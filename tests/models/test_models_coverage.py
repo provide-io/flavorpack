@@ -7,8 +7,8 @@ import pytest
 
 from flavor.models import (
     FOOTER_SIZE,
-    PSPF_INTERNAL_FOOTER_MAGIC_NUMBER,
-    PSPF_VERSION_NUMBER,
+    FLAVOR_INTERNAL_FOOTER_MAGIC_NUMBER,
+    FLAVOR_VERSION_NUMBER,
     FlavorFooter,
 )
 
