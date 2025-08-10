@@ -1,0 +1,20 @@
+# Simple Provider Requirements
+# Minimal dependencies for Flavor demonstration
+
+# No external dependencies required for this simple example!
+# The provider uses only Python standard library modules:
+# - json (JSON processing)
+# - os (operating system interface)  
+# - pathlib (path handling)
+# - hashlib (cryptographic hashing)
+# - time (time utilities)
+# - logging (logging framework)
+# - typing (type hints)
+
+# For production providers, you might add:
+# requests>=2.28.0       # HTTP client
+# pydantic>=1.10.0       # Data validation
+# cryptography>=3.4.8    # Cryptographic primitives
+# click>=8.0.0           # CLI framework
+
+# Keep dependencies minimal to reduce package size and attack surface
