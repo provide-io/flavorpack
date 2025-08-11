@@ -5,6 +5,7 @@ use anyhow::{Context, Result};
 use clap::Parser;
 use flate2::read::GzDecoder;
 use log::{debug, error, info, trace};
+use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::fs::File;
 use std::io::{Read, Seek, SeekFrom};
@@ -17,6 +18,43 @@ use flavor::{FlavorFooter, FLAVOR_MAGIC_EOF_STRING, FLAVOR_INTERNAL_FOOTER_MAGIC
 
 mod verification;
 use verification::verify_package_signature;
+
+#[derive(Debug, Deserialize, Serialize)]
+struct Metadata {
+    format_version: String,
+    package: PackageInfo,
+    #[serde(default)]
+    runtime_slots: Vec<RuntimeSlotInfo>,
+    #[serde(default)]
+    cache_policy: CachePolicy,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+struct PackageInfo {
+    name: String,
+    version: String,
+    entry_point: String,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+struct RuntimeSlotInfo {
+    slot: usize,
+    name: String,
+    #[serde(rename = "type")]
+    slot_type: String,
+    version: String,
+    size: u64,
+    checksum: String,
+    compression: String,
+}
+
+#[derive(Debug, Deserialize, Serialize, Default)]
+struct CachePolicy {
+    #[serde(default)]
+    verify_on_launch: bool,
+    #[serde(default)]
+    allow_version_mismatch: bool,
+}
 
 #[derive(Parser)]
 #[command(name = "flavor-launcher-rs")]
@@ -39,6 +77,72 @@ struct Cli {
     /// Arguments to pass through to the Python program
     #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
     passthrough_args: Vec<String>,
+}
+
+fn load_metadata_into_memory(
+    exe_path: &PathBuf,
+    footer: &FlavorFooter,
+    flavor_data_offset: i64,
+) -> Result<Metadata> {
+    let mut file = File::open(exe_path)?;
+    
+    // Seek to metadata
+    let metadata_offset = flavor_data_offset + footer.metadata_tgz_offset as i64;
+    file.seek(SeekFrom::Start(metadata_offset as u64))?;
+    
+    // Read compressed metadata
+    let mut compressed_data = vec![0u8; footer.metadata_tgz_size as usize];
+    file.read_exact(&mut compressed_data)?;
+    
+    // Decompress
+    let gz_decoder = GzDecoder::new(&compressed_data[..]);
+    let mut archive = Archive::new(gz_decoder);
+    
+    // Look for metadata files
+    for entry in archive.entries()? {
+        let mut entry = entry?;
+        let path = entry.path()?;
+        
+        if path.file_name()
+            .and_then(|f| f.to_str())
+            .map(|f| f == "config.json" || f == "metadata.json")
+            .unwrap_or(false)
+        {
+            let mut contents = String::new();
+            entry.read_to_string(&mut contents)?;
+            
+            // Try Metadata format first
+            if let Ok(metadata) = serde_json::from_str::<Metadata>(&contents) {
+                if !metadata.format_version.is_empty() {
+                    return Ok(metadata);
+                }
+            }
+            
+            // Fall back to legacy format
+            if let Ok(config) = serde_json::from_str::<serde_json::Value>(&contents) {
+                let metadata = Metadata {
+                    format_version: "1.0".to_string(),
+                    package: PackageInfo {
+                        name: config.get("package_name")
+                            .or_else(|| config.get("provider_name"))
+                            .and_then(|v| v.as_str())
+                            .unwrap_or("unknown")
+                            .to_string(),
+                        version: "1.0.0".to_string(),
+                        entry_point: config.get("entry_point")
+                            .and_then(|v| v.as_str())
+                            .unwrap_or("")
+                            .to_string(),
+                    },
+                    runtime_slots: Vec::new(),
+                    cache_policy: CachePolicy::default(),
+                };
+                return Ok(metadata);
+            }
+        }
+    }
+    
+    Err(anyhow::anyhow!("No metadata found in package"))
 }
 
 fn main() {
@@ -102,6 +206,16 @@ fn run_provider(args: Cli) -> Result<()> {
         .context("Could not get executable path")?;
     
     debug!("📍 Executable path: {}", exe_path.display());
+    
+    // Load metadata FIRST - always from package
+    let (footer, flavor_data_offset) = {
+        let mut file = File::open(&exe_path)?;
+        find_flavor_data(&mut file)?
+    };
+    
+    let metadata = load_metadata_into_memory(&exe_path, &footer, flavor_data_offset)?;
+    info!("📋 Loaded metadata: package={} version={}", 
+          metadata.package.name, metadata.package.version);
 
     // Create unique cache directory based on executable hash
     let mut hasher = Sha256::new();
@@ -158,19 +272,12 @@ fn run_provider(args: Cli) -> Result<()> {
 
     trace!("🐍 Found Python executable: path={}", python_path.display());
 
-    // Read metadata to get entry point
-    let mut metadata_path = cache_dir.join("metadata/config.json");
-    if !metadata_path.exists() {
-        // Old structure from Go/Rust packagers
-        metadata_path = cache_dir.join("cache/metadata/config.json");
+    // Use entry point from in-memory metadata
+    let entry_point = &metadata.package.entry_point;
+    if entry_point.is_empty() {
+        return Err(anyhow::anyhow!("No entry point in metadata"));
     }
-    let config_data = std::fs::read_to_string(&metadata_path)
-        .with_context(|| format!("Could not read metadata from {}", metadata_path.display()))?;
-
-    let entry_point = extract_entry_point(&config_data)
-        .context("Could not find entry point in metadata")?;
-
-    trace!("🎯 Found entry point: entry_point={}", entry_point);
+    trace!("🎯 Using entry point from memory: entry_point={}", entry_point);
 
     // Parse entry point (format: "module:function")
     let parts: Vec<&str> = entry_point.split(':').collect();

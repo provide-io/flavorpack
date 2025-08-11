@@ -3,8 +3,8 @@
 #
 from pathlib import Path
 
-from ..exceptions import InvalidFooterError, VerificationError
-from ..models import FLAVOR_EOF_MAGIC_STRING, FOOTER_SIZE, PSPFV1Footer
+from flavor.exceptions import InvalidFooterError, VerificationError
+from flavor.models import FLAVOR_EOF_MAGIC_STRING, FOOTER_SIZE, PSPFooter
 
 
 class FlavorReader:
@@ -13,7 +13,7 @@ class FlavorReader:
     def __init__(self, package_path: Path) -> None:
         self.package_path = package_path
 
-    def verify(self) -> PSPFV1Footer:
+    def verify(self) -> PSPFooter:
         """
         Verifies the package's structure and integrity.
 
@@ -45,7 +45,7 @@ class FlavorReader:
                 # Read and unpack footer
                 f.seek(-len(FLAVOR_EOF_MAGIC_STRING) - FOOTER_SIZE, 2)
                 footer_bytes = f.read(FOOTER_SIZE)
-                footer = PSPFV1Footer.unpack(footer_bytes)
+                footer = PSPFooter.unpack(footer_bytes)
                 return footer
         except (OSError, ValueError) as e:
             raise VerificationError(f"Failed to read or unpack footer: {e}") from e

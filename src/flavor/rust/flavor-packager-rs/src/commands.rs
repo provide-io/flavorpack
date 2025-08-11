@@ -181,6 +181,18 @@ async fn append_flavor_data(
     let mut footer = flavor::FlavorFooter::new();
     let mut current_offset = 0u64;
     
+    // METADATA FIRST - for metadata-first design
+    if let Some(metadata_path) = metadata_tgz_path {
+        if metadata_path.exists() {
+            let metadata_data = utils::read_file_bytes(metadata_path)?;
+            footer.metadata_tgz_offset = current_offset;
+            footer.metadata_tgz_size = metadata_data.len() as u64;
+            file.write_all(&metadata_data)?;
+            current_offset += metadata_data.len() as u64;
+        }
+    }
+    
+    // Runtime slots (UV and Python are now considered runtime components)
     // Add UV binary (if exists, otherwise skip)
     if uv_binary_path.exists() {
         let uv_data = utils::read_file_bytes(uv_binary_path)?;
@@ -198,17 +210,6 @@ async fn append_flavor_data(
             footer.python_install_tgz_size = python_data.len() as u64;
             file.write_all(&python_data)?;
             current_offset += python_data.len() as u64;
-        }
-    }
-    
-    // Add metadata tgz (if provided)
-    if let Some(metadata_path) = metadata_tgz_path {
-        if metadata_path.exists() {
-            let metadata_data = utils::read_file_bytes(metadata_path)?;
-            footer.metadata_tgz_offset = current_offset;
-            footer.metadata_tgz_size = metadata_data.len() as u64;
-            file.write_all(&metadata_data)?;
-            current_offset += metadata_data.len() as u64;
         }
     }
     

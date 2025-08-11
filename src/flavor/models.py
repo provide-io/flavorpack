@@ -44,7 +44,7 @@ if FOOTER_SIZE != 120:
 
 
 @define(frozen=True, slots=True)
-class PSPFV1Footer:
+class PSPFooter:
     uv_offset: int
     uv_size: int
     python_offset: int
@@ -125,7 +125,7 @@ class PSPFV1Footer:
         )
 
     @classmethod
-    def unpack(cls, buffer: bytes) -> "PSPFV1Footer":
+    def unpack(cls, buffer: bytes) -> "PSPFooter":
         if len(buffer) != FOOTER_SIZE:
             raise ValueError(f"Buffer size {len(buffer)} != {FOOTER_SIZE}")
 

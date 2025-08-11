@@ -13,6 +13,7 @@ import tempfile
 from pathlib import Path
 from typing import Any, Dict, Optional
 
+from attrs import define, field, frozen
 from pyvider.telemetry import logger
 
 
@@ -240,7 +241,7 @@ class PythonPackager:
         with open(private_key_path, "rb") as f:
             private_key = serialization.load_pem_private_key(f.read(), password=None)
         
-        from ..crypto import sign_payload_hash
+        from flavor.crypto import sign_payload_hash
         return sign_payload_hash(payload_hash, private_key)
     
     def _build_wheels(self, wheels_dir: Path) -> None:
