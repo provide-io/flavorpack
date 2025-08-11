@@ -126,6 +126,14 @@ fn run_provider(args: Cli) -> Result<()> {
         info!("📦 Extracting package for first run");
         extract_package(&exe_path, &cache_dir)?;
         
+        // Check if this is a wheel-based package (new format)
+        let wheels_dir = cache_dir.join("wheels");
+        if wheels_dir.exists() {
+            // New format: create venv and install wheels
+            info!("🎡 Creating virtual environment from wheels...");
+            setup_environment_from_wheels(&cache_dir)?;
+        }
+        
         // Write marker
         std::fs::write(&cache_marker, "1")
             .context("Could not write cache marker")?;
@@ -136,6 +144,10 @@ fn run_provider(args: Cli) -> Result<()> {
 
     // Find Python executable
     let python_paths = [
+        // New wheel-based structure
+        cache_dir.join("bin/python"),
+        cache_dir.join("bin/python3"),
+        // Old venv structure from Go/Rust packagers
         cache_dir.join("cache/bin/python"),
         cache_dir.join("cache/bin/python3"),
     ];
@@ -147,7 +159,11 @@ fn run_provider(args: Cli) -> Result<()> {
     trace!("🐍 Found Python executable: path={}", python_path.display());
 
     // Read metadata to get entry point
-    let metadata_path = cache_dir.join("cache/metadata/config.json");
+    let mut metadata_path = cache_dir.join("metadata/config.json");
+    if !metadata_path.exists() {
+        // Old structure from Go/Rust packagers
+        metadata_path = cache_dir.join("cache/metadata/config.json");
+    }
     let config_data = std::fs::read_to_string(&metadata_path)
         .with_context(|| format!("Could not read metadata from {}", metadata_path.display()))?;
 
@@ -163,17 +179,33 @@ fn run_provider(args: Cli) -> Result<()> {
         return Err(anyhow::anyhow!("Invalid entry point format: {}", entry_point));
     }
     let module = parts[0];
+    let function = parts[1];
 
     // Run Python with the module and pass through all command-line arguments
-    info!("🚀 Starting provider: module={} python={}", module, python_path.display());
+    info!("🚀 Starting provider: module={} function={} python={}", module, function, python_path.display());
+    
+    // Build command to call the function with args
+    // Create a Python list representation of args
+    let mut args_list = String::from("[");
+    let exe_path = std::env::current_exe().unwrap();
+    args_list.push_str(&format!("{:?}", exe_path.display().to_string()));
+    
+    for arg in &args.passthrough_args {
+        args_list.push_str(", ");
+        args_list.push_str(&format!("{:?}", arg));
+    }
+    args_list.push(']');
+    
+    let python_code = format!(
+        "import sys; sys.argv = {}; import {}; {}.{}()",
+        args_list,
+        module,
+        module,
+        function
+    );
     
     let mut cmd = Command::new(python_path);
-    cmd.arg("-m").arg(module);
-    
-    // Pass through any additional command-line arguments
-    for arg in &args.passthrough_args {
-        cmd.arg(arg);
-    }
+    cmd.arg("-c").arg(&python_code);
     
     let status = cmd.status()
         .context("Failed to execute Python command")?;
@@ -341,6 +373,55 @@ fn extract_tar_gz(file: &mut File, offset: i64, size: u64, output_dir: &PathBuf)
     archive.unpack(output_dir)
         .context("Failed to extract tar.gz archive")?;
     
+    Ok(())
+}
+
+fn setup_environment_from_wheels(cache_dir: &PathBuf) -> Result<()> {
+    // Find UV binary
+    let uv_path = cache_dir.join("bin/uv");
+    if !uv_path.exists() {
+        return Err(anyhow::anyhow!("UV binary not found at {}", uv_path.display()));
+    }
+
+    // Create virtual environment
+    info!("🌟 Creating virtual environment...");
+    let output = Command::new(&uv_path)
+        .args(&["venv", cache_dir.to_str().unwrap(), "--python", "python3.13"])
+        .output()
+        .context("Failed to create venv")?;
+    
+    if !output.status.success() {
+        error!("Failed to create venv: {}", String::from_utf8_lossy(&output.stderr));
+        return Err(anyhow::anyhow!("Failed to create venv"));
+    }
+
+    // Install all wheels
+    let wheels_dir = cache_dir.join("wheels");
+    let entries = std::fs::read_dir(&wheels_dir)
+        .context("Failed to read wheels directory")?;
+
+    info!("📦 Installing wheels...");
+    for entry in entries {
+        let entry = entry?;
+        let path = entry.path();
+        if path.extension().and_then(|s| s.to_str()) == Some("whl") {
+            debug!("Installing wheel: {}", path.file_name().unwrap().to_string_lossy());
+            
+            let python_path = cache_dir.join("bin/python");
+            let output = Command::new(&uv_path)
+                .args(&["pip", "install", "--python", python_path.to_str().unwrap(), 
+                        "--no-deps", path.to_str().unwrap()])
+                .output()
+                .context("Failed to install wheel")?;
+            
+            if !output.status.success() {
+                error!("Failed to install wheel {}: {}", 
+                       path.display(), String::from_utf8_lossy(&output.stderr));
+                return Err(anyhow::anyhow!("Failed to install wheel"));
+            }
+        }
+    }
+
     Ok(())
 }
 

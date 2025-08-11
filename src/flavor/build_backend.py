@@ -87,10 +87,10 @@ def build_wheel(
                 "Missing 'entry_point' in [tool.flavor] table of pyproject.toml"
             )
 
-        provider_name = flavor_conf.get("provider_name")
-        if not provider_name:
+        package_name = flavor_conf.get("package_name")
+        if not package_name:
             raise BuildError(
-                "Missing 'provider_name' in [tool.flavor] table of pyproject.toml"
+                "Missing 'package_name' in [tool.flavor] table of pyproject.toml"
             )
 
         orchestrator = PackagingOrchestrator(
@@ -99,7 +99,7 @@ def build_wheel(
             output_flavor_path=str(output_executable_path),
             build_config=build_conf,
             manifest_dir=pyproject_dir,
-            provider_name=provider_name,
+            package_name=package_name,
             entry_point=entry_point,
         )
 
