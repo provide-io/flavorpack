@@ -15,6 +15,9 @@ use tar::Archive;
 mod flavor;
 use flavor::{FlavorFooter, FLAVOR_MAGIC_EOF_STRING, FLAVOR_INTERNAL_FOOTER_MAGIC, FOOTER_SIZE};
 
+mod verification;
+use verification::verify_package_signature;
+
 #[derive(Parser)]
 #[command(name = "flavor-launcher-rs")]
 #[command(about = "Flavor (Progressive Secure Package Format) launcher written in Rust")]
@@ -159,6 +162,30 @@ fn extract_package(exe_path: &PathBuf, cache_dir: &PathBuf) -> Result<()> {
 
     // Find Flavor data
     let (footer, flavor_data_offset) = find_flavor_data(&mut file)?;
+
+    // Verify package signature
+    info!("🔐 Verifying package signature...");
+    
+    // Find the maximum offset that's included in the signature
+    // (everything before the signature itself)
+    let data_ends = [
+        footer.uv_binary_offset + footer.uv_binary_size,
+        footer.python_install_tgz_offset + footer.python_install_tgz_size,
+        footer.metadata_tgz_offset + footer.metadata_tgz_size,
+        footer.payload_tgz_offset + footer.payload_tgz_size,
+        footer.public_key_pem_offset + footer.public_key_pem_size,
+    ];
+    let max_data_end = *data_ends.iter().max().unwrap();
+    
+    verify_package_signature(
+        &mut file,
+        flavor_data_offset,
+        footer.public_key_pem_offset,
+        footer.public_key_pem_size,
+        footer.package_signature_offset,
+        footer.package_signature_size,
+        max_data_end,
+    )?;
 
     let payload_offset = footer.payload_tgz_offset;
     let payload_size = footer.payload_tgz_size;
