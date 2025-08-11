@@ -14,7 +14,7 @@ from cryptography.hazmat.primitives.asymmetric import ec
 
 from flavor.compiler import ensure_go_binary
 from flavor.crypto import sign_payload_hash
-from flavor.models import FOOTER_STRUCT_FORMAT, FlavorFooter
+from flavor.models import FOOTER_STRUCT_FORMAT, PSPFV1Footer
 
 
 def test_python_and_go_checksum_match(tmp_path: Path) -> None:
@@ -29,9 +29,12 @@ def test_python_and_go_checksum_match(tmp_path: Path) -> None:
         "payload_tgz_offset": 1258496, "payload_tgz_size": 524288,
         "package_signature_offset": 1782784, "package_signature_size": 71,
         "public_key_pem_offset": 1782855, "public_key_pem_size": 120,
-        "flavor_version": 1, "flags": 1, "internal_footer_magic": 0x30505350,
+        "pspf_version": 1, "flags": 1, "internal_footer_magic": 0x30505350,
+        "language_emoji": b"\x00\x00\x00\x00",
+        "type_emoji_1": b"\x00\x00\x00\x00",
+        "type_emoji_2": b"\x00\x00\x00\x00",
     }
-    footer_instance = FlavorFooter(**footer_data)
+    footer_instance = PSPFV1Footer(**footer_data)
     python_checksum = footer_instance.footer_struct_checksum
 
     values_for_go = list(footer_data.values())

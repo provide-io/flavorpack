@@ -12,11 +12,11 @@ from .api import (
     verify_package,
 )
 from .exceptions import BuildError, VerificationError
-from .models import FlavorFooter
+from .models import PSPFV1Footer
 
 __all__ = [
     "BuildError",
-    "FlavorFooter",
+    "PSPFV1Footer",
     "VerificationError",
     "build_package_from_manifest",
     "clean_cache",

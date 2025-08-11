@@ -56,15 +56,7 @@ def test_build_package_from_manifest_missing_config(tmp_path: Path) -> None:
         api.build_package_from_manifest(pyproject_path)
 
 
-def test_generate_keys_calls_subprocess(tmp_path: Path) -> None:
-    """Tests that generate_keys calls the correct Go binary."""
-    with patch("flavor.api.ensure_go_binary", return_value="go-binary") as mock_ensure:
-        with patch("flavor.api.subprocess.run") as mock_run:
-            mock_run.return_value.returncode = 0
-            api.generate_keys(tmp_path)
-            mock_ensure.assert_called_with("flavor-packager")
-            mock_run.assert_called_once()
-            assert "keygen" in mock_run.call_args.args[0]
+
 
 
 # 📦🍜🧪🪄

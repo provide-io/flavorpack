@@ -18,10 +18,18 @@ class TestPackagingOrchestratorComprehensive:
     @pytest.fixture
     def orchestrator(self, tmp_path):
         """Create an orchestrator instance with test configuration."""
+        # Create a dummy pyproject.toml for the orchestrator to read
+        pyproject_content = """
+[build-system]
+requires = ["uv>=0.1.0"]
+build-backend = "setuptools.build_meta"
+"""
+        (tmp_path / "pyproject.toml").write_text(pyproject_content)
+
         return PackagingOrchestrator(
             package_integrity_key_path=str(tmp_path / "test.key"),
             public_key_path=str(tmp_path / "test.pub"),
-            output_pspf_path=str(tmp_path / "output.pspf"),
+            output_flavor_path=str(tmp_path / "output.pspf"),
             build_config={
                 "version": "1.0.0",
                 "dependencies": ["../dep1", "../dep2"],
@@ -36,7 +44,7 @@ class TestPackagingOrchestratorComprehensive:
         """Test orchestrator initializes with correct values."""
         assert orchestrator.package_integrity_key_path == str(tmp_path / "test.key")
         assert orchestrator.public_key_path == str(tmp_path / "test.pub")
-        assert orchestrator.output_pspf_path == str(tmp_path / "output.pspf")
+        assert orchestrator.output_flavor_path == str(tmp_path / "output.pspf")
         assert orchestrator.provider_name == "test-provider"
         assert orchestrator.entry_point == "test.main:run"
         assert orchestrator.python_version == "3.13"

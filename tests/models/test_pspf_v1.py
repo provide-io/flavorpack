@@ -1,4 +1,4 @@
-"""Tests for PSPF v0.2 format with simplified field names."""
+"""Tests for PSPF v1.0 footer."""
 
 import struct
 from pathlib import Path
@@ -6,22 +6,28 @@ import pytest
 
 from flavor.models import (
     PSPF_INTERNAL_FOOTER_MAGIC_NUMBER,
-    PSPF_V2_VERSION_NUMBER,
-    PSPF_V2_FOOTER_SIZE,
-    PSPF_PACKAGE_MARKER,
-    PSPF_LAUNCHER_MARKER,
-    PSPF_BUILDER_MARKER,
-    PSPF_PYTHON_MARKER,
-    PSPFFooterV2
+    PSPF_VERSION_NUMBER,
+    FOOTER_SIZE,
+    FLAVOR_PACKAGE_MAGIC,
+    FLAVOR_LAUNCHER_MAGIC,
+    FLAVOR_BUILDER_MAGIC,
+    EMOJI_PYTHON,
+    EMOJI_GO,
+    EMOJI_RUST,
+    EMOJI_LAUNCHER,
+    EMOJI_PACKAGER,
+    EMOJI_METADATA,
+    EMOJI_PAYLOAD,
+    PSPFV1Footer
 )
 
 
-class TestPSPFV2Footer:
-    """Test PSPF v0.2 footer structure."""
+class TestPSPFV1Footer:
+    """Test PSPF v1.0 footer structure."""
     
     def test_footer_size(self):
         """Footer should be exactly 120 bytes."""
-        footer = PSPFFooterV2(
+        footer = PSPFV1Footer(
             uv_offset=0, uv_size=0,
             python_offset=0, python_size=0,
             metadata_offset=0, metadata_size=0,
@@ -33,7 +39,7 @@ class TestPSPFV2Footer:
     
     def test_simplified_field_names(self):
         """Test that simplified field names work correctly."""
-        footer = PSPFFooterV2(
+        footer = PSPFV1Footer(
             uv_offset=100, uv_size=200,
             python_offset=300, python_size=400,
             metadata_offset=500, metadata_size=600,
@@ -52,7 +58,7 @@ class TestPSPFV2Footer:
     
     def test_pack_unpack_roundtrip(self):
         """Test packing and unpacking preserves data."""
-        original = PSPFFooterV2(
+        original = PSPFV1Footer(
             uv_offset=1000, uv_size=2000,
             python_offset=3000, python_size=4000,
             metadata_offset=5000, metadata_size=6000,
@@ -63,13 +69,13 @@ class TestPSPFV2Footer:
         )
         
         packed = original.pack()
-        unpacked = PSPFFooterV2.unpack(packed)
+        unpacked = PSPFV1Footer.unpack(packed)
         
         assert unpacked.uv_offset == original.uv_offset
         assert unpacked.python_size == original.python_size
         assert unpacked.payload_offset == original.payload_offset
         assert unpacked.flags == original.flags
-        assert unpacked.pspf_version == PSPF_V2_VERSION_NUMBER
+        assert unpacked.pspf_version == PSPF_VERSION_NUMBER
     
     def test_flags_interpretation(self):
         """Test flag bit interpretation."""
@@ -92,7 +98,7 @@ class TestPSPFV2Footer:
     
     def test_invalid_magic_rejected(self):
         """Test that invalid magic number is rejected."""
-        footer = PSPFFooterV2(
+        footer = PSPFV1Footer(
             uv_offset=0, uv_size=0,
             python_offset=0, python_size=0,
             metadata_offset=0, metadata_size=0,
@@ -104,66 +110,9 @@ class TestPSPFV2Footer:
         
         packed = footer.pack()
         with pytest.raises(ValueError, match="Invalid magic"):
-            PSPFFooterV2.unpack(packed)
+            PSPFV1Footer.unpack(packed)
     
-    def test_eof_markers_fixed_size(self):
-        """Test that all EOF markers are exactly 8 bytes."""
-        assert len(PSPF_PACKAGE_MARKER) == 8
-        assert len(PSPF_LAUNCHER_MARKER) == 8
-        assert len(PSPF_BUILDER_MARKER) == 8
-        assert len(PSPF_PYTHON_MARKER) == 8
-        
-        # All start with !PSP
-        assert PSPF_PACKAGE_MARKER.startswith(b"!PSP")
-        assert PSPF_LAUNCHER_MARKER.startswith(b"!PSP")
-        assert PSPF_BUILDER_MARKER.startswith(b"!PSP")
-        assert PSPF_PYTHON_MARKER.startswith(b"!PSP")
     
-    def test_reserved_fields(self):
-        """Test reserved fields for future expansion."""
-        footer = PSPFFooterV2(
-            uv_offset=0, uv_size=0,
-            python_offset=0, python_size=0,
-            metadata_offset=0, metadata_size=0,
-            payload_offset=0, payload_size=0,
-            signature_offset=0, signature_size=0,
-            public_key_offset=0, public_key_size=0,
-            reserved_1=0x12345678,
-            reserved_2=0x123456789ABCDEF0
-        )
-        
-        packed = footer.pack()
-        unpacked = PSPFFooterV2.unpack(packed)
-        
-        assert unpacked.reserved_1 == 0x12345678
-        assert unpacked.reserved_2 == 0x123456789ABCDEF0
 
 
-class TestEOFMarkers:
-    """Test EOF package type markers."""
-    
-    def test_marker_identification(self):
-        """Test identifying package type from marker."""
-        def identify_package_type(marker: bytes) -> str:
-            if not marker.startswith(b"!PSP"):
-                return "unknown"
-            
-            emoji = marker[4:]
-            if emoji == b"\xf0\x9f\x93\xa6":  # 📦
-                return "package"
-            elif emoji == b"\xf0\x9f\x9a\x80":  # 🚀
-                return "launcher"
-            elif emoji == b"\xf0\x9f\x8f\x97":  # 🏗️
-                return "builder"
-            elif emoji == b"\xf0\x9f\x90\xad":  # 🐍
-                return "python"
-            return "unknown"
-        
-        assert identify_package_type(PSPF_PACKAGE_MARKER) == "package"
-        assert identify_package_type(PSPF_LAUNCHER_MARKER) == "launcher"
-        assert identify_package_type(PSPF_BUILDER_MARKER) == "builder"
-        assert identify_package_type(PSPF_PYTHON_MARKER) == "python"
-        assert identify_package_type(b"NOTPSPF!") == "unknown"
 
-
-# 📦🍜🧪🪄

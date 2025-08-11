@@ -12,13 +12,44 @@ import shutil
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.backends import default_backend
+import os
 
 from flavor.compiler import ensure_go_binary
 
 
 @pytest.fixture(scope="module")
 def keygen_binaries():
-    """Get all available keygen implementations."""
+    """Get all available keygen implementations as callables."""
+    binaries = {}
+    
+    # Python uses flavor module
+    def python_keygen_cmd(key_dir):
+        return ["python", "-m", "flavor", "keygen", "--out-dir", str(key_dir)]
+    binaries["python"] = python_keygen_cmd
+    
+    # Go packager
+    go_packager = ensure_go_binary("flavor-go")
+    def go_keygen_cmd(key_dir):
+        # Go keygen does not support --out-dir, so we run it in the target directory
+        return [str(go_packager), "keygen"]
+    binaries["go"] = go_keygen_cmd
+    
+    # Rust packager if available
+    rust_dir = Path(__file__).parent.parent.parent / "src" / "flavor" / "rust" / "flavor-packager-rs"
+    if shutil.which("cargo") and rust_dir.exists():
+        subprocess.run(["cargo", "build", "--release"], cwd=rust_dir, check=True, capture_output=True)
+        rust_binary = rust_dir / "target" / "release" / "flavor-rs"
+        if rust_binary.exists():
+            def rust_keygen_cmd(key_dir):
+                return [str(rust_binary), "keygen", "--out-dir", str(key_dir)]
+            binaries["rust"] = rust_keygen_cmd
+    
+    return binaries
+
+
+@pytest.fixture(scope="module")
+def packager_binaries():
+    """Get all available packager implementations."""
     binaries = {}
     
     # Python uses flavor module
@@ -82,18 +113,17 @@ class TestKeygenCompatibility:
     
     def test_all_keygens_produce_valid_keys(self, keygen_binaries):
         """Test that all implementations generate valid ECDSA P-256 keys."""
-        for name, cmd in keygen_binaries.items():
+        for name, cmd_generator in keygen_binaries.items():
             with tempfile.TemporaryDirectory() as temp_dir:
                 key_dir = Path(temp_dir) / "keys"
                 key_dir.mkdir()
                 
-                # Run keygen
-                if name == "python":
-                    full_cmd = cmd + ["keygen", "--out-dir", str(key_dir)]
-                else:
-                    full_cmd = cmd + ["keygen", "--out-dir", str(key_dir)]
+                full_cmd = cmd_generator(key_dir)
                 
-                result = subprocess.run(full_cmd, capture_output=True, text=True)
+                # Determine cwd for subprocess based on keygen name
+                cwd = key_dir if name == "go" else None
+                
+                result = subprocess.run(full_cmd, capture_output=True, text=True, cwd=cwd)
                 assert result.returncode == 0, f"{name} keygen failed: {result.stderr}"
                 
                 # Verify keys
@@ -107,7 +137,7 @@ class TestKeygenCompatibility:
                 # Should not raise exception
                 public_key.verify(signature, test_data, ec.ECDSA(hashes.SHA256()))
     
-    def test_keys_interoperable_for_packaging(self, keygen_binaries, tmp_path):
+    def test_keys_interoperable_for_packaging(self, keygen_binaries, packager_binaries, tmp_path):
         """Test that keys from one implementation work with other packagers."""
         if len(keygen_binaries) < 2:
             pytest.skip("Need at least 2 implementations for cross-testing")
@@ -131,20 +161,20 @@ entry_point = "key_test.main:serve"
         
         # Generate keys with each implementation
         all_keys = {}
-        for gen_name, gen_cmd in keygen_binaries.items():
+        for gen_name, gen_cmd_generator in keygen_binaries.items():
             key_dir = tmp_path / f"keys_{gen_name}"
             key_dir.mkdir()
             
-            if gen_name == "python":
-                full_cmd = gen_cmd + ["keygen", "--out-dir", str(key_dir)]
-            else:
-                full_cmd = gen_cmd + ["keygen", "--out-dir", str(key_dir)]
+            full_cmd = gen_cmd_generator(key_dir)
             
-            subprocess.run(full_cmd, check=True, capture_output=True)
+            # Determine cwd for subprocess based on keygen name
+            cwd = key_dir if gen_name == "go" else None
+            
+            subprocess.run(full_cmd, check=True, capture_output=True, cwd=cwd)
             all_keys[gen_name] = key_dir
         
         # Try to build packages with each packager using keys from each generator
-        for packager_name, packager_cmd in keygen_binaries.items():
+        for packager_name, packager_base_cmd in packager_binaries.items():
             for keygen_name, key_dir in all_keys.items():
                 # Update pyproject with key paths
                 config = pyproject.read_text()
@@ -157,10 +187,11 @@ public_key_path = "{key_dir / 'provider-public.key'}"
                 
                 # Try to build
                 if packager_name == "python":
-                    build_cmd = packager_cmd + ["package", "--manifest", str(pyproject)]
+                    build_cmd = packager_base_cmd + ["package", "--manifest", str(pyproject)]
+                    build_cwd = None
                 else:
                     output = tmp_path / f"test_{packager_name}_{keygen_name}.flavor"
-                    build_cmd = packager_cmd + [
+                    build_cmd = packager_base_cmd + [
                         "build",
                         "--out", str(output),
                         "--payload-dir", str(tmp_path),
@@ -168,8 +199,9 @@ public_key_path = "{key_dir / 'provider-public.key'}"
                         "--public-key", str(key_dir / "provider-public.key"),
                         "--launcher-bin", str(ensure_go_binary("flavor-launcher-go"))
                     ]
+                    build_cwd = tmp_path if packager_name == "go" else None # Assuming go packager also needs cwd for build
                 
-                result = subprocess.run(build_cmd, capture_output=True, text=True)
+                result = subprocess.run(build_cmd, capture_output=True, text=True, cwd=build_cwd)
                 assert result.returncode == 0, (
                     f"{packager_name} packager failed with keys from {keygen_name}: {result.stderr}"
                 )
@@ -184,7 +216,7 @@ class TestKeygenDeterminism:
         if impl_name not in keygen_binaries:
             pytest.skip(f"{impl_name} implementation not available")
         
-        cmd = keygen_binaries[impl_name]
+        cmd_generator = keygen_binaries[impl_name]
         keys = []
         
         for i in range(2):
@@ -192,12 +224,12 @@ class TestKeygenDeterminism:
                 key_dir = Path(temp_dir) / "keys"
                 key_dir.mkdir()
                 
-                if impl_name == "python":
-                    full_cmd = cmd + ["keygen", "--out-dir", str(key_dir)]
-                else:
-                    full_cmd = cmd + ["keygen", "--out-dir", str(key_dir)]
+                full_cmd = cmd_generator(key_dir)
                 
-                subprocess.run(full_cmd, check=True, capture_output=True)
+                # Determine cwd for subprocess based on keygen name
+                cwd = key_dir if impl_name == "go" else None
+                
+                subprocess.run(full_cmd, check=True, capture_output=True, cwd=cwd)
                 
                 # Read private key
                 with open(key_dir / "provider-private.key", "rb") as f:
@@ -210,17 +242,17 @@ class TestKeygenDeterminism:
     
     def test_keygen_output_files(self, keygen_binaries):
         """Test that all implementations create the expected output files."""
-        for name, cmd in keygen_binaries.items():
+        for name, cmd_generator in keygen_binaries.items(): # Renamed cmd to cmd_generator for clarity
             with tempfile.TemporaryDirectory() as temp_dir:
                 key_dir = Path(temp_dir) / "keys"
                 key_dir.mkdir()
                 
-                if name == "python":
-                    full_cmd = cmd + ["keygen", "--out-dir", str(key_dir)]
-                else:
-                    full_cmd = cmd + ["keygen", "--out-dir", str(key_dir)]
+                full_cmd = cmd_generator(key_dir) # Use the callable directly
                 
-                subprocess.run(full_cmd, check=True, capture_output=True)
+                # Determine cwd for subprocess based on keygen name
+                cwd = key_dir if name == "go" else None
+                
+                subprocess.run(full_cmd, check=True, capture_output=True, cwd=cwd)
                 
                 # Check files exist with correct names
                 assert (key_dir / "provider-private.key").exists()

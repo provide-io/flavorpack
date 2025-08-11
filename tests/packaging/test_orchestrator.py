@@ -18,7 +18,7 @@ def test_orchestrator_constructs_correct_build_command(tmp_path: Path) -> None:
             orchestrator = PackagingOrchestrator(
                 package_integrity_key_path="keys/priv.key",
                 public_key_path="keys/pub.key",
-                output_pspf_path=str(output_path),
+                                    output_flavor_path=str(output_path),
                 build_config={},
                 manifest_dir=manifest_dir,
                 provider_name="myprovider",

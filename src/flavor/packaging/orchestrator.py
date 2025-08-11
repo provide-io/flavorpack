@@ -102,6 +102,10 @@ class PackagingOrchestrator:
                 ]
             )
 
+            # Debug: Check if pip exists after venv creation
+            pip_path_after_venv = payload_dir / "bin" / "pip"
+            logger.info(f"Pip path after uv venv: {pip_path_after_venv}, exists: {pip_path_after_venv.exists()}")
+
             # Install the provider and its dependencies
             logger.info("Installing provider dependencies...")
             pip_cmd = [

@@ -83,13 +83,21 @@ def ensure_go_binary(tool_name: str) -> Path:
                         f"go.mod not found in the discovered source path: {go_module_root}"
                     )
 
+                go_module_map = {
+                    "flavor-packager": "flavor-go",
+                    "flavor-launcher": "flavor-launcher-go",
+                    "flavor-go": "flavor-go",
+                    "flavor-launcher-go": "flavor-launcher-go",
+                }
+                go_module_name = go_module_map.get(tool_name, tool_name) # Default to tool_name if not found
+
                 cmd = [
                     "go",
                     "build",
                     "-buildvcs=false",
                     "-o",
                     str(binary_path),
-                    f"./{tool_name}",
+                    f"./{go_module_name}",
                 ]
                 env = os.environ.copy()
                 env["CGO_ENABLED"] = "1"

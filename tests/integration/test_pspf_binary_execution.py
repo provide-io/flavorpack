@@ -264,7 +264,7 @@ setup(name="test-dep", version="1.0.0", py_modules=["test_dep"])
         orchestrator = PackagingOrchestrator(
             package_integrity_key_path=str(test_provider_dir / "keys" / "provider-private.key"),
             public_key_path=str(test_provider_dir / "keys" / "provider-public.key"),
-            output_pspf_path=str(tmp_path / "test.pspf"),
+            output_flavor_path=str(tmp_path / "test.pspf"),
             build_config={"version": "1.0.0", "dependencies": []},
             manifest_dir=test_provider_dir,
             provider_name="test",

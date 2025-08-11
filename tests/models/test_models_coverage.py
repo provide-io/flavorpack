@@ -5,12 +5,7 @@ the FlavorFooter.unpack error handling.
 
 import pytest
 
-from flavor.models import (
-    FOOTER_SIZE,
-    FLAVOR_INTERNAL_FOOTER_MAGIC_NUMBER,
-    FLAVOR_VERSION_NUMBER,
-    FlavorFooter,
-)
+from flavor.models import PSPFV1Footer, FOOTER_SIZE, PSPF_VERSION_NUMBER
 
 
 @pytest.fixture
@@ -23,9 +18,9 @@ def valid_footer_data() -> dict[str, int]:
         "payload_tgz_offset": 7, "payload_tgz_size": 8,
         "package_signature_offset": 9, "package_signature_size": 10,
         "public_key_pem_offset": 11, "public_key_pem_size": 12,
-        "flavor_version": FLAVOR_VERSION_NUMBER,
+        "pspf_version": PSPF_VERSION_NUMBER,
         "flags": 0,
-        "internal_footer_magic": FLAVOR_INTERNAL_FOOTER_MAGIC_NUMBER,
+        "internal_footer_magic": PSPF_INTERNAL_FOOTER_MAGIC_NUMBER,
     }
 
 
@@ -34,19 +29,19 @@ def test_unpack_invalid_buffer_size() -> None:
     Tests that FlavorFooter.unpack raises ValueError for a buffer of the wrong size.
     """
     with pytest.raises(ValueError, match=f"Buffer size 10 != {FOOTER_SIZE}"):
-        FlavorFooter.unpack(b"\x00" * 10)
+        PSPFV1Footer.unpack(b"\x00" * 10)
 
 
 def test_unpack_checksum_mismatch(valid_footer_data: dict[str, int]) -> None:
     """
     Tests that FlavorFooter.unpack raises ValueError for a checksum mismatch.
     """
-    footer = FlavorFooter(**valid_footer_data)
+    footer = PSPFV1Footer(**valid_footer_data)
     packed_bytes = list(footer.pack())
     packed_bytes[100] = (packed_bytes[100] + 1) % 256
     corrupted_buffer = bytes(packed_bytes)
     with pytest.raises(ValueError, match="Footer checksum mismatch"):
-        FlavorFooter.unpack(corrupted_buffer)
+        PSPFV1Footer.unpack(corrupted_buffer)
 
 
 def test_unpack_bad_magic_number(valid_footer_data: dict[str, int]) -> None:
@@ -54,19 +49,19 @@ def test_unpack_bad_magic_number(valid_footer_data: dict[str, int]) -> None:
     Tests that FlavorFooter.unpack raises ValueError for an invalid magic number.
     """
     valid_footer_data["internal_footer_magic"] = 0xBADCAFE
-    footer = FlavorFooter(**valid_footer_data)
+    footer = PSPFV1Footer(**valid_footer_data)
     with pytest.raises(ValueError, match="Invalid InternalFooterMagic"):
-        FlavorFooter.unpack(footer.pack())
+        PSPFV1Footer.unpack(footer.pack())
 
 
 def test_unpack_bad_version(valid_footer_data: dict[str, int]) -> None:
     """
     Tests that FlavorFooter.unpack raises ValueError for an unexpected version.
     """
-    valid_footer_data["flavor_version"] = 9999
-    footer = FlavorFooter(**valid_footer_data)
+    valid_footer_data["pspf_version"] = 9999
+    footer = PSPFV1Footer(**valid_footer_data)
     with pytest.raises(ValueError, match="Unexpected PSPF version"):
-        FlavorFooter.unpack(footer.pack())
+        PSPFV1Footer.unpack(footer.pack())
 
 
 # 📦🍜🧪🪄
