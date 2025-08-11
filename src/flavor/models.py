@@ -2,7 +2,6 @@
 # flavor/models.py
 #
 import struct
-from typing import Self
 import zlib
 
 from attrs import define, field

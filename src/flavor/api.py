@@ -64,7 +64,7 @@ def build_package_from_manifest(manifest_path: Path) -> list[Path]:
 
 def verify_package(package_path: Path) -> None:
     """Verifies a Flavor package."""
-    packager_executable = ensure_go_binary("flavor-packager")
+    packager_executable = ensure_go_binary("flavor-go")
     try:
         subprocess.run(
             [str(packager_executable), "verify", str(package_path)],

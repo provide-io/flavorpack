@@ -8,7 +8,7 @@ from unittest.mock import patch
 
 import pytest
 
-from flavor.exceptions import VerificationError, InvalidFooterError
+from flavor.exceptions import InvalidFooterError, VerificationError
 from flavor.models import FLAVOR_EOF_MAGIC_STRING
 from flavor.packaging.reader import FlavorReader
 
@@ -38,7 +38,10 @@ def test_reader_verify_footer_unpack_fails(tmp_path: Path) -> None:
         "flavor.models.PSPFV1Footer.unpack",
         side_effect=ValueError("mocked unpack error"),
     ) as mock_unpack:
-        with pytest.raises(VerificationError, match="Failed to read or unpack footer: mocked unpack error"):
+        with pytest.raises(
+            VerificationError,
+            match="Failed to read or unpack footer: mocked unpack error",
+        ):
             reader.verify()
         mock_unpack.assert_called_once()
 

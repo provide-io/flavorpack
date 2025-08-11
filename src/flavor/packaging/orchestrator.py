@@ -16,7 +16,6 @@ from pyvider.telemetry import logger
 from ..compiler import ensure_go_binary
 from ..exceptions import BuildError
 
-
 def _write_file_secure(path: Path, content: str) -> None:
     """Write file with secure permissions (0o600)."""
     path.write_text(content)
@@ -61,7 +60,7 @@ class PackagingOrchestrator:
 
     def build_package(self) -> None:
         logger.info("Orchestrator starting build process...")
-        packager_executable = ensure_go_binary("flavor-packager")
+        packager_executable = ensure_go_binary("flavor-go")
         with tempfile.TemporaryDirectory(prefix="flavor_build_") as temp_dir_str:
             temp_dir = Path(temp_dir_str)
             payload_dir = temp_dir / "payload"
@@ -102,19 +101,13 @@ class PackagingOrchestrator:
                 ]
             )
 
-            # Debug: Check if pip exists after venv creation
-            pip_path_after_venv = payload_dir / "bin" / "pip"
-            logger.info(f"Pip path after uv venv: {pip_path_after_venv}, exists: {pip_path_after_venv.exists()}")
 
             # Install the provider and its dependencies
             logger.info("Installing provider dependencies...")
             pip_cmd = [
-                "uv",
-                "pip",
+                str(payload_dir / "bin" / "pip3"),
                 "install",
-                "--python",
-                str(payload_dir / "bin" / "python"),
-                "--no-cache",
+                "--no-cache-dir",
             ]
 
             # Install dependencies from build config
@@ -150,7 +143,7 @@ class PackagingOrchestrator:
 
                 self._run_subprocess(
                     [
-                        str(payload_dir / "bin" / "pip"),
+                        str(payload_dir / "bin" / "pip3"),
                         "install",
                         "--no-deps",
                         uv_requirement,
@@ -168,14 +161,14 @@ class PackagingOrchestrator:
             else:
                 raise BuildError("UV binary not found in cache/bin after installation")
 
-            # Create payload.tgz containing the entire cache directory
+            # Create payload archive with gzip -9 compression
             logger.info("Creating payload archive...")
             payload_tgz_path = temp_dir / "payload.tgz"
-            with tarfile.open(payload_tgz_path, "w:gz") as tar:
+            with tarfile.open(payload_tgz_path, "w:gz", compresslevel=9) as tar:
                 tar.add(payload_dir, arcname="cache")
 
             # Ensure launcher is built
-            launcher_executable = ensure_go_binary("flavor-launcher")
+            launcher_executable = ensure_go_binary("flavor-launcher-go")
 
             build_cmd_args = [
                 str(packager_executable),

@@ -19,7 +19,7 @@ def test_main_module_entrypoint() -> None:
                 runpy.run_module("flavor", run_name="__main__")
             finally:
                 sys.argv = original_argv
-        
+
         # Verify that the exit was successful.
         assert e.type == SystemExit
         assert e.value.code == 0

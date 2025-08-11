@@ -1,18 +1,19 @@
 """Tests for PSPF v0.1 metadata models."""
 
-import json
 from datetime import datetime
+import json
 from pathlib import Path
 import tempfile
+
 import pytest
 
 from flavor.metadata import (
-    PSPFMetadata,
-    PackageMetadata,
-    RuntimeConfig,
-    DependencyInfo,
     ChecksumInfo,
+    DependencyInfo,
     MetadataBundle,
+    PackageMetadata,
+    PSPFMetadata,
+    RuntimeConfig,
     create_minimal_metadata,
 )
 
@@ -20,7 +21,7 @@ from flavor.metadata import (
 class TestPSPFMetadata:
     """Test PSPF metadata model."""
 
-    def test_default_values(self):
+    def test_default_values(self) -> None:
         """Test default values are set correctly."""
         meta = PSPFMetadata()
         assert meta.format_version == "0.1"
@@ -32,7 +33,7 @@ class TestPSPFMetadata:
         assert meta.flags_interpretation == {}
         assert meta.sections == {}
 
-    def test_json_serialization(self):
+    def test_json_serialization(self) -> None:
         """Test JSON serialization."""
         meta = PSPFMetadata(
             created_by={"tool": "flavor", "version": "0.1.0"},
@@ -49,7 +50,7 @@ class TestPSPFMetadata:
         assert data["package_info"]["size_bytes"] == 1024
         assert data["created_at"].endswith("Z")
 
-    def test_json_deserialization(self):
+    def test_json_deserialization(self) -> None:
         """Test JSON deserialization."""
         json_str = """{
             "format_version": "0.1",
@@ -71,7 +72,7 @@ class TestPSPFMetadata:
         assert meta.sections["uv"]["version"] == "0.1.18"
         assert isinstance(meta.created_at, datetime)
 
-    def test_roundtrip_serialization(self):
+    def test_roundtrip_serialization(self) -> None:
         """Test that serialization/deserialization preserves data."""
         original = PSPFMetadata(
             created_by={"tool": "test", "version": "1.0"},
@@ -90,7 +91,7 @@ class TestPSPFMetadata:
 class TestPackageMetadata:
     """Test package metadata model."""
 
-    def test_required_fields(self):
+    def test_required_fields(self) -> None:
         """Test that required fields must be provided."""
         with pytest.raises(TypeError):
             PackageMetadata()  # Missing name and version
@@ -102,7 +103,7 @@ class TestPackageMetadata:
         assert meta.author == {}
         assert meta.keywords == []
 
-    def test_full_metadata(self):
+    def test_full_metadata(self) -> None:
         """Test complete metadata example."""
         meta = PackageMetadata(
             name="terraform-provider-example",
@@ -127,7 +128,7 @@ class TestPackageMetadata:
         assert data["terraform"]["protocol_version"] == 6
         assert "darwin_arm64" in data["supported_platforms"]
 
-    def test_metadata_roundtrip(self):
+    def test_metadata_roundtrip(self) -> None:
         """Test serialization roundtrip."""
         original = PackageMetadata(
             name="test",
@@ -145,7 +146,7 @@ class TestPackageMetadata:
 class TestRuntimeConfig:
     """Test runtime configuration model."""
 
-    def test_minimal_config(self):
+    def test_minimal_config(self) -> None:
         """Test minimal runtime config."""
         config = RuntimeConfig(entry_point="provider.main:serve")
         assert config.entry_point == "provider.main:serve"
@@ -155,7 +156,7 @@ class TestRuntimeConfig:
         assert config.environment == {}
         assert config.inherit_env == []
 
-    def test_full_config(self):
+    def test_full_config(self) -> None:
         """Test complete runtime config."""
         config = RuntimeConfig(
             entry_point="my_provider:main",
@@ -179,7 +180,7 @@ class TestRuntimeConfig:
         assert data["resource_limits"]["max_memory_mb"] == 512
         assert data["logging"]["format"] == "json"
 
-    def test_config_with_security_restrictions(self):
+    def test_config_with_security_restrictions(self) -> None:
         """Test config with security restrictions."""
         config = RuntimeConfig(
             entry_point="secure_provider:serve",
@@ -216,7 +217,7 @@ class TestRuntimeConfig:
 class TestDependencyInfo:
     """Test dependency information model."""
 
-    def test_minimal_dependencies(self):
+    def test_minimal_dependencies(self) -> None:
         """Test minimal dependency info."""
         deps = DependencyInfo()
         assert deps.resolver == "uv"
@@ -225,7 +226,7 @@ class TestDependencyInfo:
         assert deps.total_packages == 0
         assert isinstance(deps.resolution_date, datetime)
 
-    def test_complete_dependencies(self):
+    def test_complete_dependencies(self) -> None:
         """Test complete dependency info."""
         deps = DependencyInfo(
             resolver="uv",
@@ -266,7 +267,7 @@ class TestDependencyInfo:
         assert data["dependency_graph"]["boto3"] == ["botocore", "s3transfer"]
         assert data["total_packages"] == 15
 
-    def test_vulnerability_info(self):
+    def test_vulnerability_info(self) -> None:
         """Test vulnerability check information."""
         deps = DependencyInfo(
             vulnerabilities_check={
@@ -294,7 +295,7 @@ class TestDependencyInfo:
 class TestChecksumInfo:
     """Test checksum information model."""
 
-    def test_minimal_checksums(self):
+    def test_minimal_checksums(self) -> None:
         """Test minimal checksum info."""
         checksums = ChecksumInfo()
         assert checksums.algorithm == "sha256"
@@ -302,7 +303,7 @@ class TestChecksumInfo:
         assert checksums.payload_contents == {}
         assert checksums.total_package_checksum is None
 
-    def test_complete_checksums(self):
+    def test_complete_checksums(self) -> None:
         """Test complete checksum info."""
         checksums = ChecksumInfo(
             algorithm="sha256",
@@ -338,7 +339,7 @@ class TestChecksumInfo:
 class TestMetadataBundle:
     """Test metadata bundle operations."""
 
-    def test_minimal_bundle_creation(self):
+    def test_minimal_bundle_creation(self) -> None:
         """Test creating minimal metadata bundle."""
         bundle = create_minimal_metadata(
             name="test-provider", version="1.0.0", entry_point="test_provider:main"
@@ -350,7 +351,7 @@ class TestMetadataBundle:
         assert bundle.runtime.entry_point == "test_provider:main"
         assert bundle.pspf.created_by["tool"] == "flavor"
 
-    def test_bundle_write_to_directory(self):
+    def test_bundle_write_to_directory(self) -> None:
         """Test writing bundle to directory with correct permissions."""
         bundle = create_minimal_metadata("test", "1.0", "test:main")
 
@@ -382,7 +383,7 @@ class TestMetadataBundle:
                 content = filepath.read_text()
                 json.loads(content)  # Should not raise
 
-    def test_bundle_read_from_directory(self):
+    def test_bundle_read_from_directory(self) -> None:
         """Test reading bundle from directory."""
         # Create and write a bundle
         original = MetadataBundle(
@@ -434,7 +435,7 @@ class TestMetadataBundle:
             assert restored.checksums.sections["payload"]["size_bytes"] == 1024
             assert restored.checksums.total_package_checksum == "sha256:test123"
 
-    def test_bundle_missing_files_error(self):
+    def test_bundle_missing_files_error(self) -> None:
         """Test that reading from directory with missing files raises error."""
         with tempfile.TemporaryDirectory() as tmpdir:
             metadata_dir = Path(tmpdir) / "metadata"
@@ -452,7 +453,7 @@ class TestMetadataBundle:
 class TestDateTimeSerialization:
     """Test datetime serialization/deserialization."""
 
-    def test_datetime_format(self):
+    def test_datetime_format(self) -> None:
         """Test that datetimes are serialized in ISO format with Z suffix."""
         # Test with PSPFMetadata
         meta = PSPFMetadata()
@@ -473,7 +474,7 @@ class TestDateTimeSerialization:
         data = json.loads(json_str)
         assert data["generated_at"].endswith("Z")
 
-    def test_datetime_parsing(self):
+    def test_datetime_parsing(self) -> None:
         """Test parsing datetime from JSON."""
         # Test various datetime formats
         test_dates = [
@@ -494,7 +495,7 @@ class TestDateTimeSerialization:
 class TestEdgeCases:
     """Test edge cases and error conditions."""
 
-    def test_empty_json_objects(self):
+    def test_empty_json_objects(self) -> None:
         """Test handling of empty JSON objects."""
         json_str = "{}"
 
@@ -510,7 +511,7 @@ class TestEdgeCases:
         with pytest.raises(TypeError):
             RuntimeConfig.from_json(json_str)
 
-    def test_extra_fields_ignored(self):
+    def test_extra_fields_ignored(self) -> None:
         """Test that extra fields in JSON are ignored."""
         json_str = """{
             "name": "test",
@@ -527,7 +528,7 @@ class TestEdgeCases:
         assert not hasattr(meta, "custom_field")
         assert not hasattr(meta, "nested")
 
-    def test_unicode_handling(self):
+    def test_unicode_handling(self) -> None:
         """Test Unicode string handling."""
         meta = PackageMetadata(
             name="test-provider",

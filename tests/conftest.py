@@ -1,12 +1,7 @@
-import sys
-from pathlib import Path
-from typing import Callable
 
-import pytest
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec
-
-from flavor.packaging.keys import generate_key_pair as generate_keys
+import pytest
 
 
 @pytest.fixture(scope="session")

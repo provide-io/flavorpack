@@ -49,8 +49,8 @@ class PackageMetadata:
     author: dict[str, str] = field(factory=dict)
     license: str = ""
     homepage: str | None = None
-    repository: dict[str, str | None] = None
-    bugs: dict[str, str | None] = None
+    repository: dict[str, str | None] | None = None
+    bugs: dict[str, str | None] | None = None
     keywords: list[str] = field(factory=list)
     terraform: dict[str, Any] = field(factory=dict)
     supported_platforms: list[str] = field(factory=list)
