@@ -26,6 +26,13 @@ const TRUSTED_KEY_FINGERPRINTS: &[[u8; 32]] = &[
         0x1d, 0xc1, 0x17, 0xa1, 0x2f, 0x79, 0x15, 0x3f,
         0xfa, 0x10, 0x77, 0x44, 0xa6, 0x62, 0x35, 0xbd,
     ],
+    // Python packager generated key
+    [
+        0xa3, 0x36, 0xb2, 0xe5, 0x53, 0x34, 0xb7, 0xab,
+        0x49, 0x69, 0x54, 0x57, 0xe3, 0x22, 0x4b, 0xd9,
+        0xf1, 0xb2, 0xbb, 0x61, 0xf7, 0xbe, 0x25, 0x38,
+        0xff, 0xeb, 0xc9, 0x76, 0x2d, 0x3f, 0xb7, 0x2b,
+    ],
 ];
 
 pub fn verify_package_signature(
@@ -49,10 +56,11 @@ pub fn verify_package_signature(
     let verifying_key = VerifyingKey::from_public_key_pem(public_key_str)
         .context("Failed to parse public key PEM")?;
     
-    // Compute fingerprint of the public key
-    let public_key_der = verifying_key.to_encoded_point(false);
+    // Compute fingerprint of the public key (must use DER-encoded SubjectPublicKeyInfo)
+    let public_key_der = verifying_key.to_public_key_der()
+        .context("Failed to convert to DER format")?;
     let mut hasher = Sha256::new();
-    hasher.update(public_key_der.as_bytes());
+    hasher.update(public_key_der.as_ref());
     let fingerprint = hasher.finalize();
     
     // Check if this key is trusted
@@ -117,9 +125,10 @@ pub fn compute_key_fingerprint(public_key_pem: &str) -> Result<[u8; 32]> {
     let verifying_key = VerifyingKey::from_public_key_pem(public_key_pem)
         .context("Failed to parse public key PEM")?;
     
-    let public_key_der = verifying_key.to_encoded_point(false);
+    let public_key_der = verifying_key.to_public_key_der()
+        .context("Failed to convert to DER format")?;
     let mut hasher = Sha256::new();
-    hasher.update(public_key_der.as_bytes());
+    hasher.update(public_key_der.as_ref());
     let fingerprint = hasher.finalize();
     
     Ok(fingerprint.into())

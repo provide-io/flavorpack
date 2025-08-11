@@ -173,12 +173,15 @@ include = ["test_provider*"]
     
     # Use the test keys from the project root
     project_root = Path(__file__).parent.parent.parent
-    keys_dir = project_root / "test-keys"
+    test_keys_dir = project_root / "test-keys"
     
-    # Generate keys if they don't exist
+    # Create symlink to test keys in the expected location
+    keys_dir = tmp_path / "keys"
     if not keys_dir.exists():
         keys_dir.mkdir(parents=True)
-        generate_keys(keys_dir)
+        # Copy the test keys instead of generating new ones
+        shutil.copy2(test_keys_dir / "provider-private.key", keys_dir / "provider-private.key")
+        shutil.copy2(test_keys_dir / "provider-public.key", keys_dir / "provider-public.key")
     
     return tmp_path
 

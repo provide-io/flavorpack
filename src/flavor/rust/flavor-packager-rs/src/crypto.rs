@@ -74,6 +74,14 @@ pub fn sign_data(signing_key: &SigningKey, data: &[u8]) -> Result<Vec<u8>> {
     Ok(signature.to_der().as_bytes().to_vec())
 }
 
+pub fn sign_hash(signing_key: &SigningKey, hash: &[u8]) -> Result<Vec<u8>> {
+    // Sign the pre-computed hash directly (for compatibility with Go packager)
+    let signature: Signature = signing_key.sign(hash);
+    
+    // Convert to DER format (ASN.1)
+    Ok(signature.to_der().as_bytes().to_vec())
+}
+
 pub fn verify_signature(
     verifying_key: &VerifyingKey, 
     data: &[u8], 
