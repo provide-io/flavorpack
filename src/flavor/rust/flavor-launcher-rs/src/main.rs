@@ -4,7 +4,7 @@
 use anyhow::{Context, Result};
 use clap::Parser;
 use flate2::read::GzDecoder;
-use log::{debug, error, info, trace, warn};
+use log::{debug, error, info, trace};
 use sha2::{Digest, Sha256};
 use std::fs::File;
 use std::io::{Read, Seek, SeekFrom};
@@ -22,6 +22,7 @@ use verification::verify_package_signature;
 #[command(name = "flavor-launcher-rs")]
 #[command(about = "Flavor (Progressive Secure Package Format) launcher written in Rust")]
 #[command(version = "0.1.0")]
+#[command(trailing_var_arg = true)]
 struct Cli {
     /// Enable trace logging
     #[arg(long, short = 'v')]
@@ -34,16 +35,48 @@ struct Cli {
     /// Force re-extraction even if cache exists
     #[arg(long)]
     force_extract: bool,
+    
+    /// Arguments to pass through to the Python program
+    #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
+    passthrough_args: Vec<String>,
 }
 
 fn main() {
-    let args = Cli::parse();
+    // Check if we should show developer CLI instead of running the package
+    if std::env::var("FLAVOR_LAUNCHER_CLI").is_ok() {
+        // Parse CLI args and show developer interface
+        let args = Cli::parse();
+        
+        // Initialize logging
+        let log_level = if args.verbose { "trace" } else { "info" };
+        env_logger::Builder::from_env(
+            env_logger::Env::default()
+                .default_filter_or(log_level)
+                .default_write_style_or("never")
+        )
+        .target(env_logger::Target::Stderr)
+        .format_timestamp_secs()
+        .init();
+        
+        // TODO: Implement developer CLI commands (verify, inspect, extract, etc.)
+        eprintln!("Developer CLI mode enabled. Commands not yet implemented.");
+        eprintln!("Available flags: --verbose, --cache-dir, --force-extract");
+        exit(0);
+    }
+    
+    // Normal operation: run the package
+    // Don't parse CLI - pass all args through to the Python program
+    let args = Cli {
+        verbose: false,
+        cache_dir: None,
+        force_extract: false,
+        passthrough_args: std::env::args().skip(1).collect(),
+    };
 
     // Initialize logging - NEVER log to stdout as it breaks Terraform protocol
-    let log_level = if args.verbose { "trace" } else { "info" };
     env_logger::Builder::from_env(
         env_logger::Env::default()
-            .default_filter_or(log_level)
+            .default_filter_or("info")
             .default_write_style_or("never")
     )
     .target(env_logger::Target::Stderr)
@@ -131,13 +164,18 @@ fn run_provider(args: Cli) -> Result<()> {
     }
     let module = parts[0];
 
-    // Run Python with the module
+    // Run Python with the module and pass through all command-line arguments
     info!("🚀 Starting provider: module={} python={}", module, python_path.display());
     
-    let status = Command::new(python_path)
-        .arg("-m")
-        .arg(module)
-        .status()
+    let mut cmd = Command::new(python_path);
+    cmd.arg("-m").arg(module);
+    
+    // Pass through any additional command-line arguments
+    for arg in &args.passthrough_args {
+        cmd.arg(arg);
+    }
+    
+    let status = cmd.status()
         .context("Failed to execute Python command")?;
 
     if !status.success() {
@@ -184,7 +222,8 @@ fn extract_package(exe_path: &PathBuf, cache_dir: &PathBuf) -> Result<()> {
         footer.public_key_pem_size,
         footer.package_signature_offset,
         footer.package_signature_size,
-        max_data_end,
+        footer.payload_tgz_offset,
+        footer.payload_tgz_size,
     )?;
 
     let payload_offset = footer.payload_tgz_offset;

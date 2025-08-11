@@ -129,10 +129,14 @@ import json
 import sys
 
 def main():
+    # Capture and print arguments to verify they're passed through
+    args = sys.argv[1:] if len(sys.argv) > 1 else []
     print(json.dumps({
         "status": "running",
         "provider": "test_provider",
-        "version": "1.0.0"
+        "version": "1.0.0",
+        "args": args,
+        "argc": len(args)
     }))
     sys.exit(0)
 
@@ -167,9 +171,14 @@ where = ["src"]
 include = ["test_provider*"]
 """)
     
-    # Generate keys
-    keys_dir = tmp_path / "keys"
-    generate_keys(keys_dir)
+    # Use the test keys from the project root
+    project_root = Path(__file__).parent.parent.parent
+    keys_dir = project_root / "test-keys"
+    
+    # Generate keys if they don't exist
+    if not keys_dir.exists():
+        keys_dir.mkdir(parents=True)
+        generate_keys(keys_dir)
     
     return tmp_path
 
@@ -250,6 +259,9 @@ class TestAllFlavorCombinations:
         if not all_launchers:
             pytest.skip("No launchers available")
         
+        # Get project root for key paths
+        project_root = Path(__file__).parent.parent.parent
+        
         # Determine output directory
         workenv_dir = Path.cwd() / "workenv"
         if not workenv_dir.exists():
@@ -301,8 +313,8 @@ class TestAllFlavorCombinations:
                                 "build",
                                 "--out", str(output_path),
                                 "--payload-dir", str(work_dir / "payload"),
-                                "--package-key", str(test_provider / "keys/provider-private.key"),
-                                "--public-key", str(test_provider / "keys/provider-public.key"),
+                                "--package-key", str(project_root / "test-keys/provider-private.key"),
+                                "--public-key", str(project_root / "test-keys/provider-public.key"),
                                 "--launcher-bin", launcher_path
                             ]
                             
@@ -314,7 +326,7 @@ class TestAllFlavorCombinations:
                             )
                     
                     if result.returncode == 0:
-                        # Test the binary
+                        # Test the binary without args
                         test_result = subprocess.run(
                             [str(output_path)],
                             capture_output=True,
@@ -322,17 +334,40 @@ class TestAllFlavorCombinations:
                             timeout=10
                         )
                         
+                        # Test with arguments to ensure they're passed through
+                        test_args_result = subprocess.run(
+                            [str(output_path), "--test-arg", "value", "positional"],
+                            capture_output=True,
+                            text=True,
+                            timeout=10
+                        )
+                        
                         success = test_result.returncode == 0
+                        args_passed = False
+                        
                         if success:
                             try:
                                 output_json = json.loads(test_result.stdout)
                                 success = output_json.get("status") == "running"
+                                
+                                # Check if args were passed through correctly
+                                if test_args_result.returncode == 0:
+                                    args_output = json.loads(test_args_result.stdout)
+                                    passed_args = args_output.get("args", [])
+                                    args_passed = (
+                                        "--test-arg" in passed_args and
+                                        "value" in passed_args and
+                                        "positional" in passed_args
+                                    )
+                                    if not args_passed:
+                                        print(f"   ⚠️  Args not passed correctly: {passed_args}")
                             except:
                                 success = False
                         
                         results[combo] = {
                             "built": True,
                             "runs": success,
+                            "args_passed": args_passed,
                             "path": str(output_path),
                             "size": output_path.stat().st_size if output_path.exists() else 0
                         }
@@ -371,7 +406,8 @@ class TestAllFlavorCombinations:
             if result.get("built"):
                 status = "✅ Runs" if result.get("runs") else "⚠️  Built but fails"
                 size = result.get("size", 0) / (1024 * 1024)
-                print(f"  {combo}: {status} ({size:.1f} MB)")
+                args_status = " (args ✓)" if result.get("args_passed") else " (args ✗)"
+                print(f"  {combo}: {status}{args_status} ({size:.1f} MB)")
             else:
                 print(f"  {combo}: ❌ Build failed")
         

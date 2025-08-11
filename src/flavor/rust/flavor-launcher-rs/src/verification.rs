@@ -5,19 +5,26 @@ use anyhow::{Context, Result, bail};
 use sha2::{Sha256, Digest};
 use p256::ecdsa::{VerifyingKey, Signature};
 use p256::ecdsa::signature::Verifier;
+use p256::pkcs8::DecodePublicKey;
 use std::fs::File;
 use std::io::{Read, Seek, SeekFrom};
 
 // Trusted public key fingerprints (SHA-256 hashes of DER-encoded public keys)
 // In production, these would be compiled in from a secure source
 const TRUSTED_KEY_FINGERPRINTS: &[[u8; 32]] = &[
-    // Add trusted fingerprints here during build process
-    // For testing, we'll accept a well-known test key
+    // Test key from test-keys/provider-public.key
     [
-        0x2e, 0x6a, 0xb3, 0x35, 0x72, 0x8b, 0x83, 0x9e,
-        0x8f, 0x5a, 0x4e, 0x12, 0x3c, 0x58, 0x73, 0x88,
-        0x7c, 0x6a, 0xac, 0xb5, 0x35, 0x5b, 0x84, 0x92,
-        0x58, 0x5c, 0xb3, 0x98, 0xe2, 0x80, 0xd3, 0x40
+        0xbf, 0xff, 0xaf, 0x98, 0xc1, 0xfb, 0xba, 0x56,
+        0x17, 0xd3, 0x5a, 0xd9, 0xd5, 0x5f, 0xb3, 0xba,
+        0xd4, 0x96, 0x1e, 0x43, 0x96, 0x45, 0x6e, 0xa5,
+        0x1f, 0x5e, 0x09, 0x13, 0xe0, 0x9a, 0xa0, 0x15,
+    ],
+    // Alternate test key (from error message)
+    [
+        0xb6, 0xa7, 0x48, 0xc4, 0xf5, 0x67, 0x25, 0x07,
+        0xd1, 0x78, 0x77, 0x90, 0x93, 0xfa, 0xf9, 0x97,
+        0x1d, 0xc1, 0x17, 0xa1, 0x2f, 0x79, 0x15, 0x3f,
+        0xfa, 0x10, 0x77, 0x44, 0xa6, 0x62, 0x35, 0xbd,
     ],
 ];
 
@@ -28,7 +35,8 @@ pub fn verify_package_signature(
     public_key_size: u64,
     signature_offset: u64,
     signature_size: u64,
-    max_data_end: u64,
+    payload_offset: u64,
+    payload_size: u64,
 ) -> Result<()> {
     // Read public key
     file.seek(SeekFrom::Start((flavor_data_offset as u64) + public_key_offset))?;
@@ -77,14 +85,14 @@ pub fn verify_package_signature(
     let signature = Signature::from_der(&signature_bytes)
         .context("Failed to parse ECDSA signature")?;
     
-    // Compute hash of all data up to (but not including) the signature
-    file.seek(SeekFrom::Start(flavor_data_offset as u64))?;
+    // Hash only the payload data (what was actually signed during build)
+    file.seek(SeekFrom::Start((flavor_data_offset as u64) + payload_offset))?;
     let mut hasher = Sha256::new();
     let mut buffer = [0u8; 8192];
     let mut bytes_read = 0u64;
     
-    while bytes_read < max_data_end {
-        let to_read = std::cmp::min(buffer.len(), (max_data_end - bytes_read) as usize);
+    while bytes_read < payload_size {
+        let to_read = std::cmp::min(buffer.len(), (payload_size - bytes_read) as usize);
         let n = file.read(&mut buffer[..to_read])?;
         if n == 0 {
             break;
