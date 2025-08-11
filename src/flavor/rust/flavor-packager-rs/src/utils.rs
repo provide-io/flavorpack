@@ -19,8 +19,8 @@ pub fn create_tar_gz<P: AsRef<Path>, Q: AsRef<Path>>(
     let gz_encoder = GzEncoder::new(tar_gz_file, Compression::best());
     let mut tar_builder = Builder::new(gz_encoder);
     
-    // Add the entire directory recursively
-    tar_builder.append_dir_all(".", &source_dir)
+    // Add the entire directory recursively under "cache" prefix
+    tar_builder.append_dir_all("cache", &source_dir)
         .with_context(|| format!("Failed to add directory to tar.gz: {:?}", source_dir.as_ref()))?;
     
     let gz_encoder = tar_builder.into_inner()
