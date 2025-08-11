@@ -184,11 +184,11 @@ def prepare_payload_for_go_rust(provider_dir, work_dir):
         "uv", "venv", str(payload_dir), "--python", "python3.13"
     ], check=True)
     
-    # Install provider
+    # Install provider (non-editable for proper packaging)
     subprocess.run([
         "uv", "pip", "install",
         "--python", str(payload_dir / "bin/python"),
-        "-e", str(provider_dir)
+        str(provider_dir)
     ], check=True)
     
     # Create metadata inside the payload directory

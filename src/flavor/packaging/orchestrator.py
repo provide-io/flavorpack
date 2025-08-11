@@ -101,6 +101,18 @@ class PackagingOrchestrator:
                 ]
             )
 
+            # Install pip in the venv
+            logger.info("Installing pip...")
+            self._run_subprocess(
+                [
+                    "uv",
+                    "pip",
+                    "install",
+                    "--python",
+                    str(payload_dir / "bin" / "python"),
+                    "pip",
+                ]
+            )
 
             # Install the provider and its dependencies
             logger.info("Installing provider dependencies...")
@@ -115,11 +127,11 @@ class PackagingOrchestrator:
                 dep_path = self.manifest_dir / dep
                 if dep_path.exists():
                     logger.info(f"Installing dependency: {dep}")
-                    self._run_subprocess([*pip_cmd, "-e", str(dep_path)])
+                    self._run_subprocess([*pip_cmd, str(dep_path)])
 
             # Install the main package
             logger.info("Installing main package...")
-            self._run_subprocess([*pip_cmd, "-e", str(self.manifest_dir)])
+            self._run_subprocess([*pip_cmd, str(self.manifest_dir)])
 
             # UV should be in the cache/bin directory after installation
             cache_uv = payload_dir / "bin" / "uv"
