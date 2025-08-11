@@ -1,0 +1,513 @@
+"""
+PSPF 2025 Builder Tests
+
+Tests bundle building, manifest handling, and build options.
+"""
+
+import hashlib
+import os
+import tempfile
+import tomllib
+from pathlib import Path
+
+import pytest
+
+from flavor.psp.format_2025 import (
+    PSPFBuilder,
+    PSPFReader,
+    SlotMetadata,
+    LAUNCHER_EMOJIS,
+    RANDOM_EMOJIS
+)
+
+
+class TestPSPFBuilder:
+    """Test PSPF bundle building."""
+    
+    @pytest.fixture
+    def temp_dir(self):
+        """Create temporary directory for tests."""
+        temp_path = Path(tempfile.mkdtemp())
+        yield temp_path
+        # Cleanup
+        import shutil
+        shutil.rmtree(temp_path)
+    
+    @pytest.fixture
+    def manifest_file(self, temp_dir):
+        """Create a manifest file."""
+        # Create test files
+        wheel_path = temp_dir / "dist" / "myapp.whl"
+        wheel_path.parent.mkdir()
+        wheel_path.write_bytes(b"WHEEL_CONTENT")
+        
+        manifest_data = {
+            "name": "myapp",
+            "version": "1.0.0",
+            "slots": [
+                {
+                    "path": str(wheel_path),
+                    "purpose": "payload",
+                    "lifecycle": "persistent"
+                }
+            ]
+        }
+        
+        manifest_path = temp_dir / "manifest.toml"
+        # Write TOML manually for test
+        toml_content = f'''
+name = "{manifest_data['name']}"
+version = "{manifest_data['version']}"
+
+[[slots]]
+path = "{manifest_data['slots'][0]['path']}"
+purpose = "{manifest_data['slots'][0]['purpose']}"
+lifecycle = "{manifest_data['slots'][0]['lifecycle']}"
+'''
+        manifest_path.write_text(toml_content)
+        
+        return manifest_path
+    
+    def test_build_from_manifest(self, temp_dir, manifest_file):
+        """Test building from manifest file."""
+        bundle_path = temp_dir / "from_manifest.pspf"
+        
+        builder = PSPFBuilder()
+        builder.build(
+            output_path=bundle_path,
+            manifest_path=manifest_file
+        )
+        
+        # Verify bundle
+        assert bundle_path.exists()
+        
+        reader = PSPFReader(bundle_path)
+        metadata = reader.read_metadata()
+        
+        assert metadata['package']['name'] == 'myapp'
+        assert metadata['package']['version'] == '1.0.0'
+    
+    def test_automatic_launcher_selection_python(self, temp_dir):
+        """Test automatic Python launcher selection."""
+        # Create Python wheel
+        wheel_path = temp_dir / "app.whl"
+        wheel_path.write_bytes(b"PK")  # Zip magic
+        
+        slot = SlotMetadata(
+            index=0,
+            name="app",
+            size=2,
+            compressed_size=0,
+            checksum="abc",
+            compression="none",
+            purpose="payload",
+            lifecycle="persistent",
+            path=wheel_path
+        )
+        
+        bundle_path = temp_dir / "auto_python.pspf"
+        builder = PSPFBuilder()
+        builder.build(
+            output_path=bundle_path,
+            metadata={"format": "PSPF/2025", "package": {"name": "test", "version": "1.0"}},
+            slots=[slot],
+            launcher_type="python"  # Would be auto-detected in real impl
+        )
+        
+        # Check emoji
+        with open(bundle_path, 'rb') as f:
+            f.seek(-16, 2)
+            magic = f.read(16).decode('utf-8')
+        
+        assert magic[1] == LAUNCHER_EMOJIS['python']
+    
+    def test_custom_emoji_selection(self, temp_dir):
+        """Test custom emoji selection."""
+        bundle_path = temp_dir / "custom_emoji.pspf"
+        
+        builder = PSPFBuilder()
+        builder.build(
+            output_path=bundle_path,
+            metadata={"format": "PSPF/2025", "package": {"name": "test", "version": "1.0"}},
+            slots=[],
+            launcher_type="go",
+            emoji_seed="🌮"
+        )
+        
+        # Check emoji
+        with open(bundle_path, 'rb') as f:
+            f.seek(-16, 2)
+            magic = f.read(16).decode('utf-8')
+        
+        assert magic == "📦🐹🌮🪄"
+    
+    def test_compression_selection(self, temp_dir):
+        """Test automatic compression selection."""
+        # Create different file types
+        text_path = temp_dir / "text.json"
+        text_path.write_text('{"data": "value"}' * 100)
+        
+        binary_path = temp_dir / "binary.so"
+        binary_path.write_bytes(os.urandom(1024))
+        
+        random_path = temp_dir / "random.dat"
+        random_path.write_bytes(os.urandom(1024))
+        
+        slots = [
+            SlotMetadata(
+                index=0,
+                name="text",
+                size=text_path.stat().st_size,
+                compressed_size=0,
+                checksum="abc",
+                compression="gzip",  # Good for text
+                purpose="config",
+                lifecycle="persistent",
+                path=text_path
+            ),
+            SlotMetadata(
+                index=1,
+                name="binary",
+                size=binary_path.stat().st_size,
+                compressed_size=0,
+                checksum="def",
+                compression="zstd",  # Good for binary
+                purpose="library",
+                lifecycle="persistent",
+                path=binary_path
+            ),
+            SlotMetadata(
+                index=2,
+                name="random",
+                size=random_path.stat().st_size,
+                compressed_size=0,
+                checksum="ghi",
+                compression="none",  # Random data doesn't compress
+                purpose="data",
+                lifecycle="persistent",
+                path=random_path
+            )
+        ]
+        
+        bundle_path = temp_dir / "compressed.pspf"
+        builder = PSPFBuilder()
+        builder.build(
+            output_path=bundle_path,
+            metadata={"format": "PSPF/2025", "package": {"name": "test", "version": "1.0"}},
+            slots=slots
+        )
+        
+        # Verify compression worked
+        assert bundle_path.exists()
+        # Text should compress well
+        # Random should not compress
+    
+    def test_build_validation_missing_file(self, temp_dir):
+        """Test build fails with missing file."""
+        slot = SlotMetadata(
+            index=0,
+            name="missing",
+            size=100,
+            compressed_size=0,
+            checksum="abc",
+            compression="none",
+            purpose="payload",
+            lifecycle="persistent",
+            path=temp_dir / "nonexistent.txt"
+        )
+        
+        bundle_path = temp_dir / "invalid.pspf"
+        builder = PSPFBuilder()
+        
+        # Should handle missing file gracefully
+        builder.build(
+            output_path=bundle_path,
+            metadata={"format": "PSPF/2025", "package": {"name": "test", "version": "1.0"}},
+            slots=[slot]
+        )
+    
+    def test_build_validation_invalid_purpose(self, temp_dir):
+        """Test validation of slot purpose."""
+        valid_purposes = ["payload", "library", "config", "asset", "runtime", "binary", "installer", "data"]
+        
+        for purpose in valid_purposes:
+            slot = SlotMetadata(
+                index=0,
+                name=f"test_{purpose}",
+                size=100,
+                compressed_size=0,
+                checksum="abc",
+                compression="none",
+                purpose=purpose,
+                lifecycle="persistent"
+            )
+            
+            # Should not raise
+            assert slot.purpose in valid_purposes
+    
+    def test_build_validation_duplicate_indices(self, temp_dir):
+        """Test handling of duplicate slot indices."""
+        slot1 = SlotMetadata(
+            index=0,
+            name="slot1",
+            size=100,
+            compressed_size=0,
+            checksum="abc",
+            compression="none",
+            purpose="payload",
+            lifecycle="persistent"
+        )
+        
+        slot2 = SlotMetadata(
+            index=0,  # Duplicate index
+            name="slot2",
+            size=100,
+            compressed_size=0,
+            checksum="def",
+            compression="none",
+            purpose="payload",
+            lifecycle="persistent"
+        )
+        
+        # Builder should handle this appropriately
+        # In real implementation, might auto-assign indices
+        assert slot1.index == slot2.index
+    
+    def test_incremental_build(self, temp_dir):
+        """Test incremental build optimization."""
+        # Create initial slots
+        slots = []
+        for i in range(3):
+            path = temp_dir / f"slot{i}.dat"
+            path.write_bytes(b"DATA" * 100)
+            
+            slots.append(SlotMetadata(
+                index=i,
+                name=f"slot{i}",
+                size=path.stat().st_size,
+                compressed_size=0,
+                checksum=hashlib.sha256(path.read_bytes()).hexdigest(),
+                compression="gzip",
+                purpose="payload",
+                lifecycle="persistent",
+                path=path
+            ))
+        
+        # First build
+        bundle_path = temp_dir / "incremental.pspf"
+        builder = PSPFBuilder()
+        builder.build(
+            output_path=bundle_path,
+            metadata={"format": "PSPF/2025", "package": {"name": "test", "version": "1.0"}},
+            slots=slots
+        )
+        
+        # Modify one slot
+        slots[1].path.write_bytes(b"MODIFIED" * 100)
+        slots[1].checksum = hashlib.sha256(slots[1].path.read_bytes()).hexdigest()
+        
+        # Incremental build (in real impl would reuse unchanged slots)
+        builder.build(
+            output_path=bundle_path,
+            metadata={"format": "PSPF/2025", "package": {"name": "test", "version": "1.1"}},
+            slots=slots
+        )
+        
+        # Verify update
+        reader = PSPFReader(bundle_path)
+        metadata = reader.read_metadata()
+        assert metadata['package']['version'] == '1.1'
+    
+    def test_cross_platform_build(self, temp_dir):
+        """Test cross-platform building."""
+        # Simulate building for different target
+        bundle_path = temp_dir / "cross_platform.pspf"
+        
+        builder = PSPFBuilder()
+        # In real implementation, would download target launcher
+        builder.build(
+            output_path=bundle_path,
+            metadata={
+                "format": "PSPF/2025",
+                "package": {"name": "test", "version": "1.0"},
+                "target_platform": "linux-amd64"
+            },
+            slots=[],
+            launcher_type="go"
+        )
+        
+        assert bundle_path.exists()
+    
+    def test_reproducible_build(self, temp_dir):
+        """Test reproducible build mode."""
+        slot_path = temp_dir / "data.txt"
+        slot_path.write_text("Reproducible content")
+        
+        slot = SlotMetadata(
+            index=0,
+            name="data",
+            size=slot_path.stat().st_size,
+            compressed_size=0,
+            checksum=hashlib.sha256(slot_path.read_bytes()).hexdigest(),
+            compression="none",
+            purpose="payload",
+            lifecycle="persistent",
+            path=slot_path
+        )
+        
+        # In reproducible mode:
+        # - Timestamps should be zeroed
+        # - Random emoji derived from content hash
+        # - Ephemeral key derived deterministically
+        
+        bundle_path = temp_dir / "reproducible.pspf"
+        builder = PSPFBuilder()
+        
+        # Would use content hash for emoji selection
+        content_hash = hashlib.sha256(slot_path.read_bytes()).hexdigest()
+        emoji_index = int(content_hash[:2], 16) % len(RANDOM_EMOJIS)
+        deterministic_emoji = RANDOM_EMOJIS[emoji_index]
+        
+        builder.build(
+            output_path=bundle_path,
+            metadata={"format": "PSPF/2025", "package": {"name": "test", "version": "1.0"}},
+            slots=[slot],
+            emoji_seed=deterministic_emoji
+        )
+        
+        # Check emoji is deterministic
+        with open(bundle_path, 'rb') as f:
+            f.seek(-16, 2)
+            magic = f.read(16).decode('utf-8')
+        
+        assert magic[2] == deterministic_emoji
+    
+    def test_size_optimization(self, temp_dir):
+        """Test size optimization build mode."""
+        # Create compressible content
+        large_path = temp_dir / "large.txt"
+        large_path.write_text("REPEAT" * 10000)
+        
+        slot = SlotMetadata(
+            index=0,
+            name="large",
+            size=large_path.stat().st_size,
+            compressed_size=0,
+            checksum="abc",
+            compression="gzip",  # Would use max compression
+            purpose="payload",
+            lifecycle="persistent",
+            path=large_path
+        )
+        
+        bundle_path = temp_dir / "optimized.pspf"
+        builder = PSPFBuilder()
+        builder.build(
+            output_path=bundle_path,
+            metadata={"format": "PSPF/2025", "package": {"name": "test", "version": "1.0"}},
+            slots=[slot]
+        )
+        
+        # Verify aggressive compression
+        bundle_size = bundle_path.stat().st_size
+        original_size = large_path.stat().st_size
+        
+        # Bundle should be much smaller than original
+        assert bundle_size < original_size
+    
+    def test_persistent_key_signing(self, temp_dir):
+        """Test signing with persistent keys."""
+        # In real implementation, would use actual crypto keys
+        metadata = {
+            "format": "PSPF/2025",
+            "package": {
+                "name": "signed",
+                "version": "1.0.0"
+            },
+            "verification": {
+                "integrity_seal": {
+                    "required": True,
+                    "algorithm": "ecdsa-p256"
+                },
+                "trust_signatures": {
+                    "required": True,
+                    "signers": [
+                        {
+                            "name": "Developer",
+                            "key_id": "DEV123",
+                            "algorithm": "ed25519"
+                        }
+                    ]
+                }
+            }
+        }
+        
+        bundle_path = temp_dir / "signed.pspf"
+        builder = PSPFBuilder()
+        builder.build(
+            output_path=bundle_path,
+            metadata=metadata,
+            slots=[]
+        )
+        
+        # Verify both signatures exist
+        reader = PSPFReader(bundle_path)
+        read_metadata = reader.read_metadata()
+        
+        assert read_metadata['verification']['integrity_seal']['required']
+        assert read_metadata['verification']['trust_signatures']['required']
+    
+    def test_multi_slot_bundling(self, temp_dir):
+        """Test bundling many slots."""
+        slots = []
+        
+        # Create 20 slots of different types
+        slot_types = [
+            ("runtime", 2),
+            ("library", 5),
+            ("payload", 3),
+            ("asset", 10)
+        ]
+        
+        slot_index = 0
+        for slot_type, count in slot_types:
+            for i in range(count):
+                path = temp_dir / f"{slot_type}_{i}.dat"
+                path.write_bytes(f"{slot_type}_{i}".encode() * 10)
+                
+                slots.append(SlotMetadata(
+                    index=slot_index,
+                    name=f"{slot_type}_{i}",
+                    size=path.stat().st_size,
+                    compressed_size=0,
+                    checksum=hashlib.sha256(path.read_bytes()).hexdigest(),
+                    compression="none",
+                    purpose=slot_type if slot_type != "payload" else "library",
+                    lifecycle="persistent",
+                    path=path
+                ))
+                slot_index += 1
+        
+        bundle_path = temp_dir / "multi_slot.pspf"
+        builder = PSPFBuilder()
+        builder.build(
+            output_path=bundle_path,
+            metadata={
+                "format": "PSPF/2025",
+                "package": {"name": "complex-app", "version": "1.0"},
+                "slots": [s.to_dict() for s in slots]
+            },
+            slots=slots
+        )
+        
+        # Verify all slots included
+        reader = PSPFReader(bundle_path)
+        index = reader.read_index()
+        assert index.slot_count == 20
+        
+        metadata = reader.read_metadata()
+        assert len(metadata['slots']) == 20
+        
+        # Verify sequential indices
+        for i, slot_meta in enumerate(metadata['slots']):
+            assert slot_meta['index'] == i

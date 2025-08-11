@@ -16,6 +16,9 @@ use tar::Archive;
 mod flavor;
 use flavor::{FlavorFooter, FLAVOR_MAGIC_EOF_STRING, FLAVOR_INTERNAL_FOOTER_MAGIC, FOOTER_SIZE};
 
+mod pspf2025;
+use pspf2025::{PSPFIndex, PSPF_MAGIC, PSPF_VERSION, Reader as PSPFReader, Launcher as PSPFLauncher};
+
 mod verification;
 use verification::verify_package_signature;
 

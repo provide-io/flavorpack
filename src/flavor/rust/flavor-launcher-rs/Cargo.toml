@@ -25,6 +25,8 @@ thiserror = "1.0"
 dirs = "5.0"
 p256 = { version = "0.13", features = ["ecdsa", "pem"] }
 ecdsa = { version = "0.16", features = ["verifying", "pem"] }
+crc32fast = "1.3"
+adler32 = "1.2"
 
 [profile.release]
 lto = true
