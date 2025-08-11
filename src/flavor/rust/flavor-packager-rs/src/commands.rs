@@ -67,22 +67,10 @@ pub async fn build_command(
     log::info!("Creating payload archive...");
     let payload_tgz_size = utils::create_tar_gz(&payload_dir, &payload_tgz_path)?;
     
-    // Hash the payload for signing
-    log::info!("Signing payload...");
-    let payload_data = utils::read_file_bytes(&payload_tgz_path)?;
-    
-    // Hash the payload first (to match Go packager behavior)
-    use sha2::{Sha256, Digest};
-    let mut hasher = Sha256::new();
-    hasher.update(&payload_data);
-    let payload_hash = hasher.finalize().to_vec();
-    
-    let signing_key = crypto::load_private_key(&package_key)?;
-    let signature = task::spawn_blocking(move || {
-        crypto::sign_hash(&signing_key, &payload_hash)
-    }).await??;
-    
-    utils::write_file_bytes(&signature_path, &signature)?;
+    // Signature must be pre-computed
+    let signature = utils::read_file_bytes(&signature_path)
+        .with_context(|| format!("signature.bin not found at {} - signature must be pre-computed", signature_path.display()))?;
+    log::info!("Using pre-computed signature");
     
     // Ensure output directory exists
     utils::ensure_parent_dir(&out)?;

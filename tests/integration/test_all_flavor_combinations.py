@@ -249,6 +249,26 @@ def prepare_payload_for_go_rust(provider_dir, work_dir):
     if uv_bin:
         shutil.copy2(uv_bin, work_dir / "uv")
     
+    # Pre-compute signature for Go/Rust builders
+    import hashlib
+    hasher = hashlib.sha256()
+    with open(payload_tgz, "rb") as f:
+        while chunk := f.read(8192):
+            hasher.update(chunk)
+    payload_hash = hasher.digest()
+    
+    # Get project root for key paths
+    project_root = Path(__file__).parent.parent.parent
+    private_key_path = project_root / "test-keys/provider-private.key"
+    
+    # Sign using openssl (simplified for test)
+    result = subprocess.run([
+        "openssl", "dgst", "-sha256", "-sign", str(private_key_path)
+    ], input=payload_hash, capture_output=True, check=True)
+    
+    signature_path = work_dir / "signature.bin"
+    signature_path.write_bytes(result.stdout)
+    
     return payload_tgz
 
 

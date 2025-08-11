@@ -12,8 +12,8 @@ mod utils;
 use commands::*;
 
 #[derive(Parser)]
-#[command(name = "flavor-packager-rs")]
-#[command(about = "Flavor (Progressive Secure Package Format) packager written in Rust")]
+#[command(name = "flavor-rust")]
+#[command(about = "Flavor binary builder written in Rust")]
 #[command(version = "0.1.0")]
 struct Cli {
     #[command(subcommand)]
