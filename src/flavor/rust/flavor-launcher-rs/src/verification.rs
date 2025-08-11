@@ -4,8 +4,8 @@
 use anyhow::{Context, Result, bail};
 use sha2::{Sha256, Digest};
 use p256::ecdsa::{VerifyingKey, Signature};
-use p256::ecdsa::signature::Verifier;
-use p256::pkcs8::DecodePublicKey;
+use p256::ecdsa::signature::hazmat::PrehashVerifier;
+use p256::pkcs8::{DecodePublicKey, EncodePublicKey};
 use std::fs::File;
 use std::io::{Read, Seek, SeekFrom};
 
@@ -112,8 +112,8 @@ pub fn verify_package_signature(
     let data_hash = hasher.finalize();
     log::debug!("Data hash: {}", hex::encode(&data_hash));
     
-    // Verify signature
-    verifying_key.verify(&data_hash, &signature)
+    // Verify signature (using prehashed since packagers sign the hash directly)
+    verifying_key.verify_prehash(&data_hash, &signature)
         .context("Signature verification failed")?;
     
     log::info!("Package signature verified successfully");

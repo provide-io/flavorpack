@@ -70,9 +70,16 @@ pub async fn build_command(
     // Hash the payload for signing
     log::info!("Signing payload...");
     let payload_data = utils::read_file_bytes(&payload_tgz_path)?;
+    
+    // Hash the payload first (to match Go packager behavior)
+    use sha2::{Sha256, Digest};
+    let mut hasher = Sha256::new();
+    hasher.update(&payload_data);
+    let payload_hash = hasher.finalize().to_vec();
+    
     let signing_key = crypto::load_private_key(&package_key)?;
     let signature = task::spawn_blocking(move || {
-        crypto::sign_data(&signing_key, &payload_data)
+        crypto::sign_hash(&signing_key, &payload_hash)
     }).await??;
     
     utils::write_file_bytes(&signature_path, &signature)?;

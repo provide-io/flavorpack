@@ -101,24 +101,14 @@ class PackagingOrchestrator:
                 ]
             )
 
-            # Install pip in the venv
-            logger.info("Installing pip...")
-            self._run_subprocess(
-                [
-                    "uv",
-                    "pip",
-                    "install",
-                    "--python",
-                    str(payload_dir / "bin" / "python"),
-                    "pip",
-                ]
-            )
-
-            # Install the provider and its dependencies
+            # Install the provider and its dependencies using uv
             logger.info("Installing provider dependencies...")
-            pip_cmd = [
-                str(payload_dir / "bin" / "pip3"),
+            uv_cmd = [
+                "uv",
+                "pip",
                 "install",
+                "--python",
+                str(payload_dir / "bin" / "python"),
                 "--no-cache-dir",
             ]
 
@@ -127,57 +117,32 @@ class PackagingOrchestrator:
                 dep_path = self.manifest_dir / dep
                 if dep_path.exists():
                     logger.info(f"Installing dependency: {dep}")
-                    self._run_subprocess([*pip_cmd, str(dep_path)])
+                    self._run_subprocess([*uv_cmd, str(dep_path)])
 
             # Install the main package
             logger.info("Installing main package...")
-            self._run_subprocess([*pip_cmd, str(self.manifest_dir)])
+            self._run_subprocess([*uv_cmd, str(self.manifest_dir)])
 
-            # UV should be in the cache/bin directory after installation
-            cache_uv = payload_dir / "bin" / "uv"
-
-            if not cache_uv.exists():
-                # Install UV into the cache environment
-                logger.info("Installing UV into cache environment...")
-                # Parse UV version requirement from pyproject.toml if specified
-                import tomllib
-
-                manifest_path = self.manifest_dir / "pyproject.toml"
-                with manifest_path.open("rb") as f:
-                    pyproject = tomllib.load(f)
-
-                # Look for UV version in build-system.requires
-                uv_requirement = "uv"  # Default to latest
-                for req in pyproject.get("build-system", {}).get("requires", []):
-                    if req.startswith("uv"):
-                        uv_requirement = req
-                        break
-
-                self._run_subprocess(
-                    [
-                        str(payload_dir / "bin" / "pip3"),
-                        "install",
-                        "--no-deps",
-                        uv_requirement,
-                    ]
-                )
-
-            # UV binary should stay in cache/bin where it belongs
-            # The Go packager expects it at the temp_dir level for PSPF structure
-            if cache_uv.exists():
+            # Copy the host UV binary to the staging area for PSPF structure
+            # UV should NOT be installed in the payload - it's a host tool
+            import shutil
+            uv_host_path = shutil.which("uv")
+            if uv_host_path:
                 pspf_uv = temp_dir / "uv"
-                import shutil
-
-                shutil.copy2(str(cache_uv), str(pspf_uv))
-                logger.info(f"Copied UV binary to PSPF staging: {pspf_uv}")
+                shutil.copy2(uv_host_path, str(pspf_uv))
+                logger.info(f"Copied host UV binary to PSPF staging: {pspf_uv}")
             else:
-                raise BuildError("UV binary not found in cache/bin after installation")
+                logger.warning("UV binary not found in PATH - package will not include UV")
 
             # Create payload archive with gzip -9 compression
-            logger.info("Creating payload archive...")
+            logger.info("Creating payload archive with maximum compression...")
             payload_tgz_path = temp_dir / "payload.tgz"
             with tarfile.open(payload_tgz_path, "w:gz", compresslevel=9) as tar:
                 tar.add(payload_dir, arcname="cache")
+            
+            # Log the compressed size
+            payload_size = payload_tgz_path.stat().st_size / (1024 * 1024)
+            logger.info(f"Payload compressed to {payload_size:.1f} MB")
 
             # Ensure launcher is built
             launcher_executable = ensure_go_binary("flavor-launcher-go")
