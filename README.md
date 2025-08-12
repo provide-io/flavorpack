@@ -1,134 +1,169 @@
-# Progressive Secure Package Format (Flavor) v0.1
+# Flavor - Progressive Secure Package Format (PSPF) v0.1
 
-Flavor is the **Progressive Secure Package Format** - a modern, secure, and performant binary packaging format for distributing complex multi-runtime applications. Flavor v0.1 is specifically designed for packaging Python-based Terraform providers built with the [Pyvider framework](https://github.com/provide-io/pyvider), but its architecture supports progressive enhancement for other language ecosystems.
+[![CI](https://github.com/provide-io/flavor/actions/workflows/ci.yml/badge.svg)](https://github.com/provide-io/flavor/actions/workflows/ci.yml)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-The format produces a **self-contained, cryptographically signed binary** that embeds a Go-based launcher, Python runtime, package managers, and all application dependencies. When executed, the launcher creates a fully isolated environment on-the-fly, ensuring consistent execution across all deployment environments.
+Flavor is a modern packaging system that implements the **Progressive Secure Package Format (PSPF) v0.1** - a secure, performant binary packaging format for distributing multi-runtime applications. The initial implementation focuses on packaging Python-based Terraform providers built with the [Pyvider framework](https://github.com/provide-io/pyvider).
 
-## Core Features
+## Key Features
 
-- **Progressive Architecture**: Designed for multi-language support with current focus on Go+Python hybrid applications
-- **Zero Dependencies**: End-users need only the target platform (e.g., Terraform). The Flavor binary contains everything else.
-- **Cryptographic Security**: Packages are signed using ECDSA P-256/P-384/P-521 curves with SHA-256 for integrity and authenticity
-- **Performance Optimized**: Go launcher provides fast startup with intelligent caching for subsequent executions
-- **Standards Compliant**: Integrates with Python build ecosystem via PEP 517 and standard tooling
+- **🔒 Cryptographically Secure**: ECDSA signatures with configurable curves (P-256/P-384/P-521)
+- **📦 Self-Contained Binaries**: Zero runtime dependencies for end users
+- **🚀 Fast Startup**: Native Go launcher with intelligent caching
+- **🐍 Python Native**: Full PEP 517 build system integration
+- **🔧 Extensible Design**: Architecture supports multiple package formats ("flavors")
 
-## Flavor v0.1 Specification
+## Installation
 
-**Format Version**: 0.1  
-**Architecture**: Hybrid Go launcher + embedded Python runtime  
-**Security**: ECDSA signature verification with configurable curves  
-**Packaging**: Single binary with embedded assets and metadata  
-**Target Platforms**: Terraform Plugin Protocol v6 providers  
+### From PyPI (Coming Soon)
 
-For detailed technical specifications, see [docs/SPECIFICATION.md](docs/SPECIFICATION.md).
+```bash
+pip install flavor
+```
+
+### From Source
+
+```bash
+git clone https://github.com/provide-io/flavor.git
+cd flavor
+pip install -e .
+```
 
 ## Quick Start
 
-### Installation
+### 1. Generate Signing Keys
 
 ```bash
-# Install the Flavor toolchain
-cd flavor && source env.sh
-pytest  # Verify installation (27/27 tests should pass)
-```
-
-### TofuSoup Integration (Recommended)
-
-```bash
-cd tofusoup && source env.sh
-uv pip install -e /path/to/flavor
-
-# Use integrated soup package commands
-.venv_darwin_arm64/bin/python -m tofusoup.cli package keygen --out-dir ./keys
-.venv_darwin_arm64/bin/python -m tofusoup.cli package build
-.venv_darwin_arm64/bin/python -m tofusoup.cli package verify package.flavor
-```
-
-### Direct Flavor CLI Usage
-
-```bash
-# Generate ECDSA signing keys
 flavor keygen --out-dir ./keys
-
-# Build Flavor package from manifest
-flavor build pyproject.toml
-
-# Verify package integrity and signature
-flavor verify terraform-provider-example.flavor
 ```
 
-### Configuration
+### 2. Configure Your Project
 
-Configure your provider's `pyproject.toml`:
+Add to your `pyproject.toml`:
 
 ```toml
-[project]
-name = "terraform-provider-example"
-version = "1.0.0"
-scripts = { "terraform-provider-example" = "example.main:serve" }
-
 [tool.flavor]
 provider_name = "example"
 entry_point = "example.main:serve"
 
-[tool.flavor.build]
-python_version = "3.13"
-dependencies = ["./src/example", "attrs"]
-
 [tool.flavor.signing]
-private_key_path = "keys/provider-private.key" 
+private_key_path = "keys/provider-private.key"
 public_key_path = "keys/provider-public.key"
-curve = "P-256"  # P-256, P-384, or P-521
-
-# For PEP 517 builds
-[build-system]
-requires = ["setuptools>=61.0", "wheel"]
-build-backend = "setuptools.build_meta"  # Note: Flavor has its own build backend for provider packages
 ```
 
-## Architecture Overview
+### 3. Build Your Package
 
-Flavor v0.1 implements a **hybrid runtime architecture**:
+```bash
+flavor package --manifest pyproject.toml
+```
 
-1. **Go Launcher**: Fast, lightweight binary that handles:
-   - Cryptographic signature verification
-   - Runtime environment setup
-   - Python interpreter and dependency management
-   - Inter-process communication with target platform
+### 4. Verify Package Integrity
 
-2. **Embedded Python Runtime**: Complete Python environment including:
-   - Python 3.13 interpreter
-   - `uv` package manager
-   - All application dependencies
-   - Provider-specific code
+```bash
+flavor verify dist/terraform-provider-example.flavor
+```
 
-3. **Security Layer**: ECDSA-based verification system:
-   - Configurable elliptic curves (P-256, P-384, P-521)
-   - SHA-256 message digest
-   - Tamper-evident package integrity
+## How It Works
 
-## Documentation Structure
+Flavor packages consist of:
 
-- **[docs/SPECIFICATION.md](docs/SPECIFICATION.md)** - Complete Flavor v0.1 format specification
-- **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** - Detailed architecture design and rationale  
-- **[docs/SECURITY.md](docs/SECURITY.md)** - Cryptographic design and security model
-- **[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)** - Development workflow and contribution guide
-- **[docs/INTEGRATION.md](docs/INTEGRATION.md)** - TofuSoup integration and cross-language testing
-- **[BUILD_WORKFLOWS.md](BUILD_WORKFLOWS.md)** - Build process and PEP 517 integration
+1. **Native Go Launcher**: Handles signature verification and environment setup
+2. **Embedded Python Runtime**: Complete Python environment with all dependencies
+3. **Cryptographic Footer**: ECDSA signature and package metadata
 
-## Development Status
+When executed, the launcher:
+- Verifies the package signature
+- Extracts the embedded runtime (with caching)
+- Sets up an isolated Python environment
+- Executes your application
 
-**Flavor v0.1 Status**: Production Ready  
-**Test Coverage**: 27/27 tests passing  
-**Cross-Language Compatibility**: Go ↔ Python verified  
-**Integration Status**: Fully integrated with TofuSoup conformance suite  
+## Package Format
+
+The PSPF v0.1 format uses a structured binary layout:
+
+```
+[Go Launcher Binary]
+[UV Package Manager]
+[Python Runtime Archive]
+[Metadata Archive]
+[Application Payload]
+[ECDSA Signature]
+[Public Key]
+[Footer Structure]
+[Magic String: 📦FLAVOR📦]
+```
+
+## Documentation
+
+- **[Specification](docs/SPECIFICATION.md)** - Complete PSPF v0.1 format specification
+- **[Architecture](docs/ARCHITECTURE.md)** - Design decisions and architecture
+- **[Security](docs/SECURITY.md)** - Cryptographic design and threat model
+- **[Development](docs/DEVELOPMENT.md)** - Contributing and development guide
+- **[Examples](docs/examples/)** - Sample configurations and use cases
+
+## Use Cases
+
+### Terraform Provider Distribution
+
+Flavor is designed for packaging Python-based Terraform providers:
+
+```python
+# example/main.py
+from pyvider import serve_provider
+from .provider import ExampleProvider
+
+def serve():
+    serve_provider(ExampleProvider)
+```
+
+Build and distribute as a single binary that Terraform can execute directly.
+
+### Future Package Formats
+
+The Flavor architecture supports adding new package formats:
+- Different runtime combinations (Node.js, Ruby, etc.)
+- Alternative compression algorithms
+- Custom metadata formats
+
+## Contributing
+
+We welcome contributions! Please see our [Development Guide](docs/DEVELOPMENT.md) for:
+- Setting up your development environment
+- Running the test suite
+- Submitting pull requests
+
+## Testing
+
+```bash
+# Run all tests
+pytest
+
+# Run with coverage
+pytest --cov=flavor --cov-report=term-missing
+
+# Run specific test categories
+pytest tests/unit/
+pytest tests/integration/
+pytest tests/cross_language/
+```
 
 ## License
 
-Licensed under the Apache License, Version 2.0. See LICENSE for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+- Built on the [Pyvider](https://github.com/provide-io/pyvider) framework
+- Uses [uv](https://github.com/astral-sh/uv) for fast Python package management
+- Cryptography powered by the [cryptography](https://cryptography.io/) library
 
 ## Support
 
-- **Issues**: Report bugs and feature requests via GitHub Issues
-- **Documentation**: Comprehensive docs in the `docs/` directory
-- **Testing**: Full test suite demonstrates capabilities and compatibility
+- **Issues**: [GitHub Issues](https://github.com/provide-io/flavor/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/provide-io/flavor/discussions)
+- **Email**: engineering@provide.services
+
+---
+
+*Flavor - Modern packaging for modern applications*

@@ -1,132 +1,97 @@
-# Flavor v0.1 Documentation Index
+# Flavor Documentation
 
-**Progressive Secure Package Format v0.1**  
-**Documentation Version**: 1.0  
-**Last Updated**: August 2025
+Welcome to the Flavor documentation! This directory contains comprehensive documentation for the Flavor packaging system and the Progressive Secure Package Format (PSPF) v0.1.
 
-## Overview
-
-This directory contains comprehensive documentation for **Flavor**, an extensible packaging system that supports multiple package formats. Currently, Flavor implements:
-
-- **PSP (Progressive Secure Package) Format v0.1** - A modern, secure, and performant binary packaging format for distributing complex multi-runtime applications
-
-Flavor is designed to be extensible, allowing new package formats ("flavors") to be added while maintaining a consistent toolchain and workflow. Each flavor can have its own format specification, file extension, and implementation details.
-
-The PSP flavor (PSPF v0.1) is specifically designed for packaging Python-based Terraform providers built with the Pyvider framework, but Flavor's architecture supports future enhancement for other formats and language ecosystems.
-
-## Documentation Structure
-
-### 📋 Core Specifications
-- **[SPECIFICATION.md](SPECIFICATION.md)** - Complete Flavor v0.1 format specification
-  - Binary format structure and layout
-  - Cryptographic design and algorithms
-  - Security properties and guarantees
-  - Reference implementation details
-
-### 🏗️ Architecture and Design  
-- **[ARCHITECTURE.md](ARCHITECTURE.md)** - Detailed architecture design and rationale
-  - System architecture and component design
-  - Cross-language integration patterns
-  - Performance optimization strategies
-  - Future evolution roadmap
-
-### 🔒 Security Documentation
-- **[SECURITY.md](SECURITY.md)** - Cryptographic design and security model
-  - Threat model and attack surface analysis
-  - Cryptographic implementation details
-  - Security testing and validation
-  - Security best practices and guidelines
-
-### 💻 Development Resources
-- **[DEVELOPMENT.md](DEVELOPMENT.md)** - Development workflow and contribution guide
-  - Development environment setup
-  - Testing strategies and frameworks
-  - Cross-language development patterns
-  - Contributing guidelines and standards
-
-### 🔗 Integration Guides
-- **[INTEGRATION.md](INTEGRATION.md)** - TofuSoup integration and cross-language testing
-  - Complete integration setup guide
-  - Command mapping and usage examples
-  - Cross-language testing frameworks
-  - Troubleshooting and debugging
-
-### 📚 Legacy Documentation
-- **[DESIGN_TOFUSOUP_INTEGRATION.md](DESIGN_TOFUSOUP_INTEGRATION.md)** - Original integration design document
-- **[REFACTOR.md](REFACTOR.md)** - Migration from earlier package format documentation
-
-## Quick Navigation
+## 📚 Core Documentation
 
 ### For Users
-- **Getting Started**: See main [README.md](../README.md) for installation and quick start
-- **Command Reference**: See [INTEGRATION.md](INTEGRATION.md#4-command-integration) for complete command documentation
-- **Configuration**: See [SPECIFICATION.md](SPECIFICATION.md#5-build-integration) for configuration options
+
+- **[Quickstart Guide](quickstart.md)** - Get started with Flavor in 5 minutes
+- **[Installation](installation.md)** - Detailed installation instructions
+- **[CLI Reference](cli-reference.md)** - Complete command-line interface documentation
+- **[FAQ](faq.md)** - Frequently asked questions
+- **[Troubleshooting](troubleshooting.md)** - Common issues and solutions
 
 ### For Developers
-- **Development Setup**: See [DEVELOPMENT.md](DEVELOPMENT.md#1-development-environment-setup)
-- **Architecture Overview**: See [ARCHITECTURE.md](ARCHITECTURE.md#2-system-architecture)
-- **Contributing**: See [DEVELOPMENT.md](DEVELOPMENT.md#6-contributing-guidelines)
 
-### For Security Researchers
-- **Security Model**: See [SECURITY.md](SECURITY.md#2-threat-model)
-- **Cryptographic Design**: See [SECURITY.md](SECURITY.md#3-cryptographic-design)
-- **Attack Surface**: See [SECURITY.md](SECURITY.md#5-attack-surface-analysis)
+- **[Specification](SPECIFICATION.md)** - Complete PSPF v0.1 format specification
+- **[Architecture](ARCHITECTURE.md)** - System design and architectural decisions
+- **[Development](DEVELOPMENT.md)** - Contributing guide and development setup
+- **[Security](SECURITY.md)** - Security model and cryptographic design
 
-### For Integrators
-- **Integration Architecture**: See [INTEGRATION.md](INTEGRATION.md#2-architecture-integration)
-- **API Reference**: See [ARCHITECTURE.md](ARCHITECTURE.md#3-component-design)
-- **Cross-Language Testing**: See [INTEGRATION.md](INTEGRATION.md#5-cross-language-testing)
+### Integration & Migration
 
-## Document Dependencies
+- **[Integration Guide](INTEGRATION.md)** - Integrating Flavor with other tools
+- **[Migration Guide](migration-guide.md)** - Migrating from other packaging systems
 
-```mermaid
-graph TB
-    A[README.md<br/>Quick Start] --> B[SPECIFICATION.md<br/>Format Spec]
-    A --> C[INTEGRATION.md<br/>Usage Guide]
-    B --> D[ARCHITECTURE.md<br/>Design Details]
-    B --> E[SECURITY.md<br/>Security Model]
-    C --> F[DEVELOPMENT.md<br/>Dev Guide]
-    D --> F
-    E --> F
-    
-    G[Legacy Docs] --> H[DESIGN_TOFUSOUP_INTEGRATION.md]
-    G --> I[REFACTOR.md]
+## 📁 Examples
+
+The [examples/](examples/) directory contains working examples:
+
+- **[simple-provider](examples/simple-provider/)** - Basic Terraform provider example
+- **[aws-resources](examples/aws-resources/)** - Provider with AWS resources
+- **[database-provider](examples/database-provider/)** - Database connectivity example
+- **[multi-platform](examples/multi-platform/)** - CI/CD automation example
+
+## 🔍 Quick Links
+
+### Getting Started
+1. [Install Flavor](installation.md)
+2. [Follow the Quickstart](quickstart.md)
+3. [Try an Example](examples/simple-provider/)
+
+### Understanding Flavor
+- [What is PSPF?](SPECIFICATION.md#overview)
+- [Why use Flavor?](index.md)
+- [How does it work?](ARCHITECTURE.md#overview)
+
+### Common Tasks
+- [Generate signing keys](cli-reference.md#keygen)
+- [Build a package](cli-reference.md#package)
+- [Verify a package](cli-reference.md#verify)
+
+## 📖 Documentation Structure
+
+```
+docs/
+├── README.md              # This file
+├── index.md              # Documentation home
+├── quickstart.md         # Quick start guide
+├── installation.md       # Installation instructions
+├── cli-reference.md      # CLI documentation
+├── faq.md               # Frequently asked questions
+├── troubleshooting.md   # Troubleshooting guide
+├── migration-guide.md   # Migration from other tools
+├── SPECIFICATION.md     # PSPF v0.1 specification
+├── ARCHITECTURE.md      # Architecture documentation
+├── DEVELOPMENT.md       # Development guide
+├── SECURITY.md         # Security documentation
+├── INTEGRATION.md      # Integration guide
+├── examples/           # Working examples
+│   ├── simple-provider/
+│   ├── aws-resources/
+│   ├── database-provider/
+│   └── multi-platform/
+└── internal/           # Internal documentation (not for end users)
 ```
 
-## Status and Completeness
+## 🤝 Contributing
 
-| Document | Status | Completeness | Last Updated |
-|----------|--------|--------------|--------------|
-| SPECIFICATION.md | ✅ Production | 100% | August 2025 |
-| ARCHITECTURE.md | ✅ Production | 100% | August 2025 |
-| SECURITY.md | ✅ Production | 100% | August 2025 |
-| DEVELOPMENT.md | ✅ Production | 100% | August 2025 |
-| INTEGRATION.md | ✅ Production | 100% | August 2025 |
-| Legacy Docs | 📚 Archive | 100% | Historical |
+We welcome contributions to the documentation! Please:
 
-## Contribution Guidelines
+1. Follow the existing documentation style
+2. Include practical examples where appropriate
+3. Keep explanations clear and concise
+4. Update the index when adding new documents
 
-Documentation follows the same contribution process as code:
+See [DEVELOPMENT.md](DEVELOPMENT.md) for more details.
 
-1. **Accuracy**: Ensure all technical details are accurate and verified
-2. **Completeness**: Provide comprehensive coverage of topics
-3. **Clarity**: Use clear, concise language appropriate for the target audience
-4. **Consistency**: Maintain consistent terminology and formatting
-5. **Examples**: Include practical examples and code snippets
-6. **Updates**: Keep documentation synchronized with code changes
+## 📞 Getting Help
 
-## Support and Feedback
-
-- **Issues**: Report documentation issues via GitHub Issues
-- **Questions**: Ask questions in discussions or issues
-- **Contributions**: Submit pull requests for documentation improvements
-- **Reviews**: All documentation changes require peer review
-
-## License
-
-All documentation is licensed under the Apache License, Version 2.0, consistent with the Flavor project license.
+- **GitHub Issues**: [Report bugs or request features](https://github.com/provide-io/flavor/issues)
+- **Discussions**: [Ask questions and share ideas](https://github.com/provide-io/flavor/discussions)
+- **Email**: engineering@provide.services
 
 ---
 
-**Progressive Secure Package Format (Flavor) v0.1**  
-*Modern, secure, performant packaging for multi-runtime applications*
+*Flavor - Modern packaging for modern applications*

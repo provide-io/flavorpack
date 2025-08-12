@@ -3,8 +3,8 @@
 #
 from pathlib import Path
 
-from ..exceptions import InvalidFooterError, VerificationError
-from ..models import FLAVOR_EOF_MAGIC_STRING, FOOTER_SIZE, FlavorFooter
+from flavor.exceptions import InvalidFooterError, VerificationError
+from flavor.models import FLAVOR_EOF_MAGIC_STRING, FOOTER_SIZE, PSPFooter
 
 
 class FlavorReader:
@@ -13,7 +13,7 @@ class FlavorReader:
     def __init__(self, package_path: Path) -> None:
         self.package_path = package_path
 
-    def verify(self) -> FlavorFooter:
+    def verify(self) -> PSPFooter:
         """
         Verifies the package's structure and integrity.
 
@@ -45,7 +45,7 @@ class FlavorReader:
                 # Read and unpack footer
                 f.seek(-len(FLAVOR_EOF_MAGIC_STRING) - FOOTER_SIZE, 2)
                 footer_bytes = f.read(FOOTER_SIZE)
-                footer = FlavorFooter.unpack(footer_bytes)
+                footer = PSPFooter.unpack(footer_bytes)
                 return footer
         except (OSError, ValueError) as e:
             raise VerificationError(f"Failed to read or unpack footer: {e}") from e
@@ -64,7 +64,7 @@ class FlavorReader:
             info = "📦 Flavor Package Information\n"
             info += f"File: {self.package_path.name}\n"
             info += f"Size: {file_size:,} bytes\n"
-            info += f"Version: {footer.flavor_version}\n"
+            info += f"Version: {footer.pspf_version}\n"
             info += f"Flags: 0x{footer.flags:04x}\n"
 
             if footer.is_uv_binary_compressed:
@@ -72,12 +72,12 @@ class FlavorReader:
             else:
                 info += "UV Binary: Uncompressed\n"
 
-            info += f"UV Binary: {footer.uv_binary_size:,} bytes at offset {footer.uv_binary_offset}\n"
-            info += f"Python Install: {footer.python_install_tgz_size:,} bytes at offset {footer.python_install_tgz_size}\n"
-            info += f"Metadata: {footer.metadata_tgz_size:,} bytes at offset {footer.metadata_tgz_offset}\n"
-            info += f"Payload: {footer.payload_tgz_size:,} bytes at offset {footer.payload_tgz_offset}\n"
-            info += f"Signature: {footer.package_signature_size:,} bytes at offset {footer.package_signature_offset}\n"
-            info += f"Public Key: {footer.public_key_pem_size:,} bytes at offset {footer.public_key_pem_offset}\n"
+            info += f"UV Binary: {footer.uv_size:,} bytes at offset {footer.uv_offset}\n"
+            info += f"Python Install: {footer.python_size:,} bytes at offset {footer.python_offset}\n"
+            info += f"Metadata: {footer.metadata_size:,} bytes at offset {footer.metadata_offset}\n"
+            info += f"Payload: {footer.payload_size:,} bytes at offset {footer.payload_offset}\n"
+            info += f"Signature: {footer.signature_size:,} bytes at offset {footer.signature_offset}\n"
+            info += f"Public Key: {footer.public_key_size:,} bytes at offset {footer.public_key_offset}\n"
             info += f"Footer Checksum: 0x{footer.footer_struct_checksum:08x}\n"
             info += f"Language Emoji: {footer.language_emoji.decode('utf-8')}\n"
             info += f"Type Emoji 1: {footer.type_emoji_1.decode('utf-8')}\n"

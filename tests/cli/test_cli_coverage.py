@@ -8,7 +8,7 @@ from unittest.mock import patch
 from click.testing import CliRunner
 
 from flavor.cli import main as cli_main
-from flavor.exceptions import BuildError, PackagingError, VerificationError
+from flavor.exceptions import BuildError, PackagingError
 
 
 def test_cli_package_fails(tmp_path: Path) -> None:

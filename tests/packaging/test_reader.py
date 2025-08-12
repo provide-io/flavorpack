@@ -24,7 +24,7 @@ def test_reader_invalid_eof_magic(tmp_path: Path) -> None:
     bad_magic_file.write_bytes(b"\x00" * 200)
     reader = FlavorReader(bad_magic_file)
 
-    with pytest.raises(InvalidFooterError, match="Invalid PSPF EOF Magic"):
+    with pytest.raises(InvalidFooterError, match="Invalid Flavor EOF Magic"):
         reader.verify()
 
 
