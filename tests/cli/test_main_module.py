@@ -14,12 +14,12 @@ def test_main_module_entrypoint() -> None:
         # catch this to prevent pytest from marking the test as failed.
         with pytest.raises(SystemExit) as e:
             original_argv = sys.argv
-            sys.argv = ["pspf", "--version"]
+            sys.argv = ["flavor", "--version"]
             try:
-                runpy.run_module("pspf", run_name="__main__")
+                runpy.run_module("flavor", run_name="__main__")
             finally:
                 sys.argv = original_argv
-        
+
         # Verify that the exit was successful.
         assert e.type == SystemExit
         assert e.value.code == 0

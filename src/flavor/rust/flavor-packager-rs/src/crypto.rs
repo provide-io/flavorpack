@@ -4,7 +4,7 @@
 use anyhow::{Context, Result};
 use p256::{
     ecdsa::{
-        signature::{Signer, Verifier},
+        signature::{Signer, Verifier, hazmat::PrehashSigner},
         Signature, SigningKey, VerifyingKey,
     },
     pkcs8::{DecodePrivateKey, DecodePublicKey, EncodePrivateKey, EncodePublicKey},
@@ -69,6 +69,16 @@ pub fn sign_data(signing_key: &SigningKey, data: &[u8]) -> Result<Vec<u8>> {
     
     // Sign the hash
     let signature: Signature = signing_key.sign(&hash);
+    
+    // Convert to DER format (ASN.1)
+    Ok(signature.to_der().as_bytes().to_vec())
+}
+
+pub fn sign_hash(signing_key: &SigningKey, hash: &[u8]) -> Result<Vec<u8>> {
+    // Sign the pre-computed hash directly (for compatibility with Go packager)
+    // Use sign_prehash to avoid double hashing
+    let signature: Signature = signing_key.sign_prehash(hash)
+        .context("Failed to sign prehashed data")?;
     
     // Convert to DER format (ASN.1)
     Ok(signature.to_der().as_bytes().to_vec())

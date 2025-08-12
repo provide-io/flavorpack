@@ -4,10 +4,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "flavor"
-description = "Progressive Secure Package Format (flavor) v0.1 Build Tool"
+version = "0.1.0"
+description = "Flavor packaging system implementing Progressive Secure Package Format (PSPF) v0.1"
 readme = "README.md"
 authors = [
-    { name = "Timmy Crawford", email = "timmy@provide.services" },
+    { name = "Provide Services", email = "engineering@provide.services" },
 ]
 license = { text = "MIT" }
 classifiers = [
@@ -18,24 +19,26 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
-    "Programming Language :: Python :: 3.14",
     "Topic :: Software Development :: Build Tools",
     "Topic :: Security :: Cryptography",
+    "Topic :: System :: Archiving :: Packaging",
 ]
-requires-python = ">=3.11"
+requires-python = ">=3.13"
 dependencies = [
     "attrs>=23.1.0",
     "click>=8.1.7",
     "cryptography>=41.0.4",
     "wheel>=0.40.0",
     "zstandard>=0.22.0",
+    "pyvider-telemetry @ file://localhost/REDACTED_ABS_PATH",
 ]
-dynamic = ["version"]
+keywords = ["packaging", "terraform", "provider", "pspf", "flavor"]
 
 [project.urls]
-Homepage = "https://github.com/provide-services/pyvider"
-"Bug Tracker" = "https://github.com/provide-services/pyvider/issues"
-"Source Code" = "https://github.com/provide-services/pyvider"
+Homepage = "https://github.com/provide-io/flavor"
+"Bug Tracker" = "https://github.com/provide-io/flavor/issues"
+"Source Code" = "https://github.com/provide-io/flavor"
+Documentation = "https://github.com/provide-io/flavor/tree/main/docs"
 
 [project.optional-dependencies]
 dev = [
@@ -64,8 +67,6 @@ flavor = "flavor.cli:main"
 include-package-data = true
 package-dir = {"" = "src"}
 
-[tool.setuptools.dynamic]
-version = { file = "src/flavor/VERSION" }
 
 [tool.setuptools.packages.find]
 where = ["src"]

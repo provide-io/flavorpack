@@ -10,7 +10,7 @@ use std::path::Path;
 
 // Flavor Constants
 pub const FLAVOR_VERSION: u16 = 1;
-pub const FLAVOR_INTERNAL_FOOTER_MAGIC: u32 = 0x50535030; // 'PSP0' in little endian
+pub const FLAVOR_INTERNAL_FOOTER_MAGIC: u32 = 0x30505350; // '0PSP' in little endian
 pub const FLAVOR_MAGIC_EOF_STRING: &[u8] = "📦FLAVOR📦".as_bytes(); // UTF-8 encoded
 pub const FOOTER_SIZE: i64 = 120;
 

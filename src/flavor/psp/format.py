@@ -56,7 +56,7 @@ class PSPFlavor:
         # This delegates to the existing PSPF build logic
         from flavor.api import build_package_from_manifest
 
-        build_package_from_manifest(manifest_path, output_path)
+        build_package_from_manifest(manifest_path)
 
     def verify(self, package_path: Path) -> bool:
         """Verify a PSP-flavored package."""

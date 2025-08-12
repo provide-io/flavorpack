@@ -6,8 +6,9 @@ use flate2::write::GzEncoder;
 use flate2::Compression;
 use std::fs::{self, File};
 use std::io::{self, Read, Write};
-use std::path::Path;
-use tar::Builder;
+use std::path::{Path, PathBuf};
+use std::os::unix::fs::PermissionsExt;
+use tar::{Builder, Header, EntryType};
 
 pub fn create_tar_gz<P: AsRef<Path>, Q: AsRef<Path>>(
     source_dir: P, 
@@ -16,12 +17,11 @@ pub fn create_tar_gz<P: AsRef<Path>, Q: AsRef<Path>>(
     let tar_gz_file = File::create(&output_path)
         .with_context(|| format!("Failed to create tar.gz file: {:?}", output_path.as_ref()))?;
     
-    let gz_encoder = GzEncoder::new(tar_gz_file, Compression::default());
+    let gz_encoder = GzEncoder::new(tar_gz_file, Compression::best());
     let mut tar_builder = Builder::new(gz_encoder);
     
-    // Add the entire directory recursively
-    tar_builder.append_dir_all(".", &source_dir)
-        .with_context(|| format!("Failed to add directory to tar.gz: {:?}", source_dir.as_ref()))?;
+    // Add directory and its contents recursively, preserving symlinks
+    append_dir_all_with_symlinks(&mut tar_builder, source_dir.as_ref(), "cache")?;
     
     let gz_encoder = tar_builder.into_inner()
         .context("Failed to finalize tar archive")?;
@@ -38,6 +38,85 @@ pub fn create_tar_gz<P: AsRef<Path>, Q: AsRef<Path>>(
     );
     
     Ok(file_size)
+}
+
+fn append_dir_all_with_symlinks<W: Write>(
+    builder: &mut Builder<W>,
+    src_dir: &Path,
+    dst_prefix: &str,
+) -> Result<()> {
+    let src_dir = src_dir.canonicalize()
+        .with_context(|| format!("Failed to canonicalize source dir: {:?}", src_dir))?;
+    
+    append_dir_all_recursive(builder, &src_dir, &src_dir, dst_prefix)
+}
+
+fn append_dir_all_recursive<W: Write>(
+    builder: &mut Builder<W>,
+    base_dir: &Path,
+    current_dir: &Path,
+    dst_prefix: &str,
+) -> Result<()> {
+    for entry in fs::read_dir(current_dir)? {
+        let entry = entry?;
+        let path = entry.path();
+        let metadata = fs::symlink_metadata(&path)?;
+        
+        // Calculate relative path from base directory
+        let rel_path = path.strip_prefix(base_dir)
+            .with_context(|| format!("Failed to strip prefix from {:?}", path))?;
+        
+        // Create destination path with prefix
+        let dst_path = PathBuf::from(dst_prefix).join(rel_path);
+        let dst_path_str = dst_path.to_string_lossy();
+        
+        if metadata.is_symlink() {
+            // Handle symlinks
+            let link_target = fs::read_link(&path)?;
+            let mut header = Header::new_gnu();
+            header.set_path(&dst_path)?;
+            header.set_link_name(&link_target)?;
+            header.set_entry_type(EntryType::Symlink);
+            header.set_size(0);
+            header.set_mode(0o777);
+            header.set_mtime(metadata.modified()?.duration_since(std::time::UNIX_EPOCH)?.as_secs());
+            header.set_cksum();
+            
+            builder.append(&header, &[][..])
+                .with_context(|| format!("Failed to append symlink {:?}", path))?;
+                
+        } else if metadata.is_dir() {
+            // Handle directories
+            let mut header = Header::new_gnu();
+            header.set_path(&dst_path)?;
+            header.set_entry_type(EntryType::Directory);
+            header.set_size(0);
+            header.set_mode(metadata.permissions().mode());
+            header.set_mtime(metadata.modified()?.duration_since(std::time::UNIX_EPOCH)?.as_secs());
+            header.set_cksum();
+            
+            builder.append(&header, &[][..])
+                .with_context(|| format!("Failed to append directory {:?}", path))?;
+            
+            // Recurse into directory
+            append_dir_all_recursive(builder, base_dir, &path, dst_prefix)?;
+            
+        } else if metadata.is_file() {
+            // Handle regular files
+            let mut header = Header::new_gnu();
+            header.set_path(&dst_path)?;
+            header.set_size(metadata.len());
+            header.set_mode(metadata.permissions().mode());
+            header.set_mtime(metadata.modified()?.duration_since(std::time::UNIX_EPOCH)?.as_secs());
+            header.set_cksum();
+            
+            let mut file = File::open(&path)?;
+            builder.append(&header, &mut file)
+                .with_context(|| format!("Failed to append file {:?}", path))?;
+        }
+    }
+    
+    Ok(())
 }
 
 pub fn copy_file<P: AsRef<Path>, Q: AsRef<Path>>(

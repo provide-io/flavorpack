@@ -121,9 +121,7 @@ flavor/
 │   ├── ARCHITECTURE.md             # Architecture design document
 │   ├── SECURITY.md                 # Security model and implementation
 │   ├── DEVELOPMENT.md              # This document
-│   ├── INTEGRATION.md              # TofuSoup integration guide
-│   ├── DESIGN_TOFUSOUP_INTEGRATION.md  # Legacy integration design
-│   └── REFACTOR.md                 # Migration documentation
+│   └── INTEGRATION.md              # TofuSoup integration guide
 ├── src/
 │   └── flavor/                       # Python implementation
 │       ├── __init__.py             # Package initialization  

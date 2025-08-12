@@ -1,6 +1,5 @@
-import os
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from click.testing import CliRunner
 
@@ -14,7 +13,7 @@ def test_cli_package_and_verify(tmp_path: Path) -> None:
     runner = CliRunner()
     project_dir = tmp_path / "project"
     project_dir.mkdir()
-    
+
     pyproject_path = project_dir / "pyproject.toml"
     pyproject_path.touch()
 
@@ -24,17 +23,19 @@ def test_cli_package_and_verify(tmp_path: Path) -> None:
             cli_main,
             ["package", "--manifest", str(pyproject_path)],
         )
-        assert package_result.exit_code == 0, f"Package command failed: {package_result.output}"
+        assert package_result.exit_code == 0, (
+            f"Package command failed: {package_result.output}"
+        )
         mock_build.assert_called_once_with(pyproject_path)
 
     fake_package_file = tmp_path / "fake.pspf"
     fake_package_file.touch()
 
     with patch("flavor.cli.verify_package") as mock_verify:
-        verify_result = runner.invoke(
-            cli_main, ["verify", str(fake_package_file)]
+        verify_result = runner.invoke(cli_main, ["verify", str(fake_package_file)])
+        assert verify_result.exit_code == 0, (
+            f"Verify command failed: {verify_result.output}"
         )
-        assert verify_result.exit_code == 0, f"Verify command failed: {verify_result.output}"
         mock_verify.assert_called_once_with(fake_package_file)
 
 
@@ -42,7 +43,7 @@ def test_cli_keygen(tmp_path: Path) -> None:
     """Tests the 'keygen' command."""
     runner = CliRunner()
     keys_dir = tmp_path / "test_keys"
-    
+
     with patch("flavor.cli.generate_key_pair") as mock_keygen:
         result = runner.invoke(
             cli_main,

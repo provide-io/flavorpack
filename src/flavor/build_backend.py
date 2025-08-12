@@ -67,7 +67,7 @@ def build_wheel(
             f"Public key for embedding not found at resolved path: {public_key_path}"
         )
 
-    launcher_bin_path = ensure_go_binary("flavor-launcher")
+    launcher_bin_path = ensure_go_binary("flavor-launcher-go")
 
     scripts = project_conf.get("scripts", {})
     if not scripts or len(scripts) != 1:
@@ -87,20 +87,19 @@ def build_wheel(
                 "Missing 'entry_point' in [tool.flavor] table of pyproject.toml"
             )
 
-        provider_name = flavor_conf.get("provider_name")
-        if not provider_name:
+        package_name = flavor_conf.get("package_name")
+        if not package_name:
             raise BuildError(
-                "Missing 'provider_name' in [tool.flavor] table of pyproject.toml"
+                "Missing 'package_name' in [tool.flavor] table of pyproject.toml"
             )
 
         orchestrator = PackagingOrchestrator(
-            launcher_bin_path=str(launcher_bin_path),
             package_integrity_key_path=str(private_key_path),
             public_key_path=str(public_key_path),
             output_flavor_path=str(output_executable_path),
             build_config=build_conf,
             manifest_dir=pyproject_dir,
-            provider_name=provider_name,
+            package_name=package_name,
             entry_point=entry_point,
         )
 
@@ -129,7 +128,7 @@ def _create_wheel_file(
     wheel_directory: str,
     package_name: str,
     package_version: str,
-    project_conf: dict,
+    project_conf: dict[str, Any],
     executable_path: Path,
 ) -> str:
     normalized_name = package_name.replace("-", "_")

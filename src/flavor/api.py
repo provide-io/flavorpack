@@ -30,11 +30,11 @@ def build_package_from_manifest(manifest_path: Path) -> list[Path]:
         "entry_point",
         pyproject.get("project", {}).get("scripts", {}).get(project_name, "main:main"),
     )
-    provider_name = flavor_config.get("metadata", {}).get("provider_name", project_name)
+    package_name = flavor_config.get("metadata", {}).get("package_name", project_name)
 
     # Use absolute paths based on manifest location
     manifest_dir = manifest_path.parent.absolute()
-    output_flavor_path = manifest_dir / "dist" / f"{provider_name}.flavor"
+    output_flavor_path = manifest_dir / "dist" / f"{package_name}.flavor"
     package_integrity_key_path = manifest_dir / "keys" / "provider-private.key"
     public_key_path = manifest_dir / "keys" / "provider-public.key"
 
@@ -55,7 +55,7 @@ def build_package_from_manifest(manifest_path: Path) -> list[Path]:
         output_flavor_path=str(output_flavor_path),
         build_config=build_config,
         manifest_dir=manifest_path.parent,
-        provider_name=provider_name,
+        package_name=package_name,
         entry_point=entry_point,
     )
     orchestrator.build_package()
@@ -64,7 +64,7 @@ def build_package_from_manifest(manifest_path: Path) -> list[Path]:
 
 def verify_package(package_path: Path) -> None:
     """Verifies a Flavor package."""
-    packager_executable = ensure_go_binary("flavor-packager")
+    packager_executable = ensure_go_binary("flavor-go")
     try:
         subprocess.run(
             [str(packager_executable), "verify", str(package_path)],
