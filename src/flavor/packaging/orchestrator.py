@@ -83,17 +83,34 @@ class PackagingOrchestrator:
             signature_path = temp_dir / "signature.bin"
             signature_path.write_bytes(signature)
             
-            # Create tarballs for directory slots
-            logger.info("Creating tarballs for directory slots...")
+            # Create tarballs for slots
+            logger.info("Creating slot tarballs...")
+            
+            # Slot 0: UV binary
+            uv_tarball = temp_dir / "uv.tar"
+            with tarfile.open(uv_tarball, "w") as tar:
+                # Add UV to bin directory
+                uv_path = artifacts["payload_dir"] / "bin" / "uv"
+                tar.add(uv_path, arcname="bin/uv")
+            
+            # Slot 1: Python runtime (from python_packager)
+            python_tarball = artifacts.get("python_tgz")
+            if not python_tarball:
+                raise BuildError("Python runtime tarball not found")
+            
+            # Slot 2: Wheels
             wheels_tarball = temp_dir / "wheels.tar"
             with tarfile.open(wheels_tarball, "w") as tar:
-                tar.add(artifacts["payload_dir"] / "wheels", arcname=".")
+                # Add wheels directory contents, not the directory itself
+                wheels_dir = artifacts["payload_dir"] / "wheels"
+                for wheel in wheels_dir.glob("*.whl"):
+                    tar.add(wheel, arcname=wheel.name)
             
-            uv_tarball = temp_dir / "uv.tar" 
-            with tarfile.open(uv_tarball, "w") as tar:
-                # Just add the UV binary itself
-                uv_path = artifacts["payload_dir"] / "bin" / "uv"
-                tar.add(uv_path, arcname="uv")
+            # Copy bootstrap script
+            bootstrap_src = Path(__file__).parent / "bootstrap.py"
+            bootstrap_dest = temp_dir / "bootstrap.py"
+            import shutil
+            shutil.copy2(bootstrap_src, bootstrap_dest)
             
             # Step 3: Create manifest for pspf-builder
             manifest = {
@@ -101,27 +118,37 @@ class PackagingOrchestrator:
                 "version": self.build_config.get("version", "1.0.0"),
                 "launcher": "go",
                 "launcher_path": str(Path(__file__).parent.parent / "go/cmd/pspf-launcher/pspf-launcher"),
-                "command": "cd {slot:2} && {slot:0}/uv pip install --no-deps --python {slot:1}/bin/python3.11 --find-links . " + self.package_name + " && {slot:0}/uv run --python {slot:1}/bin/python3.11 --no-project python -m " + self.entry_point.split(":")[0],
+                "command": "uv run --python 3.11 {slot:3} " + self.entry_point.split(":")[0],
                 "slots": [
                     {
                         "name": "uv",
                         "path": str(uv_tarball),
                         "compression": "gzip",
                         "purpose": "tool",
-                        "lifecycle": "volatile"
+                        "lifecycle": "volatile",
+                        "extract_to": "."
                     },
                     {
                         "name": "python",
-                        "path": str(artifacts["python_tgz"]),
-                        "compression": "none",  # Already compressed
+                        "path": str(python_tarball),
+                        "compression": "gzip",
                         "purpose": "runtime",
-                        "lifecycle": "volatile"
+                        "lifecycle": "persistent",
+                        "extract_to": "share/uv/python"
                     },
                     {
                         "name": "wheels",
                         "path": str(wheels_tarball),
                         "compression": "gzip",
                         "purpose": "payload",
+                        "lifecycle": "volatile",
+                        "extract_to": "wheels"
+                    },
+                    {
+                        "name": "bootstrap",
+                        "path": str(bootstrap_dest),
+                        "compression": "none",
+                        "purpose": "script",
                         "lifecycle": "volatile"
                     }
                 ],

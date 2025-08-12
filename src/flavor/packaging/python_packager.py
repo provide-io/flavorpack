@@ -320,16 +320,50 @@ class PythonPackager:
         self._write_json(metadata_dir / "config.json", config_data)
     
     def _create_python_placeholder(self, python_tgz: Path) -> None:
-        """Create a placeholder Python distribution archive."""
-        with tempfile.TemporaryDirectory() as temp_dir:
-            python_dir = Path(temp_dir) / "python"
-            python_dir.mkdir()
-            (python_dir / "README.txt").write_text(
-                f"Python {self.python_version} distribution placeholder\n"
-                "In production, this would contain the full Python distribution."
-            )
-            with tarfile.open(python_tgz, "w:gz", compresslevel=9) as tar:
-                tar.add(python_dir, arcname=".")
+        """Download and package Python distribution using UV."""
+        logger.info(f"Downloading Python {self.python_version} using UV...")
+        
+        # Use UV to download Python
+        self._run_subprocess([
+            "uv", "python", "install", self.python_version
+        ])
+        
+        # Find the installed Python
+        import platform
+        machine = platform.machine().lower()
+        system = platform.system().lower()
+        
+        # UV installs to ~/.local/share/uv/python/
+        uv_python_dir = Path.home() / ".local" / "share" / "uv" / "python"
+        
+        # Find the matching Python installation
+        python_install_dir = None
+        # UV uses format like cpython-3.11.12-macos-aarch64-none
+        for path in uv_python_dir.glob(f"cpython-{self.python_version}*"):
+            if path.is_dir():
+                python_install_dir = path
+                break
+        
+        if not python_install_dir or not python_install_dir.exists():
+            logger.warning(f"Could not find UV-installed Python at expected location")
+            # Fall back to placeholder
+            with tempfile.TemporaryDirectory() as temp_dir:
+                python_dir = Path(temp_dir) / "python"
+                python_dir.mkdir()
+                (python_dir / "README.txt").write_text(
+                    f"Python {self.python_version} distribution placeholder\n"
+                    "In production, this would contain the full Python distribution."
+                )
+                with tarfile.open(python_tgz, "w:gz", compresslevel=9) as tar:
+                    tar.add(python_dir, arcname=".")
+            return
+        
+        logger.info(f"Found Python installation at: {python_install_dir}")
+        
+        # Create tarball of the Python installation
+        with tarfile.open(python_tgz, "w:gz", compresslevel=9) as tar:
+            # Add all files from the Python directory, preserving structure
+            tar.add(python_install_dir, arcname=".")
     
     def _run_subprocess(self, command: list[str], cwd: Optional[Path] = None) -> str:
         """Run a subprocess command."""
