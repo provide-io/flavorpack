@@ -23,8 +23,8 @@ def generate_key_pair(keys_dir: Path) -> tuple[Path, Path]:
         format=serialization.PublicFormat.SubjectPublicKeyInfo,
     )
 
-    private_key_path = keys_dir / "provider-private.key"
-    public_key_path = keys_dir / "provider-public.key"
+    private_key_path = keys_dir / "flavor-private.key"
+    public_key_path = keys_dir / "flavor-public.key"
 
     keys_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
     private_key_path.write_bytes(private_pem)

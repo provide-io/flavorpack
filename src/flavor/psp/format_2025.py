@@ -423,30 +423,12 @@ class PSPFReader:
             
         self._index = PSPFIndex.unpack(index_data)
         
-        # Verify checksum
+        # Verify checksum (Adler-32 with checksum field as 0)
         expected_crc = self._index.index_checksum
-        # Pack with checksum set to 0 for verification
-        temp_checksum = self._index.index_checksum
-        self._index.index_checksum = 0
-        data_for_check = struct.pack(
-            PSPFIndex.FORMAT,
-            self._index.format_magic,
-            self._index.format_version,
-            0,  # Checksum field as 0
-            self._index.package_size,
-            self._index.launcher_size,
-            self._index.metadata_offset,
-            self._index.metadata_size,
-            self._index.slot_table_offset,
-            self._index.slot_table_size,
-            self._index.slot_count,
-            self._index.flags,
-            self._index.ephemeral_public_key,
-            self._index.metadata_checksum,
-            self._index.reserved
-        )
-        actual_crc = zlib.crc32(data_for_check)
-        self._index.index_checksum = temp_checksum
+        # Use the raw index data, set checksum field to 0
+        data_for_check = bytearray(index_data)
+        data_for_check[12:16] = b'\x00\x00\x00\x00'
+        actual_crc = zlib.adler32(data_for_check)
         
         if expected_crc != actual_crc:
             raise ValueError("Index checksum mismatch")

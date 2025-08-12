@@ -1,7 +1,7 @@
 #
 # flavor/metadata.py
 #
-"""Metadata models for Flavor v0.1 packages."""
+"""Metadata models for Flavor PSPF/2025 packages."""
 
 from datetime import UTC, datetime
 import json
@@ -15,7 +15,7 @@ from attrs import asdict, define, field, fields
 class PSPFMetadata:
     """Core PSPF metadata (pspf.json)."""
 
-    format_version: str = "0.1"
+    format_version: str = "2025"
     format_name: str = "Progressive Secure Package Format"
     created_at: datetime = field(factory=lambda: datetime.now(UTC))
     created_by: dict[str, str] = field(factory=dict)
@@ -223,7 +223,7 @@ def create_minimal_metadata(
 ) -> MetadataBundle:
     """Create minimal metadata for a package."""
     return MetadataBundle(
-        pspf=PSPFMetadata(created_by={"tool": "flavor", "version": "0.1.0"}),
+        pspf=PSPFMetadata(created_by={"tool": "flavor", "version": "2025.0.0"}),
         package=PackageMetadata(
             name=name, version=version, description=f"{name} Terraform provider"
         ),

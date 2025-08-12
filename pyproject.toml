@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "flavor"
-version = "0.1.0"
-description = "Flavor packaging system implementing Progressive Secure Package Format (PSPF) v0.1"
+version = "2025.0.0"
+description = "Flavor packaging system implementing Progressive Secure Package Format (PSPF/2025)"
 readme = "README.md"
 authors = [
     { name = "Provide Services", email = "engineering@provide.services" },
@@ -30,7 +30,7 @@ dependencies = [
     "cryptography>=41.0.4",
     "wheel>=0.40.0",
     "zstandard>=0.22.0",
-    "pyvider-telemetry @ file://localhost/REDACTED_ABS_PATH",
+    # "pyvider-telemetry @ file://localhost/REDACTED_ABS_PATH",  # Install from local path
 ]
 keywords = ["packaging", "terraform", "provider", "pspf", "flavor"]
 
@@ -157,3 +157,11 @@ exclude_lines = ["pragma: no cover", "raise NotImplementedError", "if __name__ =
 dev = [
     "ty>=0.0.1a17",
 ]
+
+[tool.flavor]
+provider_name = "flavor"
+entry_point = "flavor.cli:main"
+
+[tool.flavor.signing]
+private_key_path = "keys/flavor-private.key"
+public_key_path = "keys/flavor-public.key"

@@ -9,6 +9,8 @@ use std::process::{Command, Stdio};
 use tar::Archive;
 use tempfile::TempDir;
 
+mod verify;
+
 const PSPF_MAGIC: &[u8] = b"PSPF2025";
 const INDEX_SIZE: u64 = 256;
 const MAX_SEARCH_SIZE: u64 = 10 * 1024 * 1024; // 10MB
@@ -83,10 +85,14 @@ fn main() -> Result<()> {
     let exe_path = env::current_exe()
         .context("Failed to get executable path")?;
 
+    // Check for verify mode
+    let args: Vec<String> = env::args().collect();
+    if args.len() > 1 && args[1] == "verify" {
+        return verify::verify_package(&exe_path);
+    }
+
     // Check if CLI mode is enabled
     if env::var("FLAVOR_LAUNCHER_CLI").unwrap_or_default() == "true" {
-        let args: Vec<String> = env::args().collect();
-        
         if args.len() < 2 {
             show_bundle_info(&exe_path)?;
             return Ok(());

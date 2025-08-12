@@ -9,10 +9,8 @@ verification of Progressive Secure Provider Format (Flavor) packages.
 # Public API for the packaging module
 from .keys import generate_key_pair
 from .orchestrator import PackagingOrchestrator
-from .reader import FlavorReader
 
 __all__ = [
-    "FlavorReader",
     "PackagingOrchestrator",
     "generate_key_pair",
 ]
