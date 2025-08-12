@@ -27,7 +27,7 @@ impl PSPFIndex {
     pub fn new() -> Self {
         Self {
             format_magic: *b"PSPF2025",
-            format_version: crate::PSPF_VERSION,
+            format_version: super::PSPF_VERSION,
             index_checksum: 0,
             package_size: 0,
             launcher_size: 0,
@@ -45,7 +45,7 @@ impl PSPFIndex {
 
     /// Pack index to bytes
     pub fn pack(&self) -> Vec<u8> {
-        let mut buf = vec![0u8; crate::INDEX_SIZE];
+        let mut buf = vec![0u8; super::INDEX_SIZE];
         
         // Use unsafe to get raw bytes
         unsafe {
@@ -58,16 +58,16 @@ impl PSPFIndex {
         
         // Calculate and update checksum
         buf[12..16].copy_from_slice(&[0, 0, 0, 0]); // Zero checksum field
-        let checksum = adler32::adler32(&buf).unwrap();
+        let checksum = adler32::adler32(buf.as_slice()).unwrap();
         buf[12..16].copy_from_slice(&checksum.to_le_bytes());
         
         buf
     }
 
     /// Unpack index from bytes
-    pub fn unpack(data: &[u8]) -> Result<Self, crate::FlavorError> {
-        if data.len() != crate::INDEX_SIZE {
-            return Err(crate::FlavorError::InvalidIndexSize);
+    pub fn unpack(data: &[u8]) -> Result<Self, super::FlavorError> {
+        if data.len() != super::INDEX_SIZE {
+            return Err(super::FlavorError::InvalidIndexSize);
         }
 
         let index = unsafe {
@@ -77,10 +77,10 @@ impl PSPFIndex {
         // Verify checksum
         let mut temp_data = data.to_vec();
         temp_data[12..16].copy_from_slice(&[0, 0, 0, 0]);
-        let expected_checksum = adler32::adler32(&temp_data).unwrap();
+        let expected_checksum = adler32::adler32(temp_data.as_slice()).unwrap();
         
         if index.index_checksum != expected_checksum {
-            return Err(crate::FlavorError::ChecksumMismatch);
+            return Err(super::FlavorError::ChecksumMismatch);
         }
 
         Ok(index)
@@ -136,6 +136,8 @@ pub struct Metadata {
     pub execution: Option<ExecutionInfo>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub verification: Option<VerificationInfo>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub build: Option<BuildInfo>,
 }
 
 /// Package information
@@ -145,6 +147,18 @@ pub struct PackageInfo {
     pub version: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
+}
+
+/// Build information
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BuildInfo {
+    pub builder: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub version: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub timestamp: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub host: Option<String>,
 }
 
 /// Execution configuration

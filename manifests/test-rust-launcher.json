@@ -1,0 +1,17 @@
+{
+  "name": "test-rust-launcher",
+  "version": "1.0.0",
+  "description": "Test Rust launcher CLI",
+  "launcher": "rust",
+  "command": "{slot:0}",
+  "slots": [
+    {
+      "path": "test-app.sh",
+      "name": "test-app.sh",
+      "compression": "gzip",
+      "purpose": "executable",
+      "lifecycle": "volatile"
+    }
+  ],
+  "environment": {}
+}

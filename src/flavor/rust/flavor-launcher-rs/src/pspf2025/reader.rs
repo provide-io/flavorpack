@@ -1,6 +1,6 @@
 //! PSPF 2025 Bundle Reader
 
-use crate::{
+use super::{
     errors::{FlavorError, Result},
     spec::*,
     EMOJI_MAGIC_SIZE, INDEX_SIZE, PSPF_MAGIC,
@@ -147,7 +147,7 @@ impl Reader {
         file.read_exact(&mut slot_data)?;
         
         // Verify checksum
-        if adler32::adler32(&slot_data).unwrap() != checksum {
+        if adler32::adler32(slot_data.as_slice()).unwrap() != checksum {
             return Err(FlavorError::ChecksumMismatch);
         }
         

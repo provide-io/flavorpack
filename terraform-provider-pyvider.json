@@ -1,0 +1,35 @@
+{
+  "name": "terraform-provider-pyvider",
+  "version": "0.0.2",
+  "description": "Terraform provider for Pyvider resources, bundled with PSPF",
+  "launcher": "go",
+  "command": "python3 {slot:0}",
+  "slots": [
+    {
+      "path": "terraform-provider-main.py",
+      "name": "main.py",
+      "compression": "gzip",
+      "purpose": "executable",
+      "lifecycle": "persistent"
+    },
+    {
+      "path": "terraform-provider-demo.py",
+      "name": "terraform-provider-demo.py",
+      "compression": "gzip",
+      "purpose": "executable",
+      "lifecycle": "persistent"
+    },
+    {
+      "path": "provider_server.py",
+      "name": "provider_server.py",
+      "compression": "gzip",
+      "purpose": "executable",
+      "lifecycle": "persistent"
+    }
+  ],
+  "environment": {
+    "PSPF_BUILDER": "go/pspf-builder",
+    "PROVIDER_NAME": "pyvider",
+    "PROVIDER_VERSION": "0.0.2"
+  }
+}

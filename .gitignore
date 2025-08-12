@@ -109,4 +109,4 @@ Desktop.ini
 
 # UV
 .venv/
-uv.lock
+uv.lockworkenv/

@@ -1,14 +1,17 @@
 use clap::Parser;
 use serde::{Deserialize, Serialize};
 use std::fs::{self, File};
-use std::io::{self, Read, Seek, SeekFrom, Write};
-use std::path::{Path, PathBuf};
+use std::io::{Seek, SeekFrom, Write};
+use std::path::PathBuf;
 use anyhow::{Context, Result};
 use sha2::{Sha256, Digest};
 use tar::Builder as TarBuilder;
 use flate2::write::GzEncoder;
 use flate2::Compression;
 use rand::Rng;
+use rand::rngs::OsRng;
+use ed25519_dalek::{SigningKey, Signature, Signer};
+use pem::{Pem, encode};
 
 /// Build PSPF 2025 bundles
 #[derive(Parser, Debug)]
@@ -25,6 +28,10 @@ struct Args {
     /// Launcher type (go, rust, python, node)
     #[arg(short, long, default_value = "rust")]
     launcher: String,
+
+    /// Enable reproducible builds (deterministic output)
+    #[arg(long)]
+    reproducible: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -178,18 +185,39 @@ fn main() -> Result<()> {
         reserved: [0; 120],
     };
 
-    // Generate ephemeral keys (mock for now)
-    let mut rng = rand::thread_rng();
-    rng.fill(&mut index.ephemeral_public_key);
+    // Generate ephemeral Ed25519 keys
+    let signing_key = if args.reproducible {
+        // Use deterministic seed for reproducible builds
+        let seed = Sha256::digest(b"reproducible-build-seed");
+        let seed_bytes: [u8; 32] = seed.into();
+        SigningKey::from_bytes(&seed_bytes)
+    } else {
+        SigningKey::generate(&mut OsRng)
+    };
+    let public_key = signing_key.verifying_key();
+    index.ephemeral_public_key[..32].copy_from_slice(public_key.as_bytes());
 
     // Skip index block space
     let index_offset = launcher_size;
     out.seek(SeekFrom::Start(index_offset + INDEX_SIZE))?;
 
     // Build metadata
-    let hostname = gethostname::gethostname()
-        .to_string_lossy()
-        .to_string();
+    let (build_timestamp, build_host) = if args.reproducible {
+        // Use fixed values for reproducible builds
+        (
+            "2025-01-01T00:00:00Z".to_string(),
+            format!("{}/{} reproducible", std::env::consts::OS, std::env::consts::ARCH)
+        )
+    } else {
+        let hostname = gethostname::gethostname()
+            .to_string_lossy()
+            .to_string();
+        (
+            chrono::Utc::now().to_rfc3339(),
+            format!("{}/{} {}", std::env::consts::OS, std::env::consts::ARCH, hostname)
+        )
+    };
+    
     let metadata = Metadata {
         format: "PSPF/2025".to_string(),
         package: PackageInfo {
@@ -212,11 +240,8 @@ fn main() -> Result<()> {
         build: Some(BuildInfo {
             builder: "rust/pspf-builder".to_string(),
             version: Some("1.0.0".to_string()),
-            timestamp: Some(chrono::Utc::now().to_rfc3339()),
-            host: Some(format!("{}/{} {}", 
-                std::env::consts::OS, 
-                std::env::consts::ARCH,
-                hostname)),
+            timestamp: Some(build_timestamp),
+            host: Some(build_host),
         }),
     };
 
@@ -297,22 +322,24 @@ fn main() -> Result<()> {
     }
     index.slot_table_size = (slot_offsets.len() * 20) as u64;
 
-    // Create and write metadata archive
-    let metadata_pos = out.stream_position()?;
-    let metadata_size = write_metadata(&mut out, &metadata)?;
-
-    index.metadata_offset = metadata_pos;
-    index.metadata_size = metadata_size as u64;
-
+    // Create metadata archive in memory first to calculate checksum
+    let metadata_archive = create_metadata_archive(&metadata, &signing_key)?;
+    
     // Calculate metadata checksum
-    let metadata_json = serde_json::to_vec(&metadata)?;
     let mut hasher = Sha256::new();
-    hasher.update(&metadata_json);
+    hasher.update(&metadata_archive);
     let metadata_checksum = hasher.finalize();
     index.metadata_checksum.copy_from_slice(&metadata_checksum);
+    
+    // Write metadata archive
+    let metadata_pos = out.stream_position()?;
+    out.write_all(&metadata_archive)?;
+    
+    index.metadata_offset = metadata_pos;
+    index.metadata_size = metadata_archive.len() as u64;
 
     // Write emoji magic
-    let emoji_magic = generate_emoji_magic(&config.launcher);
+    let emoji_magic = generate_emoji_magic(&config.launcher, args.reproducible);
     out.write_all(&emoji_magic)?;
 
     // Update package size
@@ -352,7 +379,7 @@ fn align_offset(offset: u64, alignment: u64) -> u64 {
     (offset + alignment - 1) & !(alignment - 1)
 }
 
-fn write_metadata(out: &mut File, metadata: &Metadata) -> Result<usize> {
+fn create_metadata_archive(metadata: &Metadata, signing_key: &SigningKey) -> Result<Vec<u8>> {
     let mut buffer = Vec::new();
     
     {
@@ -368,32 +395,33 @@ fn write_metadata(out: &mut File, metadata: &Metadata) -> Result<usize> {
         header.set_cksum();
         tar.append(&header, &metadata_json[..])?;
 
-        // Write integrity seal (mock for now)
-        let seal = vec![0u8; 32]; // Mock signature
+        // Sign the metadata with Ed25519
+        let signature: Signature = signing_key.sign(&metadata_json);
         let mut seal_header = tar::Header::new_gnu();
         seal_header.set_path("integrity/seal.sig")?;
-        seal_header.set_size(seal.len() as u64);
+        seal_header.set_size(signature.to_bytes().len() as u64);
         seal_header.set_mode(0o644);
         seal_header.set_cksum();
-        tar.append(&seal_header, &seal[..])?;
+        tar.append(&seal_header, signature.to_bytes().as_ref())?;
 
-        // Write public key (mock for now)
-        let pubkey = vec![0u8; 32]; // Mock public key
+        // Write public key in PEM format
+        let public_key_bytes = signing_key.verifying_key().to_bytes();
+        let pem = Pem::new("PUBLIC KEY", public_key_bytes);
+        let pem_string = encode(&pem);
         let mut key_header = tar::Header::new_gnu();
         key_header.set_path("integrity/seal.pem")?;
-        key_header.set_size(pubkey.len() as u64);
+        key_header.set_size(pem_string.len() as u64);
         key_header.set_mode(0o644);
         key_header.set_cksum();
-        tar.append(&key_header, &pubkey[..])?;
+        tar.append(&key_header, pem_string.as_bytes())?;
 
         tar.finish()?;
     }
 
-    out.write_all(&buffer)?;
-    Ok(buffer.len())
+    Ok(buffer)
 }
 
-fn generate_emoji_magic(launcher_type: &str) -> Vec<u8> {
+fn generate_emoji_magic(launcher_type: &str, reproducible: bool) -> Vec<u8> {
     let package_emoji = "📦";
     let launcher_emoji = match launcher_type {
         "go" => "🐹",
@@ -403,9 +431,13 @@ fn generate_emoji_magic(launcher_type: &str) -> Vec<u8> {
         _ => "📄",
     };
     
-    let random_emojis = ["🌮", "🍕", "🎉", "🚀", "🌟", "💎", "🎨", "🔥", "⚡", "🌈"];
-    let mut rng = rand::thread_rng();
-    let random_emoji = random_emojis[rng.gen_range(0..random_emojis.len())];
+    let random_emoji = if reproducible {
+        "🔒" // Lock emoji for reproducible builds
+    } else {
+        let random_emojis = ["🌮", "🍕", "🎉", "🚀", "🌟", "💎", "🎨", "🔥", "⚡", "🌈"];
+        let mut rng = rand::thread_rng();
+        random_emojis[rng.gen_range(0..random_emojis.len())]
+    };
     
     let magic_wand = "🪄";
     

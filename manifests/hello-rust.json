@@ -1,0 +1,9 @@
+{
+  "name": "test-rust-cli",
+  "version": "1.0.0",
+  "description": "Test Rust CLI",
+  "launcher": "rust",
+  "command": "echo 'Hello from Rust CLI test'",
+  "slots": [],
+  "environment": {}
+}

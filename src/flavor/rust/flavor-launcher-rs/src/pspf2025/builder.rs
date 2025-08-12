@@ -1,6 +1,6 @@
 //! PSPF 2025 Bundle Builder
 
-use crate::{
+use super::{
     errors::{FlavorError, Result},
     spec::*,
     EMOJI_MAGIC_SIZE, INDEX_SIZE, PSPF_MAGIC, PSPF_VERSION, RANDOM_EMOJIS, SLOT_ALIGNMENT,
@@ -104,12 +104,12 @@ impl Builder {
 
     fn write_metadata(
         &self,
-        writer: &mut impl Write,
+        writer: &mut (impl Write + Seek),
         metadata: &Metadata,
         private_key: &[u8; 32],
         public_key: &[u8; 32],
     ) -> Result<u64> {
-        let start_pos = writer.stream_position()?;
+        let _start_pos = writer.stream_position()?;
         
         // Create metadata archive in memory
         let archive_data = self.create_metadata_archive(metadata, private_key, public_key)?;
@@ -164,7 +164,7 @@ impl Builder {
 
     fn write_slots(
         &self,
-        writer: &mut impl Write + Seek,
+        writer: &mut (impl Write + Seek),
         slots: &[SlotMetadata],
     ) -> Result<(Vec<u8>, u64)> {
         let mut slot_entries = Vec::new();
@@ -182,7 +182,7 @@ impl Builder {
             let slot_data = self.compress_slot(slot)?;
             writer.write_all(&slot_data)?;
             
-            let checksum = adler32::adler32(&slot_data).unwrap();
+            let checksum = adler32::adler32(slot_data.as_slice()).unwrap();
             
             slot_entries.push(SlotTableEntry {
                 offset: slot_offset,

@@ -1,0 +1,186 @@
+{
+  "timestamp": "2025-08-10 20:42:16",
+  "summary": {
+    "total": 4,
+    "passed": 4,
+    "failed": 0
+  },
+  "results": [
+    {
+      "combination": "go-go",
+      "success": true,
+      "duration": 0.056549072265625,
+      "error": null,
+      "tests": [
+        {
+          "name": "Build",
+          "passed": true,
+          "error": null,
+          "duration": 0.007627010345458984
+        },
+        {
+          "name": "CLI info test",
+          "passed": true,
+          "error": null,
+          "duration": 0.00912785530090332
+        },
+        {
+          "name": "Verify test",
+          "passed": true,
+          "error": null,
+          "duration": 0.0077211856842041016
+        },
+        {
+          "name": "Extract",
+          "passed": true,
+          "error": null,
+          "duration": 0.007273197174072266
+        },
+        {
+          "name": "Arg Passthrough",
+          "passed": true,
+          "error": null,
+          "duration": 0.014995813369750977
+        },
+        {
+          "name": "Builder ID",
+          "passed": true,
+          "error": null,
+          "duration": 0.006120920181274414
+        }
+      ]
+    },
+    {
+      "combination": "go-rust",
+      "success": true,
+      "duration": 0.0569148063659668,
+      "error": null,
+      "tests": [
+        {
+          "name": "Build",
+          "passed": true,
+          "error": null,
+          "duration": 0.00847005844116211
+        },
+        {
+          "name": "CLI info test",
+          "passed": true,
+          "error": null,
+          "duration": 0.008585929870605469
+        },
+        {
+          "name": "Verify test",
+          "passed": true,
+          "error": null,
+          "duration": 0.007306098937988281
+        },
+        {
+          "name": "Extract",
+          "passed": true,
+          "error": null,
+          "duration": 0.010489225387573242
+        },
+        {
+          "name": "Arg Passthrough",
+          "passed": true,
+          "error": null,
+          "duration": 0.012162923812866211
+        },
+        {
+          "name": "Builder ID",
+          "passed": true,
+          "error": null,
+          "duration": 0.006474018096923828
+        }
+      ]
+    },
+    {
+      "combination": "rust-go",
+      "success": true,
+      "duration": 0.05626320838928223,
+      "error": null,
+      "tests": [
+        {
+          "name": "Build",
+          "passed": true,
+          "error": null,
+          "duration": 0.009003162384033203
+        },
+        {
+          "name": "CLI info test",
+          "passed": true,
+          "error": null,
+          "duration": 0.008859872817993164
+        },
+        {
+          "name": "Verify test",
+          "passed": true,
+          "error": null,
+          "duration": 0.007138967514038086
+        },
+        {
+          "name": "Extract",
+          "passed": true,
+          "error": null,
+          "duration": 0.013178110122680664
+        },
+        {
+          "name": "Arg Passthrough",
+          "passed": true,
+          "error": null,
+          "duration": 0.010034799575805664
+        },
+        {
+          "name": "Builder ID",
+          "passed": true,
+          "error": null,
+          "duration": 0.004842042922973633
+        }
+      ]
+    },
+    {
+      "combination": "rust-rust",
+      "success": true,
+      "duration": 0.05695509910583496,
+      "error": null,
+      "tests": [
+        {
+          "name": "Build",
+          "passed": true,
+          "error": null,
+          "duration": 0.010315179824829102
+        },
+        {
+          "name": "CLI info test",
+          "passed": true,
+          "error": null,
+          "duration": 0.008387088775634766
+        },
+        {
+          "name": "Verify test",
+          "passed": true,
+          "error": null,
+          "duration": 0.0071277618408203125
+        },
+        {
+          "name": "Extract",
+          "passed": true,
+          "error": null,
+          "duration": 0.015623331069946289
+        },
+        {
+          "name": "Arg Passthrough",
+          "passed": true,
+          "error": null,
+          "duration": 0.007822751998901367
+        },
+        {
+          "name": "Builder ID",
+          "passed": true,
+          "error": null,
+          "duration": 0.004567861557006836
+        }
+      ]
+    }
+  ]
+}

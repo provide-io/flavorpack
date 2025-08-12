@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Context, Result};
 use flate2::read::GzDecoder;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::env;
 use std::fs::{self, File};
 use std::io::{Read, Seek, SeekFrom};
@@ -31,21 +31,23 @@ struct PSPFIndex {
     reserved: [u8; 120],           // Reserved for future use
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 struct Metadata {
     format: String,
     package: PackageInfo,
     slots: Vec<SlotMetadata>,
     execution: ExecutionInfo,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    build: Option<BuildInfo>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 struct PackageInfo {
     name: String,
     version: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 struct SlotMetadata {
     index: usize,
     name: String,
@@ -57,7 +59,7 @@ struct SlotMetadata {
     lifecycle: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 struct ExecutionInfo {
     primary_slot: usize,
     command: String,
@@ -65,16 +67,51 @@ struct ExecutionInfo {
     environment: std::collections::HashMap<String, String>,
 }
 
-fn main() -> Result<()> {
-    // Check if CLI mode is enabled
-    if env::var("PSPF_CLI_ENABLED").unwrap_or_default() == "true" {
-        eprintln!("PSPF CLI mode not yet implemented");
-        std::process::exit(1);
-    }
+#[derive(Debug, Deserialize, Serialize)]
+struct BuildInfo {
+    builder: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    version: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    timestamp: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    host: Option<String>,
+}
 
+fn main() -> Result<()> {
     // Get the path to our own executable
     let exe_path = env::current_exe()
         .context("Failed to get executable path")?;
+
+    // Check if CLI mode is enabled
+    if env::var("FLAVOR_LAUNCHER_CLI").unwrap_or_default() == "true" {
+        let args: Vec<String> = env::args().collect();
+        
+        if args.len() < 2 {
+            show_bundle_info(&exe_path)?;
+            return Ok(());
+        }
+        
+        match args[1].as_str() {
+            "info" => show_bundle_info(&exe_path)?,
+            "run" => run_bundle(&exe_path, &args[2..])?,
+            "extract" => {
+                if args.len() < 4 {
+                    eprintln!("Usage: {} extract <slot> <dir>", args[0]);
+                    std::process::exit(1);
+                }
+                extract_slot(&exe_path, &args[2], &args[3])?;
+            }
+            "metadata" => show_metadata(&exe_path)?,
+            "verify" => verify_bundle(&exe_path)?,
+            _ => {
+                eprintln!("Unknown command: {}", args[1]);
+                eprintln!("Available commands: info, run, extract, metadata, verify");
+                std::process::exit(1);
+            }
+        }
+        return Ok(());
+    }
 
     // Create reader for our bundle
     let mut reader = Reader::new(&exe_path)?;
@@ -89,7 +126,7 @@ fn main() -> Result<()> {
     // Extract all slots
     let mut slot_paths = std::collections::HashMap::new();
     for (i, slot) in metadata.slots.iter().enumerate() {
-        let slot_path = reader.extract_slot(i, &cache_dir)?;
+        let slot_path = reader.extract_slot(i, cache_dir.path())?;
         slot_paths.insert(slot.index, slot_path);
     }
 
@@ -271,7 +308,7 @@ impl Reader {
         Err(anyhow!("psp.json not found in metadata"))
     }
 
-    fn extract_slot(&mut self, index: usize, cache_dir: &TempDir) -> Result<PathBuf> {
+    fn extract_slot(&mut self, index: usize, output_dir: &Path) -> Result<PathBuf> {
         let idx = self.read_index()?;
 
         // Read slot table entry
@@ -304,7 +341,7 @@ impl Reader {
         };
 
         // Write to cache
-        let slot_path = cache_dir.path().join(&slot_meta.name);
+        let slot_path = output_dir.join(&slot_meta.name);
         fs::write(&slot_path, decompressed)?;
 
         // Make executable if needed
@@ -329,4 +366,237 @@ impl Clone for PSPFIndex {
     fn clone(&self) -> Self {
         *self
     }
+}
+
+// CLI command implementations
+
+fn show_bundle_info(exe_path: &Path) -> Result<()> {
+    let mut reader = Reader::new(exe_path)?;
+    let index = reader.read_index()?;
+    let metadata = reader.read_metadata()?;
+    
+    // Detect launcher type
+    let launcher_type = detect_launcher_type(exe_path);
+    let builder_type = detect_builder_type(&metadata);
+    
+    // Calculate compression info
+    let mut total_original = 0i64;
+    let mut total_compressed = 0i64;
+    let mut compression_types = std::collections::HashSet::new();
+    
+    for slot in &metadata.slots {
+        total_original += slot.size;
+        total_compressed += slot.compressed_size;
+        if !slot.compression.is_empty() && slot.compression != "none" {
+            compression_types.insert(slot.compression.clone());
+        }
+    }
+    
+    let compression_info = if compression_types.is_empty() {
+        "none".to_string()
+    } else {
+        let types: Vec<_> = compression_types.into_iter().collect();
+        if total_original > 0 {
+            let ratio = (total_compressed as f64 / total_original as f64) * 100.0;
+            format!("{} compressed to {:.0}%", types.join(", "), ratio)
+        } else {
+            types.join(", ")
+        }
+    };
+    
+    // Verify status
+    let verify_status = if verify_magic(exe_path).is_ok() { "✓" } else { "✗" };
+    
+    println!("{} v{} [PSPF/{}]", 
+        metadata.package.name, 
+        metadata.package.version,
+        metadata.format.trim_start_matches("PSPF/"));
+    
+    println!("Built with: {} | Launcher: {} | Size: {:.1}MB",
+        builder_type,
+        launcher_type,
+        index.package_size as f64 / (1024.0 * 1024.0));
+    
+    let slot_count = metadata.slots.len();
+    println!("Slots: {} ({}) | Verified: {}",
+        slot_count,
+        compression_info,
+        verify_status);
+    
+    if let Some(exec) = metadata.execution.command.split_whitespace().next() {
+        println!("\nRun with: {}", exec);
+    }
+    println!("CLI Mode: Use 'run' to execute, 'extract' to unpack");
+    
+    Ok(())
+}
+
+fn run_bundle(exe_path: &Path, args: &[String]) -> Result<()> {
+    // Simply execute the bundle with the provided arguments
+    let mut all_args = vec![exe_path.to_string_lossy().to_string()];
+    all_args.extend(args.iter().cloned());
+    
+    // Unset CLI environment variable and re-execute
+    unsafe {
+        env::remove_var("FLAVOR_LAUNCHER_CLI");
+    }
+    
+    let status = Command::new(exe_path)
+        .args(args)
+        .stdin(Stdio::inherit())
+        .stdout(Stdio::inherit())
+        .stderr(Stdio::inherit())
+        .status()?;
+    
+    std::process::exit(status.code().unwrap_or(1));
+}
+
+fn extract_slot(exe_path: &Path, slot_str: &str, output_dir: &str) -> Result<()> {
+    let slot_index = slot_str.parse::<usize>()
+        .context("Invalid slot index")?;
+    
+    let mut reader = Reader::new(exe_path)?;
+    let metadata = reader.read_metadata()?;
+    
+    if slot_index >= metadata.slots.len() {
+        return Err(anyhow!("Slot index out of range"));
+    }
+    
+    let slot_name = metadata.slots[slot_index].name.clone();
+    let output_path = reader.extract_slot(slot_index, Path::new(output_dir))?;
+    
+    println!("Extracted slot {} ({}) to {}", 
+        slot_index, slot_name, output_path.display());
+    
+    Ok(())
+}
+
+fn show_metadata(exe_path: &Path) -> Result<()> {
+    let mut reader = Reader::new(exe_path)?;
+    let metadata = reader.read_metadata()?;
+    
+    let json = serde_json::to_string_pretty(&metadata)?;
+    println!("{}", json);
+    
+    Ok(())
+}
+
+fn verify_bundle(exe_path: &Path) -> Result<()> {
+    println!("Verifying bundle integrity...");
+    
+    let mut errors = Vec::new();
+    let mut reader = Reader::new(exe_path)?;
+    
+    // Check magic
+    match verify_magic(exe_path) {
+        Ok(_) => println!("✓ Magic sequence valid"),
+        Err(e) => errors.push(format!("Magic verification failed: {}", e)),
+    }
+    
+    // Check index
+    match reader.read_index() {
+        Ok(_) => println!("✓ Index checksum valid"),
+        Err(e) => errors.push(format!("Index verification failed: {}", e)),
+    }
+    
+    // Check metadata
+    match reader.read_metadata() {
+        Ok(metadata) => {
+            println!("✓ Metadata checksum valid");
+            
+            // Check each slot
+            for (i, slot) in metadata.slots.iter().enumerate() {
+                // Verify slot by trying to extract it to temp dir
+                match tempfile::tempdir() {
+                    Ok(temp_dir) => {
+                        match reader.extract_slot(i, temp_dir.path()) {
+                            Ok(_) => println!("✓ Slot {} ({}) checksum valid", i, slot.name),
+                            Err(e) => errors.push(format!("Slot {} ({}) verification failed: {}", i, slot.name, e)),
+                        }
+                    }
+                    Err(e) => errors.push(format!("Failed to create temp dir for slot {} verification: {}", i, e)),
+                }
+            }
+        }
+        Err(e) => errors.push(format!("Metadata verification failed: {}", e)),
+    }
+    
+    if errors.is_empty() {
+        println!("\n✓ Bundle verification passed");
+    } else {
+        println!("\n✗ Bundle verification failed:");
+        for err in errors {
+            println!("  - {}", err);
+        }
+        std::process::exit(1);
+    }
+    
+    Ok(())
+}
+
+fn verify_magic(exe_path: &Path) -> Result<()> {
+    let mut file = File::open(exe_path)?;
+    let file_size = file.metadata()?.len();
+    
+    if file_size < 256 + 16 {
+        return Err(anyhow!("File too small"));
+    }
+    
+    // Search for PSPF magic starting from the launcher size
+    let mut search_start = 0;
+    while search_start < file_size.min(MAX_SEARCH_SIZE) {
+        file.seek(SeekFrom::Start(search_start))?;
+        
+        let mut buffer = vec![0u8; 8];
+        if file.read_exact(&mut buffer).is_err() {
+            break;
+        }
+        
+        if &buffer == PSPF_MAGIC {
+            return Ok(());
+        }
+        
+        search_start += 1;
+    }
+    
+    Err(anyhow!("PSPF magic not found"))
+}
+
+fn detect_launcher_type(exe_path: &Path) -> String {
+    // Check filename patterns
+    if let Some(filename) = exe_path.file_name().and_then(|f| f.to_str()) {
+        if filename.contains("rust") {
+            return "rust".to_string();
+        }
+        if filename.contains("go") {
+            return "go".to_string();
+        }
+    }
+    
+    // Fall back to binary inspection
+    if let Ok(data) = fs::read(exe_path) {
+        let size = data.len().min(65536);
+        let header = &data[..size];
+        
+        // Rust binaries
+        if header.windows(10).any(|w| w == b"rust_panic") || 
+           header.windows(3).any(|w| w == b"_ZN") {
+            return "rust".to_string();
+        }
+        
+        // Go binaries
+        if header.windows(10).any(|w| w == b"go.buildid") || 
+           header.windows(12).any(|w| w == b"runtime.main") {
+            return "go".to_string();
+        }
+    }
+    
+    "unknown".to_string()
+}
+
+fn detect_builder_type(metadata: &Metadata) -> String {
+    if let Some(build_info) = &metadata.build {
+        return build_info.builder.clone();
+    }
+    "unknown/pspf-builder".to_string()
 }
