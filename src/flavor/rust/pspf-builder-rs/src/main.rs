@@ -58,6 +58,8 @@ struct Metadata {
     slots: Vec<SlotMetadata>,
     execution: ExecutionInfo,
     verification: VerificationInfo,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    build: Option<BuildInfo>,
 }
 
 #[derive(Debug, Serialize)]
@@ -95,6 +97,17 @@ struct VerificationInfo {
 struct IntegritySealInfo {
     required: bool,
     algorithm: String,
+}
+
+#[derive(Debug, Serialize)]
+struct BuildInfo {
+    builder: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    version: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    timestamp: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    host: Option<String>,
 }
 
 #[repr(C, packed)]
@@ -174,6 +187,9 @@ fn main() -> Result<()> {
     out.seek(SeekFrom::Start(index_offset + INDEX_SIZE))?;
 
     // Build metadata
+    let hostname = gethostname::gethostname()
+        .to_string_lossy()
+        .to_string();
     let metadata = Metadata {
         format: "PSPF/2025".to_string(),
         package: PackageInfo {
@@ -193,6 +209,15 @@ fn main() -> Result<()> {
                 algorithm: "ecdsa-p256".to_string(),
             },
         },
+        build: Some(BuildInfo {
+            builder: "rust/pspf-builder".to_string(),
+            version: Some("1.0.0".to_string()),
+            timestamp: Some(chrono::Utc::now().to_rfc3339()),
+            host: Some(format!("{}/{} {}", 
+                std::env::consts::OS, 
+                std::env::consts::ARCH,
+                hostname)),
+        }),
     };
 
     // Process slots
