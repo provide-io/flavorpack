@@ -40,7 +40,7 @@ The canonical specification for the binary format is the implementation in the G
 ## Immediate Roadmap (Pre-Release Tasks)
 
 1.  **Implement Production Cryptography in Python Verifier**: Replace the placeholder signing and verification logic in `src/flavor/psp/format_2025.py` with a real `ed25519` implementation (e.g., using the `cryptography` library). This is critical for true cross-language verification.
-2.  **Add `zstd` Compression**: Add `zstd` support to the Go and Rust builders to improve compression ratios for binary assets.
+2.  **Add Additional Encodings**: Add support for additional encoding formats (beyond gzip) to the Go and Rust builders for better flexibility.
 3.  **Repair and Unify the Test Suite**: Fix the BDD test suite by updating `tests/bdd/features/steps/pytest_runner.py` to point to existing, correct `pytest` tests. Expand the `pytest` suite to perform end-to-end, cross-language validation (e.g., build with Go, verify with Python).
 
 ## How to Build & Test

@@ -92,6 +92,7 @@ def clean_cache() -> None:
     """Removes cached Go binaries."""
     cache_dir = Path.home() / ".cache" / "flavor"
     if cache_dir.exists():
+        import shutil
         shutil.rmtree(cache_dir, ignore_errors=True)
 
 

@@ -27,7 +27,7 @@ from flavor.psp.format_2025 import (
     INDEX_SIZE,
     EMOJI_MAGIC_SIZE,
     SLOT_ALIGNMENT,
-    LAUNCHER_EMOJIS,
+    MAGIC_WAND_EMOJI,
     align_offset
 )
 
@@ -67,7 +67,7 @@ class TestPSPFCore:
             "verification": {
                 "integrity_seal": {
                     "required": True,
-                    "algorithm": "ecdsa-p256"
+                    "algorithm": "ed25519"
                 }
             }
         }
@@ -96,7 +96,7 @@ class TestPSPFCore:
             size=simple_payload.stat().st_size,
             compressed_size=0,
             checksum=hashlib.sha256(simple_payload.read_bytes()).hexdigest(),
-            compression="gzip",
+            encoding="gzip",
             purpose="payload",
             lifecycle="persistent",
             path=simple_payload
@@ -117,7 +117,7 @@ class TestPSPFCore:
         assert bundle_path.stat().st_size > 0
     
     def test_emoji_magic_format(self, temp_dir, simple_payload, simple_metadata):
-        """Test emoji magic ends with 📦??🪄."""
+        """Test emoji magic is just the magic wand."""
         # Build bundle
         bundle_path = temp_dir / "test.pspf"
         builder = PSPFBuilder()
@@ -130,26 +130,17 @@ class TestPSPFCore:
         
         # Check emoji magic
         with open(bundle_path, 'rb') as f:
-            f.seek(-16, 2)
-            magic = f.read(16)
+            f.seek(-4, 2)
+            magic = f.read(4)
         
-        magic_str = magic.decode('utf-8').strip('\x00')
-        assert len(magic_str) == 4
-        assert magic_str[0] == '📦'
-        assert magic_str[1] == '🐍'  # Python launcher
-        assert magic_str[3] == '🪄'
+        magic_str = magic.decode('utf-8')
+        assert magic_str == MAGIC_WAND_EMOJI
     
-    def test_launcher_emoji_mapping(self, temp_dir, simple_metadata):
-        """Test launcher language emoji mapping."""
-        test_cases = [
-            ("go", "🐹"),
-            ("rust", "🦀"),
-            ("python", "🐍"),
-            ("node", "🟢"),
-            ("unknown", "📄")
-        ]
+    def test_magic_wand_footer(self, temp_dir, simple_metadata):
+        """Test magic wand emoji footer."""
+        test_cases = ["go", "rust", "python", "node", "unknown"]
         
-        for launcher_type, expected_emoji in test_cases:
+        for launcher_type in test_cases:
             bundle_path = temp_dir / f"test_{launcher_type}.pspf"
             builder = PSPFBuilder()
             builder.build(
@@ -159,16 +150,13 @@ class TestPSPFCore:
                 launcher_type=launcher_type
             )
             
-            # Check emoji
+            # Check emoji is always magic wand
             with open(bundle_path, 'rb') as f:
-                f.seek(-16, 2)
-                magic = f.read(16)
+                f.seek(-4, 2)
+                magic = f.read(4)
             
             magic_str = magic.decode('utf-8')
-            # Split into individual emojis (they're multi-byte)
-            emojis = [c for c in magic_str.strip('\x00')]
-            assert len(emojis) == 4
-            assert emojis[1] == expected_emoji
+            assert magic_str == MAGIC_WAND_EMOJI
     
     def test_index_block_location(self, temp_dir, simple_metadata):
         """Test index block is at launcher_size offset."""
@@ -194,10 +182,11 @@ class TestPSPFCore:
     
     def test_index_block_size(self):
         """Test index block is exactly 256 bytes."""
-        assert struct.calcsize(PSPFIndex.FORMAT) == INDEX_SIZE
+        # FORMAT is now an attrs field, so we need to access it from an instance
+        index = PSPFIndex()
+        assert struct.calcsize(index.FORMAT) == INDEX_SIZE
         
         # Also test packing
-        index = PSPFIndex()
         packed = index.pack()
         assert len(packed) == INDEX_SIZE
     
@@ -278,7 +267,7 @@ class TestPSPFCore:
                 size=slot_path.stat().st_size,
                 compressed_size=0,
                 checksum=hashlib.sha256(slot_path.read_bytes()).hexdigest(),
-                compression="none",
+                encoding="none",
                 purpose="payload",
                 lifecycle="persistent",
                 path=slot_path
@@ -300,12 +289,18 @@ class TestPSPFCore:
         with open(bundle_path, 'rb') as f:
             f.seek(index.slot_table_offset)
             for i in range(index.slot_count):
-                offset = struct.unpack('<Q', f.read(8))[0]
-                size = struct.unpack('<Q', f.read(8))[0]
-                checksum = struct.unpack('<I', f.read(4))[0]
+                # Read the full 24-byte entry
+                entry_data = f.read(24)
+                offset = struct.unpack('<Q', entry_data[0:8])[0]
+                size = struct.unpack('<Q', entry_data[8:16])[0]
+                checksum = struct.unpack('<I', entry_data[16:20])[0]
+                encoding = entry_data[20]
+                purpose = entry_data[21]
+                lifecycle = entry_data[22]
+                reserved = entry_data[23]
                 
                 # Verify alignment
-                assert offset % SLOT_ALIGNMENT == 0, f"Slot {i} not aligned"
+                assert offset % SLOT_ALIGNMENT == 0, f"Slot {i} not aligned (offset={offset})"
     
     def test_align_offset_function(self):
         """Test offset alignment function."""
@@ -333,8 +328,8 @@ class TestPSPFCore:
         
         # Test corrupted magic
         with open(bundle_path, 'r+b') as f:
-            f.seek(-16, 2)
-            f.write(b"BADMAGIC" * 2)
+            f.seek(-4, 2)
+            f.write(b"BAD!")
         
         reader2 = PSPFReader(bundle_path)
         assert not reader2.verify_magic()

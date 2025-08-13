@@ -77,12 +77,13 @@ flavor/
 
 ## 🚧 Next Steps
 1.  Implement production-grade cryptography in the Python verifier.
-2.  Add `zstd` compression support to the Go and Rust builders.
+2.  Add additional encoding formats (e.g., encryption) to the Go and Rust builders.
 3.  Repair and expand the `pytest` and BDD test suites to perform end-to-end, cross-language validation.
 
 ## 📖 Documentation
 - [`docs/SPECIFICATION.md`](docs/SPECIFICATION.md) - Complete PSPF 2025 format specification.
 - [`DEVELOPMENT.md`](DEVELOPMENT.md) - Guide for developers contributing to Flavor.
+- [`docs/TODO.md`](docs/TODO.md) - A list of tasks to be done.
 
 ## 🤝 Contributing
 Please see [`DEVELOPMENT.md`](DEVELOPMENT.md) for detailed instructions.

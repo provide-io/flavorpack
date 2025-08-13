@@ -41,7 +41,7 @@ class TestPackagingOrchestratorComprehensive:
         assert orchestrator.entry_point == "test.main:run"
         assert orchestrator.python_version == "3.11"
 
-    @patch("flavor.packaging.orchestrator.PackagingOrchestrator._run_subprocess")
+    @patch("flavor.packaging.util.run_subprocess")
     @patch("flavor.packaging.python_packager.PythonPackager.prepare_artifacts")
     @patch("flavor.packaging.python_packager.PythonPackager.compute_signature")
     def test_build_package_flow(
@@ -73,7 +73,7 @@ class TestPackagingOrchestratorComprehensive:
         assert "--output" in args
         assert orchestrator.output_flavor_path in args
 
-    @patch("flavor.packaging.orchestrator.subprocess.run")
+    @patch("flavor.packaging.util.run_subprocess")
     def test_build_error_handling(self, mock_run, orchestrator) -> None:
         """Test error handling when subprocess fails."""
         mock_run.side_effect = BuildError("Build failed!")
