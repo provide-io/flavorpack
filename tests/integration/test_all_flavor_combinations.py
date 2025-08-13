@@ -68,8 +68,8 @@ def all_packagers():
         }
     
     # Rust packager
-    rust_dir = Path(__file__).parent.parent.parent / "src/flavor/rust/flavor-packager-rs"
-    rust_bin = rust_dir / "target/release/flavor-rs"
+    rust_dir = Path(__file__).parent.parent.parent / "src/flavor/rust/pspf-builder-rs"
+    rust_bin = rust_dir / "target/release/pspf-builder-rs"
     if rust_bin.exists():
         packagers["rust"] = {
             "cmd": [str(rust_bin)],
@@ -107,8 +107,8 @@ def all_launchers():
         launchers["go"] = str(go_launcher)
     
     # Rust launcher
-    rust_dir = Path(__file__).parent.parent.parent / "src/flavor/rust/flavor-launcher-rs"
-    rust_launcher = rust_dir / "target/release/flavor-launcher-rs"
+    rust_dir = Path(__file__).parent.parent.parent / "src/flavor/rust/pspf-launcher-rs"
+    rust_launcher = rust_dir / "target/release/pspf-launcher-rs"
     if rust_launcher.exists():
         launchers["rust"] = str(rust_launcher)
     elif shutil.which("cargo"):
@@ -313,6 +313,10 @@ class TestAllFlavorCombinations:
                 combo = f"{packager_name}-packager_{launcher_name}-launcher"
                 output_path = output_dir / f"test-provider_{combo}"
                 
+                # Remove existing file if it exists
+                if output_path.exists():
+                    output_path.unlink()
+                
                 print(f"\n=== Building {combo} ===")
                 
                 try:
@@ -358,11 +362,13 @@ class TestAllFlavorCombinations:
                                 "slots": [
                                     {
                                         "index": 0,
-                                        "path": str(work_dir / "payload"),
-                                        "type": "directory"
+                                        "name": "payload",
+                                        "path": str(work_dir / "payload.tgz"),
+                                        "type": "file"
                                     },
                                     {
                                         "index": 1,
+                                        "name": "public_key",
                                         "path": str(project_root / "test-keys/flavor-public.key"),
                                         "type": "file"
                                     }
@@ -372,6 +378,21 @@ class TestAllFlavorCombinations:
                             manifest_path = work_dir / "manifest.json"
                             with open(manifest_path, "w") as f:
                                 json.dump(manifest_data, f, indent=2)
+                            
+                            # Copy the launcher to the working directory for pspf-builder
+                            if packager_name in ["go", "rust"]:
+                                # Map launcher names to expected filenames
+                                launcher_map = {
+                                    "go": "pspf-launcher",
+                                    "rust": "pspf-launcher-rust",
+                                    "python": "pspf-launcher-python",
+                                    "node": "pspf-launcher-node"
+                                }
+                                launcher_filename = launcher_map.get(launcher_name, "pspf-launcher")
+                                launcher_copy = work_dir / launcher_filename
+                                shutil.copy2(launcher_path, launcher_copy)
+                                # Make it executable
+                                launcher_copy.chmod(0o755)
                             
                             cmd = packager_info["cmd"] + [
                                 "--manifest", str(manifest_path),
@@ -443,7 +464,10 @@ class TestAllFlavorCombinations:
                             "built": False,
                             "error": result.stderr
                         }
-                        print(f"❌ {combo}: Build failed - {result.stderr[:100]}")
+                        print(f"❌ {combo}: Build failed")
+                        print(f"   Command: {' '.join(cmd)}")
+                        print(f"   Stderr: {result.stderr}")
+                        print(f"   Stdout: {result.stdout}")
                 
                 except Exception as e:
                     results[combo] = {
