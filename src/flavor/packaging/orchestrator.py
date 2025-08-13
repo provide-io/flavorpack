@@ -118,7 +118,7 @@ class PackagingOrchestrator:
                 "version": self.build_config.get("version", "1.0.0"),
                 "launcher": "go",
                 "launcher_path": str(Path(__file__).parent.parent / "go/cmd/pspf-launcher/pspf-launcher"),
-                "command": "uv run --python 3.11 {slot:3} " + self.entry_point.split(":")[0],
+                "command": "{cache}/bin/python3 {slot:3} " + self.entry_point.split(":")[0],
                 "slots": [
                     {
                         "name": "uv",
@@ -131,10 +131,10 @@ class PackagingOrchestrator:
                     {
                         "name": "python",
                         "path": str(python_tarball),
-                        "compression": "gzip",
+                        "compression": "none",
                         "purpose": "runtime",
                         "lifecycle": "persistent",
-                        "extract_to": "share/uv/python"
+                        "extract_to": "."
                     },
                     {
                         "name": "wheels",
