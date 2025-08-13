@@ -11,7 +11,7 @@
 
 ### Still Outstanding ⚠️
 - Rust missing critical features (cache validation, setup commands)
-- Binary format incompatibility between Go and Rust
+- ~~Binary format incompatibility between Go and Rust~~ ✅ FIXED (unified 24-byte slot table)
 - Mock/placeholder crypto implementations
 - Duplicate subprocess execution logic in Python
 - Unused error constants in Go
@@ -123,26 +123,17 @@ func getLauncherPath(launcherType string) string {
 - **Environment substitution** - Minimal implementation
 - **Platform detection** - Missing detailed implementation
 
-### 2. Binary Format Incompatibility
+### 2. ~~Binary Format Incompatibility~~ ✅ FIXED
 ```rust
-// Rust: 20-byte slot entries
-pub struct SlotTableEntry {
-    pub index: u32,
-    pub offset: u64,
-    pub size: u64,
-}
-
-// Go: 36-byte slot entries
-type SlotTableEntry struct {
-    Index          uint32
-    Offset         uint64
-    Size           uint64
-    CompressedSize uint64
-    Checksum       uint32
-    Compression    uint8
-    Purpose        uint8
-    Lifecycle      uint8
-    Reserved       uint8
+// Both Go and Rust now use unified 24-byte slot entries:
+struct SlotEntry {
+    offset: u64,      // 8 bytes: where slot data starts
+    size: u64,        // 8 bytes: size of data as stored
+    checksum: u32,    // 4 bytes: adler32 of stored data
+    compression: u8,  // 1 byte: 0=none, 1=gzip, 2=zstd, etc
+    purpose: u8,      // 1 byte: 0=payload, 1=runtime, 2=tool
+    lifecycle: u8,    // 1 byte: 0=persistent, 1=volatile
+    reserved: u8,     // 1 byte: padding for alignment
 }
 ```
 
@@ -214,14 +205,14 @@ node → 🟢
 5. **Create integration tests** across implementations
 
 ### Critical Bugs to Fix
-1. **Rust 20-byte vs Go 36-byte slot entries** - Binary incompatibility
+1. ~~**Rust 20-byte vs Go 36-byte slot entries** - Binary incompatibility~~ ✅ FIXED
 2. **Signature verification always returns True** in Python
 3. **Missing cache validation** in Rust launcher
 4. **TODO: Decompression** not implemented in Go
 
 ## Impact Assessment
 
-- **High Risk**: Binary format incompatibility between Go and Rust
+- ~~**High Risk**: Binary format incompatibility between Go and Rust~~ ✅ FIXED
 - **Medium Risk**: Mock crypto implementations in production code
 - **Low Risk**: Unused imports and dead code (cleanup only)
 
