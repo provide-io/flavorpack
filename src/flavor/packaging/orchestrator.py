@@ -147,17 +147,11 @@ class PackagingOrchestrator:
                     },
                     {
                         "type": "write_file",
-                        "path": "{cache}/bin/{package_name}",
-                        "content": f"#!/usr/bin/env python3\nfrom {self.entry_point.split(':')[0]} import {self.entry_point.split(':')[1]}\nif __name__ == '__main__':\n    {self.entry_point.split(':')[1]}()",
-                        "mode": 0o755,
-                    },
-                    {
-                        "type": "write_file",
                         "path": "{cache}/metadata/installed",
                         "content": "{package_name}-{version}",
                     },
                 ],
-                "command": "{cache}/bin/{package_name}",
+                "command": "{cache}/bin/uv run --python {cache}/bin/python3 -m {package_name}",
                 "slots": [
                     {
                         "name": "uv",
