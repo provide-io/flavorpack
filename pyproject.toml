@@ -32,7 +32,7 @@ dependencies = [
     "zstandard>=0.22.0",
     "pyvider-telemetry @ file://localhost/REDACTED_ABS_PATH",  # Install from local path
 ]
-keywords = ["packaging", "terraform", "provider", "pspf", "flavor"]
+keywords = ["packaging", "pspf", "flavor", "executable", "bundle"]
 
 [project.urls]
 Homepage = "https://github.com/provide-io/flavor"
@@ -159,7 +159,7 @@ dev = [
 ]
 
 [tool.flavor]
-provider_name = "flavor"
+package_name = "flavor"
 entry_point = "flavor.cli:main"
 
 [tool.flavor.signing]

@@ -1,158 +1,91 @@
-# Flavor - PSPF 2025 Implementation
+# Flavor - PSPF 2025 Packaging System
 
-[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-[![Tests: 116 Passing](https://img.shields.io/badge/tests-116%20passing-green.svg)](tests/)
+[![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Flavor implements the **Progressive Secure Package Format (PSPF) 2025 Edition** - a polyglot package format enabling self-contained, executable bundles across multiple languages and platforms.
+Flavor is a packaging system for the **Progressive Secure Package Format (PSPF) 2025 Edition** - a polyglot package format enabling self-contained, executable bundles.
 
-## 🚀 Current State
+## 🚀 Architecture & State
 
-- ✅ **116 passing tests** with 96% code coverage
-- ✅ **Cross-language support** (Python, Go, Rust, Node.js)
-- ✅ **Working builders & launchers** in Go and Rust
-- ✅ **Comprehensive specification** in `docs/SPECIFICATION.md`
-- 🚧 **Python implementation** ready for production cryptography
+Flavor uses a high-level **Python Orchestrator** to drive one or more low-level **Builders** (Go, Rust). The Python toolchain also includes a compliant **Verifier** capable of inspecting and validating any PSPF 2025 bundle.
 
-## 📦 Key Features
+- ✅ **Functional Builders**: Go and Rust implementations with working Ed25519 cryptography.
+- ⚠️ **Python Orchestrator & Verifier**: A `click`-based CLI for orchestrating builds. The verifier correctly parses the format but has **placeholder cryptography** and cannot yet verify real signatures.
+- ✅ **Canonical Specification**: The format is defined by the Go/Rust implementations and documented in `docs/SPECIFICATION.md`.
 
-### Format Design
-- **256-byte index block** at launcher_size offset
-- **Metadata-first architecture** with required `psp.json`
-- **4-emoji magic sequence**: 📦[Launcher][Random]🪄
-- **Slot-based payload system** with lifecycle policies
-- **Ephemeral Ed25519 signatures** for integrity
+## 📦 Key Features of PSPF 2025
 
-### Language Support
-- 🐍 **Python**: Functional builder/launcher prototype
-- 🐹 **Go**: Production-quality PSPF builder and launcher
-- 🦀 **Rust**: Production-quality PSPF builder and launcher  
-- 🟢 **Node.js**: Planned implementation
+- **256-byte index block** for fast metadata access.
+- **Metadata-first architecture** with a required `psp.json` manifest.
+- **Slot-based payload system** for organizing runtimes, libraries, and assets.
+- **Ephemeral Ed25519 signatures** for tamper-evident integrity.
 
 ## 🛠️ Quick Start
 
-### Running Tests
-
+### 1. Install Dependencies
+It is recommended to use `uv` for managing the Python environment.
 ```bash
-# Install in editable mode
-pip install -e .
-
-# Run all PSPF 2025 tests (116 tests)
-pytest tests/test_pspf_2025_*.py -v
-
-# Run with coverage
-pytest tests/test_pspf_2025_*.py --cov=flavor.psp.format_2025 --cov-report=term-missing
-
-# Run specific test suite
-pytest tests/test_pspf_2025_core.py -v
+uv venv
+source .venv/bin/activate
+uv pip install -e .[dev]
 ```
 
-### Building a Bundle (Python Implementation)
+### 2. Build Native Tools
+Ensure you have Go and Rust installed, then build the low-level tools.
+```bash
+# Build Go tools
+(cd src/flavor/go/cmd/pspf-builder && go build)
+(cd src/flavor/go/cmd/pspf-launcher && go build)
 
-```python
-from flavor.psp.format_2025 import PSPFBuilder, SlotMetadata
-from pathlib import Path
+# Build Rust tools
+(cd src/flavor/rust/pspf-builder-rs && cargo build --release)
+(cd src/flavor/rust/pspf-launcher-rs && cargo build --release)
+```
 
-builder = PSPFBuilder()
-slot = SlotMetadata(
-    index=0,
-    name="app",
-    size=1024,
-    compressed_size=512,
-    checksum="abc123",
-    compression="gzip",
-    purpose="payload",
-    lifecycle="persistent",
-    path=Path("app.py")
-)
+### 3. Use the Flavor CLI
+The `flavor` CLI orchestrates the build and verification processes.
+```bash
+# Generate signing keys (for builders)
+flavor keygen
 
-builder.build(
-    output_path=Path("app.pspf"),
-    metadata={
-        "format": "PSPF/2025",
-        "package": {"name": "myapp", "version": "1.0.0"}
-    },
-    slots=[slot],
-    launcher_type="python"
-)
+# Package the application (drives a builder)
+flavor package
+
+# Verify any PSPF 2025 bundle (using the Python verifier)
+flavor verify <path-to-bundle.pspf>
 ```
 
 ## 📂 Project Structure
-
 ```
 flavor/
 ├── src/flavor/
-│   ├── psp/
-│   │   └── format_2025.py          # PSPF 2025 Python implementation
+│   ├── cli.py                    # Python Orchestrator & Verifier CLI
+│   ├── packaging/                # Python orchestration logic
+│   │   └── orchestrator.py
+│   ├── psp/                      # Python PSPF 2025 implementation
+│   │   └── format_2025.py        #   (used for verification)
 │   ├── go/
-│   │   ├── cmd/pspf-builder/      # Go builder
-│   │   └── cmd/pspf-launcher/     # Go launcher
+│   │   ├── cmd/pspf-builder/     # Go Builder (low-level)
+│   │   └── cmd/pspf-launcher/    # Go Launcher
 │   └── rust/
-│       ├── pspf-builder-rs/       # Rust builder
-│       └── pspf-launcher-rs/      # Rust launcher
-├── tests/
-│   ├── test_pspf_2025_*.py        # Comprehensive test suite
-│   └── bdd/                       # BDD feature tests
+│       ├── pspf-builder-rs/      # Rust Builder (low-level)
+│       └── pspf-launcher-rs/     # Rust Launcher
+├── tests/                        # Pytest suite for Python components
 └── docs/
-    ├── SPECIFICATION.md           # Full format specification
-    └── RATIONALE.md               # Rationale and marketing
+    └── SPECIFICATION.md          # Canonical PSPF 2025 format specification
 ```
 
-## 🧪 Test Categories
-
-1. **Core Format** (15 tests) - Magic validation, index structure
-2. **Slot Management** (12 tests) - Lifecycle policies, compression
-3. **Security** (11 tests) - Ed25519 signatures, integrity verification
-4. **Execution** (12 tests) - Argument passing, environment setup
-5. **Builder** (13 tests) - Bundle creation, reproducible builds
-6. **Compatibility** (12 tests) - Cross-language verification
-7. **Matrix Tests** (41 tests) - All builder/launcher combinations
-
-## 🔒 Security Features
-
-- **Ephemeral Ed25519 keys** generated per bundle
-- **SHA256 checksums** for metadata integrity
-- **CRC32 validation** for index block
-- **Tamper detection** at multiple levels
-- **Optional trust signatures** for persistent verification
-
-## 🚧 Implementation Status
-
-### Completed ✅
-- Full PSPF 2025 specification
-- Comprehensive test suite
-- Production-quality Go/Rust builders and launchers with real cryptography
-- Functional Python prototype with placeholder cryptography
-
-### In Progress 🚧
-- Production Python cryptography implementation
-- `zstd` compression support for all builders
-- Unified cross-language test suite
-- CLI tools
-- Node.js support
+## 🚧 Next Steps
+1.  Implement production-grade cryptography in the Python verifier.
+2.  Add `zstd` compression support to the Go and Rust builders.
+3.  Repair and expand the `pytest` and BDD test suites to perform end-to-end, cross-language validation.
 
 ## 📖 Documentation
-
-- [`docs/SPECIFICATION.md`](docs/SPECIFICATION.md) - Complete format specification
-- [`docs/RATIONALE.md`](docs/RATIONALE.md) - Marketing and rationale
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) - System architecture
-- [`DEVELOPMENT.md`](DEVELOPMENT.md) - Development guide
+- [`docs/SPECIFICATION.md`](docs/SPECIFICATION.md) - Complete PSPF 2025 format specification.
+- [`DEVELOPMENT.md`](DEVELOPMENT.md) - Guide for developers contributing to Flavor.
 
 ## 🤝 Contributing
-
-The PSPF 2025 implementation is ready for final production hardening:
-
-1. Implement production cryptography in the Python builder
-2. Add `zstd` compression support to all builders
-3. Unify the test suite to perform cross-language validation
-4. Implement CLI commands
-
-See [`DEVELOPMENT.md`](DEVELOPMENT.md) for detailed development instructions.
+Please see [`DEVELOPMENT.md`](DEVELOPMENT.md) for detailed instructions.
 
 ## 📜 License
-
 MIT License - see [`LICENSE`](LICENSE) file for details.
-
----
-
-*PSPF 2025 - The future of polyglot package distribution* 📦🚀🪄

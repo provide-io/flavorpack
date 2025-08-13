@@ -117,9 +117,11 @@ class PSPFIndex:
         )
         
         # Calculate checksum with checksum field set to 0
-        checksum = zlib.crc32(data)
-        # Update checksum field in data
+        # FIX: Use adler32 to match Go/Rust implementation, not crc32.
+        checksum = zlib.adler32(data)
         self.index_checksum = checksum
+        
+        # Repack with the correct checksum
         data = struct.pack(
             self.FORMAT,
             self.format_magic,
@@ -425,7 +427,6 @@ class PSPFReader:
         
         # Verify checksum (Adler-32 with checksum field as 0)
         expected_crc = self._index.index_checksum
-        # Use the raw index data, set checksum field to 0
         data_for_check = bytearray(index_data)
         data_for_check[12:16] = b'\x00\x00\x00\x00'
         actual_crc = zlib.adler32(data_for_check)

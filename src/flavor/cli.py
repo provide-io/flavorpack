@@ -41,7 +41,7 @@ except importlib.metadata.PackageNotFoundError:
 )
 @click.pass_context
 def cli(ctx: click.Context, log_level: str) -> None:
-    """Pyvider Secure Packaging Format (flavor) Build Tool."""
+    """PSPF (Progressive Secure Package Format) Build Tool."""
     ctx.ensure_object(dict)
     ctx.obj["log_level"] = log_level
 
@@ -66,7 +66,7 @@ def cli(ctx: click.Context, log_level: str) -> None:
     help="Directory to save the ECDSA key pair.",
 )
 def keygen(out_dir: str) -> None:
-    """Generates an ECDSA P-256 key pair for flavor package integrity signing."""
+    """Generates an ECDSA P-256 key pair for package integrity signing."""
     try:
         generate_key_pair(Path(out_dir))
         click.secho(
@@ -92,8 +92,8 @@ def keygen(out_dir: str) -> None:
     help="Custom output path for the package (defaults to dist/<name>.pspf).",
 )
 def package_command(pyproject_toml_path: str, output_path: str | None) -> None:
-    """Packages the provider for one or more target platforms."""
-    click.echo("🚀 Packaging provider...")
+    """Packages the application for one or more target platforms."""
+    click.echo("🚀 Packaging application...")
     try:
         built_artifacts = build_package_from_manifest(Path(pyproject_toml_path), output_path=Path(output_path) if output_path else None)
         for artifact in built_artifacts:
