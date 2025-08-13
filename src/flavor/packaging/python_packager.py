@@ -6,14 +6,13 @@
 import hashlib
 import json
 import os
+from pathlib import Path
 import shutil
 import subprocess
 import tarfile
 import tempfile
-from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
-from attrs import define, field, frozen
 from pyvider.telemetry import logger
 
 
@@ -29,15 +28,15 @@ class PythonPackager:
     - Preparing all artifacts for flavor assembly
     """
 
-    DEFAULT_PYTHON_VERSION = "3.13"
+    DEFAULT_PYTHON_VERSION = "3.11"
 
     def __init__(
         self,
         manifest_dir: Path,
         package_name: str,
         entry_point: str,
-        build_config: Dict[str, Any],
-        python_version: Optional[str] = None,
+        build_config: dict[str, Any],
+        python_version: str | None = None,
     ):
         self.manifest_dir = manifest_dir
         self.package_name = package_name
@@ -45,7 +44,7 @@ class PythonPackager:
         self.build_config = build_config
         self.python_version = python_version or self.DEFAULT_PYTHON_VERSION
 
-    def prepare_artifacts(self, work_dir: Path) -> Dict[str, Path]:
+    def prepare_artifacts(self, work_dir: Path) -> dict[str, Path]:
         """
         Prepare all artifacts needed for flavor assembly.
 
@@ -138,10 +137,12 @@ class PythonPackager:
 
         # Load private key and sign
         from cryptography.hazmat.primitives import serialization
+
         with open(private_key_path, "rb") as f:
             private_key = serialization.load_pem_private_key(f.read(), password=None)
 
         from flavor.crypto import sign_payload_hash
+
         return sign_payload_hash(payload_hash, private_key)
 
     def _build_wheels(self, wheels_dir: Path) -> None:
@@ -151,18 +152,28 @@ class PythonPackager:
             build_venv = Path(build_env_dir) / "venv"
 
             logger.info("Creating temporary build environment...")
-            self._run_subprocess([
-                "uv", "venv", str(build_venv),
-                "--python", f"python{self.python_version}"
-            ])
+            self._run_subprocess(
+                [
+                    "uv",
+                    "venv",
+                    str(build_venv),
+                    "--python",
+                    f"python{self.python_version}",
+                ]
+            )
 
             # Install pip in the build venv
             logger.info("Installing pip in build environment...")
-            self._run_subprocess([
-                "uv", "pip", "install",
-                "--python", str(build_venv / "bin" / "python"),
-                "pip"
-            ])
+            self._run_subprocess(
+                [
+                    "uv",
+                    "pip",
+                    "install",
+                    "--python",
+                    str(build_venv / "bin" / "python"),
+                    "pip",
+                ]
+            )
 
             pip3 = build_venv / "bin" / "pip3"
 
@@ -171,21 +182,29 @@ class PythonPackager:
                 dep_path = self.manifest_dir / dep
                 if dep_path.exists():
                     logger.info(f"Building wheel for dependency: {dep}")
-                    self._run_subprocess([
-                        str(pip3), "wheel",
-                        "--wheel-dir", str(wheels_dir),
-                        "--no-deps",
-                        str(dep_path)
-                    ])
+                    self._run_subprocess(
+                        [
+                            str(pip3),
+                            "wheel",
+                            "--wheel-dir",
+                            str(wheels_dir),
+                            "--no-deps",
+                            str(dep_path),
+                        ]
+                    )
 
             # Build main package wheel
             logger.info("Building wheel for main package...")
-            self._run_subprocess([
-                str(pip3), "wheel",
-                "--wheel-dir", str(wheels_dir),
-                "--no-deps",
-                str(self.manifest_dir)
-            ])
+            self._run_subprocess(
+                [
+                    str(pip3),
+                    "wheel",
+                    "--wheel-dir",
+                    str(wheels_dir),
+                    "--no-deps",
+                    str(self.manifest_dir),
+                ]
+            )
 
             # Download transitive dependencies
             all_deps = []
@@ -197,11 +216,9 @@ class PythonPackager:
 
             logger.info("Downloading dependency wheels...")
             for package in all_deps:
-                self._run_subprocess([
-                    str(pip3), "wheel",
-                    "--wheel-dir", str(wheels_dir),
-                    package
-                ])
+                self._run_subprocess(
+                    [str(pip3), "wheel", "--wheel-dir", str(wheels_dir), package]
+                )
 
     def _create_metadata(self, metadata_dir: Path) -> None:
         """Create metadata files."""
@@ -224,12 +241,11 @@ class PythonPackager:
         logger.info(f"Downloading Python {self.python_version} using UV...")
 
         # Use UV to download Python
-        self._run_subprocess([
-            "uv", "python", "install", self.python_version
-        ])
+        self._run_subprocess(["uv", "python", "install", self.python_version])
 
         # Find the installed Python
         import platform
+
         machine = platform.machine().lower()
         system = platform.system().lower()
 
@@ -245,7 +261,7 @@ class PythonPackager:
                 break
 
         if not python_install_dir or not python_install_dir.exists():
-            logger.warning(f"Could not find UV-installed Python at expected location")
+            logger.warning("Could not find UV-installed Python at expected location")
             # Fall back to placeholder
             with tempfile.TemporaryDirectory() as temp_dir:
                 python_dir = Path(temp_dir) / "python"
@@ -265,7 +281,7 @@ class PythonPackager:
             # Add all files from the Python directory, preserving structure
             tar.add(python_install_dir, arcname=".")
 
-    def _run_subprocess(self, command: list[str], cwd: Optional[Path] = None) -> str:
+    def _run_subprocess(self, command: list[str], cwd: Path | None = None) -> str:
         """Run a subprocess command."""
         logger.info(f"Running command: {' '.join(command)}")
         env = os.environ.copy()
@@ -279,7 +295,7 @@ class PythonPackager:
             )
         return result.stdout.strip()
 
-    def _write_json(self, path: Path, data: Dict[str, Any]) -> None:
+    def _write_json(self, path: Path, data: dict[str, Any]) -> None:
         """Write JSON file with secure permissions."""
         path.write_text(json.dumps(data, indent=2))
         path.chmod(0o600)

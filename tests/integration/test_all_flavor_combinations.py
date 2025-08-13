@@ -175,7 +175,7 @@ provider_name = "test"
 entry_point = "test_provider.main:main"
 
 [tool.flavor.build]
-python_version = "3.13"
+python_version = "3.11"
 dependencies = ["./src/test_provider"]
 
 [tool.setuptools.packages.find]
@@ -205,7 +205,7 @@ def prepare_payload_for_go_rust(provider_dir, work_dir):
     
     # Create venv
     subprocess.run([
-        "uv", "venv", str(payload_dir), "--python", "python3.13"
+        "uv", "venv", str(payload_dir), "--python", "python3.11"
     ], check=True)
     
     # Install provider (non-editable for proper packaging)
@@ -224,7 +224,7 @@ def prepare_payload_for_go_rust(provider_dir, work_dir):
         "provider_name": "test",
         "entry_point": "test_provider.main:main",
         "runtime": {
-            "python_version": "3.13",
+            "python_version": "3.11",
             "uv_version": "0.4.0"
         },
         "package": {
@@ -242,10 +242,10 @@ def prepare_payload_for_go_rust(provider_dir, work_dir):
             "name": "test-provider",
             "version": "1.0.0",
             "language": "python",
-            "language_version": "3.13"
+            "language_version": "3.11"
         },
         "runtime_requirements": {
-            "python": "3.13",
+            "python": "3.11",
             "uv": "0.4.0"
         }
     }
@@ -321,11 +321,12 @@ class TestAllFlavorCombinations:
                 
                 try:
                     if packager_info["type"] == "manifest":
-                        # Python packager doesn't support launcher selection yet
-                        # It will use the default Go launcher
+                        # Python packager supports launcher selection and output path
                         cmd = packager_info["cmd"] + [
                             "package",
-                            "--manifest", str(test_provider / "pyproject.toml")
+                            "--manifest", str(test_provider / "pyproject.toml"),
+                            "--launcher", launcher_name,
+                            "--output", str(output_path)
                         ]
                         
                         result = subprocess.run(
@@ -333,15 +334,6 @@ class TestAllFlavorCombinations:
                             capture_output=True,
                             text=True
                         )
-                        
-                        # Move the output file to the expected location
-                        if result.returncode == 0:
-                            # Find the output file - it could have different names
-                            dist_dir = test_provider / "dist"
-                            if dist_dir.exists():
-                                for file in dist_dir.glob("*.flavor"):
-                                    shutil.move(str(file), str(output_path))
-                                    break
                     else:
                         # Go/Rust packager - needs manifest.json
                         with tempfile.TemporaryDirectory() as work_dir:
@@ -350,27 +342,21 @@ class TestAllFlavorCombinations:
                             
                             # Create manifest.json for pspf-builder
                             manifest_data = {
-                                "package": {
-                                    "name": "test-provider",
-                                    "version": "1.0.0",
-                                    "description": "Test provider"
-                                },
-                                "provider": {
-                                    "name": "test-provider",
-                                    "version": "1.0.0"
+                                "name": "test-provider",
+                                "version": "1.0.0",
+                                "description": "Test provider",
+                                "command": "{cache}/bin/python3 -m test_provider.main",
+                                "environment": {
+                                    "PYTHONPATH": "{cache}/lib/python3.11/site-packages"
                                 },
                                 "slots": [
                                     {
-                                        "index": 0,
                                         "name": "payload",
                                         "path": str(work_dir / "payload.tgz"),
-                                        "type": "file"
-                                    },
-                                    {
-                                        "index": 1,
-                                        "name": "public_key",
-                                        "path": str(project_root / "test-keys/flavor-public.key"),
-                                        "type": "file"
+                                        "compression": "gzip",
+                                        "purpose": "payload",
+                                        "lifecycle": "persistent",
+                                        "extract_to": "."
                                     }
                                 ]
                             }
@@ -408,6 +394,9 @@ class TestAllFlavorCombinations:
                             )
                     
                     if result.returncode == 0:
+                        # Make the output file executable
+                        output_path.chmod(0o755)
+                        
                         # Test the binary without args
                         test_result = subprocess.run(
                             [str(output_path)],
@@ -474,7 +463,7 @@ class TestAllFlavorCombinations:
                         "built": False,
                         "error": str(e)
                     }
-                    print(f"❌ {combo}: Exception - {str(e)[:100]}")
+                    print(f"❌ {combo}: Exception - {str(e)}")
         
         # Summary
         print("\n=== SUMMARY ===")

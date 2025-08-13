@@ -6,6 +6,8 @@
 import json
 import os
 from pathlib import Path
+import platform
+import shutil
 import subprocess
 import tarfile
 import tempfile
@@ -30,6 +32,7 @@ class PackagingOrchestrator:
         package_name: str,
         entry_point: str,
         python_version: str | None = None,
+        launcher_type: str = "go",
     ) -> None:
         self.package_integrity_key_path = package_integrity_key_path
         self.public_key_path = public_key_path
@@ -39,6 +42,25 @@ class PackagingOrchestrator:
         self.build_config = build_config
         self.manifest_dir = manifest_dir
         self.python_version = python_version or self.DEFAULT_PYTHON_VERSION
+        self.launcher_type = launcher_type
+
+        # Set up workenv directory for build artifacts
+        self.platform = self._get_platform()
+        self.workenv_dir = Path.cwd() / "workenv" / "flavors" / self.platform
+        self.workenv_dir.mkdir(parents=True, exist_ok=True)
+
+    def _get_platform(self) -> str:
+        """Get platform string in format 'os_arch'."""
+        system = platform.system().lower()
+        machine = platform.machine().lower()
+
+        # Normalize architecture names
+        if machine == "x86_64":
+            machine = "amd64"
+        elif machine == "aarch64":
+            machine = "arm64"
+
+        return f"{system}_{machine}"
 
     def _run_subprocess(self, command: list[str], cwd: Path | str | None = None) -> str:
         logger.info(f"Running command: {' '.join(command)}")
@@ -55,7 +77,7 @@ class PackagingOrchestrator:
 
     def build_package(self) -> None:
         logger.info("Orchestrator starting build process...")
-        
+
         # Use the new PythonPackager to prepare all artifacts
         python_packager = PythonPackager(
             manifest_dir=self.manifest_dir,
@@ -64,40 +86,39 @@ class PackagingOrchestrator:
             build_config=self.build_config,
             python_version=self.python_version,
         )
-        
+
         with tempfile.TemporaryDirectory(prefix="flavor_build_") as temp_dir_str:
             temp_dir = Path(temp_dir_str)
-            
+
             # Step 1: Python packager prepares all artifacts
             logger.info("Preparing Python artifacts...")
             artifacts = python_packager.prepare_artifacts(temp_dir)
-            
+
             # Step 2: Compute signature
             logger.info("Computing payload signature...")
             signature = python_packager.compute_signature(
-                artifacts["payload_tgz"], 
-                Path(self.package_integrity_key_path)
+                artifacts["payload_tgz"], Path(self.package_integrity_key_path)
             )
-            
+
             # Write signature to file for Go packager
             signature_path = temp_dir / "signature.bin"
             signature_path.write_bytes(signature)
-            
+
             # Create tarballs for slots
             logger.info("Creating slot tarballs...")
-            
+
             # Slot 0: UV binary
             uv_tarball = temp_dir / "uv.tar"
             with tarfile.open(uv_tarball, "w") as tar:
                 # Add UV to bin directory
                 uv_path = artifacts["payload_dir"] / "bin" / "uv"
                 tar.add(uv_path, arcname="bin/uv")
-            
+
             # Slot 1: Python runtime (from python_packager)
             python_tarball = artifacts.get("python_tgz")
             if not python_tarball:
                 raise BuildError("Python runtime tarball not found")
-            
+
             # Slot 2: Wheels
             wheels_tarball = temp_dir / "wheels.tar"
             with tarfile.open(wheels_tarball, "w") as tar:
@@ -105,37 +126,36 @@ class PackagingOrchestrator:
                 wheels_dir = artifacts["payload_dir"] / "wheels"
                 for wheel in wheels_dir.glob("*.whl"):
                     tar.add(wheel, arcname=wheel.name)
-            
+
             # Step 3: Create manifest for pspf-builder
             manifest = {
                 "name": self.package_name,
                 "version": self.build_config.get("version", "1.0.0"),
-                "launcher": "go",
-                "launcher_path": str(Path(__file__).parent.parent / "go/cmd/pspf-launcher/pspf-launcher"),
+                "launcher": self.launcher_type,
+                "launcher_path": str(
+                    Path(__file__).parent.parent / "go/cmd/pspf-launcher/pspf-launcher"
+                ),
                 "cache_validation": {
                     "check_file": "{cache}/metadata/installed",
-                    "expected_content": f"{self.package_name}-{self.build_config.get('version', '1.0.0')}"
+                    "expected_content": f"{self.package_name}-{self.build_config.get('version', '1.0.0')}",
                 },
                 "setup_commands": [
                     {
                         "type": "enumerate_and_execute",
                         "command": "{cache}/bin/uv pip install --python {cache}/bin/python3 --target {cache}/lib/python3.11/site-packages --no-deps",
-                        "enumerate": {
-                            "path": "{cache}/wheels",
-                            "pattern": "*.whl"
-                        }
+                        "enumerate": {"path": "{cache}/wheels", "pattern": "*.whl"},
                     },
                     {
                         "type": "write_file",
                         "path": "{cache}/bin/{package_name}",
                         "content": f"#!/usr/bin/env python3\nfrom {self.entry_point.split(':')[0]} import {self.entry_point.split(':')[1]}\nif __name__ == '__main__':\n    {self.entry_point.split(':')[1]}()",
-                        "mode": 0o755
+                        "mode": 0o755,
                     },
                     {
                         "type": "write_file",
                         "path": "{cache}/metadata/installed",
-                        "content": "{package_name}-{version}"
-                    }
+                        "content": "{package_name}-{version}",
+                    },
                 ],
                 "command": "{cache}/bin/{package_name}",
                 "slots": [
@@ -145,7 +165,7 @@ class PackagingOrchestrator:
                         "compression": "gzip",
                         "purpose": "tool",
                         "lifecycle": "volatile",
-                        "extract_to": "."
+                        "extract_to": ".",
                     },
                     {
                         "name": "python",
@@ -153,7 +173,7 @@ class PackagingOrchestrator:
                         "compression": "gzip",
                         "purpose": "runtime",
                         "lifecycle": "persistent",
-                        "extract_to": "."
+                        "extract_to": ".",
                     },
                     {
                         "name": "wheels",
@@ -161,53 +181,79 @@ class PackagingOrchestrator:
                         "compression": "gzip",
                         "purpose": "payload",
                         "lifecycle": "volatile",
-                        "extract_to": "wheels"
-                    }
+                        "extract_to": "wheels",
+                    },
                 ],
-                "environment": {
-                    "UV_SYSTEM_PYTHON": "1"
-                },
+                "environment": {"UV_SYSTEM_PYTHON": "1"},
                 "signature": {
                     "private_key": self.package_integrity_key_path,
-                    "public_key": self.public_key_path
-                }
+                    "public_key": self.public_key_path,
+                },
             }
-            
+
             manifest_path = temp_dir / "manifest.json"
             manifest_path.write_text(json.dumps(manifest, indent=2))
-            
+
             # Step 4: Build and use pspf-builder
             # Always rebuild to ensure we're using latest version
             go_base = Path(__file__).parent.parent / "go"
-            
-            # Build launcher
-            launcher_dir = go_base / "cmd/pspf-launcher"
-            logger.info("Building pspf-launcher...")
+
+            # Build the appropriate launcher to workenv
+            if self.launcher_type == "go":
+                launcher_src_dir = go_base / "cmd/pspf-launcher"
+                launcher_output = self.workenv_dir / "pspf-launcher-go"
+                logger.info(f"Building Go pspf-launcher to {launcher_output}...")
+                self._run_subprocess(
+                    ["go", "build", "-o", str(launcher_output), "."],
+                    cwd=launcher_src_dir,
+                )
+                # Create copies with expected names
+                shutil.copy2(launcher_output, self.workenv_dir / "pspf-launcher")
+            elif self.launcher_type == "rust":
+                rust_launcher_dir = (
+                    Path(__file__).parent.parent / "rust/pspf-launcher-rs"
+                )
+                launcher_output = self.workenv_dir / "pspf-launcher-rust"
+                logger.info(f"Building Rust pspf-launcher to {launcher_output}...")
+                self._run_subprocess(
+                    [
+                        "cargo",
+                        "build",
+                        "--release",
+                        "--target-dir",
+                        str(self.workenv_dir / "rust-build"),
+                    ],
+                    cwd=rust_launcher_dir,
+                )
+                # Copy from Rust's target directory
+                rust_binary = self.workenv_dir / "rust-build/release/pspf-launcher-rs"
+                shutil.copy2(rust_binary, launcher_output)
+                # Also copy as pspf-launcher for Go builder compatibility
+                shutil.copy2(rust_binary, self.workenv_dir / "pspf-launcher")
+
+            # Build builder to workenv
+            builder_src_dir = go_base / "cmd/pspf-builder"
+            builder_output = self.workenv_dir / "pspf-builder"
+            logger.info(f"Building pspf-builder to {builder_output}...")
             self._run_subprocess(
-                ["go", "build", "-o", "pspf-launcher", "."],
-                cwd=launcher_dir
+                ["go", "build", "-o", str(builder_output), "."], cwd=builder_src_dir
             )
-            
-            # Build builder
-            builder_dir = go_base / "cmd/pspf-builder"
-            logger.info("Building pspf-builder...")
-            self._run_subprocess(
-                ["go", "build", "-o", "pspf-builder", "."],
-                cwd=builder_dir
-            )
-            
-            packager_executable = builder_dir / "pspf-builder"
-            
+
+            packager_executable = builder_output
+
             build_cmd_args = [
                 str(packager_executable),
-                "--manifest", str(manifest_path),
-                "--output", self.output_flavor_path,
-                "--launcher", "go"
+                "--manifest",
+                str(manifest_path),
+                "--output",
+                self.output_flavor_path,
+                "--launcher",
+                self.launcher_type,
             ]
-            
+
             logger.info("Building flavor package...")
-            # Run from the pspf-builder directory where the launcher symlink exists
-            self._run_subprocess(build_cmd_args, cwd=builder_dir)
+            # Run from workenv directory where the launchers are
+            self._run_subprocess(build_cmd_args, cwd=self.workenv_dir)
 
 
 # 🏛️ 📝 🕹️

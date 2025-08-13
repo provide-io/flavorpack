@@ -96,7 +96,7 @@ def setup_test_environment():
     os.environ["FLAVOR_CONFIG_DIR"] = "/tmp/flavor-test-config"
 
     # Set consistent Python version for builds
-    os.environ["FLAVOR_PYTHON_VERSION"] = "3.13"
+    os.environ["FLAVOR_PYTHON_VERSION"] = "3.11"
 
     # Disable any caching that might interfere with tests
     os.environ["FLAVOR_NO_CACHE"] = "1"
