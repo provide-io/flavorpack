@@ -3,21 +3,22 @@
 #
 "Core logic for building Flavor packages by orchestrating the Go packager CLI."
 
+import json
 import os
 from pathlib import Path
 import subprocess
+import tarfile
 import tempfile
 from typing import Any
 
 from pyvider.telemetry import logger
 
-from ..compiler import ensure_go_binary
 from ..exceptions import BuildError
 from .python_packager import PythonPackager
 
 
 class PackagingOrchestrator:
-    DEFAULT_PYTHON_VERSION = "3.13"
+    DEFAULT_PYTHON_VERSION = "3.11"
 
     def __init__(
         self,
@@ -82,27 +83,101 @@ class PackagingOrchestrator:
             signature_path = temp_dir / "signature.bin"
             signature_path.write_bytes(signature)
             
-            # Step 3: Use Go packager as a pure builder
-            packager_executable = ensure_go_binary("flavor-go")
-            launcher_executable = ensure_go_binary("flavor-launcher-go")
+            # Create tarballs for slots
+            logger.info("Creating slot tarballs...")
+            
+            # Slot 0: UV binary
+            uv_tarball = temp_dir / "uv.tar"
+            with tarfile.open(uv_tarball, "w") as tar:
+                # Add UV to bin directory
+                uv_path = artifacts["payload_dir"] / "bin" / "uv"
+                tar.add(uv_path, arcname="bin/uv")
+            
+            # Slot 1: Python runtime (from python_packager)
+            python_tarball = artifacts.get("python_tgz")
+            if not python_tarball:
+                raise BuildError("Python runtime tarball not found")
+            
+            # Slot 2: Wheels
+            wheels_tarball = temp_dir / "wheels.tar"
+            with tarfile.open(wheels_tarball, "w") as tar:
+                # Add wheels directory contents, not the directory itself
+                wheels_dir = artifacts["payload_dir"] / "wheels"
+                for wheel in wheels_dir.glob("*.whl"):
+                    tar.add(wheel, arcname=wheel.name)
+            
+            # Copy bootstrap script
+            bootstrap_src = Path(__file__).parent / "bootstrap.py"
+            bootstrap_dest = temp_dir / "bootstrap.py"
+            import shutil
+            shutil.copy2(bootstrap_src, bootstrap_dest)
+            
+            # Step 3: Create manifest for pspf-builder
+            manifest = {
+                "name": self.package_name,
+                "version": self.build_config.get("version", "1.0.0"),
+                "launcher": "go",
+                "launcher_path": str(Path(__file__).parent.parent / "go/cmd/pspf-launcher/pspf-launcher"),
+                "command": "uv run --python 3.11 {slot:3} " + self.entry_point.split(":")[0],
+                "slots": [
+                    {
+                        "name": "uv",
+                        "path": str(uv_tarball),
+                        "compression": "gzip",
+                        "purpose": "tool",
+                        "lifecycle": "volatile",
+                        "extract_to": "."
+                    },
+                    {
+                        "name": "python",
+                        "path": str(python_tarball),
+                        "compression": "gzip",
+                        "purpose": "runtime",
+                        "lifecycle": "persistent",
+                        "extract_to": "share/uv/python"
+                    },
+                    {
+                        "name": "wheels",
+                        "path": str(wheels_tarball),
+                        "compression": "gzip",
+                        "purpose": "payload",
+                        "lifecycle": "volatile",
+                        "extract_to": "wheels"
+                    },
+                    {
+                        "name": "bootstrap",
+                        "path": str(bootstrap_dest),
+                        "compression": "none",
+                        "purpose": "script",
+                        "lifecycle": "volatile"
+                    }
+                ],
+                "environment": {
+                    "UV_SYSTEM_PYTHON": "1"
+                },
+                "signature": {
+                    "private_key": self.package_integrity_key_path,
+                    "public_key": self.public_key_path
+                }
+            }
+            
+            manifest_path = temp_dir / "manifest.json"
+            manifest_path.write_text(json.dumps(manifest, indent=2))
+            
+            # Step 4: Use pspf-builder
+            packager_executable = Path(__file__).parent.parent / "go/cmd/pspf-builder/pspf-builder"
             
             build_cmd_args = [
                 str(packager_executable),
-                "build",
-                "--package-key",
-                self.package_integrity_key_path,
-                "--public-key",
-                self.public_key_path,
-                "--out",
-                self.output_flavor_path,
-                "--payload-dir",
-                str(artifacts["payload_dir"]),
-                "--launcher-bin",
-                str(launcher_executable),
+                "--manifest", str(manifest_path),
+                "--output", self.output_flavor_path,
+                "--launcher", "go"
             ]
             
             logger.info("Building flavor package...")
-            self._run_subprocess(build_cmd_args, cwd=temp_dir)
+            # Run from the pspf-builder directory where the launcher symlink exists
+            builder_dir = packager_executable.parent
+            self._run_subprocess(build_cmd_args, cwd=builder_dir)
 
 
 # 🏛️ 📝 🕹️

@@ -1,6 +1,6 @@
-# env.ps1 - Flavor Development Environment Setup
+# env.ps1 - flavor Development Environment Setup
 #
-# This script sets up a clean, isolated development environment for Flavor
+# This script sets up a clean, isolated development environment for flavor
 # using 'uv' for high-performance virtual environment and dependency management.
 #
 # Usage: .\env.ps1
@@ -30,7 +30,6 @@ function Write-Warning {
     param([string]$Message)
     Write-Host "⚠️  $Message" -ForegroundColor Yellow
 }
-
 # --- Cleanup Previous Environment ---
 Write-Header "🧹 Cleaning Previous Environment"
 
@@ -43,12 +42,14 @@ Remove-Alias -Name pip3 -ErrorAction SilentlyContinue
 # Clear existing PYTHONPATH
 Remove-Item Env:PYTHONPATH -ErrorAction SilentlyContinue
 
-Write-Success "Cleared Python aliases and PYTHONPATH"
+# Store original PATH for restoration if needed
+$script:OriginalPath = $env:PATH
 
+Write-Success "Cleared Python aliases and PYTHONPATH"
 # --- Project Validation ---
 if (-not (Test-Path "pyproject.toml")) {
     Write-Error "No 'pyproject.toml' found in current directory"
-    Write-Host "Please run this script from the Flavor root directory"
+    Write-Host "Please run this script from the flavor root directory"
     exit 1
 }
 
@@ -61,6 +62,7 @@ $uvCommand = Get-Command uv -ErrorAction SilentlyContinue
 if (-not $uvCommand) {
     Write-Host "Installing UV..."
     
+    # Install UV using the official PowerShell installer
     try {
         powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
         
@@ -83,7 +85,6 @@ if (-not $uvCommand) {
 } else {
     Write-Success "UV already installed"
 }
-
 # --- Platform Detection ---
 $TFOS = if ($IsWindows) { "windows" } elseif ($IsMacOS) { "darwin" } else { "linux" }
 $TFARCH = switch ([System.Environment]::Is64BitOperatingSystem) {
@@ -98,7 +99,7 @@ $TFARCH = switch ([System.Environment]::Is64BitOperatingSystem) {
 }
 
 # Workenv directory setup
-$Profile = if ($env:FLAVOR_WORKENV_PROFILE) { $env:FLAVOR_WORKENV_PROFILE } else { "default" }
+$Profile = if ($env:FLAVOR_PROFILE) { $env:FLAVOR_PROFILE } else { "default" }
 if ($Profile -eq "default") {
     $VenvDir = "workenv/flavor_${TFOS}_${TFARCH}"
 } else {
@@ -106,23 +107,27 @@ if ($Profile -eq "default") {
 }
 
 $env:UV_PROJECT_ENVIRONMENT = $VenvDir
-
 # --- Virtual Environment ---
 Write-Header "🐍 Setting Up Virtual Environment"
 Write-Host "Directory: $VenvDir"
 
-$VenvExists = (Test-Path $VenvDir) -and (Test-Path "$VenvDir/Scripts/activate.ps1") -and (Test-Path "$VenvDir/Scripts/python.exe")
+# Check for existing venv - handle cross-platform paths
+if ($IsWindows) {
+    $VenvExists = (Test-Path $VenvDir) -and (Test-Path "$VenvDir/Scripts/activate.ps1") -and (Test-Path "$VenvDir/Scripts/python.exe")
+} else {
+    $VenvExists = (Test-Path $VenvDir) -and (Test-Path "$VenvDir/bin/activate.ps1") -and (Test-Path "$VenvDir/bin/python")
+}
 
 if ($VenvExists) {
     Write-Success "Virtual environment exists"
 } else {
-    Write-Host "Creating virtual environment..."
+    Write-Host "Creating virtual environment..." -NoNewline
     try {
         & uv venv $VenvDir
-        Write-Success "Virtual environment created"
+        Write-Success " Virtual environment created"
     }
     catch {
-        Write-Error "Virtual environment creation failed: $_"
+        Write-Error " Virtual environment creation failed: $_"
         exit 1
     }
 }
@@ -144,68 +149,105 @@ if (Test-Path $ActivateScript) {
     Write-Host "For macOS/Linux, you may need to use: source $VenvDir/bin/activate"
     exit 1
 }
-
 # --- Dependency Installation ---
 Write-Header "📦 Installing Dependencies"
 
-Write-Host "Syncing dependencies..."
+# Create log directory
+$LogDir = Join-Path $env:TEMP "flavor_setup"
+New-Item -ItemType Directory -Force -Path $LogDir | Out-Null
+
+Write-Host "Syncing dependencies..." -NoNewline
 try {
-    & uv sync --all-groups
-    Write-Success "Dependencies synced"
+    & uv sync --all-groups 2>&1 | Out-File -FilePath (Join-Path $LogDir "sync.log")
+    Write-Success " Dependencies synced"
 }
 catch {
-    Write-Error "Dependency sync failed"
+    Write-Error " Dependency sync failed"
+    Write-Host "Check log at: $(Join-Path $LogDir 'sync.log')"
     exit 1
 }
 
-Write-Host "Installing Flavor in editable mode..."
+Write-Host "Installing flavor in editable mode..." -NoNewline
 try {
-    & uv pip install --no-deps -e .
-    Write-Success "Flavor installed"
+    & uv pip install --no-deps -e . 2>&1 | Out-File -FilePath (Join-Path $LogDir "install.log")
+    Write-Success " flavor installed"
 }
 catch {
-    Write-Error "Installation failed"
+    Write-Error " Installation failed"
+    Write-Host "Check log at: $(Join-Path $LogDir 'install.log')"
     exit 1
 }
-
 # --- Sibling Packages ---
 Write-Header "🤝 Installing Sibling Packages"
 
 $ParentDir = Split-Path -Parent (Get-Location)
 $SiblingCount = 0
 
-# Install pyvider packages
-Get-ChildItem -Path $ParentDir -Directory -Filter "pyvider*" | ForEach-Object {
+# New unified siblings configuration
+# Sibling with configuration
+# Pattern-based sibling
+Get-ChildItem -Path $ParentDir -Directory -Filter "pyvider-*" | ForEach-Object {
     $SiblingName = $_.Name
-    Write-Host "Installing $SiblingName..."
+    $WithDeps = $true    $DepsText = if ($WithDeps) { " with dependencies" } else { " without dependencies" }
+    Write-Host "Installing $SiblingName$DepsText..." -NoNewline
     try {
-        & uv pip install --no-deps -e $_.FullName
-        Write-Success "$SiblingName installed"
+        if ($WithDeps) {
+            & uv pip install -e $_.FullName 2>&1 | Out-File -FilePath (Join-Path $LogDir "$SiblingName.log")
+        } else {
+            & uv pip install --no-deps -e $_.FullName 2>&1 | Out-File -FilePath (Join-Path $LogDir "$SiblingName.log")
+        }
+        Write-Success " $SiblingName installed"
         $SiblingCount++
     }
     catch {
-        Write-Warning "Failed to install $SiblingName"
+        Write-Warning " Failed to install $SiblingName"
+    }
+}
+# Sibling with configuration
+# Explicit sibling
+$tofusoupDir = Join-Path $ParentDir "tofusoup"
+if (Test-Path $tofusoupDir) {
+    $WithDeps = $true    $DepsText = if ($WithDeps) { " with dependencies" } else { " without dependencies" }
+    Write-Host "Installing tofusoup$DepsText..." -NoNewline
+    try {
+        if ($WithDeps) {
+            & uv pip install -e $tofusoupDir
+        } else {
+            & uv pip install --no-deps -e $tofusoupDir
+        }
+        Write-Success " tofusoup installed"
+        $SiblingCount++
+    }
+    catch {
+        Write-Warning " Failed to install tofusoup package from '$tofusoupDir'"
+        Write-Host "Attempting to continue..."
+    }
+}
+# Sibling with configuration
+# Explicit sibling
+$wrkenvDir = Join-Path $ParentDir "wrkenv"
+if (Test-Path $wrkenvDir) {
+    $WithDeps = $true    $DepsText = if ($WithDeps) { " with dependencies" } else { " without dependencies" }
+    Write-Host "Installing wrkenv$DepsText..." -NoNewline
+    try {
+        if ($WithDeps) {
+            & uv pip install -e $wrkenvDir
+        } else {
+            & uv pip install --no-deps -e $wrkenvDir
+        }
+        Write-Success " wrkenv installed"
+        $SiblingCount++
+    }
+    catch {
+        Write-Warning " Failed to install wrkenv package from '$wrkenvDir'"
+        Write-Host "Attempting to continue..."
     }
 }
 
-# Special handling for tofusoup
-$TofusoupDir = Join-Path $ParentDir "tofusoup"
-if (Test-Path $TofusoupDir) {
-    Write-Host "Found tofusoup package. Installing in editable mode with dependencies..."
-    try {
-        & uv pip install -e $TofusoupDir
-        Write-Success "tofusoup installed"
-        $SiblingCount++
-    }
-    catch {
-        Write-Warning "Failed to install tofusoup package"
-    }
-}
 
 if ($SiblingCount -eq 0) {
     Write-Warning "No sibling packages found"
 }
-
 # --- Environment Configuration ---
 Write-Header "🔧 Configuring Environment"
 
@@ -213,24 +255,85 @@ Write-Header "🔧 Configuring Environment"
 $env:PYTHONPATH = "$(Get-Location)/src;$(Get-Location)"
 Write-Host "PYTHONPATH: $env:PYTHONPATH"
 
-# Clean up PATH - remove duplicates
-$PathArray = $env:PATH -split ';' | Where-Object { $_ -ne '' } | Select-Object -Unique
-$VenvBin = Join-Path $VenvDir "Scripts"
-$NewPath = @($VenvBin) + ($PathArray | Where-Object { $_ -ne $VenvBin })
-$env:PATH = $NewPath -join ';'
+# Clean up PATH - remove duplicates and handle cross-platform
+if ($IsWindows) {
+    $PathSeparator = ';'
+    $VenvBin = Join-Path $VenvDir "Scripts"
+} else {
+    $PathSeparator = ':'
+    $VenvBin = Join-Path $VenvDir "bin"
+}
 
+$PathArray = $env:PATH -split $PathSeparator | Where-Object { $_ -ne '' } | Select-Object -Unique
+$NewPath = @($VenvBin) + ($PathArray | Where-Object { $_ -ne $VenvBin })
+$env:PATH = $NewPath -join $PathSeparator
+
+# --- Tool Verification ---
+Write-Header "🔍 Verifying Installation"
+
+Write-Host "`nTool Locations & Versions:" -ForegroundColor Green
+Write-Host ("━" * 40)
+
+# Python
+$PYTHONCmd = Get-Command python -ErrorAction SilentlyContinue
+if ($PYTHONCmd) {
+    Write-Host ("{0,-12}: {1}" -f "Python", $PYTHONCmd.Source)
+    $Version = & python --version 2>&1 2>&1 | Select-Object -First 1
+    Write-Host ("{0,-12}  {1}" -f "", $Version)
+}
+
+# UV
+$UVCmd = Get-Command uv -ErrorAction SilentlyContinue
+if ($UVCmd) {
+    Write-Host ("{0,-12}: {1}" -f "UV", $UVCmd.Source)
+    $Version = & uv --version 2>&1 2>&1 | Select-Object -First 1
+    Write-Host ("{0,-12}  {1}" -f "", $Version)
+}
+
+# wrkenv
+$WRKENVCmd = Get-Command wrkenv -ErrorAction SilentlyContinue
+if ($WRKENVCmd) {
+    Write-Host ("{0,-12}: {1}" -f "wrkenv", $WRKENVCmd.Source)
+    $Version = & wrkenv --version 2>&1 || echo 'No version info' 2>&1 | Select-Object -First 1
+    Write-Host ("{0,-12}  {1}" -f "", $Version)
+}
+
+# ibmtf
+$IBMTFCmd = Get-Command ibmtf -ErrorAction SilentlyContinue
+if ($IBMTFCmd) {
+    Write-Host ("{0,-12}: {1}" -f "ibmtf", $IBMTFCmd.Source)
+    $Version = & ibmtf version 2>&1 | head -1 || echo 'Not installed' 2>&1 | Select-Object -First 1
+    Write-Host ("{0,-12}  {1}" -f "", $Version)
+}
+
+# tofu
+$TOFUCmd = Get-Command tofu -ErrorAction SilentlyContinue
+if ($TOFUCmd) {
+    Write-Host ("{0,-12}: {1}" -f "tofu", $TOFUCmd.Source)
+    $Version = & tofu version 2>&1 | head -1 || echo 'Not installed' 2>&1 | Select-Object -First 1
+    Write-Host ("{0,-12}  {1}" -f "", $Version)
+}
+
+
+Write-Host ("━" * 40)
 # --- Final Summary ---
 Write-Header "✅ Environment Ready!"
 
-Write-Host "`nFlavor development environment activated" -ForegroundColor Green
+Write-Host "`n$("flavor development environment activated" | Write-Host -ForegroundColor Green)"
 Write-Host "Virtual environment: $VenvDir"
 Write-Host "Profile: $Profile"
 Write-Host "`nUseful commands:"
-Write-Host "  flavor --help     # Flavor CLI"
-Write-Host "  pytest            # Run tests"
-Write-Host "  deactivate        # Exit environment"
+Write-Host "  flavor --help  # flavor CLI"
+Write-Host "  wrkenv status  # Check tool versions"
+Write-Host "  wrkenv container status  # Container status"
+Write-Host "  pytest  # Run tests"
+Write-Host "  deactivate  # Exit environment"
+
+# --- Cleanup ---
+# Remove temporary log files older than 1 day
+if (Test-Path $LogDir) {
+    Get-ChildItem -Path $LogDir -Filter "*.log" | Where-Object { $_.LastWriteTime -lt (Get-Date).AddDays(-1) } | Remove-Item -Force -ErrorAction SilentlyContinue
+}
 
 # Return success
 exit 0
-
-# 📦🍜⚡🪄

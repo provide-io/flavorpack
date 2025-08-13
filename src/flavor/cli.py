@@ -11,10 +11,10 @@ import subprocess
 
 import click
 
-from .api import build_package_from_manifest, verify_package
-from .compiler import _get_cache_dir
-from .exceptions import BuildError
-from .packaging.keys import generate_key_pair
+from flavor.api import build_package_from_manifest, verify_package
+# from flavor.compiler import _get_cache_dir  # Moved to scraps
+from flavor.exceptions import BuildError
+from flavor.packaging.keys import generate_key_pair
 
 try:
     __version__ = importlib.metadata.version("flavor")
@@ -85,11 +85,17 @@ def keygen(out_dir: str) -> None:
     type=click.Path(exists=True, dir_okay=False, resolve_path=True),
     help="Path to the pyproject.toml manifest file.",
 )
-def package_command(pyproject_toml_path: str) -> None:
+@click.option(
+    "--output",
+    "output_path",
+    type=click.Path(dir_okay=False, resolve_path=True),
+    help="Custom output path for the package (defaults to dist/<name>.pspf).",
+)
+def package_command(pyproject_toml_path: str, output_path: str | None) -> None:
     """Packages the provider for one or more target platforms."""
     click.echo("🚀 Packaging provider...")
     try:
-        built_artifacts = build_package_from_manifest(Path(pyproject_toml_path))
+        built_artifacts = build_package_from_manifest(Path(pyproject_toml_path), output_path=Path(output_path) if output_path else None)
         for artifact in built_artifacts:
             click.secho(
                 f"✅ Successfully built artifact at {artifact}",
@@ -116,29 +122,39 @@ def verify_command(package_file: str) -> None:
     final_package_file = Path(package_file)
     click.echo(f"🔍 Verifying package '{final_package_file}'...")
     try:
-        verify_package(final_package_file)
-        click.secho("✅ Go-based cryptographic verification successful.", fg="green")
-    except (BuildError, subprocess.CalledProcessError) as e:
-        stderr_info = (
-            f"  Stderr: {e.stderr.strip()}" if hasattr(e, "stderr") and e.stderr else ""
-        )
-        click.secho(
-            f"❌ Go-based verification failed: {e}{stderr_info}", fg="red", err=True
-        )
+        result = verify_package(final_package_file)
+        
+        # Display results
+        click.echo(f"\nPackage Format: {result['format']}")
+        click.echo(f"Version: {result['version']}")
+        click.echo(f"Launcher Size: {result['launcher_size'] / (1024*1024):.1f} MB")
+        
+        if result['format'] == 'PSPF/2025':
+            click.echo(f"Slot Count: {result['slot_count']}")
+            if 'package' in result:
+                pkg = result['package']
+                click.echo(f"Package: {pkg.get('name', 'unknown')} v{pkg.get('version', 'unknown')}")
+            if 'slots' in result:
+                click.echo("\nSlots:")
+                for slot in result['slots']:
+                    click.echo(f"  [{slot['index']}] {slot['name']}: {slot['size'] / 1024:.1f} KB")
+        
+        # Signature verification result
+        if result['signature_valid']:
+            click.secho("\n✅ Signature verification successful", fg="green")
+        else:
+            click.secho("\n❌ Signature verification failed", fg="red")
+            raise click.Abort()
+            
+    except Exception as e:
+        click.secho(f"❌ Verification failed: {e}", fg="red", err=True)
         raise click.Abort() from e
 
 
 @cli.command("clean")
 def clean_command() -> None:
     """Removes cached Go binaries."""
-    click.echo("🧹 Cleaning cached Go binaries...")
-    cache_dir = _get_cache_dir()
-    bin_dir = cache_dir / "bin"
-    if bin_dir.exists():
-        shutil.rmtree(bin_dir, ignore_errors=True)
-        click.secho(f"✅ Removed cache directory: {bin_dir}", fg="green")
-    else:
-        click.secho("Info: Cache directory not found, nothing to clean.", fg="yellow")
+    click.echo("Clean command not available - compiler moved to scraps")
 
 
 main = cli

@@ -12,11 +12,9 @@ from flavor.api import (
     verify_package,
 )
 from flavor.exceptions import BuildError, VerificationError
-from flavor.models import PSPFooter
 
 __all__ = [
     "BuildError",
-    "PSPFooter",
     "VerificationError",
     "build_package_from_manifest",
     "clean_cache",

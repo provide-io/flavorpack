@@ -1,10 +1,10 @@
-# Flavor - Progressive Secure Package Format (PSPF) v0.1
+# Flavor - Progressive Secure Package Format (PSPF/2025)
 
 [![CI](https://github.com/provide-io/flavor/actions/workflows/ci.yml/badge.svg)](https://github.com/provide-io/flavor/actions/workflows/ci.yml)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Flavor is a modern packaging system that implements the **Progressive Secure Package Format (PSPF) v0.1** - a secure, performant binary packaging format for distributing multi-runtime applications. The initial implementation focuses on packaging Python-based Terraform providers built with the [Pyvider framework](https://github.com/provide-io/pyvider).
+Flavor is a modern packaging system that implements the **Progressive Secure Package Format (PSPF) 2025 Edition** - a secure, performant binary packaging format for distributing multi-runtime applications. The format supports polyglot execution with launchers for Go, Rust, Python, and Node.js.
 
 ## Key Features
 
@@ -48,8 +48,8 @@ provider_name = "example"
 entry_point = "example.main:serve"
 
 [tool.flavor.signing]
-private_key_path = "keys/provider-private.key"
-public_key_path = "keys/provider-public.key"
+private_key_path = "keys/flavor-private.key"
+public_key_path = "keys/flavor-public.key"
 ```
 
 ### 3. Build Your Package
@@ -80,23 +80,21 @@ When executed, the launcher:
 
 ## Package Format
 
-The PSPF v0.1 format uses a structured binary layout:
+The PSPF/2025 format uses a structured binary layout:
 
 ```
-[Go Launcher Binary]
-[UV Package Manager]
-[Python Runtime Archive]
+[Native Launcher Binary (Go/Rust)]
+[Slot 0: UV Package Manager]
+[Slot 1: Python Runtime]
+[Slot 2: Application Wheels]
 [Metadata Archive]
-[Application Payload]
-[ECDSA Signature]
-[Public Key]
-[Footer Structure]
-[Magic String: 📦FLAVOR📦]
+[256-byte Index Block]
+[4-Emoji Magic: 📦[Launcher][Random]🪄]
 ```
 
 ## Documentation
 
-- **[Specification](docs/SPECIFICATION.md)** - Complete PSPF v0.1 format specification
+- **[Specification](docs/SPECIFICATION_PSPF_2025.md)** - Complete PSPF/2025 format specification
 - **[Architecture](docs/ARCHITECTURE.md)** - Design decisions and architecture
 - **[Security](docs/SECURITY.md)** - Cryptographic design and threat model
 - **[Development](docs/DEVELOPMENT.md)** - Contributing and development guide

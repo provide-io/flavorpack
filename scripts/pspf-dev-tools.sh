@@ -23,7 +23,7 @@ DEFAULT_CACHE_DIR="$HOME/.cache/flavor-dev"
 
 show_help() {
     cat << 'EOF'
-🛠️  PSPF Developer Tools v0.1.0
+🛠️  PSPF Developer Tools 2025
 ==================================
 
 A comprehensive toolkit for PSPF development workflows.

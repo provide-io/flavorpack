@@ -1,6 +1,6 @@
 # Flavor Documentation
 
-Welcome to the Flavor documentation! This directory contains comprehensive documentation for the Flavor packaging system and the Progressive Secure Package Format (PSPF) v0.1.
+Welcome to the Flavor documentation! This directory contains comprehensive documentation for the Flavor packaging system and the Progressive Secure Package Format (PSPF/2025).
 
 ## 📚 Core Documentation
 
@@ -14,7 +14,7 @@ Welcome to the Flavor documentation! This directory contains comprehensive docum
 
 ### For Developers
 
-- **[Specification](SPECIFICATION.md)** - Complete PSPF v0.1 format specification
+- **[Specification](SPECIFICATION_PSPF_2025.md)** - Complete PSPF/2025 format specification
 - **[Architecture](ARCHITECTURE.md)** - System design and architectural decisions
 - **[Development](DEVELOPMENT.md)** - Contributing guide and development setup
 - **[Security](SECURITY.md)** - Security model and cryptographic design
@@ -62,7 +62,7 @@ docs/
 ├── faq.md               # Frequently asked questions
 ├── troubleshooting.md   # Troubleshooting guide
 ├── migration-guide.md   # Migration from other tools
-├── SPECIFICATION.md     # PSPF v0.1 specification
+├── SPECIFICATION_PSPF_2025.md  # PSPF/2025 specification
 ├── ARCHITECTURE.md      # Architecture documentation
 ├── DEVELOPMENT.md       # Development guide
 ├── SECURITY.md         # Security documentation

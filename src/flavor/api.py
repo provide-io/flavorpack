@@ -10,13 +10,13 @@ import subprocess
 # No typing imports needed with Python 3.11+
 import tomllib
 
-from .compiler import ensure_go_binary
+# from .compiler import ensure_go_binary  # Moved to scraps
 from .exceptions import VerificationError
 from .packaging.keys import generate_key_pair
 from .packaging.orchestrator import PackagingOrchestrator
 
 
-def build_package_from_manifest(manifest_path: Path) -> list[Path]:
+def build_package_from_manifest(manifest_path: Path, output_path: Path | None = None) -> list[Path]:
     """Builds a package from a pyproject.toml manifest."""
     # Parse pyproject.toml to get build configurations
 
@@ -34,9 +34,9 @@ def build_package_from_manifest(manifest_path: Path) -> list[Path]:
 
     # Use absolute paths based on manifest location
     manifest_dir = manifest_path.parent.absolute()
-    output_flavor_path = manifest_dir / "dist" / f"{package_name}.flavor"
-    package_integrity_key_path = manifest_dir / "keys" / "provider-private.key"
-    public_key_path = manifest_dir / "keys" / "provider-public.key"
+    output_flavor_path = output_path if output_path else manifest_dir / "dist" / f"{package_name}.pspf"
+    package_integrity_key_path = manifest_dir / "keys" / "flavor-private.key"
+    public_key_path = manifest_dir / "keys" / "flavor-public.key"
 
     # Ensure keys exist (for testing purposes)
     if not package_integrity_key_path.exists() or not public_key_path.exists():
@@ -62,18 +62,10 @@ def build_package_from_manifest(manifest_path: Path) -> list[Path]:
     return [output_flavor_path]
 
 
-def verify_package(package_path: Path) -> None:
+def verify_package(package_path: Path) -> dict:
     """Verifies a Flavor package."""
-    packager_executable = ensure_go_binary("flavor-go")
-    try:
-        subprocess.run(
-            [str(packager_executable), "verify", str(package_path)],
-            check=True,
-            capture_output=True,
-            text=True,
-        )
-    except subprocess.CalledProcessError as e:
-        raise VerificationError(f"Package verification failed: {e.stderr}") from e
+    from .verification import FlavorVerifier
+    return FlavorVerifier.verify_package(package_path)
 
 
 def clean_cache() -> None:
