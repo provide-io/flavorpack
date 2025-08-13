@@ -136,22 +136,22 @@ class PackagingOrchestrator:
                     Path(__file__).parent.parent / "go/cmd/pspf-launcher/pspf-launcher"
                 ),
                 "cache_validation": {
-                    "check_file": "{cache}/metadata/installed",
+                    "check_file": "{workenv}/metadata/installed",
                     "expected_content": f"{self.package_name}-{self.build_config.get('version', '1.0.0')}",
                 },
                 "setup_commands": [
                     {
                         "type": "enumerate_and_execute",
-                        "command": "{cache}/bin/uv pip install --python {cache}/bin/python3 --target {cache}/lib/python3.11/site-packages --no-deps",
-                        "enumerate": {"path": "{cache}/wheels", "pattern": "*.whl"},
+                        "command": "{workenv}/bin/uv pip install --python {workenv}/bin/python3 --target {workenv}/lib/python3.11/site-packages --no-deps",
+                        "enumerate": {"path": "{workenv}/wheels", "pattern": "*.whl"},
                     },
                     {
                         "type": "write_file",
-                        "path": "{cache}/metadata/installed",
+                        "path": "{workenv}/metadata/installed",
                         "content": "{package_name}-{version}",
                     },
                 ],
-                "command": "{cache}/bin/uv run --python {cache}/bin/python3 -m {package_name}",
+                "command": "{workenv}/bin/uv run --python {workenv}/bin/python3 -m {package_name}",
                 "slots": [
                     {
                         "name": "uv",

@@ -83,9 +83,6 @@ target/
 # Binary executables (no matter where they are)
 *.flavor
 *.pspf
-pspf-builder
-pspf-launcher
-pspf-launcher-*
 # But allow source files with these names
 !*.go
 !*.rs
