@@ -114,3 +114,5 @@ uv.lockworkenv/
 *.tgz
 *.tar.gz
 *code.sh
+*bfiles*
+pspf-*

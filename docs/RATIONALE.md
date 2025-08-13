@@ -86,8 +86,7 @@ That 16-byte ending `📦🐹🌈🪄` isn't just whimsy:
 
 ### 3. **Progressive Extraction Saves the Day**
 
-Not everything needs to be extracted:
-```python
+Not everything needs to be extracted:```python
 # Only extract what's needed, when needed
 if not cache.has("python-runtime"):
     extract_slot("python-runtime", lifecycle="persistent")
@@ -129,8 +128,7 @@ pip install -r requirements.txt
 ./app
 ```
 
-### Multi-Language Harmony
-```json
+### Multi-Language Harmony```json
 {
   "slots": [
     {"name": "frontend", "purpose": "payload"},  // React app
@@ -205,10 +203,8 @@ It's not trying to replace Docker, pip, or npm. It's the layer that makes them p
 
 ---
 
-*Ready to try it?*
-```bash
+*Ready to try it?*```bash
 pip install pspf-tools
 pspf init myapp
 pspf build --launcher go
-./myapp  # That's it. You're done.
-```
+./myapp  # That's it. You're done.```

@@ -52,7 +52,6 @@ class PackageMetadata:
     repository: dict[str, str | None] | None = None
     bugs: dict[str, str | None] | None = None
     keywords: list[str] = field(factory=list)
-    terraform: dict[str, Any] = field(factory=dict)
     supported_platforms: list[str] = field(factory=list)
     requirements: dict[str, str] = field(factory=dict)
     metadata: dict[str, Any] = field(factory=dict)
@@ -225,7 +224,7 @@ def create_minimal_metadata(
     return MetadataBundle(
         pspf=PSPFMetadata(created_by={"tool": "flavor", "version": "2025.0.0"}),
         package=PackageMetadata(
-            name=name, version=version, description=f"{name} Terraform provider"
+            name=name, version=version, description=f"A self-contained {name} package"
         ),
         runtime=RuntimeConfig(entry_point=entry_point),
         dependencies=DependencyInfo(),

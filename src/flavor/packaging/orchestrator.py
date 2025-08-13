@@ -106,19 +106,31 @@ class PackagingOrchestrator:
                 for wheel in wheels_dir.glob("*.whl"):
                     tar.add(wheel, arcname=wheel.name)
             
-            # Copy bootstrap script
-            bootstrap_src = Path(__file__).parent / "bootstrap.py"
-            bootstrap_dest = temp_dir / "bootstrap.py"
-            import shutil
-            shutil.copy2(bootstrap_src, bootstrap_dest)
-            
             # Step 3: Create manifest for pspf-builder
             manifest = {
                 "name": self.package_name,
                 "version": self.build_config.get("version", "1.0.0"),
                 "launcher": "go",
                 "launcher_path": str(Path(__file__).parent.parent / "go/cmd/pspf-launcher/pspf-launcher"),
-                "command": "{cache}/bin/python3 {slot:3} " + self.entry_point.split(":")[0],
+                "cache_validation": {
+                    "check_file": "{cache}/metadata/installed",
+                    "expected_content": f"{self.package_name}-{self.build_config.get('version', '1.0.0')}"
+                },
+                "setup_commands": [
+                    {
+                        "type": "enumerate_and_execute",
+                        "command": "{cache}/bin/uv pip install --python {cache}/bin/python3 --target {cache}/lib/python3.11/site-packages --no-deps",
+                        "enumerate": {
+                            "path": "{cache}/wheels",
+                            "pattern": "*.whl"
+                        }
+                    },
+                    {
+                        "type": "execute", 
+                        "command": "echo '{package_name}-{version}' > {cache}/metadata/installed"
+                    }
+                ],
+                "command": "{cache}/bin/python3 -m " + self.entry_point.split(":")[0],
                 "slots": [
                     {
                         "name": "uv",
@@ -131,7 +143,7 @@ class PackagingOrchestrator:
                     {
                         "name": "python",
                         "path": str(python_tarball),
-                        "compression": "none",
+                        "compression": "gzip",
                         "purpose": "runtime",
                         "lifecycle": "persistent",
                         "extract_to": "."
@@ -143,13 +155,6 @@ class PackagingOrchestrator:
                         "purpose": "payload",
                         "lifecycle": "volatile",
                         "extract_to": "wheels"
-                    },
-                    {
-                        "name": "bootstrap",
-                        "path": str(bootstrap_dest),
-                        "compression": "none",
-                        "purpose": "script",
-                        "lifecycle": "volatile"
                     }
                 ],
                 "environment": {

@@ -1,51 +1,51 @@
 # Flavor Development Guide
 
-This guide provides an accurate, code-first overview of the Flavor project's current state and the immediate roadmap for reaching a production release.
+This guide provides an accurate, code-first overview of the Flavor project's current state.
 
-## Project State
+## Project Architecture
 
-Flavor is an advanced prototype of a polyglot packaging system implementing the **Progressive Secure Package Format (PSPF) 2025 Edition**. It features three parallel implementations of the specification with a high-quality test suite. The primary focus is now on achieving feature parity and unifying the test harness.
+Flavor is a polyglot packaging system that uses a Python **Orchestrator** to drive language-specific **Builders**. It also includes a compliant Python **Verifier** for cross-language validation and a BDD test suite intended to wrap `pytest`.
 
-### Canonical Specification
+- **Orchestrator (Python)**: The primary user-facing tool (`flavor` CLI) in `src/flavor/`. It orchestrates the build process by preparing Python application artifacts and then invoking a low-level builder.
+- **Builders (Go/Rust)**: Low-level tools that assemble prepared artifacts into a valid PSPF 2025 bundle. They handle binary format details like index block creation, slot management, and integrity sealing.
+- **Verifier (Python)**: A pure Python implementation of a PSPF 2025 reader located in `src/flavor/psp/format_2025.py`. It allows the `flavor` tool to verify the integrity of any compliant bundle, regardless of which builder created it.
+- **Launchers (Go/Rust)**: Executable stubs embedded in the final bundle that extract and run the application.
 
-The single source of truth for the file format is **[`docs/SPECIFICATION.md`](docs/SPECIFICATION.md)**. All implementations must adhere to this document.
+The canonical specification for the binary format is the implementation in the Go and Rust builders. The **[`docs/SPECIFICATION.md`](docs/SPECIFICATION.md)** has been updated to reflect this implementation.
 
-## Implementations
+## Implementation State
 
-The project consists of three builders that produce compatible PSPF bundles.
+### 1. Python Orchestrator & Verifier
+- **Location**: `src/flavor/`
+- **State**: **Functional**.
+- **Orchestrator**: The `PackagingOrchestrator` correctly prepares Python artifacts and invokes the Go builder to create a final bundle.
+- **Verifier**: The `PSPFReader` in `format_2025.py` correctly parses the binary format implemented by Go/Rust. However, its cryptographic verification logic is currently a **placeholder** and cannot verify real signatures.
 
-### 1. Go Implementation
-- **Location**: `src/flavor/go/cmd/pspf-builder/`
-- **State**: **Production-Quality**.
-- **Cryptography**: **Functional**. Uses `crypto/ed25519` for real ephemeral key generation and signing.
-- **Compression**: **Partial**. Implements `gzip`.
+### 2. Go Builder & Launcher
+- **Location**: `src/flavor/go/cmd/`
+- **State**: **Functional**.
+- **Cryptography**: Implements functional `ed25519` for signing.
+- **Compression**: Supports `gzip` and `none`.
 
-### 2. Rust Implementation
-- **Location**: `src/flavor/rust/pspf-builder-rs/`
-- **State**: **Production-Quality**.
-- **Cryptography**: **Functional**. Uses the `ed25519-dalek` crate for real key generation and signing.
-- **Compression**: **Partial**. Implements `gzip`.
+### 3. Rust Builder & Launcher
+- **Location**: `src/flavor/rust/`
+- **State**: **Functional**.
+- **Cryptography**: Implements functional `ed25519-dalek` for signing.
+- **Compression**: Supports `gzip` and `none`.
 
-### 3. Python Implementation
-- **Location**: `src/flavor/psp/format_2025.py`
-- **State**: **Functional Prototype**.
-- **Cryptography**: **Placeholder**. Uses `os.urandom()` and a simple keyed hash, not real asymmetric signatures. **This is the highest priority item to fix.**
-- **Compression**: **Partial**. Implements `gzip`.
+### 4. BDD Tests
+- **Location**: `tests/bdd/`
+- **State**: **Non-Functional**. The test runner (`pytest_runner.py`) is configured to wrap `pytest` but points to test files that do not exist. The testing strategy requires unification and repair.
 
 ## Immediate Roadmap (Pre-Release Tasks)
 
-1.  **Achieve Implementation Parity**
-    *   **Python Cryptography**: Replace the placeholder signing logic in `format_2025.py` with a real `ed25519` implementation using the `cryptography` library. This will bring it to parity with the Go and Rust builders.
-    *   **`zstd` Compression**: Add `zstd` compression support to all three builders (Python, Go, Rust) to complete the planned feature set.
-
-2.  **Unify the Test Suite**
-    *   The `pytest` suite in `tests/` is the primary test harness. It needs to be expanded to drive the Go and Rust builders, not just the Python implementation.
-    *   Tests should be created to build a standard bundle with each language's builder and then verify that bundle's integrity and structure using each language's reader/launcher. This will provide true cross-compatibility validation.
+1.  **Implement Production Cryptography in Python Verifier**: Replace the placeholder signing and verification logic in `src/flavor/psp/format_2025.py` with a real `ed25519` implementation (e.g., using the `cryptography` library). This is critical for true cross-language verification.
+2.  **Add `zstd` Compression**: Add `zstd` support to the Go and Rust builders to improve compression ratios for binary assets.
+3.  **Repair and Unify the Test Suite**: Fix the BDD test suite by updating `tests/bdd/features/steps/pytest_runner.py` to point to existing, correct `pytest` tests. Expand the `pytest` suite to perform end-to-end, cross-language validation (e.g., build with Go, verify with Python).
 
 ## How to Build & Test
 
 ### Environment Setup
-It is recommended to use `uv` for managing the Python environment.
 ```bash
 # Create and activate the virtual environment
 uv venv
@@ -66,8 +66,10 @@ uv pip install -e .[dev]
 ```
 
 ### Running Tests
-The primary test suite is run with `pytest`.
 ```bash
-# Run all Python-based tests
+# Run all Python-based tests for the packager and verifier
 pytest
+
+# The BDD suite is currently non-functional
+# behave tests/bdd/features/
 ```

@@ -24,7 +24,7 @@ def build_package_from_manifest(manifest_path: Path, output_path: Path | None = 
         pyproject = tomllib.load(f)
 
     # Get values from pyproject.toml
-    project_name = pyproject.get("project", {}).get("name", "my-provider")
+    project_name = pyproject.get("project", {}).get("name", "my-package")
     flavor_config = pyproject.get("tool", {}).get("flavor", {})
     entry_point = flavor_config.get(
         "entry_point",

@@ -8,7 +8,7 @@ from unittest.mock import patch
 from click.testing import CliRunner
 
 from flavor.cli import main as cli_main
-from flavor.exceptions import BuildError, PackagingError
+from flavor.exceptions import BuildError, PackagingError, VerificationError
 
 
 def test_cli_package_fails(tmp_path: Path) -> None:
@@ -47,11 +47,11 @@ def test_cli_verify_fails(tmp_path: Path) -> None:
 
     with patch(
         "flavor.cli.verify_package",
-        side_effect=BuildError("Mocked verification failure"),
+        side_effect=VerificationError("Mocked verification failure"),
     ) as mock_verify:
         result = runner.invoke(cli_main, ["verify", str(package_file)])
         assert result.exit_code != 0
-        assert "Go-based verification failed" in result.output
+        assert "Verification failed: Mocked verification failure" in result.output
         mock_verify.assert_called_once()
 
 
