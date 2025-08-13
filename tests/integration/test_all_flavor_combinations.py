@@ -345,9 +345,9 @@ class TestAllFlavorCombinations:
                                 "name": "test-provider",
                                 "version": "1.0.0",
                                 "description": "Test provider",
-                                "command": "{cache}/bin/python3 -m test_provider.main",
+                                "command": "{workenv}/bin/python3 -m test_provider.main",
                                 "environment": {
-                                    "PYTHONPATH": "{cache}/lib/python3.11/site-packages"
+                                    "PYTHONPATH": "{workenv}/lib/python3.11/site-packages"
                                 },
                                 "slots": [
                                     {

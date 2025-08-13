@@ -95,19 +95,45 @@ struct BuildInfo {
     host: Option<String>,
 }
 
+/// 🚀 Main entry point for the PSPF Rust launcher
+/// 
+/// The launcher follows this execution flow:
+/// 1. Initialize logging based on FLAVOR_LOG_LEVEL/FLAVOR_RUST_LOG_LEVEL
+/// 2. Capture the user's current working directory (CWD)
+/// 3. Check for special modes (verify, CLI commands)
+/// 4. Read and validate the PSPF package format
+/// 5. Extract metadata and slots to a temporary work environment
+/// 6. Run setup commands if needed (or skip if environment is cached/valid)
+/// 7. Execute the primary command while preserving the user's CWD
+/// 
+/// The launcher ensures all subprocesses run in the user's original directory
+/// while having access to the extracted work environment via FLAVOR_WORKENV.
 fn main() -> Result<()> {
-    // 🚀 Initialize logging
-    env_logger::init();
+    // 🚀 Initialize logging with FLAVOR_LOG_LEVEL
+    // Prioritize FLAVOR_RUST_LOG_LEVEL, then FLAVOR_LOG_LEVEL, then default to "info"
+    let log_level = env::var("FLAVOR_RUST_LOG_LEVEL")
+        .or_else(|_| env::var("FLAVOR_LOG_LEVEL"))
+        .unwrap_or_else(|_| "info".to_string());
+    
+    env_logger::Builder::from_env(env_logger::Env::default())
+        .filter_level(log_level.parse().unwrap_or(log::LevelFilter::Info))
+        .format_timestamp_millis()
+        .init();
     
     // 🦀 Log launcher info
     info!("🦀 PSPF Rust Launcher v{} starting...", env!("CARGO_PKG_VERSION"));
     info!("🏗️ Built with Rust {}", env!("CARGO_PKG_RUST_VERSION"));
-    debug!("🔍 Debug logging enabled");
+    debug!("🔍 Debug logging enabled at level: {}", log_level);
     
     // 📍 Get the path to our own executable
     let exe_path = env::current_exe()
         .context("Failed to get executable path")?;
     debug!("📦 Bundle path: {:?}", exe_path);
+    
+    // 📂 Capture user's current working directory early
+    let user_cwd = env::current_dir()
+        .context("Failed to get current directory")?;
+    debug!("📂 User working directory: {:?}", user_cwd);
 
     // 🔍 Check for verify mode
     let args: Vec<String> = env::args().collect();
@@ -155,35 +181,36 @@ fn main() -> Result<()> {
     debug!("🎯 Primary slot: {}", metadata.execution.primary_slot);
     debug!("🔧 Command: {}", metadata.execution.command);
 
-    // 🗂️ Create cache directory
-    let cache_dir = TempDir::new_in(env::temp_dir())
-        .context("Failed to create cache directory")?;
-    info!("📁 Cache directory: {:?}", cache_dir.path());
+    // 🗂️ Create work environment directory
+    let workenv_dir = TempDir::new_in(env::temp_dir())
+        .context("Failed to create work environment directory")?;
+    info!("📁 Work environment: {:?}", workenv_dir.path());
 
     // 📤 Extract all slots
     info!("📤 Extracting {} slots...", metadata.slots.len());
     let mut slot_paths = std::collections::HashMap::new();
     for (i, slot) in metadata.slots.iter().enumerate() {
         debug!("📦 Extracting slot {}: {} ({} bytes)", i, slot.name, slot.size);
-        let slot_path = reader.extract_slot(i, cache_dir.path())?;
+        let slot_path = reader.extract_slot(i, workenv_dir.path())?;
         debug!("✅ Extracted to: {:?}", slot_path);
         slot_paths.insert(slot.index, slot_path);
     }
 
-    // 🔍 Check cache validity
-    let cache_valid = if let Some(cache_validation) = &metadata.cache_validation {
-        check_cache_validity(cache_dir.path(), cache_validation)
+    // 🔍 Check work environment validity
+    // If a validation file is specified, check if the environment is already set up
+    let workenv_valid = if let Some(cache_validation) = &metadata.cache_validation {
+        check_workenv_validity(workenv_dir.path(), cache_validation)
     } else {
         false
     };
     
-    if cache_valid {
-        info!("✅ Cache is valid, skipping setup");
+    if workenv_valid {
+        info!("✅ Work environment is valid, skipping setup");
     } else {
         // 🔧 Run setup commands
         if !metadata.setup_commands.is_empty() {
             info!("🔧 Running {} setup commands...", metadata.setup_commands.len());
-            execute_setup_commands(&metadata.setup_commands, cache_dir.path(), &metadata.package)?;
+            execute_setup_commands(&metadata.setup_commands, workenv_dir.path(), &metadata.package, &user_cwd)?;
         }
     }
     
@@ -196,8 +223,8 @@ fn main() -> Result<()> {
         command = command.replace(&placeholder, path.to_str().unwrap());
     }
     
-    // 🔄 Substitute cache directory and package info
-    command = command.replace("{cache}", cache_dir.path().to_str().unwrap());
+    // 🔄 Substitute work environment and package info
+    command = command.replace("{workenv}", workenv_dir.path().to_str().unwrap());
     command = command.replace("{package_name}", &metadata.package.name);
     command = command.replace("{version}", &metadata.package.version);
     
@@ -232,19 +259,19 @@ fn main() -> Result<()> {
             let placeholder = format!("{{slot:{}}}", idx);
             v = v.replace(&placeholder, path.to_str().unwrap());
         }
-        // Substitute cache directory and package info
-        v = v.replace("{cache}", cache_dir.path().to_str().unwrap());
+        // Substitute work environment and package info
+        v = v.replace("{workenv}", workenv_dir.path().to_str().unwrap());
         v = v.replace("{package_name}", &metadata.package.name);
         v = v.replace("{version}", &metadata.package.version);
         cmd.env(k, v);
     }
-
-    // Set working directory to primary slot if specified
-    if let Some(primary_path) = slot_paths.get(&metadata.execution.primary_slot) {
-        if let Some(parent) = primary_path.parent() {
-            cmd.current_dir(parent);
-        }
-    }
+    
+    // 🌍 Add FLAVOR_WORKENV environment variable
+    cmd.env("FLAVOR_WORKENV", workenv_dir.path());
+    
+    // 📂 Set working directory to user's original directory
+    debug!("📂 Setting working directory to: {:?}", user_cwd);
+    cmd.current_dir(&user_cwd);
 
     // Connect stdio
     cmd.stdin(Stdio::inherit())
@@ -266,6 +293,13 @@ fn main() -> Result<()> {
     std::process::exit(exit_code);
 }
 
+/// 📖 Reader for PSPF package files
+/// Handles reading the package structure including:
+/// - Launcher binary (native executable)
+/// - PSPF index (256-byte header)
+/// - Metadata archive (compressed psp.json)
+/// - Slot table (24-byte entries per slot)
+/// - Slot data (payload files)
 struct Reader {
     file: File,
     launcher_size: u64,
@@ -386,6 +420,10 @@ impl Reader {
     }
 
     // 🔍 Check if data is a tar archive
+    /// Detects if the given data is a tar archive by checking for:
+    /// 1. "ustar" magic at offset 257 (POSIX tar format)
+    /// 2. ASCII-printable characters in the name field
+    /// 3. Valid tar structure (as a fallback test)
     fn is_tarball(&self, data: &[u8]) -> bool {
         // Check for tar magic header (ustar)
         if data.len() >= 512 {
@@ -739,33 +777,42 @@ fn detect_builder_type(metadata: &Metadata) -> String {
     "unknown/pspf-builder".to_string()
 }
 
-// 🔍 Check if cache is valid
-fn check_cache_validity(cache_dir: &Path, validation: &CacheValidationInfo) -> bool {
-    let check_path = validation.check_file.replace("{cache}", cache_dir.to_str().unwrap());
+// 🔍 Check if work environment is valid
+/// Validates the work environment by checking if a specific file exists with expected content.
+/// This allows skipping redundant setup if the environment is already properly initialized.
+fn check_workenv_validity(workenv_dir: &Path, validation: &CacheValidationInfo) -> bool {
+    let check_path = validation.check_file
+        .replace("{workenv}", workenv_dir.to_str().unwrap());
     
-    debug!("🔍 Checking cache validity: {}", check_path);
+    debug!("🔍 Checking work environment validity: {}", check_path);
     
     match fs::read_to_string(&check_path) {
         Ok(content) => {
             let is_valid = content.trim() == validation.expected_content;
             if is_valid {
-                debug!("✅ Cache validation passed");
+                debug!("✅ Work environment validation passed");
             } else {
-                debug!("❌ Cache validation failed: expected '{}', got '{}'", validation.expected_content, content.trim());
+                debug!("❌ Work environment validation failed: expected '{}', got '{}'", validation.expected_content, content.trim());
             }
             is_valid
         }
         Err(_) => {
-            debug!("❌ Cache validation file not found");
+            debug!("❌ Work environment validation file not found");
             false
         }
     }
 }
 
 // 🔧 Execute setup commands
-fn execute_setup_commands(commands: &[Value], cache_dir: &Path, package: &PackageInfo) -> Result<()> {
+/// Processes and executes all setup commands required to initialize the work environment.
+/// Supports multiple command types:
+/// - enumerate_and_execute: Find files matching a pattern and execute a command with them
+/// - write_file: Create a file with specified content and permissions
+/// - execute: Run a shell command (default for string commands)
+/// All commands preserve the user's current working directory.
+fn execute_setup_commands(commands: &[Value], workenv_dir: &Path, package: &PackageInfo, user_cwd: &Path) -> Result<()> {
     // 📁 Create metadata directory
-    let metadata_dir = cache_dir.join("metadata");
+    let metadata_dir = workenv_dir.join("metadata");
     fs::create_dir_all(&metadata_dir)?;
     
     for (i, cmd) in commands.iter().enumerate() {
@@ -774,7 +821,7 @@ fn execute_setup_commands(commands: &[Value], cache_dir: &Path, package: &Packag
         match cmd {
             Value::String(s) => {
                 // Legacy string command
-                execute_command(s, cache_dir, package)?;
+                execute_command(s, workenv_dir, package, user_cwd)?;
             }
             Value::Object(map) => {
                 let cmd_type = map.get("type").and_then(|v| v.as_str()).unwrap_or("");
@@ -782,13 +829,13 @@ fn execute_setup_commands(commands: &[Value], cache_dir: &Path, package: &Packag
                 match cmd_type {
                     "enumerate_and_execute" => {
                         let command = map.get("command").and_then(|v| v.as_str()).unwrap_or("");
-                        let command = substitute_placeholders(command, cache_dir, package);
+                        let command = substitute_placeholders(command, workenv_dir, package);
                         
                         if let Some(enumerate) = map.get("enumerate").and_then(|v| v.as_object()) {
                             let path = enumerate.get("path").and_then(|v| v.as_str()).unwrap_or("");
                             let pattern = enumerate.get("pattern").and_then(|v| v.as_str()).unwrap_or("");
                             
-                            let path = substitute_placeholders(path, cache_dir, package);
+                            let path = substitute_placeholders(path, workenv_dir, package);
                             let glob_pattern = format!("{}/{}", path, pattern);
                             
                             debug!("📂 Enumerating files: {}", glob_pattern);
@@ -808,7 +855,7 @@ fn execute_setup_commands(commands: &[Value], cache_dir: &Path, package: &Packag
                                     
                                     info!("🚀 Executing: {} with {} files", cmd_name, file_count);
                                     let args_refs: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
-                                    run_command(cmd_name, &args_refs, cache_dir)?;
+                                    run_command(cmd_name, &args_refs, workenv_dir, user_cwd)?;
                                 }
                             }
                         }
@@ -818,8 +865,8 @@ fn execute_setup_commands(commands: &[Value], cache_dir: &Path, package: &Packag
                         let content = map.get("content").and_then(|v| v.as_str()).unwrap_or("");
                         let mode = map.get("mode").and_then(|v| v.as_u64()).unwrap_or(0o644) as u32;
                         
-                        let path = substitute_placeholders(path, cache_dir, package);
-                        let content = substitute_placeholders(content, cache_dir, package);
+                        let path = substitute_placeholders(path, workenv_dir, package);
+                        let content = substitute_placeholders(content, workenv_dir, package);
                         
                         debug!("📝 Writing file: {} (mode: {:o})", path, mode);
                         
@@ -840,7 +887,7 @@ fn execute_setup_commands(commands: &[Value], cache_dir: &Path, package: &Packag
                     }
                     _ => {
                         let command = map.get("command").and_then(|v| v.as_str()).unwrap_or("");
-                        execute_command(command, cache_dir, package)?;
+                        execute_command(command, workenv_dir, package, user_cwd)?;
                     }
                 }
             }
@@ -854,37 +901,53 @@ fn execute_setup_commands(commands: &[Value], cache_dir: &Path, package: &Packag
 }
 
 // 🔄 Substitute placeholders
-fn substitute_placeholders(text: &str, cache_dir: &Path, package: &PackageInfo) -> String {
-    text.replace("{cache}", cache_dir.to_str().unwrap())
+/// Replaces template placeholders in text with actual values.
+/// Supported placeholders:
+/// - {workenv}: Path to the work environment directory
+/// - {package_name}: Name of the package
+/// - {version}: Version of the package
+fn substitute_placeholders(text: &str, workenv_dir: &Path, package: &PackageInfo) -> String {
+    text.replace("{workenv}", workenv_dir.to_str().unwrap())
         .replace("{package_name}", &package.name)
         .replace("{version}", &package.version)
 }
 
 // 🚀 Execute a command
-fn execute_command(command: &str, cache_dir: &Path, package: &PackageInfo) -> Result<()> {
-    let command = substitute_placeholders(command, cache_dir, package);
+/// Executes a single command string after substituting placeholders.
+/// The command is split on whitespace to separate the executable from arguments.
+/// Preserves the user's current working directory.
+fn execute_command(command: &str, workenv_dir: &Path, package: &PackageInfo, user_cwd: &Path) -> Result<()> {
+    let command = substitute_placeholders(command, workenv_dir, package);
     let parts: Vec<_> = command.split_whitespace().collect();
     
     if parts.is_empty() {
         return Ok(());
     }
     
-    run_command(parts[0], &parts[1..], cache_dir)
+    run_command(parts[0], &parts[1..], workenv_dir, user_cwd)
 }
 
 // 🏃 Run a command with arguments
-fn run_command(cmd: &str, args: &[&str], cache_dir: &Path) -> Result<()> {
-    debug!("🏃 Running: {} {:?}", cmd, args);
+/// Executes a command with the given arguments in the user's working directory.
+/// Sets up the environment with:
+/// - FLAVOR_WORKENV pointing to the work environment
+/// - PATH prepended with {workenv}/bin for access to installed tools
+/// Returns an error if the command fails to execute or returns non-zero exit code.
+fn run_command(cmd: &str, args: &[&str], workenv_dir: &Path, user_cwd: &Path) -> Result<()> {
+    debug!("🏃 Running: {} {:?} in {:?}", cmd, args, user_cwd);
     
     let mut command = Command::new(cmd);
     command.args(args);
     
-    // Set environment
-    command.env("FLAVOR_CACHE", cache_dir);
+    // 📂 Set working directory to user's directory
+    command.current_dir(user_cwd);
     
-    // Prepend cache/bin to PATH
+    // 🌍 Set environment
+    command.env("FLAVOR_WORKENV", workenv_dir);
+    
+    // 📍 Prepend workenv/bin to PATH
     if let Ok(path) = env::var("PATH") {
-        let new_path = format!("{}/bin:{}", cache_dir.to_str().unwrap(), path);
+        let new_path = format!("{}/bin:{}", workenv_dir.to_str().unwrap(), path);
         command.env("PATH", new_path);
     }
     
