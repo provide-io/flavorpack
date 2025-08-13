@@ -63,9 +63,7 @@ where = ["src"]
 
         # Build Rust launcher
         print("\n🦀 Building Rust launcher...")
-        rust_dir = Path(
-            "/REDACTED_ABS_PATH"
-        )
+        rust_dir = Path(__file__).parent.parent.parent / "src/flavor/rust/pspf-launcher-rs"
         result = subprocess.run(
             ["cargo", "build", "--release"],
             cwd=rust_dir,
@@ -76,7 +74,7 @@ where = ["src"]
             print(f"❌ Failed to build Rust launcher: {result.stderr}")
             return
 
-        rust_launcher = rust_dir / "target" / "release" / "flavor-launcher-rs"
+        rust_launcher = rust_dir / "target" / "release" / "pspf-launcher-rs"
         print(f"✅ Rust launcher built: {rust_launcher}")
 
         # Create executable
