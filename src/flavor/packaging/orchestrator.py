@@ -126,11 +126,18 @@ class PackagingOrchestrator:
                         }
                     },
                     {
-                        "type": "execute", 
-                        "command": "echo '{package_name}-{version}' > {cache}/metadata/installed"
+                        "type": "write_file",
+                        "path": "{cache}/bin/{package_name}",
+                        "content": f"#!/usr/bin/env python3\nfrom {self.entry_point.split(':')[0]} import {self.entry_point.split(':')[1]}\nif __name__ == '__main__':\n    {self.entry_point.split(':')[1]}()",
+                        "mode": 0o755
+                    },
+                    {
+                        "type": "write_file",
+                        "path": "{cache}/metadata/installed",
+                        "content": "{package_name}-{version}"
                     }
                 ],
-                "command": "{cache}/bin/python3 -m " + self.entry_point.split(":")[0],
+                "command": "{cache}/bin/{package_name}",
                 "slots": [
                     {
                         "name": "uv",
@@ -169,8 +176,27 @@ class PackagingOrchestrator:
             manifest_path = temp_dir / "manifest.json"
             manifest_path.write_text(json.dumps(manifest, indent=2))
             
-            # Step 4: Use pspf-builder
-            packager_executable = Path(__file__).parent.parent / "go/cmd/pspf-builder/pspf-builder"
+            # Step 4: Build and use pspf-builder
+            # Always rebuild to ensure we're using latest version
+            go_base = Path(__file__).parent.parent / "go"
+            
+            # Build launcher
+            launcher_dir = go_base / "cmd/pspf-launcher"
+            logger.info("Building pspf-launcher...")
+            self._run_subprocess(
+                ["go", "build", "-o", "pspf-launcher", "."],
+                cwd=launcher_dir
+            )
+            
+            # Build builder
+            builder_dir = go_base / "cmd/pspf-builder"
+            logger.info("Building pspf-builder...")
+            self._run_subprocess(
+                ["go", "build", "-o", "pspf-builder", "."],
+                cwd=builder_dir
+            )
+            
+            packager_executable = builder_dir / "pspf-builder"
             
             build_cmd_args = [
                 str(packager_executable),
@@ -181,7 +207,6 @@ class PackagingOrchestrator:
             
             logger.info("Building flavor package...")
             # Run from the pspf-builder directory where the launcher symlink exists
-            builder_dir = packager_executable.parent
             self._run_subprocess(build_cmd_args, cwd=builder_dir)
 
 

@@ -26,7 +26,7 @@ def test_cli_package_and_verify(tmp_path: Path) -> None:
         assert package_result.exit_code == 0, (
             f"Package command failed: {package_result.output}"
         )
-        mock_build.assert_called_once_with(pyproject_path)
+        mock_build.assert_called_once_with(pyproject_path, output_path=None)
 
     fake_package_file = tmp_path / "fake.pspf"
     fake_package_file.touch()
