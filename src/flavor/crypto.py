@@ -8,7 +8,7 @@ Centralized cryptographic operations for the Pyvider builder.
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import ec, utils
 
-from .exceptions import SigningError
+from flavor.exceptions import SigningError
 
 
 def generate_keys() -> tuple[ec.EllipticCurvePrivateKey, ec.EllipticCurvePublicKey]:

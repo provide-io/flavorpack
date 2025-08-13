@@ -3,20 +3,21 @@
 #
 """Public API for the Flavor build tool."""
 
+import os
 from pathlib import Path
-import shutil
-import subprocess
 
 # No typing imports needed with Python 3.11+
 import tomllib
 
-# from .compiler import ensure_go_binary  # Moved to scraps
-from .exceptions import VerificationError
 from .packaging.keys import generate_key_pair
 from .packaging.orchestrator import PackagingOrchestrator
 
 
-def build_package_from_manifest(manifest_path: Path, output_path: Path | None = None) -> list[Path]:
+def build_package_from_manifest(
+    manifest_path: Path,
+    output_path: Path | None = None,
+    launcher_type: str | None = None,
+) -> list[Path]:
     """Builds a package from a pyproject.toml manifest."""
     # Parse pyproject.toml to get build configurations
 
@@ -32,9 +33,26 @@ def build_package_from_manifest(manifest_path: Path, output_path: Path | None = 
     )
     package_name = flavor_config.get("metadata", {}).get("package_name", project_name)
 
+    # Determine launcher type (priority: CLI arg > env var > config > default)
+    if launcher_type is None:
+        launcher_type = os.environ.get("FLAVOR_LAUNCHER")
+    if launcher_type is None:
+        launcher_type = flavor_config.get("launcher")
+    if launcher_type is None:
+        launcher_type = "go"
+
+    # Validate launcher type
+    valid_launchers = ["go", "rust"]
+    if launcher_type not in valid_launchers:
+        raise ValueError(
+            f"Invalid launcher type '{launcher_type}'. Must be one of: {', '.join(valid_launchers)}"
+        )
+
     # Use absolute paths based on manifest location
     manifest_dir = manifest_path.parent.absolute()
-    output_flavor_path = output_path if output_path else manifest_dir / "dist" / f"{package_name}.pspf"
+    output_flavor_path = (
+        output_path if output_path else manifest_dir / "dist" / f"{package_name}.pspf"
+    )
     package_integrity_key_path = manifest_dir / "keys" / "flavor-private.key"
     public_key_path = manifest_dir / "keys" / "flavor-public.key"
 
@@ -57,6 +75,7 @@ def build_package_from_manifest(manifest_path: Path, output_path: Path | None = 
         manifest_dir=manifest_path.parent,
         package_name=package_name,
         entry_point=entry_point,
+        launcher_type=launcher_type,
     )
     orchestrator.build_package()
     return [output_flavor_path]
@@ -65,6 +84,7 @@ def build_package_from_manifest(manifest_path: Path, output_path: Path | None = 
 def verify_package(package_path: Path) -> dict:
     """Verifies a Flavor package."""
     from .verification import FlavorVerifier
+
     return FlavorVerifier.verify_package(package_path)
 
 

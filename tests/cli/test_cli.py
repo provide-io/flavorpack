@@ -32,6 +32,15 @@ def test_cli_package_and_verify(tmp_path: Path) -> None:
     fake_package_file.touch()
 
     with patch("flavor.cli.verify_package") as mock_verify:
+        mock_verify.return_value = {
+            'format': 'PSPF/2025',
+            'version': '1.0.0',
+            'launcher_size': 1024 * 1024,  # 1 MB
+            'slot_count': 1,
+            'package': {'name': 'test-package', 'version': '1.0.0'},
+            'slots': [{'index': 0, 'name': 'main', 'size': 512 * 1024}],
+            'signature_valid': True
+        }
         verify_result = runner.invoke(cli_main, ["verify", str(fake_package_file)])
         assert verify_result.exit_code == 0, (
             f"Verify command failed: {verify_result.output}"

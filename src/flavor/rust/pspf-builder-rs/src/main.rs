@@ -25,7 +25,7 @@ struct Args {
     #[arg(short, long)]
     output: PathBuf,
 
-    /// Launcher type (go, rust, python, node)
+    /// Launcher type (go, rust)
     #[arg(short, long, default_value = "rust")]
     launcher: String,
 
@@ -369,8 +369,6 @@ fn get_launcher_path(launcher_type: &str) -> String {
     match launcher_type {
         "go" => "pspf-launcher".to_string(),
         "rust" => "pspf-launcher-rust".to_string(),
-        "python" => "pspf-launcher-python".to_string(),
-        "node" => "pspf-launcher-node".to_string(),
         _ => "pspf-launcher".to_string(),
     }
 }
@@ -426,8 +424,6 @@ fn generate_emoji_magic(launcher_type: &str, reproducible: bool) -> Vec<u8> {
     let launcher_emoji = match launcher_type {
         "go" => "🐹",
         "rust" => "🦀",
-        "python" => "🐍",
-        "node" => "🟢",
         _ => "📄",
     };
     

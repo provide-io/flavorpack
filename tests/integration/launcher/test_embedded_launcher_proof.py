@@ -51,7 +51,7 @@ package_name = "{name}"
 entry_point = "{module_name}.main:serve"
 
 [tool.flavor.build]
-python_version = "3.13"
+python_version = "3.11"
 dependencies = ["./src/{module_name}"]
 
 [tool.setuptools.packages.find]
@@ -61,7 +61,11 @@ include = ["{module_name}*"]
     return pyproject
 
 
-@pytest.mark.skip(reason="Test requires pre-built Go/Rust binaries and is complex")
+@pytest.mark.skipif(
+    not ((Path(__file__).parent.parent.parent.parent / "src/flavor/go/cmd/pspf-builder/pspf-builder").exists() and
+         (Path(__file__).parent.parent.parent.parent / "src/flavor/rust/pspf-builder-rs/target/release/pspf-builder-rs").exists()),
+    reason="Test requires pre-built Go/Rust binaries"
+)
 def test_go_packager_embedded_launcher() -> None:
     """Test Go packager with embedded Go launcher."""
     from flavor.api import build_package_from_manifest
@@ -74,7 +78,11 @@ def test_go_packager_embedded_launcher() -> None:
         python_package = artifacts[0]
         assert python_package.exists()
 
-@pytest.mark.skip(reason="Test requires pre-built Go/Rust binaries and is complex")
+@pytest.mark.skipif(
+    not ((Path(__file__).parent.parent.parent.parent / "src/flavor/go/cmd/pspf-builder/pspf-builder").exists() and
+         (Path(__file__).parent.parent.parent.parent / "src/flavor/rust/pspf-builder-rs/target/release/pspf-builder-rs").exists()),
+    reason="Test requires pre-built Go/Rust binaries"
+)
 def test_rust_packager_embedded_launcher() -> None:
     """Test Rust packager with embedded Rust launcher."""
     from flavor.api import build_package_from_manifest
@@ -87,7 +95,11 @@ def test_rust_packager_embedded_launcher() -> None:
         python_package = artifacts[0]
         assert python_package.exists()
 
-@pytest.mark.skip(reason="Test requires pre-built Go/Rust binaries and is complex")
+@pytest.mark.skipif(
+    not ((Path(__file__).parent.parent.parent.parent / "src/flavor/go/cmd/pspf-builder/pspf-builder").exists() and
+         (Path(__file__).parent.parent.parent.parent / "src/flavor/rust/pspf-builder-rs/target/release/pspf-builder-rs").exists()),
+    reason="Test requires pre-built Go/Rust binaries"
+)
 def test_self_extraction() -> None:
     """Test that PSPF packages self-extract the embedded launcher."""
     assert True

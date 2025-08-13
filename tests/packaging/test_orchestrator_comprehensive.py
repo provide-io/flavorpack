@@ -29,7 +29,7 @@ class TestPackagingOrchestratorComprehensive:
             manifest_dir=tmp_path,
             package_name="test-package",
             entry_point="test.main:run",
-            python_version="3.13",
+            python_version="3.11",
         )
 
     def test_orchestrator_initialization(self, orchestrator, tmp_path) -> None:
@@ -39,7 +39,7 @@ class TestPackagingOrchestratorComprehensive:
         assert orchestrator.output_flavor_path == str(tmp_path / "output.pspf")
         assert orchestrator.package_name == "test-package"
         assert orchestrator.entry_point == "test.main:run"
-        assert orchestrator.python_version == "3.13"
+        assert orchestrator.python_version == "3.11"
 
     @patch("flavor.packaging.orchestrator.PackagingOrchestrator._run_subprocess")
     @patch("flavor.packaging.python_packager.PythonPackager.prepare_artifacts")

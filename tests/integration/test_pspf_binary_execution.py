@@ -69,7 +69,10 @@ public_key_path = "keys/flavor-public.key"
         generate_keys(keys_dir)
         return package_dir
 
-    @pytest.mark.skip(reason="Test requires pre-built Go builder")
+    @pytest.mark.skipif(
+        not (Path(__file__).parent.parent.parent / "src/flavor/go/cmd/pspf-builder/pspf-builder").exists(),
+        reason="Test requires pre-built Go builder"
+    )
     def test_build_minimal_package(self, test_package_dir) -> None:
         """Test building a minimal package."""
         manifest_path = test_package_dir / "pyproject.toml"
@@ -77,9 +80,12 @@ public_key_path = "keys/flavor-public.key"
         assert len(artifacts) == 1
         artifact_path = artifacts[0]
         assert artifact_path.exists()
-        assert artifact_path.name == "test.pspf"
+        assert artifact_path.name == "test-package.pspf"
 
-    @pytest.mark.skip(reason="Test requires pre-built Go builder")
+    @pytest.mark.skipif(
+        not (Path(__file__).parent.parent.parent / "src/flavor/go/cmd/pspf-builder/pspf-builder").exists(),
+        reason="Test requires pre-built Go builder"
+    )
     def test_verify_built_package(self, test_package_dir) -> None:
         """Test verifying a built PSPF package."""
         manifest_path = test_package_dir / "pyproject.toml"

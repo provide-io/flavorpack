@@ -40,7 +40,7 @@ Homepage = "https://github.com/provide-io/flavor"
 "Source Code" = "https://github.com/provide-io/flavor"
 Documentation = "https://github.com/provide-io/flavor/tree/main/docs"
 
-[project.optional-dependencies]
+[dependency-groups]
 dev = [
     "black>=23.9.1",
     "coverage>=7.3.2",
@@ -153,10 +153,6 @@ show_missing = true
 skip_covered = true
 exclude_lines = ["pragma: no cover", "raise NotImplementedError", "if __name__ == .__main__.:", "if TYPE_CHECKING:", "def __repr__", "def __str__", "pass"]
 
-[dependency-groups]
-dev = [
-    "ty>=0.0.1a17",
-]
 
 [tool.flavor]
 package_name = "flavor"
