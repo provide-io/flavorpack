@@ -296,10 +296,37 @@ fn main() -> Result<()> {
         // Calculate adler32 checksum
         let adler_checksum = adler::adler32_slice(&compressed);
 
+        // Map purpose string to uint8
+        let purpose_value = match slot.purpose.as_str() {
+            "payload" => 0,
+            "runtime" => 1,
+            "tool" => 2,
+            _ => 0, // default to payload
+        };
+
+        // Map lifecycle string to uint8
+        let lifecycle_value = match slot.lifecycle.as_str() {
+            "persistent" => 0,
+            "volatile" => 1,
+            _ => 0, // default to persistent
+        };
+
+        // Map compression string to uint8
+        let compression_value = match slot.compression.as_str() {
+            "gzip" => 1,
+            "zstd" => 2,
+            "none" | "" => 0,
+            _ => 0, // default to none
+        };
+
         slot_offsets.push(SlotEntry {
             offset: slot_offset,
             size: compressed.len() as u64,
             checksum: adler_checksum,
+            compression: compression_value,
+            purpose: purpose_value,
+            lifecycle: lifecycle_value,
+            reserved: 0,
         });
     }
 
@@ -319,8 +346,13 @@ fn main() -> Result<()> {
         out.write_all(&entry.offset.to_le_bytes())?;
         out.write_all(&entry.size.to_le_bytes())?;
         out.write_all(&entry.checksum.to_le_bytes())?;
+        out.write_all(&entry.compression.to_le_bytes())?;
+        out.write_all(&entry.purpose.to_le_bytes())?;
+        out.write_all(&entry.lifecycle.to_le_bytes())?;
+        out.write_all(&entry.reserved.to_le_bytes())?;
     }
-    index.slot_table_size = (slot_offsets.len() * 20) as u64;
+    // Each slot entry is 8+8+4+1+1+1+1 = 24 bytes
+    index.slot_table_size = (slot_offsets.len() * 24) as u64;
 
     // Create metadata archive in memory first to calculate checksum
     let metadata_archive = create_metadata_archive(&metadata, &signing_key)?;
@@ -360,9 +392,13 @@ fn main() -> Result<()> {
 }
 
 struct SlotEntry {
-    offset: u64,
-    size: u64,
-    checksum: u32,
+    offset: u64,      // 8 bytes: where slot data starts
+    size: u64,        // 8 bytes: size of data as stored
+    checksum: u32,    // 4 bytes: adler32 of stored data
+    compression: u8,  // 1 byte: 0=none, 1=gzip, 2=zstd, etc
+    purpose: u8,      // 1 byte: 0=payload, 1=runtime, 2=tool
+    lifecycle: u8,    // 1 byte: 0=persistent, 1=volatile
+    reserved: u8,     // 1 byte: padding for alignment
 }
 
 fn get_launcher_path(launcher_type: &str) -> String {

@@ -317,19 +317,29 @@ impl Reader {
     fn extract_slot(&mut self, index: usize, output_dir: &Path) -> Result<PathBuf> {
         let idx = self.read_index()?;
 
-        // Read slot table entry
-        self.file.seek(SeekFrom::Start(idx.slot_table_offset + (index as u64 * 20)))?;
-        let mut entry_data = vec![0u8; 20];
+        // Read slot table entry (24 bytes per entry)
+        self.file.seek(SeekFrom::Start(idx.slot_table_offset + (index as u64 * 24)))?;
+        let mut entry_data = vec![0u8; 24];
         self.file.read_exact(&mut entry_data)?;
 
         let offset = u64::from_le_bytes(entry_data[0..8].try_into()?);
         let size = u64::from_le_bytes(entry_data[8..16].try_into()?);
-        let _checksum = u32::from_le_bytes(entry_data[16..20].try_into()?);
+        let checksum = u32::from_le_bytes(entry_data[16..20].try_into()?);
+        let _compression = entry_data[20];
+        let _purpose = entry_data[21];
+        let _lifecycle = entry_data[22];
+        let _reserved = entry_data[23];
 
         // Read slot data
         self.file.seek(SeekFrom::Start(offset))?;
         let mut slot_data = vec![0u8; size as usize];
         self.file.read_exact(&mut slot_data)?;
+        
+        // Verify checksum of compressed data
+        let calculated_checksum = adler::adler32_slice(&slot_data);
+        if calculated_checksum != checksum {
+            return Err(anyhow!("Slot checksum mismatch: expected {}, got {}", checksum, calculated_checksum));
+        }
 
         // Get metadata to check compression
         let metadata = self.read_metadata()?;
