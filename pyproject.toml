@@ -27,10 +27,11 @@ requires-python = ">=3.11"
 dependencies = [
     "attrs>=23.1.0",
     "click>=8.1.7",
-    "cryptography>=41.0.4",
+    "cryptography[openssl]>=41.0.4",
     "wheel>=0.40.0",
     "zstandard>=0.22.0",
-    "pyvider-telemetry @ file://localhost/REDACTED_ABS_PATH",  # Install from local path
+    "pyvider-telemetry @ file://localhost/REDACTED_ABS_PATH", # Install from local path
+    "cattrs>=25.1.1",
 ]
 keywords = ["packaging", "pspf", "flavor", "executable", "bundle"]
 

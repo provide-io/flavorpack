@@ -15,26 +15,10 @@ use tempfile::TempDir;
 mod verify;
 
 const PSPF_MAGIC: &[u8] = b"PSPF2025";
-const INDEX_SIZE: u64 = 256;
+
 const MAX_SEARCH_SIZE: u64 = 10 * 1024 * 1024; // 10MB
 
-#[repr(C, packed)]
-struct PSPFIndex {
-    format_magic: [u8; 8],        // "PSPF2025"
-    format_version: u32,           // 0x20250001
-    index_checksum: u32,           // Adler-32 of index block
-    package_size: u64,             // Total file size
-    launcher_size: u64,            // Size of launcher binary
-    metadata_offset: u64,          // Offset to metadata archive
-    metadata_size: u64,            // Size of metadata archive
-    slot_table_offset: u64,        // Offset to slot table
-    slot_table_size: u64,          // Size of slot table
-    slot_count: u32,               // Number of slots
-    flags: u32,                    // Feature flags
-    ephemeral_public_key: [u8; 32], // Ephemeral public key
-    metadata_checksum: [u8; 32],   // SHA256 of metadata
-    reserved: [u8; 120],           // Reserved for future use
-}
+use pspf_common::{PSPFIndex, INDEX_SIZE};
 
 #[derive(Debug, Deserialize, Serialize)]
 struct Metadata {
@@ -69,7 +53,7 @@ struct SlotMetadata {
     size: i64,
     compressed_size: i64,
     checksum: String,
-    compression: String,
+    encoding: String,
     purpose: String,
     lifecycle: String,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -458,7 +442,7 @@ impl Reader {
         let offset = u64::from_le_bytes(entry_data[0..8].try_into()?);
         let size = u64::from_le_bytes(entry_data[8..16].try_into()?);
         let checksum = u32::from_le_bytes(entry_data[16..20].try_into()?);
-        let _compression = entry_data[20];
+        let _encoding = entry_data[20];
         let _purpose = entry_data[21];
         let _lifecycle = entry_data[22];
         let _reserved = entry_data[23];
@@ -474,12 +458,12 @@ impl Reader {
             return Err(anyhow!("Slot checksum mismatch: expected {}, got {}", checksum, calculated_checksum));
         }
 
-        // Get metadata to check compression
+        // Get metadata to check encoding
         let metadata = self.read_metadata()?;
         let slot_meta = &metadata.slots[index];
 
         // Decompress if needed
-        let decompressed = match slot_meta.compression.as_str() {
+        let decompressed = match slot_meta.encoding.as_str() {
             "gzip" => {
                 let mut gz = GzDecoder::new(&slot_data[..]);
                 let mut result = Vec::new();
@@ -536,13 +520,7 @@ impl Reader {
 }
 
 // Manual implementation of Copy for PSPFIndex
-impl Copy for PSPFIndex {}
 
-impl Clone for PSPFIndex {
-    fn clone(&self) -> Self {
-        *self
-    }
-}
 
 // CLI command implementations
 
@@ -555,23 +533,23 @@ fn show_bundle_info(exe_path: &Path) -> Result<()> {
     let launcher_type = detect_launcher_type(exe_path);
     let builder_type = detect_builder_type(&metadata);
     
-    // Calculate compression info
+    // Calculate encoding info
     let mut total_original = 0i64;
     let mut total_compressed = 0i64;
-    let mut compression_types = std::collections::HashSet::new();
+    let mut encoding_types = std::collections::HashSet::new();
     
     for slot in &metadata.slots {
         total_original += slot.size;
         total_compressed += slot.compressed_size;
-        if !slot.compression.is_empty() && slot.compression != "none" {
-            compression_types.insert(slot.compression.clone());
+        if !slot.encoding.is_empty() && slot.encoding != "none" {
+            encoding_types.insert(slot.encoding.clone());
         }
     }
     
-    let compression_info = if compression_types.is_empty() {
+    let encoding_info = if encoding_types.is_empty() {
         "none".to_string()
     } else {
-        let types: Vec<_> = compression_types.into_iter().collect();
+        let types: Vec<_> = encoding_types.into_iter().collect();
         if total_original > 0 {
             let ratio = (total_compressed as f64 / total_original as f64) * 100.0;
             format!("{} compressed to {:.0}%", types.join(", "), ratio)
@@ -596,7 +574,7 @@ fn show_bundle_info(exe_path: &Path) -> Result<()> {
     let slot_count = metadata.slots.len();
     println!("Slots: {} ({}) | Verified: {}",
         slot_count,
-        compression_info,
+        encoding_info,
         verify_status);
     
     if let Some(exec) = metadata.execution.command.split_whitespace().next() {

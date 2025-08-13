@@ -16,8 +16,7 @@ from flavor.psp.format_2025 import (
     PSPFBuilder,
     PSPFReader,
     SlotMetadata,
-    LAUNCHER_EMOJIS,
-    RANDOM_EMOJIS
+    MAGIC_WAND_EMOJI
 )
 
 
@@ -99,7 +98,7 @@ lifecycle = "{manifest_data['slots'][0]['lifecycle']}"
             size=2,
             compressed_size=0,
             checksum="abc",
-            compression="none",
+            encoding="none",
             purpose="payload",
             lifecycle="persistent",
             path=wheel_path
@@ -116,30 +115,29 @@ lifecycle = "{manifest_data['slots'][0]['lifecycle']}"
         
         # Check emoji
         with open(bundle_path, 'rb') as f:
-            f.seek(-16, 2)
-            magic = f.read(16).decode('utf-8')
+            f.seek(-4, 2)
+            magic = f.read(4).decode('utf-8')
         
-        assert magic[1] == LAUNCHER_EMOJIS['python']
+        assert magic == MAGIC_WAND_EMOJI
     
-    def test_custom_emoji_selection(self, temp_dir):
-        """Test custom emoji selection."""
-        bundle_path = temp_dir / "custom_emoji.pspf"
+    def test_magic_wand_selection(self, temp_dir):
+        """Test magic wand emoji selection."""
+        bundle_path = temp_dir / "magic_wand.pspf"
         
         builder = PSPFBuilder()
         builder.build(
             output_path=bundle_path,
             metadata={"format": "PSPF/2025", "package": {"name": "test", "version": "1.0"}},
             slots=[],
-            launcher_type="go",
-            emoji_seed="🌮"
+            launcher_type="go"
         )
         
         # Check emoji
         with open(bundle_path, 'rb') as f:
-            f.seek(-16, 2)
-            magic = f.read(16).decode('utf-8')
+            f.seek(-4, 2)
+            magic = f.read(4).decode('utf-8')
         
-        assert magic == "📦🐹🌮🪄"
+        assert magic == MAGIC_WAND_EMOJI
     
     def test_compression_selection(self, temp_dir):
         """Test automatic compression selection."""
@@ -160,7 +158,7 @@ lifecycle = "{manifest_data['slots'][0]['lifecycle']}"
                 size=text_path.stat().st_size,
                 compressed_size=0,
                 checksum="abc",
-                compression="gzip",  # Good for text
+                encoding="gzip",  # Good for text
                 purpose="config",
                 lifecycle="persistent",
                 path=text_path
@@ -171,7 +169,7 @@ lifecycle = "{manifest_data['slots'][0]['lifecycle']}"
                 size=binary_path.stat().st_size,
                 compressed_size=0,
                 checksum="def",
-                compression="zstd",  # Good for binary
+                encoding="none",  # Binary files often don't compress well
                 purpose="library",
                 lifecycle="persistent",
                 path=binary_path
@@ -182,7 +180,7 @@ lifecycle = "{manifest_data['slots'][0]['lifecycle']}"
                 size=random_path.stat().st_size,
                 compressed_size=0,
                 checksum="ghi",
-                compression="none",  # Random data doesn't compress
+                encoding="none",  # Random data doesn't compress
                 purpose="data",
                 lifecycle="persistent",
                 path=random_path
@@ -210,7 +208,7 @@ lifecycle = "{manifest_data['slots'][0]['lifecycle']}"
             size=100,
             compressed_size=0,
             checksum="abc",
-            compression="none",
+            encoding="none",
             purpose="payload",
             lifecycle="persistent",
             path=temp_dir / "nonexistent.txt"
@@ -237,7 +235,7 @@ lifecycle = "{manifest_data['slots'][0]['lifecycle']}"
                 size=100,
                 compressed_size=0,
                 checksum="abc",
-                compression="none",
+                encoding="none",
                 purpose=purpose,
                 lifecycle="persistent"
             )
@@ -253,7 +251,7 @@ lifecycle = "{manifest_data['slots'][0]['lifecycle']}"
             size=100,
             compressed_size=0,
             checksum="abc",
-            compression="none",
+            encoding="none",
             purpose="payload",
             lifecycle="persistent"
         )
@@ -264,7 +262,7 @@ lifecycle = "{manifest_data['slots'][0]['lifecycle']}"
             size=100,
             compressed_size=0,
             checksum="def",
-            compression="none",
+            encoding="none",
             purpose="payload",
             lifecycle="persistent"
         )
@@ -287,7 +285,7 @@ lifecycle = "{manifest_data['slots'][0]['lifecycle']}"
                 size=path.stat().st_size,
                 compressed_size=0,
                 checksum=hashlib.sha256(path.read_bytes()).hexdigest(),
-                compression="gzip",
+                encoding="gzip",
                 purpose="payload",
                 lifecycle="persistent",
                 path=path
@@ -349,7 +347,7 @@ lifecycle = "{manifest_data['slots'][0]['lifecycle']}"
             size=slot_path.stat().st_size,
             compressed_size=0,
             checksum=hashlib.sha256(slot_path.read_bytes()).hexdigest(),
-            compression="none",
+            encoding="none",
             purpose="payload",
             lifecycle="persistent",
             path=slot_path
@@ -357,30 +355,24 @@ lifecycle = "{manifest_data['slots'][0]['lifecycle']}"
         
         # In reproducible mode:
         # - Timestamps should be zeroed
-        # - Random emoji derived from content hash
+        # - Magic wand emoji is always used
         # - Ephemeral key derived deterministically
         
         bundle_path = temp_dir / "reproducible.pspf"
         builder = PSPFBuilder()
         
-        # Would use content hash for emoji selection
-        content_hash = hashlib.sha256(slot_path.read_bytes()).hexdigest()
-        emoji_index = int(content_hash[:2], 16) % len(RANDOM_EMOJIS)
-        deterministic_emoji = RANDOM_EMOJIS[emoji_index]
-        
         builder.build(
             output_path=bundle_path,
             metadata={"format": "PSPF/2025", "package": {"name": "test", "version": "1.0"}},
-            slots=[slot],
-            emoji_seed=deterministic_emoji
+            slots=[slot]
         )
         
-        # Check emoji is deterministic
+        # Check emoji is always magic wand
         with open(bundle_path, 'rb') as f:
-            f.seek(-16, 2)
-            magic = f.read(16).decode('utf-8')
+            f.seek(-4, 2)
+            magic = f.read(4).decode('utf-8')
         
-        assert magic[2] == deterministic_emoji
+        assert magic == MAGIC_WAND_EMOJI
     
     def test_size_optimization(self, temp_dir):
         """Test size optimization build mode."""
@@ -394,7 +386,7 @@ lifecycle = "{manifest_data['slots'][0]['lifecycle']}"
             size=large_path.stat().st_size,
             compressed_size=0,
             checksum="abc",
-            compression="gzip",  # Would use max compression
+            encoding="gzip",  # Would use max compression
             purpose="payload",
             lifecycle="persistent",
             path=large_path
@@ -427,7 +419,7 @@ lifecycle = "{manifest_data['slots'][0]['lifecycle']}"
             "verification": {
                 "integrity_seal": {
                     "required": True,
-                    "algorithm": "ecdsa-p256"
+                    "algorithm": "ed25519"
                 },
                 "trust_signatures": {
                     "required": True,
@@ -481,7 +473,7 @@ lifecycle = "{manifest_data['slots'][0]['lifecycle']}"
                     size=path.stat().st_size,
                     compressed_size=0,
                     checksum=hashlib.sha256(path.read_bytes()).hexdigest(),
-                    compression="none",
+                    encoding="none",
                     purpose=slot_type if slot_type != "payload" else "library",
                     lifecycle="persistent",
                     path=path

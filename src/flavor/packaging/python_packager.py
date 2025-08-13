@@ -8,12 +8,13 @@ import json
 import os
 from pathlib import Path
 import shutil
-import subprocess
 import tarfile
 import tempfile
 from typing import Any
 
 from pyvider.telemetry import logger
+
+from .util import run_subprocess
 
 
 class PythonPackager:
@@ -152,7 +153,7 @@ class PythonPackager:
             build_venv = Path(build_env_dir) / "venv"
 
             logger.info("Creating temporary build environment...")
-            self._run_subprocess(
+            run_subprocess(
                 [
                     "uv",
                     "venv",
@@ -164,7 +165,7 @@ class PythonPackager:
 
             # Install pip in the build venv
             logger.info("Installing pip in build environment...")
-            self._run_subprocess(
+            run_subprocess(
                 [
                     "uv",
                     "pip",
@@ -182,7 +183,7 @@ class PythonPackager:
                 dep_path = self.manifest_dir / dep
                 if dep_path.exists():
                     logger.info(f"Building wheel for dependency: {dep}")
-                    self._run_subprocess(
+                    run_subprocess(
                         [
                             str(pip3),
                             "wheel",
@@ -195,7 +196,7 @@ class PythonPackager:
 
             # Build main package wheel
             logger.info("Building wheel for main package...")
-            self._run_subprocess(
+            run_subprocess(
                 [
                     str(pip3),
                     "wheel",
@@ -216,7 +217,7 @@ class PythonPackager:
 
             logger.info("Downloading dependency wheels...")
             for package in all_deps:
-                self._run_subprocess(
+                run_subprocess(
                     [str(pip3), "wheel", "--wheel-dir", str(wheels_dir), package]
                 )
 
@@ -241,26 +242,12 @@ class PythonPackager:
         logger.info(f"Downloading Python {self.python_version} using UV...")
 
         # Use UV to download Python
-        self._run_subprocess(["uv", "python", "install", self.python_version])
+        run_subprocess(["uv", "python", "install", self.python_version])
 
         # Find the installed Python
-        import platform
+        python_install_dir = Path.home() / ".local" / "share" / "uv" / "python" / f"cpython-{self.python_version}-macos-aarch64-none"
 
-        machine = platform.machine().lower()
-        system = platform.system().lower()
-
-        # UV installs to ~/.local/share/uv/python/
-        uv_python_dir = Path.home() / ".local" / "share" / "uv" / "python"
-
-        # Find the matching Python installation
-        python_install_dir = None
-        # UV uses format like cpython-3.11.12-macos-aarch64-none
-        for path in uv_python_dir.glob(f"cpython-{self.python_version}*"):
-            if path.is_dir():
-                python_install_dir = path
-                break
-
-        if not python_install_dir or not python_install_dir.exists():
+        if not python_install_dir.exists():
             logger.warning("Could not find UV-installed Python at expected location")
             # Fall back to placeholder
             with tempfile.TemporaryDirectory() as temp_dir:
@@ -280,20 +267,6 @@ class PythonPackager:
         with tarfile.open(python_tgz, "w:gz", compresslevel=9) as tar:
             # Add all files from the Python directory, preserving structure
             tar.add(python_install_dir, arcname=".")
-
-    def _run_subprocess(self, command: list[str], cwd: Path | None = None) -> str:
-        """Run a subprocess command."""
-        logger.info(f"Running command: {' '.join(command)}")
-        env = os.environ.copy()
-        env["NO_COVERAGE"] = "1"
-        result = subprocess.run(
-            command, capture_output=True, text=True, cwd=cwd, check=False, env=env
-        )
-        if result.returncode != 0:
-            raise RuntimeError(
-                f"Command failed: {' '.join(command)}\nStderr: {result.stderr.strip()}"
-            )
-        return result.stdout.strip()
 
     def _write_json(self, path: Path, data: dict[str, Any]) -> None:
         """Write JSON file with secure permissions."""

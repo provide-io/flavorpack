@@ -52,7 +52,7 @@ class TestPSPFSecurity:
             size=payload_path.stat().st_size,
             compressed_size=0,
             checksum=hashlib.sha256(payload_path.read_bytes()).hexdigest(),
-            compression="gzip",
+            encoding="gzip",
             purpose="payload",
             lifecycle="persistent",
             path=payload_path
@@ -68,7 +68,7 @@ class TestPSPFSecurity:
             "verification": {
                 "integrity_seal": {
                     "required": True,
-                    "algorithm": "ecdsa-p256"
+                    "algorithm": "ed25519"
                 }
             }
         }
@@ -169,19 +169,52 @@ class TestPSPFSecurity:
             f.seek(index.metadata_offset)
             archive_data = f.read(index.metadata_size)
             
-            # Modify archive (simple corruption)
-            modified_data = archive_data.replace(b'"version": "1.0.0"', b'"version": "2.0.0"')
+            # Decompress the archive
+            import io
+            import gzip
+            with gzip.GzipFile(fileobj=io.BytesIO(archive_data)) as gz:
+                with tarfile.open(fileobj=gz, mode='r') as tar:
+                    # Extract all members
+                    members_data = {}
+                    for member in tar.getmembers():
+                        file_obj = tar.extractfile(member)
+                        if file_obj:
+                            members_data[member.name] = (member, file_obj.read())
             
+            # Modify psp.json
+            for name, (member, data) in members_data.items():
+                if name == 'psp.json':
+                    # Tamper with the JSON
+                    modified_json = data.replace(b'"version": "1.0.0"', b'"version": "2.0.0"')
+                    members_data[name] = (member, modified_json)
+                    member.size = len(modified_json)
+                    break
+            
+            # Recompress the archive
+            output = io.BytesIO()
+            with gzip.GzipFile(fileobj=output, mode='w') as gz:
+                with tarfile.open(fileobj=gz, mode='w') as tar:
+                    for name, (member, data) in members_data.items():
+                        tar.addfile(member, io.BytesIO(data))
+            
+            # Write back the modified archive
+            modified_data = output.getvalue()
             f.seek(index.metadata_offset)
-            f.write(modified_data)
+            
+            # Ensure we don't exceed the original size
+            if len(modified_data) <= index.metadata_size:
+                f.write(modified_data)
+                # Pad with zeros if needed
+                if len(modified_data) < index.metadata_size:
+                    f.write(b'\x00' * (index.metadata_size - len(modified_data)))
         
         # Verify tampering is detected
         launcher = PSPFLauncher(tampered_path)
         result = launcher.verify_integrity()
         
-        # In real implementation, this would detect tampering
-        # For now, we simulate the expected behavior
-        assert launcher.bundle_path == tampered_path
+        # The integrity check should fail due to tampering
+        assert not result['valid'], "Tampering should be detected"
+        assert result['tamper_detected'] or not result['signature_valid'], "Should detect tampered metadata"
     
     def test_slot_tampering_detection(self, temp_dir):
         """Test detection of tampered slot data."""
@@ -196,7 +229,7 @@ class TestPSPFSecurity:
             size=len(original_data),
             compressed_size=0,
             checksum=hashlib.sha256(original_data).hexdigest(),
-            compression="none",
+            encoding="none",
             purpose="payload",
             lifecycle="persistent",
             path=slot_path
@@ -223,10 +256,12 @@ class TestPSPFSecurity:
             f.seek(slot_offset)
             f.write(b"Tampered slot data")
         
-        # Checksum verification should fail
-        reader2 = PSPFReader(bundle_path)
-        # In real implementation, this would detect checksum mismatch
-        assert reader2 is not None
+        # Checksum verification should fail when extracting the slot
+        launcher = PSPFLauncher(bundle_path)
+        
+        # Try to extract the tampered slot (pass slot index, not SlotMetadata)
+        with pytest.raises(ValueError, match="Checksum mismatch"):
+            launcher.extract_slot(0, temp_dir / "extracted", verify_checksum=True)
     
     def test_index_checksum_validation(self, temp_dir):
         """Test index block checksum validation."""
@@ -262,17 +297,16 @@ class TestPSPFSecurity:
         
         # Corrupt emoji magic
         with open(bundle_path, 'r+b') as f:
-            f.seek(-16, 2)
-            f.write(b"BADMAGIC" * 2)
+            f.seek(-4, 2)
+            f.write(b"BAD!")
         
         reader = PSPFReader(bundle_path)
         assert not reader.verify_magic()
         
-        # Launcher should detect invalid magic
+        # Launcher should detect invalid magic during integrity check
         launcher = PSPFLauncher(bundle_path)
-        # In real implementation, verify_integrity would check magic first
-        # For now, we just verify that magic check failed
-        assert not reader.verify_magic()
+        result = launcher.verify_integrity()
+        assert not result['valid'], "Should fail integrity check with bad magic"
     
     def test_missing_integrity_seal(self, temp_dir):
         """Test handling of missing integrity seal."""
@@ -315,7 +349,7 @@ class TestPSPFSecurity:
             "verification": {
                 "integrity_seal": {
                     "required": True,
-                    "algorithm": "ecdsa-p256"
+                    "algorithm": "ed25519"
                 },
                 "trust_signatures": {
                     "required": False,

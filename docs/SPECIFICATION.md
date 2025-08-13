@@ -76,24 +76,19 @@ type PSPFIndex struct {
 }
 ```
 
-### 2.3 Emoji Magic Structure (16 bytes)
+### 2.3 Emoji Magic Structure (4 bytes)
 
-The bundle MUST end with exactly 4 UTF-8 encoded emojis:
+The bundle MUST end with exactly 1 UTF-8 encoded emoji:
 
 | Position | Bytes | Emoji | Purpose |
 |----------|-------|--------|---------|
-| EOF-16   | 4     | 📦     | Package identifier (ALWAYS) |
-| EOF-12   | 4     | [L]    | Launcher type (see below) |
-| EOF-8    | 4     | [R]    | Random/build-specific |
 | EOF-4    | 4     | 🪄     | Magic wand (ALWAYS) |
 
-Launcher type emojis:
-- 🐹 = Go launcher
-- 🦀 = Rust launcher
-- 🐍 = Python launcher
-- 🟢 = Node.js launcher
-- ⚡ = Native/no launcher
-- 🔮 = Unknown/generic
+This simplified magic footer:
+- Resolves criticism about excessive magic footer size (16 bytes → 4 bytes)
+- Maintains easy visual identification of PSPF files
+- Simplifies implementation across all languages
+- Removes launcher-specific emojis that provided no functional value
 
 ## 3. Metadata Specification
 

@@ -1,0 +1,29 @@
+"""
+PSPF 2025 Format Constants
+"""
+
+# Format constants
+PSPF_MAGIC = b"PSPF2025"
+PSPF_VERSION = 0x20250001
+INDEX_SIZE = 256
+EMOJI_MAGIC_SIZE = 4  # Just the magic wand emoji
+SLOT_ALIGNMENT = 8
+
+# Magic wand emoji marks end of PSPF file
+MAGIC_WAND_EMOJI = "🪄"
+
+# Compression types
+COMPRESSION_NONE = 0
+COMPRESSION_GZIP = 1
+COMPRESSION_ZSTD = 2
+
+# Purpose types
+PURPOSE_PAYLOAD = 0
+PURPOSE_RUNTIME = 1
+PURPOSE_TOOL = 2
+
+# Lifecycle types
+LIFECYCLE_PERSISTENT = 0
+LIFECYCLE_VOLATILE = 1
+LIFECYCLE_TEMPORARY = 2
+LIFECYCLE_INSTALL = 3

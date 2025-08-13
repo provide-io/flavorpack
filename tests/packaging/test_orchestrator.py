@@ -14,7 +14,7 @@ def test_orchestrator_constructs_correct_build_command(tmp_path: Path) -> None:
     output_path = tmp_path / "dist" / "package.pspf"
 
     with patch(
-        "flavor.packaging.orchestrator.PackagingOrchestrator._run_subprocess"
+        "flavor.packaging.util.run_subprocess"
     ) as mock_run, patch(
         "flavor.packaging.python_packager.PythonPackager.prepare_artifacts"
     ) as mock_prepare, patch(

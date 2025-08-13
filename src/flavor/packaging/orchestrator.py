@@ -8,7 +8,6 @@ import os
 from pathlib import Path
 import platform
 import shutil
-import subprocess
 import tarfile
 import tempfile
 from typing import Any
@@ -17,6 +16,7 @@ from pyvider.telemetry import logger
 
 from ..exceptions import BuildError
 from .python_packager import PythonPackager
+from .util import run_subprocess
 
 
 class PackagingOrchestrator:
@@ -61,19 +61,6 @@ class PackagingOrchestrator:
             machine = "arm64"
 
         return f"{system}_{machine}"
-
-    def _run_subprocess(self, command: list[str], cwd: Path | str | None = None) -> str:
-        logger.info(f"Running command: {' '.join(command)}")
-        env = os.environ.copy()
-        env["NO_COVERAGE"] = "1"
-        result = subprocess.run(
-            command, capture_output=True, text=True, cwd=cwd, check=False, env=env
-        )
-        if result.returncode != 0:
-            raise BuildError(
-                f"Command failed: {' '.join(command)}\nStderr: {result.stderr.strip()}"
-            )
-        return result.stdout.strip()
 
     def build_package(self) -> None:
         logger.info("Orchestrator starting build process...")
@@ -142,7 +129,7 @@ class PackagingOrchestrator:
                 "setup_commands": [
                     {
                         "type": "enumerate_and_execute",
-                        "command": "{workenv}/bin/uv pip install --python {workenv}/bin/python3 --target {workenv}/lib/python3.11/site-packages --no-deps",
+                        "command": f"{{workenv}}/bin/uv pip install --python {{workenv}}/bin/python3 --target {{workenv}}/lib/python{self.python_version}/site-packages --no-deps",
                         "enumerate": {"path": "{workenv}/wheels", "pattern": "*.whl"},
                     },
                     {
@@ -156,7 +143,7 @@ class PackagingOrchestrator:
                     {
                         "name": "uv",
                         "path": str(uv_tarball),
-                        "compression": "gzip",
+                        "encoding": "gzip",
                         "purpose": "tool",
                         "lifecycle": "volatile",
                         "extract_to": ".",
@@ -164,7 +151,7 @@ class PackagingOrchestrator:
                     {
                         "name": "python",
                         "path": str(python_tarball),
-                        "compression": "gzip",
+                        "encoding": "gzip",
                         "purpose": "runtime",
                         "lifecycle": "persistent",
                         "extract_to": ".",
@@ -172,7 +159,7 @@ class PackagingOrchestrator:
                     {
                         "name": "wheels",
                         "path": str(wheels_tarball),
-                        "compression": "gzip",
+                        "encoding": "gzip",
                         "purpose": "payload",
                         "lifecycle": "volatile",
                         "extract_to": "wheels",
@@ -197,7 +184,7 @@ class PackagingOrchestrator:
                 launcher_src_dir = go_base / "cmd/pspf-launcher"
                 launcher_output = self.workenv_dir / "pspf-launcher-go"
                 logger.info(f"Building Go pspf-launcher to {launcher_output}...")
-                self._run_subprocess(
+                run_subprocess(
                     ["go", "build", "-o", str(launcher_output), "."],
                     cwd=launcher_src_dir,
                 )
@@ -209,7 +196,7 @@ class PackagingOrchestrator:
                 )
                 launcher_output = self.workenv_dir / "pspf-launcher-rust"
                 logger.info(f"Building Rust pspf-launcher to {launcher_output}...")
-                self._run_subprocess(
+                run_subprocess(
                     [
                         "cargo",
                         "build",
@@ -229,7 +216,7 @@ class PackagingOrchestrator:
             builder_src_dir = go_base / "cmd/pspf-builder"
             builder_output = self.workenv_dir / "pspf-builder"
             logger.info(f"Building pspf-builder to {builder_output}...")
-            self._run_subprocess(
+            run_subprocess(
                 ["go", "build", "-o", str(builder_output), "."], cwd=builder_src_dir
             )
 
@@ -247,7 +234,7 @@ class PackagingOrchestrator:
 
             logger.info("Building flavor package...")
             # Run from workenv directory where the launchers are
-            self._run_subprocess(build_cmd_args, cwd=self.workenv_dir)
+            run_subprocess(build_cmd_args, cwd=self.workenv_dir)
 
 
 # 🏛️ 📝 🕹️
