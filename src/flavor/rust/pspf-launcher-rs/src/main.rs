@@ -1,9 +1,12 @@
 use anyhow::{anyhow, Context, Result};
 use flate2::read::GzDecoder;
+use log::{debug, error, info, warn};
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use std::env;
 use std::fs::{self, File};
-use std::io::{Read, Seek, SeekFrom};
+use std::io::{Read, Seek, SeekFrom, Write};
+use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use tar::Archive;
@@ -41,6 +44,16 @@ struct Metadata {
     execution: ExecutionInfo,
     #[serde(skip_serializing_if = "Option::is_none")]
     build: Option<BuildInfo>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    cache_validation: Option<CacheValidationInfo>,
+    #[serde(default)]
+    setup_commands: Vec<Value>,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+struct CacheValidationInfo {
+    check_file: String,
+    expected_content: String,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -59,6 +72,8 @@ struct SlotMetadata {
     compression: String,
     purpose: String,
     lifecycle: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    extract_to: Option<String>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -81,18 +96,29 @@ struct BuildInfo {
 }
 
 fn main() -> Result<()> {
-    // Get the path to our own executable
+    // 🚀 Initialize logging
+    env_logger::init();
+    
+    // 🦀 Log launcher info
+    info!("🦀 PSPF Rust Launcher v{} starting...", env!("CARGO_PKG_VERSION"));
+    info!("🏗️ Built with Rust {}", env!("CARGO_PKG_RUST_VERSION"));
+    debug!("🔍 Debug logging enabled");
+    
+    // 📍 Get the path to our own executable
     let exe_path = env::current_exe()
         .context("Failed to get executable path")?;
+    debug!("📦 Bundle path: {:?}", exe_path);
 
-    // Check for verify mode
+    // 🔍 Check for verify mode
     let args: Vec<String> = env::args().collect();
     if args.len() > 1 && args[1] == "verify" {
+        info!("🔐 Running in verify mode");
         return verify::verify_package(&exe_path);
     }
 
-    // Check if CLI mode is enabled
+    // 🖥️ Check if CLI mode is enabled
     if env::var("FLAVOR_LAUNCHER_CLI").unwrap_or_default() == "true" {
+        info!("💻 Running in CLI mode");
         if args.len() < 2 {
             show_bundle_info(&exe_path)?;
             return Ok(());
@@ -119,37 +145,71 @@ fn main() -> Result<()> {
         return Ok(());
     }
 
-    // Create reader for our bundle
+    // 📖 Create reader for our bundle
     let mut reader = Reader::new(&exe_path)?;
+    info!("📖 Reading PSPF bundle");
 
-    // Read metadata
+    // 📋 Read metadata
     let metadata = reader.read_metadata()?;
+    info!("📦 Package: {} v{}", metadata.package.name, metadata.package.version);
+    debug!("🎯 Primary slot: {}", metadata.execution.primary_slot);
+    debug!("🔧 Command: {}", metadata.execution.command);
 
-    // Create cache directory
+    // 🗂️ Create cache directory
     let cache_dir = TempDir::new_in(env::temp_dir())
         .context("Failed to create cache directory")?;
+    info!("📁 Cache directory: {:?}", cache_dir.path());
 
-    // Extract all slots
+    // 📤 Extract all slots
+    info!("📤 Extracting {} slots...", metadata.slots.len());
     let mut slot_paths = std::collections::HashMap::new();
     for (i, slot) in metadata.slots.iter().enumerate() {
+        debug!("📦 Extracting slot {}: {} ({} bytes)", i, slot.name, slot.size);
         let slot_path = reader.extract_slot(i, cache_dir.path())?;
+        debug!("✅ Extracted to: {:?}", slot_path);
         slot_paths.insert(slot.index, slot_path);
     }
 
-    // Prepare execution
+    // 🔍 Check cache validity
+    let cache_valid = if let Some(cache_validation) = &metadata.cache_validation {
+        check_cache_validity(cache_dir.path(), cache_validation)
+    } else {
+        false
+    };
+    
+    if cache_valid {
+        info!("✅ Cache is valid, skipping setup");
+    } else {
+        // 🔧 Run setup commands
+        if !metadata.setup_commands.is_empty() {
+            info!("🔧 Running {} setup commands...", metadata.setup_commands.len());
+            execute_setup_commands(&metadata.setup_commands, cache_dir.path(), &metadata.package)?;
+        }
+    }
+    
+    // 🎯 Prepare execution
     let mut command = metadata.execution.command.clone();
     
-    // Substitute slot references in command
+    // 🔄 Substitute slot references in command
     for (idx, path) in &slot_paths {
         let placeholder = format!("{{slot:{}}}", idx);
         command = command.replace(&placeholder, path.to_str().unwrap());
     }
+    
+    // 🔄 Substitute cache directory and package info
+    command = command.replace("{cache}", cache_dir.path().to_str().unwrap());
+    command = command.replace("{package_name}", &metadata.package.name);
+    command = command.replace("{version}", &metadata.package.version);
+    
+    debug!("🎯 Final command: {}", command);
 
-    // Parse command
+    // 🔪 Parse command
     let parts: Vec<&str> = command.split_whitespace().collect();
     if parts.is_empty() {
+        error!("❌ Empty command");
         return Err(anyhow!("Empty command"));
     }
+    debug!("🔪 Command parts: {:?}", parts);
 
     // Build command with arguments
     let mut cmd = Command::new(parts[0]);
@@ -172,6 +232,10 @@ fn main() -> Result<()> {
             let placeholder = format!("{{slot:{}}}", idx);
             v = v.replace(&placeholder, path.to_str().unwrap());
         }
+        // Substitute cache directory and package info
+        v = v.replace("{cache}", cache_dir.path().to_str().unwrap());
+        v = v.replace("{package_name}", &metadata.package.name);
+        v = v.replace("{version}", &metadata.package.version);
         cmd.env(k, v);
     }
 
@@ -187,12 +251,19 @@ fn main() -> Result<()> {
         .stdout(Stdio::inherit())
         .stderr(Stdio::inherit());
 
-    // Execute
+    // 🚀 Execute
+    info!("🚀 Executing: {}", parts[0]);
     let status = cmd.status()
         .context("Failed to execute command")?;
 
-    // Exit with same code
-    std::process::exit(status.code().unwrap_or(1));
+    // 🏁 Exit with same code
+    let exit_code = status.code().unwrap_or(1);
+    if exit_code == 0 {
+        info!("✅ Process exited successfully");
+    } else {
+        error!("❌ Process exited with code: {}", exit_code);
+    }
+    std::process::exit(exit_code);
 }
 
 struct Reader {
@@ -314,6 +385,30 @@ impl Reader {
         Err(anyhow!("psp.json not found in metadata"))
     }
 
+    // 🔍 Check if data is a tar archive
+    fn is_tarball(&self, data: &[u8]) -> bool {
+        // Check for tar magic header (ustar)
+        if data.len() >= 512 {
+            // Check for ustar magic at offset 257
+            if data.len() > 262 && &data[257..262] == b"ustar" {
+                return true;
+            }
+            // Also check if it looks like a tar header (name field is ASCII)
+            let is_ascii = data[..100.min(data.len())].iter()
+                .take_while(|&&b| b != 0)
+                .all(|&b| b >= 32 && b <= 126);
+            
+            if is_ascii && data.len() >= 512 {
+                // Try to parse as tar to be sure
+                let mut tar = Archive::new(&data[..]);
+                if tar.entries().is_ok() {
+                    return true;
+                }
+            }
+        }
+        false
+    }
+    
     fn extract_slot(&mut self, index: usize, output_dir: &Path) -> Result<PathBuf> {
         let idx = self.read_index()?;
 
@@ -356,20 +451,47 @@ impl Reader {
             _ => slot_data,
         };
 
-        // Write to cache
-        let slot_path = output_dir.join(&slot_meta.name);
-        fs::write(&slot_path, decompressed)?;
-
-        // Make executable if needed
-        if slot_meta.purpose == "executable" {
-            #[cfg(unix)]
-            {
-                use std::os::unix::fs::PermissionsExt;
-                let mut perms = fs::metadata(&slot_path)?.permissions();
-                perms.set_mode(0o755);
-                fs::set_permissions(&slot_path, perms)?;
+        // 📦 Check if this is a tarball that needs extraction
+        let slot_path = if self.is_tarball(&decompressed) {
+            debug!("📦 Slot {} is a tarball, extracting...", index);
+            
+            // Determine extraction directory
+            let extract_dir = if let Some(extract_to) = slot_meta.extract_to.as_ref() {
+                if extract_to == "." {
+                    output_dir.to_path_buf()
+                } else {
+                    output_dir.join(extract_to)
+                }
+            } else {
+                output_dir.join(&slot_meta.name)
+            };
+            
+            // 📁 Ensure extraction directory exists
+            fs::create_dir_all(&extract_dir)?;
+            
+            // 📤 Extract tarball
+            let mut tar = Archive::new(&decompressed[..]);
+            tar.unpack(&extract_dir)?;
+            
+            extract_dir
+        } else {
+            // 📄 Single file - write directly
+            let slot_path = output_dir.join(&slot_meta.name);
+            fs::write(&slot_path, decompressed)?;
+            
+            // 🔧 Make executable if needed
+            if slot_meta.purpose == "executable" || slot_meta.purpose == "tool" {
+                #[cfg(unix)]
+                {
+                    use std::os::unix::fs::PermissionsExt;
+                    let mut perms = fs::metadata(&slot_path)?.permissions();
+                    perms.set_mode(0o755);
+                    fs::set_permissions(&slot_path, perms)?;
+                }
             }
-        }
+            
+            slot_path
+        };
 
         Ok(slot_path)
     }
@@ -615,4 +737,165 @@ fn detect_builder_type(metadata: &Metadata) -> String {
         return build_info.builder.clone();
     }
     "unknown/pspf-builder".to_string()
+}
+
+// 🔍 Check if cache is valid
+fn check_cache_validity(cache_dir: &Path, validation: &CacheValidationInfo) -> bool {
+    let check_path = validation.check_file.replace("{cache}", cache_dir.to_str().unwrap());
+    
+    debug!("🔍 Checking cache validity: {}", check_path);
+    
+    match fs::read_to_string(&check_path) {
+        Ok(content) => {
+            let is_valid = content.trim() == validation.expected_content;
+            if is_valid {
+                debug!("✅ Cache validation passed");
+            } else {
+                debug!("❌ Cache validation failed: expected '{}', got '{}'", validation.expected_content, content.trim());
+            }
+            is_valid
+        }
+        Err(_) => {
+            debug!("❌ Cache validation file not found");
+            false
+        }
+    }
+}
+
+// 🔧 Execute setup commands
+fn execute_setup_commands(commands: &[Value], cache_dir: &Path, package: &PackageInfo) -> Result<()> {
+    // 📁 Create metadata directory
+    let metadata_dir = cache_dir.join("metadata");
+    fs::create_dir_all(&metadata_dir)?;
+    
+    for (i, cmd) in commands.iter().enumerate() {
+        debug!("🔧 Processing setup command {}", i);
+        
+        match cmd {
+            Value::String(s) => {
+                // Legacy string command
+                execute_command(s, cache_dir, package)?;
+            }
+            Value::Object(map) => {
+                let cmd_type = map.get("type").and_then(|v| v.as_str()).unwrap_or("");
+                
+                match cmd_type {
+                    "enumerate_and_execute" => {
+                        let command = map.get("command").and_then(|v| v.as_str()).unwrap_or("");
+                        let command = substitute_placeholders(command, cache_dir, package);
+                        
+                        if let Some(enumerate) = map.get("enumerate").and_then(|v| v.as_object()) {
+                            let path = enumerate.get("path").and_then(|v| v.as_str()).unwrap_or("");
+                            let pattern = enumerate.get("pattern").and_then(|v| v.as_str()).unwrap_or("");
+                            
+                            let path = substitute_placeholders(path, cache_dir, package);
+                            let glob_pattern = format!("{}/{}", path, pattern);
+                            
+                            debug!("📂 Enumerating files: {}", glob_pattern);
+                            let files: Vec<_> = glob::glob(&glob_pattern)?
+                                .filter_map(Result::ok)
+                                .collect();
+                            
+                            if !files.is_empty() {
+                                let parts: Vec<_> = command.split_whitespace().collect();
+                                if !parts.is_empty() {
+                                    let cmd_name = parts[0];
+                                    let mut args: Vec<String> = parts[1..].iter().map(|s| s.to_string()).collect();
+                                    let file_count = files.len();
+                                    for file in files {
+                                        args.push(file.to_string_lossy().to_string());
+                                    }
+                                    
+                                    info!("🚀 Executing: {} with {} files", cmd_name, file_count);
+                                    let args_refs: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
+                                    run_command(cmd_name, &args_refs, cache_dir)?;
+                                }
+                            }
+                        }
+                    }
+                    "write_file" => {
+                        let path = map.get("path").and_then(|v| v.as_str()).unwrap_or("");
+                        let content = map.get("content").and_then(|v| v.as_str()).unwrap_or("");
+                        let mode = map.get("mode").and_then(|v| v.as_u64()).unwrap_or(0o644) as u32;
+                        
+                        let path = substitute_placeholders(path, cache_dir, package);
+                        let content = substitute_placeholders(content, cache_dir, package);
+                        
+                        debug!("📝 Writing file: {} (mode: {:o})", path, mode);
+                        
+                        // Ensure parent directory exists
+                        if let Some(parent) = Path::new(&path).parent() {
+                            fs::create_dir_all(parent)?;
+                        }
+                        
+                        let mut file = File::create(&path)?;
+                        writeln!(file, "{}", content)?;
+                        
+                        // Set permissions
+                        #[cfg(unix)]
+                        {
+                            let permissions = fs::Permissions::from_mode(mode);
+                            fs::set_permissions(&path, permissions)?;
+                        }
+                    }
+                    _ => {
+                        let command = map.get("command").and_then(|v| v.as_str()).unwrap_or("");
+                        execute_command(command, cache_dir, package)?;
+                    }
+                }
+            }
+            _ => {
+                warn!("⚠️ Unknown setup command type");
+            }
+        }
+    }
+    
+    Ok(())
+}
+
+// 🔄 Substitute placeholders
+fn substitute_placeholders(text: &str, cache_dir: &Path, package: &PackageInfo) -> String {
+    text.replace("{cache}", cache_dir.to_str().unwrap())
+        .replace("{package_name}", &package.name)
+        .replace("{version}", &package.version)
+}
+
+// 🚀 Execute a command
+fn execute_command(command: &str, cache_dir: &Path, package: &PackageInfo) -> Result<()> {
+    let command = substitute_placeholders(command, cache_dir, package);
+    let parts: Vec<_> = command.split_whitespace().collect();
+    
+    if parts.is_empty() {
+        return Ok(());
+    }
+    
+    run_command(parts[0], &parts[1..], cache_dir)
+}
+
+// 🏃 Run a command with arguments
+fn run_command(cmd: &str, args: &[&str], cache_dir: &Path) -> Result<()> {
+    debug!("🏃 Running: {} {:?}", cmd, args);
+    
+    let mut command = Command::new(cmd);
+    command.args(args);
+    
+    // Set environment
+    command.env("FLAVOR_CACHE", cache_dir);
+    
+    // Prepend cache/bin to PATH
+    if let Ok(path) = env::var("PATH") {
+        let new_path = format!("{}/bin:{}", cache_dir.to_str().unwrap(), path);
+        command.env("PATH", new_path);
+    }
+    
+    let output = command.output()?;
+    
+    if !output.status.success() {
+        error!("❌ Command failed: {} {:?}", cmd, args);
+        error!("📝 stdout: {}", String::from_utf8_lossy(&output.stdout));
+        error!("📝 stderr: {}", String::from_utf8_lossy(&output.stderr));
+        return Err(anyhow!("Command failed with exit code: {:?}", output.status.code()));
+    }
+    
+    Ok(())
 }

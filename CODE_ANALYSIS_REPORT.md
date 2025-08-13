@@ -10,7 +10,10 @@
 - **Total lines removed**: ~275 lines
 
 ### Still Outstanding ⚠️
-- Rust missing critical features (cache validation, setup commands)
+- **Rust launcher missing critical features**:
+  - ❌ Cache validation not implemented
+  - ❌ Setup commands not implemented (causes "No such file or directory" errors)
+  - ❌ Cache directory substitution (`{cache}`) ✅ FIXED
 - ~~Binary format incompatibility between Go and Rust~~ ✅ FIXED (unified 24-byte slot table)
 - Mock/placeholder crypto implementations
 - Duplicate subprocess execution logic in Python

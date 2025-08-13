@@ -81,6 +81,8 @@ target/
 
 # Flavor build artifacts
 # Binary executables (no matter where they are)
+*.flavor
+*.pspf
 pspf-builder
 pspf-launcher
 pspf-launcher-*
@@ -96,6 +98,7 @@ pspf-launcher-*
 !*.hpp
 # PSPF packages
 *.pspf
+
 Cargo.lock
 **/*.rs.bk
 *.pdb
