@@ -52,6 +52,10 @@ dependencies = ["./src/emoji_test"]
 where = ["src"]
 """)
 
+        # Create dist directory
+        dist_dir = temp_dir / "dist"
+        dist_dir.mkdir(exist_ok=True)
+        
         # Build package with Python
         print("📦 Building package with Python flavor...")
         package_path = build_package_from_manifest(pyproject)[0]
