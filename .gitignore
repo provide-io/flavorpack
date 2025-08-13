@@ -110,3 +110,7 @@ Desktop.ini
 # UV
 .venv/
 uv.lockworkenv/
+
+*.tgz
+*.tar.gz
+*code.sh
