@@ -38,7 +38,7 @@ This directory was created by the PSPF Simple Provider example.
 ## Provider Information:
 - Name: Simple Provider
 - Version: 1.0.0
-- Package Format: PSPF v0.1
+- Package Format: PSPF/2025
 - Runtime: Embedded Python
 
 ## Learn More:

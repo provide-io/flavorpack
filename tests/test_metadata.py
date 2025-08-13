@@ -1,4 +1,4 @@
-"""Tests for PSPF v0.1 metadata models."""
+"""Tests for PSPF/2025 metadata models."""
 
 from datetime import datetime
 import json

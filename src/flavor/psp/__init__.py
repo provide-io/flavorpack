@@ -3,9 +3,7 @@
 #
 """PSP (Progressive Secure Package) flavor implementation."""
 
-from flavor.psp.format import PSPFlavor
-
-__all__ = ["PSPFlavor"]
-
+# The old PSPFlavor has been moved to scraps
+# New implementation uses format_2025
 
 # 📦🍜🔒🪄
