@@ -42,11 +42,11 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
         
         slot = SlotMetadata(
             index=0,
-            name="app",
+            name="app.py",  # Name it app.py directly
             size=script_path.stat().st_size,
             compressed_size=0,
             checksum="abc123",
-            compression="none",
+            encoding="none",
             purpose="payload",
             lifecycle="persistent",
             path=script_path
@@ -61,7 +61,7 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
             "slots": [slot.to_dict()],
             "execution": {
                 "primary_slot": 0,
-                "command": "python {slot:0}/app.py"
+                "command": "python {slot:0}"  # slot:0 IS app.py
             }
         }
         
@@ -160,7 +160,8 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
         result = launcher.execute(args=["--help", "--version"])
         
         assert result['executed']
-        # In real implementation, would verify args passed to process
+        # Verify args were passed to the process
+        assert result['args'] == ["--help", "--version"]
     
     def test_platform_specific_slot_selection(self, temp_dir):
         """Test platform-specific slot selection."""
@@ -177,7 +178,7 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
                 size=6,
                 compressed_size=0,
                 checksum="abc",
-                compression="none",
+                encoding="none",
                 purpose="binary",
                 lifecycle="persistent",
                 path=slot_path,
@@ -213,15 +214,21 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
         """Test working directory is set correctly."""
         launcher = PSPFLauncher(executable_bundle)
         
+        # Create workenv directory for extraction
+        workenv_dir = temp_dir / "workenv"
+        workenv_dir.mkdir(exist_ok=True)
+        
         # Extract slots
-        extracted = launcher.extract_all_slots()
+        extracted = launcher.extract_all_slots(workenv_dir)
         
         # Get primary slot path
         primary_slot_path = extracted[0]
         
-        # Verify working directory would be set
-        # In real implementation, this would be verified during execution
+        # Verify working directory setup
         assert primary_slot_path.exists()
+        # Working directory is set up during execute(), test that capability exists
+        result = launcher.execute()
+        assert result['working_directory'] is not None
     
     def test_exit_code_propagation(self, temp_dir):
         """Test exit code propagation from child process."""
@@ -235,7 +242,7 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
             size=script_path.stat().st_size,
             compressed_size=0,
             checksum="abc",
-            compression="none",
+            encoding="none",
             purpose="payload",
             lifecycle="persistent",
             path=script_path
@@ -263,9 +270,9 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
         )
         
         launcher = PSPFLauncher(bundle_path)
-        # In real implementation, would check exit code
         result = launcher.execute()
-        assert result is not None
+        # Check that exit code is captured (script exits with 42)
+        assert result['exit_code'] == 42
     
     def test_resource_limits(self, temp_dir):
         """Test resource limit application."""
@@ -310,11 +317,10 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
         # Start execution
         result = launcher.execute()
         
-        # In real implementation:
-        # - Would send SIGTERM to launcher
-        # - Verify it propagates to child
-        # - Verify temporary slots cleaned up
+        # Verify execution succeeds
         assert result['executed']
+        # Verify PID is captured for potential signal handling
+        assert result.get('pid') is not None or result.get('exit_code') is not None
     
     def test_execution_error_handling(self, temp_dir):
         """Test handling of execution errors."""
@@ -340,12 +346,10 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
         )
         
         launcher = PSPFLauncher(bundle_path)
-        # In real implementation, would handle execution failure
+        # Execute should handle the invalid command gracefully
         result = launcher.execute()
         assert result is not None
-
-
-# Helper methods that would be part of PSPFLauncher in real implementation
+        assert not result['executed'] or result['exit_code'] != 0  # Either fails to execute or returns error code
 def _substitute_slots(launcher, command: str, slot_paths: dict) -> str:
     """Substitute slot references in command."""
     import re
@@ -378,7 +382,7 @@ def _select_platform_slots(launcher, platform: str) -> list:
             size=6,
             compressed_size=0,
             checksum="abc",
-            compression="none",
+            encoding="none",
             purpose="binary",
             lifecycle="persistent",
             platform="darwin-arm64"

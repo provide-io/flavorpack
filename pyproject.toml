@@ -27,12 +27,13 @@ requires-python = ">=3.11"
 dependencies = [
     "attrs>=23.1.0",
     "click>=8.1.7",
-    "cryptography>=41.0.4",
+    "cryptography[openssl]>=41.0.4",
     "wheel>=0.40.0",
     "zstandard>=0.22.0",
-    "pyvider-telemetry @ file://localhost/REDACTED_ABS_PATH",  # Install from local path
+    "pyvider-telemetry @ file://localhost/REDACTED_ABS_PATH", # Install from local path
+    "cattrs>=25.1.1",
 ]
-keywords = ["packaging", "terraform", "provider", "pspf", "flavor"]
+keywords = ["packaging", "pspf", "flavor", "executable", "bundle"]
 
 [project.urls]
 Homepage = "https://github.com/provide-io/flavor"
@@ -40,7 +41,7 @@ Homepage = "https://github.com/provide-io/flavor"
 "Source Code" = "https://github.com/provide-io/flavor"
 Documentation = "https://github.com/provide-io/flavor/tree/main/docs"
 
-[project.optional-dependencies]
+[dependency-groups]
 dev = [
     "black>=23.9.1",
     "coverage>=7.3.2",
@@ -153,13 +154,9 @@ show_missing = true
 skip_covered = true
 exclude_lines = ["pragma: no cover", "raise NotImplementedError", "if __name__ == .__main__.:", "if TYPE_CHECKING:", "def __repr__", "def __str__", "pass"]
 
-[dependency-groups]
-dev = [
-    "ty>=0.0.1a17",
-]
 
 [tool.flavor]
-provider_name = "flavor"
+package_name = "flavor"
 entry_point = "flavor.cli:main"
 
 [tool.flavor.signing]

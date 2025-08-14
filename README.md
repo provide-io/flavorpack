@@ -1,167 +1,92 @@
-# Flavor - Progressive Secure Package Format (PSPF/2025)
+# Flavor - PSPF 2025 Packaging System
 
-[![CI](https://github.com/provide-io/flavor/actions/workflows/ci.yml/badge.svg)](https://github.com/provide-io/flavor/actions/workflows/ci.yml)
-[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Flavor is a modern packaging system that implements the **Progressive Secure Package Format (PSPF) 2025 Edition** - a secure, performant binary packaging format for distributing multi-runtime applications. The format supports polyglot execution with launchers for Go, Rust, Python, and Node.js.
+Flavor is a packaging system for the **Progressive Secure Package Format (PSPF) 2025 Edition** - a polyglot package format enabling self-contained, executable bundles.
 
-## Key Features
+## 🚀 Architecture & State
 
-- **🔒 Cryptographically Secure**: ECDSA signatures with configurable curves (P-256/P-384/P-521)
-- **📦 Self-Contained Binaries**: Zero runtime dependencies for end users
-- **🚀 Fast Startup**: Native Go launcher with intelligent caching
-- **🐍 Python Native**: Full PEP 517 build system integration
-- **🔧 Extensible Design**: Architecture supports multiple package formats ("flavors")
+Flavor uses a high-level **Python Orchestrator** to drive one or more low-level **Builders** (Go, Rust). The Python toolchain also includes a compliant **Verifier** capable of inspecting and validating any PSPF 2025 bundle.
 
-## Installation
+- ✅ **Functional Builders**: Go and Rust implementations with working Ed25519 cryptography.
+- ⚠️ **Python Orchestrator & Verifier**: A `click`-based CLI for orchestrating builds. The verifier correctly parses the format but has **placeholder cryptography** and cannot yet verify real signatures.
+- ✅ **Canonical Specification**: The format is defined by the Go/Rust implementations and documented in `docs/SPECIFICATION.md`.
 
-### From PyPI (Coming Soon)
+## 📦 Key Features of PSPF 2025
 
+- **256-byte index block** for fast metadata access.
+- **Metadata-first architecture** with a required `psp.json` manifest.
+- **Slot-based payload system** for organizing runtimes, libraries, and assets.
+- **Ephemeral Ed25519 signatures** for tamper-evident integrity.
+
+## 🛠️ Quick Start
+
+### 1. Install Dependencies
+It is recommended to use `uv` for managing the Python environment.
 ```bash
-pip install flavor
+uv venv
+source .venv/bin/activate
+uv pip install -e .[dev]
 ```
 
-### From Source
-
+### 2. Build Native Tools
+Ensure you have Go and Rust installed, then build the low-level tools.
 ```bash
-git clone https://github.com/provide-io/flavor.git
-cd flavor
-pip install -e .
+# Build Go tools
+(cd src/flavor/go/cmd/pspf-builder && go build)
+(cd src/flavor/go/cmd/pspf-launcher && go build)
+
+# Build Rust tools
+(cd src/flavor/rust/pspf-builder-rs && cargo build --release)
+(cd src/flavor/rust/pspf-launcher-rs && cargo build --release)
 ```
 
-## Quick Start
-
-### 1. Generate Signing Keys
-
+### 3. Use the Flavor CLI
+The `flavor` CLI orchestrates the build and verification processes.
 ```bash
-flavor keygen --out-dir ./keys
+# Generate signing keys (for builders)
+flavor keygen
+
+# Package the application (drives a builder)
+flavor package
+
+# Verify any PSPF 2025 bundle (using the Python verifier)
+flavor verify <path-to-bundle.pspf>
 ```
 
-### 2. Configure Your Project
-
-Add to your `pyproject.toml`:
-
-```toml
-[tool.flavor]
-provider_name = "example"
-entry_point = "example.main:serve"
-
-[tool.flavor.signing]
-private_key_path = "keys/flavor-private.key"
-public_key_path = "keys/flavor-public.key"
+## 📂 Project Structure
+```
+flavor/
+├── src/flavor/
+│   ├── cli.py                    # Python Orchestrator & Verifier CLI
+│   ├── packaging/                # Python orchestration logic
+│   │   └── orchestrator.py
+│   ├── psp/                      # Python PSPF 2025 implementation
+│   │   └── format_2025.py        #   (used for verification)
+│   ├── go/
+│   │   ├── cmd/pspf-builder/     # Go Builder (low-level)
+│   │   └── cmd/pspf-launcher/    # Go Launcher
+│   └── rust/
+│       ├── pspf-builder-rs/      # Rust Builder (low-level)
+│       └── pspf-launcher-rs/     # Rust Launcher
+├── tests/                        # Pytest suite for Python components
+└── docs/
+    └── SPECIFICATION.md          # Canonical PSPF 2025 format specification
 ```
 
-### 3. Build Your Package
+## 🚧 Next Steps
+1.  Implement production-grade cryptography in the Python verifier.
+2.  Add additional encoding formats (e.g., encryption) to the Go and Rust builders.
+3.  Repair and expand the `pytest` and BDD test suites to perform end-to-end, cross-language validation.
 
-```bash
-flavor package --manifest pyproject.toml
-```
+## 📖 Documentation
+- [`docs/SPECIFICATION.md`](docs/SPECIFICATION.md) - Complete PSPF 2025 format specification.
+- [`DEVELOPMENT.md`](DEVELOPMENT.md) - Guide for developers contributing to Flavor.
+- [`docs/TODO.md`](docs/TODO.md) - A list of tasks to be done.
 
-### 4. Verify Package Integrity
+## 🤝 Contributing
+Please see [`DEVELOPMENT.md`](DEVELOPMENT.md) for detailed instructions.
 
-```bash
-flavor verify dist/terraform-provider-example.flavor
-```
-
-## How It Works
-
-Flavor packages consist of:
-
-1. **Native Go Launcher**: Handles signature verification and environment setup
-2. **Embedded Python Runtime**: Complete Python environment with all dependencies
-3. **Cryptographic Footer**: ECDSA signature and package metadata
-
-When executed, the launcher:
-- Verifies the package signature
-- Extracts the embedded runtime (with caching)
-- Sets up an isolated Python environment
-- Executes your application
-
-## Package Format
-
-The PSPF/2025 format uses a structured binary layout:
-
-```
-[Native Launcher Binary (Go/Rust)]
-[Slot 0: UV Package Manager]
-[Slot 1: Python Runtime]
-[Slot 2: Application Wheels]
-[Metadata Archive]
-[256-byte Index Block]
-[4-Emoji Magic: 📦[Launcher][Random]🪄]
-```
-
-## Documentation
-
-- **[Specification](docs/SPECIFICATION_PSPF_2025.md)** - Complete PSPF/2025 format specification
-- **[Architecture](docs/ARCHITECTURE.md)** - Design decisions and architecture
-- **[Security](docs/SECURITY.md)** - Cryptographic design and threat model
-- **[Development](docs/DEVELOPMENT.md)** - Contributing and development guide
-- **[Examples](docs/examples/)** - Sample configurations and use cases
-
-## Use Cases
-
-### Terraform Provider Distribution
-
-Flavor is designed for packaging Python-based Terraform providers:
-
-```python
-# example/main.py
-from pyvider import serve_provider
-from .provider import ExampleProvider
-
-def serve():
-    serve_provider(ExampleProvider)
-```
-
-Build and distribute as a single binary that Terraform can execute directly.
-
-### Future Package Formats
-
-The Flavor architecture supports adding new package formats:
-- Different runtime combinations (Node.js, Ruby, etc.)
-- Alternative compression algorithms
-- Custom metadata formats
-
-## Contributing
-
-We welcome contributions! Please see our [Development Guide](docs/DEVELOPMENT.md) for:
-- Setting up your development environment
-- Running the test suite
-- Submitting pull requests
-
-## Testing
-
-```bash
-# Run all tests
-pytest
-
-# Run with coverage
-pytest --cov=flavor --cov-report=term-missing
-
-# Run specific test categories
-pytest tests/unit/
-pytest tests/integration/
-pytest tests/cross_language/
-```
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Acknowledgments
-
-- Built on the [Pyvider](https://github.com/provide-io/pyvider) framework
-- Uses [uv](https://github.com/astral-sh/uv) for fast Python package management
-- Cryptography powered by the [cryptography](https://cryptography.io/) library
-
-## Support
-
-- **Issues**: [GitHub Issues](https://github.com/provide-io/flavor/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/provide-io/flavor/discussions)
-- **Email**: engineering@provide.services
-
----
-
-*Flavor - Modern packaging for modern applications*
+## 📜 License
+MIT License - see [`LICENSE`](LICENSE) file for details.

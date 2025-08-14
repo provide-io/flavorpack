@@ -15,8 +15,22 @@ import tempfile
 import pytest
 
 from flavor.api import generate_keys
-from flavor.compiler import ensure_go_binary
 
+
+def build_go_binary(cmd_path):
+    """Build a Go binary if it doesn't exist."""
+    binary_path = cmd_path / Path(cmd_path.name)
+    if not binary_path.exists():
+        try:
+            subprocess.run(
+                ["go", "build", "-o", str(binary_path), "."],
+                cwd=cmd_path,
+                check=True,
+                capture_output=True
+            )
+        except subprocess.CalledProcessError:
+            return None
+    return binary_path if binary_path.exists() else None
 
 
 def get_platform_info():
@@ -44,19 +58,18 @@ def all_packagers():
         "type": "manifest"
     }
     
-    # Go packager
-    try:
-        go_bin = ensure_go_binary("flavor-go")
+    # Go packager (pspf-builder)
+    go_cmd_path = Path(__file__).parent.parent.parent / "src/flavor/go/cmd/pspf-builder"
+    go_bin = build_go_binary(go_cmd_path)
+    if go_bin:
         packagers["go"] = {
             "cmd": [str(go_bin)],
             "type": "payload"
         }
-    except:
-        pass
     
     # Rust packager
-    rust_dir = Path(__file__).parent.parent.parent / "src/flavor/rust/flavor-packager-rs"
-    rust_bin = rust_dir / "target/release/flavor-rs"
+    rust_dir = Path(__file__).parent.parent.parent / "src/flavor/rust/pspf-builder-rs"
+    rust_bin = rust_dir / "target/release/pspf-builder-rs"
     if rust_bin.exists():
         packagers["rust"] = {
             "cmd": [str(rust_bin)],
@@ -87,16 +100,15 @@ def all_launchers():
     """Get all available launchers."""
     launchers = {}
     
-    # Go launcher
-    try:
-        go_launcher = ensure_go_binary("flavor-launcher-go")
+    # Go launcher (pspf-launcher)
+    go_launcher_path = Path(__file__).parent.parent.parent / "src/flavor/go/cmd/pspf-launcher"
+    go_launcher = build_go_binary(go_launcher_path)
+    if go_launcher:
         launchers["go"] = str(go_launcher)
-    except:
-        pass
     
     # Rust launcher
-    rust_dir = Path(__file__).parent.parent.parent / "src/flavor/rust/flavor-launcher-rs"
-    rust_launcher = rust_dir / "target/release/flavor-launcher-rs"
+    rust_dir = Path(__file__).parent.parent.parent / "src/flavor/rust/pspf-launcher-rs"
+    rust_launcher = rust_dir / "target/release/pspf-launcher-rs"
     if rust_launcher.exists():
         launchers["rust"] = str(rust_launcher)
     elif shutil.which("cargo"):
@@ -163,7 +175,7 @@ provider_name = "test"
 entry_point = "test_provider.main:main"
 
 [tool.flavor.build]
-python_version = "3.13"
+python_version = "3.11"
 dependencies = ["./src/test_provider"]
 
 [tool.setuptools.packages.find]
@@ -180,8 +192,8 @@ include = ["test_provider*"]
     if not keys_dir.exists():
         keys_dir.mkdir(parents=True)
         # Copy the test keys instead of generating new ones
-        shutil.copy2(test_keys_dir / "provider-private.key", keys_dir / "provider-private.key")
-        shutil.copy2(test_keys_dir / "provider-public.key", keys_dir / "provider-public.key")
+        shutil.copy2(test_keys_dir / "flavor-private.key", keys_dir / "flavor-private.key")
+        shutil.copy2(test_keys_dir / "flavor-public.key", keys_dir / "flavor-public.key")
     
     return tmp_path
 
@@ -193,7 +205,7 @@ def prepare_payload_for_go_rust(provider_dir, work_dir):
     
     # Create venv
     subprocess.run([
-        "uv", "venv", str(payload_dir), "--python", "python3.13"
+        "uv", "venv", str(payload_dir), "--python", "python3.11"
     ], check=True)
     
     # Install provider (non-editable for proper packaging)
@@ -212,7 +224,7 @@ def prepare_payload_for_go_rust(provider_dir, work_dir):
         "provider_name": "test",
         "entry_point": "test_provider.main:main",
         "runtime": {
-            "python_version": "3.13",
+            "python_version": "3.11",
             "uv_version": "0.4.0"
         },
         "package": {
@@ -230,10 +242,10 @@ def prepare_payload_for_go_rust(provider_dir, work_dir):
             "name": "test-provider",
             "version": "1.0.0",
             "language": "python",
-            "language_version": "3.13"
+            "language_version": "3.11"
         },
         "runtime_requirements": {
-            "python": "3.13",
+            "python": "3.11",
             "uv": "0.4.0"
         }
     }
@@ -259,7 +271,7 @@ def prepare_payload_for_go_rust(provider_dir, work_dir):
     
     # Get project root for key paths
     project_root = Path(__file__).parent.parent.parent
-    private_key_path = project_root / "test-keys/provider-private.key"
+    private_key_path = project_root / "test-keys/flavor-private.key"
     
     # Sign using openssl (simplified for test)
     result = subprocess.run([
@@ -301,15 +313,20 @@ class TestAllFlavorCombinations:
                 combo = f"{packager_name}-packager_{launcher_name}-launcher"
                 output_path = output_dir / f"test-provider_{combo}"
                 
+                # Remove existing file if it exists
+                if output_path.exists():
+                    output_path.unlink()
+                
                 print(f"\n=== Building {combo} ===")
                 
                 try:
                     if packager_info["type"] == "manifest":
-                        # Python packager doesn't support launcher selection yet
-                        # It will use the default Go launcher
+                        # Python packager supports launcher selection and output path
                         cmd = packager_info["cmd"] + [
                             "package",
-                            "--manifest", str(test_provider / "pyproject.toml")
+                            "--manifest", str(test_provider / "pyproject.toml"),
+                            "--launcher", launcher_name,
+                            "--output", str(output_path)
                         ]
                         
                         result = subprocess.run(
@@ -317,28 +334,56 @@ class TestAllFlavorCombinations:
                             capture_output=True,
                             text=True
                         )
-                        
-                        # Move the output file to the expected location
-                        if result.returncode == 0:
-                            # Find the output file - it could have different names
-                            dist_dir = test_provider / "dist"
-                            if dist_dir.exists():
-                                for file in dist_dir.glob("*.flavor"):
-                                    shutil.move(str(file), str(output_path))
-                                    break
                     else:
-                        # Go/Rust packager - needs payload.tgz
+                        # Go/Rust packager - needs manifest.json
                         with tempfile.TemporaryDirectory() as work_dir:
                             work_dir = Path(work_dir)
                             prepare_payload_for_go_rust(test_provider, work_dir)
                             
+                            # Create manifest.json for pspf-builder
+                            manifest_data = {
+                                "name": "test-provider",
+                                "version": "1.0.0",
+                                "description": "Test provider",
+                                "command": "{workenv}/bin/python3 -m test_provider.main",
+                                "environment": {
+                                    "PYTHONPATH": "{workenv}/lib/python3.11/site-packages"
+                                },
+                                "slots": [
+                                    {
+                                        "name": "payload",
+                                        "path": str(work_dir / "payload.tgz"),
+                                        "compression": "gzip",
+                                        "purpose": "payload",
+                                        "lifecycle": "persistent",
+                                        "extract_to": "."
+                                    }
+                                ]
+                            }
+                            
+                            manifest_path = work_dir / "manifest.json"
+                            with open(manifest_path, "w") as f:
+                                json.dump(manifest_data, f, indent=2)
+                            
+                            # Copy the launcher to the working directory for pspf-builder
+                            if packager_name in ["go", "rust"]:
+                                # Map launcher names to expected filenames
+                                launcher_map = {
+                                    "go": "pspf-launcher",
+                                    "rust": "pspf-launcher-rust",
+                                    "python": "pspf-launcher-python",
+                                    "node": "pspf-launcher-node"
+                                }
+                                launcher_filename = launcher_map.get(launcher_name, "pspf-launcher")
+                                launcher_copy = work_dir / launcher_filename
+                                shutil.copy2(launcher_path, launcher_copy)
+                                # Make it executable
+                                launcher_copy.chmod(0o755)
+                            
                             cmd = packager_info["cmd"] + [
-                                "build",
-                                "--out", str(output_path),
-                                "--payload-dir", str(work_dir / "payload"),
-                                "--package-key", str(project_root / "test-keys/provider-private.key"),
-                                "--public-key", str(project_root / "test-keys/provider-public.key"),
-                                "--launcher-bin", launcher_path
+                                "--manifest", str(manifest_path),
+                                "--output", str(output_path),
+                                "--launcher", launcher_name
                             ]
                             
                             result = subprocess.run(
@@ -349,6 +394,9 @@ class TestAllFlavorCombinations:
                             )
                     
                     if result.returncode == 0:
+                        # Make the output file executable
+                        output_path.chmod(0o755)
+                        
                         # Test the binary without args
                         test_result = subprocess.run(
                             [str(output_path)],
@@ -405,14 +453,17 @@ class TestAllFlavorCombinations:
                             "built": False,
                             "error": result.stderr
                         }
-                        print(f"❌ {combo}: Build failed - {result.stderr[:100]}")
+                        print(f"❌ {combo}: Build failed")
+                        print(f"   Command: {' '.join(cmd)}")
+                        print(f"   Stderr: {result.stderr}")
+                        print(f"   Stdout: {result.stdout}")
                 
                 except Exception as e:
                     results[combo] = {
                         "built": False,
                         "error": str(e)
                     }
-                    print(f"❌ {combo}: Exception - {str(e)[:100]}")
+                    print(f"❌ {combo}: Exception - {str(e)}")
         
         # Summary
         print("\n=== SUMMARY ===")

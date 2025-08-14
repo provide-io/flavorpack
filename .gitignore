@@ -78,6 +78,24 @@ go.work
 
 # Rust
 target/
+
+# Flavor build artifacts
+# Binary executables (no matter where they are)
+*.flavor
+*.pspf
+# But allow source files with these names
+!*.go
+!*.rs
+!*.py
+!*.js
+!*.ts
+!*.c
+!*.h
+!*.cpp
+!*.hpp
+# PSPF packages
+*.pspf
+
 Cargo.lock
 **/*.rs.bk
 *.pdb
@@ -110,3 +128,8 @@ Desktop.ini
 # UV
 .venv/
 uv.lockworkenv/
+
+*.tgz
+*.tar.gz
+*code.sh
+*bfiles*

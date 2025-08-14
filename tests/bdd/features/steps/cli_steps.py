@@ -191,7 +191,7 @@ def step_build_bundle_cli(context, language):
         size=slot_path.stat().st_size,
         compressed_size=0,
         checksum="test",
-        compression="gzip",
+        encoding="gzip",
         purpose="payload",
         lifecycle="persistent",
         path=slot_path
@@ -237,7 +237,7 @@ def step_build_cross_language(context, builder_lang, launcher_lang):
         size=payload_path.stat().st_size,
         compressed_size=0,
         checksum="test",
-        compression="none",
+        encoding="none",
         purpose="payload",
         lifecycle="persistent",
         path=payload_path
@@ -355,8 +355,8 @@ def step_check_launcher_emoji(context):
     }
     
     with open(context.bundle_path, 'rb') as f:
-        f.seek(-16, 2)
-        magic = f.read(16).decode('utf-8').strip('\x00')
+        f.seek(-4, 2)
+        magic = f.read(4).decode('utf-8').strip('\x00')
     
     # Get language from bundle name or context
     for lang, emoji in emoji_map.items():
@@ -412,7 +412,7 @@ def step_have_all_combinations(context):
                 size=len(payload),
                 compressed_size=0,
                 checksum="test",
-                compression="none",
+                encoding="none",
                 purpose="payload",
                 lifecycle="persistent"
             )
@@ -462,8 +462,8 @@ def step_test_all_combinations(context):
         
         # Check launcher emoji
         with open(combo['bundle'], 'rb') as f:
-            f.seek(-16, 2)
-            magic = f.read(16).decode('utf-8').strip('\x00')
+            f.seek(-4, 2)
+            magic = f.read(4).decode('utf-8').strip('\x00')
         
         emoji_map = {
             "Python": "🐍",
