@@ -208,29 +208,58 @@ class PythonPackager:
             )
 
             # Download transitive dependencies using pip
-            # For each local package, try to download its PyPI dependencies
+            # First, we need to install the main package to get its dependencies resolved
             logger.info("Downloading transitive dependencies...")
             
-            # First collect all packages (dependencies + main)
-            all_packages = []
-            for dep in self.build_config.get("dependencies", []):
-                dep_path = self.manifest_dir / dep
-                if dep_path.exists():
-                    all_packages.append(str(dep_path))
-            all_packages.append(str(self.manifest_dir))
+            # Install the main package and its dependencies into the build venv
+            # This will resolve all dependencies properly
+            logger.info("Installing package to resolve dependencies...")
+            run_subprocess(
+                [
+                    str(pip3),
+                    "install",
+                    str(self.manifest_dir),
+                ]
+            )
             
-            # Use pip to download dependencies, ignoring errors for local packages
-            for package_path in all_packages:
-                logger.info(f"Downloading dependencies for {Path(package_path).name}...")
-                try:
-                    # Use pip download to get only the dependencies, not the package itself
-                    run_subprocess(
-                        [str(pip3), "download", "--dest", str(wheels_dir), 
-                         "--only-deps", package_path]
-                    )
-                except Exception as e:
-                    logger.warning(f"Some dependencies failed to download for {Path(package_path).name}: {e}")
-                    # Continue - local packages won't be on PyPI
+            # Now download all the dependencies (excluding what we already built)
+            # Get the list of installed packages
+            logger.info("Downloading resolved dependencies as wheels...")
+            existing_wheels = {w.name for w in wheels_dir.glob("*.whl")}
+            
+            # Use pip freeze to get all installed packages, then download them
+            result = run_subprocess(
+                [str(pip3), "freeze"],
+                capture_output=True,
+                text=True
+            )
+            
+            # Download each dependency that we don't already have
+            for line in result.stdout.strip().split("\n"):
+                if not line or line.startswith("#"):
+                    continue
+                # Parse package name from requirement spec
+                pkg_spec = line.strip()
+                if "==" in pkg_spec:
+                    pkg_name = pkg_spec.split("==")[0].lower().replace("-", "_")
+                    # Check if we already have a wheel for this package
+                    has_wheel = any(pkg_name in wheel.lower() for wheel in existing_wheels)
+                    if not has_wheel:
+                        try:
+                            logger.info(f"Downloading wheel for: {pkg_spec}")
+                            run_subprocess(
+                                [str(pip3), "download", "--dest", str(wheels_dir),
+                                 "--only-binary", ":all:", pkg_spec]
+                            )
+                        except Exception as e:
+                            logger.warning(f"Failed to download wheel for {pkg_spec}: {e}")
+                            # Try without --only-binary flag
+                            try:
+                                run_subprocess(
+                                    [str(pip3), "download", "--dest", str(wheels_dir), pkg_spec]
+                                )
+                            except Exception as e2:
+                                logger.warning(f"Failed to download {pkg_spec} in any format: {e2}")
 
     def _create_metadata(self, metadata_dir: Path) -> None:
         """Create metadata files."""
