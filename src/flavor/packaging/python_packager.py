@@ -208,19 +208,54 @@ class PythonPackager:
             )
 
             # Download transitive dependencies using pip
-            # First, we need to install the main package to get its dependencies resolved
+            # First, install all local dependencies to get their transitive dependencies
             logger.info("Downloading transitive dependencies...")
+            
+            # First install local dependencies without their dependencies to make them available
+            # This prevents pip from trying to fetch them from PyPI
+            for dep in self.build_config.get("dependencies", []):
+                dep_path = self.manifest_dir / dep
+                if dep_path.exists():
+                    logger.info(f"Pre-installing local dependency: {dep}")
+                    run_subprocess(
+                        [
+                            str(pip3),
+                            "install",
+                            "--no-deps",
+                            str(dep_path),
+                        ]
+                    )
+            
+            # Now install each local dependency WITH its dependencies to get PyPI packages
+            for dep in self.build_config.get("dependencies", []):
+                dep_path = self.manifest_dir / dep
+                if dep_path.exists():
+                    logger.info(f"Installing {dep} with its PyPI dependencies...")
+                    try:
+                        run_subprocess(
+                            [
+                                str(pip3),
+                                "install",
+                                str(dep_path),
+                            ]
+                        )
+                    except Exception as e:
+                        logger.warning(f"Failed to install dependencies for {dep}: {e}")
+                        # Continue anyway - the package itself is installed
             
             # Install the main package and its dependencies into the build venv
             # This will resolve all dependencies properly
-            logger.info("Installing package to resolve dependencies...")
-            run_subprocess(
-                [
-                    str(pip3),
-                    "install",
-                    str(self.manifest_dir),
-                ]
-            )
+            logger.info("Installing main package to resolve dependencies...")
+            try:
+                run_subprocess(
+                    [
+                        str(pip3),
+                        "install",
+                        str(self.manifest_dir),
+                    ]
+                )
+            except Exception as e:
+                logger.warning(f"Failed to install main package dependencies: {e}")
             
             # Now download all the dependencies (excluding what we already built)
             # Get the list of installed packages
