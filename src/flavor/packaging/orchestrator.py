@@ -176,6 +176,11 @@ class PackagingOrchestrator:
                     "public_key": self.public_key_path,
                 },
             }
+            
+            # Add runtime configuration if present in build config
+            execution_config = self.build_config.get("execution", {})
+            if "runtime" in execution_config:
+                manifest["runtime"] = execution_config["runtime"]
 
             manifest_path = temp_dir / "manifest.json"
             manifest_path.write_text(json.dumps(manifest, indent=2))
