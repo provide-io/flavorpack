@@ -72,7 +72,7 @@ def step_impl(context: Context):
         size=len(payload_path.read_bytes()),
         compressed_size=0,  # Will be set during build
         checksum=hashlib.sha256(payload_path.read_bytes()).hexdigest(),
-        compression="gzip",
+        encoding="gzip",
         purpose="payload",
         lifecycle="persistent",
         path=payload_path
@@ -99,7 +99,7 @@ def step_impl(context: Context):
         "verification": {
             "integrity_seal": {
                 "required": True,
-                "algorithm": "ecdsa-p256"
+                "algorithm": "ed25519"
             }
         }
     }
@@ -133,8 +133,8 @@ def step_impl(context: Context):
 def step_impl(context: Context):
     """Verify emoji magic pattern."""
     with open(context.test_bundle.bundle_path, 'rb') as f:
-        f.seek(-16, 2)
-        magic = f.read(16)
+        f.seek(-4, 2)
+        magic = f.read(4)
         
     # Check first and last emoji
     assert magic[0:4] == "📦".encode('utf-8')
@@ -171,7 +171,7 @@ def step_impl(context: Context, lifecycle: str):
         size=1024,
         compressed_size=512,
         checksum="abc123",
-        compression="gzip",
+        encoding="gzip",
         purpose="payload",
         lifecycle=lifecycle
     )
@@ -479,8 +479,8 @@ def step_impl(context: Context):
 def step_impl(context: Context):
     """Verify emoji parsing."""
     with open(context.test_bundle.bundle_path, 'rb') as f:
-        f.seek(-16, 2)
-        magic = f.read(16)
+        f.seek(-4, 2)
+        magic = f.read(4)
         
     # Verify it's valid UTF-8 emoji sequence
     try:

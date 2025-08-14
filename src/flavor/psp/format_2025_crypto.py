@@ -1,0 +1,67 @@
+"""
+PSPF 2025 Cryptography Implementation
+
+Handles Ed25519 signatures and integrity verification.
+"""
+
+from cryptography.hazmat.primitives.asymmetric import ed25519
+from cryptography.exceptions import InvalidSignature
+
+
+def ephemeral_key_pair() -> tuple[bytes, bytes]:
+    """Generate ephemeral Ed25519 key pair for integrity sealing.
+    
+    Returns:
+        tuple: (private_key_bytes, public_key_bytes)
+            - private_key_bytes: 32-byte Ed25519 private key seed
+            - public_key_bytes: 32-byte Ed25519 public key
+    """
+    # Generate a new Ed25519 private key
+    private_key = ed25519.Ed25519PrivateKey.generate()
+    
+    # Get the raw bytes for compatibility with Go/Rust implementations
+    # Note: private_bytes_raw() returns the 32-byte seed, not the full 64-byte key
+    private_key_bytes = private_key.private_bytes_raw()
+    public_key_bytes = private_key.public_key().public_bytes_raw()
+    
+    return private_key_bytes, public_key_bytes
+
+
+def sign_data(data: bytes, private_key_bytes: bytes) -> bytes:
+    """Sign data with Ed25519 private key.
+    
+    Args:
+        data: The data to sign
+        private_key_bytes: 32-byte Ed25519 private key seed
+        
+    Returns:
+        bytes: 64-byte Ed25519 signature
+    """
+    # Reconstruct the private key from the seed bytes
+    private_key = ed25519.Ed25519PrivateKey.from_private_bytes(private_key_bytes)
+    
+    # Sign the data
+    signature = private_key.sign(data)
+    
+    return signature
+
+
+def verify_signature(data: bytes, signature: bytes, public_key_bytes: bytes) -> bool:
+    """Verify Ed25519 signature.
+    
+    Args:
+        data: The data that was signed
+        signature: 64-byte Ed25519 signature
+        public_key_bytes: 32-byte Ed25519 public key
+        
+    Returns:
+        bool: True if signature is valid, False otherwise
+    """
+    try:
+        public_key = ed25519.Ed25519PublicKey.from_public_bytes(public_key_bytes)
+        public_key.verify(signature, data)
+        return True
+    except InvalidSignature:
+        return False
+    except Exception:
+        return False

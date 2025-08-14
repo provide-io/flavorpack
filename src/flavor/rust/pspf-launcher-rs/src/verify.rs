@@ -5,7 +5,7 @@ use std::io::{Read, Seek, SeekFrom};
 use std::path::Path;
 use adler::Adler32;
 use sha2::{Sha256, Digest};
-use ed25519_dalek::{PublicKey, Signature, Verifier};
+use ed25519_dalek::{VerifyingKey, Signature, Verifier};
 use flate2::read::GzDecoder;
 use tar::Archive;
 
@@ -119,14 +119,17 @@ pub fn verify_package(package_path: &Path) -> Result<()> {
                 let pem = pem::parse(pem_str)?;
                 
                 // Extract raw public key bytes (last 32 bytes of SubjectPublicKeyInfo)
-                let spki_bytes = &pem.contents;
+                let spki_bytes = &pem.contents();
                 let key_bytes = &spki_bytes[spki_bytes.len() - 32..];
                 
                 // Verify the ephemeral key matches the one in index
                 if key_bytes == &ephemeral_key[..32] {
                     // Parse signature
-                    let signature = Signature::from_bytes(&sig_bytes)?;
-                    let public_key = PublicKey::from_bytes(key_bytes)?;
+                    let sig_array: [u8; 64] = sig_bytes.clone().try_into()
+                        .map_err(|_| anyhow!("Invalid signature length"))?;
+                    let signature = Signature::from_bytes(&sig_array);
+                    let public_key = VerifyingKey::from_bytes(key_bytes.try_into()
+                        .map_err(|_| anyhow!("Invalid key length"))?)?;
                     
                     // Verify signature over psp.json
                     integrity_seal_valid = public_key.verify(&json_bytes, &signature).is_ok();

@@ -50,7 +50,7 @@ class TestPSPFSlots:
             size=len(text_data),
             compressed_size=0,
             checksum=hashlib.sha256(text_data.encode()).hexdigest(),
-            compression="gzip",
+            encoding="gzip",
             purpose="config",
             lifecycle="persistent",
             path=text_path
@@ -67,7 +67,7 @@ class TestPSPFSlots:
             size=len(binary_data),
             compressed_size=0,
             checksum=hashlib.sha256(binary_data).hexdigest(),
-            compression="zstd",
+            encoding="none",  # Binary files often don't compress well
             purpose="library",
             lifecycle="volatile",
             path=binary_path
@@ -84,7 +84,7 @@ class TestPSPFSlots:
             size=len(temp_data),
             compressed_size=0,
             checksum=hashlib.sha256(temp_data).hexdigest(),
-            compression="none",
+            encoding="none",
             purpose="payload",
             lifecycle="temporary",
             path=temp_path
@@ -100,7 +100,7 @@ class TestPSPFSlots:
             size=1024,
             compressed_size=512,
             checksum="abc123",
-            compression="gzip",
+            encoding="gzip",
             purpose="payload",
             lifecycle="persistent"
         )
@@ -120,7 +120,7 @@ class TestPSPFSlots:
             size=1024,
             compressed_size=512,
             checksum="abc123",
-            compression="gzip",
+            encoding="gzip",
             purpose="payload",
             lifecycle="volatile"
         )
@@ -139,7 +139,7 @@ class TestPSPFSlots:
             size=1024,
             compressed_size=512,
             checksum="abc123",
-            compression="gzip",
+            encoding="gzip",
             purpose="payload",
             lifecycle="temporary"
         )
@@ -158,7 +158,7 @@ class TestPSPFSlots:
             size=1024,
             compressed_size=512,
             checksum="abc123",
-            compression="gzip",
+            encoding="gzip",
             purpose="installer",
             lifecycle="install"
         )
@@ -217,7 +217,7 @@ class TestPSPFSlots:
             size=len(data),
             compressed_size=0,
             checksum=hashlib.sha256(data).hexdigest(),
-            compression="gzip",
+            encoding="gzip",
             purpose="payload",
             lifecycle="persistent",
             path=slot_path
@@ -245,7 +245,7 @@ class TestPSPFSlots:
             size=len(data),
             compressed_size=0,
             checksum=hashlib.sha256(data).hexdigest(),
-            compression="none",
+            encoding="none",
             purpose="payload",
             lifecycle="persistent",
             path=slot_path
@@ -272,7 +272,7 @@ class TestPSPFSlots:
             size=len(data),
             compressed_size=0,
             checksum=expected_checksum,
-            compression="none",
+            encoding="none",
             purpose="payload",
             lifecycle="persistent",
             path=slot_path
@@ -329,7 +329,7 @@ class TestPSPFSlots:
             size=1024,
             compressed_size=512,
             checksum="abc123",
-            compression="gzip",
+            encoding="gzip",
             purpose="payload",
             lifecycle="persistent"
         )
@@ -351,7 +351,7 @@ class TestPSPFSlots:
             size=2048,
             compressed_size=1024,
             checksum="deadbeef",
-            compression="zstd",
+            encoding="none",  # Binary files often don't compress well
             purpose="library",
             lifecycle="volatile",
             path=Path("/tmp/test")
@@ -366,7 +366,7 @@ class TestPSPFSlots:
         assert slot_dict['size'] == 2048
         assert slot_dict['compressed_size'] == 1024
         assert slot_dict['checksum'] == "deadbeef"
-        assert slot_dict['compression'] == "zstd"
+        assert slot_dict['encoding'] == "none"
         assert slot_dict['purpose'] == "library"
         assert slot_dict['lifecycle'] == "volatile"
         assert slot_dict['path'] == "/tmp/test"
@@ -384,7 +384,7 @@ class TestPSPFSlots:
             size=len(large_data),
             compressed_size=0,
             checksum=hashlib.sha256(large_data).hexdigest(),
-            compression="none",
+            encoding="none",
             purpose="payload",
             lifecycle="persistent",
             path=large_path

@@ -6,13 +6,10 @@
 
 import importlib.metadata
 from pathlib import Path
-import shutil
-import subprocess
 
 import click
 
 from flavor.api import build_package_from_manifest, verify_package
-# from flavor.compiler import _get_cache_dir  # Moved to scraps
 from flavor.exceptions import BuildError
 from flavor.packaging.keys import generate_key_pair
 
@@ -41,7 +38,7 @@ except importlib.metadata.PackageNotFoundError:
 )
 @click.pass_context
 def cli(ctx: click.Context, log_level: str) -> None:
-    """Pyvider Secure Packaging Format (flavor) Build Tool."""
+    """PSPF (Progressive Secure Package Format) Build Tool."""
     ctx.ensure_object(dict)
     ctx.obj["log_level"] = log_level
 
@@ -66,7 +63,7 @@ def cli(ctx: click.Context, log_level: str) -> None:
     help="Directory to save the ECDSA key pair.",
 )
 def keygen(out_dir: str) -> None:
-    """Generates an ECDSA P-256 key pair for flavor package integrity signing."""
+    """Generates an ECDSA P-256 key pair for package integrity signing."""
     try:
         generate_key_pair(Path(out_dir))
         click.secho(
@@ -91,11 +88,23 @@ def keygen(out_dir: str) -> None:
     type=click.Path(dir_okay=False, resolve_path=True),
     help="Custom output path for the package (defaults to dist/<name>.pspf).",
 )
-def package_command(pyproject_toml_path: str, output_path: str | None) -> None:
-    """Packages the provider for one or more target platforms."""
-    click.echo("🚀 Packaging provider...")
+@click.option(
+    "--launcher",
+    type=click.Choice(["go", "rust"], case_sensitive=False),
+    default=None,
+    help="Launcher type to embed (defaults to 'go' or value from FLAVOR_LAUNCHER env var).",
+)
+def package_command(
+    pyproject_toml_path: str, output_path: str | None, launcher: str | None
+) -> None:
+    """Packages the application for one or more target platforms."""
+    click.echo("🚀 Packaging application...")
     try:
-        built_artifacts = build_package_from_manifest(Path(pyproject_toml_path), output_path=Path(output_path) if output_path else None)
+        built_artifacts = build_package_from_manifest(
+            Path(pyproject_toml_path),
+            output_path=Path(output_path) if output_path else None,
+            launcher_type=launcher,
+        )
         for artifact in built_artifacts:
             click.secho(
                 f"✅ Successfully built artifact at {artifact}",
@@ -123,29 +132,33 @@ def verify_command(package_file: str) -> None:
     click.echo(f"🔍 Verifying package '{final_package_file}'...")
     try:
         result = verify_package(final_package_file)
-        
+
         # Display results
         click.echo(f"\nPackage Format: {result['format']}")
         click.echo(f"Version: {result['version']}")
-        click.echo(f"Launcher Size: {result['launcher_size'] / (1024*1024):.1f} MB")
-        
-        if result['format'] == 'PSPF/2025':
+        click.echo(f"Launcher Size: {result['launcher_size'] / (1024 * 1024):.1f} MB")
+
+        if result["format"] == "PSPF/2025":
             click.echo(f"Slot Count: {result['slot_count']}")
-            if 'package' in result:
-                pkg = result['package']
-                click.echo(f"Package: {pkg.get('name', 'unknown')} v{pkg.get('version', 'unknown')}")
-            if 'slots' in result:
+            if "package" in result:
+                pkg = result["package"]
+                click.echo(
+                    f"Package: {pkg.get('name', 'unknown')} v{pkg.get('version', 'unknown')}"
+                )
+            if "slots" in result:
                 click.echo("\nSlots:")
-                for slot in result['slots']:
-                    click.echo(f"  [{slot['index']}] {slot['name']}: {slot['size'] / 1024:.1f} KB")
-        
+                for slot in result["slots"]:
+                    click.echo(
+                        f"  [{slot['index']}] {slot['name']}: {slot['size'] / 1024:.1f} KB"
+                    )
+
         # Signature verification result
-        if result['signature_valid']:
+        if result["signature_valid"]:
             click.secho("\n✅ Signature verification successful", fg="green")
         else:
             click.secho("\n❌ Signature verification failed", fg="red")
             raise click.Abort()
-            
+
     except Exception as e:
         click.secho(f"❌ Verification failed: {e}", fg="red", err=True)
         raise click.Abort() from e
