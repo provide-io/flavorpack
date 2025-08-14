@@ -60,12 +60,13 @@ def build_package_from_manifest(
     if not package_integrity_key_path.exists() or not public_key_path.exists():
         generate_key_pair(manifest_dir / "keys")
 
-    # Load buildconfig.toml if it exists
-    build_config = {}
+    # Load build config from pyproject.toml first, then override with buildconfig.toml if it exists
+    build_config = flavor_config.get("build", {})
     buildconfig_path = manifest_dir / "buildconfig.toml"
     if buildconfig_path.exists():
         with buildconfig_path.open("rb") as f:
-            build_config = tomllib.load(f).get("build", {})
+            # Merge buildconfig.toml settings (takes precedence)
+            build_config.update(tomllib.load(f).get("build", {}))
 
     orchestrator = PackagingOrchestrator(
         package_integrity_key_path=str(package_integrity_key_path),
