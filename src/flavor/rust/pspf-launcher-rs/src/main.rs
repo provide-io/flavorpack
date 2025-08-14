@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Context, Result};
 use flate2::read::GzDecoder;
-use log::{debug, error, info, warn};
+use log::{debug, error, info, trace, warn};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::env;
@@ -108,6 +108,17 @@ fn main() -> Result<()> {
     info!("🦀 PSPF Rust Launcher v{} starting...", env!("CARGO_PKG_VERSION"));
     info!("🏗️ Built with Rust {}", env!("CARGO_PKG_RUST_VERSION"));
     debug!("🔍 Debug logging enabled at level: {}", log_level);
+    
+    // 🌍 Log incoming environment variables
+    let env_vars: Vec<(String, String)> = env::vars().collect();
+    debug!("📊 Environment variables received from parent process: count={}", env_vars.len());
+    
+    // Log all environment variables in trace mode
+    if log::log_enabled!(log::Level::Trace) {
+        for (key, value) in &env_vars {
+            trace!("🔑 Env var: {}={}", key, value);
+        }
+    }
     
     // 📍 Get the path to our own executable
     let exe_path = env::current_exe()
@@ -236,7 +247,15 @@ fn main() -> Result<()> {
         cmd.args(&args);
     }
 
-    // Set environment
+    // 🌍 CRITICAL: Inherit all parent environment variables
+    let parent_env: Vec<(String, String)> = env::vars().collect();
+    debug!("🌍 Inheriting parent environment: {} variables", parent_env.len());
+    for (key, value) in parent_env {
+        cmd.env(&key, &value);
+    }
+
+    // Set additional environment from package metadata
+    debug!("➕ Adding package-defined environment variables: count={}", metadata.execution.environment.len());
     for (k, mut v) in metadata.execution.environment {
         // Substitute slot references
         for (idx, path) in &slot_paths {
@@ -247,7 +266,8 @@ fn main() -> Result<()> {
         v = v.replace("{workenv}", workenv_dir.path().to_str().unwrap());
         v = v.replace("{package_name}", &metadata.package.name);
         v = v.replace("{version}", &metadata.package.version);
-        cmd.env(k, v);
+        cmd.env(&k, &v);
+        trace!("➕ Added package env var: {}={}", k, v);
     }
     
     // 🌍 Add FLAVOR_WORKENV environment variable
@@ -264,6 +284,17 @@ fn main() -> Result<()> {
 
     // 🚀 Execute
     info!("🚀 Executing: {}", parts[0]);
+    debug!("🎯 Command details: args={:?}, cwd={:?}", &parts[1..], user_cwd);
+    debug!("📊 Final environment state: all parent vars + package vars passed to subprocess");
+    
+    // In trace mode, log all environment variables being passed
+    if log::log_enabled!(log::Level::Trace) {
+        trace!("🌍 Environment variables being passed to subprocess:");
+        // Note: We can't easily enumerate cmd.env after building, but we know we passed all parent env + additions
+        trace!("  → All parent environment variables inherited");
+        trace!("  → Plus FLAVOR_WORKENV and package-specific variables");
+    }
+    
     let status = cmd.status()
         .context("Failed to execute command")?;
 
@@ -920,7 +951,12 @@ fn run_command(cmd: &str, args: &[&str], workenv_dir: &Path, user_cwd: &Path) ->
     // 📂 Set working directory to user's directory
     command.current_dir(user_cwd);
     
-    // 🌍 Set environment
+    // 🌍 CRITICAL: Inherit all parent environment variables
+    for (key, value) in env::vars() {
+        command.env(&key, &value);
+    }
+    
+    // 🌍 Override/add FLAVOR_WORKENV environment variable
     command.env("FLAVOR_WORKENV", workenv_dir);
     
     // 📍 Prepend workenv/bin to PATH
