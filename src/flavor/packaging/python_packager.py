@@ -207,19 +207,30 @@ class PythonPackager:
                 ]
             )
 
-            # Download transitive dependencies
-            all_deps = []
+            # Download transitive dependencies using pip
+            # For each local package, try to download its PyPI dependencies
+            logger.info("Downloading transitive dependencies...")
+            
+            # First collect all packages (dependencies + main)
+            all_packages = []
             for dep in self.build_config.get("dependencies", []):
                 dep_path = self.manifest_dir / dep
                 if dep_path.exists():
-                    all_deps.append(str(dep_path))
-            all_deps.append(str(self.manifest_dir))
-
-            logger.info("Downloading dependency wheels...")
-            for package in all_deps:
-                run_subprocess(
-                    [str(pip3), "wheel", "--wheel-dir", str(wheels_dir), package]
-                )
+                    all_packages.append(str(dep_path))
+            all_packages.append(str(self.manifest_dir))
+            
+            # Use pip to download dependencies, ignoring errors for local packages
+            for package_path in all_packages:
+                logger.info(f"Downloading dependencies for {Path(package_path).name}...")
+                try:
+                    # Use pip download to get only the dependencies, not the package itself
+                    run_subprocess(
+                        [str(pip3), "download", "--dest", str(wheels_dir), 
+                         "--only-deps", package_path]
+                    )
+                except Exception as e:
+                    logger.warning(f"Some dependencies failed to download for {Path(package_path).name}: {e}")
+                    # Continue - local packages won't be on PyPI
 
     def _create_metadata(self, metadata_dir: Path) -> None:
         """Create metadata files."""
@@ -244,10 +255,18 @@ class PythonPackager:
         # Use UV to download Python
         run_subprocess(["uv", "python", "install", self.python_version])
 
-        # Find the installed Python
-        python_install_dir = Path.home() / ".local" / "share" / "uv" / "python" / f"cpython-{self.python_version}-macos-aarch64-none"
-
-        if not python_install_dir.exists():
+        # Find the installed Python (UV installs with full version like 3.11.12)
+        uv_python_base = Path.home() / ".local" / "share" / "uv" / "python"
+        python_install_dir = None
+        
+        # Look for any Python that matches our major.minor version
+        if uv_python_base.exists():
+            for python_dir in uv_python_base.glob(f"cpython-{self.python_version}*"):
+                if python_dir.is_dir():
+                    python_install_dir = python_dir
+                    break
+        
+        if not python_install_dir or not python_install_dir.exists():
             logger.warning("Could not find UV-installed Python at expected location")
             # Fall back to placeholder
             with tempfile.TemporaryDirectory() as temp_dir:

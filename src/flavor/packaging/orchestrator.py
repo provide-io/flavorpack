@@ -62,6 +62,7 @@ class PackagingOrchestrator:
 
         return f"{system}_{machine}"
 
+
     def build_package(self) -> None:
         logger.info("Orchestrator starting build process...")
 
@@ -128,8 +129,12 @@ class PackagingOrchestrator:
                 },
                 "setup_commands": [
                     {
-                        "type": "enumerate_and_execute",
-                        "command": f"{{workenv}}/bin/uv pip install --python {{workenv}}/bin/python3 --target {{workenv}}/lib/python{self.python_version}/site-packages --no-deps",
+                        "type": "execute",
+                        "command": f"{{workenv}}/bin/uv venv {{workenv}}/venv --python {{workenv}}/bin/python3",
+                    },
+                    {
+                        "type": "enumerate_and_execute", 
+                        "command": f"{{workenv}}/bin/uv pip install --python {{workenv}}/venv/bin/python3 --no-deps",
                         "enumerate": {"path": "{workenv}/wheels", "pattern": "*.whl"},
                     },
                     {
@@ -138,7 +143,7 @@ class PackagingOrchestrator:
                         "content": "{package_name}-{version}",
                     },
                 ],
-                "command": "{workenv}/bin/uv run --python {workenv}/bin/python3 -m {package_name}",
+                "command": f"{{workenv}}/venv/bin/python -m {self.entry_point.rsplit(':', 1)[0] if ':' in self.entry_point else self.entry_point}",
                 "slots": [
                     {
                         "name": "uv",
