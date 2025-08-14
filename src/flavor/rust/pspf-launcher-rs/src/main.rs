@@ -30,6 +30,8 @@ struct Metadata {
     build: Option<BuildInfo>,
     #[serde(skip_serializing_if = "Option::is_none")]
     cache_validation: Option<CacheValidationInfo>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    runtime: Option<RuntimeInfo>,
     #[serde(default)]
     setup_commands: Vec<Value>,
 }
@@ -77,6 +79,24 @@ struct BuildInfo {
     timestamp: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     host: Option<String>,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+struct RuntimeInfo {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    env: Option<RuntimeEnv>,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+struct RuntimeEnv {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    unset: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    map: Option<std::collections::HashMap<String, String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    set: Option<std::collections::HashMap<String, String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pass: Option<Vec<String>>,
 }
 
 /// 🚀 Main entry point for the PSPF Rust launcher
@@ -248,10 +268,20 @@ fn main() -> Result<()> {
     }
 
     // 🌍 CRITICAL: Inherit all parent environment variables
-    let parent_env: Vec<(String, String)> = env::vars().collect();
-    debug!("🌍 Inheriting parent environment: {} variables", parent_env.len());
-    for (key, value) in parent_env {
-        cmd.env(&key, &value);
+    let mut env_map: std::collections::HashMap<String, String> = env::vars().collect();
+    debug!("🌍 Inheriting parent environment: {} variables", env_map.len());
+    
+    // 🔄 Process runtime.env configuration if present
+    if let Some(runtime) = &metadata.runtime {
+        if let Some(runtime_env) = &runtime.env {
+            debug!("🔄 Processing runtime.env configuration");
+            process_runtime_env(&mut env_map, runtime_env);
+        }
+    }
+    
+    // Apply the processed environment to the command
+    for (key, value) in &env_map {
+        cmd.env(key, value);
     }
 
     // Set additional environment from package metadata
@@ -934,6 +964,55 @@ fn execute_command(command: &str, workenv_dir: &Path, package: &PackageInfo, use
     }
     
     run_command(parts[0], &parts[1..], workenv_dir, user_cwd)
+}
+
+/// Process runtime environment operations in order:
+/// 1. unset - Remove specified variables
+/// 2. map - Map/rename variables  
+/// 3. set - Set specific values
+/// 4. pass - Verify required variables exist
+fn process_runtime_env(env_map: &mut std::collections::HashMap<String, String>, runtime_env: &RuntimeEnv) {
+    // 1. Process unset operations
+    if let Some(unset_list) = &runtime_env.unset {
+        debug!("🗑️ Processing unset operations: count={}", unset_list.len());
+        for key in unset_list {
+            if env_map.remove(key).is_some() {
+                trace!("🗑️ Unset env var: {}", key);
+            }
+        }
+    }
+    
+    // 2. Process map operations
+    if let Some(map_ops) = &runtime_env.map {
+        debug!("🔄 Processing map operations: count={}", map_ops.len());
+        for (from, to) in map_ops {
+            if let Some(value) = env_map.remove(from) {
+                env_map.insert(to.clone(), value.clone());
+                trace!("🔄 Mapped env var: {} -> {} = {}", from, to, value);
+            }
+        }
+    }
+    
+    // 3. Process set operations
+    if let Some(set_ops) = &runtime_env.set {
+        debug!("✏️ Processing set operations: count={}", set_ops.len());
+        for (key, value) in set_ops {
+            env_map.insert(key.clone(), value.clone());
+            trace!("✏️ Set env var: {} = {}", key, value);
+        }
+    }
+    
+    // 4. Process pass operations (verify required variables exist)
+    if let Some(pass_list) = &runtime_env.pass {
+        debug!("✅ Processing pass operations: count={}", pass_list.len());
+        for key in pass_list {
+            if env_map.contains_key(key) {
+                trace!("✅ Verified env var exists: {}", key);
+            } else {
+                warn!("⚠️ Required environment variable not found: {}", key);
+            }
+        }
+    }
 }
 
 // 🏃 Run a command with arguments
