@@ -67,6 +67,10 @@ def build_package_from_manifest(
         with buildconfig_path.open("rb") as f:
             # Merge buildconfig.toml settings (takes precedence)
             build_config.update(tomllib.load(f).get("build", {}))
+    
+    # Include execution config (runtime.env, etc.) in the build config
+    if "execution" in flavor_config:
+        build_config["execution"] = flavor_config["execution"]
 
     orchestrator = PackagingOrchestrator(
         package_integrity_key_path=str(package_integrity_key_path),

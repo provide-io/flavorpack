@@ -179,8 +179,12 @@ class PackagingOrchestrator:
             
             # Add runtime configuration if present in build config
             execution_config = self.build_config.get("execution", {})
+            logger.debug(f"Execution config from build_config: {execution_config}")
             if "runtime" in execution_config:
+                logger.info(f"Adding runtime configuration to manifest: {execution_config['runtime']}")
                 manifest["runtime"] = execution_config["runtime"]
+            else:
+                logger.debug("No runtime configuration found in execution config")
 
             manifest_path = temp_dir / "manifest.json"
             manifest_path.write_text(json.dumps(manifest, indent=2))
