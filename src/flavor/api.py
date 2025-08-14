@@ -39,7 +39,7 @@ def build_package_from_manifest(
     if launcher_type is None:
         launcher_type = flavor_config.get("launcher")
     if launcher_type is None:
-        launcher_type = "go"
+        launcher_type = "rust"
 
     # Validate launcher type
     valid_launchers = ["go", "rust"]
