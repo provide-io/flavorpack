@@ -34,7 +34,7 @@ class PSPFBuilder:
         output_path: Path,
         metadata: dict | None = None,
         slots: list[SlotMetadata] | None = None,
-        launcher_type: str = "go",
+        launcher_type: str = "rust",
         manifest_path: Path | None = None,
     ) -> None:
         """Build a PSPF bundle."""

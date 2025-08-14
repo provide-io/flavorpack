@@ -32,7 +32,7 @@ class PackagingOrchestrator:
         package_name: str,
         entry_point: str,
         python_version: str | None = None,
-        launcher_type: str = "go",
+        launcher_type: str = "rust",
     ) -> None:
         self.package_integrity_key_path = package_integrity_key_path
         self.public_key_path = public_key_path
@@ -226,15 +226,26 @@ class PackagingOrchestrator:
                 # Also copy as pspf-launcher for Go builder compatibility
                 shutil.copy2(rust_binary, self.workenv_dir / "pspf-launcher")
 
-            # Build builder to workenv
-            builder_src_dir = go_base / "cmd/pspf-builder"
-            builder_output = self.workenv_dir / "pspf-builder"
-            logger.info(f"Building pspf-builder to {builder_output}...")
-            run_subprocess(
-                ["go", "build", "-o", str(builder_output), "."], cwd=builder_src_dir
-            )
+            # Build builder to workenv (default to Rust builder)
+            # Use Rust builder by default since it's more complete
+            rust_base = Path(__file__).parent.parent / "rust"
+            rust_builder_dir = rust_base / "pspf-builder-rs"
+            rust_builder_output = self.workenv_dir / "pspf-builder"
+            
+            # Check if Rust builder binary already exists
+            rust_binary = rust_builder_dir / "target" / "release" / "pspf-builder-rs"
+            if rust_binary.exists():
+                logger.info(f"Using existing Rust pspf-builder from {rust_binary}")
+                shutil.copy2(rust_binary, rust_builder_output)
+            else:
+                logger.info(f"Building Rust pspf-builder to {rust_builder_output}...")
+                run_subprocess(
+                    ["cargo", "build", "--release"],
+                    cwd=rust_builder_dir
+                )
+                shutil.copy2(rust_binary, rust_builder_output)
 
-            packager_executable = builder_output
+            packager_executable = rust_builder_output
 
             build_cmd_args = [
                 str(packager_executable),
