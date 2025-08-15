@@ -1,0 +1,214 @@
+# Flavor Workflow Configuration
+# This file controls which workflows are enabled and their settings
+# All workflows check this file to determine if they should run
+
+# Global settings
+global:
+  enabled: true
+  debug: false
+  timeout_minutes: 30
+  
+  # Default runner for all jobs (can be overridden per workflow)
+  default_runner: ubuntu-latest
+  
+  # Artifact retention
+  artifact_retention_days: 30
+  
+  # Python/Go/Rust versions
+  python_version: "3.11"
+  go_version: "1.21"
+  rust_version: "1.75"
+  uv_version: "0.7.8"
+
+# Workflow-specific configurations
+workflows:
+  # Core CI/CD workflows
+  tests:
+    enabled: true
+    triggers:
+      push: [main, develop]
+      pull_request: [main, develop]
+      schedule: "0 0 * * 0"  # Weekly on Sunday
+    matrix:
+      os: [ubuntu-latest, macos-latest]
+      python: ["3.11", "3.12", "3.13"]
+    coverage:
+      enabled: true
+      branch_coverage: true
+      min_coverage: 60
+    parallel: true  # Use pytest-xdist
+
+  quality:
+    enabled: true
+    triggers:
+      push: [main, develop]
+      pull_request: [main, develop]
+    checks:
+      - ruff_lint
+      - ruff_format
+      - mypy
+      - security_scan
+
+  helpers:
+    enabled: true
+    triggers:
+      push: 
+        paths:
+          - "helpers/**"
+          - ".github/workflows/helpers.yml"
+      workflow_dispatch: true
+    matrix:
+      language: [go, rust]
+      os: [ubuntu-latest, macos-latest, windows-latest]
+    cache: true
+    upload_artifacts: true
+
+  taster:
+    enabled: true
+    triggers:
+      push:
+        paths:
+          - "tests/taster/**"
+          - "src/flavor/**"
+      pull_request: [main]
+      workflow_dispatch: true
+    matrix:
+      launcher: [go, rust]
+      builder: [go, rust]
+      os: [ubuntu-latest, macos-latest]
+    tests:
+      - env
+      - argv
+      - signals
+      - metadata
+      - features
+      - test
+
+  security:
+    enabled: true
+    triggers:
+      schedule: "0 0 * * 1"  # Weekly on Monday
+      workflow_dispatch: true
+    scans:
+      - dependency_check
+      - license_scan
+      - vulnerability_scan
+      - secret_scan
+    alert_level: high
+
+  release:
+    enabled: false  # Disabled by default for safety
+    triggers:
+      workflow_dispatch: true
+      push:
+        tags: ["v*"]
+    artifacts:
+      - name: flavor-cli
+        path: dist/
+        platforms: [linux-amd64, darwin-amd64, darwin-arm64, windows-amd64]
+      - name: helpers
+        path: helpers/bin/
+        platforms: [linux-amd64, darwin-amd64, darwin-arm64, windows-amd64]
+      - name: python-wheel
+        path: dist/*.whl
+        pypi: true
+    signing:
+      enabled: true
+      gpg_key: ${{ secrets.GPG_SIGNING_KEY }}
+    changelog:
+      enabled: true
+      conventional_commits: true
+
+  documentation:
+    enabled: true
+    triggers:
+      push:
+        paths:
+          - "docs/**"
+          - "README.md"
+          - "CLAUDE.md"
+      workflow_dispatch: true
+    build:
+      - api_docs
+      - user_guide
+      - developer_guide
+    deploy:
+      enabled: false
+      target: github_pages
+
+  performance:
+    enabled: false  # Expensive, run manually
+    triggers:
+      workflow_dispatch: true
+      schedule: "0 0 * * 6"  # Weekly on Saturday
+    benchmarks:
+      - package_build_time
+      - binary_size
+      - extraction_time
+      - memory_usage
+    comparison:
+      enabled: true
+      baseline: main
+
+  integration:
+    enabled: true
+    triggers:
+      push: [main]
+      workflow_dispatch: true
+    matrix:
+      test_package: [hello-world, complex-app, terraform-provider]
+      launcher: [go, rust]
+      os: [ubuntu-latest, macos-latest]
+    validate:
+      - build
+      - sign
+      - verify
+      - execute
+
+# Notification settings
+notifications:
+  slack:
+    enabled: false
+    webhook: ${{ secrets.SLACK_WEBHOOK }}
+    channels:
+      failure: "#ci-failures"
+      success: "#ci-success"
+  
+  email:
+    enabled: false
+    recipients: ["team@example.com"]
+    on_failure: true
+    on_success: false
+
+# Cache settings
+cache:
+  python:
+    enabled: true
+    paths:
+      - "~/.cache/pip"
+      - "~/.cache/uv"
+      - "workenv/"
+  
+  go:
+    enabled: true
+    paths:
+      - "~/go/pkg/mod"
+      - "~/.cache/go-build"
+  
+  rust:
+    enabled: true
+    paths:
+      - "~/.cargo/registry"
+      - "~/.cargo/git"
+      - "target/"
+
+# Security policies
+security:
+  required_reviewers: 2
+  dismiss_stale_reviews: true
+  restrict_base_branches: [main]
+  enforce_admins: false
+  required_status_checks:
+    - "tests"
+    - "quality"
+    - "security"
