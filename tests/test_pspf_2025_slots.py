@@ -299,11 +299,11 @@ class TestPSPFSlots:
             f.seek(index.slot_table_offset)
             
             for i in range(index.slot_count):
-                # Each entry is 20 bytes: offset(8) + size(8) + checksum(4)
-                entry = f.read(20)
-                assert len(entry) == 20
+                # Each entry is 24 bytes: offset(8) + size(8) + checksum(4) + encoding(1) + purpose(1) + lifecycle(1) + reserved(1)
+                entry = f.read(24)
+                assert len(entry) == 24
                 
-                offset, size, checksum = struct.unpack('<QQI', entry)
+                offset, size, checksum, encoding, purpose, lifecycle, reserved = struct.unpack('<QQIBBBB', entry)
                 assert offset > 0
                 assert offset % SLOT_ALIGNMENT == 0
                 assert size > 0

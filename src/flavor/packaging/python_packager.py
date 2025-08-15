@@ -14,7 +14,7 @@ from typing import Any
 
 from pyvider.telemetry import logger
 
-from .util import run_subprocess
+from flavor.packaging.util import run_subprocess
 
 
 class PythonPackager:
@@ -38,12 +38,14 @@ class PythonPackager:
         entry_point: str,
         build_config: dict[str, Any],
         python_version: str | None = None,
+        progress_reporter: Any = None,
     ):
         self.manifest_dir = manifest_dir
         self.package_name = package_name
         self.entry_point = entry_point
         self.build_config = build_config
         self.python_version = python_version or self.DEFAULT_PYTHON_VERSION
+        self.progress = progress_reporter
 
     def prepare_artifacts(self, work_dir: Path) -> dict[str, Path]:
         """
@@ -58,16 +60,27 @@ class PythonPackager:
             - payload_dir: Directory containing payload (for legacy compatibility)
         """
         artifacts = {}
+        
+        # Create progress bar for preparation steps
+        prep_bar = None
+        if self.progress:
+            prep_bar = self.progress.create_bar(total=5, description="Preparing artifacts")
+            if prep_bar:
+                prep_bar.start()
 
         # Create payload structure
         payload_dir = work_dir / "payload"
         payload_dir.mkdir(mode=0o700)
         artifacts["payload_dir"] = payload_dir
+        if prep_bar:
+            prep_bar.increment()
 
         # Build wheels
         wheels_dir = payload_dir / "wheels"
         wheels_dir.mkdir(mode=0o700)
         self._build_wheels(wheels_dir)
+        if prep_bar:
+            prep_bar.increment()
 
         # Add UV binary
         uv_host_path = shutil.which("uv")
@@ -85,11 +98,15 @@ class PythonPackager:
             shutil.copy2(uv_host_path, str(work_uv))
             work_uv.chmod(0o755)
             artifacts["uv_binary"] = work_uv
+        if prep_bar:
+            prep_bar.increment()
 
         # Create metadata
         metadata_dir = payload_dir / "metadata"
         metadata_dir.mkdir(mode=0o700)
         self._create_metadata(metadata_dir)
+        if prep_bar:
+            prep_bar.increment()
 
         # Create payload archive with gzip -9 compression
         logger.info("Creating payload archive with maximum compression...")
@@ -115,6 +132,9 @@ class PythonPackager:
         python_tgz = work_dir / "python.tgz"
         self._create_python_placeholder(python_tgz)
         artifacts["python_tgz"] = python_tgz
+        if prep_bar:
+            prep_bar.increment()
+            prep_bar.finish()
 
         return artifacts
 
@@ -148,11 +168,18 @@ class PythonPackager:
 
     def _build_wheels(self, wheels_dir: Path) -> None:
         """Build wheels for the package and its dependencies."""
+        # Create progress spinner for wheel building
+        wheel_spinner = None
+        if self.progress:
+            wheel_spinner = self.progress.create_spinner(description="Building wheels")
+        
         # Create temporary build environment
         with tempfile.TemporaryDirectory() as build_env_dir:
             build_venv = Path(build_env_dir) / "venv"
 
             logger.info("Creating temporary build environment...")
+            if wheel_spinner:
+                wheel_spinner.tick()
             run_subprocess(
                 [
                     "uv",
@@ -196,6 +223,8 @@ class PythonPackager:
 
             # Build main package wheel
             logger.info("Building wheel for main package...")
+            if wheel_spinner:
+                wheel_spinner.tick()
             run_subprocess(
                 [
                     str(pip3),
@@ -210,6 +239,8 @@ class PythonPackager:
             # Download transitive dependencies using pip
             # First, install all local dependencies to get their transitive dependencies
             logger.info("Downloading transitive dependencies...")
+            if wheel_spinner:
+                wheel_spinner.tick()
             
             # First install local dependencies without their dependencies to make them available
             # This prevents pip from trying to fetch them from PyPI
@@ -295,6 +326,10 @@ class PythonPackager:
                                 )
                             except Exception as e2:
                                 logger.warning(f"Failed to download {pkg_spec} in any format: {e2}")
+        
+        # Finish spinner
+        if wheel_spinner:
+            wheel_spinner.finish()
 
     def _create_metadata(self, metadata_dir: Path) -> None:
         """Create metadata files."""
@@ -315,9 +350,19 @@ class PythonPackager:
     def _create_python_placeholder(self, python_tgz: Path) -> None:
         """Download and package Python distribution using UV."""
         logger.info(f"Downloading Python {self.python_version} using UV...")
+        
+        # Create spinner for Python download
+        python_spinner = None
+        if self.progress:
+            python_spinner = self.progress.create_spinner(description=f"Downloading Python {self.python_version}")
+            if python_spinner:
+                python_spinner.tick()
 
         # Use UV to download Python
         run_subprocess(["uv", "python", "install", self.python_version])
+        
+        if python_spinner:
+            python_spinner.finish()
 
         # Find the installed Python (UV installs with full version like 3.11.12)
         uv_python_base = Path.home() / ".local" / "share" / "uv" / "python"

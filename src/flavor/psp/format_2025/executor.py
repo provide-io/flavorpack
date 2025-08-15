@@ -69,7 +69,12 @@ class BundleExecutor:
         for i, slot in enumerate(slots):
             placeholder = f"{{slot:{i}}}"
             if placeholder in command:
-                slot_path = self.workenv_dir / slot['name']
+                slot_name = slot['name']
+                # For tarballs, the content is extracted directly to workenv
+                if slot_name.endswith('.tar.gz') or slot_name.endswith('.tgz'):
+                    slot_path = self.workenv_dir
+                else:
+                    slot_path = self.workenv_dir / slot_name
                 command = command.replace(placeholder, str(slot_path))
                 logger.trace(f"🔄 Substituted {placeholder} -> {slot_path}")
         

@@ -112,9 +112,49 @@ class PSPFReader:
         return self._metadata
 
     def read_slot(self, slot_index: int) -> bytes:
-        """Read a specific slot."""
-        # Mock implementation
-        raise NotImplementedError("read_slot is not implemented yet")
+        """Read a specific slot.
+        
+        Args:
+            slot_index: Index of the slot to read
+            
+        Returns:
+            bytes: Decompressed slot data
+            
+        Raises:
+            ValueError: If slot index is invalid
+        """
+        index = self.read_index()
+        
+        if slot_index < 0 or slot_index >= index.slot_count:
+            raise ValueError(f"Invalid slot index: {slot_index} (have {index.slot_count} slots)")
+        
+        with open(self.bundle_path, 'rb') as f:
+            # Read slot table entry
+            f.seek(index.slot_table_offset + slot_index * 24)
+            entry_data = f.read(24)
+            
+            # Parse the 24-byte structure:
+            # offset(8), size(8), checksum(4), encoding(1), purpose(1), lifecycle(1), reserved(1)
+            offset, size, checksum, encoding, purpose, lifecycle, reserved = struct.unpack(
+                '<QQIBBBB', entry_data
+            )
+            
+            # Read slot data
+            f.seek(offset)
+            slot_data = f.read(size)
+            
+            # Verify checksum (adler32 of stored data)
+            actual_checksum = zlib.adler32(slot_data)
+            if actual_checksum != checksum:
+                raise ValueError(f"Slot {slot_index} checksum mismatch: expected {checksum}, got {actual_checksum}")
+            
+            # Decompress if needed
+            if encoding == 1:  # gzip
+                return zlib.decompress(slot_data)
+            elif encoding == 0:  # none
+                return slot_data
+            else:
+                raise ValueError(f"Unsupported encoding method: {encoding}")
 
     def verify_all_checksums(self) -> bool:
         """Verify all slot checksums.
