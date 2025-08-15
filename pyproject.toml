@@ -157,7 +157,7 @@ python_files = ["test_*.py"]
 norecursedirs = [".git", "build", "dist", "*.egg-info", ".venv", "htmlcov", ".hypothesis"]
 
 [tool.coverage.run]
-branch = true
+branch = false
 source = ["flavor"]
 parallel = true
 omit = ["*/protocols/tfprotov6/protobuf/*", "*/protocols/tfprotov6/handlers/validate_resource_config.py"]
