@@ -13,6 +13,8 @@ use rand::rngs::OsRng;
 use ed25519_dalek::{SigningKey, Signature, Signer};
 use pem::{Pem, encode};
 
+mod logging;
+
 use flavor_common::{PSPFIndex, INDEX_SIZE, SLOT_ALIGNMENT, EMOJI_MAGIC_SIZE};
 
 /// Build PSPF 2025 bundles
@@ -136,6 +138,12 @@ struct BuildInfo {
 
 
 fn main() -> Result<()> {
+    // Initialize logging with JSON support
+    if let Err(e) = logging::init_logger() {
+        eprintln!("Failed to initialize logger: {}", e);
+        // Fall back to basic stderr logging
+    }
+    
     let args = Args::parse();
 
     // Read manifest
@@ -375,6 +383,7 @@ fn main() -> Result<()> {
     out.seek(SeekFrom::Start(index_offset))?;
     write_index(&mut out, &index)?;
 
+    // Standard output for success messages (builder convention)
     println!("✅ Successfully built PSPF bundle: {:?}", args.output);
     println!("  Package: {} v{}", config.name, config.version);
     println!("  Launcher: {}", config.launcher);

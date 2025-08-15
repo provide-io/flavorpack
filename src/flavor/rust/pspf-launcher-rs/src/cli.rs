@@ -4,7 +4,6 @@
 //! available when running a PSPF bundle with FLAVOR_LAUNCHER_CLI=true
 
 use anyhow::{anyhow, Context, Result};
-use log::debug;
 use std::fs;
 use std::path::Path;
 use std::process::{Command, Stdio};

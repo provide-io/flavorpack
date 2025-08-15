@@ -240,6 +240,7 @@ Taster includes:
 - argv[0] and command line argument testing
 - Process information display
 - Whitelist testing for `unset = ["*"]` patterns
+- Signal handling testing (`signals` command) for SIGTERM/SIGINT
 - Interactive shell for live debugging
 
 The taster package's `pyproject.toml` demonstrates complex runtime.env configuration including whitelist patterns, making it ideal for testing environment filtering behavior.
@@ -255,17 +256,51 @@ The taster package's `pyproject.toml` demonstrates complex runtime.env configura
 
 - `FLAVOR_LAUNCHER` - Override default launcher type (go/rust)
 - `FLAVOR_SKIP_KEY_VERIFICATION` - Skip signature verification
-- `FLAVOR_LOG_LEVEL` - Set log level (debug/info/warn/error)
+- `FLAVOR_LOG_LEVEL` - Set log level (debug/info/warn/error) or use JSON format (json, json:debug, json:info, etc.)
+- `FLAVOR_LOG_PATH` - Send logs to file instead of stderr
 - `FLAVOR_CACHE` - Override cache directory
 - `FLAVOR_WORKENV` - Set by launcher, points to work environment
 - `FLAVOR_COMMAND_NAME` - Original binary name (fallback for argv[0])
 - `FLAVOR_ORIGINAL_COMMAND` - Full original command path
 
+## Enterprise Features (Rust Launcher)
+
+### Signal Handling and Graceful Shutdown
+- **Signal Forwarding**: SIGTERM/SIGINT are forwarded to child processes
+- **Graceful Termination**: Waits up to 10 seconds for child to exit before SIGKILL
+- **Resource Cleanup**: Removes lock files and marks incomplete extractions on exit
+- **Debug Logging**: All signal handling steps are logged for observability
+
+### Concurrent Execution Safety
+- **File Locking**: Uses `.extraction.lock` files to prevent concurrent extractions
+- **Stale Lock Detection**: Automatically cleans up locks from dead processes (checks PID)
+- **Cache Integrity**: Uses `.extraction.complete` markers to ensure cache validity
+- **Incomplete Handling**: Marks and cleans up incomplete extractions from interrupted runs
+
+### Structured JSON Logging
+- **JSON Format**: `FLAVOR_LOG_LEVEL=json` outputs structured JSON logs
+- **Flexible Levels**: `json:debug`, `json:info`, `json:warn`, `json:error` 
+- **File Logging**: `FLAVOR_LOG_PATH=/path/to/file.log` sends logs to file
+- **Log Structure**:
+  ```json
+  {
+    "@timestamp": "2025-08-14T03:19:47.678385+00:00",
+    "@level": "info",
+    "@message": "📖 Reading PSPF bundle",
+    "@module": "flavor_rs_launcher",
+    "@pid": 87802,
+    "@file": "src/main.rs",
+    "@line": 342
+  }
+  ```
+- **Integration Ready**: Compatible with ELK, Splunk, Datadog, and other log aggregation systems
+- **Output Convention**: All logs go to stderr (or file), keeping stdout clean for child process
+
 ## Important Implementation Notes
 
 1. **Go Launcher Limitation**: Cannot actually set argv[0] on Unix due to Go's exec.Command restrictions. Uses environment variables as fallback.
 
-2. **Rust Launcher**: Uses `std::os::unix::process::CommandExt::arg0()` to properly set argv[0].
+2. **Rust Launcher**: Uses `std::os::unix::process::CommandExt::arg0()` to properly set argv[0]. Includes enterprise features for production use.
 
 3. **Binary Naming Convention**: All binaries follow the pattern `flavor-<lang>-<component>` where lang is `go` or `rs` and component is `launcher` or `builder`.
 
