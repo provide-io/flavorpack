@@ -7,7 +7,6 @@ use anyhow::{anyhow, Result};
 use glob::glob;
 use log::{debug, info};
 use serde_json::Value;
-use std::collections::HashMap;
 use std::env;
 use std::fs;
 use std::path::Path;

@@ -23,3 +23,4 @@ chrono = "0.4"
 gethostname = "0.5"
 ed25519-dalek = { version = "2.1", features = ["rand_core"] }
 pem = "3.0"
+log = { version = "0.4", features = ["std"] }

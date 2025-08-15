@@ -6,6 +6,8 @@ import sys
 import json
 import platform
 import subprocess
+import signal
+import time
 from pathlib import Path
 import click
 
@@ -201,6 +203,78 @@ def echo(args):
     click.secho(f"📝 Arguments ({len(args)}):", fg='yellow')
     for i, arg in enumerate(args, 1):
         click.echo(f"  [{i}] {arg}")
+
+
+@cli.command()
+@click.option('--duration', default=30, help='How long to run (seconds)')
+@click.option('--verbose', is_flag=True, help='Show verbose output')
+def signals(duration, verbose):
+    """🛑 Test signal handling (SIGTERM/SIGINT)"""
+    click.secho("=" * 60, fg='cyan')
+    click.secho("🛑 SIGNAL HANDLING TEST", fg='cyan', bold=True)
+    click.secho("=" * 60, fg='cyan')
+    
+    # Track if we received a signal
+    signal_received = {'sig': None, 'time': None}
+    
+    def signal_handler(signum, frame):
+        """Handle signals gracefully"""
+        signal_name = signal.Signals(signum).name
+        signal_received['sig'] = signal_name
+        signal_received['time'] = time.time()
+        
+        click.secho(f"\n📨 Received {signal_name} (signal {signum})", fg='yellow', bold=True)
+        click.echo(f"⏰ Time in execution: {time.time() - start_time:.2f}s")
+        
+        # Check parent process info
+        ppid = os.getppid()
+        click.echo(f"👤 Parent PID: {ppid}")
+        
+        # Check environment for launcher info
+        if verbose:
+            click.secho("\n🔍 Launcher environment:", fg='blue')
+            for key in ["FLAVOR_ORIGINAL_COMMAND", "FLAVOR_COMMAND_NAME", "FLAVOR_WORKENV"]:
+                value = os.environ.get(key, "not set")
+                click.echo(f"  {key}: {value}")
+        
+        click.secho("\n✅ Exiting gracefully...", fg='green')
+        sys.exit(0)
+    
+    # Install signal handlers
+    signal.signal(signal.SIGTERM, signal_handler)
+    signal.signal(signal.SIGINT, signal_handler)
+    
+    pid = os.getpid()
+    ppid = os.getppid()
+    
+    click.secho(f"🚀 Process started", fg='green')
+    click.echo(f"  PID: {pid}")
+    click.echo(f"  Parent PID: {ppid}")
+    click.echo(f"  Duration: {duration} seconds")
+    click.echo()
+    click.secho("⌨️  Press Ctrl+C or send SIGTERM to test signal handling", fg='yellow')
+    click.echo()
+    
+    # Show progress
+    start_time = time.time()
+    for i in range(duration):
+        elapsed = i + 1
+        remaining = duration - elapsed
+        progress = "█" * elapsed + "░" * remaining
+        click.echo(f"\r⏳ Progress: [{progress}] {elapsed}/{duration}s", nl=False)
+        
+        try:
+            time.sleep(1)
+        except KeyboardInterrupt:
+            # This shouldn't happen as we handle SIGINT, but just in case
+            signal_handler(signal.SIGINT, None)
+    
+    click.echo()  # New line after progress
+    
+    if signal_received['sig']:
+        click.secho(f"✅ Signal test completed - received {signal_received['sig']}", fg='green')
+    else:
+        click.secho("✅ Completed normally without signals", fg='green')
 
 
 @cli.command()

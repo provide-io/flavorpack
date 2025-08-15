@@ -8,14 +8,12 @@ use std::fs::File;
 use std::io::{Read, Seek, SeekFrom};
 use std::path::{Path, PathBuf};
 use tar::Archive;
-use tempfile::TempDir;
 
 use crate::metadata::Metadata;
 
 /// Reader for PSPF bundles
 pub struct Reader {
     pub file: File,
-    exe_path: PathBuf,
 }
 
 impl Reader {
@@ -25,7 +23,6 @@ impl Reader {
             .with_context(|| format!("Failed to open bundle: {:?}", path))?;
         Ok(Self {
             file,
-            exe_path: path.to_path_buf(),
         })
     }
 
