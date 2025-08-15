@@ -60,7 +60,7 @@ def env():
                     value = value[:47] + "..."
                 click.echo(f"  {var} = {value}")
             if len(vars) > 5:
-                click.secho(f"  ... and {len(vars) - 5} more", fg='grey')
+                click.secho(f"  ... and {len(vars) - 5} more", dim=True)
     
     # Test expected values from runtime.env
     click.secho("\n" + "=" * 60, fg='cyan')
@@ -177,7 +177,7 @@ def shell():
     click.secho("🐚 TASTER INTERACTIVE SHELL", fg='cyan', bold=True)
     click.secho("=" * 60, fg='cyan')
     click.secho(f"🐍 Python {sys.version}", fg='yellow')
-    click.secho("Type 'exit()' or Ctrl-D to exit", fg='grey')
+    click.secho("Type 'exit()' or Ctrl-D to exit", dim=True)
     click.secho("\n📚 Available in namespace:", fg='blue')
     click.echo("  - os, sys, json, platform")
     click.echo("  - env = dict(os.environ)")

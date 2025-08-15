@@ -96,8 +96,8 @@ class PackagingOrchestrator:
             logger.info("Creating slot tarballs...")
 
             # Slot 0: UV binary
-            uv_tarball = temp_dir / "uv.tar"
-            with tarfile.open(uv_tarball, "w") as tar:
+            uv_tarball = temp_dir / "uv.tar.gz"
+            with tarfile.open(uv_tarball, "w:gz") as tar:
                 # Add UV to bin directory
                 uv_path = artifacts["payload_dir"] / "bin" / "uv"
                 tar.add(uv_path, arcname="bin/uv")
@@ -108,8 +108,8 @@ class PackagingOrchestrator:
                 raise BuildError("Python runtime tarball not found")
 
             # Slot 2: Wheels
-            wheels_tarball = temp_dir / "wheels.tar"
-            with tarfile.open(wheels_tarball, "w") as tar:
+            wheels_tarball = temp_dir / "wheels.tar.gz"
+            with tarfile.open(wheels_tarball, "w:gz") as tar:
                 # Add wheels directory contents, not the directory itself
                 wheels_dir = artifacts["payload_dir"] / "wheels"
                 for wheel in wheels_dir.glob("*.whl"):
@@ -196,20 +196,19 @@ class PackagingOrchestrator:
             # Build the appropriate launcher to workenv
             if self.launcher_type == "go":
                 launcher_src_dir = go_base / "cmd/pspf-launcher"
-                launcher_output = self.workenv_dir / "pspf-launcher-go"
-                logger.info(f"Building Go pspf-launcher to {launcher_output}...")
+                launcher_output = self.workenv_dir / "flavor-go-launcher"
+                logger.info(f"Building Go launcher to {launcher_output}...")
                 run_subprocess(
                     ["go", "build", "-o", str(launcher_output), "."],
                     cwd=launcher_src_dir,
                 )
                 # Create copies with expected names
-                shutil.copy2(launcher_output, self.workenv_dir / "pspf-launcher")
             elif self.launcher_type == "rust":
                 rust_launcher_dir = (
                     Path(__file__).parent.parent / "rust/pspf-launcher-rs"
                 )
-                launcher_output = self.workenv_dir / "pspf-launcher-rust"
-                logger.info(f"Building Rust pspf-launcher to {launcher_output}...")
+                launcher_output = self.workenv_dir / "flavor-rs-launcher"
+                logger.info(f"Building Rust launcher to {launcher_output}...")
                 run_subprocess(
                     [
                         "cargo",
@@ -221,24 +220,22 @@ class PackagingOrchestrator:
                     cwd=rust_launcher_dir,
                 )
                 # Copy from Rust's target directory
-                rust_binary = self.workenv_dir / "rust-build/release/pspf-launcher-rs"
+                rust_binary = self.workenv_dir / "rust-build/release/flavor-rs-launcher"
                 shutil.copy2(rust_binary, launcher_output)
-                # Also copy as pspf-launcher for Go builder compatibility
-                shutil.copy2(rust_binary, self.workenv_dir / "pspf-launcher")
 
             # Build builder to workenv (default to Rust builder)
             # Use Rust builder by default since it's more complete
             rust_base = Path(__file__).parent.parent / "rust"
             rust_builder_dir = rust_base / "pspf-builder-rs"
-            rust_builder_output = self.workenv_dir / "pspf-builder"
+            rust_builder_output = self.workenv_dir / "flavor-rs-builder"
             
             # Check if Rust builder binary already exists
-            rust_binary = rust_builder_dir / "target" / "release" / "pspf-builder-rs"
+            rust_binary = rust_builder_dir / "target" / "release" / "flavor-rs-builder"
             if rust_binary.exists():
-                logger.info(f"Using existing Rust pspf-builder from {rust_binary}")
+                logger.info(f"Using existing Rust builder from {rust_binary}")
                 shutil.copy2(rust_binary, rust_builder_output)
             else:
-                logger.info(f"Building Rust pspf-builder to {rust_builder_output}...")
+                logger.info(f"Building Rust builder to {rust_builder_output}...")
                 run_subprocess(
                     ["cargo", "build", "--release"],
                     cwd=rust_builder_dir

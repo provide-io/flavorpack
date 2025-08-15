@@ -230,13 +230,13 @@ class PSPFBuilder:
                     SlotMetadata(
                         index=i,
                         name=slot_path.stem,
-                        size=slot_path.stat().st_size,
-                        compressed_size=0,
+                        size=slot_path.stat().st_size,  # Size as stored
                         checksum="",
                         encoding="gzip",
                         purpose=slot_data.get("purpose", "payload"),
                         lifecycle=slot_data.get("lifecycle", "persistent"),
                         path=slot_path,
+                        extract_to=slot_data.get("extract_to"),
                     )
                 )
 

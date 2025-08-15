@@ -48,6 +48,12 @@ struct BuildConfig {
     slots: Vec<Slot>,
     #[serde(default)]
     environment: std::collections::HashMap<String, String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    cache_validation: Option<serde_json::Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    runtime: Option<serde_json::Value>,
+    #[serde(default)]
+    setup_commands: Vec<serde_json::Value>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -58,6 +64,8 @@ struct Slot {
     encoding: String,
     purpose: String,
     lifecycle: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    extract_to: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -69,6 +77,12 @@ struct Metadata {
     verification: VerificationInfo,
     #[serde(skip_serializing_if = "Option::is_none")]
     build: Option<BuildInfo>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    cache_validation: Option<serde_json::Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    runtime: Option<serde_json::Value>,
+    #[serde(default)]
+    setup_commands: Vec<serde_json::Value>,
 }
 
 #[derive(Debug, Serialize)]
@@ -82,12 +96,13 @@ struct PackageInfo {
 struct SlotMetadata {
     index: usize,
     name: String,
-    size: i64,
-    compressed_size: i64,
+    size: i64,  // Size as stored in package
     checksum: String,
-    encoding: String,
+    encoding: String,  // Indicates compression type
     purpose: String,
     lifecycle: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    extract_to: Option<String>,  // Runtime extraction subdirectory
 }
 
 #[derive(Debug, Serialize)]
@@ -224,6 +239,9 @@ fn main() -> Result<()> {
             timestamp: Some(build_timestamp),
             host: Some(build_host),
         }),
+        cache_validation: config.cache_validation.clone(),
+        runtime: config.runtime.clone(),
+        setup_commands: config.setup_commands.clone(),
     };
 
     // Process slots
@@ -240,25 +258,19 @@ fn main() -> Result<()> {
         hasher.update(&slot_data);
         let checksum = format!("{:x}", hasher.finalize());
 
-        // Compress if needed
-        let compressed = match slot.encoding.as_str() {
-            "gzip" => {
-                let mut encoder = GzEncoder::new(Vec::new(), Compression::default());
-                encoder.write_all(&slot_data)?;
-                encoder.finish()?
-            }
-            _ => slot_data.clone(),
-        };
+        // The encoding field describes what format the data is already in
+        // We don't need to compress it again - just use it as-is
+        let compressed = slot_data.clone();
 
         let slot_meta = SlotMetadata {
             index: i,
             name: slot.name.clone(),
-            size: slot_data.len() as i64,
-            compressed_size: compressed.len() as i64,
+            size: compressed.len() as i64,  // Size as stored in the package
             checksum,
             encoding: slot.encoding.clone(),
             purpose: slot.purpose.clone(),
             lifecycle: slot.lifecycle.clone(),
+            extract_to: slot.extract_to.clone(),
         };
         metadata_slots.push(slot_meta);
 
@@ -352,7 +364,7 @@ fn main() -> Result<()> {
     index.metadata_size = metadata_archive.len() as u64;
 
     // Write emoji magic
-    let emoji_magic = generate_emoji_magic(&config.launcher, args.reproducible);
+    let emoji_magic = generate_emoji_magic(&config.launcher);
     out.write_all(&emoji_magic)?;
 
     // Update package size
@@ -384,9 +396,9 @@ struct SlotEntry {
 
 fn get_launcher_path(launcher_type: &str) -> String {
     match launcher_type {
-        "go" => "pspf-launcher".to_string(),
-        "rust" => "pspf-launcher-rust".to_string(),
-        _ => "pspf-launcher".to_string(),
+        "go" => "flavor-go-launcher".to_string(),
+        "rust" => "flavor-rs-launcher".to_string(),
+        _ => "flavor-rs-launcher".to_string(),  // Default to Rust launcher
     }
 }
 
@@ -436,7 +448,7 @@ fn create_metadata_archive(metadata: &Metadata, signing_key: &SigningKey) -> Res
     Ok(buffer)
 }
 
-fn generate_emoji_magic(launcher_type: &str, reproducible: bool) -> Vec<u8> {
+fn generate_emoji_magic(launcher_type: &str) -> Vec<u8> {
     // Just the magic wand emoji (4 bytes)
     let magic_wand = "🪄";
     magic_wand.as_bytes().to_vec()

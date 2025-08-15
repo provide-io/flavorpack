@@ -9,18 +9,34 @@ Flavor is a packaging tool that creates self-contained, portable binaries from P
 ### PSPF Format
 - **Magic**: `PSPF2025` header identifies the format
 - **Structure**: Launcher + Index + Slots + Metadata + Emoji Magic (🪄)
-- **Slots**: Compressed archives containing code, dependencies, or tools
+- **Slots**: Archives containing code, dependencies, or tools (compression indicated by `encoding` field)
 - **Metadata**: JSON manifest with package info, execution commands, and runtime configuration
+
+### Metadata Structure (PSPF 2025)
+
+SlotMetadata fields:
+- `index`: Slot position in the package
+- `name`: Descriptive name of the slot
+- `size`: Size as stored in the package (bytes)
+- `checksum`: SHA256 of the stored data
+- `encoding`: How the data is encoded ("none", "gzip")
+- `purpose`: Slot purpose ("payload", "runtime", "tool")
+- `lifecycle`: Persistence ("persistent", "volatile")
+- `extract_to`: Optional extraction subdirectory
+
+**Note**: The `encoding` field replaced the old `compressed_size` field - the encoding tells us whether data is compressed.
 
 ### Components
 
 1. **Launchers** (in `src/flavor/go/cmd/pspf-launcher` and `src/flavor/rust/pspf-launcher-rs`)
+   - Binary names: `flavor-go-launcher` (Go), `flavor-rs-launcher` (Rust)
    - Extract and cache work environment
    - Handle runtime.env configuration
    - Execute Python with proper environment
    - **Note**: Go launcher cannot set argv[0] due to exec.Command limitations; Rust launcher can
 
 2. **Builders** (in `src/flavor/go/cmd/pspf-builder` and `src/flavor/rust/pspf-builder-rs`)
+   - Binary names: `flavor-go-builder` (Go), `flavor-rs-builder` (Rust)
    - Read manifest.json
    - Embed launcher binary
    - Pack slots with compression
@@ -37,8 +53,8 @@ Flavor is a packaging tool that creates self-contained, portable binaries from P
 
 As of recent updates, **Rust is the default** for both launcher and builder:
 - Better argv[0] handling (Python sees correct command name)
-- Rust packages renamed to use "flavor" prefix (flavor-launcher, flavor-builder, flavor-common)
-- Go components still available via `--launcher go` flag or `FLAVOR_LAUNCHER=go` env var
+- Consistent naming: `flavor-rs-launcher`, `flavor-rs-builder`
+- Go components available via `--launcher go` flag: `flavor-go-launcher`, `flavor-go-builder`
 
 ## Runtime Environment Configuration
 
@@ -199,6 +215,35 @@ Key test files:
 - `tests/test_pspf_2025_*.py` - Format tests
 - `tests/integration/test_all_flavor_combinations.py` - Tests all launcher/packager combinations
 
+### Debugging Package Internals with Taster
+
+**Important**: For any debugging work that needs to happen *inside* a flavor package (environment variables, argv handling, extraction, runtime behavior, etc.), use the `taster` test package instead of creating one-off test scripts.
+
+The `taster` package (`tests/taster/`) is a comprehensive test harness specifically designed for debugging flavor package internals:
+
+```bash
+# Build taster
+cd tests/taster
+../../workenv/flavor_darwin_arm64/bin/flavor package --manifest pyproject.toml --output dist/taster.pspf
+
+# Run taster commands
+chmod +x dist/taster.pspf
+FLAVOR_SKIP_KEY_VERIFICATION=1 ./dist/taster.pspf env   # Test environment variables
+FLAVOR_SKIP_KEY_VERIFICATION=1 ./dist/taster.pspf argv  # Test argv[0] and command info
+FLAVOR_SKIP_KEY_VERIFICATION=1 ./dist/taster.pspf info  # Display package/system info
+FLAVOR_SKIP_KEY_VERIFICATION=1 ./dist/taster.pspf test  # Run all tests
+FLAVOR_SKIP_KEY_VERIFICATION=1 ./dist/taster.pspf shell # Interactive Python shell
+```
+
+Taster includes:
+- Environment variable inspection (including runtime.env verification)
+- argv[0] and command line argument testing
+- Process information display
+- Whitelist testing for `unset = ["*"]` patterns
+- Interactive shell for live debugging
+
+The taster package's `pyproject.toml` demonstrates complex runtime.env configuration including whitelist patterns, making it ideal for testing environment filtering behavior.
+
 ## Common Issues
 
 1. **argv[0] not showing correct command**: Use Rust launcher (default) instead of Go
@@ -222,7 +267,9 @@ Key test files:
 
 2. **Rust Launcher**: Uses `std::os::unix::process::CommandExt::arg0()` to properly set argv[0].
 
-3. **Builder Selection**: Now defaults to Rust builder (`flavor-builder`) which uses the same manifest format as Go builder.
+3. **Binary Naming Convention**: All binaries follow the pattern `flavor-<lang>-<component>` where lang is `go` or `rs` and component is `launcher` or `builder`.
+
+3. **Builder Selection**: Now defaults to Rust builder (`flavor-rs-builder`) which uses the same manifest format as Go builder.
 
 4. **Slot Alignment**: Slots are aligned to 8-byte boundaries for efficient memory mapping.
 
