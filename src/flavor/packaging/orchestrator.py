@@ -32,7 +32,7 @@ class PackagingOrchestrator:
         package_name: str,
         entry_point: str,
         python_version: str | None = None,
-        launcher_type: str = "go",
+        launcher_type: str = "rust",
     ) -> None:
         self.package_integrity_key_path = package_integrity_key_path
         self.public_key_path = public_key_path
@@ -61,6 +61,7 @@ class PackagingOrchestrator:
             machine = "arm64"
 
         return f"{system}_{machine}"
+
 
     def build_package(self) -> None:
         logger.info("Orchestrator starting build process...")
@@ -128,8 +129,12 @@ class PackagingOrchestrator:
                 },
                 "setup_commands": [
                     {
-                        "type": "enumerate_and_execute",
-                        "command": f"{{workenv}}/bin/uv pip install --python {{workenv}}/bin/python3 --target {{workenv}}/lib/python{self.python_version}/site-packages --no-deps",
+                        "type": "execute",
+                        "command": f"{{workenv}}/bin/uv venv {{workenv}}/venv --python {{workenv}}/bin/python3",
+                    },
+                    {
+                        "type": "enumerate_and_execute", 
+                        "command": f"{{workenv}}/bin/uv pip install --python {{workenv}}/venv/bin/python3 --no-deps",
                         "enumerate": {"path": "{workenv}/wheels", "pattern": "*.whl"},
                     },
                     {
@@ -138,7 +143,7 @@ class PackagingOrchestrator:
                         "content": "{package_name}-{version}",
                     },
                 ],
-                "command": "{workenv}/bin/uv run --python {workenv}/bin/python3 -m {package_name}",
+                "command": f"{{workenv}}/venv/bin/python -m {self.entry_point.rsplit(':', 1)[0] if ':' in self.entry_point else self.entry_point}",
                 "slots": [
                     {
                         "name": "uv",
@@ -171,6 +176,15 @@ class PackagingOrchestrator:
                     "public_key": self.public_key_path,
                 },
             }
+            
+            # Add runtime configuration if present in build config
+            execution_config = self.build_config.get("execution", {})
+            logger.debug(f"Execution config from build_config: {execution_config}")
+            if "runtime" in execution_config:
+                logger.info(f"Adding runtime configuration to manifest: {execution_config['runtime']}")
+                manifest["runtime"] = execution_config["runtime"]
+            else:
+                logger.debug("No runtime configuration found in execution config")
 
             manifest_path = temp_dir / "manifest.json"
             manifest_path.write_text(json.dumps(manifest, indent=2))
@@ -212,15 +226,26 @@ class PackagingOrchestrator:
                 # Also copy as pspf-launcher for Go builder compatibility
                 shutil.copy2(rust_binary, self.workenv_dir / "pspf-launcher")
 
-            # Build builder to workenv
-            builder_src_dir = go_base / "cmd/pspf-builder"
-            builder_output = self.workenv_dir / "pspf-builder"
-            logger.info(f"Building pspf-builder to {builder_output}...")
-            run_subprocess(
-                ["go", "build", "-o", str(builder_output), "."], cwd=builder_src_dir
-            )
+            # Build builder to workenv (default to Rust builder)
+            # Use Rust builder by default since it's more complete
+            rust_base = Path(__file__).parent.parent / "rust"
+            rust_builder_dir = rust_base / "pspf-builder-rs"
+            rust_builder_output = self.workenv_dir / "pspf-builder"
+            
+            # Check if Rust builder binary already exists
+            rust_binary = rust_builder_dir / "target" / "release" / "pspf-builder-rs"
+            if rust_binary.exists():
+                logger.info(f"Using existing Rust pspf-builder from {rust_binary}")
+                shutil.copy2(rust_binary, rust_builder_output)
+            else:
+                logger.info(f"Building Rust pspf-builder to {rust_builder_output}...")
+                run_subprocess(
+                    ["cargo", "build", "--release"],
+                    cwd=rust_builder_dir
+                )
+                shutil.copy2(rust_binary, rust_builder_output)
 
-            packager_executable = builder_output
+            packager_executable = rust_builder_output
 
             build_cmd_args = [
                 str(packager_executable),

@@ -68,6 +68,19 @@ flavor = "flavor.cli:main"
 include-package-data = true
 package-dir = {"" = "src"}
 
+[tool.setuptools.package-data]
+flavor = [
+    "go/**/*.go",
+    "go/**/*.mod", 
+    "go/**/*.sum",
+    "go/**/go.mod",
+    "go/**/go.sum",
+    "rust/**/*.rs",
+    "rust/**/*.toml",
+    "rust/**/*.lock",
+    "rust/**/Cargo.toml",
+    "rust/**/Cargo.lock",
+]
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -158,6 +171,11 @@ exclude_lines = ["pragma: no cover", "raise NotImplementedError", "if __name__ =
 [tool.flavor]
 package_name = "flavor"
 entry_point = "flavor.cli:main"
+
+[tool.flavor.build]
+dependencies = [
+    "../pyvider-telemetry",
+]
 
 [tool.flavor.signing]
 private_key_path = "keys/flavor-private.key"

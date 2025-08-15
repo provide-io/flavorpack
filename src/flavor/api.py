@@ -39,7 +39,7 @@ def build_package_from_manifest(
     if launcher_type is None:
         launcher_type = flavor_config.get("launcher")
     if launcher_type is None:
-        launcher_type = "go"
+        launcher_type = "rust"
 
     # Validate launcher type
     valid_launchers = ["go", "rust"]
@@ -60,12 +60,17 @@ def build_package_from_manifest(
     if not package_integrity_key_path.exists() or not public_key_path.exists():
         generate_key_pair(manifest_dir / "keys")
 
-    # Load buildconfig.toml if it exists
-    build_config = {}
+    # Load build config from pyproject.toml first, then override with buildconfig.toml if it exists
+    build_config = flavor_config.get("build", {})
     buildconfig_path = manifest_dir / "buildconfig.toml"
     if buildconfig_path.exists():
         with buildconfig_path.open("rb") as f:
-            build_config = tomllib.load(f).get("build", {})
+            # Merge buildconfig.toml settings (takes precedence)
+            build_config.update(tomllib.load(f).get("build", {}))
+    
+    # Include execution config (runtime.env, etc.) in the build config
+    if "execution" in flavor_config:
+        build_config["execution"] = flavor_config["execution"]
 
     orchestrator = PackagingOrchestrator(
         package_integrity_key_path=str(package_integrity_key_path),

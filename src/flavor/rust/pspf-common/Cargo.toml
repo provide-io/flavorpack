@@ -1,5 +1,5 @@
 [package]
-name = "pspf-common"
+name = "flavor-common"
 version = "0.1.0"
 edition = "2021"
 
