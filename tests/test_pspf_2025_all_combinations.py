@@ -59,7 +59,6 @@ class TestAllCombinations:
             index=0,
             name="payload",
             size=len(payload_content),
-            compressed_size=0,
             checksum=hashlib.sha256(payload_content.encode()).hexdigest(),
             encoding="gzip",
             purpose="payload",
@@ -163,7 +162,6 @@ class TestAllCombinations:
                 index=idx,
                 name=name,
                 size=len(content),
-                compressed_size=0,
                 checksum=hashlib.sha256(content).hexdigest(),
                 encoding="gzip" if name == "text" else "none",
                 purpose="payload",
@@ -286,7 +284,6 @@ class TestAllCombinations:
             index=0,
             name="main",
             size=payload_path.stat().st_size,
-            compressed_size=0,
             checksum=hashlib.sha256(payload_path.read_bytes()).hexdigest(),
             encoding="gzip",  # Use gzip for all tests since zstd isn't implemented yet
             purpose="payload",

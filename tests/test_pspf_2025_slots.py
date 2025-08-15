@@ -48,7 +48,6 @@ class TestPSPFSlots:
             index=0,
             name="config",
             size=len(text_data),
-            compressed_size=0,
             checksum=hashlib.sha256(text_data.encode()).hexdigest(),
             encoding="gzip",
             purpose="config",
@@ -65,7 +64,6 @@ class TestPSPFSlots:
             index=1,
             name="library",
             size=len(binary_data),
-            compressed_size=0,
             checksum=hashlib.sha256(binary_data).hexdigest(),
             encoding="none",  # Binary files often don't compress well
             purpose="library",
@@ -82,7 +80,6 @@ class TestPSPFSlots:
             index=2,
             name="wheel",
             size=len(temp_data),
-            compressed_size=0,
             checksum=hashlib.sha256(temp_data).hexdigest(),
             encoding="none",
             purpose="payload",
@@ -98,7 +95,6 @@ class TestPSPFSlots:
             index=0,
             name="test-persistent",
             size=1024,
-            compressed_size=512,
             checksum="abc123",
             encoding="gzip",
             purpose="payload",
@@ -118,7 +114,6 @@ class TestPSPFSlots:
             index=0,
             name="test-volatile",
             size=1024,
-            compressed_size=512,
             checksum="abc123",
             encoding="gzip",
             purpose="payload",
@@ -137,7 +132,6 @@ class TestPSPFSlots:
             index=0,
             name="test-temporary",
             size=1024,
-            compressed_size=512,
             checksum="abc123",
             encoding="gzip",
             purpose="payload",
@@ -156,7 +150,6 @@ class TestPSPFSlots:
             index=0,
             name="test-install",
             size=1024,
-            compressed_size=512,
             checksum="abc123",
             encoding="gzip",
             purpose="installer",
@@ -215,7 +208,6 @@ class TestPSPFSlots:
             index=0,
             name="compressed",
             size=len(data),
-            compressed_size=0,
             checksum=hashlib.sha256(data).hexdigest(),
             encoding="gzip",
             purpose="payload",
@@ -243,7 +235,6 @@ class TestPSPFSlots:
             index=0,
             name="uncompressed",
             size=len(data),
-            compressed_size=0,
             checksum=hashlib.sha256(data).hexdigest(),
             encoding="none",
             purpose="payload",
@@ -270,7 +261,6 @@ class TestPSPFSlots:
             index=0,
             name="checksum_test",
             size=len(data),
-            compressed_size=0,
             checksum=expected_checksum,
             encoding="none",
             purpose="payload",
@@ -327,7 +317,6 @@ class TestPSPFSlots:
             index=0,
             name="cached_slot",
             size=1024,
-            compressed_size=512,
             checksum="abc123",
             encoding="gzip",
             purpose="payload",
@@ -349,7 +338,6 @@ class TestPSPFSlots:
             index=5,
             name="test_slot",
             size=2048,
-            compressed_size=1024,
             checksum="deadbeef",
             encoding="none",  # Binary files often don't compress well
             purpose="library",
@@ -364,7 +352,6 @@ class TestPSPFSlots:
         assert slot_dict['index'] == 5
         assert slot_dict['name'] == "test_slot"
         assert slot_dict['size'] == 2048
-        assert slot_dict['compressed_size'] == 1024
         assert slot_dict['checksum'] == "deadbeef"
         assert slot_dict['encoding'] == "none"
         assert slot_dict['purpose'] == "library"
@@ -382,7 +369,6 @@ class TestPSPFSlots:
             index=0,
             name="large_slot",
             size=len(large_data),
-            compressed_size=0,
             checksum=hashlib.sha256(large_data).hexdigest(),
             encoding="none",
             purpose="payload",
