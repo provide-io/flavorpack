@@ -207,19 +207,94 @@ class PythonPackager:
                 ]
             )
 
-            # Download transitive dependencies
-            all_deps = []
+            # Download transitive dependencies using pip
+            # First, install all local dependencies to get their transitive dependencies
+            logger.info("Downloading transitive dependencies...")
+            
+            # First install local dependencies without their dependencies to make them available
+            # This prevents pip from trying to fetch them from PyPI
             for dep in self.build_config.get("dependencies", []):
                 dep_path = self.manifest_dir / dep
                 if dep_path.exists():
-                    all_deps.append(str(dep_path))
-            all_deps.append(str(self.manifest_dir))
-
-            logger.info("Downloading dependency wheels...")
-            for package in all_deps:
+                    logger.info(f"Pre-installing local dependency: {dep}")
+                    run_subprocess(
+                        [
+                            str(pip3),
+                            "install",
+                            "--no-deps",
+                            str(dep_path),
+                        ]
+                    )
+            
+            # Now install each local dependency WITH its dependencies to get PyPI packages
+            for dep in self.build_config.get("dependencies", []):
+                dep_path = self.manifest_dir / dep
+                if dep_path.exists():
+                    logger.info(f"Installing {dep} with its PyPI dependencies...")
+                    try:
+                        run_subprocess(
+                            [
+                                str(pip3),
+                                "install",
+                                str(dep_path),
+                            ]
+                        )
+                    except Exception as e:
+                        logger.warning(f"Failed to install dependencies for {dep}: {e}")
+                        # Continue anyway - the package itself is installed
+            
+            # Install the main package and its dependencies into the build venv
+            # This will resolve all dependencies properly
+            logger.info("Installing main package to resolve dependencies...")
+            try:
                 run_subprocess(
-                    [str(pip3), "wheel", "--wheel-dir", str(wheels_dir), package]
+                    [
+                        str(pip3),
+                        "install",
+                        str(self.manifest_dir),
+                    ]
                 )
+            except Exception as e:
+                logger.warning(f"Failed to install main package dependencies: {e}")
+            
+            # Now download all the dependencies (excluding what we already built)
+            # Get the list of installed packages
+            logger.info("Downloading resolved dependencies as wheels...")
+            existing_wheels = {w.name for w in wheels_dir.glob("*.whl")}
+            
+            # Use pip freeze to get all installed packages, then download them
+            result = run_subprocess(
+                [str(pip3), "freeze"],
+                capture_output=True,
+                text=True
+            )
+            
+            # Download each dependency that we don't already have
+            for line in result.stdout.strip().split("\n"):
+                if not line or line.startswith("#"):
+                    continue
+                # Parse package name from requirement spec
+                pkg_spec = line.strip()
+                if "==" in pkg_spec:
+                    pkg_name = pkg_spec.split("==")[0].lower().replace("-", "_")
+                    # Check if we already have a wheel for this package
+                    has_wheel = any(pkg_name in wheel.lower() for wheel in existing_wheels)
+                    if not has_wheel:
+                        try:
+                            logger.info(f"Downloading wheel for: {pkg_spec}")
+                            run_subprocess(
+                                [str(pip3), "download", "--dest", str(wheels_dir),
+                                 "--only-binary", ":all:", pkg_spec]
+                            )
+                        except Exception as e:
+                            logger.warning(f"Failed to download wheel for {pkg_spec}: {e}")
+                            # Try without --only-binary flag
+                            try:
+                                run_subprocess(
+                                    [str(pip3), "download", "--dest", str(wheels_dir), pkg_spec]
+                                )
+                            except Exception as e2:
+                                logger.warning(f"Failed to download {pkg_spec} in any format: {e2}")
 
     def _create_metadata(self, metadata_dir: Path) -> None:
         """Create metadata files."""
@@ -244,10 +319,18 @@ class PythonPackager:
         # Use UV to download Python
         run_subprocess(["uv", "python", "install", self.python_version])
 
-        # Find the installed Python
-        python_install_dir = Path.home() / ".local" / "share" / "uv" / "python" / f"cpython-{self.python_version}-macos-aarch64-none"
-
-        if not python_install_dir.exists():
+        # Find the installed Python (UV installs with full version like 3.11.12)
+        uv_python_base = Path.home() / ".local" / "share" / "uv" / "python"
+        python_install_dir = None
+        
+        # Look for any Python that matches our major.minor version
+        if uv_python_base.exists():
+            for python_dir in uv_python_base.glob(f"cpython-{self.python_version}*"):
+                if python_dir.is_dir():
+                    python_install_dir = python_dir
+                    break
+        
+        if not python_install_dir or not python_install_dir.exists():
             logger.warning("Could not find UV-installed Python at expected location")
             # Fall back to placeholder
             with tempfile.TemporaryDirectory() as temp_dir:

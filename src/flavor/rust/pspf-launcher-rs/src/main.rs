@@ -1,12 +1,13 @@
 use anyhow::{anyhow, Context, Result};
 use flate2::read::GzDecoder;
-use log::{debug, error, info, warn};
+use log::{debug, error, info, trace, warn};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::env;
 use std::fs::{self, File};
 use std::io::{Read, Seek, SeekFrom, Write};
 use std::os::unix::fs::PermissionsExt;
+use std::os::unix::process::CommandExt;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use tar::Archive;
@@ -18,7 +19,7 @@ const PSPF_MAGIC: &[u8] = b"PSPF2025";
 
 const MAX_SEARCH_SIZE: u64 = 10 * 1024 * 1024; // 10MB
 
-use pspf_common::{PSPFIndex, INDEX_SIZE};
+use flavor_common::{PSPFIndex, INDEX_SIZE};
 
 #[derive(Debug, Deserialize, Serialize)]
 struct Metadata {
@@ -30,6 +31,8 @@ struct Metadata {
     build: Option<BuildInfo>,
     #[serde(skip_serializing_if = "Option::is_none")]
     cache_validation: Option<CacheValidationInfo>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    runtime: Option<RuntimeInfo>,
     #[serde(default)]
     setup_commands: Vec<Value>,
 }
@@ -79,6 +82,24 @@ struct BuildInfo {
     host: Option<String>,
 }
 
+#[derive(Debug, Deserialize, Serialize)]
+struct RuntimeInfo {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    env: Option<RuntimeEnv>,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+struct RuntimeEnv {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    unset: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    map: Option<std::collections::HashMap<String, String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    set: Option<std::collections::HashMap<String, String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pass: Option<Vec<String>>,
+}
+
 /// 🚀 Main entry point for the PSPF Rust launcher
 /// 
 /// The launcher follows this execution flow:
@@ -108,6 +129,17 @@ fn main() -> Result<()> {
     info!("🦀 PSPF Rust Launcher v{} starting...", env!("CARGO_PKG_VERSION"));
     info!("🏗️ Built with Rust {}", env!("CARGO_PKG_RUST_VERSION"));
     debug!("🔍 Debug logging enabled at level: {}", log_level);
+    
+    // 🌍 Log incoming environment variables
+    let env_vars: Vec<(String, String)> = env::vars().collect();
+    debug!("📊 Environment variables received from parent process: count={}", env_vars.len());
+    
+    // Log all environment variables in trace mode
+    if log::log_enabled!(log::Level::Trace) {
+        for (key, value) in &env_vars {
+            trace!("🔑 Env var: {}={}", key, value);
+        }
+    }
     
     // 📍 Get the path to our own executable
     let exe_path = env::current_exe()
@@ -221,9 +253,21 @@ fn main() -> Result<()> {
         return Err(anyhow!("Empty command"));
     }
     debug!("🔪 Command parts: {:?}", parts);
+    
+    // 🏷️ Get original command name for argv[0]
+    let original_cmd = env::args().next().unwrap_or_else(|| "flavor".to_string());
+    let binary_name = Path::new(&original_cmd)
+        .file_name()
+        .and_then(|n| n.to_str())
+        .unwrap_or("flavor");
+    debug!("🏷️ Setting argv[0] to binary name: {} (from: {})", binary_name, original_cmd);
 
-    // Build command with arguments
+    // Build command with custom argv[0]
     let mut cmd = Command::new(parts[0]);
+    
+    // Set argv[0] to the original binary name
+    // This makes the Python process see the correct command name in sys.argv[0]
+    cmd.arg0(binary_name);
     
     // Add command arguments
     if parts.len() > 1 {
@@ -236,7 +280,31 @@ fn main() -> Result<()> {
         cmd.args(&args);
     }
 
-    // Set environment
+    // 🌍 CRITICAL: Inherit all parent environment variables
+    let mut env_map: std::collections::HashMap<String, String> = env::vars().collect();
+    debug!("🌍 Inheriting parent environment: {} variables", env_map.len());
+    
+    // 🏷️ Add original command information to environment
+    // These can be used as fallbacks if argv[0] isn't sufficient
+    env_map.insert("FLAVOR_ORIGINAL_COMMAND".to_string(), original_cmd.clone());
+    env_map.insert("FLAVOR_COMMAND_NAME".to_string(), binary_name.to_string());
+    debug!("🏷️ Added command name environment variables");
+    
+    // 🔄 Process runtime.env configuration if present
+    if let Some(runtime) = &metadata.runtime {
+        if let Some(runtime_env) = &runtime.env {
+            debug!("🔄 Processing runtime.env configuration");
+            process_runtime_env(&mut env_map, runtime_env);
+        }
+    }
+    
+    // Apply the processed environment to the command
+    for (key, value) in &env_map {
+        cmd.env(key, value);
+    }
+
+    // Set additional environment from package metadata
+    debug!("➕ Adding package-defined environment variables: count={}", metadata.execution.environment.len());
     for (k, mut v) in metadata.execution.environment {
         // Substitute slot references
         for (idx, path) in &slot_paths {
@@ -247,7 +315,8 @@ fn main() -> Result<()> {
         v = v.replace("{workenv}", workenv_dir.path().to_str().unwrap());
         v = v.replace("{package_name}", &metadata.package.name);
         v = v.replace("{version}", &metadata.package.version);
-        cmd.env(k, v);
+        cmd.env(&k, &v);
+        trace!("➕ Added package env var: {}={}", k, v);
     }
     
     // 🌍 Add FLAVOR_WORKENV environment variable
@@ -264,6 +333,17 @@ fn main() -> Result<()> {
 
     // 🚀 Execute
     info!("🚀 Executing: {}", parts[0]);
+    debug!("🎯 Command details: args={:?}, cwd={:?}", &parts[1..], user_cwd);
+    debug!("📊 Final environment state: all parent vars + package vars passed to subprocess");
+    
+    // In trace mode, log all environment variables being passed
+    if log::log_enabled!(log::Level::Trace) {
+        trace!("🌍 Environment variables being passed to subprocess:");
+        // Note: We can't easily enumerate cmd.env after building, but we know we passed all parent env + additions
+        trace!("  → All parent environment variables inherited");
+        trace!("  → Plus FLAVOR_WORKENV and package-specific variables");
+    }
+    
     let status = cmd.status()
         .context("Failed to execute command")?;
 
@@ -396,7 +476,33 @@ impl Reader {
             if entry.path()?.to_str() == Some("psp.json") {
                 let mut content = String::new();
                 entry.read_to_string(&mut content)?;
-                return Ok(serde_json::from_str(&content)?);
+                
+                // Add detailed error handling for JSON parsing
+                trace!("📄 Raw metadata JSON ({} bytes)", content.len());
+                if log::log_enabled!(log::Level::Trace) && content.len() < 2000 {
+                    trace!("📄 Metadata content:\n{}", content);
+                }
+                
+                match serde_json::from_str::<Metadata>(&content) {
+                    Ok(metadata) => {
+                        debug!("✅ Successfully parsed metadata for package: {} v{}", 
+                            metadata.package.name, metadata.package.version);
+                        return Ok(metadata);
+                    }
+                    Err(e) => {
+                        error!("❌ Failed to parse metadata JSON: {}", e);
+                        let line = e.line();
+                        // Try to show the problematic line
+                        let lines: Vec<&str> = content.lines().collect();
+                        if line > 0 && (line - 1) < lines.len() {
+                            error!("  Line {}: {}", line, lines[line - 1]);
+                            if line < lines.len() {
+                                error!("  Line {}: {}", line + 1, lines[line]);
+                            }
+                        }
+                        return Err(anyhow!("Metadata JSON parsing failed: {}", e));
+                    }
+                }
             }
         }
 
@@ -905,6 +1011,270 @@ fn execute_command(command: &str, workenv_dir: &Path, package: &PackageInfo, use
     run_command(parts[0], &parts[1..], workenv_dir, user_cwd)
 }
 
+/// Process runtime environment operations with preserve logic:
+/// 1. Analyze pass patterns to determine what to preserve
+/// 2. unset - Remove specified variables (except those marked to preserve)
+/// 3. map - Map/rename variables  
+/// 4. set - Set specific values
+/// 5. pass - Final verification of required variables
+fn process_runtime_env(env_map: &mut std::collections::HashMap<String, String>, runtime_env: &RuntimeEnv) {
+    // Note: We could save original_env here if we wanted to support
+    // restoring variables in the future
+    
+    // Log initial state
+    debug!("🔍 Initial environment: {} variables", env_map.len());
+    if log::log_enabled!(log::Level::Trace) {
+        let mut keys: Vec<_> = env_map.keys().cloned().collect();
+        keys.sort();
+        for key in &keys[..keys.len().min(10)] {
+            trace!("  Initial env: {} = {}", key, env_map.get(key).map(|v| {
+                if v.len() > 50 { format!("{}...", &v[..50]) } else { v.clone() }
+            }).unwrap_or_default());
+        }
+        if keys.len() > 10 {
+            trace!("  ... and {} more variables", keys.len() - 10);
+        }
+    }
+    
+    // Build pass patterns first to know what to preserve
+    let mut pass_patterns: Vec<glob::Pattern> = Vec::new();
+    if let Some(pass_list) = &runtime_env.pass {
+        debug!("🛡️ Building pass patterns: {} patterns", pass_list.len());
+        for pattern in pass_list {
+            if pattern.contains('*') || pattern.contains('?') {
+                match glob::Pattern::new(pattern) {
+                    Ok(p) => {
+                        pass_patterns.push(p);
+                        trace!("  🛡️ Pass pattern: {} (glob)", pattern);
+                    }
+                    Err(e) => warn!("Invalid pass glob pattern '{}': {}", pattern, e),
+                }
+            } else {
+                // Convert exact match to pattern for uniform handling
+                match glob::Pattern::new(pattern) {
+                    Ok(p) => {
+                        pass_patterns.push(p);
+                        trace!("  🛡️ Pass pattern: {} (exact)", pattern);
+                    }
+                    Err(e) => warn!("Invalid pass pattern '{}': {}", pattern, e),
+                }
+            }
+        }
+    }
+    
+    // Helper function to check if a key should be preserved
+    let should_preserve = |key: &str| -> bool {
+        for pattern in &pass_patterns {
+            if pattern.matches(key) {
+                return true;
+            }
+        }
+        false
+    };
+    
+    // 1. Process unset operations (with preserve logic)
+    if let Some(unset_list) = &runtime_env.unset {
+        debug!("🗑️ Processing unset operations: {} patterns", unset_list.len());
+        let mut removed_count = 0;
+        let mut preserved_count = 0;
+        let mut removed_keys = Vec::new();
+        let mut preserved_keys = Vec::new();
+        
+        for pattern in unset_list {
+            if pattern == "*" {
+                // Special case: unset all (except preserved)
+                debug!("🗑️ Unsetting ALL environment variables (pattern: '*'), except preserved");
+                let all_keys: Vec<String> = env_map.keys().cloned().collect();
+                
+                for key in all_keys {
+                    if should_preserve(&key) {
+                        preserved_count += 1;
+                        preserved_keys.push(key.clone());
+                        trace!("  🛡️ Preserved: {}", key);
+                    } else {
+                        if env_map.remove(&key).is_some() {
+                            removed_count += 1;
+                            removed_keys.push(key.clone());
+                            trace!("  🗑️ Unset: {}", key);
+                        }
+                    }
+                }
+            } else if pattern.contains('*') || pattern.contains('?') {
+                // Glob pattern
+                let glob_pattern = glob::Pattern::new(pattern).unwrap_or_else(|e| {
+                    warn!("Invalid glob pattern '{}': {}", pattern, e);
+                    glob::Pattern::new("").unwrap()
+                });
+                
+                let keys_to_check: Vec<String> = env_map.keys()
+                    .filter(|k| glob_pattern.matches(k))
+                    .cloned()
+                    .collect();
+                
+                debug!("🗑️ Glob pattern '{}' matches {} variables", pattern, keys_to_check.len());
+                for key in keys_to_check {
+                    if should_preserve(&key) {
+                        preserved_count += 1;
+                        preserved_keys.push(key.clone());
+                        trace!("  🛡️ Preserved (matched unset but also pass): {}", key);
+                    } else {
+                        if env_map.remove(&key).is_some() {
+                            removed_count += 1;
+                            removed_keys.push(key.clone());
+                            trace!("  🗑️ Unset (glob): {}", key);
+                        }
+                    }
+                }
+            } else {
+                // Exact match
+                if should_preserve(pattern) {
+                    preserved_count += 1;
+                    preserved_keys.push(pattern.clone());
+                    debug!("🛡️ Preserved (matched unset but also pass): {}", pattern);
+                } else if env_map.remove(pattern).is_some() {
+                    removed_count += 1;
+                    removed_keys.push(pattern.clone());
+                    debug!("🗑️ Unset exact: {}", pattern);
+                } else {
+                    trace!("  ⚠️ Variable not found: {}", pattern);
+                }
+            }
+        }
+        
+        if removed_count > 0 {
+            info!("🗑️ Removed {} environment variables", removed_count);
+            if log::log_enabled!(log::Level::Debug) && removed_keys.len() <= 20 {
+                for key in &removed_keys {
+                    debug!("  - {}", key);
+                }
+            }
+        }
+        
+        if preserved_count > 0 {
+            info!("🛡️ Preserved {} environment variables (matched pass patterns)", preserved_count);
+            if log::log_enabled!(log::Level::Debug) && preserved_keys.len() <= 20 {
+                for key in &preserved_keys {
+                    debug!("  + {}", key);
+                }
+            }
+        }
+    }
+    
+    // 2. Process map operations
+    if let Some(map_ops) = &runtime_env.map {
+        debug!("🔄 Processing map operations: {} mappings", map_ops.len());
+        let mut mapped_count = 0;
+        
+        for (from, to) in map_ops {
+            if let Some(value) = env_map.remove(from) {
+                let value_preview = if value.len() > 50 { 
+                    format!("{}...", &value[..50]) 
+                } else { 
+                    value.clone() 
+                };
+                env_map.insert(to.clone(), value);
+                mapped_count += 1;
+                debug!("  🔄 Mapped: {} -> {} (value: {})", from, to, value_preview);
+            } else {
+                trace!("  ⚠️ Cannot map '{}' -> '{}': source not found", from, to);
+            }
+        }
+        
+        if mapped_count > 0 {
+            info!("🔄 Mapped {} environment variables", mapped_count);
+        }
+    }
+    
+    // 3. Process set operations
+    if let Some(set_ops) = &runtime_env.set {
+        debug!("✏️ Processing set operations: {} variables", set_ops.len());
+        
+        for (key, value) in set_ops {
+            let value_preview = if value.len() > 50 { 
+                format!("{}...", &value[..50]) 
+            } else { 
+                value.clone() 
+            };
+            env_map.insert(key.clone(), value.clone());
+            debug!("  ✏️ Set: {} = {}", key, value_preview);
+        }
+        
+        info!("✏️ Set {} environment variables", set_ops.len());
+    }
+    
+    // 4. Final pass verification (check that required variables exist)
+    if let Some(pass_list) = &runtime_env.pass {
+        debug!("✅ Final pass verification: {} patterns", pass_list.len());
+        let mut missing_patterns = Vec::new();
+        let mut found_vars = Vec::new();
+        
+        for pattern in pass_list {
+            let mut pattern_matched = false;
+            
+            if pattern.contains('*') || pattern.contains('?') {
+                // Glob pattern - check if any variable matches
+                let glob_pattern = match glob::Pattern::new(pattern) {
+                    Ok(p) => p,
+                    Err(e) => {
+                        warn!("Invalid pass glob pattern '{}': {}", pattern, e);
+                        continue;
+                    }
+                };
+                
+                for key in env_map.keys() {
+                    if glob_pattern.matches(key) {
+                        pattern_matched = true;
+                        found_vars.push(key.clone());
+                        trace!("  ✅ Found matching variable: {} (pattern: {})", key, pattern);
+                    }
+                }
+                
+                if !pattern_matched {
+                    missing_patterns.push(pattern.clone());
+                    warn!("  ⚠️ No variables found matching pattern: {}", pattern);
+                }
+            } else {
+                // Exact match
+                if env_map.contains_key(pattern) {
+                    found_vars.push(pattern.clone());
+                    trace!("  ✅ Verified env var exists: {}", pattern);
+                } else {
+                    missing_patterns.push(pattern.clone());
+                    warn!("  ⚠️ Required environment variable not found: {}", pattern);
+                }
+            }
+        }
+        
+        if !missing_patterns.is_empty() {
+            warn!("⚠️ Missing {} required patterns/variables: {:?}", missing_patterns.len(), missing_patterns);
+        }
+        if !found_vars.is_empty() {
+            let unique_found: std::collections::HashSet<_> = found_vars.iter().cloned().collect();
+            debug!("✅ Verified {} environment variables match pass patterns", unique_found.len());
+            if log::log_enabled!(log::Level::Trace) && unique_found.len() <= 20 {
+                for var in &unique_found {
+                    trace!("  + {}", var);
+                }
+            }
+        }
+    }
+    
+    // Log final state
+    debug!("🎯 Final environment: {} variables after runtime.env processing", env_map.len());
+    if log::log_enabled!(log::Level::Trace) {
+        let mut keys: Vec<_> = env_map.keys().cloned().collect();
+        keys.sort();
+        for key in &keys[..keys.len().min(10)] {
+            trace!("  Final env: {} = {}", key, env_map.get(key).map(|v| {
+                if v.len() > 50 { format!("{}...", &v[..50]) } else { v.clone() }
+            }).unwrap_or_default());
+        }
+        if keys.len() > 10 {
+            trace!("  ... and {} more variables", keys.len() - 10);
+        }
+    }
+}
+
 // 🏃 Run a command with arguments
 /// Executes a command with the given arguments in the user's working directory.
 /// Sets up the environment with:
@@ -920,7 +1290,12 @@ fn run_command(cmd: &str, args: &[&str], workenv_dir: &Path, user_cwd: &Path) ->
     // 📂 Set working directory to user's directory
     command.current_dir(user_cwd);
     
-    // 🌍 Set environment
+    // 🌍 CRITICAL: Inherit all parent environment variables
+    for (key, value) in env::vars() {
+        command.env(&key, &value);
+    }
+    
+    // 🌍 Override/add FLAVOR_WORKENV environment variable
     command.env("FLAVOR_WORKENV", workenv_dir);
     
     // 📍 Prepend workenv/bin to PATH

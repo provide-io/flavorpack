@@ -92,7 +92,7 @@ def keygen(out_dir: str) -> None:
     "--launcher",
     type=click.Choice(["go", "rust"], case_sensitive=False),
     default=None,
-    help="Launcher type to embed (defaults to 'go' or value from FLAVOR_LAUNCHER env var).",
+    help="Launcher type to embed (defaults to 'rust' or value from FLAVOR_LAUNCHER env var).",
 )
 def package_command(
     pyproject_toml_path: str, output_path: str | None, launcher: str | None
@@ -171,6 +171,12 @@ def clean_command() -> None:
 
 
 main = cli
+
+
+if __name__ == "__main__":
+    cli()
+
+
 # 🖱️ ⌨️ 🕹️
 
 
