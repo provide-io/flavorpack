@@ -3,6 +3,10 @@ name = "flavor-launcher"
 version = "0.1.0"
 edition = "2021"
 
+[[bin]]
+name = "flavor-rs-launcher"
+path = "src/main.rs"
+
 [dependencies]
 flavor-common = { path = "../pspf-common" }
 anyhow = "1.0"
