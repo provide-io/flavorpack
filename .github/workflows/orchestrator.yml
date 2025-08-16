@@ -25,6 +25,7 @@ jobs:
   config:
     name: 📋 Load Configuration
     runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || !contains(github.event.head_commit.message, '[skip ci]')
     outputs:
       workflows: ${{ steps.parse.outputs.workflows }}
       global: ${{ steps.parse.outputs.global }}
@@ -64,10 +65,10 @@ jobs:
           echo "📋 Enabled workflows: $ENABLED_WORKFLOWS"
 
   # ==================================================================================
-  # 🧪 Tests Workflow
+  # 🧪 Flavor Core Tests
   # ==================================================================================
-  tests:
-    name: 🧪 Tests
+  flavor-tests:
+    name: 🧪 Flavor Tests
     needs: config
     if: contains(needs.config.outputs.workflows, 'tests')
     strategy:
@@ -93,12 +94,18 @@ jobs:
           uv venv workenv/flavor_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m)
           source workenv/flavor_*/bin/activate
           uv pip install -e .[dev]
-          uv pip install pytest-cov
+          uv pip install pytest-cov pytest-xdist
       
-      - name: 🧪 Run Tests
+      - name: 🧪 Run Flavor Tests
         run: |
           source workenv/flavor_*/bin/activate
-          pytest tests/ -n auto --cov=src/flavor --cov-branch --cov-report=xml --cov-report=term
+          # Run unit tests first (fast feedback)
+          pytest tests/ -m "unit and not slow and not requires_helpers" -n auto --cov=src/flavor --cov-branch
+          # Run integration tests (exclude slow and helper-dependent)
+          pytest tests/ -m "integration and not slow and not requires_helpers" -n auto --cov-append --cov=src/flavor
+          # Generate coverage report
+          coverage xml
+          coverage report
       
       - name: 📊 Upload Coverage
         if: matrix.os == 'ubuntu-latest' && matrix.python == '3.11'
@@ -107,6 +114,130 @@ jobs:
           file: ./coverage.xml
           flags: unittests
           name: flavor-coverage
+
+  # ==================================================================================
+  # 🐌 Slow/Performance Tests
+  # ==================================================================================
+  performance-tests:
+    name: 🐌 Performance Tests
+    needs: config
+    if: contains(needs.config.outputs.workflows, 'tests')
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python: ["3.11"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      
+      - name: ⚡ Install uv
+        uses: astral-sh/setup-uv@v4
+      
+      - name: 🔧 Setup Environment
+        run: |
+          uv venv workenv/flavor_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m)
+          source workenv/flavor_*/bin/activate
+          uv pip install -e .[dev]
+          uv pip install pytest-cov pytest-xdist
+      
+      - name: 🐌 Run Performance Tests
+        run: |
+          source workenv/flavor_*/bin/activate
+          pytest tests/ -m "slow or mmap" -v --tb=short
+        timeout-minutes: 30
+
+  # ==================================================================================
+  # 🍯 Taster Tests (Parallel with Flavor Tests)
+  # ==================================================================================
+  taster-tests:
+    name: 🍯 Taster Tests
+    needs: [config, helpers]
+    if: contains(needs.config.outputs.workflows, 'tests')
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python: ["3.11", "3.12"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      
+      - name: ⚡ Install uv
+        uses: astral-sh/setup-uv@v4
+      
+      - name: 📥 Download Helpers
+        uses: actions/download-artifact@v4
+        with:
+          pattern: helpers-go-*
+          path: helpers/bin/
+          merge-multiple: true
+      
+      - name: 🔧 Setup Permissions
+        run: chmod +x helpers/bin/* || true
+      
+      - name: 🔧 Setup Flavor Environment
+        run: |
+          uv venv workenv/flavor_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m)
+          source workenv/flavor_*/bin/activate
+          uv pip install -e .
+          uv pip install pytest pytest-cov pytest-xdist
+      
+      - name: 📦 Build Flavor Package
+        run: |
+          source workenv/flavor_*/bin/activate
+          flavor package --launcher go --output dist/flavor.pspf
+      
+      - name: 🔧 Install Flavor from Package
+        run: |
+          chmod +x dist/flavor.pspf
+          ./dist/flavor.pspf --version
+          # Install flavor globally for taster tests
+          mkdir -p $HOME/.local/bin
+          cp dist/flavor.pspf $HOME/.local/bin/flavor
+          chmod +x $HOME/.local/bin/flavor
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          # Verify installation
+          which flavor
+          flavor --version
+      
+      - name: 🧪 Run Taster Tests
+        run: |
+          source workenv/flavor_*/bin/activate
+          cd helpers/taster
+          # Ensure taster uses the installed flavor artifact
+          export PATH="$HOME/.local/bin:$PATH"
+          # Run taster-specific tests
+          pytest tests/ -m "taster and not stress" -n auto -v
+      
+      - name: 🍯 Test Taster Self-Packaging
+        run: |
+          source workenv/flavor_*/bin/activate
+          cd helpers/taster
+          # Use the installed flavor artifact to package taster with Go launcher
+          export PATH="$HOME/.local/bin:$PATH"
+          flavor package --launcher go --output dist/taster-go.pspf
+          # Use taster to package itself with Rust launcher (different builder)
+          chmod +x dist/taster-go.pspf
+          FLAVOR_INSECURE=1 ./dist/taster-go.pspf package --launcher rust --builder rust --output dist/taster-rust.pspf
+          # Verify both packages
+          FLAVOR_LAUNCHER_CLI=true ./dist/taster-go.pspf info
+          FLAVOR_LAUNCHER_CLI=true ./dist/taster-rust.pspf info
+          # Test taster self-packaging with mixed combinations
+          FLAVOR_INSECURE=1 ./dist/taster-go.pspf package --launcher go --builder rust --output dist/taster-go-rust.pspf
+          FLAVOR_LAUNCHER_CLI=true ./dist/taster-go-rust.pspf info
 
   # ==================================================================================
   # 🔨 Helper Builds
@@ -118,8 +249,54 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        language: [go, rust]
+        include:
+          # Linux AMD64
+          - os: ubuntu-latest
+            language: go
+            goos: linux
+            goarch: amd64
+            platform: linux-amd64
+          - os: ubuntu-latest
+            language: rust
+            platform: linux-amd64
+          # Linux ARM64
+          - os: ubuntu-latest
+            language: go
+            goos: linux
+            goarch: arm64
+            platform: linux-arm64
+          - os: ubuntu-latest
+            language: rust
+            platform: linux-arm64
+            rust-target: aarch64-unknown-linux-gnu
+          # macOS ARM64
+          - os: macos-latest
+            language: go
+            goos: darwin
+            goarch: arm64
+            platform: darwin-arm64
+          - os: macos-latest
+            language: rust
+            platform: darwin-arm64
+          # Windows AMD64
+          - os: windows-latest
+            language: go
+            goos: windows
+            goarch: amd64
+            platform: windows-amd64
+          - os: windows-latest
+            language: rust
+            platform: windows-amd64
+          # Windows ARM64
+          - os: windows-latest
+            language: go
+            goos: windows
+            goarch: arm64
+            platform: windows-arm64
+          - os: windows-latest
+            language: rust
+            platform: windows-arm64
+            rust-target: aarch64-pc-windows-msvc
     runs-on: ${{ matrix.os }}
     steps:
       - name: 📥 Checkout
@@ -138,28 +315,42 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
+          targets: ${{ matrix.rust-target }}
       
-      - name: 🔨 Build Helper
+      - name: 🔨 Build Helpers
         id: build
         run: |
           if [ "${{ matrix.language }}" = "go" ]; then
             cd helpers/flavor-go
-            go build -o ../../helpers/bin/flavor-go-launcher-${{ matrix.os }} ./cmd/pspf-launcher
-            go build -o ../../helpers/bin/flavor-go-builder-${{ matrix.os }} ./cmd/pspf-builder
+            # Set cross-compilation environment
+            export GOOS=${{ matrix.goos }}
+            export GOARCH=${{ matrix.goarch }}
+            # Build both Go binaries in parallel
+            go build -o ../../helpers/bin/flavor-go-launcher-${{ matrix.platform }} ./cmd/flavor-go-launcher &
+            PID1=$!
+            go build -o ../../helpers/bin/flavor-go-builder-${{ matrix.platform }} ./cmd/flavor-go-builder &
+            PID2=$!
+            wait $PID1 $PID2
           else
             cd helpers/flavor-rust
-            cargo build --release --bin flavor-rs-launcher
-            cargo build --release --bin flavor-rs-builder
-            cp target/release/flavor-rs-launcher ../../helpers/bin/flavor-rs-launcher-${{ matrix.os }}
-            cp target/release/flavor-rs-builder ../../helpers/bin/flavor-rs-builder-${{ matrix.os }}
+            # Cargo will parallelize internally, build both targets
+            if [ -n "${{ matrix.rust-target }}" ]; then
+              cargo build --release --target ${{ matrix.rust-target }} --bin flavor-rs-launcher --bin flavor-rs-builder
+              cp target/${{ matrix.rust-target }}/release/flavor-rs-launcher ../../helpers/bin/flavor-rs-launcher-${{ matrix.platform }}
+              cp target/${{ matrix.rust-target }}/release/flavor-rs-builder ../../helpers/bin/flavor-rs-builder-${{ matrix.platform }}
+            else
+              cargo build --release --bin flavor-rs-launcher --bin flavor-rs-builder
+              cp target/release/flavor-rs-launcher ../../helpers/bin/flavor-rs-launcher-${{ matrix.platform }}
+              cp target/release/flavor-rs-builder ../../helpers/bin/flavor-rs-builder-${{ matrix.platform }}
+            fi
           fi
         shell: bash
       
       - name: 📦 Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: helpers-${{ matrix.language }}-${{ matrix.os }}
-          path: helpers/bin/*-${{ matrix.os }}
+          name: helpers-${{ matrix.language }}-${{ matrix.platform }}
+          path: helpers/bin/*-${{ matrix.platform }}*
           retention-days: 30
 
   # ==================================================================================
@@ -172,9 +363,40 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        launcher: [go, rust]
-        builder: [go, rust]
-        os: [ubuntu-latest, macos-latest]
+        include:
+          # Test on native platforms (not cross-compiled)
+          - os: ubuntu-latest
+            platform: linux-amd64
+            launcher: go
+            builder: go
+          - os: ubuntu-latest
+            platform: linux-amd64
+            launcher: rust
+            builder: rust
+          - os: ubuntu-latest
+            platform: linux-amd64
+            launcher: go
+            builder: rust
+          - os: ubuntu-latest
+            platform: linux-amd64
+            launcher: rust
+            builder: go
+          - os: macos-latest
+            platform: darwin-arm64
+            launcher: go
+            builder: go
+          - os: macos-latest
+            platform: darwin-arm64
+            launcher: rust
+            builder: rust
+          - os: macos-latest
+            platform: darwin-arm64
+            launcher: go
+            builder: rust
+          - os: macos-latest
+            platform: darwin-arm64
+            launcher: rust
+            builder: go
     runs-on: ${{ matrix.os }}
     steps:
       - name: 📥 Checkout
@@ -183,7 +405,7 @@ jobs:
       - name: 📥 Download Helpers
         uses: actions/download-artifact@v4
         with:
-          pattern: helpers-*-${{ matrix.os }}
+          pattern: helpers-*-${{ matrix.platform }}
           path: helpers/bin/
           merge-multiple: true
       
@@ -233,7 +455,7 @@ jobs:
   # ==================================================================================
   release:
     name: 📦 Build Release Artifacts
-    needs: [tests, helpers, taster]
+    needs: [flavor-tests, taster-tests, helpers, taster]
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     strategy:
       matrix:
@@ -297,7 +519,7 @@ jobs:
   # ==================================================================================
   summary:
     name: 📋 Workflow Summary
-    needs: [tests, helpers, taster]
+    needs: [flavor-tests, taster-tests, helpers, taster]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -307,10 +529,16 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           
           # Check job statuses
-          if [ "${{ needs.tests.result }}" = "success" ]; then
-            echo "✅ Tests: Passed" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ needs.flavor-tests.result }}" = "success" ]; then
+            echo "✅ Flavor Tests: Passed" >> $GITHUB_STEP_SUMMARY
           else
-            echo "❌ Tests: Failed" >> $GITHUB_STEP_SUMMARY
+            echo "❌ Flavor Tests: Failed" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ "${{ needs.taster-tests.result }}" = "success" ]; then
+            echo "✅ Taster Tests: Passed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Taster Tests: Failed" >> $GITHUB_STEP_SUMMARY
           fi
           
           if [ "${{ needs.helpers.result }}" = "success" ]; then

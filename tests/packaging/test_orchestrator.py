@@ -1,11 +1,14 @@
 """Tests for the packaging orchestrator."""
 
+import pytest
 from pathlib import Path
 from unittest.mock import patch
 
 from flavor.packaging.orchestrator import PackagingOrchestrator
 
 
+@pytest.mark.packaging
+@pytest.mark.unit
 def test_orchestrator_constructs_correct_build_command(tmp_path: Path) -> None:
     """
     Verifies that the orchestrator calls the Go builder with the correct arguments.

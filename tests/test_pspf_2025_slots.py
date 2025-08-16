@@ -20,6 +20,7 @@ from flavor.psp.format_2025 import (
     SlotMetadata,
     SLOT_ALIGNMENT
 )
+from flavor.psp.format_2025.constants import SLOT_DESCRIPTOR_SIZE
 
 
 class TestPSPFSlots:
@@ -293,20 +294,25 @@ class TestPSPFSlots:
         reader = PSPFReader(bundle_path)
         index = reader.read_index()
         
-        # Read slot table
+        # Read slot table - NEW FORMAT uses 64-byte descriptors
+        from flavor.psp.format_2025.slots import SlotDescriptor
+        
         with open(bundle_path, 'rb') as f:
             f.seek(index.slot_table_offset)
             
             for i in range(index.slot_count):
-                # Each entry is 24 bytes: offset(8) + size(8) + checksum(4) + encoding(1) + purpose(1) + lifecycle(1) + reserved(1)
-                entry = f.read(24)
-                assert len(entry) == 24
+                # Each entry is now 64 bytes (SlotDescriptor)
+                entry = f.read(SLOT_DESCRIPTOR_SIZE)
+                assert len(entry) == SLOT_DESCRIPTOR_SIZE
                 
-                offset, size, checksum, encoding, purpose, lifecycle, reserved = struct.unpack('<QQIBBBB', entry)
-                assert offset > 0
-                assert offset % SLOT_ALIGNMENT == 0
-                assert size > 0
-                assert checksum != 0
+                # Use SlotDescriptor to unpack
+                descriptor = SlotDescriptor.unpack(entry)
+                
+                # Verify descriptor fields
+                assert descriptor.offset > 0
+                assert descriptor.offset % SLOT_ALIGNMENT == 0
+                assert descriptor.size > 0
+                assert descriptor.checksum != 0
     
     def test_slot_extraction_caching(self, temp_dir):
         """Test slot caching metadata."""

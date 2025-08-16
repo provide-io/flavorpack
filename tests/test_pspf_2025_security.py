@@ -27,6 +27,8 @@ from flavor.psp.format_2025 import (
 )
 
 
+@pytest.mark.security
+@pytest.mark.unit
 class TestPSPFSecurity:
     """Test PSPF security features."""
     
