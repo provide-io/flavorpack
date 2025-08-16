@@ -44,7 +44,6 @@ class TestPSPFCompatibility:
             index=0,
             name="app",
             size=slot_path.stat().st_size,
-            compressed_size=0,
             checksum="abc123",
             encoding="gzip",
             purpose="payload",

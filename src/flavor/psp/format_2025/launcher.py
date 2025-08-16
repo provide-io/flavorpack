@@ -11,6 +11,7 @@ import subprocess
 import tarfile
 import zlib
 from pathlib import Path
+from contextlib import contextmanager
 
 from pyvider.telemetry import logger
 
@@ -25,6 +26,13 @@ class PSPFLauncher(PSPFReader):
         self.bundle_path = bundle_path
         self.cache_dir = Path.home() / ".cache" / "pspf"
         self.cache_dir.mkdir(parents=True, exist_ok=True)
+
+    @contextmanager
+    def acquire_lock(self, lock_file: Path, timeout: float = 30.0):
+        """Acquire a file-based lock for extraction."""
+        from flavor.resilience import default_lock_manager
+        with default_lock_manager.lock(lock_file.name, timeout=timeout) as lock:
+            yield lock
 
     def read_slot_table(self) -> list[dict]:
         """Read the slot table from the bundle.
@@ -88,14 +96,20 @@ class PSPFLauncher(PSPFReader):
         extracted_paths = {}
         
         logger.info(f"📤 Extracting {len(slot_table)} slots")
-        for slot_entry in slot_table:
-            slot_idx = slot_entry['index']
-            logger.debug(f"🔄 Extracting slot {slot_idx}")
-            slot_path = self.extract_slot(slot_idx, workenv_dir)
-            extracted_paths[slot_idx] = slot_path
-        
-        logger.info(f"✅ Extracted all {len(extracted_paths)} slots")
-        return extracted_paths
+        try:
+            for slot_entry in slot_table:
+                slot_idx = slot_entry['index']
+                logger.debug(f"🔄 Extracting slot {slot_idx}")
+                slot_path = self.extract_slot(slot_idx, workenv_dir)
+                extracted_paths[slot_idx] = slot_path
+            
+            logger.info(f"✅ Extracted all {len(extracted_paths)} slots")
+            return extracted_paths
+        except Exception as e:
+            logger.error(f"❌ Extraction interrupted or failed: {e}. Cleaning up partial extraction.")
+            import shutil
+            shutil.rmtree(workenv_dir, ignore_errors=True)
+            raise # Re-raise the exception
 
     def extract_slot(self, slot_index: int, workenv_dir: Path, verify_checksum: bool = False) -> Path:
         """Extract a single slot.
@@ -170,20 +184,27 @@ class PSPFLauncher(PSPFReader):
         
         if is_tarball or slot_name.endswith('.tar.gz') or slot_name.endswith('.tgz'):
             logger.debug(f"📤 Extracting tarball {slot_name} to {workenv_dir}")
-            with tarfile.open(fileobj=io.BytesIO(data), mode='r:*') as tar:
-                tar.extractall(path=workenv_dir)
-            logger.debug(f"✅ Extracted tarball contents to {workenv_dir}")
-            
-            # Return the base directory
-            return workenv_dir
+            try:
+                with tarfile.open(fileobj=io.BytesIO(data), mode='r:*') as tar:
+                    tar.extractall(path=workenv_dir)
+                logger.debug(f"✅ Extracted tarball contents to {workenv_dir}")
+                
+                # Return the base directory
+                return workenv_dir
+            except (OSError, PermissionError, tarfile.ReadError) as e:
+                logger.error(f"❌ Disk or tarball error extracting slot {slot_index} to {workenv_dir}: {e}")
+                raise # Re-raise the exception
         else:
             # Write single file
             output_path = workenv_dir / slot_name
-            output_path.parent.mkdir(parents=True, exist_ok=True)
-            output_path.write_bytes(data)
-            logger.debug(f"✅ Wrote {len(data)} bytes to {output_path}")
-            
-            return output_path
+            try:
+                output_path.parent.mkdir(parents=True, exist_ok=True)
+                output_path.write_bytes(data)
+                logger.debug(f"✅ Wrote {len(data)} bytes to {output_path}")
+                return output_path
+            except (OSError, PermissionError) as e:
+                logger.error(f"❌ Disk error writing slot {slot_index} to {output_path}: {e}")
+                raise # Re-raise the exception
 
     def setup_workenv(self) -> Path:
         """Setup work environment for bundle execution.
