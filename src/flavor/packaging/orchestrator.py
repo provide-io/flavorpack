@@ -203,7 +203,7 @@ class PackagingOrchestrator:
                         "path": str(uv_tarball),
                         "encoding": "gzip",
                         "purpose": "tool",
-                        "lifecycle": "volatile",
+                        "lifecycle": "persistent",  # UV binary stays for command execution
                         "extract_to": ".",
                     },
                     {

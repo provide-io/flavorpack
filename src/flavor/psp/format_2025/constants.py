@@ -6,11 +6,11 @@ import platform
 import sys
 
 # Format constants
-PSPF_MAGIC = b"PSPF2025-MM\x00\x00\x00\x00\x00"  # 16 bytes with MM marker
+PSPF_MAGIC = b"PSPF2025"  # 8 bytes, standard format
 PSPF_VERSION = 0x20250001  # Keep as v1
-HEADER_SIZE = 512  # Expanded from 256
-SLOT_DESCRIPTOR_SIZE = 64  # Expanded from 24
-TRAILING_MAGIC_SIZE = 16  # Expanded from 4
+HEADER_SIZE = 256  # Standard size per spec
+SLOT_DESCRIPTOR_SIZE = 64  # Descriptor size
+TRAILING_MAGIC_SIZE = 8  # 📦🪄 = 8 bytes UTF-8
 SLOT_ALIGNMENT = 8  # Minimum alignment
 
 # Platform-specific page sizes
@@ -103,8 +103,8 @@ DEFAULT_MIN_MEMORY = 8 * 1024 * 1024    # 8MB
 DEFAULT_CHUNK_SIZE = 64 * 1024          # 64KB for streaming
 
 # Backwards compatibility - map old names
-INDEX_SIZE = HEADER_SIZE  # For existing code
-EMOJI_MAGIC_SIZE = len(TRAILING_MAGIC.encode('utf-8'))
+INDEX_SIZE = HEADER_SIZE  # For existing code (256 bytes)
+EMOJI_MAGIC_SIZE = 8  # Always 8 bytes for 📦🪄
 
 # Old purpose/lifecycle names for compatibility
 PURPOSE_PAYLOAD = PURPOSE_DATA

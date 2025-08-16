@@ -361,6 +361,38 @@ class PSPFReader:
             return True
         except InvalidSignature:
             return False
+    
+    def verify_integrity(self) -> dict:
+        """Verify complete package integrity.
+        
+        Returns:
+            dict: Verification result with standard keys
+        """
+        try:
+            # Verify individual components
+            magic_valid = self.verify_magic()
+            checksums_valid = self.verify_all_checksums()
+            signature_valid = self.verify_signature()
+            valid = magic_valid and checksums_valid and signature_valid
+            
+            return {
+                'valid': valid,
+                'magic_valid': magic_valid,
+                'checksums_valid': checksums_valid,
+                'signature_valid': signature_valid,
+                'tamper_detected': not valid,
+                'error': None if valid else 'Verification failed'
+            }
+        except Exception as e:
+            logger.error(f"Integrity verification failed: {e}")
+            return {
+                'valid': False,
+                'magic_valid': False,
+                'checksums_valid': False, 
+                'signature_valid': False,
+                'tamper_detected': True,
+                'error': str(e)
+            }
 
     def extract_slot(self, slot_index: int, dest_dir: Path) -> Path:
         """Extract a slot to a directory.
