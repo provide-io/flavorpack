@@ -9,6 +9,7 @@ import struct
 import tarfile
 import zlib
 from pathlib import Path
+from contextlib import contextmanager
 
 from cryptography.exceptions import InvalidSignature
 from pyvider.telemetry import logger
@@ -26,6 +27,14 @@ class PSPFReader:
         self._file = None
         self._index = None
         self._metadata = None
+
+    @contextmanager
+    def extraction_lock(self, extract_dir: Path, timeout: float = 30.0):
+        """Acquire an extraction lock for a given directory."""
+        from flavor.resilience import default_lock_manager
+        lock_file = extract_dir / ".extraction.lock"
+        with default_lock_manager.lock(lock_file.name, timeout=timeout) as lock:
+            yield lock
 
     def verify_magic(self) -> bool:
         """Verify magic wand emoji at end of file."""
