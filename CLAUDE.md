@@ -73,12 +73,12 @@ cp target/release/flavor-rs-launcher ../bin/
 
 ### Package Building
 ```bash
-# Build a PSPF package using Python builder
-workenv/flavor_darwin_arm64/bin/flavor package --manifest manifest.json --output output.pspf
+# Build a PSP package using Python builder
+workenv/flavor_darwin_arm64/bin/flavor package --manifest manifest.json --output output.psp
 
 # Using different builders/launchers
-workenv/flavor_darwin_arm64/bin/flavor package --builder python --launcher go --output output.pspf
-workenv/flavor_darwin_arm64/bin/flavor package --builder go --launcher rust --output output.pspf
+workenv/flavor_darwin_arm64/bin/flavor package --builder python --launcher go --output output.psp
+workenv/flavor_darwin_arm64/bin/flavor package --builder go --launcher rust --output output.psp
 
 # Test all builder/launcher combinations
 ./test-all-combinations.sh
@@ -138,6 +138,7 @@ These are automatically installed when running `source env.sh`.
 - `wrkenv.toml`: Workenv configuration for sibling packages
 - `pytest.ini`: Test configuration and markers
 - `test-all-combinations.sh`: Cross-language compatibility testing
+- `helpers/taster`: Comprehensive test package for all Flavor functionality
 
 ## Testing Strategy
 
@@ -155,3 +156,49 @@ These are automatically installed when running `source env.sh`.
 4. Follow PSPF/2025 specification exactly - no deviations
 5. Update tests when modifying core functionality
 6. Use markers to categorize new tests appropriately
+
+## Security and Package Verification
+
+### IMPORTANT: Package Verification
+- **NEVER** use `FLAVOR_SKIP_KEY_VERIFICATION` - this environment variable should not exist
+- Use `FLAVOR_INSECURE=1` **ONLY** when absolutely necessary for debugging
+- Always test packages WITHOUT any insecure flags - packages should verify properly
+- Use `--key-seed` when building packages for deterministic key generation
+
+### Testing with Taster
+The `helpers/taster` package is the primary tool for testing Flavor functionality:
+
+```bash
+# Build taster with deterministic keys for testing
+cd helpers/taster
+../../workenv/flavor_darwin_arm64/bin/flavor package \
+  --manifest pyproject.toml \
+  --output taster.psp \
+  --launcher rust \
+  --key-seed test123
+
+# Test taster (no insecure flags needed!)
+./taster.psp --help
+./taster.psp info
+./taster.psp env
+./taster.psp exit 42 --message "Error test"
+./taster.psp file workenv-test
+./taster.psp signals --sleep 5
+```
+
+Taster provides comprehensive testing commands:
+- `exit`: Test exit codes and error handling
+- `file`: Test file I/O and workenv persistence
+- `signals`: Test signal handling and sleep/timeout behavior
+- `env`: Verify environment variable processing
+- `info`: Display package and system information
+- `cache`: Manage Flavor cache
+- `argv`: Test command-line argument handling
+- `pipe`: Test stdin/stdout piping
+- `mmap`: Verify memory-mapped I/O
+
+### Volatile Slot Cleanup
+The launcher automatically removes volatile slots after setup:
+- Wheels directory is marked as volatile and removed after installation
+- UV and Python runtime are persistent for execution
+- This reduces cache size while maintaining functionality

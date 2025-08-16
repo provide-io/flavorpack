@@ -86,7 +86,7 @@ def keygen(out_dir: str) -> None:
     "--output",
     "output_path",
     type=click.Path(dir_okay=False, resolve_path=True),
-    help="Custom output path for the package (defaults to dist/<name>.pspf).",
+    help="Custom output path for the package (defaults to dist/<name>.psp).",
 )
 @click.option(
     "--launcher",

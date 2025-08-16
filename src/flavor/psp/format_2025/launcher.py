@@ -35,24 +35,6 @@ class PSPFLauncher(PSPFReader):
         with default_lock_manager.lock(lock_file.name, timeout=timeout) as lock:
             yield lock
 
-    def verify_integrity(self) -> dict:
-        """Verify bundle integrity (wrapper for test compatibility).
-        
-        Returns:
-            dict: Verification result with standard keys
-        """
-        # Use inherited methods from PSPFReader
-        signature_valid = self.verify_signature()
-        checksums_valid = self.verify_all_checksums()
-        valid = signature_valid and checksums_valid
-        
-        return {
-            'valid': valid,
-            'signature_valid': signature_valid,
-            'checksums_valid': checksums_valid,
-            'tamper_detected': not valid,
-            'error': None if valid else 'Verification failed'
-        }
     
     def read_slot_table(self) -> list[dict]:
         """Read the slot table from the bundle.

@@ -56,7 +56,7 @@ def build_package_from_manifest(
     # Use absolute paths based on manifest location
     manifest_dir = manifest_path.parent.absolute()
     output_flavor_path = (
-        output_path if output_path else manifest_dir / "dist" / f"{package_name}.pspf"
+        output_path if output_path else manifest_dir / "dist" / f"{package_name}.psp"
     )
     
     # Handle key paths - use provided keys or fallback to default locations
