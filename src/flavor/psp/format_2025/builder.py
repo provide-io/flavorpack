@@ -13,6 +13,7 @@ from typing import BinaryIO
 
 from pyvider.telemetry import logger
 
+from flavor.utils import get_platform_string
 from flavor.psp.format_2025.constants import (
     EMOJI_MAGIC_SIZE,
     INDEX_SIZE,
@@ -150,9 +151,39 @@ class PSPFBuilder:
 
     def _get_launcher(self, launcher_type: str) -> bytes:
         """Get launcher binary."""
-        # Mock implementation - return dummy launcher
-        logger.debug(f"🐹 Using {launcher_type} launcher (mock)")
-        return b"LAUNCHER_BINARY_" + launcher_type.encode() + b"\x00" * 1000
+        platform_str = get_platform_string()
+        
+        # Map launcher types to actual binary names
+        # Use 'rs' for rust, 'go' for go launcher
+        # Python, node, unknown types default to rust launcher
+        if launcher_type in ["rust", "python", "node", "unknown"]:
+            launcher_suffix = "rs"
+        else:
+            launcher_suffix = launcher_type
+        
+        # Try to find launcher in workenv
+        workenv_dir = Path.cwd() / "workenv" / "flavors" / platform_str
+        launcher_name = f"flavor-{launcher_suffix}-launcher"
+        launcher_path = workenv_dir / launcher_name
+        
+        if launcher_path.exists():
+            logger.debug(f"🚀 Loading {launcher_type} launcher from {launcher_path}")
+            return launcher_path.read_bytes()
+        
+        # Fallback: try to find in various common locations
+        search_paths = [
+            Path.cwd() / launcher_name,
+            Path(__file__).parent.parent.parent / "go/cmd/pspf-launcher" / launcher_name,
+            Path(__file__).parent.parent.parent / f"rust/flavor/target/release/{launcher_name}",
+        ]
+        
+        for path in search_paths:
+            if path.exists():
+                logger.debug(f"🚀 Loading {launcher_type} launcher from {path}")
+                return path.read_bytes()
+        
+        # If no launcher found, raise error
+        raise FileNotFoundError(f"Could not find {launcher_name} binary. Build it first with 'flavor package'")
 
     def _write_metadata(
         self, f: BinaryIO, metadata: dict, private_key: bytes, public_key: bytes
@@ -230,13 +261,13 @@ class PSPFBuilder:
                     SlotMetadata(
                         index=i,
                         name=slot_path.stem,
-                        size=slot_path.stat().st_size,
-                        compressed_size=0,
+                        size=slot_path.stat().st_size,  # Size as stored
                         checksum="",
                         encoding="gzip",
                         purpose=slot_data.get("purpose", "payload"),
                         lifecycle=slot_data.get("lifecycle", "persistent"),
                         path=slot_path,
+                        extract_to=slot_data.get("extract_to"),
                     )
                 )
 

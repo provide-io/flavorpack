@@ -94,9 +94,8 @@ class TestPSPFCore:
             index=0,
             name="hello",
             size=simple_payload.stat().st_size,
-            compressed_size=0,
             checksum=hashlib.sha256(simple_payload.read_bytes()).hexdigest(),
-            encoding="gzip",
+            encoding="none",
             purpose="payload",
             lifecycle="persistent",
             path=simple_payload
@@ -265,7 +264,6 @@ class TestPSPFCore:
                 index=i,
                 name=f"slot{i}",
                 size=slot_path.stat().st_size,
-                compressed_size=0,
                 checksum=hashlib.sha256(slot_path.read_bytes()).hexdigest(),
                 encoding="none",
                 purpose="payload",

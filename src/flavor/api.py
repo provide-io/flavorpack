@@ -9,14 +9,19 @@ from pathlib import Path
 # No typing imports needed with Python 3.11+
 import tomllib
 
-from .packaging.keys import generate_key_pair
-from .packaging.orchestrator import PackagingOrchestrator
+from flavor.packaging.keys import generate_key_pair
+from flavor.packaging.orchestrator import PackagingOrchestrator
 
 
 def build_package_from_manifest(
     manifest_path: Path,
     output_path: Path | None = None,
     launcher_type: str | None = None,
+    strip_binaries: bool = False,
+    show_progress: bool = False,
+    private_key_path: Path | None = None,
+    public_key_path: Path | None = None,
+    key_seed: str | None = None,
 ) -> list[Path]:
     """Builds a package from a pyproject.toml manifest."""
     # Parse pyproject.toml to get build configurations
@@ -53,12 +58,24 @@ def build_package_from_manifest(
     output_flavor_path = (
         output_path if output_path else manifest_dir / "dist" / f"{package_name}.pspf"
     )
-    package_integrity_key_path = manifest_dir / "keys" / "flavor-private.key"
-    public_key_path = manifest_dir / "keys" / "flavor-public.key"
-
-    # Ensure keys exist (for testing purposes)
-    if not package_integrity_key_path.exists() or not public_key_path.exists():
-        generate_key_pair(manifest_dir / "keys")
+    
+    # Handle key paths - use provided keys or fallback to default locations
+    if private_key_path:
+        package_integrity_key_path = private_key_path
+        if not public_key_path:
+            # If no public key provided, assume it's alongside the private key
+            public_key_path = private_key_path.parent / "flavor-public.key"
+    else:
+        # Use default key paths
+        package_integrity_key_path = manifest_dir / "keys" / "flavor-private.key"
+        public_key_path_default = manifest_dir / "keys" / "flavor-public.key"
+        
+        # Only generate keys if no key options provided
+        if not key_seed and not package_integrity_key_path.exists():
+            generate_key_pair(manifest_dir / "keys")
+        
+        if not public_key_path:
+            public_key_path = public_key_path_default
 
     # Load build config from pyproject.toml first, then override with buildconfig.toml if it exists
     build_config = flavor_config.get("build", {})
@@ -73,14 +90,17 @@ def build_package_from_manifest(
         build_config["execution"] = flavor_config["execution"]
 
     orchestrator = PackagingOrchestrator(
-        package_integrity_key_path=str(package_integrity_key_path),
-        public_key_path=str(public_key_path),
+        package_integrity_key_path=str(package_integrity_key_path) if private_key_path else None,
+        public_key_path=str(public_key_path) if public_key_path else None,
         output_flavor_path=str(output_flavor_path),
         build_config=build_config,
         manifest_dir=manifest_path.parent,
         package_name=package_name,
         entry_point=entry_point,
         launcher_type=launcher_type,
+        strip_binaries=strip_binaries,
+        show_progress=show_progress,
+        key_seed=key_seed,
     )
     orchestrator.build_package()
     return [output_flavor_path]

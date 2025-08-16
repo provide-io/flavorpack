@@ -31,8 +31,8 @@ class FlavorVerifier:
         # Read metadata
         metadata = reader.read_metadata()
 
-        # Mock signature verification
-        signature_valid = True  # Placeholder
+        # Verify integrity using reader's method
+        signature_valid = reader.verify_integrity()
 
         # Mock slot data
         slots_info = []

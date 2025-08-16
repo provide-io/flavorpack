@@ -133,3 +133,4 @@ uv.lockworkenv/
 *.tar.gz
 *code.sh
 *bfiles*
+helpers/bin/

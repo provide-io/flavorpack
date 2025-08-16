@@ -9,18 +9,34 @@ Flavor is a packaging tool that creates self-contained, portable binaries from P
 ### PSPF Format
 - **Magic**: `PSPF2025` header identifies the format
 - **Structure**: Launcher + Index + Slots + Metadata + Emoji Magic (🪄)
-- **Slots**: Compressed archives containing code, dependencies, or tools
+- **Slots**: Archives containing code, dependencies, or tools (compression indicated by `encoding` field)
 - **Metadata**: JSON manifest with package info, execution commands, and runtime configuration
+
+### Metadata Structure (PSPF 2025)
+
+SlotMetadata fields:
+- `index`: Slot position in the package
+- `name`: Descriptive name of the slot
+- `size`: Size as stored in the package (bytes)
+- `checksum`: SHA256 of the stored data
+- `encoding`: How the data is encoded ("none", "gzip")
+- `purpose`: Slot purpose ("payload", "runtime", "tool")
+- `lifecycle`: Persistence ("persistent", "volatile")
+- `extract_to`: Optional extraction subdirectory
+
+**Note**: The `encoding` field replaced the old `compressed_size` field - the encoding tells us whether data is compressed.
 
 ### Components
 
 1. **Launchers** (in `src/flavor/go/cmd/pspf-launcher` and `src/flavor/rust/pspf-launcher-rs`)
+   - Binary names: `flavor-go-launcher` (Go), `flavor-rs-launcher` (Rust)
    - Extract and cache work environment
    - Handle runtime.env configuration
    - Execute Python with proper environment
    - **Note**: Go launcher cannot set argv[0] due to exec.Command limitations; Rust launcher can
 
 2. **Builders** (in `src/flavor/go/cmd/pspf-builder` and `src/flavor/rust/pspf-builder-rs`)
+   - Binary names: `flavor-go-builder` (Go), `flavor-rs-builder` (Rust)
    - Read manifest.json
    - Embed launcher binary
    - Pack slots with compression
@@ -37,8 +53,8 @@ Flavor is a packaging tool that creates self-contained, portable binaries from P
 
 As of recent updates, **Rust is the default** for both launcher and builder:
 - Better argv[0] handling (Python sees correct command name)
-- Rust packages renamed to use "flavor" prefix (flavor-launcher, flavor-builder, flavor-common)
-- Go components still available via `--launcher go` flag or `FLAVOR_LAUNCHER=go` env var
+- Consistent naming: `flavor-rs-launcher`, `flavor-rs-builder`
+- Go components available via `--launcher go` flag: `flavor-go-launcher`, `flavor-go-builder`
 
 ## Runtime Environment Configuration
 
@@ -149,6 +165,15 @@ With enhanced debug logging (`RUST_LOG=debug`), you can see:
 
 Use `RUST_LOG=trace` for even more detail including variable values.
 
+## Building the Tools
+
+To build the Rust launcher and builder binaries:
+```bash
+./helpers/build.sh
+```
+
+This will compile the Rust components and place the binaries in `helpers/bin/`.
+
 ## Building Packages
 
 ### From pyproject.toml
@@ -185,10 +210,14 @@ PSPF packages extract to a cached work environment:
 - `src/flavor/cli.py` - CLI commands (package, verify, etc.)
 - `src/flavor/packaging/orchestrator.py` - Coordinates building process
 - `src/flavor/psp/format_2025/builder.py` - Low-level PSPF construction
-- `src/flavor/go/cmd/pspf-launcher/main.go` - Go launcher implementation
-- `src/flavor/rust/pspf-launcher-rs/src/main.rs` - Rust launcher implementation
+- `src/flavor-go/cmd/pspf-launcher/main.go` - Go launcher implementation
+- `helpers/flavor-rust/src/bin/flavor-rs-launcher.rs` - Rust launcher implementation
+- `helpers/flavor-rust/src/bin/flavor-rs-builder.rs` - Rust builder implementation
+- `helpers/bin/` - Pre-built launcher and builder binaries
 
 ## Testing
+
+**IMPORTANT: Always test in SECURE MODE by default. Only use FLAVOR_INSECURE=1 if absolutely necessary for debugging signature verification issues.**
 
 Run tests with:
 ```bash
@@ -199,30 +228,96 @@ Key test files:
 - `tests/test_pspf_2025_*.py` - Format tests
 - `tests/integration/test_all_flavor_combinations.py` - Tests all launcher/packager combinations
 
+### Debugging Package Internals with Taster
+
+**Important**: For any debugging work that needs to happen *inside* a flavor package (environment variables, argv handling, extraction, runtime behavior, etc.), use the `taster` test package instead of creating one-off test scripts.
+
+The `taster` package (`tests/taster/`) is a comprehensive test harness specifically designed for debugging flavor package internals:
+
+```bash
+# Build taster
+cd tests/taster
+../../workenv/flavor_darwin_arm64/bin/flavor package --manifest pyproject.toml --output dist/taster.pspf
+
+# Run taster commands (works with proper key verification)
+chmod +x dist/taster.pspf
+./dist/taster.pspf env   # Test environment variables
+./dist/taster.pspf argv  # Test argv[0] and command info
+./dist/taster.pspf info  # Display package/system info
+./dist/taster.pspf test  # Run all tests
+./dist/taster.pspf shell # Interactive Python shell
+```
+
+Taster includes:
+- Environment variable inspection (including runtime.env verification)
+- argv[0] and command line argument testing
+- Process information display
+- Whitelist testing for `unset = ["*"]` patterns
+- Signal handling testing (`signals` command) for SIGTERM/SIGINT
+- Interactive shell for live debugging
+
+The taster package's `pyproject.toml` demonstrates complex runtime.env configuration including whitelist patterns, making it ideal for testing environment filtering behavior.
+
 ## Common Issues
 
 1. **argv[0] not showing correct command**: Use Rust launcher (default) instead of Go
 2. **Missing encoding field error**: Ensure all slots in manifest have encoding field (even if "none")
-3. **Key verification failures**: Set `FLAVOR_SKIP_KEY_VERIFICATION=1` for testing
+3. **Key verification failures**: Ensure keys are properly generated and public key is embedded
 4. **Package size**: Rust launcher is ~18MB, Go launcher is ~4MB
 
 ## Environment Variables
 
 - `FLAVOR_LAUNCHER` - Override default launcher type (go/rust)
-- `FLAVOR_SKIP_KEY_VERIFICATION` - Skip signature verification
-- `FLAVOR_LOG_LEVEL` - Set log level (debug/info/warn/error)
+- `FLAVOR_INSECURE` - Skip signature verification (only for debugging, not for production)
+- `FLAVOR_LOG_LEVEL` - Set log level (debug/info/warn/error) or use JSON format (json, json:debug, json:info, etc.)
+- `FLAVOR_LOG_PATH` - Send logs to file instead of stderr
 - `FLAVOR_CACHE` - Override cache directory
 - `FLAVOR_WORKENV` - Set by launcher, points to work environment
 - `FLAVOR_COMMAND_NAME` - Original binary name (fallback for argv[0])
 - `FLAVOR_ORIGINAL_COMMAND` - Full original command path
 
+## Enterprise Features (Rust Launcher)
+
+### Signal Handling and Graceful Shutdown
+- **Signal Forwarding**: SIGTERM/SIGINT are forwarded to child processes
+- **Graceful Termination**: Waits up to 10 seconds for child to exit before SIGKILL
+- **Resource Cleanup**: Removes lock files and marks incomplete extractions on exit
+- **Debug Logging**: All signal handling steps are logged for observability
+
+### Concurrent Execution Safety
+- **File Locking**: Uses `.extraction.lock` files to prevent concurrent extractions
+- **Stale Lock Detection**: Automatically cleans up locks from dead processes (checks PID)
+- **Cache Integrity**: Uses `.extraction.complete` markers to ensure cache validity
+- **Incomplete Handling**: Marks and cleans up incomplete extractions from interrupted runs
+
+### Structured JSON Logging
+- **JSON Format**: `FLAVOR_LOG_LEVEL=json` outputs structured JSON logs
+- **Flexible Levels**: `json:debug`, `json:info`, `json:warn`, `json:error` 
+- **File Logging**: `FLAVOR_LOG_PATH=/path/to/file.log` sends logs to file
+- **Log Structure**:
+  ```json
+  {
+    "@timestamp": "2025-08-14T03:19:47.678385+00:00",
+    "@level": "info",
+    "@message": "📖 Reading PSPF bundle",
+    "@module": "flavor_rs_launcher",
+    "@pid": 87802,
+    "@file": "src/main.rs",
+    "@line": 342
+  }
+  ```
+- **Integration Ready**: Compatible with ELK, Splunk, Datadog, and other log aggregation systems
+- **Output Convention**: All logs go to stderr (or file), keeping stdout clean for child process
+
 ## Important Implementation Notes
 
 1. **Go Launcher Limitation**: Cannot actually set argv[0] on Unix due to Go's exec.Command restrictions. Uses environment variables as fallback.
 
-2. **Rust Launcher**: Uses `std::os::unix::process::CommandExt::arg0()` to properly set argv[0].
+2. **Rust Launcher**: Uses `std::os::unix::process::CommandExt::arg0()` to properly set argv[0]. Includes enterprise features for production use.
 
-3. **Builder Selection**: Now defaults to Rust builder (`flavor-builder`) which uses the same manifest format as Go builder.
+3. **Binary Naming Convention**: All binaries follow the pattern `flavor-<lang>-<component>` where lang is `go` or `rs` and component is `launcher` or `builder`.
+
+3. **Builder Selection**: Now defaults to Rust builder (`flavor-rs-builder`) which uses the same manifest format as Go builder.
 
 4. **Slot Alignment**: Slots are aligned to 8-byte boundaries for efficient memory mapping.
 
@@ -246,3 +341,5 @@ Extract and inspect metadata:
 FLAVOR_LAUNCHER_CLI=true ./myapp.pspf extract 0 /tmp/extract
 tar -tzf /tmp/extract/metadata.tar.gz
 ```
+- When using Python, always use absolute imports.
+- Do not develop with FLAVOR_INSECURE on. You must always exercise the security when testing.

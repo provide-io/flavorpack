@@ -1,0 +1,330 @@
+name: 🎭 Workflow Orchestrator
+
+on:
+  workflow_dispatch:
+    inputs:
+      workflows:
+        description: 'Workflows to run (comma-separated)'
+        required: false
+        default: 'tests,quality,helpers'
+        type: string
+      skip_checks:
+        description: 'Skip configuration checks'
+        required: false
+        default: false
+        type: boolean
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  # ==================================================================================
+  # 📋 Configuration Loader
+  # ==================================================================================
+  config:
+    name: 📋 Load Configuration
+    runs-on: ubuntu-latest
+    outputs:
+      workflows: ${{ steps.parse.outputs.workflows }}
+      global: ${{ steps.parse.outputs.global }}
+      matrix: ${{ steps.parse.outputs.matrix }}
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            .github/workflow-config.yml
+            .github/workflows
+      
+      - name: 🔧 Parse Configuration
+        id: parse
+        run: |
+          if [ ! -f .github/workflow-config.yml ]; then
+            echo "::error::Configuration file not found"
+            exit 1
+          fi
+          
+          # Install yq for YAML parsing
+          wget -qO /tmp/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          chmod +x /tmp/yq
+          
+          # Extract enabled workflows
+          ENABLED_WORKFLOWS=$(/tmp/yq eval '.workflows | to_entries | map(select(.value.enabled == true) | .key) | join(",")' .github/workflow-config.yml)
+          echo "workflows=$ENABLED_WORKFLOWS" >> $GITHUB_OUTPUT
+          
+          # Extract global config
+          GLOBAL_CONFIG=$(/tmp/yq eval '.global | @json' .github/workflow-config.yml)
+          echo "global=$GLOBAL_CONFIG" >> $GITHUB_OUTPUT
+          
+          # Build matrix for artifact builds
+          MATRIX=$(/tmp/yq eval '.workflows.helpers.matrix | @json' .github/workflow-config.yml)
+          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+          
+          echo "📋 Enabled workflows: $ENABLED_WORKFLOWS"
+
+  # ==================================================================================
+  # 🧪 Tests Workflow
+  # ==================================================================================
+  tests:
+    name: 🧪 Tests
+    needs: config
+    if: contains(needs.config.outputs.workflows, 'tests')
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python: ["3.11", "3.12", "3.13"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      
+      - name: ⚡ Install uv
+        uses: astral-sh/setup-uv@v4
+      
+      - name: 🔧 Setup Environment
+        run: |
+          uv venv workenv/flavor_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m)
+          source workenv/flavor_*/bin/activate
+          uv pip install -e .[dev]
+          uv pip install pytest-cov
+      
+      - name: 🧪 Run Tests
+        run: |
+          source workenv/flavor_*/bin/activate
+          pytest tests/ -n auto --cov=src/flavor --cov-branch --cov-report=xml --cov-report=term
+      
+      - name: 📊 Upload Coverage
+        if: matrix.os == 'ubuntu-latest' && matrix.python == '3.11'
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+          flags: unittests
+          name: flavor-coverage
+
+  # ==================================================================================
+  # 🔨 Helper Builds
+  # ==================================================================================
+  helpers:
+    name: 🔨 Build Helpers
+    needs: config
+    if: contains(needs.config.outputs.workflows, 'helpers')
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        language: [go, rust]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 🐹 Setup Go
+        if: matrix.language == 'go'
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+          cache: true
+          cache-dependency-path: helpers/flavor-go/go.sum
+      
+      - name: 🦀 Setup Rust
+        if: matrix.language == 'rust'
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+      
+      - name: 🔨 Build Helper
+        id: build
+        run: |
+          if [ "${{ matrix.language }}" = "go" ]; then
+            cd helpers/flavor-go
+            go build -o ../../helpers/bin/flavor-go-launcher-${{ matrix.os }} ./cmd/pspf-launcher
+            go build -o ../../helpers/bin/flavor-go-builder-${{ matrix.os }} ./cmd/pspf-builder
+          else
+            cd helpers/flavor-rust
+            cargo build --release --bin flavor-rs-launcher
+            cargo build --release --bin flavor-rs-builder
+            cp target/release/flavor-rs-launcher ../../helpers/bin/flavor-rs-launcher-${{ matrix.os }}
+            cp target/release/flavor-rs-builder ../../helpers/bin/flavor-rs-builder-${{ matrix.os }}
+          fi
+        shell: bash
+      
+      - name: 📦 Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: helpers-${{ matrix.language }}-${{ matrix.os }}
+          path: helpers/bin/*-${{ matrix.os }}
+          retention-days: 30
+
+  # ==================================================================================
+  # 🧪 Taster Integration Tests
+  # ==================================================================================
+  taster:
+    name: 🍯 Taster Tests
+    needs: [config, helpers]
+    if: contains(needs.config.outputs.workflows, 'taster')
+    strategy:
+      fail-fast: false
+      matrix:
+        launcher: [go, rust]
+        builder: [go, rust]
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 📥 Download Helpers
+        uses: actions/download-artifact@v4
+        with:
+          pattern: helpers-*-${{ matrix.os }}
+          path: helpers/bin/
+          merge-multiple: true
+      
+      - name: 🔧 Setup Permissions
+        run: chmod +x helpers/bin/*
+      
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: ⚡ Install uv
+        uses: astral-sh/setup-uv@v4
+      
+      - name: 🔧 Build Taster Package
+        run: |
+          uv venv workenv/flavor_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m)
+          source workenv/flavor_*/bin/activate
+          uv pip install -e .
+          
+          cd tests/taster
+          ../../workenv/flavor_*/bin/flavor package \
+            --launcher ${{ matrix.launcher }} \
+            --builder ${{ matrix.builder }} \
+            --output dist/taster-${{ matrix.launcher }}-${{ matrix.builder }}.pspf
+      
+      - name: 🧪 Run Taster Tests
+        run: |
+          chmod +x tests/taster/dist/taster-${{ matrix.launcher }}-${{ matrix.builder }}.pspf
+          
+          # Run all taster commands
+          export FLAVOR_INSECURE=1
+          ./tests/taster/dist/taster-${{ matrix.launcher }}-${{ matrix.builder }}.pspf test
+          ./tests/taster/dist/taster-${{ matrix.launcher }}-${{ matrix.builder }}.pspf env
+          ./tests/taster/dist/taster-${{ matrix.launcher }}-${{ matrix.builder }}.pspf argv
+          ./tests/taster/dist/taster-${{ matrix.launcher }}-${{ matrix.builder }}.pspf metadata
+          ./tests/taster/dist/taster-${{ matrix.launcher }}-${{ matrix.builder }}.pspf features
+      
+      - name: 📦 Upload Test Packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: taster-${{ matrix.launcher }}-${{ matrix.builder }}-${{ matrix.os }}
+          path: tests/taster/dist/*.pspf
+
+  # ==================================================================================
+  # 📦 Release Artifacts
+  # ==================================================================================
+  release:
+    name: 📦 Build Release Artifacts
+    needs: [tests, helpers, taster]
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux-amd64
+          - os: macos-latest
+            platform: darwin-amd64
+          - os: macos-latest
+            platform: darwin-arm64
+          - os: windows-latest
+            platform: windows-amd64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 📥 Download All Helpers
+        uses: actions/download-artifact@v4
+        with:
+          pattern: helpers-*
+          path: release/helpers/
+          merge-multiple: true
+      
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: ⚡ Install uv
+        uses: astral-sh/setup-uv@v4
+      
+      - name: 📦 Build Python Wheel
+        run: |
+          uv venv
+          uv pip install build
+          python -m build --wheel
+      
+      - name: 🎁 Package Release
+        run: |
+          mkdir -p release/flavor-${{ github.ref_name }}-${{ matrix.platform }}
+          
+          # Copy helpers
+          cp -r helpers/bin/* release/flavor-${{ github.ref_name }}-${{ matrix.platform }}/
+          
+          # Copy Python wheel
+          cp dist/*.whl release/flavor-${{ github.ref_name }}-${{ matrix.platform }}/
+          
+          # Create tarball
+          tar czf flavor-${{ github.ref_name }}-${{ matrix.platform }}.tar.gz \
+            -C release flavor-${{ github.ref_name }}-${{ matrix.platform }}
+      
+      - name: 📤 Upload Release Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.platform }}
+          path: flavor-*.tar.gz
+
+  # ==================================================================================
+  # 📋 Summary
+  # ==================================================================================
+  summary:
+    name: 📋 Workflow Summary
+    needs: [tests, helpers, taster]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📊 Generate Summary
+        run: |
+          echo "# 🎭 Workflow Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Check job statuses
+          if [ "${{ needs.tests.result }}" = "success" ]; then
+            echo "✅ Tests: Passed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Tests: Failed" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ "${{ needs.helpers.result }}" = "success" ]; then
+            echo "✅ Helpers: Built successfully" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Helpers: Build failed" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ "${{ needs.taster.result }}" = "success" ]; then
+            echo "✅ Taster: Integration tests passed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Taster: Integration tests failed" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 📦 Artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "Check the Actions tab for downloadable artifacts." >> $GITHUB_STEP_SUMMARY

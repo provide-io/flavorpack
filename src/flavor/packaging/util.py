@@ -9,7 +9,7 @@ from pathlib import Path
 
 from pyvider.telemetry import logger
 
-from ..exceptions import BuildError
+from flavor.exceptions import BuildError
 
 
 def run_subprocess(command: list[str], cwd: Path | str | None = None, 
