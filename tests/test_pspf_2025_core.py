@@ -32,6 +32,7 @@ from flavor.psp.format_2025 import (
 )
 
 
+@pytest.mark.unit
 class TestPSPFCore:
     """Test core PSPF format functionality."""
     

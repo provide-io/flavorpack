@@ -16,6 +16,7 @@ from contextlib import contextmanager
 from pyvider.telemetry import logger
 
 from flavor.psp.format_2025.reader import PSPFReader
+from flavor.psp.format_2025.constants import SLOT_DESCRIPTOR_SIZE
 
 
 class PSPFLauncher(PSPFReader):
@@ -34,6 +35,25 @@ class PSPFLauncher(PSPFReader):
         with default_lock_manager.lock(lock_file.name, timeout=timeout) as lock:
             yield lock
 
+    def verify_integrity(self) -> dict:
+        """Verify bundle integrity (wrapper for test compatibility).
+        
+        Returns:
+            dict: Verification result with standard keys
+        """
+        # Use inherited methods from PSPFReader
+        signature_valid = self.verify_signature()
+        checksums_valid = self.verify_all_checksums()
+        valid = signature_valid and checksums_valid
+        
+        return {
+            'valid': valid,
+            'signature_valid': signature_valid,
+            'checksums_valid': checksums_valid,
+            'tamper_detected': not valid,
+            'error': None if valid else 'Verification failed'
+        }
+    
     def read_slot_table(self) -> list[dict]:
         """Read the slot table from the bundle.
         
@@ -55,18 +75,23 @@ class PSPFLauncher(PSPFReader):
             # Seek to slot table
             f.seek(index.slot_table_offset)
             
-            # Read each 24-byte slot entry
+            # Read each 64-byte slot descriptor (new format)
             for i in range(index.slot_count):
-                entry_data = f.read(24)
-                if len(entry_data) != 24:
-                    raise ValueError(f"Invalid slot table entry {i}: expected 24 bytes, got {len(entry_data)}")
+                entry_data = f.read(SLOT_DESCRIPTOR_SIZE)
+                if len(entry_data) != SLOT_DESCRIPTOR_SIZE:
+                    raise ValueError(f"Invalid slot table entry {i}: expected {SLOT_DESCRIPTOR_SIZE} bytes, got {len(entry_data)}")
                 
-                # Parse the 24-byte structure:
-                # NOTE: This format must match Go/Rust implementations
-                # offset(8), size(8), checksum(4), encoding(1), purpose(1), lifecycle(1), reserved(1)
-                offset, size, checksum, encoding, purpose, lifecycle, reserved = struct.unpack(
-                    '<QQIBBBB', entry_data
-                )
+                # Use SlotDescriptor to unpack
+                from flavor.psp.format_2025.slots import SlotDescriptor
+                descriptor = SlotDescriptor.unpack(entry_data)
+                
+                # Extract the fields we need for launcher
+                offset = descriptor.offset
+                size = descriptor.size  # Compressed size
+                checksum = descriptor.checksum
+                encoding = descriptor.compression
+                purpose = descriptor.purpose
+                lifecycle = descriptor.lifecycle
                 
                 slot_entries.append({
                     'index': i,

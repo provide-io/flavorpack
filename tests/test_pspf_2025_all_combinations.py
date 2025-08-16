@@ -34,6 +34,10 @@ BUILDER_LAUNCHER_COMBINATIONS = [
 ]
 
 
+@pytest.mark.integration
+@pytest.mark.cross_language
+@pytest.mark.requires_helpers
+@pytest.mark.slow
 class TestAllCombinations:
     """Test all builder/launcher combinations systematically."""
     

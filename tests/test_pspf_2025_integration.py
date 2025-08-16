@@ -1,0 +1,198 @@
+#!/usr/bin/env python3
+# tests/test_pspf_2025_integration.py
+# Integration test for building and reading PSPF bundles with new format
+
+import pytest
+import tempfile
+from pathlib import Path
+
+from flavor.psp.format_2025.builder import PSPFBuilder
+from flavor.psp.format_2025.reader import PSPFReader
+from flavor.psp.format_2025.slots import SlotMetadata
+from flavor.psp.format_2025.constants import ACCESS_MMAP, HEADER_SIZE, SLOT_DESCRIPTOR_SIZE
+
+
+class TestPSPFIntegration:
+    """Integration tests for PSPF/2025 format."""
+    
+    @pytest.fixture
+    def test_data_dir(self):
+        """Create test data directory."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            data_dir = Path(tmpdir)
+            
+            # Create test files
+            (data_dir / "test1.txt").write_text("This is test file 1")
+            (data_dir / "test2.json").write_text('{"data": "test"}')
+            (data_dir / "config.yaml").write_text("key: value\n")
+            
+            yield data_dir
+    
+    def test_build_and_read_bundle(self, test_data_dir):
+        """Test building and reading a bundle."""
+        output_file = test_data_dir / "test.pspf"
+        
+        # Create slots
+        slots = [
+            SlotMetadata(
+                index=0,
+                name="test1.txt",
+                size=19,
+                checksum="",
+                encoding="none",
+                purpose="data",
+                lifecycle="volatile",
+                path=test_data_dir / "test1.txt"
+            ),
+            SlotMetadata(
+                index=1,
+                name="test2.json",
+                size=17,
+                checksum="",
+                encoding="gzip",
+                purpose="config",
+                lifecycle="persistent",
+                path=test_data_dir / "test2.json"
+            ),
+            SlotMetadata(
+                index=2,
+                name="config.yaml",
+                size=11,
+                checksum="",
+                encoding="none",
+                purpose="config",
+                lifecycle="volatile",
+                path=test_data_dir / "config.yaml"
+            ),
+        ]
+        
+        # Build bundle with mmap optimizations
+        builder = PSPFBuilder(enable_mmap=True, page_aligned=True)
+        
+        # Mock launcher for testing
+        builder._get_launcher = lambda x: b"MOCK_LAUNCHER_DATA"
+        
+        metadata = {
+            "package": {
+                "name": "test-bundle",
+                "version": "1.0.0",
+                "description": "Test bundle for PSPF/2025"
+            }
+        }
+        
+        builder.build(output_file, metadata=metadata, slots=slots)
+        
+        # Verify file was created
+        assert output_file.exists()
+        
+        # Read bundle with mmap backend
+        reader = PSPFReader(output_file, mode=ACCESS_MMAP)
+        reader.open()
+        
+        # Verify magic
+        assert reader.verify_magic()
+        
+        # Read index
+        index = reader.read_index()
+        assert index.header_size == HEADER_SIZE
+        assert index.descriptor_size == SLOT_DESCRIPTOR_SIZE
+        assert index.descriptor_count == 3
+        
+        # Read slot descriptors
+        descriptors = reader.read_slot_descriptors()
+        assert len(descriptors) == 3
+        
+        # Verify first slot
+        assert descriptors[0].size > 0
+        assert descriptors[0].compression == 0  # none
+        assert descriptors[0].purpose == 0  # data
+        
+        # Verify second slot (compressed)
+        assert descriptors[1].compression == 1  # gzip
+        assert descriptors[1].purpose == 2  # config
+        
+        # Read and verify slot data
+        slot1_data = reader.read_slot(0)
+        assert slot1_data == b"This is test file 1"
+        
+        slot2_data = reader.read_slot(1)
+        assert slot2_data == b'{"data": "test"}'
+        
+        slot3_data = reader.read_slot(2)
+        assert slot3_data == b"key: value\n"
+        
+        # Test slot views (lazy loading)
+        view = reader.get_slot_view(0)
+        assert view.content == b"This is test file 1"
+        
+        # Test streaming
+        chunks = list(reader.stream_slot(2, chunk_size=5))
+        assert len(chunks) == 3  # 11 bytes in 5-byte chunks
+        assert b"".join(chunks) == b"key: value\n"
+        
+        reader.close()
+    
+    def test_backend_switching(self, test_data_dir):
+        """Test switching between backends."""
+        output_file = test_data_dir / "test.pspf"
+        
+        # Build minimal bundle
+        builder = PSPFBuilder()
+        builder._get_launcher = lambda x: b"MOCK"
+        builder.build(output_file, metadata={}, slots=[])
+        
+        # Start with file backend
+        reader = PSPFReader(output_file, mode=ACCESS_MMAP)
+        reader.open()
+        
+        # Read index
+        index = reader.read_index()
+        assert index is not None
+        
+        # Switch to streaming
+        reader.use_streaming(chunk_size=128)
+        
+        # Can still read
+        index2 = reader.read_index()
+        assert index2.header_size == index.header_size
+        
+        reader.close()
+    
+    def test_page_aligned_slots(self, test_data_dir):
+        """Test page-aligned slot optimization."""
+        output_file = test_data_dir / "aligned.pspf"
+        
+        # Create large slot to test alignment
+        large_file = test_data_dir / "large.bin"
+        large_file.write_bytes(b"X" * 10000)
+        
+        slots = [
+            SlotMetadata(
+                index=0,
+                name="large.bin",
+                size=10000,
+                checksum="",
+                encoding="none",
+                purpose="data",
+                lifecycle="volatile",
+                path=large_file
+            ),
+        ]
+        
+        # Build with page alignment
+        builder = PSPFBuilder(enable_mmap=True, page_aligned=True)
+        builder._get_launcher = lambda x: b"MOCK"
+        builder.build(output_file, metadata={}, slots=slots)
+        
+        # Read and verify alignment
+        with PSPFReader(output_file, mode=ACCESS_MMAP) as reader:
+            descriptors = reader.read_slot_descriptors()
+            
+            # Check if slot is page-aligned
+            from flavor.psp.format_2025.constants import PAGE_SIZE
+            slot_offset = descriptors[0].offset
+            
+            # Data section should be page-aligned
+            assert descriptors[0].alignment == PAGE_SIZE
+
+# 🧪📦🗺️🪄
