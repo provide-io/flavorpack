@@ -21,7 +21,7 @@ from flavor.psp.format_2025 import (
     PSPFLauncher,
     PSPFIndex,
     SlotMetadata,
-    ephemeral_key_pair,
+    generate_key_pair,
     PSPF_MAGIC,
     INDEX_SIZE
 )
@@ -89,7 +89,7 @@ class TestPSPFSecurity:
         # Generate multiple key pairs
         keys = []
         for _ in range(5):
-            private_key, public_key = ephemeral_key_pair()
+            private_key, public_key = generate_key_pair()
             keys.append((private_key, public_key))
         
         # Verify all keys are unique

@@ -212,8 +212,8 @@ class PSPFReader:
         descriptors = []
         
         # Read all slot descriptors
-        for i in range(index.descriptor_count):
-            offset = index.descriptor_offset + (i * SLOT_DESCRIPTOR_SIZE)
+        for i in range(index.slot_count):
+            offset = index.slot_table_offset + (i * SLOT_DESCRIPTOR_SIZE)
             data = self._backend.read_at(offset, SLOT_DESCRIPTOR_SIZE)
             
             # Convert to bytes if memoryview
