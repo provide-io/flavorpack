@@ -81,10 +81,8 @@ class PSPFBuilder:
         # Create enhanced index with 512-byte header
         index = PSPFIndex()
         index.launcher_size = launcher_size
-        index.public_key = public_key
-        index.header_size = HEADER_SIZE
-        index.descriptor_size = SLOT_DESCRIPTOR_SIZE
-        index.page_size = PAGE_SIZE
+        # Note: ephemeral_public_key can be set if signing is enabled
+        # For now, leaving it as zeros per simplified approach
         
         # Set capabilities
         capabilities = 0
@@ -212,8 +210,8 @@ class PSPFBuilder:
             
             # Calculate checksum with checksum field zeroed
             checksum_data = bytearray(index_data)
-            checksum_data[28:32] = b'\x00\x00\x00\x00'
-            index.header_checksum = zlib.adler32(checksum_data)
+            checksum_data[12:16] = b'\x00\x00\x00\x00'  # Checksum is at offset 12
+            index.index_checksum = zlib.adler32(checksum_data)
             
             # Write final index with checksum
             f.seek(index_offset)

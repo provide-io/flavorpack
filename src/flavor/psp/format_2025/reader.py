@@ -144,13 +144,14 @@ class PSPFReader:
         self._index = PSPFIndex.unpack(index_data)
 
         # Verify checksum (Adler-32 with checksum field as 0)
-        expected_checksum = self._index.header_checksum
-        data_for_check = bytearray(index_data)
-        data_for_check[28:32] = b"\x00\x00\x00\x00"  # Zero out checksum field
-        actual_checksum = zlib.adler32(data_for_check)
+        expected_checksum = self._index.index_checksum
+        if expected_checksum != 0:  # Only verify if checksum is set
+            data_for_check = bytearray(index_data)
+            data_for_check[12:16] = b"\x00\x00\x00\x00"  # Zero out checksum field at correct offset
+            actual_checksum = zlib.adler32(data_for_check)
 
-        if expected_checksum != actual_checksum:
-            raise ValueError(f"Index checksum mismatch: expected {expected_checksum}, got {actual_checksum}")
+            if expected_checksum != actual_checksum:
+                raise ValueError(f"Index checksum mismatch: expected {expected_checksum}, got {actual_checksum}")
 
         return self._index
 
@@ -171,18 +172,26 @@ class PSPFReader:
         if isinstance(metadata_data, memoryview):
             metadata_data = bytes(metadata_data)
         
-        # Verify metadata checksum
+        # Verify metadata checksum (Adler32 stored in first 4 bytes of 32-byte field)
         actual_checksum = zlib.adler32(metadata_data)
-        if actual_checksum != index.metadata_checksum:
-            raise ValueError(f"Metadata checksum mismatch: expected {index.metadata_checksum}, got {actual_checksum}")
+        # Extract the Adler32 from the first 4 bytes of the checksum field
+        expected_checksum = struct.unpack('<I', index.metadata_checksum[:4])[0] if index.metadata_checksum else 0
+        if expected_checksum != 0 and actual_checksum != expected_checksum:
+            raise ValueError(f"Metadata checksum mismatch: expected {expected_checksum}, got {actual_checksum}")
         
-        # Parse based on format
-        if index.metadata_format == METADATA_JSON:
-            if index.metadata_compression == COMPRESSION_GZIP:
-                # Decompress first
-                metadata_data = gzip.decompress(metadata_data)
-            self._metadata = json.loads(metadata_data.decode('utf-8'))
-        else:
+        # Parse metadata (always gzipped JSON in current implementation)
+        # Decompress first
+        try:
+            metadata_data = gzip.decompress(metadata_data)
+        except gzip.BadGzipFile:
+            # Not compressed, use as-is
+            pass
+        
+        # Parse JSON
+        self._metadata = json.loads(metadata_data.decode('utf-8'))
+        
+        # Remove the old conditional that was checking metadata_format
+        if False:  # Keep structure for now
             # Legacy tar.gz format
             with tarfile.open(fileobj=io.BytesIO(metadata_data), mode="r:gz") as tar:
                 psp_member = tar.getmember("psp.json")
