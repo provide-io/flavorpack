@@ -1,9 +1,25 @@
 # Progressive Secure Package Format (PSPF) Specification
 ## 2025 Edition
 
-### Version: 2025.1
-### Status: Implemented (Go/Rust), Spec Updated 2025-08-11
-### Date: 2025-08-11
+### Version: 2025.2
+### Status: Implemented (Go/Rust/Python), Spec Updated 2025-08-15
+### Date: 2025-08-15
+
+---
+
+## Changelog
+
+### Version 2025.2 (2025-08-15)
+- **BREAKING**: Renamed `EphemeralPublicKey` to `PublicKey` in index structure
+- **BREAKING**: Metadata is now gzipped JSON (not tar.gz archive)
+- Clarified that signature covers uncompressed JSON
+- Added implementation requirements section
+- Specified exact storage of checksums and signatures
+- Documented cross-language compatibility requirements
+
+### Version 2025.1 (2025-08-11)
+- Initial specification release
+- Implemented in Go and Rust
 
 ---
 
@@ -16,7 +32,7 @@ The Progressive Secure Package Format (PSPF) 2025 Edition is a self-extracting, 
 1. **Polyglot by Design**: Valid as both an OS executable and PSPF package
 2. **Progressive Extraction**: Load only what's needed, when needed
 3. **Language Agnostic**: No assumptions about payload content or runtime
-4. **Secure by Default**: Ephemeral key integrity sealing built-in
+4. **Secure by Default**: Ed25519 signature-based integrity sealing built-in
 5. **Minimal Overhead**: Fixed 8192-byte index + 8-byte magic
 6. **Future-Proof**: Extensible through metadata, not format changes
 
@@ -33,7 +49,7 @@ The Progressive Secure Package Format (PSPF) 2025 Edition is a self-extracting, 
 │      Index Block             │ Fixed 8192 bytes
 │      (See Section 2.2)       │
 ├──────────────────────────────┤ Launcher_Size + 8192
-│      Metadata Archive        │ tar.gz containing psp.json
+│      Metadata (gzipped JSON) │ Compressed JSON metadata
 │                              │ Variable size
 ├──────────────────────────────┤
 │      Slot 0                  │ Aligned to 8-byte boundary
@@ -77,9 +93,9 @@ type PSPFIndex struct {
     Flags             uint32   // Feature flags
     
     // Security (576 bytes)
-    EphemeralPublicKey [32]byte  // Ed25519 public key for integrity seal
-    MetadataChecksum   [32]byte  // SHA256 of the raw metadata archive
-    IntegritySignature [512]byte // Signature of metadata (Ed25519 uses first 64 bytes)
+    PublicKey          [32]byte  // Ed25519 public key for signature verification
+    MetadataChecksum   [32]byte  // Adler-32 of compressed metadata (first 4 bytes, rest zeros)
+    IntegritySignature [512]byte // Ed25519 signature of uncompressed JSON (first 64 bytes, rest zeros)
     
     // Performance hints (64 bytes)
     AccessMode        uint8    // 0=auto, 1=mmap, 2=file, 3=stream
@@ -137,17 +153,15 @@ This magic footer:
 
 ## 3. Metadata Specification
 
-The metadata MUST be a gzip-compressed tar archive (`metadata.tar.gz`) containing at least `psp.json` and an `integrity/` directory.
+The metadata MUST be gzip-compressed JSON data. The signature and public key are stored in the index block, not embedded in the metadata.
 
-```
-metadata.tar.gz/
-├── psp.json                 # REQUIRED: Package manifest
-└── integrity/               # REQUIRED: Integrity seal
-    ├── seal.sig             # Ephemeral Ed25519 signature of psp.json
-    └── seal.pem             # Ephemeral public key
-```
+**Key points:**
+- Metadata is pure JSON (no tar archive)
+- Stored compressed with gzip
+- Signature covers the uncompressed JSON
+- Public key and signature are in the index block
 
-### 3.1 psp.json Schema (Simplified)
+### 3.1 Metadata JSON Schema
 
 ```json
 {
@@ -171,10 +185,11 @@ metadata.tar.gz/
   "execution": {
     "command": "string with {slot:N} substitutions"
   },
-  "verification": {
-    "integrity_seal": {
-      "required": true,
-      "algorithm": "ed25519"
+  "runtime": {
+    "env": {
+      "set": {},
+      "unset": [],
+      "pass": []
     }
   }
 }
@@ -182,10 +197,81 @@ metadata.tar.gz/
 
 ## 4. Security Model
 
-Every bundle MUST include an integrity seal using ephemeral `ed25519` keys:
-1. Generate a new key pair at build time.
-2. Sign the contents of `psp.json` with the private key.
-3. Include the public key and signature in the `integrity/` directory within the metadata archive.
-4. Store the public key in the `EphemeralPublicKey` field of the Index Block.
-5. Discard the private key.
-6. The launcher MUST verify that the signature is valid for `psp.json` using the public key from the index block before any extraction occurs.
+Every bundle MUST include cryptographic integrity verification using Ed25519:
+
+1. **Key Generation**: Generate an Ed25519 key pair at build time (optionally deterministic with --key-seed)
+2. **Signing**: Sign the uncompressed JSON metadata with the private key
+3. **Storage in Index**:
+   - Store the 32-byte public key in the `PublicKey` field
+   - Store the 64-byte signature in the first 64 bytes of `IntegritySignature` field
+   - Store Adler-32 checksum of compressed metadata in first 4 bytes of `MetadataChecksum`
+4. **Private Key**: Discard after signing (or derive deterministically from seed)
+5. **Verification**: The launcher MUST:
+   - Read and decompress the metadata
+   - Verify the Ed25519 signature of the JSON using the public key from the index
+   - Verify the Adler-32 checksum matches the compressed data
+   - Refuse to execute if verification fails
+
+## 5. Implementation Requirements
+
+### 5.1 Language-Specific Modules
+
+Each language implementation MUST provide:
+
+1. **Standalone Module**: A self-contained package/module that can be imported by other projects
+   - Python: `flavor` package on PyPI
+   - Rust: `flavor` crate on crates.io
+   - Go: `github.com/provide-io/flavor-go` module
+
+2. **Consistent API**: Each implementation should offer similar functionality:
+   - Builder API for creating PSPF packages
+   - Reader API for extracting and verifying packages
+   - Launcher binaries for executing packages
+   - Helper utilities for key generation, signing, etc.
+
+3. **Developer Experience**: Prioritize ease of use:
+   - Simple, intuitive APIs
+   - Comprehensive documentation
+   - Examples and tutorials
+   - Type safety where applicable
+
+### 5.2 Cross-Language Compatibility
+
+All implementations MUST:
+- Use identical binary formats for all structures
+- Implement the same cryptographic algorithms (Ed25519, Adler-32)
+- Handle endianness consistently (little-endian)
+- Support reading packages created by any other implementation
+- Pass cross-language compatibility tests
+
+### 5.3 Field Names and Conventions
+
+To maintain consistency across implementations:
+- Use `PublicKey` not `EphemeralPublicKey` (keys aren't necessarily ephemeral)
+- Use `package_size` not `file_size` for total package size
+- Use `slot_table_offset` not `descriptor_offset`
+- Metadata is always gzipped JSON (no conditionals)
+- Signatures are stored in the index, not embedded in metadata
+
+### 5.4 Implementation Notes
+
+#### Checksum Calculations
+- **Index Checksum**: Adler-32 of the entire 8192-byte index with the checksum field set to 0
+- **Metadata Checksum**: Adler-32 of the compressed (gzipped) metadata bytes
+- **Slot Checksums**: Adler-32 of the compressed slot data
+
+#### Signature Verification
+- **What to Sign**: The uncompressed JSON metadata (not the gzipped version)
+- **Signature Storage**: First 64 bytes of the 512-byte `IntegritySignature` field
+- **Public Key Storage**: 32-byte `PublicKey` field in the index
+- **Algorithm**: Ed25519 (RFC 8032)
+
+#### Compression
+- **Metadata**: Always gzip compressed
+- **Slots**: Compression optional, specified per-slot
+- **Supported Algorithms**: none, gzip, zstd, brotli
+
+#### Alignment
+- **Index Block**: Always at `launcher_size` offset (no alignment needed)
+- **Slots**: Aligned to 8-byte boundaries minimum
+- **Page Alignment**: Optional, for memory-mapped I/O optimization

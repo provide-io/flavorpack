@@ -40,7 +40,7 @@ class PSPFIndex:
         "I"    # flags
         
         # Security (576 bytes)
-        "32s"  # ephemeral_public_key
+        "32s"  # public_key (Ed25519)
         "32s"  # metadata_checksum
         "512s" # integrity_signature (Ed25519 uses first 64 bytes)
         
@@ -98,7 +98,7 @@ class PSPFIndex:
     flags: int = field(default=0)
     
     # Security fields
-    ephemeral_public_key: bytes = field(default=Factory(lambda: b"\x00" * 32))
+    public_key: bytes = field(default=Factory(lambda: b"\x00" * 32))
     metadata_checksum: bytes = field(default=Factory(lambda: b"\x00" * 32))
     integrity_signature: bytes = field(default=Factory(lambda: b"\x00" * 512))
     
@@ -157,7 +157,7 @@ class PSPFIndex:
             self.slot_table_size,
             self.slot_count,
             self.flags,
-            self.ephemeral_public_key,
+            self.public_key,
             self.metadata_checksum,
             self.integrity_signature,
             self.access_mode,
@@ -204,7 +204,7 @@ class PSPFIndex:
             self.slot_table_size,
             self.slot_count,
             self.flags,
-            self.ephemeral_public_key,
+            self.public_key,
             self.metadata_checksum,
             self.integrity_signature,
             self.access_mode,
@@ -257,7 +257,7 @@ class PSPFIndex:
             slot_table_size=unpacked[8],
             slot_count=unpacked[9],
             flags=unpacked[10],
-            ephemeral_public_key=unpacked[11],
+            public_key=unpacked[11],
             metadata_checksum=unpacked[12],
             integrity_signature=unpacked[13],
             access_mode=unpacked[14],

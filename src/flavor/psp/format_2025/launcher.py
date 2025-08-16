@@ -161,7 +161,8 @@ class PSPFLauncher(PSPFReader):
         # Decode if needed
         if slot_entry['encoding'] == 1:  # gzip
             logger.debug(f"🗜️ Decompressing slot {slot_index} with gzip")
-            data = zlib.decompress(slot_data)
+            import gzip
+            data = gzip.decompress(slot_data)
             logger.debug(f"✅ Decompressed to {len(data)} bytes")
         elif slot_entry['encoding'] == 2:  # reserved for future encoding methods
             logger.error(f"❌ Encoding method 2 is reserved for future use")

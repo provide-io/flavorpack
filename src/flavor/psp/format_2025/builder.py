@@ -25,7 +25,7 @@ from flavor.psp.format_2025.constants import (
     CAPABILITY_MMAP, CAPABILITY_SIGNED, CAPABILITY_PAGE_ALIGNED,
     DEFAULT_MAX_MEMORY, DEFAULT_MIN_MEMORY
 )
-from flavor.psp.format_2025.crypto import ephemeral_key_pair, sign_data
+from flavor.psp.format_2025.crypto import generate_key_pair, sign_data
 from flavor.psp.format_2025.index import PSPFIndex
 from flavor.psp.format_2025.slots import SlotDescriptor, SlotMetadata, align_offset, align_to_page
 
@@ -71,8 +71,8 @@ class PSPFBuilder:
         if metadata and "slots" not in metadata and slots:
             metadata["slots"] = [slot.to_dict() for slot in slots]
 
-        # Generate ephemeral keys
-        private_key, public_key = ephemeral_key_pair()
+        # Generate keys for signing
+        private_key, public_key = generate_key_pair()
 
         # Get launcher
         launcher_data = self._get_launcher(launcher_type)
@@ -81,8 +81,8 @@ class PSPFBuilder:
         # Create enhanced index with 512-byte header
         index = PSPFIndex()
         index.launcher_size = launcher_size
-        # Note: ephemeral_public_key can be set if signing is enabled
-        # For now, leaving it as zeros per simplified approach
+        # Store public key for signature verification
+        index.public_key = public_key
         
         # Set capabilities
         capabilities = 0
@@ -99,9 +99,7 @@ class PSPFBuilder:
         index.max_memory = DEFAULT_MAX_MEMORY
         index.min_memory = DEFAULT_MIN_MEMORY
         
-        # Set metadata format
-        index.metadata_format = METADATA_JSON
-        index.metadata_compression = COMPRESSION_GZIP
+        # Metadata is always gzipped JSON in PSPF/2025
 
         # Write bundle
         with open(output_path, "wb") as f:
@@ -112,39 +110,42 @@ class PSPFBuilder:
             index_offset = launcher_size
             f.seek(index_offset + HEADER_SIZE)
 
-            # Write metadata
+            # Create and sign metadata
             metadata_offset = f.tell()
-            metadata_data = self._create_metadata(metadata, private_key, public_key)
+            metadata_json, signature = self._create_metadata(metadata, private_key, public_key)
             
-            # Compress metadata
-            if index.metadata_compression == COMPRESSION_GZIP:
-                metadata_data = gzip.compress(metadata_data)
+            # Store signature in index (Ed25519 signatures are 64 bytes)
+            # Pad signature to 512 bytes
+            padded_signature = signature + b'\x00' * (512 - 64)
+            index.integrity_signature = padded_signature
+            
+            # Compress metadata (always gzip in PSPF/2025)
+            metadata_data = gzip.compress(metadata_json)
             
             f.write(metadata_data)
             
             index.metadata_offset = metadata_offset
             index.metadata_size = len(metadata_data)
-            index.metadata_checksum = zlib.adler32(metadata_data)
+            # Store Adler32 checksum as 32-byte field (padded)
+            checksum = zlib.adler32(metadata_data)
+            index.metadata_checksum = checksum.to_bytes(4, 'little') + b'\x00' * 28
 
             # Prepare slot descriptors
             descriptors = []
             if slots:
-                # Calculate descriptor table offset
-                descriptor_offset = align_offset(f.tell(), SLOT_ALIGNMENT)
-                index.descriptor_offset = descriptor_offset
-                index.descriptor_count = len(slots)
+                index.slot_count = len(slots)
                 
-                # Skip space for descriptors
-                f.seek(descriptor_offset + len(slots) * SLOT_DESCRIPTOR_SIZE)
+                # Calculate and set slot table position (right after metadata)
+                slot_table_offset = align_offset(f.tell(), SLOT_ALIGNMENT)
+                index.slot_table_offset = slot_table_offset
+                index.slot_table_size = len(slots) * SLOT_DESCRIPTOR_SIZE
                 
-                # Align data section to page boundary if requested
-                if self.page_aligned:
-                    data_offset = align_to_page(f.tell())
-                else:
-                    data_offset = align_offset(f.tell(), SLOT_ALIGNMENT)
+                # Reserve space for slot table
+                f.seek(slot_table_offset + index.slot_table_size)
                 
-                index.data_offset = data_offset
-                f.seek(data_offset)
+                # Align to boundary for first slot data
+                data_start = align_offset(f.tell(), SLOT_ALIGNMENT)
+                f.seek(data_start)
                 
                 # Write slot data and build descriptors
                 for i, slot in enumerate(slots):
@@ -190,20 +191,23 @@ class PSPFBuilder:
                         f"original={original_size}, compression={compression_type}"
                     )
                 
-                # Write descriptor table
-                f.seek(descriptor_offset)
+                # Now go back and write the descriptor table
+                end_of_slots = f.tell()
+                f.seek(slot_table_offset)
                 for descriptor in descriptors:
                     f.write(descriptor.pack())
-
-            # Remember position after descriptor table
-            end_of_data = f.tell()
+                
+                # Return to end of data
+                f.seek(end_of_slots)
+            
+            # Now we're at the correct position (end of all data)
             
             # Write trailing magic with package and wand emojis
             trailing_magic = '📦🪄'
             f.write(trailing_magic.encode('utf-8'))
             
-            # Update file size
-            index.file_size = f.tell()
+            # Update package size to include trailing magic
+            index.package_size = f.tell()
 
             # Calculate and write index with checksum
             index_data = index.pack()
@@ -217,13 +221,9 @@ class PSPFBuilder:
             f.seek(index_offset)
             f.write(index.pack())
             
-            # Now seek to end and re-write the magic as the very last thing
-            f.seek(0, 2)  # Seek to end of file
-            f.write(trailing_magic.encode('utf-8'))
-            
         logger.info(
             f"✅ Built PSPF/2025 bundle: {output_path} "
-            f"({index.file_size} bytes, {len(descriptors)} slots)"
+            f"({index.package_size} bytes, {len(descriptors)} slots)"
         )
 
     def _get_launcher(self, launcher_type: str) -> bytes:
@@ -265,9 +265,12 @@ class PSPFBuilder:
 
     def _create_metadata(
         self, metadata: dict, private_key: bytes, public_key: bytes
-    ) -> bytes:
-        """Create metadata as JSON (can be in tar.gz for legacy)."""
-        # For new format, we can use plain JSON
+    ) -> Tuple[bytes, bytes]:
+        """Create metadata JSON and sign it.
+        
+        Returns:
+            tuple: (json_data, signature)
+        """
         if metadata is None:
             metadata = {}
         
@@ -281,11 +284,8 @@ class PSPFBuilder:
         # Sign the metadata
         signature = sign_data(json_data, private_key)
         
-        # Add signature to metadata
-        metadata["signature"] = signature.hex()
-        
-        # Return final JSON
-        return json.dumps(metadata, indent=2).encode('utf-8')
+        # Return JSON and signature separately
+        return json_data, signature
 
     def _get_slot_data(self, slot: SlotMetadata) -> bytes:
         """Get raw slot data."""
