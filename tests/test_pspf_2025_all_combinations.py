@@ -49,22 +49,40 @@ class TestAllCombinations:
     @pytest.mark.parametrize("builder,launcher", BUILDER_LAUNCHER_COMBINATIONS)
     def test_builder_launcher_combination(self, builder, launcher):
         """Test a specific builder/launcher combination."""
-        # Create test payload
-        payload_content = f"Built with {builder}, launched with {launcher}"
-        payload_path = self.temp_dir / f"{builder}_{launcher}_payload.dat"
-        payload_path.write_bytes(payload_content.encode())
+        # Create a proper tar archive with an executable script
+        tar_path = self.temp_dir / f"{builder}_{launcher}_payload.tar.gz"
+        
+        # Create a simple executable script
+        script_content = f"""#!/bin/sh
+echo "Built with {builder}, launched with {launcher}"
+exit 0
+"""
+        
+        # Create tar archive containing the script
+        import tarfile
+        import io
+        
+        with tarfile.open(tar_path, 'w:gz') as tar:
+            # Add the run script
+            script_info = tarfile.TarInfo(name='run')
+            script_info.size = len(script_content)
+            script_info.mode = 0o755  # Make it executable
+            tar.addfile(script_info, io.BytesIO(script_content.encode()))
+        
+        # Get size for metadata
+        payload_size = tar_path.stat().st_size
+        payload_content = tar_path.read_bytes()
         
         # Create slot
         slot = SlotMetadata(
             index=0,
-            name="payload",
-            size=len(payload_content),
-            compressed_size=0,
-            checksum=hashlib.sha256(payload_content.encode()).hexdigest(),
-            encoding="gzip",
+            name="payload.tar.gz",
+            size=payload_size,
+            checksum=hashlib.sha256(payload_content).hexdigest(),
+            encoding="none",  # Already compressed
             purpose="payload",
             lifecycle="persistent",
-            path=payload_path
+            path=tar_path
         )
         
         # Build bundle
@@ -129,8 +147,8 @@ class TestAllCombinations:
         # 5. Verify slot
         assert len(metadata_read['slots']) == 1
         slot_meta = metadata_read['slots'][0]
-        assert slot_meta['name'] == 'payload'
-        assert slot_meta['encoding'] == 'gzip'
+        assert slot_meta['name'] == 'payload.tar.gz'
+        assert slot_meta['encoding'] == 'none'  # Already compressed
         
         # 6. Verify checksums - TODO: implement verify_all_checksums()
         # assert reader.verify_all_checksums()
@@ -163,7 +181,6 @@ class TestAllCombinations:
                 index=idx,
                 name=name,
                 size=len(content),
-                compressed_size=0,
                 checksum=hashlib.sha256(content).hexdigest(),
                 encoding="gzip" if name == "text" else "none",
                 purpose="payload",
@@ -286,7 +303,6 @@ class TestAllCombinations:
             index=0,
             name="main",
             size=payload_path.stat().st_size,
-            compressed_size=0,
             checksum=hashlib.sha256(payload_path.read_bytes()).hexdigest(),
             encoding="gzip",  # Use gzip for all tests since zstd isn't implemented yet
             purpose="payload",

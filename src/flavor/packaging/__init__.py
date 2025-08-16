@@ -7,8 +7,8 @@ verification of Progressive Secure Provider Format (Flavor) packages.
 """
 
 # Public API for the packaging module
-from .keys import generate_key_pair
-from .orchestrator import PackagingOrchestrator
+from flavor.packaging.keys import generate_key_pair
+from flavor.packaging.orchestrator import PackagingOrchestrator
 
 __all__ = [
     "PackagingOrchestrator",

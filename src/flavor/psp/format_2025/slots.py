@@ -35,14 +35,13 @@ class SlotMetadata:
 
     index: int = field(validator=validators.instance_of(int))
     name: str = field(validator=validators.instance_of(str))
-    size: int = field(validator=validators.instance_of(int))
-    compressed_size: int = field(validator=validators.instance_of(int))
+    size: int = field(validator=validators.instance_of(int))  # Size as stored in package
     checksum: str = field(validator=validators.instance_of(str))
-    encoding: str = field(validator=validators.in_(["none", "gzip"]))
+    encoding: str = field(validator=validators.in_(["none", "gzip"]))  # Indicates compression type
     purpose: str = field()  # Store original value, normalize when needed
     lifecycle: str = field(validator=validators.in_(["persistent", "volatile", "temporary", "install"]))
-    path: Path | None = field(default=None)
-    platform: str | None = field(default=None)
+    path: Path | None = field(default=None)  # Build-time source path
+    extract_to: str | None = field(default=None)  # Runtime extraction subdirectory
 
     def get_purpose_value(self) -> int:
         """Get the numeric purpose value for binary encoding."""
