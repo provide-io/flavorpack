@@ -189,7 +189,31 @@ class PackagingOrchestrator:
                 "execution": {
                     "primary_slot": 0,  # Primary slot for execution
                     "command": f"{{workenv}}/bin/{self.package_name}",  # Use the installed script
-                    "environment": {},
+                    "env": {},  # Application-specific environment variables
+                },
+                "workenv": {
+                    "directories": [
+                        # Additional directories for application use (Python venv dirs are created by UV)
+                        {"path": "tmp", "mode": "0700"},  # User-only temp directory
+                        {"path": "var", "mode": "0755"},
+                        {"path": "var/log", "mode": "0755"},
+                        {"path": "var/cache", "mode": "0755"},
+                        {"path": "var/run", "mode": "0755"},
+                        {"path": "etc", "mode": "0755"},  # Configuration
+                        {"path": "home", "mode": "0700"},  # User home directory
+                        {"path": "state", "mode": "0755"},  # Application state
+                    ],
+                    "env": {
+                        "TMPDIR": "{workenv}/tmp",
+                        "TMP": "{workenv}/tmp",
+                        "TEMP": "{workenv}/tmp",
+                        "XDG_RUNTIME_DIR": "{workenv}/var/run",
+                        "XDG_CACHE_HOME": "{workenv}/var/cache",
+                        "XDG_DATA_HOME": "{workenv}/share",
+                        "XDG_STATE_HOME": "{workenv}/state",
+                        "XDG_CONFIG_HOME": "{workenv}/etc",
+                        "HOME": "{workenv}/home",
+                    },
                 },
                 "cache_validation": {
                     "check_file": "{workenv}/metadata/installed",
@@ -382,7 +406,6 @@ class PackagingOrchestrator:
                         "extract_to": "wheels",
                     },
                 ],
-                "environment": {},
                 "signature": {
                     "private_key": self.package_integrity_key_path,
                     "public_key": self.public_key_path,

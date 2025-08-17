@@ -102,7 +102,19 @@ def validate_metadata_dict(metadata: Dict[str, Any]) -> Dict[str, Any]:
     result = {}
     
     for key, value in metadata.items():
-        if key in PATH_KEYS and isinstance(value, str):
+        if key == "workenv" and isinstance(value, dict):
+            # Special case: workenv section needs special handling
+            # - directories: paths are relative to workenv (no {workenv} prefix)
+            # - env: values should have {workenv} placeholders
+            workenv_result = {}
+            if "directories" in value:
+                # Keep directory paths as-is (they're relative)
+                workenv_result["directories"] = value["directories"]
+            if "env" in value:
+                # Validate env values to ensure they use {workenv}
+                workenv_result["env"] = validate_metadata_dict(value["env"])
+            result[key] = workenv_result
+        elif key in PATH_KEYS and isinstance(value, str):
             # This is a path field - validate it
             result[key] = validate_metadata_path(value)
         elif key in PATTERN_KEYS and isinstance(value, dict) and "path" in value:
