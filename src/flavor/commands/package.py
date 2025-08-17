@@ -33,6 +33,11 @@ from flavor.exceptions import BuildError
     help="Launcher type to embed (defaults to 'rust' or value from FLAVOR_LAUNCHER env var).",
 )
 @click.option(
+    "--launcher-bin",
+    type=click.Path(exists=True, dir_okay=False, resolve_path=True),
+    help="Path to launcher binary (overrides launcher type selection).",
+)
+@click.option(
     "--builder-bin",
     type=click.Path(exists=True, dir_okay=False, resolve_path=True),
     help="Path to builder binary (overrides default builder selection).",
@@ -72,10 +77,21 @@ from flavor.exceptions import BuildError
     type=str,
     help="Seed for deterministic key generation.",
 )
+@click.option(
+    "--output-format",
+    type=click.Choice(["text", "json"], case_sensitive=False),
+    help="Output format (or set FLAVOR_OUTPUT_FORMAT env var).",
+)
+@click.option(
+    "--output-file",
+    type=str,
+    help="Output file path, STDOUT, or STDERR (or set FLAVOR_OUTPUT_FILE env var).",
+)
 def package_command(
     pyproject_toml_path: str,
     output_path: str | None,
     launcher: str | None,
+    launcher_bin: str | None,
     builder_bin: str | None,
     verify: bool,
     strip: bool,
@@ -84,6 +100,8 @@ def package_command(
     private_key: str | None,
     public_key: str | None,
     key_seed: str | None,
+    output_format: str | None,
+    output_file: str | None,
 ) -> None:
     """Packages the application for one or more target platforms."""
     if not quiet:
@@ -94,6 +112,7 @@ def package_command(
             Path(pyproject_toml_path),
             output_path=Path(output_path) if output_path else None,
             launcher_type=launcher,
+            launcher_bin=Path(launcher_bin) if launcher_bin else None,
             builder_bin=Path(builder_bin) if builder_bin else None,
             strip_binaries=strip,
             show_progress=progress and not quiet,

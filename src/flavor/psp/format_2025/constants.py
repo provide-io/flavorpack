@@ -35,11 +35,19 @@ MAGIC_WAND_EMOJI = "🪄"
 TRAILING_MAGIC = "📦🪄"  # Both emojis at end of bundle
 EMOJI_MAGIC_SIZE = len(TRAILING_MAGIC.encode('utf-8'))  # Size in bytes
 
-# Compression types
-COMPRESSION_NONE = 0
-COMPRESSION_GZIP = 1
-COMPRESSION_ZSTD = 2
-COMPRESSION_BROTLI = 3
+# Encoding types - describe the actual format of slot data
+ENCODING_RAW = 0      # Raw uncompressed data
+ENCODING_TAR = 1      # Uncompressed tar archive
+ENCODING_GZIP = 2     # Gzipped single file  
+ENCODING_TGZ = 3      # Tar archive, then gzipped (tar.gz)
+
+# Future encoding formats (not implemented yet):
+# ENCODING_ZSTD = 4     # Zstd compressed single file
+# ENCODING_TZST = 5     # Tar archive, then zstd compressed  
+# ENCODING_BROTLI = 6   # Brotli compressed single file
+# ENCODING_TBR = 7      # Tar archive, then brotli compressed
+# ENCODING_ZIP = 8      # Zip archive (would need zipfile module)
+# ENCODING_7Z = 9       # 7-zip archive (would need py7zr module)
 
 # Checksum algorithms
 CHECKSUM_ADLER32 = 0   # Default, fast

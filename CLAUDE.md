@@ -6,6 +6,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Flavor is a packaging system implementing the Progressive Secure Package Format (PSPF/2025). It creates self-extracting, polyglot archive formats that are valid both as OS executables and PSPF packages. The system consists of Python, Go, and Rust components working together.
 
+## Critical Design Principles
+
+**NEVER add environment variable-specific logic in the helpers (Rust/Go)**. The helpers should be generic and data-driven. All environment variable configuration should come from the metadata. Do not add special cases like "if command is UV then set UV_SYSTEM_PYTHON" - this violates the separation of concerns. The helpers are meant to be generic executors that work with ANY package based on metadata alone.
+
 ## Development Environment Setup
 
 Always use the workenv virtual environment system:

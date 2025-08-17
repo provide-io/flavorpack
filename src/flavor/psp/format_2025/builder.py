@@ -16,7 +16,7 @@ import tempfile
 import time
 import zlib
 from pathlib import Path
-from typing import List, Dict, Any, Optional, Tuple, Union
+from typing import Any
 
 import attrs
 from pyvider.telemetry import logger
@@ -26,7 +26,7 @@ from flavor.utils import get_platform_string
 from flavor.psp.format_2025.constants import (
     EMOJI_MAGIC_SIZE, HEADER_SIZE, MAGIC_WAND_EMOJI, PSPF_MAGIC,
     SLOT_DESCRIPTOR_SIZE, PAGE_SIZE, SLOT_ALIGNMENT,
-    COMPRESSION_NONE, COMPRESSION_GZIP,
+    ENCODING_RAW, ENCODING_TAR, ENCODING_GZIP, ENCODING_TGZ,
     PURPOSE_DATA, PURPOSE_CODE, PURPOSE_CONFIG, PURPOSE_MEDIA,
     LIFECYCLE_PERMANENT, LIFECYCLE_CACHED, LIFECYCLE_TEMPORARY,
     ACCESS_AUTO, CACHE_NORMAL,
@@ -41,6 +41,8 @@ from flavor.psp.format_2025.spec import (
 )
 from flavor.psp.format_2025.validation import validate_complete
 from flavor.psp.format_2025.keys import resolve_keys
+from flavor.psp.format_2025.checksums import calculate_checksum
+from flavor.psp.format_2025.paths import validate_metadata_dict
 
 
 # =============================================================================
@@ -113,9 +115,9 @@ def build_package(spec: BuildSpec, output_path: Path) -> BuildResult:
 
 
 def prepare_slots(
-    slots: List[SlotMetadata],
+    slots: list[SlotMetadata],
     options: BuildOptions
-) -> List[PreparedSlot]:
+) -> list[PreparedSlot]:
     """
     Prepare slots for packaging.
     
@@ -134,28 +136,31 @@ def prepare_slots(
         # Load data
         data = _load_slot_data(slot)
         
-        # Apply compression if needed
-        compressed_data, compression_type = _compress_data(
+        # Determine encoding (no compression, just metadata)
+        slot_data, encoding_type = _determine_encoding(
             data, slot.encoding, options
         )
         
-        # Calculate checksum
-        checksum = zlib.adler32(compressed_data)
+        # Calculate checksums with prefixes
+        checksum_str = calculate_checksum(slot_data, "sha256")
+        checksum_adler32 = zlib.adler32(slot_data)
+        
+        # Store prefixed checksum in metadata
+        slot.checksum = checksum_str
         
         prepared.append(
             PreparedSlot(
                 metadata=slot,
                 data=data,
-                compressed_data=compressed_data if compressed_data != data else None,
-                compression_type=compression_type,
-                checksum=checksum
+                compressed_data=slot_data if slot_data != data else None,
+                encoding_type=encoding_type,  # Now encoding type, not compression
+                checksum=checksum_adler32  # Binary descriptor uses raw Adler-32
             )
         )
         
         logger.debug(
             f"   📍 Slot '{slot.name}': "
-            f"{len(data)} bytes → {len(compressed_data)} bytes "
-            f"(compression: {compression_type})"
+            f"{len(data)} bytes, encoding: {encoding_type}"
         )
     
     return prepared
@@ -163,7 +168,7 @@ def prepare_slots(
 
 def create_index(
     spec: BuildSpec,
-    slots: List[PreparedSlot],
+    slots: list[PreparedSlot],
     public_key: bytes
 ) -> PSPFIndex:
     """
@@ -227,24 +232,43 @@ def _load_slot_data(slot: SlotMetadata) -> bytes:
         return slot.path.read_bytes()
 
 
-def _compress_data(
+def _determine_encoding(
     data: bytes,
     encoding: str,
     options: BuildOptions
-) -> Tuple[bytes, int]:
-    """Compress data according to encoding and options."""
-    if encoding == "none" or options.compression == "none":
-        return data, COMPRESSION_NONE
+) -> tuple[bytes, int]:
+    """Determine encoding constant for the data format.
     
-    if encoding == "gzip" or options.compression == "gzip":
-        compressed = gzip.compress(data, compresslevel=options.compression_level)
-        # Only use compression if it actually saves space
-        if len(compressed) < len(data):
-            return compressed, COMPRESSION_GZIP
+    Note: This does NOT compress data - the orchestrator/packer handles that.
+    We just map the encoding string to the appropriate constant.
+    """
+    encoding_lower = encoding.lower()
     
-    # TODO: Support zstd and brotli
-    
-    return data, COMPRESSION_NONE
+    # Map encoding strings to constants
+    if encoding_lower in ("none", "raw", ""):
+        return data, ENCODING_RAW
+    elif encoding_lower == "tar":
+        return data, ENCODING_TAR
+    elif encoding_lower == "gzip":
+        return data, ENCODING_GZIP
+    elif encoding_lower in ("tgz", "tar.gz"):
+        return data, ENCODING_TGZ
+    # Future formats (not implemented yet):
+    # elif encoding_lower == "zstd":
+    #     return data, ENCODING_ZSTD
+    # elif encoding_lower in ("tzst", "tar.zst"):
+    #     return data, ENCODING_TZST
+    # elif encoding_lower == "brotli":
+    #     return data, ENCODING_BROTLI
+    # elif encoding_lower in ("tbr", "tar.br"):
+    #     return data, ENCODING_TBR
+    # elif encoding_lower == "zip":
+    #     return data, ENCODING_ZIP
+    # elif encoding_lower == "7z":
+    #     return data, ENCODING_7Z
+    else:
+        logger.warning(f"Unknown encoding '{encoding}', using ENCODING_RAW")
+        return data, ENCODING_RAW
 
 
 def _get_launcher(launcher_type: str) -> bytes:
@@ -261,11 +285,13 @@ def _get_launcher(launcher_type: str) -> bytes:
     
     launcher_name = launcher_map.get(launcher_type, "flavor-rs-launcher")
     
-    # Search paths
+    # Search paths - prioritize helpers/bin first
     search_paths = [
-        Path.cwd() / "workenv" / "flavors" / platform_str / launcher_name,
         Path.cwd() / "helpers" / "bin" / launcher_name,
+        Path.cwd().parent / "helpers" / "bin" / launcher_name,  
+        Path.cwd().parent.parent / "helpers" / "bin" / launcher_name,  # For tests
         Path.home() / ".cache" / "flavor" / "bin" / launcher_name,
+        Path.cwd() / "workenv" / "flavors" / platform_str / launcher_name,
         Path.cwd() / launcher_name,
     ]
     
@@ -283,7 +309,7 @@ def _get_launcher(launcher_type: str) -> bytes:
 def _write_package(
     spec: BuildSpec,
     output_path: Path,
-    slots: List[PreparedSlot],
+    slots: list[PreparedSlot],
     private_key: bytes,
     public_key: bytes
 ) -> int:
@@ -303,13 +329,30 @@ def _write_package(
     index = create_index(spec, slots, public_key)
     index.launcher_size = launcher_size
     
-    # Create metadata JSON
+    # Create metadata JSON in the format expected by launchers
+    # Extract package info from spec.metadata
+    package_info = spec.metadata.get("package", {})
+    execution_info = spec.metadata.get("execution", {})
+    
     metadata = {
         "format": "PSPF/2025",
-        "version": "1.0.0",
-        **spec.metadata,
-        "slots": [slot.metadata.to_dict() for slot in slots]
+        "package": package_info,
+        "slots": [slot.metadata.to_dict() for slot in slots],
+        "execution": execution_info,
     }
+    
+    # Add optional fields if present
+    if "cache_validation" in spec.metadata:
+        metadata["cache_validation"] = spec.metadata["cache_validation"]
+    if "setup_commands" in spec.metadata:
+        metadata["setup_commands"] = spec.metadata["setup_commands"]
+    if "runtime" in spec.metadata:
+        metadata["runtime"] = spec.metadata["runtime"]
+    if "build" in spec.metadata:
+        metadata["build"] = spec.metadata["build"]
+    
+    # Validate all paths in metadata use {workenv}
+    metadata = validate_metadata_dict(metadata)
     metadata_json = json.dumps(metadata, indent=2).encode('utf-8')
     
     # Sign metadata
@@ -370,7 +413,7 @@ def _write_package(
                     size=len(data_to_write),
                     original_size=len(slot.data),
                     checksum=slot.checksum,
-                    compression=slot.compression_type,
+                    encoding=slot.encoding_type,  # Using encoding field now
                     purpose=_map_purpose(slot.metadata.purpose),
                     lifecycle=_map_lifecycle(slot.metadata.lifecycle),
                     permissions=0o644,
@@ -457,7 +500,7 @@ class PSPFBuilder:
     Provides a chainable API for constructing build specifications.
     """
     
-    def __init__(self, spec: Optional[BuildSpec] = None):
+    def __init__(self, spec: BuildSpec | None = None):
         """Initialize with optional starting specification."""
         self._spec = spec or BuildSpec()
     
@@ -478,10 +521,11 @@ class PSPFBuilder:
     def add_slot(
         self,
         name: str,
-        data: Union[bytes, str, Path],
+        data: bytes | str | Path,
         purpose: str = "data",
         lifecycle: str = "runtime",
-        encoding: str = "gzip"
+        encoding: str = "gzip",
+        extract_to: str | None = None
     ) -> 'PSPFBuilder':
         """
         Add a slot to the package.
@@ -492,6 +536,7 @@ class PSPFBuilder:
             purpose: Slot purpose (data, code, config, media)
             lifecycle: Slot lifecycle (runtime, cached, temporary)
             encoding: Compression encoding (none, gzip)
+            extract_to: Extract location relative to workenv (default: None)
         """
         # Determine path and size
         if isinstance(data, bytes):
@@ -521,6 +566,7 @@ class PSPFBuilder:
             encoding=encoding,
             purpose=purpose,
             lifecycle=lifecycle,
+            extract_to=extract_to,
             path=path
         )
         
@@ -529,10 +575,10 @@ class PSPFBuilder:
     
     def with_keys(
         self,
-        seed: Optional[str] = None,
-        private: Optional[bytes] = None,
-        public: Optional[bytes] = None,
-        path: Optional[Path] = None
+        seed: str | None = None,
+        private: bytes | None = None,
+        public: bytes | None = None,
+        path: Path | None = None
     ) -> 'PSPFBuilder':
         """
         Configure signing keys.
@@ -571,7 +617,7 @@ class PSPFBuilder:
         new_spec = self._spec.with_options(new_options)
         return PSPFBuilder(new_spec)
     
-    def build(self, output_path: Union[str, Path]) -> BuildResult:
+    def build(self, output_path: str | Path) -> BuildResult:
         """
         Build the package.
         

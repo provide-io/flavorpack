@@ -28,6 +28,7 @@ from flavor.psp.format_2025 import (
     build_package,
 )
 from flavor.psp.format_2025.slots import SlotMetadata
+from flavor.psp.format_2025.paths import validate_metadata_dict
 
 
 class PackagingOrchestrator:
@@ -44,6 +45,7 @@ class PackagingOrchestrator:
         entry_point: str,
         python_version: str | None = None,
         launcher_type: str = "rust",
+        launcher_bin: str | None = None,
         builder_bin: str | None = None,
         strip_binaries: bool = False,
         show_progress: bool = False,
@@ -58,6 +60,7 @@ class PackagingOrchestrator:
         self.manifest_dir = manifest_dir
         self.python_version = python_version or self.DEFAULT_PYTHON_VERSION
         self.launcher_type = launcher_type
+        self.launcher_bin = launcher_bin
         self.builder_bin = builder_bin
         self.strip_binaries = strip_binaries
         self.show_progress = show_progress
@@ -133,7 +136,7 @@ class PackagingOrchestrator:
             # Create slot tarballs
             logger.info("Creating slot tarballs...")
             with progress.task(total=3, description="Creating slots") as bar:
-                # Slot 0: UV binary
+                # Slot 0: UV binary - must be at bin/uv in the tarball
                 uv_tarball = temp_dir / "uv.tar.gz"
                 with tarfile.open(uv_tarball, "w:gz") as tar:
                     uv_path = artifacts["payload_dir"] / "bin" / "uv"
@@ -158,18 +161,25 @@ class PackagingOrchestrator:
                     bar.increment()
             
             # Find launcher binary
-            launcher_name = self._get_launcher_name()
-            try:
-                launcher_path = self._find_helper(launcher_name)
-            except BuildError:
-                logger.warning(f"{launcher_name} not found, trying FLAVOR_LAUNCHER_BIN environment variable")
-                launcher_path_str = os.environ.get("FLAVOR_LAUNCHER_BIN")
-                if not launcher_path_str:
-                    raise BuildError(f"Launcher binary not found: {launcher_name}")
-                launcher_path = Path(launcher_path_str)
+            if self.launcher_bin:
+                # Use explicit launcher_bin if provided
+                launcher_path = Path(self.launcher_bin)
+                if not launcher_path.exists():
+                    raise BuildError(f"Launcher binary not found: {self.launcher_bin}")
+            else:
+                launcher_name = self._get_launcher_name()
+                try:
+                    launcher_path = self._find_helper(launcher_name)
+                except BuildError:
+                    logger.warning(f"{launcher_name} not found, trying FLAVOR_LAUNCHER_BIN environment variable")
+                    launcher_path_str = os.environ.get("FLAVOR_LAUNCHER_BIN")
+                    if not launcher_path_str:
+                        raise BuildError(f"Launcher binary not found: {launcher_name}")
+                    launcher_path = Path(launcher_path_str)
             
-            # Build metadata - must match Rust launcher expectations
-            entry_module = self.entry_point.rsplit(':', 1)[0] if ':' in self.entry_point else self.entry_point
+            # Build metadata - all paths must use {workenv}
+            # Use the installed command name (package name) as the entry point
+            # The setup_commands will install it to {workenv}/bin/{package_name}
             
             metadata = {
                 "package": {
@@ -178,8 +188,8 @@ class PackagingOrchestrator:
                 },
                 "execution": {
                     "primary_slot": 0,  # Primary slot for execution
-                    "command": f"{{workenv}}/bin/python -m {entry_module}",
-                    "environment": {"UV_SYSTEM_PYTHON": "1"},
+                    "command": f"{{workenv}}/bin/{self.package_name}",  # Use the installed script
+                    "environment": {},
                 },
                 "cache_validation": {
                     "check_file": "{workenv}/metadata/installed",
@@ -188,7 +198,7 @@ class PackagingOrchestrator:
                 "setup_commands": [
                     {
                         "type": "enumerate_and_execute",
-                        "command": "{workenv}/bin/uv pip install --break-system-packages --python {workenv}/bin/python3 --no-deps",
+                        "command": "{workenv}/bin/uv pip install --python {workenv}/bin/python3.11 --no-deps",
                         "enumerate": {"path": "{workenv}/wheels", "pattern": "*.whl"},
                     },
                     {
@@ -199,20 +209,27 @@ class PackagingOrchestrator:
                 ],
             }
             
+            # Validate all paths use {workenv} placeholder
+            metadata = validate_metadata_dict(metadata)
+            
             # Add runtime configuration if present
             execution_config = self.build_config.get("execution", {})
             if "runtime" in execution_config:
                 logger.info(f"Adding runtime configuration: {execution_config['runtime']}")
                 metadata["runtime"] = execution_config["runtime"]
             
-            # Use the fluent builder API
+            # Use the fluent builder API with explicit extract_to paths
+            # extract_to="." means extract to workenv root
+            # UV is gzipped and should be mmapped
+            # Python and wheels are already tgz files
             builder = (PSPFBuilder.create()
                 .metadata(**metadata)
-                .add_slot("uv", uv_tarball)
-                .add_slot("python", python_tarball) 
-                .add_slot("wheels", wheels_tarball)
+                .add_slot("uv", uv_tarball, encoding="tgz", purpose="tool", lifecycle="runtime", extract_to="{workenv}")
+                .add_slot("python", python_tarball, encoding="tgz", purpose="runtime", lifecycle="runtime", extract_to="{workenv}") 
+                .add_slot("wheels", wheels_tarball, encoding="tgz", purpose="payload", lifecycle="cache", extract_to="{workenv}/wheels")
                 .with_options(
                     launcher_type=self.launcher_type,  # Pass launcher type for internal lookup
+                    launcher_bin=launcher_path,  # Pass the resolved launcher path
                     strip_binaries=self.strip_binaries,
                     enable_mmap=True,
                     page_aligned=True,
@@ -329,7 +346,7 @@ class PackagingOrchestrator:
                 "setup_commands": [
                     {
                         "type": "enumerate_and_execute", 
-                        "command": f"{{workenv}}/bin/uv pip install --break-system-packages --python {{workenv}}/bin/python3 --no-deps",
+                        "command": f"{{workenv}}/bin/uv pip install --python {{workenv}}/bin/python3.11 --no-deps",
                         "enumerate": {"path": "{workenv}/wheels", "pattern": "*.whl"},
                     },
                     {
@@ -338,7 +355,7 @@ class PackagingOrchestrator:
                         "content": "{package_name}-{version}",
                     },
                 ],
-                "command": f"{{workenv}}/bin/python -m {self.entry_point.rsplit(':', 1)[0] if ':' in self.entry_point else self.entry_point}",
+                "command": f"{{workenv}}/bin/{self.package_name}",
                 "slots": [
                     {
                         "name": "uv",
@@ -361,11 +378,11 @@ class PackagingOrchestrator:
                         "path": str(wheels_tarball),
                         "encoding": "gzip",
                         "purpose": "payload",
-                        "lifecycle": "init",  # Wheels extracted once, removed after installation
+                        "lifecycle": "cache",  # Wheels can be cached
                         "extract_to": "wheels",
                     },
                 ],
-                "environment": {"UV_SYSTEM_PYTHON": "1"},
+                "environment": {},
                 "signature": {
                     "private_key": self.package_integrity_key_path,
                     "public_key": self.public_key_path,
