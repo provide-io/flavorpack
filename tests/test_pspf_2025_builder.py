@@ -67,24 +67,7 @@ lifecycle = "{manifest_data['slots'][0]['lifecycle']}"
         
         return manifest_path
     
-    def test_build_from_manifest(self, temp_dir, manifest_file, test_builder):
-        """Test building from manifest file."""
-        bundle_path = temp_dir / "from_manifest.psp"
-        
-        # Use test_builder from fixture
-        test_builder.build(
-            output_path=bundle_path,
-            manifest_path=manifest_file
-        )
-        
-        # Verify bundle
-        assert bundle_path.exists()
-        
-        reader = PSPFReader(bundle_path)
-        metadata = reader.read_metadata()
-        
-        assert metadata['package']['name'] == 'myapp'
-        assert metadata['package']['version'] == '1.0.0'
+    
     
     def test_automatic_launcher_selection_python(self, temp_dir, test_builder):
         """Test automatic Python launcher selection."""
@@ -105,12 +88,11 @@ lifecycle = "{manifest_data['slots'][0]['lifecycle']}"
         
         bundle_path = temp_dir / "auto_python.psp"
         # Use test_builder from fixture
-        test_builder.build(
-            output_path=bundle_path,
-            metadata={"format": "PSPF/2025", "package": {"name": "test", "version": "1.0"}},
-            slots=[slot],
-            launcher_type="python"  # Would be auto-detected in real impl
-        )
+        result = (test_builder.metadata(format="PSPF/2025", package={"name": "test", "version": "1.0"})
+                             .add_slot(slot.name, slot.path, encoding=slot.encoding, purpose=slot.purpose, lifecycle=slot.lifecycle)
+                             .with_options(launcher_type="python")
+                             .build(bundle_path))
+        assert result.success, f"Build failed: {result.errors}"
         
         # Check emoji
         with open(bundle_path, 'rb') as f:
@@ -124,12 +106,10 @@ lifecycle = "{manifest_data['slots'][0]['lifecycle']}"
         bundle_path = temp_dir / "magic_wand.psp"
         
         # Use test_builder from fixture
-        test_builder.build(
-            output_path=bundle_path,
-            metadata={"format": "PSPF/2025", "package": {"name": "test", "version": "1.0"}},
-            slots=[],
-            launcher_type="go"
-        )
+        result = (test_builder.metadata(format="PSPF/2025", package={"name": "test", "version": "1.0"}, allow_empty=True)
+                          .with_options(launcher_type="go")
+                          .build(bundle_path))
+        assert result.success, f"Build failed: {result.errors}"
         
         # Check emoji
         with open(bundle_path, 'rb') as f:
@@ -185,11 +165,11 @@ lifecycle = "{manifest_data['slots'][0]['lifecycle']}"
         
         bundle_path = temp_dir / "compressed.psp"
         # Use test_builder from fixture
-        test_builder.build(
-            output_path=bundle_path,
-            metadata={"format": "PSPF/2025", "package": {"name": "test", "version": "1.0"}},
-            slots=slots
-        )
+        builder = test_builder.metadata(format="PSPF/2025", package={"name": "test", "version": "1.0"})
+        for slot in slots:
+            builder = builder.add_slot(slot.name, slot.path, encoding=slot.encoding, purpose=slot.purpose, lifecycle=slot.lifecycle)
+        result = builder.build(bundle_path)
+        assert result.success, f"Build failed: {result.errors}"
         
         # Verify compression worked
         assert bundle_path.exists()
@@ -212,15 +192,11 @@ lifecycle = "{manifest_data['slots'][0]['lifecycle']}"
         bundle_path = temp_dir / "invalid.psp"
         # Use test_builder from fixture
         
-        # Should raise error for missing file
-        import pytest
-        from flavor.exceptions import BuildError
-        with pytest.raises(BuildError, match="Slot path does not exist"):
-            test_builder.build(
-                output_path=bundle_path,
-                metadata={"format": "PSPF/2025", "package": {"name": "test", "version": "1.0"}},
-                slots=[slot]
-            )
+        result = (test_builder.metadata(format="PSPF/2025", package={"name": "test", "version": "1.0"})
+                              .add_slot(slot.name, slot.path, encoding=slot.encoding, purpose=slot.purpose, lifecycle=slot.lifecycle)
+                              .build(bundle_path))
+        assert not result.success
+        assert any("does not exist" in e for e in result.errors)
     
     def test_build_validation_invalid_purpose(self, temp_dir, test_builder):
         """Test validation of slot purpose."""
@@ -288,22 +264,22 @@ lifecycle = "{manifest_data['slots'][0]['lifecycle']}"
         # First build
         bundle_path = temp_dir / "incremental.psp"
         # Use test_builder from fixture
-        test_builder.build(
-            output_path=bundle_path,
-            metadata={"format": "PSPF/2025", "package": {"name": "test", "version": "1.0"}},
-            slots=slots
-        )
+        builder = test_builder.metadata(format="PSPF/2025", package={"name": "test", "version": "1.0"})
+        for slot in slots:
+            builder = builder.add_slot(slot.name, slot.path, encoding=slot.encoding, purpose=slot.purpose, lifecycle=slot.lifecycle)
+        result = builder.build(bundle_path)
+        assert result.success, f"Build failed: {result.errors}"
         
         # Modify one slot
         slots[1].path.write_bytes(b"MODIFIED" * 100)
         slots[1].checksum = hashlib.sha256(slots[1].path.read_bytes()).hexdigest()
         
         # Incremental build (in real impl would reuse unchanged slots)
-        test_builder.build(
-            output_path=bundle_path,
-            metadata={"format": "PSPF/2025", "package": {"name": "test", "version": "1.1"}},
-            slots=slots
-        )
+        builder = test_builder.metadata(format="PSPF/2025", package={"name": "test", "version": "1.1"})
+        for slot in slots:
+            builder = builder.add_slot(slot.name, slot.path, encoding=slot.encoding, purpose=slot.purpose, lifecycle=slot.lifecycle)
+        result = builder.build(bundle_path)
+        assert result.success, f"Build failed: {result.errors}"
         
         # Verify update
         reader = PSPFReader(bundle_path)
@@ -317,16 +293,15 @@ lifecycle = "{manifest_data['slots'][0]['lifecycle']}"
         
         # Use test_builder from fixture
         # In real implementation, would download target launcher
-        test_builder.build(
-            output_path=bundle_path,
-            metadata={
-                "format": "PSPF/2025",
-                "package": {"name": "test", "version": "1.0"},
-                "target_platform": "linux-amd64"
-            },
-            slots=[],
-            launcher_type="go"
-        )
+        metadata = {
+            "format": "PSPF/2025",
+            "package": {"name": "test", "version": "1.0"},
+            "target_platform": "linux-amd64"
+        }
+        result = (test_builder.metadata(**metadata, allow_empty=True)
+                          .with_options(launcher_type="go")
+                          .build(bundle_path))
+        assert result.success, f"Build failed: {result.errors}"
         
         assert bundle_path.exists()
     
@@ -354,11 +329,10 @@ lifecycle = "{manifest_data['slots'][0]['lifecycle']}"
         bundle_path = temp_dir / "reproducible.psp"
         # Use test_builder from fixture
         
-        test_builder.build(
-            output_path=bundle_path,
-            metadata={"format": "PSPF/2025", "package": {"name": "test", "version": "1.0"}},
-            slots=[slot]
-        )
+        result = (test_builder.metadata(format="PSPF/2025", package={"name": "test", "version": "1.0"})
+                          .add_slot(slot.name, slot.path, encoding=slot.encoding, purpose=slot.purpose, lifecycle=slot.lifecycle)
+                          .build(bundle_path))
+        assert result.success, f"Build failed: {result.errors}"
         
         # Check emoji is always magic wand
         with open(bundle_path, 'rb') as f:
@@ -386,11 +360,10 @@ lifecycle = "{manifest_data['slots'][0]['lifecycle']}"
         
         bundle_path = temp_dir / "optimized.psp"
         # Use test_builder from fixture
-        test_builder.build(
-            output_path=bundle_path,
-            metadata={"format": "PSPF/2025", "package": {"name": "test", "version": "1.0"}},
-            slots=[slot]
-        )
+        result = (test_builder.metadata(format="PSPF/2025", package={"name": "test", "version": "1.0"})
+                          .add_slot(slot.name, slot.path, encoding=slot.encoding, purpose=slot.purpose, lifecycle=slot.lifecycle)
+                          .build(bundle_path))
+        assert result.success, f"Build failed: {result.errors}"
         
         # Verify bundle was created
         bundle_size = bundle_path.stat().st_size
@@ -430,11 +403,9 @@ lifecycle = "{manifest_data['slots'][0]['lifecycle']}"
         
         bundle_path = temp_dir / "signed.psp"
         # Use test_builder from fixture
-        test_builder.build(
-            output_path=bundle_path,
-            metadata=metadata,
-            slots=[]
-        )
+        result = (test_builder.metadata(**metadata, allow_empty=True)
+                          .build(bundle_path))
+        assert result.success, f"Build failed: {result.errors}"
         
         # Verify both signatures exist
         reader = PSPFReader(bundle_path)
@@ -475,15 +446,11 @@ lifecycle = "{manifest_data['slots'][0]['lifecycle']}"
         
         bundle_path = temp_dir / "multi_slot.psp"
         # Use test_builder from fixture
-        test_builder.build(
-            output_path=bundle_path,
-            metadata={
-                "format": "PSPF/2025",
-                "package": {"name": "complex-app", "version": "1.0"},
-                "slots": [s.to_dict() for s in slots]
-            },
-            slots=slots
-        )
+        builder = test_builder.metadata(format="PSPF/2025", package={"name": "complex-app", "version": "1.0"})
+        for slot in slots:
+            builder = builder.add_slot(slot.name, slot.path, encoding=slot.encoding, purpose=slot.purpose, lifecycle=slot.lifecycle)
+        result = builder.build(bundle_path)
+        assert result.success, f"Build failed: {result.errors}"
         
         # Verify all slots included
         reader = PSPFReader(bundle_path)

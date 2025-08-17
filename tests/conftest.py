@@ -15,4 +15,5 @@ def key_pair() -> tuple[ed25519.Ed25519PrivateKey, ed25519.Ed25519PublicKey]:
 @pytest.fixture
 def test_builder():
     """Fixture to create a PSPFBuilder in test mode for reproducible tests."""
-    return PSPFBuilder(test_mode=True)
+    # New API uses a fluent interface and explicit seeding for reproducibility
+    return PSPFBuilder.create().with_keys(seed="pytest_reproducible_seed")

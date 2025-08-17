@@ -23,7 +23,7 @@ class TestPSPFIntegration:
             
             # Create test files
             (data_dir / "test1.txt").write_text("This is test file 1")
-            (data_dir / "test2.json").write_text('{"data": "test"}')
+            (data_dir / "test2.json").write_text('{"data": "test"}' * 100)
             (data_dir / "config.yaml").write_text("key: value\n")
             
             yield data_dir
@@ -67,11 +67,6 @@ class TestPSPFIntegration:
         ]
         
         # Build bundle with mmap optimizations
-        builder = PSPFBuilder(enable_mmap=True, page_aligned=True)
-        
-        # Mock launcher for testing
-        test_builder._get_launcher = lambda x: b"MOCK_LAUNCHER_DATA"
-        
         metadata = {
             "package": {
                 "name": "test-bundle",
@@ -79,8 +74,11 @@ class TestPSPFIntegration:
                 "description": "Test bundle for PSPF/2025"
             }
         }
-        
-        test_builder.build(output_file, metadata=metadata, slots=slots)
+        builder_instance = test_builder.metadata(**metadata)
+        for slot in slots:
+            builder_instance = builder_instance.add_slot(slot.name, slot.path, encoding=slot.encoding, purpose=slot.purpose, lifecycle=slot.lifecycle)
+        result = builder_instance.with_options(enable_mmap=True, page_aligned=True).build(output_file)
+        assert result.success, f"Build failed: {result.errors}"
         
         # Verify file was created
         assert output_file.exists()
@@ -139,8 +137,16 @@ class TestPSPFIntegration:
         
         # Build minimal bundle
         # Use test_builder from fixture
-        test_builder._get_launcher = lambda x: b"MOCK"
-        test_builder.build(output_file, metadata={}, slots=[])
+        metadata = {
+            "package": {
+                "name": "test-bundle",
+                "version": "1.0.0"
+            }
+        }
+        result = (test_builder.metadata(**metadata, allow_empty=True)
+                          .with_options(launcher_type="go") # Assuming a default launcher type
+                          .build(output_file))
+        assert result.success, f"Build failed: {result.errors}"
         
         # Start with file backend
         reader = PSPFReader(output_file, mode=ACCESS_MMAP)
@@ -183,9 +189,17 @@ class TestPSPFIntegration:
         ]
         
         # Build with page alignment
-        builder = PSPFBuilder(enable_mmap=True, page_aligned=True)
-        test_builder._get_launcher = lambda x: b"MOCK"
-        test_builder.build(output_file, metadata={}, slots=slots)
+        metadata = {
+            "package": {
+                "name": "test-bundle",
+                "version": "1.0.0"
+            }
+        }
+        builder_instance = test_builder.metadata(**metadata, allow_empty=True)
+        for slot in slots:
+            builder_instance = builder_instance.add_slot(slot.name, slot.path, encoding=slot.encoding, purpose=slot.purpose, lifecycle=slot.lifecycle)
+        result = builder_instance.with_options(enable_mmap=True, page_aligned=True).build(output_file)
+        assert result.success, f"Build failed: {result.errors}"
         
         # Read and verify alignment
         with PSPFReader(output_file, mode=ACCESS_MMAP) as reader:
