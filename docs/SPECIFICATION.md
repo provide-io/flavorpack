@@ -185,20 +185,81 @@ The metadata MUST be gzip-compressed JSON data. The signature and public key are
       "checksum": "string (adler32 or sha256:hex)",
       "encoding": "none|gzip|zstd|brotli",
       "purpose": "payload|runtime|config|asset|library|binary|installer|data",
-      "lifecycle": "runtime|init|startup|shutdown|cache|temp|lazy|eager|dev|config|platform",
+      "lifecycle": "runtime|init|startup|shutdown|cache|temp|lazy|eager|dev|config|platform|volatile",
       "extract_to": "string (optional, custom extraction path)",
       "platform": "string (optional, platform-specific slot)"
     }
   ],
   "execution": {
-    "command": "string with {slot:N} substitutions"
+    "primary_slot": "number (index of primary executable slot)",
+    "command": "string with {workenv} substitutions",
+    "env": {
+      "KEY": "value"
+    }
   },
   "runtime": {
     "env": {
-      "set": {},
-      "unset": [],
-      "pass": []
+      "set": {"KEY": "value"},
+      "unset": ["KEY"],
+      "pass": ["KEY"],
+      "map": {"OLD_KEY": "NEW_KEY"}
     }
+  },
+  "workenv": {
+    "directories": [
+      {
+        "path": "tmp",
+        "mode": "0700"
+      },
+      {
+        "path": "var",
+        "mode": "0755"
+      },
+      {
+        "path": "var/log",
+        "mode": "0755"
+      },
+      {
+        "path": "var/cache",
+        "mode": "0755"
+      },
+      {
+        "path": "var/run",
+        "mode": "0755"
+      }
+    ],
+    "env": {
+      "TMPDIR": "{workenv}/tmp",
+      "TMP": "{workenv}/tmp",
+      "TEMP": "{workenv}/tmp",
+      "XDG_RUNTIME_DIR": "{workenv}/var/run",
+      "XDG_CACHE_HOME": "{workenv}/var/cache",
+      "XDG_DATA_HOME": "{workenv}/var",
+      "XDG_STATE_HOME": "{workenv}/var"
+    }
+  },
+  "setup_commands": [
+    {
+      "type": "execute|enumerate_and_execute|write_file",
+      "command": "string (for execute/enumerate)",
+      "enumerate": {
+        "path": "string",
+        "pattern": "string"
+      },
+      "path": "string (for write_file)",
+      "content": "string (for write_file)"
+    }
+  ],
+  "cache_validation": {
+    "check_file": "{workenv}/validation_marker",
+    "expected_content": "string"
+  },
+  "build": {
+    "builder": "string",
+    "version": "string",
+    "package_timestamp": "ISO8601",
+    "host": "string",
+    "builder_timestamp": "ISO8601"
   }
 }
 ```
@@ -216,6 +277,7 @@ The `lifecycle` field instructs launchers how to handle slot content:
 #### Retention-based Lifecycles
 - **`cache`** - Kept for performance, can be regenerated if needed
 - **`temp`** - Removed after current session ends
+- **`volatile`** - Removed immediately after setup commands complete
 
 #### Access-based Lifecycles
 - **`lazy`** - Loaded on-demand, not extracted initially
@@ -227,11 +289,53 @@ The `lifecycle` field instructs launchers how to handle slot content:
 - **`platform`** - Platform/OS specific content
 
 **Requirements:**
-- Launchers MUST support `init`, `runtime`, and `cache` lifecycles
+- Launchers MUST support `init`, `runtime`, `cache`, and `volatile` lifecycles
 - Launchers SHOULD support other lifecycles where appropriate
 - Unknown lifecycles should be treated as `runtime` for forward compatibility
 
-### 3.3 Slot Purpose
+### 3.3 Metadata Sections
+
+#### 3.3.1 Package Information
+Basic package identification:
+- **`name`**: Package name
+- **`version`**: Package version using semantic versioning
+
+#### 3.3.2 Execution Configuration
+Controls how the package is executed:
+- **`primary_slot`**: Index of the main executable slot
+- **`command`**: Command to execute with `{workenv}` placeholder substitution
+- **`env`**: Environment variables to set for the application
+
+#### 3.3.3 Runtime Environment
+Security and environment filtering:
+- **`env.set`**: Variables to set (overrides existing)
+- **`env.unset`**: Variables to remove from environment
+- **`env.pass`**: Variables to pass through from parent
+- **`env.map`**: Map old variable names to new ones
+
+#### 3.3.4 Work Environment Setup
+Initializes the isolated work environment:
+- **`directories`**: List of directories to create with Unix permissions
+  - `path`: Relative path within workenv
+  - `mode`: Unix permission mode (e.g., "0700" for user-only)
+- **`env`**: Environment variables pointing to workenv paths
+  - Supports `{workenv}` placeholder substitution
+  - Commonly sets TMPDIR, XDG directories, etc.
+
+#### 3.3.5 Setup Commands
+Commands executed after extraction but before main execution:
+- **`execute`**: Run a single command
+- **`enumerate_and_execute`**: Run command for each file matching pattern
+- **`write_file`**: Create a file with specific content
+
+All commands support `{workenv}`, `{package_name}`, and `{version}` placeholders.
+
+#### 3.3.6 Cache Validation
+Determines if cached workenv is still valid:
+- **`check_file`**: Path to validation marker file
+- **`expected_content`**: Content that must match for cache to be valid
+
+### 3.4 Slot Purpose
 
 The `purpose` field describes the semantic type of content:
 
@@ -245,6 +349,29 @@ The `purpose` field describes the semantic type of content:
 - **`data`** - Generic data files
 
 Purpose and lifecycle are orthogonal - any purpose can have any lifecycle.
+
+### 3.5 Environment Variable Processing Order
+
+Environment variables are processed in layers, each with specific purposes:
+
+1. **Runtime Security Layer** (`runtime.env`)
+   - First layer: security filtering
+   - `unset`: Remove sensitive variables
+   - `pass`: Whitelist specific variables
+   - `map`: Rename variables for compatibility
+   - `set`: Override with safe defaults
+
+2. **Work Environment Layer** (`workenv.env`)
+   - Second layer: setup workenv-specific paths
+   - Sets TMPDIR, XDG directories, etc.
+   - All paths relative to `{workenv}`
+
+3. **Execution Layer** (`execution.env`)
+   - Final layer: application-specific settings
+   - Sets variables needed by the application
+   - Can reference `{workenv}` paths
+
+This layered approach ensures security policies are applied before application configuration.
 
 ## 4. Reading Order and Performance
 

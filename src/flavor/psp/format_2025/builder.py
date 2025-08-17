@@ -348,6 +348,8 @@ def _write_package(
         metadata["setup_commands"] = spec.metadata["setup_commands"]
     if "runtime" in spec.metadata:
         metadata["runtime"] = spec.metadata["runtime"]
+    if "workenv" in spec.metadata:
+        metadata["workenv"] = spec.metadata["workenv"]
     if "build" in spec.metadata:
         metadata["build"] = spec.metadata["build"]
     
