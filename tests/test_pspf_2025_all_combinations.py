@@ -154,8 +154,8 @@ exit 0
         assert slot_meta['name'] == 'payload.tar.gz'
         assert slot_meta['encoding'] == 'none'  # Already compressed
         
-        # 6. Verify checksums - TODO: implement verify_all_checksums()
-        # assert reader.verify_all_checksums()
+        # 6. Verify checksums
+        assert reader.verify_all_checksums()
         
         # 7. Test execution
         launcher_obj = PSPFLauncher(bundle_path)

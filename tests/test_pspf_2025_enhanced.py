@@ -18,17 +18,17 @@ class TestEnhancedConstants:
     """Test enhanced constants and sizes."""
     
     def test_header_size(self):
-        """Header should be 512 bytes."""
-        assert HEADER_SIZE == 512
+        """Header should be 8192 bytes (8KB)."""
+        assert HEADER_SIZE == 8192
     
     def test_slot_descriptor_size(self):
         """Slot descriptor should be 64 bytes."""
         assert SLOT_DESCRIPTOR_SIZE == 64
     
     def test_magic_format(self):
-        """Magic should include MM marker."""
-        assert b"PSPF2025-MM" in PSPF_MAGIC
-        assert len(PSPF_MAGIC) == 16
+        """Magic should be PSPF2025."""
+        assert PSPF_MAGIC == b"PSPF2025"
+        assert len(PSPF_MAGIC) == 8
     
     def test_trailing_magic(self):
         """Trailing magic should have both emojis."""
@@ -40,10 +40,10 @@ class TestEnhancedIndex:
     """Test enhanced 512-byte index structure."""
     
     def test_index_size(self):
-        """Index should pack to exactly 512 bytes."""
+        """Index should pack to exactly 8192 bytes (8KB)."""
         index = PSPFIndex()
         packed = index.pack()
-        assert len(packed) == 512
+        assert len(packed) == 8192
     
     def test_index_fields(self):
         """Test new index fields."""

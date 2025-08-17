@@ -1,7 +1,7 @@
 # Progressive Secure Package Format (PSPF) Specification
 ## 2025 Edition
 
-### Version: 2025.2
+### Version: 2025.0
 ### Status: Implemented (Go/Rust/Python), Spec Updated 2025-08-15
 ### Date: 2025-08-15
 
@@ -9,7 +9,7 @@
 
 ## Changelog
 
-### Version 2025.2 (2025-08-15)
+### Version 2025.0 (2025-08-15)
 - **BREAKING**: Renamed `EphemeralPublicKey` to `PublicKey` in index structure
 - **BREAKING**: Metadata is now gzipped JSON (not tar.gz archive)
 - Clarified that signature covers uncompressed JSON
@@ -17,7 +17,6 @@
 - Specified exact storage of checksums and signatures
 - Documented cross-language compatibility requirements
 
-### Version 2025.1 (2025-08-11)
 - Initial specification release
 - Implemented in Go and Rust
 
@@ -51,22 +50,29 @@ The Progressive Secure Package Format (PSPF) 2025 Edition is a self-extracting, 
 ├──────────────────────────────┤ Launcher_Size + 8192
 │      Metadata (gzipped JSON) │ Compressed JSON metadata
 │                              │ Variable size
-├──────────────────────────────┤
-│      Slot 0                  │ Aligned to 8-byte boundary
-├──────────────────────────────┤
-│      Slot 1                  │ Aligned to 8-byte boundary
+├──────────────────────────────┤ Aligned to 8-byte boundary
+│      Slot Table              │ Table of slot descriptors
+│                              │ (64 bytes per slot)
+├──────────────────────────────┤ Aligned to 8-byte boundary
+│      Slot 0                  │ First slot data
+├──────────────────────────────┤ Aligned to 8-byte boundary
+│      Slot 1                  │ Second slot data
 ├──────────────────────────────┤
 │      ...                     │
-├──────────────────────────────┤
-│      Slot N                  │ Aligned to 8-byte boundary
-├──────────────────────────────┤
-│      Slot Table              │ Table of slot offsets/sizes
+├──────────────────────────────┤ Aligned to 8-byte boundary
+│      Slot N                  │ Last slot data
 ├──────────────────────────────┤
 │      Padding (if needed)     │ Zero bytes for alignment
 ├──────────────────────────────┤ EOF - 8
 │      Emoji Magic             │ 📦🪄 (exactly 8 bytes)
 └──────────────────────────────┘ EOF
 ```
+
+**Performance Note**: The slot table is positioned immediately after metadata and BEFORE the actual slot data. This allows readers to:
+1. Read the index to get metadata and slot table offsets
+2. Read both metadata and slot table (small, sequential reads)
+3. Know exact locations of all slots without seeking to end of file
+4. Directly seek to any slot for random access
 
 ### 2.2 Index Block Structure (8192 bytes)
 
@@ -195,7 +201,31 @@ The metadata MUST be gzip-compressed JSON data. The signature and public key are
 }
 ```
 
-## 4. Security Model
+## 4. Reading Order and Performance
+
+The PSPF format is designed for efficient reading with minimal seeks:
+
+1. **Read Index** (8KB at launcher_size offset)
+   - Provides offsets and sizes for everything else
+   - Single read operation
+
+2. **Read Metadata** (small, typically < 10KB)
+   - At index.MetadataOffset
+   - Compressed JSON with package info
+
+3. **Read Slot Table** (64 bytes × slot count)
+   - At index.SlotTableOffset
+   - Immediately follows metadata for sequential reading
+   - Contains offsets, sizes, checksums for all slots
+
+4. **Access Slots** (as needed)
+   - Direct seek to any slot using table info
+   - No need to read entire file
+   - Parallel reads possible for multiple slots
+
+This design minimizes I/O operations and allows efficient random access to slots.
+
+## 5. Security Model
 
 Every bundle MUST include cryptographic integrity verification using Ed25519:
 
@@ -212,9 +242,9 @@ Every bundle MUST include cryptographic integrity verification using Ed25519:
    - Verify the Adler-32 checksum matches the compressed data
    - Refuse to execute if verification fails
 
-## 5. Implementation Requirements
+## 6. Implementation Requirements
 
-### 5.1 Language-Specific Modules
+### 6.1 Language-Specific Modules
 
 Each language implementation MUST provide:
 
@@ -235,7 +265,7 @@ Each language implementation MUST provide:
    - Examples and tutorials
    - Type safety where applicable
 
-### 5.2 Cross-Language Compatibility
+### 6.2 Cross-Language Compatibility
 
 All implementations MUST:
 - Use identical binary formats for all structures
@@ -244,7 +274,7 @@ All implementations MUST:
 - Support reading packages created by any other implementation
 - Pass cross-language compatibility tests
 
-### 5.3 Field Names and Conventions
+### 6.3 Field Names and Conventions
 
 To maintain consistency across implementations:
 - Use `PublicKey` not `EphemeralPublicKey` (keys aren't necessarily ephemeral)
@@ -253,7 +283,7 @@ To maintain consistency across implementations:
 - Metadata is always gzipped JSON (no conditionals)
 - Signatures are stored in the index, not embedded in metadata
 
-### 5.4 Implementation Notes
+### 6.4 Implementation Notes
 
 #### Checksum Calculations
 - **Index Checksum**: Adler-32 of the entire 8192-byte index with the checksum field set to 0

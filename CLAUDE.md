@@ -90,7 +90,7 @@ workenv/flavor_darwin_arm64/bin/flavor package --builder go --launcher rust --ou
 
 1. **PSPF Format Structure** (256-byte index + slots + magic footer)
    - Index block at launcher_size offset containing format metadata
-   - Metadata archive (tar.gz) with psp.json manifest
+   - Metadata (gzipped JSON) with package manifest
    - Payload slots (0-N) containing actual content
    - 4-byte emoji magic footer (🪄)
 
@@ -113,8 +113,8 @@ workenv/flavor_darwin_arm64/bin/flavor package --builder go --launcher rust --ou
 
 ### Security Model
 
-- **Ephemeral Key Sealing**: Each package is signed with ephemeral Ed25519 keys
-- Keys generated at build time, private key discarded after signing
+- **Ed25519 Signatures**: Each package is signed with Ed25519 keys
+- Keys generated at build time (or deterministically with --key-seed), private key discarded after signing
 - Public key embedded in index block for verification
 - Launcher verifies integrity before extraction
 

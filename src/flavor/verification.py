@@ -35,7 +35,7 @@ class FlavorVerifier:
         integrity_result = reader.verify_integrity()
         signature_valid = integrity_result.get('signature_valid', False)
 
-        # Mock slot data
+        # Extract slot information from metadata
         slots_info = []
         if "slots" in metadata:
             for i, slot_data in enumerate(metadata["slots"]):

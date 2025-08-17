@@ -27,6 +27,7 @@ from flavor.psp.format_2025 import (
     INDEX_SIZE,
     EMOJI_MAGIC_SIZE,
     SLOT_ALIGNMENT,
+    SLOT_DESCRIPTOR_SIZE,
     MAGIC_WAND_EMOJI,
     align_offset
 )
@@ -207,7 +208,7 @@ class TestPSPFCore:
         assert index.format_version == PSPF_VERSION
     
     def test_metadata_archive_structure(self, temp_dir, simple_metadata):
-        """Test metadata.tgz structure."""
+        """Test metadata is gzipped JSON."""
         bundle_path = temp_dir / "test.pspf"
         builder = PSPFBuilder()
         builder.build(
@@ -225,13 +226,16 @@ class TestPSPFCore:
             f.seek(index.metadata_offset)
             archive_data = f.read(index.metadata_size)
         
-        # Verify it's a valid tar.gz
+        # Verify it's gzipped JSON
         import io
-        with tarfile.open(fileobj=io.BytesIO(archive_data), mode='r:gz') as tar:
-            names = tar.getnames()
-            assert 'psp.json' in names
-            assert 'integrity/seal.sig' in names
-            assert 'integrity/seal.pem' in names
+        import gzip
+        import json
+        with gzip.open(io.BytesIO(archive_data), 'rb') as gz:
+            json_data = gz.read()
+            metadata = json.loads(json_data)
+            assert 'package' in metadata
+            assert 'format' in metadata
+            assert metadata['format'] == 'PSPF/2025'
     
     def test_metadata_psp_json_required(self, temp_dir, simple_metadata):
         """Test psp.json is required in metadata."""
@@ -288,15 +292,10 @@ class TestPSPFCore:
         with open(bundle_path, 'rb') as f:
             f.seek(index.slot_table_offset)
             for i in range(index.slot_count):
-                # Read the full 24-byte entry
-                entry_data = f.read(24)
-                offset = struct.unpack('<Q', entry_data[0:8])[0]
-                size = struct.unpack('<Q', entry_data[8:16])[0]
-                checksum = struct.unpack('<I', entry_data[16:20])[0]
-                encoding = entry_data[20]
-                purpose = entry_data[21]
-                lifecycle = entry_data[22]
-                reserved = entry_data[23]
+                # Read the full 64-byte descriptor
+                entry_data = f.read(SLOT_DESCRIPTOR_SIZE)
+                # Offset is at bytes 16-24 in the 64-byte descriptor
+                offset = struct.unpack('<Q', entry_data[16:24])[0]
                 
                 # Verify alignment
                 assert offset % SLOT_ALIGNMENT == 0, f"Slot {i} not aligned (offset={offset})"

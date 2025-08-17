@@ -289,19 +289,18 @@ class PSPFBuilder:
 
     def _get_slot_data(self, slot: SlotMetadata) -> bytes:
         """Get raw slot data."""
-        if slot.path and slot.path.exists():
-            if slot.path.is_dir():
-                # Create tarball for directory
-                buffer = io.BytesIO()
-                with tarfile.open(fileobj=buffer, mode="w") as tar:
-                    tar.add(slot.path, arcname=".")
-                buffer.seek(0)
-                return buffer.read()
-            else:
-                return slot.path.read_bytes()
+        if not slot.path or not slot.path.exists():
+            raise BuildError(f"Slot path does not exist: {slot.path}")
+            
+        if slot.path.is_dir():
+            # Create tarball for directory
+            buffer = io.BytesIO()
+            with tarfile.open(fileobj=buffer, mode="w") as tar:
+                tar.add(slot.path, arcname=".")
+            buffer.seek(0)
+            return buffer.read()
         else:
-            # Mock data for testing
-            return b"MOCK_SLOT_DATA"
+            return slot.path.read_bytes()
 
     def _compress_data(self, data: bytes, encoding: str) -> Tuple[bytes, int]:
         """Compress data with specified encoding.

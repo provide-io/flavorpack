@@ -1,136 +1,36 @@
-# Python
+# Environment
+.env
+.venv
+venv/
+env/
+workenv/
+
+# Python cache
 __pycache__/
 *.py[cod]
 *$py.class
-*.so
-.Python
+
+# Distribution
 build/
-develop-eggs/
 dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-share/python-wheels/
 *.egg-info/
-.installed.cfg
 *.egg
-MANIFEST
+.eggs/
 
-# Virtual environments
-.venv/
-venv/
-ENV/
-env/
-workenv/
-workenv_*/
-
-# IDEs
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-.DS_Store
-
-# Testing
-.tox/
-.nox/
-.coverage
-.coverage.*
-.cache
+# Test artifacts
 .pytest_cache/
-cover/
+.coverage
 htmlcov/
-.hypothesis/
+reports/
 
-# Type checking
-.mypy_cache/
-.dmypy.json
-dmypy.json
-.pyre/
-.pytype/
+# IDE
+.idea/
+.vscode/
 
-# Flavor specific
-keys/
-test-keys/
-*.flavor
-*.pspf
-flavor-test-output/
-test-project/
-test-provider/
-
-# Go
-*.exe
-*.exe~
-*.dll
-*.so
-*.dylib
-*.test
-*.out
-vendor/
-go.work
-
-# Rust
-target/
-
-# Flavor build artifacts
-# Binary executables (no matter where they are)
-*.flavor
-*.pspf
-# But allow source files with these names
-!*.go
-!*.rs
-!*.py
-!*.js
-!*.ts
-!*.c
-!*.h
-!*.cpp
-!*.hpp
-# PSPF packages
-*.pspf
-
-Cargo.lock
-**/*.rs.bk
-*.pdb
-
-# Logs
-*.log
-logs/
-
-# Local configuration
-.env
-.env.local
-
-# Build artifacts
-bfiles-*.txt
-
-# macOS
-.DS_Store
-.AppleDouble
-.LSOverride
-
-# Windows
-Thumbs.db
-ehthumbs.db
-Desktop.ini
-
-# Linux
-.directory
-.Trash-*
-
-# UV
-.venv/
-uv.lockworkenv/
-
-*.tgz
-*.tar.gz
-*code.sh
-*bfiles*
+# Local Build Artifacts
+# Compiled helper binaries should not be version controlled.
+# They are built from source via `./helpers/build.sh`.
 helpers/bin/
+*.pspf
+*.psp
+target/
