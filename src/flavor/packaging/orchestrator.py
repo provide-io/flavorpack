@@ -12,6 +12,8 @@ import tarfile
 import tempfile
 from typing import Any
 
+import attrs
+import cattrs
 from pyvider.telemetry import logger
 
 from flavor.exceptions import BuildError
@@ -19,6 +21,13 @@ from flavor.utils import get_platform_string
 from flavor.packaging.python_packager import PythonPackager
 from flavor.utils.subprocess import run_command
 from flavor.helpers import HelperManager
+from flavor.psp.format_2025 import (
+    BuildSpec,
+    BuildOptions,
+    KeyConfig,
+    build_package,
+)
+from flavor.psp.format_2025.slots import SlotMetadata
 
 
 class PackagingOrchestrator:
@@ -81,6 +90,175 @@ class PackagingOrchestrator:
 
     def build_package(self) -> None:
         logger.info("Orchestrator starting build process...")
+        
+        # Decide whether to use internal Python builder or external builder
+        if self.builder_bin or os.environ.get("FLAVOR_BUILDER_BIN"):
+            logger.info("Using external builder binary")
+            self._build_with_external_builder()
+        else:
+            logger.info("Using internal Python builder (default)")
+            self._build_with_python_builder()
+    
+    def _build_with_python_builder(self) -> None:
+        """Build package using the internal Python PSPF builder."""
+        logger.info("Building package with internal Python builder...")
+        
+        # Import builder components
+        from flavor.psp.format_2025.builder import PSPFBuilder
+        
+        # Set up progress reporter
+        from flavor.progress import ProgressReporter
+        progress = ProgressReporter(enabled=self.show_progress)
+        
+        # Use the PythonPackager to prepare all artifacts
+        python_packager = PythonPackager(
+            manifest_dir=self.manifest_dir,
+            package_name=self.package_name,
+            entry_point=self.entry_point,
+            build_config=self.build_config,
+            python_version=self.python_version,
+            progress_reporter=progress,
+        )
+        
+        with tempfile.TemporaryDirectory(prefix="flavor_build_") as temp_dir_str:
+            temp_dir = Path(temp_dir_str)
+            
+            # Prepare Python artifacts
+            logger.info("Preparing Python artifacts...")
+            with progress.task(total=5, description="Preparing Python artifacts") as bar:
+                artifacts = python_packager.prepare_artifacts(temp_dir)
+                if bar:
+                    bar.finish()
+            
+            # Create slot tarballs
+            logger.info("Creating slot tarballs...")
+            with progress.task(total=3, description="Creating slots") as bar:
+                # Slot 0: UV binary
+                uv_tarball = temp_dir / "uv.tar.gz"
+                with tarfile.open(uv_tarball, "w:gz") as tar:
+                    uv_path = artifacts["payload_dir"] / "bin" / "uv"
+                    tar.add(uv_path, arcname="bin/uv")
+                if bar:
+                    bar.increment()
+                
+                # Slot 1: Python runtime
+                python_tarball = artifacts.get("python_tgz")
+                if not python_tarball:
+                    raise BuildError("Python runtime tarball not found")
+                if bar:
+                    bar.increment()
+                
+                # Slot 2: Wheels
+                wheels_tarball = temp_dir / "wheels.tar.gz"
+                with tarfile.open(wheels_tarball, "w:gz") as tar:
+                    wheels_dir = artifacts["payload_dir"] / "wheels"
+                    for wheel in wheels_dir.glob("*.whl"):
+                        tar.add(wheel, arcname=wheel.name)
+                if bar:
+                    bar.increment()
+            
+            # Find launcher binary
+            launcher_name = self._get_launcher_name()
+            try:
+                launcher_path = self._find_helper(launcher_name)
+            except BuildError:
+                logger.warning(f"{launcher_name} not found, trying FLAVOR_LAUNCHER_BIN environment variable")
+                launcher_path_str = os.environ.get("FLAVOR_LAUNCHER_BIN")
+                if not launcher_path_str:
+                    raise BuildError(f"Launcher binary not found: {launcher_name}")
+                launcher_path = Path(launcher_path_str)
+            
+            # Build metadata - must match Rust launcher expectations
+            entry_module = self.entry_point.rsplit(':', 1)[0] if ':' in self.entry_point else self.entry_point
+            
+            metadata = {
+                "package": {
+                    "name": self.package_name,
+                    "version": self.build_config.get("version", "1.0.0"),
+                },
+                "execution": {
+                    "primary_slot": 0,  # Primary slot for execution
+                    "command": f"{{workenv}}/bin/python -m {entry_module}",
+                    "environment": {"UV_SYSTEM_PYTHON": "1"},
+                },
+                "cache_validation": {
+                    "check_file": "{workenv}/metadata/installed",
+                    "expected_content": f"{self.package_name}-{self.build_config.get('version', '1.0.0')}",
+                },
+                "setup_commands": [
+                    {
+                        "type": "enumerate_and_execute",
+                        "command": "{workenv}/bin/uv pip install --break-system-packages --python {workenv}/bin/python3 --no-deps",
+                        "enumerate": {"path": "{workenv}/wheels", "pattern": "*.whl"},
+                    },
+                    {
+                        "type": "write_file",
+                        "path": "{workenv}/metadata/installed",
+                        "content": "{package_name}-{version}",
+                    },
+                ],
+            }
+            
+            # Add runtime configuration if present
+            execution_config = self.build_config.get("execution", {})
+            if "runtime" in execution_config:
+                logger.info(f"Adding runtime configuration: {execution_config['runtime']}")
+                metadata["runtime"] = execution_config["runtime"]
+            
+            # Use the fluent builder API
+            builder = (PSPFBuilder.create()
+                .metadata(**metadata)
+                .add_slot("uv", uv_tarball)
+                .add_slot("python", python_tarball) 
+                .add_slot("wheels", wheels_tarball)
+                .with_options(
+                    launcher_type=self.launcher_type,  # Pass launcher type for internal lookup
+                    strip_binaries=self.strip_binaries,
+                    enable_mmap=True,
+                    page_aligned=True,
+                ))
+            
+            # Configure keys if provided
+            if self.key_seed:
+                builder = builder.with_keys(seed=self.key_seed)
+            elif self.package_integrity_key_path and self.public_key_path:
+                private_key = Path(self.package_integrity_key_path).read_bytes()
+                public_key = Path(self.public_key_path).read_bytes()
+                builder = builder.with_keys(private=private_key, public=public_key)
+            
+            # Build the package
+            spinner = progress.create_spinner(description="Building PSPF package")
+            if spinner:
+                spinner.tick()
+            
+            result = builder.build(Path(self.output_flavor_path))
+            
+            if spinner:
+                spinner.finish()
+            
+            if not result.success:
+                raise BuildError(f"Package build failed: {'; '.join(result.errors)}")
+            
+            # Final success message
+            if self.show_progress:
+                final_size = Path(self.output_flavor_path).stat().st_size / (1024 * 1024)
+                logger.info(f"✅ Package built successfully: {final_size:.1f} MB")
+                if result.metadata:
+                    if "duration_seconds" in result.metadata:
+                        logger.info(f"⏱️  Build time: {result.metadata['duration_seconds']:.2f}s")
+    
+    def _get_launcher_name(self) -> str:
+        """Get the launcher helper name based on launcher type."""
+        if self.launcher_type == "rust":
+            return "flavor-rs-launcher"
+        elif self.launcher_type == "go":
+            return "flavor-go-launcher"
+        else:
+            return "flavor-rs-launcher"  # Default
+    
+    def _build_with_external_builder(self) -> None:
+        """Build package using an external builder binary (Go/Rust)."""
+        logger.info("Building package with external builder...")
         
         # Set up progress reporter
         from flavor.progress import ProgressReporter
@@ -236,13 +414,7 @@ class PackagingOrchestrator:
                     packager_executable = self._find_helper(builder_name)
 
             # Find launcher binary
-            launcher_name = f"flavor-{self.launcher_type}-launcher" if self.launcher_type in ["go", "rust"] else f"flavor-rs-launcher"
-            if self.launcher_type == "rust":
-                launcher_name = "flavor-rs-launcher"
-            elif self.launcher_type == "go":
-                launcher_name = "flavor-go-launcher"
-            else:
-                launcher_name = "flavor-rs-launcher"  # Default
+            launcher_name = self._get_launcher_name()
             
             try:
                 launcher_executable = self._find_helper(launcher_name)

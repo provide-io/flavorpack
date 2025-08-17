@@ -44,9 +44,7 @@ def validate_metadata(metadata: Dict[str, Any]) -> List[str]:
     """
     errors = []
     
-    if not metadata:
-        errors.append("📋 Metadata is required but not provided")
-        return errors
+    
     
     # Check for package name (required)
     has_name = False

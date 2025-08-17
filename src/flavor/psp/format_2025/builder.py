@@ -21,7 +21,7 @@ from typing import List, Dict, Any, Optional, Tuple, Union
 import attrs
 from pyvider.telemetry import logger
 
-from flavor.exceptions import BuildError
+from flavor.exceptions import BuildError, CryptoError, ValidationError
 from flavor.utils import get_platform_string
 from flavor.psp.format_2025.constants import (
     EMOJI_MAGIC_SIZE, HEADER_SIZE, MAGIC_WAND_EMOJI, PSPF_MAGIC,
@@ -274,7 +274,7 @@ def _get_launcher(launcher_type: str) -> bytes:
             logger.debug(f"🚀 Loading {launcher_type} launcher from {path}")
             return path.read_bytes()
     
-    raise FileNotFoundError(
+    raise BuildError(
         f"Could not find {launcher_name} binary. "
         f"Build it first with 'flavor helpers build'"
     )
@@ -510,7 +510,7 @@ class PSPFBuilder:
             path = data
             size = path.stat().st_size if path.exists() else 0
         else:
-            raise ValueError(f"Invalid data type: {type(data)}")
+            raise BuildError(f"Invalid data type: {type(data)}")
         
         # Create slot metadata
         slot = SlotMetadata(

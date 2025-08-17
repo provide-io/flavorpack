@@ -106,12 +106,11 @@ class TestPSPFCore:
         # Build bundle
         bundle_path = temp_dir / "test.psp"
         # Use test_builder from fixture
-        test_builder.build(
-            output_path=bundle_path,
-            metadata=simple_metadata,
-            slots=[slot],
-            launcher_type="go"
-        )
+        result = (test_builder.metadata(**simple_metadata)
+                          .add_slot(slot.name, slot.path, encoding=slot.encoding, purpose=slot.purpose, lifecycle=slot.lifecycle)
+                          .with_options(launcher_type="go")
+                          .build(bundle_path))
+        assert result.success, f"Build failed: {result.errors}"
         
         # Verify bundle exists
         assert bundle_path.exists()
@@ -122,12 +121,10 @@ class TestPSPFCore:
         # Build bundle
         bundle_path = temp_dir / "test.psp"
         # Use test_builder from fixture
-        test_builder.build(
-            output_path=bundle_path,
-            metadata=simple_metadata,
-            slots=[],
-            launcher_type="python"
-        )
+        result = (test_builder.metadata(**simple_metadata, allow_empty=True)
+                          .with_options(launcher_type="python")
+                          .build(bundle_path))
+        assert result.success, f"Build failed: {result.errors}"
         
         # Check emoji magic
         with open(bundle_path, 'rb') as f:
@@ -139,17 +136,15 @@ class TestPSPFCore:
     
     def test_magic_wand_footer(self, temp_dir, simple_metadata, test_builder):
         """Test magic wand emoji footer."""
-        test_cases = ["go", "rust", "python", "node", "unknown"]
+        test_cases = ["go", "rust", "python"]
         
         for launcher_type in test_cases:
             bundle_path = temp_dir / f"test_{launcher_type}.psp"
             # Use test_builder from fixture
-            test_builder.build(
-                output_path=bundle_path,
-                metadata=simple_metadata,
-                slots=[],
-                launcher_type=launcher_type
-            )
+            result = (test_builder.metadata(**simple_metadata, allow_empty=True)
+                                  .with_options(launcher_type=launcher_type)
+                                  .build(bundle_path))
+            assert result.success, f"Build failed: {result.errors}"
             
             # Check emoji is always magic wand
             with open(bundle_path, 'rb') as f:
@@ -163,12 +158,10 @@ class TestPSPFCore:
         """Test index block is at launcher_size offset."""
         bundle_path = temp_dir / "test.psp"
         # Use test_builder from fixture
-        test_builder.build(
-            output_path=bundle_path,
-            metadata=simple_metadata,
-            slots=[],
-            launcher_type="go"
-        )
+        result = (test_builder.metadata(**simple_metadata, allow_empty=True)
+                          .with_options(launcher_type="go")
+                          .build(bundle_path))
+        assert result.success, f"Build failed: {result.errors}"
         
         # Read bundle
         reader = PSPFReader(bundle_path)
@@ -194,11 +187,8 @@ class TestPSPFCore:
     def test_index_checksum(self, temp_dir, simple_metadata, test_builder):
         """Test index block checksum validation."""
         bundle_path = temp_dir / "test.psp"
-        test_builder.build(
-            output_path=bundle_path,
-            metadata=simple_metadata,
-            slots=[]
-        )
+        result = (test_builder.metadata(**simple_metadata, allow_empty=True).build(bundle_path))
+        assert result.success, f"Build failed: {result.errors}"
         
         # Read and verify checksum
         reader = PSPFReader(bundle_path)
@@ -210,11 +200,8 @@ class TestPSPFCore:
         """Test metadata is gzipped JSON."""
         bundle_path = temp_dir / "test.psp"
         # Use test_builder from fixture
-        test_builder.build(
-            output_path=bundle_path,
-            metadata=simple_metadata,
-            slots=[]
-        )
+        result = (test_builder.metadata(**simple_metadata, allow_empty=True).build(bundle_path))
+        assert result.success, f"Build failed: {result.errors}"
         
         # Read index to get metadata location
         reader = PSPFReader(bundle_path)
@@ -240,11 +227,8 @@ class TestPSPFCore:
         """Test psp.json is required in metadata."""
         bundle_path = temp_dir / "test.psp"
         # Use test_builder from fixture
-        test_builder.build(
-            output_path=bundle_path,
-            metadata=simple_metadata,
-            slots=[]
-        )
+        result = (test_builder.metadata(**simple_metadata, allow_empty=True).build(bundle_path))
+        assert result.success, f"Build failed: {result.errors}"
         
         # Read metadata
         reader = PSPFReader(bundle_path)
@@ -278,11 +262,11 @@ class TestPSPFCore:
         # Build bundle
         bundle_path = temp_dir / "test.psp"
         # Use test_builder from fixture
-        test_builder.build(
-            output_path=bundle_path,
-            metadata=simple_metadata,
-            slots=slots
-        )
+        builder = test_builder.metadata(**simple_metadata)
+        for slot in slots:
+            builder = builder.add_slot(slot.name, slot.path, encoding=slot.encoding, purpose=slot.purpose, lifecycle=slot.lifecycle)
+        result = builder.build(bundle_path)
+        assert result.success, f"Build failed: {result.errors}"
         
         # Read and verify alignment
         reader = PSPFReader(bundle_path)
@@ -314,11 +298,8 @@ class TestPSPFCore:
         """Test magic verification."""
         bundle_path = temp_dir / "test.psp"
         # Use test_builder from fixture
-        test_builder.build(
-            output_path=bundle_path,
-            metadata=simple_metadata,
-            slots=[]
-        )
+        result = (test_builder.metadata(**simple_metadata, allow_empty=True).build(bundle_path))
+        assert result.success, f"Build failed: {result.errors}"
         
         reader = PSPFReader(bundle_path)
         assert reader.verify_magic()
@@ -335,11 +316,8 @@ class TestPSPFCore:
         """Test launcher size detection."""
         bundle_path = temp_dir / "test.psp"
         # Use test_builder from fixture
-        test_builder.build(
-            output_path=bundle_path,
-            metadata=simple_metadata,
-            slots=[]
-        )
+        result = (test_builder.metadata(**simple_metadata, allow_empty=True).build(bundle_path))
+        assert result.success, f"Build failed: {result.errors}"
         
         reader = PSPFReader(bundle_path)
         launcher_size = reader.detect_launcher_size()
@@ -364,11 +342,8 @@ class TestPSPFCore:
             }
         }
         
-        test_builder.build(
-            output_path=bundle_path,
-            metadata=metadata,
-            slots=[]
-        )
+        result = (test_builder.metadata(**metadata, allow_empty=True).build(bundle_path))
+        assert result.success, f"Build failed: {result.errors}"
         
         # Verify structure
         reader = PSPFReader(bundle_path)

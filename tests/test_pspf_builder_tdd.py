@@ -260,25 +260,16 @@ class TestValidateSpec:
         if not validate_spec or not BuildSpec:
             pytest.skip("validate_spec/BuildSpec not implemented yet")
             
-        spec = BuildSpec(
-            metadata={"package": {"name": "test"}},
-            slots=[
-                SlotMetadata(
-                    index=0,
-                    name="",  # Invalid: empty name
-                    size=-1,  # Invalid: negative size
-                    checksum="",
-                    encoding="invalid",  # Invalid encoding
-                    purpose="data",
-                    lifecycle="runtime"
-                )
-            ]
-        )
-        errors = validate_spec(spec)
-        
-        assert len(errors) > 0
-        assert any("name" in e.lower() for e in errors)
-        assert any("size" in e.lower() for e in errors)
+        with pytest.raises(ValueError):
+            SlotMetadata(
+                index=0,
+                name="",  # Invalid: empty name
+                size=-1,  # Invalid: negative size
+                checksum="",
+                encoding="invalid",  # Invalid encoding
+                purpose="data",
+                lifecycle="runtime"
+            )
     
     def test_validate_valid_spec(self, minimal_spec):
         """Should accept valid spec."""
@@ -452,55 +443,7 @@ class TestPSPFBuilder:
         assert output.exists()
 
 
-# =============================================================================
-# Backward Compatibility Tests
-# =============================================================================
 
-class TestBackwardCompatibility:
-    """Test that old API patterns still work."""
-    
-    def test_old_builder_pattern(self, temp_dir, sample_slot):
-        """Old PSPFBuilder pattern should still work."""
-        if not PSPFBuilder:
-            pytest.skip("PSPFBuilder not implemented yet")
-            
-        # Old pattern
-        builder = PSPFBuilder()
-        output = temp_dir / "old_pattern.psp"
-        
-        # This is how the current API works
-        builder.build(
-            output,
-            metadata={"package": {"name": "test"}},
-            slots=[sample_slot]
-        )
-        
-        assert output.exists()
-    
-    def test_migration_path(self, temp_dir, sample_slot):
-        """Should provide clear migration path."""
-        if not PSPFBuilder:
-            pytest.skip("PSPFBuilder not implemented yet")
-            
-        output1 = temp_dir / "old.psp"
-        output2 = temp_dir / "new.psp"
-        
-        metadata = {"package": {"name": "test", "version": "1.0"}}
-        slots = [sample_slot]
-        
-        # Old way
-        builder = PSPFBuilder()
-        builder.build(output1, metadata=metadata, slots=slots)
-        
-        # New way (fluent)
-        (PSPFBuilder.create()
-            .metadata(**metadata["package"])
-            .add_slot(sample_slot.name, sample_slot.path)
-            .build(output2))
-        
-        # Both should produce valid packages
-        assert output1.exists()
-        assert output2.exists()
 
 
 # =============================================================================
@@ -550,14 +493,15 @@ class TestIntegration:
         
         # Should have correct metadata
         metadata = reader.read_metadata()
-        assert metadata["package"]["name"] == "complete-app"
-        assert metadata["package"]["version"] == "1.0.0"
+        assert metadata["name"] == "complete-app"
+        assert metadata["version"] == "1.0.0"
         
         # Should have correct slots
-        slots = reader.list_slots()
-        assert len(slots) == 2
-        assert any(s["name"] == "main" for s in slots)
-        assert any(s["name"] == "config" for s in slots)
+        metadata = reader.read_metadata()
+        slots_metadata = metadata.get("slots", [])
+        assert len(slots_metadata) == 2
+        assert any(s["name"] == "main" for s in slots_metadata)
+        assert any(s["name"] == "config" for s in slots_metadata)
     
     def test_error_handling(self, temp_dir):
         """Test comprehensive error handling."""

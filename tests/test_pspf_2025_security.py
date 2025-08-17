@@ -76,11 +76,10 @@ class TestPSPFSecurity:
         
         bundle_path = temp_dir / "secure.psp"
         # Use test_builder from fixture
-        test_builder.build(
-            output_path=bundle_path,
-            metadata=metadata,
-            slots=[slot]
-        )
+        result = (test_builder.metadata(**metadata)
+                          .add_slot(slot.name, slot.path, encoding=slot.encoding, purpose=slot.purpose, lifecycle=slot.lifecycle)
+                          .build(bundle_path))
+        assert result.success, f"Build failed: {result.errors}"
         
         return bundle_path
     
@@ -109,11 +108,9 @@ class TestPSPFSecurity:
         """Test ephemeral key is included in bundle."""
         bundle_path = temp_dir / "ephemeral.psp"
         # Use test_builder from fixture
-        test_builder.build(
-            output_path=bundle_path,
-            metadata={"format": "PSPF/2025", "package": {"name": "test", "version": "1.0"}},
-            slots=[]
-        )
+        result = (test_builder.metadata(format="PSPF/2025", package={"name": "test", "version": "1.0"}, allow_empty=True)
+                          .build(bundle_path))
+        assert result.success, f"Build failed: {result.errors}"
         
         # Read index
         reader = PSPFReader(bundle_path)
@@ -256,11 +253,9 @@ class TestPSPFSecurity:
         """Test index block checksum validation."""
         bundle_path = temp_dir / "index_check.psp"
         # Use test_builder from fixture
-        test_builder.build(
-            output_path=bundle_path,
-            metadata={"format": "PSPF/2025", "package": {"name": "test", "version": "1.0"}},
-            slots=[]
-        )
+        result = (test_builder.metadata(format="PSPF/2025", package={"name": "test", "version": "1.0"}, allow_empty=True)
+                          .build(bundle_path))
+        assert result.success, f"Build failed: {result.errors}"
         
         # Read original index to get checksum
         reader = PSPFReader(bundle_path)
@@ -287,11 +282,9 @@ class TestPSPFSecurity:
         """Test detection of corrupted emoji magic."""
         bundle_path = temp_dir / "magic_corrupt.psp"
         # Use test_builder from fixture
-        test_builder.build(
-            output_path=bundle_path,
-            metadata={"format": "PSPF/2025", "package": {"name": "test", "version": "1.0"}},
-            slots=[]
-        )
+        result = (test_builder.metadata(format="PSPF/2025", package={"name": "test", "version": "1.0"}, allow_empty=True)
+                          .build(bundle_path))
+        assert result.success, f"Build failed: {result.errors}"
         
         # Corrupt emoji magic
         with open(bundle_path, 'r+b') as f:
@@ -324,11 +317,9 @@ class TestPSPFSecurity:
         
         bundle_path = temp_dir / "no_seal.psp"
         # Use test_builder from fixture
-        test_builder.build(
-            output_path=bundle_path,
-            metadata=metadata,
-            slots=[]
-        )
+        result = (test_builder.metadata(**metadata, allow_empty=True)
+                          .build(bundle_path))
+        assert result.success, f"Build failed: {result.errors}"
         
         # Should work without seal if not required
         launcher = PSPFLauncher(bundle_path)
@@ -364,11 +355,9 @@ class TestPSPFSecurity:
         
         bundle_path = temp_dir / "trusted.psp"
         # Use test_builder from fixture
-        test_builder.build(
-            output_path=bundle_path,
-            metadata=metadata,
-            slots=[]
-        )
+        result = (test_builder.metadata(**metadata, allow_empty=True)
+                          .build(bundle_path))
+        assert result.success, f"Build failed: {result.errors}"
         
         # Read and verify structure
         reader = PSPFReader(bundle_path)
@@ -392,8 +381,10 @@ class TestPSPFSecurity:
         bundle2_path = temp_dir / "bundle2.psp"
         
         # Use test_builder from fixture
-        test_builder.build(output_path=bundle1_path, metadata=metadata, slots=[])
-        test_builder.build(output_path=bundle2_path, metadata=metadata, slots=[])
+        result1 = (test_builder.metadata(**metadata, allow_empty=True).build(bundle1_path))
+        assert result1.success, f"Build failed: {result1.errors}"
+        result2 = (test_builder.metadata(**metadata, allow_empty=True).build(bundle2_path))
+        assert result2.success, f"Build failed: {result2.errors}"
         
         # Compare bundles
         data1 = bundle1_path.read_bytes()

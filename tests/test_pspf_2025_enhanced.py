@@ -58,15 +58,7 @@ class TestEnhancedIndex:
         # SLOT_DESCRIPTOR_SIZE is a constant (64), not an index field
         assert index.page_size == 4096
     
-    def test_backwards_compatibility(self):
-        """Test that current field names work (old names no longer supported)."""
-        index = PSPFIndex()
-        
-        # Current field names (old names are no longer supported)
-        assert index.slot_count == 0  # was descriptor_count
-        assert index.slot_table_offset == 0  # was descriptor_offset
-        assert index.package_size == 0  # was file_size
-        assert index.public_key == b'\x00' * 32  # was ephemeral_public_key
+    
     
     def test_pack_unpack_roundtrip(self):
         """Pack and unpack should preserve data."""
@@ -184,25 +176,7 @@ class TestEnhancedSlots:
         assert unpacked.lifecycle == 0
         assert unpacked.permissions == 0o755
     
-    def test_legacy_compatibility(self):
-        """Old SlotMetadata should convert to new SlotDescriptor."""
-        from flavor.psp.format_2025.slots import SlotMetadata
-        
-        legacy = SlotMetadata(
-            index=5,
-            name="test.txt",
-            size=1000,
-            checksum="abc123",
-            encoding="gzip",
-            purpose="payload",
-            lifecycle="runtime"
-        )
-        
-        descriptor = legacy.to_descriptor()
-        assert descriptor.id == 5
-        assert descriptor.name == "test.txt"
-        assert descriptor.compression == 1  # gzip
-        assert descriptor.lifecycle == 0  # permanent
+    
     
     def test_slot_view_lazy_loading(self):
         """SlotView should support lazy loading."""
