@@ -23,3 +23,20 @@ def get_platform_string() -> str:
     machine = arch_map.get(machine, machine)
     
     return f"{system}_{machine}"
+
+
+# Re-export subprocess utilities for convenience
+from flavor.utils.subprocess import (
+    run_command,
+    run_command_simple,
+    run_command_with_progress,
+    run_subprocess,
+)
+
+__all__ = [
+    "get_platform_string",
+    "run_command",
+    "run_command_simple",
+    "run_command_with_progress",
+    "run_subprocess",
+]

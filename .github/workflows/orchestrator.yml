@@ -282,10 +282,10 @@ jobs:
           source workenv/flavor_*/bin/activate
           
           # Set launcher binary path for Rust builder
-          export FLAVOR_LAUNCHER_BIN="$PWD/helpers/bin/flavor-go-launcher"
+          export FLAVOR_LAUNCHER_BIN="$PWD/helpers/bin/flavor-rs-launcher"
           echo "FLAVOR_LAUNCHER_BIN=$FLAVOR_LAUNCHER_BIN"
           
-          flavor package --launcher go --output dist/flavor.psp
+          flavor package --launcher rust --output dist/flavor.psp
       
       - name: 🔧 Install Flavor from Package
         run: |

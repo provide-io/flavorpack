@@ -47,7 +47,7 @@ class TestPSPFBuilder:
                 {
                     "path": str(wheel_path),
                     "purpose": "payload",
-                    "lifecycle": "persistent"
+                    "lifecycle": "runtime"
                 }
             ]
         }
@@ -99,7 +99,7 @@ lifecycle = "{manifest_data['slots'][0]['lifecycle']}"
             checksum="abc",
             encoding="none",
             purpose="payload",
-            lifecycle="persistent",
+            lifecycle="runtime",
             path=wheel_path
         )
         
@@ -158,7 +158,7 @@ lifecycle = "{manifest_data['slots'][0]['lifecycle']}"
                 checksum="abc",
                 encoding="gzip",  # Good for text
                 purpose="config",
-                lifecycle="persistent",
+                lifecycle="runtime",
                 path=text_path
             ),
             SlotMetadata(
@@ -168,7 +168,7 @@ lifecycle = "{manifest_data['slots'][0]['lifecycle']}"
                 checksum="def",
                 encoding="none",  # Binary files often don't compress well
                 purpose="library",
-                lifecycle="persistent",
+                lifecycle="runtime",
                 path=binary_path
             ),
             SlotMetadata(
@@ -178,7 +178,7 @@ lifecycle = "{manifest_data['slots'][0]['lifecycle']}"
                 checksum="ghi",
                 encoding="none",  # Random data doesn't compress
                 purpose="data",
-                lifecycle="persistent",
+                lifecycle="runtime",
                 path=random_path
             )
         ]
@@ -205,7 +205,7 @@ lifecycle = "{manifest_data['slots'][0]['lifecycle']}"
             checksum="abc",
             encoding="none",
             purpose="payload",
-            lifecycle="persistent",
+            lifecycle="runtime",
             path=temp_dir / "nonexistent.txt"
         )
         
@@ -234,7 +234,7 @@ lifecycle = "{manifest_data['slots'][0]['lifecycle']}"
                 checksum="abc",
                 encoding="none",
                 purpose=purpose,
-                lifecycle="persistent"
+                lifecycle="runtime"
             )
             
             # Should not raise
@@ -249,7 +249,7 @@ lifecycle = "{manifest_data['slots'][0]['lifecycle']}"
             checksum="abc",
             encoding="none",
             purpose="payload",
-            lifecycle="persistent"
+            lifecycle="runtime"
         )
         
         slot2 = SlotMetadata(
@@ -259,7 +259,7 @@ lifecycle = "{manifest_data['slots'][0]['lifecycle']}"
             checksum="def",
             encoding="none",
             purpose="payload",
-            lifecycle="persistent"
+            lifecycle="runtime"
         )
         
         # Builder should handle this appropriately
@@ -281,7 +281,7 @@ lifecycle = "{manifest_data['slots'][0]['lifecycle']}"
                 checksum=hashlib.sha256(path.read_bytes()).hexdigest(),
                 encoding="gzip",
                 purpose="payload",
-                lifecycle="persistent",
+                lifecycle="runtime",
                 path=path
             ))
         
@@ -342,7 +342,7 @@ lifecycle = "{manifest_data['slots'][0]['lifecycle']}"
             checksum=hashlib.sha256(slot_path.read_bytes()).hexdigest(),
             encoding="none",
             purpose="payload",
-            lifecycle="persistent",
+            lifecycle="runtime",
             path=slot_path
         )
         
@@ -380,7 +380,7 @@ lifecycle = "{manifest_data['slots'][0]['lifecycle']}"
             checksum="abc",
             encoding="gzip",  # Would use max compression
             purpose="payload",
-            lifecycle="persistent",
+            lifecycle="runtime",
             path=large_path
         )
         
@@ -468,7 +468,7 @@ lifecycle = "{manifest_data['slots'][0]['lifecycle']}"
                     checksum=hashlib.sha256(path.read_bytes()).hexdigest(),
                     encoding="none",
                     purpose=slot_type if slot_type != "payload" else "library",
-                    lifecycle="persistent",
+                    lifecycle="runtime",
                     path=path
                 ))
                 slot_index += 1

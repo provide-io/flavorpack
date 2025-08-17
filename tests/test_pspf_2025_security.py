@@ -55,7 +55,7 @@ class TestPSPFSecurity:
             checksum=hashlib.sha256(payload_path.read_bytes()).hexdigest(),
             encoding="gzip",
             purpose="payload",
-            lifecycle="persistent",
+            lifecycle="runtime",
             path=payload_path
         )
         
@@ -220,7 +220,7 @@ class TestPSPFSecurity:
             checksum=hashlib.sha256(original_data).hexdigest(),
             encoding="none",
             purpose="payload",
-            lifecycle="persistent",
+            lifecycle="runtime",
             path=slot_path
         )
         

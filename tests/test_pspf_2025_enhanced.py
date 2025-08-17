@@ -195,7 +195,7 @@ class TestEnhancedSlots:
             checksum="abc123",
             encoding="gzip",
             purpose="payload",
-            lifecycle="persistent"
+            lifecycle="runtime"
         )
         
         descriptor = legacy.to_descriptor()

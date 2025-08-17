@@ -93,11 +93,11 @@ runs:
         
         # Build launcher
         echo "🔨 Building Go launcher..."
-        go build -ldflags="-s -w" -o ../bin/flavor-go-launcher cmd/pspf-launcher/main.go
+        go build -ldflags="-s -w" -o ../bin/flavor-go-launcher cmd/flavor-go-launcher/main.go
         
         # Build builder
         echo "🔨 Building Go builder..."
-        go build -ldflags="-s -w" -o ../bin/flavor-go-builder cmd/pspf-builder/main.go
+        go build -ldflags="-s -w" -o ../bin/flavor-go-builder cmd/flavor-go-builder/main.go
         
         # Strip if requested
         if [ "${{ inputs.strip }}" = "true" ] && command -v strip &> /dev/null; then

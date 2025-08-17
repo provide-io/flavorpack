@@ -52,7 +52,7 @@ class TestPSPFSlots:
             checksum=hashlib.sha256(text_data.encode()).hexdigest(),
             encoding="gzip",
             purpose="config",
-            lifecycle="persistent",
+            lifecycle="runtime",
             path=text_path
         ))
         
@@ -68,7 +68,7 @@ class TestPSPFSlots:
             checksum=hashlib.sha256(binary_data).hexdigest(),
             encoding="none",  # Binary files often don't compress well
             purpose="library",
-            lifecycle="volatile",
+            lifecycle="init",
             path=binary_path
         ))
         
@@ -84,83 +84,83 @@ class TestPSPFSlots:
             checksum=hashlib.sha256(temp_data).hexdigest(),
             encoding="none",
             purpose="payload",
-            lifecycle="temporary",
+            lifecycle="temp",
             path=temp_path
         ))
         
         return slots
     
-    def test_slot_lifecycle_persistent(self, temp_dir, test_builder):
-        """Test persistent slot lifecycle metadata."""
+    def test_slot_lifecycle_runtime(self, temp_dir, test_builder):
+        """Test runtime slot lifecycle metadata."""
         slot = SlotMetadata(
             index=0,
-            name="test-persistent",
+            name="test-runtime",
             size=1024,
             checksum="abc123",
             encoding="gzip",
             purpose="payload",
-            lifecycle="persistent"
+            lifecycle="runtime"
         )
         
         # Test metadata serialization
         slot_dict = slot.to_dict()
-        assert slot_dict['lifecycle'] == 'persistent'
-        assert slot_dict['name'] == 'test-persistent'
-        # Persistent slots should remain after first use
+        assert slot_dict['lifecycle'] == 'runtime'
+        assert slot_dict['name'] == 'test-runtime'
+        # Runtime slots available during application execution
     
-    def test_slot_lifecycle_volatile(self, temp_dir, test_builder):
-        """Test volatile slot lifecycle metadata."""
+    def test_slot_lifecycle_init(self, temp_dir, test_builder):
+        """Test init slot lifecycle metadata."""
         slot = SlotMetadata(
             index=0,
-            name="test-volatile",
+            name="test-init",
             size=1024,
             checksum="abc123",
             encoding="gzip",
             purpose="payload",
-            lifecycle="volatile"
+            lifecycle="init"
         )
         
         # Test metadata serialization
         slot_dict = slot.to_dict()
-        assert slot_dict['lifecycle'] == 'volatile'
-        assert slot_dict['name'] == 'test-volatile'
-        # Volatile slots removed on process exit
+        assert slot_dict['lifecycle'] == 'init'
+        assert slot_dict['name'] == 'test-init'
+        # Init slots removed after initialization
     
-    def test_slot_lifecycle_temporary(self, temp_dir, test_builder):
-        """Test temporary slot lifecycle metadata."""
+    def test_slot_lifecycle_temp(self, temp_dir, test_builder):
+        """Test temp slot lifecycle metadata."""
         slot = SlotMetadata(
             index=0,
-            name="test-temporary",
+            name="test-temp",
             size=1024,
             checksum="abc123",
             encoding="gzip",
             purpose="payload",
-            lifecycle="temporary"
+            lifecycle="temp"
         )
         
         # Test metadata serialization
         slot_dict = slot.to_dict()
-        assert slot_dict['lifecycle'] == 'temporary'
-        assert slot_dict['name'] == 'test-temporary'
-        # Temporary slots removed after first use
+        assert slot_dict['lifecycle'] == 'temp'
+        assert slot_dict['name'] == 'test-temp'
+        # Temp slots removed after current session
     
-    def test_slot_lifecycle_install(self, temp_dir, test_builder):
-        """Test install slot lifecycle metadata."""
+    def test_slot_lifecycle_cache(self, temp_dir, test_builder):
+        """Test cache slot lifecycle metadata."""
         slot = SlotMetadata(
             index=0,
-            name="test-install",
+            name="test-cache",
             size=1024,
             checksum="abc123",
             encoding="gzip",
-            purpose="installer",
-            lifecycle="install"
+            purpose="config",
+            lifecycle="cache"
         )
         
         # Test metadata serialization
         slot_dict = slot.to_dict()
-        assert slot_dict['lifecycle'] == 'install'
-        assert slot_dict['purpose'] == 'installer'
-        # Install slots run once then entire bundle removed
+        assert slot_dict['lifecycle'] == 'cache'
+        assert slot_dict['purpose'] == 'config'
+        # Cache slots kept for performance, can be regenerated
     
     def test_multiple_slots(self, temp_dir, test_slots, test_builder):
         """Test bundle with multiple slots."""
@@ -211,7 +211,7 @@ class TestPSPFSlots:
             checksum=hashlib.sha256(data).hexdigest(),
             encoding="gzip",
             purpose="payload",
-            lifecycle="persistent",
+            lifecycle="runtime",
             path=slot_path
         )
         
@@ -241,7 +241,7 @@ class TestPSPFSlots:
             checksum=hashlib.sha256(data).hexdigest(),
             encoding="none",
             purpose="payload",
-            lifecycle="persistent",
+            lifecycle="runtime",
             path=slot_path
         )
         
@@ -269,7 +269,7 @@ class TestPSPFSlots:
             checksum=expected_checksum,
             encoding="none",
             purpose="payload",
-            lifecycle="persistent",
+            lifecycle="runtime",
             path=slot_path
         )
         
@@ -332,7 +332,7 @@ class TestPSPFSlots:
             checksum=hashlib.sha256(slot_path.read_bytes()).hexdigest(),
             encoding="gzip",
             purpose="payload",
-            lifecycle="persistent",
+            lifecycle="runtime",
             path=slot_path
         )
         
@@ -349,7 +349,7 @@ class TestPSPFSlots:
         reader = PSPFReader(bundle_path)
         metadata = reader.read_metadata()
         slot_meta = metadata['slots'][0]
-        assert slot_meta['lifecycle'] == 'persistent'  # Persistent slots can be cached
+        assert slot_meta['lifecycle'] == 'runtime'  # Runtime slots available during execution
     
     def test_slot_metadata_serialization(self, test_builder):
         """Test SlotMetadata to_dict serialization."""
@@ -360,7 +360,7 @@ class TestPSPFSlots:
             checksum="deadbeef",
             encoding="none",  # Binary files often don't compress well
             purpose="library",
-            lifecycle="volatile",
+            lifecycle="init",
             path=Path("/tmp/test")
         )
         
@@ -374,7 +374,7 @@ class TestPSPFSlots:
         assert slot_dict['checksum'] == "deadbeef"
         assert slot_dict['encoding'] == "none"
         assert slot_dict['purpose'] == "library"
-        assert slot_dict['lifecycle'] == "volatile"
+        assert slot_dict['lifecycle'] == "init"
         # Path should not be included in serialized metadata
         assert 'path' not in slot_dict
     
@@ -392,7 +392,7 @@ class TestPSPFSlots:
             checksum=hashlib.sha256(large_data).hexdigest(),
             encoding="none",
             purpose="payload",
-            lifecycle="persistent",
+            lifecycle="runtime",
             path=large_path
         )
         

@@ -17,7 +17,8 @@ from pyvider.telemetry import logger
 from flavor.exceptions import BuildError
 from flavor.utils import get_platform_string
 from flavor.packaging.python_packager import PythonPackager
-from flavor.packaging.util import run_subprocess
+from flavor.utils.subprocess import run_command
+from flavor.helpers import HelperManager
 
 
 class PackagingOrchestrator:
@@ -34,6 +35,7 @@ class PackagingOrchestrator:
         entry_point: str,
         python_version: str | None = None,
         launcher_type: str = "rust",
+        builder_bin: str | None = None,
         strip_binaries: bool = False,
         show_progress: bool = False,
         key_seed: str | None = None,
@@ -47,40 +49,34 @@ class PackagingOrchestrator:
         self.manifest_dir = manifest_dir
         self.python_version = python_version or self.DEFAULT_PYTHON_VERSION
         self.launcher_type = launcher_type
+        self.builder_bin = builder_bin
         self.strip_binaries = strip_binaries
         self.show_progress = show_progress
         self.key_seed = key_seed
 
-        # Define helper search paths
+        # Use HelperManager for finding helpers
+        self.helper_manager = HelperManager()
         self.platform = get_platform_string()
-        project_root = self.manifest_dir.parent
-        self.helper_search_paths = [
-            Path(p) for p in os.environ.get("FLAVOR_HELPERS_BIN", "").split(":") if p
-        ]
-        self.helper_search_paths.extend([
-            Path.home() / ".cache" / "flavor" / "bin",
-            project_root / "helpers" / "bin",
-        ])
 
 
     def _find_helper(self, helper_name: str) -> Path:
-        """Find a helper binary in the search paths."""
-        for search_dir in self.helper_search_paths:
-            helper_path = search_dir / helper_name
-            if helper_path.is_file() and os.access(helper_path, os.X_OK):
-                logger.info(f"Found helper '{helper_name}' at: {helper_path}")
-                return helper_path
+        """Find a helper binary using HelperManager."""
+        # Try to get helper info from HelperManager
+        helper_info = self.helper_manager.get_helper_info(helper_name)
+        if helper_info and helper_info.path.exists():
+            logger.info(f"Found helper '{helper_name}' at: {helper_info.path}")
+            return helper_info.path
         
-        available_helpers = []
-        for search_dir in self.helper_search_paths:
-            if search_dir.exists():
-                available_helpers.extend([h.name for h in search_dir.iterdir()])
-
+        # If not found, list available helpers for error message
+        helpers = self.helper_manager.list_helpers()
+        available_names = []
+        for helper_list in [helpers["launchers"], helpers["builders"]]:
+            available_names.extend([h.name for h in helper_list])
+        
         raise BuildError(
             f"Could not find required helper binary '{helper_name}'.\n"
-            f"Searched in: {[str(p) for p in self.helper_search_paths]}.\n"
-            f"Available helpers found: {list(set(available_helpers)) or 'None'}.\n"
-            "Ensure helpers are built and in one of the search paths."
+            f"Available helpers: {available_names or 'None'}.\n"
+            "Ensure helpers are built. Run: flavor helpers build"
         )
 
     def build_package(self) -> None:
@@ -110,27 +106,8 @@ class PackagingOrchestrator:
                 if bar:
                     bar.finish()
 
-            # Step 2: Compute signature
-            logger.info("Computing payload signature...")
-            with progress.task(total=1, description="Computing signature") as bar:
-                # Only compute signature if we have a key path (not using key-seed)
-                if self.package_integrity_key_path:
-                    signature = python_packager.compute_signature(
-                        artifacts["payload_tgz"], Path(self.package_integrity_key_path)
-                    )
-                else:
-                    # When using key-seed, builder will handle signing
-                    signature = None
-                if bar:
-                    bar.finish()
-
-            # Write signature to file for Go packager (if we have one)
-            signature_path = temp_dir / "signature.bin"
-            if signature:
-                signature_path.write_bytes(signature)
-            else:
-                # Create empty signature file for builder to know we're using key-seed
-                signature_path.write_bytes(b"")
+            # Note: Signature generation is handled by the builders (Go/Rust)
+            # They generate Ed25519 signatures when creating the PSPF package
 
             # Create tarballs for slots
             logger.info("Creating slot tarballs...")
@@ -162,7 +139,7 @@ class PackagingOrchestrator:
                 if bar:
                     bar.increment()
 
-            # Step 3: Create manifest for pspf-builder
+            # Step 3: Create manifest for builder
             manifest = {
                 "name": self.package_name,
                 "version": self.build_config.get("version", "1.0.0"),
@@ -190,7 +167,7 @@ class PackagingOrchestrator:
                         "path": str(uv_tarball),
                         "encoding": "gzip",
                         "purpose": "tool",
-                        "lifecycle": "persistent",
+                        "lifecycle": "cache",  # UV tool can be cached, regenerated if needed
                         "extract_to": ".",
                     },
                     {
@@ -198,7 +175,7 @@ class PackagingOrchestrator:
                         "path": str(python_tarball),
                         "encoding": "gzip",
                         "purpose": "runtime",
-                        "lifecycle": "persistent",
+                        "lifecycle": "runtime",  # Python runtime available during execution
                         "extract_to": ".",
                     },
                     {
@@ -206,7 +183,7 @@ class PackagingOrchestrator:
                         "path": str(wheels_tarball),
                         "encoding": "gzip",
                         "purpose": "payload",
-                        "lifecycle": "volatile",
+                        "lifecycle": "init",  # Wheels extracted once, removed after installation
                         "extract_to": "wheels",
                     },
                 ],
@@ -237,15 +214,43 @@ class PackagingOrchestrator:
             logger.info(f"Generated manifest: {json.dumps(manifest, indent=2)}")
 
             # Step 4: Find and use builder helper
-            # Prefer Rust builder if available, otherwise use Go
-            builder_name = "flavor-rs-builder"
-            try:
-                packager_executable = self._find_helper(builder_name)
-            except BuildError:
-                logger.warning(f"{builder_name} not found, falling back to Go builder.")
-                builder_name = "flavor-go-builder"
-                packager_executable = self._find_helper(builder_name)
+            # Priority: 1. builder_bin parameter, 2. FLAVOR_BUILDER_BIN env var, 3. auto-detect
+            if self.builder_bin:
+                packager_executable = Path(self.builder_bin)
+                if not packager_executable.exists():
+                    raise BuildError(f"Builder binary not found: {self.builder_bin}")
+                logger.info(f"Using custom builder: {packager_executable}")
+            elif os.environ.get("FLAVOR_BUILDER_BIN"):
+                packager_executable = Path(os.environ["FLAVOR_BUILDER_BIN"])
+                if not packager_executable.exists():
+                    raise BuildError(f"Builder binary not found: {packager_executable}")
+                logger.info(f"Using custom builder from FLAVOR_BUILDER_BIN: {packager_executable}")
+            else:
+                # Prefer Rust builder if available, otherwise use Go
+                builder_name = "flavor-rs-builder"
+                try:
+                    packager_executable = self._find_helper(builder_name)
+                except BuildError:
+                    logger.warning(f"{builder_name} not found, falling back to Go builder.")
+                    builder_name = "flavor-go-builder"
+                    packager_executable = self._find_helper(builder_name)
 
+            # Find launcher binary
+            launcher_name = f"flavor-{self.launcher_type}-launcher" if self.launcher_type in ["go", "rust"] else f"flavor-rs-launcher"
+            if self.launcher_type == "rust":
+                launcher_name = "flavor-rs-launcher"
+            elif self.launcher_type == "go":
+                launcher_name = "flavor-go-launcher"
+            else:
+                launcher_name = "flavor-rs-launcher"  # Default
+            
+            try:
+                launcher_executable = self._find_helper(launcher_name)
+            except BuildError:
+                logger.warning(f"{launcher_name} not found, trying FLAVOR_LAUNCHER_BIN environment variable")
+                launcher_executable = os.environ.get("FLAVOR_LAUNCHER_BIN")
+                if not launcher_executable:
+                    raise BuildError(f"Launcher binary not found: {launcher_name}")
 
             build_cmd_args = [
                 str(packager_executable),
@@ -253,8 +258,8 @@ class PackagingOrchestrator:
                 str(manifest_path),
                 "--output",
                 self.output_flavor_path,
-                "--launcher",
-                self.launcher_type,
+                "--launcher-bin",
+                str(launcher_executable),
             ]
             
             # Add key options if provided
@@ -271,7 +276,7 @@ class PackagingOrchestrator:
                 spinner.tick()
             
             # We don't need a specific cwd for the builder, it takes absolute paths
-            run_subprocess(build_cmd_args)
+            run_command(build_cmd_args, check=True, capture_output=True)
             
             if spinner:
                 spinner.finish()

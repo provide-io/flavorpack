@@ -182,10 +182,12 @@ The metadata MUST be gzip-compressed JSON data. The signature and public key are
       "index": "number (0-based)",
       "name": "string",
       "size": "number (bytes)",
-      "compressed_size": "number (bytes)",
-      "checksum": "string (sha256:hex)",
-      "compression": "none|gzip|zstd",
-      "purpose": "runtime|payload|asset|..."
+      "checksum": "string (adler32 or sha256:hex)",
+      "encoding": "none|gzip|zstd|brotli",
+      "purpose": "payload|runtime|config|asset|library|binary|installer|data",
+      "lifecycle": "runtime|init|startup|shutdown|cache|temp|lazy|eager|dev|config|platform",
+      "extract_to": "string (optional, custom extraction path)",
+      "platform": "string (optional, platform-specific slot)"
     }
   ],
   "execution": {
@@ -200,6 +202,49 @@ The metadata MUST be gzip-compressed JSON data. The signature and public key are
   }
 }
 ```
+
+### 3.2 Slot Lifecycles
+
+The `lifecycle` field instructs launchers how to handle slot content:
+
+#### Timing-based Lifecycles
+- **`init`** - First run only, content is extracted once then removed after initialization
+- **`startup`** - Extracted/executed at every startup before main execution
+- **`runtime`** - Available during application execution (default)
+- **`shutdown`** - Executed during cleanup/exit phase
+
+#### Retention-based Lifecycles
+- **`cache`** - Kept for performance, can be regenerated if needed
+- **`temp`** - Removed after current session ends
+
+#### Access-based Lifecycles
+- **`lazy`** - Loaded on-demand, not extracted initially
+- **`eager`** - Loaded immediately on startup
+
+#### Environment-based Lifecycles
+- **`dev`** - Only extracted in development/debug mode
+- **`config`** - User-modifiable configuration files
+- **`platform`** - Platform/OS specific content
+
+**Requirements:**
+- Launchers MUST support `init`, `runtime`, and `cache` lifecycles
+- Launchers SHOULD support other lifecycles where appropriate
+- Unknown lifecycles should be treated as `runtime` for forward compatibility
+
+### 3.3 Slot Purpose
+
+The `purpose` field describes the semantic type of content:
+
+- **`payload`** - Main application data
+- **`runtime`** - Executable code
+- **`config`** - Configuration files
+- **`asset`** - Static resources (images, fonts, etc.)
+- **`library`** - Shared libraries or dependencies
+- **`binary`** - Native executable binaries
+- **`installer`** - Installation files (packages, wheels)
+- **`data`** - Generic data files
+
+Purpose and lifecycle are orthogonal - any purpose can have any lifecycle.
 
 ## 4. Reading Order and Performance
 

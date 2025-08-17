@@ -16,7 +16,7 @@ Feature: PSPF Bundle Building
       [[slots]]
       path = "dist/myapp.whl"
       purpose = "payload"
-      lifecycle = "persistent"
+      lifecycle = "runtime"
       """
     When I run "pspf build manifest.toml"
     Then a PSPF bundle should be created
