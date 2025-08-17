@@ -10,6 +10,7 @@ from flavor.psp.format_2025.constants import (
     INDEX_SIZE,
     EMOJI_MAGIC_SIZE,
     SLOT_ALIGNMENT,
+    SLOT_DESCRIPTOR_SIZE,
     MAGIC_WAND_EMOJI,
 )
 from flavor.psp.format_2025.index import PSPFIndex
@@ -27,6 +28,7 @@ __all__ = [
     'INDEX_SIZE',
     'EMOJI_MAGIC_SIZE',
     'SLOT_ALIGNMENT',
+    'SLOT_DESCRIPTOR_SIZE',
     'MAGIC_WAND_EMOJI',
     
     # Classes

@@ -23,45 +23,6 @@ from flavor.packaging.util import run_subprocess
 class PackagingOrchestrator:
     DEFAULT_PYTHON_VERSION = "3.11"
 
-    @staticmethod
-    def discover_helpers() -> dict[str, list[str]]:
-        """Discover available helper launchers and builders in helpers/bin."""
-        helpers_bin = Path(__file__).parent.parent.parent.parent / "helpers" / "bin"
-        
-        helpers = {
-            "launchers": [],
-            "builders": [],
-        }
-        
-        if helpers_bin.exists():
-            # Find all launchers (flavor-*-launcher pattern)
-            for launcher in helpers_bin.glob("flavor-*-launcher"):
-                # Extract language from filename (e.g., "go" from "flavor-go-launcher")
-                parts = launcher.stem.split("-")
-                if len(parts) >= 2:
-                    lang = parts[1]
-                    helpers["launchers"].append(lang)
-            
-            # Find all builders (flavor-*-builder pattern)
-            for builder in helpers_bin.glob("flavor-*-builder"):
-                # Extract language from filename
-                parts = builder.stem.split("-")
-                if len(parts) >= 2:
-                    lang = parts[1]
-                    helpers["builders"].append(lang)
-        
-        return helpers
-    
-    @staticmethod
-    def get_available_launchers() -> list[str]:
-        """Get list of available launcher helper types."""
-        return PackagingOrchestrator.discover_helpers()["launchers"]
-    
-    @staticmethod
-    def get_available_builders() -> list[str]:
-        """Get list of available builder helper types."""
-        return PackagingOrchestrator.discover_helpers()["builders"]
-
     def __init__(
         self,
         package_integrity_key_path: str | None,
@@ -90,11 +51,37 @@ class PackagingOrchestrator:
         self.show_progress = show_progress
         self.key_seed = key_seed
 
-        # Set up workenv directory for build artifacts
+        # Define helper search paths
         self.platform = get_platform_string()
-        self.workenv_dir = Path.cwd() / "workenv" / "flavors" / self.platform
-        self.workenv_dir.mkdir(parents=True, exist_ok=True)
+        project_root = self.manifest_dir.parent
+        self.helper_search_paths = [
+            Path(p) for p in os.environ.get("FLAVOR_HELPERS_BIN", "").split(":") if p
+        ]
+        self.helper_search_paths.extend([
+            Path.home() / ".cache" / "flavor" / "bin",
+            project_root / "helpers" / "bin",
+        ])
 
+
+    def _find_helper(self, helper_name: str) -> Path:
+        """Find a helper binary in the search paths."""
+        for search_dir in self.helper_search_paths:
+            helper_path = search_dir / helper_name
+            if helper_path.is_file() and os.access(helper_path, os.X_OK):
+                logger.info(f"Found helper '{helper_name}' at: {helper_path}")
+                return helper_path
+        
+        available_helpers = []
+        for search_dir in self.helper_search_paths:
+            if search_dir.exists():
+                available_helpers.extend([h.name for h in search_dir.iterdir()])
+
+        raise BuildError(
+            f"Could not find required helper binary '{helper_name}'.\n"
+            f"Searched in: {[str(p) for p in self.helper_search_paths]}.\n"
+            f"Available helpers found: {list(set(available_helpers)) or 'None'}.\n"
+            "Ensure helpers are built and in one of the search paths."
+        )
 
     def build_package(self) -> None:
         logger.info("Orchestrator starting build process...")
@@ -203,7 +190,7 @@ class PackagingOrchestrator:
                         "path": str(uv_tarball),
                         "encoding": "gzip",
                         "purpose": "tool",
-                        "lifecycle": "persistent",  # UV binary stays for command execution
+                        "lifecycle": "persistent",
                         "extract_to": ".",
                     },
                     {
@@ -230,6 +217,12 @@ class PackagingOrchestrator:
                 },
             }
             
+            # Add build metadata for reproducible builds
+            if self.build_config.get("build_timestamp"):
+                manifest["build_timestamp"] = self.build_config["build_timestamp"]
+            if self.build_config.get("build_host"):
+                manifest["build_host"] = self.build_config["build_host"]
+            
             # Add runtime configuration if present in build config
             execution_config = self.build_config.get("execution", {})
             logger.debug(f"Execution config from build_config: {execution_config}")
@@ -243,74 +236,16 @@ class PackagingOrchestrator:
             manifest_path.write_text(json.dumps(manifest, indent=2))
             logger.info(f"Generated manifest: {json.dumps(manifest, indent=2)}")
 
-            # Step 4: Dynamically discover and use launchers/builders
-            helpers_bin = Path(__file__).parent.parent.parent.parent / "helpers" / "bin"
-            
-            # Map language aliases to binary prefixes
-            lang_map = {
-                "go": "go",
-                "rust": "rs",
-                "rs": "rs",
-            }
-            
-            # Get the launcher binary based on type
-            launcher_lang = lang_map.get(self.launcher_type, self.launcher_type)
-            launcher_pattern = f"flavor-{launcher_lang}-launcher"
-            launcher_src = helpers_bin / launcher_pattern
-            launcher_output = self.workenv_dir / launcher_pattern
-            
-            if launcher_src.exists():
-                logger.info(f"Using pre-built launcher from {launcher_src}")
-                shutil.copy2(launcher_src, launcher_output)
-                
-                # Strip binary if requested
-                if self.strip_binaries:
-                    from flavor.optimization import BinaryOptimizer
-                    optimizer = BinaryOptimizer()
-                    original_size = launcher_output.stat().st_size
-                    logger.info(f"Stripping debug symbols from launcher (current size: {original_size / (1024 * 1024):.1f} MB)...")
-                    result = optimizer.strip_binary(launcher_output)
-                    if result["success"]:
-                        new_size = result.get("new_size", original_size)
-                        size_reduction = result.get("size_reduction", 0)
-                        reduction_percent = result.get("reduction_percent", 0)
-                        logger.info(f"✅ Launcher stripped: {original_size / (1024 * 1024):.1f} MB → {new_size / (1024 * 1024):.1f} MB (reduced {size_reduction / (1024 * 1024):.1f} MB / {reduction_percent:.1f}%)")
-                    else:
-                        logger.warning(f"Failed to strip launcher: {result.get('error', 'Unknown error')}")
-            else:
-                # Fallback for missing launcher
-                available_launchers = list(helpers_bin.glob("flavor-*-launcher"))
-                if available_launchers:
-                    logger.warning(f"Launcher '{launcher_pattern}' not found. Available launchers: {[l.name for l in available_launchers]}")
-                    # Use first available launcher as fallback
-                    fallback = available_launchers[0]
-                    logger.info(f"Using fallback launcher: {fallback.name}")
-                    shutil.copy2(fallback, self.workenv_dir / fallback.name)
-                    launcher_output = self.workenv_dir / fallback.name
-                else:
-                    raise RuntimeError(f"No launchers found in {helpers_bin}")
-            
-            # Get the builder binary (default to Rust builder)
-            # Discover available builders
-            available_builders = list(helpers_bin.glob("flavor-*-builder"))
-            if not available_builders:
-                raise RuntimeError(f"No builders found in {helpers_bin}")
-            
-            # Prefer Rust builder if available, otherwise use first available
-            builder_src = None
-            for builder in available_builders:
-                if "rs" in builder.name or "rust" in builder.name:
-                    builder_src = builder
-                    break
-            
-            if not builder_src:
-                builder_src = available_builders[0]
-            
-            builder_output = self.workenv_dir / builder_src.name
-            logger.info(f"Using pre-built builder from {builder_src}")
-            shutil.copy2(builder_src, builder_output)
-            
-            packager_executable = builder_output
+            # Step 4: Find and use builder helper
+            # Prefer Rust builder if available, otherwise use Go
+            builder_name = "flavor-rs-builder"
+            try:
+                packager_executable = self._find_helper(builder_name)
+            except BuildError:
+                logger.warning(f"{builder_name} not found, falling back to Go builder.")
+                builder_name = "flavor-go-builder"
+                packager_executable = self._find_helper(builder_name)
+
 
             build_cmd_args = [
                 str(packager_executable),
@@ -331,12 +266,12 @@ class PackagingOrchestrator:
                 build_cmd_args.extend(["--key-seed", self.key_seed])
 
             logger.info("Building flavor package...")
-            # Run from workenv directory where the launchers are
             spinner = progress.create_spinner(description="Building PSPF package")
             if spinner:
                 spinner.tick()
             
-            run_subprocess(build_cmd_args, cwd=self.workenv_dir)
+            # We don't need a specific cwd for the builder, it takes absolute paths
+            run_subprocess(build_cmd_args)
             
             if spinner:
                 spinner.finish()
