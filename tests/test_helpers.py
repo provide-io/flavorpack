@@ -191,8 +191,8 @@ class TestHelperManager:
         # Should have built 2 helpers
         assert len(built) == 2
         
-        # Check that cargo build was called correctly
-        assert mock_run.call_count == 2
+        # Check that cargo build was called correctly (workspace build)
+        assert mock_run.call_count == 1  # Single workspace build
         
         # Verify output paths
         assert self.helpers_bin / "flavor-rs-launcher" in built

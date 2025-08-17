@@ -44,7 +44,7 @@
 
      Error: No such option: --output-dir Did you mean --output?
 
-⏺ Bash(cd tests/taster && ../../workenv/flavor_darwin_arm64/bin/flavor package --manifest pyproject.toml --output dist/taster.pspf)
+⏺ Bash(cd tests/taster && ../../workenv/flavor_darwin_arm64/bin/flavor package --manifest pyproject.toml --output dist/taster.psp)
   ⎿  Error: [Pyvider Setup] INFO (pyvider.telemetry.core_setup): ⚙️➡️🚀 Starting Pyvider (structlog) explicit setup...
      [Pyvider Setup] INFO (pyvider.telemetry.core_setup): 📝➡️🎨 Configured Key-Value (ConsoleRenderer).
      [Pyvider Setup] INFO (pyvider.telemetry.core_setup): 📝➡️✅ structlog configured. Wrapper: BoundLogger. Output: sys.stderr.
@@ -60,7 +60,7 @@
      … +32 lines (ctrl+r to see all)
 
 ⏺ Bash(cd tests/taster && mkdir -p dist && ../../workenv/flavor_darwin_arm64/bin/flavor package --manifest pyproject.toml --output
-      dist/taster.pspf)
+      dist/taster.psp)
   ⎿  🚀 Packaging application...                                                                         
      ✅ Successfully built artifact at /REDACTED_ABS_PATH
      ✅ All targets built successfully.
@@ -68,13 +68,13 @@
 
 ⏺ Perfect! Now let's run the taster test to verify everything works:
 
-⏺ Bash(cd tests/taster && FLAVOR_SKIP_KEY_VERIFICATION=1 RUST_LOG=debug ./dist/taster.pspf env)
+⏺ Bash(cd tests/taster && FLAVOR_SKIP_KEY_VERIFICATION=1 RUST_LOG=debug ./dist/taster.psp env)
   ⎿  Error: (eval):cd:1: no such file or directory: tests/taster
 
-⏺ Bash(FLAVOR_SKIP_KEY_VERIFICATION=1 RUST_LOG=debug ./dist/taster.pspf env)
-  ⎿  Error: (eval):1: permission denied: ./dist/taster.pspf
+⏺ Bash(FLAVOR_SKIP_KEY_VERIFICATION=1 RUST_LOG=debug ./dist/taster.psp env)
+  ⎿  Error: (eval):1: permission denied: ./dist/taster.psp
 
-⏺ Bash(chmod +x dist/taster.pspf && FLAVOR_SKIP_KEY_VERIFICATION=1 RUST_LOG=debug ./dist/taster.pspf env)
+⏺ Bash(chmod +x dist/taster.psp && FLAVOR_SKIP_KEY_VERIFICATION=1 RUST_LOG=debug ./dist/taster.psp env)
   ⎿  ============================================================
      🌍 ENVIRONMENT VARIABLE TEST
      ============================================================
@@ -82,7 +82,7 @@
 
 ⏺ Excellent! The taster test is now working perfectly! Let's run all the test commands to fully verify the refactoring:
 
-⏺ Bash(FLAVOR_SKIP_KEY_VERIFICATION=1 ./dist/taster.pspf test)
+⏺ Bash(FLAVOR_SKIP_KEY_VERIFICATION=1 ./dist/taster.psp test)
   ⎿  ============================================================
      🧪 TASTER COMPREHENSIVE TEST SUITE
      ============================================================
@@ -142,15 +142,15 @@
        224 +  ```bash
        225 +  # Build taster
        226 +  cd tests/taster
-       227 +  ../../workenv/flavor_darwin_arm64/bin/flavor package --manifest pyproject.toml --output dist/taster.pspf
+       227 +  ../../workenv/flavor_darwin_arm64/bin/flavor package --manifest pyproject.toml --output dist/taster.psp
        228 +  
        229 +  # Run taster commands
-       230 +  chmod +x dist/taster.pspf
-       231 +  FLAVOR_SKIP_KEY_VERIFICATION=1 ./dist/taster.pspf env   # Test environment variables
-       232 +  FLAVOR_SKIP_KEY_VERIFICATION=1 ./dist/taster.pspf argv  # Test argv[0] and command info
-       233 +  FLAVOR_SKIP_KEY_VERIFICATION=1 ./dist/taster.pspf info  # Display package/system info
-       234 +  FLAVOR_SKIP_KEY_VERIFICATION=1 ./dist/taster.pspf test  # Run all tests
-       235 +  FLAVOR_SKIP_KEY_VERIFICATION=1 ./dist/taster.pspf shell # Interactive Python shell
+       230 +  chmod +x dist/taster.psp
+       231 +  FLAVOR_SKIP_KEY_VERIFICATION=1 ./dist/taster.psp env   # Test environment variables
+       232 +  FLAVOR_SKIP_KEY_VERIFICATION=1 ./dist/taster.psp argv  # Test argv[0] and command info
+       233 +  FLAVOR_SKIP_KEY_VERIFICATION=1 ./dist/taster.psp info  # Display package/system info
+       234 +  FLAVOR_SKIP_KEY_VERIFICATION=1 ./dist/taster.psp test  # Run all tests
+       235 +  FLAVOR_SKIP_KEY_VERIFICATION=1 ./dist/taster.psp shell # Interactive Python shell
        236 +  ```
        237 +  
        238 +  Taster includes:

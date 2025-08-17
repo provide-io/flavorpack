@@ -445,8 +445,8 @@
        167 +              
        168                def mock_builder(launcher, key_seed):
        169                    """Mock builder that creates a file."""
-       170 -                  output = taster_dir / f"test-{key_seed}.pspf"
-       170 +                  output = taster_dir / f"test-{key_seed}-{len(created_files)}.pspf"
+       170 -                  output = taster_dir / f"test-{key_seed}.psp"
+       170 +                  output = taster_dir / f"test-{key_seed}-{len(created_files)}.psp"
        171                    output.write_bytes(b"FAKE_LAUNCHER" + b"PSPF2025" + b"DATA")
        172 +                  created_files.append(output)
        173                    return output
@@ -471,7 +471,7 @@
 ⏺ Update(tests/test_verify_json.py)
   ⎿  Updated tests/test_verify_json.py with 7 additions and 7 removals                                  
        20            
-       21            with tempfile.NamedTemporaryFile(suffix=".pspf") as tmpfile:
+       21            with tempfile.NamedTemporaryFile(suffix=".psp") as tmpfile:
        22                # Mock FlavorVerifier
        23 -              with patch('taster.commands.verify.FlavorVerifier') as mock_verifier:
        23 +              with patch('flavor.verification.FlavorVerifier') as mock_verifier:
@@ -498,7 +498,7 @@
        82                        result = runner.invoke(verify_command, 
      ...
        116            
-       117            with tempfile.NamedTemporaryFile(suffix=".pspf") as tmpfile:
+       117            with tempfile.NamedTemporaryFile(suffix=".psp") as tmpfile:
        118                # Mock FlavorVerifier to raise an exception
        119 -              with patch('taster.commands.verify.FlavorVerifier') as mock_verifier:
        119 +              with patch('flavor.verification.FlavorVerifier') as mock_verifier:
@@ -507,7 +507,7 @@
        122                    result = runner.invoke(verify_command, [tmpfile.name])
      ...
        129            
-       130            with tempfile.NamedTemporaryFile(suffix=".pspf") as tmpfile:
+       130            with tempfile.NamedTemporaryFile(suffix=".psp") as tmpfile:
        131                # Mock FlavorVerifier to raise an exception
        132 -              with patch('taster.commands.verify.FlavorVerifier') as mock_verifier:
        132 +              with patch('flavor.verification.FlavorVerifier') as mock_verifier:
@@ -515,7 +515,7 @@
        134                    
        135                    result = runner.invoke(verify_command, [tmpfile.name, '--json'])
      ...
-       183            with tempfile.NamedTemporaryFile(suffix=".pspf") as tmpfile:
+       183            with tempfile.NamedTemporaryFile(suffix=".psp") as tmpfile:
        184                # Mock sys.argv[0]
        185                with patch('taster.commands.verify.sys.argv', [tmpfile.name]):
        186 -                  with patch('taster.commands.verify.FlavorVerifier') as mock_verifier:
@@ -526,7 +526,7 @@
      ...
        198            runner = click.testing.CliRunner()
        199            
-       200            with tempfile.NamedTemporaryFile(suffix=".pspf") as tmpfile:
+       200            with tempfile.NamedTemporaryFile(suffix=".psp") as tmpfile:
        201 -              with patch('taster.commands.verify.FlavorVerifier') as mock_verifier:
        201 +              with patch('flavor.verification.FlavorVerifier') as mock_verifier:
        202                    mock_verifier.verify_package.return_value = {
@@ -579,7 +579,7 @@
 ⏺ Update(tests/test_verify_json.py)
   ⎿  Updated tests/test_verify_json.py with 1 addition and 1 removal                            
        182            
-       183            with tempfile.NamedTemporaryFile(suffix=".pspf") as tmpfile:
+       183            with tempfile.NamedTemporaryFile(suffix=".psp") as tmpfile:
        184                # Mock sys.argv[0]
        185 -              with patch('taster.commands.verify.sys.argv', [tmpfile.name]):
        185 +              with patch('sys.argv', [tmpfile.name]):
@@ -663,7 +663,7 @@
      ☒ Run integration tests to verify everything works
      ☐ Build taster and test crosslang command in practice
 
-⏺ Bash(cd helpers/taster && ../../workenv/flavor_darwin_arm64/bin/flavor package --manifest pyproject.toml --output taster.pspf --launcher rust --key-seed test123 --no…)
+⏺ Bash(cd helpers/taster && ../../workenv/flavor_darwin_arm64/bin/flavor package --manifest pyproject.toml --output taster.psp --launcher rust --key-seed test123 --no…)
   ⎿  🚀 Packaging application...                                                                      
      ✅ Successfully built artifact at /REDACTED_ABS_PATH
      ✅ All targets built successfully.
@@ -671,26 +671,26 @@
 
 ⏺ Now let's test the crosslang command:
 
-⏺ Bash(cd helpers/taster && ./taster.pspf crosslang --help)
+⏺ Bash(cd helpers/taster && ./taster.psp crosslang --help)
   ⎿  Error: (eval):cd:1: no such file or directory: helpers/taster
 
-⏺ Bash(./taster.pspf crosslang --help)
-  ⎿  Usage: taster.pspf crosslang [OPTIONS]                              
+⏺ Bash(./taster.psp crosslang --help)
+  ⎿  Usage: taster.psp crosslang [OPTIONS]                              
 
        🌍 Test cross-language compatibility between Python, Go, and Rust.
      … +6 lines (ctrl+r to expand)
 
 ⏺ Good! Now let's test the verify command with JSON output:
 
-⏺ Bash(./taster.pspf verify ./taster.pspf --json | head -20)
+⏺ Bash(./taster.psp verify ./taster.psp --json | head -20)
   ⎿  {                            
-       "package": "taster.pspf",
+       "package": "taster.psp",
        "exists": true,
      … +9 lines (ctrl+r to expand)
 
 ⏺ Let me now make a small real integration test to ensure the crosslang command actually runs (though we won't run all the tests as they require Go and Rust builders):
 
-⏺ Bash(./taster.pspf features --json | head -30)
+⏺ Bash(./taster.psp features --json | head -30)
   ⎿  {                             
        "launcher": "rust",
        "features": [

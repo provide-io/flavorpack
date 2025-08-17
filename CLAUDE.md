@@ -197,6 +197,16 @@ Taster provides comprehensive testing commands:
 - `pipe`: Test stdin/stdout piping
 - `mmap`: Verify memory-mapped I/O
 
+### CRITICAL BUILD REQUIREMENTS
+
+**ALWAYS USE `pip3` DURING THE BUILD PROCESS** - This is absolutely critical for proper dependency resolution and wheel building. Never use `pip` or other alternatives.
+
+### Important Package Building Notes
+- The runtime extraction directory is `{workenv}` - this is where the package contents are extracted at runtime
+- Python and tools are installed directly in `{workenv}`, NOT in a subdirectory like `{workenv}/venv`
+- Never use absolute paths in manifests - they break portability
+- Dependencies must be properly bundled using pip3 to create wheels
+
 ### Volatile Slot Cleanup
 The launcher automatically removes volatile slots after setup:
 - Wheels directory is marked as volatile and removed after installation

@@ -14,6 +14,7 @@ from typing import BinaryIO, List, Dict, Any, Optional, Tuple
 
 from pyvider.telemetry import logger
 
+from flavor.exceptions import BuildError
 from flavor.utils import get_platform_string
 from flavor.psp.format_2025.constants import (
     EMOJI_MAGIC_SIZE, HEADER_SIZE, MAGIC_WAND_EMOJI, PSPF_MAGIC,
@@ -33,16 +34,18 @@ from flavor.psp.format_2025.slots import SlotDescriptor, SlotMetadata, align_off
 class PSPFBuilder:
     """Build PSPF bundles with enhanced format."""
 
-    def __init__(self, enable_mmap: bool = True, page_aligned: bool = True):
+    def __init__(self, enable_mmap: bool = True, page_aligned: bool = True, test_mode: bool = False):
         """Initialize builder.
         
         Args:
             enable_mmap: Enable memory-mapped access optimizations
             page_aligned: Align slots to page boundaries for optimal mmap
+            test_mode: Use stub launcher for reproducible tests
         """
         self.temp_dir = Path(tempfile.mkdtemp())
         self.enable_mmap = enable_mmap
         self.page_aligned = page_aligned
+        self.test_mode = test_mode
 
     def build(
         self,
@@ -228,6 +231,19 @@ class PSPFBuilder:
 
     def _get_launcher(self, launcher_type: str) -> bytes:
         """Get launcher binary."""
+        # In test mode, use a stub launcher for reproducibility
+        if self.test_mode:
+            import os
+            # Use a deterministic stub based on environment
+            if os.environ.get("CI") == "true":
+                # CI environment - use a fixed stub
+                stub = b"STUB_LAUNCHER_CI" * 100  # 1600 bytes
+            else:
+                # Local test environment - use a different fixed stub
+                stub = b"STUB_LAUNCHER_LOCAL" * 100  # 1900 bytes
+            logger.debug(f"🧪 Using test stub launcher ({len(stub)} bytes)")
+            return stub
+        
         platform_str = get_platform_string()
         
         # Map launcher types to actual binary names
@@ -248,6 +264,11 @@ class PSPFBuilder:
         # Fallback: try to find in various common locations
         search_paths = [
             Path.cwd() / launcher_name,
+            Path.cwd() / "helpers" / "bin" / launcher_name,
+            Path.home() / ".cache" / "flavor" / "bin" / launcher_name,
+            # Check for CI-style paths
+            Path.cwd() / "../../helpers" / "bin" / launcher_name,
+            Path(__file__).parent.parent.parent.parent.parent / "helpers" / "bin" / launcher_name,
             Path(__file__).parent.parent.parent / "go/cmd/pspf-launcher" / launcher_name,
             Path(__file__).parent.parent.parent / f"rust/flavor/target/release/{launcher_name}",
         ]

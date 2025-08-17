@@ -84,21 +84,21 @@
        13    
        14    Build the package:
        15    ```bash
-       16 -  flavor package --manifest tests/taster/pyproject.toml --output dist/taster.pspf
-       16 +  flavor package --manifest pyproject.toml --output dist/taster.pspf --launcher rust --key-seed test123
+       16 -  flavor package --manifest tests/taster/pyproject.toml --output dist/taster.psp
+       16 +  flavor package --manifest pyproject.toml --output dist/taster.psp --launcher rust --key-seed test123
        17    ```
        18    
        19    Run tests:
      ...
        27    
        28    # Interactive shell for testing
-       29    ./dist/taster.pspf shell
+       29    ./dist/taster.psp shell
        30 +  
        31 +  # Cross-language compatibility testing
-       32 +  ./dist/taster.pspf crosslang --verbose
+       32 +  ./dist/taster.psp crosslang --verbose
        33 +  
        34 +  # Verify packages with JSON output
-       35 +  ./dist/taster.pspf verify some-package.pspf --json
+       35 +  ./dist/taster.psp verify some-package.psp --json
        36    ```
        37    
        38    ## Commands
@@ -387,7 +387,7 @@
        209        def test_metadata_archive_structure(self, temp_dir, simple_metadata):
        210 -          """Test metadata.tgz structure."""
        210 +          """Test metadata is gzipped JSON."""
-       211            bundle_path = temp_dir / "test.pspf"
+       211            bundle_path = temp_dir / "test.psp"
        212            builder = PSPFBuilder()
        213            builder.build(
      ...

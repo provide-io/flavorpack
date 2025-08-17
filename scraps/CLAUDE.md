@@ -178,7 +178,7 @@ This will compile the Rust components and place the binaries in `helpers/bin/`.
 
 ### From pyproject.toml
 ```bash
-flavor package --manifest pyproject.toml --output dist/myapp.pspf
+flavor package --manifest pyproject.toml --output dist/myapp.psp
 ```
 
 ### Configuration in pyproject.toml
@@ -237,15 +237,15 @@ The `taster` package (`tests/taster/`) is a comprehensive test harness specifica
 ```bash
 # Build taster
 cd tests/taster
-../../workenv/flavor_darwin_arm64/bin/flavor package --manifest pyproject.toml --output dist/taster.pspf
+../../workenv/flavor_darwin_arm64/bin/flavor package --manifest pyproject.toml --output dist/taster.psp
 
 # Run taster commands (works with proper key verification)
-chmod +x dist/taster.pspf
-./dist/taster.pspf env   # Test environment variables
-./dist/taster.pspf argv  # Test argv[0] and command info
-./dist/taster.pspf info  # Display package/system info
-./dist/taster.pspf test  # Run all tests
-./dist/taster.pspf shell # Interactive Python shell
+chmod +x dist/taster.psp
+./dist/taster.psp env   # Test environment variables
+./dist/taster.psp argv  # Test argv[0] and command info
+./dist/taster.psp info  # Display package/system info
+./dist/taster.psp test  # Run all tests
+./dist/taster.psp shell # Interactive Python shell
 ```
 
 Taster includes:
@@ -327,8 +327,8 @@ The taster package's `pyproject.toml` demonstrates complex runtime.env configura
 
 Enable debug output:
 ```bash
-FLAVOR_LOG_LEVEL=debug ./myapp.pspf
-RUST_LOG=debug ./myapp.pspf  # For Rust launcher
+FLAVOR_LOG_LEVEL=debug ./myapp.psp
+RUST_LOG=debug ./myapp.psp  # For Rust launcher
 ```
 
 Check work environment:
@@ -338,7 +338,7 @@ ls -la /REDACTED_TMP
 
 Extract and inspect metadata:
 ```bash
-FLAVOR_LAUNCHER_CLI=true ./myapp.pspf extract 0 /tmp/extract
+FLAVOR_LAUNCHER_CLI=true ./myapp.psp extract 0 /tmp/extract
 tar -tzf /tmp/extract/metadata.tar.gz
 ```
 - When using Python, always use absolute imports.

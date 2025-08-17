@@ -25,22 +25,23 @@ class TestReaderBackends:
     @pytest.fixture
     def test_bundle(self):
         """Create a minimal test bundle."""
-        with tempfile.NamedTemporaryFile(suffix='.pspf', delete=False) as f:
+        with tempfile.NamedTemporaryFile(suffix='.psp', delete=False) as f:
             # Write fake launcher (100 bytes)
             f.write(b'LAUNCHER' * 12 + b'DATA')
             
             # Write index/header (512 bytes)
             index = PSPFIndex()
             index.launcher_size = 100
-            index.descriptor_offset = 100 + HEADER_SIZE  # After header
-            index.descriptor_count = 2
-            index.data_offset = 100 + HEADER_SIZE + (2 * SLOT_DESCRIPTOR_SIZE)
-            index.file_size = index.data_offset + 1000  # Approximate
+            index.slot_table_offset = 100 + HEADER_SIZE  # After header
+            index.slot_count = 2
+            index.slot_table_size = 2 * SLOT_DESCRIPTOR_SIZE
+            data_offset = 100 + HEADER_SIZE + (2 * SLOT_DESCRIPTOR_SIZE)
+            index.package_size = data_offset + 1000  # Approximate
             
             # Calculate checksum
             index_data = index.pack()
             checksum = zlib.adler32(index_data)
-            index.header_checksum = checksum
+            index.index_checksum = checksum
             
             # Write index with checksum
             f.write(index.pack())
@@ -49,7 +50,7 @@ class TestReaderBackends:
             slot1 = SlotDescriptor(
                 id=0,
                 name="test1.txt",
-                offset=index.data_offset,
+                offset=data_offset,
                 size=100,
                 original_size=100,
                 checksum=zlib.adler32(b'TEST DATA 1' * 9 + b'T'),  # 100 bytes
@@ -60,7 +61,7 @@ class TestReaderBackends:
             slot2 = SlotDescriptor(
                 id=1,
                 name="test2.txt",
-                offset=index.data_offset + 100,
+                offset=data_offset + 100,
                 size=200,
                 original_size=200,
                 checksum=zlib.adler32(b'TEST DATA 2' * 18 + b'TD'),  # 200 bytes
@@ -94,7 +95,7 @@ class TestReaderBackends:
         # Read index
         index = reader.read_index()
         assert index.launcher_size == 100
-        assert index.descriptor_count == 2
+        assert index.slot_count == 2
         
         # Read slot descriptors
         descriptors = reader.read_slot_descriptors()
@@ -158,7 +159,7 @@ class TestReaderBackends:
         """Test reader as context manager."""
         with PSPFReader(test_bundle, mode=ACCESS_MMAP) as reader:
             index = reader.read_index()
-            assert index.descriptor_count == 2
+            assert index.slot_count == 2
         
         # Backend should be closed automatically
         assert reader._backend is None
@@ -210,7 +211,7 @@ class TestReaderBackends:
         
         # Can still read
         index = reader.read_index()
-        assert index.descriptor_count == 2
+        assert index.slot_count == 2
         
         # Switch to streaming
         reader.use_streaming(chunk_size=64)

@@ -52,10 +52,10 @@
 
 ### Self-Hosting Achievement
 Successfully built and tested all 4 launcher/builder combinations:
-- `flavor-go-go.pspf` - Go builder + Go launcher
-- `flavor-go-rust.pspf` - Go builder + Rust launcher  
-- `flavor-rust-go.pspf` - Rust builder + Go launcher
-- `flavor-rust-rust.pspf` - Rust builder + Rust launcher
+- `flavor-go-go.psp` - Go builder + Go launcher
+- `flavor-go-rust.psp` - Go builder + Rust launcher  
+- `flavor-rust-go.psp` - Rust builder + Go launcher
+- `flavor-rust-rust.psp` - Rust builder + Rust launcher
 
 ### Simplification
 - **Magic footer reduced** from 16 bytes (4 emojis) to 4 bytes (just 🪄)

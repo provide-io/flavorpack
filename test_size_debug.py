@@ -28,7 +28,7 @@ with tempfile.TemporaryDirectory() as tmpdir:
     )
     
     # Build package
-    bundle_path = tmpdir / "test.pspf"
+    bundle_path = tmpdir / "test.psp"
     builder = PSPFBuilder()
     
     metadata = {

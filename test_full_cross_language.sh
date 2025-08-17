@@ -24,7 +24,7 @@ cd helpers/taster
 echo -e "\n${YELLOW}Building taster packages with all combinations...${NC}"
 
 # Clean up old builds
-rm -f *.pspf *.psp 2>/dev/null || true
+rm -f *.psp *.psp 2>/dev/null || true
 
 # Array of builders and launchers
 BUILDERS=("python" "go" "rust")
@@ -33,7 +33,7 @@ LAUNCHERS=("go" "rust")
 # Build with each combination using deterministic keys
 for builder in "${BUILDERS[@]}"; do
     for launcher in "${LAUNCHERS[@]}"; do
-        output="taster-${builder}-${launcher}.pspf"
+        output="taster-${builder}-${launcher}.psp"
         echo -e "\n📦 Building with ${builder} builder + ${launcher} launcher -> ${output}"
         
         if [ "$builder" = "python" ]; then
@@ -73,7 +73,7 @@ echo "==========================================${NC}"
 
 # Test 1: Python verification of all packages
 echo -e "\n${YELLOW}Test 1: Python verification${NC}"
-for file in taster-*.pspf; do
+for file in taster-*.psp; do
     echo -n "  Verifying $file with Python... "
     if python3 -c "
 from flavor.psp.format_2025 import PSPFReader
@@ -91,7 +91,7 @@ done
 
 # Test 2: Go launcher CLI verification
 echo -e "\n${YELLOW}Test 2: Go launcher CLI verification${NC}"
-for file in taster-*-go.pspf; do
+for file in taster-*-go.psp; do
     echo -n "  Verifying $file with Go CLI... "
     if FLAVOR_LAUNCHER_CLI=true "./$file" verify >/dev/null 2>&1; then
         echo -e "${GREEN}✅${NC}"
@@ -102,7 +102,7 @@ done
 
 # Test 3: Rust launcher CLI verification
 echo -e "\n${YELLOW}Test 3: Rust launcher CLI verification${NC}"
-for file in taster-*-rust.pspf; do
+for file in taster-*-rust.psp; do
     echo -n "  Verifying $file with Rust CLI... "
     if FLAVOR_LAUNCHER_CLI=true "./$file" verify >/dev/null 2>&1; then
         echo -e "${GREEN}✅${NC}"
@@ -120,7 +120,7 @@ echo -e "\n${YELLOW}Test 4: Feature parity checks${NC}"
 for launcher in go rust; do
     echo -e "\n  Testing ${launcher} launcher features:"
     # Pick any package with the right launcher
-    pkg=$(ls taster-*-${launcher}.pspf | head -1)
+    pkg=$(ls taster-*-${launcher}.psp | head -1)
     "./$pkg" features
 done
 
@@ -134,7 +134,7 @@ COMMANDS=("--help" "--version" "info" "env" "echo test")
 
 for launcher in go rust; do
     echo -e "\n  Testing ${launcher} launcher CLI:"
-    pkg=$(ls taster-*-${launcher}.pspf | head -1)
+    pkg=$(ls taster-*-${launcher}.psp | head -1)
     
     for cmd in "${COMMANDS[@]}"; do
         echo -n "    Command '$cmd'... "
@@ -153,7 +153,7 @@ echo "==========================================${NC}"
 
 # Test 6: Packages actually execute
 echo -e "\n${YELLOW}Test 6: Package execution${NC}"
-for file in taster-*.pspf; do
+for file in taster-*.psp; do
     echo -n "  Executing $file... "
     output=$("./$file" echo "Hello from $file" 2>&1)
     if echo "$output" | grep -q "Hello from"; then
@@ -174,8 +174,8 @@ for builder in python go rust; do
     echo -n "  Testing ${builder} builder reproducibility... "
     
     # Build twice with same key-seed
-    output1="test-repro-1.pspf"
-    output2="test-repro-2.pspf"
+    output1="test-repro-1.psp"
+    output2="test-repro-2.psp"
     
     if [ "$builder" = "python" ]; then
         ../../workenv/flavor_darwin_arm64/bin/flavor package \

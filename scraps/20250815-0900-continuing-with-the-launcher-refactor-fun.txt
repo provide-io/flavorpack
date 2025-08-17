@@ -152,13 +152,13 @@
 ⏺ Bash(tar -czf payload.tar.gz taster)
   ⎿  (No content)
 
-⏺ Bash(/REDACTED_ABS_PATH --manifest manifest.json --output ./dist/taster-rust-fixed.pspf
+⏺ Bash(/REDACTED_ABS_PATH --manifest manifest.json --output ./dist/taster-rust-fixed.psp
       --launcher rust)
-  ⎿  ✅ Successfully built package: "./dist/taster-rust-fixed.pspf" 
+  ⎿  ✅ Successfully built package: "./dist/taster-rust-fixed.psp" 
 
 ⏺ Now let's test if it runs:
 
-⏺ Bash(FLAVOR_LAUNCHER_CLI=true ./dist/taster-rust-fixed.pspf info)
+⏺ Bash(FLAVOR_LAUNCHER_CLI=true ./dist/taster-rust-fixed.psp info)
   ⎿  📦 PSPF Bundle Information                                                              
      ══════════════════════════════════════════
      📍 Path: /REDACTED_ABS_PATH
@@ -166,7 +166,7 @@
 
 ⏺ Excellent! Now let's verify that the signature verification works:
 
-⏺ Bash(FLAVOR_LAUNCHER_CLI=true ./dist/taster-rust-fixed.pspf verify)
+⏺ Bash(FLAVOR_LAUNCHER_CLI=true ./dist/taster-rust-fixed.psp verify)
   ⎿  Error: IO error: numeric field was not a number: oad",
         when getting cksum for {
        "format": "PSPF/2025",
@@ -207,7 +207,7 @@
 
 ⏺ Let me check where this error could be coming from in the launcher:
 
-⏺ Bash(cd /REDACTED_ABS_PATH && RUST_BACKTRACE=1 FLAVOR_LAUNCHER_CLI=true ./dist/taster-rust-fixed.pspf
+⏺ Bash(cd /REDACTED_ABS_PATH && RUST_BACKTRACE=1 FLAVOR_LAUNCHER_CLI=true ./dist/taster-rust-fixed.psp
       verify 2>&1 | head -30)
   ⎿  🔍 Verifying PSPF bundle...                           
      ══════════════════════════════════════════
@@ -234,14 +234,14 @@
            "name": "payload",
      … +7 lines (ctrl+r to expand)
 
-⏺ Bash(/REDACTED_ABS_PATH --manifest test-simple.json --output test-simple.pspf --launcher
+⏺ Bash(/REDACTED_ABS_PATH --manifest test-simple.json --output test-simple.psp --launcher
       rust)
-  ⎿  ✅ Successfully built package: "test-simple.pspf" 
+  ⎿  ✅ Successfully built package: "test-simple.psp" 
 
-⏺ Bash(FLAVOR_LAUNCHER_CLI=true ./test-simple.pspf verify)
-  ⎿  Error: (eval):1: permission denied: ./test-simple.pspf
+⏺ Bash(FLAVOR_LAUNCHER_CLI=true ./test-simple.psp verify)
+  ⎿  Error: (eval):1: permission denied: ./test-simple.psp
 
-⏺ Bash(chmod +x test-simple.pspf && FLAVOR_LAUNCHER_CLI=true ./test-simple.pspf verify)
+⏺ Bash(chmod +x test-simple.psp && FLAVOR_LAUNCHER_CLI=true ./test-simple.psp verify)
   ⎿  Error: IO error: numeric field was not a number: "payload when getting cksum for {
        "format": "PSPF/2025",
        "package": {
@@ -255,7 +255,7 @@
 
 ⏺ The issue seems to be in parsing the JSON metadata. Let me check what's actually in the metadata:
 
-⏺ Bash(FLAVOR_LAUNCHER_CLI=true ./test-simple.pspf info)
+⏺ Bash(FLAVOR_LAUNCHER_CLI=true ./test-simple.psp info)
   ⎿  📦 PSPF Bundle Information                                                   
      ══════════════════════════════════════════
      📍 Path: /REDACTED_ABS_PATH
@@ -272,7 +272,7 @@
 
 ⏺ This error is likely coming from the launcher binary itself when trying to verify. Let me test if the package actually runs:
 
-⏺ Bash(./test-simple.pspf)
+⏺ Bash(./test-simple.psp)
   ⎿  Error: Launch failed: IO error: numeric field was not a number: "payload when getting cksum for {
        "format": "PSPF/2025",
        "package": {
@@ -284,7 +284,7 @@
 ⏺ The package can't run due to this JSON parsing issue. This is happening in the launcher when it tries to read the metadata. Let me check the
    metadata structure in detail:
 
-⏺ Bash(hexdump -C test-simple.pspf | tail -20)
+⏺ Bash(hexdump -C test-simple.psp | tail -20)
   ⎿  0028a5c0  2e 41 bb 18 12 fe 67 16  de 9d 12 ac 2c 17 1f 09  |.A....g.....,...|
      0028a5d0  46 cf 0f e4 e1 3e c2 55  3b e0 c5 4a 04 f5 2f 13  |F....>.U;..J../.|
      0028a5e0  15 ee 57 88 9d 05 7b 0f  93 c9 fa a6 22 1d 50 c2  |..W...{.....".P.|
@@ -292,10 +292,10 @@
 
 ⏺ The end has the emoji magic. Let me extract and check the metadata:
 
-⏺ Bash(dd if=test-simple.pspf of=metadata.gz bs=1 skip=2663752 count=405 2>/dev/null | gunzip)
+⏺ Bash(dd if=test-simple.psp of=metadata.gz bs=1 skip=2663752 count=405 2>/dev/null | gunzip)
   ⎿  Error: gunzip: (stdin): unexpected end of file
 
-⏺ Bash(dd if=test-simple.pspf of=metadata.gz bs=1 skip=2663752 count=405 2>/dev/null && file metadata.gz)
+⏺ Bash(dd if=test-simple.psp of=metadata.gz bs=1 skip=2663752 count=405 2>/dev/null && file metadata.gz)
   ⎿  metadata.gz: gzip compressed data, original size modulo 2^32 713
 
 ⏺ Bash(gunzip -c metadata.gz | jq .)
@@ -390,7 +390,7 @@
 
   Let me look for where the launcher CLI parses metadata when showing the verify output:
 
-⏺ Bash(cd /REDACTED_ABS_PATH && strings test-simple.pspf | grep -A5 -B5 "numeric field")
+⏺ Bash(cd /REDACTED_ABS_PATH && strings test-simple.psp | grep -A5 -B5 "numeric field")
   ⎿  @@@@@@@@@@@*                  
      @@"<$
      B@@J
@@ -420,9 +420,9 @@
 
 ⏺ Bash(cd /REDACTED_ABS_PATH && /REDACTED_ABS_PATH --manifest
        test-simple.json --outpu…)
-  ⎿  ✅ Successfully built package: "test-simple-new.pspf" 
+  ⎿  ✅ Successfully built package: "test-simple-new.psp" 
 
-⏺ Bash(chmod +x test-simple-new.pspf && FLAVOR_LAUNCHER_CLI=true ./test-simple-new.pspf verify)
+⏺ Bash(chmod +x test-simple-new.psp && FLAVOR_LAUNCHER_CLI=true ./test-simple-new.psp verify)
   ⎿  Error: IO error: numeric field was not a number: "payload when getting cksum for {
        "format": "PSPF/2025",
        "package": {
@@ -441,11 +441,11 @@
       /REDACTED_ABS_PATH)
   ⎿  (No content)
 
-⏺ Bash(/REDACTED_ABS_PATH --manifest test-simple.json --output test-simple-fixed.pspf
+⏺ Bash(/REDACTED_ABS_PATH --manifest test-simple.json --output test-simple-fixed.psp
       --launcher rust)
-  ⎿  ✅ Successfully built package: "test-simple-fixed.pspf" 
+  ⎿  ✅ Successfully built package: "test-simple-fixed.psp" 
 
-⏺ Bash(chmod +x test-simple-fixed.pspf && FLAVOR_LAUNCHER_CLI=true ./test-simple-fixed.pspf verify)
+⏺ Bash(chmod +x test-simple-fixed.psp && FLAVOR_LAUNCHER_CLI=true ./test-simple-fixed.psp verify)
   ⎿  Error: IO error: numeric field was not a number: "payload when getting cksum for {
        "format": "PSPF/2025",
        "package": {
@@ -465,7 +465,7 @@
 
 ⏺ The launcher was just updated. Let me check if the builder is actually finding it:
 
-⏺ Bash(strings test-simple-fixed.pspf | grep "numeric field" | head -1)
+⏺ Bash(strings test-simple-fixed.psp | grep "numeric field" | head -1)
   ⎿ /private/tmp/rust-20250628-8015-2pvnvd/rustc-1.88.0-src/library/alloc/src/slice.rsustar 00/REDACTED_ABS_PATH
     949cf8c6b5b557f/tar-0.4.44/src/header.rs when getting size for  when getting mode for  when getting uid for  when getting gid for  when ge
     tting mtime for  when getting cksum for : when getting real_size for  when getting offset from sparse header when getting length from spar
@@ -524,7 +524,7 @@
      use std::path::Path;
      fn main() {
          env_logger::init();
-         let path = Path::new("test-simple-fixed.pspf");
+         let path = Path::new("test-simple-fixed.psp");
          match verify_package(path) {
              Ok(result) => {
                  println!("Package: {} v{}", result.package_name, result.package_version);
@@ -544,7 +544,7 @@
          env_logger::init();
          let args: Vec<String> = std::env::args().collect();
          if args.len() < 2 {
-             eprintln!("Usage: {} <package.pspf>", args[0]);
+             eprintln!("Usage: {} <package.psp>", args[0]);
              std::process::exit(1);
      … +16 lines (ctrl+r to expand)
 
@@ -556,15 +556,15 @@
 
 ⏺ Bash(cd /REDACTED_ABS_PATH && RUST_LOG=debug
       /REDACTED_ABS_PATH tes…)
-  ⎿  [2025-08-15T15:56:49Z INFO  flavor::psp::format_2025::verifier] Verifying PSPF/2025 package: "test-simple-fixed.pspf"            
-     [2025-08-15T15:56:49Z DEBUG flavor::psp::format_2025::backends] 🗺️ MMap opened test-simple-fixed.pspf (2664165 bytes) in 29.542µs
+  ⎿  [2025-08-15T15:56:49Z INFO  flavor::psp::format_2025::verifier] Verifying PSPF/2025 package: "test-simple-fixed.psp"            
+     [2025-08-15T15:56:49Z DEBUG flavor::psp::format_2025::backends] 🗺️ MMap opened test-simple-fixed.psp (2664165 bytes) in 29.542µs
      [2025-08-15T15:56:49Z DEBUG flavor::psp::format_2025::reader] Index loaded in 1.133125ms
      … +9 lines (ctrl+r to expand)
 
 ⏺ Excellent! The verifier works perfectly when called directly. The issue is in the launcher's CLI verify command. Let me check if maybe we
   have a version mismatch:
 
-⏺ Bash(strings test-simple-fixed.pspf | head -30 | tail -10)
+⏺ Bash(strings test-simple-fixed.psp | head -30 | tail -10)
   ⎿   Signature: INVALID or not verified
       Signature: VALID
       Extracting slot
@@ -579,10 +579,10 @@
 ⏺ The verify_bundle function looks fine - it just calls verify_package. But the error happens before the verify output is shown. Let me run
   the package itself to see what happens:
 
-⏺ Bash(RUST_LOG=debug ./test-simple-fixed.pspf 2>&1 | head -20)
+⏺ Bash(RUST_LOG=debug ./test-simple-fixed.psp 2>&1 | head -20)
   ⎿  [2025-08-15T15:57:10Z INFO  flavor::psp::format_2025::launcher] 📖 Reading PSPF bundle                                                   
      [2025-08-15T15:57:10Z DEBUG flavor::psp::format_2025::backends] 🗺️ MMap opened /REDACTED_ABS_PATH
-     imple-fixed.pspf (2664165 bytes) in 16.5µs
+     imple-fixed.psp (2664165 bytes) in 16.5µs
      … +16 lines (ctrl+r to expand)
 
 ⏺ So it verifies successfully (lines 7-9), but then fails with the tar error when trying to launch. This means the issue is in the launcher's
@@ -613,7 +613,7 @@
 ⏺ I see the code reads the metadata and uses the checksum. Let me check what's happening earlier when verification completes but before
   launching:
 
-⏺ Bash(RUST_LOG=trace ./test-simple-fixed.pspf 2>&1 | grep -A5 -B5 "numeric field")
+⏺ Bash(RUST_LOG=trace ./test-simple-fixed.psp 2>&1 | grep -A5 -B5 "numeric field")
   ⎿  [2025-08-15T15:58:04Z TRACE flavor::psp::format_2025::backends] 🔍 MMap read_at: offset=2663752, size=405
      [2025-08-15T15:58:04Z TRACE flavor::psp::format_2025::backends] ✅ MMap read 405 bytes in 125ns
      [2025-08-15T15:58:04Z DEBUG flavor::psp::format_2025::verifier] Index checksum: ✅ VALID
@@ -640,7 +640,7 @@
 ⏺ Let me check what the error actually looks like in context. The pattern suggests something is trying to parse the JSON metadata as tar. Let
   me look for any code that might still have tar parsing when it reads metadata:
 
-⏺ Bash(cd /REDACTED_ABS_PATH && RUST_BACKTRACE=full ./test-simple-fixed.pspf 2>&1 | grep -A30 "numeric
+⏺ Bash(cd /REDACTED_ABS_PATH && RUST_BACKTRACE=full ./test-simple-fixed.psp 2>&1 | grep -A30 "numeric
       field")
   ⎿  Launch failed: IO error: numeric field was not a number: "payload when getting cksum for {
        "format": "PSPF/2025",
@@ -649,7 +649,7 @@
 
 ⏺ No backtrace. The error is being caught and wrapped. Let me add some debug output to understand where this is happening:
 
-⏺ Bash(RUST_LOG=trace FLAVOR_INSECURE=1 ./test-simple-fixed.pspf 2>&1 | grep -A2 -B2 "Reading metadata")
+⏺ Bash(RUST_LOG=trace FLAVOR_INSECURE=1 ./test-simple-fixed.psp 2>&1 | grep -A2 -B2 "Reading metadata")
   ⎿  No matches found
 
 ⏺ Let me check if the issue is actually in how we're verifying. The verify command has this error but running the package directly also has

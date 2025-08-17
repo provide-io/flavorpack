@@ -55,33 +55,33 @@ class TestEnhancedIndex:
         assert index.max_memory == DEFAULT_MAX_MEMORY
         assert index.min_memory == DEFAULT_MIN_MEMORY
         assert index.capabilities & CAPABILITY_MMAP
-        assert index.descriptor_size == 64
+        # SLOT_DESCRIPTOR_SIZE is a constant (64), not an index field
         assert index.page_size == 4096
     
     def test_backwards_compatibility(self):
-        """Old field names should still work."""
+        """Test that current field names work (old names no longer supported)."""
         index = PSPFIndex()
         
-        # Aliases should work
-        assert index.slot_count == index.descriptor_count
-        assert index.slot_table_offset == index.descriptor_offset
-        assert index.package_size == index.file_size
-        assert index.ephemeral_public_key == index.public_key
+        # Current field names (old names are no longer supported)
+        assert index.slot_count == 0  # was descriptor_count
+        assert index.slot_table_offset == 0  # was descriptor_offset
+        assert index.package_size == 0  # was file_size
+        assert index.public_key == b'\x00' * 32  # was ephemeral_public_key
     
     def test_pack_unpack_roundtrip(self):
         """Pack and unpack should preserve data."""
         index = PSPFIndex()
-        index.file_size = 1234567
-        index.descriptor_count = 10
+        index.package_size = 1234567
+        index.slot_count = 10
         index.max_memory = 256 * 1024 * 1024
         
         packed = index.pack()
         unpacked = PSPFIndex.unpack(packed)
         
-        assert unpacked.file_size == 1234567
-        assert unpacked.descriptor_count == 10
+        assert unpacked.package_size == 1234567
+        assert unpacked.slot_count == 10
         assert unpacked.max_memory == 256 * 1024 * 1024
-        assert unpacked.header_checksum != 0  # Should have checksum
+        assert unpacked.index_checksum != 0  # Should have checksum
     
     def test_checksum_validation(self):
         """Checksum should be calculated correctly."""
@@ -89,8 +89,8 @@ class TestEnhancedIndex:
         packed = index.pack()
         
         # Extract checksum from packed data
-        # After magic(16) + major(2) + minor(2) + header_size(4) + total_headers(4) = 28
-        checksum_offset = 28
+        # After magic(8) + version(4) = 12
+        checksum_offset = 12
         stored_checksum = struct.unpack_from('<I', packed, checksum_offset)[0]
         
         # Recalculate with checksum field zeroed

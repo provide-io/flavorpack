@@ -38,12 +38,12 @@
 
 ⏺ Now let's test the taster package WITHOUT any FLAVOR_INSECURE flag:
 
-⏺ Bash(cd /REDACTED_ABS_PATH && ./taster.pspf --help)
+⏺ Bash(cd /REDACTED_ABS_PATH && ./taster.psp --help)
   ⎿  Error: Launch failed: Invalid signature size
 
 ⏺ The error persists. Let me rebuild the taster package with the fixed Rust builder:
 
-⏺ Bash(cd /REDACTED_ABS_PATH && ../../helpers/bin/flavor-rs-builder --manifest manifest.json --output taster-fixed.pspf --launcher rus…)
+⏺ Bash(cd /REDACTED_ABS_PATH && ../../helpers/bin/flavor-rs-builder --manifest manifest.json --output taster-fixed.psp --launcher rus…)
   ⎿  Error: ❌ Build failed: Failed to read launcher 'flavor-rs-launcher': No such file or directory (os error 2)
 
 ⏺ Bash(FLAVOR_LAUNCHER_BIN=/REDACTED_ABS_PATH /REDACTED_ABS_PATH --man…)
@@ -64,7 +64,7 @@
 
 ⏺ The package built but there's a verification error. Let me test it anyway:
 
-⏺ Bash(./taster-new.pspf --help)
+⏺ Bash(./taster-new.psp --help)
   ⎿  Usage: python -m taster.taster-new [OPTIONS] COMMAND [ARGS]...
 
        🍯 Taster - Test package for flavor functionality
@@ -88,7 +88,7 @@
 ⏺ Now let's test Rust builder with Python reader:
 
 ⏺ Bash(FLAVOR_LAUNCHER_BIN=/REDACTED_ABS_PATH /REDACTED_ABS_PATH --man…)
-  ⎿  ✅ Successfully built package: "taster-rust.pspf"         
+  ⎿  ✅ Successfully built package: "taster-rust.psp"         
      📝 Writing metadata at position 0x291d60
      📝 Wrote metadata: start=0x291d60, size=495, end=0x291f4f
      … +2 lines (ctrl+r to expand)
@@ -98,7 +98,7 @@
   ⎿  Error: [Pyvider Setup] INFO (pyvider.telemetry.core_setup): 📝➡️🎨 Configured Key-Value (ConsoleRenderer).
      [Pyvider Setup] INFO (pyvider.telemetry.core_setup): 📝➡️✅ structlog configured. Wrapper: BoundLogger. Output: sys.stderr.
      2025-08-15 14:50:11.089071 [debug    ] 🗣️ 🤖 Auto-selected mmap backend file_size_mb=2.6181745529174805
-     2025-08-15 14:50:11.089149 [debug    ] 🗣️ 🗺️ Opening mmap backend     path=taster-rust.pspf size_bytes=2745355 size_mb=2.6181745529174805
+     2025-08-15 14:50:11.089149 [debug    ] 🗣️ 🗺️ Opening mmap backend     path=taster-rust.psp size_bytes=2745355 size_mb=2.6181745529174805
      2025-08-15 14:50:11.095136 [debug    ] 🗣️ 🔧 Applied MADV_SEQUENTIAL hint
      2025-08-15 14:50:11.095177 [debug    ] 🗣️ ✅ MMap opened               elapsed_ms=6.036291946657002 pages=167
      2025-08-15 14:50:11.095219 [debug    ] 🗣️ 🔍 MMap read_at              elapsed_us=1.583946868777275 offset=0 size=1048576 zero_copy=True
@@ -1709,7 +1709,7 @@
 
   Let's create a simple test to verify that packages built with one language can be read by another:
 
-⏺ Bash(cd /REDACTED_ABS_PATH && ../../helpers/bin/flavor-go-builder --manifest manifest.json --output taster-go.pspf --launcher go --k…)
+⏺ Bash(cd /REDACTED_ABS_PATH && ../../helpers/bin/flavor-go-builder --manifest manifest.json --output taster-go.psp --launcher go --k…)
   ⎿  Error: 2025-08-15T15:10:13.811-0700 [INFO]  pspf-builder: 🚀 Loading launcher: type=rust
      2025-08-15T15:10:13.812-0700 [DEBUG] pspf-builder: 🔍 Launcher path: path=flavor-rs-launcher
      2025-08-15T15:10:13.812-0700 [ERROR] pspf-builder: ❌ Failed to read launcher: error="open flavor-rs-launcher: no such file or directory" path=flavor-rs-launcher
@@ -1737,19 +1737,19 @@
 
 ⏺ Good, the package built successfully (the verification errors are from Python trying to read back with old field names). Let me test it:
 
-⏺ Bash(./taster-python.pspf --version)
+⏺ Bash(./taster-python.psp --version)
   ⎿  flavor-rs-launcher 0.3.0        
      Built: 2025-08-15T22:15:38+00:00
 
 ⏺ Good! Now let's build the same package with Rust builder and Python launcher:
 
 ⏺ Bash(FLAVOR_LAUNCHER_BIN=/REDACTED_ABS_PATH /REDACTED_ABS_PATH --man…)
-  ⎿  ✅ Successfully built package: "taster-rust.pspf"         
+  ⎿  ✅ Successfully built package: "taster-rust.psp"         
      📝 Writing metadata at position 0x291d60
      📝 Wrote metadata: start=0x291d60, size=496, end=0x291f50
      … +2 lines (ctrl+r to expand)
 
-⏺ Bash(./taster-rust.pspf --version)
+⏺ Bash(./taster-rust.psp --version)
   ⎿  flavor-rs-launcher 0.3.0        
      Built: 2025-08-15T22:16:11+00:00
 
@@ -1760,7 +1760,7 @@
   ⎿  Error: [Pyvider Setup] INFO (pyvider.telemetry.core_setup): 📝➡️🎨 Configured Key-Value (ConsoleRenderer).
      [Pyvider Setup] INFO (pyvider.telemetry.core_setup): 📝➡️✅ structlog configured. Wrapper: BoundLogger. Output: sys.stderr.
      2025-08-15 15:16:24.739503 [debug    ] 🗣️ 🤖 Auto-selected mmap backend file_size_mb=2.6181745529174805
-     2025-08-15 15:16:24.739585 [debug    ] 🗣️ 🗺️ Opening mmap backend     path=taster-rust.pspf size_bytes=2745355 size_mb=2.6181745529174805
+     2025-08-15 15:16:24.739585 [debug    ] 🗣️ 🗺️ Opening mmap backend     path=taster-rust.psp size_bytes=2745355 size_mb=2.6181745529174805
      2025-08-15 15:16:24.745671 [debug    ] 🗣️ 🔧 Applied MADV_SEQUENTIAL hint
      2025-08-15 15:16:24.745724 [debug    ] 🗣️ ✅ MMap opened               elapsed_ms=6.148083019070327 pages=167
      2025-08-15 15:16:24.745768 [debug    ] 🗣️ 🔍 MMap read_at              elapsed_us=1.9998988136649132 offset=0 size=1048576 zero_copy=True
@@ -1817,7 +1817,7 @@
        7      "slots": [
        8        {
 
-⏺ Bash(/REDACTED_ABS_PATH --manifest manifest.json --output taster-go.pspf --launcher go --key-seed test123)
+⏺ Bash(/REDACTED_ABS_PATH --manifest manifest.json --output taster-go.psp --launcher go --key-seed test123)
   ⎿  2025-08-15T15:18:52.845-0700 [INFO]  pspf-builder: 🚀 Loading launcher: type=go             
      2025-08-15T15:18:52.845-0700 [DEBUG] pspf-builder: 🔍 Launcher path: path=flavor-go-launcher
      2025-08-15T15:18:52.846-0700 [DEBUG] pspf-builder: ✅ Launcher loaded: size=5028338
@@ -1825,7 +1825,7 @@
 
 ⏺ Excellent! The Go builder successfully created the package. Now let's test it:
 
-⏺ Bash(./taster-go.pspf --version 2>&1 | head -5)
+⏺ Bash(./taster-go.psp --version 2>&1 | head -5)
   ⎿  flavor-go-launcher 0.3.0   
      Built: 2025-08-15T22:18:52Z
 
@@ -1836,7 +1836,7 @@
   ⎿  Error: [Pyvider Setup] INFO (pyvider.telemetry.core_setup): 📝➡️🎨 Configured Key-Value (ConsoleRenderer).
      [Pyvider Setup] INFO (pyvider.telemetry.core_setup): 📝➡️✅ structlog configured. Wrapper: BoundLogger. Output: sys.stderr.
      2025-08-15 15:19:08.865122 [debug    ] 🗣️ 🤖 Auto-selected mmap backend file_size_mb=4.851687431335449
-     2025-08-15 15:19:08.865212 [debug    ] 🗣️ 🗺️ Opening mmap backend     path=taster-go.pspf size_bytes=5087363 size_mb=4.851687431335449
+     2025-08-15 15:19:08.865212 [debug    ] 🗣️ 🗺️ Opening mmap backend     path=taster-go.psp size_bytes=5087363 size_mb=4.851687431335449
      2025-08-15 15:19:08.870026 [debug    ] 🗣️ 🔧 Applied MADV_SEQUENTIAL hint
      2025-08-15 15:19:08.870058 [debug    ] 🗣️ ✅ MMap opened               elapsed_ms=4.856958985328674 pages=310
      2025-08-15 15:19:08.870091 [debug    ] 🗣️ 🔍 MMap read_at              elapsed_us=1.5830155462026596 offset=0 size=1048576 zero_copy=True

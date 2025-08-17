@@ -295,12 +295,12 @@ echo "🔥 Running chaos tests..."
 # Test 1: Disk full
 echo "Testing disk full..."
 dd if=/dev/zero of=/tmp/bigfile bs=1M count=10000 2>/dev/null
-flavor package --manifest pyproject.toml --output test.pspf
+flavor package --manifest pyproject.toml --output test.psp
 rm /tmp/bigfile
 
 # Test 2: Kill during extraction
 echo "Testing interruption..."
-flavor package --manifest pyproject.toml --output test.pspf &
+flavor package --manifest pyproject.toml --output test.psp &
 PID=$!
 sleep 2
 kill -TERM $PID
@@ -309,7 +309,7 @@ wait $PID
 # Test 3: Concurrent execution
 echo "Testing concurrency..."
 for i in {1..10}; do
-    ./test.pspf --test &
+    ./test.psp --test &
 done
 wait
 
@@ -328,7 +328,7 @@ def test_concurrent_package_builds():
     def build_package(index):
         start = time.time()
         try:
-            result = flavor.package(f"test_{index}.pspf")
+            result = flavor.package(f"test_{index}.psp")
             return ("success", time.time() - start)
         except Exception as e:
             return ("failure", str(e))

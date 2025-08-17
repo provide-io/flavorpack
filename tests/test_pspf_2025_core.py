@@ -74,13 +74,13 @@ class TestPSPFCore:
             }
         }
     
-    def test_pspf_specification_implemented(self):
+    def test_pspf_specification_implemented(self, test_builder):
         """Test that PSPF 2025 specification is implemented."""
         assert PSPFBuilder is not None
         assert PSPFReader is not None
         assert PSPFIndex is not None
     
-    def test_ephemeral_keys_available(self):
+    def test_ephemeral_keys_available(self, test_builder):
         """Test ephemeral key generation."""
         private_key, public_key = generate_key_pair()
         assert private_key is not None
@@ -89,7 +89,7 @@ class TestPSPFCore:
         assert len(public_key) == 32
         assert private_key != public_key
     
-    def test_build_minimal_bundle(self, temp_dir, simple_payload, simple_metadata):
+    def test_build_minimal_bundle(self, temp_dir, simple_payload, simple_metadata, test_builder):
         """Test building a minimal PSPF bundle."""
         # Create slot
         slot = SlotMetadata(
@@ -104,9 +104,9 @@ class TestPSPFCore:
         )
         
         # Build bundle
-        bundle_path = temp_dir / "test.pspf"
-        builder = PSPFBuilder()
-        builder.build(
+        bundle_path = temp_dir / "test.psp"
+        # Use test_builder from fixture
+        test_builder.build(
             output_path=bundle_path,
             metadata=simple_metadata,
             slots=[slot],
@@ -117,12 +117,12 @@ class TestPSPFCore:
         assert bundle_path.exists()
         assert bundle_path.stat().st_size > 0
     
-    def test_emoji_magic_format(self, temp_dir, simple_payload, simple_metadata):
+    def test_emoji_magic_format(self, temp_dir, simple_payload, simple_metadata, test_builder):
         """Test emoji magic is just the magic wand."""
         # Build bundle
-        bundle_path = temp_dir / "test.pspf"
-        builder = PSPFBuilder()
-        builder.build(
+        bundle_path = temp_dir / "test.psp"
+        # Use test_builder from fixture
+        test_builder.build(
             output_path=bundle_path,
             metadata=simple_metadata,
             slots=[],
@@ -137,14 +137,14 @@ class TestPSPFCore:
         magic_str = magic.decode('utf-8')
         assert magic_str == MAGIC_WAND_EMOJI
     
-    def test_magic_wand_footer(self, temp_dir, simple_metadata):
+    def test_magic_wand_footer(self, temp_dir, simple_metadata, test_builder):
         """Test magic wand emoji footer."""
         test_cases = ["go", "rust", "python", "node", "unknown"]
         
         for launcher_type in test_cases:
-            bundle_path = temp_dir / f"test_{launcher_type}.pspf"
-            builder = PSPFBuilder()
-            builder.build(
+            bundle_path = temp_dir / f"test_{launcher_type}.psp"
+            # Use test_builder from fixture
+            test_builder.build(
                 output_path=bundle_path,
                 metadata=simple_metadata,
                 slots=[],
@@ -159,11 +159,11 @@ class TestPSPFCore:
             magic_str = magic.decode('utf-8')
             assert magic_str == MAGIC_WAND_EMOJI
     
-    def test_index_block_location(self, temp_dir, simple_metadata):
+    def test_index_block_location(self, temp_dir, simple_metadata, test_builder):
         """Test index block is at launcher_size offset."""
-        bundle_path = temp_dir / "test.pspf"
-        builder = PSPFBuilder()
-        builder.build(
+        bundle_path = temp_dir / "test.psp"
+        # Use test_builder from fixture
+        test_builder.build(
             output_path=bundle_path,
             metadata=simple_metadata,
             slots=[],
@@ -181,7 +181,7 @@ class TestPSPFCore:
         
         assert index_magic == PSPF_MAGIC
     
-    def test_index_block_size(self):
+    def test_index_block_size(self, test_builder):
         """Test index block is exactly 256 bytes."""
         # FORMAT is now an attrs field, so we need to access it from an instance
         index = PSPFIndex()
@@ -191,11 +191,10 @@ class TestPSPFCore:
         packed = index.pack()
         assert len(packed) == INDEX_SIZE
     
-    def test_index_checksum(self, temp_dir, simple_metadata):
+    def test_index_checksum(self, temp_dir, simple_metadata, test_builder):
         """Test index block checksum validation."""
-        bundle_path = temp_dir / "test.pspf"
-        builder = PSPFBuilder()
-        builder.build(
+        bundle_path = temp_dir / "test.psp"
+        test_builder.build(
             output_path=bundle_path,
             metadata=simple_metadata,
             slots=[]
@@ -207,11 +206,11 @@ class TestPSPFCore:
         assert index.format_magic == PSPF_MAGIC
         assert index.format_version == PSPF_VERSION
     
-    def test_metadata_archive_structure(self, temp_dir, simple_metadata):
+    def test_metadata_archive_structure(self, temp_dir, simple_metadata, test_builder):
         """Test metadata is gzipped JSON."""
-        bundle_path = temp_dir / "test.pspf"
-        builder = PSPFBuilder()
-        builder.build(
+        bundle_path = temp_dir / "test.psp"
+        # Use test_builder from fixture
+        test_builder.build(
             output_path=bundle_path,
             metadata=simple_metadata,
             slots=[]
@@ -237,11 +236,11 @@ class TestPSPFCore:
             assert 'format' in metadata
             assert metadata['format'] == 'PSPF/2025'
     
-    def test_metadata_psp_json_required(self, temp_dir, simple_metadata):
+    def test_metadata_psp_json_required(self, temp_dir, simple_metadata, test_builder):
         """Test psp.json is required in metadata."""
-        bundle_path = temp_dir / "test.pspf"
-        builder = PSPFBuilder()
-        builder.build(
+        bundle_path = temp_dir / "test.psp"
+        # Use test_builder from fixture
+        test_builder.build(
             output_path=bundle_path,
             metadata=simple_metadata,
             slots=[]
@@ -256,7 +255,7 @@ class TestPSPFCore:
         assert 'package' in metadata
         assert 'verification' in metadata
     
-    def test_slot_alignment(self, temp_dir, simple_metadata):
+    def test_slot_alignment(self, temp_dir, simple_metadata, test_builder):
         """Test slots are aligned to 8-byte boundaries."""
         # Create multiple slots
         slots = []
@@ -277,9 +276,9 @@ class TestPSPFCore:
             ))
         
         # Build bundle
-        bundle_path = temp_dir / "test.pspf"
-        builder = PSPFBuilder()
-        builder.build(
+        bundle_path = temp_dir / "test.psp"
+        # Use test_builder from fixture
+        test_builder.build(
             output_path=bundle_path,
             metadata=simple_metadata,
             slots=slots
@@ -300,7 +299,7 @@ class TestPSPFCore:
                 # Verify alignment
                 assert offset % SLOT_ALIGNMENT == 0, f"Slot {i} not aligned (offset={offset})"
     
-    def test_align_offset_function(self):
+    def test_align_offset_function(self, test_builder):
         """Test offset alignment function."""
         # Test various offsets
         assert align_offset(0) == 0
@@ -311,11 +310,11 @@ class TestPSPFCore:
         assert align_offset(100) == 104
         assert align_offset(104) == 104
     
-    def test_reader_verify_magic(self, temp_dir, simple_metadata):
+    def test_reader_verify_magic(self, temp_dir, simple_metadata, test_builder):
         """Test magic verification."""
-        bundle_path = temp_dir / "test.pspf"
-        builder = PSPFBuilder()
-        builder.build(
+        bundle_path = temp_dir / "test.psp"
+        # Use test_builder from fixture
+        test_builder.build(
             output_path=bundle_path,
             metadata=simple_metadata,
             slots=[]
@@ -332,11 +331,11 @@ class TestPSPFCore:
         reader2 = PSPFReader(bundle_path)
         assert not reader2.verify_magic()
     
-    def test_launcher_size_detection(self, temp_dir, simple_metadata):
+    def test_launcher_size_detection(self, temp_dir, simple_metadata, test_builder):
         """Test launcher size detection."""
-        bundle_path = temp_dir / "test.pspf"
-        builder = PSPFBuilder()
-        builder.build(
+        bundle_path = temp_dir / "test.psp"
+        # Use test_builder from fixture
+        test_builder.build(
             output_path=bundle_path,
             metadata=simple_metadata,
             slots=[]
@@ -352,10 +351,10 @@ class TestPSPFCore:
         
         assert magic == PSPF_MAGIC
     
-    def test_empty_bundle(self, temp_dir):
+    def test_empty_bundle(self, temp_dir, test_builder):
         """Test building bundle with no slots."""
-        bundle_path = temp_dir / "empty.pspf"
-        builder = PSPFBuilder()
+        bundle_path = temp_dir / "empty.psp"
+        # Use test_builder from fixture
         
         metadata = {
             "format": "PSPF/2025",
@@ -365,7 +364,7 @@ class TestPSPFCore:
             }
         }
         
-        builder.build(
+        test_builder.build(
             output_path=bundle_path,
             metadata=metadata,
             slots=[]

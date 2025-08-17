@@ -90,11 +90,11 @@ launcher = "rust"  # or "go"
 EOF
 
 # Package the application
-flavor package --manifest pyproject.toml --output hello.pspf
+flavor package --manifest pyproject.toml --output hello.psp
 
 # Run the packaged application
-chmod +x hello.pspf
-./hello.pspf --name "Flavor User"
+chmod +x hello.psp
+./hello.psp --name "Flavor User"
 # Output: Hello, Flavor User!
 ```
 
@@ -185,11 +185,11 @@ pytest tests/ -v
 # Build and test the taster package (comprehensive integration test)
 cd tests/taster
 ../../workenv/flavor_*/bin/flavor package
-chmod +x dist/taster.pspf
-./dist/taster.pspf test      # Run all taster tests
-./dist/taster.pspf env       # Test environment handling
-./dist/taster.pspf argv      # Test argv[0] handling
-./dist/taster.pspf signals   # Test signal handling
+chmod +x dist/taster.psp
+./dist/taster.psp test      # Run all taster tests
+./dist/taster.psp env       # Test environment handling
+./dist/taster.psp argv      # Test argv[0] handling
+./dist/taster.psp signals   # Test signal handling
 ```
 
 ## 🚀 Advanced Features
@@ -218,13 +218,13 @@ flavor cache clean --older-than 30
 ### Package Inspection
 ```bash
 # Verify package integrity
-flavor verify package.pspf
+flavor verify package.psp
 
 # Inspect package contents
-flavor inspect package.pspf --verbose
+flavor inspect package.psp --verbose
 
 # Extract specific slot (when in CLI mode)
-FLAVOR_LAUNCHER_CLI=true ./package.pspf extract 2 output_dir
+FLAVOR_LAUNCHER_CLI=true ./package.psp extract 2 output_dir
 ```
 
 ## 📖 Documentation

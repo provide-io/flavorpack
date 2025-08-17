@@ -67,7 +67,7 @@
 **Fix**: Add `flavor cache explain <package>` command
 
 ### 11. File Extension Inconsistency
-**Issue**: Mixed `.psp` and `.pspf` references still in:
+**Issue**: Mixed `.psp` and `.psp` references still in:
 - Test files
 - Comments
 - Old documentation

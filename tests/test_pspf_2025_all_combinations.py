@@ -22,6 +22,7 @@ from flavor.psp.format_2025 import (
     PSPF_MAGIC,
     INDEX_SIZE
 )
+from flavor.utils import get_platform_string
 
 
 # Only test actual existing builders/launchers
@@ -34,10 +35,49 @@ BUILDER_LAUNCHER_COMBINATIONS = [
 ]
 
 
+def check_helper_available(helper_type: str, language: str) -> bool:
+    """Check if a helper binary is available."""
+    platform_str = get_platform_string()
+    
+    # Map language types to actual binary names
+    if language in ["rust", "python", "node", "unknown"]:
+        suffix = "rs"
+    else:
+        suffix = language
+    
+    helper_name = f"flavor-{suffix}-{helper_type}"
+    
+    # Check in workenv
+    workenv_dir = Path.cwd() / "workenv" / "flavors" / platform_str
+    if (workenv_dir / helper_name).exists():
+        return True
+    
+    # Check in helpers/bin
+    helpers_dir = Path.cwd() / "helpers" / "bin"
+    if (helpers_dir / helper_name).exists():
+        return True
+    
+    # Check in ~/.cache/flavor/bin
+    cache_dir = Path.home() / ".cache" / "flavor" / "bin"
+    if (cache_dir / helper_name).exists():
+        return True
+    
+    return False
+
+
+def check_helpers_available() -> bool:
+    """Check if all required helpers are available."""
+    for language in LANGUAGES:
+        if not check_helper_available("launcher", language):
+            return False
+    return True
+
+
 @pytest.mark.integration
 @pytest.mark.cross_language
 @pytest.mark.requires_helpers
 @pytest.mark.slow
+@pytest.mark.skipif(not check_helpers_available(), reason="Helper binaries not available - build with 'flavor helpers build'")
 class TestAllCombinations:
     """Test all builder/launcher combinations systematically."""
     
@@ -51,7 +91,7 @@ class TestAllCombinations:
         shutil.rmtree(self.temp_dir)
     
     @pytest.mark.parametrize("builder,launcher", BUILDER_LAUNCHER_COMBINATIONS)
-    def test_builder_launcher_combination(self, builder, launcher):
+    def test_builder_launcher_combination(self, builder, launcher, test_builder):
         """Test a specific builder/launcher combination."""
         # Create a proper tar archive with an executable script
         tar_path = self.temp_dir / f"{builder}_{launcher}_payload.tar.gz"
@@ -90,8 +130,8 @@ exit 0
         )
         
         # Build bundle
-        bundle_path = self.temp_dir / f"{builder}_{launcher}.pspf"
-        builder_obj = PSPFBuilder()
+        bundle_path = self.temp_dir / f"{builder}_{launcher}.psp"
+        builder_obj = test_builder
         
         metadata = {
             "format": "PSPF/2025",
@@ -164,9 +204,9 @@ exit 0
         assert result['error'] is None
     
     @pytest.mark.parametrize("builder,launcher", BUILDER_LAUNCHER_COMBINATIONS)
-    def test_compatibility_matrix(self, builder, launcher):
+    def test_compatibility_matrix(self, builder, launcher, test_builder):
         """Test compatibility aspects of each combination."""
-        bundle_path = self.temp_dir / f"compat_{builder}_{launcher}.pspf"
+        bundle_path = self.temp_dir / f"compat_{builder}_{launcher}.psp"
         
         # Test various content types
         test_files = {
@@ -193,7 +233,7 @@ exit 0
             ))
         
         # Build with multiple slots
-        builder_obj = PSPFBuilder()
+        builder_obj = test_builder
         builder_obj.build(
             output_path=bundle_path,
             metadata={
@@ -215,16 +255,16 @@ exit 0
         for slot_meta in metadata['slots']:
             assert slot_meta['checksum'] == slots[slot_meta['index']].checksum
     
-    def test_all_combinations_summary(self):
+    def test_all_combinations_summary(self, test_builder):
         """Generate summary of all combinations."""
         results = []
         
         for builder in LANGUAGES:
             for launcher in LANGUAGES:
-                bundle_path = self.temp_dir / f"summary_{builder}_{launcher}.pspf"
+                bundle_path = self.temp_dir / f"summary_{builder}_{launcher}.psp"
                 
                 # Quick build
-                builder_obj = PSPFBuilder()
+                builder_obj = test_builder
                 builder_obj.build(
                     output_path=bundle_path,
                     metadata={
@@ -266,12 +306,12 @@ exit 0
         print(f"Failed: {sum(1 for r in results if not r['valid'])}")
     
     @pytest.mark.parametrize("launcher", LANGUAGES)
-    def test_launcher_emoji_correctness(self, launcher):
+    def test_launcher_emoji_correctness(self, launcher, test_builder):
         """Test each launcher has correct emoji."""
-        bundle_path = self.temp_dir / f"emoji_test_{launcher}.pspf"
+        bundle_path = self.temp_dir / f"emoji_test_{launcher}.psp"
         
-        builder = PSPFBuilder()
-        builder.build(
+        # Use test_builder from fixture
+        test_builder.build(
             output_path=bundle_path,
             metadata={"format": "PSPF/2025", "package": {"name": "emoji", "version": "1.0"}},
             slots=[],
@@ -289,7 +329,7 @@ exit 0
         ("go", "rust"),       # Go builder with Rust launcher
         ("rust", "go"),       # Rust builder with Go launcher
     ])
-    def test_critical_cross_language_paths(self, builder, launcher):
+    def test_critical_cross_language_paths(self, builder, launcher, test_builder):
         """Test critical cross-language combinations in detail."""
         # Create realistic payload for language
         payloads = {
@@ -315,8 +355,8 @@ exit 0
         )
         
         # Build bundle
-        bundle_path = self.temp_dir / f"critical_{builder}_{launcher}.pspf"
-        builder_obj = PSPFBuilder()
+        bundle_path = self.temp_dir / f"critical_{builder}_{launcher}.psp"
+        builder_obj = test_builder
         
         metadata = {
             "format": "PSPF/2025",
