@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 """
-Path validation and normalization for PSPF metadata.
+Metadata validation and processing for PSP packages.
 
-Ensures all paths in metadata use the {workenv} placeholder for portability.
-This makes it clear to developers that paths are relative to the work environment.
+This module handles metadata structure validation, path normalization,
+and other metadata-related operations that are independent of the
+specific package format.
 """
 
 import os
-from typing import Any, Dict, List, Union
+from typing import Any
 
 
 def validate_metadata_path(path: str) -> str:
@@ -77,7 +78,7 @@ def validate_metadata_path(path: str) -> str:
     return path
 
 
-def validate_metadata_dict(metadata: Dict[str, Any]) -> Dict[str, Any]:
+def validate_metadata_dict(metadata: dict[str, Any]) -> dict[str, Any]:
     """
     Recursively validate all paths in a metadata dictionary.
     
@@ -104,15 +105,30 @@ def validate_metadata_dict(metadata: Dict[str, Any]) -> Dict[str, Any]:
     for key, value in metadata.items():
         if key == "workenv" and isinstance(value, dict):
             # Special case: workenv section needs special handling
-            # - directories: paths are relative to workenv (no {workenv} prefix)
-            # - env: values should have {workenv} placeholders
+            # - directories: paths must have {workenv} prefix
+            # - env: values should have {workenv} placeholders where needed
             workenv_result = {}
             if "directories" in value:
-                # Keep directory paths as-is (they're relative)
-                workenv_result["directories"] = value["directories"]
+                # Validate directory paths
+                dirs = value["directories"]
+                if isinstance(dirs, list):
+                    # Ensure all directory paths start with {workenv}
+                    validated_dirs = []
+                    for dir_info in dirs:
+                        if isinstance(dir_info, dict) and "path" in dir_info:
+                            if not dir_info["path"].startswith("{workenv}"):
+                                raise ValueError(
+                                    f"Workenv directory path must start with {{workenv}}: {dir_info['path']}"
+                                )
+                        validated_dirs.append(dir_info)
+                    workenv_result["directories"] = validated_dirs
+                else:
+                    workenv_result["directories"] = dirs
             if "env" in value:
-                # Validate env values to ensure they use {workenv}
-                workenv_result["env"] = validate_metadata_dict(value["env"])
+                # Env values can have placeholders but don't require {workenv}
+                workenv_result["env"] = value["env"]
+            if "umask" in value:
+                workenv_result["umask"] = value["umask"]
             result[key] = workenv_result
         elif key in PATH_KEYS and isinstance(value, str):
             # This is a path field - validate it
@@ -136,7 +152,7 @@ def validate_metadata_dict(metadata: Dict[str, Any]) -> Dict[str, Any]:
     return result
 
 
-def validate_metadata_list(items: List[Any], is_path_list: bool = False) -> List[Any]:
+def validate_metadata_list(items: list[Any], is_path_list: bool = False) -> list[Any]:
     """
     Validate items in a list, handling both dict and string items.
     
@@ -217,3 +233,74 @@ def make_relative_to_workenv(absolute_path: str, workenv_dir: str) -> str:
     # Path is not under workenv - just return with {workenv} prefix
     # This shouldn't normally happen but handle gracefully
     return validate_metadata_path(absolute_path)
+
+
+def validate_metadata(metadata: dict[str, Any]) -> bool:
+    """
+    Validate a complete metadata structure.
+    
+    Args:
+        metadata: The metadata dictionary to validate
+        
+    Returns:
+        True if valid
+        
+    Raises:
+        ValueError: If metadata is invalid
+    """
+    # Check required fields
+    if "format" not in metadata:
+        raise ValueError("Missing required field: format")
+    
+    # Check format version
+    if metadata["format"] not in ["PSPF/2025"]:
+        raise ValueError(f"Unsupported format: {metadata['format']}")
+    
+    # Check for old field names
+    if "execution" in metadata and "environment" in metadata["execution"]:
+        raise ValueError("Use 'env' instead of 'environment' in execution section")
+    
+    # Validate workenv directories
+    if "workenv" in metadata and "directories" in metadata["workenv"]:
+        dirs = metadata["workenv"]["directories"]
+        for dir_info in dirs:
+            if "path" in dir_info:
+                if not dir_info["path"].startswith("{workenv}"):
+                    raise ValueError(
+                        f"Workenv directory path must start with {{workenv}}: {dir_info['path']}"
+                    )
+            if "mode" in dir_info:
+                # Validate mode format
+                mode = dir_info["mode"]
+                if not isinstance(mode, str):
+                    raise ValueError(f"Invalid mode type: {type(mode)}")
+                try:
+                    # Try to parse as octal
+                    if mode.startswith("0o"):
+                        int(mode[2:], 8)
+                    elif mode.startswith("0"):
+                        int(mode, 8)
+                    else:
+                        int(mode, 8)
+                except ValueError:
+                    raise ValueError(f"Invalid mode: {mode}")
+    
+    # Validate umask if present
+    if "workenv" in metadata and "umask" in metadata["workenv"]:
+        umask = metadata["workenv"]["umask"]
+        if not isinstance(umask, str):
+            raise ValueError(f"Invalid umask type: {type(umask)}")
+        try:
+            # Try to parse as octal
+            if umask.startswith("0o"):
+                val = int(umask[2:], 8)
+            elif umask.startswith("0"):
+                val = int(umask, 8)
+            else:
+                val = int(umask, 8)
+            if val < 0 or val > 0o777:
+                raise ValueError(f"Invalid umask value: {umask}")
+        except ValueError:
+            raise ValueError(f"Invalid umask: {umask}")
+    
+    return True

@@ -256,7 +256,7 @@ class SlotMetadata:
     
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
-        from flavor.psp.format_2025.paths import validate_metadata_path
+        from flavor.psp.metadata.paths import validate_metadata_path
         from flavor.psp.format_2025.checksums import calculate_checksum
         
         # Ensure checksum has prefix
