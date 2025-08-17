@@ -339,11 +339,21 @@ class PythonPackager:
             return
 
         logger.info(f"Found Python installation at: {python_install_dir}")
-
-        # Create tarball of the Python installation
+        
+        # Check for EXTERNALLY-MANAGED marker
+        externally_managed = python_install_dir / "lib" / f"python{self.python_version}" / "EXTERNALLY-MANAGED"
+        
+        # Create tarball of the Python installation, excluding EXTERNALLY-MANAGED
         with tarfile.open(python_tgz, "w:gz", compresslevel=9) as tar:
+            # Custom filter to exclude EXTERNALLY-MANAGED file
+            def filter_externally_managed(tarinfo):
+                if tarinfo.name.endswith("EXTERNALLY-MANAGED"):
+                    logger.debug(f"Excluding EXTERNALLY-MANAGED marker from Python runtime tarball")
+                    return None
+                return tarinfo
+            
             # Add all files from the Python directory, preserving structure
-            tar.add(python_install_dir, arcname=".")
+            tar.add(python_install_dir, arcname=".", filter=filter_externally_managed)
 
     def _write_json(self, path: Path, data: dict[str, Any]) -> None:
         """Write JSON file with secure permissions."""

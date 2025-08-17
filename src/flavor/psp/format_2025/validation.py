@@ -121,7 +121,7 @@ def validate_slots(slots: List[SlotMetadata]) -> List[str]:
             errors.append(f"📏 Slot '{slot.name}' has negative size: {slot.size}")
         
         # Check encoding validity
-        valid_encodings = ["none", "gzip", "zstd", "brotli"]
+        valid_encodings = ["none", "raw", "gzip", "tar", "tgz", "tar.gz", "zstd", "brotli"]
         if slot.encoding not in valid_encodings:
             errors.append(
                 f"🗜️ Slot '{slot.name}' has invalid encoding '{slot.encoding}'. "

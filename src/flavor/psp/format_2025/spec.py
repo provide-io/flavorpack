@@ -7,7 +7,7 @@ system, emphasizing immutability and functional programming patterns.
 """
 
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import attrs
 from attrs import define, field, validators
@@ -27,10 +27,10 @@ class KeyConfig:
     4. Generate ephemeral (default)
     """
     
-    private_key: Optional[bytes] = field(default=None)
-    public_key: Optional[bytes] = field(default=None)
-    key_seed: Optional[str] = field(default=None)
-    key_path: Optional[Path] = field(default=None)
+    private_key: bytes | None = field(default=None)
+    public_key: bytes | None = field(default=None)
+    key_seed: str | None = field(default=None)
+    key_path: Path | None = field(default=None)
     
     def has_explicit_keys(self) -> bool:
         """Check if explicit keys are provided."""
@@ -72,12 +72,13 @@ class BuildOptions:
         default="rust",
         validator=validators.in_(["rust", "go", "python", "node"])
     )
+    launcher_bin: Path | None = field(default=None)
     
     # Build behavior
     reproducible: bool = field(default=False)
     verbose: bool = field(default=False)
     
-    def with_compression(self, compression: str, level: Optional[int] = None) -> 'BuildOptions':
+    def with_compression(self, compression: str, level: int | None = None) -> 'BuildOptions':
         """Return new BuildOptions with updated compression settings."""
         updates = {"compression": compression}
         if level is not None:
@@ -98,10 +99,10 @@ class BuildSpec:
     """
     
     # Package metadata (name, version, description, etc.)
-    metadata: Dict[str, Any] = field(factory=dict)
+    metadata: dict[str, Any] = field(factory=dict)
     
     # Slots to include in the package
-    slots: List[SlotMetadata] = field(factory=list)
+    slots: list[SlotMetadata] = field(factory=list)
     
     # Key configuration for signing
     keys: KeyConfig = field(factory=KeyConfig)
@@ -136,7 +137,7 @@ class BuildSpec:
         new_slots = [*self.slots, *slots]
         return attrs.evolve(self, slots=new_slots)
     
-    def replace_slots(self, slots: List[SlotMetadata]) -> 'BuildSpec':
+    def replace_slots(self, slots: list[SlotMetadata]) -> 'BuildSpec':
         """
         Return new BuildSpec with replaced slot list.
         
@@ -175,16 +176,16 @@ class BuildResult:
     """
     
     success: bool = field(validator=validators.instance_of(bool))
-    package_path: Optional[Path] = field(default=None)
-    errors: List[str] = field(factory=list)
-    warnings: List[str] = field(factory=list)
-    metadata: Dict[str, Any] = field(factory=dict)
+    package_path: Path | None = field(default=None)
+    errors: list[str] = field(factory=list)
+    warnings: list[str] = field(factory=list)
+    metadata: dict[str, Any] = field(factory=dict)
     
     # Timing information
-    duration_seconds: Optional[float] = field(default=None)
+    duration_seconds: float | None = field(default=None)
     
     # Size information
-    package_size_bytes: Optional[int] = field(default=None)
+    package_size_bytes: int | None = field(default=None)
     
     def has_errors(self) -> bool:
         """Check if there are any errors."""
@@ -220,17 +221,17 @@ class PreparedSlot:
     
     metadata: SlotMetadata = field(validator=validators.instance_of(SlotMetadata))
     data: bytes = field(validator=validators.instance_of(bytes))
-    compressed_data: Optional[bytes] = field(default=None)
-    compression_type: int = field(default=0)
+    compressed_data: bytes | None = field(default=None)
+    encoding_type: int = field(default=0)  # Renamed from compression_type for consistency
     checksum: int = field(default=0)
-    offset: Optional[int] = field(default=None)
+    offset: int | None = field(default=None)
     
-    def with_compression(self, compressed_data: bytes, compression_type: int) -> 'PreparedSlot':
-        """Return new PreparedSlot with compression applied."""
+    def with_encoding(self, compressed_data: bytes, encoding_type: int) -> 'PreparedSlot':
+        """Return new PreparedSlot with encoding applied."""
         return attrs.evolve(
             self,
             compressed_data=compressed_data,
-            compression_type=compression_type
+            encoding_type=encoding_type
         )
     
     def with_offset(self, offset: int) -> 'PreparedSlot':
