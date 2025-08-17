@@ -21,7 +21,7 @@ class TestPackagingOrchestratorComprehensive:
         return PackagingOrchestrator(
             package_integrity_key_path=str(tmp_path / "test.key"),
             public_key_path=str(tmp_path / "test.pub"),
-            output_flavor_path=str(tmp_path / "output.pspf"),
+            output_flavor_path=str(tmp_path / "output.psp"),
             build_config={
                 "version": "1.0.0",
                 "dependencies": [],
@@ -36,12 +36,12 @@ class TestPackagingOrchestratorComprehensive:
         """Test orchestrator initializes with correct values."""
         assert orchestrator.package_integrity_key_path == str(tmp_path / "test.key")
         assert orchestrator.public_key_path == str(tmp_path / "test.pub")
-        assert orchestrator.output_flavor_path == str(tmp_path / "output.pspf")
+        assert orchestrator.output_flavor_path == str(tmp_path / "output.psp")
         assert orchestrator.package_name == "test-package"
         assert orchestrator.entry_point == "test.main:run"
         assert orchestrator.python_version == "3.11"
 
-    @patch("flavor.packaging.util.run_subprocess")
+    @patch("flavor.packaging.orchestrator.run_subprocess")
     @patch("flavor.packaging.python_packager.PythonPackager.prepare_artifacts")
     @patch("flavor.packaging.python_packager.PythonPackager.compute_signature")
     def test_build_package_flow(
@@ -68,19 +68,31 @@ class TestPackagingOrchestratorComprehensive:
         # Check that the final build command was called
         final_build_call = mock_run.call_args_list[-1]
         args = final_build_call.args[0]
-        assert "pspf-builder" in args[0]
+        assert "flavor-rs-builder" in args[0] or "flavor-go-builder" in args[0]
         assert "--manifest" in args
         assert "--output" in args
         assert orchestrator.output_flavor_path in args
 
-    @patch("flavor.packaging.util.run_subprocess")
-    def test_build_error_handling(self, mock_run, orchestrator) -> None:
+    @patch("flavor.packaging.python_packager.PythonPackager.compute_signature")
+    @patch("flavor.packaging.python_packager.PythonPackager.prepare_artifacts")  
+    @patch("flavor.packaging.orchestrator.run_subprocess")
+    def test_build_error_handling(self, mock_run, mock_prepare, mock_sign, orchestrator, tmp_path) -> None:
         """Test error handling when subprocess fails."""
+        # Setup mocks for Python packager
+        mock_prepare.return_value = {
+            "payload_tgz": tmp_path / "payload.tgz",
+            "python_tgz": tmp_path / "python.tgz",
+            "payload_dir": tmp_path / "payload",
+        }
+        (tmp_path / "payload" / "bin").mkdir(parents=True)
+        (tmp_path / "payload" / "bin" / "uv").touch()
+        (tmp_path / "payload" / "wheels").mkdir()
+        mock_sign.return_value = b"fakesig"
+        
+        # Make the build command fail
         mock_run.side_effect = BuildError("Build failed!")
 
         with pytest.raises(BuildError) as exc_info:
-            # We need to mock the python_packager part to isolate the subprocess call
-            with patch("flavor.packaging.python_packager.PythonPackager"):
-                 orchestrator.build_package()
+            orchestrator.build_package()
 
         assert "Build failed!" in str(exc_info.value)

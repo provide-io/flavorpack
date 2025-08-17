@@ -4,7 +4,7 @@
 
 set -e
 
-echo "🧪 Testing all builder/launcher combinations for taster.pspf"
+echo "🧪 Testing all builder/launcher combinations for taster.psp"
 echo "============================================================"
 
 # Colors for output
@@ -31,7 +31,7 @@ echo "========================" >> "$RESULTS_FILE"
 test_combination() {
     local builder=$1
     local launcher=$2
-    local output_name="taster-${builder}-${launcher}.pspf"
+    local output_name="taster-${builder}-${launcher}.psp"
     
     echo -e "\n${YELLOW}Testing: ${builder} builder + ${launcher} launcher${NC}"
     echo "Output: $output_name"
@@ -189,12 +189,12 @@ else
     
     # Show file sizes for comparison
     echo -e "\n${YELLOW}Bundle sizes:${NC}"
-    ls -lh *.pspf 2>/dev/null || echo "No bundles found"
+    ls -lh *.psp 2>/dev/null || echo "No bundles found"
     
     # Test one bundle with detailed mmap verification
-    if [ -f "taster-rust-rust.pspf" ]; then
-        echo -e "\n${YELLOW}Detailed mmap verification for taster-rust-rust.pspf:${NC}"
-        RUST_LOG=trace FLAVOR_LOG_LEVEL=trace ./taster-rust-rust.pspf --version 2>&1 | grep -E "mmap|memory|backend|timing" | head -20
+    if [ -f "taster-rust-rust.psp" ]; then
+        echo -e "\n${YELLOW}Detailed mmap verification for taster-rust-rust.psp:${NC}"
+        RUST_LOG=trace FLAVOR_LOG_LEVEL=trace ./taster-rust-rust.psp --version 2>&1 | grep -E "mmap|memory|backend|timing" | head -20
     fi
 fi
 

@@ -273,9 +273,97 @@ def inspect_command(package_file: str, output_format: str, verbose: bool) -> Non
 
 
 @cli.command("clean")
-def clean_command() -> None:
-    """Removes cached Go binaries."""
-    click.echo("Clean command not available - compiler moved to scraps")
+@click.option(
+    "--all",
+    is_flag=True,
+    help="Clean both work environment and helpers",
+)
+@click.option(
+    "--helpers",
+    is_flag=True,
+    help="Clean only helper binaries",
+)
+@click.option(
+    "--dry-run",
+    is_flag=True,
+    help="Show what would be removed without removing",
+)
+@click.option(
+    "--yes", "-y",
+    is_flag=True,
+    help="Skip confirmation prompt",
+)
+def clean_command(all: bool, helpers: bool, dry_run: bool, yes: bool) -> None:
+    """Clean work environment cache (default) or helpers."""
+    from flavor.cache import CacheManager, get_cache_dir
+    from flavor.helpers import HelperManager
+    from pathlib import Path
+    
+    # Determine what to clean
+    clean_workenv = not helpers or all
+    clean_helpers = helpers or all
+    
+    if dry_run:
+        click.echo("🔍 DRY RUN - Nothing will be removed\n")
+    
+    total_freed = 0
+    
+    # Clean workenv
+    if clean_workenv:
+        manager = CacheManager()
+        cached = manager.list_cached()
+        
+        if cached:
+            size = manager.get_cache_size()
+            size_mb = size / (1024 * 1024)
+            
+            if dry_run:
+                click.echo(f"Would remove {len(cached)} cached packages ({size_mb:.1f} MB):")
+                for pkg in cached:
+                    pkg_size_mb = pkg["size"] / (1024 * 1024)
+                    name = pkg.get("name", pkg["id"])
+                    click.echo(f"  - {name} ({pkg_size_mb:.1f} MB)")
+            else:
+                if not yes:
+                    if not click.confirm(f"Remove {len(cached)} cached packages ({size_mb:.1f} MB)?"):
+                        click.echo("Aborted.")
+                        return
+                
+                removed = manager.clean()
+                if removed:
+                    click.secho(f"✅ Removed {len(removed)} cached packages", fg="green")
+                    total_freed += size
+    
+    # Clean helpers
+    if clean_helpers:
+        helper_dir = Path.home() / ".cache" / "flavor" / "bin"
+        if helper_dir.exists():
+            helpers_list = list(helper_dir.glob("flavor-*"))
+            helpers_list = [h for h in helpers_list if not h.suffix == ".d"]  # Skip .d files
+            
+            if helpers_list:
+                total_size = sum(h.stat().st_size for h in helpers_list)
+                size_mb = total_size / (1024 * 1024)
+                
+                if dry_run:
+                    click.echo(f"\nWould remove {len(helpers_list)} helper binaries ({size_mb:.1f} MB):")
+                    for helper in helpers_list:
+                        h_size_mb = helper.stat().st_size / (1024 * 1024)
+                        click.echo(f"  - {helper.name} ({h_size_mb:.1f} MB)")
+                else:
+                    if not yes:
+                        if not click.confirm(f"Remove {len(helpers_list)} helper binaries ({size_mb:.1f} MB)?"):
+                            click.echo("Aborted.")
+                            return
+                    
+                    import shutil
+                    shutil.rmtree(helper_dir)
+                    click.secho(f"✅ Removed {len(helpers_list)} helper binaries", fg="green")
+                    total_freed += total_size
+    
+    if not dry_run and total_freed > 0:
+        freed_mb = total_freed / (1024 * 1024)
+        click.secho(f"\n💾 Total freed: {freed_mb:.1f} MB", fg="green")
 
 
 main = cli
@@ -366,43 +454,17 @@ def analyze_deps_command(manifest_path: str) -> None:
     click.echo("    flavor package --optimize")
 
 
-@cli.command()
-def list_helpers() -> None:
-    """List available launcher and builder helpers."""
-    from flavor.packaging.orchestrator import PackagingOrchestrator
-    
-    helpers = PackagingOrchestrator.discover_helpers()
-    
-    click.echo("🔍 Available Flavor Helpers")
-    click.echo("=" * 40)
-    
-    if helpers["launchers"]:
-        click.echo("\n📦 Launcher Helpers:")
-        for launcher in sorted(helpers["launchers"]):
-            click.echo(f"  • {launcher}")
-    else:
-        click.echo("\n⚠️  No launcher helpers found in helpers/bin")
-    
-    if helpers["builders"]:
-        click.echo("\n🔨 Builder Helpers:")
-        for builder in sorted(helpers["builders"]):
-            click.echo(f"  • {builder}")
-    else:
-        click.echo("\n⚠️  No builder helpers found in helpers/bin")
-    
-    click.echo("\n💡 To use a specific launcher, add --launcher <type> to your package command")
-    click.echo("   Example: flavor package --launcher go --manifest pyproject.toml")
 
 
 @cli.group()
-def cache() -> None:
-    """Manage the Flavor package cache."""
+def workenv() -> None:
+    """Manage the Flavor work environment cache."""
     pass
 
 
-@cache.command("list")
-def cache_list() -> None:
-    """List cached packages."""
+@workenv.command("list")
+def workenv_list() -> None:
+    """List cached package extractions."""
     from flavor.cache import CacheManager
     
     manager = CacheManager()
@@ -433,9 +495,9 @@ def cache_list() -> None:
         click.echo(f"   Modified: {modified.strftime('%Y-%m-%d %H:%M:%S')}")
 
 
-@cache.command("info")
-def cache_info() -> None:
-    """Show cache information."""
+@workenv.command("info")
+def workenv_info() -> None:
+    """Show work environment cache information."""
     from flavor.cache import CacheManager, get_cache_dir
     
     manager = CacheManager()
@@ -449,7 +511,7 @@ def cache_info() -> None:
     click.echo(f"Number of packages: {len(cached)}")
 
 
-@cache.command("clean")
+@workenv.command("clean")
 @click.option(
     "--older-than",
     type=int,
@@ -460,8 +522,8 @@ def cache_info() -> None:
     is_flag=True,
     help="Skip confirmation prompt",
 )
-def cache_clean(older_than: int | None, yes: bool) -> None:
-    """Clean the cache."""
+def workenv_clean(older_than: int | None, yes: bool) -> None:
+    """Clean the work environment cache."""
     from flavor.cache import CacheManager
     
     manager = CacheManager()
@@ -490,15 +552,15 @@ def cache_clean(older_than: int | None, yes: bool) -> None:
         click.echo("No packages to clean")
 
 
-@cache.command("remove")
+@workenv.command("remove")
 @click.argument("package_id")
 @click.option(
     "--yes", "-y",
     is_flag=True,
     help="Skip confirmation prompt",
 )
-def cache_remove(package_id: str, yes: bool) -> None:
-    """Remove a specific cached package."""
+def workenv_remove(package_id: str, yes: bool) -> None:
+    """Remove a specific cached package extraction."""
     from flavor.cache import CacheManager
     
     manager = CacheManager()
@@ -519,12 +581,12 @@ def cache_remove(package_id: str, yes: bool) -> None:
 
 
 @cli.group()
-def helper() -> None:
+def helpers() -> None:
     """Manage Flavor helper binaries (launchers and builders)."""
     pass
 
 
-@helper.command("list")
+@helpers.command("list")
 @click.option(
     "--verbose", "-v",
     is_flag=True,
@@ -533,25 +595,43 @@ def helper() -> None:
 def helper_list(verbose: bool) -> None:
     """List available helper binaries."""
     from flavor.helpers import HelperManager
+    import subprocess
     
     manager = HelperManager()
     helpers = manager.list_helpers()
     
     if not helpers["launchers"] and not helpers["builders"]:
-        click.echo("No helpers found. Build them with: flavor helper build")
+        click.echo("No helpers found. Build them with: flavor helpers build")
         return
     
     click.echo("🔧 Available Flavor Helpers")
     click.echo("=" * 60)
     
+    # Helper function to get version
+    def get_version(helper_path):
+        try:
+            result = subprocess.run(
+                [str(helper_path), "--version"],
+                capture_output=True,
+                text=True,
+                timeout=2
+            )
+            if result.returncode == 0:
+                # Parse version from output (first line usually)
+                lines = result.stdout.strip().split('\n')
+                if lines:
+                    return lines[0]
+        except:
+            pass
+        return None
+    
     if helpers["launchers"]:
         click.echo("\n📦 Launchers:")
         for launcher in sorted(helpers["launchers"], key=lambda h: h.name):
             size_mb = launcher.size / (1024 * 1024)
-            click.echo(f"  • {launcher.name} ({launcher.language}, {size_mb:.1f} MB)")
+            version = get_version(launcher.path) or launcher.version or "unknown"
+            click.echo(f"  • {launcher.name} ({launcher.language}, {size_mb:.1f} MB) - {version}")
             if verbose:
-                if launcher.version:
-                    click.echo(f"    Version: {launcher.version}")
                 if launcher.checksum:
                     click.echo(f"    Checksum: {launcher.checksum}")
                 if launcher.built_from:
@@ -561,17 +641,16 @@ def helper_list(verbose: bool) -> None:
         click.echo("\n🔨 Builders:")
         for builder in sorted(helpers["builders"], key=lambda h: h.name):
             size_mb = builder.size / (1024 * 1024)
-            click.echo(f"  • {builder.name} ({builder.language}, {size_mb:.1f} MB)")
+            version = get_version(builder.path) or builder.version or "unknown"
+            click.echo(f"  • {builder.name} ({builder.language}, {size_mb:.1f} MB) - {version}")
             if verbose:
-                if builder.version:
-                    click.echo(f"    Version: {builder.version}")
                 if builder.checksum:
                     click.echo(f"    Checksum: {builder.checksum}")
                 if builder.built_from:
                     click.echo(f"    Source: {builder.built_from}")
 
 
-@helper.command("build")
+@helpers.command("build")
 @click.option(
     "--lang",
     type=click.Choice(["go", "rust", "all"], case_sensitive=False),
@@ -607,7 +686,7 @@ def helper_build(lang: str, force: bool) -> None:
         click.echo("  • Rust: cargo --version")
 
 
-@helper.command("clean")
+@helpers.command("clean")
 @click.option(
     "--lang",
     type=click.Choice(["go", "rust", "all"], case_sensitive=False),
@@ -642,7 +721,7 @@ def helper_clean(lang: str, yes: bool) -> None:
         click.echo("No helpers to remove")
 
 
-@helper.command("info")
+@helpers.command("info")
 @click.argument("name")
 def helper_info(name: str) -> None:
     """Show detailed information about a specific helper."""
@@ -686,7 +765,7 @@ def helper_info(name: str) -> None:
         click.echo("Status: ❌ File not found")
 
 
-@helper.command("test")
+@helpers.command("test")
 @click.option(
     "--lang",
     type=click.Choice(["go", "rust", "all"], case_sensitive=False),

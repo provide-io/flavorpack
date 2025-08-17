@@ -234,7 +234,11 @@ class SlotMetadata:
         """Convert to dictionary for JSON serialization using cattrs."""
         converter = cattrs.Converter()
         converter.register_unstructure_hook(Path, str)
-        return converter.unstructure(self)
+        data = converter.unstructure(self)
+        # Remove path field from serialized metadata - it's a build-time detail
+        # that shouldn't be included in the bundle metadata
+        data.pop('path', None)
+        return data
     
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> 'SlotMetadata':

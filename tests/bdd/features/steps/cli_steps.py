@@ -159,7 +159,7 @@ lifecycle = "{manifest['slots'][0]['lifecycle']}"
 @when('I build the {language} bundle using the CLI')
 def step_build_bundle_cli(context, language):
     """Build PSPF bundle using flavor CLI."""
-    output_path = context.project_dir / f"{context.project_dir.name}.pspf"
+    output_path = context.project_dir / f"{context.project_dir.name}.psp"
     
     # Simulate flavor CLI command
     cmd = [
@@ -220,7 +220,7 @@ def step_build_bundle_cli(context, language):
 @when('I build with {builder_lang} builder and {launcher_lang} launcher')
 def step_build_cross_language(context, builder_lang, launcher_lang):
     """Build with specific builder/launcher combination."""
-    output_path = context.project_dir / f"cross_{builder_lang}_{launcher_lang}.pspf"
+    output_path = context.project_dir / f"cross_{builder_lang}_{launcher_lang}.psp"
     
     # Simulate cross-language build
     from flavor.psp.format_2025 import PSPFBuilder, SlotMetadata
@@ -397,7 +397,7 @@ def step_have_all_combinations(context):
     
     for builder_lang in languages:
         for launcher_lang in languages:
-            bundle_name = f"{builder_lang.lower()}_{launcher_lang.lower()}.pspf"
+            bundle_name = f"{builder_lang.lower()}_{launcher_lang.lower()}.psp"
             bundle_path = context.temp_dir / bundle_name
             
             # Create a simple payload

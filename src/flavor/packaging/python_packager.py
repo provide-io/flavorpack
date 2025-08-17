@@ -236,7 +236,13 @@ class PythonPackager:
                 ]
             )
 
-            # Download transitive dependencies using uv pip
+            # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            # CRITICAL: ALWAYS use pip3 for wheel operations
+            # uv does NOT support pip download or pip wheel commands
+            # DO NOT attempt to use uv for downloading dependencies
+            # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            
+            # Download transitive dependencies using pip3
             logger.info("Downloading transitive dependencies...")
             if wheel_spinner:
                 wheel_spinner.tick()
@@ -255,19 +261,30 @@ class PythonPackager:
             except Exception as e:
                 logger.warning(f"Failed to install main package dependencies: {e}")
 
-            # Now download all the dependencies as wheels into the target directory
+            # Now download all the dependencies as wheels using pip3
             logger.info("Downloading resolved dependencies as wheels...")
             try:
                 run_subprocess(
                     [
-                        "uv", "pip", "download",
-                        "--python", str(build_venv / "bin" / "python"),
+                        str(pip3),
+                        "download",
                         "--dest", str(wheels_dir),
+                        "--only-binary", ":all:",  # Prefer wheels
                         str(self.manifest_dir),
                     ]
                 )
             except Exception as e:
-                logger.warning(f"Failed to download some wheels: {e}")
+                logger.warning(f"Failed to download dependency wheels: {e}")
+                # Try alternative: pip3 wheel for dependencies
+                logger.info("Trying pip3 wheel as fallback...")
+                run_subprocess(
+                    [
+                        str(pip3),
+                        "wheel",
+                        "--wheel-dir", str(wheels_dir),
+                        str(self.manifest_dir),
+                    ]
+                )
 
         # Finish spinner
         if wheel_spinner:

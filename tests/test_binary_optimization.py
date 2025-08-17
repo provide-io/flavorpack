@@ -133,47 +133,40 @@ class TestStripFlagIntegration:
         if self.temp_dir.exists():
             shutil.rmtree(self.temp_dir)
     
-    @patch('flavor.packaging.orchestrator.PackagingOrchestrator')
-    @patch('flavor.optimization.BinaryOptimizer')
-    def test_package_with_strip_flag(self, MockOptimizer, MockOrchestrator):
+    @patch('flavor.cli.build_package_from_manifest')
+    def test_package_with_strip_flag(self, mock_build):
         """Test package command with --strip flag."""
         manifest = self.temp_dir / "pyproject.toml"
         manifest.write_text("[tool.flavor]\nname = 'test'\nentry_point = 'main:app'")
         
-        mock_opt_instance = MagicMock()
-        MockOptimizer.return_value = mock_opt_instance
-        mock_opt_instance.optimize.return_value = {'success': True, 'total_reduction': 5000}
+        mock_build.return_value = [self.temp_dir / "test.psp"]
         
         result = self.runner.invoke(cli, [
             "package",
             "--manifest", str(manifest),
-            "--output", str(self.temp_dir / "test.pspf"),
+            "--output", str(self.temp_dir / "test.psp"),
             "--strip"
         ])
         
-        # Check that optimizer was used
-        assert mock_opt_instance.optimize.called
+        # Check that strip flag was passed through
+        mock_build.assert_called_once()
+        args, kwargs = mock_build.call_args
+        assert kwargs.get('strip_binaries') == True
     
     def test_strip_flag_shows_size_reduction(self):
         """Test that strip flag shows size reduction in output."""
         manifest = self.temp_dir / "pyproject.toml"
         manifest.write_text("[tool.flavor]\nname = 'test'\nentry_point = 'main:app'")
         
-        with patch('flavor.api.build_package_from_manifest') as mock_build:
-            mock_build.return_value = {
-                'success': True,
-                'optimization': {
-                    'original_size': 10000,
-                    'final_size': 7000,
-                    'reduction_percent': 30
-                }
-            }
+        with patch('flavor.cli.build_package_from_manifest') as mock_build:
+            mock_build.return_value = [self.temp_dir / "test.psp"]
             
             result = self.runner.invoke(cli, [
                 "package",
                 "--manifest", str(manifest),
-                "--output", str(self.temp_dir / "test.pspf"),
+                "--output", str(self.temp_dir / "test.psp"),
                 "--strip"
             ])
             
-            assert "30%" in result.output or "3000" in result.output or "reduction" in result.output.lower()
+            # The CLI shows a message about optimization when strip is used
+            assert "optimized" in result.output.lower() or "stripped" in result.output.lower()

@@ -36,7 +36,7 @@ class TestPSPFSlots:
         shutil.rmtree(temp_path)
     
     @pytest.fixture
-    def test_slots(self, temp_dir):
+    def test_slots(self, temp_dir, test_builder):
         """Create test slots with different properties."""
         slots = []
         
@@ -90,7 +90,7 @@ class TestPSPFSlots:
         
         return slots
     
-    def test_slot_lifecycle_persistent(self, temp_dir):
+    def test_slot_lifecycle_persistent(self, temp_dir, test_builder):
         """Test persistent slot lifecycle metadata."""
         slot = SlotMetadata(
             index=0,
@@ -108,7 +108,7 @@ class TestPSPFSlots:
         assert slot_dict['name'] == 'test-persistent'
         # Persistent slots should remain after first use
     
-    def test_slot_lifecycle_volatile(self, temp_dir):
+    def test_slot_lifecycle_volatile(self, temp_dir, test_builder):
         """Test volatile slot lifecycle metadata."""
         slot = SlotMetadata(
             index=0,
@@ -126,7 +126,7 @@ class TestPSPFSlots:
         assert slot_dict['name'] == 'test-volatile'
         # Volatile slots removed on process exit
     
-    def test_slot_lifecycle_temporary(self, temp_dir):
+    def test_slot_lifecycle_temporary(self, temp_dir, test_builder):
         """Test temporary slot lifecycle metadata."""
         slot = SlotMetadata(
             index=0,
@@ -144,7 +144,7 @@ class TestPSPFSlots:
         assert slot_dict['name'] == 'test-temporary'
         # Temporary slots removed after first use
     
-    def test_slot_lifecycle_install(self, temp_dir):
+    def test_slot_lifecycle_install(self, temp_dir, test_builder):
         """Test install slot lifecycle metadata."""
         slot = SlotMetadata(
             index=0,
@@ -162,7 +162,7 @@ class TestPSPFSlots:
         assert slot_dict['purpose'] == 'installer'
         # Install slots run once then entire bundle removed
     
-    def test_multiple_slots(self, temp_dir, test_slots):
+    def test_multiple_slots(self, temp_dir, test_slots, test_builder):
         """Test bundle with multiple slots."""
         metadata = {
             "format": "PSPF/2025",
@@ -173,9 +173,9 @@ class TestPSPFSlots:
             "slots": [slot.to_dict() for slot in test_slots]
         }
         
-        bundle_path = temp_dir / "multi.pspf"
-        builder = PSPFBuilder()
-        builder.build(
+        bundle_path = temp_dir / "multi.psp"
+        # Use test_builder from fixture
+        test_builder.build(
             output_path=bundle_path,
             metadata=metadata,
             slots=test_slots
@@ -197,7 +197,7 @@ class TestPSPFSlots:
             assert slot_meta['lifecycle'] == slot.lifecycle
             assert slot_meta['purpose'] == slot.purpose
     
-    def test_slot_compression_gzip(self, temp_dir):
+    def test_slot_compression_gzip(self, temp_dir, test_builder):
         """Test gzip compression."""
         # Create highly compressible data
         data = b"REPEAT" * 1000
@@ -215,17 +215,20 @@ class TestPSPFSlots:
             path=slot_path
         )
         
-        builder = PSPFBuilder()
-        compressed_data = builder._compress_slot(slot)
+        # Use test_builder from fixture
+        from flavor.psp.format_2025.constants import COMPRESSION_GZIP
+        compressed_data, compression_type = test_builder._compress_data(data, "gzip")
         
         # Verify compression worked
         assert len(compressed_data) < len(data)
+        assert compression_type == COMPRESSION_GZIP
         
-        # Verify decompression
-        decompressed = zlib.decompress(compressed_data)
+        # Verify decompression  
+        import gzip
+        decompressed = gzip.decompress(compressed_data)
         assert decompressed == data
     
-    def test_slot_compression_none(self, temp_dir):
+    def test_slot_compression_none(self, temp_dir, test_builder):
         """Test no compression."""
         data = b"NOCOMPRESS" * 100
         slot_path = temp_dir / "nocompress.bin"
@@ -242,13 +245,15 @@ class TestPSPFSlots:
             path=slot_path
         )
         
-        builder = PSPFBuilder()
-        stored_data = builder._compress_slot(slot)
+        # Use test_builder from fixture
+        from flavor.psp.format_2025.constants import COMPRESSION_NONE
+        stored_data, compression_type = test_builder._compress_data(data, "none")
         
         # Verify no compression
         assert stored_data == data
+        assert compression_type == COMPRESSION_NONE
     
-    def test_slot_checksum_verification(self, temp_dir):
+    def test_slot_checksum_verification(self, temp_dir, test_builder):
         """Test slot checksum verification."""
         # Create slot with known checksum
         data = b"CHECKSUM_TEST"
@@ -269,9 +274,9 @@ class TestPSPFSlots:
         )
         
         # Build bundle
-        bundle_path = temp_dir / "checksum.pspf"
-        builder = PSPFBuilder()
-        builder.build(
+        bundle_path = temp_dir / "checksum.psp"
+        # Use test_builder from fixture
+        test_builder.build(
             output_path=bundle_path,
             metadata={"format": "PSPF/2025", "package": {"name": "test", "version": "1.0"}},
             slots=[slot]
@@ -281,11 +286,11 @@ class TestPSPFSlots:
         reader = PSPFReader(bundle_path)
         assert reader.verify_all_checksums()
     
-    def test_slot_table_structure(self, temp_dir, test_slots):
+    def test_slot_table_structure(self, temp_dir, test_slots, test_builder):
         """Test slot table binary structure."""
-        bundle_path = temp_dir / "table.pspf"
-        builder = PSPFBuilder()
-        builder.build(
+        bundle_path = temp_dir / "table.psp"
+        # Use test_builder from fixture
+        test_builder.build(
             output_path=bundle_path,
             metadata={"format": "PSPF/2025", "package": {"name": "test", "version": "1.0"}},
             slots=test_slots
@@ -314,7 +319,7 @@ class TestPSPFSlots:
                 assert descriptor.size > 0
                 assert descriptor.checksum != 0
     
-    def test_slot_extraction_caching(self, temp_dir):
+    def test_slot_extraction_caching(self, temp_dir, test_builder):
         """Test slot caching metadata."""
         # Create a bundle with a cacheable slot
         slot_path = temp_dir / "cached.txt"
@@ -332,9 +337,9 @@ class TestPSPFSlots:
         )
         
         # Build bundle
-        bundle_path = temp_dir / "cached.pspf"
-        builder = PSPFBuilder()
-        builder.build(
+        bundle_path = temp_dir / "cached.psp"
+        # Use test_builder from fixture
+        test_builder.build(
             output_path=bundle_path,
             metadata={"format": "PSPF/2025", "package": {"name": "cached", "version": "1.0"}},
             slots=[slot]
@@ -346,7 +351,7 @@ class TestPSPFSlots:
         slot_meta = metadata['slots'][0]
         assert slot_meta['lifecycle'] == 'persistent'  # Persistent slots can be cached
     
-    def test_slot_metadata_serialization(self):
+    def test_slot_metadata_serialization(self, test_builder):
         """Test SlotMetadata to_dict serialization."""
         slot = SlotMetadata(
             index=5,
@@ -370,9 +375,10 @@ class TestPSPFSlots:
         assert slot_dict['encoding'] == "none"
         assert slot_dict['purpose'] == "library"
         assert slot_dict['lifecycle'] == "volatile"
-        assert slot_dict['path'] == "/tmp/test"
+        # Path should not be included in serialized metadata
+        assert 'path' not in slot_dict
     
-    def test_large_slot_handling(self, temp_dir):
+    def test_large_slot_handling(self, temp_dir, test_builder):
         """Test handling of large slots."""
         # Create a 10MB slot
         large_data = os.urandom(10 * 1024 * 1024)
@@ -391,9 +397,9 @@ class TestPSPFSlots:
         )
         
         # Build bundle
-        bundle_path = temp_dir / "large.pspf"
-        builder = PSPFBuilder()
-        builder.build(
+        bundle_path = temp_dir / "large.psp"
+        # Use test_builder from fixture
+        test_builder.build(
             output_path=bundle_path,
             metadata={"format": "PSPF/2025", "package": {"name": "large", "version": "1.0"}},
             slots=[slot]

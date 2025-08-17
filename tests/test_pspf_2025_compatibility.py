@@ -34,7 +34,7 @@ class TestPSPFCompatibility:
         import shutil
         shutil.rmtree(temp_path)
     
-    def test_python_builder_go_launcher(self, temp_dir):
+    def test_python_builder_go_launcher(self, temp_dir, test_builder):
         """Test Python builder with Go launcher."""
         # Build with Python
         slot_path = temp_dir / "app.py"
@@ -51,9 +51,9 @@ class TestPSPFCompatibility:
             path=slot_path
         )
         
-        bundle_path = temp_dir / "py_go.pspf"
-        builder = PSPFBuilder()
-        builder.build(
+        bundle_path = temp_dir / "py_go.psp"
+        # Use test_builder from fixture
+        test_builder.build(
             output_path=bundle_path,
             metadata={
                 "format": "PSPF/2025",
@@ -74,14 +74,14 @@ class TestPSPFCompatibility:
         metadata = reader.read_metadata()
         assert len(metadata['slots']) == 1
     
-    def test_go_builder_rust_launcher(self, temp_dir):
+    def test_go_builder_rust_launcher(self, temp_dir, test_builder):
         """Test Go builder with Rust launcher."""
         # Simulate Go-built bundle
-        bundle_path = temp_dir / "go_rust.pspf"
+        bundle_path = temp_dir / "go_rust.psp"
         
         # Build with standard format
-        builder = PSPFBuilder()
-        builder.build(
+        # Use test_builder from fixture
+        test_builder.build(
             output_path=bundle_path,
             metadata={
                 "format": "PSPF/2025",
@@ -103,13 +103,13 @@ class TestPSPFCompatibility:
         reader = PSPFReader(bundle_path)
         assert reader.verify_all_checksums()
     
-    def test_rust_builder_python_launcher(self, temp_dir):
+    def test_rust_builder_python_launcher(self, temp_dir, test_builder):
         """Test Rust builder with Python launcher."""
         # Simulate Rust-built bundle
-        bundle_path = temp_dir / "rust_py.pspf"
+        bundle_path = temp_dir / "rust_py.psp"
         
-        builder = PSPFBuilder()
-        builder.build(
+        # Use test_builder from fixture
+        test_builder.build(
             output_path=bundle_path,
             metadata={
                 "format": "PSPF/2025",
@@ -131,7 +131,7 @@ class TestPSPFCompatibility:
         magic_str = magic.decode('utf-8')
         assert magic_str == '🪄'  # Magic wand emoji
     
-    def test_checksum_compatibility(self, temp_dir):
+    def test_checksum_compatibility(self, temp_dir, test_builder):
         """Test checksum computation across languages."""
         # Create test data
         test_data = b"The quick brown fox jumps over the lazy dog"
@@ -160,7 +160,7 @@ class TestPSPFCompatibility:
             computed = hashlib.sha256(test_data).hexdigest()
             assert computed == expected_sha256
     
-    def test_compression_compatibility(self, temp_dir):
+    def test_compression_compatibility(self, temp_dir, test_builder):
         """Test compression algorithm compatibility."""
         # Create slots with different compression
         test_data = b"Compress me!" * 100
@@ -188,9 +188,9 @@ class TestPSPFCompatibility:
             ))
         
         # Build bundle
-        bundle_path = temp_dir / "compressed.pspf"
-        builder = PSPFBuilder()
-        builder.build(
+        bundle_path = temp_dir / "compressed.psp"
+        # Use test_builder from fixture
+        test_builder.build(
             output_path=bundle_path,
             metadata={
                 "format": "PSPF/2025",
@@ -207,13 +207,13 @@ class TestPSPFCompatibility:
         for slot_meta in metadata['slots']:
             assert slot_meta['encoding'] in ["gzip", "none"]
     
-    def test_utf8_emoji_handling(self, temp_dir):
+    def test_utf8_emoji_handling(self, temp_dir, test_builder):
         """Test UTF-8 emoji handling across languages."""
         # Test emoji magic is just magic wand
         
-        bundle_path = temp_dir / "emoji_test.pspf"
-        builder = PSPFBuilder()
-        builder.build(
+        bundle_path = temp_dir / "emoji_test.psp"
+        # Use test_builder from fixture
+        test_builder.build(
             output_path=bundle_path,
             metadata={"format": "PSPF/2025", "package": {"name": "emoji", "version": "1.0"}},
             slots=[],
@@ -234,7 +234,7 @@ class TestPSPFCompatibility:
         assert len(emoji_bytes) == 4
         assert emoji_bytes == '🪄'.encode('utf-8')
     
-    def test_platform_path_normalization(self, temp_dir):
+    def test_platform_path_normalization(self, temp_dir, test_builder):
         """Test cross-platform path handling."""
         # Windows-style paths
         windows_paths = [
@@ -258,9 +258,9 @@ class TestPSPFCompatibility:
             }
         }
         
-        bundle_path = temp_dir / "paths.pspf"
-        builder = PSPFBuilder()
-        builder.build(
+        bundle_path = temp_dir / "paths.psp"
+        # Use test_builder from fixture
+        test_builder.build(
             output_path=bundle_path,
             metadata=metadata,
             slots=[]
@@ -273,12 +273,12 @@ class TestPSPFCompatibility:
         # Paths should be preserved
         assert 'paths' in read_metadata
     
-    def test_binary_parsing_compatibility(self, temp_dir):
+    def test_binary_parsing_compatibility(self, temp_dir, test_builder):
         """Test binary structure parsing compatibility."""
         # Create bundle
-        bundle_path = temp_dir / "binary_test.pspf"
-        builder = PSPFBuilder()
-        builder.build(
+        bundle_path = temp_dir / "binary_test.psp"
+        # Use test_builder from fixture
+        test_builder.build(
             output_path=bundle_path,
             metadata={"format": "PSPF/2025", "package": {"name": "binary", "version": "1.0"}},
             slots=[]
@@ -304,7 +304,7 @@ class TestPSPFCompatibility:
             
             # All parsers should read identical values
     
-    def test_metadata_json_compatibility(self, temp_dir):
+    def test_metadata_json_compatibility(self, temp_dir, test_builder):
         """Test JSON metadata compatibility."""
         # Complex metadata with edge cases
         metadata = {
@@ -326,9 +326,9 @@ class TestPSPFCompatibility:
             "array": [1, 2.5, "three", None, True]
         }
         
-        bundle_path = temp_dir / "json_test.pspf"
-        builder = PSPFBuilder()
-        builder.build(
+        bundle_path = temp_dir / "json_test.psp"
+        # Use test_builder from fixture
+        test_builder.build(
             output_path=bundle_path,
             metadata=metadata,
             slots=[]
@@ -345,14 +345,13 @@ class TestPSPFCompatibility:
         assert read_metadata['null_value'] is None
         assert read_metadata['boolean'] is True
     
-    def test_large_file_handling(self, temp_dir):
+    def test_large_file_handling(self, temp_dir, test_builder):
         """Test 2GB+ file handling."""
         # Create a large slot reference (not actual 2GB for testing)
         large_slot = SlotMetadata(
             index=0,
             name="large_file",
             size=2 * 1024 * 1024 * 1024 + 1,  # 2GB + 1 byte
-            compressed_size=1024 * 1024 * 1024,  # 1GB compressed
             checksum="abc123",
             encoding="none",  # Large files often use no compression
             purpose="data",
@@ -365,9 +364,9 @@ class TestPSPFCompatibility:
             "slots": [large_slot.to_dict()]
         }
         
-        bundle_path = temp_dir / "large.pspf"
-        builder = PSPFBuilder()
-        builder.build(
+        bundle_path = temp_dir / "large.psp"
+        # Use test_builder from fixture
+        test_builder.build(
             output_path=bundle_path,
             metadata=metadata,
             slots=[]  # Don't actually include the large file
@@ -381,12 +380,12 @@ class TestPSPFCompatibility:
         assert slot_meta['size'] == 2 * 1024 * 1024 * 1024 + 1
         assert slot_meta['size'] > 2**31 - 1  # Larger than 32-bit signed max
     
-    def test_endianness_handling(self, temp_dir):
+    def test_endianness_handling(self, temp_dir, test_builder):
         """Test little-endian consistency."""
         # PSPF mandates little-endian
-        bundle_path = temp_dir / "endian.pspf"
-        builder = PSPFBuilder()
-        builder.build(
+        bundle_path = temp_dir / "endian.psp"
+        # Use test_builder from fixture
+        test_builder.build(
             output_path=bundle_path,
             metadata={"format": "PSPF/2025", "package": {"name": "endian", "version": "1.0"}},
             slots=[]
@@ -410,7 +409,7 @@ class TestPSPFCompatibility:
             assert version_le == 0x20250001
             assert version_be != 0x20250001
     
-    def test_node_compatibility(self, temp_dir):
+    def test_node_compatibility(self, temp_dir, test_builder):
         """Test Node.js launcher compatibility."""
         # Create JavaScript payload
         js_path = temp_dir / "app.js"
@@ -420,7 +419,6 @@ class TestPSPFCompatibility:
             index=0,
             name="app",
             size=js_path.stat().st_size,
-            compressed_size=0,
             checksum="abc",
             encoding="gzip",
             purpose="payload",
@@ -428,9 +426,9 @@ class TestPSPFCompatibility:
             path=js_path
         )
         
-        bundle_path = temp_dir / "node.pspf"
-        builder = PSPFBuilder()
-        builder.build(
+        bundle_path = temp_dir / "node.psp"
+        # Use test_builder from fixture
+        test_builder.build(
             output_path=bundle_path,
             metadata={"format": "PSPF/2025", "package": {"name": "node-test", "version": "1.0"}},
             slots=[slot],

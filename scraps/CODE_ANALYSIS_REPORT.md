@@ -47,10 +47,10 @@
 
 ### Self-Hosting Demonstrated ✅
 Successfully built and tested all 4 launcher/builder combinations:
-- `flavor-go-go.pspf` (49MB) - Go builder + Go launcher
-- `flavor-go-rust.pspf` (47MB) - Go builder + Rust launcher  
-- `flavor-rust-go.pspf` (49MB) - Go builder + Go launcher (built by flavor-go-rust.pspf)
-- `flavor-rust-rust.pspf` (47MB) - Go builder + Rust launcher (built by flavor-rust-go.pspf)
+- `flavor-go-go.psp` (49MB) - Go builder + Go launcher
+- `flavor-go-rust.psp` (47MB) - Go builder + Rust launcher  
+- `flavor-rust-go.psp` (49MB) - Go builder + Go launcher (built by flavor-go-rust.psp)
+- `flavor-rust-rust.psp` (47MB) - Go builder + Rust launcher (built by flavor-rust-go.psp)
 
 Each package can build any other package, proving the system is fully self-hosting.
 

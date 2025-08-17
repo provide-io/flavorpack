@@ -175,8 +175,8 @@ pspf extract --slot models ./ml-app
 pspf repack --compress zstd ./big-app
 
 # Language-specific tools complement
-pip install --from-pspf ./python-app.pspf
-cargo pspf-publish ./rust-tool.pspf
+pip install --from-pspf ./python-app.psp
+cargo pspf-publish ./rust-tool.psp
 ```
 
 ## It's Not Perfect (But It's Honest)

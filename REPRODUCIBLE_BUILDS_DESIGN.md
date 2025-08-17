@@ -26,7 +26,7 @@ flavor package \
   --private-key path/to/signing.key \    # Use specific signing key
   --public-key path/to/verify.key \       # Use specific public key
   --timestamp "2025-01-01T00:00:00Z" \    # Fixed build timestamp
-  --output package.pspf
+  --output package.psp
 ```
 
 ### Key Handling Hierarchy

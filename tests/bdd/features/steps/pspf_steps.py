@@ -105,7 +105,7 @@ def step_impl(context: Context):
     }
     
     # Build bundle
-    bundle_path = context.test_bundle.temp_dir / "test.pspf"
+    bundle_path = context.test_bundle.temp_dir / "test.psp"
     builder.build(
         output_path=bundle_path,
         metadata=context.test_bundle.metadata,
@@ -291,7 +291,7 @@ def step_impl(context: Context, args: str):
     
     # In real implementation, this would parse the manifest
     # For testing, we'll build with defaults
-    bundle_path = context.test_bundle.temp_dir / "output.pspf"
+    bundle_path = context.test_bundle.temp_dir / "output.psp"
     builder.build(
         output_path=bundle_path,
         manifest_path=context.manifest_path,

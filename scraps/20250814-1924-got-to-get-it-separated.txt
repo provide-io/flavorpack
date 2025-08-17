@@ -146,7 +146,7 @@
        330 -          path1 = launcher.extract_slot(slot, launcher.cache_dir)
        331 -          assert path1.exists()
        329 +          # Build bundle
-       330 +          bundle_path = temp_dir / "cached.pspf"
+       330 +          bundle_path = temp_dir / "cached.psp"
        331 +          builder = PSPFBuilder()
        332 +          builder.build(
        333 +              output_path=bundle_path,
@@ -327,7 +327,7 @@
 ⏺ Update(../../tests/packaging/test_orchestrator.py)
   ⎿  Updated ../../tests/packaging/test_orchestrator.py with 8 additions and 2 removals
        13        manifest_dir = tmp_path
-       14        output_path = tmp_path / "dist" / "package.pspf"
+       14        output_path = tmp_path / "dist" / "package.psp"
        15    
        16 +      # Create mock keys
        17 +      keys_dir = tmp_path / "keys"
@@ -564,17 +564,17 @@
 
 ⏺ Good, only one TODO and it's in tests. Let me create a quick end-to-end test:
 
-⏺ Bash(cd helpers/taster && ../../workenv/flavor_darwin_arm64/bin/flavor package --launcher rust --output dist/taster.pspf 2>&1 | tail -5)
+⏺ Bash(cd helpers/taster && ../../workenv/flavor_darwin_arm64/bin/flavor package --launcher rust --output dist/taster.psp 2>&1 | tail -5)
   ⎿ 2025-08-14 17:38:51.679320 [info     ] 🗣️ Running command: /REDACTED_ABS_PATH --manife
     st /REDACTED_TMP --output /REDACTED_ABS_PATH -
     -launcher rust --public-key /REDACTED_ABS_PATH service_name=flavor
     … +4 lines (ctrl+r to expand)
 
 
-⏺ Bash(./dist/taster.pspf --version 2>&1)
-  ⎿  Error: (eval):1: permission denied: ./dist/taster.pspf
+⏺ Bash(./dist/taster.psp --version 2>&1)
+  ⎿  Error: (eval):1: permission denied: ./dist/taster.psp
 
-⏺ Bash(chmod +x dist/taster.pspf && ./dist/taster.pspf --version 2>&1)
+⏺ Bash(chmod +x dist/taster.psp && ./dist/taster.psp --version 2>&1)
   ⎿  flavor-rs-launcher 0.3.0        
      Built: 2025-08-15T00:38:51+00:00
 
@@ -617,7 +617,7 @@
   1. Core Functionality Working
     - PSPF 2025 format implementation complete
     - Go and Rust builders/launchers built and functional
-    - End-to-end packaging works (taster.pspf builds and runs)
+    - End-to-end packaging works (taster.psp builds and runs)
     - Reproducible builds via key-seed option
   2. Test Infrastructure Solid
     - 128 of 141 tests passing (91% pass rate)
@@ -650,8 +650,8 @@
   ../../workenv/flavor_darwin_arm64/bin/flavor package --launcher rust
 
   # 3. Test the built package
-  chmod +x dist/taster.pspf
-  ./dist/taster.pspf --version
+  chmod +x dist/taster.psp
+  ./dist/taster.psp --version
 
   # 4. Run test suite
   cd ../..
@@ -988,13 +988,13 @@
 
 ⏺ Good! Now test the package build command:
 
-⏺ Bash(cd helpers/taster && python -m taster.cli package build --launcher rust --output dist/taster-new.pspf 2>&1 | tail -5)
+⏺ Bash(cd helpers/taster && python -m taster.cli package build --launcher rust --output dist/taster-new.psp 2>&1 | tail -5)
   ⎿  Error: (eval):cd:1: no such file or directory: helpers/taster
 
 ⏺ Bash(pwd)
   ⎿  /REDACTED_ABS_PATH
 
-⏺ Bash(python -m taster.cli package build --launcher rust --output dist/taster-new.pspf 2>&1 | tail -5)
+⏺ Bash(python -m taster.cli package build --launcher rust --output dist/taster-new.psp 2>&1 | tail -5)
   ⎿  2025-08-14 17:45:33.140390 [info     ] 🗣️ Using pre-built builder from /REDACTED_ABS_PATH                            
      2025-08-14 17:45:33.141436 [info     ] 🗣️ Building flavor package...
      2025-08-14 17:45:33.141480 [info     ] 🗣️ Running command: /REDACTED_ABS_PATH --manife
@@ -1058,13 +1058,13 @@
   Example usage:
 
   # Run Flavor's tests
-  ./dist/taster.pspf test flavor --coverage
+  ./dist/taster.psp test flavor --coverage
 
   # Build a package
-  ./dist/taster.pspf package build --launcher rust
+  ./dist/taster.psp package build --launcher rust
 
   # Clean everything
-  ./dist/taster.pspf test clean
+  ./dist/taster.psp test clean
 
   What's integrated:
 
@@ -1157,9 +1157,9 @@
   ⎿  0000000      7365    2074    ae64    7c61    0861
      0000012
 
-⏺ Now let's test with the actual taster.pspf bundle:
+⏺ Now let's test with the actual taster.psp bundle:
 
-⏺ Bash(cd dist && chmod +x taster.pspf && echo "TESTING" | ./taster.pspf pipe stdin --transform hash 2>&1)
+⏺ Bash(cd dist && chmod +x taster.psp && echo "TESTING" | ./taster.psp pipe stdin --transform hash 2>&1)
   ⎿  Error: Traceback (most recent call last):
        File "<frozen runpy>", line 198, in _run_module_as_main
        File "<frozen runpy>", line 88, in _run_code

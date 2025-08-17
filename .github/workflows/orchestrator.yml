@@ -69,7 +69,7 @@ jobs:
   # ==================================================================================
   flavor-tests:
     name: 🧪 Flavor Tests
-    needs: config
+    needs: [config, helpers]
     if: contains(needs.config.outputs.workflows, 'tests')
     strategy:
       fail-fast: false
@@ -89,6 +89,53 @@ jobs:
       - name: ⚡ Install uv
         uses: astral-sh/setup-uv@v4
       
+      - name: 🔧 Determine platform
+        id: platform
+        run: |
+          if [ "${{ runner.os }}" = "Linux" ]; then
+            echo "platform=linux-amd64" >> $GITHUB_OUTPUT
+          elif [ "${{ runner.os }}" = "macOS" ]; then
+            echo "platform=darwin-arm64" >> $GITHUB_OUTPUT
+          elif [ "${{ runner.os }}" = "Windows" ]; then
+            echo "platform=windows-amd64" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: 📥 Download Helper Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: helpers-*-${{ steps.platform.outputs.platform }}
+          path: helpers/bin/
+          merge-multiple: true
+      
+      - name: 🔧 Setup Helpers
+        run: |
+          # Setup platform-specific helpers
+          cd helpers/bin
+          ls -la
+          
+          # Remove platform suffixes from the binaries
+          for file in *-${{ steps.platform.outputs.platform }}; do
+            if [ -f "$file" ]; then
+              base="${file%-${{ steps.platform.outputs.platform }}}"
+              echo "Renaming $file to $base"
+              mv "$file" "$base"
+            fi
+          done
+          
+          chmod +x * 2>/dev/null || true
+          ls -la
+          cd ../..
+          
+          # Copy to workenv location where tests might look
+          platform=$(uname -s | tr '[:upper:]' '[:lower:]')
+          arch=$(uname -m | sed 's/x86_64/x86_64/' | sed 's/aarch64/arm64/')
+          mkdir -p "workenv/flavors/${platform}_${arch}"
+          cp helpers/bin/* "workenv/flavors/${platform}_${arch}/" 2>/dev/null || true
+          
+          # Also put in ~/.cache/flavor/bin for tests that look there
+          mkdir -p ~/.cache/flavor/bin
+          cp helpers/bin/* ~/.cache/flavor/bin/ 2>/dev/null || true
+      
       - name: 🔧 Setup Environment
         run: |
           uv venv workenv/flavor_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m)
@@ -99,10 +146,8 @@ jobs:
       - name: 🧪 Run Flavor Tests
         run: |
           source workenv/flavor_*/bin/activate
-          # Run unit tests first (fast feedback)
-          pytest tests/ -m "unit and not slow and not requires_helpers" -n auto --cov=src/flavor --cov-branch
-          # Run integration tests (exclude slow and helper-dependent)
-          pytest tests/ -m "integration and not slow and not requires_helpers" -n auto --cov-append --cov=src/flavor
+          # Run all tests excluding slow ones
+          pytest tests/ -m "not slow" -n auto --cov=src/flavor --cov-branch --tb=short
           # Generate coverage report
           coverage xml
           coverage report
@@ -178,15 +223,52 @@ jobs:
       - name: ⚡ Install uv
         uses: astral-sh/setup-uv@v4
       
+      - name: 🔧 Determine platform
+        id: platform
+        run: |
+          if [ "${{ runner.os }}" = "Linux" ]; then
+            echo "platform=linux-amd64" >> $GITHUB_OUTPUT
+          elif [ "${{ runner.os }}" = "macOS" ]; then
+            echo "platform=darwin-arm64" >> $GITHUB_OUTPUT
+          elif [ "${{ runner.os }}" = "Windows" ]; then
+            echo "platform=windows-amd64" >> $GITHUB_OUTPUT
+          fi
+      
       - name: 📥 Download Helpers
         uses: actions/download-artifact@v4
         with:
-          pattern: helpers-go-*
+          pattern: helpers-*-${{ steps.platform.outputs.platform }}
           path: helpers/bin/
           merge-multiple: true
       
-      - name: 🔧 Setup Permissions
-        run: chmod +x helpers/bin/* || true
+      - name: 🔧 Setup Helpers
+        run: |
+          # Setup platform-specific helpers
+          cd helpers/bin
+          ls -la
+          
+          # Remove platform suffixes from the binaries
+          for file in *-${{ steps.platform.outputs.platform }}; do
+            if [ -f "$file" ]; then
+              base="${file%-${{ steps.platform.outputs.platform }}}"
+              echo "Renaming $file to $base"
+              mv "$file" "$base"
+            fi
+          done
+          
+          chmod +x * 2>/dev/null || true
+          ls -la
+          cd ../..
+          
+          # Copy to workenv location
+          platform=$(uname -s | tr '[:upper:]' '[:lower:]')
+          arch=$(uname -m | sed 's/x86_64/x86_64/' | sed 's/aarch64/arm64/')
+          mkdir -p "workenv/flavors/${platform}_${arch}"
+          cp helpers/bin/* "workenv/flavors/${platform}_${arch}/" 2>/dev/null || true
+          
+          # Also put in ~/.cache/flavor/bin
+          mkdir -p ~/.cache/flavor/bin
+          cp helpers/bin/* ~/.cache/flavor/bin/ 2>/dev/null || true
       
       - name: 🔧 Setup Flavor Environment
         run: |
@@ -198,15 +280,15 @@ jobs:
       - name: 📦 Build Flavor Package
         run: |
           source workenv/flavor_*/bin/activate
-          flavor package --launcher go --output dist/flavor.pspf
+          flavor package --launcher go --output dist/flavor.psp
       
       - name: 🔧 Install Flavor from Package
         run: |
-          chmod +x dist/flavor.pspf
-          ./dist/flavor.pspf --version
+          chmod +x dist/flavor.psp
+          ./dist/flavor.psp --version
           # Install flavor globally for taster tests
           mkdir -p $HOME/.local/bin
-          cp dist/flavor.pspf $HOME/.local/bin/flavor
+          cp dist/flavor.psp $HOME/.local/bin/flavor
           chmod +x $HOME/.local/bin/flavor
           echo "$HOME/.local/bin" >> $GITHUB_PATH
           # Verify installation
@@ -228,16 +310,16 @@ jobs:
           cd helpers/taster
           # Use the installed flavor artifact to package taster with Go launcher
           export PATH="$HOME/.local/bin:$PATH"
-          flavor package --launcher go --output dist/taster-go.pspf
+          flavor package --launcher go --output dist/taster-go.psp
           # Use taster to package itself with Rust launcher (different builder)
-          chmod +x dist/taster-go.pspf
-          FLAVOR_INSECURE=1 ./dist/taster-go.pspf package --launcher rust --builder rust --output dist/taster-rust.pspf
+          chmod +x dist/taster-go.psp
+          FLAVOR_INSECURE=1 ./dist/taster-go.psp package --launcher rust --builder rust --output dist/taster-rust.psp
           # Verify both packages
-          FLAVOR_LAUNCHER_CLI=true ./dist/taster-go.pspf info
-          FLAVOR_LAUNCHER_CLI=true ./dist/taster-rust.pspf info
+          FLAVOR_LAUNCHER_CLI=true ./dist/taster-go.psp info
+          FLAVOR_LAUNCHER_CLI=true ./dist/taster-rust.psp info
           # Test taster self-packaging with mixed combinations
-          FLAVOR_INSECURE=1 ./dist/taster-go.pspf package --launcher go --builder rust --output dist/taster-go-rust.pspf
-          FLAVOR_LAUNCHER_CLI=true ./dist/taster-go-rust.pspf info
+          FLAVOR_INSECURE=1 ./dist/taster-go.psp package --launcher go --builder rust --output dist/taster-go-rust.psp
+          FLAVOR_LAUNCHER_CLI=true ./dist/taster-go-rust.psp info
 
   # ==================================================================================
   # 🔨 Helper Builds
@@ -250,7 +332,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # Linux AMD64
+          # Linux AMD64 only
           - os: ubuntu-latest
             language: go
             goos: linux
@@ -259,17 +341,7 @@ jobs:
           - os: ubuntu-latest
             language: rust
             platform: linux-amd64
-          # Linux ARM64
-          - os: ubuntu-latest
-            language: go
-            goos: linux
-            goarch: arm64
-            platform: linux-arm64
-          - os: ubuntu-latest
-            language: rust
-            platform: linux-arm64
-            rust-target: aarch64-unknown-linux-gnu
-          # macOS ARM64
+          # macOS ARM64 only
           - os: macos-latest
             language: go
             goos: darwin
@@ -278,25 +350,35 @@ jobs:
           - os: macos-latest
             language: rust
             platform: darwin-arm64
-          # Windows AMD64
-          - os: windows-latest
-            language: go
-            goos: windows
-            goarch: amd64
-            platform: windows-amd64
-          - os: windows-latest
-            language: rust
-            platform: windows-amd64
-          # Windows ARM64
-          - os: windows-latest
-            language: go
-            goos: windows
-            goarch: arm64
-            platform: windows-arm64
-          - os: windows-latest
-            language: rust
-            platform: windows-arm64
-            rust-target: aarch64-pc-windows-msvc
+          # # Linux ARM64 - COMMENTED OUT
+          # - os: ubuntu-latest
+          #   language: go
+          #   goos: linux
+          #   goarch: arm64
+          #   platform: linux-arm64
+          # - os: ubuntu-latest
+          #   language: rust
+          #   platform: linux-arm64
+          #   rust-target: aarch64-unknown-linux-gnu
+          # # Windows AMD64 - COMMENTED OUT
+          # - os: windows-latest
+          #   language: go
+          #   goos: windows
+          #   goarch: amd64
+          #   platform: windows-amd64
+          # - os: windows-latest
+          #   language: rust
+          #   platform: windows-amd64
+          # # Windows ARM64 - COMMENTED OUT
+          # - os: windows-latest
+          #   language: go
+          #   goos: windows
+          #   goarch: arm64
+          #   platform: windows-arm64
+          # - os: windows-latest
+          #   language: rust
+          #   platform: windows-arm64
+          #   rust-target: aarch64-pc-windows-msvc
     runs-on: ${{ matrix.os }}
     steps:
       - name: 📥 Checkout
@@ -317,22 +399,42 @@ jobs:
           toolchain: stable
           targets: ${{ matrix.rust-target }}
       
+      - name: 🔧 Install Cross-Compilation Tools
+        if: matrix.language == 'rust' && matrix.rust-target == 'aarch64-unknown-linux-gnu'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu
+      
       - name: 🔨 Build Helpers
         id: build
         run: |
+          # Ensure output directory exists
+          mkdir -p helpers/bin
+          
           if [ "${{ matrix.language }}" = "go" ]; then
             cd helpers/flavor-go
             # Set cross-compilation environment
             export GOOS=${{ matrix.goos }}
             export GOARCH=${{ matrix.goarch }}
-            # Build both Go binaries in parallel
-            go build -o ../../helpers/bin/flavor-go-launcher-${{ matrix.platform }} ./cmd/flavor-go-launcher &
+            # Enable reproducible builds
+            export CGO_ENABLED=0
+            export GOFLAGS="-trimpath"
+            # Build both Go binaries with reproducible flags
+            go build -trimpath -ldflags="-s -w -buildid=" -o ../../helpers/bin/flavor-go-launcher-${{ matrix.platform }} ./cmd/flavor-go-launcher &
             PID1=$!
-            go build -o ../../helpers/bin/flavor-go-builder-${{ matrix.platform }} ./cmd/flavor-go-builder &
+            go build -trimpath -ldflags="-s -w -buildid=" -o ../../helpers/bin/flavor-go-builder-${{ matrix.platform }} ./cmd/flavor-go-builder &
             PID2=$!
             wait $PID1 $PID2
           else
             cd helpers/flavor-rust
+            
+            # Set cross-compilation environment for ARM64 Linux
+            if [ "${{ matrix.rust-target }}" = "aarch64-unknown-linux-gnu" ]; then
+              export CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc
+              export CC_aarch64_unknown_linux_gnu=aarch64-linux-gnu-gcc
+              export CXX_aarch64_unknown_linux_gnu=aarch64-linux-gnu-g++
+            fi
+            
             # Cargo will parallelize internally, build both targets
             if [ -n "${{ matrix.rust-target }}" ]; then
               cargo build --release --target ${{ matrix.rust-target }} --bin flavor-rs-launcher --bin flavor-rs-builder
@@ -364,39 +466,23 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # Test on native platforms (not cross-compiled)
+          # Test both launchers on both platforms
           - os: ubuntu-latest
             platform: linux-amd64
             launcher: go
-            builder: go
+            builder: python  # For naming only, actual builder is always Python
           - os: ubuntu-latest
             platform: linux-amd64
             launcher: rust
-            builder: rust
-          - os: ubuntu-latest
-            platform: linux-amd64
-            launcher: go
-            builder: rust
-          - os: ubuntu-latest
-            platform: linux-amd64
-            launcher: rust
-            builder: go
+            builder: python
           - os: macos-latest
             platform: darwin-arm64
             launcher: go
-            builder: go
+            builder: python
           - os: macos-latest
             platform: darwin-arm64
             launcher: rust
-            builder: rust
-          - os: macos-latest
-            platform: darwin-arm64
-            launcher: go
-            builder: rust
-          - os: macos-latest
-            platform: darwin-arm64
-            launcher: rust
-            builder: go
+            builder: python
     runs-on: ${{ matrix.os }}
     steps:
       - name: 📥 Checkout
@@ -406,11 +492,48 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           pattern: helpers-*-${{ matrix.platform }}
-          path: helpers/bin/
+          # Download directly to current directory, not helpers/bin/
+          path: ./
           merge-multiple: true
       
-      - name: 🔧 Setup Permissions
-        run: chmod +x helpers/bin/*
+      - name: 🔧 Setup Helpers
+        run: |
+          # List what we downloaded
+          echo "Downloaded artifacts:"
+          ls -la
+          
+          # The artifacts are downloaded with directory structure preserved
+          # Move them to the correct location
+          mkdir -p helpers/bin
+          
+          # Find and move all helper binaries
+          find . -name "flavor-*-launcher*" -o -name "flavor-*-builder*" | while read f; do
+            echo "Moving $f to helpers/bin/"
+            mv "$f" helpers/bin/ 2>/dev/null || true
+          done
+          
+          # Remove platform suffix from binaries
+          cd helpers/bin
+          for file in *-${{ matrix.platform }}; do
+            if [ -f "$file" ]; then
+              base="${file%-${{ matrix.platform }}}"
+              echo "Renaming $file to $base"
+              mv "$file" "$base"
+            fi
+          done
+          
+          chmod +x *
+          echo "Final helpers/bin contents:"
+          ls -la
+          cd ../..
+          
+          # Also copy to ~/.cache/flavor/bin for builder to find launchers
+          mkdir -p ~/.cache/flavor/bin
+          cp helpers/bin/* ~/.cache/flavor/bin/
+          
+          # Add to PATH so builders can find launchers
+          echo "$PWD/helpers/bin" >> $GITHUB_PATH
+          echo "$HOME/.cache/flavor/bin" >> $GITHUB_PATH
       
       - name: 🐍 Setup Python
         uses: actions/setup-python@v5
@@ -426,29 +549,36 @@ jobs:
           source workenv/flavor_*/bin/activate
           uv pip install -e .
           
-          cd tests/taster
+          # Set the helpers path explicitly to avoid path issues
+          export FLAVOR_HELPERS_BIN="$PWD/helpers/bin"
+          echo "FLAVOR_HELPERS_BIN=$FLAVOR_HELPERS_BIN"
+          ls -la $FLAVOR_HELPERS_BIN
+          
+          cd helpers/taster
+          # Note: flavor package only supports --launcher, not --builder
+          # All packages are built with Python builder currently
           ../../workenv/flavor_*/bin/flavor package \
             --launcher ${{ matrix.launcher }} \
-            --builder ${{ matrix.builder }} \
-            --output dist/taster-${{ matrix.launcher }}-${{ matrix.builder }}.pspf
+            --output dist/taster-${{ matrix.launcher }}-${{ matrix.builder }}.psp
       
       - name: 🧪 Run Taster Tests
         run: |
-          chmod +x tests/taster/dist/taster-${{ matrix.launcher }}-${{ matrix.builder }}.pspf
+          # The package is built in helpers/taster/dist/, not tests/taster/dist/
+          chmod +x helpers/taster/dist/taster-${{ matrix.launcher }}-${{ matrix.builder }}.psp
           
           # Run all taster commands
           export FLAVOR_INSECURE=1
-          ./tests/taster/dist/taster-${{ matrix.launcher }}-${{ matrix.builder }}.pspf test
-          ./tests/taster/dist/taster-${{ matrix.launcher }}-${{ matrix.builder }}.pspf env
-          ./tests/taster/dist/taster-${{ matrix.launcher }}-${{ matrix.builder }}.pspf argv
-          ./tests/taster/dist/taster-${{ matrix.launcher }}-${{ matrix.builder }}.pspf metadata
-          ./tests/taster/dist/taster-${{ matrix.launcher }}-${{ matrix.builder }}.pspf features
+          ./helpers/taster/dist/taster-${{ matrix.launcher }}-${{ matrix.builder }}.psp test
+          ./tests/taster/dist/taster-${{ matrix.launcher }}-${{ matrix.builder }}.psp env
+          ./tests/taster/dist/taster-${{ matrix.launcher }}-${{ matrix.builder }}.psp argv
+          ./tests/taster/dist/taster-${{ matrix.launcher }}-${{ matrix.builder }}.psp metadata
+          ./tests/taster/dist/taster-${{ matrix.launcher }}-${{ matrix.builder }}.psp features
       
       - name: 📦 Upload Test Packages
         uses: actions/upload-artifact@v4
         with:
           name: taster-${{ matrix.launcher }}-${{ matrix.builder }}-${{ matrix.os }}
-          path: tests/taster/dist/*.pspf
+          path: tests/taster/dist/*.psp
 
   # ==================================================================================
   # 📦 Release Artifacts

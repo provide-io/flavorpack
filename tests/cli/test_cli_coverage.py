@@ -42,7 +42,7 @@ def test_cli_verify_fails(tmp_path: Path) -> None:
     Tests that the `verify` command handles exceptions from the reader.
     """
     runner = CliRunner()
-    package_file = tmp_path / "package.pspf"
+    package_file = tmp_path / "package.psp"
     package_file.touch()
 
     with patch(

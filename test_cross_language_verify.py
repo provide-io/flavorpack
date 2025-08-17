@@ -158,7 +158,7 @@ def main():
                 manifest_path = create_test_manifest(temp_path)
                 
                 # Build package
-                package_path = temp_path / f"test_{builder_name.lower()}_{verifier_name.lower()}.pspf"
+                package_path = temp_path / f"test_{builder_name.lower()}_{verifier_name.lower()}.psp"
                 launcher = launchers[builder_name]
                 
                 print(f"\nTesting {builder_name} builder -> {verifier_name} verifier (launcher: {launcher})")
@@ -176,13 +176,13 @@ def main():
                     # Rebuild with appropriate launcher for CLI verification
                     if verifier_name == "Go" and launcher != "go":
                         # Need Go launcher for Go CLI verification
-                        package_path = temp_path / f"test_{builder_name.lower()}_go_launcher.pspf"
+                        package_path = temp_path / f"test_{builder_name.lower()}_go_launcher.psp"
                         if not build_func(manifest_path, package_path, launcher="go", key_seed="test123"):
                             results.append((builder_name, verifier_name, "REBUILD_FAILED"))
                             continue
                     elif verifier_name == "Rust" and launcher != "rust":
                         # Need Rust launcher for Rust CLI verification
-                        package_path = temp_path / f"test_{builder_name.lower()}_rust_launcher.pspf"
+                        package_path = temp_path / f"test_{builder_name.lower()}_rust_launcher.psp"
                         if not build_func(manifest_path, package_path, launcher="rust", key_seed="test123"):
                             results.append((builder_name, verifier_name, "REBUILD_FAILED"))
                             continue

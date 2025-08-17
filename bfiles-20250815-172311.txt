@@ -298,7 +298,7 @@ include pyproject.toml
 **Fix**: Add `flavor cache explain <package>` command
 
 ### 11. File Extension Inconsistency
-**Issue**: Mixed `.psp` and `.pspf` references still in:
+**Issue**: Mixed `.psp` and `.psp` references still in:
 - Test files
 - Comments
 - Old documentation
@@ -690,12 +690,12 @@ echo "🔥 Running chaos tests..."
 # Test 1: Disk full
 echo "Testing disk full..."
 dd if=/dev/zero of=/tmp/bigfile bs=1M count=10000 2>/dev/null
-flavor package --manifest pyproject.toml --output test.pspf
+flavor package --manifest pyproject.toml --output test.psp
 rm /tmp/bigfile
 
 # Test 2: Kill during extraction
 echo "Testing interruption..."
-flavor package --manifest pyproject.toml --output test.pspf &
+flavor package --manifest pyproject.toml --output test.psp &
 PID=$!
 sleep 2
 kill -TERM $PID
@@ -704,7 +704,7 @@ wait $PID
 # Test 3: Concurrent execution
 echo "Testing concurrency..."
 for i in {1..10}; do
-    ./test.pspf --test &
+    ./test.psp --test &
 done
 wait
 
@@ -723,7 +723,7 @@ def test_concurrent_package_builds():
     def build_package(index):
         start = time.time()
         try:
-            result = flavor.package(f"test_{index}.pspf")
+            result = flavor.package(f"test_{index}.psp")
             return ("success", time.time() - start)
         except Exception as e:
             return ("failure", str(e))
@@ -1196,8 +1196,8 @@ pspf extract --slot models ./ml-app
 pspf repack --compress zstd ./big-app
 
 # Language-specific tools complement
-pip install --from-pspf ./python-app.pspf
-cargo pspf-publish ./rust-tool.pspf
+pip install --from-pspf ./python-app.psp
+cargo pspf-publish ./rust-tool.psp
 ```
 
 ## It's Not Perfect (But It's Honest)
@@ -3736,16 +3736,16 @@ func extractSlot(exePath, slotStr, outputDir string, logger hclog.Logger) {
 }
 
 func detectLauncherType(exePath string) string {
-	if strings.Contains(os.Args[0], "test-cli.pspf") || strings.Contains(exePath, "test-cli.pspf") {
+	if strings.Contains(os.Args[0], "test-cli.psp") || strings.Contains(exePath, "test-cli.psp") {
 		return "go"
 	}
-	if strings.Contains(os.Args[0], "rust-go.pspf") || strings.Contains(exePath, "rust-go.pspf") {
+	if strings.Contains(os.Args[0], "rust-go.psp") || strings.Contains(exePath, "rust-go.psp") {
 		return "go"
 	}
-	if strings.Contains(os.Args[0], "go-rust.pspf") || strings.Contains(exePath, "go-rust.pspf") {
+	if strings.Contains(os.Args[0], "go-rust.psp") || strings.Contains(exePath, "go-rust.psp") {
 		return "rust"
 	}
-	if strings.Contains(os.Args[0], "rust-rust.pspf") || strings.Contains(exePath, "rust-rust.pspf") {
+	if strings.Contains(os.Args[0], "rust-rust.psp") || strings.Contains(exePath, "rust-rust.psp") {
 		return "rust"
 	}
 
@@ -9138,7 +9138,7 @@ pub fn get_cache_dir() -> std::path::PathBuf {
        330 -          path1 = launcher.extract_slot(slot, launcher.cache_dir)
        331 -          assert path1.exists()
        329 +          # Build bundle
-       330 +          bundle_path = temp_dir / "cached.pspf"
+       330 +          bundle_path = temp_dir / "cached.psp"
        331 +          builder = PSPFBuilder()
        332 +          builder.build(
        333 +              output_path=bundle_path,
@@ -9319,7 +9319,7 @@ pub fn get_cache_dir() -> std::path::PathBuf {
 ⏺ Update(../../tests/packaging/test_orchestrator.py)
   ⎿  Updated ../../tests/packaging/test_orchestrator.py with 8 additions and 2 removals
        13        manifest_dir = tmp_path
-       14        output_path = tmp_path / "dist" / "package.pspf"
+       14        output_path = tmp_path / "dist" / "package.psp"
        15    
        16 +      # Create mock keys
        17 +      keys_dir = tmp_path / "keys"
@@ -9556,17 +9556,17 @@ pub fn get_cache_dir() -> std::path::PathBuf {
 
 ⏺ Good, only one TODO and it's in tests. Let me create a quick end-to-end test:
 
-⏺ Bash(cd helpers/taster && ../../workenv/flavor_darwin_arm64/bin/flavor package --launcher rust --output dist/taster.pspf 2>&1 | tail -5)
+⏺ Bash(cd helpers/taster && ../../workenv/flavor_darwin_arm64/bin/flavor package --launcher rust --output dist/taster.psp 2>&1 | tail -5)
   ⎿ 2025-08-14 17:38:51.679320 [info     ] 🗣️ Running command: /REDACTED_ABS_PATH --manife
     st /REDACTED_TMP --output /REDACTED_ABS_PATH -
     -launcher rust --public-key /REDACTED_ABS_PATH service_name=flavor
     … +4 lines (ctrl+r to expand)
 
 
-⏺ Bash(./dist/taster.pspf --version 2>&1)
-  ⎿  Error: (eval):1: permission denied: ./dist/taster.pspf
+⏺ Bash(./dist/taster.psp --version 2>&1)
+  ⎿  Error: (eval):1: permission denied: ./dist/taster.psp
 
-⏺ Bash(chmod +x dist/taster.pspf && ./dist/taster.pspf --version 2>&1)
+⏺ Bash(chmod +x dist/taster.psp && ./dist/taster.psp --version 2>&1)
   ⎿  flavor-rs-launcher 0.3.0        
      Built: 2025-08-15T00:38:51+00:00
 
@@ -9609,7 +9609,7 @@ pub fn get_cache_dir() -> std::path::PathBuf {
   1. Core Functionality Working
     - PSPF 2025 format implementation complete
     - Go and Rust builders/launchers built and functional
-    - End-to-end packaging works (taster.pspf builds and runs)
+    - End-to-end packaging works (taster.psp builds and runs)
     - Reproducible builds via key-seed option
   2. Test Infrastructure Solid
     - 128 of 141 tests passing (91% pass rate)
@@ -9642,8 +9642,8 @@ pub fn get_cache_dir() -> std::path::PathBuf {
   ../../workenv/flavor_darwin_arm64/bin/flavor package --launcher rust
 
   # 3. Test the built package
-  chmod +x dist/taster.pspf
-  ./dist/taster.pspf --version
+  chmod +x dist/taster.psp
+  ./dist/taster.psp --version
 
   # 4. Run test suite
   cd ../..
@@ -9980,13 +9980,13 @@ pub fn get_cache_dir() -> std::path::PathBuf {
 
 ⏺ Good! Now test the package build command:
 
-⏺ Bash(cd helpers/taster && python -m taster.cli package build --launcher rust --output dist/taster-new.pspf 2>&1 | tail -5)
+⏺ Bash(cd helpers/taster && python -m taster.cli package build --launcher rust --output dist/taster-new.psp 2>&1 | tail -5)
   ⎿  Error: (eval):cd:1: no such file or directory: helpers/taster
 
 ⏺ Bash(pwd)
   ⎿  /REDACTED_ABS_PATH
 
-⏺ Bash(python -m taster.cli package build --launcher rust --output dist/taster-new.pspf 2>&1 | tail -5)
+⏺ Bash(python -m taster.cli package build --launcher rust --output dist/taster-new.psp 2>&1 | tail -5)
   ⎿  2025-08-14 17:45:33.140390 [info     ] 🗣️ Using pre-built builder from /REDACTED_ABS_PATH                            
      2025-08-14 17:45:33.141436 [info     ] 🗣️ Building flavor package...
      2025-08-14 17:45:33.141480 [info     ] 🗣️ Running command: /REDACTED_ABS_PATH --manife
@@ -10050,13 +10050,13 @@ pub fn get_cache_dir() -> std::path::PathBuf {
   Example usage:
 
   # Run Flavor's tests
-  ./dist/taster.pspf test flavor --coverage
+  ./dist/taster.psp test flavor --coverage
 
   # Build a package
-  ./dist/taster.pspf package build --launcher rust
+  ./dist/taster.psp package build --launcher rust
 
   # Clean everything
-  ./dist/taster.pspf test clean
+  ./dist/taster.psp test clean
 
   What's integrated:
 
@@ -10149,9 +10149,9 @@ pub fn get_cache_dir() -> std::path::PathBuf {
   ⎿  0000000      7365    2074    ae64    7c61    0861
      0000012
 
-⏺ Now let's test with the actual taster.pspf bundle:
+⏺ Now let's test with the actual taster.psp bundle:
 
-⏺ Bash(cd dist && chmod +x taster.pspf && echo "TESTING" | ./taster.pspf pipe stdin --transform hash 2>&1)
+⏺ Bash(cd dist && chmod +x taster.psp && echo "TESTING" | ./taster.psp pipe stdin --transform hash 2>&1)
   ⎿  Error: Traceback (most recent call last):
        File "<frozen runpy>", line 198, in _run_module_as_main
        File "<frozen runpy>", line 88, in _run_code
@@ -10545,13 +10545,13 @@ pub fn get_cache_dir() -> std::path::PathBuf {
 ⏺ Bash(tar -czf payload.tar.gz taster)
   ⎿  (No content)
 
-⏺ Bash(/REDACTED_ABS_PATH --manifest manifest.json --output ./dist/taster-rust-fixed.pspf
+⏺ Bash(/REDACTED_ABS_PATH --manifest manifest.json --output ./dist/taster-rust-fixed.psp
       --launcher rust)
-  ⎿  ✅ Successfully built package: "./dist/taster-rust-fixed.pspf" 
+  ⎿  ✅ Successfully built package: "./dist/taster-rust-fixed.psp" 
 
 ⏺ Now let's test if it runs:
 
-⏺ Bash(FLAVOR_LAUNCHER_CLI=true ./dist/taster-rust-fixed.pspf info)
+⏺ Bash(FLAVOR_LAUNCHER_CLI=true ./dist/taster-rust-fixed.psp info)
   ⎿  📦 PSPF Bundle Information                                                              
      ══════════════════════════════════════════
      📍 Path: /REDACTED_ABS_PATH
@@ -10559,7 +10559,7 @@ pub fn get_cache_dir() -> std::path::PathBuf {
 
 ⏺ Excellent! Now let's verify that the signature verification works:
 
-⏺ Bash(FLAVOR_LAUNCHER_CLI=true ./dist/taster-rust-fixed.pspf verify)
+⏺ Bash(FLAVOR_LAUNCHER_CLI=true ./dist/taster-rust-fixed.psp verify)
   ⎿  Error: IO error: numeric field was not a number: oad",
         when getting cksum for {
        "format": "PSPF/2025",
@@ -10600,7 +10600,7 @@ pub fn get_cache_dir() -> std::path::PathBuf {
 
 ⏺ Let me check where this error could be coming from in the launcher:
 
-⏺ Bash(cd /REDACTED_ABS_PATH && RUST_BACKTRACE=1 FLAVOR_LAUNCHER_CLI=true ./dist/taster-rust-fixed.pspf
+⏺ Bash(cd /REDACTED_ABS_PATH && RUST_BACKTRACE=1 FLAVOR_LAUNCHER_CLI=true ./dist/taster-rust-fixed.psp
       verify 2>&1 | head -30)
   ⎿  🔍 Verifying PSPF bundle...                           
      ══════════════════════════════════════════
@@ -10627,14 +10627,14 @@ pub fn get_cache_dir() -> std::path::PathBuf {
            "name": "payload",
      … +7 lines (ctrl+r to expand)
 
-⏺ Bash(/REDACTED_ABS_PATH --manifest test-simple.json --output test-simple.pspf --launcher
+⏺ Bash(/REDACTED_ABS_PATH --manifest test-simple.json --output test-simple.psp --launcher
       rust)
-  ⎿  ✅ Successfully built package: "test-simple.pspf" 
+  ⎿  ✅ Successfully built package: "test-simple.psp" 
 
-⏺ Bash(FLAVOR_LAUNCHER_CLI=true ./test-simple.pspf verify)
-  ⎿  Error: (eval):1: permission denied: ./test-simple.pspf
+⏺ Bash(FLAVOR_LAUNCHER_CLI=true ./test-simple.psp verify)
+  ⎿  Error: (eval):1: permission denied: ./test-simple.psp
 
-⏺ Bash(chmod +x test-simple.pspf && FLAVOR_LAUNCHER_CLI=true ./test-simple.pspf verify)
+⏺ Bash(chmod +x test-simple.psp && FLAVOR_LAUNCHER_CLI=true ./test-simple.psp verify)
   ⎿  Error: IO error: numeric field was not a number: "payload when getting cksum for {
        "format": "PSPF/2025",
        "package": {
@@ -10648,7 +10648,7 @@ pub fn get_cache_dir() -> std::path::PathBuf {
 
 ⏺ The issue seems to be in parsing the JSON metadata. Let me check what's actually in the metadata:
 
-⏺ Bash(FLAVOR_LAUNCHER_CLI=true ./test-simple.pspf info)
+⏺ Bash(FLAVOR_LAUNCHER_CLI=true ./test-simple.psp info)
   ⎿  📦 PSPF Bundle Information                                                   
      ══════════════════════════════════════════
      📍 Path: /REDACTED_ABS_PATH
@@ -10665,7 +10665,7 @@ pub fn get_cache_dir() -> std::path::PathBuf {
 
 ⏺ This error is likely coming from the launcher binary itself when trying to verify. Let me test if the package actually runs:
 
-⏺ Bash(./test-simple.pspf)
+⏺ Bash(./test-simple.psp)
   ⎿  Error: Launch failed: IO error: numeric field was not a number: "payload when getting cksum for {
        "format": "PSPF/2025",
        "package": {
@@ -10677,7 +10677,7 @@ pub fn get_cache_dir() -> std::path::PathBuf {
 ⏺ The package can't run due to this JSON parsing issue. This is happening in the launcher when it tries to read the metadata. Let me check the
    metadata structure in detail:
 
-⏺ Bash(hexdump -C test-simple.pspf | tail -20)
+⏺ Bash(hexdump -C test-simple.psp | tail -20)
   ⎿  0028a5c0  2e 41 bb 18 12 fe 67 16  de 9d 12 ac 2c 17 1f 09  |.A....g.....,...|
      0028a5d0  46 cf 0f e4 e1 3e c2 55  3b e0 c5 4a 04 f5 2f 13  |F....>.U;..J../.|
      0028a5e0  15 ee 57 88 9d 05 7b 0f  93 c9 fa a6 22 1d 50 c2  |..W...{.....".P.|
@@ -10685,10 +10685,10 @@ pub fn get_cache_dir() -> std::path::PathBuf {
 
 ⏺ The end has the emoji magic. Let me extract and check the metadata:
 
-⏺ Bash(dd if=test-simple.pspf of=metadata.gz bs=1 skip=2663752 count=405 2>/dev/null | gunzip)
+⏺ Bash(dd if=test-simple.psp of=metadata.gz bs=1 skip=2663752 count=405 2>/dev/null | gunzip)
   ⎿  Error: gunzip: (stdin): unexpected end of file
 
-⏺ Bash(dd if=test-simple.pspf of=metadata.gz bs=1 skip=2663752 count=405 2>/dev/null && file metadata.gz)
+⏺ Bash(dd if=test-simple.psp of=metadata.gz bs=1 skip=2663752 count=405 2>/dev/null && file metadata.gz)
   ⎿  metadata.gz: gzip compressed data, original size modulo 2^32 713
 
 ⏺ Bash(gunzip -c metadata.gz | jq .)
@@ -10783,7 +10783,7 @@ pub fn get_cache_dir() -> std::path::PathBuf {
 
   Let me look for where the launcher CLI parses metadata when showing the verify output:
 
-⏺ Bash(cd /REDACTED_ABS_PATH && strings test-simple.pspf | grep -A5 -B5 "numeric field")
+⏺ Bash(cd /REDACTED_ABS_PATH && strings test-simple.psp | grep -A5 -B5 "numeric field")
   ⎿  @@@@@@@@@@@*                  
      @@"<$
      B@@J
@@ -10813,9 +10813,9 @@ pub fn get_cache_dir() -> std::path::PathBuf {
 
 ⏺ Bash(cd /REDACTED_ABS_PATH && /REDACTED_ABS_PATH --manifest
        test-simple.json --outpu…)
-  ⎿  ✅ Successfully built package: "test-simple-new.pspf" 
+  ⎿  ✅ Successfully built package: "test-simple-new.psp" 
 
-⏺ Bash(chmod +x test-simple-new.pspf && FLAVOR_LAUNCHER_CLI=true ./test-simple-new.pspf verify)
+⏺ Bash(chmod +x test-simple-new.psp && FLAVOR_LAUNCHER_CLI=true ./test-simple-new.psp verify)
   ⎿  Error: IO error: numeric field was not a number: "payload when getting cksum for {
        "format": "PSPF/2025",
        "package": {
@@ -10834,11 +10834,11 @@ pub fn get_cache_dir() -> std::path::PathBuf {
       /REDACTED_ABS_PATH)
   ⎿  (No content)
 
-⏺ Bash(/REDACTED_ABS_PATH --manifest test-simple.json --output test-simple-fixed.pspf
+⏺ Bash(/REDACTED_ABS_PATH --manifest test-simple.json --output test-simple-fixed.psp
       --launcher rust)
-  ⎿  ✅ Successfully built package: "test-simple-fixed.pspf" 
+  ⎿  ✅ Successfully built package: "test-simple-fixed.psp" 
 
-⏺ Bash(chmod +x test-simple-fixed.pspf && FLAVOR_LAUNCHER_CLI=true ./test-simple-fixed.pspf verify)
+⏺ Bash(chmod +x test-simple-fixed.psp && FLAVOR_LAUNCHER_CLI=true ./test-simple-fixed.psp verify)
   ⎿  Error: IO error: numeric field was not a number: "payload when getting cksum for {
        "format": "PSPF/2025",
        "package": {
@@ -10858,7 +10858,7 @@ pub fn get_cache_dir() -> std::path::PathBuf {
 
 ⏺ The launcher was just updated. Let me check if the builder is actually finding it:
 
-⏺ Bash(strings test-simple-fixed.pspf | grep "numeric field" | head -1)
+⏺ Bash(strings test-simple-fixed.psp | grep "numeric field" | head -1)
   ⎿ /private/tmp/rust-20250628-8015-2pvnvd/rustc-1.88.0-src/library/alloc/src/slice.rsustar 00/REDACTED_ABS_PATH
     949cf8c6b5b557f/tar-0.4.44/src/header.rs when getting size for  when getting mode for  when getting uid for  when getting gid for  when ge
     tting mtime for  when getting cksum for : when getting real_size for  when getting offset from sparse header when getting length from spar
@@ -10917,7 +10917,7 @@ pub fn get_cache_dir() -> std::path::PathBuf {
      use std::path::Path;
      fn main() {
          env_logger::init();
-         let path = Path::new("test-simple-fixed.pspf");
+         let path = Path::new("test-simple-fixed.psp");
          match verify_package(path) {
              Ok(result) => {
                  println!("Package: {} v{}", result.package_name, result.package_version);
@@ -10937,7 +10937,7 @@ pub fn get_cache_dir() -> std::path::PathBuf {
          env_logger::init();
          let args: Vec<String> = std::env::args().collect();
          if args.len() < 2 {
-             eprintln!("Usage: {} <package.pspf>", args[0]);
+             eprintln!("Usage: {} <package.psp>", args[0]);
              std::process::exit(1);
      … +16 lines (ctrl+r to expand)
 
@@ -10949,15 +10949,15 @@ pub fn get_cache_dir() -> std::path::PathBuf {
 
 ⏺ Bash(cd /REDACTED_ABS_PATH && RUST_LOG=debug
       /REDACTED_ABS_PATH tes…)
-  ⎿  [2025-08-15T15:56:49Z INFO  flavor::psp::format_2025::verifier] Verifying PSPF/2025 package: "test-simple-fixed.pspf"            
-     [2025-08-15T15:56:49Z DEBUG flavor::psp::format_2025::backends] 🗺️ MMap opened test-simple-fixed.pspf (2664165 bytes) in 29.542µs
+  ⎿  [2025-08-15T15:56:49Z INFO  flavor::psp::format_2025::verifier] Verifying PSPF/2025 package: "test-simple-fixed.psp"            
+     [2025-08-15T15:56:49Z DEBUG flavor::psp::format_2025::backends] 🗺️ MMap opened test-simple-fixed.psp (2664165 bytes) in 29.542µs
      [2025-08-15T15:56:49Z DEBUG flavor::psp::format_2025::reader] Index loaded in 1.133125ms
      … +9 lines (ctrl+r to expand)
 
 ⏺ Excellent! The verifier works perfectly when called directly. The issue is in the launcher's CLI verify command. Let me check if maybe we
   have a version mismatch:
 
-⏺ Bash(strings test-simple-fixed.pspf | head -30 | tail -10)
+⏺ Bash(strings test-simple-fixed.psp | head -30 | tail -10)
   ⎿   Signature: INVALID or not verified
       Signature: VALID
       Extracting slot
@@ -10972,10 +10972,10 @@ pub fn get_cache_dir() -> std::path::PathBuf {
 ⏺ The verify_bundle function looks fine - it just calls verify_package. But the error happens before the verify output is shown. Let me run
   the package itself to see what happens:
 
-⏺ Bash(RUST_LOG=debug ./test-simple-fixed.pspf 2>&1 | head -20)
+⏺ Bash(RUST_LOG=debug ./test-simple-fixed.psp 2>&1 | head -20)
   ⎿  [2025-08-15T15:57:10Z INFO  flavor::psp::format_2025::launcher] 📖 Reading PSPF bundle                                                   
      [2025-08-15T15:57:10Z DEBUG flavor::psp::format_2025::backends] 🗺️ MMap opened /REDACTED_ABS_PATH
-     imple-fixed.pspf (2664165 bytes) in 16.5µs
+     imple-fixed.psp (2664165 bytes) in 16.5µs
      … +16 lines (ctrl+r to expand)
 
 ⏺ So it verifies successfully (lines 7-9), but then fails with the tar error when trying to launch. This means the issue is in the launcher's
@@ -11006,7 +11006,7 @@ pub fn get_cache_dir() -> std::path::PathBuf {
 ⏺ I see the code reads the metadata and uses the checksum. Let me check what's happening earlier when verification completes but before
   launching:
 
-⏺ Bash(RUST_LOG=trace ./test-simple-fixed.pspf 2>&1 | grep -A5 -B5 "numeric field")
+⏺ Bash(RUST_LOG=trace ./test-simple-fixed.psp 2>&1 | grep -A5 -B5 "numeric field")
   ⎿  [2025-08-15T15:58:04Z TRACE flavor::psp::format_2025::backends] 🔍 MMap read_at: offset=2663752, size=405
      [2025-08-15T15:58:04Z TRACE flavor::psp::format_2025::backends] ✅ MMap read 405 bytes in 125ns
      [2025-08-15T15:58:04Z DEBUG flavor::psp::format_2025::verifier] Index checksum: ✅ VALID
@@ -11033,7 +11033,7 @@ pub fn get_cache_dir() -> std::path::PathBuf {
 ⏺ Let me check what the error actually looks like in context. The pattern suggests something is trying to parse the JSON metadata as tar. Let
   me look for any code that might still have tar parsing when it reads metadata:
 
-⏺ Bash(cd /REDACTED_ABS_PATH && RUST_BACKTRACE=full ./test-simple-fixed.pspf 2>&1 | grep -A30 "numeric
+⏺ Bash(cd /REDACTED_ABS_PATH && RUST_BACKTRACE=full ./test-simple-fixed.psp 2>&1 | grep -A30 "numeric
       field")
   ⎿  Launch failed: IO error: numeric field was not a number: "payload when getting cksum for {
        "format": "PSPF/2025",
@@ -11042,7 +11042,7 @@ pub fn get_cache_dir() -> std::path::PathBuf {
 
 ⏺ No backtrace. The error is being caught and wrapped. Let me add some debug output to understand where this is happening:
 
-⏺ Bash(RUST_LOG=trace FLAVOR_INSECURE=1 ./test-simple-fixed.pspf 2>&1 | grep -A2 -B2 "Reading metadata")
+⏺ Bash(RUST_LOG=trace FLAVOR_INSECURE=1 ./test-simple-fixed.psp 2>&1 | grep -A2 -B2 "Reading metadata")
   ⎿  No matches found
 
 ⏺ Let me check if the issue is actually in how we're verifying. The verify command has this error but running the package directly also has
@@ -11114,12 +11114,12 @@ pub fn get_cache_dir() -> std::path::PathBuf {
 
 ⏺ Now let's test the taster package WITHOUT any FLAVOR_INSECURE flag:
 
-⏺ Bash(cd /REDACTED_ABS_PATH && ./taster.pspf --help)
+⏺ Bash(cd /REDACTED_ABS_PATH && ./taster.psp --help)
   ⎿  Error: Launch failed: Invalid signature size
 
 ⏺ The error persists. Let me rebuild the taster package with the fixed Rust builder:
 
-⏺ Bash(cd /REDACTED_ABS_PATH && ../../helpers/bin/flavor-rs-builder --manifest manifest.json --output taster-fixed.pspf --launcher rus…)
+⏺ Bash(cd /REDACTED_ABS_PATH && ../../helpers/bin/flavor-rs-builder --manifest manifest.json --output taster-fixed.psp --launcher rus…)
   ⎿  Error: ❌ Build failed: Failed to read launcher 'flavor-rs-launcher': No such file or directory (os error 2)
 
 ⏺ Bash(FLAVOR_LAUNCHER_BIN=/REDACTED_ABS_PATH /REDACTED_ABS_PATH --man…)
@@ -11140,7 +11140,7 @@ pub fn get_cache_dir() -> std::path::PathBuf {
 
 ⏺ The package built but there's a verification error. Let me test it anyway:
 
-⏺ Bash(./taster-new.pspf --help)
+⏺ Bash(./taster-new.psp --help)
   ⎿  Usage: python -m taster.taster-new [OPTIONS] COMMAND [ARGS]...
 
        🍯 Taster - Test package for flavor functionality
@@ -11164,7 +11164,7 @@ pub fn get_cache_dir() -> std::path::PathBuf {
 ⏺ Now let's test Rust builder with Python reader:
 
 ⏺ Bash(FLAVOR_LAUNCHER_BIN=/REDACTED_ABS_PATH /REDACTED_ABS_PATH --man…)
-  ⎿  ✅ Successfully built package: "taster-rust.pspf"         
+  ⎿  ✅ Successfully built package: "taster-rust.psp"         
      📝 Writing metadata at position 0x291d60
      📝 Wrote metadata: start=0x291d60, size=495, end=0x291f4f
      … +2 lines (ctrl+r to expand)
@@ -11174,7 +11174,7 @@ pub fn get_cache_dir() -> std::path::PathBuf {
   ⎿  Error: [Pyvider Setup] INFO (pyvider.telemetry.core_setup): 📝➡️🎨 Configured Key-Value (ConsoleRenderer).
      [Pyvider Setup] INFO (pyvider.telemetry.core_setup): 📝➡️✅ structlog configured. Wrapper: BoundLogger. Output: sys.stderr.
      2025-08-15 14:50:11.089071 [debug    ] 🗣️ 🤖 Auto-selected mmap backend file_size_mb=2.6181745529174805
-     2025-08-15 14:50:11.089149 [debug    ] 🗣️ 🗺️ Opening mmap backend     path=taster-rust.pspf size_bytes=2745355 size_mb=2.6181745529174805
+     2025-08-15 14:50:11.089149 [debug    ] 🗣️ 🗺️ Opening mmap backend     path=taster-rust.psp size_bytes=2745355 size_mb=2.6181745529174805
      2025-08-15 14:50:11.095136 [debug    ] 🗣️ 🔧 Applied MADV_SEQUENTIAL hint
      2025-08-15 14:50:11.095177 [debug    ] 🗣️ ✅ MMap opened               elapsed_ms=6.036291946657002 pages=167
      2025-08-15 14:50:11.095219 [debug    ] 🗣️ 🔍 MMap read_at              elapsed_us=1.583946868777275 offset=0 size=1048576 zero_copy=True
@@ -12785,7 +12785,7 @@ pub fn get_cache_dir() -> std::path::PathBuf {
 
   Let's create a simple test to verify that packages built with one language can be read by another:
 
-⏺ Bash(cd /REDACTED_ABS_PATH && ../../helpers/bin/flavor-go-builder --manifest manifest.json --output taster-go.pspf --launcher go --k…)
+⏺ Bash(cd /REDACTED_ABS_PATH && ../../helpers/bin/flavor-go-builder --manifest manifest.json --output taster-go.psp --launcher go --k…)
   ⎿  Error: 2025-08-15T15:10:13.811-0700 [INFO]  pspf-builder: 🚀 Loading launcher: type=rust
      2025-08-15T15:10:13.812-0700 [DEBUG] pspf-builder: 🔍 Launcher path: path=flavor-rs-launcher
      2025-08-15T15:10:13.812-0700 [ERROR] pspf-builder: ❌ Failed to read launcher: error="open flavor-rs-launcher: no such file or directory" path=flavor-rs-launcher
@@ -12813,19 +12813,19 @@ pub fn get_cache_dir() -> std::path::PathBuf {
 
 ⏺ Good, the package built successfully (the verification errors are from Python trying to read back with old field names). Let me test it:
 
-⏺ Bash(./taster-python.pspf --version)
+⏺ Bash(./taster-python.psp --version)
   ⎿  flavor-rs-launcher 0.3.0        
      Built: 2025-08-15T22:15:38+00:00
 
 ⏺ Good! Now let's build the same package with Rust builder and Python launcher:
 
 ⏺ Bash(FLAVOR_LAUNCHER_BIN=/REDACTED_ABS_PATH /REDACTED_ABS_PATH --man…)
-  ⎿  ✅ Successfully built package: "taster-rust.pspf"         
+  ⎿  ✅ Successfully built package: "taster-rust.psp"         
      📝 Writing metadata at position 0x291d60
      📝 Wrote metadata: start=0x291d60, size=496, end=0x291f50
      … +2 lines (ctrl+r to expand)
 
-⏺ Bash(./taster-rust.pspf --version)
+⏺ Bash(./taster-rust.psp --version)
   ⎿  flavor-rs-launcher 0.3.0        
      Built: 2025-08-15T22:16:11+00:00
 
@@ -12836,7 +12836,7 @@ pub fn get_cache_dir() -> std::path::PathBuf {
   ⎿  Error: [Pyvider Setup] INFO (pyvider.telemetry.core_setup): 📝➡️🎨 Configured Key-Value (ConsoleRenderer).
      [Pyvider Setup] INFO (pyvider.telemetry.core_setup): 📝➡️✅ structlog configured. Wrapper: BoundLogger. Output: sys.stderr.
      2025-08-15 15:16:24.739503 [debug    ] 🗣️ 🤖 Auto-selected mmap backend file_size_mb=2.6181745529174805
-     2025-08-15 15:16:24.739585 [debug    ] 🗣️ 🗺️ Opening mmap backend     path=taster-rust.pspf size_bytes=2745355 size_mb=2.6181745529174805
+     2025-08-15 15:16:24.739585 [debug    ] 🗣️ 🗺️ Opening mmap backend     path=taster-rust.psp size_bytes=2745355 size_mb=2.6181745529174805
      2025-08-15 15:16:24.745671 [debug    ] 🗣️ 🔧 Applied MADV_SEQUENTIAL hint
      2025-08-15 15:16:24.745724 [debug    ] 🗣️ ✅ MMap opened               elapsed_ms=6.148083019070327 pages=167
      2025-08-15 15:16:24.745768 [debug    ] 🗣️ 🔍 MMap read_at              elapsed_us=1.9998988136649132 offset=0 size=1048576 zero_copy=True
@@ -12893,7 +12893,7 @@ pub fn get_cache_dir() -> std::path::PathBuf {
        7      "slots": [
        8        {
 
-⏺ Bash(/REDACTED_ABS_PATH --manifest manifest.json --output taster-go.pspf --launcher go --key-seed test123)
+⏺ Bash(/REDACTED_ABS_PATH --manifest manifest.json --output taster-go.psp --launcher go --key-seed test123)
   ⎿  2025-08-15T15:18:52.845-0700 [INFO]  pspf-builder: 🚀 Loading launcher: type=go             
      2025-08-15T15:18:52.845-0700 [DEBUG] pspf-builder: 🔍 Launcher path: path=flavor-go-launcher
      2025-08-15T15:18:52.846-0700 [DEBUG] pspf-builder: ✅ Launcher loaded: size=5028338
@@ -12901,7 +12901,7 @@ pub fn get_cache_dir() -> std::path::PathBuf {
 
 ⏺ Excellent! The Go builder successfully created the package. Now let's test it:
 
-⏺ Bash(./taster-go.pspf --version 2>&1 | head -5)
+⏺ Bash(./taster-go.psp --version 2>&1 | head -5)
   ⎿  flavor-go-launcher 0.3.0   
      Built: 2025-08-15T22:18:52Z
 
@@ -12912,7 +12912,7 @@ pub fn get_cache_dir() -> std::path::PathBuf {
   ⎿  Error: [Pyvider Setup] INFO (pyvider.telemetry.core_setup): 📝➡️🎨 Configured Key-Value (ConsoleRenderer).
      [Pyvider Setup] INFO (pyvider.telemetry.core_setup): 📝➡️✅ structlog configured. Wrapper: BoundLogger. Output: sys.stderr.
      2025-08-15 15:19:08.865122 [debug    ] 🗣️ 🤖 Auto-selected mmap backend file_size_mb=4.851687431335449
-     2025-08-15 15:19:08.865212 [debug    ] 🗣️ 🗺️ Opening mmap backend     path=taster-go.pspf size_bytes=5087363 size_mb=4.851687431335449
+     2025-08-15 15:19:08.865212 [debug    ] 🗣️ 🗺️ Opening mmap backend     path=taster-go.psp size_bytes=5087363 size_mb=4.851687431335449
      2025-08-15 15:19:08.870026 [debug    ] 🗣️ 🔧 Applied MADV_SEQUENTIAL hint
      2025-08-15 15:19:08.870058 [debug    ] 🗣️ ✅ MMap opened               elapsed_ms=4.856958985328674 pages=310
      2025-08-15 15:19:08.870091 [debug    ] 🗣️ 🔍 MMap read_at              elapsed_us=1.5830155462026596 offset=0 size=1048576 zero_copy=True
@@ -13493,8 +13493,8 @@ pub fn get_cache_dir() -> std::path::PathBuf {
        167 +              
        168                def mock_builder(launcher, key_seed):
        169                    """Mock builder that creates a file."""
-       170 -                  output = taster_dir / f"test-{key_seed}.pspf"
-       170 +                  output = taster_dir / f"test-{key_seed}-{len(created_files)}.pspf"
+       170 -                  output = taster_dir / f"test-{key_seed}.psp"
+       170 +                  output = taster_dir / f"test-{key_seed}-{len(created_files)}.psp"
        171                    output.write_bytes(b"FAKE_LAUNCHER" + b"PSPF2025" + b"DATA")
        172 +                  created_files.append(output)
        173                    return output
@@ -13519,7 +13519,7 @@ pub fn get_cache_dir() -> std::path::PathBuf {
 ⏺ Update(tests/test_verify_json.py)
   ⎿  Updated tests/test_verify_json.py with 7 additions and 7 removals                                  
        20            
-       21            with tempfile.NamedTemporaryFile(suffix=".pspf") as tmpfile:
+       21            with tempfile.NamedTemporaryFile(suffix=".psp") as tmpfile:
        22                # Mock FlavorVerifier
        23 -              with patch('taster.commands.verify.FlavorVerifier') as mock_verifier:
        23 +              with patch('flavor.verification.FlavorVerifier') as mock_verifier:
@@ -13546,7 +13546,7 @@ pub fn get_cache_dir() -> std::path::PathBuf {
        82                        result = runner.invoke(verify_command, 
      ...
        116            
-       117            with tempfile.NamedTemporaryFile(suffix=".pspf") as tmpfile:
+       117            with tempfile.NamedTemporaryFile(suffix=".psp") as tmpfile:
        118                # Mock FlavorVerifier to raise an exception
        119 -              with patch('taster.commands.verify.FlavorVerifier') as mock_verifier:
        119 +              with patch('flavor.verification.FlavorVerifier') as mock_verifier:
@@ -13555,7 +13555,7 @@ pub fn get_cache_dir() -> std::path::PathBuf {
        122                    result = runner.invoke(verify_command, [tmpfile.name])
      ...
        129            
-       130            with tempfile.NamedTemporaryFile(suffix=".pspf") as tmpfile:
+       130            with tempfile.NamedTemporaryFile(suffix=".psp") as tmpfile:
        131                # Mock FlavorVerifier to raise an exception
        132 -              with patch('taster.commands.verify.FlavorVerifier') as mock_verifier:
        132 +              with patch('flavor.verification.FlavorVerifier') as mock_verifier:
@@ -13563,7 +13563,7 @@ pub fn get_cache_dir() -> std::path::PathBuf {
        134                    
        135                    result = runner.invoke(verify_command, [tmpfile.name, '--json'])
      ...
-       183            with tempfile.NamedTemporaryFile(suffix=".pspf") as tmpfile:
+       183            with tempfile.NamedTemporaryFile(suffix=".psp") as tmpfile:
        184                # Mock sys.argv[0]
        185                with patch('taster.commands.verify.sys.argv', [tmpfile.name]):
        186 -                  with patch('taster.commands.verify.FlavorVerifier') as mock_verifier:
@@ -13574,7 +13574,7 @@ pub fn get_cache_dir() -> std::path::PathBuf {
      ...
        198            runner = click.testing.CliRunner()
        199            
-       200            with tempfile.NamedTemporaryFile(suffix=".pspf") as tmpfile:
+       200            with tempfile.NamedTemporaryFile(suffix=".psp") as tmpfile:
        201 -              with patch('taster.commands.verify.FlavorVerifier') as mock_verifier:
        201 +              with patch('flavor.verification.FlavorVerifier') as mock_verifier:
        202                    mock_verifier.verify_package.return_value = {
@@ -13627,7 +13627,7 @@ pub fn get_cache_dir() -> std::path::PathBuf {
 ⏺ Update(tests/test_verify_json.py)
   ⎿  Updated tests/test_verify_json.py with 1 addition and 1 removal                            
        182            
-       183            with tempfile.NamedTemporaryFile(suffix=".pspf") as tmpfile:
+       183            with tempfile.NamedTemporaryFile(suffix=".psp") as tmpfile:
        184                # Mock sys.argv[0]
        185 -              with patch('taster.commands.verify.sys.argv', [tmpfile.name]):
        185 +              with patch('sys.argv', [tmpfile.name]):
@@ -13711,7 +13711,7 @@ pub fn get_cache_dir() -> std::path::PathBuf {
      ☒ Run integration tests to verify everything works
      ☐ Build taster and test crosslang command in practice
 
-⏺ Bash(cd helpers/taster && ../../workenv/flavor_darwin_arm64/bin/flavor package --manifest pyproject.toml --output taster.pspf --launcher rust --key-seed test123 --no…)
+⏺ Bash(cd helpers/taster && ../../workenv/flavor_darwin_arm64/bin/flavor package --manifest pyproject.toml --output taster.psp --launcher rust --key-seed test123 --no…)
   ⎿  🚀 Packaging application...                                                                      
      ✅ Successfully built artifact at /REDACTED_ABS_PATH
      ✅ All targets built successfully.
@@ -13719,26 +13719,26 @@ pub fn get_cache_dir() -> std::path::PathBuf {
 
 ⏺ Now let's test the crosslang command:
 
-⏺ Bash(cd helpers/taster && ./taster.pspf crosslang --help)
+⏺ Bash(cd helpers/taster && ./taster.psp crosslang --help)
   ⎿  Error: (eval):cd:1: no such file or directory: helpers/taster
 
-⏺ Bash(./taster.pspf crosslang --help)
-  ⎿  Usage: taster.pspf crosslang [OPTIONS]                              
+⏺ Bash(./taster.psp crosslang --help)
+  ⎿  Usage: taster.psp crosslang [OPTIONS]                              
 
        🌍 Test cross-language compatibility between Python, Go, and Rust.
      … +6 lines (ctrl+r to expand)
 
 ⏺ Good! Now let's test the verify command with JSON output:
 
-⏺ Bash(./taster.pspf verify ./taster.pspf --json | head -20)
+⏺ Bash(./taster.psp verify ./taster.psp --json | head -20)
   ⎿  {                            
-       "package": "taster.pspf",
+       "package": "taster.psp",
        "exists": true,
      … +9 lines (ctrl+r to expand)
 
 ⏺ Let me now make a small real integration test to ensure the crosslang command actually runs (though we won't run all the tests as they require Go and Rust builders):
 
-⏺ Bash(./taster.pspf features --json | head -30)
+⏺ Bash(./taster.psp features --json | head -30)
   ⎿  {                             
        "launcher": "rust",
        "features": [
@@ -14164,28 +14164,28 @@ A comprehensive test package for testing flavor functionality including:
 
 Build the package:
 ```bash
-flavor package --manifest pyproject.toml --output dist/taster.pspf --launcher rust --key-seed test123
+flavor package --manifest pyproject.toml --output dist/taster.psp --launcher rust --key-seed test123
 ```
 
 Run tests:
 ```bash
 # Test environment variables
-./dist/taster.pspf env
+./dist/taster.psp env
 
 # Test argv[0]
-./dist/taster.pspf argv
+./dist/taster.psp argv
 
 # Test all
-./dist/taster.pspf test
+./dist/taster.psp test
 
 # Interactive shell for testing
-./dist/taster.pspf shell
+./dist/taster.psp shell
 
 # Cross-language compatibility testing
-./dist/taster.pspf crosslang --verbose
+./dist/taster.psp crosslang --verbose
 
 # Verify packages with JSON output
-./dist/taster.pspf verify some-package.pspf --json
+./dist/taster.psp verify some-package.psp --json
 ```
 
 ## Commands
@@ -14270,7 +14270,7 @@ def read_pspf_metadata(package_path):
                 break
 
 if __name__ == "__main__":
-    package_path = Path("dist/taster.pspf")
+    package_path = Path("dist/taster.psp")
     if package_path.exists():
         read_pspf_metadata(package_path)
     else:
@@ -14825,7 +14825,7 @@ def speed_test(iterations, warmup):
         # Warmup
         for _ in range(warmup):
             builder = PSPFBuilder()
-            bundle_path = tmpdir / "warmup.pspf"
+            bundle_path = tmpdir / "warmup.psp"
             builder.build(
                 output_path=bundle_path,
                 metadata={"format": "PSPF/2025", "package": {"name": "test", "version": "1.0"}},
@@ -14840,7 +14840,7 @@ def speed_test(iterations, warmup):
             start = time.perf_counter()
             
             builder = PSPFBuilder()
-            bundle_path = tmpdir / f"bench_{i}.pspf"
+            bundle_path = tmpdir / f"bench_{i}.psp"
             builder.build(
                 output_path=bundle_path,
                 metadata={"format": "PSPF/2025", "package": {"name": "test", "version": "1.0"}},
@@ -14909,7 +14909,7 @@ def concurrent_test(workers, duration, operation):
             # Create a test bundle for read operations
             if operation in ['read', 'mixed']:
                 builder = PSPFBuilder()
-                test_bundle = tmpdir / "test.pspf"
+                test_bundle = tmpdir / "test.psp"
                 builder.build(
                     output_path=test_bundle,
                     metadata={"format": "PSPF/2025", "package": {"name": "test", "version": "1.0"}},
@@ -14921,7 +14921,7 @@ def concurrent_test(workers, duration, operation):
                     if operation == 'build' or (operation == 'mixed' and ops_count % 2 == 0):
                         # Build operation
                         builder = PSPFBuilder()
-                        bundle_path = tmpdir / f"worker_{worker_id}_{ops_count}.pspf"
+                        bundle_path = tmpdir / f"worker_{worker_id}_{ops_count}.psp"
                         builder.build(
                             output_path=bundle_path,
                             metadata={"format": "PSPF/2025", "package": {"name": f"test_{worker_id}", "version": "1.0"}},
@@ -15213,7 +15213,7 @@ class CrossLangTester:
     
     def build_with_python(self, launcher="go", key_seed="test123"):
         """Build with Python builder."""
-        output = self.taster_dir / f"test-python-{launcher}.pspf"
+        output = self.taster_dir / f"test-python-{launcher}.psp"
         cmd = [
             str(self.python_builder), "package",
             "--manifest", str(self.taster_dir / "pyproject.toml"),
@@ -15241,7 +15241,7 @@ class CrossLangTester:
     
     def build_with_go(self, launcher="go", key_seed="test123"):
         """Build with Go builder."""
-        output = self.taster_dir / f"test-go-{launcher}.pspf"
+        output = self.taster_dir / f"test-go-{launcher}.psp"
         
         # Go builder needs launcher binary path
         launcher_bin = f"flavor-{launcher}-launcher"
@@ -15276,7 +15276,7 @@ class CrossLangTester:
     
     def build_with_rust(self, launcher="rust", key_seed="test123"):
         """Build with Rust builder."""
-        output = self.taster_dir / f"test-rust-{launcher}.pspf"
+        output = self.taster_dir / f"test-rust-{launcher}.psp"
         
         # Rust builder needs launcher binary path
         launcher_bin = f"flavor-{launcher}-launcher"
@@ -15749,7 +15749,7 @@ def test_feature(test_func, feature_name):
 def test_argv0():
     """Test if argv[0] is set correctly"""
     # Check if argv[0] contains the expected binary name
-    expected = ["taster", ".pspf"]
+    expected = ["taster", ".psp"]
     return any(exp in sys.argv[0] for exp in expected)
 
 
@@ -16074,7 +16074,7 @@ def metadata_command():
     possible_paths = [
         workenv_path / "metadata" / "psp.json",
         workenv_path / "psp.json",
-        workenv_path / ".pspf" / "psp.json",
+        workenv_path / ".psp" / "psp.json",
     ]
     
     metadata = None
@@ -16207,7 +16207,7 @@ def detect_bundle_mmap():
     indicators = []
     
     # Check 1: Look for PSPF file descriptor
-    bundle_path = sys.argv[0] if sys.argv[0].endswith('.pspf') else None
+    bundle_path = sys.argv[0] if sys.argv[0].endswith('.psp') else None
     if bundle_path and os.path.exists(bundle_path):
         try:
             # Check if file is currently open by process
@@ -16337,7 +16337,7 @@ def mmap_command():
     click.echo("\n📊 Summary:")
     if any("memory-mapped" in str(i).lower() for i in indicators):
         click.echo("  ✅ Bundle appears to be using memory-mapped I/O")
-    elif bundle_path := (sys.argv[0] if sys.argv[0].endswith('.pspf') else None):
+    elif bundle_path := (sys.argv[0] if sys.argv[0].endswith('.psp') else None):
         if os.path.exists(bundle_path):
             click.echo("  ⚠️ Bundle exists but mmap usage unclear")
         else:
@@ -17291,7 +17291,7 @@ use std::path::Path;
 fn main() {
     env_logger::init();
     
-    let path = Path::new("test-simple-fixed.pspf");
+    let path = Path::new("test-simple-fixed.psp");
     match verify_package(path) {
         Ok(result) => {
             println!("Package: {} v{}", result.package_name, result.package_version);
@@ -17382,7 +17382,7 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
             }
         }
         
-        bundle_path = temp_dir / "app.pspf"
+        bundle_path = temp_dir / "app.psp"
         builder = PSPFBuilder()
         builder.build(
             output_path=bundle_path,
@@ -17510,7 +17510,7 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
             "slots": [s.to_dict() for s in slots]
         }
         
-        bundle_path = temp_dir / "multiplatform.pspf"
+        bundle_path = temp_dir / "multiplatform.psp"
         builder = PSPFBuilder()
         builder.build(
             output_path=bundle_path,
@@ -17576,7 +17576,7 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
             }
         }
         
-        bundle_path = temp_dir / "exit42.pspf"
+        bundle_path = temp_dir / "exit42.psp"
         builder = PSPFBuilder()
         builder.build(
             output_path=bundle_path,
@@ -17608,7 +17608,7 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
             }
         }
         
-        bundle_path = temp_dir / "limited.pspf"
+        bundle_path = temp_dir / "limited.psp"
         builder = PSPFBuilder()
         builder.build(
             output_path=bundle_path,
@@ -17652,7 +17652,7 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
             }
         }
         
-        bundle_path = temp_dir / "error.pspf"
+        bundle_path = temp_dir / "error.psp"
         builder = PSPFBuilder()
         builder.build(
             output_path=bundle_path,
@@ -17781,7 +17781,7 @@ class TestSlotTableReading:
             ]
             
             # Build bundle
-            bundle_path = tmpdir / "test.pspf"
+            bundle_path = tmpdir / "test.psp"
             builder = PSPFBuilder()
             
             metadata = {
@@ -17894,7 +17894,7 @@ class TestSlotExtraction:
                 )
             ]
             
-            bundle_path = tmpdir / "compressed.pspf"
+            bundle_path = tmpdir / "compressed.psp"
             builder = PSPFBuilder()
             
             metadata = {
@@ -17998,7 +17998,7 @@ class TestWorkEnvironment:
                 path=runtime_tar
             )
             
-            bundle_path = tmpdir / "setup.pspf"
+            bundle_path = tmpdir / "setup.psp"
             builder = PSPFBuilder()
             
             metadata = {
@@ -18114,7 +18114,7 @@ sys.exit(0)
                 path=script_path
             )
             
-            bundle_path = tmpdir / "executable.pspf"
+            bundle_path = tmpdir / "executable.psp"
             builder = PSPFBuilder()
             
             metadata = {
@@ -18481,7 +18481,7 @@ class TestDiskFailures:
     def test_disk_full_during_extraction(self):
         """Test behavior when disk becomes full during extraction."""
         # Create a package
-        package_path = self.temp_dir / "test.pspf"
+        package_path = self.temp_dir / "test.psp"
         builder = PSPFBuilder()
         builder.add_slot("large", b"A" * 1024 * 1024)  # 1MB
         builder.build(package_path)
@@ -18505,7 +18505,7 @@ class TestDiskFailures:
         # Make directory read-only
         os.chmod(extract_dir, 0o444)
         
-        package_path = self.temp_dir / "test.pspf"
+        package_path = self.temp_dir / "test.psp"
         builder = PSPFBuilder()
         builder.add_slot("test", b"data")
         builder.build(package_path)
@@ -18520,7 +18520,7 @@ class TestDiskFailures:
     def test_corrupted_package_partial_read(self):
         """Test handling of corrupted packages."""
         # Create valid package
-        package_path = self.temp_dir / "corrupt.pspf"
+        package_path = self.temp_dir / "corrupt.psp"
         builder = PSPFBuilder()
         builder.add_slot("test", b"data")
         builder.build(package_path)
@@ -18541,7 +18541,7 @@ class TestDiskFailures:
     
     def test_extraction_cleanup_on_failure(self):
         """Ensure partial extractions are cleaned up on failure."""
-        package_path = self.temp_dir / "test.pspf"
+        package_path = self.temp_dir / "test.psp"
         extract_dir = self.temp_dir / "extract"
         
         builder = PSPFBuilder()
@@ -18590,7 +18590,7 @@ class TestProcessFailures:
     
     def test_signal_handling_during_extraction(self):
         """Test signal handling during long operations."""
-        package_path = Path("test.pspf")
+        package_path = Path("test.psp")
         
         # Create large package for slow extraction
         builder = PSPFBuilder()
@@ -18637,7 +18637,7 @@ class TestProcessFailures:
             child_pids.append(mock_proc.pid)
             
             # Launch process
-            launcher.execute_async("test.pspf", ["--long-running"])
+            launcher.execute_async("test.psp", ["--long-running"])
         
         # Simulate parent termination
         launcher.cleanup()
@@ -18673,7 +18673,7 @@ class TestNetworkFailures:
             
             downloader = PackageDownloader()
             with pytest.raises(NetworkError) as exc_info:
-                downloader.download("https://example.com/package.pspf")
+                downloader.download("https://example.com/package.psp")
             
             assert "network" in str(exc_info.value).lower()
     
@@ -18705,7 +18705,7 @@ class TestConcurrencyIssues:
     
     def test_concurrent_extraction_lock(self):
         """Test that concurrent extractions are properly locked."""
-        package_path = Path("test.pspf")
+        package_path = Path("test.psp")
         extract_dir = Path("extract")
         
         builder = PSPFBuilder()
@@ -18815,7 +18815,7 @@ class TestResourceLeaks:
         
         # Perform many operations
         for i in range(100):
-            package_path = Path(f"test_{i}.pspf")
+            package_path = Path(f"test_{i}.psp")
             builder = PSPFBuilder()
             builder.add_slot("test", b"data")
             builder.build(package_path)
@@ -18849,7 +18849,7 @@ class TestResourceLeaks:
             for j in range(10):
                 builder.add_slot(f"slot_{j}", b"A" * 10000)
             
-            package_path = Path(f"test_{i}.pspf")
+            package_path = Path(f"test_{i}.psp")
             builder.build(package_path)
             
             reader = PSPFReader(package_path)
@@ -18881,7 +18881,7 @@ class TestResourceLeaks:
         
         for i in range(10):
             # Launch async operations
-            handle = launcher.execute_async("test.pspf", ["--async"])
+            handle = launcher.execute_async("test.psp", ["--async"])
             handle.wait(timeout=1)
             handle.cleanup()
         
@@ -18923,7 +18923,7 @@ class TestRecoveryMechanisms:
             mock_telemetry.side_effect = Exception("Telemetry service down")
             
             # Should still work without telemetry
-            result = launcher.execute("test.pspf", ["--run"])
+            result = launcher.execute("test.psp", ["--run"])
             assert result.success is True
     
     def test_rollback_on_failed_update(self):
@@ -18959,7 +18959,7 @@ class TestRecoveryMechanisms:
             ]
             
             try:
-                extractor.extract_with_checkpoint("package.pspf", 10)
+                extractor.extract_with_checkpoint("package.psp", 10)
             except KeyboardInterrupt:
                 pass
         
@@ -18970,7 +18970,7 @@ class TestRecoveryMechanisms:
         with patch.object(extractor, 'extract_slot') as mock_extract:
             mock_extract.side_effect = [f"slot_{i}" for i in range(3, 10)]
             
-            extractor.resume_from_checkpoint("package.pspf")
+            extractor.resume_from_checkpoint("package.psp")
         
         # Should complete all slots
         assert extractor.get_checkpoint() == 10
@@ -19014,7 +19014,7 @@ class TestPackageSecurity:
     def test_signature_verification_required(self):
         """Ensure packages cannot run without valid signature."""
         # Create a package without signature
-        package_path = self.temp_dir / "unsigned.pspf"
+        package_path = self.temp_dir / "unsigned.psp"
         builder = PSPFBuilder()
         
         # Build without signing
@@ -19025,7 +19025,7 @@ class TestPackageSecurity:
     def test_tampered_package_detection(self):
         """Ensure tampered packages are detected."""
         # Create a valid signed package
-        package_path = self.temp_dir / "signed.pspf"
+        package_path = self.temp_dir / "signed.psp"
         private_key, public_key = generate_ephemeral_keys()
         
         builder = PSPFBuilder()
@@ -19128,7 +19128,7 @@ class TestPackageSecurity:
         import threading
         import time
         
-        package_path = self.temp_dir / "race.pspf"
+        package_path = self.temp_dir / "race.psp"
         extract_dir = self.temp_dir / "extract"
         
         # Create package
@@ -19187,13 +19187,13 @@ class TestPackageSecurity:
         builder1 = PSPFBuilder()
         builder1.add_slot("test", b"data")
         builder1.set_reproducible(True)
-        package1 = self.temp_dir / "package1.pspf"
+        package1 = self.temp_dir / "package1.psp"
         builder1.build(package1)
         
         builder2 = PSPFBuilder()
         builder2.add_slot("test", b"data")
         builder2.set_reproducible(True)
-        package2 = self.temp_dir / "package2.pspf"
+        package2 = self.temp_dir / "package2.psp"
         builder2.build(package2)
         
         # Should produce identical packages
@@ -19210,7 +19210,7 @@ class TestPackageSecurity:
         
         builder = PSPFBuilder()
         builder.add_file(restricted_file)
-        package_path = self.temp_dir / "perms.pspf"
+        package_path = self.temp_dir / "perms.psp"
         builder.build(package_path)
         
         # Extract and check permissions
@@ -19255,7 +19255,7 @@ class TestCryptographicSecurity:
         """Ensure signature verification is timing-attack resistant."""
         import time
         
-        package_path = Path("test.pspf")
+        package_path = Path("test.psp")
         reader = PSPFReader(package_path)
         
         # Time verification with correct vs incorrect signatures
@@ -19394,7 +19394,7 @@ class TestBreakingInputs:
                 
                 # Attempt to build with this slot
                 builder = PSPFBuilder()
-                bundle_path = tmpdir / "evil.pspf"
+                bundle_path = tmpdir / "evil.psp"
                 
                 # This should either sanitize or reject the filename
                 builder.build(
@@ -19488,7 +19488,7 @@ class TestBreakingInputs:
             tmpdir = Path(tmpdir)
             
             # Try to read this as a PSPF bundle
-            chaos_file = tmpdir / "chaos.pspf"
+            chaos_file = tmpdir / "chaos.psp"
             chaos_file.write_bytes(binary_data)
             
             try:
@@ -19541,7 +19541,7 @@ class PSPFStateMachine(RuleBasedStateMachine):
             return
         
         builder = PSPFBuilder()
-        bundle_path = self.tmpdir / f"bundle_{len(self.bundles)}.pspf"
+        bundle_path = self.tmpdir / f"bundle_{len(self.bundles)}.psp"
         
         try:
             builder.build(
@@ -19596,9 +19596,9 @@ class TestHypothesisPipeIntegration:
     def test_pipe_stdin_stdout(self, data):
         """Test piping arbitrary binary data through taster"""
         # Skip if taster not available
-        taster_path = Path(__file__).parents[3] / "dist" / "taster.pspf"
+        taster_path = Path(__file__).parents[3] / "dist" / "taster.psp"
         if not taster_path.exists():
-            pytest.skip("taster.pspf not built")
+            pytest.skip("taster.psp not built")
         
         # Pipe data through taster
         result = subprocess.run(
@@ -19617,9 +19617,9 @@ class TestHypothesisPipeIntegration:
     @settings(max_examples=10)
     def test_pipe_corruption(self, data, corruption_prob):
         """Test corruption command"""
-        taster_path = Path(__file__).parents[3] / "dist" / "taster.pspf"
+        taster_path = Path(__file__).parents[3] / "dist" / "taster.psp"
         if not taster_path.exists():
-            pytest.skip("taster.pspf not built")
+            pytest.skip("taster.psp not built")
         
         # Corrupt data
         result = subprocess.run(
@@ -19644,9 +19644,9 @@ class TestHypothesisPipeIntegration:
     @settings(max_examples=20)
     def test_pipe_json_validation(self, json_obj):
         """Test JSON validation through pipe"""
-        taster_path = Path(__file__).parents[3] / "dist" / "taster.pspf"
+        taster_path = Path(__file__).parents[3] / "dist" / "taster.psp"
         if not taster_path.exists():
-            pytest.skip("taster.pspf not built")
+            pytest.skip("taster.psp not built")
         
         import json
         json_str = json.dumps(json_obj)
@@ -19726,7 +19726,7 @@ class TestCrossLangTester:
             tester.python_builder = Path("/fake/python/builder")
             
             # Create fake output file
-            output_file = taster_dir / "test-python-go.pspf"
+            output_file = taster_dir / "test-python-go.psp"
             output_file.touch()
             
             result = tester.build_with_python(launcher="go")
@@ -19749,7 +19749,7 @@ class TestCrossLangTester:
             tester.go_builder = Path("/fake/go/builder")
             
             # Create fake output file
-            output_file = taster_dir / "test-go-go.pspf"
+            output_file = taster_dir / "test-go-go.psp"
             output_file.touch()
             
             result = tester.build_with_go(launcher="go")
@@ -19772,7 +19772,7 @@ class TestCrossLangTester:
             tester.rust_builder = Path("/fake/rust/builder")
             
             # Create fake output file
-            output_file = taster_dir / "test-rust-rust.pspf"
+            output_file = taster_dir / "test-rust-rust.psp"
             output_file.touch()
             
             result = tester.build_with_rust(launcher="rust")
@@ -19782,7 +19782,7 @@ class TestCrossLangTester:
     
     def test_verify_with_python(self):
         """Test Python verification."""
-        with tempfile.NamedTemporaryFile(suffix=".pspf") as tmpfile:
+        with tempfile.NamedTemporaryFile(suffix=".psp") as tmpfile:
             package_path = Path(tmpfile.name)
             
             # Mock the PSPFReader
@@ -19805,7 +19805,7 @@ class TestCrossLangTester:
         """Test launcher CLI verification."""
         mock_run.return_value = Mock(returncode=0, stderr="", stdout="Verified")
         
-        with tempfile.NamedTemporaryFile(suffix=".pspf") as tmpfile:
+        with tempfile.NamedTemporaryFile(suffix=".psp") as tmpfile:
             package_path = Path(tmpfile.name)
             
             tester = CrossLangTester()
@@ -19820,7 +19820,7 @@ class TestCrossLangTester:
         """Test CLI command testing."""
         mock_run.return_value = Mock(returncode=0, stderr="", stdout="Help text")
         
-        with tempfile.NamedTemporaryFile(suffix=".pspf") as tmpfile:
+        with tempfile.NamedTemporaryFile(suffix=".psp") as tmpfile:
             package_path = Path(tmpfile.name)
             
             tester = CrossLangTester()
@@ -19840,7 +19840,7 @@ class TestCrossLangTester:
             
             def mock_builder(launcher, key_seed):
                 """Mock builder that creates a file."""
-                output = taster_dir / f"test-{key_seed}-{len(created_files)}.pspf"
+                output = taster_dir / f"test-{key_seed}-{len(created_files)}.psp"
                 output.write_bytes(b"FAKE_LAUNCHER" + b"PSPF2025" + b"DATA")
                 created_files.append(output)
                 return output
@@ -20002,7 +20002,7 @@ class TestVerifyCommand:
         """Test basic verification without JSON."""
         runner = click.testing.CliRunner()
         
-        with tempfile.NamedTemporaryFile(suffix=".pspf") as tmpfile:
+        with tempfile.NamedTemporaryFile(suffix=".psp") as tmpfile:
             # Mock FlavorVerifier
             with patch('flavor.verification.FlavorVerifier') as mock_verifier:
                 mock_verifier.verify_package.return_value = {
@@ -20025,7 +20025,7 @@ class TestVerifyCommand:
         """Test verification with JSON output."""
         runner = click.testing.CliRunner()
         
-        with tempfile.NamedTemporaryFile(suffix=".pspf") as tmpfile:
+        with tempfile.NamedTemporaryFile(suffix=".psp") as tmpfile:
             # Mock FlavorVerifier
             verification_result = {
                 'format': 'PSPF2025',
@@ -20050,7 +20050,7 @@ class TestVerifyCommand:
         """Test verification with JSON output to file."""
         runner = click.testing.CliRunner()
         
-        with tempfile.NamedTemporaryFile(suffix=".pspf") as tmpfile:
+        with tempfile.NamedTemporaryFile(suffix=".psp") as tmpfile:
             with tempfile.NamedTemporaryFile(mode='w', suffix=".json", delete=False) as output_file:
                 output_path = output_file.name
             
@@ -20078,7 +20078,7 @@ class TestVerifyCommand:
         """Test verification when package doesn't exist."""
         runner = click.testing.CliRunner()
         
-        result = runner.invoke(verify_command, ['/nonexistent/package.pspf'])
+        result = runner.invoke(verify_command, ['/nonexistent/package.psp'])
         assert result.exit_code == 0
         assert "Package file not found" in result.output
     
@@ -20086,7 +20086,7 @@ class TestVerifyCommand:
         """Test verification when package doesn't exist with JSON output."""
         runner = click.testing.CliRunner()
         
-        result = runner.invoke(verify_command, ['/nonexistent/package.pspf', '--json'])
+        result = runner.invoke(verify_command, ['/nonexistent/package.psp', '--json'])
         assert result.exit_code == 0
         
         output_data = json.loads(result.output)
@@ -20098,7 +20098,7 @@ class TestVerifyCommand:
         """Test verification when an error occurs."""
         runner = click.testing.CliRunner()
         
-        with tempfile.NamedTemporaryFile(suffix=".pspf") as tmpfile:
+        with tempfile.NamedTemporaryFile(suffix=".psp") as tmpfile:
             # Mock FlavorVerifier to raise an exception
             with patch('flavor.verification.FlavorVerifier') as mock_verifier:
                 mock_verifier.verify_package.side_effect = Exception("Verification error")
@@ -20111,7 +20111,7 @@ class TestVerifyCommand:
         """Test verification error with JSON output."""
         runner = click.testing.CliRunner()
         
-        with tempfile.NamedTemporaryFile(suffix=".pspf") as tmpfile:
+        with tempfile.NamedTemporaryFile(suffix=".psp") as tmpfile:
             # Mock FlavorVerifier to raise an exception
             with patch('flavor.verification.FlavorVerifier') as mock_verifier:
                 mock_verifier.verify_package.side_effect = Exception("Verification error")
@@ -20127,7 +20127,7 @@ class TestVerifyCommand:
         """Test fallback to basic checks when flavor module not available."""
         runner = click.testing.CliRunner()
         
-        with tempfile.NamedTemporaryFile(suffix=".pspf") as tmpfile:
+        with tempfile.NamedTemporaryFile(suffix=".psp") as tmpfile:
             # Write some test data with PSPF magic
             tmpfile.write(b"LAUNCHER_DATA" + b"PSPF2025" + b"PACKAGE_DATA")
             tmpfile.flush()
@@ -20144,7 +20144,7 @@ class TestVerifyCommand:
         """Test fallback to basic checks with JSON output."""
         runner = click.testing.CliRunner()
         
-        with tempfile.NamedTemporaryFile(suffix=".pspf") as tmpfile:
+        with tempfile.NamedTemporaryFile(suffix=".psp") as tmpfile:
             # Write some test data with PSPF magic
             tmpfile.write(b"LAUNCHER_DATA" + b"PSPF2025" + b"PACKAGE_DATA")
             tmpfile.flush()
@@ -20164,7 +20164,7 @@ class TestVerifyCommand:
         """Test that verify uses current executable when no path provided."""
         runner = click.testing.CliRunner()
         
-        with tempfile.NamedTemporaryFile(suffix=".pspf") as tmpfile:
+        with tempfile.NamedTemporaryFile(suffix=".psp") as tmpfile:
             # Mock sys.argv[0]
             with patch('sys.argv', [tmpfile.name]):
                 with patch('flavor.verification.FlavorVerifier') as mock_verifier:
@@ -20181,7 +20181,7 @@ class TestVerifyCommand:
         """Test output when signature verification fails."""
         runner = click.testing.CliRunner()
         
-        with tempfile.NamedTemporaryFile(suffix=".pspf") as tmpfile:
+        with tempfile.NamedTemporaryFile(suffix=".psp") as tmpfile:
             with patch('flavor.verification.FlavorVerifier') as mock_verifier:
                 mock_verifier.verify_package.return_value = {
                     'format': 'PSPF2025',
@@ -20209,7 +20209,7 @@ fn main() {
     let mut backend = MMapBackend::new();
     
     // Test basic operations
-    let path = Path::new("test.pspf");
+    let path = Path::new("test.psp");
     if let Err(e) = backend.open(path) {
         println!("Expected error opening non-existent file: {:?}", e);
     }
@@ -27815,7 +27815,7 @@ def main():
                 manifest_path = create_test_manifest(temp_path)
                 
                 # Build package
-                package_path = temp_path / f"test_{builder_name.lower()}_{verifier_name.lower()}.pspf"
+                package_path = temp_path / f"test_{builder_name.lower()}_{verifier_name.lower()}.psp"
                 launcher = launchers[builder_name]
                 
                 print(f"\nTesting {builder_name} builder -> {verifier_name} verifier (launcher: {launcher})")
@@ -27833,13 +27833,13 @@ def main():
                     # Rebuild with appropriate launcher for CLI verification
                     if verifier_name == "Go" and launcher != "go":
                         # Need Go launcher for Go CLI verification
-                        package_path = temp_path / f"test_{builder_name.lower()}_go_launcher.pspf"
+                        package_path = temp_path / f"test_{builder_name.lower()}_go_launcher.psp"
                         if not build_func(manifest_path, package_path, launcher="go", key_seed="test123"):
                             results.append((builder_name, verifier_name, "REBUILD_FAILED"))
                             continue
                     elif verifier_name == "Rust" and launcher != "rust":
                         # Need Rust launcher for Rust CLI verification
-                        package_path = temp_path / f"test_{builder_name.lower()}_rust_launcher.pspf"
+                        package_path = temp_path / f"test_{builder_name.lower()}_rust_launcher.psp"
                         if not build_func(manifest_path, package_path, launcher="rust", key_seed="test123"):
                             results.append((builder_name, verifier_name, "REBUILD_FAILED"))
                             continue
@@ -27912,7 +27912,7 @@ with tempfile.TemporaryDirectory() as tmpdir:
     )
     
     # Build package
-    bundle_path = tmpdir / "test.pspf"
+    bundle_path = tmpdir / "test.psp"
     builder = PSPFBuilder()
     
     metadata = {
@@ -28009,7 +28009,7 @@ entry_point = "my.package:main"
 
     with patch("flavor.api.PackagingOrchestrator") as mock_orchestrator_cls:
         mock_orchestrator = mock_orchestrator_cls.return_value
-        expected_output = project_dir / "dist" / "my-package.pspf"
+        expected_output = project_dir / "dist" / "my-package.psp"
         
         # Mock the build process to return the expected path
         mock_orchestrator.build_package.return_value = None
@@ -28917,7 +28917,7 @@ lifecycle = "{manifest['slots'][0]['lifecycle']}"
 @when('I build the {language} bundle using the CLI')
 def step_build_bundle_cli(context, language):
     """Build PSPF bundle using flavor CLI."""
-    output_path = context.project_dir / f"{context.project_dir.name}.pspf"
+    output_path = context.project_dir / f"{context.project_dir.name}.psp"
     
     # Simulate flavor CLI command
     cmd = [
@@ -28978,7 +28978,7 @@ def step_build_bundle_cli(context, language):
 @when('I build with {builder_lang} builder and {launcher_lang} launcher')
 def step_build_cross_language(context, builder_lang, launcher_lang):
     """Build with specific builder/launcher combination."""
-    output_path = context.project_dir / f"cross_{builder_lang}_{launcher_lang}.pspf"
+    output_path = context.project_dir / f"cross_{builder_lang}_{launcher_lang}.psp"
     
     # Simulate cross-language build
     from flavor.psp.format_2025 import PSPFBuilder, SlotMetadata
@@ -29155,7 +29155,7 @@ def step_have_all_combinations(context):
     
     for builder_lang in languages:
         for launcher_lang in languages:
-            bundle_name = f"{builder_lang.lower()}_{launcher_lang.lower()}.pspf"
+            bundle_name = f"{builder_lang.lower()}_{launcher_lang.lower()}.psp"
             bundle_path = context.temp_dir / bundle_name
             
             # Create a simple payload
@@ -29366,7 +29366,7 @@ def step_impl(context: Context):
     }
     
     # Build bundle
-    bundle_path = context.test_bundle.temp_dir / "test.pspf"
+    bundle_path = context.test_bundle.temp_dir / "test.psp"
     builder.build(
         output_path=bundle_path,
         metadata=context.test_bundle.metadata,
@@ -29552,7 +29552,7 @@ def step_impl(context: Context, args: str):
     
     # In real implementation, this would parse the manifest
     # For testing, we'll build with defaults
-    bundle_path = context.test_bundle.temp_dir / "output.pspf"
+    bundle_path = context.test_bundle.temp_dir / "output.psp"
     builder.build(
         output_path=bundle_path,
         manifest_path=context.manifest_path,
@@ -30271,7 +30271,7 @@ def test_cli_package_and_verify(tmp_path: Path) -> None:
         )
         mock_build.assert_called_once_with(pyproject_path, output_path=None, launcher_type=None)
 
-    fake_package_file = tmp_path / "fake.pspf"
+    fake_package_file = tmp_path / "fake.psp"
     fake_package_file.touch()
 
     with patch("flavor.cli.verify_package") as mock_verify:
@@ -30359,7 +30359,7 @@ def test_cli_verify_fails(tmp_path: Path) -> None:
     Tests that the `verify` command handles exceptions from the reader.
     """
     runner = CliRunner()
-    package_file = tmp_path / "package.pspf"
+    package_file = tmp_path / "package.psp"
     package_file.touch()
 
     with patch(
@@ -30848,7 +30848,7 @@ def test_orchestrator_constructs_correct_build_command(tmp_path: Path) -> None:
     Verifies that the orchestrator calls the Go builder with the correct arguments.
     """
     manifest_dir = tmp_path
-    output_path = tmp_path / "dist" / "package.pspf"
+    output_path = tmp_path / "dist" / "package.psp"
 
     # Create mock keys
     keys_dir = tmp_path / "keys"
@@ -30931,7 +30931,7 @@ class TestPackagingOrchestratorComprehensive:
         return PackagingOrchestrator(
             package_integrity_key_path=str(tmp_path / "test.key"),
             public_key_path=str(tmp_path / "test.pub"),
-            output_flavor_path=str(tmp_path / "output.pspf"),
+            output_flavor_path=str(tmp_path / "output.psp"),
             build_config={
                 "version": "1.0.0",
                 "dependencies": [],
@@ -30946,7 +30946,7 @@ class TestPackagingOrchestratorComprehensive:
         """Test orchestrator initializes with correct values."""
         assert orchestrator.package_integrity_key_path == str(tmp_path / "test.key")
         assert orchestrator.public_key_path == str(tmp_path / "test.pub")
-        assert orchestrator.output_flavor_path == str(tmp_path / "output.pspf")
+        assert orchestrator.output_flavor_path == str(tmp_path / "output.psp")
         assert orchestrator.package_name == "test-package"
         assert orchestrator.entry_point == "test.main:run"
         assert orchestrator.python_version == "3.11"
@@ -31147,7 +31147,7 @@ class TestStripFlagIntegration:
         result = self.runner.invoke(cli, [
             "package",
             "--manifest", str(manifest),
-            "--output", str(self.temp_dir / "test.pspf"),
+            "--output", str(self.temp_dir / "test.psp"),
             "--strip"
         ])
         
@@ -31172,7 +31172,7 @@ class TestStripFlagIntegration:
             result = self.runner.invoke(cli, [
                 "package",
                 "--manifest", str(manifest),
-                "--output", str(self.temp_dir / "test.pspf"),
+                "--output", str(self.temp_dir / "test.psp"),
                 "--strip"
             ])
             
@@ -32944,7 +32944,7 @@ exit 0
         )
         
         # Build bundle
-        bundle_path = self.temp_dir / f"{builder}_{launcher}.pspf"
+        bundle_path = self.temp_dir / f"{builder}_{launcher}.psp"
         builder_obj = PSPFBuilder()
         
         metadata = {
@@ -33020,7 +33020,7 @@ exit 0
     @pytest.mark.parametrize("builder,launcher", BUILDER_LAUNCHER_COMBINATIONS)
     def test_compatibility_matrix(self, builder, launcher):
         """Test compatibility aspects of each combination."""
-        bundle_path = self.temp_dir / f"compat_{builder}_{launcher}.pspf"
+        bundle_path = self.temp_dir / f"compat_{builder}_{launcher}.psp"
         
         # Test various content types
         test_files = {
@@ -33075,7 +33075,7 @@ exit 0
         
         for builder in LANGUAGES:
             for launcher in LANGUAGES:
-                bundle_path = self.temp_dir / f"summary_{builder}_{launcher}.pspf"
+                bundle_path = self.temp_dir / f"summary_{builder}_{launcher}.psp"
                 
                 # Quick build
                 builder_obj = PSPFBuilder()
@@ -33122,7 +33122,7 @@ exit 0
     @pytest.mark.parametrize("launcher", LANGUAGES)
     def test_launcher_emoji_correctness(self, launcher):
         """Test each launcher has correct emoji."""
-        bundle_path = self.temp_dir / f"emoji_test_{launcher}.pspf"
+        bundle_path = self.temp_dir / f"emoji_test_{launcher}.psp"
         
         builder = PSPFBuilder()
         builder.build(
@@ -33169,7 +33169,7 @@ exit 0
         )
         
         # Build bundle
-        bundle_path = self.temp_dir / f"critical_{builder}_{launcher}.pspf"
+        bundle_path = self.temp_dir / f"critical_{builder}_{launcher}.psp"
         builder_obj = PSPFBuilder()
         
         metadata = {
@@ -33432,7 +33432,7 @@ lifecycle = "{manifest_data['slots'][0]['lifecycle']}"
     
     def test_build_from_manifest(self, temp_dir, manifest_file):
         """Test building from manifest file."""
-        bundle_path = temp_dir / "from_manifest.pspf"
+        bundle_path = temp_dir / "from_manifest.psp"
         
         builder = PSPFBuilder()
         builder.build(
@@ -33466,7 +33466,7 @@ lifecycle = "{manifest_data['slots'][0]['lifecycle']}"
             path=wheel_path
         )
         
-        bundle_path = temp_dir / "auto_python.pspf"
+        bundle_path = temp_dir / "auto_python.psp"
         builder = PSPFBuilder()
         builder.build(
             output_path=bundle_path,
@@ -33484,7 +33484,7 @@ lifecycle = "{manifest_data['slots'][0]['lifecycle']}"
     
     def test_magic_wand_selection(self, temp_dir):
         """Test magic wand emoji selection."""
-        bundle_path = temp_dir / "magic_wand.pspf"
+        bundle_path = temp_dir / "magic_wand.psp"
         
         builder = PSPFBuilder()
         builder.build(
@@ -33546,7 +33546,7 @@ lifecycle = "{manifest_data['slots'][0]['lifecycle']}"
             )
         ]
         
-        bundle_path = temp_dir / "compressed.pspf"
+        bundle_path = temp_dir / "compressed.psp"
         builder = PSPFBuilder()
         builder.build(
             output_path=bundle_path,
@@ -33572,7 +33572,7 @@ lifecycle = "{manifest_data['slots'][0]['lifecycle']}"
             path=temp_dir / "nonexistent.txt"
         )
         
-        bundle_path = temp_dir / "invalid.pspf"
+        bundle_path = temp_dir / "invalid.psp"
         builder = PSPFBuilder()
         
         # Should handle missing file gracefully
@@ -33646,7 +33646,7 @@ lifecycle = "{manifest_data['slots'][0]['lifecycle']}"
             ))
         
         # First build
-        bundle_path = temp_dir / "incremental.pspf"
+        bundle_path = temp_dir / "incremental.psp"
         builder = PSPFBuilder()
         builder.build(
             output_path=bundle_path,
@@ -33673,7 +33673,7 @@ lifecycle = "{manifest_data['slots'][0]['lifecycle']}"
     def test_cross_platform_build(self, temp_dir):
         """Test cross-platform building."""
         # Simulate building for different target
-        bundle_path = temp_dir / "cross_platform.pspf"
+        bundle_path = temp_dir / "cross_platform.psp"
         
         builder = PSPFBuilder()
         # In real implementation, would download target launcher
@@ -33711,7 +33711,7 @@ lifecycle = "{manifest_data['slots'][0]['lifecycle']}"
         # - Magic wand emoji is always used
         # - Ephemeral key derived deterministically
         
-        bundle_path = temp_dir / "reproducible.pspf"
+        bundle_path = temp_dir / "reproducible.psp"
         builder = PSPFBuilder()
         
         builder.build(
@@ -33744,7 +33744,7 @@ lifecycle = "{manifest_data['slots'][0]['lifecycle']}"
             path=large_path
         )
         
-        bundle_path = temp_dir / "optimized.pspf"
+        bundle_path = temp_dir / "optimized.psp"
         builder = PSPFBuilder()
         builder.build(
             output_path=bundle_path,
@@ -33786,7 +33786,7 @@ lifecycle = "{manifest_data['slots'][0]['lifecycle']}"
             }
         }
         
-        bundle_path = temp_dir / "signed.pspf"
+        bundle_path = temp_dir / "signed.psp"
         builder = PSPFBuilder()
         builder.build(
             output_path=bundle_path,
@@ -33831,7 +33831,7 @@ lifecycle = "{manifest_data['slots'][0]['lifecycle']}"
                 ))
                 slot_index += 1
         
-        bundle_path = temp_dir / "multi_slot.pspf"
+        bundle_path = temp_dir / "multi_slot.psp"
         builder = PSPFBuilder()
         builder.build(
             output_path=bundle_path,
@@ -33911,7 +33911,7 @@ class TestPSPFCompatibility:
             path=slot_path
         )
         
-        bundle_path = temp_dir / "py_go.pspf"
+        bundle_path = temp_dir / "py_go.psp"
         builder = PSPFBuilder()
         builder.build(
             output_path=bundle_path,
@@ -33937,7 +33937,7 @@ class TestPSPFCompatibility:
     def test_go_builder_rust_launcher(self, temp_dir):
         """Test Go builder with Rust launcher."""
         # Simulate Go-built bundle
-        bundle_path = temp_dir / "go_rust.pspf"
+        bundle_path = temp_dir / "go_rust.psp"
         
         # Build with standard format
         builder = PSPFBuilder()
@@ -33966,7 +33966,7 @@ class TestPSPFCompatibility:
     def test_rust_builder_python_launcher(self, temp_dir):
         """Test Rust builder with Python launcher."""
         # Simulate Rust-built bundle
-        bundle_path = temp_dir / "rust_py.pspf"
+        bundle_path = temp_dir / "rust_py.psp"
         
         builder = PSPFBuilder()
         builder.build(
@@ -34048,7 +34048,7 @@ class TestPSPFCompatibility:
             ))
         
         # Build bundle
-        bundle_path = temp_dir / "compressed.pspf"
+        bundle_path = temp_dir / "compressed.psp"
         builder = PSPFBuilder()
         builder.build(
             output_path=bundle_path,
@@ -34071,7 +34071,7 @@ class TestPSPFCompatibility:
         """Test UTF-8 emoji handling across languages."""
         # Test emoji magic is just magic wand
         
-        bundle_path = temp_dir / "emoji_test.pspf"
+        bundle_path = temp_dir / "emoji_test.psp"
         builder = PSPFBuilder()
         builder.build(
             output_path=bundle_path,
@@ -34118,7 +34118,7 @@ class TestPSPFCompatibility:
             }
         }
         
-        bundle_path = temp_dir / "paths.pspf"
+        bundle_path = temp_dir / "paths.psp"
         builder = PSPFBuilder()
         builder.build(
             output_path=bundle_path,
@@ -34136,7 +34136,7 @@ class TestPSPFCompatibility:
     def test_binary_parsing_compatibility(self, temp_dir):
         """Test binary structure parsing compatibility."""
         # Create bundle
-        bundle_path = temp_dir / "binary_test.pspf"
+        bundle_path = temp_dir / "binary_test.psp"
         builder = PSPFBuilder()
         builder.build(
             output_path=bundle_path,
@@ -34186,7 +34186,7 @@ class TestPSPFCompatibility:
             "array": [1, 2.5, "three", None, True]
         }
         
-        bundle_path = temp_dir / "json_test.pspf"
+        bundle_path = temp_dir / "json_test.psp"
         builder = PSPFBuilder()
         builder.build(
             output_path=bundle_path,
@@ -34225,7 +34225,7 @@ class TestPSPFCompatibility:
             "slots": [large_slot.to_dict()]
         }
         
-        bundle_path = temp_dir / "large.pspf"
+        bundle_path = temp_dir / "large.psp"
         builder = PSPFBuilder()
         builder.build(
             output_path=bundle_path,
@@ -34244,7 +34244,7 @@ class TestPSPFCompatibility:
     def test_endianness_handling(self, temp_dir):
         """Test little-endian consistency."""
         # PSPF mandates little-endian
-        bundle_path = temp_dir / "endian.pspf"
+        bundle_path = temp_dir / "endian.psp"
         builder = PSPFBuilder()
         builder.build(
             output_path=bundle_path,
@@ -34288,7 +34288,7 @@ class TestPSPFCompatibility:
             path=js_path
         )
         
-        bundle_path = temp_dir / "node.pspf"
+        bundle_path = temp_dir / "node.psp"
         builder = PSPFBuilder()
         builder.build(
             output_path=bundle_path,
@@ -34414,7 +34414,7 @@ class TestPSPFCore:
         )
         
         # Build bundle
-        bundle_path = temp_dir / "test.pspf"
+        bundle_path = temp_dir / "test.psp"
         builder = PSPFBuilder()
         builder.build(
             output_path=bundle_path,
@@ -34430,7 +34430,7 @@ class TestPSPFCore:
     def test_emoji_magic_format(self, temp_dir, simple_payload, simple_metadata):
         """Test emoji magic is just the magic wand."""
         # Build bundle
-        bundle_path = temp_dir / "test.pspf"
+        bundle_path = temp_dir / "test.psp"
         builder = PSPFBuilder()
         builder.build(
             output_path=bundle_path,
@@ -34452,7 +34452,7 @@ class TestPSPFCore:
         test_cases = ["go", "rust", "python", "node", "unknown"]
         
         for launcher_type in test_cases:
-            bundle_path = temp_dir / f"test_{launcher_type}.pspf"
+            bundle_path = temp_dir / f"test_{launcher_type}.psp"
             builder = PSPFBuilder()
             builder.build(
                 output_path=bundle_path,
@@ -34471,7 +34471,7 @@ class TestPSPFCore:
     
     def test_index_block_location(self, temp_dir, simple_metadata):
         """Test index block is at launcher_size offset."""
-        bundle_path = temp_dir / "test.pspf"
+        bundle_path = temp_dir / "test.psp"
         builder = PSPFBuilder()
         builder.build(
             output_path=bundle_path,
@@ -34503,7 +34503,7 @@ class TestPSPFCore:
     
     def test_index_checksum(self, temp_dir, simple_metadata):
         """Test index block checksum validation."""
-        bundle_path = temp_dir / "test.pspf"
+        bundle_path = temp_dir / "test.psp"
         builder = PSPFBuilder()
         builder.build(
             output_path=bundle_path,
@@ -34519,7 +34519,7 @@ class TestPSPFCore:
     
     def test_metadata_archive_structure(self, temp_dir, simple_metadata):
         """Test metadata is gzipped JSON."""
-        bundle_path = temp_dir / "test.pspf"
+        bundle_path = temp_dir / "test.psp"
         builder = PSPFBuilder()
         builder.build(
             output_path=bundle_path,
@@ -34549,7 +34549,7 @@ class TestPSPFCore:
     
     def test_metadata_psp_json_required(self, temp_dir, simple_metadata):
         """Test psp.json is required in metadata."""
-        bundle_path = temp_dir / "test.pspf"
+        bundle_path = temp_dir / "test.psp"
         builder = PSPFBuilder()
         builder.build(
             output_path=bundle_path,
@@ -34587,7 +34587,7 @@ class TestPSPFCore:
             ))
         
         # Build bundle
-        bundle_path = temp_dir / "test.pspf"
+        bundle_path = temp_dir / "test.psp"
         builder = PSPFBuilder()
         builder.build(
             output_path=bundle_path,
@@ -34623,7 +34623,7 @@ class TestPSPFCore:
     
     def test_reader_verify_magic(self, temp_dir, simple_metadata):
         """Test magic verification."""
-        bundle_path = temp_dir / "test.pspf"
+        bundle_path = temp_dir / "test.psp"
         builder = PSPFBuilder()
         builder.build(
             output_path=bundle_path,
@@ -34644,7 +34644,7 @@ class TestPSPFCore:
     
     def test_launcher_size_detection(self, temp_dir, simple_metadata):
         """Test launcher size detection."""
-        bundle_path = temp_dir / "test.pspf"
+        bundle_path = temp_dir / "test.psp"
         builder = PSPFBuilder()
         builder.build(
             output_path=bundle_path,
@@ -34664,7 +34664,7 @@ class TestPSPFCore:
     
     def test_empty_bundle(self, temp_dir):
         """Test building bundle with no slots."""
-        bundle_path = temp_dir / "empty.pspf"
+        bundle_path = temp_dir / "empty.psp"
         builder = PSPFBuilder()
         
         metadata = {
@@ -34947,7 +34947,7 @@ class TestPSPFIntegration:
     
     def test_build_and_read_bundle(self, test_data_dir):
         """Test building and reading a bundle."""
-        output_file = test_data_dir / "test.pspf"
+        output_file = test_data_dir / "test.psp"
         
         # Create slots
         slots = [
@@ -35051,7 +35051,7 @@ class TestPSPFIntegration:
     
     def test_backend_switching(self, test_data_dir):
         """Test switching between backends."""
-        output_file = test_data_dir / "test.pspf"
+        output_file = test_data_dir / "test.psp"
         
         # Build minimal bundle
         builder = PSPFBuilder()
@@ -35077,7 +35077,7 @@ class TestPSPFIntegration:
     
     def test_page_aligned_slots(self, test_data_dir):
         """Test page-aligned slot optimization."""
-        output_file = test_data_dir / "aligned.pspf"
+        output_file = test_data_dir / "aligned.psp"
         
         # Create large slot to test alignment
         large_file = test_data_dir / "large.bin"
@@ -35144,7 +35144,7 @@ class TestReaderBackends:
     @pytest.fixture
     def test_bundle(self):
         """Create a minimal test bundle."""
-        with tempfile.NamedTemporaryFile(suffix='.pspf', delete=False) as f:
+        with tempfile.NamedTemporaryFile(suffix='.psp', delete=False) as f:
             # Write fake launcher (100 bytes)
             f.write(b'LAUNCHER' * 12 + b'DATA')
             
@@ -35435,7 +35435,7 @@ class TestPSPFSecurity:
             }
         }
         
-        bundle_path = temp_dir / "secure.pspf"
+        bundle_path = temp_dir / "secure.psp"
         builder = PSPFBuilder()
         builder.build(
             output_path=bundle_path,
@@ -35468,7 +35468,7 @@ class TestPSPFSecurity:
     
     def test_ephemeral_key_in_bundle(self, temp_dir):
         """Test ephemeral key is included in bundle."""
-        bundle_path = temp_dir / "ephemeral.pspf"
+        bundle_path = temp_dir / "ephemeral.psp"
         builder = PSPFBuilder()
         builder.build(
             output_path=bundle_path,
@@ -35596,7 +35596,7 @@ class TestPSPFSecurity:
             path=slot_path
         )
         
-        bundle_path = temp_dir / "slot_tamper.pspf"
+        bundle_path = temp_dir / "slot_tamper.psp"
         builder = PSPFBuilder()
         builder.build(
             output_path=bundle_path,
@@ -35626,7 +35626,7 @@ class TestPSPFSecurity:
     
     def test_index_checksum_validation(self, temp_dir):
         """Test index block checksum validation."""
-        bundle_path = temp_dir / "index_check.pspf"
+        bundle_path = temp_dir / "index_check.psp"
         builder = PSPFBuilder()
         builder.build(
             output_path=bundle_path,
@@ -35648,7 +35648,7 @@ class TestPSPFSecurity:
     
     def test_emoji_magic_corruption(self, temp_dir):
         """Test detection of corrupted emoji magic."""
-        bundle_path = temp_dir / "magic_corrupt.pspf"
+        bundle_path = temp_dir / "magic_corrupt.psp"
         builder = PSPFBuilder()
         builder.build(
             output_path=bundle_path,
@@ -35685,7 +35685,7 @@ class TestPSPFSecurity:
             }
         }
         
-        bundle_path = temp_dir / "no_seal.pspf"
+        bundle_path = temp_dir / "no_seal.psp"
         builder = PSPFBuilder()
         builder.build(
             output_path=bundle_path,
@@ -35725,7 +35725,7 @@ class TestPSPFSecurity:
             }
         }
         
-        bundle_path = temp_dir / "trusted.pspf"
+        bundle_path = temp_dir / "trusted.psp"
         builder = PSPFBuilder()
         builder.build(
             output_path=bundle_path,
@@ -35751,8 +35751,8 @@ class TestPSPFSecurity:
         }
         
         # Build twice
-        bundle1_path = temp_dir / "bundle1.pspf"
-        bundle2_path = temp_dir / "bundle2.pspf"
+        bundle1_path = temp_dir / "bundle1.psp"
+        bundle2_path = temp_dir / "bundle2.psp"
         
         builder = PSPFBuilder()
         builder.build(output_path=bundle1_path, metadata=metadata, slots=[])
@@ -35957,7 +35957,7 @@ class TestPSPFSlots:
             "slots": [slot.to_dict() for slot in test_slots]
         }
         
-        bundle_path = temp_dir / "multi.pspf"
+        bundle_path = temp_dir / "multi.psp"
         builder = PSPFBuilder()
         builder.build(
             output_path=bundle_path,
@@ -36053,7 +36053,7 @@ class TestPSPFSlots:
         )
         
         # Build bundle
-        bundle_path = temp_dir / "checksum.pspf"
+        bundle_path = temp_dir / "checksum.psp"
         builder = PSPFBuilder()
         builder.build(
             output_path=bundle_path,
@@ -36067,7 +36067,7 @@ class TestPSPFSlots:
     
     def test_slot_table_structure(self, temp_dir, test_slots):
         """Test slot table binary structure."""
-        bundle_path = temp_dir / "table.pspf"
+        bundle_path = temp_dir / "table.psp"
         builder = PSPFBuilder()
         builder.build(
             output_path=bundle_path,
@@ -36116,7 +36116,7 @@ class TestPSPFSlots:
         )
         
         # Build bundle
-        bundle_path = temp_dir / "cached.pspf"
+        bundle_path = temp_dir / "cached.psp"
         builder = PSPFBuilder()
         builder.build(
             output_path=bundle_path,
@@ -36175,7 +36175,7 @@ class TestPSPFSlots:
         )
         
         # Build bundle
-        bundle_path = temp_dir / "large.pspf"
+        bundle_path = temp_dir / "large.psp"
         builder = PSPFBuilder()
         builder.build(
             output_path=bundle_path,

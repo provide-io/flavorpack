@@ -18,17 +18,29 @@ def test_cli_package_and_verify(tmp_path: Path) -> None:
     pyproject_path.touch()
 
     with patch("flavor.cli.build_package_from_manifest") as mock_build:
-        mock_build.return_value = [Path("fake/artifact")]
-        package_result = runner.invoke(
-            cli_main,
-            ["package", "--manifest", str(pyproject_path)],
-        )
-        assert package_result.exit_code == 0, (
-            f"Package command failed: {package_result.output}"
-        )
-        mock_build.assert_called_once_with(pyproject_path, output_path=None, launcher_type=None)
+        # Create a real fake artifact file that can be verified
+        fake_artifact = tmp_path / "fake_artifact.psp"
+        fake_artifact.touch()
+        mock_build.return_value = [fake_artifact]
+        
+        # Also mock verify to avoid real verification
+        with patch("flavor.cli.verify_package") as mock_verify:
+            mock_verify.return_value = {"signature_valid": True}
+            
+            package_result = runner.invoke(
+                cli_main,
+                ["package", "--manifest", str(pyproject_path)],
+            )
+            assert package_result.exit_code == 0, (
+                f"Package command failed: {package_result.output}"
+            )
+            
+        # Check that build was called with correct parameters
+        args, kwargs = mock_build.call_args
+        assert args[0] == pyproject_path
+        assert kwargs.get('strip_binaries') == False
 
-    fake_package_file = tmp_path / "fake.pspf"
+    fake_package_file = tmp_path / "fake.psp"
     fake_package_file.touch()
 
     with patch("flavor.cli.verify_package") as mock_verify:
