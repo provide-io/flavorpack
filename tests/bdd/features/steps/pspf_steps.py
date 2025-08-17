@@ -21,7 +21,7 @@ from flavor.psp.format_2025 import (
     PSPFIndex,
     SlotMetadata,
     PSPFLauncher,
-    ephemeral_key_pair
+    generate_key_pair
 )
 
 
@@ -54,7 +54,7 @@ def step_impl(context: Context):
 @given('ephemeral keys are available for integrity sealing')
 def step_impl(context: Context):
     """Ensure ephemeral key generation works."""
-    private_key, public_key = ephemeral_key_pair()
+    private_key, public_key = generate_key_pair()
     assert private_key is not None
     assert public_key is not None
     context.ephemeral_keys = (private_key, public_key)

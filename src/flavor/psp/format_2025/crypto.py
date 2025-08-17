@@ -7,15 +7,15 @@ from cryptography.exceptions import InvalidSignature
 from pyvider.telemetry import logger
 
 
-def ephemeral_key_pair() -> tuple[bytes, bytes]:
-    """Generate ephemeral Ed25519 key pair for integrity sealing.
+def generate_key_pair() -> tuple[bytes, bytes]:
+    """Generate Ed25519 key pair for package signing.
     
     Returns:
         tuple: (private_key_bytes, public_key_bytes)
             - private_key_bytes: 32-byte Ed25519 private key seed
             - public_key_bytes: 32-byte Ed25519 public key
     """
-    logger.debug("🔐 Generating ephemeral Ed25519 key pair")
+    logger.debug("🔐 Generating Ed25519 key pair")
     
     # Generate a new Ed25519 private key
     private_key = ed25519.Ed25519PrivateKey.generate()

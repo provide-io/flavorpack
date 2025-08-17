@@ -1,17 +1,26 @@
 """Tests for the packaging orchestrator."""
 
+import pytest
 from pathlib import Path
 from unittest.mock import patch
 
 from flavor.packaging.orchestrator import PackagingOrchestrator
 
 
+@pytest.mark.packaging
+@pytest.mark.unit
 def test_orchestrator_constructs_correct_build_command(tmp_path: Path) -> None:
     """
     Verifies that the orchestrator calls the Go builder with the correct arguments.
     """
     manifest_dir = tmp_path
     output_path = tmp_path / "dist" / "package.pspf"
+
+    # Create mock keys
+    keys_dir = tmp_path / "keys"
+    keys_dir.mkdir()
+    (keys_dir / "priv.key").write_text("mock private key")
+    (keys_dir / "pub.key").write_text("mock public key")
 
     with patch(
         "flavor.packaging.util.run_subprocess"
@@ -34,8 +43,8 @@ def test_orchestrator_constructs_correct_build_command(tmp_path: Path) -> None:
         mock_sign.return_value = b"fakesig"
 
         orchestrator = PackagingOrchestrator(
-            package_integrity_key_path="keys/priv.key",
-            public_key_path="keys/pub.key",
+            package_integrity_key_path=str(keys_dir / "priv.key"),
+            public_key_path=str(keys_dir / "pub.key"),
             output_flavor_path=str(output_path),
             build_config={},
             manifest_dir=manifest_dir,
@@ -47,14 +56,14 @@ def test_orchestrator_constructs_correct_build_command(tmp_path: Path) -> None:
         # Find the final build command call
         build_call = None
         for c in mock_run.call_args_list:
-            if "pspf-builder" in c.args[0][0]:
+            if "flavor-rs-builder" in c.args[0][0] or "flavor-go-builder" in c.args[0][0]:
                 build_call = c
                 break
 
-        assert build_call is not None, "Go build command was not called"
+        assert build_call is not None, "Builder command was not called"
         build_cmd_args = build_call.args[0]
         
-        assert "pspf-builder" in build_cmd_args[0]
+        assert "flavor-rs-builder" in build_cmd_args[0] or "flavor-go-builder" in build_cmd_args[0]
         assert "--manifest" in build_cmd_args
         assert "--output" in build_cmd_args
         assert str(output_path) in build_cmd_args

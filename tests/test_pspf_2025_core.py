@@ -21,7 +21,7 @@ from flavor.psp.format_2025 import (
     PSPFReader,
     PSPFIndex,
     SlotMetadata,
-    ephemeral_key_pair,
+    generate_key_pair,
     PSPF_MAGIC,
     PSPF_VERSION,
     INDEX_SIZE,
@@ -32,6 +32,7 @@ from flavor.psp.format_2025 import (
 )
 
 
+@pytest.mark.unit
 class TestPSPFCore:
     """Test core PSPF format functionality."""
     
@@ -80,7 +81,7 @@ class TestPSPFCore:
     
     def test_ephemeral_keys_available(self):
         """Test ephemeral key generation."""
-        private_key, public_key = ephemeral_key_pair()
+        private_key, public_key = generate_key_pair()
         assert private_key is not None
         assert public_key is not None
         assert len(private_key) == 32

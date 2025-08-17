@@ -12,6 +12,8 @@ import pytest
 from flavor.helpers import HelperInfo, HelperManager
 
 
+@pytest.mark.helpers
+@pytest.mark.requires_helpers
 class TestHelperManager:
     """Test the HelperManager class."""
     
@@ -387,6 +389,8 @@ class TestHelperManager:
         assert installed == []
 
 
+@pytest.mark.helpers
+@pytest.mark.unit
 class TestHelperInfo:
     """Test the HelperInfo dataclass."""
     

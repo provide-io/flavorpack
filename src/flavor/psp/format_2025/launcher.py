@@ -11,10 +11,12 @@ import subprocess
 import tarfile
 import zlib
 from pathlib import Path
+from contextlib import contextmanager
 
 from pyvider.telemetry import logger
 
 from flavor.psp.format_2025.reader import PSPFReader
+from flavor.psp.format_2025.constants import SLOT_DESCRIPTOR_SIZE
 
 
 class PSPFLauncher(PSPFReader):
@@ -26,6 +28,14 @@ class PSPFLauncher(PSPFReader):
         self.cache_dir = Path.home() / ".cache" / "pspf"
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
+    @contextmanager
+    def acquire_lock(self, lock_file: Path, timeout: float = 30.0):
+        """Acquire a file-based lock for extraction."""
+        from flavor.resilience import default_lock_manager
+        with default_lock_manager.lock(lock_file.name, timeout=timeout) as lock:
+            yield lock
+
+    
     def read_slot_table(self) -> list[dict]:
         """Read the slot table from the bundle.
         
@@ -47,18 +57,23 @@ class PSPFLauncher(PSPFReader):
             # Seek to slot table
             f.seek(index.slot_table_offset)
             
-            # Read each 24-byte slot entry
+            # Read each 64-byte slot descriptor (new format)
             for i in range(index.slot_count):
-                entry_data = f.read(24)
-                if len(entry_data) != 24:
-                    raise ValueError(f"Invalid slot table entry {i}: expected 24 bytes, got {len(entry_data)}")
+                entry_data = f.read(SLOT_DESCRIPTOR_SIZE)
+                if len(entry_data) != SLOT_DESCRIPTOR_SIZE:
+                    raise ValueError(f"Invalid slot table entry {i}: expected {SLOT_DESCRIPTOR_SIZE} bytes, got {len(entry_data)}")
                 
-                # Parse the 24-byte structure:
-                # NOTE: This format must match Go/Rust implementations
-                # offset(8), size(8), checksum(4), encoding(1), purpose(1), lifecycle(1), reserved(1)
-                offset, size, checksum, encoding, purpose, lifecycle, reserved = struct.unpack(
-                    '<QQIBBBB', entry_data
-                )
+                # Use SlotDescriptor to unpack
+                from flavor.psp.format_2025.slots import SlotDescriptor
+                descriptor = SlotDescriptor.unpack(entry_data)
+                
+                # Extract the fields we need for launcher
+                offset = descriptor.offset
+                size = descriptor.size  # Compressed size
+                checksum = descriptor.checksum
+                encoding = descriptor.compression
+                purpose = descriptor.purpose
+                lifecycle = descriptor.lifecycle
                 
                 slot_entries.append({
                     'index': i,
@@ -88,14 +103,20 @@ class PSPFLauncher(PSPFReader):
         extracted_paths = {}
         
         logger.info(f"📤 Extracting {len(slot_table)} slots")
-        for slot_entry in slot_table:
-            slot_idx = slot_entry['index']
-            logger.debug(f"🔄 Extracting slot {slot_idx}")
-            slot_path = self.extract_slot(slot_idx, workenv_dir)
-            extracted_paths[slot_idx] = slot_path
-        
-        logger.info(f"✅ Extracted all {len(extracted_paths)} slots")
-        return extracted_paths
+        try:
+            for slot_entry in slot_table:
+                slot_idx = slot_entry['index']
+                logger.debug(f"🔄 Extracting slot {slot_idx}")
+                slot_path = self.extract_slot(slot_idx, workenv_dir)
+                extracted_paths[slot_idx] = slot_path
+            
+            logger.info(f"✅ Extracted all {len(extracted_paths)} slots")
+            return extracted_paths
+        except Exception as e:
+            logger.error(f"❌ Extraction interrupted or failed: {e}. Cleaning up partial extraction.")
+            import shutil
+            shutil.rmtree(workenv_dir, ignore_errors=True)
+            raise # Re-raise the exception
 
     def extract_slot(self, slot_index: int, workenv_dir: Path, verify_checksum: bool = False) -> Path:
         """Extract a single slot.
@@ -140,7 +161,8 @@ class PSPFLauncher(PSPFReader):
         # Decode if needed
         if slot_entry['encoding'] == 1:  # gzip
             logger.debug(f"🗜️ Decompressing slot {slot_index} with gzip")
-            data = zlib.decompress(slot_data)
+            import gzip
+            data = gzip.decompress(slot_data)
             logger.debug(f"✅ Decompressed to {len(data)} bytes")
         elif slot_entry['encoding'] == 2:  # reserved for future encoding methods
             logger.error(f"❌ Encoding method 2 is reserved for future use")
@@ -170,20 +192,27 @@ class PSPFLauncher(PSPFReader):
         
         if is_tarball or slot_name.endswith('.tar.gz') or slot_name.endswith('.tgz'):
             logger.debug(f"📤 Extracting tarball {slot_name} to {workenv_dir}")
-            with tarfile.open(fileobj=io.BytesIO(data), mode='r:*') as tar:
-                tar.extractall(path=workenv_dir)
-            logger.debug(f"✅ Extracted tarball contents to {workenv_dir}")
-            
-            # Return the base directory
-            return workenv_dir
+            try:
+                with tarfile.open(fileobj=io.BytesIO(data), mode='r:*') as tar:
+                    tar.extractall(path=workenv_dir)
+                logger.debug(f"✅ Extracted tarball contents to {workenv_dir}")
+                
+                # Return the base directory
+                return workenv_dir
+            except (OSError, PermissionError, tarfile.ReadError) as e:
+                logger.error(f"❌ Disk or tarball error extracting slot {slot_index} to {workenv_dir}: {e}")
+                raise # Re-raise the exception
         else:
             # Write single file
             output_path = workenv_dir / slot_name
-            output_path.parent.mkdir(parents=True, exist_ok=True)
-            output_path.write_bytes(data)
-            logger.debug(f"✅ Wrote {len(data)} bytes to {output_path}")
-            
-            return output_path
+            try:
+                output_path.parent.mkdir(parents=True, exist_ok=True)
+                output_path.write_bytes(data)
+                logger.debug(f"✅ Wrote {len(data)} bytes to {output_path}")
+                return output_path
+            except (OSError, PermissionError) as e:
+                logger.error(f"❌ Disk error writing slot {slot_index} to {output_path}: {e}")
+                raise # Re-raise the exception
 
     def setup_workenv(self) -> Path:
         """Setup work environment for bundle execution.

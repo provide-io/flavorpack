@@ -34,6 +34,10 @@ BUILDER_LAUNCHER_COMBINATIONS = [
 ]
 
 
+@pytest.mark.integration
+@pytest.mark.cross_language
+@pytest.mark.requires_helpers
+@pytest.mark.slow
 class TestAllCombinations:
     """Test all builder/launcher combinations systematically."""
     
@@ -362,8 +366,9 @@ exit 0
         # 3. Launcher compatibility
         launcher_obj = PSPFLauncher(bundle_path)
         
-        # Extract slots
-        extracted = launcher_obj.extract_all_slots()
+        # Setup work environment and extract slots
+        workenv_dir = launcher_obj.setup_workenv()
+        extracted = launcher_obj.extract_all_slots(workenv_dir)
         assert len(extracted) == 1
         
         # Verify integrity
