@@ -114,7 +114,7 @@ class PSPFReader:
             # Convert memoryview to bytes if needed
             search_data = bytes(data) if isinstance(data, memoryview) else data
             
-            # Look for magic (first 8 bytes of 16-byte magic)
+            # Look for PSPF magic (8 bytes: "PSPF2025")
             pos = search_data.find(PSPF_MAGIC[:8])
             if pos >= 0:
                 self._launcher_size = offset + pos
@@ -432,7 +432,8 @@ class PSPFReader:
         if self._is_tarball(slot_data):
             logger.debug(f"📦 Slot {slot_index} is a tarball, extracting...")
             with tarfile.open(fileobj=io.BytesIO(slot_data), mode="r") as tar:
-                tar.extractall(dest_dir)
+                # Use the filter parameter to avoid Python 3.14 deprecation warning
+                tar.extractall(dest_dir, filter='data')
             return dest_dir
         else:
             # Single file

@@ -18,13 +18,19 @@ This will create a `workenv/` directory containing a platform-specific Python vi
 
 The Python build orchestrator depends on pre-compiled helper binaries for Go and Rust. These helpers must be built from the source code within this repository.
 
-A single script handles the compilation of both Go and Rust helpers and places them in the correct location (`helpers/bin/`).
+A single script handles the compilation of both Go and Rust helpers and places them in the cache location (`~/.cache/flavor/bin/`).
 
 ```bash
 ./helpers/build.sh
 ```
 
 Run this script once after cloning the repository and any time you make changes to the Go or Rust source code in the `helpers/` directory.
+
+The helper binaries will be installed to:
+- `~/.cache/flavor/bin/flavor-go-builder` - Go builder
+- `~/.cache/flavor/bin/flavor-go-launcher` - Go launcher  
+- `~/.cache/flavor/bin/flavor-rs-builder` - Rust builder
+- `~/.cache/flavor/bin/flavor-rs-launcher` - Rust launcher
 
 ## 3. Development Workflow
 
@@ -56,7 +62,7 @@ This command will now reliably find and use the helper binaries you compiled in 
 ### Summary
 
 1.  `source env.sh` -> Sets up Python environment.
-2.  `./helpers/build.sh` -> Compiles and places Go/Rust helpers in `helpers/bin/`.
+2.  `./helpers/build.sh` -> Compiles and places Go/Rust helpers in `~/.cache/flavor/bin/`.
 3.  `flavor ...` -> Use the tool.
 
 This process ensures that the helper binaries are always in sync with the source code of your current branch, providing a reliable and hermetic build environment.

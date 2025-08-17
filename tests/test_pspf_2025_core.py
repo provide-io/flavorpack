@@ -99,7 +99,7 @@ class TestPSPFCore:
             checksum=hashlib.sha256(simple_payload.read_bytes()).hexdigest(),
             encoding="none",
             purpose="payload",
-            lifecycle="persistent",
+            lifecycle="runtime",
             path=simple_payload
         )
         
@@ -271,7 +271,7 @@ class TestPSPFCore:
                 checksum=hashlib.sha256(slot_path.read_bytes()).hexdigest(),
                 encoding="none",
                 purpose="payload",
-                lifecycle="persistent",
+                lifecycle="runtime",
                 path=slot_path
             ))
         

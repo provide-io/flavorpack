@@ -155,8 +155,8 @@ jobs:
           VERSION="${{ needs.validate.outputs.version }}"
           LDFLAGS="-s -w -X main.Version=$VERSION -X main.BuildTime=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
           
-          go build -ldflags="$LDFLAGS" -o ../bin/flavor-go-launcher-${{ matrix.platform }} cmd/pspf-launcher/main.go
-          go build -ldflags="$LDFLAGS" -o ../bin/flavor-go-builder-${{ matrix.platform }} cmd/pspf-builder/main.go
+          go build -ldflags="$LDFLAGS" -o ../bin/flavor-go-launcher-${{ matrix.platform }} cmd/flavor-go-launcher/main.go
+          go build -ldflags="$LDFLAGS" -o ../bin/flavor-go-builder-${{ matrix.platform }} cmd/flavor-go-builder/main.go
       
       # Build Rust helpers
       - name: 🦀 Build Rust Helpers

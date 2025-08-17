@@ -13,7 +13,9 @@ from attrs import define, field, validators
 from flavor.psp.format_2025.constants import (
     SLOT_ALIGNMENT, SLOT_DESCRIPTOR_SIZE, PAGE_SIZE,
     PURPOSE_DATA, PURPOSE_CODE, PURPOSE_CONFIG, PURPOSE_MEDIA,
-    LIFECYCLE_PERMANENT, LIFECYCLE_CACHED, LIFECYCLE_TEMPORARY, LIFECYCLE_STREAM,
+    LIFECYCLE_INIT, LIFECYCLE_STARTUP, LIFECYCLE_RUNTIME, LIFECYCLE_SHUTDOWN,
+    LIFECYCLE_CACHE, LIFECYCLE_TEMP, LIFECYCLE_LAZY, LIFECYCLE_EAGER,
+    LIFECYCLE_DEV, LIFECYCLE_CONFIG, LIFECYCLE_PLATFORM,
     ACCESS_HINT_SEQUENTIAL, ACCESS_HINT_RANDOM, ACCESS_HINT_ONCE,
     CACHE_NORMAL, COMPRESSION_NONE
 )
@@ -66,7 +68,7 @@ class SlotDescriptor:
     
     # Semantics (8 bytes)
     purpose: int = field(default=PURPOSE_DATA)
-    lifecycle: int = field(default=LIFECYCLE_CACHED)
+    lifecycle: int = field(default=LIFECYCLE_RUNTIME)
     access_hint: int = field(default=ACCESS_HINT_SEQUENTIAL)
     priority: int = field(default=CACHE_NORMAL)
     permissions: int = field(default=0o644)  # Unix-style
@@ -193,19 +195,40 @@ class SlotMetadata:
     checksum: str = field(validator=validators.instance_of(str))
     encoding: str = field(validator=validators.in_(["none", "gzip"]))
     purpose: str = field()
-    lifecycle: str = field(validator=validators.in_(["persistent", "volatile", "temporary", "install"]))
+    lifecycle: str = field(validator=validators.in_([
+        # Timing-based
+        "init", "startup", "runtime", "shutdown",
+        # Retention-based
+        "cache", "temp",
+        # Access-based
+        "lazy", "eager",
+        # Environment-based
+        "dev", "config", "platform"
+    ]))
     path: Path | None = field(default=None)
     extract_to: str | None = field(default=None)
+    platform: str | None = field(default=None)  # Added for backward compatibility
     
     def to_descriptor(self) -> SlotDescriptor:
         """Convert legacy metadata to new descriptor."""
         # Map string values to integers
         purpose_map = {"payload": PURPOSE_DATA, "runtime": PURPOSE_CODE, "tool": PURPOSE_CONFIG}
         lifecycle_map = {
-            "persistent": LIFECYCLE_PERMANENT,
-            "volatile": LIFECYCLE_CACHED,
-            "temporary": LIFECYCLE_TEMPORARY,
-            "install": LIFECYCLE_TEMPORARY
+            # Timing-based
+            "init": LIFECYCLE_INIT,
+            "startup": LIFECYCLE_STARTUP,
+            "runtime": LIFECYCLE_RUNTIME,
+            "shutdown": LIFECYCLE_SHUTDOWN,
+            # Retention-based
+            "cache": LIFECYCLE_CACHE,
+            "temp": LIFECYCLE_TEMP,
+            # Access-based
+            "lazy": LIFECYCLE_LAZY,
+            "eager": LIFECYCLE_EAGER,
+            # Environment-based
+            "dev": LIFECYCLE_DEV,
+            "config": LIFECYCLE_CONFIG,
+            "platform": LIFECYCLE_PLATFORM
         }
         compression_map = {"none": 0, "gzip": 1}
         
@@ -220,7 +243,7 @@ class SlotMetadata:
             checksum=checksum_int & 0xFFFFFFFF,  # Truncate to 32-bit
             compression=compression_map.get(self.encoding, 0),
             purpose=purpose_map.get(normalize_purpose(self.purpose), PURPOSE_DATA),
-            lifecycle=lifecycle_map.get(self.lifecycle, LIFECYCLE_CACHED),
+            lifecycle=lifecycle_map.get(self.lifecycle, LIFECYCLE_RUNTIME),
             path=self.path
         )
     

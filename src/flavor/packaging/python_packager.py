@@ -14,7 +14,7 @@ from typing import Any
 
 from pyvider.telemetry import logger
 
-from flavor.packaging.util import run_subprocess
+from flavor.utils.subprocess import run_command
 
 
 class PythonPackager:
@@ -138,33 +138,9 @@ class PythonPackager:
 
         return artifacts
 
-    def compute_signature(self, payload_tgz: Path, private_key_path: Path) -> bytes:
-        """
-        Compute signature for the payload.
-
-        Args:
-            payload_tgz: Path to the payload archive
-            private_key_path: Path to the private key
-
-        Returns:
-            Signature bytes
-        """
-        # Hash the payload
-        hasher = hashlib.sha256()
-        with open(payload_tgz, "rb") as f:
-            while chunk := f.read(8192):
-                hasher.update(chunk)
-        payload_hash = hasher.digest()
-
-        # Load private key and sign
-        from cryptography.hazmat.primitives import serialization
-
-        with open(private_key_path, "rb") as f:
-            private_key = serialization.load_pem_private_key(f.read(), password=None)
-
-        from flavor.crypto import sign_payload_hash
-
-        return sign_payload_hash(payload_hash, private_key)
+    # Note: Signature generation has been removed as it's handled by the builders
+    # The Go and Rust builders generate Ed25519 signatures directly when creating
+    # the PSPF package. This ensures consistency across all package formats.
 
     def _build_wheels(self, wheels_dir: Path) -> None:
         """Build wheels for the package and its dependencies."""
@@ -180,19 +156,21 @@ class PythonPackager:
             logger.info("Creating temporary build environment...")
             if wheel_spinner:
                 wheel_spinner.tick()
-            run_subprocess(
+            run_command(
                 [
                     "uv",
                     "venv",
                     str(build_venv),
                     "--python",
                     f"python{self.python_version}",
-                ]
+                ],
+                check=True,
+                capture_output=True
             )
 
             # Install pip in the build venv, as `uv` does not have a `wheel` subcommand
             logger.info("Installing pip in build environment for wheel creation...")
-            run_subprocess(
+            run_command(
                 [
                     "uv",
                     "pip",
@@ -200,7 +178,9 @@ class PythonPackager:
                     "--python",
                     str(build_venv / "bin" / "python"),
                     "pip",
-                ]
+                ],
+                check=True,
+                capture_output=True
             )
 
             pip3 = build_venv / "bin" / "pip3"
@@ -210,7 +190,7 @@ class PythonPackager:
                 dep_path = self.manifest_dir / dep
                 if dep_path.exists():
                     logger.info(f"Building wheel for dependency: {dep}")
-                    run_subprocess(
+                    run_command(
                         [
                             str(pip3),
                             "wheel",
@@ -218,14 +198,16 @@ class PythonPackager:
                             str(wheels_dir),
                             "--no-deps",
                             str(dep_path),
-                        ]
+                        ],
+                        check=True,
+                        capture_output=True
                     )
 
             # Build main package wheel
             logger.info("Building wheel for main package...")
             if wheel_spinner:
                 wheel_spinner.tick()
-            run_subprocess(
+            run_command(
                 [
                     str(pip3),
                     "wheel",
@@ -233,7 +215,9 @@ class PythonPackager:
                     str(wheels_dir),
                     "--no-deps",
                     str(self.manifest_dir),
-                ]
+                ],
+                check=True,
+                capture_output=True
             )
 
             # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -251,12 +235,14 @@ class PythonPackager:
             # This will resolve all dependencies properly
             logger.info("Installing main package to resolve dependencies...")
             try:
-                run_subprocess(
+                run_command(
                     [
                         "uv", "pip", "install",
                         "--python", str(build_venv / "bin" / "python"),
                         str(self.manifest_dir),
-                    ]
+                    ],
+                    check=True,
+                    capture_output=True
                 )
             except Exception as e:
                 logger.warning(f"Failed to install main package dependencies: {e}")
@@ -264,26 +250,30 @@ class PythonPackager:
             # Now download all the dependencies as wheels using pip3
             logger.info("Downloading resolved dependencies as wheels...")
             try:
-                run_subprocess(
+                run_command(
                     [
                         str(pip3),
                         "download",
                         "--dest", str(wheels_dir),
                         "--only-binary", ":all:",  # Prefer wheels
                         str(self.manifest_dir),
-                    ]
+                    ],
+                    check=True,
+                    capture_output=True
                 )
             except Exception as e:
                 logger.warning(f"Failed to download dependency wheels: {e}")
                 # Try alternative: pip3 wheel for dependencies
                 logger.info("Trying pip3 wheel as fallback...")
-                run_subprocess(
+                run_command(
                     [
                         str(pip3),
                         "wheel",
                         "--wheel-dir", str(wheels_dir),
                         str(self.manifest_dir),
-                    ]
+                    ],
+                    check=True,
+                    capture_output=True
                 )
 
         # Finish spinner
@@ -318,7 +308,7 @@ class PythonPackager:
                 python_spinner.tick()
 
         # Use UV to download Python
-        run_subprocess(["uv", "python", "install", self.python_version])
+        run_command(["uv", "python", "install", self.python_version], check=True, capture_output=True)
         
         if python_spinner:
             python_spinner.finish()

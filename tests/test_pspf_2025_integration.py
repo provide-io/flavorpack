@@ -41,7 +41,7 @@ class TestPSPFIntegration:
                 checksum="",
                 encoding="none",
                 purpose="data",
-                lifecycle="volatile",
+                lifecycle="init",
                 path=test_data_dir / "test1.txt"
             ),
             SlotMetadata(
@@ -51,7 +51,7 @@ class TestPSPFIntegration:
                 checksum="",
                 encoding="gzip",
                 purpose="config",
-                lifecycle="persistent",
+                lifecycle="runtime",
                 path=test_data_dir / "test2.json"
             ),
             SlotMetadata(
@@ -61,7 +61,7 @@ class TestPSPFIntegration:
                 checksum="",
                 encoding="none",
                 purpose="config",
-                lifecycle="volatile",
+                lifecycle="init",
                 path=test_data_dir / "config.yaml"
             ),
         ]
@@ -177,7 +177,7 @@ class TestPSPFIntegration:
                 checksum="",
                 encoding="none",
                 purpose="data",
-                lifecycle="volatile",
+                lifecycle="init",
                 path=large_file
             ),
         ]

@@ -41,11 +41,10 @@ class TestPackagingOrchestratorComprehensive:
         assert orchestrator.entry_point == "test.main:run"
         assert orchestrator.python_version == "3.11"
 
-    @patch("flavor.packaging.orchestrator.run_subprocess")
+    @patch("flavor.packaging.orchestrator.run_command")
     @patch("flavor.packaging.python_packager.PythonPackager.prepare_artifacts")
-    @patch("flavor.packaging.python_packager.PythonPackager.compute_signature")
     def test_build_package_flow(
-        self, mock_sign, mock_prepare, mock_run, orchestrator, tmp_path
+        self, mock_prepare, mock_run, orchestrator, tmp_path
     ) -> None:
         """Test the overall flow of the build_package method."""
         # Setup mocks
@@ -57,13 +56,11 @@ class TestPackagingOrchestratorComprehensive:
         (tmp_path / "payload" / "bin").mkdir(parents=True)
         (tmp_path / "payload" / "bin" / "uv").touch()
         (tmp_path / "payload" / "wheels").mkdir()
-        mock_sign.return_value = b"fakesig"
         mock_run.return_value = "Success"
 
         orchestrator.build_package()
 
         mock_prepare.assert_called_once()
-        mock_sign.assert_called_once()
         
         # Check that the final build command was called
         final_build_call = mock_run.call_args_list[-1]
@@ -73,10 +70,9 @@ class TestPackagingOrchestratorComprehensive:
         assert "--output" in args
         assert orchestrator.output_flavor_path in args
 
-    @patch("flavor.packaging.python_packager.PythonPackager.compute_signature")
     @patch("flavor.packaging.python_packager.PythonPackager.prepare_artifacts")  
-    @patch("flavor.packaging.orchestrator.run_subprocess")
-    def test_build_error_handling(self, mock_run, mock_prepare, mock_sign, orchestrator, tmp_path) -> None:
+    @patch("flavor.packaging.orchestrator.run_command")
+    def test_build_error_handling(self, mock_run, mock_prepare, orchestrator, tmp_path) -> None:
         """Test error handling when subprocess fails."""
         # Setup mocks for Python packager
         mock_prepare.return_value = {
@@ -87,7 +83,6 @@ class TestPackagingOrchestratorComprehensive:
         (tmp_path / "payload" / "bin").mkdir(parents=True)
         (tmp_path / "payload" / "bin" / "uv").touch()
         (tmp_path / "payload" / "wheels").mkdir()
-        mock_sign.return_value = b"fakesig"
         
         # Make the build command fail
         mock_run.side_effect = BuildError("Build failed!")
