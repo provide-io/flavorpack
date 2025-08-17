@@ -216,3 +216,4 @@ The launcher automatically removes volatile slots after setup:
 - Wheels directory is marked as volatile and removed after installation
 - UV and Python runtime are persistent for execution
 - This reduces cache size while maintaining functionality
+- always use absolute projects, such as `flavor.utils`, or `flavor.placeholders` or anything.

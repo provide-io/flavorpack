@@ -28,7 +28,7 @@ from flavor.psp.format_2025 import (
     build_package,
 )
 from flavor.psp.format_2025.slots import SlotMetadata
-from flavor.psp.format_2025.paths import validate_metadata_dict
+from flavor.psp.metadata.paths import validate_metadata_dict
 
 
 class PackagingOrchestrator:
@@ -192,16 +192,17 @@ class PackagingOrchestrator:
                     "env": {},  # Application-specific environment variables
                 },
                 "workenv": {
+                    "umask": "0077",  # Default to owner-only access
                     "directories": [
                         # Additional directories for application use (Python venv dirs are created by UV)
-                        {"path": "tmp", "mode": "0700"},  # User-only temp directory
-                        {"path": "var", "mode": "0755"},
-                        {"path": "var/log", "mode": "0755"},
-                        {"path": "var/cache", "mode": "0755"},
-                        {"path": "var/run", "mode": "0755"},
-                        {"path": "etc", "mode": "0755"},  # Configuration
-                        {"path": "home", "mode": "0700"},  # User home directory
-                        {"path": "state", "mode": "0755"},  # Application state
+                        {"path": "{workenv}/tmp"},  # Will be 0700 with umask
+                        {"path": "{workenv}/var"},
+                        {"path": "{workenv}/var/log"},
+                        {"path": "{workenv}/var/cache"},
+                        {"path": "{workenv}/var/run"},
+                        {"path": "{workenv}/etc"},  # Configuration
+                        {"path": "{workenv}/home"},  # User home directory
+                        {"path": "{workenv}/state"},  # Application state
                     ],
                     "env": {
                         "TMPDIR": "{workenv}/tmp",
