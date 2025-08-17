@@ -280,6 +280,11 @@ jobs:
       - name: 📦 Build Flavor Package
         run: |
           source workenv/flavor_*/bin/activate
+          
+          # Set launcher binary path for Rust builder
+          export FLAVOR_LAUNCHER_BIN="$PWD/helpers/bin/flavor-go-launcher"
+          echo "FLAVOR_LAUNCHER_BIN=$FLAVOR_LAUNCHER_BIN"
+          
           flavor package --launcher go --output dist/flavor.psp
       
       - name: 🔧 Install Flavor from Package
@@ -553,6 +558,14 @@ jobs:
           export FLAVOR_HELPERS_BIN="$PWD/helpers/bin"
           echo "FLAVOR_HELPERS_BIN=$FLAVOR_HELPERS_BIN"
           ls -la $FLAVOR_HELPERS_BIN
+          
+          # Set launcher binary path for Rust builder
+          if [ "${{ matrix.launcher }}" = "go" ]; then
+            export FLAVOR_LAUNCHER_BIN="$PWD/helpers/bin/flavor-go-launcher"
+          else
+            export FLAVOR_LAUNCHER_BIN="$PWD/helpers/bin/flavor-rs-launcher"
+          fi
+          echo "FLAVOR_LAUNCHER_BIN=$FLAVOR_LAUNCHER_BIN"
           
           cd helpers/taster
           # Note: flavor package only supports --launcher, not --builder
