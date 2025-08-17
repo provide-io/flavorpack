@@ -186,12 +186,8 @@ class PackagingOrchestrator:
                 },
                 "setup_commands": [
                     {
-                        "type": "execute",
-                        "command": f"{{workenv}}/bin/uv venv {{workenv}}/venv --python {{workenv}}/bin/python3",
-                    },
-                    {
                         "type": "enumerate_and_execute", 
-                        "command": f"{{workenv}}/bin/uv pip install --python {{workenv}}/venv/bin/python3 --no-deps",
+                        "command": f"{{workenv}}/bin/uv pip install --break-system-packages --python {{workenv}}/bin/python3 --no-deps",
                         "enumerate": {"path": "{workenv}/wheels", "pattern": "*.whl"},
                     },
                     {
@@ -200,14 +196,14 @@ class PackagingOrchestrator:
                         "content": "{package_name}-{version}",
                     },
                 ],
-                "command": f"{{workenv}}/venv/bin/python -m {self.entry_point.rsplit(':', 1)[0] if ':' in self.entry_point else self.entry_point}",
+                "command": f"{{workenv}}/bin/python -m {self.entry_point.rsplit(':', 1)[0] if ':' in self.entry_point else self.entry_point}",
                 "slots": [
                     {
                         "name": "uv",
                         "path": str(uv_tarball),
                         "encoding": "gzip",
                         "purpose": "tool",
-                        "lifecycle": "volatile",
+                        "lifecycle": "persistent",  # UV binary stays for command execution
                         "extract_to": ".",
                     },
                     {

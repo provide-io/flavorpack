@@ -174,6 +174,7 @@ class BundleExecutor:
                 if stderr:
                     logger.debug(f"📝 stderr: {stderr[:500]}")  # Log first 500 chars
             
+            crashed = process.returncode < 0 # Negative return codes often indicate a crash due to a signal
             return {
                 "exit_code": process.returncode,
                 "stdout": stdout,
@@ -183,7 +184,8 @@ class BundleExecutor:
                 "args": args or [],
                 "pid": process.pid,
                 "working_directory": str(self.workenv_dir),
-                "error": None if process.returncode == 0 else f"Process exited with code {process.returncode}"
+                "error": None if process.returncode == 0 else f"Process exited with code {process.returncode}",
+                "crashed": crashed
             }
             
         except Exception as e:
@@ -197,5 +199,6 @@ class BundleExecutor:
                 "args": args or [],
                 "pid": None,
                 "working_directory": str(self.workenv_dir),
-                "error": str(e)
+                "error": str(e),
+                "returncode": 1 # Add returncode for consistency
             }

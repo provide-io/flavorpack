@@ -10,11 +10,11 @@ readme = "README.md"
 authors = [
     { name = "Provide Services", email = "engineering@provide.services" },
 ]
-license = { text = "MIT" }
+license = { text = "Apache-2.0" }
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
+    "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -30,7 +30,7 @@ dependencies = [
     "cryptography[openssl]>=41.0.4",
     "wheel>=0.40.0",
     "zstandard>=0.22.0",
-    "pyvider-telemetry @ file://localhost/REDACTED_ABS_PATH", # Install from local path
+    "pyvider-telemetry",
     "cattrs>=25.1.1",
 ]
 keywords = ["packaging", "pspf", "flavor", "executable", "bundle"]
@@ -59,6 +59,7 @@ dev = [
     "pytest-xdist>=3.6.0",
     "twine>=6.0.0",
     "types-protobuf>=6.30.2.20250516",
+    "psutil>=5.9.0", # Added for resource monitoring tests
 ]
 
 [project.scripts]

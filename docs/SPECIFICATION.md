@@ -1,9 +1,25 @@
 # Progressive Secure Package Format (PSPF) Specification
 ## 2025 Edition
 
-### Version: 2025.1
-### Status: Implemented (Go/Rust), Spec Updated 2025-08-11
-### Date: 2025-08-11
+### Version: 2025.2
+### Status: Implemented (Go/Rust/Python), Spec Updated 2025-08-15
+### Date: 2025-08-15
+
+---
+
+## Changelog
+
+### Version 2025.2 (2025-08-15)
+- **BREAKING**: Renamed `EphemeralPublicKey` to `PublicKey` in index structure
+- **BREAKING**: Metadata is now gzipped JSON (not tar.gz archive)
+- Clarified that signature covers uncompressed JSON
+- Added implementation requirements section
+- Specified exact storage of checksums and signatures
+- Documented cross-language compatibility requirements
+
+### Version 2025.1 (2025-08-11)
+- Initial specification release
+- Implemented in Go and Rust
 
 ---
 
@@ -16,8 +32,8 @@ The Progressive Secure Package Format (PSPF) 2025 Edition is a self-extracting, 
 1. **Polyglot by Design**: Valid as both an OS executable and PSPF package
 2. **Progressive Extraction**: Load only what's needed, when needed
 3. **Language Agnostic**: No assumptions about payload content or runtime
-4. **Secure by Default**: Ephemeral key integrity sealing built-in
-5. **Minimal Overhead**: Fixed 256-byte index + 16-byte magic
+4. **Secure by Default**: Ed25519 signature-based integrity sealing built-in
+5. **Minimal Overhead**: Fixed 8192-byte index + 8-byte magic
 6. **Future-Proof**: Extensible through metadata, not format changes
 
 ## 2. File Structure
@@ -30,10 +46,10 @@ The Progressive Secure Package Format (PSPF) 2025 Edition is a self-extracting, 
 │      Launcher Binary         │ Platform-specific executable
 │                              │ Variable size
 ├──────────────────────────────┤ Launcher_Size
-│      Index Block             │ Fixed 256 bytes
+│      Index Block             │ Fixed 8192 bytes
 │      (See Section 2.2)       │
-├──────────────────────────────┤ Launcher_Size + 256
-│      Metadata Archive        │ tar.gz containing psp.json
+├──────────────────────────────┤ Launcher_Size + 8192
+│      Metadata (gzipped JSON) │ Compressed JSON metadata
 │                              │ Variable size
 ├──────────────────────────────┤
 │      Slot 0                  │ Aligned to 8-byte boundary
@@ -47,62 +63,105 @@ The Progressive Secure Package Format (PSPF) 2025 Edition is a self-extracting, 
 │      Slot Table              │ Table of slot offsets/sizes
 ├──────────────────────────────┤
 │      Padding (if needed)     │ Zero bytes for alignment
-├──────────────────────────────┤ EOF - 16
-│      Emoji Magic             │ 📦[L][R]🪄 (exactly 16 bytes)
+├──────────────────────────────┤ EOF - 8
+│      Emoji Magic             │ 📦🪄 (exactly 8 bytes)
 └──────────────────────────────┘ EOF
 ```
 
-### 2.2 Index Block Structure (256 bytes)
+### 2.2 Index Block Structure (8192 bytes)
 
 This structure reflects the current Go and Rust implementations, which are the canonical source of truth.
 
 ```go
-// PSPFIndex represents the PSPF 2025 index block
+// PSPFIndex represents the PSPF 2025 index block (8192 bytes)
 type PSPFIndex struct {
-    FormatMagic      byte  // "PSPF2025"
+    // Core identification (16 bytes)
+    FormatMagic       [8]byte  // "PSPF2025"
     FormatVersion     uint32   // 0x20250001
     IndexChecksum     uint32   // Adler-32 of index block (with this field as 0)
+    
+    // File structure (48 bytes)
     PackageSize       uint64   // Total file size
     LauncherSize      uint64   // Size of launcher binary
     MetadataOffset    uint64   // Offset to metadata archive
     MetadataSize      uint64   // Size of metadata archive
     SlotTableOffset   uint64   // Offset to slot table
     SlotTableSize     uint64   // Size of slot table
+    
+    // Slot information (8 bytes)
     SlotCount         uint32   // Number of slots
     Flags             uint32   // Feature flags
-    EphemeralPublicKeybyte // Ed25519 public key for integrity seal
-    MetadataChecksum byte // SHA256 of the raw metadata archive
-    Reserved         byte // Reserved for future use
+    
+    // Security (576 bytes)
+    PublicKey          [32]byte  // Ed25519 public key for signature verification
+    MetadataChecksum   [32]byte  // Adler-32 of compressed metadata (first 4 bytes, rest zeros)
+    IntegritySignature [512]byte // Ed25519 signature of uncompressed JSON (first 64 bytes, rest zeros)
+    
+    // Performance hints (64 bytes)
+    AccessMode        uint8    // 0=auto, 1=mmap, 2=file, 3=stream
+    CacheStrategy     uint8    // 0=none, 1=lazy, 2=eager, 3=critical
+    CompressionType   uint8    // 0=none, 1=gzip, 2=zstd, 3=brotli
+    EncryptionType    uint8    // 0=none, 1=aes256-gcm, 2=chacha20
+    PageSize          uint32   // Optimal page size for alignment
+    MaxMemory         uint64   // Suggested maximum memory usage
+    MinMemory         uint64   // Minimum required memory
+    CpuFeatures       uint64   // Required CPU features (bit flags)
+    GpuRequirements   uint64   // GPU requirements (bit flags)
+    NumaHints         uint64   // NUMA topology hints
+    StreamChunkSize   uint32   // Optimal streaming chunk size
+    Padding1          [12]byte // Alignment padding
+    
+    // Extended metadata (128 bytes)
+    BuildTimestamp    uint64   // Unix timestamp of build
+    BuildMachine      [32]byte // Build machine identifier
+    SourceHash        [32]byte // Hash of source code/inputs
+    DependencyHash    [32]byte // Hash of all dependencies
+    LicenseID         [16]byte // SPDX license identifier
+    ProvenanceURI     [8]byte  // Short URI to provenance data
+    
+    // Capabilities (32 bytes)
+    Capabilities      uint64   // What this package can do
+    Requirements      uint64   // What this package needs
+    Extensions        uint64   // Extended features
+    Compatibility     uint32   // Minimum reader version
+    ProtocolVersion   uint32   // Protocol version for negotiation
+    
+    // Future cryptography space (512 bytes)
+    // Reserved for post-quantum signatures and additional algorithms
+    FutureCrypto      [512]byte
+    
+    // Reserved for future use (6808 bytes)
+    // This large reserved space ensures we never need to change
+    // the index size again, even with post-quantum cryptography
+    Reserved          [6808]byte
 }
 ```
 
-### 2.3 Emoji Magic Structure (4 bytes)
+### 2.3 Emoji Magic Structure (8 bytes)
 
-The bundle MUST end with exactly 1 UTF-8 encoded emoji:
+The bundle MUST end with exactly 2 UTF-8 encoded emojis:
 
 | Position | Bytes | Emoji | Purpose |
 |----------|-------|--------|---------|
-| EOF-4    | 4     | 🪄     | Magic wand (ALWAYS) |
+| EOF-8    | 4     | 📦     | Package emoji |
+| EOF-4    | 4     | 🪄     | Magic wand emoji |
 
-This simplified magic footer:
-- Resolves criticism about excessive magic footer size (16 bytes → 4 bytes)
-- Maintains easy visual identification of PSPF files
-- Simplifies implementation across all languages
-- Removes launcher-specific emojis that provided no functional value
+This magic footer:
+- Provides clear visual identification of PSPF files
+- Is consistent across all implementations
+- Uses exactly 8 bytes (4 bytes per emoji in UTF-8)
 
 ## 3. Metadata Specification
 
-The metadata MUST be a gzip-compressed tar archive (`metadata.tar.gz`) containing at least `psp.json` and an `integrity/` directory.
+The metadata MUST be gzip-compressed JSON data. The signature and public key are stored in the index block, not embedded in the metadata.
 
-```
-metadata.tar.gz/
-├── psp.json                 # REQUIRED: Package manifest
-└── integrity/               # REQUIRED: Integrity seal
-    ├── seal.sig             # Ephemeral Ed25519 signature of psp.json
-    └── seal.pem             # Ephemeral public key
-```
+**Key points:**
+- Metadata is pure JSON (no tar archive)
+- Stored compressed with gzip
+- Signature covers the uncompressed JSON
+- Public key and signature are in the index block
 
-### 3.1 psp.json Schema (Simplified)
+### 3.1 Metadata JSON Schema
 
 ```json
 {
@@ -126,10 +185,11 @@ metadata.tar.gz/
   "execution": {
     "command": "string with {slot:N} substitutions"
   },
-  "verification": {
-    "integrity_seal": {
-      "required": true,
-      "algorithm": "ed25519"
+  "runtime": {
+    "env": {
+      "set": {},
+      "unset": [],
+      "pass": []
     }
   }
 }
@@ -137,10 +197,81 @@ metadata.tar.gz/
 
 ## 4. Security Model
 
-Every bundle MUST include an integrity seal using ephemeral `ed25519` keys:
-1. Generate a new key pair at build time.
-2. Sign the contents of `psp.json` with the private key.
-3. Include the public key and signature in the `integrity/` directory within the metadata archive.
-4. Store the public key in the `EphemeralPublicKey` field of the Index Block.
-5. Discard the private key.
-6. The launcher MUST verify that the signature is valid for `psp.json` using the public key from the index block before any extraction occurs.
+Every bundle MUST include cryptographic integrity verification using Ed25519:
+
+1. **Key Generation**: Generate an Ed25519 key pair at build time (optionally deterministic with --key-seed)
+2. **Signing**: Sign the uncompressed JSON metadata with the private key
+3. **Storage in Index**:
+   - Store the 32-byte public key in the `PublicKey` field
+   - Store the 64-byte signature in the first 64 bytes of `IntegritySignature` field
+   - Store Adler-32 checksum of compressed metadata in first 4 bytes of `MetadataChecksum`
+4. **Private Key**: Discard after signing (or derive deterministically from seed)
+5. **Verification**: The launcher MUST:
+   - Read and decompress the metadata
+   - Verify the Ed25519 signature of the JSON using the public key from the index
+   - Verify the Adler-32 checksum matches the compressed data
+   - Refuse to execute if verification fails
+
+## 5. Implementation Requirements
+
+### 5.1 Language-Specific Modules
+
+Each language implementation MUST provide:
+
+1. **Standalone Module**: A self-contained package/module that can be imported by other projects
+   - Python: `flavor` package on PyPI
+   - Rust: `flavor` crate on crates.io
+   - Go: `github.com/provide-io/flavor-go` module
+
+2. **Consistent API**: Each implementation should offer similar functionality:
+   - Builder API for creating PSPF packages
+   - Reader API for extracting and verifying packages
+   - Launcher binaries for executing packages
+   - Helper utilities for key generation, signing, etc.
+
+3. **Developer Experience**: Prioritize ease of use:
+   - Simple, intuitive APIs
+   - Comprehensive documentation
+   - Examples and tutorials
+   - Type safety where applicable
+
+### 5.2 Cross-Language Compatibility
+
+All implementations MUST:
+- Use identical binary formats for all structures
+- Implement the same cryptographic algorithms (Ed25519, Adler-32)
+- Handle endianness consistently (little-endian)
+- Support reading packages created by any other implementation
+- Pass cross-language compatibility tests
+
+### 5.3 Field Names and Conventions
+
+To maintain consistency across implementations:
+- Use `PublicKey` not `EphemeralPublicKey` (keys aren't necessarily ephemeral)
+- Use `package_size` not `file_size` for total package size
+- Use `slot_table_offset` not `descriptor_offset`
+- Metadata is always gzipped JSON (no conditionals)
+- Signatures are stored in the index, not embedded in metadata
+
+### 5.4 Implementation Notes
+
+#### Checksum Calculations
+- **Index Checksum**: Adler-32 of the entire 8192-byte index with the checksum field set to 0
+- **Metadata Checksum**: Adler-32 of the compressed (gzipped) metadata bytes
+- **Slot Checksums**: Adler-32 of the compressed slot data
+
+#### Signature Verification
+- **What to Sign**: The uncompressed JSON metadata (not the gzipped version)
+- **Signature Storage**: First 64 bytes of the 512-byte `IntegritySignature` field
+- **Public Key Storage**: 32-byte `PublicKey` field in the index
+- **Algorithm**: Ed25519 (RFC 8032)
+
+#### Compression
+- **Metadata**: Always gzip compressed
+- **Slots**: Compression optional, specified per-slot
+- **Supported Algorithms**: none, gzip, zstd, brotli
+
+#### Alignment
+- **Index Block**: Always at `launcher_size` offset (no alignment needed)
+- **Slots**: Aligned to 8-byte boundaries minimum
+- **Page Alignment**: Optional, for memory-mapped I/O optimization

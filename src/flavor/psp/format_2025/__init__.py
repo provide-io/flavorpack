@@ -14,7 +14,7 @@ from flavor.psp.format_2025.constants import (
 )
 from flavor.psp.format_2025.index import PSPFIndex
 from flavor.psp.format_2025.slots import SlotMetadata, align_offset
-from flavor.psp.format_2025.crypto import ephemeral_key_pair, sign_data, verify_signature
+from flavor.psp.format_2025.crypto import generate_key_pair, sign_data, verify_signature
 from flavor.psp.format_2025.builder import PSPFBuilder
 from flavor.psp.format_2025.reader import PSPFReader
 from flavor.psp.format_2025.launcher import PSPFLauncher
@@ -38,7 +38,7 @@ __all__ = [
     'BundleExecutor',
     
     # Functions
-    'ephemeral_key_pair',
+    'generate_key_pair',
     'sign_data',
     'verify_signature',
     'align_offset',
