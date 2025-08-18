@@ -119,7 +119,7 @@ class TestHelperManager:
         assert info is None
     
     @patch("shutil.which")
-    @patch("subprocess.run")
+    @patch("flavor.helpers.run_command")
     def test_build_go_helpers(self, mock_run, mock_which):
         """Test building Go helpers."""
         # Mock Go availability
@@ -139,9 +139,9 @@ class TestHelperManager:
         mock_run.side_effect = mock_run_side_effect
         
         # Create source directories
-        go_launcher_src = self.src_dir / "go" / "cmd" / "pspf-launcher"
+        go_launcher_src = self.src_dir / "go" / "cmd" / "flavor-go-launcher"
         go_launcher_src.mkdir(parents=True)
-        go_builder_src = self.src_dir / "go" / "cmd" / "pspf-builder"
+        go_builder_src = self.src_dir / "go" / "cmd" / "flavor-go-builder"
         go_builder_src.mkdir(parents=True)
         
         built = self.manager._build_go_helpers()
@@ -165,34 +165,38 @@ class TestHelperManager:
         
         assert len(built) == 0
     
+    @patch("flavor.helpers.shutil.copy2")
     @patch("shutil.which")
-    @patch("subprocess.run")
-    def test_build_rust_helpers(self, mock_run, mock_which):
+    @patch("flavor.helpers.run_command")
+    def test_build_rust_helpers(self, mock_run, mock_which, mock_copy):
         """Test building Rust helpers."""
         # Mock Cargo availability
         mock_which.return_value = "/usr/bin/cargo"
         mock_run.return_value = MagicMock(returncode=0)
         
         # Create source directories and fake built binaries
-        rust_launcher_src = self.src_dir / "rust" / "pspf-launcher-rs"
-        rust_launcher_src.mkdir(parents=True)
-        rust_launcher_target = rust_launcher_src / "target" / "release"
-        rust_launcher_target.mkdir(parents=True)
-        (rust_launcher_target / "pspf-launcher-rs").write_text("fake binary")
+        # The actual code looks for binaries in helpers/flavor-rust/target/release
+        rust_src_dir = self.helpers_dir / "flavor-rust"
+        rust_target = rust_src_dir / "target" / "release"
+        rust_target.mkdir(parents=True)
+        (rust_target / "flavor-rs-launcher").write_bytes(b"fake launcher binary")
+        (rust_target / "flavor-rs-builder").write_bytes(b"fake builder binary")
         
-        rust_builder_src = self.src_dir / "rust" / "pspf-builder-rs"
-        rust_builder_src.mkdir(parents=True)
-        rust_builder_target = rust_builder_src / "target" / "release"
-        rust_builder_target.mkdir(parents=True)
-        (rust_builder_target / "pspf-builder-rs").write_text("fake binary")
+        # Mock copy2 to simulate copying binaries
+        def copy_side_effect(src, dst):
+            # Create the destination file
+            Path(dst).parent.mkdir(parents=True, exist_ok=True)
+            Path(dst).write_bytes(b"fake binary")
+            Path(dst).chmod(0o755)
+        mock_copy.side_effect = copy_side_effect
         
         built = self.manager._build_rust_helpers()
         
-        # Should have built 2 helpers
+        # Should have built 2 helpers  
         assert len(built) == 2
         
-        # Check that cargo build was called correctly
-        assert mock_run.call_count == 2
+        # Check that cargo build was called correctly (workspace build)
+        assert mock_run.call_count == 1  # Single workspace build
         
         # Verify output paths
         assert self.helpers_bin / "flavor-rs-launcher" in built
@@ -299,7 +303,7 @@ class TestHelperManager:
         assert not rs_launcher.exists()
         assert not rust_builder.exists()
     
-    @patch("subprocess.run")
+    @patch("flavor.helpers.run_command")
     def test_test_helpers_success(self, mock_run):
         """Test testing helpers successfully."""
         # Create fake helpers
@@ -320,7 +324,7 @@ class TestHelperManager:
         assert "flavor-go-launcher" in results["passed"]
         assert "flavor-rs-builder" in results["passed"]
     
-    @patch("subprocess.run")
+    @patch("flavor.helpers.run_command")
     def test_test_helpers_failure(self, mock_run):
         """Test testing helpers with failures."""
         # Create fake helper
@@ -339,7 +343,7 @@ class TestHelperManager:
         assert len(results["failed"]) == 1
         assert results["failed"][0]["name"] == "flavor-go-launcher"
     
-    @patch("subprocess.run")
+    @patch("flavor.helpers.run_command")
     def test_test_helpers_timeout(self, mock_run):
         """Test testing helpers with timeout."""
         # Create fake helper
@@ -352,7 +356,7 @@ class TestHelperManager:
         
         assert len(results["passed"]) == 0
         assert len(results["failed"]) == 1
-        assert "Timeout" in results["failed"][0]["error"]
+        assert "timed out" in results["failed"][0]["error"].lower()
     
     def test_test_helpers_not_executable(self):
         """Test testing helpers that are not executable."""
@@ -367,7 +371,7 @@ class TestHelperManager:
         assert len(results["failed"]) == 1
         assert "not executable" in results["failed"][0]["error"]
     
-    @patch("subprocess.run")
+    @patch("flavor.helpers.run_command")
     def test_test_helpers_specific_language(self, mock_run):
         """Test testing helpers for a specific language."""
         # Create fake helpers
@@ -404,7 +408,7 @@ class TestHelperInfo:
             size=4096,
             checksum="abc123",
             version="1.0.0",
-            built_from=Path("/src/go/cmd/pspf-launcher"),
+            built_from=Path("/src/go/cmd/flavor-go-launcher"),
         )
         
         assert info.name == "flavor-go-launcher"

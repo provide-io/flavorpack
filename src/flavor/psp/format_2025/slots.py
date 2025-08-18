@@ -7,15 +7,16 @@ import struct
 import zlib
 from pathlib import Path
 from typing import Any, Optional
-import cattrs
 from attrs import define, field, validators
 
 from flavor.psp.format_2025.constants import (
     SLOT_ALIGNMENT, SLOT_DESCRIPTOR_SIZE, PAGE_SIZE,
     PURPOSE_DATA, PURPOSE_CODE, PURPOSE_CONFIG, PURPOSE_MEDIA,
-    LIFECYCLE_PERMANENT, LIFECYCLE_CACHED, LIFECYCLE_TEMPORARY, LIFECYCLE_STREAM,
+    LIFECYCLE_INIT, LIFECYCLE_STARTUP, LIFECYCLE_RUNTIME, LIFECYCLE_SHUTDOWN,
+    LIFECYCLE_CACHE, LIFECYCLE_TEMP, LIFECYCLE_LAZY, LIFECYCLE_EAGER,
+    LIFECYCLE_DEV, LIFECYCLE_CONFIG, LIFECYCLE_PLATFORM,
     ACCESS_HINT_SEQUENTIAL, ACCESS_HINT_RANDOM, ACCESS_HINT_ONCE,
-    CACHE_NORMAL, COMPRESSION_NONE
+    CACHE_NORMAL, ENCODING_RAW, ENCODING_TAR, ENCODING_GZIP, ENCODING_TGZ
 )
 
 
@@ -60,13 +61,13 @@ class SlotDescriptor:
     # Properties (16 bytes)
     original_size: int = field(default=0)  # Uncompressed size
     checksum: int = field(default=0)  # Adler-32 of stored data
-    compression: int = field(default=COMPRESSION_NONE)
+    encoding: int = field(default=ENCODING_RAW)  # Renamed from compression
     encryption: int = field(default=0)
     alignment: int = field(default=SLOT_ALIGNMENT)
     
     # Semantics (8 bytes)
     purpose: int = field(default=PURPOSE_DATA)
-    lifecycle: int = field(default=LIFECYCLE_CACHED)
+    lifecycle: int = field(default=LIFECYCLE_RUNTIME)
     access_hint: int = field(default=ACCESS_HINT_SEQUENTIAL)
     priority: int = field(default=CACHE_NORMAL)
     permissions: int = field(default=0o644)  # Unix-style
@@ -95,7 +96,7 @@ class SlotDescriptor:
             'Q'  # size (8)
             'Q'  # original_size (8)
             'I'  # checksum (4)
-            'B'  # compression (1)
+            'B'  # encoding (1)
             'B'  # encryption (1)
             'H'  # alignment (2)
             'B'  # purpose (1)
@@ -112,7 +113,7 @@ class SlotDescriptor:
             self.size,
             self.original_size,
             self.checksum,
-            self.compression,
+            self.encoding,
             self.encryption,
             self.alignment,
             self.purpose,
@@ -143,7 +144,7 @@ class SlotDescriptor:
             size=unpacked[3],
             original_size=unpacked[4],
             checksum=unpacked[5],
-            compression=unpacked[6],
+            encoding=unpacked[6],
             encryption=unpacked[7],
             alignment=unpacked[8],
             purpose=unpacked[9],
@@ -165,7 +166,7 @@ class SlotDescriptor:
             'size': self.size,
             'original_size': self.original_size,
             'checksum': self.checksum,
-            'compression': self.compression,
+            'encoding': self.encoding,
             'encryption': self.encryption,
             'alignment': self.alignment,
             'purpose': self.purpose,
@@ -191,23 +192,46 @@ class SlotMetadata:
     name: str = field(validator=validators.instance_of(str))
     size: int = field(validator=validators.instance_of(int))
     checksum: str = field(validator=validators.instance_of(str))
-    encoding: str = field(validator=validators.in_(["none", "gzip"]))
+    encoding: str = field(validator=validators.in_(["none", "raw", "gzip", "tar", "tgz", "tar.gz"]))
     purpose: str = field()
-    lifecycle: str = field(validator=validators.in_(["persistent", "volatile", "temporary", "install"]))
+    lifecycle: str = field(validator=validators.in_([
+        # Timing-based
+        "init", "startup", "runtime", "shutdown",
+        # Retention-based
+        "cache", "temp", "volatile",
+        # Access-based
+        "lazy", "eager",
+        # Environment-based
+        "dev", "config", "platform"
+    ]))
     path: Path | None = field(default=None)
     extract_to: str | None = field(default=None)
+    platform: str | None = field(default=None)  # Added for backward compatibility
     
     def to_descriptor(self) -> SlotDescriptor:
         """Convert legacy metadata to new descriptor."""
         # Map string values to integers
         purpose_map = {"payload": PURPOSE_DATA, "runtime": PURPOSE_CODE, "tool": PURPOSE_CONFIG}
         lifecycle_map = {
-            "persistent": LIFECYCLE_PERMANENT,
-            "volatile": LIFECYCLE_CACHED,
-            "temporary": LIFECYCLE_TEMPORARY,
-            "install": LIFECYCLE_TEMPORARY
+            # Timing-based
+            "init": LIFECYCLE_INIT,
+            "startup": LIFECYCLE_STARTUP,
+            "runtime": LIFECYCLE_RUNTIME,
+            "shutdown": LIFECYCLE_SHUTDOWN,
+            # Retention-based
+            "cache": LIFECYCLE_CACHE,
+            "temp": LIFECYCLE_TEMP,
+            "volatile": LIFECYCLE_CACHE,  # Volatile maps to cache lifecycle
+            # Access-based
+            "lazy": LIFECYCLE_LAZY,
+            "eager": LIFECYCLE_EAGER,
+            # Environment-based
+            "dev": LIFECYCLE_DEV,
+            "config": LIFECYCLE_CONFIG,
+            "platform": LIFECYCLE_PLATFORM
         }
-        compression_map = {"none": 0, "gzip": 1}
+        encoding_map = {"none": ENCODING_RAW, "raw": ENCODING_RAW, "tar": ENCODING_TAR, 
+                        "gzip": ENCODING_GZIP, "tgz": ENCODING_TGZ, "tar.gz": ENCODING_TGZ}
         
         # Convert hex checksum to integer
         checksum_int = int(self.checksum, 16) if isinstance(self.checksum, str) else self.checksum
@@ -218,9 +242,9 @@ class SlotMetadata:
             size=self.size,
             original_size=self.size,  # Assume uncompressed for legacy
             checksum=checksum_int & 0xFFFFFFFF,  # Truncate to 32-bit
-            compression=compression_map.get(self.encoding, 0),
+            encoding=encoding_map.get(self.encoding, 0),  # Maps encoding string to int
             purpose=purpose_map.get(normalize_purpose(self.purpose), PURPOSE_DATA),
-            lifecycle=lifecycle_map.get(self.lifecycle, LIFECYCLE_CACHED),
+            lifecycle=lifecycle_map.get(self.lifecycle, LIFECYCLE_RUNTIME),
             path=self.path
         )
     
@@ -231,10 +255,25 @@ class SlotMetadata:
         return purpose_map.get(normalized, 0)
     
     def to_dict(self) -> dict[str, Any]:
-        """Convert to dictionary for JSON serialization using cattrs."""
-        converter = cattrs.Converter()
-        converter.register_unstructure_hook(Path, str)
-        return converter.unstructure(self)
+        """Convert to dictionary for JSON serialization."""
+        from flavor.psp.metadata.paths import validate_metadata_path
+        from flavor.psp.format_2025.checksums import calculate_checksum
+        
+        # Ensure checksum has prefix
+        if not self.checksum:
+            # Create a placeholder checksum from the name
+            self.checksum = calculate_checksum(self.name.encode(), "sha256")
+        
+        return {
+            'index': self.index,
+            'name': self.name,
+            'size': self.size,
+            'checksum': self.checksum,  # Prefixed format (e.g., "sha256:...")
+            'encoding': self.encoding,
+            'purpose': self.purpose,
+            'lifecycle': self.lifecycle,
+            'extract_to': validate_metadata_path(self.extract_to) if self.extract_to else None,
+        }
     
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> 'SlotMetadata':
@@ -277,15 +316,18 @@ class SlotView:
     def content(self) -> bytes:
         """Get decompressed content."""
         if self._decompressed is None:
-            if self.descriptor.compression == COMPRESSION_NONE:
+            if self.descriptor.encoding == ENCODING_RAW:
                 self._decompressed = bytes(self.data) if isinstance(self.data, memoryview) else self.data
             else:
-                # Decompress based on compression type
+                # Decompress based on encoding type
                 import zlib
-                if self.descriptor.compression == 1:  # gzip
+                if self.descriptor.encoding == 2:  # ENCODING_GZIP
                     self._decompressed = zlib.decompress(self.data)
+                elif self.descriptor.encoding == 3:  # ENCODING_TGZ
+                    # For tar.gz, return as-is (launcher handles extraction)
+                    self._decompressed = bytes(self.data) if isinstance(self.data, memoryview) else self.data
                 else:
-                    raise ValueError(f"Unsupported compression: {self.descriptor.compression}")
+                    raise ValueError(f"Unsupported encoding: {self.descriptor.encoding}")
         return self._decompressed
     
     def compute_checksum(self, data: bytes) -> int:

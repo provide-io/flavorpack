@@ -14,7 +14,7 @@ from typing import Any
 
 from pyvider.telemetry import logger
 
-from flavor.packaging.util import run_subprocess
+from flavor.utils.subprocess import run_command
 
 
 class PythonPackager:
@@ -138,33 +138,9 @@ class PythonPackager:
 
         return artifacts
 
-    def compute_signature(self, payload_tgz: Path, private_key_path: Path) -> bytes:
-        """
-        Compute signature for the payload.
-
-        Args:
-            payload_tgz: Path to the payload archive
-            private_key_path: Path to the private key
-
-        Returns:
-            Signature bytes
-        """
-        # Hash the payload
-        hasher = hashlib.sha256()
-        with open(payload_tgz, "rb") as f:
-            while chunk := f.read(8192):
-                hasher.update(chunk)
-        payload_hash = hasher.digest()
-
-        # Load private key and sign
-        from cryptography.hazmat.primitives import serialization
-
-        with open(private_key_path, "rb") as f:
-            private_key = serialization.load_pem_private_key(f.read(), password=None)
-
-        from flavor.crypto import sign_payload_hash
-
-        return sign_payload_hash(payload_hash, private_key)
+    # Note: Signature generation has been removed as it's handled by the builders
+    # The Go and Rust builders generate Ed25519 signatures directly when creating
+    # the PSPF package. This ensures consistency across all package formats.
 
     def _build_wheels(self, wheels_dir: Path) -> None:
         """Build wheels for the package and its dependencies."""
@@ -180,19 +156,21 @@ class PythonPackager:
             logger.info("Creating temporary build environment...")
             if wheel_spinner:
                 wheel_spinner.tick()
-            run_subprocess(
+            run_command(
                 [
                     "uv",
                     "venv",
                     str(build_venv),
                     "--python",
                     f"python{self.python_version}",
-                ]
+                ],
+                check=True,
+                capture_output=True
             )
 
-            # Install pip in the build venv
-            logger.info("Installing pip in build environment...")
-            run_subprocess(
+            # Install pip in the build venv, as `uv` does not have a `wheel` subcommand
+            logger.info("Installing pip in build environment for wheel creation...")
+            run_command(
                 [
                     "uv",
                     "pip",
@@ -200,7 +178,9 @@ class PythonPackager:
                     "--python",
                     str(build_venv / "bin" / "python"),
                     "pip",
-                ]
+                ],
+                check=True,
+                capture_output=True
             )
 
             pip3 = build_venv / "bin" / "pip3"
@@ -210,7 +190,7 @@ class PythonPackager:
                 dep_path = self.manifest_dir / dep
                 if dep_path.exists():
                     logger.info(f"Building wheel for dependency: {dep}")
-                    run_subprocess(
+                    run_command(
                         [
                             str(pip3),
                             "wheel",
@@ -218,14 +198,16 @@ class PythonPackager:
                             str(wheels_dir),
                             "--no-deps",
                             str(dep_path),
-                        ]
+                        ],
+                        check=True,
+                        capture_output=True
                     )
 
             # Build main package wheel
             logger.info("Building wheel for main package...")
             if wheel_spinner:
                 wheel_spinner.tick()
-            run_subprocess(
+            run_command(
                 [
                     str(pip3),
                     "wheel",
@@ -233,100 +215,67 @@ class PythonPackager:
                     str(wheels_dir),
                     "--no-deps",
                     str(self.manifest_dir),
-                ]
+                ],
+                check=True,
+                capture_output=True
             )
 
-            # Download transitive dependencies using pip
-            # First, install all local dependencies to get their transitive dependencies
+            # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            # CRITICAL: ALWAYS use pip3 for wheel operations
+            # uv does NOT support pip download or pip wheel commands
+            # DO NOT attempt to use uv for downloading dependencies
+            # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            
+            # Download transitive dependencies using pip3
             logger.info("Downloading transitive dependencies...")
             if wheel_spinner:
                 wheel_spinner.tick()
-            
-            # First install local dependencies without their dependencies to make them available
-            # This prevents pip from trying to fetch them from PyPI
-            for dep in self.build_config.get("dependencies", []):
-                dep_path = self.manifest_dir / dep
-                if dep_path.exists():
-                    logger.info(f"Pre-installing local dependency: {dep}")
-                    run_subprocess(
-                        [
-                            str(pip3),
-                            "install",
-                            "--no-deps",
-                            str(dep_path),
-                        ]
-                    )
-            
-            # Now install each local dependency WITH its dependencies to get PyPI packages
-            for dep in self.build_config.get("dependencies", []):
-                dep_path = self.manifest_dir / dep
-                if dep_path.exists():
-                    logger.info(f"Installing {dep} with its PyPI dependencies...")
-                    try:
-                        run_subprocess(
-                            [
-                                str(pip3),
-                                "install",
-                                str(dep_path),
-                            ]
-                        )
-                    except Exception as e:
-                        logger.warning(f"Failed to install dependencies for {dep}: {e}")
-                        # Continue anyway - the package itself is installed
-            
+
             # Install the main package and its dependencies into the build venv
             # This will resolve all dependencies properly
             logger.info("Installing main package to resolve dependencies...")
             try:
-                run_subprocess(
+                run_command(
                     [
-                        str(pip3),
-                        "install",
+                        "uv", "pip", "install",
+                        "--python", str(build_venv / "bin" / "python"),
                         str(self.manifest_dir),
-                    ]
+                    ],
+                    check=True,
+                    capture_output=True
                 )
             except Exception as e:
                 logger.warning(f"Failed to install main package dependencies: {e}")
-            
-            # Now download all the dependencies (excluding what we already built)
-            # Get the list of installed packages
+
+            # Now download all the dependencies as wheels using pip3
             logger.info("Downloading resolved dependencies as wheels...")
-            existing_wheels = {w.name for w in wheels_dir.glob("*.whl")}
-            
-            # Use pip freeze to get all installed packages, then download them
-            result = run_subprocess(
-                [str(pip3), "freeze"],
-                capture_output=True,
-                text=True
-            )
-            
-            # Download each dependency that we don't already have
-            for line in result.stdout.strip().split("\n"):
-                if not line or line.startswith("#"):
-                    continue
-                # Parse package name from requirement spec
-                pkg_spec = line.strip()
-                if "==" in pkg_spec:
-                    pkg_name = pkg_spec.split("==")[0].lower().replace("-", "_")
-                    # Check if we already have a wheel for this package
-                    has_wheel = any(pkg_name in wheel.lower() for wheel in existing_wheels)
-                    if not has_wheel:
-                        try:
-                            logger.info(f"Downloading wheel for: {pkg_spec}")
-                            run_subprocess(
-                                [str(pip3), "download", "--dest", str(wheels_dir),
-                                 "--only-binary", ":all:", pkg_spec]
-                            )
-                        except Exception as e:
-                            logger.warning(f"Failed to download wheel for {pkg_spec}: {e}")
-                            # Try without --only-binary flag
-                            try:
-                                run_subprocess(
-                                    [str(pip3), "download", "--dest", str(wheels_dir), pkg_spec]
-                                )
-                            except Exception as e2:
-                                logger.warning(f"Failed to download {pkg_spec} in any format: {e2}")
-        
+            try:
+                run_command(
+                    [
+                        str(pip3),
+                        "download",
+                        "--dest", str(wheels_dir),
+                        "--only-binary", ":all:",  # Prefer wheels
+                        str(self.manifest_dir),
+                    ],
+                    check=True,
+                    capture_output=True
+                )
+            except Exception as e:
+                logger.warning(f"Failed to download dependency wheels: {e}")
+                # Try alternative: pip3 wheel for dependencies
+                logger.info("Trying pip3 wheel as fallback...")
+                run_command(
+                    [
+                        str(pip3),
+                        "wheel",
+                        "--wheel-dir", str(wheels_dir),
+                        str(self.manifest_dir),
+                    ],
+                    check=True,
+                    capture_output=True
+                )
+
         # Finish spinner
         if wheel_spinner:
             wheel_spinner.finish()
@@ -359,7 +308,7 @@ class PythonPackager:
                 python_spinner.tick()
 
         # Use UV to download Python
-        run_subprocess(["uv", "python", "install", self.python_version])
+        run_command(["uv", "python", "install", self.python_version], check=True, capture_output=True)
         
         if python_spinner:
             python_spinner.finish()
@@ -390,11 +339,21 @@ class PythonPackager:
             return
 
         logger.info(f"Found Python installation at: {python_install_dir}")
-
-        # Create tarball of the Python installation
+        
+        # Check for EXTERNALLY-MANAGED marker
+        externally_managed = python_install_dir / "lib" / f"python{self.python_version}" / "EXTERNALLY-MANAGED"
+        
+        # Create tarball of the Python installation, excluding EXTERNALLY-MANAGED
         with tarfile.open(python_tgz, "w:gz", compresslevel=9) as tar:
+            # Custom filter to exclude EXTERNALLY-MANAGED file
+            def filter_externally_managed(tarinfo):
+                if tarinfo.name.endswith("EXTERNALLY-MANAGED"):
+                    logger.debug(f"Excluding EXTERNALLY-MANAGED marker from Python runtime tarball")
+                    return None
+                return tarinfo
+            
             # Add all files from the Python directory, preserving structure
-            tar.add(python_install_dir, arcname=".")
+            tar.add(python_install_dir, arcname=".", filter=filter_externally_managed)
 
     def _write_json(self, path: Path, data: dict[str, Any]) -> None:
         """Write JSON file with secure permissions."""

@@ -14,7 +14,7 @@ def test_orchestrator_constructs_correct_build_command(tmp_path: Path) -> None:
     Verifies that the orchestrator calls the Go builder with the correct arguments.
     """
     manifest_dir = tmp_path
-    output_path = tmp_path / "dist" / "package.pspf"
+    output_path = tmp_path / "dist" / "package.psp"
 
     # Create mock keys
     keys_dir = tmp_path / "keys"
@@ -23,12 +23,13 @@ def test_orchestrator_constructs_correct_build_command(tmp_path: Path) -> None:
     (keys_dir / "pub.key").write_text("mock public key")
 
     with patch(
-        "flavor.packaging.util.run_subprocess"
+        "flavor.packaging.orchestrator.run_command"
     ) as mock_run, patch(
         "flavor.packaging.python_packager.PythonPackager.prepare_artifacts"
-    ) as mock_prepare, patch(
-        "flavor.packaging.python_packager.PythonPackager.compute_signature"
-    ) as mock_sign:
+    ) as mock_prepare:
+        
+        # Mock run_command to prevent actual execution
+        mock_run.return_value = None
         
         # Mock the artifacts returned by the python packager
         mock_prepare.return_value = {
@@ -39,8 +40,6 @@ def test_orchestrator_constructs_correct_build_command(tmp_path: Path) -> None:
         (tmp_path / "payload" / "bin").mkdir(parents=True)
         (tmp_path / "payload" / "bin" / "uv").touch()
         (tmp_path / "payload" / "wheels").mkdir()
-        
-        mock_sign.return_value = b"fakesig"
 
         orchestrator = PackagingOrchestrator(
             package_integrity_key_path=str(keys_dir / "priv.key"),

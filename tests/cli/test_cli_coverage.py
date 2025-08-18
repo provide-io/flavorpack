@@ -20,7 +20,7 @@ def test_cli_package_fails(tmp_path: Path) -> None:
     pyproject_path.touch()
 
     with patch(
-        "flavor.cli.build_package_from_manifest",
+        "flavor.commands.package.build_package_from_manifest",
         side_effect=PackagingError("Mocked packaging failure"),
     ) as mock_package:
         result = runner.invoke(
@@ -42,11 +42,11 @@ def test_cli_verify_fails(tmp_path: Path) -> None:
     Tests that the `verify` command handles exceptions from the reader.
     """
     runner = CliRunner()
-    package_file = tmp_path / "package.pspf"
+    package_file = tmp_path / "package.psp"
     package_file.touch()
 
     with patch(
-        "flavor.cli.verify_package",
+        "flavor.commands.verify.verify_package",
         side_effect=VerificationError("Mocked verification failure"),
     ) as mock_verify:
         result = runner.invoke(cli_main, ["verify", str(package_file)])

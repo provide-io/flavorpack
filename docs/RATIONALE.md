@@ -6,7 +6,6 @@ Modern software distribution is fractured:
 
 - **Python developers** wrestle with virtual environments, wheels, and "works on my machine"
 - **Go developers** ship static binaries but struggle with embedding resources
-- **Node developers** navigate the maze of node_modules and platform-specific binaries
 - **Enterprise teams** need signatures, compliance, and audit trails
 - **DevOps engineers** want reproducible builds and hermetic deployments
 
@@ -27,7 +26,7 @@ PSPF (Progressive Secure Package Format) is what happens when you stop fighting 
 ./myapp
 
 # But it's also a structured package
-pspf inspect ./myapp
+flavor inspect ./myapp
 > 📦 myapp v2.1.0
 > 🐹 Go launcher with 3 slots
 > ✓ Integrity verified (ephemeral seal)
@@ -71,18 +70,18 @@ One package can contain Python code, Go binaries, ML models, and configs. The la
 
 The binary format is dead simple:
 ```
-[Launcher][Index:256][Metadata][Slots][📦🐹🌈🪄]
+[Launcher][Index:8192][Metadata][Slots][📦🪄]
 ```
 
 New features? Add them to metadata. The core format never changes.
 
 ### 2. **The Emoji Magic Is Genius** (Yes, Really)
 
-That 16-byte ending `📦🐹🌈🪄` isn't just whimsy:
+That 8-byte ending `📦🪄` isn't just whimsy:
 - **Instant file type detection** - even in a hex dump
 - **Corruption detection** - emoji can't appear by accident
-- **Build fingerprinting** - the third emoji can be unique per build
 - **Human-friendly** - developers smile when they see it
+- **Consistent across platforms** - UTF-8 encoded everywhere
 
 ### 3. **Progressive Extraction Saves the Day**
 
@@ -139,14 +138,14 @@ pip install -r requirements.txt
 }
 ```
 
-One package, four languages, zero problems.
+One package, zero problems.
 
 ### CI/CD Paradise
 ```yaml
 # Every build is sealed, no key management
 - name: Build PSPF
   run: |
-    pspf build --ephemeral-seal
+    flavor build 
     # That's it. Signed and delivered.
 ```
 
@@ -155,7 +154,7 @@ One package, four languages, zero problems.
 ### Python Developers
 Finally ship apps your users can just run. No "first install Python 3.11.2 but not 3.11.3 because..."
 
-### Go Developers  
+### Go Developers
 Embed assets, configs, even Python plugins in your static binary. Still one file.
 
 ### Enterprise Teams
@@ -175,8 +174,8 @@ pspf extract --slot models ./ml-app
 pspf repack --compress zstd ./big-app
 
 # Language-specific tools complement
-pip install --from-pspf ./python-app.pspf
-cargo pspf-publish ./rust-tool.pspf
+pip install --from-pspf ./python-app.psp
+cargo pspf-publish ./rust-tool.psp
 ```
 
 ## It's Not Perfect (But It's Honest)

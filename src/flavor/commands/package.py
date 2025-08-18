@@ -1,0 +1,158 @@
+#!/usr/bin/env python3
+#
+# flavor/commands/package.py
+#
+"""Package command for the flavor CLI."""
+
+from pathlib import Path
+
+import click
+
+from flavor.api import build_package_from_manifest, verify_package
+from flavor.exceptions import BuildError
+
+
+@click.command("package")
+@click.option(
+    "--manifest",
+    "pyproject_toml_path",
+    default="pyproject.toml",
+    type=click.Path(exists=True, dir_okay=False, resolve_path=True),
+    help="Path to the pyproject.toml manifest file.",
+)
+@click.option(
+    "--output",
+    "output_path",
+    type=click.Path(dir_okay=False, resolve_path=True),
+    help="Custom output path for the package (defaults to dist/<name>.psp).",
+)
+@click.option(
+    "--launcher",
+    type=click.Choice(["go", "rust"], case_sensitive=False),
+    default=None,
+    help="Launcher type to embed (defaults to 'rust' or value from FLAVOR_LAUNCHER env var).",
+)
+@click.option(
+    "--launcher-bin",
+    type=click.Path(exists=True, dir_okay=False, resolve_path=True),
+    help="Path to launcher binary (overrides launcher type selection).",
+)
+@click.option(
+    "--builder-bin",
+    type=click.Path(exists=True, dir_okay=False, resolve_path=True),
+    help="Path to builder binary (overrides default builder selection).",
+)
+@click.option(
+    "--verify/--no-verify",
+    default=True,
+    help="Verify the package after building (default: verify).",
+)
+@click.option(
+    "--strip",
+    is_flag=True,
+    help="Strip debug symbols from launcher binary for size reduction.",
+)
+@click.option(
+    "--progress",
+    is_flag=True,
+    help="Show progress bars during packaging.",
+)
+@click.option(
+    "--quiet",
+    is_flag=True,
+    help="Suppress progress output.",
+)
+@click.option(
+    "--private-key",
+    type=click.Path(exists=True, dir_okay=False, resolve_path=True),
+    help="Path to private key (PEM format) for signing.",
+)
+@click.option(
+    "--public-key",
+    type=click.Path(exists=True, dir_okay=False, resolve_path=True),
+    help="Path to public key (PEM format, optional if private key provided).",
+)
+@click.option(
+    "--key-seed",
+    type=str,
+    help="Seed for deterministic key generation.",
+)
+@click.option(
+    "--output-format",
+    type=click.Choice(["text", "json"], case_sensitive=False),
+    help="Output format (or set FLAVOR_OUTPUT_FORMAT env var).",
+)
+@click.option(
+    "--output-file",
+    type=str,
+    help="Output file path, STDOUT, or STDERR (or set FLAVOR_OUTPUT_FILE env var).",
+)
+def package_command(
+    pyproject_toml_path: str,
+    output_path: str | None,
+    launcher: str | None,
+    launcher_bin: str | None,
+    builder_bin: str | None,
+    verify: bool,
+    strip: bool,
+    progress: bool,
+    quiet: bool,
+    private_key: str | None,
+    public_key: str | None,
+    key_seed: str | None,
+    output_format: str | None,
+    output_file: str | None,
+) -> None:
+    """Packages the application for one or more target platforms."""
+    if not quiet:
+        click.echo("🚀 Packaging application...")
+
+    try:
+        built_artifacts = build_package_from_manifest(
+            Path(pyproject_toml_path),
+            output_path=Path(output_path) if output_path else None,
+            launcher_type=launcher,
+            launcher_bin=Path(launcher_bin) if launcher_bin else None,
+            builder_bin=Path(builder_bin) if builder_bin else None,
+            strip_binaries=strip,
+            show_progress=progress and not quiet,
+            private_key_path=Path(private_key) if private_key else None,
+            public_key_path=Path(public_key) if public_key else None,
+            key_seed=key_seed,
+        )
+        for artifact in built_artifacts:
+            if not quiet:
+                click.secho(
+                    f"✅ Successfully built artifact at {artifact}",
+                    fg="green",
+                )
+
+            # Show optimization results if strip was used
+            if strip and not quiet:
+                click.echo("  📉 Binary optimized (debug symbols stripped)")
+
+            # Verify the package if requested
+            if verify:
+                if not quiet:
+                    click.echo(f"🔍 Verifying {artifact}...")
+                try:
+                    result = verify_package(artifact)
+                    if result["signature_valid"]:
+                        if not quiet:
+                            click.secho("  ✅ Package verified successfully", fg="green")
+                    else:
+                        click.secho("  ❌ Package verification failed", fg="red")
+                        raise BuildError(f"Verification failed for {artifact}")
+                except Exception as e:
+                    click.secho(f"  ❌ Verification error: {e}", fg="red")
+                    raise BuildError(f"Verification failed for {artifact}: {e}") from e
+
+        if built_artifacts:
+            if not quiet:
+                click.secho("✅ All targets built successfully.", fg="green")
+        else:
+            click.secho("⚠️ No targets were specified or built.", fg="yellow")
+
+    except (BuildError, click.UsageError) as e:
+        click.secho(f"❌ Packaging Failed:\n{e}", fg="red", err=True)
+        raise click.Abort() from e

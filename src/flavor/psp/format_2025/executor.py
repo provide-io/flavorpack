@@ -118,8 +118,8 @@ class BundleExecutor:
         env['FLAVOR_VERSION'] = self.package_version
         
         # Custom environment variables from metadata
-        if 'environment' in self.execution_config:
-            for key, value in self.execution_config['environment'].items():
+        if 'env' in self.execution_config:
+            for key, value in self.execution_config['env'].items():
                 value = str(value).replace('{workenv}', str(self.workenv_dir))
                 value = value.replace('{package_name}', self.package_name)
                 value = value.replace('{version}', self.package_version)

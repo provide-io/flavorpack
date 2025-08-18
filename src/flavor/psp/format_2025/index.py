@@ -11,7 +11,7 @@ from flavor.psp.format_2025.constants import (
     SIGNATURE_ED25519, METADATA_JSON,
     DEFAULT_MAX_MEMORY, DEFAULT_MIN_MEMORY, DEFAULT_CHUNK_SIZE,
     CAPABILITY_MMAP, CAPABILITY_SIGNED,
-    ACCESS_AUTO, CACHE_NORMAL, COMPRESSION_NONE
+    ACCESS_AUTO, CACHE_NORMAL, ENCODING_RAW
 )
 
 
@@ -47,7 +47,7 @@ class PSPFIndex:
         # Performance hints (64 bytes)
         "B"    # access_mode
         "B"    # cache_strategy
-        "B"    # compression_type
+        "B"    # encoding_type
         "B"    # encryption_type
         "I"    # page_size
         "Q"    # max_memory
@@ -105,7 +105,7 @@ class PSPFIndex:
     # Performance hints
     access_mode: int = field(default=ACCESS_AUTO)
     cache_strategy: int = field(default=CACHE_NORMAL)
-    compression_type: int = field(default=COMPRESSION_NONE)
+    encoding_type: int = field(default=ENCODING_RAW)
     encryption_type: int = field(default=0)
     page_size: int = field(default=4096)
     max_memory: int = field(default=DEFAULT_MAX_MEMORY)
@@ -162,7 +162,7 @@ class PSPFIndex:
             self.integrity_signature,
             self.access_mode,
             self.cache_strategy,
-            self.compression_type,
+            self.encoding_type,
             self.encryption_type,
             self.page_size,
             self.max_memory,
@@ -209,7 +209,7 @@ class PSPFIndex:
             self.integrity_signature,
             self.access_mode,
             self.cache_strategy,
-            self.compression_type,
+            self.encoding_type,
             self.encryption_type,
             self.page_size,
             self.max_memory,
@@ -262,7 +262,7 @@ class PSPFIndex:
             integrity_signature=unpacked[13],
             access_mode=unpacked[14],
             cache_strategy=unpacked[15],
-            compression_type=unpacked[16],
+            encoding_type=unpacked[16],
             encryption_type=unpacked[17],
             page_size=unpacked[18],
             max_memory=unpacked[19],
