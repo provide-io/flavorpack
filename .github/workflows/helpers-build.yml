@@ -1,0 +1,422 @@
+name: 🔨 Helper Builds
+
+on:
+  workflow_dispatch:
+  workflow_call:
+    outputs:
+      artifact-prefix:
+        description: 'Prefix for uploaded artifacts'
+        value: ${{ jobs.check-cache.outputs.cache-hit == 'true' && 'cached' || jobs.build.outputs.artifact-prefix }}
+      cache-hit:
+        description: 'Whether helpers were loaded from cache'
+        value: ${{ jobs.check-cache.outputs.cache-hit }}
+  push:
+    branches: [main, develop, feature/*]
+    paths:
+      - 'helpers/flavor-go/**'
+      - 'helpers/flavor-rust/**'
+      - '.github/workflows/helpers-build.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'helpers/flavor-go/**'
+      - 'helpers/flavor-rust/**'
+
+jobs:
+  # ==================================================================================
+  # 🔍 Check Cache First
+  # ==================================================================================
+  check-cache:
+    name: 🔍 Check Helper Cache
+    runs-on: ubuntu-latest
+    outputs:
+      cache-hit: ${{ steps.cache.outputs.cache-hit }}
+      cache-key: ${{ steps.key.outputs.cache-key }}
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            helpers/flavor-go
+            helpers/flavor-rust
+      
+      - name: 🔑 Generate Cache Key
+        id: key
+        shell: bash
+        run: |
+          # Create cache key from source file hashes
+          GO_HASH=$(find helpers/flavor-go -type f -name "*.go" -o -name "go.mod" -o -name "go.sum" | sort | xargs sha256sum | sha256sum | cut -d' ' -f1)
+          RUST_HASH=$(find helpers/flavor-rust -type f -name "*.rs" -o -name "Cargo.toml" -o -name "Cargo.lock" | sort | xargs sha256sum | sha256sum | cut -d' ' -f1)
+          CACHE_KEY="helpers-v2-${GO_HASH:0:16}-${RUST_HASH:0:16}"
+          echo "cache-key=$CACHE_KEY" >> $GITHUB_OUTPUT
+          echo "📦 Cache key: $CACHE_KEY"
+      
+      - name: 💾 Check Cache
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            helpers/bin/
+          key: ${{ steps.key.outputs.cache-key }}
+          lookup-only: true
+      
+      - name: 📊 Cache Status
+        shell: bash
+        run: |
+          if [ "${{ steps.cache.outputs.cache-hit }}" = "true" ]; then
+            echo "✅ Helpers found in cache - skipping build!"
+          else
+            echo "🔨 Cache miss - will build helpers"
+          fi
+
+  # ==================================================================================
+  # 🔨 Build Go and Rust Helpers (only if not cached)
+  # ==================================================================================
+  build:
+    needs: check-cache
+    if: needs.check-cache.outputs.cache-hit != 'true'
+    name: 🔨 Build ${{ matrix.language }} (${{ matrix.platform }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Linux AMD64
+          - os: ubuntu-latest
+            language: go
+            goos: linux
+            goarch: amd64
+            platform: linux_amd64
+          - os: ubuntu-latest
+            language: rust
+            platform: linux_amd64
+          
+          # macOS ARM64
+          - os: macos-15
+            language: go
+            goos: darwin
+            goarch: arm64
+            platform: darwin_arm64
+          - os: macos-15
+            language: rust
+            platform: darwin_arm64
+          
+          # macOS AMD64 (for Intel Macs)
+          - os: macos-15
+            language: go
+            goos: darwin
+            goarch: amd64
+            platform: darwin_amd64
+          - os: macos-15
+            language: rust
+            platform: darwin_amd64
+            rust-target: x86_64-apple-darwin
+          
+          # Windows AMD64
+          - os: windows-latest
+            language: go
+            goos: windows
+            goarch: amd64
+            platform: windows_amd64
+          - os: windows-latest
+            language: rust
+            platform: windows_amd64
+          
+          # Linux ARM64
+          - os: ubuntu-latest
+            language: go
+            goos: linux
+            goarch: arm64
+            platform: linux_arm64
+          - os: ubuntu-latest
+            language: rust
+            platform: linux_arm64
+            rust-target: aarch64-unknown-linux-gnu
+          
+          # Windows ARM64
+          - os: windows-latest
+            language: go
+            goos: windows
+            goarch: arm64
+            platform: windows_arm64
+          - os: windows-latest
+            language: rust
+            platform: windows_arm64
+            rust-target: aarch64-pc-windows-msvc
+    
+    runs-on: ${{ matrix.os }}
+    outputs:
+      artifact-prefix: helpers-${{ github.run_id }}
+    
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 🐹 Setup Go
+        if: matrix.language == 'go'
+        uses: actions/setup-go@v5
+        with:
+          go-version: 'stable'
+          cache: true
+          cache-dependency-path: helpers/flavor-go/go.sum
+      
+      - name: 🦀 Setup Rust
+        if: matrix.language == 'rust'
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          targets: ${{ matrix.rust-target }}
+      
+      - name: 🔧 Install Cross-Compilation Tools
+        if: matrix.language == 'rust' && matrix.platform == 'linux_arm64'
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+          # Set up cargo config for cross-compilation
+          mkdir -p .cargo
+          echo '[target.aarch64-unknown-linux-gnu]' > .cargo/config.toml
+          echo 'linker = "aarch64-linux-gnu-gcc"' >> .cargo/config.toml
+      
+      - name: 🔨 Build Go Helpers
+        if: matrix.language == 'go'
+        shell: bash
+        run: |
+          cd helpers/flavor-go
+          
+          # Ensure output directory exists
+          mkdir -p ../bin
+          
+          # Set cross-compilation environment
+          export GOOS=${{ matrix.goos }}
+          export GOARCH=${{ matrix.goarch }}
+          export CGO_ENABLED=0
+          export GOFLAGS="-trimpath"
+          
+          # Build both binaries with reproducible flags
+          echo "Building flavor-go-launcher for $GOOS/$GOARCH..."
+          if [[ "${{ matrix.os }}" == windows-* ]]; then
+            go build -trimpath -ldflags="-s -w -buildid=" \
+              -o ../bin/flavor-go-launcher-${{ matrix.platform }}.exe \
+              ./cmd/flavor-go-launcher
+            
+            echo "Building flavor-go-builder for $GOOS/$GOARCH..."
+            go build -trimpath -ldflags="-s -w -buildid=" \
+              -o ../bin/flavor-go-builder-${{ matrix.platform }}.exe \
+              ./cmd/flavor-go-builder
+          else
+            go build -trimpath -ldflags="-s -w -buildid=" \
+              -o ../bin/flavor-go-launcher-${{ matrix.platform }} \
+              ./cmd/flavor-go-launcher
+            
+            echo "Building flavor-go-builder for $GOOS/$GOARCH..."
+            go build -trimpath -ldflags="-s -w -buildid=" \
+              -o ../bin/flavor-go-builder-${{ matrix.platform }} \
+              ./cmd/flavor-go-builder
+          fi
+          
+          # Show built binaries
+          ls -la ../bin/
+      
+      - name: 🔨 Build Rust Helpers
+        if: matrix.language == 'rust'
+        shell: bash
+        run: |
+          cd helpers/flavor-rust
+          
+          # Ensure output directory exists
+          mkdir -p ../bin
+          
+          # Build for target if specified
+          if [ -n "${{ matrix.rust-target }}" ]; then
+            echo "Building for target: ${{ matrix.rust-target }}"
+            cargo build --release --target ${{ matrix.rust-target }}
+            if [[ "${{ matrix.os }}" == windows-* ]]; then
+              cp target/${{ matrix.rust-target }}/release/flavor-rs-launcher.exe \
+                ../bin/flavor-rs-launcher-${{ matrix.platform }}.exe
+              cp target/${{ matrix.rust-target }}/release/flavor-rs-builder.exe \
+                ../bin/flavor-rs-builder-${{ matrix.platform }}.exe
+            else
+              cp target/${{ matrix.rust-target }}/release/flavor-rs-launcher \
+                ../bin/flavor-rs-launcher-${{ matrix.platform }}
+              cp target/${{ matrix.rust-target }}/release/flavor-rs-builder \
+                ../bin/flavor-rs-builder-${{ matrix.platform }}
+            fi
+          else
+            echo "Building for native target"
+            cargo build --release
+            if [[ "${{ matrix.os }}" == windows-* ]]; then
+              cp target/release/flavor-rs-launcher.exe \
+                ../bin/flavor-rs-launcher-${{ matrix.platform }}.exe
+              cp target/release/flavor-rs-builder.exe \
+                ../bin/flavor-rs-builder-${{ matrix.platform }}.exe
+            else
+              cp target/release/flavor-rs-launcher \
+                ../bin/flavor-rs-launcher-${{ matrix.platform }}
+              cp target/release/flavor-rs-builder \
+                ../bin/flavor-rs-builder-${{ matrix.platform }}
+            fi
+          fi
+          
+          # Show built binaries
+          ls -la ../bin/
+      
+      - name: 🧪 Test Helpers
+        shell: bash
+        run: |
+          # Test that binaries execute and capture version info
+          if [[ "${{ matrix.os }}" == windows-* ]]; then
+            EXE=".exe"
+          else
+            EXE=""
+          fi
+          
+          if [ "${{ matrix.language }}" = "go" ]; then
+            echo "🐹 Go Launcher version:"
+            ./helpers/bin/flavor-go-launcher-${{ matrix.platform }}${EXE} --version || echo "No version flag"
+            echo ""
+            echo "🐹 Go Builder version:"
+            ./helpers/bin/flavor-go-builder-${{ matrix.platform }}${EXE} --version || echo "No version flag"
+          else
+            echo "🦀 Rust Launcher version:"
+            ./helpers/bin/flavor-rs-launcher-${{ matrix.platform }}${EXE} --version || echo "No version flag"
+            echo ""
+            echo "🦀 Rust Builder version:"
+            ./helpers/bin/flavor-rs-builder-${{ matrix.platform }}${EXE} --version || echo "No version flag"
+          fi
+      
+      - name: 📦 Create Archive
+        shell: bash
+        run: |
+          cd helpers/bin
+          # Determine short language name
+          if [ "${{ matrix.language }}" = "go" ]; then
+            SHORT_LANG="go"
+          else
+            SHORT_LANG="rs"
+          fi
+          
+          # Use 7z on Windows (pre-installed), zip on Unix
+          if [[ "${{ matrix.os }}" == windows-* ]]; then
+            # Windows: use 7z (pre-installed on GitHub runners)
+            7z a -tzip "flavor-${SHORT_LANG}-helpers-${{ matrix.platform }}.zip" "*-${{ matrix.platform }}*"
+          else
+            # Unix: use zip
+            zip -r flavor-${SHORT_LANG}-helpers-${{ matrix.platform }}.zip *-${{ matrix.platform }}
+          fi
+      
+      - name: 📤 Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: flavor-${{ matrix.language == 'go' && 'go' || 'rs' }}-helpers-${{ matrix.platform }}
+          path: helpers/bin/flavor-*-helpers-${{ matrix.platform }}.zip
+          retention-days: 30
+
+  # ==================================================================================
+  # 💾 Save to Cache (after all builds complete)
+  # ==================================================================================
+  save-cache:
+    name: 💾 Save Helper Cache
+    needs: [check-cache, build]
+    if: needs.check-cache.outputs.cache-hit != 'true' && needs.build.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Download All Helpers
+        uses: actions/download-artifact@v4
+        with:
+          pattern: flavor-*-helpers-*
+          path: helpers/bin/
+      
+      - name: 🔧 Organize Helpers
+        shell: bash
+        run: |
+          # Extract and organize helpers
+          cd helpers/bin
+          # Each artifact is in its own directory, containing a zip file
+          for dir in flavor-*-helpers-*; do
+            if [ -d "$dir" ]; then
+              # Extract any zip files
+              if ls "$dir"/*.zip 1> /dev/null 2>&1; then
+                unzip -o "$dir"/*.zip
+              fi
+            fi
+          done
+          # Clean up directories and zip files
+          rm -rf flavor-*-helpers-*/
+          rm -f *.zip
+          # Make executables
+          chmod +x flavor-*-launcher-* flavor-*-builder-* 2>/dev/null || true
+          ls -la
+      
+      - name: 💾 Save to Cache
+        uses: actions/cache/save@v4
+        with:
+          path: helpers/bin/
+          key: ${{ needs.check-cache.outputs.cache-key }}
+
+  # ==================================================================================
+  # 📦 Provide Cached Helpers (when cache hit)
+  # ==================================================================================
+  provide-cached:
+    name: 📦 Provide Cached Helpers
+    needs: check-cache
+    if: needs.check-cache.outputs.cache-hit == 'true'
+    strategy:
+      matrix:
+        platform: [linux_amd64, darwin_amd64, darwin_arm64, windows_amd64, linux_arm64, windows_arm64]
+        language: [go, rust]
+    runs-on: ubuntu-latest
+    steps:
+      - name: 💾 Restore from Cache
+        uses: actions/cache/restore@v4
+        with:
+          path: helpers/bin/
+          key: ${{ needs.check-cache.outputs.cache-key }}
+      
+      - name: 📤 Upload Cached Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: flavor-${{ matrix.language == 'go' && 'go' || 'rs' }}-helpers-${{ matrix.platform }}
+          path: |
+            helpers/bin/flavor-${{ matrix.language == 'go' && 'go' || 'rs' }}-*-${{ matrix.platform }}*
+          retention-days: 7
+
+  # ==================================================================================
+  # ✅ Summary
+  # ==================================================================================
+  summary:
+    name: ✅ Build Summary
+    needs: [check-cache, build, save-cache, provide-cached]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📊 Generate Summary
+        run: |
+          echo "# 🔨 Helper Build Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ needs.check-cache.outputs.cache-hit }}" = "true" ]; then
+            echo "💾 **Helpers loaded from cache** - no rebuild needed!" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Cache key: \`${{ needs.check-cache.outputs.cache-key }}\`" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.build.result }}" = "success" ]; then
+            echo "✅ All helper builds completed successfully" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "🆕 Fresh builds created and cached" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.build.result }}" = "skipped" ]; then
+            echo "⏭️ Build was skipped" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Some helper builds failed" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 📦 Built Artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Go Helpers" >> $GITHUB_STEP_SUMMARY
+          echo "- flavor-go-launcher (linux_amd64, darwin_amd64, darwin_arm64, windows_amd64, linux_arm64, windows_arm64)" >> $GITHUB_STEP_SUMMARY
+          echo "- flavor-go-builder (linux_amd64, darwin_amd64, darwin_arm64, windows_amd64, linux_arm64, windows_arm64)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Rust Helpers" >> $GITHUB_STEP_SUMMARY
+          echo "- flavor-rs-launcher (linux_amd64, darwin_amd64, darwin_arm64, windows_amd64, linux_arm64, windows_arm64)" >> $GITHUB_STEP_SUMMARY
+          echo "- flavor-rs-builder (linux_amd64, darwin_amd64, darwin_arm64, windows_amd64, linux_arm64, windows_arm64)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "_Note: Run binaries with --version to see version information_" >> $GITHUB_STEP_SUMMARY

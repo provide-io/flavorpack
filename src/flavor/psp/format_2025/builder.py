@@ -322,18 +322,8 @@ def _write_package(
     output_path.parent.mkdir(parents=True, exist_ok=True)
     
     # Get launcher
-    if spec.options.launcher_bin:
-        # Use explicitly provided launcher binary
-        logger.info(f"Using explicit launcher binary: {spec.options.launcher_bin}")
-        if not spec.options.launcher_bin.exists():
-            raise BuildError(f"Launcher binary not found: {spec.options.launcher_bin}")
-        launcher_data = spec.options.launcher_bin.read_bytes()
-    else:
-        # Use launcher type to find the appropriate launcher
-        logger.info(f"Using launcher type '{spec.options.launcher_type}' to find launcher")
-        launcher_data = _get_launcher(spec.options.launcher_type)
+    launcher_data = _get_launcher(spec.options.launcher_type)
     launcher_size = len(launcher_data)
-    logger.info(f"Launcher size: {launcher_size} bytes")
     
     # Create index
     index = create_index(spec, slots, public_key)

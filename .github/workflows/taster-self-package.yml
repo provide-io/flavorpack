@@ -1,0 +1,170 @@
+name: 🔄 Taster Self-Packaging
+
+on:
+  workflow_dispatch:
+  workflow_call:
+  workflow_run:
+    workflows: ["📦 Flavor Packaging Tests"]
+    types: [completed]
+    branches: [main, develop, feature/*]
+  push:
+    branches: [main, develop, feature/*]
+    paths:
+      - 'helpers/taster/**'
+      - '.github/workflows/taster-self-package.yml'
+
+jobs:
+  # ==================================================================================
+  # 🔄 Taster packages itself (needs artifacts from flavor-packaging workflow)
+  # ==================================================================================
+  taster-self-package:
+    name: 🔄 Taster → Taster
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # Test cross-packaging combinations
+        include:
+          - os: ubuntu-latest
+            initial_launcher: rust
+            self_launcher: go
+            self_builder: rust
+          - os: ubuntu-latest
+            initial_launcher: go
+            self_launcher: rust
+            self_builder: python
+          - os: ubuntu-latest
+            initial_launcher: rust
+            self_launcher: rust
+            self_builder: go
+          - os: macos-15
+            initial_launcher: rust
+            self_launcher: rust
+            self_builder: go
+          - os: macos-15
+            initial_launcher: go
+            self_launcher: rust
+            self_builder: rust
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: ⚡ Install uv
+        uses: astral-sh/setup-uv@v4
+      
+      - name: 🐹 Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 'stable'
+          cache: true
+          cache-dependency-path: helpers/flavor-go/go.sum
+      
+      - name: 🦀 Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+      
+      - name: 🔨 Build All Helpers
+        shell: bash
+        run: |
+          # Build Go helpers
+          cd helpers/flavor-go
+          go build -o ../bin/flavor-go-launcher ./cmd/flavor-go-launcher
+          go build -o ../bin/flavor-go-builder ./cmd/flavor-go-builder
+          cd ../..
+          
+          # Build Rust helpers
+          cd helpers/flavor-rust
+          cargo build --release
+          cp target/release/flavor-rs-launcher ../bin/
+          cp target/release/flavor-rs-builder ../bin/
+          cd ../..
+          
+          # Make helpers available globally
+          mkdir -p $HOME/.cache/flavor/bin
+          cp helpers/bin/* $HOME/.cache/flavor/bin/
+          chmod +x $HOME/.cache/flavor/bin/*
+      
+      - name: 🔧 Build Initial Taster
+        shell: bash
+        run: |
+          # Setup Flavor environment
+          uv venv workenv/flavor_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m)
+          source workenv/flavor_*/bin/activate
+          uv pip install -e .
+          
+          # Build initial taster package
+          cd helpers/taster
+          
+          if [ "${{ matrix.initial_launcher }}" = "go" ]; then
+            export FLAVOR_LAUNCHER_BIN="$PWD/../bin/flavor-go-launcher"
+          else
+            export FLAVOR_LAUNCHER_BIN="$PWD/../bin/flavor-rs-launcher"
+          fi
+          
+          flavor package \
+            --launcher ${{ matrix.initial_launcher }} \
+            --output initial-taster.psp \
+            --key-seed test123
+          
+          chmod +x initial-taster.psp
+          cd ../..
+      
+      - name: 🔄 Taster Self-Package
+        shell: bash
+        run: |
+          cd helpers/taster
+          
+          # Use FLAVOR_INSECURE for cross-packaging test
+          export FLAVOR_INSECURE=1
+          
+          # Taster packages itself with different launcher/builder combo
+          ./initial-taster.psp package \
+            --launcher ${{ matrix.self_launcher }} \
+            --builder ${{ matrix.self_builder }} \
+            --output self-packaged.psp \
+            --key-seed test456
+      
+      - name: 🧪 Test Self-Packaged Taster
+        shell: bash
+        run: |
+          cd helpers/taster
+          chmod +x self-packaged.psp
+          
+          # Test the self-packaged version
+          ./self-packaged.psp --version
+          ./self-packaged.psp info
+          ./self-packaged.psp test
+      
+      - name: 🔄 Second Generation Package
+        shell: bash
+        run: |
+          cd helpers/taster
+          
+          # Self-packaged taster packages itself again
+          export FLAVOR_INSECURE=1
+          ./self-packaged.psp package \
+            --launcher ${{ matrix.initial_launcher }} \
+            --builder ${{ matrix.self_launcher }} \
+            --output second-gen.psp \
+            --key-seed test789
+      
+      - name: 🧪 Test Second Generation
+        shell: bash
+        run: |
+          cd helpers/taster
+          chmod +x second-gen.psp
+          ./second-gen.psp --version
+          ./second-gen.psp info
+      
+      - name: 📤 Upload Packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: taster-self-${{ matrix.initial_launcher }}-${{ matrix.self_launcher }}-${{ matrix.self_builder }}-${{ matrix.os }}
+          path: |
+            helpers/taster/self-packaged.psp
+            helpers/taster/second-gen.psp

@@ -11,6 +11,7 @@ from typing import List, Dict, Any
 
 from flavor.psp.format_2025.spec import BuildSpec
 from flavor.psp.format_2025.slots import SlotMetadata
+from flavor.psp.metadata.validators import validate_metadata as validate_metadata_structure
 
 
 def validate_spec(spec: BuildSpec) -> List[str]:

@@ -71,7 +71,7 @@ class PSPFLauncher(PSPFReader):
                 offset = descriptor.offset
                 size = descriptor.size  # Compressed size
                 checksum = descriptor.checksum
-                encoding = descriptor.compression
+                encoding = descriptor.encoding
                 purpose = descriptor.purpose
                 lifecycle = descriptor.lifecycle
                 
@@ -159,17 +159,23 @@ class PSPFLauncher(PSPFReader):
         
         # NOTE: Decoding logic must match Go/Rust implementations
         # Decode if needed
-        if slot_entry['encoding'] == 1:  # gzip
+        if slot_entry['encoding'] == 0:  # raw/none
+            logger.debug(f"📄 Slot {slot_index} is unencoded (raw)")
+            data = slot_data
+        elif slot_entry['encoding'] == 1:  # tar
+            logger.debug(f"📦 Slot {slot_index} is a tar archive")
+            data = slot_data  # Tar archives are extracted later
+        elif slot_entry['encoding'] == 2:  # gzip
             logger.debug(f"🗜️ Decompressing slot {slot_index} with gzip")
             import gzip
             data = gzip.decompress(slot_data)
             logger.debug(f"✅ Decompressed to {len(data)} bytes")
-        elif slot_entry['encoding'] == 2:  # reserved for future encoding methods
-            logger.error(f"❌ Encoding method 2 is reserved for future use")
+        elif slot_entry['encoding'] == 3:  # tar.gz
+            logger.debug(f"📦🗜️ Slot {slot_index} is a tar.gz archive")
+            data = slot_data  # Will be decompressed and extracted later
+        else:
+            logger.error(f"❌ Unsupported encoding method: {slot_entry['encoding']}")
             raise ValueError(f"Unsupported encoding method: {slot_entry['encoding']}")
-        else:  # none
-            logger.debug(f"📄 Slot {slot_index} is unencoded (raw)")
-            data = slot_data
         
         # Get slot name from metadata
         metadata = self.read_metadata()

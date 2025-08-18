@@ -22,11 +22,51 @@ def test_orchestrator_constructs_correct_build_command(tmp_path: Path) -> None:
     (keys_dir / "priv.key").write_text("mock private key")
     (keys_dir / "pub.key").write_text("mock public key")
 
+    # Create mock launcher and builder binaries
+    mock_launcher = tmp_path / "flavor-rs-launcher"
+    mock_launcher.write_text("#!/bin/sh\necho mock launcher")
+    mock_launcher.chmod(0o755)
+    
+    mock_builder = tmp_path / "flavor-rs-builder"
+    mock_builder.write_text("#!/bin/sh\necho mock builder")
+    mock_builder.chmod(0o755)
+    
+    # Create mock artifacts
+    (tmp_path / "payload.tgz").write_bytes(b"mock payload")
+    (tmp_path / "python.tgz").write_bytes(b"mock python")
+    (tmp_path / "payload" / "bin").mkdir(parents=True)
+    (tmp_path / "payload" / "bin" / "uv").touch()
+    (tmp_path / "payload" / "wheels").mkdir()
+    
+    orchestrator = PackagingOrchestrator(
+        package_integrity_key_path=str(keys_dir / "priv.key"),
+        public_key_path=str(keys_dir / "pub.key"),
+        output_flavor_path=str(output_path),
+        build_config={},
+        manifest_dir=manifest_dir,
+        package_name="mypackage",
+        entry_point="main:serve",
+    )
+    
     with patch(
         "flavor.packaging.orchestrator.run_command"
     ) as mock_run, patch(
         "flavor.packaging.python_packager.PythonPackager.prepare_artifacts"
-    ) as mock_prepare:
+    ) as mock_prepare, patch(
+        "flavor.packaging.orchestrator.PackagingOrchestrator._find_helper"
+    ) as mock_find_helper, patch.object(
+        orchestrator, "_build_with_python_builder"
+    ) as mock_build:
+        
+        # Mock helper finding - return appropriate binary based on what's being looked for
+        def find_helper_side_effect(name):
+            if "launcher" in name:
+                return mock_launcher
+            elif "builder" in name:
+                return mock_builder
+            else:
+                raise ValueError(f"Unknown helper: {name}")
+        mock_find_helper.side_effect = find_helper_side_effect
         
         # Mock run_command to prevent actual execution
         mock_run.return_value = None
@@ -37,27 +77,19 @@ def test_orchestrator_constructs_correct_build_command(tmp_path: Path) -> None:
             "python_tgz": tmp_path / "python.tgz",
             "payload_dir": tmp_path / "payload",
         }
-        (tmp_path / "payload" / "bin").mkdir(parents=True)
-        (tmp_path / "payload" / "bin" / "uv").touch()
-        (tmp_path / "payload" / "wheels").mkdir()
+        
+        # Mock the internal build to just call external builder
+        mock_build.side_effect = lambda: orchestrator._build_with_external_builder()
 
-        orchestrator = PackagingOrchestrator(
-            package_integrity_key_path=str(keys_dir / "priv.key"),
-            public_key_path=str(keys_dir / "pub.key"),
-            output_flavor_path=str(output_path),
-            build_config={},
-            manifest_dir=manifest_dir,
-            package_name="mypackage",
-            entry_point="main:serve",
-        )
         orchestrator.build_package()
 
         # Find the final build command call
         build_call = None
         for c in mock_run.call_args_list:
-            if "flavor-rs-builder" in c.args[0][0] or "flavor-go-builder" in c.args[0][0]:
-                build_call = c
-                break
+            if c and c.args and c.args[0]:
+                if "flavor-rs-builder" in str(c.args[0]) or "flavor-go-builder" in str(c.args[0]):
+                    build_call = c
+                    break
 
         assert build_call is not None, "Builder command was not called"
         build_cmd_args = build_call.args[0]

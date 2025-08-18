@@ -28,7 +28,8 @@ from flavor.psp.format_2025 import (
 
 
 @pytest.mark.security
-@pytest.mark.unit
+@pytest.mark.integration
+@pytest.mark.requires_helpers
 class TestPSPFSecurity:
     """Test PSPF security features."""
     

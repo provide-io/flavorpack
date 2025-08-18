@@ -1,0 +1,204 @@
+name: 📦 Flavor Packaging Tests
+
+on:
+  workflow_dispatch:
+  workflow_call:
+  push:
+    branches: [main, develop, feature/*]
+    paths:
+      - 'src/flavor/**'
+      - 'helpers/flavor-*/**'
+      - '.github/workflows/flavor-packaging.yml'
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  # ==================================================================================
+  # 📦 Flavor packages itself
+  # ==================================================================================
+  flavor-self-package:
+    name: 🔄 Flavor → Flavor
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-15]
+        launcher: [go, rust]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: ⚡ Install uv
+        uses: astral-sh/setup-uv@v4
+      
+      - name: 🐹 Setup Go
+        if: matrix.launcher == 'go'
+        uses: actions/setup-go@v5
+        with:
+          go-version: 'stable'
+          cache: true
+          cache-dependency-path: helpers/flavor-go/go.sum
+      
+      - name: 🦀 Setup Rust
+        if: matrix.launcher == 'rust'
+        uses: dtolnay/rust-toolchain@stable
+      
+      - name: 🔨 Build Launcher
+        shell: bash
+        run: |
+          if [ "${{ matrix.launcher }}" = "go" ]; then
+            cd helpers/flavor-go
+            go build -o ../bin/flavor-go-launcher ./cmd/flavor-go-launcher
+            go build -o ../bin/flavor-go-builder ./cmd/flavor-go-builder
+          elif [ "${{ matrix.launcher }}" = "rust" ]; then
+            cd helpers/flavor-rust
+            cargo build --release
+            cp target/release/flavor-rs-launcher ../bin/
+            cp target/release/flavor-rs-builder ../bin/
+          fi
+      
+      - name: 🔧 Setup Flavor
+        shell: bash
+        run: |
+          uv venv workenv/flavor_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m)
+          source workenv/flavor_*/bin/activate
+          uv pip install -e .
+      
+      - name: 📦 Flavor Packages Itself
+        shell: bash
+        run: |
+          source workenv/flavor_*/bin/activate
+          
+          # Determine platform string
+          OS=$(uname -s | tr '[:upper:]' '[:lower:]')
+          ARCH=$(uname -m | sed 's/x86_64/amd64/')
+          PLATFORM="${OS}_${ARCH}"
+          
+          # Set launcher binary path
+          if [ "${{ matrix.launcher }}" = "go" ]; then
+            export FLAVOR_LAUNCHER_BIN="$PWD/helpers/bin/flavor-go-launcher"
+          else
+            export FLAVOR_LAUNCHER_BIN="$PWD/helpers/bin/flavor-rs-launcher"
+          fi
+          
+          # Build package with platform-specific name
+          flavor package \
+            --launcher ${{ matrix.launcher }} \
+            --output dist/flavor-${PLATFORM}.psp \
+            --key-seed test123
+      
+      - name: 🧪 Test Flavor Package
+        shell: bash
+        run: |
+          # Find the built package
+          PSP_FILE=$(ls dist/flavor-*.psp)
+          chmod +x $PSP_FILE
+          $PSP_FILE --version
+          $PSP_FILE --help
+      
+      - name: 📤 Upload Flavor Package
+        uses: actions/upload-artifact@v4
+        with:
+          name: flavor-${{ matrix.os == 'ubuntu-latest' && 'linux_amd64' || 'darwin_arm64' }}-${{ matrix.launcher }}
+          path: dist/flavor-*.psp
+
+  # ==================================================================================
+  # 🍯 Flavor packages Taster
+  # ==================================================================================
+  flavor-package-taster:
+    name: 📦 Flavor → Taster
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-15]
+        launcher: [go, rust]
+        builder: [python]  # Flavor only supports Python builder currently
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: ⚡ Install uv
+        uses: astral-sh/setup-uv@v4
+      
+      - name: 🐹 Setup Go
+        if: matrix.launcher == 'go'
+        uses: actions/setup-go@v5
+        with:
+          go-version: 'stable'
+          cache: true
+          cache-dependency-path: helpers/flavor-go/go.sum
+      
+      - name: 🦀 Setup Rust
+        if: matrix.launcher == 'rust'
+        uses: dtolnay/rust-toolchain@stable
+      
+      - name: 🔨 Build Launcher
+        shell: bash
+        run: |
+          if [ "${{ matrix.launcher }}" = "go" ]; then
+            cd helpers/flavor-go
+            go build -o ../bin/flavor-go-launcher ./cmd/flavor-go-launcher
+          elif [ "${{ matrix.launcher }}" = "rust" ]; then
+            cd helpers/flavor-rust
+            cargo build --release --bin flavor-rs-launcher
+            cp target/release/flavor-rs-launcher ../bin/
+          fi
+      
+      - name: 🔧 Setup Flavor
+        shell: bash
+        run: |
+          uv venv workenv/flavor_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m)
+          source workenv/flavor_*/bin/activate
+          uv pip install -e .
+      
+      - name: 📦 Package Taster
+        shell: bash
+        run: |
+          source workenv/flavor_*/bin/activate
+          cd helpers/taster
+          
+          # Determine platform string
+          OS=$(uname -s | tr '[:upper:]' '[:lower:]')
+          ARCH=$(uname -m | sed 's/x86_64/amd64/')
+          PLATFORM="${OS}_${ARCH}"
+          
+          # Set launcher binary path if needed
+          if [ "${{ matrix.launcher }}" = "go" ]; then
+            export FLAVOR_LAUNCHER_BIN="$PWD/../bin/flavor-go-launcher"
+          elif [ "${{ matrix.launcher }}" = "rust" ]; then
+            export FLAVOR_LAUNCHER_BIN="$PWD/../bin/flavor-rs-launcher"
+          fi
+          
+          # Build package with platform-specific name
+          flavor package \
+            --launcher ${{ matrix.launcher }} \
+            --output dist/taster-${PLATFORM}.psp \
+            --key-seed test123
+      
+      - name: 🧪 Test Taster Package
+        shell: bash
+        run: |
+          # Find the built package
+          PSP_FILE=$(ls helpers/taster/dist/taster-*.psp)
+          chmod +x $PSP_FILE
+          $PSP_FILE --version
+          $PSP_FILE info
+          $PSP_FILE test
+      
+      - name: 📤 Upload Taster Package
+        uses: actions/upload-artifact@v4
+        with:
+          name: taster-${{ matrix.os == 'ubuntu-latest' && 'linux_amd64' || 'darwin_arm64' }}-${{ matrix.launcher }}
+          path: helpers/taster/dist/taster-*.psp
+          retention-days: 7
