@@ -13,7 +13,7 @@ from flavor.psp.format_2025.backends import MMapBackend, FileBackend, StreamBack
 from flavor.psp.format_2025.constants import (
     PSPF_MAGIC, HEADER_SIZE, SLOT_DESCRIPTOR_SIZE,
     ACCESS_MMAP, ACCESS_FILE, ACCESS_STREAM, ACCESS_AUTO,
-    COMPRESSION_NONE, COMPRESSION_GZIP
+    ENCODING_RAW, ENCODING_GZIP
 )
 from flavor.psp.format_2025.index import PSPFIndex
 from flavor.psp.format_2025.slots import SlotDescriptor
@@ -54,7 +54,7 @@ class TestReaderBackends:
                 size=100,
                 original_size=100,
                 checksum=zlib.adler32(b'TEST DATA 1' * 9 + b'T'),  # 100 bytes
-                compression=COMPRESSION_NONE
+                encoding=ENCODING_RAW
             )
             f.write(slot1.pack())
             
@@ -65,7 +65,7 @@ class TestReaderBackends:
                 size=200,
                 original_size=200,
                 checksum=zlib.adler32(b'TEST DATA 2' * 18 + b'TD'),  # 200 bytes
-                compression=COMPRESSION_NONE
+                encoding=ENCODING_RAW
             )
             f.write(slot2.pack())
             

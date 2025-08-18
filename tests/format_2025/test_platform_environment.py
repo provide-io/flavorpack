@@ -11,9 +11,10 @@ from flavor.utils import (
     get_os_version,
     get_cpu_type
 )
-from flavor.psp.workenv.environment import set_platform_environment
+from flavor.psp.format_2025.environment import set_platform_environment
 
 
+@pytest.mark.unit
 class TestPlatformEnvironment:
     """Test platform-specific environment variable handling."""
     

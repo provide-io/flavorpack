@@ -192,17 +192,16 @@ class PackagingOrchestrator:
                     "env": {},  # Application-specific environment variables
                 },
                 "workenv": {
-                    "umask": "0077",  # Default to owner-only access
                     "directories": [
                         # Additional directories for application use (Python venv dirs are created by UV)
-                        {"path": "{workenv}/tmp"},  # Will be 0700 with umask
-                        {"path": "{workenv}/var"},
-                        {"path": "{workenv}/var/log"},
-                        {"path": "{workenv}/var/cache"},
-                        {"path": "{workenv}/var/run"},
-                        {"path": "{workenv}/etc"},  # Configuration
-                        {"path": "{workenv}/home"},  # User home directory
-                        {"path": "{workenv}/state"},  # Application state
+                        {"path": "tmp", "mode": "0700"},  # User-only temp directory
+                        {"path": "var", "mode": "0755"},
+                        {"path": "var/log", "mode": "0755"},
+                        {"path": "var/cache", "mode": "0755"},
+                        {"path": "var/run", "mode": "0755"},
+                        {"path": "etc", "mode": "0755"},  # Configuration
+                        {"path": "home", "mode": "0700"},  # User home directory
+                        {"path": "state", "mode": "0755"},  # Application state
                     ],
                     "env": {
                         "TMPDIR": "{workenv}/tmp",

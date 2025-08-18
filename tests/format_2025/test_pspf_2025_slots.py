@@ -216,12 +216,12 @@ class TestPSPFSlots:
         )
         
         # Use test_builder from fixture
-        from flavor.psp.format_2025.constants import COMPRESSION_GZIP
+        from flavor.psp.format_2025.constants import ENCODING_GZIP
         compressed_data, compression_type = test_builder._compress_data(data, "gzip")
         
         # Verify compression worked
         assert len(compressed_data) < len(data)
-        assert compression_type == COMPRESSION_GZIP
+        assert compression_type == ENCODING_GZIP
         
         # Verify decompression  
         import gzip
@@ -246,12 +246,12 @@ class TestPSPFSlots:
         )
         
         # Use test_builder from fixture
-        from flavor.psp.format_2025.constants import COMPRESSION_NONE
+        from flavor.psp.format_2025.constants import ENCODING_RAW
         stored_data, compression_type = test_builder._compress_data(data, "none")
         
         # Verify no compression
         assert stored_data == data
-        assert compression_type == COMPRESSION_NONE
+        assert compression_type == ENCODING_RAW
     
     def test_slot_checksum_verification(self, temp_dir, test_builder):
         """Test slot checksum verification."""

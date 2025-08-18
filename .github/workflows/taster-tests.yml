@@ -1,0 +1,180 @@
+name: 🍯 Taster Unit Tests
+
+on:
+  workflow_dispatch:
+  workflow_call:
+  push:
+    branches: [main, develop, feature/*]
+    paths:
+      - 'helpers/taster/**'
+      - 'tests/taster/**'
+      - '.github/workflows/taster-tests.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'helpers/taster/**'
+      - 'tests/taster/**'
+
+jobs:
+  # ==================================================================================
+  # 🧪 Taster Unit Tests
+  # ==================================================================================
+  taster-unit-tests:
+    name: 🧪 Taster Tests
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-15]
+        python: ["3.11", "3.12", "3.13"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      
+      - name: ⚡ Install uv
+        uses: astral-sh/setup-uv@v4
+      
+      - name: 🔧 Setup Environment
+        shell: bash
+        run: |
+          uv venv workenv/flavor_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m)
+          source workenv/flavor_*/bin/activate
+          uv pip install -e .
+          uv pip install pytest pytest-cov pytest-xdist hypothesis
+      
+      - name: 🧪 Run Taster Tests
+        shell: bash
+        run: |
+          source workenv/flavor_*/bin/activate
+          cd helpers/taster
+          
+          # Run taster-specific unit tests
+          pytest tests/ -m "taster and not stress" -n auto -v --tb=short
+      
+      - name: 📊 Generate Coverage Report
+        if: matrix.os == 'ubuntu-latest' && matrix.python == '3.11'
+        shell: bash
+        run: |
+          source workenv/flavor_*/bin/activate
+          cd helpers/taster
+          
+          # Generate coverage report for taster
+          pytest tests/ -m "taster" --cov=taster --cov-report=xml --cov-report=term
+      
+      - name: 📤 Upload Coverage
+        if: matrix.os == 'ubuntu-latest' && matrix.python == '3.11'
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./helpers/taster/coverage.xml
+          flags: taster
+          name: taster-coverage
+
+  # ==================================================================================
+  # 🚀 Taster Integration Tests
+  # ==================================================================================
+  taster-integration:
+    name: 🚀 Integration Tests
+    needs: taster-unit-tests
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-15]
+        launcher: [go, rust]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: ⚡ Install uv
+        uses: astral-sh/setup-uv@v4
+      
+      - name: 🐹 Setup Go
+        if: matrix.launcher == 'go'
+        uses: actions/setup-go@v5
+        with:
+          go-version: 'stable'
+          cache: true
+          cache-dependency-path: helpers/flavor-go/go.sum
+      
+      - name: 🦀 Setup Rust
+        if: matrix.launcher == 'rust'
+        uses: dtolnay/rust-toolchain@stable
+      
+      - name: 🔨 Build Launcher
+        shell: bash
+        run: |
+          if [ "${{ matrix.launcher }}" = "go" ]; then
+            cd helpers/flavor-go
+            go build -o ../bin/flavor-go-launcher ./cmd/flavor-go-launcher
+          elif [ "${{ matrix.launcher }}" = "rust" ]; then
+            cd helpers/flavor-rust
+            cargo build --release --bin flavor-rs-launcher
+            cp target/release/flavor-rs-launcher ../bin/
+          fi
+      
+      - name: 🔧 Setup Flavor
+        shell: bash
+        run: |
+          uv venv workenv/flavor_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m)
+          source workenv/flavor_*/bin/activate
+          uv pip install -e .
+      
+      - name: 📦 Build Taster Package
+        shell: bash
+        run: |
+          source workenv/flavor_*/bin/activate
+          cd helpers/taster
+          
+          if [ "${{ matrix.launcher }}" = "go" ]; then
+            export FLAVOR_LAUNCHER_BIN="$PWD/../bin/flavor-go-launcher"
+          else
+            export FLAVOR_LAUNCHER_BIN="$PWD/../bin/flavor-rs-launcher"
+          fi
+          
+          flavor package \
+            --launcher ${{ matrix.launcher }} \
+            --output taster.psp \
+            --key-seed test123
+          
+          chmod +x taster.psp
+      
+      - name: 🧪 Run Integration Tests
+        shell: bash
+        run: |
+          cd helpers/taster
+          
+          # Test all taster commands
+          ./taster.psp --version
+          ./taster.psp --help
+          ./taster.psp info
+          ./taster.psp env
+          ./taster.psp test
+          ./taster.psp exit 0 --message "Success test"
+          
+          # Test file operations
+          ./taster.psp file workenv-test
+          
+          # Test command execution
+          ./taster.psp argv one two three
+          
+          # Test pipe operations
+          echo "test data" | ./taster.psp pipe
+      
+      - name: 📤 Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: taster-integration-${{ matrix.launcher }}-${{ matrix.os }}
+          path: |
+            helpers/taster/taster.psp
+            helpers/taster/test-results/
