@@ -16,7 +16,6 @@ from flavor.packaging.orchestrator import PackagingOrchestrator
 def build_package_from_manifest(
     manifest_path: Path,
     output_path: Path | None = None,
-    launcher_type: str | None = None,
     launcher_bin: Path | None = None,
     builder_bin: Path | None = None,
     strip_binaries: bool = False,
@@ -39,21 +38,6 @@ def build_package_from_manifest(
         pyproject.get("project", {}).get("scripts", {}).get(project_name, "main:main"),
     )
     package_name = flavor_config.get("metadata", {}).get("package_name", project_name)
-
-    # Determine launcher type (priority: CLI arg > env var > config > default)
-    if launcher_type is None:
-        launcher_type = os.environ.get("FLAVOR_LAUNCHER")
-    if launcher_type is None:
-        launcher_type = flavor_config.get("launcher")
-    if launcher_type is None:
-        launcher_type = "rust"
-
-    # Validate launcher type
-    valid_launchers = ["go", "rust"]
-    if launcher_type not in valid_launchers:
-        raise ValueError(
-            f"Invalid launcher type '{launcher_type}'. Must be one of: {', '.join(valid_launchers)}"
-        )
 
     # Use absolute paths based on manifest location
     manifest_dir = manifest_path.parent.absolute()
@@ -92,14 +76,13 @@ def build_package_from_manifest(
         build_config["execution"] = flavor_config["execution"]
 
     orchestrator = PackagingOrchestrator(
-        package_integrity_key_path=str(package_integrity_key_path) if private_key_path else None,
+        package_integrity_key_path=str(package_integrity_key_path) if package_integrity_key_path else None,
         public_key_path=str(public_key_path) if public_key_path else None,
         output_flavor_path=str(output_flavor_path),
         build_config=build_config,
         manifest_dir=manifest_path.parent,
         package_name=package_name,
         entry_point=entry_point,
-        launcher_type=launcher_type,
         launcher_bin=str(launcher_bin) if launcher_bin else None,
         builder_bin=str(builder_bin) if builder_bin else None,
         strip_binaries=strip_binaries,

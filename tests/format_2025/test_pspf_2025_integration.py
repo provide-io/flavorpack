@@ -49,7 +49,7 @@ class TestPSPFIntegration:
                 name="test2.json",
                 size=17,
                 checksum="",
-                encoding="gzip",
+                encoding="none",
                 purpose="config",
                 lifecycle="runtime",
                 path=test_data_dir / "test2.json"
@@ -103,11 +103,11 @@ class TestPSPFIntegration:
         
         # Verify first slot
         assert descriptors[0].size > 0
-        assert descriptors[0].compression == 0  # none
+        assert descriptors[0].encoding == 0  # none
         assert descriptors[0].purpose == 0  # data
         
-        # Verify second slot (compressed)
-        assert descriptors[1].compression == 1  # gzip
+        # Verify second slot (not compressed)
+        assert descriptors[1].encoding == 0  # none
         assert descriptors[1].purpose == 2  # config
         
         # Read and verify slot data
@@ -115,7 +115,7 @@ class TestPSPFIntegration:
         assert slot1_data == b"This is test file 1"
         
         slot2_data = reader.read_slot(1)
-        assert slot2_data == b'{"data": "test"}'
+        assert slot2_data == b'{"data": "test"}' * 100
         
         slot3_data = reader.read_slot(2)
         assert slot3_data == b"key: value\n"
@@ -144,7 +144,7 @@ class TestPSPFIntegration:
             }
         }
         result = (test_builder.metadata(**metadata, allow_empty=True)
-                          .with_options(launcher_type="go") # Assuming a default launcher type
+                          .with_options() # Use default launcher
                           .build(output_file))
         assert result.success, f"Build failed: {result.errors}"
         

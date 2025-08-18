@@ -2,8 +2,8 @@
 ## 2025 Edition
 
 ### Version: 2025.0
-### Status: Implemented (Go/Rust/Python), Spec Updated 2025-08-15
-### Date: 2025-08-15
+### Status: Implemented (Go/Rust/Python), Spec Updated 2025-08-17
+### Date: 2025-08-17
 
 ---
 
@@ -16,7 +16,6 @@
 - Added implementation requirements section
 - Specified exact storage of checksums and signatures
 - Documented cross-language compatibility requirements
-
 - Initial specification release
 - Implemented in Go and Rust
 
@@ -254,12 +253,36 @@ The metadata MUST be gzip-compressed JSON data. The signature and public key are
     "check_file": "{workenv}/validation_marker",
     "expected_content": "string"
   },
+  "verification": {
+    "integrity_seal": {
+      "required": true,
+      "algorithm": "ed25519"
+    },
+    "signed": true,
+    "require_verification": true,
+    "trust_signatures": ["optional array of trusted signature fingerprints"]
+  },
   "build": {
-    "builder": "string",
-    "version": "string",
-    "package_timestamp": "ISO8601",
-    "host": "string",
-    "builder_timestamp": "ISO8601"
+    "tool": "string (e.g., flavor-python, flavor-go, flavor-rust)",
+    "tool_version": "string",
+    "timestamp": "ISO8601",
+    "deterministic": "boolean",
+    "platform": {
+      "os": "string (darwin, linux, windows)",
+      "arch": "string (arm64, amd64, x86_64)",
+      "host": "string (hostname)"
+    }
+  },
+  "launcher": {
+    "tool": "string (e.g., flavor-rs-launcher, flavor-go-launcher)",
+    "tool_version": "string",
+    "size": "number (bytes)",
+    "checksum": "string (sha256:hex)",
+    "capabilities": ["array of launcher capabilities (mmap, async, sandbox)"]
+  },
+  "compatibility": {
+    "min_format_version": "string (e.g., 1.0.0)",
+    "features": ["array of PSPF features used (workenv_dirs, runtime_env, setup_commands, etc.)"]
   }
 }
 ```
@@ -334,6 +357,47 @@ All commands support `{workenv}`, `{package_name}`, and `{version}` placeholders
 Determines if cached workenv is still valid:
 - **`check_file`**: Path to validation marker file
 - **`expected_content`**: Content that must match for cache to be valid
+
+#### 3.3.7 Verification Metadata
+Cryptographic integrity and signature verification:
+- **`integrity_seal`**: Configuration for integrity verification
+  - `required`: Whether integrity verification is mandatory
+  - `algorithm`: Signature algorithm (ed25519)
+- **`signed`**: Whether the package is cryptographically signed
+- **`require_verification`**: Whether verification must pass for execution
+- **`trust_signatures`**: Optional array of trusted signature fingerprints
+
+#### 3.3.8 Build Metadata
+Information about how the package was built:
+- **`tool`**: Build tool used (flavor-python, flavor-go, flavor-rust)
+- **`tool_version`**: Version of the build tool
+- **`timestamp`**: ISO8601 timestamp of when package was built
+- **`deterministic`**: Whether build used deterministic key generation
+- **`platform`**: Build platform information
+  - `os`: Operating system (darwin, linux, windows)
+  - `arch`: Architecture (arm64, amd64, x86_64)
+  - `host`: Hostname of build machine
+
+#### 3.3.9 Launcher Metadata
+Information about the embedded launcher:
+- **`tool`**: Launcher tool name (flavor-rs-launcher, flavor-go-launcher)
+- **`tool_version`**: Version of the launcher
+- **`size`**: Size of launcher binary in bytes
+- **`checksum`**: SHA256 checksum of launcher binary
+- **`capabilities`**: Array of launcher capabilities
+  - `mmap`: Memory-mapped I/O support
+  - `async`: Asynchronous execution support
+  - `sandbox`: Sandboxing capabilities
+
+#### 3.3.10 Compatibility Metadata
+Package compatibility information:
+- **`min_format_version`**: Minimum PSPF format version required
+- **`features`**: Array of PSPF features used by this package
+  - `workenv_dirs`: Uses workenv directory creation
+  - `runtime_env`: Uses runtime environment filtering
+  - `setup_commands`: Uses setup command execution
+  - `cache_validation`: Uses cache validation
+  - `volatile_slots`: Contains volatile lifecycle slots
 
 ### 3.4 Slot Purpose
 

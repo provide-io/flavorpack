@@ -65,7 +65,7 @@ class TestPSPFCore:
             },
             "execution": {
                 "primary_slot": 0,
-                "command": "{slot:0}/hello.sh"
+                "command": "{workenv}/hello.sh"
             },
             "verification": {
                 "integrity_seal": {
@@ -109,7 +109,7 @@ class TestPSPFCore:
         # Use test_builder from fixture
         result = (test_builder.metadata(**simple_metadata)
                           .add_slot(slot.name, slot.path, encoding=slot.encoding, purpose=slot.purpose, lifecycle=slot.lifecycle)
-                          .with_options(launcher_type="go")
+                          .with_options()
                           .build(bundle_path))
         assert result.success, f"Build failed: {result.errors}"
         
@@ -123,7 +123,7 @@ class TestPSPFCore:
         bundle_path = temp_dir / "test.psp"
         # Use test_builder from fixture
         result = (test_builder.metadata(**simple_metadata, allow_empty=True)
-                          .with_options(launcher_type="python")
+                          .with_options()
                           .build(bundle_path))
         assert result.success, f"Build failed: {result.errors}"
         
@@ -137,30 +137,28 @@ class TestPSPFCore:
     
     def test_magic_wand_footer(self, temp_dir, simple_metadata, test_builder):
         """Test magic wand emoji footer."""
-        test_cases = ["go", "rust", "python"]
+        # Test with default launcher
+        bundle_path = temp_dir / "test_default.psp"
+        # Use test_builder from fixture
+        result = (test_builder.metadata(**simple_metadata, allow_empty=True)
+                              .with_options()
+                              .build(bundle_path))
+        assert result.success, f"Build failed: {result.errors}"
         
-        for launcher_type in test_cases:
-            bundle_path = temp_dir / f"test_{launcher_type}.psp"
-            # Use test_builder from fixture
-            result = (test_builder.metadata(**simple_metadata, allow_empty=True)
-                                  .with_options(launcher_type=launcher_type)
-                                  .build(bundle_path))
-            assert result.success, f"Build failed: {result.errors}"
-            
-            # Check emoji is always magic wand
-            with open(bundle_path, 'rb') as f:
-                f.seek(-4, 2)
-                magic = f.read(4)
-            
-            magic_str = magic.decode('utf-8')
-            assert magic_str == MAGIC_WAND_EMOJI
+        # Check emoji is always magic wand
+        with open(bundle_path, 'rb') as f:
+            f.seek(-4, 2)
+            magic = f.read(4)
+        
+        magic_str = magic.decode('utf-8')
+        assert magic_str == MAGIC_WAND_EMOJI
     
     def test_index_block_location(self, temp_dir, simple_metadata, test_builder):
         """Test index block is at launcher_size offset."""
         bundle_path = temp_dir / "test.psp"
         # Use test_builder from fixture
         result = (test_builder.metadata(**simple_metadata, allow_empty=True)
-                          .with_options(launcher_type="go")
+                          .with_options()
                           .build(bundle_path))
         assert result.success, f"Build failed: {result.errors}"
         

@@ -39,6 +39,7 @@ jobs:
           sparse-checkout: |
             helpers/flavor-go
             helpers/flavor-rust
+            .github/workflows/helpers-build.yml
       
       - name: 🔑 Generate Cache Key
         id: key
@@ -47,7 +48,9 @@ jobs:
           # Create cache key from source file hashes
           GO_HASH=$(find helpers/flavor-go -type f -name "*.go" -o -name "go.mod" -o -name "go.sum" | sort | xargs sha256sum | sha256sum | cut -d' ' -f1)
           RUST_HASH=$(find helpers/flavor-rust -type f -name "*.rs" -o -name "Cargo.toml" -o -name "Cargo.lock" | sort | xargs sha256sum | sha256sum | cut -d' ' -f1)
-          CACHE_KEY="helpers-v2-${GO_HASH:0:16}-${RUST_HASH:0:16}"
+          # Add workflow file hash to invalidate cache when workflow changes
+          WORKFLOW_HASH=$(sha256sum .github/workflows/helpers-build.yml | cut -d' ' -f1)
+          CACHE_KEY="helpers-v3-${GO_HASH:0:16}-${RUST_HASH:0:16}-${WORKFLOW_HASH:0:8}"
           echo "cache-key=$CACHE_KEY" >> $GITHUB_OUTPUT
           echo "📦 Cache key: $CACHE_KEY"
       

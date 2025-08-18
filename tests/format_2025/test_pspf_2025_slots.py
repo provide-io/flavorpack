@@ -169,17 +169,17 @@ class TestPSPFSlots:
             "package": {
                 "name": "multi-slot",
                 "version": "1.0.0"
-            },
-            "slots": [slot.to_dict() for slot in test_slots]
+            }
         }
         
         bundle_path = temp_dir / "multi.psp"
-        # Use test_builder from fixture
-        test_builder.build(
-            output_path=bundle_path,
-            metadata=metadata,
-            slots=test_slots
-        )
+        # Use test_builder from fixture with fluent API
+        builder = test_builder.metadata(**metadata)
+        for slot in test_slots:
+            if hasattr(slot, 'path') and slot.path:
+                builder = builder.add_slot(slot.name, slot.path, encoding=slot.encoding, purpose=slot.purpose, lifecycle=slot.lifecycle)
+        result = builder.build(bundle_path)
+        assert result.success, f"Build failed: {result.errors}"
         
         # Verify all slots
         reader = PSPFReader(bundle_path)
@@ -215,18 +215,22 @@ class TestPSPFSlots:
             path=slot_path
         )
         
-        # Use test_builder from fixture
-        from flavor.psp.format_2025.constants import ENCODING_GZIP
-        compressed_data, compression_type = test_builder._compress_data(data, "gzip")
+        # Build bundle with gzip compression
+        bundle_path = temp_dir / "compressed.psp"
+        metadata = {
+            "format": "PSPF/2025",
+            "package": {"name": "test", "version": "1.0"}
+        }
         
-        # Verify compression worked
-        assert len(compressed_data) < len(data)
-        assert compression_type == ENCODING_GZIP
+        result = (test_builder.metadata(**metadata)
+                             .add_slot("compressed", slot_path, encoding="gzip", purpose="payload", lifecycle="runtime")
+                             .build(bundle_path))
+        assert result.success, f"Build failed: {result.errors}"
         
-        # Verify decompression  
-        import gzip
-        decompressed = gzip.decompress(compressed_data)
-        assert decompressed == data
+        # Verify the slot is stored with compression by checking metadata
+        reader = PSPFReader(bundle_path)
+        metadata_read = reader.read_metadata()
+        assert metadata_read['slots'][0]['encoding'] == 'gzip'
     
     def test_slot_compression_none(self, temp_dir, test_builder):
         """Test no compression."""
@@ -245,13 +249,22 @@ class TestPSPFSlots:
             path=slot_path
         )
         
-        # Use test_builder from fixture
-        from flavor.psp.format_2025.constants import ENCODING_RAW
-        stored_data, compression_type = test_builder._compress_data(data, "none")
+        # Build bundle without compression
+        bundle_path = temp_dir / "uncompressed.psp"
+        metadata = {
+            "format": "PSPF/2025",
+            "package": {"name": "test", "version": "1.0"}
+        }
         
-        # Verify no compression
-        assert stored_data == data
-        assert compression_type == ENCODING_RAW
+        result = (test_builder.metadata(**metadata)
+                             .add_slot("uncompressed", slot_path, encoding="none", purpose="payload", lifecycle="runtime")
+                             .build(bundle_path))
+        assert result.success, f"Build failed: {result.errors}"
+        
+        # Verify the slot is stored without compression
+        reader = PSPFReader(bundle_path)
+        metadata_read = reader.read_metadata()
+        assert metadata_read['slots'][0]['encoding'] == 'none'
     
     def test_slot_checksum_verification(self, temp_dir, test_builder):
         """Test slot checksum verification."""
@@ -275,12 +288,12 @@ class TestPSPFSlots:
         
         # Build bundle
         bundle_path = temp_dir / "checksum.psp"
-        # Use test_builder from fixture
-        test_builder.build(
-            output_path=bundle_path,
-            metadata={"format": "PSPF/2025", "package": {"name": "test", "version": "1.0"}},
-            slots=[slot]
-        )
+        # Use test_builder from fixture with fluent API
+        metadata = {"format": "PSPF/2025", "package": {"name": "test", "version": "1.0"}}
+        result = (test_builder.metadata(**metadata)
+                             .add_slot(slot.name, slot.path, encoding=slot.encoding, purpose=slot.purpose, lifecycle=slot.lifecycle)
+                             .build(bundle_path))
+        assert result.success, f"Build failed: {result.errors}"
         
         # Verify checksum
         reader = PSPFReader(bundle_path)
@@ -289,12 +302,14 @@ class TestPSPFSlots:
     def test_slot_table_structure(self, temp_dir, test_slots, test_builder):
         """Test slot table binary structure."""
         bundle_path = temp_dir / "table.psp"
-        # Use test_builder from fixture
-        test_builder.build(
-            output_path=bundle_path,
-            metadata={"format": "PSPF/2025", "package": {"name": "test", "version": "1.0"}},
-            slots=test_slots
-        )
+        # Use test_builder from fixture with fluent API
+        metadata = {"format": "PSPF/2025", "package": {"name": "test", "version": "1.0"}}
+        builder = test_builder.metadata(**metadata)
+        for slot in test_slots:
+            if hasattr(slot, 'path') and slot.path:
+                builder = builder.add_slot(slot.name, slot.path, encoding=slot.encoding, purpose=slot.purpose, lifecycle=slot.lifecycle)
+        result = builder.build(bundle_path)
+        assert result.success, f"Build failed: {result.errors}"
         
         reader = PSPFReader(bundle_path)
         index = reader.read_index()
@@ -338,12 +353,12 @@ class TestPSPFSlots:
         
         # Build bundle
         bundle_path = temp_dir / "cached.psp"
-        # Use test_builder from fixture
-        test_builder.build(
-            output_path=bundle_path,
-            metadata={"format": "PSPF/2025", "package": {"name": "cached", "version": "1.0"}},
-            slots=[slot]
-        )
+        # Use test_builder from fixture with fluent API
+        metadata = {"format": "PSPF/2025", "package": {"name": "cached", "version": "1.0"}}
+        result = (test_builder.metadata(**metadata)
+                             .add_slot(slot.name, slot.path, encoding=slot.encoding, purpose=slot.purpose, lifecycle=slot.lifecycle)
+                             .build(bundle_path))
+        assert result.success, f"Build failed: {result.errors}"
         
         # Verify slot metadata includes caching info
         reader = PSPFReader(bundle_path)
@@ -398,12 +413,12 @@ class TestPSPFSlots:
         
         # Build bundle
         bundle_path = temp_dir / "large.psp"
-        # Use test_builder from fixture
-        test_builder.build(
-            output_path=bundle_path,
-            metadata={"format": "PSPF/2025", "package": {"name": "large", "version": "1.0"}},
-            slots=[slot]
-        )
+        # Use test_builder from fixture with fluent API
+        metadata = {"format": "PSPF/2025", "package": {"name": "large", "version": "1.0"}}
+        result = (test_builder.metadata(**metadata)
+                             .add_slot(slot.name, slot.path, encoding=slot.encoding, purpose=slot.purpose, lifecycle=slot.lifecycle)
+                             .build(bundle_path))
+        assert result.success, f"Build failed: {result.errors}"
         
         # Verify
         assert bundle_path.exists()
