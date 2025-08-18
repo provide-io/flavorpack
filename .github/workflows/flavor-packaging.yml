@@ -51,6 +51,7 @@ jobs:
       - name: 🔨 Build Launcher
         shell: bash
         run: |
+          mkdir -p helpers/bin
           if [ "${{ matrix.launcher }}" = "go" ]; then
             cd helpers/flavor-go
             go build -o ../bin/flavor-go-launcher ./cmd/flavor-go-launcher
@@ -146,6 +147,7 @@ jobs:
       - name: 🔨 Build Launcher
         shell: bash
         run: |
+          mkdir -p helpers/bin
           if [ "${{ matrix.launcher }}" = "go" ]; then
             cd helpers/flavor-go
             go build -o ../bin/flavor-go-launcher ./cmd/flavor-go-launcher

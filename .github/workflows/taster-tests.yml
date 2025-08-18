@@ -49,15 +49,41 @@ jobs:
           uv pip install -e helpers/taster
           uv pip install pytest pytest-cov pytest-xdist hypothesis
       
-      - name: 🧪 Run Taster Tests
+      - name: 🐹 Setup Go  
+        uses: actions/setup-go@v5
+        with:
+          go-version: 'stable'
+          cache: true
+          cache-dependency-path: helpers/flavor-go/go.sum
+      
+      - name: 🦀 Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+      
+      - name: 🔨 Build Helpers
+        shell: bash
+        run: |
+          # Build Go helpers
+          cd helpers/flavor-go
+          go build -o ../bin/flavor-go-launcher ./cmd/flavor-go-launcher
+          go build -o ../bin/flavor-go-builder ./cmd/flavor-go-builder
+          
+          # Build Rust helpers
+          cd ../flavor-rust
+          cargo build --release
+          cp target/release/flavor-rs-launcher ../bin/
+          cp target/release/flavor-rs-builder ../bin/
+          
+          # Make executable
+          chmod +x ../bin/*
+      
+      - name: 🧪 Run Taster Crosslang Tests
         shell: bash
         run: |
           source workenv/flavor_*/bin/activate
-          cd helpers/taster
           
-          # Run taster-specific unit tests (skip problematic launcher tests for now)
-          # These tests need refactoring to work with the current implementation
-          pytest tests/ -m "taster and not stress" -n auto -v --tb=short --ignore=tests/format_2025/test_launcher_execution.py
+          # Run crosslang tests with taster
+          cd helpers/taster
+          taster crosslang --verbose
       
       - name: 📊 Generate Coverage Report
         if: matrix.os == 'ubuntu-latest' && matrix.python == '3.11'
