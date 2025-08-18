@@ -183,17 +183,22 @@ class PackageInspector:
         security = {
             "signed": False,
             "signature_valid": False,
-            "ephemeral_key": None,
+            "public_key": None,
             "integrity_seal": False,
             "checksums_valid": False
         }
         
-        # Check for ephemeral keys
-        if "ephemeral_keys" in metadata:
-            keys = metadata["ephemeral_keys"]
-            if keys and "public_key" in keys:
-                security["ephemeral_key"] = keys["public_key"][:32] + "..."
-                security["signed"] = True
+        # Check for public key in index (Ed25519)
+        # Note: The public key is stored in the index, not metadata
+        try:
+            index = self._read_index()
+            if index and hasattr(index, 'public_key'):
+                # Check if public key is non-zero
+                if any(b != 0 for b in index.public_key):
+                    security["public_key"] = index.public_key[:16].hex() + "..."
+                    security["signed"] = True
+        except:
+            pass
         
         # Check for integrity seal
         if "integrity_seal" in metadata:

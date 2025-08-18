@@ -1,7 +1,7 @@
 # Progressive Secure Package Format (PSPF) Specification
 ## 2025 Edition
 
-### Version: 2025.2
+### Version: 2025.0
 ### Status: Implemented (Go/Rust/Python), Spec Updated 2025-08-15
 ### Date: 2025-08-15
 
@@ -9,7 +9,7 @@
 
 ## Changelog
 
-### Version 2025.2 (2025-08-15)
+### Version 2025.0 (2025-08-15)
 - **BREAKING**: Renamed `EphemeralPublicKey` to `PublicKey` in index structure
 - **BREAKING**: Metadata is now gzipped JSON (not tar.gz archive)
 - Clarified that signature covers uncompressed JSON
@@ -17,7 +17,6 @@
 - Specified exact storage of checksums and signatures
 - Documented cross-language compatibility requirements
 
-### Version 2025.1 (2025-08-11)
 - Initial specification release
 - Implemented in Go and Rust
 
@@ -51,22 +50,29 @@ The Progressive Secure Package Format (PSPF) 2025 Edition is a self-extracting, 
 ├──────────────────────────────┤ Launcher_Size + 8192
 │      Metadata (gzipped JSON) │ Compressed JSON metadata
 │                              │ Variable size
-├──────────────────────────────┤
-│      Slot 0                  │ Aligned to 8-byte boundary
-├──────────────────────────────┤
-│      Slot 1                  │ Aligned to 8-byte boundary
+├──────────────────────────────┤ Aligned to 8-byte boundary
+│      Slot Table              │ Table of slot descriptors
+│                              │ (64 bytes per slot)
+├──────────────────────────────┤ Aligned to 8-byte boundary
+│      Slot 0                  │ First slot data
+├──────────────────────────────┤ Aligned to 8-byte boundary
+│      Slot 1                  │ Second slot data
 ├──────────────────────────────┤
 │      ...                     │
-├──────────────────────────────┤
-│      Slot N                  │ Aligned to 8-byte boundary
-├──────────────────────────────┤
-│      Slot Table              │ Table of slot offsets/sizes
+├──────────────────────────────┤ Aligned to 8-byte boundary
+│      Slot N                  │ Last slot data
 ├──────────────────────────────┤
 │      Padding (if needed)     │ Zero bytes for alignment
 ├──────────────────────────────┤ EOF - 8
 │      Emoji Magic             │ 📦🪄 (exactly 8 bytes)
 └──────────────────────────────┘ EOF
 ```
+
+**Performance Note**: The slot table is positioned immediately after metadata and BEFORE the actual slot data. This allows readers to:
+1. Read the index to get metadata and slot table offsets
+2. Read both metadata and slot table (small, sequential reads)
+3. Know exact locations of all slots without seeking to end of file
+4. Directly seek to any slot for random access
 
 ### 2.2 Index Block Structure (8192 bytes)
 
@@ -176,26 +182,222 @@ The metadata MUST be gzip-compressed JSON data. The signature and public key are
       "index": "number (0-based)",
       "name": "string",
       "size": "number (bytes)",
-      "compressed_size": "number (bytes)",
-      "checksum": "string (sha256:hex)",
-      "compression": "none|gzip|zstd",
-      "purpose": "runtime|payload|asset|..."
+      "checksum": "string (adler32 or sha256:hex)",
+      "encoding": "none|gzip|zstd|brotli",
+      "purpose": "payload|runtime|config|asset|library|binary|installer|data",
+      "lifecycle": "runtime|init|startup|shutdown|cache|temp|lazy|eager|dev|config|platform|volatile",
+      "extract_to": "string (optional, custom extraction path)",
+      "platform": "string (optional, platform-specific slot)"
     }
   ],
   "execution": {
-    "command": "string with {slot:N} substitutions"
+    "primary_slot": "number (index of primary executable slot)",
+    "command": "string with {workenv} substitutions",
+    "env": {
+      "KEY": "value"
+    }
   },
   "runtime": {
     "env": {
-      "set": {},
-      "unset": [],
-      "pass": []
+      "set": {"KEY": "value"},
+      "unset": ["KEY"],
+      "pass": ["KEY"],
+      "map": {"OLD_KEY": "NEW_KEY"}
     }
+  },
+  "workenv": {
+    "directories": [
+      {
+        "path": "tmp",
+        "mode": "0700"
+      },
+      {
+        "path": "var",
+        "mode": "0755"
+      },
+      {
+        "path": "var/log",
+        "mode": "0755"
+      },
+      {
+        "path": "var/cache",
+        "mode": "0755"
+      },
+      {
+        "path": "var/run",
+        "mode": "0755"
+      }
+    ],
+    "env": {
+      "TMPDIR": "{workenv}/tmp",
+      "TMP": "{workenv}/tmp",
+      "TEMP": "{workenv}/tmp",
+      "XDG_RUNTIME_DIR": "{workenv}/var/run",
+      "XDG_CACHE_HOME": "{workenv}/var/cache",
+      "XDG_DATA_HOME": "{workenv}/var",
+      "XDG_STATE_HOME": "{workenv}/var"
+    }
+  },
+  "setup_commands": [
+    {
+      "type": "execute|enumerate_and_execute|write_file",
+      "command": "string (for execute/enumerate)",
+      "enumerate": {
+        "path": "string",
+        "pattern": "string"
+      },
+      "path": "string (for write_file)",
+      "content": "string (for write_file)"
+    }
+  ],
+  "cache_validation": {
+    "check_file": "{workenv}/validation_marker",
+    "expected_content": "string"
+  },
+  "build": {
+    "builder": "string",
+    "version": "string",
+    "package_timestamp": "ISO8601",
+    "host": "string",
+    "builder_timestamp": "ISO8601"
   }
 }
 ```
 
-## 4. Security Model
+### 3.2 Slot Lifecycles
+
+The `lifecycle` field instructs launchers how to handle slot content:
+
+#### Timing-based Lifecycles
+- **`init`** - First run only, content is extracted once then removed after initialization
+- **`startup`** - Extracted/executed at every startup before main execution
+- **`runtime`** - Available during application execution (default)
+- **`shutdown`** - Executed during cleanup/exit phase
+
+#### Retention-based Lifecycles
+- **`cache`** - Kept for performance, can be regenerated if needed
+- **`temp`** - Removed after current session ends
+- **`volatile`** - Removed immediately after setup commands complete
+
+#### Access-based Lifecycles
+- **`lazy`** - Loaded on-demand, not extracted initially
+- **`eager`** - Loaded immediately on startup
+
+#### Environment-based Lifecycles
+- **`dev`** - Only extracted in development/debug mode
+- **`config`** - User-modifiable configuration files
+- **`platform`** - Platform/OS specific content
+
+**Requirements:**
+- Launchers MUST support `init`, `runtime`, `cache`, and `volatile` lifecycles
+- Launchers SHOULD support other lifecycles where appropriate
+- Unknown lifecycles should be treated as `runtime` for forward compatibility
+
+### 3.3 Metadata Sections
+
+#### 3.3.1 Package Information
+Basic package identification:
+- **`name`**: Package name
+- **`version`**: Package version using semantic versioning
+
+#### 3.3.2 Execution Configuration
+Controls how the package is executed:
+- **`primary_slot`**: Index of the main executable slot
+- **`command`**: Command to execute with `{workenv}` placeholder substitution
+- **`env`**: Environment variables to set for the application
+
+#### 3.3.3 Runtime Environment
+Security and environment filtering:
+- **`env.set`**: Variables to set (overrides existing)
+- **`env.unset`**: Variables to remove from environment
+- **`env.pass`**: Variables to pass through from parent
+- **`env.map`**: Map old variable names to new ones
+
+#### 3.3.4 Work Environment Setup
+Initializes the isolated work environment:
+- **`directories`**: List of directories to create with Unix permissions
+  - `path`: Relative path within workenv
+  - `mode`: Unix permission mode (e.g., "0700" for user-only)
+- **`env`**: Environment variables pointing to workenv paths
+  - Supports `{workenv}` placeholder substitution
+  - Commonly sets TMPDIR, XDG directories, etc.
+
+#### 3.3.5 Setup Commands
+Commands executed after extraction but before main execution:
+- **`execute`**: Run a single command
+- **`enumerate_and_execute`**: Run command for each file matching pattern
+- **`write_file`**: Create a file with specific content
+
+All commands support `{workenv}`, `{package_name}`, and `{version}` placeholders.
+
+#### 3.3.6 Cache Validation
+Determines if cached workenv is still valid:
+- **`check_file`**: Path to validation marker file
+- **`expected_content`**: Content that must match for cache to be valid
+
+### 3.4 Slot Purpose
+
+The `purpose` field describes the semantic type of content:
+
+- **`payload`** - Main application data
+- **`runtime`** - Executable code
+- **`config`** - Configuration files
+- **`asset`** - Static resources (images, fonts, etc.)
+- **`library`** - Shared libraries or dependencies
+- **`binary`** - Native executable binaries
+- **`installer`** - Installation files (packages, wheels)
+- **`data`** - Generic data files
+
+Purpose and lifecycle are orthogonal - any purpose can have any lifecycle.
+
+### 3.5 Environment Variable Processing Order
+
+Environment variables are processed in layers, each with specific purposes:
+
+1. **Runtime Security Layer** (`runtime.env`)
+   - First layer: security filtering
+   - `unset`: Remove sensitive variables
+   - `pass`: Whitelist specific variables
+   - `map`: Rename variables for compatibility
+   - `set`: Override with safe defaults
+
+2. **Work Environment Layer** (`workenv.env`)
+   - Second layer: setup workenv-specific paths
+   - Sets TMPDIR, XDG directories, etc.
+   - All paths relative to `{workenv}`
+
+3. **Execution Layer** (`execution.env`)
+   - Final layer: application-specific settings
+   - Sets variables needed by the application
+   - Can reference `{workenv}` paths
+
+This layered approach ensures security policies are applied before application configuration.
+
+## 4. Reading Order and Performance
+
+The PSPF format is designed for efficient reading with minimal seeks:
+
+1. **Read Index** (8KB at launcher_size offset)
+   - Provides offsets and sizes for everything else
+   - Single read operation
+
+2. **Read Metadata** (small, typically < 10KB)
+   - At index.MetadataOffset
+   - Compressed JSON with package info
+
+3. **Read Slot Table** (64 bytes × slot count)
+   - At index.SlotTableOffset
+   - Immediately follows metadata for sequential reading
+   - Contains offsets, sizes, checksums for all slots
+
+4. **Access Slots** (as needed)
+   - Direct seek to any slot using table info
+   - No need to read entire file
+   - Parallel reads possible for multiple slots
+
+This design minimizes I/O operations and allows efficient random access to slots.
+
+## 5. Security Model
 
 Every bundle MUST include cryptographic integrity verification using Ed25519:
 
@@ -212,9 +414,9 @@ Every bundle MUST include cryptographic integrity verification using Ed25519:
    - Verify the Adler-32 checksum matches the compressed data
    - Refuse to execute if verification fails
 
-## 5. Implementation Requirements
+## 6. Implementation Requirements
 
-### 5.1 Language-Specific Modules
+### 6.1 Language-Specific Modules
 
 Each language implementation MUST provide:
 
@@ -235,7 +437,7 @@ Each language implementation MUST provide:
    - Examples and tutorials
    - Type safety where applicable
 
-### 5.2 Cross-Language Compatibility
+### 6.2 Cross-Language Compatibility
 
 All implementations MUST:
 - Use identical binary formats for all structures
@@ -244,7 +446,7 @@ All implementations MUST:
 - Support reading packages created by any other implementation
 - Pass cross-language compatibility tests
 
-### 5.3 Field Names and Conventions
+### 6.3 Field Names and Conventions
 
 To maintain consistency across implementations:
 - Use `PublicKey` not `EphemeralPublicKey` (keys aren't necessarily ephemeral)
@@ -253,7 +455,7 @@ To maintain consistency across implementations:
 - Metadata is always gzipped JSON (no conditionals)
 - Signatures are stored in the index, not embedded in metadata
 
-### 5.4 Implementation Notes
+### 6.4 Implementation Notes
 
 #### Checksum Calculations
 - **Index Checksum**: Adler-32 of the entire 8192-byte index with the checksum field set to 0

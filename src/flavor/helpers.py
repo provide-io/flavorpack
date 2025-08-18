@@ -8,12 +8,13 @@ import hashlib
 import os
 import platform
 import shutil
-import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 from pyvider.telemetry import logger
+
+from flavor.utils.subprocess import run_command
 
 
 @dataclass
@@ -105,12 +106,13 @@ class HelperManager:
         # Try to get version
         version = None
         try:
-            result = subprocess.run(
+            result = run_command(
                 [str(path), "--version"],
                 capture_output=True,
-                text=True,
+                check=False,
                 timeout=2,
-                env={**os.environ, "FLAVOR_LAUNCHER_CLI": "true"}
+                env={**os.environ, "FLAVOR_LAUNCHER_CLI": "true"},
+                log_command=False,
             )
             if result.returncode == 0:
                 # Parse version from output
@@ -191,7 +193,7 @@ class HelperManager:
         if force or not launcher_out.exists():
             logger.info("Building Go launcher...")
             try:
-                subprocess.run(
+                run_command(
                     ["go", "build", "-o", str(launcher_out), "."],
                     cwd=launcher_src,
                     check=True,
@@ -200,10 +202,8 @@ class HelperManager:
                 launcher_out.chmod(0o755)
                 built.append(launcher_out)
                 logger.info(f"✅ Built Go launcher: {launcher_out}")
-            except subprocess.CalledProcessError as e:
+            except Exception as e:
                 logger.error(f"Failed to build Go launcher: {e}")
-                if e.stderr:
-                    logger.error(e.stderr.decode())
         
         # Build builder
         builder_src = self.go_src_dir / "cmd" / "flavor-go-builder"
@@ -212,7 +212,7 @@ class HelperManager:
         if force or not builder_out.exists():
             logger.info("Building Go builder...")
             try:
-                subprocess.run(
+                run_command(
                     ["go", "build", "-o", str(builder_out), "."],
                     cwd=builder_src,
                     check=True,
@@ -221,10 +221,8 @@ class HelperManager:
                 builder_out.chmod(0o755)
                 built.append(builder_out)
                 logger.info(f"✅ Built Go builder: {builder_out}")
-            except subprocess.CalledProcessError as e:
+            except Exception as e:
                 logger.error(f"Failed to build Go builder: {e}")
-                if e.stderr:
-                    logger.error(e.stderr.decode())
         
         return built
     
@@ -245,7 +243,7 @@ class HelperManager:
             logger.info("Building Rust helpers...")
             try:
                 # Build in release mode (builds all workspace members)
-                subprocess.run(
+                run_command(
                     ["cargo", "build", "--release"],
                     cwd=self.rust_src_dir,
                     check=True,
@@ -272,10 +270,8 @@ class HelperManager:
                 else:
                     logger.error("Rust builder binary not found after build")
                     
-            except subprocess.CalledProcessError as e:
+            except Exception as e:
                 logger.error(f"Failed to build Rust helpers: {e}")
-                if e.stderr:
-                    logger.error(e.stderr.decode())
         
         return built
     
@@ -357,12 +353,13 @@ class HelperManager:
                     if helper.type == "launcher":
                         env["FLAVOR_LAUNCHER_CLI"] = "true"
                     
-                    result = subprocess.run(
+                    result = run_command(
                         [str(helper.path), "--version"],
                         capture_output=True,
-                        text=True,
+                        check=False,
                         timeout=5,
                         env=env,
+                        log_command=False,
                     )
                     
                     if result.returncode == 0:
@@ -373,11 +370,6 @@ class HelperManager:
                             "error": f"Exit code {result.returncode}",
                             "stderr": result.stderr[:200] if result.stderr else None,
                         })
-                except subprocess.TimeoutExpired:
-                    results["failed"].append({
-                        "name": helper.name,
-                        "error": "Timeout running --version"
-                    })
                 except Exception as e:
                     results["failed"].append({
                         "name": helper.name,

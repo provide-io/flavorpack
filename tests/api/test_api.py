@@ -30,7 +30,7 @@ entry_point = "my.package:main"
 
     with patch("flavor.api.PackagingOrchestrator") as mock_orchestrator_cls:
         mock_orchestrator = mock_orchestrator_cls.return_value
-        expected_output = project_dir / "dist" / "my-package.pspf"
+        expected_output = project_dir / "dist" / "my-package.psp"
         
         # Mock the build process to return the expected path
         mock_orchestrator.build_package.return_value = None

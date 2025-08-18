@@ -46,7 +46,6 @@ entry_point = "emoji_test.main:serve"
 
 [tool.flavor.build]
 python_version = "3.11"
-dependencies = ["./src/emoji_test"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -56,16 +55,16 @@ where = ["src"]
         dist_dir = temp_dir / "dist"
         dist_dir.mkdir(exist_ok=True)
         
-        # Build package with Python
-        print("📦 Building package with Python flavor...")
-        package_path = build_package_from_manifest(pyproject)[0]
-        print(f"✅ Package built: {package_path}")
-
         # For this test, we're specifically testing if a Rust launcher can run
         # a Python-built PSPF package. However, the current Python builder uses
         # Go launcher by default. For now, mark this as expected to fail.
         import pytest
         pytest.skip("Rust launcher cross-language test requires manual PSPF assembly - not yet implemented")
+        
+        # Build package with Python
+        print("📦 Building package with Python flavor...")
+        package_path = build_package_from_manifest(pyproject)[0]
+        print(f"✅ Package built: {package_path}")
 
         # Run with verbose logging to see emojis
         print("\n🚀 Running with Rust launcher (verbose mode)...")

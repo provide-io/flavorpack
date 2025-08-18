@@ -35,11 +35,19 @@ MAGIC_WAND_EMOJI = "🪄"
 TRAILING_MAGIC = "📦🪄"  # Both emojis at end of bundle
 EMOJI_MAGIC_SIZE = len(TRAILING_MAGIC.encode('utf-8'))  # Size in bytes
 
-# Compression types
-COMPRESSION_NONE = 0
-COMPRESSION_GZIP = 1
-COMPRESSION_ZSTD = 2
-COMPRESSION_BROTLI = 3
+# Encoding types - describe the actual format of slot data
+ENCODING_RAW = 0      # Raw uncompressed data
+ENCODING_TAR = 1      # Uncompressed tar archive
+ENCODING_GZIP = 2     # Gzipped single file  
+ENCODING_TGZ = 3      # Tar archive, then gzipped (tar.gz)
+
+# Future encoding formats (not implemented yet):
+# ENCODING_ZSTD = 4     # Zstd compressed single file
+# ENCODING_TZST = 5     # Tar archive, then zstd compressed  
+# ENCODING_BROTLI = 6   # Brotli compressed single file
+# ENCODING_TBR = 7      # Tar archive, then brotli compressed
+# ENCODING_ZIP = 8      # Zip archive (would need zipfile module)
+# ENCODING_7Z = 9       # 7-zip archive (would need py7zr module)
 
 # Checksum algorithms
 CHECKSUM_ADLER32 = 0   # Default, fast
@@ -53,11 +61,28 @@ PURPOSE_CODE = 1     # Executable code
 PURPOSE_CONFIG = 2   # Configuration files
 PURPOSE_MEDIA = 3    # Media/assets
 
-# Lifecycle types (refined)
-LIFECYCLE_PERMANENT = 0   # Never remove, always cached
-LIFECYCLE_CACHED = 1      # Cache between runs
-LIFECYCLE_TEMPORARY = 2   # Remove after use
-LIFECYCLE_STREAM = 3      # Never fully load
+# Lifecycle types (new system with 11 values)
+# Timing-based
+LIFECYCLE_INIT = 0        # First run only, removed after initialization
+LIFECYCLE_STARTUP = 1     # Extracted/executed at every startup
+LIFECYCLE_RUNTIME = 2     # Available during application execution (default)
+LIFECYCLE_SHUTDOWN = 3    # Executed during cleanup/exit phase
+# Retention-based
+LIFECYCLE_CACHE = 4       # Kept for performance, can be regenerated
+LIFECYCLE_TEMP = 5        # Removed after current session ends
+# Access-based
+LIFECYCLE_LAZY = 6        # Loaded on-demand, not extracted initially
+LIFECYCLE_EAGER = 7       # Loaded immediately on startup
+# Environment-based
+LIFECYCLE_DEV = 8         # Only extracted in development/debug mode
+LIFECYCLE_CONFIG = 9      # User-modifiable configuration files
+LIFECYCLE_PLATFORM = 10   # Platform/OS specific content
+
+# Legacy lifecycle values (deprecated - for backward compatibility only)
+LIFECYCLE_PERMANENT = 2   # Maps to LIFECYCLE_RUNTIME
+LIFECYCLE_CACHED = 4      # Maps to LIFECYCLE_CACHE
+LIFECYCLE_TEMPORARY = 5   # Maps to LIFECYCLE_TEMP
+LIFECYCLE_STREAM = 6      # Maps to LIFECYCLE_LAZY
 
 # Access modes
 ACCESS_FILE = 0      # Traditional file I/O

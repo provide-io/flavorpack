@@ -175,7 +175,7 @@ class TestCacheCLICommands:
     
     @patch('flavor.cache.get_cache_dir')
     def test_cache_list_command(self, mock_cache_dir):
-        """Test 'flavor cache list' command."""
+        """Test 'flavor workenv list' command."""
         mock_cache_dir.return_value = self.temp_dir
         
         # Create some cached packages
@@ -185,7 +185,7 @@ class TestCacheCLICommands:
             '{"name": "app1", "version": "1.0.0"}'
         )
         
-        result = self.runner.invoke(cli, ["cache", "list"])
+        result = self.runner.invoke(cli, ["workenv", "list"])
         
         assert result.exit_code == 0
         assert "app1" in result.output
@@ -193,7 +193,7 @@ class TestCacheCLICommands:
     
     @patch('flavor.cache.get_cache_dir')
     def test_cache_clean_command(self, mock_cache_dir):
-        """Test 'flavor cache clean' command."""
+        """Test 'flavor workenv clean' command."""
         mock_cache_dir.return_value = self.temp_dir
         
         # Create old package
@@ -201,23 +201,23 @@ class TestCacheCLICommands:
         old_pkg.mkdir()
         (old_pkg / ".extraction.complete").touch()
         
-        result = self.runner.invoke(cli, ["cache", "clean", "--yes"])
+        result = self.runner.invoke(cli, ["workenv", "clean", "--yes"])
         
         assert result.exit_code == 0
         assert "Cleaned" in result.output or "Removed" in result.output
     
     @patch('flavor.cache.get_cache_dir')
     def test_cache_clean_with_age(self, mock_cache_dir):
-        """Test 'flavor cache clean --older-than' command."""
+        """Test 'flavor workenv clean --older-than' command."""
         mock_cache_dir.return_value = self.temp_dir
         
-        result = self.runner.invoke(cli, ["cache", "clean", "--older-than", "7", "--yes"])
+        result = self.runner.invoke(cli, ["workenv", "clean", "--older-than", "7", "--yes"])
         
         assert result.exit_code == 0
     
     @patch('flavor.cache.get_cache_dir')
     def test_cache_remove_command(self, mock_cache_dir):
-        """Test 'flavor cache remove' command."""
+        """Test 'flavor workenv remove' command."""
         mock_cache_dir.return_value = self.temp_dir
         
         # Create package to remove
@@ -225,21 +225,21 @@ class TestCacheCLICommands:
         pkg_dir = self.temp_dir / pkg_id
         pkg_dir.mkdir()
         
-        result = self.runner.invoke(cli, ["cache", "remove", pkg_id, "--yes"])
+        result = self.runner.invoke(cli, ["workenv", "remove", pkg_id, "--yes"])
         
         assert result.exit_code == 0
         assert not pkg_dir.exists()
     
     @patch('flavor.cache.get_cache_dir')
     def test_cache_info_command(self, mock_cache_dir):
-        """Test 'flavor cache info' command."""
+        """Test 'flavor workenv info' command."""
         mock_cache_dir.return_value = self.temp_dir
         
         # Create a package
         (self.temp_dir / "pkg1").mkdir()
         (self.temp_dir / "pkg1" / "file.txt").write_text("x" * 1000)
         
-        result = self.runner.invoke(cli, ["cache", "info"])
+        result = self.runner.invoke(cli, ["workenv", "info"])
         
         assert result.exit_code == 0
         assert "Cache directory:" in result.output

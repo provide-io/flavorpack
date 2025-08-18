@@ -7,7 +7,6 @@ Handles bundle execution, slot extraction, and work environment setup.
 import io
 import os
 import struct
-import subprocess
 import tarfile
 import zlib
 from pathlib import Path
@@ -17,6 +16,7 @@ from pyvider.telemetry import logger
 
 from flavor.psp.format_2025.reader import PSPFReader
 from flavor.psp.format_2025.constants import SLOT_DESCRIPTOR_SIZE
+from flavor.utils.subprocess import run_command
 
 
 class PSPFLauncher(PSPFReader):
@@ -194,7 +194,8 @@ class PSPFLauncher(PSPFReader):
             logger.debug(f"📤 Extracting tarball {slot_name} to {workenv_dir}")
             try:
                 with tarfile.open(fileobj=io.BytesIO(data), mode='r:*') as tar:
-                    tar.extractall(path=workenv_dir)
+                    # Use the filter parameter to avoid Python 3.14 deprecation warning
+                    tar.extractall(path=workenv_dir, filter='data')
                 logger.debug(f"✅ Extracted tarball contents to {workenv_dir}")
                 
                 # Return the base directory
@@ -219,6 +220,7 @@ class PSPFLauncher(PSPFReader):
         
         Creates a work environment directory, extracts slots, and runs setup commands.
         Uses cache validation to avoid re-extraction when possible.
+        Handles lifecycle-based slot cleanup (e.g., 'init' slots removed after setup).
         
         Returns:
             Path: Path to the work environment directory
@@ -264,15 +266,57 @@ class PSPFLauncher(PSPFReader):
         # Extract slots if cache is invalid
         if not cache_valid:
             logger.info(f"📤 Extracting slots (cache invalid)")
-            self.extract_all_slots(workenv_dir)
+            extracted_slots = self.extract_all_slots(workenv_dir)
             
             # Run setup commands
             if 'setup_commands' in metadata:
                 self._run_setup_commands(metadata['setup_commands'], workenv_dir, metadata)
+            
+            # Handle lifecycle-based cleanup
+            self._cleanup_lifecycle_slots(workenv_dir, metadata, extracted_slots)
         else:
             logger.info(f"✅ Using cached work environment")
         
         return workenv_dir
+    
+    def _cleanup_lifecycle_slots(self, workenv_dir: Path, metadata: dict, extracted_slots: dict[int, Path]) -> None:
+        """Clean up slots based on their lifecycle after setup.
+        
+        Args:
+            workenv_dir: Work environment directory
+            metadata: Package metadata
+            extracted_slots: Mapping of slot index to extracted paths
+        """
+        import shutil
+        
+        # Get slot metadata
+        slots = metadata.get('slots', [])
+        
+        for slot_idx, slot_path in extracted_slots.items():
+            if slot_idx < len(slots):
+                slot_meta = slots[slot_idx]
+                lifecycle = slot_meta.get('lifecycle', 'runtime')
+                
+                # Handle different lifecycle values
+                if lifecycle == 'init':
+                    # 'init' lifecycle: remove after initialization
+                    logger.debug(f"🗑️ Removing 'init' lifecycle slot {slot_idx}: {slot_path}")
+                    if slot_path.exists():
+                        if slot_path.is_dir():
+                            shutil.rmtree(slot_path, ignore_errors=True)
+                        else:
+                            slot_path.unlink(missing_ok=True)
+                elif lifecycle == 'temp':
+                    # 'temp' lifecycle: mark for cleanup after session
+                    logger.debug(f"🕐 Slot {slot_idx} marked as 'temp' - will be cleaned after session")
+                elif lifecycle in ['volatile']:  # Handle legacy 'volatile' as 'init'
+                    # Legacy support: treat 'volatile' as 'init'
+                    logger.debug(f"🗑️ Removing legacy 'volatile' slot {slot_idx}: {slot_path}")
+                    if slot_path.exists():
+                        if slot_path.is_dir():
+                            shutil.rmtree(slot_path, ignore_errors=True)
+                        else:
+                            slot_path.unlink(missing_ok=True)
     
     def _run_setup_commands(self, setup_commands: list, workenv_dir: Path, metadata: dict) -> None:
         """Run setup commands for work environment.
@@ -331,6 +375,9 @@ class PSPFLauncher(PSPFReader):
                     
                     logger.debug(f"🏃 Running: {command}")
                     
+                    # Use shell=True for complex commands with pipes/redirects
+                    # Note: We need subprocess.run here for shell=True support
+                    import subprocess
                     result = subprocess.run(command, shell=True, cwd=workenv_dir, capture_output=True, text=True)
                     if result.returncode != 0:
                         logger.error(f"❌ Command failed: {command}")

@@ -6,6 +6,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Flavor is a packaging system implementing the Progressive Secure Package Format (PSPF/2025). It creates self-extracting, polyglot archive formats that are valid both as OS executables and PSPF packages. The system consists of Python, Go, and Rust components working together.
 
+## Critical Design Principles
+
+**NEVER add environment variable-specific logic in the helpers (Rust/Go)**. The helpers should be generic and data-driven. All environment variable configuration should come from the metadata. Do not add special cases like "if command is UV then set UV_SYSTEM_PYTHON" - this violates the separation of concerns. The helpers are meant to be generic executors that work with ANY package based on metadata alone.
+
 ## Development Environment Setup
 
 Always use the workenv virtual environment system:
@@ -90,7 +94,7 @@ workenv/flavor_darwin_arm64/bin/flavor package --builder go --launcher rust --ou
 
 1. **PSPF Format Structure** (256-byte index + slots + magic footer)
    - Index block at launcher_size offset containing format metadata
-   - Metadata archive (tar.gz) with psp.json manifest
+   - Metadata (gzipped JSON) with package manifest
    - Payload slots (0-N) containing actual content
    - 4-byte emoji magic footer (🪄)
 
@@ -113,8 +117,8 @@ workenv/flavor_darwin_arm64/bin/flavor package --builder go --launcher rust --ou
 
 ### Security Model
 
-- **Ephemeral Key Sealing**: Each package is signed with ephemeral Ed25519 keys
-- Keys generated at build time, private key discarded after signing
+- **Ed25519 Signatures**: Each package is signed with Ed25519 keys
+- Keys generated at build time (or deterministically with --key-seed), private key discarded after signing
 - Public key embedded in index block for verification
 - Launcher verifies integrity before extraction
 
@@ -197,8 +201,19 @@ Taster provides comprehensive testing commands:
 - `pipe`: Test stdin/stdout piping
 - `mmap`: Verify memory-mapped I/O
 
+### CRITICAL BUILD REQUIREMENTS
+
+**ALWAYS USE `pip3` DURING THE BUILD PROCESS** - This is absolutely critical for proper dependency resolution and wheel building. Never use `pip` or other alternatives.
+
+### Important Package Building Notes
+- The runtime extraction directory is `{workenv}` - this is where the package contents are extracted at runtime
+- Python and tools are installed directly in `{workenv}`, NOT in a subdirectory like `{workenv}/venv`
+- Never use absolute paths in manifests - they break portability
+- Dependencies must be properly bundled using pip3 to create wheels
+
 ### Volatile Slot Cleanup
 The launcher automatically removes volatile slots after setup:
 - Wheels directory is marked as volatile and removed after installation
 - UV and Python runtime are persistent for execution
 - This reduces cache size while maintaining functionality
+- always use absolute projects, such as `flavor.utils`, or `flavor.placeholders` or anything.
