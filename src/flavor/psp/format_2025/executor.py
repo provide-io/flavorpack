@@ -4,11 +4,12 @@ Handles process execution with environment setup and variable substitution.
 """
 
 import os
-import subprocess
+import shlex
 from pathlib import Path
 from typing import Any
 
 from pyvider.telemetry import logger
+from flavor.utils.subprocess import run_command
 
 
 class BundleExecutor:
@@ -37,46 +38,22 @@ class BundleExecutor:
         Returns:
             str: Prepared command ready for execution
         """
-        # Basic substitutions
-        command = base_command.replace('{workenv}', str(self.workenv_dir))
-        command = command.replace('{package_name}', self.package_name)
-        command = command.replace('{version}', self.package_version)
-        
-        # Slot substitutions
-        command = self._substitute_slots(command)
+        logger.debug(f"🔍 prepare_command input: {base_command}")
         
         # Primary slot substitution
-        command = self._substitute_primary(command)
+        command = self._substitute_primary(base_command)
+        logger.debug(f"🔍 after primary substitution: {command}")
+        
+        # Basic substitutions - only {workenv}, {package_name}, and {version} as per spec
+        command = command.replace('{workenv}', str(self.workenv_dir))
+        command = command.replace('{package_name}', self.package_name)
+        command = command.replace('{version}', self.package_version)
+        logger.debug(f"🔍 after basic substitutions: {command}")
         
         # Append user arguments
         if args:
             arg_str = ' '.join(f'"{arg}"' if ' ' in arg else arg for arg in args)
             command = f"{command} {arg_str}"
-        
-        return command
-    
-    def _substitute_slots(self, command: str) -> str:
-        """Substitute {slot:N} references in command.
-        
-        Args:
-            command: Command with potential slot references
-            
-        Returns:
-            str: Command with slot references substituted
-        """
-        slots = self.metadata.get('slots', [])
-        
-        for i, slot in enumerate(slots):
-            placeholder = f"{{slot:{i}}}"
-            if placeholder in command:
-                slot_name = slot['name']
-                # For tarballs, the content is extracted directly to workenv
-                if slot_name.endswith('.tar.gz') or slot_name.endswith('.tgz'):
-                    slot_path = self.workenv_dir
-                else:
-                    slot_path = self.workenv_dir / slot_name
-                command = command.replace(placeholder, str(slot_path))
-                logger.trace(f"🔄 Substituted {placeholder} -> {slot_path}")
         
         return command
     
@@ -96,7 +73,13 @@ class BundleExecutor:
         slots = self.metadata.get('slots', [])
         
         if primary_slot < len(slots):
-            primary_path = self.workenv_dir / slots[primary_slot]['name']
+            slot_name = slots[primary_slot]['name']
+            # For tarballs, use {workenv} placeholder
+            if slot_name.endswith('.tar.gz') or slot_name.endswith('.tgz'):
+                primary_path = "{workenv}"
+            else:
+                # For non-tarballs, use relative path
+                primary_path = slot_name
             command = command.replace('{primary}', str(primary_path))
             logger.trace(f"🔄 Substituted {{primary}} -> {primary_path}")
         else:
@@ -152,39 +135,38 @@ class BundleExecutor:
         logger.debug(f"📁 Working directory: {self.workenv_dir}")
         
         try:
-            # Execute the command
-            process = subprocess.Popen(
-                command,
-                shell=True,
+            # Parse command into arguments (safely handles quotes and spaces)
+            args = shlex.split(command)
+            
+            # Execute the command using shared utility (no shell=True for security)
+            result = run_command(
+                args,
                 cwd=self.workenv_dir,
                 env=env,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True
+                capture_output=True,
+                check=False,  # We want to handle the exit code ourselves
+                log_command=False  # Already logged above
             )
             
-            # Wait for completion and get output
-            stdout, stderr = process.communicate()
-            
             # Log result
-            if process.returncode == 0:
+            if result.returncode == 0:
                 logger.info(f"✅ Execution completed successfully (exit code: 0)")
             else:
-                logger.warning(f"⚠️ Execution completed with exit code: {process.returncode}")
-                if stderr:
-                    logger.debug(f"📝 stderr: {stderr[:500]}")  # Log first 500 chars
+                logger.warning(f"⚠️ Execution completed with exit code: {result.returncode}")
+                if result.stderr:
+                    logger.debug(f"📝 stderr: {result.stderr[:500]}")  # Log first 500 chars
             
-            crashed = process.returncode < 0 # Negative return codes often indicate a crash due to a signal
+            crashed = result.returncode < 0 # Negative return codes often indicate a crash due to a signal
             return {
-                "exit_code": process.returncode,
-                "stdout": stdout,
-                "stderr": stderr,
+                "exit_code": result.returncode,
+                "stdout": result.stdout,
+                "stderr": result.stderr,
                 "executed": True,
                 "command": command,
                 "args": args or [],
-                "pid": process.pid,
+                "pid": os.getpid(),  # Current process PID since we don't have access to subprocess PID
                 "working_directory": str(self.workenv_dir),
-                "error": None if process.returncode == 0 else f"Process exited with code {process.returncode}",
+                "error": None if result.returncode == 0 else f"Process exited with code {result.returncode}",
                 "crashed": crashed
             }
             

@@ -44,7 +44,6 @@ class PackagingOrchestrator:
         package_name: str,
         entry_point: str,
         python_version: str | None = None,
-        launcher_type: str = "rust",
         launcher_bin: str | None = None,
         builder_bin: str | None = None,
         strip_binaries: bool = False,
@@ -59,7 +58,6 @@ class PackagingOrchestrator:
         self.build_config = build_config
         self.manifest_dir = manifest_dir
         self.python_version = python_version or self.DEFAULT_PYTHON_VERSION
-        self.launcher_type = launcher_type
         self.launcher_bin = launcher_bin
         self.builder_bin = builder_bin
         self.strip_binaries = strip_binaries
@@ -70,6 +68,32 @@ class PackagingOrchestrator:
         self.helper_manager = HelperManager()
         self.platform = get_platform_string()
 
+
+    def _detect_launcher_type(self, launcher_path: Path) -> str:
+        """Detect launcher type by running the binary with --version."""
+        from flavor.utils.subprocess import run_command
+        try:
+            result = run_command(
+                [str(launcher_path), "--version"],
+                capture_output=True,
+                check=False,  # Don't raise on non-zero exit
+                timeout=5,
+                log_command=False
+            )
+            output = result.stdout.lower()
+            
+            # Check for identifying strings in the output
+            if "flavor-rs-launcher" in output or "rust" in output:
+                return "rust"
+            elif "flavor-go-launcher" in output or "go version" in output:
+                return "go"
+            else:
+                # Default to rust if we can't determine
+                logger.warning(f"Could not determine launcher type from output: {result.stdout}")
+                return "rust"
+        except Exception as e:
+            logger.warning(f"Failed to detect launcher type: {e}")
+            return "rust"  # Default to rust
 
     def _find_helper(self, helper_name: str) -> Path:
         """Find a helper binary using HelperManager."""
@@ -167,15 +191,31 @@ class PackagingOrchestrator:
                 if not launcher_path.exists():
                     raise BuildError(f"Launcher binary not found: {self.launcher_bin}")
             else:
-                launcher_name = self._get_launcher_name()
-                try:
-                    launcher_path = self._find_helper(launcher_name)
-                except BuildError:
-                    logger.warning(f"{launcher_name} not found, trying FLAVOR_LAUNCHER_BIN environment variable")
-                    launcher_path_str = os.environ.get("FLAVOR_LAUNCHER_BIN")
-                    if not launcher_path_str:
-                        raise BuildError(f"Launcher binary not found: {launcher_name}")
+                # Try environment variable first
+                launcher_path_str = os.environ.get("FLAVOR_LAUNCHER_BIN")
+                if launcher_path_str:
                     launcher_path = Path(launcher_path_str)
+                    if not launcher_path.exists():
+                        raise BuildError(f"Launcher binary from FLAVOR_LAUNCHER_BIN not found: {launcher_path_str}")
+                else:
+                    # Default to rust launcher
+                    launcher_name = "flavor-rs-launcher"
+                    try:
+                        launcher_path = self._find_helper(launcher_name)
+                    except BuildError:
+                        # Try go launcher as fallback
+                        launcher_name = "flavor-go-launcher"
+                        try:
+                            launcher_path = self._find_helper(launcher_name)
+                        except BuildError:
+                            raise BuildError(
+                                "No launcher binary found. Please specify --launcher-bin or set FLAVOR_LAUNCHER_BIN, "
+                                "or ensure flavor-rs-launcher or flavor-go-launcher is built."
+                            )
+            
+            # Detect launcher type for metadata
+            launcher_type = self._detect_launcher_type(launcher_path)
+            logger.info(f"Detected launcher type: {launcher_type}")
             
             # Build metadata - all paths must use {workenv}
             # Use the installed command name (package name) as the entry point
@@ -252,7 +292,6 @@ class PackagingOrchestrator:
                 .add_slot("python", python_tarball, encoding="tgz", purpose="runtime", lifecycle="runtime", extract_to="{workenv}") 
                 .add_slot("wheels", wheels_tarball, encoding="tgz", purpose="payload", lifecycle="cache", extract_to="{workenv}/wheels")
                 .with_options(
-                    launcher_type=self.launcher_type,  # Pass launcher type for internal lookup
                     launcher_bin=launcher_path,  # Pass the resolved launcher path
                     strip_binaries=self.strip_binaries,
                     enable_mmap=True,
@@ -263,8 +302,10 @@ class PackagingOrchestrator:
             if self.key_seed:
                 builder = builder.with_keys(seed=self.key_seed)
             elif self.package_integrity_key_path and self.public_key_path:
-                private_key = Path(self.package_integrity_key_path).read_bytes()
-                public_key = Path(self.public_key_path).read_bytes()
+                # Load PEM keys and convert to raw format
+                from flavor.packaging.keys import load_private_key_raw, load_public_key_raw
+                private_key = load_private_key_raw(Path(self.package_integrity_key_path))
+                public_key = load_public_key_raw(Path(self.public_key_path))
                 builder = builder.with_keys(private=private_key, public=public_key)
             
             # Build the package
@@ -287,15 +328,6 @@ class PackagingOrchestrator:
                 if result.metadata:
                     if "duration_seconds" in result.metadata:
                         logger.info(f"⏱️  Build time: {result.metadata['duration_seconds']:.2f}s")
-    
-    def _get_launcher_name(self) -> str:
-        """Get the launcher helper name based on launcher type."""
-        if self.launcher_type == "rust":
-            return "flavor-rs-launcher"
-        elif self.launcher_type == "go":
-            return "flavor-go-launcher"
-        else:
-            return "flavor-rs-launcher"  # Default
     
     def _build_with_external_builder(self) -> None:
         """Build package using an external builder binary (Go/Rust)."""
@@ -362,7 +394,6 @@ class PackagingOrchestrator:
             manifest = {
                 "name": self.package_name,
                 "version": self.build_config.get("version", "1.0.0"),
-                "launcher": self.launcher_type,
                 "cache_validation": {
                     "check_file": "{workenv}/metadata/installed",
                     "expected_content": f"{self.package_name}-{self.build_config.get('version', '1.0.0')}",
@@ -453,16 +484,37 @@ class PackagingOrchestrator:
                     builder_name = "flavor-go-builder"
                     packager_executable = self._find_helper(builder_name)
 
-            # Find launcher binary
-            launcher_name = self._get_launcher_name()
+            # Find launcher binary (same logic as internal builder)
+            if self.launcher_bin:
+                launcher_executable = Path(self.launcher_bin)
+                if not launcher_executable.exists():
+                    raise BuildError(f"Launcher binary not found: {self.launcher_bin}")
+            else:
+                # Try environment variable first
+                launcher_executable_str = os.environ.get("FLAVOR_LAUNCHER_BIN")
+                if launcher_executable_str:
+                    launcher_executable = Path(launcher_executable_str)
+                    if not launcher_executable.exists():
+                        raise BuildError(f"Launcher binary from FLAVOR_LAUNCHER_BIN not found: {launcher_executable_str}")
+                else:
+                    # Default to rust launcher
+                    launcher_name = "flavor-rs-launcher"
+                    try:
+                        launcher_executable = self._find_helper(launcher_name)
+                    except BuildError:
+                        # Try go launcher as fallback
+                        launcher_name = "flavor-go-launcher"
+                        try:
+                            launcher_executable = self._find_helper(launcher_name)
+                        except BuildError:
+                            raise BuildError(
+                                "No launcher binary found. Please specify --launcher-bin or set FLAVOR_LAUNCHER_BIN, "
+                                "or ensure flavor-rs-launcher or flavor-go-launcher is built."
+                            )
             
-            try:
-                launcher_executable = self._find_helper(launcher_name)
-            except BuildError:
-                logger.warning(f"{launcher_name} not found, trying FLAVOR_LAUNCHER_BIN environment variable")
-                launcher_executable = os.environ.get("FLAVOR_LAUNCHER_BIN")
-                if not launcher_executable:
-                    raise BuildError(f"Launcher binary not found: {launcher_name}")
+            # Detect launcher type for metadata
+            detected_launcher_type = self._detect_launcher_type(launcher_executable)
+            logger.info(f"Detected launcher type: {detected_launcher_type}")
 
             build_cmd_args = [
                 str(packager_executable),

@@ -107,7 +107,7 @@ jobs:
           fi
           
           flavor package \
-            --launcher ${{ matrix.initial_launcher }} \
+            --launcher-bin $FLAVOR_LAUNCHER_BIN \
             --output initial-taster.psp \
             --key-seed test123
           
@@ -122,9 +122,16 @@ jobs:
           # Use FLAVOR_INSECURE for cross-packaging test
           export FLAVOR_INSECURE=1
           
+          # Set launcher binary for self-packaging
+          if [ "${{ matrix.self_launcher }}" = "go" ]; then
+            export FLAVOR_LAUNCHER_BIN="$PWD/../bin/flavor-go-launcher"
+          else
+            export FLAVOR_LAUNCHER_BIN="$PWD/../bin/flavor-rs-launcher"
+          fi
+          
           # Taster packages itself with different launcher/builder combo
           ./initial-taster.psp package \
-            --launcher ${{ matrix.self_launcher }} \
+            --launcher-bin $FLAVOR_LAUNCHER_BIN \
             --builder ${{ matrix.self_builder }} \
             --output self-packaged.psp \
             --key-seed test456
@@ -147,8 +154,16 @@ jobs:
           
           # Self-packaged taster packages itself again
           export FLAVOR_INSECURE=1
+          
+          # Set launcher binary for second gen
+          if [ "${{ matrix.initial_launcher }}" = "go" ]; then
+            export FLAVOR_LAUNCHER_BIN="$PWD/../bin/flavor-go-launcher"
+          else
+            export FLAVOR_LAUNCHER_BIN="$PWD/../bin/flavor-rs-launcher"
+          fi
+          
           ./self-packaged.psp package \
-            --launcher ${{ matrix.initial_launcher }} \
+            --launcher-bin $FLAVOR_LAUNCHER_BIN \
             --builder ${{ matrix.self_launcher }} \
             --output second-gen.psp \
             --key-seed test789

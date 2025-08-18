@@ -11,7 +11,7 @@ def get_os_name() -> str:
         str: Normalized OS name (darwin, linux, windows)
     """
     os_name = platform.system().lower()
-    if os_name == "darwin":
+    if os_name in ("darwin", "macos"):
         return "darwin"
     return os_name
 

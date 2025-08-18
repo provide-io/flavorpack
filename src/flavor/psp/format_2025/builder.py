@@ -42,6 +42,10 @@ from flavor.psp.format_2025.spec import (
 from flavor.psp.format_2025.validation import validate_complete
 from flavor.psp.format_2025.keys import resolve_keys
 from flavor.psp.format_2025.checksums import calculate_checksum
+from flavor.psp.format_2025.metadata.assembly import (
+    assemble_metadata,
+    get_launcher_info
+)
 from flavor.psp.metadata.paths import validate_metadata_dict
 
 
@@ -108,7 +112,6 @@ def build_package(spec: BuildSpec, output_path: Path) -> BuildResult:
         package_size_bytes=package_size,
         metadata={
             "slot_count": len(prepared_slots),
-            "launcher_type": spec.options.launcher_type,
             "compression": spec.options.compression
         }
     )
@@ -271,39 +274,6 @@ def _determine_encoding(
         return data, ENCODING_RAW
 
 
-def _get_launcher(launcher_type: str) -> bytes:
-    """Get launcher binary for the specified type."""
-    platform_str = get_platform_string()
-    
-    # Map launcher types to binary names
-    launcher_map = {
-        "rust": "flavor-rs-launcher",
-        "go": "flavor-go-launcher",
-        "python": "flavor-rs-launcher",  # Python uses Rust launcher
-        "node": "flavor-rs-launcher",    # Node uses Rust launcher
-    }
-    
-    launcher_name = launcher_map.get(launcher_type, "flavor-rs-launcher")
-    
-    # Search paths - prioritize helpers/bin first
-    search_paths = [
-        Path.cwd() / "helpers" / "bin" / launcher_name,
-        Path.cwd().parent / "helpers" / "bin" / launcher_name,  
-        Path.cwd().parent.parent / "helpers" / "bin" / launcher_name,  # For tests
-        Path.home() / ".cache" / "flavor" / "bin" / launcher_name,
-        Path.cwd() / "workenv" / "flavors" / platform_str / launcher_name,
-        Path.cwd() / launcher_name,
-    ]
-    
-    for path in search_paths:
-        if path.exists():
-            logger.debug(f"🚀 Loading {launcher_type} launcher from {path}")
-            return path.read_bytes()
-    
-    raise BuildError(
-        f"Could not find {launcher_name} binary. "
-        f"Build it first with 'flavor helpers build'"
-    )
 
 
 def _write_package(
@@ -321,40 +291,32 @@ def _write_package(
     # Ensure output directory exists
     output_path.parent.mkdir(parents=True, exist_ok=True)
     
-    # Get launcher
-    launcher_data = _get_launcher(spec.options.launcher_type)
+    # Get launcher binary
+    if spec.options.launcher_bin:
+        launcher_data = spec.options.launcher_bin.read_bytes()
+    else:
+        # Default to rust launcher
+        from flavor.psp.format_2025.metadata.assembly import load_launcher_binary
+        launcher_data = load_launcher_binary("rust")
+    
     launcher_size = len(launcher_data)
+    
+    # Create launcher info for metadata
+    from flavor.psp.format_2025.metadata.assembly import calculate_checksum, extract_launcher_version
+    launcher_info = {
+        "data": launcher_data,
+        "tool": "launcher",  # Will be detected at runtime
+        "tool_version": extract_launcher_version(launcher_data),
+        "checksum": calculate_checksum(launcher_data, "sha256"),
+        "capabilities": ["mmap", "async", "sandbox"],  # Generic capabilities
+    }
     
     # Create index
     index = create_index(spec, slots, public_key)
     index.launcher_size = launcher_size
     
-    # Create metadata JSON in the format expected by launchers
-    # Extract package info from spec.metadata
-    package_info = spec.metadata.get("package", {})
-    execution_info = spec.metadata.get("execution", {})
-    
-    metadata = {
-        "format": "PSPF/2025",
-        "package": package_info,
-        "slots": [slot.metadata.to_dict() for slot in slots],
-        "execution": execution_info,
-    }
-    
-    # Add optional fields if present
-    if "cache_validation" in spec.metadata:
-        metadata["cache_validation"] = spec.metadata["cache_validation"]
-    if "setup_commands" in spec.metadata:
-        metadata["setup_commands"] = spec.metadata["setup_commands"]
-    if "runtime" in spec.metadata:
-        metadata["runtime"] = spec.metadata["runtime"]
-    if "workenv" in spec.metadata:
-        metadata["workenv"] = spec.metadata["workenv"]
-    if "build" in spec.metadata:
-        metadata["build"] = spec.metadata["build"]
-    
-    # Validate all paths in metadata use {workenv}
-    metadata = validate_metadata_dict(metadata)
+    # Assemble complete metadata using the new assembly function
+    metadata = assemble_metadata(spec, slots, launcher_info)
     metadata_json = json.dumps(metadata, indent=2).encode('utf-8')
     
     # Sign metadata
@@ -610,7 +572,7 @@ class PSPFBuilder:
         - strip_binaries: Strip debug symbols from binaries
         - compression: Compression type (none, gzip)
         - compression_level: Compression level (0-9)
-        - launcher_type: Launcher type (rust, go)
+        - launcher_bin: Path to launcher binary
         - reproducible: Enable reproducible builds
         """
         # Create new options with updates

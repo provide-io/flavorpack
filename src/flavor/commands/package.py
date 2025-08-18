@@ -9,7 +9,7 @@ from pathlib import Path
 import click
 
 from flavor.api import build_package_from_manifest, verify_package
-from flavor.exceptions import BuildError
+from flavor.exceptions import BuildError, PackagingError
 
 
 @click.command("package")
@@ -27,15 +27,9 @@ from flavor.exceptions import BuildError
     help="Custom output path for the package (defaults to dist/<name>.psp).",
 )
 @click.option(
-    "--launcher",
-    type=click.Choice(["go", "rust"], case_sensitive=False),
-    default=None,
-    help="Launcher type to embed (defaults to 'rust' or value from FLAVOR_LAUNCHER env var).",
-)
-@click.option(
     "--launcher-bin",
     type=click.Path(exists=True, dir_okay=False, resolve_path=True),
-    help="Path to launcher binary (overrides launcher type selection).",
+    help="Path to launcher binary to embed in the package.",
 )
 @click.option(
     "--builder-bin",
@@ -90,7 +84,6 @@ from flavor.exceptions import BuildError
 def package_command(
     pyproject_toml_path: str,
     output_path: str | None,
-    launcher: str | None,
     launcher_bin: str | None,
     builder_bin: str | None,
     verify: bool,
@@ -111,7 +104,6 @@ def package_command(
         built_artifacts = build_package_from_manifest(
             Path(pyproject_toml_path),
             output_path=Path(output_path) if output_path else None,
-            launcher_type=launcher,
             launcher_bin=Path(launcher_bin) if launcher_bin else None,
             builder_bin=Path(builder_bin) if builder_bin else None,
             strip_binaries=strip,
@@ -153,6 +145,6 @@ def package_command(
         else:
             click.secho("⚠️ No targets were specified or built.", fg="yellow")
 
-    except (BuildError, click.UsageError) as e:
+    except (BuildError, PackagingError, click.UsageError) as e:
         click.secho(f"❌ Packaging Failed:\n{e}", fg="red", err=True)
         raise click.Abort() from e

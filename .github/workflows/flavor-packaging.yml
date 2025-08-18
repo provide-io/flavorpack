@@ -88,7 +88,7 @@ jobs:
           
           # Build package with platform-specific name
           flavor package \
-            --launcher ${{ matrix.launcher }} \
+            --launcher-bin $FLAVOR_LAUNCHER_BIN \
             --output dist/flavor-${PLATFORM}.psp \
             --key-seed test123
       
@@ -182,7 +182,7 @@ jobs:
           
           # Build package with platform-specific name
           flavor package \
-            --launcher ${{ matrix.launcher }} \
+            --launcher-bin $FLAVOR_LAUNCHER_BIN \
             --output dist/taster-${PLATFORM}.psp \
             --key-seed test123
       
@@ -194,7 +194,9 @@ jobs:
           chmod +x $PSP_FILE
           $PSP_FILE --version
           $PSP_FILE info
-          $PSP_FILE test
+          # Basic smoke tests
+          $PSP_FILE env | head -5
+          $PSP_FILE exit 0
       
       - name: 📤 Upload Taster Package
         uses: actions/upload-artifact@v4

@@ -172,7 +172,7 @@ class TestBuildOptions:
         assert options.page_aligned == True
         assert options.strip_binaries == False
         assert options.compression == "gzip"
-        assert options.launcher_type == "rust"
+        assert options.launcher_bin == None
     
     def test_build_options_customization(self):
         """BuildOptions should be customizable."""
@@ -181,12 +181,11 @@ class TestBuildOptions:
             
         options = BuildOptions(
             enable_mmap=False,
-            compression="none",
-            launcher_type="go"
+            compression="none"
         )
         assert options.enable_mmap == False
         assert options.compression == "none"
-        assert options.launcher_type == "go"
+        # launcher_type removed, using launcher_bin instead
 
 
 # =============================================================================
@@ -470,9 +469,12 @@ class TestIntegration:
         
         result = (PSPFBuilder.create()
             .metadata(
-                name="complete-app",
-                version="1.0.0",
-                description="A complete test application"
+                format="PSPF/2025",
+                package={
+                    "name": "complete-app",
+                    "version": "1.0.0",
+                    "description": "A complete test application"
+                }
             )
             .add_slot("main", main_file)
             .add_slot("config", config_file)
@@ -493,8 +495,8 @@ class TestIntegration:
         
         # Should have correct metadata
         metadata = reader.read_metadata()
-        assert metadata["name"] == "complete-app"
-        assert metadata["version"] == "1.0.0"
+        assert metadata["package"]["name"] == "complete-app"
+        assert metadata["package"]["version"] == "1.0.0"
         
         # Should have correct slots
         metadata = reader.read_metadata()
