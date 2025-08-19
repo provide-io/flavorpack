@@ -1,237 +1,316 @@
 name: 🔨 Helper Pipeline
 
 on:
+  # Manual trigger
   workflow_dispatch:
     inputs:
       force_rebuild:
         description: 'Force rebuild even if cached'
         type: boolean
         default: false
+      platforms:
+        description: 'Specific platforms to rebuild (comma-separated, or "all")'
+        type: string
+        default: 'all'
+  
+  # Trigger on helper code changes
+  push:
+    branches:
+      - main
+      - 'feature/**'
+    paths:
+      - 'helpers/flavor-go/**'
+      - 'helpers/flavor-rs/**'
+      - '.github/workflows/helper-pipeline*.yml'
+      - '.github/workflows/platform-helpers.yml'
+      - '.github/scripts/build-platform-helpers.sh'
+      - '.github/scripts/test-binaries.*'
+  
+  pull_request:
+    paths:
+      - 'helpers/flavor-go/**'
+      - 'helpers/flavor-rs/**'
+  
+  # Can be called by other workflows
   workflow_call:
     outputs:
       artifact-name:
-        description: 'Name of helper artifacts'
-        value: all-helpers-${{ github.sha }}
+        description: 'Name of the uploaded artifact'
+        value: ${{ jobs.finalize.outputs.artifact-name }}
       cache-hit:
-        description: 'Whether cache was used'
+        description: 'Whether fully cached version was used'
         value: ${{ jobs.check-cache.outputs.cache-hit }}
-  push:
-    paths:
-      - 'helpers/**'
-      - '.github/workflows/helper-pipeline.yml'
-      - '.github/workflows/platform-helpers.yml'
-  pull_request:
-    paths:
-      - 'helpers/**'
 
 jobs:
-  # Check if we can use cached helpers
+  # Calculate hash and check cache status
   check-cache:
     name: 📦 Check Helper Cache
     runs-on: ubuntu-latest
     outputs:
-      cache-hit: ${{ steps.cache.outputs.cache-hit }}
-      cache-key: ${{ steps.cache-key.outputs.key }}
+      hash: ${{ steps.hash.outputs.value }}
+      cache-hit: ${{ steps.check.outputs.cache-hit }}
+      cache-exists: ${{ steps.check.outputs.exists }}
+      last-status: ${{ steps.check.outputs.last-status }}
+      failed-platforms: ${{ steps.check.outputs.failed-platforms }}
+      artifact-name: ${{ steps.hash.outputs.artifact-name }}
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
       
-      - name: 🔑 Generate cache key
-        id: cache-key
+      - name: 🔑 Calculate helper content hash
+        id: hash
         run: |
-          # Hash all helper source files
-          HASH=$(find helpers -type f \( -name "*.go" -o -name "*.rs" -o -name "*.toml" -o -name "*.mod" -o -name "*.sum" -o -name "Cargo.*" \) -exec sha256sum {} \; | sort | sha256sum | cut -d' ' -f1)
-          echo "key=helpers-v2-$HASH" >> $GITHUB_OUTPUT
-          echo "📦 Cache key: helpers-v2-$HASH"
+          # Hash all helper source files for cache key
+          HASH=$(find helpers/flavor-go helpers/flavor-rs -type f \
+            \( -name "*.go" -o -name "*.rs" -o -name "*.mod" -o -name "*.sum" -o -name "Cargo.*" \) \
+            -exec sha256sum {} \; | sort | sha256sum | cut -d' ' -f1 | cut -c1-16)
+          
+          echo "value=$HASH" >> $GITHUB_OUTPUT
+          echo "artifact-name=helpers-$HASH" >> $GITHUB_OUTPUT
+          echo "📦 Helper content hash: $HASH"
       
-      - name: 💾 Check cache
-        id: cache
-        if: ${{ github.event.inputs.force_rebuild != 'true' }}
-        uses: actions/cache@v4
-        with:
-          path: cached-helpers
-          key: ${{ steps.cache-key.outputs.key }}
-          lookup-only: true
-      
-      - name: 📊 Cache status
+      - name: 🔍 Check cache and last build status
+        id: check
         run: |
-          if [ "${{ steps.cache.outputs.cache-hit }}" == "true" ]; then
-            echo "✅ Cache hit! Helpers will be restored from cache."
-            echo "### ✅ Helper Cache Hit" >> $GITHUB_STEP_SUMMARY
-            echo "Using cached helpers from key: ${{ steps.cache-key.outputs.key }}" >> $GITHUB_STEP_SUMMARY
+          ARTIFACT_NAME="${{ steps.hash.outputs.artifact-name }}"
+          echo "🔍 Checking for artifact: $ARTIFACT_NAME"
+          
+          # Check if artifact exists
+          ARTIFACT_JSON=$(gh api \
+            -H "Accept: application/vnd.github+json" \
+            /repos/${{ github.repository }}/actions/artifacts \
+            --jq ".artifacts[] | select(.name == \"$ARTIFACT_NAME\")" 2>/dev/null || echo "")
+          
+          if [ -n "$ARTIFACT_JSON" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "✅ Found existing artifact"
+            
+            # Get the workflow run that created this artifact
+            RUN_ID=$(echo "$ARTIFACT_JSON" | jq -r '.workflow_run.id' | head -1)
+            
+            if [ -n "$RUN_ID" ]; then
+              # Check if all test jobs passed
+              FAILED_JOBS=$(gh api /repos/${{ github.repository }}/actions/runs/$RUN_ID/jobs \
+                --jq '.jobs[] | select(.conclusion == "failure" and (.name | contains("Build") or .name | contains("Test"))) | .name' 2>/dev/null || echo "")
+              
+              if [ -z "$FAILED_JOBS" ]; then
+                echo "✅ All platforms passed in previous build"
+                echo "last-status=success" >> $GITHUB_OUTPUT
+                echo "failed-platforms=" >> $GITHUB_OUTPUT
+                echo "cache-hit=true" >> $GITHUB_OUTPUT
+              else
+                echo "⚠️ Some platforms failed in previous build:"
+                echo "$FAILED_JOBS"
+                
+                # Extract platform names from failed jobs
+                FAILED_PLATFORMS=$(echo "$FAILED_JOBS" | grep -oE "(linux|darwin|windows)_(amd64|arm64)" | sort -u | tr '\n' ',' | sed 's/,$//')
+                
+                # If no platforms extracted, check job names
+                if [ -z "$FAILED_PLATFORMS" ]; then
+                  # Try alternative patterns
+                  FAILED_PLATFORMS=$(echo "$FAILED_JOBS" | grep -oE "ubuntu|macos|windows" | \
+                    sed 's/ubuntu/linux_amd64/g; s/macos/darwin_arm64/g; s/windows/windows_amd64/g' | \
+                    sort -u | tr '\n' ',' | sed 's/,$//')
+                fi
+                
+                echo "last-status=partial" >> $GITHUB_OUTPUT
+                echo "failed-platforms=${FAILED_PLATFORMS:-linux_amd64}" >> $GITHUB_OUTPUT
+                echo "cache-hit=false" >> $GITHUB_OUTPUT
+              fi
+            else
+              # Artifact exists but can't determine status - assume success
+              echo "last-status=success" >> $GITHUB_OUTPUT
+              echo "failed-platforms=" >> $GITHUB_OUTPUT
+              echo "cache-hit=true" >> $GITHUB_OUTPUT
+            fi
           else
-            echo "🔨 Cache miss. Helpers will be built fresh."
-            echo "### 🔨 Building Helpers Fresh" >> $GITHUB_STEP_SUMMARY
-            echo "Cache key: ${{ steps.cache-key.outputs.key }}" >> $GITHUB_STEP_SUMMARY
+            echo "❌ No artifact found for hash $HASH"
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "last-status=none" >> $GITHUB_OUTPUT
+            echo "failed-platforms=all" >> $GITHUB_OUTPUT
+            echo "cache-hit=false" >> $GITHUB_OUTPUT
           fi
-
-  # Build helpers using the platform-helpers workflow
-  build-helpers:
-    name: 🔨 Build All Helpers
-    needs: check-cache
-    if: needs.check-cache.outputs.cache-hit != 'true' || github.event.inputs.force_rebuild == 'true'
-    uses: ./.github/workflows/platform-helpers.yml
-    secrets: inherit
-
-  # Restore from cache if available
-  restore-cached:
-    name: 💾 Restore Cached Helpers
-    needs: check-cache
-    if: needs.check-cache.outputs.cache-hit == 'true' && github.event.inputs.force_rebuild != 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - name: 💾 Restore cache
-        uses: actions/cache@v4
-        with:
-          path: cached-helpers
-          key: ${{ needs.check-cache.outputs.cache-key }}
+        env:
+          GH_TOKEN: ${{ github.token }}
       
-      - name: 📤 Upload from cache
-        uses: actions/upload-artifact@v4
-        with:
-          name: all-helpers-${{ github.sha }}
-          path: cached-helpers/**/*
-          retention-days: 7
-      
-      - name: 📊 Cache metrics
+      - name: 📊 Cache status summary
         run: |
-          echo "### 📊 Helper Cache Metrics" >> $GITHUB_STEP_SUMMARY
-          echo "- Cache restored successfully" >> $GITHUB_STEP_SUMMARY
-          echo "- Size: $(du -sh cached-helpers | cut -f1)" >> $GITHUB_STEP_SUMMARY
-          echo "- Files:" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          find cached-helpers -type f -name "flavor-*" | sort >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-
-  # Test that helpers work correctly
-  test-helpers:
-    name: 🧪 Test Helpers
-    needs: [build-helpers, restore-cached]
-    if: always() && (needs.build-helpers.result == 'success' || needs.restore-cached.result == 'success')
-    runs-on: ${{ matrix.os }}
+          echo "### 🔍 Helper Cache Analysis" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Content Hash**: \`${{ steps.hash.outputs.value }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Artifact Name**: \`${{ steps.hash.outputs.artifact-name }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ steps.check.outputs.cache-hit }}" == "true" ]; then
+            echo "✅ **Fully cached** - All platforms built and tested successfully" >> $GITHUB_STEP_SUMMARY
+            if [ "${{ inputs.force_rebuild }}" != "true" ]; then
+              echo "⏭️ Will skip build and use cached artifacts" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "⚠️ Force rebuild requested - will rebuild all platforms" >> $GITHUB_STEP_SUMMARY
+            fi
+          elif [ "${{ steps.check.outputs.last-status }}" == "partial" ]; then
+            echo "⚠️ **Partially cached** - Some platforms need rebuilding" >> $GITHUB_STEP_SUMMARY
+            echo "Failed platforms: \`${{ steps.check.outputs.failed-platforms }}\`" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "🔨 **Not cached** - Will build all platforms" >> $GITHUB_STEP_SUMMARY
+          fi
+  
+  # Determine what needs to be built
+  plan-builds:
+    name: 📋 Plan Build Matrix
+    needs: check-cache
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+      skip-all: ${{ steps.plan.outputs.skip-all }}
+      platforms: ${{ steps.plan.outputs.platforms }}
+    steps:
+      - name: 📋 Determine build matrix
+        id: plan
+        run: |
+          # Check if we should skip everything
+          if [ "${{ needs.check-cache.outputs.cache-hit }}" == "true" ] && [ "${{ inputs.force_rebuild }}" != "true" ]; then
+            echo "✅ Using fully cached build - skipping all builds"
+            echo "skip-all=true" >> $GITHUB_OUTPUT
+            echo 'matrix={"platform":[]}' >> $GITHUB_OUTPUT
+            echo "platforms=" >> $GITHUB_OUTPUT
+          else
+            echo "skip-all=false" >> $GITHUB_OUTPUT
+            
+            # Determine which platforms to build
+            if [ "${{ inputs.force_rebuild }}" == "true" ]; then
+              if [ "${{ inputs.platforms }}" == "all" ]; then
+                # Force rebuild all
+                PLATFORMS="linux_amd64,linux_arm64,darwin_amd64,darwin_arm64,windows_amd64"
+                echo "🔨 Force rebuilding all platforms"
+              else
+                # Force rebuild specific platforms
+                PLATFORMS="${{ inputs.platforms }}"
+                echo "🔨 Force rebuilding platforms: $PLATFORMS"
+              fi
+            elif [ "${{ needs.check-cache.outputs.last-status }}" == "partial" ]; then
+              # Rebuild only failed platforms
+              PLATFORMS="${{ needs.check-cache.outputs.failed-platforms }}"
+              echo "🔧 Rebuilding failed platforms: $PLATFORMS"
+            else
+              # No cache - build all
+              PLATFORMS="linux_amd64,linux_arm64,darwin_amd64,darwin_arm64,windows_amd64"
+              echo "🔨 Building all platforms (no cache)"
+            fi
+            
+            # Create matrix JSON
+            MATRIX='{"platform":['
+            IFS=',' read -ra PLATFORM_ARRAY <<< "$PLATFORMS"
+            for platform in "${PLATFORM_ARRAY[@]}"; do
+              platform=$(echo "$platform" | xargs) # trim whitespace
+              if [ -n "$platform" ]; then
+                MATRIX="$MATRIX\"$platform\","
+              fi
+            done
+            MATRIX="${MATRIX%,}]}"
+            
+            echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+            echo "platforms=$PLATFORMS" >> $GITHUB_OUTPUT
+            
+            echo "📋 Build matrix: $MATRIX"
+          fi
+      
+      - name: 📊 Build plan summary
+        run: |
+          echo "### 📋 Build Plan" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.plan.outputs.skip-all }}" == "true" ]; then
+            echo "✅ **No builds needed** - Using fully cached artifacts" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "🔨 **Platforms to build**: ${{ steps.plan.outputs.platforms }}" >> $GITHUB_STEP_SUMMARY
+          fi
+  
+  # Build helpers for selected platforms
+  build-platforms:
+    name: 🔨 Build ${{ matrix.platform }}
+    needs: [check-cache, plan-builds]
+    if: needs.plan-builds.outputs.skip-all != 'true'
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - os: ubuntu-24.04
-            platform: linux_amd64
-            test_cross: true
-          - os: macos-15
-            platform: darwin_arm64
-            test_cross: false
-          - os: windows-2025
-            platform: windows_amd64
-            test_cross: false
-    steps:
-      - name: 📥 Checkout
-        uses: actions/checkout@v4
-      
-      - name: 📦 Download helpers
-        uses: actions/download-artifact@v4
-        with:
-          name: all-helpers-${{ github.sha }}
-          path: helpers
-      
-      - name: 🔐 Set permissions
-        if: runner.os != 'Windows'
-        run: |
-          chmod +x helpers/bin/*
-          ls -la helpers/bin/
-      
-      - name: 🧪 Test native binaries
-        shell: pwsh
-        run: |
-          & ./.github/scripts/test-binaries.ps1 -Platform "${{ matrix.platform }}"
-      
-      - name: 🧪 Test cross-compiled binaries
-        if: matrix.test_cross
-        shell: pwsh
-        run: |
-          # Test other platform binaries with CrossCompiled flag
-          $platforms = @("linux_arm64", "darwin_amd64", "darwin_arm64", "windows_amd64")
-          foreach ($plat in $platforms) {
-            if ($plat -ne "${{ matrix.platform }}") {
-              Write-Host "Testing cross-compiled: $plat"
-              & ./.github/scripts/test-binaries.ps1 -Platform $plat -CrossCompiled
-            }
-          }
-
-  # Cache the built helpers for future use
-  cache-helpers:
-    name: 💾 Cache Helpers
-    needs: [test-helpers, check-cache]
-    if: needs.test-helpers.result == 'success' && needs.check-cache.outputs.cache-hit != 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - name: 📦 Download helpers
-        uses: actions/download-artifact@v4
-        with:
-          name: all-helpers-${{ github.sha }}
-          path: cached-helpers
-      
-      - name: 💾 Save to cache
-        uses: actions/cache@v4
-        with:
-          path: cached-helpers
-          key: ${{ needs.check-cache.outputs.cache-key }}
-      
-      - name: 📊 Cache saved
-        run: |
-          echo "### 💾 Helpers Cached" >> $GITHUB_STEP_SUMMARY
-          echo "- Key: ${{ needs.check-cache.outputs.cache-key }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Size: $(du -sh cached-helpers | cut -f1)" >> $GITHUB_STEP_SUMMARY
-
-  # Summary
-  helper-summary:
-    name: 📊 Helper Pipeline Summary
-    needs: [check-cache, build-helpers, restore-cached, test-helpers, cache-helpers]
+      matrix: ${{ fromJson(needs.plan-builds.outputs.matrix) }}
+    uses: ./.github/workflows/platform-helpers.yml
+    with:
+      platforms: ${{ matrix.platform }}
+      artifact-prefix: ${{ needs.check-cache.outputs.hash }}
+    secrets: inherit
+  
+  # Combine all artifacts (new and cached)
+  finalize:
+    name: 📦 Finalize Artifacts
+    needs: [check-cache, plan-builds, build-platforms]
     if: always()
     runs-on: ubuntu-latest
+    outputs:
+      artifact-name: ${{ steps.final.outputs.artifact-name }}
     steps:
-      - name: 📊 Generate summary
+      - name: 📥 Download existing artifact (if partial rebuild)
+        if: needs.check-cache.outputs.cache-exists == 'true' && needs.plan-builds.outputs.skip-all != 'true'
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.check-cache.outputs.artifact-name }}
+          path: cached-helpers
+      
+      - name: 📥 Download newly built platforms
+        if: needs.plan-builds.outputs.skip-all != 'true'
+        uses: actions/download-artifact@v4
+        with:
+          pattern: ${{ needs.check-cache.outputs.hash }}-*
+          path: new-helpers
+      
+      - name: 🔀 Merge artifacts
+        if: needs.plan-builds.outputs.skip-all != 'true'
         run: |
-          echo "# 🔨 Helper Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+          mkdir -p final-helpers/bin
+          
+          # Start with cached helpers if they exist
+          if [ -d cached-helpers ]; then
+            echo "📦 Copying cached helpers..."
+            find cached-helpers -type f -name "flavor-*" -exec cp {} final-helpers/bin/ \; 2>/dev/null || true
+          fi
+          
+          # Overwrite with newly built helpers
+          if [ -d new-helpers ]; then
+            echo "📦 Adding newly built helpers..."
+            find new-helpers -type f -name "flavor-*" -exec cp {} final-helpers/bin/ \;
+          fi
+          
+          echo "📋 Final artifact contents:"
+          ls -la final-helpers/bin/ || echo "No binaries found"
+      
+      - name: 📤 Upload final artifact
+        id: final
+        if: needs.plan-builds.outputs.skip-all != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ needs.check-cache.outputs.artifact-name }}
+          path: final-helpers/**
+          retention-days: 30
+          overwrite: true
+      
+      - name: ✅ Set output for cached build
+        if: needs.plan-builds.outputs.skip-all == 'true'
+        id: cached
+        run: |
+          echo "artifact-name=${{ needs.check-cache.outputs.artifact-name }}" >> $GITHUB_OUTPUT
+      
+      - name: 📊 Final summary
+        run: |
+          echo "### 📦 Helper Pipeline Complete" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
-          # Cache status
-          if [ "${{ needs.check-cache.outputs.cache-hit }}" == "true" ]; then
-            echo "### 💾 Cache" >> $GITHUB_STEP_SUMMARY
-            echo "✅ **Cache Hit** - Used existing helpers" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ needs.plan-builds.outputs.skip-all }}" == "true" ]; then
+            echo "✅ **Used cached artifacts** - No rebuild needed" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.build-platforms.result }}" == "success" ]; then
+            echo "✅ **Build successful** - All requested platforms built" >> $GITHUB_STEP_SUMMARY
           else
-            echo "### 🔨 Build" >> $GITHUB_STEP_SUMMARY
-            if [ "${{ needs.build-helpers.result }}" == "success" ]; then
-              echo "✅ **Build Success** - All helpers built" >> $GITHUB_STEP_SUMMARY
-            elif [ "${{ needs.build-helpers.result }}" == "skipped" ]; then
-              echo "⏭️ **Build Skipped** - Using cache" >> $GITHUB_STEP_SUMMARY
-            else
-              echo "❌ **Build Failed**" >> $GITHUB_STEP_SUMMARY
-            fi
+            echo "⚠️ **Partial success** - Some platforms may have failed" >> $GITHUB_STEP_SUMMARY
           fi
           
           echo "" >> $GITHUB_STEP_SUMMARY
-          
-          # Test status
-          echo "### 🧪 Tests" >> $GITHUB_STEP_SUMMARY
-          if [ "${{ needs.test-helpers.result }}" == "success" ]; then
-            echo "✅ **All helper tests passed**" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "❌ **Helper tests failed**" >> $GITHUB_STEP_SUMMARY
-          fi
-          
-          echo "" >> $GITHUB_STEP_SUMMARY
-          
-          # Cache save status
-          if [ "${{ needs.cache-helpers.result }}" == "success" ]; then
-            echo "### 💾 Cache Update" >> $GITHUB_STEP_SUMMARY
-            echo "✅ **Helpers cached for future use**" >> $GITHUB_STEP_SUMMARY
-          fi
-          
-          # Overall status
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## Overall Status" >> $GITHUB_STEP_SUMMARY
-          if [[ "${{ needs.test-helpers.result }}" == "success" ]]; then
-            echo "### ✅ Helper Pipeline Succeeded" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "### ❌ Helper Pipeline Failed" >> $GITHUB_STEP_SUMMARY
-            exit 1
-          fi
+          echo "**Artifact**: \`${{ needs.check-cache.outputs.artifact-name }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Hash**: \`${{ needs.check-cache.outputs.hash }}\`" >> $GITHUB_STEP_SUMMARY
