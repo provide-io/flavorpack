@@ -263,7 +263,7 @@ The metadata MUST be gzip-compressed JSON data. The signature and public key are
     "trust_signatures": ["optional array of trusted signature fingerprints"]
   },
   "build": {
-    "tool": "string (e.g., flavor-python, flavor-go, flavor-rust)",
+    "tool": "string (e.g., flavor-python, flavor-go, flavor-rs)",
     "tool_version": "string",
     "timestamp": "ISO8601",
     "deterministic": "boolean",
@@ -369,7 +369,7 @@ Cryptographic integrity and signature verification:
 
 #### 3.3.8 Build Metadata
 Information about how the package was built:
-- **`tool`**: Build tool used (flavor-python, flavor-go, flavor-rust)
+- **`tool`**: Build tool used (flavor-python, flavor-go, flavor-rs)
 - **`tool_version`**: Version of the build tool
 - **`timestamp`**: ISO8601 timestamp of when package was built
 - **`deterministic`**: Whether build used deterministic key generation

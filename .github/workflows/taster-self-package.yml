@@ -78,7 +78,7 @@ jobs:
           cd ../..
           
           # Build Rust helpers
-          cd helpers/flavor-rust
+          cd helpers/flavor-rs
           cargo build --release
           cp target/release/flavor-rs-launcher ../bin/
           cp target/release/flavor-rs-builder ../bin/

@@ -57,7 +57,7 @@ jobs:
             go build -o ../bin/flavor-go-launcher ./cmd/flavor-go-launcher
             go build -o ../bin/flavor-go-builder ./cmd/flavor-go-builder
           elif [ "${{ matrix.launcher }}" = "rust" ]; then
-            cd helpers/flavor-rust
+            cd helpers/flavor-rs
             cargo build --release
             cp target/release/flavor-rs-launcher ../bin/
             cp target/release/flavor-rs-builder ../bin/
@@ -152,7 +152,7 @@ jobs:
             cd helpers/flavor-go
             go build -o ../bin/flavor-go-launcher ./cmd/flavor-go-launcher
           elif [ "${{ matrix.launcher }}" = "rust" ]; then
-            cd helpers/flavor-rust
+            cd helpers/flavor-rs
             cargo build --release --bin flavor-rs-launcher
             cp target/release/flavor-rs-launcher ../bin/
           fi

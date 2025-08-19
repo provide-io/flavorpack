@@ -62,19 +62,17 @@ jobs:
       - name: 🔨 Build Helpers
         shell: bash
         run: |
-          # Build Go helpers
-          cd helpers/flavor-go
-          go build -o ../bin/flavor-go-launcher ./cmd/flavor-go-launcher
-          go build -o ../bin/flavor-go-builder ./cmd/flavor-go-builder
+          # Build helpers using Makefiles
+          cd helpers
+          make all
           
-          # Build Rust helpers
-          cd ../flavor-rust
-          cargo build --release
-          cp target/release/flavor-rs-launcher ../bin/
-          cp target/release/flavor-rs-builder ../bin/
+          # Install to XDG cache location for taster to find them
+          mkdir -p ~/.cache/flavor/helpers/bin
+          cp bin/* ~/.cache/flavor/helpers/bin/
+          chmod +x ~/.cache/flavor/helpers/bin/*
           
-          # Make executable
-          chmod +x ../bin/*
+          # List built helpers
+          ls -la bin/
       
       - name: 🧪 Run Taster Crosslang Tests
         shell: bash
@@ -146,7 +144,7 @@ jobs:
             cd helpers/flavor-go
             go build -o ../bin/flavor-go-launcher ./cmd/flavor-go-launcher
           elif [ "${{ matrix.launcher }}" = "rust" ]; then
-            cd helpers/flavor-rust
+            cd helpers/flavor-rs
             cargo build --release --bin flavor-rs-launcher
             cp target/release/flavor-rs-launcher ../bin/
           fi

@@ -175,8 +175,8 @@ class TestHelperManager:
         mock_run.return_value = MagicMock(returncode=0)
         
         # Create source directories and fake built binaries
-        # The actual code looks for binaries in helpers/flavor-rust/target/release
-        rust_src_dir = self.helpers_dir / "flavor-rust"
+        # The actual code looks for binaries in helpers/flavor-rs/target/release
+        rust_src_dir = self.helpers_dir / "flavor-rs"
         rust_target = rust_src_dir / "target" / "release"
         rust_target.mkdir(parents=True)
         (rust_target / "flavor-rs-launcher").write_bytes(b"fake launcher binary")
@@ -294,7 +294,7 @@ class TestHelperManager:
     def test_clean_helpers_rust_aliases(self):
         """Test that cleaning 'rust' also cleans 'rs' prefixed helpers."""
         rs_launcher = self.create_fake_helper("flavor-rs-launcher")
-        rust_builder = self.create_fake_helper("flavor-rust-builder")
+        rust_builder = self.create_fake_helper("flavor-rs-builder")
         
         removed = self.manager.clean_helpers(language="rust")
         
