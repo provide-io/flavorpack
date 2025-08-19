@@ -4,9 +4,12 @@ PSPF 2025 Bundle Launcher
 Handles bundle execution, slot extraction, and work environment setup.
 """
 
+import glob
 import io
 import os
+import shlex
 import struct
+import subprocess
 import tarfile
 import zlib
 from pathlib import Path
@@ -71,7 +74,7 @@ class PSPFLauncher(PSPFReader):
                 offset = descriptor.offset
                 size = descriptor.size  # Compressed size
                 checksum = descriptor.checksum
-                encoding = descriptor.compression
+                encoding = descriptor.encoding
                 purpose = descriptor.purpose
                 lifecycle = descriptor.lifecycle
                 
@@ -159,17 +162,23 @@ class PSPFLauncher(PSPFReader):
         
         # NOTE: Decoding logic must match Go/Rust implementations
         # Decode if needed
-        if slot_entry['encoding'] == 1:  # gzip
+        if slot_entry['encoding'] == 0:  # raw/none
+            logger.debug(f"📄 Slot {slot_index} is unencoded (raw)")
+            data = slot_data
+        elif slot_entry['encoding'] == 1:  # tar
+            logger.debug(f"📦 Slot {slot_index} is a tar archive")
+            data = slot_data  # Tar archives are extracted later
+        elif slot_entry['encoding'] == 2:  # gzip
             logger.debug(f"🗜️ Decompressing slot {slot_index} with gzip")
             import gzip
             data = gzip.decompress(slot_data)
             logger.debug(f"✅ Decompressed to {len(data)} bytes")
-        elif slot_entry['encoding'] == 2:  # reserved for future encoding methods
-            logger.error(f"❌ Encoding method 2 is reserved for future use")
+        elif slot_entry['encoding'] == 3:  # tar.gz
+            logger.debug(f"📦🗜️ Slot {slot_index} is a tar.gz archive")
+            data = slot_data  # Will be decompressed and extracted later
+        else:
+            logger.error(f"❌ Unsupported encoding method: {slot_entry['encoding']}")
             raise ValueError(f"Unsupported encoding method: {slot_entry['encoding']}")
-        else:  # none
-            logger.debug(f"📄 Slot {slot_index} is unencoded (raw)")
-            data = slot_data
         
         # Get slot name from metadata
         metadata = self.read_metadata()
@@ -373,22 +382,58 @@ class PSPFLauncher(PSPFReader):
                     command = command.replace('{package_name}', metadata['package']['name'])
                     command = command.replace('{version}', metadata['package']['version'])
                     
-                    logger.debug(f"🏃 Running: {command}")
+                    # Parse command safely to avoid shell injection
+                    args = shlex.split(command)
                     
-                    # Use shell=True for complex commands with pipes/redirects
-                    # Note: We need subprocess.run here for shell=True support
-                    import subprocess
-                    result = subprocess.run(command, shell=True, cwd=workenv_dir, capture_output=True, text=True)
-                    if result.returncode != 0:
+                    # Use the shared run_command utility
+                    try:
+                        result = run_command(
+                            args,
+                            cwd=workenv_dir,
+                            capture_output=True,
+                            check=True,
+                            log_command=True
+                        )
+                        logger.debug(f"✅ Command succeeded")
+                    except Exception as e:
                         logger.error(f"❌ Command failed: {command}")
-                        logger.error(f"❌ Output: {result.stderr}")
-                        raise RuntimeError(f"Setup command failed: {command}")
+                        raise RuntimeError(f"Setup command failed: {command}") from e
                     
                     logger.debug(f"✅ Command succeeded")
                     
                 elif cmd_type == 'enumerate_and_execute':
                     # Handle file enumeration and execution
-                    logger.warning(f"⚠️ enumerate_and_execute not yet implemented")
+                    pattern = cmd.get('pattern', '*')
+                    command_template = cmd.get('command', '')
+                    
+                    # Find matching files
+                    search_path = workenv_dir / pattern
+                    matches = glob.glob(str(search_path))
+                    
+                    logger.debug(f"📂 Found {len(matches)} files matching {pattern}")
+                    
+                    for file_path in matches:
+                        # Substitute file path in command
+                        command = command_template.replace('{file}', file_path)
+                        command = command.replace('{workenv}', str(workenv_dir))
+                        
+                        # Parse and execute command using shared utility
+                        args = shlex.split(command)
+                        
+                        try:
+                            result = run_command(
+                                args,
+                                cwd=workenv_dir,
+                                capture_output=True,
+                                check=True,
+                                log_command=True
+                            )
+                        except Exception as e:
+                            logger.error(f"❌ Command failed for {file_path}: {command}")
+                            logger.error(f"❌ Error: {e}")
+                            # Continue with other files instead of failing
+                    
+                    logger.debug(f"✅ Processed {len(matches)} files")
                 else:
                     logger.warning(f"⚠️ Unknown setup command type: {cmd_type}")
             else:
@@ -446,6 +491,8 @@ class PSPFLauncher(PSPFReader):
             
             # Use the executor for actual process execution
             from flavor.psp.format_2025.executor import BundleExecutor
+            logger.debug(f"🔍 Metadata command: {metadata.get('execution', {}).get('command', 'N/A')}")
+            logger.debug(f"🔍 Workenv dir: {workenv_dir}")
             executor = BundleExecutor(metadata, workenv_dir)
             
             # Execute and return result

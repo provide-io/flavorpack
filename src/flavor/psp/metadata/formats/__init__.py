@@ -1,3 +1,0 @@
-"""
-Format-specific metadata implementations.
-"""

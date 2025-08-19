@@ -90,7 +90,7 @@ lifecycle = "{manifest_data['slots'][0]['lifecycle']}"
         # Use test_builder from fixture
         result = (test_builder.metadata(format="PSPF/2025", package={"name": "test", "version": "1.0"})
                              .add_slot(slot.name, slot.path, encoding=slot.encoding, purpose=slot.purpose, lifecycle=slot.lifecycle)
-                             .with_options(launcher_type="python")
+                             .with_options()
                              .build(bundle_path))
         assert result.success, f"Build failed: {result.errors}"
         
@@ -107,7 +107,7 @@ lifecycle = "{manifest_data['slots'][0]['lifecycle']}"
         
         # Use test_builder from fixture
         result = (test_builder.metadata(format="PSPF/2025", package={"name": "test", "version": "1.0"}, allow_empty=True)
-                          .with_options(launcher_type="go")
+                          .with_options()
                           .build(bundle_path))
         assert result.success, f"Build failed: {result.errors}"
         
@@ -299,7 +299,7 @@ lifecycle = "{manifest_data['slots'][0]['lifecycle']}"
             "target_platform": "linux-amd64"
         }
         result = (test_builder.metadata(**metadata, allow_empty=True)
-                          .with_options(launcher_type="go")
+                          .with_options()
                           .build(bundle_path))
         assert result.success, f"Build failed: {result.errors}"
         

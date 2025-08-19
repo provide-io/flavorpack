@@ -160,7 +160,7 @@ class TestEnhancedSlots:
             size=1024*1024,
             original_size=2048*1024,
             checksum=0xABCDEF00,
-            compression=1,  # gzip
+            encoding=1,  # gzip
             lifecycle=0,  # permanent
             permissions=0o755
         )
@@ -172,7 +172,7 @@ class TestEnhancedSlots:
         assert unpacked.size == 1024*1024
         assert unpacked.original_size == 2048*1024
         assert unpacked.checksum == 0xABCDEF00
-        assert unpacked.compression == 1
+        assert unpacked.encoding == 1
         assert unpacked.lifecycle == 0
         assert unpacked.permissions == 0o755
     

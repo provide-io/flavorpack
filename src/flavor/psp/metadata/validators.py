@@ -1,157 +1,87 @@
+#!/usr/bin/env python3
 """
-Validator functions for metadata fields.
+Metadata validation functions for PSP packages.
 
-These validators are used with attrs to ensure data integrity
-and compliance with specifications.
+This module contains validation logic for package metadata structures.
 """
 
-from pathlib import Path
 from typing import Any
 
 
-class ValidationError(ValueError):
-    """Validation error with field information."""
-    
-    def __init__(self, field: str, value: Any, reason: str):
-        self.field = field
-        self.value = value
-        self.reason = reason
-        super().__init__(f"Invalid {field}: {reason}")
-
-
-def validate_workenv_path(instance, attribute, value: str) -> None:
-    """Validate that a path starts with {workenv}.
-    
-    Args:
-        instance: The attrs instance
-        attribute: The attribute being validated
-        value: The path value
-        
-    Raises:
-        ValidationError: If path doesn't start with {workenv}
+def validate_metadata(metadata: dict[str, Any]) -> bool:
     """
-    if not value.startswith("{workenv}"):
-        raise ValidationError(
-            field=attribute.name,
-            value=value,
-            reason=f"must start with {{workenv}}"
-        )
-
-
-def validate_mode(instance, attribute, value: int) -> None:
-    """Validate a Unix file mode.
+    Validate a complete metadata structure.
     
     Args:
-        instance: The attrs instance
-        attribute: The attribute being validated
-        value: The mode value
-        
-    Raises:
-        ValidationError: If mode is invalid
-    """
-    if not isinstance(value, int):
-        raise ValidationError(
-            field=attribute.name,
-            value=value,
-            reason="must be an integer"
-        )
-    
-    if not 0 <= value <= 0o777:
-        raise ValidationError(
-            field=attribute.name,
-            value=oct(value),
-            reason="must be between 0000 and 0777"
-        )
-
-
-def validate_format_version(instance, attribute, value: str) -> None:
-    """Validate a format version string.
-    
-    Args:
-        instance: The attrs instance
-        attribute: The attribute being validated
-        value: The format version
-        
-    Raises:
-        ValidationError: If format is unsupported
-    """
-    supported_formats = ["PSPF/2025"]
-    if value not in supported_formats:
-        raise ValidationError(
-            field=attribute.name,
-            value=value,
-            reason=f"unsupported format, must be one of {supported_formats}"
-        )
-
-
-def validate_env_operations(instance, attribute, value: dict) -> None:
-    """Validate runtime environment operations.
-    
-    Args:
-        instance: The attrs instance
-        attribute: The attribute being validated
-        value: The env operations dict
-        
-    Raises:
-        ValidationError: If operations are invalid
-    """
-    valid_ops = {"unset", "pass", "map", "set"}
-    
-    for op in value:
-        if op not in valid_ops:
-            raise ValidationError(
-                field=f"{attribute.name}.{op}",
-                value=op,
-                reason=f"unknown operation, must be one of {valid_ops}"
-            )
-    
-    # Validate operation types
-    list_ops = {"unset", "pass"}
-    dict_ops = {"map", "set"}
-    
-    for op in list_ops:
-        if op in value and not isinstance(value[op], list):
-            raise ValidationError(
-                field=f"{attribute.name}.{op}",
-                value=type(value[op]).__name__,
-                reason="must be a list"
-            )
-    
-    for op in dict_ops:
-        if op in value and not isinstance(value[op], dict):
-            raise ValidationError(
-                field=f"{attribute.name}.{op}",
-                value=type(value[op]).__name__,
-                reason="must be a dict"
-            )
-
-
-def validate_placeholder(value: str) -> bool:
-    """Check if a string contains valid placeholders.
-    
-    Args:
-        value: String to check
+        metadata: The metadata dictionary to validate
         
     Returns:
-        True if all placeholders are valid
+        True if valid
+        
+    Raises:
+        ValueError: If metadata is invalid
     """
-    valid_placeholders = {
-        "{workenv}", "{os}", "{arch}", "{platform}",
-        "{package_name}", "{version}"
-    }
+    # Check required fields
+    if "format" not in metadata:
+        raise ValueError("Missing required field: format")
     
-    # Find all placeholders in the string
-    import re
-    placeholders = re.findall(r'\{[^}]+\}', value)
+    # Check format version
+    if metadata["format"] not in ["PSPF/2025"]:
+        raise ValueError(f"Unsupported format: {metadata['format']}")
     
-    # Check each placeholder
-    for placeholder in placeholders:
-        if placeholder not in valid_placeholders:
-            # Could be a nested path like {workenv}/{os}
-            # which is valid if components are valid
-            parts = placeholder.strip("{}").split("/")
-            for part in parts:
-                if f"{{{part}}}" not in valid_placeholders:
-                    return False
+    # Check for old field names
+    if "execution" in metadata and "environment" in metadata["execution"]:
+        raise ValueError("Use 'env' instead of 'environment' in execution section")
+    
+    # Validate workenv directories
+    if "workenv" in metadata and "directories" in metadata["workenv"]:
+        dirs = metadata["workenv"]["directories"]
+        for dir_info in dirs:
+            if "path" in dir_info:
+                if not dir_info["path"].startswith("{workenv}"):
+                    raise ValueError(
+                        f"Workenv directory path must start with {{workenv}}: {dir_info['path']}"
+                    )
+            if "mode" in dir_info:
+                # Validate mode format
+                mode = dir_info["mode"]
+                if not isinstance(mode, str):
+                    raise ValueError(f"Invalid mode type: {type(mode)}")
+                try:
+                    # Try to parse as octal
+                    if mode.startswith("0o"):
+                        mode_val = int(mode[2:], 8)
+                    elif mode.startswith("0"):
+                        mode_val = int(mode, 8)
+                    else:
+                        # Must be digits only for plain octal
+                        if not mode.isdigit():
+                            raise ValueError(f"Invalid mode: {mode}")
+                        mode_val = int(mode, 8)
+                    # Check valid range (0-0777)
+                    if mode_val < 0 or mode_val > 0o777:
+                        raise ValueError(f"Invalid mode: {mode}")
+                except (ValueError, TypeError) as e:
+                    if "Invalid mode" in str(e):
+                        raise
+                    raise ValueError(f"Invalid mode: {mode}")
+    
+    # Validate umask if present
+    if "workenv" in metadata and "umask" in metadata["workenv"]:
+        umask = metadata["workenv"]["umask"]
+        if not isinstance(umask, str):
+            raise ValueError(f"Invalid umask type: {type(umask)}")
+        try:
+            # Try to parse as octal
+            if umask.startswith("0o"):
+                val = int(umask[2:], 8)
+            elif umask.startswith("0"):
+                val = int(umask, 8)
+            else:
+                val = int(umask, 8)
+            if val < 0 or val > 0o777:
+                raise ValueError(f"Invalid umask value: {umask}")
+        except ValueError:
+            raise ValueError(f"Invalid umask: {umask}")
     
     return True

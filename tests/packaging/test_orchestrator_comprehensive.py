@@ -30,6 +30,7 @@ class TestPackagingOrchestratorComprehensive:
             package_name="test-package",
             entry_point="test.main:run",
             python_version="3.11",
+            key_seed="test-seed",  # Use deterministic key generation for tests
         )
 
     def test_orchestrator_initialization(self, orchestrator, tmp_path) -> None:
@@ -41,53 +42,45 @@ class TestPackagingOrchestratorComprehensive:
         assert orchestrator.entry_point == "test.main:run"
         assert orchestrator.python_version == "3.11"
 
-    @patch("flavor.packaging.orchestrator.run_command")
     @patch("flavor.packaging.python_packager.PythonPackager.prepare_artifacts")
     def test_build_package_flow(
-        self, mock_prepare, mock_run, orchestrator, tmp_path
+        self, mock_prepare, orchestrator, tmp_path
     ) -> None:
         """Test the overall flow of the build_package method."""
+        # Create the slot files that will be referenced
+        payload_tgz = tmp_path / "payload.tgz"
+        python_tgz = tmp_path / "python.tgz"
+        
+        # Create minimal tarball files
+        with tarfile.open(payload_tgz, "w:gz") as tar:
+            tar.add(__file__, arcname="test.py")
+        with tarfile.open(python_tgz, "w:gz") as tar:
+            tar.add(__file__, arcname="test.py")
+            
         # Setup mocks
         mock_prepare.return_value = {
-            "payload_tgz": tmp_path / "payload.tgz",
-            "python_tgz": tmp_path / "python.tgz",
+            "payload_tgz": payload_tgz,
+            "python_tgz": python_tgz,
             "payload_dir": tmp_path / "payload",
         }
         (tmp_path / "payload" / "bin").mkdir(parents=True)
         (tmp_path / "payload" / "bin" / "uv").touch()
         (tmp_path / "payload" / "wheels").mkdir()
-        mock_run.return_value = "Success"
 
+        # Build the package
         orchestrator.build_package()
 
+        # Verify the package was created
+        assert Path(orchestrator.output_flavor_path).exists()
         mock_prepare.assert_called_once()
-        
-        # Check that the final build command was called
-        final_build_call = mock_run.call_args_list[-1]
-        args = final_build_call.args[0]
-        assert "flavor-rs-builder" in args[0] or "flavor-go-builder" in args[0]
-        assert "--manifest" in args
-        assert "--output" in args
-        assert orchestrator.output_flavor_path in args
 
     @patch("flavor.packaging.python_packager.PythonPackager.prepare_artifacts")  
-    @patch("flavor.packaging.orchestrator.run_command")
-    def test_build_error_handling(self, mock_run, mock_prepare, orchestrator, tmp_path) -> None:
-        """Test error handling when subprocess fails."""
-        # Setup mocks for Python packager
-        mock_prepare.return_value = {
-            "payload_tgz": tmp_path / "payload.tgz",
-            "python_tgz": tmp_path / "python.tgz",
-            "payload_dir": tmp_path / "payload",
-        }
-        (tmp_path / "payload" / "bin").mkdir(parents=True)
-        (tmp_path / "payload" / "bin" / "uv").touch()
-        (tmp_path / "payload" / "wheels").mkdir()
-        
-        # Make the build command fail
-        mock_run.side_effect = BuildError("Build failed!")
+    def test_build_error_handling(self, mock_prepare, orchestrator, tmp_path) -> None:
+        """Test error handling when package preparation fails."""
+        # Make the prepare_artifacts fail
+        mock_prepare.side_effect = BuildError("Preparation failed!")
 
         with pytest.raises(BuildError) as exc_info:
             orchestrator.build_package()
 
-        assert "Build failed!" in str(exc_info.value)
+        assert "Preparation failed!" in str(exc_info.value)

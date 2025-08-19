@@ -39,7 +39,8 @@ class TestPlatformDetection:
             ("Linux", "linux"),
             ("Windows", "windows"),
             ("darwin", "darwin"),
-            ("LINUX", "linux")
+            ("LINUX", "linux"),
+            ("MacOS", "darwin"),  # Alternative name
         ]
         
         for input_os, expected_os in test_cases:

@@ -20,7 +20,7 @@ from flavor.psp.format_2025.backends import (
     HybridBackend, create_backend
 )
 from flavor.psp.format_2025.constants import (
-    EMOJI_MAGIC_SIZE, HEADER_SIZE, TRAILING_MAGIC, PSPF_MAGIC,
+    EMOJI_MAGIC_SIZE, HEADER_SIZE, TRAILING_MAGIC, PSPF_MAGIC, PSPF_VERSION,
     SLOT_DESCRIPTOR_SIZE, ACCESS_AUTO, ACCESS_MMAP, ACCESS_FILE,
     ENCODING_RAW, ENCODING_TAR, ENCODING_GZIP, ENCODING_TGZ,
     METADATA_JSON, METADATA_CBOR
@@ -117,10 +117,31 @@ class PSPFReader:
             # Look for PSPF magic (8 bytes: "PSPF2025")
             pos = search_data.find(PSPF_MAGIC[:8])
             if pos >= 0:
-                self._launcher_size = offset + pos
-                return self._launcher_size
+                # Validate this is actually the index, not a false positive
+                potential_offset = offset + pos
+                
+                # Try to read and validate the version field (next 4 bytes after magic)
+                try:
+                    if potential_offset + 12 <= file_size:
+                        version_data = self._backend.read_at(potential_offset + 8, 4)
+                        version = struct.unpack('<I', version_data)[0]
+                        
+                        # Check if version looks reasonable (PSPF version 0x20250001)
+                        if version == PSPF_VERSION:
+                            self._launcher_size = potential_offset
+                            logger.debug("🔍 Found and validated PSPF magic at offset", 
+                                       offset=self._launcher_size, version=hex(version))
+                            return self._launcher_size
+                        else:
+                            logger.debug("⚠️ Found PSPF-like bytes but invalid version", 
+                                       offset=potential_offset, version=hex(version))
+                except Exception as e:
+                    logger.debug("⚠️ Error validating potential PSPF magic", 
+                               offset=potential_offset, error=str(e))
         
-        # Default to 0 if not found
+        # Log warning if not found
+        logger.warning("⚠️ Could not find PSPF magic in package, defaulting to offset 0", 
+                      file_size=file_size, searched_bytes=min(file_size, 10 * 1024 * 1024))
         self._launcher_size = 0
         return 0
 
@@ -133,6 +154,7 @@ class PSPFReader:
             self.open()
 
         launcher_size = self.detect_launcher_size()
+        logger.debug("📦 Reading index from offset", offset=launcher_size, size=HEADER_SIZE)
         
         # Read index using backend
         index_data = self._backend.read_at(launcher_size, HEADER_SIZE)

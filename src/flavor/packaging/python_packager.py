@@ -168,7 +168,11 @@ class PythonPackager:
                 capture_output=True
             )
 
-            # Install pip in the build venv, as `uv` does not have a `wheel` subcommand
+            # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            # CRITICAL: MUST INSTALL pip3 FOR WHEEL OPERATIONS
+            # uv DOES NOT SUPPORT wheel/download COMMANDS
+            # ALWAYS USE pip3, NEVER pip, NEVER uv pip FOR BUILDING
+            # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             logger.info("Installing pip in build environment for wheel creation...")
             run_command(
                 [
@@ -183,13 +187,27 @@ class PythonPackager:
                 capture_output=True
             )
 
+            # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            # CRITICAL: ALWAYS USE pip3 FOR ALL WHEEL OPERATIONS
+            # DO NOT USE pip (without 3) - IT MAY NOT EXIST
+            # DO NOT USE uv pip - IT DOESN'T SUPPORT wheel/download
+            # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             pip3 = build_venv / "bin" / "pip3"
 
-            # Build wheels for dependencies
+            # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            # CRITICAL: BUILD WHEELS FOR LOCAL DEPENDENCIES
+            # MUST USE pip3 TO BUILD WHEELS AND DOWNLOAD TRANSITIVE DEPS
+            # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            # Build wheels for dependencies AND their transitive dependencies
             for dep in self.build_config.get("dependencies", []):
                 dep_path = self.manifest_dir / dep
                 if dep_path.exists():
                     logger.info(f"Building wheel for dependency: {dep}")
+                    # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                    # CRITICAL: MUST USE pip3 TO BUILD WHEEL FOR LOCAL DEPENDENCY
+                    # DO NOT USE pip OR uv pip - ONLY pip3 WORKS FOR WHEEL BUILDING
+                    # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                    # First build the wheel for the dependency itself
                     run_command(
                         [
                             str(pip3),
@@ -202,7 +220,46 @@ class PythonPackager:
                         check=True,
                         capture_output=True
                     )
+                    # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                    # CRITICAL: MUST USE pip3 TO DOWNLOAD TRANSITIVE DEPENDENCIES
+                    # DO NOT USE pip OR uv pip - ONLY pip3 SUPPORTS download COMMAND
+                    # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                    # Then download its dependencies using pip3
+                    logger.info(f"Downloading transitive dependencies for {dep}")
+                    try:
+                        run_command(
+                            [
+                                str(pip3),
+                                "download",
+                                "--dest", str(wheels_dir),
+                                "--only-binary", ":all:",
+                                str(dep_path),
+                            ],
+                            check=False,  # Don't fail if some deps can't be downloaded
+                            capture_output=True
+                        )
+                    except Exception as e:
+                        logger.warning(f"Could not download all dependencies for {dep}: {e}")
+                        # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                        # CRITICAL: FALLBACK ALSO MUST USE pip3 FOR WHEEL BUILDING
+                        # DO NOT USE pip OR uv pip - ONLY pip3 WORKS FOR WHEELS
+                        # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                        # Try pip3 wheel as fallback
+                        run_command(
+                            [
+                                str(pip3),
+                                "wheel",
+                                "--wheel-dir", str(wheels_dir),
+                                str(dep_path),
+                            ],
+                            check=False,
+                            capture_output=True
+                        )
 
+            # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            # CRITICAL: MUST USE pip3 TO BUILD MAIN PACKAGE WHEEL
+            # DO NOT USE pip OR uv pip - ONLY pip3 SUPPORTS wheel COMMAND
+            # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             # Build main package wheel
             logger.info("Building wheel for main package...")
             if wheel_spinner:
@@ -247,6 +304,10 @@ class PythonPackager:
             except Exception as e:
                 logger.warning(f"Failed to install main package dependencies: {e}")
 
+            # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            # CRITICAL: MUST USE pip3 FOR DOWNLOADING DEPENDENCY WHEELS
+            # DO NOT USE pip OR uv pip - ONLY pip3 SUPPORTS download COMMAND
+            # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             # Now download all the dependencies as wheels using pip3
             logger.info("Downloading resolved dependencies as wheels...")
             try:
@@ -263,6 +324,10 @@ class PythonPackager:
                 )
             except Exception as e:
                 logger.warning(f"Failed to download dependency wheels: {e}")
+                # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                # CRITICAL: FALLBACK MUST ALSO USE pip3 FOR WHEEL BUILDING
+                # DO NOT USE pip OR uv pip - ONLY pip3 SUPPORTS wheel COMMAND
+                # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 # Try alternative: pip3 wheel for dependencies
                 logger.info("Trying pip3 wheel as fallback...")
                 run_command(

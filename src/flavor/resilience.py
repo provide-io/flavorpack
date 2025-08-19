@@ -5,6 +5,7 @@ This module provides retry logic, circuit breakers, and recovery mechanisms.
 """
 
 import os
+import tempfile
 import time
 import psutil
 import threading
@@ -294,7 +295,7 @@ class LockManager:
     """Manages file-based locks for concurrent operations."""
     
     def __init__(self, lock_dir: Optional[Path] = None):
-        self.lock_dir = lock_dir or Path("/tmp/flavor/locks")
+        self.lock_dir = lock_dir or Path(tempfile.gettempdir()) / "flavor" / "locks"
         self.lock_dir.mkdir(parents=True, exist_ok=True)
         self.held_locks = set()
     
@@ -439,7 +440,7 @@ class CheckpointManager:
     """Manages checkpoints for resumable operations."""
     
     def __init__(self, checkpoint_dir: Optional[Path] = None):
-        self.checkpoint_dir = checkpoint_dir or Path("/tmp/flavor/checkpoints")
+        self.checkpoint_dir = checkpoint_dir or Path(tempfile.gettempdir()) / "flavor" / "checkpoints"
         self.checkpoint_dir.mkdir(parents=True, exist_ok=True)
     
     def save_checkpoint(self, operation_id: str, state: dict):

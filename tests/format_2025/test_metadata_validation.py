@@ -1,10 +1,10 @@
 """Test metadata validation for PSPF/2025 format."""
 
 import pytest
-from flavor.psp.metadata.formats.pspf_2025 import validate_metadata
-from flavor.psp.metadata.validators import ValidationError
+from flavor.psp.metadata.validators import validate_metadata
 
 
+@pytest.mark.unit
 class TestMetadataValidation:
     """Test validation of PSPF metadata structures."""
     
@@ -37,7 +37,7 @@ class TestMetadataValidation:
         }
         
         # Should fail validation
-        with pytest.raises(ValidationError, match="workenv"):
+        with pytest.raises(ValueError, match="must start with \\{workenv\\}"):
             validate_metadata(invalid_metadata)
     
     def test_workenv_env_validation(self):
@@ -81,7 +81,7 @@ class TestMetadataValidation:
                     "umask": umask
                 }
             }
-            with pytest.raises(ValidationError):
+            with pytest.raises(ValueError, match="Invalid umask"):
                 validate_metadata(metadata)
     
     def test_execution_env_renamed(self):
@@ -96,9 +96,8 @@ class TestMetadataValidation:
             }
         }
         
-        # The new structure doesn't check for old field names - it just ignores them
-        # This is fine since we don't need backward compatibility
-        # validate_metadata(old_metadata)  # Would just ignore 'environment' field
+        with pytest.raises(ValueError, match="Use 'env' instead of 'environment'"):
+            validate_metadata(old_metadata)
         
         # New format (should pass)
         new_metadata = {
@@ -162,7 +161,7 @@ class TestMetadataValidation:
                     ]
                 }
             }
-            with pytest.raises(ValidationError, match="mode"):
+            with pytest.raises(ValueError, match="Invalid mode"):
                 validate_metadata(metadata)
     
     def test_complete_metadata_structure(self):
@@ -245,7 +244,7 @@ class TestMetadataValidation:
             }
         }
         
-        with pytest.raises(ValidationError, match="PSPF"):
+        with pytest.raises(ValueError, match="Missing required field: format"):
             validate_metadata(metadata_no_format)
         
         # Wrong format version
@@ -256,7 +255,7 @@ class TestMetadataValidation:
             }
         }
         
-        with pytest.raises(ValidationError, match="PSPF"):
+        with pytest.raises(ValueError, match="Unsupported format"):
             validate_metadata(metadata_wrong_format)
     
     def test_empty_workenv_section(self):
