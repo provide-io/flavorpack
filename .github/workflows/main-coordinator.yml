@@ -1,0 +1,224 @@
+name: 🎯 Main Coordinator
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_helpers:
+        description: 'Run helper pipeline'
+        type: boolean
+        default: true
+      run_python_tests:
+        description: 'Run Python tests'
+        type: boolean
+        default: true
+      run_taster_tests:
+        description: 'Run Taster tests'
+        type: boolean
+        default: true
+      platforms:
+        description: 'Platforms to test (comma-separated: linux,macos,windows)'
+        type: string
+        default: 'linux,macos'
+      python_versions:
+        description: 'Python versions to test'
+        type: string
+        default: '3.13'
+      fast_mode:
+        description: 'Fast mode (minimal testing)'
+        type: boolean
+        default: false
+  push:
+    branches:
+      - main
+      - 'feature/**'
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  # Analyze what changed
+  changes:
+    name: 🔍 Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      helpers: ${{ steps.filter.outputs.helpers }}
+      python: ${{ steps.filter.outputs.python }}
+      taster: ${{ steps.filter.outputs.taster }}
+      workflows: ${{ steps.filter.outputs.workflows }}
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 🔍 Path filter
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            helpers:
+              - 'helpers/flavor-go/**'
+              - 'helpers/flavor-rs/**'
+              - '.github/workflows/helper-pipeline.yml'
+              - '.github/workflows/platform-helpers.yml'
+            python:
+              - 'src/**'
+              - 'tests/**'
+              - 'pyproject.toml'
+              - '.github/workflows/python-tests.yml'
+            taster:
+              - 'helpers/taster/**'
+              - '.github/workflows/taster-pipeline.yml'
+            workflows:
+              - '.github/workflows/**'
+      
+      - name: 📊 Change summary
+        run: |
+          echo "### 🔍 Changes Detected" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ steps.filter.outputs.helpers }}" == "true" ]; then
+            echo "- ✅ **Helpers**: Changes detected" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- ⏭️ **Helpers**: No changes" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ "${{ steps.filter.outputs.python }}" == "true" ]; then
+            echo "- ✅ **Python**: Changes detected" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- ⏭️ **Python**: No changes" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ "${{ steps.filter.outputs.taster }}" == "true" ]; then
+            echo "- ✅ **Taster**: Changes detected" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- ⏭️ **Taster**: No changes" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ "${{ steps.filter.outputs.workflows }}" == "true" ]; then
+            echo "- ✅ **Workflows**: Changes detected" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- ⏭️ **Workflows**: No changes" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  # Run helper pipeline if needed
+  helpers:
+    name: 🔨 Helper Pipeline
+    needs: changes
+    if: |
+      (inputs.run_helpers && github.event_name == 'workflow_dispatch') ||
+      (needs.changes.outputs.helpers == 'true' && github.event_name != 'workflow_dispatch')
+    uses: ./.github/workflows/helper-pipeline.yml
+    secrets: inherit
+
+  # Run Python tests
+  python-tests:
+    name: 🐍 Python Tests
+    needs: [changes, helpers]
+    if: |
+      always() &&
+      (needs.helpers.result == 'success' || needs.helpers.result == 'skipped') &&
+      ((inputs.run_python_tests && github.event_name == 'workflow_dispatch') ||
+       (needs.changes.outputs.python == 'true' && github.event_name != 'workflow_dispatch'))
+    uses: ./.github/workflows/python-tests.yml
+    with:
+      platforms: ${{ inputs.platforms }}
+      python_versions: ${{ inputs.python_versions }}
+      fast_mode: ${{ inputs.fast_mode }}
+      helper_artifact: ${{ needs.helpers.outputs.artifact-name || '' }}
+    secrets: inherit
+
+  # Run Taster tests
+  taster-tests:
+    name: 🍯 Taster Tests
+    needs: [changes, helpers]
+    if: |
+      always() &&
+      (needs.helpers.result == 'success' || needs.helpers.result == 'skipped') &&
+      ((inputs.run_taster_tests && github.event_name == 'workflow_dispatch') ||
+       (needs.changes.outputs.taster == 'true' && github.event_name != 'workflow_dispatch'))
+    uses: ./.github/workflows/taster-pipeline.yml
+    with:
+      test_platforms: ${{ inputs.platforms }}
+      launcher_types: both
+      helper_artifact: ${{ needs.helpers.outputs.artifact-name || '' }}
+    secrets: inherit
+
+  # Final summary
+  summary:
+    name: 📊 Pipeline Summary
+    needs: [changes, helpers, python-tests, taster-tests]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📊 Generate summary
+        run: |
+          echo "# 🎯 Main Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Trigger info
+          echo "## Trigger Information" >> $GITHUB_STEP_SUMMARY
+          echo "- Event: ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Branch: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- SHA: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Pipeline results
+          echo "## Pipeline Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Helper status
+          if [ "${{ needs.helpers.result }}" == "success" ]; then
+            echo "### ✅ Helpers" >> $GITHUB_STEP_SUMMARY
+            echo "Successfully built and cached" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.helpers.result }}" == "skipped" ]; then
+            echo "### ⏭️ Helpers" >> $GITHUB_STEP_SUMMARY
+            echo "No changes or not requested" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.helpers.result }}" == "failure" ]; then
+            echo "### ❌ Helpers" >> $GITHUB_STEP_SUMMARY
+            echo "Build or test failed" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Python test status
+          if [ "${{ needs.python-tests.result }}" == "success" ]; then
+            echo "### ✅ Python Tests" >> $GITHUB_STEP_SUMMARY
+            echo "All tests passed" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.python-tests.result }}" == "skipped" ]; then
+            echo "### ⏭️ Python Tests" >> $GITHUB_STEP_SUMMARY
+            echo "No changes or not requested" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.python-tests.result }}" == "failure" ]; then
+            echo "### ❌ Python Tests" >> $GITHUB_STEP_SUMMARY
+            echo "Tests failed" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Taster test status
+          if [ "${{ needs.taster-tests.result }}" == "success" ]; then
+            echo "### ✅ Taster Tests" >> $GITHUB_STEP_SUMMARY
+            echo "All tests passed" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.taster-tests.result }}" == "skipped" ]; then
+            echo "### ⏭️ Taster Tests" >> $GITHUB_STEP_SUMMARY
+            echo "No changes or not requested" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.taster-tests.result }}" == "failure" ]; then
+            echo "### ❌ Taster Tests" >> $GITHUB_STEP_SUMMARY
+            echo "Tests failed" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Configuration
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "## Configuration" >> $GITHUB_STEP_SUMMARY
+            echo "- Platforms: ${{ inputs.platforms }}" >> $GITHUB_STEP_SUMMARY
+            echo "- Python versions: ${{ inputs.python_versions }}" >> $GITHUB_STEP_SUMMARY
+            echo "- Fast mode: ${{ inputs.fast_mode }}" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # Overall status
+          echo "## Overall Status" >> $GITHUB_STEP_SUMMARY
+          if [[ "${{ needs.helpers.result }}" == "failure" ]] || \
+             [[ "${{ needs.python-tests.result }}" == "failure" ]] || \
+             [[ "${{ needs.taster-tests.result }}" == "failure" ]]; then
+            echo "### ❌ Pipeline Failed" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          else
+            echo "### ✅ Pipeline Succeeded" >> $GITHUB_STEP_SUMMARY
+          fi

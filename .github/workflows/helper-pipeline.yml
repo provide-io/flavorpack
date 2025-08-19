@@ -1,0 +1,237 @@
+name: 🔨 Helper Pipeline
+
+on:
+  workflow_dispatch:
+    inputs:
+      force_rebuild:
+        description: 'Force rebuild even if cached'
+        type: boolean
+        default: false
+  workflow_call:
+    outputs:
+      artifact-name:
+        description: 'Name of helper artifacts'
+        value: helpers-${{ github.sha }}
+      cache-hit:
+        description: 'Whether cache was used'
+        value: ${{ jobs.check-cache.outputs.cache-hit }}
+  push:
+    paths:
+      - 'helpers/**'
+      - '.github/workflows/helper-pipeline.yml'
+      - '.github/workflows/platform-helpers.yml'
+  pull_request:
+    paths:
+      - 'helpers/**'
+
+jobs:
+  # Check if we can use cached helpers
+  check-cache:
+    name: 📦 Check Helper Cache
+    runs-on: ubuntu-latest
+    outputs:
+      cache-hit: ${{ steps.cache.outputs.cache-hit }}
+      cache-key: ${{ steps.cache-key.outputs.key }}
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 🔑 Generate cache key
+        id: cache-key
+        run: |
+          # Hash all helper source files
+          HASH=$(find helpers -type f \( -name "*.go" -o -name "*.rs" -o -name "*.toml" -o -name "*.mod" -o -name "*.sum" -o -name "Cargo.*" \) -exec sha256sum {} \; | sort | sha256sum | cut -d' ' -f1)
+          echo "key=helpers-v2-$HASH" >> $GITHUB_OUTPUT
+          echo "📦 Cache key: helpers-v2-$HASH"
+      
+      - name: 💾 Check cache
+        id: cache
+        if: ${{ github.event.inputs.force_rebuild != 'true' }}
+        uses: actions/cache@v4
+        with:
+          path: cached-helpers
+          key: ${{ steps.cache-key.outputs.key }}
+          lookup-only: true
+      
+      - name: 📊 Cache status
+        run: |
+          if [ "${{ steps.cache.outputs.cache-hit }}" == "true" ]; then
+            echo "✅ Cache hit! Helpers will be restored from cache."
+            echo "### ✅ Helper Cache Hit" >> $GITHUB_STEP_SUMMARY
+            echo "Using cached helpers from key: ${{ steps.cache-key.outputs.key }}" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "🔨 Cache miss. Helpers will be built fresh."
+            echo "### 🔨 Building Helpers Fresh" >> $GITHUB_STEP_SUMMARY
+            echo "Cache key: ${{ steps.cache-key.outputs.key }}" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  # Build helpers using the platform-helpers workflow
+  build-helpers:
+    name: 🔨 Build All Helpers
+    needs: check-cache
+    if: needs.check-cache.outputs.cache-hit != 'true' || github.event.inputs.force_rebuild == 'true'
+    uses: ./.github/workflows/platform-helpers.yml
+    secrets: inherit
+
+  # Restore from cache if available
+  restore-cached:
+    name: 💾 Restore Cached Helpers
+    needs: check-cache
+    if: needs.check-cache.outputs.cache-hit == 'true' && github.event.inputs.force_rebuild != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 💾 Restore cache
+        uses: actions/cache@v4
+        with:
+          path: cached-helpers
+          key: ${{ needs.check-cache.outputs.cache-key }}
+      
+      - name: 📤 Upload from cache
+        uses: actions/upload-artifact@v4
+        with:
+          name: helpers-${{ github.sha }}
+          path: cached-helpers/**/*
+          retention-days: 7
+      
+      - name: 📊 Cache metrics
+        run: |
+          echo "### 📊 Helper Cache Metrics" >> $GITHUB_STEP_SUMMARY
+          echo "- Cache restored successfully" >> $GITHUB_STEP_SUMMARY
+          echo "- Size: $(du -sh cached-helpers | cut -f1)" >> $GITHUB_STEP_SUMMARY
+          echo "- Files:" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          find cached-helpers -type f -name "flavor-*" | sort >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+  # Test that helpers work correctly
+  test-helpers:
+    name: 🧪 Test Helpers
+    needs: [build-helpers, restore-cached]
+    if: always() && (needs.build-helpers.result == 'success' || needs.restore-cached.result == 'success')
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            platform: linux_amd64
+            test_cross: true
+          - os: macos-15
+            platform: darwin_arm64
+            test_cross: false
+          - os: windows-2025
+            platform: windows_amd64
+            test_cross: false
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 📦 Download helpers
+        uses: actions/download-artifact@v4
+        with:
+          name: helpers-${{ github.sha }}
+          path: helpers
+      
+      - name: 🔐 Set permissions
+        if: runner.os != 'Windows'
+        run: |
+          chmod +x helpers/bin/*
+          ls -la helpers/bin/
+      
+      - name: 🧪 Test native binaries
+        shell: pwsh
+        run: |
+          & ./.github/scripts/test-binaries.ps1 -Platform "${{ matrix.platform }}"
+      
+      - name: 🧪 Test cross-compiled binaries
+        if: matrix.test_cross
+        shell: pwsh
+        run: |
+          # Test other platform binaries with CrossCompiled flag
+          $platforms = @("linux_arm64", "darwin_amd64", "darwin_arm64", "windows_amd64")
+          foreach ($plat in $platforms) {
+            if ($plat -ne "${{ matrix.platform }}") {
+              Write-Host "Testing cross-compiled: $plat"
+              & ./.github/scripts/test-binaries.ps1 -Platform $plat -CrossCompiled
+            }
+          }
+
+  # Cache the built helpers for future use
+  cache-helpers:
+    name: 💾 Cache Helpers
+    needs: [test-helpers, check-cache]
+    if: needs.test-helpers.result == 'success' && needs.check-cache.outputs.cache-hit != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📦 Download helpers
+        uses: actions/download-artifact@v4
+        with:
+          name: helpers-${{ github.sha }}
+          path: cached-helpers
+      
+      - name: 💾 Save to cache
+        uses: actions/cache@v4
+        with:
+          path: cached-helpers
+          key: ${{ needs.check-cache.outputs.cache-key }}
+      
+      - name: 📊 Cache saved
+        run: |
+          echo "### 💾 Helpers Cached" >> $GITHUB_STEP_SUMMARY
+          echo "- Key: ${{ needs.check-cache.outputs.cache-key }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Size: $(du -sh cached-helpers | cut -f1)" >> $GITHUB_STEP_SUMMARY
+
+  # Summary
+  helper-summary:
+    name: 📊 Helper Pipeline Summary
+    needs: [check-cache, build-helpers, restore-cached, test-helpers, cache-helpers]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📊 Generate summary
+        run: |
+          echo "# 🔨 Helper Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Cache status
+          if [ "${{ needs.check-cache.outputs.cache-hit }}" == "true" ]; then
+            echo "### 💾 Cache" >> $GITHUB_STEP_SUMMARY
+            echo "✅ **Cache Hit** - Used existing helpers" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### 🔨 Build" >> $GITHUB_STEP_SUMMARY
+            if [ "${{ needs.build-helpers.result }}" == "success" ]; then
+              echo "✅ **Build Success** - All helpers built" >> $GITHUB_STEP_SUMMARY
+            elif [ "${{ needs.build-helpers.result }}" == "skipped" ]; then
+              echo "⏭️ **Build Skipped** - Using cache" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "❌ **Build Failed**" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Test status
+          echo "### 🧪 Tests" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ needs.test-helpers.result }}" == "success" ]; then
+            echo "✅ **All helper tests passed**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Helper tests failed**" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Cache save status
+          if [ "${{ needs.cache-helpers.result }}" == "success" ]; then
+            echo "### 💾 Cache Update" >> $GITHUB_STEP_SUMMARY
+            echo "✅ **Helpers cached for future use**" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # Overall status
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Overall Status" >> $GITHUB_STEP_SUMMARY
+          if [[ "${{ needs.test-helpers.result }}" == "success" ]]; then
+            echo "### ✅ Helper Pipeline Succeeded" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### ❌ Helper Pipeline Failed" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
