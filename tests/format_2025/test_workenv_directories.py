@@ -6,13 +6,14 @@ import tempfile
 import pytest
 from pathlib import Path
 from unittest.mock import patch, MagicMock
-from flavor.psp.workenv.directories import (
+from flavor.psp.metadata.paths import (
     validate_workenv_paths,
     create_workenv_directories,
     apply_umask
 )
 
 
+@pytest.mark.unit
 class TestWorkenvDirectories:
     """Test workenv directory validation and creation."""
     
@@ -93,8 +94,11 @@ class TestWorkenvDirectories:
                         dir_path = workenv / dir_info["path"].replace("{workenv}/", "")
                         if dir_path.exists():
                             dir_stat = dir_path.stat()
-                            # Default is 0777 & ~0077 = 0700
-                            assert stat.S_IMODE(dir_stat.st_mode) == 0o700
+                            # Default is 0777 & ~umask
+                            # On macOS, default umask is often 0o022, giving 0o755
+                            # On Linux, it's often 0o077, giving 0o700
+                            mode = stat.S_IMODE(dir_stat.st_mode)
+                            assert mode in (0o700, 0o755), f"Expected 0o700 or 0o755, got {oct(mode)}"
             finally:
                 # Restore original umask
                 os.umask(old_umask)

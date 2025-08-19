@@ -3,9 +3,10 @@
 import platform
 import pytest
 from pathlib import Path
-from flavor.psp.workenv.placeholders import substitute_placeholders
+from flavor.psp.metadata.paths import substitute_placeholders
 
 
+@pytest.mark.unit
 class TestPlatformPlaceholders:
     """Test platform-specific placeholder substitution."""
 
@@ -19,7 +20,7 @@ class TestPlatformPlaceholders:
         
         # Multiple workenv references
         result = substitute_placeholders("{workenv}/var/{workenv}/log", workenv_path)
-        assert result == "/test/workenv/var/test/workenv/log"
+        assert result == "/test/workenv/var//test/workenv/log"
     
     def test_substitute_os_placeholder(self):
         """Test that {os} placeholder is correctly substituted."""

@@ -68,10 +68,6 @@ class BuildOptions:
     compression_level: int = field(default=6, validator=validators.instance_of(int))
     
     # Launcher selection
-    launcher_type: str = field(
-        default="rust",
-        validator=validators.in_(["rust", "go", "python", "node"])
-    )
     launcher_bin: Path | None = field(default=None)
     
     # Build behavior
@@ -85,9 +81,6 @@ class BuildOptions:
             updates["compression_level"] = level
         return attrs.evolve(self, **updates)
     
-    def with_launcher(self, launcher_type: str) -> 'BuildOptions':
-        """Return new BuildOptions with updated launcher type."""
-        return attrs.evolve(self, launcher_type=launcher_type)
 
 
 @define(frozen=True)
