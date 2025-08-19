@@ -3,10 +3,6 @@ name: 🎯 Main Coordinator
 on:
   workflow_dispatch:
     inputs:
-      run_helpers:
-        description: 'Run helper pipeline'
-        type: boolean
-        default: true
       run_python_tests:
         description: 'Run Python tests'
         type: boolean
@@ -53,11 +49,7 @@ jobs:
         id: filter
         with:
           filters: |
-            helpers:
-              - 'helpers/flavor-go/**'
-              - 'helpers/flavor-rs/**'
-              - '.github/workflows/helper-pipeline.yml'
-              - '.github/workflows/platform-helpers.yml'
+            # Note: Helper pipeline is independent - not tracked here
             python:
               - 'src/**'
               - 'tests/**'
@@ -73,12 +65,6 @@ jobs:
         run: |
           echo "### 🔍 Changes Detected" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          
-          if [ "${{ steps.filter.outputs.helpers }}" == "true" ]; then
-            echo "- ✅ **Helpers**: Changes detected" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "- ⏭️ **Helpers**: No changes" >> $GITHUB_STEP_SUMMARY
-          fi
           
           if [ "${{ steps.filter.outputs.python }}" == "true" ]; then
             echo "- ✅ **Python**: Changes detected" >> $GITHUB_STEP_SUMMARY
@@ -98,23 +84,11 @@ jobs:
             echo "- ⏭️ **Workflows**: No changes" >> $GITHUB_STEP_SUMMARY
           fi
 
-  # Run helper pipeline if needed
-  helpers:
-    name: 🔨 Helper Pipeline
-    needs: changes
-    if: |
-      (inputs.run_helpers && github.event_name == 'workflow_dispatch') ||
-      (needs.changes.outputs.helpers == 'true' && github.event_name != 'workflow_dispatch')
-    uses: ./.github/workflows/helper-pipeline.yml
-    secrets: inherit
-
   # Run Python tests
   python-tests:
     name: 🐍 Python Tests
-    needs: [changes, helpers]
+    needs: changes
     if: |
-      always() &&
-      (needs.helpers.result == 'success' || needs.helpers.result == 'skipped') &&
       ((inputs.run_python_tests && github.event_name == 'workflow_dispatch') ||
        (needs.changes.outputs.python == 'true' && github.event_name != 'workflow_dispatch'))
     uses: ./.github/workflows/python-tests.yml
@@ -122,29 +96,27 @@ jobs:
       platforms: ${{ inputs.platforms }}
       python_versions: ${{ inputs.python_versions }}
       fast_mode: ${{ inputs.fast_mode }}
-      helper_artifact: ${{ needs.helpers.outputs.artifact-name || '' }}
+      # Helper artifacts downloaded separately by workflow
     secrets: inherit
 
   # Run Taster tests
   taster-tests:
     name: 🍯 Taster Tests
-    needs: [changes, helpers]
+    needs: changes
     if: |
-      always() &&
-      (needs.helpers.result == 'success' || needs.helpers.result == 'skipped') &&
       ((inputs.run_taster_tests && github.event_name == 'workflow_dispatch') ||
        (needs.changes.outputs.taster == 'true' && github.event_name != 'workflow_dispatch'))
     uses: ./.github/workflows/taster-pipeline.yml
     with:
       test_platforms: ${{ inputs.platforms }}
       launcher_types: both
-      helper_artifact: ${{ needs.helpers.outputs.artifact-name || '' }}
+      # Helper artifacts downloaded separately by workflow
     secrets: inherit
 
   # Final summary
   summary:
     name: 📊 Pipeline Summary
-    needs: [changes, helpers, python-tests, taster-tests]
+    needs: [changes, python-tests, taster-tests]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -162,19 +134,6 @@ jobs:
           
           # Pipeline results
           echo "## Pipeline Results" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          
-          # Helper status
-          if [ "${{ needs.helpers.result }}" == "success" ]; then
-            echo "### ✅ Helpers" >> $GITHUB_STEP_SUMMARY
-            echo "Successfully built and cached" >> $GITHUB_STEP_SUMMARY
-          elif [ "${{ needs.helpers.result }}" == "skipped" ]; then
-            echo "### ⏭️ Helpers" >> $GITHUB_STEP_SUMMARY
-            echo "No changes or not requested" >> $GITHUB_STEP_SUMMARY
-          elif [ "${{ needs.helpers.result }}" == "failure" ]; then
-            echo "### ❌ Helpers" >> $GITHUB_STEP_SUMMARY
-            echo "Build or test failed" >> $GITHUB_STEP_SUMMARY
-          fi
           echo "" >> $GITHUB_STEP_SUMMARY
           
           # Python test status
@@ -214,8 +173,7 @@ jobs:
           
           # Overall status
           echo "## Overall Status" >> $GITHUB_STEP_SUMMARY
-          if [[ "${{ needs.helpers.result }}" == "failure" ]] || \
-             [[ "${{ needs.python-tests.result }}" == "failure" ]] || \
+          if [[ "${{ needs.python-tests.result }}" == "failure" ]] || \
              [[ "${{ needs.taster-tests.result }}" == "failure" ]]; then
             echo "### ❌ Pipeline Failed" >> $GITHUB_STEP_SUMMARY
             exit 1

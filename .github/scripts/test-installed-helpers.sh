@@ -1,9 +1,8 @@
 #!/bin/bash
 set -e
 
-# Test that built binaries actually work
-# Usage: .github/scripts/test-binaries.sh <platform>
-# Environment: CROSS_COMPILE=true for cross-compiled binaries
+# Test installed helpers from cache directory
+# Usage: .github/scripts/test-installed-helpers.sh <platform> [cross]
 
 PLATFORM="$1"
 CROSS_MODE="$2"
@@ -22,39 +21,24 @@ if [ -z "$PLATFORM" ]; then
     exit 1
 fi
 
-echo "🧪 Testing built binaries for $PLATFORM"
-echo "   Current directory: $(pwd)"
-echo "   Looking in: helpers/bin/"
+# Get cache directory
+CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/flavor/helpers/bin"
+
+echo "🧪 Testing installed helpers for $PLATFORM"
+echo "   Cache directory: $CACHE_DIR"
 if [ "$CROSS_COMPILE" = "true" ]; then
     echo "   Mode: Cross-compiled (format check only)"
 else
     echo "   Mode: Native (execution test)"
 fi
 
-# Ensure we're in the repository root
-if [ -d "helpers/bin" ]; then
-    BIN_DIR="helpers/bin"
-elif [ -d "../helpers/bin" ]; then
-    BIN_DIR="../helpers/bin"
-elif [ -d "../../helpers/bin" ]; then
-    BIN_DIR="../../helpers/bin"
-else
-    echo "❌ Cannot find helpers/bin directory"
-    echo "   Current directory: $(pwd)"
-    echo "   Directory contents:"
-    ls -la | head -5
-    exit 1
-fi
-
-# Debug: Show what's in the bin directory
-echo "   Contents of $BIN_DIR:"
-ls -la "$BIN_DIR" 2>/dev/null | grep "$PLATFORM" | head -5 || echo "     No files for $PLATFORM"
-
-# Find all binaries for this platform (versioned format)
-BINARIES=$(find "$BIN_DIR" -name "*-*-${PLATFORM}*" -type f 2>/dev/null)
+# Find all binaries for this platform
+BINARIES=$(find "$CACHE_DIR" -name "*-${PLATFORM}*" -type f 2>/dev/null)
 
 if [ -z "$BINARIES" ]; then
-    echo "❌ No binaries found for platform: $PLATFORM"
+    echo "❌ No binaries found for platform: $PLATFORM in $CACHE_DIR"
+    echo "   Contents of cache:"
+    ls -la "$CACHE_DIR" 2>/dev/null | head -10 || echo "     Cache directory not found"
     exit 1
 fi
 
@@ -96,6 +80,9 @@ for BINARY in $BINARIES; do
             echo "  ✅ Binary executes"
         else
             echo "  ❌ Binary failed to run: $(basename $BINARY)"
+            # Try to get error details
+            ERROR_MSG=$("$BINARY" --version 2>&1 | head -3 || echo "No error output")
+            echo "     Error: $ERROR_MSG"
             FAILED=true
         fi
     fi

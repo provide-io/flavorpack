@@ -1,0 +1,265 @@
+name: 🌶️ Flavor Pipeline
+
+on:
+  workflow_dispatch:
+    inputs:
+      helper_run_id:
+        description: 'Helper Pipeline run ID (leave empty for latest)'
+        type: string
+        required: false
+      test_filter:
+        description: 'Test filter (e.g., -k test_name or -m marker)'
+        type: string
+        required: false
+  
+  push:
+    branches:
+      - main
+      - 'feature/**'
+    paths:
+      - 'src/flavor/**'
+      - 'tests/**'
+      - 'pyproject.toml'
+      - '.github/workflows/flavor-pipeline.yml'
+  
+  pull_request:
+    paths:
+      - 'src/flavor/**'
+      - 'tests/**'
+  
+  workflow_run:
+    workflows: ["🔨 Helper Pipeline"]
+    types: [completed]
+    branches: [main]
+
+jobs:
+  # Setup and download helper artifacts
+  setup:
+    name: 🔧 Setup & Get Helpers
+    runs-on: ubuntu-latest
+    outputs:
+      helper_version: ${{ steps.helpers.outputs.version }}
+      test_matrix: ${{ steps.matrix.outputs.matrix }}
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 🔍 Determine helper version
+        id: helpers
+        run: |
+          # Get helper version from the latest successful run or specified run
+          if [ -n "${{ inputs.helper_run_id }}" ]; then
+            RUN_ID="${{ inputs.helper_run_id }}"
+          else
+            # Get latest successful helper pipeline run
+            RUN_ID=$(gh run list --workflow=helper-pipeline.yml --status=success --limit=1 --json databaseId -q '.[0].databaseId')
+          fi
+          
+          echo "Using Helper Pipeline run: $RUN_ID"
+          echo "run_id=$RUN_ID" >> $GITHUB_OUTPUT
+          
+          # Extract version from run artifacts
+          gh run view $RUN_ID --json artifacts -q '.artifacts[0].name' | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 > version.txt
+          VERSION=$(cat version.txt)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Helper version: $VERSION"
+        env:
+          GH_TOKEN: ${{ github.token }}
+      
+      - name: 📥 Download helper artifacts
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          workflow: helper-pipeline.yml
+          run_id: ${{ steps.helpers.outputs.run_id }}
+          name: flavor-helpers-${{ steps.helpers.outputs.version }}-all
+          path: ./helpers-dist
+      
+      - name: 📤 Upload helpers for test jobs
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-helpers-${{ github.run_id }}
+          path: |
+            helpers-dist/*.zip
+      
+      - name: 🧪 Define test matrix
+        id: matrix
+        run: |
+          # Define test categories
+          cat > matrix.json << 'EOF'
+          {
+            "include": [
+              {"name": "unit", "runner": "ubuntu-latest", "marker": "unit", "timeout": 10},
+              {"name": "integration", "runner": "ubuntu-latest", "marker": "integration", "timeout": 20},
+              {"name": "security", "runner": "ubuntu-latest", "marker": "security", "timeout": 15},
+              {"name": "format-2025", "runner": "ubuntu-latest", "path": "tests/format_2025", "timeout": 30},
+              {"name": "packaging", "runner": "ubuntu-latest", "path": "tests/packaging", "timeout": 25},
+              {"name": "cross-language", "runner": "ubuntu-latest", "marker": "cross_language", "timeout": 30},
+              {"name": "stress", "runner": "ubuntu-22.04", "marker": "stress", "timeout": 45}
+            ]
+          }
+          EOF
+          
+          MATRIX=$(cat matrix.json | jq -c .)
+          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+          echo "Test matrix: $MATRIX"
+
+  # Run tests in parallel
+  test:
+    name: 🧪 Test ${{ matrix.name }}
+    needs: setup
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: ${{ matrix.timeout }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.setup.outputs.test_matrix) }}
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 📥 Download helpers
+        uses: actions/download-artifact@v4
+        with:
+          name: test-helpers-${{ github.run_id }}
+          path: ./helpers-dist
+      
+      - name: 🔧 Extract helpers
+        run: |
+          mkdir -p helpers/bin
+          for platform in linux_amd64 linux_arm64 darwin_amd64 darwin_arm64 windows_amd64; do
+            if [ -f "helpers-dist/flavor-helpers-${{ needs.setup.outputs.helper_version }}-${platform}.zip" ]; then
+              unzip -o "helpers-dist/flavor-helpers-${{ needs.setup.outputs.helper_version }}-${platform}.zip" -d helpers/bin/ || true
+            fi
+          done
+          
+          # Make Linux binaries executable
+          chmod +x helpers/bin/*-linux_* 2>/dev/null || true
+          
+          # List available helpers
+          ls -la helpers/bin/
+      
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      - name: 📦 Install dependencies
+        run: |
+          # Set up virtual environment
+          python -m venv workenv
+          source workenv/bin/activate
+          
+          # Install uv for faster dependency resolution
+          pip install uv
+          
+          # Install flavor and test dependencies
+          uv pip install -e ".[dev,test]"
+          
+          # Install sibling packages if needed
+          if [ -f "../pyvider-telemetry/pyproject.toml" ]; then
+            uv pip install -e "../pyvider-telemetry"
+          fi
+      
+      - name: 🧪 Run tests
+        run: |
+          source workenv/bin/activate
+          
+          # Build test command
+          TEST_CMD="pytest -xvs"
+          
+          # Add marker if specified
+          if [ -n "${{ matrix.marker }}" ]; then
+            TEST_CMD="$TEST_CMD -m ${{ matrix.marker }}"
+          fi
+          
+          # Add path if specified
+          if [ -n "${{ matrix.path }}" ]; then
+            TEST_CMD="$TEST_CMD ${{ matrix.path }}"
+          else
+            TEST_CMD="$TEST_CMD tests/"
+          fi
+          
+          # Add user filter if provided
+          if [ -n "${{ inputs.test_filter }}" ]; then
+            TEST_CMD="$TEST_CMD ${{ inputs.test_filter }}"
+          fi
+          
+          # Add coverage for unit tests
+          if [ "${{ matrix.name }}" = "unit" ]; then
+            TEST_CMD="$TEST_CMD --cov=src/flavor --cov-report=xml --cov-report=term"
+          fi
+          
+          echo "Running: $TEST_CMD"
+          $TEST_CMD
+      
+      - name: 📊 Upload coverage
+        if: matrix.name == 'unit'
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage.xml
+          flags: unittests
+          name: flavor-coverage
+      
+      - name: 📤 Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ matrix.name }}-${{ github.run_id }}
+          path: |
+            pytest-results.xml
+            .coverage
+            coverage.xml
+
+  # Summary and validation
+  validate:
+    name: ✅ Validate & Summary
+    needs: [setup, test]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 📥 Download test results
+        uses: actions/download-artifact@v4
+        with:
+          pattern: test-results-*
+          path: test-results
+      
+      - name: 📊 Generate summary
+        run: |
+          echo "## 🌶️ Flavor Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Helper Version:** ${{ needs.setup.outputs.helper_version }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          echo "### Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Parse test results
+          for result_dir in test-results/test-results-*; do
+            if [ -d "$result_dir" ]; then
+              TEST_NAME=$(basename "$result_dir" | sed 's/test-results-//' | sed "s/-${{ github.run_id }}//")
+              echo "- **$TEST_NAME**: " >> $GITHUB_STEP_SUMMARY
+              
+              if [ -f "$result_dir/pytest-results.xml" ]; then
+                # Parse pytest XML for pass/fail counts
+                echo "✅ Completed" >> $GITHUB_STEP_SUMMARY
+              else
+                echo "⚠️ No results" >> $GITHUB_STEP_SUMMARY
+              fi
+            fi
+          done
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "- [View test results](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})" >> $GITHUB_STEP_SUMMARY
+      
+      - name: 🎯 Check status
+        run: |
+          # Check if any test job failed
+          if [ "${{ needs.test.result }}" != "success" ]; then
+            echo "❌ Some tests failed"
+            exit 1
+          fi
+          echo "✅ All tests passed"
