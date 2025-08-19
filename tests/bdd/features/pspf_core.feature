@@ -37,12 +37,12 @@ Feature: PSPF 2025 Core Format
     And each slot should have a valid checksum
 
   Scenario Outline: Emoji magic variations
-    Given I have a launcher of type <launcher_type>
+    Given I have a launcher named <launcher_name>
     When I build a PSPF bundle with emoji seed <seed>
     Then the emoji magic should be <expected_magic>
 
     Examples:
-      | launcher_type | seed | expected_magic |
+      | launcher_name | seed | expected_magic |
       | go            | 1    | 📦🐹🦄🪄        |
       | rust          | 2    | 📦🦀🍕🪄        |
       | python        | 3    | 📦🐍🌈🪄        |

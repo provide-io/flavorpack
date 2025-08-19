@@ -398,13 +398,7 @@ def _write_package(
         # Update package size
         index.package_size = f.tell()
         
-        # Calculate index checksum
-        index_data = index.pack()
-        checksum_data = bytearray(index_data)
-        checksum_data[12:16] = b'\x00\x00\x00\x00'
-        index.index_checksum = zlib.adler32(checksum_data)
-        
-        # Write final index
+        # Write final index (pack() calculates checksum internally)
         f.seek(index_offset)
         f.write(index.pack())
     

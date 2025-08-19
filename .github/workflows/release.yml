@@ -164,7 +164,7 @@ jobs:
       - name: 🦀 Build Rust Helpers
         shell: bash
         run: |
-          cd helpers/flavor-rust
+          cd helpers/flavor-rs
           
           # Set version in Cargo.toml
           VERSION="${{ needs.validate.outputs.version }}"

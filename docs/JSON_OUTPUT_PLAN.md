@@ -76,7 +76,7 @@ Implement JSON output format capability for all CLI commands across Python, Go, 
 
 ### 3. Rust Implementation Tests
 
-#### Test File: `helpers/flavor-rust/src/output.rs` (test module)
+#### Test File: `helpers/flavor-rs/src/output.rs` (test module)
 ```rust
 #[cfg(test)]
 mod tests {
@@ -167,9 +167,9 @@ mod tests {
 - Update all `cmd/*/main.go` files
 
 ### Rust Files to Create
-- `helpers/flavor-rust/src/output/mod.rs`
-- `helpers/flavor-rust/src/output/handler.rs`
-- `helpers/flavor-rust/src/output/json.rs`
+- `helpers/flavor-rs/src/output/mod.rs`
+- `helpers/flavor-rs/src/output/handler.rs`
+- `helpers/flavor-rs/src/output/json.rs`
 - Update all binary crates
 
 ## Test Markers Strategy

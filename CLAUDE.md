@@ -69,7 +69,7 @@ go build -o ../bin/flavor-go-builder cmd/flavor-go-builder/main.go
 go build -o ../bin/flavor-go-launcher cmd/flavor-go-launcher/main.go
 
 # Build Rust helpers
-cd helpers/flavor-rust
+cd helpers/flavor-rs
 cargo build --release
 cp target/release/flavor-rs-builder ../bin/
 cp target/release/flavor-rs-launcher ../bin/
@@ -80,9 +80,9 @@ cp target/release/flavor-rs-launcher ../bin/
 # Build a PSP package using Python builder
 workenv/flavor_darwin_arm64/bin/flavor package --manifest manifest.json --output output.psp
 
-# Using different builders/launchers
-workenv/flavor_darwin_arm64/bin/flavor package --builder python --launcher go --output output.psp
-workenv/flavor_darwin_arm64/bin/flavor package --builder go --launcher rust --output output.psp
+# Using different launchers
+workenv/flavor_darwin_arm64/bin/flavor package --manifest manifest.json --launcher-bin helpers/bin/flavor-go-launcher --output output.psp
+workenv/flavor_darwin_arm64/bin/flavor package --manifest manifest.json --launcher-bin helpers/bin/flavor-rs-launcher --output output.psp
 
 # Test all builder/launcher combinations
 ./test-all-combinations.sh
@@ -101,7 +101,7 @@ workenv/flavor_darwin_arm64/bin/flavor package --builder go --launcher rust --ou
 2. **Multi-Language Implementation**
    - **Python** (`src/flavor/`): Primary implementation, packaging orchestration
    - **Go** (`helpers/flavor-go/`): High-performance builder/launcher
-   - **Rust** (`helpers/flavor-rust/`): Memory-safe builder/launcher
+   - **Rust** (`helpers/flavor-rs/`): Memory-safe builder/launcher
    
 3. **Key Python Modules**
    - `flavor.psp.format_2025.builder`: PSPF package building logic
@@ -178,7 +178,7 @@ cd helpers/taster
 ../../workenv/flavor_darwin_arm64/bin/flavor package \
   --manifest pyproject.toml \
   --output taster.psp \
-  --launcher rust \
+  --launcher-bin ../bin/flavor-rs-launcher \
   --key-seed test123
 
 # Test taster (no insecure flags needed!)
@@ -217,3 +217,4 @@ The launcher automatically removes volatile slots after setup:
 - UV and Python runtime are persistent for execution
 - This reduces cache size while maintaining functionality
 - always use absolute projects, such as `flavor.utils`, or `flavor.placeholders` or anything.
+- GitHub Actions must be manually triggered. Pushes do not trigger them.
