@@ -8,10 +8,19 @@ on:
         type: boolean
         default: false
   workflow_call:
+    inputs:
+      platforms:
+        description: 'Specific platform to build (e.g., linux_amd64)'
+        type: string
+        default: 'all'
+      artifact-prefix:
+        description: 'Prefix for artifact naming (usually a hash)'
+        type: string
+        default: ''
     outputs:
       artifact-name:
         description: 'Name of combined artifact'
-        value: all-helpers-${{ github.sha }}
+        value: ${{ inputs.artifact-prefix || 'all-helpers' }}-${{ inputs.platforms != 'all' && inputs.platforms || github.sha }}
 
 jobs:
   # Check cache before building
@@ -51,52 +60,52 @@ jobs:
           fi
 
   # Build helpers for each platform (Go + Rust in same job)
+  # Determine build matrix based on platforms input
+  setup-matrix:
+    name: Setup Build Matrix
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+    steps:
+      - name: Create build matrix
+        id: matrix
+        run: |
+          if [ "${{ inputs.platforms }}" == "all" ] || [ -z "${{ inputs.platforms }}" ]; then
+            # Build all platforms
+            echo 'matrix={"include":[{"os":"ubuntu-24.04","platform":"linux_amd64","rust_target":"x86_64-unknown-linux-gnu","goos":"linux","goarch":"amd64"},{"os":"ubuntu-24.04","platform":"linux_arm64","rust_target":"aarch64-unknown-linux-gnu","goos":"linux","goarch":"arm64","setup_cross":true},{"os":"macos-15","platform":"darwin_amd64","rust_target":"x86_64-apple-darwin","goos":"darwin","goarch":"amd64"},{"os":"macos-15","platform":"darwin_arm64","rust_target":"aarch64-apple-darwin","goos":"darwin","goarch":"arm64"},{"os":"windows-2025","platform":"windows_amd64","rust_target":"x86_64-pc-windows-msvc","goos":"windows","goarch":"amd64"}]}' >> $GITHUB_OUTPUT
+          else
+            # Build specific platform
+            case "${{ inputs.platforms }}" in
+              linux_amd64)
+                echo 'matrix={"include":[{"os":"ubuntu-24.04","platform":"linux_amd64","rust_target":"x86_64-unknown-linux-gnu","goos":"linux","goarch":"amd64"}]}' >> $GITHUB_OUTPUT
+                ;;
+              linux_arm64)
+                echo 'matrix={"include":[{"os":"ubuntu-24.04","platform":"linux_arm64","rust_target":"aarch64-unknown-linux-gnu","goos":"linux","goarch":"arm64","setup_cross":true}]}' >> $GITHUB_OUTPUT
+                ;;
+              darwin_amd64)
+                echo 'matrix={"include":[{"os":"macos-15","platform":"darwin_amd64","rust_target":"x86_64-apple-darwin","goos":"darwin","goarch":"amd64"}]}' >> $GITHUB_OUTPUT
+                ;;
+              darwin_arm64)
+                echo 'matrix={"include":[{"os":"macos-15","platform":"darwin_arm64","rust_target":"aarch64-apple-darwin","goos":"darwin","goarch":"arm64"}]}' >> $GITHUB_OUTPUT
+                ;;
+              windows_amd64)
+                echo 'matrix={"include":[{"os":"windows-2025","platform":"windows_amd64","rust_target":"x86_64-pc-windows-msvc","goos":"windows","goarch":"amd64"}]}' >> $GITHUB_OUTPUT
+                ;;
+              *)
+                echo "Unknown platform: ${{ inputs.platforms }}"
+                exit 1
+                ;;
+            esac
+          fi
+
   build-platform:
     name: Build ${{ matrix.platform }}
-    needs: check-cache
+    needs: [check-cache, setup-matrix]
     if: needs.check-cache.outputs.cache-hit != 'true' || github.event.inputs.force_rebuild == 'true'
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          # Linux x86_64
-          - os: ubuntu-24.04
-            platform: linux_amd64
-            rust_target: x86_64-unknown-linux-gnu
-            goos: linux
-            goarch: amd64
-            
-          # Linux ARM64 (cross-compile)
-          - os: ubuntu-24.04
-            platform: linux_arm64
-            rust_target: aarch64-unknown-linux-gnu
-            goos: linux
-            goarch: arm64
-            setup_cross: true
-            
-          # macOS ARM64 (native on M1 runners)
-          - os: macos-15
-            platform: darwin_arm64
-            rust_target: aarch64-apple-darwin
-            goos: darwin
-            goarch: arm64
-            
-          # macOS x86_64 (cross-compile on M1)
-          - os: macos-15
-            platform: darwin_amd64
-            rust_target: x86_64-apple-darwin
-            goos: darwin
-            goarch: amd64
-            
-          # Windows x86_64
-          - os: windows-2025
-            platform: windows_amd64
-            rust_target: x86_64-pc-windows-msvc
-            goos: windows
-            goarch: amd64
-            ext: .exe
-            
+      matrix: ${{ fromJson(needs.setup-matrix.outputs.matrix) }}
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
@@ -186,7 +195,7 @@ jobs:
       - name: 📤 Upload Platform Helpers
         uses: actions/upload-artifact@v4
         with:
-          name: helpers-${{ matrix.platform }}
+          name: ${{ inputs.artifact-prefix || 'helpers' }}-${{ matrix.platform }}
           path: helpers/bin/*-${{ matrix.platform }}*
           retention-days: 7
 
@@ -210,18 +219,21 @@ jobs:
           path: cached-helpers/**/*
           retention-days: 7
 
-  # Combine all platform artifacts into single artifact
+  # Combine all platform artifacts into single artifact (only for 'all' platforms)
   combine-helpers:
     name: 📦 Combine All Platforms
     needs: [build-platform, check-cache]
-    if: always() && (needs.build-platform.result == 'success' || needs.build-platform.result == 'skipped')
+    if: |
+      always() && 
+      (inputs.platforms == 'all' || inputs.platforms == '') &&
+      (needs.build-platform.result == 'success' || needs.build-platform.result == 'skipped')
     runs-on: ubuntu-latest
     steps:
       - name: 📥 Download all platform helpers
         if: needs.build-platform.result == 'success'
         uses: actions/download-artifact@v4
         with:
-          pattern: helpers-*
+          pattern: ${{ inputs.artifact-prefix || 'helpers' }}-*
           path: all-helpers
       
       - name: 🗂️ Organize helpers
@@ -251,7 +263,7 @@ jobs:
         if: needs.build-platform.result == 'success'
         uses: actions/upload-artifact@v4
         with:
-          name: all-helpers-${{ github.sha }}
+          name: ${{ inputs.artifact-prefix || 'all-helpers-' }}${{ inputs.artifact-prefix && '' || github.sha }}
           path: organized-helpers/**/*
           retention-days: 7
       
