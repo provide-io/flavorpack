@@ -1,19 +1,13 @@
 name: 🔨 Helper Pipeline
 
 on:
-  # Manual trigger
   workflow_dispatch:
     inputs:
       force_rebuild:
         description: 'Force rebuild even if cached'
         type: boolean
         default: false
-      platforms:
-        description: 'Specific platforms to rebuild (comma-separated, or "all")'
-        type: string
-        default: 'all'
   
-  # Trigger on helper code changes
   push:
     branches:
       - main
@@ -21,296 +15,756 @@ on:
     paths:
       - 'helpers/flavor-go/**'
       - 'helpers/flavor-rs/**'
-      - '.github/workflows/helper-pipeline*.yml'
-      - '.github/workflows/platform-helpers.yml'
+      - '.github/workflows/helper-pipeline.yml'
       - '.github/scripts/build-platform-helpers.sh'
-      - '.github/scripts/test-binaries.*'
   
   pull_request:
     paths:
       - 'helpers/flavor-go/**'
       - 'helpers/flavor-rs/**'
   
-  # Can be called by other workflows
   workflow_call:
     outputs:
       artifact-name:
-        description: 'Name of the uploaded artifact'
-        value: ${{ jobs.finalize.outputs.artifact-name }}
-      cache-hit:
-        description: 'Whether fully cached version was used'
-        value: ${{ jobs.check-cache.outputs.cache-hit }}
+        description: 'Name of the combined artifact'
+        value: flavor-helpers-${{ jobs.check-diff.outputs.version }}-all
 
 jobs:
-  # Calculate hash and check cache status
-  check-cache:
-    name: 📦 Check Helper Cache
+  # Check if helpers changed and get version
+  check-diff:
+    name: 📊 Check Changes
     runs-on: ubuntu-latest
     outputs:
-      hash: ${{ steps.hash.outputs.value }}
-      cache-hit: ${{ steps.check.outputs.cache-hit }}
-      cache-exists: ${{ steps.check.outputs.exists }}
-      last-status: ${{ steps.check.outputs.last-status }}
-      failed-platforms: ${{ steps.check.outputs.failed-platforms }}
-      artifact-name: ${{ steps.hash.outputs.artifact-name }}
+      helpers_changed: ${{ steps.diff.outputs.changed }}
+      hash: ${{ steps.diff.outputs.hash }}
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Need full history for git diff
+      
+      - name: 🔍 Check helpers diff
+        id: diff
+        env:
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          GITHUB_EVENT_BEFORE: ${{ github.event.before }}
+          GITHUB_BASE_REF: ${{ github.base_ref }}
+        run: |
+          chmod +x .github/scripts/check-helpers-diff.sh
+          .github/scripts/check-helpers-diff.sh
+      
+      - name: 🔍 Get version
+        id: version
+        run: |
+          chmod +x .github/scripts/get-helper-version.sh
+          .github/scripts/get-helper-version.sh
+
+  # Build for Linux AMD64
+  build-linux-amd64:
+    name: 🐧 Build Linux AMD64
+    needs: check-diff
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout
+        id: checkout
+        uses: actions/checkout@v4
+      
+      - name: 📊 Initialize build metadata
+        id: metadata
+        run: |
+          chmod +x .github/scripts/capture-build-metadata.sh
+          METADATA_FILE=$(.github/scripts/capture-build-metadata.sh \
+            "linux_amd64" \
+            "${{ needs.check-diff.outputs.version }}" \
+            "artifacts/metadata")
+          echo "metadata_file=$METADATA_FILE" >> $GITHUB_OUTPUT
+          
+          # Record container startup time
+          chmod +x .github/scripts/record-timing.sh
+          CONTAINER_START_TIME=$(($(date +%s%N) - ${GITHUB_RUN_STARTED_AT_NS:-$(date +%s%N)}))
+          .github/scripts/record-timing.sh "$METADATA_FILE" "container_startup" "record" "${CONTAINER_START_TIME}"
+      
+      - name: 💾 Check cache
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            artifacts/flavor-helpers-${{ needs.check-diff.outputs.version }}-linux_amd64.zip
+          key: flavor-helpers-${{ needs.check-diff.outputs.version }}-linux_amd64
+          lookup-only: ${{ inputs.force_rebuild == 'true' }}
+      
+      - name: ⏱️ Record cache check
+        if: always()
+        run: |
+          .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "cache_check" "end"
+          .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "cache_hit" "record" "${{ steps.cache.outputs.cache-hit }}"
+      
+      - name: 🐹 Setup Go
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+      
+      - name: 🦀 Setup Rust
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-unknown-linux-gnu
+      
+      - name: 🔨 Build
+        id: build
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "build_total" "start"
+          
+          # Build Go helpers
+          .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "build_go" "start"
+          chmod +x .github/scripts/build-platform-helpers.sh
+          .github/scripts/build-platform-helpers.sh linux_amd64 linux amd64 x86_64-unknown-linux-gnu
+          .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "build_go" "end"
+          
+          .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "build_total" "end"
+          
+          # Output for compatibility
+          echo "timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_OUTPUT
+      
+      - name: 📦 Package
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "package" "start"
+          chmod +x .github/scripts/package-with-metadata.sh
+          .github/scripts/package-with-metadata.sh \
+            "linux_amd64" \
+            "${{ needs.check-diff.outputs.version }}" \
+            "helpers/bin" \
+            "artifacts" \
+            "${{ steps.metadata.outputs.metadata_file }}"
+          .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "package" "end"
+      
+      - name: 📦 Extract cached binaries
+        if: steps.cache.outputs.cache-hit == 'true'
+        run: |
+          mkdir -p helpers/bin
+          if [ -f "artifacts/flavor-helpers-${{ needs.check-diff.outputs.version }}-linux_amd64.zip" ]; then
+            unzip -o "artifacts/flavor-helpers-${{ needs.check-diff.outputs.version }}-linux_amd64.zip" -d helpers/bin/
+          fi
+      
+      - name: 🧪 Test binaries
+        id: test
+        continue-on-error: true
+        run: |
+          chmod +x .github/scripts/test-platform-binaries.sh
+          mkdir -p artifacts/test-results
+          .github/scripts/test-platform-binaries.sh linux_amd64 helpers/bin artifacts/test-results
+      
+      
+      - name: 💾 Save cache
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            artifacts/flavor-helpers-${{ needs.check-diff.outputs.version }}-linux_amd64.zip
+          key: flavor-helpers-${{ needs.check-diff.outputs.version }}-linux_amd64
+      
+      - name: 📊 Generate metadata
+        if: always()
+        env:
+          BUILD_DURATION: ${{ steps.build.outputs.duration || '0' }}
+          BUILD_TIMESTAMP: ${{ steps.build.outputs.timestamp || '' }}
+        run: |
+          chmod +x .github/scripts/generate-platform-metadata.sh
+          .github/scripts/generate-platform-metadata.sh \
+            "linux_amd64" \
+            "${{ needs.check-diff.outputs.version }}" \
+            "${{ steps.cache.outputs.cache-hit == 'true' }}" \
+            "artifacts/metadata"
+      
+      - name: 📤 Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: flavor-helpers-${{ needs.check-diff.outputs.version }}-linux_amd64
+          path: |
+            artifacts/*.zip
+            artifacts/metadata/
+            artifacts/test-results/
+
+  # Build for Linux ARM64 (cross-compile)
+  build-linux-arm64:
+    name: 🐧 Build Linux ARM64
+    needs: check-diff
+    runs-on: ubuntu-latest
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
       
-      - name: 🔑 Calculate helper content hash
-        id: hash
-        run: |
-          # Hash all helper source files for cache key
-          HASH=$(find helpers/flavor-go helpers/flavor-rs -type f \
-            \( -name "*.go" -o -name "*.rs" -o -name "*.mod" -o -name "*.sum" -o -name "Cargo.*" \) \
-            -exec sha256sum {} \; | sort | sha256sum | cut -d' ' -f1 | cut -c1-16)
-          
-          echo "value=$HASH" >> $GITHUB_OUTPUT
-          echo "artifact-name=helpers-$HASH" >> $GITHUB_OUTPUT
-          echo "📦 Helper content hash: $HASH"
+      - name: 💾 Check cache
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            artifacts/flavor-helpers-${{ needs.check-diff.outputs.version }}-linux_arm64.zip
+          key: flavor-helpers-${{ needs.check-diff.outputs.version }}-linux_arm64
+          lookup-only: ${{ inputs.force_rebuild == 'true' }}
       
-      - name: 🔍 Check cache and last build status
-        id: check
-        run: |
-          ARTIFACT_NAME="${{ steps.hash.outputs.artifact-name }}"
-          echo "🔍 Checking for artifact: $ARTIFACT_NAME"
-          
-          # Check if artifact exists
-          ARTIFACT_JSON=$(gh api \
-            -H "Accept: application/vnd.github+json" \
-            /repos/${{ github.repository }}/actions/artifacts \
-            --jq ".artifacts[] | select(.name == \"$ARTIFACT_NAME\")" 2>/dev/null || echo "")
-          
-          if [ -n "$ARTIFACT_JSON" ]; then
-            echo "exists=true" >> $GITHUB_OUTPUT
-            echo "✅ Found existing artifact"
-            
-            # Get the workflow run that created this artifact
-            RUN_ID=$(echo "$ARTIFACT_JSON" | jq -r '.workflow_run.id' | head -1)
-            
-            if [ -n "$RUN_ID" ]; then
-              # Check if all test jobs passed
-              FAILED_JOBS=$(gh api /repos/${{ github.repository }}/actions/runs/$RUN_ID/jobs \
-                --jq '.jobs[] | select(.conclusion == "failure" and (.name | contains("Build") or .name | contains("Test"))) | .name' 2>/dev/null || echo "")
-              
-              if [ -z "$FAILED_JOBS" ]; then
-                echo "✅ All platforms passed in previous build"
-                echo "last-status=success" >> $GITHUB_OUTPUT
-                echo "failed-platforms=" >> $GITHUB_OUTPUT
-                echo "cache-hit=true" >> $GITHUB_OUTPUT
-              else
-                echo "⚠️ Some platforms failed in previous build:"
-                echo "$FAILED_JOBS"
-                
-                # Extract platform names from failed jobs
-                FAILED_PLATFORMS=$(echo "$FAILED_JOBS" | grep -oE "(linux|darwin|windows)_(amd64|arm64)" | sort -u | tr '\n' ',' | sed 's/,$//')
-                
-                # If no platforms extracted, check job names
-                if [ -z "$FAILED_PLATFORMS" ]; then
-                  # Try alternative patterns
-                  FAILED_PLATFORMS=$(echo "$FAILED_JOBS" | grep -oE "ubuntu|macos|windows" | \
-                    sed 's/ubuntu/linux_amd64/g; s/macos/darwin_arm64/g; s/windows/windows_amd64/g' | \
-                    sort -u | tr '\n' ',' | sed 's/,$//')
-                fi
-                
-                echo "last-status=partial" >> $GITHUB_OUTPUT
-                echo "failed-platforms=${FAILED_PLATFORMS:-linux_amd64}" >> $GITHUB_OUTPUT
-                echo "cache-hit=false" >> $GITHUB_OUTPUT
-              fi
-            else
-              # Artifact exists but can't determine status - assume success
-              echo "last-status=success" >> $GITHUB_OUTPUT
-              echo "failed-platforms=" >> $GITHUB_OUTPUT
-              echo "cache-hit=true" >> $GITHUB_OUTPUT
-            fi
-          else
-            echo "❌ No artifact found for hash $HASH"
-            echo "exists=false" >> $GITHUB_OUTPUT
-            echo "last-status=none" >> $GITHUB_OUTPUT
-            echo "failed-platforms=all" >> $GITHUB_OUTPUT
-            echo "cache-hit=false" >> $GITHUB_OUTPUT
-          fi
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - name: 🐹 Setup Go
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
       
-      - name: 📊 Cache status summary
+      - name: 🦀 Setup Rust
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-unknown-linux-gnu
+      
+      - name: 🔧 Setup cross-compilation
+        if: steps.cache.outputs.cache-hit != 'true'
         run: |
-          echo "### 🔍 Helper Cache Analysis" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Content Hash**: \`${{ steps.hash.outputs.value }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "**Artifact Name**: \`${{ steps.hash.outputs.artifact-name }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          
-          if [ "${{ steps.check.outputs.cache-hit }}" == "true" ]; then
-            echo "✅ **Fully cached** - All platforms built and tested successfully" >> $GITHUB_STEP_SUMMARY
-            if [ "${{ inputs.force_rebuild }}" != "true" ]; then
-              echo "⏭️ Will skip build and use cached artifacts" >> $GITHUB_STEP_SUMMARY
-            else
-              echo "⚠️ Force rebuild requested - will rebuild all platforms" >> $GITHUB_STEP_SUMMARY
-            fi
-          elif [ "${{ steps.check.outputs.last-status }}" == "partial" ]; then
-            echo "⚠️ **Partially cached** - Some platforms need rebuilding" >> $GITHUB_STEP_SUMMARY
-            echo "Failed platforms: \`${{ steps.check.outputs.failed-platforms }}\`" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "🔨 **Not cached** - Will build all platforms" >> $GITHUB_STEP_SUMMARY
-          fi
-  
-  # Determine what needs to be built
-  plan-builds:
-    name: 📋 Plan Build Matrix
-    needs: check-cache
-    runs-on: ubuntu-latest
-    outputs:
-      matrix: ${{ steps.plan.outputs.matrix }}
-      skip-all: ${{ steps.plan.outputs.skip-all }}
-      platforms: ${{ steps.plan.outputs.platforms }}
-    steps:
-      - name: 📋 Determine build matrix
-        id: plan
+          chmod +x .github/scripts/setup-cross-compile.sh
+          .github/scripts/setup-cross-compile.sh linux_arm64
+      
+      - name: 🔨 Build
+        id: build
+        if: steps.cache.outputs.cache-hit != 'true'
         run: |
-          # Check if we should skip everything
-          if [ "${{ needs.check-cache.outputs.cache-hit }}" == "true" ] && [ "${{ inputs.force_rebuild }}" != "true" ]; then
-            echo "✅ Using fully cached build - skipping all builds"
-            echo "skip-all=true" >> $GITHUB_OUTPUT
-            echo 'matrix={"platform":[]}' >> $GITHUB_OUTPUT
-            echo "platforms=" >> $GITHUB_OUTPUT
-          else
-            echo "skip-all=false" >> $GITHUB_OUTPUT
-            
-            # Determine which platforms to build
-            if [ "${{ inputs.force_rebuild }}" == "true" ]; then
-              if [ "${{ inputs.platforms }}" == "all" ]; then
-                # Force rebuild all
-                PLATFORMS="linux_amd64,linux_arm64,darwin_amd64,darwin_arm64,windows_amd64"
-                echo "🔨 Force rebuilding all platforms"
-              else
-                # Force rebuild specific platforms
-                PLATFORMS="${{ inputs.platforms }}"
-                echo "🔨 Force rebuilding platforms: $PLATFORMS"
-              fi
-            elif [ "${{ needs.check-cache.outputs.last-status }}" == "partial" ]; then
-              # Rebuild only failed platforms
-              PLATFORMS="${{ needs.check-cache.outputs.failed-platforms }}"
-              echo "🔧 Rebuilding failed platforms: $PLATFORMS"
-            else
-              # No cache - build all
-              PLATFORMS="linux_amd64,linux_arm64,darwin_amd64,darwin_arm64,windows_amd64"
-              echo "🔨 Building all platforms (no cache)"
-            fi
-            
-            # Create matrix JSON
-            MATRIX='{"platform":['
-            IFS=',' read -ra PLATFORM_ARRAY <<< "$PLATFORMS"
-            for platform in "${PLATFORM_ARRAY[@]}"; do
-              platform=$(echo "$platform" | xargs) # trim whitespace
-              if [ -n "$platform" ]; then
-                MATRIX="$MATRIX\"$platform\","
-              fi
-            done
-            MATRIX="${MATRIX%,}]}"
-            
-            echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
-            echo "platforms=$PLATFORMS" >> $GITHUB_OUTPUT
-            
-            echo "📋 Build matrix: $MATRIX"
+          chmod +x .github/scripts/build-platform-helpers.sh
+          BUILD_START=$(date +%s)
+          .github/scripts/build-platform-helpers.sh linux_arm64 linux arm64 aarch64-unknown-linux-gnu
+          BUILD_END=$(date +%s)
+          BUILD_DURATION=$((BUILD_END - BUILD_START))
+          echo "duration=$BUILD_DURATION" >> $GITHUB_OUTPUT
+          echo "timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_OUTPUT
+      
+      - name: 📦 Package
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p artifacts
+          cd helpers/bin
+          zip ../../artifacts/flavor-helpers-${{ needs.check-diff.outputs.version }}-linux_arm64.zip *-linux_arm64
+          cd ../..
+      
+      - name: 📦 Extract cached binaries
+        if: steps.cache.outputs.cache-hit == 'true'
+        run: |
+          mkdir -p helpers/bin
+          if [ -f "artifacts/flavor-helpers-${{ needs.check-diff.outputs.version }}-linux_arm64.zip" ]; then
+            unzip -o "artifacts/flavor-helpers-${{ needs.check-diff.outputs.version }}-linux_arm64.zip" -d helpers/bin/
           fi
       
-      - name: 📊 Build plan summary
-        run: |
-          echo "### 📋 Build Plan" >> $GITHUB_STEP_SUMMARY
-          if [ "${{ steps.plan.outputs.skip-all }}" == "true" ]; then
-            echo "✅ **No builds needed** - Using fully cached artifacts" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "🔨 **Platforms to build**: ${{ steps.plan.outputs.platforms }}" >> $GITHUB_STEP_SUMMARY
-          fi
-  
-  # Build helpers for selected platforms
-  build-platforms:
-    name: 🔨 Build ${{ matrix.platform }}
-    needs: [check-cache, plan-builds]
-    if: needs.plan-builds.outputs.skip-all != 'true'
-    strategy:
-      fail-fast: false
-      matrix: ${{ fromJson(needs.plan-builds.outputs.matrix) }}
-    uses: ./.github/workflows/platform-helpers.yml
-    with:
-      platforms: ${{ matrix.platform }}
-      artifact-prefix: ${{ needs.check-cache.outputs.hash }}
-    secrets: inherit
-  
-  # Combine all artifacts (new and cached)
-  finalize:
-    name: 📦 Finalize Artifacts
-    needs: [check-cache, plan-builds, build-platforms]
-    if: always()
-    runs-on: ubuntu-latest
-    outputs:
-      artifact-name: ${{ steps.final.outputs.artifact-name }}
-    steps:
-      - name: 📥 Download existing artifact (if partial rebuild)
-        if: needs.check-cache.outputs.cache-exists == 'true' && needs.plan-builds.outputs.skip-all != 'true'
+      - name: 🧪 Test binaries
+        id: test
         continue-on-error: true
-        uses: actions/download-artifact@v4
-        with:
-          name: ${{ needs.check-cache.outputs.artifact-name }}
-          path: cached-helpers
-      
-      - name: 📥 Download newly built platforms
-        if: needs.plan-builds.outputs.skip-all != 'true'
-        uses: actions/download-artifact@v4
-        with:
-          pattern: ${{ needs.check-cache.outputs.hash }}-*
-          path: new-helpers
-      
-      - name: 🔀 Merge artifacts
-        if: needs.plan-builds.outputs.skip-all != 'true'
         run: |
-          mkdir -p final-helpers/bin
-          
-          # Start with cached helpers if they exist
-          if [ -d cached-helpers ]; then
-            echo "📦 Copying cached helpers..."
-            find cached-helpers -type f -name "flavor-*" -exec cp {} final-helpers/bin/ \; 2>/dev/null || true
-          fi
-          
-          # Overwrite with newly built helpers
-          if [ -d new-helpers ]; then
-            echo "📦 Adding newly built helpers..."
-            find new-helpers -type f -name "flavor-*" -exec cp {} final-helpers/bin/ \;
-          fi
-          
-          echo "📋 Final artifact contents:"
-          ls -la final-helpers/bin/ || echo "No binaries found"
+          chmod +x .github/scripts/test-platform-binaries.sh
+          mkdir -p artifacts/test-results
+          .github/scripts/test-platform-binaries.sh linux_arm64 helpers/bin artifacts/test-results
       
-      - name: 📤 Upload final artifact
-        id: final
-        if: needs.plan-builds.outputs.skip-all != 'true'
+      
+      - name: 💾 Save cache
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            artifacts/flavor-helpers-${{ needs.check-diff.outputs.version }}-linux_arm64.zip
+          key: flavor-helpers-${{ needs.check-diff.outputs.version }}-linux_arm64
+      
+      - name: 📊 Generate metadata
+        if: always()
+        env:
+          BUILD_DURATION: ${{ steps.build.outputs.duration || '0' }}
+          BUILD_TIMESTAMP: ${{ steps.build.outputs.timestamp || '' }}
+        run: |
+          chmod +x .github/scripts/generate-platform-metadata.sh
+          .github/scripts/generate-platform-metadata.sh \
+            "linux_arm64" \
+            "${{ needs.check-diff.outputs.version }}" \
+            "${{ steps.cache.outputs.cache-hit == 'true' }}" \
+            "artifacts/metadata"
+      
+      - name: 📤 Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ needs.check-cache.outputs.artifact-name }}
-          path: final-helpers/**
-          retention-days: 30
-          overwrite: true
+          name: flavor-helpers-${{ needs.check-diff.outputs.version }}-linux_arm64
+          path: |
+            artifacts/*.zip
+            artifacts/metadata/
+            artifacts/test-results/
+
+  # Build for Darwin AMD64
+  build-darwin-amd64:
+    name: 🍎 Build Darwin AMD64
+    needs: check-diff
+    runs-on: macos-13  # Intel Mac
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
       
-      - name: ✅ Set output for cached build
-        if: needs.plan-builds.outputs.skip-all == 'true'
-        id: cached
-        run: |
-          echo "artifact-name=${{ needs.check-cache.outputs.artifact-name }}" >> $GITHUB_OUTPUT
+      - name: 💾 Check cache
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            artifacts/flavor-helpers-${{ needs.check-diff.outputs.version }}-darwin_amd64.zip
+          key: flavor-helpers-${{ needs.check-diff.outputs.version }}-darwin_amd64
+          lookup-only: ${{ inputs.force_rebuild == 'true' }}
       
-      - name: 📊 Final summary
+      - name: 🐹 Setup Go
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+      
+      - name: 🦀 Setup Rust
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-apple-darwin
+      
+      - name: 🔨 Build
+        id: build
+        if: steps.cache.outputs.cache-hit != 'true'
         run: |
-          echo "### 📦 Helper Pipeline Complete" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          
-          if [ "${{ needs.plan-builds.outputs.skip-all }}" == "true" ]; then
-            echo "✅ **Used cached artifacts** - No rebuild needed" >> $GITHUB_STEP_SUMMARY
-          elif [ "${{ needs.build-platforms.result }}" == "success" ]; then
-            echo "✅ **Build successful** - All requested platforms built" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "⚠️ **Partial success** - Some platforms may have failed" >> $GITHUB_STEP_SUMMARY
+          chmod +x .github/scripts/build-platform-helpers.sh
+          BUILD_START=$(date +%s)
+          .github/scripts/build-platform-helpers.sh darwin_amd64 darwin amd64 x86_64-apple-darwin
+          BUILD_END=$(date +%s)
+          BUILD_DURATION=$((BUILD_END - BUILD_START))
+          echo "duration=$BUILD_DURATION" >> $GITHUB_OUTPUT
+          echo "timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_OUTPUT
+      
+      - name: 📦 Package
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p artifacts
+          cd helpers/bin
+          zip ../../artifacts/flavor-helpers-${{ needs.check-diff.outputs.version }}-darwin_amd64.zip *-darwin_amd64
+          cd ../..
+      
+      - name: 📦 Extract cached binaries
+        if: steps.cache.outputs.cache-hit == 'true'
+        run: |
+          mkdir -p helpers/bin
+          if [ -f "artifacts/flavor-helpers-${{ needs.check-diff.outputs.version }}-darwin_amd64.zip" ]; then
+            unzip -o "artifacts/flavor-helpers-${{ needs.check-diff.outputs.version }}-darwin_amd64.zip" -d helpers/bin/
           fi
+      
+      - name: 🧪 Test binaries
+        id: test
+        continue-on-error: true
+        run: |
+          chmod +x .github/scripts/test-platform-binaries.sh
+          mkdir -p artifacts/test-results
+          .github/scripts/test-platform-binaries.sh darwin_amd64 helpers/bin artifacts/test-results
+      
+      
+      - name: 💾 Save cache
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            artifacts/flavor-helpers-${{ needs.check-diff.outputs.version }}-darwin_amd64.zip
+          key: flavor-helpers-${{ needs.check-diff.outputs.version }}-darwin_amd64
+      
+      - name: 📊 Generate metadata
+        if: always()
+        env:
+          BUILD_DURATION: ${{ steps.build.outputs.duration || '0' }}
+          BUILD_TIMESTAMP: ${{ steps.build.outputs.timestamp || '' }}
+        run: |
+          chmod +x .github/scripts/generate-platform-metadata.sh
+          .github/scripts/generate-platform-metadata.sh \
+            "darwin_amd64" \
+            "${{ needs.check-diff.outputs.version }}" \
+            "${{ steps.cache.outputs.cache-hit == 'true' }}" \
+            "artifacts/metadata"
+      
+      - name: 📤 Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: flavor-helpers-${{ needs.check-diff.outputs.version }}-darwin_amd64
+          path: |
+            artifacts/*.zip
+            artifacts/metadata/
+            artifacts/test-results/
+
+  # Build for Darwin ARM64
+  build-darwin-arm64:
+    name: 🍎 Build Darwin ARM64
+    needs: check-diff
+    runs-on: macos-15  # M1 Mac
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 💾 Check cache
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            artifacts/flavor-helpers-${{ needs.check-diff.outputs.version }}-darwin_arm64.zip
+          key: flavor-helpers-${{ needs.check-diff.outputs.version }}-darwin_arm64
+          lookup-only: ${{ inputs.force_rebuild == 'true' }}
+      
+      - name: 🐹 Setup Go
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+      
+      - name: 🦀 Setup Rust
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin
+      
+      - name: 🔨 Build
+        id: build
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          chmod +x .github/scripts/build-platform-helpers.sh
+          BUILD_START=$(date +%s)
+          .github/scripts/build-platform-helpers.sh darwin_arm64 darwin arm64 aarch64-apple-darwin
+          BUILD_END=$(date +%s)
+          BUILD_DURATION=$((BUILD_END - BUILD_START))
+          echo "duration=$BUILD_DURATION" >> $GITHUB_OUTPUT
+          echo "timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_OUTPUT
+      
+      - name: 📦 Package
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p artifacts
+          cd helpers/bin
+          zip ../../artifacts/flavor-helpers-${{ needs.check-diff.outputs.version }}-darwin_arm64.zip *-darwin_arm64
+          cd ../..
+      
+      - name: 📦 Extract cached binaries
+        if: steps.cache.outputs.cache-hit == 'true'
+        run: |
+          mkdir -p helpers/bin
+          if [ -f "artifacts/flavor-helpers-${{ needs.check-diff.outputs.version }}-darwin_arm64.zip" ]; then
+            unzip -o "artifacts/flavor-helpers-${{ needs.check-diff.outputs.version }}-darwin_arm64.zip" -d helpers/bin/
+          fi
+      
+      - name: 🧪 Test binaries
+        id: test
+        continue-on-error: true
+        run: |
+          chmod +x .github/scripts/test-platform-binaries.sh
+          mkdir -p artifacts/test-results
+          .github/scripts/test-platform-binaries.sh darwin_arm64 helpers/bin artifacts/test-results
+      
+      
+      - name: 💾 Save cache
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            artifacts/flavor-helpers-${{ needs.check-diff.outputs.version }}-darwin_arm64.zip
+          key: flavor-helpers-${{ needs.check-diff.outputs.version }}-darwin_arm64
+      
+      - name: 📊 Generate metadata
+        if: always()
+        env:
+          BUILD_DURATION: ${{ steps.build.outputs.duration || '0' }}
+          BUILD_TIMESTAMP: ${{ steps.build.outputs.timestamp || '' }}
+        run: |
+          chmod +x .github/scripts/generate-platform-metadata.sh
+          .github/scripts/generate-platform-metadata.sh \
+            "darwin_arm64" \
+            "${{ needs.check-diff.outputs.version }}" \
+            "${{ steps.cache.outputs.cache-hit == 'true' }}" \
+            "artifacts/metadata"
+      
+      - name: 📤 Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: flavor-helpers-${{ needs.check-diff.outputs.version }}-darwin_arm64
+          path: |
+            artifacts/*.zip
+            artifacts/metadata/
+            artifacts/test-results/
+
+  # Build for Windows AMD64
+  build-windows-amd64:
+    name: 🪟 Build Windows AMD64
+    needs: check-diff
+    runs-on: windows-2025
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 💾 Check cache
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            artifacts/flavor-helpers-${{ needs.check-diff.outputs.version }}-windows_amd64.zip
+          key: flavor-helpers-${{ needs.check-diff.outputs.version }}-windows_amd64
+          lookup-only: ${{ inputs.force_rebuild == 'true' }}
+      
+      - name: 🐹 Setup Go
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+      
+      - name: 🦀 Setup Rust
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+      
+      - name: 🔨 Build
+        id: build
+        if: steps.cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          chmod +x .github/scripts/build-platform-helpers.sh
+          BUILD_START=$(date +%s)
+          .github/scripts/build-platform-helpers.sh windows_amd64 windows amd64 x86_64-pc-windows-msvc
+          BUILD_END=$(date +%s)
+          BUILD_DURATION=$((BUILD_END - BUILD_START))
+          echo "duration=$BUILD_DURATION" >> $GITHUB_OUTPUT
+          echo "timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_OUTPUT
+      
+      - name: 📦 Package
+        if: steps.cache.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path artifacts
+          $files = Get-ChildItem -Path helpers/bin -Filter "*-windows_amd64.exe"
+          Compress-Archive -Path $files.FullName -DestinationPath "artifacts/flavor-helpers-${{ needs.check-diff.outputs.version }}-windows_amd64.zip"
+      
+      - name: 📦 Extract cached binaries
+        if: steps.cache.outputs.cache-hit == 'true'
+        shell: bash
+        run: |
+          mkdir -p helpers/bin
+          if [ -f "artifacts/flavor-helpers-${{ needs.check-diff.outputs.version }}-windows_amd64.zip" ]; then
+            unzip -o "artifacts/flavor-helpers-${{ needs.check-diff.outputs.version }}-windows_amd64.zip" -d helpers/bin/
+          fi
+      
+      - name: 🧪 Test binaries
+        id: test
+        continue-on-error: true
+        shell: bash
+        run: |
+          chmod +x .github/scripts/test-platform-binaries.sh
+          mkdir -p artifacts/test-results
+          .github/scripts/test-platform-binaries.sh windows_amd64 helpers/bin artifacts/test-results || echo "test_failed=true" >> $GITHUB_OUTPUT
+      
+      
+      - name: 💾 Save cache
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            artifacts/flavor-helpers-${{ needs.check-diff.outputs.version }}-windows_amd64.zip
+          key: flavor-helpers-${{ needs.check-diff.outputs.version }}-windows_amd64
+      
+      - name: 📊 Generate metadata
+        if: always()
+        shell: bash
+        env:
+          BUILD_DURATION: ${{ steps.build.outputs.duration || '0' }}
+          BUILD_TIMESTAMP: ${{ steps.build.outputs.timestamp || '' }}
+        run: |
+          chmod +x .github/scripts/generate-platform-metadata.sh
+          .github/scripts/generate-platform-metadata.sh \
+            "windows_amd64" \
+            "${{ needs.check-diff.outputs.version }}" \
+            "${{ steps.cache.outputs.cache-hit == 'true' }}" \
+            "artifacts/metadata"
+      
+      - name: 📤 Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: flavor-helpers-${{ needs.check-diff.outputs.version }}-windows_amd64
+          path: |
+            artifacts/*.zip
+            artifacts/metadata/
+            artifacts/test-results/
+
+  # Test cross-platform binaries
+  test-cross-platform:
+    name: 🧪 Cross-Platform Tests
+    needs: [check-diff, build-linux-amd64, build-linux-arm64, build-darwin-amd64, build-darwin-arm64, build-windows-amd64]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout (for scripts)
+        uses: actions/checkout@v4
+      
+      - name: 🔧 Setup QEMU
+        run: |
+          chmod +x .github/scripts/setup-qemu-emulation.sh
+          .github/scripts/setup-qemu-emulation.sh
+      
+      - name: 📥 Download Linux artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: flavor-helpers-${{ needs.check-diff.outputs.version }}-linux*
+          path: artifacts
+      
+      - name: 🧪 Test Linux ARM64 on AMD64
+        run: |
+          # Extract Linux ARM64 binaries
+          mkdir -p test-bin
+          unzip -o artifacts/flavor-helpers-${{ needs.check-diff.outputs.version }}-linux_arm64/*.zip -d test-bin/
           
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Artifact**: \`${{ needs.check-cache.outputs.artifact-name }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "**Hash**: \`${{ needs.check-cache.outputs.hash }}\`" >> $GITHUB_STEP_SUMMARY
+          # Test with QEMU emulation
+          chmod +x .github/scripts/test-platform-binaries.sh
+          mkdir -p cross-test-results
+          .github/scripts/test-platform-binaries.sh linux_arm64 test-bin cross-test-results || true
+      
+      - name: 🧪 Test Linux AMD64 on this runner
+        run: |
+          # Extract Linux AMD64 binaries
+          mkdir -p test-bin-amd64
+          unzip -o artifacts/flavor-helpers-${{ needs.check-diff.outputs.version }}-linux_amd64/*.zip -d test-bin-amd64/
+          
+          # Test natively
+          mkdir -p cross-test-results
+          .github/scripts/test-platform-binaries.sh linux_amd64 test-bin-amd64 cross-test-results || true
+      
+      - name: 📤 Upload cross-test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: cross-test-results-${{ needs.check-diff.outputs.version }}
+          path: cross-test-results/
+
+  # Combine all artifacts
+  combine:
+    name: 📦 Combine Artifacts
+    needs: [check-diff, build-linux-amd64, build-linux-arm64, build-darwin-amd64, build-darwin-arm64, build-windows-amd64]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout (for scripts)
+        uses: actions/checkout@v4
+      
+      - name: 📥 Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: flavor-helpers-${{ needs.check-diff.outputs.version }}-*
+          path: platform-artifacts
+      
+      - name: 🔀 Combine binaries
+        run: |
+          mkdir -p final
+          cd platform-artifacts
+          for dir in */; do
+            if [ -f "$dir"*.zip ]; then
+              cp "$dir"*.zip ../final/
+            fi
+          done
+          cd ../final
+          
+          # Extract all zips to create combined
+          mkdir -p extracted
+          for zip in flavor-helpers-*-*.zip; do
+            if [[ "$zip" != *"-all.zip" ]]; then
+              unzip -o "$zip" -d extracted/
+            fi
+          done
+          cd extracted
+          zip ../flavor-helpers-${{ needs.check-diff.outputs.version }}-all.zip *
+          cd ../..
+      
+      - name: 📊 Combine metadata
+        run: |
+          chmod +x .github/scripts/combine-platform-metadata.sh
+          .github/scripts/combine-platform-metadata.sh \
+            "platform-artifacts" \
+            "${{ needs.check-diff.outputs.version }}" \
+            "final/combined-metadata.json"
+      
+      - name: 🧪 Combine test results
+        run: |
+          chmod +x .github/scripts/combine-test-results.sh
+          .github/scripts/combine-test-results.sh \
+            "platform-artifacts" \
+            "final/combined-test-report.json"
+      
+      - name: 📊 Generate checksums
+        run: |
+          cd final
+          chmod +x ../.github/scripts/generate-checksums.sh
+          ../.github/scripts/generate-checksums.sh \
+            "${{ needs.check-diff.outputs.version }}" \
+            "${{ needs.check-diff.outputs.hash }}"
+          cd ..
+      
+      - name: 📤 Upload combined
+        uses: actions/upload-artifact@v4
+        with:
+          name: flavor-helpers-${{ needs.check-diff.outputs.version }}-all
+          path: |
+            final/*.zip
+            final/*.txt
+            final/*.json
+      
+      - name: 📤 Upload test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ needs.check-diff.outputs.version }}
+          path: |
+            final/combined-test-report.json
+      
+      - name: 📤 Upload metadata artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-metadata-${{ needs.check-diff.outputs.version }}
+          path: |
+            final/combined-metadata.json
+            platform-artifacts/*/metadata/
+  
+  # Validate and generate summary
+  validate:
+    name: 🧪 Validate & Summarize
+    needs: [check-diff, combine, test-cross-platform]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout (for scripts)
+        uses: actions/checkout@v4
+      
+      - name: 📥 Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: flavor-helpers-${{ needs.check-diff.outputs.version }}-*
+          path: artifacts
+      
+      - name: 📥 Download test results
+        uses: actions/download-artifact@v4
+        with:
+          name: test-results-${{ needs.check-diff.outputs.version }}
+          path: artifacts/test-results
+      
+      - name: 🔍 Validate artifacts
+        id: validate
+        run: |
+          chmod +x .github/scripts/validate-helper-pipeline.sh
+          .github/scripts/validate-helper-pipeline.sh artifacts validation-report.json || true
+      
+      - name: 📊 Generate summary
+        if: always()
+        env:
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_SERVER_URL: ${{ github.server_url }}
+        run: |
+          chmod +x .github/scripts/generate-pipeline-summary.py
+          python3 .github/scripts/generate-pipeline-summary.py \
+            validation-report.json \
+            "${{ github.run_id }}"
+      
+      - name: 📤 Upload validation report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: validation-report-${{ needs.check-diff.outputs.version }}
+          path: |
+            validation-report.json
+            pipeline-summary.md

@@ -10,6 +10,41 @@ Flavor is a packaging system implementing the Progressive Secure Package Format 
 
 **NEVER add environment variable-specific logic in the helpers (Rust/Go)**. The helpers should be generic and data-driven. All environment variable configuration should come from the metadata. Do not add special cases like "if command is UV then set UV_SYSTEM_PYTHON" - this violates the separation of concerns. The helpers are meant to be generic executors that work with ANY package based on metadata alone.
 
+## CI/CD Pipeline Architecture
+
+### Helper Pipeline Independence
+The helper pipeline (`helper-pipeline.yml`) is **completely standalone** and independent. Key principles:
+
+1. **No Direct Dependencies**: The helper pipeline should NEVER be called as a reusable workflow from other workflows
+2. **Artifact-Based Integration**: Workflows that need helpers must download artifacts from a successful helper pipeline run
+3. **Automatic Triggering**: If helper artifacts don't exist:
+   - Use `workflow_run` trigger or `dawidd6/action-download-artifact` action
+   - Trigger helper pipeline if needed
+   - Wait for completion
+   - Fail the workflow if helper pipeline fails
+4. **Clean Separation**: Helper pipeline ONLY builds helpers and validates them - no other logic
+
+#### Recommended Approach Using GitHub Actions Native Features
+
+**Option 1: workflow_run trigger** (for dependent workflows)
+```yaml
+on:
+  workflow_run:
+    workflows: ["🔨 Helper Pipeline"]
+    types: [completed]
+    branches: [main]
+```
+
+**Option 2: dawidd6/action-download-artifact** (most flexible)
+```yaml
+- uses: dawidd6/action-download-artifact@v6
+  with:
+    workflow: helper-pipeline.yml
+    name: flavor-helpers-0.3.0-all
+    path: ./helpers
+    workflow_conclusion: success
+```
+
 ## Development Environment Setup
 
 Always use the workenv virtual environment system:
@@ -218,3 +253,4 @@ The launcher automatically removes volatile slots after setup:
 - This reduces cache size while maintaining functionality
 - always use absolute projects, such as `flavor.utils`, or `flavor.placeholders` or anything.
 - GitHub Actions must be manually triggered. Pushes do not trigger them.
+- when building github workflows, you will default to looking for/updating scripts in .github/scripts. you will *NOT* put more than a few lines in any workflow yaml.
