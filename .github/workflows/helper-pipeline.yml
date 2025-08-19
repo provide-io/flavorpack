@@ -11,7 +11,7 @@ on:
     outputs:
       artifact-name:
         description: 'Name of helper artifacts'
-        value: helpers-${{ github.sha }}
+        value: all-helpers-${{ github.sha }}
       cache-hit:
         description: 'Whether cache was used'
         value: ${{ jobs.check-cache.outputs.cache-hit }}
@@ -89,7 +89,7 @@ jobs:
       - name: 📤 Upload from cache
         uses: actions/upload-artifact@v4
         with:
-          name: helpers-${{ github.sha }}
+          name: all-helpers-${{ github.sha }}
           path: cached-helpers/**/*
           retention-days: 7
       
@@ -129,7 +129,7 @@ jobs:
       - name: 📦 Download helpers
         uses: actions/download-artifact@v4
         with:
-          name: helpers-${{ github.sha }}
+          name: all-helpers-${{ github.sha }}
           path: helpers
       
       - name: 🔐 Set permissions
@@ -166,7 +166,7 @@ jobs:
       - name: 📦 Download helpers
         uses: actions/download-artifact@v4
         with:
-          name: helpers-${{ github.sha }}
+          name: all-helpers-${{ github.sha }}
           path: cached-helpers
       
       - name: 💾 Save to cache
