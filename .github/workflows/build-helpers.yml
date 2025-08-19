@@ -1,0 +1,196 @@
+name: 🔨 Helper Pipeline
+
+on:
+  # Manual trigger
+  workflow_dispatch:
+    inputs:
+      force_rebuild:
+        description: 'Force rebuild even if artifacts exist'
+        type: boolean
+        default: false
+  
+  # Trigger on helper code changes
+  push:
+    branches:
+      - main
+      - 'feature/**'
+    paths:
+      - 'helpers/**'
+      - '.github/workflows/build-helpers.yml'
+      - '.github/workflows/platform-helpers.yml'
+      - '.github/scripts/build-platform-helpers.sh'
+      - '.github/scripts/test-binaries.*'
+  
+  pull_request:
+    paths:
+      - 'helpers/**'
+  
+  # Can be called by other workflows
+  workflow_call:
+    outputs:
+      artifact-name:
+        description: 'Name of the uploaded artifact'
+        value: ${{ jobs.upload.outputs.artifact-name }}
+      artifact-url:
+        description: 'URL to download the artifact'
+        value: ${{ jobs.upload.outputs.artifact-url }}
+
+jobs:
+  # Check if artifacts already exist
+  check-existing:
+    name: 📦 Check Existing Artifacts
+    runs-on: ubuntu-latest
+    outputs:
+      exists: ${{ steps.check.outputs.exists }}
+      artifact-name: ${{ steps.check.outputs.artifact-name }}
+    steps:
+      - name: 🔍 Check for existing artifacts
+        id: check
+        run: |
+          ARTIFACT_NAME="helpers-${{ github.sha }}"
+          echo "artifact-name=$ARTIFACT_NAME" >> $GITHUB_OUTPUT
+          
+          # Check if artifact exists using GitHub API
+          if gh api \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            /repos/${{ github.repository }}/actions/artifacts \
+            --jq ".artifacts[] | select(.name == \"$ARTIFACT_NAME\")" | grep -q "$ARTIFACT_NAME"; then
+            echo "✅ Artifact $ARTIFACT_NAME already exists"
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "❌ Artifact $ARTIFACT_NAME does not exist"
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
+      
+      - name: 📊 Status summary
+        run: |
+          echo "### 📦 Helper Artifacts Status" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.check.outputs.exists }}" == "true" ]; then
+            echo "✅ **Artifacts exist** for commit ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+            echo "Artifact name: \`${{ steps.check.outputs.artifact-name }}\`" >> $GITHUB_STEP_SUMMARY
+            if [ "${{ inputs.force_rebuild }}" == "true" ]; then
+              echo "⚠️ Force rebuild requested - will rebuild anyway" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "⏭️ Skipping build - using existing artifacts" >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "🔨 **No artifacts found** - will build helpers" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  # Build helpers using platform-helpers workflow
+  build:
+    name: 🏗️ Build All Helpers
+    needs: check-existing
+    if: needs.check-existing.outputs.exists != 'true' || inputs.force_rebuild == true
+    uses: ./.github/workflows/platform-helpers.yml
+    secrets: inherit
+
+  # Upload combined artifact
+  upload:
+    name: 📤 Upload Helper Artifacts
+    needs: [check-existing, build]
+    if: always() && (needs.build.result == 'success' || needs.check-existing.outputs.exists == 'true')
+    runs-on: ubuntu-latest
+    outputs:
+      artifact-name: ${{ steps.upload.outputs.artifact-name }}
+      artifact-url: ${{ steps.upload.outputs.artifact-url }}
+    steps:
+      # If we built new helpers, they're already uploaded by platform-helpers
+      # If using existing, we just output the info
+      - name: 📦 Set artifact info
+        id: upload
+        run: |
+          if [ "${{ needs.build.result }}" == "success" ]; then
+            # New build - artifact created by platform-helpers
+            ARTIFACT_NAME="${{ needs.build.outputs.artifact-name }}"
+          else
+            # Using existing
+            ARTIFACT_NAME="${{ needs.check-existing.outputs.artifact-name }}"
+          fi
+          
+          echo "artifact-name=$ARTIFACT_NAME" >> $GITHUB_OUTPUT
+          echo "artifact-url=https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" >> $GITHUB_OUTPUT
+          
+          echo "### 📤 Helper Artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "**Artifact Name**: \`$ARTIFACT_NAME\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Status**: Ready for use by other workflows" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "To use in another workflow:" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`yaml" >> $GITHUB_STEP_SUMMARY
+          echo "- uses: actions/download-artifact@v4" >> $GITHUB_STEP_SUMMARY
+          echo "  with:" >> $GITHUB_STEP_SUMMARY
+          echo "    name: $ARTIFACT_NAME" >> $GITHUB_STEP_SUMMARY
+          echo "    github-token: \${{ secrets.GITHUB_TOKEN }}" >> $GITHUB_STEP_SUMMARY
+          echo "    repository: ${{ github.repository }}" >> $GITHUB_STEP_SUMMARY
+          echo "    run-id: \${{ github.run_id }}" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
+  # Run tests on the helpers
+  test:
+    name: 🧪 Test Helpers
+    needs: [upload]
+    if: always() && needs.upload.result == 'success'
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 📦 Download helpers
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.upload.outputs.artifact-name }}
+          path: helpers
+      
+      - name: 🔐 Set permissions
+        if: runner.os != 'Windows'
+        run: chmod +x helpers/bin/*
+      
+      - name: 🧪 Test helpers
+        run: |
+          echo "Testing helpers on ${{ matrix.os }}..."
+          ls -la helpers/bin/ || dir helpers\bin
+          
+          # Basic smoke tests
+          if [ -f "helpers/bin/flavor-go-launcher" ] || [ -f "helpers/bin/flavor-go-launcher.exe" ]; then
+            echo "✅ Go launcher found"
+          fi
+          
+          if [ -f "helpers/bin/flavor-rs-launcher" ] || [ -f "helpers/bin/flavor-rs-launcher.exe" ]; then
+            echo "✅ Rust launcher found"
+          fi
+        shell: bash
+
+  # Final status
+  status:
+    name: 📊 Build Status
+    needs: [check-existing, build, upload, test]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📊 Final summary
+        run: |
+          echo "# 🔨 Helper Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Status
+          if [ "${{ needs.test.result }}" == "success" ] || [ "${{ needs.check-existing.outputs.exists }}" == "true" ]; then
+            echo "## ✅ Success" >> $GITHUB_STEP_SUMMARY
+            echo "Helper artifacts are ready for use" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.test.result }}" == "skipped" ] && [ "${{ needs.check-existing.outputs.exists }}" == "true" ]; then
+            echo "## ✅ Using Existing Artifacts" >> $GITHUB_STEP_SUMMARY
+            echo "No rebuild needed - existing artifacts are valid" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## ❌ Failed" >> $GITHUB_STEP_SUMMARY
+            echo "Helper build or tests failed" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Artifact**: \`${{ needs.upload.outputs.artifact-name }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit**: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY

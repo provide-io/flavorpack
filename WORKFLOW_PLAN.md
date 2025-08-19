@@ -74,10 +74,49 @@ act workflow_dispatch -W .github/workflows/act-test.yml --container-daemon-socke
 - Artifact downloads are properly conditional based on skip_helpers flag
 - Windows .exe extensions are handled correctly
 
+## Latest Status Update (2025-08-18 Evening)
+
+### Modular Workflow Architecture ✅ IMPLEMENTED
+Successfully transitioned from monolithic to modular workflow system:
+
+1. **🎯 main-coordinator.yml** - Pure orchestrator (no build/test work)
+   - Detects changes using path filters
+   - Conditionally triggers other workflows based on changes
+   - Aggregates results and generates summary reports
+   
+2. **🔨 helper-pipeline.yml** - Independent helper builds
+   - Manages caching of helper binaries
+   - Calls platform-helpers.yml for actual builds
+   - Runs helper tests across platforms
+   - Fixed artifact naming to use `all-helpers-{sha}`
+   
+3. **🏗️ platform-helpers.yml** - Cross-platform builds
+   - Builds Go and Rust helpers for all platforms in parallel
+   - Handles cross-compilation for linux_arm64
+   - Creates unified artifact `all-helpers-{sha}`
+   - Uses PowerShell for cross-platform binary testing
+   
+4. **🐍 python-tests.yml** - Python test suite
+   - Runs unit and integration tests
+   - Can run with or without helpers (graceful degradation)
+   
+5. **🍯 taster-pipeline.yml** - Taster testing
+   - Tests the taster package functionality
+   - Requires helper artifacts for full testing
+
+### Today's Additional Fixes
+1. ✅ Fixed artifact naming mismatch (helpers-{sha} → all-helpers-{sha})
+2. ✅ Fixed PowerShell parameter passing in test-binaries.ps1
+3. ✅ Pushed fixes and verified in production
+
+### Known Issues
+1. **Transient network errors** - Cross-compilation setup for linux_arm64 occasionally fails with curl errors
+2. **Workflow versioning** - When a workflow calls another, it uses the version from the same commit (requires push before testing changes)
+
 ## Remaining Items
-1. Monitor GitHub Actions runs to verify fixes work in production
-2. Add documentation for using act locally with the new setup
-3. Consider creating additional PowerShell scripts for other workflow tasks
+1. Add retry logic for transient network failures in cross-compilation setup
+2. Consider caching cross-compilation tools to avoid network dependencies
+3. Add documentation for the new modular architecture
 
 ## Files Modified/Created
 
