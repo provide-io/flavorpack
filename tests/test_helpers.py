@@ -12,7 +12,6 @@ import pytest
 from flavor.helpers import HelperInfo, HelperManager
 
 
-@pytest.mark.helpers
 @pytest.mark.requires_helpers
 class TestHelperManager:
     """Test the HelperManager class."""
@@ -24,10 +23,12 @@ class TestHelperManager:
         self.helpers_dir = self.temp_dir / "helpers"
         self.helpers_bin = self.helpers_dir / "bin"
         self.src_dir = self.temp_dir / "src" / "flavor"
+        self.installed_helpers_bin = self.temp_dir / "cache" / "flavor" / "helpers" / "bin"
         
         # Create directories
         self.helpers_bin.mkdir(parents=True)
         self.src_dir.mkdir(parents=True)
+        self.installed_helpers_bin.mkdir(parents=True)
         
         # Patch the HelperManager to use our temp directory
         self.manager = HelperManager()
@@ -35,6 +36,8 @@ class TestHelperManager:
         self.manager.helpers_dir = self.helpers_dir
         self.manager.helpers_bin = self.helpers_bin
         self.manager.src_dir = self.src_dir
+        # Also override the installed helpers directory to avoid finding real helpers
+        self.manager.installed_helpers_bin = self.installed_helpers_bin
     
     def teardown_method(self):
         """Clean up test environment."""
@@ -393,8 +396,8 @@ class TestHelperManager:
         assert installed == []
 
 
-@pytest.mark.helpers
 @pytest.mark.unit
+@pytest.mark.requires_helpers
 class TestHelperInfo:
     """Test the HelperInfo dataclass."""
     

@@ -1,18 +1,19 @@
 name: Rust Helpers
 
 on:
-  push:
-    paths:
-      - 'helpers/flavor-rs/**'
-      - 'helpers/Makefile'
-      - '.github/workflows/helpers-rust.yml'
-  pull_request:
-    paths:
-      - 'helpers/flavor-rs/**'
-      - 'helpers/Makefile'
-      - '.github/workflows/helpers-rust.yml'
   workflow_dispatch:
   workflow_call:
+  # Disabled automatic triggers - use helpers-build.yml instead
+  # push:
+  #   paths:
+  #     - 'helpers/flavor-rs/**'
+  #     - 'helpers/Makefile'
+  #     - '.github/workflows/helpers-rust.yml'
+  # pull_request:
+  #   paths:
+  #     - 'helpers/flavor-rs/**'
+  #     - 'helpers/Makefile'
+  #     - '.github/workflows/helpers-rust.yml'
     outputs:
       artifact-name:
         description: "Name of the uploaded artifact"

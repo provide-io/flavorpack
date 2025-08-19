@@ -39,15 +39,6 @@ class TestPSPFCore:
     """Test core PSPF format functionality."""
     
     @pytest.fixture
-    def temp_dir(self):
-        """Create temporary directory for tests."""
-        temp_path = Path(tempfile.mkdtemp())
-        yield temp_path
-        # Cleanup
-        import shutil
-        shutil.rmtree(temp_path)
-    
-    @pytest.fixture
     def simple_payload(self, temp_dir):
         """Create a simple test payload."""
         payload_path = temp_dir / "hello.sh"

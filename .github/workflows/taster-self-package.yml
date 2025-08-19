@@ -3,15 +3,7 @@ name: 🔄 Taster Self-Packaging
 on:
   workflow_dispatch:
   workflow_call:
-  workflow_run:
-    workflows: ["📦 Flavor Packaging Tests"]
-    types: [completed]
-    branches: [main, develop, feature/*]
-  push:
-    branches: [main, develop, feature/*]
-    paths:
-      - 'helpers/taster/**'
-      - '.github/workflows/taster-self-package.yml'
+  # Disabled automatic triggers - use main-pipeline.yml instead
 
 jobs:
   # ==================================================================================
@@ -58,33 +50,19 @@ jobs:
       - name: ⚡ Install uv
         uses: astral-sh/setup-uv@v4
       
-      - name: 🐹 Setup Go
-        uses: actions/setup-go@v5
+      - name: 📥 Download Helpers
+        uses: actions/download-artifact@v4
         with:
-          go-version: 'stable'
-          cache: true
-          cache-dependency-path: helpers/flavor-go/go.sum
+          name: all-helpers
+          path: all-helpers-download
       
-      - name: 🦀 Setup Rust
-        uses: dtolnay/rust-toolchain@stable
-      
-      - name: 🔨 Build All Helpers
+      - name: 🔧 Organize Helpers
         shell: bash
         run: |
-          # Build Go helpers
-          cd helpers/flavor-go
-          go build -o ../bin/flavor-go-launcher ./cmd/flavor-go-launcher
-          go build -o ../bin/flavor-go-builder ./cmd/flavor-go-builder
-          cd ../..
+          chmod +x .github/scripts/organize-artifacts.sh
+          .github/scripts/organize-artifacts.sh all-helpers-download
           
-          # Build Rust helpers
-          cd helpers/flavor-rs
-          cargo build --release
-          cp target/release/flavor-rs-launcher ../bin/
-          cp target/release/flavor-rs-builder ../bin/
-          cd ../..
-          
-          # Make helpers available globally
+          # Make helpers available globally for taster
           mkdir -p $HOME/.cache/flavor/bin
           cp helpers/bin/* $HOME/.cache/flavor/bin/
           chmod +x $HOME/.cache/flavor/bin/*
@@ -93,9 +71,8 @@ jobs:
         shell: bash
         run: |
           # Setup Flavor environment
-          uv venv workenv/flavor_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m)
-          source workenv/flavor_*/bin/activate
-          uv pip install -e .
+          chmod +x .github/scripts/setup-workenv.sh
+          source .github/scripts/setup-workenv.sh
           
           # Build initial taster package
           cd helpers/taster

@@ -1,18 +1,19 @@
 name: Go Helpers
 
 on:
-  push:
-    paths:
-      - 'helpers/flavor-go/**'
-      - 'helpers/Makefile'
-      - '.github/workflows/helpers-go.yml'
-  pull_request:
-    paths:
-      - 'helpers/flavor-go/**'
-      - 'helpers/Makefile'
-      - '.github/workflows/helpers-go.yml'
   workflow_dispatch:
   workflow_call:
+  # Disabled automatic triggers - use helpers-build.yml instead
+  # push:
+  #   paths:
+  #     - 'helpers/flavor-go/**'
+  #     - 'helpers/Makefile'
+  #     - '.github/workflows/helpers-go.yml'
+  # pull_request:
+  #   paths:
+  #     - 'helpers/flavor-go/**'
+  #     - 'helpers/Makefile'
+  #     - '.github/workflows/helpers-go.yml'
     outputs:
       artifact-name:
         description: "Name of the uploaded artifact"
