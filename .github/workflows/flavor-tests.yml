@@ -3,75 +3,15 @@ name: 🧪 Flavor Core Tests
 on:
   workflow_dispatch:
   workflow_call:
-  push:
-    branches: [main, develop, feature/*]
-    paths:
-      - 'src/flavor/**'
-      - 'tests/**'
-      - 'pyproject.toml'
-      - '.github/workflows/flavor-tests.yml'
-  pull_request:
-    branches: [main, develop]
 
 jobs:
   # ==================================================================================
-  # 🚀 Fast Unit Tests (run first, fail fast)
+  # 🚀 Fast Tests (no helpers required)
   # ==================================================================================
-  unit-tests:
-    name: 🚀 Unit Tests
+  fast-tests:
+    name: 🚀 Fast Tests
     strategy:
       fail-fast: true
-      matrix:
-        os: [ubuntu-latest, macos-15]
-        python: ["3.11", "3.12", "3.13"]
-    runs-on: ${{ matrix.os }}
-    steps:
-      - name: 📥 Checkout
-        uses: actions/checkout@v4
-      
-      - name: 🐍 Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python }}
-      
-      - name: ⚡ Install uv
-        uses: astral-sh/setup-uv@v4
-      
-      - name: 🔧 Setup Environment
-        run: |
-          uv venv workenv/flavor_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m)
-          source workenv/flavor_*/bin/activate
-          uv pip install -e .[dev]
-          uv pip install pytest pytest-cov pytest-xdist
-      
-      - name: 🚀 Run Unit Tests
-        run: |
-          source workenv/flavor_*/bin/activate
-          # Run unit tests that don't require helpers
-          pytest tests/ -m "unit" -n auto --tb=short -q || echo "⚠️ Unit test issues"
-      
-      - name: 📊 Coverage (Ubuntu 3.11 only)
-        if: matrix.os == 'ubuntu-latest' && matrix.python == '3.11'
-        run: |
-          source workenv/flavor_*/bin/activate
-          pytest tests/ -m "unit" --cov=src/flavor --cov-report=xml --cov-report=term-missing
-      
-      - name: 📤 Upload Coverage
-        if: matrix.os == 'ubuntu-latest' && matrix.python == '3.11'
-        uses: codecov/codecov-action@v4
-        with:
-          file: ./coverage.xml
-          flags: unit
-          name: unit-coverage
-
-  # ==================================================================================
-  # 🔧 Integration Tests (after unit tests pass)
-  # ==================================================================================
-  integration-tests:
-    name: 🔧 Integration Tests
-    needs: unit-tests
-    strategy:
-      fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-15]
         python: ["3.11", "3.12"]
@@ -90,138 +30,111 @@ jobs:
       
       - name: 🔧 Setup Environment
         run: |
-          uv venv workenv/flavor_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m)
-          source workenv/flavor_*/bin/activate
-          uv pip install -e .[dev]
-          uv pip install pytest pytest-cov pytest-xdist
+          chmod +x .github/scripts/setup-workenv.sh
+          source .github/scripts/setup-workenv.sh
       
-      - name: 🔧 Run Integration Tests
+      - name: 🚀 Run Unit Tests
         run: |
           source workenv/flavor_*/bin/activate
-          # Most integration tests require helpers, skip for now
-          # TODO: Fix test markers to properly separate helper-dependent tests
-          echo "⚠️ Integration tests skipped - most require helpers"
-          exit 0
-
-  # ==================================================================================
-  # 🔐 Security Tests (parallel with integration)
-  # ==================================================================================
-  security-tests:
-    name: 🔐 Security Tests
-    needs: unit-tests
-    runs-on: ubuntu-latest
-    steps:
-      - name: 📥 Checkout
-        uses: actions/checkout@v4
-      
-      - name: 🐍 Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-      
-      - name: ⚡ Install uv
-        uses: astral-sh/setup-uv@v4
-      
-      - name: 🔧 Setup Environment
-        run: |
-          uv venv workenv/flavor_linux_x86_64
-          source workenv/flavor_*/bin/activate
-          uv pip install -e .[dev]
-          uv pip install bandit safety
+          pytest tests/ -m "unit and not requires_helpers" \
+            --cov=src/flavor \
+            --cov-report=xml:coverage-unit.xml \
+            --cov-report=term \
+            -n auto --tb=short
       
       - name: 🔐 Run Security Tests
         run: |
           source workenv/flavor_*/bin/activate
-          # Run security tests if they exist
-          pytest tests/ -m "security" -v --tb=short || echo "⚠️ No security tests found"
-      
-      - name: 🔍 Bandit Security Scan
-        run: |
-          source workenv/flavor_*/bin/activate
-          bandit -r src/flavor -f json -o bandit-report.json || true
-      
-      - name: 📤 Upload Security Report
-        uses: actions/upload-artifact@v4
-        with:
-          name: security-report
-          path: bandit-report.json
-
-  # ==================================================================================
-  # 📦 Packaging Tests (parallel with integration)
-  # ==================================================================================
-  packaging-tests:
-    name: 📦 Packaging Tests
-    needs: unit-tests
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-15]
-    runs-on: ${{ matrix.os }}
-    steps:
-      - name: 📥 Checkout
-        uses: actions/checkout@v4
-      
-      - name: 🐍 Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-      
-      - name: ⚡ Install uv
-        uses: astral-sh/setup-uv@v4
-      
-      - name: 🔧 Setup Environment
-        run: |
-          uv venv workenv/flavor_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m)
-          source workenv/flavor_*/bin/activate
-          uv pip install -e .[dev]
-          uv pip install pytest pytest-cov pytest-xdist
-      
-      - name: 📦 Run Packaging Tests
-        run: |
-          source workenv/flavor_*/bin/activate
-          pytest tests/ -m "packaging and not requires_helpers" -v --tb=short
-
-  # ==================================================================================
-  # 🗺️ Memory-Mapped Tests (parallel with integration)
-  # ==================================================================================
-  mmap-tests:
-    name: 🗺️ MMap Tests
-    needs: unit-tests
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-15]
-    runs-on: ${{ matrix.os }}
-    steps:
-      - name: 📥 Checkout
-        uses: actions/checkout@v4
-      
-      - name: 🐍 Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-      
-      - name: ⚡ Install uv
-        uses: astral-sh/setup-uv@v4
-      
-      - name: 🔧 Setup Environment
-        run: |
-          uv venv workenv/flavor_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m)
-          source workenv/flavor_*/bin/activate
-          uv pip install -e .[dev]
-          uv pip install pytest pytest-cov pytest-xdist
+          pytest tests/ -m "security and not requires_helpers" \
+            --cov=src/flavor \
+            --cov-append \
+            --cov-report=xml:coverage-security.xml \
+            -v --tb=short
       
       - name: 🗺️ Run MMap Tests
         run: |
           source workenv/flavor_*/bin/activate
-          pytest tests/ -m "mmap" -v --tb=short
+          pytest tests/ -m "mmap and not requires_helpers" \
+            --cov=src/flavor \
+            --cov-append \
+            --cov-report=xml:coverage-mmap.xml \
+            -v --tb=short
+      
+      - name: 📤 Upload Coverage
+        if: matrix.os == 'ubuntu-latest' && matrix.python == '3.11'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-fast-${{ matrix.os }}-${{ matrix.python }}
+          path: coverage-*.xml
 
   # ==================================================================================
-  # 🐌 Slow Tests (run separately)
+  # 🔧 Helper-Dependent Tests (requires built helpers)
+  # ==================================================================================
+  helper-tests:
+    name: 🔧 Helper Tests
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-15]
+        python: ["3.11"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      
+      - name: ⚡ Install uv
+        uses: astral-sh/setup-uv@v4
+      
+      - name: 📥 Download Helpers
+        uses: actions/download-artifact@v4
+        with:
+          name: all-helpers
+          path: all-helpers-download
+      
+      - name: 🔧 Organize Helpers
+        run: |
+          chmod +x .github/scripts/organize-artifacts.sh
+          .github/scripts/organize-artifacts.sh all-helpers-download
+      
+      - name: 🔧 Setup Environment
+        run: |
+          chmod +x .github/scripts/setup-workenv.sh
+          source .github/scripts/setup-workenv.sh
+      
+      - name: 🔧 Run Integration Tests
+        run: |
+          chmod +x .github/scripts/run-tests-with-helpers.sh
+          .github/scripts/run-tests-with-helpers.sh "integration"
+          mv coverage-integration.xml coverage-integration-${{ matrix.os }}.xml
+      
+      - name: 🌐 Run Cross-Language Tests
+        run: |
+          chmod +x .github/scripts/run-tests-with-helpers.sh
+          .github/scripts/run-tests-with-helpers.sh "cross_language"
+          mv coverage-cross_language.xml coverage-crosslang-${{ matrix.os }}.xml
+      
+      - name: 📦 Run Packaging Tests with Helpers
+        run: |
+          chmod +x .github/scripts/run-tests-with-helpers.sh
+          .github/scripts/run-tests-with-helpers.sh "packaging and requires_helpers"
+          mv coverage-packaging.xml coverage-packaging-${{ matrix.os }}.xml
+      
+      - name: 📤 Upload Coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-helper-${{ matrix.os }}-${{ matrix.python }}
+          path: coverage-*.xml
+
+  # ==================================================================================
+  # 🐌 Slow/Stress Tests (separate for timeout management)
   # ==================================================================================
   slow-tests:
     name: 🐌 Slow Tests
-    needs: [integration-tests, packaging-tests]
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -236,26 +149,47 @@ jobs:
       - name: ⚡ Install uv
         uses: astral-sh/setup-uv@v4
       
+      - name: 📥 Download Helpers
+        uses: actions/download-artifact@v4
+        with:
+          name: all-helpers
+          path: all-helpers-download
+      
+      - name: 🔧 Organize Helpers
+        run: |
+          chmod +x .github/scripts/organize-artifacts.sh
+          .github/scripts/organize-artifacts.sh all-helpers-download
+      
       - name: 🔧 Setup Environment
         run: |
-          uv venv workenv/flavor_linux_x86_64
-          source workenv/flavor_*/bin/activate
-          uv pip install -e .[dev]
+          chmod +x .github/scripts/setup-workenv.sh
+          source .github/scripts/setup-workenv.sh
       
       - name: 🐌 Run Slow Tests
         run: |
-          source workenv/flavor_*/bin/activate
-          pytest tests/ -m "slow" -v --tb=short
+          chmod +x .github/scripts/run-tests-with-helpers.sh
+          .github/scripts/run-tests-with-helpers.sh "slow"
+      
+      - name: 💪 Run Stress Tests
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          chmod +x .github/scripts/run-tests-with-helpers.sh
+          .github/scripts/run-tests-with-helpers.sh "stress"
+      
+      - name: 📤 Upload Coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-slow
+          path: coverage-*.xml
 
   # ==================================================================================
-  # 💪 Stress Tests (optional, manual trigger)
+  # 📊 Combine Coverage Reports
   # ==================================================================================
-  stress-tests:
-    name: 💪 Stress Tests
-    if: github.event_name == 'workflow_dispatch'
-    needs: [integration-tests]
+  combine-coverage:
+    name: 📊 Combined Coverage
+    needs: [fast-tests, helper-tests, slow-tests]
+    if: always()
     runs-on: ubuntu-latest
-    timeout-minutes: 60
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
@@ -265,75 +199,37 @@ jobs:
         with:
           python-version: '3.11'
       
-      - name: ⚡ Install uv
-        uses: astral-sh/setup-uv@v4
+      - name: 📥 Download All Coverage Reports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: coverage-*
+          path: coverage-reports
       
-      - name: 🔧 Setup Environment
+      - name: 📊 Combine Coverage
         run: |
-          uv venv workenv/flavor_linux_x86_64
-          source workenv/flavor_*/bin/activate
-          uv pip install -e .[dev]
-          uv pip install hypothesis
+          pip install coverage[toml]
+          
+          # Find all coverage files
+          find coverage-reports -name "*.xml" -exec cp {} . \;
+          
+          # List what we have
+          echo "📊 Coverage files found:"
+          ls -la coverage-*.xml
+          
+          # Combine using coverage.py
+          coverage combine coverage-*.xml || true
+          coverage xml -o coverage-combined.xml
+          coverage report
       
-      - name: 💪 Run Stress Tests
-        run: |
-          source workenv/flavor_*/bin/activate
-          pytest tests/ -m "stress" -v --tb=short
-
-  # ==================================================================================
-  # ✅ Test Summary
-  # ==================================================================================
-  test-summary:
-    name: ✅ Test Summary
-    needs: [unit-tests, integration-tests, security-tests, packaging-tests, mmap-tests, slow-tests]
-    if: always()
-    runs-on: ubuntu-latest
-    steps:
-      - name: 📊 Generate Summary
-        run: |
-          echo "# 🧪 Test Results Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          
-          # Check each test job result
-          echo "## Test Categories" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          
-          if [ "${{ needs.unit-tests.result }}" = "success" ]; then
-            echo "✅ **Unit Tests**: Passed" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "❌ **Unit Tests**: Failed" >> $GITHUB_STEP_SUMMARY
-          fi
-          
-          if [ "${{ needs.integration-tests.result }}" = "success" ]; then
-            echo "✅ **Integration Tests**: Passed" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "❌ **Integration Tests**: Failed" >> $GITHUB_STEP_SUMMARY
-          fi
-          
-          if [ "${{ needs.security-tests.result }}" = "success" ]; then
-            echo "✅ **Security Tests**: Passed" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "❌ **Security Tests**: Failed" >> $GITHUB_STEP_SUMMARY
-          fi
-          
-          if [ "${{ needs.packaging-tests.result }}" = "success" ]; then
-            echo "✅ **Packaging Tests**: Passed" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "❌ **Packaging Tests**: Failed" >> $GITHUB_STEP_SUMMARY
-          fi
-          
-          if [ "${{ needs.mmap-tests.result }}" = "success" ]; then
-            echo "✅ **Memory-Mapped Tests**: Passed" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "❌ **Memory-Mapped Tests**: Failed" >> $GITHUB_STEP_SUMMARY
-          fi
-          
-          if [ "${{ needs.slow-tests.result }}" = "success" ]; then
-            echo "✅ **Slow Tests**: Passed" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "❌ **Slow Tests**: Failed" >> $GITHUB_STEP_SUMMARY
-          fi
-          
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## Coverage" >> $GITHUB_STEP_SUMMARY
-          echo "Coverage reports available in Codecov for unit tests" >> $GITHUB_STEP_SUMMARY
+      - name: 📤 Upload to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage-combined.xml
+          flags: combined
+          name: combined-coverage
+      
+      - name: 📤 Save Combined Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-combined
+          path: coverage-combined.xml

@@ -1,6 +1,6 @@
-# env.ps1 - wrkenv Development Environment Setup
+# env.ps1 - flavor Development Environment Setup
 #
-# This script sets up a clean, isolated development environment for wrkenv
+# This script sets up a clean, isolated development environment for flavor
 # using 'uv' for high-performance virtual environment and dependency management.
 #
 # Usage: .\env.ps1
@@ -49,7 +49,7 @@ Write-Success "Cleared Python aliases and PYTHONPATH"
 # --- Project Validation ---
 if (-not (Test-Path "pyproject.toml")) {
     Write-Error "No 'pyproject.toml' found in current directory"
-    Write-Host "Please run this script from the wrkenv root directory"
+    Write-Host "Please run this script from the flavor root directory"
     exit 1
 }
 
@@ -99,9 +99,9 @@ $TFARCH = switch ([System.Environment]::Is64BitOperatingSystem) {
 }
 
 # Workenv directory setup
-$Profile = if ($env:WRKENV_PROFILE) { $env:WRKENV_PROFILE } else { "default" }
+$Profile = if ($env:FLAVOR_PROFILE) { $env:FLAVOR_PROFILE } else { "default" }
 if ($Profile -eq "default") {
-    $VenvDir = "workenv/wrkenv_${TFOS}_${TFARCH}"
+    $VenvDir = "workenv/flavor_${TFOS}_${TFARCH}"
 } else {
     $VenvDir = "workenv/${Profile}_${TFOS}_${TFARCH}"
 }
@@ -153,7 +153,7 @@ if (Test-Path $ActivateScript) {
 Write-Header "📦 Installing Dependencies"
 
 # Create log directory
-$LogDir = Join-Path $env:TEMP "wrkenv_setup"
+$LogDir = Join-Path $env:TEMP "flavor_setup"
 New-Item -ItemType Directory -Force -Path $LogDir | Out-Null
 
 Write-Host "Syncing dependencies..." -NoNewline
@@ -167,10 +167,10 @@ catch {
     exit 1
 }
 
-Write-Host "Installing wrkenv in editable mode..." -NoNewline
+Write-Host "Installing flavor in editable mode..." -NoNewline
 try {
     & uv pip install --no-deps -e . 2>&1 | Out-File -FilePath (Join-Path $LogDir "install.log")
-    Write-Success " wrkenv installed"
+    Write-Success " flavor installed"
 }
 catch {
     Write-Error " Installation failed"
@@ -182,6 +182,70 @@ Write-Header "🤝 Installing Sibling Packages"
 
 $ParentDir = Split-Path -Parent (Get-Location)
 $SiblingCount = 0
+
+# New unified siblings configuration
+# Sibling with configuration
+# Pattern-based sibling
+Get-ChildItem -Path $ParentDir -Directory -Filter "pyvider-*" | ForEach-Object {
+    $SiblingName = $_.Name
+    $WithDeps = $true
+    $DepsText = if ($WithDeps) { " with dependencies" } else { " without dependencies" }
+    Write-Host "Installing $SiblingName$DepsText..." -NoNewline
+    try {
+        if ($WithDeps) {
+            & uv pip install -e $_.FullName 2>&1 | Out-File -FilePath (Join-Path $LogDir "$SiblingName.log")
+        } else {
+            & uv pip install --no-deps -e $_.FullName 2>&1 | Out-File -FilePath (Join-Path $LogDir "$SiblingName.log")
+        }
+        Write-Success " $SiblingName installed"
+        $SiblingCount++
+    }
+    catch {
+        Write-Warning " Failed to install $SiblingName"
+    }
+}
+# Sibling with configuration
+# Explicit sibling
+$tofusoupDir = Join-Path $ParentDir "tofusoup"
+if (Test-Path $tofusoupDir) {
+    $WithDeps = $true
+    $DepsText = if ($WithDeps) { " with dependencies" } else { " without dependencies" }
+    Write-Host "Installing tofusoup$DepsText..." -NoNewline
+    try {
+        if ($WithDeps) {
+            & uv pip install -e $tofusoupDir
+        } else {
+            & uv pip install --no-deps -e $tofusoupDir
+        }
+        Write-Success " tofusoup installed"
+        $SiblingCount++
+    }
+    catch {
+        Write-Warning " Failed to install tofusoup package from '$tofusoupDir'"
+        Write-Host "Attempting to continue..."
+    }
+}
+# Sibling with configuration
+# Explicit sibling
+$wrkenvDir = Join-Path $ParentDir "wrkenv"
+if (Test-Path $wrkenvDir) {
+    $WithDeps = $true
+    $DepsText = if ($WithDeps) { " with dependencies" } else { " without dependencies" }
+    Write-Host "Installing wrkenv$DepsText..." -NoNewline
+    try {
+        if ($WithDeps) {
+            & uv pip install -e $wrkenvDir
+        } else {
+            & uv pip install --no-deps -e $wrkenvDir
+        }
+        Write-Success " wrkenv installed"
+        $SiblingCount++
+    }
+    catch {
+        Write-Warning " Failed to install wrkenv package from '$wrkenvDir'"
+        Write-Host "Attempting to continue..."
+    }
+}
 
 
 if ($SiblingCount -eq 0) {
@@ -258,11 +322,11 @@ Write-Host ("━" * 40)
 # --- Final Summary ---
 Write-Header "✅ Environment Ready!"
 
-Write-Host "`n$("wrkenv development environment activated" | Write-Host -ForegroundColor Green)"
+Write-Host "`n$("flavor development environment activated" | Write-Host -ForegroundColor Green)"
 Write-Host "Virtual environment: $VenvDir"
 Write-Host "Profile: $Profile"
 Write-Host "`nUseful commands:"
-Write-Host "  wrkenv --help  # wrkenv CLI"
+Write-Host "  flavor --help  # flavor CLI"
 Write-Host "  wrkenv status  # Check tool versions"
 Write-Host "  wrkenv container status  # Container status"
 Write-Host "  pytest  # Run tests"

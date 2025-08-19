@@ -24,15 +24,6 @@ class TestPSPFBuilder:
     """Test PSPF bundle building."""
     
     @pytest.fixture
-    def temp_dir(self):
-        """Create temporary directory for tests."""
-        temp_path = Path(tempfile.mkdtemp())
-        yield temp_path
-        # Cleanup
-        import shutil
-        shutil.rmtree(temp_path)
-    
-    @pytest.fixture
     def manifest_file(self, temp_dir):
         """Create a manifest file."""
         # Create test files

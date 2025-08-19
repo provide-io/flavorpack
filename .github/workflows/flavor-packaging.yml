@@ -3,14 +3,7 @@ name: 📦 Flavor Packaging Tests
 on:
   workflow_dispatch:
   workflow_call:
-  push:
-    branches: [main, develop, feature/*]
-    paths:
-      - 'src/flavor/**'
-      - 'helpers/flavor-*/**'
-      - '.github/workflows/flavor-packaging.yml'
-  pull_request:
-    branches: [main, develop]
+  # Disabled automatic triggers - use main-pipeline.yml instead
 
 jobs:
   # ==================================================================================
@@ -36,39 +29,23 @@ jobs:
       - name: ⚡ Install uv
         uses: astral-sh/setup-uv@v4
       
-      - name: 🐹 Setup Go
-        if: matrix.launcher == 'go'
-        uses: actions/setup-go@v5
+      - name: 📥 Download Helpers
+        uses: actions/download-artifact@v4
         with:
-          go-version: 'stable'
-          cache: true
-          cache-dependency-path: helpers/flavor-go/go.sum
+          name: all-helpers
+          path: all-helpers-download
       
-      - name: 🦀 Setup Rust
-        if: matrix.launcher == 'rust'
-        uses: dtolnay/rust-toolchain@stable
-      
-      - name: 🔨 Build Launcher
+      - name: 🔧 Organize Helpers
         shell: bash
         run: |
-          mkdir -p helpers/bin
-          if [ "${{ matrix.launcher }}" = "go" ]; then
-            cd helpers/flavor-go
-            go build -o ../bin/flavor-go-launcher ./cmd/flavor-go-launcher
-            go build -o ../bin/flavor-go-builder ./cmd/flavor-go-builder
-          elif [ "${{ matrix.launcher }}" = "rust" ]; then
-            cd helpers/flavor-rs
-            cargo build --release
-            cp target/release/flavor-rs-launcher ../bin/
-            cp target/release/flavor-rs-builder ../bin/
-          fi
+          chmod +x .github/scripts/organize-artifacts.sh
+          .github/scripts/organize-artifacts.sh all-helpers-download
       
       - name: 🔧 Setup Flavor
         shell: bash
         run: |
-          uv venv workenv/flavor_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m)
-          source workenv/flavor_*/bin/activate
-          uv pip install -e .
+          chmod +x .github/scripts/setup-workenv.sh
+          source .github/scripts/setup-workenv.sh
       
       - name: 📦 Flavor Packages Itself
         shell: bash
@@ -96,11 +73,8 @@ jobs:
       - name: 🧪 Test Flavor Package
         shell: bash
         run: |
-          # Find the built package
-          PSP_FILE=$(ls dist/flavor-*.psp)
-          chmod +x $PSP_FILE
-          $PSP_FILE --version
-          $PSP_FILE --help
+          chmod +x .github/scripts/test-package.sh
+          .github/scripts/test-package.sh dist/flavor-*.psp
       
       - name: 📤 Upload Flavor Package
         uses: actions/upload-artifact@v4
@@ -132,37 +106,23 @@ jobs:
       - name: ⚡ Install uv
         uses: astral-sh/setup-uv@v4
       
-      - name: 🐹 Setup Go
-        if: matrix.launcher == 'go'
-        uses: actions/setup-go@v5
+      - name: 📥 Download Helpers
+        uses: actions/download-artifact@v4
         with:
-          go-version: 'stable'
-          cache: true
-          cache-dependency-path: helpers/flavor-go/go.sum
+          name: all-helpers
+          path: all-helpers-download
       
-      - name: 🦀 Setup Rust
-        if: matrix.launcher == 'rust'
-        uses: dtolnay/rust-toolchain@stable
-      
-      - name: 🔨 Build Launcher
+      - name: 🔧 Organize Helpers
         shell: bash
         run: |
-          mkdir -p helpers/bin
-          if [ "${{ matrix.launcher }}" = "go" ]; then
-            cd helpers/flavor-go
-            go build -o ../bin/flavor-go-launcher ./cmd/flavor-go-launcher
-          elif [ "${{ matrix.launcher }}" = "rust" ]; then
-            cd helpers/flavor-rs
-            cargo build --release --bin flavor-rs-launcher
-            cp target/release/flavor-rs-launcher ../bin/
-          fi
+          chmod +x .github/scripts/organize-artifacts.sh
+          .github/scripts/organize-artifacts.sh all-helpers-download
       
       - name: 🔧 Setup Flavor
         shell: bash
         run: |
-          uv venv workenv/flavor_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m)
-          source workenv/flavor_*/bin/activate
-          uv pip install -e .
+          chmod +x .github/scripts/setup-workenv.sh
+          source .github/scripts/setup-workenv.sh
       
       - name: 📦 Package Taster
         shell: bash
@@ -191,14 +151,8 @@ jobs:
       - name: 🧪 Test Taster Package
         shell: bash
         run: |
-          # Find the built package
-          PSP_FILE=$(ls helpers/taster/dist/taster-*.psp)
-          chmod +x $PSP_FILE
-          $PSP_FILE --version
-          $PSP_FILE info
-          # Basic smoke tests
-          $PSP_FILE env | head -5
-          $PSP_FILE exit 0
+          chmod +x .github/scripts/test-package.sh
+          .github/scripts/test-package.sh helpers/taster/dist/taster-*.psp
       
       - name: 📤 Upload Taster Package
         uses: actions/upload-artifact@v4

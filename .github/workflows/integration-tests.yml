@@ -15,11 +15,12 @@ on:
         required: false
         type: string
   
-  workflow_run:
-    workflows: ["Build All Helpers"]
-    types:
-      - completed
-    branches: [main, develop, "feature/*"]
+  # Disabled automatic triggers - use main-pipeline.yml instead
+  # workflow_run:
+  #   workflows: ["Build All Helpers"]
+  #   types:
+  #     - completed
+  #   branches: [main, develop, "feature/*"]
 
 jobs:
   integration-test:
@@ -40,158 +41,57 @@ jobs:
         with:
           python-version: '3.11'
       
-      - name: 📥 Download helpers from current workflow
-        if: ${{ github.event_name == 'workflow_run' }}
+      - name: 📥 Download Helpers
         uses: actions/download-artifact@v4
         with:
           name: all-helpers
           path: all-helpers-download
-          run-id: ${{ github.event.workflow_run.id }}
       
-      - name: 📥 Download helpers from specific run
-        if: ${{ github.event_name != 'workflow_run' && inputs.artifact_run_id != '' }}
-        uses: actions/download-artifact@v4
-        with:
-          name: all-helpers
-          path: all-helpers-download
-          run-id: ${{ inputs.artifact_run_id }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-      
-      - name: 📥 Download helpers from latest successful run
-        if: ${{ github.event_name != 'workflow_run' && inputs.artifact_run_id == '' }}
-        run: |
-          # Get the latest successful Build All Helpers run
-          LATEST_RUN=$(gh run list --workflow="Build All Helpers" --branch="${{ github.ref_name }}" --status=success --limit=1 --json databaseId --jq '.[0].databaseId')
-          
-          if [ -z "$LATEST_RUN" ]; then
-            echo "❌ No successful Build All Helpers runs found"
-            exit 1
-          fi
-          
-          echo "📦 Downloading helpers from run $LATEST_RUN"
-          gh run download $LATEST_RUN --name all-helpers --dir all-helpers-download
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      
-      - name: 🔧 Organize helpers into bin directory (Unix)
+      - name: 🔧 Organize Helpers (Unix)
         if: runner.os != 'Windows'
         run: |
-          mkdir -p helpers/bin
-          
-          # Debug: Show what we downloaded
-          echo "📦 Downloaded artifacts structure:"
-          find all-helpers-download -type f -name "flavor-*" | head -20
-          
-          # The artifacts might be in subdirectories like flavor-go-helpers-0.3.0_linux_amd64/
-          # Copy only the binaries that match our platform
-          OS="$(uname -s | tr '[:upper:]' '[:lower:]')"
-          ARCH="$(uname -m)"
-          
-          # Normalize architecture names
-          case "$ARCH" in
-            x86_64) ARCH="amd64" ;;
-            aarch64|arm64) ARCH="arm64" ;;
-          esac
-          
-          # Normalize OS names
-          case "$OS" in
-            linux) PLATFORM="linux" ;;
-            darwin) PLATFORM="darwin" ;;
-            *) PLATFORM="$OS" ;;
-          esac
-          
-          echo "🎯 Looking for binaries matching platform: ${PLATFORM}_${ARCH}"
-          
-          # Find and copy platform-specific binaries
-          find all-helpers-download -type f -name "*-${PLATFORM}_${ARCH}" ! -name "*.md" -exec cp {} helpers/bin/ \; 2>/dev/null || true
-          find all-helpers-download -type f -name "*-${PLATFORM}-${ARCH}" ! -name "*.md" -exec cp {} helpers/bin/ \; 2>/dev/null || true
-          
-          # Also copy any generic binaries (without platform suffix) for local testing
-          find all-helpers-download -type f \( -name "flavor-go-launcher" -o -name "flavor-go-builder" -o -name "flavor-rs-launcher" -o -name "flavor-rs-builder" \) -exec cp {} helpers/bin/ \; 2>/dev/null || true
-          
-          # Make all binaries executable
-          chmod +x helpers/bin/* 2>/dev/null || true
-          
-          echo "📦 Organized helpers in helpers/bin:"
-          ls -la helpers/bin/ || echo "No binaries found"
+          chmod +x .github/scripts/organize-artifacts.sh
+          .github/scripts/organize-artifacts.sh all-helpers-download
       
-      - name: 🔧 Organize helpers into bin directory (Windows)
+      - name: 🔧 Organize Helpers (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
+          # TODO: Create organize-artifacts.ps1 script
           New-Item -ItemType Directory -Force -Path helpers\bin
-          
-          # Debug: Show what we downloaded
-          Write-Host "📦 Downloaded artifacts structure:"
-          Get-ChildItem -Path all-helpers-download -Recurse -Include "flavor-*.exe" | Select-Object -First 20
-          
-          # Find and copy Windows binaries
           Get-ChildItem -Path all-helpers-download -Recurse -Include "*windows*.exe" | 
             ForEach-Object { 
               Copy-Item $_.FullName -Destination helpers\bin\ -Force
               Write-Host "Copied: $($_.Name)"
             }
-          
-          # Also copy any .exe files that might not have platform suffix
-          Get-ChildItem -Path all-helpers-download -Recurse -Include "flavor-go-*.exe", "flavor-rs-*.exe" | 
-            Where-Object { $_.Name -notmatch "linux|darwin" } |
-            ForEach-Object { 
-              Copy-Item $_.FullName -Destination helpers\bin\ -Force
-              Write-Host "Copied: $($_.Name)"
-            }
-          
-          Write-Host "📦 Organized helpers in helpers\bin:"
-          Get-ChildItem helpers\bin\
       
-      - name: 📦 Install uv (Unix)
+      - name: ⚡ Install uv
+        uses: astral-sh/setup-uv@v4
+      
+      - name: 🔧 Setup Environment (Unix)
         if: runner.os != 'Windows'
         run: |
-          curl -LsSf https://astral.sh/uv/install.sh | sh
-          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
-      
-      - name: 📦 Install uv (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          irm https://astral.sh/uv/install.ps1 | iex
-          $env:PATH = "$env:LOCALAPPDATA\uv\bin;$env:PATH"
-          [System.Environment]::SetEnvironmentVariable("PATH", $env:PATH, [System.EnvironmentVariableTarget]::User)
-      
-      - name: 🔧 Setup environment (Unix)
-        if: runner.os != 'Windows'
-        run: |
-          # Set up Python virtual environment with uv
-          uv venv workenv
-          source workenv/bin/activate
-          
-          # Install flavor and dependencies
-          uv pip install -e .
+          chmod +x .github/scripts/setup-workenv.sh
+          source .github/scripts/setup-workenv.sh
           
           # Verify installation
-          workenv/bin/python -c "import flavor; print(f'✅ Flavor {flavor.__version__} installed')"
+          workenv/flavor_*/bin/python -c "import flavor; print(f'✅ Flavor installed')"
       
-      - name: 🔧 Setup environment (Windows)
+      - name: 🔧 Setup Environment (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          # Set up Python virtual environment with uv
+          # TODO: Create setup-workenv.ps1 script
           uv venv workenv
           & workenv\Scripts\Activate.ps1
-          
-          # Install flavor and dependencies
           uv pip install -e .
-          
-          # Verify installation
           & workenv\Scripts\python.exe -c "import flavor; print(f'✅ Flavor installed')"
       
-      - name: 🧪 Test taster build with each launcher (Unix)
+      - name: 🧪 Run Integration Tests (Unix)
         if: runner.os != 'Windows'
         timeout-minutes: 5
         run: |
-          # Make the test script executable
           chmod +x .github/scripts/test-integration.sh
-          
-          # Run the integration test script
           .github/scripts/test-integration.sh
       
       - name: 🧪 Test taster build with each launcher (Windows)

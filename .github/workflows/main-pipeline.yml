@@ -13,7 +13,7 @@ on:
         required: false
         default: false
         type: boolean
-  # Disabled automatic triggers - use simple-ci.yml instead
+  # Disabled automatic triggers - manual dispatch only
   # push:
   #   branches: [main, develop, feature/*]
   # pull_request:
@@ -37,6 +37,7 @@ jobs:
     if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.skip_tests != 'true' }}
     uses: ./.github/workflows/flavor-tests.yml
     secrets: inherit
+    # Note: flavor-tests.yml now properly downloads helpers and runs ALL test categories
 
   taster-tests:
     name: 🍯 Taster Tests
@@ -63,135 +64,35 @@ jobs:
     secrets: inherit
 
   # ==================================================================================
+  # 🔧 Integration Tests (after helpers are built)
+  # ==================================================================================
+  integration-tests:
+    name: 🔧 Integration Tests
+    needs: build-helpers
+    if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.skip_tests != 'true' }}
+    uses: ./.github/workflows/integration-tests.yml
+    secrets: inherit
+
+  # ==================================================================================
   # 📊 Consolidated Summary
   # ==================================================================================
   pipeline-summary:
     name: 📊 Pipeline Summary
-    needs: [build-helpers, flavor-tests, taster-tests, flavor-packaging, taster-self-packaging]
+    needs: [build-helpers, flavor-tests, taster-tests, flavor-packaging, taster-self-packaging, integration-tests]
     if: always()
     runs-on: ubuntu-latest
     steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
       - name: 📊 Generate Consolidated Report
         run: |
-          echo "# 🎯 Main CI Pipeline Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## 📈 Overall Status" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          
-          # Determine overall status
-          overall="success"
-          if [ "${{ needs.build-helpers.result }}" != "success" ]; then
-            overall="failure"
-          fi
-          if [ "${{ needs.flavor-tests.result }}" != "success" ] && [ "${{ needs.flavor-tests.result }}" != "skipped" ]; then
-            overall="failure"
-          fi
-          if [ "${{ needs.taster-tests.result }}" != "success" ] && [ "${{ needs.taster-tests.result }}" != "skipped" ]; then
-            overall="failure"
-          fi
-          if [ "${{ needs.flavor-packaging.result }}" != "success" ] && [ "${{ needs.flavor-packaging.result }}" != "skipped" ]; then
-            overall="failure"
-          fi
-          if [ "${{ needs.taster-self-packaging.result }}" != "success" ] && [ "${{ needs.taster-self-packaging.result }}" != "skipped" ]; then
-            overall="failure"
-          fi
-          
-          if [ "$overall" = "success" ]; then
-            echo "### ✅ All workflows completed successfully!" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "### ❌ Some workflows failed - see details below" >> $GITHUB_STEP_SUMMARY
-          fi
-          
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## 📋 Workflow Results" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Workflow | Status | Description |" >> $GITHUB_STEP_SUMMARY
-          echo "|----------|--------|-------------|" >> $GITHUB_STEP_SUMMARY
-          
-          # Helper Builds
-          if [ "${{ needs.build-helpers.result }}" = "success" ]; then
-            echo "| 🔨 Helper Builds | ✅ Success | Go/Rust helpers built for all platforms |" >> $GITHUB_STEP_SUMMARY
-          elif [ "${{ needs.build-helpers.result }}" = "skipped" ]; then
-            echo "| 🔨 Helper Builds | ⏭️ Skipped | - |" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "| 🔨 Helper Builds | ❌ Failed | Check build logs |" >> $GITHUB_STEP_SUMMARY
-          fi
-          
-          # Flavor Tests
-          if [ "${{ needs.flavor-tests.result }}" = "success" ]; then
-            echo "| 🧪 Flavor Tests | ✅ Success | All test marks passed |" >> $GITHUB_STEP_SUMMARY
-          elif [ "${{ needs.flavor-tests.result }}" = "skipped" ]; then
-            echo "| 🧪 Flavor Tests | ⏭️ Skipped | - |" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "| 🧪 Flavor Tests | ❌ Failed | Check test results |" >> $GITHUB_STEP_SUMMARY
-          fi
-          
-          # Taster Tests
-          if [ "${{ needs.taster-tests.result }}" = "success" ]; then
-            echo "| 🍯 Taster Tests | ✅ Success | Unit and integration tests passed |" >> $GITHUB_STEP_SUMMARY
-          elif [ "${{ needs.taster-tests.result }}" = "skipped" ]; then
-            echo "| 🍯 Taster Tests | ⏭️ Skipped | - |" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "| 🍯 Taster Tests | ❌ Failed | Check test results |" >> $GITHUB_STEP_SUMMARY
-          fi
-          
-          # Flavor Packaging
-          if [ "${{ needs.flavor-packaging.result }}" = "success" ]; then
-            echo "| 📦 Flavor Packaging | ✅ Success | Self-packaging and Taster packaging work |" >> $GITHUB_STEP_SUMMARY
-          elif [ "${{ needs.flavor-packaging.result }}" = "skipped" ]; then
-            echo "| 📦 Flavor Packaging | ⏭️ Skipped | - |" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "| 📦 Flavor Packaging | ❌ Failed | Check packaging logs |" >> $GITHUB_STEP_SUMMARY
-          fi
-          
-          # Taster Self-Packaging
-          if [ "${{ needs.taster-self-packaging.result }}" = "success" ]; then
-            echo "| 🔄 Taster Self-Package | ✅ Success | Cross-combination packaging works |" >> $GITHUB_STEP_SUMMARY
-          elif [ "${{ needs.taster-self-packaging.result }}" = "skipped" ]; then
-            echo "| 🔄 Taster Self-Package | ⏭️ Skipped | - |" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "| 🔄 Taster Self-Package | ❌ Failed | Check self-packaging logs |" >> $GITHUB_STEP_SUMMARY
-          fi
-          
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## 🔗 Quick Links" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- [View All Artifacts](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}#artifacts)" >> $GITHUB_STEP_SUMMARY
-          echo "- [Download Helpers](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}#artifacts)" >> $GITHUB_STEP_SUMMARY
-          echo "- [Coverage Report](https://codecov.io/gh/${{ github.repository }})" >> $GITHUB_STEP_SUMMARY
-          
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## 📊 Test Coverage" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Category | Tests | Status |" >> $GITHUB_STEP_SUMMARY
-          echo "|----------|-------|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Unit Tests | Fast isolated tests | See flavor-tests |" >> $GITHUB_STEP_SUMMARY
-          echo "| Integration | Multi-component tests | See flavor-tests |" >> $GITHUB_STEP_SUMMARY
-          echo "| Security | Crypto and safety tests | See flavor-tests |" >> $GITHUB_STEP_SUMMARY
-          echo "| Packaging | Build verification | See flavor-packaging |" >> $GITHUB_STEP_SUMMARY
-          echo "| Memory-Mapped | MMap backend tests | See flavor-tests |" >> $GITHUB_STEP_SUMMARY
-          echo "| Cross-Language | Go/Rust/Python tests | See taster-self-package |" >> $GITHUB_STEP_SUMMARY
-          
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "---" >> $GITHUB_STEP_SUMMARY
-          echo "_Generated at $(date -u '+%Y-%m-%d %H:%M:%S UTC')_" >> $GITHUB_STEP_SUMMARY
+          chmod +x .github/scripts/generate-summary.sh
+          .github/scripts/generate-summary.sh \
+            "${{ needs.build-helpers.result }}" \
+            "${{ needs.flavor-tests.result }}" \
+            "${{ needs.taster-tests.result }}" \
+            "${{ needs.flavor-packaging.result }}" \
+            "${{ needs.taster-self-packaging.result }}" \
+            "${{ needs.integration-tests.result }}"
       
-      - name: 🚦 Set Exit Code
-        if: always()
-        run: |
-          if [ "${{ needs.build-helpers.result }}" != "success" ]; then
-            exit 1
-          fi
-          if [ "${{ needs.flavor-tests.result }}" != "success" ] && [ "${{ needs.flavor-tests.result }}" != "skipped" ]; then
-            exit 1
-          fi
-          if [ "${{ needs.taster-tests.result }}" != "success" ] && [ "${{ needs.taster-tests.result }}" != "skipped" ]; then
-            exit 1
-          fi
-          if [ "${{ needs.flavor-packaging.result }}" != "success" ] && [ "${{ needs.flavor-packaging.result }}" != "skipped" ]; then
-            exit 1
-          fi
-          if [ "${{ needs.taster-self-packaging.result }}" != "success" ] && [ "${{ needs.taster-self-packaging.result }}" != "skipped" ]; then
-            exit 1
-          fi
-          echo "✅ All required workflows passed!"
