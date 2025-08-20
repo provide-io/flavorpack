@@ -50,15 +50,11 @@ jobs:
           GITHUB_EVENT_NAME: ${{ github.event_name }}
           GITHUB_EVENT_BEFORE: ${{ github.event.before }}
           GITHUB_BASE_REF: ${{ github.base_ref }}
-        run: |
-          chmod +x .github/scripts/check-helpers-diff.sh
-          .github/scripts/check-helpers-diff.sh
+        run: .github/scripts/check-helpers-diff.sh
       
       - name: 🔍 Get version
         id: version
-        run: |
-          chmod +x .github/scripts/get-helper-version.sh
-          .github/scripts/get-helper-version.sh
+        run: .github/scripts/get-helper-version.sh
 
   # Build for Linux AMD64
   build-linux-amd64:
@@ -73,7 +69,6 @@ jobs:
       - name: 📊 Initialize build metadata
         id: metadata
         run: |
-          chmod +x .github/scripts/capture-build-metadata.sh
           METADATA_FILE=$(.github/scripts/capture-build-metadata.sh \
             "linux_amd64" \
             "${{ needs.check-diff.outputs.version }}" \
@@ -81,7 +76,6 @@ jobs:
           echo "metadata_file=$METADATA_FILE" >> $GITHUB_OUTPUT
           
           # Record container startup time
-          chmod +x .github/scripts/record-timing.sh
           .github/scripts/record-timing.sh "$METADATA_FILE" "container_startup" "start"
       
       - name: 💾 Check cache (DISABLED - always rebuild)
@@ -117,7 +111,6 @@ jobs:
           
           # Build Go helpers
           .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "build_go" "start"
-          chmod +x .github/scripts/build-platform-helpers.sh
           .github/scripts/build-platform-helpers.sh linux_amd64 linux amd64 x86_64-unknown-linux-gnu
           .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "build_go" "end"
           
@@ -130,7 +123,6 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
           .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "package" "start"
-          chmod +x .github/scripts/package-with-metadata.sh
           .github/scripts/package-with-metadata.sh \
             "linux_amd64" \
             "${{ needs.check-diff.outputs.version }}" \
@@ -151,7 +143,6 @@ jobs:
         id: test
         continue-on-error: true
         run: |
-          chmod +x .github/scripts/test-platform-binaries.sh
           mkdir -p artifacts/test-results
           .github/scripts/test-platform-binaries.sh linux_amd64 helpers/bin artifacts/test-results
       
@@ -171,7 +162,6 @@ jobs:
           BUILD_DURATION: ${{ steps.build.outputs.duration || '0' }}
           BUILD_TIMESTAMP: ${{ steps.build.outputs.timestamp || '' }}
         run: |
-          chmod +x .github/scripts/generate-platform-metadata.sh
           .github/scripts/generate-platform-metadata.sh \
             "linux_amd64" \
             "${{ needs.check-diff.outputs.version }}" \
@@ -199,7 +189,6 @@ jobs:
       - name: 📊 Initialize build metadata
         id: metadata
         run: |
-          chmod +x .github/scripts/capture-build-metadata.sh
           METADATA_FILE=$(.github/scripts/capture-build-metadata.sh \
             "linux_arm64" \
             "${{ needs.check-diff.outputs.version }}" \
@@ -207,7 +196,6 @@ jobs:
           echo "metadata_file=$METADATA_FILE" >> $GITHUB_OUTPUT
           
           # Record container startup time
-          chmod +x .github/scripts/record-timing.sh
           .github/scripts/record-timing.sh "$METADATA_FILE" "container_startup" "start"
       
       - name: 💾 Check cache (DISABLED - always rebuild)
@@ -249,7 +237,6 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
           .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "setup_cross_compile" "start"
-          chmod +x .github/scripts/setup-cross-compile.sh
           .github/scripts/setup-cross-compile.sh linux_arm64
           .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "setup_cross_compile" "end"
       
@@ -261,7 +248,6 @@ jobs:
           
           # Build with timing for each language
           .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "build_go" "start"
-          chmod +x .github/scripts/build-platform-helpers.sh
           .github/scripts/build-platform-helpers.sh linux_arm64 linux arm64 aarch64-unknown-linux-gnu
           .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "build_go" "end"
           
@@ -274,7 +260,6 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
           .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "package" "start"
-          chmod +x .github/scripts/package-with-metadata.sh
           .github/scripts/package-with-metadata.sh \
             "linux_arm64" \
             "${{ needs.check-diff.outputs.version }}" \
@@ -295,7 +280,6 @@ jobs:
         id: test
         continue-on-error: true
         run: |
-          chmod +x .github/scripts/test-platform-binaries.sh
           mkdir -p artifacts/test-results
           .github/scripts/test-platform-binaries.sh linux_arm64 helpers/bin artifacts/test-results
       
@@ -315,7 +299,6 @@ jobs:
           BUILD_DURATION: ${{ steps.build.outputs.duration || '0' }}
           BUILD_TIMESTAMP: ${{ steps.build.outputs.timestamp || '' }}
         run: |
-          chmod +x .github/scripts/generate-platform-metadata.sh
           .github/scripts/generate-platform-metadata.sh \
             "linux_arm64" \
             "${{ needs.check-diff.outputs.version }}" \
@@ -343,7 +326,6 @@ jobs:
       - name: 📊 Initialize build metadata
         id: metadata
         run: |
-          chmod +x .github/scripts/capture-build-metadata.sh
           METADATA_FILE=$(.github/scripts/capture-build-metadata.sh \
             "darwin_amd64" \
             "${{ needs.check-diff.outputs.version }}" \
@@ -351,7 +333,6 @@ jobs:
           echo "metadata_file=$METADATA_FILE" >> $GITHUB_OUTPUT
           
           # Record container startup time
-          chmod +x .github/scripts/record-timing.sh
           .github/scripts/record-timing.sh "$METADATA_FILE" "container_startup" "start"
       
       - name: 💾 Check cache (DISABLED - always rebuild)
@@ -397,7 +378,6 @@ jobs:
           
           # Build with timing for each language
           .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "build_go" "start"
-          chmod +x .github/scripts/build-platform-helpers.sh
           .github/scripts/build-platform-helpers.sh darwin_amd64 darwin amd64 x86_64-apple-darwin
           .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "build_go" "end"
           
@@ -410,7 +390,6 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
           .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "package" "start"
-          chmod +x .github/scripts/package-with-metadata.sh
           .github/scripts/package-with-metadata.sh \
             "darwin_amd64" \
             "${{ needs.check-diff.outputs.version }}" \
@@ -431,7 +410,6 @@ jobs:
         id: test
         continue-on-error: true
         run: |
-          chmod +x .github/scripts/test-platform-binaries.sh
           mkdir -p artifacts/test-results
           .github/scripts/test-platform-binaries.sh darwin_amd64 helpers/bin artifacts/test-results
       
@@ -451,7 +429,6 @@ jobs:
           BUILD_DURATION: ${{ steps.build.outputs.duration || '0' }}
           BUILD_TIMESTAMP: ${{ steps.build.outputs.timestamp || '' }}
         run: |
-          chmod +x .github/scripts/generate-platform-metadata.sh
           .github/scripts/generate-platform-metadata.sh \
             "darwin_amd64" \
             "${{ needs.check-diff.outputs.version }}" \
@@ -479,7 +456,6 @@ jobs:
       - name: 📊 Initialize build metadata
         id: metadata
         run: |
-          chmod +x .github/scripts/capture-build-metadata.sh
           METADATA_FILE=$(.github/scripts/capture-build-metadata.sh \
             "darwin_arm64" \
             "${{ needs.check-diff.outputs.version }}" \
@@ -487,7 +463,6 @@ jobs:
           echo "metadata_file=$METADATA_FILE" >> $GITHUB_OUTPUT
           
           # Record container startup time
-          chmod +x .github/scripts/record-timing.sh
           .github/scripts/record-timing.sh "$METADATA_FILE" "container_startup" "start"
       
       - name: 💾 Check cache (DISABLED - always rebuild)
@@ -533,7 +508,6 @@ jobs:
           
           # Build with timing for each language
           .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "build_go" "start"
-          chmod +x .github/scripts/build-platform-helpers.sh
           .github/scripts/build-platform-helpers.sh darwin_arm64 darwin arm64 aarch64-apple-darwin
           .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "build_go" "end"
           
@@ -546,7 +520,6 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
           .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "package" "start"
-          chmod +x .github/scripts/package-with-metadata.sh
           .github/scripts/package-with-metadata.sh \
             "darwin_arm64" \
             "${{ needs.check-diff.outputs.version }}" \
@@ -567,7 +540,6 @@ jobs:
         id: test
         continue-on-error: true
         run: |
-          chmod +x .github/scripts/test-platform-binaries.sh
           mkdir -p artifacts/test-results
           .github/scripts/test-platform-binaries.sh darwin_arm64 helpers/bin artifacts/test-results
       
@@ -587,7 +559,6 @@ jobs:
           BUILD_DURATION: ${{ steps.build.outputs.duration || '0' }}
           BUILD_TIMESTAMP: ${{ steps.build.outputs.timestamp || '' }}
         run: |
-          chmod +x .github/scripts/generate-platform-metadata.sh
           .github/scripts/generate-platform-metadata.sh \
             "darwin_arm64" \
             "${{ needs.check-diff.outputs.version }}" \
@@ -750,51 +721,6 @@ jobs:
   #           artifacts/metadata/
   #           artifacts/test-results/
 
-  # Test cross-platform binaries
-  test-cross-platform:
-    name: 🧪 Cross-Platform Tests
-    # TEMPORARILY REMOVED build-windows-amd64 from dependencies
-    needs: [check-diff, build-linux-amd64, build-linux-arm64, build-darwin-amd64, build-darwin-arm64]
-    if: always()
-    runs-on: ubuntu-latest
-    steps:
-      - name: 📥 Checkout (for scripts)
-        uses: actions/checkout@v4
-      
-      
-      - name: 📥 Download Linux artifacts
-        uses: actions/download-artifact@v4
-        with:
-          pattern: flavor-helpers-${{ needs.check-diff.outputs.version }}-linux*
-          path: artifacts
-      
-      - name: 🧪 Test Linux ARM64 on AMD64
-        run: |
-          # Extract Linux ARM64 binaries
-          mkdir -p test-bin
-          unzip -o artifacts/flavor-helpers-${{ needs.check-diff.outputs.version }}-linux_arm64/*.zip -d test-bin/
-          
-          # Test with QEMU emulation
-          chmod +x .github/scripts/test-platform-binaries.sh
-          mkdir -p cross-test-results
-          .github/scripts/test-platform-binaries.sh linux_arm64 test-bin cross-test-results || true
-      
-      - name: 🧪 Test Linux AMD64 on this runner
-        run: |
-          # Extract Linux AMD64 binaries
-          mkdir -p test-bin-amd64
-          unzip -o artifacts/flavor-helpers-${{ needs.check-diff.outputs.version }}-linux_amd64/*.zip -d test-bin-amd64/
-          
-          # Test natively
-          mkdir -p cross-test-results
-          .github/scripts/test-platform-binaries.sh linux_amd64 test-bin-amd64 cross-test-results || true
-      
-      - name: 📤 Upload cross-test results
-        uses: actions/upload-artifact@v4
-        with:
-          name: cross-test-results-${{ needs.check-diff.outputs.version }}
-          path: cross-test-results/
-
   # Combine all artifacts
   combine:
     name: 📦 Combine Artifacts
@@ -814,29 +740,10 @@ jobs:
       
       - name: 🔀 Combine binaries
         run: |
-          mkdir -p final
-          cd platform-artifacts
-          for dir in */; do
-            if [ -f "$dir"*.zip ]; then
-              cp "$dir"*.zip ../final/
-            fi
-          done
-          cd ../final
-          
-          # Extract all zips to create combined
-          mkdir -p extracted
-          for zip in flavor-helpers-*-*.zip; do
-            if [[ "$zip" != *"-all.zip" ]]; then
-              unzip -o "$zip" -d extracted/
-            fi
-          done
-          cd extracted
-          zip ../flavor-helpers-${{ needs.check-diff.outputs.version }}-all.zip *
-          cd ../..
+          .github/scripts/combine-binaries.sh platform-artifacts ${{ needs.check-diff.outputs.version }} final
       
       - name: 📊 Combine metadata
         run: |
-          chmod +x .github/scripts/combine-platform-metadata.sh
           .github/scripts/combine-platform-metadata.sh \
             "platform-artifacts" \
             "${{ needs.check-diff.outputs.version }}" \
@@ -844,7 +751,6 @@ jobs:
       
       - name: 🧪 Combine test results
         run: |
-          chmod +x .github/scripts/combine-test-results.sh
           .github/scripts/combine-test-results.sh \
             "platform-artifacts" \
             "final/combined-test-report.json"
@@ -852,7 +758,6 @@ jobs:
       - name: 📊 Generate checksums
         run: |
           cd final
-          chmod +x ../.github/scripts/generate-checksums.sh
           ../.github/scripts/generate-checksums.sh \
             "${{ needs.check-diff.outputs.version }}" \
             "${{ needs.check-diff.outputs.hash }}"
@@ -885,7 +790,7 @@ jobs:
   # Validate and generate summary
   validate:
     name: 🧪 Validate & Summarize
-    needs: [check-diff, combine, test-cross-platform]
+    needs: [check-diff, combine]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -907,7 +812,6 @@ jobs:
       - name: 🔍 Validate artifacts
         id: validate
         run: |
-          chmod +x .github/scripts/validate-helper-pipeline.py
           python3 .github/scripts/validate-helper-pipeline.py artifacts validation-report.json ${{ needs.check-diff.outputs.version }} || true
       
       - name: 📊 Generate summary
@@ -916,7 +820,6 @@ jobs:
           GITHUB_REPOSITORY: ${{ github.repository }}
           GITHUB_SERVER_URL: ${{ github.server_url }}
         run: |
-          chmod +x .github/scripts/generate-pipeline-summary.py
           python3 .github/scripts/generate-pipeline-summary.py \
             validation-report.json \
             "${{ github.run_id }}"

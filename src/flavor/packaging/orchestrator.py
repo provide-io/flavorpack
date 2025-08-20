@@ -95,14 +95,15 @@ class PackagingOrchestrator:
             return "rust"  # Default to rust
 
     def _find_helper(self, helper_name: str) -> Path:
-        """Find a helper binary using HelperManager."""
-        # Try to get helper info from HelperManager
-        helper_info = self.helper_manager.get_helper_info(helper_name)
-        if helper_info and helper_info.path.exists():
-            logger.info(f"Found helper '{helper_name}' at: {helper_info.path}")
-            return helper_info.path
+        """Find a helper binary using HelperManager, auto-downloading if needed."""
+        # Try to find the helper, with auto-download enabled
+        helper_path = self.helper_manager.find_helper(helper_name, auto_download=True)
 
-        # If not found, list available helpers for error message
+        if helper_path and helper_path.exists():
+            logger.info(f"Found helper '{helper_name}' at: {helper_path}")
+            return helper_path
+
+        # If not found even with auto-download, provide helpful error
         helpers = self.helper_manager.list_helpers()
         available_names = []
         for helper_list in [helpers["launchers"], helpers["builders"]]:
@@ -111,7 +112,8 @@ class PackagingOrchestrator:
         raise BuildError(
             f"Could not find required helper binary '{helper_name}'.\n"
             f"Available helpers: {available_names or 'None'}.\n"
-            "Ensure helpers are built. Run: flavor helpers build"
+            "The helper could not be auto-downloaded. Please check your internet connection\n"
+            "or build helpers locally with: flavor helpers build"
         )
 
     def build_package(self) -> None:
@@ -258,9 +260,9 @@ class PackagingOrchestrator:
                 )
                 logger.info(f"✅ Package built successfully: {final_size:.1f} MB")
                 if result.metadata and "duration_seconds" in result.metadata:
-                        logger.info(
-                            f"⏱️  Build time: {result.metadata['duration_seconds']:.2f}s"
-                        )
+                    logger.info(
+                        f"⏱️  Build time: {result.metadata['duration_seconds']:.2f}s"
+                    )
 
     def _build_with_external_builder(self) -> None:
         """Build package using an external builder binary (Go/Rust)."""
@@ -303,13 +305,10 @@ class PackagingOrchestrator:
             # Step 3: Create manifest for builder
             key_paths = {
                 "private": self.package_integrity_key_path,
-                "public": self.public_key_path
+                "public": self.public_key_path,
             }
             manifest = create_builder_manifest(
-                self.package_name,
-                self.build_config,
-                slots,
-                key_paths
+                self.package_name, self.build_config, slots, key_paths
             )
 
             # Write manifest to file
@@ -317,14 +316,12 @@ class PackagingOrchestrator:
 
             # Step 4: Find and use builder helper
             packager_executable = find_builder_executable(
-                self.builder_bin,
-                self._find_helper
+                self.builder_bin, self._find_helper
             )
 
             # Find launcher binary
             launcher_executable = find_launcher_executable(
-                self.launcher_bin,
-                self._find_helper
+                self.launcher_bin, self._find_helper
             )
 
             # Detect launcher type for metadata

@@ -6,6 +6,7 @@ import json
 import os
 from pathlib import Path
 import shutil
+import tempfile
 import time
 
 
@@ -23,10 +24,10 @@ def get_cache_dir() -> Path:
             return base / "pspf" / "workenv"
         else:
             # Linux
-            return Path("/tmp") / "pspf" / "workenv"
+            return Path(tempfile.gettempdir()) / "pspf" / "workenv"
     else:
         # Windows
-        return Path(os.environ.get("TEMP", "/tmp")) / "pspf" / "workenv"
+        return Path(os.environ.get("TEMP", tempfile.gettempdir())) / "pspf" / "workenv"
 
 
 class CacheManager:

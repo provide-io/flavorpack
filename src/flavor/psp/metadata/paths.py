@@ -107,7 +107,7 @@ def validate_metadata_dict(metadata: dict[str, Any]) -> dict[str, Any]:
     # Keys that contain path patterns or templates
     PATTERN_KEYS = {"pattern", "enumerate"}
 
-    result = {}
+    result: dict[str, Any] = {}
 
     for key, value in metadata.items():
         if key == "workenv" and isinstance(value, dict):

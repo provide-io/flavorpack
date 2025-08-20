@@ -32,7 +32,7 @@ class PSPFLauncher(PSPFReader):
     @contextmanager
     def acquire_lock(self, lock_file: Path, timeout: float = 30.0):
         """Acquire a file-based lock for extraction."""
-        from flavor.resilience import default_lock_manager
+        from flavor.locking import default_lock_manager
 
         with default_lock_manager.lock(lock_file.name, timeout=timeout) as lock:
             yield lock

@@ -30,7 +30,7 @@ def create_slot_tarballs(temp_dir: Path, artifacts: dict[str, Path], progress: A
 
     # Determine platform-specific directory for binaries
     bin_dir = "Scripts" if is_windows else "bin"
-    
+
     with progress.task(total=3, description="Creating slots") as bar:
         # Slot 0: UV binary
         uv_tarball = temp_dir / "uv.tar.gz"
@@ -271,7 +271,7 @@ def create_python_builder_metadata(
         Complete metadata dictionary for Python builder
     """
     version = build_config.get("version", "1.0.0")
-    
+
     # Determine platform-specific paths
     is_windows = platform.system() == "Windows"
     bin_dir = "Scripts" if is_windows else "bin"
