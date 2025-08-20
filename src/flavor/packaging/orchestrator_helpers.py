@@ -28,12 +28,16 @@ def create_slot_tarballs(temp_dir: Path, artifacts: dict[str, Path], progress: A
 
     slots = {}
 
+    # Determine platform-specific directory for binaries
+    bin_dir = "Scripts" if is_windows else "bin"
+
     with progress.task(total=3, description="Creating slots") as bar:
         # Slot 0: UV binary
         uv_tarball = temp_dir / "uv.tar.gz"
         with tarfile.open(uv_tarball, "w:gz") as tar:
             uv_path = artifacts["payload_dir"] / "bin" / uv_exe
-            tar.add(uv_path, arcname=f"bin/{uv_exe}")
+            # Use platform-specific directory in tarball
+            tar.add(uv_path, arcname=f"{bin_dir}/{uv_exe}")
         slots["uv"] = uv_tarball
         if bar:
             bar.increment()
@@ -80,7 +84,9 @@ def create_builder_manifest(
     uv_exe = "uv.exe" if is_windows else "uv"
     # Use Scripts for Windows, bin for Unix
     bin_dir = "Scripts" if is_windows else "bin"
+    # Windows UV Python has python.exe in root, not in Scripts
     python_exe = "python.exe" if is_windows else "python3.11"
+    python_path = f"{{workenv}}/{python_exe}" if is_windows else f"{{workenv}}/{bin_dir}/{python_exe}"
     package_exe = f"{package_name}.exe" if is_windows else package_name
     version = build_config.get("version", "1.0.0")
 
@@ -94,7 +100,7 @@ def create_builder_manifest(
         "setup_commands": [
             {
                 "type": "enumerate_and_execute",
-                "command": f"{{workenv}}/{bin_dir}/{uv_exe} pip install --python {{workenv}}/{bin_dir}/{python_exe} --no-deps",
+                "command": f"{{workenv}}/{bin_dir}/{uv_exe} pip install --python {python_path} --no-deps",
                 "enumerate": {"path": "{workenv}/wheels", "pattern": "*.whl"},
             },
             {
@@ -266,6 +272,14 @@ def create_python_builder_metadata(
     """
     version = build_config.get("version", "1.0.0")
 
+    # Determine platform-specific paths
+    is_windows = platform.system() == "Windows"
+    bin_dir = "Scripts" if is_windows else "bin"
+    python_exe = "python.exe" if is_windows else "python3.11"
+    # Windows UV Python has python.exe in root, not in Scripts
+    python_path = f"{{workenv}}/{python_exe}" if is_windows else f"{{workenv}}/{bin_dir}/{python_exe}"
+    package_exe = f"{package_name}.exe" if is_windows else package_name
+
     metadata = {
         "package": {
             "name": package_name,
@@ -273,7 +287,7 @@ def create_python_builder_metadata(
         },
         "execution": {
             "primary_slot": 0,  # Primary slot for execution
-            "command": f"{{workenv}}/bin/{package_name}",  # Use the installed script
+            "command": f"{{workenv}}/{bin_dir}/{package_exe}",  # Use the installed script
             "env": {},  # Application-specific environment variables
         },
         "workenv": {
@@ -307,9 +321,9 @@ def create_python_builder_metadata(
         "setup_commands": [
             {
                 "type": "enumerate_and_execute",
-                "command": "{workenv}/bin/"
+                "command": f"{{workenv}}/{bin_dir}/"
                 + uv_exe
-                + " pip install --python {workenv}/bin/python3.11 --no-deps",
+                + f" pip install --python {python_path} --system --no-deps",
                 "enumerate": {"path": "{workenv}/wheels", "pattern": "*.whl"},
             },
             {
@@ -346,14 +360,16 @@ def create_python_slot_tarballs(
     """
     is_windows = platform.system() == "Windows"
     uv_exe = "uv.exe" if is_windows else "uv"
+    # Determine platform-specific directory for binaries
+    bin_dir = "Scripts" if is_windows else "bin"
 
     with progress.task(total=3, description="Creating slots") as bar:
-        # Slot 0: UV binary - must be at bin/uv in the tarball
+        # Slot 0: UV binary - must be in platform-specific dir in the tarball
         uv_tarball = temp_dir / "uv.tar.gz"
         with tarfile.open(uv_tarball, "w:gz") as tar:
             uv_path = artifacts["payload_dir"] / "bin" / uv_exe
-            # Always use bin/uv in the tarball for consistency
-            tar.add(uv_path, arcname=f"bin/{uv_exe}")
+            # Use platform-specific directory in tarball (Scripts on Windows, bin on Unix)
+            tar.add(uv_path, arcname=f"{bin_dir}/{uv_exe}")
         if bar:
             bar.increment()
 

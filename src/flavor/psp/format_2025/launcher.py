@@ -4,7 +4,6 @@ PSPF 2025 Bundle Launcher
 Handles bundle execution, slot extraction, and work environment setup.
 """
 
-from contextlib import contextmanager
 import glob
 import io
 import os
@@ -15,8 +14,9 @@ import zlib
 
 from pyvider.telemetry import logger
 
-from flavor.psp.format_2025.constants import SLOT_DESCRIPTOR_SIZE
+from flavor.psp.format_2025.launcher_slots import read_slot_table, substitute_slot_references
 from flavor.psp.format_2025.reader import PSPFReader
+from flavor.psp.format_2025.shared import acquire_lock
 from flavor.utils.subprocess import run_command
 
 
@@ -29,69 +29,7 @@ class PSPFLauncher(PSPFReader):
         self.cache_dir = Path.home() / ".cache" / "pspf"
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
-    @contextmanager
-    def acquire_lock(self, lock_file: Path, timeout: float = 30.0):
-        """Acquire a file-based lock for extraction."""
-        from flavor.resilience import default_lock_manager
 
-        with default_lock_manager.lock(lock_file.name, timeout=timeout) as lock:
-            yield lock
-
-    def read_slot_table(self) -> list[dict]:
-        """Read the slot table from the bundle.
-
-        Returns:
-            list: List of slot entries, each containing:
-                - offset: Start position of slot data
-                - size: Size of uncompressed data
-                - checksum: Adler32 checksum
-                - encoding: 0=none, 1=gzip, 2=reserved
-                - purpose: 0=payload, 1=runtime, 2=tool
-                - lifecycle: 0=persistent, 1=volatile, 2=temporary, 3=install
-        """
-        # NOTE: This logic is unique to Python launcher - Go/Rust have their own implementations
-        index = self.read_index()
-
-        slot_entries = []
-
-        with Path(self.bundle_path).open("rb") as f:
-            # Seek to slot table
-            f.seek(index.slot_table_offset)
-
-            # Read each 64-byte slot descriptor (new format)
-            for i in range(index.slot_count):
-                entry_data = f.read(SLOT_DESCRIPTOR_SIZE)
-                if len(entry_data) != SLOT_DESCRIPTOR_SIZE:
-                    raise ValueError(
-                        f"Invalid slot table entry {i}: expected {SLOT_DESCRIPTOR_SIZE} bytes, got {len(entry_data)}"
-                    )
-
-                # Use SlotDescriptor to unpack
-                from flavor.psp.format_2025.slots import SlotDescriptor
-
-                descriptor = SlotDescriptor.unpack(entry_data)
-
-                # Extract the fields we need for launcher
-                offset = descriptor.offset
-                size = descriptor.size  # Compressed size
-                checksum = descriptor.checksum
-                encoding = descriptor.encoding
-                purpose = descriptor.purpose
-                lifecycle = descriptor.lifecycle
-
-                slot_entries.append(
-                    {
-                        "index": i,
-                        "offset": offset,
-                        "size": size,
-                        "checksum": checksum,
-                        "encoding": encoding,
-                        "purpose": purpose,
-                        "lifecycle": lifecycle,
-                    }
-                )
-
-        return slot_entries
 
     def extract_all_slots(self, workenv_dir: Path) -> dict[int, Path]:
         """Extract all slots to the work environment.
@@ -105,7 +43,7 @@ class PSPFLauncher(PSPFReader):
         logger.debug(f"📦 Extracting all slots to {workenv_dir}")
 
         # NOTE: This parallels Go's ExtractAllSlots logic
-        slot_table = self.read_slot_table()
+        slot_table = read_slot_table(self)
         extracted_paths = {}
 
         logger.info(f"📤 Extracting {len(slot_table)} slots")
@@ -143,7 +81,7 @@ class PSPFLauncher(PSPFReader):
         logger.debug(f"📦 Extracting slot {slot_index} to {workenv_dir}")
 
         # NOTE: This logic is unique to Python launcher - Go/Rust have their own implementations
-        slot_table = self.read_slot_table()
+        slot_table = read_slot_table(self)
 
         if slot_index < 0 or slot_index >= len(slot_table):
             logger.error(
@@ -487,27 +425,6 @@ class PSPFLauncher(PSPFReader):
                 # Legacy string command
                 logger.warning("⚠️ String setup commands not supported")
 
-    def _substitute_slot_references(self, command: str, workenv_dir: Path) -> str:
-        """Substitute {slot:N} references in command.
-
-        Args:
-            command: Command with potential slot references
-            workenv_dir: Work environment directory
-
-        Returns:
-            str: Command with slot references substituted
-        """
-        # NOTE: Slot substitution logic matches Go implementation
-        metadata = self.read_metadata()
-
-        for i, slot in enumerate(metadata.get("slots", [])):
-            placeholder = f"{{slot:{i}}}"
-            if placeholder in command:
-                slot_path = workenv_dir / slot["name"]
-                command = command.replace(placeholder, str(slot_path))
-                logger.debug(f"🔄 Substituted {placeholder} -> {slot_path}")
-
-        return command
 
     def execute(self, args: list[str] | None = None) -> dict:
         """Execute the bundle.

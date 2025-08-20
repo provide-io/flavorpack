@@ -364,6 +364,11 @@ class PythonPackager:
                     capture_output=True,
                 )
 
+        # Remove UV wheel if it exists - UV is extracted separately and shouldn't be in wheels
+        for uv_wheel in wheels_dir.glob("uv-*.whl"):
+            logger.info(f"Removing UV wheel from wheels directory: {uv_wheel.name}")
+            uv_wheel.unlink()
+
         # Finish spinner
         if wheel_spinner:
             wheel_spinner.finish()
@@ -407,16 +412,75 @@ class PythonPackager:
         if python_spinner:
             python_spinner.finish()
 
-        # Find the installed Python (UV installs with full version like 3.11.12)
-        uv_python_base = Path.home() / ".local" / "share" / "uv" / "python"
+        # Find the installed Python using UV's python list command
+        # This is more reliable than guessing the installation path
         python_install_dir = None
 
-        # Look for any Python that matches our major.minor version
-        if uv_python_base.exists():
-            for python_dir in uv_python_base.glob(f"cpython-{self.python_version}*"):
-                if python_dir.is_dir():
-                    python_install_dir = python_dir
-                    break
+        try:
+            # Use UV to list installed Python versions
+            result = run_command(
+                ["uv", "python", "list", "--only-installed"],
+                check=True,
+                capture_output=True
+            )
+
+            # Parse the output to find our Python version
+            # CRITICAL: Only accept UV-managed Python, NEVER system Python
+            for line in result.stdout.splitlines():
+                # Line format: cpython-3.11.12-platform-arch-none    /path/to/python
+                if f"cpython-{self.python_version}" in line:
+                    # Extract the path (after the whitespace)
+                    # UV output format varies by platform
+                    parts = line.split()
+                    # Find the path - it's after the version string
+                    # Look for a part that starts with / or C:\ or contains /python
+                    python_path = None
+                    for part in parts[1:]:  # Skip the first part (version)
+                        if part.startswith('/') or part.startswith('C:\\') or '/python' in part:
+                            # Remove any symlink arrows or trailing content
+                            if ' -> ' in part:
+                                part = part.split(' -> ')[0]
+                            python_path = Path(part)
+                            break
+                    
+                    if python_path:
+                        # CRITICAL: Only accept UV-managed Python installations
+                        # UV installs to ~/.local/share/uv/python or ~/AppData/Local/uv/python
+                        # NEVER accept system Python from /usr, /opt, /System, etc.
+                        path_str = str(python_path).lower()
+                        if ('/uv/python' in path_str or '\\uv\\python' in path_str or
+                            '/.local/share/uv' in path_str or '\\appdata\\local\\uv' in path_str):
+                            # This is a UV-managed Python, use it
+                            # Get the parent directory (UV installs in .../bin/python3.x)
+                            if python_path.parent.name == "bin" or python_path.parent.name == "Scripts":
+                                python_install_dir = python_path.parent.parent
+                            else:
+                                python_install_dir = python_path.parent
+                            logger.info(f"Found UV-managed Python {self.python_version} at: {python_install_dir}")
+                            break
+                        else:
+                            # This is system Python, skip it
+                            logger.warning(f"Skipping system Python at: {python_path}")
+                            continue
+        except Exception as e:
+            logger.warning(f"Could not list UV Python installations: {e}")
+
+        # Fallback to guessing the path if UV list didn't work
+        if not python_install_dir:
+            import platform
+            if platform.system() == "Windows":
+                # On Windows, UV installs Python to AppData\Local\uv\python
+                uv_python_base = Path.home() / "AppData" / "Local" / "uv" / "python"
+            else:
+                # On Unix-like systems
+                uv_python_base = Path.home() / ".local" / "share" / "uv" / "python"
+
+            # Look for any Python that matches our major.minor version
+            if uv_python_base.exists():
+                for python_dir in uv_python_base.glob(f"cpython-{self.python_version}*"):
+                    if python_dir.is_dir():
+                        python_install_dir = python_dir
+                        break
 
         if not python_install_dir or not python_install_dir.exists():
             logger.warning("Could not find UV-installed Python at expected location")
@@ -443,18 +507,39 @@ class PythonPackager:
         )
 
         # Create tarball of the Python installation, excluding EXTERNALLY-MANAGED
+        # On Windows, we need to reorganize bin/ to Scripts/
+        import platform
+        is_windows = platform.system() == "Windows"
+
         with tarfile.open(python_tgz, "w:gz", compresslevel=9) as tar:
-            # Custom filter to exclude EXTERNALLY-MANAGED file
-            def filter_externally_managed(tarinfo):
-                if tarinfo.name.endswith("EXTERNALLY-MANAGED"):
-                    logger.debug(
-                        "Excluding EXTERNALLY-MANAGED marker from Python runtime tarball"
+            # Custom filter to exclude EXTERNALLY-MANAGED file and reorganize for Windows
+            def filter_and_reorganize(tarinfo):
+                # Remove leading "./" if present for consistent checking
+                normalized_name = tarinfo.name.lstrip("./")
+
+                # Check for EXTERNALLY-MANAGED in various locations
+                if "EXTERNALLY-MANAGED" in normalized_name:
+                    logger.info(
+                        f"Excluding EXTERNALLY-MANAGED marker from Python runtime tarball: {tarinfo.name}"
                     )
                     return None
+
+                # On Windows, move bin/ contents to Scripts/
+                if is_windows:
+                    if normalized_name.startswith("bin/"):
+                        # Change bin/something to Scripts/something
+                        original_name = tarinfo.name
+                        tarinfo.name = tarinfo.name.replace("bin/", "Scripts/", 1)
+                        logger.debug(f"Windows: Remapping {original_name} to {tarinfo.name}")
+                    elif normalized_name == "bin":
+                        # Rename the bin directory itself to Scripts
+                        tarinfo.name = tarinfo.name.replace("bin", "Scripts", 1)
+                        logger.debug("Windows: Remapping bin directory to Scripts")
+
                 return tarinfo
 
             # Add all files from the Python directory, preserving structure
-            tar.add(python_install_dir, arcname=".", filter=filter_externally_managed)
+            tar.add(python_install_dir, arcname=".", filter=filter_and_reorganize)
 
     def _write_json(self, path: Path, data: dict[str, Any]) -> None:
         """Write JSON file with secure permissions."""
