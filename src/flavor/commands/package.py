@@ -131,7 +131,9 @@ def package_command(
                     result = verify_package(artifact)
                     if result["signature_valid"]:
                         if not quiet:
-                            click.secho("  ✅ Package verified successfully", fg="green")
+                            click.secho(
+                                "  ✅ Package verified successfully", fg="green"
+                            )
                     else:
                         click.secho("  ❌ Package verification failed", fg="red")
                         raise BuildError(f"Verification failed for {artifact}")

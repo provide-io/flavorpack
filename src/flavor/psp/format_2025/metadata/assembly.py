@@ -2,14 +2,14 @@
 """Metadata assembly for PSPF packages."""
 
 import datetime
-import socket
 from pathlib import Path
-from typing import Dict, List, Any, Optional
+import socket
+from typing import Any
 
-from flavor.utils import get_os_name, get_arch_name, get_platform_string
 from flavor.psp.format_2025.checksums import calculate_checksum
 from flavor.psp.format_2025.spec import BuildSpec
 from flavor.psp.metadata.paths import validate_metadata_dict
+from flavor.utils import get_arch_name, get_os_name, get_platform_string
 
 
 def get_flavor_version() -> str:
@@ -21,27 +21,28 @@ def get_flavor_version() -> str:
 def load_launcher_binary(launcher_type: str) -> bytes:
     """Load launcher binary for the specified type."""
     import os
+
     platform_str = get_platform_string()
-    
+
     # Map launcher types to binary names
     launcher_map = {
         "rust": "flavor-rs-launcher",
         "go": "flavor-go-launcher",
         "python": "flavor-rs-launcher",  # Python uses Rust launcher
-        "node": "flavor-rs-launcher",    # Node uses Rust launcher
+        "node": "flavor-rs-launcher",  # Node uses Rust launcher
     }
-    
+
     launcher_base = launcher_map.get(launcher_type, "flavor-rs-launcher")
-    
+
     # Try both platform-specific and generic names
     launcher_names = [
         f"{launcher_base}-{platform_str}",  # Platform-specific first
-        launcher_base,                       # Generic fallback
+        launcher_base,  # Generic fallback
     ]
-    
+
     # Get XDG_CACHE_HOME with fallback to ~/.cache
     xdg_cache = os.environ.get("XDG_CACHE_HOME", os.path.expanduser("~/.cache"))
-    
+
     # Search paths - prioritize helpers/bin first, then XDG cache location
     base_search_paths = [
         Path.cwd() / "helpers" / "bin",
@@ -52,20 +53,20 @@ def load_launcher_binary(launcher_type: str) -> bytes:
         Path.cwd() / "workenv" / "flavors" / platform_str,
         Path.cwd(),
     ]
-    
+
     # Try each launcher name in each search path
     for base_path in base_search_paths:
         for launcher_name in launcher_names:
             path = base_path / launcher_name
             if path.exists():
                 return path.read_bytes()
-    
+
     # Build helpful error message showing all searched paths
     searched_paths = []
     for base_path in base_search_paths:
         for launcher_name in launcher_names:
             searched_paths.append(str(base_path / launcher_name))
-    
+
     raise FileNotFoundError(
         f"Could not find {launcher_base} binary. "
         f"Build it first with 'flavor helpers build'. "
@@ -80,7 +81,7 @@ def extract_launcher_version(launcher_data: bytes) -> str:
     return "1.0.0"
 
 
-def get_launcher_capabilities(launcher_type: str) -> List[str]:
+def get_launcher_capabilities(launcher_type: str) -> list[str]:
     """Get capabilities for launcher type."""
     capabilities_map = {
         "rust": ["mmap", "async", "sandbox"],
@@ -91,10 +92,10 @@ def get_launcher_capabilities(launcher_type: str) -> List[str]:
     return capabilities_map.get(launcher_type, ["mmap"])
 
 
-def get_launcher_info(launcher_type: str) -> Dict[str, Any]:
+def get_launcher_info(launcher_type: str) -> dict[str, Any]:
     """Get launcher binary and metadata."""
     launcher_data = load_launcher_binary(launcher_type)
-    
+
     # Map launcher types to tool names
     launcher_map = {
         "rust": "flavor-rs-launcher",
@@ -102,10 +103,10 @@ def get_launcher_info(launcher_type: str) -> Dict[str, Any]:
         "python": "flavor-rs-launcher",
         "node": "flavor-rs-launcher",
     }
-    
+
     tool_name = launcher_map.get(launcher_type, "flavor-rs-launcher")
     checksum = calculate_checksum(launcher_data, "sha256")
-    
+
     return {
         "data": launcher_data,
         "tool": tool_name,
@@ -115,22 +116,22 @@ def get_launcher_info(launcher_type: str) -> Dict[str, Any]:
     }
 
 
-def create_build_metadata(deterministic: bool = False) -> Dict[str, Any]:
+def create_build_metadata(deterministic: bool = False) -> dict[str, Any]:
     """Create build section metadata."""
     return {
         "tool": "flavor-python",
         "tool_version": get_flavor_version(),
-        "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        "timestamp": datetime.datetime.now(datetime.UTC).isoformat(),
         "deterministic": deterministic,
         "platform": {
             "os": get_os_name(),
             "arch": get_arch_name(),
             "host": socket.gethostname(),
-        }
+        },
     }
 
 
-def create_launcher_metadata(launcher_info: Dict[str, Any]) -> Dict[str, Any]:
+def create_launcher_metadata(launcher_info: dict[str, Any]) -> dict[str, Any]:
     """Create launcher section metadata from launcher info."""
     return {
         "tool": launcher_info["tool"],
@@ -141,58 +142,58 @@ def create_launcher_metadata(launcher_info: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-def create_verification_metadata(spec: BuildSpec) -> Dict[str, Any]:
+def create_verification_metadata(spec: BuildSpec) -> dict[str, Any]:
     """Create verification section metadata."""
     # Check if insecure mode is enabled
-    insecure = getattr(spec.options, 'insecure_mode', False)
-    
+    insecure = getattr(spec.options, "insecure_mode", False)
+
     # Start with base verification metadata
     verification = {
-        "integrity_seal": {
-            "required": True,
-            "algorithm": "ed25519"
-        },
+        "integrity_seal": {"required": True, "algorithm": "ed25519"},
         "signed": True,
         "require_verification": not insecure,
     }
-    
+
     # If trust_signatures was provided in spec metadata, include it
-    if "verification" in spec.metadata and "trust_signatures" in spec.metadata["verification"]:
-        verification["trust_signatures"] = spec.metadata["verification"]["trust_signatures"]
-    
+    if (
+        "verification" in spec.metadata
+        and "trust_signatures" in spec.metadata["verification"]
+    ):
+        verification["trust_signatures"] = spec.metadata["verification"][
+            "trust_signatures"
+        ]
+
     return verification
 
 
-def detect_features_used(spec: BuildSpec) -> List[str]:
+def detect_features_used(spec: BuildSpec) -> list[str]:
     """Detect which PSPF features are used in this package."""
     features = []
-    
+
     if "workenv" in spec.metadata and "directories" in spec.metadata["workenv"]:
         features.append("workenv_dirs")
-    
+
     if "runtime" in spec.metadata and "env" in spec.metadata["runtime"]:
         features.append("runtime_env")
-    
-    if "setup_commands" in spec.metadata and spec.metadata["setup_commands"]:
+
+    if spec.metadata.get("setup_commands"):
         features.append("setup_commands")
-    
+
     if "cache_validation" in spec.metadata:
         features.append("cache_validation")
-    
+
     # Check for volatile slots
     for slot in spec.slots:
-        if hasattr(slot, 'lifecycle') and slot.lifecycle == "volatile":
+        if hasattr(slot, "lifecycle") and slot.lifecycle == "volatile":
             features.append("volatile_slots")
             break
-    
+
     return features
 
 
 def assemble_metadata(
-    spec: BuildSpec,
-    slots: List[Any],
-    launcher_info: Dict[str, Any]
-) -> Dict[str, Any]:
+    spec: BuildSpec, slots: list[Any], launcher_info: dict[str, Any]
+) -> dict[str, Any]:
     """Assemble complete metadata structure."""
     # Core metadata
     metadata = {
@@ -202,30 +203,28 @@ def assemble_metadata(
         "slots": [slot.metadata.to_dict() for slot in slots],
         "execution": spec.metadata.get("execution", {}),
         "verification": create_verification_metadata(spec),
-        "build": create_build_metadata(
-            deterministic=spec.keys.key_seed is not None
-        ),
+        "build": create_build_metadata(deterministic=spec.keys.key_seed is not None),
         "launcher": create_launcher_metadata(launcher_info),
         "compatibility": {
             "min_format_version": "1.0.0",
             "features": detect_features_used(spec),
-        }
+        },
     }
-    
+
     # Add optional sections if present
     for section in ["cache_validation", "setup_commands", "runtime", "workenv"]:
         if section in spec.metadata:
             metadata[section] = spec.metadata[section]
-    
+
     # Handle backward compatibility for tests (if old format exists)
     if "builder" in spec.metadata:
         metadata["builder"] = spec.metadata["builder"]
-    
+
     if "launcher" in spec.metadata and isinstance(spec.metadata["launcher"], dict):
         # Merge old launcher metadata (for tests)
         for key, value in spec.metadata["launcher"].items():
             if key not in metadata["launcher"]:
                 metadata["launcher"][key] = value
-    
+
     # Validate all paths use {workenv}
     return validate_metadata_dict(metadata)

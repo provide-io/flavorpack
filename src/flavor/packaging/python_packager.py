@@ -3,9 +3,7 @@
 #
 """Python packager that owns all Python-specific packaging logic."""
 
-import hashlib
 import json
-import os
 from pathlib import Path
 import shutil
 import tarfile
@@ -39,16 +37,17 @@ class PythonPackager:
         build_config: dict[str, Any],
         python_version: str | None = None,
         progress_reporter: Any = None,
-    ):
+    ) -> None:
         self.manifest_dir = manifest_dir
         self.package_name = package_name
         self.entry_point = entry_point
         self.build_config = build_config
         self.python_version = python_version or self.DEFAULT_PYTHON_VERSION
         self.progress = progress_reporter
-        
+
         # Platform-specific paths
         import platform
+
         self.is_windows = platform.system() == "Windows"
         self.venv_bin_dir = "Scripts" if self.is_windows else "bin"
         self.uv_exe = "uv.exe" if self.is_windows else "uv"
@@ -66,11 +65,13 @@ class PythonPackager:
             - payload_dir: Directory containing payload (for legacy compatibility)
         """
         artifacts = {}
-        
+
         # Create progress bar for preparation steps
         prep_bar = None
         if self.progress:
-            prep_bar = self.progress.create_bar(total=5, description="Preparing artifacts")
+            prep_bar = self.progress.create_bar(
+                total=5, description="Preparing artifacts"
+            )
             if prep_bar:
                 prep_bar.start()
 
@@ -156,7 +157,7 @@ class PythonPackager:
         wheel_spinner = None
         if self.progress:
             wheel_spinner = self.progress.create_spinner(description="Building wheels")
-        
+
         # Create temporary build environment
         with tempfile.TemporaryDirectory() as build_env_dir:
             build_venv = Path(build_env_dir) / "venv"
@@ -173,7 +174,7 @@ class PythonPackager:
                     f"python{self.python_version}",
                 ],
                 check=True,
-                capture_output=True
+                capture_output=True,
             )
 
             # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -193,7 +194,7 @@ class PythonPackager:
                     "pip",
                 ],
                 check=True,
-                capture_output=True
+                capture_output=True,
             )
 
             # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -228,7 +229,7 @@ class PythonPackager:
                             str(dep_path),
                         ],
                         check=True,
-                        capture_output=True
+                        capture_output=True,
                     )
                     # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                     # CRITICAL: MUST USE pip3 TO DOWNLOAD TRANSITIVE DEPENDENCIES
@@ -241,15 +242,19 @@ class PythonPackager:
                             [
                                 str(pip3),
                                 "download",
-                                "--dest", str(wheels_dir),
-                                "--only-binary", ":all:",
+                                "--dest",
+                                str(wheels_dir),
+                                "--only-binary",
+                                ":all:",
                                 str(dep_path),
                             ],
                             check=False,  # Don't fail if some deps can't be downloaded
-                            capture_output=True
+                            capture_output=True,
                         )
                     except Exception as e:
-                        logger.warning(f"Could not download all dependencies for {dep}: {e}")
+                        logger.warning(
+                            f"Could not download all dependencies for {dep}: {e}"
+                        )
                         # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                         # CRITICAL: FALLBACK ALSO MUST USE pip3 FOR WHEEL BUILDING
                         # DO NOT USE pip OR uv pip - ONLY pip3 WORKS FOR WHEELS
@@ -259,11 +264,12 @@ class PythonPackager:
                             [
                                 str(pip3),
                                 "wheel",
-                                "--wheel-dir", str(wheels_dir),
+                                "--wheel-dir",
+                                str(wheels_dir),
                                 str(dep_path),
                             ],
                             check=False,
-                            capture_output=True
+                            capture_output=True,
                         )
 
             # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -284,7 +290,7 @@ class PythonPackager:
                     str(self.manifest_dir),
                 ],
                 check=True,
-                capture_output=True
+                capture_output=True,
             )
 
             # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -292,7 +298,7 @@ class PythonPackager:
             # uv does NOT support pip download or pip wheel commands
             # DO NOT attempt to use uv for downloading dependencies
             # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            
+
             # Download transitive dependencies using pip3
             logger.info("Downloading transitive dependencies...")
             if wheel_spinner:
@@ -305,12 +311,15 @@ class PythonPackager:
                 python_exe = "python.exe" if self.is_windows else "python"
                 run_command(
                     [
-                        "uv", "pip", "install",
-                        "--python", str(build_venv / self.venv_bin_dir / python_exe),
+                        "uv",
+                        "pip",
+                        "install",
+                        "--python",
+                        str(build_venv / self.venv_bin_dir / python_exe),
                         str(self.manifest_dir),
                     ],
                     check=True,
-                    capture_output=True
+                    capture_output=True,
                 )
             except Exception as e:
                 logger.warning(f"Failed to install main package dependencies: {e}")
@@ -326,12 +335,14 @@ class PythonPackager:
                     [
                         str(pip3),
                         "download",
-                        "--dest", str(wheels_dir),
-                        "--only-binary", ":all:",  # Prefer wheels
+                        "--dest",
+                        str(wheels_dir),
+                        "--only-binary",
+                        ":all:",  # Prefer wheels
                         str(self.manifest_dir),
                     ],
                     check=True,
-                    capture_output=True
+                    capture_output=True,
                 )
             except Exception as e:
                 logger.warning(f"Failed to download dependency wheels: {e}")
@@ -345,11 +356,12 @@ class PythonPackager:
                     [
                         str(pip3),
                         "wheel",
-                        "--wheel-dir", str(wheels_dir),
+                        "--wheel-dir",
+                        str(wheels_dir),
                         str(self.manifest_dir),
                     ],
                     check=True,
-                    capture_output=True
+                    capture_output=True,
                 )
 
         # Finish spinner
@@ -375,31 +387,37 @@ class PythonPackager:
     def _create_python_placeholder(self, python_tgz: Path) -> None:
         """Download and package Python distribution using UV."""
         logger.info(f"Downloading Python {self.python_version} using UV...")
-        
+
         # Create spinner for Python download
         python_spinner = None
         if self.progress:
-            python_spinner = self.progress.create_spinner(description=f"Downloading Python {self.python_version}")
+            python_spinner = self.progress.create_spinner(
+                description=f"Downloading Python {self.python_version}"
+            )
             if python_spinner:
                 python_spinner.tick()
 
         # Use UV to download Python
-        run_command(["uv", "python", "install", self.python_version], check=True, capture_output=True)
-        
+        run_command(
+            ["uv", "python", "install", self.python_version],
+            check=True,
+            capture_output=True,
+        )
+
         if python_spinner:
             python_spinner.finish()
 
         # Find the installed Python (UV installs with full version like 3.11.12)
         uv_python_base = Path.home() / ".local" / "share" / "uv" / "python"
         python_install_dir = None
-        
+
         # Look for any Python that matches our major.minor version
         if uv_python_base.exists():
             for python_dir in uv_python_base.glob(f"cpython-{self.python_version}*"):
                 if python_dir.is_dir():
                     python_install_dir = python_dir
                     break
-        
+
         if not python_install_dir or not python_install_dir.exists():
             logger.warning("Could not find UV-installed Python at expected location")
             # Fall back to placeholder
@@ -415,19 +433,26 @@ class PythonPackager:
             return
 
         logger.info(f"Found Python installation at: {python_install_dir}")
-        
+
         # Check for EXTERNALLY-MANAGED marker
-        externally_managed = python_install_dir / "lib" / f"python{self.python_version}" / "EXTERNALLY-MANAGED"
-        
+        (
+            python_install_dir
+            / "lib"
+            / f"python{self.python_version}"
+            / "EXTERNALLY-MANAGED"
+        )
+
         # Create tarball of the Python installation, excluding EXTERNALLY-MANAGED
         with tarfile.open(python_tgz, "w:gz", compresslevel=9) as tar:
             # Custom filter to exclude EXTERNALLY-MANAGED file
             def filter_externally_managed(tarinfo):
                 if tarinfo.name.endswith("EXTERNALLY-MANAGED"):
-                    logger.debug(f"Excluding EXTERNALLY-MANAGED marker from Python runtime tarball")
+                    logger.debug(
+                        "Excluding EXTERNALLY-MANAGED marker from Python runtime tarball"
+                    )
                     return None
                 return tarinfo
-            
+
             # Add all files from the Python directory, preserving structure
             tar.add(python_install_dir, arcname=".", filter=filter_externally_managed)
 

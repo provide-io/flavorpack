@@ -53,7 +53,7 @@ def helper_list(verbose: bool) -> None:
                 lines = result.stdout.strip().split("\n")
                 if lines:
                     return lines[0]
-        except:
+        except Exception:
             pass
         return None
 
@@ -62,7 +62,9 @@ def helper_list(verbose: bool) -> None:
         for launcher in sorted(helpers["launchers"], key=lambda h: h.name):
             size_mb = launcher.size / (1024 * 1024)
             version = get_version(launcher.path) or launcher.version or "unknown"
-            click.echo(f"  • {launcher.name} ({launcher.language}, {size_mb:.1f} MB) - {version}")
+            click.echo(
+                f"  • {launcher.name} ({launcher.language}, {size_mb:.1f} MB) - {version}"
+            )
             if verbose:
                 if launcher.checksum:
                     click.echo(f"    Checksum: {launcher.checksum}")
@@ -74,7 +76,9 @@ def helper_list(verbose: bool) -> None:
         for builder in sorted(helpers["builders"], key=lambda h: h.name):
             size_mb = builder.size / (1024 * 1024)
             version = get_version(builder.path) or builder.version or "unknown"
-            click.echo(f"  • {builder.name} ({builder.language}, {size_mb:.1f} MB) - {version}")
+            click.echo(
+                f"  • {builder.name} ({builder.language}, {size_mb:.1f} MB) - {version}"
+            )
             if verbose:
                 if builder.checksum:
                     click.echo(f"    Checksum: {builder.checksum}")
@@ -138,10 +142,9 @@ def helper_clean(lang: str, yes: bool) -> None:
 
     manager = HelperManager()
 
-    if not yes:
-        if not click.confirm(f"Remove {lang} helper binaries?"):
-            click.echo("Aborted.")
-            return
+    if not yes and not click.confirm(f"Remove {lang} helper binaries?"):
+        click.echo("Aborted.")
+        return
 
     language = None if lang == "all" else lang
 

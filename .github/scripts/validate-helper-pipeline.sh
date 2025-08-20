@@ -2,14 +2,21 @@
 set -e
 
 # Validate helper pipeline artifacts and generate detailed report
-# Usage: .github/scripts/validate-helper-pipeline.sh <artifacts_dir> <output_json>
+# Usage: .github/scripts/validate-helper-pipeline.sh <artifacts_dir> <output_json> [version]
 
 ARTIFACTS_DIR="${1:-.}"
 OUTPUT_JSON="${2:-validation-report.json}"
+VERSION="${3:-0.3.0}"  # Pass version from pipeline!
 
 echo "🔍 Validating helper pipeline artifacts"
 echo "   Artifacts directory: $ARTIFACTS_DIR"
 echo "   Output report: $OUTPUT_JSON"
+echo "   Version: $VERSION"
+
+# Debug: List what's in the artifacts directory
+echo ""
+echo "📁 Contents of artifacts directory:"
+ls -la "$ARTIFACTS_DIR/" || echo "Failed to list $ARTIFACTS_DIR"
 
 # Initialize report
 cat > "$OUTPUT_JSON" << EOF
@@ -26,7 +33,7 @@ cat > "$OUTPUT_JSON" << EOF
 EOF
 
 # Check if test results artifact exists
-TEST_RESULTS_FILE="$ARTIFACTS_DIR/test-results/combined-test-report.json"
+TEST_RESULTS_FILE="$ARTIFACTS_DIR/final/combined-test-report.json"
 if [ -f "$TEST_RESULTS_FILE" ]; then
     echo "📋 Found combined test results"
     # Update report with test results using Python to handle JSON properly
@@ -93,7 +100,7 @@ test_binary_version() {
 # Function to check if artifact was cached
 check_cache_status() {
     local platform="$1"
-    local build_json="$ARTIFACTS_DIR/flavor-helpers-0.3.0-all/flavor-helpers-0.3.0-build.json"
+    local build_json="$ARTIFACTS_DIR/flavor-helpers-$VERSION-all/flavor-helpers-$VERSION-build.json"
     
     # If we have build metadata, check the build timestamp
     if [ -f "$build_json" ]; then
@@ -108,7 +115,7 @@ with open('$build_json') as f:
         
         # Compare with pipeline start time (would need to be passed in)
         # For now, we'll check file modification times
-        zip_file="$ARTIFACTS_DIR/flavor-helpers-0.3.0-$platform/flavor-helpers-0.3.0-$platform.zip"
+        zip_file="$ARTIFACTS_DIR/flavor-helpers-$VERSION-$platform/flavor-helpers-$VERSION-$platform.zip"
         if [ -f "$zip_file" ]; then
             # Get file modification time
             if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -159,8 +166,18 @@ for i in "${!PLATFORMS[@]}"; do
     
     TOTAL=$((TOTAL + 1))
     
-    # Check if platform artifact exists
-    zip_file="$ARTIFACTS_DIR/flavor-helpers-0.3.0-$platform/flavor-helpers-0.3.0-$platform.zip"
+    # Debug: Check what's in the platform directory
+    echo "  📂 Checking directory: $ARTIFACTS_DIR/flavor-helpers-$VERSION-$platform/"
+    if [ -d "$ARTIFACTS_DIR/flavor-helpers-$VERSION-$platform" ]; then
+        ls -la "$ARTIFACTS_DIR/flavor-helpers-$VERSION-$platform/" | head -5
+    fi
+    
+    # Check if platform artifact exists (look in multiple possible locations)
+    zip_file="$ARTIFACTS_DIR/flavor-helpers-$VERSION-$platform/flavor-helpers-$VERSION-$platform.zip"
+    if [ ! -f "$zip_file" ]; then
+        # Try without nested directory
+        zip_file="$ARTIFACTS_DIR/flavor-helpers-$VERSION-$platform.zip"
+    fi
     if [ ! -f "$zip_file" ]; then
         echo "  ❌ Artifact not found: $zip_file"
         FAILED=$((FAILED + 1))
@@ -195,7 +212,7 @@ with open('$OUTPUT_JSON', 'r+') as f:
     echo "  📦 Source: $cache_status"
     
     # Check for test results first - in the individual platform artifact
-    test_results_file="$ARTIFACTS_DIR/flavor-helpers-0.3.0-$platform/test-results/${platform}-test-report.json"
+    test_results_file="$ARTIFACTS_DIR/flavor-helpers-$VERSION-$platform/test-results/${platform}-test-report.json"
     
     if [ -f "$test_results_file" ]; then
         echo "  📋 Found test results file"

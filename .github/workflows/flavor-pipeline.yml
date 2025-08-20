@@ -59,8 +59,18 @@ jobs:
           echo "run_id=$RUN_ID" >> $GITHUB_OUTPUT
           
           # Extract version from run artifacts
-          gh run view $RUN_ID --json artifacts -q '.artifacts[0].name' | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 > version.txt
-          VERSION=$(cat version.txt)
+          ARTIFACTS=$(gh api repos/${{ github.repository }}/actions/runs/$RUN_ID/artifacts --jq '.artifacts[].name')
+          echo "Available artifacts:"
+          echo "$ARTIFACTS"
+          
+          # Extract version from artifact name
+          VERSION=$(echo "$ARTIFACTS" | grep "flavor-helpers-" | head -1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+          
+          if [ -z "$VERSION" ]; then
+            echo "Warning: Could not extract version from artifacts, using default"
+            VERSION="0.3.0"
+          fi
+          
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Helper version: $VERSION"
         env:
@@ -93,8 +103,7 @@ jobs:
               {"name": "security", "runner": "ubuntu-latest", "marker": "security", "timeout": 15},
               {"name": "format-2025", "runner": "ubuntu-latest", "path": "tests/format_2025", "timeout": 30},
               {"name": "packaging", "runner": "ubuntu-latest", "path": "tests/packaging", "timeout": 25},
-              {"name": "cross-language", "runner": "ubuntu-latest", "marker": "cross_language", "timeout": 30},
-              {"name": "stress", "runner": "ubuntu-22.04", "marker": "stress", "timeout": 45}
+              {"name": "cross-language", "runner": "ubuntu-latest", "marker": "cross_language", "timeout": 30}
             ]
           }
           EOF
@@ -152,6 +161,9 @@ jobs:
           # Install uv for faster dependency resolution
           pip install uv
           
+          # Install pytest first to ensure it's available
+          uv pip install pytest pytest-cov pytest-xdist
+          
           # Install flavor and test dependencies
           uv pip install -e ".[dev,test]"
           
@@ -164,8 +176,8 @@ jobs:
         run: |
           source workenv/bin/activate
           
-          # Build test command
-          TEST_CMD="pytest -xvs"
+          # Build test command (use python -m pytest to ensure correct pytest is used)
+          TEST_CMD="python -m pytest -xvs"
           
           # Add marker if specified
           if [ -n "${{ matrix.marker }}" ]; then

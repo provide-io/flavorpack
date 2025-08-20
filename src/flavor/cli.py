@@ -8,6 +8,15 @@ import importlib.metadata
 
 import click
 
+# Import all commands at module level
+from flavor.commands.helpers import helper_group
+from flavor.commands.inspect import inspect_command
+from flavor.commands.keygen import keygen_command
+from flavor.commands.package import package_command
+from flavor.commands.utils import analyze_deps_command, clean_command
+from flavor.commands.verify import verify_command
+from flavor.commands.workenv import workenv_group
+
 try:
     __version__ = importlib.metadata.version("flavor")
 except importlib.metadata.PackageNotFoundError:
@@ -43,19 +52,11 @@ def cli(ctx: click.Context, log_level: str) -> None:
 
     config = TelemetryConfig(
         service_name="flavor",
-        logging=LoggingConfig(default_level=telemetry_log_level, console_formatter="key_value"),
+        logging=LoggingConfig(
+            default_level=telemetry_log_level, console_formatter="key_value"
+        ),
     )
     setup_telemetry(config)
-
-
-# Import and register all commands
-from flavor.commands.helpers import helper_group
-from flavor.commands.inspect import inspect_command
-from flavor.commands.keygen import keygen_command
-from flavor.commands.package import package_command
-from flavor.commands.utils import analyze_deps_command, clean_command
-from flavor.commands.verify import verify_command
-from flavor.commands.workenv import workenv_group
 
 # Register simple commands
 cli.add_command(keygen_command, name="keygen")

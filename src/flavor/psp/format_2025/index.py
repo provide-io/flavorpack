@@ -4,14 +4,21 @@
 
 import struct
 import zlib
-from attrs import define, field, Factory
+
+from attrs import Factory, define, field
 
 from flavor.psp.format_2025.constants import (
-    PSPF_MAGIC, PSPF_VERSION, HEADER_SIZE,
-    SIGNATURE_ED25519, METADATA_JSON,
-    DEFAULT_MAX_MEMORY, DEFAULT_MIN_MEMORY, DEFAULT_CHUNK_SIZE,
-    CAPABILITY_MMAP, CAPABILITY_SIGNED,
-    ACCESS_AUTO, CACHE_NORMAL, ENCODING_RAW
+    ACCESS_AUTO,
+    CACHE_NORMAL,
+    CAPABILITY_MMAP,
+    CAPABILITY_SIGNED,
+    DEFAULT_CHUNK_SIZE,
+    DEFAULT_MAX_MEMORY,
+    DEFAULT_MIN_MEMORY,
+    ENCODING_RAW,
+    HEADER_SIZE,
+    PSPF_MAGIC,
+    PSPF_VERSION,
 )
 
 
@@ -20,71 +27,67 @@ class PSPFIndex:
     """PSPF Index Block Structure - 8192 bytes total."""
 
     # Format string for 4096-byte header
-    FORMAT: str = field(default=(
-        "<"  # Little-endian
-        # Core identification (16 bytes)
-        "8s"   # format_magic
-        "I"    # format_version
-        "I"    # index_checksum
-        
-        # File structure (48 bytes)
-        "Q"    # package_size
-        "Q"    # launcher_size
-        "Q"    # metadata_offset
-        "Q"    # metadata_size
-        "Q"    # slot_table_offset
-        "Q"    # slot_table_size
-        
-        # Slot information (8 bytes)
-        "I"    # slot_count
-        "I"    # flags
-        
-        # Security (576 bytes)
-        "32s"  # public_key (Ed25519)
-        "32s"  # metadata_checksum
-        "512s" # integrity_signature (Ed25519 uses first 64 bytes)
-        
-        # Performance hints (64 bytes)
-        "B"    # access_mode
-        "B"    # cache_strategy
-        "B"    # encoding_type
-        "B"    # encryption_type
-        "I"    # page_size
-        "Q"    # max_memory
-        "Q"    # min_memory
-        "Q"    # cpu_features
-        "Q"    # gpu_requirements
-        "Q"    # numa_hints
-        "I"    # stream_chunk_size
-        "12x"  # padding
-        
-        # Extended metadata (128 bytes)
-        "Q"    # build_timestamp
-        "32s"  # build_machine
-        "32s"  # source_hash
-        "32s"  # dependency_hash
-        "16s"  # license_id
-        "8s"   # provenance_uri
-        
-        # Capabilities (32 bytes)
-        "Q"    # capabilities
-        "Q"    # requirements
-        "Q"    # extensions
-        "I"    # compatibility
-        "I"    # protocol_version
-        
-        # Future cryptography space (512 bytes)
-        "512s" # future_crypto
-        
-        # Reserved (6808 bytes for future expansion)
-        "6808s" # reserved
-    ), init=False, repr=False)
+    FORMAT: str = field(
+        default=(
+            "<"  # Little-endian
+            # Core identification (16 bytes)
+            "8s"  # format_magic
+            "I"  # format_version
+            "I"  # index_checksum
+            # File structure (48 bytes)
+            "Q"  # package_size
+            "Q"  # launcher_size
+            "Q"  # metadata_offset
+            "Q"  # metadata_size
+            "Q"  # slot_table_offset
+            "Q"  # slot_table_size
+            # Slot information (8 bytes)
+            "I"  # slot_count
+            "I"  # flags
+            # Security (576 bytes)
+            "32s"  # public_key (Ed25519)
+            "32s"  # metadata_checksum
+            "512s"  # integrity_signature (Ed25519 uses first 64 bytes)
+            # Performance hints (64 bytes)
+            "B"  # access_mode
+            "B"  # cache_strategy
+            "B"  # encoding_type
+            "B"  # encryption_type
+            "I"  # page_size
+            "Q"  # max_memory
+            "Q"  # min_memory
+            "Q"  # cpu_features
+            "Q"  # gpu_requirements
+            "Q"  # numa_hints
+            "I"  # stream_chunk_size
+            "12x"  # padding
+            # Extended metadata (128 bytes)
+            "Q"  # build_timestamp
+            "32s"  # build_machine
+            "32s"  # source_hash
+            "32s"  # dependency_hash
+            "16s"  # license_id
+            "8s"  # provenance_uri
+            # Capabilities (32 bytes)
+            "Q"  # capabilities
+            "Q"  # requirements
+            "Q"  # extensions
+            "I"  # compatibility
+            "I"  # protocol_version
+            # Future cryptography space (512 bytes)
+            "512s"  # future_crypto
+            # Reserved (6808 bytes for future expansion)
+            "6808s"  # reserved
+        ),
+        init=False,
+        repr=False,
+    )
 
     # Core identification fields
     format_magic: bytes = field(default=PSPF_MAGIC)
     format_version: int = field(default=PSPF_VERSION)
     index_checksum: int = field(default=0)
-    
+
     # File structure fields
     package_size: int = field(default=0)
     launcher_size: int = field(default=0)
@@ -92,16 +95,16 @@ class PSPFIndex:
     metadata_size: int = field(default=0)
     slot_table_offset: int = field(default=0)
     slot_table_size: int = field(default=0)
-    
+
     # Slot information
     slot_count: int = field(default=0)
     flags: int = field(default=0)
-    
+
     # Security fields
     public_key: bytes = field(default=Factory(lambda: b"\x00" * 32))
     metadata_checksum: bytes = field(default=Factory(lambda: b"\x00" * 32))
     integrity_signature: bytes = field(default=Factory(lambda: b"\x00" * 512))
-    
+
     # Performance hints
     access_mode: int = field(default=ACCESS_AUTO)
     cache_strategy: int = field(default=CACHE_NORMAL)
@@ -114,7 +117,7 @@ class PSPFIndex:
     gpu_requirements: int = field(default=0)
     numa_hints: int = field(default=0)
     stream_chunk_size: int = field(default=DEFAULT_CHUNK_SIZE)
-    
+
     # Extended metadata
     build_timestamp: int = field(default=0)
     build_machine: bytes = field(default=Factory(lambda: b"\x00" * 32))
@@ -122,21 +125,21 @@ class PSPFIndex:
     dependency_hash: bytes = field(default=Factory(lambda: b"\x00" * 32))
     license_id: bytes = field(default=Factory(lambda: b"\x00" * 16))
     provenance_uri: bytes = field(default=Factory(lambda: b"\x00" * 8))
-    
+
     # Capabilities
     capabilities: int = field(default=CAPABILITY_MMAP | CAPABILITY_SIGNED)
     requirements: int = field(default=0)
     extensions: int = field(default=0)
     compatibility: int = field(default=PSPF_VERSION)
     protocol_version: int = field(default=1)
-    
+
     # Future cryptography space
     future_crypto: bytes = field(default=Factory(lambda: b"\x00" * 512))
-    
+
     # Reserved space for future expansion
     reserved: bytes = field(default=Factory(lambda: b"\x00" * 6808))
-    
-    # Backwards compatibility properties  
+
+    # Backwards compatibility properties
     @property
     def metadata_checksum_bytes(self) -> bytes:
         """Get metadata checksum as bytes."""
@@ -283,7 +286,8 @@ class PSPFIndex:
             compatibility=unpacked[34],
             protocol_version=unpacked[35],
             future_crypto=unpacked[36],
-            reserved=unpacked[37]
+            reserved=unpacked[37],
         )
+
 
 # 📦🔧🏗️🪄

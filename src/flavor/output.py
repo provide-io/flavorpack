@@ -4,30 +4,31 @@
 #
 """Output formatting and redirection for Flavor tools."""
 
-import json
-import sys
 from enum import Enum
+import json
 from pathlib import Path
+import sys
 from typing import Any, TextIO
 
 
 class OutputFormat(Enum):
     """Supported output formats."""
+
     TEXT = "text"
     JSON = "json"
 
 
 class OutputHandler:
     """Handles output formatting and redirection."""
-    
+
     def __init__(
         self,
         format: OutputFormat = OutputFormat.TEXT,
         file: str | None = None,
-    ):
+    ) -> None:
         """
         Initialize output handler.
-        
+
         Args:
             format: Output format (text or json)
             file: Output file path, or "STDOUT", "STDERR" (default: STDOUT)
@@ -36,20 +37,20 @@ class OutputHandler:
         self._output_file = file
         self._file_handle: TextIO | None = None
         self._output_buffer: list[dict[str, Any]] = []
-        
-    def __enter__(self):
+
+    def __enter__(self) -> "OutputHandler":
         """Context manager entry."""
         if self._output_file and self._output_file not in ("STDOUT", "STDERR"):
-            self._file_handle = open(self._output_file, "w")
+            self._file_handle = Path(self._output_file).open("w")
         return self
-        
-    def __exit__(self, exc_type, exc_val, exc_tb):
+
+    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         """Context manager exit - flush any buffered output."""
         if self.format == OutputFormat.JSON:
             self._flush_json()
         if self._file_handle:
             self._file_handle.close()
-            
+
     def _get_output_stream(self) -> TextIO:
         """Get the output stream to write to."""
         if self._file_handle:
@@ -58,8 +59,8 @@ class OutputHandler:
             return sys.stderr
         else:  # Default to STDOUT
             return sys.stdout
-            
-    def _flush_json(self):
+
+    def _flush_json(self) -> None:
         """Flush buffered JSON output."""
         if self._output_buffer:
             stream = self._get_output_stream()
@@ -67,11 +68,11 @@ class OutputHandler:
             stream.write("\n")
             stream.flush()
             self._output_buffer.clear()
-            
-    def write(self, data: Any, **kwargs):
+
+    def write(self, data: Any, **kwargs: Any) -> None:
         """
         Write output in the configured format.
-        
+
         Args:
             data: Data to output (string for text, dict/list for JSON)
             **kwargs: Additional metadata for JSON output
@@ -84,10 +85,10 @@ class OutputHandler:
                 entry = data
             else:
                 entry = {"data": data}
-            
+
             if kwargs:
                 entry.update(kwargs)
-                
+
             self._output_buffer.append(entry)
         else:
             # Text output - write immediately
@@ -101,8 +102,8 @@ class OutputHandler:
                 if not str(data).endswith("\n"):
                     stream.write("\n")
             stream.flush()
-            
-    def error(self, message: str, **kwargs):
+
+    def error(self, message: str, **kwargs: Any) -> None:
         """Write an error message."""
         if self.format == OutputFormat.JSON:
             self.write({"error": message, **kwargs})
@@ -110,15 +111,15 @@ class OutputHandler:
             # Errors always go to stderr in text mode
             sys.stderr.write(f"Error: {message}\n")
             sys.stderr.flush()
-            
-    def success(self, message: str, **kwargs):
+
+    def success(self, message: str, **kwargs: Any) -> None:
         """Write a success message."""
         if self.format == OutputFormat.JSON:
             self.write({"success": message, **kwargs})
         else:
             self.write(f"✅ {message}")
-            
-    def info(self, message: str, **kwargs):
+
+    def info(self, message: str, **kwargs: Any) -> None:
         """Write an info message."""
         if self.format == OutputFormat.JSON:
             self.write({"info": message, **kwargs})
@@ -132,22 +133,22 @@ def get_output_handler(
 ) -> OutputHandler:
     """
     Create output handler from environment or defaults.
-    
+
     Args:
         format_env: Environment variable name for format (default: FLAVOR_OUTPUT_FORMAT)
         file_env: Environment variable name for file (default: FLAVOR_OUTPUT_FILE)
-    
+
     Returns:
         Configured OutputHandler
     """
     import os
-    
+
     format_env = format_env or "FLAVOR_OUTPUT_FORMAT"
     file_env = file_env or "FLAVOR_OUTPUT_FILE"
-    
+
     format_str = os.environ.get(format_env, "text").lower()
     output_format = OutputFormat.JSON if format_str == "json" else OutputFormat.TEXT
-    
+
     output_file = os.environ.get(file_env)
-    
+
     return OutputHandler(format=output_format, file=output_file)

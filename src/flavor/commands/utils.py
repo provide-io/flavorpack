@@ -34,7 +34,6 @@ import click
 def clean_command(all: bool, helpers: bool, dry_run: bool, yes: bool) -> None:
     """Clean work environment cache (default) or helpers."""
     from flavor.cache import CacheManager
-    from flavor.helpers import HelperManager
 
     # Determine what to clean
     clean_workenv = not helpers or all
@@ -55,22 +54,25 @@ def clean_command(all: bool, helpers: bool, dry_run: bool, yes: bool) -> None:
             size_mb = size / (1024 * 1024)
 
             if dry_run:
-                click.echo(f"Would remove {len(cached)} cached packages ({size_mb:.1f} MB):")
+                click.echo(
+                    f"Would remove {len(cached)} cached packages ({size_mb:.1f} MB):"
+                )
                 for pkg in cached:
                     pkg_size_mb = pkg["size"] / (1024 * 1024)
                     name = pkg.get("name", pkg["id"])
                     click.echo(f"  - {name} ({pkg_size_mb:.1f} MB)")
             else:
-                if not yes:
-                    if not click.confirm(
-                        f"Remove {len(cached)} cached packages ({size_mb:.1f} MB)?"
-                    ):
-                        click.echo("Aborted.")
-                        return
+                if not yes and not click.confirm(
+                    f"Remove {len(cached)} cached packages ({size_mb:.1f} MB)?"
+                ):
+                    click.echo("Aborted.")
+                    return
 
                 removed = manager.clean()
                 if removed:
-                    click.secho(f"✅ Removed {len(removed)} cached packages", fg="green")
+                    click.secho(
+                        f"✅ Removed {len(removed)} cached packages", fg="green"
+                    )
                     total_freed += size
 
     # Clean helpers
@@ -78,7 +80,9 @@ def clean_command(all: bool, helpers: bool, dry_run: bool, yes: bool) -> None:
         helper_dir = Path.home() / ".cache" / "flavor" / "bin"
         if helper_dir.exists():
             helpers_list = list(helper_dir.glob("flavor-*"))
-            helpers_list = [h for h in helpers_list if not h.suffix == ".d"]  # Skip .d files
+            helpers_list = [
+                h for h in helpers_list if h.suffix != ".d"
+            ]  # Skip .d files
 
             if helpers_list:
                 total_size = sum(h.stat().st_size for h in helpers_list)
@@ -92,17 +96,18 @@ def clean_command(all: bool, helpers: bool, dry_run: bool, yes: bool) -> None:
                         h_size_mb = helper.stat().st_size / (1024 * 1024)
                         click.echo(f"  - {helper.name} ({h_size_mb:.1f} MB)")
                 else:
-                    if not yes:
-                        if not click.confirm(
-                            f"Remove {len(helpers_list)} helper binaries ({size_mb:.1f} MB)?"
-                        ):
-                            click.echo("Aborted.")
-                            return
+                    if not yes and not click.confirm(
+                        f"Remove {len(helpers_list)} helper binaries ({size_mb:.1f} MB)?"
+                    ):
+                        click.echo("Aborted.")
+                        return
 
                     import shutil
 
                     shutil.rmtree(helper_dir)
-                    click.secho(f"✅ Removed {len(helpers_list)} helper binaries", fg="green")
+                    click.secho(
+                        f"✅ Removed {len(helpers_list)} helper binaries", fg="green"
+                    )
                     total_freed += total_size
 
     if not dry_run and total_freed > 0:
@@ -134,7 +139,7 @@ def analyze_deps_command(manifest_path: str) -> None:
     imports = analyzer.analyze_imports(project_root)
 
     # Read declared dependencies from pyproject.toml
-    with open(manifest, "rb") as f:
+    with manifest.open("rb") as f:
         pyproject = tomllib.load(f)
 
     dependencies = []
@@ -196,7 +201,7 @@ def analyze_deps_command(manifest_path: str) -> None:
     if std_lib:
         click.echo("\n  Standard Library:")
         for module in std_lib[:10]:  # Show first 10
-            files = list(imports[module])[:2]  # Show first 2 files
+            list(imports[module])[:2]  # Show first 2 files
             click.echo(f"    • {module} (used in {len(imports[module])} files)")
 
     if third_party:
