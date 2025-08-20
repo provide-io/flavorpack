@@ -8,8 +8,6 @@ Handles platform-specific environment variables and layered environment processi
 import platform
 from typing import Any
 
-from flavor.utils import get_cpu_type
-
 
 def get_normalized_os() -> str:
     """Get normalized OS name."""
@@ -102,6 +100,53 @@ def get_os_version() -> str | None:
         release = platform.release()
         if release:
             return release
+    except Exception:
+        pass
+
+    return None
+
+
+def get_cpu_type() -> str | None:
+    """
+    Get CPU type/family information.
+
+    Returns:
+        CPU type string or None if unavailable
+    """
+    try:
+        processor = platform.processor()
+        if processor:
+            # Clean up common processor strings
+            if "Intel" in processor:
+                # Extract Intel CPU model
+                if "Core" in processor:
+                    # Try to extract model like "Core i7"
+                    import re
+
+                    match = re.search(r"Core\(TM\)\s+(\w+)", processor)
+                    if match:
+                        return f"Intel Core {match.group(1)}"
+                return "Intel"
+            elif "AMD" in processor:
+                # Extract AMD CPU model
+                if "Ryzen" in processor:
+                    import re
+
+                    match = re.search(r"Ryzen\s+(\d+\s+\w+)", processor)
+                    if match:
+                        return f"AMD Ryzen {match.group(1)}"
+                return "AMD"
+            elif "Apple" in processor or "M1" in processor or "M2" in processor:
+                # Apple Silicon
+                import re
+
+                match = re.search(r"(M\d+\w*)", processor)
+                if match:
+                    return f"Apple {match.group(1)}"
+                return "Apple Silicon"
+            elif processor:
+                # Return cleaned processor string
+                return processor.strip()
     except Exception:
         pass
 

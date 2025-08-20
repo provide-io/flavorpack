@@ -172,12 +172,6 @@ jobs:
           # Install flavor
           uv pip install -e .
       
-      - name: 🔍 Debug Python locations (Windows only)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          ./.github/scripts/find-python-windows.ps1
-      
       - name: 🔨 Build Taster
         id: build
         shell: bash

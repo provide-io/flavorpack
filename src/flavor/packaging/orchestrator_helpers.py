@@ -30,7 +30,7 @@ def create_slot_tarballs(temp_dir: Path, artifacts: dict[str, Path], progress: A
 
     # Determine platform-specific directory for binaries
     bin_dir = "Scripts" if is_windows else "bin"
-
+    
     with progress.task(total=3, description="Creating slots") as bar:
         # Slot 0: UV binary
         uv_tarball = temp_dir / "uv.tar.gz"
@@ -84,8 +84,8 @@ def create_builder_manifest(
     uv_exe = "uv.exe" if is_windows else "uv"
     # Use Scripts for Windows, bin for Unix
     bin_dir = "Scripts" if is_windows else "bin"
-    # Windows UV Python has python.exe in root, not in Scripts
     python_exe = "python.exe" if is_windows else "python3.11"
+    # Windows UV Python has python.exe in root, not in Scripts
     python_path = f"{{workenv}}/{python_exe}" if is_windows else f"{{workenv}}/{bin_dir}/{python_exe}"
     package_exe = f"{package_name}.exe" if is_windows else package_name
     version = build_config.get("version", "1.0.0")
@@ -271,7 +271,7 @@ def create_python_builder_metadata(
         Complete metadata dictionary for Python builder
     """
     version = build_config.get("version", "1.0.0")
-
+    
     # Determine platform-specific paths
     is_windows = platform.system() == "Windows"
     bin_dir = "Scripts" if is_windows else "bin"
@@ -323,7 +323,7 @@ def create_python_builder_metadata(
                 "type": "enumerate_and_execute",
                 "command": f"{{workenv}}/{bin_dir}/"
                 + uv_exe
-                + f" pip install --python {python_path} --system --no-deps",
+                + f" pip install --python {python_path} --no-deps",
                 "enumerate": {"path": "{workenv}/wheels", "pattern": "*.whl"},
             },
             {
