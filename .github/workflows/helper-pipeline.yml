@@ -82,8 +82,7 @@ jobs:
           
           # Record container startup time
           chmod +x .github/scripts/record-timing.sh
-          CONTAINER_START_TIME=$(($(date +%s%N) - ${GITHUB_RUN_STARTED_AT_NS:-$(date +%s%N)}))
-          .github/scripts/record-timing.sh "$METADATA_FILE" "container_startup" "record" "${CONTAINER_START_TIME}"
+          .github/scripts/record-timing.sh "$METADATA_FILE" "container_startup" "start"
       
       - name: 💾 Check cache
         id: cache
@@ -198,6 +197,20 @@ jobs:
       - name: 📥 Checkout
         uses: actions/checkout@v4
       
+      - name: 📊 Initialize build metadata
+        id: metadata
+        run: |
+          chmod +x .github/scripts/capture-build-metadata.sh
+          METADATA_FILE=$(.github/scripts/capture-build-metadata.sh \
+            "linux_arm64" \
+            "${{ needs.check-diff.outputs.version }}" \
+            "artifacts/metadata")
+          echo "metadata_file=$METADATA_FILE" >> $GITHUB_OUTPUT
+          
+          # Record container startup time
+          chmod +x .github/scripts/record-timing.sh
+          .github/scripts/record-timing.sh "$METADATA_FILE" "container_startup" "start"
+      
       - name: 💾 Check cache
         id: cache
         uses: actions/cache@v4
@@ -207,11 +220,22 @@ jobs:
           key: flavor-helpers-${{ needs.check-diff.outputs.version }}-linux_arm64
           lookup-only: ${{ inputs.force_rebuild == 'true' }}
       
+      - name: ⏱️ Record cache check
+        if: always()
+        run: |
+          .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "cache_check" "end"
+          .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "cache_hit" "record" "${{ steps.cache.outputs.cache-hit }}"
+      
       - name: 🐹 Setup Go
         if: steps.cache.outputs.cache-hit != 'true'
         uses: actions/setup-go@v5
         with:
           go-version: '1.21'
+      
+      - name: ⏱️ Record Go setup
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "setup_go" "end"
       
       - name: 🦀 Setup Rust
         if: steps.cache.outputs.cache-hit != 'true'
@@ -219,31 +243,48 @@ jobs:
         with:
           targets: aarch64-unknown-linux-gnu
       
+      - name: ⏱️ Record Rust setup
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "setup_rust" "end"
+      
       - name: 🔧 Setup cross-compilation
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
+          .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "setup_cross_compile" "start"
           chmod +x .github/scripts/setup-cross-compile.sh
           .github/scripts/setup-cross-compile.sh linux_arm64
+          .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "setup_cross_compile" "end"
       
       - name: 🔨 Build
         id: build
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
+          .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "build_total" "start"
+          
+          # Build with timing for each language
+          .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "build_go" "start"
           chmod +x .github/scripts/build-platform-helpers.sh
-          BUILD_START=$(date +%s)
           .github/scripts/build-platform-helpers.sh linux_arm64 linux arm64 aarch64-unknown-linux-gnu
-          BUILD_END=$(date +%s)
-          BUILD_DURATION=$((BUILD_END - BUILD_START))
-          echo "duration=$BUILD_DURATION" >> $GITHUB_OUTPUT
+          .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "build_go" "end"
+          
+          .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "build_total" "end"
+          
+          # Output for compatibility
           echo "timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_OUTPUT
       
       - name: 📦 Package
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
-          mkdir -p artifacts
-          cd helpers/bin
-          zip ../../artifacts/flavor-helpers-${{ needs.check-diff.outputs.version }}-linux_arm64.zip *-linux_arm64
-          cd ../..
+          .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "package" "start"
+          chmod +x .github/scripts/package-with-metadata.sh
+          .github/scripts/package-with-metadata.sh \
+            "linux_arm64" \
+            "${{ needs.check-diff.outputs.version }}" \
+            "helpers/bin" \
+            "artifacts" \
+            "${{ steps.metadata.outputs.metadata_file }}"
+          .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "package" "end"
       
       - name: 📦 Extract cached binaries
         if: steps.cache.outputs.cache-hit == 'true'
@@ -301,6 +342,20 @@ jobs:
       - name: 📥 Checkout
         uses: actions/checkout@v4
       
+      - name: 📊 Initialize build metadata
+        id: metadata
+        run: |
+          chmod +x .github/scripts/capture-build-metadata.sh
+          METADATA_FILE=$(.github/scripts/capture-build-metadata.sh \
+            "darwin_amd64" \
+            "${{ needs.check-diff.outputs.version }}" \
+            "artifacts/metadata")
+          echo "metadata_file=$METADATA_FILE" >> $GITHUB_OUTPUT
+          
+          # Record container startup time
+          chmod +x .github/scripts/record-timing.sh
+          .github/scripts/record-timing.sh "$METADATA_FILE" "container_startup" "start"
+      
       - name: 💾 Check cache
         id: cache
         uses: actions/cache@v4
@@ -310,11 +365,22 @@ jobs:
           key: flavor-helpers-${{ needs.check-diff.outputs.version }}-darwin_amd64
           lookup-only: ${{ inputs.force_rebuild == 'true' }}
       
+      - name: ⏱️ Record cache check
+        if: always()
+        run: |
+          .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "cache_check" "end"
+          .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "cache_hit" "record" "${{ steps.cache.outputs.cache-hit }}"
+      
       - name: 🐹 Setup Go
         if: steps.cache.outputs.cache-hit != 'true'
         uses: actions/setup-go@v5
         with:
           go-version: '1.21'
+      
+      - name: ⏱️ Record Go setup
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "setup_go" "end"
       
       - name: 🦀 Setup Rust
         if: steps.cache.outputs.cache-hit != 'true'
@@ -322,25 +388,40 @@ jobs:
         with:
           targets: x86_64-apple-darwin
       
+      - name: ⏱️ Record Rust setup
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "setup_rust" "end"
+      
       - name: 🔨 Build
         id: build
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
+          .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "build_total" "start"
+          
+          # Build with timing for each language
+          .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "build_go" "start"
           chmod +x .github/scripts/build-platform-helpers.sh
-          BUILD_START=$(date +%s)
           .github/scripts/build-platform-helpers.sh darwin_amd64 darwin amd64 x86_64-apple-darwin
-          BUILD_END=$(date +%s)
-          BUILD_DURATION=$((BUILD_END - BUILD_START))
-          echo "duration=$BUILD_DURATION" >> $GITHUB_OUTPUT
+          .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "build_go" "end"
+          
+          .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "build_total" "end"
+          
+          # Output for compatibility
           echo "timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_OUTPUT
       
       - name: 📦 Package
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
-          mkdir -p artifacts
-          cd helpers/bin
-          zip ../../artifacts/flavor-helpers-${{ needs.check-diff.outputs.version }}-darwin_amd64.zip *-darwin_amd64
-          cd ../..
+          .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "package" "start"
+          chmod +x .github/scripts/package-with-metadata.sh
+          .github/scripts/package-with-metadata.sh \
+            "darwin_amd64" \
+            "${{ needs.check-diff.outputs.version }}" \
+            "helpers/bin" \
+            "artifacts" \
+            "${{ steps.metadata.outputs.metadata_file }}"
+          .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "package" "end"
       
       - name: 📦 Extract cached binaries
         if: steps.cache.outputs.cache-hit == 'true'
@@ -398,6 +479,20 @@ jobs:
       - name: 📥 Checkout
         uses: actions/checkout@v4
       
+      - name: 📊 Initialize build metadata
+        id: metadata
+        run: |
+          chmod +x .github/scripts/capture-build-metadata.sh
+          METADATA_FILE=$(.github/scripts/capture-build-metadata.sh \
+            "darwin_arm64" \
+            "${{ needs.check-diff.outputs.version }}" \
+            "artifacts/metadata")
+          echo "metadata_file=$METADATA_FILE" >> $GITHUB_OUTPUT
+          
+          # Record container startup time
+          chmod +x .github/scripts/record-timing.sh
+          .github/scripts/record-timing.sh "$METADATA_FILE" "container_startup" "start"
+      
       - name: 💾 Check cache
         id: cache
         uses: actions/cache@v4
@@ -407,11 +502,22 @@ jobs:
           key: flavor-helpers-${{ needs.check-diff.outputs.version }}-darwin_arm64
           lookup-only: ${{ inputs.force_rebuild == 'true' }}
       
+      - name: ⏱️ Record cache check
+        if: always()
+        run: |
+          .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "cache_check" "end"
+          .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "cache_hit" "record" "${{ steps.cache.outputs.cache-hit }}"
+      
       - name: 🐹 Setup Go
         if: steps.cache.outputs.cache-hit != 'true'
         uses: actions/setup-go@v5
         with:
           go-version: '1.21'
+      
+      - name: ⏱️ Record Go setup
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "setup_go" "end"
       
       - name: 🦀 Setup Rust
         if: steps.cache.outputs.cache-hit != 'true'
@@ -419,25 +525,40 @@ jobs:
         with:
           targets: aarch64-apple-darwin
       
+      - name: ⏱️ Record Rust setup
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "setup_rust" "end"
+      
       - name: 🔨 Build
         id: build
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
+          .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "build_total" "start"
+          
+          # Build with timing for each language
+          .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "build_go" "start"
           chmod +x .github/scripts/build-platform-helpers.sh
-          BUILD_START=$(date +%s)
           .github/scripts/build-platform-helpers.sh darwin_arm64 darwin arm64 aarch64-apple-darwin
-          BUILD_END=$(date +%s)
-          BUILD_DURATION=$((BUILD_END - BUILD_START))
-          echo "duration=$BUILD_DURATION" >> $GITHUB_OUTPUT
+          .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "build_go" "end"
+          
+          .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "build_total" "end"
+          
+          # Output for compatibility
           echo "timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_OUTPUT
       
       - name: 📦 Package
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
-          mkdir -p artifacts
-          cd helpers/bin
-          zip ../../artifacts/flavor-helpers-${{ needs.check-diff.outputs.version }}-darwin_arm64.zip *-darwin_arm64
-          cd ../..
+          .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "package" "start"
+          chmod +x .github/scripts/package-with-metadata.sh
+          .github/scripts/package-with-metadata.sh \
+            "darwin_arm64" \
+            "${{ needs.check-diff.outputs.version }}" \
+            "helpers/bin" \
+            "artifacts" \
+            "${{ steps.metadata.outputs.metadata_file }}"
+          .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "package" "end"
       
       - name: 📦 Extract cached binaries
         if: steps.cache.outputs.cache-hit == 'true'
@@ -495,6 +616,21 @@ jobs:
       - name: 📥 Checkout
         uses: actions/checkout@v4
       
+      - name: 📊 Initialize build metadata
+        id: metadata
+        shell: bash
+        run: |
+          chmod +x .github/scripts/capture-build-metadata.sh
+          METADATA_FILE=$(.github/scripts/capture-build-metadata.sh \
+            "windows_amd64" \
+            "${{ needs.check-diff.outputs.version }}" \
+            "artifacts/metadata")
+          echo "metadata_file=$METADATA_FILE" >> $GITHUB_OUTPUT
+          
+          # Record container startup time
+          chmod +x .github/scripts/record-timing.sh
+          .github/scripts/record-timing.sh "$METADATA_FILE" "container_startup" "start"
+      
       - name: 💾 Check cache
         id: cache
         uses: actions/cache@v4
@@ -504,11 +640,24 @@ jobs:
           key: flavor-helpers-${{ needs.check-diff.outputs.version }}-windows_amd64
           lookup-only: ${{ inputs.force_rebuild == 'true' }}
       
+      - name: ⏱️ Record cache check
+        if: always()
+        shell: bash
+        run: |
+          .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "cache_check" "end"
+          .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "cache_hit" "record" "${{ steps.cache.outputs.cache-hit }}"
+      
       - name: 🐹 Setup Go
         if: steps.cache.outputs.cache-hit != 'true'
         uses: actions/setup-go@v5
         with:
           go-version: '1.21'
+      
+      - name: ⏱️ Record Go setup
+        if: steps.cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "setup_go" "end"
       
       - name: 🦀 Setup Rust
         if: steps.cache.outputs.cache-hit != 'true'
@@ -516,26 +665,43 @@ jobs:
         with:
           targets: x86_64-pc-windows-msvc
       
+      - name: ⏱️ Record Rust setup
+        if: steps.cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "setup_rust" "end"
+      
       - name: 🔨 Build
         id: build
         if: steps.cache.outputs.cache-hit != 'true'
         shell: bash
         run: |
+          .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "build_total" "start"
+          
+          # Build with timing for each language
+          .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "build_go" "start"
           chmod +x .github/scripts/build-platform-helpers.sh
-          BUILD_START=$(date +%s)
           .github/scripts/build-platform-helpers.sh windows_amd64 windows amd64 x86_64-pc-windows-msvc
-          BUILD_END=$(date +%s)
-          BUILD_DURATION=$((BUILD_END - BUILD_START))
-          echo "duration=$BUILD_DURATION" >> $GITHUB_OUTPUT
+          .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "build_go" "end"
+          
+          .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "build_total" "end"
+          
+          # Output for compatibility
           echo "timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_OUTPUT
       
       - name: 📦 Package
         if: steps.cache.outputs.cache-hit != 'true'
-        shell: pwsh
+        shell: bash
         run: |
-          New-Item -ItemType Directory -Force -Path artifacts
-          $files = Get-ChildItem -Path helpers/bin -Filter "*-windows_amd64.exe"
-          Compress-Archive -Path $files.FullName -DestinationPath "artifacts/flavor-helpers-${{ needs.check-diff.outputs.version }}-windows_amd64.zip"
+          .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "package" "start"
+          chmod +x .github/scripts/package-with-metadata.sh
+          .github/scripts/package-with-metadata.sh \
+            "windows_amd64" \
+            "${{ needs.check-diff.outputs.version }}" \
+            "helpers/bin" \
+            "artifacts" \
+            "${{ steps.metadata.outputs.metadata_file }}"
+          .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "package" "end"
       
       - name: 📦 Extract cached binaries
         if: steps.cache.outputs.cache-hit == 'true'

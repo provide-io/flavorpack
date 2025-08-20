@@ -85,8 +85,10 @@ cat > "$METADATA_FILE" << EOF
 }
 EOF
 
-echo "📊 Build metadata initialized: $METADATA_FILE"
+# Export for use in other scripts (only if GITHUB_ENV exists)
+if [ -n "$GITHUB_ENV" ]; then
+  echo "METADATA_FILE=$METADATA_FILE" >> $GITHUB_ENV
+fi
 
-# Export for use in other scripts
-echo "METADATA_FILE=$METADATA_FILE" >> $GITHUB_ENV 2>/dev/null || true
+# Output only the file path for GITHUB_OUTPUT capture
 echo "$METADATA_FILE"
