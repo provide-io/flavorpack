@@ -77,12 +77,14 @@ fi
 # Create the zip file
 echo "   Creating zip archive..."
 cd "$TEMP_DIR"
+# Need to use absolute path for output since we're in temp dir
+ABSOLUTE_ZIP_FILE="$(cd "$OLDPWD" && pwd)/$ZIP_FILE"
 if [[ "$PLATFORM" == *"windows"* ]]; then
     # Windows binaries with .exe extension
-    zip -q "$ZIP_FILE" *.exe BUILD_*.* 2>/dev/null || zip -q "$ZIP_FILE" *.exe
+    zip -q "$ABSOLUTE_ZIP_FILE" *.exe BUILD_*.* 2>/dev/null || zip -q "$ABSOLUTE_ZIP_FILE" *.exe
 else
     # Unix binaries
-    zip -q "$ZIP_FILE" * 2>/dev/null || true
+    zip -q "$ABSOLUTE_ZIP_FILE" * 2>/dev/null || true
 fi
 cd - > /dev/null
 
