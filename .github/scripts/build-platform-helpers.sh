@@ -101,7 +101,7 @@ if [ "$GO_SUCCESS" = true ] && [ "$RUST_SUCCESS" = true ]; then
     echo "  Go version: $GO_VERSION"
     echo "  Rust version: $RUST_VERSION"
     
-    # Add .exe extension for Windows platforms
+    # Platform-specific post-processing
     case "$PLATFORM" in
         windows_*)
             echo "🪟 Adding .exe extension for Windows binaries..."
@@ -110,6 +110,19 @@ if [ "$GO_SUCCESS" = true ] && [ "$RUST_SUCCESS" = true ]; then
                 if [ -f "$file" ]; then
                     mv "$file" "${file}.exe"
                     echo "  Renamed: $file → ${file}.exe"
+                fi
+            done
+            cd ../..
+            ;;
+        darwin_*)
+            echo "🍎 Ensuring Darwin binaries are executable..."
+            cd helpers/bin
+            for file in *-${PLATFORM}; do
+                if [ -f "$file" ]; then
+                    chmod +x "$file"
+                    # Remove quarantine attribute if present (GitHub Actions runners shouldn't have this)
+                    xattr -dr com.apple.quarantine "$file" 2>/dev/null || true
+                    echo "  Made executable: $file"
                 fi
             done
             cd ../..

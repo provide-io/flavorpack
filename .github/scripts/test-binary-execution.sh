@@ -55,8 +55,23 @@ else
     # Execute the binary (native or emulated)
     chmod +x "$BINARY_PATH"
     
+    # On macOS, remove quarantine attribute if present
+    if [[ "$(uname -s)" == "Darwin" ]]; then
+        xattr -dr com.apple.quarantine "$BINARY_PATH" 2>/dev/null || true
+    fi
+    
     # Try to run --version and capture output
-    if VERSION_OUTPUT=$(timeout 10 "$BINARY_PATH" --version 2>&1); then
+    # macOS doesn't have timeout by default, only use it if available
+    if command -v timeout >/dev/null 2>&1; then
+        VERSION_OUTPUT=$(timeout 10 "$BINARY_PATH" --version 2>&1)
+        VERSION_EXIT=$?
+    else
+        # No timeout on macOS - just run directly
+        VERSION_OUTPUT=$("$BINARY_PATH" --version 2>&1)
+        VERSION_EXIT=$?
+    fi
+    
+    if [ $VERSION_EXIT -eq 0 ]; then
         RESULT=$(echo "$RESULT" | jq '.passed = true')
         RESULT=$(echo "$RESULT" | jq --arg vo "$VERSION_OUTPUT" '.version_output = $vo')
         
@@ -82,23 +97,52 @@ else
         fi
         
     # Try --help as fallback
-    elif HELP_OUTPUT=$(timeout 10 "$BINARY_PATH" --help 2>&1); then
-        RESULT=$(echo "$RESULT" | jq '.passed = true')
-        RESULT=$(echo "$RESULT" | jq --arg ho "$HELP_OUTPUT" '.help_output = $ho')
-        RESULT=$(echo "$RESULT" | jq '.version = "unknown" | .build_time = "unknown"')
-        
-        if [ "$TEST_MODE" = "emulated" ]; then
-            RESULT=$(echo "$RESULT" | jq '.test_type = "emulated_help"')
+    else
+        # Try --help if --version failed
+        if command -v timeout >/dev/null 2>&1; then
+            HELP_OUTPUT=$(timeout 10 "$BINARY_PATH" --help 2>&1)
+            HELP_EXIT=$?
         else
-            RESULT=$(echo "$RESULT" | jq '.test_type = "native_help"')
+            HELP_OUTPUT=$("$BINARY_PATH" --help 2>&1)
+            HELP_EXIT=$?
         fi
         
-    else
-        # Binary failed to execute
-        ERROR_OUTPUT=$(timeout 2 "$BINARY_PATH" 2>&1 || echo "Execution failed")
-        RESULT=$(echo "$RESULT" | jq --arg eo "$ERROR_OUTPUT" '.error_output = $eo')
-        RESULT=$(echo "$RESULT" | jq '.passed = false | .error = "Failed to execute"')
-        RESULT=$(echo "$RESULT" | jq '.version = "unknown" | .build_time = "unknown"')
+        if [ $HELP_EXIT -eq 0 ]; then
+            RESULT=$(echo "$RESULT" | jq '.passed = true')
+            RESULT=$(echo "$RESULT" | jq --arg ho "$HELP_OUTPUT" '.help_output = $ho')
+            RESULT=$(echo "$RESULT" | jq '.version = "unknown" | .build_time = "unknown"')
+            
+            if [ "$TEST_MODE" = "emulated" ]; then
+                RESULT=$(echo "$RESULT" | jq '.test_type = "emulated_help"')
+            else
+                RESULT=$(echo "$RESULT" | jq '.test_type = "native_help"')
+            fi
+        else
+            # Binary failed to execute - capture more diagnostics
+            ERROR_OUTPUT=$VERSION_OUTPUT
+            EXIT_CODE=$VERSION_EXIT
+            
+            # Try to get more info about why it failed
+            if [[ "$BINARY_PATH" == *"darwin"* ]] && [[ "$(uname -s)" == "Darwin" ]]; then
+                # On macOS, check if it's an architecture issue
+                ARCH_INFO=$(file "$BINARY_PATH" | grep -o "executable.*" || echo "unknown arch")
+                RESULT=$(echo "$RESULT" | jq --arg ai "$ARCH_INFO" '.arch_info = $ai')
+                
+                # Check if Rosetta 2 is available for x86_64 binaries on ARM64
+                if [[ "$BINARY_PATH" == *"amd64"* ]] && [[ "$(uname -m)" == "arm64" ]]; then
+                    if ! /usr/bin/pgrep oahd >/dev/null 2>&1; then
+                        RESULT=$(echo "$RESULT" | jq '.rosetta_status = "not_running"')
+                    else
+                        RESULT=$(echo "$RESULT" | jq '.rosetta_status = "running"')
+                    fi
+                fi
+            fi
+            
+            RESULT=$(echo "$RESULT" | jq --arg eo "$ERROR_OUTPUT" '.error_output = $eo')
+            RESULT=$(echo "$RESULT" | jq --arg ec "$EXIT_CODE" '.exit_code = $ec')
+            RESULT=$(echo "$RESULT" | jq '.passed = false | .error = "Failed to execute"')
+            RESULT=$(echo "$RESULT" | jq '.version = "unknown" | .build_time = "unknown"')
+        fi
     fi
 fi
 

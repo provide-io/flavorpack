@@ -191,6 +191,17 @@ class PSPFReader:
             index_data = bytes(index_data)
 
         self._index = PSPFIndex.unpack(index_data)
+        
+        # Debug log the parsed index values
+        logger.debug(
+            "📊 Parsed index values",
+            package_size=self._index.package_size,
+            launcher_size=self._index.launcher_size,
+            metadata_offset=f"0x{self._index.metadata_offset:016x}",
+            metadata_size=self._index.metadata_size,
+            slot_table_offset=f"0x{self._index.slot_table_offset:016x}",
+            slot_count=self._index.slot_count,
+        )
 
         # Verify checksum (Adler-32 with checksum field as 0)
         expected_checksum = self._index.index_checksum

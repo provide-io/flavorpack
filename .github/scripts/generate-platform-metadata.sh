@@ -88,7 +88,18 @@ if [ -d "helpers/bin" ]; then
             else
                 BINARY_SIZE=$(stat -f%z "$binary" 2>/dev/null || stat -c%s "$binary" 2>/dev/null || wc -c < "$binary" | tr -d ' ' 2>/dev/null || echo "0")
             fi
-            BINARY_SHA256=$(shasum -a 256 "$binary" | cut -d' ' -f1)
+            
+            # Get SHA256 hash (cross-platform)
+            if [ -n "$RUNNER_OS" ] && [ "$RUNNER_OS" = "Windows" ]; then
+                # Use certutil on Windows
+                BINARY_SHA256=$(certutil -hashfile "$binary" SHA256 | head -2 | tail -1 | tr -d ' ' | tr '[:upper:]' '[:lower:]')
+            elif command -v shasum >/dev/null 2>&1; then
+                BINARY_SHA256=$(shasum -a 256 "$binary" | cut -d' ' -f1)
+            elif command -v sha256sum >/dev/null 2>&1; then
+                BINARY_SHA256=$(sha256sum "$binary" | cut -d' ' -f1)
+            else
+                BINARY_SHA256="unavailable"
+            fi
             
             # Determine component type
             COMPONENT=""

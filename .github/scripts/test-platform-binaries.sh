@@ -91,20 +91,31 @@ for BINARY in $BINARIES; do
     echo ""
     echo "Testing: $BINARY_NAME"
     
-    # Use unified testing script
-    if TEST_RESULT=$(.github/scripts/test-binary-execution.sh "$BINARY" "$TEST_MODE" 2>/dev/null); then
-        echo "  ✅ Test passed"
-        PASSED=$((PASSED + 1))
+    # Use unified testing script and capture output
+    TEST_OUTPUT=$(.github/scripts/test-binary-execution.sh "$BINARY" "$TEST_MODE" 2>&1 || true)
+    
+    # Try to parse as JSON first
+    if echo "$TEST_OUTPUT" | jq . >/dev/null 2>&1; then
+        TEST_RESULT="$TEST_OUTPUT"
+        # Check if test passed based on JSON
+        if echo "$TEST_RESULT" | jq -e '.passed == true' >/dev/null 2>&1; then
+            echo "  ✅ Test passed"
+            PASSED=$((PASSED + 1))
+        else
+            echo "  ❌ Test failed"
+            FAILED=$((FAILED + 1))
+        fi
     else
-        echo "  ❌ Test failed"
+        # If not valid JSON, create error result
+        echo "  ❌ Test failed (invalid output)"
         FAILED=$((FAILED + 1))
-        # Still capture the result even if test failed
-        TEST_RESULT=$(.github/scripts/test-binary-execution.sh "$BINARY" "$TEST_MODE" 2>/dev/null || echo '{"error": "test failed"}')
+        TEST_RESULT=$(jq -n --arg name "$BINARY_NAME" --arg error "$TEST_OUTPUT" \
+            '{name: $name, passed: false, error: "Invalid test output", raw_output: $error}')
     fi
     
     TOTAL=$((TOTAL + 1))
     
-    # Add result to report
+    # Add result to report (TEST_RESULT is guaranteed to be valid JSON now)
     jq --argjson result "$TEST_RESULT" '.binaries += [$result]' "$REPORT_FILE" > "$REPORT_FILE.tmp" && mv "$REPORT_FILE.tmp" "$REPORT_FILE"
     
     # Display key info

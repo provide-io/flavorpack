@@ -49,7 +49,7 @@ if [ "$ACTION" = "start" ]; then
     START_TIMESTAMP=$(get_timestamp)
     
     # Update metadata with Python for proper JSON handling
-    python3 -c "
+    PYTHONIOENCODING=utf-8 python3 -c "
 import json
 import sys
 
@@ -68,7 +68,7 @@ data['timings']['$EVENT_NAME'] = {
 with open('$METADATA_FILE', 'w') as f:
     json.dump(data, f, indent=2)
 "
-    echo "⏱️ Started timing: $EVENT_NAME"
+    echo "[TIMER] Started timing: $EVENT_NAME"
     
 elif [ "$ACTION" = "end" ]; then
     # Record end time and calculate duration
@@ -76,9 +76,16 @@ elif [ "$ACTION" = "end" ]; then
     END_TIMESTAMP=$(get_timestamp)
     
     # Update metadata with duration
-    python3 -c "
+    PYTHONIOENCODING=utf-8 python3 -c "
 import json
 import sys
+import os
+
+# Force UTF-8 encoding for Windows
+if sys.platform == 'win32':
+    import io
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+    os.environ['PYTHONIOENCODING'] = 'utf-8'
 
 with open('$METADATA_FILE', 'r') as f:
     data = json.load(f)
@@ -110,14 +117,14 @@ if '$VALUE':
 with open('$METADATA_FILE', 'w') as f:
     json.dump(data, f, indent=2)
 
-# Output duration for GitHub Actions
+# Output duration for GitHub Actions - use ASCII-safe characters
 if '$EVENT_NAME' in data['timings'] and 'duration_seconds' in data['timings']['$EVENT_NAME']:
-    print(f\"⏱️ Completed {data['timings']['$EVENT_NAME']['duration_seconds']:.2f}s: $EVENT_NAME\")
+    print(f\"[TIMER] Completed {data['timings']['$EVENT_NAME']['duration_seconds']:.2f}s: $EVENT_NAME\")
 "
     
 elif [ "$ACTION" = "record" ]; then
     # Just record a value without timing
-    python3 -c "
+    PYTHONIOENCODING=utf-8 python3 -c "
 import json
 
 with open('$METADATA_FILE', 'r') as f:
@@ -135,5 +142,5 @@ data['timings']['$EVENT_NAME']['timestamp'] = '$(get_timestamp)'
 with open('$METADATA_FILE', 'w') as f:
     json.dump(data, f, indent=2)
 "
-    echo "📝 Recorded: $EVENT_NAME = $VALUE"
+    echo "[RECORD] Recorded: $EVENT_NAME = $VALUE"
 fi
