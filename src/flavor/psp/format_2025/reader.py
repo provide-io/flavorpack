@@ -119,10 +119,15 @@ class PSPFReader:
 
         file_size = self.bundle_path.stat().st_size
 
-        # Search for PSPF magic in chunks
-        chunk_size = 1024 * 1024  # 1MB chunks
-        for offset in range(0, min(file_size, 10 * 1024 * 1024), chunk_size):
-            data = self._backend.read_at(offset, min(chunk_size, file_size - offset))
+        # Search for PSPF magic in smaller chunks to avoid missing it
+        # Most launchers are 1-3MB, so 10MB limit should be more than enough
+        chunk_size = 64 * 1024  # 64KB chunks - smaller to avoid boundary issues
+        search_limit = min(file_size, 10 * 1024 * 1024)
+        
+        for offset in range(0, search_limit, chunk_size):
+            # Read chunk (64KB should be fast enough)
+            read_size = min(chunk_size, file_size - offset)
+            data = self._backend.read_at(offset, read_size)
 
             # Convert memoryview to bytes if needed
             search_data = bytes(data) if isinstance(data, memoryview) else data
@@ -165,7 +170,7 @@ class PSPFReader:
         logger.warning(
             "⚠️ Could not find PSPF magic in package, defaulting to offset 0",
             file_size=file_size,
-            searched_bytes=min(file_size, 10 * 1024 * 1024),
+            searched_bytes=search_limit,
         )
         self._launcher_size = 0
         return 0
