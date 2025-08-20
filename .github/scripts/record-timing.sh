@@ -14,16 +14,24 @@ if [ -z "$METADATA_FILE" ] || [ -z "$EVENT_NAME" ] || [ -z "$ACTION" ]; then
     exit 1
 fi
 
-# Ensure metadata file exists
+# Ensure metadata file exists (create if needed for start action)
 if [ ! -f "$METADATA_FILE" ]; then
-    echo "❌ Metadata file not found: $METADATA_FILE"
-    exit 1
+    if [ "$ACTION" = "start" ]; then
+        # Create initial metadata file if it doesn't exist
+        mkdir -p "$(dirname "$METADATA_FILE")"
+        echo '{"timings": {}}' > "$METADATA_FILE"
+    else
+        echo "❌ Metadata file not found: $METADATA_FILE"
+        exit 1
+    fi
 fi
 
 # Get current time in nanoseconds for precision
 get_time_ns() {
-    if date +%s%N >/dev/null 2>&1; then
-        date +%s%N
+    # Check if date supports nanoseconds (Linux)
+    local test_ns=$(date +%s%N 2>/dev/null)
+    if [ -n "$test_ns" ] && [[ "$test_ns" =~ ^[0-9]+$ ]]; then
+        echo "$test_ns"
     else
         # Fallback for systems without nanosecond support (macOS)
         python3 -c "import time; print(int(time.time() * 1000000000))"
