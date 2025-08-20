@@ -190,11 +190,11 @@ jobs:
             source workenv/bin/activate
           fi
           
-          # Use Go launcher instead of Rust launcher (Python builder works with Go launcher)
+          # Use Rust launcher by default instead of Go launcher
           if [[ "${{ matrix.platform }}" == *"windows"* ]]; then
-            LAUNCHER_BIN="helpers/bin/flavor-go-launcher-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}.exe"
+            LAUNCHER_BIN="helpers/bin/flavor-rs-launcher-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}.exe"
           else
-            LAUNCHER_BIN="helpers/bin/flavor-go-launcher-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}"
+            LAUNCHER_BIN="helpers/bin/flavor-rs-launcher-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}"
           fi
           
           echo "Building taster with launcher: $LAUNCHER_BIN"
