@@ -134,7 +134,8 @@ jobs:
       - name: 🔧 Extract helpers
         run: |
           mkdir -p helpers/bin
-          for platform in linux_amd64 linux_arm64 darwin_amd64 darwin_arm64 windows_amd64; do
+          # TEMPORARILY REMOVED windows_amd64 - Windows support has path separator issues
+          for platform in linux_amd64 linux_arm64 darwin_amd64 darwin_arm64; do
             if [ -f "helpers-dist/flavor-helpers-${{ needs.setup.outputs.helper_version }}-${platform}.zip" ]; then
               unzip -o "helpers-dist/flavor-helpers-${{ needs.setup.outputs.helper_version }}-${platform}.zip" -d helpers/bin/ || true
             fi

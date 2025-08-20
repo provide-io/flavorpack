@@ -44,15 +44,28 @@ if [ -n "$METADATA_FILE" ] && [ -f "$METADATA_FILE" ]; then
     echo "   Including build metadata..."
     cp "$METADATA_FILE" "$TEMP_DIR/BUILD_METADATA.json"
     
+    # Convert path for Python on Windows
+    if [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "cygwin" ]]; then
+        # Convert /tmp path to Windows path for Python
+        PYTHON_TEMP_DIR=$(cygpath -w "$TEMP_DIR" 2>/dev/null || echo "$TEMP_DIR")
+    else
+        PYTHON_TEMP_DIR="$TEMP_DIR"
+    fi
+    
     # Also create a human-readable build info file
-    python3 -c "
+    PYTHONIOENCODING=utf-8 python3 -c "
 import json
 from datetime import datetime
+import os
+
+# Handle path separators
+temp_dir = r'$PYTHON_TEMP_DIR'.replace('\\\\', '/')
 
 with open('$METADATA_FILE', 'r') as f:
     data = json.load(f)
 
-with open('$TEMP_DIR/BUILD_INFO.txt', 'w') as f:
+build_info_path = os.path.join(temp_dir, 'BUILD_INFO.txt').replace('\\\\', '/')
+with open(build_info_path, 'w') as f:
     f.write('Flavor Helper Build Information\\n')
     f.write('='*50 + '\\n\\n')
     f.write(f\"Platform: {data.get('platform', 'unknown')}\\n\")
@@ -79,9 +92,26 @@ echo "   Creating zip archive..."
 cd "$TEMP_DIR"
 # Need to use absolute path for output since we're in temp dir
 ABSOLUTE_ZIP_FILE="$(cd "$OLDPWD" && pwd)/$ZIP_FILE"
+
+# Use PowerShell on Windows for zipping if zip is not available
 if [[ "$PLATFORM" == *"windows"* ]]; then
-    # Windows binaries with .exe extension
-    zip -q "$ABSOLUTE_ZIP_FILE" *.exe BUILD_*.* 2>/dev/null || zip -q "$ABSOLUTE_ZIP_FILE" *.exe
+    if command -v zip >/dev/null 2>&1; then
+        # zip is available
+        zip -q "$ABSOLUTE_ZIP_FILE" *.exe BUILD_*.* 2>/dev/null || zip -q "$ABSOLUTE_ZIP_FILE" *.exe
+    else
+        # Use PowerShell to create zip
+        echo "   Using PowerShell to create archive..."
+        # Convert Unix path to Windows path for PowerShell
+        WINDOWS_ZIP_PATH=$(cygpath -w "$ABSOLUTE_ZIP_FILE" 2>/dev/null || echo "$ABSOLUTE_ZIP_FILE")
+        # Get list of files to compress
+        FILES_TO_COMPRESS=$(ls *.exe BUILD_*.* 2>/dev/null | tr '\n' ',' | sed 's/,$//')
+        if [ -n "$FILES_TO_COMPRESS" ]; then
+            powershell -Command "Compress-Archive -Path $FILES_TO_COMPRESS -DestinationPath '$WINDOWS_ZIP_PATH' -Force"
+        else
+            # Just compress exe files if no BUILD files
+            powershell -Command "Compress-Archive -Path *.exe -DestinationPath '$WINDOWS_ZIP_PATH' -Force"
+        fi
+    fi
 else
     # Unix binaries
     zip -q "$ABSOLUTE_ZIP_FILE" * 2>/dev/null || true

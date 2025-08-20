@@ -44,8 +44,8 @@ def main():
     
     # Helper binaries status table - detailed view
     summary.append("### Helper Binaries Status\n")
-    summary.append("| Platform | Component | Language | Version | Build Time | Status |")
-    summary.append("|----------|-----------|----------|---------|------------|--------|")
+    summary.append("| Component | Platform | Language | Version | Build Time | Status |")
+    summary.append("|-----------|----------|----------|---------|------------|--------|")
     
     platforms_order = ["linux_amd64", "linux_arm64", "darwin_amd64", "darwin_arm64", "windows_amd64"]
     platform_emojis = {
@@ -211,7 +211,7 @@ def main():
             # Format version
             version_display = f"**{version}**" if version != "unknown" else "-"
             
-            summary.append(f"| {platform_display} | {component_display} | {language} | {version_display} | {build_time_display} | {status_display} |")
+            summary.append(f"| {component_display} | {platform_display} | {language} | {version_display} | {build_time_display} | {status_display} |")
     
     summary.append("\n")
     
