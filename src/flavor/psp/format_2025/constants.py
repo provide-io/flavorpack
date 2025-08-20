@@ -65,7 +65,7 @@ LIFECYCLE_RUNTIME = 2  # Available during application execution (default)
 LIFECYCLE_SHUTDOWN = 3  # Executed during cleanup/exit phase
 # Retention-based
 LIFECYCLE_CACHE = 4  # Kept for performance, can be regenerated
-LIFECYCLE_TEMP = 5  # Removed after current session ends
+LIFECYCLE_TEMPORARY = 5  # Removed after current session ends
 # Access-based
 LIFECYCLE_LAZY = 6  # Loaded on-demand, not extracted initially
 LIFECYCLE_EAGER = 7  # Loaded immediately on startup
@@ -77,7 +77,7 @@ LIFECYCLE_PLATFORM = 10  # Platform/OS specific content
 # Legacy lifecycle values (deprecated - for backward compatibility only)
 LIFECYCLE_PERMANENT = 2  # Maps to LIFECYCLE_RUNTIME
 LIFECYCLE_CACHED = 4  # Maps to LIFECYCLE_CACHE
-LIFECYCLE_TEMPORARY = 5  # Maps to LIFECYCLE_TEMP
+LIFECYCLE_TEMP = 5  # Maps to LIFECYCLE_TEMPORARY (deprecated)
 LIFECYCLE_STREAM = 6  # Maps to LIFECYCLE_LAZY
 
 # Access modes

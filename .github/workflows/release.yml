@@ -133,6 +133,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+          cache: 'pip'
       
       - name: 🐹 Setup Go
         uses: actions/setup-go@v5
@@ -317,6 +318,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+          cache: 'pip'
       
       - name: 📦 Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1

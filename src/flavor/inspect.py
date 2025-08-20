@@ -24,9 +24,9 @@ class PackageInspector:
         if not self.package_path.exists():
             raise FileNotFoundError(f"Package not found: {package_path}")
 
-        self._file_data = None
-        self._index_offset = None
-        self._metadata = None
+        self._file_data: bytes | None = None
+        self._index_offset: int | None = None
+        self._metadata: dict | None = None
 
     def _load_file(self) -> None:
         """Load file data if not already loaded."""
@@ -43,6 +43,7 @@ class PackageInspector:
         self._load_file()
 
         # Search for magic in first 10MB
+        assert self._file_data is not None  # Guaranteed by _load_file()
         search_limit = min(10 * 1024 * 1024, len(self._file_data))
         magic_pos = self._file_data.find(self.PSPF_MAGIC, 0, search_limit)
 
@@ -199,9 +200,13 @@ class PackageInspector:
         # Note: The public key is stored in the index, not metadata
         try:
             index = self._read_index()
-            if index and hasattr(index, "public_key") and any(b != 0 for b in index.public_key):
-                    security["public_key"] = index.public_key[:16].hex() + "..."
-                    security["signed"] = True
+            if (
+                index
+                and hasattr(index, "public_key")
+                and any(b != 0 for b in index.public_key)
+            ):
+                security["public_key"] = index.public_key[:16].hex() + "..."
+                security["signed"] = True
         except Exception:
             pass
 

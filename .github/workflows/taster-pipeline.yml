@@ -45,16 +45,7 @@ jobs:
       - name: 🔍 Determine helper version
         id: helpers
         run: |
-          # Get helper version from the latest successful run or specified run
-          if [ -n "${{ inputs.helper_run_id }}" ]; then
-            RUN_ID="${{ inputs.helper_run_id }}"
-          else
-            # Get latest successful helper pipeline run
-            RUN_ID=$(gh run list --workflow=helper-pipeline.yml --status=success --limit=1 --json databaseId -q '.[0].databaseId')
-          fi
-
-          echo "Using Helper Pipeline run: $RUN_ID"
-          echo "run_id=$RUN_ID" >> $GITHUB_OUTPUT
+          .github/scripts/get-helper-run.sh "${{ inputs.helper_run_id }}"
 
           # Extract version from run artifacts
           ARTIFACTS=$(gh api repos/${{ github.repository }}/actions/runs/$RUN_ID/artifacts --jq '.artifacts[].name')
@@ -132,17 +123,7 @@ jobs:
       - name: 🔧 Extract helpers
         shell: bash
         run: |
-          mkdir -p helpers/bin
-
-          # Extract the specific platform helpers
-          if [ -f "helpers-dist/flavor-helpers-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}.zip" ]; then
-            unzip -o "helpers-dist/flavor-helpers-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}.zip" -d helpers/bin/
-          fi
-
-          # Make binaries executable (Unix platforms)
-          if [[ "${{ matrix.platform }}" != *"windows"* ]]; then
-            chmod +x helpers/bin/* 2>/dev/null || true
-          fi
+          .github/scripts/download-helpers.sh helpers-dist "${{ needs.setup.outputs.helper_version }}" "${{ matrix.platform }}"
 
           # List available helpers
           ls -la helpers/bin/
@@ -156,22 +137,7 @@ jobs:
 
       - name: 📦 Setup workenv
         shell: bash
-        run: |
-          # Set up virtual environment
-          python -m venv workenv
-
-          # Activate and install dependencies
-          if [[ "${{ runner.os }}" == "Windows" ]]; then
-            source workenv/Scripts/activate
-          else
-            source workenv/bin/activate
-          fi
-
-          # Install uv for faster dependency resolution
-          pip install uv
-
-          # Install flavor
-          uv pip install -e .
+        run: .github/scripts/setup-python-workenv.sh
 
       - name: 🔨 Build Taster
         id: build
@@ -311,23 +277,16 @@ jobs:
 
       - name: 🔧 Extract all helpers
         run: |
-          mkdir -p helpers/bin
-          for zip in helpers-dist/*.zip; do
-            unzip -o "$zip" -d helpers/bin/ || true
-          done
-          chmod +x helpers/bin/*-linux_* 2>/dev/null || true
+          .github/scripts/download-helpers.sh helpers-dist "${{ needs.setup.outputs.helper_version }}"
 
       - name: 🐍 Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+          cache: 'pip'
 
       - name: 📦 Setup environment
-        run: |
-          python -m venv workenv
-          source workenv/bin/activate
-          pip install uv
-          uv pip install -e .
+        run: .github/scripts/setup-python-workenv.sh
 
       - name: 🧪 Run comprehensive tests
         run: |

@@ -82,7 +82,7 @@ class PSPFReader:
     @contextmanager
     def extraction_lock(self, extract_dir: Path, timeout: float = 30.0):
         """Acquire an extraction lock for a given directory."""
-        from flavor.resilience import default_lock_manager
+        from flavor.locking import default_lock_manager
 
         lock_file = extract_dir / ".extraction.lock"
         with default_lock_manager.lock(lock_file.name, timeout=timeout) as lock:
@@ -123,7 +123,7 @@ class PSPFReader:
         # Most launchers are 1-3MB, so 10MB limit should be more than enough
         chunk_size = 64 * 1024  # 64KB chunks - smaller to avoid boundary issues
         search_limit = min(file_size, 10 * 1024 * 1024)
-        
+
         for offset in range(0, search_limit, chunk_size):
             # Read chunk (64KB should be fast enough)
             read_size = min(chunk_size, file_size - offset)
@@ -196,7 +196,7 @@ class PSPFReader:
             index_data = bytes(index_data)
 
         self._index = PSPFIndex.unpack(index_data)
-        
+
         # Debug log the parsed index values
         logger.debug(
             "📊 Parsed index values",

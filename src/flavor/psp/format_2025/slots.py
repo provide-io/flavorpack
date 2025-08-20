@@ -28,7 +28,7 @@ from flavor.psp.format_2025.constants import (
     LIFECYCLE_RUNTIME,
     LIFECYCLE_SHUTDOWN,
     LIFECYCLE_STARTUP,
-    LIFECYCLE_TEMP,
+    LIFECYCLE_TEMPORARY,
     PAGE_SIZE,
     PURPOSE_CODE,
     PURPOSE_CONFIG,
@@ -256,7 +256,7 @@ class SlotMetadata:
             "shutdown": LIFECYCLE_SHUTDOWN,
             # Retention-based
             "cache": LIFECYCLE_CACHE,
-            "temp": LIFECYCLE_TEMP,
+            "temp": LIFECYCLE_TEMPORARY,
             "volatile": LIFECYCLE_CACHE,  # Volatile maps to cache lifecycle
             # Access-based
             "lazy": LIFECYCLE_LAZY,

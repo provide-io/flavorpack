@@ -415,7 +415,7 @@ class PythonPackager:
         else:
             # On Unix-like systems
             uv_python_base = Path.home() / ".local" / "share" / "uv" / "python"
-        
+
         python_install_dir = None
 
         # Look for any Python that matches our major.minor version
@@ -453,7 +453,7 @@ class PythonPackager:
         # On Windows, we need to reorganize bin/ to Scripts/
         import platform
         is_windows = platform.system() == "Windows"
-        
+
         with tarfile.open(python_tgz, "w:gz", compresslevel=9) as tar:
             # Custom filter to exclude EXTERNALLY-MANAGED file and reorganize for Windows
             def filter_and_reorganize(tarinfo):
@@ -462,7 +462,7 @@ class PythonPackager:
                         "Excluding EXTERNALLY-MANAGED marker from Python runtime tarball"
                     )
                     return None
-                
+
                 # On Windows, move bin/ contents to Scripts/
                 if is_windows and tarinfo.name.startswith("./bin/"):
                     # Change ./bin/something to ./Scripts/something
@@ -473,7 +473,7 @@ class PythonPackager:
                     # Rename the bin directory itself to Scripts
                     tarinfo.name = "./Scripts"
                     logger.debug("Windows: Remapping ./bin to ./Scripts")
-                
+
                 return tarinfo
 
             # Add all files from the Python directory, preserving structure

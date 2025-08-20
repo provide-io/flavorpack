@@ -47,16 +47,7 @@ jobs:
       - name: 🔍 Determine helper version
         id: helpers
         run: |
-          # Get helper version from the latest successful run or specified run
-          if [ -n "${{ inputs.helper_run_id }}" ]; then
-            RUN_ID="${{ inputs.helper_run_id }}"
-          else
-            # Get latest successful helper pipeline run
-            RUN_ID=$(gh run list --workflow=helper-pipeline.yml --status=success --limit=1 --json databaseId -q '.[0].databaseId')
-          fi
-          
-          echo "Using Helper Pipeline run: $RUN_ID"
-          echo "run_id=$RUN_ID" >> $GITHUB_OUTPUT
+          .github/scripts/get-helper-run.sh "${{ inputs.helper_run_id }}"
           
           # Extract version from run artifacts
           ARTIFACTS=$(gh api repos/${{ github.repository }}/actions/runs/$RUN_ID/artifacts --jq '.artifacts[].name')
@@ -133,16 +124,8 @@ jobs:
       
       - name: 🔧 Extract helpers
         run: |
-          mkdir -p helpers/bin
           # TEMPORARILY REMOVED windows_amd64 - Windows support has path separator issues
-          for platform in linux_amd64 linux_arm64 darwin_amd64 darwin_arm64; do
-            if [ -f "helpers-dist/flavor-helpers-${{ needs.setup.outputs.helper_version }}-${platform}.zip" ]; then
-              unzip -o "helpers-dist/flavor-helpers-${{ needs.setup.outputs.helper_version }}-${platform}.zip" -d helpers/bin/ || true
-            fi
-          done
-          
-          # Make Linux binaries executable
-          chmod +x helpers/bin/*-linux_* 2>/dev/null || true
+          .github/scripts/download-helpers.sh helpers-dist "${{ needs.setup.outputs.helper_version }}" "linux_amd64 linux_arm64 darwin_amd64 darwin_arm64"
           
           # List available helpers
           ls -la helpers/bin/

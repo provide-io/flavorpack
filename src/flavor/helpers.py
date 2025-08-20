@@ -524,11 +524,45 @@ class HelperManager:
         Returns:
             List of installed helper paths
         """
-        # This would download pre-built binaries from GitHub releases
-        # For now, this is a placeholder
-        logger.warning("Pre-built binary installation not yet implemented")
-        logger.info("Please build from source using: flavor helper build")
-        return []
+        from flavor.helper_download import HelperDownloader
+
+        downloader = HelperDownloader(cache_dir=self.installed_helpers_bin.parent)
+        if version != "latest":
+            downloader.HELPER_VERSION = version.lstrip("v")
+
+        downloaded = downloader.download_all_helpers()
+        return list(downloaded.values())
+
+    def find_helper(self, name: str, auto_download: bool = True) -> Path | None:
+        """Find a helper binary, optionally downloading if not found.
+
+        Args:
+            name: Helper name (e.g., "flavor-rs-launcher")
+            auto_download: If True, download from GitHub if not found locally
+
+        Returns:
+            Path to the helper binary or None if not found
+        """
+        # First check local development helpers
+        local_path = self.helpers_bin / name
+        if local_path.exists():
+            return local_path
+
+        # Check installed helpers cache
+        installed_path = self.installed_helpers_bin / self.current_platform / name
+        if installed_path.exists():
+            return installed_path
+
+        # Try to download if enabled
+        if auto_download:
+            try:
+                from flavor.helper_download import get_helper
+
+                return get_helper(name)
+            except Exception as e:
+                logger.warning(f"Failed to auto-download {name}: {e}")
+
+        return None
 
 
 # 🔧🏗️🤖

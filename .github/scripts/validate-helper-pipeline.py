@@ -8,12 +8,19 @@ import zipfile
 from pathlib import Path
 from datetime import datetime
 
+def get_default_version():
+    """Get version from VERSION file."""
+    version_file = Path(__file__).parent.parent / "VERSION"
+    if version_file.exists():
+        return version_file.read_text().strip()
+    return "0.3.0"  # fallback
+
 
 def main():
     # Parse arguments
     artifacts_dir = sys.argv[1] if len(sys.argv) > 1 else "."
     output_json = sys.argv[2] if len(sys.argv) > 2 else "validation-report.json"
-    version = sys.argv[3] if len(sys.argv) > 3 else "0.3.0"
+    version = sys.argv[3] if len(sys.argv) > 3 else get_default_version()
     
     print(f"🔍 Validating helper pipeline artifacts")
     print(f"   Artifacts directory: {artifacts_dir}")
