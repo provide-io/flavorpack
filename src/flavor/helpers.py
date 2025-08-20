@@ -38,39 +38,135 @@ class HelperManager:
         self.flavor_root = Path(__file__).parent.parent.parent
         self.helpers_dir = self.flavor_root / "helpers"
         self.helpers_bin = self.helpers_dir / "bin"
+        
+        # Also check XDG cache location for installed helpers
+        xdg_cache = os.environ.get("XDG_CACHE_HOME", os.path.expanduser("~/.cache"))
+        self.installed_helpers_bin = Path(xdg_cache) / "flavor" / "helpers" / "bin"
+        
         # Source directories are in helpers/<language>
         self.go_src_dir = self.helpers_dir / "flavor-go"
-        self.rust_src_dir = self.helpers_dir / "flavor-rust"
+        self.rust_src_dir = self.helpers_dir / "flavor-rs"
         
         # Ensure helpers directories exist
         self.helpers_dir.mkdir(exist_ok=True)
         self.helpers_bin.mkdir(exist_ok=True)
+        
+        # Detect current platform
+        self.current_platform = self._get_current_platform()
     
-    def list_helpers(self) -> dict[str, list[HelperInfo]]:
-        """List all available helpers."""
+    def _get_current_platform(self) -> str:
+        """Get the current platform identifier (e.g., 'linux_amd64', 'darwin_arm64')."""
+        system = platform.system().lower()
+        machine = platform.machine().lower()
+        
+        # Normalize OS names
+        os_map = {
+            'linux': 'linux',
+            'darwin': 'darwin',
+            'windows': 'windows',
+        }
+        
+        # Normalize architecture names
+        arch_map = {
+            'x86_64': 'amd64',
+            'amd64': 'amd64',
+            'aarch64': 'arm64',
+            'arm64': 'arm64',
+        }
+        
+        os_name = os_map.get(system, system)
+        arch_name = arch_map.get(machine, machine)
+        
+        return f"{os_name}_{arch_name}"
+    
+    def list_helpers(self, platform_filter: bool = False) -> dict[str, list[HelperInfo]]:
+        """List all available helpers.
+        
+        Args:
+            platform_filter: If True, only return helpers compatible with current platform
+            
+        Returns:
+            Dictionary with 'launchers' and 'builders' lists
+        """
         helpers = {
             "launchers": [],
             "builders": [],
         }
         
-        if not self.helpers_bin.exists():
-            return helpers
+        # Check both local development and installed locations
+        search_dirs = []
+        if self.helpers_bin.exists():
+            search_dirs.append(self.helpers_bin)
+        if self.installed_helpers_bin.exists():
+            search_dirs.append(self.installed_helpers_bin)
         
-        # Find all launchers
-        for launcher in self.helpers_bin.glob("flavor-*-launcher"):
-            if launcher.is_file():
-                info = self._get_helper_info(launcher)
-                if info:
-                    helpers["launchers"].append(info)
+        # Track seen helpers to avoid duplicates
+        seen = set()
         
-        # Find all builders
-        for builder in self.helpers_bin.glob("flavor-*-builder"):
-            if builder.is_file():
-                info = self._get_helper_info(builder)
-                if info:
-                    helpers["builders"].append(info)
+        for search_dir in search_dirs:
+            # Find all launchers (match both with and without platform suffix)
+            for launcher in search_dir.glob("flavor-*-launcher*"):
+                if launcher.is_file() and launcher.name not in seen:
+                    # Check platform compatibility if filtering is enabled
+                    if platform_filter and not self._is_platform_compatible(launcher.name):
+                        continue
+                    
+                    info = self._get_helper_info(launcher)
+                    if info:
+                        helpers["launchers"].append(info)
+                        seen.add(launcher.name)
+            
+            # Find all builders (match both with and without platform suffix)
+            for builder in search_dir.glob("flavor-*-builder*"):
+                if builder.is_file() and builder.name not in seen:
+                    # Check platform compatibility if filtering is enabled
+                    if platform_filter and not self._is_platform_compatible(builder.name):
+                        continue
+                    
+                    info = self._get_helper_info(builder)
+                    if info:
+                        helpers["builders"].append(info)
+                        seen.add(builder.name)
         
         return helpers
+    
+    def _is_platform_compatible(self, filename: str) -> bool:
+        """Check if a helper binary is compatible with the current platform.
+        
+        Args:
+            filename: Name of the helper binary file
+            
+        Returns:
+            True if compatible with current platform, False otherwise
+        """
+        # Binaries without platform suffix are assumed to be for the current platform
+        # (e.g., locally built binaries)
+        if not any(platform in filename for platform in ['linux', 'darwin', 'windows']):
+            return True
+        
+        # Check if the current platform is in the filename
+        # Handle both underscore and hyphen separators
+        current_parts = self.current_platform.split('_')
+        os_name = current_parts[0]
+        arch_name = current_parts[1] if len(current_parts) > 1 else ''
+        
+        # Check OS match
+        if os_name not in filename.lower():
+            return False
+        
+        # Check architecture match (if specified in filename)
+        if arch_name and any(arch in filename.lower() for arch in ['amd64', 'arm64', 'x86_64', 'aarch64']):
+            # Map architecture names for comparison
+            arch_variants = {
+                'amd64': ['amd64', 'x86_64'],
+                'arm64': ['arm64', 'aarch64'],
+            }
+            
+            valid_archs = arch_variants.get(arch_name, [arch_name])
+            if not any(arch in filename.lower() for arch in valid_archs):
+                return False
+        
+        return True
     
     def _get_helper_info(self, path: Path) -> HelperInfo | None:
         """Get information about a helper binary."""
@@ -84,9 +180,16 @@ class HelperManager:
             return None
         
         # Extract language and type from filename
-        # Format: flavor-<lang>-<type>
+        # Format: flavor-<lang>-<type> or flavor-<lang>-<type>-<platform>
         lang = parts[1]
-        helper_type = parts[2]
+        
+        # Helper type might have platform suffix (e.g., launcher-darwin_arm64)
+        helper_type_full = parts[2]
+        # Remove platform suffix if present (e.g., "launcher-darwin_arm64" -> "launcher")
+        helper_type = helper_type_full.split("_")[0]  # Split by underscore for platform
+        if helper_type not in ["launcher", "builder"]:
+            # Try without any suffix
+            helper_type = helper_type_full
         
         # Get file info
         stat = path.stat()
@@ -136,7 +239,7 @@ class HelperManager:
                 built_from = helpers_dir / "flavor-go" / "cmd" / "flavor-go-builder"
         elif lang in ["rs", "rust"]:
             # Rust uses a workspace structure
-            built_from = helpers_dir / "flavor-rust"
+            built_from = helpers_dir / "flavor-rs"
         
         return HelperInfo(
             name=name,
@@ -293,7 +396,7 @@ class HelperManager:
         if language == "go":
             patterns = ["flavor-go-*"]
         elif language == "rust":
-            patterns = ["flavor-rs-*", "flavor-rust-*"]
+            patterns = ["flavor-rs-*", "flavor-rs-*"]
         else:
             patterns = ["flavor-*"]
         

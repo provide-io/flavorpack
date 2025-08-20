@@ -10,6 +10,41 @@ Flavor is a packaging system implementing the Progressive Secure Package Format 
 
 **NEVER add environment variable-specific logic in the helpers (Rust/Go)**. The helpers should be generic and data-driven. All environment variable configuration should come from the metadata. Do not add special cases like "if command is UV then set UV_SYSTEM_PYTHON" - this violates the separation of concerns. The helpers are meant to be generic executors that work with ANY package based on metadata alone.
 
+## CI/CD Pipeline Architecture
+
+### Helper Pipeline Independence
+The helper pipeline (`helper-pipeline.yml`) is **completely standalone** and independent. Key principles:
+
+1. **No Direct Dependencies**: The helper pipeline should NEVER be called as a reusable workflow from other workflows
+2. **Artifact-Based Integration**: Workflows that need helpers must download artifacts from a successful helper pipeline run
+3. **Automatic Triggering**: If helper artifacts don't exist:
+   - Use `workflow_run` trigger or `dawidd6/action-download-artifact` action
+   - Trigger helper pipeline if needed
+   - Wait for completion
+   - Fail the workflow if helper pipeline fails
+4. **Clean Separation**: Helper pipeline ONLY builds helpers and validates them - no other logic
+
+#### Recommended Approach Using GitHub Actions Native Features
+
+**Option 1: workflow_run trigger** (for dependent workflows)
+```yaml
+on:
+  workflow_run:
+    workflows: ["🔨 Helper Pipeline"]
+    types: [completed]
+    branches: [main]
+```
+
+**Option 2: dawidd6/action-download-artifact** (most flexible)
+```yaml
+- uses: dawidd6/action-download-artifact@v6
+  with:
+    workflow: helper-pipeline.yml
+    name: flavor-helpers-0.3.0-all
+    path: ./helpers
+    workflow_conclusion: success
+```
+
 ## Development Environment Setup
 
 Always use the workenv virtual environment system:
@@ -69,7 +104,7 @@ go build -o ../bin/flavor-go-builder cmd/flavor-go-builder/main.go
 go build -o ../bin/flavor-go-launcher cmd/flavor-go-launcher/main.go
 
 # Build Rust helpers
-cd helpers/flavor-rust
+cd helpers/flavor-rs
 cargo build --release
 cp target/release/flavor-rs-builder ../bin/
 cp target/release/flavor-rs-launcher ../bin/
@@ -80,9 +115,9 @@ cp target/release/flavor-rs-launcher ../bin/
 # Build a PSP package using Python builder
 workenv/flavor_darwin_arm64/bin/flavor package --manifest manifest.json --output output.psp
 
-# Using different builders/launchers
-workenv/flavor_darwin_arm64/bin/flavor package --builder python --launcher go --output output.psp
-workenv/flavor_darwin_arm64/bin/flavor package --builder go --launcher rust --output output.psp
+# Using different launchers
+workenv/flavor_darwin_arm64/bin/flavor package --manifest manifest.json --launcher-bin helpers/bin/flavor-go-launcher --output output.psp
+workenv/flavor_darwin_arm64/bin/flavor package --manifest manifest.json --launcher-bin helpers/bin/flavor-rs-launcher --output output.psp
 
 # Test all builder/launcher combinations
 ./test-all-combinations.sh
@@ -101,7 +136,7 @@ workenv/flavor_darwin_arm64/bin/flavor package --builder go --launcher rust --ou
 2. **Multi-Language Implementation**
    - **Python** (`src/flavor/`): Primary implementation, packaging orchestration
    - **Go** (`helpers/flavor-go/`): High-performance builder/launcher
-   - **Rust** (`helpers/flavor-rust/`): Memory-safe builder/launcher
+   - **Rust** (`helpers/flavor-rs/`): Memory-safe builder/launcher
    
 3. **Key Python Modules**
    - `flavor.psp.format_2025.builder`: PSPF package building logic
@@ -178,7 +213,7 @@ cd helpers/taster
 ../../workenv/flavor_darwin_arm64/bin/flavor package \
   --manifest pyproject.toml \
   --output taster.psp \
-  --launcher rust \
+  --launcher-bin ../bin/flavor-rs-launcher \
   --key-seed test123
 
 # Test taster (no insecure flags needed!)
@@ -217,3 +252,5 @@ The launcher automatically removes volatile slots after setup:
 - UV and Python runtime are persistent for execution
 - This reduces cache size while maintaining functionality
 - always use absolute projects, such as `flavor.utils`, or `flavor.placeholders` or anything.
+- GitHub Actions must be manually triggered. Pushes do not trigger them.
+- when building github workflows, you will default to looking for/updating scripts in .github/scripts. you will *NOT* put more than a few lines in any workflow yaml.

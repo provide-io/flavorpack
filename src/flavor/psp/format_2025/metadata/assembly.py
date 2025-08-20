@@ -20,6 +20,7 @@ def get_flavor_version() -> str:
 
 def load_launcher_binary(launcher_type: str) -> bytes:
     """Load launcher binary for the specified type."""
+    import os
     platform_str = get_platform_string()
     
     # Map launcher types to binary names
@@ -30,25 +31,45 @@ def load_launcher_binary(launcher_type: str) -> bytes:
         "node": "flavor-rs-launcher",    # Node uses Rust launcher
     }
     
-    launcher_name = launcher_map.get(launcher_type, "flavor-rs-launcher")
+    launcher_base = launcher_map.get(launcher_type, "flavor-rs-launcher")
     
-    # Search paths - prioritize helpers/bin first
-    search_paths = [
-        Path.cwd() / "helpers" / "bin" / launcher_name,
-        Path.cwd().parent / "helpers" / "bin" / launcher_name,
-        Path.cwd().parent.parent / "helpers" / "bin" / launcher_name,  # For tests
-        Path.home() / ".cache" / "flavor" / "bin" / launcher_name,
-        Path.cwd() / "workenv" / "flavors" / platform_str / launcher_name,
-        Path.cwd() / launcher_name,
+    # Try both platform-specific and generic names
+    launcher_names = [
+        f"{launcher_base}-{platform_str}",  # Platform-specific first
+        launcher_base,                       # Generic fallback
     ]
     
-    for path in search_paths:
-        if path.exists():
-            return path.read_bytes()
+    # Get XDG_CACHE_HOME with fallback to ~/.cache
+    xdg_cache = os.environ.get("XDG_CACHE_HOME", os.path.expanduser("~/.cache"))
+    
+    # Search paths - prioritize helpers/bin first, then XDG cache location
+    base_search_paths = [
+        Path.cwd() / "helpers" / "bin",
+        Path.cwd().parent / "helpers" / "bin",
+        Path.cwd().parent.parent / "helpers" / "bin",  # For tests
+        Path(xdg_cache) / "flavor" / "helpers" / "bin",  # XDG cache location
+        Path.home() / ".cache" / "flavor" / "helpers" / "bin",  # Fallback cache
+        Path.cwd() / "workenv" / "flavors" / platform_str,
+        Path.cwd(),
+    ]
+    
+    # Try each launcher name in each search path
+    for base_path in base_search_paths:
+        for launcher_name in launcher_names:
+            path = base_path / launcher_name
+            if path.exists():
+                return path.read_bytes()
+    
+    # Build helpful error message showing all searched paths
+    searched_paths = []
+    for base_path in base_search_paths:
+        for launcher_name in launcher_names:
+            searched_paths.append(str(base_path / launcher_name))
     
     raise FileNotFoundError(
-        f"Could not find {launcher_name} binary. "
-        f"Build it first with 'flavor helpers build'"
+        f"Could not find {launcher_base} binary. "
+        f"Build it first with 'flavor helpers build'. "
+        f"Searched paths: {', '.join(searched_paths[:3])}..."
     )
 
 

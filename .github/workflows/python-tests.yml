@@ -1,0 +1,309 @@
+name: 🐍 Python Tests
+
+on:
+  workflow_dispatch:
+    inputs:
+      platforms:
+        description: 'Platforms to test (comma-separated: linux,macos,windows)'
+        type: string
+        default: 'linux,macos'
+      python_versions:
+        description: 'Python versions to test (comma-separated)'
+        type: string
+        default: '3.13'
+      fast_mode:
+        description: 'Fast mode (minimal testing)'
+        type: boolean
+        default: false
+      use_helper_cache:
+        description: 'Use cached helpers if available'
+        type: boolean
+        default: true
+  workflow_call:
+    inputs:
+      platforms:
+        type: string
+        default: 'linux,macos'
+      python_versions:
+        type: string
+        default: '3.13'
+      fast_mode:
+        type: boolean
+        default: false
+      helper_artifact:
+        type: string
+        default: ''
+  push:
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - 'pyproject.toml'
+      - '.github/workflows/python-tests.yml'
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'tests/**'
+
+jobs:
+  # Run tests on each platform
+  platform-tests:
+    name: 🧪 ${{ matrix.os_name }} / Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Linux tests
+          - os: ubuntu-24.04
+            os_name: Linux
+            platform: linux_amd64
+            python: "3.13"
+            enabled: ${{ contains(inputs.platforms, 'linux') || inputs.platforms == '' }}
+          - os: ubuntu-24.04
+            os_name: Linux
+            platform: linux_amd64
+            python: "3.12"
+            enabled: ${{ contains(inputs.platforms, 'linux') && contains(inputs.python_versions, '3.12') }}
+          - os: ubuntu-24.04
+            os_name: Linux
+            platform: linux_amd64
+            python: "3.11"
+            enabled: ${{ contains(inputs.platforms, 'linux') && contains(inputs.python_versions, '3.11') }}
+          
+          # macOS tests
+          - os: macos-15
+            os_name: macOS
+            platform: darwin_arm64
+            python: "3.13"
+            enabled: ${{ contains(inputs.platforms, 'macos') || inputs.platforms == '' }}
+          
+          # Windows tests
+          - os: windows-2025
+            os_name: Windows
+            platform: windows_amd64
+            python: "3.13"
+            enabled: ${{ contains(inputs.platforms, 'windows') }}
+    
+    steps:
+      - name: 🎯 Check if enabled
+        if: matrix.enabled == false
+        run: |
+          echo "⏭️ Skipping ${{ matrix.os_name }} Python ${{ matrix.python }} (not selected)"
+          exit 0
+      
+      - name: 📥 Checkout
+        if: matrix.enabled != false
+        uses: actions/checkout@v4
+      
+      - name: 🐍 Setup Python ${{ matrix.python }}
+        if: matrix.enabled != false
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          cache: 'pip'
+      
+      # Download helpers if provided
+      - name: 📦 Download helper artifacts
+        if: matrix.enabled != false && inputs.helper_artifact != ''
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.helper_artifact }}
+          path: helpers
+      
+      # Or try to get from helper pipeline
+      - name: 📦 Get helpers from cache
+        if: matrix.enabled != false && inputs.helper_artifact == '' && inputs.use_helper_cache
+        id: helper-cache
+        uses: actions/cache@v4
+        with:
+          path: helpers
+          key: helpers-v2-latest
+          restore-keys: |
+            helpers-v2-
+      
+      - name: 🔐 Set executable permissions
+        if: matrix.enabled != false && (steps.helper-cache.outputs.cache-hit == 'true' || inputs.helper_artifact != '')
+        shell: bash
+        run: |
+          if [ -d "helpers/bin" ]; then
+            chmod +x helpers/bin/* 2>/dev/null || true
+            echo "✅ Helper binaries found and made executable"
+            ls -la helpers/bin/ 2>/dev/null || true
+          else
+            echo "⚠️ No helper binaries found (will skip helper-dependent tests)"
+          fi
+      
+      - name: 🔧 Install dependencies
+        if: matrix.enabled != false
+        shell: bash
+        run: |
+          # Install uv for faster operations
+          pip install uv
+          
+          # Create and activate virtual environment
+          uv venv workenv
+          
+          # Platform-specific activation
+          if [ "${{ runner.os }}" == "Windows" ]; then
+            source workenv/Scripts/activate
+          else
+            source workenv/bin/activate
+          fi
+          
+          # Install package and test dependencies
+          uv pip install -e .
+          uv pip install pytest pytest-xdist pytest-timeout pytest-mock pytest-cov
+      
+      - name: 🧪 Run unit tests
+        if: matrix.enabled != false
+        shell: bash
+        run: |
+          # Activate environment
+          if [ "${{ runner.os }}" == "Windows" ]; then
+            source workenv/Scripts/activate
+          else
+            source workenv/bin/activate
+          fi
+          
+          echo "### 🧪 Unit Tests - ${{ matrix.os_name }} Python ${{ matrix.python }}" >> $GITHUB_STEP_SUMMARY
+          
+          # Run unit tests with coverage
+          pytest tests/unit \
+            -n auto \
+            --timeout=60 \
+            --cov=src/flavor \
+            --cov-report=term-missing \
+            --cov-report=xml:coverage-unit.xml \
+            --junit-xml=junit-unit.xml \
+            -v
+          
+          echo "✅ Unit tests completed" >> $GITHUB_STEP_SUMMARY
+      
+      - name: 🧪 Run integration tests
+        if: matrix.enabled != false && !inputs.fast_mode
+        shell: bash
+        run: |
+          # Activate environment
+          if [ "${{ runner.os }}" == "Windows" ]; then
+            source workenv/Scripts/activate
+          else
+            source workenv/bin/activate
+          fi
+          
+          echo "### 🧪 Integration Tests - ${{ matrix.os_name }}" >> $GITHUB_STEP_SUMMARY
+          
+          # Skip helper tests if no helpers available
+          if [ -d "helpers/bin" ]; then
+            MARKERS=""
+          else
+            MARKERS="-m 'not requires_helpers'"
+            echo "⚠️ Skipping helper-dependent tests" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # Run integration tests
+          pytest tests/integration tests/validation tests/format_2025 \
+            $MARKERS \
+            -n auto \
+            --timeout=120 \
+            --cov=src/flavor \
+            --cov-append \
+            --cov-report=term-missing \
+            --cov-report=xml:coverage-integration.xml \
+            --junit-xml=junit-integration.xml \
+            -v
+          
+          echo "✅ Integration tests completed" >> $GITHUB_STEP_SUMMARY
+      
+      - name: 📊 Upload test results
+        if: always() && matrix.enabled != false
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ matrix.os_name }}-py${{ matrix.python }}
+          path: |
+            junit-*.xml
+            coverage-*.xml
+          retention-days: 7
+      
+      - name: 📊 Test summary
+        if: always() && matrix.enabled != false
+        run: |
+          echo "### 📊 Test Summary - ${{ matrix.os_name }} Python ${{ matrix.python }}" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Tests completed for ${{ matrix.os_name }} on Python ${{ matrix.python }}" >> $GITHUB_STEP_SUMMARY
+
+  # Combine coverage reports
+  coverage-report:
+    name: 📊 Coverage Report
+    needs: platform-tests
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 📦 Download all test results
+        uses: actions/download-artifact@v4
+        with:
+          pattern: test-results-*
+          path: test-results
+      
+      - name: 🔧 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      
+      - name: 📊 Combine coverage
+        run: |
+          pip install coverage
+          
+          # Find all coverage files
+          find test-results -name "coverage-*.xml" -exec cp {} . \;
+          
+          # Combine coverage reports
+          coverage combine || true
+          coverage report || true
+          
+          echo "### 📊 Combined Coverage Report" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          coverage report || echo "No coverage data available" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+      
+      - name: 📤 Upload combined coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-combined
+          path: |
+            .coverage
+            coverage*.xml
+          retention-days: 7
+
+  # Final summary
+  test-summary:
+    name: 📊 Python Tests Summary
+    needs: [platform-tests, coverage-report]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📊 Generate summary
+        run: |
+          echo "# 🐍 Python Tests Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Platform test results
+          if [ "${{ needs.platform-tests.result }}" == "success" ]; then
+            echo "## ✅ All Python tests passed" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.platform-tests.result }}" == "skipped" ]; then
+            echo "## ⏭️ Python tests skipped" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## ❌ Python tests failed" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Configuration" >> $GITHUB_STEP_SUMMARY
+          echo "- Platforms: ${{ inputs.platforms }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Python versions: ${{ inputs.python_versions }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Fast mode: ${{ inputs.fast_mode }}" >> $GITHUB_STEP_SUMMARY
+          
+          # Overall status
+          if [[ "${{ needs.platform-tests.result }}" != "success" ]] && [[ "${{ needs.platform-tests.result }}" != "skipped" ]]; then
+            exit 1
+          fi

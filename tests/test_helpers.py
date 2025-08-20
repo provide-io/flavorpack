@@ -12,7 +12,6 @@ import pytest
 from flavor.helpers import HelperInfo, HelperManager
 
 
-@pytest.mark.helpers
 @pytest.mark.requires_helpers
 class TestHelperManager:
     """Test the HelperManager class."""
@@ -24,10 +23,12 @@ class TestHelperManager:
         self.helpers_dir = self.temp_dir / "helpers"
         self.helpers_bin = self.helpers_dir / "bin"
         self.src_dir = self.temp_dir / "src" / "flavor"
+        self.installed_helpers_bin = self.temp_dir / "cache" / "flavor" / "helpers" / "bin"
         
         # Create directories
         self.helpers_bin.mkdir(parents=True)
         self.src_dir.mkdir(parents=True)
+        self.installed_helpers_bin.mkdir(parents=True)
         
         # Patch the HelperManager to use our temp directory
         self.manager = HelperManager()
@@ -35,6 +36,8 @@ class TestHelperManager:
         self.manager.helpers_dir = self.helpers_dir
         self.manager.helpers_bin = self.helpers_bin
         self.manager.src_dir = self.src_dir
+        # Also override the installed helpers directory to avoid finding real helpers
+        self.manager.installed_helpers_bin = self.installed_helpers_bin
     
     def teardown_method(self):
         """Clean up test environment."""
@@ -175,8 +178,8 @@ class TestHelperManager:
         mock_run.return_value = MagicMock(returncode=0)
         
         # Create source directories and fake built binaries
-        # The actual code looks for binaries in helpers/flavor-rust/target/release
-        rust_src_dir = self.helpers_dir / "flavor-rust"
+        # The actual code looks for binaries in helpers/flavor-rs/target/release
+        rust_src_dir = self.helpers_dir / "flavor-rs"
         rust_target = rust_src_dir / "target" / "release"
         rust_target.mkdir(parents=True)
         (rust_target / "flavor-rs-launcher").write_bytes(b"fake launcher binary")
@@ -294,7 +297,7 @@ class TestHelperManager:
     def test_clean_helpers_rust_aliases(self):
         """Test that cleaning 'rust' also cleans 'rs' prefixed helpers."""
         rs_launcher = self.create_fake_helper("flavor-rs-launcher")
-        rust_builder = self.create_fake_helper("flavor-rust-builder")
+        rust_builder = self.create_fake_helper("flavor-rs-builder")
         
         removed = self.manager.clean_helpers(language="rust")
         
@@ -393,8 +396,8 @@ class TestHelperManager:
         assert installed == []
 
 
-@pytest.mark.helpers
 @pytest.mark.unit
+@pytest.mark.requires_helpers
 class TestHelperInfo:
     """Test the HelperInfo dataclass."""
     

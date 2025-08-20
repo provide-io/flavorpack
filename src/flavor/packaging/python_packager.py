@@ -46,6 +46,12 @@ class PythonPackager:
         self.build_config = build_config
         self.python_version = python_version or self.DEFAULT_PYTHON_VERSION
         self.progress = progress_reporter
+        
+        # Platform-specific paths
+        import platform
+        self.is_windows = platform.system() == "Windows"
+        self.venv_bin_dir = "Scripts" if self.is_windows else "bin"
+        self.uv_exe = "uv.exe" if self.is_windows else "uv"
 
     def prepare_artifacts(self, work_dir: Path) -> dict[str, Path]:
         """
@@ -88,15 +94,17 @@ class PythonPackager:
             # Copy to payload bin directory
             bin_dir = payload_dir / "bin"
             bin_dir.mkdir(mode=0o700, exist_ok=True)
-            payload_uv = bin_dir / "uv"
+            payload_uv = bin_dir / self.uv_exe
             shutil.copy2(uv_host_path, str(payload_uv))
-            payload_uv.chmod(0o755)
+            if not self.is_windows:
+                payload_uv.chmod(0o755)
             logger.info(f"Copied UV binary to payload: {payload_uv}")
 
             # Also copy to work dir for Go/Rust packager compatibility
-            work_uv = work_dir / "uv"
+            work_uv = work_dir / self.uv_exe
             shutil.copy2(uv_host_path, str(work_uv))
-            work_uv.chmod(0o755)
+            if not self.is_windows:
+                work_uv.chmod(0o755)
             artifacts["uv_binary"] = work_uv
         if prep_bar:
             prep_bar.increment()
@@ -174,13 +182,14 @@ class PythonPackager:
             # ALWAYS USE pip3, NEVER pip, NEVER uv pip FOR BUILDING
             # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             logger.info("Installing pip in build environment for wheel creation...")
+            python_exe = "python.exe" if self.is_windows else "python"
             run_command(
                 [
                     "uv",
                     "pip",
                     "install",
                     "--python",
-                    str(build_venv / "bin" / "python"),
+                    str(build_venv / self.venv_bin_dir / python_exe),
                     "pip",
                 ],
                 check=True,
@@ -192,7 +201,8 @@ class PythonPackager:
             # DO NOT USE pip (without 3) - IT MAY NOT EXIST
             # DO NOT USE uv pip - IT DOESN'T SUPPORT wheel/download
             # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            pip3 = build_venv / "bin" / "pip3"
+            pip3_exe = "pip3.exe" if self.is_windows else "pip3"
+            pip3 = build_venv / self.venv_bin_dir / pip3_exe
 
             # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             # CRITICAL: BUILD WHEELS FOR LOCAL DEPENDENCIES
@@ -292,10 +302,11 @@ class PythonPackager:
             # This will resolve all dependencies properly
             logger.info("Installing main package to resolve dependencies...")
             try:
+                python_exe = "python.exe" if self.is_windows else "python"
                 run_command(
                     [
                         "uv", "pip", "install",
-                        "--python", str(build_venv / "bin" / "python"),
+                        "--python", str(build_venv / self.venv_bin_dir / python_exe),
                         str(self.manifest_dir),
                     ],
                     check=True,
