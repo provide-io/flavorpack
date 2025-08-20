@@ -129,7 +129,6 @@ def get_cpu_type() -> str | None:
 
 
 __all__ = [
-    "get_cpu_type",
     "get_platform_string",
     "run_command",
     "run_command_simple",

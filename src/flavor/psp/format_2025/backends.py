@@ -439,23 +439,16 @@ def create_backend(mode: int = ACCESS_AUTO, path: Path | None = None) -> Backend
             mode = ACCESS_FILE
             logger.debug("🤖 Default to file backend", path_exists=False)
 
-    # Create the appropriate backend and open it if path provided
-    backend = None
+    # Create the appropriate backend
     if mode == ACCESS_MMAP:
-        backend = MMapBackend()
+        return MMapBackend()
     elif mode == ACCESS_STREAM:
-        backend = StreamBackend()
+        return StreamBackend()
     elif mode == ACCESS_FILE:
-        backend = FileBackend()
+        return FileBackend()
     else:
         # Default to hybrid for unknown modes
-        backend = HybridBackend()
-    
-    # Open the backend with the path if provided
-    if path and backend:
-        backend.open(path)
-    
-    return backend
+        return HybridBackend()
 
 
 # 📦💾🗺️🪄
