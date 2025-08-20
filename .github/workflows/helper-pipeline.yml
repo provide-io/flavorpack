@@ -188,11 +188,11 @@ jobs:
             artifacts/metadata/
             artifacts/test-results/
 
-  # Build for Linux ARM64 (cross-compile)
+  # Build for Linux ARM64 (native)
   build-linux-arm64:
     name: 🐧 Build Linux ARM64
     needs: check-diff
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
@@ -763,10 +763,6 @@ jobs:
       - name: 📥 Checkout (for scripts)
         uses: actions/checkout@v4
       
-      - name: 🔧 Setup QEMU
-        run: |
-          chmod +x .github/scripts/setup-qemu-emulation.sh
-          .github/scripts/setup-qemu-emulation.sh
       
       - name: 📥 Download Linux artifacts
         uses: actions/download-artifact@v4
@@ -907,13 +903,13 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: test-results-${{ needs.check-diff.outputs.version }}
-          path: artifacts/test-results
+          path: artifacts/final
       
       - name: 🔍 Validate artifacts
         id: validate
         run: |
           chmod +x .github/scripts/validate-helper-pipeline.sh
-          .github/scripts/validate-helper-pipeline.sh artifacts validation-report.json || true
+          .github/scripts/validate-helper-pipeline.sh artifacts validation-report.json ${{ needs.check-diff.outputs.version }} || true
       
       - name: 📊 Generate summary
         if: always()

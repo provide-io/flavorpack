@@ -13,12 +13,12 @@ from flavor.commands.verify import verify_command
 from flavor.commands.workenv import workenv_group
 
 __all__ = [
+    "analyze_deps_command",
+    "clean_command",
+    "helper_group",
+    "inspect_command",
     "keygen_command",
     "package_command",
     "verify_command",
-    "inspect_command",
-    "clean_command",
-    "analyze_deps_command",
     "workenv_group",
-    "helper_group",
 ]
