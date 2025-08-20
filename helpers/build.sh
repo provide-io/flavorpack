@@ -9,7 +9,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 PROJECT_ROOT=$(dirname "$SCRIPT_DIR")
 BIN_DIR="$SCRIPT_DIR/bin"
 GO_DIR="$SCRIPT_DIR/flavor-go"
-RUST_DIR="$SCRIPT_DIR/flavor-rust"
+RUST_DIR="$SCRIPT_DIR/flavor-rs"
 
 # --- Logging ---
 log_info() { echo -e "ℹ️  $1"; }
@@ -35,21 +35,12 @@ mkdir -p "$BIN_DIR"
 
 # --- Build Go Helpers ---
 log_info "Building Go helpers..."
-(
-  cd "$GO_DIR"
-  go build -ldflags="-s -w" -o "$BIN_DIR/flavor-go-builder" ./cmd/flavor-go-builder
-  go build -ldflags="-s -w" -o "$BIN_DIR/flavor-go-launcher" ./cmd/flavor-go-launcher
-)
+make -C "$GO_DIR" build BIN_DIR="$BIN_DIR"
 log_success "Go helpers built successfully."
 
 # --- Build Rust Helpers ---
 log_info "Building Rust helpers..."
-(
-  cd "$RUST_DIR"
-  cargo build --release
-  cp "target/release/flavor-rs-builder" "$BIN_DIR/"
-  cp "target/release/flavor-rs-launcher" "$BIN_DIR/"
-)
+make -C "$RUST_DIR" build BIN_DIR="$BIN_DIR"
 log_success "Rust helpers built successfully."
 
 # --- Finalization ---

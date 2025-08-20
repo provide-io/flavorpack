@@ -161,10 +161,15 @@ class PackagingOrchestrator:
             logger.info("Creating slot tarballs...")
             with progress.task(total=3, description="Creating slots") as bar:
                 # Slot 0: UV binary - must be at bin/uv in the tarball
+                # Use platform-specific name
+                is_windows = platform.system() == "Windows"
+                uv_exe = "uv.exe" if is_windows else "uv"
+                
                 uv_tarball = temp_dir / "uv.tar.gz"
                 with tarfile.open(uv_tarball, "w:gz") as tar:
-                    uv_path = artifacts["payload_dir"] / "bin" / "uv"
-                    tar.add(uv_path, arcname="bin/uv")
+                    uv_path = artifacts["payload_dir"] / "bin" / uv_exe
+                    # Always use bin/uv in the tarball for consistency
+                    tar.add(uv_path, arcname=f"bin/{uv_exe}")
                 if bar:
                     bar.increment()
                 
@@ -262,7 +267,7 @@ class PackagingOrchestrator:
                 "setup_commands": [
                     {
                         "type": "enumerate_and_execute",
-                        "command": "{workenv}/bin/uv pip install --python {workenv}/bin/python3.11 --no-deps",
+                        "command": "{workenv}/bin/" + uv_exe + " pip install --python {workenv}/bin/python3.11 --no-deps",
                         "enumerate": {"path": "{workenv}/wheels", "pattern": "*.whl"},
                     },
                     {
@@ -363,13 +368,17 @@ class PackagingOrchestrator:
             # Create tarballs for slots
             logger.info("Creating slot tarballs...")
             
+            # Use platform-specific UV name
+            is_windows = platform.system() == "Windows"
+            uv_exe = "uv.exe" if is_windows else "uv"
+            
             with progress.task(total=3, description="Creating slots") as bar:
                 # Slot 0: UV binary
                 uv_tarball = temp_dir / "uv.tar.gz"
                 with tarfile.open(uv_tarball, "w:gz") as tar:
                     # Add UV to bin directory
-                    uv_path = artifacts["payload_dir"] / "bin" / "uv"
-                    tar.add(uv_path, arcname="bin/uv")
+                    uv_path = artifacts["payload_dir"] / "bin" / uv_exe
+                    tar.add(uv_path, arcname=f"bin/{uv_exe}")
                 if bar:
                     bar.increment()
 
@@ -401,7 +410,7 @@ class PackagingOrchestrator:
                 "setup_commands": [
                     {
                         "type": "enumerate_and_execute", 
-                        "command": f"{{workenv}}/bin/uv pip install --python {{workenv}}/bin/python3.11 --no-deps",
+                        "command": f"{{workenv}}/bin/{uv_exe} pip install --python {{workenv}}/bin/python3.11 --no-deps",
                         "enumerate": {"path": "{workenv}/wheels", "pattern": "*.whl"},
                     },
                     {

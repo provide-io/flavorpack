@@ -27,15 +27,6 @@ class TestPSPFSlots:
     """Test PSPF slot management."""
     
     @pytest.fixture
-    def temp_dir(self):
-        """Create temporary directory for tests."""
-        temp_path = Path(tempfile.mkdtemp())
-        yield temp_path
-        # Cleanup
-        import shutil
-        shutil.rmtree(temp_path)
-    
-    @pytest.fixture
     def test_slots(self, temp_dir, test_builder):
         """Create test slots with different properties."""
         slots = []

@@ -1,0 +1,288 @@
+name: 🍯 Taster Pipeline
+
+on:
+  workflow_dispatch:
+    inputs:
+      test_platforms:
+        description: 'Platforms to test on'
+        type: string
+        default: 'linux,macos'
+      launcher_types:
+        description: 'Launcher types to test (go,rust,both)'
+        type: string
+        default: 'both'
+      use_helper_cache:
+        description: 'Use cached helpers if available'
+        type: boolean
+        default: true
+  workflow_call:
+    inputs:
+      test_platforms:
+        type: string
+        default: 'linux,macos'
+      launcher_types:
+        type: string
+        default: 'both'
+      helper_artifact:
+        type: string
+        default: ''
+  push:
+    paths:
+      - 'helpers/taster/**'
+      - '.github/workflows/taster-pipeline.yml'
+  pull_request:
+    paths:
+      - 'helpers/taster/**'
+
+jobs:
+  # Build and test Taster packages
+  taster-tests:
+    name: 🍯 Taster ${{ matrix.os_name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            os_name: Linux
+            platform: linux_amd64
+            enabled: ${{ contains(inputs.test_platforms, 'linux') || inputs.test_platforms == '' }}
+          
+          - os: macos-15
+            os_name: macOS
+            platform: darwin_arm64
+            enabled: ${{ contains(inputs.test_platforms, 'macos') || inputs.test_platforms == '' }}
+          
+          - os: windows-2025
+            os_name: Windows
+            platform: windows_amd64
+            enabled: ${{ contains(inputs.test_platforms, 'windows') }}
+    
+    steps:
+      - name: 🎯 Check if enabled
+        if: matrix.enabled == false
+        run: |
+          echo "⏭️ Skipping ${{ matrix.os_name }} (not selected)"
+          exit 0
+      
+      - name: 📥 Checkout
+        if: matrix.enabled != false
+        uses: actions/checkout@v4
+      
+      - name: 🐍 Setup Python
+        if: matrix.enabled != false
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: 'pip'
+      
+      # Get helpers
+      - name: 📦 Download helper artifacts
+        if: matrix.enabled != false && inputs.helper_artifact != ''
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.helper_artifact }}
+          path: helpers
+      
+      - name: 📦 Get helpers from cache
+        if: matrix.enabled != false && inputs.helper_artifact == '' && inputs.use_helper_cache
+        id: helper-cache
+        uses: actions/cache@v4
+        with:
+          path: helpers
+          key: helpers-v2-latest
+          restore-keys: |
+            helpers-v2-
+      
+      # Build helpers if not available
+      - name: 🔨 Build helpers locally
+        if: matrix.enabled != false && steps.helper-cache.outputs.cache-hit != 'true' && inputs.helper_artifact == ''
+        shell: bash
+        run: |
+          echo "⚠️ No cached helpers found, building locally..."
+          
+          # Install Go
+          if ! command -v go &> /dev/null; then
+            echo "Installing Go..."
+            # This would normally be done with setup-go action
+          fi
+          
+          # Install Rust
+          if ! command -v cargo &> /dev/null; then
+            echo "Installing Rust..."
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+            source "$HOME/.cargo/env"
+          fi
+          
+          # Build helpers
+          chmod +x .github/scripts/build-platform-helpers.sh
+          .github/scripts/build-platform-helpers.sh \
+            "${{ matrix.platform }}" \
+            "${{ runner.os == 'Windows' && 'windows' || runner.os == 'macOS' && 'darwin' || 'linux' }}" \
+            "${{ runner.arch == 'ARM64' && 'arm64' || 'amd64' }}" \
+            "${{ runner.os == 'Windows' && 'x86_64-pc-windows-msvc' || runner.os == 'macOS' && 'aarch64-apple-darwin' || 'x86_64-unknown-linux-gnu' }}" \
+            "${{ runner.os == 'Windows' && '.exe' || '' }}"
+      
+      - name: 🔐 Set executable permissions
+        if: matrix.enabled != false && runner.os != 'Windows'
+        run: |
+          chmod +x helpers/bin/* 2>/dev/null || true
+          ls -la helpers/bin/
+      
+      - name: 🔧 Install Taster
+        if: matrix.enabled != false
+        shell: bash
+        run: |
+          pip install uv
+          uv venv workenv
+          
+          # Activate environment
+          if [ "${{ runner.os }}" == "Windows" ]; then
+            source workenv/Scripts/activate
+          else
+            source workenv/bin/activate
+          fi
+          
+          # Install flavor and taster
+          uv pip install -e .
+          cd helpers/taster
+          uv pip install -e .
+          cd ../..
+          
+          # Install test dependencies
+          uv pip install pytest pytest-xdist pytest-timeout
+      
+      - name: 🧪 Test Taster functionality
+        if: matrix.enabled != false
+        shell: bash
+        run: |
+          # Activate environment
+          if [ "${{ runner.os }}" == "Windows" ]; then
+            source workenv/Scripts/activate
+          else
+            source workenv/bin/activate
+          fi
+          
+          echo "### 🍯 Taster Tests - ${{ matrix.os_name }}" >> $GITHUB_STEP_SUMMARY
+          
+          # Run taster tests
+          cd helpers/taster
+          pytest tests -n auto -v --junit-xml=../../junit-taster.xml
+          cd ../..
+          
+          echo "✅ Taster tests completed" >> $GITHUB_STEP_SUMMARY
+      
+      - name: 📦 Build Taster with Go launcher
+        if: matrix.enabled != false && (inputs.launcher_types == 'go' || inputs.launcher_types == 'both')
+        shell: bash
+        run: |
+          # Activate environment
+          if [ "${{ runner.os }}" == "Windows" ]; then
+            source workenv/Scripts/activate
+            EXT=".exe"
+          else
+            source workenv/bin/activate
+            EXT=""
+          fi
+          
+          echo "### 📦 Building Taster with Go launcher" >> $GITHUB_STEP_SUMMARY
+          
+          flavor package \
+            --manifest helpers/taster/pyproject.toml \
+            --launcher-bin "helpers/bin/flavor-go-launcher-${{ matrix.platform }}${EXT}" \
+            --output "taster-go-${{ matrix.platform }}.psp" \
+            --key-seed test123
+          
+          # Test the package
+          chmod +x "taster-go-${{ matrix.platform }}.psp"
+          ./taster-go-${{ matrix.platform }}.psp --version
+          ./taster-go-${{ matrix.platform }}.psp info
+          
+          echo "✅ Taster with Go launcher built and tested" >> $GITHUB_STEP_SUMMARY
+      
+      - name: 📦 Build Taster with Rust launcher
+        if: matrix.enabled != false && (inputs.launcher_types == 'rust' || inputs.launcher_types == 'both')
+        shell: bash
+        run: |
+          # Activate environment
+          if [ "${{ runner.os }}" == "Windows" ]; then
+            source workenv/Scripts/activate
+            EXT=".exe"
+          else
+            source workenv/bin/activate
+            EXT=""
+          fi
+          
+          echo "### 📦 Building Taster with Rust launcher" >> $GITHUB_STEP_SUMMARY
+          
+          flavor package \
+            --manifest helpers/taster/pyproject.toml \
+            --launcher-bin "helpers/bin/flavor-rs-launcher-${{ matrix.platform }}${EXT}" \
+            --output "taster-rust-${{ matrix.platform }}.psp" \
+            --key-seed test123
+          
+          # Test the package
+          chmod +x "taster-rust-${{ matrix.platform }}.psp"
+          ./taster-rust-${{ matrix.platform }}.psp --version
+          ./taster-rust-${{ matrix.platform }}.psp info
+          
+          echo "✅ Taster with Rust launcher built and tested" >> $GITHUB_STEP_SUMMARY
+      
+      - name: 🧪 Cross-launcher testing
+        if: matrix.enabled != false && inputs.launcher_types == 'both'
+        shell: bash
+        run: |
+          echo "### 🔄 Cross-launcher testing" >> $GITHUB_STEP_SUMMARY
+          
+          # Test that both launchers produce same output
+          ./taster-go-${{ matrix.platform }}.psp env > go-env.txt
+          ./taster-rust-${{ matrix.platform }}.psp env > rust-env.txt
+          
+          if diff go-env.txt rust-env.txt; then
+            echo "✅ Go and Rust launchers produce identical output" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ Go and Rust launchers produce different output" >> $GITHUB_STEP_SUMMARY
+            echo "Differences:" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            diff go-env.txt rust-env.txt >> $GITHUB_STEP_SUMMARY || true
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: 📤 Upload Taster packages
+        if: matrix.enabled != false
+        uses: actions/upload-artifact@v4
+        with:
+          name: taster-packages-${{ matrix.platform }}
+          path: |
+            taster-*.psp
+            junit-taster.xml
+          retention-days: 7
+
+  # Summary
+  taster-summary:
+    name: 📊 Taster Pipeline Summary
+    needs: taster-tests
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📊 Generate summary
+        run: |
+          echo "# 🍯 Taster Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ needs.taster-tests.result }}" == "success" ]; then
+            echo "## ✅ All Taster tests passed" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.taster-tests.result }}" == "skipped" ]; then
+            echo "## ⏭️ Taster tests skipped" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## ❌ Taster tests failed" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Configuration" >> $GITHUB_STEP_SUMMARY
+          echo "- Test platforms: ${{ inputs.test_platforms }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Launcher types: ${{ inputs.launcher_types }}" >> $GITHUB_STEP_SUMMARY
+          
+          if [[ "${{ needs.taster-tests.result }}" != "success" ]] && [[ "${{ needs.taster-tests.result }}" != "skipped" ]]; then
+            exit 1
+          fi
