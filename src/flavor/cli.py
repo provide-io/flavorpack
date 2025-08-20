@@ -10,7 +10,6 @@ import click
 
 # Import all commands at module level
 from flavor.commands.helpers import helper_group
-from flavor.commands.inspect import inspect_command
 from flavor.commands.keygen import keygen_command
 from flavor.commands.package import package_command
 from flavor.commands.utils import analyze_deps_command, clean_command
@@ -62,7 +61,6 @@ def cli(ctx: click.Context, log_level: str) -> None:
 cli.add_command(keygen_command, name="keygen")
 cli.add_command(package_command, name="package")
 cli.add_command(verify_command, name="verify")
-cli.add_command(inspect_command, name="inspect")
 cli.add_command(clean_command, name="clean")
 cli.add_command(analyze_deps_command, name="analyze-deps")
 

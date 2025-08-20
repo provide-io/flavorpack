@@ -2,7 +2,6 @@
 # src/flavor/psp/format_2025/reader.py
 # PSPF 2025 Bundle Reader - Uses backend system for flexible access
 
-from contextlib import contextmanager
 import gzip
 import io
 import json
@@ -20,6 +19,7 @@ from flavor.psp.format_2025.backends import (
     StreamBackend,
     create_backend,
 )
+from flavor.psp.format_2025.shared import acquire_lock
 from flavor.psp.format_2025.constants import (
     ACCESS_AUTO,
     ACCESS_MMAP,
@@ -79,14 +79,12 @@ class PSPFReader:
             self._backend.close()
             self._backend = None
 
-    @contextmanager
     def extraction_lock(self, extract_dir: Path, timeout: float = 30.0):
-        """Acquire an extraction lock for a given directory."""
-        from flavor.resilience import default_lock_manager
-
-        lock_file = extract_dir / ".extraction.lock"
-        with default_lock_manager.lock(lock_file.name, timeout=timeout) as lock:
-            yield lock
+        """Acquire an extraction lock for a given directory.
+        
+        This is a compatibility wrapper around the shared acquire_lock function.
+        """
+        return acquire_lock(extract_dir.name, timeout)
 
     def verify_magic(self) -> bool:
         """Verify trailing package and wand emoji magic."""
