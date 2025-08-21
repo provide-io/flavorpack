@@ -3,6 +3,7 @@
 #
 """Public API for the Flavor build tool."""
 
+import json
 from pathlib import Path
 
 # No typing imports needed with Python 3.11+
@@ -23,34 +24,73 @@ def build_package_from_manifest(
     public_key_path: Path | None = None,
     key_seed: str | None = None,
 ) -> list[Path]:
-    """Builds a package from a pyproject.toml manifest."""
-    # Parse pyproject.toml to get build configurations
-    with manifest_path.open("rb") as f:
-        pyproject = tomllib.load(f)
+    """Builds a package from a manifest file (pyproject.toml or JSON)."""
+    # Determine manifest format and parse accordingly
+    manifest_type = "json" if manifest_path.suffix == ".json" else "toml"
+    
+    if manifest_type == "json":
+        # Handle JSON manifest (compatible with Rust/Go builders)
+        with manifest_path.open("r") as f:
+            manifest_data = json.load(f)
+        
+        # Extract required fields from JSON manifest
+        package_config = manifest_data.get("package", {})
+        project_name = package_config.get("name")
+        if not project_name:
+            raise ValueError("Package name must be defined in 'package.name'")
+        
+        version = package_config.get("version")
+        if not version:
+            raise ValueError("Package version must be defined in 'package.version'")
+        
+        # For JSON manifests, use the execution command as entry point
+        execution_config = manifest_data.get("execution", {})
+        entry_point = execution_config.get("command")
+        if not entry_point:
+            raise ValueError("Execution command must be defined in 'execution.command'")
+        
+        package_name = project_name
+        flavor_config = manifest_data  # Pass entire JSON as flavor config
+        build_config = manifest_data  # Use entire manifest as build config
+        
+    else:
+        # Handle TOML manifest (pyproject.toml)
+        with manifest_path.open("rb") as f:
+            pyproject = tomllib.load(f)
 
-    # Get values from pyproject.toml
-    project_config = pyproject.get("project", {})
-    flavor_config = pyproject.get("tool", {}).get("flavor", {})
+        # Get values from pyproject.toml
+        project_config = pyproject.get("project", {})
+        flavor_config = pyproject.get("tool", {}).get("flavor", {})
 
-    project_name = project_config.get("name")
-    if not project_name:
-        raise ValueError("Project name must be defined in [project] table")
+        project_name = project_config.get("name")
+        if not project_name:
+            raise ValueError("Project name must be defined in [project] table")
 
-    version = project_config.get("version")
-    if not version:
-        raise ValueError("Project version must be defined in [project] table")
+        version = project_config.get("version")
+        if not version:
+            raise ValueError("Project version must be defined in [project] table")
 
-    entry_point = flavor_config.get("entry_point")
-    if not entry_point:
-        scripts = project_config.get("scripts", {})
-        if project_name in scripts:
-            entry_point = scripts[project_name]
-        else:
-            raise ValueError(
-                "Project entry_point must be defined in [project.scripts] or [tool.flavor.entry_point]"
-            )
+        entry_point = flavor_config.get("entry_point")
+        if not entry_point:
+            scripts = project_config.get("scripts", {})
+            if project_name in scripts:
+                entry_point = scripts[project_name]
+            else:
+                raise ValueError(
+                    "Project entry_point must be defined in [project.scripts] or [tool.flavor.entry_point]"
+                )
 
-    package_name = flavor_config.get("metadata", {}).get("package_name", project_name)
+        package_name = flavor_config.get("metadata", {}).get("package_name", project_name)
+        
+        # Load build config from pyproject.toml, then override with buildconfig.toml if it exists
+        build_config = flavor_config.get("build", {})
+        buildconfig_path = manifest_path.parent / "buildconfig.toml"
+        if buildconfig_path.exists():
+            with buildconfig_path.open("rb") as f:
+                build_config.update(tomllib.load(f).get("build", {}))
+
+        if "execution" in flavor_config:
+            build_config["execution"] = flavor_config["execution"]
 
     # Use absolute paths based on manifest location
     manifest_dir = manifest_path.parent.absolute()
@@ -67,16 +107,6 @@ def build_package_from_manifest(
     if not key_seed and not private_key_path.exists():
         generate_key_pair(manifest_dir / "keys")
 
-    # Load build config from pyproject.toml, then override with buildconfig.toml if it exists
-    build_config = flavor_config.get("build", {})
-    buildconfig_path = manifest_dir / "buildconfig.toml"
-    if buildconfig_path.exists():
-        with buildconfig_path.open("rb") as f:
-            build_config.update(tomllib.load(f).get("build", {}))
-
-    if "execution" in flavor_config:
-        build_config["execution"] = flavor_config["execution"]
-
     orchestrator = PackagingOrchestrator(
         package_integrity_key_path=str(private_key_path),
         public_key_path=str(public_key_path),
@@ -91,6 +121,7 @@ def build_package_from_manifest(
         strip_binaries=strip_binaries,
         show_progress=show_progress,
         key_seed=key_seed,
+        manifest_type=manifest_type,
     )
     orchestrator.build_package()
     return [output_flavor_path]
