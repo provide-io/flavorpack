@@ -146,7 +146,7 @@ fi
 # Test 5: File operations
 echo ""
 echo "📁 Test 5: File operations"
-./"$TASTER_OUTPUT" file test-workenv
+./"$TASTER_OUTPUT" file workenv-test
 
 # Test 6: Environment variables
 echo ""
