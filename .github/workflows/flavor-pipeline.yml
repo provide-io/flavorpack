@@ -12,21 +12,6 @@ on:
         type: string
         required: false
   
-  push:
-    branches:
-      - main
-      - 'feature/**'
-    paths:
-      - 'src/flavor/**'
-      - 'tests/**'
-      - 'pyproject.toml'
-      - '.github/workflows/flavor-pipeline.yml'
-  
-  pull_request:
-    paths:
-      - 'src/flavor/**'
-      - 'tests/**'
-  
   workflow_run:
     workflows: ["🔨 Helper Pipeline"]
     types: [completed]

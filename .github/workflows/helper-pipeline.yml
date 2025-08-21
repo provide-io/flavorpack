@@ -7,27 +7,6 @@ on:
         description: 'Force rebuild even if cached'
         type: boolean
         default: false
-  
-  push:
-    branches:
-      - main
-      - 'feature/**'
-    paths:
-      - 'helpers/flavor-go/**'
-      - 'helpers/flavor-rs/**'
-      - '.github/workflows/helper-pipeline.yml'
-      - '.github/scripts/build-platform-helpers.sh'
-  
-  pull_request:
-    paths:
-      - 'helpers/flavor-go/**'
-      - 'helpers/flavor-rs/**'
-  
-  workflow_call:
-    outputs:
-      artifact-name:
-        description: 'Name of the combined artifact'
-        value: flavor-helpers-${{ jobs.check-diff.outputs.version }}-all
 
 jobs:
   # Check if helpers changed and get version
