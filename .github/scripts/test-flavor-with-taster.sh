@@ -12,10 +12,15 @@ echo "🧪 Testing Flavor with Taster for $PLATFORM"
 echo "   Version: $VERSION"
 echo "   Artifact directory: $ARTIFACT_DIR"
 
-# Disable UV cache to avoid corruption issues on GitHub runners
-export UV_NO_CACHE=1
+# Clear all caches to avoid corruption issues on GitHub runners
+echo "🧹 Clearing all caches to avoid corruption issues..."
+# Clear UV's cache
+uv cache clean || true
+# Clear any flavor caches that might contain UV's Python installations
+rm -rf ~/.cache/flavor || true
+rm -rf ~/Library/Caches/flavor || true
+# Set UV to use a fresh temporary cache
 export UV_CACHE_DIR=/tmp/uv-cache-$$
-echo "🧹 Disabled UV cache (UV_NO_CACHE=1) to avoid corruption issues..."
 
 # Determine Flavor package filename
 if [[ "$PLATFORM" == *"windows"* ]]; then

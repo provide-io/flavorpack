@@ -159,6 +159,17 @@ class PythonPackager:
             logger.info("Creating temporary build environment...")
             if wheel_spinner:
                 wheel_spinner.tick()
+
+            # If UV cache might be corrupted (in CI), ensure Python is installed first
+            import os
+            if os.environ.get("UV_CACHE_DIR", "").startswith("/tmp/"):
+                logger.info(f"Installing Python {self.python_version} via UV...")
+                run_command(
+                    ["uv", "python", "install", f"{self.python_version}"],
+                    check=True,
+                    capture_output=True,
+                )
+
             # Create a venv and seed it with pip. `uv venv` without --seed does not install pip.
             run_command(
                 [
