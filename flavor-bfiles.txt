@@ -1,58 +1,30 @@
 Attention: The following text is a 'bfiles' bundle, containing multiple delimited files with metadata.
 Parse and analyze the content between '<<< BOF <<<' and '>>> EOF >>>' for each '### FILE...' entry.
 
---- START OF BFILE bfiles-20250819-201520.txt ---
-bfiles bundle generated on: 2025-08-19T20:15:20.122202
+--- START OF BFILE bfiles-20250819-215541.txt ---
+bfiles bundle generated on: 2025-08-19T21:55:41.778966
 Config: hash=sha256, gitignore=yes, followlinks=no
 ---
 
-### FILE 1: flavor/__init__.py | checksum=9464ed716806... | modified=2025-08-15T18:40:05 | op=+ | size=471 | tokens=119 | type=x-python ###
+### FILE 1: ai_studio_code.sh | checksum=9bec513d8783... | modified=2025-08-19T21:53:32 | op=+ | size=30957 | tokens=6106 | type=x-sh ###
 <<< BOF <<<
-#
-# flavor/__init__.py
-#
-"""
-This package contains the core logic for building and verifying the
-Pyvider Secure Package Format (Flavor).
-"""
+#!/bin/bash
+# 🛠️ Project Update Script
+set -eo pipefail
 
-from flavor.api import (
-    build_package_from_manifest,
-    clean_cache,
-    verify_package,
-)
-from flavor.exceptions import BuildError, VerificationError
+# --- Logging ---
+log_info() { echo -e "ℹ️  $1"; }
+log_create() { echo -e "✨ $1"; }
+log_update() { echo -e "🔄 $1"; }
+log_delete() { echo -e "🔥 $1"; }
+log_success() { echo -e "✅ $1"; }
 
-__all__ = [
-    "BuildError",
-    "VerificationError",
-    "build_package_from_manifest",
-    "clean_cache",
-    "verify_package",
-]
-# 🌐 📈 🔥
+# --- Operations ---
+log_info "Applying fixes for orchestrator instantiation and pip wheel validation."
 
-
-# 📦🍜🚀🪄
->>> EOF >>>
-
-### FILE 2: flavor/__main__.py | checksum=2689482d352f... | modified=2025-08-15T18:40:05 | op=+ | size=136 | tokens=47 | type=x-python ###
-<<< BOF <<<
-#!/usr/bin/env python3
-# flavor/__main__.py
-#
-
-from flavor.cli import cli
-
-if __name__ == "__main__":
-    cli()
-
-
-# 📦🍜🖥️🪄
->>> EOF >>>
-
-### FILE 3: flavor/api.py | checksum=66a0a1eed875... | modified=2025-08-19T16:02:38 | op=+ | size=4252 | tokens=971 | type=x-python ###
-<<< BOF <<<
+log_update "Updating: flavor/api.py"
+mkdir -p flavor/
+cat <<'EOF' > flavor/api.py
 #
 # flavor/api.py
 #
@@ -80,7 +52,6 @@ def build_package_from_manifest(
 ) -> list[Path]:
     """Builds a package from a pyproject.toml manifest."""
     # Parse pyproject.toml to get build configurations
-
     with manifest_path.open("rb") as f:
         pyproject = tomllib.load(f)
 
@@ -168,15 +139,1133 @@ def clean_cache() -> None:
 def generate_keys(output_dir: Path) -> tuple[Path, Path]:
     """Generate a new key pair for package signing. Alias for generate_key_pair."""
     return generate_key_pair(output_dir)
+EOF
+
+log_update "Updating: flavor/packaging/orchestrator.py"
+mkdir -p flavor/packaging/
+cat <<'EOF' > flavor/packaging/orchestrator.py
+#
+# flavor/packaging/orchestrator.py
+#
+"Core logic for building Flavor packages by orchestrating the Go packager CLI."
+
+import os
+from pathlib import Path
+import platform
+import tempfile
+from typing import Any
+
+from pyvider.telemetry import logger
+
+from flavor.exceptions import BuildError
+from flavor.helpers import HelperManager
+from flavor.packaging.orchestrator_helpers import (
+    create_builder_manifest,
+    create_python_builder_metadata,
+    create_python_slot_tarballs,
+    create_slot_tarballs,
+    find_builder_executable,
+    find_launcher_executable,
+    write_manifest_file,
+)
+from flavor.packaging.python_packager import PythonPackager
+from flavor.psp.metadata.paths import validate_metadata_dict
+from flavor.utils import get_platform_string
+from flavor.utils.subprocess import run_command
 
 
-# 📡 ⚖️ 🔌
+class PackagingOrchestrator:
+    DEFAULT_PYTHON_VERSION = "3.11"
+
+    def __init__(
+        self,
+        package_integrity_key_path: str | None,
+        public_key_path: str | None,
+        output_flavor_path: str,
+        build_config: dict[str, Any],
+        manifest_dir: Path,
+        package_name: str,
+        entry_point: str,
+        python_version: str | None = None,
+        launcher_bin: str | None = None,
+        builder_bin: str | None = None,
+        strip_binaries: bool = False,
+        show_progress: bool = False,
+        key_seed: str | None = None,
+    ) -> None:
+        self.package_integrity_key_path = package_integrity_key_path
+        self.public_key_path = public_key_path
+        self.output_flavor_path = output_flavor_path
+        self.package_name = package_name
+        self.entry_point = entry_point
+        self.build_config = build_config
+        self.manifest_dir = manifest_dir
+        self.python_version = python_version or self.DEFAULT_PYTHON_VERSION
+        self.launcher_bin = launcher_bin
+        self.builder_bin = builder_bin
+        self.strip_binaries = strip_binaries
+        self.show_progress = show_progress
+        self.key_seed = key_seed
+
+        # Use HelperManager for finding helpers
+        self.helper_manager = HelperManager()
+        self.platform = get_platform_string()
+
+    def _detect_launcher_type(self, launcher_path: Path) -> str:
+        """Detect launcher type by running the binary with --version."""
+        from flavor.utils.subprocess import run_command
+
+        try:
+            result = run_command(
+                [str(launcher_path), "--version"],
+                capture_output=True,
+                check=False,  # Don't raise on non-zero exit
+                timeout=5,
+                log_command=False,
+            )
+            output = result.stdout.lower()
+
+            # Check for identifying strings in the output
+            if "flavor-rs-launcher" in output or "rust" in output:
+                return "rust"
+            elif "flavor-go-launcher" in output or "go version" in output:
+                return "go"
+            else:
+                # Default to rust if we can't determine
+                logger.warning(
+                    f"Could not determine launcher type from output: {result.stdout}"
+                )
+                return "rust"
+        except Exception as e:
+            logger.warning(f"Failed to detect launcher type: {e}")
+            return "rust"  # Default to rust
+
+    def _find_helper(self, helper_name: str) -> Path:
+        """Find a helper binary using HelperManager."""
+        try:
+            helper_path = self.helper_manager.get_helper(helper_name)
+            logger.info(f"Found helper '{helper_name}' at: {helper_path}")
+            return helper_path
+        except FileNotFoundError as e:
+            # List available helpers for better error message
+            helpers = self.helper_manager.list_helpers()
+            available_names = []
+            for helper_list in [helpers["launchers"], helpers["builders"]]:
+                available_names.extend([h.name for h in helper_list])
+
+            raise BuildError(
+                f"Could not find required helper binary '{helper_name}'.\n"
+                f"Available helpers: {available_names or 'None'}.\n"
+                f"Error: {e}"
+            ) from e
+
+    def build_package(self) -> None:
+        logger.info("Orchestrator starting build process...")
+
+        # Decide whether to use internal Python builder or external builder
+        if self.builder_bin or os.environ.get("FLAVOR_BUILDER_BIN"):
+            logger.info("Using external builder binary")
+            self._build_with_external_builder()
+        else:
+            logger.info("Using internal Python builder (default)")
+            self._build_with_python_builder()
+
+    def _build_with_python_builder(self) -> None:
+        """Build package using the internal Python PSPF builder."""
+        logger.info("Building package with internal Python builder...")
+
+        # Import builder components
+        # Set up progress reporter
+        from flavor.progress import ProgressReporter
+        from flavor.psp.format_2025.builder import PSPFBuilder
+
+        progress = ProgressReporter(enabled=self.show_progress)
+
+        # Use the PythonPackager to prepare all artifacts
+        python_packager = PythonPackager(
+            manifest_dir=self.manifest_dir,
+            package_name=self.package_name,
+            entry_point=self.entry_point,
+            build_config=self.build_config,
+            python_version=self.python_version,
+            progress_reporter=progress,
+        )
+
+        with tempfile.TemporaryDirectory(prefix="flavor_build_") as temp_dir_str:
+            temp_dir = Path(temp_dir_str)
+
+            # Prepare Python artifacts
+            logger.info("Preparing Python artifacts...")
+            with progress.task(
+                total=5, description="Preparing Python artifacts"
+            ) as bar:
+                artifacts = python_packager.prepare_artifacts(temp_dir)
+                if bar:
+                    bar.finish()
+
+            # Create slot tarballs using helper function
+            logger.info("Creating slot tarballs...")
+            uv_tarball, python_tarball, wheels_tarball = create_python_slot_tarballs(
+                temp_dir, artifacts, progress
+            )
+
+            # Find launcher binary using helper function
+            launcher_path = find_launcher_executable(self.launcher_bin)
+
+            # Detect launcher type for metadata
+            launcher_type = self._detect_launcher_type(launcher_path)
+            logger.info(f"Detected launcher type: {launcher_type}")
+
+            # Build metadata using helper function
+            is_windows = platform.system() == "Windows"
+            uv_exe = "uv.exe" if is_windows else "uv"
+            metadata = create_python_builder_metadata(
+                self.package_name, self.build_config, uv_exe
+            )
+
+            # Validate all paths use {workenv} placeholder
+            metadata = validate_metadata_dict(metadata)
+
+            # Use the fluent builder API with explicit extract_to paths
+            # extract_to="." means extract to workenv root
+            # UV is gzipped and should be mmapped
+            # Python and wheels are already tgz files
+            builder = (
+                PSPFBuilder.create()
+                .metadata(**metadata)
+                .add_slot(
+                    "uv",
+                    uv_tarball,
+                    encoding="tgz",
+                    purpose="tool",
+                    lifecycle="runtime",
+                    extract_to="{workenv}",
+                )
+                .add_slot(
+                    "python",
+                    python_tarball,
+                    encoding="tgz",
+                    purpose="runtime",
+                    lifecycle="runtime",
+                    extract_to="{workenv}",
+                )
+                .add_slot(
+                    "wheels",
+                    wheels_tarball,
+                    encoding="tgz",
+                    purpose="payload",
+                    lifecycle="cache",
+                    extract_to="{workenv}/wheels",
+                )
+                .with_options(
+                    launcher_bin=launcher_path,  # Pass the resolved launcher path
+                    strip_binaries=self.strip_binaries,
+                    enable_mmap=True,
+                    page_aligned=True,
+                )
+            )
+
+            # Configure keys if provided
+            if self.key_seed:
+                builder = builder.with_keys(seed=self.key_seed)
+            elif self.package_integrity_key_path and self.public_key_path:
+                # Load PEM keys and convert to raw format
+                from flavor.packaging.keys import (
+                    load_private_key_raw,
+                    load_public_key_raw,
+                )
+
+                private_key = load_private_key_raw(
+                    Path(self.package_integrity_key_path)
+                )
+                public_key = load_public_key_raw(Path(self.public_key_path))
+                builder = builder.with_keys(private=private_key, public=public_key)
+
+            # Build the package
+            spinner = progress.create_spinner(description="Building PSPF package")
+            if spinner:
+                spinner.tick()
+
+            result = builder.build(Path(self.output_flavor_path))
+
+            if spinner:
+                spinner.finish()
+
+            if not result.success:
+                raise BuildError(f"Package build failed: {'; '.join(result.errors)}")
+
+            # Final success message
+            if self.show_progress:
+                final_size = Path(self.output_flavor_path).stat().st_size / (
+                    1024 * 1024
+                )
+                logger.info(f"✅ Package built successfully: {final_size:.1f} MB")
+                if result.metadata and "duration_seconds" in result.metadata:
+                    logger.info(
+                        f"⏱️  Build time: {result.metadata['duration_seconds']:.2f}s"
+                    )
+
+    def _build_with_external_builder(self) -> None:
+        """Build package using an external builder binary (Go/Rust)."""
+        logger.info("Building package with external builder...")
+
+        # Set up progress reporter
+        from flavor.progress import ProgressReporter
+
+        progress = ProgressReporter(enabled=self.show_progress)
+
+        # Use the new PythonPackager to prepare all artifacts
+        python_packager = PythonPackager(
+            manifest_dir=self.manifest_dir,
+            package_name=self.package_name,
+            entry_point=self.entry_point,
+            build_config=self.build_config,
+            python_version=self.python_version,
+            progress_reporter=progress,
+        )
+
+        with tempfile.TemporaryDirectory(prefix="flavor_build_") as temp_dir_str:
+            temp_dir = Path(temp_dir_str)
+
+            # Step 1: Python packager prepares all artifacts
+            logger.info("Preparing Python artifacts...")
+            with progress.task(
+                total=5, description="Preparing Python artifacts"
+            ) as bar:
+                artifacts = python_packager.prepare_artifacts(temp_dir)
+                if bar:
+                    bar.finish()
+
+            # Note: Signature generation is handled by the builders (Go/Rust)
+            # They generate Ed25519 signatures when creating the PSPF package
+
+            # Create tarballs for slots
+            logger.info("Creating slot tarballs...")
+            slots = create_slot_tarballs(temp_dir, artifacts, progress)
+
+            # Step 3: Create manifest for builder
+            key_paths = {
+                "private": self.package_integrity_key_path,
+                "public": self.public_key_path,
+            }
+            manifest = create_builder_manifest(
+                self.package_name, self.build_config, slots, key_paths
+            )
+
+            # Write manifest to file
+            manifest_path = write_manifest_file(manifest, temp_dir)
+
+            # Step 4: Find and use builder helper
+            packager_executable = find_builder_executable(self.builder_bin)
+
+            # Find launcher binary
+            launcher_executable = find_launcher_executable(self.launcher_bin)
+
+            # Detect launcher type for metadata
+            detected_launcher_type = self._detect_launcher_type(launcher_executable)
+            logger.info(f"Detected launcher type: {detected_launcher_type}")
+
+            build_cmd_args = [
+                str(packager_executable),
+                "--manifest",
+                str(manifest_path),
+                "--output",
+                self.output_flavor_path,
+                "--launcher-bin",
+                str(launcher_executable),
+            ]
+
+            # Add key options if provided
+            if self.package_integrity_key_path:
+                build_cmd_args.extend(
+                    ["--private-key", self.package_integrity_key_path]
+                )
+            if self.public_key_path:
+                build_cmd_args.extend(["--public-key", self.public_key_path])
+            if self.key_seed:
+                build_cmd_args.extend(["--key-seed", self.key_seed])
+
+            logger.info("Building flavor package...")
+            spinner = progress.create_spinner(description="Building PSPF package")
+            if spinner:
+                spinner.tick()
+
+            # We don't need a specific cwd for the builder, it takes absolute paths
+            run_command(build_cmd_args, check=True, capture_output=True)
+
+            if spinner:
+                spinner.finish()
+
+            # Final success message with progress
+            if self.show_progress:
+                final_size = Path(self.output_flavor_path).stat().st_size / (
+                    1024 * 1024
+                )
+                logger.info(f"✅ Package built successfully: {final_size:.1f} MB")
+EOF
+
+log_update "Updating: flavor/packaging/python_packager.py"
+mkdir -p flavor/packaging/
+cat <<'EOF' > flavor/packaging/python_packager.py
+#
+# flavor/packaging/python_packager.py
+#
+"""Python packager that owns all Python-specific packaging logic."""
+
+import json
+from pathlib import Path
+import shutil
+import tarfile
+import tempfile
+from typing import Any
+
+from pyvider.telemetry import logger
+
+from flavor.utils.subprocess import run_command
 
 
-# 📦🍜🔌🪄
+class PythonPackager:
+    """
+    Handles all Python-specific packaging logic.
+
+    This class is responsible for:
+    - Building wheels from source packages
+    - Managing dependencies
+    - Creating metadata
+    - Computing signatures
+    - Preparing all artifacts for flavor assembly
+    """
+
+    DEFAULT_PYTHON_VERSION = "3.11"
+
+    def __init__(
+        self,
+        manifest_dir: Path,
+        package_name: str,
+        entry_point: str,
+        build_config: dict[str, Any],
+        python_version: str | None = None,
+        progress_reporter: Any = None,
+    ) -> None:
+        self.manifest_dir = manifest_dir
+        self.package_name = package_name
+        self.entry_point = entry_point
+        self.build_config = build_config
+        self.python_version = python_version or self.DEFAULT_PYTHON_VERSION
+        self.progress = progress_reporter
+
+        # Platform-specific paths
+        import platform
+
+        self.is_windows = platform.system() == "Windows"
+        self.venv_bin_dir = "Scripts" if self.is_windows else "bin"
+        self.uv_exe = "uv.exe" if self.is_windows else "uv"
+
+    def prepare_artifacts(self, work_dir: Path) -> dict[str, Path]:
+        """
+        Prepare all artifacts needed for flavor assembly.
+
+        Returns:
+            Dictionary mapping artifact names to their paths:
+            - payload_tgz: The main payload archive
+            - metadata_tgz: Metadata archive
+            - uv_binary: UV binary (if available)
+            - python_tgz: Python distribution (placeholder for now)
+            - payload_dir: Directory containing payload (for legacy compatibility)
+        """
+        artifacts = {}
+
+        # Create progress bar for preparation steps
+        prep_bar = None
+        if self.progress:
+            prep_bar = self.progress.create_bar(
+                total=5, description="Preparing artifacts"
+            )
+            if prep_bar:
+                prep_bar.start()
+
+        # Create payload structure
+        payload_dir = work_dir / "payload"
+        payload_dir.mkdir(mode=0o700)
+        artifacts["payload_dir"] = payload_dir
+        if prep_bar:
+            prep_bar.increment()
+
+        # Build wheels
+        wheels_dir = payload_dir / "wheels"
+        wheels_dir.mkdir(mode=0o700)
+        self._build_wheels(wheels_dir)
+        if prep_bar:
+            prep_bar.increment()
+
+        # Add UV binary
+        uv_host_path = shutil.which("uv")
+        if uv_host_path:
+            # Copy to payload bin directory
+            bin_dir = payload_dir / "bin"
+            bin_dir.mkdir(mode=0o700, exist_ok=True)
+            payload_uv = bin_dir / self.uv_exe
+            shutil.copy2(uv_host_path, str(payload_uv))
+            if not self.is_windows:
+                payload_uv.chmod(0o755)
+            logger.info(f"Copied UV binary to payload: {payload_uv}")
+
+            # Also copy to work dir for Go/Rust packager compatibility
+            work_uv = work_dir / self.uv_exe
+            shutil.copy2(uv_host_path, str(work_uv))
+            if not self.is_windows:
+                work_uv.chmod(0o755)
+            artifacts["uv_binary"] = work_uv
+        if prep_bar:
+            prep_bar.increment()
+
+        # Create metadata
+        metadata_dir = payload_dir / "metadata"
+        metadata_dir.mkdir(mode=0o700)
+        self._create_metadata(metadata_dir)
+        if prep_bar:
+            prep_bar.increment()
+
+        # Create payload archive with gzip -9 compression
+        logger.info("Creating payload archive with maximum compression...")
+        payload_tgz = work_dir / "payload.tgz"
+        with tarfile.open(payload_tgz, "w:gz", compresslevel=9) as tar:
+            tar.add(payload_dir, arcname=".")
+        artifacts["payload_tgz"] = payload_tgz
+
+        # Log the compressed size
+        payload_size = payload_tgz.stat().st_size / (1024 * 1024)
+        logger.info(f"Payload compressed to {payload_size:.1f} MB")
+
+        # Create metadata archive (separate for selective extraction)
+        metadata_content = work_dir / "metadata_content"
+        metadata_content.mkdir(mode=0o700)
+        # For now empty, but could contain launcher-specific metadata
+        metadata_tgz = work_dir / "metadata.tgz"
+        with tarfile.open(metadata_tgz, "w:gz", compresslevel=9) as tar:
+            tar.add(metadata_content, arcname=".")
+        artifacts["metadata_tgz"] = metadata_tgz
+
+        # Create Python distribution placeholder
+        python_tgz = work_dir / "python.tgz"
+        self._create_python_placeholder(python_tgz)
+        artifacts["python_tgz"] = python_tgz
+        if prep_bar:
+            prep_bar.increment()
+            prep_bar.finish()
+
+        return artifacts
+
+    def _build_wheels(self, wheels_dir: Path) -> None:
+        """Build wheels for the package and its dependencies."""
+        wheel_spinner = None
+        if self.progress:
+            wheel_spinner = self.progress.create_spinner(description="Building wheels")
+
+        with tempfile.TemporaryDirectory() as build_env_dir:
+            build_venv = Path(build_env_dir) / "venv"
+
+            logger.info("Creating temporary build environment...")
+            if wheel_spinner:
+                wheel_spinner.tick()
+            run_command(
+                [
+                    "uv",
+                    "venv",
+                    str(build_venv),
+                    "--python",
+                    f"python{self.python_version}",
+                ],
+                check=True,
+                capture_output=True,
+            )
+
+            python_exe = build_venv / self.venv_bin_dir / (
+                "python.exe" if self.is_windows else "python"
+            )
+
+            # Build wheels for local dependencies
+            for dep in self.build_config.get("dependencies", []):
+                dep_path = self.manifest_dir / dep
+                if dep_path.exists():
+                    logger.info(f"Building wheel for dependency: {dep}")
+                    run_command(
+                        [
+                            str(python_exe),
+                            "-m",
+                            "pip",
+                            "wheel",
+                            "--wheel-dir",
+                            str(wheels_dir),
+                            "--no-deps",
+                            str(dep_path),
+                        ],
+                        check=True,
+                        capture_output=True,
+                    )
+
+            # Build main package wheel
+            logger.info("Building wheel for main package...")
+            if wheel_spinner:
+                wheel_spinner.tick()
+            run_command(
+                [
+                    str(python_exe),
+                    "-m",
+                    "pip",
+                    "wheel",
+                    "--wheel-dir",
+                    str(wheels_dir),
+                    "--no-deps",
+                    str(self.manifest_dir),
+                ],
+                check=True,
+                capture_output=True,
+            )
+
+            # Download transitive dependencies for the main package
+            logger.info("Downloading transitive dependencies...")
+            if wheel_spinner:
+                wheel_spinner.tick()
+
+            try:
+                run_command(
+                    [
+                        str(python_exe),
+                        "-m",
+                        "pip",
+                        "download",
+                        "--dest",
+                        str(wheels_dir),
+                        "--only-binary",
+                        ":all:",
+                        str(self.manifest_dir),
+                    ],
+                    check=True,
+                    capture_output=True,
+                )
+            except Exception as e:
+                logger.warning(f"Failed to download dependency wheels: {e}")
+                logger.info("Trying pip wheel as fallback...")
+                run_command(
+                    [
+                        str(python_exe),
+                        "-m",
+                        "pip",
+                        "wheel",
+                        "--wheel-dir",
+                        str(wheels_dir),
+                        str(self.manifest_dir),
+                    ],
+                    check=True,
+                    capture_output=True,
+                )
+
+        if wheel_spinner:
+            wheel_spinner.finish()
+
+    def _create_metadata(self, metadata_dir: Path) -> None:
+        """Create metadata files."""
+        package_manifest = {
+            "name": self.package_name,
+            "version": self.build_config.get("version", "0.0.1"),
+            "entry_point": self.entry_point,
+            "python_version": self.python_version,
+        }
+        self._write_json(metadata_dir / "package_manifest.json", package_manifest)
+
+        config_data = {
+            "entry_point": self.entry_point,
+            "package_name": self.package_name,
+        }
+        self._write_json(metadata_dir / "config.json", config_data)
+
+    def _create_python_placeholder(self, python_tgz: Path) -> None:
+        """Download and package Python distribution using UV."""
+        logger.info(f"Downloading Python {self.python_version} using UV...")
+
+        python_spinner = None
+        if self.progress:
+            python_spinner = self.progress.create_spinner(
+                description=f"Downloading Python {self.python_version}"
+            )
+            if python_spinner:
+                python_spinner.tick()
+
+        run_command(
+            ["uv", "python", "install", self.python_version],
+            check=True,
+            capture_output=True,
+        )
+
+        if python_spinner:
+            python_spinner.finish()
+
+        import platform
+        if platform.system() == "Windows":
+            uv_python_base = Path.home() / "AppData" / "Local" / "uv" / "python"
+        else:
+            uv_python_base = Path.home() / ".local" / "share" / "uv" / "python"
+
+        python_install_dir = None
+        if uv_python_base.exists():
+            for python_dir in uv_python_base.glob(f"cpython-{self.python_version}*"):
+                if python_dir.is_dir():
+                    python_install_dir = python_dir
+                    break
+
+        if not python_install_dir or not python_install_dir.exists():
+            logger.warning("Could not find UV-installed Python at expected location")
+            with tempfile.TemporaryDirectory() as temp_dir:
+                python_dir = Path(temp_dir) / "python"
+                python_dir.mkdir()
+                (python_dir / "README.txt").write_text(
+                    f"Python {self.python_version} distribution placeholder\n"
+                    "In production, this would contain the full Python distribution."
+                )
+                with tarfile.open(python_tgz, "w:gz", compresslevel=9) as tar:
+                    tar.add(python_dir, arcname=".")
+            return
+
+        logger.info(f"Found Python installation at: {python_install_dir}")
+
+        with tarfile.open(python_tgz, "w:gz", compresslevel=9) as tar:
+            def filter_and_reorganize(tarinfo):
+                if tarinfo.name.endswith("EXTERNALLY-MANAGED"):
+                    return None
+                if self.is_windows and tarinfo.name.startswith("./bin/"):
+                    tarinfo.name = tarinfo.name.replace("./bin/", "./Scripts/", 1)
+                elif self.is_windows and tarinfo.name == "./bin":
+                    tarinfo.name = "./Scripts"
+                return tarinfo
+
+            tar.add(python_install_dir, arcname=".", filter=filter_and_reorganize)
+
+    def _write_json(self, path: Path, data: dict[str, Any]) -> None:
+        """Write JSON file with secure permissions."""
+        path.write_text(json.dumps(data, indent=2))
+        path.chmod(0o600)
+EOF
+
+log_success "Build process and orchestrator updated to resolve test failures."
 >>> EOF >>>
 
-### FILE 4: flavor/cache.py | checksum=38ff65f6790c... | modified=2025-08-19T16:58:39 | op=+ | size=6828 | tokens=1355 | type=x-python ###
+### FILE 2: flavor.egg-info/PKG-INFO | checksum=9d8b5e61530f... | modified=2025-08-19T20:45:10 | op=+ | size=5334 | tokens=1331 ###
+<<< BOF <<<
+Metadata-Version: 2.4
+Name: flavor
+Version: 0.3.0
+Summary: Flavor packaging system implementing Progressive Secure Package Format (PSPF/2025)
+Author-email: Provide Services <engineering@provide.services>
+License: Apache-2.0
+Project-URL: Homepage, https://github.com/provide-io/flavor
+Project-URL: Bug Tracker, https://github.com/provide-io/flavor/issues
+Project-URL: Source Code, https://github.com/provide-io/flavor
+Project-URL: Documentation, https://github.com/provide-io/flavor/tree/main/docs
+Keywords: packaging,pspf,flavor,executable,bundle
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: Apache Software License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Programming Language :: Python :: 3.13
+Classifier: Topic :: Software Development :: Build Tools
+Classifier: Topic :: Security :: Cryptography
+Classifier: Topic :: System :: Archiving :: Packaging
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: attrs>=23.1.0
+Requires-Dist: click>=8.1.7
+Requires-Dist: cryptography>=41.0.4
+Requires-Dist: wheel>=0.40.0
+Requires-Dist: pyvider-telemetry
+Requires-Dist: cattrs>=25.1.1
+Dynamic: license-file
+
+# Flavor - Progressive Secure Package Format (PSPF)
+
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![Go 1.21+](https://img.shields.io/badge/go-1.21+-00ADD8.svg)](https://golang.org/dl/)
+[![Rust 1.75+](https://img.shields.io/badge/rust-1.75+-orange.svg)](https://www.rust-lang.org/)
+
+Flavor is a cross-language packaging system that creates self-contained, portable executables using the **Progressive Secure Package Format (PSPF) 2025 Edition**. It enables you to ship Python applications as single binaries that "just work" - no installation, no dependencies, no configuration required.
+
+## 🎯 Key Features
+
+- **Single-File Distribution**: Package entire applications into one executable file
+- **Cross-Language Support**: Python orchestrator with Go and Rust launchers
+- **Secure by Default**: Ed25519 signature verification ensures package integrity
+- **Progressive Extraction**: Extract only what's needed, when it's needed
+- **Smart Caching**: Persistent work environment with intelligent validation
+- **Zero Dependencies**: End users need nothing pre-installed
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Python 3.11 or higher
+- UV package manager (`curl -LsSf https://astral.sh/uv/install.sh | sh`)
+- Go 1.21+ and Rust 1.75+ (for building helpers)
+
+### Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/provide-io/flavor.git
+cd flavor
+
+# Set up environment and install dependencies
+source env.sh
+
+# Build the Go and Rust helpers
+./helpers/build.sh
+```
+
+### Creating Your First Package
+
+```bash
+# Package a Python application
+flavor package --manifest pyproject.toml --output myapp.psp
+
+# Run the packaged application
+./myapp.psp
+
+# Verify package integrity
+flavor verify myapp.psp
+```
+
+## 📦 PSPF Format
+
+The Progressive Secure Package Format is a polyglot file format that works as both an OS executable and a structured package:
+
+```
+[Native Launcher] → Go or Rust executable
+[8192-byte Index] → Format metadata and offsets
+[Metadata] → Gzipped JSON manifest
+[Slot Table] → Slot descriptors
+[Slots 0..N] → Application code, runtime, dependencies
+[📦🪄] → 8-byte emoji magic footer
+```
+
+## 📚 Documentation
+
+- **[Format Specification](docs/SPECIFICATION.md)** - Complete PSPF/2025 specification
+- **[Development Guide](DEVELOPMENT.md)** - Setup and contribution instructions
+- **[Design Rationale](docs/RATIONALE.md)** - Why PSPF exists and design decisions
+- **[API Documentation](docs/README.md)** - Full documentation index
+
+## 🏗️ Architecture
+
+Flavor consists of three main components:
+
+1. **Python Orchestrator** - Manages the build process, creates manifests, handles dependencies
+2. **Native Launchers** (Go/Rust) - Extract and execute packages with security verification
+3. **Native Builders** (Go/Rust) - Assemble PSPF packages from manifests and slots
+
+## 🔒 Security
+
+Every PSPF package includes cryptographic integrity verification:
+
+- Ed25519 signatures ensure packages haven't been tampered with
+- Public keys are embedded in the package index
+- Signature verification happens automatically on every launch
+- Optional deterministic builds with `--key-seed` for reproducibility
+
+## 🧪 Testing
+
+```bash
+# Run the test suite
+workenv/flavor_*/bin/pytest tests/
+
+# Run with coverage
+workenv/flavor_*/bin/pytest --cov=src/flavor --cov-report=term-missing
+
+# Test cross-language compatibility
+./test-all-combinations.sh
+```
+
+## 🤝 Contributing
+
+We welcome contributions! Please see our [Development Guide](DEVELOPMENT.md) for setup instructions and coding standards.
+
+## 📄 License
+
+MIT License - see LICENSE file for details.
+
+## 🙏 Acknowledgments
+
+Flavor is built on the shoulders of giants:
+- [UV](https://github.com/astral-sh/uv) for fast Python package management
+- [PyOxidizer](https://github.com/indygreg/PyOxidizer) for inspiration
+- The Python, Go, and Rust communities for excellent tooling
+
+---
+
+**Built with ❤️ by the Provide team**
+>>> EOF >>>
+
+### FILE 3: flavor.egg-info/SOURCES.txt | checksum=87c06adac4fb... | modified=2025-08-19T20:45:10 | op=+ | size=2053 | tokens=651 | type=plain ###
+<<< BOF <<<
+LICENSE
+MANIFEST.in
+README.md
+pyproject.toml
+src/flavor/__init__.py
+src/flavor/__main__.py
+src/flavor/api.py
+src/flavor/cache.py
+src/flavor/cli.py
+src/flavor/config.py
+src/flavor/exceptions.py
+src/flavor/helpers.py
+src/flavor/inspect.py
+src/flavor/locking.py
+src/flavor/output.py
+src/flavor/progress.py
+src/flavor/safe_optimization.py
+src/flavor/verification.py
+src/flavor.egg-info/PKG-INFO
+src/flavor.egg-info/SOURCES.txt
+src/flavor.egg-info/dependency_links.txt
+src/flavor.egg-info/entry_points.txt
+src/flavor.egg-info/requires.txt
+src/flavor.egg-info/top_level.txt
+src/flavor/commands/__init__.py
+src/flavor/commands/helpers.py
+src/flavor/commands/inspect.py
+src/flavor/commands/keygen.py
+src/flavor/commands/package.py
+src/flavor/commands/utils.py
+src/flavor/commands/verify.py
+src/flavor/commands/workenv.py
+src/flavor/helpers/darwin_arm64/flavor-rs-launcher
+src/flavor/packaging/__init__.py
+src/flavor/packaging/keys.py
+src/flavor/packaging/orchestrator.py
+src/flavor/packaging/orchestrator_helpers.py
+src/flavor/packaging/python_packager.py
+src/flavor/psp/__init__.py
+src/flavor/psp/format_2025/__init__.py
+src/flavor/psp/format_2025/backends.py
+src/flavor/psp/format_2025/builder.py
+src/flavor/psp/format_2025/checksums.py
+src/flavor/psp/format_2025/constants.py
+src/flavor/psp/format_2025/crypto.py
+src/flavor/psp/format_2025/environment.py
+src/flavor/psp/format_2025/executor.py
+src/flavor/psp/format_2025/index.py
+src/flavor/psp/format_2025/keys.py
+src/flavor/psp/format_2025/launcher.py
+src/flavor/psp/format_2025/reader.py
+src/flavor/psp/format_2025/slots.py
+src/flavor/psp/format_2025/spec.py
+src/flavor/psp/format_2025/validation.py
+src/flavor/psp/format_2025/metadata/__init__.py
+src/flavor/psp/format_2025/metadata/assembly.py
+src/flavor/psp/metadata/__init__.py
+src/flavor/psp/metadata/paths.py
+src/flavor/psp/metadata/validators.py
+src/flavor/utils/__init__.py
+src/flavor/utils/subprocess.py
+tests/test_cache_management.py
+tests/test_helpers.py
+tests/test_mmap_edge_cases.py
+tests/test_mmap_performance.py
+tests/test_utils_platform.py
+>>> EOF >>>
+
+### FILE 4: flavor.egg-info/dependency_links.txt | checksum=01ba4719c80b... | modified=2025-08-19T20:45:10 | op=+ | size=1 | tokens=1 | type=plain ###
+<<< BOF <<<
+
+>>> EOF >>>
+
+### FILE 5: flavor.egg-info/entry_points.txt | checksum=9def2b04432b... | modified=2025-08-19T20:45:10 | op=+ | size=43 | tokens=12 | type=plain ###
+<<< BOF <<<
+[console_scripts]
+flavor = flavor.cli:main
+>>> EOF >>>
+
+### FILE 6: flavor.egg-info/requires.txt | checksum=a095adf779b6... | modified=2025-08-19T20:45:10 | op=+ | size=95 | tokens=47 | type=plain ###
+<<< BOF <<<
+attrs>=23.1.0
+click>=8.1.7
+cryptography>=41.0.4
+wheel>=0.40.0
+pyvider-telemetry
+cattrs>=25.1.1
+>>> EOF >>>
+
+### FILE 7: flavor.egg-info/top_level.txt | checksum=b74d8fe80492... | modified=2025-08-19T20:45:10 | op=+ | size=7 | tokens=3 | type=plain ###
+<<< BOF <<<
+flavor
+>>> EOF >>>
+
+### FILE 8: flavor/__init__.py | checksum=9464ed716806... | modified=2025-08-15T18:40:05 | op=+ | size=471 | tokens=119 | type=x-python ###
+<<< BOF <<<
+#
+# flavor/__init__.py
+#
+"""
+This package contains the core logic for building and verifying the
+Pyvider Secure Package Format (Flavor).
+"""
+
+from flavor.api import (
+    build_package_from_manifest,
+    clean_cache,
+    verify_package,
+)
+from flavor.exceptions import BuildError, VerificationError
+
+__all__ = [
+    "BuildError",
+    "VerificationError",
+    "build_package_from_manifest",
+    "clean_cache",
+    "verify_package",
+]
+# 🌐 📈 🔥
+
+
+# 📦🍜🚀🪄
+>>> EOF >>>
+
+### FILE 9: flavor/__main__.py | checksum=2689482d352f... | modified=2025-08-15T18:40:05 | op=+ | size=136 | tokens=47 | type=x-python ###
+<<< BOF <<<
+#!/usr/bin/env python3
+# flavor/__main__.py
+#
+
+from flavor.cli import cli
+
+if __name__ == "__main__":
+    cli()
+
+
+# 📦🍜🖥️🪄
+>>> EOF >>>
+
+### FILE 10: flavor/api.py | checksum=f8c31fae1378... | modified=2025-08-19T21:53:41 | op=+ | size=4209 | tokens=946 | type=x-python ###
+<<< BOF <<<
+#
+# flavor/api.py
+#
+"""Public API for the Flavor build tool."""
+
+from pathlib import Path
+
+# No typing imports needed with Python 3.11+
+import tomllib
+
+from flavor.packaging.keys import generate_key_pair
+from flavor.packaging.orchestrator import PackagingOrchestrator
+
+
+def build_package_from_manifest(
+    manifest_path: Path,
+    output_path: Path | None = None,
+    launcher_bin: Path | None = None,
+    builder_bin: Path | None = None,
+    strip_binaries: bool = False,
+    show_progress: bool = False,
+    private_key_path: Path | None = None,
+    public_key_path: Path | None = None,
+    key_seed: str | None = None,
+) -> list[Path]:
+    """Builds a package from a pyproject.toml manifest."""
+    # Parse pyproject.toml to get build configurations
+    with manifest_path.open("rb") as f:
+        pyproject = tomllib.load(f)
+
+    # Get values from pyproject.toml
+    project_name = pyproject.get("project", {}).get("name", "my-package")
+    flavor_config = pyproject.get("tool", {}).get("flavor", {})
+    entry_point = flavor_config.get(
+        "entry_point",
+        pyproject.get("project", {}).get("scripts", {}).get(project_name, "main:main"),
+    )
+    package_name = flavor_config.get("metadata", {}).get("package_name", project_name)
+
+    # Use absolute paths based on manifest location
+    manifest_dir = manifest_path.parent.absolute()
+    output_flavor_path = (
+        output_path if output_path else manifest_dir / "dist" / f"{package_name}.psp"
+    )
+
+    # Handle key paths - use provided keys or fallback to default locations
+    if private_key_path:
+        package_integrity_key_path = private_key_path
+        if not public_key_path:
+            # If no public key provided, assume it's alongside the private key
+            public_key_path = private_key_path.parent / "flavor-public.key"
+    else:
+        # Use default key paths
+        package_integrity_key_path = manifest_dir / "keys" / "flavor-private.key"
+        public_key_path_default = manifest_dir / "keys" / "flavor-public.key"
+
+        # Only generate keys if no key options provided
+        if not key_seed and not package_integrity_key_path.exists():
+            generate_key_pair(manifest_dir / "keys")
+
+        if not public_key_path:
+            public_key_path = public_key_path_default
+
+    # Load build config from pyproject.toml first, then override with buildconfig.toml if it exists
+    build_config = flavor_config.get("build", {})
+    buildconfig_path = manifest_dir / "buildconfig.toml"
+    if buildconfig_path.exists():
+        with buildconfig_path.open("rb") as f:
+            # Merge buildconfig.toml settings (takes precedence)
+            build_config.update(tomllib.load(f).get("build", {}))
+
+    # Include execution config (runtime.env, etc.) in the build config
+    if "execution" in flavor_config:
+        build_config["execution"] = flavor_config["execution"]
+
+    orchestrator = PackagingOrchestrator(
+        package_integrity_key_path=str(package_integrity_key_path)
+        if package_integrity_key_path
+        else None,
+        public_key_path=str(public_key_path) if public_key_path else None,
+        output_flavor_path=str(output_flavor_path),
+        build_config=build_config,
+        manifest_dir=manifest_path.parent,
+        package_name=package_name,
+        entry_point=entry_point,
+        launcher_bin=str(launcher_bin) if launcher_bin else None,
+        builder_bin=str(builder_bin) if builder_bin else None,
+        strip_binaries=strip_binaries,
+        show_progress=show_progress,
+        key_seed=key_seed,
+    )
+    orchestrator.build_package()
+    return [output_flavor_path]
+
+
+def verify_package(package_path: Path) -> dict:
+    """Verifies a Flavor package."""
+    from .verification import FlavorVerifier
+
+    return FlavorVerifier.verify_package(package_path)
+
+
+def clean_cache() -> None:
+    """Removes cached Go binaries."""
+    cache_dir = Path.home() / ".cache" / "flavor"
+    if cache_dir.exists():
+        import shutil
+
+        shutil.rmtree(cache_dir, ignore_errors=True)
+
+
+def generate_keys(output_dir: Path) -> tuple[Path, Path]:
+    """Generate a new key pair for package signing. Alias for generate_key_pair."""
+    return generate_key_pair(output_dir)
+>>> EOF >>>
+
+### FILE 11: flavor/cache.py | checksum=38ff65f6790c... | modified=2025-08-19T21:18:32 | op=+ | size=6828 | tokens=1355 | type=x-python ###
 <<< BOF <<<
 #!/usr/bin/env python3
 """Cache management for Flavor packages."""
@@ -409,7 +1498,7 @@ class CacheManager:
         return total
 >>> EOF >>>
 
-### FILE 5: flavor/cli.py | checksum=070b78516d72... | modified=2025-08-19T16:02:38 | op=+ | size=2182 | tokens=491 | type=x-python ###
+### FILE 12: flavor/cli.py | checksum=070b78516d72... | modified=2025-08-19T21:18:32 | op=+ | size=2182 | tokens=491 | type=x-python ###
 <<< BOF <<<
 #!/usr/bin/env python3
 #
@@ -490,7 +1579,7 @@ if __name__ == "__main__":
     cli()
 >>> EOF >>>
 
-### FILE 6: flavor/commands/__init__.py | checksum=bc555067e365... | modified=2025-08-19T16:02:38 | op=+ | size=668 | tokens=139 | type=x-python ###
+### FILE 13: flavor/commands/__init__.py | checksum=bc555067e365... | modified=2025-08-19T21:18:32 | op=+ | size=668 | tokens=139 | type=x-python ###
 <<< BOF <<<
 #!/usr/bin/env python3
 #
@@ -518,7 +1607,7 @@ __all__ = [
 ]
 >>> EOF >>>
 
-### FILE 7: flavor/commands/helpers.py | checksum=029bb26744a5... | modified=2025-08-19T18:23:29 | op=+ | size=7874 | tokens=1843 | type=x-python ###
+### FILE 14: flavor/commands/helpers.py | checksum=029bb26744a5... | modified=2025-08-19T21:18:32 | op=+ | size=7874 | tokens=1843 | type=x-python ###
 <<< BOF <<<
 #!/usr/bin/env python3
 #
@@ -778,7 +1867,7 @@ def helper_test(lang: str) -> None:
         click.echo("\n⚠️  No tests were run")
 >>> EOF >>>
 
-### FILE 8: flavor/commands/inspect.py | checksum=a1c3b2fcf272... | modified=2025-08-19T16:02:38 | op=+ | size=1349 | tokens=319 | type=x-python ###
+### FILE 15: flavor/commands/inspect.py | checksum=a1c3b2fcf272... | modified=2025-08-19T21:18:32 | op=+ | size=1349 | tokens=319 | type=x-python ###
 <<< BOF <<<
 #!/usr/bin/env python3
 #
@@ -829,7 +1918,7 @@ def inspect_command(package_file: str, output_format: str, verbose: bool) -> Non
         raise click.Abort() from e
 >>> EOF >>>
 
-### FILE 9: flavor/commands/keygen.py | checksum=b98f845c09f0... | modified=2025-08-19T16:02:38 | op=+ | size=851 | tokens=204 | type=x-python ###
+### FILE 16: flavor/commands/keygen.py | checksum=b98f845c09f0... | modified=2025-08-19T21:18:32 | op=+ | size=851 | tokens=204 | type=x-python ###
 <<< BOF <<<
 #!/usr/bin/env python3
 #
@@ -864,7 +1953,7 @@ def keygen_command(out_dir: str) -> None:
         raise click.Abort() from e
 >>> EOF >>>
 
-### FILE 10: flavor/commands/package.py | checksum=edc8de2962d7... | modified=2025-08-19T16:02:38 | op=+ | size=4985 | tokens=1092 | type=x-python ###
+### FILE 17: flavor/commands/package.py | checksum=edc8de2962d7... | modified=2025-08-19T21:18:32 | op=+ | size=4985 | tokens=1092 | type=x-python ###
 <<< BOF <<<
 #!/usr/bin/env python3
 #
@@ -1020,7 +2109,7 @@ def package_command(
         raise click.Abort() from e
 >>> EOF >>>
 
-### FILE 11: flavor/commands/utils.py | checksum=6981fa764cfd... | modified=2025-08-19T16:02:38 | op=+ | size=6737 | tokens=1532 | type=x-python ###
+### FILE 18: flavor/commands/utils.py | checksum=6981fa764cfd... | modified=2025-08-19T21:18:32 | op=+ | size=6737 | tokens=1532 | type=x-python ###
 <<< BOF <<<
 #!/usr/bin/env python3
 #
@@ -1246,7 +2335,7 @@ def analyze_deps_command(manifest_path: str) -> None:
     click.echo("    flavor package --optimize")
 >>> EOF >>>
 
-### FILE 12: flavor/commands/verify.py | checksum=8b8ff3bd1acb... | modified=2025-08-19T16:02:38 | op=+ | size=1812 | tokens=421 | type=x-python ###
+### FILE 19: flavor/commands/verify.py | checksum=8b8ff3bd1acb... | modified=2025-08-19T21:18:32 | op=+ | size=1812 | tokens=421 | type=x-python ###
 <<< BOF <<<
 #!/usr/bin/env python3
 #
@@ -1305,7 +2394,7 @@ def verify_command(package_file: str) -> None:
         raise click.Abort() from e
 >>> EOF >>>
 
-### FILE 13: flavor/commands/workenv.py | checksum=465ab909b9f9... | modified=2025-08-19T16:02:38 | op=+ | size=3596 | tokens=864 | type=x-python ###
+### FILE 20: flavor/commands/workenv.py | checksum=465ab909b9f9... | modified=2025-08-19T21:18:32 | op=+ | size=3596 | tokens=864 | type=x-python ###
 <<< BOF <<<
 #!/usr/bin/env python3
 #
@@ -1443,7 +2532,123 @@ def workenv_remove(package_id: str, yes: bool) -> None:
         click.secho(f"❌ Package '{package_id}' not found", fg="red")
 >>> EOF >>>
 
-### FILE 14: flavor/exceptions.py | checksum=c67cbbb8f385... | modified=2025-08-19T16:02:38 | op=+ | size=709 | tokens=129 | type=x-python ###
+### FILE 21: flavor/config.py | checksum=ab89cb4ed2cd... | modified=2025-08-19T21:18:32 | op=+ | size=3869 | tokens=803 | type=x-python ###
+<<< BOF <<<
+"""
+Structured configuration models for the `[tool.flavor]` section of `pyproject.toml`.
+
+This module uses the `attrs` library to define typed, immutable classes that
+represent the configuration for building a Flavor package. This approach provides
+type safety, default values, and clearer code compared to using unstructured
+dictionaries.
+"""
+
+from typing import Any
+
+from attrs import define, field
+
+from flavor.exceptions import ValidationError
+
+
+@define(frozen=True, kw_only=True)
+class RuntimeEnvConfig:
+    """Configuration for the sandboxed runtime environment variables."""
+
+    unset: list[str] = field(factory=list)
+    passthrough: list[str] = field(factory=list)
+    set_vars: dict[str, str | int | bool] = field(factory=dict)
+    map_vars: dict[str, str] = field(factory=dict)
+
+
+@define(frozen=True, kw_only=True)
+class ExecutionConfig:
+    """Execution-related configuration from the manifest."""
+
+    runtime_env: RuntimeEnvConfig = field(factory=RuntimeEnvConfig)
+
+
+@define(frozen=True, kw_only=True)
+class BuildConfig:
+    """Build-related configuration from the manifest."""
+
+    dependencies: list[str] = field(factory=list)
+
+
+@define(frozen=True, kw_only=True)
+class MetadataConfig:
+    """Metadata-related configuration from the manifest."""
+
+    package_name: str | None = field(default=None)
+
+
+@define(frozen=True, kw_only=True)
+class FlavorConfig:
+    """Top-level structured configuration for the `[tool.flavor]` section."""
+
+    name: str
+    version: str
+    entry_point: str
+    metadata: MetadataConfig = field(factory=MetadataConfig)
+    build: BuildConfig = field(factory=BuildConfig)
+    execution: ExecutionConfig = field(factory=ExecutionConfig)
+
+    @classmethod
+    def from_dict(cls, config: dict[str, Any], project_defaults: dict[str, Any]) -> "FlavorConfig":
+        """
+        Factory method to create a validated FlavorConfig from a dictionary.
+
+        Args:
+            config: The dictionary from the `[tool.flavor]` section of pyproject.toml.
+            project_defaults: A dictionary with fallback values from the `[project]` section.
+
+        Returns:
+            A validated, immutable FlavorConfig instance.
+
+        Raises:
+            ValidationError: If the configuration is invalid.
+        """
+        name = config.get("name") or project_defaults.get("name")
+        if not name:
+            raise ValidationError("Project name must be defined in [project].name or [tool.flavor].name")
+
+        version = config.get("version") or project_defaults.get("version")
+        if not version:
+            raise ValidationError("Project version must be defined in [project].version or [tool.flavor].version")
+
+        entry_point = config.get("entry_point") or project_defaults.get("entry_point")
+        if not entry_point:
+            raise ValidationError("Project entry_point must be defined in [project].scripts or [tool.flavor].entry_point")
+
+        # Metadata
+        meta_conf = config.get("metadata", {})
+        metadata = MetadataConfig(package_name=meta_conf.get("package_name"))
+
+        # Build
+        build_conf = config.get("build", {})
+        build = BuildConfig(dependencies=build_conf.get("dependencies", []))
+
+        # Execution
+        exec_conf = config.get("execution", {})
+        runtime_conf = exec_conf.get("runtime", {}).get("env", {})
+        runtime_env = RuntimeEnvConfig(
+            unset=runtime_conf.get("unset", []),
+            passthrough=runtime_conf.get("pass", []),  # 'pass' is the key in TOML
+            set_vars=runtime_conf.get("set", {}),
+            map_vars=runtime_conf.get("map", {}),
+        )
+        execution = ExecutionConfig(runtime_env=runtime_env)
+
+        return cls(
+            name=name,
+            version=version,
+            entry_point=entry_point,
+            metadata=metadata,
+            build=build,
+            execution=execution,
+        )
+>>> EOF >>>
+
+### FILE 22: flavor/exceptions.py | checksum=c67cbbb8f385... | modified=2025-08-19T21:18:32 | op=+ | size=709 | tokens=129 | type=x-python ###
 <<< BOF <<<
 #!/usr/bin/env python3
 """
@@ -1487,7 +2692,7 @@ class VerificationError(FlavorException):
     pass
 >>> EOF >>>
 
-### FILE 15: flavor/helpers.py | checksum=2a70795b5eb2... | modified=2025-08-19T18:03:55 | op=+ | size=18939 | tokens=3775 | type=x-python ###
+### FILE 23: flavor/helpers.py | checksum=2a70795b5eb2... | modified=2025-08-19T21:18:32 | op=+ | size=18939 | tokens=3775 | type=x-python ###
 <<< BOF <<<
 #!/usr/bin/env python3
 #
@@ -2043,7 +3248,7 @@ class HelperManager:
 # 🔧🏗️🤖
 >>> EOF >>>
 
-### FILE 16: flavor/inspect.py | checksum=a832817c8c65... | modified=2025-08-19T17:03:02 | op=+ | size=11218 | tokens=2358 | type=x-python ###
+### FILE 24: flavor/inspect.py | checksum=a832817c8c65... | modified=2025-08-19T21:18:32 | op=+ | size=11218 | tokens=2358 | type=x-python ###
 <<< BOF <<<
 #!/usr/bin/env python3
 """Package inspection utilities for Flavor."""
@@ -2397,7 +3602,7 @@ class PackageInspector:
             return "\n".join(output)
 >>> EOF >>>
 
-### FILE 17: flavor/locking.py | checksum=5bf27e6865a5... | modified=2025-08-19T16:59:58 | op=+ | size=3705 | tokens=756 | type=x-python ###
+### FILE 25: flavor/locking.py | checksum=5bf27e6865a5... | modified=2025-08-19T21:18:32 | op=+ | size=3705 | tokens=756 | type=x-python ###
 <<< BOF <<<
 """File-based locking mechanism for Flavor."""
 
@@ -2523,7 +3728,7 @@ class LockManager:
 default_lock_manager = LockManager()
 >>> EOF >>>
 
-### FILE 18: flavor/output.py | checksum=e0721b6e29dc... | modified=2025-08-19T16:02:38 | op=+ | size=4831 | tokens=1034 | type=x-python ###
+### FILE 26: flavor/output.py | checksum=e0721b6e29dc... | modified=2025-08-19T21:18:32 | op=+ | size=4831 | tokens=1034 | type=x-python ###
 <<< BOF <<<
 #!/usr/bin/env python3
 #
@@ -2681,7 +3886,7 @@ def get_output_handler(
     return OutputHandler(format=output_format, file=output_file)
 >>> EOF >>>
 
-### FILE 19: flavor/packaging/__init__.py | checksum=3bce4082d73a... | modified=2025-08-19T09:26:15 | op=+ | size=436 | tokens=116 | type=x-python ###
+### FILE 27: flavor/packaging/__init__.py | checksum=3bce4082d73a... | modified=2025-08-19T09:26:15 | op=+ | size=436 | tokens=116 | type=x-python ###
 <<< BOF <<<
 #
 # flavor/packaging/__init__.py
@@ -2705,7 +3910,7 @@ __all__ = [
 # 📦🍜🚀🪄
 >>> EOF >>>
 
-### FILE 20: flavor/packaging/keys.py | checksum=766ba7ee38eb... | modified=2025-08-19T16:02:38 | op=+ | size=6167 | tokens=1419 | type=x-python ###
+### FILE 28: flavor/packaging/keys.py | checksum=766ba7ee38eb... | modified=2025-08-19T21:18:32 | op=+ | size=6167 | tokens=1419 | type=x-python ###
 <<< BOF <<<
 #!/usr/bin/env python3
 #
@@ -2874,7 +4079,7 @@ def load_public_key_raw(key_path: Path) -> bytes:
         )
 >>> EOF >>>
 
-### FILE 21: flavor/packaging/orchestrator.py | checksum=d849fa61215c... | modified=2025-08-19T18:05:57 | op=+ | size=13879 | tokens=2616 | type=x-python ###
+### FILE 29: flavor/packaging/orchestrator.py | checksum=a06bc9eb804d... | modified=2025-08-19T21:53:41 | op=+ | size=13833 | tokens=2589 | type=x-python ###
 <<< BOF <<<
 #
 # flavor/packaging/orchestrator.py
@@ -3234,15 +4439,9 @@ class PackagingOrchestrator:
                     1024 * 1024
                 )
                 logger.info(f"✅ Package built successfully: {final_size:.1f} MB")
-
-
-# 🏛️ 📝 🕹️
-
-
-# 📦🍜📄🪄
 >>> EOF >>>
 
-### FILE 22: flavor/packaging/orchestrator_helpers.py | checksum=82d2590404a6... | modified=2025-08-19T18:07:02 | op=+ | size=14237 | tokens=3216 | type=x-python ###
+### FILE 30: flavor/packaging/orchestrator_helpers.py | checksum=2dc05406f213... | modified=2025-08-19T21:18:32 | op=+ | size=14236 | tokens=3196 | type=x-python ###
 <<< BOF <<<
 """Helper functions for PackagingOrchestrator to reduce complexity."""
 
@@ -3255,6 +4454,7 @@ from typing import Any
 
 from pyvider.telemetry import logger
 
+from flavor.config import FlavorConfig
 from flavor.exceptions import BuildError
 
 
@@ -3312,42 +4512,37 @@ def create_slot_tarballs(
 
 
 def create_builder_manifest(
-    package_name: str,
-    build_config: dict[str, Any],
+    flavor_config: FlavorConfig,
     slots: dict[str, Path],
-    key_paths: dict[str, Path | None],
+    key_paths: dict[str, str | None],
 ) -> dict[str, Any]:
     """Create manifest for external builder.
 
     Args:
-        package_name: Name of the package
-        build_config: Build configuration dictionary
-        slots: Dictionary of slot tarballs
-        key_paths: Dictionary with 'private' and 'public' key paths
+        flavor_config: Structured configuration for the package.
+        slots: Dictionary of slot tarballs.
+        key_paths: Dictionary with 'private' and 'public' key paths.
 
     Returns:
-        Complete manifest dictionary for builder
+        Complete manifest dictionary for builder.
     """
     is_windows = platform.system() == "Windows"
     uv_exe = "uv.exe" if is_windows else "uv"
-    # Use Scripts for Windows, bin for Unix
     bin_dir = "Scripts" if is_windows else "bin"
     python_exe = "python.exe" if is_windows else "python3.11"
-    # Windows UV Python has python.exe in root, not in Scripts
     python_path = (
         f"{{workenv}}/{python_exe}"
         if is_windows
         else f"{{workenv}}/{bin_dir}/{python_exe}"
     )
-    package_exe = f"{package_name}.exe" if is_windows else package_name
-    version = build_config.get("version", "1.0.0")
+    package_exe = f"{flavor_config.name}.exe" if is_windows else flavor_config.name
 
     manifest = {
-        "name": package_name,
-        "version": version,
+        "name": flavor_config.name,
+        "version": flavor_config.version,
         "cache_validation": {
             "check_file": "{workenv}/metadata/installed",
-            "expected_content": f"{package_name}-{version}",
+            "expected_content": f"{flavor_config.name}-{flavor_config.version}",
         },
         "setup_commands": [
             {
@@ -3394,17 +4589,18 @@ def create_builder_manifest(
         },
     }
 
-    # Add optional build metadata
-    if build_config.get("build_timestamp"):
-        manifest["build_timestamp"] = build_config["build_timestamp"]
-    if build_config.get("build_host"):
-        manifest["build_host"] = build_config["build_host"]
-
-    # Add runtime configuration if present
-    execution_config = build_config.get("execution", {})
-    if "runtime" in execution_config:
-        logger.info(f"Adding runtime configuration: {execution_config['runtime']}")
-        manifest["runtime"] = execution_config["runtime"]
+    # Add runtime configuration if present in a structured way
+    if flavor_config.execution.runtime_env:
+        runtime_env = flavor_config.execution.runtime_env
+        manifest["runtime"] = {
+            "env": {
+                "unset": runtime_env.unset,
+                "pass": runtime_env.passthrough,
+                "set": runtime_env.set_vars,
+                "map": runtime_env.map_vars,
+            }
+        }
+        logger.info(f"Adding runtime configuration: {manifest['runtime']}")
 
     return manifest
 
@@ -3426,7 +4622,7 @@ def write_manifest_file(manifest: dict[str, Any], temp_dir: Path) -> Path:
     return manifest_path
 
 
-def find_builder_executable(builder_bin: Path | None) -> Path:
+def find_builder_executable(builder_bin: str | None) -> Path:
     """Find the builder executable to use.
 
     Args:
@@ -3470,7 +4666,7 @@ def find_builder_executable(builder_bin: Path | None) -> Path:
             raise BuildError(f"No builder found: {e}") from e
 
 
-def find_launcher_executable(launcher_bin: Path | None) -> Path:
+def find_launcher_executable(launcher_bin: str | None) -> Path:
     """Find the launcher executable to use.
 
     Args:
@@ -3518,37 +4714,30 @@ def find_launcher_executable(launcher_bin: Path | None) -> Path:
             ) from e
 
 
-def create_python_builder_metadata(
-    package_name: str, build_config: dict[str, Any], uv_exe: str
-) -> dict[str, Any]:
+def create_python_builder_metadata(flavor_config: FlavorConfig) -> dict[str, Any]:
     """Create metadata for Python builder.
 
     Args:
-        package_name: Name of the package
-        build_config: Build configuration dictionary
-        uv_exe: UV executable name (platform-specific)
+        flavor_config: Structured configuration for the package.
 
     Returns:
         Complete metadata dictionary for Python builder
     """
-    version = build_config.get("version", "1.0.0")
-
     # Determine platform-specific paths
     is_windows = platform.system() == "Windows"
     bin_dir = "Scripts" if is_windows else "bin"
     python_exe = "python.exe" if is_windows else "python3.11"
-    # Windows UV Python has python.exe in root, not in Scripts
     python_path = (
         f"{{workenv}}/{python_exe}"
         if is_windows
         else f"{{workenv}}/{bin_dir}/{python_exe}"
     )
-    package_exe = f"{package_name}.exe" if is_windows else package_name
+    package_exe = f"{flavor_config.name}.exe" if is_windows else flavor_config.name
 
     metadata = {
         "package": {
-            "name": package_name,
-            "version": version,
+            "name": flavor_config.name,
+            "version": flavor_config.version,
         },
         "execution": {
             "primary_slot": 0,  # Primary slot for execution
@@ -3557,15 +4746,14 @@ def create_python_builder_metadata(
         },
         "workenv": {
             "directories": [
-                # Additional directories for application use (Python venv dirs are created by UV)
-                {"path": "tmp", "mode": "0700"},  # User-only temp directory
-                {"path": "var", "mode": "0755"},
-                {"path": "var/log", "mode": "0755"},
-                {"path": "var/cache", "mode": "0755"},
-                {"path": "var/run", "mode": "0755"},
-                {"path": "etc", "mode": "0755"},  # Configuration
-                {"path": "home", "mode": "0700"},  # User home directory
-                {"path": "state", "mode": "0755"},  # Application state
+                {"path": "{workenv}/tmp", "mode": "0700"},
+                {"path": "{workenv}/var", "mode": "0755"},
+                {"path": "{workenv}/var/log", "mode": "0755"},
+                {"path": "{workenv}/var/cache", "mode": "0755"},
+                {"path": "{workenv}/var/run", "mode": "0755"},
+                {"path": "{workenv}/etc", "mode": "0755"},
+                {"path": "{workenv}/home", "mode": "0700"},
+                {"path": "{workenv}/state", "mode": "0755"},
             ],
             "env": {
                 "TMPDIR": "{workenv}/tmp",
@@ -3581,13 +4769,13 @@ def create_python_builder_metadata(
         },
         "cache_validation": {
             "check_file": "{workenv}/metadata/installed",
-            "expected_content": f"{package_name}-{version}",
+            "expected_content": f"{flavor_config.name}-{flavor_config.version}",
         },
         "setup_commands": [
             {
                 "type": "enumerate_and_execute",
                 "command": f"{{workenv}}/{bin_dir}/"
-                + uv_exe
+                + f"{'uv.exe' if is_windows else 'uv'}"
                 + f" pip install --python {python_path} --no-deps",
                 "enumerate": {"path": "{workenv}/wheels", "pattern": "*.whl"},
             },
@@ -3600,10 +4788,21 @@ def create_python_builder_metadata(
     }
 
     # Add runtime configuration if present
-    execution_config = build_config.get("execution", {})
-    if "runtime" in execution_config:
-        logger.info(f"Adding runtime configuration: {execution_config['runtime']}")
-        metadata["runtime"] = execution_config["runtime"]
+    if flavor_config.execution.runtime_env:
+        runtime_env = flavor_config.execution.runtime_env
+        manifest_runtime_env = {
+            key: value
+            for key, value in {
+                "unset": runtime_env.unset or None,
+                "pass": runtime_env.passthrough or None,
+                "set": runtime_env.set_vars or None,
+                "map": runtime_env.map_vars or None,
+            }.items()
+            if value is not None
+        }
+        if manifest_runtime_env:
+            metadata["runtime"] = {"env": manifest_runtime_env}
+            logger.info(f"Adding runtime configuration: {metadata['runtime']}")
 
     return metadata
 
@@ -3655,7 +4854,7 @@ def create_python_slot_tarballs(
     return uv_tarball, python_tarball, wheels_tarball
 >>> EOF >>>
 
-### FILE 23: flavor/packaging/python_packager.py | checksum=a0b4fc22c790... | modified=2025-08-19T16:59:58 | op=+ | size=19970 | tokens=3748 | type=x-python ###
+### FILE 31: flavor/packaging/python_packager.py | checksum=d263b5664488... | modified=2025-08-19T21:53:41 | op=+ | size=12108 | tokens=2336 | type=x-python ###
 <<< BOF <<<
 #
 # flavor/packaging/python_packager.py
@@ -3806,18 +5005,12 @@ class PythonPackager:
 
         return artifacts
 
-    # Note: Signature generation has been removed as it's handled by the builders
-    # The Go and Rust builders generate Ed25519 signatures directly when creating
-    # the PSPF package. This ensures consistency across all package formats.
-
     def _build_wheels(self, wheels_dir: Path) -> None:
         """Build wheels for the package and its dependencies."""
-        # Create progress spinner for wheel building
         wheel_spinner = None
         if self.progress:
             wheel_spinner = self.progress.create_spinner(description="Building wheels")
 
-        # Create temporary build environment
         with tempfile.TemporaryDirectory() as build_env_dir:
             build_venv = Path(build_env_dir) / "venv"
 
@@ -3836,51 +5029,20 @@ class PythonPackager:
                 capture_output=True,
             )
 
-            # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            # CRITICAL: MUST INSTALL pip3 FOR WHEEL OPERATIONS
-            # uv DOES NOT SUPPORT wheel/download COMMANDS
-            # ALWAYS USE pip3, NEVER pip, NEVER uv pip FOR BUILDING
-            # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            logger.info("Installing pip in build environment for wheel creation...")
-            python_exe = "python.exe" if self.is_windows else "python"
-            run_command(
-                [
-                    "uv",
-                    "pip",
-                    "install",
-                    "--python",
-                    str(build_venv / self.venv_bin_dir / python_exe),
-                    "pip",
-                ],
-                check=True,
-                capture_output=True,
+            python_exe = build_venv / self.venv_bin_dir / (
+                "python.exe" if self.is_windows else "python"
             )
 
-            # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            # CRITICAL: ALWAYS USE pip3 FOR ALL WHEEL OPERATIONS
-            # DO NOT USE pip (without 3) - IT MAY NOT EXIST
-            # DO NOT USE uv pip - IT DOESN'T SUPPORT wheel/download
-            # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            pip3_exe = "pip3.exe" if self.is_windows else "pip3"
-            pip3 = build_venv / self.venv_bin_dir / pip3_exe
-
-            # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            # CRITICAL: BUILD WHEELS FOR LOCAL DEPENDENCIES
-            # MUST USE pip3 TO BUILD WHEELS AND DOWNLOAD TRANSITIVE DEPS
-            # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            # Build wheels for dependencies AND their transitive dependencies
+            # Build wheels for local dependencies
             for dep in self.build_config.get("dependencies", []):
                 dep_path = self.manifest_dir / dep
                 if dep_path.exists():
                     logger.info(f"Building wheel for dependency: {dep}")
-                    # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                    # CRITICAL: MUST USE pip3 TO BUILD WHEEL FOR LOCAL DEPENDENCY
-                    # DO NOT USE pip OR uv pip - ONLY pip3 WORKS FOR WHEEL BUILDING
-                    # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                    # First build the wheel for the dependency itself
                     run_command(
                         [
-                            str(pip3),
+                            str(python_exe),
+                            "-m",
+                            "pip",
                             "wheel",
                             "--wheel-dir",
                             str(wheels_dir),
@@ -3890,58 +5052,16 @@ class PythonPackager:
                         check=True,
                         capture_output=True,
                     )
-                    # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                    # CRITICAL: MUST USE pip3 TO DOWNLOAD TRANSITIVE DEPENDENCIES
-                    # DO NOT USE pip OR uv pip - ONLY pip3 SUPPORTS download COMMAND
-                    # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                    # Then download its dependencies using pip3
-                    logger.info(f"Downloading transitive dependencies for {dep}")
-                    try:
-                        run_command(
-                            [
-                                str(pip3),
-                                "download",
-                                "--dest",
-                                str(wheels_dir),
-                                "--only-binary",
-                                ":all:",
-                                str(dep_path),
-                            ],
-                            check=False,  # Don't fail if some deps can't be downloaded
-                            capture_output=True,
-                        )
-                    except Exception as e:
-                        logger.warning(
-                            f"Could not download all dependencies for {dep}: {e}"
-                        )
-                        # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                        # CRITICAL: FALLBACK ALSO MUST USE pip3 FOR WHEEL BUILDING
-                        # DO NOT USE pip OR uv pip - ONLY pip3 WORKS FOR WHEELS
-                        # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                        # Try pip3 wheel as fallback
-                        run_command(
-                            [
-                                str(pip3),
-                                "wheel",
-                                "--wheel-dir",
-                                str(wheels_dir),
-                                str(dep_path),
-                            ],
-                            check=False,
-                            capture_output=True,
-                        )
 
-            # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            # CRITICAL: MUST USE pip3 TO BUILD MAIN PACKAGE WHEEL
-            # DO NOT USE pip OR uv pip - ONLY pip3 SUPPORTS wheel COMMAND
-            # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             # Build main package wheel
             logger.info("Building wheel for main package...")
             if wheel_spinner:
                 wheel_spinner.tick()
             run_command(
                 [
-                    str(pip3),
+                    str(python_exe),
+                    "-m",
+                    "pip",
                     "wheel",
                     "--wheel-dir",
                     str(wheels_dir),
@@ -3952,52 +5072,22 @@ class PythonPackager:
                 capture_output=True,
             )
 
-            # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            # CRITICAL: ALWAYS use pip3 for wheel operations
-            # uv does NOT support pip download or pip wheel commands
-            # DO NOT attempt to use uv for downloading dependencies
-            # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-            # Download transitive dependencies using pip3
+            # Download transitive dependencies for the main package
             logger.info("Downloading transitive dependencies...")
             if wheel_spinner:
                 wheel_spinner.tick()
 
-            # Install the main package and its dependencies into the build venv
-            # This will resolve all dependencies properly
-            logger.info("Installing main package to resolve dependencies...")
             try:
-                python_exe = "python.exe" if self.is_windows else "python"
                 run_command(
                     [
-                        "uv",
+                        str(python_exe),
+                        "-m",
                         "pip",
-                        "install",
-                        "--python",
-                        str(build_venv / self.venv_bin_dir / python_exe),
-                        str(self.manifest_dir),
-                    ],
-                    check=True,
-                    capture_output=True,
-                )
-            except Exception as e:
-                logger.warning(f"Failed to install main package dependencies: {e}")
-
-            # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            # CRITICAL: MUST USE pip3 FOR DOWNLOADING DEPENDENCY WHEELS
-            # DO NOT USE pip OR uv pip - ONLY pip3 SUPPORTS download COMMAND
-            # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            # Now download all the dependencies as wheels using pip3
-            logger.info("Downloading resolved dependencies as wheels...")
-            try:
-                run_command(
-                    [
-                        str(pip3),
                         "download",
                         "--dest",
                         str(wheels_dir),
                         "--only-binary",
-                        ":all:",  # Prefer wheels
+                        ":all:",
                         str(self.manifest_dir),
                     ],
                     check=True,
@@ -4005,15 +5095,12 @@ class PythonPackager:
                 )
             except Exception as e:
                 logger.warning(f"Failed to download dependency wheels: {e}")
-                # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                # CRITICAL: FALLBACK MUST ALSO USE pip3 FOR WHEEL BUILDING
-                # DO NOT USE pip OR uv pip - ONLY pip3 SUPPORTS wheel COMMAND
-                # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                # Try alternative: pip3 wheel for dependencies
-                logger.info("Trying pip3 wheel as fallback...")
+                logger.info("Trying pip wheel as fallback...")
                 run_command(
                     [
-                        str(pip3),
+                        str(python_exe),
+                        "-m",
+                        "pip",
                         "wheel",
                         "--wheel-dir",
                         str(wheels_dir),
@@ -4023,7 +5110,6 @@ class PythonPackager:
                     capture_output=True,
                 )
 
-        # Finish spinner
         if wheel_spinner:
             wheel_spinner.finish()
 
@@ -4047,7 +5133,6 @@ class PythonPackager:
         """Download and package Python distribution using UV."""
         logger.info(f"Downloading Python {self.python_version} using UV...")
 
-        # Create spinner for Python download
         python_spinner = None
         if self.progress:
             python_spinner = self.progress.create_spinner(
@@ -4056,7 +5141,6 @@ class PythonPackager:
             if python_spinner:
                 python_spinner.tick()
 
-        # Use UV to download Python
         run_command(
             ["uv", "python", "install", self.python_version],
             check=True,
@@ -4066,18 +5150,13 @@ class PythonPackager:
         if python_spinner:
             python_spinner.finish()
 
-        # Find the installed Python (UV installs with full version like 3.11.12)
         import platform
         if platform.system() == "Windows":
-            # On Windows, UV installs Python to AppData\Local\uv\python
             uv_python_base = Path.home() / "AppData" / "Local" / "uv" / "python"
         else:
-            # On Unix-like systems
             uv_python_base = Path.home() / ".local" / "share" / "uv" / "python"
 
         python_install_dir = None
-
-        # Look for any Python that matches our major.minor version
         if uv_python_base.exists():
             for python_dir in uv_python_base.glob(f"cpython-{self.python_version}*"):
                 if python_dir.is_dir():
@@ -4086,7 +5165,6 @@ class PythonPackager:
 
         if not python_install_dir or not python_install_dir.exists():
             logger.warning("Could not find UV-installed Python at expected location")
-            # Fall back to placeholder
             with tempfile.TemporaryDirectory() as temp_dir:
                 python_dir = Path(temp_dir) / "python"
                 python_dir.mkdir()
@@ -4100,54 +5178,25 @@ class PythonPackager:
 
         logger.info(f"Found Python installation at: {python_install_dir}")
 
-        # Check for EXTERNALLY-MANAGED marker
-        (
-            python_install_dir
-            / "lib"
-            / f"python{self.python_version}"
-            / "EXTERNALLY-MANAGED"
-        )
-
-        # Create tarball of the Python installation, excluding EXTERNALLY-MANAGED
-        # On Windows, we need to reorganize bin/ to Scripts/
-        import platform
-        is_windows = platform.system() == "Windows"
-
         with tarfile.open(python_tgz, "w:gz", compresslevel=9) as tar:
-            # Custom filter to exclude EXTERNALLY-MANAGED file and reorganize for Windows
             def filter_and_reorganize(tarinfo):
                 if tarinfo.name.endswith("EXTERNALLY-MANAGED"):
-                    logger.debug(
-                        "Excluding EXTERNALLY-MANAGED marker from Python runtime tarball"
-                    )
                     return None
-
-                # On Windows, move bin/ contents to Scripts/
-                if is_windows and tarinfo.name.startswith("./bin/"):
-                    # Change ./bin/something to ./Scripts/something
-                    original_name = tarinfo.name
+                if self.is_windows and tarinfo.name.startswith("./bin/"):
                     tarinfo.name = tarinfo.name.replace("./bin/", "./Scripts/", 1)
-                    logger.debug(f"Windows: Remapping {original_name} to {tarinfo.name}")
-                elif is_windows and tarinfo.name == "./bin":
-                    # Rename the bin directory itself to Scripts
+                elif self.is_windows and tarinfo.name == "./bin":
                     tarinfo.name = "./Scripts"
-                    logger.debug("Windows: Remapping ./bin to ./Scripts")
-
                 return tarinfo
 
-            # Add all files from the Python directory, preserving structure
             tar.add(python_install_dir, arcname=".", filter=filter_and_reorganize)
 
     def _write_json(self, path: Path, data: dict[str, Any]) -> None:
         """Write JSON file with secure permissions."""
         path.write_text(json.dumps(data, indent=2))
         path.chmod(0o600)
-
-
-# 🐍📦🏗️
 >>> EOF >>>
 
-### FILE 24: flavor/progress.py | checksum=50662aff61bb... | modified=2025-08-19T16:02:38 | op=+ | size=5862 | tokens=1257 | type=x-python ###
+### FILE 32: flavor/progress.py | checksum=50662aff61bb... | modified=2025-08-19T21:18:32 | op=+ | size=5862 | tokens=1257 | type=x-python ###
 <<< BOF <<<
 #!/usr/bin/env python3
 """Progress reporting utilities for Flavor."""
@@ -4368,7 +5417,7 @@ class ProgressReporter:
                 self.cleanup_finished()
 >>> EOF >>>
 
-### FILE 25: flavor/psp/__init__.py | checksum=d58a079ba710... | modified=2025-08-15T18:40:05 | op=+ | size=195 | tokens=59 | type=x-python ###
+### FILE 33: flavor/psp/__init__.py | checksum=d58a079ba710... | modified=2025-08-15T18:40:05 | op=+ | size=195 | tokens=59 | type=x-python ###
 <<< BOF <<<
 #
 # flavor/psp/__init__.py
@@ -4381,7 +5430,7 @@ class ProgressReporter:
 # 📦🍜🔒🪄
 >>> EOF >>>
 
-### FILE 26: flavor/psp/format_2025/__init__.py | checksum=fbf98ce48181... | modified=2025-08-19T16:02:38 | op=+ | size=1651 | tokens=433 | type=x-python ###
+### FILE 34: flavor/psp/format_2025/__init__.py | checksum=fbf98ce48181... | modified=2025-08-19T21:18:32 | op=+ | size=1651 | tokens=433 | type=x-python ###
 <<< BOF <<<
 """
 PSPF 2025 Format Implementation
@@ -4450,7 +5499,7 @@ __all__ = [
 ]
 >>> EOF >>>
 
-### FILE 27: flavor/psp/format_2025/backends.py | checksum=e99396ec7a6a... | modified=2025-08-19T16:02:38 | op=+ | size=14687 | tokens=3275 | type=x-python ###
+### FILE 35: flavor/psp/format_2025/backends.py | checksum=e99396ec7a6a... | modified=2025-08-19T21:18:32 | op=+ | size=14687 | tokens=3275 | type=x-python ###
 <<< BOF <<<
 #!/usr/bin/env python3
 # src/flavor/psp/format_2025/backends.py
@@ -4908,7 +5957,7 @@ def create_backend(mode: int = ACCESS_AUTO, path: Path | None = None) -> Backend
 # 📦💾🗺️🪄
 >>> EOF >>>
 
-### FILE 28: flavor/psp/format_2025/builder.py | checksum=f25258977049... | modified=2025-08-19T16:02:38 | op=+ | size=18892 | tokens=4099 | type=x-python ###
+### FILE 36: flavor/psp/format_2025/builder.py | checksum=f25258977049... | modified=2025-08-19T21:18:32 | op=+ | size=18892 | tokens=4099 | type=x-python ###
 <<< BOF <<<
 #!/usr/bin/env python3
 """
@@ -5520,7 +6569,7 @@ class PSPFBuilder:
         return build_package(self._spec, output_path)
 >>> EOF >>>
 
-### FILE 29: flavor/psp/format_2025/checksums.py | checksum=294f640cbf25... | modified=2025-08-19T16:02:38 | op=+ | size=4859 | tokens=1123 | type=x-python ###
+### FILE 37: flavor/psp/format_2025/checksums.py | checksum=294f640cbf25... | modified=2025-08-19T21:18:32 | op=+ | size=4859 | tokens=1123 | type=x-python ###
 <<< BOF <<<
 #!/usr/bin/env python3
 """
@@ -5690,7 +6739,7 @@ def is_strong_checksum(checksum_str: str) -> bool:
     return algo in ["sha256", "sha512", "blake2b", "blake2s"]
 >>> EOF >>>
 
-### FILE 30: flavor/psp/format_2025/constants.py | checksum=8d28dfe0a3dd... | modified=2025-08-19T16:59:42 | op=+ | size=5017 | tokens=1582 | type=x-python ###
+### FILE 38: flavor/psp/format_2025/constants.py | checksum=8d28dfe0a3dd... | modified=2025-08-19T21:18:32 | op=+ | size=5017 | tokens=1582 | type=x-python ###
 <<< BOF <<<
 #!/usr/bin/env python3
 # src/flavor/psp/format_2025/constants.py
@@ -5832,7 +6881,7 @@ LIFECYCLE_INSTALL = LIFECYCLE_TEMPORARY
 # 📦💾🔍🪄
 >>> EOF >>>
 
-### FILE 31: flavor/psp/format_2025/crypto.py | checksum=2b2b1c33c79d... | modified=2025-08-19T16:02:38 | op=+ | size=2538 | tokens=581 | type=x-python ###
+### FILE 39: flavor/psp/format_2025/crypto.py | checksum=2b2b1c33c79d... | modified=2025-08-19T21:18:32 | op=+ | size=2538 | tokens=581 | type=x-python ###
 <<< BOF <<<
 """
 PSPF 2025 Cryptography Implementation
@@ -5913,7 +6962,7 @@ def verify_signature(data: bytes, signature: bytes, public_key_bytes: bytes) -> 
         return False
 >>> EOF >>>
 
-### FILE 32: flavor/psp/format_2025/environment.py | checksum=699f6476cadb... | modified=2025-08-19T16:02:38 | op=+ | size=6304 | tokens=1372 | type=x-python ###
+### FILE 40: flavor/psp/format_2025/environment.py | checksum=699f6476cadb... | modified=2025-08-19T21:18:32 | op=+ | size=6304 | tokens=1372 | type=x-python ###
 <<< BOF <<<
 #!/usr/bin/env python3
 """
@@ -6136,7 +7185,7 @@ def apply_environment_layers(
     return result
 >>> EOF >>>
 
-### FILE 33: flavor/psp/format_2025/executor.py | checksum=76cffbf2c901... | modified=2025-08-19T16:02:38 | op=+ | size=7194 | tokens=1439 | type=x-python ###
+### FILE 41: flavor/psp/format_2025/executor.py | checksum=76cffbf2c901... | modified=2025-08-19T21:18:32 | op=+ | size=7194 | tokens=1439 | type=x-python ###
 <<< BOF <<<
 """
 PSPF 2025 Bundle Executor
@@ -6335,7 +7384,7 @@ class BundleExecutor:
             }
 >>> EOF >>>
 
-### FILE 34: flavor/psp/format_2025/index.py | checksum=d7902f2527e8... | modified=2025-08-19T16:02:38 | op=+ | size=9706 | tokens=2205 | type=x-python ###
+### FILE 42: flavor/psp/format_2025/index.py | checksum=d7902f2527e8... | modified=2025-08-19T21:18:32 | op=+ | size=9706 | tokens=2205 | type=x-python ###
 <<< BOF <<<
 #!/usr/bin/env python3
 # src/flavor/psp/format_2025/index.py
@@ -6632,7 +7681,7 @@ class PSPFIndex:
 # 📦🔧🏗️🪄
 >>> EOF >>>
 
-### FILE 35: flavor/psp/format_2025/keys.py | checksum=9fc10b2f01ff... | modified=2025-08-19T16:02:38 | op=+ | size=6989 | tokens=1621 | type=x-python ###
+### FILE 43: flavor/psp/format_2025/keys.py | checksum=9fc10b2f01ff... | modified=2025-08-19T21:18:32 | op=+ | size=6989 | tokens=1621 | type=x-python ###
 <<< BOF <<<
 #!/usr/bin/env python3
 """
@@ -6864,7 +7913,7 @@ def create_key_config(
     )
 >>> EOF >>>
 
-### FILE 36: flavor/psp/format_2025/launcher.py | checksum=ee5576fb711e... | modified=2025-08-19T16:57:25 | op=+ | size=23152 | tokens=4455 | type=x-python ###
+### FILE 44: flavor/psp/format_2025/launcher.py | checksum=ee5576fb711e... | modified=2025-08-19T21:18:32 | op=+ | size=23152 | tokens=4455 | type=x-python ###
 <<< BOF <<<
 """
 PSPF 2025 Bundle Launcher
@@ -7431,7 +8480,7 @@ class PSPFLauncher(PSPFReader):
             }
 >>> EOF >>>
 
-### FILE 37: flavor/psp/format_2025/metadata/__init__.py | checksum=4318d51ebbf6... | modified=2025-08-19T16:02:38 | op=+ | size=382 | tokens=75 | type=x-python ###
+### FILE 45: flavor/psp/format_2025/metadata/__init__.py | checksum=4318d51ebbf6... | modified=2025-08-19T21:18:32 | op=+ | size=382 | tokens=75 | type=x-python ###
 <<< BOF <<<
 """Metadata assembly and creation for PSPF packages."""
 
@@ -7452,7 +8501,7 @@ __all__ = [
 ]
 >>> EOF >>>
 
-### FILE 38: flavor/psp/format_2025/metadata/assembly.py | checksum=703f592d3ee7... | modified=2025-08-19T16:02:38 | op=+ | size=7887 | tokens=1798 | type=x-python ###
+### FILE 46: flavor/psp/format_2025/metadata/assembly.py | checksum=703f592d3ee7... | modified=2025-08-19T21:18:32 | op=+ | size=7887 | tokens=1798 | type=x-python ###
 <<< BOF <<<
 #!/usr/bin/env python3
 """Metadata assembly for PSPF packages."""
@@ -7686,7 +8735,7 @@ def assemble_metadata(
     return validate_metadata_dict(metadata)
 >>> EOF >>>
 
-### FILE 39: flavor/psp/format_2025/reader.py | checksum=909177e3050b... | modified=2025-08-19T16:59:58 | op=+ | size=20832 | tokens=4275 | type=x-python ###
+### FILE 47: flavor/psp/format_2025/reader.py | checksum=909177e3050b... | modified=2025-08-19T21:18:32 | op=+ | size=20832 | tokens=4275 | type=x-python ###
 <<< BOF <<<
 #!/usr/bin/env python3
 # src/flavor/psp/format_2025/reader.py
@@ -8307,7 +9356,7 @@ def verify_bundle(bundle_path: Path) -> bool:
 # 📦📖🗺️🪄
 >>> EOF >>>
 
-### FILE 40: flavor/psp/format_2025/slots.py | checksum=944867a0667b... | modified=2025-08-19T16:59:30 | op=+ | size=13430 | tokens=3098 | type=x-python ###
+### FILE 48: flavor/psp/format_2025/slots.py | checksum=944867a0667b... | modified=2025-08-19T21:18:32 | op=+ | size=13430 | tokens=3098 | type=x-python ###
 <<< BOF <<<
 #!/usr/bin/env python3
 # src/flavor/psp/format_2025/slots.py
@@ -8713,7 +9762,7 @@ class SlotView:
 # 📦🎰🗂️🪄
 >>> EOF >>>
 
-### FILE 41: flavor/psp/format_2025/spec.py | checksum=6ee2310c26fd... | modified=2025-08-19T16:02:38 | op=+ | size=7819 | tokens=1682 | type=x-python ###
+### FILE 49: flavor/psp/format_2025/spec.py | checksum=6ee2310c26fd... | modified=2025-08-19T21:18:32 | op=+ | size=7819 | tokens=1682 | type=x-python ###
 <<< BOF <<<
 #!/usr/bin/env python3
 """
@@ -8958,7 +10007,7 @@ class PreparedSlot:
         return len(self.get_data_to_write())
 >>> EOF >>>
 
-### FILE 42: flavor/psp/format_2025/validation.py | checksum=1d1debbdcac0... | modified=2025-08-19T16:02:38 | op=+ | size=8282 | tokens=1782 | type=x-python ###
+### FILE 50: flavor/psp/format_2025/validation.py | checksum=1d1debbdcac0... | modified=2025-08-19T21:18:32 | op=+ | size=8282 | tokens=1782 | type=x-python ###
 <<< BOF <<<
 #!/usr/bin/env python3
 """
@@ -9236,7 +10285,7 @@ def validate_complete(spec: BuildSpec) -> list[str]:
     return errors
 >>> EOF >>>
 
-### FILE 43: flavor/psp/metadata/__init__.py | checksum=8996edd79b68... | modified=2025-08-19T16:02:38 | op=+ | size=165 | tokens=42 | type=x-python ###
+### FILE 51: flavor/psp/metadata/__init__.py | checksum=8996edd79b68... | modified=2025-08-19T21:18:32 | op=+ | size=165 | tokens=42 | type=x-python ###
 <<< BOF <<<
 """Metadata handling for PSP packages."""
 
@@ -9251,7 +10300,7 @@ __all__ = [
 ]
 >>> EOF >>>
 
-### FILE 44: flavor/psp/metadata/paths.py | checksum=a18ea5957f4f... | modified=2025-08-19T17:01:54 | op=+ | size=11934 | tokens=2697 | type=x-python ###
+### FILE 52: flavor/psp/metadata/paths.py | checksum=a18ea5957f4f... | modified=2025-08-19T21:18:32 | op=+ | size=11934 | tokens=2697 | type=x-python ###
 <<< BOF <<<
 #!/usr/bin/env python3
 """
@@ -9653,7 +10702,7 @@ def create_workenv_directories(
             os.umask(old_umask)
 >>> EOF >>>
 
-### FILE 45: flavor/psp/metadata/validators.py | checksum=6b55cf9e76a1... | modified=2025-08-19T16:02:38 | op=+ | size=3195 | tokens=679 | type=x-python ###
+### FILE 53: flavor/psp/metadata/validators.py | checksum=6b55cf9e76a1... | modified=2025-08-19T21:18:32 | op=+ | size=3195 | tokens=679 | type=x-python ###
 <<< BOF <<<
 #!/usr/bin/env python3
 """
@@ -9744,7 +10793,7 @@ def validate_metadata(metadata: dict[str, Any]) -> bool:
     return True
 >>> EOF >>>
 
-### FILE 46: flavor/safe_optimization.py | checksum=ffd4114e385e... | modified=2025-08-19T16:02:38 | op=+ | size=6913 | tokens=1458 | type=x-python ###
+### FILE 54: flavor/safe_optimization.py | checksum=ffd4114e385e... | modified=2025-08-19T21:18:32 | op=+ | size=6913 | tokens=1458 | type=x-python ###
 <<< BOF <<<
 #!/usr/bin/env python3
 """Safe optimization strategies that actually work."""
@@ -9948,7 +10997,7 @@ if __name__ == "__main__":
     whitelist.filter_wheels(Path("wheels"), Path("filtered_wheels"))
 >>> EOF >>>
 
-### FILE 47: flavor/templates/config.json | checksum=4eb492d0aed3... | modified=2025-08-11T18:22:27 | op=+ | size=1218 | tokens=314 | type=json ###
+### FILE 55: flavor/templates/config.json | checksum=4eb492d0aed3... | modified=2025-08-11T18:22:27 | op=+ | size=1218 | tokens=314 | type=json ###
 <<< BOF <<<
 {
   "//": "This is the default pristine environment configuration for a Pyvider provider.",
@@ -9999,7 +11048,7 @@ if __name__ == "__main__":
 }
 >>> EOF >>>
 
-### FILE 48: flavor/utils/__init__.py | checksum=2616e8fd98b7... | modified=2025-08-19T16:02:38 | op=+ | size=3714 | tokens=805 | type=x-python ###
+### FILE 56: flavor/utils/__init__.py | checksum=2616e8fd98b7... | modified=2025-08-19T21:18:32 | op=+ | size=3714 | tokens=805 | type=x-python ###
 <<< BOF <<<
 """Utility functions for flavor."""
 
@@ -10140,7 +11189,7 @@ __all__ = [
 ]
 >>> EOF >>>
 
-### FILE 49: flavor/utils/subprocess.py | checksum=ef1f4b1615f9... | modified=2025-08-19T16:02:38 | op=+ | size=4825 | tokens=1024 | type=x-python ###
+### FILE 57: flavor/utils/subprocess.py | checksum=ef1f4b1615f9... | modified=2025-08-19T21:18:32 | op=+ | size=4825 | tokens=1024 | type=x-python ###
 <<< BOF <<<
 #!/usr/bin/env python3
 #
@@ -10310,7 +11359,7 @@ def run_subprocess(
     return result.stdout.strip()
 >>> EOF >>>
 
-### FILE 50: flavor/verification.py | checksum=4ab6fa3b7405... | modified=2025-08-19T16:02:38 | op=+ | size=1710 | tokens=355 | type=x-python ###
+### FILE 58: flavor/verification.py | checksum=4ab6fa3b7405... | modified=2025-08-19T21:18:32 | op=+ | size=1710 | tokens=355 | type=x-python ###
 <<< BOF <<<
 #
 # flavor/verification.py
@@ -10377,16 +11426,16 @@ class FlavorVerifier:
 
 
 ### BUNDLE SUMMARY ###
-- Included Files: 50
-- Total Size (Included): 335184 bytes
+- Included Files: 58
+- Total Size (Included): 369591 bytes
 - Duplicate Files Skipped: 0
-- Items Excluded by Config/Defaults: 119 (Files: 119, Dirs: 0)
+- Items Excluded by Config/Defaults: 121 (Files: 121, Dirs: 0)
 - Items Excluded by .gitignore: 1
 - Empty Files Found: 0
 - System Errors Encountered: 0
 - Encoding Errors (Fallback Attempted): 0
-- Estimated Bundle Token Range: 72149 - 75679
-- Processing Time: 0.15 seconds
+- Estimated Bundle Token Range: 79619 - 83656
+- Processing Time: 0.17 seconds
 ### END BUNDLE SUMMARY ###
 
---- END OF BFILE bfiles-20250819-201520.txt ---
+--- END OF BFILE bfiles-20250819-215541.txt ---

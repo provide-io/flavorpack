@@ -12,6 +12,11 @@ echo "🧪 Testing Flavor with Taster for $PLATFORM"
 echo "   Version: $VERSION"
 echo "   Artifact directory: $ARTIFACT_DIR"
 
+# Disable UV cache to avoid corruption issues on GitHub runners
+export UV_NO_CACHE=1
+export UV_CACHE_DIR=/tmp/uv-cache-$$
+echo "🧹 Disabled UV cache (UV_NO_CACHE=1) to avoid corruption issues..."
+
 # Determine Flavor package filename
 if [[ "$PLATFORM" == *"windows"* ]]; then
     FLAVOR_PACKAGE="$ARTIFACT_DIR/flavor-${VERSION}-${PLATFORM}.exe"
@@ -66,7 +71,7 @@ cd helpers/taster
 
 # Install Taster dependencies
 echo "📦 Installing Taster dependencies..."
-uv pip install --system -e .
+uv pip install -e .
 
 # Build Taster using the Flavor PSP
 echo "🔨 Building Taster package with Flavor..."

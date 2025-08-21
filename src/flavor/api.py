@@ -8,8 +8,6 @@ from pathlib import Path
 # No typing imports needed with Python 3.11+
 import tomllib
 
-from flavor.config import FlavorConfig
-from flavor.exceptions import ValidationError
 from flavor.packaging.keys import generate_key_pair
 from flavor.packaging.orchestrator import PackagingOrchestrator
 
@@ -30,65 +28,64 @@ def build_package_from_manifest(
     with manifest_path.open("rb") as f:
         pyproject = tomllib.load(f)
 
-    project_section = pyproject.get("project", {})
-    flavor_section = pyproject.get("tool", {}).get("flavor", {})
+    # Get values from pyproject.toml
+    project_config = pyproject.get("project", {})
+    flavor_config = pyproject.get("tool", {}).get("flavor", {})
 
-    # Create project defaults for fallback
-    project_name = project_section.get("name")
-    project_defaults = {
-        "name": project_name,
-        "version": project_section.get("version"),
-        "entry_point": project_section.get("scripts", {}).get(project_name or ""),
-    }
+    project_name = project_config.get("name")
+    if not project_name:
+        raise ValueError("Project name must be defined in [project] table")
 
-    # Load buildconfig.toml first and merge it into the flavor_section dict
+    version = project_config.get("version")
+    if not version:
+        raise ValueError("Project version must be defined in [project] table")
+
+    entry_point = flavor_config.get("entry_point")
+    if not entry_point:
+        scripts = project_config.get("scripts", {})
+        if project_name in scripts:
+            entry_point = scripts[project_name]
+        else:
+            raise ValueError(
+                "Project entry_point must be defined in [project.scripts] or [tool.flavor.entry_point]"
+            )
+
+    package_name = flavor_config.get("metadata", {}).get("package_name", project_name)
+
+    # Use absolute paths based on manifest location
     manifest_dir = manifest_path.parent.absolute()
-    buildconfig_path = manifest_dir / "buildconfig.toml"
-    if buildconfig_path.exists():
-        with buildconfig_path.open("rb") as f:
-            buildconfig_data = tomllib.load(f).get("build", {})
-            # Merge buildconfig.toml settings (takes precedence)
-            flavor_build_section = flavor_section.setdefault("build", {})
-            flavor_build_section.update(buildconfig_data)
-
-    # Create structured config object from the (potentially merged) dictionary
-    try:
-        flavor_config = FlavorConfig.from_dict(flavor_section, project_defaults)
-    except ValidationError as e:
-        # Re-raise with a more user-friendly message
-        raise ValueError(f"Invalid pyproject.toml [tool.flavor] configuration: {e}") from e
-
-    package_name = flavor_config.metadata.package_name or flavor_config.name
     output_flavor_path = (
         output_path if output_path else manifest_dir / "dist" / f"{package_name}.psp"
     )
 
-    # Handle key paths - use provided keys or fallback to default locations
-    if private_key_path:
-        package_integrity_key_path = private_key_path
-        if not public_key_path:
-            # If no public key provided, assume it's alongside the private key
-            public_key_path = private_key_path.parent / "flavor-public.key"
-    else:
-        # Use default key paths
-        package_integrity_key_path = manifest_dir / "keys" / "flavor-private.key"
-        public_key_path_default = manifest_dir / "keys" / "flavor-public.key"
+    # Handle key paths
+    if not private_key_path:
+        private_key_path = manifest_dir / "keys" / "flavor-private.key"
+    if not public_key_path:
+        public_key_path = manifest_dir / "keys" / "flavor-public.key"
 
-        # Only generate keys if no key options provided
-        if not key_seed and not package_integrity_key_path.exists():
-            generate_key_pair(manifest_dir / "keys")
+    if not key_seed and not private_key_path.exists():
+        generate_key_pair(manifest_dir / "keys")
 
-        if not public_key_path:
-            public_key_path = public_key_path_default
+    # Load build config from pyproject.toml, then override with buildconfig.toml if it exists
+    build_config = flavor_config.get("build", {})
+    buildconfig_path = manifest_dir / "buildconfig.toml"
+    if buildconfig_path.exists():
+        with buildconfig_path.open("rb") as f:
+            build_config.update(tomllib.load(f).get("build", {}))
+
+    if "execution" in flavor_config:
+        build_config["execution"] = flavor_config["execution"]
 
     orchestrator = PackagingOrchestrator(
-        package_integrity_key_path=str(package_integrity_key_path)
-        if package_integrity_key_path
-        else None,
-        public_key_path=str(public_key_path) if public_key_path else None,
+        package_integrity_key_path=str(private_key_path),
+        public_key_path=str(public_key_path),
         output_flavor_path=str(output_flavor_path),
-        flavor_config=flavor_config,
-        manifest_dir=manifest_path.parent,
+        build_config=build_config,
+        manifest_dir=manifest_dir,
+        package_name=package_name,
+        entry_point=entry_point,
+        version=version,
         launcher_bin=str(launcher_bin) if launcher_bin else None,
         builder_bin=str(builder_bin) if builder_bin else None,
         strip_binaries=strip_binaries,
@@ -118,9 +115,3 @@ def clean_cache() -> None:
 def generate_keys(output_dir: Path) -> tuple[Path, Path]:
     """Generate a new key pair for package signing. Alias for generate_key_pair."""
     return generate_key_pair(output_dir)
-
-
-# 📡 ⚖️ 🔌
-
-
-# 📦🍜🔌🪄
