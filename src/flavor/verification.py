@@ -33,7 +33,7 @@ class FlavorVerifier:
 
         # Verify integrity using reader's method
         integrity_result = reader.verify_integrity()
-        signature_valid = integrity_result.get('signature_valid', False)
+        signature_valid = integrity_result.get("signature_valid", False)
 
         # Extract slot information from metadata
         slots_info = []

@@ -13,8 +13,8 @@ if [ -z "$VERSION" ]; then
 fi
 
 if [ -z "$VERSION" ]; then
-    # Default version
-    VERSION="0.3.0"
+    # Get from centralized VERSION file
+    VERSION=$($(dirname "$0")/get-version.sh)
 fi
 
 echo "version=$VERSION" >> $GITHUB_OUTPUT

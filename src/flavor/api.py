@@ -3,7 +3,6 @@
 #
 """Public API for the Flavor build tool."""
 
-import os
 from pathlib import Path
 
 # No typing imports needed with Python 3.11+
@@ -44,7 +43,7 @@ def build_package_from_manifest(
     output_flavor_path = (
         output_path if output_path else manifest_dir / "dist" / f"{package_name}.psp"
     )
-    
+
     # Handle key paths - use provided keys or fallback to default locations
     if private_key_path:
         package_integrity_key_path = private_key_path
@@ -55,11 +54,11 @@ def build_package_from_manifest(
         # Use default key paths
         package_integrity_key_path = manifest_dir / "keys" / "flavor-private.key"
         public_key_path_default = manifest_dir / "keys" / "flavor-public.key"
-        
+
         # Only generate keys if no key options provided
         if not key_seed and not package_integrity_key_path.exists():
             generate_key_pair(manifest_dir / "keys")
-        
+
         if not public_key_path:
             public_key_path = public_key_path_default
 
@@ -70,13 +69,15 @@ def build_package_from_manifest(
         with buildconfig_path.open("rb") as f:
             # Merge buildconfig.toml settings (takes precedence)
             build_config.update(tomllib.load(f).get("build", {}))
-    
+
     # Include execution config (runtime.env, etc.) in the build config
     if "execution" in flavor_config:
         build_config["execution"] = flavor_config["execution"]
 
     orchestrator = PackagingOrchestrator(
-        package_integrity_key_path=str(package_integrity_key_path) if package_integrity_key_path else None,
+        package_integrity_key_path=str(package_integrity_key_path)
+        if package_integrity_key_path
+        else None,
         public_key_path=str(public_key_path) if public_key_path else None,
         output_flavor_path=str(output_flavor_path),
         build_config=build_config,
@@ -105,6 +106,7 @@ def clean_cache() -> None:
     cache_dir = Path.home() / ".cache" / "flavor"
     if cache_dir.exists():
         import shutil
+
         shutil.rmtree(cache_dir, ignore_errors=True)
 
 

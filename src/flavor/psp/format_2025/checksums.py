@@ -8,10 +8,8 @@ Format: "algorithm:hexvalue" (e.g., "sha256:abc123...", "adler32:deadbeef")
 
 import hashlib
 import zlib
-from typing import Tuple, Optional
 
 from flavor.exceptions import ValidationError
-
 
 # Supported checksum algorithms
 SUPPORTED_ALGORITHMS = ["sha256", "sha512", "blake2b", "blake2s", "adler32", "md5"]
@@ -20,14 +18,14 @@ SUPPORTED_ALGORITHMS = ["sha256", "sha512", "blake2b", "blake2s", "adler32", "md
 def calculate_checksum(data: bytes, algorithm: str = "sha256") -> str:
     """
     Calculate checksum with algorithm prefix.
-    
+
     Args:
         data: The data to checksum
         algorithm: The checksum algorithm to use
-        
+
     Returns:
         Prefixed checksum string (e.g., "sha256:abc123...")
-        
+
     Raises:
         ValueError: If algorithm is not supported
     """
@@ -45,7 +43,7 @@ def calculate_checksum(data: bytes, algorithm: str = "sha256") -> str:
         return f"blake2s:{digest}"
     elif algorithm == "md5":
         # MD5 for compatibility, not recommended for security
-        digest = hashlib.md5(data).hexdigest()
+        digest = hashlib.md5(data, usedforsecurity=False).hexdigest()
         return f"md5:{digest}"
     elif algorithm == "adler32":
         # Adler32 returns an integer, format as 8-char hex
@@ -58,11 +56,11 @@ def calculate_checksum(data: bytes, algorithm: str = "sha256") -> str:
 def verify_checksum(data: bytes, checksum_str: str) -> bool:
     """
     Verify data against a prefixed checksum string.
-    
+
     Args:
         data: The data to verify
         checksum_str: The expected checksum (with or without prefix)
-        
+
     Returns:
         True if checksum matches, False otherwise
     """
@@ -74,44 +72,44 @@ def verify_checksum(data: bytes, checksum_str: str) -> bool:
         return False
 
 
-def parse_checksum(checksum_str: str) -> Tuple[str, str]:
+def parse_checksum(checksum_str: str) -> tuple[str, str]:
     """
     Parse algorithm and value from a checksum string.
-    
+
     Handles both prefixed ("sha256:abc123") and legacy (unprefixed) formats.
     Legacy format assumes SHA-256 for backward compatibility.
-    
+
     Args:
         checksum_str: The checksum string to parse
-        
+
     Returns:
         Tuple of (algorithm, hex_value)
-        
+
     Raises:
         ValidationError: If checksum format is invalid
     """
     if not checksum_str:
         raise ValidationError("Empty checksum string")
-    
+
     if ":" in checksum_str:
         # Prefixed format
         parts = checksum_str.split(":", 1)
         if len(parts) != 2:
             raise ValidationError(f"Invalid checksum format: {checksum_str}")
-        
+
         algo, value = parts
         if algo not in SUPPORTED_ALGORITHMS:
             raise ValidationError(f"Unknown checksum algorithm: {algo}")
-        
+
         return algo, value
     else:
         # Legacy format - assume SHA-256
         # Check if it looks like a hex string
         try:
             int(checksum_str, 16)
-        except ValueError:
-            raise ValidationError(f"Invalid hex checksum: {checksum_str}")
-        
+        except ValueError as e:
+            raise ValidationError(f"Invalid hex checksum: {checksum_str}") from e
+
         # Guess algorithm based on length
         if len(checksum_str) == 64:
             return "sha256", checksum_str
@@ -129,10 +127,10 @@ def parse_checksum(checksum_str: str) -> Tuple[str, str]:
 def normalize_checksum(checksum_str: str) -> str:
     """
     Normalize a checksum string to prefixed format.
-    
+
     Args:
         checksum_str: The checksum string (with or without prefix)
-        
+
     Returns:
         Normalized checksum with prefix
     """
@@ -143,10 +141,10 @@ def normalize_checksum(checksum_str: str) -> str:
 def get_checksum_algorithm(checksum_str: str) -> str:
     """
     Get the algorithm from a checksum string.
-    
+
     Args:
         checksum_str: The checksum string
-        
+
     Returns:
         The algorithm name
     """
@@ -157,10 +155,10 @@ def get_checksum_algorithm(checksum_str: str) -> str:
 def is_strong_checksum(checksum_str: str) -> bool:
     """
     Check if a checksum uses a cryptographically strong algorithm.
-    
+
     Args:
         checksum_str: The checksum string
-        
+
     Returns:
         True if using a strong algorithm (sha256, sha512, blake2b, blake2s)
     """

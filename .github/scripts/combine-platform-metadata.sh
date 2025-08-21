@@ -45,7 +45,7 @@ fi
 for metadata_file in $METADATA_FILES; do
     echo "Processing: $metadata_file"
     
-    # Extract platform name from path (e.g., artifacts/flavor-helpers-0.3.0-linux_amd64/metadata/platform-metadata.json)
+    # Extract platform name from path (e.g., artifacts/flavor-helpers-VERSION-linux_amd64/metadata/platform-metadata.json)
     PLATFORM=$(echo "$metadata_file" | sed -E 's/.*flavor-helpers-[^-]+-([^/]+).*/\1/')
     
     if [ -z "$PLATFORM" ]; then
