@@ -34,3 +34,4 @@ helpers/bin/
 *.pspf
 *.psp
 target/
+*code.sh
