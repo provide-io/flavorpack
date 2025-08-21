@@ -78,6 +78,24 @@ def create_builder_manifest(
             "check_file": "{workenv}/metadata/installed",
             "expected_content": f"{package_name}-{version}",
         },
+        "workenv": {
+            "directories": [
+                {"path": "{workenv}/tmp", "mode": "0700"},
+                {"path": "{workenv}/var", "mode": "0755"},
+                {"path": "{workenv}/var/log", "mode": "0755"},
+                {"path": "{workenv}/var/cache", "mode": "0755"},
+                {"path": "{workenv}/var/run", "mode": "0755"},
+                {"path": "{workenv}/etc", "mode": "0755"},
+                {"path": "{workenv}/home", "mode": "0700"},
+                {"path": "{workenv}/state", "mode": "0755"},
+            ],
+            "env": {
+                "TMPDIR": "{workenv}/tmp", "TEMP": "{workenv}/tmp", "TMP": "{workenv}/tmp",
+                "XDG_RUNTIME_DIR": "{workenv}/var/run", "XDG_CACHE_HOME": "{workenv}/var/cache",
+                "XDG_DATA_HOME": "{workenv}/share", "XDG_STATE_HOME": "{workenv}/state",
+                "XDG_CONFIG_HOME": "{workenv}/etc", "HOME": "{workenv}/home",
+            },
+        },
         "setup_commands": [
             {
                 "type": "enumerate_and_execute",

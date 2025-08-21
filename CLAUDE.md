@@ -254,3 +254,4 @@ The launcher automatically removes volatile slots after setup:
 - always use absolute projects, such as `flavor.utils`, or `flavor.placeholders` or anything.
 - GitHub Actions must be manually triggered. Pushes do not trigger them.
 - when building github workflows, you will default to looking for/updating scripts in .github/scripts. you will *NOT* put more than a few lines in any workflow yaml.
+- 1. The manifest should set the multiple x-platform temp variables to be {workenv}/tmp during runtime. during build time, it doesn't matter what tmp directory is used, as long as everything is installed, and prepped, in w

@@ -8,6 +8,7 @@ from pathlib import Path
 import shutil
 import tarfile
 import tempfile
+import tomllib
 from typing import Any
 
 from pyvider.telemetry import logger
@@ -51,6 +52,9 @@ class PythonPackager:
         self.is_windows = platform.system() == "Windows"
         self.venv_bin_dir = "Scripts" if self.is_windows else "bin"
         self.uv_exe = "uv.exe" if self.is_windows else "uv"
+        
+        # Track processed dependencies to avoid cycles
+        self._processed_deps = set()
 
     def prepare_artifacts(self, work_dir: Path) -> dict[str, Path]:
         """
@@ -146,6 +150,84 @@ class PythonPackager:
             prep_bar.finish()
 
         return artifacts
+    
+    def _resolve_transitive_dependencies(self, dep_path: Path, seen: set[Path] | None = None, depth: int = 0) -> list[Path]:
+        """
+        Recursively resolve all transitive local dependencies.
+        
+        Args:
+            dep_path: Path to a local dependency
+            seen: Set of already-seen paths to avoid cycles
+            depth: Current recursion depth for logging
+            
+        Returns:
+            List of all transitive dependency paths in dependency order (deepest first)
+        """
+        if seen is None:
+            seen = set()
+            logger.info("🔍 Starting transitive dependency resolution...")
+        
+        indent = "  " * depth
+        
+        # Normalize the path to avoid duplicates
+        dep_path = dep_path.resolve()
+        
+        logger.debug(f"{indent}📦 Examining dependency: {dep_path.name} at {dep_path}")
+        
+        # Check if we've already processed this dependency
+        if dep_path in seen:
+            logger.debug(f"{indent}⏭️  Already processed {dep_path.name}, skipping to avoid cycle")
+            return []
+        
+        seen.add(dep_path)
+        
+        # Result list - dependencies will be added in reverse order (deepest first)
+        all_deps = []
+        
+        # Check if this dependency has a pyproject.toml
+        pyproject_path = dep_path / "pyproject.toml"
+        if pyproject_path.exists():
+            try:
+                logger.debug(f"{indent}📖 Reading {pyproject_path}")
+                with pyproject_path.open("rb") as f:
+                    pyproject = tomllib.load(f)
+                
+                # Look for flavor build dependencies
+                flavor_build = pyproject.get("tool", {}).get("flavor", {}).get("build", {})
+                sub_deps = flavor_build.get("dependencies", [])
+                
+                if sub_deps:
+                    logger.info(f"{indent}🔗 Found {len(sub_deps)} sub-dependencies in {dep_path.name}")
+                    for sub_dep in sub_deps:
+                        logger.debug(f"{indent}  ➤ {sub_dep}")
+                
+                # Recursively process each sub-dependency
+                for sub_dep in sub_deps:
+                    sub_dep_path = dep_path / sub_dep
+                    if sub_dep_path.exists():
+                        logger.debug(f"{indent}🔄 Recursing into {sub_dep_path.name}")
+                        # Get all transitive dependencies of this sub-dependency
+                        transitive = self._resolve_transitive_dependencies(sub_dep_path, seen, depth + 1)
+                        all_deps.extend(transitive)
+                    else:
+                        logger.warning(f"{indent}⚠️  Sub-dependency not found: {sub_dep_path}")
+                
+            except Exception as e:
+                logger.warning(f"{indent}❌ Failed to read dependencies from {pyproject_path}: {e}")
+        else:
+            logger.debug(f"{indent}📄 No pyproject.toml found at {pyproject_path}")
+        
+        # Add this dependency after its dependencies (post-order)
+        if dep_path not in all_deps:
+            all_deps.append(dep_path)
+            logger.info(f"{indent}✅ Added {dep_path.name} to dependency list")
+        
+        if depth == 0:
+            logger.info(f"🎯 Total transitive dependencies found: {len(all_deps)}")
+            for i, dep in enumerate(all_deps, 1):
+                logger.info(f"  {i}. {dep.name} ({dep})")
+        
+        return all_deps
 
     def _build_wheels(self, wheels_dir: Path) -> None:
         """Build wheels for the package and its dependencies."""
@@ -198,25 +280,34 @@ class PythonPackager:
             )
 
 
-            # Build wheels for local dependencies
+            # Build wheels for local dependencies and their transitive dependencies
+            all_local_deps = []
             for dep in self.build_config.get("dependencies", []):
                 dep_path = self.manifest_dir / dep
                 if dep_path.exists():
-                    logger.info(f"Building wheel for dependency: {dep}")
-                    run_command(
-                        [
-                            str(python_exe),
-                            "-m",
-                            "pip",
-                            "wheel",
-                            "--wheel-dir",
-                            str(wheels_dir),
-                            "--no-deps",
-                            str(dep_path),
-                        ],
-                        check=True,
-                        capture_output=True,
-                    )
+                    # Get all transitive dependencies for this direct dependency
+                    transitive_deps = self._resolve_transitive_dependencies(dep_path)
+                    for trans_dep in transitive_deps:
+                        if trans_dep not in all_local_deps:
+                            all_local_deps.append(trans_dep)
+            
+            # Build wheels for all discovered dependencies
+            for dep_path in all_local_deps:
+                logger.info(f"Building wheel for dependency: {dep_path.name}")
+                run_command(
+                    [
+                        str(python_exe),
+                        "-m",
+                        "pip",
+                        "wheel",
+                        "--wheel-dir",
+                        str(wheels_dir),
+                        "--no-deps",
+                        str(dep_path),
+                    ],
+                    check=True,
+                    capture_output=True,
+                )
 
             # Build main package wheel
             logger.info("Building wheel for main package...")
@@ -237,30 +328,22 @@ class PythonPackager:
                 capture_output=True,
             )
 
-            # Download transitive dependencies for the main package
+            # Download transitive dependencies for all packages  
             logger.info("Downloading transitive dependencies...")
             if wheel_spinner:
                 wheel_spinner.tick()
 
-            try:
-                run_command(
-                    [
-                        str(python_exe),
-                        "-m",
-                        "pip",
-                        "download",
-                        "--dest",
-                        str(wheels_dir),
-                        "--only-binary",
-                        ":all:",
-                        str(self.manifest_dir),
-                    ],
-                    check=True,
-                    capture_output=True,
-                )
-            except Exception as e:
-                logger.warning(f"Failed to download dependency wheels: {e}")
-                logger.info("Trying pip wheel as fallback...")
+            # Download dependencies for all local packages we built
+            # We need to do this for each package to ensure we get ALL their dependencies
+            logger.info("📦 Downloading dependencies for all packages...")
+            all_packages_to_resolve = all_local_deps + [self.manifest_dir]
+            
+            for package_path in all_packages_to_resolve:
+                logger.info(f"  📥 Getting dependencies for {package_path.name}...")
+                if wheel_spinner:
+                    wheel_spinner.tick()
+                    
+                # Use pip wheel to ensure we get all dependencies
                 run_command(
                     [
                         str(python_exe),
@@ -269,7 +352,7 @@ class PythonPackager:
                         "wheel",
                         "--wheel-dir",
                         str(wheels_dir),
-                        str(self.manifest_dir),
+                        str(package_path),
                     ],
                     check=True,
                     capture_output=True,
@@ -306,27 +389,30 @@ class PythonPackager:
             if python_spinner:
                 python_spinner.tick()
 
+        # First ensure Python is installed
         run_command(
             ["uv", "python", "install", self.python_version],
             check=True,
             capture_output=True,
         )
 
-        if python_spinner:
-            python_spinner.finish()
-
-        import platform
-        if platform.system() == "Windows":
-            uv_python_base = Path.home() / "AppData" / "Local" / "uv" / "python"
-        else:
-            uv_python_base = Path.home() / ".local" / "share" / "uv" / "python"
-
+        # Use uv python find to get the actual path
+        result = run_command(
+            ["uv", "python", "find", self.python_version],
+            check=True,
+            capture_output=True,
+        )
+        
         python_install_dir = None
-        if uv_python_base.exists():
-            for python_dir in uv_python_base.glob(f"cpython-{self.python_version}*"):
-                if python_dir.is_dir():
-                    python_install_dir = python_dir
-                    break
+        if result.stdout:
+            python_path = result.stdout.strip()
+            logger.info(f"UV found Python at: {python_path}")
+            # Get the parent directory (the actual Python installation)
+            python_bin = Path(python_path)
+            if python_bin.exists():
+                # Go up from bin/python3.11 to the installation root
+                python_install_dir = python_bin.parent.parent
+                logger.info(f"Python installation directory: {python_install_dir}")
 
         if not python_install_dir or not python_install_dir.exists():
             logger.warning("Could not find UV-installed Python at expected location")
@@ -339,6 +425,8 @@ class PythonPackager:
                 )
                 with tarfile.open(python_tgz, "w:gz", compresslevel=9) as tar:
                     tar.add(python_dir, arcname=".")
+            if python_spinner:
+                python_spinner.finish()
             return
 
         logger.info(f"Found Python installation at: {python_install_dir}")
