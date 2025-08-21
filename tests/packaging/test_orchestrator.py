@@ -3,6 +3,7 @@
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+import attrs
 import pytest
 
 from flavor.config import FlavorConfig
@@ -15,25 +16,34 @@ def mock_flavor_config() -> FlavorConfig:
     """Provides a default FlavorConfig object for tests."""
     return FlavorConfig.from_dict(
         config={
-            "name": "test-package",
-            "version": "1.0.0",
-            "entry_point": "test_pkg.main:cli",
             "build": {},
             "execution": {},
         },
-        project_defaults={},
+        project_defaults={
+            "name": "test-package",
+            "version": "1.0.0",
+            "entry_point": "test_pkg.main:cli",
+        },
     )
 
 
 @pytest.fixture
 def orchestrator(tmp_path: Path, mock_flavor_config: FlavorConfig) -> PackagingOrchestrator:
     """Provides a PackagingOrchestrator instance for tests."""
+    # The orchestrator's __init__ was refactored to take individual arguments
+    # instead of a single config object. We unpack the mock config here to match.
     return PackagingOrchestrator(
         package_integrity_key_path=None,
         public_key_path=None,
         output_flavor_path=str(tmp_path / "dist/test.psp"),
-        flavor_config=mock_flavor_config,
+        build_config={  # Combine build and execution configs
+            **attrs.asdict(mock_flavor_config.build),
+            "execution": attrs.asdict(mock_flavor_config.execution),
+        },
         manifest_dir=tmp_path,
+        package_name=mock_flavor_config.name,
+        version=mock_flavor_config.version,
+        entry_point=mock_flavor_config.entry_point,
         show_progress=False,
     )
 

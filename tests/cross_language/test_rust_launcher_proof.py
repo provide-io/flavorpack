@@ -3,105 +3,107 @@
 Proof that Rust launcher with emoji logging works with Python-built packages.
 """
 
-import os
 from pathlib import Path
 import subprocess
 import tempfile
 
+import pytest
+
 from flavor.api import build_package_from_manifest
+from flavor.helpers import HelperManager
 
 
+# This test requires the rust launcher to be built
+@pytest.mark.requires_helpers
 def test_rust_launcher_with_python_package() -> None:
-    """Prove Rust launcher with emoji logging works."""
-    with tempfile.TemporaryDirectory() as temp_dir:
-        temp_dir = Path(temp_dir)
+    """Prove Rust launcher can execute a Python package built by the Python builder."""
+    helper_manager = HelperManager()
+    try:
+        # Find the Rust launcher binary
+        rust_launcher_path = helper_manager.get_helper("flavor-rs-launcher")
+    except FileNotFoundError:
+        pytest.skip("Rust launcher helper binary not found. Run 'flavor helpers build'.")
 
-        # Create test provider
-        src_dir = temp_dir / "src" / "emoji_test"
+    with tempfile.TemporaryDirectory() as temp_dir_str:
+        temp_dir = Path(temp_dir_str)
+
+        # Create a simple Python application to be packaged
+        src_dir = temp_dir / "src" / "my_app"
         src_dir.mkdir(parents=True)
 
-        (src_dir / "__init__.py").write_text('"""Emoji test provider."""')
-        (src_dir / "main.py").write_text("""
+        (src_dir / "__init__.py").touch()
+        (src_dir / "main.py").write_text(
+            """
 import sys
 print("🎉 Rust launcher successfully executed Python package!")
-print("🐍 Python code is running inside Rust-launched environment")
-print("✅ Cross-language compatibility with emojis proven!")
+print("🐍 Python code is running inside a Rust-launched environment.")
+print("✅ Cross-language compatibility proven!")
 sys.exit(0)
-""")
+"""
+        )
 
-        # Create pyproject.toml
-        pyproject = temp_dir / "pyproject.toml"
-        pyproject.write_text("""
+        # Create pyproject.toml manifest
+        pyproject_path = temp_dir / "pyproject.toml"
+        pyproject_path.write_text(
+            """
 [project]
-name = "emoji-test"
+name = "cross-lang-test-app"
 version = "1.0.0"
-requires-python = ">=3.9"
 
 [project.scripts]
-terraform-provider-emoji = "emoji_test.main:serve"
-
-[tool.flavor]
-provider_name = "emoji"
-entry_point = "emoji_test.main:serve"
-
-[tool.flavor.build]
-python_version = "3.11"
+my_app = "my_app.main:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
-""")
 
-        # Create dist directory
-        dist_dir = temp_dir / "dist"
-        dist_dir.mkdir(exist_ok=True)
-        
-        # For this test, we're specifically testing if a Rust launcher can run
-        # a Python-built PSPF package. However, the current Python builder uses
-        # Go launcher by default. For now, mark this as expected to fail.
-        import pytest
-        pytest.skip("Rust launcher cross-language test requires manual PSPF assembly - not yet implemented")
-        
-        # Build package with Python
-        print("📦 Building package with Python flavor...")
-        package_path = build_package_from_manifest(pyproject)[0]
-        print(f"✅ Package built: {package_path}")
-
-        # Run with verbose logging to see emojis
-        print("\n🚀 Running with Rust launcher (verbose mode)...")
-        env = os.environ.copy()
-        env["RUST_LOG"] = "trace"
-
-        result = subprocess.run(
-            [str(executable), "--verbose"],
-            capture_output=True,
-            text=True,
-            env=env,
-            timeout=30,
+[tool.flavor]
+entry_point = "my_app.main:main"
+"""
         )
 
-        print("\n=== RUST LAUNCHER OUTPUT (stderr) ===")
-        print(result.stderr)
-        print("\n=== PYTHON OUTPUT (stdout) ===")
+        # Build the package using the Python builder, but specify the Rust launcher
+        print("📦 Building package with Python builder and Rust launcher...")
+        built_artifacts = build_package_from_manifest(
+            manifest_path=pyproject_path,
+            launcher_bin=rust_launcher_path,
+            show_progress=True,
+        )
+        assert built_artifacts, "Package build did not produce any artifacts."
+        package_path = built_artifacts[0]
+        print(f"✅ Package built: {package_path}")
+        assert package_path.exists(), "Built package file does not exist."
+        
+        # Make the package executable (required on Unix-like systems)
+        package_path.chmod(0o755)
+
+        # Execute the built package
+        print(f"🚀 Executing package with Rust launcher: {package_path}")
+        result = subprocess.run(
+            [str(package_path)],
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+
+        # Print output for debugging
+        print("\n=== RUST LAUNCHER STDOUT ===")
         print(result.stdout)
+        print("\n=== RUST LAUNCHER STDERR ===")
+        print(result.stderr)
         print(f"\nExit code: {result.returncode}")
 
-        # Verify success - for now just check it runs
-        # The full Rust launcher integration will be tested when we have proper
-        # cross-language launcher embedding support
-        if result.returncode != 0:
-            print(f"Warning: Package execution failed, this test needs proper launcher embedding")
-            # For now, we'll skip the assertions since the infrastructure isn't ready
-            return
+        # --- Assertions ---
+        assert result.returncode == 0, "Package execution failed with a non-zero exit code."
 
-        print("\n✅ PROOF COMPLETE: Rust launcher with emoji logging works perfectly!")
-        print("   - 🦀 Rust launcher extracted the package")
-        print("   - 🐍 Python code executed successfully")
-        print("   - 📝 Structured logging with emojis is functional")
-        print("   - 🎯 Cross-language compatibility proven!")
+        # Verify the output from the Python script
+        stdout = result.stdout
+        assert "🎉 Rust launcher successfully executed Python package!" in stdout
+        assert "🐍 Python code is running inside a Rust-launched environment." in stdout
+        assert "✅ Cross-language compatibility proven!" in stdout
+
+        print("\n✅ PROOF COMPLETE: Rust launcher successfully executed a Python-built package.")
 
 
 if __name__ == "__main__":
-    test_rust_launcher_with_python_package()
-
-
-# 📦🍜🧪🪄
+    pytest.main([__file__])

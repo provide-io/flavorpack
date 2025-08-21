@@ -147,24 +147,19 @@ class PythonPackager:
 
         return artifacts
 
-    # Note: Signature generation has been removed as it's handled by the builders
-    # The Go and Rust builders generate Ed25519 signatures directly when creating
-    # the PSPF package. This ensures consistency across all package formats.
-
     def _build_wheels(self, wheels_dir: Path) -> None:
         """Build wheels for the package and its dependencies."""
-        # Create progress spinner for wheel building
         wheel_spinner = None
         if self.progress:
             wheel_spinner = self.progress.create_spinner(description="Building wheels")
 
-        # Create temporary build environment
         with tempfile.TemporaryDirectory() as build_env_dir:
             build_venv = Path(build_env_dir) / "venv"
 
             logger.info("Creating temporary build environment...")
             if wheel_spinner:
                 wheel_spinner.tick()
+            # Create a venv and seed it with pip. `uv venv` without --seed does not install pip.
             run_command(
                 [
                     "uv",
@@ -172,37 +167,36 @@ class PythonPackager:
                     str(build_venv),
                     "--python",
                     f"python{self.python_version}",
+                    "--seed",
                 ],
                 check=True,
                 capture_output=True,
             )
 
-            # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            # CRITICAL: ALWAYS USE pip3 FOR ALL WHEEL OPERATIONS
-            # DO NOT USE pip (without 3) - IT MAY NOT EXIST
-            # DO NOT USE uv pip - IT DOESN'T SUPPORT wheel/download
-            # The `uv venv` command above already installs pip.
-            # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            pip3_exe = "pip3.exe" if self.is_windows else "pip3"
-            pip3 = build_venv / self.venv_bin_dir / pip3_exe
+            python_exe = build_venv / self.venv_bin_dir / (
+                "python.exe" if self.is_windows else "python"
+            )
 
-            # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            # CRITICAL: BUILD WHEELS FOR LOCAL DEPENDENCIES
-            # MUST USE pip3 TO BUILD WHEELS AND DOWNLOAD TRANSITIVE DEPS
-            # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            # Build wheels for dependencies AND their transitive dependencies
+            # Explicitly install 'wheel' as it's required for building wheels
+            # but not guaranteed to be in a seeded venv.
+            logger.info("Installing 'wheel' into temporary environment...")
+            run_command(
+                ["uv", "pip", "install", "wheel", "--python", str(python_exe)],
+                check=True,
+                capture_output=True,
+            )
+
+
+            # Build wheels for local dependencies
             for dep in self.build_config.get("dependencies", []):
                 dep_path = self.manifest_dir / dep
                 if dep_path.exists():
                     logger.info(f"Building wheel for dependency: {dep}")
-                    # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                    # CRITICAL: MUST USE pip3 TO BUILD WHEEL FOR LOCAL DEPENDENCY
-                    # DO NOT USE pip OR uv pip - ONLY pip3 WORKS FOR WHEEL BUILDING
-                    # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                    # First build the wheel for the dependency itself
                     run_command(
                         [
-                            str(pip3),
+                            str(python_exe),
+                            "-m",
+                            "pip",
                             "wheel",
                             "--wheel-dir",
                             str(wheels_dir),
@@ -212,58 +206,16 @@ class PythonPackager:
                         check=True,
                         capture_output=True,
                     )
-                    # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                    # CRITICAL: MUST USE pip3 TO DOWNLOAD TRANSITIVE DEPENDENCIES
-                    # DO NOT USE pip OR uv pip - ONLY pip3 SUPPORTS download COMMAND
-                    # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                    # Then download its dependencies using pip3
-                    logger.info(f"Downloading transitive dependencies for {dep}")
-                    try:
-                        run_command(
-                            [
-                                str(pip3),
-                                "download",
-                                "--dest",
-                                str(wheels_dir),
-                                "--only-binary",
-                                ":all:",
-                                str(dep_path),
-                            ],
-                            check=False,  # Don't fail if some deps can't be downloaded
-                            capture_output=True,
-                        )
-                    except Exception as e:
-                        logger.warning(
-                            f"Could not download all dependencies for {dep}: {e}"
-                        )
-                        # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                        # CRITICAL: FALLBACK ALSO MUST USE pip3 FOR WHEEL BUILDING
-                        # DO NOT USE pip OR uv pip - ONLY pip3 WORKS FOR WHEELS
-                        # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                        # Try pip3 wheel as fallback
-                        run_command(
-                            [
-                                str(pip3),
-                                "wheel",
-                                "--wheel-dir",
-                                str(wheels_dir),
-                                str(dep_path),
-                            ],
-                            check=False,
-                            capture_output=True,
-                        )
 
-            # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            # CRITICAL: MUST USE pip3 TO BUILD MAIN PACKAGE WHEEL
-            # DO NOT USE pip OR uv pip - ONLY pip3 SUPPORTS wheel COMMAND
-            # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             # Build main package wheel
             logger.info("Building wheel for main package...")
             if wheel_spinner:
                 wheel_spinner.tick()
             run_command(
                 [
-                    str(pip3),
+                    str(python_exe),
+                    "-m",
+                    "pip",
                     "wheel",
                     "--wheel-dir",
                     str(wheels_dir),
@@ -274,52 +226,22 @@ class PythonPackager:
                 capture_output=True,
             )
 
-            # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            # CRITICAL: ALWAYS use pip3 for wheel operations
-            # uv does NOT support pip download or pip wheel commands
-            # DO NOT attempt to use uv for downloading dependencies
-            # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-            # Download transitive dependencies using pip3
+            # Download transitive dependencies for the main package
             logger.info("Downloading transitive dependencies...")
             if wheel_spinner:
                 wheel_spinner.tick()
 
-            # Install the main package and its dependencies into the build venv
-            # This will resolve all dependencies properly
-            logger.info("Installing main package to resolve dependencies...")
             try:
-                python_exe = "python.exe" if self.is_windows else "python"
                 run_command(
                     [
-                        "uv",
+                        str(python_exe),
+                        "-m",
                         "pip",
-                        "install",
-                        "--python",
-                        str(build_venv / self.venv_bin_dir / python_exe),
-                        str(self.manifest_dir),
-                    ],
-                    check=True,
-                    capture_output=True,
-                )
-            except Exception as e:
-                logger.warning(f"Failed to install main package dependencies: {e}")
-
-            # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            # CRITICAL: MUST USE pip3 FOR DOWNLOADING DEPENDENCY WHEELS
-            # DO NOT USE pip OR uv pip - ONLY pip3 SUPPORTS download COMMAND
-            # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            # Now download all the dependencies as wheels using pip3
-            logger.info("Downloading resolved dependencies as wheels...")
-            try:
-                run_command(
-                    [
-                        str(pip3),
                         "download",
                         "--dest",
                         str(wheels_dir),
                         "--only-binary",
-                        ":all:",  # Prefer wheels
+                        ":all:",
                         str(self.manifest_dir),
                     ],
                     check=True,
@@ -327,15 +249,12 @@ class PythonPackager:
                 )
             except Exception as e:
                 logger.warning(f"Failed to download dependency wheels: {e}")
-                # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                # CRITICAL: FALLBACK MUST ALSO USE pip3 FOR WHEEL BUILDING
-                # DO NOT USE pip OR uv pip - ONLY pip3 SUPPORTS wheel COMMAND
-                # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                # Try alternative: pip3 wheel for dependencies
-                logger.info("Trying pip3 wheel as fallback...")
+                logger.info("Trying pip wheel as fallback...")
                 run_command(
                     [
-                        str(pip3),
+                        str(python_exe),
+                        "-m",
+                        "pip",
                         "wheel",
                         "--wheel-dir",
                         str(wheels_dir),
@@ -345,7 +264,6 @@ class PythonPackager:
                     capture_output=True,
                 )
 
-        # Finish spinner
         if wheel_spinner:
             wheel_spinner.finish()
 
@@ -369,7 +287,6 @@ class PythonPackager:
         """Download and package Python distribution using UV."""
         logger.info(f"Downloading Python {self.python_version} using UV...")
 
-        # Create spinner for Python download
         python_spinner = None
         if self.progress:
             python_spinner = self.progress.create_spinner(
@@ -378,7 +295,6 @@ class PythonPackager:
             if python_spinner:
                 python_spinner.tick()
 
-        # Use UV to download Python
         run_command(
             ["uv", "python", "install", self.python_version],
             check=True,
@@ -388,18 +304,13 @@ class PythonPackager:
         if python_spinner:
             python_spinner.finish()
 
-        # Find the installed Python (UV installs with full version like 3.11.12)
         import platform
         if platform.system() == "Windows":
-            # On Windows, UV installs Python to AppData\Local\uv\python
             uv_python_base = Path.home() / "AppData" / "Local" / "uv" / "python"
         else:
-            # On Unix-like systems
             uv_python_base = Path.home() / ".local" / "share" / "uv" / "python"
 
         python_install_dir = None
-
-        # Look for any Python that matches our major.minor version
         if uv_python_base.exists():
             for python_dir in uv_python_base.glob(f"cpython-{self.python_version}*"):
                 if python_dir.is_dir():
@@ -408,7 +319,6 @@ class PythonPackager:
 
         if not python_install_dir or not python_install_dir.exists():
             logger.warning("Could not find UV-installed Python at expected location")
-            # Fall back to placeholder
             with tempfile.TemporaryDirectory() as temp_dir:
                 python_dir = Path(temp_dir) / "python"
                 python_dir.mkdir()
@@ -422,48 +332,19 @@ class PythonPackager:
 
         logger.info(f"Found Python installation at: {python_install_dir}")
 
-        # Check for EXTERNALLY-MANAGED marker
-        (
-            python_install_dir
-            / "lib"
-            / f"python{self.python_version}"
-            / "EXTERNALLY-MANAGED"
-        )
-
-        # Create tarball of the Python installation, excluding EXTERNALLY-MANAGED
-        # On Windows, we need to reorganize bin/ to Scripts/
-        import platform
-        is_windows = platform.system() == "Windows"
-
         with tarfile.open(python_tgz, "w:gz", compresslevel=9) as tar:
-            # Custom filter to exclude EXTERNALLY-MANAGED file and reorganize for Windows
             def filter_and_reorganize(tarinfo):
                 if tarinfo.name.endswith("EXTERNALLY-MANAGED"):
-                    logger.debug(
-                        "Excluding EXTERNALLY-MANAGED marker from Python runtime tarball"
-                    )
                     return None
-
-                # On Windows, move bin/ contents to Scripts/
-                if is_windows and tarinfo.name.startswith("./bin/"):
-                    # Change ./bin/something to ./Scripts/something
-                    original_name = tarinfo.name
+                if self.is_windows and tarinfo.name.startswith("./bin/"):
                     tarinfo.name = tarinfo.name.replace("./bin/", "./Scripts/", 1)
-                    logger.debug(f"Windows: Remapping {original_name} to {tarinfo.name}")
-                elif is_windows and tarinfo.name == "./bin":
-                    # Rename the bin directory itself to Scripts
+                elif self.is_windows and tarinfo.name == "./bin":
                     tarinfo.name = "./Scripts"
-                    logger.debug("Windows: Remapping ./bin to ./Scripts")
-
                 return tarinfo
 
-            # Add all files from the Python directory, preserving structure
             tar.add(python_install_dir, arcname=".", filter=filter_and_reorganize)
 
     def _write_json(self, path: Path, data: dict[str, Any]) -> None:
         """Write JSON file with secure permissions."""
         path.write_text(json.dumps(data, indent=2))
         path.chmod(0o600)
-
-
-# 🐍📦🏗️
