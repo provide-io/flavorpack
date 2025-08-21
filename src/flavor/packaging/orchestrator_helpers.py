@@ -9,6 +9,7 @@ from typing import Any
 
 from pyvider.telemetry import logger
 
+from flavor.config import FlavorConfig
 from flavor.exceptions import BuildError
 
 
@@ -66,42 +67,37 @@ def create_slot_tarballs(
 
 
 def create_builder_manifest(
-    package_name: str,
-    build_config: dict[str, Any],
+    flavor_config: FlavorConfig,
     slots: dict[str, Path],
-    key_paths: dict[str, Path | None],
+    key_paths: dict[str, str | None],
 ) -> dict[str, Any]:
     """Create manifest for external builder.
 
     Args:
-        package_name: Name of the package
-        build_config: Build configuration dictionary
-        slots: Dictionary of slot tarballs
-        key_paths: Dictionary with 'private' and 'public' key paths
+        flavor_config: Structured configuration for the package.
+        slots: Dictionary of slot tarballs.
+        key_paths: Dictionary with 'private' and 'public' key paths.
 
     Returns:
-        Complete manifest dictionary for builder
+        Complete manifest dictionary for builder.
     """
     is_windows = platform.system() == "Windows"
     uv_exe = "uv.exe" if is_windows else "uv"
-    # Use Scripts for Windows, bin for Unix
     bin_dir = "Scripts" if is_windows else "bin"
     python_exe = "python.exe" if is_windows else "python3.11"
-    # Windows UV Python has python.exe in root, not in Scripts
     python_path = (
         f"{{workenv}}/{python_exe}"
         if is_windows
         else f"{{workenv}}/{bin_dir}/{python_exe}"
     )
-    package_exe = f"{package_name}.exe" if is_windows else package_name
-    version = build_config.get("version", "1.0.0")
+    package_exe = f"{flavor_config.name}.exe" if is_windows else flavor_config.name
 
     manifest = {
-        "name": package_name,
-        "version": version,
+        "name": flavor_config.name,
+        "version": flavor_config.version,
         "cache_validation": {
             "check_file": "{workenv}/metadata/installed",
-            "expected_content": f"{package_name}-{version}",
+            "expected_content": f"{flavor_config.name}-{flavor_config.version}",
         },
         "setup_commands": [
             {
@@ -148,17 +144,18 @@ def create_builder_manifest(
         },
     }
 
-    # Add optional build metadata
-    if build_config.get("build_timestamp"):
-        manifest["build_timestamp"] = build_config["build_timestamp"]
-    if build_config.get("build_host"):
-        manifest["build_host"] = build_config["build_host"]
-
-    # Add runtime configuration if present
-    execution_config = build_config.get("execution", {})
-    if "runtime" in execution_config:
-        logger.info(f"Adding runtime configuration: {execution_config['runtime']}")
-        manifest["runtime"] = execution_config["runtime"]
+    # Add runtime configuration if present in a structured way
+    if flavor_config.execution.runtime_env:
+        runtime_env = flavor_config.execution.runtime_env
+        manifest["runtime"] = {
+            "env": {
+                "unset": runtime_env.unset,
+                "pass": runtime_env.passthrough,
+                "set": runtime_env.set_vars,
+                "map": runtime_env.map_vars,
+            }
+        }
+        logger.info(f"Adding runtime configuration: {manifest['runtime']}")
 
     return manifest
 
@@ -180,7 +177,7 @@ def write_manifest_file(manifest: dict[str, Any], temp_dir: Path) -> Path:
     return manifest_path
 
 
-def find_builder_executable(builder_bin: Path | None) -> Path:
+def find_builder_executable(builder_bin: str | None) -> Path:
     """Find the builder executable to use.
 
     Args:
@@ -224,7 +221,7 @@ def find_builder_executable(builder_bin: Path | None) -> Path:
             raise BuildError(f"No builder found: {e}") from e
 
 
-def find_launcher_executable(launcher_bin: Path | None) -> Path:
+def find_launcher_executable(launcher_bin: str | None) -> Path:
     """Find the launcher executable to use.
 
     Args:
@@ -272,37 +269,30 @@ def find_launcher_executable(launcher_bin: Path | None) -> Path:
             ) from e
 
 
-def create_python_builder_metadata(
-    package_name: str, build_config: dict[str, Any], uv_exe: str
-) -> dict[str, Any]:
+def create_python_builder_metadata(flavor_config: FlavorConfig) -> dict[str, Any]:
     """Create metadata for Python builder.
 
     Args:
-        package_name: Name of the package
-        build_config: Build configuration dictionary
-        uv_exe: UV executable name (platform-specific)
+        flavor_config: Structured configuration for the package.
 
     Returns:
         Complete metadata dictionary for Python builder
     """
-    version = build_config.get("version", "1.0.0")
-
     # Determine platform-specific paths
     is_windows = platform.system() == "Windows"
     bin_dir = "Scripts" if is_windows else "bin"
     python_exe = "python.exe" if is_windows else "python3.11"
-    # Windows UV Python has python.exe in root, not in Scripts
     python_path = (
         f"{{workenv}}/{python_exe}"
         if is_windows
         else f"{{workenv}}/{bin_dir}/{python_exe}"
     )
-    package_exe = f"{package_name}.exe" if is_windows else package_name
+    package_exe = f"{flavor_config.name}.exe" if is_windows else flavor_config.name
 
     metadata = {
         "package": {
-            "name": package_name,
-            "version": version,
+            "name": flavor_config.name,
+            "version": flavor_config.version,
         },
         "execution": {
             "primary_slot": 0,  # Primary slot for execution
@@ -311,15 +301,14 @@ def create_python_builder_metadata(
         },
         "workenv": {
             "directories": [
-                # Additional directories for application use (Python venv dirs are created by UV)
-                {"path": "tmp", "mode": "0700"},  # User-only temp directory
-                {"path": "var", "mode": "0755"},
-                {"path": "var/log", "mode": "0755"},
-                {"path": "var/cache", "mode": "0755"},
-                {"path": "var/run", "mode": "0755"},
-                {"path": "etc", "mode": "0755"},  # Configuration
-                {"path": "home", "mode": "0700"},  # User home directory
-                {"path": "state", "mode": "0755"},  # Application state
+                {"path": "{workenv}/tmp", "mode": "0700"},
+                {"path": "{workenv}/var", "mode": "0755"},
+                {"path": "{workenv}/var/log", "mode": "0755"},
+                {"path": "{workenv}/var/cache", "mode": "0755"},
+                {"path": "{workenv}/var/run", "mode": "0755"},
+                {"path": "{workenv}/etc", "mode": "0755"},
+                {"path": "{workenv}/home", "mode": "0700"},
+                {"path": "{workenv}/state", "mode": "0755"},
             ],
             "env": {
                 "TMPDIR": "{workenv}/tmp",
@@ -335,13 +324,13 @@ def create_python_builder_metadata(
         },
         "cache_validation": {
             "check_file": "{workenv}/metadata/installed",
-            "expected_content": f"{package_name}-{version}",
+            "expected_content": f"{flavor_config.name}-{flavor_config.version}",
         },
         "setup_commands": [
             {
                 "type": "enumerate_and_execute",
                 "command": f"{{workenv}}/{bin_dir}/"
-                + uv_exe
+                + f"{'uv.exe' if is_windows else 'uv'}"
                 + f" pip install --python {python_path} --no-deps",
                 "enumerate": {"path": "{workenv}/wheels", "pattern": "*.whl"},
             },
@@ -354,10 +343,21 @@ def create_python_builder_metadata(
     }
 
     # Add runtime configuration if present
-    execution_config = build_config.get("execution", {})
-    if "runtime" in execution_config:
-        logger.info(f"Adding runtime configuration: {execution_config['runtime']}")
-        metadata["runtime"] = execution_config["runtime"]
+    if flavor_config.execution.runtime_env:
+        runtime_env = flavor_config.execution.runtime_env
+        manifest_runtime_env = {
+            key: value
+            for key, value in {
+                "unset": runtime_env.unset or None,
+                "pass": runtime_env.passthrough or None,
+                "set": runtime_env.set_vars or None,
+                "map": runtime_env.map_vars or None,
+            }.items()
+            if value is not None
+        }
+        if manifest_runtime_env:
+            metadata["runtime"] = {"env": manifest_runtime_env}
+            logger.info(f"Adding runtime configuration: {metadata['runtime']}")
 
     return metadata
 

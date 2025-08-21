@@ -178,29 +178,10 @@ class PythonPackager:
             )
 
             # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            # CRITICAL: MUST INSTALL pip3 FOR WHEEL OPERATIONS
-            # uv DOES NOT SUPPORT wheel/download COMMANDS
-            # ALWAYS USE pip3, NEVER pip, NEVER uv pip FOR BUILDING
-            # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            logger.info("Installing pip in build environment for wheel creation...")
-            python_exe = "python.exe" if self.is_windows else "python"
-            run_command(
-                [
-                    "uv",
-                    "pip",
-                    "install",
-                    "--python",
-                    str(build_venv / self.venv_bin_dir / python_exe),
-                    "pip",
-                ],
-                check=True,
-                capture_output=True,
-            )
-
-            # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             # CRITICAL: ALWAYS USE pip3 FOR ALL WHEEL OPERATIONS
             # DO NOT USE pip (without 3) - IT MAY NOT EXIST
             # DO NOT USE uv pip - IT DOESN'T SUPPORT wheel/download
+            # The `uv venv` command above already installs pip.
             # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             pip3_exe = "pip3.exe" if self.is_windows else "pip3"
             pip3 = build_venv / self.venv_bin_dir / pip3_exe

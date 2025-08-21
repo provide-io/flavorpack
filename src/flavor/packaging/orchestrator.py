@@ -11,6 +11,7 @@ from typing import Any
 
 from pyvider.telemetry import logger
 
+from flavor.config import FlavorConfig
 from flavor.exceptions import BuildError
 from flavor.helpers import HelperManager
 from flavor.packaging.orchestrator_helpers import (
@@ -36,10 +37,8 @@ class PackagingOrchestrator:
         package_integrity_key_path: str | None,
         public_key_path: str | None,
         output_flavor_path: str,
-        build_config: dict[str, Any],
+        flavor_config: FlavorConfig,
         manifest_dir: Path,
-        package_name: str,
-        entry_point: str,
         python_version: str | None = None,
         launcher_bin: str | None = None,
         builder_bin: str | None = None,
@@ -50,9 +49,7 @@ class PackagingOrchestrator:
         self.package_integrity_key_path = package_integrity_key_path
         self.public_key_path = public_key_path
         self.output_flavor_path = output_flavor_path
-        self.package_name = package_name
-        self.entry_point = entry_point
-        self.build_config = build_config
+        self.flavor_config = flavor_config
         self.manifest_dir = manifest_dir
         self.python_version = python_version or self.DEFAULT_PYTHON_VERSION
         self.launcher_bin = launcher_bin
@@ -138,9 +135,7 @@ class PackagingOrchestrator:
         # Use the PythonPackager to prepare all artifacts
         python_packager = PythonPackager(
             manifest_dir=self.manifest_dir,
-            package_name=self.package_name,
-            entry_point=self.entry_point,
-            build_config=self.build_config,
+            flavor_config=self.flavor_config,
             python_version=self.python_version,
             progress_reporter=progress,
         )
@@ -171,11 +166,7 @@ class PackagingOrchestrator:
             logger.info(f"Detected launcher type: {launcher_type}")
 
             # Build metadata using helper function
-            is_windows = platform.system() == "Windows"
-            uv_exe = "uv.exe" if is_windows else "uv"
-            metadata = create_python_builder_metadata(
-                self.package_name, self.build_config, uv_exe
-            )
+            metadata = create_python_builder_metadata(self.flavor_config)
 
             # Validate all paths use {workenv} placeholder
             metadata = validate_metadata_dict(metadata)
@@ -271,9 +262,7 @@ class PackagingOrchestrator:
         # Use the new PythonPackager to prepare all artifacts
         python_packager = PythonPackager(
             manifest_dir=self.manifest_dir,
-            package_name=self.package_name,
-            entry_point=self.entry_point,
-            build_config=self.build_config,
+            flavor_config=self.flavor_config,
             python_version=self.python_version,
             progress_reporter=progress,
         )
@@ -302,9 +291,7 @@ class PackagingOrchestrator:
                 "private": self.package_integrity_key_path,
                 "public": self.public_key_path,
             }
-            manifest = create_builder_manifest(
-                self.package_name, self.build_config, slots, key_paths
-            )
+            manifest = create_builder_manifest(self.flavor_config, slots, key_paths)
 
             # Write manifest to file
             manifest_path = write_manifest_file(manifest, temp_dir)

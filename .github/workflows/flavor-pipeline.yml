@@ -207,7 +207,7 @@ jobs:
           - platform: linux_amd64
             runner: ubuntu-latest
           - platform: linux_arm64
-            runner: ubuntu-latest
+            runner: ubuntu-24.04-arm
           - platform: darwin_amd64
             runner: macos-13  # Intel Mac
           - platform: darwin_arm64
@@ -263,9 +263,8 @@ jobs:
             runner: macos-13
           - platform: darwin_arm64
             runner: macos-latest
-          # Test Linux ARM64 on AMD64 runner (emulation)
           - platform: linux_arm64
-            runner: ubuntu-latest
+            runner: ubuntu-24.04-arm
     
     steps:
       - name: 📥 Checkout
