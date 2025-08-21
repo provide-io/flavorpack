@@ -95,26 +95,23 @@ class PackagingOrchestrator:
             return "rust"  # Default to rust
 
     def _find_helper(self, helper_name: str) -> Path:
-        """Find a helper binary using HelperManager, auto-downloading if needed."""
-        # Try to find the helper, with auto-download enabled
-        helper_path = self.helper_manager.find_helper(helper_name, auto_download=True)
-
-        if helper_path and helper_path.exists():
+        """Find a helper binary using HelperManager."""
+        try:
+            helper_path = self.helper_manager.get_helper(helper_name)
             logger.info(f"Found helper '{helper_name}' at: {helper_path}")
             return helper_path
+        except FileNotFoundError as e:
+            # List available helpers for better error message
+            helpers = self.helper_manager.list_helpers()
+            available_names = []
+            for helper_list in [helpers["launchers"], helpers["builders"]]:
+                available_names.extend([h.name for h in helper_list])
 
-        # If not found even with auto-download, provide helpful error
-        helpers = self.helper_manager.list_helpers()
-        available_names = []
-        for helper_list in [helpers["launchers"], helpers["builders"]]:
-            available_names.extend([h.name for h in helper_list])
-
-        raise BuildError(
-            f"Could not find required helper binary '{helper_name}'.\n"
-            f"Available helpers: {available_names or 'None'}.\n"
-            "The helper could not be auto-downloaded. Please check your internet connection\n"
-            "or build helpers locally with: flavor helpers build"
-        )
+            raise BuildError(
+                f"Could not find required helper binary '{helper_name}'.\n"
+                f"Available helpers: {available_names or 'None'}.\n"
+                f"Error: {e}"
+            ) from e
 
     def build_package(self) -> None:
         logger.info("Orchestrator starting build process...")
@@ -167,9 +164,7 @@ class PackagingOrchestrator:
             )
 
             # Find launcher binary using helper function
-            launcher_path = find_launcher_executable(
-                self.launcher_bin, self._find_helper
-            )
+            launcher_path = find_launcher_executable(self.launcher_bin)
 
             # Detect launcher type for metadata
             launcher_type = self._detect_launcher_type(launcher_path)
@@ -315,14 +310,10 @@ class PackagingOrchestrator:
             manifest_path = write_manifest_file(manifest, temp_dir)
 
             # Step 4: Find and use builder helper
-            packager_executable = find_builder_executable(
-                self.builder_bin, self._find_helper
-            )
+            packager_executable = find_builder_executable(self.builder_bin)
 
             # Find launcher binary
-            launcher_executable = find_launcher_executable(
-                self.launcher_bin, self._find_helper
-            )
+            launcher_executable = find_launcher_executable(self.launcher_bin)
 
             # Detect launcher type for metadata
             detected_launcher_type = self._detect_launcher_type(launcher_executable)
