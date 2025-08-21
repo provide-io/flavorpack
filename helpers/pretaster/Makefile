@@ -1,9 +1,10 @@
 # Pretaster Makefile
 # Comprehensive build and test management for PSPF test suite
 
-# Configuration
+# Configuration  
 SHELL := /bin/bash
 .SHELLFLAGS := -euo pipefail -c
+.ONESHELL:
 .DEFAULT_GOAL := help
 
 # Paths
@@ -208,7 +209,7 @@ test: test-core test-combo ## Run all tests
 .PHONY: test-core
 test-core: $(SIMPLE_PACKAGES) $(LOGS_DIR) ## Run core test suite (without orchestration)
 	$(call print,"🧪 Running core tests...",$(PURPLE))
-	@FLAVOR_LOG_LEVEL=$(LOG_LEVEL) $(TESTS_DIR)/test-pretaster.sh
+	@FLAVOR_LOG_LEVEL=$(LOG_LEVEL) $(TESTS_DIR)/test-pretaster.sh || (echo "❌ Core tests failed with exit code $$?"; exit 1)
 	$(call print,"✅ Core tests completed",$(GREEN))
 
 .PHONY: test-combo
@@ -218,14 +219,14 @@ test-combo: combo-test ## Alias for combo-test
 combo-test: build-helpers ## Test all builder/launcher combinations
 	@mkdir -p $(LOGS_DIR)
 	$(call print,"🎯 Testing all builder/launcher combinations...",$(PURPLE))
-	@$(TESTS_DIR)/combination-tests.sh
+	@$(TESTS_DIR)/combination-tests.sh || (echo "❌ Combination tests failed with exit code $$?"; exit 1)
 	$(call print,"✅ Combination tests completed",$(GREEN))
 	$(call print,"📁 Logs saved in $(LOGS_DIR)/",$(CYAN))
 
 .PHONY: test-direct
 test-direct: build-helpers ## Test direct PSP execution
 	$(call print,"🎯 Testing direct PSP execution...",$(PURPLE))
-	@$(TESTS_DIR)/direct-execution-tests.sh
+	@$(TESTS_DIR)/direct-execution-tests.sh || (echo "❌ Direct execution tests failed with exit code $$?"; exit 1)
 	$(call print,"✅ Direct execution tests completed",$(GREEN))
 
 .PHONY: test-echo

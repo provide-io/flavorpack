@@ -1,12 +1,13 @@
 #!/bin/bash
 # Build Flavor PSP package using platform-specific helpers
-# Usage: build-flavor.sh <platform> <version> <artifact_dir>
+# Usage: build-flavor.sh <platform> <version> <artifact_dir> [launcher_bin]
 
 set -e
 
 PLATFORM="${1:-linux_amd64}"
 VERSION="${2:-0.3.0}"
 ARTIFACT_DIR="${3:-artifacts}"
+FLAVOR_LAUNCHER_BIN="${4:-}"
 
 echo "🔨 Building Flavor PSP for $PLATFORM"
 echo "   Version: $VERSION"
@@ -37,18 +38,28 @@ pip3 install --quiet uv
 echo "📦 Installing Flavor..."
 uv pip install --system -e .
 
-# Extract platform helpers
-echo "📦 Extracting helpers for $PLATFORM..."
-mkdir -p helpers/bin
+# Check if helpers are already extracted or extract them
+echo "📦 Checking helpers for $PLATFORM..."
 
-# Find and extract the helper artifact
-HELPER_ZIP="$ARTIFACT_DIR/flavor-helpers-${VERSION}-${PLATFORM}.zip"
-if [ -f "$HELPER_ZIP" ]; then
-    echo "   Found helper artifact: $HELPER_ZIP"
-    unzip -o "$HELPER_ZIP" -d helpers/bin/
+# Check if helpers already exist (may have been extracted by download-helpers.sh)
+if [ -f "helpers/bin/flavor-rs-launcher-${VERSION}-${PLATFORM}" ] || [ -f "helpers/bin/flavor-rs-launcher-${VERSION}-${PLATFORM}.exe" ]; then
+    echo "   Helpers already extracted in helpers/bin/"
 else
-    echo "❌ Helper artifact not found: $HELPER_ZIP"
-    exit 1
+    # Try to extract from artifact directory
+    mkdir -p helpers/bin
+    HELPER_ZIP="$ARTIFACT_DIR/flavor-helpers-${VERSION}-${PLATFORM}.zip"
+    if [ -f "$HELPER_ZIP" ]; then
+        echo "   Extracting helper artifact: $HELPER_ZIP"
+        unzip -o "$HELPER_ZIP" -d helpers/bin/
+    else
+        echo "❌ Helper artifact not found and helpers not pre-extracted"
+        echo "   Checked: $HELPER_ZIP"
+        echo "   Contents of $ARTIFACT_DIR:"
+        ls -la "$ARTIFACT_DIR" 2>/dev/null || echo "     Directory not found"
+        echo "   Contents of helpers/bin:"
+        ls -la "helpers/bin/" 2>/dev/null || echo "     Directory not found"
+        exit 1
+    fi
 fi
 
 # Make helpers executable (Unix only)
@@ -57,10 +68,16 @@ if [[ "$PLATFORM" != *"windows"* ]]; then
 fi
 
 # Select the launcher binary
-if [[ "$PLATFORM" == *"windows"* ]]; then
-    LAUNCHER="helpers/bin/flavor-rs-launcher-${VERSION}-${PLATFORM}.exe"
+if [ -z "$FLAVOR_LAUNCHER_BIN" ]; then
+    # Default to Rust launcher if not specified
+    if [[ "$PLATFORM" == *"windows"* ]]; then
+        LAUNCHER="helpers/bin/flavor-rs-launcher-${VERSION}-${PLATFORM}.exe"
+    else
+        LAUNCHER="helpers/bin/flavor-rs-launcher-${VERSION}-${PLATFORM}"
+    fi
 else
-    LAUNCHER="helpers/bin/flavor-rs-launcher-${VERSION}-${PLATFORM}"
+    # Use the provided launcher binary
+    LAUNCHER="$FLAVOR_LAUNCHER_BIN"
 fi
 
 if [ ! -f "$LAUNCHER" ]; then

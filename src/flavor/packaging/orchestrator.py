@@ -46,6 +46,7 @@ class PackagingOrchestrator:
         strip_binaries: bool = False,
         show_progress: bool = False,
         key_seed: str | None = None,
+        manifest_type: str = "toml",
     ) -> None:
         self.package_integrity_key_path = package_integrity_key_path
         self.public_key_path = public_key_path
@@ -61,6 +62,7 @@ class PackagingOrchestrator:
         self.strip_binaries = strip_binaries
         self.show_progress = show_progress
         self.key_seed = key_seed
+        self.manifest_type = manifest_type
 
         # Use HelperManager for finding helpers
         self.helper_manager = HelperManager()
@@ -183,6 +185,11 @@ class PackagingOrchestrator:
         logger.info("Building package with external builder...")
         from flavor.progress import ProgressReporter
         from flavor.packaging.orchestrator_helpers import create_slot_tarballs
+        
+        # If we have a JSON manifest, we can use it directly with external builders
+        if self.manifest_type == "json":
+            self._build_with_json_manifest()
+            return
 
         progress = ProgressReporter(enabled=self.show_progress)
 
@@ -225,12 +232,12 @@ class PackagingOrchestrator:
                 "--launcher-bin", str(launcher_executable),
             ]
 
-            if self.package_integrity_key_path:
-                build_cmd_args.extend(["--private-key", self.package_integrity_key_path])
-            if self.public_key_path:
-                build_cmd_args.extend(["--public-key", self.public_key_path])
             if self.key_seed:
                 build_cmd_args.extend(["--key-seed", self.key_seed])
+            elif self.package_integrity_key_path:
+                build_cmd_args.extend(["--private-key", self.package_integrity_key_path])
+                if self.public_key_path:
+                    build_cmd_args.extend(["--public-key", self.public_key_path])
 
             logger.info("Building flavor package...")
             spinner = progress.create_spinner(description="Building PSPF package")
@@ -240,6 +247,69 @@ class PackagingOrchestrator:
 
             if spinner: spinner.finish()
 
+            if self.show_progress:
+                final_size = Path(self.output_flavor_path).stat().st_size / (1024 * 1024)
+                logger.info(f"✅ Package built successfully: {final_size:.1f} MB")
+
+    def _build_with_json_manifest(self) -> None:
+        """Build package using a JSON manifest directly with external builders."""
+        logger.info("Building package with JSON manifest and external builder...")
+        from flavor.progress import ProgressReporter
+        import json
+
+        progress = ProgressReporter(enabled=self.show_progress)
+        
+        # Write the manifest to a temporary file
+        with tempfile.TemporaryDirectory(prefix="flavor_json_build_") as temp_dir_str:
+            temp_dir = Path(temp_dir_str)
+            
+            # Transform nested JSON manifest to flat structure expected by external builders
+            flat_manifest = {
+                "name": self.build_config.get("package", {}).get("name", self.package_name),
+                "version": self.build_config.get("package", {}).get("version", self.version),
+                "command": self.build_config.get("execution", {}).get("command", self.entry_point),
+                "slots": self.build_config.get("slots", []),  # Default to empty slots array
+            }
+            
+            # Add optional fields if present
+            if "environment" in self.build_config.get("execution", {}):
+                flat_manifest["env"] = self.build_config["execution"]["environment"]
+            
+            # Write manifest directly to file
+            manifest_path = temp_dir / "manifest.json"
+            manifest_path.write_text(json.dumps(flat_manifest, indent=2))
+            logger.info(f"Using JSON manifest at: {manifest_path}")
+            
+            # Find executables
+            packager_executable = find_builder_executable(self.builder_bin)
+            launcher_executable = find_launcher_executable(self.launcher_bin)
+            
+            detected_launcher_type = self._detect_launcher_type(launcher_executable)
+            logger.info(f"Detected launcher type: {detected_launcher_type}")
+            
+            # Build command
+            build_cmd_args = [
+                str(packager_executable),
+                "--manifest", str(manifest_path),
+                "--output", self.output_flavor_path,
+                "--launcher-bin", str(launcher_executable),
+            ]
+            
+            if self.key_seed:
+                build_cmd_args.extend(["--key-seed", self.key_seed])
+            elif self.package_integrity_key_path:
+                build_cmd_args.extend(["--private-key", self.package_integrity_key_path])
+                if self.public_key_path:
+                    build_cmd_args.extend(["--public-key", self.public_key_path])
+            
+            logger.info("Building package...")
+            spinner = progress.create_spinner(description="Building PSPF package")
+            if spinner: spinner.tick()
+            
+            run_command(build_cmd_args, check=True, capture_output=True)
+            
+            if spinner: spinner.finish()
+            
             if self.show_progress:
                 final_size = Path(self.output_flavor_path).stat().st_size / (1024 * 1024)
                 logger.info(f"✅ Package built successfully: {final_size:.1f} MB")

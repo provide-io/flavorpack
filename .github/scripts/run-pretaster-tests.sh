@@ -1,12 +1,13 @@
 #!/bin/bash
 # Run pretaster test suite
-# Usage: run-pretaster-tests.sh <platform> <version> <test_suite>
+# Usage: run-pretaster-tests.sh <platform> <version> <test_suite> [pretaster_psp]
 
 set -euo pipefail
 
 PLATFORM="${1}"
 VERSION="${2}"
 TEST_SUITE="${3:-all}"
+PRETASTER_PSP="${4:-}"
 
 echo "🧪 Running pretaster tests for $PLATFORM"
 echo "📦 Helper version: $VERSION"
@@ -46,30 +47,80 @@ cd pretaster
 # Create logs directory
 mkdir -p logs
 
-# Run specified test suite using pretaster's Makefile
+# Run specified test suite
 echo "🚀 Starting test suite: $TEST_SUITE"
-case "$TEST_SUITE" in
-  all)
-    # Run all tests (helpers already available)
-    make all
-    ;;
-  combo)
-    # Run combination tests  
-    make combo-test
-    ;;
-  core)
-    # Run core tests
-    make test-core
-    ;;
-  direct)
-    # Run direct tests
-    make test-direct
-    ;;
-  *)
-    echo "❌ Unknown test suite: $TEST_SUITE"
-    exit 1
-    ;;
-esac
+
+if [ -n "$PRETASTER_PSP" ]; then
+    echo "📦 Using pre-built pretaster: $PRETASTER_PSP"
+    
+    # Ensure the PSP is executable
+    if [[ "$PLATFORM" != *"windows"* ]]; then
+        chmod +x "$PRETASTER_PSP" 2>/dev/null || true
+    fi
+    
+    # Configure to use Go builder + Rust launcher for test packages
+    # This completes the cross-language chain
+    export PRETASTER_BUILDER="bin/flavor-go-builder-${VERSION}-${PLATFORM}"
+    export PRETASTER_LAUNCHER="bin/flavor-rs-launcher-${VERSION}-${PLATFORM}"
+    
+    echo "   Builder for tests: $PRETASTER_BUILDER"
+    echo "   Launcher for tests: $PRETASTER_LAUNCHER"
+    
+    # Run tests with the provided pretaster PSP
+    # Pretaster's test commands are integrated into the PSP
+    case "$TEST_SUITE" in
+      all)
+        "$PRETASTER_PSP" test --all
+        ;;
+      combo)
+        "$PRETASTER_PSP" test --combo
+        ;;
+      core)
+        "$PRETASTER_PSP" test --core
+        ;;
+      direct)
+        "$PRETASTER_PSP" test --direct
+        ;;
+      *)
+        echo "❌ Unknown test suite: $TEST_SUITE"
+        exit 1
+        ;;
+    esac
+else
+    # Original Makefile-based execution
+    case "$TEST_SUITE" in
+      all)
+        # Run all tests (helpers already available)
+        make all
+        EXIT_CODE=$?
+        ;;
+      combo)
+        # Run combination tests  
+        make combo-test
+        EXIT_CODE=$?
+        ;;
+      core)
+        # Run core tests
+        make test-core
+        EXIT_CODE=$?
+        ;;
+      direct)
+        # Run direct tests
+        make test-direct
+        EXIT_CODE=$?
+        ;;
+      *)
+        echo "❌ Unknown test suite: $TEST_SUITE"
+        exit 1
+        ;;
+    esac
+    
+    # Check if make command succeeded
+    if [ $EXIT_CODE -ne 0 ]; then
+        echo "❌ Test suite failed with exit code: $EXIT_CODE"
+        exit $EXIT_CODE
+    fi
+fi
 
 echo "✅ Pretaster tests completed for $PLATFORM"
 

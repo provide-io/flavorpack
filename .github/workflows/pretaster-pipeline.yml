@@ -59,6 +59,104 @@ jobs:
           MATRIX=$(cat matrix.json | jq -c .)
           echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
 
+  build-crosslang-chain:
+    name: 🔗 Build Cross-Language Chain
+    needs: setup
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.setup.outputs.test_matrix) }}
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: 🦀 Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+      
+      - name: 🐹 Setup Go  
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+      
+      - name: 📥 Download helpers
+        uses: actions/download-artifact@v4
+        with:
+          name: pretaster-helpers-${{ github.run_id }}
+          path: ./helpers-dist
+      
+      - name: 🔧 Extract helpers
+        run: |
+          .github/scripts/download-helpers.sh helpers-dist \
+            "${{ needs.setup.outputs.helper_version }}" \
+            "${{ matrix.platform }}"
+      
+      - name: 🔗 Build cross-language chain
+        run: |
+          chmod +x .github/scripts/build-pretaster-chain.sh
+          .github/scripts/build-pretaster-chain.sh \
+            "${{ matrix.platform }}" \
+            "${{ needs.setup.outputs.helper_version }}" \
+            helpers-dist
+      
+      - name: 📤 Upload chain artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: crosslang-chain-${{ matrix.platform }}
+          path: build/
+
+  test-crosslang:
+    name: 🧪 Test Cross-Language Chain
+    needs: [setup, build-crosslang-chain]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.setup.outputs.test_matrix) }}
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 📥 Download chain artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: crosslang-chain-${{ matrix.platform }}
+          path: ./build
+      
+      - name: 📥 Download helpers
+        uses: actions/download-artifact@v4
+        with:
+          name: pretaster-helpers-${{ github.run_id }}
+          path: ./helpers-dist
+      
+      - name: 🧪 Run cross-language tests
+        run: |
+          PRETASTER_PSP="build/pretaster-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}.psp"
+          if [[ "${{ matrix.platform }}" == *"windows"* ]]; then
+            PRETASTER_PSP="build/pretaster-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}.exe"
+          fi
+          
+          chmod +x "$PRETASTER_PSP" 2>/dev/null || true
+          
+          .github/scripts/run-pretaster-tests.sh \
+            "${{ matrix.platform }}" \
+            "${{ needs.setup.outputs.helper_version }}" \
+            "${{ inputs.test_suite }}" \
+            "$PRETASTER_PSP"
+      
+      - name: 📤 Upload test logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: crosslang-logs-${{ matrix.platform }}-${{ github.run_id }}
+          path: helpers/pretaster/logs/
+
   test-pretaster:
     name: 🧪 Pretaster ${{ matrix.name }}
     needs: setup
@@ -103,7 +201,7 @@ jobs:
 
   validate:
     name: ✅ Validate PSPF Compatibility
-    needs: [setup, test-pretaster]
+    needs: [setup, test-pretaster, test-crosslang]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -113,7 +211,7 @@ jobs:
       - name: 📥 Download all logs
         uses: actions/download-artifact@v4
         with:
-          pattern: pretaster-logs-*
+          pattern: '*-logs-*'
           path: all-logs
       
       - name: 📊 Generate compatibility report
