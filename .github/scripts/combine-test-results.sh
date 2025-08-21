@@ -23,7 +23,8 @@ EOF
 PLATFORMS=("linux_amd64" "linux_arm64" "darwin_amd64" "darwin_arm64" "windows_amd64")
 
 for platform in "${PLATFORMS[@]}"; do
-    TEST_FILE="$ARTIFACTS_DIR/flavor-helpers-0.3.0-$platform/test-results/${platform}-test-report.json"
+    # Try to find test file with any version
+    TEST_FILE=$(find "$ARTIFACTS_DIR" -name "${platform}-test-report.json" -path "*/test-results/*" 2>/dev/null | head -1)
     
     if [ -f "$TEST_FILE" ]; then
         echo "  ✅ Found test results for $platform"

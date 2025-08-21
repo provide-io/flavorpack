@@ -11,28 +11,28 @@ from typing import Any
 def validate_metadata(metadata: dict[str, Any]) -> bool:
     """
     Validate a complete metadata structure.
-    
+
     Args:
         metadata: The metadata dictionary to validate
-        
+
     Returns:
         True if valid
-        
+
     Raises:
         ValueError: If metadata is invalid
     """
     # Check required fields
     if "format" not in metadata:
         raise ValueError("Missing required field: format")
-    
+
     # Check format version
     if metadata["format"] not in ["PSPF/2025"]:
         raise ValueError(f"Unsupported format: {metadata['format']}")
-    
+
     # Check for old field names
     if "execution" in metadata and "environment" in metadata["execution"]:
         raise ValueError("Use 'env' instead of 'environment' in execution section")
-    
+
     # Validate workenv directories
     if "workenv" in metadata and "directories" in metadata["workenv"]:
         dirs = metadata["workenv"]["directories"]
@@ -64,8 +64,8 @@ def validate_metadata(metadata: dict[str, Any]) -> bool:
                 except (ValueError, TypeError) as e:
                     if "Invalid mode" in str(e):
                         raise
-                    raise ValueError(f"Invalid mode: {mode}")
-    
+                    raise ValueError(f"Invalid mode: {mode}") from e
+
     # Validate umask if present
     if "workenv" in metadata and "umask" in metadata["workenv"]:
         umask = metadata["workenv"]["umask"]
@@ -81,7 +81,7 @@ def validate_metadata(metadata: dict[str, Any]) -> bool:
                 val = int(umask, 8)
             if val < 0 or val > 0o777:
                 raise ValueError(f"Invalid umask value: {umask}")
-        except ValueError:
-            raise ValueError(f"Invalid umask: {umask}")
-    
+        except ValueError as e:
+            raise ValueError(f"Invalid umask: {umask}") from e
+
     return True

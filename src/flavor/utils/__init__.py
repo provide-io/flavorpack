@@ -3,10 +3,18 @@
 import platform
 import re
 
+# Re-export subprocess utilities for convenience
+from flavor.utils.subprocess import (
+    run_command,
+    run_command_simple,
+    run_command_with_progress,
+    run_subprocess,
+)
+
 
 def get_os_name() -> str:
     """Get normalized OS name.
-    
+
     Returns:
         str: Normalized OS name (darwin, linux, windows)
     """
@@ -18,7 +26,7 @@ def get_os_name() -> str:
 
 def get_arch_name() -> str:
     """Get normalized architecture name.
-    
+
     Returns:
         str: Normalized architecture (amd64, arm64, x86, i386)
     """
@@ -35,7 +43,7 @@ def get_arch_name() -> str:
 
 def get_platform_string() -> str:
     """Get normalized platform string in format 'os_arch'.
-    
+
     Returns:
         str: Platform string like 'darwin_arm64' or 'linux_amd64'
     """
@@ -44,13 +52,13 @@ def get_platform_string() -> str:
 
 def get_os_version() -> str | None:
     """Get OS version information.
-    
+
     Returns:
         str | None: OS version string or None if unavailable
     """
     try:
         system = platform.system()
-        
+
         if system == "Darwin":
             # macOS version
             mac_ver = platform.mac_ver()
@@ -70,20 +78,20 @@ def get_os_version() -> str | None:
             version = platform.version()
             if version:
                 return version
-        
+
         # Fallback to platform.release()
         release = platform.release()
         if release:
             return release
     except Exception:
         pass
-    
+
     return None
 
 
 def get_cpu_type() -> str | None:
     """Get CPU type/family information.
-    
+
     Returns:
         str | None: CPU type string or None if unavailable
     """
@@ -94,20 +102,20 @@ def get_cpu_type() -> str | None:
             if "Intel" in processor:
                 # Extract Intel CPU model
                 if "Core" in processor:
-                    match = re.search(r'Core\(TM\)\s+(\w+)', processor)
+                    match = re.search(r"Core\(TM\)\s+(\w+)", processor)
                     if match:
                         return f"Intel Core {match.group(1)}"
                 return "Intel"
             elif "AMD" in processor:
                 # Extract AMD CPU model
                 if "Ryzen" in processor:
-                    match = re.search(r'Ryzen\s+(\d+\s+\w+)', processor)
+                    match = re.search(r"Ryzen\s+(\d+\s+\w+)", processor)
                     if match:
                         return f"AMD Ryzen {match.group(1)}"
                 return "AMD"
             elif "Apple" in processor or "M1" in processor or "M2" in processor:
                 # Apple Silicon
-                match = re.search(r'(M\d+\w*)', processor)
+                match = re.search(r"(M\d+\w*)", processor)
                 if match:
                     return f"Apple {match.group(1)}"
                 return "Apple Silicon"
@@ -116,17 +124,9 @@ def get_cpu_type() -> str | None:
                 return processor.strip()
     except Exception:
         pass
-    
+
     return None
 
-
-# Re-export subprocess utilities for convenience
-from flavor.utils.subprocess import (
-    run_command,
-    run_command_simple,
-    run_command_with_progress,
-    run_subprocess,
-)
 
 __all__ = [
     "get_platform_string",

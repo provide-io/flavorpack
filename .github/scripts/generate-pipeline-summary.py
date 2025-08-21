@@ -6,6 +6,13 @@ import sys
 import os
 from pathlib import Path
 
+def get_default_version():
+    """Get version from VERSION file."""
+    version_file = Path(__file__).parent.parent / "VERSION"
+    if version_file.exists():
+        return version_file.read_text().strip()
+    return "0.3.0"  # fallback
+
 
 def main():
     if len(sys.argv) < 2:
@@ -44,8 +51,8 @@ def main():
     
     # Helper binaries status table - detailed view
     summary.append("### Helper Binaries Status\n")
-    summary.append("| Platform | Component | Language | Version | Build Time | Status |")
-    summary.append("|----------|-----------|----------|---------|------------|--------|")
+    summary.append("| Component | Platform | Language | Version | Build Time | Status |")
+    summary.append("|-----------|----------|----------|---------|------------|--------|")
     
     platforms_order = ["linux_amd64", "linux_arm64", "darwin_amd64", "darwin_arm64", "windows_amd64"]
     platform_emojis = {
@@ -211,7 +218,7 @@ def main():
             # Format version
             version_display = f"**{version}**" if version != "unknown" else "-"
             
-            summary.append(f"| {platform_display} | {component_display} | {language} | {version_display} | {build_time_display} | {status_display} |")
+            summary.append(f"| {component_display} | {platform_display} | {language} | {version_display} | {build_time_display} | {status_display} |")
     
     summary.append("\n")
     
@@ -229,7 +236,7 @@ def main():
         cache_status = platform.get("cache_status", "unknown")
         
         # Create artifact name with link
-        artifact_name = f"flavor-helpers-{data.get('version', '0.3.0')}-{platform_key}.zip"
+        artifact_name = f"flavor-helpers-{data.get('version', get_default_version())}-{platform_key}.zip"
         if run_id and github_repository:
             if status == "passed":
                 artifact_url = f"{github_server_url}/{github_repository}/actions/runs/{run_id}#artifacts"
