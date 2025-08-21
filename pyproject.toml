@@ -71,16 +71,7 @@ package-dir = {"" = "src"}
 
 [tool.setuptools.package-data]
 flavor = [
-    "go/**/*.go",
-    "go/**/*.mod", 
-    "go/**/*.sum",
-    "go/**/go.mod",
-    "go/**/go.sum",
-    "rust/**/*.rs",
-    "rust/**/*.toml",
-    "rust/**/*.lock",
-    "rust/**/Cargo.toml",
-    "rust/**/Cargo.lock",
+    "helpers/**/*",  # Platform-specific helper binaries
 ]
 
 [tool.setuptools.packages.find]

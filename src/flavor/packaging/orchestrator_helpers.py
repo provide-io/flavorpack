@@ -12,7 +12,9 @@ from pyvider.telemetry import logger
 from flavor.exceptions import BuildError
 
 
-def create_slot_tarballs(temp_dir: Path, artifacts: dict[str, Path], progress: Any) -> dict[str, Path]:
+def create_slot_tarballs(
+    temp_dir: Path, artifacts: dict[str, Path], progress: Any
+) -> dict[str, Path]:
     """Create tarball files for each slot.
 
     Args:
@@ -67,7 +69,7 @@ def create_builder_manifest(
     package_name: str,
     build_config: dict[str, Any],
     slots: dict[str, Path],
-    key_paths: dict[str, Path | None]
+    key_paths: dict[str, Path | None],
 ) -> dict[str, Any]:
     """Create manifest for external builder.
 
@@ -86,7 +88,11 @@ def create_builder_manifest(
     bin_dir = "Scripts" if is_windows else "bin"
     python_exe = "python.exe" if is_windows else "python3.11"
     # Windows UV Python has python.exe in root, not in Scripts
-    python_path = f"{{workenv}}/{python_exe}" if is_windows else f"{{workenv}}/{bin_dir}/{python_exe}"
+    python_path = (
+        f"{{workenv}}/{python_exe}"
+        if is_windows
+        else f"{{workenv}}/{bin_dir}/{python_exe}"
+    )
     package_exe = f"{package_name}.exe" if is_windows else package_name
     version = build_config.get("version", "1.0.0")
 
@@ -174,12 +180,11 @@ def write_manifest_file(manifest: dict[str, Any], temp_dir: Path) -> Path:
     return manifest_path
 
 
-def find_builder_executable(builder_bin: Path | None, find_helper_func) -> Path:
+def find_builder_executable(builder_bin: Path | None) -> Path:
     """Find the builder executable to use.
 
     Args:
         builder_bin: Explicitly specified builder binary path
-        find_helper_func: Function to find helper binaries
 
     Returns:
         Path to builder executable
@@ -203,21 +208,27 @@ def find_builder_executable(builder_bin: Path | None, find_helper_func) -> Path:
         return packager_executable
 
     # Auto-detect: Prefer Rust builder if available, otherwise use Go
+    from flavor.helpers import HelperManager
+
+    manager = HelperManager()
+
     builder_name = "flavor-rs-builder"
     try:
-        return find_helper_func(builder_name)
-    except BuildError:
+        return manager.get_helper(builder_name)
+    except FileNotFoundError:
         logger.warning(f"{builder_name} not found, falling back to Go builder.")
         builder_name = "flavor-go-builder"
-        return find_helper_func(builder_name)
+        try:
+            return manager.get_helper(builder_name)
+        except FileNotFoundError as e:
+            raise BuildError(f"No builder found: {e}") from e
 
 
-def find_launcher_executable(launcher_bin: Path | None, find_helper_func) -> Path:
+def find_launcher_executable(launcher_bin: Path | None) -> Path:
     """Find the launcher executable to use.
 
     Args:
         launcher_bin: Explicitly specified launcher binary path
-        find_helper_func: Function to find helper binaries
 
     Returns:
         Path to launcher executable
@@ -236,19 +247,25 @@ def find_launcher_executable(launcher_bin: Path | None, find_helper_func) -> Pat
     if launcher_executable_str:
         launcher_executable = Path(launcher_executable_str)
         if not launcher_executable.exists():
-            raise BuildError(f"Launcher binary from FLAVOR_LAUNCHER_BIN not found: {launcher_executable_str}")
+            raise BuildError(
+                f"Launcher binary from FLAVOR_LAUNCHER_BIN not found: {launcher_executable_str}"
+            )
         return launcher_executable
 
     # Default to rust launcher
+    from flavor.helpers import HelperManager
+
+    manager = HelperManager()
+
     launcher_name = "flavor-rs-launcher"
     try:
-        return find_helper_func(launcher_name)
-    except BuildError:
+        return manager.get_helper(launcher_name)
+    except FileNotFoundError:
         # Try go launcher as fallback
         launcher_name = "flavor-go-launcher"
         try:
-            return find_helper_func(launcher_name)
-        except BuildError as e:
+            return manager.get_helper(launcher_name)
+        except FileNotFoundError as e:
             raise BuildError(
                 "No launcher binary found. Please specify --launcher-bin or set FLAVOR_LAUNCHER_BIN, "
                 "or ensure flavor-rs-launcher or flavor-go-launcher is built."
@@ -256,9 +273,7 @@ def find_launcher_executable(launcher_bin: Path | None, find_helper_func) -> Pat
 
 
 def create_python_builder_metadata(
-    package_name: str,
-    build_config: dict[str, Any],
-    uv_exe: str
+    package_name: str, build_config: dict[str, Any], uv_exe: str
 ) -> dict[str, Any]:
     """Create metadata for Python builder.
 
@@ -277,7 +292,11 @@ def create_python_builder_metadata(
     bin_dir = "Scripts" if is_windows else "bin"
     python_exe = "python.exe" if is_windows else "python3.11"
     # Windows UV Python has python.exe in root, not in Scripts
-    python_path = f"{{workenv}}/{python_exe}" if is_windows else f"{{workenv}}/{bin_dir}/{python_exe}"
+    python_path = (
+        f"{{workenv}}/{python_exe}"
+        if is_windows
+        else f"{{workenv}}/{bin_dir}/{python_exe}"
+    )
     package_exe = f"{package_name}.exe" if is_windows else package_name
 
     metadata = {
@@ -344,9 +363,7 @@ def create_python_builder_metadata(
 
 
 def create_python_slot_tarballs(
-    temp_dir: Path,
-    artifacts: dict[str, Path],
-    progress: Any
+    temp_dir: Path, artifacts: dict[str, Path], progress: Any
 ) -> tuple[Path, Path, Path]:
     """Create slot tarballs for Python builder.
 

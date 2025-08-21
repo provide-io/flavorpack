@@ -53,20 +53,16 @@ def test_orchestrator_constructs_correct_build_command(tmp_path: Path) -> None:
     ) as mock_run, patch(
         "flavor.packaging.python_packager.PythonPackager.prepare_artifacts"
     ) as mock_prepare, patch(
-        "flavor.packaging.orchestrator.PackagingOrchestrator._find_helper"
-    ) as mock_find_helper, patch.object(
+        "flavor.packaging.orchestrator.find_builder_executable"
+    ) as mock_find_builder, patch(
+        "flavor.packaging.orchestrator.find_launcher_executable"
+    ) as mock_find_launcher, patch.object(
         orchestrator, "_build_with_python_builder"
     ) as mock_build:
         
-        # Mock helper finding - return appropriate binary based on what's being looked for
-        def find_helper_side_effect(name):
-            if "launcher" in name:
-                return mock_launcher
-            elif "builder" in name:
-                return mock_builder
-            else:
-                raise ValueError(f"Unknown helper: {name}")
-        mock_find_helper.side_effect = find_helper_side_effect
+        # Mock helper finding
+        mock_find_builder.return_value = mock_builder
+        mock_find_launcher.return_value = mock_launcher
         
         # Mock run_command to prevent actual execution
         mock_run.return_value = None

@@ -168,14 +168,23 @@ jobs:
             "${{ steps.cache.outputs.cache-hit == 'true' }}" \
             "artifacts/metadata"
       
-      - name: 📤 Upload artifact
+      - name: 📤 Upload binaries
         uses: actions/upload-artifact@v4
         with:
           name: flavor-helpers-${{ needs.check-diff.outputs.version }}-linux_amd64
-          path: |
-            artifacts/*.zip
-            artifacts/metadata/
-            artifacts/test-results/
+          path: artifacts/*.zip
+      
+      - name: 📤 Upload metadata
+        uses: actions/upload-artifact@v4
+        with:
+          name: helper-metadata-${{ needs.check-diff.outputs.version }}-linux_amd64
+          path: artifacts/metadata/
+      
+      - name: 📤 Upload validation
+        uses: actions/upload-artifact@v4
+        with:
+          name: helper-validation-${{ needs.check-diff.outputs.version }}-linux_amd64
+          path: artifacts/test-results/
 
   # Build for Linux ARM64 (native)
   build-linux-arm64:
@@ -305,14 +314,23 @@ jobs:
             "${{ steps.cache.outputs.cache-hit == 'true' }}" \
             "artifacts/metadata"
       
-      - name: 📤 Upload artifact
+      - name: 📤 Upload binaries
         uses: actions/upload-artifact@v4
         with:
           name: flavor-helpers-${{ needs.check-diff.outputs.version }}-linux_arm64
-          path: |
-            artifacts/*.zip
-            artifacts/metadata/
-            artifacts/test-results/
+          path: artifacts/*.zip
+      
+      - name: 📤 Upload metadata
+        uses: actions/upload-artifact@v4
+        with:
+          name: helper-metadata-${{ needs.check-diff.outputs.version }}-linux_arm64
+          path: artifacts/metadata/
+      
+      - name: 📤 Upload validation
+        uses: actions/upload-artifact@v4
+        with:
+          name: helper-validation-${{ needs.check-diff.outputs.version }}-linux_arm64
+          path: artifacts/test-results/
 
   # Build for Darwin AMD64
   build-darwin-amd64:
@@ -435,14 +453,23 @@ jobs:
             "${{ steps.cache.outputs.cache-hit == 'true' }}" \
             "artifacts/metadata"
       
-      - name: 📤 Upload artifact
+      - name: 📤 Upload binaries
         uses: actions/upload-artifact@v4
         with:
           name: flavor-helpers-${{ needs.check-diff.outputs.version }}-darwin_amd64
-          path: |
-            artifacts/*.zip
-            artifacts/metadata/
-            artifacts/test-results/
+          path: artifacts/*.zip
+      
+      - name: 📤 Upload metadata
+        uses: actions/upload-artifact@v4
+        with:
+          name: helper-metadata-${{ needs.check-diff.outputs.version }}-darwin_amd64
+          path: artifacts/metadata/
+      
+      - name: 📤 Upload validation
+        uses: actions/upload-artifact@v4
+        with:
+          name: helper-validation-${{ needs.check-diff.outputs.version }}-darwin_amd64
+          path: artifacts/test-results/
 
   # Build for Darwin ARM64
   build-darwin-arm64:
@@ -565,178 +592,206 @@ jobs:
             "${{ steps.cache.outputs.cache-hit == 'true' }}" \
             "artifacts/metadata"
       
-      - name: 📤 Upload artifact
+      - name: 📤 Upload binaries
         uses: actions/upload-artifact@v4
         with:
           name: flavor-helpers-${{ needs.check-diff.outputs.version }}-darwin_arm64
-          path: |
-            artifacts/*.zip
-            artifacts/metadata/
-            artifacts/test-results/
+          path: artifacts/*.zip
+      
+      - name: 📤 Upload metadata
+        uses: actions/upload-artifact@v4
+        with:
+          name: helper-metadata-${{ needs.check-diff.outputs.version }}-darwin_arm64
+          path: artifacts/metadata/
+      
+      - name: 📤 Upload validation
+        uses: actions/upload-artifact@v4
+        with:
+          name: helper-validation-${{ needs.check-diff.outputs.version }}-darwin_arm64
+          path: artifacts/test-results/
 
   # Build for Windows AMD64
-  # TEMPORARILY DISABLED: Windows support has path separator issues in Go launcher
-  # build-windows-amd64:
-  #   name: 🪟 Build Windows AMD64
-  #   needs: check-diff
-  #   runs-on: windows-2025
-  #   steps:
-  #     - name: 📥 Checkout
-  #       uses: actions/checkout@v4
-  #     
-  #     - name: 📊 Initialize build metadata
-  #       id: metadata
-  #       shell: bash
-  #       run: |
-  #         chmod +x .github/scripts/capture-build-metadata.sh
-  #         METADATA_FILE=$(.github/scripts/capture-build-metadata.sh \
-  #           "windows_amd64" \
-  #           "${{ needs.check-diff.outputs.version }}" \
-  #           "artifacts/metadata")
-  #         echo "metadata_file=$METADATA_FILE" >> $GITHUB_OUTPUT
-  #         
-  #         # Record container startup time
-  #         chmod +x .github/scripts/record-timing.sh
-  #         .github/scripts/record-timing.sh "$METADATA_FILE" "container_startup" "start"
-  #     
-  #     - name: 💾 Check cache
-  #       id: cache
-  #       uses: actions/cache@v4
-  #       with:
-  #         path: |
-  #           artifacts/flavor-helpers-${{ needs.check-diff.outputs.version }}-windows_amd64.zip
-  #         key: flavor-helpers-${{ needs.check-diff.outputs.version }}-windows_amd64
-  #         lookup-only: ${{ inputs.force_rebuild == 'true' }}
-  #     
-  #     - name: ⏱️ Record cache check
-  #       if: always()
-  #       shell: bash
-  #       run: |
-  #         .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "cache_check" "end"
-  #         .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "cache_hit" "record" "${{ steps.cache.outputs.cache-hit }}"
-  #     
-  #     - name: 🐹 Setup Go
-  #       if: steps.cache.outputs.cache-hit != 'true'
-  #       uses: actions/setup-go@v5
-  #       with:
-  #         go-version: '1.21'
-  #     
-  #     - name: ⏱️ Record Go setup
-  #       if: steps.cache.outputs.cache-hit != 'true'
-  #       shell: bash
-  #       run: |
-  #         .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "setup_go" "end"
-  #     
-  #     - name: 🦀 Setup Rust
-  #       if: steps.cache.outputs.cache-hit != 'true'
-  #       uses: dtolnay/rust-toolchain@stable
-  #       with:
-  #         targets: x86_64-pc-windows-msvc
-  #     
-  #     - name: ⏱️ Record Rust setup
-  #       if: steps.cache.outputs.cache-hit != 'true'
-  #       shell: bash
-  #       run: |
-  #         .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "setup_rust" "end"
-  #     
-  #     - name: 🔨 Build
-  #       id: build
-  #       if: steps.cache.outputs.cache-hit != 'true'
-  #       shell: bash
-  #       run: |
-  #         .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "build_total" "start"
-  #         
-  #         # Build with timing for each language
-  #         .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "build_go" "start"
-  #         chmod +x .github/scripts/build-platform-helpers.sh
-  #         .github/scripts/build-platform-helpers.sh windows_amd64 windows amd64 x86_64-pc-windows-msvc
-  #         .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "build_go" "end"
-  #         
-  #         .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "build_total" "end"
-  #         
-  #         # Output for compatibility
-  #         echo "timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_OUTPUT
-  #     
-  #     - name: 📦 Package
-  #       if: steps.cache.outputs.cache-hit != 'true'
-  #       shell: bash
-  #       run: |
-  #         .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "package" "start"
-  #         chmod +x .github/scripts/package-with-metadata.sh
-  #         .github/scripts/package-with-metadata.sh \
-  #           "windows_amd64" \
-  #           "${{ needs.check-diff.outputs.version }}" \
-  #           "helpers/bin" \
-  #           "artifacts" \
-  #           "${{ steps.metadata.outputs.metadata_file }}"
-  #         .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "package" "end"
-  #     
-  #     - name: 📦 Extract cached binaries
-  #       if: steps.cache.outputs.cache-hit == 'true'
-  #       shell: bash
-  #       run: |
-  #         mkdir -p helpers/bin
-  #         if [ -f "artifacts/flavor-helpers-${{ needs.check-diff.outputs.version }}-windows_amd64.zip" ]; then
-  #           unzip -o "artifacts/flavor-helpers-${{ needs.check-diff.outputs.version }}-windows_amd64.zip" -d helpers/bin/
-  #         fi
-  #     
-  #     - name: 🧪 Test binaries
-  #       id: test
-  #       continue-on-error: true
-  #       shell: bash
-  #       run: |
-  #         chmod +x .github/scripts/test-platform-binaries.sh
-  #         mkdir -p artifacts/test-results
-  #         .github/scripts/test-platform-binaries.sh windows_amd64 helpers/bin artifacts/test-results || echo "test_failed=true" >> $GITHUB_OUTPUT
-  #     
-  #     
-  #     - name: 💾 Save cache
-  #       if: steps.cache.outputs.cache-hit != 'true'
-  #       uses: actions/cache/save@v4
-  #       with:
-  #         path: |
-  #           artifacts/flavor-helpers-${{ needs.check-diff.outputs.version }}-windows_amd64.zip
-  #         key: flavor-helpers-${{ needs.check-diff.outputs.version }}-windows_amd64
-  #     
-  #     - name: 📊 Generate metadata
-  #       if: always()
-  #       shell: bash
-  #       env:
-  #         BUILD_DURATION: ${{ steps.build.outputs.duration || '0' }}
-  #         BUILD_TIMESTAMP: ${{ steps.build.outputs.timestamp || '' }}
-  #       run: |
-  #         chmod +x .github/scripts/generate-platform-metadata.sh
-  #         .github/scripts/generate-platform-metadata.sh \
-  #           "windows_amd64" \
-  #           "${{ needs.check-diff.outputs.version }}" \
-  #           "${{ steps.cache.outputs.cache-hit == 'true' }}" \
-  #           "artifacts/metadata"
-  #     
-  #     - name: 📤 Upload artifact
-  #       uses: actions/upload-artifact@v4
-  #       with:
-  #         name: flavor-helpers-${{ needs.check-diff.outputs.version }}-windows_amd64
-  #         path: |
-  #           artifacts/*.zip
-  #           artifacts/metadata/
-  #           artifacts/test-results/
+  build-windows-amd64:
+    name: 🪟 Build Windows AMD64
+    needs: check-diff
+    runs-on: windows-2025
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 📊 Initialize build metadata
+        id: metadata
+        shell: bash
+        run: |
+          chmod +x .github/scripts/capture-build-metadata.sh
+          METADATA_FILE=$(.github/scripts/capture-build-metadata.sh \
+            "windows_amd64" \
+            "${{ needs.check-diff.outputs.version }}" \
+            "artifacts/metadata")
+          echo "metadata_file=$METADATA_FILE" >> $GITHUB_OUTPUT
+          
+          # Record container startup time
+          chmod +x .github/scripts/record-timing.sh
+          .github/scripts/record-timing.sh "$METADATA_FILE" "container_startup" "start"
+      
+      - name: 💾 Check cache (DISABLED - always rebuild)
+        id: cache
+        shell: bash
+        run: |
+          echo "cache-hit=false" >> $GITHUB_OUTPUT
+          echo "Cache check disabled - always rebuilding"
+          # Note: We still upload artifacts for other workflows to use
+      
+      - name: ⏱️ Record cache check
+        if: always()
+        shell: bash
+        run: |
+          .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "cache_check" "end"
+          .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "cache_hit" "record" "${{ steps.cache.outputs.cache-hit }}"
+      
+      - name: 🐹 Setup Go
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+      
+      - name: ⏱️ Record Go setup
+        if: steps.cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "setup_go" "end"
+      
+      - name: 🦀 Setup Rust
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+      
+      - name: ⏱️ Record Rust setup
+        if: steps.cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "setup_rust" "end"
+      
+      - name: 🔨 Build
+        id: build
+        if: steps.cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "build_total" "start"
+          
+          # Build with timing for each language
+          .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "build_go" "start"
+          chmod +x .github/scripts/build-platform-helpers.sh
+          .github/scripts/build-platform-helpers.sh windows_amd64 windows amd64 x86_64-pc-windows-msvc
+          .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "build_go" "end"
+          
+          .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "build_total" "end"
+          
+          # Output for compatibility
+          echo "timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_OUTPUT
+      
+      - name: 📦 Package
+        if: steps.cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "package" "start"
+          chmod +x .github/scripts/package-with-metadata.sh
+          .github/scripts/package-with-metadata.sh \
+            "windows_amd64" \
+            "${{ needs.check-diff.outputs.version }}" \
+            "helpers/bin" \
+            "artifacts" \
+            "${{ steps.metadata.outputs.metadata_file }}"
+          .github/scripts/record-timing.sh "${{ steps.metadata.outputs.metadata_file }}" "package" "end"
+      
+      - name: 📦 Extract cached binaries
+        if: steps.cache.outputs.cache-hit == 'true'
+        shell: bash
+        run: |
+          mkdir -p helpers/bin
+          if [ -f "artifacts/flavor-helpers-${{ needs.check-diff.outputs.version }}-windows_amd64.zip" ]; then
+            unzip -o "artifacts/flavor-helpers-${{ needs.check-diff.outputs.version }}-windows_amd64.zip" -d helpers/bin/
+          fi
+      
+      - name: 🧪 Test binaries
+        id: test
+        continue-on-error: true
+        shell: bash
+        run: |
+          chmod +x .github/scripts/test-platform-binaries.sh
+          mkdir -p artifacts/test-results
+          .github/scripts/test-platform-binaries.sh windows_amd64 helpers/bin artifacts/test-results || echo "test_failed=true" >> $GITHUB_OUTPUT
+      
+      
+      # Cache saving disabled - always rebuilding
+      # - name: 💾 Save cache
+      #   if: steps.cache.outputs.cache-hit != 'true'
+      #   uses: actions/cache/save@v4
+      #   with:
+      #     path: |
+      #       artifacts/flavor-helpers-${{ needs.check-diff.outputs.version }}-windows_amd64.zip
+      #     key: flavor-helpers-${{ needs.check-diff.outputs.version }}-windows_amd64
+      
+      - name: 📊 Generate metadata
+        if: always()
+        shell: bash
+        env:
+          BUILD_DURATION: ${{ steps.build.outputs.duration || '0' }}
+          BUILD_TIMESTAMP: ${{ steps.build.outputs.timestamp || '' }}
+        run: |
+          chmod +x .github/scripts/generate-platform-metadata.sh
+          .github/scripts/generate-platform-metadata.sh \
+            "windows_amd64" \
+            "${{ needs.check-diff.outputs.version }}" \
+            "${{ steps.cache.outputs.cache-hit == 'true' }}" \
+            "artifacts/metadata"
+      
+      - name: 📤 Upload binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: flavor-helpers-${{ needs.check-diff.outputs.version }}-windows_amd64
+          path: artifacts/*.zip
+      
+      - name: 📤 Upload metadata
+        uses: actions/upload-artifact@v4
+        with:
+          name: helper-metadata-${{ needs.check-diff.outputs.version }}-windows_amd64
+          path: artifacts/metadata/
+      
+      - name: 📤 Upload validation
+        uses: actions/upload-artifact@v4
+        with:
+          name: helper-validation-${{ needs.check-diff.outputs.version }}-windows_amd64
+          path: artifacts/test-results/
 
   # Combine all artifacts
   combine:
     name: 📦 Combine Artifacts
-    # TEMPORARILY REMOVED build-windows-amd64 from dependencies
-    needs: [check-diff, build-linux-amd64, build-linux-arm64, build-darwin-amd64, build-darwin-arm64]
+    needs: [check-diff, build-linux-amd64, build-linux-arm64, build-darwin-amd64, build-darwin-arm64, build-windows-amd64]
     if: always()
     runs-on: ubuntu-latest
     steps:
       - name: 📥 Checkout (for scripts)
         uses: actions/checkout@v4
       
-      - name: 📥 Download all artifacts
+      - name: 📥 Download binary artifacts
         uses: actions/download-artifact@v4
         with:
           pattern: flavor-helpers-${{ needs.check-diff.outputs.version }}-*
           path: platform-artifacts
+      
+      - name: 📥 Download metadata artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: helper-metadata-${{ needs.check-diff.outputs.version }}-*
+          path: metadata-artifacts
+      
+      - name: 📥 Download validation artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: helper-validation-${{ needs.check-diff.outputs.version }}-*
+          path: validation-artifacts
       
       - name: 🔀 Combine binaries
         run: |
@@ -745,14 +800,14 @@ jobs:
       - name: 📊 Combine metadata
         run: |
           .github/scripts/combine-platform-metadata.sh \
-            "platform-artifacts" \
+            "metadata-artifacts" \
             "${{ needs.check-diff.outputs.version }}" \
             "final/combined-metadata.json"
       
       - name: 🧪 Combine test results
         run: |
           .github/scripts/combine-test-results.sh \
-            "platform-artifacts" \
+            "validation-artifacts" \
             "final/combined-test-report.json"
       
       - name: 📊 Generate checksums
@@ -775,17 +830,17 @@ jobs:
       - name: 📤 Upload test results
         uses: actions/upload-artifact@v4
         with:
-          name: test-results-${{ needs.check-diff.outputs.version }}
+          name: helper-validation-${{ needs.check-diff.outputs.version }}-combined
           path: |
             final/combined-test-report.json
       
       - name: 📤 Upload metadata artifact
         uses: actions/upload-artifact@v4
         with:
-          name: build-metadata-${{ needs.check-diff.outputs.version }}
+          name: helper-metadata-${{ needs.check-diff.outputs.version }}-combined
           path: |
             final/combined-metadata.json
-            platform-artifacts/*/metadata/
+            metadata-artifacts/
   
   # Validate and generate summary
   validate:
@@ -797,22 +852,35 @@ jobs:
       - name: 📥 Checkout (for scripts)
         uses: actions/checkout@v4
       
-      - name: 📥 Download all artifacts
+      - name: 📥 Download binary artifacts
         uses: actions/download-artifact@v4
         with:
           pattern: flavor-helpers-${{ needs.check-diff.outputs.version }}-*
           path: artifacts
       
-      - name: 📥 Download test results
+      - name: 📥 Download validation results
+        if: needs.combine.result == 'success'
         uses: actions/download-artifact@v4
         with:
-          name: test-results-${{ needs.check-diff.outputs.version }}
+          name: helper-validation-${{ needs.check-diff.outputs.version }}-combined
           path: artifacts/final
+      
+      - name: 📥 Download metadata
+        if: needs.combine.result == 'success'
+        uses: actions/download-artifact@v4
+        with:
+          name: helper-metadata-${{ needs.check-diff.outputs.version }}-combined
+          path: artifacts/metadata
       
       - name: 🔍 Validate artifacts
         id: validate
         run: |
-          python3 .github/scripts/validate-helper-pipeline.py artifacts validation-report.json ${{ needs.check-diff.outputs.version }} || true
+          # Create empty validation report if validation script doesn't exist or fails
+          if [ -f ".github/scripts/validate-helper-pipeline.py" ]; then
+            python3 .github/scripts/validate-helper-pipeline.py artifacts validation-report.json ${{ needs.check-diff.outputs.version }} || echo '{"status": "partial", "artifacts": []}' > validation-report.json
+          else
+            echo '{"status": "no-validation", "artifacts": []}' > validation-report.json
+          fi
       
       - name: 📊 Generate summary
         if: always()
