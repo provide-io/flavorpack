@@ -34,7 +34,8 @@ COMBO_GO_RS := $(DIST_DIR)/pretaster-go-rs.psp
 COMBO_GO_GO := $(DIST_DIR)/pretaster-go-go.psp
 
 # All test packages
-TEST_PACKAGES := $(ECHO_PSP) $(SHELL_PSP) $(ENV_PSP) $(ORCHESTRATE_PSP)
+SIMPLE_PACKAGES := $(ECHO_PSP) $(SHELL_PSP) $(ENV_PSP)
+TEST_PACKAGES := $(SIMPLE_PACKAGES) $(ORCHESTRATE_PSP)
 COMBO_PACKAGES := $(COMBO_RS_RS) $(COMBO_RS_GO) $(COMBO_GO_RS) $(COMBO_GO_GO)
 ALL_PACKAGES := $(TEST_PACKAGES) $(COMBO_PACKAGES) $(PRETASTER_PSP)
 
@@ -205,7 +206,7 @@ $(COMBO_GO_GO): $(DIST_DIR) build-helpers
 test: test-core test-combo ## Run all tests
 
 .PHONY: test-core
-test-core: $(TEST_PACKAGES) $(LOGS_DIR) ## Run core test suite
+test-core: $(SIMPLE_PACKAGES) $(LOGS_DIR) ## Run core test suite (without orchestration)
 	$(call print,"🧪 Running core tests...",$(PURPLE))
 	@FLAVOR_LOG_LEVEL=$(LOG_LEVEL) $(TESTS_DIR)/test-pretaster.sh
 	$(call print,"✅ Core tests completed",$(GREEN))

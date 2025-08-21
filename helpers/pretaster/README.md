@@ -6,15 +6,14 @@ Pretaster is a comprehensive test suite for PSPF builders and launchers, designe
 
 ```
 pretaster/
-├── bin/                  # Entry point scripts
-│   └── pretaster.sh            # Main pretaster entry point
 ├── configs/              # Manifest JSON files for test scenarios
 │   ├── test-bad-slot.json      # Tests slot field validation
 │   ├── test-echo.json          # Simple echo test  
 │   ├── test-env.json           # Environment variable filtering
 │   ├── test-orchestrate.json   # Multi-slot orchestration
 │   ├── test-shell.json         # Shell script execution
-│   └── test-taster-lite.json   # Pretaster command tests
+│   ├── test-taster-lite.json   # Pretaster command tests (legacy)
+│   └── pretaster.json          # Main pretaster package manifest
 ├── dist/                 # Built .psp packages (gitignored)
 ├── docs/                 # Documentation
 │   └── slot-field-spec.md      # Slot field specification
@@ -25,7 +24,8 @@ pretaster/
 │   ├── log_test.sh             # Logging test script
 │   ├── orchestrate.sh          # Multi-slot orchestrator
 │   ├── simple_test.sh          # Basic shell script
-│   └── taster_lite.sh          # Pretaster command implementation
+│   ├── taster_lite.sh          # Pretaster command implementation
+│   └── pretaster               # Main pretaster entry point
 ├── slots/                # Pre-built slot content
 │   ├── scripts/                # Additional scripts
 │   ├── scripts.tar.gz          # Scripts tarball
@@ -73,9 +73,9 @@ make clean
 # Quick build of pretaster for testing
 make quick
 
-# Using the main entry point directly
-bin/pretaster.sh info
-bin/pretaster.sh exit 42
+# Run pretaster directly from dist
+./dist/pretaster.psp info
+./dist/pretaster.psp exit 42
 
 # Run tests with debug logging
 make debug
@@ -233,18 +233,23 @@ All combinations are tested to ensure cross-language compatibility:
 8. **Slot Field**: Optional well-formedness validation
 9. **Extract To**: Files extracted to correct subdirectories
 
-## Main Entry Point
+## Package Structure
 
-The main pretaster entry point is `bin/pretaster.sh`. This script:
-- Checks if `dist/pretaster.psp` exists
-- Provides helpful error messages if not built
-- Executes pretaster.psp with all arguments
-- Properly propagates exit codes
+The pretaster package (`dist/pretaster.psp`) contains:
+- Main entry point script extracted to `{workenv}/bin/pretaster`
+- Command implementation in `{workenv}/scripts/taster_lite.sh`
+- Both scripts work together to provide the full pretaster functionality
+
+When executed, pretaster.psp:
+1. Extracts files to the workenv directory
+2. Places the main entry point in `{workenv}/bin/`
+3. Places supporting scripts in `{workenv}/scripts/`
+4. Executes via `/bin/bash {workenv}/bin/pretaster`
 
 ```bash
-# Use the entry point directly
-bin/pretaster.sh info
-bin/pretaster.sh exit 42
+# Run pretaster directly
+./dist/pretaster.psp info
+./dist/pretaster.psp exit 42
 ```
 
 ## Recent Updates

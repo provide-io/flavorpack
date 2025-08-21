@@ -1,0 +1,121 @@
+name: 🧪 Pretaster PSPF Validation
+
+on:
+  workflow_dispatch:
+    inputs:
+      helper_run_id:
+        description: 'Helper Pipeline run ID (leave empty for latest)'
+        type: string
+        required: false
+      test_suite:
+        description: 'Test suite to run (all, combo, core, direct)'
+        type: string
+        required: false
+        default: 'all'
+  
+  workflow_run:
+    workflows: ["🔨 Helper Pipeline"]
+    types: [completed]
+    branches: [main, develop]
+
+jobs:
+  setup:
+    name: 🔧 Setup & Get Helpers
+    runs-on: ubuntu-latest
+    outputs:
+      helper_version: ${{ steps.helpers.outputs.version }}
+      test_matrix: ${{ steps.matrix.outputs.matrix }}
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 🔍 Determine helper version
+        id: helpers
+        run: |
+          source .github/scripts/get-helper-run.sh "${{ inputs.helper_run_id }}"
+          echo "run_id=$RUN_ID" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+        env:
+          GH_TOKEN: ${{ github.token }}
+      
+      - name: 📥 Download helper artifacts
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          workflow: helper-pipeline.yml
+          run_id: ${{ steps.helpers.outputs.run_id }}
+          name: flavor-helpers-${{ steps.helpers.outputs.version }}-all
+          path: ./helpers-dist
+      
+      - name: 📤 Upload helpers for test jobs
+        uses: actions/upload-artifact@v4
+        with:
+          name: pretaster-helpers-${{ github.run_id }}
+          path: helpers-dist/*.zip
+      
+      - name: 🧪 Define test matrix
+        id: matrix
+        run: |
+          .github/scripts/create-pretaster-matrix.sh > matrix.json
+          MATRIX=$(cat matrix.json | jq -c .)
+          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+
+  test-pretaster:
+    name: 🧪 Pretaster ${{ matrix.name }}
+    needs: setup
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.setup.outputs.test_matrix) }}
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 🦀 Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+      
+      - name: 🐹 Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+      
+      - name: 📥 Download helpers
+        uses: actions/download-artifact@v4
+        with:
+          name: pretaster-helpers-${{ github.run_id }}
+          path: ./helpers-dist
+      
+      - name: 🔧 Extract and run pretaster
+        run: |
+          .github/scripts/run-pretaster-tests.sh \
+            "${{ matrix.platform }}" \
+            "${{ needs.setup.outputs.helper_version }}" \
+            "${{ inputs.test_suite }}"
+      
+      - name: 📤 Upload test logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pretaster-logs-${{ matrix.platform }}-${{ github.run_id }}
+          path: helpers/pretaster/logs/
+
+  validate:
+    name: ✅ Validate PSPF Compatibility
+    needs: [setup, test-pretaster]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 📥 Download all logs
+        uses: actions/download-artifact@v4
+        with:
+          pattern: pretaster-logs-*
+          path: all-logs
+      
+      - name: 📊 Generate compatibility report
+        run: |
+          .github/scripts/generate-pspf-compatibility-report.sh all-logs
