@@ -41,6 +41,16 @@ This single file is a **Progressive Secure Package Format (PSPF)** bundle. It's 
 
 In short, Flavor lets you focus on building great software, not on the complexities of distributing it.
 
+### What Flavor Is Not
+
+It's also important to understand what Flavor is **not**:
+
+*   **It is not a container like Docker.** Flavor packages run directly on the host OS. They do not provide OS-level virtualization or isolation (like a separate filesystem or network stack).
+*   **It is not a Virtual Machine.** Flavor does not bundle a guest operating system. The packaged application uses the kernel of the host system.
+*   **It is not a full sandbox.** While the launcher creates an isolated *work environment* for the application's files, it does not sandbox the process in the same way as technologies like `chroot`, Flatpak, or Snap. The packaged application runs as a normal process under the user who executed it.
+
+Flavor's focus is on **packaging and distribution**, not on process isolation or full system virtualization. It simplifies getting your application and its dependencies onto a machine in a secure and portable way.
+
 ---
 
 **Ready to see it in action?**
