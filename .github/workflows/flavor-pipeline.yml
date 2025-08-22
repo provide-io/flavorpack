@@ -12,21 +12,6 @@ on:
         type: string
         required: false
   
-  push:
-    branches:
-      - main
-      - 'feature/**'
-    paths:
-      - 'src/flavor/**'
-      - 'tests/**'
-      - 'pyproject.toml'
-      - '.github/workflows/flavor-pipeline.yml'
-  
-  pull_request:
-    paths:
-      - 'src/flavor/**'
-      - 'tests/**'
-  
   workflow_run:
     workflows: ["🔨 Helper Pipeline"]
     types: [completed]
@@ -47,23 +32,11 @@ jobs:
       - name: 🔍 Determine helper version
         id: helpers
         run: |
-          .github/scripts/get-helper-run.sh "${{ inputs.helper_run_id }}"
+          # Source the script to get RUN_ID and VERSION
+          source .github/scripts/get-helper-run.sh "${{ inputs.helper_run_id }}"
           
-          # Extract version from run artifacts
-          ARTIFACTS=$(gh api repos/${{ github.repository }}/actions/runs/$RUN_ID/artifacts --jq '.artifacts[].name')
-          echo "Available artifacts:"
-          echo "$ARTIFACTS"
-          
-          # Extract version from artifact name
-          VERSION=$(echo "$ARTIFACTS" | grep "flavor-helpers-" | head -1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
-          
-          if [ -z "$VERSION" ]; then
-            echo "Warning: Could not extract version from artifacts, using default"
-            VERSION="0.3.0"
-          fi
-          
+          echo "run_id=$RUN_ID" >> $GITHUB_OUTPUT
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Helper version: $VERSION"
         env:
           GH_TOKEN: ${{ github.token }}
       
@@ -206,10 +179,174 @@ jobs:
             .coverage
             coverage.xml
 
+  # Build Flavor PSP packages
+  build-flavor:
+    name: 📦 Build Flavor ${{ matrix.platform }}
+    needs: [setup, test]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux_amd64
+            runner: ubuntu-latest
+          - platform: linux_arm64
+            runner: ubuntu-24.04-arm
+          - platform: darwin_amd64
+            runner: macos-13  # Intel Mac
+          - platform: darwin_arm64
+            runner: macos-latest  # M1 Mac
+          # Windows temporarily disabled due to path issues
+          # - platform: windows_amd64
+          #   runner: windows-latest
+    
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: 📥 Download helper artifacts
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          workflow: helper-pipeline.yml
+          name: flavor-helpers-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}
+          path: ./artifacts
+      
+      - name: 🔨 Build Flavor PSP
+        run: |
+          bash .github/scripts/build-flavor.sh \
+            "${{ matrix.platform }}" \
+            "${{ needs.setup.outputs.helper_version }}" \
+            "artifacts"
+      
+      - name: 📤 Upload Flavor package
+        uses: actions/upload-artifact@v4
+        with:
+          name: flavor-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}
+          path: |
+            artifacts/flavor-*.psp
+            artifacts/flavor-*.exe
+  
+  # Test Flavor with Taster
+  test-flavor:
+    name: 🧪 Test Flavor with Taster ${{ matrix.platform }}
+    needs: [setup, build-flavor]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux_amd64
+            runner: ubuntu-latest
+          - platform: darwin_amd64
+            runner: macos-13
+          - platform: darwin_arm64
+            runner: macos-latest
+          - platform: linux_arm64
+            runner: ubuntu-24.04-arm
+    
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: 📥 Download Flavor package
+        uses: actions/download-artifact@v4
+        with:
+          name: flavor-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}
+          path: ./artifacts
+      
+      - name: 📥 Download helper binaries
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          workflow: helper-pipeline.yml
+          name: flavor-helpers-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}
+          path: ./artifacts
+      
+      - name: 🔧 Extract helpers
+        run: |
+          mkdir -p helpers/bin
+          unzip -o "artifacts/flavor-helpers-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}.zip" -d helpers/bin/
+          chmod +x helpers/bin/* || true
+      
+      - name: 🧪 Test Flavor with Taster
+        run: |
+          bash .github/scripts/test-flavor-with-taster.sh \
+            "${{ matrix.platform }}" \
+            "${{ needs.setup.outputs.helper_version }}" \
+            "artifacts"
+      
+      - name: 📤 Upload Taster package
+        uses: actions/upload-artifact@v4
+        with:
+          name: taster-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}
+          path: |
+            artifacts/taster-*.psp
+            artifacts/taster-*.exe
+      
+      - name: 📤 Upload test logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: flavor-test-logs-${{ matrix.platform }}-${{ github.run_id }}
+          path: |
+            *.log
+            test-*.txt
+  
+  # Combine all Flavor artifacts
+  combine-flavor:
+    name: 📦 Combine Flavor Artifacts
+    needs: [setup, build-flavor, test-flavor]
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Download all Flavor packages
+        uses: actions/download-artifact@v4
+        with:
+          pattern: flavor-${{ needs.setup.outputs.helper_version }}-*
+          path: flavor-packages
+          merge-multiple: true
+      
+      - name: 📥 Download all Taster packages
+        uses: actions/download-artifact@v4
+        with:
+          pattern: taster-${{ needs.setup.outputs.helper_version }}-*
+          path: taster-packages
+          merge-multiple: true
+      
+      - name: 🗂️ Organize artifacts
+        run: |
+          mkdir -p combined
+          
+          # Copy all Flavor packages
+          find flavor-packages -type f \( -name "*.psp" -o -name "*.exe" \) -exec cp {} combined/ \;
+          
+          # Copy all Taster packages
+          find taster-packages -type f \( -name "*.psp" -o -name "*.exe" \) -exec cp {} combined/ \;
+          
+          # List all artifacts
+          echo "📦 Combined artifacts:"
+          ls -la combined/
+      
+      - name: 📤 Upload combined artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: flavor-packages-${{ needs.setup.outputs.helper_version }}-all
+          path: combined/*
+
   # Summary and validation
   validate:
     name: ✅ Validate & Summary
-    needs: [setup, test]
+    needs: [setup, test, build-flavor, test-flavor, combine-flavor]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -221,6 +358,13 @@ jobs:
         with:
           pattern: test-results-*
           path: test-results
+      
+      - name: 📥 Download Flavor packages
+        if: needs.combine-flavor.result == 'success'
+        uses: actions/download-artifact@v4
+        with:
+          name: flavor-packages-${{ needs.setup.outputs.helper_version }}-all
+          path: flavor-artifacts
       
       - name: 📊 Generate summary
         run: |
@@ -247,9 +391,35 @@ jobs:
             fi
           done
           
+          # Only show Flavor packages section if they were built
+          if [ -d "flavor-artifacts" ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### 📦 Flavor & Taster Packages" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            
+            # List Flavor packages
+            echo "#### Flavor PSP Packages:" >> $GITHUB_STEP_SUMMARY
+            for pkg in flavor-artifacts/flavor-*.psp flavor-artifacts/flavor-*.exe; do
+              if [ -f "$pkg" ]; then
+                SIZE=$(du -h "$pkg" | cut -f1)
+                echo "- \`$(basename "$pkg")\` ($SIZE)" >> $GITHUB_STEP_SUMMARY
+              fi
+            done
+            
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "#### Taster Test Packages:" >> $GITHUB_STEP_SUMMARY
+            for pkg in flavor-artifacts/taster-*.psp flavor-artifacts/taster-*.exe; do
+              if [ -f "$pkg" ]; then
+                SIZE=$(du -h "$pkg" | cut -f1)
+                echo "- \`$(basename "$pkg")\` ($SIZE)" >> $GITHUB_STEP_SUMMARY
+              fi
+            done
+          fi
+          
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Artifacts" >> $GITHUB_STEP_SUMMARY
           echo "- [View test results](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})" >> $GITHUB_STEP_SUMMARY
+          echo "- [Download Flavor packages](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}#artifacts)" >> $GITHUB_STEP_SUMMARY
       
       - name: 🎯 Check status
         run: |
@@ -258,4 +428,17 @@ jobs:
             echo "❌ Some tests failed"
             exit 1
           fi
-          echo "✅ All tests passed"
+          
+          # Check if Flavor build failed
+          if [ "${{ needs.build-flavor.result }}" != "success" ]; then
+            echo "❌ Flavor build failed"
+            exit 1
+          fi
+          
+          # Check if Flavor tests failed
+          if [ "${{ needs.test-flavor.result }}" != "success" ]; then
+            echo "❌ Flavor tests failed"
+            exit 1
+          fi
+          
+          echo "✅ All tests and builds passed"

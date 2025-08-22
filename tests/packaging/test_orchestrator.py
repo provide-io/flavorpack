@@ -1,103 +1,182 @@
-"""Tests for the packaging orchestrator."""
+"""Unit tests for the PackagingOrchestrator."""
 
-import pytest
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
+import attrs
+import pytest
+
+from flavor.config import FlavorConfig
+from flavor.exceptions import BuildError
 from flavor.packaging.orchestrator import PackagingOrchestrator
 
 
-@pytest.mark.packaging
-@pytest.mark.unit
-def test_orchestrator_constructs_correct_build_command(tmp_path: Path) -> None:
-    """
-    Verifies that the orchestrator calls the Go builder with the correct arguments.
-    """
-    manifest_dir = tmp_path
-    output_path = tmp_path / "dist" / "package.psp"
-
-    # Create mock keys
-    keys_dir = tmp_path / "keys"
-    keys_dir.mkdir()
-    (keys_dir / "priv.key").write_text("mock private key")
-    (keys_dir / "pub.key").write_text("mock public key")
-
-    # Create mock launcher and builder binaries
-    mock_launcher = tmp_path / "flavor-rs-launcher"
-    mock_launcher.write_text("#!/bin/sh\necho mock launcher")
-    mock_launcher.chmod(0o755)
-    
-    mock_builder = tmp_path / "flavor-rs-builder"
-    mock_builder.write_text("#!/bin/sh\necho mock builder")
-    mock_builder.chmod(0o755)
-    
-    # Create mock artifacts
-    (tmp_path / "payload.tgz").write_bytes(b"mock payload")
-    (tmp_path / "python.tgz").write_bytes(b"mock python")
-    (tmp_path / "payload" / "bin").mkdir(parents=True)
-    (tmp_path / "payload" / "bin" / "uv").touch()
-    (tmp_path / "payload" / "wheels").mkdir()
-    
-    orchestrator = PackagingOrchestrator(
-        package_integrity_key_path=str(keys_dir / "priv.key"),
-        public_key_path=str(keys_dir / "pub.key"),
-        output_flavor_path=str(output_path),
-        build_config={},
-        manifest_dir=manifest_dir,
-        package_name="mypackage",
-        entry_point="main:serve",
+@pytest.fixture
+def mock_flavor_config() -> FlavorConfig:
+    """Provides a default FlavorConfig object for tests."""
+    return FlavorConfig.from_dict(
+        config={
+            "build": {},
+            "execution": {},
+        },
+        project_defaults={
+            "name": "test-package",
+            "version": "1.0.0",
+            "entry_point": "test_pkg.main:cli",
+        },
     )
-    
-    with patch(
-        "flavor.packaging.orchestrator.run_command"
-    ) as mock_run, patch(
-        "flavor.packaging.python_packager.PythonPackager.prepare_artifacts"
-    ) as mock_prepare, patch(
-        "flavor.packaging.orchestrator.PackagingOrchestrator._find_helper"
-    ) as mock_find_helper, patch.object(
-        orchestrator, "_build_with_python_builder"
-    ) as mock_build:
-        
-        # Mock helper finding - return appropriate binary based on what's being looked for
-        def find_helper_side_effect(name):
-            if "launcher" in name:
-                return mock_launcher
-            elif "builder" in name:
-                return mock_builder
-            else:
-                raise ValueError(f"Unknown helper: {name}")
-        mock_find_helper.side_effect = find_helper_side_effect
-        
-        # Mock run_command to prevent actual execution
-        mock_run.return_value = None
-        
-        # Mock the artifacts returned by the python packager
-        mock_prepare.return_value = {
-            "payload_tgz": tmp_path / "payload.tgz",
-            "python_tgz": tmp_path / "python.tgz",
-            "payload_dir": tmp_path / "payload",
-        }
-        
-        # Mock the internal build to just call external builder
-        mock_build.side_effect = lambda: orchestrator._build_with_external_builder()
 
+
+@pytest.fixture
+def orchestrator(tmp_path: Path, mock_flavor_config: FlavorConfig) -> PackagingOrchestrator:
+    """Provides a PackagingOrchestrator instance for tests."""
+    # The orchestrator's __init__ was refactored to take individual arguments
+    # instead of a single config object. We unpack the mock config here to match.
+    return PackagingOrchestrator(
+        package_integrity_key_path=None,
+        public_key_path=None,
+        output_flavor_path=str(tmp_path / "dist/test.psp"),
+        build_config={  # Combine build and execution configs
+            **attrs.asdict(mock_flavor_config.build),
+            "execution": attrs.asdict(mock_flavor_config.execution),
+        },
+        manifest_dir=tmp_path,
+        package_name=mock_flavor_config.name,
+        version=mock_flavor_config.version,
+        entry_point=mock_flavor_config.entry_point,
+        show_progress=False,
+    )
+
+
+@pytest.fixture
+def setup_payload_dir(tmp_path: Path) -> Path:
+    """Creates a mock payload directory with necessary files for helpers."""
+    payload_dir = tmp_path / "payload"
+    bin_dir = payload_dir / "bin"
+    wheels_dir = payload_dir / "wheels"
+    bin_dir.mkdir(parents=True)
+    wheels_dir.mkdir()
+    # This `uv` file is required by `create_slot_tarballs`.
+    (bin_dir / "uv").touch()
+    return payload_dir
+
+
+@patch("flavor.psp.format_2025.builder.PSPFBuilder")
+@patch("flavor.packaging.orchestrator.PythonPackager")
+@patch("flavor.packaging.orchestrator.find_launcher_executable")
+@patch("flavor.packaging.orchestrator.PackagingOrchestrator._detect_launcher_type")
+def test_python_builder_flow(
+    mock_detect_launcher,
+    mock_find_launcher,
+    mock_python_packager,
+    mock_pspf_builder,
+    orchestrator: PackagingOrchestrator,
+    setup_payload_dir: Path,
+    tmp_path: Path,
+):
+    """Test the default Python builder flow is orchestrated correctly."""
+    # --- Setup Mocks ---
+    mock_find_launcher.return_value = Path("/path/to/flavor-rs-launcher")
+    mock_detect_launcher.return_value = "rust"
+
+    mock_packager_instance = mock_python_packager.return_value
+    mock_packager_instance.prepare_artifacts.return_value = {
+        "payload_dir": setup_payload_dir,
+        "python_tgz": tmp_path / "python.tgz",
+    }
+    (tmp_path / "python.tgz").touch()
+
+    mock_builder_instance = mock_pspf_builder.create.return_value
+    mock_build_result = MagicMock()
+    mock_build_result.success = True
+    mock_builder_instance.metadata.return_value = mock_builder_instance
+    mock_builder_instance.add_slot.return_value = mock_builder_instance
+    mock_builder_instance.with_options.return_value = mock_builder_instance
+    mock_builder_instance.with_keys.return_value = mock_builder_instance
+    mock_builder_instance.build.return_value = mock_build_result
+
+    # --- Execute ---
+    orchestrator.build_package()
+
+    # --- Assertions ---
+    mock_python_packager.assert_called_once()
+    mock_packager_instance.prepare_artifacts.assert_called_once()
+    mock_pspf_builder.create.assert_called_once()
+    mock_builder_instance.build.assert_called_once_with(Path(orchestrator.output_flavor_path))
+
+
+@patch("flavor.packaging.orchestrator.find_launcher_executable")
+@patch("flavor.packaging.orchestrator.find_builder_executable")
+@patch("flavor.packaging.orchestrator.run_command")
+@patch("flavor.packaging.orchestrator.PythonPackager")
+@patch("flavor.packaging.orchestrator.PackagingOrchestrator._detect_launcher_type")
+def test_external_builder_command_construction(
+    mock_detect_launcher,
+    mock_python_packager,
+    mock_run_command,
+    mock_find_builder,
+    mock_find_launcher,
+    orchestrator: PackagingOrchestrator,
+    setup_payload_dir: Path,
+    tmp_path: Path,
+):
+    """Verify the orchestrator calls the external builder with correct arguments."""
+    # --- Setup Mocks ---
+    mock_find_builder.return_value = Path("/path/to/flavor-rs-builder")
+    mock_find_launcher.return_value = Path("/path/to/flavor-rs-launcher")
+    mock_detect_launcher.return_value = "rust"
+
+    mock_packager_instance = mock_python_packager.return_value
+    mock_packager_instance.prepare_artifacts.return_value = {
+        "payload_dir": setup_payload_dir,
+        "python_tgz": tmp_path / "python.tgz",
+    }
+    (tmp_path / "python.tgz").touch()
+
+    # --- Execute ---
+    orchestrator.builder_bin = "/path/to/flavor-rs-builder"
+    orchestrator.build_package()
+
+    # --- Assertions ---
+    mock_python_packager.assert_called_once()
+    mock_packager_instance.prepare_artifacts.assert_called_once()
+    mock_run_command.assert_called_once()
+
+    call_args = mock_run_command.call_args[0][0]
+    assert call_args[0] == "/path/to/flavor-rs-builder"
+    assert "--manifest" in call_args
+    assert "--output" in call_args
+    assert orchestrator.output_flavor_path in call_args
+    assert "--launcher-bin" in call_args
+    assert "/path/to/flavor-rs-launcher" in call_args
+
+
+@patch("flavor.packaging.orchestrator.find_launcher_executable")
+@patch("flavor.packaging.orchestrator.find_builder_executable")
+@patch("flavor.packaging.orchestrator.run_command", side_effect=BuildError("Build failed"))
+@patch("flavor.packaging.orchestrator.PythonPackager")
+def test_external_builder_error_handling(
+    mock_python_packager,
+    mock_run_command,
+    mock_find_builder,
+    mock_find_launcher,
+    orchestrator: PackagingOrchestrator,
+    setup_payload_dir: Path,
+    tmp_path: Path,
+):
+    """Verify that BuildError from run_command is propagated correctly."""
+    # --- Setup Mocks ---
+    mock_find_builder.return_value = Path("/fake/builder")
+    mock_find_launcher.return_value = Path("/fake/launcher")
+
+    mock_packager_instance = mock_python_packager.return_value
+    mock_packager_instance.prepare_artifacts.return_value = {
+        "payload_dir": setup_payload_dir,
+        "python_tgz": tmp_path / "python.tgz",
+    }
+    (tmp_path / "python.tgz").touch()
+
+    # --- Execute & Assert ---
+    orchestrator.builder_bin = "/fake/builder"
+    with pytest.raises(BuildError, match="Build failed"):
         orchestrator.build_package()
-
-        # Find the final build command call
-        build_call = None
-        for c in mock_run.call_args_list:
-            if c and c.args and c.args[0]:
-                if "flavor-rs-builder" in str(c.args[0]) or "flavor-go-builder" in str(c.args[0]):
-                    build_call = c
-                    break
-
-        assert build_call is not None, "Builder command was not called"
-        build_cmd_args = build_call.args[0]
-        
-        assert "flavor-rs-builder" in build_cmd_args[0] or "flavor-go-builder" in build_cmd_args[0]
-        assert "--manifest" in build_cmd_args
-        assert "--output" in build_cmd_args
-        assert str(output_path) in build_cmd_args
-
-
-# 📦🍜🧪🪄

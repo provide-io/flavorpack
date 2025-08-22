@@ -1,0 +1,6 @@
+# Platform-specific helper binaries
+*/flavor-*-launcher*
+*/flavor-*-builder*
+
+# But keep the directory structure
+!.gitkeep

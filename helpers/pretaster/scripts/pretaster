@@ -1,0 +1,10 @@
+#!/bin/bash
+# Pretaster - Main entry point that delegates to taster_lite.sh
+
+set -e
+
+# Get the workenv directory
+WORKENV="${FLAVOR_WORKENV:-$(dirname "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")")}"
+
+# Execute taster_lite.sh with all arguments
+exec /bin/bash "$WORKENV/scripts/taster_lite.sh" "$@"

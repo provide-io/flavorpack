@@ -515,54 +515,38 @@ class HelperManager:
 
         return None
 
-    def install_prebuilt(self, version: str = "latest") -> list[Path]:
-        """Install pre-built helpers from GitHub releases.
-
-        Args:
-            version: Version to install ("latest" or specific version like "v1.0.0")
-
-        Returns:
-            List of installed helper paths
-        """
-        from flavor.helper_download import HelperDownloader
-
-        downloader = HelperDownloader(cache_dir=self.installed_helpers_bin.parent)
-        if version != "latest":
-            downloader.HELPER_VERSION = version.lstrip("v")
-
-        downloaded = downloader.download_all_helpers()
-        return list(downloaded.values())
-
-    def find_helper(self, name: str, auto_download: bool = True) -> Path | None:
-        """Find a helper binary, optionally downloading if not found.
+    def get_helper(self, name: str) -> Path:
+        """Get path to a helper binary.
 
         Args:
             name: Helper name (e.g., "flavor-rs-launcher")
-            auto_download: If True, download from GitHub if not found locally
 
         Returns:
-            Path to the helper binary or None if not found
+            Path to the helper binary
+
+        Raises:
+            FileNotFoundError: If helper not found
         """
-        # First check local development helpers
+        # 1. Check bundled with package (for PyPI wheels)
+        bundled_path = Path(__file__).parent / "helpers" / self.current_platform / name
+        if bundled_path.exists():
+            return bundled_path
+
+        # 2. Check local development helpers
         local_path = self.helpers_bin / name
         if local_path.exists():
             return local_path
 
-        # Check installed helpers cache
+        # 3. Check installed helpers cache (legacy)
         installed_path = self.installed_helpers_bin / self.current_platform / name
         if installed_path.exists():
             return installed_path
 
-        # Try to download if enabled
-        if auto_download:
-            try:
-                from flavor.helper_download import get_helper
-
-                return get_helper(name)
-            except Exception as e:
-                logger.warning(f"Failed to auto-download {name}: {e}")
-
-        return None
+        # Not found
+        raise FileNotFoundError(
+            f"Helper '{name}' not found for platform {self.current_platform}.\n"
+            f"Searched: {bundled_path}, {local_path}, {installed_path}"
+        )
 
 
 # 🔧🏗️🤖
