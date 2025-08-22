@@ -17,7 +17,6 @@ from flavor.packaging.orchestrator_helpers import (
     create_builder_manifest,
     create_python_builder_metadata,
     create_python_slot_tarballs,
-    create_slot_tarballs,
     find_builder_executable,
     find_launcher_executable,
     write_manifest_file,
@@ -39,6 +38,7 @@ class PackagingOrchestrator:
         build_config: dict[str, Any],
         manifest_dir: Path,
         package_name: str,
+        version: str,
         entry_point: str,
         python_version: str | None = None,
         launcher_bin: str | None = None,
@@ -46,11 +46,13 @@ class PackagingOrchestrator:
         strip_binaries: bool = False,
         show_progress: bool = False,
         key_seed: str | None = None,
+        manifest_type: str = "toml",
     ) -> None:
         self.package_integrity_key_path = package_integrity_key_path
         self.public_key_path = public_key_path
         self.output_flavor_path = output_flavor_path
         self.package_name = package_name
+        self.version = version
         self.entry_point = entry_point
         self.build_config = build_config
         self.manifest_dir = manifest_dir
@@ -60,6 +62,7 @@ class PackagingOrchestrator:
         self.strip_binaries = strip_binaries
         self.show_progress = show_progress
         self.key_seed = key_seed
+        self.manifest_type = manifest_type
 
         # Use HelperManager for finding helpers
         self.helper_manager = HelperManager()
@@ -67,59 +70,30 @@ class PackagingOrchestrator:
 
     def _detect_launcher_type(self, launcher_path: Path) -> str:
         """Detect launcher type by running the binary with --version."""
-        from flavor.utils.subprocess import run_command
-
         try:
             result = run_command(
                 [str(launcher_path), "--version"],
                 capture_output=True,
-                check=False,  # Don't raise on non-zero exit
+                check=False,
                 timeout=5,
                 log_command=False,
             )
             output = result.stdout.lower()
 
-            # Check for identifying strings in the output
             if "flavor-rs-launcher" in output or "rust" in output:
                 return "rust"
-            elif "flavor-go-launcher" in output or "go version" in output:
+            if "flavor-go-launcher" in output or "go version" in output:
                 return "go"
-            else:
-                # Default to rust if we can't determine
-                logger.warning(
-                    f"Could not determine launcher type from output: {result.stdout}"
-                )
-                return "rust"
+
+            logger.warning(f"Could not determine launcher type from output: {result.stdout}")
+            return "rust"
         except Exception as e:
             logger.warning(f"Failed to detect launcher type: {e}")
-            return "rust"  # Default to rust
-
-    def _find_helper(self, helper_name: str) -> Path:
-        """Find a helper binary using HelperManager, auto-downloading if needed."""
-        # Try to find the helper, with auto-download enabled
-        helper_path = self.helper_manager.find_helper(helper_name, auto_download=True)
-
-        if helper_path and helper_path.exists():
-            logger.info(f"Found helper '{helper_name}' at: {helper_path}")
-            return helper_path
-
-        # If not found even with auto-download, provide helpful error
-        helpers = self.helper_manager.list_helpers()
-        available_names = []
-        for helper_list in [helpers["launchers"], helpers["builders"]]:
-            available_names.extend([h.name for h in helper_list])
-
-        raise BuildError(
-            f"Could not find required helper binary '{helper_name}'.\n"
-            f"Available helpers: {available_names or 'None'}.\n"
-            "The helper could not be auto-downloaded. Please check your internet connection\n"
-            "or build helpers locally with: flavor helpers build"
-        )
+            return "rust"
 
     def build_package(self) -> None:
         logger.info("Orchestrator starting build process...")
 
-        # Decide whether to use internal Python builder or external builder
         if self.builder_bin or os.environ.get("FLAVOR_BUILDER_BIN"):
             logger.info("Using external builder binary")
             self._build_with_external_builder()
@@ -130,15 +104,11 @@ class PackagingOrchestrator:
     def _build_with_python_builder(self) -> None:
         """Build package using the internal Python PSPF builder."""
         logger.info("Building package with internal Python builder...")
-
-        # Import builder components
-        # Set up progress reporter
         from flavor.progress import ProgressReporter
         from flavor.psp.format_2025.builder import PSPFBuilder
 
         progress = ProgressReporter(enabled=self.show_progress)
 
-        # Use the PythonPackager to prepare all artifacts
         python_packager = PythonPackager(
             manifest_dir=self.manifest_dir,
             package_name=self.package_name,
@@ -151,129 +121,78 @@ class PackagingOrchestrator:
         with tempfile.TemporaryDirectory(prefix="flavor_build_") as temp_dir_str:
             temp_dir = Path(temp_dir_str)
 
-            # Prepare Python artifacts
             logger.info("Preparing Python artifacts...")
-            with progress.task(
-                total=5, description="Preparing Python artifacts"
-            ) as bar:
+            with progress.task(total=5, description="Preparing Python artifacts") as bar:
                 artifacts = python_packager.prepare_artifacts(temp_dir)
-                if bar:
-                    bar.finish()
+                if bar: bar.finish()
 
-            # Create slot tarballs using helper function
             logger.info("Creating slot tarballs...")
             uv_tarball, python_tarball, wheels_tarball = create_python_slot_tarballs(
                 temp_dir, artifacts, progress
             )
 
-            # Find launcher binary using helper function
-            launcher_path = find_launcher_executable(
-                self.launcher_bin, self._find_helper
-            )
-
-            # Detect launcher type for metadata
+            launcher_path = find_launcher_executable(self.launcher_bin)
             launcher_type = self._detect_launcher_type(launcher_path)
             logger.info(f"Detected launcher type: {launcher_type}")
 
-            # Build metadata using helper function
             is_windows = platform.system() == "Windows"
             uv_exe = "uv.exe" if is_windows else "uv"
             metadata = create_python_builder_metadata(
-                self.package_name, self.build_config, uv_exe
+                self.package_name, self.version, self.build_config
             )
-
-            # Validate all paths use {workenv} placeholder
             metadata = validate_metadata_dict(metadata)
 
-            # Use the fluent builder API with explicit extract_to paths
-            # extract_to="." means extract to workenv root
-            # UV is gzipped and should be mmapped
-            # Python and wheels are already tgz files
             builder = (
                 PSPFBuilder.create()
                 .metadata(**metadata)
-                .add_slot(
-                    "uv",
-                    uv_tarball,
-                    encoding="tgz",
-                    purpose="tool",
-                    lifecycle="runtime",
-                    extract_to="{workenv}",
-                )
-                .add_slot(
-                    "python",
-                    python_tarball,
-                    encoding="tgz",
-                    purpose="runtime",
-                    lifecycle="runtime",
-                    extract_to="{workenv}",
-                )
-                .add_slot(
-                    "wheels",
-                    wheels_tarball,
-                    encoding="tgz",
-                    purpose="payload",
-                    lifecycle="cache",
-                    extract_to="{workenv}/wheels",
-                )
+                .add_slot("uv", uv_tarball, encoding="tgz", purpose="tool", lifecycle="runtime", extract_to="{workenv}")
+                .add_slot("python", python_tarball, encoding="tgz", purpose="runtime", lifecycle="runtime", extract_to="{workenv}")
+                .add_slot("wheels", wheels_tarball, encoding="tgz", purpose="payload", lifecycle="cache", extract_to="{workenv}/wheels")
                 .with_options(
-                    launcher_bin=launcher_path,  # Pass the resolved launcher path
+                    launcher_bin=launcher_path,
                     strip_binaries=self.strip_binaries,
                     enable_mmap=True,
                     page_aligned=True,
                 )
             )
 
-            # Configure keys if provided
             if self.key_seed:
                 builder = builder.with_keys(seed=self.key_seed)
             elif self.package_integrity_key_path and self.public_key_path:
-                # Load PEM keys and convert to raw format
-                from flavor.packaging.keys import (
-                    load_private_key_raw,
-                    load_public_key_raw,
-                )
-
-                private_key = load_private_key_raw(
-                    Path(self.package_integrity_key_path)
-                )
+                from flavor.packaging.keys import load_private_key_raw, load_public_key_raw
+                private_key = load_private_key_raw(Path(self.package_integrity_key_path))
                 public_key = load_public_key_raw(Path(self.public_key_path))
                 builder = builder.with_keys(private=private_key, public=public_key)
 
-            # Build the package
             spinner = progress.create_spinner(description="Building PSPF package")
-            if spinner:
-                spinner.tick()
+            if spinner: spinner.tick()
 
             result = builder.build(Path(self.output_flavor_path))
 
-            if spinner:
-                spinner.finish()
+            if spinner: spinner.finish()
 
             if not result.success:
                 raise BuildError(f"Package build failed: {'; '.join(result.errors)}")
 
-            # Final success message
             if self.show_progress:
-                final_size = Path(self.output_flavor_path).stat().st_size / (
-                    1024 * 1024
-                )
+                final_size = Path(self.output_flavor_path).stat().st_size / (1024 * 1024)
                 logger.info(f"✅ Package built successfully: {final_size:.1f} MB")
                 if result.metadata and "duration_seconds" in result.metadata:
-                    logger.info(
-                        f"⏱️  Build time: {result.metadata['duration_seconds']:.2f}s"
-                    )
+                    logger.info(f"⏱️  Build time: {result.metadata['duration_seconds']:.2f}s")
 
     def _build_with_external_builder(self) -> None:
         """Build package using an external builder binary (Go/Rust)."""
         logger.info("Building package with external builder...")
-
-        # Set up progress reporter
         from flavor.progress import ProgressReporter
+        from flavor.packaging.orchestrator_helpers import create_slot_tarballs
+        
+        # If we have a JSON manifest, we can use it directly with external builders
+        if self.manifest_type == "json":
+            self._build_with_json_manifest()
+            return
 
         progress = ProgressReporter(enabled=self.show_progress)
 
-        # Use the new PythonPackager to prepare all artifacts
         python_packager = PythonPackager(
             manifest_dir=self.manifest_dir,
             package_name=self.package_name,
@@ -286,88 +205,111 @@ class PackagingOrchestrator:
         with tempfile.TemporaryDirectory(prefix="flavor_build_") as temp_dir_str:
             temp_dir = Path(temp_dir_str)
 
-            # Step 1: Python packager prepares all artifacts
             logger.info("Preparing Python artifacts...")
-            with progress.task(
-                total=5, description="Preparing Python artifacts"
-            ) as bar:
+            with progress.task(total=5, description="Preparing Python artifacts") as bar:
                 artifacts = python_packager.prepare_artifacts(temp_dir)
-                if bar:
-                    bar.finish()
+                if bar: bar.finish()
 
-            # Note: Signature generation is handled by the builders (Go/Rust)
-            # They generate Ed25519 signatures when creating the PSPF package
-
-            # Create tarballs for slots
             logger.info("Creating slot tarballs...")
             slots = create_slot_tarballs(temp_dir, artifacts, progress)
 
-            # Step 3: Create manifest for builder
-            key_paths = {
-                "private": self.package_integrity_key_path,
-                "public": self.public_key_path,
-            }
+            key_paths = {"private": self.package_integrity_key_path, "public": self.public_key_path}
             manifest = create_builder_manifest(
-                self.package_name, self.build_config, slots, key_paths
+                self.package_name, self.version, self.build_config, slots, key_paths
             )
 
-            # Write manifest to file
             manifest_path = write_manifest_file(manifest, temp_dir)
+            packager_executable = find_builder_executable(self.builder_bin)
+            launcher_executable = find_launcher_executable(self.launcher_bin)
 
-            # Step 4: Find and use builder helper
-            packager_executable = find_builder_executable(
-                self.builder_bin, self._find_helper
-            )
-
-            # Find launcher binary
-            launcher_executable = find_launcher_executable(
-                self.launcher_bin, self._find_helper
-            )
-
-            # Detect launcher type for metadata
             detected_launcher_type = self._detect_launcher_type(launcher_executable)
             logger.info(f"Detected launcher type: {detected_launcher_type}")
 
             build_cmd_args = [
                 str(packager_executable),
-                "--manifest",
-                str(manifest_path),
-                "--output",
-                self.output_flavor_path,
-                "--launcher-bin",
-                str(launcher_executable),
+                "--manifest", str(manifest_path),
+                "--output", self.output_flavor_path,
+                "--launcher-bin", str(launcher_executable),
             ]
 
-            # Add key options if provided
-            if self.package_integrity_key_path:
-                build_cmd_args.extend(
-                    ["--private-key", self.package_integrity_key_path]
-                )
-            if self.public_key_path:
-                build_cmd_args.extend(["--public-key", self.public_key_path])
             if self.key_seed:
                 build_cmd_args.extend(["--key-seed", self.key_seed])
+            elif self.package_integrity_key_path:
+                build_cmd_args.extend(["--private-key", self.package_integrity_key_path])
+                if self.public_key_path:
+                    build_cmd_args.extend(["--public-key", self.public_key_path])
 
             logger.info("Building flavor package...")
             spinner = progress.create_spinner(description="Building PSPF package")
-            if spinner:
-                spinner.tick()
+            if spinner: spinner.tick()
 
-            # We don't need a specific cwd for the builder, it takes absolute paths
             run_command(build_cmd_args, check=True, capture_output=True)
 
-            if spinner:
-                spinner.finish()
+            if spinner: spinner.finish()
 
-            # Final success message with progress
             if self.show_progress:
-                final_size = Path(self.output_flavor_path).stat().st_size / (
-                    1024 * 1024
-                )
+                final_size = Path(self.output_flavor_path).stat().st_size / (1024 * 1024)
                 logger.info(f"✅ Package built successfully: {final_size:.1f} MB")
 
+    def _build_with_json_manifest(self) -> None:
+        """Build package using a JSON manifest directly with external builders."""
+        logger.info("Building package with JSON manifest and external builder...")
+        from flavor.progress import ProgressReporter
+        import json
 
-# 🏛️ 📝 🕹️
-
-
-# 📦🍜📄🪄
+        progress = ProgressReporter(enabled=self.show_progress)
+        
+        # Write the manifest to a temporary file
+        with tempfile.TemporaryDirectory(prefix="flavor_json_build_") as temp_dir_str:
+            temp_dir = Path(temp_dir_str)
+            
+            # Transform nested JSON manifest to flat structure expected by external builders
+            flat_manifest = {
+                "name": self.build_config.get("package", {}).get("name", self.package_name),
+                "version": self.build_config.get("package", {}).get("version", self.version),
+                "command": self.build_config.get("execution", {}).get("command", self.entry_point),
+                "slots": self.build_config.get("slots", []),  # Default to empty slots array
+            }
+            
+            # Add optional fields if present
+            if "environment" in self.build_config.get("execution", {}):
+                flat_manifest["env"] = self.build_config["execution"]["environment"]
+            
+            # Write manifest directly to file
+            manifest_path = temp_dir / "manifest.json"
+            manifest_path.write_text(json.dumps(flat_manifest, indent=2))
+            logger.info(f"Using JSON manifest at: {manifest_path}")
+            
+            # Find executables
+            packager_executable = find_builder_executable(self.builder_bin)
+            launcher_executable = find_launcher_executable(self.launcher_bin)
+            
+            detected_launcher_type = self._detect_launcher_type(launcher_executable)
+            logger.info(f"Detected launcher type: {detected_launcher_type}")
+            
+            # Build command
+            build_cmd_args = [
+                str(packager_executable),
+                "--manifest", str(manifest_path),
+                "--output", self.output_flavor_path,
+                "--launcher-bin", str(launcher_executable),
+            ]
+            
+            if self.key_seed:
+                build_cmd_args.extend(["--key-seed", self.key_seed])
+            elif self.package_integrity_key_path:
+                build_cmd_args.extend(["--private-key", self.package_integrity_key_path])
+                if self.public_key_path:
+                    build_cmd_args.extend(["--public-key", self.public_key_path])
+            
+            logger.info("Building package...")
+            spinner = progress.create_spinner(description="Building PSPF package")
+            if spinner: spinner.tick()
+            
+            run_command(build_cmd_args, check=True, capture_output=True)
+            
+            if spinner: spinner.finish()
+            
+            if self.show_progress:
+                final_size = Path(self.output_flavor_path).stat().st_size / (1024 * 1024)
+                logger.info(f"✅ Package built successfully: {final_size:.1f} MB")

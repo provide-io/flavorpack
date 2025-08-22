@@ -59,29 +59,37 @@ def helper_list(verbose: bool) -> None:
 
     if helpers["launchers"]:
         click.echo("\n📦 Launchers:")
-        for launcher in sorted(helpers["launchers"], key=lambda h: h.name):
+        launchers = sorted(helpers["launchers"], key=lambda h: h.name)
+        for i, launcher in enumerate(launchers):
+            if i > 0:
+                click.echo()  # Add newline between entries
             size_mb = launcher.size / (1024 * 1024)
             version = get_version(launcher.path) or launcher.version or "unknown"
             click.echo(
                 f"  • {launcher.name} ({launcher.language}, {size_mb:.1f} MB) - {version}"
             )
+            click.echo(f"    Path: {launcher.path}")
+            if launcher.checksum:
+                click.echo(f"    SHA256: {launcher.checksum}")
             if verbose:
-                if launcher.checksum:
-                    click.echo(f"    Checksum: {launcher.checksum}")
                 if launcher.built_from:
                     click.echo(f"    Source: {launcher.built_from}")
 
     if helpers["builders"]:
         click.echo("\n🔨 Builders:")
-        for builder in sorted(helpers["builders"], key=lambda h: h.name):
+        builders = sorted(helpers["builders"], key=lambda h: h.name)
+        for i, builder in enumerate(builders):
+            if i > 0:
+                click.echo()  # Add newline between entries
             size_mb = builder.size / (1024 * 1024)
             version = get_version(builder.path) or builder.version or "unknown"
             click.echo(
                 f"  • {builder.name} ({builder.language}, {size_mb:.1f} MB) - {version}"
             )
+            click.echo(f"    Path: {builder.path}")
+            if builder.checksum:
+                click.echo(f"    SHA256: {builder.checksum}")
             if verbose:
-                if builder.checksum:
-                    click.echo(f"    Checksum: {builder.checksum}")
                 if builder.built_from:
                     click.echo(f"    Source: {builder.built_from}")
 

@@ -1,0 +1,11 @@
+{
+  "package": {
+    "name": "test-flavor",
+    "version": "1.0.0",
+    "description": "Test flavor package"
+  },
+  "execution": {
+    "command": "flavor",
+    "args": ["--version"]
+  }
+}

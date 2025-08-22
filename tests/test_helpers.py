@@ -390,10 +390,10 @@ class TestHelperManager:
         assert "flavor-go-launcher" in results["passed"]
         assert "flavor-rs-builder" in results["skipped"]
     
-    def test_install_prebuilt_placeholder(self):
-        """Test that install_prebuilt is a placeholder for now."""
-        installed = self.manager.install_prebuilt()
-        assert installed == []
+    def test_get_helper_not_found(self):
+        """Test that get_helper raises FileNotFoundError when helper not found."""
+        with pytest.raises(FileNotFoundError, match="flavor-nonexistent"):
+            self.manager.get_helper("flavor-nonexistent")
 
 
 @pytest.mark.unit

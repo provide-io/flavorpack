@@ -1,0 +1,13 @@
+# Built packages
+dist/
+
+# Test artifacts
+test-*.txt
+.extraction.*
+
+# Cache directories
+.cache/
+__pycache__/
+
+# Test logs
+logs/
