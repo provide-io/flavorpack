@@ -65,10 +65,7 @@ The Progressive Secure Package Format is a polyglot file format that works as bo
 
 ## 📚 Documentation
 
-- **[Format Specification](docs/SPECIFICATION.md)** - Complete PSPF/2025 specification
-- **[Development Guide](DEVELOPMENT.md)** - Setup and contribution instructions
-- **[Design Rationale](docs/RATIONALE.md)** - Why PSPF exists and design decisions
-- **[API Documentation](docs/README.md)** - Full documentation index
+For a complete guide to using Flavor, developing with it, and contributing to the project, please see our **[Full Documentation](docs/DOCUMENTATION.md)**.
 
 ## 🏗️ Architecture
 
@@ -102,7 +99,7 @@ workenv/flavor_*/bin/pytest --cov=src/flavor --cov-report=term-missing
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see our [Development Guide](DEVELOPMENT.md) for setup instructions and coding standards.
+We welcome contributions! Please see our **[Contribution Guide](docs/06_contribution_guide.md)** for setup instructions and development workflow.
 
 ## 📄 License
 
