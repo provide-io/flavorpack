@@ -1,0 +1,71 @@
+{
+  "name": "pretaster-orchestrate",
+  "version": "1.0.0",
+  "description": "Multi-slot orchestration test with complex slot interactions",
+  "package": {
+    "name": "pretaster-orchestrate",
+    "version": "1.0.0",
+    "description": "Multi-slot orchestration test with complex slot interactions"
+  },
+  "format": "PSPF/2025",
+  "slots": [
+    {
+      "slot": 0,
+      "name": "orchestrate.tar.gz",
+      "path": "{workenv}/scripts/orchestrate.tar.gz",
+      "purpose": "payload",
+      "lifecycle": "cached",
+      "encoding": "gzip",
+      "extract_to": "{workenv}/orchestrator"
+    },
+    {
+      "slot": 1,
+      "name": "utilities.tar.gz",
+      "path": "{workenv}/slots/utilities.tar.gz",
+      "purpose": "payload",
+      "lifecycle": "cached",
+      "encoding": "none",
+      "extract_to": "{workenv}/slot1"
+    },
+    {
+      "slot": 2,
+      "name": "flavor-go-builder",
+      "path": "{workenv}/../bin/flavor-go-builder-darwin_arm64",
+      "purpose": "payload",
+      "lifecycle": "cached",
+      "encoding": "none",
+      "extract_to": "{workenv}/slot2"
+    },
+    {
+      "slot": 3,
+      "name": "scripts.tar.gz",
+      "path": "{workenv}/slots/scripts.tar.gz",
+      "purpose": "payload",
+      "lifecycle": "cached",
+      "encoding": "none",
+      "extract_to": "{workenv}/slot3"
+    }
+  ],
+  "runtime": {
+    "env": {
+      "unset": ["*"],
+      "pass": ["PATH", "HOME", "USER", "LANG", "LC_*", "TERM", "FLAVOR_*"],
+      "set": {
+        "ORCHESTRATE_MODE": "full",
+        "SLOT_COUNT": "4"
+      }
+    }
+  },
+  "command": "/bin/bash {workenv}/orchestrator/orchestrate.sh",
+  "environment": {
+    "TEST_MODE": "orchestration"
+  },
+  "execution": {
+    "command": "/bin/bash {workenv}/orchestrator/orchestrate.sh",
+    "args": [],
+    "env": {
+      "TEST_MODE": "orchestration"
+    },
+    "primary_slot": 0
+  }
+}

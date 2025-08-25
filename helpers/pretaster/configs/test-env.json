@@ -1,0 +1,39 @@
+{
+  "name": "pretaster-env",
+  "version": "1.0.0",
+  "description": "Environment variable filtering test",
+  "package": {
+    "name": "pretaster-env",
+    "version": "1.0.0",
+    "description": "Environment variable filtering test"
+  },
+  "format": "PSPF/2025",
+  "slots": [
+    {
+      "slot": 0,
+      "name": "env_test.py",
+      "path": "{workenv}/scripts/env_test.py",
+      "purpose": "payload",
+      "lifecycle": "cached",
+      "encoding": "none",
+      "extract_to": "{workenv}/scripts"
+    }
+  ],
+  "runtime": {
+    "env": {
+      "unset": ["*"],
+      "pass": ["PATH", "HOME", "USER", "LANG", "LC_*", "TERM", "FLAVOR_*"],
+      "set": {
+        "PRETASTER_MODE": "env_test"
+      }
+    }
+  },
+  "command": "python3 {workenv}/scripts/env_test.py",
+  "environment": {},
+  "execution": {
+    "command": "python3 {workenv}/scripts/env_test.py",
+    "args": [],
+    "env": {},
+    "primary_slot": 0
+  }
+}
