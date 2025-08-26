@@ -239,6 +239,9 @@ class SlotMetadata:
     path: Path | None = field(default=None)
     extract_to: str | None = field(default=None)
     platform: str | None = field(default=None)  # Added for backward compatibility
+    permissions: str | None = field(
+        default=None
+    )  # Unix permissions as octal string (e.g., "0755")
 
     def to_descriptor(self) -> SlotDescriptor:
         """Convert legacy metadata to new descriptor."""

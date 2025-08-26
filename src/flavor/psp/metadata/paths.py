@@ -41,16 +41,9 @@ def validate_metadata_path(path: str) -> str:
         # This is a placeholder like "{version}" or "{package_name}"
         return path
 
-    # Remove any leading slashes (absolute paths are not allowed)
+    # Absolute paths should be kept as-is (new design: "/" means absolute path)
     if path.startswith("/"):
-        # Try to extract the relative part if it looks like a common pattern
-        if "/workenv/" in path:
-            # Extract everything after /workenv/
-            idx = path.index("/workenv/") + len("/workenv/")
-            path = path[idx:]
-        else:
-            # Just remove the leading slash
-            path = path.lstrip("/")
+        return path
 
     # If path doesn't start with {workenv}, add it
     if not path.startswith("{workenv}"):

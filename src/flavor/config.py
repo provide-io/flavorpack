@@ -57,7 +57,9 @@ class FlavorConfig:
     execution: ExecutionConfig = field(factory=ExecutionConfig)
 
     @classmethod
-    def from_dict(cls, config: dict[str, Any], project_defaults: dict[str, Any]) -> "FlavorConfig":
+    def from_dict(
+        cls, config: dict[str, Any], project_defaults: dict[str, Any]
+    ) -> "FlavorConfig":
         """
         Factory method to create a validated FlavorConfig from a dictionary.
 
@@ -73,15 +75,21 @@ class FlavorConfig:
         """
         name = config.get("name") or project_defaults.get("name")
         if not name:
-            raise ValidationError("Project name must be defined in [project].name or [tool.flavor].name")
+            raise ValidationError(
+                "Project name must be defined in [project].name or [tool.flavor].name"
+            )
 
         version = config.get("version") or project_defaults.get("version")
         if not version:
-            raise ValidationError("Project version must be defined in [project].version or [tool.flavor].version")
+            raise ValidationError(
+                "Project version must be defined in [project].version or [tool.flavor].version"
+            )
 
         entry_point = config.get("entry_point") or project_defaults.get("entry_point")
         if not entry_point:
-            raise ValidationError("Project entry_point must be defined in [project].scripts or [tool.flavor].entry_point")
+            raise ValidationError(
+                "Project entry_point must be defined in [project].scripts or [tool.flavor].entry_point"
+            )
 
         # Metadata
         meta_conf = config.get("metadata", {})

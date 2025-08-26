@@ -35,3 +35,12 @@ helpers/bin/
 *.psp
 target/
 *code.sh
+
+# Test manifests (generated during testing)
+flavor-manifest.json
+helpers/pretaster/pretaster-build-manifest.json
+helpers/pretaster/test-runner.sh
+*bfile*
+.hypothesis
+*.whl
+bin/

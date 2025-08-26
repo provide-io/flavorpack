@@ -1,35 +1,36 @@
-# Flavor Documentation
+# Flavor Pack Documentation
 
-Welcome to the official documentation for Flavor, the Progressive Secure Package Format (PSPF) packaging system.
+Welcome to the official documentation for Flavor Pack (`flavorpack`), the Progressive Secure Package Format (PSPF) packaging system.
 
-This documentation is designed to be a comprehensive guide for users, developers, and contributors. It is structured to help you learn effectively, from high-level concepts to detailed technical specifications.
+## Documentation Structure
 
-## Table of Contents
+### For Users
+- **[User Guide](USER-GUIDE.md)** - Getting started, creating packages, and using Flavor Pack
+- **[Changelog](CHANGELOG.md)** - Version history and release notes
 
-*   **[1. Introduction: What is Flavor?](./00_introduction.md)**
-    *   Learn about the problems Flavor solves and why it's a powerful tool for modern software distribution.
+### For Developers
+- **[Development Guide](DEVELOPMENT.md)** - Setting up development environment, building, and testing
+- **[Architecture](ARCHITECTURE.md)** - Technical architecture and design decisions
+- **[CI/CD Pipeline](CI-CD.md)** - Continuous integration and deployment
 
-*   **[2. Quick Start](./01_quick_start.md)**
-    *   A hands-on tutorial to package your first Python application with Flavor.
+### Reference
+- **[API Reference](API-REFERENCE.md)** - PSPF specification and command reference
+- **[Versioning](VERSIONING.md)** - Version strategy and compatibility
+- **[Troubleshooting](TROUBLESHOOTING.md)** - Common issues and solutions
 
-*   **[3. Core Concepts](./02_core_concepts.md)**
-    *   Understand the magic behind Flavor and PSPF: the polyglot executable, the index, slots, and the security model.
+## Quick Links
 
-*   **[4. The Flavor Ecosystem](./03_ecosystem.md)**
-    *   An overview of the different components (Python, Go, Rust) and how they work together.
+- **Repository**: https://github.com/provide-io/flavor
+- **Issues**: https://github.com/provide-io/flavor/issues
+- **License**: MIT
 
-*   **[5. Advanced Usage](./04_advanced_usage.md)**
-    *   Master your workflow with advanced topics like multi-language packages and dependency management.
+## Getting Started
 
-*   **[6. PSPF/2025 Specification Reference](./05_specification_reference.md)**
-    *   A developer-focused reference for the PSPF/2025 specification.
-
-*   **[7. Contribution Guide](./06_contribution_guide.md)**
-    *   Learn how to set up your development environment, run tests, and contribute to Flavor.
-
-*   **[8. Versioning](./07_versioning.md)**
-    *   Understand the versioning strategy for the PSPF format and Flavor's tooling.
+1. **New to Flavor Pack?** Start with the [User Guide](USER-GUIDE.md)
+2. **Want to contribute?** Read the [Development Guide](DEVELOPMENT.md)
+3. **Need technical details?** See the [Architecture](ARCHITECTURE.md)
+4. **Having issues?** Check [Troubleshooting](TROUBLESHOOTING.md)
 
 ---
 
-*For legacy documentation, see the `stale/` directory.*
+*Legacy documentation has been archived in the `stale/` directory for historical reference.*

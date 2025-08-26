@@ -12,16 +12,18 @@ class SafeOptimizer:
     def remove_cache_files(self, wheel_path: Path) -> int:
         """Remove __pycache__ and .pyc files - always safe."""
         saved = 0
-        with zipfile.ZipFile(wheel_path, "r") as zin, zipfile.ZipFile(
-            wheel_path.with_suffix(".tmp"),
-            "w",
-            zipfile.ZIP_DEFLATED,
-            compresslevel=9,
-        ) as zout:
+        with (
+            zipfile.ZipFile(wheel_path, "r") as zin,
+            zipfile.ZipFile(
+                wheel_path.with_suffix(".tmp"),
+                "w",
+                zipfile.ZIP_DEFLATED,
+                compresslevel=9,
+            ) as zout,
+        ):
             for item in zin.infolist():
-                if (
-                    "__pycache__" not in item.filename
-                    and not item.filename.endswith(".pyc")
+                if "__pycache__" not in item.filename and not item.filename.endswith(
+                    ".pyc"
                 ):
                     zout.writestr(item, zin.read(item.filename))
                 else:
@@ -36,12 +38,15 @@ class SafeOptimizer:
         saved = 0
         test_patterns = ["tests/", "test/", "testing/", "*_test.py", "test_*.py"]
 
-        with zipfile.ZipFile(wheel_path, "r") as zin, zipfile.ZipFile(
-            wheel_path.with_suffix(".tmp"),
-            "w",
-            zipfile.ZIP_DEFLATED,
-            compresslevel=9,
-        ) as zout:
+        with (
+            zipfile.ZipFile(wheel_path, "r") as zin,
+            zipfile.ZipFile(
+                wheel_path.with_suffix(".tmp"),
+                "w",
+                zipfile.ZIP_DEFLATED,
+                compresslevel=9,
+            ) as zout,
+        ):
             for item in zin.infolist():
                 skip = any(pattern in item.filename for pattern in test_patterns)
                 if not skip:
@@ -56,12 +61,15 @@ class SafeOptimizer:
         """Remove documentation - safe for runtime."""
         saved = 0
 
-        with zipfile.ZipFile(wheel_path, "r") as zin, zipfile.ZipFile(
-            wheel_path.with_suffix(".tmp"),
-            "w",
-            zipfile.ZIP_DEFLATED,
-            compresslevel=9,
-        ) as zout:
+        with (
+            zipfile.ZipFile(wheel_path, "r") as zin,
+            zipfile.ZipFile(
+                wheel_path.with_suffix(".tmp"),
+                "w",
+                zipfile.ZIP_DEFLATED,
+                compresslevel=9,
+            ) as zout,
+        ):
             for item in zin.infolist():
                 skip = any(
                     item.filename.endswith(ext) for ext in [".md", ".rst", ".txt"]
@@ -80,12 +88,15 @@ class SafeOptimizer:
     def strip_type_hints(self, wheel_path: Path) -> int:
         """Remove .pyi stub files - safe if not using mypy at runtime."""
         saved = 0
-        with zipfile.ZipFile(wheel_path, "r") as zin, zipfile.ZipFile(
-            wheel_path.with_suffix(".tmp"),
-            "w",
-            zipfile.ZIP_DEFLATED,
-            compresslevel=9,
-        ) as zout:
+        with (
+            zipfile.ZipFile(wheel_path, "r") as zin,
+            zipfile.ZipFile(
+                wheel_path.with_suffix(".tmp"),
+                "w",
+                zipfile.ZIP_DEFLATED,
+                compresslevel=9,
+            ) as zout,
+        ):
             for item in zin.infolist():
                 if (
                     not item.filename.endswith(".pyi")

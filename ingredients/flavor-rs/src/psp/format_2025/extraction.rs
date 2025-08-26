@@ -1,0 +1,437 @@
+//! Extraction logic for PSPF slots
+//!
+//! This module handles the extraction of slots from PSPF packages,
+//! including single files, tarballs, and permission management.
+
+#![deny(warnings)]
+#![deny(clippy::all)]
+#![deny(clippy::pedantic)]
+#![allow(clippy::module_name_repetitions)]
+
+use std::fs;
+use std::io::Read;
+use std::path::Path;
+
+use flate2::read::GzDecoder;
+use log::{debug, error, trace};
+use tar::Archive;
+
+#[cfg(unix)]
+use super::constants::DEFAULT_DIR_PERMS;
+use super::constants::{
+    ENCODING_GZIP, ENCODING_RAW,
+    ENCODING_TAR, ENCODING_TGZ,
+};
+use super::reader::Reader;
+use super::slots::SlotDescriptor;
+use crate::exceptions::{FlavorError, Result};
+
+/// Extract a slot to the specified directory
+pub fn extract_slot(reader: &mut Reader, slot_index: usize, dest_dir: &Path) -> Result<()> {
+    trace!("🎯 Extracting slot {slot_index} to {dest_dir:?}");
+
+    // Get descriptors
+    let descriptors = reader.read_slot_descriptors()?;
+    trace!("📊 Found {} slot descriptors", descriptors.len());
+
+    if slot_index >= descriptors.len() {
+        debug!(
+            "❌ Slot {} not found (available: 0-{})",
+            slot_index,
+            descriptors.len() - 1
+        );
+        return Err(FlavorError::Generic(format!(
+            "Slot index {slot_index} out of range"
+        )));
+    }
+
+    let descriptor = &descriptors[slot_index];
+    let desc_encoding = descriptor.encoding;
+    // Copy values to avoid unaligned access
+    let desc_offset = descriptor.offset;
+    let desc_size = descriptor.size;
+    trace!(
+        "📏 Slot {slot_index} descriptor: offset={desc_offset:#x}, size={desc_size}, encoding={desc_encoding}"
+    );
+
+    // Read slot data using backend (raw/compressed)
+    let slot_data = reader.read_slot(descriptor)?;
+    trace!(
+        "📦 Read {} bytes (raw) for slot {}",
+        slot_data.len(),
+        slot_index
+    );
+
+    // Decompress based on encoding
+    let decompressed_data = match desc_encoding {
+        ENCODING_GZIP => {
+            // Single file, gzipped
+            trace!("🗜️ Decompressing GZIP slot {slot_index}");
+            let mut decoder = GzDecoder::new(&slot_data[..]);
+            let mut decompressed = Vec::new();
+            decoder
+                .read_to_end(&mut decompressed)
+                .map_err(|e| FlavorError::Generic(format!("Failed to decompress GZIP: {e}")))?;
+            trace!(
+                "✅ Decompressed {} -> {} bytes",
+                slot_data.len(),
+                decompressed.len()
+            );
+            decompressed
+        }
+        ENCODING_TGZ => {
+            // Tar archive, then gzipped
+            trace!("🗜️ Decompressing TGZ slot {slot_index}");
+            let mut decoder = GzDecoder::new(&slot_data[..]);
+            let mut decompressed = Vec::new();
+            decoder
+                .read_to_end(&mut decompressed)
+                .map_err(|e| FlavorError::Generic(format!("Failed to decompress TGZ: {e}")))?;
+            trace!(
+                "✅ Decompressed tar.gz {} -> {} bytes",
+                slot_data.len(),
+                decompressed.len()
+            );
+            decompressed
+        }
+        ENCODING_RAW | ENCODING_TAR => {
+            // Raw uncompressed data or uncompressed tar
+            trace!("📄 Using raw/uncompressed data for slot {slot_index}");
+            slot_data
+        }
+        unknown => {
+            error!(
+                "❌ FATAL: Unknown encoding {unknown} for slot {slot_index}"
+            );
+            return Err(FlavorError::Generic(format!(
+                "Unknown encoding {unknown} for slot {slot_index}"
+            )));
+        }
+    };
+
+    trace!(
+        "📊 Slot {} decompressed size: {} bytes",
+        slot_index,
+        decompressed_data.len()
+    );
+
+    // Get metadata for slot info
+    let metadata = reader.read_metadata()?;
+
+    // Get slot info from metadata
+    let (slot_name, slot_encoding, slot_purpose) = if slot_index < metadata.slots.len() {
+        let slot_info = &metadata.slots[slot_index];
+        (
+            slot_info.name.clone(),
+            slot_info.encoding.clone(),
+            slot_info.purpose.clone(),
+        )
+    } else {
+        (format!("slot_{slot_index}"), String::new(), String::new())
+    };
+
+    debug!(
+        "🎯 Slot {slot_index} encoding: '{slot_encoding}', purpose: '{slot_purpose}', name: '{slot_name}'"
+    );
+
+    // Strict encoding validation - no fallthrough allowed
+    match desc_encoding {
+        ENCODING_GZIP => {
+            // ENCODING_GZIP (2) means "Gzipped single file" per the PSPF spec
+            if is_tarball(&decompressed_data) {
+                error!(
+                    "❌ FATAL: Slot {slot_index} encoding is GZIP but data is a tarball!"
+                );
+                return Err(FlavorError::Generic(format!(
+                    "Encoding mismatch: slot {slot_index} declared as GZIP but contains tar archive"
+                )));
+            }
+            extract_single_file(
+                &decompressed_data,
+                dest_dir,
+                &descriptors,
+                slot_index,
+                &slot_purpose,
+            )?;
+        }
+        ENCODING_TGZ => {
+            // ENCODING_TGZ (3) means "Tar archive, then gzipped"
+            if !is_tarball(&decompressed_data) {
+                error!(
+                    "❌ FATAL: Slot {slot_index} encoding is TGZ but data is not a tarball!"
+                );
+                error!(
+                    "  First 16 bytes: {:02x?}",
+                    &decompressed_data[..16.min(decompressed_data.len())]
+                );
+                return Err(FlavorError::Generic(format!(
+                    "Encoding mismatch: slot {slot_index} declared as TGZ but is not a tar archive"
+                )));
+            }
+            debug!("📦 Slot {slot_index} is a tar archive, extracting...");
+            extract_tarball(&decompressed_data, dest_dir)?;
+        }
+        ENCODING_TAR => {
+            // ENCODING_TAR (1) means "Uncompressed tar archive"
+            if !is_tarball(&decompressed_data) {
+                error!(
+                    "❌ FATAL: Slot {slot_index} encoding is TAR but data is not a tarball!"
+                );
+                return Err(FlavorError::Generic(format!(
+                    "Encoding mismatch: slot {slot_index} declared as TAR but is not a tar archive"
+                )));
+            }
+            debug!(
+                "📦 Slot {slot_index} is an uncompressed tar archive, extracting..."
+            );
+            extract_tarball(&decompressed_data, dest_dir)?;
+        }
+        ENCODING_RAW => {
+            // ENCODING_RAW (0) means "Raw uncompressed data"
+            if is_tarball(&decompressed_data) {
+                error!(
+                    "❌ FATAL: Slot {slot_index} encoding is RAW but data is a tarball!"
+                );
+                return Err(FlavorError::Generic(format!(
+                    "Encoding mismatch: slot {slot_index} declared as RAW but contains tar archive"
+                )));
+            }
+            let output_path = dest_dir.join(&slot_name);
+            extract_raw_file(&decompressed_data, &output_path, &descriptors, slot_index)?;
+        }
+        unknown_encoding => {
+            // This case is now handled in the decompression step above
+            error!(
+                "❌ FATAL: Unhandled encoding {unknown_encoding} for slot {slot_index} in extraction phase"
+            );
+            return Err(FlavorError::Generic(format!(
+                "Unhandled encoding {unknown_encoding} for slot {slot_index} in extraction phase"
+            )));
+        }
+    }
+
+    Ok(())
+}
+
+/// Extract a single gzipped file
+fn extract_single_file(
+    decompressed_data: &[u8],
+    dest_dir: &Path,
+    descriptors: &[SlotDescriptor],
+    slot_index: usize,
+    slot_purpose: &str,
+) -> Result<()> {
+    // This is a single gzipped file (not a tarball)
+    // Per PSPF spec: ENCODING_GZIP = single file that has been gzipped
+    // dest_dir IS the full file path (e.g., bin/uv)
+    debug!("📝 Writing single gzipped file directly to {dest_dir:?}");
+
+    // Create parent directory if needed (secure permissions)
+    if let Some(parent) = dest_dir.parent() {
+        create_parent_directory(parent)?;
+    } else {
+        debug!("⚠️ No parent directory for dest_dir: {dest_dir:?}");
+    }
+
+    // Write the file directly to the specified path
+    write_file_with_logging(dest_dir, decompressed_data)?;
+
+    // Set file permissions based on descriptor or defaults
+    set_file_permissions(dest_dir, descriptors, slot_index, slot_purpose)?;
+
+    Ok(())
+}
+
+/// Extract a raw (non-gzipped) file
+fn extract_raw_file(
+    decompressed_data: &[u8],
+    output_path: &Path,
+    #[cfg_attr(not(unix), allow(unused_variables))] descriptors: &[SlotDescriptor],
+    #[cfg_attr(not(unix), allow(unused_variables))] slot_index: usize,
+) -> Result<()> {
+    debug!("📝 Writing non-GZIP single file to {output_path:?}");
+
+    if let Some(parent) = output_path.parent() {
+        create_parent_directory(parent)?;
+    }
+
+    write_file_with_logging(output_path, decompressed_data)?;
+
+    // Set file permissions based on descriptor or defaults
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+
+        // Get permissions from descriptor
+        let descriptor = &descriptors[slot_index];
+        // Copy to avoid unaligned access
+        let perms = descriptor.permissions;
+        let mode = if perms != 0 {
+            u32::from(perms)
+        } else {
+            // Default to secure permissions for regular files
+            u32::from(crate::psp::format_2025::constants::DEFAULT_FILE_PERMS)
+        };
+
+        match fs::set_permissions(output_path, fs::Permissions::from_mode(mode)) {
+            Ok(()) => debug!("✅ Set permissions {mode:o} on {output_path:?}"),
+            Err(e) => error!("❌ Failed to set permissions on {output_path:?}: {e}"),
+        }
+    }
+
+    debug!("✅ Successfully wrote file: {output_path:?}");
+    Ok(())
+}
+
+/// Create a parent directory with secure permissions
+fn create_parent_directory(parent: &Path) -> Result<()> {
+    debug!("📁 Creating parent directory for single file: {parent:?}");
+    fs::create_dir_all(parent)?;
+    debug!("✅ Created parent directory: {parent:?}");
+
+    // Set secure directory permissions
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        // Only set permissions if we just created the directory
+        if parent.exists() {
+            match fs::set_permissions(parent, fs::Permissions::from_mode(u32::from(DEFAULT_DIR_PERMS)))
+            {
+                Ok(()) => debug!("✅ Set permissions on parent directory"),
+                Err(e) => debug!("⚠️ Could not set permissions on parent directory: {e}"),
+            }
+        }
+    }
+
+    Ok(())
+}
+
+/// Write a file with logging
+fn write_file_with_logging(path: &Path, data: &[u8]) -> Result<()> {
+    debug!("📝 Writing {} bytes to file: {:?}", data.len(), path);
+    match fs::write(path, data) {
+        Ok(()) => {
+            debug!("✅ Successfully wrote file: {path:?}");
+            Ok(())
+        }
+        Err(e) => {
+            error!("❌ Failed to write file {path:?}: {e}");
+            Err(FlavorError::Generic(format!("Failed to write file: {e}")))
+        }
+    }
+}
+
+/// Set file permissions based on descriptor or defaults
+#[cfg(unix)]
+fn set_file_permissions(
+    path: &Path,
+    descriptors: &[SlotDescriptor],
+    slot_index: usize,
+    slot_purpose: &str,
+) -> Result<()> {
+    use std::os::unix::fs::PermissionsExt;
+
+    // Get permissions from descriptor
+    let descriptor = &descriptors[slot_index];
+    // Copy to avoid unaligned access
+    let perms = descriptor.permissions;
+    let mode = if perms != 0 {
+        u32::from(perms)
+    } else {
+        // Default permissions based on purpose
+        if slot_purpose == "tool" || path.to_string_lossy().contains("/bin/") {
+            u32::from(crate::psp::format_2025::constants::DEFAULT_EXECUTABLE_PERMS) // Executable: rwx------
+        } else {
+            u32::from(crate::psp::format_2025::constants::DEFAULT_FILE_PERMS) // Regular file: rw-------
+        }
+    };
+
+    match fs::set_permissions(path, fs::Permissions::from_mode(mode)) {
+        Ok(()) => {
+            debug!("✅ Set permissions {mode:o} on {path:?}");
+            Ok(())
+        }
+        Err(e) => {
+            error!("❌ Failed to set permissions on {path:?}: {e}");
+            Err(FlavorError::Generic(format!(
+                "Failed to set permissions: {e}"
+            )))
+        }
+    }
+}
+
+#[cfg(not(unix))]
+fn set_file_permissions(
+    _path: &Path,
+    _descriptors: &[SlotDescriptor],
+    _slot_index: usize,
+    _slot_purpose: &str,
+) -> Result<()> {
+    // No-op on non-Unix systems
+    Ok(())
+}
+
+/// Check if data looks like a tar archive
+fn is_tarball(data: &[u8]) -> bool {
+    // Check for tar magic number at offset 257
+    if data.len() > 262 {
+        // tar archives have "ustar" at offset 257
+        &data[257..262] == b"ustar"
+    } else {
+        false
+    }
+}
+
+/// Extract a tarball to a directory
+pub fn extract_tarball(data: &[u8], dest_dir: &Path) -> Result<()> {
+    debug!("📦 Extracting tarball to {dest_dir:?}");
+
+    // Create destination directory if it doesn't exist
+    if !dest_dir.exists() {
+        fs::create_dir_all(dest_dir)?;
+    }
+
+    // Create tar archive reader
+    let mut tar = Archive::new(std::io::Cursor::new(data));
+
+    // Extract all files
+    for entry_result in tar.entries()? {
+        let mut entry = entry_result?;
+        let path = entry.path()?;
+        let dest_path = dest_dir.join(&path);
+
+        trace!("📄 Extracting: {path:?}");
+
+        // Create parent directories if needed
+        if let Some(parent) = dest_path.parent() {
+            if !parent.exists() {
+                fs::create_dir_all(parent)?;
+            }
+        }
+
+        // Extract the entry
+        entry.unpack(&dest_path)?;
+
+        // Set permissions for extracted files
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            if let Ok(metadata) = entry.header().mode() {
+                let permissions = fs::Permissions::from_mode(metadata);
+                let _ = fs::set_permissions(&dest_path, permissions);
+            }
+        }
+    }
+
+    debug!("✅ Tarball extracted successfully");
+    Ok(())
+}
+
+/// Check if a gzipped data is a tarball
+pub fn is_gzipped_tarball(data: &[u8]) -> Result<bool> {
+    // Try to decompress and check if it's a tarball
+    let mut decoder = GzDecoder::new(data);
+    let mut decompressed = Vec::new();
+    decoder.read_to_end(&mut decompressed)?;
+    Ok(is_tarball(&decompressed))
+}

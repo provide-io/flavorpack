@@ -4,45 +4,73 @@
 
 set -euo pipefail
 
+# CRITICAL: Unset any PRETASTER_PSP environment variable that might be set
+# This prevents confusion from GitHub Actions or other environments
+unset PRETASTER_PSP || true
+
 PLATFORM="${1}"
 VERSION="${2}"
 TEST_SUITE="${3:-all}"
+# Only use PRETASTER_PSP if explicitly passed as 4th argument
 PRETASTER_PSP="${4:-}"
 
 echo "🧪 Running pretaster tests for $PLATFORM"
-echo "📦 Helper version: $VERSION"
+echo "📦 Ingredient version: $VERSION"
 echo "🎯 Test suite: $TEST_SUITE"
 
-# Extract platform-specific helpers
-echo "📥 Extracting helpers for $PLATFORM..."
-mkdir -p helpers/bin
-if [ -f "helpers-dist/flavor-helpers-$VERSION-$PLATFORM.zip" ]; then
-    unzip -o "helpers-dist/flavor-helpers-$VERSION-$PLATFORM.zip" -d helpers/bin/
+# Extract or copy platform-specific ingredients
+echo "📥 Setting up ingredients for $PLATFORM..."
+mkdir -p ingredients/bin
+
+# Check if ingredients are already extracted (actions/download-artifact extracts them)
+if [ -d "ingredients-dist" ] && [ "$(ls -A ingredients-dist 2>/dev/null)" ]; then
+    # Check if they're individual files (already extracted)
+    if [ -f "ingredients-dist/flavor-go-builder-$VERSION-$PLATFORM" ] || \
+       [ -f "ingredients-dist/flavor-rs-builder-$VERSION-$PLATFORM" ]; then
+        echo "📂 Ingredients already extracted, copying..."
+        cp -f ingredients-dist/* ingredients/bin/ 2>/dev/null || true
+    # Or if they're zipped
+    elif [ -f "ingredients-dist/flavor-ingredients-$VERSION-$PLATFORM.zip" ]; then
+        echo "📦 Extracting zipped ingredients..."
+        unzip -o "ingredients-dist/flavor-ingredients-$VERSION-$PLATFORM.zip" -d ingredients/bin/
+    elif [ -f "ingredients-dist/flavor-ingredients-$VERSION-all.zip" ]; then
+        echo "📦 Extracting all-platform ingredients..."
+        unzip -o "ingredients-dist/flavor-ingredients-$VERSION-all.zip" -d ingredients/bin/
+    else
+        echo "⚠️ No ingredients found in ingredients-dist/, will rely on existing ingredients/bin/"
+    fi
 else
-    echo "⚠️ Platform-specific helpers not found, using all helpers"
-    unzip -o "helpers-dist/flavor-helpers-$VERSION-all.zip" -d helpers/bin/
+    echo "⚠️ No ingredients-dist/ directory, will rely on existing ingredients/bin/"
 fi
 
-# Make helpers executable
-chmod +x helpers/bin/* || true
+# Make ingredients executable
+chmod +x ingredients/bin/* || true
 
-# List available helpers
-echo "📦 Available helpers:"
-ls -la helpers/bin/
+# List available ingredients
+echo "📦 Available ingredients:"
+ls -la ingredients/bin/
 
-# Create symlinks for pretaster to find the helpers
-cd helpers
-for file in bin/flavor-*-$VERSION-$PLATFORM; do
+# Create symlinks for pretaster to find the ingredients
+for file in ingredients/bin/flavor-*-$VERSION-$PLATFORM; do
     if [ -f "$file" ]; then
         # Create symlink without version and platform suffix
         base_name=$(basename "$file" | sed "s/-$VERSION-$PLATFORM//")
-        ln -sf "$(basename "$file")" "bin/$base_name"
-        echo "Created symlink: bin/$base_name -> $(basename "$file")"
+        ln -sf "$(basename "$file")" "ingredients/bin/$base_name"
+        echo "Created symlink: ingredients/bin/$base_name -> $(basename "$file")"
     fi
 done
 
 # Change to pretaster directory
-cd pretaster
+cd helpers/pretaster
+
+# Set workenv base for builders to resolve {workenv} placeholders
+export FLAVOR_WORKENV_BASE="$(pwd)"
+echo "📁 Setting FLAVOR_WORKENV_BASE=$FLAVOR_WORKENV_BASE"
+echo "📂 Current directory: $(pwd)"
+echo "📂 Contents of scripts directory:"
+ls -la scripts/ || echo "No scripts directory"
+echo "📂 Contents of slots directory:"
+ls -la slots/ || echo "No slots directory"
 
 # Create logs directory
 mkdir -p logs
@@ -51,17 +79,39 @@ mkdir -p logs
 echo "🚀 Starting test suite: $TEST_SUITE"
 
 if [ -n "$PRETASTER_PSP" ]; then
-    echo "📦 Using pre-built pretaster: $PRETASTER_PSP"
+    if [ -f "$PRETASTER_PSP" ]; then
+        echo "📦 Using pre-built pretaster: $PRETASTER_PSP"
+        
+        # Ensure the PSP is executable
+        if [[ "$PLATFORM" != *"windows"* ]]; then
+            chmod +x "$PRETASTER_PSP" 2>/dev/null || true
+        fi
+    else
+        echo "⚠️ PRETASTER_PSP was set to '$PRETASTER_PSP' but file doesn't exist"
+        echo "📝 Falling back to Makefile-based execution"
+        PRETASTER_PSP=""  # Clear it to use Makefile approach
+    fi
+fi
+
+echo "🔍 Debug: PRETASTER_PSP = '$PRETASTER_PSP'"
+echo "🔍 Debug: File exists = $([ -f "$PRETASTER_PSP" ] && echo "yes" || echo "no")"
+
+if [ -n "$PRETASTER_PSP" ]; then
     
-    # Ensure the PSP is executable
-    if [[ "$PLATFORM" != *"windows"* ]]; then
-        chmod +x "$PRETASTER_PSP" 2>/dev/null || true
+    # Setup ingredients directory if they exist in CI download location
+    if [ -d "../../ingredients-dist" ]; then
+        echo "📥 Found downloaded ingredients, copying to expected location..."
+        mkdir -p ../bin
+        cp -f ../../ingredients-dist/* ../bin/ 2>/dev/null || true
+        # Make them executable
+        chmod +x ../bin/* 2>/dev/null || true
+        echo "✅ Ingredients copied to ../bin/"
     fi
     
     # Configure to use Go builder + Rust launcher for test packages
     # This completes the cross-language chain
-    export PRETASTER_BUILDER="bin/flavor-go-builder-${VERSION}-${PLATFORM}"
-    export PRETASTER_LAUNCHER="bin/flavor-rs-launcher-${VERSION}-${PLATFORM}"
+    export PRETASTER_BUILDER="../bin/flavor-go-builder-${VERSION}-${PLATFORM}"
+    export PRETASTER_LAUNCHER="../bin/flavor-rs-launcher-${VERSION}-${PLATFORM}"
     
     echo "   Builder for tests: $PRETASTER_BUILDER"
     echo "   Launcher for tests: $PRETASTER_LAUNCHER"
@@ -90,7 +140,7 @@ else
     # Original Makefile-based execution
     case "$TEST_SUITE" in
       all)
-        # Run all tests (helpers already available)
+        # Run all tests (ingredients already available)
         make all
         EXIT_CODE=$?
         ;;

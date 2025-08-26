@@ -1,6 +1,6 @@
-# env.ps1 - flavor Development Environment Setup
+# env.ps1 - flavorpack Development Environment Setup
 #
-# This script sets up a clean, isolated development environment for flavor
+# This script sets up a clean, isolated development environment for flavorpack
 # using 'uv' for high-performance virtual environment and dependency management.
 #
 # Usage: .\env.ps1
@@ -49,7 +49,7 @@ Write-Success "Cleared Python aliases and PYTHONPATH"
 # --- Project Validation ---
 if (-not (Test-Path "pyproject.toml")) {
     Write-Error "No 'pyproject.toml' found in current directory"
-    Write-Host "Please run this script from the flavor root directory"
+    Write-Host "Please run this script from the flavorpack root directory"
     exit 1
 }
 
@@ -99,9 +99,9 @@ $TFARCH = switch ([System.Environment]::Is64BitOperatingSystem) {
 }
 
 # Workenv directory setup
-$Profile = if ($env:FLAVOR_PROFILE) { $env:FLAVOR_PROFILE } else { "default" }
+$Profile = if ($env:FLAVORPACK_PROFILE) { $env:FLAVORPACK_PROFILE } else { "default" }
 if ($Profile -eq "default") {
-    $VenvDir = "workenv/flavor_${TFOS}_${TFARCH}"
+    $VenvDir = "workenv/flavorpack_${TFOS}_${TFARCH}"
 } else {
     $VenvDir = "workenv/${Profile}_${TFOS}_${TFARCH}"
 }
@@ -153,7 +153,7 @@ if (Test-Path $ActivateScript) {
 Write-Header "📦 Installing Dependencies"
 
 # Create log directory
-$LogDir = Join-Path $env:TEMP "flavor_setup"
+$LogDir = Join-Path $env:TEMP "flavorpack_setup"
 New-Item -ItemType Directory -Force -Path $LogDir | Out-Null
 
 Write-Host "Syncing dependencies..." -NoNewline
@@ -167,10 +167,10 @@ catch {
     exit 1
 }
 
-Write-Host "Installing flavor in editable mode..." -NoNewline
+Write-Host "Installing flavorpack in editable mode..." -NoNewline
 try {
     & uv pip install --no-deps -e . 2>&1 | Out-File -FilePath (Join-Path $LogDir "install.log")
-    Write-Success " flavor installed"
+    Write-Success " flavorpack installed"
 }
 catch {
     Write-Error " Installation failed"
@@ -188,8 +188,7 @@ $SiblingCount = 0
 # Pattern-based sibling
 Get-ChildItem -Path $ParentDir -Directory -Filter "pyvider-*" | ForEach-Object {
     $SiblingName = $_.Name
-    $WithDeps = $true
-    $DepsText = if ($WithDeps) { " with dependencies" } else { " without dependencies" }
+    $WithDeps = $true    $DepsText = if ($WithDeps) { " with dependencies" } else { " without dependencies" }
     Write-Host "Installing $SiblingName$DepsText..." -NoNewline
     try {
         if ($WithDeps) {
@@ -208,8 +207,7 @@ Get-ChildItem -Path $ParentDir -Directory -Filter "pyvider-*" | ForEach-Object {
 # Explicit sibling
 $tofusoupDir = Join-Path $ParentDir "tofusoup"
 if (Test-Path $tofusoupDir) {
-    $WithDeps = $true
-    $DepsText = if ($WithDeps) { " with dependencies" } else { " without dependencies" }
+    $WithDeps = $true    $DepsText = if ($WithDeps) { " with dependencies" } else { " without dependencies" }
     Write-Host "Installing tofusoup$DepsText..." -NoNewline
     try {
         if ($WithDeps) {
@@ -229,8 +227,7 @@ if (Test-Path $tofusoupDir) {
 # Explicit sibling
 $wrkenvDir = Join-Path $ParentDir "wrkenv"
 if (Test-Path $wrkenvDir) {
-    $WithDeps = $true
-    $DepsText = if ($WithDeps) { " with dependencies" } else { " without dependencies" }
+    $WithDeps = $true    $DepsText = if ($WithDeps) { " with dependencies" } else { " without dependencies" }
     Write-Host "Installing wrkenv$DepsText..." -NoNewline
     try {
         if ($WithDeps) {
@@ -281,7 +278,7 @@ Write-Host ("━" * 40)
 $PYTHONCmd = Get-Command python -ErrorAction SilentlyContinue
 if ($PYTHONCmd) {
     Write-Host ("{0,-12}: {1}" -f "Python", $PYTHONCmd.Source)
-    $Version = & python --version 2>&1 | Select-Object -First 1
+    $Version = & python --version 2>&1 2>&1 | Select-Object -First 1
     Write-Host ("{0,-12}  {1}" -f "", $Version)
 }
 
@@ -289,7 +286,7 @@ if ($PYTHONCmd) {
 $UVCmd = Get-Command uv -ErrorAction SilentlyContinue
 if ($UVCmd) {
     Write-Host ("{0,-12}: {1}" -f "UV", $UVCmd.Source)
-    $Version = & uv --version 2>&1 | Select-Object -First 1
+    $Version = & uv --version 2>&1 2>&1 | Select-Object -First 1
     Write-Host ("{0,-12}  {1}" -f "", $Version)
 }
 
@@ -322,11 +319,11 @@ Write-Host ("━" * 40)
 # --- Final Summary ---
 Write-Header "✅ Environment Ready!"
 
-Write-Host "`n$("flavor development environment activated" | Write-Host -ForegroundColor Green)"
+Write-Host "`n$("flavorpack development environment activated" | Write-Host -ForegroundColor Green)"
 Write-Host "Virtual environment: $VenvDir"
 Write-Host "Profile: $Profile"
 Write-Host "`nUseful commands:"
-Write-Host "  flavor --help  # flavor CLI"
+Write-Host "  flavorpack --help  # flavorpack CLI"
 Write-Host "  wrkenv status  # Check tool versions"
 Write-Host "  wrkenv container status  # Container status"
 Write-Host "  pytest  # Run tests"
