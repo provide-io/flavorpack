@@ -1,0 +1,280 @@
+name: 02 🔬 Pretaster Validation
+
+on:
+  workflow_dispatch:
+    inputs:
+      ingredient_run_id:
+        description: 'Ingredient Prep run ID (leave empty for latest)'
+        type: string
+        required: false
+      test_suite:
+        description: 'Test suite to run (all, combo, core, direct)'
+        type: string
+        required: false
+        default: 'all'
+  
+  workflow_run:
+    workflows: ["01 🥘 Ingredient Prep"]
+    types: [completed]
+    branches: [main, develop]
+
+jobs:
+  setup:
+    name: 🔧 Setup & Get Helpers
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      ingredient_run_id: ${{ steps.ingredients.outputs.run_id }}
+      test_matrix: ${{ steps.matrix.outputs.matrix }}
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 🔍 Determine version
+        id: version
+        run: |
+          VERSION=$(cat VERSION)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+      
+      - name: 🔍 Get Ingredient prep run
+        id: ingredients
+        run: |
+          # Get Ingredient prep run ID
+          if [ -n "${{ inputs.ingredient_run_id }}" ]; then
+            RUN_ID="${{ inputs.ingredient_run_id }}"
+          else
+            RUN_ID=$(gh run list --workflow 01-ingredient-prep.yml --status success --limit 1 --json databaseId -q '.[0].databaseId')
+          fi
+          echo "run_id=$RUN_ID" >> $GITHUB_OUTPUT
+        env:
+          GH_TOKEN: ${{ github.token }}
+      
+      - name: 🧪 Define test matrix
+        id: matrix
+        run: |
+          .github/scripts/create-pretaster-matrix.sh > matrix.json
+          MATRIX=$(cat matrix.json | jq -c .)
+          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+
+  build-pretaster:
+    name: 🔨 Build Pretaster Packages
+    needs: setup
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.setup.outputs.test_matrix) }}
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 🦀 Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+      
+      - name: 🐹 Setup Go  
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+      
+      - name: 📥 Download ingredients for platform
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          workflow: 01-ingredient-prep.yml
+          run_id: ${{ needs.setup.outputs.ingredient_run_id }}
+          name: flavor-ingredients-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
+          path: ./ingredients-dist
+      
+      - name: 🔧 Setup ingredients
+        run: |
+          # Extract ingredients and set up directory structure
+          .github/scripts/download-ingredients.sh ingredients-dist \
+            "${{ needs.setup.outputs.version }}" \
+            "${{ matrix.platform }}"
+          
+          # Ingredients are already in ingredients/bin/ from the script
+          chmod +x ingredients/bin/*
+          ls -la ingredients/bin/
+      
+      - name: 🔨 Build Pretaster packages
+        working-directory: helpers/pretaster
+        run: |
+          export FLAVOR_WORKENV_BASE=$(pwd)
+          export FLAVOR_LOG_LEVEL=info
+          
+          # Create output directory
+          mkdir -p dist
+          
+          # Build test packages using JSON manifests directly
+          echo "📦 Building Pretaster test packages..."
+          
+          # Build with different builder/launcher combinations
+          ../../ingredients/bin/flavor-go-builder-${{ matrix.platform }} \
+            --manifest configs/test-echo.json \
+            --launcher-bin ../../ingredients/bin/flavor-rs-launcher-${{ matrix.platform }} \
+            --output dist/pretaster-echo.psp \
+            --key-seed pretaster-test
+          
+          ../../ingredients/bin/flavor-rs-builder-${{ matrix.platform }} \
+            --manifest configs/test-shell.json \
+            --launcher-bin ../../ingredients/bin/flavor-go-launcher-${{ matrix.platform }} \
+            --output dist/pretaster-shell.psp \
+            --key-seed pretaster-test
+          
+          ls -la dist/
+      
+      - name: 📤 Upload Pretaster packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: pretaster-packages-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
+          path: helpers/pretaster/dist/
+
+  test-crosslang:
+    name: 🧪 Test Cross-Language Chain
+    needs: [setup, build-pretaster, test-pretaster]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.setup.outputs.test_matrix) }}
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 📥 Download pretaster packages
+        uses: actions/download-artifact@v4
+        with:
+          name: pretaster-psp-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
+          path: ./build
+      
+      - name: 📥 Download ingredients for platform
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          workflow: 01-ingredient-prep.yml
+          name: flavor-ingredients-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
+          path: ./ingredients-dist
+      
+      - name: 🔍 Verify Cross-Language Package
+        shell: bash
+        run: |
+          echo "📦 Checking for pretaster PSP..."
+          PRETASTER_PSP="build/pretaster-${{ needs.setup.outputs.version }}-${{ matrix.platform }}.psp"
+          
+          if [ -f "$PRETASTER_PSP" ]; then
+            echo "✅ Pretaster package found: $PRETASTER_PSP"
+            ls -lh "$PRETASTER_PSP"
+          else
+            echo "⚠️ Pretaster package not found at: $PRETASTER_PSP"
+            echo "Contents of build directory:"
+            ls -la build/ || echo "Build directory not found"
+          fi
+      
+      - name: 🧪 Run cross-language tests
+        run: |
+          # Set the path to the pretaster PSP (downloaded to ./build)
+          PRETASTER_PSP="$(pwd)/build/pretaster-${{ needs.setup.outputs.version }}-${{ matrix.platform }}.psp"
+          
+          # Verify the PSP exists
+          if [ ! -f "$PRETASTER_PSP" ]; then
+            echo "❌ Pretaster PSP not found at: $PRETASTER_PSP"
+            echo "Contents of build directory:"
+            ls -la build/ || echo "Build directory not found"
+            exit 1
+          fi
+          
+          chmod +x "$PRETASTER_PSP" 2>/dev/null || true
+          
+          # Run tests with the absolute path to the PSP
+          .github/scripts/run-pretaster-tests.sh \
+            "${{ matrix.platform }}" \
+            "${{ needs.setup.outputs.version }}" \
+            "${{ inputs.test_suite }}" \
+            "$PRETASTER_PSP"
+      
+      - name: 📤 Upload test logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: crosslang-logs-${{ matrix.platform }}-${{ github.run_id }}
+          path: helpers/pretaster/logs/
+
+  test-pretaster:
+    name: 🧪 Build Pretaster ${{ matrix.name }}
+    needs: setup
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.setup.outputs.test_matrix) }}
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 🦀 Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+      
+      - name: 🐹 Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+      
+      - name: 📥 Download ingredients for platform
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          workflow: 01-ingredient-prep.yml
+          name: flavor-ingredients-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
+          path: ./ingredients-dist
+      
+      - name: 🔧 Build pretaster PSP
+        shell: bash
+        run: |
+          # The dawidd6 action downloads the artifact contents (zip files) to ingredients-dist/
+          echo "Contents of ingredients-dist:"
+          ls -la ingredients-dist/ || true
+          
+          # Extract the ingredient binaries
+          .github/scripts/download-ingredients.sh ingredients-dist \
+            "${{ needs.setup.outputs.version }}" \
+            "${{ matrix.platform }}"
+          
+          # Build pretaster PSP using the consolidated script
+          mkdir -p build
+          .github/scripts/build-pretaster.sh \
+            "${{ matrix.platform }}" \
+            "${{ needs.setup.outputs.version }}" \
+            "simple" \
+            "build"
+      
+      - name: 📤 Upload pretaster PSP
+        uses: actions/upload-artifact@v4
+        with:
+          name: pretaster-psp-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
+          path: build/pretaster-${{ needs.setup.outputs.version }}-${{ matrix.platform }}.*
+      
+      - name: 📤 Upload test logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pretaster-logs-${{ matrix.platform }}-${{ github.run_id }}
+          path: helpers/pretaster/logs/
+
+  validate:
+    name: ✅ Validate PSPF Compatibility
+    needs: [setup, test-pretaster, test-crosslang]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 📥 Download all logs
+        uses: actions/download-artifact@v4
+        with:
+          pattern: '*-logs-*'
+          path: all-logs
+      
+      - name: 📊 Generate compatibility report
+        run: |
+          .github/scripts/generate-pspf-compatibility-report.sh all-logs

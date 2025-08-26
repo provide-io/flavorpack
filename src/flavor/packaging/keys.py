@@ -11,7 +11,12 @@ from cryptography.hazmat.primitives.asymmetric import ed25519
 
 
 def generate_key_pair(keys_dir: Path) -> tuple[Path, Path]:
-    """Generates a new Ed25519 key pair and saves them to the specified directory.
+    """Generates a new Ed25519 key pair and saves them to PEM files.
+
+    This function is used for CLI operations where keys need to be persisted
+    to files for later use. For internal package building where keys are
+    used immediately and discarded, use flavor.psp.format_2025.crypto.generate_key_pair()
+    which returns raw bytes instead.
 
     Ed25519 is used for all PSPF packages as specified in the PSPF/2025 format.
     This provides:
@@ -25,6 +30,9 @@ def generate_key_pair(keys_dir: Path) -> tuple[Path, Path]:
 
     Returns:
         tuple: (private_key_path, public_key_path)
+        
+    See Also:
+        flavor.psp.format_2025.crypto.generate_key_pair: For in-memory key generation
     """
     # Generate Ed25519 key pair
     private_key = ed25519.Ed25519PrivateKey.generate()

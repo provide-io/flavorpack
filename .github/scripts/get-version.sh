@@ -1,18 +1,18 @@
 #!/bin/bash
-# Get the helper version from VERSION file
+# Get the current version from VERSION file
 # Usage: get-version.sh
 
-set -e
+set -euo pipefail
 
-# Try to read from .github/VERSION file
-VERSION_FILE="$(dirname "$0")/../VERSION"
+# Find the VERSION file (look in repo root)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+VERSION_FILE="$REPO_ROOT/VERSION"
 
 if [ -f "$VERSION_FILE" ]; then
     VERSION=$(cat "$VERSION_FILE" | tr -d '[:space:]')
+    echo "$VERSION"
 else
-    # Fallback to default
-    VERSION="0.3.0"
-    echo "Warning: VERSION file not found, using default: $VERSION" >&2
+    echo "❌ VERSION file not found at $VERSION_FILE" >&2
+    echo "0.3.0"  # Default fallback
 fi
-
-echo "$VERSION"

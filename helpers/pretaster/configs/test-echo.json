@@ -14,7 +14,7 @@
     {
       "slot": 0,
       "name": "echo_test.py",
-      "path": "scripts/echo_test.py",
+      "path": "{workenv}/scripts/echo_test.py",
       "purpose": "payload",
       "lifecycle": "cached",
       "encoding": "none",

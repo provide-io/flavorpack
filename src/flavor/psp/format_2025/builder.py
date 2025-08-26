@@ -26,6 +26,7 @@ from flavor.psp.format_2025.constants import (
     CAPABILITY_MMAP,
     CAPABILITY_PAGE_ALIGNED,
     CAPABILITY_SIGNED,
+    DEFAULT_FILE_PERMS,
     DEFAULT_MAX_MEMORY,
     DEFAULT_MIN_MEMORY,
     ENCODING_GZIP,
@@ -87,41 +88,62 @@ def build_package(spec: BuildSpec, output_path: Path) -> BuildResult:
     start_time = time.time()
 
     # Validate specification
-    logger.info("🔍 Validating build specification...")
+    logger.info("🔍🏗️🚀 Validating build specification")
+    logger.debug(
+        "📋🔍📋 Build spec details",
+        slot_count=len(spec.slots),
+        has_metadata=bool(spec.metadata),
+        has_keys=bool(spec.keys),
+    )
     errors = validate_complete(spec)
     if errors:
-        logger.error(f"❌ Validation failed with {len(errors)} errors")
+        logger.error("❌🔍🚨 Validation failed", error_count=len(errors))
         for error in errors:
-            logger.error(f"  {error}")
+            logger.error("  ❌📋📋 Validation error", error=error)
         return BuildResult(success=False, errors=errors)
+    logger.debug("✅🔍📋 Validation passed")
 
     # Resolve keys
-    logger.info("🔑 Resolving signing keys...")
+    logger.info("🔑🔍🚀 Resolving signing keys")
+    logger.trace("🔑🔍📋 Key configuration", has_keys=bool(spec.keys))
     try:
         private_key, public_key = resolve_keys(spec.keys)
     except Exception as e:
         return BuildResult(success=False, errors=[f"🔑 Key resolution failed: {e}"])
 
     # Prepare slots
-    logger.info(f"📦 Preparing {len(spec.slots)} slots...")
+    logger.info("📦🏗️🚀 Preparing slots", slot_count=len(spec.slots))
+    logger.debug("🎰🔍📋 Slot details", slots=[s.name for s in spec.slots])
     try:
         prepared_slots = prepare_slots(spec.slots, spec.options)
+        logger.debug("🎰✅📋 Slots prepared", prepared_count=len(prepared_slots))
     except Exception as e:
+        logger.error("📦🏗️❌ Slot preparation failed", error=str(e))
         return BuildResult(success=False, errors=[f"📦 Slot preparation failed: {e}"])
 
     # Write package
-    logger.info(f"✍️ Writing package to {output_path}...")
+    logger.info("✍️🏗️🚀 Writing package", output=str(output_path))
+    logger.trace(
+        "📦🔍📋 Package assembly details",
+        slot_count=len(prepared_slots),
+        has_signature=bool(private_key),
+    )
     try:
         package_size = _write_package(
             spec, output_path, prepared_slots, private_key, public_key
         )
+        logger.debug("✍️✅📋 Package written", size_bytes=package_size)
     except Exception as e:
+        logger.error("✍️🏗️❌ Package writing failed", error=str(e))
         return BuildResult(success=False, errors=[f"❌ Package writing failed: {e}"])
 
     # Success!
     duration = time.time() - start_time
     logger.info(
-        f"✅ Package built successfully in {duration:.2f}s ({package_size / 1024 / 1024:.1f} MB)"
+        "✅🏗️🎉 Package built successfully",
+        duration_seconds=duration,
+        size_mb=package_size / 1024 / 1024,
+        path=str(output_path),
     )
 
     return BuildResult(
@@ -177,8 +199,13 @@ def prepare_slots(
             )
         )
 
-        logger.debug(
-            f"   📍 Slot '{slot.name}': {len(data)} bytes, encoding: {encoding_type}"
+        logger.trace(
+            "🎰🔍📋 Slot prepared",
+            name=slot.name,
+            raw_size=len(data),
+            compressed_size=len(slot_data),
+            encoding=encoding_type,
+            checksum=checksum_str[:8],
         )
 
     return prepared
@@ -235,18 +262,38 @@ def _load_slot_data(slot: SlotMetadata) -> bytes:
         # Empty slot
         return b""
 
-    if not slot.path.exists():
-        raise BuildError(f"Slot path does not exist: {slot.path}")
+    # Resolve {workenv} if present in path
+    slot_path = slot.path
+    if isinstance(slot_path, str) and "{workenv}" in slot_path:
+        import os
 
-    if slot.path.is_dir():
+        # Priority: 1. FLAVOR_WORKENV_BASE env var, 2. Current working directory
+        base_dir = os.environ.get("FLAVOR_WORKENV_BASE", os.getcwd())
+        slot_path = Path(slot_path.replace("{workenv}", base_dir))
+        logger.debug(
+            f"📍 Resolved slot path: {slot.path} -> {slot_path} (base: {base_dir})"
+        )
+    elif isinstance(slot_path, Path) and "{workenv}" in str(slot_path):
+        import os
+
+        base_dir = os.environ.get("FLAVOR_WORKENV_BASE", os.getcwd())
+        slot_path = Path(str(slot_path).replace("{workenv}", base_dir))
+        logger.debug(
+            f"📍 Resolved slot path: {slot.path} -> {slot_path} (base: {base_dir})"
+        )
+
+    if not slot_path.exists():
+        raise BuildError(f"Slot path does not exist: {slot_path}")
+
+    if slot_path.is_dir():
         # Create tarball for directory
         buffer = io.BytesIO()
         with tarfile.open(fileobj=buffer, mode="w") as tar:
-            tar.add(slot.path, arcname=".")
+            tar.add(slot_path, arcname=".")
         buffer.seek(0)
         return buffer.read()
     else:
-        return slot.path.read_bytes()
+        return slot_path.read_bytes()
 
 
 def _determine_encoding(
@@ -311,6 +358,11 @@ def _write_package(
         launcher_data = load_launcher_binary("rust")
 
     launcher_size = len(launcher_data)
+    logger.trace(
+        "🚀📏📋 Launcher loaded",
+        size=launcher_size,
+        has_binary=bool(spec.options.launcher_bin),
+    )
 
     # Create launcher info for metadata
     from flavor.psp.format_2025.metadata.assembly import (
@@ -385,6 +437,16 @@ def _write_package(
                 f.write(data_to_write)
 
                 # Create descriptor
+                # Parse permissions from metadata or use default
+                if slot.metadata.permissions:
+                    # Parse octal string (e.g., "0755" -> 0o755)
+                    try:
+                        slot_permissions = int(slot.metadata.permissions.lstrip("0"), 8)
+                    except (ValueError, AttributeError):
+                        slot_permissions = DEFAULT_FILE_PERMS
+                else:
+                    slot_permissions = DEFAULT_FILE_PERMS
+
                 descriptor = SlotDescriptor(
                     id=i,
                     name=slot.metadata.name,
@@ -395,7 +457,7 @@ def _write_package(
                     encoding=slot.encoding_type,  # Using encoding field now
                     purpose=_map_purpose(slot.metadata.purpose),
                     lifecycle=_map_lifecycle(slot.metadata.lifecycle),
-                    permissions=0o644,
+                    permissions=slot_permissions,
                     alignment=PAGE_SIZE
                     if spec.options.page_aligned
                     else SLOT_ALIGNMENT,
@@ -418,6 +480,18 @@ def _write_package(
         # Write final index (pack() calculates checksum internally)
         f.seek(index_offset)
         f.write(index.pack())
+
+    # Set the output file as executable (matching Rust and Go builders)
+    # Respects umask - typically results in 0o755 with default umask
+    import stat
+
+    current_mode = output_path.stat().st_mode
+    output_path.chmod(current_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+    logger.trace(
+        "🔧📝📋 Set output file as executable",
+        path=str(output_path),
+        mode=oct(output_path.stat().st_mode),
+    )
 
     return index.package_size
 
@@ -502,6 +576,7 @@ class PSPFBuilder:
         lifecycle: str = "runtime",
         encoding: str = "gzip",
         extract_to: str | None = None,
+        permissions: str | None = None,
     ) -> "PSPFBuilder":
         """
         Add a slot to the package.
@@ -513,6 +588,7 @@ class PSPFBuilder:
             lifecycle: Slot lifecycle (runtime, cached, temporary)
             encoding: Compression encoding (none, gzip)
             extract_to: Extract location relative to workenv (default: None)
+            permissions: Unix permissions as octal string (e.g., "0755")
         """
         # Determine path and size
         if isinstance(data, bytes):
@@ -524,7 +600,9 @@ class PSPFBuilder:
             size = len(data)
         elif isinstance(data, str):
             # Write string to temp file securely
-            with tempfile.NamedTemporaryFile(mode='w', delete=False, encoding='utf-8') as temp_file:
+            with tempfile.NamedTemporaryFile(
+                mode="w", delete=False, encoding="utf-8"
+            ) as temp_file:
                 temp_file.write(data)
                 temp_path = Path(temp_file.name)
             path = temp_path
@@ -546,6 +624,7 @@ class PSPFBuilder:
             lifecycle=lifecycle,
             extract_to=extract_to,
             path=path,
+            permissions=permissions,
         )
 
         new_spec = self._spec.with_slot(slot)

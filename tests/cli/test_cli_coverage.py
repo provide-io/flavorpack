@@ -11,9 +11,9 @@ from flavor.cli import main as cli_main
 from flavor.exceptions import BuildError, PackagingError, VerificationError
 
 
-def test_cli_package_fails(tmp_path: Path) -> None:
+def test_cli_pack_fails(tmp_path: Path) -> None:
     """
-    Tests that the `package` command handles exceptions from the orchestrator.
+    Tests that the `pack` command handles exceptions from the orchestrator.
     """
     runner = CliRunner()
     pyproject_path = tmp_path / "pyproject.toml"
@@ -26,7 +26,7 @@ def test_cli_package_fails(tmp_path: Path) -> None:
         result = runner.invoke(
             cli_main,
             [
-                "package",
+                "pack",
                 "--manifest",
                 str(pyproject_path),
             ],

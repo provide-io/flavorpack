@@ -10,14 +10,50 @@ echo ""
 TEST_FAILURES=0
 FAILED_TESTS=""
 
-# Change to pretaster directory
-cd /REDACTED_ABS_PATH
+# Get directories
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PRETASTER_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+HELPERS_DIR="$(cd "$PRETASTER_DIR/.." && pwd)"
 
-# Build helpers first
-echo "🔨 Building helpers..."
-cd /REDACTED_ABS_PATH
-./build.sh
-cd /REDACTED_ABS_PATH
+# Change to pretaster directory
+cd "$PRETASTER_DIR"
+
+# Check if we're running inside a PSP (FLAVOR_WORKENV will be set by launcher)
+if [ -n "${FLAVOR_WORKENV:-}" ]; then
+    echo "📦 Running inside PSP package (FLAVOR_WORKENV=$FLAVOR_WORKENV)"
+    echo "   Skipping helper build - using packaged helpers"
+    
+    # When in PSP, helpers should be in the workenv
+    HELPERS_DIR="$FLAVOR_WORKENV"
+else
+    # Set FLAVOR_WORKENV_BASE so builders can resolve {workenv} placeholders
+    export FLAVOR_WORKENV_BASE="$PRETASTER_DIR"
+    echo "📁 Setting FLAVOR_WORKENV_BASE=$FLAVOR_WORKENV_BASE"
+    
+    # Build helpers first (only when running locally, not in PSP)
+    echo "🔨 Building helpers..."
+    cd "$HELPERS_DIR"
+    ./build.sh
+    cd "$PRETASTER_DIR"
+fi
+
+# Create required tar.gz archives for test packages
+echo "📦 Creating test archives..."
+if [ -f scripts/orchestrate.sh ]; then
+    tar czf scripts/orchestrate.tar.gz -C scripts orchestrate.sh
+    echo "  ✅ Created scripts/orchestrate.tar.gz"
+fi
+
+# Create slots archives if needed
+mkdir -p slots
+if [ -d slots/utilities ]; then
+    tar czf slots/utilities.tar.gz -C slots utilities/
+    echo "  ✅ Created slots/utilities.tar.gz"
+fi
+if [ -d slots/scripts ]; then
+    tar czf slots/scripts.tar.gz -C slots scripts/
+    echo "  ✅ Created slots/scripts.tar.gz"
+fi
 
 echo ""
 echo "📦 Building test packages..."

@@ -1,3 +1,1 @@
-"""
-Tests for PSPF 2025 format implementation.
-"""
+"""PSPF format runtime and execution tests"""

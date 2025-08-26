@@ -55,7 +55,7 @@ make help
 # Build everything and run all tests
 make all
 
-# Build helpers only
+# Build ingredients only
 make build
 
 # Build all test packages
@@ -115,7 +115,7 @@ cd helpers/pretaster
 - Tests basic packaging, execution, and command substitution
 - Validates `{workenv}` placeholder replacement
 
-### 2. Shell Script Test (`test-shell.json`) 
+### 2. Shell Script Test (`test-shell.json`)
 - **Builder**: Rust / **Launcher**: Go (default in test script)
 - Shell script with environment variables
 - Tests bash script execution and environment passing
@@ -132,7 +132,7 @@ cd helpers/pretaster
 - Complex multi-slot package with:
   - Slot 0: Orchestrator script (`orchestrate.sh`)
   - Slot 1: Utilities tarball (`utilities.tar.gz`)
-  - Slot 2: Gzipped Flavor Go builder binary
+  - Slot 2: Gzipped Flavor Pack Go builder binary
   - Slot 3: Scripts tarball (`scripts.tar.gz`)
 - Tests slot extraction, different encodings, and inter-slot coordination
 
@@ -197,8 +197,8 @@ The test suite validates the log level priority chain:
 4. Default: `info`
 
 ### Language-Specific Log Prefixes
-- **Rust helpers**: All log lines prefixed with 🦀
-- **Go helpers**: All log lines prefixed with 🐹
+- **Rust ingredients**: All log lines prefixed with 🦀
+- **Go ingredients**: All log lines prefixed with 🐹
 
 ### Exit Code Propagation
 - Exit codes are properly propagated through all launchers
@@ -252,13 +252,44 @@ When executed, pretaster.psp:
 ./dist/pretaster.psp exit 42
 ```
 
+## CI/CD Integration
+
+Pretaster is used extensively in the CI pipeline to validate cross-language compatibility:
+
+### Pretaster Pipeline (`.github/workflows/pretaster-pipeline.yml`)
+- Downloads ingredient artifacts from ingredient pipeline
+- Builds pretaster PSP package using ingredients
+- Executes pretaster to validate PSP functionality
+- Tests all builder/launcher combinations
+
+### Key Behaviors
+- **FLAVOR_WORKENV Detection**: When running as PSP, pretaster detects `FLAVOR_WORKENV` and skips ingredient rebuilding
+- **Honest Validation**: Test output clearly states what's validated vs what would require full testing
+- **No Fake Success**: Scripts report actual validation status, not pretend success
+
 ## Recent Updates
 
-### Go Launcher `extract_to` Field
-The Go launcher correctly respects the `extract_to` field in slot metadata, ensuring files are extracted to the specified subdirectory rather than the workenv root.
+### PSP Execution Validation
+Pretaster now provides honest validation output when running as a PSP package, clearly stating:
+- ✓ PSP is executing (proven by output)
+- ✓ Launcher successfully extracted package
+- ✓ Environment variables properly set
+- ⚠️ Full cross-language tests require building test packages
 
-### Slot Field Validation
-Both builders support an optional `slot` field for manifest validation. If present and mismatched with the actual array position, the build fails with a critical error. See `docs/slot-field-spec.md` for details.
+### Windows Platform
+Windows support is temporarily disabled in CI due to UTF-8 encoding issues. When re-enabled:
+- Set `PYTHONUTF8=1` and `PYTHONIOENCODING=utf-8`
+- Ensure proper encoding in all Python scripts
+
+### Manifest Format
+All builders now use the nested PSPF/2025 format exclusively:
+```json
+{
+  "package": { "name": "...", "version": "..." },
+  "execution": { "command": "...", "environment": {} },
+  "slots": []
+}
+```
 
 ## Troubleshooting
 
@@ -271,6 +302,6 @@ Both builders support an optional `slot` field for manifest validation. If prese
 ## Development Notes
 
 - Built .psp files are not committed (see .gitignore)
-- Test scripts assume helpers are built in ../bin/
+- Test scripts assume ingredients are built in ../bin/
 - All tests use `--key-seed test123` for reproducible builds
 - Workenv locations vary by launcher (check FLAVOR_WORKENV)

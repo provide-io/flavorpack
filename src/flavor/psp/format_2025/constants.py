@@ -123,6 +123,11 @@ DEFAULT_MAX_MEMORY = 128 * 1024 * 1024  # 128MB
 DEFAULT_MIN_MEMORY = 8 * 1024 * 1024  # 8MB
 DEFAULT_CHUNK_SIZE = 64 * 1024  # 64KB for streaming
 
+# Default permissions (secure by default)
+DEFAULT_FILE_PERMS = 0o600  # Read/write for owner only
+DEFAULT_EXECUTABLE_PERMS = 0o700  # Read/write/execute for owner only
+DEFAULT_DIR_PERMS = 0o700  # Read/write/execute for owner only
+
 # Backwards compatibility - map old names
 INDEX_SIZE = HEADER_SIZE  # For existing code (now 8192 bytes)
 EMOJI_MAGIC_SIZE = 8  # Always 8 bytes for 📦🪄
