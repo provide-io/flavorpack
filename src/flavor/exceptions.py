@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Custom exceptions for the flavor package.
+Custom exceptions for the flavor pack.
 """
 
 

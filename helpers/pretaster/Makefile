@@ -8,18 +8,29 @@ SHELL := /bin/bash
 .DEFAULT_GOAL := help
 
 # Paths
-HELPERS_DIR := ..
-BIN_DIR := $(HELPERS_DIR)/bin
+INGREDIENTS_DIR := ..
+BIN_DIR := $(INGREDIENTS_DIR)/bin
 DIST_DIR := dist
 LOGS_DIR := logs
 TESTS_DIR := tests
 CONFIGS_DIR := configs
 
-# Builders and Launchers
-RS_BUILDER := $(BIN_DIR)/flavor-rs-builder
-GO_BUILDER := $(BIN_DIR)/flavor-go-builder
-RS_LAUNCHER := $(BIN_DIR)/flavor-rs-launcher
-GO_LAUNCHER := $(BIN_DIR)/flavor-go-launcher
+# Platform detection
+OS := $(shell uname -s | tr '[:upper:]' '[:lower:]')
+ARCH := $(shell uname -m)
+ifeq ($(ARCH),x86_64)
+    ARCH := amd64
+endif
+ifeq ($(ARCH),aarch64)
+    ARCH := arm64
+endif
+PLATFORM := $(OS)_$(ARCH)
+
+# Builders and Launchers with platform suffix
+RS_BUILDER := $(BIN_DIR)/flavor-rs-builder-$(PLATFORM)
+GO_BUILDER := $(BIN_DIR)/flavor-go-builder-$(PLATFORM)
+RS_LAUNCHER := $(BIN_DIR)/flavor-rs-launcher-$(PLATFORM)
+GO_LAUNCHER := $(BIN_DIR)/flavor-go-launcher-$(PLATFORM)
 
 # Test packages
 ECHO_PSP := $(DIST_DIR)/echo-test.psp
@@ -94,17 +105,21 @@ help: ## Show this help message
 build: build-helpers ## Build all helpers (Go and Rust)
 
 .PHONY: build-helpers
-build-helpers: ## Build Go and Rust helpers
+build-helpers: ## Build Go and Rust helpers (skipped when in PSP)
+ifdef FLAVOR_WORKENV
+	$(call print,"📦 Running in PSP - skipping helper build",$(YELLOW))
+else
 	$(call print,"🔨 Building helpers...",$(BLUE))
-	@cd $(HELPERS_DIR) && ./build.sh
+	@cd $(INGREDIENTS_DIR) && ./build.sh
 	$(call print,"✅ Helpers built successfully",$(GREEN))
+endif
 
 .PHONY: build-go
 build-go: ## Build only Go helpers
 	$(call print,"🐹 Building Go helpers...",$(BLUE))
 	@cd $(HELPERS_DIR)/flavor-go && \
-		go build -o $(BIN_DIR)/flavor-go-builder cmd/flavor-go-builder/main.go && \
-		go build -o $(BIN_DIR)/flavor-go-launcher cmd/flavor-go-launcher/main.go
+		go build -o $(BIN_DIR)/flavor-go-builder-$(PLATFORM) cmd/flavor-go-builder/main.go && \
+		go build -o $(BIN_DIR)/flavor-go-launcher-$(PLATFORM) cmd/flavor-go-launcher/main.go
 	$(call print,"✅ Go helpers built",$(GREEN))
 
 .PHONY: build-rust
@@ -112,8 +127,8 @@ build-rust: ## Build only Rust helpers
 	$(call print,"🦀 Building Rust helpers...",$(BLUE))
 	@cd $(HELPERS_DIR)/flavor-rs && \
 		cargo build --release && \
-		cp target/release/flavor-rs-builder $(BIN_DIR)/ && \
-		cp target/release/flavor-rs-launcher $(BIN_DIR)/
+		cp target/release/flavor-rs-builder $(BIN_DIR)/flavor-rs-builder-$(PLATFORM) && \
+		cp target/release/flavor-rs-launcher $(BIN_DIR)/flavor-rs-launcher-$(PLATFORM)
 	$(call print,"✅ Rust helpers built",$(GREEN))
 
 ####################

@@ -8,12 +8,20 @@ from pyvider.telemetry import logger
 
 
 def generate_key_pair() -> tuple[bytes, bytes]:
-    """Generate Ed25519 key pair for package signing.
+    """Generate Ed25519 key pair for package signing (in-memory).
+
+    This function is used for internal package building where keys are
+    generated, used immediately for signing, and then discarded (ephemeral keys).
+    For CLI operations where keys need to be saved to files, use
+    flavor.packaging.keys.generate_key_pair() which handles file persistence.
 
     Returns:
         tuple: (private_key_bytes, public_key_bytes)
             - private_key_bytes: 32-byte Ed25519 private key seed
             - public_key_bytes: 32-byte Ed25519 public key
+            
+    See Also:
+        flavor.packaging.keys.generate_key_pair: For file-based key generation
     """
     logger.debug("🔐 Generating Ed25519 key pair")
 

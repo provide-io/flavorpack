@@ -118,17 +118,26 @@ def get_launcher_info(launcher_type: str) -> dict[str, Any]:
 
 def create_build_metadata(deterministic: bool = False) -> dict[str, Any]:
     """Create build section metadata."""
-    return {
+    build_meta = {
         "tool": "flavor-python",
         "tool_version": get_flavor_version(),
-        "timestamp": datetime.datetime.now(datetime.UTC).isoformat(),
         "deterministic": deterministic,
         "platform": {
             "os": get_os_name(),
             "arch": get_arch_name(),
-            "host": socket.gethostname(),
         },
     }
+
+    # Only add non-deterministic fields if not in deterministic mode
+    if not deterministic:
+        build_meta["timestamp"] = datetime.datetime.now(datetime.UTC).isoformat()
+        build_meta["platform"]["host"] = socket.gethostname()
+    else:
+        # Use fixed timestamp for deterministic builds
+        build_meta["timestamp"] = "2025-01-01T00:00:00+00:00"
+        build_meta["platform"]["host"] = "deterministic-build"
+
+    return build_meta
 
 
 def create_launcher_metadata(launcher_info: dict[str, Any]) -> dict[str, Any]:

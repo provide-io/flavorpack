@@ -27,31 +27,34 @@ def build_package_from_manifest(
     """Builds a package from a manifest file (pyproject.toml or JSON)."""
     # Determine manifest format and parse accordingly
     manifest_type = "json" if manifest_path.suffix == ".json" else "toml"
-    
+
     if manifest_type == "json":
         # Handle JSON manifest (compatible with Rust/Go builders)
         with manifest_path.open("r") as f:
             manifest_data = json.load(f)
-        
+
         # Extract required fields from JSON manifest
         package_config = manifest_data.get("package", {})
         project_name = package_config.get("name")
         if not project_name:
             raise ValueError("Package name must be defined in 'package.name'")
-        
+
         version = package_config.get("version")
         if not version:
             raise ValueError("Package version must be defined in 'package.version'")
-        
+
         # For JSON manifests, use the execution command as entry point
         execution_config = manifest_data.get("execution", {})
         entry_point = execution_config.get("command")
         if not entry_point:
             raise ValueError("Execution command must be defined in 'execution.command'")
-        
+
         package_name = project_name
         flavor_config = manifest_data  # Pass entire JSON as flavor config
         build_config = manifest_data  # Use entire manifest as build config
+
+        # Initialize cli_scripts for JSON manifests
+        cli_scripts = {}
         
     else:
         # Handle TOML manifest (pyproject.toml)
@@ -68,20 +71,40 @@ def build_package_from_manifest(
 
         version = project_config.get("version")
         if not version:
-            raise ValueError("Project version must be defined in [project] table")
+            # Check if version is dynamic
+            dynamic_fields = project_config.get("dynamic", [])
+            if "version" in dynamic_fields:
+                # Try to get version from VERSION file or __version__.py
+                version_file = manifest_path.parent / "VERSION"
+                if version_file.exists():
+                    version = version_file.read_text().strip()
+                else:
+                    # Try to get from package metadata if installed
+                    try:
+                        import importlib.metadata
+                        version = importlib.metadata.version(project_name)
+                    except Exception:
+                        # Fall back to a default version if all else fails
+                        version = "0.0.0"
+            else:
+                raise ValueError("Project version must be defined in [project] table or marked as dynamic")
 
+        # Get all CLI scripts defined in the project
+        cli_scripts = project_config.get("scripts", {})
+        
         entry_point = flavor_config.get("entry_point")
         if not entry_point:
-            scripts = project_config.get("scripts", {})
-            if project_name in scripts:
-                entry_point = scripts[project_name]
+            if project_name in cli_scripts:
+                entry_point = cli_scripts[project_name]
             else:
                 raise ValueError(
                     "Project entry_point must be defined in [project.scripts] or [tool.flavor.entry_point]"
                 )
 
-        package_name = flavor_config.get("metadata", {}).get("package_name", project_name)
-        
+        package_name = flavor_config.get("metadata", {}).get(
+            "package_name", project_name
+        )
+
         # Load build config from pyproject.toml, then override with buildconfig.toml if it exists
         build_config = flavor_config.get("build", {})
         buildconfig_path = manifest_path.parent / "buildconfig.toml"
@@ -107,6 +130,9 @@ def build_package_from_manifest(
     if not key_seed and not private_key_path.exists():
         generate_key_pair(manifest_dir / "keys")
 
+    # Pass CLI scripts to build config
+    build_config["cli_scripts"] = cli_scripts
+    
     orchestrator = PackagingOrchestrator(
         package_integrity_key_path=str(private_key_path),
         public_key_path=str(public_key_path),

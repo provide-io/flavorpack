@@ -22,7 +22,7 @@ $binPattern = if ($Platform -like "*windows*") {
 }
 
 # Find all binaries for this platform
-$binaries = Get-ChildItem -Path "helpers/bin" -Filter $binPattern -ErrorAction SilentlyContinue
+$binaries = Get-ChildItem -Path "ingredients/bin" -Filter $binPattern -ErrorAction SilentlyContinue
 
 if (-not $binaries) {
     Write-Error "❌ No binaries found for platform: $Platform"

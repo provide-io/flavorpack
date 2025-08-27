@@ -6,9 +6,9 @@ from click.testing import CliRunner
 from flavor.cli import main as cli_main
 
 
-def test_cli_package_and_verify(tmp_path: Path) -> None:
+def test_cli_pack_and_verify(tmp_path: Path) -> None:
     """
-    Tests the full CLI flow: 'package' a provider and then 'verify' it.
+    Tests the full CLI flow: 'pack' a provider and then 'verify' it.
     """
     runner = CliRunner()
     project_dir = tmp_path / "project"
@@ -27,12 +27,12 @@ def test_cli_package_and_verify(tmp_path: Path) -> None:
         with patch("flavor.commands.package.verify_package") as mock_verify:
             mock_verify.return_value = {"signature_valid": True}
             
-            package_result = runner.invoke(
+            pack_result = runner.invoke(
                 cli_main,
-                ["package", "--manifest", str(pyproject_path)],
+                ["pack", "--manifest", str(pyproject_path)],
             )
-            assert package_result.exit_code == 0, (
-                f"Package command failed: {package_result.output}"
+            assert pack_result.exit_code == 0, (
+                f"Pack command failed: {pack_result.output}"
             )
             
         # Check that build was called with correct parameters

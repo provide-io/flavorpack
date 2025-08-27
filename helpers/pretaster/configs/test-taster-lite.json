@@ -1,42 +1,51 @@
 {
-  "name": "pretaster",
+  "name": "pretaster-taster-test",
   "version": "1.0.0",
-  "description": "Pretaster shell implementation test",
-  "command": "/bin/bash {workenv}/scripts/taster_lite.sh",
+  "description": "Pretaster test using real taster",
+  "command": "/bin/bash {workenv}/scripts/test-with-taster.sh",
   "environment": {
-    "TASTER_MODE": "lite"
+    "TASTER_MODE": "real"
   },
   "package": {
-    "name": "pretaster",
+    "name": "pretaster-taster-test",
     "version": "1.0.0",
-    "description": "Pretaster shell implementation test"
+    "description": "Pretaster test using real taster"
   },
   "format": "PSPF/2025",
   "slots": [
     {
       "slot": 0,
-      "name": "taster_lite.sh",
-      "path": "scripts/taster_lite.sh",
+      "name": "test-with-taster.sh",
+      "path": "{workenv}/scripts/test-with-taster.sh",
       "purpose": "payload",
       "lifecycle": "cached",
       "encoding": "none",
       "extract_to": "{workenv}/scripts"
+    },
+    {
+      "slot": 1,
+      "name": "taster.psp",
+      "path": "{workenv}/scripts/taster.psp",
+      "purpose": "payload",
+      "lifecycle": "cached",
+      "encoding": "none",
+      "extract_to": "{workenv}/bin"
     }
   ],
   "runtime": {
     "env": {
       "unset": ["*"],
-      "pass": ["PATH", "HOME", "USER", "LANG", "LC_*", "TERM", "SHELL", "FLAVOR_*"],
+      "pass": ["PATH", "HOME", "USER", "LANG", "LC_*", "TERM", "SHELL", "FLAVOR_*", "TASTER_PSP"],
       "set": {
         "PRETASTER_VERSION": "1.0.0"
       }
     }
   },
   "execution": {
-    "command": "/bin/bash {workenv}/scripts/taster_lite.sh",
+    "command": "/bin/bash {workenv}/scripts/test-with-taster.sh",
     "args": [],
     "env": {
-      "TASTER_MODE": "lite"
+      "TASTER_MODE": "real"
     },
     "primary_slot": 0
   }

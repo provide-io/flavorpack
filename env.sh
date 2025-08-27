@@ -1,8 +1,8 @@
 #!/bin/bash
 #
-# env.sh - flavor Development Environment Setup
+# env.sh - flavorpack Development Environment Setup
 #
-# This script sets up a clean, isolated development environment for flavor
+# This script sets up a clean, isolated development environment for flavorpack
 # using 'uv' for high-performance virtual environment and dependency management.
 #
 # Usage: source ./env.sh
@@ -63,7 +63,7 @@ print_success "Cleared Python aliases and PYTHONPATH"
 # --- Project Validation ---
 if [ ! -f "pyproject.toml" ]; then
     print_error "No 'pyproject.toml' found in current directory"
-    echo "Please run this script from the flavor root directory"
+    echo "Please run this script from the flavorpack root directory"
     return 1 2>/dev/null || exit 1
 fi
 
@@ -104,9 +104,9 @@ case "$TFARCH" in
 esac
 
 # Workenv directory setup
-PROFILE="${FLAVOR_PROFILE:-default}"
+PROFILE="${FLAVORPACK_PROFILE:-default}"
 if [ "$PROFILE" = "default" ]; then
-    VENV_DIR="workenv/flavor_${TFOS}_${TFARCH}"
+    VENV_DIR="workenv/flavorpack_${TFOS}_${TFARCH}"
 else
     VENV_DIR="workenv/${PROFILE}_${TFOS}_${TFARCH}"
 fi
@@ -228,10 +228,10 @@ export UV_PROJECT_ENVIRONMENT="${VENV_DIR}"
 print_header "📦 Installing Dependencies"
 
 # Create log directory
-mkdir -p /tmp/flavor_setup
+mkdir -p /tmp/flavorpack_setup
 
 echo -n "Syncing dependencies..."
-uv sync --all-groups > /tmp/flavor_setup/sync.log 2>&1 &
+uv sync --all-groups > /tmp/flavorpack_setup/sync.log 2>&1 &
 SYNC_PID=$!
 spinner $SYNC_PID
 wait $SYNC_PID
@@ -241,26 +241,26 @@ if [ $SYNC_EXIT_CODE -eq 0 ]; then
     print_success "Dependencies synced"
 else
     print_warning "Dependency sync failed - will install project and siblings manually"
-    echo "Check /tmp/flavor_setup/sync.log for details"
+    echo "Check /tmp/flavorpack_setup/sync.log for details"
     
     # Try to install just the project without dependencies first
-    echo -n "Installing flavor without dependencies..."
-    uv pip install --no-deps -e . > /tmp/flavor_setup/install_nodeps.log 2>&1 &
+    echo -n "Installing flavorpack without dependencies..."
+    uv pip install --no-deps -e . > /tmp/flavorpack_setup/install_nodeps.log 2>&1 &
     INSTALL_PID=$!
     spinner $INSTALL_PID
     wait $INSTALL_PID
     if [ $? -eq 0 ]; then
-        print_success "flavor installed (no deps)"
+        print_success "flavorpack installed (no deps)"
     else
-        print_error "Failed to install flavor"
+        print_error "Failed to install flavorpack"
         return 1 2>/dev/null || exit 1
     fi
 fi
 
-echo -n "Installing flavor in editable mode..."
-uv pip install --no-deps -e . > /tmp/flavor_setup/install.log 2>&1 &
+echo -n "Installing flavorpack in editable mode..."
+uv pip install --no-deps -e . > /tmp/flavorpack_setup/install.log 2>&1 &
 spinner $!
-print_success "flavor installed"
+print_success "flavorpack installed"
 # --- Sibling Packages ---
 print_header "🤝 Installing Sibling Packages"
 
@@ -275,19 +275,19 @@ for dir in "${PARENT_DIR}"/pyvider-*; do
         SIBLING_NAME=$(basename "${dir}")
         echo -n "Installing ${SIBLING_NAME} with dependencies..."
         # If with_deps is true, first try normal install, then fallback to local-only
-        uv pip install -e "${dir}" > /tmp/flavor_setup/${SIBLING_NAME}.log 2>&1 &
+        uv pip install -e "${dir}" > /tmp/flavorpack_setup/${SIBLING_NAME}.log 2>&1 &
         INSTALL_PID=$!
         spinner $INSTALL_PID
         wait $INSTALL_PID
         if [ $? -ne 0 ]; then
             echo -n " Retrying with local version only..."
-            uv pip install --force-reinstall --no-deps -e "${dir}" > /tmp/flavor_setup/${SIBLING_NAME}_local.log 2>&1 &
+            uv pip install --force-reinstall --no-deps -e "${dir}" > /tmp/flavorpack_setup/${SIBLING_NAME}_local.log 2>&1 &
             INSTALL_PID=$!
             spinner $INSTALL_PID
             wait $INSTALL_PID
             if [ $? -eq 0 ]; then
                 print_success "${SIBLING_NAME} installed (local, no deps)"
-                print_warning "Some dependencies may be missing - check /tmp/flavor_setup/${SIBLING_NAME}.log"
+                print_warning "Some dependencies may be missing - check /tmp/flavorpack_setup/${SIBLING_NAME}.log"
             else
                 print_error "${SIBLING_NAME} installation failed"
             fi
@@ -302,19 +302,19 @@ done
 tofusoup_DIR="${PARENT_DIR}/tofusoup"
 if [ -d "${TOFUSOUP_DIR}" ]; then
     echo -n "Installing tofusoup with dependencies..."
-    uv pip install -e "${TOFUSOUP_DIR}" > /tmp/flavor_setup/tofusoup.log 2>&1 &
+    uv pip install -e "${TOFUSOUP_DIR}" > /tmp/flavorpack_setup/tofusoup.log 2>&1 &
     INSTALL_PID=$!
     spinner $INSTALL_PID
     wait $INSTALL_PID
     if [ $? -ne 0 ]; then
         echo -n " Retrying with local version only..."
-        uv pip install --force-reinstall --no-deps -e "${TOFUSOUP_DIR}" > /tmp/flavor_setup/tofusoup_local.log 2>&1 &
+        uv pip install --force-reinstall --no-deps -e "${TOFUSOUP_DIR}" > /tmp/flavorpack_setup/tofusoup_local.log 2>&1 &
         INSTALL_PID=$!
         spinner $INSTALL_PID
         wait $INSTALL_PID
         if [ $? -eq 0 ]; then
             print_success "tofusoup installed (local, no deps)"
-            print_warning "Some dependencies may be missing - check /tmp/flavor_setup/tofusoup.log"
+            print_warning "Some dependencies may be missing - check /tmp/flavorpack_setup/tofusoup.log"
         else
             print_error "tofusoup installation failed"
         fi
@@ -328,19 +328,19 @@ fi
 wrkenv_DIR="${PARENT_DIR}/wrkenv"
 if [ -d "${WRKENV_DIR}" ]; then
     echo -n "Installing wrkenv with dependencies..."
-    uv pip install -e "${WRKENV_DIR}" > /tmp/flavor_setup/wrkenv.log 2>&1 &
+    uv pip install -e "${WRKENV_DIR}" > /tmp/flavorpack_setup/wrkenv.log 2>&1 &
     INSTALL_PID=$!
     spinner $INSTALL_PID
     wait $INSTALL_PID
     if [ $? -ne 0 ]; then
         echo -n " Retrying with local version only..."
-        uv pip install --force-reinstall --no-deps -e "${WRKENV_DIR}" > /tmp/flavor_setup/wrkenv_local.log 2>&1 &
+        uv pip install --force-reinstall --no-deps -e "${WRKENV_DIR}" > /tmp/flavorpack_setup/wrkenv_local.log 2>&1 &
         INSTALL_PID=$!
         spinner $INSTALL_PID
         wait $INSTALL_PID
         if [ $? -eq 0 ]; then
             print_success "wrkenv installed (local, no deps)"
-            print_warning "Some dependencies may be missing - check /tmp/flavor_setup/wrkenv.log"
+            print_warning "Some dependencies may be missing - check /tmp/flavorpack_setup/wrkenv.log"
         else
             print_error "wrkenv installation failed"
         fi
@@ -422,11 +422,11 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 # --- Final Summary ---
 print_header "✅ Environment Ready!"
 
-echo -e "\n${COLOR_GREEN}flavor development environment activated${COLOR_NC}"
+echo -e "\n${COLOR_GREEN}flavorpack development environment activated${COLOR_NC}"
 echo "Virtual environment: ${VENV_DIR}"
 echo "Profile: ${PROFILE}"
 echo -e "\nUseful commands:"
-echo "  flavor --help  # flavor CLI"
+echo "  flavorpack --help  # flavorpack CLI"
 echo "  wrkenv status  # Check tool versions"
 echo "  wrkenv container status  # Container status"
 echo "  pytest  # Run tests"
@@ -434,7 +434,7 @@ echo "  deactivate  # Exit environment"
 
 # --- Cleanup ---
 # Remove temporary log files older than 1 day
-find /tmp/flavor_setup -name "*.log" -mtime +1 -delete 2>/dev/null
+find /tmp/flavorpack_setup -name "*.log" -mtime +1 -delete 2>/dev/null
 
 # Return success
 return 0 2>/dev/null || exit 0

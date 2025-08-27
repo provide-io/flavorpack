@@ -1,10 +1,11 @@
-# Flavor - Progressive Secure Package Format (PSPF)
+# 🌶️📦 Flavor Pack: Your Yummy Progressive Secure Polyglot Packaging Toolchain
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![Go 1.21+](https://img.shields.io/badge/go-1.21+-00ADD8.svg)](https://golang.org/dl/)
 [![Rust 1.75+](https://img.shields.io/badge/rust-1.75+-orange.svg)](https://www.rust-lang.org/)
+[![CI Pipeline](https://img.shields.io/badge/CI-passing-brightgreen.svg)](https://github.com/provide-io/flavor/actions)
 
-Flavor is a cross-language packaging system that creates self-contained, portable executables using the **Progressive Secure Package Format (PSPF) 2025 Edition**. It enables you to ship Python applications as single binaries that "just work" - no installation, no dependencies, no configuration required.
+Flavor Pack (`flavorpack`) is a cross-language packaging system that creates self-contained, portable executables using the **Progressive Secure Package Format (PSPF) 2025 Edition**. It enables you to ship Python applications as single binaries that "just work" - no installation, no dependencies, no configuration required.
 
 ## 🎯 Key Features
 
@@ -21,7 +22,7 @@ Flavor is a cross-language packaging system that creates self-contained, portabl
 
 - Python 3.11 or higher
 - UV package manager (`curl -LsSf https://astral.sh/uv/install.sh | sh`)
-- Go 1.21+ and Rust 1.75+ (for building helpers)
+- Go 1.21+ and Rust 1.75+ (for building ingredients)
 
 ### Installation
 
@@ -33,15 +34,15 @@ cd flavor
 # Set up environment and install dependencies
 source env.sh
 
-# Build the Go and Rust helpers
-./helpers/build.sh
+# Build the Go and Rust ingredients
+./ingredients/build.sh
 ```
 
 ### Creating Your First Package
 
 ```bash
 # Package a Python application
-flavor package --manifest pyproject.toml --output myapp.psp
+flavor pack --manifest pyproject.toml --output myapp.psp
 
 # Run the packaged application
 ./myapp.psp
@@ -65,15 +66,31 @@ The Progressive Secure Package Format is a polyglot file format that works as bo
 
 ## 📚 Documentation
 
-For a complete guide to using Flavor, developing with it, and contributing to the project, please see our **[Full Documentation](docs/DOCUMENTATION.md)**.
+- **[User Guide](docs/USER-GUIDE.md)** - Getting started and creating packages
+- **[Development Guide](docs/DEVELOPMENT.md)** - Setting up development environment
+- **[Architecture](docs/ARCHITECTURE.md)** - Technical details and design
+- **[API Reference](docs/API-REFERENCE.md)** - Command and format specifications
+- **[Troubleshooting](docs/TROUBLESHOOTING.md)** - Common issues and solutions
+- **[Full Documentation Index](docs/DOCUMENTATION.md)** - Complete documentation structure
 
 ## 🏗️ Architecture
 
-Flavor consists of three main components:
+Flavor Pack consists of three main components:
 
-1. **Python Orchestrator** - Manages the build process, creates manifests, handles dependencies
-2. **Native Launchers** (Go/Rust) - Extract and execute packages with security verification
-3. **Native Builders** (Go/Rust) - Assemble PSPF packages from manifests and slots
+1. **Python Orchestrator** (`src/flavor/`)
+   - Manages the build process and dependency resolution
+   - Creates manifests and handles Python packaging
+   - Provides CLI interface for package operations
+
+2. **Native Launchers** (`ingredients/flavor-{go,rs}/`)
+   - Extract and execute packages at runtime
+   - Perform Ed25519 signature verification
+   - Manage workenv caching and lifecycle
+
+3. **Native Builders** (`ingredients/flavor-{go,rs}/`)
+   - Assemble PSPF packages from manifests
+   - Implement the PSPF/2025 binary format
+   - Handle slot packing and metadata encoding
 
 ## 🔒 Security
 
@@ -95,23 +112,24 @@ workenv/flavor_*/bin/pytest --cov=src/flavor --cov-report=term-missing
 
 # Test cross-language compatibility
 ./test-all-combinations.sh
+
+# Run specific test categories
+workenv/flavor_*/bin/pytest -m unit        # Fast unit tests
+workenv/flavor_*/bin/pytest -m integration # Integration tests
+workenv/flavor_*/bin/pytest -m security    # Security tests
+
+# Test ingredients with Taster
+cd helpers/taster
+../../workenv/flavor_*/bin/flavor pack --manifest pyproject.toml --output taster.psp
+./taster.psp --help
 ```
-
-## 🤝 Contributing
-
-We welcome contributions! Please see our **[Contribution Guide](docs/06_contribution_guide.md)** for setup instructions and development workflow.
-
-## 📄 License
-
-MIT License - see LICENSE file for details.
 
 ## 🙏 Acknowledgments
 
-Flavor is built on the shoulders of giants:
+Flavor Pack is built on the shoulders of giants:
 - [UV](https://github.com/astral-sh/uv) for fast Python package management
-- [PyOxidizer](https://github.com/indygreg/PyOxidizer) for inspiration
 - The Python, Go, and Rust communities for excellent tooling
 
 ---
 
-**Built with ❤️ by the Provide team**
+**Built with ❤️ by the provide.io team**

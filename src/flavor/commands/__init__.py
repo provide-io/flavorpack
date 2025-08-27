@@ -4,10 +4,10 @@
 #
 """Command modules for the flavor CLI."""
 
-from flavor.commands.helpers import helper_group
+from flavor.commands.ingredients import ingredient_group
 from flavor.commands.inspect import inspect_command
 from flavor.commands.keygen import keygen_command
-from flavor.commands.package import package_command
+from flavor.commands.package import pack_command
 from flavor.commands.utils import analyze_deps_command, clean_command
 from flavor.commands.verify import verify_command
 from flavor.commands.workenv import workenv_group
@@ -15,10 +15,10 @@ from flavor.commands.workenv import workenv_group
 __all__ = [
     "analyze_deps_command",
     "clean_command",
-    "helper_group",
+    "ingredient_group",
     "inspect_command",
     "keygen_command",
-    "package_command",
+    "pack_command",
     "verify_command",
     "workenv_group",
 ]

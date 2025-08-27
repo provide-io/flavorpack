@@ -13,12 +13,12 @@ import click
 @click.option(
     "--all",
     is_flag=True,
-    help="Clean both work environment and helpers",
+    help="Clean both work environment and ingredients",
 )
 @click.option(
-    "--helpers",
+    "--ingredients",
     is_flag=True,
-    help="Clean only helper binaries",
+    help="Clean only ingredient binaries",
 )
 @click.option(
     "--dry-run",
@@ -31,13 +31,13 @@ import click
     is_flag=True,
     help="Skip confirmation prompt",
 )
-def clean_command(all: bool, helpers: bool, dry_run: bool, yes: bool) -> None:
-    """Clean work environment cache (default) or helpers."""
+def clean_command(all: bool, ingredients: bool, dry_run: bool, yes: bool) -> None:
+    """Clean work environment cache (default) or ingredients."""
     from flavor.cache import CacheManager
 
     # Determine what to clean
-    clean_workenv = not helpers or all
-    clean_helpers = helpers or all
+    clean_workenv = not ingredients or all
+    clean_ingredients = ingredients or all
 
     if dry_run:
         click.echo("🔍 DRY RUN - Nothing will be removed\n")
@@ -75,38 +75,39 @@ def clean_command(all: bool, helpers: bool, dry_run: bool, yes: bool) -> None:
                     )
                     total_freed += size
 
-    # Clean helpers
-    if clean_helpers:
-        helper_dir = Path.home() / ".cache" / "flavor" / "bin"
-        if helper_dir.exists():
-            helpers_list = list(helper_dir.glob("flavor-*"))
-            helpers_list = [
-                h for h in helpers_list if h.suffix != ".d"
+    # Clean ingredients
+    if clean_ingredients:
+        ingredient_dir = Path.home() / ".cache" / "flavor" / "bin"
+        if ingredient_dir.exists():
+            ingredients_list = list(ingredient_dir.glob("flavor-*"))
+            ingredients_list = [
+                h for h in ingredients_list if h.suffix != ".d"
             ]  # Skip .d files
 
-            if helpers_list:
-                total_size = sum(h.stat().st_size for h in helpers_list)
+            if ingredients_list:
+                total_size = sum(h.stat().st_size for h in ingredients_list)
                 size_mb = total_size / (1024 * 1024)
 
                 if dry_run:
                     click.echo(
-                        f"\nWould remove {len(helpers_list)} helper binaries ({size_mb:.1f} MB):"
+                        f"\nWould remove {len(ingredients_list)} ingredient binaries ({size_mb:.1f} MB):"
                     )
-                    for helper in helpers_list:
-                        h_size_mb = helper.stat().st_size / (1024 * 1024)
-                        click.echo(f"  - {helper.name} ({h_size_mb:.1f} MB)")
+                    for ingredient in ingredients_list:
+                        h_size_mb = ingredient.stat().st_size / (1024 * 1024)
+                        click.echo(f"  - {ingredient.name} ({h_size_mb:.1f} MB)")
                 else:
                     if not yes and not click.confirm(
-                        f"Remove {len(helpers_list)} helper binaries ({size_mb:.1f} MB)?"
+                        f"Remove {len(ingredients_list)} ingredient binaries ({size_mb:.1f} MB)?"
                     ):
                         click.echo("Aborted.")
                         return
 
                     import shutil
 
-                    shutil.rmtree(helper_dir)
+                    shutil.rmtree(ingredient_dir)
                     click.secho(
-                        f"✅ Removed {len(helpers_list)} helper binaries", fg="green"
+                        f"✅ Removed {len(ingredients_list)} ingredient binaries",
+                        fg="green",
                     )
                     total_freed += total_size
 
@@ -219,4 +220,4 @@ def analyze_deps_command(manifest_path: str) -> None:
     click.echo("    • *.pyi type stub files")
 
     click.echo("\n  Use --optimize flag to apply these safe optimizations:")
-    click.echo("    flavor package --optimize")
+    click.echo("    flavor pack --optimize")

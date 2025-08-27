@@ -45,6 +45,10 @@ class BundleExecutor:
         command = self._substitute_primary(base_command)
         logger.debug(f"🔍 after primary substitution: {command}")
 
+        # Slot substitution - {slot:N} references
+        command = self._substitute_slots(command)
+        logger.debug(f"🔍 after slot substitution: {command}")
+
         # Basic substitutions - only {workenv}, {package_name}, and {version} as per spec
         command = command.replace("{workenv}", str(self.workenv_dir))
         command = command.replace("{package_name}", self.package_name)
@@ -87,6 +91,33 @@ class BundleExecutor:
             logger.warning(f"⚠️ Primary slot {primary_slot} not found")
 
         return command
+
+    def _substitute_slots(self, command: str) -> str:
+        """Substitute {slot:N} references in command.
+
+        Args:
+            command: Command with potential {slot:N} references
+
+        Returns:
+            str: Command with slot references substituted
+        """
+        import re
+
+        def replace_slot(match):
+            slot_idx = int(match.group(1))
+            slots = self.metadata.get("slots", [])
+
+            if slot_idx < len(slots):
+                slot_name = slots[slot_idx]["name"]
+                # Build the path to the extracted slot
+                slot_path = self.workenv_dir / slot_name
+                return str(slot_path)
+            else:
+                logger.warning(f"⚠️ Slot {slot_idx} not found")
+                return match.group(0)  # Keep original if not found
+
+        # Replace all {slot:N} patterns
+        return re.sub(r"\{slot:(\d+)\}", replace_slot, command)
 
     def prepare_environment(self) -> dict[str, str]:
         """Prepare environment variables for execution.
@@ -137,11 +168,11 @@ class BundleExecutor:
 
         try:
             # Parse command into arguments (safely handles quotes and spaces)
-            args = shlex.split(command)
+            command_args = shlex.split(command)
 
             # Execute the command using shared utility (no shell=True for security)
             result = run_command(
-                args,
+                command_args,
                 cwd=self.workenv_dir,
                 env=env,
                 capture_output=True,
@@ -170,7 +201,8 @@ class BundleExecutor:
                 "stderr": result.stderr,
                 "executed": True,
                 "command": command,
-                "args": args or [],
+                "args": args
+                or [],  # Return the original user args, not the parsed command
                 "pid": os.getpid(),  # Current process PID since we don't have access to subprocess PID
                 "working_directory": str(self.workenv_dir),
                 "error": None
@@ -187,7 +219,7 @@ class BundleExecutor:
                 "stderr": str(e),
                 "executed": False,
                 "command": command,
-                "args": args or [],
+                "args": args or [],  # Return the original user args
                 "pid": None,
                 "working_directory": str(self.workenv_dir),
                 "error": str(e),
