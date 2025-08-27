@@ -12,7 +12,23 @@ from flavor.api import build_package_from_manifest, verify_package
 from flavor.exceptions import BuildError, PackagingError
 
 
-@click.command("package")
+def safe_echo(message: str, **kwargs) -> None:
+    """Echo a message, handling Windows encoding issues."""
+    try:
+        click.echo(message, **kwargs)
+    except UnicodeEncodeError:
+        # On Windows, replace emojis with ASCII alternatives
+        message = message.replace("🚀", "[LAUNCH]")
+        message = message.replace("✅", "[OK]")
+        message = message.replace("❌", "[ERROR]")
+        message = message.replace("🔍", "[VERIFY]")
+        message = message.replace("📦", "[PACKAGE]")
+        message = message.replace("⚠️", "[WARN]")
+        message = message.replace("ℹ️", "[INFO]")
+        click.echo(message, **kwargs)
+
+
+@click.command("pack")
 @click.option(
     "--manifest",
     "pyproject_toml_path",
@@ -72,6 +88,11 @@ from flavor.exceptions import BuildError, PackagingError
     help="Seed for deterministic key generation.",
 )
 @click.option(
+    "--workenv-base",
+    type=click.Path(exists=True, file_okay=False, resolve_path=True),
+    help="Base directory for {workenv} resolution (defaults to CWD).",
+)
+@click.option(
     "--output-format",
     type=click.Choice(["text", "json"], case_sensitive=False),
     help="Output format (or set FLAVOR_OUTPUT_FORMAT env var).",
@@ -81,7 +102,7 @@ from flavor.exceptions import BuildError, PackagingError
     type=str,
     help="Output file path, STDOUT, or STDERR (or set FLAVOR_OUTPUT_FILE env var).",
 )
-def package_command(
+def pack_command(
     pyproject_toml_path: str,
     output_path: str | None,
     launcher_bin: str | None,
@@ -93,12 +114,19 @@ def package_command(
     private_key: str | None,
     public_key: str | None,
     key_seed: str | None,
+    workenv_base: str | None,
     output_format: str | None,
     output_file: str | None,
 ) -> None:
-    """Packages the application for one or more target platforms."""
+    """Pack the application for one or more target platforms."""
     if not quiet:
-        click.echo("🚀 Packaging application...")
+        safe_echo("🚀 Packaging application...")
+
+    # Set workenv base if provided via flag
+    if workenv_base:
+        import os
+
+        os.environ["FLAVOR_WORKENV_BASE"] = workenv_base
 
     try:
         built_artifacts = build_package_from_manifest(
@@ -114,39 +142,67 @@ def package_command(
         )
         for artifact in built_artifacts:
             if not quiet:
-                click.secho(
-                    f"✅ Successfully built artifact at {artifact}",
-                    fg="green",
-                )
+                try:
+                    click.secho(
+                        f"✅ Successfully built artifact at {artifact}",
+                        fg="green",
+                    )
+                except UnicodeEncodeError:
+                    click.secho(
+                        f"[OK] Successfully built artifact at {artifact}",
+                        fg="green",
+                    )
 
             # Show optimization results if strip was used
             if strip and not quiet:
-                click.echo("  📉 Binary optimized (debug symbols stripped)")
+                safe_echo("  📉 Binary optimized (debug symbols stripped)")
 
             # Verify the package if requested
             if verify:
                 if not quiet:
-                    click.echo(f"🔍 Verifying {artifact}...")
+                    safe_echo(f"🔍 Verifying {artifact}...")
                 try:
                     result = verify_package(artifact)
                     if result["signature_valid"]:
                         if not quiet:
-                            click.secho(
-                                "  ✅ Package verified successfully", fg="green"
-                            )
+                            try:
+                                click.secho(
+                                    "  ✅ Package verified successfully", fg="green"
+                                )
+                            except UnicodeEncodeError:
+                                click.secho(
+                                    "  [OK] Package verified successfully", fg="green"
+                                )
                     else:
-                        click.secho("  ❌ Package verification failed", fg="red")
+                        try:
+                            click.secho("  ❌ Package verification failed", fg="red")
+                        except UnicodeEncodeError:
+                            click.secho(
+                                "  [ERROR] Package verification failed", fg="red"
+                            )
                         raise BuildError(f"Verification failed for {artifact}")
                 except Exception as e:
-                    click.secho(f"  ❌ Verification error: {e}", fg="red")
+                    try:
+                        click.secho(f"  ❌ Verification error: {e}", fg="red")
+                    except UnicodeEncodeError:
+                        click.secho(f"  [ERROR] Verification error: {e}", fg="red")
                     raise BuildError(f"Verification failed for {artifact}: {e}") from e
 
         if built_artifacts:
             if not quiet:
-                click.secho("✅ All targets built successfully.", fg="green")
+                try:
+                    click.secho("✅ All targets built successfully.", fg="green")
+                except UnicodeEncodeError:
+                    click.secho("[OK] All targets built successfully.", fg="green")
         else:
-            click.secho("⚠️ No targets were specified or built.", fg="yellow")
+            try:
+                click.secho("⚠️ No targets were specified or built.", fg="yellow")
+            except UnicodeEncodeError:
+                click.secho("[WARN] No targets were specified or built.", fg="yellow")
 
     except (BuildError, PackagingError, click.UsageError) as e:
-        click.secho(f"❌ Packaging Failed:\n{e}", fg="red", err=True)
+        try:
+            click.secho(f"❌ Packaging Failed:\n{e}", fg="red", err=True)
+        except UnicodeEncodeError:
+            click.secho(f"[ERROR] Packaging Failed:\n{e}", fg="red", err=True)
         raise click.Abort() from e

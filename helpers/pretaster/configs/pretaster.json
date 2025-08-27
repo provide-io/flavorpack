@@ -16,7 +16,7 @@
     {
       "slot": 0,
       "name": "pretaster",
-      "path": "scripts/pretaster",
+      "path": "{workenv}/scripts/pretaster",
       "purpose": "payload",
       "lifecycle": "cached",
       "encoding": "none",
@@ -24,8 +24,8 @@
     },
     {
       "slot": 1,
-      "name": "taster_lite.sh",
-      "path": "scripts/taster_lite.sh",
+      "name": "test-with-taster.sh",
+      "path": "{workenv}/scripts/test-with-taster.sh",
       "purpose": "payload",
       "lifecycle": "cached",
       "encoding": "none",

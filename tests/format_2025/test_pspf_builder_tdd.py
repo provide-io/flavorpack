@@ -59,9 +59,11 @@ def sample_slot(temp_dir):
 @pytest.fixture
 def minimal_spec(sample_slot):
     """Create minimal valid BuildSpec."""
+    from flavor.psp.format_2025.spec import KeyConfig
     return BuildSpec(
         metadata={"package": {"name": "test", "version": "1.0"}},
-        slots=[sample_slot]
+        slots=[sample_slot],
+        keys=KeyConfig(key_seed="test-deterministic")  # Use deterministic keys
     )
 
 

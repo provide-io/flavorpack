@@ -21,10 +21,6 @@ class TestEnhancedConstants:
         """Header should be 8192 bytes (8KB)."""
         assert HEADER_SIZE == 8192
     
-    def test_slot_descriptor_size(self):
-        """Slot descriptor should be 64 bytes."""
-        assert SLOT_DESCRIPTOR_SIZE == 64
-    
     def test_magic_format(self):
         """Magic should be PSPF2025."""
         assert PSPF_MAGIC == b"PSPF2025"

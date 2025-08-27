@@ -3,7 +3,7 @@
 Mock Validation Tests
 
 These tests ensure that our mock launchers accurately represent real launcher behavior.
-They should be run as integration tests with real helpers available.
+They should be run as integration tests with real ingredients available.
 """
 
 import pytest
@@ -14,7 +14,7 @@ from flavor.psp.format_2025 import PSPFBuilder, PSPFReader
 
 
 @pytest.mark.integration
-@pytest.mark.requires_helpers  
+@pytest.mark.requires_ingredients  
 class TestMockAccuracy:
     """Validate that our mocks accurately represent real behavior."""
     

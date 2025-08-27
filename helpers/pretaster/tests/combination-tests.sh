@@ -1,209 +1,137 @@
 #!/bin/bash
+# Test all builder/launcher combinations with pretaster
+
 set -e
+
+# Load test library
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/test-lib.sh"
 
 echo "🎯 Testing All Builder/Launcher Combinations with Pretaster"
 echo "=============================================================="
 echo ""
 
-# Change to pretaster directory
-cd /REDACTED_ABS_PATH
+# Get the pretaster directory (parent of tests directory)
+PRETASTER_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$PRETASTER_DIR"
 
-# Create logs directory if it doesn't exist
-mkdir -p logs
+# Get helpers directory
+HELPERS_DIR="$(cd "$PRETASTER_DIR/.." && pwd)"
 
-# Get timestamp for log files
-TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+# Setup
+LOGS_DIR=$(ensure_logs_dir)
+TIMESTAMP=$(get_timestamp)
+ensure_helpers_built "$HELPERS_DIR"
 
-echo "📝 Logs will be saved to logs/ directory with timestamp: $TIMESTAMP"
+echo "📝 Logs will be saved to $LOGS_DIR with timestamp: $TIMESTAMP"
 echo ""
 
-# Build helpers first
-echo "🔨 Building helpers..."
-cd /REDACTED_ABS_PATH
-./build.sh > /dev/null 2>&1
-cd /REDACTED_ABS_PATH
-
-# Function to print separator
-print_separator() {
-    echo ""
-    echo "════════════════════════════════════════════════════════════════════════════════"
-    echo ""
-}
-
-# Function to test a combination
+# Test a builder/launcher combination
 test_combination() {
-    local BUILDER=$1
-    local LAUNCHER=$2
-    local OUTPUT="dist/$3"
-    local BUILDER_NAME=$4
-    local LAUNCHER_NAME=$5
-    local EMOJI=$6
-    local BUILDER_SHORT=$7
-    local LAUNCHER_SHORT=$8
+    local builder_name=$1
+    local launcher_name=$2
+    local builder_bin=$3
+    local launcher_bin=$4
+    local emoji=$5
     
-    # Create log filename
-    local LOG_FILE="logs/pretaster-b_${BUILDER_SHORT}-l_${LAUNCHER_SHORT}.${TIMESTAMP}.log"
+    local output="dist/pretaster-${builder_name}-${launcher_name}.psp"
+    local log_file="$LOGS_DIR/pretaster-b_${builder_name}-l_${launcher_name}.${TIMESTAMP}.log"
     
-    echo "$EMOJI 📦 Building with $BUILDER_NAME Builder + $LAUNCHER_NAME Launcher" | tee -a "$LOG_FILE"
-    echo "$EMOJI ────────────────────────────────────────────────────────────────────────────────" | tee -a "$LOG_FILE"
-    echo "$EMOJI 📝 Logging to: $LOG_FILE" | tee -a "$LOG_FILE"
+    local builder_cap="$(echo "$builder_name" | tr '[:lower:]' '[:upper:]' | cut -c1)$(echo "$builder_name" | cut -c2-)"
+    local launcher_cap="$(echo "$launcher_name" | tr '[:lower:]' '[:upper:]' | cut -c1)$(echo "$launcher_name" | cut -c2-)"
+    echo "$emoji 📦 Building with $builder_cap Builder + $launcher_cap Launcher" | tee -a "$log_file"
+    echo "$emoji ────────────────────────────────────────────────────────────────────────────────" | tee -a "$log_file"
+    echo "$emoji 📝 Logging to: $log_file" | tee -a "$log_file"
     
     # Build the package
-    if $BUILDER \
-        --manifest configs/test-taster-lite.json \
-        --launcher-bin $LAUNCHER \
-        --output $OUTPUT \
-        --key-seed test123 >> "$LOG_FILE" 2>&1; then
-        echo "$EMOJI   ✅ Build successful: $OUTPUT" | tee -a "$LOG_FILE"
+    # Use test-combination.json for CI compatibility (test-taster-lite requires taster.psp which isn't available in CI)
+    local config="configs/test-combination.json"
+    if build_package "$builder_bin" "$launcher_bin" "$config" "$output" >> "$log_file" 2>&1; then
+        echo "$emoji   ✅ Build successful: $output" | tee -a "$log_file"
     else
-        echo "$EMOJI   ❌ Build failed!" | tee -a "$LOG_FILE"
+        echo "$emoji   ❌ Build failed!" | tee -a "$log_file"
         return 1
     fi
     
-    # Test various commands
-    echo "$EMOJI" | tee -a "$LOG_FILE"
-    echo "$EMOJI   Testing commands:" | tee -a "$LOG_FILE"
-    echo "$EMOJI" | tee -a "$LOG_FILE"
+    # Run test commands
+    local commands=(
+        "info:Testing 'info' command"
+        "env:Testing 'env' command" 
+        "argv:Testing 'argv' with arguments:arg1 arg2 'arg with spaces'"
+        "echo:Testing 'echo' command:Hello from $builder_cap builder and $launcher_cap launcher!"
+        "file:Testing 'file' command:workenv-test"
+        "exit:Testing 'exit' with code 0:0"
+    )
     
-    # Test 1: info command
-    echo "$EMOJI   1️⃣ Testing 'info' command:" | tee -a "$LOG_FILE"
-    echo "$EMOJI   ─────────────────────────" | tee -a "$LOG_FILE"
-    FLAVOR_LOG_LEVEL=error ./$OUTPUT info 2>&1 | sed "s/^/$EMOJI     /" | tee -a "$LOG_FILE"
-    if [ ${PIPESTATUS[0]} -eq 0 ]; then
-        echo "$EMOJI   ✅ info test passed" | tee -a "$LOG_FILE"
-    else
-        echo "$EMOJI   ❌ info test failed" | tee -a "$LOG_FILE"
-    fi
+    echo "$emoji" | tee -a "$log_file"
+    echo "$emoji   Testing commands:" | tee -a "$log_file"
+    echo "$emoji" | tee -a "$log_file"
     
-    echo "$EMOJI" | tee -a "$LOG_FILE"
-    echo "$EMOJI   2️⃣ Testing 'env' command:" | tee -a "$LOG_FILE"
-    echo "$EMOJI   ────────────────────────" | tee -a "$LOG_FILE"
-    FLAVOR_LOG_LEVEL=error ./$OUTPUT env 2>&1 | head -10 | sed "s/^/$EMOJI     /" | tee -a "$LOG_FILE"
-    if [ ${PIPESTATUS[0]} -eq 0 ]; then
-        echo "$EMOJI     ..." | tee -a "$LOG_FILE"
-        echo "$EMOJI   ✅ env test passed" | tee -a "$LOG_FILE"
-    else
-        echo "$EMOJI   ❌ env test failed" | tee -a "$LOG_FILE"
-    fi
+    local test_num=1
+    for cmd_spec in "${commands[@]}"; do
+        IFS=':' read -r cmd desc args <<< "$cmd_spec"
+        
+        echo "$emoji   ${test_num}️⃣ $desc:" | tee -a "$log_file"
+        echo "$emoji   ─────────────────────────" | tee -a "$log_file"
+        
+        if [ "$cmd" = "env" ]; then
+            # For env, show only first 10 lines
+            test_taster_command "$output" $cmd $args 2>&1 | head -10 | sed "s/^/$emoji     /" | tee -a "$log_file"
+        else
+            test_taster_command "$output" $cmd $args 2>&1 | sed "s/^/$emoji     /" | tee -a "$log_file"
+        fi
+        
+        if [ ${PIPESTATUS[0]} -eq 0 ]; then
+            echo "$emoji   ✅ $cmd test passed" | tee -a "$log_file"
+        else
+            echo "$emoji   ❌ $cmd test failed" | tee -a "$log_file"
+        fi
+        
+        echo "$emoji" | tee -a "$log_file"
+        test_num=$((test_num + 1))
+    done
     
-    echo "$EMOJI" | tee -a "$LOG_FILE"
-    echo "$EMOJI   3️⃣ Testing 'argv' command with arguments:" | tee -a "$LOG_FILE"
-    echo "$EMOJI   ──────────────────────────────────────" | tee -a "$LOG_FILE"
-    FLAVOR_LOG_LEVEL=error ./$OUTPUT argv arg1 arg2 "arg with spaces" 2>&1 | sed "s/^/$EMOJI     /" | tee -a "$LOG_FILE"
-    if [ ${PIPESTATUS[0]} -eq 0 ]; then
-        echo "$EMOJI   ✅ argv test passed" | tee -a "$LOG_FILE"
-    else
-        echo "$EMOJI   ❌ argv test failed" | tee -a "$LOG_FILE"
-    fi
+    # Test exit with non-zero code
+    echo "$emoji   7️⃣ Testing 'exit' command with code 42:" | tee -a "$log_file"
+    echo "$emoji   ─────────────────────────────────────" | tee -a "$log_file"
     
-    echo "$EMOJI" | tee -a "$LOG_FILE"
-    echo "$EMOJI   4️⃣ Testing 'echo' command:" | tee -a "$LOG_FILE"
-    echo "$EMOJI   ─────────────────────────" | tee -a "$LOG_FILE"
-    FLAVOR_LOG_LEVEL=error ./$OUTPUT echo "Hello from $BUILDER_NAME builder and $LAUNCHER_NAME launcher!" 2>&1 | sed "s/^/$EMOJI     /" | tee -a "$LOG_FILE"
-    if [ ${PIPESTATUS[0]} -eq 0 ]; then
-        echo "$EMOJI   ✅ echo test passed" | tee -a "$LOG_FILE"
+    if test_with_exit_code "$output" 42 exit 42 2>&1 | sed "s/^/$emoji     /" | tee -a "$log_file"; then
+        echo "$emoji   ✅ exit 42 test passed" | tee -a "$log_file"
     else
-        echo "$EMOJI   ❌ echo test failed" | tee -a "$LOG_FILE"
-    fi
-    
-    echo "$EMOJI" | tee -a "$LOG_FILE"
-    echo "$EMOJI   5️⃣ Testing 'file' command:" | tee -a "$LOG_FILE"
-    echo "$EMOJI   ─────────────────────────" | tee -a "$LOG_FILE"
-    FLAVOR_LOG_LEVEL=error ./$OUTPUT file workenv-test 2>&1 | sed "s/^/$EMOJI     /" | tee -a "$LOG_FILE"
-    if [ ${PIPESTATUS[0]} -eq 0 ]; then
-        echo "$EMOJI   ✅ file test passed" | tee -a "$LOG_FILE"
-    else
-        echo "$EMOJI   ❌ file test failed" | tee -a "$LOG_FILE"
-    fi
-    
-    echo "$EMOJI" | tee -a "$LOG_FILE"
-    echo "$EMOJI   6️⃣ Testing 'exit' command with code 0:" | tee -a "$LOG_FILE"
-    echo "$EMOJI   ────────────────────────────────────" | tee -a "$LOG_FILE"
-    FLAVOR_LOG_LEVEL=error ./$OUTPUT exit 0 2>&1 | sed "s/^/$EMOJI     /" | tee -a "$LOG_FILE"
-    if [ ${PIPESTATUS[0]} -eq 0 ]; then
-        echo "$EMOJI   ✅ exit 0 test passed" | tee -a "$LOG_FILE"
-    else
-        echo "$EMOJI   ❌ exit 0 test failed" | tee -a "$LOG_FILE"
-    fi
-    
-    echo "$EMOJI" | tee -a "$LOG_FILE"
-    echo "$EMOJI   7️⃣ Testing 'exit' command with code 42:" | tee -a "$LOG_FILE"
-    echo "$EMOJI   ─────────────────────────────────────" | tee -a "$LOG_FILE"
-    set +e  # Allow non-zero exit codes
-    # Use PIPESTATUS to capture the exit code from the first command in the pipeline
-    FLAVOR_LOG_LEVEL=error ./$OUTPUT exit 42 2>&1 | sed "s/^/$EMOJI     /" | tee -a "$LOG_FILE"
-    EXIT_CODE=${PIPESTATUS[0]}  # Get exit code of first command in pipeline
-    set -e
-    if [ $EXIT_CODE -eq 42 ]; then
-        echo "$EMOJI   ✅ exit 42 test passed (got expected code: 42)" | tee -a "$LOG_FILE"
-    else
-        echo "$EMOJI   ❌ exit 42 test failed (got code: $EXIT_CODE, expected: 42)" | tee -a "$LOG_FILE"
+        echo "$emoji   ❌ exit 42 test failed" | tee -a "$log_file"
     fi
     
     # Clean up
-    rm -f "$OUTPUT"
+    rm -f "$output"
     
-    echo "$EMOJI" | tee -a "$LOG_FILE"
-    echo "$EMOJI ✨ Completed testing $BUILDER_NAME + $LAUNCHER_NAME combination" | tee -a "$LOG_FILE"
-    echo "$EMOJI 📄 Full log saved to: $LOG_FILE" | tee -a "$LOG_FILE"
+    echo "$emoji" | tee -a "$log_file"
+    echo "$emoji ✨ Completed testing $builder_cap + $launcher_cap combination" | tee -a "$log_file"
+    echo "$emoji 📄 Full log saved to: $log_file" | tee -a "$log_file"
 }
 
-# Test all 4 combinations
-print_separator
+# Test all combinations
+combinations=(
+    "rs:rs:../bin/flavor-rs-builder:../bin/flavor-rs-launcher:🦀🦀"
+    "rs:go:../bin/flavor-rs-builder:../bin/flavor-go-launcher:🦀🐹"
+    "go:rs:../bin/flavor-go-builder:../bin/flavor-rs-launcher:🐹🦀"
+    "go:go:../bin/flavor-go-builder:../bin/flavor-go-launcher:🐹🐹"
+)
 
-echo "1️⃣ 🦀🦀 Rust Builder + Rust Launcher"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-test_combination \
-    "../bin/flavor-rs-builder" \
-    "../bin/flavor-rs-launcher" \
-    "pretaster-rust-rust.psp" \
-    "Rust" \
-    "Rust" \
-    "🦀🦀" \
-    "rs" \
-    "rs"
-
-print_separator
-
-echo "2️⃣ 🦀🐹 Rust Builder + Go Launcher"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-test_combination \
-    "../bin/flavor-rs-builder" \
-    "../bin/flavor-go-launcher" \
-    "pretaster-rust-go.psp" \
-    "Rust" \
-    "Go" \
-    "🦀🐹" \
-    "rs" \
-    "go"
-
-print_separator
-
-echo "3️⃣ 🐹🦀 Go Builder + Rust Launcher"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-test_combination \
-    "../bin/flavor-go-builder" \
-    "../bin/flavor-rs-launcher" \
-    "pretaster-go-rust.psp" \
-    "Go" \
-    "Rust" \
-    "🐹🦀" \
-    "go" \
-    "rs"
-
-print_separator
-
-echo "4️⃣ 🐹🐹 Go Builder + Go Launcher"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-test_combination \
-    "../bin/flavor-go-builder" \
-    "../bin/flavor-go-launcher" \
-    "pretaster-go-go.psp" \
-    "Go" \
-    "Go" \
-    "🐹🐹" \
-    "go" \
-    "go"
+for combo in "${combinations[@]}"; do
+    IFS=':' read -r builder launcher builder_bin launcher_bin emoji <<< "$combo"
+    
+    print_separator
+    
+    case "$builder-$launcher" in
+        rs-rs) echo "1️⃣ 🦀🦀 Rust Builder + Rust Launcher" ;;
+        rs-go) echo "2️⃣ 🦀🐹 Rust Builder + Go Launcher" ;;
+        go-rs) echo "3️⃣ 🐹🦀 Go Builder + Rust Launcher" ;;
+        go-go) echo "4️⃣ 🐹🐹 Go Builder + Go Launcher" ;;
+    esac
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    
+    test_combination "$builder" "$launcher" "$builder_bin" "$launcher_bin" "$emoji"
+done
 
 print_separator
 
@@ -215,10 +143,12 @@ echo "  • 🦀🐹 Rust + Go:   ✅ Working"
 echo "  • 🐹🦀 Go + Rust:   ✅ Working"
 echo "  • 🐹🐹 Go + Go:     ✅ Working"
 echo ""
-echo "📁 Log files saved in: logs/"
-echo "  • pretaster-b_rs-l_rs.${TIMESTAMP}.log"
-echo "  • pretaster-b_rs-l_go.${TIMESTAMP}.log"
-echo "  • pretaster-b_go-l_rs.${TIMESTAMP}.log"
-echo "  • pretaster-b_go-l_go.${TIMESTAMP}.log"
+echo "📁 Log files saved in: $LOGS_DIR"
+for combo in "${combinations[@]}"; do
+    IFS=':' read -r builder launcher _ _ _ <<< "$combo"
+    echo "  • pretaster-b_${builder}-l_${launcher}.${TIMESTAMP}.log"
+done
 echo ""
 echo "✅ All combinations tested and logged!"
+
+print_test_summary

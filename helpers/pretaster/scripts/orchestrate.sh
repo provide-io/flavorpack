@@ -9,7 +9,7 @@ echo ""
 echo "📊 Environment Check:"
 echo "  ORCHESTRATE_MODE: ${ORCHESTRATE_MODE:-not set}"
 echo "  SLOT_COUNT: ${SLOT_COUNT:-not set}"
-echo "  WORKENV_PATH: ${WORKENV_PATH:-not set}"
+echo "  WORKENV_PATH: ${FLAVOR_WORKENV:-not set}"
 echo "  TEST_MODE: ${TEST_MODE:-not set}"
 
 # Verify slots were extracted
@@ -17,7 +17,7 @@ echo ""
 echo "📦 Verifying Slot Extraction:"
 
 # Slot 0: This script itself
-if [ -f "${WORKENV_PATH}/orchestrator/orchestrate.sh" ]; then
+if [ -f "${FLAVOR_WORKENV}/orchestrator/orchestrate.sh" ]; then
     echo "  ✅ Slot 0: Orchestrator script found"
 else
     echo "  ❌ Slot 0: Orchestrator script missing!"
@@ -25,10 +25,10 @@ else
 fi
 
 # Slot 1: Utilities tarball (should be extracted)
-if [ -f "${WORKENV_PATH}/slot1/utilities.tar.gz" ]; then
+if [ -f "${FLAVOR_WORKENV}/slot1/utilities.tar.gz" ]; then
     echo "  ✅ Slot 1: Utilities tarball found"
     echo "     Extracting utilities..."
-    cd "${WORKENV_PATH}/slot1"
+    cd "${FLAVOR_WORKENV}/slot1"
     tar -xzf utilities.tar.gz
     echo "     Contents:"
     ls -la | sed 's/^/       /'
@@ -51,30 +51,30 @@ else
 fi
 
 # Slot 2: Gzipped Flavor builder (should be decompressed)
-if [ -f "${WORKENV_PATH}/slot2/flavor-go-builder" ]; then
+if [ -f "${FLAVOR_WORKENV}/slot2/flavor-go-builder" ]; then
     echo ""
     echo "  ✅ Slot 2: Flavor Go builder found (decompressed from gzip)"
     echo "     Checking builder:"
-    if [ -x "${WORKENV_PATH}/slot2/flavor-go-builder" ]; then
+    if [ -x "${FLAVOR_WORKENV}/slot2/flavor-go-builder" ]; then
         echo "     Builder is executable"
         # Try to get version if possible
-        "${WORKENV_PATH}/slot2/flavor-go-builder" --version 2>/dev/null | head -1 | sed 's/^/     /' || echo "     (version check failed - expected)"
+        "${FLAVOR_WORKENV}/slot2/flavor-go-builder" --version 2>/dev/null | head -1 | sed 's/^/     /' || echo "     (version check failed - expected)"
     else
         echo "     Making builder executable..."
-        chmod +x "${WORKENV_PATH}/slot2/flavor-go-builder"
+        chmod +x "${FLAVOR_WORKENV}/slot2/flavor-go-builder"
     fi
 else
     echo "  ❌ Slot 2: Flavor builder missing!"
     echo "     Looking for any files in slot2:"
-    ls -la "${WORKENV_PATH}/slot2/" 2>/dev/null | sed 's/^/       /' || echo "       Directory doesn't exist"
+    ls -la "${FLAVOR_WORKENV}/slot2/" 2>/dev/null | sed 's/^/       /' || echo "       Directory doesn't exist"
 fi
 
 # Slot 3: Scripts tarball
-if [ -f "${WORKENV_PATH}/slot3/scripts.tar.gz" ]; then
+if [ -f "${FLAVOR_WORKENV}/slot3/scripts.tar.gz" ]; then
     echo ""
     echo "  ✅ Slot 3: Scripts tarball found"
     echo "     Extracting scripts..."
-    cd "${WORKENV_PATH}/slot3"
+    cd "${FLAVOR_WORKENV}/slot3"
     tar -xzf scripts.tar.gz
     echo "     Contents:"
     ls -la | sed 's/^/       /'
@@ -99,7 +99,7 @@ echo "✨ Orchestration Complete!"
 echo ""
 echo "Summary:"
 echo "  • All ${SLOT_COUNT} slots processed successfully"
-echo "  • Workenv location: ${WORKENV_PATH}"
+echo "  • Workenv location: ${FLAVOR_WORKENV}"
 echo "  • Mode: ${ORCHESTRATE_MODE}"
 echo ""
 echo "This test demonstrates:"

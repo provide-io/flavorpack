@@ -11,17 +11,17 @@
   "slots": [
     {
       "slot": 0,
-      "name": "orchestrator.sh",
-      "path": "scripts/orchestrate.sh",
+      "name": "orchestrate.tar.gz",
+      "path": "{workenv}/scripts/orchestrate.tar.gz",
       "purpose": "payload",
       "lifecycle": "cached",
-      "encoding": "none",
+      "encoding": "gzip",
       "extract_to": "{workenv}/orchestrator"
     },
     {
       "slot": 1,
       "name": "utilities.tar.gz",
-      "path": "slots/utilities.tar.gz",
+      "path": "{workenv}/slots/utilities.tar.gz",
       "purpose": "payload",
       "lifecycle": "cached",
       "encoding": "none",
@@ -29,17 +29,17 @@
     },
     {
       "slot": 2,
-      "name": "flavor-go-builder.gz",
-      "path": "../bin/flavor-go-builder",
+      "name": "flavor-go-builder",
+      "path": "{workenv}/../bin/flavor-go-builder-darwin_arm64",
       "purpose": "payload",
       "lifecycle": "cached",
-      "encoding": "gzip",
+      "encoding": "none",
       "extract_to": "{workenv}/slot2"
     },
     {
       "slot": 3,
       "name": "scripts.tar.gz",
-      "path": "slots/scripts.tar.gz",
+      "path": "{workenv}/slots/scripts.tar.gz",
       "purpose": "payload",
       "lifecycle": "cached",
       "encoding": "none",
@@ -52,8 +52,7 @@
       "pass": ["PATH", "HOME", "USER", "LANG", "LC_*", "TERM", "FLAVOR_*"],
       "set": {
         "ORCHESTRATE_MODE": "full",
-        "SLOT_COUNT": "4",
-        "WORKENV_PATH": "{workenv}"
+        "SLOT_COUNT": "4"
       }
     }
   },

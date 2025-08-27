@@ -50,7 +50,7 @@ def orchestrator(tmp_path: Path, mock_flavor_config: FlavorConfig) -> PackagingO
 
 @pytest.fixture
 def setup_payload_dir(tmp_path: Path) -> Path:
-    """Creates a mock payload directory with necessary files for helpers."""
+    """Creates a mock payload directory with necessary files for ingredients."""
     payload_dir = tmp_path / "payload"
     bin_dir = payload_dir / "bin"
     wheels_dir = payload_dir / "wheels"
