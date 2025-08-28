@@ -14,6 +14,7 @@ from typing import Any
 
 from pyvider.telemetry import logger
 
+from flavor.utils.archive import deterministic_filter
 from flavor.utils.subprocess import run_command
 
 
@@ -188,7 +189,9 @@ class PythonPackager:
         logger.info("Creating payload archive with maximum compression...")
         payload_tgz = work_dir / "payload.tgz"
         with tarfile.open(payload_tgz, "w:gz", compresslevel=9) as tar:
-            tar.add(payload_dir, arcname=".")
+            # Sort files for deterministic build
+            for f in sorted(payload_dir.rglob("*")):
+                tar.add(f, arcname=f.relative_to(payload_dir))
         artifacts["payload_tgz"] = payload_tgz
 
         # Log the compressed size
@@ -861,7 +864,7 @@ class PythonPackager:
                     elif tarinfo.isdir():
                         logger.trace(f"  📁 Adding: {tarinfo.name}/")
 
-                    return tarinfo
+                    return deterministic_filter(tarinfo)
 
                 logger.debug("🏗️ Adding Python installation to tarball...")
                 tar.add(python_install_dir, arcname=".", filter=filter_and_reorganize)

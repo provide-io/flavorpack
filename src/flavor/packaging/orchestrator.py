@@ -95,8 +95,8 @@ class PackagingOrchestrator:
             )
             return "rust"
         except Exception as e:
-            logger.warning("🔍🚨❌ Failed to detect launcher type", error=str(e))
-            return "rust"
+            logger.error("Failed to execute command", error=str(e))
+            raise BuildError(f"Failed to execute command: {launcher_path}") from e
 
     def build_package(self) -> None:
         logger.info("🎯🏗️🚀 Orchestrator starting build process")
@@ -125,6 +125,14 @@ class PackagingOrchestrator:
             raise BuildError(f"Launcher binary not found: {launcher_path}")
         if not os.access(launcher_path, os.X_OK):
             raise BuildError(f"Launcher binary not executable: {launcher_path}")
+
+        # Check for platform mismatch
+        if self.platform not in launcher_path.name and "any" not in launcher_path.name:
+            logger.warning(
+                "Launcher platform mismatch",
+                expected=self.platform,
+                found=launcher_path.name,
+            )
         logger.info(f"✅ Launcher found and executable: {launcher_path}")
         
         # Store for later use
