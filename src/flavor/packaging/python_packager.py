@@ -509,70 +509,117 @@ class PythonPackager:
                     if ".whl" in line:
                         logger.info("📦🏗️✅ Built main package", wheel=line.strip())
 
-            # Download transitive dependencies ONLY ONCE for the main package
-            # Avoid duplicates and skip build dependencies
-            logger.info("🌐📥🚀 Downloading runtime dependencies from PyPI")
-            if wheel_spinner:
-                wheel_spinner.tick()
-
-            logger.info(
-                "📦🔄🚀 Resolving dependencies for main package only",
-                package=self.manifest_dir.name,
-            )
-
-            # Use pip wheel BUT ONLY for the main package, not for all packages
-            # This avoids downloading duplicate dependencies
-            resolve_cmd = [
-                str(python_exe),
-                "-m",
-                "pip",
-                "wheel",
-                "--wheel-dir",
-                str(wheels_dir),
-                str(self.manifest_dir),
-            ]
-            logger.trace("💻🚀📋 Command", command=" ".join(resolve_cmd))
-            result = run_command(
-                resolve_cmd,
-                check=True,
-                capture_output=True,
-            )
-            
-            if result.stdout:
-                # Count new wheels downloaded
-                new_wheels = [
-                    line
-                    for line in result.stdout.strip().split("\n")
-                    if "Downloading" in line
-                ]
-                if new_wheels:
-                    logger.debug(
-                        "🌐📥✅ Downloaded dependencies", count=len(new_wheels)
-                    )
-
-            # Remove ONLY pure build-time dependencies that are never needed at runtime
-            # Be conservative - only remove tools that are definitely build-only
-            build_only_deps = {
-                "setuptools", "wheel", "pip", "build", "installer",
-                "setuptools-scm", "flit", "flit-core", "poetry", "poetry-core",
-                "hatchling", "pdm", "pdm-backend", "maturin", "scikit-build",
-                "distutils", "distribute", "eggs", "easy-install",
-                "pyproject-hooks", "pip-tools", "twine", "build-backend",
-                "uv", "flavorpack"  # UV and flavorpack are packaging tools, not runtime deps!
-            }
-            # Note: NOT removing: tomli, packaging, pyparsing as they might be runtime deps
-            
-            removed_count = 0
-            for wheel_file in list(wheels_dir.glob("*.whl")):
-                # Extract package name from wheel filename
-                wheel_name = wheel_file.stem.split("-")[0].replace("_", "-").lower()
-                if wheel_name in build_only_deps:
-                    logger.info(f"🗑️ Removing build-only dependency: {wheel_file.name}")
-                    wheel_file.unlink()
-                    removed_count += 1
+            # Parse pyproject.toml to get ONLY runtime dependencies (PEP 517/518)
+            logger.info("📖 Parsing pyproject.toml for runtime dependencies")
+            runtime_deps = []
+            try:
+                pyproject_path = self.manifest_dir / "pyproject.toml"
+                with open(pyproject_path, "rb") as f:
+                    pyproject_data = tomllib.load(f)
                     
-            if removed_count > 0:
-                logger.info(f"🧹 Removed {removed_count} build-only dependencies")
+                    # Get runtime dependencies from project.dependencies
+                    runtime_deps = pyproject_data.get("project", {}).get("dependencies", [])
+                    logger.info(f"📦 Found {len(runtime_deps)} runtime dependencies")
+                    
+                    # Log build-system requirements (these should NOT be included)
+                    build_requires = pyproject_data.get("build-system", {}).get("requires", [])
+                    if build_requires:
+                        logger.info(f"🔨 Excluding {len(build_requires)} build-system requirements")
+                        for req in build_requires[:3]:  # Show first 3
+                            logger.debug(f"  ❌ Build-only: {req}")
+                        
+            except Exception as e:
+                logger.warning(f"⚠️ Could not parse pyproject.toml, falling back to pip wheel: {e}")
+                runtime_deps = []
+            
+            # Download ONLY runtime dependencies
+            if runtime_deps:
+                # Method 1: Create a requirements file and use pip download
+                logger.info("🌐📥 Downloading ONLY runtime dependencies")
+                if wheel_spinner:
+                    wheel_spinner.tick()
+                    
+                with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as req_file:
+                    # Write runtime dependencies to requirements file
+                    for dep in runtime_deps:
+                        req_file.write(f"{dep}\n")
+                    req_file.flush()
+                    
+                    # Download only these specific dependencies
+                    download_cmd = [
+                        str(python_exe),
+                        "-m",
+                        "pip",
+                        "download",
+                        "--dest", str(wheels_dir),
+                        "--only-binary", ":all:",  # Prefer wheels
+                        "-r", req_file.name,
+                    ]
+                    logger.debug("💻 Downloading runtime deps", command=" ".join(download_cmd))
+                    result = run_command(
+                        download_cmd,
+                        check=False,  # Don't fail if some deps can't be found as wheels
+                        capture_output=True,
+                    )
+                    
+                    # Clean up temp file
+                    os.unlink(req_file.name)
+                    
+                # Convert any source distributions to wheels
+                for file in wheels_dir.iterdir():
+                    if file.suffix == ".tar.gz":
+                        logger.debug(f"🔄 Converting {file.name} to wheel")
+                        build_cmd = [
+                            str(python_exe),
+                            "-m",
+                            "pip",
+                            "wheel",
+                            "--wheel-dir", str(wheels_dir),
+                            "--no-deps",
+                            str(file),
+                        ]
+                        run_command(build_cmd, check=False, capture_output=True)
+                        file.unlink()  # Remove source distribution
+                        
+            else:
+                # Fallback: Use pip wheel but with better filtering
+                logger.warning("⚠️ No runtime deps found, using fallback method")
+                resolve_cmd = [
+                    str(python_exe),
+                    "-m",
+                    "pip",
+                    "wheel",
+                    "--wheel-dir",
+                    str(wheels_dir),
+                    str(self.manifest_dir),
+                ]
+                logger.trace("💻 Command", command=" ".join(resolve_cmd))
+                result = run_command(
+                    resolve_cmd,
+                    check=True,
+                    capture_output=True,
+                )
+                
+                # Remove known build-only dependencies
+                build_only_deps = {
+                    "setuptools", "wheel", "pip", "build", "installer",
+                    "setuptools-scm", "flit", "flit-core", "poetry", "poetry-core",
+                    "hatchling", "pdm", "pdm-backend", "maturin", "scikit-build",
+                    "distutils", "distribute", "eggs", "easy-install",
+                    "pyproject-hooks", "pip-tools", "twine", "build-backend",
+                    "uv", "flavorpack"
+                }
+                
+                removed_count = 0
+                for wheel_file in list(wheels_dir.glob("*.whl")):
+                    wheel_name = wheel_file.stem.split("-")[0].replace("_", "-").lower()
+                    if wheel_name in build_only_deps:
+                        logger.info(f"🗑️ Removing build dependency: {wheel_file.name}")
+                        wheel_file.unlink()
+                        removed_count += 1
+                        
+                if removed_count > 0:
+                    logger.info(f"🧹 Removed {removed_count} build dependencies")
 
             # Log final wheel count
             wheel_files = list(wheels_dir.glob("*.whl"))
