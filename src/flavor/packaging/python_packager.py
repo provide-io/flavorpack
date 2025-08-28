@@ -510,20 +510,18 @@ class PythonPackager:
                         logger.info("📦🏗️✅ Built main package", wheel=line.strip())
 
             # Download transitive dependencies ONLY ONCE for the main package
-            # This avoids duplicate dependencies and reduces package size
-            logger.info("🌐📥🚀 Downloading transitive dependencies from PyPI")
+            # Avoid duplicates and skip build dependencies
+            logger.info("🌐📥🚀 Downloading runtime dependencies from PyPI")
             if wheel_spinner:
                 wheel_spinner.tick()
 
-            # Only resolve dependencies for the main package
-            # Local dependencies' deps will be included transitively
             logger.info(
-                "📦🔄🚀 Resolving dependencies for main package",
+                "📦🔄🚀 Resolving dependencies for main package only",
                 package=self.manifest_dir.name,
             )
 
-            # Use pip download to get ONLY runtime dependencies, not build deps
-            # First, get the dependency list without downloading
+            # Use pip wheel BUT ONLY for the main package, not for all packages
+            # This avoids downloading duplicate dependencies
             resolve_cmd = [
                 str(python_exe),
                 "-m",
@@ -549,16 +547,32 @@ class PythonPackager:
                 ]
                 if new_wheels:
                     logger.debug(
-                        "🌐📥✅ Downloaded new dependencies", count=len(new_wheels)
+                        "🌐📥✅ Downloaded dependencies", count=len(new_wheels)
                     )
 
-            # Remove build-time dependencies that shouldn't be in runtime
-            build_time_deps = {"setuptools", "wheel", "pip", "build", "installer", "packaging"}
+            # Remove ONLY pure build-time dependencies that are never needed at runtime
+            # Be conservative - only remove tools that are definitely build-only
+            build_only_deps = {
+                "setuptools", "wheel", "pip", "build", "installer",
+                "setuptools-scm", "flit", "flit-core", "poetry", "poetry-core",
+                "hatchling", "pdm", "pdm-backend", "maturin", "scikit-build",
+                "distutils", "distribute", "eggs", "easy-install",
+                "pyproject-hooks", "pip-tools", "twine", "build-backend",
+                "uv", "flavorpack"  # UV and flavorpack are packaging tools, not runtime deps!
+            }
+            # Note: NOT removing: tomli, packaging, pyparsing as they might be runtime deps
+            
+            removed_count = 0
             for wheel_file in list(wheels_dir.glob("*.whl")):
+                # Extract package name from wheel filename
                 wheel_name = wheel_file.stem.split("-")[0].replace("_", "-").lower()
-                if wheel_name in build_time_deps:
-                    logger.info(f"🗑️ Removing build-time dependency: {wheel_file.name}")
+                if wheel_name in build_only_deps:
+                    logger.info(f"🗑️ Removing build-only dependency: {wheel_file.name}")
                     wheel_file.unlink()
+                    removed_count += 1
+                    
+            if removed_count > 0:
+                logger.info(f"🧹 Removed {removed_count} build-only dependencies")
 
             # Log final wheel count
             wheel_files = list(wheels_dir.glob("*.whl"))
