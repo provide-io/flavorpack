@@ -14,7 +14,10 @@ Welcome to the official documentation for Flavor Pack (`flavorpack`), the Progre
 - **[CI/CD Pipeline](CI-CD.md)** - Continuous integration and deployment
 
 ### Reference
-- **[API Reference](API-REFERENCE.md)** - PSPF specification and command reference
+- **[API Reference](API-REFERENCE.md)** - Command reference and usage examples
+- **[Formal Specifications (RFCs)](rfc/)**
+  - [PSPF/2025 Specification](rfc/0001-pspf-2025-specification.md) - The base specification for the Progressive Secure Package Format.
+  - [Staged Payload Architecture (SPA) Extension](rfc/0002-pspf-spa-extension.md) - An optional extension for improving startup performance.
 - **[Versioning](VERSIONING.md)** - Version strategy and compatibility
 - **[Troubleshooting](TROUBLESHOOTING.md)** - Common issues and solutions
 

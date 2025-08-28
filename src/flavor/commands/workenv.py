@@ -92,16 +92,11 @@ def workenv_clean(older_than: int | None, yes: bool) -> None:
             click.echo("Aborted.")
             return
 
-    # Clean incomplete extractions first
-    incomplete = manager.clean_incomplete()
-    if incomplete:
-        click.echo(f"Removed {len(incomplete)} incomplete extractions")
-
     # Clean old packages
     removed = manager.clean(max_age_days=older_than)
 
     if removed:
-        click.secho(f"✅ Cleaned {len(removed)} packages from cache", fg="green")
+        click.secho(f"""✅ Removed {len(removed)} cached package(s)""", fg="green")
     else:
         click.echo("No packages to clean")
 
@@ -121,11 +116,12 @@ def workenv_remove(package_id: str, yes: bool) -> None:
     manager = CacheManager()
 
     if not yes:
-        info = manager.get_info(package_id)
-        if info:
-            size_mb = info["size"] / (1024 * 1024)
-            name = info.get("name", package_id)
-            if not click.confirm(f"Remove {name} ({size_mb:.1f} MB)?"):
+        info = manager.inspect_workenv(package_id)
+        if info and info.get("exists"):
+            from pathlib import Path
+            size_mb = manager._get_dir_size(Path(info["content_dir"])) / (1024 * 1024)
+            name = info.get("package_info", {}).get("name", package_id)
+            if not click.confirm(f"""Remove {name} ({size_mb:.1f} MB)?"""):
                 click.echo("Aborted.")
                 return
 
