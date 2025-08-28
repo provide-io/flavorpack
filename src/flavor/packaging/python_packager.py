@@ -509,57 +509,56 @@ class PythonPackager:
                     if ".whl" in line:
                         logger.info("📦🏗️✅ Built main package", wheel=line.strip())
 
-            # Download transitive dependencies for all packages
+            # Download transitive dependencies ONLY ONCE for the main package
+            # This avoids duplicate dependencies and reduces package size
             logger.info("🌐📥🚀 Downloading transitive dependencies from PyPI")
             if wheel_spinner:
                 wheel_spinner.tick()
 
-            # Download dependencies for all local packages we built
-            # We need to do this for each package to ensure we get ALL their dependencies
+            # Only resolve dependencies for the main package
+            # Local dependencies' deps will be included transitively
             logger.info(
-                "📦🔄🚀 Resolving dependencies for packages",
-                count=len(all_local_deps) + 1,
+                "📦🔄🚀 Resolving dependencies for main package",
+                package=self.manifest_dir.name,
             )
-            all_packages_to_resolve = all_local_deps + [self.manifest_dir]
 
-            for i, package_path in enumerate(all_packages_to_resolve, 1):
-                logger.info(
-                    "📥🔄📋 Resolving dependencies",
-                    index=i,
-                    total=len(all_packages_to_resolve),
-                    package=package_path.name,
-                )
-                if wheel_spinner:
-                    wheel_spinner.tick()
-
-                # Use pip3 wheel to ensure we get all dependencies
-                # CRITICAL: Must use pip3 for proper dependency resolution
-                resolve_cmd = [
-                    str(python_exe),
-                    "-m",
-                    "pip",
-                    "wheel",
-                    "--wheel-dir",
-                    str(wheels_dir),
-                    str(package_path),
+            # Use pip download to get ONLY runtime dependencies, not build deps
+            # First, get the dependency list without downloading
+            resolve_cmd = [
+                str(python_exe),
+                "-m",
+                "pip",
+                "wheel",
+                "--wheel-dir",
+                str(wheels_dir),
+                str(self.manifest_dir),
+            ]
+            logger.trace("💻🚀📋 Command", command=" ".join(resolve_cmd))
+            result = run_command(
+                resolve_cmd,
+                check=True,
+                capture_output=True,
+            )
+            
+            if result.stdout:
+                # Count new wheels downloaded
+                new_wheels = [
+                    line
+                    for line in result.stdout.strip().split("\n")
+                    if "Downloading" in line
                 ]
-                logger.trace("💻🚀📋 Command", command=" ".join(resolve_cmd))
-                result = run_command(
-                    resolve_cmd,
-                    check=True,
-                    capture_output=True,
-                )
-                if result.stdout:
-                    # Count new wheels downloaded
-                    new_wheels = [
-                        line
-                        for line in result.stdout.strip().split("\n")
-                        if "Downloading" in line
-                    ]
-                    if new_wheels:
-                        logger.debug(
-                            "🌐📥✅ Downloaded new dependencies", count=len(new_wheels)
-                        )
+                if new_wheels:
+                    logger.debug(
+                        "🌐📥✅ Downloaded new dependencies", count=len(new_wheels)
+                    )
+
+            # Remove build-time dependencies that shouldn't be in runtime
+            build_time_deps = {"setuptools", "wheel", "pip", "build", "installer", "packaging"}
+            for wheel_file in list(wheels_dir.glob("*.whl")):
+                wheel_name = wheel_file.stem.split("-")[0].replace("_", "-").lower()
+                if wheel_name in build_time_deps:
+                    logger.info(f"🗑️ Removing build-time dependency: {wheel_file.name}")
+                    wheel_file.unlink()
 
             # Log final wheel count
             wheel_files = list(wheels_dir.glob("*.whl"))
