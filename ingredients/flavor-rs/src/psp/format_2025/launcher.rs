@@ -557,9 +557,9 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
                 }
             };
 
-            // Write metadata to package metadata directory in temp location
-            // Use hidden .{workenv}.pspf/package/ structure
-            let package_metadata_dir = temp_dir.join(format!(".{}.pspf", paths.name())).join("package");
+            // Write metadata to package metadata directory directly in cache (not in temp)
+            // Use hidden .{workenv}.pspf/package/ structure as a sibling to workenv
+            let package_metadata_dir = paths.metadata().join("package");
             fs::create_dir_all(&package_metadata_dir)?;
             let metadata_file = package_metadata_dir.join("psp.json");
             let metadata_json = serde_json::to_string_pretty(&metadata)?;

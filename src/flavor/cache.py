@@ -52,41 +52,16 @@ class CacheManager:
         cached = []
 
         for entry in self.cache_dir.iterdir():
-            if not entry.is_dir():
-                continue
-                
-            # Skip hidden metadata directories
-            if entry.name.startswith(".") and entry.name.endswith(".pspf"):
+            if not entry.is_dir() or entry.name.startswith("."):
                 continue
 
-            # Check for metadata directories
-            instance_metadata = self.cache_dir / f".{entry.name}.pspf"
-            package_metadata = entry / ".pspf"
-            
-            # Determine which metadata location to use
-            metadata_dir = None
-            if instance_metadata.exists():
-                metadata_dir = instance_metadata
-            elif package_metadata.exists():
-                metadata_dir = package_metadata
-            
-            # Check completion markers
-            extraction_complete = False
-            if metadata_dir:
-                # Check various possible locations for completion marker
-                complete_paths = [
-                    metadata_dir / "extraction.complete",
-                    metadata_dir / "instance" / "extract" / "complete",
-                    metadata_dir / "instance" / "extraction.complete",
-                ]
-                extraction_complete = any(p.exists() for p in complete_paths)
-            else:
-                # Legacy check
-                if (entry / ".extraction.complete").exists():
-                    extraction_complete = True
-            
-            # Skip incomplete extractions
-            if not extraction_complete:
+            instance_metadata_dir = self.cache_dir / f".{entry.name}.pspf"
+            if not instance_metadata_dir.is_dir():
+                continue
+
+            # Check for the modern completion marker
+            completion_marker = instance_metadata_dir / "instance" / "extract" / "complete"
+            if not completion_marker.exists():
                 continue
 
             info = {
@@ -94,31 +69,22 @@ class CacheManager:
                 "path": str(entry),
                 "size": self._get_dir_size(entry),
                 "modified": entry.stat().st_mtime,
-                "metadata_type": "instance" if instance_metadata.exists() else "package" if package_metadata.exists() else None,
+                "metadata_type": "instance",
             }
 
-            # Try to read metadata from various locations
-            metadata_locations = [
-                entry / "metadata" / "psp.json",  # New standard location
-                entry / "metadata.json",  # Legacy location
-                entry / f".{entry.name}.pspf" / "package" / "psp.json",  # Package metadata
-            ]
-            
-            metadata_found = False
-            for metadata_file in metadata_locations:
-                if metadata_file.exists():
-                    try:
-                        with metadata_file.open() as f:
-                            metadata = json.load(f)
-                            pkg = metadata.get("package", metadata)  # Handle nested or flat format
-                            info["name"] = pkg.get("name", "unknown")
-                            info["version"] = pkg.get("version", "unknown")
-                            metadata_found = True
-                            break
-                    except (json.JSONDecodeError, KeyError):
-                        pass
-            
-            if not metadata_found:
+            # Read metadata from the standard location
+            metadata_file = instance_metadata_dir / "package" / "psp.json"
+            if metadata_file.exists():
+                try:
+                    with metadata_file.open() as f:
+                        metadata = json.load(f)
+                        pkg = metadata.get("package", metadata)
+                        info["name"] = pkg.get("name", "unknown")
+                        info["version"] = pkg.get("version", "unknown")
+                except (json.JSONDecodeError, KeyError):
+                    info["name"] = "unknown"
+                    info["version"] = "unknown"
+            else:
                 info["name"] = "unknown"
                 info["version"] = "unknown"
 
@@ -177,7 +143,7 @@ class CacheManager:
         return removed
 
     def inspect_workenv(self, workenv_name: str) -> dict:
-        """Inspect a specific workenv with metadata directory support.
+        """Inspect a specific workenv.
         
         Args:
             workenv_name: Name of the workenv to inspect
@@ -186,8 +152,7 @@ class CacheManager:
             Detailed inspection information
         """
         workenv_dir = self.cache_dir / workenv_name
-        instance_metadata = self.cache_dir / f".{workenv_name}.pspf"
-        package_metadata = workenv_dir / ".pspf"
+        instance_metadata_dir = self.cache_dir / f".{workenv_name}.pspf"
         
         info = {
             "name": workenv_name,
@@ -200,87 +165,38 @@ class CacheManager:
             "package_info": {},
         }
         
-        if not workenv_dir.exists():
+        if not workenv_dir.exists() or not instance_metadata_dir.is_dir():
             return info
         
-        # Determine metadata type and location
-        metadata_dir = None
-        if instance_metadata.exists():
-            info["metadata_type"] = "instance"
-            info["metadata_dir"] = str(instance_metadata)
-            metadata_dir = instance_metadata
-        elif package_metadata.exists():
-            info["metadata_type"] = "package"
-            info["metadata_dir"] = str(package_metadata)
-            metadata_dir = package_metadata
+        info["metadata_type"] = "instance"
+        info["metadata_dir"] = str(instance_metadata_dir)
         
-        # Read checksum if available
-        if metadata_dir:
-            checksum_paths = [
-                metadata_dir / "package.checksum",
-                metadata_dir / "instance" / "package.checksum",
-            ]
-            for checksum_file in checksum_paths:
-                if checksum_file.exists():
-                    try:
-                        info["checksum"] = checksum_file.read_text().strip()
-                        break
-                    except IOError:
-                        pass
-            
-            # Check extraction completion
-            complete_paths = [
-                metadata_dir / "extraction.complete",
-                metadata_dir / "instance" / "extract" / "complete",
-                metadata_dir / "instance" / "extraction.complete",
-            ]
-            info["extraction_complete"] = any(p.exists() for p in complete_paths)
+        # Read checksum from the standard location
+        checksum_file = instance_metadata_dir / "instance" / "package.checksum"
+        if checksum_file.exists():
+            with contextlib.suppress(IOError):
+                info["checksum"] = checksum_file.read_text().strip()
+
+        # Check for the modern completion marker
+        completion_marker = instance_metadata_dir / "instance" / "extract" / "complete"
+        info["extraction_complete"] = completion_marker.exists()
         
-        # Read package metadata
-        metadata_locations = [
-            workenv_dir / "metadata" / "psp.json",
-            workenv_dir / "metadata.json",
-            workenv_dir / f".{workenv_name}.pspf" / "package" / "psp.json",
-        ]
-        
-        for metadata_file in metadata_locations:
-            if metadata_file.exists():
-                try:
-                    with metadata_file.open() as f:
-                        metadata = json.load(f)
-                        pkg = metadata.get("package", metadata)
-                        info["package_info"] = {
-                            "name": pkg.get("name"),
-                            "version": pkg.get("version"),
-                            "builder": metadata.get("build", {}).get("builder"),
-                        }
-                        break
-                except (json.JSONDecodeError, IOError):
-                    pass
+        # Read package metadata from the standard location
+        metadata_file = instance_metadata_dir / "package" / "psp.json"
+        if metadata_file.exists():
+            try:
+                with metadata_file.open() as f:
+                    metadata = json.load(f)
+                    pkg = metadata.get("package", metadata)
+                    info["package_info"] = {
+                        "name": pkg.get("name"),
+                        "version": pkg.get("version"),
+                        "builder": metadata.get("build", {}).get("builder"),
+                    }
+            except (json.JSONDecodeError, IOError):
+                pass
         
         return info
-    
-    def clean_incomplete(self) -> list[str]:
-        """Clean incomplete extractions.
-
-        Returns:
-            List of removed package IDs
-        """
-        removed = []
-
-        for entry in self.cache_dir.iterdir():
-            if not entry.is_dir():
-                continue
-
-            # Remove incomplete extractions
-            if (entry / ".extraction.incomplete").exists():
-                try:
-                    shutil.rmtree(entry)
-                    removed.append(entry.name)
-                except OSError:
-                    pass
-
-        return removed
 
     def remove(self, package_id: str) -> bool:
         """Remove a specific cached package.
@@ -299,41 +215,6 @@ class CacheManager:
             except OSError:
                 return False
         return False
-
-    def get_info(self, package_id: str) -> dict | None:
-        """Get information about a cached package.
-
-        Args:
-            package_id: ID of the package
-
-        Returns:
-            Package information or None if not found
-        """
-        package_dir = self.cache_dir / package_id
-        if not package_dir.exists():
-            return None
-
-        info = {
-            "id": package_id,
-            "path": str(package_dir),
-            "size": self._get_dir_size(package_dir),
-            "modified": package_dir.stat().st_mtime,
-            "complete": (package_dir / ".extraction.complete").exists(),
-        }
-
-        # Try to read metadata
-        metadata_file = package_dir / "metadata.json"
-        if metadata_file.exists():
-            try:
-                with metadata_file.open() as f:
-                    metadata = json.load(f)
-                    info["name"] = metadata.get("name", "unknown")
-                    info["version"] = metadata.get("version", "unknown")
-                    info["slots"] = metadata.get("slots", [])
-            except (json.JSONDecodeError, KeyError):
-                pass
-
-        return info
 
     def _get_dir_size(self, path: Path) -> int:
         """Get total size of a directory.
