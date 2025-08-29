@@ -48,14 +48,19 @@ test_combination() {
     # The cache directories are based on the output package name
     local base_name="$(basename "$output" .psp)"
     
-    # Remove the dot-prefixed cache directory (contains checksums and metadata)
-    rm -rf ~/.cache/flavor/workenv/."$base_name".pspf 2>/dev/null || true
-    # Remove the workenv directory (contains extracted files)
-    rm -rf ~/.cache/flavor/workenv/"$base_name" 2>/dev/null || true
-    
-    # Also clear pretaster-combination cache since that's the package name in the manifest
-    rm -rf ~/.cache/flavor/workenv/.pretaster-combination.pspf 2>/dev/null || true
-    rm -rf ~/.cache/flavor/workenv/pretaster-combination 2>/dev/null || true
+    # Clear cache in both XDG location (Go launcher) and macOS location (Rust launcher)
+    for cache_base in ~/.cache/flavor/workenv ~/Library/Caches/flavor/workenv; do
+        if [[ -d "$cache_base" ]]; then
+            # Remove the dot-prefixed cache directory (contains checksums and metadata)
+            rm -rf "$cache_base/.$base_name.pspf" 2>/dev/null || true
+            # Remove the workenv directory (contains extracted files)
+            rm -rf "$cache_base/$base_name" 2>/dev/null || true
+            
+            # Also clear pretaster-combination cache since that's the package name in the manifest
+            rm -rf "$cache_base/.pretaster-combination.pspf" 2>/dev/null || true
+            rm -rf "$cache_base/pretaster-combination" 2>/dev/null || true
+        fi
+    done
     
     # Build the package
     # Use test-combination.json for CI compatibility (test-taster-lite requires taster.psp which isn't available in CI)
