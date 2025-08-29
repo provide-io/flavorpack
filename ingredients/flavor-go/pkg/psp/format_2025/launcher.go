@@ -329,7 +329,7 @@ func extractSlot(exePath, slotStr, outputDir string, logger hclog.Logger) {
 		os.Exit(1)
 	}
 
-	fmt.Printf("Extracted slot %d (%s) to %s\n", slotIndex, slot.Name, outputPath)
+	fmt.Printf("Extracted slot %d (%s) to %s\n", slotIndex, slot.ID, outputPath)
 }
 
 func detectLauncherType(exePath string) string {
@@ -443,9 +443,9 @@ func verifyBundle(exePath string, logger hclog.Logger) {
 		for i, slot := range metadata.Slots {
 			_, err := reader.ReadSlot(i)
 			if err != nil {
-				errors = append(errors, fmt.Sprintf("Slot %d (%s) read failed: %v", i, slot.Name, err))
+				errors = append(errors, fmt.Sprintf("Slot %d (%s) read failed: %v", i, slot.ID, err))
 			} else {
-				fmt.Printf("✓ Slot %d (%s) checksum valid\n", i, slot.Name)
+				fmt.Printf("✓ Slot %d (%s) checksum valid\n", i, slot.ID)
 			}
 		}
 	}

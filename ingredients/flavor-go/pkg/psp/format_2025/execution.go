@@ -484,10 +484,10 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 		
 		// Progress reporting to stderr
 		for i, slot := range metadata.Slots {
-			logger.Debug("📦 Extracting slot", "index", i, "name", slot.Name, "size", slot.Size)
+			logger.Debug("📦 Extracting slot", "index", i, "id", slot.ID, "size", slot.Size)
 			
 			// Write progress to stderr
-			fmt.Fprintf(os.Stderr, "[%d/%d] Extracting %s...\n", i+1, len(metadata.Slots), slot.Name)
+			fmt.Fprintf(os.Stderr, "[%d/%d] Extracting %s...\n", i+1, len(metadata.Slots), slot.ID)
 			slotPath, err := reader.ExtractSlot(i, tempExtractDir)
 			if err != nil {
 				logger.Error("❌ Failed to extract slot, cleaning up", "error", err)
@@ -495,7 +495,7 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 				return nil, fmt.Errorf("%w: %v", ErrSlotExtractionFailed, err)
 			}
 			logger.Debug("✅ Extracted slot", "path", slotPath)
-			slotPaths[slot.Index] = slotPath
+			slotPaths[slot.Slot] = slotPath
 		}
 		
 		// Write metadata to package metadata directory directly in cache (not in temp)
@@ -601,15 +601,15 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 		logger.Info("✅ Work environment is valid, skipping persistent slot extraction")
 		for i, slot := range metadata.Slots {
 			if slot.Lifecycle == "volatile" {
-				logger.Debug("📦 Extracting volatile slot", "index", i, "name", slot.Name)
+				logger.Debug("📦 Extracting volatile slot", "index", i, "id", slot.ID)
 				slotPath, err := reader.ExtractSlot(i, workenvDir)
 				if err != nil {
 					logger.Error("❌ Failed to extract slot", "error", fmt.Errorf("%w: %v", ErrSlotExtractionFailed, err))
 					return nil, fmt.Errorf("%w: %v", ErrSlotExtractionFailed, err)
 				}
-				slotPaths[slot.Index] = slotPath
+				slotPaths[slot.Slot] = slotPath
 			} else {
-				slotPaths[slot.Index] = workenvDir
+				slotPaths[slot.Slot] = workenvDir
 			}
 		}
 	}
