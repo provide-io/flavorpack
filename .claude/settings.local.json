@@ -19,7 +19,8 @@
       "Bash(gh pr list:*)",
       "Bash(git add:*)",
       "Bash(git push:*)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(git commit:*)"
     ],
     "additionalDirectories": [
       "/Users/tim/code/gh/provide-io"
