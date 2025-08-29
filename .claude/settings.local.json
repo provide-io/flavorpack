@@ -76,7 +76,8 @@
       "WebSearch",
       "Bash(FLAVOR_INSECURE=1 ./tests/combination-tests.sh)",
       "Bash(./tests/test_exit_codes.sh:*)",
-      "Bash(/dev/null ls -la ~/.cache/flavor/workenv/)"
+      "Bash(/dev/null ls -la ~/.cache/flavor/workenv/)",
+      "Bash(grep:*)"
     ],
     "additionalDirectories": [
       "/Users/tim/code/gh/provide-io"
