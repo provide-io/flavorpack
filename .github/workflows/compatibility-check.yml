@@ -91,11 +91,16 @@ jobs:
           for binary in ingredients/bin/flavor-*-linux_*; do
             if [ -f "$binary" ]; then
               echo -n "Checking $(basename $binary): "
+              # Check if binary is static - either file says "statically linked" or ldd says "not a dynamic executable"
               if file "$binary" | grep -q "statically linked"; then
-                echo "✅ Static"
+                echo "✅ Static (file)"
+              elif ldd "$binary" 2>&1 | grep -q "not a dynamic executable\|statically linked"; then
+                echo "✅ Static (ldd)"
               else
                 echo "❌ Dynamic"
-                ldd "$binary" 2>&1 | head -3
+                echo "  File output: $(file $binary)"
+                echo "  LDD output:"
+                ldd "$binary" 2>&1 | head -3 | sed 's/^/    /'
                 failed=1
               fi
             fi
