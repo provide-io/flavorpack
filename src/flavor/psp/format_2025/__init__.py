@@ -7,8 +7,7 @@ Progressive Secure Package Format (2025 Edition)
 from flavor.psp.format_2025.builder import PSPFBuilder, build_package
 from flavor.psp.format_2025.constants import (
     EMOJI_MAGIC_SIZE,
-    INDEX_SIZE,
-    MAGIC_WAND_EMOJI,
+    HEADER_SIZE,
     PSPF_MAGIC,
     PSPF_VERSION,
     SLOT_ALIGNMENT,
@@ -32,8 +31,7 @@ from flavor.psp.format_2025.validation import validate_complete, validate_spec
 
 __all__ = [
     "EMOJI_MAGIC_SIZE",
-    "INDEX_SIZE",
-    "MAGIC_WAND_EMOJI",
+    "HEADER_SIZE",
     # Constants
     "PSPF_MAGIC",
     "PSPF_VERSION",

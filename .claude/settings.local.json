@@ -44,7 +44,8 @@
       "Bash(/Users/tim/code/gh/provide-io/flavorpack/ingredients/bin/flavor-go-builder-darwin_arm64 --manifest configs/test-combination.json --launcher-bin /Users/tim/code/gh/provide-io/flavorpack/ingredients/bin/flavor-go-launcher-darwin_arm64 --output /tmp/test-go.psp --key-seed test123)",
       "Bash(/tmp/test-go.psp:*)",
       "Bash(python -m pytest tests/ -v --tb=short -x)",
-      "Bash(python3 -m pytest tests/ -v --tb=short -x)"
+      "Bash(python3 -m pytest tests/ -v --tb=short -x)",
+      "Bash(python -m pytest tests/format_2025/test_metadata_assembly.py -v)"
     ],
     "additionalDirectories": [
       "/Users/tim/code/gh/provide-io"
