@@ -59,9 +59,6 @@ EOF
         "name": "${package_name}",
         "version": "1.0.0"
     },
-    "build": {
-        "launcher": "../../ingredients/bin/flavor-${launcher}-launcher-darwin_arm64"
-    },
     "execution": {
         "command": "python3 {workenv}/scripts/exit_test.py",
         "primary_slot": 0
@@ -69,8 +66,10 @@ EOF
     "slots": [
         {
             "id": "exit-test-script",
-            "path": "scripts/exit_test.py",
-            "purpose": "application"
+            "source": "scripts/exit_test.py",
+            "target": "scripts/exit_test.py",
+            "purpose": "payload",
+            "lifecycle": "cached"
         }
     ]
 }
@@ -78,7 +77,8 @@ EOF
     
     # Build package
     local builder_bin="../../ingredients/bin/flavor-${builder}-builder-darwin_arm64"
-    if ! $builder_bin --manifest configs/test-exit.json --output "$package_file" --key-seed test123 --log-level error 2>/dev/null; then
+    local launcher_bin="../../ingredients/bin/flavor-${launcher}-launcher-darwin_arm64"
+    if ! $builder_bin --manifest configs/test-exit.json --launcher-bin "$launcher_bin" --output "$package_file" --key-seed test123 --log-level error 2>&1 | grep -v "^🦀\|^🐹" >/dev/null; then
         echo -e "${RED}❌ Failed to build package${NC}"
         return 1
     fi

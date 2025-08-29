@@ -3,9 +3,6 @@
         "name": "test-exit-255",
         "version": "1.0.0"
     },
-    "build": {
-        "launcher": "../../ingredients/bin/flavor-go-launcher-darwin_arm64"
-    },
     "execution": {
         "command": "python3 {workenv}/scripts/exit_test.py",
         "primary_slot": 0
@@ -13,8 +10,10 @@
     "slots": [
         {
             "id": "exit-test-script",
-            "path": "scripts/exit_test.py",
-            "purpose": "application"
+            "source": "scripts/exit_test.py",
+            "target": "scripts/exit_test.py",
+            "purpose": "payload",
+            "lifecycle": "cached"
         }
     ]
 }
