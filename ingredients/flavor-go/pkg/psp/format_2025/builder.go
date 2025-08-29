@@ -449,9 +449,8 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 
 		// Add to metadata
 		slotMeta := SlotMetadata{
-			Index:       i,
+			Slot:        i,  // Position validator
 			ID:          slot.ID,
-			Name:        slot.ID,  // Keep for backward compat
 			Source:      slot.Source,
 			Target:      slot.Target,
 			Size:        0,  // Will be set after encoding handling
@@ -460,7 +459,6 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 			Purpose:     slot.Purpose,
 			Lifecycle:   slot.Lifecycle,
 			Resolution:  slot.Resolution,
-			ExtractTo:   slot.Target,  // For backward compat
 			Permissions: slot.Permissions,
 		}
 
