@@ -187,7 +187,7 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
         builder = PSPFBuilder().metadata(**metadata)
         for slot in slots:
             builder = builder.add_slot(
-                name=slot.name,
+                name=slot.id,
                 data=slot.path,
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,
@@ -201,7 +201,7 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
 
         # Should select matching platform
         assert len(selected) == 1
-        assert selected[0].name == "binary-darwin-arm64"
+        assert selected[0].id == "binary-darwin-arm64"
 
     def test_working_directory_setup(self, temp_dir, executable_bundle):
         """Test working directory is set correctly."""

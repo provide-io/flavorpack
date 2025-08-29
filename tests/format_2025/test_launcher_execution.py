@@ -326,7 +326,7 @@ class TestWorkEnvironment:
 
             # Add slot
             builder = builder.add_slot(
-                name=slot.name,
+                name=slot.id,
                 data=slot.path,
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,
@@ -438,7 +438,7 @@ sys.exit(0)
 
             # Add slot
             builder = builder.add_slot(
-                name=slot.name,
+                name=slot.id,
                 data=slot.path,
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,

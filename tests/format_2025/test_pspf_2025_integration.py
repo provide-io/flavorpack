@@ -84,7 +84,7 @@ class TestPSPFIntegration:
         builder_instance = test_builder.metadata(**metadata)
         for slot in slots:
             builder_instance = builder_instance.add_slot(
-                slot.name,
+                slot.id,
                 slot.path,
                 encoding=slot.encoding,
                 purpose=slot.purpose,
@@ -206,7 +206,7 @@ class TestPSPFIntegration:
         builder_instance = test_builder.metadata(**metadata, allow_empty=True)
         for slot in slots:
             builder_instance = builder_instance.add_slot(
-                slot.name,
+                slot.id,
                 slot.path,
                 encoding=slot.encoding,
                 purpose=slot.purpose,

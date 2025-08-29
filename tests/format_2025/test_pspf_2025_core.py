@@ -95,7 +95,7 @@ class TestPSPFCore:
         result = (
             test_builder.metadata(**simple_metadata)
             .add_slot(
-                slot.name,
+                slot.id,
                 slot.path,
                 encoding=slot.encoding,
                 purpose=slot.purpose,
@@ -275,7 +275,7 @@ class TestPSPFCore:
         builder = test_builder.metadata(**simple_metadata)
         for slot in slots:
             builder = builder.add_slot(
-                slot.name,
+                slot.id,
                 slot.path,
                 encoding=slot.encoding,
                 purpose=slot.purpose,
