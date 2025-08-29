@@ -21,7 +21,8 @@
       "Bash(git push:*)",
       "Bash(git reset:*)",
       "Bash(git commit:*)",
-      "Bash(gh workflow run:*)"
+      "Bash(gh workflow run:*)",
+      "Bash(gh run watch:*)"
     ],
     "additionalDirectories": [
       "/Users/tim/code/gh/provide-io"
