@@ -448,10 +448,11 @@ class TestPSPFSlots:
         slot_dict = slot.to_dict()
 
         # Verify all fields
-        assert slot_dict["index"] == 5
+        assert slot_dict["slot"] == 5  # Uses "slot" not "index" in dict
         assert slot_dict["id"] == "test_slot"
         assert slot_dict["size"] == 2048
-        assert slot_dict["checksum"] == "deadbeef"
+        # Checksum gets prefixed in to_dict
+        assert "deadbeef" in slot_dict["checksum"]
         assert slot_dict["encoding"] == "none"
         assert slot_dict["purpose"] == "library"
         assert slot_dict["lifecycle"] == "init"

@@ -65,7 +65,7 @@ class TestSlotTableReading:
                     checksum=hashlib.sha256(slot2_path.read_bytes()).hexdigest(),
                     encoding="gzip",
                     purpose="tool",
-                    lifecycle="volatile",
+                    lifecycle="temp",
                 ),
             ]
 
@@ -189,7 +189,7 @@ class TestSlotExtraction:
                     checksum=hashlib.sha256(slot2_content.encode()).hexdigest(),
                     encoding="none",
                     purpose="tool",
-                    lifecycle="volatile",
+                    lifecycle="temp",
                 ),
             ]
 
