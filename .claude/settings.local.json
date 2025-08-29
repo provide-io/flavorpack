@@ -83,7 +83,8 @@
       "Bash(do echo \"=== $f ===\")",
       "Bash(done)",
       "Bash(uv pip install:*)",
-      "Bash(uv run pytest:*)"
+      "Bash(uv run pytest:*)",
+      "Bash(python -m pytest tests/format_2025/test_pspf_2025_slots.py::TestPSPFSlots::test_slot_metadata_serialization -xvs)"
     ],
     "additionalDirectories": [
       "/Users/tim/code/gh/provide-io"
