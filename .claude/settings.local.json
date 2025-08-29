@@ -73,7 +73,8 @@
       "Read(/Users/tim/Library/Caches/**)",
       "Read(/Users/tim/.cache/uv/**)",
       "Bash(uv cache:*)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(FLAVOR_INSECURE=1 ./tests/combination-tests.sh)"
     ],
     "additionalDirectories": [
       "/Users/tim/code/gh/provide-io"
