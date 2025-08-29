@@ -145,11 +145,18 @@ fn get_purpose_byte(purpose: &str) -> u8 {
 /// Get lifecycle byte from string
 fn get_lifecycle_byte(lifecycle: &str) -> u8 {
     match lifecycle {
-        "volatile" => 1,
-        "cache" => 2,
-        "runtime" => 3,
-        "persistent" => 4,
-        _ => 0,
+        "init" => 0,
+        "startup" => 1,
+        "runtime" => 2,
+        "shutdown" => 3,
+        "cache" => 4,
+        "temporary" => 5,
+        "lazy" => 6,
+        "eager" => 7,
+        "dev" => 8,
+        "config" => 9,
+        "platform" => 10,
+        _ => 2, // default to runtime
     }
 }
 
