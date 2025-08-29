@@ -62,13 +62,14 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
 
         slot = SlotMetadata(
             index=0,
-            name="app",
+            id="app",
+            source=str(wheel_path),
+            target="app",
             size=2,
             checksum="abc",
             encoding="none",
             purpose="payload",
             lifecycle="runtime",
-            path=wheel_path,
         )
 
         bundle_path = temp_dir / "auto_python.psp"
@@ -134,33 +135,36 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
         slots = [
             SlotMetadata(
                 index=0,
-                name="text",
+                id="text",
+                source=str(text_path),
+                target="text",
                 size=text_path.stat().st_size,
                 checksum="abc",
                 encoding="gzip",  # Good for text
                 purpose="config",
                 lifecycle="runtime",
-                path=text_path,
             ),
             SlotMetadata(
                 index=1,
-                name="binary",
+                id="binary",
+                source=str(binary_path),
+                target="binary",
                 size=binary_path.stat().st_size,
                 checksum="def",
                 encoding="none",  # Binary files often don't compress well
                 purpose="library",
                 lifecycle="runtime",
-                path=binary_path,
             ),
             SlotMetadata(
                 index=2,
-                name="random",
+                id="random",
+                source=str(random_path),
+                target="random",
                 size=random_path.stat().st_size,
                 checksum="ghi",
                 encoding="none",  # Random data doesn't compress
                 purpose="data",
                 lifecycle="runtime",
-                path=random_path,
             ),
         ]
 
@@ -189,13 +193,14 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
         """Test build fails with missing file."""
         slot = SlotMetadata(
             index=0,
-            name="missing",
+            id="missing",
+            source=str(temp_dir / "nonexistent.txt"),
+            target="missing",
             size=100,
             checksum="abc",
             encoding="none",
             purpose="payload",
             lifecycle="runtime",
-            path=temp_dir / "nonexistent.txt",
         )
 
         bundle_path = temp_dir / "invalid.psp"
@@ -233,7 +238,9 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
         for purpose in valid_purposes:
             slot = SlotMetadata(
                 index=0,
-                name=f"test_{purpose}",
+                id=f"test_{purpose}",
+                source="",
+                target=f"test_{purpose}",
                 size=100,
                 checksum="abc",
                 encoding="none",
@@ -248,7 +255,9 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
         """Test handling of duplicate slot indices."""
         slot1 = SlotMetadata(
             index=0,
-            name="slot1",
+            id="slot1",
+            source="",
+            target="slot1",
             size=100,
             checksum="abc",
             encoding="none",
@@ -258,7 +267,9 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
 
         slot2 = SlotMetadata(
             index=0,  # Duplicate index
-            name="slot2",
+            id="slot2",
+            source="",
+            target="slot2",
             size=100,
             checksum="def",
             encoding="none",
@@ -281,13 +292,14 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
             slots.append(
                 SlotMetadata(
                     index=i,
-                    name=f"slot{i}",
+                    id=f"slot{i}",
+                    source=str(path),
+                    target=f"slot{i}",
                     size=path.stat().st_size,
                     checksum=hashlib.sha256(path.read_bytes()).hexdigest(),
                     encoding="gzip",
                     purpose="payload",
                     lifecycle="runtime",
-                    path=path,
                 )
             )
 
@@ -360,13 +372,14 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
 
         slot = SlotMetadata(
             index=0,
-            name="data",
+            id="data",
+            source=str(slot_path),
+            target="data",
             size=slot_path.stat().st_size,
             checksum=hashlib.sha256(slot_path.read_bytes()).hexdigest(),
             encoding="none",
             purpose="payload",
             lifecycle="runtime",
-            path=slot_path,
         )
 
         # In reproducible mode:
@@ -407,13 +420,14 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
 
         slot = SlotMetadata(
             index=0,
-            name="large",
+            id="large",
+            source=str(large_path),
+            target="large",
             size=large_path.stat().st_size,
             checksum="abc",
             encoding="gzip",  # Would use max compression
             purpose="payload",
             lifecycle="runtime",
-            path=large_path,
         )
 
         bundle_path = temp_dir / "optimized.psp"
@@ -491,13 +505,14 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
                 slots.append(
                     SlotMetadata(
                         index=slot_index,
-                        name=f"{slot_type}_{i}",
+                        id=f"{slot_type}_{i}",
+                        source=str(path),
+                        target=f"{slot_type}_{i}",
                         size=path.stat().st_size,
                         checksum=hashlib.sha256(path.read_bytes()).hexdigest(),
                         encoding="none",
                         purpose=slot_type if slot_type != "payload" else "library",
                         lifecycle="runtime",
-                        path=path,
                     )
                 )
                 slot_index += 1
