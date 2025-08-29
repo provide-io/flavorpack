@@ -29,7 +29,9 @@
       "Bash(./build-linux.sh:*)",
       "Bash(/Users/tim/code/gh/provide-io/flavorpack/ingredients/build-linux.sh)",
       "Bash(source env.sh)",
-      "Bash(ruff format:*)"
+      "Bash(ruff format:*)",
+      "Bash(gh api:*)",
+      "Bash(ruff check:*)"
     ],
     "additionalDirectories": [
       "/Users/tim/code/gh/provide-io"
