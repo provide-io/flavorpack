@@ -23,7 +23,8 @@
       "Bash(git commit:*)",
       "Bash(gh workflow run:*)",
       "Bash(gh run watch:*)",
-      "Bash(gh run view:*)"
+      "Bash(gh run view:*)",
+      "Bash(gh run cancel:*)"
     ],
     "additionalDirectories": [
       "/Users/tim/code/gh/provide-io"
