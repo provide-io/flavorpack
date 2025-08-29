@@ -63,7 +63,8 @@
       "Bash(../bin/flavor-rs-builder-darwin_arm64:*)",
       "Bash(../bin/test-builder:*)",
       "Bash(find:*)",
-      "Bash(bin/flavor-rs-builder-darwin_arm64:*)"
+      "Bash(bin/flavor-rs-builder-darwin_arm64:*)",
+      "Bash(install:*)"
     ],
     "additionalDirectories": [
       "/Users/tim/code/gh/provide-io"

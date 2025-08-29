@@ -35,10 +35,8 @@ build:
 			cp target/$(TARGET)/release/flavor-rs-builder $(BIN_DIR)/flavor-rs-builder-$(PLATFORM); \
 		else \
 			cargo build $(CARGO_FLAGS); \
-			cp target/release/flavor-rs-launcher $(BIN_DIR)/flavor-rs-launcher-$(PLATFORM); \
-			cp target/release/flavor-rs-builder $(BIN_DIR)/flavor-rs-builder-$(PLATFORM); \
-			xattr -cr $(BIN_DIR)/flavor-rs-launcher-$(PLATFORM) 2>/dev/null || true; \
-			xattr -cr $(BIN_DIR)/flavor-rs-builder-$(PLATFORM) 2>/dev/null || true; \
+			install -m 755 target/release/flavor-rs-launcher $(BIN_DIR)/flavor-rs-launcher-$(PLATFORM); \
+			install -m 755 target/release/flavor-rs-builder $(BIN_DIR)/flavor-rs-builder-$(PLATFORM); \
 		fi; \
 		chmod +x $(BIN_DIR)/flavor-rs-*; \
 		echo "✅ Rust helpers built: flavor-rs-*-$(PLATFORM)"; \
