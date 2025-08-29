@@ -8,6 +8,7 @@ from flavor.psp.format_2025.builder import PSPFBuilder, build_package
 from flavor.psp.format_2025.constants import (
     EMOJI_MAGIC_SIZE,
     HEADER_SIZE,
+    MAGIC_WAND_EMOJI,
     PSPF_MAGIC,
     PSPF_VERSION,
     SLOT_ALIGNMENT,
@@ -32,6 +33,7 @@ from flavor.psp.format_2025.validation import validate_complete, validate_spec
 __all__ = [
     "EMOJI_MAGIC_SIZE",
     "HEADER_SIZE",
+    "MAGIC_WAND_EMOJI",
     # Constants
     "PSPF_MAGIC",
     "PSPF_VERSION",
