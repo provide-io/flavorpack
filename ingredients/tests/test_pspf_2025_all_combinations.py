@@ -20,7 +20,6 @@ from flavor.psp.format_2025 import (
     SlotMetadata,
     MAGIC_WAND_EMOJI,
     PSPF_MAGIC,
-    INDEX_SIZE
 )
 from flavor.utils import get_platform_string
 
