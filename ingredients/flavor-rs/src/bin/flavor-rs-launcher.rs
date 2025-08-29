@@ -15,21 +15,16 @@ const EXIT_IO_ERROR: i32 = 106;
 
 fn main() {
     // Set up panic handler to return specific exit code
-    panic::set_hook(Box::new(|panic_info| {
+    let original_hook = panic::take_hook();
+    panic::set_hook(Box::new(move |panic_info| {
         eprintln!("PANIC: {}", panic_info);
+        original_hook(panic_info);
         process::exit(EXIT_PANIC);
     }));
     
-    // Wrap main logic in catch_unwind for extra safety
-    let result = panic::catch_unwind(|| run());
-    
-    match result {
-        Ok(exit_code) => process::exit(exit_code),
-        Err(_) => {
-            eprintln!("Fatal: Unhandled panic in launcher");
-            process::exit(EXIT_PANIC);
-        }
-    }
+    // Just call run directly - catch_unwind might be causing issues
+    let exit_code = run();
+    process::exit(exit_code);
 }
 
 fn run() -> i32 {
