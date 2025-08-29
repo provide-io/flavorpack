@@ -8,6 +8,13 @@ const VERSION: &str = "0.3.0";
 fn main() {
     // --- Argument and Environment Parsing ---
     let args: Vec<String> = env::args().collect();
+    
+    // Check for --version flag early (before PSPF validation)
+    if args.len() > 1 && args[1] == "--version" {
+        println!("flavor-rs-launcher {}", VERSION);
+        process::exit(0);
+    }
+    
     let exe_path = env::current_exe().unwrap_or_else(|e| {
         eprintln!("Failed to get executable path: {}", e);
         process::exit(1);
@@ -52,10 +59,6 @@ fn main() {
                     eprintln!("Error: {}", e);
                     1
                 })
-            }
-            "--version" => {
-                println!("flavor-rs-launcher {}", VERSION);
-                0
             }
             _ => {
                 eprintln!("Error: Unknown command '{}'", command);
