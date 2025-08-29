@@ -1,17 +1,7 @@
 //! Flavor Rust launcher binary
 
-use flavor::{launch_package, LaunchOptions};
+use flavor::{launch_package, LaunchOptions, exit_codes::*, version::VERSION};
 use std::{env, panic, process};
-
-const VERSION: &str = "0.3.0";
-
-// Exit codes for different error types
-const EXIT_PANIC: i32 = 101;
-const EXIT_PSPF_ERROR: i32 = 102;
-const EXIT_EXTRACTION_ERROR: i32 = 103;
-const EXIT_EXECUTION_ERROR: i32 = 104;
-const EXIT_INVALID_ARGS: i32 = 105;
-const EXIT_IO_ERROR: i32 = 106;
 
 fn main() {
     // Set up panic handler to return specific exit code
@@ -38,7 +28,7 @@ fn run() -> i32 {
     
     // Check for --version flag early (before PSPF validation)
     if args.len() > 1 && args[1] == "--version" {
-        println!("flavor-rs-launcher {}", VERSION);
+        println!("flavor-rs-launcher {}", flavor::version::full_version());
         return 0;
     }
     
