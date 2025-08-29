@@ -141,12 +141,6 @@ pub struct CompatibilityInfo {
     pub features: Vec<String>,
 }
 
-/// For backward compatibility with tests
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct BuilderInfo {
-    pub name: String,
-    pub version: String,
-}
 
 /// Cache validation configuration
 #[derive(Debug, Clone, Deserialize, Serialize)]
