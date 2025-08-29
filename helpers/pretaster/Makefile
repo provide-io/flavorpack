@@ -309,16 +309,18 @@ clean: ## Remove all built artifacts
 	@rm -f test-package.tar.gz
 	$(call print,"✅ Cleanup complete",$(GREEN))
 
+.PHONY: cache-dir
+cache-dir: ## Show cache directory location (like uv cache dir)
+	@echo "$${XDG_CACHE_HOME:-$$HOME/.cache}/flavor"
+
 .PHONY: clean-cache
-clean-cache: ## Clean Flavor workenv cache (both locations)
+clean-cache: ## Clean Flavor workenv cache (respects XDG_CACHE_HOME)
 	$(call print,"🧹 Cleaning Flavor cache...",$(YELLOW))
-	@# Clean ~/.cache location (cross-platform default)
-	@rm -rf ~/.cache/flavor/workenv/.* 2>/dev/null || true
-	@rm -rf ~/.cache/flavor/workenv/* 2>/dev/null || true
-	@# Clean macOS-specific location if it exists
-	@rm -rf ~/Library/Caches/flavor/workenv/.* 2>/dev/null || true
-	@rm -rf ~/Library/Caches/flavor/workenv/* 2>/dev/null || true
-	$(call print,"✅ Cache cleaned",$(GREEN))
+	@# Use XDG_CACHE_HOME if set, otherwise ~/.cache (same as uv)
+	@CACHE_DIR=$${XDG_CACHE_HOME:-$$HOME/.cache}; \
+	rm -rf $$CACHE_DIR/flavor/workenv/.* 2>/dev/null || true; \
+	rm -rf $$CACHE_DIR/flavor/workenv/* 2>/dev/null || true
+	$(call print,"✅ Cache cleaned from $${XDG_CACHE_HOME:-$$HOME/.cache}/flavor",$(GREEN))
 
 .PHONY: clean-logs
 clean-logs: ## Remove only log files
