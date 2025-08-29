@@ -107,7 +107,7 @@ class TestPSPFSlots:
         # Test metadata serialization
         slot_dict = slot.to_dict()
         assert slot_dict["lifecycle"] == "runtime"
-        assert slot_dict["name"] == "test-runtime"
+        assert slot_dict["id"] == "test-runtime"
         # Runtime slots available during application execution
 
     def test_slot_lifecycle_init(self, temp_dir, test_builder):
@@ -127,7 +127,7 @@ class TestPSPFSlots:
         # Test metadata serialization
         slot_dict = slot.to_dict()
         assert slot_dict["lifecycle"] == "init"
-        assert slot_dict["name"] == "test-init"
+        assert slot_dict["id"] == "test-init"
         # Init slots removed after initialization
 
     def test_slot_lifecycle_temp(self, temp_dir, test_builder):
@@ -147,7 +147,7 @@ class TestPSPFSlots:
         # Test metadata serialization
         slot_dict = slot.to_dict()
         assert slot_dict["lifecycle"] == "temp"
-        assert slot_dict["name"] == "test-temp"
+        assert slot_dict["id"] == "test-temp"
         # Temp slots removed after current session
 
     def test_slot_lifecycle_cache(self, temp_dir, test_builder):
@@ -181,10 +181,10 @@ class TestPSPFSlots:
         # Use test_builder from fixture with fluent API
         builder = test_builder.metadata(**metadata)
         for slot in test_slots:
-            if hasattr(slot, "path") and slot.path:
+            if hasattr(slot, "source") and slot.source:
                 builder = builder.add_slot(
-                    slot.name,
-                    slot.path,
+                    slot.id,
+                    slot.source,
                     encoding=slot.encoding,
                     purpose=slot.purpose,
                     lifecycle=slot.lifecycle,
@@ -204,7 +204,7 @@ class TestPSPFSlots:
         # Verify slot properties preserved
         for i, slot in enumerate(test_slots):
             slot_meta = metadata_read["slots"][i]
-            assert slot_meta["name"] == slot.name
+            assert slot_meta["name"] == slot.id
             assert slot_meta["lifecycle"] == slot.lifecycle
             assert slot_meta["purpose"] == slot.purpose
 
@@ -326,8 +326,8 @@ class TestPSPFSlots:
         result = (
             test_builder.metadata(**metadata)
             .add_slot(
-                slot.name,
-                slot.path,
+                slot.id,
+                slot.source,
                 encoding=slot.encoding,
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,
@@ -350,10 +350,10 @@ class TestPSPFSlots:
         }
         builder = test_builder.metadata(**metadata)
         for slot in test_slots:
-            if hasattr(slot, "path") and slot.path:
+            if hasattr(slot, "source") and slot.source:
                 builder = builder.add_slot(
-                    slot.name,
-                    slot.path,
+                    slot.id,
+                    slot.source,
                     encoding=slot.encoding,
                     purpose=slot.purpose,
                     lifecycle=slot.lifecycle,
@@ -412,8 +412,8 @@ class TestPSPFSlots:
         result = (
             test_builder.metadata(**metadata)
             .add_slot(
-                slot.name,
-                slot.path,
+                slot.id,
+                slot.source,
                 encoding=slot.encoding,
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,
@@ -449,14 +449,15 @@ class TestPSPFSlots:
 
         # Verify all fields
         assert slot_dict["index"] == 5
-        assert slot_dict["name"] == "test_slot"
+        assert slot_dict["id"] == "test_slot"
         assert slot_dict["size"] == 2048
         assert slot_dict["checksum"] == "deadbeef"
         assert slot_dict["encoding"] == "none"
         assert slot_dict["purpose"] == "library"
         assert slot_dict["lifecycle"] == "init"
-        # Path should not be included in serialized metadata
-        assert "path" not in slot_dict
+        # Source and target should be included in serialized metadata
+        assert "source" in slot_dict
+        assert "target" in slot_dict
 
     def test_large_slot_handling(self, temp_dir, test_builder):
         """Test handling of large slots."""
@@ -487,8 +488,8 @@ class TestPSPFSlots:
         result = (
             test_builder.metadata(**metadata)
             .add_slot(
-                slot.name,
-                slot.path,
+                slot.id,
+                slot.source,
                 encoding=slot.encoding,
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,

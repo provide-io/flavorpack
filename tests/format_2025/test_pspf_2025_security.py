@@ -42,13 +42,14 @@ class TestPSPFSecurity:
 
         slot = SlotMetadata(
             index=0,
-            name="secure_payload",
+            id="secure_payload",
+            source=str(payload_path),
+            target="secure_payload",
             size=payload_path.stat().st_size,
             checksum=hashlib.sha256(payload_path.read_bytes()).hexdigest(),
             encoding="gzip",
             purpose="payload",
             lifecycle="runtime",
-            path=payload_path,
         )
 
         metadata = {
@@ -65,8 +66,8 @@ class TestPSPFSecurity:
         result = (
             test_builder.metadata(**metadata)
             .add_slot(
-                slot.name,
-                slot.path,
+                slot.id,
+                slot.source,
                 encoding=slot.encoding,
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,
@@ -214,13 +215,14 @@ class TestPSPFSecurity:
 
         slot = SlotMetadata(
             index=0,
-            name="data",
+            id="data",
+            source=str(slot_path),
+            target="data",
             size=len(original_data),
             checksum=hashlib.sha256(original_data).hexdigest(),
             encoding="none",
             purpose="payload",
             lifecycle="runtime",
-            path=slot_path,
         )
 
         bundle_path = temp_dir / "slot_tamper.psp"
