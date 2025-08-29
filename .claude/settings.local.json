@@ -68,7 +68,12 @@
       "Bash(git checkout:*)",
       "Bash(FLAVOR_LOG_LEVEL=info ./dist/orchestrate-test.psp)",
       "Bash(./tests/test-pretaster.sh:*)",
-      "Bash(./dist/echo-test.psp:*)"
+      "Bash(./dist/echo-test.psp:*)",
+      "Read(/Users/tim/.cache/uv/**)",
+      "Read(/Users/tim/Library/Caches/**)",
+      "Read(/Users/tim/.cache/uv/**)",
+      "Bash(uv cache:*)",
+      "WebSearch"
     ],
     "additionalDirectories": [
       "/Users/tim/code/gh/provide-io"
