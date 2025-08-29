@@ -57,7 +57,8 @@
       "Bash(codesign:*)",
       "Bash(./target/release/flavor-rs-launcher --version)",
       "Bash(./target/release/flavor-rs-builder:*)",
-      "Bash(FLAVOR_LOG_LEVEL=info tests/test-pretaster.sh)"
+      "Bash(FLAVOR_LOG_LEVEL=info tests/test-pretaster.sh)",
+      "Bash(cmp:*)"
     ],
     "additionalDirectories": [
       "/Users/tim/code/gh/provide-io"
