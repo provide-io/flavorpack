@@ -51,7 +51,10 @@
       "Bash(xattr:*)",
       "Bash(/Users/tim/code/gh/provide-io/flavorpack/ingredients/bin/flavor-go-launcher-darwin_arm64:*)",
       "Bash(../../ingredients/bin/flavor-rs-builder-darwin_arm64:*)",
-      "Bash(../../bin/flavor-rs-launcher-darwin_arm64:*)"
+      "Bash(../../bin/flavor-rs-launcher-darwin_arm64:*)",
+      "Bash(../../bin/flavor-go-launcher-darwin_arm64:*)",
+      "Bash(../../bin/flavor-rs-builder-darwin_arm64:*)",
+      "Bash(codesign:*)"
     ],
     "additionalDirectories": [
       "/Users/tim/code/gh/provide-io"
