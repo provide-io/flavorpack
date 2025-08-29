@@ -149,7 +149,6 @@ class PythonPackager:
             - metadata_tgz: Metadata archive
             - uv_binary: UV binary (if available)
             - python_tgz: Python distribution (placeholder for now)
-            - payload_dir: Directory containing payload (for legacy compatibility)
         """
         artifacts = {}
 
