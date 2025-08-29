@@ -77,7 +77,8 @@
       "Bash(FLAVOR_INSECURE=1 ./tests/combination-tests.sh)",
       "Bash(./tests/test_exit_codes.sh:*)",
       "Bash(/dev/null ls -la ~/.cache/flavor/workenv/)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "WebFetch(domain:raw.githubusercontent.com)"
     ],
     "additionalDirectories": [
       "/Users/tim/code/gh/provide-io"
