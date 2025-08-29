@@ -85,7 +85,7 @@ jobs:
       - name: 🦀 Setup Rust
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: nightly-2024-12-01
+          toolchain: nightly
           targets: ${{ matrix.rust_target }}
       
       - name: 🔧 Setup musl (Linux)
