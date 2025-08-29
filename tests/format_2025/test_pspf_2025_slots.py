@@ -39,13 +39,14 @@ class TestPSPFSlots:
         slots.append(
             SlotMetadata(
                 index=0,
-                name="config",
+                id="config",
+                source=str(text_path),
+                target="config",
                 size=len(text_data),
                 checksum=hashlib.sha256(text_data.encode()).hexdigest(),
                 encoding="gzip",
                 purpose="config",
                 lifecycle="runtime",
-                path=text_path,
             )
         )
 
@@ -57,13 +58,14 @@ class TestPSPFSlots:
         slots.append(
             SlotMetadata(
                 index=1,
-                name="library",
+                id="library",
+                source=str(binary_path),
+                target="library",
                 size=len(binary_data),
                 checksum=hashlib.sha256(binary_data).hexdigest(),
                 encoding="none",  # Binary files often don't compress well
                 purpose="library",
                 lifecycle="init",
-                path=binary_path,
             )
         )
 
@@ -75,13 +77,14 @@ class TestPSPFSlots:
         slots.append(
             SlotMetadata(
                 index=2,
-                name="wheel",
+                id="wheel",
+                source=str(temp_path),
+                target="wheel",
                 size=len(temp_data),
                 checksum=hashlib.sha256(temp_data).hexdigest(),
                 encoding="none",
                 purpose="payload",
                 lifecycle="temp",
-                path=temp_path,
             )
         )
 
@@ -91,7 +94,9 @@ class TestPSPFSlots:
         """Test runtime slot lifecycle metadata."""
         slot = SlotMetadata(
             index=0,
-            name="test-runtime",
+            id="test-runtime",
+            source="",
+            target="test-runtime",
             size=1024,
             checksum="abc123",
             encoding="gzip",
@@ -109,7 +114,9 @@ class TestPSPFSlots:
         """Test init slot lifecycle metadata."""
         slot = SlotMetadata(
             index=0,
-            name="test-init",
+            id="test-init",
+            source="",
+            target="test-init",
             size=1024,
             checksum="abc123",
             encoding="gzip",
@@ -127,7 +134,9 @@ class TestPSPFSlots:
         """Test temp slot lifecycle metadata."""
         slot = SlotMetadata(
             index=0,
-            name="test-temp",
+            id="test-temp",
+            source="",
+            target="test-temp",
             size=1024,
             checksum="abc123",
             encoding="gzip",
@@ -145,7 +154,9 @@ class TestPSPFSlots:
         """Test cache slot lifecycle metadata."""
         slot = SlotMetadata(
             index=0,
-            name="test-cache",
+            id="test-cache",
+            source="",
+            target="test-cache",
             size=1024,
             checksum="abc123",
             encoding="gzip",
@@ -206,13 +217,14 @@ class TestPSPFSlots:
 
         slot = SlotMetadata(
             index=0,
-            name="compressed",
+            id="compressed",
+            source=str(slot_path),
+            target="compressed",
             size=len(data),
             checksum=hashlib.sha256(data).hexdigest(),
             encoding="gzip",
             purpose="payload",
             lifecycle="runtime",
-            path=slot_path,
         )
 
         # Build bundle with gzip compression
@@ -248,13 +260,14 @@ class TestPSPFSlots:
 
         slot = SlotMetadata(
             index=0,
-            name="uncompressed",
+            id="uncompressed",
+            source=str(slot_path),
+            target="uncompressed",
             size=len(data),
             checksum=hashlib.sha256(data).hexdigest(),
             encoding="none",
             purpose="payload",
             lifecycle="runtime",
-            path=slot_path,
         )
 
         # Build bundle without compression
@@ -293,13 +306,14 @@ class TestPSPFSlots:
 
         slot = SlotMetadata(
             index=0,
-            name="checksum_test",
+            id="checksum_test",
+            source=str(slot_path),
+            target="checksum_test",
             size=len(data),
             checksum=expected_checksum,
             encoding="none",
             purpose="payload",
             lifecycle="runtime",
-            path=slot_path,
         )
 
         # Build bundle
@@ -378,13 +392,14 @@ class TestPSPFSlots:
 
         slot = SlotMetadata(
             index=0,
-            name="cached_slot",
+            id="cached_slot",
+            source=str(slot_path),
+            target="cached_slot",
             size=slot_path.stat().st_size,
             checksum=hashlib.sha256(slot_path.read_bytes()).hexdigest(),
             encoding="gzip",
             purpose="payload",
             lifecycle="runtime",
-            path=slot_path,
         )
 
         # Build bundle
@@ -419,13 +434,14 @@ class TestPSPFSlots:
         """Test SlotMetadata to_dict serialization."""
         slot = SlotMetadata(
             index=5,
-            name="test_slot",
+            id="test_slot",
+            source="/tmp/test",
+            target="test_slot",
             size=2048,
             checksum="deadbeef",
             encoding="none",  # Binary files often don't compress well
             purpose="library",
             lifecycle="init",
-            path=Path("/tmp/test"),
         )
 
         # Serialize
@@ -451,13 +467,14 @@ class TestPSPFSlots:
 
         slot = SlotMetadata(
             index=0,
-            name="large_slot",
+            id="large_slot",
+            source=str(large_path),
+            target="large_slot",
             size=len(large_data),
             checksum=hashlib.sha256(large_data).hexdigest(),
             encoding="none",
             purpose="payload",
             lifecycle="runtime",
-            path=large_path,
         )
 
         # Build bundle
