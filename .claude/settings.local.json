@@ -49,7 +49,8 @@
       "Bash(python -m pytest tests/format_2025/test_metadata_assembly.py -v --tb=short)",
       "Bash(echo \"Exit code: $?\")",
       "Bash(xattr:*)",
-      "Bash(/Users/tim/code/gh/provide-io/flavorpack/ingredients/bin/flavor-go-launcher-darwin_arm64:*)"
+      "Bash(/Users/tim/code/gh/provide-io/flavorpack/ingredients/bin/flavor-go-launcher-darwin_arm64:*)",
+      "Bash(../../ingredients/bin/flavor-rs-builder-darwin_arm64:*)"
     ],
     "additionalDirectories": [
       "/Users/tim/code/gh/provide-io"
