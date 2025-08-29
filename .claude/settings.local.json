@@ -39,7 +39,8 @@
       "Bash(dist/test.psp:*)",
       "Read(/Users/tim/Library/Caches/flavor/workenv/test/**)",
       "Read(/Users/tim/Library/Caches/flavor/workenv/test/**)",
-      "Bash(FLAVOR_LOG_LEVEL=info dist/test.psp info)"
+      "Bash(FLAVOR_LOG_LEVEL=info dist/test.psp info)",
+      "Bash(FLAVOR_LOG_LEVEL=debug dist/test.psp info)"
     ],
     "additionalDirectories": [
       "/Users/tim/code/gh/provide-io"
