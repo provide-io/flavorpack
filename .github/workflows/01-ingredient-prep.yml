@@ -44,7 +44,7 @@ jobs:
         run: |
           # Define all platforms as a single-line JSON
           # Note: Linux platforms use musl for static linking to ensure compatibility with older glibc versions
-          ALL_PLATFORMS='[{"platform":"linux_amd64","os":"ubuntu-latest","rust_target":"x86_64-unknown-linux-musl","use_musl":true},{"platform":"linux_arm64","os":"ubuntu-latest","rust_target":"aarch64-unknown-linux-musl","use_musl":true},{"platform":"darwin_amd64","os":"macos-13","rust_target":"x86_64-apple-darwin","use_musl":false},{"platform":"darwin_arm64","os":"macos-15","rust_target":"aarch64-apple-darwin","use_musl":false}]'
+          ALL_PLATFORMS='[{"platform":"linux_amd64","os":"ubuntu-latest","rust_target":"x86_64-unknown-linux-musl","use_musl":true},{"platform":"linux_arm64","os":"ubuntu-24.04-arm64","rust_target":"aarch64-unknown-linux-musl","use_musl":true},{"platform":"darwin_amd64","os":"macos-13","rust_target":"x86_64-apple-darwin","use_musl":false},{"platform":"darwin_arm64","os":"macos-15","rust_target":"aarch64-apple-darwin","use_musl":false}]'
           
           # Check if specific platforms requested
           PLATFORMS="${{ inputs.platforms }}"
@@ -99,7 +99,7 @@ jobs:
         uses: dtolnay/rust-toolchain@nightly
         with:
           toolchain: nightly-2024-12-01
-          targets: ${{ matrix.rust_target }}${{ matrix.platform == 'linux_arm64' && ', aarch64-unknown-linux-gnu' || '' }}
+          targets: ${{ matrix.rust_target }}
           components: rustfmt, clippy
       
       - name: 📦 Install cargo-zigbuild (alternative for older glibc)
@@ -113,44 +113,8 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true' && matrix.use_musl && runner.os == 'Linux'
         run: |
           sudo apt-get update
-          # Install musl tools and cross-compilation support
+          # Install musl tools - native compilation, no cross-compilation needed
           sudo apt-get install -y musl-tools
-          
-          # For ARM64 cross-compilation
-          if [ "${{ matrix.platform }}" = "linux_arm64" ]; then
-            # Note: ARM64 musl cross-compilation can be flaky
-            # Skip if download fails and use standard toolchain instead
-            echo "Setting up ARM64 cross-compilation..."
-            # Install cross-compilation tools for ARM64
-            sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
-            
-            # Try to download musl cross-compiler with timeout and fallback
-            MUSL_DOWNLOADED=false
-            for attempt in 1 2 3; do
-              echo "Attempt $attempt: Downloading musl cross-compiler..."
-              if wget --timeout=60 --tries=2 https://musl.cc/aarch64-linux-musl-cross.tgz 2>/dev/null; then
-                echo "Download successful"
-                MUSL_DOWNLOADED=true
-                break
-              else
-                echo "Download failed, will retry..."
-                sleep 5
-              fi
-            done
-            
-            if [ "$MUSL_DOWNLOADED" = "true" ] && [ -f aarch64-linux-musl-cross.tgz ]; then
-              tar -xzf aarch64-linux-musl-cross.tgz
-              echo "$PWD/aarch64-linux-musl-cross/bin" >> $GITHUB_PATH
-              echo "CC_aarch64_unknown_linux_musl=aarch64-linux-musl-gcc" >> $GITHUB_ENV
-              echo "CXX_aarch64_unknown_linux_musl=aarch64-linux-musl-g++" >> $GITHUB_ENV
-              echo "AR_aarch64_unknown_linux_musl=aarch64-linux-musl-ar" >> $GITHUB_ENV
-              echo "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER=aarch64-linux-musl-gcc" >> $GITHUB_ENV
-              echo "✅ ARM64 musl cross-compiler installed"
-            else
-              echo "⚠️ Could not download musl cross-compiler, will use standard toolchain"
-              echo "SKIP_ARM64_MUSL=true" >> $GITHUB_ENV
-            fi
-          fi
       
       - name: 🔨 Build ingredients
         if: steps.cache.outputs.cache-hit != 'true'
@@ -191,19 +155,10 @@ jobs:
           # Set version via environment variable for build.rs
           export FLAVOR_VERSION="$VERSION"
           
-          # Build with target - use fallback if musl not available for ARM64
-          if [ "${{ matrix.platform }}" = "linux_arm64" ] && [ "$SKIP_ARM64_MUSL" = "true" ]; then
-            echo "⚠️ Building with standard ARM64 toolchain (no musl)"
-            # Use standard aarch64 target instead of musl
-            cargo build --release --target aarch64-unknown-linux-gnu
-            cp target/aarch64-unknown-linux-gnu/release/flavor-rs-builder ../bin/flavor-rs-builder-$VERSION-$PLATFORM
-            cp target/aarch64-unknown-linux-gnu/release/flavor-rs-launcher ../bin/flavor-rs-launcher-$VERSION-$PLATFORM
-          else
-            # Build with specified target (musl or native)
-            cargo build --release --target ${{ matrix.rust_target }}
-            cp target/${{ matrix.rust_target }}/release/flavor-rs-builder ../bin/flavor-rs-builder-$VERSION-$PLATFORM
-            cp target/${{ matrix.rust_target }}/release/flavor-rs-launcher ../bin/flavor-rs-launcher-$VERSION-$PLATFORM
-          fi
+          # Build with specified target (musl for Linux, native for macOS)
+          cargo build --release --target ${{ matrix.rust_target }}
+          cp target/${{ matrix.rust_target }}/release/flavor-rs-builder ../bin/flavor-rs-builder-$VERSION-$PLATFORM
+          cp target/${{ matrix.rust_target }}/release/flavor-rs-launcher ../bin/flavor-rs-launcher-$VERSION-$PLATFORM
           
           cd ../..
           
