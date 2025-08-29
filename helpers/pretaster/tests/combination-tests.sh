@@ -1,7 +1,7 @@
 #!/bin/bash
 # Test all builder/launcher combinations with pretaster
 
-set -ex
+set -e
 
 # Load test library
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
