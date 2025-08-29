@@ -17,7 +17,7 @@
       "lifecycle": "cached",
       "encoding": "raw",
       "id": "combo-test-py",
-      "source": "{workenv}/scripts/combo_test.py",
+      "source": "scripts/combo_test.py",
       "target": "scripts/combo_test.py",
       "permissions": "0755"
     }
