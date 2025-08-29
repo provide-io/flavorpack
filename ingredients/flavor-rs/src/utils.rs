@@ -36,6 +36,7 @@ pub fn get_platform_string() -> String {
 }
 
 /// Get the appropriate cache directory for the current platform
+/// Uses XDG Base Directory Specification for consistency across all platforms
 pub fn get_cache_dir() -> std::path::PathBuf {
     use std::path::PathBuf;
 
@@ -43,21 +44,14 @@ pub fn get_cache_dir() -> std::path::PathBuf {
         return PathBuf::from(cache_dir);
     }
 
-    #[cfg(target_os = "macos")]
-    {
-        if let Some(home) = env::var_os("HOME") {
-            return PathBuf::from(home).join("Library/Caches/flavor");
-        }
+    // Use XDG_CACHE_HOME if set, otherwise ~/.cache
+    // This provides consistency across all Unix-like platforms (Linux, macOS, BSDs)
+    if let Ok(xdg_cache) = env::var("XDG_CACHE_HOME") {
+        return PathBuf::from(xdg_cache).join("flavor");
     }
-
-    #[cfg(target_os = "linux")]
-    {
-        if let Ok(xdg_cache) = env::var("XDG_CACHE_HOME") {
-            return PathBuf::from(xdg_cache).join("flavor");
-        }
-        if let Some(home) = env::var_os("HOME") {
-            return PathBuf::from(home).join(".cache/flavor");
-        }
+    
+    if let Some(home) = env::var_os("HOME") {
+        return PathBuf::from(home).join(".cache/flavor");
     }
 
     #[cfg(target_os = "windows")]
