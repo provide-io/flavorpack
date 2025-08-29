@@ -453,7 +453,7 @@ def _write_package(
 
                 descriptor = SlotDescriptor(
                     id=i,
-                    name=slot.metadata.name,
+                    name=slot.metadata.id,
                     offset=slot_offset,
                     size=len(data_to_write),
                     original_size=len(slot.data),
