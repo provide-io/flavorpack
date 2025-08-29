@@ -40,33 +40,36 @@ class TestPSPFIntegration:
         slots = [
             SlotMetadata(
                 index=0,
-                name="test1.txt",
+                id="test1.txt",
+                source=str(test_data_dir / "test1.txt"),
+                target="test1.txt",
                 size=19,
                 checksum="",
                 encoding="none",
                 purpose="data",
                 lifecycle="init",
-                path=test_data_dir / "test1.txt",
             ),
             SlotMetadata(
                 index=1,
-                name="test2.json",
+                id="test2.json",
+                source=str(test_data_dir / "test2.json"),
+                target="test2.json",
                 size=17,
                 checksum="",
                 encoding="none",
                 purpose="config",
                 lifecycle="runtime",
-                path=test_data_dir / "test2.json",
             ),
             SlotMetadata(
                 index=2,
-                name="config.yaml",
+                id="config.yaml",
+                source=str(test_data_dir / "config.yaml"),
+                target="config.yaml",
                 size=11,
                 checksum="",
                 encoding="none",
                 purpose="config",
                 lifecycle="init",
-                path=test_data_dir / "config.yaml",
             ),
         ]
 
@@ -187,13 +190,14 @@ class TestPSPFIntegration:
         slots = [
             SlotMetadata(
                 index=0,
-                name="large.bin",
+                id="large.bin",
+                source=str(large_file),
+                target="large.bin",
                 size=10000,
                 checksum="",
                 encoding="none",
                 purpose="data",
                 lifecycle="init",
-                path=large_file,
             ),
         ]
 
