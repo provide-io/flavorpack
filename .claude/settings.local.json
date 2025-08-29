@@ -36,7 +36,8 @@
       "Bash(cat:*)",
       "Bash(timeout:*)",
       "Bash(RUST_BACKTRACE=1 /Users/tim/code/gh/provide-io/flavorpack/ingredients/bin/flavor-rs-builder-darwin_arm64 --manifest configs/test-combination.json --launcher-bin /Users/tim/code/gh/provide-io/flavorpack/ingredients/bin/flavor-rs-launcher-darwin_arm64 --output dist/pretaster-rs-rs.psp --key-seed test123 --log-level trace)",
-      "Bash(dist/test.psp:*)"
+      "Bash(dist/test.psp:*)",
+      "Read(/Users/tim/Library/Caches/flavor/workenv/test/**)"
     ],
     "additionalDirectories": [
       "/Users/tim/code/gh/provide-io"
