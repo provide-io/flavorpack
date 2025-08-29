@@ -11,16 +11,6 @@ import (
 
 const version = "0.3.0"
 
-// Exit codes for different error types
-const (
-	ExitPanic           = 101
-	ExitPSPFError       = 102
-	ExitExtractionError = 103
-	ExitExecutionError  = 104
-	ExitInvalidArgs     = 105
-	ExitIOError         = 106
-)
-
 func getBuilderTimestamp() string {
 	// Try to get vcs.time from build info
 	if info, ok := debug.ReadBuildInfo(); ok {
@@ -47,14 +37,14 @@ func main() {
 		if r := recover(); r != nil {
 			fmt.Fprintf(os.Stderr, "PANIC: %v\n", r)
 			debug.PrintStack()
-			os.Exit(ExitPanic)
+			os.Exit(format_2025.ExitPanic)
 		}
 	}()
 
 	exePath, err := os.Executable()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to get executable path: %v\n", err)
-		os.Exit(ExitIOError)
+		os.Exit(format_2025.ExitIOError)
 	}
 
 	// Check for --version flag before launching
