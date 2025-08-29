@@ -14,10 +14,6 @@ type Metadata struct {
 	Launcher        *LauncherInfo        `json:"launcher,omitempty"`
 	Compatibility   *CompatibilityInfo   `json:"compatibility,omitempty"`
 	Workenv         *WorkenvInfo         `json:"workenv,omitempty"`
-
-	// Deprecated - for backward compatibility with tests
-	BuildInfo *BuildInfo   `json:"build_info,omitempty"`
-	Builder   *BuilderInfo `json:"builder,omitempty"`
 }
 
 type PackageInfo struct {
