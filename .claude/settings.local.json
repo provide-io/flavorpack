@@ -24,7 +24,8 @@
       "Bash(gh workflow run:*)",
       "Bash(gh run watch:*)",
       "Bash(gh run view:*)",
-      "Bash(gh run cancel:*)"
+      "Bash(gh run cancel:*)",
+      "Bash(ingredients/bin/flavor-rs-launcher-darwin_arm64:*)"
     ],
     "additionalDirectories": [
       "/Users/tim/code/gh/provide-io"
