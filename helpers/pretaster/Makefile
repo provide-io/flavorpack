@@ -310,10 +310,14 @@ clean: ## Remove all built artifacts
 	$(call print,"✅ Cleanup complete",$(GREEN))
 
 .PHONY: clean-cache
-clean-cache: ## Clean Flavor workenv cache
+clean-cache: ## Clean Flavor workenv cache (both locations)
 	$(call print,"🧹 Cleaning Flavor cache...",$(YELLOW))
+	@# Clean ~/.cache location (cross-platform default)
 	@rm -rf ~/.cache/flavor/workenv/.* 2>/dev/null || true
 	@rm -rf ~/.cache/flavor/workenv/* 2>/dev/null || true
+	@# Clean macOS-specific location if it exists
+	@rm -rf ~/Library/Caches/flavor/workenv/.* 2>/dev/null || true
+	@rm -rf ~/Library/Caches/flavor/workenv/* 2>/dev/null || true
 	$(call print,"✅ Cache cleaned",$(GREEN))
 
 .PHONY: clean-logs
