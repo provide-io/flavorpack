@@ -303,20 +303,20 @@ class SlotMetadata:
 
         # Ensure checksum has prefix
         if not self.checksum:
-            # Create a placeholder checksum from the name
-            self.checksum = calculate_checksum(self.name.encode(), "sha256")
+            # Create a placeholder checksum from the id
+            self.checksum = calculate_checksum(self.id.encode(), "sha256")
 
         return {
-            "index": self.index,
-            "name": self.name,
+            "slot": self.index,  # Position validator
+            "id": self.id,
+            "source": self.source,
+            "target": self.target,
             "size": self.size,
             "checksum": self.checksum,  # Prefixed format (e.g., "sha256:...")
             "encoding": self.encoding,
             "purpose": self.purpose,
             "lifecycle": self.lifecycle,
-            "extract_to": validate_metadata_path(self.extract_to)
-            if self.extract_to
-            else None,
+            "permissions": self.permissions,
         }
 
     @classmethod
