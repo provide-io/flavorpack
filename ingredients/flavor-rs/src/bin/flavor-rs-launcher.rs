@@ -1,7 +1,7 @@
 //! Flavor Rust launcher binary
 
 use flavor::{launch_package, LaunchOptions};
-use std::{env, panic, process};
+use std::{env, process};
 
 const VERSION: &str = "0.3.0";
 
@@ -14,34 +14,20 @@ const EXIT_INVALID_ARGS: i32 = 105;
 const EXIT_IO_ERROR: i32 = 106;
 
 fn main() {
-    // Set up panic handler to return specific exit code
-    let original_hook = panic::take_hook();
-    panic::set_hook(Box::new(move |panic_info| {
-        eprintln!("PANIC: {}", panic_info);
-        original_hook(panic_info);
-        process::exit(EXIT_PANIC);
-    }));
-    
-    // Just call run directly - catch_unwind might be causing issues
-    let exit_code = run();
-    process::exit(exit_code);
-}
-
-fn run() -> i32 {
     // --- Argument and Environment Parsing ---
     let args: Vec<String> = env::args().collect();
     
     // Check for --version flag early (before PSPF validation)
     if args.len() > 1 && args[1] == "--version" {
         println!("flavor-rs-launcher {}", VERSION);
-        return 0;
+        process::exit(0);
     }
     
     let exe_path = match env::current_exe() {
         Ok(path) => path,
         Err(e) => {
             eprintln!("Failed to get executable path: {}", e);
-            return EXIT_IO_ERROR;
+            process::exit(EXIT_IO_ERROR);
         }
     };
 
@@ -97,7 +83,7 @@ fn run() -> i32 {
                 EXIT_INVALID_ARGS
             }
         };
-        return exit_code;
+        process::exit(exit_code);
     }
 
     // --- Standard Package Execution ---
@@ -120,11 +106,11 @@ fn run() -> i32 {
     };
 
     match launch_package(&exe_path, &remaining_args, options) {
-        Ok(code) => code,
+        Ok(code) => process::exit(code),
         Err(e) => {
             eprintln!("Package launch error: {}", e);
             // Determine error type based on error message
-            if e.to_string().contains("PSPF") || e.to_string().contains("magic") {
+            let exit_code = if e.to_string().contains("PSPF") || e.to_string().contains("magic") {
                 EXIT_PSPF_ERROR
             } else if e.to_string().contains("extract") || e.to_string().contains("slot") {
                 EXIT_EXTRACTION_ERROR
@@ -132,7 +118,8 @@ fn run() -> i32 {
                 EXIT_IO_ERROR
             } else {
                 EXIT_EXECUTION_ERROR
-            }
+            };
+            process::exit(exit_code);
         }
     }
 }
