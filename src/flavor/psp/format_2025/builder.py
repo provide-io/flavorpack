@@ -34,8 +34,8 @@ from flavor.psp.format_2025.constants import (
     ENCODING_TAR,
     ENCODING_TGZ,
     HEADER_SIZE,
-    LIFECYCLE_CACHED,
-    LIFECYCLE_PERMANENT,
+    LIFECYCLE_CACHE,
+    LIFECYCLE_RUNTIME,
     LIFECYCLE_TEMPORARY,
     PAGE_SIZE,
     PURPOSE_CODE,
@@ -521,25 +521,25 @@ def _map_purpose(purpose: str) -> int:
 def _map_lifecycle(lifecycle: str) -> int:
     """Map lifecycle string to constant."""
     mapping = {
-        "permanent": LIFECYCLE_PERMANENT,
-        "persistent": LIFECYCLE_PERMANENT,
-        "runtime": LIFECYCLE_PERMANENT,
-        "cached": LIFECYCLE_CACHED,
-        "cache": LIFECYCLE_CACHED,
-        "volatile": LIFECYCLE_CACHED,
+        "permanent": LIFECYCLE_RUNTIME,
+        "persistent": LIFECYCLE_RUNTIME,
+        "runtime": LIFECYCLE_RUNTIME,
+        "cached": LIFECYCLE_CACHE,
+        "cache": LIFECYCLE_CACHE,
+        "volatile": LIFECYCLE_CACHE,
         "temporary": LIFECYCLE_TEMPORARY,
         "temp": LIFECYCLE_TEMPORARY,
         "install": LIFECYCLE_TEMPORARY,
         "init": LIFECYCLE_TEMPORARY,
-        "startup": LIFECYCLE_CACHED,
+        "startup": LIFECYCLE_CACHE,
         "shutdown": LIFECYCLE_TEMPORARY,
-        "lazy": LIFECYCLE_CACHED,
-        "eager": LIFECYCLE_PERMANENT,
+        "lazy": LIFECYCLE_CACHE,
+        "eager": LIFECYCLE_RUNTIME,
         "dev": LIFECYCLE_TEMPORARY,
-        "config": LIFECYCLE_PERMANENT,
-        "platform": LIFECYCLE_CACHED,
+        "config": LIFECYCLE_RUNTIME,
+        "platform": LIFECYCLE_CACHE,
     }
-    return mapping.get(lifecycle, LIFECYCLE_CACHED)
+    return mapping.get(lifecycle, LIFECYCLE_CACHE)
 
 
 # =============================================================================
