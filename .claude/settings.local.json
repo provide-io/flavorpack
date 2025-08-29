@@ -58,7 +58,10 @@
       "Bash(./target/release/flavor-rs-launcher --version)",
       "Bash(./target/release/flavor-rs-builder:*)",
       "Bash(FLAVOR_LOG_LEVEL=info tests/test-pretaster.sh)",
-      "Bash(cmp:*)"
+      "Bash(cmp:*)",
+      "Bash(RUST_BACKTRACE=1 timeout 1 /Users/tim/code/gh/provide-io/flavorpack/ingredients/bin/flavor-rs-builder-darwin_arm64 --version)",
+      "Bash(../bin/flavor-rs-builder-darwin_arm64:*)",
+      "Bash(../bin/test-builder:*)"
     ],
     "additionalDirectories": [
       "/Users/tim/code/gh/provide-io"
