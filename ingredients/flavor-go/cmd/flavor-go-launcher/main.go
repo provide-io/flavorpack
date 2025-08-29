@@ -11,6 +11,16 @@ import (
 
 const version = "0.3.0"
 
+// Exit codes for different error types
+const (
+	ExitPanic           = 101
+	ExitPSPFError       = 102
+	ExitExtractionError = 103
+	ExitExecutionError  = 104
+	ExitInvalidArgs     = 105
+	ExitIOError         = 106
+)
+
 func getBuilderTimestamp() string {
 	// Try to get vcs.time from build info
 	if info, ok := debug.ReadBuildInfo(); ok {
@@ -32,9 +42,19 @@ func getBuilderTimestamp() string {
 }
 
 func main() {
+	// Set up panic recovery to return specific exit code
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Fprintf(os.Stderr, "PANIC: %v\n", r)
+			debug.PrintStack()
+			os.Exit(ExitPanic)
+		}
+	}()
+
 	exePath, err := os.Executable()
 	if err != nil {
-		panic(err)
+		fmt.Fprintf(os.Stderr, "Failed to get executable path: %v\n", err)
+		os.Exit(ExitIOError)
 	}
 
 	// Check for --version flag before launching
@@ -57,6 +77,14 @@ func main() {
 		args = os.Args[1:]
 	}
 
-	format_2025.LaunchWithLogLevel(exePath, args, logLevel, logSource)
+	// Launch with error handling
+	exitCode := format_2025.LaunchWithLogLevel(exePath, args, logLevel, logSource)
+	
+	// Map any non-zero exit code to specific error types if needed
+	if exitCode != 0 {
+		// LaunchWithLogLevel already provides detailed error logging
+		// Just pass through the exit code
+		os.Exit(exitCode)
+	}
 }
 // Test 3: Trigger rebuild Mon Aug 18 15:45:13 PDT 2025
