@@ -65,7 +65,10 @@
       "Bash(find:*)",
       "Bash(bin/flavor-rs-builder-darwin_arm64:*)",
       "Bash(install:*)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(FLAVOR_LOG_LEVEL=info ./dist/orchestrate-test.psp)",
+      "Bash(./tests/test-pretaster.sh:*)",
+      "Bash(./dist/echo-test.psp:*)"
     ],
     "additionalDirectories": [
       "/Users/tim/code/gh/provide-io"

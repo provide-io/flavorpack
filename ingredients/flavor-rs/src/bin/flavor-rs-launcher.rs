@@ -1,6 +1,6 @@
 //! Flavor Rust launcher binary
 
-use flavor::{launch_package, LaunchOptions, exit_codes::*, version::VERSION};
+use flavor::{launch_package, LaunchOptions, exit_codes::*};
 use std::{env, panic, process};
 
 fn main() {

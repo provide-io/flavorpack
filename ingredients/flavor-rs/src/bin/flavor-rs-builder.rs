@@ -1,8 +1,10 @@
 //! Flavor Rust builder binary
 
 use clap::Parser;
-use flavor::{build_package, BuildOptions, exit_codes::*, version::VERSION};
+use flavor::{build_package, BuildOptions, exit_codes::*};
 use std::{env, panic, path::PathBuf, process};
+
+const VERSION: &str = flavor::version::VERSION;
 
 #[derive(Parser, Debug)]
 #[command(version = VERSION, about = "Build PSPF packages")]
