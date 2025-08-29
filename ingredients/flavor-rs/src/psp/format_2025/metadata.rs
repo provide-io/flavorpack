@@ -29,10 +29,6 @@ pub struct Metadata {
     pub workenv: Option<WorkenvInfo>,
     #[serde(default)]
     pub setup_commands: Vec<Value>,
-
-    // Deprecated - for backward compatibility with tests
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub builder: Option<BuilderInfo>,
 }
 
 /// Package information
@@ -45,7 +41,8 @@ pub struct PackageInfo {
 /// Slot metadata for each data slot in the package
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct SlotMetadata {
-    pub index: usize,
+    #[serde(rename = "slot")]
+    pub index: usize,         // Position validator
     pub id: String,           // Arbitrary identifier
     pub source: String,        // Source path 
     pub target: String,        // Destination in workenv
