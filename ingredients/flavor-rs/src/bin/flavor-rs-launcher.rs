@@ -1,11 +1,38 @@
 //! Flavor Rust launcher binary
 
 use flavor::{launch_package, LaunchOptions};
-use std::{env, process};
+use std::{env, panic, process};
 
 const VERSION: &str = "0.3.0";
 
+// Exit codes for different error types
+const EXIT_PANIC: i32 = 101;
+const EXIT_PSPF_ERROR: i32 = 102;
+const EXIT_EXTRACTION_ERROR: i32 = 103;
+const EXIT_EXECUTION_ERROR: i32 = 104;
+const EXIT_INVALID_ARGS: i32 = 105;
+const EXIT_IO_ERROR: i32 = 106;
+
 fn main() {
+    // Set up panic handler to return specific exit code
+    panic::set_hook(Box::new(|panic_info| {
+        eprintln!("PANIC: {}", panic_info);
+        process::exit(EXIT_PANIC);
+    }));
+    
+    // Wrap main logic in catch_unwind for extra safety
+    let result = panic::catch_unwind(|| run());
+    
+    match result {
+        Ok(exit_code) => process::exit(exit_code),
+        Err(_) => {
+            eprintln!("Fatal: Unhandled panic in launcher");
+            process::exit(EXIT_PANIC);
+        }
+    }
+}
+
+fn run() -> i32 {
     // --- Argument and Environment Parsing ---
     let args: Vec<String> = env::args().collect();
     
