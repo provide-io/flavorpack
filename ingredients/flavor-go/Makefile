@@ -106,7 +106,7 @@ deps:
 install: build
 	@echo "📦 Installing Go helpers to $(FLAVOR_HELPERS_DIR)..."
 	@mkdir -p $(FLAVOR_HELPERS_DIR)
-	@cp $(BIN_DIR)/flavor-go-*-$(GOOS)_$(GOARCH) $(FLAVOR_HELPERS_DIR)/
+	@install -m 755 $(BIN_DIR)/flavor-go-*-$(GOOS)_$(GOARCH) $(FLAVOR_HELPERS_DIR)/
 	@# Create symlinks without platform suffix for convenience
 	@ln -sf flavor-go-builder-$(GOOS)_$(GOARCH) $(FLAVOR_HELPERS_DIR)/flavor-go-builder
 	@ln -sf flavor-go-launcher-$(GOOS)_$(GOARCH) $(FLAVOR_HELPERS_DIR)/flavor-go-launcher
