@@ -64,7 +64,8 @@
       "Bash(../bin/test-builder:*)",
       "Bash(find:*)",
       "Bash(bin/flavor-rs-builder-darwin_arm64:*)",
-      "Bash(install:*)"
+      "Bash(install:*)",
+      "Bash(git checkout:*)"
     ],
     "additionalDirectories": [
       "/Users/tim/code/gh/provide-io"
