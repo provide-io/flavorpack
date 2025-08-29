@@ -18,7 +18,7 @@
       "encoding": "raw",
       "id": "combo-test-py",
       "source": "scripts/combo_test.py",
-      "target": "{workenv}/scripts/combo_test.py",
+      "target": "scripts/combo_test.py",
       "permissions": "0755"
     }
   ],
