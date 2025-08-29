@@ -47,6 +47,7 @@ setup(
 @pytest.fixture
 def orchestrator_factory(tmp_path):
     """Factory to create a PackagingOrchestrator instance for tests."""
+
     def _factory(**kwargs):
         defaults = {
             "package_integrity_key_path": None,
@@ -61,6 +62,7 @@ def orchestrator_factory(tmp_path):
         }
         defaults.update(kwargs)
         return PackagingOrchestrator(**defaults)
+
     return _factory
 
 
@@ -68,7 +70,9 @@ class TestLauncherAvailability:
     """Test launcher availability and error handling with focused unit tests."""
 
     @patch("flavor.packaging.orchestrator.find_launcher_executable")
-    def test_missing_launcher_error(self, mock_find_launcher, orchestrator_factory, manifest_file):
+    def test_missing_launcher_error(
+        self, mock_find_launcher, orchestrator_factory, manifest_file
+    ):
         """Test BuildError is raised when launcher binary does not exist."""
         mock_find_launcher.return_value.exists.return_value = False
         orchestrator = orchestrator_factory(launcher_bin="/fake/launcher")
@@ -77,7 +81,14 @@ class TestLauncherAvailability:
 
     @patch("flavor.packaging.orchestrator.find_launcher_executable")
     @patch("os.access", return_value=False)
-    def test_launcher_not_executable(self, mock_os_access, mock_find_launcher, orchestrator_factory, tmp_path, manifest_file):
+    def test_launcher_not_executable(
+        self,
+        mock_os_access,
+        mock_find_launcher,
+        orchestrator_factory,
+        tmp_path,
+        manifest_file,
+    ):
         """Test BuildError is raised when launcher binary is not executable."""
         launcher_path = tmp_path / "unexecutable-launcher"
         launcher_path.touch()
@@ -90,8 +101,19 @@ class TestLauncherAvailability:
     @patch("flavor.packaging.orchestrator.find_launcher_executable")
     @patch("pathlib.Path.exists", return_value=True)
     @patch("os.access", return_value=True)
-    @patch("flavor.packaging.orchestrator.run_command", side_effect=OSError("Corrupted binary"))
-    def test_corrupted_launcher_detection(self, mock_run, mock_access, mock_exists, mock_find, orchestrator_factory, manifest_file):
+    @patch(
+        "flavor.packaging.orchestrator.run_command",
+        side_effect=OSError("Corrupted binary"),
+    )
+    def test_corrupted_launcher_detection(
+        self,
+        mock_run,
+        mock_access,
+        mock_exists,
+        mock_find,
+        orchestrator_factory,
+        manifest_file,
+    ):
         """Test BuildError is raised if launcher is corrupted and cannot be executed."""
         mock_find.return_value = Path("/fake/corrupted-launcher")
         orchestrator = orchestrator_factory()
@@ -102,8 +124,19 @@ class TestLauncherAvailability:
     @patch("pathlib.Path.exists", return_value=True)
     @patch("os.access", return_value=True)
     @patch("flavor.packaging.orchestrator.logger.warning")
-    @patch("flavor.packaging.orchestrator.PackagingOrchestrator._build_with_python_builder")
-    def test_wrong_platform_launcher_warning(self, mock_build, mock_logger, mock_access, mock_exists, mock_find, orchestrator_factory, manifest_file):
+    @patch(
+        "flavor.packaging.orchestrator.PackagingOrchestrator._build_with_python_builder"
+    )
+    def test_wrong_platform_launcher_warning(
+        self,
+        mock_build,
+        mock_logger,
+        mock_access,
+        mock_exists,
+        mock_find,
+        orchestrator_factory,
+        manifest_file,
+    ):
         """Test that a warning is logged for a platform mismatch."""
         mock_find.return_value = Path("launcher-windows-amd64")
         orchestrator = orchestrator_factory()
@@ -122,16 +155,38 @@ class TestLauncherReproducibility:
     @patch("flavor.psp.format_2025.builder.build_package")
     @patch("flavor.packaging.python_packager.PythonPackager.prepare_artifacts")
     @patch("builtins.open")
-    def test_reproducible_builds_with_same_launcher(self, mock_open, mock_prepare_artifacts, mock_build, mock_run, mock_access, mock_exists, mock_find, orchestrator_factory, tmp_path, manifest_file):
+    def test_reproducible_builds_with_same_launcher(
+        self,
+        mock_open,
+        mock_prepare_artifacts,
+        mock_build,
+        mock_run,
+        mock_access,
+        mock_exists,
+        mock_find,
+        orchestrator_factory,
+        tmp_path,
+        manifest_file,
+    ):
         """Test that builds with the same launcher are reproducible."""
         # Configure mock_open to return BytesIO for specific paths
-        original_path_open = Path.open # Store original Path.open
+        original_path_open = Path.open  # Store original Path.open
+
         def mock_open_side_effect(file, mode="r", *args, **kwargs):
-            if file.resolve() == mock_prepare_artifacts.return_value["uv_binary"].resolve():
+            if (
+                file.resolve()
+                == mock_prepare_artifacts.return_value["uv_binary"].resolve()
+            ):
                 return io.BytesIO(b"mock uv content")
-            elif file.resolve() == mock_prepare_artifacts.return_value["python_tgz"].resolve():
+            elif (
+                file.resolve()
+                == mock_prepare_artifacts.return_value["python_tgz"].resolve()
+            ):
                 return io.BytesIO(b"mock python tgz content")
-            elif file.resolve() == mock_prepare_artifacts.return_value["wheels_tgz"].resolve():
+            elif (
+                file.resolve()
+                == mock_prepare_artifacts.return_value["wheels_tgz"].resolve()
+            ):
                 return io.BytesIO(b"mock wheels tgz content")
             else:
                 # Call the original Path.open for other files (e.g., manifest_file)
@@ -141,13 +196,19 @@ class TestLauncherReproducibility:
 
         # Mock prepare_artifacts to return deterministic paths
         mock_uv_path = MagicMock(spec=Path)
-        mock_uv_path.open.return_value.__enter__.return_value = io.BytesIO(b"mock uv content")
+        mock_uv_path.open.return_value.__enter__.return_value = io.BytesIO(
+            b"mock uv content"
+        )
         mock_uv_path.resolve.return_value = Path("/mock/payload_dir/bin/uv")
         mock_python_tgz_path = MagicMock(spec=Path)
-        mock_python_tgz_path.open.return_value.__enter__.return_value = io.BytesIO(b"mock python tgz content")
+        mock_python_tgz_path.open.return_value.__enter__.return_value = io.BytesIO(
+            b"mock python tgz content"
+        )
         mock_python_tgz_path.resolve.return_value = Path("/mock/python.tgz")
         mock_wheels_tgz_path = MagicMock(spec=Path)
-        mock_wheels_tgz_path.open.return_value.__enter__.return_value = io.BytesIO(b"mock wheels tgz content")
+        mock_wheels_tgz_path.open.return_value.__enter__.return_value = io.BytesIO(
+            b"mock wheels tgz content"
+        )
         mock_wheels_tgz_path.resolve.return_value = Path("/mock/wheels.tgz")
 
         mock_prepare_artifacts.return_value = {
@@ -158,14 +219,18 @@ class TestLauncherReproducibility:
         }
 
         launcher_path = tmp_path / "test-launcher"
-        launcher_path.write_bytes(b'\x7fELF\x02\x01\x01\x00' + b'\x00' * 100)
+        launcher_path.write_bytes(b"\x7fELF\x02\x01\x01\x00" + b"\x00" * 100)
         launcher_path.chmod(0o755)
         mock_find.return_value = launcher_path
 
-        orchestrator1 = orchestrator_factory(key_seed="test-seed", output_flavor_path=tmp_path / "test1.psp")
+        orchestrator1 = orchestrator_factory(
+            key_seed="test-seed", output_flavor_path=tmp_path / "test1.psp"
+        )
         orchestrator1.build_package()
 
-        orchestrator2 = orchestrator_factory(key_seed="test-seed", output_flavor_path=tmp_path / "test2.psp")
+        orchestrator2 = orchestrator_factory(
+            key_seed="test-seed", output_flavor_path=tmp_path / "test2.psp"
+        )
         orchestrator2.build_package()
 
         assert mock_build.call_count == 2

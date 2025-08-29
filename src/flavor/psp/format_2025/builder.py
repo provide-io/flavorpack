@@ -291,7 +291,7 @@ def _load_slot_data(slot: SlotMetadata) -> bytes:
         buffer = io.BytesIO()
         with tarfile.open(fileobj=buffer, mode="w") as tar:
             # Add files in a sorted, deterministic order
-            for path_item in sorted(slot_path.rglob('*')):
+            for path_item in sorted(slot_path.rglob("*")):
                 arcname = path_item.relative_to(slot_path)
                 tar.add(path_item, arcname=arcname, filter=deterministic_filter)
         buffer.seek(0)

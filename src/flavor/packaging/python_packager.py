@@ -58,25 +58,23 @@ class PythonPackager:
         # Track processed dependencies to avoid cycles
         self._processed_deps = set()
 
-    def _get_pypa_pip_install_cmd(self, python_exe: Path, packages: list[str]) -> list[str]:
+    def _get_pypa_pip_install_cmd(
+        self, python_exe: Path, packages: list[str]
+    ) -> list[str]:
         """
         Get real pip install command.
-        
+
         CRITICAL: Must use ACTUAL pip3 NOT uv pip - uv pip is incomplete/broken
         DO NOT CHANGE THIS TO uv pip - IT WILL BREAK DEPENDENCY RESOLUTION
         """
         return [str(python_exe), "-m", "pip", "install"] + packages
-    
+
     def _get_pypa_pip_wheel_cmd(
-        self, 
-        python_exe: Path, 
-        wheel_dir: Path, 
-        source: Path, 
-        no_deps: bool = False
+        self, python_exe: Path, wheel_dir: Path, source: Path, no_deps: bool = False
     ) -> list[str]:
         """
         Get real pip wheel command.
-        
+
         CRITICAL: Must use ACTUAL pip3 NOT uv pip - uv pip is incomplete/broken
         DO NOT CHANGE THIS TO uv pip - IT WILL BREAK DEPENDENCY RESOLUTION
         """
@@ -85,18 +83,18 @@ class PythonPackager:
             cmd.append("--no-deps")
         cmd.append(str(source))
         return cmd
-    
+
     def _get_pypa_pip_download_cmd(
         self,
         python_exe: Path,
         dest_dir: Path,
         requirements_file: Path | None = None,
         packages: list[str] | None = None,
-        binary_only: bool = True
+        binary_only: bool = True,
     ) -> list[str]:
         """
         Get real pip download command.
-        
+
         CRITICAL: Must use ACTUAL pip3 NOT uv pip - uv pip is incomplete/broken
         DO NOT CHANGE THIS TO uv pip - IT WILL BREAK DEPENDENCY RESOLUTION
         """
@@ -554,49 +552,61 @@ class PythonPackager:
                 pyproject_path = self.manifest_dir / "pyproject.toml"
                 with open(pyproject_path, "rb") as f:
                     pyproject_data = tomllib.load(f)
-                    
+
                     # Get runtime dependencies from project.dependencies
-                    runtime_deps = pyproject_data.get("project", {}).get("dependencies", [])
+                    runtime_deps = pyproject_data.get("project", {}).get(
+                        "dependencies", []
+                    )
                     logger.info(f"📦 Found {len(runtime_deps)} runtime dependencies")
-                    
+
                     # Log build-system requirements (these should NOT be included)
-                    build_requires = pyproject_data.get("build-system", {}).get("requires", [])
+                    build_requires = pyproject_data.get("build-system", {}).get(
+                        "requires", []
+                    )
                     if build_requires:
-                        logger.info(f"🔨 Excluding {len(build_requires)} build-system requirements")
+                        logger.info(
+                            f"🔨 Excluding {len(build_requires)} build-system requirements"
+                        )
                         for req in build_requires[:3]:  # Show first 3
                             logger.debug(f"  ❌ Build-only: {req}")
-                        
+
             except Exception as e:
                 logger.error(f"❌ Failed to parse pyproject.toml: {e}")
-                raise RuntimeError(f"Cannot proceed without valid pyproject.toml: {e}") from e
-            
+                raise RuntimeError(
+                    f"Cannot proceed without valid pyproject.toml: {e}"
+                ) from e
+
             # Download ONLY runtime dependencies
             if runtime_deps:
                 # Method 1: Create a requirements file and use pip download
                 logger.info("🌐📥 Downloading ONLY runtime dependencies")
                 if wheel_spinner:
                     wheel_spinner.tick()
-                    
-                with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as req_file:
+
+                with tempfile.NamedTemporaryFile(
+                    mode="w", suffix=".txt", delete=False
+                ) as req_file:
                     # Write runtime dependencies to requirements file
                     for dep in runtime_deps:
                         req_file.write(f"{dep}\n")
                     req_file.flush()
-                    
+
                     # Download only these specific dependencies
                     download_cmd = self._get_pypa_pip_download_cmd(
                         python_exe, wheels_dir, requirements_file=Path(req_file.name)
                     )
-                    logger.debug("💻 Downloading runtime deps", command=" ".join(download_cmd))
+                    logger.debug(
+                        "💻 Downloading runtime deps", command=" ".join(download_cmd)
+                    )
                     result = run_command(
                         download_cmd,
                         check=False,  # Don't fail if some deps can't be found as wheels
                         capture_output=True,
                     )
-                    
+
                     # Clean up temp file
                     os.unlink(req_file.name)
-                    
+
                 # Convert any source distributions to wheels
                 for file in wheels_dir.iterdir():
                     if file.suffix == ".tar.gz":
@@ -608,7 +618,9 @@ class PythonPackager:
                         file.unlink()  # Remove source distribution
             else:
                 # No runtime dependencies found - that's OK, just log it
-                logger.info("📦 No runtime dependencies to download (package has no dependencies)")
+                logger.info(
+                    "📦 No runtime dependencies to download (package has no dependencies)"
+                )
 
             # Log final wheel count
             wheel_files = list(wheels_dir.glob("*.whl"))

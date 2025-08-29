@@ -27,7 +27,9 @@
       "Bash(gh run cancel:*)",
       "Bash(ingredients/bin/flavor-rs-launcher-darwin_arm64:*)",
       "Bash(./build-linux.sh:*)",
-      "Bash(/Users/tim/code/gh/provide-io/flavorpack/ingredients/build-linux.sh)"
+      "Bash(/Users/tim/code/gh/provide-io/flavorpack/ingredients/build-linux.sh)",
+      "Bash(source env.sh)",
+      "Bash(ruff format:*)"
     ],
     "additionalDirectories": [
       "/Users/tim/code/gh/provide-io"

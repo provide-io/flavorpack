@@ -134,7 +134,7 @@ class PackagingOrchestrator:
                 found=launcher_path.name,
             )
         logger.info(f"✅ Launcher found and executable: {launcher_path}")
-        
+
         # Store for later use
         self._launcher_path = launcher_path
 

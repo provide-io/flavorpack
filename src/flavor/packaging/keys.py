@@ -30,7 +30,7 @@ def generate_key_pair(keys_dir: Path) -> tuple[Path, Path]:
 
     Returns:
         tuple: (private_key_path, public_key_path)
-        
+
     See Also:
         flavor.psp.format_2025.crypto.generate_key_pair: For in-memory key generation
     """

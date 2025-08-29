@@ -28,19 +28,19 @@ def inspect_command(package_file: str, output_json: bool) -> None:
     """Quick inspection of a flavor package."""
     import json
     from datetime import datetime
-    
+
     package_path = Path(package_file)
-    
+
     try:
         with PSPFReader(package_path) as reader:
             # Get basic info
             index = reader.read_index()
             metadata = reader.read_metadata()
             slot_descriptors = reader.read_slot_descriptors()
-            
+
             # Get slot metadata from JSON
             slots_metadata = metadata.get("slots", [])
-            
+
             if output_json:
                 # JSON output
                 output = {
@@ -54,10 +54,16 @@ def inspect_command(package_file: str, output_json: bool) -> None:
                     "slots": [
                         {
                             "index": i,
-                            "name": slots_metadata[i].get("name", f"slot_{i}") if i < len(slots_metadata) else f"slot_{i}",
-                            "purpose": slots_metadata[i].get("purpose", "unknown") if i < len(slots_metadata) else "unknown",
+                            "name": slots_metadata[i].get("name", f"slot_{i}")
+                            if i < len(slots_metadata)
+                            else f"slot_{i}",
+                            "purpose": slots_metadata[i].get("purpose", "unknown")
+                            if i < len(slots_metadata)
+                            else "unknown",
                             "size": slot.size,
-                            "encoding": slots_metadata[i].get("encoding", "raw") if i < len(slots_metadata) else "raw",
+                            "encoding": slots_metadata[i].get("encoding", "raw")
+                            if i < len(slots_metadata)
+                            else "raw",
                         }
                         for i, slot in enumerate(slot_descriptors)
                     ],
@@ -67,12 +73,14 @@ def inspect_command(package_file: str, output_json: bool) -> None:
                 # Human-readable columnar output
                 file_size = package_path.stat().st_size
                 launcher_size = index.launcher_size
-                
+
                 # Package header
                 click.echo(f"\nPackage: {package_path.name} ({format_size(file_size)})")
                 click.echo(f"├── Format: PSPF/0x{index.format_version:08x}")
-                click.echo(f"├── Launcher: {metadata.get('build', {}).get('launcher_type', 'Unknown')} ({format_size(launcher_size)})")
-                
+                click.echo(
+                    f"├── Launcher: {metadata.get('build', {}).get('launcher_type', 'Unknown')} ({format_size(launcher_size)})"
+                )
+
                 # Build info
                 build_time = metadata.get("build", {}).get("timestamp", "Unknown")
                 if build_time != "Unknown":
@@ -81,21 +89,23 @@ def inspect_command(package_file: str, output_json: bool) -> None:
                         build_time = dt.strftime("%Y-%m-%d %H:%M")
                     except:
                         pass
-                builder_version = metadata.get("build", {}).get("builder_version", "Unknown")
+                builder_version = metadata.get("build", {}).get(
+                    "builder_version", "Unknown"
+                )
                 click.echo(f"├── Built: {build_time} with {builder_version}")
-                
+
                 # Package info
                 pkg_name = metadata.get("package", {}).get("name", "Unknown")
                 pkg_version = metadata.get("package", {}).get("version", "Unknown")
                 if pkg_name != "Unknown":
                     click.echo(f"├── Package: {pkg_name} v{pkg_version}")
-                
+
                 # Slots
                 click.echo(f"└── Slots: {len(slot_descriptors)}")
                 for i, slot in enumerate(slot_descriptors):
                     is_last = i == len(slot_descriptors) - 1
                     prefix = "    └──" if is_last else "    ├──"
-                    
+
                     # Get slot metadata from JSON
                     if i < len(slots_metadata):
                         slot_meta = slots_metadata[i]
@@ -106,21 +116,21 @@ def inspect_command(package_file: str, output_json: bool) -> None:
                         slot_name = f"slot_{i}"
                         slot_purpose = ""
                         slot_encoding = "raw"
-                    
+
                     # Format slot info
                     slot_size = format_size(slot.size)
                     slot_info = f"[{i}] {slot_name} ({slot_size})"
-                    
+
                     # Add purpose if available
                     if slot_purpose:
                         slot_info += f" - {slot_purpose}"
                     if slot_encoding != "raw":
                         slot_info += f" [{slot_encoding}]"
-                    
+
                     click.echo(f"{prefix} {slot_info}")
-                
+
                 click.echo()  # Empty line at end
-                
+
     except FileNotFoundError:
         click.secho(f"❌ Package not found: {package_file}", fg="red", err=True)
         raise click.Abort()
