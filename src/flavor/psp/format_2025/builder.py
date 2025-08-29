@@ -122,7 +122,7 @@ def build_package(spec: BuildSpec, output_path: Path) -> BuildResult:
 
     # Prepare slots
     logger.info("📦🏗️🚀 Preparing slots", slot_count=len(spec.slots))
-    logger.debug("🎰🔍📋 Slot details", slots=[s.name for s in spec.slots])
+    logger.debug("🎰🔍📋 Slot details", slots=[s.id for s in spec.slots])
     try:
         prepared_slots = prepare_slots(spec.slots, spec.options)
         logger.debug("🎰✅📋 Slots prepared", prepared_count=len(prepared_slots))
@@ -210,7 +210,7 @@ def prepare_slots(
 
         logger.trace(
             "🎰🔍📋 Slot prepared",
-            name=slot.name,
+            name=slot.id,
             raw_size=len(data),
             compressed_size=len(slot_data),
             encoding=encoding_type,
@@ -267,28 +267,20 @@ def create_index(
 
 def _load_slot_data(slot: SlotMetadata) -> bytes:
     """Load raw data for a slot."""
-    if not slot.path:
+    if not slot.source:
         # Empty slot
         return b""
 
-    # Resolve {workenv} if present in path
-    slot_path = slot.path
-    if isinstance(slot_path, str) and "{workenv}" in slot_path:
+    # Resolve {workenv} if present in source path
+    slot_path = Path(slot.source) if slot.source else Path()
+    if "{workenv}" in str(slot_path):
         import os
 
         # Priority: 1. FLAVOR_WORKENV_BASE env var, 2. Current working directory
         base_dir = os.environ.get("FLAVOR_WORKENV_BASE", os.getcwd())
-        slot_path = Path(slot_path.replace("{workenv}", base_dir))
-        logger.debug(
-            f"📍 Resolved slot path: {slot.path} -> {slot_path} (base: {base_dir})"
-        )
-    elif isinstance(slot_path, Path) and "{workenv}" in str(slot_path):
-        import os
-
-        base_dir = os.environ.get("FLAVOR_WORKENV_BASE", os.getcwd())
         slot_path = Path(str(slot_path).replace("{workenv}", base_dir))
         logger.debug(
-            f"📍 Resolved slot path: {slot.path} -> {slot_path} (base: {base_dir})"
+            f"📍 Resolved slot path: {slot.source} -> {slot_path} (base: {base_dir})"
         )
 
     if not slot_path.exists():
