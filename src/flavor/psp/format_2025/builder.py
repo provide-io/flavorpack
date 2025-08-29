@@ -622,14 +622,14 @@ class PSPFBuilder:
         # Create slot metadata
         slot = SlotMetadata(
             index=len(self._spec.slots),
-            name=name,
+            id=name,
+            source=str(path) if path else "",
+            target=extract_to or name,
             size=size,
             checksum="",  # Will be calculated during build
             encoding=encoding,
             purpose=purpose,
             lifecycle=lifecycle,
-            extract_to=extract_to,
-            path=path,
             permissions=permissions,
         )
 
