@@ -39,13 +39,14 @@ def sample_slot(temp_dir):
 
     return SlotMetadata(
         index=0,
-        name="test",
+        id="test",
+        source=str(test_file),
+        target="test",
         size=len("Hello, World!"),
         checksum="abc123",
         encoding="none",
         purpose="data",
         lifecycle="runtime",
-        path=test_file,
     )
 
 
@@ -104,7 +105,9 @@ class TestBuildSpec:
         # with_slot should return new instance
         slot = SlotMetadata(
             index=0,
-            name="test",
+            id="test",
+            source="",
+            target="test",
             size=10,
             checksum="abc",
             encoding="none",
@@ -259,7 +262,9 @@ class TestValidateSpec:
         with pytest.raises(ValueError):
             SlotMetadata(
                 index=0,
-                name="",  # Invalid: empty name
+                id="",  # Invalid: empty id
+                source="",
+                target="",
                 size=-1,  # Invalid: negative size
                 checksum="",
                 encoding="invalid",  # Invalid encoding
