@@ -78,7 +78,10 @@
       "Bash(./tests/test_exit_codes.sh:*)",
       "Bash(/dev/null ls -la ~/.cache/flavor/workenv/)",
       "Bash(grep:*)",
-      "WebFetch(domain:raw.githubusercontent.com)"
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(for f in configs/*.json)",
+      "Bash(do echo \"=== $f ===\")",
+      "Bash(done)"
     ],
     "additionalDirectories": [
       "/Users/tim/code/gh/provide-io"
