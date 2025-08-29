@@ -61,7 +61,9 @@
       "Bash(cmp:*)",
       "Bash(RUST_BACKTRACE=1 timeout 1 /Users/tim/code/gh/provide-io/flavorpack/ingredients/bin/flavor-rs-builder-darwin_arm64 --version)",
       "Bash(../bin/flavor-rs-builder-darwin_arm64:*)",
-      "Bash(../bin/test-builder:*)"
+      "Bash(../bin/test-builder:*)",
+      "Bash(find:*)",
+      "Bash(bin/flavor-rs-builder-darwin_arm64:*)"
     ],
     "additionalDirectories": [
       "/Users/tim/code/gh/provide-io"
