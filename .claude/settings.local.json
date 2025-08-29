@@ -31,7 +31,8 @@
       "Bash(source env.sh)",
       "Bash(ruff format:*)",
       "Bash(gh api:*)",
-      "Bash(ruff check:*)"
+      "Bash(ruff check:*)",
+      "Bash(./tests/combination-tests.sh:*)"
     ],
     "additionalDirectories": [
       "/Users/tim/code/gh/provide-io"
