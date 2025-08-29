@@ -43,6 +43,15 @@ test_combination() {
     echo "$emoji ────────────────────────────────────────────────────────────────────────────────" | tee -a "$log_file"
     echo "$emoji 📝 Logging to: $log_file" | tee -a "$log_file"
     
+    # Clear cache for pretaster-combination to avoid checksum mismatches from rebuilds
+    # Each rebuild creates a new checksum due to timestamps, so we need fresh cache
+    rm -rf ~/.cache/flavor/workenv/.pretaster-combination.pspf 2>/dev/null || true
+    rm -rf ~/.cache/flavor/workenv/pretaster-combination 2>/dev/null || true
+    # Also clear based on output name
+    local base_name="$(basename "$output" .psp)"
+    rm -rf ~/.cache/flavor/workenv/."$base_name".pspf 2>/dev/null || true
+    rm -rf ~/.cache/flavor/workenv/"$base_name" 2>/dev/null || true
+    
     # Build the package
     # Use test-combination.json for CI compatibility (test-taster-lite requires taster.psp which isn't available in CI)
     local config="configs/test-combination.json"
