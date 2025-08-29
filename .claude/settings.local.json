@@ -46,7 +46,9 @@
       "Bash(python -m pytest tests/ -v --tb=short -x)",
       "Bash(python3 -m pytest tests/ -v --tb=short -x)",
       "Bash(python -m pytest tests/format_2025/test_metadata_assembly.py -v)",
-      "Bash(python -m pytest tests/format_2025/test_metadata_assembly.py -v --tb=short)"
+      "Bash(python -m pytest tests/format_2025/test_metadata_assembly.py -v --tb=short)",
+      "Bash(echo \"Exit code: $?\")",
+      "Bash(xattr:*)"
     ],
     "additionalDirectories": [
       "/Users/tim/code/gh/provide-io"
