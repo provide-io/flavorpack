@@ -46,9 +46,9 @@ func VerifyBundle(exePath string) {
 		for i, slot := range metadata.Slots {
 			_, err := reader.ReadSlot(i)
 			if err != nil {
-				errors = append(errors, fmt.Sprintf("Slot %d (%s) read failed: %v", i, slot.Name, err))
+				errors = append(errors, fmt.Sprintf("Slot %d (%s) read failed: %v", i, slot.ID, err))
 			} else {
-				fmt.Printf("✓ Slot %d (%s) checksum valid\n", i, slot.Name)
+				fmt.Printf("✓ Slot %d (%s) checksum valid\n", i, slot.ID)
 			}
 		}
 	}
