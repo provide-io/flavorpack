@@ -55,7 +55,8 @@
       "Bash(../../bin/flavor-go-launcher-darwin_arm64:*)",
       "Bash(../../bin/flavor-rs-builder-darwin_arm64:*)",
       "Bash(codesign:*)",
-      "Bash(./target/release/flavor-rs-launcher --version)"
+      "Bash(./target/release/flavor-rs-launcher --version)",
+      "Bash(./target/release/flavor-rs-builder:*)"
     ],
     "additionalDirectories": [
       "/Users/tim/code/gh/provide-io"
