@@ -155,3 +155,4 @@ pytest -m integration
 pytest -m cross_language
 pytest -m security
 ```
+- you will remember to NEVER do ad-hoc signing unless SPECIFICALLY REQUESTED, or you suggest it and I approve.
