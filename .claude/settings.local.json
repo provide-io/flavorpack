@@ -33,7 +33,8 @@
       "Bash(gh api:*)",
       "Bash(ruff check:*)",
       "Bash(./tests/combination-tests.sh:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(timeout:*)"
     ],
     "additionalDirectories": [
       "/Users/tim/code/gh/provide-io"
