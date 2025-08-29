@@ -23,9 +23,9 @@ build:
 	else \
 		EXT=""; \
 	fi; \
-	GOOS=$(GOOS) GOARCH=$(GOARCH) CGO_ENABLED=0 go build $(LDFLAGS) \
+	GOOS=$(GOOS) GOARCH=$(GOARCH) CGO_ENABLED=0 go build -buildvcs=false $(LDFLAGS) \
 		-o $(BIN_DIR)/flavor-go-builder-$(GOOS)_$(GOARCH)$$EXT ./cmd/flavor-go-builder; \
-	GOOS=$(GOOS) GOARCH=$(GOARCH) CGO_ENABLED=0 go build $(LDFLAGS) \
+	GOOS=$(GOOS) GOARCH=$(GOARCH) CGO_ENABLED=0 go build -buildvcs=false $(LDFLAGS) \
 		-o $(BIN_DIR)/flavor-go-launcher-$(GOOS)_$(GOARCH)$$EXT ./cmd/flavor-go-launcher
 	@chmod +x $(BIN_DIR)/flavor-go-* 2>/dev/null || true
 	@echo "✅ Go helpers built: flavor-go-*-$(GOOS)_$(GOARCH)"

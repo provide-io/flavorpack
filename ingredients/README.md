@@ -2,6 +2,32 @@
 
 This directory contains the Go and Rust implementations of Flavor Pack builders and launchers.
 
+## Requirements
+
+### Rust
+- **Minimum version**: Rust 1.85+ (for Edition 2024 support)
+- **Build targets**: 
+  - Linux: Uses musl for static binaries (no glibc dependencies)
+  - macOS/Windows: Native builds
+- **Installation**: 
+  ```bash
+  # Install Rust with musl targets for Linux
+  rustup target add x86_64-unknown-linux-musl
+  rustup target add aarch64-unknown-linux-musl
+  ```
+
+### Go
+- **Minimum version**: Go 1.21+
+- **Build mode**: `CGO_ENABLED=0` for static binaries
+- **Installation**: Download from https://go.dev or use package manager
+
+## Binary Compatibility
+
+All Linux binaries are built as static executables:
+- **Universal compatibility**: Works on any Linux distribution
+- **Tested on**: CentOS 7 (glibc 2.17), Amazon Linux 2023, Ubuntu 22.04/24.04, Alpine Linux
+- **No runtime dependencies**: Fully self-contained binaries
+
 ## Directory Structure
 
 ```

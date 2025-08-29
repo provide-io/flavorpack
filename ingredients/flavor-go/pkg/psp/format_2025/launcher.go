@@ -1,6 +1,7 @@
 package format_2025
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -9,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/provide-io/flavor/go/flavor/pkg/logging"
@@ -83,6 +85,10 @@ func LaunchWithLogLevel(exePath string, args []string, cliLogLevel, cliLogSource
 		Level:      hclog.LevelFromString(actualLevel),
 		JSONFormat: jsonFormat,
 		Output:     output,
+		TimeFormat: "2006-01-02T15:04:05Z", // UTC ISO format without timezone  
+		TimeFn: func() time.Time {
+			return time.Now().UTC() // Force UTC time
+		},
 	}
 
 	logger := hclog.New(loggerOpts)
@@ -125,23 +131,26 @@ func LaunchWithLogLevel(exePath string, args []string, cliLogLevel, cliLogSource
 			showBundleInfo(exePath, logger)
 		case "verify":
 			verifyBundle(exePath, logger)
+		case "metadata":
+			showMetadata(exePath, logger)
 		case "extract":
 			if len(args) < 3 {
-				logger.Error("Usage: extract <slot_index> <output_dir>")
+				fmt.Fprintf(os.Stderr, "Error: extract requires slot index and output directory\n")
+				fmt.Fprintf(os.Stderr, "Usage: extract <slot_index> <output_dir>\n")
 				os.Exit(1)
 			}
 			extractSlot(exePath, args[1], args[2], logger)
 		case "run":
 			// Run with remaining arguments
 			if err := execBundle(exePath, args[1:], userCwd, logger); err != nil {
-				logger.Error("❌ Failed to exec command", "error", err)
+				fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 				os.Exit(1)
 			}
 			// If we reach here, exec failed
 			os.Exit(1)
 		default:
-			logger.Error("Unknown command", "command", args[0])
-			logger.Info("Available commands: info, verify, extract, run")
+			fmt.Fprintf(os.Stderr, "Error: Unknown command '%s'\n", args[0])
+			fmt.Fprintf(os.Stderr, "Available commands: info, verify, metadata, extract, run\n")
 			os.Exit(1)
 		}
 		return
@@ -160,8 +169,23 @@ func Launch(exePath string, args []string) {
 	LaunchWithLogLevel(exePath, args, "", "")
 }
 
-// execBundle prepares and executes a bundle using syscall.Exec (process replacement)
+// execBundle prepares and executes a bundle
 func execBundle(exePath string, args []string, userCwd string, logger hclog.Logger) error {
+	// Check execution mode
+	execMode := os.Getenv("FLAVOR_EXEC_MODE")
+	useSpawn := strings.ToLower(execMode) == "spawn"
+	
+	if useSpawn {
+		logger.Debug("👶 Using spawn mode (child process)")
+		return spawnBundle(exePath, args, userCwd, logger)
+	}
+	
+	logger.Debug("🔄 Using exec mode (process replacement)")
+	return execBundleReplace(exePath, args, userCwd, logger)
+}
+
+// execBundleReplace prepares and executes a bundle using syscall.Exec (process replacement)
+func execBundleReplace(exePath string, args []string, userCwd string, logger hclog.Logger) error {
 	// Prepare the command (do all extraction and setup)
 	var cmd *exec.Cmd
 	cmd, err := runBundleWithCwd(exePath, args, userCwd, logger)
@@ -353,6 +377,33 @@ func detectLauncherType(exePath string) string {
 	return "unknown"
 }
 
+func showMetadata(exePath string, logger hclog.Logger) {
+	reader, err := NewReader(exePath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: Failed to create reader: %v\n", err)
+		os.Exit(1)
+	}
+	defer func() {
+		if err := reader.Close(); err != nil {
+			logger.Debug("Failed to close reader", "error", err)
+		}
+	}()
+
+	metadata, err := reader.ReadMetadata()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: Failed to read metadata: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Output raw JSON metadata
+	encoder := json.NewEncoder(os.Stdout)
+	encoder.SetIndent("", "  ")
+	if err := encoder.Encode(metadata); err != nil {
+		fmt.Fprintf(os.Stderr, "Error: Failed to encode metadata: %v\n", err)
+		os.Exit(1)
+	}
+}
+
 func verifyBundle(exePath string, logger hclog.Logger) {
 	reader, err := NewReader(exePath)
 	if err != nil {
@@ -414,9 +465,46 @@ func detectBuilderType(metadata *Metadata) string {
 	if metadata.Build != nil && metadata.Build.Tool != "" {
 		return metadata.Build.Tool
 	}
-	// Check old format for backward compatibility
-	if metadata.BuildInfo != nil && metadata.BuildInfo.Tool != "" {
-		return metadata.BuildInfo.Tool
-	}
 	return "unknown/flavor-builder"
+}
+
+// spawnBundle executes the bundle as a child process (doesn't replace current process)
+func spawnBundle(exePath string, args []string, userCwd string, logger hclog.Logger) error {
+	// Prepare the command (do all extraction and setup)
+	cmd, err := runBundleWithCwd(exePath, args, userCwd, logger)
+	if err != nil {
+		return fmt.Errorf("failed to prepare command: %w", err)
+	}
+	
+	// Connect stdio
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	
+	logger.Info("🚀 Spawning child process", "command", cmd.Path, "args", cmd.Args[1:])
+	
+	// Start and wait for the process
+	if err := cmd.Start(); err != nil {
+		return fmt.Errorf("failed to start process: %w", err)
+	}
+	
+	// Track volatile paths for cleanup
+	// TODO: Get volatile paths from execution context
+	
+	if err := cmd.Wait(); err != nil {
+		if exitErr, ok := err.(*exec.ExitError); ok {
+			// Return the exit code
+			if status, ok := exitErr.Sys().(syscall.WaitStatus); ok {
+				// Clean up volatile paths before exit
+				// TODO: Implement volatile cleanup
+				os.Exit(status.ExitStatus())
+			}
+		}
+		return fmt.Errorf("process failed: %w", err)
+	}
+	
+	// Clean up volatile paths on success
+	// TODO: Implement volatile cleanup
+	
+	return nil
 }

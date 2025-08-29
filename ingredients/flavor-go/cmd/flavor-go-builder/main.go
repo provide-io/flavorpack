@@ -61,7 +61,7 @@ func init() {
 	rootCmd.Flags().StringVar(&keySeed, "key-seed", "", "Seed for deterministic key generation")
 	rootCmd.Flags().StringVar(&logLevel, "log-level", "", "Log level (trace, debug, info, warn, error)")
 	rootCmd.Flags().StringVar(&workenvBase, "workenv-base", "", "Base directory for {workenv} resolution (defaults to CWD)")
-	rootCmd.Flags().BoolVar(&versionFlag, "version", false, "Show version information")
+	rootCmd.Flags().BoolVarP(&versionFlag, "version", "V", false, "Show version information")
 
 	if err := rootCmd.MarkFlagRequired("manifest"); err != nil {
 		panic(err)
@@ -72,8 +72,8 @@ func init() {
 }
 
 func main() {
-	// Handle --version before cobra parses other flags
-	if len(os.Args) > 1 && os.Args[1] == "--version" {
+	// Handle --version or -V before cobra parses other flags
+	if len(os.Args) > 1 && (os.Args[1] == "--version" || os.Args[1] == "-V") {
 		fmt.Printf("flavor-go-builder %s\n", version)
 		fmt.Printf("Built: %s\n", getBuilderTimestamp())
 		os.Exit(0)

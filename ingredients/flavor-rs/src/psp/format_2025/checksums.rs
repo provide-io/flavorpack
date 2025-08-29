@@ -4,6 +4,7 @@
 
 use sha2::{Digest, Sha256, Sha512};
 use std::fmt;
+use std::io::Read;
 
 /// Supported checksum algorithms
 #[derive(Debug, Clone, PartialEq)]
@@ -57,8 +58,55 @@ pub fn parse_checksum(checksum_str: &str) -> Result<(ChecksumAlgorithm, String),
     }
 }
 
-/// Calculate checksum with prefix
-pub fn calculate_checksum(data: &[u8], algorithm: ChecksumAlgorithm) -> String {
+/// Calculate checksum with prefix using streaming I/O
+/// This replaces the old memory-based version for efficiency
+pub fn calculate_checksum<R: Read>(mut reader: R, algorithm: ChecksumAlgorithm) -> std::io::Result<String> {
+    const BUFFER_SIZE: usize = 8 * 1024 * 1024; // 8MB buffer
+    let mut buffer = vec![0u8; BUFFER_SIZE];
+    
+    match algorithm {
+        ChecksumAlgorithm::Sha256 => {
+            let mut hasher = Sha256::new();
+            loop {
+                let bytes_read = reader.read(&mut buffer)?;
+                if bytes_read == 0 {
+                    break;
+                }
+                hasher.update(&buffer[..bytes_read]);
+            }
+            Ok(format!("sha256:{:x}", hasher.finalize()))
+        }
+        ChecksumAlgorithm::Sha512 => {
+            let mut hasher = Sha512::new();
+            loop {
+                let bytes_read = reader.read(&mut buffer)?;
+                if bytes_read == 0 {
+                    break;
+                }
+                hasher.update(&buffer[..bytes_read]);
+            }
+            Ok(format!("sha512:{:x}", hasher.finalize()))
+        }
+        ChecksumAlgorithm::Adler32 => {
+            let mut adler = adler::Adler32::new();
+            loop {
+                let bytes_read = reader.read(&mut buffer)?;
+                if bytes_read == 0 {
+                    break;
+                }
+                adler.write_slice(&buffer[..bytes_read]);
+            }
+            Ok(format!("adler32:{:08x}", adler.checksum()))
+        }
+        ChecksumAlgorithm::Blake2b => {
+            // Would need blake2 crate
+            unimplemented!("Blake2b not yet implemented")
+        }
+    }
+}
+
+/// Calculate checksum from byte slice - convenience function for small data like metadata
+pub fn calculate_checksum_bytes(data: &[u8], algorithm: ChecksumAlgorithm) -> String {
     match algorithm {
         ChecksumAlgorithm::Sha256 => {
             let mut hasher = Sha256::new();
@@ -75,7 +123,6 @@ pub fn calculate_checksum(data: &[u8], algorithm: ChecksumAlgorithm) -> String {
             format!("adler32:{:08x}", checksum)
         }
         ChecksumAlgorithm::Blake2b => {
-            // Would need blake2 crate
             unimplemented!("Blake2b not yet implemented")
         }
     }
@@ -84,7 +131,7 @@ pub fn calculate_checksum(data: &[u8], algorithm: ChecksumAlgorithm) -> String {
 /// Verify data against a checksum string
 pub fn verify_checksum(data: &[u8], checksum_str: &str) -> Result<bool, String> {
     let (algo, expected) = parse_checksum(checksum_str)?;
-    let actual = calculate_checksum(data, algo);
+    let actual = calculate_checksum_bytes(data, algo);
 
     // Compare just the hex part
     let actual_hex = actual.split(':').next_back().unwrap_or(&actual);

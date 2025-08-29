@@ -8,7 +8,7 @@ SHELL := /bin/bash
 .DEFAULT_GOAL := help
 
 # Paths
-INGREDIENTS_DIR := ..
+INGREDIENTS_DIR := ../../ingredients
 BIN_DIR := $(INGREDIENTS_DIR)/bin
 DIST_DIR := dist
 LOGS_DIR := logs
@@ -117,7 +117,7 @@ endif
 .PHONY: build-go
 build-go: ## Build only Go helpers
 	$(call print,"🐹 Building Go helpers...",$(BLUE))
-	@cd $(HELPERS_DIR)/flavor-go && \
+	@cd $(INGREDIENTS_DIR)/flavor-go && \
 		go build -o $(BIN_DIR)/flavor-go-builder-$(PLATFORM) cmd/flavor-go-builder/main.go && \
 		go build -o $(BIN_DIR)/flavor-go-launcher-$(PLATFORM) cmd/flavor-go-launcher/main.go
 	$(call print,"✅ Go helpers built",$(GREEN))
@@ -125,7 +125,7 @@ build-go: ## Build only Go helpers
 .PHONY: build-rust
 build-rust: ## Build only Rust helpers
 	$(call print,"🦀 Building Rust helpers...",$(BLUE))
-	@cd $(HELPERS_DIR)/flavor-rs && \
+	@cd $(INGREDIENTS_DIR)/flavor-rs && \
 		cargo build --release && \
 		cp target/release/flavor-rs-builder $(BIN_DIR)/flavor-rs-builder-$(PLATFORM) && \
 		cp target/release/flavor-rs-launcher $(BIN_DIR)/flavor-rs-launcher-$(PLATFORM)
@@ -234,7 +234,7 @@ test-combo: combo-test ## Alias for combo-test
 combo-test: build-helpers ## Test all builder/launcher combinations
 	@mkdir -p $(LOGS_DIR)
 	$(call print,"🎯 Testing all builder/launcher combinations...",$(PURPLE))
-	@$(TESTS_DIR)/combination-tests.sh || (echo "❌ Combination tests failed with exit code $$?"; exit 1)
+	@$(TESTS_DIR)/combination-tests.sh || (echo "❌ Combination tests failed with exit code $?"; exit 1)
 	$(call print,"✅ Combination tests completed",$(GREEN))
 	$(call print,"📁 Logs saved in $(LOGS_DIR)/",$(CYAN))
 
@@ -324,7 +324,7 @@ info: ## Show current configuration
 	@echo -e "$(CYAN)=======================$(NC)"
 	@echo ""
 	@echo -e "$(YELLOW)Paths:$(NC)"
-	@echo "  Helpers:    $(HELPERS_DIR)"
+	@echo "  Ingredients: $(INGREDIENTS_DIR)"
 	@echo "  Binaries:   $(BIN_DIR)"
 	@echo "  Dist:       $(DIST_DIR)"
 	@echo "  Logs:       $(LOGS_DIR)"

@@ -3,6 +3,7 @@
 pub mod backends;
 pub mod builder;
 pub mod checksums;
+pub mod cli;
 pub mod constants;
 pub mod crypto;
 pub mod debug;

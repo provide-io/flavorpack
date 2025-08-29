@@ -46,16 +46,18 @@ pub struct PackageInfo {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct SlotMetadata {
     pub index: usize,
-    pub name: String,
-    pub size: i64, // Size as stored in package
+    pub id: String,           // Arbitrary identifier
+    pub source: String,        // Source path 
+    pub target: String,        // Destination in workenv
+    pub size: i64,            // Size as stored in package
     pub checksum: String,
-    pub encoding: String, // Indicates compression type
+    pub encoding: String,     // Indicates compression type
     pub purpose: String,
     pub lifecycle: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub extract_to: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub permissions: Option<String>, // Unix permissions as octal string (e.g., "0755")
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub resolution: Option<String>,  // When to resolve: build|runtime|lazy
 }
 
 /// Execution configuration

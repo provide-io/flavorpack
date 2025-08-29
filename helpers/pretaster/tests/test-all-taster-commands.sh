@@ -13,8 +13,8 @@ echo ""
 
 # Get directories
 PRETASTER_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-HELPERS_DIR="$(cd "$PRETASTER_DIR/.." && pwd)"
-TASTER_DIR="$(cd "$HELPERS_DIR/taster" && pwd)"
+HELPERS_DIR="$(cd "$PRETASTER_DIR/../../ingredients" && pwd)"
+TASTER_DIR="$(cd "$PRETASTER_DIR/../taster" && pwd)"
 
 # Build taster if needed
 if [ ! -f "$TASTER_DIR/taster.psp" ]; then
@@ -23,7 +23,7 @@ if [ ! -f "$TASTER_DIR/taster.psp" ]; then
     ../../workenv/flavor_darwin_arm64/bin/flavor pack \
         --manifest pyproject.toml \
         --output taster.psp \
-        --launcher-bin ../bin/flavor-rs-launcher \
+        --launcher-bin "$HELPERS_DIR/bin/flavor-rs-launcher" \
         --key-seed test123
 fi
 

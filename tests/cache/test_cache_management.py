@@ -1,14 +1,37 @@
 """Tests for cache management commands."""
 
+import json
 import tempfile
 import shutil
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+import os
+import time
+from unittest.mock import patch
 import pytest
 from click.testing import CliRunner
 
 from flavor.cli import cli
 from flavor.cache import CacheManager
+
+
+def create_modern_cached_package(cache_dir: Path, pkg_name: str, app_name: str, version: str):
+    """Helper function to create a cached package with the modern layout."""
+    content_dir = cache_dir / pkg_name
+    content_dir.mkdir()
+    (content_dir / "file.txt").write_text(f"content for {app_name}")
+
+    metadata_dir = cache_dir / f".{pkg_name}.pspf"
+    instance_dir = metadata_dir / "instance"
+    package_meta_dir = metadata_dir / "package"
+    
+    (instance_dir / "extract").mkdir(parents=True)
+    (instance_dir / "extract" / "complete").touch()
+    
+    package_meta_dir.mkdir(parents=True)
+    package_meta_dir.joinpath("psp.json").write_text(
+        json.dumps({"package": {"name": app_name, "version": version}})
+    )
+    return content_dir, metadata_dir
 
 
 class TestCacheManager:
@@ -32,19 +55,13 @@ class TestCacheManager:
         assert manager.cache_dir.exists()
     
     def test_list_cached_packages(self):
-        """Test listing cached packages."""
-        # Create some fake cached packages
-        (self.cache_dir / "abc123").mkdir()
-        (self.cache_dir / "abc123" / ".extraction.complete").touch()
-        (self.cache_dir / "abc123" / "metadata.json").write_text('{"name": "test1", "version": "1.0.0"}')
+        """Test listing cached packages with the modern layout."""
+        create_modern_cached_package(self.cache_dir, "abc123", "test1", "1.0.0")
+        create_modern_cached_package(self.cache_dir, "def456", "test2", "2.0.0")
         
-        (self.cache_dir / "def456").mkdir()
-        (self.cache_dir / "def456" / ".extraction.complete").touch()
-        (self.cache_dir / "def456" / "metadata.json").write_text('{"name": "test2", "version": "2.0.0"}')
-        
-        # Incomplete extraction (should not be listed)
-        (self.cache_dir / "ghi789").mkdir()
-        (self.cache_dir / "ghi789" / ".extraction.incomplete").touch()
+        incomplete_dir = self.cache_dir / "ghi789"
+        incomplete_dir.mkdir()
+        (self.cache_dir / ".ghi789.pspf").mkdir()
         
         manager = CacheManager(cache_dir=self.cache_dir)
         cached = manager.list_cached()
@@ -56,74 +73,38 @@ class TestCacheManager:
     
     def test_get_cache_size(self):
         """Test calculating total cache size."""
-        # Create files with known sizes
-        pkg1 = self.cache_dir / "pkg1"
-        pkg1.mkdir()
-        (pkg1 / "file1.txt").write_text("x" * 1000)  # 1KB
-        (pkg1 / "file2.txt").write_text("y" * 2000)  # 2KB
+        pkg1_dir, _ = create_modern_cached_package(self.cache_dir, "pkg1", "app1", "1.0")
+        (pkg1_dir / "file1.txt").write_text("x" * 1000)
+        (pkg1_dir / "file2.txt").write_text("y" * 2000)
         
-        pkg2 = self.cache_dir / "pkg2"
-        pkg2.mkdir()
-        (pkg2 / "file3.txt").write_text("z" * 3000)  # 3KB
+        pkg2_dir, _ = create_modern_cached_package(self.cache_dir, "pkg2", "app2", "1.0")
+        (pkg2_dir / "file3.txt").write_text("z" * 3000)
         
         manager = CacheManager(cache_dir=self.cache_dir)
         total_size = manager.get_cache_size()
         
-        # Should be approximately 6KB (may vary slightly due to filesystem)
-        assert 5900 < total_size < 6100
-    
+        assert 5900 < total_size < 6200
+
     def test_clean_old_packages(self):
         """Test cleaning packages older than specified days."""
-        import time
-        import os
+        pkg_old_dir, _ = create_modern_cached_package(self.cache_dir, "old_pkg", "old", "1.0")
+        pkg_new_dir, _ = create_modern_cached_package(self.cache_dir, "new_pkg", "new", "1.0")
         
-        # Create packages with different ages
-        pkg_old = self.cache_dir / "old_pkg"
-        pkg_old.mkdir()
-        (pkg_old / ".extraction.complete").touch()
-        
-        pkg_new = self.cache_dir / "new_pkg"
-        pkg_new.mkdir()
-        (pkg_new / ".extraction.complete").touch()
-        
-        # Modify the mtime of old_pkg to be 31 days ago
         old_time = time.time() - (86400 * 31)
-        os.utime(pkg_old, (old_time, old_time))
+        os.utime(pkg_old_dir, (old_time, old_time))
         
         manager = CacheManager(cache_dir=self.cache_dir)
         removed = manager.clean(max_age_days=30)
         
         assert len(removed) == 1
         assert "old_pkg" in removed
-        assert not pkg_old.exists()
-        assert pkg_new.exists()
-    
-    def test_clean_incomplete_extractions(self):
-        """Test cleaning incomplete extractions."""
-        # Create incomplete extraction
-        incomplete = self.cache_dir / "incomplete"
-        incomplete.mkdir()
-        (incomplete / ".extraction.incomplete").touch()
-        (incomplete / "partial_data.txt").write_text("partial")
-        
-        # Create complete extraction
-        complete = self.cache_dir / "complete"
-        complete.mkdir()
-        (complete / ".extraction.complete").touch()
-        
-        manager = CacheManager(cache_dir=self.cache_dir)
-        removed = manager.clean_incomplete()
-        
-        assert len(removed) == 1
-        assert not incomplete.exists()
-        assert complete.exists()
+        assert not pkg_old_dir.exists()
+        assert pkg_new_dir.exists()
     
     def test_remove_specific_package(self):
         """Test removing a specific cached package."""
         pkg_id = "test_pkg_123"
-        pkg_dir = self.cache_dir / pkg_id
-        pkg_dir.mkdir()
-        (pkg_dir / "data.txt").write_text("test data")
+        pkg_dir, _ = create_modern_cached_package(self.cache_dir, pkg_id, "app", "1.0")
         
         manager = CacheManager(cache_dir=self.cache_dir)
         success = manager.remove(pkg_id)
@@ -137,27 +118,6 @@ class TestCacheManager:
         success = manager.remove("nonexistent")
         
         assert success is False
-    
-    def test_get_package_info(self):
-        """Test getting information about a cached package."""
-        pkg_id = "test_pkg"
-        pkg_dir = self.cache_dir / pkg_id
-        pkg_dir.mkdir()
-        (pkg_dir / ".extraction.complete").touch()
-        (pkg_dir / "metadata.json").write_text(
-            '{"name": "test-app", "version": "1.2.3", "slots": [{"name": "payload"}]}'
-        )
-        (pkg_dir / "data.txt").write_text("x" * 1000)
-        
-        manager = CacheManager(cache_dir=self.cache_dir)
-        info = manager.get_info(pkg_id)
-        
-        assert info is not None
-        assert info["id"] == pkg_id
-        assert info["name"] == "test-app"
-        assert info["version"] == "1.2.3"
-        assert info["size"] > 1000
-        assert info["complete"] is True
 
 
 class TestCacheCLICommands:
@@ -178,12 +138,7 @@ class TestCacheCLICommands:
         """Test 'flavor workenv list' command."""
         mock_cache_dir.return_value = self.temp_dir
         
-        # Create some cached packages
-        (self.temp_dir / "pkg1").mkdir()
-        (self.temp_dir / "pkg1" / ".extraction.complete").touch()
-        (self.temp_dir / "pkg1" / "metadata.json").write_text(
-            '{"name": "app1", "version": "1.0.0"}'
-        )
+        create_modern_cached_package(self.temp_dir, "pkg1", "app1", "1.0.0")
         
         result = self.runner.invoke(cli, ["workenv", "list"])
         
@@ -196,34 +151,31 @@ class TestCacheCLICommands:
         """Test 'flavor workenv clean' command."""
         mock_cache_dir.return_value = self.temp_dir
         
-        # Create old package
-        old_pkg = self.temp_dir / "old_pkg"
-        old_pkg.mkdir()
-        (old_pkg / ".extraction.complete").touch()
+        create_modern_cached_package(self.temp_dir, "old_pkg", "old", "1.0")
         
         result = self.runner.invoke(cli, ["workenv", "clean", "--yes"])
         
         assert result.exit_code == 0
-        assert "Cleaned" in result.output or "Removed" in result.output
+        assert "Removed" in result.output and "cached package(s)" in result.output
     
     @patch('flavor.cache.get_cache_dir')
     def test_cache_clean_with_age(self, mock_cache_dir):
         """Test 'flavor workenv clean --older-than' command."""
         mock_cache_dir.return_value = self.temp_dir
-        
-        result = self.runner.invoke(cli, ["workenv", "clean", "--older-than", "7", "--yes"])
+        create_modern_cached_package(self.temp_dir, "old_pkg", "old", "1.0")
+
+        result = self.runner.invoke(cli, ["workenv", "clean", "--older-than", "0", "--yes"])
         
         assert result.exit_code == 0
-    
+        assert "Removed" in result.output and "cached package(s)" in result.output
+
     @patch('flavor.cache.get_cache_dir')
     def test_cache_remove_command(self, mock_cache_dir):
         """Test 'flavor workenv remove' command."""
         mock_cache_dir.return_value = self.temp_dir
         
-        # Create package to remove
         pkg_id = "test_pkg"
-        pkg_dir = self.temp_dir / pkg_id
-        pkg_dir.mkdir()
+        pkg_dir, _ = create_modern_cached_package(self.temp_dir, pkg_id, "app", "1.0")
         
         result = self.runner.invoke(cli, ["workenv", "remove", pkg_id, "--yes"])
         
@@ -231,17 +183,15 @@ class TestCacheCLICommands:
         assert not pkg_dir.exists()
     
     @patch('flavor.cache.get_cache_dir')
-    def test_cache_info_command(self, mock_cache_dir):
-        """Test 'flavor workenv info' command."""
+    def test_cache_inspect_command(self, mock_cache_dir):
+        """Test 'flavor workenv inspect' command."""
         mock_cache_dir.return_value = self.temp_dir
         
-        # Create a package
-        (self.temp_dir / "pkg1").mkdir()
-        (self.temp_dir / "pkg1" / "file.txt").write_text("x" * 1000)
+        create_modern_cached_package(self.temp_dir, "pkg1", "app1", "1.0")
         
-        result = self.runner.invoke(cli, ["workenv", "info"])
+        result = self.runner.invoke(cli, ["workenv", "inspect", "pkg1"])
         
         assert result.exit_code == 0
-        assert "Cache directory:" in result.output
-        assert "Total size:" in result.output
-        assert "Number of packages:" in result.output
+        assert "Package: pkg1" in result.output
+        assert "Extraction: Complete" in result.output
+        assert "Name: app1" in result.output

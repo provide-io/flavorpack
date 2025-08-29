@@ -15,27 +15,40 @@
   "slots": [
     {
       "slot": 0,
-      "name": "test-with-taster.sh",
-      "path": "{workenv}/scripts/test-with-taster.sh",
       "purpose": "payload",
       "lifecycle": "cached",
-      "encoding": "none",
-      "extract_to": "{workenv}/scripts"
+      "encoding": "raw",
+      "id": "test-with-taster-sh",
+      "source": "{workenv}/scripts/test-with-taster.sh",
+      "target": "scripts/test-with-taster.sh",
+      "permissions": "0755"
     },
     {
       "slot": 1,
-      "name": "taster.psp",
-      "path": "{workenv}/scripts/taster.psp",
       "purpose": "payload",
       "lifecycle": "cached",
-      "encoding": "none",
-      "extract_to": "{workenv}/bin"
+      "encoding": "raw",
+      "id": "taster-psp",
+      "source": "{workenv}/scripts/taster.psp",
+      "target": "bin/taster.psp"
     }
   ],
   "runtime": {
     "env": {
-      "unset": ["*"],
-      "pass": ["PATH", "HOME", "USER", "LANG", "LC_*", "TERM", "SHELL", "FLAVOR_*", "TASTER_PSP"],
+      "unset": [
+        "*"
+      ],
+      "pass": [
+        "PATH",
+        "HOME",
+        "USER",
+        "LANG",
+        "LC_*",
+        "TERM",
+        "SHELL",
+        "FLAVOR_*",
+        "TASTER_PSP"
+      ],
       "set": {
         "PRETASTER_VERSION": "1.0.0"
       }

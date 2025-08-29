@@ -13,7 +13,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"strings"
 )
 
 const (
@@ -418,39 +417,15 @@ func (r *Reader) ExtractSlot(slotIndex int, destDir string) (string, error) {
 	// Extract permissions field (bytes 52-54)
 	slotPermissions := binary.LittleEndian.Uint16(entryData[52:54])
 
-	// Determine extraction path based on extract_to field
-	var destPath string
-	var extractDir string
-	
-	if slotMeta.ExtractTo != "" {
-		// Substitute placeholders in extract_to
-		extractTo := slotMeta.ExtractTo
-		extractTo = strings.ReplaceAll(extractTo, "{workenv}", destDir)
-		
-		// Check encoding to determine if this is a single file or archive
-		// Per PSPF spec: encoding "gzip" means single gzipped file (not a tarball)
-		if slotMeta.Encoding == "gzip" && !isTarball(decompressed) {
-			// For single gzipped files, extract_to IS the full file path
-			// Do NOT append the slot name
-			destPath = extractTo
-		} else {
-			// For tarballs or other archives, extract to the directory specified
-			// Do NOT append the slot name - extract_to specifies the exact location
-			destPath = extractTo
-		}
-		// For tarballs, extract to the directory specified
-		extractDir = extractTo
-	} else {
-		// Default to workenv root with slot name
-		destPath = filepath.Join(destDir, slotMeta.Name)
-		extractDir = destDir
-	}
+	// Target field specifies where to extract (relative to workenv)
+	destPath := filepath.Join(destDir, slotMeta.Target)
+	extractDir := filepath.Dir(destPath)
 
 	// Check if this is a tarball that needs extraction
 	if isTarball(decompressed) {
 
 		// Ensure extraction directory exists
-		if err := os.MkdirAll(extractDir, 0755); err != nil {
+		if err := os.MkdirAll(extractDir, DefaultDirPerms); err != nil {
 			return "", fmt.Errorf("%w: failed to create extraction directory for slot %d: %v", ErrSlotExtractionFailed, slotIndex, err)
 		}
 
@@ -473,7 +448,7 @@ func (r *Reader) ExtractSlot(slotIndex int, destDir string) (string, error) {
 				}
 			case tar.TypeReg:
 				// Ensure parent directory exists
-				if err := os.MkdirAll(filepath.Dir(target), 0755); err != nil {
+				if err := os.MkdirAll(filepath.Dir(target), DefaultDirPerms); err != nil {
 					return "", err
 				}
 
@@ -502,7 +477,7 @@ func (r *Reader) ExtractSlot(slotIndex int, destDir string) (string, error) {
 				}
 			case tar.TypeSymlink:
 				// Ensure parent directory exists
-				if err := os.MkdirAll(filepath.Dir(target), 0755); err != nil {
+				if err := os.MkdirAll(filepath.Dir(target), DefaultDirPerms); err != nil {
 					return "", err
 				}
 
@@ -536,21 +511,12 @@ func (r *Reader) ExtractSlot(slotIndex int, destDir string) (string, error) {
 		return "", err
 	}
 
-	// Use permissions from slot descriptor if available, otherwise fall back to defaults
+	// Use permissions from slot descriptor if available, otherwise use defaults
 	var perm os.FileMode
 	if slotPermissions != 0 {
 		perm = os.FileMode(slotPermissions)
 	} else {
-		// Fallback permissions - default to DefaultFilePerms for regular files
-		perm = DefaultFilePerms
-		// Make tool binaries and scripts executable
-		if slotMeta.Purpose == "tool" || slotMeta.Name == "uv" || strings.HasSuffix(slotMeta.Name, "/bin/uv") || strings.HasSuffix(destPath, "/bin/uv") {
-			perm = DefaultExecutablePerms
-		}
-		// Make scripts executable
-		if strings.HasSuffix(destPath, ".py") || strings.HasSuffix(destPath, ".sh") || slotMeta.Name == "bootstrap" {
-			perm = DefaultExecutablePerms
-		}
+		perm = DefaultFilePerms // 0600 - secure by default
 	}
 
 	if err := os.WriteFile(destPath, decompressed, perm); err != nil {

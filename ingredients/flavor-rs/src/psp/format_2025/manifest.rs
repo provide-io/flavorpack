@@ -39,19 +39,20 @@ pub struct ExecutionInfo {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ManifestSlot {
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub slot: Option<i32>, // Slot number for well-formedness check
-    pub path: String,
-    pub name: String,
+    pub slot: Option<i32>,    // Optional: position validator
+    pub id: String,            // Arbitrary identifier for the slot
+    pub source: String,        // Source path within the package
+    pub target: String,        // Destination path in workenv
     #[serde(default)]
-    pub encoding: String,
+    pub encoding: String,      // Compression/encoding type
     #[serde(default = "default_purpose")]
-    pub purpose: String,
+    pub purpose: String,       // Role of the slot
     #[serde(default = "default_lifecycle")]
-    pub lifecycle: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub extract_to: Option<String>,
+    pub lifecycle: String,     // Cache management
     #[serde(skip_serializing_if = "Option::is_none")]
     pub permissions: Option<String>, // Unix permissions as octal string (e.g., "0755")
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub resolution: Option<String>,  // When to resolve: build|runtime|lazy
 }
 
 fn default_purpose() -> String {

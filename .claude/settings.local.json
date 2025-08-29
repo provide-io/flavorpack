@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cargo --version)",
+      "Bash(rustc --version)",
+      "Bash(cargo clean:*)",
+      "Bash(cargo build:*)",
+      "Bash(make:*)",
+      "Bash(/Users/tim/code/gh/provide-io/flavorpack/ingredients/bin/flavor-rs-builder-darwin_arm64:*)",
+      "Bash(/Users/tim/code/gh/provide-io/flavorpack/ingredients/bin/flavor-rs-launcher-darwin_arm64:*)",
+      "Bash(./build.sh)",
+      "Bash(chmod:*)",
+      "Bash(./test-linux-build.sh:*)",
+      "Bash(docker run:*)",
+      "Bash(gh repo view:*)",
+      "Bash(gh run list:*)",
+      "Bash(gh workflow list:*)",
+      "Bash(gh workflow view:*)",
+      "Bash(gh pr list:*)",
+      "Bash(git add:*)",
+      "Bash(git push:*)",
+      "Bash(git reset:*)"
+    ],
+    "additionalDirectories": [
+      "/Users/tim/code/gh/provide-io"
+    ]
+  },
+  "outputStyle": "default"
+}

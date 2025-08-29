@@ -1,7 +1,7 @@
 #!/bin/bash
 # Test all builder/launcher combinations with pretaster
 
-set -e
+set -ex
 
 # Load test library
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -15,8 +15,8 @@ echo ""
 PRETASTER_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$PRETASTER_DIR"
 
-# Get helpers directory
-HELPERS_DIR="$(cd "$PRETASTER_DIR/.." && pwd)"
+# Get ingredients directory (where helpers are built)
+HELPERS_DIR="$(cd "$PRETASTER_DIR/../../ingredients" && pwd)"
 
 # Setup
 LOGS_DIR=$(ensure_logs_dir)
@@ -49,7 +49,8 @@ test_combination() {
     if build_package "$builder_bin" "$launcher_bin" "$config" "$output" >> "$log_file" 2>&1; then
         echo "$emoji   ✅ Build successful: $output" | tee -a "$log_file"
     else
-        echo "$emoji   ❌ Build failed!" | tee -a "$log_file"
+        local exit_code=$?
+        echo "$emoji   ❌ Build failed with exit code $exit_code!" | tee -a "$log_file"
         return 1
     fi
     
@@ -109,12 +110,19 @@ test_combination() {
     echo "$emoji 📄 Full log saved to: $log_file" | tee -a "$log_file"
 }
 
+# Detect platform
+OS=$(uname -s | tr '[:upper:]' '[:lower:]')
+ARCH=$(uname -m)
+[ "$ARCH" = "x86_64" ] && ARCH="amd64"
+[ "$ARCH" = "aarch64" ] && ARCH="arm64"
+PLATFORM="${OS}_${ARCH}"
+
 # Test all combinations
 combinations=(
-    "rs:rs:../bin/flavor-rs-builder:../bin/flavor-rs-launcher:🦀🦀"
-    "rs:go:../bin/flavor-rs-builder:../bin/flavor-go-launcher:🦀🐹"
-    "go:rs:../bin/flavor-go-builder:../bin/flavor-rs-launcher:🐹🦀"
-    "go:go:../bin/flavor-go-builder:../bin/flavor-go-launcher:🐹🐹"
+    "rs:rs:$HELPERS_DIR/bin/flavor-rs-builder-$PLATFORM:$HELPERS_DIR/bin/flavor-rs-launcher-$PLATFORM:🦀🦀"
+    "rs:go:$HELPERS_DIR/bin/flavor-rs-builder-$PLATFORM:$HELPERS_DIR/bin/flavor-go-launcher-$PLATFORM:🦀🐹"
+    "go:rs:$HELPERS_DIR/bin/flavor-go-builder-$PLATFORM:$HELPERS_DIR/bin/flavor-rs-launcher-$PLATFORM:🐹🦀"
+    "go:go:$HELPERS_DIR/bin/flavor-go-builder-$PLATFORM:$HELPERS_DIR/bin/flavor-go-launcher-$PLATFORM:🐹🐹"
 )
 
 for combo in "${combinations[@]}"; do

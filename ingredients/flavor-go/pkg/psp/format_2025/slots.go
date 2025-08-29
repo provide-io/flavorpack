@@ -2,14 +2,18 @@ package format_2025
 
 type SlotMetadata struct {
 	Index       int    `json:"index"`
-	Name        string `json:"name"`
+	ID          string `json:"id"`                       // Slot identifier (was Name)
+	Name        string `json:"name,omitempty"`           // Legacy: backward compat
+	Source      string `json:"source,omitempty"`         // Source path
+	Target      string `json:"target"`                   // Destination path
 	Size        int64  `json:"size"`
 	Checksum    string `json:"checksum"`
 	Encoding    string `json:"encoding"`
 	Purpose     string `json:"purpose"`
 	Lifecycle   string `json:"lifecycle"`
-	ExtractTo   string `json:"extract_to"`
-	Permissions string `json:"permissions,omitempty"` // Unix permissions as octal string (e.g., "0755")
+	Resolution  string `json:"resolution,omitempty"`     // When to resolve: build|runtime|lazy
+	ExtractTo   string `json:"extract_to,omitempty"`    // Legacy: backward compat
+	Permissions string `json:"permissions,omitempty"`   // Unix permissions (e.g., "0755")
 }
 
 // SlotDescriptor is the 64-byte enhanced slot descriptor format

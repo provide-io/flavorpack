@@ -61,14 +61,15 @@ type CacheValidationConfig struct {
 }
 
 type Slot struct {
-	Slot        *int   `json:"slot,omitempty"`  // Slot number for well-formedness check (pointer to distinguish unset from 0)
-	Path        string `json:"path"`
-	Name        string `json:"name"`
-	Encoding    string `json:"encoding"`
-	Purpose     string `json:"purpose"`
-	Lifecycle   string `json:"lifecycle"`
-	ExtractTo   string `json:"extract_to"`
-	Permissions string `json:"permissions,omitempty"` // Unix permissions as octal string (e.g., "0755")
+	Slot        *int   `json:"slot,omitempty"`        // Optional: position validator
+	ID          string `json:"id"`                    // Arbitrary identifier
+	Source      string `json:"source"`                 // Source path
+	Target      string `json:"target"`                 // Destination in workenv
+	Purpose     string `json:"purpose"`                // Role of the slot
+	Lifecycle   string `json:"lifecycle"`              // Cache management
+	Resolution  string `json:"resolution,omitempty"`   // When to resolve: build|runtime|lazy
+	Encoding    string `json:"encoding"`               // Compression/encoding (string in JSON)
+	Permissions string `json:"permissions,omitempty"`  // Unix permissions (e.g., "0755")
 }
 
 // hashSlotName computes a hash of the slot name (SHA256, first 8 bytes as uint64)
@@ -157,6 +158,10 @@ func BuildWithLogLevel(manifestPath, outputPath, launcherBin, privateKeyPath, pu
 		Level:      hclog.LevelFromString(actualLevel),
 		JSONFormat: jsonFormat,
 		Output:     output,
+		TimeFormat: "2006-01-02T15:04:05Z", // UTC ISO format without timezone
+		TimeFn: func() time.Time {
+			return time.Now().UTC() // Force UTC time
+		},
 	})
 	
 	// Log startup messages
@@ -222,7 +227,7 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 	// 📁 Create output directory if it doesn't exist
 	outputDir := filepath.Dir(outputPath)
 	logger.Debug("📁 Ensuring output directory exists", "dir", outputDir)
-	if err := os.MkdirAll(outputDir, 0755); err != nil {
+	if err := os.MkdirAll(outputDir, DefaultDirPerms); err != nil {
 		logger.Error("❌ Failed to create output directory", "error", err, "dir", outputDir)
 		os.Exit(1)
 	}
@@ -386,17 +391,45 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 	logger.Debug("🔍 Slot processing details", "alignment", SlotAlignment, "descriptor_size", SlotDescriptorSize)
 	var slotDescriptors []SlotDescriptor
 	for i, slot := range config.Slots {
-		// Validate slot number if provided - critical error on mismatch
-		if slot.Slot != nil && *slot.Slot != i {
-			logger.Error("❌ Critical: Slot number mismatch", "expected", i, "declared", *slot.Slot, "name", slot.Name)
+		// Validate required fields
+		if slot.ID == "" {
+			logger.Error("❌ Critical: Slot missing required 'id' field", "index", i)
 			os.Exit(1)
 		}
+		if slot.Source == "" {
+			logger.Error("❌ Critical: Slot missing required 'source' field", "index", i, "id", slot.ID)
+			os.Exit(1)
+		}
+		if slot.Target == "" {
+			logger.Error("❌ Critical: Slot missing required 'target' field", "index", i, "id", slot.ID)
+			os.Exit(1)
+		}
+		
+		// Set defaults
+		if slot.Resolution == "" {
+			slot.Resolution = "build"
+		}
+		if slot.Permissions == "" {
+			slot.Permissions = fmt.Sprintf("%04o", DefaultFilePerms)  // Default to owner read/write, no execute
+		}
+		
+		// Validate slot number if provided - critical error on mismatch
+		if slot.Slot != nil && *slot.Slot != i {
+			logger.Error("❌ Critical: Slot number mismatch", "expected", i, "declared", *slot.Slot, "id", slot.ID)
+			os.Exit(1)
+		}
+		
 		// 📂 Read slot data
-		logger.Debug("📂 Processing slot", "index", i, "name", slot.Name, "path", slot.Path)
-		logger.Trace("🔎 Slot configuration", "encoding", slot.Encoding, "purpose", slot.Purpose, "lifecycle", slot.Lifecycle)
+		logger.Debug("📂 Processing slot", "index", i, "id", slot.ID, "source", slot.Source, "target", slot.Target)
+		logger.Trace("🔎 Slot configuration", 
+			"encoding", slot.Encoding, 
+			"purpose", slot.Purpose, 
+			"lifecycle", slot.Lifecycle,
+			"resolution", slot.Resolution,
+			"permissions", slot.Permissions)
 		
 		// Resolve {workenv} to base directory (FLAVOR_WORKENV_BASE or CWD)
-		slotPath := slot.Path
+		slotPath := slot.Source
 		if strings.Contains(slotPath, "{workenv}") {
 			// Priority: 1. FLAVOR_WORKENV_BASE env var, 2. Current working directory
 			baseDir := os.Getenv("FLAVOR_WORKENV_BASE")
@@ -404,12 +437,12 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 				baseDir, _ = os.Getwd()
 			}
 			slotPath = strings.ReplaceAll(slotPath, "{workenv}", baseDir)
-			logger.Debug("📍 Resolved path", "original", slot.Path, "resolved", slotPath, "base", baseDir)
+			logger.Debug("📍 Resolved path", "original", slot.Source, "resolved", slotPath, "base", baseDir)
 		}
 		
 		slotData, err := os.ReadFile(slotPath)
 		if err != nil {
-			logger.Error("❌ Failed to read slot", "error", err, "path", slot.Path)
+			logger.Error("❌ Failed to read slot", "error", err, "path", slot.Source)
 			os.Exit(1)
 		}
 		logger.Debug("📊 Slot size", "original", len(slotData), "encoding", slot.Encoding)
@@ -417,13 +450,17 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 		// Add to metadata
 		slotMeta := SlotMetadata{
 			Index:       i,
-			Name:        slot.Name,
+			ID:          slot.ID,
+			Name:        slot.ID,  // Keep for backward compat
+			Source:      slot.Source,
+			Target:      slot.Target,
 			Size:        0,  // Will be set after encoding handling
 			Checksum:    "", // Will be set to compressed data checksum
 			Encoding:    slot.Encoding,
 			Purpose:     slot.Purpose,
 			Lifecycle:   slot.Lifecycle,
-			ExtractTo:   slot.ExtractTo,
+			Resolution:  slot.Resolution,
+			ExtractTo:   slot.Target,  // For backward compat
 			Permissions: slot.Permissions,
 		}
 
@@ -431,7 +468,7 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 		var compressed []byte
 		var encodingMethod uint8 // defaults to 0 (none)
 
-		logger.Debug("🎯 Processing slot encoding", "slot", i, "encoding", slot.Encoding, "name", slot.Name)
+		logger.Debug("🎯 Processing slot encoding", "slot", i, "encoding", slot.Encoding, "id", slot.ID)
 		switch slot.Encoding {
 		case "gzip":
 			compressed = slotData
@@ -474,7 +511,7 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 
 		// ✍️ Write slot
 		slotOffset := alignedPos
-		logger.Debug("✍️ Writing slot", "name", slot.Name, "offset", slotOffset, "size", len(compressed))
+		logger.Debug("✍️ Writing slot", "id", slot.ID, "offset", slotOffset, "size", len(compressed))
 		if _, err := out.Write(compressed); err != nil {
 			logger.Error("❌ Failed to write slot", "error", err)
 			os.Exit(1)
@@ -542,7 +579,7 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 		
 		slotDescriptors = append(slotDescriptors, SlotDescriptor{
 			ID:           uint64(i),
-			NameHash:     hashSlotName(slot.Name),
+			NameHash:     hashSlotName(slot.ID),
 			Offset:       uint64(slotOffset),
 			Size:         uint64(len(compressed)), // actual stored size
 			OriginalSize: uint64(len(slotData)),   // original uncompressed size
@@ -655,7 +692,7 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 		"slot_table_size", index.SlotTableSize)
 
 	// 🔧 Make the output file executable
-	if err := os.Chmod(outputPath, 0755); err != nil {
+	if err := os.Chmod(outputPath, DefaultDirPerms); err != nil {
 		logger.Error("❌ Failed to make output executable", "error", err)
 		os.Exit(1)
 	}

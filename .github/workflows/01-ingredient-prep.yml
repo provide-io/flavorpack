@@ -43,7 +43,8 @@ jobs:
         id: matrix
         run: |
           # Define all platforms as a single-line JSON
-          ALL_PLATFORMS='[{"platform":"linux_amd64","os":"ubuntu-latest","rust_target":"x86_64-unknown-linux-gnu"},{"platform":"linux_arm64","os":"ubuntu-24.04-arm","rust_target":"aarch64-unknown-linux-gnu"},{"platform":"darwin_amd64","os":"macos-13","rust_target":"x86_64-apple-darwin"},{"platform":"darwin_arm64","os":"macos-15","rust_target":"aarch64-apple-darwin"}]'
+          # Note: Linux platforms use musl for static linking to ensure compatibility with older glibc versions
+          ALL_PLATFORMS='[{"platform":"linux_amd64","os":"ubuntu-latest","rust_target":"x86_64-unknown-linux-musl","use_musl":true},{"platform":"linux_arm64","os":"ubuntu-latest","rust_target":"aarch64-unknown-linux-musl","use_musl":true},{"platform":"darwin_amd64","os":"macos-13","rust_target":"x86_64-apple-darwin","use_musl":false},{"platform":"darwin_arm64","os":"macos-15","rust_target":"aarch64-apple-darwin","use_musl":false}]'
           
           # Check if specific platforms requested
           PLATFORMS="${{ inputs.platforms }}"
@@ -95,18 +96,39 @@ jobs:
       
       - name: 🦀 Setup Rust
         if: steps.cache.outputs.cache-hit != 'true'
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@nightly
         with:
+          toolchain: nightly-2024-12-01
           targets: ${{ matrix.rust_target }}
+          components: rustfmt, clippy
       
-      - name: 🔧 Setup cross-compilation (Linux ARM64)
-        if: steps.cache.outputs.cache-hit != 'true' && matrix.platform == 'linux_arm64' && runner.os == 'Linux' && runner.arch != 'ARM64'
+      - name: 📦 Install cargo-zigbuild (alternative for older glibc)
+        if: steps.cache.outputs.cache-hit != 'true' && runner.os == 'Linux' && matrix.use_musl != true
+        run: |
+          # cargo-zigbuild can target specific glibc versions
+          cargo install cargo-zigbuild
+          echo "ℹ️ cargo-zigbuild installed for glibc version targeting"
+      
+      - name: 🔧 Setup musl toolchain (Linux)
+        if: steps.cache.outputs.cache-hit != 'true' && matrix.use_musl && runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
-          echo "CC=aarch64-linux-gnu-gcc" >> $GITHUB_ENV
-          echo "CXX=aarch64-linux-gnu-g++" >> $GITHUB_ENV
-          echo "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc" >> $GITHUB_ENV
+          # Install musl tools and cross-compilation support
+          sudo apt-get install -y musl-tools
+          
+          # For ARM64 cross-compilation
+          if [ "${{ matrix.platform }}" = "linux_arm64" ]; then
+            # Install cross-compilation tools for ARM64
+            sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+            # Download and setup musl cross-compiler for ARM64
+            wget -q https://musl.cc/aarch64-linux-musl-cross.tgz
+            tar -xzf aarch64-linux-musl-cross.tgz
+            echo "$PWD/aarch64-linux-musl-cross/bin" >> $GITHUB_PATH
+            echo "CC_aarch64_unknown_linux_musl=aarch64-linux-musl-gcc" >> $GITHUB_ENV
+            echo "CXX_aarch64_unknown_linux_musl=aarch64-linux-musl-g++" >> $GITHUB_ENV
+            echo "AR_aarch64_unknown_linux_musl=aarch64-linux-musl-ar" >> $GITHUB_ENV
+            echo "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER=aarch64-linux-musl-gcc" >> $GITHUB_ENV
+          fi
       
       - name: 🔨 Build ingredients
         if: steps.cache.outputs.cache-hit != 'true'
@@ -128,13 +150,13 @@ jobs:
           echo "🐹 Building Go ingredients..."
           cd ingredients/flavor-go
           
-          # Builder
-          go build -ldflags "-X main.Version=$VERSION" \
+          # Builder (with -buildvcs=false to avoid git issues in CI)
+          go build -buildvcs=false -ldflags "-X main.Version=$VERSION" \
             -o ../bin/flavor-go-builder-$VERSION-$PLATFORM \
             cmd/flavor-go-builder/main.go
           
-          # Launcher  
-          go build -ldflags "-X main.Version=$VERSION" \
+          # Launcher (with -buildvcs=false to avoid git issues in CI)
+          go build -buildvcs=false -ldflags "-X main.Version=$VERSION" \
             -o ../bin/flavor-go-launcher-$VERSION-$PLATFORM \
             cmd/flavor-go-launcher/main.go
           

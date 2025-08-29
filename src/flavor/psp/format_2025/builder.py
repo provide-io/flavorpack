@@ -65,6 +65,7 @@ from flavor.psp.format_2025.spec import (
     PreparedSlot,
 )
 from flavor.psp.format_2025.validation import validate_complete
+from flavor.utils.archive import deterministic_filter
 
 # =============================================================================
 # Pure Functions
@@ -286,10 +287,13 @@ def _load_slot_data(slot: SlotMetadata) -> bytes:
         raise BuildError(f"Slot path does not exist: {slot_path}")
 
     if slot_path.is_dir():
-        # Create tarball for directory
+        # Create tarball for directory deterministically
         buffer = io.BytesIO()
         with tarfile.open(fileobj=buffer, mode="w") as tar:
-            tar.add(slot_path, arcname=".")
+            # Add files in a sorted, deterministic order
+            for path_item in sorted(slot_path.rglob('*')):
+                arcname = path_item.relative_to(slot_path)
+                tar.add(path_item, arcname=arcname, filter=deterministic_filter)
         buffer.seek(0)
         return buffer.read()
     else:
@@ -392,7 +396,7 @@ def _write_package(
     index.integrity_signature = padded_signature
 
     # Compress metadata
-    metadata_compressed = gzip.compress(metadata_json)
+    metadata_compressed = gzip.compress(metadata_json, mtime=0)
 
     # Write package
     with output_path.open("wb") as f:
