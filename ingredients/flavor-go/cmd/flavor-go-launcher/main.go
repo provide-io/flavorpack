@@ -78,13 +78,7 @@ func main() {
 	}
 
 	// Launch with error handling
-	exitCode := format_2025.LaunchWithLogLevel(exePath, args, logLevel, logSource)
-	
-	// Map any non-zero exit code to specific error types if needed
-	if exitCode != 0 {
-		// LaunchWithLogLevel already provides detailed error logging
-		// Just pass through the exit code
-		os.Exit(exitCode)
-	}
+	// Note: LaunchWithLogLevel calls os.Exit directly on error
+	format_2025.LaunchWithLogLevel(exePath, args, logLevel, logSource)
 }
 // Test 3: Trigger rebuild Mon Aug 18 15:45:13 PDT 2025

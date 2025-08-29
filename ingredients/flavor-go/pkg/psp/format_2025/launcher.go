@@ -16,6 +16,16 @@ import (
 	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
+// Exit codes for different error types
+const (
+	ExitPanic           = 101
+	ExitPSPFError       = 102
+	ExitExtractionError = 103
+	ExitExecutionError  = 104
+	ExitInvalidArgs     = 105
+	ExitIOError         = 106
+)
+
 
 func isEnvTrue(key string) bool {
 	val := os.Getenv(key)
@@ -114,7 +124,7 @@ func LaunchWithLogLevel(exePath string, args []string, cliLogLevel, cliLogSource
 	userCwd, err := os.Getwd()
 	if err != nil {
 		logger.Error("❌ Failed to get current directory", "error", err)
-		os.Exit(1)
+		os.Exit(ExitIOError)
 	}
 	logger.Debug("📁 User working directory", "path", userCwd)
 
@@ -137,31 +147,40 @@ func LaunchWithLogLevel(exePath string, args []string, cliLogLevel, cliLogSource
 			if len(args) < 3 {
 				fmt.Fprintf(os.Stderr, "Error: extract requires slot index and output directory\n")
 				fmt.Fprintf(os.Stderr, "Usage: extract <slot_index> <output_dir>\n")
-				os.Exit(1)
+				os.Exit(ExitInvalidArgs)
 			}
 			extractSlot(exePath, args[1], args[2], logger)
 		case "run":
 			// Run with remaining arguments
 			if err := execBundle(exePath, args[1:], userCwd, logger); err != nil {
 				fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-				os.Exit(1)
+				os.Exit(ExitExecutionError)
 			}
 			// If we reach here, exec failed
-			os.Exit(1)
+			os.Exit(ExitExecutionError)
 		default:
 			fmt.Fprintf(os.Stderr, "Error: Unknown command '%s'\n", args[0])
 			fmt.Fprintf(os.Stderr, "Available commands: info, verify, metadata, extract, run\n")
-			os.Exit(1)
+			os.Exit(ExitInvalidArgs)
 		}
 		return
 	}
 
 	if err := execBundle(exePath, args, userCwd, logger); err != nil {
 		logger.Error("❌ Failed to exec command", "error", err)
-		os.Exit(1)
+		// Determine error type based on error message
+		errStr := err.Error()
+		if strings.Contains(errStr, "PSPF") || strings.Contains(errStr, "magic") {
+			os.Exit(ExitPSPFError)
+		} else if strings.Contains(errStr, "extract") || strings.Contains(errStr, "slot") {
+			os.Exit(ExitExtractionError)
+		} else if strings.Contains(errStr, "file") || strings.Contains(errStr, "I/O") {
+			os.Exit(ExitIOError)
+		}
+		os.Exit(ExitExecutionError)
 	}
 	// If we reach here, exec failed (shouldn't happen on Unix)
-	os.Exit(1)
+	os.Exit(ExitExecutionError)
 }
 
 // Launch is the backward-compatible entry point
