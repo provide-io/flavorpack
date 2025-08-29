@@ -503,8 +503,9 @@ class TestIntegration:
         metadata = reader.read_metadata()
         slots_metadata = metadata.get("slots", [])
         assert len(slots_metadata) == 2
-        assert any(s["name"] == "main" for s in slots_metadata)
-        assert any(s["name"] == "config" for s in slots_metadata)
+        # Check both possible field names for backward compatibility
+        assert any(s.get("name", s.get("id")) == "main" for s in slots_metadata)
+        assert any(s.get("name", s.get("id")) == "config" for s in slots_metadata)
 
     def test_error_handling(self, temp_dir):
         """Test comprehensive error handling."""

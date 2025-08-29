@@ -85,7 +85,7 @@ class TestPSPFIntegration:
         for slot in slots:
             builder_instance = builder_instance.add_slot(
                 slot.id,
-                slot.path,
+                slot.source,
                 encoding=slot.encoding,
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,
@@ -207,7 +207,7 @@ class TestPSPFIntegration:
         for slot in slots:
             builder_instance = builder_instance.add_slot(
                 slot.id,
-                slot.path,
+                slot.source,
                 encoding=slot.encoding,
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,

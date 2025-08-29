@@ -204,7 +204,11 @@ class TestPSPFSlots:
         # Verify slot properties preserved
         for i, slot in enumerate(test_slots):
             slot_meta = metadata_read["slots"][i]
-            assert slot_meta["name"] == slot.id
+            # Check both possible field names for backward compatibility
+            if "name" in slot_meta:
+                assert slot_meta["name"] == slot.id
+            else:
+                assert slot_meta["id"] == slot.id
             assert slot_meta["lifecycle"] == slot.lifecycle
             assert slot_meta["purpose"] == slot.purpose
 

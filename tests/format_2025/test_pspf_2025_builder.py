@@ -80,7 +80,7 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
             )
             .add_slot(
                 slot.id,
-                slot.path,
+                slot.source,
                 encoding=slot.encoding,
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,
@@ -176,7 +176,7 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
         for slot in slots:
             builder = builder.add_slot(
                 slot.id,
-                slot.path,
+                slot.source,
                 encoding=slot.encoding,
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,
@@ -212,7 +212,7 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
             )
             .add_slot(
                 slot.id,
-                slot.path,
+                slot.source,
                 encoding=slot.encoding,
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,
@@ -312,7 +312,7 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
         for slot in slots:
             builder = builder.add_slot(
                 slot.id,
-                slot.path,
+                slot.source,
                 encoding=slot.encoding,
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,
@@ -331,7 +331,7 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
         for slot in slots:
             builder = builder.add_slot(
                 slot.id,
-                slot.path,
+                slot.source,
                 encoding=slot.encoding,
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,
@@ -396,7 +396,7 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
             )
             .add_slot(
                 slot.id,
-                slot.path,
+                slot.source,
                 encoding=slot.encoding,
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,
@@ -438,7 +438,7 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
             )
             .add_slot(
                 slot.id,
-                slot.path,
+                slot.source,
                 encoding=slot.encoding,
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,
@@ -525,7 +525,7 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
         for slot in slots:
             builder = builder.add_slot(
                 slot.id,
-                slot.path,
+                slot.source,
                 encoding=slot.encoding,
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,

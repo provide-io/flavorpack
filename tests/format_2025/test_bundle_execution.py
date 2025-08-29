@@ -188,7 +188,7 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
         for slot in slots:
             builder = builder.add_slot(
                 name=slot.id,
-                data=slot.path,
+                data=slot.source,
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,
                 encoding=slot.encoding,
