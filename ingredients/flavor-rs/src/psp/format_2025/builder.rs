@@ -191,8 +191,7 @@ pub fn build(manifest_path: &Path, output_path: &Path, options: BuildOptions) ->
             .workenv
             .as_ref()
             .and_then(|v| serde_json::from_value::<WorkenvInfo>(v.clone()).ok()),
-        setup_commands: manifest.setup_commands.clone(),
-        builder: None, // Deprecated field
+        setup_commands: manifest.setup_commands.clone()
     };
 
     // Process slots (read only, don't write yet)
