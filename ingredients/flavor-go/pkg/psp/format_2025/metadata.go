@@ -97,8 +97,3 @@ type CompatibilityInfo struct {
 	Features         []string `json:"features"`
 }
 
-// For backward compatibility with tests
-type BuilderInfo struct {
-	Name    string `json:"name"`
-	Version string `json:"version"`
-}
