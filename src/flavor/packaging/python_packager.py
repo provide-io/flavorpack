@@ -14,6 +14,7 @@ from typing import Any
 
 from pyvider.telemetry import logger
 
+from flavor.utils.archive import deterministic_filter
 from flavor.utils.subprocess import run_command
 
 
@@ -188,7 +189,9 @@ class PythonPackager:
         logger.info("Creating payload archive with maximum compression...")
         payload_tgz = work_dir / "payload.tgz"
         with tarfile.open(payload_tgz, "w:gz", compresslevel=9) as tar:
-            tar.add(payload_dir, arcname=".")
+            # Sort files for deterministic build
+            for f in sorted(payload_dir.rglob("*")):
+                tar.add(f, arcname=f.relative_to(payload_dir))
         artifacts["payload_tgz"] = payload_tgz
 
         # Log the compressed size
@@ -506,31 +509,81 @@ class PythonPackager:
                     if ".whl" in line:
                         logger.info("📦🏗️✅ Built main package", wheel=line.strip())
 
-            # Download transitive dependencies for all packages
-            logger.info("🌐📥🚀 Downloading transitive dependencies from PyPI")
-            if wheel_spinner:
-                wheel_spinner.tick()
-
-            # Download dependencies for all local packages we built
-            # We need to do this for each package to ensure we get ALL their dependencies
-            logger.info(
-                "📦🔄🚀 Resolving dependencies for packages",
-                count=len(all_local_deps) + 1,
-            )
-            all_packages_to_resolve = all_local_deps + [self.manifest_dir]
-
-            for i, package_path in enumerate(all_packages_to_resolve, 1):
-                logger.info(
-                    "📥🔄📋 Resolving dependencies",
-                    index=i,
-                    total=len(all_packages_to_resolve),
-                    package=package_path.name,
-                )
+            # Parse pyproject.toml to get ONLY runtime dependencies (PEP 517/518)
+            logger.info("📖 Parsing pyproject.toml for runtime dependencies")
+            runtime_deps = []
+            try:
+                pyproject_path = self.manifest_dir / "pyproject.toml"
+                with open(pyproject_path, "rb") as f:
+                    pyproject_data = tomllib.load(f)
+                    
+                    # Get runtime dependencies from project.dependencies
+                    runtime_deps = pyproject_data.get("project", {}).get("dependencies", [])
+                    logger.info(f"📦 Found {len(runtime_deps)} runtime dependencies")
+                    
+                    # Log build-system requirements (these should NOT be included)
+                    build_requires = pyproject_data.get("build-system", {}).get("requires", [])
+                    if build_requires:
+                        logger.info(f"🔨 Excluding {len(build_requires)} build-system requirements")
+                        for req in build_requires[:3]:  # Show first 3
+                            logger.debug(f"  ❌ Build-only: {req}")
+                        
+            except Exception as e:
+                logger.warning(f"⚠️ Could not parse pyproject.toml, falling back to pip wheel: {e}")
+                runtime_deps = []
+            
+            # Download ONLY runtime dependencies
+            if runtime_deps:
+                # Method 1: Create a requirements file and use pip download
+                logger.info("🌐📥 Downloading ONLY runtime dependencies")
                 if wheel_spinner:
                     wheel_spinner.tick()
-
-                # Use pip3 wheel to ensure we get all dependencies
-                # CRITICAL: Must use pip3 for proper dependency resolution
+                    
+                with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as req_file:
+                    # Write runtime dependencies to requirements file
+                    for dep in runtime_deps:
+                        req_file.write(f"{dep}\n")
+                    req_file.flush()
+                    
+                    # Download only these specific dependencies
+                    download_cmd = [
+                        str(python_exe),
+                        "-m",
+                        "pip",
+                        "download",
+                        "--dest", str(wheels_dir),
+                        "--only-binary", ":all:",  # Prefer wheels
+                        "-r", req_file.name,
+                    ]
+                    logger.debug("💻 Downloading runtime deps", command=" ".join(download_cmd))
+                    result = run_command(
+                        download_cmd,
+                        check=False,  # Don't fail if some deps can't be found as wheels
+                        capture_output=True,
+                    )
+                    
+                    # Clean up temp file
+                    os.unlink(req_file.name)
+                    
+                # Convert any source distributions to wheels
+                for file in wheels_dir.iterdir():
+                    if file.suffix == ".tar.gz":
+                        logger.debug(f"🔄 Converting {file.name} to wheel")
+                        build_cmd = [
+                            str(python_exe),
+                            "-m",
+                            "pip",
+                            "wheel",
+                            "--wheel-dir", str(wheels_dir),
+                            "--no-deps",
+                            str(file),
+                        ]
+                        run_command(build_cmd, check=False, capture_output=True)
+                        file.unlink()  # Remove source distribution
+                        
+            else:
+                # Fallback: Use pip wheel but with better filtering
+                logger.warning("⚠️ No runtime deps found, using fallback method")
                 resolve_cmd = [
                     str(python_exe),
                     "-m",
@@ -538,25 +591,35 @@ class PythonPackager:
                     "wheel",
                     "--wheel-dir",
                     str(wheels_dir),
-                    str(package_path),
+                    str(self.manifest_dir),
                 ]
-                logger.trace("💻🚀📋 Command", command=" ".join(resolve_cmd))
+                logger.trace("💻 Command", command=" ".join(resolve_cmd))
                 result = run_command(
                     resolve_cmd,
                     check=True,
                     capture_output=True,
                 )
-                if result.stdout:
-                    # Count new wheels downloaded
-                    new_wheels = [
-                        line
-                        for line in result.stdout.strip().split("\n")
-                        if "Downloading" in line
-                    ]
-                    if new_wheels:
-                        logger.debug(
-                            "🌐📥✅ Downloaded new dependencies", count=len(new_wheels)
-                        )
+                
+                # Remove known build-only dependencies
+                build_only_deps = {
+                    "setuptools", "wheel", "pip", "build", "installer",
+                    "setuptools-scm", "flit", "flit-core", "poetry", "poetry-core",
+                    "hatchling", "pdm", "pdm-backend", "maturin", "scikit-build",
+                    "distutils", "distribute", "eggs", "easy-install",
+                    "pyproject-hooks", "pip-tools", "twine", "build-backend",
+                    "uv", "flavorpack"
+                }
+                
+                removed_count = 0
+                for wheel_file in list(wheels_dir.glob("*.whl")):
+                    wheel_name = wheel_file.stem.split("-")[0].replace("_", "-").lower()
+                    if wheel_name in build_only_deps:
+                        logger.info(f"🗑️ Removing build dependency: {wheel_file.name}")
+                        wheel_file.unlink()
+                        removed_count += 1
+                        
+                if removed_count > 0:
+                    logger.info(f"🧹 Removed {removed_count} build dependencies")
 
             # Log final wheel count
             wheel_files = list(wheels_dir.glob("*.whl"))
@@ -861,7 +924,7 @@ class PythonPackager:
                     elif tarinfo.isdir():
                         logger.trace(f"  📁 Adding: {tarinfo.name}/")
 
-                    return tarinfo
+                    return deterministic_filter(tarinfo)
 
                 logger.debug("🏗️ Adding Python installation to tarball...")
                 tar.add(python_install_dir, arcname=".", filter=filter_and_reorganize)
