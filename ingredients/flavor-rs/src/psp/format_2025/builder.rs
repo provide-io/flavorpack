@@ -508,7 +508,7 @@ pub fn build(manifest_path: &Path, output_path: &Path, options: BuildOptions) ->
 
     // Write index with checksum
     out.seek(SeekFrom::Start(index_offset))?;
-    write_index(&mut out, &index)?;
+    write_index(&mut out, &mut index)?;
 
     // Make the output file executable
     #[cfg(unix)]
@@ -578,15 +578,18 @@ fn get_launcher(options: &BuildOptions) -> Result<Vec<u8>> {
     })
 }
 
-fn write_index(out: &mut File, index: &Index) -> Result<()> {
-    let mut bytes = index.to_bytes();
-
+fn write_index(out: &mut File, index: &mut Index) -> Result<()> {
     // Calculate checksum with placeholder set to 0
-    // index_checksum is at offset 12 (after 8-byte magic + 4-byte version)
+    let mut bytes = index.to_bytes();
     bytes[12..16].copy_from_slice(&[0, 0, 0, 0]);
     let checksum = adler::adler32_slice(&bytes);
-    bytes[12..16].copy_from_slice(&checksum.to_le_bytes());
-
-    out.write_all(&bytes)?;
+    
+    // Update the index structure with the calculated checksum
+    index.index_checksum = checksum;
+    
+    // Get the bytes again with the updated checksum
+    let final_bytes = index.to_bytes();
+    
+    out.write_all(&final_bytes)?;
     Ok(())
 }
