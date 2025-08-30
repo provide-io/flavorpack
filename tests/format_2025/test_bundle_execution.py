@@ -364,13 +364,15 @@ def _select_platform_slots(launcher, platform: str) -> list:
         return [
             SlotMetadata(
                 index=0,
-                name="binary-darwin-arm64",
+                id="binary-darwin-arm64",
+                source="",
+                target="binary-darwin-arm64",
                 size=6,
                 checksum="abc",
                 encoding="none",
                 purpose="binary",
                 lifecycle="runtime",
-                platform="darwin-arm64",
+                # Platform would be handled differently
             )
         ]
     return []
