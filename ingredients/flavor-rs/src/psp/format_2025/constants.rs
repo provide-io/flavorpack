@@ -79,10 +79,16 @@ pub const ENCODING_TGZ: u8 = 3; // Tar archive, then gzipped (tar.gz)
 // pub const ENCODING_ZIP: u8 = 8;      // Zip archive
 // pub const ENCODING_7Z: u8 = 9;       // 7-zip archive
 
-/// Purpose types
-pub const PURPOSE_PAYLOAD: u8 = 0; // Payload/data files  
-pub const PURPOSE_RUNTIME: u8 = 1; // Runtime/executable code
-pub const PURPOSE_TOOL: u8 = 2; // Tool/configuration files
+/// Purpose types - aligned with Python naming
+pub const PURPOSE_DATA: u8 = 0; // General data files
+pub const PURPOSE_CODE: u8 = 1; // Executable code  
+pub const PURPOSE_CONFIG: u8 = 2; // Configuration files
+pub const PURPOSE_MEDIA: u8 = 3; // Media/assets
+
+// Legacy aliases for backward compatibility
+pub const PURPOSE_PAYLOAD: u8 = PURPOSE_DATA; // Deprecated: use PURPOSE_DATA
+pub const PURPOSE_RUNTIME: u8 = PURPOSE_CODE; // Deprecated: use PURPOSE_CODE
+pub const PURPOSE_TOOL: u8 = PURPOSE_CONFIG; // Deprecated: use PURPOSE_CONFIG
 
 /// Lifecycle types - must match Python/Go builders
 pub const LIFECYCLE_INIT: u8 = 0; // First run only, removed after initialization

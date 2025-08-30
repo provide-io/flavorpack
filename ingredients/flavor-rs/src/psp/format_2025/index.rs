@@ -289,13 +289,13 @@ impl Index {
         let mut data_copy = raw_data.to_vec();
 
         // Log the checksum bytes before zeroing
-        let checksum_bytes = &raw_data[12..16];
+        let checksum_bytes = &raw_data[4..8];
         debug!(
             "Checksum bytes in index: {:02x} {:02x} {:02x} {:02x}",
             checksum_bytes[0], checksum_bytes[1], checksum_bytes[2], checksum_bytes[3]
         );
 
-        data_copy[12..16].copy_from_slice(&[0, 0, 0, 0]);
+        data_copy[4..8].copy_from_slice(&[0, 0, 0, 0]);
 
         // Log first 72 bytes of the index (core fields)
         debug!("First 72 bytes of index (with checksum zeroed):");

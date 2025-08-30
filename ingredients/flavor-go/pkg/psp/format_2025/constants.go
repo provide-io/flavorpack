@@ -70,10 +70,16 @@ const (
 	EncodingGzip = 2 // Gzipped single file
 	EncodingTgz  = 3 // Tar archive, then gzipped (tar.gz)
 	
-	// Purpose types
-	PurposePayload = 0 // Payload/data files
-	PurposeRuntime = 1 // Runtime/executable code
-	PurposeTool    = 2 // Tool/configuration files
+	// Purpose types - aligned with Python naming
+	PurposeData   = 0 // General data files
+	PurposeCode   = 1 // Executable code
+	PurposeConfig = 2 // Configuration files
+	PurposeMedia  = 3 // Media/assets
+	
+	// Legacy aliases for backward compatibility
+	PurposePayload = PurposeData   // Deprecated: use PurposeData
+	PurposeRuntime = PurposeCode   // Deprecated: use PurposeCode
+	PurposeTool    = PurposeConfig // Deprecated: use PurposeConfig
 	
 	// Lifecycle types - must match Python/Rust
 	LifecycleInit      = 0  // First run only, removed after initialization
