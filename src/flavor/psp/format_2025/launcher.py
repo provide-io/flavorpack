@@ -408,6 +408,7 @@ class PSPFLauncher(PSPFReader):
                 elif cmd_type == "execute":
                     # Handle command execution
                     command = cmd.get("command", "")
+                    logger.debug(f"🔧 Original command: {command}")
 
                     # Substitute placeholders
                     command = command.replace("{workenv}", str(workenv_dir))
@@ -420,6 +421,7 @@ class PSPFLauncher(PSPFReader):
 
                     # Parse command safely to avoid shell injection
                     args = shlex.split(command)
+                    logger.debug(f"🔧 Executing command args: {args}")
 
                     # Use the shared run_command utility
                     try:
