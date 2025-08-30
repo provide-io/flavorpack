@@ -147,9 +147,11 @@ pub fn extract_slot(reader: &mut Reader, slot_index: usize, dest_dir: &Path) -> 
                     "Encoding mismatch: slot {slot_index} declared as GZIP but contains tar archive"
                 )));
             }
+            // For GZIP single files, need to pass the full target path
+            let target_path = dest_dir.join(&slot_target);
             extract_single_file(
                 &decompressed_data,
-                dest_dir,
+                &target_path,
                 &descriptors,
                 slot_index,
             )?;
