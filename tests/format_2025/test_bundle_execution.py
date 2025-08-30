@@ -66,6 +66,7 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
             purpose=slot.purpose,
             lifecycle=slot.lifecycle,
             encoding=slot.encoding,
+            extract_to=slot.target,  # Specify extraction target name
         )
         builder.build(bundle_path)
 
@@ -258,6 +259,7 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
             purpose=slot.purpose,
             lifecycle=slot.lifecycle,
             encoding=slot.encoding,
+            extract_to=slot.target,  # Specify extraction target name
         )
         builder.build(bundle_path)
 
