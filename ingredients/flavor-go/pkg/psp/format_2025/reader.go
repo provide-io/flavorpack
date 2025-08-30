@@ -81,7 +81,7 @@ func (r *Reader) Close() error {
 	return nil
 }
 
-// VerifyMagic verifies the emoji magic at end of file
+// VerifyMagic verifies the MagicTrailer emoji bookends
 func (r *Reader) VerifyMagic() (bool, error) {
 	if err := r.Open(); err != nil {
 		return false, err
@@ -93,48 +93,54 @@ func (r *Reader) VerifyMagic() (bool, error) {
 		return false, err
 	}
 
-	// Read MagicTrailer (last 16 bytes)
+	// Read MagicTrailer (last 8200 bytes)
 	trailer := make([]byte, MagicTrailerSize)
 	if _, err := r.file.ReadAt(trailer, info.Size()-MagicTrailerSize); err != nil {
 		return false, err
 	}
 
-	// Verify emoji magic in last 8 bytes
-	if !bytes.Equal(trailer[8:], TrailingMagic) {
+	// Verify emoji bookends (📦 at start, 🪄 at end)
+	if !bytes.Equal(trailer[:4], PackageEmojiBytes) {
+		return false, ErrInvalidEmojiMagic
+	}
+	if !bytes.Equal(trailer[MagicTrailerSize-4:], MagicWandEmojiBytes) {
 		return false, ErrInvalidEmojiMagic
 	}
 	return true, nil
 }
 
-// ReadMagicTrailer reads the MagicTrailer and returns the index offset
-func (r *Reader) ReadMagicTrailer() (int64, error) {
+// ReadMagicTrailer reads the MagicTrailer and returns the index data
+func (r *Reader) ReadMagicTrailer() ([]byte, error) {
 	if err := r.Open(); err != nil {
-		return 0, err
+		return nil, err
 	}
 
 	// Get file size
 	info, err := r.file.Stat()
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 
-	// Read MagicTrailer (last 16 bytes)
+	// Read MagicTrailer (last 8200 bytes)
 	trailer := make([]byte, MagicTrailerSize)
 	if _, err := r.file.ReadAt(trailer, info.Size()-MagicTrailerSize); err != nil {
-		return 0, err
+		return nil, err
 	}
 
-	// Verify emoji magic in last 8 bytes
-	if !bytes.Equal(trailer[8:], TrailingMagic) {
-		return 0, ErrInvalidEmojiMagic
+	// Verify emoji bookends
+	if !bytes.Equal(trailer[:4], PackageEmojiBytes) {
+		return nil, fmt.Errorf("invalid MagicTrailer: missing 📦 at start")
+	}
+	if !bytes.Equal(trailer[MagicTrailerSize-4:], MagicWandEmojiBytes) {
+		return nil, fmt.Errorf("invalid MagicTrailer: missing 🪄 at end")
 	}
 
-	// Extract index offset from first 8 bytes (little-endian uint64)
-	indexOffset := int64(binary.LittleEndian.Uint64(trailer[:8]))
+	// Extract index from between emojis
+	indexData := trailer[4 : 4+IndexSize]
 
-	r.logger.Debug("Found index via MagicTrailer", "index_offset", indexOffset, "file_size", info.Size())
+	r.logger.Debug("Found index in MagicTrailer", "trailer_size", MagicTrailerSize, "file_size", info.Size())
 
-	return indexOffset, nil
+	return indexData, nil
 }
 
 // ReadIndex reads and verifies the index block
@@ -147,24 +153,14 @@ func (r *Reader) ReadIndex() (*PSPFIndex, error) {
 		return nil, err
 	}
 
-	indexOffset, err := r.ReadMagicTrailer()
+	// Read index from MagicTrailer
+	indexData, err := r.ReadMagicTrailer()
 	if err != nil {
 		return nil, err
 	}
 
-	// Debug: Log the index offset
-	r.logger.Debug("Index offset from MagicTrailer", "offset", indexOffset, "offset_hex", fmt.Sprintf("0x%x", indexOffset))
-
-	// Seek to index position
-	if _, err := r.file.Seek(indexOffset, io.SeekStart); err != nil {
-		return nil, err
-	}
-
-	// Read index data
-	indexData := make([]byte, IndexSize)
-	if _, err := r.file.Read(indexData); err != nil {
-		return nil, err
-	}
+	// Debug: Log that we got the index
+	r.logger.Debug("Parsing index from MagicTrailer", "size", IndexSize)
 
 	// Unpack index
 	index := &PSPFIndex{}

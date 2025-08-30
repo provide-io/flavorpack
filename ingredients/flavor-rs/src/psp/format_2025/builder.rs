@@ -498,19 +498,14 @@ pub fn build(manifest_path: &Path, output_path: &Path, options: BuildOptions) ->
     // Step 5: Return to end of data and write MagicTrailer
     out.seek(SeekFrom::Start(end_pos))?;
 
-    // Write MagicTrailer (16 bytes: index pointer + emoji magic)
-    let mut trailer = [0u8; MAGIC_TRAILER_SIZE];
-    trailer[..8].copy_from_slice(&index_offset.to_le_bytes()); // Index pointer
-    trailer[8..].copy_from_slice(&*TRAILING_MAGIC); // Emoji magic
-    out.write_all(&trailer)?;
+    // Update package size before writing MagicTrailer
+    // (add 8200 for the trailer that will be written)
+    index.package_size = end_pos + MAGIC_TRAILER_SIZE as u64;
 
-    // Update package size
-    let final_pos = out.stream_position()?;
-    index.package_size = final_pos;
-
-    // Write index with checksum
-    out.seek(SeekFrom::Start(index_offset))?;
-    write_index(&mut out, &mut index)?;
+    // Write MagicTrailer (8200 bytes: 📦 + index + 🪄)
+    out.write_all(PACKAGE_EMOJI_BYTES)?;  // 4-byte package emoji
+    write_index(&mut out, &mut index)?;   // 8192-byte index (includes checksum calc)
+    out.write_all(MAGIC_WAND_EMOJI_BYTES)?;  // 4-byte magic wand emoji
 
     // Make the output file executable
     #[cfg(unix)]

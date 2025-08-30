@@ -30,7 +30,7 @@ pub const FORMAT_VERSION: u32 = PSPF_VERSION; // Alias for compatibility
 /// Size constants
 pub const HEADER_SIZE: usize = 8192; // Future-proof 8KB index block
 pub const SLOT_DESCRIPTOR_SIZE: usize = 64; // Descriptor size
-pub const MAGIC_TRAILER_SIZE: usize = 16; // 8-byte index pointer + 8-byte emoji magic
+pub const MAGIC_TRAILER_SIZE: usize = 8200; // 📦 (4) + index (8192) + 🪄 (4)
 pub const SLOT_ALIGNMENT: u64 = 8;
 
 // Platform-specific page sizes
