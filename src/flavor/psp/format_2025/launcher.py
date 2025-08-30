@@ -26,7 +26,7 @@ class PSPFLauncher(PSPFReader):
     def __init__(self, bundle_path: Path | None = None) -> None:
         super().__init__(bundle_path)
         self.bundle_path = bundle_path
-        self.cache_dir = Path.home() / ".cache" / "pspf"
+        self.cache_dir = Path.home() / ".cache" / "flavor"
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
     @contextmanager
@@ -262,7 +262,7 @@ class PSPFLauncher(PSPFReader):
         package_version = metadata["package"]["version"]
 
         # Create work environment directory
-        workenv_base = Path.home() / ".cache" / "pspf" / "workenv"
+        workenv_base = Path.home() / ".cache" / "flavor" / "workenv"
         workenv_dir = workenv_base / f"{package_name}_{package_version}"
         workenv_dir.mkdir(parents=True, exist_ok=True)
 
