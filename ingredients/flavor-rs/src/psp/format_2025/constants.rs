@@ -1,23 +1,9 @@
 // helpers/flavor-rs/src/psp/format_2025/constants.rs
 // PSPF 2025 Format Constants - Enhanced Memory-Mapped Version
 
-use crate::utils::xor::{xor_const, xor_decode_default, XOR_KEY};
-use std::sync::LazyLock;
-
-// Raw magic bytes (exported for compatibility)
-const PSPF_MAGIC_RAW: &[u8] = b"PSPF2025";
-const PACKAGE_EMOJI_RAW: &[u8] = &[0xF0, 0x9F, 0x93, 0xA6];  // 📦
-const MAGIC_WAND_EMOJI_RAW: &[u8] = &[0xF0, 0x9F, 0xAA, 0x84];  // 🪄
-
-// XOR'd constants computed at compile time (prevents literals in binary)
-pub const PSPF_MAGIC_ENCODED: [u8; 8] = xor_const::<8>(PSPF_MAGIC_RAW, XOR_KEY);
-
-// Lazy static for runtime decoded values
-pub static PSPF_MAGIC: LazyLock<Vec<u8>> = LazyLock::new(|| xor_decode_default(&PSPF_MAGIC_ENCODED));
-
 // Individual emoji bytes for MagicTrailer bookends
-pub const PACKAGE_EMOJI_BYTES: &[u8] = PACKAGE_EMOJI_RAW;  // 📦 as bytes (MagicTrailer start)
-pub const MAGIC_WAND_EMOJI_BYTES: &[u8] = MAGIC_WAND_EMOJI_RAW;  // 🪄 as bytes (MagicTrailer end)
+pub const PACKAGE_EMOJI_BYTES: &[u8] = &[0xF0, 0x9F, 0x93, 0xA6];  // 📦 as bytes (MagicTrailer start)
+pub const MAGIC_WAND_EMOJI_BYTES: &[u8] = &[0xF0, 0x9F, 0xAA, 0x84];  // 🪄 as bytes (MagicTrailer end)
 
 /// Format version - keeping as v1
 pub const PSPF_VERSION: u32 = 0x20250001;

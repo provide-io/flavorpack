@@ -246,31 +246,31 @@ impl Index {
         bytes[672..680].copy_from_slice(&self.gpu_requirements.to_le_bytes());
         bytes[680..688].copy_from_slice(&self.numa_hints.to_le_bytes());
         bytes[688..692].copy_from_slice(&self.stream_chunk_size.to_le_bytes());
-        bytes[700..712].copy_from_slice(&self.padding1);
+        bytes[692..704].copy_from_slice(&self.padding1);
 
         // Pack extended metadata
-        bytes[712..720].copy_from_slice(&self.build_timestamp.to_le_bytes());
-        bytes[720..752].copy_from_slice(&self.build_machine);
-        bytes[752..784].copy_from_slice(&self.source_hash);
-        bytes[784..816].copy_from_slice(&self.dependency_hash);
-        bytes[816..832].copy_from_slice(&self.license_id);
-        bytes[832..840].copy_from_slice(&self.provenance_uri);
+        bytes[704..712].copy_from_slice(&self.build_timestamp.to_le_bytes());
+        bytes[712..744].copy_from_slice(&self.build_machine);
+        bytes[744..776].copy_from_slice(&self.source_hash);
+        bytes[776..808].copy_from_slice(&self.dependency_hash);
+        bytes[808..824].copy_from_slice(&self.license_id);
+        bytes[824..832].copy_from_slice(&self.provenance_uri);
 
         // Pack capabilities
-        bytes[840..848].copy_from_slice(&self.capabilities.to_le_bytes());
-        bytes[848..856].copy_from_slice(&self.requirements.to_le_bytes());
-        bytes[856..864].copy_from_slice(&self.extensions.to_le_bytes());
-        bytes[864..868].copy_from_slice(&self.compatibility.to_le_bytes());
-        bytes[868..872].copy_from_slice(&self.protocol_version.to_le_bytes());
+        bytes[832..840].copy_from_slice(&self.capabilities.to_le_bytes());
+        bytes[840..848].copy_from_slice(&self.requirements.to_le_bytes());
+        bytes[848..856].copy_from_slice(&self.extensions.to_le_bytes());
+        bytes[856..860].copy_from_slice(&self.compatibility.to_le_bytes());
+        bytes[860..864].copy_from_slice(&self.protocol_version.to_le_bytes());
 
         // Pack future crypto and reserved
-        bytes[872..1384].copy_from_slice(&self.future_crypto);
-        bytes[1384..8192].copy_from_slice(&self.reserved);
+        bytes[864..1376].copy_from_slice(&self.future_crypto);
+        bytes[1376..8192].copy_from_slice(&self.reserved);
 
         // Calculate and update checksum (with checksum field zeroed)
-        bytes[12..16].copy_from_slice(&[0, 0, 0, 0]);
+        bytes[4..8].copy_from_slice(&[0, 0, 0, 0]);
         let checksum = adler::adler32_slice(&bytes[..]);
-        bytes[12..16].copy_from_slice(&checksum.to_le_bytes());
+        bytes[4..8].copy_from_slice(&checksum.to_le_bytes());
 
         bytes
     }
