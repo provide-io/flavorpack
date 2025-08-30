@@ -74,11 +74,6 @@ LIFECYCLE_DEV = 8  # Only extracted in development/debug mode
 LIFECYCLE_CONFIG = 9  # User-modifiable configuration files
 LIFECYCLE_PLATFORM = 10  # Platform/OS specific content
 
-# Legacy lifecycle values (deprecated - for backward compatibility only)
-LIFECYCLE_PERMANENT = 2  # Maps to LIFECYCLE_RUNTIME
-LIFECYCLE_CACHED = 4  # Maps to LIFECYCLE_CACHE
-LIFECYCLE_TEMP = 5  # Maps to LIFECYCLE_TEMPORARY (deprecated)
-LIFECYCLE_STREAM = 6  # Maps to LIFECYCLE_LAZY
 
 # Access modes
 ACCESS_FILE = 0  # Traditional file I/O
@@ -128,16 +123,5 @@ DEFAULT_FILE_PERMS = 0o600  # Read/write for owner only
 DEFAULT_EXECUTABLE_PERMS = 0o700  # Read/write/execute for owner only
 DEFAULT_DIR_PERMS = 0o700  # Read/write/execute for owner only
 
-# Backwards compatibility - map old names
-INDEX_SIZE = HEADER_SIZE  # For existing code (now 8192 bytes)
-EMOJI_MAGIC_SIZE = 8  # Always 8 bytes for 📦🪄
-
-# Old purpose/lifecycle names for compatibility
-PURPOSE_PAYLOAD = PURPOSE_DATA
-PURPOSE_RUNTIME = PURPOSE_CODE
-PURPOSE_TOOL = PURPOSE_CONFIG
-LIFECYCLE_PERSISTENT = LIFECYCLE_PERMANENT
-LIFECYCLE_VOLATILE = LIFECYCLE_CACHED
-LIFECYCLE_INSTALL = LIFECYCLE_TEMPORARY
 
 # 📦💾🔍🪄
