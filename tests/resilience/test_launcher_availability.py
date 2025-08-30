@@ -148,6 +148,8 @@ class TestLauncherAvailability:
 class TestLauncherReproducibility:
     """Test launcher build reproducibility."""
 
+    @patch("flavor.packaging.python_packager.tarfile.open")
+    @patch("flavor.packaging.python_packager.gzip.open")
     @patch("shutil.copy2")
     @patch("tempfile.mkdtemp", return_value="/tmp/flavor_build_deterministic")
     @patch("flavor.packaging.orchestrator.find_launcher_executable")
@@ -168,6 +170,8 @@ class TestLauncherReproducibility:
         mock_find,
         mock_mkdtemp,
         mock_copy2,
+        mock_gzip_open,
+        mock_tarfile_open,
         orchestrator_factory,
         tmp_path,
         manifest_file,
@@ -177,6 +181,20 @@ class TestLauncherReproducibility:
         def copy2_side_effect(src, dst):
             return dst
         mock_copy2.side_effect = copy2_side_effect
+        
+        # Mock gzip.open to return a mock file
+        mock_gzip_file = MagicMock()
+        mock_gzip_file.write.return_value = None
+        mock_gzip_file.__enter__.return_value = mock_gzip_file
+        mock_gzip_file.__exit__.return_value = None
+        mock_gzip_open.return_value = mock_gzip_file
+        
+        # Mock tarfile.open to return a mock tarfile
+        mock_tar = MagicMock()
+        mock_tar.add.return_value = None
+        mock_tar.__enter__.return_value = mock_tar
+        mock_tar.__exit__.return_value = None
+        mock_tarfile_open.return_value = mock_tar
         
         # Configure mock_open to return BytesIO for specific paths
         original_path_open = Path.open  # Store original Path.open
