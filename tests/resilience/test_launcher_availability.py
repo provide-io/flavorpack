@@ -200,16 +200,22 @@ class TestLauncherReproducibility:
             b"mock uv content"
         )
         mock_uv_path.resolve.return_value = Path("/mock/payload_dir/bin/uv")
+        mock_uv_path.stat.return_value.st_size = 15  # Length of "mock uv content"
+        mock_uv_path.exists.return_value = True
         mock_python_tgz_path = MagicMock(spec=Path)
         mock_python_tgz_path.open.return_value.__enter__.return_value = io.BytesIO(
             b"mock python tgz content"
         )
         mock_python_tgz_path.resolve.return_value = Path("/mock/python.tgz")
+        mock_python_tgz_path.stat.return_value.st_size = 23  # Length of "mock python tgz content"
+        mock_python_tgz_path.exists.return_value = True
         mock_wheels_tgz_path = MagicMock(spec=Path)
         mock_wheels_tgz_path.open.return_value.__enter__.return_value = io.BytesIO(
             b"mock wheels tgz content"
         )
         mock_wheels_tgz_path.resolve.return_value = Path("/mock/wheels.tgz")
+        mock_wheels_tgz_path.stat.return_value.st_size = 23  # Length of "mock wheels tgz content"
+        mock_wheels_tgz_path.exists.return_value = True
 
         mock_prepare_artifacts.return_value = {
             "uv_binary": mock_uv_path,
