@@ -148,8 +148,8 @@ class TestLauncherAvailability:
 class TestLauncherReproducibility:
     """Test launcher build reproducibility."""
 
-    @patch("flavor.packaging.python_packager.tarfile.open")
-    @patch("flavor.packaging.python_packager.gzip.open")
+    @patch("tarfile.open")
+    @patch("gzip.open")
     @patch("shutil.copy2")
     @patch("tempfile.mkdtemp", return_value="/tmp/flavor_build_deterministic")
     @patch("flavor.packaging.orchestrator.find_launcher_executable")
