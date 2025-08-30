@@ -185,11 +185,11 @@ This document provides a comprehensive comparison of the PSPF/2025 format implem
 
 | Operation | Python | Go | Rust | Status |
 |-----------|--------|-----|------|--------|
-| Verify MagicTrailer | `verify_magic_trailer()` | `VerifyMagicTrailer()` | `verify_magic()` | ⚠️ Rust needs renaming |
+| Verify MagicTrailer | `verify_magic_trailer()` | `VerifyMagicTrailer()` | N/A | ✅ Aligned (Rust doesn't expose)|
 | Read index | `read_index()` | `ReadIndex()` | `read_index()` | ✅ Aligned |
 | Read metadata | `read_metadata()` | `ReadMetadata()` | `read_metadata()` | ✅ Aligned |
-| Pack index | `pack()` | `Pack()` | `to_bytes()` | ⚠️ Different names |
-| Parse index | `unpack()` | `Unpack()` | `parse()` | ⚠️ Different names |
+| Pack index | `pack()` | `Pack()` | `pack()` | ✅ Aligned |
+| Parse index | `unpack()` | `Unpack()` | `unpack()` | ✅ Aligned |
 
 ## 📁 Directory Structure
 
