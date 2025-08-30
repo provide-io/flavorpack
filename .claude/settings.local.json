@@ -148,7 +148,9 @@
       "Bash(helpers/taster/dist/taster-new.psp:*)",
       "Bash(dist/flavor.psp:*)",
       "Bash(/bin/ls:*)",
-      "Bash(../../ingredients/bin/flavor-go-builder-darwin_arm64:*)"
+      "Bash(../../ingredients/bin/flavor-go-builder-darwin_arm64:*)",
+      "Read(/Users/tim/code/gh/**)",
+      "Read(/Users/tim/code/gh/**)"
     ],
     "additionalDirectories": [
       "/Users/tim/code/gh/provide-io"
