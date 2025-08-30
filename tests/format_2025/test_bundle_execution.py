@@ -36,37 +36,24 @@ import sys
 print(f"Hello from PSPF! Args: {sys.argv[1:]}")
 """)
 
-        slot = SlotMetadata(
-            index=0,
-            id="main-app",
-            source=str(script_path),
-            target="app.py",  # Target path in workenv
-            size=script_path.stat().st_size,
-            checksum="abc123",
-            encoding="none",
-            purpose="payload",
-            lifecycle="runtime",
-        )
-
         metadata = {
             "format": "PSPF/2025",
             "package": {"name": "hello-app", "version": "1.0.0"},
-            "slots": [slot.to_dict()],
             "execution": {
                 "primary_slot": 0,
-                "command": "/usr/bin/python3 {slot:0}",  # slot:0 IS app.py
+                "command": "/usr/bin/python3 {slot:0}",  # slot:0 is the extracted file
             },
         }
 
         bundle_path = temp_dir / "app.psp"
         builder = PSPFBuilder().metadata(**metadata)
         builder = builder.add_slot(
-            name=slot.id,
-            data=Path(slot.source),  # Pass as Path so it reads the file content
-            purpose=slot.purpose,
-            lifecycle=slot.lifecycle,
-            encoding=slot.encoding,
-            extract_to=slot.target,  # Specify extraction target name
+            name="main-app",
+            data=script_path,  # Pass as Path so it reads the file content
+            purpose="payload",
+            lifecycle="runtime",
+            encoding="none",
+            extract_to="app.py",  # Extract with this name
         )
         builder.build(bundle_path)
 
@@ -232,34 +219,20 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
         script_path = temp_dir / "exit42.py"
         script_path.write_text("import sys; sys.exit(42)")
 
-        slot = SlotMetadata(
-            index=0,
-            id="exit42",
-            source=str(script_path),
-            target="exit42.py",
-            size=script_path.stat().st_size,
-            checksum="abc",
-            encoding="none",
-            purpose="payload",
-            lifecycle="runtime",
-        )
-
         metadata = {
             "format": "PSPF/2025",
             "package": {"name": "exit-test", "version": "1.0.0"},
-            "slots": [slot.to_dict()],
             "execution": {"primary_slot": 0, "command": "/usr/bin/python3 {slot:0}"},
         }
 
         bundle_path = temp_dir / "exit42.psp"
         builder = PSPFBuilder().metadata(**metadata)
         builder = builder.add_slot(
-            name=slot.id,
-            data=Path(slot.source),  # Pass as Path so it reads the file content
-            purpose=slot.purpose,
-            lifecycle=slot.lifecycle,
-            encoding=slot.encoding,
-            extract_to=slot.target,  # Specify extraction target name
+            name="exit42",
+            data=script_path,
+            purpose="payload",
+            lifecycle="runtime",
+            encoding="none",
         )
         builder.build(bundle_path)
 
