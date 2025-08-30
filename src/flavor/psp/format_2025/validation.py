@@ -6,6 +6,7 @@ All validation functions are pure and return lists of error messages.
 Empty list means validation passed.
 """
 
+from pathlib import Path
 from typing import Any
 
 from flavor.psp.format_2025.slots import SlotMetadata
@@ -104,20 +105,20 @@ def validate_slots(slots: list[SlotMetadata]) -> list[str]:
         # Check index uniqueness
         if slot.index in seen_indices:
             errors.append(
-                f"🔢 Duplicate slot index {slot.index} for slot '{slot.name}'"
+                f"🔢 Duplicate slot index {slot.index} for slot '{slot.id}'"
             )
         seen_indices.add(slot.index)
 
         # Check name validity
-        if not slot.name or not slot.name.strip():
+        if not slot.id or not slot.id.strip():
             errors.append(f"📝 Slot at index {slot.index} has empty name")
-        elif slot.name in seen_names:
-            errors.append(f"📝 Duplicate slot name '{slot.name}'")
-        seen_names.add(slot.name)
+        elif slot.id in seen_names:
+            errors.append(f"📝 Duplicate slot name '{slot.id}'")
+        seen_names.add(slot.id)
 
         # Check size validity
         if slot.size < 0:
-            errors.append(f"📏 Slot '{slot.name}' has negative size: {slot.size}")
+            errors.append(f"📏 Slot '{slot.id}' has negative size: {slot.size}")
 
         # Check encoding validity
         valid_encodings = [
@@ -132,17 +133,18 @@ def validate_slots(slots: list[SlotMetadata]) -> list[str]:
         ]
         if slot.encoding not in valid_encodings:
             errors.append(
-                f"🗜️ Slot '{slot.name}' has invalid encoding '{slot.encoding}'. "
+                f"🗜️ Slot '{slot.id}' has invalid encoding '{slot.encoding}'. "
                 f"Valid options: {', '.join(valid_encodings)}"
             )
 
-        # Check path existence if provided
-        if slot.path:
-            if not slot.path.exists():
-                errors.append(f"📁 Slot '{slot.name}' path does not exist: {slot.path}")
-            elif not slot.path.is_file() and not slot.path.is_dir():
+        # Check source path existence if provided
+        if slot.source:
+            source_path = Path(slot.source)
+            if not source_path.exists():
+                errors.append(f"📁 Slot '{slot.id}' source does not exist: {slot.source}")
+            elif not source_path.is_file() and not source_path.is_dir():
                 errors.append(
-                    f"📁 Slot '{slot.name}' path is neither file nor directory: {slot.path}"
+                    f"📁 Slot '{slot.id}' source is neither file nor directory: {slot.source}"
                 )
 
         # Check purpose validity
@@ -161,7 +163,7 @@ def validate_slots(slots: list[SlotMetadata]) -> list[str]:
         ]
         if slot.purpose not in valid_purposes:
             errors.append(
-                f"🎯 Slot '{slot.name}' has invalid purpose '{slot.purpose}'. "
+                f"🎯 Slot '{slot.id}' has invalid purpose '{slot.purpose}'. "
                 f"Valid options: {', '.join(valid_purposes)}"
             )
 
@@ -187,7 +189,7 @@ def validate_slots(slots: list[SlotMetadata]) -> list[str]:
         ]
         if slot.lifecycle not in valid_lifecycles:
             errors.append(
-                f"♻️ Slot '{slot.name}' has invalid lifecycle '{slot.lifecycle}'. "
+                f"♻️ Slot '{slot.id}' has invalid lifecycle '{slot.lifecycle}'. "
                 f"Valid options: {', '.join(valid_lifecycles)}"
             )
 
@@ -195,7 +197,7 @@ def validate_slots(slots: list[SlotMetadata]) -> list[str]:
         if slot.checksum:
             # Checksum should be hex string or similar
             if not isinstance(slot.checksum, str):
-                errors.append(f"🔐 Slot '{slot.name}' checksum must be a string")
+                errors.append(f"🔐 Slot '{slot.id}' checksum must be a string")
 
     return errors
 

@@ -79,13 +79,14 @@ class TestPSPFCore:
         # Create slot
         slot = SlotMetadata(
             index=0,
-            name="hello",
+            id="hello",
+            source=str(simple_payload),
+            target="hello",
             size=simple_payload.stat().st_size,
             checksum=hashlib.sha256(simple_payload.read_bytes()).hexdigest(),
             encoding="none",
             purpose="payload",
             lifecycle="runtime",
-            path=simple_payload,
         )
 
         # Build bundle
@@ -94,7 +95,7 @@ class TestPSPFCore:
         result = (
             test_builder.metadata(**simple_metadata)
             .add_slot(
-                slot.name,
+                slot.id,
                 slot.path,
                 encoding=slot.encoding,
                 purpose=slot.purpose,
@@ -257,13 +258,14 @@ class TestPSPFCore:
             slots.append(
                 SlotMetadata(
                     index=i,
-                    name=f"slot{i}",
+                    id=f"slot{i}",
+                    source=str(slot_path),
+                    target=f"slot{i}",
                     size=slot_path.stat().st_size,
                     checksum=hashlib.sha256(slot_path.read_bytes()).hexdigest(),
                     encoding="none",
                     purpose="payload",
                     lifecycle="runtime",
-                    path=slot_path,
                 )
             )
 
@@ -273,7 +275,7 @@ class TestPSPFCore:
         builder = test_builder.metadata(**simple_metadata)
         for slot in slots:
             builder = builder.add_slot(
-                slot.name,
+                slot.id,
                 slot.path,
                 encoding=slot.encoding,
                 purpose=slot.purpose,

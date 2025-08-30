@@ -38,13 +38,14 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
 
         slot = SlotMetadata(
             index=0,
-            name="app.py",  # Name it app.py directly
+            id="main-app",
+            source=str(script_path),
+            target="app.py",  # Target path in workenv
             size=script_path.stat().st_size,
             checksum="abc123",
             encoding="none",
             purpose="payload",
             lifecycle="runtime",
-            path=script_path,
         )
 
         metadata = {
@@ -60,8 +61,8 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
         bundle_path = temp_dir / "app.psp"
         builder = PSPFBuilder().metadata(**metadata)
         builder = builder.add_slot(
-            name=slot.name,
-            data=slot.path,
+            name=slot.id,
+            data=slot.source,
             purpose=slot.purpose,
             lifecycle=slot.lifecycle,
             encoding=slot.encoding,
@@ -164,13 +165,14 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
             slots.append(
                 SlotMetadata(
                     index=i,
-                    name=f"binary-{platform}",
+                    id=f"binary-{platform}",
+                    source=str(slot_path),
+                    target=f"binary-{platform}",
                     size=6,
                     checksum="abc",
                     encoding="none",
                     purpose="binary",
                     lifecycle="runtime",
-                    path=slot_path,
                     platform=platform,
                 )
             )
@@ -185,7 +187,7 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
         builder = PSPFBuilder().metadata(**metadata)
         for slot in slots:
             builder = builder.add_slot(
-                name=slot.name,
+                name=slot.id,
                 data=slot.path,
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,
@@ -199,7 +201,7 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
 
         # Should select matching platform
         assert len(selected) == 1
-        assert selected[0].name == "binary-darwin-arm64"
+        assert selected[0].id == "binary-darwin-arm64"
 
     def test_working_directory_setup(self, temp_dir, executable_bundle):
         """Test working directory is set correctly."""
@@ -229,13 +231,14 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
 
         slot = SlotMetadata(
             index=0,
-            name="exit42",
+            id="exit42",
+            source=str(script_path),
+            target="exit42.py",
             size=script_path.stat().st_size,
             checksum="abc",
             encoding="none",
             purpose="payload",
             lifecycle="runtime",
-            path=script_path,
         )
 
         metadata = {
@@ -248,8 +251,8 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
         bundle_path = temp_dir / "exit42.psp"
         builder = PSPFBuilder().metadata(**metadata)
         builder = builder.add_slot(
-            name=slot.name,
-            data=slot.path,
+            name=slot.id,
+            data=slot.source,
             purpose=slot.purpose,
             lifecycle=slot.lifecycle,
             encoding=slot.encoding,

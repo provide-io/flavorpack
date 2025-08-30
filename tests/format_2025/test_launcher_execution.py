@@ -47,23 +47,25 @@ class TestSlotTableReading:
             slots = [
                 SlotMetadata(
                     index=0,
-                    name="payload",
+                    id="payload",
+                    source=str(slot1_path),
+                    target="payload",
                     size=slot1_path.stat().st_size,
                     checksum=hashlib.sha256(slot1_path.read_bytes()).hexdigest(),
                     encoding="none",
                     purpose="payload",
                     lifecycle="runtime",
-                    path=slot1_path,
                 ),
                 SlotMetadata(
                     index=1,
-                    name="script",
+                    id="script",
+                    source=str(slot2_path),
+                    target="script",
                     size=slot2_path.stat().st_size,
                     checksum=hashlib.sha256(slot2_path.read_bytes()).hexdigest(),
                     encoding="gzip",
                     purpose="tool",
-                    lifecycle="volatile",
-                    path=slot2_path,
+                    lifecycle="temp",
                 ),
             ]
 
@@ -79,8 +81,8 @@ class TestSlotTableReading:
             # Add slots
             for slot in slots:
                 builder = builder.add_slot(
-                    name=slot.name,
-                    data=slot.path,
+                    name=slot.id,
+                    data=slot.source,
                     purpose=slot.purpose,
                     lifecycle=slot.lifecycle,
                     encoding=slot.encoding,
@@ -167,7 +169,9 @@ class TestSlotExtraction:
             slots = [
                 SlotMetadata(
                     index=0,
-                    name="compressed_payload",
+                    id="compressed_payload",
+                    source=str(slot1_path),
+                    target="compressed_payload",
                     size=len(compressed_data),  # Size of compressed data
                     checksum=hashlib.sha256(
                         compressed_data
@@ -175,17 +179,17 @@ class TestSlotExtraction:
                     encoding="gzip",  # Mark as gzip since we're providing compressed data
                     purpose="payload",
                     lifecycle="runtime",
-                    path=slot1_path,
                 ),
                 SlotMetadata(
                     index=1,
-                    name="script",
+                    id="script",
+                    source=str(slot2_path),
+                    target="script",
                     size=len(slot2_content),
                     checksum=hashlib.sha256(slot2_content.encode()).hexdigest(),
                     encoding="none",
                     purpose="tool",
-                    lifecycle="volatile",
-                    path=slot2_path,
+                    lifecycle="temp",
                 ),
             ]
 
@@ -199,8 +203,8 @@ class TestSlotExtraction:
             # Add slots
             for slot in slots:
                 builder = builder.add_slot(
-                    name=slot.name,
-                    data=slot.path,
+                    name=slot.id,
+                    data=slot.source,
                     purpose=slot.purpose,
                     lifecycle=slot.lifecycle,
                     encoding=slot.encoding,
@@ -288,13 +292,14 @@ class TestWorkEnvironment:
 
             slot = SlotMetadata(
                 index=0,
-                name="python_runtime",
+                id="python_runtime",
+                source=str(runtime_tar),
+                target="python_runtime",
                 size=runtime_tar.stat().st_size,
                 checksum=hashlib.sha256(runtime_tar.read_bytes()).hexdigest(),
                 encoding="none",  # Already gzipped
                 purpose="runtime",
                 lifecycle="runtime",
-                path=runtime_tar,
             )
 
             bundle_path = tmpdir / "setup.psp"
@@ -321,7 +326,7 @@ class TestWorkEnvironment:
 
             # Add slot
             builder = builder.add_slot(
-                name=slot.name,
+                name=slot.id,
                 data=slot.path,
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,
@@ -409,13 +414,14 @@ sys.exit(0)
 
             slot = SlotMetadata(
                 index=0,
-                name="main.py",
+                id="main.py",
+                source=str(script_path),
+                target="main.py",
                 size=script_path.stat().st_size,
                 checksum=hashlib.sha256(script_path.read_bytes()).hexdigest(),
                 encoding="none",
                 purpose="payload",
                 lifecycle="runtime",
-                path=script_path,
             )
 
             bundle_path = tmpdir / "executable.psp"
@@ -432,7 +438,7 @@ sys.exit(0)
 
             # Add slot
             builder = builder.add_slot(
-                name=slot.name,
+                name=slot.id,
                 data=slot.path,
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,
