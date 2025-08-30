@@ -23,11 +23,6 @@ fn main() {
 }
 
 fn run() -> i32 {
-    // Debug: Simple stderr output to verify execution
-    if env::var("FLAVOR_LOG_LEVEL").is_ok() || env::var("FLAVOR_LAUNCHER_LOG_LEVEL").is_ok() {
-        eprintln!("DEBUG: Launcher run() started");
-    }
-    
     // Initialize logging as early as possible for debugging
     if let Ok(level) = env::var("FLAVOR_LAUNCHER_LOG_LEVEL") {
         flavor::logger::JsonLogger::init_with_level(&level, "FLAVOR_LAUNCHER_LOG_LEVEL");
@@ -137,9 +132,11 @@ fn run() -> i32 {
     // Check if this is a bundle being run with special commands
     // These commands should work even without CLI mode for compatibility
     if args.len() > 1 {
+        log::trace!("Checking for special commands, arg[1] = {}", args[1]);
         match args[1].as_str() {
             "info" => {
                 log::debug!("Running info command on bundle");
+                log::trace!("Calling show_info for: {:?}", exe_path);
                 return flavor::psp::format_2025::cli::show_info(&exe_path);
             }
             "verify" => {
