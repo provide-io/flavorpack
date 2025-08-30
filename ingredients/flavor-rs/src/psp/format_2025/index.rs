@@ -125,29 +125,28 @@ impl Index {
         use std::convert::TryInto;
 
         let mut index = Index::new();
-        index.format_magic.copy_from_slice(&data[0..8]);
-        index.format_version = u32::from_le_bytes(data[8..12].try_into()
+        index.format_version = u32::from_le_bytes(data[0..4].try_into()
             .map_err(|_| FlavorError::Generic("Invalid format version bytes".into()))?);
-        index.index_checksum = u32::from_le_bytes(data[12..16].try_into()
+        index.index_checksum = u32::from_le_bytes(data[4..8].try_into()
             .map_err(|_| FlavorError::Generic("Invalid index checksum bytes".into()))?);
-        index.package_size = u64::from_le_bytes(data[16..24].try_into()
+        index.package_size = u64::from_le_bytes(data[8..16].try_into()
             .map_err(|_| FlavorError::Generic("Invalid package size bytes".into()))?);
-        index.launcher_size = u64::from_le_bytes(data[24..32].try_into()
+        index.launcher_size = u64::from_le_bytes(data[16..24].try_into()
             .map_err(|_| FlavorError::Generic("Invalid launcher size bytes".into()))?);
 
         // Debug: Log the raw bytes we're parsing for metadata offset and size
         debug!(
-            "Raw bytes at offset 32-40 (metadata_offset): {:02x?}",
-            &data[32..40]
+            "Raw bytes at offset 24-32 (metadata_offset): {:02x?}",
+            &data[24..32]
         );
         debug!(
-            "Raw bytes at offset 40-48 (metadata_size): {:02x?}",
-            &data[40..48]
+            "Raw bytes at offset 32-40 (metadata_size): {:02x?}",
+            &data[32..40]
         );
 
-        index.metadata_offset = u64::from_le_bytes(data[32..40].try_into()
+        index.metadata_offset = u64::from_le_bytes(data[24..32].try_into()
             .map_err(|_| FlavorError::Generic("Invalid metadata offset bytes".into()))?);
-        index.metadata_size = u64::from_le_bytes(data[40..48].try_into()
+        index.metadata_size = u64::from_le_bytes(data[32..40].try_into()
             .map_err(|_| FlavorError::Generic("Invalid metadata size bytes".into()))?);
 
         // Copy to locals before logging to avoid alignment issues
