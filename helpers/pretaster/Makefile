@@ -145,7 +145,7 @@ $(LOGS_DIR):
 	@mkdir -p $(LOGS_DIR)
 
 # Individual test packages
-$(ECHO_PSP): $(DIST_DIR) build-helpers
+$(ECHO_PSP): $(DIST_DIR)
 	$(call print,"📦 Building echo test package...",$(CYAN))
 	@$(GO_BUILDER) \
 		--manifest $(CONFIGS_DIR)/test-echo.json \
@@ -153,7 +153,7 @@ $(ECHO_PSP): $(DIST_DIR) build-helpers
 		--output $@ \
 		--key-seed $(KEY_SEED)
 
-$(SHELL_PSP): $(DIST_DIR) build-helpers
+$(SHELL_PSP): $(DIST_DIR)
 	$(call print,"📦 Building shell test package...",$(CYAN))
 	@$(RS_BUILDER) \
 		--manifest $(CONFIGS_DIR)/test-shell.json \
@@ -161,7 +161,7 @@ $(SHELL_PSP): $(DIST_DIR) build-helpers
 		--output $@ \
 		--key-seed $(KEY_SEED)
 
-$(ENV_PSP): $(DIST_DIR) build-helpers
+$(ENV_PSP): $(DIST_DIR)
 	$(call print,"📦 Building environment test package...",$(CYAN))
 	@$(GO_BUILDER) \
 		--manifest $(CONFIGS_DIR)/test-env.json \
@@ -169,7 +169,7 @@ $(ENV_PSP): $(DIST_DIR) build-helpers
 		--output $@ \
 		--key-seed $(KEY_SEED)
 
-$(ORCHESTRATE_PSP): $(DIST_DIR) build-helpers
+$(ORCHESTRATE_PSP): $(DIST_DIR)
 	$(call print,"📦 Building orchestration test package...",$(CYAN))
 	@$(RS_BUILDER) \
 		--manifest $(CONFIGS_DIR)/test-orchestrate.json \
@@ -177,7 +177,7 @@ $(ORCHESTRATE_PSP): $(DIST_DIR) build-helpers
 		--output $@ \
 		--key-seed $(KEY_SEED)
 
-$(PRETASTER_PSP): $(DIST_DIR) build-helpers
+$(PRETASTER_PSP): $(DIST_DIR)
 	$(call print,"📦 Building pretaster package...",$(CYAN))
 	@$(RS_BUILDER) \
 		--manifest $(CONFIGS_DIR)/pretaster.json \
@@ -186,28 +186,28 @@ $(PRETASTER_PSP): $(DIST_DIR) build-helpers
 		--key-seed $(KEY_SEED)
 
 # Combination packages
-$(COMBO_RS_RS): $(DIST_DIR) build-helpers
+$(COMBO_RS_RS): $(DIST_DIR)
 	@$(RS_BUILDER) \
 		--manifest $(CONFIGS_DIR)/test-taster-lite.json \
 		--launcher-bin $(RS_LAUNCHER) \
 		--output $@ \
 		--key-seed $(KEY_SEED)
 
-$(COMBO_RS_GO): $(DIST_DIR) build-helpers
+$(COMBO_RS_GO): $(DIST_DIR)
 	@$(RS_BUILDER) \
 		--manifest $(CONFIGS_DIR)/test-taster-lite.json \
 		--launcher-bin $(GO_LAUNCHER) \
 		--output $@ \
 		--key-seed $(KEY_SEED)
 
-$(COMBO_GO_RS): $(DIST_DIR) build-helpers
+$(COMBO_GO_RS): $(DIST_DIR)
 	@$(GO_BUILDER) \
 		--manifest $(CONFIGS_DIR)/test-taster-lite.json \
 		--launcher-bin $(RS_LAUNCHER) \
 		--output $@ \
 		--key-seed $(KEY_SEED)
 
-$(COMBO_GO_GO): $(DIST_DIR) build-helpers
+$(COMBO_GO_GO): $(DIST_DIR)
 	@$(GO_BUILDER) \
 		--manifest $(CONFIGS_DIR)/test-taster-lite.json \
 		--launcher-bin $(GO_LAUNCHER) \

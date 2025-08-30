@@ -31,10 +31,11 @@ else
     echo "📁 Setting FLAVOR_WORKENV_BASE=$FLAVOR_WORKENV_BASE"
     
     # Build helpers first (only when running locally, not in PSP)
-    echo "🔨 Building helpers..."
-    cd "$HELPERS_DIR"
-    ./build.sh
-    cd "$PRETASTER_DIR"
+    # DISABLED: Build process corrupts Rust binaries on macOS
+    # echo "🔨 Building helpers..."
+    # cd "$HELPERS_DIR"
+    # ./build.sh
+    # cd "$PRETASTER_DIR"
 fi
 
 # Create required tar.gz archives for test packages

@@ -65,6 +65,12 @@ fi
 log_info "Setting executable permissions..."
 chmod +x "$BIN_DIR"/flavor-* 2>/dev/null || true
 
+# Strip extended attributes on macOS to prevent Gatekeeper kills
+if [ "$OS" = "darwin" ]; then
+  log_info "Stripping extended attributes from binaries (macOS)..."
+  xattr -cr "$BIN_DIR"/flavor-* 2>/dev/null || true
+fi
+
 log_success "Build complete! Binaries in '$BIN_DIR':"
 ls -lh "$BIN_DIR"/flavor-* 2>/dev/null | awk '{print "  - "$9" ("$5")"}'
 
