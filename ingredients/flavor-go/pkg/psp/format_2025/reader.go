@@ -95,6 +95,7 @@ func (r *Reader) VerifyMagic() (bool, error) {
 }
 
 // DetectLauncherSize detects launcher size by finding index block
+// Returns the offset where the index block starts (which is the launcher size)
 func (r *Reader) DetectLauncherSize() (int64, error) {
 	if err := r.Open(); err != nil {
 		return 0, err
@@ -122,6 +123,7 @@ func (r *Reader) DetectLauncherSize() (int64, error) {
 		// Search for PSPF magic in this chunk
 		pos := bytes.Index(data, PSPFMagic)
 		if pos >= 0 {
+			// Return the position where the index starts (launcher size)
 			return offset + int64(pos), nil
 		}
 	}
