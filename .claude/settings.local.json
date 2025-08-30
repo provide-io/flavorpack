@@ -153,7 +153,10 @@
       "Read(/Users/tim/code/gh/**)",
       "Bash(FLAVOR_LOG_LEVEL=trace timeout 2 dist/flavor.psp --version)",
       "Bash(./flavor.psp metadata:*)",
-      "Bash(./flavor.psp --version)"
+      "Bash(./flavor.psp --version)",
+      "Bash(FLAVOR_LOG_LEVEL=trace dist/echo-test.psp \"hello from dist\")",
+      "Bash(FLAVOR_LOG_LEVEL=trace dist/shell-test.psp)",
+      "Bash(FLAVOR_LOG_LEVEL=trace dist/pretaster-rs-rs.psp info)"
     ],
     "additionalDirectories": [
       "/Users/tim/code/gh/provide-io"
