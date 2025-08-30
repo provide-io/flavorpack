@@ -13,6 +13,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 const (
@@ -417,7 +418,14 @@ func (r *Reader) ExtractSlot(slotIndex int, destDir string) (string, error) {
 	slotPermissions := binary.LittleEndian.Uint16(entryData[52:54])
 
 	// Target field specifies where to extract (relative to workenv)
-	destPath := filepath.Join(destDir, slotMeta.Target)
+	// Substitute {workenv} placeholder with the actual destDir
+	targetPath := slotMeta.Target
+	if strings.Contains(targetPath, "{workenv}") {
+		// Remove {workenv}/ prefix if present, as we're already extracting to destDir
+		targetPath = strings.ReplaceAll(targetPath, "{workenv}/", "")
+		targetPath = strings.ReplaceAll(targetPath, "{workenv}", "")
+	}
+	destPath := filepath.Join(destDir, targetPath)
 	extractDir := filepath.Dir(destPath)
 
 	// Check if this is a tarball that needs extraction
