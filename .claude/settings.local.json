@@ -160,7 +160,8 @@
       "Bash(FLAVOR_LOG_LEVEL=trace dist/echo-rs-rs.psp \"hello from dist with Rust launcher\")",
       "Bash(FLAVOR_LOG_LEVEL=debug dist/flavor.psp --version)",
       "Bash(FLAVOR_LOG_LEVEL=trace timeout 2 ./flavor.psp --version)",
-      "Bash(FLAVOR_LOG_LEVEL=trace dist/flavor.psp --version)"
+      "Bash(FLAVOR_LOG_LEVEL=trace dist/flavor.psp --version)",
+      "Bash(strace -e trace=open,openat,execve timeout 2 dist/flavor.psp --version)"
     ],
     "additionalDirectories": [
       "/Users/tim/code/gh/provide-io"
