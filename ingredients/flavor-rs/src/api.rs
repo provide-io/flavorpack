@@ -92,16 +92,22 @@ fn detect_package_format(package_path: &Path) -> Result<PackageFormat> {
     let file_size = file.metadata()?.len();
 
     // Search in chunks from the beginning (up to 10MB to handle large launchers)
-    // Check for MagicTrailer at end of file
+    // Check for MagicTrailer at end of file using minimal reads
     if file_size >= psp::format_2025::constants::MAGIC_TRAILER_SIZE as u64 {
-        file.seek(SeekFrom::End(-(psp::format_2025::constants::MAGIC_TRAILER_SIZE as i64)))?;
-        let mut trailer = vec![0u8; psp::format_2025::constants::MAGIC_TRAILER_SIZE];
-        file.read_exact(&mut trailer)?;
+        // First check for 🪄 at the very end (last 4 bytes)
+        file.seek(SeekFrom::End(-4))?;
+        let mut magic_wand = [0u8; 4];
+        file.read_exact(&mut magic_wand)?;
         
-        // Check for 📦 at start and 🪄 at end
-        if trailer[0..4] == *psp::format_2025::constants::PACKAGE_EMOJI_BYTES
-            && trailer[psp::format_2025::constants::MAGIC_TRAILER_SIZE - 4..] == *psp::format_2025::constants::MAGIC_WAND_EMOJI_BYTES {
-            return Ok(PackageFormat::PSPF2025);
+        if magic_wand == *psp::format_2025::constants::MAGIC_WAND_EMOJI_BYTES {
+            // Now check for 📦 at the start of the trailer
+            file.seek(SeekFrom::End(-(psp::format_2025::constants::MAGIC_TRAILER_SIZE as i64)))?;
+            let mut package_emoji = [0u8; 4];
+            file.read_exact(&mut package_emoji)?;
+            
+            if package_emoji == *psp::format_2025::constants::PACKAGE_EMOJI_BYTES {
+                return Ok(PackageFormat::PSPF2025);
+            }
         }
     }
 

@@ -28,18 +28,24 @@ pub fn detect_format(package_path: &Path) -> Result<PackageFormat> {
         let mut trailing = [0u8; 8];
         file.read_exact(&mut trailing)?;
         
-        // Check for MagicTrailer (📦 + index + 🪄)
+        // Check for MagicTrailer (📦 + index + 🪄) using minimal reads
         // The MagicTrailer is 8200 bytes total at the end of the file
         if file_size >= format_2025::constants::MAGIC_TRAILER_SIZE as u64 {
-            file.seek(SeekFrom::End(-(format_2025::constants::MAGIC_TRAILER_SIZE as i64)))?;
-            let mut trailer = vec![0u8; format_2025::constants::MAGIC_TRAILER_SIZE];
-            file.read_exact(&mut trailer)?;
+            // First check for 🪄 at the very end (last 4 bytes)
+            file.seek(SeekFrom::End(-4))?;
+            let mut magic_wand = [0u8; 4];
+            file.read_exact(&mut magic_wand)?;
             
-            // Check for 📦 at start and 🪄 at end
-            if trailer[0..4] == *format_2025::constants::PACKAGE_EMOJI_BYTES
-                && trailer[format_2025::constants::MAGIC_TRAILER_SIZE - 4..] == *format_2025::constants::MAGIC_WAND_EMOJI_BYTES {
-                log::debug!("Found valid MagicTrailer at end of file");
-                return Ok(PackageFormat::PSPF2025);
+            if magic_wand == *format_2025::constants::MAGIC_WAND_EMOJI_BYTES {
+                // Now check for 📦 at the start of the trailer
+                file.seek(SeekFrom::End(-(format_2025::constants::MAGIC_TRAILER_SIZE as i64)))?;
+                let mut package_emoji = [0u8; 4];
+                file.read_exact(&mut package_emoji)?;
+                
+                if package_emoji == *format_2025::constants::PACKAGE_EMOJI_BYTES {
+                    log::debug!("Found valid MagicTrailer at end of file");
+                    return Ok(PackageFormat::PSPF2025);
+                }
             }
         }
         log::trace!("No valid MagicTrailer found");
