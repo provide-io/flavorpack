@@ -413,7 +413,9 @@ def _write_package(
 
         # Write metadata
         metadata_offset = f.tell()
+        logger.debug(f"Metadata offset: {metadata_offset}, size: {len(metadata_compressed)}")
         f.write(metadata_compressed)
+        logger.debug(f"Position after metadata: {f.tell()}")
 
         index.metadata_offset = metadata_offset
         index.metadata_size = len(metadata_compressed)
@@ -474,7 +476,9 @@ def _write_package(
 
         # Update package size before writing MagicTrailer
         # (add 8200 for the trailer that will be written)
-        index.package_size = f.tell() + MAGIC_TRAILER_SIZE
+        current_pos = f.tell()
+        logger.debug(f"Position before MagicTrailer: {current_pos}")
+        index.package_size = current_pos + MAGIC_TRAILER_SIZE
 
         # Write MagicTrailer (8200 bytes: 📦 + index + 🪄)
         f.write(PACKAGE_EMOJI_BYTES)  # 4-byte package emoji
