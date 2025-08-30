@@ -4,20 +4,9 @@
 
 import sys
 
-from flavor.utils.xor import xor_decode, xor_encode
-
-# Raw magic bytes (not exported, only for encoding)
-_PSPF_MAGIC_RAW = b"PSPF2025"
-_PACKAGE_EMOJI_RAW = bytes([0xF0, 0x9F, 0x93, 0xA6])  # 📦
-_MAGIC_WAND_EMOJI_RAW = bytes([0xF0, 0x9F, 0xAA, 0x84])  # 🪄
-
-# XOR'd constants (stored to prevent literals in binary)
-PSPF_MAGIC_ENCODED = xor_encode(_PSPF_MAGIC_RAW)
-
-# Decoded values for runtime use
-PSPF_MAGIC = xor_decode(PSPF_MAGIC_ENCODED)  # 8 bytes, used in index format_magic field
-PACKAGE_EMOJI_BYTES = _PACKAGE_EMOJI_RAW  # 📦 as bytes (MagicTrailer start)
-MAGIC_WAND_EMOJI_BYTES = _MAGIC_WAND_EMOJI_RAW  # 🪄 as bytes (MagicTrailer end)
+# Emoji bytes for MagicTrailer bookends
+PACKAGE_EMOJI_BYTES = bytes([0xF0, 0x9F, 0x93, 0xA6])  # 📦 as bytes (MagicTrailer start)
+MAGIC_WAND_EMOJI_BYTES = bytes([0xF0, 0x9F, 0xAA, 0x84])  # 🪄 as bytes (MagicTrailer end)
 
 # Display-only emoji constants (for UI/logging)
 PACKAGE_EMOJI = "📦"

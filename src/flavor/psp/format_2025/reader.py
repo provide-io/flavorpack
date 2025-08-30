@@ -30,7 +30,6 @@ from flavor.psp.format_2025.constants import (
     MAGIC_TRAILER_SIZE,
     MAGIC_WAND_EMOJI_BYTES,
     PACKAGE_EMOJI_BYTES,
-    PSPF_MAGIC,
     PSPF_VERSION,
     SLOT_DESCRIPTOR_SIZE,
 )
