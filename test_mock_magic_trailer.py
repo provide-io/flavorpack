@@ -61,6 +61,10 @@ def test_mock_creates_valid_magic_trailer():
                 # Check if MagicTrailer is at the end
                 expected_trailer_start = len(data) - MAGIC_TRAILER_SIZE
                 print(f"Expected MagicTrailer start: {expected_trailer_start}")
+                print(f"Actual file structure:")
+                print(f"  Launcher: 0-{MOCK_LAUNCHER_SIZE-1} ({MOCK_LAUNCHER_SIZE} bytes)")
+                print(f"  Metadata: {MOCK_LAUNCHER_SIZE}-{package_emoji_pos-1} ({package_emoji_pos - MOCK_LAUNCHER_SIZE} bytes)")
+                print(f"  MagicTrailer: {package_emoji_pos}-{len(data)-1} ({len(data) - package_emoji_pos} bytes)")
                 
                 # Read last 8200 bytes
                 f.seek(-MAGIC_TRAILER_SIZE, 2)
