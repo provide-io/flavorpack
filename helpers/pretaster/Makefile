@@ -223,6 +223,8 @@ test: test-core test-combo ## Run all tests
 
 .PHONY: test-core
 test-core: $(SIMPLE_PACKAGES) $(LOGS_DIR) ## Run core test suite (without orchestration)
+	@# Strip extended attributes from built packages (macOS security)
+	@xattr -cr $(DIST_DIR) 2>/dev/null || true
 	$(call print,"🧪 Running core tests...",$(PURPLE))
 	FLAVOR_LOG_LEVEL=$(LOG_LEVEL) $(TESTS_DIR)/test-pretaster.sh || (echo "❌ Core tests failed with exit code $$?"; exit 1)
 	$(call print,"✅ Core tests completed",$(GREEN))
