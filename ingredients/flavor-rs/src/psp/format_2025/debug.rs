@@ -78,7 +78,6 @@ pub fn debug_dump(reader: &mut Reader, output_dir: &Path) -> Result<()> {
 /// Format index as JSON
 fn format_index_json(index: &Index) -> String {
     // Copy values to avoid unaligned access
-    let format_magic = index.format_magic;
     let version = index.format_version;
     let file_size = index.package_size;
     let launcher_size = index.launcher_size;
@@ -89,7 +88,6 @@ fn format_index_json(index: &Index) -> String {
 
     format!(
         r#"{{
-  "format_magic": "{}",
   "version": "0x{:08x}",
   "file_size": {},
   "launcher_size": {},
@@ -99,7 +97,6 @@ fn format_index_json(index: &Index) -> String {
   "metadata_format": "{}",
   "public_key": "{}"
 }}"#,
-        String::from_utf8_lossy(&format_magic).trim_end_matches('\0'),
         version,
         file_size,
         launcher_size,

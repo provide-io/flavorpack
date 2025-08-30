@@ -28,34 +28,21 @@ pub fn detect_format(package_path: &Path) -> Result<PackageFormat> {
         let mut trailing = [0u8; 8];
         file.read_exact(&mut trailing)?;
         
-        // Check for the emoji magic bytes
-        let expected = [
-            format_2025::constants::PACKAGE_EMOJI_BYTES,
-            format_2025::constants::MAGIC_WAND_EMOJI_BYTES,
-        ].concat();
-        
-        if trailing == expected.as_slice() {
-            log::trace!("Found emoji magic at end of file");
-            // Now verify there's a valid PSPF header somewhere
-            // Search for PSPF magic in the file
-            let search_limit = file_size.min(10 * 1024 * 1024);
-            log::trace!("Searching for PSPF magic in first {} bytes", search_limit);
+        // Check for MagicTrailer (📦 + index + 🪄)
+        // The MagicTrailer is 8200 bytes total at the end of the file
+        if file_size >= format_2025::constants::MAGIC_TRAILER_SIZE as u64 {
+            file.seek(SeekFrom::End(-(format_2025::constants::MAGIC_TRAILER_SIZE as i64)))?;
+            let mut trailer = vec![0u8; format_2025::constants::MAGIC_TRAILER_SIZE];
+            file.read_exact(&mut trailer)?;
             
-            for offset in (0..search_limit).step_by(1024) {
-                file.seek(SeekFrom::Start(offset))?;
-                let mut buffer = vec![0u8; 1024.min((file_size - offset) as usize)];
-                file.read_exact(&mut buffer)?;
-
-                let magic = &format_2025::constants::PSPF_MAGIC;
-                if buffer.starts_with(magic) || buffer.windows(8).any(|w| w == magic) {
-                    log::debug!("Found PSPF magic at offset {}", offset);
-                    return Ok(PackageFormat::PSPF2025);
-                }
+            // Check for 📦 at start and 🪄 at end
+            if trailer[0..4] == *format_2025::constants::PACKAGE_EMOJI_BYTES
+                && trailer[format_2025::constants::MAGIC_TRAILER_SIZE - 4..] == *format_2025::constants::MAGIC_WAND_EMOJI_BYTES {
+                log::debug!("Found valid MagicTrailer at end of file");
+                return Ok(PackageFormat::PSPF2025);
             }
-            log::trace!("PSPF magic not found in search range");
-        } else {
-            log::trace!("No emoji magic at end of file");
         }
+        log::trace!("No valid MagicTrailer found");
     }
 
     Err(FlavorError::UnsupportedFormat(

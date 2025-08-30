@@ -92,14 +92,15 @@ fn detect_package_format(package_path: &Path) -> Result<PackageFormat> {
     let file_size = file.metadata()?.len();
 
     // Search in chunks from the beginning (up to 10MB to handle large launchers)
-    for offset in (0..file_size.min(10 * 1024 * 1024)).step_by(1024) {
-        file.seek(SeekFrom::Start(offset))?;
-        let mut buffer = vec![0u8; 1024.min((file_size - offset) as usize)];
-        file.read_exact(&mut buffer)?;
-
-        // Check for PSPF magic bytes (using constants to avoid string in binary)
-        let magic = &psp::format_2025::constants::PSPF_MAGIC;
-        if buffer.starts_with(magic) || buffer.windows(8).any(|w| w == magic) {
+    // Check for MagicTrailer at end of file
+    if file_size >= psp::format_2025::constants::MAGIC_TRAILER_SIZE as u64 {
+        file.seek(SeekFrom::End(-(psp::format_2025::constants::MAGIC_TRAILER_SIZE as i64)))?;
+        let mut trailer = vec![0u8; psp::format_2025::constants::MAGIC_TRAILER_SIZE];
+        file.read_exact(&mut trailer)?;
+        
+        // Check for 📦 at start and 🪄 at end
+        if trailer[0..4] == *psp::format_2025::constants::PACKAGE_EMOJI_BYTES
+            && trailer[psp::format_2025::constants::MAGIC_TRAILER_SIZE - 4..] == *psp::format_2025::constants::MAGIC_WAND_EMOJI_BYTES {
             return Ok(PackageFormat::PSPF2025);
         }
     }
