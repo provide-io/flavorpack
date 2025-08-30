@@ -98,6 +98,25 @@ fn run() -> i32 {
     // --- Standard Package Execution ---
     // Not in CLI mode, so treat all args after the executable name as app arguments.
     
+    // But first check if this is just a standalone launcher being called with --version
+    // (without being a bundle and without CLI mode)
+    if args.len() > 1 && args[1] == "--version" {
+        eprintln!("DEBUG: Checking if bundle...");
+        // Try to detect if this is a PSPF bundle first
+        match flavor::psp::detect_format(&exe_path) {
+            Ok(_format) => {
+                eprintln!("DEBUG: Is a bundle, continuing to launch");
+                // It's a bundle, continue to launch
+            }
+            Err(_) => {
+                // Not a bundle, just show version
+                eprintln!("DEBUG: Not a bundle, showing version");
+                println!("flavor-rs-launcher {}", flavor::version::full_version());
+                return 0;
+            }
+        }
+    }
+    
     // Initialize logging for standard execution.
     if let Ok(level) = env::var("FLAVOR_LAUNCHER_LOG_LEVEL") {
         flavor::logger::JsonLogger::init_with_level(&level, "FLAVOR_LAUNCHER_LOG_LEVEL");
