@@ -192,9 +192,9 @@ impl Index {
             .map_err(|_| FlavorError::Generic("Invalid build timestamp bytes".into()))?);
         index.build_machine.copy_from_slice(&data[712..744]);
         index.source_hash.copy_from_slice(&data[744..776]);
-        index.dependency_hash.copy_from_slice(&data[784..816]);
-        index.license_id.copy_from_slice(&data[816..832]);
-        index.provenance_uri.copy_from_slice(&data[832..840]);
+        index.dependency_hash.copy_from_slice(&data[776..808]);
+        index.license_id.copy_from_slice(&data[808..824]);
+        index.provenance_uri.copy_from_slice(&data[824..832]);
 
         // Parse capabilities
         index.capabilities = u64::from_le_bytes(data[840..848].try_into()
@@ -257,15 +257,15 @@ impl Index {
         bytes[824..832].copy_from_slice(&self.provenance_uri);
 
         // Pack capabilities
-        bytes[832..840].copy_from_slice(&self.capabilities.to_le_bytes());
-        bytes[840..848].copy_from_slice(&self.requirements.to_le_bytes());
-        bytes[848..856].copy_from_slice(&self.extensions.to_le_bytes());
-        bytes[856..860].copy_from_slice(&self.compatibility.to_le_bytes());
-        bytes[860..864].copy_from_slice(&self.protocol_version.to_le_bytes());
+        bytes[840..848].copy_from_slice(&self.capabilities.to_le_bytes());
+        bytes[848..856].copy_from_slice(&self.requirements.to_le_bytes());
+        bytes[856..864].copy_from_slice(&self.extensions.to_le_bytes());
+        bytes[864..868].copy_from_slice(&self.compatibility.to_le_bytes());
+        bytes[868..872].copy_from_slice(&self.protocol_version.to_le_bytes());
 
         // Pack future crypto and reserved
-        bytes[864..1376].copy_from_slice(&self.future_crypto);
-        bytes[1376..8192].copy_from_slice(&self.reserved);
+        bytes[872..1384].copy_from_slice(&self.future_crypto);
+        bytes[1384..8192].copy_from_slice(&self.reserved);
 
         // Calculate and update checksum (with checksum field zeroed)
         bytes[4..8].copy_from_slice(&[0, 0, 0, 0]);
