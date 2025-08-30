@@ -16,12 +16,7 @@ import (
 	"strings"
 )
 
-const (
-	// Default file permissions
-	DefaultFilePerms      os.FileMode = 0600  // Read/write for owner only
-	DefaultExecutablePerms os.FileMode = 0700  // Read/write/execute for owner only
-	DefaultDirPerms       os.FileMode = 0700  // Read/write/execute for owner only (secure by default)
-)
+// Constants are defined in constants.go
 
 var (
 	ErrInvalidMagic      = errors.New("invalid magic sequence")
@@ -432,7 +427,7 @@ func (r *Reader) ExtractSlot(slotIndex int, destDir string) (string, error) {
 	if isTarball(decompressed) {
 
 		// Ensure extraction directory exists
-		if err := os.MkdirAll(extractDir, DefaultDirPerms); err != nil {
+		if err := os.MkdirAll(extractDir, os.FileMode(DefaultDirPerms)); err != nil {
 			return "", fmt.Errorf("%w: failed to create extraction directory for slot %d: %v", ErrSlotExtractionFailed, slotIndex, err)
 		}
 
@@ -455,7 +450,7 @@ func (r *Reader) ExtractSlot(slotIndex int, destDir string) (string, error) {
 				}
 			case tar.TypeReg:
 				// Ensure parent directory exists
-				if err := os.MkdirAll(filepath.Dir(target), DefaultDirPerms); err != nil {
+				if err := os.MkdirAll(filepath.Dir(target), os.FileMode(DefaultDirPerms)); err != nil {
 					return "", err
 				}
 
@@ -484,7 +479,7 @@ func (r *Reader) ExtractSlot(slotIndex int, destDir string) (string, error) {
 				}
 			case tar.TypeSymlink:
 				// Ensure parent directory exists
-				if err := os.MkdirAll(filepath.Dir(target), DefaultDirPerms); err != nil {
+				if err := os.MkdirAll(filepath.Dir(target), os.FileMode(DefaultDirPerms)); err != nil {
 					return "", err
 				}
 
@@ -514,7 +509,7 @@ func (r *Reader) ExtractSlot(slotIndex int, destDir string) (string, error) {
 		return destPath, nil
 	}
 
-	if err := os.MkdirAll(filepath.Dir(destPath), DefaultDirPerms); err != nil {
+	if err := os.MkdirAll(filepath.Dir(destPath), os.FileMode(DefaultDirPerms)); err != nil {
 		return "", err
 	}
 
@@ -523,7 +518,7 @@ func (r *Reader) ExtractSlot(slotIndex int, destDir string) (string, error) {
 	if slotPermissions != 0 {
 		perm = os.FileMode(slotPermissions)
 	} else {
-		perm = DefaultFilePerms // 0600 - secure by default
+		perm = os.FileMode(DefaultFilePerms) // 0600 - secure by default
 	}
 
 	if err := os.WriteFile(destPath, decompressed, perm); err != nil {

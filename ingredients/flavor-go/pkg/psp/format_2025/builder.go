@@ -227,14 +227,14 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 	// 📁 Create output directory if it doesn't exist
 	outputDir := filepath.Dir(outputPath)
 	logger.Debug("📁 Ensuring output directory exists", "dir", outputDir)
-	if err := os.MkdirAll(outputDir, DefaultDirPerms); err != nil {
+	if err := os.MkdirAll(outputDir, os.FileMode(DefaultDirPerms)); err != nil {
 		logger.Error("❌ Failed to create output directory", "error", err, "dir", outputDir)
 		os.Exit(1)
 	}
 
 	// 💾 Create output file with executable permissions
 	logger.Debug("💾 Creating output file", "path", outputPath)
-	out, err := os.OpenFile(outputPath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, DefaultExecutablePerms)
+	out, err := os.OpenFile(outputPath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, os.FileMode(DefaultExecutablePerms))
 	if err != nil {
 		logger.Error("❌ Failed to create output file", "error", err)
 		os.Exit(1)
@@ -689,7 +689,7 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 		"slot_table_size", index.SlotTableSize)
 
 	// 🔧 Make the output file executable
-	if err := os.Chmod(outputPath, DefaultExecutablePerms); err != nil {
+	if err := os.Chmod(outputPath, os.FileMode(DefaultExecutablePerms)); err != nil {
 		logger.Error("❌ Failed to make output executable", "error", err)
 		os.Exit(1)
 	}

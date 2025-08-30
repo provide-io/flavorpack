@@ -37,7 +37,7 @@ func IsProcessRunning(pid int) bool {
 func TryAcquireLock(paths *WorkenvPaths, logger hclog.Logger) (bool, error) {
 	// Create instance/extract directory if it doesn't exist
 	extractDir := paths.Extract()
-	if err := os.MkdirAll(extractDir, DefaultDirPerms); err != nil {
+	if err := os.MkdirAll(extractDir, os.FileMode(DefaultDirPerms)); err != nil {
 		logger.Debug("Failed to create extract directory", "error", err)
 	}
 	
@@ -131,7 +131,7 @@ func WaitForExtraction(paths *WorkenvPaths, timeoutSecs int, logger hclog.Logger
 // MarkExtractionComplete marks cache extraction as complete
 func MarkExtractionComplete(paths *WorkenvPaths, logger hclog.Logger) error {
 	extractDir := paths.Extract()
-	if err := os.MkdirAll(extractDir, DefaultDirPerms); err != nil {
+	if err := os.MkdirAll(extractDir, os.FileMode(DefaultDirPerms)); err != nil {
 		return err
 	}
 	markerPath := paths.CompleteFile()
@@ -157,7 +157,7 @@ func IsExtractionComplete(paths *WorkenvPaths) bool {
 // MarkExtractionIncomplete marks cache as incomplete (used during signal handling)
 func MarkExtractionIncomplete(paths *WorkenvPaths, logger hclog.Logger) {
 	extractDir := paths.Extract()
-	os.MkdirAll(extractDir, DefaultDirPerms)
+	os.MkdirAll(extractDir, os.FileMode(DefaultDirPerms))
 	// Remove the complete marker if it exists
 	os.Remove(paths.CompleteFile())
 	logger.Debug("⚠️ Marked extraction as incomplete")
