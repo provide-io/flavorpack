@@ -9,19 +9,16 @@ var (
 	pspfMagicRaw      = []byte("PSPF2025")
 	packageEmojiRaw   = []byte{0xF0, 0x9F, 0x93, 0xA6} // 📦
 	magicWandEmojiRaw = []byte{0xF0, 0x9F, 0xAA, 0x84} // 🪄
-	trailingMagicRaw  = append(packageEmojiRaw, magicWandEmojiRaw...)
 
 	// XOR'd constants (prevents literals in binary)
-	PSPFMagicEncoded     = utils.XOREncodeDefault(pspfMagicRaw)
-	TrailingMagicEncoded = utils.XOREncodeDefault(trailingMagicRaw)
+	PSPFMagicEncoded = utils.XOREncodeDefault(pspfMagicRaw)
 
 	// Decoded values for runtime use
-	PSPFMagic     = utils.XORDecodeDefault(PSPFMagicEncoded)
-	TrailingMagic = utils.XORDecodeDefault(TrailingMagicEncoded)
+	PSPFMagic = utils.XORDecodeDefault(PSPFMagicEncoded) // Used in index format_magic field
 	
 	// Individual emoji bytes for MagicTrailer bookends
-	PackageEmojiBytes = packageEmojiRaw  // 📦 as bytes
-	MagicWandEmojiBytes = magicWandEmojiRaw  // 🪄 as bytes
+	PackageEmojiBytes   = packageEmojiRaw   // 📦 as bytes (MagicTrailer start)
+	MagicWandEmojiBytes = magicWandEmojiRaw // 🪄 as bytes (MagicTrailer end)
 )
 
 const (

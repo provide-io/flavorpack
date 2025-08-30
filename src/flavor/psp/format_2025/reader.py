@@ -33,7 +33,6 @@ from flavor.psp.format_2025.constants import (
     PSPF_MAGIC,
     PSPF_VERSION,
     SLOT_DESCRIPTOR_SIZE,
-    TRAILING_MAGIC,
 )
 from flavor.psp.format_2025.crypto import verify_signature
 from flavor.psp.format_2025.index import PSPFIndex
