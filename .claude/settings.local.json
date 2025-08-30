@@ -113,7 +113,8 @@
       "Bash(FLAVOR_LOG_LEVEL=trace dist/taster.psp info)",
       "Bash(FLAVOR_LOG_LEVEL=trace ./target/release/flavor-rs-launcher --version)",
       "Bash(FLAVOR_LAUNCHER_CLI=1 dist/taster.psp info)",
-      "Bash(./pretaster test:*)"
+      "Bash(./pretaster test:*)",
+      "Bash(FLAVOR_LOG_LEVEL=trace dist/echo-test.psp \"hello world\")"
     ],
     "additionalDirectories": [
       "/Users/tim/code/gh/provide-io"
