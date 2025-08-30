@@ -115,7 +115,7 @@ class TestLauncherAvailability:
 class TestLauncherReproducibility:
     """Test launcher build reproducibility."""
 
-            @patch("flavor.packaging.orchestrator.find_launcher_executable")
+    @patch("flavor.packaging.orchestrator.find_launcher_executable")
     @patch("pathlib.Path.exists", return_value=True)
     @patch("os.access", return_value=True)
     @patch("flavor.packaging.orchestrator.run_command")

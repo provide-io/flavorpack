@@ -57,11 +57,13 @@ build_package() {
     local output="$4"
     local key_seed="${5:-test123}"
     
+    cat "$manifest"
     "$builder" \
         --manifest "$manifest" \
         --launcher-bin "$launcher" \
         --output "$output" \
-        --key-seed "$key_seed"
+        --key-seed "$key_seed" \
+        --log-level trace
 }
 
 # Test a taster command
@@ -121,10 +123,17 @@ ensure_helpers_built() {
         return 1
     fi
     
-    if [ ! -f "$helpers_dir/bin/flavor-rs-builder" ] || \
-       [ ! -f "$helpers_dir/bin/flavor-go-builder" ] || \
-       [ ! -f "$helpers_dir/bin/flavor-rs-launcher" ] || \
-       [ ! -f "$helpers_dir/bin/flavor-go-launcher" ]; then
+    # Detect platform
+    local os=$(uname -s | tr '[:upper:]' '[:lower:]')
+    local arch=$(uname -m)
+    [ "$arch" = "x86_64" ] && arch="amd64"
+    [ "$arch" = "aarch64" ] && arch="arm64"
+    local platform="${os}_${arch}"
+    
+    if [ ! -f "$helpers_dir/bin/flavor-rs-builder-$platform" ] || \
+       [ ! -f "$helpers_dir/bin/flavor-go-builder-$platform" ] || \
+       [ ! -f "$helpers_dir/bin/flavor-rs-launcher-$platform" ] || \
+       [ ! -f "$helpers_dir/bin/flavor-go-launcher-$platform" ]; then
         
         # Check if we're in CI and helpers are pre-built
         if [ -n "$CI" ] || [ -n "$GITHUB_ACTIONS" ]; then
@@ -133,7 +142,7 @@ ensure_helpers_built() {
             ls -la "$helpers_dir/bin/" 2>/dev/null || echo "bin/ directory doesn't exist"
             
             # Don't try to build in CI - that requires Go/Rust
-            if [ ! -f "$helpers_dir/bin/flavor-rs-builder" ]; then
+            if [ ! -f "$helpers_dir/bin/flavor-rs-builder-$platform" ]; then
                 print_color "$RED" "❌ Missing required helpers in CI environment"
                 print_color "$RED" "   Expected helpers in: $helpers_dir/bin/"
                 return 1

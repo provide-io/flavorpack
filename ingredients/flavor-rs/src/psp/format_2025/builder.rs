@@ -14,7 +14,7 @@ use crate::exceptions::{FlavorError, Result};
 use ed25519_dalek::{Signature, Signer};
 use log::{debug, error, info, trace, warn};
 use std::fs::{self, File};
-use std::io::{Seek, SeekFrom, Write};
+use std::io::{self, BufReader, Read, Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};
 use std::time::Instant;
 
@@ -124,7 +124,8 @@ pub fn build(manifest_path: &Path, output_path: &Path, options: BuildOptions) ->
     };
 
     // Calculate launcher checksum
-    let launcher_checksum = calculate_checksum(&launcher_data, ChecksumAlgorithm::Sha256);
+    let launcher_checksum = calculate_checksum(launcher_data.as_slice(), ChecksumAlgorithm::Sha256)
+        .map_err(|e| FlavorError::Generic(format!("Failed to calculate launcher checksum: {}", e)))?;
 
     let mut metadata = Metadata {
         format: "PSPF/2025".to_string(),
@@ -198,7 +199,7 @@ pub fn build(manifest_path: &Path, output_path: &Path, options: BuildOptions) ->
     let slots_timer = Instant::now();
     let mut slot_descriptors = Vec::new();
     let mut metadata_slots = Vec::new();
-    let mut slot_data_list = Vec::new(); // Store slot data for later writing
+    let mut slot_paths = Vec::new(); // Store paths for streaming later
 
     debug!("🎰 Processing {} slots", manifest.slots.len());
     for (i, slot) in manifest.slots.iter().enumerate() {
@@ -208,16 +209,16 @@ pub fn build(manifest_path: &Path, output_path: &Path, options: BuildOptions) ->
             if declared_slot as usize != i {
                 error!(
                     "❌ Critical: Slot number mismatch - expected {}, declared {} for slot '{}'",
-                    i, declared_slot, slot.name
+                    i, declared_slot, slot.id
                 );
                 std::process::exit(1);
             }
         }
-        // Read slot data
-        trace!("📖 Reading slot {}: {}", i, slot.path);
+        // Process slot metadata without loading data into memory
+        trace!("📖 Processing slot {}: {}", i, slot.source);
 
         // Resolve {workenv} to base directory (FLAVOR_WORKENV_BASE or CWD)
-        let slot_path = if slot.path.contains("{workenv}") {
+        let slot_path = if slot.source.contains("{workenv}") {
             // Priority: 1. FLAVOR_WORKENV_BASE env var, 2. Current working directory
             let base_dir = if let Ok(env_base) = std::env::var("FLAVOR_WORKENV_BASE") {
                 info!("🔍 Using FLAVOR_WORKENV_BASE: {}", env_base);
@@ -230,49 +231,75 @@ pub fn build(manifest_path: &Path, output_path: &Path, options: BuildOptions) ->
                 cwd
             };
             let resolved = slot
-                .path
+                .source
                 .replace("{workenv}", base_dir.to_str().unwrap_or("."));
             info!(
                 "📍 Resolved slot path: {} -> {} (base: {})",
-                slot.path,
+                slot.source,
                 resolved,
                 base_dir.display()
             );
-            resolved
+            PathBuf::from(resolved)
         } else {
-            info!("📍 Slot path has no {{workenv}}: {}", slot.path);
-            slot.path.clone()
+            info!("📍 Slot path has no {{workenv}}: {}", slot.source);
+            PathBuf::from(&slot.source)
         };
 
-        let slot_data = fs::read(&slot_path).map_err(|e| {
-            FlavorError::Generic(format!("Failed to read slot {} (resolved to {}): {}", slot.path, slot_path, e))
+        // Open file and calculate size + checksums in streaming fashion
+        info!("Attempting to open slot file at: {:?}", slot_path);
+        let slot_file = File::open(&slot_path).map_err(|e| {
+            FlavorError::Generic(format!("Failed to open slot {} (resolved to {:?}): {}", slot.source, slot_path, e))
         })?;
-        trace!("📊 Slot {} size: {} bytes", i, slot_data.len());
-
-        // Calculate checksum with prefix
+        
+        let file_metadata = slot_file.metadata()?;
+        let file_size = file_metadata.len();
+        trace!("📊 Slot {} size: {} bytes", i, file_size);
+        
+        // Calculate checksums using streaming
         let checksum_timer = Instant::now();
-        let checksum = calculate_checksum(&slot_data, ChecksumAlgorithm::Sha256);
-        trace!("☑️ Checksum calculated in {:?}", checksum_timer.elapsed());
+        let mut reader = BufReader::with_capacity(8 * 1024 * 1024, slot_file);
+        let checksum = calculate_checksum(&mut reader, ChecksumAlgorithm::Sha256).map_err(|e| {
+            FlavorError::Generic(format!("Failed to calculate checksum for slot {}: {}", i, e))
+        })?;
+        
+        // Calculate Adler-32 by re-reading (we need both checksums)
+        let slot_file2 = File::open(&slot_path)?;
+        let mut reader2 = BufReader::with_capacity(8 * 1024 * 1024, slot_file2);
+        let mut adler = adler::Adler32::new();
+        let mut buffer = vec![0u8; 8 * 1024 * 1024];
+        loop {
+            let bytes_read = reader2.read(&mut buffer).map_err(|e| {
+                FlavorError::Generic(format!("Failed to read slot {} for Adler32: {}", i, e))
+            })?;
+            if bytes_read == 0 {
+                break;
+            }
+            adler.write_slice(&buffer[..bytes_read]);
+        }
+        let adler_checksum = adler.checksum();
+        
+        trace!("☑️ Checksums calculated in {:?}", checksum_timer.elapsed());
+        info!("Slot {}: SHA256 checksum: {}", i, checksum);
+        info!("Slot {}: Adler32 checksum: {:08x}", i, adler_checksum);
 
         // Create metadata entry
         let slot_meta = SlotMetadata {
             index: i,
-            name: slot.name.clone(),
-            size: slot_data.len() as i64,
+            id: slot.id.clone(),
+            source: slot.source.clone(),
+            target: slot.target.clone(),
+            size: file_size as i64,
             checksum,
             encoding: slot.encoding.clone(),
             purpose: slot.purpose.clone(),
             lifecycle: slot.lifecycle.clone(),
-            extract_to: slot.extract_to.clone(),
-            permissions: slot.permissions.clone(),
+            permissions: slot.permissions.clone().or_else(|| Some(format!("{:04o}", super::constants::DEFAULT_FILE_PERMS))),
+            resolution: slot.resolution.clone().or_else(|| Some("build".to_string())),
         };
         metadata_slots.push(slot_meta);
 
-        // Don't write slot data yet, just store it
-        slot_data_list.push(slot_data.clone());
-
-        // Calculate Adler-32 checksum
-        let adler_checksum = adler::adler32_slice(&slot_data);
+        // Store path for later streaming (instead of data)
+        slot_paths.push(slot_path);
 
         // Map string values to bytes per PSPF spec constants
         let encoding_value = match slot.encoding.as_str() {
@@ -311,9 +338,9 @@ pub fn build(manifest_path: &Path, output_path: &Path, options: BuildOptions) ->
 
         // Create proper 64-byte SlotDescriptor (offset will be set later)
         let mut descriptor = SlotDescriptor::new(i as u64);
-        descriptor = descriptor.with_name(&slot.name);
-        descriptor.size = slot_data.len() as u64;
-        descriptor.original_size = slot_data.len() as u64; // TODO: Track original size if compressed
+        descriptor = descriptor.with_name(&slot.id);
+        descriptor.size = file_size;
+        descriptor.original_size = file_size; // TODO: Track original size if compressed
         descriptor.checksum = adler_checksum;
         descriptor.encoding = encoding_value;
         descriptor.purpose = purpose_value;
@@ -334,8 +361,8 @@ pub fn build(manifest_path: &Path, output_path: &Path, options: BuildOptions) ->
         trace!(
             "📍 Slot {}: {} size {} bytes, checksum {:08x}",
             i,
-            slot.name,
-            slot_data.len(),
+            slot.id,
+            file_size,
             adler_checksum
         );
     }
@@ -428,8 +455,8 @@ pub fn build(manifest_path: &Path, output_path: &Path, options: BuildOptions) ->
         descriptor_table_offset
     );
 
-    // Step 3: Write slot data and update descriptor offsets
-    for (i, (descriptor, slot_data)) in slot_descriptors.iter_mut().zip(&slot_data_list).enumerate()
+    // Step 3: Stream slot data directly from files and update descriptor offsets
+    for (i, (descriptor, slot_path)) in slot_descriptors.iter_mut().zip(&slot_paths).enumerate()
     {
         // Align position
         let current = out.stream_position()?;
@@ -441,13 +468,16 @@ pub fn build(manifest_path: &Path, output_path: &Path, options: BuildOptions) ->
         // Write slot and update descriptor with actual offset
         let slot_offset = out.stream_position()?;
         descriptor.offset = slot_offset;
-        out.write_all(slot_data)?;
+        
+        // Stream file directly to output
+        let mut slot_file = File::open(slot_path)?;
+        let bytes_copied = io::copy(&mut slot_file, &mut out)?;
 
         debug!(
             "📍 Wrote slot {}: offset={:#x}, size={} bytes",
             i,
             slot_offset,
-            slot_data.len()
+            bytes_copied
         );
     }
 
@@ -486,7 +516,7 @@ pub fn build(manifest_path: &Path, output_path: &Path, options: BuildOptions) ->
     {
         use std::os::unix::fs::PermissionsExt;
         let mut perms = fs::metadata(output_path)?.permissions();
-        perms.set_mode(0o755);
+        perms.set_mode(super::constants::DEFAULT_DIR_PERMS as u32);
         fs::set_permissions(output_path, perms)?;
     }
 

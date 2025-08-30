@@ -13,12 +13,14 @@
   "slots": [
     {
       "slot": 0,
-      "name": "echo_test.py",
-      "path": "{workenv}/scripts/echo_test.py",
+      "id": "echo-test-script",
+      "source": "scripts/echo_test.py",
+      "target": "scripts/echo_test.py",
       "purpose": "payload",
       "lifecycle": "cached",
-      "encoding": "none",
-      "extract_to": "{workenv}/scripts"
+      "encoding": "raw",
+      "permissions": "0755",
+      "resolution": "build"
     }
   ],
   "execution": {

@@ -119,19 +119,20 @@ pub fn extract_slot(reader: &mut Reader, slot_index: usize, dest_dir: &Path) -> 
     let metadata = reader.read_metadata()?;
 
     // Get slot info from metadata
-    let (slot_name, slot_encoding, slot_purpose) = if slot_index < metadata.slots.len() {
+    let (slot_id, slot_target, slot_encoding, slot_purpose) = if slot_index < metadata.slots.len() {
         let slot_info = &metadata.slots[slot_index];
         (
-            slot_info.name.clone(),
+            slot_info.id.clone(),
+            slot_info.target.clone(),
             slot_info.encoding.clone(),
             slot_info.purpose.clone(),
         )
     } else {
-        (format!("slot_{slot_index}"), String::new(), String::new())
+        (format!("slot_{slot_index}"), format!("slot_{slot_index}"), String::new(), String::new())
     };
 
     debug!(
-        "🎯 Slot {slot_index} encoding: '{slot_encoding}', purpose: '{slot_purpose}', name: '{slot_name}'"
+        "🎯 Slot {slot_index} encoding: '{slot_encoding}', purpose: '{slot_purpose}', id: '{slot_id}'"
     );
 
     // Strict encoding validation - no fallthrough allowed
@@ -151,7 +152,6 @@ pub fn extract_slot(reader: &mut Reader, slot_index: usize, dest_dir: &Path) -> 
                 dest_dir,
                 &descriptors,
                 slot_index,
-                &slot_purpose,
             )?;
         }
         ENCODING_TGZ => {
@@ -196,7 +196,7 @@ pub fn extract_slot(reader: &mut Reader, slot_index: usize, dest_dir: &Path) -> 
                     "Encoding mismatch: slot {slot_index} declared as RAW but contains tar archive"
                 )));
             }
-            let output_path = dest_dir.join(&slot_name);
+            let output_path = dest_dir.join(&slot_target);
             extract_raw_file(&decompressed_data, &output_path, &descriptors, slot_index)?;
         }
         unknown_encoding => {
@@ -219,7 +219,6 @@ fn extract_single_file(
     dest_dir: &Path,
     descriptors: &[SlotDescriptor],
     slot_index: usize,
-    slot_purpose: &str,
 ) -> Result<()> {
     // This is a single gzipped file (not a tarball)
     // Per PSPF spec: ENCODING_GZIP = single file that has been gzipped
@@ -237,7 +236,7 @@ fn extract_single_file(
     write_file_with_logging(dest_dir, decompressed_data)?;
 
     // Set file permissions based on descriptor or defaults
-    set_file_permissions(dest_dir, descriptors, slot_index, slot_purpose)?;
+    set_file_permissions(dest_dir, descriptors, slot_index)?;
 
     Ok(())
 }
@@ -246,8 +245,8 @@ fn extract_single_file(
 fn extract_raw_file(
     decompressed_data: &[u8],
     output_path: &Path,
-    #[cfg_attr(not(unix), allow(unused_variables))] descriptors: &[SlotDescriptor],
-    #[cfg_attr(not(unix), allow(unused_variables))] slot_index: usize,
+    descriptors: &[SlotDescriptor],
+    slot_index: usize,
 ) -> Result<()> {
     debug!("📝 Writing non-GZIP single file to {output_path:?}");
 
@@ -258,26 +257,7 @@ fn extract_raw_file(
     write_file_with_logging(output_path, decompressed_data)?;
 
     // Set file permissions based on descriptor or defaults
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::PermissionsExt;
-
-        // Get permissions from descriptor
-        let descriptor = &descriptors[slot_index];
-        // Copy to avoid unaligned access
-        let perms = descriptor.permissions;
-        let mode = if perms != 0 {
-            u32::from(perms)
-        } else {
-            // Default to secure permissions for regular files
-            u32::from(crate::psp::format_2025::constants::DEFAULT_FILE_PERMS)
-        };
-
-        match fs::set_permissions(output_path, fs::Permissions::from_mode(mode)) {
-            Ok(()) => debug!("✅ Set permissions {mode:o} on {output_path:?}"),
-            Err(e) => error!("❌ Failed to set permissions on {output_path:?}: {e}"),
-        }
-    }
+    set_file_permissions(output_path, descriptors, slot_index)?;
 
     debug!("✅ Successfully wrote file: {output_path:?}");
     Ok(())
@@ -327,7 +307,6 @@ fn set_file_permissions(
     path: &Path,
     descriptors: &[SlotDescriptor],
     slot_index: usize,
-    slot_purpose: &str,
 ) -> Result<()> {
     use std::os::unix::fs::PermissionsExt;
 
@@ -338,12 +317,8 @@ fn set_file_permissions(
     let mode = if perms != 0 {
         u32::from(perms)
     } else {
-        // Default permissions based on purpose
-        if slot_purpose == "tool" || path.to_string_lossy().contains("/bin/") {
-            u32::from(crate::psp::format_2025::constants::DEFAULT_EXECUTABLE_PERMS) // Executable: rwx------
-        } else {
-            u32::from(crate::psp::format_2025::constants::DEFAULT_FILE_PERMS) // Regular file: rw-------
-        }
+        // Default to secure file permissions
+        u32::from(crate::psp::format_2025::constants::DEFAULT_FILE_PERMS) // 0600
     };
 
     match fs::set_permissions(path, fs::Permissions::from_mode(mode)) {
@@ -365,7 +340,6 @@ fn set_file_permissions(
     _path: &Path,
     _descriptors: &[SlotDescriptor],
     _slot_index: usize,
-    _slot_purpose: &str,
 ) -> Result<()> {
     // No-op on non-Unix systems
     Ok(())

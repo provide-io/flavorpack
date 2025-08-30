@@ -53,7 +53,10 @@ fn main() {
 
     // Set workenv base if provided
     if let Some(ref base) = args.workenv_base {
-        env::set_var("FLAVOR_WORKENV_BASE", base.display().to_string());
+        // SAFETY: This is called once at program startup before any threads are spawned
+        unsafe {
+            env::set_var("FLAVOR_WORKENV_BASE", base.display().to_string());
+        }
     }
 
     // Initialize logging with level if provided
