@@ -35,17 +35,25 @@ class FlavorVerifier:
         integrity_result = reader.verify_integrity()
         signature_valid = integrity_result.get("signature_valid", False)
 
-        # Extract slot information from metadata
+        # Extract comprehensive slot information from metadata
         slots_info = []
         if "slots" in metadata:
             for i, slot_data in enumerate(metadata["slots"]):
-                slots_info.append(
-                    {
-                        "index": i,
-                        "name": slot_data.get("id", slot_data.get("name", f"slot_{i}")),
-                        "size": slot_data.get("size", 0),
-                    }
-                )
+                slot_info = {
+                    "index": i,
+                    "id": slot_data.get("id", f"slot_{i}"),
+                    "size": slot_data.get("size", 0),
+                    "encoding": slot_data.get("encoding", "raw"),
+                    "purpose": slot_data.get("purpose", ""),
+                    "lifecycle": slot_data.get("lifecycle", ""),
+                    "target": slot_data.get("target", ""),
+                    "type": slot_data.get("type", ""),
+                    "permissions": slot_data.get("permissions", ""),
+                    "checksum": slot_data.get("checksum", ""),
+                }
+                # Remove empty optional fields
+                slot_info = {k: v for k, v in slot_info.items() if v or k in ["index", "id", "size", "encoding"]}
+                slots_info.append(slot_info)
 
         return {
             "format": "PSPF/2025",
@@ -54,6 +62,7 @@ class FlavorVerifier:
             "signature_valid": signature_valid,
             "slot_count": index.slot_count,
             "package": metadata.get("package", {}),
+            "build": metadata.get("build", {}),
             "slots": slots_info,
         }
 
