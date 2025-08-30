@@ -524,7 +524,8 @@ pub fn build(manifest_path: &Path, output_path: &Path, options: BuildOptions) ->
         .unwrap_or_else(|| "unknown".to_string());
     log::info!("  Launcher: {}", launcher_display);
     log::info!("  Slots: {}", manifest.slots.len());
-    log::info!("  Size: {} bytes", index.package_size);
+    let package_size = index.package_size; // Copy to avoid unaligned reference
+    log::info!("  Size: {} bytes", package_size);
 
     Ok(())
 }

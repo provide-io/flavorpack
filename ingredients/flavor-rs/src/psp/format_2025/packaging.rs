@@ -9,6 +9,7 @@
 #![allow(clippy::module_name_repetitions)]
 #![allow(clippy::cast_possible_truncation)]
 
+use crate::psp::format_2025::constants::DEFAULT_FILE_PERMS;
 use std::fs::File;
 use std::io::{Seek, SeekFrom, Write};
 use std::path::Path;
