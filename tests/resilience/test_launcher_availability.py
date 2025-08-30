@@ -148,6 +148,7 @@ class TestLauncherAvailability:
 class TestLauncherReproducibility:
     """Test launcher build reproducibility."""
 
+    @patch("os.stat")
     @patch("tarfile.open")
     @patch("gzip.open")
     @patch("shutil.copy2")
@@ -158,10 +159,12 @@ class TestLauncherReproducibility:
     @patch("flavor.packaging.orchestrator.run_command")
     @patch("flavor.psp.format_2025.builder.build_package")
     @patch("flavor.packaging.python_packager.PythonPackager.prepare_artifacts")
+    @patch("flavor.packaging.orchestrator_ingredients.create_python_slot_tarballs")
     @patch("builtins.open")
     def test_reproducible_builds_with_same_launcher(
         self,
         mock_open,
+        mock_create_slot_tarballs,
         mock_prepare_artifacts,
         mock_build,
         mock_run,
@@ -172,11 +175,38 @@ class TestLauncherReproducibility:
         mock_copy2,
         mock_gzip_open,
         mock_tarfile_open,
+        mock_os_stat,
         orchestrator_factory,
         tmp_path,
         manifest_file,
     ):
         """Test that builds with the same launcher are reproducible."""
+        # Mock os.stat to return proper size for the mock paths
+        import stat as stat_module
+        def stat_side_effect(path, *args, **kwargs):
+            mock_stat = MagicMock()
+            str_path = str(path)
+            if "uv.gz" in str_path:
+                mock_stat.st_size = 100
+                mock_stat.st_mode = stat_module.S_IFREG | 0o644
+            elif "python.tar.gz" in str_path:
+                mock_stat.st_size = 200
+                mock_stat.st_mode = stat_module.S_IFREG | 0o644
+            elif "wheels.tar.gz" in str_path:
+                mock_stat.st_size = 300
+                mock_stat.st_mode = stat_module.S_IFREG | 0o644
+            elif "test-launcher" in str_path:
+                mock_stat.st_size = 108  # Size of our fake launcher
+                mock_stat.st_mode = stat_module.S_IFREG | 0o755
+            elif "ingredients" in str_path or str_path.endswith("/"):
+                mock_stat.st_size = 0
+                mock_stat.st_mode = stat_module.S_IFDIR | 0o755
+            else:
+                mock_stat.st_size = 0
+                mock_stat.st_mode = stat_module.S_IFREG | 0o644
+            return mock_stat
+        mock_os_stat.side_effect = stat_side_effect
+        
         # Mock shutil.copy2 to return the destination path
         def copy2_side_effect(src, dst):
             return dst
@@ -250,6 +280,30 @@ class TestLauncherReproducibility:
             "wheels_tgz": mock_wheels_tgz_path,
             "payload_dir": Path("/mock/payload_dir"),
         }
+        
+        # Mock create_python_slot_tarballs to return deterministic paths with proper mocks
+        mock_uv_gz = MagicMock(spec=Path)
+        mock_uv_gz.__str__.return_value = "/tmp/flavor_build_deterministic/uv.gz"
+        mock_uv_gz.stat.return_value.st_size = 100
+        mock_uv_gz.exists.return_value = True
+        mock_uv_gz.open.return_value.__enter__.return_value = io.BytesIO(b"mock uv gz content")
+        mock_uv_gz.open.return_value.__exit__.return_value = None
+        
+        mock_python_tar = MagicMock(spec=Path)
+        mock_python_tar.__str__.return_value = "/tmp/flavor_build_deterministic/python.tar.gz"
+        mock_python_tar.stat.return_value.st_size = 200
+        mock_python_tar.exists.return_value = True
+        mock_python_tar.open.return_value.__enter__.return_value = io.BytesIO(b"mock python tar content")
+        mock_python_tar.open.return_value.__exit__.return_value = None
+        
+        mock_wheels_tar = MagicMock(spec=Path)
+        mock_wheels_tar.__str__.return_value = "/tmp/flavor_build_deterministic/wheels.tar.gz"
+        mock_wheels_tar.stat.return_value.st_size = 300
+        mock_wheels_tar.exists.return_value = True
+        mock_wheels_tar.open.return_value.__enter__.return_value = io.BytesIO(b"mock wheels tar content")
+        mock_wheels_tar.open.return_value.__exit__.return_value = None
+        
+        mock_create_slot_tarballs.return_value = (mock_uv_gz, mock_python_tar, mock_wheels_tar)
 
         launcher_path = tmp_path / "test-launcher"
         launcher_path.write_bytes(b"\x7fELF\x02\x01\x01\x00" + b"\x00" * 100)
