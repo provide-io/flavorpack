@@ -160,7 +160,7 @@ def speed_test(iterations, warmup) -> None:
             # Benchmark verify
             start = time.perf_counter()
             reader = PSPFReader(bundle_path)
-            reader.verify_magic()
+            reader.verify_magic_trailer()
             reader.verify_all_checksums()
             verify_time = time.perf_counter() - start
             results["verify"].append(verify_time)
@@ -255,7 +255,7 @@ def concurrent_test(workers, duration, operation) -> None:
                     else:
                         # Read operation
                         reader = PSPFReader(test_bundle)
-                        reader.verify_magic()
+                        reader.verify_magic_trailer()
                         reader.read_metadata()
 
                     ops_count += 1

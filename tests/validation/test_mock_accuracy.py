@@ -97,7 +97,7 @@ class TestMockAccuracy:
         reader = PSPFReader(output_file)
 
         # Check magic footer
-        assert reader.verify_magic()
+        assert reader.verify_magic_trailer()
 
         # Check index block
         index = reader.read_index()
@@ -177,7 +177,7 @@ class TestMockAccuracy:
             # Both should have valid PSPF structure
             for package_path in [mock_output, real_output]:
                 reader = PSPFReader(package_path)
-                assert reader.verify_magic()
+                assert reader.verify_magic_trailer()
                 assert reader.read_index() is not None
                 assert reader.read_metadata()["format"] == "PSPF/2025"
 

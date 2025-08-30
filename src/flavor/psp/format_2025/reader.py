@@ -88,8 +88,8 @@ class PSPFReader:
         with default_lock_manager.lock(lock_file.name, timeout=timeout) as lock:
             yield lock
 
-    def verify_magic(self) -> bool:
-        """Verify MagicTrailer emoji bookends."""
+    def verify_magic_trailer(self) -> bool:
+        """Verify MagicTrailer emoji bookends at end of file."""
         if not self._backend:
             self.open()
 
@@ -440,7 +440,7 @@ class PSPFReader:
         """
         try:
             # Verify individual components
-            magic_valid = self.verify_magic()
+            magic_valid = self.verify_magic_trailer()
             checksums_valid = self.verify_all_checksums()
             signature_valid = self.verify_signature()
             valid = magic_valid and checksums_valid and signature_valid
@@ -552,7 +552,7 @@ def verify_bundle(bundle_path: Path) -> bool:
     """
     with PSPFReader(bundle_path, ACCESS_MMAP) as reader:
         # Check magic
-        if not reader.verify_magic():
+        if not reader.verify_magic_trailer():
             logger.error("❌ Invalid magic ending")
             return False
 

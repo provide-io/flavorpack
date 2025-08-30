@@ -313,7 +313,7 @@ class TestPSPFSecurity:
             f.write(b"BAD!")
 
         reader = PSPFReader(bundle_path)
-        assert not reader.verify_magic()
+        assert not reader.verify_magic_trailer()
 
         # Launcher should detect invalid magic during integrity check
         launcher = PSPFLauncher(bundle_path)

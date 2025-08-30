@@ -22,7 +22,7 @@ class FlavorVerifier:
         reader = PSPFReader(package_path)
 
         # Verify magic
-        if not reader.verify_magic():
+        if not reader.verify_magic_trailer():
             raise ValueError("Not a valid PSPF/2025 bundle")
 
         # Read and verify index (read_index performs the check)

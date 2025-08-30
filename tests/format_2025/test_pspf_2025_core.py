@@ -328,7 +328,7 @@ class TestPSPFCore:
         assert result.success, f"Build failed: {result.errors}"
 
         reader = PSPFReader(bundle_path)
-        assert reader.verify_magic()
+        assert reader.verify_magic_trailer()
 
         # Test corrupted magic
         with open(bundle_path, "r+b") as f:
@@ -336,7 +336,7 @@ class TestPSPFCore:
             f.write(b"BAD!")
 
         reader2 = PSPFReader(bundle_path)
-        assert not reader2.verify_magic()
+        assert not reader2.verify_magic_trailer()
 
     def test_launcher_size_detection(self, temp_dir, simple_metadata, test_builder):
         """Test launcher size detection."""
@@ -372,7 +372,7 @@ class TestPSPFCore:
 
         # Verify structure
         reader = PSPFReader(bundle_path)
-        assert reader.verify_magic()
+        assert reader.verify_magic_trailer()
         index = reader.read_index()
         assert index.slot_count == 0
 

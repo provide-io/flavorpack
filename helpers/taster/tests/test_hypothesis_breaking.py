@@ -208,7 +208,7 @@ class TestBreakingInputs:
                 reader = PSPFReader(chaos_file)
 
                 # Try various operations that might break
-                reader.verify_magic()  # Should fail for most inputs
+                reader.verify_magic_trailer()  # Should fail for most inputs
 
             except Exception:
                 # Expected for chaotic data
@@ -281,7 +281,7 @@ class PSPFStateMachine(RuleBasedStateMachine):
 
         try:
             reader = PSPFReader(bundle)
-            reader.verify_magic()
+            reader.verify_magic_trailer()
             reader.read_metadata()
         except Exception:
             # Might be corrupted
