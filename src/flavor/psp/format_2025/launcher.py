@@ -407,15 +407,7 @@ class PSPFLauncher(PSPFReader):
 
                 elif cmd_type == "execute":
                     # Handle command execution
-                    logger.debug(f"🔧 Command dict: {cmd}")
                     command = cmd.get("command", "")
-                    
-                    # Fix malformed commands that start with {workenv}/
-                    # These should not have the executable in the workenv
-                    if command.startswith("{workenv}/chmod "):
-                        command = command.replace("{workenv}/chmod ", "chmod ")
-                    
-                    logger.debug(f"🔧 Original command: {command}")
 
                     # Substitute placeholders
                     command = command.replace("{workenv}", str(workenv_dir))
