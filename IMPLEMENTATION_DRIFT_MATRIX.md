@@ -47,43 +47,43 @@ This document provides a comprehensive comparison of the PSPF/2025 format implem
 ### Lifecycle Types
 
 | Type | PSPF Spec | Python | Go | Rust | Status |
-|------|--------|-----|------|--------|
-| LIFECYCLE_INIT | `0` | `0` | `0` | ✅ Aligned |
-| LIFECYCLE_STARTUP | `1` | `1` | `1` | ✅ Aligned |
-| LIFECYCLE_RUNTIME | `2` | `2` | `2` | ✅ Aligned |
-| LIFECYCLE_SHUTDOWN | `3` | `3` | `3` | ✅ Aligned |
-| LIFECYCLE_CACHE | `4` | `4` | `4` | ✅ Aligned |
-| LIFECYCLE_TEMPORARY | `5` | `5` | `5` | ✅ Aligned |
-| LIFECYCLE_LAZY | `6` | `6` | `6` | ✅ Aligned |
-| LIFECYCLE_EAGER | `7` | `7` | `7` | ✅ Aligned |
-| LIFECYCLE_DEV | `8` | `8` | `8` | ✅ Aligned |
-| LIFECYCLE_CONFIG | `9` | `9` | `9` | ✅ Aligned |
-| LIFECYCLE_PLATFORM | `10` | `10` | `10` | ✅ Aligned |
+|------|-----------|--------|-----|------|--------|
+| LIFECYCLE_INIT | `0` | `0` | `0` | `0` | ✅ Aligned |
+| LIFECYCLE_STARTUP | `1` | `1` | `1` | `1` | ✅ Aligned |
+| LIFECYCLE_RUNTIME | `2` | `2` | `2` | `2` | ✅ Aligned |
+| LIFECYCLE_SHUTDOWN | `3` | `3` | `3` | `3` | ✅ Aligned |
+| LIFECYCLE_CACHE | `4` | `4` | `4` | `4` | ✅ Aligned |
+| LIFECYCLE_TEMPORARY | `5` | `5` | `5` | `5` | ✅ Aligned |
+| LIFECYCLE_LAZY | `6` | `6` | `6` | `6` | ✅ Aligned |
+| LIFECYCLE_EAGER | `7` | `7` | `7` | `7` | ✅ Aligned |
+| LIFECYCLE_DEV | `8` | `8` | `8` | `8` | ✅ Aligned |
+| LIFECYCLE_CONFIG | `9` | `9` | `9` | `9` | ✅ Aligned |
+| LIFECYCLE_PLATFORM | `10` | `10` | `10` | `10` | ✅ Aligned |
 
 ### Path Constants
 
 | Constant | PSPF Spec | Python | Go | Rust | Status |
-|----------|--------|-----|------|--------|
-| PSPF_HIDDEN_PREFIX | `"."` | `"."` | `"."` | ✅ Aligned |
-| PSPF_SUFFIX | `".pspf"` | `".pspf"` | `".pspf"` | ✅ Aligned |
-| INSTANCE_DIR | `"instance"` | `"instance"` | `"instance"` | ✅ Aligned |
-| PACKAGE_DIR | `"package"` | `"package"` | `"package"` | ✅ Aligned |
-| TMP_DIR | `"tmp"` | `"tmp"` | `"tmp"` | ✅ Aligned |
-| EXTRACT_DIR | `"extract"` | `"extract"` | `"extract"` | ✅ Aligned |
-| LOG_DIR | `"log"` | `"log"` | `"log"` | ✅ Aligned |
-| LOCK_FILE | `"lock"` | `"lock"` | `"lock"` | ✅ Aligned |
-| COMPLETE_FILE | `"complete"` | `"complete"` | `"complete"` | ✅ Aligned |
+|----------|-----------|--------|-----|------|--------|
+| PSPF_HIDDEN_PREFIX | `"."` | `"."` | `"."` | `"."` | ✅ Aligned |
+| PSPF_SUFFIX | `".pspf"` | `".pspf"` | `".pspf"` | `".pspf"` | ✅ Aligned |
+| INSTANCE_DIR | `"instance"` | `"instance"` | `"instance"` | `"instance"` | ✅ Aligned |
+| PACKAGE_DIR | `"package"` | `"package"` | `"package"` | `"package"` | ✅ Aligned |
+| TMP_DIR | `"tmp"` | `"tmp"` | `"tmp"` | `"tmp"` | ✅ Aligned |
+| EXTRACT_DIR | `"extract"` | `"extract"` | `"extract"` | `"extract"` | ✅ Aligned |
+| LOG_DIR | `"log"` | `"log"` | `"log"` | `"log"` | ✅ Aligned |
+| LOCK_FILE | `"lock"` | `"lock"` | `"lock"` | `"lock"` | ✅ Aligned |
+| COMPLETE_FILE | `"complete"` | `"complete"` | `"complete"` | `"complete"` | ✅ Aligned |
 
 ## 📊 Index Structure
 
 ### Field Offsets (All values in bytes)
 
 | Field | PSPF Spec (Offset/Size) | Python | Go | Rust | Status |
-|-------|--------|------|--------|-----|------|--------|
-| format_version | 0 | 4 | ✅ | ✅ | ✅ | ✅ Aligned |
-| index_checksum | 4 | 4 | ✅ | ✅ | ✅ | ✅ Aligned |
-| package_size | 8 | 8 | ✅ | ✅ | ✅ | ✅ Aligned |
-| launcher_size | 16 | 8 | ✅ | ✅ | ✅ | ✅ Aligned |
+|-------|-------------------------|--------|-----|------|--------|
+| format_version | 0-3 (4 bytes) | ✅ | ✅ | ✅ | ✅ Aligned |
+| index_checksum | 4-7 (4 bytes) | ✅ | ✅ | ✅ | ✅ Aligned |
+| package_size | 8-15 (8 bytes) | ✅ | ✅ | ✅ | ✅ Aligned |
+| launcher_size | 16-23 (8 bytes) | ✅ | ✅ | ✅ | ✅ Aligned |
 | metadata_offset | 24 | 8 | ✅ | ✅ | ✅ | ✅ Aligned |
 | metadata_size | 32 | 8 | ✅ | ✅ | ✅ | ✅ Aligned |
 | slot_table_offset | 40 | 8 | ✅ | ✅ | ✅ | ✅ Aligned |
