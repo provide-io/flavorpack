@@ -8,8 +8,7 @@ use crate::exceptions::{FlavorError, Result};
 #[repr(C, packed)]
 #[derive(Clone)]
 pub struct Index {
-    // Core identification (16 bytes)
-    pub format_magic: [u8; 8], // "PSPF2025"
+    // Core identification (8 bytes)
     pub format_version: u32,   // 0x20250001
     pub index_checksum: u32,   // Adler-32 of index block (with this field as 0)
 
@@ -62,15 +61,14 @@ pub struct Index {
     // Future cryptography space (512 bytes)
     pub future_crypto: [u8; 512], // Reserved for post-quantum signatures
 
-    // Reserved for future use (6808 bytes)
-    pub reserved: [u8; 6808], // Large buffer for future expansion
+    // Reserved for future use (6816 bytes)
+    pub reserved: [u8; 6816], // Large buffer for future expansion
 }
 
 impl Index {
     /// Create a new index with defaults
     pub fn new() -> Self {
         Index {
-            format_magic: PSPF_MAGIC,
             format_version: PSPF_VERSION,
             index_checksum: 0,
             package_size: 0,
@@ -108,7 +106,7 @@ impl Index {
             compatibility: PSPF_VERSION,
             protocol_version: 1,
             future_crypto: [0; 512],
-            reserved: [0; 6808],
+            reserved: [0; 6816],
         }
     }
 

@@ -1,24 +1,9 @@
 package format_2025
 
-import (
-	"github.com/provide-io/flavor/go/flavor/pkg/utils"
-)
-
 var (
-	// Raw magic bytes (not exported, only for encoding)
-	pspfMagicRaw      = []byte("PSPF2025")
-	packageEmojiRaw   = []byte{0xF0, 0x9F, 0x93, 0xA6} // 📦
-	magicWandEmojiRaw = []byte{0xF0, 0x9F, 0xAA, 0x84} // 🪄
-
-	// XOR'd constants (prevents literals in binary)
-	PSPFMagicEncoded = utils.XOREncodeDefault(pspfMagicRaw)
-
-	// Decoded values for runtime use
-	PSPFMagic = utils.XORDecodeDefault(PSPFMagicEncoded) // Used in index format_magic field
-	
 	// Individual emoji bytes for MagicTrailer bookends
-	PackageEmojiBytes   = packageEmojiRaw   // 📦 as bytes (MagicTrailer start)
-	MagicWandEmojiBytes = magicWandEmojiRaw // 🪄 as bytes (MagicTrailer end)
+	PackageEmojiBytes   = []byte{0xF0, 0x9F, 0x93, 0xA6} // 📦 as bytes (MagicTrailer start)
+	MagicWandEmojiBytes = []byte{0xF0, 0x9F, 0xAA, 0x84} // 🪄 as bytes (MagicTrailer end)
 )
 
 const (

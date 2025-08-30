@@ -168,11 +168,6 @@ func (r *Reader) ReadIndex() (*PSPFIndex, error) {
 		return nil, err
 	}
 
-	// Verify magic
-	if !bytes.Equal(index.FormatMagic[:], PSPFMagic) {
-		return nil, ErrInvalidMagic
-	}
-
 	// Verify version
 	if index.FormatVersion != PSPFVersion {
 		return nil, fmt.Errorf("%w: got 0x%08x, expected 0x%08x", ErrInvalidVersion, index.FormatVersion, PSPFVersion)

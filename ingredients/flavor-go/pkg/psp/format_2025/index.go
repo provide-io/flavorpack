@@ -97,23 +97,23 @@ func (idx *PSPFIndex) Pack() []byte {
 	copy(buf[692:704], idx.Padding1[:])
 
 	// Pack extended metadata
-	binary.LittleEndian.PutUint64(buf[712:720], idx.BuildTimestamp)
-	copy(buf[720:752], idx.BuildMachine[:])
-	copy(buf[752:784], idx.SourceHash[:])
-	copy(buf[784:816], idx.DependencyHash[:])
-	copy(buf[816:832], idx.LicenseID[:])
-	copy(buf[832:840], idx.ProvenanceURI[:])
+	binary.LittleEndian.PutUint64(buf[704:712], idx.BuildTimestamp)
+	copy(buf[712:744], idx.BuildMachine[:])
+	copy(buf[744:776], idx.SourceHash[:])
+	copy(buf[776:808], idx.DependencyHash[:])
+	copy(buf[808:824], idx.LicenseID[:])
+	copy(buf[824:832], idx.ProvenanceURI[:])
 
 	// Pack capabilities
-	binary.LittleEndian.PutUint64(buf[840:848], idx.Capabilities)
-	binary.LittleEndian.PutUint64(buf[848:856], idx.Requirements)
-	binary.LittleEndian.PutUint64(buf[856:864], idx.Extensions)
-	binary.LittleEndian.PutUint32(buf[864:868], idx.Compatibility)
-	binary.LittleEndian.PutUint32(buf[868:872], idx.ProtocolVersion)
+	binary.LittleEndian.PutUint64(buf[832:840], idx.Capabilities)
+	binary.LittleEndian.PutUint64(buf[840:848], idx.Requirements)
+	binary.LittleEndian.PutUint64(buf[848:856], idx.Extensions)
+	binary.LittleEndian.PutUint32(buf[856:860], idx.Compatibility)
+	binary.LittleEndian.PutUint32(buf[860:864], idx.ProtocolVersion)
 
 	// Pack future crypto and reserved
-	copy(buf[872:1384], idx.FutureCrypto[:])
-	copy(buf[1384:8192], idx.Reserved[:])
+	copy(buf[864:1376], idx.FutureCrypto[:])
+	copy(buf[1376:8192], idx.Reserved[:])
 
 	return buf
 }
@@ -124,53 +124,52 @@ func (idx *PSPFIndex) Unpack(data []byte) error {
 		return fmt.Errorf("invalid index size: %d", len(data))
 	}
 
-	copy(idx.FormatMagic[:], data[0:8])
-	idx.FormatVersion = binary.LittleEndian.Uint32(data[8:12])
-	idx.IndexChecksum = binary.LittleEndian.Uint32(data[12:16])
-	idx.PackageSize = binary.LittleEndian.Uint64(data[16:24])
-	idx.LauncherSize = binary.LittleEndian.Uint64(data[24:32])
-	idx.MetadataOffset = binary.LittleEndian.Uint64(data[32:40])
-	idx.MetadataSize = binary.LittleEndian.Uint64(data[40:48])
-	idx.SlotTableOffset = binary.LittleEndian.Uint64(data[48:56])
-	idx.SlotTableSize = binary.LittleEndian.Uint64(data[56:64])
-	idx.SlotCount = binary.LittleEndian.Uint32(data[64:68])
-	idx.Flags = binary.LittleEndian.Uint32(data[68:72])
-	copy(idx.PublicKey[:], data[72:104])
-	copy(idx.MetadataChecksum[:], data[104:136])
-	copy(idx.IntegritySignature[:], data[136:648])
+	idx.FormatVersion = binary.LittleEndian.Uint32(data[0:4])
+	idx.IndexChecksum = binary.LittleEndian.Uint32(data[4:8])
+	idx.PackageSize = binary.LittleEndian.Uint64(data[8:16])
+	idx.LauncherSize = binary.LittleEndian.Uint64(data[16:24])
+	idx.MetadataOffset = binary.LittleEndian.Uint64(data[24:32])
+	idx.MetadataSize = binary.LittleEndian.Uint64(data[32:40])
+	idx.SlotTableOffset = binary.LittleEndian.Uint64(data[40:48])
+	idx.SlotTableSize = binary.LittleEndian.Uint64(data[48:56])
+	idx.SlotCount = binary.LittleEndian.Uint32(data[56:60])
+	idx.Flags = binary.LittleEndian.Uint32(data[60:64])
+	copy(idx.PublicKey[:], data[64:96])
+	copy(idx.MetadataChecksum[:], data[96:128])
+	copy(idx.IntegritySignature[:], data[128:640])
 
 	// Unpack performance hints
-	idx.AccessMode = data[648]
-	idx.CacheStrategy = data[649]
-	idx.EncodingType = data[650]
-	idx.EncryptionType = data[651]
-	idx.PageSize = binary.LittleEndian.Uint32(data[652:656])
-	idx.MaxMemory = binary.LittleEndian.Uint64(data[656:664])
-	idx.MinMemory = binary.LittleEndian.Uint64(data[664:672])
-	idx.CpuFeatures = binary.LittleEndian.Uint64(data[672:680])
-	idx.GpuRequirements = binary.LittleEndian.Uint64(data[680:688])
-	idx.NumaHints = binary.LittleEndian.Uint64(data[688:696])
-	idx.StreamChunkSize = binary.LittleEndian.Uint32(data[696:700])
-	copy(idx.Padding1[:], data[700:712])
+	idx.AccessMode = data[640]
+	idx.CacheStrategy = data[641]
+	idx.EncodingType = data[642]
+	idx.EncryptionType = data[643]
+	idx.PageSize = binary.LittleEndian.Uint32(data[644:648])
+	idx.MaxMemory = binary.LittleEndian.Uint64(data[648:656])
+	idx.MinMemory = binary.LittleEndian.Uint64(data[656:664])
+	idx.CpuFeatures = binary.LittleEndian.Uint64(data[664:672])
+	idx.GpuRequirements = binary.LittleEndian.Uint64(data[672:680])
+	idx.NumaHints = binary.LittleEndian.Uint64(data[680:688])
+	idx.StreamChunkSize = binary.LittleEndian.Uint32(data[688:692])
+	copy(idx.Padding1[:], data[692:704])
 
 	// Unpack extended metadata
-	idx.BuildTimestamp = binary.LittleEndian.Uint64(data[712:720])
-	copy(idx.BuildMachine[:], data[720:752])
-	copy(idx.SourceHash[:], data[752:784])
-	copy(idx.DependencyHash[:], data[784:816])
-	copy(idx.LicenseID[:], data[816:832])
-	copy(idx.ProvenanceURI[:], data[832:840])
+	idx.BuildTimestamp = binary.LittleEndian.Uint64(data[704:712])
+	copy(idx.BuildMachine[:], data[712:744])
+	copy(idx.SourceHash[:], data[744:776])
+	copy(idx.DependencyHash[:], data[776:808])
+	copy(idx.LicenseID[:], data[808:824])
+	copy(idx.ProvenanceURI[:], data[824:832])
 
 	// Unpack capabilities
-	idx.Capabilities = binary.LittleEndian.Uint64(data[840:848])
-	idx.Requirements = binary.LittleEndian.Uint64(data[848:856])
-	idx.Extensions = binary.LittleEndian.Uint64(data[856:864])
-	idx.Compatibility = binary.LittleEndian.Uint32(data[864:868])
-	idx.ProtocolVersion = binary.LittleEndian.Uint32(data[868:872])
+	idx.Capabilities = binary.LittleEndian.Uint64(data[832:840])
+	idx.Requirements = binary.LittleEndian.Uint64(data[840:848])
+	idx.Extensions = binary.LittleEndian.Uint64(data[848:856])
+	idx.Compatibility = binary.LittleEndian.Uint32(data[856:860])
+	idx.ProtocolVersion = binary.LittleEndian.Uint32(data[860:864])
 
 	// Unpack future crypto and reserved
-	copy(idx.FutureCrypto[:], data[872:1384])
-	copy(idx.Reserved[:], data[1384:8192])
+	copy(idx.FutureCrypto[:], data[864:1376])
+	copy(idx.Reserved[:], data[1376:8192])
 
 	return nil
 }

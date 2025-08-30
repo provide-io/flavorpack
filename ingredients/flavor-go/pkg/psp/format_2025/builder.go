@@ -255,10 +255,7 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 
 	// 📦 Create index
 	logger.Debug("📦 Creating PSPF index")
-	var formatMagic [8]byte
-	copy(formatMagic[:], PSPFMagic)
 	index := &PSPFIndex{
-		FormatMagic:   formatMagic,
 		FormatVersion: PSPFVersion,
 		LauncherSize:  uint64(launcherSize),
 	}
