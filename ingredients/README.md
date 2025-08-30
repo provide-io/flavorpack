@@ -41,15 +41,14 @@ ingredients/
 │   ├── src/          # Source code
 │   ├── Cargo.toml    # Rust package manifest
 │   └── Makefile      # Build and quality targets
-├── taster/            # Comprehensive test package
-│   ├── taster/       # Python test commands
-│   └── pyproject.toml # Package configuration
-├── pretaster/         # Cross-language validation suite
-│   ├── Makefile      # Test orchestration
-│   ├── configs/      # Test manifests
-│   └── tests/        # Test scripts
-└── build.sh           # Build all ingredients
+├── scripts/           # Build and deployment scripts
+├── build.sh           # Build all ingredients
+├── build-linux.sh     # Linux-specific build
+├── test-binaries.sh   # Test built binaries
+└── test-linux-build.sh # Test Linux builds in Docker
 ```
+
+**Note**: For cross-language testing and validation, see `helpers/pretaster/` in the project root.
 
 ## Building
 

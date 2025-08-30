@@ -349,16 +349,6 @@ class PSPFLauncher(PSPFReader):
                     logger.debug(
                         f"🕐 Slot {slot_idx} marked as 'temp' - will be cleaned after session"
                     )
-                elif lifecycle in ["volatile"]:  # Handle legacy 'volatile' as 'init'
-                    # Legacy support: treat 'volatile' as 'init'
-                    logger.debug(
-                        f"🗑️ Removing legacy 'volatile' slot {slot_idx}: {slot_path}"
-                    )
-                    if slot_path.exists():
-                        if slot_path.is_dir():
-                            shutil.rmtree(slot_path, ignore_errors=True)
-                        else:
-                            slot_path.unlink(missing_ok=True)
 
     def _run_setup_commands(
         self, setup_commands: list, workenv_dir: Path, metadata: dict
@@ -484,7 +474,6 @@ class PSPFLauncher(PSPFReader):
                 else:
                     logger.warning(f"⚠️ Unknown setup command type: {cmd_type}")
             else:
-                # Legacy string command
                 logger.warning("⚠️ String setup commands not supported")
 
     def _substitute_slot_references(self, command: str, workenv_dir: Path) -> str:

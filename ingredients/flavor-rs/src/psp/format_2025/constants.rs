@@ -10,7 +10,6 @@ pub const FORMAT_VERSION: u32 = PSPF_VERSION; // Alias for compatibility
 
 /// Size constants
 pub const HEADER_SIZE: usize = 8192; // Future-proof 8KB index block
-pub const INDEX_SIZE: usize = HEADER_SIZE; // Alias for compatibility
 pub const SLOT_DESCRIPTOR_SIZE: usize = 64; // Descriptor size
 pub const TRAILING_MAGIC_SIZE: usize = 8; // 📦🪄 = 8 bytes UTF-8
 pub const SLOT_ALIGNMENT: u64 = 8;

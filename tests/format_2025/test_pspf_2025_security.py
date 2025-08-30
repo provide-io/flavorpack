@@ -23,7 +23,7 @@ from flavor.psp.format_2025 import (
     SlotMetadata,
     generate_key_pair,
     PSPF_MAGIC,
-    INDEX_SIZE,
+    HEADER_SIZE,
 )
 
 

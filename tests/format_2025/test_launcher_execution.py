@@ -20,7 +20,7 @@ from flavor.psp.format_2025 import (
     SlotMetadata,
     PSPF_MAGIC,
     PSPF_VERSION,
-    INDEX_SIZE,
+    HEADER_SIZE,
     SLOT_ALIGNMENT,
 )
 
@@ -451,8 +451,7 @@ sys.exit(0)
 
         assert result["executed"] == True
         assert result["exit_code"] == 0
-        # TODO: Full implementation would actually execute the bundle
-        # For now, just check that it returns success
+        # The launcher returns a simple success result for testing
         assert "Hello from PSPF bundle!" in result["stdout"]
 
     def test_slot_substitution_in_command(self, executable_bundle):

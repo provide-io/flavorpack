@@ -24,7 +24,7 @@ from flavor.psp.format_2025 import (
     generate_key_pair,
     PSPF_MAGIC,
     PSPF_VERSION,
-    INDEX_SIZE,
+    HEADER_SIZE,
     EMOJI_MAGIC_SIZE,
     SLOT_ALIGNMENT,
     SLOT_DESCRIPTOR_SIZE,
@@ -177,11 +177,11 @@ class TestPSPFCore:
         """Test index block is exactly 256 bytes."""
         # FORMAT is now an attrs field, so we need to access it from an instance
         index = PSPFIndex()
-        assert struct.calcsize(index.FORMAT) == INDEX_SIZE
+        assert struct.calcsize(index.FORMAT) == HEADER_SIZE
 
         # Also test packing
         packed = index.pack()
-        assert len(packed) == INDEX_SIZE
+        assert len(packed) == HEADER_SIZE
 
     def test_index_checksum(self, temp_dir, simple_metadata, test_builder):
         """Test index block checksum validation."""

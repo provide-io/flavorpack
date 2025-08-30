@@ -225,7 +225,7 @@ fn extract_slots(
         }
     };
     let mut slot_paths = HashMap::new();
-    let mut volatile_paths = Vec::new();
+    let mut init_paths = Vec::new();
 
     info!("📤 Extracting {} slots...", metadata.slots.len());
     
@@ -266,16 +266,16 @@ fn extract_slots(
         let extracted_path = workenv_path.join(&slot.target);
         debug!("✅ Extracted to: {extracted_path:?}");
 
-        // Track volatile slots for later cleanup
-        if slot.lifecycle == "volatile" {
-            debug!("📌 Marking slot {} as volatile for cleanup", slot.index);
-            volatile_paths.push(extracted_path.clone());
+        // Track init slots for later cleanup (removed after initialization)
+        if slot.lifecycle == "init" {
+            debug!("📌 Marking slot {} as init for cleanup", slot.index);
+            init_paths.push(extracted_path.clone());
         }
 
         slot_paths.insert(i, extracted_path);
     }
 
-    Ok((slot_paths, volatile_paths))
+    Ok((slot_paths, init_paths))
 }
 
 /// Build slot paths without extraction (when cache is valid)
@@ -496,7 +496,7 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
         }
     };
 
-    let (_slot_paths, _volatile_paths) = if workenv_valid {
+    let (_slot_paths, _init_paths) = if workenv_valid {
         info!("✅ Work environment is valid, skipping extraction and setup");
         (build_slot_paths(&metadata, &workenv_path), Vec::new())
     } else {
@@ -517,11 +517,11 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
 
             // Extract slots to temporary directory
             let extraction_result = (|| -> Result<((HashMap<usize, PathBuf>, Vec<PathBuf>), PathBuf)> {
-                let (slot_path_map, volatile) = extract_slots(&mut reader, &temp_extract_dir)?;
-                Ok(((slot_path_map, volatile), temp_extract_dir.clone()))
+                let (slot_path_map, init_slots) = extract_slots(&mut reader, &temp_extract_dir)?;
+                Ok(((slot_path_map, init_slots), temp_extract_dir.clone()))
             })();
 
-            let ((slot_path_map, volatile), temp_dir) = match extraction_result {
+            let ((slot_path_map, init_slots), temp_dir) = match extraction_result {
                 Ok(result) => result,
                 Err(e) => {
                     // Clean up temporary directory on extraction failure
@@ -569,18 +569,18 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
                 }
             }
 
-            // Remove volatile files after setup (in temp directory)
-            if !volatile.is_empty() {
-                info!("🧹 Cleaning up {} volatile slot(s)...", volatile.len());
-                for volatile_path in &volatile {
-                    if volatile_path.exists() {
-                        debug!("🗑️ Removing volatile path: {volatile_path:?}");
-                        if volatile_path.is_dir() {
-                            if let Err(e) = fs::remove_dir_all(volatile_path) {
-                                warn!("Failed to remove volatile directory {volatile_path:?}: {e}");
+            // Remove init files after setup (in temp directory)
+            if !init_slots.is_empty() {
+                info!("🧹 Cleaning up {} init slot(s)...", init_slots.len());
+                for init_path in &init_slots {
+                    if init_path.exists() {
+                        debug!("🗑️ Removing init path: {init_path:?}");
+                        if init_path.is_dir() {
+                            if let Err(e) = fs::remove_dir_all(init_path) {
+                                warn!("Failed to remove init directory {init_path:?}: {e}");
                             }
-                        } else if let Err(e) = fs::remove_file(volatile_path) {
-                            warn!("Failed to remove volatile file {volatile_path:?}: {e}");
+                        } else if let Err(e) = fs::remove_file(init_path) {
+                            warn!("Failed to remove init file {init_path:?}: {e}");
                         }
                     }
                 }
@@ -653,7 +653,7 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
             // Release the lock
             release_lock(&paths);
 
-            (slot_path_map, volatile)
+            (slot_path_map, init_slots)
         } else {
             // Another process is extracting, wait for it
             info!("⏳ Another process is extracting, waiting...");
