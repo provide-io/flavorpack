@@ -175,7 +175,7 @@ def create_builder_manifest(
                 "source": str(slots["wheels"]),
                 "encoding": "tgz",
                 "purpose": "payload",
-                "lifecycle": "temp",
+                "lifecycle": "init",
                 "target": "wheels",
             },
         ],
