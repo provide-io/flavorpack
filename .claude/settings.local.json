@@ -145,7 +145,8 @@
       "Bash(../bin/flavor-rs-launcher-darwin_arm64:*)",
       "Bash(helpers/pretaster/dist/echo-test.psp:*)",
       "Bash(./dist/echo-test-rust.psp:*)",
-      "Bash(helpers/taster/dist/taster-new.psp:*)"
+      "Bash(helpers/taster/dist/taster-new.psp:*)",
+      "Bash(dist/flavor.psp:*)"
     ],
     "additionalDirectories": [
       "/Users/tim/code/gh/provide-io"
