@@ -58,6 +58,57 @@ class PythonPackager:
         # Track processed dependencies to avoid cycles
         self._processed_deps = set()
 
+    def _get_pypa_pip_install_cmd(self, python_exe: Path, packages: list[str]) -> list[str]:
+        """
+        Get real pip install command.
+        
+        CRITICAL: Must use ACTUAL pip3 NOT uv pip - uv pip is incomplete/broken
+        DO NOT CHANGE THIS TO uv pip - IT WILL BREAK DEPENDENCY RESOLUTION
+        """
+        return [str(python_exe), "-m", "pip", "install"] + packages
+    
+    def _get_pypa_pip_wheel_cmd(
+        self, 
+        python_exe: Path, 
+        wheel_dir: Path, 
+        source: Path, 
+        no_deps: bool = False
+    ) -> list[str]:
+        """
+        Get real pip wheel command.
+        
+        CRITICAL: Must use ACTUAL pip3 NOT uv pip - uv pip is incomplete/broken
+        DO NOT CHANGE THIS TO uv pip - IT WILL BREAK DEPENDENCY RESOLUTION
+        """
+        cmd = [str(python_exe), "-m", "pip", "wheel", "--wheel-dir", str(wheel_dir)]
+        if no_deps:
+            cmd.append("--no-deps")
+        cmd.append(str(source))
+        return cmd
+    
+    def _get_pypa_pip_download_cmd(
+        self,
+        python_exe: Path,
+        dest_dir: Path,
+        requirements_file: Path | None = None,
+        packages: list[str] | None = None,
+        binary_only: bool = True
+    ) -> list[str]:
+        """
+        Get real pip download command.
+        
+        CRITICAL: Must use ACTUAL pip3 NOT uv pip - uv pip is incomplete/broken
+        DO NOT CHANGE THIS TO uv pip - IT WILL BREAK DEPENDENCY RESOLUTION
+        """
+        cmd = [str(python_exe), "-m", "pip", "download", "--dest", str(dest_dir)]
+        if binary_only:
+            cmd.extend(["--only-binary", ":all:"])
+        if requirements_file:
+            cmd.extend(["-r", str(requirements_file)])
+        if packages:
+            cmd.extend(packages)
+        return cmd
+
     def _find_uv_command(self) -> str:
         """Find the UV command."""
         import shutil
@@ -418,8 +469,9 @@ class PythonPackager:
             # Explicitly install 'wheel' as it's required for building wheels
             # but not guaranteed to be in a seeded venv.
             logger.info("📦📥🚀 Installing wheel package into temporary environment")
+            install_wheel_cmd = self._get_pypa_pip_install_cmd(python_exe, ["wheel"])
             run_command(
-                [uv_cmd, "pip", "install", "wheel", "--python", str(python_exe)],
+                install_wheel_cmd,
                 check=True,
                 capture_output=True,
             )
@@ -460,16 +512,9 @@ class PythonPackager:
                     total=len(all_local_deps),
                     name=dep_path.name,
                 )
-                wheel_cmd = [
-                    str(python_exe),
-                    "-m",
-                    "pip",
-                    "wheel",
-                    "--wheel-dir",
-                    str(wheels_dir),
-                    "--no-deps",
-                    str(dep_path),
-                ]
+                wheel_cmd = self._get_pypa_pip_wheel_cmd(
+                    python_exe, wheels_dir, dep_path, no_deps=True
+                )
                 logger.trace("💻🚀📋 Command", command=" ".join(wheel_cmd))
                 result = run_command(
                     wheel_cmd,
@@ -488,16 +533,9 @@ class PythonPackager:
             )
             if wheel_spinner:
                 wheel_spinner.tick()
-            main_wheel_cmd = [
-                str(python_exe),
-                "-m",
-                "pip",
-                "wheel",
-                "--wheel-dir",
-                str(wheels_dir),
-                "--no-deps",
-                str(self.manifest_dir),
-            ]
+            main_wheel_cmd = self._get_pypa_pip_wheel_cmd(
+                python_exe, wheels_dir, self.manifest_dir, no_deps=True
+            )
             logger.trace("💻🚀📋 Command", command=" ".join(main_wheel_cmd))
             result = run_command(
                 main_wheel_cmd,
@@ -529,8 +567,8 @@ class PythonPackager:
                             logger.debug(f"  ❌ Build-only: {req}")
                         
             except Exception as e:
-                logger.warning(f"⚠️ Could not parse pyproject.toml, falling back to pip wheel: {e}")
-                runtime_deps = []
+                logger.error(f"❌ Failed to parse pyproject.toml: {e}")
+                raise RuntimeError(f"Cannot proceed without valid pyproject.toml: {e}") from e
             
             # Download ONLY runtime dependencies
             if runtime_deps:
@@ -546,15 +584,9 @@ class PythonPackager:
                     req_file.flush()
                     
                     # Download only these specific dependencies
-                    download_cmd = [
-                        str(python_exe),
-                        "-m",
-                        "pip",
-                        "download",
-                        "--dest", str(wheels_dir),
-                        "--only-binary", ":all:",  # Prefer wheels
-                        "-r", req_file.name,
-                    ]
+                    download_cmd = self._get_pypa_pip_download_cmd(
+                        python_exe, wheels_dir, requirements_file=Path(req_file.name)
+                    )
                     logger.debug("💻 Downloading runtime deps", command=" ".join(download_cmd))
                     result = run_command(
                         download_cmd,
@@ -569,57 +601,14 @@ class PythonPackager:
                 for file in wheels_dir.iterdir():
                     if file.suffix == ".tar.gz":
                         logger.debug(f"🔄 Converting {file.name} to wheel")
-                        build_cmd = [
-                            str(python_exe),
-                            "-m",
-                            "pip",
-                            "wheel",
-                            "--wheel-dir", str(wheels_dir),
-                            "--no-deps",
-                            str(file),
-                        ]
+                        build_cmd = self._get_pypa_pip_wheel_cmd(
+                            python_exe, wheels_dir, file, no_deps=True
+                        )
                         run_command(build_cmd, check=False, capture_output=True)
                         file.unlink()  # Remove source distribution
-                        
             else:
-                # Fallback: Use pip wheel but with better filtering
-                logger.warning("⚠️ No runtime deps found, using fallback method")
-                resolve_cmd = [
-                    str(python_exe),
-                    "-m",
-                    "pip",
-                    "wheel",
-                    "--wheel-dir",
-                    str(wheels_dir),
-                    str(self.manifest_dir),
-                ]
-                logger.trace("💻 Command", command=" ".join(resolve_cmd))
-                result = run_command(
-                    resolve_cmd,
-                    check=True,
-                    capture_output=True,
-                )
-                
-                # Remove known build-only dependencies
-                build_only_deps = {
-                    "setuptools", "wheel", "pip", "build", "installer",
-                    "setuptools-scm", "flit", "flit-core", "poetry", "poetry-core",
-                    "hatchling", "pdm", "pdm-backend", "maturin", "scikit-build",
-                    "distutils", "distribute", "eggs", "easy-install",
-                    "pyproject-hooks", "pip-tools", "twine", "build-backend",
-                    "uv", "flavorpack"
-                }
-                
-                removed_count = 0
-                for wheel_file in list(wheels_dir.glob("*.whl")):
-                    wheel_name = wheel_file.stem.split("-")[0].replace("_", "-").lower()
-                    if wheel_name in build_only_deps:
-                        logger.info(f"🗑️ Removing build dependency: {wheel_file.name}")
-                        wheel_file.unlink()
-                        removed_count += 1
-                        
-                if removed_count > 0:
-                    logger.info(f"🧹 Removed {removed_count} build dependencies")
+                # No runtime dependencies found - that's OK, just log it
+                logger.info("📦 No runtime dependencies to download (package has no dependencies)")
 
             # Log final wheel count
             wheel_files = list(wheels_dir.glob("*.whl"))

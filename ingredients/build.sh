@@ -1,6 +1,7 @@
 #!/bin/bash
 #
 # build.sh - Compiles Go and Rust ingredient binaries into ingredients/bin/
+# Builds both normal (dynamically linked) and musl (statically linked) versions for Linux
 #
 set -eo pipefail
 
@@ -11,10 +12,21 @@ BIN_DIR="$SCRIPT_DIR/bin"
 GO_DIR="$SCRIPT_DIR/flavor-go"
 RUST_DIR="$SCRIPT_DIR/flavor-rs"
 
+# Detect platform
+OS=$(uname -s | tr '[:upper:]' '[:lower:]')
+ARCH=$(uname -m)
+if [ "$ARCH" = "x86_64" ]; then
+  ARCH="amd64"
+elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then
+  ARCH="arm64"
+fi
+PLATFORM="${OS}_${ARCH}"
+
 # --- Logging ---
 log_info() { echo -e "ℹ️  $1"; }
 log_success() { echo -e "✅ $1"; }
 log_error() { echo -e "❌ $1" >&2; }
+log_warn() { echo -e "⚠️  $1"; }
 
 # --- Pre-flight Checks ---
 check_tool() {
@@ -28,22 +40,34 @@ log_info "Checking for required build tools..."
 check_tool go
 check_tool cargo
 log_success "All build tools found."
+log_info "Platform detected: $PLATFORM"
 
 # --- Main Build ---
 log_info "Starting build for Go and Rust ingredients..."
 mkdir -p "$BIN_DIR"
 
 # --- Build Go Ingredients ---
-log_info "Building Go ingredients..."
+log_info "Building Go ingredients for $PLATFORM..."
 make -C "$GO_DIR" build BIN_DIR="$BIN_DIR"
 log_success "Go ingredients built successfully."
 
 # --- Build Rust Ingredients ---
-log_info "Building Rust ingredients..."
+log_info "Building Rust ingredients for $PLATFORM..."
 make -C "$RUST_DIR" build BIN_DIR="$BIN_DIR"
 log_success "Rust ingredients built successfully."
 
-# --- Finalization ---
+# Linux note: Rust build automatically uses musl for static binaries
+if [ "$OS" = "linux" ]; then
+  log_info "Note: Linux builds are static by default (Go: CGO_ENABLED=0, Rust: musl)"
+fi
+
+# --- List Built Binaries ---
 log_info "Setting executable permissions..."
-chmod +x "$BIN_DIR"/flavor-*
-log_success "All ingredients are built and located in '$BIN_DIR'."
+chmod +x "$BIN_DIR"/flavor-* 2>/dev/null || true
+
+log_success "Build complete! Binaries in '$BIN_DIR':"
+ls -lh "$BIN_DIR"/flavor-* 2>/dev/null | awk '{print "  - "$9" ("$5")"}'
+
+# Count binaries
+BINARY_COUNT=$(ls "$BIN_DIR"/flavor-* 2>/dev/null | wc -l)
+log_info "Total binaries built: $BINARY_COUNT"

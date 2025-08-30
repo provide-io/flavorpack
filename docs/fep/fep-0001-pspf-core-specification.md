@@ -194,18 +194,55 @@ This REQUIRED array contains one JSON object for each Slot in the package. Each 
 ```json
 "slots": [
   {
-    "name": "string",
+    "slot": 0,  // Optional: position validator
+    "id": "string",  // Arbitrary identifier for the slot
+    "source": "string",  // Source path within the package
+    "target": "string",  // Destination path in workenv
     "purpose": "payload|runtime|config|asset|library",
     "lifecycle": "runtime|volatile|temp|cache|init|lazy|eager",
+    "resolution": "build|runtime|lazy",  // Optional: when to resolve
     "checksum": "sha256:...",
     "size": "number",
-    "encoding": "raw|tar|gzip|tgz"
+    "encoding": "raw|tar|gzip|tgz",  // String in JSON, converts to numeric in binary
+    "permissions": "0755"  // Optional: Unix-style permissions (includes executable bit)
   }
 ]
 ```
 
-*   **purpose**: Defines the role of the slot's content.
-*   **lifecycle**: Defines how the Launcher should manage the slot's data over time, enabling the Progressive Extraction model.
+*   **slot**: (Optional) Expected array position for well-formedness checking. If present and doesn't match actual position, builders MUST fail with a critical error.
+*   **id**: Arbitrary string identifier for the slot. Used for logging and referencing.
+*   **source**: Path to the source file within the package or build context. No prefix means the file is embedded in the package.
+*   **target**: Destination path within the workenv where the file will be placed.
+*   **purpose**: Defines the role of the slot's content. MUST be one of: `"payload"`, `"runtime"`, `"config"`, `"asset"`, `"library"`.
+*   **lifecycle**: Defines how the Launcher should manage the slot's data over time. MUST be one of: `"runtime"`, `"volatile"`, `"temp"`, `"cached"`, `"init"`, `"lazy"`, `"eager"`.
+*   **resolution**: (Optional) Specifies when the slot content is resolved. MUST be one of:
+    - `"build"` - Content is embedded at build time (default if omitted)
+    - `"runtime"` - Content is resolved when the package runs  
+    - `"lazy"` - Content is resolved on first access
+*   **encoding**: Compression/encoding type. MUST be one of these exact string literals:
+    - `"raw"` - No compression (converts to uint8 value 0 in binary)
+    - `"tar"` - TAR archive (converts to uint8 value 1 in binary)
+    - `"gzip"` - GZIP compressed (converts to uint8 value 2 in binary)
+    - `"tgz"` - TAR + GZIP (converts to uint8 value 3 in binary)
+*   **permissions**: (Optional) Unix-style file permissions. MUST be an octal string with leading zero (e.g., `"0755"`, `"0644"`). Converts to uint16 in binary format. If omitted, defaults to `"0644"`.
+
+#### 4.2.1. JSON to Binary Field Mappings
+
+The following table defines the exact mappings between JSON manifest fields and binary format fields:
+
+| JSON Field | JSON Type | Binary Field | Binary Type | Conversion |
+|:-----------|:----------|:-------------|:------------|:-----------|
+| `slot` | number | - | - | Validation only, not stored |
+| `id` | string | `name_hash` | uint64 | SHA256 hash, first 8 bytes |
+| `source` | string | - | - | Used at build time only |
+| `target` | string | Stored in metadata | - | Preserved as string in metadata |
+| `encoding` | string | `encoding` | uint8 | `"raw"`→0, `"tar"`→1, `"gzip"`→2, `"tgz"`→3 |
+| `permissions` | string | `permissions` | uint16 | Octal string to integer (e.g., `"0755"`→0x01ED) |
+| `purpose` | string | `purpose` | uint8 | `"payload"`→0, `"runtime"`→1, `"config"`→2, `"asset"`→3, `"library"`→4 |
+| `lifecycle` | string | `lifecycle` | uint8 | `"runtime"`→0, `"volatile"`→1, `"temp"`→2, `"cached"`→3, `"init"`→4, `"lazy"`→5, `"eager"`→6 |
+| `resolution` | string | - | - | Build-time directive, not stored in binary |
+
+Implementations MUST reject invalid values in JSON manifests rather than attempting fallback conversions.
 
 ### 4.3. The "execution" Object
 

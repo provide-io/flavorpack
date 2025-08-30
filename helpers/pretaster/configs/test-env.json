@@ -11,12 +11,13 @@
   "slots": [
     {
       "slot": 0,
-      "name": "env_test.py",
-      "path": "{workenv}/scripts/env_test.py",
+      "id": "env-test-script",
+      "source": "{workenv}/scripts/env_test.py",
+      "target": "scripts/env_test.py",
       "purpose": "payload",
       "lifecycle": "cached",
       "encoding": "none",
-      "extract_to": "{workenv}/scripts"
+      "permissions": "0755"
     }
   ],
   "runtime": {

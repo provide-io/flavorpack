@@ -44,3 +44,4 @@ helpers/pretaster/test-runner.sh
 .hypothesis
 *.whl
 bin/
+core
