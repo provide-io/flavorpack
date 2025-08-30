@@ -173,7 +173,7 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
                     encoding="none",
                     purpose="binary",
                     lifecycle="runtime",
-                    platform=platform,
+                    # Platform-specific handling would be done at a different level
                 )
             )
 
