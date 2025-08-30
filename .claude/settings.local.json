@@ -194,7 +194,8 @@
       "Bash(FLAVOR_LOG_LEVEL=trace FLAVOR_INSECURE=1 timeout 1 ./dist/echo-test.psp \"test\")",
       "Bash(FLAVOR_INSECURE=1 dist/echo-test-go.psp \"hello from go launcher\")",
       "Bash(sudo codesign:*)",
-      "Bash(RUST_BACKTRACE=1 FLAVOR_LOG_LEVEL=trace timeout 1 dist/echo-test.psp \"test\")"
+      "Bash(RUST_BACKTRACE=1 FLAVOR_LOG_LEVEL=trace timeout 1 dist/echo-test.psp \"test\")",
+      "Bash(FLAVOR_LOG_LEVEL=info FLAVOR_INSECURE=1 dist/test-go-rs.psp info)"
     ],
     "additionalDirectories": [
       "/Users/tim/code/gh/provide-io"
