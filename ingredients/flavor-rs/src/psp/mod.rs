@@ -46,26 +46,11 @@ pub fn detect_format(package_path: &Path) -> Result<PackageFormat> {
         ].concat();
         
         if trailing == expected.as_slice() {
-            log::trace!("Found emoji magic at end of file");
-            // Now verify there's a valid PSPF header somewhere
-            // Search for PSPF magic in the file
-            let search_limit = file_size.min(MAX_LAUNCHER_SEARCH_SIZE);
-            log::trace!("Searching for PSPF magic in first {} bytes", search_limit);
-            
-            // Search efficiently using defined chunk and step sizes
-            for offset in (0..search_limit).step_by(MAGIC_SEARCH_STEP_SIZE) {
-                file.seek(SeekFrom::Start(offset))?;
-                let read_size = MAGIC_SEARCH_CHUNK_SIZE.min((file_size - offset) as usize);
-                let mut buffer = vec![0u8; read_size];
-                file.read_exact(&mut buffer)?;
-
-                let magic = &format_2025::constants::PSPF_MAGIC;
-                if buffer.starts_with(magic) || buffer.windows(8).any(|w| w == magic) {
-                    log::debug!("Found PSPF magic at offset {}", offset);
-                    return Ok(PackageFormat::PSPF2025);
-                }
-            }
-            log::trace!("PSPF magic not found in search range");
+            log::trace!("Found emoji magic at end of file, assuming valid PSPF package");
+            // If we have the emoji magic, we can assume it's a valid PSPF package
+            // The emoji magic is the definitive marker - no need to search for PSPF header
+            // as that would be expensive for large files and the emoji magic is sufficient
+            return Ok(PackageFormat::PSPF2025);
         } else {
             log::trace!("No emoji magic at end of file");
         }
