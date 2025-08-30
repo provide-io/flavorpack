@@ -47,11 +47,11 @@ fn run() -> i32 {
     
     let exe_path = match env::current_exe() {
         Ok(path) => {
-            eprintln!("📍 Executable path: {:?}", path);
+            log::debug!("📍 Executable path: {:?}", path);
             path
         },
         Err(e) => {
-            eprintln!("Failed to get executable path: {}", e);
+            log::error!("Failed to get executable path: {}", e);
             return EXIT_IO_ERROR;
         }
     };
@@ -165,9 +165,14 @@ fn run() -> i32 {
         workdir: None,
     };
 
+    log::debug!("Attempting to launch package: {:?}", exe_path);
     match launch_package(&exe_path, &remaining_args, options) {
-        Ok(code) => code,
+        Ok(code) => {
+            log::debug!("Package launched successfully, exit code: {}", code);
+            code
+        },
         Err(e) => {
+            log::error!("Launch error: {}", e);
             eprintln!("Launch error: {}", e);
             match e.to_string() {
                 s if s.contains("PSPF") || s.contains("format") => EXIT_PSPF_ERROR,
