@@ -80,7 +80,7 @@ def create_slot_tarballs(
         with tarfile.open(wheels_tarball, "w:gz") as tar:
             wheels_dir = artifacts["payload_dir"] / "wheels"
             for wheel in wheels_dir.glob("*.whl"):
-                tar.add(wheel, arcname=wheel.name)
+                tar.add(wheel, arcname=f"wheels/{wheel.name}")
         slots["wheels"] = wheels_tarball
         if bar:
             bar.increment()
@@ -142,7 +142,7 @@ def create_builder_manifest(
             {
                 "type": "enumerate_and_execute",
                 "command": f"{{workenv}}/bin/{uv_exe} pip install --python {python_path} --no-deps",
-                "enumerate": {"path": "{workenv}", "pattern": "*.whl"},
+                "enumerate": {"path": "{workenv}/wheels", "pattern": "*.whl"},
             },
             {
                 "type": "write_file",
@@ -329,7 +329,7 @@ def create_python_builder_metadata(
             {
                 "type": "enumerate_and_execute",
                 "command": f"{{workenv}}/{bin_dir}/{'uv.exe' if is_windows else 'uv'} pip install --python {python_path} --no-deps",
-                "enumerate": {"path": "{workenv}", "pattern": "*.whl"},
+                "enumerate": {"path": "{workenv}/wheels", "pattern": "*.whl"},
             },
             {
                 "type": "chmod",
@@ -396,7 +396,7 @@ def create_python_slot_tarballs(
         with tarfile.open(wheels_tarball, "w:gz") as tar:
             wheels_dir = artifacts["payload_dir"] / "wheels"
             for wheel in wheels_dir.glob("*.whl"):
-                tar.add(wheel, arcname=wheel.name)
+                tar.add(wheel, arcname=f"wheels/{wheel.name}")
         if bar:
             bar.increment()
 
