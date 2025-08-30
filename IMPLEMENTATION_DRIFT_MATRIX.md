@@ -16,7 +16,7 @@ This document provides a comprehensive comparison of the PSPF/2025 format implem
 | MAGIC_TRAILER_SIZE | `8200` | `8200` | `8200` | ✅ Aligned |
 | SLOT_DESCRIPTOR_SIZE | `64` | `64` | `64` | ✅ Aligned |
 | SLOT_ALIGNMENT | `8` | `8` | `8` | ✅ Aligned |
-| Reserved field size | `6808` bytes | `6808` bytes | `6808` bytes | ✅ Fixed |
+| Reserved field size | `6816` bytes | `6816` bytes | `6816` bytes | ✅ Fixed |
 
 ### Emoji Magic Bytes
 
@@ -117,7 +117,7 @@ This document provides a comprehensive comparison of the PSPF/2025 format implem
 | compatibility | 864 | 4 | ✅ | ✅ | ✅ | ✅ Aligned |
 | protocol_version | 868 | 4 | ✅ | ✅ | ✅ | ✅ Aligned |
 | future_crypto | 872 | 512 | ✅ | ✅ | ✅ | ✅ Aligned |
-| reserved | 1384 | 6808 | ✅ | ✅ | ✅ | ✅ Aligned |
+| reserved | 1384 | 6816 | ✅ | ✅ | ✅ | ✅ Aligned |
 | **Total** | | **8192** | ✅ | ✅ | ✅ | ✅ Aligned |
 
 ## 🔧 Core Functions
@@ -184,7 +184,7 @@ This document provides a comprehensive comparison of the PSPF/2025 format implem
 
 | Operation | Python | Go | Rust | Status |
 |-----------|--------|-----|------|--------|
-| Verify MagicTrailer | `verify_magic()` | `VerifyMagic()` | `verify_magic()` | ⚠️ Should be `verify_magic_trailer()` |
+| Verify MagicTrailer | `verify_magic_trailer()` | `VerifyMagic()` | `verify_magic()` | ⚠️ Python updated, Go/Rust need renaming |
 | Read index | `read_index()` | `ReadIndex()` | `read_index()` | ✅ Aligned |
 | Read metadata | `read_metadata()` | `ReadMetadata()` | `read_metadata()` | ✅ Aligned |
 | Pack index | `pack()` | `Pack()` | `to_bytes()` | ⚠️ Different names |
@@ -204,10 +204,11 @@ This document provides a comprehensive comparison of the PSPF/2025 format implem
 ## ⚠️ Known Issues & Discrepancies
 
 ### Critical (P0)
-- ✅ **FIXED**: Reserved field size mismatch (was 6816 in Python, now 6808 in all)
+- ✅ **FIXED**: Reserved field size corrected to 6816 bytes (was 6808, missing 8 bytes from removed format_magic)
 - ✅ **FIXED**: Index field offset bugs in Rust (numa_hints, stream_chunk_size)
 - ✅ **FIXED**: Checksum validation offset in Rust (was 12-16, now 4-8)
 - ✅ **FIXED**: Capability field offsets in Go (was off by 8 bytes)
+- ✅ **FIXED**: MagicTrailer positioning (index now exactly 8192 bytes)
 
 ### High Priority (P1)
 - ⚠️ **TODO**: Rename `verify_magic()` to `verify_magic_trailer()` for clarity
