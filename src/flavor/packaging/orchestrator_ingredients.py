@@ -373,16 +373,13 @@ def create_python_slot_tarballs(
     uv_exe = "uv.exe" if is_windows else "uv"
 
     with progress.task(total=3, description="Creating slots") as bar:
-        # UV slot - single gzipped binary
-        uv_gzip = temp_dir / "uv.gz"
+        # UV slot - put binary in a tarball for proper extraction
+        uv_tarball = temp_dir / "uv.tar.gz"
         uv_path = artifacts["payload_dir"] / "bin" / uv_exe
 
-        # Gzip the UV binary directly
-        import gzip
-
-        with open(uv_path, "rb") as f_in:
-            with gzip.open(uv_gzip, "wb", compresslevel=9) as f_out:
-                f_out.write(f_in.read())
+        # Create tarball with UV binary
+        with tarfile.open(uv_tarball, "w:gz") as tar:
+            tar.add(uv_path, arcname=f"bin/{uv_exe}")
         if bar:
             bar.increment()
 
