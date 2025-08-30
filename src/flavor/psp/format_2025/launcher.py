@@ -195,12 +195,13 @@ class PSPFLauncher(PSPFReader):
             logger.error(f"❌ Unsupported encoding method: {slot_entry['encoding']}")
             raise ValueError(f"Unsupported encoding method: {slot_entry['encoding']}")
 
-        # Get slot name from metadata
+        # Get slot name from metadata - use target for extraction path
         metadata = self.read_metadata()
         slot_name = f"slot_{slot_index}"
         if "slots" in metadata and slot_index < len(metadata["slots"]):
             slot_meta = metadata["slots"][slot_index]
-            slot_name = slot_meta.get("name", slot_name)
+            # Use "target" field for extraction path, fallback to "id" or "name"
+            slot_name = slot_meta.get("target", slot_meta.get("id", slot_meta.get("name", slot_name)))
         logger.debug(f"📝 Slot {slot_index} name: {slot_name}")
 
         # NOTE: Tarball extraction logic matches Go's tar extraction
