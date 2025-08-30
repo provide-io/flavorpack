@@ -27,6 +27,11 @@ const (
 	SlotAlignment      = 8  // Slots must be 8-byte aligned
 	SlotDescriptorSize = 64 // Enhanced slot descriptor size
 	
+	// Default permissions (secure by default - user only)
+	DefaultFilePerms       = 0600  // Read/write for owner only
+	DefaultExecutablePerms = 0700  // Read/write/execute for owner only
+	DefaultDirPerms        = 0700  // Read/write/execute for owner only
+	
 	// DiskSpaceMultiplier is the safety factor for disk space requirements
 	// We require 2x the compressed size to account for extraction overhead
 	DiskSpaceMultiplier = 2
