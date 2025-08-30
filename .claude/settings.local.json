@@ -122,7 +122,9 @@
       "Bash(dist/taster-go.psp:*)",
       "Bash(../../workenv/flavorpack_darwin_arm64/bin/python -m flavor verify:*)",
       "Bash(../../workenv/flavorpack_darwin_arm64/bin/python -m flavor inspect:*)",
-      "Bash(ingredients/bin/flavor-rs-builder-darwin_arm64:*)"
+      "Bash(ingredients/bin/flavor-rs-builder-darwin_arm64:*)",
+      "Bash(workenv/flavorpack_darwin_arm64/bin/python -m flavor pack:*)",
+      "Bash(dist/flavorpack.psp:*)"
     ],
     "additionalDirectories": [
       "/Users/tim/code/gh/provide-io"
