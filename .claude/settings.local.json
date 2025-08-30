@@ -188,7 +188,9 @@
       "Bash(FLAVOR_LOG_LEVEL=trace FLAVOR_INSECURE=1 timeout 1 dist/echo-test.psp \"test\")",
       "Bash(FLAVOR_LOG_LEVEL=info FLAVOR_INSECURE=1 ./dist/echo-test.psp \"hello\")",
       "Bash(FLAVOR_LOG_LEVEL=error FLAVOR_INSECURE=1 dist/echo-test.psp \"hello world\")",
-      "Bash(FLAVOR_INSECURE=1 dist/env-test.psp)"
+      "Bash(FLAVOR_INSECURE=1 dist/env-test.psp)",
+      "Bash(FLAVOR_LOG_LEVEL=info FLAVOR_INSECURE=1 dist/pretaster-go-rs.psp info)",
+      "Bash(dist/pretaster-go-rs.psp echo \"hello from go-rs\")"
     ],
     "additionalDirectories": [
       "/Users/tim/code/gh/provide-io"
