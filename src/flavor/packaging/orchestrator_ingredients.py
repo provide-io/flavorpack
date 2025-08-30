@@ -160,7 +160,7 @@ def create_builder_manifest(
                 "lifecycle": "cache",
                 "target": f"bin/{uv_exe}",  # For gzip encoding, this is treated as full file path
                 "type": "file",
-                "permissions": "0755",  # Executable permissions
+                "permissions": "0700",  # Owner-only executable permissions
             },
             {
                 "id": "python",

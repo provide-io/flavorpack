@@ -79,7 +79,7 @@ endef
 ###################
 
 .PHONY: all
-all: clean clean-cache build test ## Clean, build helpers, and run all tests
+all: clean build test ## Clean everything, build helpers, and run all tests
 	$(call print,"✅ All tasks completed!",$(GREEN))
 
 .PHONY: help
