@@ -17,13 +17,19 @@ const (
 // FindIndexOffset searches for PSPF magic bytes and returns the offset where the index block starts
 // This is equivalent to the launcher size since the index immediately follows the launcher
 func FindIndexOffset(r io.ReadSeeker, magic []byte) (int64, error) {
-	// Start from beginning
-	if _, err := r.Seek(0, io.SeekStart); err != nil {
-		return 0, fmt.Errorf("failed to seek to start: %w", err)
+	// Get file size
+	fileSize, err := r.Seek(0, io.SeekEnd)
+	if err != nil {
+		return 0, fmt.Errorf("failed to seek to end: %w", err)
 	}
 
+	// Start search from 1MB (launchers should be at least this big to avoid finding embedded constants)
+	// This skips any PSPF magic that might be embedded in the launcher binary itself
+	const minLauncherSize int64 = 1024 * 1024 // 1MB minimum
+	startOffset := minLauncherSize
+
 	// Read file in chunks to find PSPF magic
-	for offset := int64(0); offset < MaxSearchSize; offset += ChunkSize {
+	for offset := startOffset; offset < MaxSearchSize && offset < fileSize; offset += ChunkSize {
 		if _, err := r.Seek(offset, io.SeekStart); err != nil {
 			return 0, fmt.Errorf("failed to seek to offset %d: %w", offset, err)
 		}
