@@ -5,6 +5,10 @@ pub mod format_2025;
 use crate::exceptions::{FlavorError, Result};
 use std::path::Path;
 
+/// Maximum size to search for PSPF magic in a file (5MB)
+/// This accommodates Go launchers (~3.3MB) and Rust launchers (~1MB) with margin
+const MAX_LAUNCHER_SEARCH_SIZE: u64 = 5 * 1024 * 1024;
+
 /// Supported package formats
 #[derive(Debug, Clone, Copy)]
 pub enum PackageFormat {
@@ -42,9 +46,15 @@ pub fn detect_format(package_path: &Path) -> Result<PackageFormat> {
             let search_limit = file_size.min(5 * 1024 * 1024);
             log::trace!("Searching for PSPF magic in first {} bytes", search_limit);
             
-            for offset in (0..search_limit).step_by(1024) {
+            // Search more efficiently - use larger chunks and skip by larger amounts
+            // Most launchers have PSPF magic aligned at 4K or 8K boundaries
+            let chunk_size = 8192;  // 8KB chunks
+            let step_size = 4096;   // Step by 4KB for some overlap
+            
+            for offset in (0..search_limit).step_by(step_size) {
                 file.seek(SeekFrom::Start(offset))?;
-                let mut buffer = vec![0u8; 1024.min((file_size - offset) as usize)];
+                let read_size = chunk_size.min((file_size - offset) as usize);
+                let mut buffer = vec![0u8; read_size];
                 file.read_exact(&mut buffer)?;
 
                 let magic = &format_2025::constants::PSPF_MAGIC;
