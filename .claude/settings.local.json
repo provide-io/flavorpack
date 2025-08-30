@@ -151,7 +151,8 @@
       "Bash(../../ingredients/bin/flavor-go-builder-darwin_arm64:*)",
       "Read(/Users/tim/code/gh/**)",
       "Read(/Users/tim/code/gh/**)",
-      "Bash(FLAVOR_LOG_LEVEL=trace timeout 2 dist/flavor.psp --version)"
+      "Bash(FLAVOR_LOG_LEVEL=trace timeout 2 dist/flavor.psp --version)",
+      "Bash(./flavor.psp metadata:*)"
     ],
     "additionalDirectories": [
       "/Users/tim/code/gh/provide-io"
