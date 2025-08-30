@@ -148,14 +148,14 @@ This document provides a comprehensive comparison of the PSPF/2025 format implem
 
 ## 🏗️ Builder Capabilities
 
-| Feature | Python | Go | Rust | Status |
-|---------|--------|-----|------|--------|
-| Build empty bundle | ✅ | ✅ | ✅ | ✅ Aligned |
-| Build with slots | ✅ | ✅ | ✅ | ✅ Aligned |
-| Compression support | ✅ gzip/tar | ✅ gzip/tar | ✅ gzip/tar | ✅ Aligned |
-| Signing support | ✅ | ✅ | ✅ | ✅ Aligned |
-| MagicTrailer creation | ✅ | ✅ | ✅ | ✅ Aligned |
-| Deterministic builds | ✅ | ✅ | ✅ | ✅ Aligned |
+| Feature | PSPF Spec | Python | Go | Rust | Status |
+|---------|-----------|--------|-----|------|--------|
+| Build empty bundle | Required | ✅ | ✅ | ✅ | ✅ Aligned |
+| Build with slots | Required | ✅ | ✅ | ✅ | ✅ Aligned |
+| Compression support | gzip/tar | ✅ gzip/tar | ✅ gzip/tar | ✅ gzip/tar | ✅ Aligned |
+| Signing support | Required | ✅ | ✅ | ✅ | ✅ Aligned |
+| MagicTrailer creation | Required | ✅ | ✅ | ✅ | ✅ Aligned |
+| Deterministic builds | Optional | ✅ | ✅ | ✅ | ✅ Aligned |
 
 ## 📖 Reader Capabilities
 
