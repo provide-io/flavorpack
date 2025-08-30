@@ -65,7 +65,7 @@ class TestPackageSecurity:
             PSPFBuilder()
             .metadata(**metadata)
             .with_keys(private=private_key, public=public_key)
-            .add_slot("dummy.txt", dummy_slot)
+            .add_slot(id="dummy.txt", data=dummy_slot)
         )
         builder.build(package_path)
 
@@ -185,7 +185,7 @@ class TestPackageSecurity:
         builder = (
             PSPFBuilder()
             .metadata(**metadata)
-            .add_slot("test.dat", slot_file, encoding="none")
+            .add_slot(id="test.dat", data=slot_file, encoding="none")
         )
         builder.build(package_path)
 
@@ -254,7 +254,7 @@ class TestPackageSecurity:
         builder = (
             PSPFBuilder()
             .metadata(**metadata)
-            .add_slot("test_perms.sh", test_file, encoding="none")
+            .add_slot(id="test_perms.sh", data=test_file, encoding="none")
         )
         builder.build(package_path)
 

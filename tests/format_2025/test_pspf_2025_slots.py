@@ -183,8 +183,8 @@ class TestPSPFSlots:
         for slot in test_slots:
             if hasattr(slot, "source") and slot.source:
                 builder = builder.add_slot(
-                    slot.id,
-                    slot.source,
+                    id=slot.id,
+                    data=slot.source,
                     encoding=slot.encoding,
                     purpose=slot.purpose,
                     lifecycle=slot.lifecycle,
@@ -204,7 +204,11 @@ class TestPSPFSlots:
         # Verify slot properties preserved
         for i, slot in enumerate(test_slots):
             slot_meta = metadata_read["slots"][i]
-            assert slot_meta["name"] == slot.id
+            # Check both possible field names for backward compatibility
+            if "name" in slot_meta:
+                assert slot_meta["name"] == slot.id
+            else:
+                assert slot_meta["id"] == slot.id
             assert slot_meta["lifecycle"] == slot.lifecycle
             assert slot_meta["purpose"] == slot.purpose
 
@@ -236,9 +240,7 @@ class TestPSPFSlots:
 
         result = (
             test_builder.metadata(**metadata)
-            .add_slot(
-                "compressed",
-                slot_path,
+            .add_slot(id="compressed", data=slot_path,
                 encoding="gzip",
                 purpose="payload",
                 lifecycle="runtime",
@@ -279,9 +281,7 @@ class TestPSPFSlots:
 
         result = (
             test_builder.metadata(**metadata)
-            .add_slot(
-                "uncompressed",
-                slot_path,
+            .add_slot(id="uncompressed", data=slot_path,
                 encoding="none",
                 purpose="payload",
                 lifecycle="runtime",
@@ -326,8 +326,8 @@ class TestPSPFSlots:
         result = (
             test_builder.metadata(**metadata)
             .add_slot(
-                slot.id,
-                slot.source,
+                id=slot.id,
+                data=slot.source,
                 encoding=slot.encoding,
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,
@@ -352,8 +352,8 @@ class TestPSPFSlots:
         for slot in test_slots:
             if hasattr(slot, "source") and slot.source:
                 builder = builder.add_slot(
-                    slot.id,
-                    slot.source,
+                    id=slot.id,
+                    data=slot.source,
                     encoding=slot.encoding,
                     purpose=slot.purpose,
                     lifecycle=slot.lifecycle,
@@ -412,8 +412,8 @@ class TestPSPFSlots:
         result = (
             test_builder.metadata(**metadata)
             .add_slot(
-                slot.id,
-                slot.source,
+                id=slot.id,
+                data=slot.source,
                 encoding=slot.encoding,
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,
@@ -489,8 +489,8 @@ class TestPSPFSlots:
         result = (
             test_builder.metadata(**metadata)
             .add_slot(
-                slot.id,
-                slot.source,
+                id=slot.id,
+                data=slot.source,
                 encoding=slot.encoding,
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,

@@ -568,7 +568,7 @@ class PSPFBuilder:
 
     def add_slot(
         self,
-        name: str,
+        id: str,
         data: bytes | str | Path,
         purpose: str = "data",
         lifecycle: str = "runtime",
@@ -580,7 +580,7 @@ class PSPFBuilder:
         Add a slot to the package.
 
         Args:
-            name: Slot name
+            id: Slot identifier
             data: Slot data (bytes, string, or path to file/directory)
             purpose: Slot purpose (data, code, config, media)
             lifecycle: Slot lifecycle (runtime, cached, temporary)
@@ -614,9 +614,9 @@ class PSPFBuilder:
         # Create slot metadata
         slot = SlotMetadata(
             index=len(self._spec.slots),
-            id=name,
+            id=id,
             source=str(path) if path else "",
-            target=extract_to or name,
+            target=extract_to or id,
             size=size,
             checksum="",  # Will be calculated during build
             encoding=encoding,
