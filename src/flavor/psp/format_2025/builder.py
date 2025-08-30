@@ -470,8 +470,10 @@ def _write_package(
                 f.write(descriptor.pack())
             f.seek(end_of_slots)
 
-        # Write trailing magic
-        f.write(TRAILING_MAGIC)
+        # Write MagicTrailer (16 bytes: index pointer + emoji magic)
+        import struct
+        f.write(struct.pack('<Q', index_offset))  # 8-byte little-endian index pointer
+        f.write(TRAILING_MAGIC)  # 8-byte emoji magic
 
         # Update package size
         index.package_size = f.tell()

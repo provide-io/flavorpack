@@ -28,9 +28,8 @@ MAGIC_WAND_EMOJI = "🪄"
 PSPF_VERSION = 0x20250001  # Keep as v1
 HEADER_SIZE = 8192  # Future-proof 8KB index block
 SLOT_DESCRIPTOR_SIZE = 64  # Descriptor size
-TRAILING_MAGIC_SIZE = 8  # 📦🪄 = 8 bytes UTF-8
+MAGIC_TRAILER_SIZE = 16  # 8-byte index pointer + 8-byte emoji magic
 SLOT_ALIGNMENT = 8  # Minimum alignment
-EMOJI_MAGIC_SIZE = 8  # Size in bytes
 
 # Platform-specific page sizes
 if sys.platform == "darwin":
