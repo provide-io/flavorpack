@@ -159,6 +159,7 @@ print(" ".join(sys.argv[1:]) if len(sys.argv) > 1 else "Echo test ready")' > scr
   },
   "slots": [
     {
+      "id": "test-package",
       "name": "test-package.tar.gz",
       "path": "test-package.tar.gz",
       "encoding": "tar.gz",
@@ -220,6 +221,7 @@ EOF
   },
   "slots": [
     {
+      "id": "test-package",
       "name": "test-package.tar.gz",
       "path": "test-package.tar.gz",
       "encoding": "tar.gz",
