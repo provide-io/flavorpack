@@ -80,8 +80,7 @@ class TestSlotTableReading:
 
             # Add slots
             for slot in slots:
-                builder = builder.add_slot(
-                    name=slot.id,
+                builder = builder.add_slot(id=slot.id,
                     data=slot.source,
                     purpose=slot.purpose,
                     lifecycle=slot.lifecycle,
@@ -202,8 +201,7 @@ class TestSlotExtraction:
 
             # Add slots
             for slot in slots:
-                builder = builder.add_slot(
-                    name=slot.id,
+                builder = builder.add_slot(id=slot.id,
                     data=slot.source,
                     purpose=slot.purpose,
                     lifecycle=slot.lifecycle,
@@ -328,8 +326,7 @@ class TestWorkEnvironment:
             )
 
             # Add slot
-            builder = builder.add_slot(
-                name=slot.id,
+            builder = builder.add_slot(id=slot.id,
                 data=slot.source,
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,
@@ -440,8 +437,7 @@ sys.exit(0)
             )
 
             # Add slot
-            builder = builder.add_slot(
-                name=slot.id,
+            builder = builder.add_slot(id=slot.id,
                 data=slot.source,
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,

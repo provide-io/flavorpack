@@ -240,8 +240,7 @@ class TestPSPFSlots:
 
         result = (
             test_builder.metadata(**metadata)
-            .add_slot(
-                "compressed",
+            .add_slot(id="compressed",
                 slot_path,
                 encoding="gzip",
                 purpose="payload",
@@ -283,8 +282,7 @@ class TestPSPFSlots:
 
         result = (
             test_builder.metadata(**metadata)
-            .add_slot(
-                "uncompressed",
+            .add_slot(id="uncompressed",
                 slot_path,
                 encoding="none",
                 purpose="payload",

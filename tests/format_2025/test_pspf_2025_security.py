@@ -230,7 +230,7 @@ class TestPSPFSecurity:
         builder = (
             PSPFBuilder()
             .metadata(format="PSPF/2025", package={"name": "test", "version": "1.0"})
-            .add_slot("data", slot_path, encoding="none")
+            .add_slot(id="data", slot_path, encoding="none")
         )
         builder.build(bundle_path)
 
