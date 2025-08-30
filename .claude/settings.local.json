@@ -91,7 +91,8 @@
       "Bash(python -m pytest tests/resilience/test_launcher_availability.py::TestLauncherReproducibility::test_reproducible_builds_with_same_launcher -xvs)",
       "WebFetch(domain:github.com)",
       "Bash(FLAVOR_LOG_LEVEL=debug FLAVOR_INSECURE=1 dist/echo-test.psp \"hello world\")",
-      "Bash(dist/taster.psp:*)"
+      "Bash(dist/taster.psp:*)",
+      "Bash(FLAVOR_LOG_LEVEL=debug uv run flavor pack --manifest helpers/taster/pyproject.toml --output helpers/taster/dist/taster2.psp --key-seed test123 --launcher-bin ingredients/bin/flavor-rs-launcher-darwin_arm64)"
     ],
     "additionalDirectories": [
       "/Users/tim/code/gh/provide-io"
