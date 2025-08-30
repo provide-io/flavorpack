@@ -177,21 +177,21 @@ impl Index {
             .map_err(|_| FlavorError::Generic("Invalid max memory bytes".into()))?);
         index.min_memory = u64::from_le_bytes(data[656..664].try_into()
             .map_err(|_| FlavorError::Generic("Invalid min memory bytes".into()))?);
-        index.cpu_features = u64::from_le_bytes(data[672..680].try_into()
+        index.cpu_features = u64::from_le_bytes(data[664..672].try_into()
             .map_err(|_| FlavorError::Generic("Invalid CPU features bytes".into()))?);
-        index.gpu_requirements = u64::from_le_bytes(data[680..688].try_into()
+        index.gpu_requirements = u64::from_le_bytes(data[672..680].try_into()
             .map_err(|_| FlavorError::Generic("Invalid GPU requirements bytes".into()))?);
-        index.numa_hints = u64::from_le_bytes(data[688..696].try_into()
+        index.numa_hints = u64::from_le_bytes(data[680..688].try_into()
             .map_err(|_| FlavorError::Generic("Invalid NUMA hints bytes".into()))?);
-        index.stream_chunk_size = u32::from_le_bytes(data[696..700].try_into()
+        index.stream_chunk_size = u32::from_le_bytes(data[688..692].try_into()
             .map_err(|_| FlavorError::Generic("Invalid stream chunk size bytes".into()))?);
-        index.padding1.copy_from_slice(&data[700..712]);
+        index.padding1.copy_from_slice(&data[692..704]);
 
         // Parse extended metadata
-        index.build_timestamp = u64::from_le_bytes(data[712..720].try_into()
+        index.build_timestamp = u64::from_le_bytes(data[704..712].try_into()
             .map_err(|_| FlavorError::Generic("Invalid build timestamp bytes".into()))?);
-        index.build_machine.copy_from_slice(&data[720..752]);
-        index.source_hash.copy_from_slice(&data[752..784]);
+        index.build_machine.copy_from_slice(&data[712..744]);
+        index.source_hash.copy_from_slice(&data[744..776]);
         index.dependency_hash.copy_from_slice(&data[784..816]);
         index.license_id.copy_from_slice(&data[816..832]);
         index.provenance_uri.copy_from_slice(&data[832..840]);
