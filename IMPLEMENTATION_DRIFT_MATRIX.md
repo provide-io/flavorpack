@@ -159,32 +159,33 @@ This document provides a comprehensive comparison of the PSPF/2025 format implem
 
 ## 📖 Reader Capabilities
 
-| Feature | Python | Go | Rust | Status |
-|---------|--------|-----|------|--------|
-| Read index | ✅ | ✅ | ✅ | ✅ Aligned |
-| Read metadata | ✅ | ✅ | ✅ | ✅ Aligned |
-| Read slots | ✅ | ✅ | ✅ | ✅ Aligned |
-| Verify MagicTrailer | ✅ | ✅ | ✅ | ✅ Aligned |
-| Verify checksums | ✅ | ✅ | ✅ | ✅ Aligned |
-| Verify signatures | ✅ | ⚠️ Basic | ✅ | ⚠️ Go needs enhancement |
-| Memory-mapped I/O | ✅ | ❌ | ✅ | ⚠️ Go missing |
-| Streaming support | ✅ | ✅ | ⚠️ Basic | ⚠️ Rust needs enhancement |
+| Feature | PSPF Spec | Python | Go | Rust | Status |
+|---------|-----------|--------|-----|------|--------|
+| Read index | Required | ✅ | ✅ | ✅ | ✅ Aligned |
+| Read metadata | Required | ✅ | ✅ | ✅ | ✅ Aligned |
+| Read slots | Required | ✅ | ✅ | ✅ | ✅ Aligned |
+| Verify MagicTrailer | Required | ✅ | ✅ | ✅ | ✅ Aligned |
+| Verify checksums | Required | ✅ | ✅ | ✅ | ✅ Aligned |
+| Verify signatures | Required | ✅ | ⚠️ Basic | ✅ | ⚠️ Go needs enhancement |
+| Memory-mapped I/O | Optional | ✅ | ❌ | ✅ | ⚠️ Go missing |
+| Streaming support | Optional | ✅ | ✅ | ⚠️ Basic | ⚠️ Rust needs enhancement |
 
 ## 🚀 Launcher Capabilities
 
-| Feature | Python | Go | Rust | Status |
-|---------|--------|-----|------|--------|
-| Package execution | N/A | ✅ | ✅ | ✅ Aligned |
-| Workenv caching | N/A | ✅ | ✅ | ✅ Aligned |
-| Signature verification | N/A | ⚠️ Optional | ✅ Enforced | ⚠️ Different policies |
-| Environment variables | N/A | ✅ | ✅ | ✅ Aligned |
-| Process replacement | N/A | ✅ | ✅ | ✅ Aligned |
+| Feature | PSPF Spec | Python | Go | Rust | Status |
+|---------|-----------|--------|-----|------|--------|
+| Package execution | Required | N/A | ✅ | ✅ | ✅ Aligned |
+| Workenv caching | Required | N/A | ✅ | ✅ | ✅ Aligned |
+| Signature verification | Required | N/A | ⚠️ Optional | ✅ Enforced | ⚠️ Different policies |
+| Environment variables | Required | N/A | ✅ | ✅ | ✅ Aligned |
+| Process replacement | Required | N/A | ✅ | ✅ | ✅ Aligned |
+| Logging support | Required | N/A | ✅ Structured | ✅ Structured | ✅ Aligned |
 
 ## 🎯 Method Naming Consistency
 
 | Operation | Python | Go | Rust | Status |
 |-----------|--------|-----|------|--------|
-| Verify MagicTrailer | `verify_magic_trailer()` | `VerifyMagic()` | `verify_magic()` | ⚠️ Python updated, Go/Rust need renaming |
+| Verify MagicTrailer | `verify_magic_trailer()` | `VerifyMagicTrailer()` | `verify_magic()` | ⚠️ Rust needs renaming |
 | Read index | `read_index()` | `ReadIndex()` | `read_index()` | ✅ Aligned |
 | Read metadata | `read_metadata()` | `ReadMetadata()` | `read_metadata()` | ✅ Aligned |
 | Pack index | `pack()` | `Pack()` | `to_bytes()` | ⚠️ Different names |
@@ -192,14 +193,15 @@ This document provides a comprehensive comparison of the PSPF/2025 format implem
 
 ## 📁 Directory Structure
 
-| Component | Python | Go | Rust | Status |
-|-----------|--------|-----|------|--------|
-| Format module | `src/flavor/psp/format_2025/` | `pkg/psp/format_2025/` | `src/psp/format_2025/` | ✅ Aligned |
-| Constants file | `constants.py` | `constants.go` | `constants.rs` | ✅ Aligned |
-| Index file | `index.py` | `index.go` | `index.rs` | ✅ Aligned |
-| Slots file | `slots.py` | `slots.go` | `slots.rs` | ✅ Aligned |
-| Builder file | `builder.py` | `builder.go` | `builder.rs` | ✅ Aligned |
-| Reader file | `reader.py` | `reader.go` | `reader.rs` | ✅ Aligned |
+| Component | PSPF Spec | Python | Go | Rust | Status |
+|-----------|-----------|--------|-----|------|--------|
+| Format module | N/A | `src/flavor/psp/format_2025/` | `pkg/psp/format_2025/` | `src/psp/format_2025/` | ✅ Aligned |
+| Constants file | N/A | `constants.py` | `constants.go` | `constants.rs` | ✅ Aligned |
+| Index file | N/A | `index.py` | `index.go` | `index.rs` | ✅ Aligned |
+| Slots file | N/A | `slots.py` | `slots.go` | `slots.rs` | ✅ Aligned |
+| Builder file | N/A | `builder.py` | `builder.go` | `builder.rs` | ✅ Aligned |
+| Reader file | N/A | `reader.py` | `reader.go` | `reader.rs` | ✅ Aligned |
+| Logging module | N/A | `structlog` | `hclog` + `logger.go` | `env_logger` | ✅ All structured |
 
 ## ⚠️ Known Issues & Discrepancies
 
@@ -211,7 +213,9 @@ This document provides a comprehensive comparison of the PSPF/2025 format implem
 - ✅ **FIXED**: MagicTrailer positioning (index now exactly 8192 bytes)
 
 ### High Priority (P1)
-- ⚠️ **TODO**: Rename `verify_magic()` to `verify_magic_trailer()` for clarity
+- ✅ **FIXED**: Go renamed to `VerifyMagicTrailer()` for consistency
+- ✅ **FIXED**: Go verification now uses structured logging with hclog
+- ⚠️ **TODO**: Rust needs to rename `verify_magic()` to `verify_magic_trailer()`
 - ⚠️ **TODO**: Go launcher signature verification is optional (should match Rust)
 - ⚠️ **TODO**: Go missing memory-mapped I/O support
 
@@ -236,14 +240,14 @@ This document provides a comprehensive comparison of the PSPF/2025 format implem
 
 ## 🔄 Testing Matrix
 
-| Builder | Launcher | Status | Notes |
-|---------|----------|--------|-------|
-| Rust | Rust | ✅ Working | Signature verification enforced |
-| Rust | Go | ✅ Working | Go launcher accepts unsigned |
-| Go | Rust | ✅ Working | Rust launcher enforces signatures |
-| Go | Go | ✅ Working | Full compatibility |
-| Python | Rust | ✅ Working | Rust launcher enforces signatures |
-| Python | Go | ✅ Working | Full compatibility |
+| Builder | Launcher | PSPF Compliance | Status | Notes |
+|---------|----------|-----------------|--------|-------|
+| Rust | Rust | ✅ Full | ✅ Working | Signature verification enforced |
+| Rust | Go | ✅ Full | ✅ Working | Go launcher accepts unsigned |
+| Go | Rust | ✅ Full | ✅ Working | Rust launcher enforces signatures |
+| Go | Go | ✅ Full | ✅ Working | Full compatibility, structured logging |
+| Python | Rust | ✅ Full | ✅ Working | Rust launcher enforces signatures |
+| Python | Go | ✅ Full | ✅ Working | Full compatibility, structured logging |
 
 ## 📅 Last Updated
 
@@ -257,3 +261,7 @@ This document provides a comprehensive comparison of the PSPF/2025 format implem
 - **2025-08-30**: MagicTrailer now correctly positioned at EOF - 8200 bytes
 - **2025-08-30**: Index structure confirmed at exactly 8192 bytes across all languages
 - **2025-08-30**: Mock launcher tests now create valid PSPF packages
+- **2025-08-30**: Go renamed `VerifyMagic()` to `VerifyMagicTrailer()` for consistency
+- **2025-08-30**: Go verification now uses structured logging with hclog
+- **2025-08-30**: Added PSPF Spec column to all tables for clear reference
+- **2025-08-30**: Created `pkg/logging/logger.go` for standardized Go logging
