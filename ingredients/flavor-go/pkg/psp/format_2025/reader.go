@@ -349,8 +349,7 @@ func (r *Reader) ReadSlot(slotIndex int) ([]byte, error) {
 		// Return the tar archive for extraction
 		return decompressed, nil
 	default:
-		// Unknown encoding, return as-is
-		return slotData, nil
+		return nil, fmt.Errorf("unsupported encoding type: %d", entry.Encoding)
 	}
 }
 
