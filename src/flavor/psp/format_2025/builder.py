@@ -485,12 +485,11 @@ def _write_package(
         f.seek(index_offset)
         f.write(index.pack())
 
-    # Set the output file as executable (matching Rust and Go builders)
-    # Respects umask - typically results in 0o755 with default umask
+    # Set the output file as executable (user only for security)
+    # 0o700 = rwx------ (read/write/execute for owner only)
     import stat
 
-    current_mode = output_path.stat().st_mode
-    output_path.chmod(current_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+    output_path.chmod(0o700)
     logger.trace(
         "🔧📝📋 Set output file as executable",
         path=str(output_path),

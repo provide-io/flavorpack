@@ -1,8 +1,30 @@
 // helpers/flavor-rs/src/psp/format_2025/constants.rs
 // PSPF 2025 Format Constants - Enhanced Memory-Mapped Version
 
-/// Format magic bytes - using byte literals to prevent string from appearing in binary
-pub const PSPF_MAGIC: [u8; 8] = [b'P', b'S', b'P', b'F', b'2', b'0', b'2', b'5'];
+use crate::utils::xor::{xor_const, xor_decode_default, xor_encode_default, XOR_KEY};
+use lazy_static::lazy_static;
+
+// Raw magic bytes (not exported, only for encoding)
+const PSPF_MAGIC_RAW: &[u8] = b"PSPF2025";
+const PACKAGE_EMOJI_RAW: &[u8] = &[0xF0, 0x9F, 0x93, 0xA6];  // 📦
+const MAGIC_WAND_EMOJI_RAW: &[u8] = &[0xF0, 0x9F, 0xAA, 0x84];  // 🪄
+const TRAILING_MAGIC_RAW: &[u8] = &[
+    0xF0, 0x9F, 0x93, 0xA6,  // 📦
+    0xF0, 0x9F, 0xAA, 0x84   // 🪄
+];
+
+// XOR'd constants computed at compile time (prevents literals in binary)
+pub const PSPF_MAGIC_ENCODED: [u8; 8] = xor_const::<8>(PSPF_MAGIC_RAW, XOR_KEY);
+pub const TRAILING_MAGIC_ENCODED: [u8; 8] = xor_const::<8>(TRAILING_MAGIC_RAW, XOR_KEY);
+
+// Lazy static for runtime decoded values
+lazy_static! {
+    /// Format magic bytes - decoded at runtime
+    pub static ref PSPF_MAGIC: Vec<u8> = xor_decode_default(&PSPF_MAGIC_ENCODED);
+    
+    /// Trailing magic bytes - decoded at runtime  
+    pub static ref TRAILING_MAGIC: Vec<u8> = xor_decode_default(&TRAILING_MAGIC_ENCODED);
+}
 
 /// Format version - keeping as v1
 pub const PSPF_VERSION: u32 = 0x20250001;
@@ -24,12 +46,8 @@ pub const PAGE_SIZE: usize = 4096;
 #[cfg(not(any(target_os = "macos", target_os = "linux", target_os = "windows")))]
 pub const PAGE_SIZE: usize = 4096; // Default
 
-/// Magic endings - package and wand emojis as bytes to avoid literal emojis in binary
-/// 📦 = 0xF0 0x9F 0x93 0xA6 (UTF-8)
-pub const PACKAGE_EMOJI_BYTES: &[u8] = &[0xF0, 0x9F, 0x93, 0xA6];
-/// 🪄 = 0xF0 0x9F 0xAA 0x84 (UTF-8)  
-pub const MAGIC_WAND_EMOJI_BYTES: &[u8] = &[0xF0, 0x9F, 0xAA, 0x84];
-pub const EMOJI_MAGIC_SIZE: usize = 8; // Both emojis
+/// Emoji magic size
+pub const EMOJI_MAGIC_SIZE: usize = 8; // Both emojis (📦🪄)
 
 /// Disk space safety multiplier - require 2x compressed size for extraction
 pub const DISK_SPACE_MULTIPLIER: u64 = 2;
