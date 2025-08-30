@@ -5,10 +5,9 @@ import (
 	"fmt"
 )
 
-// PSPFIndex represents the PSPF 2025 index block (4096 bytes)
+// PSPFIndex represents the PSPF 2025 index block (8192 bytes)
 type PSPFIndex struct {
-	// Core identification (16 bytes)
-	FormatMagic   [8]byte // Format magic bytes
+	// Core identification (8 bytes)
 	FormatVersion uint32  // 0x20250001
 	IndexChecksum uint32  // Adler-32 of index block (with this field as 0)
 
@@ -61,42 +60,41 @@ type PSPFIndex struct {
 	// Future cryptography space (512 bytes)
 	FutureCrypto [512]byte // Reserved for post-quantum signatures
 
-	// Reserved for future use (6808 bytes)
-	Reserved [6808]byte // Large buffer for future expansion
+	// Reserved for future use (6816 bytes)
+	Reserved [6816]byte // Large buffer for future expansion
 }
 
 // Pack serializes the index to bytes
 func (idx *PSPFIndex) Pack() []byte {
 	buf := make([]byte, IndexSize)
 
-	copy(buf[0:8], idx.FormatMagic[:])
-	binary.LittleEndian.PutUint32(buf[8:12], idx.FormatVersion)
-	binary.LittleEndian.PutUint32(buf[12:16], idx.IndexChecksum)
-	binary.LittleEndian.PutUint64(buf[16:24], idx.PackageSize)
-	binary.LittleEndian.PutUint64(buf[24:32], idx.LauncherSize)
-	binary.LittleEndian.PutUint64(buf[32:40], idx.MetadataOffset)
-	binary.LittleEndian.PutUint64(buf[40:48], idx.MetadataSize)
-	binary.LittleEndian.PutUint64(buf[48:56], idx.SlotTableOffset)
-	binary.LittleEndian.PutUint64(buf[56:64], idx.SlotTableSize)
-	binary.LittleEndian.PutUint32(buf[64:68], idx.SlotCount)
-	binary.LittleEndian.PutUint32(buf[68:72], idx.Flags)
-	copy(buf[72:104], idx.PublicKey[:])
-	copy(buf[104:136], idx.MetadataChecksum[:])
-	copy(buf[136:648], idx.IntegritySignature[:])
+	binary.LittleEndian.PutUint32(buf[0:4], idx.FormatVersion)
+	binary.LittleEndian.PutUint32(buf[4:8], idx.IndexChecksum)
+	binary.LittleEndian.PutUint64(buf[8:16], idx.PackageSize)
+	binary.LittleEndian.PutUint64(buf[16:24], idx.LauncherSize)
+	binary.LittleEndian.PutUint64(buf[24:32], idx.MetadataOffset)
+	binary.LittleEndian.PutUint64(buf[32:40], idx.MetadataSize)
+	binary.LittleEndian.PutUint64(buf[40:48], idx.SlotTableOffset)
+	binary.LittleEndian.PutUint64(buf[48:56], idx.SlotTableSize)
+	binary.LittleEndian.PutUint32(buf[56:60], idx.SlotCount)
+	binary.LittleEndian.PutUint32(buf[60:64], idx.Flags)
+	copy(buf[64:96], idx.PublicKey[:])
+	copy(buf[96:128], idx.MetadataChecksum[:])
+	copy(buf[128:640], idx.IntegritySignature[:])
 
 	// Pack performance hints
-	buf[648] = idx.AccessMode
-	buf[649] = idx.CacheStrategy
-	buf[650] = idx.EncodingType
-	buf[651] = idx.EncryptionType
-	binary.LittleEndian.PutUint32(buf[652:656], idx.PageSize)
-	binary.LittleEndian.PutUint64(buf[656:664], idx.MaxMemory)
-	binary.LittleEndian.PutUint64(buf[664:672], idx.MinMemory)
-	binary.LittleEndian.PutUint64(buf[672:680], idx.CpuFeatures)
-	binary.LittleEndian.PutUint64(buf[680:688], idx.GpuRequirements)
-	binary.LittleEndian.PutUint64(buf[688:696], idx.NumaHints)
-	binary.LittleEndian.PutUint32(buf[696:700], idx.StreamChunkSize)
-	copy(buf[700:712], idx.Padding1[:])
+	buf[640] = idx.AccessMode
+	buf[641] = idx.CacheStrategy
+	buf[642] = idx.EncodingType
+	buf[643] = idx.EncryptionType
+	binary.LittleEndian.PutUint32(buf[644:648], idx.PageSize)
+	binary.LittleEndian.PutUint64(buf[648:656], idx.MaxMemory)
+	binary.LittleEndian.PutUint64(buf[656:664], idx.MinMemory)
+	binary.LittleEndian.PutUint64(buf[664:672], idx.CpuFeatures)
+	binary.LittleEndian.PutUint64(buf[672:680], idx.GpuRequirements)
+	binary.LittleEndian.PutUint64(buf[680:688], idx.NumaHints)
+	binary.LittleEndian.PutUint32(buf[688:692], idx.StreamChunkSize)
+	copy(buf[692:704], idx.Padding1[:])
 
 	// Pack extended metadata
 	binary.LittleEndian.PutUint64(buf[712:720], idx.BuildTimestamp)
