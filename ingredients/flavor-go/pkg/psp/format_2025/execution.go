@@ -230,7 +230,7 @@ func validatePackageChecksum(paths *WorkenvPaths, currentChecksum uint32, logger
 // savePackageChecksum saves the package checksum to the cache
 func savePackageChecksum(paths *WorkenvPaths, checksum uint32, logger hclog.Logger) error {
 	instanceDir := paths.Instance()
-	if err := os.MkdirAll(instanceDir, DefaultDirPerms); err != nil {
+	if err := os.MkdirAll(instanceDir, os.FileMode(DefaultDirPerms)); err != nil {
 		return fmt.Errorf("failed to create instance directory: %w", err)
 	}
 	
@@ -268,7 +268,7 @@ type IndexMetadata struct {
 // saveIndexMetadata saves index metadata to JSON file for inspection
 func saveIndexMetadata(paths *WorkenvPaths, index *PSPFIndex, logger hclog.Logger) error {
 	instanceDir := paths.Instance()
-	if err := os.MkdirAll(instanceDir, DefaultDirPerms); err != nil {
+	if err := os.MkdirAll(instanceDir, os.FileMode(DefaultDirPerms)); err != nil {
 		return fmt.Errorf("failed to create instance directory: %w", err)
 	}
 	
@@ -386,7 +386,7 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 	}
 	
 	workenvDir := paths.Workenv()
-	if err := os.MkdirAll(workenvDir, DefaultDirPerms); err != nil {
+	if err := os.MkdirAll(workenvDir, os.FileMode(DefaultDirPerms)); err != nil {
 		logger.Error("❌ Failed to create work environment directory", "error", err)
 		return nil, fmt.Errorf("failed to create work environment directory: %w", err)
 	}
@@ -398,7 +398,7 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 			// Substitute {workenv} placeholder in the path
 			dirPath := strings.ReplaceAll(dirSpec.Path, "{workenv}", workenvDir)
 			logger.Debug("📁 Creating directory", "path", dirPath)
-			if err := os.MkdirAll(dirPath, DefaultDirPerms); err != nil {
+			if err := os.MkdirAll(dirPath, os.FileMode(DefaultDirPerms)); err != nil {
 				logger.Error("❌ Failed to create directory", "path", dirPath, "error", err)
 				return nil, fmt.Errorf("failed to create directory %s: %w", dirPath, err)
 			}
@@ -473,7 +473,7 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 
 		// Create temporary extraction directory
 		tempExtractDir := paths.TempExtraction(os.Getpid())
-		if err := os.MkdirAll(tempExtractDir, DefaultDirPerms); err != nil {
+		if err := os.MkdirAll(tempExtractDir, os.FileMode(DefaultDirPerms)); err != nil {
 			logger.Error("❌ Failed to create temp extraction directory", "error", err)
 			return nil, fmt.Errorf("failed to create temp extraction directory: %w", err)
 		}
@@ -501,7 +501,7 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 		// Write metadata to package metadata directory directly in cache (not in temp)
 		// Use hidden .{workenv}.pspf/package/ structure as a sibling to workenv
 		packageMetadataDir := filepath.Join(paths.Metadata(), "package")
-		if err := os.MkdirAll(packageMetadataDir, DefaultDirPerms); err != nil {
+		if err := os.MkdirAll(packageMetadataDir, os.FileMode(DefaultDirPerms)); err != nil {
 			logger.Error("❌ Failed to create package metadata directory", "error", err)
 			os.RemoveAll(tempExtractDir)
 			return nil, fmt.Errorf("failed to create package metadata directory: %w", err)
@@ -617,7 +617,7 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 	if !workenvValid && len(metadata.SetupCommands) > 0 {
 		logger.Info("🔧 Running setup commands", "count", len(metadata.SetupCommands))
 		metadataDir := filepath.Join(workenvDir, "metadata")
-		if err := os.MkdirAll(metadataDir, DefaultDirPerms); err != nil {
+		if err := os.MkdirAll(metadataDir, os.FileMode(DefaultDirPerms)); err != nil {
 			logger.Error("❌ Failed to create metadata directory", "error", err)
 			return nil, fmt.Errorf("failed to create metadata directory: %w", err)
 		}
