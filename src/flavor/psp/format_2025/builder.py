@@ -483,6 +483,9 @@ def _write_package(
         logger.debug(f"Index data first 16 bytes: {index_data[:16].hex()}")
         f.write(index_data)  # 8192-byte index
         f.write(MAGIC_WAND_EMOJI_BYTES)  # 4-byte magic wand emoji
+        
+        # Get actual file size after writing
+        actual_size = f.tell()
 
     # Set the output file as executable (user only for security)
     set_file_permissions(output_path, DEFAULT_EXECUTABLE_PERMS)
@@ -492,7 +495,7 @@ def _write_package(
         mode=oct(output_path.stat().st_mode),
     )
 
-    return index.package_size
+    return actual_size
 
 
 def _map_purpose(purpose: str) -> int:
