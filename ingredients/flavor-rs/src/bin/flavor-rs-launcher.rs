@@ -23,8 +23,20 @@ fn main() {
 }
 
 fn run() -> i32 {
+    // Initialize logging as early as possible for debugging
+    if let Ok(level) = env::var("FLAVOR_LAUNCHER_LOG_LEVEL") {
+        flavor::logger::JsonLogger::init_with_level(&level, "FLAVOR_LAUNCHER_LOG_LEVEL");
+    } else if let Ok(level) = env::var("FLAVOR_LOG_LEVEL") {
+        flavor::logger::JsonLogger::init_with_level(&level, "FLAVOR_LOG_LEVEL");
+    } else {
+        flavor::logger::JsonLogger::init();
+    }
+    
+    log::trace!("Launcher starting");
+    
     // --- Argument and Environment Parsing ---
     let args: Vec<String> = env::args().collect();
+    log::trace!("Arguments: {:?}", args);
     
     // Check for --version flag early (before PSPF validation)
     if args.len() > 1 && args[1] == "--version" {
@@ -97,15 +109,6 @@ fn run() -> i32 {
 
     // --- Standard Package Execution ---
     // Not in CLI mode, so treat all args after the executable name as app arguments.
-    
-    // Initialize logging early for debugging
-    if let Ok(level) = env::var("FLAVOR_LAUNCHER_LOG_LEVEL") {
-        flavor::logger::JsonLogger::init_with_level(&level, "FLAVOR_LAUNCHER_LOG_LEVEL");
-    } else if let Ok(level) = env::var("FLAVOR_LOG_LEVEL") {
-        flavor::logger::JsonLogger::init_with_level(&level, "FLAVOR_LOG_LEVEL");
-    } else {
-        flavor::logger::JsonLogger::init();
-    }
     
     // But first check if this is just a standalone launcher being called with --version
     // (without being a bundle and without CLI mode)

@@ -108,7 +108,8 @@
       "Bash(./dist/taster.psp --version)",
       "Bash(../../ingredients/bin/flavor-rs-launcher-darwin_arm64:*)",
       "Bash(echo:*)",
-      "Bash(RUST_BACKTRACE=full FLAVOR_LOG_LEVEL=trace timeout 2 dist/taster.psp info)"
+      "Bash(RUST_BACKTRACE=full FLAVOR_LOG_LEVEL=trace timeout 2 dist/taster.psp info)",
+      "Bash(FLAVOR_LOG_LEVEL=trace timeout 2 dist/taster.psp info)"
     ],
     "additionalDirectories": [
       "/Users/tim/code/gh/provide-io"
