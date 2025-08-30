@@ -183,7 +183,12 @@
       "Bash(FLAVOR_INSECURE=1 dist/echo-test.psp \"Hello from test\")",
       "Bash(FLAVOR_LOG_LEVEL=trace FLAVOR_INSECURE=1 dist/echo-test.psp \"hello from test\")",
       "Bash(FLAVOR_LOG_LEVEL=debug FLAVOR_INSECURE=1 timeout 2 dist/echo-test.psp \"hello\")",
-      "Bash(/usr/bin/python3:*)"
+      "Bash(/usr/bin/python3:*)",
+      "Bash(FLAVOR_INSECURE=1 make test)",
+      "Bash(FLAVOR_LOG_LEVEL=trace FLAVOR_INSECURE=1 timeout 1 dist/echo-test.psp \"test\")",
+      "Bash(FLAVOR_LOG_LEVEL=info FLAVOR_INSECURE=1 ./dist/echo-test.psp \"hello\")",
+      "Bash(FLAVOR_LOG_LEVEL=error FLAVOR_INSECURE=1 dist/echo-test.psp \"hello world\")",
+      "Bash(FLAVOR_INSECURE=1 dist/env-test.psp)"
     ],
     "additionalDirectories": [
       "/Users/tim/code/gh/provide-io"
