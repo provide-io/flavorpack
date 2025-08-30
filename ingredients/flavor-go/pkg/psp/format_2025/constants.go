@@ -85,15 +85,10 @@ const (
 	EncodingGzip = 2 // Gzipped single file
 	EncodingTgz  = 3 // Tar archive, then gzipped (tar.gz)
 	
-	// Purpose types - must match Python/Rust
+	// Purpose types
 	PurposePayload = 0 // Payload/data files
 	PurposeRuntime = 1 // Runtime/executable code
 	PurposeTool    = 2 // Tool/configuration files
-	PurposeMedia   = 3 // Media/assets (unused but kept for future)
-	// Aliases for compatibility
-	PurposeData   = PurposePayload
-	PurposeCode   = PurposeRuntime
-	PurposeConfig = PurposeTool
 	
 	// Lifecycle types - must match Python/Rust
 	LifecycleInit      = 0  // First run only, removed after initialization

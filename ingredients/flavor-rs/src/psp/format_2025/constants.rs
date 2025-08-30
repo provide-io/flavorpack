@@ -103,15 +103,10 @@ pub const ENCODING_TGZ: u8 = 3; // Tar archive, then gzipped (tar.gz)
 // pub const ENCODING_ZIP: u8 = 8;      // Zip archive
 // pub const ENCODING_7Z: u8 = 9;       // 7-zip archive
 
-/// Purpose types - must match Python/Go builders
-pub const PURPOSE_PAYLOAD: u8 = 0; // Payload/data files
+/// Purpose types
+pub const PURPOSE_PAYLOAD: u8 = 0; // Payload/data files  
 pub const PURPOSE_RUNTIME: u8 = 1; // Runtime/executable code
 pub const PURPOSE_TOOL: u8 = 2; // Tool/configuration files
-// Aliases for compatibility
-pub const PURPOSE_DATA: u8 = PURPOSE_PAYLOAD;
-pub const PURPOSE_CODE: u8 = PURPOSE_RUNTIME;
-pub const PURPOSE_CONFIG: u8 = PURPOSE_TOOL;
-pub const PURPOSE_MEDIA: u8 = 3; // Media/assets (unused but kept for future)
 
 /// Lifecycle types - must match Python/Go builders
 pub const LIFECYCLE_INIT: u8 = 0; // First run only, removed after initialization
