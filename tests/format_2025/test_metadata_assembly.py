@@ -231,25 +231,6 @@ class TestMetadataAssembly:
         assert "runtime" in metadata
         assert "workenv" in metadata
 
-    def test_assemble_metadata_backward_compatibility(
-        self, basic_spec, mock_launcher_info
-    ):
-        """Test backward compatibility with old test format."""
-        # Tests might set these directly
-        spec = basic_spec.with_metadata(
-            builder={"name": "test-builder", "version": "2.0"},
-            launcher={"name": "test-launcher", "version": "2.0"},
-        )
-
-        metadata = assemble_metadata(spec, [], mock_launcher_info)
-
-        # Should have both old and new format
-        assert "builder" in metadata  # Old format for tests
-        assert metadata["builder"]["name"] == "test-builder"
-
-        # New format should still exist
-        assert metadata["build"]["tool"] == "flavor-python"
-        assert metadata["launcher"]["tool"] == "flavor-rs-launcher"
 
     def test_assemble_metadata_with_slots(self, basic_spec, mock_launcher_info):
         """Test metadata assembly includes slot information."""

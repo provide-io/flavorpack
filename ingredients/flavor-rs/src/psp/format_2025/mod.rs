@@ -31,4 +31,4 @@ pub use verifier::verify;
 pub use index::Index;
 pub use metadata::Metadata;
 pub use reader::Reader;
-pub use slots::Slot;
+pub use slots::SlotDescriptor;

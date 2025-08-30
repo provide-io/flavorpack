@@ -585,14 +585,6 @@ class IngredientManager:
                 logger.debug(f"Found ingredient at: {local_path}")
                 return local_path
 
-            # 4. Check installed ingredients cache (legacy)
-            installed_path = (
-                self.installed_ingredients_bin / self.current_platform / specific_name
-            )
-            if installed_path.exists():
-                logger.debug(f"Found ingredient at: {installed_path}")
-                return installed_path
-
         # Not found
         raise FileNotFoundError(
             f"Ingredient '{name}' not found for platform {self.current_platform}.\n"

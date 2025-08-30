@@ -116,16 +116,3 @@ def clean_command(all: bool, ingredients: bool, dry_run: bool, yes: bool) -> Non
         click.secho(f"\n💾 Total freed: {freed_mb:.1f} MB", fg="green")
 
 
-@click.command("analyze-deps")
-@click.option(
-    "--manifest",
-    "manifest_path",
-    default="pyproject.toml",
-    type=click.Path(exists=True, dir_okay=False, resolve_path=True),
-    help="Path to the pyproject.toml manifest file.",
-)
-def analyze_deps_command(manifest_path: str) -> None:
-    """Analyze package dependencies (deprecated - optimization happens automatically)."""
-    click.echo("⚠️  This command is deprecated.")
-    click.echo("📦 Wheels automatically exclude __pycache__ and .pyc files")
-    click.echo("✅ No manual optimization needed!")
