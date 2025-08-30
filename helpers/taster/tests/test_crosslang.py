@@ -38,7 +38,7 @@ class TestCrossLangTester:
         captured = capsys.readouterr()
         assert "Test message" in captured.out
 
-    @patch("flavor.utils.subprocess.run_command")
+    @patch("taster.commands.crosslang.run_command")
     def test_build_with_python(self, mock_run_command):
         """Test Python builder."""
         mock_run_command.return_value = Mock(
@@ -193,7 +193,7 @@ class TestCrossLangTester:
                 with patch.object(
                     tester,
                     "build_with_launcher",
-                    side_effect=lambda li, ks: mock_builder(li, ks),
+                    side_effect=lambda li, key_seed=None: mock_builder(li, key_seed),
                 ):
                     result = tester.test_reproducible_build(launcher_info)
 
