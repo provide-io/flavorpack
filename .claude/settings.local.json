@@ -182,7 +182,8 @@
       "Bash(FLAVOR_LOG_LEVEL=info timeout 2 dist/taster-rust-fixed.psp)",
       "Bash(FLAVOR_INSECURE=1 dist/echo-test.psp \"Hello from test\")",
       "Bash(FLAVOR_LOG_LEVEL=trace FLAVOR_INSECURE=1 dist/echo-test.psp \"hello from test\")",
-      "Bash(FLAVOR_LOG_LEVEL=debug FLAVOR_INSECURE=1 timeout 2 dist/echo-test.psp \"hello\")"
+      "Bash(FLAVOR_LOG_LEVEL=debug FLAVOR_INSECURE=1 timeout 2 dist/echo-test.psp \"hello\")",
+      "Bash(/usr/bin/python3:*)"
     ],
     "additionalDirectories": [
       "/Users/tim/code/gh/provide-io"
