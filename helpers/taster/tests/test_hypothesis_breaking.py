@@ -85,6 +85,8 @@ class TestBreakingInputs:
                 slot = SlotMetadata(
                     index=0,
                     id=filename,
+                    source="/tmp/test.txt",
+                    target=filename,  # The evil filename becomes the target
                     size=100,
                     checksum="abc123",
                     encoding="none",
@@ -129,6 +131,8 @@ class TestBreakingInputs:
                 slot = SlotMetadata(
                     index=0,
                     id="huge",
+                    source="/tmp/huge.dat",
+                    target="huge.dat",
                     size=size,
                     checksum="abc",
                     encoding="gzip" if size > 0 else "none",
