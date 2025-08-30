@@ -103,7 +103,10 @@
       "Read(/Users/tim/code/gh/**)",
       "Bash(python -m flavor pack:*)",
       "Bash(../../workenv/flavorpack_darwin_arm64/bin/python -m flavor pack:*)",
-      "Bash(FLAVOR_LOG_LEVEL=debug dist/taster.psp info)"
+      "Bash(FLAVOR_LOG_LEVEL=debug dist/taster.psp info)",
+      "Bash(RUST_BACKTRACE=1 dist/taster.psp info)",
+      "Bash(./dist/taster.psp --version)",
+      "Bash(../../ingredients/bin/flavor-rs-launcher-darwin_arm64:*)"
     ],
     "additionalDirectories": [
       "/Users/tim/code/gh/provide-io"
