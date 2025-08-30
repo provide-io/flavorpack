@@ -407,6 +407,7 @@ class PSPFLauncher(PSPFReader):
 
                 elif cmd_type == "execute":
                     # Handle command execution
+                    logger.debug(f"🔧 Command dict: {cmd}")
                     command = cmd.get("command", "")
                     logger.debug(f"🔧 Original command: {command}")
 
