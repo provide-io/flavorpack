@@ -154,28 +154,28 @@ impl Index {
         let meta_sz = index.metadata_size;
         debug!("Parsed metadata_offset: 0x{:016x} ({})", meta_off, meta_off);
         debug!("Parsed metadata_size: {} bytes", meta_sz);
-        index.slot_table_offset = u64::from_le_bytes(data[48..56].try_into()
+        index.slot_table_offset = u64::from_le_bytes(data[40..48].try_into()
             .map_err(|_| FlavorError::Generic("Invalid slot table offset bytes".into()))?);
-        index.slot_table_size = u64::from_le_bytes(data[56..64].try_into()
+        index.slot_table_size = u64::from_le_bytes(data[48..56].try_into()
             .map_err(|_| FlavorError::Generic("Invalid slot table size bytes".into()))?);
-        index.slot_count = u32::from_le_bytes(data[64..68].try_into()
+        index.slot_count = u32::from_le_bytes(data[56..60].try_into()
             .map_err(|_| FlavorError::Generic("Invalid slot count bytes".into()))?);
-        index.flags = u32::from_le_bytes(data[68..72].try_into()
+        index.flags = u32::from_le_bytes(data[60..64].try_into()
             .map_err(|_| FlavorError::Generic("Invalid flags bytes".into()))?);
-        index.public_key.copy_from_slice(&data[72..104]);
-        index.metadata_checksum.copy_from_slice(&data[104..136]);
-        index.integrity_signature.copy_from_slice(&data[136..648]);
+        index.public_key.copy_from_slice(&data[64..96]);
+        index.metadata_checksum.copy_from_slice(&data[96..128]);
+        index.integrity_signature.copy_from_slice(&data[128..640]);
 
         // Parse performance hints
-        index.access_mode = data[648];
-        index.cache_strategy = data[649];
-        index.encoding_type = data[650];
-        index.encryption_type = data[651];
-        index.page_size = u32::from_le_bytes(data[652..656].try_into()
+        index.access_mode = data[640];
+        index.cache_strategy = data[641];
+        index.encoding_type = data[642];
+        index.encryption_type = data[643];
+        index.page_size = u32::from_le_bytes(data[644..648].try_into()
             .map_err(|_| FlavorError::Generic("Invalid page size bytes".into()))?);
-        index.max_memory = u64::from_le_bytes(data[656..664].try_into()
+        index.max_memory = u64::from_le_bytes(data[648..656].try_into()
             .map_err(|_| FlavorError::Generic("Invalid max memory bytes".into()))?);
-        index.min_memory = u64::from_le_bytes(data[664..672].try_into()
+        index.min_memory = u64::from_le_bytes(data[656..664].try_into()
             .map_err(|_| FlavorError::Generic("Invalid min memory bytes".into()))?);
         index.cpu_features = u64::from_le_bytes(data[672..680].try_into()
             .map_err(|_| FlavorError::Generic("Invalid CPU features bytes".into()))?);
