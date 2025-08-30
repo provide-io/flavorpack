@@ -167,7 +167,7 @@ def create_builder_manifest(
                 "source": str(slots["python"]),
                 "encoding": "tgz",
                 "purpose": "runtime",
-                "lifecycle": "runtime",
+                "lifecycle": "cache",
                 "target": ".",
             },
             {
