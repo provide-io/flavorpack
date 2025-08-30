@@ -143,7 +143,8 @@
       "Bash(shasum:*)",
       "Bash(helpers/taster/dist/taster2.psp:*)",
       "Bash(../bin/flavor-rs-launcher-darwin_arm64:*)",
-      "Bash(helpers/pretaster/dist/echo-test.psp:*)"
+      "Bash(helpers/pretaster/dist/echo-test.psp:*)",
+      "Bash(./dist/echo-test-rust.psp:*)"
     ],
     "additionalDirectories": [
       "/Users/tim/code/gh/provide-io"
