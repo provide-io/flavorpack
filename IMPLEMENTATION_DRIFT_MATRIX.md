@@ -9,44 +9,44 @@ This document provides a comprehensive comparison of the PSPF/2025 format implem
 
 ### Version & Sizes
 
-| Constant | Python | Go | Rust | Status |
-|----------|--------|-----|------|--------|
-| PSPF_VERSION | `0x20250001` | `0x20250001` | `0x20250001` | ✅ Aligned |
-| INDEX_SIZE/HEADER_SIZE | `8192` | `8192` | `8192` | ✅ Aligned |
-| MAGIC_TRAILER_SIZE | `8200` | `8200` | `8200` | ✅ Aligned |
-| SLOT_DESCRIPTOR_SIZE | `64` | `64` | `64` | ✅ Aligned |
-| SLOT_ALIGNMENT | `8` | `8` | `8` | ✅ Aligned |
-| Reserved field size | `6816` bytes | `6816` bytes | `6816` bytes | ✅ Fixed |
+| Constant | PSPF Spec | Python | Go | Rust | Status |
+|----------|-----------|--------|-----|------|--------|
+| PSPF_VERSION | `0x20250001` | `0x20250001` | `0x20250001` | `0x20250001` | ✅ Aligned |
+| INDEX_SIZE | `8192` bytes | `8192` | `8192` | `8192` | ✅ Aligned |
+| MAGIC_TRAILER_SIZE | `8200` bytes | `8200` | `8200` | `8200` | ✅ Aligned |
+| SLOT_DESCRIPTOR_SIZE | `64` bytes | `64` | `64` | `64` | ✅ Aligned |
+| SLOT_ALIGNMENT | `8` bytes | `8` | `8` | `8` | ✅ Aligned |
+| Reserved field size | `6816` bytes | `6816` bytes | `6816` bytes | `6816` bytes | ✅ Aligned |
 
 ### Emoji Magic Bytes
 
-| Constant | Python | Go | Rust | Status |
+| Constant | PSPF Spec | Python | Go | Rust | Status |
 |----------|--------|-----|------|--------|
-| PACKAGE_EMOJI_BYTES | `[0xF0, 0x9F, 0x93, 0xA6]` | `[0xF0, 0x9F, 0x93, 0xA6]` | `[0xF0, 0x9F, 0x93, 0xA6]` | ✅ Aligned |
-| MAGIC_WAND_EMOJI_BYTES | `[0xF0, 0x9F, 0xAA, 0x84]` | `[0xF0, 0x9F, 0xAA, 0x84]` | `[0xF0, 0x9F, 0xAA, 0x84]` | ✅ Aligned |
+| PACKAGE_EMOJI_BYTES | 📦 `[0xF0, 0x9F, 0x93, 0xA6]` | `[0xF0, 0x9F, 0x93, 0xA6]` | `[0xF0, 0x9F, 0x93, 0xA6]` | `[0xF0, 0x9F, 0x93, 0xA6]` | ✅ Aligned |
+| MAGIC_WAND_EMOJI_BYTES | 🪄 `[0xF0, 0x9F, 0xAA, 0x84]` | `[0xF0, 0x9F, 0xAA, 0x84]` | `[0xF0, 0x9F, 0xAA, 0x84]` | `[0xF0, 0x9F, 0xAA, 0x84]` | ✅ Aligned |
 
 ### Encoding Types
 
-| Type | Python | Go | Rust | Status |
+| Type | PSPF Spec | Python | Go | Rust | Status |
 |------|--------|-----|------|--------|
-| ENCODING_RAW | `0` | `0` | `0` | ✅ Aligned |
-| ENCODING_TAR | `1` | `1` | `1` | ✅ Aligned |
-| ENCODING_GZIP | `2` | `2` | `2` | ✅ Aligned |
-| ENCODING_TGZ | `3` | `3` | `3` | ✅ Aligned |
+| ENCODING_RAW | `0` | `0` | `0` | `0` | ✅ Aligned |
+| ENCODING_TAR | `1` | `1` | `1` | `1` | ✅ Aligned |
+| ENCODING_GZIP | `2` | `2` | `2` | `2` | ✅ Aligned |
+| ENCODING_TGZ | `3` | `3` | `3` | `3` | ✅ Aligned |
 
 ### Purpose Types
 
-| Type | Python | Go | Rust | Status |
+| Type | PSPF Spec | Python | Go | Rust | Status |
 |------|--------|-----|------|--------|
-| PURPOSE_DATA | `0` | `0` | `0` | ✅ Aligned |
-| PURPOSE_CODE | `1` | `1` | `1` | ✅ Aligned |
-| PURPOSE_CONFIG | `2` | `2` | `2` | ✅ Aligned |
-| PURPOSE_MEDIA | `3` | `3` | `3` | ✅ Aligned |
-| Legacy aliases | Has PAYLOAD/RUNTIME/TOOL | Has PAYLOAD/RUNTIME/TOOL | Has PAYLOAD/RUNTIME/TOOL | ✅ Aligned |
+| PURPOSE_DATA | `0` | `0` | `0` | `0` | ✅ Aligned |
+| PURPOSE_CODE | `1` | `1` | `1` | `1` | ✅ Aligned |
+| PURPOSE_CONFIG | `2` | `2` | `2` | `2` | ✅ Aligned |
+| PURPOSE_MEDIA | `3` | `3` | `3` | `3` | ✅ Aligned |
+| Legacy aliases | N/A | Has PAYLOAD/RUNTIME/TOOL | Has PAYLOAD/RUNTIME/TOOL | Has PAYLOAD/RUNTIME/TOOL | ✅ Aligned |
 
 ### Lifecycle Types
 
-| Type | Python | Go | Rust | Status |
+| Type | PSPF Spec | Python | Go | Rust | Status |
 |------|--------|-----|------|--------|
 | LIFECYCLE_INIT | `0` | `0` | `0` | ✅ Aligned |
 | LIFECYCLE_STARTUP | `1` | `1` | `1` | ✅ Aligned |
@@ -62,7 +62,7 @@ This document provides a comprehensive comparison of the PSPF/2025 format implem
 
 ### Path Constants
 
-| Constant | Python | Go | Rust | Status |
+| Constant | PSPF Spec | Python | Go | Rust | Status |
 |----------|--------|-----|------|--------|
 | PSPF_HIDDEN_PREFIX | `"."` | `"."` | `"."` | ✅ Aligned |
 | PSPF_SUFFIX | `".pspf"` | `".pspf"` | `".pspf"` | ✅ Aligned |
@@ -78,7 +78,7 @@ This document provides a comprehensive comparison of the PSPF/2025 format implem
 
 ### Field Offsets (All values in bytes)
 
-| Field | Offset | Size | Python | Go | Rust | Status |
+| Field | PSPF Spec (Offset/Size) | Python | Go | Rust | Status |
 |-------|--------|------|--------|-----|------|--------|
 | format_version | 0 | 4 | ✅ | ✅ | ✅ | ✅ Aligned |
 | index_checksum | 4 | 4 | ✅ | ✅ | ✅ | ✅ Aligned |
