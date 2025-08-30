@@ -179,7 +179,8 @@
       "Bash(FLAVOR_LOG_LEVEL=info dist/taster-go-fixed.psp info)",
       "Read(/Users/tim/.cache/flavor/workenv/taster-go-fixed/bin/**)",
       "Bash(FLAVOR_LOG_LEVEL=debug dist/taster-rust-fixed.psp --version)",
-      "Bash(FLAVOR_LOG_LEVEL=info timeout 2 dist/taster-rust-fixed.psp)"
+      "Bash(FLAVOR_LOG_LEVEL=info timeout 2 dist/taster-rust-fixed.psp)",
+      "Bash(FLAVOR_INSECURE=1 dist/echo-test.psp \"Hello from test\")"
     ],
     "additionalDirectories": [
       "/Users/tim/code/gh/provide-io"
