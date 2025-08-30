@@ -79,8 +79,8 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
                 format="PSPF/2025", package={"name": "test", "version": "1.0"}
             )
             .add_slot(
-                id=id=slot.id,
-                data=data=slot.source,
+                id=slot.id,
+                data=slot.source,
                 encoding=slot.encoding,
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,
@@ -175,8 +175,8 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
         )
         for slot in slots:
             builder = builder.add_slot(
-                id=id=slot.id,
-                data=data=slot.source,
+                id=slot.id,
+                data=slot.source,
                 encoding=slot.encoding,
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,
@@ -281,8 +281,8 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
         )
         for slot in slots:
             builder = builder.add_slot(
-                id=id=slot.id,
-                data=data=slot.source,
+                id=slot.id,
+                data=slot.source,
                 encoding=slot.encoding,
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,
@@ -300,8 +300,8 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
         )
         for slot in slots:
             builder = builder.add_slot(
-                id=id=slot.id,
-                data=data=slot.source,
+                id=slot.id,
+                data=slot.source,
                 encoding=slot.encoding,
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,
@@ -365,8 +365,8 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
                 format="PSPF/2025", package={"name": "test", "version": "1.0"}
             )
             .add_slot(
-                id=id=slot.id,
-                data=data=slot.source,
+                id=slot.id,
+                data=slot.source,
                 encoding=slot.encoding,
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,
@@ -407,8 +407,8 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
                 format="PSPF/2025", package={"name": "test", "version": "1.0"}
             )
             .add_slot(
-                id=id=slot.id,
-                data=data=slot.source,
+                id=slot.id,
+                data=slot.source,
                 encoding=slot.encoding,
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,
@@ -494,8 +494,8 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
         )
         for slot in slots:
             builder = builder.add_slot(
-                id=id=slot.id,
-                data=data=slot.source,
+                id=slot.id,
+                data=slot.source,
                 encoding=slot.encoding,
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,
