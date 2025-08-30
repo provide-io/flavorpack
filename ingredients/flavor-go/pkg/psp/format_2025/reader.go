@@ -420,8 +420,18 @@ func (r *Reader) ExtractSlot(slotIndex int, destDir string) (string, error) {
 		targetPath = strings.ReplaceAll(targetPath, "{workenv}/", "")
 		targetPath = strings.ReplaceAll(targetPath, "{workenv}", "")
 	}
-	destPath := filepath.Join(destDir, targetPath)
-	extractDir := filepath.Dir(destPath)
+	
+	// If targetPath is empty after stripping {workenv}, extract directly to destDir
+	var destPath, extractDir string
+	if targetPath == "" {
+		// Target was "{workenv}" - extract directly to destDir
+		destPath = destDir
+		extractDir = destDir
+	} else {
+		// Target has a subpath - join it with destDir
+		destPath = filepath.Join(destDir, targetPath)
+		extractDir = filepath.Dir(destPath)
+	}
 
 	// Check if this is a tarball that needs extraction
 	if isTarball(decompressed) {
