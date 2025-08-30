@@ -183,8 +183,8 @@ class TestPSPFSlots:
         for slot in test_slots:
             if hasattr(slot, "source") and slot.source:
                 builder = builder.add_slot(
-                id=slot.id,
-                data=slot.source,
+                    id=slot.id,
+                    data=slot.source,
                     encoding=slot.encoding,
                     purpose=slot.purpose,
                     lifecycle=slot.lifecycle,
@@ -352,8 +352,8 @@ class TestPSPFSlots:
         for slot in test_slots:
             if hasattr(slot, "source") and slot.source:
                 builder = builder.add_slot(
-                id=slot.id,
-                data=slot.source,
+                    id=slot.id,
+                    data=slot.source,
                     encoding=slot.encoding,
                     purpose=slot.purpose,
                     lifecycle=slot.lifecycle,
