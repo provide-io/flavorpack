@@ -175,7 +175,9 @@
       "Bash(FLAVOR_LOG_LEVEL=info dist/taster-go.psp info)",
       "Read(/Users/tim/.cache/flavor/workenv/taster-go/bin/**)",
       "Read(/Users/tim/.cache/flavor/workenv/**)",
-      "Bash(../../workenv/flavorpack_darwin_arm64/bin/flavor pack:*)"
+      "Bash(../../workenv/flavorpack_darwin_arm64/bin/flavor pack:*)",
+      "Bash(FLAVOR_LOG_LEVEL=info dist/taster-go-fixed.psp info)",
+      "Read(/Users/tim/.cache/flavor/workenv/taster-go-fixed/bin/**)"
     ],
     "additionalDirectories": [
       "/Users/tim/code/gh/provide-io"
