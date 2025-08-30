@@ -1,54 +1,24 @@
 //! Flavor Rust launcher binary
 
 use flavor::{launch_package, LaunchOptions};
-use std::{env, panic, process};
+use std::{env, process};
 
 const VERSION: &str = "0.3.0";
 
-// Exit codes for different error types
-const EXIT_PANIC: i32 = 101;
-const EXIT_PSPF_ERROR: i32 = 102;
-const EXIT_EXTRACTION_ERROR: i32 = 103;
-const EXIT_EXECUTION_ERROR: i32 = 104;
-const EXIT_INVALID_ARGS: i32 = 105;
-const EXIT_IO_ERROR: i32 = 106;
-
 fn main() {
-    // Set up panic handler to return specific exit code
-    panic::set_hook(Box::new(|panic_info| {
-        eprintln!("PANIC: {}", panic_info);
-        process::exit(EXIT_PANIC);
-    }));
-    
-    // Wrap main logic in catch_unwind for extra safety
-    let result = panic::catch_unwind(|| run());
-    
-    match result {
-        Ok(exit_code) => process::exit(exit_code),
-        Err(_) => {
-            eprintln!("Fatal: Unhandled panic in launcher");
-            process::exit(EXIT_PANIC);
-        }
-    }
-}
-
-fn run() -> i32 {
     // --- Argument and Environment Parsing ---
     let args: Vec<String> = env::args().collect();
     
     // Check for --version flag early (before PSPF validation)
     if args.len() > 1 && args[1] == "--version" {
         println!("flavor-rs-launcher {}", VERSION);
-        return 0;
+        process::exit(0);
     }
     
-    let exe_path = match env::current_exe() {
-        Ok(path) => path,
-        Err(e) => {
-            eprintln!("Failed to get executable path: {}", e);
-            return EXIT_IO_ERROR;
-        }
-    };
+    let exe_path = env::current_exe().unwrap_or_else(|e| {
+        eprintln!("Failed to get executable path: {}", e);
+        process::exit(1);
+    });
 
     // Determine if running in CLI mode ONLY from the environment variable.
     let cli_mode = env::var("FLAVOR_LAUNCHER_CLI").map_or(false, |v| v == "1" || v.to_lowercase() == "true");
@@ -73,12 +43,9 @@ fn run() -> i32 {
             "extract" => {
                 if command_args.len() < 3 {
                     eprintln!("Usage: {} extract <slot_index> <output_dir>", args[0]);
-                    EXIT_INVALID_ARGS
+                    1
                 } else {
-                    match flavor::psp::format_2025::cli::extract_slot(&exe_path, &command_args[1], &command_args[2]) {
-                        code if code == 0 => 0,
-                        _ => EXIT_EXTRACTION_ERROR,
-                    }
+                    flavor::psp::format_2025::cli::extract_slot(&exe_path, &command_args[1], &command_args[2])
                 }
             }
             "run" => {
@@ -88,21 +55,18 @@ fn run() -> i32 {
                     insecure: env::var("FLAVOR_INSECURE").unwrap_or_default() == "1",
                     workdir: None,
                 };
-                match launch_package(&exe_path, &remaining_args, options) {
-                    Ok(code) => code,
-                    Err(e) => {
-                        eprintln!("Launch error: {}", e);
-                        EXIT_EXECUTION_ERROR
-                    }
-                }
+                launch_package(&exe_path, &remaining_args, options).unwrap_or_else(|e| {
+                    eprintln!("Error: {}", e);
+                    1
+                })
             }
             _ => {
                 eprintln!("Error: Unknown command '{}'", command);
                 eprintln!("Available commands: info, verify, metadata, extract, run");
-                EXIT_INVALID_ARGS
+                1
             }
         };
-        return exit_code;
+        process::exit(exit_code);
     }
 
     // --- Standard Package Execution ---
@@ -124,20 +88,10 @@ fn run() -> i32 {
         workdir: None,
     };
 
-    match launch_package(&exe_path, &remaining_args, options) {
-        Ok(code) => code,
-        Err(e) => {
-            eprintln!("Package launch error: {}", e);
-            // Determine error type based on error message
-            if e.to_string().contains("PSPF") || e.to_string().contains("magic") {
-                EXIT_PSPF_ERROR
-            } else if e.to_string().contains("extract") || e.to_string().contains("slot") {
-                EXIT_EXTRACTION_ERROR
-            } else if e.to_string().contains("I/O") || e.to_string().contains("file") {
-                EXIT_IO_ERROR
-            } else {
-                EXIT_EXECUTION_ERROR
-            }
-        }
-    }
+    let exit_code = launch_package(&exe_path, &remaining_args, options).unwrap_or_else(|e| {
+        eprintln!("Error: {}", e);
+        1
+    });
+
+    process::exit(exit_code);
 }
