@@ -38,7 +38,8 @@ pub fn detect_format(package_path: &Path) -> Result<PackageFormat> {
             log::trace!("Found emoji magic at end of file");
             // Now verify there's a valid PSPF header somewhere
             // Search for PSPF magic in the file
-            let search_limit = file_size.min(10 * 1024 * 1024);
+            // Limit search to first 2MB for performance (launchers shouldn't be larger)
+            let search_limit = file_size.min(2 * 1024 * 1024);
             log::trace!("Searching for PSPF magic in first {} bytes", search_limit);
             
             for offset in (0..search_limit).step_by(1024) {

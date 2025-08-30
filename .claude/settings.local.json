@@ -115,7 +115,8 @@
       "Bash(FLAVOR_LAUNCHER_CLI=1 dist/taster.psp info)",
       "Bash(./pretaster test:*)",
       "Bash(FLAVOR_LOG_LEVEL=trace dist/echo-test.psp \"hello world\")",
-      "Bash(dist/echo-test.psp:*)"
+      "Bash(dist/echo-test.psp:*)",
+      "Bash(FLAVOR_LOG_LEVEL=debug timeout 2 dist/taster.psp info)"
     ],
     "additionalDirectories": [
       "/Users/tim/code/gh/provide-io"
