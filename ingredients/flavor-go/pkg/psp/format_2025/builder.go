@@ -690,7 +690,7 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 		"slot_table_size", index.SlotTableSize)
 
 	// 🔧 Make the output file executable
-	if err := os.Chmod(outputPath, DefaultDirPerms); err != nil {
+	if err := os.Chmod(outputPath, 0755); err != nil {
 		logger.Error("❌ Failed to make output executable", "error", err)
 		os.Exit(1)
 	}
