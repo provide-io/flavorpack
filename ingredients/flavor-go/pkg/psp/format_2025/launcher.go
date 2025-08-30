@@ -244,7 +244,7 @@ func execBundleReplace(exePath string, args []string, userCwd string, logger hcl
 // to handle signals or perform cleanup. The new process handles its own signals.
 
 func showBundleInfo(exePath string, logger hclog.Logger) {
-	reader, err := NewReader(exePath)
+	reader, err := NewReaderWithLogger(exePath, logger)
 	if err != nil {
 		logger.Error("❌ Failed to create reader", "error", err)
 		os.Exit(1)
@@ -321,7 +321,7 @@ func extractSlot(exePath, slotStr, outputDir string, logger hclog.Logger) {
 		os.Exit(1)
 	}
 
-	reader, err := NewReader(exePath)
+	reader, err := NewReaderWithLogger(exePath, logger)
 	if err != nil {
 		logger.Error("❌ Failed to create reader", "error", err)
 		os.Exit(1)
@@ -399,7 +399,7 @@ func detectLauncherType(exePath string) string {
 }
 
 func showMetadata(exePath string, logger hclog.Logger) {
-	reader, err := NewReader(exePath)
+	reader, err := NewReaderWithLogger(exePath, logger)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: Failed to create reader: %v\n", err)
 		os.Exit(1)
@@ -426,7 +426,7 @@ func showMetadata(exePath string, logger hclog.Logger) {
 }
 
 func verifyBundle(exePath string, logger hclog.Logger) {
-	reader, err := NewReader(exePath)
+	reader, err := NewReaderWithLogger(exePath, logger)
 	if err != nil {
 		logger.Error("❌ Failed to create reader", "error", err)
 		os.Exit(1)

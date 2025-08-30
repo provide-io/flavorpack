@@ -320,7 +320,7 @@ func checkWorkenvValidity(paths *WorkenvPaths, index *PSPFIndex, metadata *Metad
 }
 
 func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclog.Logger) (*exec.Cmd, error) {
-	reader, err := NewReader(exePath)
+	reader, err := NewReaderWithLogger(exePath, logger)
 	if err != nil {
 		logger.Error("❌ Failed to create reader", "error", err)
 		return nil, fmt.Errorf("failed to create reader: %w", err)

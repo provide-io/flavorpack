@@ -15,6 +15,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/hashicorp/go-hclog"
 	"github.com/provide-io/flavor/go/flavor/pkg/utils/pspf"
 )
 
@@ -37,12 +38,22 @@ type Reader struct {
 	file       *os.File
 	index      *PSPFIndex
 	metadata   *Metadata
+	logger     hclog.Logger
 }
 
 // NewReader creates a new PSPF reader
 func NewReader(bundlePath string) (*Reader, error) {
+	return NewReaderWithLogger(bundlePath, hclog.NewNullLogger())
+}
+
+// NewReaderWithLogger creates a new PSPF reader with a custom logger
+func NewReaderWithLogger(bundlePath string, logger hclog.Logger) (*Reader, error) {
+	if logger == nil {
+		logger = hclog.NewNullLogger()
+	}
 	return &Reader{
 		bundlePath: bundlePath,
+		logger:     logger,
 	}, nil
 }
 
@@ -114,6 +125,9 @@ func (r *Reader) ReadIndex() (*PSPFIndex, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// Debug: Log the launcher size
+	r.logger.Debug("Launcher size detected", "size", launcherSize, "size_hex", fmt.Sprintf("0x%x", launcherSize))
 
 	// Seek to index position
 	if _, err := r.file.Seek(launcherSize, io.SeekStart); err != nil {
