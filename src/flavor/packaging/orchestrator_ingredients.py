@@ -105,7 +105,7 @@ def create_builder_manifest(
     else:
         # UV installs Python as python3 on all Unix platforms
         python_exe = "python3"
-    python_path = f"{{workenv}}/{bin_dir}/{python_exe}"
+    python_path = f"{{workenv}}/python_runtime/{bin_dir}/{python_exe}"
     package_exe = get_cli_executable_name(package_name, build_config, is_windows)
 
     manifest = {
@@ -150,7 +150,7 @@ def create_builder_manifest(
                 "content": "{package_name}-{version}",
             },
         ],
-        "command": f"{{workenv}}/{bin_dir}/{package_exe}",
+        "command": f"{{workenv}}/python_runtime/{bin_dir}/{package_exe}",
         "slots": [
             {
                 "id": "uv",
@@ -168,7 +168,7 @@ def create_builder_manifest(
                 "encoding": "tgz",
                 "purpose": "runtime",
                 "lifecycle": "cache",
-                "target": ".",
+                "target": "python_runtime",
             },
             {
                 "id": "wheels",
@@ -288,14 +288,14 @@ def create_python_builder_metadata(
     else:
         # UV installs Python as python3 on all Unix platforms
         python_exe = "python3"
-    python_path = f"{{workenv}}/{bin_dir}/{python_exe}"
+    python_path = f"{{workenv}}/python_runtime/{bin_dir}/{python_exe}"
     package_exe = get_cli_executable_name(package_name, build_config, is_windows)
 
     metadata = {
         "package": {"name": package_name, "version": version},
         "execution": {
             "primary_slot": 0,
-            "command": f"{{workenv}}/{bin_dir}/{package_exe}",
+            "command": f"{{workenv}}/python_runtime/{bin_dir}/{package_exe}",
             "env": {},
         },
         "workenv": {
