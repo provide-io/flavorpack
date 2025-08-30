@@ -109,7 +109,7 @@ def inspect_command(package_file: str, output_json: bool) -> None:
                     # Get slot metadata from JSON
                     if i < len(slots_metadata):
                         slot_meta = slots_metadata[i]
-                        slot_name = slot_meta.get("name", f"slot_{i}")
+                        slot_name = slot_meta.get("id", f"slot_{i}")
                         slot_purpose = slot_meta.get("purpose", "")
                         slot_encoding = slot_meta.get("encoding", "raw")
                     else:
