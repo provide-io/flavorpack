@@ -646,11 +646,10 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 	// Store as 4 bytes in the 32-byte field
 	binary.LittleEndian.PutUint32(index.MetadataChecksum[:4], metadataChecksum)
 
-	// 🪄 Write emoji magic
-	emojiMagic := generateEmojiMagic(config.Launcher)
-	logger.Debug("🪄 Writing emoji magic", "magic", string(emojiMagic))
-	if _, err := out.Write(emojiMagic); err != nil {
-		logger.Error("❌ Failed to write emoji magic", "error", err)
+	// 🪄 Write trailing magic (emoji bytes, XOR decoded)
+	logger.Debug("🪄 Writing trailing magic")
+	if _, err := out.Write(TrailingMagic); err != nil {
+		logger.Error("❌ Failed to write trailing magic", "error", err)
 		os.Exit(1)
 	}
 

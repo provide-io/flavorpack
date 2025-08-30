@@ -16,6 +16,13 @@ from flavor.utils.subprocess import (
     run_command_simple,
 )
 
+# Re-export XOR utilities
+from flavor.utils.xor import (
+    XOR_KEY,
+    xor_decode,
+    xor_encode,
+)
+
 __all__ = [
     # Platform utilities
     "get_os_name",
@@ -27,4 +34,8 @@ __all__ = [
     # Subprocess utilities
     "run_command",
     "run_command_simple",
+    # XOR utilities
+    "XOR_KEY",
+    "xor_encode",
+    "xor_decode",
 ]

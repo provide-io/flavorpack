@@ -1,20 +1,24 @@
 package format_2025
 
-var (
-	// PSPF 2025 constants - XOR encoded to prevent literal string from appearing in binary
-	// This is the magic bytes XORed with 0x20 to prevent string from appearing in binary
-	PSPFMagic = decodeMagic()
+import (
+	"github.com/provide-io/flavor/go/flavor/pkg/utils"
 )
 
-func decodeMagic() []byte {
-	// XOR-encoded magic: each byte XORed with 0x20
-	encoded := []byte{0x70, 0x73, 0x70, 0x66, 0x12, 0x10, 0x12, 0x15}
-	magic := make([]byte, 8)
-	for i, b := range encoded {
-		magic[i] = b ^ 0x20
-	}
-	return magic
-}
+var (
+	// Raw magic bytes (not exported, only for encoding)
+	pspfMagicRaw      = []byte("PSPF2025")
+	packageEmojiRaw   = []byte{0xF0, 0x9F, 0x93, 0xA6} // 📦
+	magicWandEmojiRaw = []byte{0xF0, 0x9F, 0xAA, 0x84} // 🪄
+	trailingMagicRaw  = append(packageEmojiRaw, magicWandEmojiRaw...)
+
+	// XOR'd constants (prevents literals in binary)
+	PSPFMagicEncoded     = utils.XOREncodeDefault(pspfMagicRaw)
+	TrailingMagicEncoded = utils.XOREncodeDefault(trailingMagicRaw)
+
+	// Decoded values for runtime use
+	PSPFMagic     = utils.XORDecodeDefault(PSPFMagicEncoded)
+	TrailingMagic = utils.XORDecodeDefault(TrailingMagicEncoded)
+)
 
 const (
 	PSPFVersion        = 0x20250001

@@ -4,19 +4,7 @@
 
 import sys
 
-# XOR key - digits of π (memorable, non-obvious)
-XOR_KEY = bytes([3, 1, 4, 1, 5, 9, 2, 6])  # First 8 digits of π
-
-
-def xor_encode(data: bytes, key: bytes = XOR_KEY) -> bytes:
-    """XOR encode data with repeating key."""
-    return bytes(data[i] ^ key[i % len(key)] for i in range(len(data)))
-
-
-def xor_decode(data: bytes, key: bytes = XOR_KEY) -> bytes:
-    """XOR decode data with repeating key (XOR is symmetric)."""
-    return xor_encode(data, key)  # XOR is its own inverse
-
+from flavor.utils.xor import xor_decode, xor_encode
 
 # Raw magic bytes (not exported, only for encoding)
 _PSPF_MAGIC_RAW = b"PSPF2025"
