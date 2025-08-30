@@ -71,7 +71,6 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
 
         return bundle_path
 
-    @pytest.mark.skip(reason="Execution functionality not fully implemented")
     def test_simple_execution(self, executable_bundle):
         """Test simple bundle execution."""
         launcher = PSPFLauncher(executable_bundle)

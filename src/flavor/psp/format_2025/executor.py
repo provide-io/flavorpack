@@ -78,7 +78,8 @@ class BundleExecutor:
         slots = self.metadata.get("slots", [])
 
         if primary_slot < len(slots):
-            slot_name = slots[primary_slot]["name"]
+            # Use "id" field if available, fallback to "name" for compatibility
+            slot_name = slots[primary_slot].get("id", slots[primary_slot].get("name", f"slot_{primary_slot}"))
             # For tarballs, use {workenv} placeholder
             if slot_name.endswith(".tar.gz") or slot_name.endswith(".tgz"):
                 primary_path = "{workenv}"
@@ -108,7 +109,8 @@ class BundleExecutor:
             slots = self.metadata.get("slots", [])
 
             if slot_idx < len(slots):
-                slot_name = slots[slot_idx]["name"]
+                # Use "id" field if available, fallback to "name" for compatibility
+                slot_name = slots[slot_idx].get("id", slots[slot_idx].get("name", f"slot_{slot_idx}"))
                 # Build the path to the extracted slot
                 slot_path = self.workenv_dir / slot_name
                 return str(slot_path)
