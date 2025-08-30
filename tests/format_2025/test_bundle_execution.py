@@ -62,7 +62,7 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
         builder = PSPFBuilder().metadata(**metadata)
         builder = builder.add_slot(
             name=slot.id,
-            data=slot.source,
+            data=Path(slot.source),  # Pass as Path so it reads the file content
             purpose=slot.purpose,
             lifecycle=slot.lifecycle,
             encoding=slot.encoding,
@@ -254,7 +254,7 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
         builder = PSPFBuilder().metadata(**metadata)
         builder = builder.add_slot(
             name=slot.id,
-            data=slot.source,
+            data=Path(slot.source),  # Pass as Path so it reads the file content
             purpose=slot.purpose,
             lifecycle=slot.lifecycle,
             encoding=slot.encoding,
