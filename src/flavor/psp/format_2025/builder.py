@@ -26,6 +26,7 @@ from flavor.psp.format_2025.constants import (
     CAPABILITY_MMAP,
     CAPABILITY_PAGE_ALIGNED,
     CAPABILITY_SIGNED,
+    DEFAULT_EXECUTABLE_PERMS,
     DEFAULT_FILE_PERMS,
     DEFAULT_MAX_MEMORY,
     DEFAULT_MIN_MEMORY,
@@ -486,10 +487,7 @@ def _write_package(
         f.write(index.pack())
 
     # Set the output file as executable (user only for security)
-    # 0o700 = rwx------ (read/write/execute for owner only)
-    import stat
-
-    output_path.chmod(0o700)
+    output_path.chmod(DEFAULT_EXECUTABLE_PERMS)
     logger.trace(
         "🔧📝📋 Set output file as executable",
         path=str(output_path),
