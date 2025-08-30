@@ -169,7 +169,7 @@ func (r *Reader) ReadIndex() (*PSPFIndex, error) {
 	}
 
 	// Verify magic
-	if !pspf.VerifyPSPFMagic(index.FormatMagic[:]) {
+	if !bytes.Equal(index.FormatMagic[:], PSPFMagic) {
 		return nil, ErrInvalidMagic
 	}
 

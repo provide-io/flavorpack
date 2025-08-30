@@ -648,7 +648,7 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 
 	// Update package size before writing MagicTrailer
 	// (add 8200 for the trailer that will be written)
-	currentPos, _ := out.Seek(0, 1)
+	currentPos, _ = out.Seek(0, 1)
 	index.PackageSize = uint64(currentPos) + MagicTrailerSize
 
 	// 🔐 Calculate index checksum (with checksum field as 0)
