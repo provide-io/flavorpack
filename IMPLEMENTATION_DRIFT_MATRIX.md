@@ -215,12 +215,13 @@ This document provides a comprehensive comparison of the PSPF/2025 format implem
 ### High Priority (P1)
 - ✅ **FIXED**: Go renamed to `VerifyMagicTrailer()` for consistency
 - ✅ **FIXED**: Go verification now uses structured logging with hclog
-- ⚠️ **TODO**: Rust needs to rename `verify_magic()` to `verify_magic_trailer()`
+- ✅ **FIXED**: Rust reserved field size (6816 bytes) and byte offsets corrected
+- ✅ **FIXED**: Rust method naming aligned (pack/unpack)
 - ⚠️ **TODO**: Go launcher signature verification is optional (should match Rust)
 - ⚠️ **TODO**: Go missing memory-mapped I/O support
 
 ### Medium Priority (P2)
-- ⚠️ Method naming inconsistency (pack/Pack/to_bytes, unpack/Unpack/parse)
+- ✅ **FIXED**: Method naming now consistent (pack/Pack/pack, unpack/Unpack/unpack)
 - ⚠️ Rust streaming support is basic compared to Python/Go
 - ⚠️ Go signature verification implementation is basic
 
