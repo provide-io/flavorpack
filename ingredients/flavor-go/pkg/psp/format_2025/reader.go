@@ -16,7 +16,6 @@ import (
 	"strings"
 
 	"github.com/hashicorp/go-hclog"
-	"github.com/provide-io/flavor/go/flavor/pkg/utils/pspf"
 )
 
 // Constants are defined in constants.go
@@ -88,26 +87,53 @@ func (r *Reader) VerifyMagic() (bool, error) {
 		return false, err
 	}
 
-	valid, err := pspf.FindTrailingMagic(r.file, pspf.EmojiMagic)
+	// Get file size
+	info, err := r.file.Stat()
 	if err != nil {
 		return false, err
 	}
-	if !valid {
+
+	// Read MagicTrailer (last 16 bytes)
+	trailer := make([]byte, MagicTrailerSize)
+	if _, err := r.file.ReadAt(trailer, info.Size()-MagicTrailerSize); err != nil {
+		return false, err
+	}
+
+	// Verify emoji magic in last 8 bytes
+	if !bytes.Equal(trailer[8:], TrailingMagic) {
 		return false, ErrInvalidEmojiMagic
 	}
 	return true, nil
 }
 
-// DetectLauncherSize detects launcher size by finding index block
-func (r *Reader) DetectLauncherSize() (int64, error) {
+// ReadMagicTrailer reads the MagicTrailer and returns the index offset
+func (r *Reader) ReadMagicTrailer() (int64, error) {
 	if err := r.Open(); err != nil {
 		return 0, err
 	}
 
-	indexOffset, err := pspf.FindIndexOffset(r.file, PSPFMagic)
+	// Get file size
+	info, err := r.file.Stat()
 	if err != nil {
-		return 0, ErrInvalidMagic
+		return 0, err
 	}
+
+	// Read MagicTrailer (last 16 bytes)
+	trailer := make([]byte, MagicTrailerSize)
+	if _, err := r.file.ReadAt(trailer, info.Size()-MagicTrailerSize); err != nil {
+		return 0, err
+	}
+
+	// Verify emoji magic in last 8 bytes
+	if !bytes.Equal(trailer[8:], TrailingMagic) {
+		return 0, ErrInvalidEmojiMagic
+	}
+
+	// Extract index offset from first 8 bytes (little-endian uint64)
+	indexOffset := int64(binary.LittleEndian.Uint64(trailer[:8]))
+
+	r.logger.Debug("Found index via MagicTrailer", "index_offset", indexOffset, "file_size", info.Size())
+
 	return indexOffset, nil
 }
 
@@ -121,16 +147,16 @@ func (r *Reader) ReadIndex() (*PSPFIndex, error) {
 		return nil, err
 	}
 
-	launcherSize, err := r.DetectLauncherSize()
+	indexOffset, err := r.ReadMagicTrailer()
 	if err != nil {
 		return nil, err
 	}
 
-	// Debug: Log the launcher size
-	r.logger.Debug("Launcher size detected", "size", launcherSize, "size_hex", fmt.Sprintf("0x%x", launcherSize))
+	// Debug: Log the index offset
+	r.logger.Debug("Index offset from MagicTrailer", "offset", indexOffset, "offset_hex", fmt.Sprintf("0x%x", indexOffset))
 
 	// Seek to index position
-	if _, err := r.file.Seek(launcherSize, io.SeekStart); err != nil {
+	if _, err := r.file.Seek(indexOffset, io.SeekStart); err != nil {
 		return nil, err
 	}
 
