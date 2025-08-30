@@ -51,6 +51,23 @@ MAGIC_WAND_EMOJI = "🪄"
 TRAILING_MAGIC = "📦🪄"  # Both emojis at end of bundle
 EMOJI_MAGIC_SIZE = len(TRAILING_MAGIC.encode("utf-8"))  # Size in bytes
 
+# Disk space safety multiplier - require 2x compressed size for extraction
+DISK_SPACE_MULTIPLIER = 2
+
+# Path constants  
+PSPF_HIDDEN_PREFIX = "."
+PSPF_SUFFIX = ".pspf"
+INSTANCE_DIR = "instance"
+PACKAGE_DIR = "package"
+TMP_DIR = "tmp"
+EXTRACT_DIR = "extract"
+LOG_DIR = "log"
+LOCK_FILE = "lock"
+COMPLETE_FILE = "complete"
+PACKAGE_CHECKSUM_FILE = "package.checksum"
+PSP_METADATA_FILE = "psp.json"
+INDEX_METADATA_FILE = "index.json"
+
 # Encoding types - describe the actual format of slot data
 ENCODING_RAW = 0  # Raw uncompressed data
 ENCODING_TAR = 1  # Uncompressed tar archive
