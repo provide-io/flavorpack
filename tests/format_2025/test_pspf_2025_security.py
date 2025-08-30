@@ -416,6 +416,5 @@ class TestPSPFSecurity:
         index1 = reader1.read_index()
         index2 = reader2.read_index()
 
-        assert index1.format_magic == index2.format_magic
         assert index1.format_version == index2.format_version
         assert index1.launcher_size == index2.launcher_size

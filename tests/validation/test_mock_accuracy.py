@@ -102,7 +102,7 @@ class TestMockAccuracy:
         # Check index block
         index = reader.read_index()
         assert index is not None
-        assert index.format_magic == b"PSPF2025"
+        assert index.format_version == 0x20250001
 
         # Check metadata
         metadata = reader.read_metadata()
