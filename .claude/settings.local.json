@@ -141,7 +141,8 @@
       "Read(/private/tmp/**)",
       "Bash(/tmp/taster2-launcher:*)",
       "Bash(shasum:*)",
-      "Bash(helpers/taster/dist/taster2.psp:*)"
+      "Bash(helpers/taster/dist/taster2.psp:*)",
+      "Bash(../bin/flavor-rs-launcher-darwin_arm64:*)"
     ],
     "additionalDirectories": [
       "/Users/tim/code/gh/provide-io"
