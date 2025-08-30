@@ -148,6 +148,8 @@ class TestLauncherAvailability:
 class TestLauncherReproducibility:
     """Test launcher build reproducibility."""
 
+    @patch("shutil.copy2")
+    @patch("tempfile.mkdtemp", return_value="/tmp/flavor_build_deterministic")
     @patch("flavor.packaging.orchestrator.find_launcher_executable")
     @patch("pathlib.Path.exists", return_value=True)
     @patch("os.access", return_value=True)
@@ -164,11 +166,18 @@ class TestLauncherReproducibility:
         mock_access,
         mock_exists,
         mock_find,
+        mock_mkdtemp,
+        mock_copy2,
         orchestrator_factory,
         tmp_path,
         manifest_file,
     ):
         """Test that builds with the same launcher are reproducible."""
+        # Mock shutil.copy2 to return the destination path
+        def copy2_side_effect(src, dst):
+            return dst
+        mock_copy2.side_effect = copy2_side_effect
+        
         # Configure mock_open to return BytesIO for specific paths
         original_path_open = Path.open  # Store original Path.open
 
