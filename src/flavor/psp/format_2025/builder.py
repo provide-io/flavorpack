@@ -476,7 +476,7 @@ def _write_package(
             f.seek(end_of_slots)
 
         # Write trailing magic
-        f.write("📦🪄".encode())
+        f.write(TRAILING_MAGIC)
 
         # Update package size
         index.package_size = f.tell()

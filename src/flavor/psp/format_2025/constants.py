@@ -4,13 +4,45 @@
 
 import sys
 
+# XOR key - digits of π (memorable, non-obvious)
+XOR_KEY = bytes([3, 1, 4, 1, 5, 9, 2, 6])  # First 8 digits of π
+
+
+def xor_encode(data: bytes, key: bytes = XOR_KEY) -> bytes:
+    """XOR encode data with repeating key."""
+    return bytes(data[i] ^ key[i % len(key)] for i in range(len(data)))
+
+
+def xor_decode(data: bytes, key: bytes = XOR_KEY) -> bytes:
+    """XOR decode data with repeating key (XOR is symmetric)."""
+    return xor_encode(data, key)  # XOR is its own inverse
+
+
+# Raw magic bytes (not exported, only for encoding)
+_PSPF_MAGIC_RAW = b"PSPF2025"
+_PACKAGE_EMOJI_RAW = bytes([0xF0, 0x9F, 0x93, 0xA6])  # 📦
+_MAGIC_WAND_EMOJI_RAW = bytes([0xF0, 0x9F, 0xAA, 0x84])  # 🪄
+_TRAILING_MAGIC_RAW = _PACKAGE_EMOJI_RAW + _MAGIC_WAND_EMOJI_RAW
+
+# XOR'd constants (stored to prevent literals in binary)
+PSPF_MAGIC_ENCODED = xor_encode(_PSPF_MAGIC_RAW)
+TRAILING_MAGIC_ENCODED = xor_encode(_TRAILING_MAGIC_RAW)
+
+# Decoded values for runtime use
+PSPF_MAGIC = xor_decode(PSPF_MAGIC_ENCODED)  # 8 bytes, standard format
+TRAILING_MAGIC = xor_decode(TRAILING_MAGIC_ENCODED)  # 📦🪄 decoded at runtime
+
+# Backward compatibility aliases
+PACKAGE_EMOJI = "📦"  # For display only
+MAGIC_WAND_EMOJI = "🪄"  # For display only
+
 # Format constants
-PSPF_MAGIC = b"PSPF2025"  # 8 bytes, standard format
 PSPF_VERSION = 0x20250001  # Keep as v1
 HEADER_SIZE = 8192  # Future-proof 8KB index block
 SLOT_DESCRIPTOR_SIZE = 64  # Descriptor size
 TRAILING_MAGIC_SIZE = 8  # 📦🪄 = 8 bytes UTF-8
 SLOT_ALIGNMENT = 8  # Minimum alignment
+EMOJI_MAGIC_SIZE = 8  # Size in bytes
 
 # Platform-specific page sizes
 if sys.platform == "darwin":
