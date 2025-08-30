@@ -232,9 +232,9 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 		os.Exit(1)
 	}
 
-	// 💾 Create output file
+	// 💾 Create output file with executable permissions
 	logger.Debug("💾 Creating output file", "path", outputPath)
-	out, err := os.Create(outputPath)
+	out, err := os.OpenFile(outputPath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, DefaultExecutablePerms)
 	if err != nil {
 		logger.Error("❌ Failed to create output file", "error", err)
 		os.Exit(1)
