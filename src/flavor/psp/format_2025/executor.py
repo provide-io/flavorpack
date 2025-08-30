@@ -79,7 +79,7 @@ class BundleExecutor:
 
         if primary_slot < len(slots):
             # Use "target" field for actual file path, fallback to "id" or "name"
-            slot_name = slots[primary_slot].get("target", slots[primary_slot].get("id", slots[primary_slot].get("name", f"slot_{primary_slot}"))))
+            slot_name = slots[primary_slot].get("target", slots[primary_slot].get("id", slots[primary_slot].get("name", f"slot_{primary_slot}")))
             # For tarballs, use {workenv} placeholder
             if slot_name.endswith(".tar.gz") or slot_name.endswith(".tgz"):
                 primary_path = "{workenv}"

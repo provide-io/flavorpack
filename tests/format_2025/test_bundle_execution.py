@@ -142,9 +142,9 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
         with pytest.raises(ValueError, match="Referenced slot 3 not found"):
             launcher._substitute_slots(command, {0: Path("/cache/slot0")})
 
-    @pytest.mark.skip(reason="Execution functionality not fully implemented")
+    @pytest.mark.skip(reason="Argument passing through launcher not yet implemented")
     def test_execution_with_arguments(self, executable_bundle):
-        """Test execution with command line arguments."""
+        """Test execution with command line arguments passed through launcher."""
         launcher = PSPFLauncher(executable_bundle)
 
         # Simulate command line args
@@ -224,9 +224,9 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
         result = launcher.execute()
         assert result["working_directory"] is not None
 
-    @pytest.mark.skip(reason="Exit code propagation not fully implemented")
+    @pytest.mark.skip(reason="Exit code propagation through launcher chain not yet implemented")
     def test_exit_code_propagation(self, temp_dir):
-        """Test exit code propagation from child process."""
+        """Test that child process exit codes are properly propagated through the launcher chain."""
         # Create script that exits with specific code
         script_path = temp_dir / "exit42.py"
         script_path.write_text("import sys; sys.exit(42)")
@@ -297,9 +297,9 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
         assert limits["cpu"] == "2"
         assert limits["timeout"] == "300s"
 
-    @pytest.mark.skip(reason="Signal handling not implemented")
+    @pytest.mark.skip(reason="Signal propagation between launcher and child process not implemented")
     def test_signal_handling(self, executable_bundle):
-        """Test signal propagation and cleanup."""
+        """Test signal propagation from launcher to child process and cleanup on termination."""
         launcher = PSPFLauncher(executable_bundle)
 
         # Start execution
