@@ -15,7 +15,7 @@ import zlib
 
 from pyvider.telemetry import logger
 
-from flavor.psp.format_2025.constants import SLOT_DESCRIPTOR_SIZE
+from flavor.psp.format_2025.constants import DISK_SPACE_MULTIPLIER, SLOT_DESCRIPTOR_SIZE
 from flavor.psp.format_2025.reader import PSPFReader
 from flavor.utils.subprocess import run_command
 
@@ -92,6 +92,40 @@ class PSPFLauncher(PSPFReader):
                 )
 
         return slot_entries
+
+    def check_disk_space(self, workenv_dir: Path) -> None:
+        """Check if there's enough disk space for extraction.
+        
+        Args:
+            workenv_dir: Directory where slots will be extracted
+            
+        Raises:
+            OSError: If insufficient disk space available
+        """
+        # Calculate total size needed (compressed size * multiplier for safety)
+        slot_table = self.read_slot_table()
+        total_needed = sum(slot['size'] * DISK_SPACE_MULTIPLIER for slot in slot_table)
+        
+        # Get available disk space
+        try:
+            import os
+            stat_result = os.statvfs(workenv_dir.parent if not workenv_dir.exists() else workenv_dir)
+            available = stat_result.f_bavail * stat_result.f_frsize
+            
+            # Convert to GB for logging
+            needed_gb = total_needed / (1024 * 1024 * 1024)
+            available_gb = available / (1024 * 1024 * 1024)
+            
+            logger.debug(f"💾 Disk space check: need {needed_gb:.2f} GB, have {available_gb:.2f} GB")
+            
+            if available < total_needed:
+                logger.error(f"❌ Insufficient disk space: need {needed_gb:.2f} GB, have {available_gb:.2f} GB")
+                raise OSError(f"Insufficient disk space: need {needed_gb:.2f} GB, have {available_gb:.2f} GB")
+                
+        except (AttributeError, OSError) as e:
+            # statvfs not available on Windows or check failed
+            logger.warning(f"⚠️ Could not check disk space: {e}")
+            # Don't fail if we can't check (matches Go behavior)
 
     def extract_all_slots(self, workenv_dir: Path) -> dict[int, Path]:
         """Extract all slots to the work environment.
