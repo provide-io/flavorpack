@@ -74,7 +74,7 @@ impl Reader {
             trace!("Parsing index from MagicTrailer");
 
             // Parse index
-            let index = Index::parse(&index_data)?;
+            let index = Index::unpack(&index_data)?;
 
             // Debug log the parsed values (copy to locals to avoid alignment issues)
             let pkg_size = index.package_size;
@@ -322,7 +322,7 @@ impl Reader {
                 ));
             }
 
-            if let Some(descriptor) = SlotDescriptor::from_bytes(&data) {
+            if let Some(descriptor) = SlotDescriptor::unpack(&data) {
                 let desc_offset = descriptor.offset;
                 let desc_size = descriptor.size;
                 let desc_checksum = descriptor.checksum;

@@ -110,8 +110,8 @@ impl Index {
         }
     }
 
-    /// Parse index from bytes
-    pub fn parse(data: &[u8]) -> Result<Self> {
+    /// Unpack index from bytes
+    pub fn unpack(data: &[u8]) -> Result<Self> {
         if data.len() != HEADER_SIZE {
             return Err(FlavorError::Generic(format!(
                 "Invalid index size: {} != {}",
@@ -215,8 +215,8 @@ impl Index {
         Ok(index)
     }
 
-    /// Serialize index to bytes
-    pub fn to_bytes(&self) -> Vec<u8> {
+    /// Pack index to bytes
+    pub fn pack(&self) -> Vec<u8> {
         let mut bytes = vec![0u8; HEADER_SIZE];
 
         // Pack fields manually to ensure correct byte order
@@ -325,7 +325,7 @@ impl Index {
 
     /// Verify index checksum (deprecated - use verify_checksum_raw)
     pub fn verify_checksum(&self) -> bool {
-        let mut bytes = self.to_bytes();
+        let mut bytes = self.pack();
 
         // Zero out checksum field
         bytes[12..16].copy_from_slice(&[0, 0, 0, 0]);

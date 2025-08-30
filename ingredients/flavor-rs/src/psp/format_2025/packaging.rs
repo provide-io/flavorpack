@@ -164,7 +164,7 @@ fn get_lifecycle_byte(lifecycle: &str) -> u8 {
 /// Write the index block to the file
 pub fn write_index_block(out: &mut File, index: &Index) -> Result<()> {
     // Get index bytes
-    let index_bytes = index.to_bytes();
+    let index_bytes = index.pack();
 
     // Write index
     out.write_all(&index_bytes)?;
@@ -218,7 +218,7 @@ pub fn write_descriptors(out: &mut File, descriptors: &[SlotDescriptor]) -> Resu
 
     // Write each descriptor
     for (i, descriptor) in descriptors.iter().enumerate() {
-        let descriptor_bytes = descriptor.to_bytes();
+        let descriptor_bytes = descriptor.pack();
         out.write_all(&descriptor_bytes)?;
         trace!("  📋 Wrote descriptor {i}");
     }

@@ -485,7 +485,7 @@ pub fn build(manifest_path: &Path, output_path: &Path, options: BuildOptions) ->
     out.seek(SeekFrom::Start(descriptor_table_offset))?;
 
     for (i, descriptor) in slot_descriptors.iter().enumerate() {
-        let descriptor_bytes = descriptor.to_bytes();
+        let descriptor_bytes = descriptor.pack();
         out.write_all(&descriptor_bytes)?;
         trace!("✍️ Wrote 64-byte descriptor for slot {}", i);
     }
@@ -578,7 +578,7 @@ fn get_launcher(options: &BuildOptions) -> Result<Vec<u8>> {
 
 fn write_index(out: &mut File, index: &mut Index) -> Result<()> {
     // Calculate checksum with placeholder set to 0
-    let mut bytes = index.to_bytes();
+    let mut bytes = index.pack();
     bytes[12..16].copy_from_slice(&[0, 0, 0, 0]);
     let checksum = adler::adler32_slice(&bytes);
     
@@ -586,7 +586,7 @@ fn write_index(out: &mut File, index: &mut Index) -> Result<()> {
     index.index_checksum = checksum;
     
     // Get the bytes again with the updated checksum
-    let final_bytes = index.to_bytes();
+    let final_bytes = index.pack();
     
     out.write_all(&final_bytes)?;
     Ok(())

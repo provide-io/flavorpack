@@ -98,8 +98,8 @@ pub fn verify(package_path: &Path) -> Result<VerifyResult> {
 
 /// Verify the index checksum
 fn verify_index_checksum(index: &super::index::Index) -> bool {
-    // Get the index bytes using the to_bytes method
-    let mut index_bytes = index.to_bytes();
+    // Get the index bytes using the pack method
+    let mut index_bytes = index.pack();
 
     // Zero out the checksum field (offset 4-8 in 8192-byte header)
     index_bytes[4..8].copy_from_slice(&[0u8; 4]);
