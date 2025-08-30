@@ -143,6 +143,7 @@ def create_builder_manifest(
                 "type": "enumerate_and_execute",
                 "command": f"{{workenv}}/bin/{uv_exe} pip install --python {python_path} --no-deps",
                 "enumerate": {"path": "{workenv}/wheels", "pattern": "*.whl"},
+                "skip_if_empty": True,  # Skip command if no wheels found
             },
             {
                 "type": "write_file",
@@ -330,6 +331,7 @@ def create_python_builder_metadata(
                 "type": "enumerate_and_execute",
                 "command": f"{{workenv}}/{bin_dir}/{'uv.exe' if is_windows else 'uv'} pip install --python {python_path} --no-deps",
                 "enumerate": {"path": "{workenv}/wheels", "pattern": "*.whl"},
+                "skip_if_empty": True,  # Skip command if no wheels found
             },
             {
                 "type": "chmod",
