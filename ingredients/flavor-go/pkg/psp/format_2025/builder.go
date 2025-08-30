@@ -646,19 +646,10 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 	// Store as 4 bytes in the 32-byte field
 	binary.LittleEndian.PutUint32(index.MetadataChecksum[:4], metadataChecksum)
 
-	// 🪄 Write MagicTrailer (16 bytes: index pointer + emoji magic)
-	logger.Debug("🪄 Writing MagicTrailer")
-	trailer := make([]byte, MagicTrailerSize)
-	binary.LittleEndian.PutUint64(trailer[:8], uint64(indexOffset))  // Index pointer
-	copy(trailer[8:], TrailingMagic)  // Emoji magic
-	if _, err := out.Write(trailer); err != nil {
-		logger.Error("❌ Failed to write MagicTrailer", "error", err)
-		os.Exit(1)
-	}
-
-	// Update package size
-	finalPos, _ := out.Seek(0, 1)
-	index.PackageSize = uint64(finalPos)
+	// Update package size before writing MagicTrailer
+	// (add 8200 for the trailer that will be written)
+	currentPos, _ := out.Seek(0, 1)
+	index.PackageSize = uint64(currentPos) + MagicTrailerSize
 
 	// 🔐 Calculate index checksum (with checksum field as 0)
 	indexData := index.Pack()
@@ -668,14 +659,24 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 	index.IndexChecksum = checksum
 	logger.Debug("🔐 Index checksum calculated", "checksum", fmt.Sprintf("0x%08x", checksum))
 
-	// 📋 Write index with calculated checksum
-	logger.Debug("📋 Writing index block", "offset", indexOffset, "size", IndexSize)
-	if _, err := out.Seek(indexOffset, 0); err != nil {
-		logger.Error("❌ Failed to seek to index", "error", err)
+	// 🪄 Write MagicTrailer (8200 bytes: 📦 + index + 🪄)
+	logger.Debug("🪄 Writing MagicTrailer")
+	
+	// Write package emoji (4 bytes)
+	if _, err := out.Write(PackageEmojiBytes); err != nil {
+		logger.Error("❌ Failed to write package emoji", "error", err)
 		os.Exit(1)
 	}
+	
+	// Write index (8192 bytes)
 	if _, err := out.Write(index.Pack()); err != nil {
 		logger.Error("❌ Failed to write index", "error", err)
+		os.Exit(1)
+	}
+	
+	// Write magic wand emoji (4 bytes)
+	if _, err := out.Write(MagicWandEmojiBytes); err != nil {
+		logger.Error("❌ Failed to write magic wand emoji", "error", err)
 		os.Exit(1)
 	}
 

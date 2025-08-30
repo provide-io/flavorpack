@@ -18,14 +18,18 @@ var (
 	// Decoded values for runtime use
 	PSPFMagic     = utils.XORDecodeDefault(PSPFMagicEncoded)
 	TrailingMagic = utils.XORDecodeDefault(TrailingMagicEncoded)
+	
+	// Individual emoji bytes for MagicTrailer bookends
+	PackageEmojiBytes = packageEmojiRaw  // 📦 as bytes
+	MagicWandEmojiBytes = magicWandEmojiRaw  // 🪄 as bytes
 )
 
 const (
 	PSPFVersion        = 0x20250001
 	IndexSize          = 8192
-	MagicTrailerSize   = 16 // 8-byte index pointer + 8-byte emoji magic
-	SlotAlignment      = 8  // Slots must be 8-byte aligned
-	SlotDescriptorSize = 64 // Enhanced slot descriptor size
+	MagicTrailerSize   = 8200 // 📦 (4) + index (8192) + 🪄 (4)
+	SlotAlignment      = 8    // Slots must be 8-byte aligned
+	SlotDescriptorSize = 64   // Enhanced slot descriptor size
 	
 	// Default permissions (secure by default - user only)
 	DefaultFilePerms       = 0600  // Read/write for owner only
