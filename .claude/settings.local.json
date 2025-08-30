@@ -89,7 +89,8 @@
       "Bash(python -m pytest tests/format_2025/test_bundle_execution.py::TestPSPFExecution::test_simple_execution -xvs)",
       "Read(/Users/tim/.cache/pspf/workenv/hello-app_1.0.0/**)",
       "Bash(python -m pytest tests/resilience/test_launcher_availability.py::TestLauncherReproducibility::test_reproducible_builds_with_same_launcher -xvs)",
-      "WebFetch(domain:github.com)"
+      "WebFetch(domain:github.com)",
+      "Bash(FLAVOR_LOG_LEVEL=debug FLAVOR_INSECURE=1 dist/echo-test.psp \"hello world\")"
     ],
     "additionalDirectories": [
       "/Users/tim/code/gh/provide-io"
