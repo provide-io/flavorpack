@@ -204,10 +204,12 @@ class SlotDescriptor:
 # Backwards compatibility - keep old SlotMetadata name
 @define
 class SlotMetadata:
-    """Legacy slot metadata for backward compatibility."""
+    """Metadata for a slot in the PSPF package."""
 
     index: int = field(validator=validators.instance_of(int))
-    name: str = field(validator=validators.instance_of(str))
+    id: str = field(validator=validators.instance_of(str))  # Slot identifier
+    source: str = field(validator=validators.instance_of(str))  # Source path
+    target: str = field(validator=validators.instance_of(str))  # Target path in workenv
     size: int = field(validator=validators.instance_of(int))
     checksum: str = field(validator=validators.instance_of(str))
     encoding: str = field(
@@ -225,26 +227,21 @@ class SlotMetadata:
                 # Retention-based
                 "cache",
                 "temp",
-                "volatile",
                 # Access-based
                 "lazy",
                 "eager",
                 # Environment-based
                 "dev",
                 "config",
-                "platform",
             ]
         )
     )
-    path: Path | None = field(default=None)
-    extract_to: str | None = field(default=None)
-    platform: str | None = field(default=None)  # Added for backward compatibility
     permissions: str | None = field(
         default=None
     )  # Unix permissions as octal string (e.g., "0755")
 
     def to_descriptor(self) -> SlotDescriptor:
-        """Convert legacy metadata to new descriptor."""
+        """Convert metadata to descriptor."""
         # Map string values to integers
         purpose_map = {
             "payload": PURPOSE_DATA,
@@ -260,14 +257,12 @@ class SlotMetadata:
             # Retention-based
             "cache": LIFECYCLE_CACHE,
             "temp": LIFECYCLE_TEMPORARY,
-            "volatile": LIFECYCLE_CACHE,  # Volatile maps to cache lifecycle
             # Access-based
             "lazy": LIFECYCLE_LAZY,
             "eager": LIFECYCLE_EAGER,
             # Environment-based
             "dev": LIFECYCLE_DEV,
             "config": LIFECYCLE_CONFIG,
-            "platform": LIFECYCLE_PLATFORM,
         }
         encoding_map = {
             "none": ENCODING_RAW,
@@ -285,14 +280,14 @@ class SlotMetadata:
 
         return SlotDescriptor(
             id=self.index,
-            name=self.name,
+            name=self.id,
             size=self.size,
-            original_size=self.size,  # Assume uncompressed for legacy
+            original_size=self.size,
             checksum=checksum_int & 0xFFFFFFFF,  # Truncate to 32-bit
             encoding=encoding_map.get(self.encoding, 0),  # Maps encoding string to int
             purpose=purpose_map.get(normalize_purpose(self.purpose), PURPOSE_DATA),
             lifecycle=lifecycle_map.get(self.lifecycle, LIFECYCLE_RUNTIME),
-            path=self.path,
+            path=None,
         )
 
     def get_purpose_value(self) -> int:
@@ -308,20 +303,20 @@ class SlotMetadata:
 
         # Ensure checksum has prefix
         if not self.checksum:
-            # Create a placeholder checksum from the name
-            self.checksum = calculate_checksum(self.name.encode(), "sha256")
+            # Create a placeholder checksum from the id
+            self.checksum = calculate_checksum(self.id.encode(), "sha256")
 
         return {
-            "index": self.index,
-            "name": self.name,
+            "slot": self.index,  # Position validator
+            "id": self.id,
+            "source": self.source,
+            "target": self.target,
             "size": self.size,
             "checksum": self.checksum,  # Prefixed format (e.g., "sha256:...")
             "encoding": self.encoding,
             "purpose": self.purpose,
             "lifecycle": self.lifecycle,
-            "extract_to": validate_metadata_path(self.extract_to)
-            if self.extract_to
-            else None,
+            "permissions": self.permissions,
         }
 
     @classmethod
