@@ -106,7 +106,8 @@
       "Bash(FLAVOR_LOG_LEVEL=debug dist/taster.psp info)",
       "Bash(RUST_BACKTRACE=1 dist/taster.psp info)",
       "Bash(./dist/taster.psp --version)",
-      "Bash(../../ingredients/bin/flavor-rs-launcher-darwin_arm64:*)"
+      "Bash(../../ingredients/bin/flavor-rs-launcher-darwin_arm64:*)",
+      "Bash(echo:*)"
     ],
     "additionalDirectories": [
       "/Users/tim/code/gh/provide-io"
