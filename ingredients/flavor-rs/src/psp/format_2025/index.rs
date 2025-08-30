@@ -197,19 +197,19 @@ impl Index {
         index.provenance_uri.copy_from_slice(&data[824..832]);
 
         // Parse capabilities
-        index.capabilities = u64::from_le_bytes(data[840..848].try_into()
+        index.capabilities = u64::from_le_bytes(data[832..840].try_into()
             .map_err(|_| FlavorError::Generic("Invalid capabilities bytes".into()))?);
-        index.requirements = u64::from_le_bytes(data[848..856].try_into()
+        index.requirements = u64::from_le_bytes(data[840..848].try_into()
             .map_err(|_| FlavorError::Generic("Invalid requirements bytes".into()))?);
-        index.extensions = u64::from_le_bytes(data[856..864].try_into()
+        index.extensions = u64::from_le_bytes(data[848..856].try_into()
             .map_err(|_| FlavorError::Generic("Invalid extensions bytes".into()))?);
-        index.compatibility = u32::from_le_bytes(data[864..868].try_into()
+        index.compatibility = u32::from_le_bytes(data[856..860].try_into()
             .map_err(|_| FlavorError::Generic("Invalid compatibility bytes".into()))?);
-        index.protocol_version = u32::from_le_bytes(data[868..872].try_into()
+        index.protocol_version = u32::from_le_bytes(data[860..864].try_into()
             .map_err(|_| FlavorError::Generic("Invalid protocol version bytes".into()))?);
 
         // Parse future crypto and reserved
-        index.future_crypto.copy_from_slice(&data[872..1384]);
+        index.future_crypto.copy_from_slice(&data[864..1376]);
         index.reserved.copy_from_slice(&data[1376..8192]);
 
         Ok(index)
@@ -257,14 +257,14 @@ impl Index {
         bytes[824..832].copy_from_slice(&self.provenance_uri);
 
         // Pack capabilities
-        bytes[840..848].copy_from_slice(&self.capabilities.to_le_bytes());
-        bytes[848..856].copy_from_slice(&self.requirements.to_le_bytes());
-        bytes[856..864].copy_from_slice(&self.extensions.to_le_bytes());
-        bytes[864..868].copy_from_slice(&self.compatibility.to_le_bytes());
-        bytes[868..872].copy_from_slice(&self.protocol_version.to_le_bytes());
+        bytes[832..840].copy_from_slice(&self.capabilities.to_le_bytes());
+        bytes[840..848].copy_from_slice(&self.requirements.to_le_bytes());
+        bytes[848..856].copy_from_slice(&self.extensions.to_le_bytes());
+        bytes[856..860].copy_from_slice(&self.compatibility.to_le_bytes());
+        bytes[860..864].copy_from_slice(&self.protocol_version.to_le_bytes());
 
         // Pack future crypto and reserved
-        bytes[872..1384].copy_from_slice(&self.future_crypto);
+        bytes[864..1376].copy_from_slice(&self.future_crypto);
         bytes[1376..8192].copy_from_slice(&self.reserved);
 
         // Calculate and update checksum (with checksum field zeroed)
