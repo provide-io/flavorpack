@@ -23,22 +23,24 @@ def key_pair() -> tuple[ed25519.Ed25519PrivateKey, ed25519.Ed25519PublicKey]:
 @pytest.fixture(autouse=True)
 def mock_launcher_loading(monkeypatch):
     """Automatically mock launcher loading for all tests.
-    
+
     This fixture is applied to ALL tests automatically. Tests that need
     real launchers should be marked with @pytest.mark.integration and
     explicitly disable this fixture.
     """
+
     def mock_load_launcher(launcher_type):
         return MOCK_LAUNCHER_DATA
-    
+
     from flavor.psp.format_2025.metadata import assembly
+
     monkeypatch.setattr(assembly, "load_launcher_binary", mock_load_launcher)
 
 
 @pytest.fixture
 def temp_dir():
     """Create a temporary directory for tests.
-    
+
     This fixture provides a clean temporary directory that is automatically
     cleaned up after the test completes.
     """
@@ -51,7 +53,7 @@ def temp_dir():
 @pytest.fixture
 def test_builder():
     """Fixture to create a PSPFBuilder in test mode for reproducible tests.
-    
+
     This builder uses mocked launchers (via mock_launcher_loading) and
     deterministic keys for reproducible test results.
     """

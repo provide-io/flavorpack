@@ -44,7 +44,7 @@ jobs:
         run: |
           # Define all platforms as a single-line JSON
           # Note: Linux platforms use musl for static linking to ensure compatibility with older glibc versions
-          ALL_PLATFORMS='[{"platform":"linux_amd64","os":"ubuntu-latest","rust_target":"x86_64-unknown-linux-musl","use_musl":true},{"platform":"linux_arm64","os":"ubuntu-latest","rust_target":"aarch64-unknown-linux-musl","use_musl":true},{"platform":"darwin_amd64","os":"macos-13","rust_target":"x86_64-apple-darwin","use_musl":false},{"platform":"darwin_arm64","os":"macos-15","rust_target":"aarch64-apple-darwin","use_musl":false}]'
+          ALL_PLATFORMS='[{"platform":"linux_amd64","os":"ubuntu-latest","rust_target":"x86_64-unknown-linux-musl","use_musl":true},{"platform":"linux_arm64","os":"ubuntu-24.04-arm","rust_target":"aarch64-unknown-linux-musl","use_musl":true},{"platform":"darwin_amd64","os":"macos-13","rust_target":"x86_64-apple-darwin","use_musl":false},{"platform":"darwin_arm64","os":"macos-15","rust_target":"aarch64-apple-darwin","use_musl":false}]'
           
           # Check if specific platforms requested
           PLATFORMS="${{ inputs.platforms }}"
@@ -102,33 +102,11 @@ jobs:
           targets: ${{ matrix.rust_target }}
           components: rustfmt, clippy
       
-      - name: 📦 Install cargo-zigbuild (alternative for older glibc)
-        if: steps.cache.outputs.cache-hit != 'true' && runner.os == 'Linux' && matrix.use_musl != true
-        run: |
-          # cargo-zigbuild can target specific glibc versions
-          cargo install cargo-zigbuild
-          echo "ℹ️ cargo-zigbuild installed for glibc version targeting"
-      
       - name: 🔧 Setup musl toolchain (Linux)
         if: steps.cache.outputs.cache-hit != 'true' && matrix.use_musl && runner.os == 'Linux'
         run: |
           sudo apt-get update
-          # Install musl tools and cross-compilation support
           sudo apt-get install -y musl-tools
-          
-          # For ARM64 cross-compilation
-          if [ "${{ matrix.platform }}" = "linux_arm64" ]; then
-            # Install cross-compilation tools for ARM64
-            sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
-            # Download and setup musl cross-compiler for ARM64
-            wget -q https://musl.cc/aarch64-linux-musl-cross.tgz
-            tar -xzf aarch64-linux-musl-cross.tgz
-            echo "$PWD/aarch64-linux-musl-cross/bin" >> $GITHUB_PATH
-            echo "CC_aarch64_unknown_linux_musl=aarch64-linux-musl-gcc" >> $GITHUB_ENV
-            echo "CXX_aarch64_unknown_linux_musl=aarch64-linux-musl-g++" >> $GITHUB_ENV
-            echo "AR_aarch64_unknown_linux_musl=aarch64-linux-musl-ar" >> $GITHUB_ENV
-            echo "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER=aarch64-linux-musl-gcc" >> $GITHUB_ENV
-          fi
       
       - name: 🔨 Build ingredients
         if: steps.cache.outputs.cache-hit != 'true'
@@ -169,10 +147,8 @@ jobs:
           # Set version via environment variable for build.rs
           export FLAVOR_VERSION="$VERSION"
           
-          # Build with target
+          # Build with specified target (musl for Linux, native for macOS)
           cargo build --release --target ${{ matrix.rust_target }}
-          
-          # Copy to bin with platform suffix
           cp target/${{ matrix.rust_target }}/release/flavor-rs-builder ../bin/flavor-rs-builder-$VERSION-$PLATFORM
           cp target/${{ matrix.rust_target }}/release/flavor-rs-launcher ../bin/flavor-rs-launcher-$VERSION-$PLATFORM
           

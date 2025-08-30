@@ -509,7 +509,7 @@ class IngredientManager:
             FileNotFoundError: If ingredient not found
         """
         platform_specific_names = []
-        
+
         # Primary search: Look in the bin directory for ANY versioned ingredients
         bin_dir = Path(__file__).parent / "bin"
         if bin_dir.exists():
@@ -517,7 +517,7 @@ class IngredientManager:
             for file in bin_dir.glob(f"{name}-*-{self.current_platform}"):
                 if file.is_file():
                     platform_specific_names.append(file.name)
-            
+
             # Also check for files without platform suffix but with version
             for file in bin_dir.glob(f"{name}-*"):
                 if file.is_file() and file.name not in platform_specific_names:
@@ -526,21 +526,26 @@ class IngredientManager:
                         plat in file.name for plat in ["linux", "darwin", "windows"]
                     ):
                         platform_specific_names.append(file.name)
-        
+
         # Optionally add current package version as a search pattern
         try:
             from flavor.version import __version__
+
             if __version__ and __version__ != "0.0.0":
-                platform_specific_names.append(f"{name}-{__version__}-{self.current_platform}")
+                platform_specific_names.append(
+                    f"{name}-{__version__}-{self.current_platform}"
+                )
         except ImportError:
             pass
-        
+
         # Add non-versioned patterns as fallbacks
-        platform_specific_names.extend([
-            f"{name}-{self.current_platform}",  # e.g., flavor-rs-launcher-linux_arm64
-            name,  # Fallback to exact name
-        ])
-        
+        platform_specific_names.extend(
+            [
+                f"{name}-{self.current_platform}",  # e.g., flavor-rs-launcher-linux_arm64
+                name,  # Fallback to exact name
+            ]
+        )
+
         # Remove duplicates while preserving order
         seen = set()
         unique_names = []

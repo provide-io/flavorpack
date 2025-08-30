@@ -19,7 +19,7 @@ def generate_key_pair() -> tuple[bytes, bytes]:
         tuple: (private_key_bytes, public_key_bytes)
             - private_key_bytes: 32-byte Ed25519 private key seed
             - public_key_bytes: 32-byte Ed25519 public key
-            
+
     See Also:
         flavor.packaging.keys.generate_key_pair: For file-based key generation
     """

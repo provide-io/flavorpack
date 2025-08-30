@@ -55,7 +55,7 @@ def build_package_from_manifest(
 
         # Initialize cli_scripts for JSON manifests
         cli_scripts = {}
-        
+
     else:
         # Handle TOML manifest (pyproject.toml)
         with manifest_path.open("rb") as f:
@@ -82,16 +82,19 @@ def build_package_from_manifest(
                     # Try to get from package metadata if installed
                     try:
                         import importlib.metadata
+
                         version = importlib.metadata.version(project_name)
                     except Exception:
                         # Fall back to a default version if all else fails
                         version = "0.0.0"
             else:
-                raise ValueError("Project version must be defined in [project] table or marked as dynamic")
+                raise ValueError(
+                    "Project version must be defined in [project] table or marked as dynamic"
+                )
 
         # Get all CLI scripts defined in the project
         cli_scripts = project_config.get("scripts", {})
-        
+
         entry_point = flavor_config.get("entry_point")
         if not entry_point:
             if project_name in cli_scripts:
@@ -132,7 +135,7 @@ def build_package_from_manifest(
 
     # Pass CLI scripts to build config
     build_config["cli_scripts"] = cli_scripts
-    
+
     orchestrator = PackagingOrchestrator(
         package_integrity_key_path=str(private_key_path),
         public_key_path=str(public_key_path),

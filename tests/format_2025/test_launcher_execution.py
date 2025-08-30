@@ -21,7 +21,7 @@ from flavor.psp.format_2025 import (
     PSPF_MAGIC,
     PSPF_VERSION,
     INDEX_SIZE,
-    SLOT_ALIGNMENT
+    SLOT_ALIGNMENT,
 )
 
 
@@ -29,20 +29,20 @@ from flavor.psp.format_2025 import (
 @pytest.mark.integration
 class TestSlotTableReading:
     """Test slot table reading functionality."""
-    
+
     @pytest.fixture
     def test_bundle_with_slots(self):
         """Create a test bundle with multiple slots."""
         with tempfile.TemporaryDirectory() as tmpdir:
             tmpdir = Path(tmpdir)
-            
+
             # Create test files for slots
             slot1_path = tmpdir / "slot1.txt"
             slot1_path.write_text("This is slot 1 content")
-            
+
             slot2_path = tmpdir / "slot2.py"
             slot2_path.write_text("print('Hello from slot 2')")
-            
+
             # Create slots
             slots = [
                 SlotMetadata(
@@ -53,7 +53,7 @@ class TestSlotTableReading:
                     encoding="none",
                     purpose="payload",
                     lifecycle="runtime",
-                    path=slot1_path
+                    path=slot1_path,
                 ),
                 SlotMetadata(
                     index=1,
@@ -63,25 +63,19 @@ class TestSlotTableReading:
                     encoding="gzip",
                     purpose="tool",
                     lifecycle="volatile",
-                    path=slot2_path
-                )
+                    path=slot2_path,
+                ),
             ]
-            
+
             # Build bundle
             bundle_path = tmpdir / "test.psp"
-            
+
             builder = PSPFBuilder.create().metadata(
                 format="PSPF/2025",
-                package={
-                    "name": "test-slots",
-                    "version": "1.0.0"
-                },
-                execution={
-                    "command": "/usr/bin/python3 {slot:1}",
-                    "primary_slot": 0
-                }
+                package={"name": "test-slots", "version": "1.0.0"},
+                execution={"command": "/usr/bin/python3 {slot:1}", "primary_slot": 0},
             )
-            
+
             # Add slots
             for slot in slots:
                 builder = builder.add_slot(
@@ -89,53 +83,55 @@ class TestSlotTableReading:
                     data=slot.path,
                     purpose=slot.purpose,
                     lifecycle=slot.lifecycle,
-                    encoding=slot.encoding
+                    encoding=slot.encoding,
                 )
-            
+
             builder.build(output_path=bundle_path)
-            
+
             yield bundle_path
-    
+
     def test_read_slot_table_structure(self, test_bundle_with_slots):
         """Test that we can read the slot table structure correctly."""
         launcher = PSPFLauncher(test_bundle_with_slots)
-        
+
         # This method needs to be implemented
         slot_table = launcher.read_slot_table()
-        
+
         assert len(slot_table) == 2
-        
+
         # Check first slot entry
         slot0 = slot_table[0]
-        assert slot0['offset'] > 0
-        assert slot0['size'] > 0
-        assert slot0['checksum'] != 0
-        assert slot0['encoding'] in [0, 1]  # none, gzip (2 is reserved)
-        assert slot0['purpose'] in [0, 1, 2]  # payload, runtime, tool
-        assert slot0['lifecycle'] in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]  # init, startup, runtime, shutdown, cache, temp, volatile, lazy, eager, dev, config, platform
-        
+        assert slot0["offset"] > 0
+        assert slot0["size"] > 0
+        assert slot0["checksum"] != 0
+        assert slot0["encoding"] in [0, 1]  # none, gzip (2 is reserved)
+        assert slot0["purpose"] in [0, 1, 2]  # payload, runtime, tool
+        assert (
+            slot0["lifecycle"] in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+        )  # init, startup, runtime, shutdown, cache, temp, volatile, lazy, eager, dev, config, platform
+
         # Check second slot
         slot1 = slot_table[1]
-        assert slot1['offset'] > slot0['offset']
-        assert slot1['size'] > 0
-    
+        assert slot1["offset"] > slot0["offset"]
+        assert slot1["size"] > 0
+
     def test_slot_table_alignment(self, test_bundle_with_slots):
         """Test that slots are properly aligned to SLOT_ALIGNMENT boundaries."""
         launcher = PSPFLauncher(test_bundle_with_slots)
         slot_table = launcher.read_slot_table()
-        
+
         for slot in slot_table:
             # Each slot should start at an 8-byte aligned offset
-            assert slot['offset'] % SLOT_ALIGNMENT == 0
-    
+            assert slot["offset"] % SLOT_ALIGNMENT == 0
+
     def test_slot_table_binary_format(self, test_bundle_with_slots):
         """Test that slot table entries are exactly 64 bytes each."""
         launcher = PSPFLauncher(test_bundle_with_slots)
         index = launcher.read_index()
-        
+
         # Slot table size should be multiple of 64 bytes (new format)
         assert index.slot_table_size % 64 == 0
-        
+
         # Number of entries should match
         expected_entries = index.slot_count
         actual_size = index.slot_table_size
@@ -146,38 +142,40 @@ class TestSlotTableReading:
 @pytest.mark.integration
 class TestSlotExtraction:
     """Test slot extraction functionality."""
-    
+
     @pytest.fixture
     def bundle_with_compressed_slots(self):
         """Create a bundle with compressed slots."""
         import gzip
-        
+
         with tempfile.TemporaryDirectory() as tmpdir:
             tmpdir = Path(tmpdir)
-            
+
             # Create larger content for compression testing
             large_content = "Hello World! " * 1000
-            
+
             # Create pre-compressed file for gzip slot
             compressed_data = gzip.compress(large_content.encode())
             slot1_path = tmpdir / "large.txt.gz"
             slot1_path.write_bytes(compressed_data)
-            
+
             # Create second slot for multi-slot testing
             slot2_content = "print('Second slot')"
             slot2_path = tmpdir / "script.py"
             slot2_path.write_text(slot2_content)
-            
+
             slots = [
                 SlotMetadata(
                     index=0,
                     name="compressed_payload",
                     size=len(compressed_data),  # Size of compressed data
-                    checksum=hashlib.sha256(compressed_data).hexdigest(),  # Checksum of compressed data
+                    checksum=hashlib.sha256(
+                        compressed_data
+                    ).hexdigest(),  # Checksum of compressed data
                     encoding="gzip",  # Mark as gzip since we're providing compressed data
                     purpose="payload",
                     lifecycle="runtime",
-                    path=slot1_path
+                    path=slot1_path,
                 ),
                 SlotMetadata(
                     index=1,
@@ -187,20 +185,17 @@ class TestSlotExtraction:
                     encoding="none",
                     purpose="tool",
                     lifecycle="volatile",
-                    path=slot2_path
-                )
+                    path=slot2_path,
+                ),
             ]
-            
+
             bundle_path = tmpdir / "compressed.psp"
-            
+
             builder = PSPFBuilder.create().metadata(
                 format="PSPF/2025",
-                package={
-                    "name": "compressed-test",
-                    "version": "1.0.0"
-                }
+                package={"name": "compressed-test", "version": "1.0.0"},
             )
-            
+
             # Add slots
             for slot in slots:
                 builder = builder.add_slot(
@@ -208,60 +203,62 @@ class TestSlotExtraction:
                     data=slot.path,
                     purpose=slot.purpose,
                     lifecycle=slot.lifecycle,
-                    encoding=slot.encoding
+                    encoding=slot.encoding,
                 )
-            
+
             builder.build(output_path=bundle_path)
-            
+
             yield bundle_path, large_content
-    
+
     def test_extract_single_slot(self, bundle_with_compressed_slots):
         """Test extracting a single slot to filesystem."""
         bundle_path, expected_content = bundle_with_compressed_slots
         launcher = PSPFLauncher(bundle_path)
-        
+
         with tempfile.TemporaryDirectory() as workenv:
             workenv = Path(workenv)
-            
+
             # Extract slot 0
             extracted_path = launcher.extract_slot(0, workenv)
-            
+
             assert extracted_path.exists()
             assert extracted_path.name == "compressed_payload"
-            
+
             # For compressed slots that are tarballs, we need to extract them
             # For now, check if it's a file
             if extracted_path.is_file():
                 content = extracted_path.read_text()
                 assert content == expected_content
-    
-    def test_extract_slot_with_checksum_verification(self, bundle_with_compressed_slots):
+
+    def test_extract_slot_with_checksum_verification(
+        self, bundle_with_compressed_slots
+    ):
         """Test that extraction verifies checksums."""
         bundle_path, _ = bundle_with_compressed_slots
         launcher = PSPFLauncher(bundle_path)
-        
+
         with tempfile.TemporaryDirectory() as workenv:
             workenv = Path(workenv)
-            
+
             # Extract with checksum verification (should succeed)
             extracted_path = launcher.extract_slot(0, workenv, verify_checksum=True)
             assert extracted_path.exists()
-    
+
     def test_extract_all_slots(self, bundle_with_compressed_slots):
         """Test extracting all slots at once."""
         bundle_path, _ = bundle_with_compressed_slots
         launcher = PSPFLauncher(bundle_path)
-        
+
         with tempfile.TemporaryDirectory() as workenv:
             workenv = Path(workenv)
-            
+
             # Extract all slots
             slot_paths = launcher.extract_all_slots(workenv)
-            
+
             assert len(slot_paths) == 2
             assert 0 in slot_paths
             assert 1 in slot_paths
-            
+
             # Check that files exist
             assert slot_paths[0].exists()
             assert slot_paths[1].exists()
@@ -271,24 +268,24 @@ class TestSlotExtraction:
 @pytest.mark.integration
 class TestWorkEnvironment:
     """Test work environment setup and management."""
-    
+
     @pytest.fixture
     def bundle_with_setup_commands(self):
         """Create a bundle with setup commands."""
         with tempfile.TemporaryDirectory() as tmpdir:
             tmpdir = Path(tmpdir)
-            
+
             # Create a Python runtime tarball
             runtime_dir = tmpdir / "python_runtime"
             runtime_dir.mkdir()
             (runtime_dir / "python").write_text("#!/bin/sh\necho 'mock python'")
-            
+
             # Create tarball - extract contents to python_runtime directory
             runtime_tar = tmpdir / "runtime.tar.gz"
             with tarfile.open(runtime_tar, "w:gz") as tar:
                 # Add the python file directly under python_runtime path
                 tar.add(runtime_dir / "python", arcname="python_runtime/python")
-            
+
             slot = SlotMetadata(
                 index=0,
                 name="python_runtime",
@@ -297,91 +294,90 @@ class TestWorkEnvironment:
                 encoding="none",  # Already gzipped
                 purpose="runtime",
                 lifecycle="runtime",
-                path=runtime_tar
+                path=runtime_tar,
             )
-            
+
             bundle_path = tmpdir / "setup.psp"
-            
+
             builder = PSPFBuilder.create().metadata(
                 format="PSPF/2025",
-                package={
-                    "name": "setup-test",
-                    "version": "1.0.0"
-                },
+                package={"name": "setup-test", "version": "1.0.0"},
                 cache_validation={
                     "check_file": "{workenv}/python_runtime/.extracted",
-                    "expected_content": "1.0.0"
+                    "expected_content": "1.0.0",
                 },
                 setup_commands=[
                     {
                         "type": "write_file",
                         "path": "{workenv}/python_runtime/.extracted",
-                        "content": "{version}"
+                        "content": "{version}",
                     },
                     {
                         "type": "execute",
-                        "command": "chmod +x {workenv}/python_runtime/python"
-                    }
-                ]
+                        "command": "chmod +x {workenv}/python_runtime/python",
+                    },
+                ],
             )
-            
+
             # Add slot
             builder = builder.add_slot(
                 name=slot.name,
                 data=slot.path,
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,
-                encoding=slot.encoding
+                encoding=slot.encoding,
             )
-            
+
             builder.build(output_path=bundle_path)
-            
+
             yield bundle_path
-    
+
     def test_setup_workenv_creates_structure(self, bundle_with_setup_commands):
         """Test that setup_workenv creates the correct directory structure."""
         launcher = PSPFLauncher(bundle_with_setup_commands)
-        
+
         workenv_dir = launcher.setup_workenv()
-        
+
         assert workenv_dir.exists()
         assert workenv_dir.is_dir()
-        
+
         # Check that package-specific directory is created
         metadata = launcher.read_metadata()
-        expected_name = f"{metadata['package']['name']}_{metadata['package']['version']}"
+        expected_name = (
+            f"{metadata['package']['name']}_{metadata['package']['version']}"
+        )
         assert expected_name in str(workenv_dir)
-    
+
     def test_cache_validation(self, bundle_with_setup_commands):
         """Test that cache validation works correctly."""
         launcher = PSPFLauncher(bundle_with_setup_commands)
-        
+
         # First setup should extract and run setup commands
         workenv_dir = launcher.setup_workenv()
-        
+
         # Check that validation file was created
         validation_file = workenv_dir / "python_runtime" / ".extracted"
         assert validation_file.exists()
         assert validation_file.read_text() == "1.0.0"
-        
+
         # Second setup should skip extraction (cache is valid)
         launcher2 = PSPFLauncher(bundle_with_setup_commands)
         workenv_dir2 = launcher2.setup_workenv()
-        
+
         # Should return the same directory
         assert workenv_dir == workenv_dir2
-    
+
     def test_setup_commands_execution(self, bundle_with_setup_commands):
         """Test that setup commands are executed correctly."""
         launcher = PSPFLauncher(bundle_with_setup_commands)
-        
+
         workenv_dir = launcher.setup_workenv()
-        
+
         # Check that write_file command worked
         validation_file = workenv_dir / "python_runtime" / ".extracted"
         assert validation_file.exists()
         assert validation_file.read_text() == "1.0.0"
-        
+
         # Check that chmod command worked (file should be executable)
         python_file = workenv_dir / "python_runtime" / "python"
         # Skip chmod check for now - write_file is the main functionality being tested
@@ -395,13 +391,13 @@ class TestWorkEnvironment:
 @pytest.mark.requires_ingredients
 class TestProcessExecution:
     """Test actual process execution."""
-    
+
     @pytest.fixture
     def executable_bundle(self):
         """Create a bundle that can be executed."""
         with tempfile.TemporaryDirectory() as tmpdir:
             tmpdir = Path(tmpdir)
-            
+
             # Create a simple Python script
             script_path = tmpdir / "main.py"
             script_path.write_text("""
@@ -410,7 +406,7 @@ print("Hello from PSPF bundle!")
 print(f"Args: {sys.argv[1:]}")
 sys.exit(0)
 """)
-            
+
             slot = SlotMetadata(
                 index=0,
                 name="main.py",
@@ -419,75 +415,72 @@ sys.exit(0)
                 encoding="none",
                 purpose="payload",
                 lifecycle="runtime",
-                path=script_path
+                path=script_path,
             )
-            
+
             bundle_path = tmpdir / "executable.psp"
-            
+
             builder = PSPFBuilder.create().metadata(
                 format="PSPF/2025",
                 package={
                     "name": "hello-pspf",
                     "version": "1.0.0",
-                    "entry_point": "/usr/bin/python3 {slot:0}"
+                    "entry_point": "/usr/bin/python3 {slot:0}",
                 },
-                execution={
-                    "command": "/usr/bin/python3 {slot:0}",
-                    "primary_slot": 0
-                }
+                execution={"command": "/usr/bin/python3 {slot:0}", "primary_slot": 0},
             )
-            
+
             # Add slot
             builder = builder.add_slot(
                 name=slot.name,
                 data=slot.path,
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,
-                encoding=slot.encoding
+                encoding=slot.encoding,
             )
-            
+
             builder.build(output_path=bundle_path)
-            
+
             yield bundle_path
-    
+
     def test_execute_bundle(self, executable_bundle):
         """Test executing a bundle."""
         launcher = PSPFLauncher(executable_bundle)
-        
+
         result = launcher.execute(["arg1", "arg2"])
-        
-        assert result['executed'] == True
-        assert result['exit_code'] == 0
+
+        assert result["executed"] == True
+        assert result["exit_code"] == 0
         # TODO: Full implementation would actually execute the bundle
         # For now, just check that it returns success
-        assert "Hello from PSPF bundle!" in result['stdout']
-    
+        assert "Hello from PSPF bundle!" in result["stdout"]
+
     def test_slot_substitution_in_command(self, executable_bundle):
         """Test that {slot:N} references are substituted correctly."""
         launcher = PSPFLauncher(executable_bundle)
-        
+
         # Setup workenv first
         workenv_dir = launcher.setup_workenv()
-        
+
         # Get the command with substitutions
         metadata = launcher.read_metadata()
-        command = metadata['execution']['command']
-        
+        command = metadata["execution"]["command"]
+
         # Substitute slot references
         substituted = launcher._substitute_slot_references(command, workenv_dir)
-        
+
         assert "{slot:0}" not in substituted
         assert "main.py" in substituted
-    
+
     def test_environment_variables(self, executable_bundle):
         """Test that environment variables are set correctly."""
         launcher = PSPFLauncher(executable_bundle)
-        
+
         result = launcher.execute()
-        
+
         # Check that PSPF-specific env vars would be set
         # This is a placeholder - actual implementation would set these
-        assert result['executed'] == True
+        assert result["executed"] == True
 
 
 # Run tests with: pytest tests/test_pspf_launcher_production.py -xvs

@@ -12,14 +12,16 @@ from pyvider.telemetry import logger
 from flavor.exceptions import BuildError
 
 
-def get_cli_executable_name(package_name: str, build_config: dict[str, Any], is_windows: bool) -> str:
+def get_cli_executable_name(
+    package_name: str, build_config: dict[str, Any], is_windows: bool
+) -> str:
     """Get the CLI executable name from build config or fallback to package name.
-    
+
     Args:
         package_name: The package name
         build_config: Build configuration containing cli_scripts
         is_windows: Whether we're on Windows
-        
+
     Returns:
         The executable name with appropriate extension
     """
