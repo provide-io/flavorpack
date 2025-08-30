@@ -19,6 +19,8 @@ TRAILING_MAGIC_ENCODED = xor_encode(_TRAILING_MAGIC_RAW)
 # Decoded values for runtime use
 PSPF_MAGIC = xor_decode(PSPF_MAGIC_ENCODED)  # 8 bytes, standard format
 TRAILING_MAGIC = xor_decode(TRAILING_MAGIC_ENCODED)  # 📦🪄 decoded at runtime
+PACKAGE_EMOJI_BYTES = _PACKAGE_EMOJI_RAW  # 📦 as bytes
+MAGIC_WAND_EMOJI_BYTES = _MAGIC_WAND_EMOJI_RAW  # 🪄 as bytes
 
 # Display-only emoji constants (for UI/logging)
 PACKAGE_EMOJI = "📦"
@@ -28,7 +30,9 @@ MAGIC_WAND_EMOJI = "🪄"
 PSPF_VERSION = 0x20250001  # Keep as v1
 HEADER_SIZE = 8192  # Future-proof 8KB index block
 SLOT_DESCRIPTOR_SIZE = 64  # Descriptor size
-MAGIC_TRAILER_SIZE = 16  # 8-byte index pointer + 8-byte emoji magic
+PACKAGE_EMOJI_SIZE = 4  # 📦 emoji (4 bytes UTF-8)
+MAGIC_WAND_EMOJI_SIZE = 4  # 🪄 emoji (4 bytes UTF-8)
+MAGIC_TRAILER_SIZE = 8200  # 📦 (4) + index (8192) + 🪄 (4)
 SLOT_ALIGNMENT = 8  # Minimum alignment
 
 # Platform-specific page sizes
