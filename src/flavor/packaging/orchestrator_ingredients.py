@@ -171,8 +171,8 @@ def create_builder_manifest(
                 "target": ".",
             },
             {
-                "name": "wheels",
-                "path": str(slots["wheels"]),
+                "id": "wheels",
+                "source": str(slots["wheels"]),
                 "encoding": "tgz",
                 "purpose": "payload",
                 "lifecycle": "cache",
