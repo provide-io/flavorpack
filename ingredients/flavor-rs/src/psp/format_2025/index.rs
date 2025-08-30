@@ -220,33 +220,32 @@ impl Index {
         let mut bytes = vec![0u8; HEADER_SIZE];
 
         // Pack fields manually to ensure correct byte order
-        bytes[0..8].copy_from_slice(&self.format_magic);
-        bytes[8..12].copy_from_slice(&self.format_version.to_le_bytes());
-        bytes[12..16].copy_from_slice(&self.index_checksum.to_le_bytes());
-        bytes[16..24].copy_from_slice(&self.package_size.to_le_bytes());
-        bytes[24..32].copy_from_slice(&self.launcher_size.to_le_bytes());
-        bytes[32..40].copy_from_slice(&self.metadata_offset.to_le_bytes());
-        bytes[40..48].copy_from_slice(&self.metadata_size.to_le_bytes());
-        bytes[48..56].copy_from_slice(&self.slot_table_offset.to_le_bytes());
-        bytes[56..64].copy_from_slice(&self.slot_table_size.to_le_bytes());
-        bytes[64..68].copy_from_slice(&self.slot_count.to_le_bytes());
-        bytes[68..72].copy_from_slice(&self.flags.to_le_bytes());
-        bytes[72..104].copy_from_slice(&self.public_key);
-        bytes[104..136].copy_from_slice(&self.metadata_checksum);
-        bytes[136..648].copy_from_slice(&self.integrity_signature);
+        bytes[0..4].copy_from_slice(&self.format_version.to_le_bytes());
+        bytes[4..8].copy_from_slice(&self.index_checksum.to_le_bytes());
+        bytes[8..16].copy_from_slice(&self.package_size.to_le_bytes());
+        bytes[16..24].copy_from_slice(&self.launcher_size.to_le_bytes());
+        bytes[24..32].copy_from_slice(&self.metadata_offset.to_le_bytes());
+        bytes[32..40].copy_from_slice(&self.metadata_size.to_le_bytes());
+        bytes[40..48].copy_from_slice(&self.slot_table_offset.to_le_bytes());
+        bytes[48..56].copy_from_slice(&self.slot_table_size.to_le_bytes());
+        bytes[56..60].copy_from_slice(&self.slot_count.to_le_bytes());
+        bytes[60..64].copy_from_slice(&self.flags.to_le_bytes());
+        bytes[64..96].copy_from_slice(&self.public_key);
+        bytes[96..128].copy_from_slice(&self.metadata_checksum);
+        bytes[128..640].copy_from_slice(&self.integrity_signature);
 
         // Pack performance hints
-        bytes[648] = self.access_mode;
-        bytes[649] = self.cache_strategy;
-        bytes[650] = self.encoding_type;
-        bytes[651] = self.encryption_type;
-        bytes[652..656].copy_from_slice(&self.page_size.to_le_bytes());
-        bytes[656..664].copy_from_slice(&self.max_memory.to_le_bytes());
-        bytes[664..672].copy_from_slice(&self.min_memory.to_le_bytes());
-        bytes[672..680].copy_from_slice(&self.cpu_features.to_le_bytes());
-        bytes[680..688].copy_from_slice(&self.gpu_requirements.to_le_bytes());
-        bytes[688..696].copy_from_slice(&self.numa_hints.to_le_bytes());
-        bytes[696..700].copy_from_slice(&self.stream_chunk_size.to_le_bytes());
+        bytes[640] = self.access_mode;
+        bytes[641] = self.cache_strategy;
+        bytes[642] = self.encoding_type;
+        bytes[643] = self.encryption_type;
+        bytes[644..648].copy_from_slice(&self.page_size.to_le_bytes());
+        bytes[648..656].copy_from_slice(&self.max_memory.to_le_bytes());
+        bytes[656..664].copy_from_slice(&self.min_memory.to_le_bytes());
+        bytes[664..672].copy_from_slice(&self.cpu_features.to_le_bytes());
+        bytes[672..680].copy_from_slice(&self.gpu_requirements.to_le_bytes());
+        bytes[680..688].copy_from_slice(&self.numa_hints.to_le_bytes());
+        bytes[688..692].copy_from_slice(&self.stream_chunk_size.to_le_bytes());
         bytes[700..712].copy_from_slice(&self.padding1);
 
         // Pack extended metadata
