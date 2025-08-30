@@ -7,10 +7,12 @@ import struct
 from pathlib import Path
 
 from flavor.psp.format_2025.constants import (
-    PSPF_MAGIC,
+    PSPF_VERSION,
     HEADER_SIZE,
     SLOT_DESCRIPTOR_SIZE,
-    TRAILING_MAGIC,
+    MAGIC_TRAILER_SIZE,
+    PACKAGE_EMOJI_BYTES,
+    MAGIC_WAND_EMOJI_BYTES,
     ACCESS_AUTO,
     ACCESS_MMAP,
     CAPABILITY_MMAP,
@@ -28,16 +30,15 @@ class TestEnhancedConstants:
         """Header should be 8192 bytes (8KB)."""
         assert HEADER_SIZE == 8192
 
-    def test_magic_format(self):
-        """Magic should be PSPF2025."""
-        assert PSPF_MAGIC == b"PSPF2025"
-        assert len(PSPF_MAGIC) == 8
+    def test_version_format(self):
+        """Version should be 0x20250001."""
+        assert PSPF_VERSION == 0x20250001
 
-    def test_trailing_magic(self):
-        """Trailing magic should have both emojis."""
-        # TRAILING_MAGIC is now bytes from XOR decode
-        assert b"\xf0\x9f\x93\xa6" in TRAILING_MAGIC  # 📦 in UTF-8
-        assert b"\xf0\x9f\xaa\x84" in TRAILING_MAGIC  # 🪄 in UTF-8
+    def test_magic_trailer_emojis(self):
+        """MagicTrailer should have both emojis."""
+        assert PACKAGE_EMOJI_BYTES == b"\xf0\x9f\x93\xa6"  # 📦 in UTF-8
+        assert MAGIC_WAND_EMOJI_BYTES == b"\xf0\x9f\xaa\x84"  # 🪄 in UTF-8
+        assert MAGIC_TRAILER_SIZE == 8200  # 4 + 8192 + 4
         assert len(TRAILING_MAGIC) == 8  # Both emojis = 8 bytes
 
 

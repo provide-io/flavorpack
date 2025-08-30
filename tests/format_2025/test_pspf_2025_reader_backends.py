@@ -11,7 +11,7 @@ from pathlib import Path
 from flavor.psp.format_2025.reader import PSPFReader, read_bundle, verify_bundle
 from flavor.psp.format_2025.backends import MMapBackend, FileBackend, StreamBackend
 from flavor.psp.format_2025.constants import (
-    PSPF_MAGIC,
+    PSPF_VERSION,
     HEADER_SIZE,
     SLOT_DESCRIPTOR_SIZE,
     ACCESS_MMAP,
