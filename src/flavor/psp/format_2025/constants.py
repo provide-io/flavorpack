@@ -30,8 +30,6 @@ MAGIC_WAND_EMOJI = "🪄"
 PSPF_VERSION = 0x20250001  # Keep as v1
 HEADER_SIZE = 8192  # Future-proof 8KB index block
 SLOT_DESCRIPTOR_SIZE = 64  # Descriptor size
-PACKAGE_EMOJI_SIZE = 4  # 📦 emoji (4 bytes UTF-8)
-MAGIC_WAND_EMOJI_SIZE = 4  # 🪄 emoji (4 bytes UTF-8)
 MAGIC_TRAILER_SIZE = 8200  # 📦 (4) + index (8192) + 🪄 (4)
 SLOT_ALIGNMENT = 8  # Minimum alignment
 
