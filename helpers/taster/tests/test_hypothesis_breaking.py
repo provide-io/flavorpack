@@ -84,7 +84,7 @@ class TestBreakingInputs:
             try:
                 slot = SlotMetadata(
                     index=0,
-                    name=filename,
+                    id=filename,
                     size=100,
                     checksum="abc123",
                     encoding="none",
@@ -128,7 +128,7 @@ class TestBreakingInputs:
             try:
                 slot = SlotMetadata(
                     index=0,
-                    name="huge",
+                    id="huge",
                     size=size,
                     checksum="abc",
                     encoding="gzip" if size > 0 else "none",

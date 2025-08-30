@@ -298,7 +298,7 @@ class TestWorkEnvironment:
                 target="python_runtime",
                 size=runtime_tar.stat().st_size,
                 checksum=hashlib.sha256(runtime_tar.read_bytes()).hexdigest(),
-                encoding="none",  # Already gzipped
+                encoding="tgz",  # Tarball that needs extraction
                 purpose="runtime",
                 lifecycle="runtime",
             )
@@ -327,7 +327,7 @@ class TestWorkEnvironment:
 
             # Add slot
             builder = builder.add_slot(id=slot.id,
-                data=slot.source,
+                data=Path(slot.source),  # Convert to Path so it reads the file
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,
                 encoding=slot.encoding,
@@ -438,7 +438,7 @@ sys.exit(0)
 
             # Add slot
             builder = builder.add_slot(id=slot.id,
-                data=slot.source,
+                data=Path(slot.source),  # Convert to Path so it reads the file
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,
                 encoding=slot.encoding,
