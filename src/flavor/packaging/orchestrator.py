@@ -203,8 +203,8 @@ class PackagingOrchestrator:
                 PSPFBuilder.create()
                 .metadata(**metadata)
                 .add_slot(
-                    "uv",
-                    uv_tarball,
+                    id="uv",
+                    data=uv_tarball,
                     encoding="gzip",
                     purpose="tool",
                     lifecycle="runtime",
@@ -212,16 +212,16 @@ class PackagingOrchestrator:
                     permissions="0700",
                 )
                 .add_slot(
-                    "python",
-                    python_tarball,
+                    id="python",
+                    data=python_tarball,
                     encoding="tgz",
                     purpose="runtime",
                     lifecycle="runtime",
                     extract_to="{workenv}",
                 )
                 .add_slot(
-                    "wheels",
-                    wheels_tarball,
+                    id="wheels",
+                    data=wheels_tarball,
                     encoding="tgz",
                     purpose="payload",
                     lifecycle="cache",
