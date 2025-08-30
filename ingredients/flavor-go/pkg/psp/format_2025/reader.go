@@ -168,7 +168,7 @@ func (r *Reader) ReadIndex() (*PSPFIndex, error) {
 
 	// Verify version
 	if index.FormatVersion != PSPFVersion {
-		return nil, ErrInvalidVersion
+		return nil, fmt.Errorf("%w: got 0x%08x, expected 0x%08x", ErrInvalidVersion, index.FormatVersion, PSPFVersion)
 	}
 
 	r.index = index
