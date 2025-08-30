@@ -492,7 +492,9 @@ class PSPFLauncher(PSPFReader):
         for i, slot in enumerate(metadata.get("slots", [])):
             placeholder = f"{{slot:{i}}}"
             if placeholder in command:
-                slot_path = workenv_dir / slot["name"]
+                # Use "id" field if available, fallback to "name" for compatibility
+                slot_name = slot.get("id", slot.get("name", f"slot_{i}"))
+                slot_path = workenv_dir / slot_name
                 command = command.replace(placeholder, str(slot_path))
                 logger.debug(f"🔄 Substituted {placeholder} -> {slot_path}")
 
