@@ -48,7 +48,7 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
         bundle_path = temp_dir / "app.psp"
         builder = PSPFBuilder().metadata(**metadata)
         builder = builder.add_slot(
-            name="main-app",
+            id="main-app",
             data=script_path,  # Pass as Path so it reads the file content
             purpose="payload",
             lifecycle="runtime",
@@ -176,7 +176,7 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
         builder = PSPFBuilder().metadata(**metadata)
         for slot in slots:
             builder = builder.add_slot(
-                name=slot.id,
+                id=slot.id,
                 data=slot.source,
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,
@@ -228,7 +228,7 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
         bundle_path = temp_dir / "exit42.psp"
         builder = PSPFBuilder().metadata(**metadata)
         builder = builder.add_slot(
-            name="exit42",
+            id="exit42",
             data=script_path,
             purpose="payload",
             lifecycle="runtime",
@@ -260,7 +260,7 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
         dummy_file.write_text("dummy")
 
         builder = PSPFBuilder().metadata(**metadata)
-        builder = builder.add_slot("dummy", dummy_file, encoding="none")
+        builder = builder.add_slot(id="dummy", data=dummy_file, encoding="none")
         builder.build(bundle_path)
 
         reader = PSPFReader(bundle_path)
