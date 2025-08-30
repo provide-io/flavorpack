@@ -57,6 +57,10 @@ build_package() {
     local output="$4"
     local key_seed="${5:-test123}"
     
+    # Ensure output directory exists
+    local output_dir=$(dirname "$output")
+    mkdir -p "$output_dir"
+    
     cat "$manifest"
     "$builder" \
         --manifest "$manifest" \
