@@ -369,8 +369,8 @@ class TestPSPFBuilder:
         result = (
             PSPFBuilder.create()
             .metadata(name="app", version="1.0")
-            .add_slot(id="main", b"print('hello')")
-            .add_slot(id="config", b'{"key": "value"}')
+            .add_slot(id="main", data=b"print('hello')")
+            .add_slot(id="config", data=b'{"key": "value"}')
             .with_keys(seed="test123")
             .build(output)
         )
@@ -390,7 +390,7 @@ class TestPSPFBuilder:
 
         # Add slots one by one
         for i in range(3):
-            builder = builder.add_slot(id=f"file{i}", f"data{i}".encode())
+            builder = builder.add_slot(id=f"file{i}", data=f"data{i}".encode())
 
         # Set keys
         builder = builder.with_keys(seed="incremental")
@@ -409,7 +409,7 @@ class TestPSPFBuilder:
 
         builder1 = PSPFBuilder.create()
         builder2 = builder1.metadata(name="test")
-        builder3 = builder2.add_slot(id="data", b"content")
+        builder3 = builder2.add_slot(id="data", data=b"content")
 
         # Each should be different instance
         assert builder1 is not builder2
@@ -437,8 +437,8 @@ class TestPSPFBuilder:
         result = (
             PSPFBuilder.create()
             .metadata(name="files", version="1.0")
-            .add_slot(id="data", file1)
-            .add_slot(id="config", file2)
+            .add_slot(id="data", data=file1)
+            .add_slot(id="config", data=file2)
             .build(output)
         )
 
@@ -479,8 +479,8 @@ class TestIntegration:
                     "description": "A complete test application",
                 },
             )
-            .add_slot(id="main", main_file)
-            .add_slot(id="config", config_file)
+            .add_slot(id="main", data=main_file)
+            .add_slot(id="config", data=config_file)
             .with_keys(seed="integration_test")
             .with_options(compression="gzip", enable_mmap=True, page_aligned=True)
             .build(output)
@@ -515,7 +515,7 @@ class TestIntegration:
         # Missing required metadata
         result = (
             PSPFBuilder.create()
-            .add_slot(id="data", b"content")
+            .add_slot(id="data", data=b"content")
             .build(temp_dir / "invalid.psp")
         )
 
@@ -537,7 +537,7 @@ class TestIntegration:
         result = (
             PSPFBuilder.create()
             .metadata(name="test")
-            .add_slot(id="missing", Path("/does/not/exist"))
+            .add_slot(id="missing", data=Path("/does/not/exist"))
             .build(temp_dir / "invalid3.psp")
         )
 
@@ -574,7 +574,7 @@ class TestPerformance:
         result = (
             PSPFBuilder.create()
             .metadata(name="large-package")
-            .add_slot(id="bigfile", large_file)
+            .add_slot(id="bigfile", data=large_file)
             .build(output)
         )
 
@@ -593,7 +593,7 @@ class TestPerformance:
 
         # Add 100 small slots
         for i in range(100):
-            builder = builder.add_slot(id=f"slot{i}", f"data{i}".encode())
+            builder = builder.add_slot(id=f"slot{i}", data=f"data{i}".encode())
 
         output = temp_dir / "many_slots.psp"
 
