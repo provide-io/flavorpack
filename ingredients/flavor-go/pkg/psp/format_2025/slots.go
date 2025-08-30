@@ -1,5 +1,18 @@
 package format_2025
 
+import (
+	"crypto/sha256"
+	"encoding/binary"
+)
+
+// HashName generates a 64-bit hash of a string for fast lookup.
+// Uses first 8 bytes of SHA256 as little-endian integer.
+// This matches the Python and Rust implementations.
+func HashName(name string) uint64 {
+	hash := sha256.Sum256([]byte(name))
+	return binary.LittleEndian.Uint64(hash[:8])
+}
+
 type SlotMetadata struct {
 	Slot        int    `json:"slot"`                     // Position validator
 	ID          string `json:"id"`                       // Slot identifier
