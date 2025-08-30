@@ -290,7 +290,7 @@ func showBundleInfo(exePath string, logger hclog.Logger) {
 	}
 
 	verifyStatus := "✓"
-	_, err = reader.VerifyMagic()
+	_, err = reader.VerifyMagicTrailer()
 	if err != nil {
 		verifyStatus = "✗"
 	}
@@ -441,7 +441,7 @@ func verifyBundle(exePath string, logger hclog.Logger) {
 
 	errors := []string{}
 
-	_, err = reader.VerifyMagic()
+	_, err = reader.VerifyMagicTrailer()
 	if err != nil {
 		errors = append(errors, fmt.Sprintf("Magic verification failed: %v", err))
 	} else {

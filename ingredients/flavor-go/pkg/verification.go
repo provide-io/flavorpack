@@ -23,11 +23,11 @@ func VerifyBundle(exePath string) {
 
 	errors := []string{}
 
-	_, err = reader.VerifyMagic()
+	_, err = reader.VerifyMagicTrailer()
 	if err != nil {
-		errors = append(errors, fmt.Sprintf("Magic verification failed: %v", err))
+		errors = append(errors, fmt.Sprintf("MagicTrailer verification failed: %v", err))
 	} else {
-		fmt.Println("✓ Magic sequence valid")
+		fmt.Println("✓ MagicTrailer valid")
 	}
 
 	_, err = reader.ReadIndex()

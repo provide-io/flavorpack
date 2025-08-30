@@ -81,8 +81,8 @@ func (r *Reader) Close() error {
 	return nil
 }
 
-// VerifyMagic verifies the MagicTrailer emoji bookends
-func (r *Reader) VerifyMagic() (bool, error) {
+// VerifyMagicTrailer verifies the MagicTrailer emoji bookends
+func (r *Reader) VerifyMagicTrailer() (bool, error) {
 	if err := r.Open(); err != nil {
 		return false, err
 	}

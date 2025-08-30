@@ -250,3 +250,10 @@ This document provides a comprehensive comparison of the PSPF/2025 format implem
 - Date: 2025-08-30
 - Version: PSPF/2025 v0x20250001
 - Status: Production Ready with minor enhancements needed
+
+## ✅ Recent Fixes
+
+- **2025-08-30**: Fixed reserved field size (6808 → 6816 bytes) to account for removed format_magic field
+- **2025-08-30**: MagicTrailer now correctly positioned at EOF - 8200 bytes
+- **2025-08-30**: Index structure confirmed at exactly 8192 bytes across all languages
+- **2025-08-30**: Mock launcher tests now create valid PSPF packages
