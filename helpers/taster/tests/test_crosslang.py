@@ -38,10 +38,10 @@ class TestCrossLangTester:
         captured = capsys.readouterr()
         assert "Test message" in captured.out
 
-    @patch("subprocess.run")
-    def test_build_with_python(self, mock_run):
+    @patch("flavor.utils.subprocess.run_command")
+    def test_build_with_python(self, mock_run_command):
         """Test Python builder."""
-        mock_run.return_value = Mock(
+        mock_run_command.return_value = Mock(
             returncode=0, stderr="", stdout="Built successfully"
         )
 
@@ -52,10 +52,9 @@ class TestCrossLangTester:
 
             tester = CrossLangTester()
             tester.taster_dir = taster_dir
-            tester.python_builder = Path("/fake/python/builder")
 
-            # Create fake output file
-            output_file = taster_dir / "test-python-go.psp"
+            # Create fake output file with correct name
+            output_file = taster_dir / "test-go.psp"
             output_file.touch()
 
             # Method renamed to build_with_launcher
@@ -64,6 +63,7 @@ class TestCrossLangTester:
             launcher_info = MagicMock()
             launcher_info.language = "go"
             launcher_info.path = Path("/fake/go/launcher")
+            launcher_info.name = "flavor-go-launcher"
             result = tester.build_with_launcher(launcher_info)
             assert result == output_file
             assert len(tester.results["build_tests"]) == 1
