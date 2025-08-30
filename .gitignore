@@ -45,3 +45,4 @@ helpers/pretaster/test-runner.sh
 *.whl
 bin/
 core
+*.local.json

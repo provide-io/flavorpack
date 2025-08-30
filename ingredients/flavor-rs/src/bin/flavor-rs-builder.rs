@@ -1,10 +1,10 @@
 //! Flavor Rust builder binary
 
 use clap::Parser;
-use flavor::{build_package, BuildOptions};
-use std::{env, path::PathBuf, process};
+use flavor::{build_package, BuildOptions, exit_codes::*};
+use std::{env, panic, path::PathBuf, process};
 
-const VERSION: &str = "0.3.0";
+const VERSION: &str = flavor::version::VERSION;
 
 #[derive(Parser, Debug)]
 #[command(version = VERSION, about = "Build PSPF packages")]
@@ -43,10 +43,29 @@ struct Args {
 }
 
 fn main() {
+    // Set up panic handler to return specific exit code
+    panic::set_hook(Box::new(|panic_info| {
+        eprintln!("PANIC: {}", panic_info);
+        process::exit(EXIT_PANIC);
+    }));
+    
+    // Wrap main logic in catch_unwind for extra safety
+    let result = panic::catch_unwind(|| run());
+    
+    match result {
+        Ok(exit_code) => process::exit(exit_code),
+        Err(_) => {
+            eprintln!("Fatal: Unhandled panic in builder");
+            process::exit(EXIT_PANIC);
+        }
+    }
+}
+
+fn run() -> i32 {
     // Handle --version before clap
     if env::args().nth(1).as_deref() == Some("--version") {
-        println!("flavor-rs-builder {}", VERSION);
-        process::exit(0);
+        println!("flavor-rs-builder {}", flavor::version::full_version());
+        return EXIT_SUCCESS;
     }
 
     let args = Args::parse();
@@ -74,8 +93,18 @@ fn main() {
         key_seed: args.key_seed,
     };
 
-    if let Err(e) = build_package(&args.manifest, &args.output, options) {
-        eprintln!("Error: {}", e);
-        process::exit(1);
+    match build_package(&args.manifest, &args.output, options) {
+        Ok(_) => EXIT_SUCCESS,
+        Err(e) => {
+            eprintln!("Build error: {}", e);
+            match e.to_string() {
+                s if s.contains("manifest") || s.contains("config") => EXIT_CONFIG_ERROR,
+                s if s.contains("PSPF") || s.contains("format") => EXIT_PSPF_ERROR,
+                s if s.contains("I/O") || s.contains("file") || s.contains("read") || s.contains("write") => EXIT_IO_ERROR,
+                s if s.contains("signature") || s.contains("key") => EXIT_SIGNATURE_ERROR,
+                s if s.contains("dependency") || s.contains("missing") => EXIT_DEPENDENCY_ERROR,
+                _ => EXIT_BUILD_ERROR,
+            }
+        }
     }
 }

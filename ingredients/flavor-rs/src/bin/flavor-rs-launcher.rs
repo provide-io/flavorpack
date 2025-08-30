@@ -1,24 +1,44 @@
 //! Flavor Rust launcher binary
 
-use flavor::{launch_package, LaunchOptions};
-use std::{env, process};
-
-const VERSION: &str = "0.3.0";
+use flavor::{launch_package, LaunchOptions, exit_codes::*};
+use std::{env, panic, process};
 
 fn main() {
+    // Set up panic handler to return specific exit code
+    panic::set_hook(Box::new(|panic_info| {
+        eprintln!("PANIC: {}", panic_info);
+        process::exit(EXIT_PANIC);
+    }));
+    
+    // Wrap main logic in catch_unwind for extra safety
+    let result = panic::catch_unwind(|| run());
+    
+    match result {
+        Ok(exit_code) => process::exit(exit_code),
+        Err(_) => {
+            eprintln!("Fatal: Unhandled panic in launcher");
+            process::exit(EXIT_PANIC);
+        }
+    }
+}
+
+fn run() -> i32 {
     // --- Argument and Environment Parsing ---
     let args: Vec<String> = env::args().collect();
     
     // Check for --version flag early (before PSPF validation)
     if args.len() > 1 && args[1] == "--version" {
-        println!("flavor-rs-launcher {}", VERSION);
-        process::exit(0);
+        println!("flavor-rs-launcher {}", flavor::version::full_version());
+        return 0;
     }
     
-    let exe_path = env::current_exe().unwrap_or_else(|e| {
-        eprintln!("Failed to get executable path: {}", e);
-        process::exit(1);
-    });
+    let exe_path = match env::current_exe() {
+        Ok(path) => path,
+        Err(e) => {
+            eprintln!("Failed to get executable path: {}", e);
+            return EXIT_IO_ERROR;
+        }
+    };
 
     // Determine if running in CLI mode ONLY from the environment variable.
     let cli_mode = env::var("FLAVOR_LAUNCHER_CLI").map_or(false, |v| v == "1" || v.to_lowercase() == "true");
@@ -43,9 +63,12 @@ fn main() {
             "extract" => {
                 if command_args.len() < 3 {
                     eprintln!("Usage: {} extract <slot_index> <output_dir>", args[0]);
-                    1
+                    EXIT_INVALID_ARGS
                 } else {
-                    flavor::psp::format_2025::cli::extract_slot(&exe_path, &command_args[1], &command_args[2])
+                    match flavor::psp::format_2025::cli::extract_slot(&exe_path, &command_args[1], &command_args[2]) {
+                        code if code == 0 => 0,
+                        _ => EXIT_EXTRACTION_ERROR,
+                    }
                 }
             }
             "run" => {
@@ -55,18 +78,21 @@ fn main() {
                     insecure: env::var("FLAVOR_INSECURE").unwrap_or_default() == "1",
                     workdir: None,
                 };
-                launch_package(&exe_path, &remaining_args, options).unwrap_or_else(|e| {
-                    eprintln!("Error: {}", e);
-                    1
-                })
+                match launch_package(&exe_path, &remaining_args, options) {
+                    Ok(code) => code,
+                    Err(e) => {
+                        eprintln!("Launch error: {}", e);
+                        EXIT_EXECUTION_ERROR
+                    }
+                }
             }
             _ => {
                 eprintln!("Error: Unknown command '{}'", command);
                 eprintln!("Available commands: info, verify, metadata, extract, run");
-                1
+                EXIT_INVALID_ARGS
             }
         };
-        process::exit(exit_code);
+        return exit_code;
     }
 
     // --- Standard Package Execution ---
@@ -88,10 +114,17 @@ fn main() {
         workdir: None,
     };
 
-    let exit_code = launch_package(&exe_path, &remaining_args, options).unwrap_or_else(|e| {
-        eprintln!("Error: {}", e);
-        1
-    });
-
-    process::exit(exit_code);
+    match launch_package(&exe_path, &remaining_args, options) {
+        Ok(code) => code,
+        Err(e) => {
+            eprintln!("Launch error: {}", e);
+            match e.to_string() {
+                s if s.contains("PSPF") || s.contains("format") => EXIT_PSPF_ERROR,
+                s if s.contains("extract") => EXIT_EXTRACTION_ERROR,
+                s if s.contains("execute") || s.contains("spawn") => EXIT_EXECUTION_ERROR,
+                s if s.contains("I/O") || s.contains("file") => EXIT_IO_ERROR,
+                _ => EXIT_EXECUTION_ERROR,
+            }
+        }
+    }
 }

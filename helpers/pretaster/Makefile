@@ -54,8 +54,8 @@ ALL_PACKAGES := $(TEST_PACKAGES) $(COMBO_PACKAGES) $(PRETASTER_PSP)
 # Key seed for reproducible builds
 KEY_SEED := test123
 
-# Log level for tests
-LOG_LEVEL ?= info
+# Log level for tests (set to debug for troubleshooting)
+LOG_LEVEL ?= error
 
 # Timestamp for logs
 TIMESTAMP := $(shell date +"%Y%m%d_%H%M%S")
@@ -79,7 +79,7 @@ endef
 ###################
 
 .PHONY: all
-all: clean build test ## Clean, build helpers, and run all tests
+all: clean clean-cache build test ## Clean, build helpers, and run all tests
 	$(call print,"✅ All tasks completed!",$(GREEN))
 
 .PHONY: help
@@ -304,7 +304,23 @@ clean: ## Remove all built artifacts
 	@rm -f *.psp
 	@rm -f test-*.txt
 	@rm -f .extraction.*
+	@rm -f scripts/*.tar.gz
+	@rm -f slots/*.tar.gz
+	@rm -f test-package.tar.gz
 	$(call print,"✅ Cleanup complete",$(GREEN))
+
+.PHONY: cache-dir
+cache-dir: ## Show cache directory location (like uv cache dir)
+	@echo "$${XDG_CACHE_HOME:-$$HOME/.cache}/flavor"
+
+.PHONY: clean-cache
+clean-cache: ## Clean Flavor workenv cache (respects XDG_CACHE_HOME)
+	$(call print,"🧹 Cleaning Flavor cache...",$(YELLOW))
+	@# Use XDG_CACHE_HOME if set, otherwise ~/.cache (same as uv)
+	@CACHE_DIR=$${XDG_CACHE_HOME:-$$HOME/.cache}; \
+	rm -rf $$CACHE_DIR/flavor/workenv/.* 2>/dev/null || true; \
+	rm -rf $$CACHE_DIR/flavor/workenv/* 2>/dev/null || true
+	$(call print,"✅ Cache cleaned from $${XDG_CACHE_HOME:-$$HOME/.cache}/flavor",$(GREEN))
 
 .PHONY: clean-logs
 clean-logs: ## Remove only log files
