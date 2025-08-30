@@ -210,7 +210,7 @@ impl Index {
 
         // Parse future crypto and reserved
         index.future_crypto.copy_from_slice(&data[872..1384]);
-        index.reserved.copy_from_slice(&data[1384..8192]);
+        index.reserved.copy_from_slice(&data[1376..8192]);
 
         Ok(index)
     }
@@ -265,7 +265,7 @@ impl Index {
 
         // Pack future crypto and reserved
         bytes[872..1384].copy_from_slice(&self.future_crypto);
-        bytes[1384..8192].copy_from_slice(&self.reserved);
+        bytes[1376..8192].copy_from_slice(&self.reserved);
 
         // Calculate and update checksum (with checksum field zeroed)
         bytes[4..8].copy_from_slice(&[0, 0, 0, 0]);
