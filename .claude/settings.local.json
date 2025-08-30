@@ -166,7 +166,8 @@
       "Bash(FLAVOR_LOG_LEVEL=trace timeout 1 ./test.psp --version)",
       "Bash(FLAVOR_LOG_LEVEL=trace ./flavor2.psp --version)",
       "Bash(FLAVOR_LOG_LEVEL=trace dist/flavor-test.psp --version)",
-      "Bash(FLAVOR_LOG_LEVEL=trace ./flavor-test.psp --version)"
+      "Bash(FLAVOR_LOG_LEVEL=trace ./flavor-test.psp --version)",
+      "Bash(FLAVOR_INSECURE=1 dist/echo-test.psp \"Hello from Go launcher\")"
     ],
     "additionalDirectories": [
       "/Users/tim/code/gh/provide-io"
