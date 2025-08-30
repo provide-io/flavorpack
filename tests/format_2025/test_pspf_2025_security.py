@@ -22,7 +22,6 @@ from flavor.psp.format_2025 import (
     PSPFIndex,
     SlotMetadata,
     generate_key_pair,
-    PSPF_MAGIC,
     HEADER_SIZE,
 )
 
