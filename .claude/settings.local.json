@@ -170,7 +170,11 @@
       "Bash(FLAVOR_INSECURE=1 dist/echo-test.psp \"Hello from Go launcher\")",
       "Read(/Users/tim/.cache/flavor/workenv/echo-test/**)",
       "Bash(flavor pack:*)",
-      "Bash(workenv/flavorpack_darwin_arm64/bin/flavor:*)"
+      "Bash(workenv/flavorpack_darwin_arm64/bin/flavor:*)",
+      "Bash(FLAVOR_LOG_LEVEL=info dist/taster-rust.psp info)",
+      "Bash(FLAVOR_LOG_LEVEL=info dist/taster-go.psp info)",
+      "Read(/Users/tim/.cache/flavor/workenv/taster-go/bin/**)",
+      "Read(/Users/tim/.cache/flavor/workenv/**)"
     ],
     "additionalDirectories": [
       "/Users/tim/code/gh/provide-io"
