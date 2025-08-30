@@ -103,10 +103,12 @@ func LaunchWithLogLevel(exePath string, args []string, cliLogLevel, cliLogSource
 
 	logger := hclog.New(loggerOpts)
 
-	// Log startup messages
-	logger.Info("🐹🐹🐹 Hello from Flavor's PSPF Launcher 🐹🐹🐹")
-	logger.Debug("Log level", "level", actualLevel, "source", logSource)
-	logger.Info("PSPF Go Launcher starting...")
+	// Only log startup messages in CLI mode
+	if isEnvTrue("FLAVOR_LAUNCHER_CLI") {
+		logger.Info("🐹🐹🐹 Hello from Flavor's PSPF Launcher 🐹🐹🐹")
+		logger.Debug("Log level", "level", actualLevel, "source", logSource)
+		logger.Info("PSPF Go Launcher starting...")
+	}
 	logger.Debug("📖 Reading PSPF bundle")
 
 	envVars := os.Environ()
@@ -225,7 +227,7 @@ func execBundleReplace(exePath string, args []string, userCwd string, logger hcl
 		envv = os.Environ()
 	}
 
-	logger.Info("🔄 Replacing process via exec", "binary", binary, "args", argv[1:])
+	logger.Debug("🔄 Replacing process via exec", "binary", binary, "args", argv[1:])
 	
 	// This replaces the current process and never returns on success
 	err = syscall.Exec(binary, argv, envv)
