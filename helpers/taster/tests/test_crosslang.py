@@ -69,38 +69,6 @@ class TestCrossLangTester:
             assert len(tester.results["build_tests"]) == 1
             assert tester.results["build_tests"][0]["success"] is True
 
-    @patch("subprocess.run")
-    def test_build_with_go(self, mock_run):
-        """Test Go builder."""
-        mock_run.return_value = Mock(
-            returncode=0, stderr="", stdout="Built successfully"
-        )
-
-        with tempfile.TemporaryDirectory() as tmpdir:
-            taster_dir = Path(tmpdir) / "helpers/taster"
-            taster_dir.mkdir(parents=True)
-            (taster_dir / "manifest.json").touch()
-
-            tester = CrossLangTester()
-            tester.taster_dir = taster_dir
-            tester.go_builder = Path("/fake/go/builder")
-
-            # Create fake output file
-            output_file = taster_dir / "test-go-go.psp"
-            output_file.touch()
-
-            # Method doesn't exist - skip this test
-            pytest.skip("build_with_go method doesn't exist")
-            assert result == output_file
-            assert len(tester.results["build_tests"]) == 1
-            assert tester.results["build_tests"][0]["builder"] == "go"
-
-    @pytest.mark.skip(reason="build_with_rust method doesn't exist")
-    @patch("subprocess.run")
-    def test_build_with_rust(self, mock_run):
-        """Test Rust builder."""
-        # Method build_with_rust doesn't exist - only build_with_launcher is available
-        pass
 
     def test_verify_with_python(self):
         """Test Python verification."""
