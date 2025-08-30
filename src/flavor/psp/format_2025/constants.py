@@ -20,9 +20,9 @@ TRAILING_MAGIC_ENCODED = xor_encode(_TRAILING_MAGIC_RAW)
 PSPF_MAGIC = xor_decode(PSPF_MAGIC_ENCODED)  # 8 bytes, standard format
 TRAILING_MAGIC = xor_decode(TRAILING_MAGIC_ENCODED)  # 📦🪄 decoded at runtime
 
-# Backward compatibility aliases
-PACKAGE_EMOJI = "📦"  # For display only
-MAGIC_WAND_EMOJI = "🪄"  # For display only
+# Display-only emoji constants (for UI/logging)
+PACKAGE_EMOJI = "📦"
+MAGIC_WAND_EMOJI = "🪄"
 
 # Format constants
 PSPF_VERSION = 0x20250001  # Keep as v1
@@ -44,12 +44,6 @@ else:
     # Default fallback
     PAGE_SIZE = 4096
     CACHE_LINE = 64
-
-# Magic endings - package and wand emojis
-PACKAGE_EMOJI = "📦"
-MAGIC_WAND_EMOJI = "🪄"
-TRAILING_MAGIC = "📦🪄"  # Both emojis at end of bundle
-EMOJI_MAGIC_SIZE = len(TRAILING_MAGIC.encode("utf-8"))  # Size in bytes
 
 # Disk space safety multiplier - require 2x compressed size for extraction
 DISK_SPACE_MULTIPLIER = 2

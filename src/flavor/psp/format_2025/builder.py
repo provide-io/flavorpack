@@ -53,6 +53,7 @@ from flavor.psp.format_2025.constants import (
     PURPOSE_MEDIA,
     SLOT_ALIGNMENT,
     SLOT_DESCRIPTOR_SIZE,
+    TRAILING_MAGIC,
 )
 from flavor.psp.format_2025.crypto import sign_data
 from flavor.psp.format_2025.index import PSPFIndex
