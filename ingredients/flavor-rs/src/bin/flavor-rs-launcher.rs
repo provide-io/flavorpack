@@ -32,6 +32,7 @@ fn run() -> i32 {
         flavor::logger::JsonLogger::init();
     }
     
+    log::debug!("🚀 Launcher process started");
     log::trace!("Launcher starting");
     
     // --- Argument and Environment Parsing ---
@@ -45,7 +46,10 @@ fn run() -> i32 {
     }
     
     let exe_path = match env::current_exe() {
-        Ok(path) => path,
+        Ok(path) => {
+            eprintln!("📍 Executable path: {:?}", path);
+            path
+        },
         Err(e) => {
             eprintln!("Failed to get executable path: {}", e);
             return EXIT_IO_ERROR;
