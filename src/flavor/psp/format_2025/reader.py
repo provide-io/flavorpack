@@ -175,8 +175,8 @@ class PSPFReader:
         expected_checksum = self._index.index_checksum
         if expected_checksum != 0:  # Only verify if checksum is set
             data_for_check = bytearray(index_data)
-            data_for_check[12:16] = (
-                b"\x00\x00\x00\x00"  # Zero out checksum field at correct offset
+            data_for_check[4:8] = (
+                b"\x00\x00\x00\x00"  # Zero out checksum field at offset 4 (after format_version)
             )
             actual_checksum = zlib.adler32(data_for_check)
 
