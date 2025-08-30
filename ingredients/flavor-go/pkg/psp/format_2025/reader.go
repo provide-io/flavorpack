@@ -14,6 +14,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/provide-io/flavor/go/flavor/pkg/utils/pspf"
 )
 
 // Constants are defined in constants.go
@@ -75,60 +77,27 @@ func (r *Reader) VerifyMagic() (bool, error) {
 		return false, err
 	}
 
-	// Seek to end minus emoji magic size
-	if _, err := r.file.Seek(-EmojiMagicSize, io.SeekEnd); err != nil {
+	valid, err := pspf.FindTrailingMagic(r.file, pspf.EmojiMagic)
+	if err != nil {
 		return false, err
 	}
-
-	magic := make([]byte, EmojiMagicSize)
-	if _, err := r.file.Read(magic); err != nil {
-		return false, err
-	}
-
-	// Check for package and magic wand emojis (8 bytes per PSPF/2025 spec)
-	// Expected: 📦 (0xF0 0x9F 0x93 0xA6) + 🪄 (0xF0 0x9F 0xAA 0x84)
-	expectedMagic := []byte{0xF0, 0x9F, 0x93, 0xA6, 0xF0, 0x9F, 0xAA, 0x84}
-	if !bytes.Equal(magic, expectedMagic) {
+	if !valid {
 		return false, ErrInvalidEmojiMagic
 	}
 	return true, nil
 }
 
 // DetectLauncherSize detects launcher size by finding index block
-// Returns the offset where the index block starts (which is the launcher size)
 func (r *Reader) DetectLauncherSize() (int64, error) {
 	if err := r.Open(); err != nil {
 		return 0, err
 	}
 
-	// Read file in chunks to find PSPF magic
-	const chunkSize = 1024 * 1024      // 1MB chunks
-	const maxSearch = 10 * 1024 * 1024 // Search up to 10MB
-
-	for offset := int64(0); offset < maxSearch; offset += chunkSize {
-		if _, err := r.file.Seek(offset, io.SeekStart); err != nil {
-			return 0, err
-		}
-
-		data := make([]byte, chunkSize)
-		n, err := r.file.Read(data)
-		if err != nil && err != io.EOF {
-			return 0, err
-		}
-		if n == 0 {
-			break
-		}
-		data = data[:n]
-
-		// Search for PSPF magic in this chunk
-		pos := bytes.Index(data, PSPFMagic)
-		if pos >= 0 {
-			// Return the position where the index starts (launcher size)
-			return offset + int64(pos), nil
-		}
+	indexOffset, err := pspf.FindIndexOffset(r.file, PSPFMagic)
+	if err != nil {
+		return 0, ErrInvalidMagic
 	}
-
-	return 0, ErrInvalidMagic
+	return indexOffset, nil
 }
 
 // ReadIndex reads and verifies the index block
@@ -164,7 +133,7 @@ func (r *Reader) ReadIndex() (*PSPFIndex, error) {
 	}
 
 	// Verify magic
-	if !bytes.Equal(index.FormatMagic[:], PSPFMagic) {
+	if !pspf.VerifyPSPFMagic(index.FormatMagic[:]) {
 		return nil, ErrInvalidMagic
 	}
 
