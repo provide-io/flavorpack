@@ -297,7 +297,7 @@ verify-helpers: ## Verify helpers are built
 ####################
 
 .PHONY: clean
-clean: ## Remove all built artifacts
+clean: ## Remove all built artifacts and workenv cache
 	$(call print,"🧹 Cleaning up...",$(YELLOW))
 	@rm -rf $(DIST_DIR)
 	@rm -rf $(LOGS_DIR)
@@ -307,6 +307,10 @@ clean: ## Remove all built artifacts
 	@rm -f scripts/*.tar.gz
 	@rm -f slots/*.tar.gz
 	@rm -f test-package.tar.gz
+	@# Clean workenv cache including .pspf directories
+	@CACHE_DIR=$${XDG_CACHE_HOME:-$$HOME/.cache}; \
+	rm -rf $$CACHE_DIR/flavor/workenv/* 2>/dev/null || true; \
+	rm -rf $$CACHE_DIR/flavor/workenv/.* 2>/dev/null || true
 	$(call print,"✅ Cleanup complete",$(GREEN))
 
 .PHONY: cache-dir
