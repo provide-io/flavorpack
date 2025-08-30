@@ -177,7 +177,9 @@
       "Read(/Users/tim/.cache/flavor/workenv/**)",
       "Bash(../../workenv/flavorpack_darwin_arm64/bin/flavor pack:*)",
       "Bash(FLAVOR_LOG_LEVEL=info dist/taster-go-fixed.psp info)",
-      "Read(/Users/tim/.cache/flavor/workenv/taster-go-fixed/bin/**)"
+      "Read(/Users/tim/.cache/flavor/workenv/taster-go-fixed/bin/**)",
+      "Bash(FLAVOR_LOG_LEVEL=debug dist/taster-rust-fixed.psp --version)",
+      "Bash(FLAVOR_LOG_LEVEL=info timeout 2 dist/taster-rust-fixed.psp)"
     ],
     "additionalDirectories": [
       "/Users/tim/code/gh/provide-io"
