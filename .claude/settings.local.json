@@ -124,7 +124,8 @@
       "Bash(../../workenv/flavorpack_darwin_arm64/bin/python -m flavor inspect:*)",
       "Bash(ingredients/bin/flavor-rs-builder-darwin_arm64:*)",
       "Bash(workenv/flavorpack_darwin_arm64/bin/python -m flavor pack:*)",
-      "Bash(dist/flavorpack.psp:*)"
+      "Bash(dist/flavorpack.psp:*)",
+      "Bash(FLAVOR_LOG_LEVEL=trace dist/flavorpack.psp --version)"
     ],
     "additionalDirectories": [
       "/Users/tim/code/gh/provide-io"
