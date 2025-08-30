@@ -86,8 +86,8 @@ class TestEnhancedIndex:
         packed = index.pack()
 
         # Extract checksum from packed data
-        # After magic(8) + version(4) = 12
-        checksum_offset = 12
+        # Checksum is at offset 4 (after format_version at offset 0)
+        checksum_offset = 4
         stored_checksum = struct.unpack_from("<I", packed, checksum_offset)[0]
 
         # Recalculate with checksum field zeroed
