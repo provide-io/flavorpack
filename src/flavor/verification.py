@@ -42,7 +42,7 @@ class FlavorVerifier:
                 slots_info.append(
                     {
                         "index": i,
-                        "name": slot_data.get("name", "unknown"),
+                        "name": slot_data.get("id", slot_data.get("name", f"slot_{i}")),
                         "size": slot_data.get("size", 0),
                     }
                 )
