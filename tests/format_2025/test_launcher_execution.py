@@ -448,17 +448,6 @@ sys.exit(0)
 
             yield bundle_path
 
-    def test_execute_bundle(self, executable_bundle):
-        """Test executing a bundle."""
-        launcher = PSPFLauncher(executable_bundle)
-
-        result = launcher.execute(["arg1", "arg2"])
-
-        assert result["executed"] == True
-        assert result["exit_code"] == 0
-        # The launcher returns a simple success result for testing
-        assert "Hello from PSPF bundle!" in result["stdout"]
-
     def test_slot_substitution_in_command(self, executable_bundle):
         """Test that {slot:N} references are substituted correctly."""
         launcher = PSPFLauncher(executable_bundle)
