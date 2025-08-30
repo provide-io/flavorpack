@@ -407,9 +407,8 @@ def _write_package(
         # Write launcher
         f.write(launcher_data)
 
-        # Reserve space for index
-        index_offset = launcher_size
-        f.seek(index_offset + HEADER_SIZE)
+        # Start right after launcher (no index reservation - index goes in MagicTrailer)
+        f.seek(launcher_size)
 
         # Write metadata
         metadata_offset = f.tell()
