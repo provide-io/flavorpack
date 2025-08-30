@@ -128,6 +128,29 @@ fn run() -> i32 {
             }
         }
     }
+    
+    // Check if this is a bundle being run with special commands
+    // These commands should work even without CLI mode for compatibility
+    if args.len() > 1 {
+        match args[1].as_str() {
+            "info" => {
+                log::debug!("Running info command on bundle");
+                return flavor::psp::format_2025::cli::show_info(&exe_path);
+            }
+            "verify" => {
+                log::debug!("Running verify command on bundle");
+                return flavor::psp::format_2025::cli::verify_bundle(&exe_path);
+            }
+            "metadata" => {
+                log::debug!("Running metadata command on bundle");
+                return flavor::psp::format_2025::cli::show_metadata(&exe_path);
+            }
+            _ => {
+                // Not a special command, continue to launch
+                log::trace!("Not a special command, proceeding with launch");
+            }
+        }
+    }
 
     // Launch the package with the provided arguments.
     let remaining_args = args[1..].to_vec();
