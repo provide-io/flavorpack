@@ -125,7 +125,11 @@
       "Bash(ingredients/bin/flavor-rs-builder-darwin_arm64:*)",
       "Bash(workenv/flavorpack_darwin_arm64/bin/python -m flavor pack:*)",
       "Bash(dist/flavorpack.psp:*)",
-      "Bash(FLAVOR_LOG_LEVEL=trace dist/flavorpack.psp --version)"
+      "Bash(FLAVOR_LOG_LEVEL=trace dist/flavorpack.psp --version)",
+      "Bash(xxd:*)",
+      "Bash(python3:*)",
+      "Bash(RUST_BACKTRACE=1 FLAVOR_LOG_LEVEL=trace timeout 2 dist/flavorpack.psp --version)",
+      "Bash(FLAVOR_LOG_LEVEL=trace dist/echo-test.psp --version)"
     ],
     "additionalDirectories": [
       "/Users/tim/code/gh/provide-io"
