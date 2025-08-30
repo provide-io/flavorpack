@@ -68,15 +68,10 @@ impl Reader {
     pub fn read_index(&mut self) -> Result<&Index> {
         if self.index.is_none() {
             let timer = Instant::now();
-            // Find launcher size
-            trace!("Detecting launcher size...");
-            let launcher_size = self.detect_launcher_size()?;
-            self.launcher_size = Some(launcher_size);
-            trace!("Launcher size: {} bytes", launcher_size);
-
-            // Read index block using backend
-            trace!("Reading index at offset {}", launcher_size);
-            let index_data = self.backend.read_at(launcher_size, HEADER_SIZE)?;
+            // Read index from MagicTrailer
+            trace!("Reading MagicTrailer...");
+            let index_data = self.read_magic_trailer()?;
+            trace!("Parsing index from MagicTrailer");
 
             // Parse index
             let index = Index::parse(&index_data)?;
@@ -249,51 +244,38 @@ impl Reader {
             .ok_or_else(|| FlavorError::Generic("Failed to read metadata".into()))
     }
 
-    /// Detect launcher size by searching for PSPF magic
-    fn detect_launcher_size(&mut self) -> Result<u64> {
+    /// Read MagicTrailer and return index data
+    fn read_magic_trailer(&mut self) -> Result<Vec<u8>> {
         use log::trace;
 
         // Get file size
         let file_size = self.path.metadata()?.len();
 
-        // Search for PSPF magic (up to 10MB to handle large launchers)
-        for offset in (0..file_size.min(10 * 1024 * 1024)).step_by(1024) {
-            let buffer = self
-                .backend
-                .read_at(offset, 1024.min((file_size - offset) as usize))?;
+        // Read MagicTrailer (last 8200 bytes)
+        let trailer = self.backend.read_at(
+            file_size - MAGIC_TRAILER_SIZE as u64,
+            MAGIC_TRAILER_SIZE
+        )?;
 
-            // Look for magic bytes
-            if let Some(pos) = buffer.windows(16).position(|w| w[..8] == PSPF_MAGIC[..8]) {
-                let potential_offset = offset + pos as u64;
-
-                // Validate this is actually the index by checking version field
-                if potential_offset + 16 < file_size {
-                    let version_check = self.backend.read_at(potential_offset + 8, 4)?;
-                    let version = u32::from_le_bytes([
-                        version_check[0],
-                        version_check[1],
-                        version_check[2],
-                        version_check[3],
-                    ]);
-
-                    // Check if this looks like a valid PSPF version (0x20250001)
-                    if version == PSPF_VERSION {
-                        trace!("Found valid PSPF magic at offset {}", potential_offset);
-                        return Ok(potential_offset);
-                    } else {
-                        trace!(
-                            "Found PSPF magic at offset {} but invalid version: 0x{:08x}",
-                            potential_offset,
-                            version
-                        );
-                    }
-                }
-            }
+        // Verify emoji bookends
+        if &trailer[..4] != PACKAGE_EMOJI_BYTES {
+            return Err(FlavorError::Generic(
+                "Invalid MagicTrailer: missing 📦 at start".into(),
+            ));
+        }
+        if &trailer[MAGIC_TRAILER_SIZE-4..] != MAGIC_WAND_EMOJI_BYTES {
+            return Err(FlavorError::Generic(
+                "Invalid MagicTrailer: missing 🪄 at end".into(),
+            ));
         }
 
-        Err(FlavorError::Generic(
-            "Could not find valid PSPF index".into(),
-        ))
+        // Extract index from between emojis
+        let index_data = trailer[4..4+HEADER_SIZE].to_vec();
+
+        trace!("Found index in MagicTrailer");
+        debug!("Trailer size: {}, file size: {} bytes", MAGIC_TRAILER_SIZE, file_size);
+
+        Ok(index_data)
     }
 
     /// Read slot descriptors
