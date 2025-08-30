@@ -478,7 +478,10 @@ def _write_package(
 
         # Write final index (pack() calculates checksum internally)
         f.seek(index_offset)
-        f.write(index.pack())
+        index_data = index.pack()
+        logger.debug(f"Writing index with format_version: 0x{index.format_version:08x}")
+        logger.debug(f"Index data first 16 bytes: {index_data[:16].hex()}")
+        f.write(index_data)
 
     # Set the output file as executable (user only for security)
     set_file_permissions(output_path, DEFAULT_EXECUTABLE_PERMS)
