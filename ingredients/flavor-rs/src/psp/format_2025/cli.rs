@@ -5,6 +5,7 @@ use std::path::Path;
 
 /// Show package information
 pub fn show_info(exe_path: &Path) -> i32 {
+    log::debug!("show_info called for: {:?}", exe_path);
     let mut reader = match Reader::new(exe_path) {
         Ok(r) => r,
         Err(e) => {
