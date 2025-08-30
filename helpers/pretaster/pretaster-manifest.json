@@ -13,12 +13,12 @@
   },
   "slots": [
     {
-      "name": "test-package.tar.gz",
-      "path": "test-package.tar.gz",
+      "id": "test-package",
+      "source": "test-package.tar.gz",
       "purpose": "runtime",
       "lifecycle": "cached",
       "encoding": "tar.gz",
-      "extract_to": "{workenv}"
+      "target": "{workenv}"
     }
   ]
 }

@@ -53,7 +53,7 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
             purpose="payload",
             lifecycle="runtime",
             encoding="none",
-            extract_to="app.py",  # Extract with this name
+            target="app.py",  # Extract with this name
         )
         builder.build(bundle_path)
 
