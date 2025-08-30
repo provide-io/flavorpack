@@ -117,7 +117,8 @@
       "Bash(FLAVOR_LOG_LEVEL=trace dist/echo-test.psp \"hello world\")",
       "Bash(dist/echo-test.psp:*)",
       "Bash(FLAVOR_LOG_LEVEL=debug timeout 2 dist/taster.psp info)",
-      "Bash(time:*)"
+      "Bash(time:*)",
+      "Bash(otool:*)"
     ],
     "additionalDirectories": [
       "/Users/tim/code/gh/provide-io"
