@@ -64,9 +64,8 @@ from flavor.psp.format_2025.metadata.assembly import (
 from flavor.psp.format_2025.slots import (
     SlotDescriptor,
     SlotMetadata,
-    align_offset,
-    align_to_page,
 )
+from flavor.utils.alignment import align_offset, align_to_page
 from flavor.psp.format_2025.spec import (
     BuildOptions,
     BuildResult,
@@ -76,6 +75,7 @@ from flavor.psp.format_2025.spec import (
 )
 from flavor.psp.format_2025.validation import validate_complete
 from flavor.utils.archive import deterministic_filter
+from flavor.utils.permissions import parse_permissions, set_file_permissions
 
 # =============================================================================
 # Pure Functions
@@ -444,14 +444,7 @@ def _write_package(
 
                 # Create descriptor
                 # Parse permissions from metadata or use default
-                if slot.metadata.permissions:
-                    # Parse octal string (e.g., "0755" -> 0o755)
-                    try:
-                        slot_permissions = int(slot.metadata.permissions.lstrip("0"), 8)
-                    except (ValueError, AttributeError):
-                        slot_permissions = DEFAULT_FILE_PERMS
-                else:
-                    slot_permissions = DEFAULT_FILE_PERMS
+                slot_permissions = parse_permissions(slot.metadata.permissions)
 
                 descriptor = SlotDescriptor(
                     id=i,
@@ -488,7 +481,7 @@ def _write_package(
         f.write(index.pack())
 
     # Set the output file as executable (user only for security)
-    output_path.chmod(DEFAULT_EXECUTABLE_PERMS)
+    set_file_permissions(output_path, DEFAULT_EXECUTABLE_PERMS)
     logger.trace(
         "🔧📝📋 Set output file as executable",
         path=str(output_path),
