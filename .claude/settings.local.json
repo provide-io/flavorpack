@@ -132,7 +132,8 @@
       "Bash(FLAVOR_LOG_LEVEL=trace dist/echo-test.psp --version)",
       "Bash(python pretaster test --single rust-rust)",
       "Bash(FLAVOR_LOG_LEVEL=trace helpers/pretaster/dist/echo-test.psp --version)",
-      "Bash(FLAVOR_LOG_LEVEL=debug uv run flavor pack --manifest pyproject.toml --output dist/flavorpack.psp --key-seed test123 --launcher-bin ingredients/bin/flavor-rs-launcher-darwin_arm64)"
+      "Bash(FLAVOR_LOG_LEVEL=debug uv run flavor pack --manifest pyproject.toml --output dist/flavorpack.psp --key-seed test123 --launcher-bin ingredients/bin/flavor-rs-launcher-darwin_arm64)",
+      "Bash(FLAVOR_LOG_LEVEL=trace timeout 1 helpers/taster/dist/taster2.psp --version)"
     ],
     "additionalDirectories": [
       "/Users/tim/code/gh/provide-io"
