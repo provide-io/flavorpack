@@ -24,6 +24,7 @@ const (
 	PSPFVersion        = 0x20250001
 	IndexSize          = 8192
 	EmojiMagicSize     = 8  // Package + magic wand emojis (8 bytes)
+	TrailingMagicSize  = 8  // Same as EmojiMagicSize
 	SlotAlignment      = 8  // Slots must be 8-byte aligned
 	SlotDescriptorSize = 64 // Enhanced slot descriptor size
 	
@@ -31,6 +32,11 @@ const (
 	DefaultFilePerms       = 0600  // Read/write for owner only
 	DefaultExecutablePerms = 0700  // Read/write/execute for owner only
 	DefaultDirPerms        = 0700  // Read/write/execute for owner only
+	
+	// Memory limits
+	DefaultMaxMemory = 128 * 1024 * 1024  // 128MB
+	DefaultMinMemory = 8 * 1024 * 1024    // 8MB
+	DefaultChunkSize = 64 * 1024          // 64KB for streaming
 	
 	// DiskSpaceMultiplier is the safety factor for disk space requirements
 	// We require 2x the compressed size to account for extraction overhead
@@ -78,6 +84,29 @@ const (
 	EncodingTar  = 1 // Uncompressed tar archive
 	EncodingGzip = 2 // Gzipped single file
 	EncodingTgz  = 3 // Tar archive, then gzipped (tar.gz)
+	
+	// Purpose types - must match Python/Rust
+	PurposePayload = 0 // Payload/data files
+	PurposeRuntime = 1 // Runtime/executable code
+	PurposeTool    = 2 // Tool/configuration files
+	PurposeMedia   = 3 // Media/assets (unused but kept for future)
+	// Aliases for compatibility
+	PurposeData   = PurposePayload
+	PurposeCode   = PurposeRuntime
+	PurposeConfig = PurposeTool
+	
+	// Lifecycle types - must match Python/Rust
+	LifecycleInit      = 0  // First run only, removed after initialization
+	LifecycleStartup   = 1  // Extracted/executed at every startup
+	LifecycleRuntime   = 2  // Available during application execution (default)
+	LifecycleShutdown  = 3  // Executed during cleanup/exit phase
+	LifecycleCache     = 4  // Kept for performance, can be regenerated
+	LifecycleTemporary = 5  // Removed after current session ends
+	LifecycleLazy      = 6  // Loaded on-demand, not extracted initially
+	LifecycleEager     = 7  // Loaded immediately on startup
+	LifecycleDev       = 8  // Only extracted in development/debug mode
+	LifecycleConfig    = 9  // User-modifiable configuration files
+	LifecyclePlatform  = 10 // Platform/OS specific content
 
 	// Future encoding formats (not implemented yet):
 	// EncodingZstd  = 4 // Zstd compressed single file
