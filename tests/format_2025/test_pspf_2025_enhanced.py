@@ -39,7 +39,8 @@ class TestEnhancedConstants:
         assert PACKAGE_EMOJI_BYTES == b"\xf0\x9f\x93\xa6"  # 📦 in UTF-8
         assert MAGIC_WAND_EMOJI_BYTES == b"\xf0\x9f\xaa\x84"  # 🪄 in UTF-8
         assert MAGIC_TRAILER_SIZE == 8200  # 4 + 8192 + 4
-        assert len(TRAILING_MAGIC) == 8  # Both emojis = 8 bytes
+        # MagicTrailer consists of 📦 + 8192-byte index + 🪄
+        assert len(PACKAGE_EMOJI_BYTES + MAGIC_WAND_EMOJI_BYTES) == 8  # Both emojis = 8 bytes
 
 
 class TestEnhancedIndex:
