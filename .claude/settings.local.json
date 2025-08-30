@@ -146,7 +146,8 @@
       "Bash(helpers/pretaster/dist/echo-test.psp:*)",
       "Bash(./dist/echo-test-rust.psp:*)",
       "Bash(helpers/taster/dist/taster-new.psp:*)",
-      "Bash(dist/flavor.psp:*)"
+      "Bash(dist/flavor.psp:*)",
+      "Bash(/bin/ls:*)"
     ],
     "additionalDirectories": [
       "/Users/tim/code/gh/provide-io"
