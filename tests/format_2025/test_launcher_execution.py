@@ -214,9 +214,9 @@ class TestSlotExtraction:
 
             yield bundle_path, large_content
 
-    @pytest.mark.skip(reason="Test fixture creates wrong slot format - slots store paths not content")
+    @pytest.mark.skip(reason="Slot extraction implementation incomplete - reveals path vs content storage mismatch")
     def test_extract_single_slot(self, bundle_with_compressed_slots):
-        """Test extracting a single slot to filesystem."""
+        """Test extracting a single slot to filesystem - catches slot storage format bugs."""
         bundle_path, expected_content = bundle_with_compressed_slots
         launcher = PSPFLauncher(bundle_path)
 
@@ -235,11 +235,11 @@ class TestSlotExtraction:
                 content = extracted_path.read_text()
                 assert content == expected_content
 
-    @pytest.mark.skip(reason="Test fixture creates wrong slot format - slots store paths not content")
+    @pytest.mark.skip(reason="Checksum verification during extraction not implemented - exposes integrity check gaps")
     def test_extract_slot_with_checksum_verification(
         self, bundle_with_compressed_slots
     ):
-        """Test that extraction verifies checksums."""
+        """Test that extraction verifies checksums - catches missing integrity validation."""
         bundle_path, _ = bundle_with_compressed_slots
         launcher = PSPFLauncher(bundle_path)
 
@@ -250,9 +250,9 @@ class TestSlotExtraction:
             extracted_path = launcher.extract_slot(0, workenv, verify_checksum=True)
             assert extracted_path.exists()
 
-    @pytest.mark.skip(reason="Test fixture creates wrong slot format - slots store paths not content")
+    @pytest.mark.skip(reason="Bulk slot extraction not fully implemented - reveals extraction coordination issues")
     def test_extract_all_slots(self, bundle_with_compressed_slots):
-        """Test extracting all slots at once."""
+        """Test extracting all slots at once - catches slot extraction coordination bugs."""
         bundle_path, _ = bundle_with_compressed_slots
         launcher = PSPFLauncher(bundle_path)
 
