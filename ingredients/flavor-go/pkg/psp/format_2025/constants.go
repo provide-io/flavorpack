@@ -23,8 +23,7 @@ var (
 const (
 	PSPFVersion        = 0x20250001
 	IndexSize          = 8192
-	EmojiMagicSize     = 8  // Package + magic wand emojis (8 bytes)
-	TrailingMagicSize  = 8  // Same as EmojiMagicSize
+	MagicTrailerSize   = 16 // 8-byte index pointer + 8-byte emoji magic
 	SlotAlignment      = 8  // Slots must be 8-byte aligned
 	SlotDescriptorSize = 64 // Enhanced slot descriptor size
 	

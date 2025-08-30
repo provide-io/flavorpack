@@ -646,10 +646,13 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 	// Store as 4 bytes in the 32-byte field
 	binary.LittleEndian.PutUint32(index.MetadataChecksum[:4], metadataChecksum)
 
-	// 🪄 Write trailing magic (emoji bytes, XOR decoded)
-	logger.Debug("🪄 Writing trailing magic")
-	if _, err := out.Write(TrailingMagic); err != nil {
-		logger.Error("❌ Failed to write trailing magic", "error", err)
+	// 🪄 Write MagicTrailer (16 bytes: index pointer + emoji magic)
+	logger.Debug("🪄 Writing MagicTrailer")
+	trailer := make([]byte, MagicTrailerSize)
+	binary.LittleEndian.PutUint64(trailer[:8], uint64(indexOffset))  // Index pointer
+	copy(trailer[8:], TrailingMagic)  // Emoji magic
+	if _, err := out.Write(trailer); err != nil {
+		logger.Error("❌ Failed to write MagicTrailer", "error", err)
 		os.Exit(1)
 	}
 
