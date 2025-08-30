@@ -30,28 +30,16 @@ class TestReaderBackends:
 
     @pytest.fixture
     def test_bundle(self):
-        """Create a minimal test bundle."""
+        """Create a minimal test bundle with MagicTrailer."""
         with tempfile.NamedTemporaryFile(suffix=".psp", delete=False) as f:
             # Write fake launcher (100 bytes)
-            f.write(b"LAUNCHER" * 12 + b"DATA")
+            launcher_data = b"LAUNCHER" * 12 + b"DATA"
+            f.write(launcher_data)
 
-            # Write index/header (512 bytes)
-            index = PSPFIndex()
-            index.launcher_size = 100
-            index.slot_table_offset = 100 + HEADER_SIZE  # After header
-            index.slot_count = 2
-            index.slot_table_size = 2 * SLOT_DESCRIPTOR_SIZE
-            data_offset = 100 + HEADER_SIZE + (2 * SLOT_DESCRIPTOR_SIZE)
-            index.package_size = data_offset + 1000  # Approximate
-
-            # Calculate checksum
-            index_data = index.pack()
-            checksum = zlib.adler32(index_data)
-            index.index_checksum = checksum
-
-            # Write index with checksum
-            f.write(index.pack())
-
+            # Prepare slot descriptors
+            slot_table_offset = 100  # After launcher
+            data_offset = slot_table_offset + (2 * SLOT_DESCRIPTOR_SIZE)
+            
             # Write slot descriptors (2 x 64 bytes)
             slot1 = SlotDescriptor(
                 id=0,
@@ -78,9 +66,28 @@ class TestReaderBackends:
             # Write slot data
             f.write(b"TEST DATA 1" * 9 + b"T")  # 100 bytes
             f.write(b"TEST DATA 2" * 18 + b"TD")  # 200 bytes
+            
+            # Calculate final package size (before MagicTrailer)
+            package_size = f.tell()
 
-            # Write trailing magic (package and wand emojis)
-            f.write("📦🪄".encode("utf-8"))
+            # Create index for MagicTrailer
+            index = PSPFIndex()
+            index.launcher_size = 100
+            index.slot_table_offset = slot_table_offset
+            index.slot_count = 2
+            index.slot_table_size = 2 * SLOT_DESCRIPTOR_SIZE
+            index.package_size = package_size + 8200  # Include MagicTrailer size
+
+            # Calculate checksum with zeroed checksum field
+            index_data = index.pack()
+            data_copy = bytearray(index_data)
+            data_copy[4:8] = b"\x00\x00\x00\x00"
+            index.index_checksum = zlib.adler32(bytes(data_copy))
+
+            # Write MagicTrailer (📦 + index + 🪄)
+            f.write("📦".encode("utf-8"))  # 4 bytes
+            f.write(index.pack())  # 8192 bytes
+            f.write("🪄".encode("utf-8"))  # 4 bytes
 
             path = Path(f.name)
 
