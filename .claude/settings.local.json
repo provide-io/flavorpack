@@ -168,7 +168,8 @@
       "Bash(FLAVOR_LOG_LEVEL=trace dist/flavor-test.psp --version)",
       "Bash(FLAVOR_LOG_LEVEL=trace ./flavor-test.psp --version)",
       "Bash(FLAVOR_INSECURE=1 dist/echo-test.psp \"Hello from Go launcher\")",
-      "Read(/Users/tim/.cache/flavor/workenv/echo-test/**)"
+      "Read(/Users/tim/.cache/flavor/workenv/echo-test/**)",
+      "Bash(flavor pack:*)"
     ],
     "additionalDirectories": [
       "/Users/tim/code/gh/provide-io"
