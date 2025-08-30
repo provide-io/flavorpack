@@ -74,8 +74,8 @@ class PSPFIndex:
             "I"  # protocol_version
             # Future cryptography space (512 bytes)
             "512s"  # future_crypto
-            # Reserved (6816 bytes for future expansion)
-            "6816s"  # reserved
+            # Reserved (6808 bytes for future expansion)
+            "6808s"  # reserved
         ),
         init=False,
         repr=False,
@@ -134,7 +134,7 @@ class PSPFIndex:
     future_crypto: bytes = field(default=Factory(lambda: b"\x00" * 512))
 
     # Reserved space for future expansion
-    reserved: bytes = field(default=Factory(lambda: b"\x00" * 6816))
+    reserved: bytes = field(default=Factory(lambda: b"\x00" * 6808))
 
     # Backwards compatibility properties
     @property

@@ -61,8 +61,8 @@ pub struct Index {
     // Future cryptography space (512 bytes)
     pub future_crypto: [u8; 512], // Reserved for post-quantum signatures
 
-    // Reserved for future use (6816 bytes)
-    pub reserved: [u8; 6816], // Large buffer for future expansion
+    // Reserved for future use (6808 bytes)
+    pub reserved: [u8; 6808], // Large buffer for future expansion
 }
 
 impl Index {
@@ -106,7 +106,7 @@ impl Index {
             compatibility: PSPF_VERSION,
             protocol_version: 1,
             future_crypto: [0; 512],
-            reserved: [0; 6816],
+            reserved: [0; 6808],
         }
     }
 
