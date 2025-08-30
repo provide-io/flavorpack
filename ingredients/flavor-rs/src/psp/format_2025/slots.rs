@@ -53,7 +53,7 @@ impl SlotDescriptor {
             lifecycle: LIFECYCLE_CACHE,
             access_hint: ACCESS_HINT_SEQUENTIAL,
             priority: CACHE_NORMAL,
-            permissions: 0o644,
+            permissions: DEFAULT_FILE_PERMS,
             platform: 0,
             extended_offset: 0,
             extended_size: 0,
