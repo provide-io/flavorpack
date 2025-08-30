@@ -61,7 +61,7 @@ type PSPFIndex struct {
 	FutureCrypto [512]byte // Reserved for post-quantum signatures
 
 	// Reserved for future use (6808 bytes)
-	Reserved [6808]byte // Large buffer for future expansion
+	Reserved [6816]byte // Large buffer for future expansion
 }
 
 // Pack serializes the index to bytes
