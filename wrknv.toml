@@ -1,0 +1,22 @@
+# wrknv configuration for flavorpack
+
+[project]
+name = "flavorpack"
+description = "Cross-language packaging system for creating self-contained executables"
+
+[tools]
+uv = "latest"
+go = "1.22.1"
+rust = "1.75"
+
+[siblings]
+patterns = [
+    "pyvider-telemetry",  # Logging and telemetry
+    "wrknv",              # This tool itself
+    "tofusoup",           # Testing suite
+    "garnish",            # Documentation
+]
+
+[settings]
+python_version = ">=3.11"
+verify_checksums = true
