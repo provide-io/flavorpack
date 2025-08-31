@@ -34,8 +34,16 @@ from flavor.psp.format_2025.constants import (
     ENCODING_TAR,
     ENCODING_TGZ,
     HEADER_SIZE,
-    LIFECYCLE_CACHED,
-    LIFECYCLE_PERMANENT,
+    LIFECYCLE_CACHE,
+    LIFECYCLE_CONFIG,
+    LIFECYCLE_DEV,
+    LIFECYCLE_EAGER,
+    LIFECYCLE_INIT,
+    LIFECYCLE_LAZY,
+    LIFECYCLE_PLATFORM,
+    LIFECYCLE_RUNTIME,
+    LIFECYCLE_SHUTDOWN,
+    LIFECYCLE_STARTUP,
     LIFECYCLE_TEMPORARY,
     PAGE_SIZE,
     PURPOSE_CODE,
@@ -114,7 +122,7 @@ def build_package(spec: BuildSpec, output_path: Path) -> BuildResult:
 
     # Prepare slots
     logger.info("📦🏗️🚀 Preparing slots", slot_count=len(spec.slots))
-    logger.debug("🎰🔍📋 Slot details", slots=[s.name for s in spec.slots])
+    logger.debug("🎰🔍📋 Slot details", slots=[s.id for s in spec.slots])
     try:
         prepared_slots = prepare_slots(spec.slots, spec.options)
         logger.debug("🎰✅📋 Slots prepared", prepared_count=len(prepared_slots))
@@ -202,7 +210,7 @@ def prepare_slots(
 
         logger.trace(
             "🎰🔍📋 Slot prepared",
-            name=slot.name,
+            name=slot.id,
             raw_size=len(data),
             compressed_size=len(slot_data),
             encoding=encoding_type,
@@ -259,28 +267,20 @@ def create_index(
 
 def _load_slot_data(slot: SlotMetadata) -> bytes:
     """Load raw data for a slot."""
-    if not slot.path:
+    if not slot.source:
         # Empty slot
         return b""
 
-    # Resolve {workenv} if present in path
-    slot_path = slot.path
-    if isinstance(slot_path, str) and "{workenv}" in slot_path:
+    # Resolve {workenv} if present in source path
+    slot_path = Path(slot.source) if slot.source else Path()
+    if "{workenv}" in str(slot_path):
         import os
 
         # Priority: 1. FLAVOR_WORKENV_BASE env var, 2. Current working directory
         base_dir = os.environ.get("FLAVOR_WORKENV_BASE", os.getcwd())
-        slot_path = Path(slot_path.replace("{workenv}", base_dir))
-        logger.debug(
-            f"📍 Resolved slot path: {slot.path} -> {slot_path} (base: {base_dir})"
-        )
-    elif isinstance(slot_path, Path) and "{workenv}" in str(slot_path):
-        import os
-
-        base_dir = os.environ.get("FLAVOR_WORKENV_BASE", os.getcwd())
         slot_path = Path(str(slot_path).replace("{workenv}", base_dir))
         logger.debug(
-            f"📍 Resolved slot path: {slot.path} -> {slot_path} (base: {base_dir})"
+            f"📍 Resolved slot path: {slot.source} -> {slot_path} (base: {base_dir})"
         )
 
     if not slot_path.exists():
@@ -291,7 +291,7 @@ def _load_slot_data(slot: SlotMetadata) -> bytes:
         buffer = io.BytesIO()
         with tarfile.open(fileobj=buffer, mode="w") as tar:
             # Add files in a sorted, deterministic order
-            for path_item in sorted(slot_path.rglob('*')):
+            for path_item in sorted(slot_path.rglob("*")):
                 arcname = path_item.relative_to(slot_path)
                 tar.add(path_item, arcname=arcname, filter=deterministic_filter)
         buffer.seek(0)
@@ -453,7 +453,7 @@ def _write_package(
 
                 descriptor = SlotDescriptor(
                     id=i,
-                    name=slot.metadata.name,
+                    name=slot.metadata.id,
                     offset=slot_offset,
                     size=len(data_to_write),
                     original_size=len(slot.data),
@@ -521,25 +521,19 @@ def _map_purpose(purpose: str) -> int:
 def _map_lifecycle(lifecycle: str) -> int:
     """Map lifecycle string to constant."""
     mapping = {
-        "permanent": LIFECYCLE_PERMANENT,
-        "persistent": LIFECYCLE_PERMANENT,
-        "runtime": LIFECYCLE_PERMANENT,
-        "cached": LIFECYCLE_CACHED,
-        "cache": LIFECYCLE_CACHED,
-        "volatile": LIFECYCLE_CACHED,
+        "init": LIFECYCLE_INIT,
+        "startup": LIFECYCLE_STARTUP,
+        "runtime": LIFECYCLE_RUNTIME,
+        "shutdown": LIFECYCLE_SHUTDOWN,
+        "cache": LIFECYCLE_CACHE,
         "temporary": LIFECYCLE_TEMPORARY,
-        "temp": LIFECYCLE_TEMPORARY,
-        "install": LIFECYCLE_TEMPORARY,
-        "init": LIFECYCLE_TEMPORARY,
-        "startup": LIFECYCLE_CACHED,
-        "shutdown": LIFECYCLE_TEMPORARY,
-        "lazy": LIFECYCLE_CACHED,
-        "eager": LIFECYCLE_PERMANENT,
-        "dev": LIFECYCLE_TEMPORARY,
-        "config": LIFECYCLE_PERMANENT,
-        "platform": LIFECYCLE_CACHED,
+        "lazy": LIFECYCLE_LAZY,
+        "eager": LIFECYCLE_EAGER,
+        "dev": LIFECYCLE_DEV,
+        "config": LIFECYCLE_CONFIG,
+        "platform": LIFECYCLE_PLATFORM,
     }
-    return mapping.get(lifecycle, LIFECYCLE_CACHED)
+    return mapping.get(lifecycle, LIFECYCLE_RUNTIME)
 
 
 # =============================================================================
@@ -574,7 +568,7 @@ class PSPFBuilder:
 
     def add_slot(
         self,
-        name: str,
+        id: str,
         data: bytes | str | Path,
         purpose: str = "data",
         lifecycle: str = "runtime",
@@ -586,7 +580,7 @@ class PSPFBuilder:
         Add a slot to the package.
 
         Args:
-            name: Slot name
+            id: Slot identifier
             data: Slot data (bytes, string, or path to file/directory)
             purpose: Slot purpose (data, code, config, media)
             lifecycle: Slot lifecycle (runtime, cached, temporary)
@@ -620,14 +614,14 @@ class PSPFBuilder:
         # Create slot metadata
         slot = SlotMetadata(
             index=len(self._spec.slots),
-            name=name,
+            id=id,
+            source=str(path) if path else "",
+            target=extract_to or id,
             size=size,
             checksum="",  # Will be calculated during build
             encoding=encoding,
             purpose=purpose,
             lifecycle=lifecycle,
-            extract_to=extract_to,
-            path=path,
             permissions=permissions,
         )
 

@@ -122,11 +122,11 @@ def get_cpu_type() -> str | None:
 
 def normalize_platform_components(os_name: str, arch_name: str) -> tuple[str, str]:
     """Normalize OS and architecture names to standard format.
-    
+
     Args:
         os_name: Operating system name
         arch_name: Architecture name
-        
+
     Returns:
         tuple: (normalized_os, normalized_arch)
     """
@@ -138,7 +138,7 @@ def normalize_platform_components(os_name: str, arch_name: str) -> tuple[str, st
         "windows": "windows",
         "win32": "windows",
     }
-    
+
     # Normalize architecture names
     arch_map = {
         "x86_64": "amd64",
@@ -150,16 +150,16 @@ def normalize_platform_components(os_name: str, arch_name: str) -> tuple[str, st
         "i486": "x86",
         "i386": "i386",
     }
-    
+
     normalized_os = os_map.get(os_name.lower(), os_name.lower())
     normalized_arch = arch_map.get(arch_name.lower(), arch_name.lower())
-    
+
     return normalized_os, normalized_arch
 
 
 __all__ = [
     "get_os_name",
-    "get_arch_name", 
+    "get_arch_name",
     "get_platform_string",
     "get_os_version",
     "get_cpu_type",

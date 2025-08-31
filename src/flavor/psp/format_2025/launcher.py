@@ -195,12 +195,13 @@ class PSPFLauncher(PSPFReader):
             logger.error(f"❌ Unsupported encoding method: {slot_entry['encoding']}")
             raise ValueError(f"Unsupported encoding method: {slot_entry['encoding']}")
 
-        # Get slot name from metadata
+        # Get slot name from metadata - use target for extraction path
         metadata = self.read_metadata()
         slot_name = f"slot_{slot_index}"
         if "slots" in metadata and slot_index < len(metadata["slots"]):
             slot_meta = metadata["slots"][slot_index]
-            slot_name = slot_meta.get("name", slot_name)
+            # Use "target" field for extraction path, fallback to "id" or "name"
+            slot_name = slot_meta.get("target", slot_meta.get("id", slot_meta.get("name", slot_name)))
         logger.debug(f"📝 Slot {slot_index} name: {slot_name}")
 
         # NOTE: Tarball extraction logic matches Go's tar extraction
@@ -349,16 +350,6 @@ class PSPFLauncher(PSPFReader):
                     logger.debug(
                         f"🕐 Slot {slot_idx} marked as 'temp' - will be cleaned after session"
                     )
-                elif lifecycle in ["volatile"]:  # Handle legacy 'volatile' as 'init'
-                    # Legacy support: treat 'volatile' as 'init'
-                    logger.debug(
-                        f"🗑️ Removing legacy 'volatile' slot {slot_idx}: {slot_path}"
-                    )
-                    if slot_path.exists():
-                        if slot_path.is_dir():
-                            shutil.rmtree(slot_path, ignore_errors=True)
-                        else:
-                            slot_path.unlink(missing_ok=True)
 
     def _run_setup_commands(
         self, setup_commands: list, workenv_dir: Path, metadata: dict
@@ -429,6 +420,7 @@ class PSPFLauncher(PSPFReader):
 
                     # Parse command safely to avoid shell injection
                     args = shlex.split(command)
+                    logger.debug(f"🔧 Executing command args: {args}")
 
                     # Use the shared run_command utility
                     try:
@@ -442,7 +434,8 @@ class PSPFLauncher(PSPFReader):
                         logger.debug("✅ Command succeeded")
                     except Exception as e:
                         logger.error(f"❌ Command failed: {command}")
-                        raise RuntimeError(f"Setup command failed: {command}") from e
+                        logger.error(f"❌ Error details: {str(e)}")
+                        raise RuntimeError(f"Setup command failed: {command}. Error: {str(e)}") from e
 
                     logger.debug("✅ Command succeeded")
 
@@ -484,7 +477,6 @@ class PSPFLauncher(PSPFReader):
                 else:
                     logger.warning(f"⚠️ Unknown setup command type: {cmd_type}")
             else:
-                # Legacy string command
                 logger.warning("⚠️ String setup commands not supported")
 
     def _substitute_slot_references(self, command: str, workenv_dir: Path) -> str:
@@ -503,7 +495,9 @@ class PSPFLauncher(PSPFReader):
         for i, slot in enumerate(metadata.get("slots", [])):
             placeholder = f"{{slot:{i}}}"
             if placeholder in command:
-                slot_path = workenv_dir / slot["name"]
+                # Use "id" field if available, fallback to "name" for compatibility
+                slot_name = slot.get("id", slot.get("name", f"slot_{i}"))
+                slot_path = workenv_dir / slot_name
                 command = command.replace(placeholder, str(slot_path))
                 logger.debug(f"🔄 Substituted {placeholder} -> {slot_path}")
 

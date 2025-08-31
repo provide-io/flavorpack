@@ -8,7 +8,7 @@ SHELL := /bin/bash
 .DEFAULT_GOAL := help
 
 # Paths
-INGREDIENTS_DIR := ..
+INGREDIENTS_DIR := ../../ingredients
 BIN_DIR := $(INGREDIENTS_DIR)/bin
 DIST_DIR := dist
 LOGS_DIR := logs
@@ -54,8 +54,8 @@ ALL_PACKAGES := $(TEST_PACKAGES) $(COMBO_PACKAGES) $(PRETASTER_PSP)
 # Key seed for reproducible builds
 KEY_SEED := test123
 
-# Log level for tests
-LOG_LEVEL ?= info
+# Log level for tests (set to debug for troubleshooting)
+LOG_LEVEL ?= error
 
 # Timestamp for logs
 TIMESTAMP := $(shell date +"%Y%m%d_%H%M%S")
@@ -79,7 +79,7 @@ endef
 ###################
 
 .PHONY: all
-all: clean build test ## Clean, build helpers, and run all tests
+all: clean clean-cache build test ## Clean, build helpers, and run all tests
 	$(call print,"✅ All tasks completed!",$(GREEN))
 
 .PHONY: help
@@ -117,7 +117,7 @@ endif
 .PHONY: build-go
 build-go: ## Build only Go helpers
 	$(call print,"🐹 Building Go helpers...",$(BLUE))
-	@cd $(HELPERS_DIR)/flavor-go && \
+	@cd $(INGREDIENTS_DIR)/flavor-go && \
 		go build -o $(BIN_DIR)/flavor-go-builder-$(PLATFORM) cmd/flavor-go-builder/main.go && \
 		go build -o $(BIN_DIR)/flavor-go-launcher-$(PLATFORM) cmd/flavor-go-launcher/main.go
 	$(call print,"✅ Go helpers built",$(GREEN))
@@ -125,7 +125,7 @@ build-go: ## Build only Go helpers
 .PHONY: build-rust
 build-rust: ## Build only Rust helpers
 	$(call print,"🦀 Building Rust helpers...",$(BLUE))
-	@cd $(HELPERS_DIR)/flavor-rs && \
+	@cd $(INGREDIENTS_DIR)/flavor-rs && \
 		cargo build --release && \
 		cp target/release/flavor-rs-builder $(BIN_DIR)/flavor-rs-builder-$(PLATFORM) && \
 		cp target/release/flavor-rs-launcher $(BIN_DIR)/flavor-rs-launcher-$(PLATFORM)
@@ -145,7 +145,7 @@ $(LOGS_DIR):
 	@mkdir -p $(LOGS_DIR)
 
 # Individual test packages
-$(ECHO_PSP): $(DIST_DIR) build-helpers
+$(ECHO_PSP): $(DIST_DIR)
 	$(call print,"📦 Building echo test package...",$(CYAN))
 	@$(GO_BUILDER) \
 		--manifest $(CONFIGS_DIR)/test-echo.json \
@@ -153,7 +153,7 @@ $(ECHO_PSP): $(DIST_DIR) build-helpers
 		--output $@ \
 		--key-seed $(KEY_SEED)
 
-$(SHELL_PSP): $(DIST_DIR) build-helpers
+$(SHELL_PSP): $(DIST_DIR)
 	$(call print,"📦 Building shell test package...",$(CYAN))
 	@$(RS_BUILDER) \
 		--manifest $(CONFIGS_DIR)/test-shell.json \
@@ -161,7 +161,7 @@ $(SHELL_PSP): $(DIST_DIR) build-helpers
 		--output $@ \
 		--key-seed $(KEY_SEED)
 
-$(ENV_PSP): $(DIST_DIR) build-helpers
+$(ENV_PSP): $(DIST_DIR)
 	$(call print,"📦 Building environment test package...",$(CYAN))
 	@$(GO_BUILDER) \
 		--manifest $(CONFIGS_DIR)/test-env.json \
@@ -169,7 +169,7 @@ $(ENV_PSP): $(DIST_DIR) build-helpers
 		--output $@ \
 		--key-seed $(KEY_SEED)
 
-$(ORCHESTRATE_PSP): $(DIST_DIR) build-helpers
+$(ORCHESTRATE_PSP): $(DIST_DIR)
 	$(call print,"📦 Building orchestration test package...",$(CYAN))
 	@$(RS_BUILDER) \
 		--manifest $(CONFIGS_DIR)/test-orchestrate.json \
@@ -177,7 +177,7 @@ $(ORCHESTRATE_PSP): $(DIST_DIR) build-helpers
 		--output $@ \
 		--key-seed $(KEY_SEED)
 
-$(PRETASTER_PSP): $(DIST_DIR) build-helpers
+$(PRETASTER_PSP): $(DIST_DIR)
 	$(call print,"📦 Building pretaster package...",$(CYAN))
 	@$(RS_BUILDER) \
 		--manifest $(CONFIGS_DIR)/pretaster.json \
@@ -186,28 +186,28 @@ $(PRETASTER_PSP): $(DIST_DIR) build-helpers
 		--key-seed $(KEY_SEED)
 
 # Combination packages
-$(COMBO_RS_RS): $(DIST_DIR) build-helpers
+$(COMBO_RS_RS): $(DIST_DIR)
 	@$(RS_BUILDER) \
 		--manifest $(CONFIGS_DIR)/test-taster-lite.json \
 		--launcher-bin $(RS_LAUNCHER) \
 		--output $@ \
 		--key-seed $(KEY_SEED)
 
-$(COMBO_RS_GO): $(DIST_DIR) build-helpers
+$(COMBO_RS_GO): $(DIST_DIR)
 	@$(RS_BUILDER) \
 		--manifest $(CONFIGS_DIR)/test-taster-lite.json \
 		--launcher-bin $(GO_LAUNCHER) \
 		--output $@ \
 		--key-seed $(KEY_SEED)
 
-$(COMBO_GO_RS): $(DIST_DIR) build-helpers
+$(COMBO_GO_RS): $(DIST_DIR)
 	@$(GO_BUILDER) \
 		--manifest $(CONFIGS_DIR)/test-taster-lite.json \
 		--launcher-bin $(RS_LAUNCHER) \
 		--output $@ \
 		--key-seed $(KEY_SEED)
 
-$(COMBO_GO_GO): $(DIST_DIR) build-helpers
+$(COMBO_GO_GO): $(DIST_DIR)
 	@$(GO_BUILDER) \
 		--manifest $(CONFIGS_DIR)/test-taster-lite.json \
 		--launcher-bin $(GO_LAUNCHER) \
@@ -234,7 +234,7 @@ test-combo: combo-test ## Alias for combo-test
 combo-test: build-helpers ## Test all builder/launcher combinations
 	@mkdir -p $(LOGS_DIR)
 	$(call print,"🎯 Testing all builder/launcher combinations...",$(PURPLE))
-	@$(TESTS_DIR)/combination-tests.sh || (echo "❌ Combination tests failed with exit code $$?"; exit 1)
+	@$(TESTS_DIR)/combination-tests.sh || (echo "❌ Combination tests failed with exit code $?"; exit 1)
 	$(call print,"✅ Combination tests completed",$(GREEN))
 	$(call print,"📁 Logs saved in $(LOGS_DIR)/",$(CYAN))
 
@@ -304,7 +304,23 @@ clean: ## Remove all built artifacts
 	@rm -f *.psp
 	@rm -f test-*.txt
 	@rm -f .extraction.*
+	@rm -f scripts/*.tar.gz
+	@rm -f slots/*.tar.gz
+	@rm -f test-package.tar.gz
 	$(call print,"✅ Cleanup complete",$(GREEN))
+
+.PHONY: cache-dir
+cache-dir: ## Show cache directory location (like uv cache dir)
+	@echo "$${XDG_CACHE_HOME:-$$HOME/.cache}/flavor"
+
+.PHONY: clean-cache
+clean-cache: ## Clean Flavor workenv cache (respects XDG_CACHE_HOME)
+	$(call print,"🧹 Cleaning Flavor cache...",$(YELLOW))
+	@# Use XDG_CACHE_HOME if set, otherwise ~/.cache (same as uv)
+	@CACHE_DIR=$${XDG_CACHE_HOME:-$$HOME/.cache}; \
+	rm -rf $$CACHE_DIR/flavor/workenv/.* 2>/dev/null || true; \
+	rm -rf $$CACHE_DIR/flavor/workenv/* 2>/dev/null || true
+	$(call print,"✅ Cache cleaned from $${XDG_CACHE_HOME:-$$HOME/.cache}/flavor",$(GREEN))
 
 .PHONY: clean-logs
 clean-logs: ## Remove only log files
@@ -324,7 +340,7 @@ info: ## Show current configuration
 	@echo -e "$(CYAN)=======================$(NC)"
 	@echo ""
 	@echo -e "$(YELLOW)Paths:$(NC)"
-	@echo "  Helpers:    $(HELPERS_DIR)"
+	@echo "  Ingredients: $(INGREDIENTS_DIR)"
 	@echo "  Binaries:   $(BIN_DIR)"
 	@echo "  Dist:       $(DIST_DIR)"
 	@echo "  Logs:       $(LOGS_DIR)"

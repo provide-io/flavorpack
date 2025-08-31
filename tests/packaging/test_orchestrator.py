@@ -29,13 +29,15 @@ def mock_flavor_config() -> FlavorConfig:
 
 
 @pytest.fixture
-def orchestrator(tmp_path: Path, mock_flavor_config: FlavorConfig) -> PackagingOrchestrator:
+def orchestrator(
+    tmp_path: Path, mock_flavor_config: FlavorConfig
+) -> PackagingOrchestrator:
     """Provides a PackagingOrchestrator instance for tests."""
     return PackagingOrchestrator(
         package_integrity_key_path=None,
         public_key_path=None,
         output_flavor_path=str(tmp_path / "dist/test.psp"),
-        build_config={ 
+        build_config={
             **attrs.asdict(mock_flavor_config.build),
             "execution": attrs.asdict(mock_flavor_config.execution),
         },
@@ -101,7 +103,9 @@ def test_python_builder_flow(
     mock_python_packager.assert_called_once()
     mock_packager_instance.prepare_artifacts.assert_called_once()
     mock_pspf_builder.create.assert_called_once()
-    mock_builder_instance.build.assert_called_once_with(Path(orchestrator.output_flavor_path))
+    mock_builder_instance.build.assert_called_once_with(
+        Path(orchestrator.output_flavor_path)
+    )
 
 
 @patch("os.access", return_value=True)
@@ -155,7 +159,9 @@ def test_external_builder_command_construction(
 @patch("pathlib.Path.exists", return_value=True)
 @patch("flavor.packaging.orchestrator.find_launcher_executable")
 @patch("flavor.packaging.orchestrator.find_builder_executable")
-@patch("flavor.packaging.orchestrator.run_command", side_effect=BuildError("Build failed"))
+@patch(
+    "flavor.packaging.orchestrator.run_command", side_effect=BuildError("Build failed")
+)
 @patch("flavor.packaging.orchestrator.PythonPackager")
 def test_external_builder_error_handling(
     mock_python_packager,
@@ -195,7 +201,10 @@ def test_launcher_not_found(mock_find_launcher, orchestrator: PackagingOrchestra
 @patch("flavor.packaging.orchestrator.find_launcher_executable")
 @patch("os.access", return_value=False)
 def test_launcher_not_executable(
-    mock_os_access, mock_find_launcher, orchestrator: PackagingOrchestrator, tmp_path: Path
+    mock_os_access,
+    mock_find_launcher,
+    orchestrator: PackagingOrchestrator,
+    tmp_path: Path,
 ):
     """Test that a BuildError is raised if the launcher binary is not executable."""
     launcher_path = tmp_path / "launcher"

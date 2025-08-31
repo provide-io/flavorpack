@@ -106,43 +106,6 @@ impl SlotDescriptor {
     }
 }
 
-/// Legacy slot structure for backward compatibility
-#[repr(C, packed)]
-#[derive(Clone, Copy)]
-pub struct Slot {
-    pub offset: u64,
-    pub size: u64,
-    pub checksum: u32,
-    pub encoding: u8,
-    pub purpose: u8,
-    pub lifecycle: u8,
-    pub reserved: u8,
-}
-
-impl Slot {
-    /// Convert legacy slot to new descriptor
-    pub fn to_descriptor(&self, id: u64) -> SlotDescriptor {
-        SlotDescriptor {
-            id,
-            name_hash: 0,
-            offset: self.offset,
-            size: self.size,
-            original_size: self.size, // Assume uncompressed for legacy
-            checksum: self.checksum,
-            encoding: self.encoding,
-            encryption: 0,
-            alignment: SLOT_ALIGNMENT as u16,
-            purpose: self.purpose,
-            lifecycle: self.lifecycle,
-            access_hint: ACCESS_HINT_SEQUENTIAL,
-            priority: CACHE_NORMAL,
-            permissions: 0o644,
-            platform: 0,
-            extended_offset: 0,
-            extended_size: 0,
-        }
-    }
-}
 
 /// Slot encoding types
 #[repr(u8)]
@@ -207,13 +170,5 @@ pub fn align_offset(offset: u64, alignment: u64) -> u64 {
 pub fn align_to_page(offset: u64) -> u64 {
     align_offset(offset, PAGE_SIZE as u64)
 }
-
-// Backward compatibility aliases
-pub type SlotTableEntry = SlotDescriptor;
-
-// Old names for compatibility
-pub use Purpose::Code as Runtime;
-pub use Purpose::Config as Tool;
-pub use Purpose::Data as Payload;
 
 // 📦🎰🗂️🪄

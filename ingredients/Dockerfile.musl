@@ -1,0 +1,29 @@
+# Multi-stage Dockerfile for building static binaries with musl
+# These binaries will work on Amazon Linux 2023 and other distributions
+
+# Stage 1: Build with musl on Alpine
+FROM rust:alpine AS builder
+
+# Install build dependencies
+RUN apk add --no-cache musl-dev
+
+WORKDIR /build
+
+# Copy the Rust project
+COPY flavor-rs/ ./flavor-rs/
+
+# Build static binaries
+WORKDIR /build/flavor-rs
+RUN cargo build --release --target x86_64-unknown-linux-musl && \
+    cargo build --release --target aarch64-unknown-linux-musl || true
+
+# Stage 2: Extract binaries
+FROM scratch AS binaries
+COPY --from=builder /build/flavor-rs/target/*/release/flavor-rs-launcher /binaries/
+COPY --from=builder /build/flavor-rs/target/*/release/flavor-rs-builder /binaries/
+
+# Stage 3: Test on Amazon Linux 2023
+FROM amazonlinux:2023 AS test
+COPY --from=builder /build/flavor-rs/target/x86_64-unknown-linux-musl/release/flavor-rs-launcher /usr/local/bin/
+COPY --from=builder /build/flavor-rs/target/x86_64-unknown-linux-musl/release/flavor-rs-builder /usr/local/bin/
+RUN ldd /usr/local/bin/flavor-rs-launcher || echo "Static binary - no dynamic dependencies"

@@ -3,7 +3,7 @@
 use crate::api::LaunchOptions;
 use crate::exceptions::{FlavorError, Result};
 use crate::utils::get_cache_dir;
-use log::{debug, error, info, warn};
+use log::{debug, error, info, trace, warn};
 use std::collections::HashMap;
 use std::env;
 use std::fs;
@@ -225,7 +225,7 @@ fn extract_slots(
         }
     };
     let mut slot_paths = HashMap::new();
-    let mut volatile_paths = Vec::new();
+    let mut init_paths = Vec::new();
 
     info!("📤 Extracting {} slots...", metadata.slots.len());
     
@@ -239,8 +239,12 @@ fn extract_slots(
         let slot = &metadata.slots[i];
         debug!(
             "📦 Extracting slot {}: {} ({} bytes)",
-            slot.index, slot.name, slot.size
+            slot.index, slot.id, slot.size
         );
+        trace!("  Source: {}", slot.source);
+        trace!("  Target: {}", slot.target);
+        trace!("  Lifecycle: {}", slot.lifecycle);
+        trace!("  Permissions: {:?}", slot.permissions);
         
         // Write progress to stderr
         let _ = writeln!(
@@ -248,56 +252,30 @@ fn extract_slots(
             "[{}/{}] Extracting {}...",
             i + 1,
             metadata.slots.len(),
-            slot.name
+            slot.id
         );
 
         // Determine extraction path
-        let extract_path = if let Some(ref extract_to) = slot.extract_to {
-            if extract_to == "." || extract_to == "{workenv}" {
-                // "." or "{workenv}" means extract to workenv root
-                workenv_path.to_path_buf()
-            } else if let Some(relative_path) = extract_to.strip_prefix("{workenv}/") {
-                // Replace {workenv} placeholder with actual path
-                workenv_path.join(relative_path)
-            } else {
-                // Use as-is (relative path)
-                workenv_path.join(extract_to)
-            }
-        } else {
-            workenv_path.join(&slot.name)
-        };
+        // Target field specifies where to extract (relative to workenv)
+        // But extract_slot expects a directory, so we need to pass workenv_path
+        // The extract_slot function will use the metadata to determine the target path
+        
+        // Extract the slot to workenv (it will use metadata.target internally)
+        reader.extract_slot(i, workenv_path)?;
 
-        // Check if this is a single file (not a tarball)
-        // Per PSPF spec: encoding "gzip" means single gzipped file, not a tarball
-        // The extract_to path for single files is the full file path, not a directory
-        let is_single_file =
-            slot.extract_to.is_some() && slot.encoding == "gzip" && !slot.name.ends_with(".tar.gz");
+        let extracted_path = workenv_path.join(&slot.target);
+        debug!("✅ Extracted to: {extracted_path:?}");
 
-        if is_single_file {
-            // For single files, create parent directory only
-            if let Some(parent) = extract_path.parent() {
-                fs::create_dir_all(parent)?;
-            }
-        } else {
-            // For tarballs, create the extraction directory
-            fs::create_dir_all(&extract_path)?;
+        // Track init slots for later cleanup (removed after initialization)
+        if slot.lifecycle == "init" {
+            debug!("📌 Marking slot {} as init for cleanup", slot.index);
+            init_paths.push(extracted_path.clone());
         }
 
-        // Extract the slot (reader should handle the actual extraction)
-        reader.extract_slot(i, &extract_path)?;
-
-        debug!("✅ Extracted to: {extract_path:?}");
-
-        // Track volatile slots for later cleanup
-        if slot.lifecycle == "volatile" {
-            debug!("📌 Marking slot {} as volatile for cleanup", slot.index);
-            volatile_paths.push(extract_path.clone());
-        }
-
-        slot_paths.insert(i, extract_path);
+        slot_paths.insert(i, extracted_path);
     }
 
-    Ok((slot_paths, volatile_paths))
+    Ok((slot_paths, init_paths))
 }
 
 /// Build slot paths without extraction (when cache is valid)
@@ -305,20 +283,8 @@ fn build_slot_paths(metadata: &Metadata, workenv_path: &Path) -> HashMap<usize, 
     let mut slot_paths = HashMap::new();
 
     for slot in &metadata.slots {
-        let slot_path = if let Some(ref extract_to) = slot.extract_to {
-            if extract_to == "." || extract_to == "{workenv}" {
-                // "." or "{workenv}" means extract to workenv root
-                workenv_path.to_path_buf()
-            } else if let Some(relative_path) = extract_to.strip_prefix("{workenv}/") {
-                // Replace {workenv} placeholder with actual path
-                workenv_path.join(relative_path)
-            } else {
-                // Use as-is (relative path)
-                workenv_path.join(extract_to)
-            }
-        } else {
-            workenv_path.join(&slot.name)
-        };
+        // Target field specifies where to extract (relative to workenv)
+        let slot_path = workenv_path.join(&slot.target);
         slot_paths.insert(slot.index, slot_path);
     }
 
@@ -414,6 +380,14 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
     info!("PSPF Rust Launcher starting...");
     debug!("🦀 Rust launcher starting");
     debug!("📖 Reading PSPF bundle");
+    
+    // Log environment variables at trace level
+    trace!("🔧 Environment variables: {} total", std::env::vars().count());
+    for (key, value) in std::env::vars() {
+        if key.starts_with("FLAVOR_") {
+            trace!("📝 Environment variable: {}={}", key, value);
+        }
+    }
 
     // Create reader for the bundle
     let mut reader = Reader::new(package_path)?;
@@ -503,6 +477,9 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
         false
     } else {
         debug!("🔍 Checking cache validity");
+        trace!("📂 Checking workenv at: {:?}", workenv_path);
+        let checksum = index.index_checksum;
+        trace!("📊 Package checksum: {:08x}", checksum);
         match check_workenv_validity_full(&paths, &index, &metadata) {
             Ok(valid) => {
                 if valid {
@@ -519,7 +496,7 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
         }
     };
 
-    let (_slot_paths, _volatile_paths) = if workenv_valid {
+    let (_slot_paths, _init_paths) = if workenv_valid {
         info!("✅ Work environment is valid, skipping extraction and setup");
         (build_slot_paths(&metadata, &workenv_path), Vec::new())
     } else {
@@ -536,14 +513,15 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
             let temp_extract_dir = paths.temp_extraction(std::process::id());
             fs::create_dir_all(&temp_extract_dir)?;
             info!("📁 Created temporary extraction directory: {:?}", temp_extract_dir);
+            trace!("🗂️ Extracting to temp before atomic move");
 
             // Extract slots to temporary directory
             let extraction_result = (|| -> Result<((HashMap<usize, PathBuf>, Vec<PathBuf>), PathBuf)> {
-                let (slot_path_map, volatile) = extract_slots(&mut reader, &temp_extract_dir)?;
-                Ok(((slot_path_map, volatile), temp_extract_dir.clone()))
+                let (slot_path_map, init_slots) = extract_slots(&mut reader, &temp_extract_dir)?;
+                Ok(((slot_path_map, init_slots), temp_extract_dir.clone()))
             })();
 
-            let ((slot_path_map, volatile), temp_dir) = match extraction_result {
+            let ((slot_path_map, init_slots), temp_dir) = match extraction_result {
                 Ok(result) => result,
                 Err(e) => {
                     // Clean up temporary directory on extraction failure
@@ -591,18 +569,18 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
                 }
             }
 
-            // Remove volatile files after setup (in temp directory)
-            if !volatile.is_empty() {
-                info!("🧹 Cleaning up {} volatile slot(s)...", volatile.len());
-                for volatile_path in &volatile {
-                    if volatile_path.exists() {
-                        debug!("🗑️ Removing volatile path: {volatile_path:?}");
-                        if volatile_path.is_dir() {
-                            if let Err(e) = fs::remove_dir_all(volatile_path) {
-                                warn!("Failed to remove volatile directory {volatile_path:?}: {e}");
+            // Remove init files after setup (in temp directory)
+            if !init_slots.is_empty() {
+                info!("🧹 Cleaning up {} init slot(s)...", init_slots.len());
+                for init_path in &init_slots {
+                    if init_path.exists() {
+                        debug!("🗑️ Removing init path: {init_path:?}");
+                        if init_path.is_dir() {
+                            if let Err(e) = fs::remove_dir_all(init_path) {
+                                warn!("Failed to remove init directory {init_path:?}: {e}");
                             }
-                        } else if let Err(e) = fs::remove_file(volatile_path) {
-                            warn!("Failed to remove volatile file {volatile_path:?}: {e}");
+                        } else if let Err(e) = fs::remove_file(init_path) {
+                            warn!("Failed to remove init file {init_path:?}: {e}");
                         }
                     }
                 }
@@ -675,7 +653,7 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
             // Release the lock
             release_lock(&paths);
 
-            (slot_path_map, volatile)
+            (slot_path_map, init_slots)
         } else {
             // Another process is extracting, wait for it
             info!("⏳ Another process is extracting, waiting...");
@@ -758,6 +736,10 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
             }
 
             debug!("🚀 Full command with args: {cmd_args:?}");
+            trace!("🔀 Using exec syscall to replace current process");
+            trace!("  Binary: {}", executable);
+            trace!("  Args: {:?}", cmd_args);
+            trace!("  Env vars count computed");
             info!("🔄 Replacing process via exec()");
 
             // This replaces the current process and never returns on success

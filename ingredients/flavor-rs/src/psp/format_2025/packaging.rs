@@ -31,7 +31,7 @@ pub fn write_slot(
     slot_info: &SlotMetadata,
     slot_index: usize,
 ) -> Result<SlotDescriptor> {
-    trace!("📦 Writing slot {}: {}", slot_index, slot_info.name);
+    trace!("📦 Writing slot {}: {}", slot_index, slot_info.id);
 
     // Read slot data
     let slot_data = std::fs::read(slot_path)?;
@@ -50,6 +50,15 @@ pub fn write_slot(
     // Write slot data
     out.write_all(&processed_data)?;
 
+    // Parse permissions from slot metadata if provided, otherwise use default
+    let permissions = if let Some(perm_str) = &slot_info.permissions {
+        // Parse octal string (e.g., "0755" or "755")
+        u16::from_str_radix(perm_str.trim_start_matches("0o").trim_start_matches('0'), 8)
+            .unwrap_or(0o600)
+    } else {
+        0o600 // Default file permissions
+    };
+
     // Create descriptor
     let descriptor = SlotDescriptor {
         id: slot_index as u64,
@@ -65,7 +74,7 @@ pub fn write_slot(
         lifecycle: get_lifecycle_byte(&slot_info.lifecycle),
         access_hint: 0,
         priority: 0,
-        permissions: 0o644, // Default permissions
+        permissions,
         platform: 0,
         extended_offset: 0,
         extended_size: 0,
@@ -136,11 +145,18 @@ fn get_purpose_byte(purpose: &str) -> u8 {
 /// Get lifecycle byte from string
 fn get_lifecycle_byte(lifecycle: &str) -> u8 {
     match lifecycle {
-        "volatile" => 1,
-        "cache" => 2,
-        "runtime" => 3,
-        "persistent" => 4,
-        _ => 0,
+        "init" => 0,
+        "startup" => 1,
+        "runtime" => 2,
+        "shutdown" => 3,
+        "cache" => 4,
+        "temporary" => 5,
+        "lazy" => 6,
+        "eager" => 7,
+        "dev" => 8,
+        "config" => 9,
+        "platform" => 10,
+        _ => 2, // default to runtime
     }
 }
 
