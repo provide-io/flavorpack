@@ -345,9 +345,11 @@ class PythonPackager:
         
         # Fall back to copying from host if download failed or not on Linux
         if not uv_obtained:
+            logger.debug("Attempting to find UV on host system")
             uv_host_path = self._find_uv_command(raise_if_not_found=False)
             
             if uv_host_path:
+                logger.info(f"Found UV on host at {uv_host_path}")
                 # Copy to payload bin directory - always bin/ regardless of platform
                 # UV goes in {workenv}/bin/uv (or uv.exe on Windows)
                 payload_uv = bin_dir / self.uv_exe
@@ -358,6 +360,7 @@ class PythonPackager:
                 work_uv = work_dir / self.uv_exe
                 self._copy_executable(uv_host_path, work_uv)
                 artifacts["uv_binary"] = work_uv
+                logger.debug(f"UV binary copied to work dir: {work_uv}")
             else:
                 logger.warning(
                     "📦⚠️❌ UV not found on host system, package will require UV at runtime"
