@@ -130,7 +130,79 @@ class PythonPackager:
             cmd.extend(packages)
         return cmd
 
-    def _find_uv_command(self) -> str:
+    def _download_uv_wheel(self, dest_dir: Path) -> Path | None:
+        """Download manylinux2014-compatible UV wheel and extract binary.
+        
+        Args:
+            dest_dir: Directory to save UV binary to
+            
+        Returns:
+            Path to UV binary if successful, None otherwise
+        """
+        import sys
+        import zipfile
+        
+        logger.info("📦 Downloading manylinux2014-compatible UV wheel")
+        
+        with tempfile.TemporaryDirectory() as temp_dir:
+            # Determine platform tag for manylinux2014
+            arch = get_arch_name()
+            if arch == "amd64":
+                platform_tag = "manylinux2014_x86_64"
+            elif arch == "arm64":
+                platform_tag = "manylinux2014_aarch64"
+            else:
+                logger.warning(f"Unsupported architecture for UV download: {arch}")
+                return None
+            
+            # Download UV wheel using pip
+            download_cmd = [
+                sys.executable, "-m", "pip", "download",
+                "--dest", temp_dir,
+                "--only-binary", ":all:",
+                "--platform", platform_tag,
+                "--python-version", self.python_version,
+                "uv"
+            ]
+            
+            try:
+                logger.debug("Running UV download command", cmd=" ".join(download_cmd))
+                result = run_command(download_cmd, check=True, capture_output=True)
+                
+                # Find the downloaded wheel
+                uv_wheel = None
+                for file in Path(temp_dir).glob("uv-*.whl"):
+                    uv_wheel = file
+                    logger.debug(f"Found UV wheel: {uv_wheel.name}")
+                    break
+                
+                if not uv_wheel:
+                    logger.warning("UV wheel not found after download")
+                    return None
+                
+                # Extract UV binary from wheel
+                with zipfile.ZipFile(uv_wheel, 'r') as wheel_zip:
+                    # UV binary is typically at uv/uv in the wheel
+                    for name in wheel_zip.namelist():
+                        if name.endswith('/uv') or name == 'uv':
+                            uv_path = dest_dir / "uv"
+                            
+                            logger.debug(f"Extracting UV binary from {name}")
+                            with wheel_zip.open(name) as src, open(uv_path, 'wb') as dst:
+                                dst.write(src.read())
+                            
+                            uv_path.chmod(0o755)
+                            logger.info("✅ Successfully downloaded manylinux2014 UV binary")
+                            return uv_path
+                
+                logger.warning("UV binary not found in wheel")
+                return None
+                
+            except Exception as e:
+                logger.warning(f"Failed to download UV wheel: {e}")
+                return None
+    
+    def _find_uv_command(self):
         """Find the UV command."""
         import shutil
         import sys
