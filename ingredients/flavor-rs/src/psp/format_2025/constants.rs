@@ -1,13 +1,15 @@
 // helpers/flavor-rs/src/psp/format_2025/constants.rs
 // PSPF 2025 Format Constants - Enhanced Memory-Mapped Version
 
-use crate::utils::xor::{xor_const, xor_decode_default, xor_encode_default, XOR_KEY};
-use lazy_static::lazy_static;
+use crate::utils::xor::{xor_const, xor_decode_default, XOR_KEY};
+use std::sync::LazyLock;
 
-// Raw magic bytes (not exported, only for encoding)
+// Raw magic bytes (exported for compatibility)
 const PSPF_MAGIC_RAW: &[u8] = b"PSPF2025";
-const PACKAGE_EMOJI_RAW: &[u8] = &[0xF0, 0x9F, 0x93, 0xA6];  // 📦
-const MAGIC_WAND_EMOJI_RAW: &[u8] = &[0xF0, 0x9F, 0xAA, 0x84];  // 🪄
+pub const PACKAGE_EMOJI_RAW: &[u8] = &[0xF0, 0x9F, 0x93, 0xA6];  // 📦
+pub const MAGIC_WAND_EMOJI_RAW: &[u8] = &[0xF0, 0x9F, 0xAA, 0x84];  // 🪄
+pub const PACKAGE_EMOJI_BYTES: &[u8] = PACKAGE_EMOJI_RAW;  // Alias
+pub const MAGIC_WAND_EMOJI_BYTES: &[u8] = MAGIC_WAND_EMOJI_RAW;  // Alias
 const TRAILING_MAGIC_RAW: &[u8] = &[
     0xF0, 0x9F, 0x93, 0xA6,  // 📦
     0xF0, 0x9F, 0xAA, 0x84   // 🪄
@@ -18,13 +20,8 @@ pub const PSPF_MAGIC_ENCODED: [u8; 8] = xor_const::<8>(PSPF_MAGIC_RAW, XOR_KEY);
 pub const TRAILING_MAGIC_ENCODED: [u8; 8] = xor_const::<8>(TRAILING_MAGIC_RAW, XOR_KEY);
 
 // Lazy static for runtime decoded values
-lazy_static! {
-    /// Format magic bytes - decoded at runtime
-    pub static ref PSPF_MAGIC: Vec<u8> = xor_decode_default(&PSPF_MAGIC_ENCODED);
-    
-    /// Trailing magic bytes - decoded at runtime  
-    pub static ref TRAILING_MAGIC: Vec<u8> = xor_decode_default(&TRAILING_MAGIC_ENCODED);
-}
+pub static PSPF_MAGIC: LazyLock<Vec<u8>> = LazyLock::new(|| xor_decode_default(&PSPF_MAGIC_ENCODED));
+pub static TRAILING_MAGIC: LazyLock<Vec<u8>> = LazyLock::new(|| xor_decode_default(&TRAILING_MAGIC_ENCODED));
 
 /// Format version - keeping as v1
 pub const PSPF_VERSION: u32 = 0x20250001;
