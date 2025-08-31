@@ -216,34 +216,48 @@ class PythonPackager:
                 logger.warning(f"Failed to download UV wheel: {e}")
                 return None
     
-    def _find_uv_command(self):
-        """Find the UV command."""
-        # Simple approach: just look for UV in PATH or common locations
+    def _find_uv_command(self, raise_if_not_found: bool = True) -> str | None:
+        """Find the UV command.
+        
+        Args:
+            raise_if_not_found: If True, raise FileNotFoundError if UV not found.
+                              If False, return None if not found.
+        
+        Returns:
+            Path to UV binary, or None if not found and raise_if_not_found is False
+        """
+        # Method 1: Check if UV is in PATH
         system_uv = shutil.which("uv")
         if system_uv:
             logger.info("🔍✅📋 Found UV in PATH", path=system_uv)
             return system_uv
 
-        # Check if UV is in the same directory as Python
+        # Method 2: Check common installation locations
+        possible_uv_locations = [
+            Path(sys.prefix) / "Scripts" / "uv.exe"
+            if self.is_windows
+            else Path(sys.prefix) / "bin" / "uv",
+            Path(sys.executable).parent / ("uv.exe" if self.is_windows else "uv"),
+        ]
+        
+        # Check PSP workenv location
         python_path = Path(sys.executable)
-        uv_name = "uv.exe" if self.is_windows else "uv"
-        uv_in_python_dir = python_path.parent / uv_name
-        if uv_in_python_dir.exists():
-            logger.info("🔍✅📋 Found UV next to Python", path=str(uv_in_python_dir))
-            return str(uv_in_python_dir)
-
-        # Check PSP workenv location (simplified)
-        workenv_bin = python_path.parent.parent / "bin" / uv_name
-        if workenv_bin.exists():
-            logger.info("🔍✅📋 Found UV in workenv", path=str(workenv_bin))
-            return str(workenv_bin)
+        workenv_bin = python_path.parent.parent / "bin" / ("uv.exe" if self.is_windows else "uv")
+        possible_uv_locations.append(workenv_bin)
+        
+        for uv_loc in possible_uv_locations:
+            if uv_loc.exists():
+                logger.info("🔍✅📋 Found UV at", path=str(uv_loc))
+                return str(uv_loc)
 
         # Not found
-        error_msg = (
-            f"UV binary not found in PATH or common locations. Python: {sys.executable}"
-        )
-        logger.error("🔍❌📋 UV not found", details=error_msg)
-        raise FileNotFoundError(error_msg)
+        if raise_if_not_found:
+            error_msg = (
+                f"UV binary not found in PATH or common locations. Python: {sys.executable}"
+            )
+            logger.error("🔍❌📋 UV not found", details=error_msg)
+            raise FileNotFoundError(error_msg)
+        return None
 
     def prepare_artifacts(self, work_dir: Path) -> dict[str, Path]:
         """
@@ -300,24 +314,7 @@ class PythonPackager:
         
         # Fall back to copying from host if download failed or not on Linux
         if not uv_obtained:
-            uv_host_path = None
-            
-            # Method 1: Check if UV is in PATH
-            uv_host_path = shutil.which("uv")
-            
-            # Method 2: Check common installation locations
-            if not uv_host_path:
-                possible_uv_locations = [
-                    Path(sys.prefix) / "Scripts" / "uv.exe"
-                    if self.is_windows
-                    else Path(sys.prefix) / "bin" / "uv",
-                    Path(sys.executable).parent / ("uv.exe" if self.is_windows else "uv"),
-                ]
-                for uv_loc in possible_uv_locations:
-                    if uv_loc.exists():
-                        uv_host_path = str(uv_loc)
-                        logger.info("📦🔍✅ Found UV at", path=uv_host_path)
-                        break
+            uv_host_path = self._find_uv_command(raise_if_not_found=False)
             
             if uv_host_path:
                 # Copy to payload bin directory - always bin/ regardless of platform
