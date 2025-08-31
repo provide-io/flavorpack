@@ -23,6 +23,11 @@ fn main() {
 }
 
 fn run() -> i32 {
+    // Debug: Simple stderr output to verify execution
+    if env::var("FLAVOR_LOG_LEVEL").is_ok() || env::var("FLAVOR_LAUNCHER_LOG_LEVEL").is_ok() {
+        eprintln!("DEBUG: Launcher run() started");
+    }
+    
     // Initialize logging as early as possible for debugging
     if let Ok(level) = env::var("FLAVOR_LAUNCHER_LOG_LEVEL") {
         flavor::logger::JsonLogger::init_with_level(&level, "FLAVOR_LAUNCHER_LOG_LEVEL");
