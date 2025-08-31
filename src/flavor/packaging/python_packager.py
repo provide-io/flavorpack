@@ -293,13 +293,13 @@ class PythonPackager:
                         break
             
             if uv_host_path:
-            # Copy to payload bin directory - always bin/ regardless of platform
-            # UV goes in {workenv}/bin/uv (or uv.exe on Windows)
-            bin_dir = payload_dir / "bin"
-            bin_dir.mkdir(mode=0o700, exist_ok=True)
-            payload_uv = bin_dir / self.uv_exe
-            shutil.copy2(uv_host_path, str(payload_uv))
-            if not self.is_windows:
+                # Copy to payload bin directory - always bin/ regardless of platform
+                # UV goes in {workenv}/bin/uv (or uv.exe on Windows)
+                bin_dir = payload_dir / "bin"
+                bin_dir.mkdir(mode=0o700, exist_ok=True)
+                payload_uv = bin_dir / self.uv_exe
+                shutil.copy2(uv_host_path, str(payload_uv))
+                if not self.is_windows:
                 payload_uv.chmod(0o755)
                 # Strip extended attributes on macOS to avoid security issues
                 if get_os_name() == "darwin":
