@@ -167,6 +167,7 @@ class TestUVDownload:
                  patch.object(packager, '_copy_executable'), \
                  patch.object(packager, '_build_wheels'), \
                  patch.object(packager, '_create_metadata'), \
+                 patch.object(packager, '_create_python_placeholder'), \
                  patch('tarfile.open'):
                 
                 # Don't pre-create directories - let the method create them
