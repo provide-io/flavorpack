@@ -165,8 +165,9 @@ jobs:
         run: |
           mkdir -p artifacts
           cd ingredients/bin
+          # Only package binaries for the CURRENT version and platform
           zip -r ../../artifacts/flavor-ingredients-${{ needs.setup.outputs.version }}-${{ matrix.platform }}.zip \
-            *-${{ matrix.platform }}* || true
+            *-${{ needs.setup.outputs.version }}-${{ matrix.platform }} || true
           cd ../..
           echo "📦 Packaged ingredients:"
           ls -la artifacts/
