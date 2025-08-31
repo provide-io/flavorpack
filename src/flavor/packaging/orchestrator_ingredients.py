@@ -158,7 +158,7 @@ def create_builder_manifest(
                 "encoding": "gzip",
                 "purpose": "tool",
                 "lifecycle": "cache",
-                "extract_to": f"bin/{uv_exe}",  # For gzip encoding, this is treated as full file path
+                "target": f"bin/{uv_exe}",  # For gzip encoding, this is treated as full file path
                 "type": "file",
                 "permissions": "0700",
             },
@@ -168,7 +168,7 @@ def create_builder_manifest(
                 "encoding": "tgz",
                 "purpose": "runtime",
                 "lifecycle": "runtime",
-                "extract_to": ".",
+                "target": ".",
             },
             {
                 "name": "wheels",
@@ -176,7 +176,7 @@ def create_builder_manifest(
                 "encoding": "tgz",
                 "purpose": "payload",
                 "lifecycle": "cache",
-                "extract_to": "wheels",
+                "target": "wheels",
             },
         ],
         "signature": {

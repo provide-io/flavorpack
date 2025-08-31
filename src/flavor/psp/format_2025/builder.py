@@ -573,7 +573,7 @@ class PSPFBuilder:
         purpose: str = "data",
         lifecycle: str = "runtime",
         encoding: str = "gzip",
-        extract_to: str | None = None,
+        target: str | None = None,
         permissions: str | None = None,
     ) -> "PSPFBuilder":
         """
@@ -585,7 +585,7 @@ class PSPFBuilder:
             purpose: Slot purpose (data, code, config, media)
             lifecycle: Slot lifecycle (runtime, cached, temporary)
             encoding: Compression encoding (none, gzip)
-            extract_to: Extract location relative to workenv (default: None)
+            target: Target location relative to workenv (default: None)
             permissions: Unix permissions as octal string (e.g., "0755")
         """
         # Determine path and size
@@ -616,7 +616,7 @@ class PSPFBuilder:
             index=len(self._spec.slots),
             id=id,
             source=str(path) if path else "",
-            target=extract_to or id,
+            target=target or id,
             size=size,
             checksum="",  # Will be calculated during build
             encoding=encoding,
