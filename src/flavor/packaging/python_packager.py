@@ -105,21 +105,10 @@ class PythonPackager:
         if binary_only:
             cmd.extend(["--only-binary", ":all:"])
         
-        # Add platform compatibility for Linux builds
-        # For Linux, prefer manylinux2014 wheels for compatibility but don't restrict to only that
-        # Pure Python wheels (with platform "any") should always work
-        import platform as platform_lib
-        if platform_lib.system() == "Linux" and binary_only:
-            # Note: pip download doesn't actually use --platform correctly for filtering
-            # It will still download the most compatible wheel available
-            # We'll rely on pip's default behavior which handles this well
-            # The manylinux2014 preference is handled by pip internally
-            
-            # Only specify Python version to ensure compatibility
-            py_parts = self.python_version.split('.')
-            py_major = py_parts[0]
-            py_minor = py_parts[1] if len(py_parts) > 1 else "11"
-            cmd.extend(["--python-version", f"{py_major}.{py_minor}"])
+        # Don't add platform constraints on Linux - let pip choose compatible wheels
+        # pip will automatically select wheels that work on the current system
+        # This allows it to choose manylinux2014, manylinux_2_28, manylinux_2_34, or any
+        # based on what's available and what works on the build system
         
         if requirements_file:
             cmd.extend(["-r", str(requirements_file)])
