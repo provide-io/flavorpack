@@ -164,13 +164,17 @@ class PythonPackager:
                 # WARNING: manylinux_2_17 wheels may have C++11 ABI incompatibility on CentOS 7
                 # CentOS 7 has GCC 4.8.5 with old C++ ABI, but grpcio needs new C++11 ABI
                 if arch == "amd64":
-                    cmd.extend(["--platform", "manylinux_2_17_x86_64"])
-                    logger.debug("Added platform constraint: manylinux_2_17_x86_64")
+                    #cmd.extend(["--platform", "manylinux_2_17_x86_64"])
+                    #logger.debug("Added platform constraint: manylinux_2_17_x86_64")
+                    cmd.extend(["--platform", "musllinux_1_2_x86_64"])
+                    logger.debug("Added platform constraint: musllinux_1_2_x86_64")
                 elif arch == "arm64":
                     # ARM64 doesn't have manylinux2010, use manylinux_2_17
-                    cmd.extend(["--platform", "manylinux_2_17_aarch64"])
-                    logger.debug("Added platform constraint: manylinux_2_17_aarch64")
+                    # cmd.extend(["--platform", "manylinux_2_17_aarch64"])
+                    # logger.debug("Added platform constraint: manylinux_2_17_aarch64")
                     logger.warning("⚠️ grpcio on CentOS 7 ARM64 may have C++ ABI issues")
+                    cmd.extend(["--platform", "musllinux_1_2_aarch64"])
+                    logger.debug("Added platform constraint: musllinux_1_2_aarch64")
             
             # Also specify Python version to match our target
             py_parts = self.python_version.split('.')
