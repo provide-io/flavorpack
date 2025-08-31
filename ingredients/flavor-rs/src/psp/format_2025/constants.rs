@@ -1,27 +1,9 @@
 // helpers/flavor-rs/src/psp/format_2025/constants.rs
 // PSPF 2025 Format Constants - Enhanced Memory-Mapped Version
 
-use crate::utils::xor::{xor_const, xor_decode_default, XOR_KEY};
-use std::sync::LazyLock;
-
-// Raw magic bytes (exported for compatibility)
-const PSPF_MAGIC_RAW: &[u8] = b"PSPF2025";
-pub const PACKAGE_EMOJI_RAW: &[u8] = &[0xF0, 0x9F, 0x93, 0xA6];  // 📦
-pub const MAGIC_WAND_EMOJI_RAW: &[u8] = &[0xF0, 0x9F, 0xAA, 0x84];  // 🪄
-pub const PACKAGE_EMOJI_BYTES: &[u8] = PACKAGE_EMOJI_RAW;  // Alias
-pub const MAGIC_WAND_EMOJI_BYTES: &[u8] = MAGIC_WAND_EMOJI_RAW;  // Alias
-const TRAILING_MAGIC_RAW: &[u8] = &[
-    0xF0, 0x9F, 0x93, 0xA6,  // 📦
-    0xF0, 0x9F, 0xAA, 0x84   // 🪄
-];
-
-// XOR'd constants computed at compile time (prevents literals in binary)
-pub const PSPF_MAGIC_ENCODED: [u8; 8] = xor_const::<8>(PSPF_MAGIC_RAW, XOR_KEY);
-pub const TRAILING_MAGIC_ENCODED: [u8; 8] = xor_const::<8>(TRAILING_MAGIC_RAW, XOR_KEY);
-
-// Lazy static for runtime decoded values
-pub static PSPF_MAGIC: LazyLock<Vec<u8>> = LazyLock::new(|| xor_decode_default(&PSPF_MAGIC_ENCODED));
-pub static TRAILING_MAGIC: LazyLock<Vec<u8>> = LazyLock::new(|| xor_decode_default(&TRAILING_MAGIC_ENCODED));
+// Individual emoji bytes for MagicTrailer bookends
+pub const PACKAGE_EMOJI_BYTES: &[u8] = &[0xF0, 0x9F, 0x93, 0xA6];  // 📦 as bytes (MagicTrailer start)
+pub const MAGIC_WAND_EMOJI_BYTES: &[u8] = &[0xF0, 0x9F, 0xAA, 0x84];  // 🪄 as bytes (MagicTrailer end)
 
 /// Format version - keeping as v1
 pub const PSPF_VERSION: u32 = 0x20250001;
@@ -30,7 +12,7 @@ pub const FORMAT_VERSION: u32 = PSPF_VERSION; // Alias for compatibility
 /// Size constants
 pub const HEADER_SIZE: usize = 8192; // Future-proof 8KB index block
 pub const SLOT_DESCRIPTOR_SIZE: usize = 64; // Descriptor size
-pub const MAGIC_TRAILER_SIZE: usize = 16; // 8-byte index pointer + 8-byte emoji magic
+pub const MAGIC_TRAILER_SIZE: usize = 8200; // 📦 (4) + index (8192) + 🪄 (4)
 pub const SLOT_ALIGNMENT: u64 = 8;
 
 // Platform-specific page sizes
@@ -97,10 +79,16 @@ pub const ENCODING_TGZ: u8 = 3; // Tar archive, then gzipped (tar.gz)
 // pub const ENCODING_ZIP: u8 = 8;      // Zip archive
 // pub const ENCODING_7Z: u8 = 9;       // 7-zip archive
 
-/// Purpose types
-pub const PURPOSE_PAYLOAD: u8 = 0; // Payload/data files  
-pub const PURPOSE_RUNTIME: u8 = 1; // Runtime/executable code
-pub const PURPOSE_TOOL: u8 = 2; // Tool/configuration files
+/// Purpose types - aligned with Python naming
+pub const PURPOSE_DATA: u8 = 0; // General data files
+pub const PURPOSE_CODE: u8 = 1; // Executable code  
+pub const PURPOSE_CONFIG: u8 = 2; // Configuration files
+pub const PURPOSE_MEDIA: u8 = 3; // Media/assets
+
+// Legacy aliases for backward compatibility
+pub const PURPOSE_PAYLOAD: u8 = PURPOSE_DATA; // Deprecated: use PURPOSE_DATA
+pub const PURPOSE_RUNTIME: u8 = PURPOSE_CODE; // Deprecated: use PURPOSE_CODE
+pub const PURPOSE_TOOL: u8 = PURPOSE_CONFIG; // Deprecated: use PURPOSE_CONFIG
 
 /// Lifecycle types - must match Python/Go builders
 pub const LIFECYCLE_INIT: u8 = 0; // First run only, removed after initialization

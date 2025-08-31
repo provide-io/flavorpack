@@ -39,11 +39,9 @@ fn run() -> i32 {
     let args: Vec<String> = env::args().collect();
     log::trace!("Arguments: {:?}", args);
     
-    // Check for --version flag early (before PSPF validation)
-    if args.len() > 1 && args[1] == "--version" {
-        println!("flavor-rs-launcher {}", flavor::version::full_version());
-        return 0;
-    }
+    // ⚠️ CRITICAL: NEVER intercept command line arguments unless in CLI mode!
+    // The launcher must pass ALL arguments to the package entrypoint unchanged.
+    // Only FLAVOR_LAUNCHER_CLI=1 enables CLI mode where the launcher processes commands.
     
     let exe_path = match env::current_exe() {
         Ok(path) => {
@@ -112,28 +110,10 @@ fn run() -> i32 {
     }
 
     // --- Standard Package Execution ---
-    // Not in CLI mode, so treat all args after the executable name as app arguments.
+    // ⚠️ CRITICAL: Not in CLI mode - pass ALL arguments directly to the package!
+    // The launcher MUST NOT intercept any arguments (including --version).
+    // All command-line arguments belong to the packaged application, not the launcher.
     
-    // But first check if this is just a standalone launcher being called with --version
-    // (without being a bundle and without CLI mode)
-    if args.len() > 1 && args[1] == "--version" {
-        log::debug!("Checking if executable is a PSPF bundle: {:?}", exe_path);
-        // Try to detect if this is a PSPF bundle first
-        match flavor::psp::detect_format(&exe_path) {
-            Ok(_format) => {
-                log::debug!("Executable is a PSPF bundle, continuing to launch");
-                // It's a bundle, continue to launch
-            }
-            Err(e) => {
-                // Not a bundle, just show version
-                log::debug!("Not a PSPF bundle ({}), showing launcher version", e);
-                println!("flavor-rs-launcher {}", flavor::version::full_version());
-                return 0;
-            }
-        }
-    }
-    
-    // Don't intercept any commands when not in CLI mode - pass everything through
     log::trace!("Not in CLI mode, passing all arguments to entrypoint");
 
     // Launch the package with the provided arguments.
@@ -151,9 +131,35 @@ fn run() -> i32 {
         },
         Err(e) => {
             log::error!("Launch error: {}", e);
-            eprintln!("Launch error: {}", e);
-            match e.to_string() {
+            
+            // Provide helpful error messages based on the error type
+            let error_msg = e.to_string();
+            if error_msg.contains("signature verification failed") || error_msg.contains("Signature verification failed") {
+                eprintln!("❌ Package signature verification failed");
+                eprintln!("");
+                eprintln!("This package's cryptographic signature could not be verified.");
+                eprintln!("This may indicate the package has been tampered with or was not properly signed.");
+                eprintln!("");
+                eprintln!("To bypass signature verification (NOT RECOMMENDED for production):");
+                eprintln!("  export FLAVOR_INSECURE=1");
+                eprintln!("");
+                eprintln!("For more details, run with FLAVOR_LOG_LEVEL=debug");
+            } else if error_msg.contains("checksum") {
+                eprintln!("❌ Package integrity check failed: {}", error_msg);
+                eprintln!("");
+                eprintln!("The package appears to be corrupted or modified.");
+                eprintln!("");
+                eprintln!("To bypass integrity checks (NOT RECOMMENDED):");
+                eprintln!("  export FLAVOR_INSECURE=1");
+            } else {
+                eprintln!("❌ Failed to launch package: {}", error_msg);
+                eprintln!("");
+                eprintln!("For more details, run with FLAVOR_LOG_LEVEL=debug");
+            }
+            
+            match error_msg {
                 s if s.contains("PSPF") || s.contains("format") => EXIT_PSPF_ERROR,
+                s if s.contains("signature") || s.contains("checksum") => EXIT_SIGNATURE_ERROR,
                 s if s.contains("extract") => EXIT_EXTRACTION_ERROR,
                 s if s.contains("execute") || s.contains("spawn") => EXIT_EXECUTION_ERROR,
                 s if s.contains("I/O") || s.contains("file") => EXIT_IO_ERROR,

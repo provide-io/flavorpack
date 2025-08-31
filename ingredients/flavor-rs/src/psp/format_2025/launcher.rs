@@ -2,6 +2,7 @@
 
 use crate::api::LaunchOptions;
 use crate::exceptions::{FlavorError, Result};
+use crate::psp::format_2025::constants::DEFAULT_DIR_PERMS;
 use crate::utils::get_cache_dir;
 use log::{debug, error, info, trace, warn};
 use std::collections::HashMap;

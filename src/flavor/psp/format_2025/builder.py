@@ -46,6 +46,9 @@ from flavor.psp.format_2025.constants import (
     LIFECYCLE_SHUTDOWN,
     LIFECYCLE_STARTUP,
     LIFECYCLE_TEMPORARY,
+    MAGIC_TRAILER_SIZE,
+    MAGIC_WAND_EMOJI_BYTES,
+    PACKAGE_EMOJI_BYTES,
     PAGE_SIZE,
     PURPOSE_CODE,
     PURPOSE_CONFIG,
@@ -53,7 +56,6 @@ from flavor.psp.format_2025.constants import (
     PURPOSE_MEDIA,
     SLOT_ALIGNMENT,
     SLOT_DESCRIPTOR_SIZE,
-    TRAILING_MAGIC,
 )
 from flavor.psp.format_2025.crypto import sign_data
 from flavor.psp.format_2025.index import PSPFIndex
@@ -405,13 +407,14 @@ def _write_package(
         # Write launcher
         f.write(launcher_data)
 
-        # Reserve space for index
-        index_offset = launcher_size
-        f.seek(index_offset + HEADER_SIZE)
+        # Start right after launcher (no index reservation - index goes in MagicTrailer)
+        f.seek(launcher_size)
 
         # Write metadata
         metadata_offset = f.tell()
+        logger.debug(f"Metadata offset: {metadata_offset}, size: {len(metadata_compressed)}")
         f.write(metadata_compressed)
+        logger.debug(f"Position after metadata: {f.tell()}")
 
         index.metadata_offset = metadata_offset
         index.metadata_size = len(metadata_compressed)
@@ -470,20 +473,22 @@ def _write_package(
                 f.write(descriptor.pack())
             f.seek(end_of_slots)
 
-        # Write MagicTrailer (16 bytes: index pointer + emoji magic)
-        import struct
-        f.write(struct.pack('<Q', index_offset))  # 8-byte little-endian index pointer
-        f.write(TRAILING_MAGIC)  # 8-byte emoji magic
+        # Update package size before writing MagicTrailer
+        # (add 8200 for the trailer that will be written)
+        current_pos = f.tell()
+        logger.debug(f"Position before MagicTrailer: {current_pos}")
+        index.package_size = current_pos + MAGIC_TRAILER_SIZE
 
-        # Update package size
-        index.package_size = f.tell()
-
-        # Write final index (pack() calculates checksum internally)
-        f.seek(index_offset)
-        index_data = index.pack()
+        # Write MagicTrailer (8200 bytes: 📦 + index + 🪄)
+        f.write(PACKAGE_EMOJI_BYTES)  # 4-byte package emoji
+        index_data = index.pack()  # pack() calculates checksum internally
         logger.debug(f"Writing index with format_version: 0x{index.format_version:08x}")
         logger.debug(f"Index data first 16 bytes: {index_data[:16].hex()}")
-        f.write(index_data)
+        f.write(index_data)  # 8192-byte index
+        f.write(MAGIC_WAND_EMOJI_BYTES)  # 4-byte magic wand emoji
+        
+        # Get actual file size after writing
+        actual_size = f.tell()
 
     # Set the output file as executable (user only for security)
     set_file_permissions(output_path, DEFAULT_EXECUTABLE_PERMS)
@@ -493,7 +498,7 @@ def _write_package(
         mode=oct(output_path.stat().st_mode),
     )
 
-    return index.package_size
+    return actual_size
 
 
 def _map_purpose(purpose: str) -> int:
