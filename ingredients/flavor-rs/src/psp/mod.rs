@@ -5,17 +5,6 @@ pub mod format_2025;
 use crate::exceptions::{FlavorError, Result};
 use std::path::Path;
 
-/// Maximum size to search for PSPF magic in a file (5MB)
-/// This accommodates Go launchers (~3.3MB) and Rust launchers (~1MB) with margin
-const MAX_LAUNCHER_SEARCH_SIZE: u64 = 5 * 1024 * 1024;
-
-/// Size of chunks to read when searching for PSPF magic (8KB)
-const MAGIC_SEARCH_CHUNK_SIZE: usize = 8192;
-
-/// Step size when searching for PSPF magic (4KB)
-/// Smaller than chunk size to provide overlap and avoid missing magic at boundaries
-const MAGIC_SEARCH_STEP_SIZE: usize = 4096;
-
 /// Supported package formats
 #[derive(Debug, Clone, Copy)]
 pub enum PackageFormat {
@@ -49,14 +38,12 @@ pub fn detect_format(package_path: &Path) -> Result<PackageFormat> {
             log::trace!("Found emoji magic at end of file");
             // Now verify there's a valid PSPF header somewhere
             // Search for PSPF magic in the file
-            let search_limit = file_size.min(MAX_LAUNCHER_SEARCH_SIZE);
+            let search_limit = file_size.min(10 * 1024 * 1024);
             log::trace!("Searching for PSPF magic in first {} bytes", search_limit);
             
-            // Search efficiently using defined chunk and step sizes
-            for offset in (0..search_limit).step_by(MAGIC_SEARCH_STEP_SIZE) {
+            for offset in (0..search_limit).step_by(1024) {
                 file.seek(SeekFrom::Start(offset))?;
-                let read_size = MAGIC_SEARCH_CHUNK_SIZE.min((file_size - offset) as usize);
-                let mut buffer = vec![0u8; read_size];
+                let mut buffer = vec![0u8; 1024.min((file_size - offset) as usize)];
                 file.read_exact(&mut buffer)?;
 
                 let magic = &format_2025::constants::PSPF_MAGIC;

@@ -153,26 +153,26 @@ def create_builder_manifest(
         "command": f"{{workenv}}/{bin_dir}/{package_exe}",
         "slots": [
             {
-                "name": "uv",
-                "path": str(slots["uv"]),
+                "id": "uv",
+                "source": str(slots["uv"]),
                 "encoding": "gzip",
                 "purpose": "tool",
                 "lifecycle": "cache",
                 "target": f"bin/{uv_exe}",  # For gzip encoding, this is treated as full file path
                 "type": "file",
-                "permissions": "0700",
+                "permissions": "0700",  # Owner-only executable permissions
             },
             {
-                "name": "python",
-                "path": str(slots["python"]),
+                "id": "python",
+                "source": str(slots["python"]),
                 "encoding": "tgz",
                 "purpose": "runtime",
                 "lifecycle": "runtime",
                 "target": ".",
             },
             {
-                "name": "wheels",
-                "path": str(slots["wheels"]),
+                "id": "wheels",
+                "source": str(slots["wheels"]),
                 "encoding": "tgz",
                 "purpose": "payload",
                 "lifecycle": "cache",

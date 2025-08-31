@@ -6,6 +6,7 @@
 import json
 import os
 from pathlib import Path
+import platform
 import shutil
 import tarfile
 import tempfile
@@ -207,6 +208,10 @@ class PythonPackager:
             shutil.copy2(uv_host_path, str(payload_uv))
             if not self.is_windows:
                 payload_uv.chmod(0o755)
+                # Strip extended attributes on macOS to avoid security issues
+                if platform.system() == "Darwin":
+                    import subprocess
+                    subprocess.run(["xattr", "-cr", str(payload_uv)], capture_output=True, check=False)
             logger.info("📦➡️✅ Copied UV binary to payload", path=str(payload_uv))
 
             # Also copy to work dir for Go/Rust packager compatibility
@@ -214,6 +219,10 @@ class PythonPackager:
             shutil.copy2(uv_host_path, str(work_uv))
             if not self.is_windows:
                 work_uv.chmod(0o755)
+                # Strip extended attributes on macOS to avoid security issues
+                if platform.system() == "Darwin":
+                    import subprocess
+                    subprocess.run(["xattr", "-cr", str(work_uv)], capture_output=True, check=False)
             artifacts["uv_binary"] = work_uv
         else:
             logger.warning(

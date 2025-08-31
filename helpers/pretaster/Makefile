@@ -79,7 +79,7 @@ endef
 ###################
 
 .PHONY: all
-all: clean clean-cache build test ## Clean, build helpers, and run all tests
+all: clean build test ## Clean everything, build helpers, and run all tests
 	$(call print,"✅ All tasks completed!",$(GREEN))
 
 .PHONY: help
@@ -223,8 +223,10 @@ test: test-core test-combo ## Run all tests
 
 .PHONY: test-core
 test-core: $(SIMPLE_PACKAGES) $(LOGS_DIR) ## Run core test suite (without orchestration)
+	@# Strip extended attributes from built packages (macOS security)
+	@xattr -cr $(DIST_DIR) 2>/dev/null || true
 	$(call print,"🧪 Running core tests...",$(PURPLE))
-	@FLAVOR_LOG_LEVEL=$(LOG_LEVEL) $(TESTS_DIR)/test-pretaster.sh || (echo "❌ Core tests failed with exit code $$?"; exit 1)
+	FLAVOR_LOG_LEVEL=$(LOG_LEVEL) $(TESTS_DIR)/test-pretaster.sh || (echo "❌ Core tests failed with exit code $$?"; exit 1)
 	$(call print,"✅ Core tests completed",$(GREEN))
 
 .PHONY: test-combo
@@ -297,7 +299,7 @@ verify-helpers: ## Verify helpers are built
 ####################
 
 .PHONY: clean
-clean: ## Remove all built artifacts
+clean: ## Remove all built artifacts and workenv cache
 	$(call print,"🧹 Cleaning up...",$(YELLOW))
 	@rm -rf $(DIST_DIR)
 	@rm -rf $(LOGS_DIR)
@@ -307,6 +309,10 @@ clean: ## Remove all built artifacts
 	@rm -f scripts/*.tar.gz
 	@rm -f slots/*.tar.gz
 	@rm -f test-package.tar.gz
+	@# Clean workenv cache including .pspf directories
+	@CACHE_DIR=$${XDG_CACHE_HOME:-$$HOME/.cache}; \
+	rm -rf $$CACHE_DIR/flavor/workenv/* 2>/dev/null || true; \
+	rm -rf $$CACHE_DIR/flavor/workenv/.* 2>/dev/null || true
 	$(call print,"✅ Cleanup complete",$(GREEN))
 
 .PHONY: cache-dir
