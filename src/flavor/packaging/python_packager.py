@@ -215,7 +215,7 @@ class PythonPackager:
                 logger.error(f"No manylinux2014 wheel found for UV {version} on {platform_tag}")
                 return None
             
-            # Download the wheel
+            # Download the wheel to a temp location
             wheel_path = Path(dest_dir) / wheel_filename
             logger.info(f"Downloading {wheel_filename} from PyPI")
             
@@ -224,24 +224,30 @@ class PythonPackager:
             
             logger.info(f"✅ Downloaded UV wheel: {wheel_filename}")
             
-            # Extract UV binary from wheel
-            import zipfile
-            with zipfile.ZipFile(wheel_path, 'r') as wheel_zip:
-                for name in wheel_zip.namelist():
-                    if name.endswith('/uv') or name == 'uv':
-                        uv_path = dest_dir / "uv"
-                        logger.debug(f"Extracting UV binary from {name}")
-                        with wheel_zip.open(name) as src, open(uv_path, 'wb') as dst:
-                            content = src.read()
-                            dst.write(content)
-                            logger.trace(f"Extracted UV binary, size: {len(content)} bytes")
-                        
-                        self._make_executable(uv_path)
-                        logger.info("✅ Successfully extracted UV binary")
-                        return uv_path
-            
-            logger.error("UV binary not found in wheel")
-            return None
+            try:
+                # Extract UV binary from wheel
+                import zipfile
+                with zipfile.ZipFile(wheel_path, 'r') as wheel_zip:
+                    for name in wheel_zip.namelist():
+                        if name.endswith('/uv') or name == 'uv':
+                            uv_path = dest_dir / "uv"
+                            logger.debug(f"Extracting UV binary from {name}")
+                            with wheel_zip.open(name) as src, open(uv_path, 'wb') as dst:
+                                content = src.read()
+                                dst.write(content)
+                                logger.trace(f"Extracted UV binary, size: {len(content)} bytes")
+                            
+                            self._make_executable(uv_path)
+                            logger.info("✅ Successfully extracted UV binary")
+                            return uv_path
+                
+                logger.error("UV binary not found in wheel")
+                return None
+            finally:
+                # Clean up the wheel file
+                if wheel_path.exists():
+                    logger.trace(f"Cleaning up UV wheel: {wheel_path}")
+                    wheel_path.unlink()
             
         except Exception as e:
             logger.error(f"Failed to download UV wheel via URL: {e}")
