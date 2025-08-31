@@ -16,6 +16,10 @@ import zipfile
 
 from pyvider.telemetry import logger
 
+from flavor.psp.format_2025.constants import (
+    DEFAULT_DIR_PERMS,
+    DEFAULT_EXECUTABLE_PERMS,
+)
 from flavor.utils import (
     get_arch_name,
     get_os_name,
@@ -179,7 +183,7 @@ class PythonPackager:
                             with wheel_zip.open(name) as src, open(uv_path, 'wb') as dst:
                                 dst.write(src.read())
                             
-                            uv_path.chmod(0o755)
+                            uv_path.chmod(DEFAULT_EXECUTABLE_PERMS)
                             logger.info("✅ Successfully downloaded manylinux2014 UV binary")
                             return uv_path
                 
@@ -243,14 +247,14 @@ class PythonPackager:
 
         # Create payload structure
         payload_dir = work_dir / "payload"
-        payload_dir.mkdir(mode=0o700)
+        payload_dir.mkdir(mode=DEFAULT_DIR_PERMS)
         artifacts["payload_dir"] = payload_dir
         if prep_bar:
             prep_bar.increment()
 
         # Build wheels
         wheels_dir = payload_dir / "wheels"
-        wheels_dir.mkdir(mode=0o700)
+        wheels_dir.mkdir(mode=DEFAULT_DIR_PERMS)
         self._build_wheels(wheels_dir)
         if prep_bar:
             prep_bar.increment()
@@ -258,7 +262,7 @@ class PythonPackager:
         # Handle UV binary - download manylinux2014 version on Linux, copy from host on other platforms
         uv_obtained = False
         bin_dir = payload_dir / "bin"
-        bin_dir.mkdir(mode=0o700, exist_ok=True)
+        bin_dir.mkdir(mode=DEFAULT_DIR_PERMS, exist_ok=True)
         
         if get_os_name() == "linux":
             # Download manylinux2014-compatible UV wheel for Linux
@@ -267,7 +271,7 @@ class PythonPackager:
                 # Also copy to work dir for compatibility
                 work_uv = work_dir / "uv"
                 shutil.copy2(payload_uv, work_uv)
-                work_uv.chmod(0o755)
+                work_uv.chmod(DEFAULT_EXECUTABLE_PERMS)
                 artifacts["uv_binary"] = work_uv
                 uv_obtained = True
         
@@ -296,11 +300,11 @@ class PythonPackager:
                 # Copy to payload bin directory - always bin/ regardless of platform
                 # UV goes in {workenv}/bin/uv (or uv.exe on Windows)
                 bin_dir = payload_dir / "bin"
-                bin_dir.mkdir(mode=0o700, exist_ok=True)
+                bin_dir.mkdir(mode=DEFAULT_DIR_PERMS, exist_ok=True)
                 payload_uv = bin_dir / self.uv_exe
                 shutil.copy2(uv_host_path, str(payload_uv))
                 if not self.is_windows:
-                    payload_uv.chmod(0o755)
+                    payload_uv.chmod(DEFAULT_EXECUTABLE_PERMS)
                     # Strip extended attributes on macOS to avoid security issues
                     if get_os_name() == "darwin":
                         run_command(["xattr", "-cr", str(payload_uv)], capture_output=True, check=False)
@@ -310,7 +314,7 @@ class PythonPackager:
                 work_uv = work_dir / self.uv_exe
                 shutil.copy2(uv_host_path, str(work_uv))
                 if not self.is_windows:
-                    work_uv.chmod(0o755)
+                    work_uv.chmod(DEFAULT_EXECUTABLE_PERMS)
                     # Strip extended attributes on macOS to avoid security issues
                     if get_os_name() == "darwin":
                         run_command(["xattr", "-cr", str(work_uv)], capture_output=True, check=False)
@@ -328,7 +332,7 @@ class PythonPackager:
 
         # Create metadata
         metadata_dir = payload_dir / "metadata"
-        metadata_dir.mkdir(mode=0o700)
+        metadata_dir.mkdir(mode=DEFAULT_DIR_PERMS)
         self._create_metadata(metadata_dir)
         if prep_bar:
             prep_bar.increment()
@@ -348,7 +352,7 @@ class PythonPackager:
 
         # Create metadata archive (separate for selective extraction)
         metadata_content = work_dir / "metadata_content"
-        metadata_content.mkdir(mode=0o700)
+        metadata_content.mkdir(mode=DEFAULT_DIR_PERMS)
         # For now empty, but could contain launcher-specific metadata
         metadata_tgz = work_dir / "metadata.tgz"
         with tarfile.open(metadata_tgz, "w:gz", compresslevel=9) as tar:
