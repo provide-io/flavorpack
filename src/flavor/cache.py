@@ -60,7 +60,9 @@ class CacheManager:
                 continue
 
             # Check for the modern completion marker
-            completion_marker = instance_metadata_dir / "instance" / "extract" / "complete"
+            completion_marker = (
+                instance_metadata_dir / "instance" / "extract" / "complete"
+            )
             if not completion_marker.exists():
                 continue
 
@@ -144,16 +146,16 @@ class CacheManager:
 
     def inspect_workenv(self, workenv_name: str) -> dict:
         """Inspect a specific workenv.
-        
+
         Args:
             workenv_name: Name of the workenv to inspect
-            
+
         Returns:
             Detailed inspection information
         """
         workenv_dir = self.cache_dir / workenv_name
         instance_metadata_dir = self.cache_dir / f".{workenv_name}.pspf"
-        
+
         info = {
             "name": workenv_name,
             "content_dir": str(workenv_dir),
@@ -164,13 +166,13 @@ class CacheManager:
             "extraction_complete": False,
             "package_info": {},
         }
-        
+
         if not workenv_dir.exists() or not instance_metadata_dir.is_dir():
             return info
-        
+
         info["metadata_type"] = "instance"
         info["metadata_dir"] = str(instance_metadata_dir)
-        
+
         # Read checksum from the standard location
         checksum_file = instance_metadata_dir / "instance" / "package.checksum"
         if checksum_file.exists():
@@ -180,7 +182,7 @@ class CacheManager:
         # Check for the modern completion marker
         completion_marker = instance_metadata_dir / "instance" / "extract" / "complete"
         info["extraction_complete"] = completion_marker.exists()
-        
+
         # Read package metadata from the standard location
         metadata_file = instance_metadata_dir / "package" / "psp.json"
         if metadata_file.exists():
@@ -195,7 +197,7 @@ class CacheManager:
                     }
             except (json.JSONDecodeError, IOError):
                 pass
-        
+
         return info
 
     def remove(self, package_id: str) -> bool:

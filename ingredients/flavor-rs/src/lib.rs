@@ -5,9 +5,11 @@
 
 pub mod api;
 pub mod exceptions;
+pub mod exit_codes;
 pub mod logger;
 pub mod psp;
 pub mod utils;
+pub mod version;
 
 use std::sync::atomic::AtomicU32;
 

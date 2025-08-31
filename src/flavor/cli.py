@@ -27,11 +27,12 @@ if sys.platform == "win32":
         pass  # Ignore if we can't enable ANSI
 
 # Import all commands at module level
+from flavor.commands.extract import extract_all_command, extract_command
 from flavor.commands.ingredients import ingredient_group
 from flavor.commands.inspect import inspect_command
 from flavor.commands.keygen import keygen_command
 from flavor.commands.package import pack_command
-from flavor.commands.utils import analyze_deps_command, clean_command
+from flavor.commands.utils import clean_command
 from flavor.commands.verify import verify_command
 from flavor.commands.workenv import workenv_group
 
@@ -82,14 +83,14 @@ cli.add_command(keygen_command, name="keygen")
 cli.add_command(pack_command, name="pack")
 cli.add_command(verify_command, name="verify")
 cli.add_command(inspect_command, name="inspect")
+cli.add_command(extract_command, name="extract")
+cli.add_command(extract_all_command, name="extract-all")
 cli.add_command(clean_command, name="clean")
-cli.add_command(analyze_deps_command, name="analyze-deps")
 
 # Register command groups
 cli.add_command(workenv_group, name="workenv")
 cli.add_command(ingredient_group, name="ingredients")
 
-# Keep main for backwards compatibility
 main = cli
 
 if __name__ == "__main__":

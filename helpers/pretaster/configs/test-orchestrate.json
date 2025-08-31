@@ -11,45 +11,56 @@
   "slots": [
     {
       "slot": 0,
-      "name": "orchestrate.tar.gz",
-      "path": "{workenv}/scripts/orchestrate.tar.gz",
       "purpose": "payload",
       "lifecycle": "cached",
       "encoding": "gzip",
-      "extract_to": "{workenv}/orchestrator"
+      "id": "orchestrate-tar-gz",
+      "source": "{workenv}/scripts/orchestrate.tar.gz",
+      "target": "orchestrator/orchestrate.tar.gz"
     },
     {
       "slot": 1,
-      "name": "utilities.tar.gz",
-      "path": "{workenv}/slots/utilities.tar.gz",
       "purpose": "payload",
       "lifecycle": "cached",
-      "encoding": "none",
-      "extract_to": "{workenv}/slot1"
+      "encoding": "raw",
+      "id": "slot1/utilities-tar-gz",
+      "source": "{workenv}/slots/utilities.tar.gz",
+      "target": "slot1/utilities.tar.gz"
     },
     {
       "slot": 2,
-      "name": "flavor-go-builder",
-      "path": "{workenv}/../bin/flavor-go-builder-darwin_arm64",
-      "purpose": "payload",
+      "purpose": "tool",
       "lifecycle": "cached",
-      "encoding": "none",
-      "extract_to": "{workenv}/slot2"
+      "encoding": "raw",
+      "id": "slot2/flavor-go-builder",
+      "source": "{workenv}/../../ingredients/bin/flavor-go-builder-darwin_arm64",
+      "target": "slot2/flavor-go-builder-darwin_arm64",
+      "permissions": "0755"
     },
     {
       "slot": 3,
-      "name": "scripts.tar.gz",
-      "path": "{workenv}/slots/scripts.tar.gz",
       "purpose": "payload",
       "lifecycle": "cached",
-      "encoding": "none",
-      "extract_to": "{workenv}/slot3"
+      "encoding": "raw",
+      "id": "slot3/scripts-tar-gz",
+      "source": "{workenv}/slots/scripts.tar.gz",
+      "target": "slot3/scripts.tar.gz"
     }
   ],
   "runtime": {
     "env": {
-      "unset": ["*"],
-      "pass": ["PATH", "HOME", "USER", "LANG", "LC_*", "TERM", "FLAVOR_*"],
+      "unset": [
+        "*"
+      ],
+      "pass": [
+        "PATH",
+        "HOME",
+        "USER",
+        "LANG",
+        "LC_*",
+        "TERM",
+        "FLAVOR_*"
+      ],
       "set": {
         "ORCHESTRATE_MODE": "full",
         "SLOT_COUNT": "4"

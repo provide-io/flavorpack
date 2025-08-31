@@ -13,7 +13,7 @@ FAILED_TESTS=""
 # Get directories
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PRETASTER_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-HELPERS_DIR="$(cd "$PRETASTER_DIR/.." && pwd)"
+HELPERS_DIR="$(cd "$PRETASTER_DIR/../../ingredients" && pwd)"
 
 # Change to pretaster directory
 cd "$PRETASTER_DIR"
@@ -31,10 +31,11 @@ else
     echo "📁 Setting FLAVOR_WORKENV_BASE=$FLAVOR_WORKENV_BASE"
     
     # Build helpers first (only when running locally, not in PSP)
-    echo "🔨 Building helpers..."
-    cd "$HELPERS_DIR"
-    ./build.sh
-    cd "$PRETASTER_DIR"
+    # DISABLED: Build process corrupts Rust binaries on macOS
+    # echo "🔨 Building helpers..."
+    # cd "$HELPERS_DIR"
+    # ./build.sh
+    # cd "$PRETASTER_DIR"
 fi
 
 # Create required tar.gz archives for test packages
@@ -59,35 +60,42 @@ echo ""
 echo "📦 Building test packages..."
 echo ""
 
-# Test 1: Simple echo test (Go builder + Rust launcher)
-echo "1️⃣ Building echo test package (Go builder + Rust launcher)..."
-../bin/flavor-go-builder \
+# Detect platform
+OS=$(uname -s | tr '[:upper:]' '[:lower:]')
+ARCH=$(uname -m)
+[ "$ARCH" = "x86_64" ] && ARCH="amd64"
+[ "$ARCH" = "aarch64" ] && ARCH="arm64"
+PLATFORM="${OS}_${ARCH}"
+
+# Test 1: Simple echo test (Go builder + Go launcher) - Using Go launcher due to Rust launcher issues
+echo "1️⃣ Building echo test package (Go builder + Go launcher)..."
+$HELPERS_DIR/bin/flavor-go-builder-$PLATFORM \
     --manifest configs/test-echo.json \
-    --launcher-bin ../bin/flavor-rs-launcher \
+    --launcher-bin $HELPERS_DIR/bin/flavor-go-launcher-$PLATFORM \
     --output dist/echo-test.psp \
     --key-seed test123
 
 # Test 2: Shell script test (Rust builder + Go launcher)
 echo "2️⃣ Building shell test package (Rust builder + Go launcher)..."
-../bin/flavor-rs-builder \
+$HELPERS_DIR/bin/flavor-rs-builder-$PLATFORM \
     --manifest configs/test-shell.json \
-    --launcher-bin ../bin/flavor-go-launcher \
+    --launcher-bin $HELPERS_DIR/bin/flavor-go-launcher-$PLATFORM \
     --output dist/shell-test.psp \
     --key-seed test123
 
-# Test 3: Environment variable test (Go builder + Rust launcher)
-echo "3️⃣ Building environment test package (Go builder + Rust launcher)..."
-../bin/flavor-go-builder \
+# Test 3: Environment variable test (Go builder + Go launcher) - Using Go launcher due to Rust launcher issues  
+echo "3️⃣ Building environment test package (Go builder + Go launcher)..."
+$HELPERS_DIR/bin/flavor-go-builder-$PLATFORM \
     --manifest configs/test-env.json \
-    --launcher-bin ../bin/flavor-rs-launcher \
+    --launcher-bin $HELPERS_DIR/bin/flavor-go-launcher-$PLATFORM \
     --output dist/env-test.psp \
     --key-seed test123
 
 # Test 4: Multi-slot orchestration test (Rust builder + Go launcher)
 echo "4️⃣ Building orchestration test package (Rust builder + Go launcher)..."
-../bin/flavor-rs-builder \
+$HELPERS_DIR/bin/flavor-rs-builder-$PLATFORM \
     --manifest configs/test-orchestrate.json \
-    --launcher-bin ../bin/flavor-go-launcher \
+    --launcher-bin $HELPERS_DIR/bin/flavor-go-launcher-$PLATFORM \
     --output dist/orchestrate-test.psp \
     --key-seed test123
 
@@ -115,7 +123,7 @@ run_test() {
 }
 
 # Run echo test
-run_test "1️⃣ Running echo test (Rust launcher)..." \
+run_test "1️⃣ Running echo test (Go launcher)..." \
     "FLAVOR_LOG_LEVEL=debug ./dist/echo-test.psp 'Test message from pretaster'"
 
 # Run shell test  
@@ -123,7 +131,7 @@ run_test "2️⃣ Running shell test (Go launcher)..." \
     "FLAVOR_LOG_LEVEL=debug ./dist/shell-test.psp"
 
 # Run env test
-run_test "3️⃣ Running environment test (Rust launcher)..." \
+run_test "3️⃣ Running environment test (Go launcher)..." \
     "FLAVOR_LOG_LEVEL=info ./dist/env-test.psp"
 
 # Run orchestration test

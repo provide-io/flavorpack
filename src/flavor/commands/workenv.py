@@ -119,6 +119,7 @@ def workenv_remove(package_id: str, yes: bool) -> None:
         info = manager.inspect_workenv(package_id)
         if info and info.get("exists"):
             from pathlib import Path
+
             size_mb = manager._get_dir_size(Path(info["content_dir"])) / (1024 * 1024)
             name = info.get("package_info", {}).get("name", package_id)
             if not click.confirm(f"""Remove {name} ({size_mb:.1f} MB)?"""):
@@ -142,14 +143,14 @@ def workenv_remove(package_id: str, yes: bool) -> None:
 def workenv_inspect(package_id: str, output_json: bool) -> None:
     """Inspect detailed metadata for a cached package extraction."""
     from flavor.cache import CacheManager
-    
+
     manager = CacheManager()
     info = manager.inspect_workenv(package_id)
-    
+
     if not info.get("exists"):
         click.secho(f"❌ Package '{package_id}' not found", fg="red")
         return
-    
+
     if output_json:
         # Output as JSON
         click.echo(json.dumps(info, indent=2, default=str))
@@ -158,49 +159,64 @@ def workenv_inspect(package_id: str, output_json: bool) -> None:
         click.echo("=" * 60)
         click.echo(f"📦 Package: {package_id}")
         click.echo("-" * 60)
-        
+
         # Basic info
         click.echo(f"📁 Location: {info['content_dir']}")
         click.echo(f"🗂️  Metadata Type: {info.get('metadata_type', 'none')}")
-        
+
         if info.get("extraction_complete"):
             click.echo("✅ Extraction: Complete")
         else:
             click.echo("⚠️  Extraction: Incomplete")
-        
+
         if info.get("checksum"):
             click.echo(f"🔐 Checksum: {info['checksum']}")
-        
+
         # Index metadata from index.json
         if info.get("metadata_dir"):
             from pathlib import Path
+
             index_file = Path(info["metadata_dir"]) / "instance" / "index.json"
             if index_file.exists():
                 try:
                     with open(index_file) as f:
                         index_data = json.load(f)
-                    
+
                     click.echo("\n📋 Index Metadata:")
-                    click.echo(f"  Format Version: 0x{index_data.get('format_version', 0):08x}")
-                    click.echo(f"  Package Size: {index_data.get('package_size', 0):,} bytes")
-                    click.echo(f"  Launcher Size: {index_data.get('launcher_size', 0):,} bytes")
+                    click.echo(
+                        f"  Format Version: 0x{index_data.get('format_version', 0):08x}"
+                    )
+                    click.echo(
+                        f"  Package Size: {index_data.get('package_size', 0):,} bytes"
+                    )
+                    click.echo(
+                        f"  Launcher Size: {index_data.get('launcher_size', 0):,} bytes"
+                    )
                     click.echo(f"  Slot Count: {index_data.get('slot_count', 0)}")
-                    click.echo(f"  Index Checksum: {index_data.get('index_checksum', 'N/A')}")
-                    
-                    if index_data.get('build_timestamp'):
-                        timestamp = index_data['build_timestamp']
+                    click.echo(
+                        f"  Index Checksum: {index_data.get('index_checksum', 'N/A')}"
+                    )
+
+                    if index_data.get("build_timestamp"):
+                        timestamp = index_data["build_timestamp"]
                         if timestamp > 0:
                             dt = datetime.datetime.fromtimestamp(timestamp)
-                            click.echo(f"  Build Time: {dt.strftime('%Y-%m-%d %H:%M:%S')}")
-                    
+                            click.echo(
+                                f"  Build Time: {dt.strftime('%Y-%m-%d %H:%M:%S')}"
+                            )
+
                     # Capabilities and requirements
-                    if index_data.get('capabilities'):
-                        click.echo(f"  Capabilities: 0x{index_data['capabilities']:016x}")
-                    if index_data.get('requirements'):
-                        click.echo(f"  Requirements: 0x{index_data['requirements']:016x}")
+                    if index_data.get("capabilities"):
+                        click.echo(
+                            f"  Capabilities: 0x{index_data['capabilities']:016x}"
+                        )
+                    if index_data.get("requirements"):
+                        click.echo(
+                            f"  Requirements: 0x{index_data['requirements']:016x}"
+                        )
                 except Exception as e:
                     click.echo(f"  ⚠️  Error reading index.json: {e}")
-        
+
         # Package metadata
         if info.get("package_info"):
             pkg = info["package_info"]
@@ -209,5 +225,5 @@ def workenv_inspect(package_id: str, output_json: bool) -> None:
             click.echo(f"  Version: {pkg.get('version', 'unknown')}")
             if pkg.get("builder"):
                 click.echo(f"  Builder: {pkg.get('builder')}")
-        
+
         click.echo()

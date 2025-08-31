@@ -1,10 +1,13 @@
+# Requires Rust 1.85+ for edition 2024
+
 [package]
 name = "flavor"
 version = "0.3.0"
-edition = "2021"
-authors = ["Provide Services <engineering@provide.services>"]
-description = "Progressive Secure Package Format (PSPF) implementation"
-license = "MIT"
+edition = "2024"
+authors = ["provide.io <code@provide.io>", "Tim Perkins <code@tim.life>"]
+description = "Progressive Secure Package Format (PSPF) Reference Implementation"
+license = "Apache-2.0"
+rust-version = "1.85"
 
 [lib]
 name = "flavor"

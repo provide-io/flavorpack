@@ -8,8 +8,14 @@ import mmap
 from pathlib import Path
 
 from flavor.psp.format_2025.backends import (
-    MMapBackend, FileBackend, StreamBackend, HybridBackend,
-    create_backend, ACCESS_AUTO, ACCESS_MMAP, ACCESS_FILE
+    MMapBackend,
+    FileBackend,
+    StreamBackend,
+    HybridBackend,
+    create_backend,
+    ACCESS_AUTO,
+    ACCESS_MMAP,
+    ACCESS_FILE,
 )
 from flavor.psp.format_2025.slots import SlotDescriptor
 
@@ -20,21 +26,21 @@ class TestTasterMMapBackends:
     @pytest.fixture
     def large_test_file(self):
         """Create a large test file for mmap testing."""
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.dat') as f:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".dat") as f:
             # Write 10MB of data
-            chunk = b'A' * 1024  # 1KB chunk
+            chunk = b"A" * 1024  # 1KB chunk
             for _ in range(10 * 1024):  # 10K chunks = 10MB
                 f.write(chunk)
 
             # Add some identifiable markers
             f.seek(0)
-            f.write(b'START_MARKER')
+            f.write(b"START_MARKER")
 
             f.seek(5 * 1024 * 1024)  # 5MB position
-            f.write(b'MIDDLE_MARKER')
+            f.write(b"MIDDLE_MARKER")
 
             f.seek(-12, 2)  # 12 bytes from end
-            f.write(b'END_MARKER!!')
+            f.write(b"END_MARKER!!")
 
             path = Path(f.name)
 
@@ -48,11 +54,11 @@ class TestTasterMMapBackends:
 
         # Get a view of the start
         view1 = backend.read_at(0, 12)
-        assert bytes(view1) == b'START_MARKER'
+        assert bytes(view1) == b"START_MARKER"
 
         # Get a view of the middle
         view2 = backend.read_at(5 * 1024 * 1024, 13)
-        assert bytes(view2) == b'MIDDLE_MARKER'
+        assert bytes(view2) == b"MIDDLE_MARKER"
 
         # Views should be memoryview objects (zero-copy)
         assert isinstance(view1, memoryview)
@@ -73,7 +79,7 @@ class TestTasterMMapBackends:
 
         start = time.perf_counter()
         # Random access pattern
-        for offset in [0, 1024*1024, 5*1024*1024, 9*1024*1024]:
+        for offset in [0, 1024 * 1024, 5 * 1024 * 1024, 9 * 1024 * 1024]:
             data = mmap_backend.read_at(offset, 4096)
             assert len(data) == 4096
         mmap_time = time.perf_counter() - start
@@ -86,7 +92,7 @@ class TestTasterMMapBackends:
 
         start = time.perf_counter()
         # Same random access pattern
-        for offset in [0, 1024*1024, 5*1024*1024, 9*1024*1024]:
+        for offset in [0, 1024 * 1024, 5 * 1024 * 1024, 9 * 1024 * 1024]:
             data = file_backend.read_at(offset, 4096)
             assert len(data) == 4096
         file_time = time.perf_counter() - start
@@ -118,7 +124,7 @@ class TestTasterMMapBackends:
 
         # Header region should use mmap (zero-copy)
         header_data = backend.read_at(0, 100)
-        assert bytes(header_data)[:12] == b'START_MARKER'
+        assert bytes(header_data)[:12] == b"START_MARKER"
 
         # Data region (beyond 1MB) should use file I/O
         data_region = backend.read_at(2 * 1024 * 1024, 100)
@@ -137,7 +143,7 @@ class TestTasterMMapBackends:
             offset=0,
             size=1024 * 1024,  # 1MB slot
             checksum=0,
-            encoding=0
+            encoding=0,
         )
 
         # Stream the slot in chunks
@@ -180,8 +186,12 @@ class TestTasterMMapBackends:
         # Create slot descriptors at different positions
         slots = [
             SlotDescriptor(id=0, offset=0, size=100, checksum=0, encoding=0),
-            SlotDescriptor(id=1, offset=5*1024*1024, size=100, checksum=0, encoding=0),
-            SlotDescriptor(id=2, offset=10*1024*1024-100, size=100, checksum=0, encoding=0),
+            SlotDescriptor(
+                id=1, offset=5 * 1024 * 1024, size=100, checksum=0, encoding=0
+            ),
+            SlotDescriptor(
+                id=2, offset=10 * 1024 * 1024 - 100, size=100, checksum=0, encoding=0
+            ),
         ]
 
         # Read slots
@@ -192,9 +202,9 @@ class TestTasterMMapBackends:
             assert len(data) == slot.size
 
         # Verify we got the right data (convert memoryview to bytes for comparison)
-        assert b'START_MARKER' in bytes(slot_data[0])
-        assert b'MIDDLE_MARKER' in bytes(slot_data[1])
-        assert b'END_MARKER' in bytes(slot_data[2])
+        assert b"START_MARKER" in bytes(slot_data[0])
+        assert b"MIDDLE_MARKER" in bytes(slot_data[1])
+        assert b"END_MARKER" in bytes(slot_data[2])
 
         backend.close()
 
@@ -253,5 +263,6 @@ class TestTasterMMapBackends:
 
         # Backend should be closed
         assert backend.mmap is None
+
 
 # 🧪🗺️💾🪄

@@ -2,6 +2,32 @@
 
 This directory contains the Go and Rust implementations of Flavor Pack builders and launchers.
 
+## Requirements
+
+### Rust
+- **Minimum version**: Rust 1.85+ (for Edition 2024 support)
+- **Build targets**: 
+  - Linux: Uses musl for static binaries (no glibc dependencies)
+  - macOS/Windows: Native builds
+- **Installation**: 
+  ```bash
+  # Install Rust with musl targets for Linux
+  rustup target add x86_64-unknown-linux-musl
+  rustup target add aarch64-unknown-linux-musl
+  ```
+
+### Go
+- **Minimum version**: Go 1.21+
+- **Build mode**: `CGO_ENABLED=0` for static binaries
+- **Installation**: Download from https://go.dev or use package manager
+
+## Binary Compatibility
+
+All Linux binaries are built as static executables:
+- **Universal compatibility**: Works on any Linux distribution
+- **Tested on**: CentOS 7 (glibc 2.17), Amazon Linux 2023, Ubuntu 22.04/24.04, Alpine Linux
+- **No runtime dependencies**: Fully self-contained binaries
+
 ## Directory Structure
 
 ```
@@ -15,15 +41,14 @@ ingredients/
 │   ├── src/          # Source code
 │   ├── Cargo.toml    # Rust package manifest
 │   └── Makefile      # Build and quality targets
-├── taster/            # Comprehensive test package
-│   ├── taster/       # Python test commands
-│   └── pyproject.toml # Package configuration
-├── pretaster/         # Cross-language validation suite
-│   ├── Makefile      # Test orchestration
-│   ├── configs/      # Test manifests
-│   └── tests/        # Test scripts
-└── build.sh           # Build all ingredients
+├── scripts/           # Build and deployment scripts
+├── build.sh           # Build all ingredients
+├── build-linux.sh     # Linux-specific build
+├── test-binaries.sh   # Test built binaries
+└── test-linux-build.sh # Test Linux builds in Docker
 ```
+
+**Note**: For cross-language testing and validation, see `helpers/pretaster/` in the project root.
 
 ## Building
 

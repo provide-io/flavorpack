@@ -225,15 +225,5 @@ def assemble_metadata(
         if section in spec.metadata:
             metadata[section] = spec.metadata[section]
 
-    # Handle backward compatibility for tests (if old format exists)
-    if "builder" in spec.metadata:
-        metadata["builder"] = spec.metadata["builder"]
-
-    if "launcher" in spec.metadata and isinstance(spec.metadata["launcher"], dict):
-        # Merge old launcher metadata (for tests)
-        for key, value in spec.metadata["launcher"].items():
-            if key not in metadata["launcher"]:
-                metadata["launcher"][key] = value
-
     # Validate all paths use {workenv}
     return validate_metadata_dict(metadata)

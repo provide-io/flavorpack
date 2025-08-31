@@ -15,8 +15,8 @@ echo ""
 PRETASTER_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$PRETASTER_DIR"
 
-# Get helpers directory
-HELPERS_DIR="$(cd "$PRETASTER_DIR/.." && pwd)"
+# Get ingredients directory (where helpers are built)
+HELPERS_DIR="$(cd "$PRETASTER_DIR/../../ingredients" && pwd)"
 
 # Setup
 LOGS_DIR=$(ensure_logs_dir)
@@ -43,13 +43,33 @@ test_combination() {
     echo "$emoji ────────────────────────────────────────────────────────────────────────────────" | tee -a "$log_file"
     echo "$emoji 📝 Logging to: $log_file" | tee -a "$log_file"
     
+    # Clear cache for this package to avoid checksum mismatches from rebuilds
+    # Each rebuild creates a new checksum due to timestamps, so we need fresh cache
+    # The cache directories are based on the output package name
+    local base_name="$(basename "$output" .psp)"
+    
+    # Clear cache in both XDG location (Go launcher) and macOS location (Rust launcher)
+    for cache_base in ~/.cache/flavor/workenv ~/Library/Caches/flavor/workenv; do
+        if [[ -d "$cache_base" ]]; then
+            # Remove the dot-prefixed cache directory (contains checksums and metadata)
+            rm -rf "$cache_base/.$base_name.pspf" 2>/dev/null || true
+            # Remove the workenv directory (contains extracted files)
+            rm -rf "$cache_base/$base_name" 2>/dev/null || true
+            
+            # Also clear pretaster-combination cache since that's the package name in the manifest
+            rm -rf "$cache_base/.pretaster-combination.pspf" 2>/dev/null || true
+            rm -rf "$cache_base/pretaster-combination" 2>/dev/null || true
+        fi
+    done
+    
     # Build the package
     # Use test-combination.json for CI compatibility (test-taster-lite requires taster.psp which isn't available in CI)
     local config="configs/test-combination.json"
     if build_package "$builder_bin" "$launcher_bin" "$config" "$output" >> "$log_file" 2>&1; then
         echo "$emoji   ✅ Build successful: $output" | tee -a "$log_file"
     else
-        echo "$emoji   ❌ Build failed!" | tee -a "$log_file"
+        local exit_code=$?
+        echo "$emoji   ❌ Build failed with exit code $exit_code!" | tee -a "$log_file"
         return 1
     fi
     
@@ -109,12 +129,19 @@ test_combination() {
     echo "$emoji 📄 Full log saved to: $log_file" | tee -a "$log_file"
 }
 
+# Detect platform
+OS=$(uname -s | tr '[:upper:]' '[:lower:]')
+ARCH=$(uname -m)
+[ "$ARCH" = "x86_64" ] && ARCH="amd64"
+[ "$ARCH" = "aarch64" ] && ARCH="arm64"
+PLATFORM="${OS}_${ARCH}"
+
 # Test all combinations
 combinations=(
-    "rs:rs:../bin/flavor-rs-builder:../bin/flavor-rs-launcher:🦀🦀"
-    "rs:go:../bin/flavor-rs-builder:../bin/flavor-go-launcher:🦀🐹"
-    "go:rs:../bin/flavor-go-builder:../bin/flavor-rs-launcher:🐹🦀"
-    "go:go:../bin/flavor-go-builder:../bin/flavor-go-launcher:🐹🐹"
+    "rs:rs:$HELPERS_DIR/bin/flavor-rs-builder-$PLATFORM:$HELPERS_DIR/bin/flavor-rs-launcher-$PLATFORM:🦀🦀"
+    "rs:go:$HELPERS_DIR/bin/flavor-rs-builder-$PLATFORM:$HELPERS_DIR/bin/flavor-go-launcher-$PLATFORM:🦀🐹"
+    "go:rs:$HELPERS_DIR/bin/flavor-go-builder-$PLATFORM:$HELPERS_DIR/bin/flavor-rs-launcher-$PLATFORM:🐹🦀"
+    "go:go:$HELPERS_DIR/bin/flavor-go-builder-$PLATFORM:$HELPERS_DIR/bin/flavor-go-launcher-$PLATFORM:🐹🐹"
 )
 
 for combo in "${combinations[@]}"; do
