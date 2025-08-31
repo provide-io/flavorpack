@@ -54,7 +54,7 @@ def inspect_command(package_file: str, output_json: bool) -> None:
                     "slots": [
                         {
                             "index": i,
-                            "name": slots_metadata[i].get("name", f"slot_{i}")
+                            "name": slots_metadata[i].get("id", f"slot_{i}")
                             if i < len(slots_metadata)
                             else f"slot_{i}",
                             "purpose": slots_metadata[i].get("purpose", "unknown")

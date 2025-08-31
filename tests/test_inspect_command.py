@@ -130,13 +130,13 @@ class TestInspectCommand:
         slots = data["slots"]
         for slot in slots:
             assert "index" in slot
-            assert "name" in slot
+            assert "name" in slot  # This is the ID field returned as "name" in JSON
             assert "purpose" in slot
             assert "size" in slot
             assert "encoding" in slot
 
-        # Check that we have expected slot names
-        slot_names = [s["name"] for s in slots]
-        assert "uv" in slot_names
-        assert "python" in slot_names
-        assert "wheels" in slot_names
+        # Check that we have expected slot IDs
+        slot_ids = [s["name"] for s in slots]  # JSON returns ID as "name" for compatibility
+        assert "uv" in slot_ids
+        assert "python" in slot_ids
+        assert "wheels" in slot_ids
