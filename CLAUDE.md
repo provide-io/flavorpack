@@ -159,3 +159,4 @@ pytest -m security
 - make sure to remember to use debug/trace logging instead of "print" statements when debugging.
 - use pretaste instead of "simple tests." no PSPF tests in /tmp. use pretaster or taster.
 - nope. you will *NEVER* hardcode permissions directly into code.
+- flavorpack is the name of the package. `flavor` is the actual tool/API.
