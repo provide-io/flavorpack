@@ -477,11 +477,15 @@ name = "foo"
 version = "0.1.0"
 source = { virtual = "workenv/foo" }
 dependencies = [
+    { name = "cryptography" },
     { name = "grpcio" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "grpcio", specifier = ">=1.74.0" }]
+requires-dist = [
+    { name = "cryptography", specifier = ">=45.0.6" },
+    { name = "grpcio", specifier = ">=1.74.0" },
+]
 
 [[package]]
 name = "grpcio"
