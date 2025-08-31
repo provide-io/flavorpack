@@ -300,29 +300,29 @@ class PythonPackager:
                 payload_uv = bin_dir / self.uv_exe
                 shutil.copy2(uv_host_path, str(payload_uv))
                 if not self.is_windows:
-                payload_uv.chmod(0o755)
-                # Strip extended attributes on macOS to avoid security issues
-                if get_os_name() == "darwin":
-                    run_command(["xattr", "-cr", str(payload_uv)], capture_output=True, check=False)
-            logger.info("📦➡️✅ Copied UV binary to payload", path=str(payload_uv))
+                    payload_uv.chmod(0o755)
+                    # Strip extended attributes on macOS to avoid security issues
+                    if get_os_name() == "darwin":
+                        run_command(["xattr", "-cr", str(payload_uv)], capture_output=True, check=False)
+                logger.info("📦➡️✅ Copied UV binary to payload", path=str(payload_uv))
 
-            # Also copy to work dir for Go/Rust packager compatibility
-            work_uv = work_dir / self.uv_exe
-            shutil.copy2(uv_host_path, str(work_uv))
-            if not self.is_windows:
-                work_uv.chmod(0o755)
-                # Strip extended attributes on macOS to avoid security issues
-                if get_os_name() == "darwin":
-                    run_command(["xattr", "-cr", str(work_uv)], capture_output=True, check=False)
-            artifacts["uv_binary"] = work_uv
-        else:
-            logger.warning(
-                "📦⚠️❌ UV not found on host system, package will require UV at runtime"
-            )
-            # We still need to provide UV somehow - this is a critical error for Python packages
-            raise FileNotFoundError(
-                "UV binary not found on host system. Cannot build Python package without UV."
-            )
+                # Also copy to work dir for Go/Rust packager compatibility
+                work_uv = work_dir / self.uv_exe
+                shutil.copy2(uv_host_path, str(work_uv))
+                if not self.is_windows:
+                    work_uv.chmod(0o755)
+                    # Strip extended attributes on macOS to avoid security issues
+                    if get_os_name() == "darwin":
+                        run_command(["xattr", "-cr", str(work_uv)], capture_output=True, check=False)
+                artifacts["uv_binary"] = work_uv
+            else:
+                logger.warning(
+                    "📦⚠️❌ UV not found on host system, package will require UV at runtime"
+                )
+                # We still need to provide UV somehow - this is a critical error for Python packages
+                raise FileNotFoundError(
+                    "UV binary not found on host system. Cannot build Python package without UV."
+                )
         if prep_bar:
             prep_bar.increment()
 
