@@ -146,6 +146,62 @@ class TestUVDownload:
                 with pytest.raises(FileNotFoundError, match="manylinux2014"):
                     packager.prepare_artifacts(work_path)
     
+    def test_download_uv_wheel_direct_fallback(self):
+        """Test that _download_uv_wheel falls back to direct download when pip fails."""
+        packager = PythonPackager(
+            manifest_dir=Path("/tmp"),
+            package_name="test",
+            entry_point="test:main",
+            build_config={},
+        )
+        
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            
+            # Mock pip to fail
+            mock_run = MagicMock()
+            mock_run.side_effect = Exception("pip not available")
+            
+            # Mock urllib to return fake PyPI data
+            fake_pypi_response = {
+                "info": {"version": "0.8.14"},
+                "releases": {
+                    "0.8.14": [
+                        {
+                            "filename": "uv-0.8.14-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+                            "url": "https://fake.url/uv.whl"
+                        }
+                    ]
+                }
+            }
+            
+            import json
+            from unittest.mock import mock_open
+            
+            with patch('flavor.packaging.python_packager.run_command', mock_run), \
+                 patch('flavor.packaging.python_packager.get_os_name', return_value='linux'), \
+                 patch('flavor.packaging.python_packager.get_arch_name', return_value='amd64'), \
+                 patch('urllib.request.urlopen') as mock_urlopen:
+                
+                # Mock PyPI JSON response
+                mock_pypi = MagicMock()
+                mock_pypi.read.return_value = json.dumps(fake_pypi_response).encode()
+                
+                # Mock wheel download
+                mock_wheel = MagicMock()
+                mock_wheel.read.return_value = b"fake wheel content"
+                
+                mock_urlopen.side_effect = [mock_pypi, mock_wheel]
+                
+                # The download should try pip first, fail, then try direct download
+                # Since we're mocking the URL download, it will fail on extraction
+                # but that's OK for this test
+                result = packager._download_uv_wheel(temp_path)
+                
+                # Verify that urlopen was called (fallback was attempted)
+                assert mock_urlopen.called
+                assert mock_urlopen.call_count >= 1  # At least PyPI JSON was fetched
+    
     def test_prepare_artifacts_non_linux_fallback(self):
         """Test that prepare_artifacts falls back to host UV on non-Linux."""
         packager = PythonPackager(
