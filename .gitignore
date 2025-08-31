@@ -46,3 +46,4 @@ helpers/pretaster/test-runner.sh
 bin/
 core
 *.local.json
+*.local.json

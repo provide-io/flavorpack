@@ -158,3 +158,4 @@ pytest -m security
 - you will remember to NEVER do ad-hoc signing unless SPECIFICALLY REQUESTED, or you suggest it and I approve.
 - make sure to remember to use debug/trace logging instead of "print" statements when debugging.
 - use pretaste instead of "simple tests." no PSPF tests in /tmp. use pretaster or taster.
+- nope. you will *NEVER* hardcode permissions directly into code.
