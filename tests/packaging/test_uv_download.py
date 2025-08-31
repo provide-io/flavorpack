@@ -158,9 +158,22 @@ class TestUVDownload:
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
             
-            # Mock pip to fail
-            mock_run = MagicMock()
-            mock_run.side_effect = Exception("pip not available")
+            # Mock run_command to fail on pip download but succeed on pip check
+            def mock_run_side_effect(*args, **kwargs):
+                cmd = args[0]
+                # Allow pip --version check to succeed
+                if "--version" in cmd:
+                    result = MagicMock()
+                    result.stdout = "pip 21.0.0"
+                    result.stderr = ""
+                    return result
+                # But fail on actual download
+                elif "download" in cmd:
+                    raise Exception("pip download failed")
+                # Default
+                return MagicMock()
+            
+            mock_run = MagicMock(side_effect=mock_run_side_effect)
             
             # Mock urllib to return fake PyPI data
             fake_pypi_response = {
