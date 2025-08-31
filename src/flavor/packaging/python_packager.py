@@ -145,25 +145,14 @@ class PythonPackager:
         logger.info("📦 Downloading manylinux2014-compatible UV wheel")
         
         with tempfile.TemporaryDirectory() as temp_dir:
-            # Determine platform tag for manylinux2014
-            arch = get_arch_name()
-            if arch == "amd64":
-                platform_tag = "manylinux2014_x86_64"
-            elif arch == "arm64":
-                platform_tag = "manylinux2014_aarch64"
-            else:
-                logger.warning(f"Unsupported architecture for UV download: {arch}")
-                return None
-            
-            # Download UV wheel using pip
-            download_cmd = [
-                sys.executable, "-m", "pip", "download",
-                "--dest", temp_dir,
-                "--only-binary", ":all:",
-                "--platform", platform_tag,
-                "--python-version", self.python_version,
-                "uv"
-            ]
+            # Use the existing _get_pypa_pip_download_cmd method
+            # This will automatically add manylinux2014 platform constraints on Linux
+            download_cmd = self._get_pypa_pip_download_cmd(
+                python_exe=Path(sys.executable),
+                dest_dir=Path(temp_dir),
+                packages=["uv"],
+                binary_only=True
+            )
             
             try:
                 logger.debug("Running UV download command", cmd=" ".join(download_cmd))
