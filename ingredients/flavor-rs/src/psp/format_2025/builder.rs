@@ -498,9 +498,8 @@ pub fn build(manifest_path: &Path, output_path: &Path, options: BuildOptions) ->
     // Step 5: Return to end of data and write trailing magic
     out.seek(SeekFrom::Start(end_pos))?;
 
-    // Write emoji magic (both package and wand)
-    out.write_all(PACKAGE_EMOJI_BYTES)?;
-    out.write_all(MAGIC_WAND_EMOJI_BYTES)?;
+    // Write trailing magic (emoji bytes, XOR decoded)
+    out.write_all(&*TRAILING_MAGIC)?;
 
     // Update package size
     let final_pos = out.stream_position()?;

@@ -1,6 +1,11 @@
 //! Utility functions for flavor
 
+pub mod xor;
+
 use std::env;
+
+// Re-export XOR functions for convenience
+pub use xor::{xor_decode_default, xor_encode_default, XOR_KEY};
 
 /// Check if an environment variable is set to a truthy value
 /// Accepts: "1", "true", "on", "yes", "t" (case insensitive)

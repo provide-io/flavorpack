@@ -35,8 +35,10 @@ class TestEnhancedConstants:
 
     def test_trailing_magic(self):
         """Trailing magic should have both emojis."""
-        assert "📦" in TRAILING_MAGIC
-        assert "🪄" in TRAILING_MAGIC
+        # TRAILING_MAGIC is now bytes from XOR decode
+        assert b"\xf0\x9f\x93\xa6" in TRAILING_MAGIC  # 📦 in UTF-8
+        assert b"\xf0\x9f\xaa\x84" in TRAILING_MAGIC  # 🪄 in UTF-8
+        assert len(TRAILING_MAGIC) == 8  # Both emojis = 8 bytes
 
 
 class TestEnhancedIndex:

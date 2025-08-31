@@ -4,13 +4,33 @@
 
 import sys
 
+from flavor.utils.xor import xor_decode, xor_encode
+
+# Raw magic bytes (not exported, only for encoding)
+_PSPF_MAGIC_RAW = b"PSPF2025"
+_PACKAGE_EMOJI_RAW = bytes([0xF0, 0x9F, 0x93, 0xA6])  # 📦
+_MAGIC_WAND_EMOJI_RAW = bytes([0xF0, 0x9F, 0xAA, 0x84])  # 🪄
+_TRAILING_MAGIC_RAW = _PACKAGE_EMOJI_RAW + _MAGIC_WAND_EMOJI_RAW
+
+# XOR'd constants (stored to prevent literals in binary)
+PSPF_MAGIC_ENCODED = xor_encode(_PSPF_MAGIC_RAW)
+TRAILING_MAGIC_ENCODED = xor_encode(_TRAILING_MAGIC_RAW)
+
+# Decoded values for runtime use
+PSPF_MAGIC = xor_decode(PSPF_MAGIC_ENCODED)  # 8 bytes, standard format
+TRAILING_MAGIC = xor_decode(TRAILING_MAGIC_ENCODED)  # 📦🪄 decoded at runtime
+
+# Display-only emoji constants (for UI/logging)
+PACKAGE_EMOJI = "📦"
+MAGIC_WAND_EMOJI = "🪄"
+
 # Format constants
-PSPF_MAGIC = b"PSPF2025"  # 8 bytes, standard format
 PSPF_VERSION = 0x20250001  # Keep as v1
 HEADER_SIZE = 8192  # Future-proof 8KB index block
 SLOT_DESCRIPTOR_SIZE = 64  # Descriptor size
 TRAILING_MAGIC_SIZE = 8  # 📦🪄 = 8 bytes UTF-8
 SLOT_ALIGNMENT = 8  # Minimum alignment
+EMOJI_MAGIC_SIZE = 8  # Size in bytes
 
 # Platform-specific page sizes
 if sys.platform == "darwin":
@@ -25,11 +45,22 @@ else:
     PAGE_SIZE = 4096
     CACHE_LINE = 64
 
-# Magic endings - package and wand emojis
-PACKAGE_EMOJI = "📦"
-MAGIC_WAND_EMOJI = "🪄"
-TRAILING_MAGIC = "📦🪄"  # Both emojis at end of bundle
-EMOJI_MAGIC_SIZE = len(TRAILING_MAGIC.encode("utf-8"))  # Size in bytes
+# Disk space safety multiplier - require 2x compressed size for extraction
+DISK_SPACE_MULTIPLIER = 2
+
+# Path constants  
+PSPF_HIDDEN_PREFIX = "."
+PSPF_SUFFIX = ".pspf"
+INSTANCE_DIR = "instance"
+PACKAGE_DIR = "package"
+TMP_DIR = "tmp"
+EXTRACT_DIR = "extract"
+LOG_DIR = "log"
+LOCK_FILE = "lock"
+COMPLETE_FILE = "complete"
+PACKAGE_CHECKSUM_FILE = "package.checksum"
+PSP_METADATA_FILE = "psp.json"
+INDEX_METADATA_FILE = "index.json"
 
 # Encoding types - describe the actual format of slot data
 ENCODING_RAW = 0  # Raw uncompressed data

@@ -80,7 +80,7 @@ def create_slot_tarballs(
         with tarfile.open(wheels_tarball, "w:gz") as tar:
             wheels_dir = artifacts["payload_dir"] / "wheels"
             for wheel in wheels_dir.glob("*.whl"):
-                tar.add(wheel, arcname=wheel.name)
+                tar.add(wheel, arcname=f"wheels/{wheel.name}")
         slots["wheels"] = wheels_tarball
         if bar:
             bar.increment()
@@ -167,15 +167,15 @@ def create_builder_manifest(
                 "source": str(slots["python"]),
                 "encoding": "tgz",
                 "purpose": "runtime",
-                "lifecycle": "runtime",
-                "target": ".",
+                "lifecycle": "cache",
+                "target": "{workenv}",
             },
             {
                 "id": "wheels",
                 "source": str(slots["wheels"]),
                 "encoding": "tgz",
                 "purpose": "payload",
-                "lifecycle": "cache",
+                "lifecycle": "init",
                 "target": "wheels",
             },
         ],
@@ -396,7 +396,7 @@ def create_python_slot_tarballs(
         with tarfile.open(wheels_tarball, "w:gz") as tar:
             wheels_dir = artifacts["payload_dir"] / "wheels"
             for wheel in wheels_dir.glob("*.whl"):
-                tar.add(wheel, arcname=wheel.name)
+                tar.add(wheel, arcname=f"wheels/{wheel.name}")
         if bar:
             bar.increment()
 
