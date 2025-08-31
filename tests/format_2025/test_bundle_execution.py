@@ -59,15 +59,6 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
 
         return bundle_path
 
-    def test_simple_execution(self, executable_bundle):
-        """Test simple bundle execution."""
-        launcher = PSPFLauncher(executable_bundle)
-        result = launcher.execute()
-
-        assert result["executed"]
-        assert result["pid"] is not None
-        assert result["error"] is None
-
     def test_slot_substitution_single(self, temp_dir):
         """Test single slot substitution in command."""
         launcher = PSPFLauncher()

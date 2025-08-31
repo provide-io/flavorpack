@@ -103,11 +103,9 @@ class PSPFReader:
         if isinstance(magic_data, memoryview):
             magic_data = bytes(magic_data)
 
-        try:
-            # Check if it matches the expected emoji magic
-            return magic_data.decode("utf-8") == TRAILING_MAGIC
-        except (UnicodeDecodeError, AttributeError):
-            return False
+        # TRAILING_MAGIC is now bytes from XOR decode
+        # Direct bytes comparison
+        return magic_data == TRAILING_MAGIC
 
     def detect_launcher_size(self) -> int:
         """Detect launcher size by finding index block."""
