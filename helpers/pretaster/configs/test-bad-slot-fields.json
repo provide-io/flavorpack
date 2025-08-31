@@ -1,0 +1,12 @@
+{
+  "name": "test-bad-fields",
+  "version": "1.0.0",
+  "command": "echo test",
+  "slots": [
+    {
+      "name": "test-slot",
+      "path": "scripts/echo_test.py",
+      "target": "test.py"
+    }
+  ]
+}

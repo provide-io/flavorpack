@@ -23,11 +23,6 @@ fn main() {
 }
 
 fn run() -> i32 {
-    // Debug: Simple stderr output to verify execution
-    if env::var("FLAVOR_LOG_LEVEL").is_ok() || env::var("FLAVOR_LAUNCHER_LOG_LEVEL").is_ok() {
-        eprintln!("DEBUG: Launcher run() started");
-    }
-    
     // Initialize logging as early as possible for debugging
     if let Ok(level) = env::var("FLAVOR_LAUNCHER_LOG_LEVEL") {
         flavor::logger::JsonLogger::init_with_level(&level, "FLAVOR_LAUNCHER_LOG_LEVEL");
@@ -37,6 +32,7 @@ fn run() -> i32 {
         flavor::logger::JsonLogger::init();
     }
     
+    log::debug!("🚀 Launcher process started");
     log::trace!("Launcher starting");
     
     // --- Argument and Environment Parsing ---
@@ -50,9 +46,12 @@ fn run() -> i32 {
     }
     
     let exe_path = match env::current_exe() {
-        Ok(path) => path,
+        Ok(path) => {
+            log::debug!("📍 Executable path: {:?}", path);
+            path
+        },
         Err(e) => {
-            eprintln!("Failed to get executable path: {}", e);
+            log::error!("Failed to get executable path: {}", e);
             return EXIT_IO_ERROR;
         }
     };
@@ -137,9 +136,11 @@ fn run() -> i32 {
     // Check if this is a bundle being run with special commands
     // These commands should work even without CLI mode for compatibility
     if args.len() > 1 {
+        log::trace!("Checking for special commands, arg[1] = {}", args[1]);
         match args[1].as_str() {
             "info" => {
                 log::debug!("Running info command on bundle");
+                log::trace!("Calling show_info for: {:?}", exe_path);
                 return flavor::psp::format_2025::cli::show_info(&exe_path);
             }
             "verify" => {
@@ -164,9 +165,14 @@ fn run() -> i32 {
         workdir: None,
     };
 
+    log::debug!("Attempting to launch package: {:?}", exe_path);
     match launch_package(&exe_path, &remaining_args, options) {
-        Ok(code) => code,
+        Ok(code) => {
+            log::debug!("Package launched successfully, exit code: {}", code);
+            code
+        },
         Err(e) => {
+            log::error!("Launch error: {}", e);
             eprintln!("Launch error: {}", e);
             match e.to_string() {
                 s if s.contains("PSPF") || s.contains("format") => EXIT_PSPF_ERROR,
