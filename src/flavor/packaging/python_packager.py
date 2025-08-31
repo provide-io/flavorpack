@@ -6,7 +6,6 @@
 import json
 import os
 from pathlib import Path
-import platform
 import shutil
 import tarfile
 import tempfile
@@ -15,8 +14,13 @@ from typing import Any
 
 from pyvider.telemetry import logger
 
+from flavor.utils import (
+    get_arch_name,
+    get_os_name,
+    get_platform_string,
+    run_command,
+)
 from flavor.utils.archive import deterministic_filter
-from flavor.utils.subprocess import run_command
 
 
 class PythonPackager:
@@ -50,9 +54,7 @@ class PythonPackager:
         self.progress = progress_reporter
 
         # Platform-specific paths
-        import platform as platform_lib
-
-        self.is_windows = platform_lib.system() == "Windows"
+        self.is_windows = get_os_name() == "windows"
         self.venv_bin_dir = "Scripts" if self.is_windows else "bin"
         self.uv_exe = "uv.exe" if self.is_windows else "uv"
 
@@ -107,14 +109,13 @@ class PythonPackager:
         
         # For Linux builds, explicitly request manylinux2014 wheels for maximum compatibility
         # manylinux2014 = manylinux_2_17 = glibc 2.17+ (CentOS 7, Amazon Linux 2, Ubuntu 14.04+)
-        import platform as platform_lib
-        if platform_lib.system() == "Linux" and binary_only:
-            machine = platform_lib.machine()
+        if get_os_name() == "linux" and binary_only:
+            arch = get_arch_name()
             
             # Specify manylinux2014 platform for broad compatibility
-            if machine == "x86_64":
+            if arch == "amd64":
                 cmd.extend(["--platform", "manylinux2014_x86_64"])
-            elif machine == "aarch64":
+            elif arch == "arm64":
                 cmd.extend(["--platform", "manylinux2014_aarch64"])
             
             # Also specify Python version to match our target
@@ -199,20 +200,18 @@ class PythonPackager:
 
         # Download UV wheel for the target platform instead of copying from host
         # This ensures we get a UV binary compatible with manylinux2014
-        import platform as platform_lib
-        
         uv_downloaded = False
-        if platform_lib.system() == "Linux":
+        if get_os_name() == "linux":
             # Download UV wheel for manylinux2014 compatibility
             logger.info("📦 Downloading UV wheel for Linux platform")
             
             # Create a temporary venv to download UV
             with tempfile.TemporaryDirectory() as temp_uv_dir:
                 # Use pip to download UV wheel with manylinux2014 platform
-                machine = platform_lib.machine()
-                if machine == "x86_64":
+                arch = get_arch_name()
+                if arch == "amd64":
                     platform_tag = "manylinux2014_x86_64"
-                elif machine == "aarch64":
+                elif arch == "arm64":
                     platform_tag = "manylinux2014_aarch64"
                 else:
                     platform_tag = None
@@ -297,9 +296,8 @@ class PythonPackager:
             if not self.is_windows:
                 payload_uv.chmod(0o755)
                 # Strip extended attributes on macOS to avoid security issues
-                if platform.system() == "Darwin":
-                    import subprocess
-                    subprocess.run(["xattr", "-cr", str(payload_uv)], capture_output=True, check=False)
+                if get_os_name() == "darwin":
+                    run_command(["xattr", "-cr", str(payload_uv)], capture_output=True, check=False)
             logger.info("📦➡️✅ Copied UV binary to payload", path=str(payload_uv))
 
             # Also copy to work dir for Go/Rust packager compatibility
@@ -308,9 +306,8 @@ class PythonPackager:
             if not self.is_windows:
                 work_uv.chmod(0o755)
                 # Strip extended attributes on macOS to avoid security issues
-                if platform.system() == "Darwin":
-                    import subprocess
-                    subprocess.run(["xattr", "-cr", str(work_uv)], capture_output=True, check=False)
+                if get_os_name() == "darwin":
+                    run_command(["xattr", "-cr", str(work_uv)], capture_output=True, check=False)
             artifacts["uv_binary"] = work_uv
         else:
             logger.warning(
@@ -757,16 +754,14 @@ class PythonPackager:
 
     def _create_python_placeholder(self, python_tgz: Path) -> None:
         """Download and package Python distribution using UV."""
-        import platform as platform_module
-
         logger.info(
             "📦📥🚀 Starting Python download and packaging", version=self.python_version
         )
         logger.debug("📁🎯📋 Target output", path=str(python_tgz))
         logger.debug(
             "💻🔍📋 Platform info",
-            system=platform_module.system(),
-            machine=platform_module.machine(),
+            system=get_os_name(),
+            machine=get_arch_name(),
         )
 
         python_spinner = None
