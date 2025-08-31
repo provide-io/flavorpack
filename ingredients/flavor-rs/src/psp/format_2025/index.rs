@@ -8,8 +8,7 @@ use crate::exceptions::{FlavorError, Result};
 #[repr(C, packed)]
 #[derive(Clone)]
 pub struct Index {
-    // Core identification (16 bytes)
-    pub format_magic: [u8; 8], // "PSPF2025"
+    // Core identification (8 bytes)
     pub format_version: u32,   // 0x20250001
     pub index_checksum: u32,   // Adler-32 of index block (with this field as 0)
 
@@ -63,14 +62,13 @@ pub struct Index {
     pub future_crypto: [u8; 512], // Reserved for post-quantum signatures
 
     // Reserved for future use (6808 bytes)
-    pub reserved: [u8; 6808], // Large buffer for future expansion
+    pub reserved: [u8; 6816], // Large buffer for future expansion
 }
 
 impl Index {
     /// Create a new index with defaults
     pub fn new() -> Self {
         Index {
-            format_magic: PSPF_MAGIC,
             format_version: PSPF_VERSION,
             index_checksum: 0,
             package_size: 0,
@@ -108,12 +106,12 @@ impl Index {
             compatibility: PSPF_VERSION,
             protocol_version: 1,
             future_crypto: [0; 512],
-            reserved: [0; 6808],
+            reserved: [0; 6816],
         }
     }
 
-    /// Parse index from bytes
-    pub fn parse(data: &[u8]) -> Result<Self> {
+    /// Unpack index from bytes
+    pub fn unpack(data: &[u8]) -> Result<Self> {
         if data.len() != HEADER_SIZE {
             return Err(FlavorError::Generic(format!(
                 "Invalid index size: {} != {}",
@@ -127,29 +125,28 @@ impl Index {
         use std::convert::TryInto;
 
         let mut index = Index::new();
-        index.format_magic.copy_from_slice(&data[0..8]);
-        index.format_version = u32::from_le_bytes(data[8..12].try_into()
+        index.format_version = u32::from_le_bytes(data[0..4].try_into()
             .map_err(|_| FlavorError::Generic("Invalid format version bytes".into()))?);
-        index.index_checksum = u32::from_le_bytes(data[12..16].try_into()
+        index.index_checksum = u32::from_le_bytes(data[4..8].try_into()
             .map_err(|_| FlavorError::Generic("Invalid index checksum bytes".into()))?);
-        index.package_size = u64::from_le_bytes(data[16..24].try_into()
+        index.package_size = u64::from_le_bytes(data[8..16].try_into()
             .map_err(|_| FlavorError::Generic("Invalid package size bytes".into()))?);
-        index.launcher_size = u64::from_le_bytes(data[24..32].try_into()
+        index.launcher_size = u64::from_le_bytes(data[16..24].try_into()
             .map_err(|_| FlavorError::Generic("Invalid launcher size bytes".into()))?);
 
         // Debug: Log the raw bytes we're parsing for metadata offset and size
         debug!(
-            "Raw bytes at offset 32-40 (metadata_offset): {:02x?}",
-            &data[32..40]
+            "Raw bytes at offset 24-32 (metadata_offset): {:02x?}",
+            &data[24..32]
         );
         debug!(
-            "Raw bytes at offset 40-48 (metadata_size): {:02x?}",
-            &data[40..48]
+            "Raw bytes at offset 32-40 (metadata_size): {:02x?}",
+            &data[32..40]
         );
 
-        index.metadata_offset = u64::from_le_bytes(data[32..40].try_into()
+        index.metadata_offset = u64::from_le_bytes(data[24..32].try_into()
             .map_err(|_| FlavorError::Generic("Invalid metadata offset bytes".into()))?);
-        index.metadata_size = u64::from_le_bytes(data[40..48].try_into()
+        index.metadata_size = u64::from_le_bytes(data[32..40].try_into()
             .map_err(|_| FlavorError::Generic("Invalid metadata size bytes".into()))?);
 
         // Copy to locals before logging to avoid alignment issues
@@ -157,124 +154,123 @@ impl Index {
         let meta_sz = index.metadata_size;
         debug!("Parsed metadata_offset: 0x{:016x} ({})", meta_off, meta_off);
         debug!("Parsed metadata_size: {} bytes", meta_sz);
-        index.slot_table_offset = u64::from_le_bytes(data[48..56].try_into()
+        index.slot_table_offset = u64::from_le_bytes(data[40..48].try_into()
             .map_err(|_| FlavorError::Generic("Invalid slot table offset bytes".into()))?);
-        index.slot_table_size = u64::from_le_bytes(data[56..64].try_into()
+        index.slot_table_size = u64::from_le_bytes(data[48..56].try_into()
             .map_err(|_| FlavorError::Generic("Invalid slot table size bytes".into()))?);
-        index.slot_count = u32::from_le_bytes(data[64..68].try_into()
+        index.slot_count = u32::from_le_bytes(data[56..60].try_into()
             .map_err(|_| FlavorError::Generic("Invalid slot count bytes".into()))?);
-        index.flags = u32::from_le_bytes(data[68..72].try_into()
+        index.flags = u32::from_le_bytes(data[60..64].try_into()
             .map_err(|_| FlavorError::Generic("Invalid flags bytes".into()))?);
-        index.public_key.copy_from_slice(&data[72..104]);
-        index.metadata_checksum.copy_from_slice(&data[104..136]);
-        index.integrity_signature.copy_from_slice(&data[136..648]);
+        index.public_key.copy_from_slice(&data[64..96]);
+        index.metadata_checksum.copy_from_slice(&data[96..128]);
+        index.integrity_signature.copy_from_slice(&data[128..640]);
 
         // Parse performance hints
-        index.access_mode = data[648];
-        index.cache_strategy = data[649];
-        index.encoding_type = data[650];
-        index.encryption_type = data[651];
-        index.page_size = u32::from_le_bytes(data[652..656].try_into()
+        index.access_mode = data[640];
+        index.cache_strategy = data[641];
+        index.encoding_type = data[642];
+        index.encryption_type = data[643];
+        index.page_size = u32::from_le_bytes(data[644..648].try_into()
             .map_err(|_| FlavorError::Generic("Invalid page size bytes".into()))?);
-        index.max_memory = u64::from_le_bytes(data[656..664].try_into()
+        index.max_memory = u64::from_le_bytes(data[648..656].try_into()
             .map_err(|_| FlavorError::Generic("Invalid max memory bytes".into()))?);
-        index.min_memory = u64::from_le_bytes(data[664..672].try_into()
+        index.min_memory = u64::from_le_bytes(data[656..664].try_into()
             .map_err(|_| FlavorError::Generic("Invalid min memory bytes".into()))?);
-        index.cpu_features = u64::from_le_bytes(data[672..680].try_into()
+        index.cpu_features = u64::from_le_bytes(data[664..672].try_into()
             .map_err(|_| FlavorError::Generic("Invalid CPU features bytes".into()))?);
-        index.gpu_requirements = u64::from_le_bytes(data[680..688].try_into()
+        index.gpu_requirements = u64::from_le_bytes(data[672..680].try_into()
             .map_err(|_| FlavorError::Generic("Invalid GPU requirements bytes".into()))?);
-        index.numa_hints = u64::from_le_bytes(data[688..696].try_into()
+        index.numa_hints = u64::from_le_bytes(data[680..688].try_into()
             .map_err(|_| FlavorError::Generic("Invalid NUMA hints bytes".into()))?);
-        index.stream_chunk_size = u32::from_le_bytes(data[696..700].try_into()
+        index.stream_chunk_size = u32::from_le_bytes(data[688..692].try_into()
             .map_err(|_| FlavorError::Generic("Invalid stream chunk size bytes".into()))?);
-        index.padding1.copy_from_slice(&data[700..712]);
+        index.padding1.copy_from_slice(&data[692..704]);
 
         // Parse extended metadata
-        index.build_timestamp = u64::from_le_bytes(data[712..720].try_into()
+        index.build_timestamp = u64::from_le_bytes(data[704..712].try_into()
             .map_err(|_| FlavorError::Generic("Invalid build timestamp bytes".into()))?);
-        index.build_machine.copy_from_slice(&data[720..752]);
-        index.source_hash.copy_from_slice(&data[752..784]);
-        index.dependency_hash.copy_from_slice(&data[784..816]);
-        index.license_id.copy_from_slice(&data[816..832]);
-        index.provenance_uri.copy_from_slice(&data[832..840]);
+        index.build_machine.copy_from_slice(&data[712..744]);
+        index.source_hash.copy_from_slice(&data[744..776]);
+        index.dependency_hash.copy_from_slice(&data[776..808]);
+        index.license_id.copy_from_slice(&data[808..824]);
+        index.provenance_uri.copy_from_slice(&data[824..832]);
 
         // Parse capabilities
-        index.capabilities = u64::from_le_bytes(data[840..848].try_into()
+        index.capabilities = u64::from_le_bytes(data[832..840].try_into()
             .map_err(|_| FlavorError::Generic("Invalid capabilities bytes".into()))?);
-        index.requirements = u64::from_le_bytes(data[848..856].try_into()
+        index.requirements = u64::from_le_bytes(data[840..848].try_into()
             .map_err(|_| FlavorError::Generic("Invalid requirements bytes".into()))?);
-        index.extensions = u64::from_le_bytes(data[856..864].try_into()
+        index.extensions = u64::from_le_bytes(data[848..856].try_into()
             .map_err(|_| FlavorError::Generic("Invalid extensions bytes".into()))?);
-        index.compatibility = u32::from_le_bytes(data[864..868].try_into()
+        index.compatibility = u32::from_le_bytes(data[856..860].try_into()
             .map_err(|_| FlavorError::Generic("Invalid compatibility bytes".into()))?);
-        index.protocol_version = u32::from_le_bytes(data[868..872].try_into()
+        index.protocol_version = u32::from_le_bytes(data[860..864].try_into()
             .map_err(|_| FlavorError::Generic("Invalid protocol version bytes".into()))?);
 
         // Parse future crypto and reserved
-        index.future_crypto.copy_from_slice(&data[872..1384]);
-        index.reserved.copy_from_slice(&data[1384..8192]);
+        index.future_crypto.copy_from_slice(&data[864..1376]);
+        index.reserved.copy_from_slice(&data[1376..8192]);
 
         Ok(index)
     }
 
-    /// Serialize index to bytes
-    pub fn to_bytes(&self) -> Vec<u8> {
+    /// Pack index to bytes
+    pub fn pack(&self) -> Vec<u8> {
         let mut bytes = vec![0u8; HEADER_SIZE];
 
         // Pack fields manually to ensure correct byte order
-        bytes[0..8].copy_from_slice(&self.format_magic);
-        bytes[8..12].copy_from_slice(&self.format_version.to_le_bytes());
-        bytes[12..16].copy_from_slice(&self.index_checksum.to_le_bytes());
-        bytes[16..24].copy_from_slice(&self.package_size.to_le_bytes());
-        bytes[24..32].copy_from_slice(&self.launcher_size.to_le_bytes());
-        bytes[32..40].copy_from_slice(&self.metadata_offset.to_le_bytes());
-        bytes[40..48].copy_from_slice(&self.metadata_size.to_le_bytes());
-        bytes[48..56].copy_from_slice(&self.slot_table_offset.to_le_bytes());
-        bytes[56..64].copy_from_slice(&self.slot_table_size.to_le_bytes());
-        bytes[64..68].copy_from_slice(&self.slot_count.to_le_bytes());
-        bytes[68..72].copy_from_slice(&self.flags.to_le_bytes());
-        bytes[72..104].copy_from_slice(&self.public_key);
-        bytes[104..136].copy_from_slice(&self.metadata_checksum);
-        bytes[136..648].copy_from_slice(&self.integrity_signature);
+        bytes[0..4].copy_from_slice(&self.format_version.to_le_bytes());
+        bytes[4..8].copy_from_slice(&self.index_checksum.to_le_bytes());
+        bytes[8..16].copy_from_slice(&self.package_size.to_le_bytes());
+        bytes[16..24].copy_from_slice(&self.launcher_size.to_le_bytes());
+        bytes[24..32].copy_from_slice(&self.metadata_offset.to_le_bytes());
+        bytes[32..40].copy_from_slice(&self.metadata_size.to_le_bytes());
+        bytes[40..48].copy_from_slice(&self.slot_table_offset.to_le_bytes());
+        bytes[48..56].copy_from_slice(&self.slot_table_size.to_le_bytes());
+        bytes[56..60].copy_from_slice(&self.slot_count.to_le_bytes());
+        bytes[60..64].copy_from_slice(&self.flags.to_le_bytes());
+        bytes[64..96].copy_from_slice(&self.public_key);
+        bytes[96..128].copy_from_slice(&self.metadata_checksum);
+        bytes[128..640].copy_from_slice(&self.integrity_signature);
 
         // Pack performance hints
-        bytes[648] = self.access_mode;
-        bytes[649] = self.cache_strategy;
-        bytes[650] = self.encoding_type;
-        bytes[651] = self.encryption_type;
-        bytes[652..656].copy_from_slice(&self.page_size.to_le_bytes());
-        bytes[656..664].copy_from_slice(&self.max_memory.to_le_bytes());
-        bytes[664..672].copy_from_slice(&self.min_memory.to_le_bytes());
-        bytes[672..680].copy_from_slice(&self.cpu_features.to_le_bytes());
-        bytes[680..688].copy_from_slice(&self.gpu_requirements.to_le_bytes());
-        bytes[688..696].copy_from_slice(&self.numa_hints.to_le_bytes());
-        bytes[696..700].copy_from_slice(&self.stream_chunk_size.to_le_bytes());
-        bytes[700..712].copy_from_slice(&self.padding1);
+        bytes[640] = self.access_mode;
+        bytes[641] = self.cache_strategy;
+        bytes[642] = self.encoding_type;
+        bytes[643] = self.encryption_type;
+        bytes[644..648].copy_from_slice(&self.page_size.to_le_bytes());
+        bytes[648..656].copy_from_slice(&self.max_memory.to_le_bytes());
+        bytes[656..664].copy_from_slice(&self.min_memory.to_le_bytes());
+        bytes[664..672].copy_from_slice(&self.cpu_features.to_le_bytes());
+        bytes[672..680].copy_from_slice(&self.gpu_requirements.to_le_bytes());
+        bytes[680..688].copy_from_slice(&self.numa_hints.to_le_bytes());
+        bytes[688..692].copy_from_slice(&self.stream_chunk_size.to_le_bytes());
+        bytes[692..704].copy_from_slice(&self.padding1);
 
         // Pack extended metadata
-        bytes[712..720].copy_from_slice(&self.build_timestamp.to_le_bytes());
-        bytes[720..752].copy_from_slice(&self.build_machine);
-        bytes[752..784].copy_from_slice(&self.source_hash);
-        bytes[784..816].copy_from_slice(&self.dependency_hash);
-        bytes[816..832].copy_from_slice(&self.license_id);
-        bytes[832..840].copy_from_slice(&self.provenance_uri);
+        bytes[704..712].copy_from_slice(&self.build_timestamp.to_le_bytes());
+        bytes[712..744].copy_from_slice(&self.build_machine);
+        bytes[744..776].copy_from_slice(&self.source_hash);
+        bytes[776..808].copy_from_slice(&self.dependency_hash);
+        bytes[808..824].copy_from_slice(&self.license_id);
+        bytes[824..832].copy_from_slice(&self.provenance_uri);
 
         // Pack capabilities
-        bytes[840..848].copy_from_slice(&self.capabilities.to_le_bytes());
-        bytes[848..856].copy_from_slice(&self.requirements.to_le_bytes());
-        bytes[856..864].copy_from_slice(&self.extensions.to_le_bytes());
-        bytes[864..868].copy_from_slice(&self.compatibility.to_le_bytes());
-        bytes[868..872].copy_from_slice(&self.protocol_version.to_le_bytes());
+        bytes[832..840].copy_from_slice(&self.capabilities.to_le_bytes());
+        bytes[840..848].copy_from_slice(&self.requirements.to_le_bytes());
+        bytes[848..856].copy_from_slice(&self.extensions.to_le_bytes());
+        bytes[856..860].copy_from_slice(&self.compatibility.to_le_bytes());
+        bytes[860..864].copy_from_slice(&self.protocol_version.to_le_bytes());
 
         // Pack future crypto and reserved
-        bytes[872..1384].copy_from_slice(&self.future_crypto);
-        bytes[1384..8192].copy_from_slice(&self.reserved);
+        bytes[864..1376].copy_from_slice(&self.future_crypto);
+        bytes[1376..8192].copy_from_slice(&self.reserved);
 
         // Calculate and update checksum (with checksum field zeroed)
-        bytes[12..16].copy_from_slice(&[0, 0, 0, 0]);
+        bytes[4..8].copy_from_slice(&[0, 0, 0, 0]);
         let checksum = adler::adler32_slice(&bytes[..]);
-        bytes[12..16].copy_from_slice(&checksum.to_le_bytes());
+        bytes[4..8].copy_from_slice(&checksum.to_le_bytes());
 
         bytes
     }
@@ -293,13 +289,13 @@ impl Index {
         let mut data_copy = raw_data.to_vec();
 
         // Log the checksum bytes before zeroing
-        let checksum_bytes = &raw_data[12..16];
+        let checksum_bytes = &raw_data[4..8];
         debug!(
             "Checksum bytes in index: {:02x} {:02x} {:02x} {:02x}",
             checksum_bytes[0], checksum_bytes[1], checksum_bytes[2], checksum_bytes[3]
         );
 
-        data_copy[12..16].copy_from_slice(&[0, 0, 0, 0]);
+        data_copy[4..8].copy_from_slice(&[0, 0, 0, 0]);
 
         // Log first 72 bytes of the index (core fields)
         debug!("First 72 bytes of index (with checksum zeroed):");
@@ -329,7 +325,7 @@ impl Index {
 
     /// Verify index checksum (deprecated - use verify_checksum_raw)
     pub fn verify_checksum(&self) -> bool {
-        let mut bytes = self.to_bytes();
+        let mut bytes = self.pack();
 
         // Zero out checksum field
         bytes[12..16].copy_from_slice(&[0, 0, 0, 0]);

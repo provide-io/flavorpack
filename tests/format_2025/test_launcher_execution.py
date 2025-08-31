@@ -18,7 +18,6 @@ from flavor.psp.format_2025 import (
     PSPFLauncher,
     PSPFReader,
     SlotMetadata,
-    PSPF_MAGIC,
     PSPF_VERSION,
     HEADER_SIZE,
     SLOT_ALIGNMENT,

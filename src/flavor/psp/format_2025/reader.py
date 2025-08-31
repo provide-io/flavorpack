@@ -28,10 +28,10 @@ from flavor.psp.format_2025.constants import (
     ENCODING_TGZ,
     HEADER_SIZE,
     MAGIC_TRAILER_SIZE,
-    PSPF_MAGIC,
+    MAGIC_WAND_EMOJI_BYTES,
+    PACKAGE_EMOJI_BYTES,
     PSPF_VERSION,
     SLOT_DESCRIPTOR_SIZE,
-    TRAILING_MAGIC,
 )
 from flavor.psp.format_2025.crypto import verify_signature
 from flavor.psp.format_2025.index import PSPFIndex
@@ -88,12 +88,12 @@ class PSPFReader:
         with default_lock_manager.lock(lock_file.name, timeout=timeout) as lock:
             yield lock
 
-    def verify_magic(self) -> bool:
-        """Verify trailing package and wand emoji magic."""
+    def verify_magic_trailer(self) -> bool:
+        """Verify MagicTrailer emoji bookends at end of file."""
         if not self._backend:
             self.open()
 
-        # Check emoji magic in MagicTrailer at end of file
+        # Read MagicTrailer at end of file
         file_size = self.bundle_path.stat().st_size
         trailer = self._backend.read_at(
             file_size - MAGIC_TRAILER_SIZE, MAGIC_TRAILER_SIZE
@@ -103,17 +103,18 @@ class PSPFReader:
         if isinstance(trailer, memoryview):
             trailer = bytes(trailer)
 
-        # Verify emoji magic in last 8 bytes of trailer
-        return trailer[8:] == TRAILING_MAGIC
+        # Verify emoji bookends (📦 at start, 🪄 at end)
+        return (trailer[:4] == PACKAGE_EMOJI_BYTES and 
+                trailer[-4:] == MAGIC_WAND_EMOJI_BYTES)
 
-    def read_magic_trailer(self) -> int:
-        """Read MagicTrailer and return index offset."""
+    def read_magic_trailer(self) -> bytes:
+        """Read MagicTrailer and extract index data."""
         if not self._backend:
             self.open()
 
         file_size = self.bundle_path.stat().st_size
         
-        # Read MagicTrailer (last 16 bytes)
+        # Read MagicTrailer (last 8200 bytes)
         trailer = self._backend.read_at(
             file_size - MAGIC_TRAILER_SIZE, MAGIC_TRAILER_SIZE
         )
@@ -122,20 +123,22 @@ class PSPFReader:
         if isinstance(trailer, memoryview):
             trailer = bytes(trailer)
 
-        # Verify emoji magic in last 8 bytes
-        if trailer[8:] != TRAILING_MAGIC:
-            raise ValueError("Invalid magic trailer: emoji magic not found")
+        # Verify emoji bookends
+        if trailer[:4] != PACKAGE_EMOJI_BYTES:
+            raise ValueError("Invalid MagicTrailer: missing 📦 at start")
+        if trailer[-4:] != MAGIC_WAND_EMOJI_BYTES:
+            raise ValueError("Invalid MagicTrailer: missing 🪄 at end")
 
-        # Extract index pointer from first 8 bytes (little-endian uint64)
-        index_offset = struct.unpack('<Q', trailer[:8])[0]
+        # Extract index from between emojis
+        index_data = trailer[4:4+HEADER_SIZE]
         
         logger.debug(
-            "🔍 Found index via MagicTrailer",
-            index_offset=index_offset,
+            "🔍 Found index in MagicTrailer",
+            trailer_size=MAGIC_TRAILER_SIZE,
             file_size=file_size
         )
         
-        return index_offset
+        return index_data
 
     def read_index(self) -> PSPFIndex:
         """Read and verify index block."""
@@ -145,14 +148,11 @@ class PSPFReader:
         if not self._backend:
             self.open()
 
-        index_offset = self.read_magic_trailer()
-        self._launcher_size = index_offset  # Store for compatibility
+        # Read index from MagicTrailer
+        index_data = self.read_magic_trailer()
         logger.debug(
-            "📦 Reading index from offset", offset=index_offset, size=HEADER_SIZE
+            "📦 Parsing index from MagicTrailer", size=HEADER_SIZE
         )
-
-        # Read index using backend
-        index_data = self._backend.read_at(index_offset, HEADER_SIZE)
 
         # Convert to bytes if memoryview
         if isinstance(index_data, memoryview):
@@ -175,8 +175,8 @@ class PSPFReader:
         expected_checksum = self._index.index_checksum
         if expected_checksum != 0:  # Only verify if checksum is set
             data_for_check = bytearray(index_data)
-            data_for_check[12:16] = (
-                b"\x00\x00\x00\x00"  # Zero out checksum field at correct offset
+            data_for_check[4:8] = (
+                b"\x00\x00\x00\x00"  # Zero out checksum field at offset 4 (after format_version)
             )
             actual_checksum = zlib.adler32(data_for_check)
 
@@ -440,7 +440,7 @@ class PSPFReader:
         """
         try:
             # Verify individual components
-            magic_valid = self.verify_magic()
+            magic_valid = self.verify_magic_trailer()
             checksums_valid = self.verify_all_checksums()
             signature_valid = self.verify_signature()
             valid = magic_valid and checksums_valid and signature_valid
@@ -552,7 +552,7 @@ def verify_bundle(bundle_path: Path) -> bool:
     """
     with PSPFReader(bundle_path, ACCESS_MMAP) as reader:
         # Check magic
-        if not reader.verify_magic():
+        if not reader.verify_magic_trailer():
             logger.error("❌ Invalid magic ending")
             return False
 

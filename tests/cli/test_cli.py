@@ -50,7 +50,7 @@ def test_cli_pack_and_verify(tmp_path: Path) -> None:
             "launcher_size": 1024 * 1024,  # 1 MB
             "slot_count": 1,
             "package": {"name": "test-package", "version": "1.0.0"},
-            "slots": [{"index": 0, "name": "main", "size": 512 * 1024}],
+            "slots": [{"index": 0, "id": "main", "size": 512 * 1024, "encoding": "raw"}],
             "signature_valid": True,
         }
         verify_result = runner.invoke(cli_main, ["verify", str(fake_package_file)])

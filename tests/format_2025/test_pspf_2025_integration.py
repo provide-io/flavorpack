@@ -103,7 +103,7 @@ class TestPSPFIntegration:
         reader.open()
 
         # Verify magic
-        assert reader.verify_magic()
+        assert reader.verify_magic_trailer()
 
         # Read index
         index = reader.read_index()
