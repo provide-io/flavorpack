@@ -165,6 +165,88 @@ class PythonPackager:
             cmd.extend(packages)
         return cmd
 
+    def _download_uv_wheel_via_url(self, dest_dir: Path) -> Path | None:
+        """Download UV wheel directly from PyPI using curl/wget.
+        
+        This is a fallback method when pip is not available.
+        
+        Args:
+            dest_dir: Directory to save UV binary to
+            
+        Returns:
+            Path to UV binary if successful, None otherwise
+        """
+        import json
+        import urllib.request
+        import shutil
+        
+        logger.info("Downloading UV wheel directly from PyPI")
+        
+        # Determine platform tag
+        arch = get_arch_name()
+        if arch == "amd64":
+            platform_tag = "manylinux_2_17_x86_64.manylinux2014_x86_64"
+        elif arch == "arm64":
+            platform_tag = "manylinux_2_17_aarch64.manylinux2014_aarch64"
+        else:
+            logger.error(f"Unsupported architecture for UV download: {arch}")
+            return None
+        
+        try:
+            # Get package info from PyPI
+            logger.debug("Fetching UV package info from PyPI")
+            with urllib.request.urlopen("https://pypi.org/pypi/uv/json") as response:
+                data = json.loads(response.read())
+            
+            # Find the right wheel
+            version = data["info"]["version"]
+            wheel_filename = None
+            wheel_url = None
+            
+            for file_info in data["releases"][version]:
+                filename = file_info["filename"]
+                if platform_tag in filename and filename.endswith(".whl"):
+                    wheel_filename = filename
+                    wheel_url = file_info["url"]
+                    logger.debug(f"Found matching wheel: {filename}")
+                    break
+            
+            if not wheel_url:
+                logger.error(f"No manylinux2014 wheel found for UV {version} on {platform_tag}")
+                return None
+            
+            # Download the wheel
+            wheel_path = Path(dest_dir) / wheel_filename
+            logger.info(f"Downloading {wheel_filename} from PyPI")
+            
+            with urllib.request.urlopen(wheel_url) as response, open(wheel_path, 'wb') as out_file:
+                shutil.copyfileobj(response, out_file)
+            
+            logger.info(f"✅ Downloaded UV wheel: {wheel_filename}")
+            
+            # Extract UV binary from wheel
+            import zipfile
+            with zipfile.ZipFile(wheel_path, 'r') as wheel_zip:
+                for name in wheel_zip.namelist():
+                    if name.endswith('/uv') or name == 'uv':
+                        uv_path = dest_dir / "uv"
+                        logger.debug(f"Extracting UV binary from {name}")
+                        with wheel_zip.open(name) as src, open(uv_path, 'wb') as dst:
+                            content = src.read()
+                            dst.write(content)
+                            logger.trace(f"Extracted UV binary, size: {len(content)} bytes")
+                        
+                        self._make_executable(uv_path)
+                        logger.info("✅ Successfully extracted UV binary")
+                        return uv_path
+            
+            logger.error("UV binary not found in wheel")
+            return None
+            
+        except Exception as e:
+            logger.error(f"Failed to download UV wheel via URL: {e}")
+            return None
+    
     def _download_uv_wheel(self, dest_dir: Path) -> Path | None:
         """Download manylinux2014-compatible UV wheel and extract binary.
         
@@ -275,11 +357,20 @@ class PythonPackager:
                 return None  # Let caller handle the error
                 
             except Exception as e:
-                logger.error(f"Failed to download UV wheel: {e}")
-                # Re-raise for Linux since UV is critical
-                if get_os_name() == "linux":
-                    raise
-                return None  # For non-Linux, we can fall back to host UV
+                logger.warning(f"Failed to download UV wheel via pip: {e}")
+                logger.info("Attempting direct download from PyPI as fallback")
+                
+                # Try direct download as fallback
+                try:
+                    return self._download_uv_wheel_via_url(dest_dir)
+                except Exception as fallback_error:
+                    logger.error(f"Direct download also failed: {fallback_error}")
+                    # Re-raise for Linux since UV is critical
+                    if get_os_name() == "linux":
+                        raise FileNotFoundError(
+                            f"Failed to download UV wheel via both pip and direct URL: {e}"
+                        ) from e
+                    return None  # For non-Linux, we can fall back to host UV
     
     def _find_uv_command(self, raise_if_not_found: bool = True) -> str | None:
         """Find the UV command.
