@@ -54,9 +54,9 @@ pub fn write_slot(
     let permissions = if let Some(perm_str) = &slot_info.permissions {
         // Parse octal string (e.g., "0755" or "755")
         u16::from_str_radix(perm_str.trim_start_matches("0o").trim_start_matches('0'), 8)
-            .unwrap_or(0o600)
+            .unwrap_or(DEFAULT_FILE_PERMS)
     } else {
-        0o600 // Default file permissions
+        DEFAULT_FILE_PERMS // Default file permissions
     };
 
     // Create descriptor
