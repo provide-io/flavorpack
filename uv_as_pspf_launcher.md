@@ -1,5 +1,9 @@
 # `uv` as a `pspf` Compliant Launcher
 
+> **Status: PROPOSAL - Not Implemented**  
+> This document describes a proposed enhancement that has not been implemented.
+> Last Updated: August 31, 2025
+
 This document outlines a proposal for `uv` to become a native launcher for the Progressive Secure Package Format (PSPF). This would be achieved by embedding latent launcher capabilities within the standard `uv` binary, which can be activated by a `pspf` builder.
 
 The core of this proposal is a "feature flag byte" within the `uv` executable. This allows a single, standard `uv` binary to be dynamically configured as a launcher by a third-party tool, without requiring a separate build of `uv`.
