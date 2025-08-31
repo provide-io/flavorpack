@@ -97,11 +97,6 @@ class TestUVDownload:
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
             
-            # Mock successful download with manylinux2014 wheel
-            mock_run = MagicMock()
-            mock_run.return_value.returncode = 0
-            mock_run.return_value.stdout = "Downloaded uv-0.8.14-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
-            
             # Create a fake wheel file
             fake_wheel = temp_path / "uv-0.8.14-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
             
@@ -111,8 +106,16 @@ class TestUVDownload:
                 # Add a fake UV binary
                 zf.writestr("uv/uv", b"fake uv binary content")
             
-            with patch('flavor.utils.subprocess.run_command', mock_run), \
-                 patch('pathlib.Path.glob', return_value=[fake_wheel]):
+            # Mock successful download with manylinux2014 wheel
+            mock_run = MagicMock()
+            mock_run.return_value.returncode = 0
+            mock_run.return_value.stdout = "Downloaded " + fake_wheel.name
+            mock_run.return_value.stderr = ""
+            
+            # Need to mock at the actual usage location in the module
+            with patch('flavor.packaging.python_packager.run_command', mock_run), \
+                 patch('flavor.packaging.python_packager.get_os_name', return_value='linux'), \
+                 patch('flavor.packaging.python_packager.get_arch_name', return_value='amd64'):
                 
                 result = packager._download_uv_wheel(temp_path)
                 
@@ -164,6 +167,17 @@ class TestUVDownload:
                  patch.object(packager, '_build_wheels'), \
                  patch.object(packager, '_create_metadata'), \
                  patch('tarfile.open'):
+                
+                # Create necessary directories and files to avoid FileNotFoundError
+                payload_dir = work_path / "payload"
+                payload_dir.mkdir()
+                metadata_dir = payload_dir / "metadata"
+                metadata_dir.mkdir()
+                
+                # Create dummy archives to avoid stat errors
+                (work_path / "payload.tgz").write_bytes(b"dummy")
+                (work_path / "metadata.tgz").write_bytes(b"dummy")
+                (work_path / "python.tgz").write_bytes(b"dummy")
                 
                 # Should not raise error on macOS when falling back to host UV
                 artifacts = packager.prepare_artifacts(work_path)
