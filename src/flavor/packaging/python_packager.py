@@ -281,10 +281,12 @@ class PythonPackager:
         if prep_bar:
             prep_bar.increment()
 
-        # Handle UV binary - download manylinux2014 version on Linux, copy from host on other platforms
-        uv_obtained = False
+        # Ensure bin directory exists for UV binary
         bin_dir = payload_dir / "bin"
         bin_dir.mkdir(mode=DEFAULT_DIR_PERMS, exist_ok=True)
+        
+        # Handle UV binary - download manylinux2014 version on Linux, copy from host on other platforms
+        uv_obtained = False
         
         if get_os_name() == "linux":
             # Download manylinux2014-compatible UV wheel for Linux
@@ -320,8 +322,6 @@ class PythonPackager:
             if uv_host_path:
                 # Copy to payload bin directory - always bin/ regardless of platform
                 # UV goes in {workenv}/bin/uv (or uv.exe on Windows)
-                bin_dir = payload_dir / "bin"
-                bin_dir.mkdir(mode=DEFAULT_DIR_PERMS, exist_ok=True)
                 payload_uv = bin_dir / self.uv_exe
                 self._copy_executable(uv_host_path, payload_uv)
                 logger.info("📦➡️✅ Copied UV binary to payload", path=str(payload_uv))
