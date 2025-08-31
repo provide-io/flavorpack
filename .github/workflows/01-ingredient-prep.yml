@@ -82,11 +82,10 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            ingredients/bin/*-${{ matrix.platform }}*
+            ingredients/bin/*-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
             artifacts/*.zip
           key: ${{ needs.setup.outputs.cache_key_base }}-${{ matrix.platform }}-${{ needs.setup.outputs.version }}
-          restore-keys: |
-            ${{ needs.setup.outputs.cache_key_base }}-${{ matrix.platform }}-
+          # No restore-keys - only use exact version match to prevent old binary accumulation
       
       - name: 🐹 Setup Go
         if: steps.cache.outputs.cache-hit != 'true'
