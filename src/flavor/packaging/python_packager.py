@@ -43,6 +43,28 @@ class PythonPackager:
 
     DEFAULT_PYTHON_VERSION = "3.11"
 
+    def _make_executable(self, file_path: Path) -> None:
+        """Make a file executable and strip extended attributes on macOS.
+        
+        Args:
+            file_path: Path to the file to make executable
+        """
+        if not self.is_windows:
+            file_path.chmod(DEFAULT_EXECUTABLE_PERMS)
+            # Strip extended attributes on macOS to avoid security issues
+            if get_os_name() == "darwin":
+                run_command(["xattr", "-cr", str(file_path)], capture_output=True, check=False)
+    
+    def _copy_executable(self, src: Path | str, dest: Path) -> None:
+        """Copy a file and make it executable.
+        
+        Args:
+            src: Source file path
+            dest: Destination file path
+        """
+        shutil.copy2(str(src), str(dest))
+        self._make_executable(dest)
+    
     def __init__(
         self,
         manifest_dir: Path,
@@ -183,7 +205,7 @@ class PythonPackager:
                             with wheel_zip.open(name) as src, open(uv_path, 'wb') as dst:
                                 dst.write(src.read())
                             
-                            uv_path.chmod(DEFAULT_EXECUTABLE_PERMS)
+                            self._make_executable(uv_path)
                             logger.info("✅ Successfully downloaded manylinux2014 UV binary")
                             return uv_path
                 
@@ -270,8 +292,7 @@ class PythonPackager:
             if payload_uv:
                 # Also copy to work dir for compatibility
                 work_uv = work_dir / "uv"
-                shutil.copy2(payload_uv, work_uv)
-                work_uv.chmod(DEFAULT_EXECUTABLE_PERMS)
+                self._copy_executable(payload_uv, work_uv)
                 artifacts["uv_binary"] = work_uv
                 uv_obtained = True
         
@@ -302,22 +323,12 @@ class PythonPackager:
                 bin_dir = payload_dir / "bin"
                 bin_dir.mkdir(mode=DEFAULT_DIR_PERMS, exist_ok=True)
                 payload_uv = bin_dir / self.uv_exe
-                shutil.copy2(uv_host_path, str(payload_uv))
-                if not self.is_windows:
-                    payload_uv.chmod(DEFAULT_EXECUTABLE_PERMS)
-                    # Strip extended attributes on macOS to avoid security issues
-                    if get_os_name() == "darwin":
-                        run_command(["xattr", "-cr", str(payload_uv)], capture_output=True, check=False)
+                self._copy_executable(uv_host_path, payload_uv)
                 logger.info("📦➡️✅ Copied UV binary to payload", path=str(payload_uv))
 
                 # Also copy to work dir for Go/Rust packager compatibility
                 work_uv = work_dir / self.uv_exe
-                shutil.copy2(uv_host_path, str(work_uv))
-                if not self.is_windows:
-                    work_uv.chmod(DEFAULT_EXECUTABLE_PERMS)
-                    # Strip extended attributes on macOS to avoid security issues
-                    if get_os_name() == "darwin":
-                        run_command(["xattr", "-cr", str(work_uv)], capture_output=True, check=False)
+                self._copy_executable(uv_host_path, work_uv)
                 artifacts["uv_binary"] = work_uv
             else:
                 logger.warning(
