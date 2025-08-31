@@ -166,15 +166,11 @@ class PythonPackager:
                 if arch == "amd64":
                     cmd.extend(["--platform", "manylinux_2_17_x86_64"])
                     logger.debug("Added platform constraint: manylinux_2_17_x86_64")
-                    # cmd.extend(["--platform", "musllinux_1_2_x86_64"])
-                    # logger.debug("Added platform constraint: musllinux_1_2_x86_64")
                 elif arch == "arm64":
                     # ARM64 doesn't have manylinux2010, use manylinux_2_17
                     cmd.extend(["--platform", "manylinux_2_17_aarch64"])
                     logger.debug("Added platform constraint: manylinux_2_17_aarch64")
-                    # logger.warning("⚠️ grpcio on CentOS 7 ARM64 may have C++ ABI issues")
-                    # cmd.extend(["--platform", "musllinux_1_2_aarch64"])
-                    logger.debug("Added platform constraint: musllinux_1_2_aarch64")
+                    logger.warning("⚠️ grpcio on CentOS 7 ARM64 may have C++ ABI issues")
 
             # Also specify Python version to match our target
             py_parts = self.python_version.split('.')
