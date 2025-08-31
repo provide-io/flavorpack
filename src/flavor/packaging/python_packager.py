@@ -177,12 +177,47 @@ class PythonPackager:
         logger.info("📦 Downloading manylinux2014-compatible UV wheel")
         logger.debug(f"Platform: {get_os_name()}, Architecture: {get_arch_name()}")
         
+        # First ensure pip is available
+        python_exe = Path(sys.executable)
+        pip_check_cmd = [str(python_exe), "-m", "pip", "--version"]
+        try:
+            logger.trace("Checking if pip is available")
+            result = run_command(pip_check_cmd, check=True, capture_output=True, log_command=False)
+            logger.trace(f"pip is available: {result.stdout.strip()}")
+        except Exception:
+            logger.info("pip not found, installing it first")
+            # Try to install pip using ensurepip or UV
+            try:
+                # First try ensurepip
+                ensurepip_cmd = [str(python_exe), "-m", "ensurepip", "--default-pip"]
+                logger.debug("Installing pip using ensurepip")
+                run_command(ensurepip_cmd, check=True, capture_output=True)
+                logger.info("✅ pip installed successfully")
+            except Exception:
+                # If ensurepip fails, try using UV to install pip
+                logger.debug("ensurepip failed, trying UV pip install")
+                uv_cmd = self._find_uv_command(raise_if_not_found=False)
+                if uv_cmd:
+                    uv_pip_cmd = [uv_cmd, "pip", "install", "pip"]
+                    try:
+                        run_command(uv_pip_cmd, check=True, capture_output=True)
+                        logger.info("✅ pip installed via UV")
+                    except Exception as e:
+                        logger.error(f"Failed to install pip: {e}")
+                        raise FileNotFoundError(
+                            "Cannot download UV wheel: pip is not available and could not be installed"
+                        ) from e
+                else:
+                    raise FileNotFoundError(
+                        "Cannot download UV wheel: pip is not available and UV not found to install it"
+                    )
+        
         with tempfile.TemporaryDirectory() as temp_dir:
             logger.trace(f"Created temp directory for UV download: {temp_dir}")
             # Use the existing _get_pypa_pip_download_cmd method
             # This will automatically add manylinux2014 platform constraints on Linux
             download_cmd = self._get_pypa_pip_download_cmd(
-                python_exe=Path(sys.executable),
+                python_exe=python_exe,
                 dest_dir=Path(temp_dir),
                 packages=["uv"],
                 binary_only=True
