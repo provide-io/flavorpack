@@ -236,12 +236,15 @@ class PythonPackager:
                             logger.info("✅ Successfully downloaded manylinux2014 UV binary")
                             return uv_path
                 
-                logger.warning("UV binary not found in wheel")
-                return None
+                logger.error("UV binary not found in wheel")
+                return None  # Let caller handle the error
                 
             except Exception as e:
-                logger.warning(f"Failed to download UV wheel: {e}")
-                return None
+                logger.error(f"Failed to download UV wheel: {e}")
+                # Re-raise for Linux since UV is critical
+                if get_os_name() == "linux":
+                    raise
+                return None  # For non-Linux, we can fall back to host UV
     
     def _find_uv_command(self, raise_if_not_found: bool = True) -> str | None:
         """Find the UV command.
@@ -335,13 +338,29 @@ class PythonPackager:
         
         if current_os == "linux":
             # Download manylinux2014-compatible UV wheel for Linux
-            payload_uv = self._download_uv_wheel(bin_dir)
-            if payload_uv:
+            logger.info("Linux detected: downloading manylinux2014-compatible UV")
+            try:
+                payload_uv = self._download_uv_wheel(bin_dir)
+                if not payload_uv:
+                    # If download returns None on Linux, this is a critical error
+                    # since we need manylinux2014 compatibility
+                    raise FileNotFoundError(
+                        "Failed to download manylinux2014-compatible UV wheel for Linux. "
+                        "This is required for broad Linux compatibility (glibc 2.17+)."
+                    )
+                
+                logger.info(f"✅ Successfully downloaded UV to {payload_uv}")
                 # Also copy to work dir for compatibility
                 work_uv = work_dir / "uv"
                 self._copy_executable(payload_uv, work_uv)
                 artifacts["uv_binary"] = work_uv
                 uv_obtained = True
+                logger.info(f"✅ UV binary ready at {work_uv}")
+            except Exception as e:
+                # Re-raise with more context
+                error_msg = f"Critical error downloading UV for Linux: {e}"
+                logger.error(error_msg)
+                raise FileNotFoundError(error_msg) from e
         
         # Fall back to copying from host if download failed or not on Linux
         if not uv_obtained:
