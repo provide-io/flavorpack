@@ -113,6 +113,11 @@ jobs:
         run: |
           echo "🔨 Building ingredients for ${{ matrix.platform }}"
           
+          # Clean old binaries to prevent accumulation
+          echo "🧹 Cleaning old binaries..."
+          rm -rf ingredients/bin
+          mkdir -p ingredients/bin
+          
           # Extract platform parts
           PLATFORM="${{ matrix.platform }}"
           OS=$(echo $PLATFORM | cut -d_ -f1)
