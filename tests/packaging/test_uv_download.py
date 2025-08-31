@@ -115,7 +115,8 @@ class TestUVDownload:
             # Need to mock at the actual usage location in the module
             with patch('flavor.packaging.python_packager.run_command', mock_run), \
                  patch('flavor.packaging.python_packager.get_os_name', return_value='linux'), \
-                 patch('flavor.packaging.python_packager.get_arch_name', return_value='amd64'):
+                 patch('flavor.packaging.python_packager.get_arch_name', return_value='amd64'), \
+                 patch.object(Path, 'glob', return_value=[fake_wheel]):
                 
                 result = packager._download_uv_wheel(temp_path)
                 
@@ -168,11 +169,7 @@ class TestUVDownload:
                  patch.object(packager, '_create_metadata'), \
                  patch('tarfile.open'):
                 
-                # Create necessary directories and files to avoid FileNotFoundError
-                payload_dir = work_path / "payload"
-                payload_dir.mkdir()
-                metadata_dir = payload_dir / "metadata"
-                metadata_dir.mkdir()
+                # Don't pre-create directories - let the method create them
                 
                 # Create dummy archives to avoid stat errors
                 (work_path / "payload.tgz").write_bytes(b"dummy")
