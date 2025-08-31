@@ -270,73 +270,24 @@ class PythonPackager:
         if prep_bar:
             prep_bar.increment()
 
-        # Download UV wheel for the target platform instead of copying from host
-        # This ensures we get a UV binary compatible with manylinux2014
-        uv_downloaded = False
+        # Handle UV binary - download manylinux2014 version on Linux, copy from host on other platforms
+        uv_obtained = False
+        bin_dir = payload_dir / "bin"
+        bin_dir.mkdir(mode=0o700, exist_ok=True)
+        
         if get_os_name() == "linux":
-            # Download UV wheel for manylinux2014 compatibility
-            logger.info("📦 Downloading UV wheel for Linux platform")
-            
-            # Create a temporary venv to download UV
-            with tempfile.TemporaryDirectory() as temp_uv_dir:
-                # Use pip to download UV wheel with manylinux2014 platform
-                arch = get_arch_name()
-                if arch == "amd64":
-                    platform_tag = "manylinux2014_x86_64"
-                elif arch == "arm64":
-                    platform_tag = "manylinux2014_aarch64"
-                else:
-                    platform_tag = None
-                
-                if platform_tag:
-                    # Download UV wheel
-                    download_cmd = [
-                        sys.executable, "-m", "pip", "download",
-                        "--dest", temp_uv_dir,
-                        "--only-binary", ":all:",
-                        "--platform", platform_tag,
-                        "--python-version", f"{self.python_version}",
-                        "uv"
-                    ]
-                    
-                    try:
-                        result = run_command(download_cmd, check=True, capture_output=True)
-                        
-                        # Extract UV binary from the wheel
-                        import zipfile
-                        uv_wheel = None
-                        for file in Path(temp_uv_dir).glob("uv-*.whl"):
-                            uv_wheel = file
-                            break
-                        
-                        if uv_wheel:
-                            with zipfile.ZipFile(uv_wheel, 'r') as wheel_zip:
-                                # UV binary is in the wheel at uv/uv or similar location
-                                for name in wheel_zip.namelist():
-                                    if name.endswith('/uv') or name == 'uv':
-                                        # Extract the UV binary
-                                        bin_dir = payload_dir / "bin"
-                                        bin_dir.mkdir(mode=0o700, exist_ok=True)
-                                        payload_uv = bin_dir / "uv"
-                                        
-                                        with wheel_zip.open(name) as src, open(payload_uv, 'wb') as dst:
-                                            dst.write(src.read())
-                                        
-                                        payload_uv.chmod(0o755)
-                                        logger.info("📦✅ Downloaded and extracted manylinux2014 UV binary")
-                                        uv_downloaded = True
-                                        
-                                        # Also copy to work dir
-                                        work_uv = work_dir / "uv"
-                                        shutil.copy2(payload_uv, work_uv)
-                                        work_uv.chmod(0o755)
-                                        artifacts["uv_binary"] = work_uv
-                                        break
-                    except Exception as e:
-                        logger.warning(f"Failed to download UV wheel: {e}")
+            # Download manylinux2014-compatible UV wheel for Linux
+            payload_uv = self._download_uv_wheel(bin_dir)
+            if payload_uv:
+                # Also copy to work dir for compatibility
+                work_uv = work_dir / "uv"
+                shutil.copy2(payload_uv, work_uv)
+                work_uv.chmod(0o755)
+                artifacts["uv_binary"] = work_uv
+                uv_obtained = True
         
         # Fall back to copying from host if download failed or not on Linux
-        if not uv_downloaded:
+        if not uv_obtained:
             uv_host_path = None
             
             # Method 1: Check if UV is in PATH
