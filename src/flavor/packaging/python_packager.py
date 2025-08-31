@@ -49,10 +49,13 @@ class PythonPackager:
         Args:
             file_path: Path to the file to make executable
         """
+        logger.trace(f"Making file executable: {file_path}")
         if not self.is_windows:
             file_path.chmod(DEFAULT_EXECUTABLE_PERMS)
+            logger.trace(f"Set permissions to {oct(DEFAULT_EXECUTABLE_PERMS)} on {file_path}")
             # Strip extended attributes on macOS to avoid security issues
             if get_os_name() == "darwin":
+                logger.trace(f"Stripping extended attributes from {file_path}")
                 run_command(["xattr", "-cr", str(file_path)], capture_output=True, check=False)
     
     def _copy_executable(self, src: Path | str, dest: Path) -> None:
@@ -62,6 +65,7 @@ class PythonPackager:
             src: Source file path
             dest: Destination file path
         """
+        logger.debug(f"Copying executable from {src} to {dest}")
         shutil.copy2(str(src), str(dest))
         self._make_executable(dest)
     
@@ -139,12 +143,15 @@ class PythonPackager:
         # manylinux2014 = manylinux_2_17 = glibc 2.17+ (CentOS 7, Amazon Linux 2, Ubuntu 14.04+)
         if get_os_name() == "linux" and binary_only:
             arch = get_arch_name()
+            logger.trace(f"Linux build detected, arch={arch}, requesting manylinux2014 wheels")
             
             # Specify manylinux2014 platform for broad compatibility
             if arch == "amd64":
                 cmd.extend(["--platform", "manylinux2014_x86_64"])
+                logger.debug("Added platform constraint: manylinux2014_x86_64")
             elif arch == "arm64":
                 cmd.extend(["--platform", "manylinux2014_aarch64"])
+                logger.debug("Added platform constraint: manylinux2014_aarch64")
             
             # Also specify Python version to match our target
             py_parts = self.python_version.split('.')
@@ -168,8 +175,10 @@ class PythonPackager:
             Path to UV binary if successful, None otherwise
         """
         logger.info("📦 Downloading manylinux2014-compatible UV wheel")
+        logger.debug(f"Platform: {get_os_name()}, Architecture: {get_arch_name()}")
         
         with tempfile.TemporaryDirectory() as temp_dir:
+            logger.trace(f"Created temp directory for UV download: {temp_dir}")
             # Use the existing _get_pypa_pip_download_cmd method
             # This will automatically add manylinux2014 platform constraints on Linux
             download_cmd = self._get_pypa_pip_download_cmd(
@@ -181,13 +190,28 @@ class PythonPackager:
             
             try:
                 logger.debug("Running UV download command", cmd=" ".join(download_cmd))
+                logger.trace(f"Full command: {download_cmd}")
                 result = run_command(download_cmd, check=True, capture_output=True)
+                if result.stdout:
+                    logger.trace(f"Download stdout: {result.stdout.strip()}")
+                if result.stderr:
+                    logger.trace(f"Download stderr: {result.stderr.strip()}")
                 
                 # Find the downloaded wheel
+                logger.trace(f"Searching for UV wheel in {temp_dir}")
+                all_files = list(Path(temp_dir).iterdir())
+                logger.trace(f"Files in temp dir: {[f.name for f in all_files]}")
+                
                 uv_wheel = None
                 for file in Path(temp_dir).glob("uv-*.whl"):
                     uv_wheel = file
                     logger.debug(f"Found UV wheel: {uv_wheel.name}")
+                    # Check the wheel name to verify it's manylinux2014
+                    if "manylinux" in uv_wheel.name:
+                        if "manylinux2014" in uv_wheel.name or "manylinux_2_17" in uv_wheel.name:
+                            logger.info(f"✅ Confirmed manylinux2014 wheel: {uv_wheel.name}")
+                        else:
+                            logger.warning(f"⚠️ UV wheel is not manylinux2014: {uv_wheel.name}")
                     break
                 
                 if not uv_wheel:
@@ -196,6 +220,7 @@ class PythonPackager:
                 
                 # Extract UV binary from wheel
                 with zipfile.ZipFile(uv_wheel, 'r') as wheel_zip:
+                    logger.trace(f"Wheel contents (first 10): {wheel_zip.namelist()[:10]}")
                     # UV binary is typically at uv/uv in the wheel
                     for name in wheel_zip.namelist():
                         if name.endswith('/uv') or name == 'uv':
@@ -203,7 +228,9 @@ class PythonPackager:
                             
                             logger.debug(f"Extracting UV binary from {name}")
                             with wheel_zip.open(name) as src, open(uv_path, 'wb') as dst:
-                                dst.write(src.read())
+                                content = src.read()
+                                dst.write(content)
+                                logger.trace(f"Extracted UV binary, size: {len(content)} bytes")
                             
                             self._make_executable(uv_path)
                             logger.info("✅ Successfully downloaded manylinux2014 UV binary")
@@ -298,11 +325,15 @@ class PythonPackager:
         # Ensure bin directory exists for UV binary
         bin_dir = payload_dir / "bin"
         bin_dir.mkdir(mode=DEFAULT_DIR_PERMS, exist_ok=True)
+        logger.debug(f"Created bin directory: {bin_dir}")
         
         # Handle UV binary - download manylinux2014 version on Linux, copy from host on other platforms
         uv_obtained = False
+        current_os = get_os_name()
+        current_arch = get_arch_name()
+        logger.info(f"Handling UV binary for {current_os}_{current_arch}")
         
-        if get_os_name() == "linux":
+        if current_os == "linux":
             # Download manylinux2014-compatible UV wheel for Linux
             payload_uv = self._download_uv_wheel(bin_dir)
             if payload_uv:
