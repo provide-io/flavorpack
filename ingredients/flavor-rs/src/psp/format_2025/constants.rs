@@ -30,7 +30,7 @@ pub const FORMAT_VERSION: u32 = PSPF_VERSION; // Alias for compatibility
 /// Size constants
 pub const HEADER_SIZE: usize = 8192; // Future-proof 8KB index block
 pub const SLOT_DESCRIPTOR_SIZE: usize = 64; // Descriptor size
-pub const TRAILING_MAGIC_SIZE: usize = 8; // 📦🪄 = 8 bytes UTF-8
+pub const MAGIC_TRAILER_SIZE: usize = 16; // 8-byte index pointer + 8-byte emoji magic
 pub const SLOT_ALIGNMENT: u64 = 8;
 
 // Platform-specific page sizes
@@ -42,9 +42,6 @@ pub const PAGE_SIZE: usize = 4096;
 pub const PAGE_SIZE: usize = 4096;
 #[cfg(not(any(target_os = "macos", target_os = "linux", target_os = "windows")))]
 pub const PAGE_SIZE: usize = 4096; // Default
-
-/// Emoji magic size
-pub const EMOJI_MAGIC_SIZE: usize = 8; // Both emojis (📦🪄)
 
 /// Disk space safety multiplier - require 2x compressed size for extraction
 pub const DISK_SPACE_MULTIPLIER: u64 = 2;

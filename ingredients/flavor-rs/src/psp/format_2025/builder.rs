@@ -495,11 +495,14 @@ pub fn build(manifest_path: &Path, output_path: &Path, options: BuildOptions) ->
         descriptor_table_offset
     );
 
-    // Step 5: Return to end of data and write trailing magic
+    // Step 5: Return to end of data and write MagicTrailer
     out.seek(SeekFrom::Start(end_pos))?;
 
-    // Write trailing magic (emoji bytes, XOR decoded)
-    out.write_all(&*TRAILING_MAGIC)?;
+    // Write MagicTrailer (16 bytes: index pointer + emoji magic)
+    let mut trailer = [0u8; MAGIC_TRAILER_SIZE];
+    trailer[..8].copy_from_slice(&index_offset.to_le_bytes()); // Index pointer
+    trailer[8..].copy_from_slice(&*TRAILING_MAGIC); // Emoji magic
+    out.write_all(&trailer)?;
 
     // Update package size
     let final_pos = out.stream_position()?;
