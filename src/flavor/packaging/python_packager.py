@@ -7,10 +7,12 @@ import json
 import os
 from pathlib import Path
 import shutil
+import sys
 import tarfile
 import tempfile
 import tomllib
 from typing import Any
+import zipfile
 
 from pyvider.telemetry import logger
 
@@ -139,9 +141,6 @@ class PythonPackager:
         Returns:
             Path to UV binary if successful, None otherwise
         """
-        import sys
-        import zipfile
-        
         logger.info("📦 Downloading manylinux2014-compatible UV wheel")
         
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -193,9 +192,6 @@ class PythonPackager:
     
     def _find_uv_command(self):
         """Find the UV command."""
-        import shutil
-        import sys
-
         # Simple approach: just look for UV in PATH or common locations
         system_uv = shutil.which("uv")
         if system_uv:
@@ -284,8 +280,6 @@ class PythonPackager:
             
             # Method 2: Check common installation locations
             if not uv_host_path:
-                import sys
-                
                 possible_uv_locations = [
                     Path(sys.prefix) / "Scripts" / "uv.exe"
                     if self.is_windows
@@ -519,8 +513,6 @@ class PythonPackager:
                 wheel_spinner.tick()
 
             # Find UV binary - check if we're running inside a PSP workenv first
-            import os
-
             uv_cmd = self._find_uv_command()
             logger.debug("🔍📦📋 Using UV command", command=uv_cmd)
 
