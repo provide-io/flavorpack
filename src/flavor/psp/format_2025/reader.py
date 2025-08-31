@@ -23,11 +23,11 @@ from flavor.psp.format_2025.backends import (
 from flavor.psp.format_2025.constants import (
     ACCESS_AUTO,
     ACCESS_MMAP,
-    EMOJI_MAGIC_SIZE,
     ENCODING_GZIP,
     ENCODING_TAR,
     ENCODING_TGZ,
     HEADER_SIZE,
+    MAGIC_TRAILER_SIZE,
     PSPF_MAGIC,
     PSPF_VERSION,
     SLOT_DESCRIPTOR_SIZE,
@@ -93,85 +93,49 @@ class PSPFReader:
         if not self._backend:
             self.open()
 
-        # Check trailing magic at end of file
+        # Check emoji magic in MagicTrailer at end of file
         file_size = self.bundle_path.stat().st_size
-        magic_data = self._backend.read_at(
-            file_size - EMOJI_MAGIC_SIZE, EMOJI_MAGIC_SIZE
+        trailer = self._backend.read_at(
+            file_size - MAGIC_TRAILER_SIZE, MAGIC_TRAILER_SIZE
         )
 
         # Convert to bytes if memoryview
-        if isinstance(magic_data, memoryview):
-            magic_data = bytes(magic_data)
+        if isinstance(trailer, memoryview):
+            trailer = bytes(trailer)
 
-        # TRAILING_MAGIC is now bytes from XOR decode
-        # Direct bytes comparison
-        return magic_data == TRAILING_MAGIC
+        # Verify emoji magic in last 8 bytes of trailer
+        return trailer[8:] == TRAILING_MAGIC
 
-    def detect_launcher_size(self) -> int:
-        """Detect launcher size by finding index block."""
-        if self._launcher_size is not None:
-            return self._launcher_size
-
+    def read_magic_trailer(self) -> int:
+        """Read MagicTrailer and return index offset."""
         if not self._backend:
             self.open()
 
         file_size = self.bundle_path.stat().st_size
-
-        # Search for PSPF magic in smaller chunks to avoid missing it
-        # Most launchers are 1-3MB, so 10MB limit should be more than enough
-        chunk_size = 64 * 1024  # 64KB chunks - smaller to avoid boundary issues
-        search_limit = min(file_size, 10 * 1024 * 1024)
-
-        for offset in range(0, search_limit, chunk_size):
-            # Read chunk (64KB should be fast enough)
-            read_size = min(chunk_size, file_size - offset)
-            data = self._backend.read_at(offset, read_size)
-
-            # Convert memoryview to bytes if needed
-            search_data = bytes(data) if isinstance(data, memoryview) else data
-
-            # Look for PSPF magic (8 bytes: "PSPF2025")
-            pos = search_data.find(PSPF_MAGIC[:8])
-            if pos >= 0:
-                # Validate this is actually the index, not a false positive
-                potential_offset = offset + pos
-
-                # Try to read and validate the version field (next 4 bytes after magic)
-                try:
-                    if potential_offset + 12 <= file_size:
-                        version_data = self._backend.read_at(potential_offset + 8, 4)
-                        version = struct.unpack("<I", version_data)[0]
-
-                        # Check if version looks reasonable (PSPF version 0x20250001)
-                        if version == PSPF_VERSION:
-                            self._launcher_size = potential_offset
-                            logger.debug(
-                                "🔍 Found and validated PSPF magic at offset",
-                                offset=self._launcher_size,
-                                version=hex(version),
-                            )
-                            return self._launcher_size
-                        else:
-                            logger.debug(
-                                "⚠️ Found PSPF-like bytes but invalid version",
-                                offset=potential_offset,
-                                version=hex(version),
-                            )
-                except Exception as e:
-                    logger.debug(
-                        "⚠️ Error validating potential PSPF magic",
-                        offset=potential_offset,
-                        error=str(e),
-                    )
-
-        # Log warning if not found
-        logger.warning(
-            "⚠️ Could not find PSPF magic in package, defaulting to offset 0",
-            file_size=file_size,
-            searched_bytes=search_limit,
+        
+        # Read MagicTrailer (last 16 bytes)
+        trailer = self._backend.read_at(
+            file_size - MAGIC_TRAILER_SIZE, MAGIC_TRAILER_SIZE
         )
-        self._launcher_size = 0
-        return 0
+
+        # Convert to bytes if memoryview
+        if isinstance(trailer, memoryview):
+            trailer = bytes(trailer)
+
+        # Verify emoji magic in last 8 bytes
+        if trailer[8:] != TRAILING_MAGIC:
+            raise ValueError("Invalid magic trailer: emoji magic not found")
+
+        # Extract index pointer from first 8 bytes (little-endian uint64)
+        index_offset = struct.unpack('<Q', trailer[:8])[0]
+        
+        logger.debug(
+            "🔍 Found index via MagicTrailer",
+            index_offset=index_offset,
+            file_size=file_size
+        )
+        
+        return index_offset
 
     def read_index(self) -> PSPFIndex:
         """Read and verify index block."""
@@ -181,13 +145,14 @@ class PSPFReader:
         if not self._backend:
             self.open()
 
-        launcher_size = self.detect_launcher_size()
+        index_offset = self.read_magic_trailer()
+        self._launcher_size = index_offset  # Store for compatibility
         logger.debug(
-            "📦 Reading index from offset", offset=launcher_size, size=HEADER_SIZE
+            "📦 Reading index from offset", offset=index_offset, size=HEADER_SIZE
         )
 
         # Read index using backend
-        index_data = self._backend.read_at(launcher_size, HEADER_SIZE)
+        index_data = self._backend.read_at(index_offset, HEADER_SIZE)
 
         # Convert to bytes if memoryview
         if isinstance(index_data, memoryview):
