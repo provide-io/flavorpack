@@ -133,21 +133,17 @@ fn verify_metadata_checksum(file: &mut File, index: &super::index::Index) -> Res
     Ok(calculated == expected)
 }
 
-/// Verify the trailing magic (8 bytes: 📦🪄)
+/// Verify the trailing magic (4 bytes: 🪄 at the very end)
 fn verify_trailing_magic(file: &mut File) -> Result<bool> {
-    // Seek to end minus 8 bytes
-    file.seek(SeekFrom::End(-8))?;
+    // Seek to end minus 4 bytes (magic wand emoji)
+    file.seek(SeekFrom::End(-4))?;
 
-    // Read the last 8 bytes
-    let mut magic = [0u8; 8];
+    // Read the last 4 bytes
+    let mut magic = [0u8; 4];
     file.read_exact(&mut magic)?;
 
-    // Check if it matches package + wand emoji bytes
-    let mut expected = Vec::with_capacity(8);
-    expected.extend_from_slice(PACKAGE_EMOJI_BYTES);
-    expected.extend_from_slice(MAGIC_WAND_EMOJI_BYTES);
-
-    Ok(magic == expected.as_slice())
+    // Check if it matches the magic wand emoji
+    Ok(magic == MAGIC_WAND_EMOJI_BYTES)
 }
 
 /// Verify the integrity seal (Ed25519 signature)
