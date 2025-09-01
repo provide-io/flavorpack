@@ -115,10 +115,13 @@ class PythonPackager:
                 cmd.extend(["--platform", "manylinux2014_x86_64"])
             elif machine == "aarch64":
                 cmd.extend(["--platform", "manylinux2014_aarch64"])
-            # Also specify Python version explicitly
-            import sys
-            py_version = f"cp{sys.version_info.major}{sys.version_info.minor}"
-            cmd.extend(["--python-version", f"{sys.version_info.major}.{sys.version_info.minor}"])
+            # Use the target Python version (not the current interpreter's version)
+            # Extract major.minor from self.python_version (e.g., "3.11" or "3.11.2")
+            py_parts = self.python_version.split('.')
+            py_major = py_parts[0]
+            py_minor = py_parts[1] if len(py_parts) > 1 else "11"
+            py_version = f"cp{py_major}{py_minor}"
+            cmd.extend(["--python-version", f"{py_major}.{py_minor}"])
             cmd.extend(["--implementation", "cp"])
             cmd.extend(["--abi", f"{py_version}"])
         
