@@ -159,10 +159,10 @@ print(" ".join(sys.argv[1:]) if len(sys.argv) > 1 else "Echo test ready")' > scr
   },
   "slots": [
     {
-      "name": "test-package.tar.gz",
-      "path": "test-package.tar.gz",
-      "encoding": "tar.gz",
-      "extract_to": "{workenv}"
+      "id": "test-package",
+      "source": "test-package.tar.gz",
+      "target": "{workenv}",
+      "encoding": "tar.gz"
     }
   ]
 }
@@ -220,10 +220,10 @@ EOF
   },
   "slots": [
     {
-      "name": "test-package.tar.gz",
-      "path": "test-package.tar.gz",
-      "encoding": "tar.gz",
-      "extract_to": "{workenv}"
+      "id": "test-package",
+      "source": "test-package.tar.gz",
+      "target": "{workenv}",
+      "encoding": "tar.gz"
     }
   ]
 }

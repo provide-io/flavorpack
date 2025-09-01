@@ -26,6 +26,7 @@ from flavor.psp.format_2025.constants import (
     CAPABILITY_MMAP,
     CAPABILITY_PAGE_ALIGNED,
     CAPABILITY_SIGNED,
+    DEFAULT_EXECUTABLE_PERMS,
     DEFAULT_FILE_PERMS,
     DEFAULT_MAX_MEMORY,
     DEFAULT_MIN_MEMORY,
@@ -45,6 +46,9 @@ from flavor.psp.format_2025.constants import (
     LIFECYCLE_SHUTDOWN,
     LIFECYCLE_STARTUP,
     LIFECYCLE_TEMPORARY,
+    MAGIC_TRAILER_SIZE,
+    MAGIC_WAND_EMOJI_BYTES,
+    PACKAGE_EMOJI_BYTES,
     PAGE_SIZE,
     PURPOSE_CODE,
     PURPOSE_CONFIG,
@@ -62,9 +66,8 @@ from flavor.psp.format_2025.metadata.assembly import (
 from flavor.psp.format_2025.slots import (
     SlotDescriptor,
     SlotMetadata,
-    align_offset,
-    align_to_page,
 )
+from flavor.utils.alignment import align_offset, align_to_page
 from flavor.psp.format_2025.spec import (
     BuildOptions,
     BuildResult,
@@ -74,6 +77,7 @@ from flavor.psp.format_2025.spec import (
 )
 from flavor.psp.format_2025.validation import validate_complete
 from flavor.utils.archive import deterministic_filter
+from flavor.utils.permissions import parse_permissions, set_file_permissions
 
 # =============================================================================
 # Pure Functions
@@ -403,13 +407,14 @@ def _write_package(
         # Write launcher
         f.write(launcher_data)
 
-        # Reserve space for index
-        index_offset = launcher_size
-        f.seek(index_offset + HEADER_SIZE)
+        # Start right after launcher (no index reservation - index goes in MagicTrailer)
+        f.seek(launcher_size)
 
         # Write metadata
         metadata_offset = f.tell()
+        logger.debug(f"Metadata offset: {metadata_offset}, size: {len(metadata_compressed)}")
         f.write(metadata_compressed)
+        logger.debug(f"Position after metadata: {f.tell()}")
 
         index.metadata_offset = metadata_offset
         index.metadata_size = len(metadata_compressed)
@@ -442,14 +447,7 @@ def _write_package(
 
                 # Create descriptor
                 # Parse permissions from metadata or use default
-                if slot.metadata.permissions:
-                    # Parse octal string (e.g., "0755" -> 0o755)
-                    try:
-                        slot_permissions = int(slot.metadata.permissions.lstrip("0"), 8)
-                    except (ValueError, AttributeError):
-                        slot_permissions = DEFAULT_FILE_PERMS
-                else:
-                    slot_permissions = DEFAULT_FILE_PERMS
+                slot_permissions = parse_permissions(slot.metadata.permissions)
 
                 descriptor = SlotDescriptor(
                     id=i,
@@ -475,29 +473,32 @@ def _write_package(
                 f.write(descriptor.pack())
             f.seek(end_of_slots)
 
-        # Write trailing magic
-        f.write("📦🪄".encode())
+        # Update package size before writing MagicTrailer
+        # (add 8200 for the trailer that will be written)
+        current_pos = f.tell()
+        logger.debug(f"Position before MagicTrailer: {current_pos}")
+        index.package_size = current_pos + MAGIC_TRAILER_SIZE
 
-        # Update package size
-        index.package_size = f.tell()
+        # Write MagicTrailer (8200 bytes: 📦 + index + 🪄)
+        f.write(PACKAGE_EMOJI_BYTES)  # 4-byte package emoji
+        index_data = index.pack()  # pack() calculates checksum internally
+        logger.debug(f"Writing index with format_version: 0x{index.format_version:08x}")
+        logger.debug(f"Index data first 16 bytes: {index_data[:16].hex()}")
+        f.write(index_data)  # 8192-byte index
+        f.write(MAGIC_WAND_EMOJI_BYTES)  # 4-byte magic wand emoji
+        
+        # Get actual file size after writing
+        actual_size = f.tell()
 
-        # Write final index (pack() calculates checksum internally)
-        f.seek(index_offset)
-        f.write(index.pack())
-
-    # Set the output file as executable (matching Rust and Go builders)
-    # Respects umask - typically results in 0o755 with default umask
-    import stat
-
-    current_mode = output_path.stat().st_mode
-    output_path.chmod(current_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+    # Set the output file as executable (user only for security)
+    set_file_permissions(output_path, DEFAULT_EXECUTABLE_PERMS)
     logger.trace(
         "🔧📝📋 Set output file as executable",
         path=str(output_path),
         mode=oct(output_path.stat().st_mode),
     )
 
-    return index.package_size
+    return actual_size
 
 
 def _map_purpose(purpose: str) -> int:
@@ -573,7 +574,7 @@ class PSPFBuilder:
         purpose: str = "data",
         lifecycle: str = "runtime",
         encoding: str = "gzip",
-        extract_to: str | None = None,
+        target: str | None = None,
         permissions: str | None = None,
     ) -> "PSPFBuilder":
         """
@@ -585,7 +586,7 @@ class PSPFBuilder:
             purpose: Slot purpose (data, code, config, media)
             lifecycle: Slot lifecycle (runtime, cached, temporary)
             encoding: Compression encoding (none, gzip)
-            extract_to: Extract location relative to workenv (default: None)
+            target: Target location relative to workenv (default: None)
             permissions: Unix permissions as octal string (e.g., "0755")
         """
         # Determine path and size
@@ -616,7 +617,7 @@ class PSPFBuilder:
             index=len(self._spec.slots),
             id=id,
             source=str(path) if path else "",
-            target=extract_to or id,
+            target=target or id,
             size=size,
             checksum="",  # Will be calculated during build
             encoding=encoding,

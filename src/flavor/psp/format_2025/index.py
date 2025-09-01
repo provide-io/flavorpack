@@ -17,7 +17,6 @@ from flavor.psp.format_2025.constants import (
     DEFAULT_MIN_MEMORY,
     ENCODING_RAW,
     HEADER_SIZE,
-    PSPF_MAGIC,
     PSPF_VERSION,
 )
 
@@ -26,12 +25,11 @@ from flavor.psp.format_2025.constants import (
 class PSPFIndex:
     """PSPF Index Block Structure - 8192 bytes total."""
 
-    # Format string for 4096-byte header
+    # Format string for 8192-byte header
     FORMAT: str = field(
         default=(
             "<"  # Little-endian
-            # Core identification (16 bytes)
-            "8s"  # format_magic
+            # Core identification (8 bytes)
             "I"  # format_version
             "I"  # index_checksum
             # File structure (48 bytes)
@@ -76,15 +74,14 @@ class PSPFIndex:
             "I"  # protocol_version
             # Future cryptography space (512 bytes)
             "512s"  # future_crypto
-            # Reserved (6808 bytes for future expansion)
-            "6808s"  # reserved
+            # Reserved (6816 bytes for future expansion)
+            "6816s"  # reserved
         ),
         init=False,
         repr=False,
     )
 
     # Core identification fields
-    format_magic: bytes = field(default=PSPF_MAGIC)
     format_version: int = field(default=PSPF_VERSION)
     index_checksum: int = field(default=0)
 
@@ -137,7 +134,7 @@ class PSPFIndex:
     future_crypto: bytes = field(default=Factory(lambda: b"\x00" * 512))
 
     # Reserved space for future expansion
-    reserved: bytes = field(default=Factory(lambda: b"\x00" * 6808))
+    reserved: bytes = field(default=Factory(lambda: b"\x00" * 6816))
 
     # Backwards compatibility properties
     @property
@@ -149,7 +146,6 @@ class PSPFIndex:
         """Pack index into binary format."""
         data = struct.pack(
             self.FORMAT,
-            self.format_magic,
             self.format_version,
             0,  # Checksum placeholder
             self.package_size,
@@ -196,7 +192,6 @@ class PSPFIndex:
         # Repack with the correct checksum
         data = struct.pack(
             self.FORMAT,
-            self.format_magic,
             self.format_version,
             checksum,  # Actual checksum
             self.package_size,
@@ -249,44 +244,43 @@ class PSPFIndex:
         unpacked = struct.unpack(format_str, data)
 
         return cls(
-            format_magic=unpacked[0],
-            format_version=unpacked[1],
-            index_checksum=unpacked[2],
-            package_size=unpacked[3],
-            launcher_size=unpacked[4],
-            metadata_offset=unpacked[5],
-            metadata_size=unpacked[6],
-            slot_table_offset=unpacked[7],
-            slot_table_size=unpacked[8],
-            slot_count=unpacked[9],
-            flags=unpacked[10],
-            public_key=unpacked[11],
-            metadata_checksum=unpacked[12],
-            integrity_signature=unpacked[13],
-            access_mode=unpacked[14],
-            cache_strategy=unpacked[15],
-            encoding_type=unpacked[16],
-            encryption_type=unpacked[17],
-            page_size=unpacked[18],
-            max_memory=unpacked[19],
-            min_memory=unpacked[20],
-            cpu_features=unpacked[21],
-            gpu_requirements=unpacked[22],
-            numa_hints=unpacked[23],
-            stream_chunk_size=unpacked[24],
-            build_timestamp=unpacked[25],
-            build_machine=unpacked[26],
-            source_hash=unpacked[27],
-            dependency_hash=unpacked[28],
-            license_id=unpacked[29],
-            provenance_uri=unpacked[30],
-            capabilities=unpacked[31],
-            requirements=unpacked[32],
-            extensions=unpacked[33],
-            compatibility=unpacked[34],
-            protocol_version=unpacked[35],
-            future_crypto=unpacked[36],
-            reserved=unpacked[37],
+            format_version=unpacked[0],
+            index_checksum=unpacked[1],
+            package_size=unpacked[2],
+            launcher_size=unpacked[3],
+            metadata_offset=unpacked[4],
+            metadata_size=unpacked[5],
+            slot_table_offset=unpacked[6],
+            slot_table_size=unpacked[7],
+            slot_count=unpacked[8],
+            flags=unpacked[9],
+            public_key=unpacked[10],
+            metadata_checksum=unpacked[11],
+            integrity_signature=unpacked[12],
+            access_mode=unpacked[13],
+            cache_strategy=unpacked[14],
+            encoding_type=unpacked[15],
+            encryption_type=unpacked[16],
+            page_size=unpacked[17],
+            max_memory=unpacked[18],
+            min_memory=unpacked[19],
+            cpu_features=unpacked[20],
+            gpu_requirements=unpacked[21],
+            numa_hints=unpacked[22],
+            stream_chunk_size=unpacked[23],
+            build_timestamp=unpacked[24],
+            build_machine=unpacked[25],
+            source_hash=unpacked[26],
+            dependency_hash=unpacked[27],
+            license_id=unpacked[28],
+            provenance_uri=unpacked[29],
+            capabilities=unpacked[30],
+            requirements=unpacked[31],
+            extensions=unpacked[32],
+            compatibility=unpacked[33],
+            protocol_version=unpacked[34],
+            future_crypto=unpacked[35],
+            reserved=unpacked[36],
         )
 
 

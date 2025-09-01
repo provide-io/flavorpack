@@ -2,6 +2,7 @@
 
 use crate::api::LaunchOptions;
 use crate::exceptions::{FlavorError, Result};
+use crate::psp::format_2025::constants::DEFAULT_DIR_PERMS;
 use crate::utils::get_cache_dir;
 use log::{debug, error, info, trace, warn};
 use std::collections::HashMap;
@@ -199,10 +200,10 @@ fn setup_workenv_directories(workenv_path: &Path, workenv_info: &WorkenvInfo) ->
                     fs::set_permissions(&dir_path, permissions)?;
                     debug!("🔒 Set permissions {} on {:?}", mode_str, dir_path);
                 } else {
-                    // Fallback to 0700 if parsing fails
-                    let permissions = fs::Permissions::from_mode(0o700);
+                    // Fallback to default dir permissions if parsing fails
+                    let permissions = fs::Permissions::from_mode(DEFAULT_DIR_PERMS as u32);
                     fs::set_permissions(&dir_path, permissions)?;
-                    debug!("🔒 Set default permissions 0700 on {:?}", dir_path);
+                    debug!("🔒 Set default permissions {} on {:?}", DEFAULT_DIR_PERMS, dir_path);
                 }
             }
         }
