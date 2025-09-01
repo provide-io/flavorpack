@@ -34,7 +34,6 @@ dependencies = [
     "cryptography>=41.0.4",
     "wheel>=0.40.0",
     "pyvider-telemetry",
-    "cattrs>=25.1.1",
     "PyYAML>=6.0",
     "uv>=0.8.13",
 ]
