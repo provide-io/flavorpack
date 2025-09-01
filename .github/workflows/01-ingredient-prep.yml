@@ -82,11 +82,10 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            ingredients/bin/*-${{ matrix.platform }}*
+            ingredients/bin/*-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
             artifacts/*.zip
           key: ${{ needs.setup.outputs.cache_key_base }}-${{ matrix.platform }}-${{ needs.setup.outputs.version }}
-          restore-keys: |
-            ${{ needs.setup.outputs.cache_key_base }}-${{ matrix.platform }}-
+          # No restore-keys - only use exact version match to prevent old binary accumulation
       
       - name: 🐹 Setup Go
         if: steps.cache.outputs.cache-hit != 'true'
@@ -113,6 +112,11 @@ jobs:
         shell: bash
         run: |
           echo "🔨 Building ingredients for ${{ matrix.platform }}"
+          
+          # Clean old binaries to prevent accumulation
+          echo "🧹 Cleaning old binaries..."
+          rm -rf ingredients/bin
+          mkdir -p ingredients/bin
           
           # Extract platform parts
           PLATFORM="${{ matrix.platform }}"
@@ -165,8 +169,9 @@ jobs:
         run: |
           mkdir -p artifacts
           cd ingredients/bin
+          # Only package binaries for the CURRENT version and platform
           zip -r ../../artifacts/flavor-ingredients-${{ needs.setup.outputs.version }}-${{ matrix.platform }}.zip \
-            *-${{ matrix.platform }}* || true
+            *-${{ needs.setup.outputs.version }}-${{ matrix.platform }} || true
           cd ../..
           echo "📦 Packaged ingredients:"
           ls -la artifacts/
