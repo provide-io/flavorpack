@@ -6,17 +6,27 @@
 import json
 import os
 from pathlib import Path
-import platform
 import shutil
+import sys
 import tarfile
 import tempfile
 import tomllib
 from typing import Any
+import zipfile
 
 from pyvider.telemetry import logger
 
+from flavor.psp.format_2025.constants import (
+    DEFAULT_DIR_PERMS,
+    DEFAULT_EXECUTABLE_PERMS,
+)
+from flavor.utils import (
+    get_arch_name,
+    get_os_name,
+    get_platform_string,
+    run_command,
+)
 from flavor.utils.archive import deterministic_filter
-from flavor.utils.subprocess import run_command
 
 
 class PythonPackager:
@@ -33,6 +43,32 @@ class PythonPackager:
 
     DEFAULT_PYTHON_VERSION = "3.11"
 
+    def _make_executable(self, file_path: Path) -> None:
+        """Make a file executable and strip extended attributes on macOS.
+        
+        Args:
+            file_path: Path to the file to make executable
+        """
+        logger.trace(f"Making file executable: {file_path}")
+        if not self.is_windows:
+            file_path.chmod(DEFAULT_EXECUTABLE_PERMS)
+            logger.trace(f"Set permissions to {oct(DEFAULT_EXECUTABLE_PERMS)} on {file_path}")
+            # Strip extended attributes on macOS to avoid security issues
+            if get_os_name() == "darwin":
+                logger.trace(f"Stripping extended attributes from {file_path}")
+                run_command(["xattr", "-cr", str(file_path)], capture_output=True, check=False)
+    
+    def _copy_executable(self, src: Path | str, dest: Path) -> None:
+        """Copy a file and make it executable.
+        
+        Args:
+            src: Source file path
+            dest: Destination file path
+        """
+        logger.debug(f"Copying executable from {src} to {dest}")
+        shutil.copy2(str(src), str(dest))
+        self._make_executable(dest)
+    
     def __init__(
         self,
         manifest_dir: Path,
@@ -50,9 +86,7 @@ class PythonPackager:
         self.progress = progress_reporter
 
         # Platform-specific paths
-        import platform as platform_lib
-
-        self.is_windows = platform_lib.system() == "Windows"
+        self.is_windows = get_os_name() == "windows"
         self.venv_bin_dir = "Scripts" if self.is_windows else "bin"
         self.uv_exe = "uv.exe" if self.is_windows else "uv"
 
@@ -107,15 +141,17 @@ class PythonPackager:
         
         # For Linux builds, explicitly request manylinux2014 wheels for maximum compatibility
         # manylinux2014 = manylinux_2_17 = glibc 2.17+ (CentOS 7, Amazon Linux 2, Ubuntu 14.04+)
-        import platform as platform_lib
-        if platform_lib.system() == "Linux" and binary_only:
-            machine = platform_lib.machine()
+        if get_os_name() == "linux" and binary_only:
+            arch = get_arch_name()
+            logger.trace(f"Linux build detected, arch={arch}, requesting manylinux2014 wheels")
             
             # Specify manylinux2014 platform for broad compatibility
-            if machine == "x86_64":
+            if arch == "amd64":
                 cmd.extend(["--platform", "manylinux2014_x86_64"])
-            elif machine == "aarch64":
+                logger.debug("Added platform constraint: manylinux2014_x86_64")
+            elif arch == "arm64":
                 cmd.extend(["--platform", "manylinux2014_aarch64"])
+                logger.debug("Added platform constraint: manylinux2014_aarch64")
             
             # Also specify Python version to match our target
             py_parts = self.python_version.split('.')
@@ -129,37 +165,261 @@ class PythonPackager:
             cmd.extend(packages)
         return cmd
 
-    def _find_uv_command(self) -> str:
-        """Find the UV command."""
+    def _download_uv_wheel_via_url(self, dest_dir: Path) -> Path | None:
+        """Download UV wheel directly from PyPI using curl/wget.
+        
+        This is a fallback method when pip is not available.
+        
+        Args:
+            dest_dir: Directory to save UV binary to
+            
+        Returns:
+            Path to UV binary if successful, None otherwise
+        """
+        import json
+        import urllib.request
         import shutil
-        import sys
-
-        # Simple approach: just look for UV in PATH or common locations
+        
+        logger.info("Downloading UV wheel directly from PyPI")
+        
+        # Determine platform tag
+        arch = get_arch_name()
+        if arch == "amd64":
+            platform_tag = "manylinux_2_17_x86_64.manylinux2014_x86_64"
+        elif arch == "arm64":
+            platform_tag = "manylinux_2_17_aarch64.manylinux2014_aarch64"
+        else:
+            logger.error(f"Unsupported architecture for UV download: {arch}")
+            return None
+        
+        try:
+            # Get package info from PyPI
+            logger.debug("Fetching UV package info from PyPI")
+            with urllib.request.urlopen("https://pypi.org/pypi/uv/json") as response:
+                data = json.loads(response.read())
+            
+            # Find the right wheel
+            version = data["info"]["version"]
+            wheel_filename = None
+            wheel_url = None
+            
+            for file_info in data["releases"][version]:
+                filename = file_info["filename"]
+                if platform_tag in filename and filename.endswith(".whl"):
+                    wheel_filename = filename
+                    wheel_url = file_info["url"]
+                    logger.debug(f"Found matching wheel: {filename}")
+                    break
+            
+            if not wheel_url:
+                logger.error(f"No manylinux2014 wheel found for UV {version} on {platform_tag}")
+                return None
+            
+            # Download the wheel to a temp location
+            wheel_path = Path(dest_dir) / wheel_filename
+            logger.info(f"Downloading {wheel_filename} from PyPI")
+            
+            with urllib.request.urlopen(wheel_url) as response, open(wheel_path, 'wb') as out_file:
+                shutil.copyfileobj(response, out_file)
+            
+            logger.info(f"✅ Downloaded UV wheel: {wheel_filename}")
+            
+            try:
+                # Extract UV binary from wheel
+                import zipfile
+                with zipfile.ZipFile(wheel_path, 'r') as wheel_zip:
+                    for name in wheel_zip.namelist():
+                        if name.endswith('/uv') or name == 'uv':
+                            uv_path = dest_dir / "uv"
+                            logger.debug(f"Extracting UV binary from {name}")
+                            with wheel_zip.open(name) as src, open(uv_path, 'wb') as dst:
+                                content = src.read()
+                                dst.write(content)
+                                logger.trace(f"Extracted UV binary, size: {len(content)} bytes")
+                            
+                            self._make_executable(uv_path)
+                            logger.info("✅ Successfully extracted UV binary")
+                            return uv_path
+                
+                logger.error("UV binary not found in wheel")
+                return None
+            finally:
+                # Clean up the wheel file
+                if wheel_path.exists():
+                    logger.trace(f"Cleaning up UV wheel: {wheel_path}")
+                    wheel_path.unlink()
+            
+        except Exception as e:
+            logger.error(f"Failed to download UV wheel via URL: {e}")
+            return None
+    
+    def _download_uv_wheel(self, dest_dir: Path) -> Path | None:
+        """Download manylinux2014-compatible UV wheel and extract binary.
+        
+        Args:
+            dest_dir: Directory to save UV binary to
+            
+        Returns:
+            Path to UV binary if successful, None otherwise
+        """
+        logger.info("📦 Downloading manylinux2014-compatible UV wheel")
+        logger.debug(f"Platform: {get_os_name()}, Architecture: {get_arch_name()}")
+        
+        # First ensure pip is available
+        python_exe = Path(sys.executable)
+        pip_check_cmd = [str(python_exe), "-m", "pip", "--version"]
+        try:
+            logger.trace("Checking if pip is available")
+            result = run_command(pip_check_cmd, check=True, capture_output=True, log_command=False)
+            logger.trace(f"pip is available: {result.stdout.strip()}")
+        except Exception:
+            logger.info("pip not found, installing it first")
+            # Try to install pip using ensurepip or UV
+            try:
+                # First try ensurepip
+                ensurepip_cmd = [str(python_exe), "-m", "ensurepip", "--default-pip"]
+                logger.debug("Installing pip using ensurepip")
+                run_command(ensurepip_cmd, check=True, capture_output=True)
+                logger.info("✅ pip installed successfully")
+            except Exception:
+                # If ensurepip fails, try using UV to install pip
+                logger.debug("ensurepip failed, trying UV pip install")
+                uv_cmd = self._find_uv_command(raise_if_not_found=False)
+                if uv_cmd:
+                    uv_pip_cmd = [uv_cmd, "pip", "install", "pip"]
+                    try:
+                        run_command(uv_pip_cmd, check=True, capture_output=True)
+                        logger.info("✅ pip installed via UV")
+                    except Exception as e:
+                        logger.error(f"Failed to install pip: {e}")
+                        raise FileNotFoundError(
+                            "Cannot download UV wheel: pip is not available and could not be installed"
+                        ) from e
+                else:
+                    raise FileNotFoundError(
+                        "Cannot download UV wheel: pip is not available and UV not found to install it"
+                    )
+        
+        with tempfile.TemporaryDirectory() as temp_dir:
+            logger.trace(f"Created temp directory for UV download: {temp_dir}")
+            # Use the existing _get_pypa_pip_download_cmd method
+            # This will automatically add manylinux2014 platform constraints on Linux
+            download_cmd = self._get_pypa_pip_download_cmd(
+                python_exe=python_exe,
+                dest_dir=Path(temp_dir),
+                packages=["uv"],
+                binary_only=True
+            )
+            
+            try:
+                logger.debug("Running UV download command", cmd=" ".join(download_cmd))
+                logger.trace(f"Full command: {download_cmd}")
+                result = run_command(download_cmd, check=True, capture_output=True)
+                if result.stdout:
+                    logger.trace(f"Download stdout: {result.stdout.strip()}")
+                if result.stderr:
+                    logger.trace(f"Download stderr: {result.stderr.strip()}")
+                
+                # Find the downloaded wheel
+                logger.trace(f"Searching for UV wheel in {temp_dir}")
+                all_files = list(Path(temp_dir).iterdir())
+                logger.trace(f"Files in temp dir: {[f.name for f in all_files]}")
+                
+                uv_wheel = None
+                for file in Path(temp_dir).glob("uv-*.whl"):
+                    uv_wheel = file
+                    logger.debug(f"Found UV wheel: {uv_wheel.name}")
+                    # Check the wheel name to verify it's manylinux2014
+                    if "manylinux" in uv_wheel.name:
+                        if "manylinux2014" in uv_wheel.name or "manylinux_2_17" in uv_wheel.name:
+                            logger.info(f"✅ Confirmed manylinux2014 wheel: {uv_wheel.name}")
+                        else:
+                            logger.warning(f"⚠️ UV wheel is not manylinux2014: {uv_wheel.name}")
+                    break
+                
+                if not uv_wheel:
+                    logger.warning("UV wheel not found after download")
+                    return None
+                
+                # Extract UV binary from wheel
+                with zipfile.ZipFile(uv_wheel, 'r') as wheel_zip:
+                    logger.trace(f"Wheel contents (first 10): {wheel_zip.namelist()[:10]}")
+                    # UV binary is typically at uv/uv in the wheel
+                    for name in wheel_zip.namelist():
+                        if name.endswith('/uv') or name == 'uv':
+                            uv_path = dest_dir / "uv"
+                            
+                            logger.debug(f"Extracting UV binary from {name}")
+                            with wheel_zip.open(name) as src, open(uv_path, 'wb') as dst:
+                                content = src.read()
+                                dst.write(content)
+                                logger.trace(f"Extracted UV binary, size: {len(content)} bytes")
+                            
+                            self._make_executable(uv_path)
+                            logger.info("✅ Successfully downloaded manylinux2014 UV binary")
+                            return uv_path
+                
+                logger.error("UV binary not found in wheel")
+                return None  # Let caller handle the error
+                
+            except Exception as e:
+                logger.warning(f"Failed to download UV wheel via pip: {e}")
+                logger.info("Attempting direct download from PyPI as fallback")
+                
+                # Try direct download as fallback
+                try:
+                    return self._download_uv_wheel_via_url(dest_dir)
+                except Exception as fallback_error:
+                    logger.error(f"Direct download also failed: {fallback_error}")
+                    # Re-raise for Linux since UV is critical
+                    if get_os_name() == "linux":
+                        raise FileNotFoundError(
+                            f"Failed to download UV wheel via both pip and direct URL: {e}"
+                        ) from e
+                    return None  # For non-Linux, we can fall back to host UV
+    
+    def _find_uv_command(self, raise_if_not_found: bool = True) -> str | None:
+        """Find the UV command.
+        
+        Args:
+            raise_if_not_found: If True, raise FileNotFoundError if UV not found.
+                              If False, return None if not found.
+        
+        Returns:
+            Path to UV binary, or None if not found and raise_if_not_found is False
+        """
+        # Method 1: Check if UV is in PATH
         system_uv = shutil.which("uv")
         if system_uv:
             logger.info("🔍✅📋 Found UV in PATH", path=system_uv)
             return system_uv
 
-        # Check if UV is in the same directory as Python
+        # Method 2: Check common installation locations
+        possible_uv_locations = [
+            Path(sys.prefix) / "Scripts" / "uv.exe"
+            if self.is_windows
+            else Path(sys.prefix) / "bin" / "uv",
+            Path(sys.executable).parent / ("uv.exe" if self.is_windows else "uv"),
+        ]
+        
+        # Check PSP workenv location
         python_path = Path(sys.executable)
-        uv_name = "uv.exe" if self.is_windows else "uv"
-        uv_in_python_dir = python_path.parent / uv_name
-        if uv_in_python_dir.exists():
-            logger.info("🔍✅📋 Found UV next to Python", path=str(uv_in_python_dir))
-            return str(uv_in_python_dir)
-
-        # Check PSP workenv location (simplified)
-        workenv_bin = python_path.parent.parent / "bin" / uv_name
-        if workenv_bin.exists():
-            logger.info("🔍✅📋 Found UV in workenv", path=str(workenv_bin))
-            return str(workenv_bin)
+        workenv_bin = python_path.parent.parent / "bin" / ("uv.exe" if self.is_windows else "uv")
+        possible_uv_locations.append(workenv_bin)
+        
+        for uv_loc in possible_uv_locations:
+            if uv_loc.exists():
+                logger.info("🔍✅📋 Found UV at", path=str(uv_loc))
+                return str(uv_loc)
 
         # Not found
-        error_msg = (
-            f"UV binary not found in PATH or common locations. Python: {sys.executable}"
-        )
-        logger.error("🔍❌📋 UV not found", details=error_msg)
-        raise FileNotFoundError(error_msg)
+        if raise_if_not_found:
+            error_msg = (
+                f"UV binary not found in PATH or common locations. Python: {sys.executable}"
+            )
+            logger.error("🔍❌📋 UV not found", details=error_msg)
+            raise FileNotFoundError(error_msg)
+        return None
 
     def prepare_artifacts(self, work_dir: Path) -> dict[str, Path]:
         """
@@ -185,80 +445,87 @@ class PythonPackager:
 
         # Create payload structure
         payload_dir = work_dir / "payload"
-        payload_dir.mkdir(mode=0o700)
+        payload_dir.mkdir(mode=DEFAULT_DIR_PERMS)
         artifacts["payload_dir"] = payload_dir
         if prep_bar:
             prep_bar.increment()
 
         # Build wheels
         wheels_dir = payload_dir / "wheels"
-        wheels_dir.mkdir(mode=0o700)
+        wheels_dir.mkdir(mode=DEFAULT_DIR_PERMS)
         self._build_wheels(wheels_dir)
         if prep_bar:
             prep_bar.increment()
 
-        # Add UV binary - first try to find it
-        # Try multiple ways to find UV
-        uv_host_path = None
+        # Ensure bin directory exists for UV binary
+        bin_dir = payload_dir / "bin"
+        bin_dir.mkdir(mode=DEFAULT_DIR_PERMS, exist_ok=True)
+        logger.debug(f"Created bin directory: {bin_dir}")
+        
+        # Handle UV binary - download manylinux2014 version on Linux, copy from host on other platforms
+        uv_obtained = False
+        current_os = get_os_name()
+        current_arch = get_arch_name()
+        logger.info(f"Handling UV binary for {current_os}_{current_arch}")
+        
+        if current_os == "linux":
+            # Download manylinux2014-compatible UV wheel for Linux
+            logger.info("Linux detected: downloading manylinux2014-compatible UV")
+            try:
+                payload_uv = self._download_uv_wheel(bin_dir)
+                if not payload_uv:
+                    # If download returns None on Linux, this is a critical error
+                    # since we need manylinux2014 compatibility
+                    raise FileNotFoundError(
+                        "Failed to download manylinux2014-compatible UV wheel for Linux. "
+                        "This is required for broad Linux compatibility (glibc 2.17+)."
+                    )
+                
+                logger.info(f"✅ Successfully downloaded UV to {payload_uv}")
+                # Also copy to work dir for compatibility
+                work_uv = work_dir / "uv"
+                self._copy_executable(payload_uv, work_uv)
+                artifacts["uv_binary"] = work_uv
+                uv_obtained = True
+                logger.info(f"✅ UV binary ready at {work_uv}")
+            except Exception as e:
+                # Re-raise with more context
+                error_msg = f"Critical error downloading UV for Linux: {e}"
+                logger.error(error_msg)
+                raise FileNotFoundError(error_msg) from e
+        
+        # Fall back to copying from host if download failed or not on Linux
+        if not uv_obtained:
+            logger.debug("Attempting to find UV on host system")
+            uv_host_path = self._find_uv_command(raise_if_not_found=False)
+            
+            if uv_host_path:
+                logger.info(f"Found UV on host at {uv_host_path}")
+                # Copy to payload bin directory - always bin/ regardless of platform
+                # UV goes in {workenv}/bin/uv (or uv.exe on Windows)
+                payload_uv = bin_dir / self.uv_exe
+                self._copy_executable(uv_host_path, payload_uv)
+                logger.info("📦➡️✅ Copied UV binary to payload", path=str(payload_uv))
 
-        # Method 1: Check if UV is in PATH
-        uv_host_path = shutil.which("uv")
-
-        # Method 2: Check common installation locations
-        if not uv_host_path:
-            import sys
-
-            possible_uv_locations = [
-                Path(sys.prefix) / "Scripts" / "uv.exe"
-                if self.is_windows
-                else Path(sys.prefix) / "bin" / "uv",
-                Path(sys.executable).parent / ("uv.exe" if self.is_windows else "uv"),
-            ]
-            for uv_loc in possible_uv_locations:
-                if uv_loc.exists():
-                    uv_host_path = str(uv_loc)
-                    logger.info("📦🔍✅ Found UV at", path=uv_host_path)
-                    break
-
-        if uv_host_path:
-            # Copy to payload bin directory - always bin/ regardless of platform
-            # UV goes in {workenv}/bin/uv (or uv.exe on Windows)
-            bin_dir = payload_dir / "bin"
-            bin_dir.mkdir(mode=0o700, exist_ok=True)
-            payload_uv = bin_dir / self.uv_exe
-            shutil.copy2(uv_host_path, str(payload_uv))
-            if not self.is_windows:
-                payload_uv.chmod(0o755)
-                # Strip extended attributes on macOS to avoid security issues
-                if platform.system() == "Darwin":
-                    import subprocess
-                    subprocess.run(["xattr", "-cr", str(payload_uv)], capture_output=True, check=False)
-            logger.info("📦➡️✅ Copied UV binary to payload", path=str(payload_uv))
-
-            # Also copy to work dir for Go/Rust packager compatibility
-            work_uv = work_dir / self.uv_exe
-            shutil.copy2(uv_host_path, str(work_uv))
-            if not self.is_windows:
-                work_uv.chmod(0o755)
-                # Strip extended attributes on macOS to avoid security issues
-                if platform.system() == "Darwin":
-                    import subprocess
-                    subprocess.run(["xattr", "-cr", str(work_uv)], capture_output=True, check=False)
-            artifacts["uv_binary"] = work_uv
-        else:
-            logger.warning(
-                "📦⚠️❌ UV not found on host system, package will require UV at runtime"
-            )
-            # We still need to provide UV somehow - this is a critical error for Python packages
-            raise FileNotFoundError(
-                "UV binary not found on host system. Cannot build Python package without UV."
-            )
+                # Also copy to work dir for Go/Rust packager compatibility
+                work_uv = work_dir / self.uv_exe
+                self._copy_executable(uv_host_path, work_uv)
+                artifacts["uv_binary"] = work_uv
+                logger.debug(f"UV binary copied to work dir: {work_uv}")
+            else:
+                logger.warning(
+                    "📦⚠️❌ UV not found on host system, package will require UV at runtime"
+                )
+                # We still need to provide UV somehow - this is a critical error for Python packages
+                raise FileNotFoundError(
+                    "UV binary not found on host system. Cannot build Python package without UV."
+                )
         if prep_bar:
             prep_bar.increment()
 
         # Create metadata
         metadata_dir = payload_dir / "metadata"
-        metadata_dir.mkdir(mode=0o700)
+        metadata_dir.mkdir(mode=DEFAULT_DIR_PERMS)
         self._create_metadata(metadata_dir)
         if prep_bar:
             prep_bar.increment()
@@ -278,7 +545,7 @@ class PythonPackager:
 
         # Create metadata archive (separate for selective extraction)
         metadata_content = work_dir / "metadata_content"
-        metadata_content.mkdir(mode=0o700)
+        metadata_content.mkdir(mode=DEFAULT_DIR_PERMS)
         # For now empty, but could contain launcher-specific metadata
         metadata_tgz = work_dir / "metadata.tgz"
         with tarfile.open(metadata_tgz, "w:gz", compresslevel=9) as tar:
@@ -443,8 +710,6 @@ class PythonPackager:
                 wheel_spinner.tick()
 
             # Find UV binary - check if we're running inside a PSP workenv first
-            import os
-
             uv_cmd = self._find_uv_command()
             logger.debug("🔍📦📋 Using UV command", command=uv_cmd)
 
@@ -690,16 +955,14 @@ class PythonPackager:
 
     def _create_python_placeholder(self, python_tgz: Path) -> None:
         """Download and package Python distribution using UV."""
-        import platform as platform_module
-
         logger.info(
             "📦📥🚀 Starting Python download and packaging", version=self.python_version
         )
         logger.debug("📁🎯📋 Target output", path=str(python_tgz))
         logger.debug(
             "💻🔍📋 Platform info",
-            system=platform_module.system(),
-            machine=platform_module.machine(),
+            system=get_os_name(),
+            machine=get_arch_name(),
         )
 
         python_spinner = None
