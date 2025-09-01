@@ -49,11 +49,11 @@ impl SlotDescriptor {
             encoding: ENCODING_RAW,
             encryption: 0,
             alignment: SLOT_ALIGNMENT as u16,
-            purpose: PURPOSE_DATA,
-            lifecycle: LIFECYCLE_CACHED,
+            purpose: PURPOSE_PAYLOAD,
+            lifecycle: LIFECYCLE_CACHE,
             access_hint: ACCESS_HINT_SEQUENTIAL,
             priority: CACHE_NORMAL,
-            permissions: 0o644,
+            permissions: DEFAULT_FILE_PERMS,
             platform: 0,
             extended_offset: 0,
             extended_size: 0,
@@ -81,7 +81,7 @@ impl SlotDescriptor {
     }
 
     /// Pack descriptor to bytes
-    pub fn to_bytes(&self) -> [u8; SLOT_DESCRIPTOR_SIZE] {
+    pub fn pack(&self) -> [u8; SLOT_DESCRIPTOR_SIZE] {
         let mut bytes = [0u8; SLOT_DESCRIPTOR_SIZE];
 
         // Safety: We're writing to a properly sized buffer
@@ -92,8 +92,8 @@ impl SlotDescriptor {
         bytes
     }
 
-    /// Parse descriptor from bytes
-    pub fn from_bytes(data: &[u8]) -> Option<Self> {
+    /// Unpack descriptor from bytes
+    pub fn unpack(data: &[u8]) -> Option<Self> {
         if data.len() != SLOT_DESCRIPTOR_SIZE {
             return None;
         }

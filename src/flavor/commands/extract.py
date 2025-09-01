@@ -69,7 +69,7 @@ def extract_command(
 
             slot = slot_descriptors[slot_index]
             slot_name = (
-                slots_metadata[slot_index].get("name", f"slot_{slot_index}")
+                slots_metadata[slot_index].get("id", slots_metadata[slot_index].get("name", f"slot_{slot_index}"))
                 if slot_index < len(slots_metadata)
                 else f"slot_{slot_index}"
             )
@@ -136,7 +136,7 @@ def extract_all_command(package_file: str, output_dir: str, force: bool) -> None
                 # Get slot metadata
                 if i < len(slots_metadata):
                     slot_meta = slots_metadata[i]
-                    slot_name = slot_meta.get("name", f"slot_{i}")
+                    slot_name = slot_meta.get("id", f"slot_{i}")
                     slot_encoding = slot_meta.get("encoding", "raw")
                 else:
                     slot_name = f"slot_{i}"

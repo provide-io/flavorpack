@@ -2,7 +2,6 @@
 # src/flavor/psp/format_2025/slots.py
 # PSPF 2025 Slot Management - Enhanced 64-byte descriptors
 
-import hashlib
 from pathlib import Path
 import struct
 from typing import Any
@@ -36,6 +35,8 @@ from flavor.psp.format_2025.constants import (
     SLOT_ALIGNMENT,
     SLOT_DESCRIPTOR_SIZE,
 )
+from flavor.utils.alignment import align_offset, align_to_page
+from flavor.utils.hashing import hash_name
 
 
 def normalize_purpose(value: str) -> str:
@@ -55,13 +56,6 @@ def normalize_purpose(value: str) -> str:
         "installer": "config",
     }
     return purpose_map.get(value, "data")  # Default to data
-
-
-def hash_name(name: str) -> int:
-    """Generate a 64-bit hash of the slot name for fast lookup."""
-    # Use first 8 bytes of SHA256 for a good distribution
-    hash_bytes = hashlib.sha256(name.encode("utf-8")).digest()[:8]
-    return struct.unpack("<Q", hash_bytes)[0]
 
 
 @define
@@ -327,16 +321,6 @@ class SlotMetadata:
             Path, lambda v, t: Path(v) if v is not None else None
         )
         return converter.structure(data, cls)
-
-
-def align_offset(offset: int, alignment: int = SLOT_ALIGNMENT) -> int:
-    """Align offset to boundary."""
-    return (offset + alignment - 1) & ~(alignment - 1)
-
-
-def align_to_page(offset: int) -> int:
-    """Align offset to page boundary for optimal mmap performance."""
-    return align_offset(offset, PAGE_SIZE)
 
 
 class SlotView:

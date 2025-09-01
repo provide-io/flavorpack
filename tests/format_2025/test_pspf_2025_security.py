@@ -22,7 +22,6 @@ from flavor.psp.format_2025 import (
     PSPFIndex,
     SlotMetadata,
     generate_key_pair,
-    PSPF_MAGIC,
     HEADER_SIZE,
 )
 
@@ -278,11 +277,15 @@ class TestPSPFSecurity:
         reader = PSPFReader(bundle_path)
         original_index = reader.read_index()
         original_checksum = original_index.index_checksum
-        launcher_size = reader.detect_launcher_size()
+        file_size = bundle_path.stat().st_size
 
-        # Tamper with a field in the index (package_size at offset 16)
+        # Tamper with a field in the MagicTrailer index (package_size at offset 8 in index)
+        # MagicTrailer is at end: file_size - 8200 + 4 (skip 📦) + 8 (skip version+checksum) = offset to package_size
         with open(bundle_path, "r+b") as f:
-            f.seek(launcher_size + 16)  # Seek to package_size field
+            magic_trailer_start = file_size - 8200
+            index_start = magic_trailer_start + 4  # Skip 📦 emoji
+            package_size_offset = index_start + 8  # Skip format_version (4) and index_checksum (4)
+            f.seek(package_size_offset)
             f.write(struct.pack("<Q", 0xDEADBEEF))  # Write invalid package size
 
         # In test environments, checksum validation logs warnings instead of raising
@@ -314,7 +317,7 @@ class TestPSPFSecurity:
             f.write(b"BAD!")
 
         reader = PSPFReader(bundle_path)
-        assert not reader.verify_magic()
+        assert not reader.verify_magic_trailer()
 
         # Launcher should detect invalid magic during integrity check
         launcher = PSPFLauncher(bundle_path)
@@ -417,6 +420,5 @@ class TestPSPFSecurity:
         index1 = reader1.read_index()
         index2 = reader2.read_index()
 
-        assert index1.format_magic == index2.format_magic
         assert index1.format_version == index2.format_version
         assert index1.launcher_size == index2.launcher_size

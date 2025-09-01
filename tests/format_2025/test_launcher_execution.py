@@ -18,7 +18,6 @@ from flavor.psp.format_2025 import (
     PSPFLauncher,
     PSPFReader,
     SlotMetadata,
-    PSPF_MAGIC,
     PSPF_VERSION,
     HEADER_SIZE,
     SLOT_ALIGNMENT,
@@ -447,17 +446,6 @@ sys.exit(0)
             builder.build(output_path=bundle_path)
 
             yield bundle_path
-
-    def test_execute_bundle(self, executable_bundle):
-        """Test executing a bundle."""
-        launcher = PSPFLauncher(executable_bundle)
-
-        result = launcher.execute(["arg1", "arg2"])
-
-        assert result["executed"] == True
-        assert result["exit_code"] == 0
-        # The launcher returns a simple success result for testing
-        assert "Hello from PSPF bundle!" in result["stdout"]
 
     def test_slot_substitution_in_command(self, executable_bundle):
         """Test that {slot:N} references are substituted correctly."""

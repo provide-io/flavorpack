@@ -119,7 +119,7 @@ pub fn extract_slot(reader: &mut Reader, slot_index: usize, dest_dir: &Path) -> 
     let metadata = reader.read_metadata()?;
 
     // Get slot info from metadata
-    let (slot_id, slot_target, slot_encoding, slot_purpose) = if slot_index < metadata.slots.len() {
+    let (slot_id, mut slot_target, slot_encoding, slot_purpose) = if slot_index < metadata.slots.len() {
         let slot_info = &metadata.slots[slot_index];
         (
             slot_info.id.clone(),
@@ -130,6 +130,14 @@ pub fn extract_slot(reader: &mut Reader, slot_index: usize, dest_dir: &Path) -> 
     } else {
         (format!("slot_{slot_index}"), format!("slot_{slot_index}"), String::new(), String::new())
     };
+    
+    // Substitute {workenv} placeholder in target path
+    // Since we're already extracting to dest_dir (which IS the workenv),
+    // we need to remove the {workenv}/ prefix from the target
+    if slot_target.contains("{workenv}") {
+        slot_target = slot_target.replace("{workenv}/", "");
+        slot_target = slot_target.replace("{workenv}", "");
+    }
 
     debug!(
         "🎯 Slot {slot_index} encoding: '{slot_encoding}', purpose: '{slot_purpose}', id: '{slot_id}'"
@@ -147,9 +155,11 @@ pub fn extract_slot(reader: &mut Reader, slot_index: usize, dest_dir: &Path) -> 
                     "Encoding mismatch: slot {slot_index} declared as GZIP but contains tar archive"
                 )));
             }
+            // For GZIP single files, need to pass the full target path
+            let target_path = dest_dir.join(&slot_target);
             extract_single_file(
                 &decompressed_data,
-                dest_dir,
+                &target_path,
                 &descriptors,
                 slot_index,
             )?;

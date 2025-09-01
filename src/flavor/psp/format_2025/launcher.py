@@ -15,7 +15,7 @@ import zlib
 
 from pyvider.telemetry import logger
 
-from flavor.psp.format_2025.constants import SLOT_DESCRIPTOR_SIZE
+from flavor.psp.format_2025.constants import DISK_SPACE_MULTIPLIER, SLOT_DESCRIPTOR_SIZE
 from flavor.psp.format_2025.reader import PSPFReader
 from flavor.utils.subprocess import run_command
 
@@ -26,7 +26,7 @@ class PSPFLauncher(PSPFReader):
     def __init__(self, bundle_path: Path | None = None) -> None:
         super().__init__(bundle_path)
         self.bundle_path = bundle_path
-        self.cache_dir = Path.home() / ".cache" / "pspf"
+        self.cache_dir = Path.home() / ".cache" / "flavor"
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
     @contextmanager
@@ -92,6 +92,24 @@ class PSPFLauncher(PSPFReader):
                 )
 
         return slot_entries
+
+    def check_disk_space(self, workenv_dir: Path) -> None:
+        """Check if there's enough disk space for extraction.
+        
+        Args:
+            workenv_dir: Directory where slots will be extracted
+            
+        Raises:
+            OSError: If insufficient disk space available
+        """
+        from flavor.utils.disk import check_disk_space
+        
+        # Calculate total size needed (compressed size * multiplier for safety)
+        slot_table = self.read_slot_table()
+        total_needed = sum(slot['size'] * DISK_SPACE_MULTIPLIER for slot in slot_table)
+        
+        # Use the utility function
+        check_disk_space(workenv_dir, total_needed)
 
     def extract_all_slots(self, workenv_dir: Path) -> dict[int, Path]:
         """Extract all slots to the work environment.
@@ -262,7 +280,7 @@ class PSPFLauncher(PSPFReader):
         package_version = metadata["package"]["version"]
 
         # Create work environment directory
-        workenv_base = Path.home() / ".cache" / "pspf" / "workenv"
+        workenv_base = Path.home() / ".cache" / "flavor" / "workenv"
         workenv_dir = workenv_base / f"{package_name}_{package_version}"
         workenv_dir.mkdir(parents=True, exist_ok=True)
 

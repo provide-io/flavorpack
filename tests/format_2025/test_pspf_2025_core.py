@@ -22,10 +22,11 @@ from flavor.psp.format_2025 import (
     PSPFIndex,
     SlotMetadata,
     generate_key_pair,
-    PSPF_MAGIC,
     PSPF_VERSION,
     HEADER_SIZE,
-    EMOJI_MAGIC_SIZE,
+    MAGIC_TRAILER_SIZE,
+    PACKAGE_EMOJI_BYTES,
+    MAGIC_WAND_EMOJI_BYTES,
     SLOT_ALIGNMENT,
     SLOT_DESCRIPTOR_SIZE,
     MAGIC_WAND_EMOJI,
@@ -165,14 +166,20 @@ class TestPSPFCore:
 
         # Read bundle
         reader = PSPFReader(bundle_path)
-        launcher_size = reader.detect_launcher_size()
-
-        # Check index magic at correct position
+        
+        # Check MagicTrailer at end of file
         with open(bundle_path, "rb") as f:
-            f.seek(launcher_size)
-            index_magic = f.read(8)
-
-        assert index_magic == PSPF_MAGIC
+            # Seek to start of MagicTrailer
+            f.seek(-MAGIC_TRAILER_SIZE, 2)
+            trailer = f.read(MAGIC_TRAILER_SIZE)
+            
+        # Verify MagicTrailer structure
+        assert trailer[:4] == PACKAGE_EMOJI_BYTES  # 📦 at start
+        assert trailer[-4:] == MAGIC_WAND_EMOJI_BYTES  # 🪄 at end
+        
+        # Verify index version in trailer
+        index_version = struct.unpack("<I", trailer[4:8])[0]
+        assert index_version == PSPF_VERSION
 
     def test_index_block_size(self, test_builder):
         """Test index block is exactly 256 bytes."""
@@ -195,7 +202,6 @@ class TestPSPFCore:
         # Read and verify checksum
         reader = PSPFReader(bundle_path)
         index = reader.read_index()  # Should not raise
-        assert index.format_magic == PSPF_MAGIC
         assert index.format_version == PSPF_VERSION
 
     def test_metadata_archive_structure(self, temp_dir, simple_metadata, test_builder):
@@ -322,7 +328,7 @@ class TestPSPFCore:
         assert result.success, f"Build failed: {result.errors}"
 
         reader = PSPFReader(bundle_path)
-        assert reader.verify_magic()
+        assert reader.verify_magic_trailer()
 
         # Test corrupted magic
         with open(bundle_path, "r+b") as f:
@@ -330,7 +336,7 @@ class TestPSPFCore:
             f.write(b"BAD!")
 
         reader2 = PSPFReader(bundle_path)
-        assert not reader2.verify_magic()
+        assert not reader2.verify_magic_trailer()
 
     def test_launcher_size_detection(self, temp_dir, simple_metadata, test_builder):
         """Test launcher size detection."""
@@ -342,14 +348,14 @@ class TestPSPFCore:
         assert result.success, f"Build failed: {result.errors}"
 
         reader = PSPFReader(bundle_path)
-        launcher_size = reader.detect_launcher_size()
-
-        # Verify index is at detected position
+        
+        # Verify MagicTrailer at end of file
         with open(bundle_path, "rb") as f:
-            f.seek(launcher_size)
-            magic = f.read(8)
-
-        assert magic == PSPF_MAGIC
+            f.seek(-MAGIC_TRAILER_SIZE, 2)
+            trailer = f.read(MAGIC_TRAILER_SIZE)
+            
+        assert trailer[:4] == PACKAGE_EMOJI_BYTES
+        assert trailer[-4:] == MAGIC_WAND_EMOJI_BYTES
 
     def test_empty_bundle(self, temp_dir, test_builder):
         """Test building bundle with no slots."""
@@ -366,7 +372,7 @@ class TestPSPFCore:
 
         # Verify structure
         reader = PSPFReader(bundle_path)
-        assert reader.verify_magic()
+        assert reader.verify_magic_trailer()
         index = reader.read_index()
         assert index.slot_count == 0
 

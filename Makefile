@@ -38,9 +38,9 @@ validate-package: ## Validate a PSPF package (usage: make validate-package PACKA
 	fi
 	@.github/scripts/validate-package-with-pretaster.sh "$(PACKAGE)"
 
-.PHONY: pretaster-clean
-pretaster-clean: ## Clean pretaster artifacts
-	@cd helpers/pretaster && make clean
+.PHONY: clean-cache
+clean-cache: ## Clean Flavor workenv cache
+	@cd helpers/pretaster && make clean-cache
 
 .PHONY: pretaster-logs
 pretaster-logs: ## Show pretaster test logs

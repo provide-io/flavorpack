@@ -23,19 +23,33 @@ fn main() {
 }
 
 fn run() -> i32 {
-    // --- Argument and Environment Parsing ---
-    let args: Vec<String> = env::args().collect();
-    
-    // Check for --version flag early (before PSPF validation)
-    if args.len() > 1 && args[1] == "--version" {
-        println!("flavor-rs-launcher {}", flavor::version::full_version());
-        return 0;
+    // Initialize logging as early as possible for debugging
+    if let Ok(level) = env::var("FLAVOR_LAUNCHER_LOG_LEVEL") {
+        flavor::logger::JsonLogger::init_with_level(&level, "FLAVOR_LAUNCHER_LOG_LEVEL");
+    } else if let Ok(level) = env::var("FLAVOR_LOG_LEVEL") {
+        flavor::logger::JsonLogger::init_with_level(&level, "FLAVOR_LOG_LEVEL");
+    } else {
+        flavor::logger::JsonLogger::init();
     }
     
+    log::debug!("🚀 Launcher process started");
+    log::trace!("Launcher starting");
+    
+    // --- Argument and Environment Parsing ---
+    let args: Vec<String> = env::args().collect();
+    log::trace!("Arguments: {:?}", args);
+    
+    // ⚠️ CRITICAL: NEVER intercept command line arguments unless in CLI mode!
+    // The launcher must pass ALL arguments to the package entrypoint unchanged.
+    // Only FLAVOR_LAUNCHER_CLI=1 enables CLI mode where the launcher processes commands.
+    
     let exe_path = match env::current_exe() {
-        Ok(path) => path,
+        Ok(path) => {
+            log::debug!("📍 Executable path: {:?}", path);
+            path
+        },
         Err(e) => {
-            eprintln!("Failed to get executable path: {}", e);
+            log::error!("Failed to get executable path: {}", e);
             return EXIT_IO_ERROR;
         }
     };
@@ -96,16 +110,11 @@ fn run() -> i32 {
     }
 
     // --- Standard Package Execution ---
-    // Not in CLI mode, so treat all args after the executable name as app arguments.
+    // ⚠️ CRITICAL: Not in CLI mode - pass ALL arguments directly to the package!
+    // The launcher MUST NOT intercept any arguments (including --version).
+    // All command-line arguments belong to the packaged application, not the launcher.
     
-    // Initialize logging for standard execution.
-    if let Ok(level) = env::var("FLAVOR_LAUNCHER_LOG_LEVEL") {
-        flavor::logger::JsonLogger::init_with_level(&level, "FLAVOR_LAUNCHER_LOG_LEVEL");
-    } else if let Ok(level) = env::var("FLAVOR_LOG_LEVEL") {
-        flavor::logger::JsonLogger::init_with_level(&level, "FLAVOR_LOG_LEVEL");
-    } else {
-        flavor::logger::JsonLogger::init();
-    }
+    log::trace!("Not in CLI mode, passing all arguments to entrypoint");
 
     // Launch the package with the provided arguments.
     let remaining_args = args[1..].to_vec();
@@ -114,12 +123,43 @@ fn run() -> i32 {
         workdir: None,
     };
 
+    log::debug!("Attempting to launch package: {:?}", exe_path);
     match launch_package(&exe_path, &remaining_args, options) {
-        Ok(code) => code,
+        Ok(code) => {
+            log::debug!("Package launched successfully, exit code: {}", code);
+            code
+        },
         Err(e) => {
-            eprintln!("Launch error: {}", e);
-            match e.to_string() {
+            log::error!("Launch error: {}", e);
+            
+            // Provide helpful error messages based on the error type
+            let error_msg = e.to_string();
+            if error_msg.contains("signature verification failed") || error_msg.contains("Signature verification failed") {
+                eprintln!("❌ Package signature verification failed");
+                eprintln!("");
+                eprintln!("This package's cryptographic signature could not be verified.");
+                eprintln!("This may indicate the package has been tampered with or was not properly signed.");
+                eprintln!("");
+                eprintln!("To bypass signature verification (NOT RECOMMENDED for production):");
+                eprintln!("  export FLAVOR_INSECURE=1");
+                eprintln!("");
+                eprintln!("For more details, run with FLAVOR_LOG_LEVEL=debug");
+            } else if error_msg.contains("checksum") {
+                eprintln!("❌ Package integrity check failed: {}", error_msg);
+                eprintln!("");
+                eprintln!("The package appears to be corrupted or modified.");
+                eprintln!("");
+                eprintln!("To bypass integrity checks (NOT RECOMMENDED):");
+                eprintln!("  export FLAVOR_INSECURE=1");
+            } else {
+                eprintln!("❌ Failed to launch package: {}", error_msg);
+                eprintln!("");
+                eprintln!("For more details, run with FLAVOR_LOG_LEVEL=debug");
+            }
+            
+            match error_msg {
                 s if s.contains("PSPF") || s.contains("format") => EXIT_PSPF_ERROR,
+                s if s.contains("signature") || s.contains("checksum") => EXIT_SIGNATURE_ERROR,
                 s if s.contains("extract") => EXIT_EXTRACTION_ERROR,
                 s if s.contains("execute") || s.contains("spawn") => EXIT_EXECUTION_ERROR,
                 s if s.contains("I/O") || s.contains("file") => EXIT_IO_ERROR,

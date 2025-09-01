@@ -208,7 +208,7 @@ class PackagingOrchestrator:
                     encoding="gzip",
                     purpose="tool",
                     lifecycle="runtime",
-                    extract_to="{workenv}/bin/uv",
+                    target="bin/uv",
                     permissions="0700",
                 )
                 .add_slot(
@@ -217,7 +217,7 @@ class PackagingOrchestrator:
                     encoding="tgz",
                     purpose="runtime",
                     lifecycle="runtime",
-                    extract_to="{workenv}",
+                    target="{workenv}",
                 )
                 .add_slot(
                     id="wheels",
@@ -225,7 +225,7 @@ class PackagingOrchestrator:
                     encoding="tgz",
                     purpose="payload",
                     lifecycle="cache",
-                    extract_to="{workenv}/wheels",
+                    target="wheels",
                 )
                 .with_options(
                     launcher_bin=launcher_path,
