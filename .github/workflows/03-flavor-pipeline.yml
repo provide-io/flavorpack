@@ -229,8 +229,10 @@ jobs:
           # Copy ONLY the versioned platform-specific ingredients to the package location
           echo "Copying ONLY versioned ${{ matrix.platform }} ingredients to src/flavor/ingredients/bin..."
           
-          # Copy only versioned files that end with the platform name (e.g., flavor-go-launcher-0.3.0-linux_arm64)
-          for binary in ingredients/bin/*-*.*.*-${{ matrix.platform }}; do
+          # Copy only versioned files for the CURRENT version that end with the platform name
+          # e.g., flavor-go-launcher-0.3.0-linux_arm64 but NOT flavor-go-launcher-0.2.9-linux_arm64
+          VERSION="${{ needs.setup.outputs.ingredient_version }}"
+          for binary in ingredients/bin/*-${VERSION}-${{ matrix.platform }}; do
             if [ -f "$binary" ]; then
               cp -v "$binary" src/flavor/ingredients/bin/
             fi
