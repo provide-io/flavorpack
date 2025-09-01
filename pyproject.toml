@@ -211,3 +211,8 @@ dependencies = []
 [tool.flavor.signing]
 private_key_path = "keys/flavor-private.key"
 public_key_path = "keys/flavor-public.key"
+
+[tool.uv.workspace]
+members = [
+    "workenv/foo",
+]
