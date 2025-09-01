@@ -82,6 +82,8 @@ class PythonPackager:
         cmd = [str(python_exe), "-m", "pip", "wheel", "--wheel-dir", str(wheel_dir)]
         if no_deps:
             cmd.append("--no-deps")
+        # Note: pip wheel doesn't support --platform flag (that's for download only)
+        # Wheels built locally will automatically use the current platform
         cmd.append(str(source))
         return cmd
 
@@ -102,6 +104,24 @@ class PythonPackager:
         cmd = [str(python_exe), "-m", "pip", "download", "--dest", str(dest_dir)]
         if binary_only:
             cmd.extend(["--only-binary", ":all:"])
+        
+        # Add platform compatibility for Linux builds
+        import platform as platform_lib
+        if platform_lib.system() == "Linux":
+            # Use manylinux2014 for broad compatibility (glibc 2.17+)
+            # This works on CentOS 7+, Amazon Linux 2, Ubuntu 14.04+, etc.
+            machine = platform_lib.machine()
+            if machine == "x86_64":
+                cmd.extend(["--platform", "manylinux2014_x86_64"])
+            elif machine == "aarch64":
+                cmd.extend(["--platform", "manylinux2014_aarch64"])
+            # Also specify Python version explicitly
+            import sys
+            py_version = f"cp{sys.version_info.major}{sys.version_info.minor}"
+            cmd.extend(["--python-version", f"{sys.version_info.major}.{sys.version_info.minor}"])
+            cmd.extend(["--implementation", "cp"])
+            cmd.extend(["--abi", f"{py_version}"])
+        
         if requirements_file:
             cmd.extend(["-r", str(requirements_file)])
         if packages:
