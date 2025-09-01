@@ -128,30 +128,45 @@ class PythonPackager:
         requirements_file: Path | None = None,
         packages: list[str] | None = None,
         binary_only: bool = True,
+        platform_tag: str | None = None,
     ) -> list[str]:
         """
         Get real pip download command.
 
         CRITICAL: Must use ACTUAL pip3 NOT uv pip - uv pip is incomplete/broken
         DO NOT CHANGE THIS TO uv pip - IT WILL BREAK DEPENDENCY RESOLUTION
+        
+        Args:
+            python_exe: Path to Python executable
+            dest_dir: Directory to download wheels to
+            requirements_file: Optional requirements file
+            packages: Optional list of packages to download
+            binary_only: Whether to download only binary wheels
+            platform_tag: Optional platform tag to use (e.g., "manylinux_2_17_x86_64")
         """
         cmd = [str(python_exe), "-m", "pip", "download", "--dest", str(dest_dir)]
         if binary_only:
             cmd.extend(["--only-binary", ":all:"])
         
-        # For Linux builds, explicitly request manylinux2014 wheels for maximum compatibility
-        # manylinux2014 = manylinux_2_17 = glibc 2.17+ (CentOS 7, Amazon Linux 2, Ubuntu 14.04+)
+        # For Linux builds, explicitly request manylinux wheels for maximum compatibility
+        # manylinux_2_17 = manylinux2014 = glibc 2.17+ (CentOS 7, Amazon Linux 2, Ubuntu 14.04+)
         if get_os_name() == "linux" and binary_only:
-            arch = get_arch_name()
-            logger.trace(f"Linux build detected, arch={arch}, requesting manylinux2014 wheels")
-            
-            # Specify manylinux2014 platform for broad compatibility
-            if arch == "amd64":
-                cmd.extend(["--platform", "manylinux2014_x86_64"])
-                logger.debug("Added platform constraint: manylinux2014_x86_64")
-            elif arch == "arm64":
-                cmd.extend(["--platform", "manylinux2014_aarch64"])
-                logger.debug("Added platform constraint: manylinux2014_aarch64")
+            if platform_tag:
+                # Use explicitly provided platform tag
+                cmd.extend(["--platform", platform_tag])
+                logger.debug(f"Added platform constraint: {platform_tag}")
+            else:
+                arch = get_arch_name()
+                logger.trace(f"Linux build detected, arch={arch}, requesting manylinux_2_17 wheels")
+                
+                # Use manylinux_2_17 format (modern packages like grpcio use this)
+                # This is equivalent to manylinux2014 (both mean glibc 2.17+)
+                if arch == "amd64":
+                    cmd.extend(["--platform", "manylinux_2_17_x86_64"])
+                    logger.debug("Added platform constraint: manylinux_2_17_x86_64")
+                elif arch == "arm64":
+                    cmd.extend(["--platform", "manylinux_2_17_aarch64"])
+                    logger.debug("Added platform constraint: manylinux_2_17_aarch64")
             
             # Also specify Python version to match our target
             py_parts = self.python_version.split('.')
@@ -303,12 +318,21 @@ class PythonPackager:
         with tempfile.TemporaryDirectory() as temp_dir:
             logger.trace(f"Created temp directory for UV download: {temp_dir}")
             # Use the existing _get_pypa_pip_download_cmd method
-            # This will automatically add manylinux2014 platform constraints on Linux
+            # UV still publishes with manylinux2014 tags, so use that explicitly
+            arch = get_arch_name()
+            uv_platform_tag = None
+            if get_os_name() == "linux":
+                if arch == "amd64":
+                    uv_platform_tag = "manylinux2014_x86_64"
+                elif arch == "arm64":
+                    uv_platform_tag = "manylinux2014_aarch64"
+            
             download_cmd = self._get_pypa_pip_download_cmd(
                 python_exe=python_exe,
                 dest_dir=Path(temp_dir),
                 packages=["uv"],
-                binary_only=True
+                binary_only=True,
+                platform_tag=uv_platform_tag
             )
             
             try:
