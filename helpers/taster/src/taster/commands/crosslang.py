@@ -8,7 +8,7 @@ import sys
 import tempfile
 
 import click
-from pyvider.telemetry import logger
+from provide.foundation import logger
 
 from flavor.ingredients.manager import IngredientManager as HelperManager
 from flavor.utils.subprocess import run_command
