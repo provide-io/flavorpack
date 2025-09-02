@@ -7,7 +7,7 @@ import platform
 import tarfile
 from typing import Any
 
-from pyvider.telemetry import logger
+from provide.foundation import logger
 
 from flavor.exceptions import BuildError
 
