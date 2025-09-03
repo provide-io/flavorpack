@@ -1,0 +1,111 @@
+site_name: FlavorPack Documentation
+site_description: Progressive Secure Package Format (PSPF/2025) - Cross-language packaging system
+site_author: provide.io
+site_url: https://flavorpack.io
+repo_url: https://github.com/provide-io/flavorpack
+repo_name: provide-io/flavorpack
+copyright: Copyright &copy; 2024 provide.io
+
+theme:
+  name: material
+  language: en
+  
+  palette:
+    # Light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: black
+      accent: deep purple
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    
+    # Dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: deep purple
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  
+  font:
+    text: Inter
+    code: Fira Code
+  
+  features:
+    - navigation.instant
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.indexes
+    - navigation.top
+    - toc.follow
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+
+plugins:
+  - search
+  - autorefs
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          paths: [src]
+          options:
+            docstring_style: google
+            show_source: true
+            show_root_heading: true
+            members_order: source
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - toc:
+      permalink: true
+  - tables
+  - attr_list
+  - md_in_html
+
+extra_css:
+  - stylesheets/extra.css
+
+nav:
+  - Home: index.md
+  
+  - Getting Started:
+    - Overview: getting-started/index.md
+    - Installation: getting-started/installation.md
+    - Quick Start: getting-started/quickstart.md
+    - First Package: getting-started/first-package.md
+    - Examples: getting-started/examples.md
+  
+  - Concepts:
+    - PSPF Format: guide/concepts/pspf-format.md
+  
+  - Reference:
+    - API Documentation: API-REFERENCE.md
+    - Architecture: ARCHITECTURE.md
+    - Development: DEVELOPMENT.md
+    - Troubleshooting: TROUBLESHOOTING.md
+  
+  - Specifications:
+    - FEP-0001 Core: spec/feps/fep-0001-pspf-core-specification.md
+    - FEP-0002 Workenv: spec/feps/fep-0002-workenv-management.md
+    - FEP-0003 Security: spec/feps/fep-0003-runtime-security-model.md
+    - FEP-0004 Staged: spec/feps/fep-0004-staged-payload-architecture.md
+    - FEP-0005 JIT: spec/feps/fep-0005-jit-loading.md
+  
+  - About:
+    - Changelog: changelog.md
+    - License: license.md
