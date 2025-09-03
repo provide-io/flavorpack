@@ -85,30 +85,35 @@
 }
 
 .pspf-layer-launcher {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #6B46C1;
   color: white;
+  font-weight: 600;
 }
 
 .pspf-layer-index {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  background: #9333EA;
   color: white;
+  font-weight: 600;
 }
 
 .pspf-layer-metadata {
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  background: #A855F7;
   color: white;
+  font-weight: 600;
 }
 
 .pspf-layer-slots {
-  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+  background: #C084FC;
   color: white;
+  font-weight: 600;
 }
 
 .pspf-layer-magic {
-  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-  color: white;
+  background: #E9D5FF;
+  color: #6B46C1;
   text-align: center;
   font-size: 1.5em;
+  font-weight: 700;
 }
 
 /* Platform badges */

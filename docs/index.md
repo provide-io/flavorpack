@@ -110,11 +110,25 @@ The PSPF 2025 format provides a robust, secure, and efficient packaging solution
 
 ### Platform Support
 
-{{ platform_support_table() }}
+| Platform | Architecture | Status | Binary Type | Notes |
+|----------|-------------|---------|------------|-------|
+| Linux | x86_64 | ✅ Full | Static (musl) | CentOS 7+, Ubuntu, Alpine |
+| Linux | aarch64 | ✅ Full | Static (musl) | ARM64 servers |
+| macOS | x86_64 | ✅ Full | Dynamic | Intel Macs |
+| macOS | arm64 | ✅ Full | Dynamic | Apple Silicon |
+| Windows | x86_64 | 🚧 Beta | Dynamic | Windows 10+ |
+| FreeBSD | x86_64 | 📋 Planned | - | Community request |
 
 ### Requirements
 
-{{ requirements_table() }}
+| Component | Minimum Version | Recommended | Notes |
+|-----------|----------------|-------------|-------|
+| Python | 3.11 | 3.12+ | Type hints, modern features |
+| Go | 1.21 | 1.22+ | For building Go ingredients |
+| Rust | 1.75 | 1.80+ | For building Rust ingredients |
+| UV | 0.1.18 | Latest | Package management |
+| Git | 2.25 | Latest | Version control |
+| Make | 3.81 | 4.0+ | Build automation |
 
 ## Documentation Overview
 

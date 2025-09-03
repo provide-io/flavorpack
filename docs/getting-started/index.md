@@ -6,7 +6,14 @@ Welcome to FlavorPack! This guide will help you get up and running with creating
 
 Before you begin, ensure you have:
 
-{{ requirements_table() }}
+| Component | Minimum Version | Recommended | Notes |
+|-----------|----------------|-------------|-------|
+| Python | 3.11 | 3.12+ | Type hints, modern features |
+| Go | 1.21 | 1.22+ | For building Go ingredients |
+| Rust | 1.75 | 1.80+ | For building Rust ingredients |
+| UV | 0.1.18 | Latest | Package management |
+| Git | 2.25 | Latest | Version control |
+| Make | 3.81 | 4.0+ | Build automation |
 
 !!! info "Platform Support"
     FlavorPack supports Linux, macOS, and Windows (beta). For the best experience, we recommend using Linux or macOS.
