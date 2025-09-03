@@ -9,9 +9,6 @@ copyright: Copyright &copy; 2024 provide.io
 
 theme:
   name: material
-  custom_dir: docs/overrides
-  logo: assets/logo.png
-  favicon: assets/favicon.png
   language: en
   
   palette:
@@ -136,22 +133,6 @@ plugins:
   
   - section-index
   
-  - git-revision-date-localized:
-      enable_creation_date: true
-      type: iso_datetime
-      timezone: UTC
-      fallback_to_build_date: false
-      
-  - macros:
-      modules:
-        - docs.macros
-      
-  - include-markdown
-  
-  - mermaid2:
-      arguments:
-        theme: |
-          ^(JSON.parse(__md_get("__palette").index == 1)) ? 'dark' : 'light'
 
 markdown_extensions:
   # Python Markdown
@@ -190,8 +171,6 @@ markdown_extensions:
   - pymdownx.keys
   - pymdownx.smartsymbols
   - pymdownx.snippets:
-      auto_append:
-        - includes/abbreviations.md
       check_paths: true
   - pymdownx.superfences:
       custom_fences:
@@ -201,9 +180,6 @@ markdown_extensions:
   - pymdownx.tabbed:
       alternate_style: true
       combine_header_slug: true
-      slugify: !!python/object/apply:pymdownx.slugs.uslugify
-        kwds:
-          case: lower
   - pymdownx.tasklist:
       custom_checkbox: true
   - pymdownx.critic:
