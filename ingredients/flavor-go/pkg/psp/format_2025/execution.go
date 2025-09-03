@@ -849,9 +849,9 @@ func cleanupLifecycleSlots(workenvDir string, metadata *Metadata, slotPaths map[
 		if slot.Lifecycle == "init" {
 			slotPath := filepath.Join(workenvDir, slot.ID)
 			if err := os.RemoveAll(slotPath); err != nil {
-				logger.Debug("Failed to remove init slot", "slot", slot.ID, "path", slotPath, "error", err)
+				logger.Debug("⚠️ Failed to remove init slot", "slot", slot.ID, "path", slotPath, "error", err)
 			} else {
-				logger.Debug("Removed init slot", "slot", slot.ID, "path", slotPath)
+				logger.Debug("✅ Removed init slot", "slot", slot.ID, "path", slotPath)
 			}
 			// Remove from slotPaths map so it's not used in execution
 			delete(slotPaths, i)
