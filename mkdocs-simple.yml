@@ -35,12 +35,12 @@ theme:
   
   features:
     - navigation.instant
-    - navigation.tabs
     - navigation.sections
     - navigation.expand
     - navigation.indexes
-    - navigation.top
+    - navigation.path
     - toc.follow
+    - toc.integrate
     - search.suggest
     - search.highlight
     - content.code.copy
