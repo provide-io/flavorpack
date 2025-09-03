@@ -9,15 +9,13 @@ All new code should import directly from provide.foundation.process.
 """
 
 from collections.abc import Mapping
+import os
 from pathlib import Path
 import subprocess
 
-from provide.foundation.process.runner import (
-    run_command as _run_command,
-    run_command_simple as _run_command_simple,
-    run_build_command,
-    BuildError,
-)
+from provide.foundation import logger
+from provide.foundation.process import run, run_simple
+from flavor.exceptions import BuildError
 
 
 def run_command(
@@ -50,15 +48,22 @@ def run_command(
         BuildError: If command fails and check=True
         subprocess.TimeoutExpired: If timeout is exceeded
     """
-    # Use foundation's run_build_command for build operations
+    if log_command:
+        logger.info(f"🗣️ Running command: {' '.join(command)}")
+
+    # Add NO_COVERAGE to environment for build commands
+    build_env = dict(env) if env is not None else os.environ.copy()
+    build_env["NO_COVERAGE"] = "1"
+    
     try:
-        result = run_build_command(
+        # Use foundation's run function
+        result = run(
             command,
             cwd=cwd,
-            env=env,
+            env=build_env,
             capture_output=capture_output,
+            check=check,
             timeout=timeout,
-            quiet=not log_command,
         )
         
         # Convert foundation's CompletedProcess to stdlib's
@@ -68,8 +73,10 @@ def run_command(
             stdout=result.stdout,
             stderr=result.stderr,
         )
-    except BuildError:
-        # Re-raise as-is for compatibility
+    except Exception as e:
+        # Convert ProcessError to BuildError for backward compatibility
+        if check and "exit code" in str(e):
+            raise BuildError(str(e)) from e
         raise
 
 
@@ -91,5 +98,7 @@ def run_command_simple(
     Raises:
         BuildError: If command fails
     """
-    result = run_command(command, cwd=cwd, capture_output=True, check=True)
-    return result.stdout.strip()
+    try:
+        return run_simple(command, cwd=cwd)
+    except Exception as e:
+        raise BuildError(str(e)) from e
