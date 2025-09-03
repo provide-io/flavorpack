@@ -1,0 +1,398 @@
+site_name: FlavorPack Documentation
+site_description: Progressive Secure Package Format (PSPF/2025) - Cross-language packaging system for self-contained executables
+site_author: provide.io
+site_url: https://flavorpack.io
+repo_url: https://github.com/provide-io/flavorpack
+repo_name: provide-io/flavorpack
+edit_uri: edit/main/docs/
+copyright: Copyright &copy; 2024 provide.io
+
+theme:
+  name: material
+  custom_dir: docs/overrides
+  logo: assets/logo.png
+  favicon: assets/favicon.png
+  language: en
+  
+  palette:
+    # Light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: deep orange
+      accent: orange
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    
+    # Dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: deep orange
+      accent: orange
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  
+  font:
+    text: Inter
+    code: JetBrains Mono
+  
+  features:
+    # Navigation
+    - navigation.instant
+    - navigation.instant.prefetch
+    - navigation.instant.progress
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.expand
+    - navigation.path
+    - navigation.indexes
+    - navigation.top
+    - navigation.footer
+    
+    # Table of contents
+    - toc.follow
+    - toc.integrate
+    
+    # Search
+    - search.suggest
+    - search.highlight
+    - search.share
+    
+    # Content
+    - content.code.copy
+    - content.code.select
+    - content.code.annotate
+    - content.tabs.link
+    - content.tooltips
+    - content.action.edit
+    - content.action.view
+    
+    # Header
+    - header.autohide
+    
+    # Announce
+    - announce.dismiss
+
+plugins:
+  - search:
+      separator: '[\s\u200b\-_,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
+      lang:
+        - en
+  
+  - autorefs
+  
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          paths: [src]
+          options:
+            docstring_style: google
+            docstring_section_style: list
+            show_source: true
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
+            show_root_heading: true
+            show_root_toc_entry: true
+            show_object_full_path: false
+            show_category_heading: true
+            show_if_no_docstring: false
+            show_signature: true
+            show_signature_annotations: true
+            show_bases: true
+            show_submodules: false
+            group_by_category: true
+            merge_init_into_class: true
+            separate_signature: true
+            line_length: 80
+            show_docstring_attributes: true
+            show_docstring_functions: true
+            show_docstring_classes: true
+            show_docstring_modules: true
+            show_docstring_description: true
+            show_docstring_examples: true
+            show_docstring_raises: true
+            show_docstring_returns: true
+            show_docstring_warns: true
+            show_docstring_yields: true
+            show_docstring_receives: true
+            show_docstring_parameters: true
+            show_docstring_other_parameters: true
+            annotations_path: full
+            members_order: source
+            filters:
+              - "!^_"
+              - "^__init__$"
+  
+  - gen-files:
+      scripts:
+        - docs/gen_ref_pages.py
+  
+  - literate-nav:
+      nav_file: SUMMARY.md
+  
+  - section-index
+  
+  - git-revision-date-localized:
+      enable_creation_date: true
+      type: iso_datetime
+      timezone: UTC
+      fallback_to_build_date: false
+      
+  - macros:
+      modules:
+        - docs.macros
+      
+  - include-markdown
+  
+  - mermaid2:
+      arguments:
+        theme: |
+          ^(JSON.parse(__md_get("__palette").index == 1)) ? 'dark' : 'light'
+
+markdown_extensions:
+  # Python Markdown
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - toc:
+      permalink: true
+      toc_depth: 3
+  - tables
+  - meta
+  
+  # Python Markdown Extensions
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.mark
+  - pymdownx.tilde
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+      use_pygments: true
+      auto_title: true
+      linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.smartsymbols
+  - pymdownx.snippets:
+      auto_append:
+        - includes/abbreviations.md
+      check_paths: true
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+      combine_header_slug: true
+      slugify: !!python/object/apply:pymdownx.slugs.uslugify
+        kwds:
+          case: lower
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.critic:
+      mode: view
+  - pymdownx.magiclink:
+      normalize_issue_symbols: true
+      repo_url_shorthand: true
+      user: provide-io
+      repo: flavorpack
+
+extra:
+  version:
+    provider: mike
+    default: latest
+  
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/provide-io/flavorpack
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/flavorpack/
+    - icon: fontawesome/solid/globe
+      link: https://provide.io
+  
+  analytics:
+    provider: google
+    property: G-XXXXXXXXXX
+    
+  consent:
+    title: Cookie consent
+    description: >-
+      We use cookies to recognize your repeated visits and preferences, as well
+      as to measure the effectiveness of our documentation and whether users
+      find what they're searching for. With your consent, you're helping us to
+      make our documentation better.
+
+extra_css:
+  - stylesheets/extra.css
+
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js
+
+nav:
+  - Home: 
+    - index.md
+    - Changelog: changelog.md
+    - License: license.md
+  
+  - Getting Started:
+    - getting-started/index.md
+    - Installation: getting-started/installation.md
+    - Quick Start: getting-started/quickstart.md
+    - First Package: getting-started/first-package.md
+    - Examples: getting-started/examples.md
+  
+  - User Guide:
+    - guide/index.md
+    - Core Concepts:
+      - guide/concepts/index.md
+      - PSPF Format: guide/concepts/pspf-format.md
+      - Package Structure: guide/concepts/package-structure.md
+      - Security Model: guide/concepts/security.md
+      - Work Environments: guide/concepts/workenv.md
+    
+    - Creating Packages:
+      - guide/packaging/index.md
+      - Python Applications: guide/packaging/python.md
+      - Package Configuration: guide/packaging/configuration.md
+      - Manifest Files: guide/packaging/manifest.md
+      - Signing & Verification: guide/packaging/signing.md
+      - Platform Support: guide/packaging/platforms.md
+    
+    - Using Packages:
+      - guide/usage/index.md
+      - Running Packages: guide/usage/running.md
+      - Command Line Interface: guide/usage/cli.md
+      - Extracting & Inspecting: guide/usage/inspection.md
+      - Cache Management: guide/usage/cache.md
+      - Environment Variables: guide/usage/environment.md
+    
+    - Advanced Topics:
+      - guide/advanced/index.md
+      - Cross-Language Support: guide/advanced/cross-language.md
+      - Custom Launchers: guide/advanced/launchers.md
+      - Builder Selection: guide/advanced/builders.md
+      - Performance Optimization: guide/advanced/performance.md
+      - Debugging: guide/advanced/debugging.md
+  
+  - API Reference:
+    - api/index.md
+    - Python API:
+      - api/python/index.md
+      - Core API: api/python/api.md
+      - CLI: api/python/cli.md
+      - Packaging:
+        - api/python/packaging/index.md
+        - Orchestrator: api/python/packaging/orchestrator.md
+        - Python Packager: api/python/packaging/python_packager.md
+        - Keys: api/python/packaging/keys.md
+      - PSPF Format:
+        - api/python/psp/index.md
+        - Builder: api/python/psp/builder.md
+        - Reader: api/python/psp/reader.md
+        - Launcher: api/python/psp/launcher.md
+        - Crypto: api/python/psp/crypto.md
+        - Metadata: api/python/psp/metadata.md
+        - Slots: api/python/psp/slots.md
+      - Utilities:
+        - api/python/utils/index.md
+        - Platform: api/python/utils/platform.md
+        - Permissions: api/python/utils/permissions.md
+        - Archive: api/python/utils/archive.md
+    
+    - Native Components:
+      - api/native/index.md
+      - Go Ingredients: api/native/go.md
+      - Rust Ingredients: api/native/rust.md
+      - Cross-Language API: api/native/cross-language.md
+  
+  - Development:
+    - development/index.md
+    - Contributing: development/contributing.md
+    - Architecture: development/architecture.md
+    - Building Ingredients: development/ingredients.md
+    - Testing:
+      - development/testing/index.md
+      - Unit Tests: development/testing/unit.md
+      - Integration Tests: development/testing/integration.md
+      - Cross-Language Tests: development/testing/cross-language.md
+    - CI/CD: development/ci-cd.md
+    - Release Process: development/release.md
+  
+  - PSPF Specification:
+    - spec/index.md
+    - Format Overview: spec/overview.md
+    - PSPF 2025 Edition: spec/pspf-2025.md
+    - Binary Layout: spec/binary-layout.md
+    - Metadata Format: spec/metadata.md
+    - Slot System: spec/slots.md
+    - Cryptography: spec/crypto.md
+    - FEPs (Enhancement Proposals):
+      - spec/feps/index.md
+      - FEP-0001 Core Specification: spec/feps/fep-0001.md
+      - FEP-0002 Workenv Management: spec/feps/fep-0002.md
+      - FEP-0003 Runtime Security: spec/feps/fep-0003.md
+      - FEP-0004 Staged Payload: spec/feps/fep-0004.md
+      - FEP-0005 JIT Loading: spec/feps/fep-0005.md
+  
+  - Cookbook:
+    - cookbook/index.md
+    - Recipes:
+      - cookbook/recipes/index.md
+      - Docker Integration: cookbook/recipes/docker.md
+      - CI/CD Pipelines: cookbook/recipes/ci-cd.md
+      - Multi-Platform Builds: cookbook/recipes/multi-platform.md
+      - Cloud Deployment: cookbook/recipes/cloud.md
+      - Testing Strategies: cookbook/recipes/testing.md
+    
+    - Examples:
+      - cookbook/examples/index.md
+      - CLI Tools: cookbook/examples/cli-tool.md
+      - Web Applications: cookbook/examples/web-app.md
+      - Data Pipelines: cookbook/examples/data-pipeline.md
+      - Microservices: cookbook/examples/microservices.md
+      - Machine Learning: cookbook/examples/ml-models.md
+  
+  - Troubleshooting:
+    - troubleshooting/index.md
+    - Common Issues: troubleshooting/common.md
+    - Platform-Specific:
+      - troubleshooting/platforms/index.md
+      - macOS: troubleshooting/platforms/macos.md
+      - Linux: troubleshooting/platforms/linux.md
+      - Windows: troubleshooting/platforms/windows.md
+    - Error Messages: troubleshooting/errors.md
+    - FAQ: troubleshooting/faq.md
+  
+  - Community:
+    - community/index.md
+    - Support: community/support.md
+    - Discussions: community/discussions.md
+    - Blog: community/blog.md
+
+validation:
+  omitted_files: warn
+  absolute_links: warn
+  unrecognized_links: warn
+
+watch:
+  - src/flavor
+  - docs
+  - mkdocs.yml
