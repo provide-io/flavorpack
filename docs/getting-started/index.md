@@ -88,7 +88,7 @@ Now that you have FlavorPack installed:
 
 1. **[Create Your First Package](first-package.md)** - Package a simple Python application
 2. **[Explore Examples](examples.md)** - See real-world usage patterns
-3. **[Read the User Guide](../guide/)** - Deep dive into concepts and features
+3. **[Read the User Guide](../guide/index.md)** - Deep dive into concepts and features
 
 ## Troubleshooting
 
@@ -116,7 +116,7 @@ Now that you have FlavorPack installed:
 
 If you run into issues:
 
-1. Check the [Troubleshooting Guide](../troubleshooting/)
+1. Check the [Troubleshooting Guide](../TROUBLESHOOTING.md)
 2. Search [existing issues](https://github.com/provide-io/flavorpack/issues)
 3. Join the [discussions](https://github.com/provide-io/flavorpack/discussions)
 4. Open a [new issue](https://github.com/provide-io/flavorpack/issues/new)

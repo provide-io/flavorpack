@@ -50,6 +50,10 @@ theme:
 plugins:
   - search
   - autorefs
+  - mermaid2:
+      arguments:
+        theme: |
+          ^(document.body.classList.contains('dark')) ? 'dark' : 'light'
   - mkdocstrings:
       default_handler: python
       handlers:
@@ -64,7 +68,11 @@ plugins:
 markdown_extensions:
   - admonition
   - pymdownx.details
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:mermaid2.fence_mermaid_custom
   - pymdownx.tabbed:
       alternate_style: true
   - pymdownx.highlight:
@@ -90,7 +98,8 @@ nav:
     - First Package: getting-started/first-package.md
     - Examples: getting-started/examples.md
   
-  - Concepts:
+  - User Guide:
+    - Overview: guide/index.md
     - PSPF Format: guide/concepts/pspf-format.md
   
   - Reference:
@@ -98,6 +107,8 @@ nav:
     - Architecture: ARCHITECTURE.md
     - Development: DEVELOPMENT.md
     - Troubleshooting: TROUBLESHOOTING.md
+    - User Guide (Legacy): USER-GUIDE.md
+    - CI/CD: CI-CD.md
   
   - Specifications:
     - FEP-0001 Core: spec/feps/fep-0001-pspf-core-specification.md
@@ -109,3 +120,4 @@ nav:
   - About:
     - Changelog: changelog.md
     - License: license.md
+    - Migration Plan: MIGRATION_PLAN.md
