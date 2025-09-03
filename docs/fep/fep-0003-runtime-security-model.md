@@ -4,7 +4,7 @@
 **Type**: Standards Track  
 **Created**: 2025-08-28  
 **Updated**: 2025-09-02  
-**Implementation**: In Progress ⚠️
+**Implementation**: Basic Platform Layer Only ⚠️
 
 ## Abstract
 
@@ -247,13 +247,15 @@ def set_platform_environment(env: dict) -> None:
 
 ## 5. Insecure Mode
 
+**Note: Not yet implemented in current version**
+
 For development and debugging, security can be relaxed:
 
 ### 5.1 Environment Variable
 
 ```bash
 # Disable signature verification and security policies
-FLAVOR_INSECURE=1 ./myapp.psp
+FLAVOR_INSECURE=1 ./myapp.psp  # PLANNED FEATURE
 ```
 
 ### 5.2 Effects of Insecure Mode
@@ -283,15 +285,15 @@ else:
 ### 6.1 Implemented ✅
 
 - **Platform environment layer**: Full implementation in `environment.py`
-- **Basic environment passing**: Workenv and execution layers
-- **Insecure mode**: `FLAVOR_INSECURE` environment variable
-- **Placeholder substitution**: Full support in paths and environment
+- **Basic environment passing**: Workenv and execution layers via metadata
+- **Placeholder substitution**: Full support in paths and environment variables
 
-### 6.2 Partially Implemented ⚠️
+### 6.2 Not Yet Implemented ❌
 
-- **Runtime security layer**: Basic structure exists, full filtering not complete
-- **Environment mapping**: Supported but not fully tested
-- **Resource limits**: Only memory hints implemented
+- **Runtime security layer**: Planned but not implemented
+- **Environment filtering/mapping**: Not implemented
+- **Insecure mode**: `FLAVOR_INSECURE` variable not checked
+- **Resource limits**: Only memory hints in index, not enforced
 
 ### 6.3 Not Implemented ❌
 

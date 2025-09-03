@@ -104,10 +104,11 @@ ACCESS_MMAP = 1     # Memory-mapped access
 ACCESS_AUTO = 2     # Choose based on size
 ACCESS_STREAM = 3   # Streaming access
 
-# Cache strategies
-CACHE_NORMAL = 0    # Standard caching
-CACHE_AGGRESSIVE = 1 # Preload everything
-CACHE_MINIMAL = 2   # Cache only essentials
+# Cache priorities
+CACHE_LOW = 0       # Evict first
+CACHE_NORMAL = 1    # Standard caching
+CACHE_HIGH = 2      # Keep in memory
+CACHE_CRITICAL = 3  # Never evict
 ```
 
 ## 4. Metadata Specification
