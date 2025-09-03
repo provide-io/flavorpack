@@ -614,6 +614,7 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 		}
 	}
 
+	// Run setup commands if cache is invalid
 	if !workenvValid && len(metadata.SetupCommands) > 0 {
 		logger.Info("🔧 Running setup commands", "count", len(metadata.SetupCommands))
 		metadataDir := filepath.Join(workenvDir, "metadata")
@@ -726,6 +727,10 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 				}
 			}
 		}
+		
+		// Clean up lifecycle-based slots after setup
+		logger.Info("🧹 Cleaning up lifecycle slots...")
+		cleanupLifecycleSlots(workenvDir, metadata, slotPaths, logger)
 	}
 
 	if metadata.Execution == nil {
@@ -835,4 +840,21 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 	}
 
 	return cmd, nil
+}
+
+// cleanupLifecycleSlots removes slots based on their lifecycle after setup
+func cleanupLifecycleSlots(workenvDir string, metadata *Metadata, slotPaths map[int]string, logger hclog.Logger) {
+	for i, slot := range metadata.Slots {
+		// Clean up init lifecycle slots - they're only needed during setup
+		if slot.Lifecycle == "init" {
+			slotPath := filepath.Join(workenvDir, slot.ID)
+			if err := os.RemoveAll(slotPath); err != nil {
+				logger.Debug("Failed to remove init slot", "slot", slot.ID, "path", slotPath, "error", err)
+			} else {
+				logger.Debug("Removed init slot", "slot", slot.ID, "path", slotPath)
+			}
+			// Remove from slotPaths map so it's not used in execution
+			delete(slotPaths, i)
+		}
+	}
 }
