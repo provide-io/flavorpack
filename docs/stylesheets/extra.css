@@ -1,0 +1,285 @@
+/* FlavorPack Documentation Custom Styles */
+
+:root {
+  /* Brand colors */
+  --flavor-orange: #ff6b35;
+  --flavor-deep-orange: #ff4500;
+  --flavor-light-orange: #ffa500;
+  --flavor-dark: #2c3e50;
+  --flavor-light: #ecf0f1;
+  
+  /* Adjust Material theme colors */
+  --md-primary-fg-color: var(--flavor-deep-orange);
+  --md-primary-fg-color--light: var(--flavor-light-orange);
+  --md-primary-fg-color--dark: var(--flavor-orange);
+  --md-accent-fg-color: var(--flavor-orange);
+}
+
+/* Code blocks with language labels */
+.highlight {
+  position: relative;
+}
+
+.highlight::before {
+  content: attr(data-lang);
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 0.2em 0.5em;
+  background: var(--md-code-bg-color);
+  color: var(--md-code-fg-color);
+  font-size: 0.75em;
+  font-family: var(--md-code-font-family);
+  border-bottom-left-radius: 0.2rem;
+  opacity: 0.5;
+}
+
+/* API reference styling */
+.doc-class {
+  border-left: 3px solid var(--md-primary-fg-color);
+  padding-left: 1em;
+  margin: 1em 0;
+}
+
+.doc-function {
+  border-left: 3px solid var(--md-accent-fg-color);
+  padding-left: 1em;
+  margin: 1em 0;
+}
+
+/* Custom admonitions */
+.md-typeset .admonition.flavor,
+.md-typeset details.flavor {
+  border-color: var(--flavor-orange);
+}
+
+.md-typeset .flavor > .admonition-title,
+.md-typeset .flavor > summary {
+  background-color: rgba(255, 107, 53, 0.1);
+  border-color: var(--flavor-orange);
+}
+
+.md-typeset .flavor > .admonition-title::before,
+.md-typeset .flavor > summary::before {
+  content: "🌶️";
+}
+
+/* Package format visualization */
+.pspf-structure {
+  display: flex;
+  flex-direction: column;
+  border: 2px solid var(--md-primary-fg-color);
+  border-radius: 0.5em;
+  overflow: hidden;
+  margin: 1em 0;
+}
+
+.pspf-layer {
+  padding: 1em;
+  border-bottom: 1px solid var(--md-default-fg-color--lightest);
+  position: relative;
+}
+
+.pspf-layer:last-child {
+  border-bottom: none;
+}
+
+.pspf-layer-launcher {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.pspf-layer-index {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+}
+
+.pspf-layer-metadata {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  color: white;
+}
+
+.pspf-layer-slots {
+  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+  color: white;
+}
+
+.pspf-layer-magic {
+  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+  color: white;
+  text-align: center;
+  font-size: 1.5em;
+}
+
+/* Platform badges */
+.platform-badge {
+  display: inline-block;
+  padding: 0.25em 0.5em;
+  margin: 0.25em;
+  border-radius: 0.25em;
+  font-size: 0.875em;
+  font-weight: 600;
+}
+
+.platform-linux {
+  background: #fcc624;
+  color: #000;
+}
+
+.platform-macos {
+  background: #000;
+  color: #fff;
+}
+
+.platform-windows {
+  background: #0078d4;
+  color: #fff;
+}
+
+/* Version selector styling */
+.md-version__current {
+  color: var(--flavor-orange) !important;
+}
+
+/* Search highlighting */
+.md-search-result mark {
+  background-color: var(--flavor-light-orange);
+  color: var(--md-default-fg-color);
+}
+
+/* Navigation enhancement */
+.md-nav__item--active > .md-nav__link {
+  color: var(--flavor-orange);
+  font-weight: 600;
+}
+
+/* Table styling */
+.md-typeset table:not([class]) {
+  border: 1px solid var(--md-default-fg-color--lightest);
+}
+
+.md-typeset table:not([class]) th {
+  background-color: var(--md-primary-fg-color);
+  color: white;
+  font-weight: 600;
+}
+
+.md-typeset table:not([class]) tr:nth-child(even) {
+  background-color: var(--md-default-bg-color--lightest);
+}
+
+/* Terminal/console styling */
+.language-console .highlight,
+.language-bash .highlight,
+.language-shell .highlight {
+  background-color: #1e1e1e;
+}
+
+.language-console code,
+.language-bash code,
+.language-shell code {
+  color: #d4d4d4;
+}
+
+/* Emoji enhancement */
+.emoji {
+  font-size: 1.2em;
+  vertical-align: middle;
+}
+
+/* Tabs customization */
+.md-typeset .tabbed-labels > label {
+  font-weight: 600;
+}
+
+.md-typeset .tabbed-labels > label[aria-selected="true"] {
+  color: var(--flavor-orange);
+  border-bottom-color: var(--flavor-orange);
+}
+
+/* Cards for homepage */
+.feature-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5em;
+  margin: 2em 0;
+}
+
+.feature-card {
+  padding: 1.5em;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.5em;
+  transition: all 0.3s ease;
+}
+
+.feature-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+  border-color: var(--flavor-orange);
+}
+
+.feature-card h3 {
+  color: var(--flavor-orange);
+  margin-top: 0;
+}
+
+/* Responsive improvements */
+@media screen and (max-width: 768px) {
+  .pspf-structure {
+    font-size: 0.875em;
+  }
+  
+  .feature-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Print styles */
+@media print {
+  .md-sidebar,
+  .md-header,
+  .md-footer,
+  .md-tabs {
+    display: none;
+  }
+  
+  .md-content {
+    margin: 0;
+  }
+}
+
+/* Animations */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.pulse {
+  animation: pulse 2s infinite;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--md-default-bg-color);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--flavor-orange);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--flavor-deep-orange);
+}
