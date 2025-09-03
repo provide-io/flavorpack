@@ -90,6 +90,19 @@ wheels = [
 ]
 
 [[package]]
+name = "hypothesis"
+version = "6.138.14"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "attrs" },
+    { name = "sortedcontainers" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/67/ed/2f65a358dd6b5bf3cee99dd2d3473eb9c5d5e50b50f83bbf8ef89ea96e39/hypothesis-6.138.14.tar.gz", hash = "sha256:5c1aa1ce3f1094b5c04ea03476017695bda408a174330e5275e40ddd06d3307a", size = 466152, upload-time = "2025-09-02T21:37:20.883Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/55/2e/fcf7371887f45083472165b21b68a7f552049334e01dc3febe484bbb7bc4/hypothesis-6.138.14-py3-none-any.whl", hash = "sha256:1a702ecfff7034b3252d7a83328093388641cdba863197169559839e841c2154", size = 533626, upload-time = "2025-09-02T21:37:17.318Z" },
+]
+
+[[package]]
 name = "pycparser"
 version = "2.22"
 source = { registry = "https://pypi.org/simple" }
@@ -112,6 +125,15 @@ wheels = [
 ]
 
 [[package]]
+name = "sortedcontainers"
+version = "2.4.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/e8/c4/ba2f8066cceb6f23394729afe52f3bf7adec04bf9ed2c820b39e19299111/sortedcontainers-2.4.0.tar.gz", hash = "sha256:25caa5a06cc30b6b83d11423433f65d1f9d76c4c6a0c90e3379eaa43b9bfdb88", size = 30594, upload-time = "2021-05-16T22:03:42.897Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/32/46/9cb0e58b2deb7f82b84065f37f3bffeb12413f947f9388e4cac22c4621ce/sortedcontainers-2.4.0-py2.py3-none-any.whl", hash = "sha256:a163dcaede0f1c021485e957a39245190e74249897e2ae4b2aa38595db237ee0", size = 29575, upload-time = "2021-05-16T22:03:41.177Z" },
+]
+
+[[package]]
 name = "structlog"
 version = "25.4.0"
 source = { registry = "https://pypi.org/simple" }
@@ -130,9 +152,17 @@ dependencies = [
     { name = "pyvider-telemetry" },
 ]
 
+[package.dev-dependencies]
+dev = [
+    { name = "hypothesis" },
+]
+
 [package.metadata]
 requires-dist = [
     { name = "click" },
     { name = "cryptography", specifier = ">=45.0.6" },
     { name = "pyvider-telemetry", specifier = ">=0.0.16" },
 ]
+
+[package.metadata.requires-dev]
+dev = [{ name = "hypothesis", specifier = ">=6.138.14" }]

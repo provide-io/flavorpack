@@ -48,3 +48,8 @@ pass = [
 set = { "TASTER_MODE" = "test", "TASTER_VERSION" = "1.0.0" }
 # Example mapping for testing
 map = { "OLD_VAR" = "NEW_VAR" }
+
+[dependency-groups]
+dev = [
+    "hypothesis>=6.138.14",
+]
