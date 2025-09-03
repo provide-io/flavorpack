@@ -90,34 +90,19 @@ extra_css:
 
 nav:
   - Home: index.md
+  - Installation: installation.md
+  - Quick Start: quickstart.md
   
-  - Getting Started:
-    - Overview: getting-started/index.md
-    - Installation: getting-started/installation.md
-    - Quick Start: getting-started/quickstart.md
-    - First Package: getting-started/first-package.md
-    - Examples: getting-started/examples.md
-  
-  - User Guide:
-    - Overview: guide/index.md
-    - PSPF Format: guide/concepts/pspf-format.md
+  - Format:
+    - PSPF Overview: pspf-format.md
+    - Core Specification: spec/feps/fep-0001-pspf-core-specification.md
+    - Workenv Management: spec/feps/fep-0002-workenv-management.md
+    - Security Model: spec/feps/fep-0003-runtime-security-model.md
+    - Staged Architecture: spec/feps/fep-0004-staged-payload-architecture.md
+    - JIT Loading: spec/feps/fep-0005-jit-loading.md
   
   - Reference:
     - API Documentation: API-REFERENCE.md
     - Architecture: ARCHITECTURE.md
     - Development: DEVELOPMENT.md
     - Troubleshooting: TROUBLESHOOTING.md
-    - User Guide (Legacy): USER-GUIDE.md
-    - CI/CD: CI-CD.md
-  
-  - Specifications:
-    - FEP-0001 Core: spec/feps/fep-0001-pspf-core-specification.md
-    - FEP-0002 Workenv: spec/feps/fep-0002-workenv-management.md
-    - FEP-0003 Security: spec/feps/fep-0003-runtime-security-model.md
-    - FEP-0004 Staged: spec/feps/fep-0004-staged-payload-architecture.md
-    - FEP-0005 JIT: spec/feps/fep-0005-jit-loading.md
-  
-  - About:
-    - Changelog: changelog.md
-    - License: license.md
-    - Migration Plan: MIGRATION_PLAN.md
