@@ -3,8 +3,10 @@
 Custom exceptions for the flavor pack.
 """
 
+from provide.foundation.errors import FoundationError
 
-class FlavorException(Exception):
+
+class FlavorException(FoundationError):
     """Base exception for all flavor-related errors."""
 
     pass

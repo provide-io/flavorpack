@@ -13,7 +13,7 @@ import shlex
 import tarfile
 import zlib
 
-from pyvider.telemetry import logger
+from provide.foundation import logger
 
 from flavor.psp.format_2025.constants import DISK_SPACE_MULTIPLIER, SLOT_DESCRIPTOR_SIZE
 from flavor.psp.format_2025.reader import PSPFReader

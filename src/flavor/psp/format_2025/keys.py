@@ -9,7 +9,7 @@ Supports multiple key sources with clear priority ordering.
 import hashlib
 from pathlib import Path
 
-from pyvider.telemetry import logger
+from provide.foundation import logger
 
 from flavor.psp.format_2025.crypto import generate_key_pair
 from flavor.psp.format_2025.spec import KeyConfig
