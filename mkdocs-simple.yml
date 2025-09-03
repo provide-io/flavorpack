@@ -96,13 +96,6 @@ nav:
   - Format:
     - PSPF Overview: pspf-format.md
     - Core Specification: spec/feps/fep-0001-pspf-core-specification.md
-    - Workenv Management: spec/feps/fep-0002-workenv-management.md
-    - Security Model: spec/feps/fep-0003-runtime-security-model.md
-    - Staged Architecture: spec/feps/fep-0004-staged-payload-architecture.md
-    - JIT Loading: spec/feps/fep-0005-jit-loading.md
   
   - Reference:
     - API Documentation: API-REFERENCE.md
-    - Architecture: ARCHITECTURE.md
-    - Development: DEVELOPMENT.md
-    - Troubleshooting: TROUBLESHOOTING.md
