@@ -31,9 +31,9 @@ class TestUVDownload:
                 binary_only=True
             )
             
-            # Check that manylinux2014_x86_64 is in the command
+            # Check that manylinux_2_17_x86_64 is in the command (modern format for manylinux2014)
             assert "--platform" in cmd
-            assert "manylinux2014_x86_64" in cmd
+            assert "manylinux_2_17_x86_64" in cmd
             assert "--python-version" in cmd
             assert "--only-binary" in cmd
             assert ":all:" in cmd
@@ -57,9 +57,9 @@ class TestUVDownload:
                 binary_only=True
             )
             
-            # Check that manylinux2014_aarch64 is in the command
+            # Check that manylinux_2_17_aarch64 is in the command (modern format for manylinux2014)
             assert "--platform" in cmd
-            assert "manylinux2014_aarch64" in cmd
+            assert "manylinux_2_17_aarch64" in cmd
             assert "--python-version" in cmd
     
     def test_pypa_pip_download_cmd_non_linux(self):
