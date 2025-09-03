@@ -8,7 +8,7 @@ from pathlib import Path
 import shlex
 from typing import Any
 
-from pyvider.telemetry import logger
+from provide.foundation import logger
 
 from flavor.utils.subprocess import run_command
 

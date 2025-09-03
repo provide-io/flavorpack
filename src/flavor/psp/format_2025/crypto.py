@@ -4,7 +4,7 @@ PSPF 2025 Cryptography Implementation
 
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric import ed25519
-from pyvider.telemetry import logger
+from provide.foundation import logger
 
 
 def generate_key_pair() -> tuple[bytes, bytes]:

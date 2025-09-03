@@ -3,7 +3,7 @@
 import os
 from pathlib import Path
 
-from pyvider.telemetry import logger
+from provide.foundation import logger
 
 from flavor.psp.format_2025.constants import (
     DEFAULT_DIR_PERMS,

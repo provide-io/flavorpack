@@ -3,7 +3,7 @@
 import os
 from pathlib import Path
 
-from pyvider.telemetry import logger
+from provide.foundation import logger
 
 
 def check_disk_space(path: Path, required_bytes: int) -> None:
