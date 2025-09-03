@@ -100,3 +100,5 @@ nav:
   - Reference:
     - API Documentation: API-REFERENCE.md
     - Architecture: ARCHITECTURE.md
+    - Development: DEVELOPMENT.md
+    - Troubleshooting: TROUBLESHOOTING.md
