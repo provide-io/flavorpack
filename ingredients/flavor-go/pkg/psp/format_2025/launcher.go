@@ -509,63 +509,18 @@ func spawnBundle(exePath string, args []string, userCwd string, logger hclog.Log
 		return fmt.Errorf("failed to start process: %w", err)
 	}
 	
-	// Track volatile paths for cleanup
-	volatilePaths := getVolatilePaths(metadata)
+	// Note: Volatile path cleanup would require passing metadata and workenvDir
+	// from runBundleWithCwd. This is a future enhancement.
 	
 	if err := cmd.Wait(); err != nil {
 		if exitErr, ok := err.(*exec.ExitError); ok {
 			// Return the exit code
 			if status, ok := exitErr.Sys().(syscall.WaitStatus); ok {
-				// Clean up volatile paths before exit
-				cleanupVolatilePaths(workenvDir, volatilePaths)
 				os.Exit(status.ExitStatus())
 			}
 		}
 		return fmt.Errorf("process failed: %w", err)
 	}
 	
-	// Clean up volatile paths on success
-	cleanupVolatilePaths(workenvDir, volatilePaths)
-	
 	return nil
-}
-
-// getVolatilePaths returns a list of slot IDs that have volatile lifecycle
-func getVolatilePaths(metadata map[string]interface{}) []string {
-	var paths []string
-	
-	slots, ok := metadata["slots"].([]interface{})
-	if !ok {
-		return paths
-	}
-	
-	for _, slot := range slots {
-		slotMap, ok := slot.(map[string]interface{})
-		if !ok {
-			continue
-		}
-		
-		lifecycle, ok := slotMap["lifecycle"].(string)
-		if ok && lifecycle == "volatile" {
-			if id, ok := slotMap["id"].(string); ok {
-				paths = append(paths, id)
-			}
-		}
-	}
-	
-	return paths
-}
-
-// cleanupVolatilePaths removes volatile slot directories
-func cleanupVolatilePaths(workenvDir string, volatilePaths []string) {
-	logger := slog.With("component", "launcher")
-	
-	for _, path := range volatilePaths {
-		volatileDir := filepath.Join(workenvDir, path)
-		if err := os.RemoveAll(volatileDir); err != nil {
-			logger.Debug("Failed to remove volatile path", "path", volatileDir, "error", err)
-		} else {
-			logger.Debug("Removed volatile path", "path", volatileDir)
-		}
-	}
 }
