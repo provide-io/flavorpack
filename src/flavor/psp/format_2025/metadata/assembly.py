@@ -11,6 +11,9 @@ from flavor.psp.format_2025.spec import BuildSpec
 from flavor.psp.metadata.paths import validate_metadata_dict
 from flavor.utils import get_arch_name, get_os_name, get_platform_string
 
+# Fallback version for development/unknown versions
+FALLBACK_VERSION = "0.0.0-dev"
+
 
 def get_flavor_version() -> str:
     """Get the version of flavor-python."""
@@ -19,7 +22,7 @@ def get_flavor_version() -> str:
         return version("flavor")
     except (ImportError, Exception):
         # Fallback for development or if package not installed
-        return "1.0.0-dev"
+        return FALLBACK_VERSION
 
 
 def load_launcher_binary(launcher_type: str) -> bytes:
@@ -105,7 +108,7 @@ def extract_launcher_version(launcher_data: bytes) -> str:
                 return version
     
     # Fallback to unknown version
-    return "1.0.0"
+    return FALLBACK_VERSION
 
 
 def get_launcher_capabilities(launcher_type: str) -> list[str]:
