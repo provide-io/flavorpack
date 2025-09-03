@@ -114,5 +114,3 @@ def clean_command(all: bool, ingredients: bool, dry_run: bool, yes: bool) -> Non
     if not dry_run and total_freed > 0:
         freed_mb = total_freed / (1024 * 1024)
         click.secho(f"\n💾 Total freed: {freed_mb:.1f} MB", fg="green")
-
-
