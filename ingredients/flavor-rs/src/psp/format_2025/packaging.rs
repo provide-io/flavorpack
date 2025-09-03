@@ -60,13 +60,13 @@ pub fn write_slot(
         DEFAULT_FILE_PERMS // Default file permissions
     };
 
-    // Hash the slot ID as a name (use slot ID as the name for now)
+    // Hash the slot's ID for fast lookup
     let name_hash = {
         use std::collections::hash_map::DefaultHasher;
         use std::hash::{Hash, Hasher};
         
         let mut hasher = DefaultHasher::new();
-        format!("slot_{}", slot_index).hash(&mut hasher);
+        slot_info.id.hash(&mut hasher);
         hasher.finish()
     };
     
