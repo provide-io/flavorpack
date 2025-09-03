@@ -304,13 +304,6 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 	}
 	copy(index.PublicKey[:], publicKey[:32])
 
-	// Skip index block space
-	indexOffset := launcherSize
-	if _, err := out.Seek(indexOffset+IndexSize, 0); err != nil {
-		logger.Error("Failed to seek past index", "error", err)
-		os.Exit(1)
-	}
-
 	// Build metadata
 	var buildTimestamp string
 	var buildHost string
@@ -383,10 +376,11 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 		},
 	}
 
-	// 📦 Process slots
-	logger.Info("📦 Processing slots", "count", len(config.Slots))
+	// 📦 Process slot metadata (but don't write data yet)
+	logger.Info("📦 Processing slot metadata", "count", len(config.Slots))
 	logger.Debug("🔍 Slot processing details", "alignment", SlotAlignment, "descriptor_size", SlotDescriptorSize)
 	var slotDescriptors []SlotDescriptor
+	var slotDataToWrite [][]byte  // Store compressed slot data for later
 	for i, slot := range config.Slots {
 		// Validate required fields
 		if slot.ID == "" {
@@ -492,25 +486,8 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 		slotMeta.Checksum = CalculateChecksum(compressed, ChecksumSHA256)
 		metadata.Slots = append(metadata.Slots, slotMeta)
 
-		// 🏷️ Align position
-		currentPos, _ := out.Seek(0, 1)
-		alignedPos := AlignOffset(currentPos, SlotAlignment)
-		if alignedPos > currentPos {
-			padding := make([]byte, alignedPos-currentPos)
-			if _, err := out.Write(padding); err != nil {
-				logger.Error("Failed to write padding", "error", err)
-				os.Exit(1)
-			}
-			logger.Debug("🏷️ Aligned slot position", "from", currentPos, "to", alignedPos, "padding", len(padding))
-		}
-
-		// ✍️ Write slot
-		slotOffset := alignedPos
-		logger.Debug("✍️ Writing slot", "id", slot.ID, "offset", slotOffset, "size", len(compressed))
-		if _, err := out.Write(compressed); err != nil {
-			logger.Error("❌ Failed to write slot", "error", err)
-			os.Exit(1)
-		}
+		// Store compressed data for later (we'll write it after metadata and slot table)
+		slotDataToWrite = append(slotDataToWrite, compressed)
 
 		// Map purpose string to uint8
 		var purposeValue uint8
@@ -572,10 +549,11 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 			permissions = uint16(DefaultFilePerms)  // Default: read/write for owner only
 		}
 		
+		// We'll fill in the offset later when we actually write the slot data
 		slotDescriptors = append(slotDescriptors, SlotDescriptor{
 			ID:           uint64(i),
 			NameHash:     hashSlotName(slot.ID),
-			Offset:       uint64(slotOffset),
+			Offset:       0, // Will be filled in later
 			Size:         uint64(len(compressed)), // actual stored size
 			OriginalSize: uint64(len(slotData)),   // original uncompressed size
 			Checksum:     adler32.Checksum(compressed),
@@ -593,29 +571,7 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 		})
 	}
 
-	// Write slot table
-	currentPos, _ := out.Seek(0, 1)
-	slotTableOffset := AlignOffset(currentPos, SlotAlignment)
-	if _, err := out.Seek(slotTableOffset, 0); err != nil {
-		logger.Error("Failed to seek to slot table", "error", err)
-		os.Exit(1)
-	}
-
-	index.SlotTableOffset = uint64(slotTableOffset)
-	index.SlotCount = uint32(len(slotDescriptors))
-
-	// Write 64-byte slot descriptors
-	for _, desc := range slotDescriptors {
-		// Write the descriptor as a packed 64-byte structure
-		if err := binary.Write(out, binary.LittleEndian, desc); err != nil {
-			logger.Error("Failed to write slot descriptor", "error", err)
-			os.Exit(1)
-		}
-	}
-	// Each slot descriptor is 64 bytes as per PSPF/2025 spec
-	index.SlotTableSize = uint64(len(slotDescriptors) * SlotDescriptorSize)
-
-	// 📜 Create and write metadata (gzipped JSON)
+	// 📜 Create and write metadata (gzipped JSON) - RIGHT AFTER LAUNCHER
 	metadataPos, _ := out.Seek(0, 1)
 	logger.Debug("📜 Writing metadata (gzipped JSON)", "position", metadataPos)
 	metadataSize, signature, err := writeMetadata(out, metadata, privateKey, publicKey)
@@ -627,6 +583,68 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 
 	index.MetadataOffset = uint64(metadataPos)
 	index.MetadataSize = uint64(metadataSize)
+
+	// Write slot table
+	currentPos, _ := out.Seek(0, 1)
+	slotTableOffset := AlignOffset(currentPos, SlotAlignment)
+	if _, err := out.Seek(slotTableOffset, 0); err != nil {
+		logger.Error("Failed to seek to slot table", "error", err)
+		os.Exit(1)
+	}
+
+	index.SlotTableOffset = uint64(slotTableOffset)
+	index.SlotCount = uint32(len(slotDescriptors))
+	index.SlotTableSize = uint64(len(slotDescriptors) * SlotDescriptorSize)
+
+	// Reserve space for slot table (we'll write it after calculating slot offsets)
+	if _, err := out.Seek(slotTableOffset + int64(index.SlotTableSize), 0); err != nil {
+		logger.Error("Failed to seek past slot table", "error", err)
+		os.Exit(1)
+	}
+
+	// Now write the actual slot data and update descriptors with correct offsets
+	for i, compressed := range slotDataToWrite {
+		// Align position
+		currentPos, _ := out.Seek(0, 1)
+		alignedPos := AlignOffset(currentPos, SlotAlignment)
+		if alignedPos > currentPos {
+			padding := make([]byte, alignedPos-currentPos)
+			if _, err := out.Write(padding); err != nil {
+				logger.Error("Failed to write padding", "error", err)
+				os.Exit(1)
+			}
+		}
+
+		// Write slot data
+		slotOffset := alignedPos
+		slotDescriptors[i].Offset = uint64(slotOffset)
+		logger.Debug("✍️ Writing slot", "id", i, "offset", slotOffset, "size", len(compressed))
+		if _, err := out.Write(compressed); err != nil {
+			logger.Error("❌ Failed to write slot", "error", err)
+			os.Exit(1)
+		}
+	}
+
+	// Go back and write the slot table with correct offsets
+	endOfSlots, _ := out.Seek(0, 1)
+	if _, err := out.Seek(slotTableOffset, 0); err != nil {
+		logger.Error("Failed to seek to slot table for writing", "error", err)
+		os.Exit(1)
+	}
+
+	// Write 64-byte slot descriptors
+	for _, desc := range slotDescriptors {
+		if err := binary.Write(out, binary.LittleEndian, desc); err != nil {
+			logger.Error("Failed to write slot descriptor", "error", err)
+			os.Exit(1)
+		}
+	}
+
+	// Return to end of file
+	if _, err := out.Seek(endOfSlots, 0); err != nil {
+		logger.Error("Failed to seek to end", "error", err)
+		os.Exit(1)
+	}
 
 	// Store signature in index (first 64 bytes of 512-byte field)
 	copy(index.IntegritySignature[:64], signature)
