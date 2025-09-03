@@ -26,18 +26,26 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "S
 A PSPF package consists of the following components in strict sequential order:
 
 ```
-Offset  Size      Component
-------  --------  ---------
-0       Variable  Native Launcher Binary
-L       8192      Index Block
-L+8192  Variable  Metadata Block (gzipped JSON)
-M       Variable  Slot Table
-S       Variable  Slot Data (0 to N slots)
-EOF-8   8         Magic Footer (📦🪄)
+Offset    Size      Component
+--------  --------  ---------
+0         Variable  Native Launcher Binary
+L         Variable  Metadata Block (gzipped JSON)
+M         Variable  Slot Table
+S         Variable  Slot Data (0 to N slots)
+EOF-8200  8200      Magic Trailer (📦 + Index + 🪄)
+```
+
+The Magic Trailer (last 8200 bytes) contains:
+```
+Offset    Size  Component
+--------  ----  ---------
+EOF-8200  4     Package emoji (📦)
+EOF-8196  8192  Index Block
+EOF-4     4     Magic wand emoji (🪄)
 ```
 
 Where:
-- L = launcher_size (stored in index)
+- L = launcher_size (stored in index at EOF-8196)
 - M = metadata_offset (stored in index)
 - S = slot_table_offset (stored in index)
 
@@ -51,7 +59,7 @@ All major sections SHALL begin on 8-byte boundaries. Padding bytes between secti
 
 ## 3. Index Block Specification
 
-The index block is exactly 8192 bytes located immediately after the launcher binary.
+The index block is exactly 8192 bytes located at EOF-8196 (within the Magic Trailer).
 
 ### 3.1. Index Structure
 
