@@ -1,18 +1,18 @@
 /* FlavorPack Documentation Custom Styles */
 
 :root {
-  /* Brand colors */
-  --flavor-orange: #ff6b35;
-  --flavor-deep-orange: #ff4500;
-  --flavor-light-orange: #ffa500;
-  --flavor-dark: #2c3e50;
-  --flavor-light: #ecf0f1;
+  /* Brand colors - Provide.io inspired palette */
+  --provide-primary: #6B46C1;  /* Deep purple */
+  --provide-secondary: #9333EA;  /* Purple */
+  --provide-accent: #A855F7;  /* Light purple */
+  --provide-dark: #1F2937;  /* Dark gray */
+  --provide-light: #F9FAFB;  /* Light gray */
+  --provide-text: #111827;  /* Text black */
   
-  /* Adjust Material theme colors */
-  --md-primary-fg-color: var(--flavor-deep-orange);
-  --md-primary-fg-color--light: var(--flavor-light-orange);
-  --md-primary-fg-color--dark: var(--flavor-orange);
-  --md-accent-fg-color: var(--flavor-orange);
+  /* Minimalist color scheme */
+  --md-primary-fg-color--light: var(--provide-accent);
+  --md-primary-fg-color--dark: var(--provide-secondary);
+  --md-accent-fg-color: var(--provide-primary);
 }
 
 /* Code blocks with language labels */
@@ -50,18 +50,18 @@
 /* Custom admonitions */
 .md-typeset .admonition.flavor,
 .md-typeset details.flavor {
-  border-color: var(--flavor-orange);
+  border-color: var(--provide-primary);
 }
 
 .md-typeset .flavor > .admonition-title,
 .md-typeset .flavor > summary {
-  background-color: rgba(255, 107, 53, 0.1);
-  border-color: var(--flavor-orange);
+  background-color: rgba(107, 70, 193, 0.1);
+  border-color: var(--provide-primary);
 }
 
 .md-typeset .flavor > .admonition-title::before,
 .md-typeset .flavor > summary::before {
-  content: "🌶️";
+  content: "📦";
 }
 
 /* Package format visualization */
@@ -138,18 +138,18 @@
 
 /* Version selector styling */
 .md-version__current {
-  color: var(--flavor-orange) !important;
+  color: var(--provide-primary) !important;
 }
 
 /* Search highlighting */
 .md-search-result mark {
-  background-color: var(--flavor-light-orange);
-  color: var(--md-default-fg-color);
+  background-color: var(--provide-accent);
+  color: white;
 }
 
 /* Navigation enhancement */
 .md-nav__item--active > .md-nav__link {
-  color: var(--flavor-orange);
+  color: var(--provide-primary);
   font-weight: 600;
 }
 
@@ -193,8 +193,8 @@
 }
 
 .md-typeset .tabbed-labels > label[aria-selected="true"] {
-  color: var(--flavor-orange);
-  border-bottom-color: var(--flavor-orange);
+  color: var(--provide-primary);
+  border-bottom-color: var(--provide-primary);
 }
 
 /* Cards for homepage */
@@ -215,11 +215,11 @@
 .feature-card:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   transform: translateY(-2px);
-  border-color: var(--flavor-orange);
+  border-color: var(--provide-primary);
 }
 
 .feature-card h3 {
-  color: var(--flavor-orange);
+  color: var(--provide-primary);
   margin-top: 0;
 }
 
@@ -276,10 +276,10 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--flavor-orange);
+  background: var(--provide-primary);
   border-radius: 5px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--flavor-deep-orange);
+  background: var(--provide-secondary);
 }
