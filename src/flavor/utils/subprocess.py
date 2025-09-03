@@ -2,16 +2,22 @@
 #
 # flavor/utils/subprocess.py
 #
-"""Unified subprocess execution utilities for the Flavor project."""
+"""Unified subprocess execution utilities for the Flavor project.
+
+This module now wraps provide.foundation.process for backward compatibility.
+All new code should import directly from provide.foundation.process.
+"""
 
 from collections.abc import Mapping
-import os
 from pathlib import Path
 import subprocess
 
-from provide.foundation import logger
-
-from flavor.exceptions import BuildError
+from provide.foundation.process.runner import (
+    run_command as _run_command,
+    run_command_simple as _run_command_simple,
+    run_build_command,
+    BuildError,
+)
 
 
 def run_command(
@@ -44,38 +50,27 @@ def run_command(
         BuildError: If command fails and check=True
         subprocess.TimeoutExpired: If timeout is exceeded
     """
-    if log_command:
-        logger.info(f"🗣️ Running command: {' '.join(command)}")
-
-    # Use provided environment or copy current
-    run_env = dict(env) if env is not None else os.environ.copy()
-    run_env["NO_COVERAGE"] = "1"  # Disable coverage for subprocesses
-
+    # Use foundation's run_build_command for build operations
     try:
-        result = subprocess.run(
+        result = run_build_command(
             command,
-            capture_output=capture_output,
-            text=True,
             cwd=cwd,
-            check=False,  # We'll handle the check ourselves
-            env=run_env,
+            env=env,
+            capture_output=capture_output,
             timeout=timeout,
+            quiet=not log_command,
         )
-
-        if check and result.returncode != 0:
-            error_msg = f"Command failed with exit code {result.returncode}: {' '.join(command)}"
-            if capture_output and result.stderr:
-                error_msg += f"\nStderr: {result.stderr.strip()}"
-            raise BuildError(error_msg)
-
-        return result
-
-    except subprocess.TimeoutExpired:
-        logger.error(f"❌ Command timed out after {timeout}s: {' '.join(command)}")
+        
+        # Convert foundation's CompletedProcess to stdlib's
+        return subprocess.CompletedProcess(
+            args=result.args,
+            returncode=result.returncode,
+            stdout=result.stdout,
+            stderr=result.stderr,
+        )
+    except BuildError:
+        # Re-raise as-is for compatibility
         raise
-    except Exception as e:
-        logger.error(f"❌ Command execution failed: {e}")
-        raise BuildError(f"Failed to execute command: {' '.join(command)}") from e
 
 
 def run_command_simple(
