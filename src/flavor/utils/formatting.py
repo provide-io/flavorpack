@@ -2,13 +2,9 @@
 #
 # flavor/utils/formatting.py
 #
-"""Formatting utilities for the flavor CLI."""
+"""Formatting utilities for the flavor CLI - thin wrapper around foundation."""
 
+from provide.foundation.utils.formatting import format_size
 
-def format_size(size_bytes: int) -> str:
-    """Format bytes as human-readable size."""
-    for unit in ["B", "KB", "MB", "GB"]:
-        if size_bytes < 1024.0:
-            return f"{size_bytes:.1f} {unit}"
-        size_bytes /= 1024.0
-    return f"{size_bytes:.1f} TB"
+# Re-export for compatibility
+__all__ = ['format_size']
