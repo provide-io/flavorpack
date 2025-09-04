@@ -3,7 +3,6 @@
 
 import json
 from pathlib import Path
-import subprocess
 
 import click.testing
 import pytest
@@ -11,59 +10,13 @@ import pytest
 from flavor.cli import cli
 
 
-@pytest.fixture
-def test_package(tmp_path):
-    """Create a test PSPF package for testing."""
-    # Check if test package already exists from previous run
-    existing_package = Path("/tmp/test-taster.psp")
-    if existing_package.exists():
-        return existing_package
-
-    # Otherwise try to build one using the taster helper package
-    taster_dir = Path("/Users/tim/code/gh/provide-io/flavorpack/helpers/taster")
-    if not taster_dir.exists():
-        pytest.skip("Taster helper package not found")
-
-    launcher_bin = Path(
-        "/Users/tim/code/gh/provide-io/flavorpack/ingredients/bin/flavor-go-launcher-darwin_arm64"
-    )
-    if not launcher_bin.exists():
-        pytest.skip("Launcher binary not found")
-
-    output_path = tmp_path / "test.psp"
-
-    # Build using flavor CLI directly
-    result = subprocess.run(
-        [
-            "../../workenv/flavor_darwin_arm64/bin/flavor",
-            "pack",
-            "--manifest",
-            "pyproject.toml",
-            "--output",
-            str(output_path),
-            "--launcher-bin",
-            str(launcher_bin),
-            "--key-seed",
-            "test123",
-        ],
-        cwd=taster_dir,
-        capture_output=True,
-        text=True,
-    )
-
-    if result.returncode != 0:
-        pytest.skip(f"Failed to build test package: {result.stderr}")
-
-    return output_path
-
-
 class TestInspectCommand:
     """Test the inspect command."""
 
-    def test_inspect_basic(self, test_package):
+    def test_inspect_basic(self, mock_test_package):
         """Test basic inspect command output."""
         runner = click.testing.CliRunner()
-        result = runner.invoke(cli, ["inspect", str(test_package)])
+        result = runner.invoke(cli, ["inspect", str(mock_test_package)])
 
         assert result.exit_code == 0
         assert "Package:" in result.output
@@ -71,10 +24,10 @@ class TestInspectCommand:
         assert "Launcher:" in result.output
         assert "Slots:" in result.output
 
-    def test_inspect_json(self, test_package):
+    def test_inspect_json(self, mock_test_package):
         """Test JSON output of inspect command."""
         runner = click.testing.CliRunner()
-        result = runner.invoke(cli, ["inspect", "--json", str(test_package)])
+        result = runner.invoke(cli, ["inspect", "--json", str(mock_test_package)])
 
         assert result.exit_code == 0
 
@@ -96,7 +49,7 @@ class TestInspectCommand:
         assert "launcher_size" in data
         assert "slots" in data
         assert isinstance(data["slots"], list)
-        assert len(data["slots"]) >= 3  # At least uv, python, wheels
+        assert len(data["slots"]) == 3  # main, config, wheels
 
     def test_inspect_nonexistent_file(self):
         """Test inspect with non-existent file."""
@@ -107,10 +60,10 @@ class TestInspectCommand:
         # Click validates file existence, so we get a different error message
         assert "does not exist" in result.output.lower()
 
-    def test_inspect_slot_metadata(self, test_package):
+    def test_inspect_slot_metadata(self, mock_test_package):
         """Test that slot metadata is properly displayed."""
         runner = click.testing.CliRunner()
-        result = runner.invoke(cli, ["inspect", "--json", str(test_package)])
+        result = runner.invoke(cli, ["inspect", "--json", str(mock_test_package)])
 
         assert result.exit_code == 0
 
@@ -138,6 +91,6 @@ class TestInspectCommand:
         slot_ids = [
             s["name"] for s in slots
         ]  # JSON returns ID as "name" for compatibility
-        assert "uv" in slot_ids
-        assert "python" in slot_ids
+        assert "main" in slot_ids
+        assert "config" in slot_ids
         assert "wheels" in slot_ids
