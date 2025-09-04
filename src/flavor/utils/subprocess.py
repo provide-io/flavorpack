@@ -9,7 +9,7 @@ import os
 from pathlib import Path
 import subprocess
 
-from pyvider.telemetry import logger
+from provide.foundation import logger
 
 from flavor.exceptions import BuildError
 

@@ -13,7 +13,7 @@ from typing import Any
 import zlib
 
 from cryptography.exceptions import InvalidSignature
-from pyvider.telemetry import logger
+from provide.foundation import logger
 
 from flavor.psp.format_2025.backends import (
     Backend,
