@@ -1,7 +1,7 @@
 //! Path management for PSPF/2025 workenv structure
 
 use std::path::{Path, PathBuf};
-use super::constants::{PSPF_HIDDEN_PREFIX, PSPF_SUFFIX, PSP_METADATA_FILE};
+use super::constants::{PSPF_HIDDEN_PREFIX, PSPF_SUFFIX, PSP_METADATA_FILE, INSTANCE_DIR, PACKAGE_DIR};
 
 /// Manages all paths for a workenv with instance and package metadata
 #[derive(Debug, Clone)]
