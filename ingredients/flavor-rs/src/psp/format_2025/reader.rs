@@ -20,6 +20,7 @@ pub struct Reader {
     path: std::path::PathBuf,
     index: Option<Index>,
     metadata: Option<Metadata>,
+    #[allow(dead_code)] // Reserved for future validation
     launcher_size: Option<u64>,
 }
 
