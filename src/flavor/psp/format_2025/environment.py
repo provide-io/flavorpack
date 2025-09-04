@@ -5,6 +5,8 @@ Environment variable management for PSPF/2025 packages.
 Handles platform-specific environment variables and layered environment processing.
 """
 
+import fnmatch
+import logging
 from typing import Any
 
 # Import platform utilities from centralized location
@@ -15,6 +17,8 @@ from flavor.utils.platform import (
     get_os_version,
     get_platform_string,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def set_platform_environment(env: dict[str, str]) -> None:
