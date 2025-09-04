@@ -575,9 +575,10 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 	// Add slot metadata to package metadata
 	metadata.Slots = slotMetadataList
 	
-	// OLD SLOT PROCESSING LOOP REMOVED - Now handled by SlotProcessor above
-	// The SlotProcessor already validates, processes encoding, and creates descriptors
-		// Validate required fields
+	// Note: OLD SLOT PROCESSING LOOP REMOVED - Now handled by SlotProcessor above
+	// The SlotProcessor validates, processes encoding, and creates descriptors
+	
+	// TODO: Delete the old loop below after verifying SlotProcessor works correctly
 		if slot.ID == "" {
 			logger.Error("❌ Critical: Slot missing required 'id' field", "index", i)
 			os.Exit(1)
