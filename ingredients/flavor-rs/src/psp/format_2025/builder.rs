@@ -2,10 +2,10 @@
 
 use super::checksums::{calculate_checksum, ChecksumAlgorithm};
 use super::{
-    constants::{CAPABILITY_MMAP, CAPABILITY_SIGNED, HEADER_SIZE, ENCODING_GZIP, ENCODING_TGZ, ENCODING_TAR, ENCODING_RAW, DEFAULT_FILE_PERMS, SLOT_ALIGNMENT, SLOT_DESCRIPTOR_SIZE, MAGIC_TRAILER_SIZE, PACKAGE_EMOJI_BYTES, MAGIC_WAND_EMOJI_BYTES},
+    constants::{CAPABILITY_MMAP, CAPABILITY_SIGNED, HEADER_SIZE, ENCODING_GZIP, ENCODING_TGZ, ENCODING_TAR, ENCODING_RAW, DEFAULT_FILE_PERMS, SLOT_ALIGNMENT, SLOT_DESCRIPTOR_SIZE, MAGIC_TRAILER_SIZE, PACKAGE_EMOJI_BYTES, MAGIC_WAND_EMOJI_BYTES, DEFAULT_DIR_PERMS},
     index::Index,
     keys::load_or_generate_keys,
-    manifest::BuildManifest,
+    manifest::{BuildManifest, ManifestSlot},
     metadata::{Metadata, PackageInfo, ExecutionInfo, VerificationInfo, IntegritySealInfo, BuildInfo, PlatformInfo, LauncherInfo, CompatibilityInfo, CacheValidationInfo, RuntimeInfo, WorkenvInfo, SlotMetadata},
     slots::{align_offset, SlotDescriptor},
 };
@@ -172,14 +172,14 @@ fn create_metadata(
 
 /// Process and validate slot data
 struct SlotProcessor {
-    manifest_slots: Vec<manifest::ManifestSlot>,
+    manifest_slots: Vec<ManifestSlot>,
     slot_descriptors: Vec<SlotDescriptor>,
     metadata_slots: Vec<SlotMetadata>,
     slot_paths: Vec<PathBuf>,
 }
 
 impl SlotProcessor {
-    fn new(manifest_slots: Vec<manifest::ManifestSlot>) -> Self {
+    fn new(manifest_slots: Vec<ManifestSlot>) -> Self {
         Self {
             manifest_slots,
             slot_descriptors: Vec::new(),
@@ -204,7 +204,7 @@ impl SlotProcessor {
         Ok(())
     }
 
-    fn process_single_slot(&mut self, index: usize, slot: &manifest::ManifestSlot) -> Result<()> {
+    fn process_single_slot(&mut self, index: usize, slot: &ManifestSlot) -> Result<()> {
         trace!("📖 Processing slot {}: {}", index, slot.source);
         
         // Validate slot number if provided
@@ -230,7 +230,7 @@ impl SlotProcessor {
         Ok(())
     }
 
-    fn validate_slot_number(&self, index: usize, slot: &manifest::ManifestSlot) -> Result<()> {
+    fn validate_slot_number(&self, index: usize, slot: &ManifestSlot) -> Result<()> {
         if let Some(declared_slot) = slot.slot {
             if declared_slot as usize != index {
                 error!(
@@ -312,7 +312,7 @@ impl SlotProcessor {
         Ok((file_size, sha256_checksum, adler32_checksum))
     }
 
-    fn create_slot_metadata(&self, index: usize, slot: &manifest::ManifestSlot, file_size: u64, checksum: String) -> SlotMetadata {
+    fn create_slot_metadata(&self, index: usize, slot: &ManifestSlot, file_size: u64, checksum: String) -> SlotMetadata {
         SlotMetadata {
             index,
             id: slot.id.clone(),
@@ -328,7 +328,7 @@ impl SlotProcessor {
         }
     }
 
-    fn create_slot_descriptor(&self, index: usize, slot: &manifest::ManifestSlot, file_size: u64, adler_checksum: u32) -> Result<SlotDescriptor> {
+    fn create_slot_descriptor(&self, index: usize, slot: &ManifestSlot, file_size: u64, adler_checksum: u32) -> Result<SlotDescriptor> {
         // Map encoding string to byte value
         let encoding_value = match slot.encoding.as_str() {
             "gzip" => ENCODING_GZIP,
