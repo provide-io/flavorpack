@@ -22,7 +22,9 @@ import (
 	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
-type BuildConfig struct {
+// BuildOptions represents the configuration for building a PSPF package.
+// This aligns with Python's BuildOptions and Rust's BuildOptions for consistency.
+type BuildOptions struct {
 	// Package metadata (required per SPEC)
 	Package         PackageConfig          `json:"package"`
 	
@@ -188,7 +190,7 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 		os.Exit(1)
 	}
 
-	var config BuildConfig
+	var config BuildOptions
 	if err := json.Unmarshal(manifestData, &config); err != nil {
 		logger.Error("❌ Failed to parse manifest", "error", err)
 		os.Exit(1)

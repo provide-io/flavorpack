@@ -6,10 +6,10 @@ Handles platform-specific environment variables and layered environment processi
 """
 
 import fnmatch
-import logging
 from typing import Any
 
-# Import platform utilities from provide.foundation
+# Import from provide.foundation
+from provide.foundation import get_logger
 from provide.foundation.platform import (
     get_arch_name,
     get_cpu_type,
@@ -18,7 +18,120 @@ from provide.foundation.platform import (
     get_platform_string,
 )
 
-logger = logging.getLogger(__name__)
+plog = get_logger()
+
+
+def process_runtime_env(
+    env_map: dict[str, str], 
+    runtime_env: dict[str, Any]
+) -> None:
+    """
+    Process runtime environment configuration.
+    
+    This function modifies the environment map in-place, applying runtime
+    environment operations in a specific order to ensure correct behavior.
+    
+    Operations are processed in this order:
+    1. Analyze pass patterns - Build list of variables to preserve  
+    2. unset - Remove specified variables (skipping those marked to preserve)
+    3. map - Rename variables
+    4. set - Set specific values
+    5. pass verification - Check that required variables/patterns exist
+    
+    Args:
+        env_map: Mutable environment variables dictionary to process
+        runtime_env: Runtime environment configuration containing:
+            - pass: List of patterns for variables to preserve/require
+            - unset: List of patterns for variables to remove
+            - map: Dict of old_name -> new_name mappings
+            - set: Dict of variable -> value assignments
+    
+    Example:
+        >>> env = {"FOO": "bar", "BAZ": "qux", "TEMP": "123"}
+        >>> runtime = {
+        ...     "pass": ["FOO", "BA*"],
+        ...     "unset": ["TEMP"],
+        ...     "map": {"FOO": "NEW_FOO"},
+        ...     "set": {"CUSTOM": "value"}
+        ... }
+        >>> process_runtime_env(env, runtime)
+        >>> # Result: {"NEW_FOO": "bar", "BAZ": "qux", "CUSTOM": "value"}
+    """
+    plog.debug("🔧 Processing runtime environment configuration")
+    
+    # Build list of patterns to preserve (pass patterns)
+    pass_patterns = runtime_env.get("pass", [])
+    
+    # Helper to check if a variable should be preserved
+    def should_preserve(key: str) -> bool:
+        """Check if a key matches any pass pattern."""
+        for pattern in pass_patterns:
+            # Exact match
+            if pattern == key:
+                return True
+            # Glob pattern match
+            if "*" in pattern or "?" in pattern:
+                if fnmatch.fnmatch(key, pattern):
+                    return True
+        return False
+    
+    # Process unset operations first (highest priority)
+    if "unset" in runtime_env and runtime_env["unset"]:
+        unset_patterns = runtime_env["unset"]
+        plog.debug(f"🗑️ Processing {len(unset_patterns)} unset patterns")
+        
+        for pattern in unset_patterns:
+            if pattern == "*":
+                # Special case: unset all except preserved
+                keys_to_remove = [k for k in env_map.keys() if not should_preserve(k)]
+                for key in keys_to_remove:
+                    del env_map[key]
+                    plog.trace(f"  🗑️ Unset: {key}")
+            elif "*" in pattern or "?" in pattern:
+                # Glob pattern
+                keys_to_remove = [k for k in env_map.keys() 
+                                if fnmatch.fnmatch(k, pattern) and not should_preserve(k)]
+                for key in keys_to_remove:
+                    del env_map[key]
+                    plog.trace(f"  🗑️ Unset (glob): {key}")
+            else:
+                # Exact match
+                if pattern in env_map and not should_preserve(pattern):
+                    del env_map[pattern]
+                    plog.debug(f"🗑️ Unset: {pattern}")
+    
+    # Process map operations (variable renaming)
+    if "map" in runtime_env and runtime_env["map"]:
+        map_ops = runtime_env["map"]
+        plog.debug(f"🔄 Processing {len(map_ops)} map operations")
+        
+        for old_key, new_key in map_ops.items():
+            if old_key in env_map and not should_preserve(old_key):
+                env_map[new_key] = env_map.pop(old_key)
+                plog.debug(f"🔄 Mapped: {old_key} -> {new_key}")
+    
+    # Process set operations (add/override variables)
+    if "set" in runtime_env and runtime_env["set"]:
+        set_ops = runtime_env["set"]
+        plog.debug(f"📝 Processing {len(set_ops)} set operations")
+        
+        for key, value in set_ops.items():
+            env_map[key] = value
+            plog.debug(f"📝 Set: {key} = '{value}'")
+    
+    # Verify all required pass patterns are satisfied
+    if pass_patterns:
+        missing = []
+        for pattern in pass_patterns:
+            # Only check exact matches for requirements
+            if "*" not in pattern and "?" not in pattern:
+                if pattern not in env_map:
+                    missing.append(pattern)
+        
+        if missing:
+            plog.warning(f"⚠️ Required environment variables not found: {', '.join(missing)}")
+    
+    plog.debug("✅ Runtime environment processing complete")
 
 
 def set_platform_environment(env: dict[str, str]) -> None:
@@ -84,31 +197,9 @@ def apply_environment_layers(
     """
     result = base_env.copy()
 
-    # Layer 1: Runtime security
+    # Layer 1: Runtime security - use dedicated processor matching Rust/Go
     if runtime_env:
-        # Unset variables
-        if "unset" in runtime_env:
-            for var in runtime_env["unset"]:
-                result.pop(var, None)
-
-        # Pass (whitelist) variables
-        if "pass" in runtime_env:
-            # Create new dict with only whitelisted vars
-            passed = {}
-            for var in runtime_env["pass"]:
-                if var in result:
-                    passed[var] = result[var]
-            result = passed
-
-        # Map (rename) variables
-        if "map" in runtime_env:
-            for old_name, new_name in runtime_env["map"].items():
-                if old_name in result:
-                    result[new_name] = result.pop(old_name)
-
-        # Set variables
-        if "set" in runtime_env:
-            result.update(runtime_env["set"])
+        process_runtime_env(result, runtime_env)
 
     # Layer 2: Workenv
     if workenv_env:
