@@ -9,7 +9,7 @@ import platform
 import tempfile
 from typing import Any
 
-from pyvider.telemetry import logger
+from provide.foundation import logger
 
 from flavor.exceptions import BuildError
 from flavor.ingredients.manager import IngredientManager

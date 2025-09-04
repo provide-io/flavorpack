@@ -4,7 +4,7 @@ import os
 import tempfile
 from pathlib import Path
 
-from pyvider.telemetry import logger
+from provide.foundation import logger
 
 
 def atomic_write(path: Path, data: bytes, mode: int | None = None) -> None:

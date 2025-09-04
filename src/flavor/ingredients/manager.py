@@ -11,7 +11,7 @@ from pathlib import Path
 import shutil
 from typing import Any
 
-from pyvider.telemetry import logger
+from provide.foundation import logger
 
 from flavor.utils.subprocess import run_command
 from flavor.utils.platform import get_platform_string

@@ -16,7 +16,7 @@ import time
 import zlib
 
 import attrs
-from pyvider.telemetry import logger
+from provide.foundation import logger
 
 from flavor.exceptions import BuildError
 from flavor.psp.format_2025.checksums import calculate_checksum
