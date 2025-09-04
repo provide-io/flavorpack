@@ -575,15 +575,7 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 	// Add slot metadata to package metadata
 	metadata.Slots = slotMetadataList
 	
-	// Note: OLD SLOT PROCESSING LOOP REMOVED - Now handled by SlotProcessor above
-	// The SlotProcessor validates, processes encoding, and creates descriptors
-	
-	// TODO: Delete the old loop below after verifying SlotProcessor works correctly
-		if slot.ID == "" {
-			logger.Error("❌ Critical: Slot missing required 'id' field", "index", i)
-			os.Exit(1)
-		}
-		if slot.Source == "" {
+	// 📜 Create and write metadata (gzipped JSON) - RIGHT AFTER LAUNCHER
 			logger.Error("❌ Critical: Slot missing required 'source' field", "index", i, "id", slot.ID)
 			os.Exit(1)
 		}
@@ -764,10 +756,7 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 			Platform:     0, // all platforms
 			ExtendedOffset: 0,
 			ExtendedSize:   0,
-		})
-	}
-
-	// 📜 Create and write metadata (gzipped JSON) - RIGHT AFTER LAUNCHER
+	
 	metadataPos, _ := out.Seek(0, 1)
 	logger.Debug("📜 Writing metadata (gzipped JSON)", "position", metadataPos)
 	metadataSize, signature, err := writeMetadata(out, metadata, privateKey, publicKey)
