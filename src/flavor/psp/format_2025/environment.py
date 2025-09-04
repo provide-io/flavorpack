@@ -9,8 +9,8 @@ import fnmatch
 import logging
 from typing import Any
 
-# Import platform utilities from centralized location
-from flavor.utils.platform import (
+# Import platform utilities from provide.foundation
+from provide.foundation.platform import (
     get_arch_name,
     get_cpu_type,
     get_os_name,
