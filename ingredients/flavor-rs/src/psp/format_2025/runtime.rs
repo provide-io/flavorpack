@@ -95,7 +95,7 @@ mod runtime_impl {
         use crate::exceptions::{FlavorError, Result};
 
         /// Handles pattern matching for environment variable preservation
-        pub struct PatternProcessor {
+        pub(super) struct PatternProcessor {
             patterns: Vec<CompiledPattern>,
             exact_matches: HashSet<String>,
         }
@@ -106,7 +106,7 @@ mod runtime_impl {
         }
 
         impl PatternProcessor {
-            pub fn new(pass_patterns: &[String]) -> Self {
+            pub(super) fn new(pass_patterns: &[String]) -> Self {
                 let mut patterns = Vec::new();
                 let mut exact_matches = HashSet::new();
                 
@@ -133,7 +133,7 @@ mod runtime_impl {
                 Self { patterns, exact_matches }
             }
             
-            pub fn should_preserve(&self, key: &str) -> bool {
+            pub(super) fn should_preserve(&self, key: &str) -> bool {
                 if self.exact_matches.contains(key) {
                     return true;
                 }
@@ -149,7 +149,7 @@ mod runtime_impl {
                 false
             }
             
-            pub fn verify_requirements(&self, env_map: &HashMap<String, String>) -> Result<()> {
+            pub(super) fn verify_requirements(&self, env_map: &HashMap<String, String>) -> Result<()> {
                 let mut missing = Vec::new();
                 
                 for pattern in &self.patterns {
@@ -180,17 +180,17 @@ mod runtime_impl {
         use super::patterns::PatternProcessor;
 
         /// Handles unset operations on environment variables
-        pub struct UnsetOperation<'a> {
+        pub(super) struct UnsetOperation<'a> {
             patterns: &'a [String],
             processor: &'a PatternProcessor,
         }
 
         impl<'a> UnsetOperation<'a> {
-            pub fn new(patterns: &'a [String], processor: &'a PatternProcessor) -> Self {
+            pub(super) fn new(patterns: &'a [String], processor: &'a PatternProcessor) -> Self {
                 Self { patterns, processor }
             }
             
-            pub fn execute(&self, env_map: &mut HashMap<String, String>) -> Result<()> {
+            pub(super) fn execute(&self, env_map: &mut HashMap<String, String>) -> Result<()> {
                 debug!("🗑️ Processing {} unset patterns", self.patterns.len());
                 
                 for pattern in self.patterns {
@@ -250,17 +250,17 @@ mod runtime_impl {
         }
 
         /// Handles map operations on environment variables
-        pub struct MapOperation<'a> {
+        pub(super) struct MapOperation<'a> {
             mappings: &'a [String],
             processor: &'a PatternProcessor,
         }
 
         impl<'a> MapOperation<'a> {
-            pub fn new(mappings: &'a [String], processor: &'a PatternProcessor) -> Self {
+            pub(super) fn new(mappings: &'a [String], processor: &'a PatternProcessor) -> Self {
                 Self { mappings, processor }
             }
             
-            pub fn execute(&self, env_map: &mut HashMap<String, String>) -> Result<()> {
+            pub(super) fn execute(&self, env_map: &mut HashMap<String, String>) -> Result<()> {
                 debug!("🔄 Processing {} map operations", self.mappings.len());
                 
                 for mapping in self.mappings {
@@ -286,16 +286,16 @@ mod runtime_impl {
         }
 
         /// Handles set operations on environment variables
-        pub struct SetOperation<'a> {
+        pub(super) struct SetOperation<'a> {
             assignments: &'a [String],
         }
 
         impl<'a> SetOperation<'a> {
-            pub fn new(assignments: &'a [String]) -> Self {
+            pub(super) fn new(assignments: &'a [String]) -> Self {
                 Self { assignments }
             }
             
-            pub fn execute(&self, env_map: &mut HashMap<String, String>) -> Result<()> {
+            pub(super) fn execute(&self, env_map: &mut HashMap<String, String>) -> Result<()> {
                 debug!("📝 Processing {} set operations", self.assignments.len());
                 
                 for assignment in self.assignments {
