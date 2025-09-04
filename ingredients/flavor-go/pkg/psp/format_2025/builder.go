@@ -152,6 +152,74 @@ func (sp *SlotProcessor) ProcessSlots() error {
 	return nil
 }
 
+// mapPurposeToUint8 maps purpose string to uint8 value for binary format
+func mapPurposeToUint8(purpose string) uint8 {
+	switch purpose {
+	case "payload":
+		return 0
+	case "runtime":
+		return 1
+	case "tool":
+		return 2
+	default:
+		return 0 // default to payload
+	}
+}
+
+// mapLifecycleToUint8 maps lifecycle string to uint8 value for binary format
+func mapLifecycleToUint8(lifecycle string) uint8 {
+	switch lifecycle {
+	// Timing-based
+	case "init":
+		return 0
+	case "startup":
+		return 1
+	case "runtime":
+		return 2
+	case "shutdown":
+		return 3
+	// Retention-based
+	case "cache":
+		return 4
+	case "temp":
+		return 5
+	// Access-based
+	case "lazy":
+		return 6
+	case "eager":
+		return 7
+	// Environment-based
+	case "dev":
+		return 8
+	case "config":
+		return 9
+	case "platform":
+		return 10
+	default:
+		return 2 // default to runtime
+	}
+}
+
+// parsePermissions parses permission string (e.g., "0755") to uint16
+func parsePermissions(permStr string) uint16 {
+	if permStr == "" {
+		return uint16(DefaultFilePerms)
+	}
+	
+	// Parse octal string (e.g., "0755" -> 0o755)
+	cleaned := strings.TrimPrefix(permStr, "0")
+	if parsed, err := strconv.ParseUint(cleaned, 8, 16); err == nil {
+		return uint16(parsed)
+	}
+	
+	return uint16(DefaultFilePerms) // fallback to default
+}
+
+// hashSlotName generates a hash for the slot name (for compatibility)
+func hashSlotName(name string) uint32 {
+	return adler32.Checksum([]byte(name))
+}
+
 // processSlot processes a single slot
 func (sp *SlotProcessor) processSlot(index int, slot *Slot) error {
 	// Validate required fields
@@ -207,15 +275,25 @@ func (sp *SlotProcessor) processSlot(index int, slot *Slot) error {
 		Permissions: slot.Permissions,
 	}
 	
-	// Create slot descriptor
+	// Create slot descriptor with all required fields
 	descriptor := SlotDescriptor{
-		Slot:         uint32(index),
+		ID:           uint64(index),
+		NameHash:     hashSlotName(slot.ID),
 		Offset:       0, // Will be set during write phase
 		Size:         uint64(len(compressed)),
-		Checksum:     checksumData[:],
+		OriginalSize: uint64(len(slotData)),
+		Checksum:     adler32.Checksum(compressed), // Use adler32 for descriptor
 		Encoding:     encodingMethod,
-		Reserved1:    0,
-		Reserved2:    0,
+		Encryption:   0, // no encryption
+		Alignment:    uint16(SlotAlignment),
+		Purpose:      mapPurposeToUint8(slot.Purpose),
+		Lifecycle:    mapLifecycleToUint8(slot.Lifecycle),
+		AccessHint:   0,   // sequential
+		Priority:     128, // normal priority
+		Permissions:  parsePermissions(slot.Permissions),
+		Platform:     0, // all platforms
+		ExtendedOffset: 0,
+		ExtendedSize:   0,
 	}
 	
 	// Store processed data
