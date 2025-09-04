@@ -95,19 +95,19 @@ class PSPFLauncher(PSPFReader):
 
     def check_disk_space(self, workenv_dir: Path) -> None:
         """Check if there's enough disk space for extraction.
-        
+
         Args:
             workenv_dir: Directory where slots will be extracted
-            
+
         Raises:
             OSError: If insufficient disk space available
         """
         from flavor.utils.disk import check_disk_space
-        
+
         # Calculate total size needed (compressed size * multiplier for safety)
         slot_table = self.read_slot_table()
-        total_needed = sum(slot['size'] * DISK_SPACE_MULTIPLIER for slot in slot_table)
-        
+        total_needed = sum(slot["size"] * DISK_SPACE_MULTIPLIER for slot in slot_table)
+
         # Use the utility function
         check_disk_space(workenv_dir, total_needed)
 
@@ -219,7 +219,9 @@ class PSPFLauncher(PSPFReader):
         if "slots" in metadata and slot_index < len(metadata["slots"]):
             slot_meta = metadata["slots"][slot_index]
             # Use "target" field for extraction path, fallback to "id" or "name"
-            slot_name = slot_meta.get("target", slot_meta.get("id", slot_meta.get("name", slot_name)))
+            slot_name = slot_meta.get(
+                "target", slot_meta.get("id", slot_meta.get("name", slot_name))
+            )
         logger.debug(f"📝 Slot {slot_index} name: {slot_name}")
 
         # NOTE: Tarball extraction logic matches Go's tar extraction
@@ -453,7 +455,9 @@ class PSPFLauncher(PSPFReader):
                     except Exception as e:
                         logger.error(f"❌ Command failed: {command}")
                         logger.error(f"❌ Error details: {str(e)}")
-                        raise RuntimeError(f"Setup command failed: {command}. Error: {str(e)}") from e
+                        raise RuntimeError(
+                            f"Setup command failed: {command}. Error: {str(e)}"
+                        ) from e
 
                     logger.debug("✅ Command succeeded")
 

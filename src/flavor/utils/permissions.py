@@ -14,16 +14,16 @@ from flavor.psp.format_2025.constants import (
 
 def parse_permissions(perms_str: str | None) -> int:
     """Parse permission string to octal integer.
-    
+
     Args:
         perms_str: Permission string like "0755" or "755"
-        
+
     Returns:
         Permission as integer, or DEFAULT_FILE_PERMS if invalid
     """
     if not perms_str:
         return DEFAULT_FILE_PERMS
-        
+
     try:
         # Remove leading '0' or '0o' if present
         perms_str = perms_str.lstrip("0o")
@@ -35,7 +35,7 @@ def parse_permissions(perms_str: str | None) -> int:
 
 def set_file_permissions(path: Path, mode: int) -> None:
     """Set file permissions safely.
-    
+
     Args:
         path: File path
         mode: Unix permission mode
@@ -49,7 +49,7 @@ def set_file_permissions(path: Path, mode: int) -> None:
 
 def ensure_secure_permissions(path: Path, is_executable: bool = False) -> None:
     """Apply secure default permissions to a file or directory.
-    
+
     Args:
         path: Path to file or directory
         is_executable: Whether file should be executable
@@ -60,16 +60,16 @@ def ensure_secure_permissions(path: Path, is_executable: bool = False) -> None:
         mode = DEFAULT_EXECUTABLE_PERMS
     else:
         mode = DEFAULT_FILE_PERMS
-    
+
     set_file_permissions(path, mode)
 
 
 def get_permissions(path: Path) -> int:
     """Get current file permissions.
-    
+
     Args:
         path: File path
-        
+
     Returns:
         Permission bits as integer
     """
@@ -81,10 +81,10 @@ def get_permissions(path: Path) -> int:
 
 def format_permissions(mode: int) -> str:
     """Format permission bits as octal string.
-    
+
     Args:
         mode: Permission bits
-        
+
     Returns:
         Formatted string like "0755"
     """

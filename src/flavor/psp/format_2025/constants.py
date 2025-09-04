@@ -5,8 +5,12 @@
 import sys
 
 # Emoji bytes for MagicTrailer bookends
-PACKAGE_EMOJI_BYTES = bytes([0xF0, 0x9F, 0x93, 0xA6])  # 📦 as bytes (MagicTrailer start)
-MAGIC_WAND_EMOJI_BYTES = bytes([0xF0, 0x9F, 0xAA, 0x84])  # 🪄 as bytes (MagicTrailer end)
+PACKAGE_EMOJI_BYTES = bytes(
+    [0xF0, 0x9F, 0x93, 0xA6]
+)  # 📦 as bytes (MagicTrailer start)
+MAGIC_WAND_EMOJI_BYTES = bytes(
+    [0xF0, 0x9F, 0xAA, 0x84]
+)  # 🪄 as bytes (MagicTrailer end)
 
 # Display-only emoji constants (for UI/logging)
 PACKAGE_EMOJI = "📦"
@@ -35,7 +39,7 @@ else:
 # Disk space safety multiplier - require 2x compressed size for extraction
 DISK_SPACE_MULTIPLIER = 2
 
-# Path constants  
+# Path constants
 PSPF_HIDDEN_PREFIX = "."
 PSPF_SUFFIX = ".pspf"
 INSTANCE_DIR = "instance"
