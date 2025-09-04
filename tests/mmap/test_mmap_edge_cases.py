@@ -2,26 +2,21 @@
 # tests/test_mmap_edge_cases.py
 # Comprehensive edge case testing for memory-mapped I/O
 
+import hashlib
 import os
-import sys
-import mmap
-import pytest
+from pathlib import Path
 import tempfile
 import threading
-import multiprocessing
-from pathlib import Path
 import time
-import hashlib
+
+import pytest
 
 from flavor.psp.format_2025.backends import (
-    MMapBackend,
-    FileBackend,
-    StreamBackend,
-    HybridBackend,
-    create_backend,
-    ACCESS_MMAP,
-    ACCESS_FILE,
     ACCESS_AUTO,
+    ACCESS_FILE,
+    ACCESS_MMAP,
+    MMapBackend,
+    create_backend,
 )
 from flavor.psp.format_2025.constants import PAGE_SIZE
 

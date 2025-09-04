@@ -1,20 +1,19 @@
 #!/usr/bin/env python3
 """Tests for metadata assembly functionality."""
 
-import json
 import datetime
-from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 import pytest
 
-from flavor.psp.format_2025.spec import BuildSpec, KeyConfig
 from flavor.psp.format_2025.metadata import (
+    assemble_metadata,
     create_build_metadata,
     create_launcher_metadata,
     create_verification_metadata,
-    assemble_metadata,
     get_launcher_info,
 )
+from flavor.psp.format_2025.spec import BuildSpec, KeyConfig
 
 
 class TestBuildMetadata:
@@ -140,7 +139,6 @@ class TestVerificationMetadata:
 
     def test_create_verification_metadata_with_seed(self):
         """Test verification metadata with deterministic key."""
-        from flavor.psp.format_2025.spec import KeyConfig
 
         spec = BuildSpec().with_keys(KeyConfig(key_seed="test-seed"))
         metadata = create_verification_metadata(spec)
@@ -230,7 +228,6 @@ class TestMetadataAssembly:
         assert "setup_commands" in metadata
         assert "runtime" in metadata
         assert "workenv" in metadata
-
 
     def test_assemble_metadata_with_slots(self, basic_spec, mock_launcher_info):
         """Test metadata assembly includes slot information."""

@@ -2,10 +2,9 @@
 """Tests for the extract commands."""
 
 import json
+from pathlib import Path
 import subprocess
 import tarfile
-import tempfile
-from pathlib import Path
 
 import click.testing
 import pytest

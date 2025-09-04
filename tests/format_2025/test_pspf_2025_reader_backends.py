@@ -2,26 +2,23 @@
 # tests/test_pspf_2025_reader_backends.py
 # Tests for PSPF reader with backend support
 
-import pytest
-import tempfile
-import struct
-import zlib
 from pathlib import Path
+import tempfile
+import zlib
 
-from flavor.psp.format_2025.reader import PSPFReader, read_bundle, verify_bundle
-from flavor.psp.format_2025.backends import MMapBackend, FileBackend, StreamBackend
+import pytest
+
+from flavor.psp.format_2025.backends import FileBackend, MMapBackend, StreamBackend
 from flavor.psp.format_2025.constants import (
-    PSPF_VERSION,
-    HEADER_SIZE,
-    SLOT_DESCRIPTOR_SIZE,
-    ACCESS_MMAP,
-    ACCESS_FILE,
-    ACCESS_STREAM,
     ACCESS_AUTO,
+    ACCESS_FILE,
+    ACCESS_MMAP,
+    ACCESS_STREAM,
     ENCODING_RAW,
-    ENCODING_GZIP,
+    SLOT_DESCRIPTOR_SIZE,
 )
 from flavor.psp.format_2025.index import PSPFIndex
+from flavor.psp.format_2025.reader import PSPFReader, read_bundle, verify_bundle
 from flavor.psp.format_2025.slots import SlotDescriptor
 
 
@@ -39,7 +36,7 @@ class TestReaderBackends:
             # Prepare slot descriptors
             slot_table_offset = 100  # After launcher
             data_offset = slot_table_offset + (2 * SLOT_DESCRIPTOR_SIZE)
-            
+
             # Write slot descriptors (2 x 64 bytes)
             slot1 = SlotDescriptor(
                 id=0,
@@ -66,7 +63,7 @@ class TestReaderBackends:
             # Write slot data
             f.write(b"TEST DATA 1" * 9 + b"T")  # 100 bytes
             f.write(b"TEST DATA 2" * 18 + b"TD")  # 200 bytes
-            
+
             # Calculate final package size (before MagicTrailer)
             package_size = f.tell()
 
@@ -85,9 +82,9 @@ class TestReaderBackends:
             index.index_checksum = zlib.adler32(bytes(data_copy))
 
             # Write MagicTrailer (📦 + index + 🪄)
-            f.write("📦".encode("utf-8"))  # 4 bytes
+            f.write("📦".encode())  # 4 bytes
             f.write(index.pack())  # 8192 bytes
-            f.write("🪄".encode("utf-8"))  # 4 bytes
+            f.write("🪄".encode())  # 4 bytes
 
             path = Path(f.name)
 

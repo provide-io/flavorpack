@@ -27,14 +27,12 @@ from flavor.psp.format_2025.constants import (
     CAPABILITY_PAGE_ALIGNED,
     CAPABILITY_SIGNED,
     DEFAULT_EXECUTABLE_PERMS,
-    DEFAULT_FILE_PERMS,
     DEFAULT_MAX_MEMORY,
     DEFAULT_MIN_MEMORY,
     ENCODING_GZIP,
     ENCODING_RAW,
     ENCODING_TAR,
     ENCODING_TGZ,
-    HEADER_SIZE,
     LIFECYCLE_CACHE,
     LIFECYCLE_CONFIG,
     LIFECYCLE_DEV,
@@ -67,7 +65,6 @@ from flavor.psp.format_2025.slots import (
     SlotDescriptor,
     SlotMetadata,
 )
-from flavor.utils.alignment import align_offset, align_to_page
 from flavor.psp.format_2025.spec import (
     BuildOptions,
     BuildResult,
@@ -76,6 +73,7 @@ from flavor.psp.format_2025.spec import (
     PreparedSlot,
 )
 from flavor.psp.format_2025.validation import validate_complete
+from flavor.utils.alignment import align_offset, align_to_page
 from flavor.utils.archive import deterministic_filter
 from flavor.utils.permissions import parse_permissions, set_file_permissions
 

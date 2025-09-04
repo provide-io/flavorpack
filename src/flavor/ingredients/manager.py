@@ -13,8 +13,8 @@ from typing import Any
 
 from provide.foundation import logger
 
-from flavor.utils.subprocess import run_command
 from flavor.utils.platform import get_platform_string
+from flavor.utils.subprocess import run_command
 
 
 @dataclass

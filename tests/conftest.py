@@ -1,8 +1,10 @@
+from pathlib import Path
+import shutil
+import tempfile
+
 from cryptography.hazmat.primitives.asymmetric import ed25519
 import pytest
-import tempfile
-import shutil
-from pathlib import Path
+
 from flavor.psp.format_2025.builder import PSPFBuilder
 
 # Mock launcher data - matches approximate size of real launchers

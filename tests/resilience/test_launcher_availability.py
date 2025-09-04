@@ -3,13 +3,12 @@
 import io
 import os
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from flavor.exceptions import BuildError
 from flavor.packaging.orchestrator import PackagingOrchestrator
-from flavor.ingredients.manager import IngredientManager
 
 
 @pytest.fixture
@@ -183,6 +182,7 @@ class TestLauncherReproducibility:
         """Test that builds with the same launcher are reproducible."""
         # Mock os.stat to return proper size for the mock paths
         import stat as stat_module
+
         def stat_side_effect(path, *args, **kwargs):
             mock_stat = MagicMock()
             str_path = str(path)
@@ -205,27 +205,29 @@ class TestLauncherReproducibility:
                 mock_stat.st_size = 0
                 mock_stat.st_mode = stat_module.S_IFREG | 0o644
             return mock_stat
+
         mock_os_stat.side_effect = stat_side_effect
-        
+
         # Mock shutil.copy2 to return the destination path
         def copy2_side_effect(src, dst):
             return dst
+
         mock_copy2.side_effect = copy2_side_effect
-        
+
         # Mock gzip.open to return a mock file
         mock_gzip_file = MagicMock()
         mock_gzip_file.write.return_value = None
         mock_gzip_file.__enter__.return_value = mock_gzip_file
         mock_gzip_file.__exit__.return_value = None
         mock_gzip_open.return_value = mock_gzip_file
-        
+
         # Mock tarfile.open to return a mock tarfile
         mock_tar = MagicMock()
         mock_tar.add.return_value = None
         mock_tar.__enter__.return_value = mock_tar
         mock_tar.__exit__.return_value = None
         mock_tarfile_open.return_value = mock_tar
-        
+
         # Configure mock_open to return BytesIO for specific paths
         original_path_open = Path.open  # Store original Path.open
 
@@ -264,14 +266,18 @@ class TestLauncherReproducibility:
             b"mock python tgz content"
         )
         mock_python_tgz_path.resolve.return_value = Path("/mock/python.tgz")
-        mock_python_tgz_path.stat.return_value.st_size = 23  # Length of "mock python tgz content"
+        mock_python_tgz_path.stat.return_value.st_size = (
+            23  # Length of "mock python tgz content"
+        )
         mock_python_tgz_path.exists.return_value = True
         mock_wheels_tgz_path = MagicMock(spec=Path)
         mock_wheels_tgz_path.open.return_value.__enter__.return_value = io.BytesIO(
             b"mock wheels tgz content"
         )
         mock_wheels_tgz_path.resolve.return_value = Path("/mock/wheels.tgz")
-        mock_wheels_tgz_path.stat.return_value.st_size = 23  # Length of "mock wheels tgz content"
+        mock_wheels_tgz_path.stat.return_value.st_size = (
+            23  # Length of "mock wheels tgz content"
+        )
         mock_wheels_tgz_path.exists.return_value = True
 
         mock_prepare_artifacts.return_value = {
@@ -280,30 +286,44 @@ class TestLauncherReproducibility:
             "wheels_tgz": mock_wheels_tgz_path,
             "payload_dir": Path("/mock/payload_dir"),
         }
-        
+
         # Mock create_python_slot_tarballs to return deterministic paths with proper mocks
         mock_uv_gz = MagicMock(spec=Path)
         mock_uv_gz.__str__.return_value = "/tmp/flavor_build_deterministic/uv.gz"
         mock_uv_gz.stat.return_value.st_size = 100
         mock_uv_gz.exists.return_value = True
-        mock_uv_gz.open.return_value.__enter__.return_value = io.BytesIO(b"mock uv gz content")
+        mock_uv_gz.open.return_value.__enter__.return_value = io.BytesIO(
+            b"mock uv gz content"
+        )
         mock_uv_gz.open.return_value.__exit__.return_value = None
-        
+
         mock_python_tar = MagicMock(spec=Path)
-        mock_python_tar.__str__.return_value = "/tmp/flavor_build_deterministic/python.tar.gz"
+        mock_python_tar.__str__.return_value = (
+            "/tmp/flavor_build_deterministic/python.tar.gz"
+        )
         mock_python_tar.stat.return_value.st_size = 200
         mock_python_tar.exists.return_value = True
-        mock_python_tar.open.return_value.__enter__.return_value = io.BytesIO(b"mock python tar content")
+        mock_python_tar.open.return_value.__enter__.return_value = io.BytesIO(
+            b"mock python tar content"
+        )
         mock_python_tar.open.return_value.__exit__.return_value = None
-        
+
         mock_wheels_tar = MagicMock(spec=Path)
-        mock_wheels_tar.__str__.return_value = "/tmp/flavor_build_deterministic/wheels.tar.gz"
+        mock_wheels_tar.__str__.return_value = (
+            "/tmp/flavor_build_deterministic/wheels.tar.gz"
+        )
         mock_wheels_tar.stat.return_value.st_size = 300
         mock_wheels_tar.exists.return_value = True
-        mock_wheels_tar.open.return_value.__enter__.return_value = io.BytesIO(b"mock wheels tar content")
+        mock_wheels_tar.open.return_value.__enter__.return_value = io.BytesIO(
+            b"mock wheels tar content"
+        )
         mock_wheels_tar.open.return_value.__exit__.return_value = None
-        
-        mock_create_slot_tarballs.return_value = (mock_uv_gz, mock_python_tar, mock_wheels_tar)
+
+        mock_create_slot_tarballs.return_value = (
+            mock_uv_gz,
+            mock_python_tar,
+            mock_wheels_tar,
+        )
 
         launcher_path = tmp_path / "test-launcher"
         launcher_path.write_bytes(b"\x7fELF\x02\x01\x01\x00" + b"\x00" * 100)

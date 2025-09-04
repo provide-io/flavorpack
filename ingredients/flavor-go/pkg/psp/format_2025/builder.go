@@ -22,7 +22,22 @@ import (
 )
 
 // BuildOptions represents the configuration for building a PSPF package.
-// This aligns with Python's BuildOptions and Rust's BuildOptions for consistency.
+//
+// This struct defines the complete configuration needed to build a PSPF/2025
+// package. It aligns with Python's BuildOptions and Rust's BuildOptions for
+// cross-language consistency. The structure matches the JSON manifest format
+// used by all PSPF builders.
+//
+// Required fields:
+// - Package: Basic package metadata (name, version, description)
+// - Execution: How to run the package (command, environment, primary slot)
+//
+// Optional fields:
+// - Slots: List of data slots to include in the package
+// - Launcher: Path to the native launcher binary
+// - Runtime: Runtime environment configuration
+// - CacheValidation: Cache validation rules
+// - SetupCommands: Commands to run during setup
 type BuildOptions struct {
 	// Package metadata (required per SPEC)
 	Package PackageConfig `json:"package"`

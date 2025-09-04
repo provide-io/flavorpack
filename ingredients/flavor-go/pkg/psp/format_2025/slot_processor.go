@@ -12,7 +12,25 @@ import (
 )
 
 // SlotProcessor handles slot processing for PSPF packages.
-// This aligns with Rust's SlotProcessor for consistency across implementations.
+// 
+// This abstraction encapsulates all slot-related operations including loading,
+// processing, and preparing slot data for package assembly. It aligns with the
+// Rust and Python implementations for cross-language consistency in the PSPF/2025
+// format.
+//
+// The processor handles:
+// - Loading slot data from disk
+// - Applying encoding/compression
+// - Calculating checksums
+// - Creating slot descriptors for the binary format
+// - Creating slot metadata for the JSON metadata section
+//
+// Slot processing workflow:
+// 1. Load manifest slots configuration
+// 2. Process each slot (read, compress, checksum)
+// 3. Create descriptors for binary slot table
+// 4. Create metadata for JSON metadata section
+// 5. Store compressed data for writing to package
 type SlotProcessor struct {
 	// Slots from manifest configuration
 	manifestSlots []Slot
@@ -41,7 +59,14 @@ func NewSlotProcessor(slots []Slot, logger hclog.Logger) *SlotProcessor {
 	}
 }
 
-// ProcessSlots processes all slots from the manifest
+// ProcessSlots processes all slots from the manifest.
+//
+// This method iterates through all configured slots, loading their data,
+// applying any specified encoding, and preparing both the binary descriptors
+// and JSON metadata. Each slot is validated for required fields and processed
+// according to its configuration.
+//
+// Returns an error if any slot fails to process.
 func (sp *SlotProcessor) ProcessSlots() error {
 	sp.logger.Info("📦 Processing slot metadata", "count", len(sp.manifestSlots))
 	sp.logger.Debug("🔍 Slot processing details", "alignment", SlotAlignment, "descriptor_size", SlotDescriptorSize)
@@ -120,7 +145,21 @@ func parsePermissions(permStr string) uint16 {
 
 // hashSlotName is defined in builder.go and reused here
 
-// processSlot processes a single slot
+// processSlot processes a single slot.
+//
+// This method handles the complete processing of a single slot:
+// - Validates required fields (id, source, target)
+// - Sets defaults for optional fields
+// - Loads and encodes the slot data
+// - Calculates checksums
+// - Creates slot descriptor for binary format
+// - Creates slot metadata for JSON format
+//
+// Args:
+//   index: The slot index (0-based)
+//   slot: The slot configuration from the manifest
+//
+// Returns an error if the slot cannot be processed.
 func (sp *SlotProcessor) processSlot(index int, slot *Slot) error {
 	// Validate required fields
 	if slot.ID == "" {
@@ -206,7 +245,20 @@ func (sp *SlotProcessor) processSlot(index int, slot *Slot) error {
 	return nil
 }
 
-// loadSlotData loads and processes slot data based on encoding
+// loadSlotData loads and processes slot data based on encoding.
+//
+// This method reads the slot data from disk and applies any specified
+// encoding. It supports path resolution with {workenv} placeholder and
+// various encoding formats (gzip, tar, tar.gz, none).
+//
+// Args:
+//   slot: The slot configuration containing source path and encoding
+//
+// Returns:
+//   - Original uncompressed data
+//   - Compressed/encoded data
+//   - Encoding method constant for the binary format
+//   - Error if the data cannot be loaded
 func (sp *SlotProcessor) loadSlotData(slot *Slot) ([]byte, []byte, uint8, error) {
 	// Resolve {workenv} placeholder
 	slotPath := slot.Source

@@ -2,23 +2,22 @@
 # tests/test_pspf_2025_enhanced.py
 # Tests for enhanced PSPF/2025 format with memory-mapped support
 
-import pytest
 import struct
-from pathlib import Path
+
+import pytest
 
 from flavor.psp.format_2025.constants import (
-    PSPF_VERSION,
-    HEADER_SIZE,
-    SLOT_DESCRIPTOR_SIZE,
-    MAGIC_TRAILER_SIZE,
-    PACKAGE_EMOJI_BYTES,
-    MAGIC_WAND_EMOJI_BYTES,
     ACCESS_AUTO,
     ACCESS_MMAP,
-    CAPABILITY_MMAP,
     CACHE_NORMAL,
+    CAPABILITY_MMAP,
     DEFAULT_MAX_MEMORY,
     DEFAULT_MIN_MEMORY,
+    HEADER_SIZE,
+    MAGIC_TRAILER_SIZE,
+    MAGIC_WAND_EMOJI_BYTES,
+    PACKAGE_EMOJI_BYTES,
+    PSPF_VERSION,
 )
 from flavor.psp.format_2025.index import PSPFIndex
 
@@ -40,7 +39,9 @@ class TestEnhancedConstants:
         assert MAGIC_WAND_EMOJI_BYTES == b"\xf0\x9f\xaa\x84"  # 🪄 in UTF-8
         assert MAGIC_TRAILER_SIZE == 8200  # 4 + 8192 + 4
         # MagicTrailer consists of 📦 + 8192-byte index + 🪄
-        assert len(PACKAGE_EMOJI_BYTES + MAGIC_WAND_EMOJI_BYTES) == 8  # Both emojis = 8 bytes
+        assert (
+            len(PACKAGE_EMOJI_BYTES + MAGIC_WAND_EMOJI_BYTES) == 8
+        )  # Both emojis = 8 bytes
 
 
 class TestEnhancedIndex:
@@ -107,6 +108,7 @@ class TestPlatformSpecific:
     def test_page_size(self):
         """Page size should be set based on platform."""
         import sys
+
         from flavor.psp.format_2025.constants import PAGE_SIZE
 
         if sys.platform == "darwin":
@@ -119,9 +121,8 @@ class TestPlatformSpecific:
     def test_access_modes(self):
         """Access modes should be defined."""
         from flavor.psp.format_2025.constants import (
-            ACCESS_FILE,
-            ACCESS_MMAP,
             ACCESS_AUTO,
+            ACCESS_FILE,
             ACCESS_STREAM,
         )
 

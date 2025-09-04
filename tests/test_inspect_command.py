@@ -2,9 +2,8 @@
 """Tests for the inspect command."""
 
 import json
-import subprocess
-import tempfile
 from pathlib import Path
+import subprocess
 
 import click.testing
 import pytest
@@ -136,7 +135,9 @@ class TestInspectCommand:
             assert "encoding" in slot
 
         # Check that we have expected slot IDs
-        slot_ids = [s["name"] for s in slots]  # JSON returns ID as "name" for compatibility
+        slot_ids = [
+            s["name"] for s in slots
+        ]  # JSON returns ID as "name" for compatibility
         assert "uv" in slot_ids
         assert "python" in slot_ids
         assert "wheels" in slot_ids

@@ -6,8 +6,8 @@ For new code, prefer importing directly from provide.foundation.crypto.
 from pathlib import Path
 
 from provide.foundation.crypto import (
-    hash_file as _hash_file,
     hash_data as _hash_data,
+    hash_file as _hash_file,
     quick_hash as _quick_hash,
 )
 

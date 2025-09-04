@@ -8,7 +8,11 @@ import os
 from pathlib import Path
 import subprocess
 
-from provide.foundation.process import run_command as foundation_run_command, ProcessError
+from provide.foundation.process import (
+    ProcessError,
+    run_command as foundation_run_command,
+)
+
 from flavor.exceptions import BuildError
 
 
