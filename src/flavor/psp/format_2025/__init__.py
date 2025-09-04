@@ -22,7 +22,8 @@ from flavor.psp.format_2025.index import PSPFIndex
 from flavor.psp.format_2025.keys import create_key_config, resolve_keys
 from flavor.psp.format_2025.launcher import PSPFLauncher
 from flavor.psp.format_2025.reader import PSPFReader
-from flavor.psp.format_2025.slots import SlotMetadata, align_offset
+from flavor.psp.format_2025.slots import SlotMetadata
+from flavor.utils.alignment import align_offset
 from flavor.psp.format_2025.spec import (
     BuildOptions,
     BuildResult,
