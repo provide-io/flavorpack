@@ -148,14 +148,14 @@ class PythonPackager:
             requirements_file: Optional requirements file
             packages: Optional list of packages to download
             binary_only: Whether to download only binary wheels
-            platform_tag: Optional platform tag to use (e.g., "manylinux_2_17_x86_64")
+            platform_tag: Optional platform tag to use (e.g., "manylinux2014_x86_64")
         """
         cmd = [str(python_exe), "-m", "pip", "download", "--dest", str(dest_dir)]
         if binary_only:
             cmd.extend(["--only-binary", ":all:"])
 
         # For Linux builds, explicitly request manylinux wheels for maximum compatibility
-        # manylinux_2_17 = manylinux2014 = glibc 2.17+ (CentOS 7, Amazon Linux 2, Ubuntu 14.04+)
+        # manylinux2014 = glibc 2.17+ (CentOS 7, Amazon Linux 2, Ubuntu 14.04+)
         if get_os_name() == "linux" and binary_only:
             if platform_tag:
                 # Use explicitly provided platform tag
@@ -164,20 +164,18 @@ class PythonPackager:
             else:
                 arch = get_arch_name()
                 logger.trace(
-                    f"Linux build detected, arch={arch}, requesting manylinux_2_17 wheels"
+                    f"Linux build detected, arch={arch}, requesting {self.MANYLINUX_TAG} wheels"
                 )
 
-                # Use manylinux_2_17 format (modern packages like grpcio use this)
-                # This is equivalent to manylinux2014 (both mean glibc 2.17+)
-                # WARNING: manylinux_2_17 wheels may have C++11 ABI incompatibility on CentOS 7
-                # CentOS 7 has GCC 4.8.5 with old C++ ABI, but grpcio needs new C++11 ABI
+                # Use manylinux2014 format for maximum compatibility
+                # manylinux2014 = glibc 2.17+ (CentOS 7, Amazon Linux 2, Ubuntu 14.04+)
                 if arch == "amd64":
-                    cmd.extend(["--platform", "manylinux_2_17_x86_64"])
-                    logger.debug("Added platform constraint: manylinux_2_17_x86_64")
+                    cmd.extend(["--platform", f"{self.MANYLINUX_TAG}_x86_64"])
+                    logger.debug(f"Added platform constraint: {self.MANYLINUX_TAG}_x86_64")
                 elif arch == "arm64":
-                    # ARM64 doesn't have manylinux2010, use manylinux_2_17
-                    cmd.extend(["--platform", "manylinux_2_17_aarch64"])
-                    logger.debug("Added platform constraint: manylinux_2_17_aarch64")
+                    # ARM64 doesn't have manylinux2010, use manylinux2014
+                    cmd.extend(["--platform", f"{self.MANYLINUX_TAG}_aarch64"])
+                    logger.debug(f"Added platform constraint: {self.MANYLINUX_TAG}_aarch64")
                     logger.warning("⚠️ grpcio on CentOS 7 ARM64 may have C++ ABI issues")
 
             # Also specify Python version to match our target
@@ -212,9 +210,9 @@ class PythonPackager:
         # Determine platform tag
         arch = get_arch_name()
         if arch == "amd64":
-            platform_tag = "manylinux_2_17_x86_64.manylinux2014_x86_64"
+            platform_tag = f"{self.MANYLINUX_TAG}_x86_64"
         elif arch == "arm64":
-            platform_tag = "manylinux_2_17_aarch64.manylinux2014_aarch64"
+            platform_tag = f"{self.MANYLINUX_TAG}_aarch64"
         else:
             logger.error(f"Unsupported architecture for UV download: {arch}")
             return None
