@@ -15,10 +15,6 @@
         <link rel="canonical" href="https://flavorpack.io/spec/feps/fep-0005-jit-loading/">
       
       
-        <link rel="prev" href="../fep-0004-staged-payload-architecture/">
-      
-      
-        <link rel="next" href="../../../changelog/">
       
       
       <link rel="icon" href="../../../assets/images/favicon.png">
@@ -26,7 +22,7 @@
     
     
       
-        <title>FEP-0005 JIT - FlavorPack Documentation</title>
+        <title>FEP-0005: Just-In-Time Loading Specification - FlavorPack Documentation</title>
       
     
     
@@ -94,7 +90,9 @@
     
       
 
-<header class="md-header" data-md-component="header">
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
     <a href="../../.." title="FlavorPack Documentation" class="md-header__button md-logo" aria-label="FlavorPack Documentation" data-md-component="logo">
       
@@ -116,7 +114,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              FEP-0005 JIT
+              FEP-0005: Just-In-Time Loading Specification
             
           </span>
         </div>
@@ -218,146 +216,6 @@
       
         
           
-            
-<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
-  <div class="md-grid">
-    <ul class="md-tabs__list">
-      
-        
-  
-  
-  
-  
-    <li class="md-tabs__item">
-      <a href="../../.." class="md-tabs__link">
-        
-  
-  
-    
-  
-  Home
-
-      </a>
-    </li>
-  
-
-      
-        
-  
-  
-  
-  
-    
-    
-      <li class="md-tabs__item">
-        <a href="../../../getting-started/" class="md-tabs__link">
-          
-  
-  
-    
-  
-  Getting Started
-
-        </a>
-      </li>
-    
-  
-
-      
-        
-  
-  
-  
-  
-    
-    
-      <li class="md-tabs__item">
-        <a href="../../../guide/" class="md-tabs__link">
-          
-  
-  
-    
-  
-  User Guide
-
-        </a>
-      </li>
-    
-  
-
-      
-        
-  
-  
-  
-  
-    
-    
-      <li class="md-tabs__item">
-        <a href="../../../API-REFERENCE/" class="md-tabs__link">
-          
-  
-  
-    
-  
-  Reference
-
-        </a>
-      </li>
-    
-  
-
-      
-        
-  
-  
-  
-    
-  
-  
-    
-    
-      <li class="md-tabs__item md-tabs__item--active">
-        <a href="../fep-0001-pspf-core-specification/" class="md-tabs__link">
-          
-  
-  
-    
-  
-  Specifications
-
-        </a>
-      </li>
-    
-  
-
-      
-        
-  
-  
-  
-  
-    
-    
-      <li class="md-tabs__item">
-        <a href="../../../changelog/" class="md-tabs__link">
-          
-  
-  
-    
-  
-  About
-
-        </a>
-      </li>
-    
-  
-
-      
-    </ul>
-  </div>
-</nav>
-          
         
       
       <main class="md-main" data-md-component="main">
@@ -371,10 +229,10 @@
                     
 
 
+
   
 
-
-<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+<nav class="md-nav md-nav--primary md-nav--integrated" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
     <a href="../../.." title="FlavorPack Documentation" class="md-nav__button md-logo" aria-label="FlavorPack Documentation" data-md-component="logo">
       
@@ -427,76 +285,8 @@
   
   
   
-    
-    
-      
-        
-          
-        
-      
-        
-      
-        
-      
-        
-      
-        
-      
-    
-    
-    
-      
-      
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
-        
-          
-          <div class="md-nav__link md-nav__container">
-            <a href="../../../getting-started/" class="md-nav__link ">
-              
-  
-  
-  <span class="md-ellipsis">
-    Getting Started
-    
-  </span>
-  
-
-            </a>
-            
-              
-              <label class="md-nav__link " for="__nav_2" id="__nav_2_label" tabindex="0">
-                <span class="md-nav__icon md-icon"></span>
-              </label>
-            
-          </div>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2">
-            <span class="md-nav__icon md-icon"></span>
-            Getting Started
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-            
-              
-                
-  
-  
-  
-  
     <li class="md-nav__item">
-      <a href="../../../getting-started/installation/" class="md-nav__link">
+      <a href="../../../installation/" class="md-nav__link">
         
   
   
@@ -510,16 +300,15 @@
     </li>
   
 
-              
-            
-              
-                
+    
+      
+      
   
   
   
   
     <li class="md-nav__item">
-      <a href="../../../getting-started/quickstart/" class="md-nav__link">
+      <a href="../../../quickstart/" class="md-nav__link">
         
   
   
@@ -533,152 +322,6 @@
     </li>
   
 
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../../getting-started/first-package/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    First Package
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../../getting-started/examples/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Examples
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    
-    
-      
-        
-          
-        
-      
-        
-      
-    
-    
-    
-      
-      
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
-        
-          
-          <div class="md-nav__link md-nav__container">
-            <a href="../../../guide/" class="md-nav__link ">
-              
-  
-  
-  <span class="md-ellipsis">
-    User Guide
-    
-  </span>
-  
-
-            </a>
-            
-              
-              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
-                <span class="md-nav__icon md-icon"></span>
-              </label>
-            
-          </div>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_3">
-            <span class="md-nav__icon md-icon"></span>
-            User Guide
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../../guide/concepts/pspf-format/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    PSPF Format
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
     
       
       
@@ -693,24 +336,16 @@
       
         
       
-        
-      
-        
-      
-        
-      
-        
-      
     
     
     
       
-      
+        
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
@@ -719,7 +354,115 @@
         <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
         
           
-          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Format
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Format
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pspf-format/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    PSPF Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../fep-0001-pspf-core-specification/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Core Specification
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
             
   
   
@@ -732,8 +475,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             Reference
           </label>
@@ -831,873 +574,6 @@
 
               
             
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../../USER-GUIDE/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    User Guide (Legacy)
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../../CI-CD/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    CI/CD
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-    
-  
-  
-  
-    
-    
-      
-        
-      
-        
-      
-        
-      
-        
-      
-        
-      
-    
-    
-    
-      
-        
-        
-      
-      
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
-        
-          
-          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
-            
-  
-  
-  <span class="md-ellipsis">
-    Specifications
-    
-  </span>
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_5">
-            <span class="md-nav__icon md-icon"></span>
-            Specifications
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../fep-0001-pspf-core-specification/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    FEP-0001 Core
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../fep-0002-workenv-management/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    FEP-0002 Workenv
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../fep-0003-runtime-security-model/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    FEP-0003 Security
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../fep-0004-staged-payload-architecture/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    FEP-0004 Staged
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-    
-  
-  
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    FEP-0005 JIT
-    
-  </span>
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
-        
-  
-  
-  <span class="md-ellipsis">
-    FEP-0005 JIT
-    
-  </span>
-  
-
-      </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#1-introduction" class="md-nav__link">
-    <span class="md-ellipsis">
-      1. Introduction
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="1. Introduction">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#11-requirements-language" class="md-nav__link">
-    <span class="md-ellipsis">
-      1.1. Requirements Language
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#12-design-goals" class="md-nav__link">
-    <span class="md-ellipsis">
-      1.2. Design Goals
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#2-jit-lifecycle-extensions" class="md-nav__link">
-    <span class="md-ellipsis">
-      2. JIT Lifecycle Extensions
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="2. JIT Lifecycle Extensions">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#21-extended-lifecycle-types" class="md-nav__link">
-    <span class="md-ellipsis">
-      2.1. Extended Lifecycle Types
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#22-loading-priority" class="md-nav__link">
-    <span class="md-ellipsis">
-      2.2. Loading Priority
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#3-metadata-extensions" class="md-nav__link">
-    <span class="md-ellipsis">
-      3. Metadata Extensions
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="3. Metadata Extensions">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#31-jit-configuration" class="md-nav__link">
-    <span class="md-ellipsis">
-      3.1. JIT Configuration
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#32-slot-level-jit-configuration" class="md-nav__link">
-    <span class="md-ellipsis">
-      3.2. Slot-Level JIT Configuration
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#4-local-jit-loading" class="md-nav__link">
-    <span class="md-ellipsis">
-      4. Local JIT Loading
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="4. Local JIT Loading">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#41-deferred-extraction" class="md-nav__link">
-    <span class="md-ellipsis">
-      4.1. Deferred Extraction
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#42-access-detection-mechanisms" class="md-nav__link">
-    <span class="md-ellipsis">
-      4.2. Access Detection Mechanisms
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#43-extraction-protocol" class="md-nav__link">
-    <span class="md-ellipsis">
-      4.3. Extraction Protocol
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#44-cache-management" class="md-nav__link">
-    <span class="md-ellipsis">
-      4.4. Cache Management
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#5-network-delivery" class="md-nav__link">
-    <span class="md-ellipsis">
-      5. Network Delivery
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="5. Network Delivery">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#51-network-source-types" class="md-nav__link">
-    <span class="md-ellipsis">
-      5.1. Network Source Types
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#52-network-configuration" class="md-nav__link">
-    <span class="md-ellipsis">
-      5.2. Network Configuration
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#53-download-protocol" class="md-nav__link">
-    <span class="md-ellipsis">
-      5.3. Download Protocol
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#54-chunk-transfer" class="md-nav__link">
-    <span class="md-ellipsis">
-      5.4. Chunk Transfer
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#6-protocol-buffer-integration" class="md-nav__link">
-    <span class="md-ellipsis">
-      6. Protocol Buffer Integration
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="6. Protocol Buffer Integration">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#61-service-definition" class="md-nav__link">
-    <span class="md-ellipsis">
-      6.1. Service Definition
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#62-authentication" class="md-nav__link">
-    <span class="md-ellipsis">
-      6.2. Authentication
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#7-integrity-verification" class="md-nav__link">
-    <span class="md-ellipsis">
-      7. Integrity Verification
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="7. Integrity Verification">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#71-slot-verification" class="md-nav__link">
-    <span class="md-ellipsis">
-      7.1. Slot Verification
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#72-network-security" class="md-nav__link">
-    <span class="md-ellipsis">
-      7.2. Network Security
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#73-cache-validation" class="md-nav__link">
-    <span class="md-ellipsis">
-      7.3. Cache Validation
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#8-performance-optimization" class="md-nav__link">
-    <span class="md-ellipsis">
-      8. Performance Optimization
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="8. Performance Optimization">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#81-prefetching" class="md-nav__link">
-    <span class="md-ellipsis">
-      8.1. Prefetching
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#82-compression" class="md-nav__link">
-    <span class="md-ellipsis">
-      8.2. Compression
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#83-caching-strategy" class="md-nav__link">
-    <span class="md-ellipsis">
-      8.3. Caching Strategy
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#9-error-handling" class="md-nav__link">
-    <span class="md-ellipsis">
-      9. Error Handling
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="9. Error Handling">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#91-local-jit-failures" class="md-nav__link">
-    <span class="md-ellipsis">
-      9.1. Local JIT Failures
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#92-network-jit-failures" class="md-nav__link">
-    <span class="md-ellipsis">
-      9.2. Network JIT Failures
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#10-implementation-requirements" class="md-nav__link">
-    <span class="md-ellipsis">
-      10. Implementation Requirements
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="10. Implementation Requirements">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#101-minimum-implementation" class="md-nav__link">
-    <span class="md-ellipsis">
-      10.1. Minimum Implementation
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#102-network-implementation" class="md-nav__link">
-    <span class="md-ellipsis">
-      10.2. Network Implementation
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#103-advanced-features" class="md-nav__link">
-    <span class="md-ellipsis">
-      10.3. Advanced Features
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#11-relationship-to-other-feps" class="md-nav__link">
-    <span class="md-ellipsis">
-      11. Relationship to Other FEPs
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="11. Relationship to Other FEPs">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#111-fep-0004-spa" class="md-nav__link">
-    <span class="md-ellipsis">
-      11.1. FEP-0004 (SPA)
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#112-fep-0002-workenv" class="md-nav__link">
-    <span class="md-ellipsis">
-      11.2. FEP-0002 (Workenv)
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#12-security-considerations" class="md-nav__link">
-    <span class="md-ellipsis">
-      12. Security Considerations
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="12. Security Considerations">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#121-trust-model" class="md-nav__link">
-    <span class="md-ellipsis">
-      12.1. Trust Model
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#122-attack-mitigation" class="md-nav__link">
-    <span class="md-ellipsis">
-      12.2. Attack Mitigation
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#13-references" class="md-nav__link">
-    <span class="md-ellipsis">
-      13. References
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    
-    
-      
-        
-      
-        
-      
-        
-      
-    
-    
-    
-      
-      
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
-        
-          
-          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    About
-    
-  </span>
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6">
-            <span class="md-nav__icon md-icon"></span>
-            About
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../../changelog/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Changelog
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../../license/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    License
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../../MIGRATION_PLAN/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Migration Plan
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
           </ul>
         </nav>
       
@@ -1711,500 +587,6 @@
                 </div>
               </div>
             
-            
-              
-              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
-                <div class="md-sidebar__scrollwrap">
-                  <div class="md-sidebar__inner">
-                    
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#1-introduction" class="md-nav__link">
-    <span class="md-ellipsis">
-      1. Introduction
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="1. Introduction">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#11-requirements-language" class="md-nav__link">
-    <span class="md-ellipsis">
-      1.1. Requirements Language
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#12-design-goals" class="md-nav__link">
-    <span class="md-ellipsis">
-      1.2. Design Goals
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#2-jit-lifecycle-extensions" class="md-nav__link">
-    <span class="md-ellipsis">
-      2. JIT Lifecycle Extensions
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="2. JIT Lifecycle Extensions">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#21-extended-lifecycle-types" class="md-nav__link">
-    <span class="md-ellipsis">
-      2.1. Extended Lifecycle Types
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#22-loading-priority" class="md-nav__link">
-    <span class="md-ellipsis">
-      2.2. Loading Priority
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#3-metadata-extensions" class="md-nav__link">
-    <span class="md-ellipsis">
-      3. Metadata Extensions
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="3. Metadata Extensions">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#31-jit-configuration" class="md-nav__link">
-    <span class="md-ellipsis">
-      3.1. JIT Configuration
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#32-slot-level-jit-configuration" class="md-nav__link">
-    <span class="md-ellipsis">
-      3.2. Slot-Level JIT Configuration
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#4-local-jit-loading" class="md-nav__link">
-    <span class="md-ellipsis">
-      4. Local JIT Loading
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="4. Local JIT Loading">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#41-deferred-extraction" class="md-nav__link">
-    <span class="md-ellipsis">
-      4.1. Deferred Extraction
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#42-access-detection-mechanisms" class="md-nav__link">
-    <span class="md-ellipsis">
-      4.2. Access Detection Mechanisms
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#43-extraction-protocol" class="md-nav__link">
-    <span class="md-ellipsis">
-      4.3. Extraction Protocol
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#44-cache-management" class="md-nav__link">
-    <span class="md-ellipsis">
-      4.4. Cache Management
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#5-network-delivery" class="md-nav__link">
-    <span class="md-ellipsis">
-      5. Network Delivery
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="5. Network Delivery">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#51-network-source-types" class="md-nav__link">
-    <span class="md-ellipsis">
-      5.1. Network Source Types
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#52-network-configuration" class="md-nav__link">
-    <span class="md-ellipsis">
-      5.2. Network Configuration
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#53-download-protocol" class="md-nav__link">
-    <span class="md-ellipsis">
-      5.3. Download Protocol
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#54-chunk-transfer" class="md-nav__link">
-    <span class="md-ellipsis">
-      5.4. Chunk Transfer
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#6-protocol-buffer-integration" class="md-nav__link">
-    <span class="md-ellipsis">
-      6. Protocol Buffer Integration
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="6. Protocol Buffer Integration">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#61-service-definition" class="md-nav__link">
-    <span class="md-ellipsis">
-      6.1. Service Definition
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#62-authentication" class="md-nav__link">
-    <span class="md-ellipsis">
-      6.2. Authentication
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#7-integrity-verification" class="md-nav__link">
-    <span class="md-ellipsis">
-      7. Integrity Verification
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="7. Integrity Verification">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#71-slot-verification" class="md-nav__link">
-    <span class="md-ellipsis">
-      7.1. Slot Verification
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#72-network-security" class="md-nav__link">
-    <span class="md-ellipsis">
-      7.2. Network Security
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#73-cache-validation" class="md-nav__link">
-    <span class="md-ellipsis">
-      7.3. Cache Validation
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#8-performance-optimization" class="md-nav__link">
-    <span class="md-ellipsis">
-      8. Performance Optimization
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="8. Performance Optimization">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#81-prefetching" class="md-nav__link">
-    <span class="md-ellipsis">
-      8.1. Prefetching
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#82-compression" class="md-nav__link">
-    <span class="md-ellipsis">
-      8.2. Compression
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#83-caching-strategy" class="md-nav__link">
-    <span class="md-ellipsis">
-      8.3. Caching Strategy
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#9-error-handling" class="md-nav__link">
-    <span class="md-ellipsis">
-      9. Error Handling
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="9. Error Handling">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#91-local-jit-failures" class="md-nav__link">
-    <span class="md-ellipsis">
-      9.1. Local JIT Failures
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#92-network-jit-failures" class="md-nav__link">
-    <span class="md-ellipsis">
-      9.2. Network JIT Failures
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#10-implementation-requirements" class="md-nav__link">
-    <span class="md-ellipsis">
-      10. Implementation Requirements
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="10. Implementation Requirements">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#101-minimum-implementation" class="md-nav__link">
-    <span class="md-ellipsis">
-      10.1. Minimum Implementation
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#102-network-implementation" class="md-nav__link">
-    <span class="md-ellipsis">
-      10.2. Network Implementation
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#103-advanced-features" class="md-nav__link">
-    <span class="md-ellipsis">
-      10.3. Advanced Features
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#11-relationship-to-other-feps" class="md-nav__link">
-    <span class="md-ellipsis">
-      11. Relationship to Other FEPs
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="11. Relationship to Other FEPs">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#111-fep-0004-spa" class="md-nav__link">
-    <span class="md-ellipsis">
-      11.1. FEP-0004 (SPA)
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#112-fep-0002-workenv" class="md-nav__link">
-    <span class="md-ellipsis">
-      11.2. FEP-0002 (Workenv)
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#12-security-considerations" class="md-nav__link">
-    <span class="md-ellipsis">
-      12. Security Considerations
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="12. Security Considerations">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#121-trust-model" class="md-nav__link">
-    <span class="md-ellipsis">
-      12.1. Trust Model
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#122-attack-mitigation" class="md-nav__link">
-    <span class="md-ellipsis">
-      12.2. Attack Mitigation
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#13-references" class="md-nav__link">
-    <span class="md-ellipsis">
-      13. References
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-                  </div>
-                </div>
-              </div>
             
           
           
@@ -2558,12 +940,6 @@
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
         
-          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
-  Back to top
-</button>
-        
       </main>
       
         <footer class="md-footer">
@@ -2596,7 +972,7 @@
     
     
       
-      <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.instant", "navigation.tabs", "navigation.sections", "navigation.expand", "navigation.indexes", "navigation.top", "toc.follow", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "content.tabs.link"], "search": "../../../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.instant", "navigation.sections", "navigation.expand", "navigation.indexes", "navigation.path", "toc.follow", "toc.integrate", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "content.tabs.link"], "search": "../../../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../../assets/javascripts/bundle.92b07e13.min.js"></script>

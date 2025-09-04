@@ -13,15 +13,7 @@
          <lastmod>2025-09-03</lastmod>
     </url>
     <url>
-         <loc>https://flavorpack.io/CI-CD/</loc>
-         <lastmod>2025-09-03</lastmod>
-    </url>
-    <url>
          <loc>https://flavorpack.io/DEVELOPMENT/</loc>
-         <lastmod>2025-09-03</lastmod>
-    </url>
-    <url>
-         <loc>https://flavorpack.io/MIGRATION_PLAN/</loc>
          <lastmod>2025-09-03</lastmod>
     </url>
     <url>
@@ -29,67 +21,15 @@
          <lastmod>2025-09-03</lastmod>
     </url>
     <url>
-         <loc>https://flavorpack.io/USER-GUIDE/</loc>
+         <loc>https://flavorpack.io/installation/</loc>
          <lastmod>2025-09-03</lastmod>
     </url>
     <url>
-         <loc>https://flavorpack.io/changelog/</loc>
+         <loc>https://flavorpack.io/pspf-format/</loc>
          <lastmod>2025-09-03</lastmod>
     </url>
     <url>
-         <loc>https://flavorpack.io/license/</loc>
-         <lastmod>2025-09-03</lastmod>
-    </url>
-    <url>
-         <loc>https://flavorpack.io/archive/analysis/DOCUMENTATION_REVIEW/</loc>
-         <lastmod>2025-09-03</lastmod>
-    </url>
-    <url>
-         <loc>https://flavorpack.io/archive/analysis/IMPLEMENTATION_DRIFT_MATRIX/</loc>
-         <lastmod>2025-09-03</lastmod>
-    </url>
-    <url>
-         <loc>https://flavorpack.io/archive/analysis/UV_DOWNLOAD_IMPROVEMENTS/</loc>
-         <lastmod>2025-09-03</lastmod>
-    </url>
-    <url>
-         <loc>https://flavorpack.io/archive/analysis/pspf_cross_language_audit_report/</loc>
-         <lastmod>2025-09-03</lastmod>
-    </url>
-    <url>
-         <loc>https://flavorpack.io/archive/legacy/DOCUMENTATION/</loc>
-         <lastmod>2025-09-03</lastmod>
-    </url>
-    <url>
-         <loc>https://flavorpack.io/archive/sessions/SESSION_SUMMARY/</loc>
-         <lastmod>2025-09-03</lastmod>
-    </url>
-    <url>
-         <loc>https://flavorpack.io/getting-started/</loc>
-         <lastmod>2025-09-03</lastmod>
-    </url>
-    <url>
-         <loc>https://flavorpack.io/getting-started/examples/</loc>
-         <lastmod>2025-09-03</lastmod>
-    </url>
-    <url>
-         <loc>https://flavorpack.io/getting-started/first-package/</loc>
-         <lastmod>2025-09-03</lastmod>
-    </url>
-    <url>
-         <loc>https://flavorpack.io/getting-started/installation/</loc>
-         <lastmod>2025-09-03</lastmod>
-    </url>
-    <url>
-         <loc>https://flavorpack.io/getting-started/quickstart/</loc>
-         <lastmod>2025-09-03</lastmod>
-    </url>
-    <url>
-         <loc>https://flavorpack.io/guide/</loc>
-         <lastmod>2025-09-03</lastmod>
-    </url>
-    <url>
-         <loc>https://flavorpack.io/guide/concepts/pspf-format/</loc>
+         <loc>https://flavorpack.io/quickstart/</loc>
          <lastmod>2025-09-03</lastmod>
     </url>
     <url>
