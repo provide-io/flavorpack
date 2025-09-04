@@ -1,7 +1,15 @@
-"""Hashing and checksum utilities."""
+"""Hashing utilities for Flavor - thin wrapper around foundation.
 
-import hashlib
+For new code, prefer importing directly from provide.foundation.crypto.
+"""
+
 from pathlib import Path
+
+from provide.foundation.crypto import (
+    hash_file as _hash_file,
+    hash_data as _hash_data,
+    quick_hash as _quick_hash,
+)
 
 
 def hash_name(name: str) -> int:
@@ -13,9 +21,8 @@ def hash_name(name: str) -> int:
     Returns:
         64-bit integer hash
     """
-    # Use first 8 bytes of SHA256 for good distribution
-    hash_bytes = hashlib.sha256(name.encode("utf-8")).digest()[:8]
-    return int.from_bytes(hash_bytes, byteorder="little")
+    from provide.foundation.crypto.utils import hash_name as _hash_name
+    return _hash_name(name)
 
 
 def hash_file(path: Path, algorithm: str = "sha256") -> str:
@@ -28,13 +35,7 @@ def hash_file(path: Path, algorithm: str = "sha256") -> str:
     Returns:
         Hex digest of file hash
     """
-    hasher = hashlib.new(algorithm)
-    
-    with open(path, "rb") as f:
-        while chunk := f.read(8192):
-            hasher.update(chunk)
-    
-    return hasher.hexdigest()
+    return _hash_file(path, algorithm)
 
 
 def hash_data(data: bytes, algorithm: str = "sha256") -> str:
@@ -47,9 +48,7 @@ def hash_data(data: bytes, algorithm: str = "sha256") -> str:
     Returns:
         Hex digest
     """
-    hasher = hashlib.new(algorithm)
-    hasher.update(data)
-    return hasher.hexdigest()
+    return _hash_data(data, algorithm)
 
 
 def verify_hash(data: bytes, expected_hash: str, algorithm: str = "sha256") -> bool:
@@ -63,8 +62,8 @@ def verify_hash(data: bytes, expected_hash: str, algorithm: str = "sha256") -> b
     Returns:
         True if hash matches
     """
-    actual_hash = hash_data(data, algorithm)
-    return actual_hash.lower() == expected_hash.lower()
+    from provide.foundation.crypto import verify_data
+    return verify_data(data, expected_hash, algorithm)
 
 
 def quick_hash(data: bytes) -> int:
@@ -76,5 +75,4 @@ def quick_hash(data: bytes) -> int:
     Returns:
         32-bit hash value
     """
-    # Use Python's built-in hash for speed
-    return hash(data) & 0xFFFFFFFF
+    return _quick_hash(data)
