@@ -170,7 +170,7 @@ mod runtime_impl {
                 }
                 
                 if !missing.is_empty() {
-                    return Err(FlavorError::Execution(format!(
+                    return Err(FlavorError::LaunchError(format!(
                         "Required environment variables not found: {}",
                         missing.join(", ")
                     )));
@@ -230,7 +230,7 @@ mod runtime_impl {
             
             fn unset_glob_pattern(&self, pattern: &str, env_map: &mut HashMap<String, String>) -> Result<()> {
                 let glob_pattern = Pattern::new(pattern).map_err(|e| {
-                    FlavorError::Configuration(format!("Invalid glob pattern '{}': {}", pattern, e))
+                    FlavorError::Generic(format!("Invalid glob pattern '{}': {}", pattern, e))
                 })?;
                 
                 let matching_keys: Vec<String> = env_map.keys()

@@ -318,7 +318,7 @@ fn prepare_command(
     if let Some(runtime_info) = &metadata.runtime {
         if let Some(runtime_env) = &runtime_info.env {
             debug!("🔄 Processing runtime.env configuration");
-            process_runtime_env(&mut env_map, runtime_env);
+            process_runtime_env(&mut env_map, &runtime_env);
         }
     }
 

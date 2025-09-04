@@ -192,7 +192,9 @@ impl SlotProcessor {
         debug!("🎰 Processing {} slots", self.manifest_slots.len());
         let slots_timer = Instant::now();
         
-        for (i, slot) in self.manifest_slots.iter().enumerate() {
+        // Clone to avoid borrow checker issue
+        let manifest_slots = self.manifest_slots.clone();
+        for (i, slot) in manifest_slots.iter().enumerate() {
             self.process_single_slot(i, slot)?;
         }
         
