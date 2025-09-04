@@ -8,8 +8,8 @@ import (
 // PSPFIndex represents the PSPF 2025 index block (8192 bytes)
 type PSPFIndex struct {
 	// Core identification (8 bytes)
-	FormatVersion uint32  // 0x20250001
-	IndexChecksum uint32  // Adler-32 of index block (with this field as 0)
+	FormatVersion uint32 // 0x20250001
+	IndexChecksum uint32 // Adler-32 of index block (with this field as 0)
 
 	// File structure (48 bytes)
 	PackageSize     uint64 // Total file size

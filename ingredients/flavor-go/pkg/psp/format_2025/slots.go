@@ -14,17 +14,17 @@ func HashName(name string) uint64 {
 }
 
 type SlotMetadata struct {
-	Slot        int    `json:"slot"`                     // Position validator
-	ID          string `json:"id"`                       // Slot identifier
-	Source      string `json:"source"`                   // Source path
-	Target      string `json:"target"`                   // Destination path
+	Slot        int    `json:"slot"`   // Position validator
+	ID          string `json:"id"`     // Slot identifier
+	Source      string `json:"source"` // Source path
+	Target      string `json:"target"` // Destination path
 	Size        int64  `json:"size"`
 	Checksum    string `json:"checksum"`
 	Encoding    string `json:"encoding"`
 	Purpose     string `json:"purpose"`
 	Lifecycle   string `json:"lifecycle"`
-	Resolution  string `json:"resolution,omitempty"`     // When to resolve: build|runtime|lazy
-	Permissions string `json:"permissions,omitempty"`   // Unix permissions (e.g., "0755")
+	Resolution  string `json:"resolution,omitempty"`  // When to resolve: build|runtime|lazy
+	Permissions string `json:"permissions,omitempty"` // Unix permissions (e.g., "0755")
 }
 
 // SlotDescriptor is the 64-byte enhanced slot descriptor format
@@ -56,4 +56,3 @@ type SlotDescriptor struct {
 	ExtendedOffset uint32 // 4 bytes: extended metadata offset
 	ExtendedSize   uint32 // 4 bytes: extended metadata size
 }
-

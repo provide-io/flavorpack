@@ -18,14 +18,14 @@ type WorkenvPaths struct {
 func NewWorkenvPaths(cacheDir string, packagePath string) *WorkenvPaths {
 	// Extract workenv name from package filename
 	workenvName := filepath.Base(packagePath)
-	
+
 	// Remove .psp or .pspf extension if present
 	if strings.HasSuffix(workenvName, ".psp") {
 		workenvName = workenvName[:len(workenvName)-4]
 	} else if strings.HasSuffix(workenvName, ".pspf") {
 		workenvName = workenvName[:len(workenvName)-5]
 	}
-	
+
 	return &WorkenvPaths{
 		cacheDir:    cacheDir,
 		workenvName: workenvName,
@@ -128,23 +128,23 @@ func (p *WorkenvPaths) MetadataExists() bool {
 // ListTempExtractions returns all temp extraction directories
 func (p *WorkenvPaths) ListTempExtractions() ([]string, error) {
 	tmpDir := p.Tmp()
-	
+
 	// If tmp directory doesn't exist, return empty list
 	if _, err := os.Stat(tmpDir); os.IsNotExist(err) {
 		return []string{}, nil
 	}
-	
+
 	entries, err := ioutil.ReadDir(tmpDir)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	var dirs []string
 	for _, entry := range entries {
 		if entry.IsDir() {
 			dirs = append(dirs, filepath.Join(tmpDir, entry.Name()))
 		}
 	}
-	
+
 	return dirs, nil
 }

@@ -12,17 +12,17 @@ const (
 	MagicTrailerSize   = 8200 // 📦 (4) + index (8192) + 🪄 (4)
 	SlotAlignment      = 8    // Slots must be 8-byte aligned
 	SlotDescriptorSize = 64   // Enhanced slot descriptor size
-	
+
 	// Default permissions (secure by default - user only)
-	DefaultFilePerms       = 0600  // Read/write for owner only
-	DefaultExecutablePerms = 0700  // Read/write/execute for owner only
-	DefaultDirPerms        = 0700  // Read/write/execute for owner only
-	
+	DefaultFilePerms       = 0600 // Read/write for owner only
+	DefaultExecutablePerms = 0700 // Read/write/execute for owner only
+	DefaultDirPerms        = 0700 // Read/write/execute for owner only
+
 	// Memory limits
-	DefaultMaxMemory = 128 * 1024 * 1024  // 128MB
-	DefaultMinMemory = 8 * 1024 * 1024    // 8MB
-	DefaultChunkSize = 64 * 1024          // 64KB for streaming
-	
+	DefaultMaxMemory = 128 * 1024 * 1024 // 128MB
+	DefaultMinMemory = 8 * 1024 * 1024   // 8MB
+	DefaultChunkSize = 64 * 1024         // 64KB for streaming
+
 	// DiskSpaceMultiplier is the safety factor for disk space requirements
 	// We require 2x the compressed size to account for extraction overhead
 	DiskSpaceMultiplier = 2
@@ -30,37 +30,37 @@ const (
 	// ==================== Path Constants ====================
 	// PSPFHiddenPrefix is the hidden directory prefix for metadata
 	PSPFHiddenPrefix = "."
-	
+
 	// PSPFSuffix is the suffix for metadata directory
 	PSPFSuffix = ".pspf"
-	
+
 	// InstanceDir is the instance metadata directory (persistent across extractions)
 	InstanceDir = "instance"
-	
+
 	// PackageDir is the package metadata directory (replaced each extraction)
 	PackageDir = "package"
-	
+
 	// TmpDir is the temporary extraction directory
 	TmpDir = "tmp"
-	
+
 	// ExtractDir is the extract operations directory (under instance)
 	ExtractDir = "extract"
-	
+
 	// LogDir is the log directory (under instance)
 	LogDir = "log"
-	
+
 	// LockFile is the lock file name (in instance/extract/)
 	LockFile = "lock"
-	
+
 	// CompleteFile is the completion marker file name (in instance/extract/)
 	CompleteFile = "complete"
-	
+
 	// PackageChecksumFile is the package checksum file name (in instance/)
 	PackageChecksumFile = "package.checksum"
-	
+
 	// PSPMetadataFile is the PSP metadata JSON file name (in package/)
 	PSPMetadataFile = "psp.json"
-	
+
 	// IndexMetadataFile is the index metadata JSON file name (in instance/)
 	IndexMetadataFile = "index.json"
 
@@ -69,18 +69,18 @@ const (
 	EncodingTar  = 1 // Uncompressed tar archive
 	EncodingGzip = 2 // Gzipped single file
 	EncodingTgz  = 3 // Tar archive, then gzipped (tar.gz)
-	
+
 	// Purpose types - aligned with Python naming
 	PurposeData   = 0 // General data files
 	PurposeCode   = 1 // Executable code
 	PurposeConfig = 2 // Configuration files
 	PurposeMedia  = 3 // Media/assets
-	
+
 	// Legacy aliases for backward compatibility
 	PurposePayload = PurposeData   // Deprecated: use PurposeData
 	PurposeRuntime = PurposeCode   // Deprecated: use PurposeCode
 	PurposeTool    = PurposeConfig // Deprecated: use PurposeConfig
-	
+
 	// Lifecycle types - must match Python/Rust
 	LifecycleInit      = 0  // First run only, removed after initialization
 	LifecycleStartup   = 1  // Extracted/executed at every startup

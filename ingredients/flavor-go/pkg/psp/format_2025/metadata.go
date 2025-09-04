@@ -96,4 +96,3 @@ type CompatibilityInfo struct {
 	MinFormatVersion string   `json:"min_format_version"`
 	Features         []string `json:"features"`
 }
-

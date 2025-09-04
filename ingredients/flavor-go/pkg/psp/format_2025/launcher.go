@@ -26,7 +26,6 @@ const (
 	ExitIOError         = 106
 )
 
-
 func isEnvTrue(key string) bool {
 	val := os.Getenv(key)
 	if val == "" {
@@ -47,7 +46,7 @@ func LaunchWithLogLevel(exePath string, args []string, cliLogLevel, cliLogSource
 	// Determine log level and source
 	var logLevel string
 	var logSource string
-	
+
 	if cliLogLevel != "" {
 		logLevel = cliLogLevel
 		logSource = cliLogSource
@@ -77,25 +76,25 @@ func LaunchWithLogLevel(exePath string, args []string, cliLogLevel, cliLogSource
 
 	// Configure logger with JSON if requested
 	var output io.Writer = os.Stderr
-	
+
 	// Support log file output
 	if logPath := os.Getenv("FLAVOR_LOG_PATH"); logPath != "" {
 		if file, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644); err == nil {
 			output = file
 		}
 	}
-	
+
 	// Add 🐹 prefix to non-JSON output
 	if !jsonFormat {
 		output = logging.NewPrefixWriter("🐹 ", output)
 	}
-	
+
 	loggerOpts := &hclog.LoggerOptions{
 		Name:       "flavor-go-launcher",
 		Level:      hclog.LevelFromString(actualLevel),
 		JSONFormat: jsonFormat,
 		Output:     output,
-		TimeFormat: "2006-01-02T15:04:05Z", // UTC ISO format without timezone  
+		TimeFormat: "2006-01-02T15:04:05Z", // UTC ISO format without timezone
 		TimeFn: func() time.Time {
 			return time.Now().UTC() // Force UTC time
 		},
@@ -195,12 +194,12 @@ func execBundle(exePath string, args []string, userCwd string, logger hclog.Logg
 	// Check execution mode
 	execMode := os.Getenv("FLAVOR_EXEC_MODE")
 	useSpawn := strings.ToLower(execMode) == "spawn"
-	
+
 	if useSpawn {
 		logger.Debug("👶 Using spawn mode (child process)")
 		return spawnBundle(exePath, args, userCwd, logger)
 	}
-	
+
 	logger.Debug("🔄 Using exec mode (process replacement)")
 	return execBundleReplace(exePath, args, userCwd, logger)
 }
@@ -220,7 +219,7 @@ func execBundleReplace(exePath string, args []string, userCwd string, logger hcl
 	if argv == nil || len(argv) == 0 {
 		argv = []string{binary}
 	}
-	
+
 	// Convert environment to []string format
 	envv := cmd.Env
 	if envv == nil {
@@ -228,13 +227,13 @@ func execBundleReplace(exePath string, args []string, userCwd string, logger hcl
 	}
 
 	logger.Debug("🔄 Replacing process via exec", "binary", binary, "args", argv[1:])
-	
+
 	// This replaces the current process and never returns on success
 	err = syscall.Exec(binary, argv, envv)
 	if err != nil {
 		return fmt.Errorf("syscall.Exec failed: %w", err)
 	}
-	
+
 	// This should never be reached
 	return errors.New("syscall.Exec returned unexpectedly")
 }
@@ -496,22 +495,22 @@ func spawnBundle(exePath string, args []string, userCwd string, logger hclog.Log
 	if err != nil {
 		return fmt.Errorf("failed to prepare command: %w", err)
 	}
-	
+
 	// Connect stdio
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	
+
 	logger.Info("🚀 Spawning child process", "command", cmd.Path, "args", cmd.Args[1:])
-	
+
 	// Start and wait for the process
 	if err := cmd.Start(); err != nil {
 		return fmt.Errorf("failed to start process: %w", err)
 	}
-	
+
 	// Note: Volatile path cleanup would require passing metadata and workenvDir
 	// from runBundleWithCwd. This is a future enhancement.
-	
+
 	if err := cmd.Wait(); err != nil {
 		if exitErr, ok := err.(*exec.ExitError); ok {
 			// Return the exit code
@@ -521,6 +520,6 @@ func spawnBundle(exePath string, args []string, userCwd string, logger hclog.Log
 		}
 		return fmt.Errorf("process failed: %w", err)
 	}
-	
+
 	return nil
 }

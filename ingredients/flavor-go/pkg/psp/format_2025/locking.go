@@ -40,7 +40,7 @@ func TryAcquireLock(paths *WorkenvPaths, logger hclog.Logger) (bool, error) {
 	if err := os.MkdirAll(extractDir, os.FileMode(DefaultDirPerms)); err != nil {
 		logger.Debug("Failed to create extract directory", "error", err)
 	}
-	
+
 	lockPath := paths.LockFile()
 	pid := os.Getpid()
 
@@ -140,7 +140,7 @@ func MarkExtractionComplete(paths *WorkenvPaths, logger hclog.Logger) error {
 		return err
 	}
 	defer file.Close()
-	
+
 	if _, err := fmt.Fprintf(file, "%d\n", os.Getpid()); err != nil {
 		return err
 	}
@@ -171,18 +171,18 @@ func IsLockAcquired() bool {
 // CleanupStaleExtractions cleans up stale extraction directories from dead processes
 func CleanupStaleExtractions(paths *WorkenvPaths, logger hclog.Logger) error {
 	tmpDir := paths.Tmp()
-	
+
 	// If the directory doesn't exist, nothing to clean
 	if _, err := os.Stat(tmpDir); os.IsNotExist(err) {
 		return nil
 	}
-	
+
 	// List all directories in tmp/
 	entries, err := os.ReadDir(tmpDir)
 	if err != nil {
 		return err
 	}
-	
+
 	for _, entry := range entries {
 		if entry.IsDir() {
 			// Try to parse PID from directory name
@@ -198,6 +198,6 @@ func CleanupStaleExtractions(paths *WorkenvPaths, logger hclog.Logger) error {
 			}
 		}
 	}
-	
+
 	return nil
 }

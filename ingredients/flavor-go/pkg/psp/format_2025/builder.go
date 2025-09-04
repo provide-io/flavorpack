@@ -26,14 +26,14 @@ import (
 // This aligns with Python's BuildOptions and Rust's BuildOptions for consistency.
 type BuildOptions struct {
 	// Package metadata (required per SPEC)
-	Package         PackageConfig          `json:"package"`
-	
+	Package PackageConfig `json:"package"`
+
 	// Execution configuration (required per SPEC)
-	Execution       ExecutionConfig        `json:"execution"`
-	
+	Execution ExecutionConfig `json:"execution"`
+
 	// Slots configuration
-	Slots           []Slot                 `json:"slots"`
-	
+	Slots []Slot `json:"slots"`
+
 	// Optional configuration
 	Launcher        string                 `json:"launcher,omitempty"`
 	CacheValidation *CacheValidationConfig `json:"cache_validation,omitempty"`
@@ -65,13 +65,13 @@ type CacheValidationConfig struct {
 type Slot struct {
 	Slot        *int   `json:"slot,omitempty"`        // Optional: position validator
 	ID          string `json:"id"`                    // Arbitrary identifier
-	Source      string `json:"source"`                 // Source path
-	Target      string `json:"target"`                 // Destination in workenv
-	Purpose     string `json:"purpose"`                // Role of the slot
-	Lifecycle   string `json:"lifecycle"`              // Cache management
-	Resolution  string `json:"resolution,omitempty"`   // When to resolve: build|runtime|lazy
-	Encoding    string `json:"encoding"`               // Compression/encoding (string in JSON)
-	Permissions string `json:"permissions,omitempty"`  // Unix permissions (e.g., "0755")
+	Source      string `json:"source"`                // Source path
+	Target      string `json:"target"`                // Destination in workenv
+	Purpose     string `json:"purpose"`               // Role of the slot
+	Lifecycle   string `json:"lifecycle"`             // Cache management
+	Resolution  string `json:"resolution,omitempty"`  // When to resolve: build|runtime|lazy
+	Encoding    string `json:"encoding"`              // Compression/encoding (string in JSON)
+	Permissions string `json:"permissions,omitempty"` // Unix permissions (e.g., "0755")
 }
 
 // hashSlotName computes a hash of the slot name (SHA256, first 8 bytes as uint64)
@@ -112,7 +112,7 @@ func BuildWithLogLevel(manifestPath, outputPath, launcherBin, privateKeyPath, pu
 	// Determine log level and source
 	var logLevel string
 	var logSource string
-	
+
 	if cliLogLevel != "" {
 		logLevel = cliLogLevel
 		logSource = "CLI --log-level"
@@ -126,7 +126,7 @@ func BuildWithLogLevel(manifestPath, outputPath, launcherBin, privateKeyPath, pu
 		logLevel = "info"
 		logSource = "default"
 	}
-	
+
 	// Parse JSON format from log level
 	jsonFormat := false
 	actualLevel := logLevel
@@ -139,22 +139,22 @@ func BuildWithLogLevel(manifestPath, outputPath, launcherBin, privateKeyPath, pu
 			actualLevel = "info"
 		}
 	}
-	
+
 	// Configure logger
 	var output io.Writer = os.Stderr
-	
+
 	// Support log file output
 	if logPath := os.Getenv("FLAVOR_LOG_PATH"); logPath != "" {
 		if file, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644); err == nil {
 			output = file
 		}
 	}
-	
+
 	// Add 🐹 prefix to non-JSON output
 	if !jsonFormat {
 		output = logging.NewPrefixWriter("🐹 ", output)
 	}
-	
+
 	logger := hclog.New(&hclog.LoggerOptions{
 		Name:       "flavor-go-builder",
 		Level:      hclog.LevelFromString(actualLevel),
@@ -165,12 +165,12 @@ func BuildWithLogLevel(manifestPath, outputPath, launcherBin, privateKeyPath, pu
 			return time.Now().UTC() // Force UTC time
 		},
 	})
-	
+
 	// Log startup messages
 	logger.Info("🐹🐹🐹 Hello from Flavor's PSPF Builder 🐹🐹🐹")
 	logger.Debug("Log level", "level", actualLevel, "source", logSource)
 	logger.Info("PSPF Go Builder starting...")
-	
+
 	// Continue with normal build process
 	doBuild(logger, manifestPath, outputPath, launcherBin, privateKeyPath, publicKeyPath, keySeed)
 }
@@ -384,15 +384,15 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 		logger.Error("❌ Failed to process slots", "error", err)
 		os.Exit(1)
 	}
-	
+
 	// Get processed data from SlotProcessor
 	slotDescriptors := slotProcessor.GetDescriptors()
 	slotDataToWrite := slotProcessor.GetSlotData()
 	slotMetadataList := slotProcessor.GetMetadata()
-	
+
 	// Add slot metadata to package metadata
 	metadata.Slots = slotMetadataList
-	
+
 	// 📜 Create and write metadata (gzipped JSON) - RIGHT AFTER LAUNCHER
 	metadataPos, _ := out.Seek(0, 1)
 	logger.Debug("📜 Writing metadata (gzipped JSON)", "position", metadataPos)
@@ -419,7 +419,7 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 	index.SlotTableSize = uint64(len(slotDescriptors) * SlotDescriptorSize)
 
 	// Reserve space for slot table (we'll write it after calculating slot offsets)
-	if _, err := out.Seek(slotTableOffset + int64(index.SlotTableSize), 0); err != nil {
+	if _, err := out.Seek(slotTableOffset+int64(index.SlotTableSize), 0); err != nil {
 		logger.Error("Failed to seek past slot table", "error", err)
 		os.Exit(1)
 	}
@@ -498,19 +498,19 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 
 	// 🪄 Write MagicTrailer (8200 bytes: 📦 + index + 🪄)
 	logger.Debug("🪄 Writing MagicTrailer")
-	
+
 	// Write package emoji (4 bytes)
 	if _, err := out.Write(PackageEmojiBytes); err != nil {
 		logger.Error("❌ Failed to write package emoji", "error", err)
 		os.Exit(1)
 	}
-	
+
 	// Write index (8192 bytes)
 	if _, err := out.Write(index.Pack()); err != nil {
 		logger.Error("❌ Failed to write index", "error", err)
 		os.Exit(1)
 	}
-	
+
 	// Write magic wand emoji (4 bytes)
 	if _, err := out.Write(MagicWandEmojiBytes); err != nil {
 		logger.Error("❌ Failed to write magic wand emoji", "error", err)

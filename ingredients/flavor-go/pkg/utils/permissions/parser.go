@@ -10,7 +10,7 @@ import (
 // Default permission constants (user-only access for security)
 const (
 	DefaultFilePerms       = 0o600 // Read/write for owner only
-	DefaultExecutablePerms = 0o700 // Read/write/execute for owner only  
+	DefaultExecutablePerms = 0o700 // Read/write/execute for owner only
 	DefaultDirPerms        = 0o700 // Read/write/execute for owner only
 )
 
@@ -24,13 +24,13 @@ func ParseOctalString(s string) (uint16, error) {
 	// Remove common prefixes
 	s = strings.TrimPrefix(s, "0o")
 	s = strings.TrimPrefix(s, "0")
-	
+
 	// Parse as octal
 	val, err := strconv.ParseUint(s, 8, 16)
 	if err != nil {
 		return DefaultFilePerms, fmt.Errorf("invalid permission string %q: %w", s, err)
 	}
-	
+
 	return uint16(val), nil
 }
 

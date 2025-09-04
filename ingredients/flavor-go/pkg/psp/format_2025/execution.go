@@ -98,41 +98,41 @@ func fixShebangs(binDir, oldPrefix, newPrefix string, logger hclog.Logger) error
 		}
 
 		scriptPath := filepath.Join(binDir, entry.Name())
-		
+
 		// Read first few bytes to check for shebang
 		file, err := os.Open(scriptPath)
 		if err != nil {
 			continue
 		}
-		
+
 		header := make([]byte, 2)
 		if _, err := file.Read(header); err != nil {
 			file.Close()
 			continue
 		}
 		file.Close()
-		
+
 		if string(header) != "#!" {
 			continue
 		}
-		
+
 		// Read entire file
 		content, err := os.ReadFile(scriptPath)
 		if err != nil {
 			continue
 		}
-		
+
 		// Find end of first line
 		lines := strings.SplitN(string(content), "\n", 2)
 		if len(lines) < 1 {
 			continue
 		}
-		
+
 		firstLine := lines[0]
 		if strings.Contains(firstLine, oldPrefix) {
 			// Replace old prefix with new prefix in shebang
 			newFirstLine := strings.ReplaceAll(firstLine, oldPrefix, newPrefix)
-			
+
 			// Reconstruct content
 			var newContent string
 			if len(lines) > 1 {
@@ -140,7 +140,7 @@ func fixShebangs(binDir, oldPrefix, newPrefix string, logger hclog.Logger) error
 			} else {
 				newContent = newFirstLine + "\n"
 			}
-			
+
 			// Write back the modified content
 			if err := os.WriteFile(scriptPath, []byte(newContent), entry.Type().Perm()); err != nil {
 				logger.Debug("Failed to fix shebang", "script", entry.Name(), "error", err)
@@ -149,10 +149,9 @@ func fixShebangs(binDir, oldPrefix, newPrefix string, logger hclog.Logger) error
 			}
 		}
 	}
-	
+
 	return nil
 }
-
 
 // checkDiskSpace verifies there's enough disk space for extraction
 func checkDiskSpace(paths *WorkenvPaths, metadata *Metadata, logger hclog.Logger) error {
@@ -161,7 +160,7 @@ func checkDiskSpace(paths *WorkenvPaths, metadata *Metadata, logger hclog.Logger
 	for _, slot := range metadata.Slots {
 		totalSizeNeeded += slot.Size * DiskSpaceMultiplier
 	}
-	
+
 	// Get available disk space
 	var stat syscall.Statfs_t
 	workenvPath := paths.Workenv()
@@ -169,22 +168,22 @@ func checkDiskSpace(paths *WorkenvPaths, metadata *Metadata, logger hclog.Logger
 		logger.Warn("⚠️ Could not check disk space", "error", err)
 		return nil // Don't fail if we can't check
 	}
-	
+
 	available := int64(stat.Bavail) * int64(stat.Bsize)
-	
+
 	// Convert to human-readable sizes
 	neededGB := float64(totalSizeNeeded) / (1024 * 1024 * 1024)
 	availableGB := float64(available) / (1024 * 1024 * 1024)
-	
+
 	logger.Debug("💾 Disk space check", "needed_gb", fmt.Sprintf("%.2f", neededGB), "available_gb", fmt.Sprintf("%.2f", availableGB))
-	
+
 	if available < totalSizeNeeded {
-		logger.Error("❌ Insufficient disk space", 
+		logger.Error("❌ Insufficient disk space",
 			"needed_gb", fmt.Sprintf("%.2f", neededGB),
 			"available_gb", fmt.Sprintf("%.2f", availableGB))
 		return fmt.Errorf("insufficient disk space: need %.2f GB, have %.2f GB", neededGB, availableGB)
 	}
-	
+
 	logger.Debug("✅ Sufficient disk space available")
 	return nil
 }
@@ -192,7 +191,7 @@ func checkDiskSpace(paths *WorkenvPaths, metadata *Metadata, logger hclog.Logger
 // validatePackageChecksum checks if the cached package checksum matches the current package
 func validatePackageChecksum(paths *WorkenvPaths, currentChecksum uint32, logger hclog.Logger) (bool, error) {
 	checksumPath := paths.ChecksumFile()
-	
+
 	// Read stored checksum
 	data, err := os.ReadFile(checksumPath)
 	if err != nil {
@@ -203,15 +202,15 @@ func validatePackageChecksum(paths *WorkenvPaths, currentChecksum uint32, logger
 		}
 		return false, nil // No checksum file is not an error, just means cache is invalid
 	}
-	
+
 	storedChecksum := strings.TrimSpace(string(data))
 	currentChecksumStr := fmt.Sprintf("%08x", currentChecksum)
-	
+
 	if storedChecksum == currentChecksumStr {
 		logger.Debug("✅ Package checksum matches cached version", "checksum", currentChecksumStr)
 		return true, nil
 	}
-	
+
 	// Checksum mismatch - this is a potential security issue
 	insecureMode := isEnvTrue("FLAVOR_INSECURE")
 	if insecureMode {
@@ -233,36 +232,36 @@ func savePackageChecksum(paths *WorkenvPaths, checksum uint32, logger hclog.Logg
 	if err := os.MkdirAll(instanceDir, os.FileMode(DefaultDirPerms)); err != nil {
 		return fmt.Errorf("failed to create instance directory: %w", err)
 	}
-	
+
 	checksumPath := paths.ChecksumFile()
 	checksumStr := fmt.Sprintf("%08x", checksum)
-	
+
 	if err := os.WriteFile(checksumPath, []byte(checksumStr), 0644); err != nil {
 		logger.Debug("⚠️ Failed to save package checksum", "error", err)
 		return err
 	}
-	
+
 	logger.Debug("💾 Saved package checksum", "checksum", checksumStr)
 	return nil
 }
 
 // IndexMetadata represents the serializable subset of PSPFIndex for JSON export
 type IndexMetadata struct {
-	FormatVersion     uint32 `json:"format_version"`
-	PackageSize       uint64 `json:"package_size"`
-	LauncherSize      uint64 `json:"launcher_size"`
-	MetadataOffset    uint64 `json:"metadata_offset"`
-	MetadataSize      uint64 `json:"metadata_size"`
-	SlotTableOffset   uint64 `json:"slot_table_offset"`
-	SlotTableSize     uint64 `json:"slot_table_size"`
-	SlotCount         uint32 `json:"slot_count"`
-	Flags             uint32 `json:"flags"`
-	IndexChecksum     string `json:"index_checksum"`
-	MetadataChecksum  string `json:"metadata_checksum"`
-	BuildTimestamp    uint64 `json:"build_timestamp"`
-	PageSize          uint32 `json:"page_size"`
-	Capabilities      uint64 `json:"capabilities"`
-	Requirements      uint64 `json:"requirements"`
+	FormatVersion    uint32 `json:"format_version"`
+	PackageSize      uint64 `json:"package_size"`
+	LauncherSize     uint64 `json:"launcher_size"`
+	MetadataOffset   uint64 `json:"metadata_offset"`
+	MetadataSize     uint64 `json:"metadata_size"`
+	SlotTableOffset  uint64 `json:"slot_table_offset"`
+	SlotTableSize    uint64 `json:"slot_table_size"`
+	SlotCount        uint32 `json:"slot_count"`
+	Flags            uint32 `json:"flags"`
+	IndexChecksum    string `json:"index_checksum"`
+	MetadataChecksum string `json:"metadata_checksum"`
+	BuildTimestamp   uint64 `json:"build_timestamp"`
+	PageSize         uint32 `json:"page_size"`
+	Capabilities     uint64 `json:"capabilities"`
+	Requirements     uint64 `json:"requirements"`
 }
 
 // saveIndexMetadata saves index metadata to JSON file for inspection
@@ -271,37 +270,37 @@ func saveIndexMetadata(paths *WorkenvPaths, index *PSPFIndex, logger hclog.Logge
 	if err := os.MkdirAll(instanceDir, os.FileMode(DefaultDirPerms)); err != nil {
 		return fmt.Errorf("failed to create instance directory: %w", err)
 	}
-	
+
 	// Create a serializable version of the index
 	indexMetadata := IndexMetadata{
-		FormatVersion:     index.FormatVersion,
-		PackageSize:       index.PackageSize,
-		LauncherSize:      index.LauncherSize,
-		MetadataOffset:    index.MetadataOffset,
-		MetadataSize:      index.MetadataSize,
-		SlotTableOffset:   index.SlotTableOffset,
-		SlotTableSize:     index.SlotTableSize,
-		SlotCount:         index.SlotCount,
-		Flags:             index.Flags,
-		IndexChecksum:     fmt.Sprintf("%08x", index.IndexChecksum),
-		MetadataChecksum:  fmt.Sprintf("%x", index.MetadataChecksum),
-		BuildTimestamp:    index.BuildTimestamp,
-		PageSize:          index.PageSize,
-		Capabilities:      index.Capabilities,
-		Requirements:      index.Requirements,
+		FormatVersion:    index.FormatVersion,
+		PackageSize:      index.PackageSize,
+		LauncherSize:     index.LauncherSize,
+		MetadataOffset:   index.MetadataOffset,
+		MetadataSize:     index.MetadataSize,
+		SlotTableOffset:  index.SlotTableOffset,
+		SlotTableSize:    index.SlotTableSize,
+		SlotCount:        index.SlotCount,
+		Flags:            index.Flags,
+		IndexChecksum:    fmt.Sprintf("%08x", index.IndexChecksum),
+		MetadataChecksum: fmt.Sprintf("%x", index.MetadataChecksum),
+		BuildTimestamp:   index.BuildTimestamp,
+		PageSize:         index.PageSize,
+		Capabilities:     index.Capabilities,
+		Requirements:     index.Requirements,
 	}
-	
+
 	indexPath := paths.IndexMetadataFile()
 	jsonData, err := json.MarshalIndent(indexMetadata, "", "  ")
 	if err != nil {
 		return fmt.Errorf("failed to marshal index metadata: %w", err)
 	}
-	
+
 	if err := os.WriteFile(indexPath, jsonData, 0644); err != nil {
 		logger.Debug("⚠️ Failed to save index metadata", "error", err)
 		return err
 	}
-	
+
 	logger.Debug("💾 Saved index metadata", "path", indexPath)
 	return nil
 }
@@ -314,7 +313,7 @@ func checkWorkenvValidity(paths *WorkenvPaths, index *PSPFIndex, metadata *Metad
 		logger.Debug("🔍 No extraction completion marker found")
 		return false, nil
 	}
-	
+
 	// Check package checksum
 	return validatePackageChecksum(paths, index.IndexChecksum, logger)
 }
@@ -330,7 +329,7 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 			logger.Error("Failed to close reader", "error", err)
 		}
 	}()
-	
+
 	// Read index for checksum validation
 	index, err := reader.ReadIndex()
 	if err != nil {
@@ -384,14 +383,14 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 		cacheDir = filepath.Join(cacheDir, "flavor")
 		paths = NewWorkenvPaths(cacheDir, exePath)
 	}
-	
+
 	workenvDir := paths.Workenv()
 	if err := os.MkdirAll(workenvDir, os.FileMode(DefaultDirPerms)); err != nil {
 		logger.Error("❌ Failed to create work environment directory", "error", err)
 		return nil, fmt.Errorf("failed to create work environment directory: %w", err)
 	}
 	logger.Info("📁 Work environment", "path", workenvDir)
-	
+
 	// Setup workenv directories if specified
 	if metadata.Workenv != nil && metadata.Workenv.Directories != nil {
 		for _, dirSpec := range metadata.Workenv.Directories {
@@ -402,7 +401,7 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 				logger.Error("❌ Failed to create directory", "path", dirPath, "error", err)
 				return nil, fmt.Errorf("failed to create directory %s: %w", dirPath, err)
 			}
-			
+
 			// Set permissions if specified
 			if dirSpec.Mode != "" {
 				// Parse octal mode string (e.g., "0700")
@@ -420,7 +419,7 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 
 	// Check if we should use cache
 	useCache := os.Getenv("FLAVOR_WORKENV_CACHE") != "false" && os.Getenv("FLAVOR_WORKENV_CACHE") != "0"
-	
+
 	workenvValid := false
 	if useCache {
 		logger.Debug("🔍 Checking cache validity")
@@ -446,7 +445,7 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 		if err := checkDiskSpace(paths, metadata, logger); err != nil {
 			return nil, err
 		}
-		
+
 		// Acquire lock before extraction
 		acquiredLock, err := TryAcquireLock(paths, logger)
 		if err != nil {
@@ -478,14 +477,14 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 			return nil, fmt.Errorf("failed to create temp extraction directory: %w", err)
 		}
 		logger.Info("📁 Created temporary extraction directory", "path", tempExtractDir)
-		
+
 		// Extract to temporary directory
 		logger.Info("📤 Extracting slots to temp directory", "count", len(metadata.Slots))
-		
+
 		// Progress reporting to stderr
 		for i, slot := range metadata.Slots {
 			logger.Debug("📦 Extracting slot", "index", i, "id", slot.ID, "size", slot.Size)
-			
+
 			// Write progress to stderr
 			fmt.Fprintf(os.Stderr, "[%d/%d] Extracting %s...\n", i+1, len(metadata.Slots), slot.ID)
 			slotPath, err := reader.ExtractSlot(i, tempExtractDir)
@@ -497,7 +496,7 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 			logger.Debug("✅ Extracted slot", "path", slotPath)
 			slotPaths[slot.Slot] = slotPath
 		}
-		
+
 		// Write metadata to package metadata directory directly in cache (not in temp)
 		// Use hidden .{workenv}.pspf/package/ structure as a sibling to workenv
 		packageMetadataDir := filepath.Join(paths.Metadata(), "package")
@@ -522,7 +521,7 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 
 		// Atomically move extracted content from temp to final location
 		logger.Info("🔄 Moving extracted content to final location...")
-		
+
 		// List all top-level items in temp directory
 		entries, err := os.ReadDir(tempExtractDir)
 		if err != nil {
@@ -530,12 +529,12 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 			os.RemoveAll(tempExtractDir)
 			return nil, fmt.Errorf("failed to read temp directory: %w", err)
 		}
-		
+
 		for _, entry := range entries {
 			fileName := entry.Name()
 			source := filepath.Join(tempExtractDir, fileName)
 			dest := filepath.Join(workenvDir, fileName)
-			
+
 			// Remove destination if it exists (for overwrite)
 			if _, err := os.Stat(dest); err == nil {
 				if entry.IsDir() {
@@ -544,7 +543,7 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 					os.Remove(dest)
 				}
 			}
-			
+
 			// Move from temp to final location
 			logger.Debug("Moving", "from", source, "to", dest)
 			if err := os.Rename(source, dest); err != nil {
@@ -568,7 +567,7 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 				}
 			}
 		}
-		
+
 		// Fix shebangs in bin directory
 		binDir := filepath.Join(workenvDir, "bin")
 		if _, err := os.Stat(binDir); err == nil {
@@ -577,22 +576,22 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 				logger.Warn("⚠️ Failed to fix some shebangs", "error", err)
 			}
 		}
-		
+
 		// Remove the now-empty temp directory
 		if err := os.RemoveAll(tempExtractDir); err != nil {
 			logger.Debug("⚠️ Failed to remove temp directory", "error", err)
 		}
-		
+
 		// Save index metadata for inspection
 		if err := saveIndexMetadata(paths, index, logger); err != nil {
 			logger.Debug("⚠️ Failed to save index metadata", "error", err)
 		}
-		
+
 		// Mark extraction as complete
 		if err := MarkExtractionComplete(paths, logger); err != nil {
 			logger.Debug("⚠️ Failed to mark extraction complete", "error", err)
 		}
-		
+
 		// Save package checksum for future cache validation
 		if err := savePackageChecksum(paths, index.IndexChecksum, logger); err != nil {
 			logger.Debug("⚠️ Failed to save package checksum", "error", err)
@@ -727,7 +726,7 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 				}
 			}
 		}
-		
+
 		// Clean up lifecycle-based slots after setup
 		logger.Info("🧹 Cleaning up lifecycle slots...")
 		cleanupLifecycleSlots(workenvDir, metadata, slotPaths, logger)

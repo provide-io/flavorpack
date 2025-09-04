@@ -399,18 +399,18 @@ func (r *Reader) ExtractSlot(slotIndex int, destDir string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	
+
 	// Read slot table entry (64 bytes per entry) to get permissions
 	slotTableEntryOffset := int64(index.SlotTableOffset) + int64(slotIndex*64)
 	if _, err := r.file.Seek(slotTableEntryOffset, io.SeekStart); err != nil {
 		return "", err
 	}
-	
+
 	var entryData [64]byte
 	if _, err := r.file.Read(entryData[:]); err != nil {
 		return "", err
 	}
-	
+
 	// Extract permissions field (bytes 52-54)
 	slotPermissions := binary.LittleEndian.Uint16(entryData[52:54])
 
@@ -422,7 +422,7 @@ func (r *Reader) ExtractSlot(slotIndex int, destDir string) (string, error) {
 		targetPath = strings.ReplaceAll(targetPath, "{workenv}/", "")
 		targetPath = strings.ReplaceAll(targetPath, "{workenv}", "")
 	}
-	
+
 	// If targetPath is empty after stripping {workenv}, extract directly to destDir
 	var destPath, extractDir string
 	if targetPath == "" {

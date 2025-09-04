@@ -58,7 +58,7 @@ func main() {
 	var logLevel string
 	var logSource string
 	var args []string
-	
+
 	if len(os.Args) > 2 && os.Args[1] == "--log-level" {
 		logLevel = os.Args[2]
 		logSource = "CLI --log-level"
@@ -71,4 +71,5 @@ func main() {
 	// Note: LaunchWithLogLevel calls os.Exit directly on error
 	format_2025.LaunchWithLogLevel(exePath, args, logLevel, logSource)
 }
+
 // Test 3: Trigger rebuild Mon Aug 18 15:45:13 PDT 2025
