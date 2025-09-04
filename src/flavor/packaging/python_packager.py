@@ -538,9 +538,9 @@ class PythonPackager:
                 payload_uv = self._download_uv_wheel(bin_dir)
                 if not payload_uv:
                     # If download returns None on Linux, this is a critical error
-                    # since we need manylinux2014 compatibility
+                    # since we need manylinux compatibility
                     raise FileNotFoundError(
-                        "Failed to download manylinux2014-compatible UV wheel for Linux. "
+                        f"Failed to download {self.MANYLINUX_TAG}-compatible UV wheel for Linux. "
                         "This is required for broad Linux compatibility (glibc 2.17+)."
                     )
 
