@@ -4,7 +4,7 @@ The Progressive Secure Package Format (PSPF) 2025 Edition is a binary format for
 
 ## Binary Structure
 
-According to FEP-0001, a PSPF package has this exact structure:
+A PSPF package has this exact structure:
 
 ```
 Offset    Size      Component
@@ -15,6 +15,11 @@ M         Variable  Slot Table
 S         Variable  Slot Data (0 to N slots)
 EOF-8200  8200      Magic Trailer
 ```
+
+Where:
+- L = launcher_size (end of launcher binary)
+- M = metadata_offset + metadata_size (aligned to 8 bytes)
+- S = slot_table_offset + slot_table_size
 
 ## Magic Trailer (8200 bytes)
 
