@@ -763,6 +763,215 @@ pub fn build(manifest_path: &Path, output_path: &Path, options: BuildOptions) ->
     Ok(())
 }
 
+/// Compress and sign metadata
+fn compress_and_sign_metadata(
+    metadata: &Metadata,
+    signing_key: &ed25519_dalek::SigningKey,
+    index: &mut Index,
+) -> Result<Vec<u8>> {
+    trace!("📝 Creating and signing metadata");
+    
+    // Create JSON
+    let metadata_json = serde_json::to_vec_pretty(metadata)?;
+    
+    // Sign the metadata
+    let signature: Signature = signing_key.sign(&metadata_json);
+    index.integrity_signature[..64].copy_from_slice(signature.to_bytes().as_ref());
+    
+    // Compress with gzip
+    let mut compressed = Vec::new();
+    {
+        use flate2::write::GzEncoder;
+        use flate2::Compression;
+        use std::io::Write;
+        
+        let mut encoder = GzEncoder::new(&mut compressed, Compression::default());
+        encoder.write_all(&metadata_json)?;
+        encoder.finish()?;
+    }
+    
+    // Calculate checksum
+    let metadata_checksum = adler::adler32_slice(&compressed);
+    let mut checksum_bytes = [0u8; 32];
+    checksum_bytes[0..4].copy_from_slice(&metadata_checksum.to_le_bytes());
+    index.metadata_checksum = checksum_bytes;
+    
+    Ok(compressed)
+}
+
+/// Write metadata to output file
+fn write_metadata_bytes(out: &mut File, compressed: &[u8], index: &mut Index) -> Result<()> {
+    let metadata_pos = out.stream_position()?;
+    eprintln!("📝 Writing metadata at position {:#x}", metadata_pos);
+    
+    out.write_all(compressed)?;
+    let metadata_end = out.stream_position()?;
+    
+    index.metadata_offset = metadata_pos;
+    index.metadata_size = compressed.len() as u64;
+    
+    eprintln!(
+        "📝 Wrote metadata: start={:#x}, size={}, end={:#x}",
+        metadata_pos,
+        compressed.len(),
+        metadata_end
+    );
+    
+    // Verify position math
+    assert_eq!(
+        metadata_end,
+        metadata_pos + compressed.len() as u64,
+        "Metadata end position mismatch!"
+    );
+    
+    Ok(())
+}
+
+/// Reserve space for descriptor table
+fn reserve_descriptor_space(
+    out: &mut File,
+    descriptors: &[SlotDescriptor],
+    index: &mut Index,
+) -> Result<u64> {
+    let current_pos = out.stream_position()?;
+    eprintln!("📍 Current position after metadata: {:#x}", current_pos);
+    
+    let descriptor_table_offset = align_offset(current_pos, SLOT_ALIGNMENT);
+    eprintln!(
+        "📍 Aligned descriptor table offset: {:#x} (aligned from {:#x})",
+        descriptor_table_offset, current_pos
+    );
+    
+    index.slot_table_offset = descriptor_table_offset;
+    index.slot_table_size = (descriptors.len() * SLOT_DESCRIPTOR_SIZE) as u64;
+    index.slot_count = descriptors.len() as u32;
+    
+    info!(
+        "🔍 Setting descriptor_offset to {:#x} for {} descriptors",
+        descriptor_table_offset,
+        descriptors.len()
+    );
+    
+    // Reserve space
+    let descriptor_table_size = (descriptors.len() * SLOT_DESCRIPTOR_SIZE) as u64;
+    out.seek(SeekFrom::Start(
+        descriptor_table_offset + descriptor_table_size,
+    ))?;
+    
+    debug!(
+        "📊 Reserved {} bytes for {} descriptors at offset {:#x}",
+        descriptor_table_size,
+        descriptors.len(),
+        descriptor_table_offset
+    );
+    
+    Ok(descriptor_table_offset)
+}
+
+/// Stream slot data from files to output
+fn stream_slot_data(
+    out: &mut File,
+    descriptors: &mut [SlotDescriptor],
+    slot_paths: &[PathBuf],
+) -> Result<()> {
+    trace!("📦 Streaming slot data to output");
+    
+    for (i, (descriptor, slot_path)) in descriptors.iter_mut().zip(slot_paths).enumerate() {
+        // Align position
+        let current = out.stream_position()?;
+        let aligned = align_offset(current, SLOT_ALIGNMENT);
+        if aligned > current {
+            out.write_all(&vec![0u8; (aligned - current) as usize])?;
+        }
+        
+        // Write slot and update descriptor with actual offset
+        let slot_offset = out.stream_position()?;
+        descriptor.offset = slot_offset;
+        
+        // Stream file directly to output
+        let mut slot_file = File::open(slot_path)?;
+        let bytes_copied = io::copy(&mut slot_file, out)?;
+        
+        debug!(
+            "📍 Wrote slot {}: offset={:#x}, size={} bytes",
+            i,
+            slot_offset,
+            bytes_copied
+        );
+    }
+    
+    Ok(())
+}
+
+/// Write descriptor table at reserved location
+fn write_descriptor_table(
+    out: &mut File,
+    descriptors: &[SlotDescriptor],
+    descriptor_table_offset: u64,
+) -> Result<u64> {
+    let end_pos = out.stream_position()?;
+    out.seek(SeekFrom::Start(descriptor_table_offset))?;
+    
+    for (i, descriptor) in descriptors.iter().enumerate() {
+        let descriptor_bytes = descriptor.pack();
+        out.write_all(&descriptor_bytes)?;
+        trace!("✍️ Wrote 64-byte descriptor for slot {}", i);
+    }
+    
+    debug!(
+        "📋 Wrote {} descriptors at offset {:#x}",
+        descriptors.len(),
+        descriptor_table_offset
+    );
+    
+    // Return to end of data
+    out.seek(SeekFrom::Start(end_pos))?;
+    Ok(end_pos)
+}
+
+/// Finalize package with MagicTrailer and make executable
+fn finalize_package(
+    out: &mut File,
+    index: &mut Index,
+    end_pos: u64,
+    output_path: &Path,
+    manifest: &BuildManifest,
+    options: &BuildOptions,
+) -> Result<()> {
+    trace!("🎬 Finalizing package with MagicTrailer");
+    
+    // Update package size before writing MagicTrailer
+    index.package_size = end_pos + MAGIC_TRAILER_SIZE as u64;
+    
+    // Write MagicTrailer (8200 bytes: 📦 + index + 🪄)
+    out.write_all(PACKAGE_EMOJI_BYTES)?;
+    write_index(out, index)?;
+    out.write_all(MAGIC_WAND_EMOJI_BYTES)?;
+    
+    // Make the output file executable
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let mut perms = fs::metadata(output_path)?.permissions();
+        perms.set_mode(DEFAULT_DIR_PERMS as u32);
+        fs::set_permissions(output_path, perms)?;
+    }
+    
+    // Log success message
+    log::info!("✅ Successfully built PSPF bundle: {output_path:?}");
+    log::info!("  Package: {} v{}", manifest.package.name, manifest.package.version);
+    let launcher_display = options.launcher_bin.as_ref()
+        .map(|p| p.display().to_string())
+        .or_else(|| std::env::var("FLAVOR_LAUNCHER_BIN").ok())
+        .unwrap_or_else(|| "unknown".to_string());
+    log::info!("  Launcher: {}", launcher_display);
+    log::info!("  Slots: {}", manifest.slots.len());
+    let package_size = index.package_size;
+    log::info!("  Size: {} bytes", package_size);
+    
+    Ok(())
+}
+
 fn get_launcher(options: &BuildOptions) -> Result<Vec<u8>> {
     // Priority order:
     // 1. Explicit launcher_bin from options

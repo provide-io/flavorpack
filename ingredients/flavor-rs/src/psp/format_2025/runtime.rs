@@ -12,10 +12,6 @@ pub use runtime_impl::{process_runtime_env, RuntimeEnv};
 
 // Implementation modules
 mod runtime_impl {
-    mod environment;
-    mod patterns;
-    mod operations;
-
     pub use environment::RuntimeEnv;
     use patterns::PatternProcessor;
     use operations::{UnsetOperation, MapOperation, SetOperation};
