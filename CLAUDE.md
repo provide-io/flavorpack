@@ -157,7 +157,7 @@ pytest -m security
 ```
 - you will remember to NEVER do ad-hoc signing unless SPECIFICALLY REQUESTED, or you suggest it and I approve.
 - make sure to remember to use debug/trace logging instead of "print" statements when debugging.
-- use pretaste instead of "simple tests." no PSPF tests in /tmp. use pretaster or taster.
+- use pretaster or taster instead of "simple tests." no PSPF tests in /tmp. ALL tests MUST use pretaster or taster - NEVER create standalone test files or test manifests.
 - nope. you will *NEVER* hardcode permissions directly into code.
 - flavorpack is the name of the package. `flavor` is the actual tool/API.
 - use constants for the default permissions, then the metadata must be able to override it. you will not directly embed default permissions into the code. anything default must be a constant.
@@ -179,3 +179,10 @@ pytest -m security
 - Use structured logging with emoji prefixes (DAS pattern)
 - All implementations must be production-ready and reliable
 - Rust code must compile with `--warnings-as-errors` (strict mode)
+
+### Testing Requirements
+- **ALL tests MUST use pretaster or taster** - NEVER create standalone test files
+- **NO test manifests in /tmp** - use pretaster/taster infrastructure only
+- **NO simple/quick tests** - use the proper testing framework
+- Cross-language compatibility must be verified through pretaster
+- If pretaster/taster aren't available, note that testing is blocked - don't create alternatives
