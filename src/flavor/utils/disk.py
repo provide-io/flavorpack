@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 
 from provide.foundation import logger
+from provide.foundation.file import ensure_dir
 
 
 def check_disk_space(path: Path, required_bytes: int) -> None:
@@ -64,4 +65,5 @@ def ensure_directory(path: Path, mode: int = 0o700) -> None:
         path: Directory path to create
         mode: Unix file permissions (default: user-only)
     """
-    path.mkdir(parents=True, exist_ok=True, mode=mode)
+    # Use foundation's ensure_dir which does the same thing
+    ensure_dir(path, mode=mode)
