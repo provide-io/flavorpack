@@ -108,6 +108,188 @@ func getBuilderTimestamp() string {
 }
 
 // BuildWithLogLevel builds a PSPF package with explicit log level control
+// SlotProcessor handles slot processing for PSPF packages.
+// This aligns with Rust's SlotProcessor for consistency across implementations.
+type SlotProcessor struct {
+	// Slots from manifest configuration
+	manifestSlots []Slot
+	
+	// Processed slot descriptors for the package
+	slotDescriptors []SlotDescriptor
+	
+	// Slot metadata for the metadata section
+	metadataSlots []SlotMetadata
+	
+	// Compressed slot data to write
+	slotData [][]byte
+	
+	// Logger for debug output
+	logger hclog.Logger
+}
+
+// NewSlotProcessor creates a new slot processor
+func NewSlotProcessor(slots []Slot, logger hclog.Logger) *SlotProcessor {
+	return &SlotProcessor{
+		manifestSlots:   slots,
+		slotDescriptors: make([]SlotDescriptor, 0, len(slots)),
+		metadataSlots:   make([]SlotMetadata, 0, len(slots)),
+		slotData:        make([][]byte, 0, len(slots)),
+		logger:          logger,
+	}
+}
+
+// ProcessSlots processes all slots from the manifest
+func (sp *SlotProcessor) ProcessSlots() error {
+	sp.logger.Info("📦 Processing slot metadata", "count", len(sp.manifestSlots))
+	sp.logger.Debug("🔍 Slot processing details", "alignment", SlotAlignment, "descriptor_size", SlotDescriptorSize)
+	
+	for i, slot := range sp.manifestSlots {
+		if err := sp.processSlot(i, &slot); err != nil {
+			return fmt.Errorf("failed to process slot %d: %w", i, err)
+		}
+	}
+	
+	return nil
+}
+
+// processSlot processes a single slot
+func (sp *SlotProcessor) processSlot(index int, slot *Slot) error {
+	// Validate required fields
+	if slot.ID == "" {
+		return fmt.Errorf("slot %d missing required 'id' field", index)
+	}
+	if slot.Source == "" {
+		return fmt.Errorf("slot %d missing required 'source' field (id: %s)", index, slot.ID)
+	}
+	if slot.Target == "" {
+		return fmt.Errorf("slot %d missing required 'target' field (id: %s)", index, slot.ID)
+	}
+	
+	// Set defaults
+	if slot.Resolution == "" {
+		slot.Resolution = "build"
+	}
+	if slot.Permissions == "" {
+		slot.Permissions = fmt.Sprintf("%04o", DefaultFilePerms)
+	}
+	
+	// Validate slot number if provided
+	if slot.Slot != nil && *slot.Slot != index {
+		return fmt.Errorf("slot number mismatch: expected %d, declared %d (id: %s)", 
+			index, *slot.Slot, slot.ID)
+	}
+	
+	sp.logger.Debug("📂 Processing slot", "index", index, "id", slot.ID, 
+		"source", slot.Source, "target", slot.Target)
+	
+	// Read and process slot data
+	slotData, compressed, encodingMethod, err := sp.loadSlotData(slot)
+	if err != nil {
+		return fmt.Errorf("failed to load slot data: %w", err)
+	}
+	
+	// Calculate checksum of compressed data
+	checksumData := sha256.Sum256(compressed)
+	checksumStr := fmt.Sprintf("sha256:%x", checksumData)
+	
+	// Create slot metadata
+	slotMeta := SlotMetadata{
+		Slot:        index,
+		ID:          slot.ID,
+		Source:      slot.Source,
+		Target:      slot.Target,
+		Size:        len(slotData),
+		Checksum:    checksumStr,
+		Encoding:    slot.Encoding,
+		Purpose:     slot.Purpose,
+		Lifecycle:   slot.Lifecycle,
+		Resolution:  slot.Resolution,
+		Permissions: slot.Permissions,
+	}
+	
+	// Create slot descriptor
+	descriptor := SlotDescriptor{
+		Slot:         uint32(index),
+		Offset:       0, // Will be set during write phase
+		Size:         uint64(len(compressed)),
+		Checksum:     checksumData[:],
+		Encoding:     encodingMethod,
+		Reserved1:    0,
+		Reserved2:    0,
+	}
+	
+	// Store processed data
+	sp.metadataSlots = append(sp.metadataSlots, slotMeta)
+	sp.slotDescriptors = append(sp.slotDescriptors, descriptor)
+	sp.slotData = append(sp.slotData, compressed)
+	
+	sp.logger.Debug("✅ Slot processed", "index", index, "id", slot.ID, 
+		"compressed_size", len(compressed), "original_size", len(slotData))
+	
+	return nil
+}
+
+// loadSlotData loads and processes slot data based on encoding
+func (sp *SlotProcessor) loadSlotData(slot *Slot) ([]byte, []byte, uint8, error) {
+	// Resolve {workenv} placeholder
+	slotPath := slot.Source
+	if strings.Contains(slotPath, "{workenv}") {
+		baseDir := os.Getenv("FLAVOR_WORKENV_BASE")
+		if baseDir == "" {
+			baseDir, _ = os.Getwd()
+		}
+		slotPath = strings.ReplaceAll(slotPath, "{workenv}", baseDir)
+		sp.logger.Debug("📍 Resolved path", "original", slot.Source, 
+			"resolved", slotPath, "base", baseDir)
+	}
+	
+	// Read slot data
+	slotData, err := os.ReadFile(slotPath)
+	if err != nil {
+		return nil, nil, 0, fmt.Errorf("failed to read slot from %s: %w", slotPath, err)
+	}
+	
+	sp.logger.Debug("📊 Slot size", "original", len(slotData), "encoding", slot.Encoding)
+	
+	// Handle encoding
+	var compressed []byte
+	var encodingMethod uint8
+	
+	switch slot.Encoding {
+	case "gzip":
+		compressed = slotData
+		encodingMethod = EncodingGzip
+	case "tgz", "tar.gz":
+		compressed = slotData
+		encodingMethod = EncodingTgz
+	case "tar":
+		compressed = slotData
+		encodingMethod = EncodingTar
+	case "none", "":
+		compressed = slotData
+		encodingMethod = EncodingRaw
+	default:
+		return nil, nil, 0, fmt.Errorf("unknown encoding: %s", slot.Encoding)
+	}
+	
+	return slotData, compressed, encodingMethod, nil
+}
+
+// GetDescriptors returns the processed slot descriptors
+func (sp *SlotProcessor) GetDescriptors() []SlotDescriptor {
+	return sp.slotDescriptors
+}
+
+// GetMetadata returns the processed slot metadata
+func (sp *SlotProcessor) GetMetadata() []SlotMetadata {
+	return sp.metadataSlots
+}
+
+// GetSlotData returns the compressed slot data
+func (sp *SlotProcessor) GetSlotData() [][]byte {
+	return sp.slotData
+}
+
 func BuildWithLogLevel(manifestPath, outputPath, launcherBin, privateKeyPath, publicKeyPath, keySeed, cliLogLevel string) {
 	// Determine log level and source
 	var logLevel string
@@ -378,11 +560,17 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 		},
 	}
 
-	// 📦 Process slot metadata (but don't write data yet)
-	logger.Info("📦 Processing slot metadata", "count", len(config.Slots))
-	logger.Debug("🔍 Slot processing details", "alignment", SlotAlignment, "descriptor_size", SlotDescriptorSize)
-	var slotDescriptors []SlotDescriptor
-	var slotDataToWrite [][]byte  // Store compressed slot data for later
+	// 📦 Process slots using SlotProcessor (aligns with Rust implementation)
+	slotProcessor := NewSlotProcessor(config.Slots, logger)
+	if err := slotProcessor.ProcessSlots(); err != nil {
+		logger.Error("❌ Failed to process slots", "error", err)
+		os.Exit(1)
+	}
+	
+	// Get processed data from SlotProcessor
+	slotDescriptors := slotProcessor.GetDescriptors()
+	slotDataToWrite := slotProcessor.GetSlotData()
+	slotMetadataList := slotProcessor.GetMetadata()
 	for i, slot := range config.Slots {
 		// Validate required fields
 		if slot.ID == "" {
