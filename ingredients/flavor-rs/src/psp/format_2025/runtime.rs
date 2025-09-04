@@ -7,12 +7,15 @@
 //! The implementation has been refactored into sub-modules for better
 //! maintainability and reduced cognitive complexity.
 
+// Use RuntimeEnv from metadata module
+use super::metadata::RuntimeEnv;
+
 // Re-export the refactored runtime module components
 pub use runtime_impl::process_runtime_env;
 
 // Implementation modules
 mod runtime_impl {
-    pub use environment::RuntimeEnv;
+    use super::RuntimeEnv;
     use patterns::PatternProcessor;
     use operations::{UnsetOperation, MapOperation, SetOperation};
     
@@ -36,29 +39,44 @@ mod runtime_impl {
         debug!("🔧 Processing runtime environment configuration");
         
         // Build pattern processor for pass/preserve operations
-        let pattern_processor = PatternProcessor::new(&runtime_env.pass);
+        let pass_patterns = runtime_env.pass.as_ref().map(|v| v.as_slice()).unwrap_or(&[]);
+        let pattern_processor = PatternProcessor::new(pass_patterns);
         
         // Process unset operations first (highest priority)
-        if !runtime_env.unset.is_empty() {
-            if let Err(e) = UnsetOperation::new(&runtime_env.unset, &pattern_processor)
-                .execute(env_map) {
-                debug!("⚠️ Error during unset operations: {}", e);
+        if let Some(unset_patterns) = &runtime_env.unset {
+            if !unset_patterns.is_empty() {
+                if let Err(e) = UnsetOperation::new(unset_patterns, &pattern_processor)
+                    .execute(env_map) {
+                    debug!("⚠️ Error during unset operations: {}", e);
+                }
             }
         }
         
         // Process map operations (variable renaming)
-        if !runtime_env.map.is_empty() {
-            if let Err(e) = MapOperation::new(&runtime_env.map, &pattern_processor)
-                .execute(env_map) {
-                debug!("⚠️ Error during map operations: {}", e);
+        if let Some(map_ops) = &runtime_env.map {
+            if !map_ops.is_empty() {
+                // Convert HashMap to Vec of key=value strings
+                let map_strings: Vec<String> = map_ops.iter()
+                    .map(|(k, v)| format!("{}={}", k, v))
+                    .collect();
+                if let Err(e) = MapOperation::new(&map_strings, &pattern_processor)
+                    .execute(env_map) {
+                    debug!("⚠️ Error during map operations: {}", e);
+                }
             }
         }
         
         // Process set operations (add/override variables)
-        if !runtime_env.set.is_empty() {
-            if let Err(e) = SetOperation::new(&runtime_env.set)
-                .execute(env_map) {
-                debug!("⚠️ Error during set operations: {}", e);
+        if let Some(set_ops) = &runtime_env.set {
+            if !set_ops.is_empty() {
+                // Convert HashMap to Vec of key=value strings
+                let set_strings: Vec<String> = set_ops.iter()
+                    .map(|(k, v)| format!("{}={}", k, v))
+                    .collect();
+                if let Err(e) = SetOperation::new(&set_strings)
+                    .execute(env_map) {
+                    debug!("⚠️ Error during set operations: {}", e);
+                }
             }
         }
         
@@ -68,33 +86,6 @@ mod runtime_impl {
         }
         
         debug!("✅ Runtime environment processing complete");
-    }
-
-    // Include the module implementations inline to avoid file system issues
-    mod environment {
-        use serde::{Deserialize, Serialize};
-
-        /// Runtime environment configuration
-        /// 
-        /// Defines how environment variables should be processed during package execution.
-        #[derive(Debug, Clone, Default, Deserialize, Serialize)]
-        pub struct RuntimeEnv {
-            /// Patterns for variables to preserve/pass through
-            #[serde(default, skip_serializing_if = "Vec::is_empty")]
-            pub pass: Vec<String>,
-            
-            /// Patterns for variables to unset/remove
-            #[serde(default, skip_serializing_if = "Vec::is_empty")]
-            pub unset: Vec<String>,
-            
-            /// Variable mapping/renaming operations
-            #[serde(default, skip_serializing_if = "Vec::is_empty")]
-            pub map: Vec<String>,
-            
-            /// Variables to set or override
-            #[serde(default, skip_serializing_if = "Vec::is_empty")]
-            pub set: Vec<String>,
-        }
     }
 
     mod patterns {
@@ -325,6 +316,3 @@ mod runtime_impl {
         }
     }
 }
-
-// Use RuntimeEnv from metadata module
-use super::metadata::RuntimeEnv;
