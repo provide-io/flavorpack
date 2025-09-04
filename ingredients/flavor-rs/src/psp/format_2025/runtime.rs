@@ -8,7 +8,7 @@
 //! maintainability and reduced cognitive complexity.
 
 // Re-export the refactored runtime module components
-pub use runtime_impl::{process_runtime_env, RuntimeEnv};
+pub use runtime_impl::process_runtime_env;
 
 // Implementation modules
 mod runtime_impl {
@@ -326,8 +326,5 @@ mod runtime_impl {
     }
 }
 
-// Keep backward compatibility with metadata module
-use super::metadata;
-
-// Re-export RuntimeEnv from metadata if it's used there
-pub use metadata::RuntimeEnv as MetadataRuntimeEnv;
+// Use RuntimeEnv from metadata module
+use super::metadata::RuntimeEnv;
