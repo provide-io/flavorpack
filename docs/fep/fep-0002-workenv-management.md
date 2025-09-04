@@ -1,137 +1,191 @@
-# FEP-0002: Working Environment (Workenv) Management
+# FEP-0002: Working Environment Management Specification
 
 **Status**: Implemented  
 **Type**: Standards Track  
 **Created**: 2025-08-28  
-**Updated**: 2025-09-02  
-**Implementation**: Complete ✅
-
-## Abstract
-
-This document specifies the Working Environment (workenv) management system for PSPF/2025 packages. The workenv is a persistent cache directory where packages are extracted and executed, enabling fast startup times through intelligent caching while maintaining security through cryptographic validation.
-
-## Table of Contents
-
-1. [Introduction](#1-introduction)
-2. [Workenv Directory Structure](#2-workenv-directory-structure)
-3. [Cache Management](#3-cache-management)
-4. [Directory Creation](#4-directory-creation)
-5. [Placeholder System](#5-placeholder-system)
-6. [Lifecycle Management](#6-lifecycle-management)
-7. [Implementation Status](#7-implementation-status)
+**Updated**: 2025-09-03  
 
 ## 1. Introduction
 
-### 1.1 Motivation
+This specification defines the Working Environment (workenv) management system for PSPF/2025 packages. The workenv provides a persistent extraction cache with cryptographic validation, atomic operations, and lifecycle-based resource management.
 
-Applications need a consistent, secure environment for execution. The workenv system provides:
+### 1.1. Requirements Language
 
-- **Persistent caching**: Extract once, run many times
-- **Cache validation**: Cryptographic verification of cached content
-- **Atomic extraction**: Ensures consistency during parallel launches
-- **Lifecycle management**: Automatic cleanup of temporary/init-only files
-- **Platform isolation**: Separate environments per package version
+The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in RFC 2119.
 
-### 1.2 Terminology
+### 1.2. Design Goals
 
-- **Workenv**: Working environment directory for a specific package
-- **Cache validation**: Process to verify cached extraction is still valid
-- **Placeholder**: Variable substitution in paths (e.g., `{workenv}`)
-- **Lifecycle**: Timing and retention policy for extracted files
+1. Persistent caching with cryptographic validation
+2. Atomic extraction preventing corruption from concurrent access
+3. Platform-agnostic directory structure
+4. Lifecycle-based automatic resource cleanup
+5. Deterministic path resolution through placeholder expansion
 
-## 2. Workenv Directory Structure
+## 2. Directory Structure
 
-### 2.1 Base Location
+### 2.1. Base Path Resolution
+
+The workenv base directory SHALL be determined using the following platform-specific algorithm:
 
 ```
-$HOME/.cache/flavor/workenv/
-└── {package_name}_{package_version}/
-    ├── bin/            # Extracted executables
-    ├── lib/            # Libraries
-    ├── data/           # Application data
-    ├── tmp/            # Temporary files
-    ├── .lock           # Process lock file
-    └── .complete       # Extraction complete marker
+Platform  Priority Order
+--------  --------------
+Linux     1. $XDG_CACHE_HOME/flavor/workenv/
+          2. $HOME/.cache/flavor/workenv/
+
+macOS     1. $XDG_CACHE_HOME/flavor/workenv/
+          2. $HOME/Library/Caches/flavor/workenv/
+
+Windows   1. %LOCALAPPDATA%\flavor\workenv\
+          2. %APPDATA%\flavor\workenv\
 ```
 
-### 2.2 Platform-Specific Paths
+### 2.2. Package Directory Structure
 
-- **Linux/macOS**: `~/.cache/flavor/workenv/`
-- **Windows**: `%LOCALAPPDATA%\flavor\workenv\`
+Each package SHALL have its own directory named `{package_name}_{package_version}`:
 
-### 2.3 Environment Variables
-
-```python
-# Set by launcher
-FLAVOR_WORKENV = "/path/to/workenv"
-FLAVOR_PACKAGE_NAME = "myapp"
-FLAVOR_PACKAGE_VERSION = "1.0.0"
-FLAVOR_SLOT_{N}_PATH = "/path/to/slot/N"
+```
+{base_path}/{package_name}_{package_version}/
+├── .lock           # Process lock file (8 bytes)
+├── .complete       # Extraction marker (0 bytes)
+├── .manifest       # Cached metadata (JSON)
+├── slot_0/         # Extracted slot 0
+├── slot_1/         # Extracted slot 1
+├── slot_N/         # Extracted slot N
+└── {custom}/       # Package-defined directories
 ```
 
-## 3. Cache Management
+### 2.3. Lock File Format
 
-### 3.1 Cache Validation
+The `.lock` file SHALL contain an 8-byte process identifier:
 
-The launcher validates cached content before use:
-
-```python
-def validate_cache(workenv_dir: Path, metadata: dict) -> bool:
-    """Validate workenv cache using metadata directives."""
-    
-    # Check completion marker
-    if not (workenv_dir / ".complete").exists():
-        return False
-    
-    # Optional: Check file-based validation
-    if "cache_validation" in metadata:
-        validation = metadata["cache_validation"]
-        check_file = validation.get("check_file", "")
-        expected_content = validation.get("expected_content", "")
-        
-        # Substitute placeholders
-        check_file = check_file.replace("{workenv}", str(workenv_dir))
-        check_file = check_file.replace("{version}", package_version)
-        
-        # Verify content
-        if Path(check_file).exists():
-            actual = Path(check_file).read_text().strip()
-            return actual == expected_content
-    
-    return True
+```
+Offset  Size  Type     Description
+------  ----  -------  -----------
+0       4     uint32   Process ID (PID)
+4       4     uint32   Unix timestamp
 ```
 
-### 3.2 Atomic Extraction
+## 3. Cache Validation Protocol
 
-Process locking ensures safe concurrent access:
+### 3.1. Validation Sequence
 
-```python
-# Launcher acquires exclusive lock
-lock_file = workenv_dir / ".lock"
-with file_lock(lock_file):
-    if not cache_valid:
-        extract_all_slots(workenv_dir)
-        (workenv_dir / ".complete").touch()
+Implementations MUST validate cached content before use:
+
+1. Verify `.complete` marker exists
+2. Compare cached `.manifest` with package metadata
+3. Verify slot checksums if present
+4. Execute custom validation if specified
+
+### 3.2. Completion Marker
+
+The `.complete` file is a zero-byte file that MUST be created atomically after successful extraction:
+
+1. Extract all required slots
+2. Sync filesystem buffers
+3. Create `.complete` atomically
+4. Release lock
+
+### 3.3. Custom Validation
+
+Packages MAY specify custom validation in metadata:
+
+```json
+{
+  "workenv": {
+    "cache_validation": {
+      "check_file": "{workenv}/version.txt",
+      "expected_content": "1.0.0",
+      "checksum": "sha256:abcd1234..."
+    }
+  }
+}
 ```
 
-### 3.3 Cache Cleanup
+Implementations SHALL:
+1. Expand placeholders in `check_file`
+2. Read file content
+3. Compare with `expected_content` or verify `checksum`
+4. Invalidate cache on mismatch
 
-```bash
-# Clean caches older than 30 days
-flavor workenv clean --older-than 30
+## 4. Atomic Extraction Protocol
 
-# Remove specific package cache
-flavor workenv remove myapp_1.0.0
+### 4.1. Lock Acquisition
 
-# List all cached environments
-flavor workenv list
+Implementations MUST use file-based locking:
+
+1. Open `.lock` with exclusive write access
+2. Write PID and timestamp
+3. Verify lock ownership
+4. Proceed with extraction
+5. Release lock on completion or failure
+
+### 4.2. Lock Recovery
+
+If lock acquisition fails:
+
+1. Read lock file content
+2. Check if owning process exists
+3. If process dead AND timestamp > 300 seconds old:
+   - Break lock and proceed
+4. Otherwise:
+   - Wait with exponential backoff
+   - Maximum wait time: 30 seconds
+
+### 4.3. Partial Extraction Recovery
+
+If `.complete` marker missing but partial content exists:
+
+1. Acquire exclusive lock
+2. Remove all existing content
+3. Perform fresh extraction
+4. Create `.complete` marker
+5. Release lock
+
+## 5. Placeholder System
+
+### 5.1. Standard Placeholders
+
+Implementations MUST support these placeholders:
+
+```
+Placeholder      Description                      Example Value
+--------------   ------------------------------   -------------
+{workenv}        Workenv directory path          /REDACTED_ABS_PATH
+{home}           User home directory              /home/user
+{tmp}            System temp directory            /tmp
+{package}        Package name from metadata       myapp
+{version}        Package version from metadata    1.0.0
+{platform}       Platform identifier              linux_amd64
+{slot_N}         Path to extracted slot N         /REDACTED_ABS_PATH
 ```
 
-## 4. Directory Creation
+### 5.2. Expansion Rules
 
-### 4.1 Metadata Specification
+1. Placeholders SHALL be case-sensitive
+2. Unknown placeholders SHALL remain unexpanded
+3. Nested placeholders are NOT supported
+4. Expansion SHALL occur before path operations
 
-Packages can declare required directories:
+### 5.3. Platform Identifiers
+
+Platform identifiers SHALL use the format `{os}_{arch}`:
+
+```
+OS        Arch      Identifier
+--------  --------  -----------
+linux     amd64     linux_amd64
+linux     arm64     linux_arm64
+darwin    amd64     darwin_amd64
+darwin    arm64     darwin_arm64
+windows   amd64     windows_amd64
+```
+
+## 6. Directory Creation
+
+### 6.1. Metadata Specification
+
+Packages MAY declare required directories:
 
 ```json
 {
@@ -139,183 +193,191 @@ Packages can declare required directories:
     "directories": [
       {
         "path": "var/log",
-        "permissions": "0755",
-        "description": "Application logs"
-      },
-      {
-        "path": "tmp",
-        "permissions": "0700",
-        "description": "Temporary files"
+        "mode": 493,
+        "description": "Log directory"
       }
-    ],
-    "umask": "0022"
+    ]
   }
 }
 ```
 
-### 4.2 Directory Creation Process
+Where `mode` is the decimal representation of Unix permissions (0755 = 493).
 
-```python
-def create_workenv_directories(
-    workenv_dir: Path,
-    directories: list[dict],
-    umask: int = 0o022
-) -> None:
-    """Create declared directories with proper permissions."""
-    
-    old_umask = os.umask(umask)
-    try:
-        for dir_spec in directories:
-            path = workenv_dir / dir_spec["path"]
-            perms = int(dir_spec.get("permissions", "0755"), 8)
-            
-            path.mkdir(parents=True, exist_ok=True)
-            path.chmod(perms & ~umask)
-    finally:
-        os.umask(old_umask)
+### 6.2. Creation Protocol
+
+1. Set process umask if specified
+2. For each directory:
+   - Create with parents
+   - Apply mode & ~umask
+   - Continue on existing
+3. Restore original umask
+
+### 6.3. Security Requirements
+
+Implementations MUST:
+- Reject paths containing `..` components
+- Reject absolute paths
+- Verify paths remain within workenv
+- Apply umask to all created directories
+
+## 7. Environment Variables
+
+### 7.1. Required Variables
+
+Launchers MUST set before execution:
+
+```
+Variable                  Description                   Example
+----------------------    ---------------------------   -------
+FLAVOR_WORKENV           Absolute path to workenv      /REDACTED_ABS_PATH
+FLAVOR_PACKAGE_NAME      Package name from metadata    myapp
+FLAVOR_PACKAGE_VERSION   Package version from metadata 1.0.0
 ```
 
-## 5. Placeholder System
+### 7.2. Optional Variables
 
-### 5.1 Supported Placeholders
+Launchers SHOULD set if applicable:
 
-| Placeholder | Description | Example |
-|------------|-------------|---------|
-| `{workenv}` | Workenv directory path | `/REDACTED_ABS_PATH` |
-| `{home}` | User home directory | `/home/user` |
-| `{tmp}` | System temp directory | `/tmp` |
-| `{package}` | Package name | `myapp` |
-| `{version}` | Package version | `1.0.0` |
-| `{platform}` | Platform string | `linux_amd64` |
-| `{slot_0}` | Slot 0 extraction path | `/REDACTED_ABS_PATH` |
-
-### 5.2 Placeholder Expansion
-
-```python
-def substitute_placeholders(path: str, workenv_dir: Path) -> str:
-    """Expand placeholders in paths."""
-    
-    replacements = {
-        "{workenv}": str(workenv_dir),
-        "{home}": str(Path.home()),
-        "{tmp}": tempfile.gettempdir(),
-        "{package}": package_name,
-        "{version}": package_version,
-        "{platform}": get_platform_string(),
-    }
-    
-    result = path
-    for placeholder, value in replacements.items():
-        result = result.replace(placeholder, value)
-    
-    # Handle slot references
-    for i in range(10):  # Support slots 0-9
-        slot_path = workenv_dir / f"slot_{i}"
-        if slot_path.exists():
-            result = result.replace(f"{{slot_{i}}}", str(slot_path))
-    
-    return result
+```
+Variable                  Description                   Example
+----------------------    ---------------------------   -------
+FLAVOR_SLOT_{N}_PATH     Path to extracted slot N      /REDACTED_ABS_PATH
+FLAVOR_OS                Operating system               linux
+FLAVOR_ARCH              Architecture                   amd64
+FLAVOR_CACHE_DIR         Cache base directory           /REDACTED_ABS_PATH
 ```
 
-## 6. Lifecycle Management
+## 8. Lifecycle Management
 
-### 6.1 Lifecycle-Based Cleanup
+### 8.1. Slot Lifecycles
 
-Different slot lifecycles affect retention:
+Slots SHALL be retained or removed based on lifecycle (from FEP-0001):
 
-```python
-# After successful first run
-if first_run:
-    # Remove INIT lifecycle slots
-    for slot in metadata["slots"]:
-        if slot["lifecycle"] == LIFECYCLE_INIT:
-            slot_path = workenv_dir / f"slot_{slot['id']}"
-            shutil.rmtree(slot_path, ignore_errors=True)
-
-# At shutdown
-for slot in metadata["slots"]:
-    if slot["lifecycle"] == LIFECYCLE_TEMPORARY:
-        slot_path = workenv_dir / f"slot_{slot['id']}"
-        shutil.rmtree(slot_path, ignore_errors=True)
+```
+Value  Name        Retention Policy
+-----  ----------  ----------------
+0      INIT        Remove after first successful run
+1      STARTUP     Extract every launch
+2      RUNTIME     Standard caching
+3      SHUTDOWN    Remove at termination
+4      CACHE       Persistent caching
+5      TEMPORARY   Remove at termination
+6      LAZY        Extract on first access
+7      EAGER       Extract immediately
 ```
 
-### 6.2 Disk Space Management
+### 8.2. Cleanup Protocol
 
-```python
-def check_disk_space(workenv_dir: Path, required_bytes: int) -> None:
-    """Ensure sufficient disk space for extraction."""
-    
-    stat = os.statvfs(workenv_dir.parent)
-    available = stat.f_bavail * stat.f_frsize
-    
-    # Require 2x space for safe extraction
-    needed = required_bytes * DISK_SPACE_MULTIPLIER
-    
-    if available < needed:
-        raise InsufficientDiskSpaceError(
-            f"Need {needed} bytes, only {available} available"
-        )
+After successful execution:
+1. Remove INIT slots if first run
+2. Remove TEMPORARY slots
+3. Remove SHUTDOWN slots
+4. Update `.manifest` with cleanup timestamp
+
+### 8.3. Cache Expiration
+
+Implementations MAY remove workenvs based on:
+- Age (last access time)
+- Size constraints
+- Explicit user request
+- Package uninstallation
+
+## 9. Disk Space Management
+
+### 9.1. Space Requirements
+
+Before extraction, implementations SHOULD:
+
+1. Calculate total uncompressed size from metadata
+2. Add 20% overhead for filesystem metadata
+3. Verify available space
+4. Fail gracefully if insufficient
+
+### 9.2. Quota Enforcement
+
+Implementations MAY enforce quotas:
+
+```json
+{
+  "workenv": {
+    "max_cache_size": 1073741824,
+    "max_cache_age_days": 30
+  }
+}
 ```
 
-## 7. Implementation Status
+## 10. Error Handling
 
-### 7.1 Completed Components ✅
+### 10.1. Error Conditions
 
-- **Python Implementation**
-  - `src/flavor/psp/format_2025/launcher.py`: Workenv setup and management
-  - `src/flavor/psp/metadata/paths.py`: Path utilities and placeholders
-  - `src/flavor/commands/workenv.py`: CLI commands for workenv management
-  - `src/flavor/cache.py`: Cache management utilities
+Implementations MUST handle:
 
-- **Go Implementation**
-  - Full workenv extraction and caching
-  - Process locking for atomic operations
-  - Platform-specific path handling
+- Lock acquisition timeout
+- Insufficient disk space
+- Permission denied
+- Corrupted cache
+- Checksum mismatch
 
-- **Rust Implementation**
-  - Workenv management with memory-mapped I/O
-  - Efficient cache validation
-  - Cross-platform support
+### 10.2. Recovery Actions
 
-### 7.2 CLI Commands
+On error, implementations SHALL:
 
-```bash
-# List all workenvs
-flavor workenv list
+1. Release any held locks
+2. Log error with context
+3. Attempt cache removal if corrupted
+4. Return specific error code
+5. NOT leave partial extractions
 
-# Get info about workenvs
-flavor workenv info
+## 11. Security Considerations
 
-# Clean old caches
-flavor workenv clean --older-than 30
+### 11.1. Path Traversal Prevention
 
-# Remove specific workenv
-flavor workenv remove myapp_1.0.0
+Implementations MUST validate all paths:
+- Reject `..` components
+- Reject absolute paths
+- Canonicalize before operations
+- Verify within workenv boundaries
 
-# Inspect workenv contents
-flavor workenv inspect myapp_1.0.0
-```
+### 11.2. Permission Preservation
 
-### 7.3 Test Coverage
+Implementations SHOULD:
+- Preserve file permissions from slots
+- Apply umask consistently
+- Restrict workenv to user access only (0700)
 
-- Cache validation tests
-- Concurrent extraction tests
-- Placeholder substitution tests
-- Lifecycle management tests
-- Disk space checks
+### 11.3. Lock File Security
 
-### 7.4 Future Enhancements
+Lock files MUST be:
+- Created with 0600 permissions
+- Verified for ownership
+- Protected from symbolic link attacks
 
-- **Shared libraries**: Deduplication across package versions
-- **Network caching**: Distributed cache for teams
-- **Compression**: Transparent compression of cached content
-- **Quota management**: Per-user/per-app space limits
+## 12. Implementation Requirements
 
-## References
+### 12.1. Minimum Implementation
 
-- [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html)
-- [File Locking Best Practices](https://www.gnu.org/software/libc/manual/html_node/File-Locks.html)
-- [Atomic File Operations](https://danluu.com/file-consistency/)
+A conforming implementation MUST:
+- Create workenv directory structure
+- Implement file-based locking
+- Support atomic extraction
+- Expand standard placeholders
+- Set required environment variables
+
+### 12.2. Recommended Implementation
+
+Implementations SHOULD:
+- Validate cached content
+- Support lifecycle-based cleanup
+- Implement disk space checks
+- Provide cache management commands
+- Support custom validation
+
+## 13. References
+
+- RFC 2119: Key words for use in RFCs
+- FEP-0001: PSPF Core Specification
+- XDG Base Directory Specification
+- POSIX.1-2017: File locking
 
 ---
-*Last Updated: 2025-09-02*
+*Version: 2025.1*
