@@ -60,10 +60,20 @@ pub fn write_slot(
         DEFAULT_FILE_PERMS // Default file permissions
     };
 
+    // Hash the slot's ID for fast lookup
+    let name_hash = {
+        use std::collections::hash_map::DefaultHasher;
+        use std::hash::{Hash, Hasher};
+        
+        let mut hasher = DefaultHasher::new();
+        slot_info.id.hash(&mut hasher);
+        hasher.finish()
+    };
+    
     // Create descriptor
     let descriptor = SlotDescriptor {
         id: slot_index as u64,
-        name_hash: 0, // TODO: Implement name hashing
+        name_hash,
         offset,
         size: processed_data.len() as u64,
         original_size: slot_data.len() as u64,

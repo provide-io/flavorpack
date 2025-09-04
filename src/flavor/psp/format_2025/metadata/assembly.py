@@ -11,11 +11,18 @@ from flavor.psp.format_2025.spec import BuildSpec
 from flavor.psp.metadata.paths import validate_metadata_dict
 from flavor.utils import get_arch_name, get_os_name, get_platform_string
 
+# Fallback version for development/unknown versions
+FALLBACK_VERSION = "0.0.0-dev"
+
 
 def get_flavor_version() -> str:
     """Get the version of flavor-python."""
-    # TODO: Get from package version
-    return "1.0.0"
+    try:
+        from importlib.metadata import version
+        return version("flavor")
+    except (ImportError, Exception):
+        # Fallback for development or if package not installed
+        return FALLBACK_VERSION
 
 
 def load_launcher_binary(launcher_type: str) -> bytes:
@@ -75,10 +82,33 @@ def load_launcher_binary(launcher_type: str) -> bytes:
 
 
 def extract_launcher_version(launcher_data: bytes) -> str:
-    """Extract version from launcher binary."""
-    # TODO: Implement actual version extraction from binary
-    # Could look for version strings or embedded metadata
-    return "1.0.0"
+    """Extract version from launcher binary.
+    
+    Looks for common version string patterns in the binary.
+    """
+    import re
+    
+    # Try to find version strings in the binary
+    # Look for patterns like "flavor-go-launcher 0.3.0" or "flavor-rs-launcher/1.0.0"
+    patterns = [
+        rb"flavor-[\w-]+launcher[\s/]+([\d.]+)",  # flavor-go-launcher 0.3.0
+        rb"version[:\s]+([\d.]+)",  # version: 1.0.0
+        rb"v([\d.]+)",  # v1.0.0
+    ]
+    
+    # Search in first 100KB of binary to avoid scanning entire file
+    search_data = launcher_data[:102400] if len(launcher_data) > 102400 else launcher_data
+    
+    for pattern in patterns:
+        match = re.search(pattern, search_data, re.IGNORECASE)
+        if match:
+            version = match.group(1).decode('utf-8', errors='ignore')
+            # Validate it looks like a version
+            if re.match(r'^\d+\.\d+(\.\d+)?', version):
+                return version
+    
+    # Fallback to unknown version
+    return FALLBACK_VERSION
 
 
 def get_launcher_capabilities(launcher_type: str) -> list[str]:
