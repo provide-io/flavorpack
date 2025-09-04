@@ -99,6 +99,27 @@ class PythonPackager:
         # Track processed dependencies to avoid cycles
         self._processed_deps = set()
 
+    # ╔══════════════════════════════════════════════════════════════════════════════╗
+    # ║                           CRITICAL PyPA HELPER METHODS                          ║
+    # ╠══════════════════════════════════════════════════════════════════════════════╣
+    # ║ ⚠️  WARNING: DO NOT REMOVE OR MODIFY THESE METHODS WITHOUT PRIOR DISCUSSION  ⚠️  ║
+    # ║                                                                                  ║
+    # ║ These PyPA helper methods are ESSENTIAL for correct wheel downloading and       ║
+    # ║ building. They handle critical functionality including:                         ║
+    # ║                                                                                  ║
+    # ║ • Platform-specific wheel selection (manylinux2014 for Linux compatibility)     ║
+    # ║ • Proper dependency resolution that uv pip cannot handle                        ║
+    # ║ • Binary wheel downloading for cross-platform builds                            ║
+    # ║ • Correct Python version targeting                                              ║
+    # ║                                                                                  ║
+    # ║ Removing these will BREAK:                                                      ║
+    # ║ - Linux compatibility (CentOS 7, Amazon Linux, Ubuntu, etc.)                    ║
+    # ║ - Cross-platform package building                                               ║
+    # ║ - Dependency resolution for complex packages                                    ║
+    # ║                                                                                  ║
+    # ║ If you think these should be removed, STOP and discuss first!                   ║
+    # ╚══════════════════════════════════════════════════════════════════════════════╝
+
     def _get_pypa_pip_install_cmd(
         self, python_exe: Path, packages: list[str]
     ) -> list[str]:
@@ -127,6 +148,7 @@ class PythonPackager:
         cmd.append(str(source))
         return cmd
 
+    # ⚠️ CRITICAL: This method handles manylinux platform tags - DO NOT REMOVE! ⚠️
     def _get_pypa_pip_download_cmd(
         self,
         python_exe: Path,
@@ -189,6 +211,10 @@ class PythonPackager:
         if packages:
             cmd.extend(packages)
         return cmd
+
+    # ╔══════════════════════════════════════════════════════════════════════════════╗
+    # ║                      END OF CRITICAL PyPA HELPER METHODS                        ║
+    # ╚══════════════════════════════════════════════════════════════════════════════╝
 
     def _download_uv_wheel_via_url(self, dest_dir: Path) -> Path | None:
         """Download UV wheel directly from PyPI using curl/wget.
@@ -340,8 +366,8 @@ class PythonPackager:
 
         with tempfile.TemporaryDirectory() as temp_dir:
             logger.trace(f"Created temp directory for UV download: {temp_dir}")
-            # Use the existing _get_pypa_pip_download_cmd method
-            # UV still publishes with manylinux2014 tags, so use that explicitly
+            # ⚠️ CRITICAL: Using _get_pypa_pip_download_cmd for correct manylinux handling ⚠️
+            # DO NOT replace this with direct uv commands - they don't handle platform tags correctly!
             arch = get_arch_name()
             uv_platform_tag = None
             if get_os_name() == "linux":
@@ -824,6 +850,7 @@ class PythonPackager:
             # Explicitly install 'wheel' as it's required for building wheels
             # but not guaranteed to be in a seeded venv.
             logger.info("📦📥🚀 Installing wheel package into temporary environment")
+            # ⚠️ Using PyPA helper - DO NOT replace with uv pip ⚠️
             install_wheel_cmd = self._get_pypa_pip_install_cmd(python_exe, ["wheel"])
             run_command(
                 install_wheel_cmd,
@@ -867,6 +894,7 @@ class PythonPackager:
                     total=len(all_local_deps),
                     name=dep_path.name,
                 )
+                # ⚠️ Using PyPA helper for proper wheel building - DO NOT REMOVE ⚠️
                 wheel_cmd = self._get_pypa_pip_wheel_cmd(
                     python_exe, wheels_dir, dep_path, no_deps=True
                 )
@@ -888,6 +916,7 @@ class PythonPackager:
             )
             if wheel_spinner:
                 wheel_spinner.tick()
+            # ⚠️ CRITICAL: PyPA helper for main package wheel - DO NOT REPLACE ⚠️
             main_wheel_cmd = self._get_pypa_pip_wheel_cmd(
                 python_exe, wheels_dir, self.manifest_dir, no_deps=True
             )
@@ -949,6 +978,7 @@ class PythonPackager:
                     req_file.flush()
 
                     # Download only these specific dependencies
+                    # ⚠️ PyPA download with manylinux2014 support - ESSENTIAL FOR LINUX ⚠️
                     download_cmd = self._get_pypa_pip_download_cmd(
                         python_exe, wheels_dir, requirements_file=Path(req_file.name)
                     )
@@ -968,6 +998,7 @@ class PythonPackager:
                 for file in wheels_dir.iterdir():
                     if file.suffix == ".tar.gz":
                         logger.debug(f"🔄 Converting {file.name} to wheel")
+                        # ⚠️ PyPA wheel building - handles complex dependencies correctly ⚠️
                         build_cmd = self._get_pypa_pip_wheel_cmd(
                             python_exe, wheels_dir, file, no_deps=True
                         )
