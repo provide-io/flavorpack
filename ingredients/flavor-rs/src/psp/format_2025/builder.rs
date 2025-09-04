@@ -12,14 +12,67 @@ use super::{
 use crate::api::BuildOptions;
 use crate::exceptions::{FlavorError, Result};
 use ed25519_dalek::{Signature, Signer};
-use log::{debug, error, info, trace, warn};
+use log::{debug, error, info, trace};
 use std::fs::{self, File};
 use std::io::{self, BufReader, Read, Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};
 use std::time::Instant;
 
-// BuildManifest and ManifestSlot now imported from manifest module
-// Key loading functions now in keys module
+/// Build a PSPF/2025 package
+pub fn build(manifest_path: &Path, output_path: &Path, options: BuildOptions) -> Result<()> {
+    let _start_time = Instant::now();
+    info!("🔨 Building PSPF/2025 package from: {manifest_path:?}");
+    trace!("🔍 Build options: {:?}", options);
+
+    // Phase 1: Initialize package components
+    let manifest = read_manifest(manifest_path)?;
+    let mut out = File::create(output_path)?;
+    trace!("📄 Created output file: {:?}", output_path);
+    
+    // Phase 2: Write launcher and setup index
+    let (launcher_size, launcher_data) = write_launcher(&mut out, &options)?;
+    let (signing_key, public_key) = load_or_generate_keys(&options)?;
+    let mut index = initialize_index(launcher_size, &public_key);
+    
+    // Skip index block space
+    let data_start = launcher_size + HEADER_SIZE as u64;
+    out.seek(SeekFrom::Start(data_start))?;
+    debug!(
+        "📍 Data section starts at {:#x} (after launcher {:#x} + index 512)",
+        data_start, launcher_size
+    );
+
+    // Phase 3: Process slots and create metadata
+    let mut metadata = create_metadata(&manifest, launcher_size, &launcher_data, &options)?;
+    
+    // Use the new SlotProcessor for all slot processing
+    let mut slot_processor = SlotProcessor::new(manifest.slots.clone());
+    slot_processor.process_slots()?;
+    metadata.slots = slot_processor.metadata_slots;
+    
+    // Phase 4: Write metadata and setup index
+    let compressed_metadata = compress_and_sign_metadata(&metadata, &signing_key, &mut index)?;
+    write_metadata_bytes(&mut out, &compressed_metadata, &mut index)?;
+    
+    // Phase 5: Reserve space for descriptor table
+    let descriptor_table_offset = reserve_descriptor_space(
+        &mut out, 
+        &slot_processor.slot_descriptors, 
+        &mut index
+    )?;
+    
+    // Phase 6: Write slot data and update descriptors
+    let mut slot_descriptors = slot_processor.slot_descriptors;
+    stream_slot_data(&mut out, &mut slot_descriptors, &slot_processor.slot_paths)?;
+    
+    // Phase 7: Write descriptor table at reserved location
+    let end_pos = write_descriptor_table(&mut out, &slot_descriptors, descriptor_table_offset)?;
+    
+    // Phase 8: Finalize package with MagicTrailer
+    finalize_package(&mut out, &mut index, end_pos, output_path, &manifest, &options)?;
+    
+    Ok(())
+}
 
 /// Read and parse the build manifest
 fn read_manifest(manifest_path: &Path) -> Result<BuildManifest> {
@@ -192,10 +245,53 @@ impl SlotProcessor {
         debug!("🎰 Processing {} slots", self.manifest_slots.len());
         let slots_timer = Instant::now();
         
-        // Clone to avoid borrow checker issue
-        let manifest_slots = self.manifest_slots.clone();
-        for (i, slot) in manifest_slots.iter().enumerate() {
-            self.process_single_slot(i, slot)?;
+        // Process slots one by one
+        let num_slots = self.manifest_slots.len();
+        for i in 0..num_slots {
+            // Work with index to avoid borrow checker issues
+            let slot = &self.manifest_slots[i];
+            
+            trace!("📖 Processing slot {}: {}", i, slot.source);
+            
+            // Validate slot number if provided
+            if let Some(declared_slot) = slot.slot {
+                if declared_slot as usize != i {
+                    error!(
+                        "❌ Critical: Slot number mismatch - expected {}, declared {} for slot '{}'",
+                        i, declared_slot, slot.id
+                    );
+                    std::process::exit(1);
+                }
+            }
+            
+            // Resolve slot path
+            let slot_path = self.resolve_slot_path(&slot.source)?;
+            
+            // Calculate checksums and size
+            let (file_size, sha256_checksum, adler32_checksum) = self.calculate_slot_checksums(&slot_path, i)?;
+            
+            // Create metadata entry
+            let slot_meta = SlotMetadata {
+                index: i,
+                id: slot.id.clone(),
+                source: slot.source.clone(),
+                target: slot.target.clone(),
+                size: file_size as i64,
+                checksum: sha256_checksum,
+                encoding: slot.encoding.clone(),
+                purpose: slot.purpose.clone(),
+                lifecycle: slot.lifecycle.clone(),
+                permissions: slot.permissions.clone().or_else(|| Some(format!("{:04o}", DEFAULT_FILE_PERMS))),
+                resolution: slot.resolution.clone().or_else(|| Some("build".to_string())),
+            };
+            self.metadata_slots.push(slot_meta);
+            
+            // Create descriptor
+            let descriptor = self.create_slot_descriptor(i, slot, file_size, adler32_checksum)?;
+            self.slot_descriptors.push(descriptor);
+            
+            // Store path for later streaming
+            self.slot_paths.push(slot_path);
         }
         
         debug!(
@@ -203,45 +299,6 @@ impl SlotProcessor {
             self.manifest_slots.len(),
             slots_timer.elapsed()
         );
-        Ok(())
-    }
-
-    fn process_single_slot(&mut self, index: usize, slot: &ManifestSlot) -> Result<()> {
-        trace!("📖 Processing slot {}: {}", index, slot.source);
-        
-        // Validate slot number if provided
-        self.validate_slot_number(index, slot)?;
-        
-        // Resolve slot path
-        let slot_path = self.resolve_slot_path(&slot.source)?;
-        
-        // Calculate checksums and size
-        let (file_size, sha256_checksum, adler32_checksum) = self.calculate_slot_checksums(&slot_path, index)?;
-        
-        // Create metadata entry
-        let slot_meta = self.create_slot_metadata(index, slot, file_size, sha256_checksum);
-        self.metadata_slots.push(slot_meta);
-        
-        // Create descriptor
-        let descriptor = self.create_slot_descriptor(index, slot, file_size, adler32_checksum)?;
-        self.slot_descriptors.push(descriptor);
-        
-        // Store path for later streaming
-        self.slot_paths.push(slot_path);
-        
-        Ok(())
-    }
-
-    fn validate_slot_number(&self, index: usize, slot: &ManifestSlot) -> Result<()> {
-        if let Some(declared_slot) = slot.slot {
-            if declared_slot as usize != index {
-                error!(
-                    "❌ Critical: Slot number mismatch - expected {}, declared {} for slot '{}'",
-                    index, declared_slot, slot.id
-                );
-                std::process::exit(1);
-            }
-        }
         Ok(())
     }
 
@@ -314,22 +371,6 @@ impl SlotProcessor {
         Ok((file_size, sha256_checksum, adler32_checksum))
     }
 
-    fn create_slot_metadata(&self, index: usize, slot: &ManifestSlot, file_size: u64, checksum: String) -> SlotMetadata {
-        SlotMetadata {
-            index,
-            id: slot.id.clone(),
-            source: slot.source.clone(),
-            target: slot.target.clone(),
-            size: file_size as i64,
-            checksum,
-            encoding: slot.encoding.clone(),
-            purpose: slot.purpose.clone(),
-            lifecycle: slot.lifecycle.clone(),
-            permissions: slot.permissions.clone().or_else(|| Some(format!("{:04o}", DEFAULT_FILE_PERMS))),
-            resolution: slot.resolution.clone().or_else(|| Some("build".to_string())),
-        }
-    }
-
     fn create_slot_descriptor(&self, index: usize, slot: &ManifestSlot, file_size: u64, adler_checksum: u32) -> Result<SlotDescriptor> {
         // Map encoding string to byte value
         let encoding_value = match slot.encoding.as_str() {
@@ -395,239 +436,6 @@ impl SlotProcessor {
     }
 }
 
-/// Build a PSPF/2025 package
-pub fn build(manifest_path: &Path, output_path: &Path, options: BuildOptions) -> Result<()> {
-    let _start_time = Instant::now();
-    info!("🔨 Building PSPF/2025 package from: {manifest_path:?}");
-    trace!("🔍 Build options: {:?}", options);
-
-    // Read and parse manifest
-    let manifest = read_manifest(manifest_path)?;
-
-    // Create output file
-    let mut out = File::create(output_path)?;
-    trace!("📄 Created output file: {:?}", output_path);
-
-    // Write launcher
-    let (launcher_size, launcher_data) = write_launcher(&mut out, &options)?;
-
-    // Get or generate keys 
-    let (signing_key, public_key) = load_or_generate_keys(&options)?;
-
-    // Create index with new 4096-byte structure
-    let mut index = initialize_index(launcher_size, &public_key);
-
-    // Skip index block space
-    let index_offset = launcher_size;
-    let data_start = index_offset + HEADER_SIZE as u64;
-    out.seek(SeekFrom::Start(data_start))?;
-    debug!(
-        "📍 Data section starts at {:#x} (after launcher {:#x} + index 512)",
-        data_start, launcher_size
-    );
-
-    // Create metadata structure
-    let mut metadata = create_metadata(&manifest, launcher_size, &launcher_data, &options)?;
-    
-    // Use the new SlotProcessor for all slot processing
-    let mut slot_processor = SlotProcessor::new(manifest.slots.clone());
-    slot_processor.process_slots()?;
-    metadata.slots = slot_processor.metadata_slots.clone();
-
-    // Phase 4: Write metadata and setup index
-    let compressed_metadata = compress_and_sign_metadata(&metadata, &signing_key, &mut index)?;
-    write_metadata_bytes(&mut out, &compressed_metadata, &mut index)?;
-    
-    // SKIP OLD SLOT PROCESSING - using SlotProcessor instead
-    if false { // Dead code to be removed
-    for (i, slot) in vec![].iter().enumerate() {
-        let _slot_timer = Instant::now();
-        // Validate slot number if provided - critical error on mismatch
-        if let Some(declared_slot) = slot.slot {
-            if declared_slot as usize != i {
-                error!(
-                    "❌ Critical: Slot number mismatch - expected {}, declared {} for slot '{}'",
-                    i, declared_slot, slot.id
-                );
-                std::process::exit(1);
-            }
-        }
-        // Process slot metadata without loading data into memory
-        trace!("📖 Processing slot {}: {}", i, slot.source);
-
-        // Resolve {workenv} to base directory (FLAVOR_WORKENV_BASE or CWD)
-        let slot_path = if slot.source.contains("{workenv}") {
-            // Priority: 1. FLAVOR_WORKENV_BASE env var, 2. Current working directory
-            let base_dir = if let Ok(env_base) = std::env::var("FLAVOR_WORKENV_BASE") {
-                info!("🔍 Using FLAVOR_WORKENV_BASE: {}", env_base);
-                PathBuf::from(env_base)
-            } else {
-                let cwd = std::env::current_dir().map_err(|e| {
-                    FlavorError::Generic(format!("Failed to get current directory: {}", e))
-                })?;
-                info!("🔍 No FLAVOR_WORKENV_BASE, using CWD: {}", cwd.display());
-                cwd
-            };
-            let resolved = slot
-                .source
-                .replace("{workenv}", base_dir.to_str().unwrap_or("."));
-            info!(
-                "📍 Resolved slot path: {} -> {} (base: {})",
-                slot.source,
-                resolved,
-                base_dir.display()
-            );
-            PathBuf::from(resolved)
-        } else {
-            info!("📍 Slot path has no {{workenv}}: {}", slot.source);
-            PathBuf::from(&slot.source)
-        };
-
-        // Open file and calculate size + checksums in streaming fashion
-        info!("Attempting to open slot file at: {:?}", slot_path);
-        let slot_file = File::open(&slot_path).map_err(|e| {
-            FlavorError::Generic(format!("Failed to open slot {} (resolved to {:?}): {}", slot.source, slot_path, e))
-        })?;
-        
-        let file_metadata = slot_file.metadata()?;
-        let file_size = file_metadata.len();
-        trace!("📊 Slot {} size: {} bytes", i, file_size);
-        
-        // Calculate checksums using streaming
-        let checksum_timer = Instant::now();
-        let mut reader = BufReader::with_capacity(8 * 1024 * 1024, slot_file);
-        let checksum = calculate_checksum(&mut reader, ChecksumAlgorithm::Sha256).map_err(|e| {
-            FlavorError::Generic(format!("Failed to calculate checksum for slot {}: {}", i, e))
-        })?;
-        
-        // Calculate Adler-32 by re-reading (we need both checksums)
-        let slot_file2 = File::open(&slot_path)?;
-        let mut reader2 = BufReader::with_capacity(8 * 1024 * 1024, slot_file2);
-        let mut adler = adler::Adler32::new();
-        let mut buffer = vec![0u8; 8 * 1024 * 1024];
-        loop {
-            let bytes_read = reader2.read(&mut buffer).map_err(|e| {
-                FlavorError::Generic(format!("Failed to read slot {} for Adler32: {}", i, e))
-            })?;
-            if bytes_read == 0 {
-                break;
-            }
-            adler.write_slice(&buffer[..bytes_read]);
-        }
-        let adler_checksum = adler.checksum();
-        
-        trace!("☑️ Checksums calculated in {:?}", checksum_timer.elapsed());
-        info!("Slot {}: SHA256 checksum: {}", i, checksum);
-        info!("Slot {}: Adler32 checksum: {:08x}", i, adler_checksum);
-
-        // Create metadata entry
-        let slot_meta = SlotMetadata {
-            index: i,
-            id: slot.id.clone(),
-            source: slot.source.clone(),
-            target: slot.target.clone(),
-            size: file_size as i64,
-            checksum,
-            encoding: slot.encoding.clone(),
-            purpose: slot.purpose.clone(),
-            lifecycle: slot.lifecycle.clone(),
-            permissions: slot.permissions.clone().or_else(|| Some(format!("{:04o}", super::constants::DEFAULT_FILE_PERMS))),
-            resolution: slot.resolution.clone().or_else(|| Some("build".to_string())),
-        };
-        metadata_slots.push(slot_meta);
-
-        // Store path for later streaming (instead of data)
-        slot_paths.push(slot_path);
-
-        // Map string values to bytes per PSPF spec constants
-        let encoding_value = match slot.encoding.as_str() {
-            "gzip" => ENCODING_GZIP,     // 2 = single gzipped file
-            "tgz" => ENCODING_TGZ,       // 3 = tar.gz
-            "tar" => ENCODING_TAR,       // 1 = uncompressed tar
-            "none" | "" => ENCODING_RAW, // 0 = raw uncompressed
-            _ => ENCODING_RAW,
-        };
-
-        let purpose_value = match slot.purpose.as_str() {
-            "payload" => 0,
-            "runtime" => 1,
-            "tool" => 2,
-            _ => 0,
-        };
-
-        let lifecycle_value = match slot.lifecycle.as_str() {
-            // Timing-based
-            "init" => 0,
-            "startup" => 1,
-            "runtime" => 2,
-            "shutdown" => 3,
-            // Retention-based
-            "cache" => 4,
-            "temp" => 5,
-            // Access-based
-            "lazy" => 6,
-            "eager" => 7,
-            // Environment-based
-            "dev" => 8,
-            "config" => 9,
-            "platform" => 10,
-            _ => 2, // default to runtime
-        };
-
-        // Create proper 64-byte SlotDescriptor (offset will be set later)
-        let mut descriptor = SlotDescriptor::new(i as u64);
-        descriptor = descriptor.with_name(&slot.id);
-        descriptor.size = file_size;
-        descriptor.original_size = file_size; // TODO: Track original size if compressed
-        descriptor.checksum = adler_checksum;
-        descriptor.encoding = encoding_value;
-        descriptor.purpose = purpose_value;
-        descriptor.lifecycle = lifecycle_value;
-
-        // Parse permissions from metadata or use default
-        descriptor.permissions = if let Some(ref perm_str) = slot.permissions {
-            // Parse octal string (e.g., "0755" -> 0o755)
-            u16::from_str_radix(perm_str.trim_start_matches('0'), 8).unwrap_or(DEFAULT_FILE_PERMS)
-        } else {
-            DEFAULT_FILE_PERMS // Default: read/write for owner only
-        };
-
-        descriptor.alignment = SLOT_ALIGNMENT as u16;
-
-        slot_descriptors.push(descriptor);
-
-        trace!(
-            "📍 Slot {}: {} size {} bytes, checksum {:08x}",
-            i,
-            slot.id,
-            file_size,
-            adler_checksum
-        );
-    }
-
-    } // End of dead code block - remove all old implementation
-    
-    // Phase 5: Reserve space for descriptor table
-    let descriptor_table_offset = reserve_descriptor_space(
-        &mut out, 
-        &slot_processor.slot_descriptors, 
-        &mut index
-    )?;
-
-    
-    // Phase 6: Write slot data and update descriptors
-    let mut slot_descriptors = slot_processor.slot_descriptors;
-    stream_slot_data(&mut out, &mut slot_descriptors, &slot_processor.slot_paths)?;
-    
-    // Phase 7: Write descriptor table at reserved location
-    let end_pos = write_descriptor_table(&mut out, &slot_descriptors, descriptor_table_offset)?;
-    
-    // Phase 8: Finalize package with MagicTrailer
-    finalize_package(&mut out, &mut index, end_pos, output_path, &manifest, &options)?;
-
-    Ok(())
-}
-
 /// Compress and sign metadata
 fn compress_and_sign_metadata(
     metadata: &Metadata,
@@ -648,7 +456,6 @@ fn compress_and_sign_metadata(
     {
         use flate2::write::GzEncoder;
         use flate2::Compression;
-        use std::io::Write;
         
         let mut encoder = GzEncoder::new(&mut compressed, Compression::default());
         encoder.write_all(&metadata_json)?;
@@ -667,7 +474,7 @@ fn compress_and_sign_metadata(
 /// Write metadata to output file
 fn write_metadata_bytes(out: &mut File, compressed: &[u8], index: &mut Index) -> Result<()> {
     let metadata_pos = out.stream_position()?;
-    eprintln!("📝 Writing metadata at position {:#x}", metadata_pos);
+    debug!("📝 Writing metadata at position {:#x}", metadata_pos);
     
     out.write_all(compressed)?;
     let metadata_end = out.stream_position()?;
@@ -675,7 +482,7 @@ fn write_metadata_bytes(out: &mut File, compressed: &[u8], index: &mut Index) ->
     index.metadata_offset = metadata_pos;
     index.metadata_size = compressed.len() as u64;
     
-    eprintln!(
+    debug!(
         "📝 Wrote metadata: start={:#x}, size={}, end={:#x}",
         metadata_pos,
         compressed.len(),
@@ -699,10 +506,10 @@ fn reserve_descriptor_space(
     index: &mut Index,
 ) -> Result<u64> {
     let current_pos = out.stream_position()?;
-    eprintln!("📍 Current position after metadata: {:#x}", current_pos);
+    debug!("📍 Current position after metadata: {:#x}", current_pos);
     
     let descriptor_table_offset = align_offset(current_pos, SLOT_ALIGNMENT);
-    eprintln!(
+    debug!(
         "📍 Aligned descriptor table offset: {:#x} (aligned from {:#x})",
         descriptor_table_offset, current_pos
     );
@@ -869,7 +676,7 @@ fn get_launcher(options: &BuildOptions) -> Result<Vec<u8>> {
             }
         }
         Err(e) => {
-            warn!("⚠️ Failed to get launcher version: {}", e);
+            debug!("⚠️ Failed to get launcher version: {}", e);
         }
     }
 
