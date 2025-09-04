@@ -1,7 +1,7 @@
 // helpers/flavor-rs/src/psp/format_2025/slots.rs
 // PSPF 2025 Slot Management - Enhanced 64-byte descriptors
 
-use super::constants::*;
+use super::constants::{ENCODING_RAW, SLOT_ALIGNMENT, PURPOSE_PAYLOAD, LIFECYCLE_CACHE, ACCESS_HINT_SEQUENTIAL, CACHE_NORMAL, DEFAULT_FILE_PERMS, SLOT_DESCRIPTOR_SIZE, PAGE_SIZE};
 use std::path::PathBuf;
 
 /// Slot descriptor - 64 bytes total
@@ -138,6 +138,7 @@ pub enum Lifecycle {
 }
 
 /// Slot metadata for runtime use
+#[derive(Debug)]
 pub struct SlotMetadata {
     pub descriptor: SlotDescriptor,
     pub name: String,

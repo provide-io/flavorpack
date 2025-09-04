@@ -1,12 +1,12 @@
 // helpers/flavor-rs/src/psp/format_2025/index.rs
 // PSPF 2025 Index Block - Future-proof 4096-byte Header
 
-use super::constants::*;
+use super::constants::{HEADER_SIZE, PSPF_VERSION};
 use crate::exceptions::{FlavorError, Result};
 
 /// PSPF/2025 index structure (8192 bytes total)
 #[repr(C, packed)]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Index {
     // Core identification (8 bytes)
     pub format_version: u32,   // 0x20250001

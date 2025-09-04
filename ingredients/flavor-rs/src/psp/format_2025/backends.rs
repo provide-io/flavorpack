@@ -9,7 +9,7 @@ use std::io::{Read, Seek, SeekFrom};
 use std::path::Path;
 use std::time::Instant;
 
-use super::constants::*;
+use super::constants::{DEFAULT_CHUNK_SIZE, ACCESS_AUTO, ACCESS_MMAP, ACCESS_STREAM, ACCESS_FILE};
 use super::slots::SlotDescriptor;
 use crate::exceptions::{FlavorError, Result};
 
@@ -42,6 +42,16 @@ pub struct MMapBackend {
     file: Option<File>,
     mmap: Option<Mmap>,
     path: Option<std::path::PathBuf>,
+}
+
+impl std::fmt::Debug for MMapBackend {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("MMapBackend")
+            .field("file", &self.file.as_ref().map(|_| "<File>"))
+            .field("mmap", &self.mmap.as_ref().map(|m| format!("<Mmap {} bytes>", m.len())))
+            .field("path", &self.path)
+            .finish()
+    }
 }
 
 impl Default for MMapBackend {
@@ -165,6 +175,16 @@ pub struct FileBackend {
     cache: HashMap<(u64, usize), Vec<u8>>,
 }
 
+impl std::fmt::Debug for FileBackend {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("FileBackend")
+            .field("file", &self.file.as_ref().map(|_| "<File>"))
+            .field("path", &self.path)
+            .field("cache_entries", &self.cache.len())
+            .finish()
+    }
+}
+
 impl Default for FileBackend {
     fn default() -> Self {
         Self::new()
@@ -255,6 +275,16 @@ pub struct StreamBackend {
     chunk_size: usize,
 }
 
+impl std::fmt::Debug for StreamBackend {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("StreamBackend")
+            .field("file", &self.file.as_ref().map(|_| "<File>"))
+            .field("path", &self.path)
+            .field("chunk_size", &self.chunk_size)
+            .finish()
+    }
+}
+
 impl StreamBackend {
     pub fn new(chunk_size: usize) -> Self {
         StreamBackend {
@@ -341,6 +371,17 @@ pub struct HybridBackend {
     header_mmap: Option<Mmap>,
     path: Option<std::path::PathBuf>,
     header_size: usize,
+}
+
+impl std::fmt::Debug for HybridBackend {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("HybridBackend")
+            .field("file", &self.file.as_ref().map(|_| "<File>"))
+            .field("header_mmap", &self.header_mmap.as_ref().map(|m| format!("<Mmap {} bytes>", m.len())))
+            .field("path", &self.path)
+            .field("header_size", &self.header_size)
+            .finish()
+    }
 }
 
 impl HybridBackend {
