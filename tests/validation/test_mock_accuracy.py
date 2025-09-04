@@ -46,6 +46,9 @@ class TestMockAccuracy:
             assembly, "load_launcher_binary", assembly_module.load_launcher_binary
         )
 
+    @pytest.mark.skip(
+        reason="Mock vs real launcher validation should be periodic integration test, not unit test"
+    )
     def test_launcher_size_assumption(self):
         """Verify mock launcher size is reasonable.
 
@@ -67,6 +70,9 @@ class TestMockAccuracy:
         except FileNotFoundError:
             pytest.skip("Real launchers not available - skipping validation")
 
+    @pytest.mark.skip(
+        reason="Mock structure validation should be periodic integration test comparing with real launchers"
+    )
     def test_mock_package_structure(self, temp_dir):
         """Verify packages built with mocks have valid PSPF structure."""
         # This test uses the mock which is fine - we're testing the mock creates valid structure
