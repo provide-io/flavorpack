@@ -162,3 +162,20 @@ pytest -m security
 - flavorpack is the name of the package. `flavor` is the actual tool/API.
 - use constants for the default permissions, then the metadata must be able to override it. you will not directly embed default permissions into the code. anything default must be a constant.
 - no lauchers will ever intercept command line arguments unless the flavor cli option is enabled.
+
+## CRITICAL REQUIREMENTS - NEVER FORGET
+
+### NO BACKWARD COMPATIBILITY - EVER
+- **ABSOLUTELY NO** backward compatibility code, functions, variables, or patterns
+- **NO** migration logic or versioning checks for old formats  
+- **NO** "if old_version then..." type code
+- **ALWAYS** implement the end-state solution directly
+- This is a greenfield project - assume everything is brand new
+- If something needs changing, replace it entirely - don't add compatibility layers
+
+### Code Quality Standards
+- **Trace logging is essential** - preserve all debug/trace logging for diagnostics
+- Only remove logging if there's a proven detrimental performance impact
+- Use structured logging with emoji prefixes (DAS pattern)
+- All implementations must be production-ready and reliable
+- Rust code must compile with `--warnings-as-errors` (strict mode)
