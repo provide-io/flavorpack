@@ -178,7 +178,6 @@ func (sp *SlotProcessor) processSlot(index int, slot *Slot) error {
 	// Create slot descriptor with all required fields
 	descriptor := SlotDescriptor{
 		ID:             uint64(index),
-		NameHash:       hashSlotName(slot.ID),
 		Offset:         0, // Will be set during write phase
 		Size:           uint64(len(compressed)),
 		OriginalSize:   uint64(len(slotData)),
