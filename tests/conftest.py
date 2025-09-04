@@ -145,8 +145,8 @@ def mock_test_package(temp_dir, test_builder):
     builder = builder.add_slot(
         id="wheels",
         data=slot2_tar,
-        purpose="dependency",
-        lifecycle="cached",
+        purpose="library",
+        lifecycle="cache",
         encoding="tar"
     )
     
