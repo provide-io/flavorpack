@@ -428,15 +428,19 @@ pub fn build(manifest_path: &Path, output_path: &Path, options: BuildOptions) ->
 
     // Create metadata structure
     let mut metadata = create_metadata(&manifest, launcher_size, &launcher_data, &options)?;
+    
+    // Use the new SlotProcessor for all slot processing
+    let mut slot_processor = SlotProcessor::new(manifest.slots.clone());
+    slot_processor.process_slots()?;
+    metadata.slots = slot_processor.metadata_slots.clone();
 
-    // Process slots (read only, don't write yet)
-    let slots_timer = Instant::now();
-    let mut slot_descriptors = Vec::new();
-    let mut metadata_slots = Vec::new();
-    let mut slot_paths = Vec::new(); // Store paths for streaming later
-
-    debug!("🎰 Processing {} slots", manifest.slots.len());
-    for (i, slot) in manifest.slots.iter().enumerate() {
+    // Phase 4: Write metadata and setup index
+    let compressed_metadata = compress_and_sign_metadata(&metadata, &signing_key, &mut index)?;
+    write_metadata_bytes(&mut out, &compressed_metadata, &mut index)?;
+    
+    // SKIP OLD SLOT PROCESSING - using SlotProcessor instead
+    if false { // Dead code to be removed
+    for (i, slot) in vec![].iter().enumerate() {
         let _slot_timer = Instant::now();
         // Validate slot number if provided - critical error on mismatch
         if let Some(declared_slot) = slot.slot {
@@ -601,14 +605,7 @@ pub fn build(manifest_path: &Path, output_path: &Path, options: BuildOptions) ->
         );
     }
 
-    debug!(
-        "✅ Processed {} slots in {:?}",
-        manifest.slots.len(),
-        slots_timer.elapsed()
-    );
-
-    // Update metadata with slots
-    metadata.slots = metadata_slots;
+    } // End of dead code block
 
     // Step 1: Write metadata FIRST (before slots and descriptors)
 
