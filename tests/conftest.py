@@ -61,3 +61,96 @@ def test_builder():
     """
     # New API uses a fluent interface and explicit seeding for reproducibility
     return PSPFBuilder.create().with_keys(seed="pytest_reproducible_seed")
+
+
+@pytest.fixture
+def mock_test_package(temp_dir, test_builder):
+    """Create a complete test PSPF package with multiple slots for testing.
+    
+    This fixture creates a test package with:
+    - Mock launcher
+    - Multiple slots with different encodings
+    - Proper metadata for testing inspect/extract commands
+    
+    Returns:
+        Path: Path to the created test package
+    """
+    import gzip
+    import tarfile
+    
+    # Create test content for slots
+    slot0_content = b"#!/usr/bin/env python3\nprint('Hello from slot 0')\n"
+    slot1_content = b"Configuration data for slot 1\n"
+    slot2_content = b"Some wheel content for testing\n" * 100  # Make it larger
+    
+    # Create slot files
+    slot0_file = temp_dir / "main.py"
+    slot0_file.write_bytes(slot0_content)
+    
+    slot1_file = temp_dir / "config.txt" 
+    slot1_file.write_bytes(slot1_content)
+    
+    # Create a gzipped slot
+    slot1_gz = temp_dir / "config.gz"
+    with gzip.open(slot1_gz, "wb") as f:
+        f.write(slot1_content)
+    
+    # Create a tar archive for slot 2 (wheels)
+    slot2_tar = temp_dir / "wheels.tar"
+    with tarfile.open(slot2_tar, "w") as tar:
+        # Add a fake wheel file
+        wheel_file = temp_dir / "test_package-1.0.0-py3-none-any.whl"
+        wheel_file.write_bytes(slot2_content)
+        tar.add(wheel_file, arcname=wheel_file.name)
+    
+    # Build the package
+    package_path = temp_dir / "test_package.psp"
+    
+    builder = test_builder.metadata(
+        format="PSPF/2025",
+        package={
+            "name": "test-package",
+            "version": "1.0.0",
+            "description": "Test package for extract/inspect commands"
+        },
+        build={
+            "builder": "pytest/mock-builder",
+            "timestamp": "2025-01-01T00:00:00Z",
+            "host": "test-host"
+        },
+        execution={
+            "command": "/usr/bin/python3 {slot:0}",
+            "primary_slot": 0,
+            "environment": {"TEST_VAR": "test_value"}
+        }
+    )
+    
+    # Add slots with different encodings
+    builder = builder.add_slot(
+        id="main",
+        data=slot0_file,
+        purpose="payload",
+        lifecycle="runtime",
+        encoding="none"
+    )
+    
+    builder = builder.add_slot(
+        id="config", 
+        data=slot1_gz,
+        purpose="config",
+        lifecycle="runtime",
+        encoding="gzip"
+    )
+    
+    builder = builder.add_slot(
+        id="wheels",
+        data=slot2_tar,
+        purpose="dependency",
+        lifecycle="cached",
+        encoding="tar"
+    )
+    
+    # Build the package
+    builder.build(output_path=package_path)
+    
+    return package_path
