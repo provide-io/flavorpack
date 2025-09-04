@@ -1,6 +1,6 @@
 //! PSPF/2025 package verifier
 
-use super::constants::{MAGIC_WAND_EMOJI_BYTES, PACKAGE_EMOJI_BYTES};
+use super::constants::MAGIC_WAND_EMOJI_BYTES;
 use crate::api::VerifyResult;
 use crate::exceptions::{FlavorError, Result};
 use adler::Adler32;
