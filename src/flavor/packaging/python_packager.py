@@ -42,6 +42,8 @@ class PythonPackager:
     """
 
     DEFAULT_PYTHON_VERSION = "3.11"
+    # manylinux2014 = glibc 2.17+ (CentOS 7, Amazon Linux 2, Ubuntu 14.04+)
+    MANYLINUX_TAG = "manylinux2014"
 
     def _make_executable(self, file_path: Path) -> None:
         """Make a file executable and strip extended attributes on macOS.
