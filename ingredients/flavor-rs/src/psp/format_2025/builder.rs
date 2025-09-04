@@ -605,159 +605,25 @@ pub fn build(manifest_path: &Path, output_path: &Path, options: BuildOptions) ->
         );
     }
 
-    } // End of dead code block
+    } // End of dead code block - remove all old implementation
+    
+    // Phase 5: Reserve space for descriptor table
+    let descriptor_table_offset = reserve_descriptor_space(
+        &mut out, 
+        &slot_processor.slot_descriptors, 
+        &mut index
+    )?;
 
-    // Step 1: Write metadata FIRST (before slots and descriptors)
-
-    // Create compressed JSON metadata
-    let metadata_json = serde_json::to_vec_pretty(&metadata)?;
-
-    // Sign the metadata
-    let signature: Signature = signing_key.sign(&metadata_json);
-    // Ed25519 signatures are 64 bytes, copy to the beginning of the 512-byte field
-    index.integrity_signature[..64].copy_from_slice(signature.to_bytes().as_ref());
-
-    // Compress the JSON with gzip
-    let mut compressed = Vec::new();
-    {
-        use flate2::write::GzEncoder;
-        use flate2::Compression;
-        use std::io::Write;
-
-        let mut encoder = GzEncoder::new(&mut compressed, Compression::default());
-        encoder.write_all(&metadata_json)?;
-        encoder.finish()?;
-    }
-
-    // Calculate metadata checksum (Adler-32)
-    let metadata_checksum = adler::adler32_slice(&compressed);
-    // Convert u32 checksum to 32-byte array (padded with zeros)
-    let mut checksum_bytes = [0u8; 32];
-    checksum_bytes[0..4].copy_from_slice(&metadata_checksum.to_le_bytes());
-    index.metadata_checksum = checksum_bytes;
-
-    // Write compressed metadata at current position
-    let metadata_pos = out.stream_position()?;
-    eprintln!("📝 Writing metadata at position {:#x}", metadata_pos);
-    out.write_all(&compressed)?;
-    let metadata_end = out.stream_position()?;
-    index.metadata_offset = metadata_pos;
-    index.metadata_size = compressed.len() as u64;
-    eprintln!(
-        "📝 Wrote metadata: start={:#x}, size={}, end={:#x}",
-        metadata_pos,
-        compressed.len(),
-        metadata_end
-    );
-
-    // Verify position math
-    assert_eq!(
-        metadata_end,
-        metadata_pos + compressed.len() as u64,
-        "Metadata end position mismatch!"
-    );
-
-    // Step 2: Calculate and reserve space for descriptor table
-    let current_pos = out.stream_position()?;
-    eprintln!("📍 Current position after metadata: {:#x}", current_pos);
-    let descriptor_table_offset = align_offset(current_pos, SLOT_ALIGNMENT);
-    eprintln!(
-        "📍 Aligned descriptor table offset: {:#x} (aligned from {:#x})",
-        descriptor_table_offset, current_pos
-    );
-    index.slot_table_offset = descriptor_table_offset;
-    index.slot_table_size = (slot_descriptors.len() * SLOT_DESCRIPTOR_SIZE) as u64;
-    index.slot_count = slot_descriptors.len() as u32;
-    info!(
-        "🔍 Setting descriptor_offset to {:#x} for {} descriptors",
-        descriptor_table_offset,
-        slot_descriptors.len()
-    );
-
-    // Reserve space for descriptors
-    let descriptor_table_size = (slot_descriptors.len() * SLOT_DESCRIPTOR_SIZE) as u64;
-    out.seek(SeekFrom::Start(
-        descriptor_table_offset + descriptor_table_size,
-    ))?;
-    debug!(
-        "📊 Reserved {} bytes for {} descriptors at offset {:#x}",
-        descriptor_table_size,
-        slot_descriptors.len(),
-        descriptor_table_offset
-    );
-
-    // Step 3: Stream slot data directly from files and update descriptor offsets
-    for (i, (descriptor, slot_path)) in slot_descriptors.iter_mut().zip(&slot_paths).enumerate()
-    {
-        // Align position
-        let current = out.stream_position()?;
-        let aligned = align_offset(current, SLOT_ALIGNMENT);
-        if aligned > current {
-            out.write_all(&vec![0u8; (aligned - current) as usize])?;
-        }
-
-        // Write slot and update descriptor with actual offset
-        let slot_offset = out.stream_position()?;
-        descriptor.offset = slot_offset;
-        
-        // Stream file directly to output
-        let mut slot_file = File::open(slot_path)?;
-        let bytes_copied = io::copy(&mut slot_file, &mut out)?;
-
-        debug!(
-            "📍 Wrote slot {}: offset={:#x}, size={} bytes",
-            i,
-            slot_offset,
-            bytes_copied
-        );
-    }
-
-    // Step 4: Go back and write descriptor table at reserved location
-    let end_pos = out.stream_position()?;
-    out.seek(SeekFrom::Start(descriptor_table_offset))?;
-
-    for (i, descriptor) in slot_descriptors.iter().enumerate() {
-        let descriptor_bytes = descriptor.pack();
-        out.write_all(&descriptor_bytes)?;
-        trace!("✍️ Wrote 64-byte descriptor for slot {}", i);
-    }
-    debug!(
-        "📋 Wrote {} descriptors at offset {:#x}",
-        slot_descriptors.len(),
-        descriptor_table_offset
-    );
-
-    // Step 5: Return to end of data and write MagicTrailer
-    out.seek(SeekFrom::Start(end_pos))?;
-
-    // Update package size before writing MagicTrailer
-    // (add 8200 for the trailer that will be written)
-    index.package_size = end_pos + MAGIC_TRAILER_SIZE as u64;
-
-    // Write MagicTrailer (8200 bytes: 📦 + index + 🪄)
-    out.write_all(PACKAGE_EMOJI_BYTES)?;  // 4-byte package emoji
-    write_index(&mut out, &mut index)?;   // 8192-byte index (includes checksum calc)
-    out.write_all(MAGIC_WAND_EMOJI_BYTES)?;  // 4-byte magic wand emoji
-
-    // Make the output file executable
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::PermissionsExt;
-        let mut perms = fs::metadata(output_path)?.permissions();
-        perms.set_mode(super::constants::DEFAULT_DIR_PERMS as u32);
-        fs::set_permissions(output_path, perms)?;
-    }
-
-    log::info!("✅ Successfully built PSPF bundle: {output_path:?}");
-    log::info!("  Package: {} v{}", manifest.package.name, manifest.package.version);
-    let launcher_display = options.launcher_bin.as_ref()
-        .map(|p| p.display().to_string())
-        .or_else(|| std::env::var("FLAVOR_LAUNCHER_BIN").ok())
-        .unwrap_or_else(|| "unknown".to_string());
-    log::info!("  Launcher: {}", launcher_display);
-    log::info!("  Slots: {}", manifest.slots.len());
-    let package_size = index.package_size; // Copy to avoid unaligned reference
-    log::info!("  Size: {} bytes", package_size);
+    
+    // Phase 6: Write slot data and update descriptors
+    let mut slot_descriptors = slot_processor.slot_descriptors;
+    stream_slot_data(&mut out, &mut slot_descriptors, &slot_processor.slot_paths)?;
+    
+    // Phase 7: Write descriptor table at reserved location
+    let end_pos = write_descriptor_table(&mut out, &slot_descriptors, descriptor_table_offset)?;
+    
+    // Phase 8: Finalize package with MagicTrailer
+    finalize_package(&mut out, &mut index, end_pos, output_path, &manifest, &options)?;
 
     Ok(())
 }
