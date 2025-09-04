@@ -2,7 +2,7 @@
 
 use super::checksums::{calculate_checksum, ChecksumAlgorithm};
 use super::{
-    constants::{CAPABILITY_MMAP, CAPABILITY_SIGNED, HEADER_SIZE, ENCODING_GZIP, ENCODING_TGZ, ENCODING_TAR, ENCODING_RAW, DEFAULT_FILE_PERMS, DEFAULT_DIR_PERMS, SLOT_ALIGNMENT, SLOT_DESCRIPTOR_SIZE, MAGIC_TRAILER_SIZE, PACKAGE_EMOJI_BYTES, MAGIC_WAND_EMOJI_BYTES, PSP_METADATA_FILE},
+    constants::{CAPABILITY_MMAP, CAPABILITY_SIGNED, HEADER_SIZE, ENCODING_GZIP, ENCODING_TGZ, ENCODING_TAR, ENCODING_RAW, DEFAULT_FILE_PERMS, SLOT_ALIGNMENT, SLOT_DESCRIPTOR_SIZE, MAGIC_TRAILER_SIZE, PACKAGE_EMOJI_BYTES, MAGIC_WAND_EMOJI_BYTES},
     index::Index,
     keys::load_or_generate_keys,
     manifest::BuildManifest,
@@ -45,22 +45,20 @@ fn get_builder_timestamp() -> Option<String> {
         .flatten()
 }
 
-/// Build a PSPF/2025 package
-pub fn build(manifest_path: &Path, output_path: &Path, options: BuildOptions) -> Result<()> {
-    let _start_time = Instant::now();
-    info!("🔨 Building PSPF/2025 package from: {manifest_path:?}");
-    trace!("🔍 Build options: {:?}", options);
-
-    // Read and parse manifest
+/// Read and parse the build manifest
+fn read_manifest(manifest_path: &Path) -> Result<BuildManifest> {
     let manifest_timer = Instant::now();
     let manifest_data = fs::read_to_string(manifest_path)?;
     let manifest: BuildManifest = serde_json::from_str(&manifest_data)
         .map_err(|e| FlavorError::Generic(format!("Failed to parse manifest: {e}")))?;
     trace!("✅ Manifest parsed in {:?}", manifest_timer.elapsed());
+    Ok(manifest)
+}
 
-    // Get launcher binary - required via CLI or env var
+/// Write launcher binary to output file
+fn write_launcher(out: &mut File, options: &BuildOptions) -> Result<(u64, Vec<u8>)> {
     let launcher_timer = Instant::now();
-    let launcher_data = get_launcher(&options)?;
+    let launcher_data = get_launcher(options)?;
     let launcher_size = launcher_data.len() as u64;
     debug!(
         "🚀 Loaded launcher: {} bytes in {:?}",
@@ -68,36 +66,27 @@ pub fn build(manifest_path: &Path, output_path: &Path, options: BuildOptions) ->
         launcher_timer.elapsed()
     );
 
-    // Create output file
-    let mut out = File::create(output_path)?;
-    trace!("📄 Created output file: {:?}", output_path);
-
-    // Write launcher
     let write_timer = Instant::now();
     out.write_all(&launcher_data)?;
     trace!("✍️ Wrote launcher in {:?}", write_timer.elapsed());
+    
+    Ok((launcher_size, launcher_data))
+}
 
-    // Get or generate keys using the keys module
-    let (signing_key, public_key) = load_or_generate_keys(&options)?;
-
-    // Create index with new 4096-byte structure
+/// Initialize the index structure  
+fn initialize_index(launcher_size: u64, public_key: &ed25519_dalek::VerifyingKey) -> Index {
     trace!("📦 Creating PSPF/2025 index structure");
     let mut index = Index::new();
     index.launcher_size = launcher_size;
     index.public_key.copy_from_slice(public_key.as_bytes());
     index.capabilities = CAPABILITY_MMAP | CAPABILITY_SIGNED;
+    
+    index
+}
 
-    // Skip index block space
-    let index_offset = launcher_size;
-    let data_start = index_offset + HEADER_SIZE as u64;
-    out.seek(SeekFrom::Start(data_start))?;
-    debug!(
-        "📍 Data section starts at {:#x} (after launcher {:#x} + index 512)",
-        data_start, launcher_size
-    );
-
-    // Build metadata
-    let (build_timestamp, build_host) = if let Ok(epoch) = std::env::var("SOURCE_DATE_EPOCH") {
+/// Get build timestamp and host information
+fn get_build_info() -> (String, String) {
+    if let Ok(epoch) = std::env::var("SOURCE_DATE_EPOCH") {
         // Use SOURCE_DATE_EPOCH for reproducible timestamps
         let timestamp = if let Ok(secs) = epoch.parse::<i64>() {
             chrono::DateTime::from_timestamp(secs, 0)
@@ -121,13 +110,23 @@ pub fn build(manifest_path: &Path, output_path: &Path, options: BuildOptions) ->
                 hostname
             ),
         )
-    };
+    }
+}
 
+/// Create the package metadata structure
+fn create_metadata(
+    manifest: &BuildManifest,
+    launcher_size: u64,
+    launcher_data: &[u8],
+    options: &BuildOptions,
+) -> Result<Metadata> {
+    let (build_timestamp, build_host) = get_build_info();
+    
     // Calculate launcher checksum
-    let launcher_checksum = calculate_checksum(launcher_data.as_slice(), ChecksumAlgorithm::Sha256)
+    let launcher_checksum = calculate_checksum(launcher_data, ChecksumAlgorithm::Sha256)
         .map_err(|e| FlavorError::Generic(format!("Failed to calculate launcher checksum: {}", e)))?;
 
-    let mut metadata = Metadata {
+    Ok(Metadata {
         format: "PSPF/2025".to_string(),
         format_version: Some("1.0.0".to_string()),
         package: PackageInfo {
@@ -152,12 +151,12 @@ pub fn build(manifest_path: &Path, output_path: &Path, options: BuildOptions) ->
         build: Some(BuildInfo {
             tool: "flavor-rs".to_string(),
             tool_version: env!("FLAVOR_VERSION").to_string(),
-            timestamp: build_timestamp.clone(),
+            timestamp: build_timestamp,
             deterministic: options.key_seed.is_some(),
             platform: PlatformInfo {
                 os: std::env::consts::OS.to_string(),
                 arch: std::env::consts::ARCH.to_string(),
-                host: build_host.clone(),
+                host: build_host,
             },
         }),
         launcher: Some(LauncherInfo {
@@ -191,8 +190,43 @@ pub fn build(manifest_path: &Path, output_path: &Path, options: BuildOptions) ->
             .workenv
             .as_ref()
             .and_then(|v| serde_json::from_value::<WorkenvInfo>(v.clone()).ok()),
-        setup_commands: manifest.setup_commands.clone()
-    };
+        setup_commands: manifest.setup_commands.clone(),
+    })
+}
+
+/// Build a PSPF/2025 package
+pub fn build(manifest_path: &Path, output_path: &Path, options: BuildOptions) -> Result<()> {
+    let _start_time = Instant::now();
+    info!("🔨 Building PSPF/2025 package from: {manifest_path:?}");
+    trace!("🔍 Build options: {:?}", options);
+
+    // Read and parse manifest
+    let manifest = read_manifest(manifest_path)?;
+
+    // Create output file
+    let mut out = File::create(output_path)?;
+    trace!("📄 Created output file: {:?}", output_path);
+
+    // Write launcher
+    let (launcher_size, launcher_data) = write_launcher(&mut out, &options)?;
+
+    // Get or generate keys 
+    let (signing_key, public_key) = load_or_generate_keys(&options)?;
+
+    // Create index with new 4096-byte structure
+    let mut index = initialize_index(launcher_size, &public_key);
+
+    // Skip index block space
+    let index_offset = launcher_size;
+    let data_start = index_offset + HEADER_SIZE as u64;
+    out.seek(SeekFrom::Start(data_start))?;
+    debug!(
+        "📍 Data section starts at {:#x} (after launcher {:#x} + index 512)",
+        data_start, launcher_size
+    );
+
+    // Create metadata structure
+    let mut metadata = create_metadata(&manifest, launcher_size, &launcher_data, &options)?;
 
     // Process slots (read only, don't write yet)
     let slots_timer = Instant::now();
