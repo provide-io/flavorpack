@@ -2,11 +2,11 @@
 
 use super::checksums::{calculate_checksum, ChecksumAlgorithm};
 use super::{
-    constants::{CAPABILITY_MMAP, CAPABILITY_SIGNED, HEADER_SIZE, ENCODING_GZIP, ENCODING_TGZ, ENCODING_TAR, ENCODING_RAW, DEFAULT_FILE_PERMS, DEFAULT_DIR_PERMS, SLOT_ALIGNMENT, SLOT_DESCRIPTOR_SIZE, MAGIC_TRAILER_SIZE, PACKAGE_EMOJI_BYTES, MAGIC_WAND_EMOJI_BYTES},
+    constants::{CAPABILITY_MMAP, CAPABILITY_SIGNED, HEADER_SIZE, ENCODING_GZIP, ENCODING_TGZ, ENCODING_TAR, ENCODING_RAW, DEFAULT_FILE_PERMS, DEFAULT_DIR_PERMS, SLOT_ALIGNMENT, SLOT_DESCRIPTOR_SIZE, MAGIC_TRAILER_SIZE, PACKAGE_EMOJI_BYTES, MAGIC_WAND_EMOJI_BYTES, PSP_METADATA_FILE},
     index::Index,
     keys::load_or_generate_keys,
     manifest::BuildManifest,
-    metadata::{Metadata, PackageInfo, ExecutionInfo, VerificationInfo, IntegritySealInfo, BuildInfo, PlatformInfo, LauncherInfo, CompatibilityInfo, CacheValidationInfo, RuntimeInfo, WorkenvInfo, Slot, PSP_METADATA_FILE},
+    metadata::{Metadata, PackageInfo, ExecutionInfo, VerificationInfo, IntegritySealInfo, BuildInfo, PlatformInfo, LauncherInfo, CompatibilityInfo, CacheValidationInfo, RuntimeInfo, WorkenvInfo, SlotMetadata},
     slots::{align_offset, SlotDescriptor},
 };
 use crate::api::BuildOptions;
