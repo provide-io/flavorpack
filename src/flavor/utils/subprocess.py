@@ -8,7 +8,7 @@ import os
 from pathlib import Path
 import subprocess
 
-from provide.foundation.process import run, run_simple, ProcessError
+from provide.foundation.process import run_command as foundation_run_command, ProcessError
 from flavor.exceptions import BuildError
 
 
@@ -25,10 +25,16 @@ def run_command(
     # Add NO_COVERAGE for build commands
     build_env = dict(env) if env is not None else os.environ.copy()
     build_env["NO_COVERAGE"] = "1"
-    
+
     try:
-        result = run(command, cwd=cwd, env=build_env, capture_output=capture_output, 
-                    check=check, timeout=timeout)
+        result = foundation_run_command(
+            command,
+            cwd=cwd,
+            env=build_env,
+            capture_output=capture_output,
+            check=check,
+            timeout=timeout,
+        )
         # Convert to stdlib CompletedProcess
         return subprocess.CompletedProcess(
             args=result.args,
@@ -46,6 +52,7 @@ def run_command_simple(command: list[str], cwd: Path | str | None = None) -> str
         # Add NO_COVERAGE
         env = os.environ.copy()
         env["NO_COVERAGE"] = "1"
-        return run_simple(command, cwd=cwd, env=env)
+        result = foundation_run_command(command, cwd=cwd, env=env)
+        return result.stdout if result.stdout else ""
     except ProcessError as e:
         raise BuildError(str(e)) from e

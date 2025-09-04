@@ -1,0 +1,2726 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Progressive Secure Package Format (PSPF/2025) - Cross-language packaging system">
+      
+      
+        <meta name="author" content="provide.io">
+      
+      
+        <link rel="canonical" href="https://flavorpack.io/archive/analysis/IMPLEMENTATION_DRIFT_MATRIX/">
+      
+      
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.18">
+    
+    
+      
+        <title>FlavorPack Implementation Drift Matrix - FlavorPack Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.7e37652d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,700,700i%7CFira+Code:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"Fira Code"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="black" data-md-color-accent="deep-purple">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#flavorpack-implementation-drift-matrix" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="FlavorPack Documentation" class="md-header__button md-logo" aria-label="FlavorPack Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            FlavorPack Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              FlavorPack Implementation Drift Matrix
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="black" data-md-color-accent="deep-purple"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="deep-purple"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/provide-io/flavorpack" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    provide-io/flavorpack
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../getting-started/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Getting Started
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../guide/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  User Guide
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../API-REFERENCE/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../spec/feps/fep-0001-pspf-core-specification/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Specifications
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../changelog/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  About
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="FlavorPack Documentation" class="md-nav__button md-logo" aria-label="FlavorPack Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    FlavorPack Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/provide-io/flavorpack" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    provide-io/flavorpack
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Home
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../getting-started/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    Getting Started
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_2" id="__nav_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            Getting Started
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../getting-started/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Installation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../getting-started/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Quick Start
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../getting-started/first-package/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    First Package
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../getting-started/examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Examples
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../guide/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    User Guide
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            User Guide
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../guide/concepts/pspf-format/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    PSPF Format
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Reference
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Reference
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../API-REFERENCE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    API Documentation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../ARCHITECTURE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Architecture
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../DEVELOPMENT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Development
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../TROUBLESHOOTING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Troubleshooting
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../USER-GUIDE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    User Guide (Legacy)
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../CI-CD/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    CI/CD
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Specifications
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Specifications
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../spec/feps/fep-0001-pspf-core-specification/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    FEP-0001 Core
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../spec/feps/fep-0002-workenv-management/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    FEP-0002 Workenv
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../spec/feps/fep-0003-runtime-security-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    FEP-0003 Security
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../spec/feps/fep-0004-staged-payload-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    FEP-0004 Staged
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../spec/feps/fep-0005-jit-loading/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    FEP-0005 JIT
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    About
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            About
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Changelog
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../license/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    License
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../MIGRATION_PLAN/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Migration Plan
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#pspf2025-format-cross-language-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      PSPF/2025 Format Cross-Language Analysis
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#format-constants" class="md-nav__link">
+    <span class="md-ellipsis">
+      🔍 Format Constants
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🔍 Format Constants">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#version-sizes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Version &amp; Sizes
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#emoji-magic-bytes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Emoji Magic Bytes
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#encoding-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      Encoding Types
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#purpose-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      Purpose Types
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#lifecycle-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      Lifecycle Types
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#path-constants" class="md-nav__link">
+    <span class="md-ellipsis">
+      Path Constants
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#index-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      📊 Index Structure
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="📊 Index Structure">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#field-offsets-all-values-in-bytes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Field Offsets (All values in bytes)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#core-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      🔧 Core Functions
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🔧 Core Functions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#hash-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Hash Functions
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#checksum-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Checksum Functions
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#signature-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Signature Functions
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#builder-capabilities" class="md-nav__link">
+    <span class="md-ellipsis">
+      🏗️ Builder Capabilities
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reader-capabilities" class="md-nav__link">
+    <span class="md-ellipsis">
+      📖 Reader Capabilities
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#launcher-capabilities" class="md-nav__link">
+    <span class="md-ellipsis">
+      🚀 Launcher Capabilities
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#method-naming-consistency" class="md-nav__link">
+    <span class="md-ellipsis">
+      🎯 Method Naming Consistency
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#directory-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      📁 Directory Structure
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#known-issues-discrepancies" class="md-nav__link">
+    <span class="md-ellipsis">
+      ⚠️ Known Issues &amp; Discrepancies
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="⚠️ Known Issues &amp; Discrepancies">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#critical-p0" class="md-nav__link">
+    <span class="md-ellipsis">
+      Critical (P0)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#high-priority-p1" class="md-nav__link">
+    <span class="md-ellipsis">
+      High Priority (P1)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#medium-priority-p2" class="md-nav__link">
+    <span class="md-ellipsis">
+      Medium Priority (P2)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#low-priority-p3" class="md-nav__link">
+    <span class="md-ellipsis">
+      Low Priority (P3)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#success-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      ✅ Success Metrics
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#testing-matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      🔄 Testing Matrix
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#last-updated" class="md-nav__link">
+    <span class="md-ellipsis">
+      📅 Last Updated
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#recent-fixes" class="md-nav__link">
+    <span class="md-ellipsis">
+      ✅ Recent Fixes
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="flavorpack-implementation-drift-matrix">FlavorPack Implementation Drift Matrix<a class="headerlink" href="#flavorpack-implementation-drift-matrix" title="Permanent link">&para;</a></h1>
+<h2 id="pspf2025-format-cross-language-analysis">PSPF/2025 Format Cross-Language Analysis<a class="headerlink" href="#pspf2025-format-cross-language-analysis" title="Permanent link">&para;</a></h2>
+<p>Generated: 2025-08-30</p>
+<p>This document provides a comprehensive comparison of the PSPF/2025 format implementation across Python, Go, and Rust.</p>
+<h2 id="format-constants">🔍 Format Constants<a class="headerlink" href="#format-constants" title="Permanent link">&para;</a></h2>
+<h3 id="version-sizes">Version &amp; Sizes<a class="headerlink" href="#version-sizes" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Constant</th>
+<th>PSPF Spec</th>
+<th>Python</th>
+<th>Go</th>
+<th>Rust</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PSPF_VERSION</td>
+<td><code>0x20250001</code></td>
+<td><code>0x20250001</code></td>
+<td><code>0x20250001</code></td>
+<td><code>0x20250001</code></td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>INDEX_SIZE</td>
+<td><code>8192</code> bytes</td>
+<td><code>8192</code></td>
+<td><code>8192</code></td>
+<td><code>8192</code></td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>MAGIC_TRAILER_SIZE</td>
+<td><code>8200</code> bytes</td>
+<td><code>8200</code></td>
+<td><code>8200</code></td>
+<td><code>8200</code></td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>SLOT_DESCRIPTOR_SIZE</td>
+<td><code>64</code> bytes</td>
+<td><code>64</code></td>
+<td><code>64</code></td>
+<td><code>64</code></td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>SLOT_ALIGNMENT</td>
+<td><code>8</code> bytes</td>
+<td><code>8</code></td>
+<td><code>8</code></td>
+<td><code>8</code></td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>Reserved field size</td>
+<td><code>6816</code> bytes</td>
+<td><code>6816</code> bytes</td>
+<td><code>6816</code> bytes</td>
+<td><code>6816</code> bytes</td>
+<td>✅ Aligned</td>
+</tr>
+</tbody>
+</table>
+<h3 id="emoji-magic-bytes">Emoji Magic Bytes<a class="headerlink" href="#emoji-magic-bytes" title="Permanent link">&para;</a></h3>
+<p>| Constant | PSPF Spec | Python | Go | Rust | Status |
+|----------|--------|-----|------|--------|
+| PACKAGE_EMOJI_BYTES | 📦 <code>[0xF0, 0x9F, 0x93, 0xA6]</code> | <code>[0xF0, 0x9F, 0x93, 0xA6]</code> | <code>[0xF0, 0x9F, 0x93, 0xA6]</code> | <code>[0xF0, 0x9F, 0x93, 0xA6]</code> | ✅ Aligned |
+| MAGIC_WAND_EMOJI_BYTES | 🪄 <code>[0xF0, 0x9F, 0xAA, 0x84]</code> | <code>[0xF0, 0x9F, 0xAA, 0x84]</code> | <code>[0xF0, 0x9F, 0xAA, 0x84]</code> | <code>[0xF0, 0x9F, 0xAA, 0x84]</code> | ✅ Aligned |</p>
+<h3 id="encoding-types">Encoding Types<a class="headerlink" href="#encoding-types" title="Permanent link">&para;</a></h3>
+<p>| Type | PSPF Spec | Python | Go | Rust | Status |
+|------|--------|-----|------|--------|
+| ENCODING_RAW | <code>0</code> | <code>0</code> | <code>0</code> | <code>0</code> | ✅ Aligned |
+| ENCODING_TAR | <code>1</code> | <code>1</code> | <code>1</code> | <code>1</code> | ✅ Aligned |
+| ENCODING_GZIP | <code>2</code> | <code>2</code> | <code>2</code> | <code>2</code> | ✅ Aligned |
+| ENCODING_TGZ | <code>3</code> | <code>3</code> | <code>3</code> | <code>3</code> | ✅ Aligned |</p>
+<h3 id="purpose-types">Purpose Types<a class="headerlink" href="#purpose-types" title="Permanent link">&para;</a></h3>
+<p>| Type | PSPF Spec | Python | Go | Rust | Status |
+|------|--------|-----|------|--------|
+| PURPOSE_DATA | <code>0</code> | <code>0</code> | <code>0</code> | <code>0</code> | ✅ Aligned |
+| PURPOSE_CODE | <code>1</code> | <code>1</code> | <code>1</code> | <code>1</code> | ✅ Aligned |
+| PURPOSE_CONFIG | <code>2</code> | <code>2</code> | <code>2</code> | <code>2</code> | ✅ Aligned |
+| PURPOSE_MEDIA | <code>3</code> | <code>3</code> | <code>3</code> | <code>3</code> | ✅ Aligned |
+| Legacy aliases | N/A | Has PAYLOAD/RUNTIME/TOOL | Has PAYLOAD/RUNTIME/TOOL | Has PAYLOAD/RUNTIME/TOOL | ✅ Aligned |</p>
+<h3 id="lifecycle-types">Lifecycle Types<a class="headerlink" href="#lifecycle-types" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>PSPF Spec</th>
+<th>Python</th>
+<th>Go</th>
+<th>Rust</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>LIFECYCLE_INIT</td>
+<td><code>0</code></td>
+<td><code>0</code></td>
+<td><code>0</code></td>
+<td><code>0</code></td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>LIFECYCLE_STARTUP</td>
+<td><code>1</code></td>
+<td><code>1</code></td>
+<td><code>1</code></td>
+<td><code>1</code></td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>LIFECYCLE_RUNTIME</td>
+<td><code>2</code></td>
+<td><code>2</code></td>
+<td><code>2</code></td>
+<td><code>2</code></td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>LIFECYCLE_SHUTDOWN</td>
+<td><code>3</code></td>
+<td><code>3</code></td>
+<td><code>3</code></td>
+<td><code>3</code></td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>LIFECYCLE_CACHE</td>
+<td><code>4</code></td>
+<td><code>4</code></td>
+<td><code>4</code></td>
+<td><code>4</code></td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>LIFECYCLE_TEMPORARY</td>
+<td><code>5</code></td>
+<td><code>5</code></td>
+<td><code>5</code></td>
+<td><code>5</code></td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>LIFECYCLE_LAZY</td>
+<td><code>6</code></td>
+<td><code>6</code></td>
+<td><code>6</code></td>
+<td><code>6</code></td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>LIFECYCLE_EAGER</td>
+<td><code>7</code></td>
+<td><code>7</code></td>
+<td><code>7</code></td>
+<td><code>7</code></td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>LIFECYCLE_DEV</td>
+<td><code>8</code></td>
+<td><code>8</code></td>
+<td><code>8</code></td>
+<td><code>8</code></td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>LIFECYCLE_CONFIG</td>
+<td><code>9</code></td>
+<td><code>9</code></td>
+<td><code>9</code></td>
+<td><code>9</code></td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>LIFECYCLE_PLATFORM</td>
+<td><code>10</code></td>
+<td><code>10</code></td>
+<td><code>10</code></td>
+<td><code>10</code></td>
+<td>✅ Aligned</td>
+</tr>
+</tbody>
+</table>
+<h3 id="path-constants">Path Constants<a class="headerlink" href="#path-constants" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Constant</th>
+<th>PSPF Spec</th>
+<th>Python</th>
+<th>Go</th>
+<th>Rust</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PSPF_HIDDEN_PREFIX</td>
+<td><code>"."</code></td>
+<td><code>"."</code></td>
+<td><code>"."</code></td>
+<td><code>"."</code></td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>PSPF_SUFFIX</td>
+<td><code>".pspf"</code></td>
+<td><code>".pspf"</code></td>
+<td><code>".pspf"</code></td>
+<td><code>".pspf"</code></td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>INSTANCE_DIR</td>
+<td><code>"instance"</code></td>
+<td><code>"instance"</code></td>
+<td><code>"instance"</code></td>
+<td><code>"instance"</code></td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>PACKAGE_DIR</td>
+<td><code>"package"</code></td>
+<td><code>"package"</code></td>
+<td><code>"package"</code></td>
+<td><code>"package"</code></td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>TMP_DIR</td>
+<td><code>"tmp"</code></td>
+<td><code>"tmp"</code></td>
+<td><code>"tmp"</code></td>
+<td><code>"tmp"</code></td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>EXTRACT_DIR</td>
+<td><code>"extract"</code></td>
+<td><code>"extract"</code></td>
+<td><code>"extract"</code></td>
+<td><code>"extract"</code></td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>LOG_DIR</td>
+<td><code>"log"</code></td>
+<td><code>"log"</code></td>
+<td><code>"log"</code></td>
+<td><code>"log"</code></td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>LOCK_FILE</td>
+<td><code>"lock"</code></td>
+<td><code>"lock"</code></td>
+<td><code>"lock"</code></td>
+<td><code>"lock"</code></td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>COMPLETE_FILE</td>
+<td><code>"complete"</code></td>
+<td><code>"complete"</code></td>
+<td><code>"complete"</code></td>
+<td><code>"complete"</code></td>
+<td>✅ Aligned</td>
+</tr>
+</tbody>
+</table>
+<h2 id="index-structure">📊 Index Structure<a class="headerlink" href="#index-structure" title="Permanent link">&para;</a></h2>
+<h3 id="field-offsets-all-values-in-bytes">Field Offsets (All values in bytes)<a class="headerlink" href="#field-offsets-all-values-in-bytes" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>PSPF Spec (Offset/Size)</th>
+<th>Python</th>
+<th>Go</th>
+<th>Rust</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>format_version</td>
+<td>0-3 (4 bytes)</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>index_checksum</td>
+<td>4-7 (4 bytes)</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>package_size</td>
+<td>8-15 (8 bytes)</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>launcher_size</td>
+<td>16-23 (8 bytes)</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>metadata_offset</td>
+<td>24-31 (8 bytes)</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>metadata_size</td>
+<td>32-39 (8 bytes)</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>slot_table_offset</td>
+<td>40-47 (8 bytes)</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>slot_table_size</td>
+<td>48-55 (8 bytes)</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>slot_count</td>
+<td>56-59 (4 bytes)</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>flags</td>
+<td>60-63 (4 bytes)</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>public_key</td>
+<td>64-95 (32 bytes)</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>metadata_checksum</td>
+<td>96-127 (32 bytes)</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>integrity_signature</td>
+<td>128-639 (512 bytes)</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>access_mode</td>
+<td>640 (1 byte)</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>cache_strategy</td>
+<td>641 (1 byte)</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>encoding_type</td>
+<td>642 (1 byte)</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>encryption_type</td>
+<td>643 (1 byte)</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>page_size</td>
+<td>644-647 (4 bytes)</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>max_memory</td>
+<td>648-655 (8 bytes)</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>min_memory</td>
+<td>656-663 (8 bytes)</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>cpu_features</td>
+<td>664-671 (8 bytes)</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>gpu_requirements</td>
+<td>672-679 (8 bytes)</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>numa_hints</td>
+<td>680-687 (8 bytes)</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>stream_chunk_size</td>
+<td>688-691 (4 bytes)</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>padding1</td>
+<td>692-703 (12 bytes)</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>build_timestamp</td>
+<td>704-711 (8 bytes)</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>build_machine</td>
+<td>712-743 (32 bytes)</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>source_hash</td>
+<td>744-775 (32 bytes)</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>dependency_hash</td>
+<td>776-807 (32 bytes)</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>license_id</td>
+<td>808-823 (16 bytes)</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>provenance_uri</td>
+<td>824-831 (8 bytes)</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>capabilities</td>
+<td>840-847 (8 bytes)</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>requirements</td>
+<td>848-855 (8 bytes)</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>extensions</td>
+<td>856-863 (8 bytes)</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>compatibility</td>
+<td>864-867 (4 bytes)</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>protocol_version</td>
+<td>868-871 (4 bytes)</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>future_crypto</td>
+<td>872-1383 (512 bytes)</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>reserved</td>
+<td>1384-8191 (6816 bytes)</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td><strong>Total</strong></td>
+<td><strong>8192 bytes</strong></td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅ Aligned</td>
+</tr>
+</tbody>
+</table>
+<h2 id="core-functions">🔧 Core Functions<a class="headerlink" href="#core-functions" title="Permanent link">&para;</a></h2>
+<h3 id="hash-functions">Hash Functions<a class="headerlink" href="#hash-functions" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Python</th>
+<th>Go</th>
+<th>Rust</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>hash_name algorithm</td>
+<td>SHA256 first 8 bytes LE</td>
+<td>SHA256 first 8 bytes LE</td>
+<td>SHA256 first 8 bytes LE</td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>Implementation</td>
+<td><code>hash_name()</code> in utils/hashing.py</td>
+<td><code>HashName()</code> in slots.go</td>
+<td><code>hash_name()</code> in slots.rs</td>
+<td>✅ Aligned</td>
+</tr>
+</tbody>
+</table>
+<h3 id="checksum-functions">Checksum Functions<a class="headerlink" href="#checksum-functions" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Python</th>
+<th>Go</th>
+<th>Rust</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Index checksum</td>
+<td>Adler32</td>
+<td>Adler32</td>
+<td>Adler32</td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>Metadata checksum</td>
+<td>Adler32</td>
+<td>Adler32</td>
+<td>Adler32</td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>Slot checksum</td>
+<td>Adler32</td>
+<td>Adler32</td>
+<td>Adler32</td>
+<td>✅ Aligned</td>
+</tr>
+</tbody>
+</table>
+<h3 id="signature-functions">Signature Functions<a class="headerlink" href="#signature-functions" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Python</th>
+<th>Go</th>
+<th>Rust</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Algorithm</td>
+<td>Ed25519</td>
+<td>Ed25519</td>
+<td>Ed25519</td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>Key generation</td>
+<td>✅ Implemented</td>
+<td>✅ Implemented</td>
+<td>✅ Implemented</td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>Signing</td>
+<td>✅ Implemented</td>
+<td>✅ Implemented</td>
+<td>✅ Implemented</td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>Verification</td>
+<td>✅ Implemented</td>
+<td>⚠️ Basic only</td>
+<td>✅ Implemented</td>
+<td>⚠️ Go needs enhancement</td>
+</tr>
+</tbody>
+</table>
+<h2 id="builder-capabilities">🏗️ Builder Capabilities<a class="headerlink" href="#builder-capabilities" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>PSPF Spec</th>
+<th>Python</th>
+<th>Go</th>
+<th>Rust</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Build empty bundle</td>
+<td>Required</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>Build with slots</td>
+<td>Required</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>Compression support</td>
+<td>gzip/tar</td>
+<td>✅ gzip/tar</td>
+<td>✅ gzip/tar</td>
+<td>✅ gzip/tar</td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>Signing support</td>
+<td>Required</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>MagicTrailer creation</td>
+<td>Required</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>Deterministic builds</td>
+<td>Optional</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅ Aligned</td>
+</tr>
+</tbody>
+</table>
+<h2 id="reader-capabilities">📖 Reader Capabilities<a class="headerlink" href="#reader-capabilities" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>PSPF Spec</th>
+<th>Python</th>
+<th>Go</th>
+<th>Rust</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Read index</td>
+<td>Required</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>Read metadata</td>
+<td>Required</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>Read slots</td>
+<td>Required</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>Verify MagicTrailer</td>
+<td>Required</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>Verify checksums</td>
+<td>Required</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>Verify signatures</td>
+<td>Required</td>
+<td>✅</td>
+<td>⚠️ Basic</td>
+<td>✅</td>
+<td>⚠️ Go needs enhancement</td>
+</tr>
+<tr>
+<td>Memory-mapped I/O</td>
+<td>Optional</td>
+<td>✅</td>
+<td>❌</td>
+<td>✅</td>
+<td>⚠️ Go missing</td>
+</tr>
+<tr>
+<td>Streaming support</td>
+<td>Optional</td>
+<td>✅</td>
+<td>✅</td>
+<td>⚠️ Basic</td>
+<td>⚠️ Rust needs enhancement</td>
+</tr>
+</tbody>
+</table>
+<h2 id="launcher-capabilities">🚀 Launcher Capabilities<a class="headerlink" href="#launcher-capabilities" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>PSPF Spec</th>
+<th>Python</th>
+<th>Go</th>
+<th>Rust</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Package execution</td>
+<td>Required</td>
+<td>N/A</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>Workenv caching</td>
+<td>Required</td>
+<td>N/A</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>Signature verification</td>
+<td>Required</td>
+<td>N/A</td>
+<td>⚠️ Optional</td>
+<td>✅ Enforced</td>
+<td>⚠️ Different policies</td>
+</tr>
+<tr>
+<td>Environment variables</td>
+<td>Required</td>
+<td>N/A</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>Process replacement</td>
+<td>Required</td>
+<td>N/A</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>Logging support</td>
+<td>Required</td>
+<td>N/A</td>
+<td>✅ Structured</td>
+<td>✅ Structured</td>
+<td>✅ Aligned</td>
+</tr>
+</tbody>
+</table>
+<h2 id="method-naming-consistency">🎯 Method Naming Consistency<a class="headerlink" href="#method-naming-consistency" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Operation</th>
+<th>Python</th>
+<th>Go</th>
+<th>Rust</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Verify MagicTrailer</td>
+<td><code>verify_magic_trailer()</code></td>
+<td><code>VerifyMagicTrailer()</code></td>
+<td>N/A</td>
+<td>✅ Aligned (Rust doesn't expose)</td>
+</tr>
+<tr>
+<td>Read index</td>
+<td><code>read_index()</code></td>
+<td><code>ReadIndex()</code></td>
+<td><code>read_index()</code></td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>Read metadata</td>
+<td><code>read_metadata()</code></td>
+<td><code>ReadMetadata()</code></td>
+<td><code>read_metadata()</code></td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>Pack index</td>
+<td><code>pack()</code></td>
+<td><code>Pack()</code></td>
+<td><code>pack()</code></td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>Parse index</td>
+<td><code>unpack()</code></td>
+<td><code>Unpack()</code></td>
+<td><code>unpack()</code></td>
+<td>✅ Aligned</td>
+</tr>
+</tbody>
+</table>
+<h2 id="directory-structure">📁 Directory Structure<a class="headerlink" href="#directory-structure" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>PSPF Spec</th>
+<th>Python</th>
+<th>Go</th>
+<th>Rust</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Format module</td>
+<td>N/A</td>
+<td><code>src/flavor/psp/format_2025/</code></td>
+<td><code>pkg/psp/format_2025/</code></td>
+<td><code>src/psp/format_2025/</code></td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>Constants file</td>
+<td>N/A</td>
+<td><code>constants.py</code></td>
+<td><code>constants.go</code></td>
+<td><code>constants.rs</code></td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>Index file</td>
+<td>N/A</td>
+<td><code>index.py</code></td>
+<td><code>index.go</code></td>
+<td><code>index.rs</code></td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>Slots file</td>
+<td>N/A</td>
+<td><code>slots.py</code></td>
+<td><code>slots.go</code></td>
+<td><code>slots.rs</code></td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>Builder file</td>
+<td>N/A</td>
+<td><code>builder.py</code></td>
+<td><code>builder.go</code></td>
+<td><code>builder.rs</code></td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>Reader file</td>
+<td>N/A</td>
+<td><code>reader.py</code></td>
+<td><code>reader.go</code></td>
+<td><code>reader.rs</code></td>
+<td>✅ Aligned</td>
+</tr>
+<tr>
+<td>Logging module</td>
+<td>N/A</td>
+<td><code>structlog</code></td>
+<td><code>hclog</code> + <code>logger.go</code></td>
+<td><code>env_logger</code></td>
+<td>✅ All structured</td>
+</tr>
+</tbody>
+</table>
+<h2 id="known-issues-discrepancies">⚠️ Known Issues &amp; Discrepancies<a class="headerlink" href="#known-issues-discrepancies" title="Permanent link">&para;</a></h2>
+<h3 id="critical-p0">Critical (P0)<a class="headerlink" href="#critical-p0" title="Permanent link">&para;</a></h3>
+<ul>
+<li>✅ <strong>FIXED</strong>: Reserved field size corrected to 6816 bytes (was 6808, missing 8 bytes from removed format_magic)</li>
+<li>✅ <strong>FIXED</strong>: Index field offset bugs in Rust (numa_hints, stream_chunk_size)</li>
+<li>✅ <strong>FIXED</strong>: Checksum validation offset in Rust (was 12-16, now 4-8)</li>
+<li>✅ <strong>FIXED</strong>: Capability field offsets in Go (was off by 8 bytes)</li>
+<li>✅ <strong>FIXED</strong>: MagicTrailer positioning (index now exactly 8192 bytes)</li>
+</ul>
+<h3 id="high-priority-p1">High Priority (P1)<a class="headerlink" href="#high-priority-p1" title="Permanent link">&para;</a></h3>
+<ul>
+<li>✅ <strong>FIXED</strong>: Go renamed to <code>VerifyMagicTrailer()</code> for consistency</li>
+<li>✅ <strong>FIXED</strong>: Go verification now uses structured logging with hclog</li>
+<li>✅ <strong>FIXED</strong>: Rust reserved field size (6816 bytes) and byte offsets corrected</li>
+<li>✅ <strong>FIXED</strong>: Rust method naming aligned (pack/unpack)</li>
+<li>⚠️ <strong>TODO</strong>: Go launcher signature verification is optional (should match Rust)</li>
+<li>⚠️ <strong>TODO</strong>: Go missing memory-mapped I/O support</li>
+</ul>
+<h3 id="medium-priority-p2">Medium Priority (P2)<a class="headerlink" href="#medium-priority-p2" title="Permanent link">&para;</a></h3>
+<ul>
+<li>✅ <strong>FIXED</strong>: Method naming now consistent (pack/Pack/pack, unpack/Unpack/unpack)</li>
+<li>⚠️ Rust streaming support is basic compared to Python/Go</li>
+<li>⚠️ Go signature verification implementation is basic</li>
+</ul>
+<h3 id="low-priority-p3">Low Priority (P3)<a class="headerlink" href="#low-priority-p3" title="Permanent link">&para;</a></h3>
+<ul>
+<li>📝 Documentation consistency across languages</li>
+<li>📝 Error message formatting differences</li>
+<li>📝 Logging verbosity differences</li>
+</ul>
+<h2 id="success-metrics">✅ Success Metrics<a class="headerlink" href="#success-metrics" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Format Alignment</strong>: 100% ✅</li>
+<li><strong>Binary Compatibility</strong>: 100% ✅ (all combinations work)</li>
+<li><strong>Constant Alignment</strong>: 100% ✅</li>
+<li><strong>Field Offset Alignment</strong>: 100% ✅</li>
+<li><strong>Core Function Alignment</strong>: 95% (Go signature verification needs work)</li>
+<li><strong>Overall Compatibility</strong>: 98% ✅</li>
+</ul>
+<h2 id="testing-matrix">🔄 Testing Matrix<a class="headerlink" href="#testing-matrix" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Builder</th>
+<th>Launcher</th>
+<th>PSPF Compliance</th>
+<th>Status</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Rust</td>
+<td>Rust</td>
+<td>✅ Full</td>
+<td>✅ Working</td>
+<td>Signature verification enforced</td>
+</tr>
+<tr>
+<td>Rust</td>
+<td>Go</td>
+<td>✅ Full</td>
+<td>✅ Working</td>
+<td>Go launcher accepts unsigned</td>
+</tr>
+<tr>
+<td>Go</td>
+<td>Rust</td>
+<td>✅ Full</td>
+<td>✅ Working</td>
+<td>Rust launcher enforces signatures</td>
+</tr>
+<tr>
+<td>Go</td>
+<td>Go</td>
+<td>✅ Full</td>
+<td>✅ Working</td>
+<td>Full compatibility, structured logging</td>
+</tr>
+<tr>
+<td>Python</td>
+<td>Rust</td>
+<td>✅ Full</td>
+<td>✅ Working</td>
+<td>Rust launcher enforces signatures</td>
+</tr>
+<tr>
+<td>Python</td>
+<td>Go</td>
+<td>✅ Full</td>
+<td>✅ Working</td>
+<td>Full compatibility, structured logging</td>
+</tr>
+</tbody>
+</table>
+<h2 id="last-updated">📅 Last Updated<a class="headerlink" href="#last-updated" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Date: 2025-08-30</li>
+<li>Version: PSPF/2025 v0x20250001</li>
+<li>Status: Production Ready with minor enhancements needed</li>
+</ul>
+<h2 id="recent-fixes">✅ Recent Fixes<a class="headerlink" href="#recent-fixes" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>2025-08-30</strong>: Fixed reserved field size (6808 → 6816 bytes) to account for removed format_magic field</li>
+<li><strong>2025-08-30</strong>: MagicTrailer now correctly positioned at EOF - 8200 bytes</li>
+<li><strong>2025-08-30</strong>: Index structure confirmed at exactly 8192 bytes across all languages</li>
+<li><strong>2025-08-30</strong>: Mock launcher tests now create valid PSPF packages</li>
+<li><strong>2025-08-30</strong>: Go renamed <code>VerifyMagic()</code> to <code>VerifyMagicTrailer()</code> for consistency</li>
+<li><strong>2025-08-30</strong>: Go verification now uses structured logging with hclog</li>
+<li><strong>2025-08-30</strong>: Added PSPF Spec column to all tables for clear reference</li>
+<li><strong>2025-08-30</strong>: Created <code>pkg/logging/logger.go</code> for standardized Go logging</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2024 provide.io
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.instant", "navigation.tabs", "navigation.sections", "navigation.expand", "navigation.indexes", "navigation.top", "toc.follow", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "content.tabs.link"], "search": "../../../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.92b07e13.min.js"></script>
+      
+    
+  </body>
+</html>

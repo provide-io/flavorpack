@@ -1,0 +1,2306 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Progressive Secure Package Format (PSPF/2025) - Cross-language packaging system">
+      
+      
+        <meta name="author" content="provide.io">
+      
+      
+        <link rel="canonical" href="https://flavorpack.io/spec/feps/fep-0001-pspf-core-specification/">
+      
+      
+        <link rel="prev" href="../../../CI-CD/">
+      
+      
+        <link rel="next" href="../fep-0002-workenv-management/">
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.18">
+    
+    
+      
+        <title>FEP-0001 Core - FlavorPack Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.7e37652d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,700,700i%7CFira+Code:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"Fira Code"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="black" data-md-color-accent="deep-purple">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#fep-0001-progressive-secure-package-format-pspf2025-core-specification" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="FlavorPack Documentation" class="md-header__button md-logo" aria-label="FlavorPack Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            FlavorPack Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              FEP-0001 Core
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="black" data-md-color-accent="deep-purple"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="deep-purple"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/provide-io/flavorpack" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    provide-io/flavorpack
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../getting-started/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Getting Started
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../guide/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  User Guide
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../API-REFERENCE/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="./" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Specifications
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../changelog/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  About
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="FlavorPack Documentation" class="md-nav__button md-logo" aria-label="FlavorPack Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    FlavorPack Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/provide-io/flavorpack" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    provide-io/flavorpack
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Home
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../getting-started/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    Getting Started
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_2" id="__nav_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            Getting Started
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../getting-started/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Installation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../getting-started/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Quick Start
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../getting-started/first-package/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    First Package
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../getting-started/examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Examples
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../guide/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    User Guide
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            User Guide
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../guide/concepts/pspf-format/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    PSPF Format
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Reference
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Reference
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../API-REFERENCE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    API Documentation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../ARCHITECTURE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Architecture
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../DEVELOPMENT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Development
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../TROUBLESHOOTING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Troubleshooting
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../USER-GUIDE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    User Guide (Legacy)
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../CI-CD/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    CI/CD
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Specifications
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Specifications
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    FEP-0001 Core
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    FEP-0001 Core
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-introduction" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. Introduction
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Introduction">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11-requirements-language" class="md-nav__link">
+    <span class="md-ellipsis">
+      1.1. Requirements Language
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12-design-goals" class="md-nav__link">
+    <span class="md-ellipsis">
+      1.2. Design Goals
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-binary-format-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. Binary Format Structure
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Binary Format Structure">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-byte-order" class="md-nav__link">
+    <span class="md-ellipsis">
+      2.1. Byte Order
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-alignment" class="md-nav__link">
+    <span class="md-ellipsis">
+      2.2. Alignment
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-index-block-specification" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. Index Block Specification
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Index Block Specification">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-index-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      3.1. Index Structure
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-flag-definitions" class="md-nav__link">
+    <span class="md-ellipsis">
+      3.2. Flag Definitions
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-checksum-calculation" class="md-nav__link">
+    <span class="md-ellipsis">
+      3.3. Checksum Calculation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#34-signature-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      3.4. Signature Verification
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-metadata-specification" class="md-nav__link">
+    <span class="md-ellipsis">
+      4. Metadata Specification
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Metadata Specification">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-required-fields" class="md-nav__link">
+    <span class="md-ellipsis">
+      4.1. Required Fields
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-optional-fields" class="md-nav__link">
+    <span class="md-ellipsis">
+      4.2. Optional Fields
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-slot-system" class="md-nav__link">
+    <span class="md-ellipsis">
+      5. Slot System
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Slot System">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-slot-table-entry-64-bytes" class="md-nav__link">
+    <span class="md-ellipsis">
+      5.1. Slot Table Entry (64 bytes)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-encoding-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      5.2. Encoding Types
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#53-purpose-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      5.3. Purpose Types
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#54-lifecycle-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      5.4. Lifecycle Types
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-magic-footer" class="md-nav__link">
+    <span class="md-ellipsis">
+      6. Magic Footer
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-execution-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      7. Execution Model
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7. Execution Model">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#71-launch-sequence" class="md-nav__link">
+    <span class="md-ellipsis">
+      7.1. Launch Sequence
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#72-working-environment" class="md-nav__link">
+    <span class="md-ellipsis">
+      7.2. Working Environment
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#73-environment-variables" class="md-nav__link">
+    <span class="md-ellipsis">
+      7.3. Environment Variables
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-security-considerations" class="md-nav__link">
+    <span class="md-ellipsis">
+      8. Security Considerations
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8. Security Considerations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#81-signature-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      8.1. Signature Verification
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#82-checksum-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      8.2. Checksum Validation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#83-path-traversal" class="md-nav__link">
+    <span class="md-ellipsis">
+      8.3. Path Traversal
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-implementation-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      9. Implementation Requirements
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="9. Implementation Requirements">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#91-minimum-implementation" class="md-nav__link">
+    <span class="md-ellipsis">
+      9.1. Minimum Implementation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#92-recommended-implementation" class="md-nav__link">
+    <span class="md-ellipsis">
+      9.2. Recommended Implementation
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-references" class="md-nav__link">
+    <span class="md-ellipsis">
+      10. References
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../fep-0002-workenv-management/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    FEP-0002 Workenv
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../fep-0003-runtime-security-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    FEP-0003 Security
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../fep-0004-staged-payload-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    FEP-0004 Staged
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../fep-0005-jit-loading/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    FEP-0005 JIT
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    About
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            About
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Changelog
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../license/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    License
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../MIGRATION_PLAN/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Migration Plan
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-introduction" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. Introduction
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Introduction">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11-requirements-language" class="md-nav__link">
+    <span class="md-ellipsis">
+      1.1. Requirements Language
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12-design-goals" class="md-nav__link">
+    <span class="md-ellipsis">
+      1.2. Design Goals
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-binary-format-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. Binary Format Structure
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Binary Format Structure">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-byte-order" class="md-nav__link">
+    <span class="md-ellipsis">
+      2.1. Byte Order
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-alignment" class="md-nav__link">
+    <span class="md-ellipsis">
+      2.2. Alignment
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-index-block-specification" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. Index Block Specification
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Index Block Specification">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-index-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      3.1. Index Structure
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-flag-definitions" class="md-nav__link">
+    <span class="md-ellipsis">
+      3.2. Flag Definitions
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-checksum-calculation" class="md-nav__link">
+    <span class="md-ellipsis">
+      3.3. Checksum Calculation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#34-signature-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      3.4. Signature Verification
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-metadata-specification" class="md-nav__link">
+    <span class="md-ellipsis">
+      4. Metadata Specification
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Metadata Specification">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-required-fields" class="md-nav__link">
+    <span class="md-ellipsis">
+      4.1. Required Fields
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-optional-fields" class="md-nav__link">
+    <span class="md-ellipsis">
+      4.2. Optional Fields
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-slot-system" class="md-nav__link">
+    <span class="md-ellipsis">
+      5. Slot System
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Slot System">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-slot-table-entry-64-bytes" class="md-nav__link">
+    <span class="md-ellipsis">
+      5.1. Slot Table Entry (64 bytes)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-encoding-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      5.2. Encoding Types
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#53-purpose-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      5.3. Purpose Types
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#54-lifecycle-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      5.4. Lifecycle Types
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-magic-footer" class="md-nav__link">
+    <span class="md-ellipsis">
+      6. Magic Footer
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-execution-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      7. Execution Model
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7. Execution Model">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#71-launch-sequence" class="md-nav__link">
+    <span class="md-ellipsis">
+      7.1. Launch Sequence
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#72-working-environment" class="md-nav__link">
+    <span class="md-ellipsis">
+      7.2. Working Environment
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#73-environment-variables" class="md-nav__link">
+    <span class="md-ellipsis">
+      7.3. Environment Variables
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-security-considerations" class="md-nav__link">
+    <span class="md-ellipsis">
+      8. Security Considerations
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8. Security Considerations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#81-signature-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      8.1. Signature Verification
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#82-checksum-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      8.2. Checksum Validation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#83-path-traversal" class="md-nav__link">
+    <span class="md-ellipsis">
+      8.3. Path Traversal
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-implementation-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      9. Implementation Requirements
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="9. Implementation Requirements">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#91-minimum-implementation" class="md-nav__link">
+    <span class="md-ellipsis">
+      9.1. Minimum Implementation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#92-recommended-implementation" class="md-nav__link">
+    <span class="md-ellipsis">
+      9.2. Recommended Implementation
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-references" class="md-nav__link">
+    <span class="md-ellipsis">
+      10. References
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="fep-0001-progressive-secure-package-format-pspf2025-core-specification">FEP-0001: Progressive Secure Package Format (PSPF/2025) Core Specification<a class="headerlink" href="#fep-0001-progressive-secure-package-format-pspf2025-core-specification" title="Permanent link">&para;</a></h1>
+<p><strong>Status</strong>: Implemented<br />
+<strong>Type</strong>: Standards Track<br />
+<strong>Created</strong>: 2025-08-28<br />
+<strong>Updated</strong>: 2025-09-02  </p>
+<h2 id="1-introduction">1. Introduction<a class="headerlink" href="#1-introduction" title="Permanent link">&para;</a></h2>
+<p>This specification defines the Progressive Secure Package Format (PSPF), version 2025, a binary format for self-contained executable packages. PSPF packages combine a native launcher executable with compressed application data into a single file that functions as both an operating system executable and a structured archive.</p>
+<h3 id="11-requirements-language">1.1. Requirements Language<a class="headerlink" href="#11-requirements-language" title="Permanent link">&para;</a></h3>
+<p>The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in RFC 2119.</p>
+<h3 id="12-design-goals">1.2. Design Goals<a class="headerlink" href="#12-design-goals" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Single-file distribution without external dependencies</li>
+<li>Cryptographic integrity verification</li>
+<li>Cross-platform execution (Linux, macOS, Windows)</li>
+<li>Progressive extraction with persistent caching</li>
+<li>Language-agnostic format suitable for any runtime</li>
+</ol>
+<h2 id="2-binary-format-structure">2. Binary Format Structure<a class="headerlink" href="#2-binary-format-structure" title="Permanent link">&para;</a></h2>
+<p>A PSPF package consists of the following components in strict sequential order:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>Offset    Size      Component
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>--------  --------  ---------
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>0         Variable  Native Launcher Binary
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>L         Variable  Metadata Block (gzipped JSON)
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>M         Variable  Slot Table
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>S         Variable  Slot Data (0 to N slots)
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>EOF-8200  8200      Magic Trailer (📦 + Index + 🪄)
+</code></pre></div>
+<p>The Magic Trailer (last 8200 bytes) contains:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>Offset    Size  Component
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>--------  ----  ---------
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>EOF-8200  4     Package emoji (📦)
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>EOF-8196  8192  Index Block
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>EOF-4     4     Magic wand emoji (🪄)
+</code></pre></div></p>
+<p>Where:
+- L = launcher_size (stored in index at EOF-8196)
+- M = metadata_offset (stored in index)
+- S = slot_table_offset (stored in index)</p>
+<h3 id="21-byte-order">2.1. Byte Order<a class="headerlink" href="#21-byte-order" title="Permanent link">&para;</a></h3>
+<p>All multi-byte integer values SHALL be stored in little-endian byte order.</p>
+<h3 id="22-alignment">2.2. Alignment<a class="headerlink" href="#22-alignment" title="Permanent link">&para;</a></h3>
+<p>All major sections SHALL begin on 8-byte boundaries. Padding bytes between sections SHALL be zero-filled.</p>
+<h2 id="3-index-block-specification">3. Index Block Specification<a class="headerlink" href="#3-index-block-specification" title="Permanent link">&para;</a></h2>
+<p>The index block is exactly 8192 bytes located at EOF-8196 (within the Magic Trailer).</p>
+<h3 id="31-index-structure">3.1. Index Structure<a class="headerlink" href="#31-index-structure" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>Offset  Size  Type      Field                   Description
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>------  ----  --------  ----------------------  -----------
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>0       4     uint32    format_version          0x20250001
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>4       4     uint32    index_checksum          Adler-32 of bytes 0,8-8191
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>8       8     uint64    package_size            Total file size in bytes
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>16      8     uint64    launcher_size           Size of launcher executable
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>24      8     uint64    metadata_offset         Offset to metadata block
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>32      8     uint64    metadata_size           Size of compressed metadata
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>40      8     uint64    slot_table_offset       Offset to slot table
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>48      8     uint64    slot_table_size         Size of slot table
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>56      4     uint32    slot_count              Number of slots (0-65535)
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>60      4     uint32    flags                   Package flags (see 3.2)
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>64      32    bytes     public_key              Ed25519 public key
+<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>96      32    bytes     metadata_checksum       SHA-256 of metadata
+<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>128     512   bytes     integrity_signature     Signature data (see 3.3)
+<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>640     1     uint8     access_mode             Memory access hint
+<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>641     1     uint8     cache_strategy          Cache priority hint
+<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>642     1     uint8     encoding_type           Default encoding
+<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a>643     1     uint8     encryption_type         Encryption (0=none)
+<a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a>644     4     uint32    page_size               Optimal page size
+<a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a>648     8     uint64    max_memory              Maximum memory needed
+<a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a>656     8     uint64    min_memory              Minimum memory needed
+<a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a>664     8     uint64    cpu_features            Required CPU features
+<a id="__codelineno-2-24" name="__codelineno-2-24" href="#__codelineno-2-24"></a>672     8     uint64    gpu_requirements        GPU requirements
+<a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a>680     8     uint64    numa_hints              NUMA topology hints
+<a id="__codelineno-2-26" name="__codelineno-2-26" href="#__codelineno-2-26"></a>688     4     uint32    stream_chunk_size       Streaming chunk size
+<a id="__codelineno-2-27" name="__codelineno-2-27" href="#__codelineno-2-27"></a>692     12    bytes     padding1                Zero padding
+<a id="__codelineno-2-28" name="__codelineno-2-28" href="#__codelineno-2-28"></a>704     8     uint64    build_timestamp         Unix timestamp
+<a id="__codelineno-2-29" name="__codelineno-2-29" href="#__codelineno-2-29"></a>712     32    bytes     build_machine           Build host identifier
+<a id="__codelineno-2-30" name="__codelineno-2-30" href="#__codelineno-2-30"></a>744     32    bytes     source_hash             Source code hash
+<a id="__codelineno-2-31" name="__codelineno-2-31" href="#__codelineno-2-31"></a>776     32    bytes     dependency_hash         Dependencies hash
+<a id="__codelineno-2-32" name="__codelineno-2-32" href="#__codelineno-2-32"></a>808     16    bytes     license_id              License identifier
+<a id="__codelineno-2-33" name="__codelineno-2-33" href="#__codelineno-2-33"></a>824     8     uint64    provenance_uri_offset   URI offset (0=none)
+<a id="__codelineno-2-34" name="__codelineno-2-34" href="#__codelineno-2-34"></a>832     8     uint64    capabilities            Capability flags
+<a id="__codelineno-2-35" name="__codelineno-2-35" href="#__codelineno-2-35"></a>840     8     uint64    requirements            Requirement flags
+<a id="__codelineno-2-36" name="__codelineno-2-36" href="#__codelineno-2-36"></a>848     8     uint64    extensions              Extension flags
+<a id="__codelineno-2-37" name="__codelineno-2-37" href="#__codelineno-2-37"></a>856     4     uint32    compatibility           Compatibility version
+<a id="__codelineno-2-38" name="__codelineno-2-38" href="#__codelineno-2-38"></a>860     4     uint32    protocol_version        Protocol version
+<a id="__codelineno-2-39" name="__codelineno-2-39" href="#__codelineno-2-39"></a>864     512   bytes     future_crypto           Reserved for PQ crypto
+<a id="__codelineno-2-40" name="__codelineno-2-40" href="#__codelineno-2-40"></a>1376    6816  bytes     reserved                Zero-filled
+</code></pre></div>
+<h3 id="32-flag-definitions">3.2. Flag Definitions<a class="headerlink" href="#32-flag-definitions" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>Bit  Name                Description
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>---  ------------------  -----------
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>0    SIGNED              Package has valid signature
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>1    COMPRESSED_INDEX    Index uses compression (future)
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>2    ENCRYPTED_SLOTS     Slots are encrypted (future)
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>3    STREAMING_READY     Optimized for streaming
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>4    DELTA_UPDATE        Supports delta updates (future)
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>5-31 Reserved            Must be zero
+</code></pre></div>
+<h3 id="33-checksum-calculation">3.3. Checksum Calculation<a class="headerlink" href="#33-checksum-calculation" title="Permanent link">&para;</a></h3>
+<p>The index_checksum field (offset 4-7) contains the Adler-32 checksum of the index block with the checksum field itself set to zero. Implementations MUST:</p>
+<ol>
+<li>Copy the index block to a buffer</li>
+<li>Set bytes 4-7 to zero</li>
+<li>Calculate Adler-32 of the entire 8192-byte buffer</li>
+<li>Compare with the stored checksum</li>
+</ol>
+<h3 id="34-signature-verification">3.4. Signature Verification<a class="headerlink" href="#34-signature-verification" title="Permanent link">&para;</a></h3>
+<p>The integrity_signature field contains cryptographic signature data. The first 64 bytes contain an Ed25519 signature of:
+- The entire index block with signature field zeroed
+- The uncompressed metadata</p>
+<p>Implementations SHOULD verify signatures unless explicitly disabled.</p>
+<h2 id="4-metadata-specification">4. Metadata Specification<a class="headerlink" href="#4-metadata-specification" title="Permanent link">&para;</a></h2>
+<p>Metadata is stored as gzip-compressed JSON at the offset specified in the index.</p>
+<h3 id="41-required-fields">4.1. Required Fields<a class="headerlink" href="#41-required-fields" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="p">{</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span><span class="nt">&quot;package&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;STRING&quot;</span><span class="p">,</span><span class="w">        </span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span><span class="nt">&quot;version&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;STRING&quot;</span><span class="w">      </span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">  </span><span class="p">},</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">  </span><span class="nt">&quot;slots&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">    </span><span class="p">{</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">      </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="err">INTEGER</span><span class="p">,</span><span class="w">         </span>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">      </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;STRING&quot;</span><span class="p">,</span><span class="w">      </span>
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="w">      </span><span class="nt">&quot;size&quot;</span><span class="p">:</span><span class="w"> </span><span class="err">INTEGER</span><span class="p">,</span><span class="w">       </span>
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="w">      </span><span class="nt">&quot;encoding&quot;</span><span class="p">:</span><span class="w"> </span><span class="err">INTEGER</span><span class="p">,</span><span class="w">   </span>
+<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="w">      </span><span class="nt">&quot;purpose&quot;</span><span class="p">:</span><span class="w"> </span><span class="err">INTEGER</span><span class="p">,</span><span class="w">    </span>
+<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="w">      </span><span class="nt">&quot;lifecycle&quot;</span><span class="p">:</span><span class="w"> </span><span class="err">INTEGER</span><span class="w">   </span>
+<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a><span class="w">  </span><span class="p">],</span>
+<a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a><span class="w">  </span><span class="nt">&quot;execution&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a><span class="w">    </span><span class="nt">&quot;command&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;STRING&quot;</span><span class="p">,</span><span class="w">     </span>
+<a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a><span class="w">    </span><span class="nt">&quot;args&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;STRING&quot;</span><span class="p">],</span><span class="w">      </span>
+<a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a><span class="w">    </span><span class="nt">&quot;primary_slot&quot;</span><span class="p">:</span><span class="w"> </span><span class="err">INTEGER</span><span class="w">  </span>
+<a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a><span class="p">}</span>
+</code></pre></div>
+<h3 id="42-optional-fields">4.2. Optional Fields<a class="headerlink" href="#42-optional-fields" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="p">{</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="nt">&quot;package&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">    </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;STRING&quot;</span><span class="p">,</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">    </span><span class="nt">&quot;author&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;STRING&quot;</span><span class="p">,</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">    </span><span class="nt">&quot;license&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;STRING&quot;</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="w">  </span><span class="p">},</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="w">  </span><span class="nt">&quot;workenv&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="w">    </span><span class="nt">&quot;directories&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="w">      </span><span class="p">{</span>
+<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="w">        </span><span class="nt">&quot;path&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;STRING&quot;</span><span class="p">,</span>
+<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="w">        </span><span class="nt">&quot;mode&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;STRING&quot;</span><span class="p">,</span>
+<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a><span class="w">        </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;STRING&quot;</span>
+<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="w">      </span><span class="p">}</span>
+<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="w">    </span><span class="p">],</span>
+<a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a><span class="w">    </span><span class="nt">&quot;env&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a><span class="w">      </span><span class="nt">&quot;KEY&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;VALUE&quot;</span>
+<a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a><span class="w">  </span><span class="p">},</span>
+<a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a><span class="w">  </span><span class="nt">&quot;runtime&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-5-20" name="__codelineno-5-20" href="#__codelineno-5-20"></a><span class="w">    </span><span class="nt">&quot;min_version&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;STRING&quot;</span><span class="p">,</span>
+<a id="__codelineno-5-21" name="__codelineno-5-21" href="#__codelineno-5-21"></a><span class="w">    </span><span class="nt">&quot;platform&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;STRING&quot;</span>
+<a id="__codelineno-5-22" name="__codelineno-5-22" href="#__codelineno-5-22"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-5-23" name="__codelineno-5-23" href="#__codelineno-5-23"></a><span class="p">}</span>
+</code></pre></div>
+<h2 id="5-slot-system">5. Slot System<a class="headerlink" href="#5-slot-system" title="Permanent link">&para;</a></h2>
+<p>Slots are numbered containers (0-based) that hold application data.</p>
+<h3 id="51-slot-table-entry-64-bytes">5.1. Slot Table Entry (64 bytes)<a class="headerlink" href="#51-slot-table-entry-64-bytes" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>Offset  Size  Type      Field             Description
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>------  ----  --------  ----------------  -----------
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>0       4     uint32    id                Slot number
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>4       8     uint64    offset            Offset in package
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>12      8     uint64    size              Compressed size
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>20      8     uint64    original_size     Uncompressed size
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>28      4     uint32    checksum          Adler-32 checksum
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>32      1     uint8     encoding          Encoding type
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>33      1     uint8     purpose           Purpose type
+<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>34      1     uint8     lifecycle         Lifecycle type
+<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>35      1     uint8     flags             Slot flags
+<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>36      8     uint64    name_hash         Hash of name
+<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a>44      2     uint16    permissions       Unix permissions
+<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>46      18    bytes     reserved          Zero-filled
+</code></pre></div>
+<h3 id="52-encoding-types">5.2. Encoding Types<a class="headerlink" href="#52-encoding-types" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>Value  Name           Description
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>-----  -------------  -----------
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>0      RAW            Uncompressed data
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>1      TAR            TAR archive
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>2      GZIP           Gzip compressed
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>3      TGZ            TAR then gzip
+</code></pre></div>
+<h3 id="53-purpose-types">5.3. Purpose Types<a class="headerlink" href="#53-purpose-types" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>Value  Name           Description
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>-----  -------------  -----------
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>0      DATA           General data files
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>1      CODE           Executable code
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>2      CONFIG         Configuration
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>3      MEDIA          Media/assets
+</code></pre></div>
+<h3 id="54-lifecycle-types">5.4. Lifecycle Types<a class="headerlink" href="#54-lifecycle-types" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>Value  Name           Description
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>-----  -------------  -----------
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>0      INIT           First run only
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>1      STARTUP        Every startup
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>2      RUNTIME        Normal extraction
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>3      SHUTDOWN       At termination
+<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>4      CACHE          Cacheable
+<a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>5      TEMPORARY      Session only
+<a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a>6      LAZY           Load on demand
+<a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a>7      EAGER          Load immediately
+<a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a>8      DEV            Development only
+<a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a>9      CONFIG         User-modifiable
+<a id="__codelineno-9-13" name="__codelineno-9-13" href="#__codelineno-9-13"></a>10     PLATFORM       Platform-specific
+</code></pre></div>
+<h2 id="6-magic-footer">6. Magic Footer<a class="headerlink" href="#6-magic-footer" title="Permanent link">&para;</a></h2>
+<p>The last 8 bytes of the file contain UTF-8 encoded emoji characters serving as a unique identifier:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>Offset  Size  Bytes              Character  Description
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>------  ----  -----------------  ---------  -----------
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>EOF-8   4     F0 9F 93 A6        📦         Package emoji
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>EOF-4   4     F0 9F AA 84        🪄         Magic wand emoji
+</code></pre></div>
+<p>Implementations MUST verify these bytes match exactly.</p>
+<h2 id="7-execution-model">7. Execution Model<a class="headerlink" href="#7-execution-model" title="Permanent link">&para;</a></h2>
+<h3 id="71-launch-sequence">7.1. Launch Sequence<a class="headerlink" href="#71-launch-sequence" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Read and verify magic footer</li>
+<li>Locate and read index block</li>
+<li>Verify index checksum</li>
+<li>Read and decompress metadata</li>
+<li>Verify metadata checksum</li>
+<li>Optionally verify signature</li>
+<li>Extract required slots to workenv</li>
+<li>Execute primary command</li>
+</ol>
+<h3 id="72-working-environment">7.2. Working Environment<a class="headerlink" href="#72-working-environment" title="Permanent link">&para;</a></h3>
+<p>The working environment (workenv) is a directory where slots are extracted:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>Platform  Environment Variable  Default Path
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>--------  -------------------  ------------
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>Linux     XDG_CACHE_HOME       ~/.cache/flavor/workenv/{name}_{version}
+<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>macOS     XDG_CACHE_HOME       ~/Library/Caches/flavor/workenv/{name}_{version}
+<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>Windows   LOCALAPPDATA         %LOCALAPPDATA%\flavor\workenv\{name}_{version}
+</code></pre></div>
+<h3 id="73-environment-variables">7.3. Environment Variables<a class="headerlink" href="#73-environment-variables" title="Permanent link">&para;</a></h3>
+<p>Launchers MUST set:
+- <code>FLAVOR_WORKENV</code>: Absolute path to workenv directory
+- <code>FLAVOR_PACKAGE_NAME</code>: Package name from metadata
+- <code>FLAVOR_PACKAGE_VERSION</code>: Package version from metadata</p>
+<p>Launchers SHOULD set:
+- <code>FLAVOR_SLOT_{N}_PATH</code>: Path to extracted slot N
+- <code>FLAVOR_OS</code>: Operating system (linux/darwin/windows)
+- <code>FLAVOR_ARCH</code>: Architecture (amd64/arm64/x86)</p>
+<h2 id="8-security-considerations">8. Security Considerations<a class="headerlink" href="#8-security-considerations" title="Permanent link">&para;</a></h2>
+<h3 id="81-signature-verification">8.1. Signature Verification<a class="headerlink" href="#81-signature-verification" title="Permanent link">&para;</a></h3>
+<p>Implementations MUST verify signatures by default unless:
+- The environment variable <code>FLAVOR_INSECURE=1</code> is set
+- The implementation is explicitly configured to skip verification</p>
+<h3 id="82-checksum-validation">8.2. Checksum Validation<a class="headerlink" href="#82-checksum-validation" title="Permanent link">&para;</a></h3>
+<p>All checksums MUST be verified:
+- Index checksum before processing
+- Metadata checksum after decompression
+- Slot checksums after extraction</p>
+<h3 id="83-path-traversal">8.3. Path Traversal<a class="headerlink" href="#83-path-traversal" title="Permanent link">&para;</a></h3>
+<p>Implementations MUST prevent path traversal attacks when extracting slots. Paths containing <code>..</code> or absolute paths MUST be rejected.</p>
+<h2 id="9-implementation-requirements">9. Implementation Requirements<a class="headerlink" href="#9-implementation-requirements" title="Permanent link">&para;</a></h2>
+<h3 id="91-minimum-implementation">9.1. Minimum Implementation<a class="headerlink" href="#91-minimum-implementation" title="Permanent link">&para;</a></h3>
+<p>A conforming implementation MUST:
+- Read and verify the magic footer
+- Parse the index block
+- Verify index and metadata checksums
+- Extract at least one slot
+- Execute the specified command</p>
+<h3 id="92-recommended-implementation">9.2. Recommended Implementation<a class="headerlink" href="#92-recommended-implementation" title="Permanent link">&para;</a></h3>
+<p>Implementations SHOULD:
+- Verify Ed25519 signatures
+- Support all encoding types
+- Implement workenv caching
+- Support incremental extraction
+- Provide progress reporting</p>
+<h2 id="10-references">10. References<a class="headerlink" href="#10-references" title="Permanent link">&para;</a></h2>
+<ul>
+<li>RFC 2119: Key words for use in RFCs</li>
+<li>RFC 1950: ZLIB Compressed Data Format</li>
+<li>RFC 1952: GZIP file format</li>
+<li>Ed25519: High-speed high-security signatures</li>
+<li>Adler-32: Checksum algorithm</li>
+</ul>
+<hr />
+<p><em>Version: 2025.1</em></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2024 provide.io
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.instant", "navigation.tabs", "navigation.sections", "navigation.expand", "navigation.indexes", "navigation.top", "toc.follow", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "content.tabs.link"], "search": "../../../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.92b07e13.min.js"></script>
+      
+    
+  </body>
+</html>

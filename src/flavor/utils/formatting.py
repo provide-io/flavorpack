@@ -7,4 +7,4 @@
 from provide.foundation.utils.formatting import format_size
 
 # Re-export for compatibility
-__all__ = ['format_size']
+__all__ = ["format_size"]

@@ -7,11 +7,11 @@ XOR_KEY = bytes([3, 1, 4, 1, 5, 9, 2, 6])  # First 8 digits of π
 def xor_encode(data: bytes, key: bytes = XOR_KEY) -> bytes:
     """
     XOR encode data with repeating key.
-    
+
     Args:
         data: Bytes to encode
         key: XOR key bytes (defaults to π digits)
-        
+
     Returns:
         XOR encoded bytes
     """
@@ -21,13 +21,13 @@ def xor_encode(data: bytes, key: bytes = XOR_KEY) -> bytes:
 def xor_decode(data: bytes, key: bytes = XOR_KEY) -> bytes:
     """
     XOR decode data with repeating key.
-    
+
     Since XOR is symmetric, this is the same as encoding.
-    
+
     Args:
         data: Bytes to decode
         key: XOR key bytes (defaults to π digits)
-        
+
     Returns:
         XOR decoded bytes
     """
