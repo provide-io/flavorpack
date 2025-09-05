@@ -65,17 +65,10 @@ def cli(ctx: click.Context, log_level: str) -> None:
     ctx.ensure_object(dict)
     ctx.obj["log_level"] = log_level
 
-    from pyvider.telemetry import LoggingConfig, TelemetryConfig, setup_telemetry
+    from provide.foundation.logger import setup_logging
 
-    telemetry_log_level = log_level.upper()
-
-    config = TelemetryConfig(
-        service_name="flavor",
-        logging=LoggingConfig(
-            default_level=telemetry_log_level, console_formatter="key_value"
-        ),
-    )
-    setup_telemetry(config)
+    # Set up structured logging with foundation logger
+    setup_logging(level=log_level.upper())
 
 
 # Register simple commands
