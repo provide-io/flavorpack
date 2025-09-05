@@ -47,3 +47,4 @@ bin/
 core
 *.local.json
 *.local.json
+archive_*
