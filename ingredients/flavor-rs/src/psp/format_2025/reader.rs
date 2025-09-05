@@ -6,7 +6,7 @@ use std::path::Path;
 use std::time::Instant;
 
 use super::backends::{create_backend, Backend, MMapBackend};
-use super::constants::*;
+use super::constants::{ACCESS_AUTO, MAGIC_TRAILER_SIZE, PACKAGE_EMOJI_BYTES, MAGIC_WAND_EMOJI_BYTES, HEADER_SIZE, SLOT_DESCRIPTOR_SIZE};
 use super::debug::debug_dump;
 use super::extraction::extract_slot;
 use super::index::Index;
@@ -20,7 +20,17 @@ pub struct Reader {
     path: std::path::PathBuf,
     index: Option<Index>,
     metadata: Option<Metadata>,
-    launcher_size: Option<u64>,
+}
+
+impl std::fmt::Debug for Reader {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Reader")
+            .field("backend", &"<Backend>")
+            .field("path", &self.path)
+            .field("index", &self.index.as_ref().map(|_| "<Index>"))
+            .field("metadata", &self.metadata.as_ref().map(|_| "<Metadata>"))
+            .finish()
+    }
 }
 
 impl Reader {
@@ -43,7 +53,6 @@ impl Reader {
             path: path.to_path_buf(),
             index: None,
             metadata: None,
-            launcher_size: None,
         })
     }
 
@@ -60,7 +69,6 @@ impl Reader {
             path: path.to_path_buf(),
             index: None,
             metadata: None,
-            launcher_size: None,
         })
     }
 

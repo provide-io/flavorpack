@@ -87,8 +87,8 @@ def inspect_command(package_file: str, output_json: bool) -> None:
                     try:
                         dt = datetime.fromisoformat(build_time.replace("Z", "+00:00"))
                         build_time = dt.strftime("%Y-%m-%d %H:%M")
-                    except:
-                        pass
+                    except (ValueError, TypeError):
+                        pass  # Keep original timestamp if parsing fails
                 builder_version = metadata.get("build", {}).get(
                     "builder_version", "Unknown"
                 )

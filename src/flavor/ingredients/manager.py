@@ -563,8 +563,8 @@ class IngredientManager:
                 if not os.access(embedded_path, os.X_OK):
                     try:
                         embedded_path.chmod(0o755)
-                    except:
-                        pass
+                    except (OSError, PermissionError):
+                        pass  # Continue even if we can't set permissions
                 logger.debug(f"Found ingredient at: {embedded_path}")
                 return embedded_path
 

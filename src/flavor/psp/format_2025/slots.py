@@ -194,7 +194,6 @@ class SlotDescriptor:
         return result
 
 
-# Backwards compatibility - keep old SlotMetadata name
 @define
 class SlotMetadata:
     """Metadata for a slot in the PSPF package."""

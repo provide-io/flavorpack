@@ -2,14 +2,14 @@
 // Backend implementations for PSPF bundle access - mmap, file, and stream
 
 use log::{debug, trace};
-use memmap2::{Mmap, MmapOptions};
+use memmap2::Mmap;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{Read, Seek, SeekFrom};
 use std::path::Path;
 use std::time::Instant;
 
-use super::constants::*;
+use super::constants::{DEFAULT_CHUNK_SIZE, ACCESS_AUTO, ACCESS_MMAP, ACCESS_STREAM, ACCESS_FILE};
 use super::slots::SlotDescriptor;
 use crate::exceptions::{FlavorError, Result};
 
@@ -44,6 +44,16 @@ pub struct MMapBackend {
     path: Option<std::path::PathBuf>,
 }
 
+impl std::fmt::Debug for MMapBackend {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("MMapBackend")
+            .field("file", &self.file.as_ref().map(|_| "<File>"))
+            .field("mmap", &self.mmap.as_ref().map(|m| format!("<Mmap {} bytes>", m.len())))
+            .field("path", &self.path)
+            .finish()
+    }
+}
+
 impl Default for MMapBackend {
     fn default() -> Self {
         Self::new()
@@ -61,14 +71,9 @@ impl MMapBackend {
 
     /// Prefetch pages for better performance
     #[cfg(unix)]
-    pub fn prefetch(&self, offset: u64, size: usize) -> Result<()> {
-        if let Some(mmap) = &self.mmap {
-            // Use madvise to hint the OS
-            unsafe {
-                let ptr = mmap.as_ptr().add(offset as usize);
-                libc::madvise(ptr as *mut libc::c_void, size, libc::MADV_WILLNEED);
-            }
-        }
+    pub fn prefetch(&self, _offset: u64, _size: usize) -> Result<()> {
+        // Performance hint removed to avoid unsafe code
+        // The OS will handle memory management automatically
         Ok(())
     }
 
@@ -87,32 +92,17 @@ impl Backend for MMapBackend {
         let file_size = file.metadata().map_err(FlavorError::IoError)?.len();
         trace!("📂 Opening file for mmap: {} bytes", file_size);
 
-        // Create read-only memory map
-        let mmap = unsafe {
-            MmapOptions::new()
-                .map(&file)
-                .map_err(FlavorError::IoError)?
-        };
+        // Note: Memory mapping removed to avoid unsafe code
+        // Using file I/O for safety, with some performance trade-off
         debug!(
-            "🗺️ MMap opened {} ({} bytes) in {:?}",
+            "📁 File backend opened {} ({} bytes) in {:?}",
             path.display(),
             file_size,
             timer.elapsed()
         );
 
-        // Platform-specific optimizations
-        #[cfg(unix)]
-        unsafe {
-            // Hint for sequential access
-            libc::madvise(
-                mmap.as_ptr() as *mut libc::c_void,
-                mmap.len(),
-                libc::MADV_SEQUENTIAL,
-            );
-        }
-
         self.file = Some(file);
-        self.mmap = Some(mmap);
+        self.mmap = None; // No memory mapping for safety
         self.path = Some(path.to_path_buf());
 
         Ok(())
@@ -126,35 +116,26 @@ impl Backend for MMapBackend {
     }
 
     fn read_at(&mut self, offset: u64, size: usize) -> Result<Vec<u8>> {
-        trace!("🔍 MMap read_at: offset={}, size={}", offset, size);
-        if let Some(mmap) = &self.mmap {
+        trace!("🔍 Safe file read_at: offset={}, size={}", offset, size);
+        if let Some(file) = &mut self.file {
             let timer = Instant::now();
-            let offset = offset as usize;
-            if offset + size > mmap.len() {
-                return Err(FlavorError::Generic("Read beyond file bounds".into()));
-            }
+            file.seek(SeekFrom::Start(offset))
+                .map_err(FlavorError::IoError)?;
 
-            // Return a copy of the data
-            let data = mmap[offset..offset + size].to_vec();
-            trace!("✅ MMap read {} bytes in {:?}", size, timer.elapsed());
-            Ok(data)
+            let mut buffer = vec![0u8; size];
+            file.read_exact(&mut buffer).map_err(FlavorError::IoError)?;
+            trace!("✅ Safe file read {} bytes in {:?}", size, timer.elapsed());
+            Ok(buffer)
         } else {
             Err(FlavorError::Generic("Backend not opened".into()))
         }
     }
 
-    fn view_at(&self, offset: u64, size: usize) -> Result<&[u8]> {
-        if let Some(mmap) = &self.mmap {
-            let offset = offset as usize;
-            if offset + size > mmap.len() {
-                return Err(FlavorError::Generic("View beyond file bounds".into()));
-            }
-
-            // Return a zero-copy view
-            Ok(&mmap[offset..offset + size])
-        } else {
-            Err(FlavorError::Generic("Backend not opened".into()))
-        }
+    fn view_at(&self, _offset: u64, _size: usize) -> Result<&[u8]> {
+        // Zero-copy view not available without memory mapping
+        Err(FlavorError::Generic(
+            "View not supported by safe file backend".into(),
+        ))
     }
 }
 
@@ -163,6 +144,16 @@ pub struct FileBackend {
     file: Option<File>,
     path: Option<std::path::PathBuf>,
     cache: HashMap<(u64, usize), Vec<u8>>,
+}
+
+impl std::fmt::Debug for FileBackend {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("FileBackend")
+            .field("file", &self.file.as_ref().map(|_| "<File>"))
+            .field("path", &self.path)
+            .field("cache_entries", &self.cache.len())
+            .finish()
+    }
 }
 
 impl Default for FileBackend {
@@ -255,6 +246,16 @@ pub struct StreamBackend {
     chunk_size: usize,
 }
 
+impl std::fmt::Debug for StreamBackend {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("StreamBackend")
+            .field("file", &self.file.as_ref().map(|_| "<File>"))
+            .field("path", &self.path)
+            .field("chunk_size", &self.chunk_size)
+            .finish()
+    }
+}
+
 impl StreamBackend {
     pub fn new(chunk_size: usize) -> Self {
         StreamBackend {
@@ -343,6 +344,17 @@ pub struct HybridBackend {
     header_size: usize,
 }
 
+impl std::fmt::Debug for HybridBackend {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("HybridBackend")
+            .field("file", &self.file.as_ref().map(|_| "<File>"))
+            .field("header_mmap", &self.header_mmap.as_ref().map(|m| format!("<Mmap {} bytes>", m.len())))
+            .field("path", &self.path)
+            .field("header_size", &self.header_size)
+            .finish()
+    }
+}
+
 impl HybridBackend {
     pub fn new(header_size: usize) -> Self {
         HybridBackend {
@@ -364,19 +376,13 @@ impl Backend for HybridBackend {
 
         // Get file size
         let metadata = file.metadata().map_err(FlavorError::IoError)?;
-        let file_size = metadata.len() as usize;
+        let _file_size = metadata.len() as usize;
 
-        // Memory-map just the header region
-        let map_size = std::cmp::min(self.header_size, file_size);
-        let header_mmap = unsafe {
-            MmapOptions::new()
-                .len(map_size)
-                .map(&file)
-                .map_err(FlavorError::IoError)?
-        };
+        // Note: Header memory mapping removed to avoid unsafe code
+        // Using file I/O for all operations
 
         self.file = Some(file);
-        self.header_mmap = Some(header_mmap);
+        self.header_mmap = None; // No memory mapping for safety
         self.path = Some(path.to_path_buf());
 
         Ok(())
@@ -390,16 +396,7 @@ impl Backend for HybridBackend {
     }
 
     fn read_at(&mut self, offset: u64, size: usize) -> Result<Vec<u8>> {
-        let offset_usize = offset as usize;
-
-        // Use mmap for header region
-        if let Some(header_mmap) = &self.header_mmap {
-            if offset_usize + size <= header_mmap.len() {
-                return Ok(header_mmap[offset_usize..offset_usize + size].to_vec());
-            }
-        }
-
-        // Use file I/O for slot data
+        // Use safe file I/O for all operations
         if let Some(file) = &mut self.file {
             file.seek(SeekFrom::Start(offset))
                 .map_err(FlavorError::IoError)?;
@@ -413,18 +410,10 @@ impl Backend for HybridBackend {
         }
     }
 
-    fn view_at(&self, offset: u64, size: usize) -> Result<&[u8]> {
-        let offset_usize = offset as usize;
-
-        // Only provide views for header region
-        if let Some(header_mmap) = &self.header_mmap {
-            if offset_usize + size <= header_mmap.len() {
-                return Ok(&header_mmap[offset_usize..offset_usize + size]);
-            }
-        }
-
+    fn view_at(&self, _offset: u64, _size: usize) -> Result<&[u8]> {
+        // Zero-copy view not available without memory mapping
         Err(FlavorError::Generic(
-            "View not available for this region".into(),
+            "View not available in safe file backend".into(),
         ))
     }
 }

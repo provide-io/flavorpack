@@ -14,10 +14,9 @@ static LOCK_ACQUIRED: AtomicBool = AtomicBool::new(false);
 /// Check if a process with given PID is still running
 #[cfg(unix)]
 pub fn is_process_running(pid: u32) -> bool {
-    unsafe {
-        // kill with signal 0 just checks if process exists
-        libc::kill(pid as i32, 0) == 0
-    }
+    // Use safe process checking by reading /proc filesystem
+    let proc_path = format!("/proc/{}", pid);
+    std::path::Path::new(&proc_path).exists()
 }
 
 #[cfg(not(unix))]
