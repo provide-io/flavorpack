@@ -221,7 +221,10 @@ class PythonPackager:
     # ╚══════════════════════════════════════════════════════════════════════════════╝
 
     @retry_on_error(
+        # Network and download errors that warrant retry
         OSError, ConnectionError, TimeoutError,
+        # CRITICAL: This function uses urllib for direct PyPI downloads
+        # DO NOT change this to use UV - UV cannot download its own binary
         max_attempts=3,
         delay=2.0,
         backoff=2.0
