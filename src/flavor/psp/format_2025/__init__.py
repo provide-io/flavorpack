@@ -16,7 +16,7 @@ from flavor.psp.format_2025.constants import (
     SLOT_ALIGNMENT,
     SLOT_DESCRIPTOR_SIZE,
 )
-from flavor.psp.format_2025.crypto import generate_key_pair, sign_data, verify_signature
+from provide.foundation.crypto import generate_key_pair, sign_data, verify_signature
 from flavor.psp.format_2025.executor import BundleExecutor
 from flavor.psp.format_2025.index import PSPFIndex
 from flavor.psp.format_2025.keys import create_key_config, resolve_keys

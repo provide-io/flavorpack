@@ -32,7 +32,7 @@ from flavor.psp.format_2025.constants import (
     PACKAGE_EMOJI_BYTES,
     SLOT_DESCRIPTOR_SIZE,
 )
-from flavor.psp.format_2025.crypto import verify_signature
+from provide.foundation.crypto import verify_signature
 from flavor.psp.format_2025.index import PSPFIndex
 from flavor.psp.format_2025.slots import SlotDescriptor, SlotView
 
