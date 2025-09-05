@@ -76,13 +76,17 @@ class PackagingOrchestrator:
     def _detect_launcher_type(self, launcher_path: Path) -> str:
         """Detect launcher type by running the binary with --version."""
         logger.debug("🔍🚀📋 Detecting launcher type", path=str(launcher_path))
-        result = run_command(
-            [str(launcher_path), "--version"],
-            capture_output=True,
-            check=False,
-            timeout=5,
-            log_command=False,
-        )
+        try:
+            result = run_command(
+                [str(launcher_path), "--version"],
+                capture_output=True,
+                check=False,
+                timeout=5,
+                log_command=False,
+            )
+        except Exception as e:
+            raise BuildError(f"Failed to execute command: {e}") from e
+        
         output = result.stdout.lower()
         logger.trace("🔍📤📋 Launcher version output", output=result.stdout.strip())
 
