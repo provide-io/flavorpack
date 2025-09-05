@@ -15,6 +15,7 @@ from typing import Any
 import zipfile
 
 from provide.foundation import logger
+from provide.foundation.errors import retry_on_error
 
 from flavor.psp.format_2025.constants import (
     DEFAULT_DIR_PERMS,
@@ -219,6 +220,12 @@ class PythonPackager:
     # ║                      END OF CRITICAL PyPA HELPER METHODS                        ║
     # ╚══════════════════════════════════════════════════════════════════════════════╝
 
+    @retry_on_error(
+        OSError, ConnectionError, TimeoutError,
+        max_attempts=3,
+        delay=2.0,
+        backoff=2.0
+    )
     def _download_uv_wheel_via_url(self, dest_dir: Path) -> Path | None:
         """Download UV wheel directly from PyPI using curl/wget.
 
@@ -233,6 +240,7 @@ class PythonPackager:
         import json
         import shutil
         import urllib.request
+        import urllib.error
 
         logger.info("Downloading UV wheel directly from PyPI")
 
@@ -318,6 +326,12 @@ class PythonPackager:
             logger.error(f"Failed to download UV wheel via URL: {e}")
             return None
 
+    @retry_on_error(
+        OSError, ConnectionError, TimeoutError, FileNotFoundError,
+        max_attempts=3,
+        delay=1.0,
+        backoff=1.5
+    )
     def _download_uv_wheel(self, dest_dir: Path) -> Path | None:
         """Download manylinux2014-compatible UV wheel and extract binary.
 
