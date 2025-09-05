@@ -105,8 +105,9 @@ def build_package_from_manifest(
                 )
 
         # First check directly under [tool.flavor], then under [tool.flavor.metadata]
-        package_name = flavor_config.get("package_name") or \
-                      flavor_config.get("metadata", {}).get("package_name", project_name)
+        package_name = flavor_config.get("package_name") or flavor_config.get(
+            "metadata", {}
+        ).get("package_name", project_name)
 
         # Load build config from pyproject.toml, then override with buildconfig.toml if it exists
         build_config = flavor_config.get("build", {})

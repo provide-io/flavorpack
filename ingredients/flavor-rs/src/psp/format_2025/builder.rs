@@ -170,7 +170,7 @@ pub fn build(manifest_path: &Path, output_path: &Path, options: BuildOptions) ->
                         .and_then(|n| n.to_str())
                         .map(|s| s.to_string())))
                 .unwrap_or_else(|| "unknown".to_string()),
-            tool_version: "1.0.0".to_string(), // TODO: Get actual version
+            tool_version: env!("CARGO_PKG_VERSION").to_string(),
             size: launcher_size as i64,
             checksum: launcher_checksum,
             capabilities: vec!["mmap".to_string(), "signed".to_string()],
@@ -579,7 +579,7 @@ fn get_launcher(options: &BuildOptions) -> Result<Vec<u8>> {
 fn write_index(out: &mut File, index: &mut Index) -> Result<()> {
     // Calculate checksum with placeholder set to 0
     let mut bytes = index.pack();
-    bytes[12..16].copy_from_slice(&[0, 0, 0, 0]);
+    bytes[4..8].copy_from_slice(&[0, 0, 0, 0]);
     let checksum = adler::adler32_slice(&bytes);
     
     // Update the index structure with the calculated checksum
