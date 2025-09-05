@@ -19,6 +19,7 @@ def get_flavor_version() -> str:
     """Get the version of flavor-python."""
     try:
         from importlib.metadata import version
+
         return version("flavor")
     except (ImportError, Exception):
         # Fallback for development or if package not installed
@@ -83,11 +84,11 @@ def load_launcher_binary(launcher_type: str) -> bytes:
 
 def extract_launcher_version(launcher_data: bytes) -> str:
     """Extract version from launcher binary.
-    
+
     Looks for common version string patterns in the binary.
     """
     import re
-    
+
     # Try to find version strings in the binary
     # Look for patterns like "flavor-go-launcher 0.3.0" or "flavor-rs-launcher/1.0.0"
     patterns = [
@@ -95,18 +96,20 @@ def extract_launcher_version(launcher_data: bytes) -> str:
         rb"version[:\s]+([\d.]+)",  # version: 1.0.0
         rb"v([\d.]+)",  # v1.0.0
     ]
-    
+
     # Search in first 100KB of binary to avoid scanning entire file
-    search_data = launcher_data[:102400] if len(launcher_data) > 102400 else launcher_data
-    
+    search_data = (
+        launcher_data[:102400] if len(launcher_data) > 102400 else launcher_data
+    )
+
     for pattern in patterns:
         match = re.search(pattern, search_data, re.IGNORECASE)
         if match:
-            version = match.group(1).decode('utf-8', errors='ignore')
+            version = match.group(1).decode("utf-8", errors="ignore")
             # Validate it looks like a version
-            if re.match(r'^\d+\.\d+(\.\d+)?', version):
+            if re.match(r"^\d+\.\d+(\.\d+)?", version):
                 return version
-    
+
     # Fallback to unknown version
     return FALLBACK_VERSION
 

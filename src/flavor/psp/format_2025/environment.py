@@ -21,31 +21,36 @@ from provide.foundation.platform import (
 plog = get_logger()
 
 
-def process_runtime_env(
-    env_map: dict[str, str], 
-    runtime_env: dict[str, Any]
-) -> None:
+def process_runtime_env(env_map: dict[str, str], runtime_env: dict[str, Any]) -> None:
     """
-    Process runtime environment configuration.
-    
+    Process runtime environment configuration for PSPF/2025 packages.
+
     This function modifies the environment map in-place, applying runtime
     environment operations in a specific order to ensure correct behavior.
-    
+    This implementation aligns with the Rust and Go implementations for
+    cross-language consistency in the PSPF/2025 format.
+
     Operations are processed in this order:
-    1. Analyze pass patterns - Build list of variables to preserve  
+    1. Analyze pass patterns - Build list of variables to preserve
     2. unset - Remove specified variables (skipping those marked to preserve)
-    3. map - Rename variables
-    4. set - Set specific values
+    3. map - Rename variables (old_name -> new_name)
+    4. set - Set specific values (override or add new)
     5. pass verification - Check that required variables/patterns exist
-    
+
+    Pattern matching supports:
+    - Exact matches: "PATH" matches only PATH
+    - Glob patterns: "PYTHON_*" matches PYTHON_HOME, PYTHON_PATH, etc.
+    - Wildcard: "*" matches all variables
+
     Args:
-        env_map: Mutable environment variables dictionary to process
+        env_map: Mutable environment variables dictionary to process.
+                 This dict is modified in-place.
         runtime_env: Runtime environment configuration containing:
             - pass: List of patterns for variables to preserve/require
             - unset: List of patterns for variables to remove
             - map: Dict of old_name -> new_name mappings
             - set: Dict of variable -> value assignments
-    
+
     Example:
         >>> env = {"FOO": "bar", "BAZ": "qux", "TEMP": "123"}
         >>> runtime = {
@@ -56,12 +61,17 @@ def process_runtime_env(
         ... }
         >>> process_runtime_env(env, runtime)
         >>> # Result: {"NEW_FOO": "bar", "BAZ": "qux", "CUSTOM": "value"}
+
+    Note:
+        This function is called during package execution to prepare the
+        environment for the packaged application. It ensures consistent
+        environment handling across different platforms and launchers.
     """
     plog.debug("🔧 Processing runtime environment configuration")
-    
+
     # Build list of patterns to preserve (pass patterns)
     pass_patterns = runtime_env.get("pass", [])
-    
+
     # Helper to check if a variable should be preserved
     def should_preserve(key: str) -> bool:
         """Check if a key matches any pass pattern."""
@@ -74,23 +84,26 @@ def process_runtime_env(
                 if fnmatch.fnmatch(key, pattern):
                     return True
         return False
-    
+
     # Process unset operations first (highest priority)
-    if "unset" in runtime_env and runtime_env["unset"]:
+    if runtime_env.get("unset"):
         unset_patterns = runtime_env["unset"]
         plog.debug(f"🗑️ Processing {len(unset_patterns)} unset patterns")
-        
+
         for pattern in unset_patterns:
             if pattern == "*":
                 # Special case: unset all except preserved
-                keys_to_remove = [k for k in env_map.keys() if not should_preserve(k)]
+                keys_to_remove = [k for k in env_map if not should_preserve(k)]
                 for key in keys_to_remove:
                     del env_map[key]
                     plog.trace(f"  🗑️ Unset: {key}")
             elif "*" in pattern or "?" in pattern:
                 # Glob pattern
-                keys_to_remove = [k for k in env_map.keys() 
-                                if fnmatch.fnmatch(k, pattern) and not should_preserve(k)]
+                keys_to_remove = [
+                    k
+                    for k in env_map
+                    if fnmatch.fnmatch(k, pattern) and not should_preserve(k)
+                ]
                 for key in keys_to_remove:
                     del env_map[key]
                     plog.trace(f"  🗑️ Unset (glob): {key}")
@@ -99,26 +112,26 @@ def process_runtime_env(
                 if pattern in env_map and not should_preserve(pattern):
                     del env_map[pattern]
                     plog.debug(f"🗑️ Unset: {pattern}")
-    
+
     # Process map operations (variable renaming)
-    if "map" in runtime_env and runtime_env["map"]:
+    if runtime_env.get("map"):
         map_ops = runtime_env["map"]
         plog.debug(f"🔄 Processing {len(map_ops)} map operations")
-        
+
         for old_key, new_key in map_ops.items():
             if old_key in env_map and not should_preserve(old_key):
                 env_map[new_key] = env_map.pop(old_key)
                 plog.debug(f"🔄 Mapped: {old_key} -> {new_key}")
-    
+
     # Process set operations (add/override variables)
-    if "set" in runtime_env and runtime_env["set"]:
+    if runtime_env.get("set"):
         set_ops = runtime_env["set"]
         plog.debug(f"📝 Processing {len(set_ops)} set operations")
-        
+
         for key, value in set_ops.items():
             env_map[key] = value
             plog.debug(f"📝 Set: {key} = '{value}'")
-    
+
     # Verify all required pass patterns are satisfied
     if pass_patterns:
         missing = []
@@ -127,10 +140,12 @@ def process_runtime_env(
             if "*" not in pattern and "?" not in pattern:
                 if pattern not in env_map:
                     missing.append(pattern)
-        
+
         if missing:
-            plog.warning(f"⚠️ Required environment variables not found: {', '.join(missing)}")
-    
+            plog.warning(
+                f"⚠️ Required environment variables not found: {', '.join(missing)}"
+            )
+
     plog.debug("✅ Runtime environment processing complete")
 
 

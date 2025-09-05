@@ -2,18 +2,16 @@
 # tests/test_pspf_2025_integration.py
 # Integration test for building and reading PSPF bundles with new format
 
-import pytest
-import tempfile
 from pathlib import Path
+import tempfile
 
-from flavor.psp.format_2025.builder import PSPFBuilder
-from flavor.psp.format_2025.reader import PSPFReader
-from flavor.psp.format_2025.slots import SlotMetadata
+import pytest
+
 from flavor.psp.format_2025.constants import (
     ACCESS_MMAP,
-    HEADER_SIZE,
-    SLOT_DESCRIPTOR_SIZE,
 )
+from flavor.psp.format_2025.reader import PSPFReader
+from flavor.psp.format_2025.slots import SlotMetadata
 
 
 class TestPSPFIntegration:
@@ -143,7 +141,7 @@ class TestPSPFIntegration:
 
         # Test slot views (lazy loading) if they support content
         view = reader.get_slot_view(0)
-        if hasattr(view, 'content'):
+        if hasattr(view, "content"):
             # View might have the actual content or the path
             assert isinstance(view.content, bytes)
 

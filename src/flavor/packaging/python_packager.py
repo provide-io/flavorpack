@@ -23,7 +23,6 @@ from flavor.psp.format_2025.constants import (
 from flavor.utils import (
     get_arch_name,
     get_os_name,
-    get_platform_string,
     run_command,
 )
 from flavor.utils.archive import deterministic_filter
@@ -193,11 +192,15 @@ class PythonPackager:
                 # manylinux2014 = glibc 2.17+ (CentOS 7, Amazon Linux 2, Ubuntu 14.04+)
                 if arch == "amd64":
                     cmd.extend(["--platform", f"{self.MANYLINUX_TAG}_x86_64"])
-                    logger.debug(f"Added platform constraint: {self.MANYLINUX_TAG}_x86_64")
+                    logger.debug(
+                        f"Added platform constraint: {self.MANYLINUX_TAG}_x86_64"
+                    )
                 elif arch == "arm64":
                     # ARM64 doesn't have manylinux2010, use manylinux2014
                     cmd.extend(["--platform", f"{self.MANYLINUX_TAG}_aarch64"])
-                    logger.debug(f"Added platform constraint: {self.MANYLINUX_TAG}_aarch64")
+                    logger.debug(
+                        f"Added platform constraint: {self.MANYLINUX_TAG}_aarch64"
+                    )
                     logger.warning("⚠️ grpcio on CentOS 7 ARM64 may have C++ ABI issues")
 
             # Also specify Python version to match our target
@@ -228,8 +231,8 @@ class PythonPackager:
             Path to UV binary if successful, None otherwise
         """
         import json
-        import urllib.request
         import shutil
+        import urllib.request
 
         logger.info("Downloading UV wheel directly from PyPI")
 

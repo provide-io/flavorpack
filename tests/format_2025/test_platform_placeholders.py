@@ -1,8 +1,9 @@
 """Test placeholder substitution for platform variables."""
 
-import platform
-import pytest
 from pathlib import Path
+
+import pytest
+
 from flavor.psp.metadata.paths import substitute_placeholders
 
 

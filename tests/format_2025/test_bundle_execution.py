@@ -4,13 +4,12 @@ PSPF 2025 Execution Tests
 Tests bundle execution, command substitution, and process management.
 """
 
-import os
-import tempfile
 from pathlib import Path
+import tempfile
 
 import pytest
 
-from flavor.psp.format_2025 import PSPFBuilder, PSPFReader, PSPFLauncher, SlotMetadata
+from flavor.psp.format_2025 import PSPFBuilder, PSPFLauncher, PSPFReader, SlotMetadata
 
 
 class TestPSPFExecution:
@@ -203,7 +202,9 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
         result = launcher.execute()
         assert result["working_directory"] is not None
 
-    @pytest.mark.skip(reason="Exit code propagation through launcher chain not yet implemented")
+    @pytest.mark.skip(
+        reason="Exit code propagation through launcher chain not yet implemented"
+    )
     def test_exit_code_propagation(self, temp_dir):
         """Test that child process exit codes are properly propagated through the launcher chain."""
         # Create script that exits with specific code
@@ -263,7 +264,9 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
         assert limits["cpu"] == "2"
         assert limits["timeout"] == "300s"
 
-    @pytest.mark.skip(reason="Signal propagation between launcher and child process not implemented")
+    @pytest.mark.skip(
+        reason="Signal propagation between launcher and child process not implemented"
+    )
     def test_signal_handling(self, executable_bundle):
         """Test signal propagation from launcher to child process and cleanup on termination."""
         launcher = PSPFLauncher(executable_bundle)

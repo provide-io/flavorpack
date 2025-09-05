@@ -454,9 +454,9 @@ class PSPFLauncher(PSPFReader):
                         logger.debug("✅ Command succeeded")
                     except Exception as e:
                         logger.error(f"❌ Command failed: {command}")
-                        logger.error(f"❌ Error details: {str(e)}")
+                        logger.error(f"❌ Error details: {e!s}")
                         raise RuntimeError(
-                            f"Setup command failed: {command}. Error: {str(e)}"
+                            f"Setup command failed: {command}. Error: {e!s}"
                         ) from e
 
                     logger.debug("✅ Command succeeded")

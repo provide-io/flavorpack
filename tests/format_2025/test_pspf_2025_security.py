@@ -6,23 +6,16 @@ Tests ephemeral keys, integrity sealing, and tamper detection.
 
 import hashlib
 import json
-import os
 import struct
-import tarfile
-import tempfile
-from pathlib import Path
-import zlib
 
 import pytest
 
 from flavor.psp.format_2025 import (
     PSPFBuilder,
-    PSPFReader,
     PSPFLauncher,
-    PSPFIndex,
+    PSPFReader,
     SlotMetadata,
     generate_key_pair,
-    HEADER_SIZE,
 )
 
 
@@ -129,7 +122,6 @@ class TestPSPFSecurity:
 
         # The metadata is gzipped JSON, not a tarball
         import gzip
-        import io
 
         metadata_json = gzip.decompress(archive_data)
         metadata = json.loads(metadata_json)
@@ -169,7 +161,6 @@ class TestPSPFSecurity:
             archive_data = f.read(index.metadata_size)
 
             # Decompress the JSON
-            import io
             import gzip
 
             metadata_json = gzip.decompress(archive_data)
@@ -284,7 +275,9 @@ class TestPSPFSecurity:
         with open(bundle_path, "r+b") as f:
             magic_trailer_start = file_size - 8200
             index_start = magic_trailer_start + 4  # Skip 📦 emoji
-            package_size_offset = index_start + 8  # Skip format_version (4) and index_checksum (4)
+            package_size_offset = (
+                index_start + 8
+            )  # Skip format_version (4) and index_checksum (4)
             f.seek(package_size_offset)
             f.write(struct.pack("<Q", 0xDEADBEEF))  # Write invalid package size
 

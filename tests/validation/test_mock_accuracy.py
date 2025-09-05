@@ -6,11 +6,11 @@ These tests ensure that our mock launchers accurately represent real launcher be
 They should be run as integration tests with real ingredients available.
 """
 
-import pytest
-from pathlib import Path
 
-from tests.conftest import MOCK_LAUNCHER_DATA, MOCK_LAUNCHER_SIZE
+import pytest
+
 from flavor.psp.format_2025 import PSPFBuilder, PSPFReader
+from tests.conftest import MOCK_LAUNCHER_DATA, MOCK_LAUNCHER_SIZE
 
 
 @pytest.mark.integration
@@ -123,8 +123,9 @@ class TestMockAccuracy:
         This test builds two packages - one with mock and one with real launcher,
         and verifies they have compatible structure.
         """
-        from flavor.psp.format_2025.metadata import assembly
         import unittest.mock
+
+        from flavor.psp.format_2025.metadata import assembly
 
         # Build with mock
         mock_output = temp_dir / "mock_package.psp"

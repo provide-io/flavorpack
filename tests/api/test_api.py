@@ -1,12 +1,10 @@
 """Tests for the high-level flavor API."""
 
-from pathlib import Path
 from unittest.mock import patch
 
 import pytest
 
 from flavor import api
-from flavor.exceptions import ValidationError
 
 
 @pytest.fixture
