@@ -13,14 +13,14 @@ from flavor.exceptions import BuildError
 
 
 def get_cli_executable_name(
-    package_name: str, build_config: dict[str, Any], is_windows: bool
+    package_name: str, build_config: dict[str, Any], windows: bool
 ) -> str:
     """Get the CLI executable name from build config or fallback to package name.
 
     Args:
         package_name: The package name
         build_config: Build configuration containing cli_scripts
-        is_windows: Whether we're on Windows
+        windows: Whether we're on Windows
 
     Returns:
         The executable name with appropriate extension
@@ -29,10 +29,10 @@ def get_cli_executable_name(
     if cli_scripts:
         # Use the first defined CLI script
         first_script = next(iter(cli_scripts.keys()))
-        return f"{first_script}.exe" if is_windows else first_script
+        return f"{first_script}.exe" if windows else first_script
     else:
         # Fallback for JSON manifests or packages without scripts
-        return f"{package_name}.exe" if is_windows else package_name
+        return f"{package_name}.exe" if windows else package_name
 
 
 def create_slot_tarballs(
@@ -48,8 +48,8 @@ def create_slot_tarballs(
     Returns:
         Dictionary mapping slot names to tarball paths
     """
-    is_windows = is_windows()
-    uv_exe = "uv.exe" if is_windows else "uv"
+    windows = is_windows()
+    uv_exe = "uv.exe" if windows else "uv"
 
     slots = {}
 
@@ -96,8 +96,8 @@ def create_builder_manifest(
     key_paths: dict[str, str | None],
 ) -> dict[str, Any]:
     """Create manifest for external builder."""
-    is_windows = is_windows()
-    uv_exe = "uv.exe" if is_windows else "uv"
+    windows = is_windows()
+    uv_exe = "uv.exe" if windows else "uv"
     bin_dir = "Scripts" if is_windows else "bin"
     # Use the exact Python binary name that UV provides
     if is_windows:
@@ -106,7 +106,7 @@ def create_builder_manifest(
         # UV installs Python as python3 on all Unix platforms
         python_exe = "python3"
     python_path = f"{{workenv}}/{bin_dir}/{python_exe}"
-    package_exe = get_cli_executable_name(package_name, build_config, is_windows)
+    package_exe = get_cli_executable_name(package_name, build_config, windows)
 
     manifest = {
         "name": package_name,
@@ -280,7 +280,7 @@ def create_python_builder_metadata(
     package_name: str, version: str, build_config: dict[str, Any]
 ) -> dict[str, Any]:
     """Create metadata for Python builder."""
-    is_windows = is_windows()
+    windows = is_windows()
     bin_dir = "Scripts" if is_windows else "bin"
     # Use the exact Python binary name that UV provides
     if is_windows:
@@ -289,7 +289,7 @@ def create_python_builder_metadata(
         # UV installs Python as python3 on all Unix platforms
         python_exe = "python3"
     python_path = f"{{workenv}}/{bin_dir}/{python_exe}"
-    package_exe = get_cli_executable_name(package_name, build_config, is_windows)
+    package_exe = get_cli_executable_name(package_name, build_config, windows)
 
     metadata = {
         "package": {"name": package_name, "version": version},
@@ -369,8 +369,8 @@ def create_python_slot_tarballs(
     temp_dir: Path, artifacts: dict[str, Path], progress: Any
 ) -> tuple[Path, Path, Path]:
     """Create slot tarballs for Python builder."""
-    is_windows = is_windows()
-    uv_exe = "uv.exe" if is_windows else "uv"
+    windows = is_windows()
+    uv_exe = "uv.exe" if windows else "uv"
 
     with progress.task(total=3, description="Creating slots") as bar:
         # UV slot - single gzipped binary
