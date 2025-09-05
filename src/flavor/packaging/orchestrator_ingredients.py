@@ -3,11 +3,11 @@
 import json
 import os
 from pathlib import Path
-import platform
 import tarfile
 from typing import Any
 
 from provide.foundation import logger
+from provide.foundation.platform import is_windows
 
 from flavor.exceptions import BuildError
 
@@ -48,7 +48,7 @@ def create_slot_tarballs(
     Returns:
         Dictionary mapping slot names to tarball paths
     """
-    is_windows = platform.system() == "Windows"
+    is_windows = is_windows()
     uv_exe = "uv.exe" if is_windows else "uv"
 
     slots = {}
@@ -96,7 +96,7 @@ def create_builder_manifest(
     key_paths: dict[str, str | None],
 ) -> dict[str, Any]:
     """Create manifest for external builder."""
-    is_windows = platform.system() == "Windows"
+    is_windows = is_windows()
     uv_exe = "uv.exe" if is_windows else "uv"
     bin_dir = "Scripts" if is_windows else "bin"
     # Use the exact Python binary name that UV provides
@@ -280,7 +280,7 @@ def create_python_builder_metadata(
     package_name: str, version: str, build_config: dict[str, Any]
 ) -> dict[str, Any]:
     """Create metadata for Python builder."""
-    is_windows = platform.system() == "Windows"
+    is_windows = is_windows()
     bin_dir = "Scripts" if is_windows else "bin"
     # Use the exact Python binary name that UV provides
     if is_windows:
@@ -369,7 +369,7 @@ def create_python_slot_tarballs(
     temp_dir: Path, artifacts: dict[str, Path], progress: Any
 ) -> tuple[Path, Path, Path]:
     """Create slot tarballs for Python builder."""
-    is_windows = platform.system() == "Windows"
+    is_windows = is_windows()
     uv_exe = "uv.exe" if is_windows else "uv"
 
     with progress.task(total=3, description="Creating slots") as bar:
