@@ -220,14 +220,6 @@ def make_relative_to_workenv(absolute_path: str, workenv_dir: str) -> str:
     return validate_metadata_path(absolute_path)
 
 
-def get_normalized_os() -> str:
-    """Get normalized OS name."""
-    return get_os_name()
-
-
-def get_normalized_arch() -> str:
-    """Get normalized architecture name."""
-    return get_arch_name()
 
 
 def substitute_placeholders(path: str, workenv_path: Path) -> str:
@@ -251,8 +243,8 @@ def substitute_placeholders(path: str, workenv_path: Path) -> str:
         return path
 
     # Get platform values
-    os_name = get_normalized_os()
-    arch_name = get_normalized_arch()
+    os_name = get_os_name()
+    arch_name = get_arch_name()
     platform_str = f"{os_name}_{arch_name}"
 
     # Substitute placeholders
