@@ -10,7 +10,6 @@ import tempfile
 import pytest
 
 from flavor.psp.format_2025 import PSPFBuilder, PSPFLauncher, PSPFReader
-from flavor.psp.format_2025.crypto import generate_key_pair as generate_ephemeral_keys
 
 
 class TestPackageSecurity:
