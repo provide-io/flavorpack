@@ -327,8 +327,8 @@ impl Index {
     pub fn verify_checksum(&self) -> bool {
         let mut bytes = self.pack();
 
-        // Zero out checksum field
-        bytes[12..16].copy_from_slice(&[0, 0, 0, 0]);
+        // Zero out checksum field (bytes 4-8)
+        bytes[4..8].copy_from_slice(&[0, 0, 0, 0]);
 
         let calculated = adler::adler32_slice(&bytes[..]);
         calculated == self.index_checksum

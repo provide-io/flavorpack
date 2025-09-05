@@ -233,6 +233,25 @@ class TestPSPFCore:
             assert "package" in metadata
             assert "format" in metadata
             assert metadata["format"] == "PSPF/2025"
+    
+    def test_metadata_placement(self, temp_dir, simple_metadata, test_builder):
+        """Test that metadata immediately follows launcher per PSPF spec."""
+        bundle_path = temp_dir / "test.psp"
+        result = test_builder.metadata(**simple_metadata, allow_empty=True).build(
+            bundle_path
+        )
+        assert result.success, f"Build failed: {result.errors}"
+        
+        # Read index to get offsets
+        reader = PSPFReader(bundle_path)
+        index = reader.read_index()
+        
+        # Metadata should immediately follow launcher with no gap
+        assert index.metadata_offset == index.launcher_size, (
+            f"Metadata should immediately follow launcher. "
+            f"Launcher ends at {index.launcher_size}, but metadata starts at {index.metadata_offset}. "
+            f"Gap of {index.metadata_offset - index.launcher_size} bytes violates PSPF spec."
+        )
 
     def test_metadata_psp_json_required(self, temp_dir, simple_metadata, test_builder):
         """Test psp.json is required in metadata."""

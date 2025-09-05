@@ -1,75 +1,5 @@
 # API Reference
 
-## PSPF/2025 Format Specification
-
-### Binary Format
-
-```
-Offset  Size    Content
-0       varies  Launcher Binary
-N       8192    Index Block
-N+8192  varies  Metadata (gzipped JSON)
-...     varies  Slot Table
-...     varies  Slot Data
-EOF-8   8       Magic Footer (📦🪄)
-```
-
-### Index Block (8192 bytes)
-
-| Offset | Size | Field | Description |
-|--------|------|-------|-------------|
-| 0 | 4 | magic | Format identifier (0x50535046) |
-| 4 | 2 | version_major | Format major version |
-| 6 | 2 | version_minor | Format minor version |
-| 8 | 8 | metadata_offset | Offset to metadata |
-| 16 | 8 | metadata_size | Size of metadata |
-| 24 | 8 | slots_offset | Offset to slot table |
-| 32 | 4 | slot_count | Number of slots |
-| 36 | 32 | public_key | Ed25519 public key |
-| 68 | 64 | signature | Ed25519 signature |
-| 132 | 8060 | reserved | Reserved for future use |
-
-### Metadata Structure (JSON)
-
-```json
-{
-  "package": {
-    "name": "string",
-    "version": "string"
-  },
-  "slots": [
-    {
-      "name": "string",
-      "purpose": "payload|runtime|config|asset|library|binary|installer|data",
-      "lifecycle": "runtime|volatile|temp|cache|init|lazy|eager",
-      "extract_to": "string (optional)",
-      "platform": "string (optional)",
-      "checksum": "string",
-      "size": "number",
-      "encoding": "raw|tar|gzip|tgz"
-    }
-  ],
-  "execution": {
-    "command": "string",
-    "args": ["string"],
-    "env": {"key": "value"},
-    "primary_slot": "number"
-  },
-  "workenv": {
-    "directories": [
-      {"path": "string", "mode": "string"}
-    ],
-    "env": {"key": "value"}
-  },
-  "runtime": {
-    "set": {"key": "value"},
-    "unset": ["string"],
-    "pass": ["string"],
-    "map": {"old": "new"}
-  }
-}
-```
-
 ## Command Line Interface
 
 ### Global Options
@@ -98,13 +28,13 @@ flavor pack [OPTIONS]
 **Examples:**
 ```bash
 # Basic package
-flavor pack --manifest pyproject.toml
+flavor pack --manifest pyproject.toml --output myapp.psp
 
 # Deterministic build
-flavor pack --key-seed production-v1
+flavor pack --manifest pyproject.toml --output myapp.psp --key-seed production-v1
 
 # Custom launcher
-flavor pack --launcher-bin ingredients/bin/flavor-go-launcher
+flavor pack --manifest pyproject.toml --output myapp.psp --launcher-bin ingredients/bin/flavor-go-launcher-darwin_arm64
 ```
 
 ### Verify Command
@@ -141,6 +71,23 @@ flavor inspect myapp.psp --format json
 flavor inspect myapp.psp --show-slots
 ```
 
+### Extract Command
+
+```bash
+flavor extract PACKAGE_PATH [OPTIONS]
+```
+
+**Options:**
+- `--output PATH` - Output directory
+- `--slot ID` - Extract specific slot only
+- `--force` - Overwrite existing files
+
+**Examples:**
+```bash
+flavor extract myapp.psp --output extracted/
+flavor extract myapp.psp --slot 0 --output runtime/
+```
+
 ### Clean Command
 
 ```bash
@@ -159,97 +106,87 @@ flavor clean
 flavor clean --all --yes
 ```
 
-### Ingredients Command
-
-```bash
-flavor ingredients SUBCOMMAND [OPTIONS]
-```
-
-**Subcommands:**
-- `list` - List available ingredients
-- `build` - Build ingredients from source
-- `test` - Test ingredient functionality
-- `info` - Show ingredient information
-- `clean` - Clean ingredient cache
-
-**Examples:**
-```bash
-flavor ingredients list
-flavor ingredients build --lang rust
-flavor ingredients test
-```
-
 ## Environment Variables
 
 ### Build-Time Variables
 
 - `FLAVOR_LAUNCHER_BIN` - Default launcher binary path
-- `FLAVOR_BUILDER_BIN` - Default builder binary path
-- `FLAVOR_WORKENV_BASE` - Base directory for workenv
-- `FLAVOR_KEY_SEED` - Default key seed
+- `FLAVOR_BUILDER_BIN` - Default builder binary path  
+- `FLAVOR_KEY_SEED` - Default key seed for signing
 - `FLAVOR_LOG_LEVEL` - Default log level
 
 ### Runtime Variables
 
-- `FLAVOR_WORKENV` - Current workenv directory (set by launcher)
-- `FLAVOR_LOG_LEVEL` - Runtime log level
-- `FLAVOR_INSECURE` - Skip signature verification (TESTING ONLY)
+Set by launchers:
+- `FLAVOR_WORKENV` - Workenv directory path
+- `FLAVOR_PACKAGE_NAME` - Package name
+- `FLAVOR_PACKAGE_VERSION` - Package version
+- `FLAVOR_SLOT_{N}_PATH` - Path to extracted slot N
+
+User configurable:
+- `FLAVOR_LOG_LEVEL` - Runtime log level (error, warn, info, debug, trace)
+- `FLAVOR_INSECURE=1` - Skip signature verification (TESTING ONLY)
 - `FLAVOR_CACHE_DIR` - Override cache directory
 - `XDG_CACHE_HOME` - Standard cache directory
 
-## Slot Specifications
+## Python API
 
-### Slot Purposes
+### Package Building
 
-| Purpose | Description | Typical Use |
-|---------|-------------|-------------|
-| `payload` | Main application data | Application code |
-| `runtime` | Executable runtime | Python, Node.js |
-| `config` | Configuration files | Settings, configs |
-| `asset` | Static resources | Images, fonts |
-| `library` | Shared libraries | Dependencies |
-| `binary` | Native executables | Ingredient programs |
-| `installer` | Installation files | Wheels, setup scripts |
-| `data` | Generic data | Databases, models |
+```python
+from flavor.packaging import Orchestrator
 
-### Slot Lifecycles
+# Build a package
+orchestrator = Orchestrator()
+orchestrator.build(
+    manifest_path="pyproject.toml",
+    output_path="myapp.psp",
+    launcher_bin="ingredients/bin/flavor-rs-launcher-darwin_arm64",
+    key_seed="production"
+)
+```
 
-| Lifecycle | Description | Cleanup |
-|-----------|-------------|---------|
-| `runtime` | Available entire execution | Never |
-| `volatile` | Deleted after setup | After setup |
-| `temp` | Deleted after session | After exit |
-| `cache` | Can be regenerated | On cache clear |
-| `init` | First run only | After first run |
-| `lazy` | Load on demand | When needed |
-| `eager` | Load immediately | At startup |
+### Package Verification
 
-### Slot Encodings
+```python
+from flavor.verification import verify_package
 
-| Encoding | Value | Description |
-|----------|-------|-------------|
-| `raw` | 0 | Uncompressed data |
-| `tar` | 1 | Tar archive |
-| `gzip` | 2 | Gzipped single file |
-| `tgz` | 3 | Gzipped tar archive |
+# Verify a package
+result = verify_package("myapp.psp")
+if result['valid']:
+    print(f"Package is valid")
+    print(f"Signed by: {result['public_key_hex']}")
+```
 
-## Platform Identifiers
+### Package Inspection
 
-Format: `{os}_{arch}`
+```python
+from flavor.psp.format_2025 import PSPFReader
 
-**Operating Systems:**
-- `linux` - Linux
-- `darwin` - macOS
+# Read package metadata
+reader = PSPFReader("myapp.psp")
+index = reader.read_index()
+metadata = reader.read_metadata()
 
-**Architectures:**
-- `amd64` - x86-64
-- `arm64` - ARM 64-bit
-- `386` - x86 32-bit
-- `arm` - ARM 32-bit
+print(f"Package: {metadata['package']['name']}")
+print(f"Version: {metadata['package']['version']}")
+print(f"Slots: {index.slot_count}")
+```
 
-**Examples:**
-- `linux_amd64` - Linux x86-64
-- `darwin_arm64` - macOS Apple Silicon
+### Working with Slots
+
+```python
+from flavor.psp.format_2025 import PSPFReader
+
+reader = PSPFReader("myapp.psp")
+slots = reader.read_slot_table()
+
+for slot in slots:
+    print(f"Slot {slot.id}: {slot.size} bytes, encoding={slot.encoding}")
+    
+# Extract specific slot
+reader.extract_slot(slot_id=0, output_dir="extracted/")
+```
 
 ## Exit Codes
 
@@ -267,20 +204,42 @@ Format: `{os}_{arch}`
 | 9 | Cache error |
 | 10 | Network error |
 
+## Platform Identifiers
+
+Format: `{os}_{arch}`
+
+**Operating Systems:**
+- `linux` - Linux
+- `darwin` - macOS
+- `windows` - Windows
+
+**Architectures:**
+- `amd64` - x86-64
+- `arm64` - ARM 64-bit
+- `386` - x86 32-bit
+- `arm` - ARM 32-bit
+
+**Examples:**
+- `linux_amd64` - Linux x86-64
+- `darwin_arm64` - macOS Apple Silicon
+- `windows_amd64` - Windows x86-64
+
 ## Security
 
 ### Ed25519 Signatures
 
 All packages are signed with Ed25519:
-- 32-byte public key
-- 64-byte signature
-- Signs metadata hash
-- Verified on every launch
+- 32-byte public key stored at index offset 64-95
+- 512-byte signature stored at index offset 128-639
+- Signs the index block (with signature zeroed) and metadata
+- Verified on every launch unless `FLAVOR_INSECURE=1`
 
 ### Key Generation
 
 ```python
-# Deterministic keys
+from flavor.psp.format_2025.crypto import generate_keypair
+
+# Deterministic keys from seed
 private_key, public_key = generate_keypair(seed="my-seed")
 
 # Random keys
@@ -289,47 +248,9 @@ private_key, public_key = generate_keypair()
 
 ### Verification Process
 
-1. Read public key from index
-2. Read signature from index
-3. Hash metadata
-4. Verify signature matches hash
-5. Reject if verification fails
-
-## Python API
-
-### Package Building
-
-```python
-from flavor import package
-
-# Build a package
-package.build(
-    manifest="pyproject.toml",
-    output="myapp.psp",
-    launcher_bin="flavor-rs-launcher",
-    key_seed="production"
-)
-```
-
-### Package Verification
-
-```python
-from flavor import verify
-
-# Verify a package
-result = verify.check("myapp.psp")
-if result.valid:
-    print(f"Package {result.name} v{result.version} is valid")
-```
-
-### Package Inspection
-
-```python
-from flavor import inspect
-
-# Inspect a package
-info = inspect.read("myapp.psp")
-print(f"Package: {info.name}")
-print(f"Version: {info.version}")
-print(f"Slots: {len(info.slots)}")
-```
+1. Read public key from index block
+2. Read signature from index block
+3. Zero out signature field in index copy
+4. Concatenate index and metadata
+5. Verify Ed25519 signature
+6. Reject if verification fails

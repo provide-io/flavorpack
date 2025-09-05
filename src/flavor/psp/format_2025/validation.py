@@ -104,9 +104,7 @@ def validate_slots(slots: list[SlotMetadata]) -> list[str]:
     for _i, slot in enumerate(slots):
         # Check index uniqueness
         if slot.index in seen_indices:
-            errors.append(
-                f"🔢 Duplicate slot index {slot.index} for slot '{slot.id}'"
-            )
+            errors.append(f"🔢 Duplicate slot index {slot.index} for slot '{slot.id}'")
         seen_indices.add(slot.index)
 
         # Check name validity
@@ -141,7 +139,9 @@ def validate_slots(slots: list[SlotMetadata]) -> list[str]:
         if slot.source:
             source_path = Path(slot.source)
             if not source_path.exists():
-                errors.append(f"📁 Slot '{slot.id}' source does not exist: {slot.source}")
+                errors.append(
+                    f"📁 Slot '{slot.id}' source does not exist: {slot.source}"
+                )
             elif not source_path.is_file() and not source_path.is_dir():
                 errors.append(
                     f"📁 Slot '{slot.id}' source is neither file nor directory: {slot.source}"

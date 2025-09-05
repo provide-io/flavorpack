@@ -317,14 +317,22 @@ class SlotMetadata:
         """Create from dictionary."""
         # Convert path strings to Path objects if present
         if "source" in data and data["source"] is not None:
-            data["source"] = Path(data["source"]) if isinstance(data["source"], str) else data["source"]
+            data["source"] = (
+                Path(data["source"])
+                if isinstance(data["source"], str)
+                else data["source"]
+            )
         if "target" in data and data["target"] is not None:
-            data["target"] = Path(data["target"]) if isinstance(data["target"], str) else data["target"]
-        
+            data["target"] = (
+                Path(data["target"])
+                if isinstance(data["target"], str)
+                else data["target"]
+            )
+
         # Filter out any extra keys that aren't part of the class
         valid_fields = {f.name for f in cls.__attrs_attrs__}
         filtered_data = {k: v for k, v in data.items() if k in valid_fields}
-        
+
         return cls(**filtered_data)
 
 

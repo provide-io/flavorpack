@@ -40,6 +40,30 @@ def handle_command(cmd, *args):
         exit_code = int(args[0]) if args else 0
         print(f"🚪 Exiting with code {exit_code}")
         return exit_code
+    elif cmd == "volatile-test":
+        # Test volatile and init lifecycle slots
+        print("🧪 Testing lifecycle slot behavior:")
+        workenv = os.getenv('FLAVOR_WORKENV', '/tmp')
+        
+        # Check if volatile slot exists (should always be extracted fresh)
+        volatile_path = os.path.join(workenv, 'volatile-data')
+        if os.path.exists(volatile_path):
+            print(f"  ✅ Volatile slot found: {volatile_path}")
+            with open(volatile_path, 'r') as f:
+                content = f.read()
+                print(f"     Content: {content[:50]}...")
+        else:
+            print(f"  ❌ Volatile slot NOT found: {volatile_path}")
+        
+        # Check if init slot exists (should be removed after setup)
+        init_path = os.path.join(workenv, 'init-setup')
+        if os.path.exists(init_path):
+            print(f"  ❌ Init slot still exists (should be removed): {init_path}")
+            return 1
+        else:
+            print(f"  ✅ Init slot properly removed after setup")
+        
+        return 0
     else:
         print(f"❌ Unknown command: {cmd}")
         return 1

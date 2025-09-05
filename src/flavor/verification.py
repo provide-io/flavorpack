@@ -52,7 +52,11 @@ class FlavorVerifier:
                     "checksum": slot_data.get("checksum", ""),
                 }
                 # Remove empty optional fields
-                slot_info = {k: v for k, v in slot_info.items() if v or k in ["index", "id", "size", "encoding"]}
+                slot_info = {
+                    k: v
+                    for k, v in slot_info.items()
+                    if v or k in ["index", "id", "size", "encoding"]
+                }
                 slots_info.append(slot_info)
 
         return {

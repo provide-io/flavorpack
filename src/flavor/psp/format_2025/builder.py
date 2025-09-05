@@ -412,7 +412,9 @@ def _write_package(
 
         # Write metadata
         metadata_offset = f.tell()
-        logger.debug(f"Metadata offset: {metadata_offset}, size: {len(metadata_compressed)}")
+        logger.debug(
+            f"Metadata offset: {metadata_offset}, size: {len(metadata_compressed)}"
+        )
         f.write(metadata_compressed)
         logger.debug(f"Position after metadata: {f.tell()}")
 
@@ -486,7 +488,7 @@ def _write_package(
         logger.debug(f"Index data first 16 bytes: {index_data[:16].hex()}")
         f.write(index_data)  # 8192-byte index
         f.write(MAGIC_WAND_EMOJI_BYTES)  # 4-byte magic wand emoji
-        
+
         # Get actual file size after writing
         actual_size = f.tell()
 

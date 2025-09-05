@@ -104,8 +104,10 @@ class PSPFReader:
             trailer = bytes(trailer)
 
         # Verify emoji bookends (📦 at start, 🪄 at end)
-        return (trailer[:4] == PACKAGE_EMOJI_BYTES and 
-                trailer[-4:] == MAGIC_WAND_EMOJI_BYTES)
+        return (
+            trailer[:4] == PACKAGE_EMOJI_BYTES
+            and trailer[-4:] == MAGIC_WAND_EMOJI_BYTES
+        )
 
     def read_magic_trailer(self) -> bytes:
         """Read MagicTrailer and extract index data."""
@@ -113,7 +115,7 @@ class PSPFReader:
             self.open()
 
         file_size = self.bundle_path.stat().st_size
-        
+
         # Read MagicTrailer (last 8200 bytes)
         trailer = self._backend.read_at(
             file_size - MAGIC_TRAILER_SIZE, MAGIC_TRAILER_SIZE
@@ -130,14 +132,14 @@ class PSPFReader:
             raise ValueError("Invalid MagicTrailer: missing 🪄 at end")
 
         # Extract index from between emojis
-        index_data = trailer[4:4+HEADER_SIZE]
-        
+        index_data = trailer[4 : 4 + HEADER_SIZE]
+
         logger.debug(
             "🔍 Found index in MagicTrailer",
             trailer_size=MAGIC_TRAILER_SIZE,
-            file_size=file_size
+            file_size=file_size,
         )
-        
+
         return index_data
 
     def read_index(self) -> PSPFIndex:
@@ -150,9 +152,7 @@ class PSPFReader:
 
         # Read index from MagicTrailer
         index_data = self.read_magic_trailer()
-        logger.debug(
-            "📦 Parsing index from MagicTrailer", size=HEADER_SIZE
-        )
+        logger.debug("📦 Parsing index from MagicTrailer", size=HEADER_SIZE)
 
         # Convert to bytes if memoryview
         if isinstance(index_data, memoryview):
