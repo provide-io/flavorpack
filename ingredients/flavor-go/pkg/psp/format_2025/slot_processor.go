@@ -294,7 +294,7 @@ func (sp *SlotProcessor) loadSlotData(slot *Slot) ([]byte, []byte, uint8, error)
 	case "tar":
 		compressed = slotData
 		encodingMethod = EncodingTar
-	case "none", "":
+	case "raw", "none", "":
 		compressed = slotData
 		encodingMethod = EncodingRaw
 	default:
