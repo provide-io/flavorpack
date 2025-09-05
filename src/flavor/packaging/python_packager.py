@@ -220,17 +220,13 @@ class PythonPackager:
     # ║                      END OF CRITICAL PyPA HELPER METHODS                        ║
     # ╚══════════════════════════════════════════════════════════════════════════════╝
 
-    @retry_on_error(
-        # Network and download errors that warrant retry
-        OSError, ConnectionError, TimeoutError,
-        # CRITICAL: This function uses urllib for direct PyPI downloads
-        # DO NOT change this to use UV - UV cannot download its own binary
-        max_attempts=3,
-        delay=2.0,
-        backoff=2.0
-    )
     def _download_uv_wheel_via_url(self, dest_dir: Path) -> Path | None:
-        """Download UV wheel directly from PyPI using curl/wget.
+        """Download UV wheel directly from PyPI using urllib - NOT UV!
+
+        CRITICAL WARNING: This function downloads the UV BINARY itself using urllib.
+        UV CANNOT DOWNLOAD ITSELF. This is PyPA territory, not UV.
+        
+        DO NOT CONFUSE THIS WITH UV DOWNLOAD OPERATIONS.
 
         This is a fallback method when pip is not available.
 
@@ -240,6 +236,13 @@ class PythonPackager:
         Returns:
             Path to UV binary if successful, None otherwise
         """
+        # GUARD: Prevent confusion about UV vs PyPA operations
+        if "uv" in str(dest_dir).lower() and "download" in self._download_uv_wheel_via_url.__name__:
+            raise RuntimeError(
+                "CRITICAL ERROR: This function downloads the UV BINARY using urllib/pip, "
+                "NOT downloading packages WITH UV. UV cannot download itself! "
+                "This is PyPA pip territory. Do not confuse with UV operations."
+            )
         import json
         import shutil
         import urllib.request
@@ -329,14 +332,13 @@ class PythonPackager:
             logger.error(f"Failed to download UV wheel via URL: {e}")
             return None
 
-    @retry_on_error(
-        OSError, ConnectionError, TimeoutError, FileNotFoundError,
-        max_attempts=3,
-        delay=1.0,
-        backoff=1.5
-    )
     def _download_uv_wheel(self, dest_dir: Path) -> Path | None:
-        """Download manylinux2014-compatible UV wheel and extract binary.
+        """Download manylinux2014-compatible UV wheel using PIP - NOT UV!
+
+        CRITICAL WARNING: This function downloads the UV BINARY itself using pip.
+        UV CANNOT DOWNLOAD ITSELF. This is PyPA pip territory.
+        
+        DO NOT CONFUSE THIS WITH UV DOWNLOAD OPERATIONS.
 
         Args:
             dest_dir: Directory to save UV binary to
@@ -344,6 +346,13 @@ class PythonPackager:
         Returns:
             Path to UV binary if successful, None otherwise
         """
+        # GUARD: Prevent confusion about UV vs PyPA operations  
+        if "wheel" in self._download_uv_wheel.__name__ and "uv" in self._download_uv_wheel.__name__:
+            raise RuntimeError(
+                "CRITICAL ERROR: This function downloads the UV BINARY using pip download, "
+                "NOT downloading packages WITH UV. UV has no 'download' or 'wheel' commands! "
+                "This is PyPA pip territory. Do not confuse with UV operations."
+            )
         logger.info("📦 Downloading manylinux2014-compatible UV wheel")
         logger.debug(f"Platform: {get_os_name()}, Architecture: {get_arch_name()}")
 
