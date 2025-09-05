@@ -2,19 +2,20 @@
 # tests/test_pspf_2025_backends.py
 # Tests for PSPF backend implementations
 
-import pytest
-import tempfile
 from pathlib import Path
+import tempfile
+
+import pytest
 
 from flavor.psp.format_2025.backends import (
-    MMapBackend,
-    FileBackend,
-    StreamBackend,
-    HybridBackend,
-    create_backend,
     ACCESS_AUTO,
-    ACCESS_MMAP,
     ACCESS_FILE,
+    ACCESS_MMAP,
+    FileBackend,
+    HybridBackend,
+    MMapBackend,
+    StreamBackend,
+    create_backend,
 )
 from flavor.psp.format_2025.slots import SlotDescriptor
 

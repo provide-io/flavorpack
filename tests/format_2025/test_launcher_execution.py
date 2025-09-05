@@ -3,24 +3,19 @@ Test suite for production-ready PSPFLauncher implementation.
 Using TDD approach to drive the implementation.
 """
 
-import tempfile
-import struct
-import hashlib
 import gzip
-import tarfile
-import io
-import os
+import hashlib
 from pathlib import Path
+import tarfile
+import tempfile
+
 import pytest
 
 from flavor.psp.format_2025 import (
+    SLOT_ALIGNMENT,
     PSPFBuilder,
     PSPFLauncher,
-    PSPFReader,
     SlotMetadata,
-    PSPF_VERSION,
-    HEADER_SIZE,
-    SLOT_ALIGNMENT,
 )
 
 
@@ -79,7 +74,8 @@ class TestSlotTableReading:
 
             # Add slots
             for slot in slots:
-                builder = builder.add_slot(id=slot.id,
+                builder = builder.add_slot(
+                    id=slot.id,
                     data=slot.source,
                     purpose=slot.purpose,
                     lifecycle=slot.lifecycle,
@@ -146,7 +142,6 @@ class TestSlotExtraction:
     @pytest.fixture
     def bundle_with_compressed_slots(self):
         """Create a bundle with compressed slots."""
-        import gzip
 
         with tempfile.TemporaryDirectory() as tmpdir:
             tmpdir = Path(tmpdir)
@@ -200,7 +195,8 @@ class TestSlotExtraction:
 
             # Add slots
             for slot in slots:
-                builder = builder.add_slot(id=slot.id,
+                builder = builder.add_slot(
+                    id=slot.id,
                     data=slot.source,
                     purpose=slot.purpose,
                     lifecycle=slot.lifecycle,
@@ -211,7 +207,9 @@ class TestSlotExtraction:
 
             yield bundle_path, large_content
 
-    @pytest.mark.skip(reason="Slot extraction implementation incomplete - reveals path vs content storage mismatch")
+    @pytest.mark.skip(
+        reason="Slot extraction implementation incomplete - reveals path vs content storage mismatch"
+    )
     def test_extract_single_slot(self, bundle_with_compressed_slots):
         """Test extracting a single slot to filesystem - catches slot storage format bugs."""
         bundle_path, expected_content = bundle_with_compressed_slots
@@ -232,7 +230,9 @@ class TestSlotExtraction:
                 content = extracted_path.read_text()
                 assert content == expected_content
 
-    @pytest.mark.skip(reason="Checksum verification during extraction not implemented - exposes integrity check gaps")
+    @pytest.mark.skip(
+        reason="Checksum verification during extraction not implemented - exposes integrity check gaps"
+    )
     def test_extract_slot_with_checksum_verification(
         self, bundle_with_compressed_slots
     ):
@@ -247,7 +247,9 @@ class TestSlotExtraction:
             extracted_path = launcher.extract_slot(0, workenv, verify_checksum=True)
             assert extracted_path.exists()
 
-    @pytest.mark.skip(reason="Bulk slot extraction not fully implemented - reveals extraction coordination issues")
+    @pytest.mark.skip(
+        reason="Bulk slot extraction not fully implemented - reveals extraction coordination issues"
+    )
     def test_extract_all_slots(self, bundle_with_compressed_slots):
         """Test extracting all slots at once - catches slot extraction coordination bugs."""
         bundle_path, _ = bundle_with_compressed_slots
@@ -325,7 +327,8 @@ class TestWorkEnvironment:
             )
 
             # Add slot
-            builder = builder.add_slot(id=slot.id,
+            builder = builder.add_slot(
+                id=slot.id,
                 data=Path(slot.source),  # Convert to Path so it reads the file
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,
@@ -436,7 +439,8 @@ sys.exit(0)
             )
 
             # Add slot
-            builder = builder.add_slot(id=slot.id,
+            builder = builder.add_slot(
+                id=slot.id,
                 data=Path(slot.source),  # Convert to Path so it reads the file
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,

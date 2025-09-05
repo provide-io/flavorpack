@@ -2,7 +2,7 @@
 
 from flavor.ingredients.manager import IngredientInfo, IngredientManager
 
-__all__ = ["IngredientManager", "IngredientInfo"]
+__all__ = ["IngredientInfo", "IngredientManager"]
 
 # Try to import embedded ingredients if available
 try:

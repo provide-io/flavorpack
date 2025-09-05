@@ -2,20 +2,18 @@
 # helpers/taster/tests/format_2025/test_mmap_backends.py
 # Tests for memory-mapped I/O backends in taster
 
-import pytest
-import tempfile
-import mmap
 from pathlib import Path
+import tempfile
+
+import pytest
 
 from flavor.psp.format_2025.backends import (
-    MMapBackend,
-    FileBackend,
-    StreamBackend,
-    HybridBackend,
-    create_backend,
     ACCESS_AUTO,
-    ACCESS_MMAP,
-    ACCESS_FILE,
+    FileBackend,
+    HybridBackend,
+    MMapBackend,
+    StreamBackend,
+    create_backend,
 )
 from flavor.psp.format_2025.slots import SlotDescriptor
 

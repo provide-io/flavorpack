@@ -6,19 +6,13 @@ Tests slot lifecycle, compression, and management functionality.
 
 import hashlib
 import os
-import struct
-import tempfile
-from pathlib import Path
-import zlib
 
 import pytest
 
 from flavor.psp.format_2025 import (
-    PSPFBuilder,
-    PSPFReader,
-    PSPFLauncher,
-    SlotMetadata,
     SLOT_ALIGNMENT,
+    PSPFReader,
+    SlotMetadata,
 )
 from flavor.psp.format_2025.constants import SLOT_DESCRIPTOR_SIZE
 
@@ -240,7 +234,9 @@ class TestPSPFSlots:
 
         result = (
             test_builder.metadata(**metadata)
-            .add_slot(id="compressed", data=slot_path,
+            .add_slot(
+                id="compressed",
+                data=slot_path,
                 encoding="gzip",
                 purpose="payload",
                 lifecycle="runtime",
@@ -281,7 +277,9 @@ class TestPSPFSlots:
 
         result = (
             test_builder.metadata(**metadata)
-            .add_slot(id="uncompressed", data=slot_path,
+            .add_slot(
+                id="uncompressed",
+                data=slot_path,
                 encoding="none",
                 purpose="payload",
                 lifecycle="runtime",

@@ -26,8 +26,8 @@ from flavor.utils.formatting import format_size
 )
 def inspect_command(package_file: str, output_json: bool) -> None:
     """Quick inspection of a flavor package."""
-    import json
     from datetime import datetime
+    import json
 
     package_path = Path(package_file)
 
