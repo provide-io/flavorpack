@@ -10,7 +10,7 @@ import tempfile
 from typing import Any
 
 from provide.foundation import logger
-from provide.foundation.errors import with_error_handling
+from provide.foundation.errors import log_only_error_context, with_error_handling
 
 from flavor.exceptions import BuildError
 from flavor.ingredients.manager import IngredientManager
@@ -69,9 +69,9 @@ class PackagingOrchestrator:
         self.helper_manager = IngredientManager()
         self.platform = get_platform_string()
 
-    @with_error_handling(
-        error_mapper=lambda e: BuildError(f"Failed to detect launcher type: {e}"),
-        context_provider=lambda: {"operation": "detect_launcher_type"}
+    @log_only_error_context(
+        context_provider=lambda: {"operation": "detect_launcher_type"},
+        log_level="trace"
     )
     def _detect_launcher_type(self, launcher_path: Path) -> str:
         """Detect launcher type by running the binary with --version."""
@@ -99,6 +99,11 @@ class PackagingOrchestrator:
         )
         return "rust"
 
+    @log_only_error_context(
+        context_provider=lambda: {"operation": "build_package"},
+        log_level="debug",
+        log_success=True
+    )
     def build_package(self) -> None:
         logger.info("🎯🏗️🚀 Orchestrator starting build process")
         logger.debug(
@@ -150,6 +155,10 @@ class PackagingOrchestrator:
             logger.info("🐍🏗️🚀 Using internal Python builder (default)")
             self._build_with_python_builder()
 
+    @log_only_error_context(
+        context_provider=lambda: {"operation": "build_with_python_builder"},
+        log_level="debug"
+    )
     def _build_with_python_builder(self) -> None:
         """Build package using the internal Python PSPF builder."""
         logger.info("🐍🔨🚀 Building package with internal Python builder")
@@ -272,6 +281,10 @@ class PackagingOrchestrator:
                         f"⏱️  Build time: {result.metadata['duration_seconds']:.2f}s"
                     )
 
+    @log_only_error_context(
+        context_provider=lambda: {"operation": "build_with_external_builder"},
+        log_level="debug"
+    )
     def _build_with_external_builder(self) -> None:
         """Build package using an external builder binary (Go/Rust)."""
         logger.info("Building package with external builder...")
