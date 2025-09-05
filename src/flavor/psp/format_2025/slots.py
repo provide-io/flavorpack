@@ -32,7 +32,7 @@ from flavor.psp.format_2025.constants import (
     SLOT_ALIGNMENT,
     SLOT_DESCRIPTOR_SIZE,
 )
-from flavor.utils.hashing import hash_name
+from provide.foundation.crypto import hash_name
 
 
 def normalize_purpose(value: str) -> str:
