@@ -131,7 +131,7 @@ def mock_test_package(temp_dir, test_builder):
         data=slot0_file,
         purpose="payload",
         lifecycle="runtime",
-        encoding="none"
+        codec="none"
     )
     
     builder = builder.add_slot(
@@ -139,7 +139,7 @@ def mock_test_package(temp_dir, test_builder):
         data=slot1_gz,
         purpose="config",
         lifecycle="runtime",
-        encoding="gzip"
+        codec="gzip"
     )
     
     builder = builder.add_slot(
@@ -147,7 +147,7 @@ def mock_test_package(temp_dir, test_builder):
         data=slot2_tar,
         purpose="library",
         lifecycle="cache",
-        encoding="tar"
+        codec="tar"
     )
     
     # Build the package

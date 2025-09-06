@@ -64,7 +64,7 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
             target="app",
             size=2,
             checksum="abc",
-            encoding="none",
+            codec="none",
             purpose="payload",
             lifecycle="runtime",
         )
@@ -137,7 +137,7 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
                 target="text",
                 size=text_path.stat().st_size,
                 checksum="abc",
-                encoding="gzip",  # Good for text
+                codec="gzip",  # Good for text
                 purpose="config",
                 lifecycle="runtime",
             ),
@@ -148,7 +148,7 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
                 target="binary",
                 size=binary_path.stat().st_size,
                 checksum="def",
-                encoding="none",  # Binary files often don't compress well
+                codec="none",  # Binary files often don't compress well
                 purpose="library",
                 lifecycle="runtime",
             ),
@@ -159,7 +159,7 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
                 target="random",
                 size=random_path.stat().st_size,
                 checksum="ghi",
-                encoding="none",  # Random data doesn't compress
+                codec="none",  # Random data doesn't compress
                 purpose="data",
                 lifecycle="runtime",
             ),
@@ -210,7 +210,7 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
                 target=f"test_{purpose}",
                 size=100,
                 checksum="abc",
-                encoding="none",
+                codec="none",
                 purpose=purpose,
                 lifecycle="runtime",
             )
@@ -227,7 +227,7 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
             target="slot1",
             size=100,
             checksum="abc",
-            encoding="none",
+            codec="none",
             purpose="payload",
             lifecycle="runtime",
         )
@@ -239,7 +239,7 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
             target="slot2",
             size=100,
             checksum="def",
-            encoding="none",
+            codec="none",
             purpose="payload",
             lifecycle="runtime",
         )
@@ -264,7 +264,7 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
                     target=f"slot{i}",
                     size=path.stat().st_size,
                     checksum=hashlib.sha256(path.read_bytes()).hexdigest(),
-                    encoding="gzip",
+                    codec="gzip",
                     purpose="payload",
                     lifecycle="runtime",
                 )
@@ -346,7 +346,7 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
             target="data",
             size=slot_path.stat().st_size,
             checksum=hashlib.sha256(slot_path.read_bytes()).hexdigest(),
-            encoding="none",
+            codec="none",
             purpose="payload",
             lifecycle="runtime",
         )
@@ -394,7 +394,7 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
             target="large",
             size=large_path.stat().st_size,
             checksum="abc",
-            encoding="gzip",  # Would use max compression
+            codec="gzip",  # Would use max compression
             purpose="payload",
             lifecycle="runtime",
         )
@@ -479,7 +479,7 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
                         target=f"{slot_type}_{i}",
                         size=path.stat().st_size,
                         checksum=hashlib.sha256(path.read_bytes()).hexdigest(),
-                        encoding="none",
+                        codec="none",
                         purpose=slot_type if slot_type != "payload" else "library",
                         lifecycle="runtime",
                     )

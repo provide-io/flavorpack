@@ -51,7 +51,7 @@ def test_cli_pack_and_verify(tmp_path: Path) -> None:
             "slot_count": 1,
             "package": {"name": "test-package", "version": "1.0.0"},
             "slots": [
-                {"index": 0, "id": "main", "size": 512 * 1024, "encoding": "raw"}
+                {"index": 0, "id": "main", "size": 512 * 1024, "codec": "raw"}
             ],
             "signature_valid": True,
         }

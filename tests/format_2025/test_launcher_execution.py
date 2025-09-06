@@ -46,7 +46,7 @@ class TestSlotTableReading:
                     target="payload",
                     size=slot1_path.stat().st_size,
                     checksum=hashlib.sha256(slot1_path.read_bytes()).hexdigest(),
-                    encoding="none",
+                    codec="none",
                     purpose="payload",
                     lifecycle="runtime",
                 ),
@@ -57,7 +57,7 @@ class TestSlotTableReading:
                     target="script",
                     size=slot2_path.stat().st_size,
                     checksum=hashlib.sha256(slot2_path.read_bytes()).hexdigest(),
-                    encoding="gzip",
+                    codec="gzip",
                     purpose="tool",
                     lifecycle="temp",
                 ),
@@ -100,7 +100,7 @@ class TestSlotTableReading:
         assert slot0["offset"] > 0
         assert slot0["size"] > 0
         assert slot0["checksum"] != 0
-        assert slot0["encoding"] in [0, 1]  # none, gzip (2 is reserved)
+        assert slot0["codec"] in [0, 1]  # none, gzip (2 is reserved)
         assert slot0["purpose"] in [0, 1, 2]  # payload, runtime, tool
         assert (
             slot0["lifecycle"] in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
@@ -169,7 +169,7 @@ class TestSlotExtraction:
                     checksum=hashlib.sha256(
                         compressed_data
                     ).hexdigest(),  # Checksum of compressed data
-                    encoding="gzip",  # Mark as gzip since we're providing compressed data
+                    codec="gzip",  # Mark as gzip since we're providing compressed data
                     purpose="payload",
                     lifecycle="runtime",
                 ),
@@ -180,7 +180,7 @@ class TestSlotExtraction:
                     target="script",
                     size=len(slot2_content),
                     checksum=hashlib.sha256(slot2_content.encode()).hexdigest(),
-                    encoding="none",
+                    codec="none",
                     purpose="tool",
                     lifecycle="temp",
                 ),
@@ -299,7 +299,7 @@ class TestWorkEnvironment:
                 target="python_runtime",
                 size=runtime_tar.stat().st_size,
                 checksum=hashlib.sha256(runtime_tar.read_bytes()).hexdigest(),
-                encoding="tgz",  # Tarball that needs extraction
+                codec="tgz",  # Tarball that needs extraction
                 purpose="runtime",
                 lifecycle="runtime",
             )
@@ -421,7 +421,7 @@ sys.exit(0)
                 target="main.py",
                 size=script_path.stat().st_size,
                 checksum=hashlib.sha256(script_path.read_bytes()).hexdigest(),
-                encoding="none",
+                codec="none",
                 purpose="payload",
                 lifecycle="runtime",
             )

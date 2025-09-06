@@ -79,7 +79,7 @@ class TestPSPFCore:
             target="hello",
             size=simple_payload.stat().st_size,
             checksum=hashlib.sha256(simple_payload.read_bytes()).hexdigest(),
-            encoding="none",
+            codec="none",
             purpose="payload",
             lifecycle="runtime",
         )
@@ -281,7 +281,7 @@ class TestPSPFCore:
                     target=f"slot{i}",
                     size=slot_path.stat().st_size,
                     checksum=hashlib.sha256(slot_path.read_bytes()).hexdigest(),
-                    encoding="none",
+                    codec="none",
                     purpose="payload",
                     lifecycle="runtime",
                 )

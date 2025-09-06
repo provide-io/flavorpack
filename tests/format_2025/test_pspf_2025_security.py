@@ -39,7 +39,7 @@ class TestPSPFSecurity:
             target="secure_payload",
             size=payload_path.stat().st_size,
             checksum=hashlib.sha256(payload_path.read_bytes()).hexdigest(),
-            encoding="gzip",
+            codec="gzip",
             purpose="payload",
             lifecycle="runtime",
         )
@@ -210,7 +210,7 @@ class TestPSPFSecurity:
             target="data",
             size=len(original_data),
             checksum=hashlib.sha256(original_data).hexdigest(),
-            encoding="none",
+            codec="none",
             purpose="payload",
             lifecycle="runtime",
         )
@@ -220,7 +220,7 @@ class TestPSPFSecurity:
         builder = (
             PSPFBuilder()
             .metadata(format="PSPF/2025", package={"name": "test", "version": "1.0"})
-            .add_slot(id="data", data=slot_path, encoding="none")
+            .add_slot(id="data", data=slot_path, codec="none")
         )
         builder.build(bundle_path)
 
