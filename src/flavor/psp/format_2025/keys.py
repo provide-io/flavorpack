@@ -11,7 +11,7 @@ from pathlib import Path
 
 from provide.foundation import logger
 
-from flavor.psp.format_2025.crypto import generate_key_pair
+from provide.foundation.crypto import generate_key_pair
 from flavor.psp.format_2025.spec import KeyConfig
 
 
