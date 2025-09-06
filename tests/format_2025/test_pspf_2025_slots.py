@@ -179,7 +179,7 @@ class TestPSPFSlots:
                 builder = builder.add_slot(
                     id=slot.id,
                     data=slot.source,
-                    encoding=slot.encoding,
+                    codec=slot.codec,
                     purpose=slot.purpose,
                     lifecycle=slot.lifecycle,
                 )
@@ -326,7 +326,7 @@ class TestPSPFSlots:
             .add_slot(
                 id=slot.id,
                 data=slot.source,
-                encoding=slot.encoding,
+                codec=slot.codec,
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,
             )
@@ -352,7 +352,7 @@ class TestPSPFSlots:
                 builder = builder.add_slot(
                     id=slot.id,
                     data=slot.source,
-                    encoding=slot.encoding,
+                    codec=slot.codec,
                     purpose=slot.purpose,
                     lifecycle=slot.lifecycle,
                 )
@@ -412,7 +412,7 @@ class TestPSPFSlots:
             .add_slot(
                 id=slot.id,
                 data=slot.source,
-                encoding=slot.encoding,
+                codec=slot.codec,
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,
             )
@@ -489,7 +489,7 @@ class TestPSPFSlots:
             .add_slot(
                 id=slot.id,
                 data=slot.source,
-                encoding=slot.encoding,
+                codec=slot.codec,
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,
             )

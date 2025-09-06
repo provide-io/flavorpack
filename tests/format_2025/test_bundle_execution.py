@@ -162,7 +162,7 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
                 data=slot.source,
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,
-                encoding=slot.encoding,
+                codec=slot.codec,
             )
         builder.build(bundle_path)
 

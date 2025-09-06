@@ -92,7 +92,7 @@ class TestPSPFCore:
             .add_slot(
                 id=slot.id,
                 data=slot.source,
-                encoding=slot.encoding,
+                codec=slot.codec,
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,
             )
@@ -295,7 +295,7 @@ class TestPSPFCore:
             builder = builder.add_slot(
                 id=slot.id,
                 data=slot.source,
-                encoding=slot.encoding,
+                codec=slot.codec,
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,
             )

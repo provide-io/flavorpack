@@ -79,7 +79,7 @@ class TestSlotTableReading:
                     data=slot.source,
                     purpose=slot.purpose,
                     lifecycle=slot.lifecycle,
-                    encoding=slot.encoding,
+                    codec=slot.codec,
                 )
 
             builder.build(output_path=bundle_path)
@@ -200,7 +200,7 @@ class TestSlotExtraction:
                     data=slot.source,
                     purpose=slot.purpose,
                     lifecycle=slot.lifecycle,
-                    encoding=slot.encoding,
+                    codec=slot.codec,
                 )
 
             builder.build(output_path=bundle_path)
@@ -332,7 +332,7 @@ class TestWorkEnvironment:
                 data=Path(slot.source),  # Convert to Path so it reads the file
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,
-                encoding=slot.encoding,
+                codec=slot.codec,
             )
 
             builder.build(output_path=bundle_path)
@@ -444,7 +444,7 @@ sys.exit(0)
                 data=Path(slot.source),  # Convert to Path so it reads the file
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,
-                encoding=slot.encoding,
+                codec=slot.codec,
             )
 
             builder.build(output_path=bundle_path)

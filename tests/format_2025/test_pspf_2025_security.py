@@ -60,7 +60,7 @@ class TestPSPFSecurity:
             .add_slot(
                 slot.id,
                 slot.source,
-                encoding=slot.encoding,
+                codec=slot.codec,
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,
             )

@@ -78,7 +78,7 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
             .add_slot(
                 id=slot.id,
                 data=slot.source,
-                encoding=slot.encoding,
+                codec=slot.codec,
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,
             )
@@ -174,7 +174,7 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
             builder = builder.add_slot(
                 id=slot.id,
                 data=slot.source,
-                encoding=slot.encoding,
+                codec=slot.codec,
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,
             )
@@ -280,7 +280,7 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
             builder = builder.add_slot(
                 id=slot.id,
                 data=slot.source,
-                encoding=slot.encoding,
+                codec=slot.codec,
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,
             )
@@ -301,7 +301,7 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
             builder = builder.add_slot(
                 id=slot.id,
                 data=slot.source,
-                encoding=slot.encoding,
+                codec=slot.codec,
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,
             )
@@ -366,7 +366,7 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
             .add_slot(
                 id=slot.id,
                 data=slot.source,
-                encoding=slot.encoding,
+                codec=slot.codec,
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,
             )
@@ -408,7 +408,7 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
             .add_slot(
                 id=slot.id,
                 data=slot.source,
-                encoding=slot.encoding,
+                codec=slot.codec,
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,
             )
@@ -495,7 +495,7 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
             builder = builder.add_slot(
                 id=slot.id,
                 data=slot.source,
-                encoding=slot.encoding,
+                codec=slot.codec,
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,
             )
