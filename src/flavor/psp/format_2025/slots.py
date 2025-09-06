@@ -253,7 +253,7 @@ class SlotMetadata:
             "dev": LIFECYCLE_DEV,
             "config": LIFECYCLE_CONFIG,
         }
-        encoding_map = {
+        codec_map = {
             "none": CODEC_RAW,
             "raw": CODEC_RAW,
             "tar": CODEC_TAR,
@@ -273,7 +273,7 @@ class SlotMetadata:
             size=self.size,
             original_size=self.size,
             checksum=checksum_int & 0xFFFFFFFF,  # Truncate to 32-bit
-            encoding=encoding_map.get(self.encoding, 0),  # Maps encoding string to int
+            codec=codec_map.get(self.codec, 0),  # Maps codec string to int
             purpose=purpose_map.get(normalize_purpose(self.purpose), PURPOSE_DATA),
             lifecycle=lifecycle_map.get(self.lifecycle, LIFECYCLE_RUNTIME),
             path=None,
@@ -351,7 +351,7 @@ class SlotView:
     def content(self) -> bytes:
         """Get decompressed content."""
         if self._decompressed is None:
-            if self.descriptor.encoding == CODEC_RAW:
+            if self.descriptor.codec == CODEC_RAW:
                 self._decompressed = (
                     bytes(self.data) if isinstance(self.data, memoryview) else self.data
                 )
@@ -359,9 +359,9 @@ class SlotView:
                 # Decompress based on encoding type
                 import zlib
 
-                if self.descriptor.encoding == 2:  # CODEC_GZIP
+                if self.descriptor.codec == 2:  # CODEC_GZIP
                     self._decompressed = zlib.decompress(self.data)
-                elif self.descriptor.encoding == 3:  # CODEC_TGZ
+                elif self.descriptor.codec == 3:  # CODEC_TGZ
                     # For tar.gz, return as-is (launcher handles extraction)
                     self._decompressed = (
                         bytes(self.data)
@@ -370,7 +370,7 @@ class SlotView:
                     )
                 else:
                     raise ValueError(
-                        f"Unsupported encoding: {self.descriptor.encoding}"
+                        f"Unsupported codec: {self.descriptor.codec}"
                     )
         return self._decompressed
 

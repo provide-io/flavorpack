@@ -287,16 +287,16 @@ func (sp *SlotProcessor) loadSlotData(slot *Slot) ([]byte, []byte, uint8, error)
 	switch slot.Encoding {
 	case "gzip":
 		compressed = slotData
-		encodingMethod = EncodingGzip
+		encodingMethod = CodecGzip
 	case "tgz", "tar.gz":
 		compressed = slotData
-		encodingMethod = EncodingTgz
+		encodingMethod = CodecTgz
 	case "tar":
 		compressed = slotData
-		encodingMethod = EncodingTar
+		encodingMethod = CodecTar
 	case "raw", "none", "":
 		compressed = slotData
-		encodingMethod = EncodingRaw
+		encodingMethod = CodecRaw
 	default:
 		return nil, nil, 0, fmt.Errorf("unknown encoding: %s", slot.Encoding)
 	}

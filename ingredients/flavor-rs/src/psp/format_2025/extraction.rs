@@ -19,8 +19,8 @@ use tar::Archive;
 #[cfg(unix)]
 use super::constants::DEFAULT_DIR_PERMS;
 use super::constants::{
-    ENCODING_GZIP, ENCODING_RAW,
-    ENCODING_TAR, ENCODING_TGZ,
+    CODEC_GZIP, CODEC_RAW,
+    CODEC_TAR, CODEC_TGZ,
 };
 use super::reader::Reader;
 use super::slots::SlotDescriptor;
@@ -64,7 +64,7 @@ pub fn extract_slot(reader: &mut Reader, slot_index: usize, dest_dir: &Path) -> 
 
     // Decompress based on encoding
     let decompressed_data = match desc_encoding {
-        ENCODING_GZIP => {
+        CODEC_GZIP => {
             // Single file, gzipped
             trace!("🗜️ Decompressing GZIP slot {slot_index}");
             let mut decoder = GzDecoder::new(&slot_data[..]);
@@ -79,7 +79,7 @@ pub fn extract_slot(reader: &mut Reader, slot_index: usize, dest_dir: &Path) -> 
             );
             decompressed
         }
-        ENCODING_TGZ => {
+        CODEC_TGZ => {
             // Tar archive, then gzipped
             trace!("🗜️ Decompressing TGZ slot {slot_index}");
             let mut decoder = GzDecoder::new(&slot_data[..]);
@@ -94,7 +94,7 @@ pub fn extract_slot(reader: &mut Reader, slot_index: usize, dest_dir: &Path) -> 
             );
             decompressed
         }
-        ENCODING_RAW | ENCODING_TAR => {
+        CODEC_RAW | CODEC_TAR => {
             // Raw uncompressed data or uncompressed tar
             trace!("📄 Using raw/uncompressed data for slot {slot_index}");
             slot_data
@@ -145,8 +145,8 @@ pub fn extract_slot(reader: &mut Reader, slot_index: usize, dest_dir: &Path) -> 
 
     // Strict encoding validation - no fallthrough allowed
     match desc_encoding {
-        ENCODING_GZIP => {
-            // ENCODING_GZIP (2) means "Gzipped single file" per the PSPF spec
+        CODEC_GZIP => {
+            // CODEC_GZIP (2) means "Gzipped single file" per the PSPF spec
             if is_tarball(&decompressed_data) {
                 error!(
                     "❌ FATAL: Slot {slot_index} encoding is GZIP but data is a tarball!"
@@ -164,8 +164,8 @@ pub fn extract_slot(reader: &mut Reader, slot_index: usize, dest_dir: &Path) -> 
                 slot_index,
             )?;
         }
-        ENCODING_TGZ => {
-            // ENCODING_TGZ (3) means "Tar archive, then gzipped"
+        CODEC_TGZ => {
+            // CODEC_TGZ (3) means "Tar archive, then gzipped"
             if !is_tarball(&decompressed_data) {
                 error!(
                     "❌ FATAL: Slot {slot_index} encoding is TGZ but data is not a tarball!"
@@ -181,8 +181,8 @@ pub fn extract_slot(reader: &mut Reader, slot_index: usize, dest_dir: &Path) -> 
             debug!("📦 Slot {slot_index} is a tar archive, extracting...");
             extract_tarball(&decompressed_data, dest_dir)?;
         }
-        ENCODING_TAR => {
-            // ENCODING_TAR (1) means "Uncompressed tar archive"
+        CODEC_TAR => {
+            // CODEC_TAR (1) means "Uncompressed tar archive"
             if !is_tarball(&decompressed_data) {
                 error!(
                     "❌ FATAL: Slot {slot_index} encoding is TAR but data is not a tarball!"
@@ -196,8 +196,8 @@ pub fn extract_slot(reader: &mut Reader, slot_index: usize, dest_dir: &Path) -> 
             );
             extract_tarball(&decompressed_data, dest_dir)?;
         }
-        ENCODING_RAW => {
-            // ENCODING_RAW (0) means "Raw uncompressed data"
+        CODEC_RAW => {
+            // CODEC_RAW (0) means "Raw uncompressed data"
             if is_tarball(&decompressed_data) {
                 error!(
                     "❌ FATAL: Slot {slot_index} encoding is RAW but data is a tarball!"
@@ -231,7 +231,7 @@ fn extract_single_file(
     slot_index: usize,
 ) -> Result<()> {
     // This is a single gzipped file (not a tarball)
-    // Per PSPF spec: ENCODING_GZIP = single file that has been gzipped
+    // Per PSPF spec: CODEC_GZIP = single file that has been gzipped
     // dest_dir IS the full file path (e.g., bin/uv)
     debug!("📝 Writing single gzipped file directly to {dest_dir:?}");
 

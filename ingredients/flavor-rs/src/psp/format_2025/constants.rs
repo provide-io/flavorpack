@@ -66,18 +66,18 @@ pub const PSP_METADATA_FILE: &str = "psp.json";
 pub const INDEX_METADATA_FILE: &str = "index.json";
 
 /// Encoding types - describe the actual format of slot data
-pub const ENCODING_RAW: u8 = 0; // Raw uncompressed data
-pub const ENCODING_TAR: u8 = 1; // Uncompressed tar archive
-pub const ENCODING_GZIP: u8 = 2; // Gzipped single file
-pub const ENCODING_TGZ: u8 = 3; // Tar archive, then gzipped (tar.gz)
+pub const CODEC_RAW: u8 = 0; // Raw uncompressed data
+pub const CODEC_TAR: u8 = 1; // Uncompressed tar archive
+pub const CODEC_GZIP: u8 = 2; // Gzipped single file
+pub const CODEC_TGZ: u8 = 3; // Tar archive, then gzipped (tar.gz)
 
 // Future encoding formats (not implemented yet):
-// pub const ENCODING_ZSTD: u8 = 4;     // Zstd compressed single file
-// pub const ENCODING_TZST: u8 = 5;     // Tar archive, then zstd compressed
-// pub const ENCODING_BROTLI: u8 = 6;   // Brotli compressed single file
-// pub const ENCODING_TBR: u8 = 7;      // Tar archive, then brotli compressed
-// pub const ENCODING_ZIP: u8 = 8;      // Zip archive
-// pub const ENCODING_7Z: u8 = 9;       // 7-zip archive
+// pub const CODEC_ZSTD: u8 = 4;     // Zstd compressed single file
+// pub const CODEC_TZST: u8 = 5;     // Tar archive, then zstd compressed
+// pub const CODEC_BROTLI: u8 = 6;   // Brotli compressed single file
+// pub const CODEC_TBR: u8 = 7;      // Tar archive, then brotli compressed
+// pub const CODEC_ZIP: u8 = 8;      // Zip archive
+// pub const CODEC_7Z: u8 = 9;       // 7-zip archive
 
 /// Purpose types - aligned with Python naming
 pub const PURPOSE_DATA: u8 = 0; // General data files

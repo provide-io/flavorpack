@@ -75,7 +75,7 @@ class PSPFLauncher(PSPFReader):
                 offset = descriptor.offset
                 size = descriptor.size  # Compressed size
                 checksum = descriptor.checksum
-                encoding = descriptor.encoding
+                codec = descriptor.codec
                 purpose = descriptor.purpose
                 lifecycle = descriptor.lifecycle
 
@@ -85,7 +85,7 @@ class PSPFLauncher(PSPFReader):
                         "offset": offset,
                         "size": size,
                         "checksum": checksum,
-                        "codec": encoding,
+                        "codec": codec,
                         "purpose": purpose,
                         "lifecycle": lifecycle,
                     }
@@ -171,7 +171,7 @@ class PSPFLauncher(PSPFReader):
 
         slot_entry = slot_table[slot_index]
         logger.debug(
-            f"📍 Slot {slot_index}: offset={slot_entry['offset']}, size={slot_entry['size']}, encoding={slot_entry['encoding']}"
+            f"📍 Slot {slot_index}: offset={slot_entry['offset']}, size={slot_entry['size']}, codec={slot_entry['codec']}"
         )
 
         # Read slot data from bundle
@@ -210,8 +210,8 @@ class PSPFLauncher(PSPFReader):
             logger.debug(f"📦🗜️ Slot {slot_index} is a tar.gz archive")
             data = slot_data  # Will be decompressed and extracted later
         else:
-            logger.error(f"❌ Unsupported encoding method: {slot_entry['encoding']}")
-            raise ValueError(f"Unsupported encoding method: {slot_entry['encoding']}")
+            logger.error(f"❌ Unsupported codec method: {slot_entry['codec']}")
+            raise ValueError(f"Unsupported codec method: {slot_entry['codec']}")
 
         # Get slot name from metadata - use target for extraction path
         metadata = self.read_metadata()

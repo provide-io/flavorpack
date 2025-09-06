@@ -315,12 +315,12 @@ func (r *Reader) ReadSlot(slotIndex int) ([]byte, error) {
 
 	// Decompress if needed based on entry.Encoding
 	switch entry.Encoding {
-	case EncodingRaw: // Raw uncompressed data
+	case CodecRaw: // Raw uncompressed data
 		return slotData, nil
-	case EncodingTar: // Uncompressed tar archive
+	case CodecTar: // Uncompressed tar archive
 		// Return as-is, caller will extract tar
 		return slotData, nil
-	case EncodingGzip: // Single file, gzipped
+	case CodecGzip: // Single file, gzipped
 		gz, err := gzip.NewReader(bytes.NewReader(slotData))
 		if err != nil {
 			return nil, fmt.Errorf("failed to create gzip reader: %w", err)
@@ -332,7 +332,7 @@ func (r *Reader) ReadSlot(slotIndex int) ([]byte, error) {
 			return nil, fmt.Errorf("failed to decompress gzip data: %w", err)
 		}
 		return decompressed, nil
-	case EncodingTgz: // Tar archive, then gzipped
+	case CodecTgz: // Tar archive, then gzipped
 		// First decompress the gzip layer
 		gz, err := gzip.NewReader(bytes.NewReader(slotData))
 		if err != nil {

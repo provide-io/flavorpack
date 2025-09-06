@@ -65,7 +65,7 @@ def verify_command(package_file: str) -> None:
 
                     # Add encoding if not raw
                     if slot.get("codec") and slot["codec"] != "raw":
-                        slot_line += f" [{slot['encoding']}]"
+                        slot_line += f" [{slot['codec']}]"
 
                     click.echo(slot_line)
 

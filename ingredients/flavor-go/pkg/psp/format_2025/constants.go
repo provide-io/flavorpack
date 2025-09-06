@@ -64,11 +64,11 @@ const (
 	// IndexMetadataFile is the index metadata JSON file name (in instance/)
 	IndexMetadataFile = "index.json"
 
-	// Encoding types - describe the actual format of slot data
-	EncodingRaw  = 0 // Raw uncompressed data
-	EncodingTar  = 1 // Uncompressed tar archive
-	EncodingGzip = 2 // Gzipped single file
-	EncodingTgz  = 3 // Tar archive, then gzipped (tar.gz)
+	// Codec types - describe the actual format of slot data
+	CodecRaw  = 0 // Raw uncompressed data
+	CodecTar  = 1 // Uncompressed tar archive
+	CodecGzip = 2 // Gzipped single file
+	CodecTgz  = 3 // Tar archive, then gzipped (tar.gz)
 
 	// Purpose types - aligned with Python naming
 	PurposeData   = 0 // General data files
@@ -95,10 +95,10 @@ const (
 	LifecyclePlatform  = 10 // Platform/OS specific content
 
 	// Future encoding formats (not implemented yet):
-	// EncodingZstd  = 4 // Zstd compressed single file
-	// EncodingTzst  = 5 // Tar archive, then zstd compressed
-	// EncodingBrotli = 6 // Brotli compressed single file
-	// EncodingTbr   = 7 // Tar archive, then brotli compressed
-	// EncodingZip   = 8 // Zip archive
-	// Encoding7z    = 9 // 7-zip archive
+	// CodecZstd  = 4 // Zstd compressed single file
+	// CodecTzst  = 5 // Tar archive, then zstd compressed
+	// CodecBrotli = 6 // Brotli compressed single file
+	// CodecTbr   = 7 // Tar archive, then brotli compressed
+	// CodecZip   = 8 // Zip archive
+	// Codec7z    = 9 // 7-zip archive
 )

@@ -2,7 +2,7 @@
 
 use super::checksums::{calculate_checksum, ChecksumAlgorithm};
 use super::{
-    constants::{CAPABILITY_MMAP, CAPABILITY_SIGNED, HEADER_SIZE, ENCODING_GZIP, ENCODING_TGZ, ENCODING_TAR, ENCODING_RAW, DEFAULT_FILE_PERMS, SLOT_ALIGNMENT, SLOT_DESCRIPTOR_SIZE, MAGIC_TRAILER_SIZE, PACKAGE_EMOJI_BYTES, MAGIC_WAND_EMOJI_BYTES, DEFAULT_DIR_PERMS},
+    constants::{CAPABILITY_MMAP, CAPABILITY_SIGNED, HEADER_SIZE, CODEC_GZIP, CODEC_TGZ, CODEC_TAR, CODEC_RAW, DEFAULT_FILE_PERMS, SLOT_ALIGNMENT, SLOT_DESCRIPTOR_SIZE, MAGIC_TRAILER_SIZE, PACKAGE_EMOJI_BYTES, MAGIC_WAND_EMOJI_BYTES, DEFAULT_DIR_PERMS},
     index::Index,
     keys::load_or_generate_keys,
     manifest::{BuildManifest, ManifestSlot},
@@ -374,11 +374,11 @@ impl SlotProcessor {
     fn create_slot_descriptor(&self, index: usize, slot: &ManifestSlot, file_size: u64, adler_checksum: u32) -> Result<SlotDescriptor> {
         // Map encoding string to byte value
         let encoding_value = match slot.encoding.as_str() {
-            "gzip" => ENCODING_GZIP,
-            "tgz" => ENCODING_TGZ,
-            "tar" => ENCODING_TAR,
-            "raw" | "none" | "" => ENCODING_RAW,
-            _ => ENCODING_RAW,
+            "gzip" => CODEC_GZIP,
+            "tgz" => CODEC_TGZ,
+            "tar" => CODEC_TAR,
+            "raw" | "none" | "" => CODEC_RAW,
+            _ => CODEC_RAW,
         };
 
         // Map purpose string to byte value

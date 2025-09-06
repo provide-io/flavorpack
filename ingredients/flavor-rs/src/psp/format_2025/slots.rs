@@ -1,7 +1,7 @@
 // helpers/flavor-rs/src/psp/format_2025/slots.rs
 // PSPF 2025 Slot Management - Enhanced 64-byte descriptors
 
-use super::constants::{ENCODING_RAW, SLOT_ALIGNMENT, PURPOSE_PAYLOAD, LIFECYCLE_CACHE, ACCESS_HINT_SEQUENTIAL, CACHE_NORMAL, DEFAULT_FILE_PERMS, SLOT_DESCRIPTOR_SIZE, PAGE_SIZE};
+use super::constants::{CODEC_RAW, SLOT_ALIGNMENT, PURPOSE_PAYLOAD, LIFECYCLE_CACHE, ACCESS_HINT_SEQUENTIAL, CACHE_NORMAL, DEFAULT_FILE_PERMS, SLOT_DESCRIPTOR_SIZE, PAGE_SIZE};
 use std::path::PathBuf;
 
 /// Slot descriptor - 64 bytes total
@@ -46,7 +46,7 @@ impl SlotDescriptor {
             size: 0,
             original_size: 0,
             checksum: 0,
-            encoding: ENCODING_RAW,
+            encoding: CODEC_RAW,
             encryption: 0,
             alignment: SLOT_ALIGNMENT as u16,
             purpose: PURPOSE_PAYLOAD,
