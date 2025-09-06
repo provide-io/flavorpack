@@ -10,7 +10,7 @@ import tempfile
 import pytest
 
 from flavor.psp.format_2025 import PSPFBuilder, PSPFLauncher, PSPFReader
-from flavor.psp.format_2025.crypto import generate_key_pair as generate_ephemeral_keys
+from flavor.psp.format_2025.keys import generate_ephemeral_keys
 
 
 class TestPackageSecurity:
@@ -283,7 +283,7 @@ class TestCryptographicSecurity:
 
     def test_signature_algorithm(self):
         """Ensure proper signature algorithm is used."""
-        from flavor.psp.format_2025.crypto import sign_data, verify_signature
+        from provide.foundation.crypto import sign_data, verify_signature
 
         # Generate keys
         private_key, public_key = generate_ephemeral_keys()

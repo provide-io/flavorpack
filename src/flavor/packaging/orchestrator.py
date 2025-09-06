@@ -10,6 +10,7 @@ import tempfile
 from typing import Any
 
 from provide.foundation import logger
+from provide.foundation.errors import log_only_error_context, with_error_handling
 
 from flavor.exceptions import BuildError
 from flavor.ingredients.manager import IngredientManager
@@ -68,10 +69,14 @@ class PackagingOrchestrator:
         self.helper_manager = IngredientManager()
         self.platform = get_platform_string()
 
+    @log_only_error_context(
+        context_provider=lambda: {"operation": "detect_launcher_type"},
+        log_level="trace"
+    )
     def _detect_launcher_type(self, launcher_path: Path) -> str:
         """Detect launcher type by running the binary with --version."""
+        logger.debug("🔍🚀📋 Detecting launcher type", path=str(launcher_path))
         try:
-            logger.debug("🔍🚀📋 Detecting launcher type", path=str(launcher_path))
             result = run_command(
                 [str(launcher_path), "--version"],
                 capture_output=True,
@@ -79,25 +84,30 @@ class PackagingOrchestrator:
                 timeout=5,
                 log_command=False,
             )
-            output = result.stdout.lower()
-            logger.trace("🔍📤📋 Launcher version output", output=result.stdout.strip())
-
-            if "flavor-rs-launcher" in output or "rust" in output:
-                logger.debug("🦀🔍✅ Detected Rust launcher")
-                return "rust"
-            if "flavor-go-launcher" in output or "go version" in output:
-                logger.debug("🐹🔍✅ Detected Go launcher")
-                return "go"
-
-            logger.warning(
-                "🔍❓⚠️ Could not determine launcher type from output",
-                output=result.stdout,
-            )
-            return "rust"
         except Exception as e:
-            logger.error("Failed to execute command", error=str(e))
-            raise BuildError(f"Failed to execute command: {launcher_path}") from e
+            raise BuildError(f"Failed to execute command: {e}") from e
+        
+        output = result.stdout.lower()
+        logger.trace("🔍📤📋 Launcher version output", output=result.stdout.strip())
 
+        if "flavor-rs-launcher" in output or "rust" in output:
+            logger.debug("🦀🔍✅ Detected Rust launcher")
+            return "rust"
+        if "flavor-go-launcher" in output or "go version" in output:
+            logger.debug("🐹🔍✅ Detected Go launcher")
+            return "go"
+
+        logger.warning(
+            "🔍❓⚠️ Could not determine launcher type from output",
+            output=result.stdout,
+        )
+        return "rust"
+
+    @log_only_error_context(
+        context_provider=lambda: {"operation": "build_package"},
+        log_level="debug",
+        log_success=True
+    )
     def build_package(self) -> None:
         logger.info("🎯🏗️🚀 Orchestrator starting build process")
         logger.debug(
@@ -149,6 +159,10 @@ class PackagingOrchestrator:
             logger.info("🐍🏗️🚀 Using internal Python builder (default)")
             self._build_with_python_builder()
 
+    @log_only_error_context(
+        context_provider=lambda: {"operation": "build_with_python_builder"},
+        log_level="debug"
+    )
     def _build_with_python_builder(self) -> None:
         """Build package using the internal Python PSPF builder."""
         logger.info("🐍🔨🚀 Building package with internal Python builder")
@@ -271,6 +285,10 @@ class PackagingOrchestrator:
                         f"⏱️  Build time: {result.metadata['duration_seconds']:.2f}s"
                     )
 
+    @log_only_error_context(
+        context_provider=lambda: {"operation": "build_with_external_builder"},
+        log_level="debug"
+    )
     def _build_with_external_builder(self) -> None:
         """Build package using an external builder binary (Go/Rust)."""
         logger.info("Building package with external builder...")
