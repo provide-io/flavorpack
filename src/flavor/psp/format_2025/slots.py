@@ -254,12 +254,12 @@ class SlotMetadata:
             "config": LIFECYCLE_CONFIG,
         }
         encoding_map = {
-            "none": ENCODING_RAW,
-            "raw": ENCODING_RAW,
-            "tar": ENCODING_TAR,
-            "gzip": ENCODING_GZIP,
-            "tgz": ENCODING_TGZ,
-            "tar.gz": ENCODING_TGZ,
+            "none": CODEC_RAW,
+            "raw": CODEC_RAW,
+            "tar": CODEC_TAR,
+            "gzip": CODEC_GZIP,
+            "tgz": CODEC_TGZ,
+            "tar.gz": CODEC_TGZ,
         }
 
         # Convert hex checksum to integer
@@ -351,7 +351,7 @@ class SlotView:
     def content(self) -> bytes:
         """Get decompressed content."""
         if self._decompressed is None:
-            if self.descriptor.encoding == ENCODING_RAW:
+            if self.descriptor.encoding == CODEC_RAW:
                 self._decompressed = (
                     bytes(self.data) if isinstance(self.data, memoryview) else self.data
                 )
@@ -359,9 +359,9 @@ class SlotView:
                 # Decompress based on encoding type
                 import zlib
 
-                if self.descriptor.encoding == 2:  # ENCODING_GZIP
+                if self.descriptor.encoding == 2:  # CODEC_GZIP
                     self._decompressed = zlib.decompress(self.data)
-                elif self.descriptor.encoding == 3:  # ENCODING_TGZ
+                elif self.descriptor.encoding == 3:  # CODEC_TGZ
                     # For tar.gz, return as-is (launcher handles extraction)
                     self._decompressed = (
                         bytes(self.data)
