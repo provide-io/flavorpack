@@ -2,15 +2,13 @@
 
 from contextlib import contextmanager, suppress
 import json
-import logging
 import os
 from pathlib import Path
 import tempfile
 import time
 
 import psutil
-
-logger = logging.getLogger(__name__)
+from provide.foundation import logger
 
 
 class LockError(Exception):
