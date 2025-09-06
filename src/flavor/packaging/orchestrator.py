@@ -5,12 +5,12 @@
 
 import os
 from pathlib import Path
-import platform
 import tempfile
 from typing import Any
 
 from provide.foundation import logger
 from provide.foundation.errors import log_only_error_context, with_error_handling
+from provide.foundation.platform import get_platform_string, is_windows
 
 from flavor.exceptions import BuildError
 from flavor.ingredients.manager import IngredientManager
@@ -24,7 +24,6 @@ from flavor.packaging.orchestrator_ingredients import (
 )
 from flavor.packaging.python_packager import PythonPackager
 from flavor.psp.metadata.paths import validate_metadata_dict
-from flavor.utils import get_platform_string
 from flavor.utils.subprocess import run_command
 
 
@@ -206,8 +205,8 @@ class PackagingOrchestrator:
             launcher_type = self._detect_launcher_type(launcher_path)
             logger.info(f"Detected launcher type: {launcher_type}")
 
-            is_windows = platform.system() == "Windows"
-            uv_exe = "uv.exe" if is_windows else "uv"
+            windows = is_windows()
+            uv_exe = "uv.exe" if windows else "uv"
             metadata = create_python_builder_metadata(
                 self.package_name, self.version, self.build_config
             )

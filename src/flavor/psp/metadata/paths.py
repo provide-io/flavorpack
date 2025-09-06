@@ -8,8 +8,9 @@ This makes it clear to developers that paths are relative to the work environmen
 
 import os
 from pathlib import Path
-import platform
 from typing import Any
+
+from provide.foundation.platform import get_os_name, get_arch_name
 
 
 def validate_metadata_path(path: str) -> str:
@@ -219,26 +220,6 @@ def make_relative_to_workenv(absolute_path: str, workenv_dir: str) -> str:
     return validate_metadata_path(absolute_path)
 
 
-def get_normalized_os() -> str:
-    """Get normalized OS name."""
-    os_name = platform.system().lower()
-    # Normalize macOS name
-    if os_name == "darwin":
-        return "darwin"
-    return os_name
-
-
-def get_normalized_arch() -> str:
-    """Get normalized architecture name."""
-    arch = platform.machine().lower()
-    # Normalize common architectures
-    if arch in ["x86_64", "amd64"]:
-        return "amd64"
-    elif arch in ["aarch64", "arm64"]:
-        return "arm64"
-    elif arch in ["i686", "i586", "i486"]:
-        return "x86"
-    return arch
 
 
 def substitute_placeholders(path: str, workenv_path: Path) -> str:
@@ -262,8 +243,8 @@ def substitute_placeholders(path: str, workenv_path: Path) -> str:
         return path
 
     # Get platform values
-    os_name = get_normalized_os()
-    arch_name = get_normalized_arch()
+    os_name = get_os_name()
+    arch_name = get_arch_name()
     platform_str = f"{os_name}_{arch_name}"
 
     # Substitute placeholders
