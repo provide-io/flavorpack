@@ -2,15 +2,10 @@
 
 import os
 import platform
+from unittest.mock import patch
+
 import pytest
-from unittest.mock import patch, MagicMock
-from flavor.utils import (
-    get_os_name,
-    get_arch_name,
-    get_platform_string,
-    get_os_version,
-    get_cpu_type,
-)
+
 from flavor.psp.format_2025.environment import set_platform_environment
 
 

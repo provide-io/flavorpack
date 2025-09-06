@@ -1,7 +1,7 @@
 // helpers/flavor-rs/src/psp/format_2025/slots.rs
 // PSPF 2025 Slot Management - Enhanced 64-byte descriptors
 
-use super::constants::*;
+use super::constants::{ENCODING_RAW, SLOT_ALIGNMENT, PURPOSE_PAYLOAD, LIFECYCLE_CACHE, ACCESS_HINT_SEQUENTIAL, CACHE_NORMAL, DEFAULT_FILE_PERMS, SLOT_DESCRIPTOR_SIZE, PAGE_SIZE};
 use std::path::PathBuf;
 
 /// Slot descriptor - 64 bytes total
@@ -83,11 +83,25 @@ impl SlotDescriptor {
     /// Pack descriptor to bytes
     pub fn pack(&self) -> [u8; SLOT_DESCRIPTOR_SIZE] {
         let mut bytes = [0u8; SLOT_DESCRIPTOR_SIZE];
-
-        // Safety: We're writing to a properly sized buffer
-        unsafe {
-            std::ptr::write_unaligned(bytes.as_mut_ptr() as *mut SlotDescriptor, *self);
-        }
+        
+        // Pack fields manually in little-endian byte order
+        bytes[0..8].copy_from_slice(&self.id.to_le_bytes());
+        bytes[8..16].copy_from_slice(&self.name_hash.to_le_bytes());
+        bytes[16..24].copy_from_slice(&self.offset.to_le_bytes());
+        bytes[24..32].copy_from_slice(&self.size.to_le_bytes());
+        bytes[32..40].copy_from_slice(&self.original_size.to_le_bytes());
+        bytes[40..44].copy_from_slice(&self.checksum.to_le_bytes());
+        bytes[44] = self.encoding;
+        bytes[45] = self.encryption;
+        bytes[46..48].copy_from_slice(&self.alignment.to_le_bytes());
+        bytes[48] = self.purpose;
+        bytes[49] = self.lifecycle;
+        bytes[50] = self.access_hint;
+        bytes[51] = self.priority;
+        bytes[52..54].copy_from_slice(&self.permissions.to_le_bytes());
+        bytes[54..56].copy_from_slice(&self.platform.to_le_bytes());
+        bytes[56..60].copy_from_slice(&self.extended_offset.to_le_bytes());
+        bytes[60..64].copy_from_slice(&self.extended_size.to_le_bytes());
 
         bytes
     }
@@ -98,11 +112,46 @@ impl SlotDescriptor {
             return None;
         }
 
-        // Safety: We've verified the size matches our struct
-        let descriptor =
-            unsafe { std::ptr::read_unaligned(data.as_ptr() as *const SlotDescriptor) };
+        // Unpack fields manually from little-endian byte order
+        use std::convert::TryInto;
+        
+        let id = u64::from_le_bytes(data[0..8].try_into().ok()?);
+        let name_hash = u64::from_le_bytes(data[8..16].try_into().ok()?);
+        let offset = u64::from_le_bytes(data[16..24].try_into().ok()?);
+        let size = u64::from_le_bytes(data[24..32].try_into().ok()?);
+        let original_size = u64::from_le_bytes(data[32..40].try_into().ok()?);
+        let checksum = u32::from_le_bytes(data[40..44].try_into().ok()?);
+        let encoding = data[44];
+        let encryption = data[45];
+        let alignment = u16::from_le_bytes(data[46..48].try_into().ok()?);
+        let purpose = data[48];
+        let lifecycle = data[49];
+        let access_hint = data[50];
+        let priority = data[51];
+        let permissions = u16::from_le_bytes(data[52..54].try_into().ok()?);
+        let platform = u16::from_le_bytes(data[54..56].try_into().ok()?);
+        let extended_offset = u32::from_le_bytes(data[56..60].try_into().ok()?);
+        let extended_size = u32::from_le_bytes(data[60..64].try_into().ok()?);
 
-        Some(descriptor)
+        Some(SlotDescriptor {
+            id,
+            name_hash,
+            offset,
+            size,
+            original_size,
+            checksum,
+            encoding,
+            encryption,
+            alignment,
+            purpose,
+            lifecycle,
+            access_hint,
+            priority,
+            permissions,
+            platform,
+            extended_offset,
+            extended_size,
+        })
     }
 }
 
@@ -138,6 +187,7 @@ pub enum Lifecycle {
 }
 
 /// Slot metadata for runtime use
+#[derive(Debug)]
 pub struct SlotMetadata {
     pub descriptor: SlotDescriptor,
     pub name: String,

@@ -6,17 +6,14 @@ Tests bundle building, manifest handling, and build options.
 
 import hashlib
 import os
-import tempfile
-import tomllib
 from pathlib import Path
 
 import pytest
 
 from flavor.psp.format_2025 import (
-    PSPFBuilder,
+    MAGIC_WAND_EMOJI,
     PSPFReader,
     SlotMetadata,
-    MAGIC_WAND_EMOJI,
 )
 
 
@@ -292,7 +289,9 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
 
         # Modify one slot
         Path(slots[1].source).write_bytes(b"MODIFIED" * 100)
-        slots[1].checksum = hashlib.sha256(Path(slots[1].source).read_bytes()).hexdigest()
+        slots[1].checksum = hashlib.sha256(
+            Path(slots[1].source).read_bytes()
+        ).hexdigest()
 
         # Incremental build (in real impl would reuse unchanged slots)
         builder = test_builder.metadata(

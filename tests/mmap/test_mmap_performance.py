@@ -2,23 +2,21 @@
 # tests/test_mmap_performance.py
 # Performance benchmarks and large file tests for mmap
 
-import os
-import sys
-import time
-import pytest
-import tempfile
-import hashlib
-import random
-from pathlib import Path
 from contextlib import contextmanager
+import os
+from pathlib import Path
+import random
+import tempfile
+import time
+
+import pytest
 
 from flavor.psp.format_2025.backends import (
-    MMapBackend,
-    FileBackend,
-    StreamBackend,
-    create_backend,
-    ACCESS_MMAP,
     ACCESS_FILE,
+    ACCESS_MMAP,
+    FileBackend,
+    MMapBackend,
+    create_backend,
 )
 from flavor.psp.format_2025.constants import PAGE_SIZE
 
@@ -170,8 +168,8 @@ class TestMMapPerformance:
 
     def test_concurrent_access_performance(self):
         """Test performance with concurrent access patterns."""
-        import threading
         import queue
+        import threading
 
         size = 20 * 1024 * 1024  # 20MB
 
@@ -256,7 +254,7 @@ class TestMMapPerformance:
             avg_mmap = sum(mmap_times) / len(mmap_times)
             avg_file = sum(file_times) / len(file_times)
 
-            print(f"\n🏃 Concurrent access performance:")
+            print("\n🏃 Concurrent access performance:")
             print(f"  MMap: avg={avg_mmap:.4f}s")
             print(f"  File: avg={avg_file:.4f}s")
             print(f"  Speedup: {avg_file / avg_mmap:.2f}x")

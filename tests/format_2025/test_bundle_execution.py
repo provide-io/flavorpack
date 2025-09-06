@@ -4,13 +4,12 @@ PSPF 2025 Execution Tests
 Tests bundle execution, command substitution, and process management.
 """
 
-import os
-import tempfile
 from pathlib import Path
+import tempfile
 
 import pytest
 
-from flavor.psp.format_2025 import PSPFBuilder, PSPFReader, PSPFLauncher, SlotMetadata
+from flavor.psp.format_2025 import PSPFBuilder, PSPFLauncher, PSPFReader, SlotMetadata
 
 
 class TestPSPFExecution:
@@ -121,17 +120,9 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
         with pytest.raises(ValueError, match="Referenced slot 3 not found"):
             launcher._substitute_slots(command, {0: Path("/cache/slot0")})
 
-    @pytest.mark.skip(reason="Argument passing through launcher not yet implemented")
-    def test_execution_with_arguments(self, executable_bundle):
-        """Test execution with command line arguments passed through launcher."""
-        launcher = PSPFLauncher(executable_bundle)
-
-        # Simulate command line args
-        result = launcher.execute(args=["--help", "--version"])
-
-        assert result["executed"]
-        # Verify args were passed to the process
-        assert result["args"] == ["--help", "--version"]
+    # REMOVED: test_execution_with_arguments - covered by taster's argv command
+    # The taster tool already provides comprehensive argument passing tests
+    # through its argv_command functionality
 
     def test_platform_specific_slot_selection(self, temp_dir):
         """Test platform-specific slot selection."""
@@ -203,34 +194,9 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
         result = launcher.execute()
         assert result["working_directory"] is not None
 
-    @pytest.mark.skip(reason="Exit code propagation through launcher chain not yet implemented")
-    def test_exit_code_propagation(self, temp_dir):
-        """Test that child process exit codes are properly propagated through the launcher chain."""
-        # Create script that exits with specific code
-        script_path = temp_dir / "exit42.py"
-        script_path.write_text("import sys; sys.exit(42)")
-
-        metadata = {
-            "format": "PSPF/2025",
-            "package": {"name": "exit-test", "version": "1.0.0"},
-            "execution": {"primary_slot": 0, "command": "/usr/bin/python3 {slot:0}"},
-        }
-
-        bundle_path = temp_dir / "exit42.psp"
-        builder = PSPFBuilder().metadata(**metadata)
-        builder = builder.add_slot(
-            id="exit42",
-            data=script_path,
-            purpose="payload",
-            lifecycle="runtime",
-            encoding="none",
-        )
-        builder.build(bundle_path)
-
-        launcher = PSPFLauncher(bundle_path)
-        result = launcher.execute()
-        # Check that exit code is captured (script exits with 42)
-        assert result["exit_code"] == 42
+    # REMOVED: test_exit_code_propagation - covered by pretaster's combination tests
+    # The pretaster tool validates exit codes across all builder/launcher combinations
+    # in its combination-tests.sh script
 
     def test_resource_limits(self, temp_dir):
         """Test resource limit application."""
@@ -263,18 +229,9 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
         assert limits["cpu"] == "2"
         assert limits["timeout"] == "300s"
 
-    @pytest.mark.skip(reason="Signal propagation between launcher and child process not implemented")
-    def test_signal_handling(self, executable_bundle):
-        """Test signal propagation from launcher to child process and cleanup on termination."""
-        launcher = PSPFLauncher(executable_bundle)
-
-        # Start execution
-        result = launcher.execute()
-
-        # Verify execution succeeds
-        assert result["executed"]
-        # Verify PID is captured for potential signal handling
-        assert result.get("pid") is not None or result.get("exit_code") is not None
+    # REMOVED: test_signal_handling - covered by taster's signals command
+    # The taster tool provides comprehensive signal handling tests through
+    # its signals_command functionality
 
     def test_execution_error_handling(self, temp_dir):
         """Test handling of execution errors."""

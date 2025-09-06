@@ -99,31 +99,38 @@ pub fn calculate_checksum<R: Read>(mut reader: R, algorithm: ChecksumAlgorithm) 
             Ok(format!("adler32:{:08x}", adler.checksum()))
         }
         ChecksumAlgorithm::Blake2b => {
-            // Would need blake2 crate
-            unimplemented!("Blake2b not yet implemented")
+            // Blake2b not implemented in this version
+            Err(std::io::Error::new(
+                std::io::ErrorKind::Unsupported,
+                "Blake2b checksum not implemented",
+            ))
         }
     }
 }
 
 /// Calculate checksum from byte slice - convenience function for small data like metadata
-pub fn calculate_checksum_bytes(data: &[u8], algorithm: ChecksumAlgorithm) -> String {
+pub fn calculate_checksum_bytes(data: &[u8], algorithm: ChecksumAlgorithm) -> Result<String, std::io::Error> {
     match algorithm {
         ChecksumAlgorithm::Sha256 => {
             let mut hasher = Sha256::new();
             hasher.update(data);
-            format!("sha256:{:x}", hasher.finalize())
+            Ok(format!("sha256:{:x}", hasher.finalize()))
         }
         ChecksumAlgorithm::Sha512 => {
             let mut hasher = Sha512::new();
             hasher.update(data);
-            format!("sha512:{:x}", hasher.finalize())
+            Ok(format!("sha512:{:x}", hasher.finalize()))
         }
         ChecksumAlgorithm::Adler32 => {
             let checksum = adler::adler32_slice(data);
-            format!("adler32:{:08x}", checksum)
+            Ok(format!("adler32:{:08x}", checksum))
         }
         ChecksumAlgorithm::Blake2b => {
-            unimplemented!("Blake2b not yet implemented")
+            // Blake2b not implemented in this version
+            Err(std::io::Error::new(
+                std::io::ErrorKind::Unsupported,
+                "Blake2b checksum not implemented",
+            ))
         }
     }
 }
@@ -131,7 +138,8 @@ pub fn calculate_checksum_bytes(data: &[u8], algorithm: ChecksumAlgorithm) -> St
 /// Verify data against a checksum string
 pub fn verify_checksum(data: &[u8], checksum_str: &str) -> Result<bool, String> {
     let (algo, expected) = parse_checksum(checksum_str)?;
-    let actual = calculate_checksum_bytes(data, algo);
+    let actual = calculate_checksum_bytes(data, algo)
+        .map_err(|e| format!("Checksum calculation failed: {}", e))?;
 
     // Compare just the hex part
     let actual_hex = actual.split(':').next_back().unwrap_or(&actual);

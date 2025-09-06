@@ -26,8 +26,8 @@ from flavor.utils.formatting import format_size
 )
 def inspect_command(package_file: str, output_json: bool) -> None:
     """Quick inspection of a flavor package."""
-    import json
     from datetime import datetime
+    import json
 
     package_path = Path(package_file)
 
@@ -87,8 +87,8 @@ def inspect_command(package_file: str, output_json: bool) -> None:
                     try:
                         dt = datetime.fromisoformat(build_time.replace("Z", "+00:00"))
                         build_time = dt.strftime("%Y-%m-%d %H:%M")
-                    except:
-                        pass
+                    except (ValueError, TypeError):
+                        pass  # Keep original timestamp if parsing fails
                 builder_version = metadata.get("build", {}).get(
                     "builder_version", "Unknown"
                 )

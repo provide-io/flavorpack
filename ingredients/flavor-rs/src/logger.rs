@@ -9,6 +9,7 @@ use std::io::{self, Write};
 use std::sync::Mutex;
 
 /// JSON logger implementation
+#[derive(Debug)]
 pub struct JsonLogger {
     level: Level,
     target_file: Mutex<Option<std::fs::File>>,
@@ -104,11 +105,11 @@ impl JsonLogger {
 }
 
 impl Log for JsonLogger {
-    fn enabled(&self, metadata: &Metadata) -> bool {
+    fn enabled(&self, metadata: &Metadata<'_>) -> bool {
         metadata.level() <= self.level
     }
 
-    fn log(&self, record: &Record) {
+    fn log(&self, record: &Record<'_>) {
         if !self.enabled(record.metadata()) {
             return;
         }

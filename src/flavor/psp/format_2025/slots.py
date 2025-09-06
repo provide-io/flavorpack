@@ -22,19 +22,16 @@ from flavor.psp.format_2025.constants import (
     LIFECYCLE_EAGER,
     LIFECYCLE_INIT,
     LIFECYCLE_LAZY,
-    LIFECYCLE_PLATFORM,
     LIFECYCLE_RUNTIME,
     LIFECYCLE_SHUTDOWN,
     LIFECYCLE_STARTUP,
     LIFECYCLE_TEMPORARY,
-    PAGE_SIZE,
     PURPOSE_CODE,
     PURPOSE_CONFIG,
     PURPOSE_DATA,
     SLOT_ALIGNMENT,
     SLOT_DESCRIPTOR_SIZE,
 )
-from flavor.utils.alignment import align_offset, align_to_page
 from flavor.utils.hashing import hash_name
 
 
@@ -194,7 +191,6 @@ class SlotDescriptor:
         return result
 
 
-# Backwards compatibility - keep old SlotMetadata name
 @define
 class SlotMetadata:
     """Metadata for a slot in the PSPF package."""
@@ -292,7 +288,6 @@ class SlotMetadata:
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
         from flavor.psp.format_2025.checksums import calculate_checksum
-        from flavor.psp.metadata.paths import validate_metadata_path
 
         # Ensure checksum has prefix
         if not self.checksum:

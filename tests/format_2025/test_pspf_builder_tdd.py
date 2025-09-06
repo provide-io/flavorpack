@@ -4,20 +4,19 @@ Test-Driven Development tests for the new PSPF builder API.
 Written BEFORE implementation to drive the design.
 """
 
-import tempfile
 from pathlib import Path
-from typing import Tuple
-import pytest
+import tempfile
+
 import attrs
+import pytest
 
-# Import the new API
-from flavor.psp.format_2025.spec import BuildSpec, KeyConfig, BuildOptions, BuildResult
-from flavor.psp.format_2025.builder import build_package, PSPFBuilder
-from flavor.psp.format_2025.validation import validate_spec
+from flavor.psp.format_2025.builder import PSPFBuilder, build_package
 from flavor.psp.format_2025.keys import resolve_keys
-
 from flavor.psp.format_2025.slots import SlotMetadata
 
+# Import the new API
+from flavor.psp.format_2025.spec import BuildOptions, BuildResult, BuildSpec, KeyConfig
+from flavor.psp.format_2025.validation import validate_spec
 
 # =============================================================================
 # Test Fixtures

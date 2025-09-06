@@ -13,8 +13,8 @@ from typing import Any
 
 from provide.foundation import logger
 
-from flavor.utils.subprocess import run_command
 from flavor.utils.platform import get_platform_string
+from flavor.utils.subprocess import run_command
 
 
 @dataclass
@@ -563,8 +563,8 @@ class IngredientManager:
                 if not os.access(embedded_path, os.X_OK):
                     try:
                         embedded_path.chmod(0o755)
-                    except:
-                        pass
+                    except (OSError, PermissionError):
+                        pass  # Continue even if we can't set permissions
                 logger.debug(f"Found ingredient at: {embedded_path}")
                 return embedded_path
 

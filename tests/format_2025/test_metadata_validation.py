@@ -1,6 +1,7 @@
 """Test metadata validation for PSPF/2025 format."""
 
 import pytest
+
 from flavor.psp.metadata.validators import validate_metadata
 
 
