@@ -89,7 +89,7 @@ def validate_slots(slots: list[SlotMetadata]) -> list[str]:
     Checks for:
     - Unique indices
     - Valid paths
-    - Valid encoding
+    - Valid codec
     - Valid sizes
     - Valid names
     """

@@ -335,8 +335,8 @@ def _determine_codec(
     # elif encoding_lower == "7z":
     #     return data, ENCODING_7Z
     else:
-        logger.warning(f"Unknown encoding '{encoding}', using ENCODING_RAW")
-        return data, ENCODING_RAW
+        logger.warning(f"Unknown codec '{codec}', using CODEC_RAW")
+        return data, CODEC_RAW
 
 
 def _write_package(
@@ -585,7 +585,7 @@ class PSPFBuilder:
             data: Slot data (bytes, string, or path to file/directory)
             purpose: Slot purpose (data, code, config, media)
             lifecycle: Slot lifecycle (runtime, cached, temporary)
-            encoding: Compression encoding (none, gzip)
+            codec: Compression codec (none, gzip)
             target: Target location relative to workenv (default: None)
             permissions: Unix permissions as octal string (e.g., "0755")
         """
