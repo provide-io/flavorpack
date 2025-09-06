@@ -12,10 +12,10 @@ from attrs import define, field, validators
 from flavor.psp.format_2025.constants import (
     ACCESS_HINT_SEQUENTIAL,
     CACHE_NORMAL,
-    ENCODING_GZIP,
-    ENCODING_RAW,
-    ENCODING_TAR,
-    ENCODING_TGZ,
+    CODEC_GZIP,
+    CODEC_RAW,
+    CODEC_TAR,
+    CODEC_TGZ,
     LIFECYCLE_CACHE,
     LIFECYCLE_CONFIG,
     LIFECYCLE_DEV,
@@ -69,7 +69,7 @@ class SlotDescriptor:
     # Properties (16 bytes)
     original_size: int = field(default=0)  # Uncompressed size
     checksum: int = field(default=0)  # Adler-32 of stored data
-    encoding: int = field(default=ENCODING_RAW)  # Renamed from compression
+    codec: int = field(default=CODEC_RAW)  # Renamed from compression
     encryption: int = field(default=0)
     alignment: int = field(default=SLOT_ALIGNMENT)
 
@@ -104,7 +104,7 @@ class SlotDescriptor:
             "Q"  # size (8)
             "Q"  # original_size (8)
             "I"  # checksum (4)
-            "B"  # encoding (1)
+            "B"  # codec (1)
             "B"  # encryption (1)
             "H"  # alignment (2)
             "B"  # purpose (1)
@@ -121,7 +121,7 @@ class SlotDescriptor:
             self.size,
             self.original_size,
             self.checksum,
-            self.encoding,
+            self.codec,
             self.encryption,
             self.alignment,
             self.purpose,
@@ -152,7 +152,7 @@ class SlotDescriptor:
             size=unpacked[3],
             original_size=unpacked[4],
             checksum=unpacked[5],
-            encoding=unpacked[6],
+            codec=unpacked[6],
             encryption=unpacked[7],
             alignment=unpacked[8],
             purpose=unpacked[9],
@@ -174,7 +174,7 @@ class SlotDescriptor:
             "size": self.size,
             "original_size": self.original_size,
             "checksum": self.checksum,
-            "encoding": self.encoding,
+            "codec": self.codec,
             "encryption": self.encryption,
             "alignment": self.alignment,
             "purpose": self.purpose,
@@ -301,7 +301,7 @@ class SlotMetadata:
             "target": self.target,
             "size": self.size,
             "checksum": self.checksum,  # Prefixed format (e.g., "sha256:...")
-            "encoding": self.encoding,
+            "codec": self.codec,
             "purpose": self.purpose,
             "lifecycle": self.lifecycle,
             "permissions": self.permissions,
