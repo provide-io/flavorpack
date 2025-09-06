@@ -15,7 +15,7 @@ from flavor.exceptions import ValidationError
 
 
 @define(frozen=True, kw_only=True)
-class RuntimeEnvConfig:
+class RuntimeRuntimeConfig:
     """Configuration for the sandboxed runtime environment variables."""
 
     unset: list[str] = field(factory=list)
@@ -28,7 +28,7 @@ class RuntimeEnvConfig:
 class ExecutionConfig:
     """Execution-related configuration from the manifest."""
 
-    runtime_env: RuntimeEnvConfig = field(factory=RuntimeEnvConfig)
+    runtime_env: RuntimeRuntimeConfig = field(factory=RuntimeRuntimeConfig)
 
 
 @define(frozen=True, kw_only=True)
@@ -102,7 +102,7 @@ class FlavorConfig:
         # Execution
         exec_conf = config.get("execution", {})
         runtime_conf = exec_conf.get("runtime", {}).get("env", {})
-        runtime_env = RuntimeEnvConfig(
+        runtime_env = RuntimeRuntimeConfig(
             unset=runtime_conf.get("unset", []),
             passthrough=runtime_conf.get("pass", []),  # 'pass' is the key in TOML
             set_vars=runtime_conf.get("set", {}),
