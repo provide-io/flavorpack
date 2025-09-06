@@ -377,7 +377,7 @@ impl SlotProcessor {
             "gzip" => ENCODING_GZIP,
             "tgz" => ENCODING_TGZ,
             "tar" => ENCODING_TAR,
-            "none" | "" => ENCODING_RAW,
+            "raw" | "none" | "" => ENCODING_RAW,
             _ => ENCODING_RAW,
         };
 
