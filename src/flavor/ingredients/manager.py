@@ -529,7 +529,7 @@ class IngredientManager:
 
         # Optionally add current package version as a search pattern
         try:
-            from flavor.version import __version__
+            from flavor._version import __version__
 
             if __version__ and __version__ != "0.0.0":
                 platform_specific_names.append(
