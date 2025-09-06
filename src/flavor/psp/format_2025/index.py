@@ -136,12 +136,6 @@ class PSPFIndex:
     # Reserved space for future expansion
     reserved: bytes = field(default=Factory(lambda: b"\x00" * 6816))
 
-    # Backwards compatibility properties
-    @property
-    def metadata_checksum_bytes(self) -> bytes:
-        """Get metadata checksum as bytes."""
-        return self.metadata_checksum
-
     def pack(self) -> bytes:
         """Pack index into binary format."""
         data = struct.pack(

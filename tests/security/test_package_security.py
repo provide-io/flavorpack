@@ -4,13 +4,12 @@ Security tests for PSPF package handling.
 These tests ensure packages cannot be tampered with or exploited.
 """
 
-import os
-import tempfile
-import hashlib
 from pathlib import Path
+import tempfile
+
 import pytest
 
-from flavor.psp.format_2025 import PSPFBuilder, PSPFReader, PSPFLauncher
+from flavor.psp.format_2025 import PSPFBuilder, PSPFLauncher, PSPFReader
 from flavor.psp.format_2025.crypto import generate_key_pair as generate_ephemeral_keys
 
 
@@ -167,7 +166,6 @@ class TestPackageSecurity:
     def test_race_condition_prevention(self):
         """Ensure race conditions during extraction are handled."""
         import threading
-        import time
 
         package_path = self.temp_dir / "race.psp"
         extract_dir = self.temp_dir / "extract"

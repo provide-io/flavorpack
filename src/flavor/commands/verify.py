@@ -40,7 +40,7 @@ def verify_command(package_file: str) -> None:
                 )
 
             # Build metadata
-            if "build" in result and result["build"]:
+            if result.get("build"):
                 build = result["build"]
                 if "timestamp" in build:
                     click.echo(f"Built: {build['timestamp']}")

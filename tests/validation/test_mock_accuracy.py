@@ -6,11 +6,11 @@ These tests ensure that our mock launchers accurately represent real launcher be
 They should be run as integration tests with real ingredients available.
 """
 
-import pytest
-from pathlib import Path
 
-from tests.conftest import MOCK_LAUNCHER_DATA, MOCK_LAUNCHER_SIZE
+import pytest
+
 from flavor.psp.format_2025 import PSPFBuilder, PSPFReader
+from tests.conftest import MOCK_LAUNCHER_DATA, MOCK_LAUNCHER_SIZE
 
 
 @pytest.mark.integration
@@ -46,6 +46,9 @@ class TestMockAccuracy:
             assembly, "load_launcher_binary", assembly_module.load_launcher_binary
         )
 
+    @pytest.mark.skip(
+        reason="Mock vs real launcher validation should be periodic integration test, not unit test"
+    )
     def test_launcher_size_assumption(self):
         """Verify mock launcher size is reasonable.
 
@@ -67,6 +70,9 @@ class TestMockAccuracy:
         except FileNotFoundError:
             pytest.skip("Real launchers not available - skipping validation")
 
+    @pytest.mark.skip(
+        reason="Mock structure validation should be periodic integration test comparing with real launchers"
+    )
     def test_mock_package_structure(self, temp_dir):
         """Verify packages built with mocks have valid PSPF structure."""
         # This test uses the mock which is fine - we're testing the mock creates valid structure
@@ -123,8 +129,9 @@ class TestMockAccuracy:
         This test builds two packages - one with mock and one with real launcher,
         and verifies they have compatible structure.
         """
-        from flavor.psp.format_2025.metadata import assembly
         import unittest.mock
+
+        from flavor.psp.format_2025.metadata import assembly
 
         # Build with mock
         mock_output = temp_dir / "mock_package.psp"

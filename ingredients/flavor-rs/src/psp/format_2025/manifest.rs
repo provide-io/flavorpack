@@ -36,7 +36,7 @@ pub struct ExecutionInfo {
     pub env: HashMap<String, String>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ManifestSlot {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub slot: Option<i32>,    // Optional: position validator

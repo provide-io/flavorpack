@@ -6,31 +6,25 @@ Tests the fundamental PSPF format structure, reading, and writing.
 
 import hashlib
 import json
-import os
 import struct
-import tarfile
-import tempfile
-from pathlib import Path
-from typing import Dict, List
-import zlib
 
 import pytest
 
 from flavor.psp.format_2025 import (
-    PSPFBuilder,
-    PSPFReader,
-    PSPFIndex,
-    SlotMetadata,
-    generate_key_pair,
-    PSPF_VERSION,
     HEADER_SIZE,
     MAGIC_TRAILER_SIZE,
-    PACKAGE_EMOJI_BYTES,
+    MAGIC_WAND_EMOJI,
     MAGIC_WAND_EMOJI_BYTES,
+    PACKAGE_EMOJI_BYTES,
+    PSPF_VERSION,
     SLOT_ALIGNMENT,
     SLOT_DESCRIPTOR_SIZE,
-    MAGIC_WAND_EMOJI,
+    PSPFBuilder,
+    PSPFIndex,
+    PSPFReader,
+    SlotMetadata,
     align_offset,
+    generate_key_pair,
 )
 
 
@@ -166,17 +160,17 @@ class TestPSPFCore:
 
         # Read bundle
         reader = PSPFReader(bundle_path)
-        
+
         # Check MagicTrailer at end of file
         with open(bundle_path, "rb") as f:
             # Seek to start of MagicTrailer
             f.seek(-MAGIC_TRAILER_SIZE, 2)
             trailer = f.read(MAGIC_TRAILER_SIZE)
-            
+
         # Verify MagicTrailer structure
         assert trailer[:4] == PACKAGE_EMOJI_BYTES  # 📦 at start
         assert trailer[-4:] == MAGIC_WAND_EMOJI_BYTES  # 🪄 at end
-        
+
         # Verify index version in trailer
         index_version = struct.unpack("<I", trailer[4:8])[0]
         assert index_version == PSPF_VERSION
@@ -223,9 +217,8 @@ class TestPSPFCore:
             archive_data = f.read(index.metadata_size)
 
         # Verify it's gzipped JSON
-        import io
         import gzip
-        import json
+        import io
 
         with gzip.open(io.BytesIO(archive_data), "rb") as gz:
             json_data = gz.read()
@@ -233,7 +226,7 @@ class TestPSPFCore:
             assert "package" in metadata
             assert "format" in metadata
             assert metadata["format"] == "PSPF/2025"
-    
+
     def test_metadata_placement(self, temp_dir, simple_metadata, test_builder):
         """Test that metadata immediately follows launcher per PSPF spec."""
         bundle_path = temp_dir / "test.psp"
@@ -241,11 +234,11 @@ class TestPSPFCore:
             bundle_path
         )
         assert result.success, f"Build failed: {result.errors}"
-        
+
         # Read index to get offsets
         reader = PSPFReader(bundle_path)
         index = reader.read_index()
-        
+
         # Metadata should immediately follow launcher with no gap
         assert index.metadata_offset == index.launcher_size, (
             f"Metadata should immediately follow launcher. "
@@ -367,12 +360,12 @@ class TestPSPFCore:
         assert result.success, f"Build failed: {result.errors}"
 
         reader = PSPFReader(bundle_path)
-        
+
         # Verify MagicTrailer at end of file
         with open(bundle_path, "rb") as f:
             f.seek(-MAGIC_TRAILER_SIZE, 2)
             trailer = f.read(MAGIC_TRAILER_SIZE)
-            
+
         assert trailer[:4] == PACKAGE_EMOJI_BYTES
         assert trailer[-4:] == MAGIC_WAND_EMOJI_BYTES
 

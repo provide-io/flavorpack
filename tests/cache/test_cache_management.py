@@ -1,17 +1,17 @@
 """Tests for cache management commands."""
 
 import json
-import tempfile
-import shutil
-from pathlib import Path
 import os
+from pathlib import Path
+import shutil
+import tempfile
 import time
 from unittest.mock import patch
-import pytest
+
 from click.testing import CliRunner
 
-from flavor.cli import cli
 from flavor.cache import CacheManager
+from flavor.cli import cli
 
 
 def create_modern_cached_package(

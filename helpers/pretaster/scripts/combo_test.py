@@ -64,6 +64,56 @@ def handle_command(cmd, *args):
             print(f"  ✅ Init slot properly removed after setup")
         
         return 0
+    elif cmd == "manylinux-test":
+        # Test that manylinux2014 platform tags are working
+        print("🧪 Testing manylinux2014 wheel downloads...")
+        print("=" * 60)
+        
+        import subprocess
+        import tempfile
+        from pathlib import Path
+        
+        # Test packages that require binary wheels
+        test_packages = ['cryptography', 'cffi']
+        
+        with tempfile.TemporaryDirectory() as temp_dir:
+            # Build the download command as PythonPackager would
+            cmd = [
+                'pip3', 'download',
+                '--dest', temp_dir,
+                '--only-binary', ':all:',
+                '--platform', 'manylinux2014_x86_64',
+                '--python-version', '3.11'
+            ] + test_packages
+            
+            print("Testing download command:")
+            print(' '.join(cmd))
+            print()
+            
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+            
+            if result.returncode == 0:
+                wheels = list(Path(temp_dir).glob('*.whl'))
+                print(f"✅ Downloaded {len(wheels)} wheels")
+                
+                # Check each package
+                for pkg in test_packages:
+                    found = False
+                    for wheel in wheels:
+                        if pkg in wheel.name.lower():
+                            if 'manylinux' in wheel.name:
+                                print(f"  ✅ {pkg}: {wheel.name[:50]}...")
+                                found = True
+                                break
+                    if not found:
+                        print(f"  ❌ {pkg}: Not found")
+                        return 1
+                
+                print("\n✅ manylinux2014 downloads working correctly!")
+                return 0
+            else:
+                print(f"❌ Download failed: {result.stderr[:200]}")
+                return 1
     else:
         print(f"❌ Unknown command: {cmd}")
         return 1

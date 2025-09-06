@@ -23,7 +23,6 @@ from flavor.psp.format_2025.constants import (
 from flavor.utils import (
     get_arch_name,
     get_os_name,
-    get_platform_string,
     run_command,
 )
 from flavor.utils.archive import deterministic_filter
@@ -42,6 +41,8 @@ class PythonPackager:
     """
 
     DEFAULT_PYTHON_VERSION = "3.11"
+    # manylinux2014 = glibc 2.17+ (CentOS 7, Amazon Linux 2, Ubuntu 14.04+)
+    MANYLINUX_TAG = "manylinux2014"
 
     def _make_executable(self, file_path: Path) -> None:
         """Make a file executable and strip extended attributes on macOS.
@@ -97,6 +98,27 @@ class PythonPackager:
         # Track processed dependencies to avoid cycles
         self._processed_deps = set()
 
+    # ╔══════════════════════════════════════════════════════════════════════════════╗
+    # ║                           CRITICAL PyPA HELPER METHODS                          ║
+    # ╠══════════════════════════════════════════════════════════════════════════════╣
+    # ║ ⚠️  WARNING: DO NOT REMOVE OR MODIFY THESE METHODS WITHOUT PRIOR DISCUSSION  ⚠️  ║
+    # ║                                                                                  ║
+    # ║ These PyPA helper methods are ESSENTIAL for correct wheel downloading and       ║
+    # ║ building. They handle critical functionality including:                         ║
+    # ║                                                                                  ║
+    # ║ • Platform-specific wheel selection (manylinux2014 for Linux compatibility)     ║
+    # ║ • Proper dependency resolution that uv pip cannot handle                        ║
+    # ║ • Binary wheel downloading for cross-platform builds                            ║
+    # ║ • Correct Python version targeting                                              ║
+    # ║                                                                                  ║
+    # ║ Removing these will BREAK:                                                      ║
+    # ║ - Linux compatibility (CentOS 7, Amazon Linux, Ubuntu, etc.)                    ║
+    # ║ - Cross-platform package building                                               ║
+    # ║ - Dependency resolution for complex packages                                    ║
+    # ║                                                                                  ║
+    # ║ If you think these should be removed, STOP and discuss first!                   ║
+    # ╚══════════════════════════════════════════════════════════════════════════════╝
+
     def _get_pypa_pip_install_cmd(
         self, python_exe: Path, packages: list[str]
     ) -> list[str]:
@@ -125,6 +147,7 @@ class PythonPackager:
         cmd.append(str(source))
         return cmd
 
+    # ⚠️ CRITICAL: This method handles manylinux platform tags - DO NOT REMOVE! ⚠️
     def _get_pypa_pip_download_cmd(
         self,
         python_exe: Path,
@@ -146,14 +169,14 @@ class PythonPackager:
             requirements_file: Optional requirements file
             packages: Optional list of packages to download
             binary_only: Whether to download only binary wheels
-            platform_tag: Optional platform tag to use (e.g., "manylinux_2_17_x86_64")
+            platform_tag: Optional platform tag to use (e.g., "manylinux2014_x86_64")
         """
         cmd = [str(python_exe), "-m", "pip", "download", "--dest", str(dest_dir)]
         if binary_only:
             cmd.extend(["--only-binary", ":all:"])
 
         # For Linux builds, explicitly request manylinux wheels for maximum compatibility
-        # manylinux_2_17 = manylinux2014 = glibc 2.17+ (CentOS 7, Amazon Linux 2, Ubuntu 14.04+)
+        # manylinux2014 = glibc 2.17+ (CentOS 7, Amazon Linux 2, Ubuntu 14.04+)
         if get_os_name() == "linux" and binary_only:
             if platform_tag:
                 # Use explicitly provided platform tag
@@ -162,20 +185,22 @@ class PythonPackager:
             else:
                 arch = get_arch_name()
                 logger.trace(
-                    f"Linux build detected, arch={arch}, requesting manylinux_2_17 wheels"
+                    f"Linux build detected, arch={arch}, requesting {self.MANYLINUX_TAG} wheels"
                 )
 
-                # Use manylinux_2_17 format (modern packages like grpcio use this)
-                # This is equivalent to manylinux2014 (both mean glibc 2.17+)
-                # WARNING: manylinux_2_17 wheels may have C++11 ABI incompatibility on CentOS 7
-                # CentOS 7 has GCC 4.8.5 with old C++ ABI, but grpcio needs new C++11 ABI
+                # Use manylinux2014 format for maximum compatibility
+                # manylinux2014 = glibc 2.17+ (CentOS 7, Amazon Linux 2, Ubuntu 14.04+)
                 if arch == "amd64":
-                    cmd.extend(["--platform", "manylinux_2_17_x86_64"])
-                    logger.debug("Added platform constraint: manylinux_2_17_x86_64")
+                    cmd.extend(["--platform", f"{self.MANYLINUX_TAG}_x86_64"])
+                    logger.debug(
+                        f"Added platform constraint: {self.MANYLINUX_TAG}_x86_64"
+                    )
                 elif arch == "arm64":
-                    # ARM64 doesn't have manylinux2010, use manylinux_2_17
-                    cmd.extend(["--platform", "manylinux_2_17_aarch64"])
-                    logger.debug("Added platform constraint: manylinux_2_17_aarch64")
+                    # ARM64 doesn't have manylinux2010, use manylinux2014
+                    cmd.extend(["--platform", f"{self.MANYLINUX_TAG}_aarch64"])
+                    logger.debug(
+                        f"Added platform constraint: {self.MANYLINUX_TAG}_aarch64"
+                    )
                     logger.warning("⚠️ grpcio on CentOS 7 ARM64 may have C++ ABI issues")
 
             # Also specify Python version to match our target
@@ -190,6 +215,10 @@ class PythonPackager:
             cmd.extend(packages)
         return cmd
 
+    # ╔══════════════════════════════════════════════════════════════════════════════╗
+    # ║                      END OF CRITICAL PyPA HELPER METHODS                        ║
+    # ╚══════════════════════════════════════════════════════════════════════════════╝
+
     def _download_uv_wheel_via_url(self, dest_dir: Path) -> Path | None:
         """Download UV wheel directly from PyPI using curl/wget.
 
@@ -202,17 +231,17 @@ class PythonPackager:
             Path to UV binary if successful, None otherwise
         """
         import json
-        import urllib.request
         import shutil
+        import urllib.request
 
         logger.info("Downloading UV wheel directly from PyPI")
 
         # Determine platform tag
         arch = get_arch_name()
         if arch == "amd64":
-            platform_tag = "manylinux_2_17_x86_64.manylinux2014_x86_64"
+            platform_tag = f"{self.MANYLINUX_TAG}_x86_64"
         elif arch == "arm64":
-            platform_tag = "manylinux_2_17_aarch64.manylinux2014_aarch64"
+            platform_tag = f"{self.MANYLINUX_TAG}_aarch64"
         else:
             logger.error(f"Unsupported architecture for UV download: {arch}")
             return None
@@ -340,8 +369,8 @@ class PythonPackager:
 
         with tempfile.TemporaryDirectory() as temp_dir:
             logger.trace(f"Created temp directory for UV download: {temp_dir}")
-            # Use the existing _get_pypa_pip_download_cmd method
-            # UV still publishes with manylinux2014 tags, so use that explicitly
+            # ⚠️ CRITICAL: Using _get_pypa_pip_download_cmd for correct manylinux handling ⚠️
+            # DO NOT replace this with direct uv commands - they don't handle platform tags correctly!
             arch = get_arch_name()
             uv_platform_tag = None
             if get_os_name() == "linux":
@@ -538,9 +567,9 @@ class PythonPackager:
                 payload_uv = self._download_uv_wheel(bin_dir)
                 if not payload_uv:
                     # If download returns None on Linux, this is a critical error
-                    # since we need manylinux2014 compatibility
+                    # since we need manylinux compatibility
                     raise FileNotFoundError(
-                        "Failed to download manylinux2014-compatible UV wheel for Linux. "
+                        f"Failed to download {self.MANYLINUX_TAG}-compatible UV wheel for Linux. "
                         "This is required for broad Linux compatibility (glibc 2.17+)."
                     )
 
@@ -824,6 +853,7 @@ class PythonPackager:
             # Explicitly install 'wheel' as it's required for building wheels
             # but not guaranteed to be in a seeded venv.
             logger.info("📦📥🚀 Installing wheel package into temporary environment")
+            # ⚠️ Using PyPA helper - DO NOT replace with uv pip ⚠️
             install_wheel_cmd = self._get_pypa_pip_install_cmd(python_exe, ["wheel"])
             run_command(
                 install_wheel_cmd,
@@ -867,6 +897,7 @@ class PythonPackager:
                     total=len(all_local_deps),
                     name=dep_path.name,
                 )
+                # ⚠️ Using PyPA helper for proper wheel building - DO NOT REMOVE ⚠️
                 wheel_cmd = self._get_pypa_pip_wheel_cmd(
                     python_exe, wheels_dir, dep_path, no_deps=True
                 )
@@ -888,6 +919,7 @@ class PythonPackager:
             )
             if wheel_spinner:
                 wheel_spinner.tick()
+            # ⚠️ CRITICAL: PyPA helper for main package wheel - DO NOT REPLACE ⚠️
             main_wheel_cmd = self._get_pypa_pip_wheel_cmd(
                 python_exe, wheels_dir, self.manifest_dir, no_deps=True
             )
@@ -949,6 +981,7 @@ class PythonPackager:
                     req_file.flush()
 
                     # Download only these specific dependencies
+                    # ⚠️ PyPA download with manylinux2014 support - ESSENTIAL FOR LINUX ⚠️
                     download_cmd = self._get_pypa_pip_download_cmd(
                         python_exe, wheels_dir, requirements_file=Path(req_file.name)
                     )
@@ -968,6 +1001,7 @@ class PythonPackager:
                 for file in wheels_dir.iterdir():
                     if file.suffix == ".tar.gz":
                         logger.debug(f"🔄 Converting {file.name} to wheel")
+                        # ⚠️ PyPA wheel building - handles complex dependencies correctly ⚠️
                         build_cmd = self._get_pypa_pip_wheel_cmd(
                             python_exe, wheels_dir, file, no_deps=True
                         )

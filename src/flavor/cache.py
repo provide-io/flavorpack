@@ -195,7 +195,7 @@ class CacheManager:
                         "version": pkg.get("version"),
                         "builder": metadata.get("build", {}).get("builder"),
                     }
-            except (json.JSONDecodeError, IOError):
+            except (OSError, json.JSONDecodeError):
                 pass
 
         return info

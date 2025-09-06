@@ -1,15 +1,17 @@
 """Test workenv directory creation with permissions and umask."""
 
 import os
+from pathlib import Path
 import stat
 import tempfile
+from unittest.mock import patch
+
 import pytest
-from pathlib import Path
-from unittest.mock import patch, MagicMock
+
 from flavor.psp.metadata.paths import (
-    validate_workenv_paths,
-    create_workenv_directories,
     apply_umask,
+    create_workenv_directories,
+    validate_workenv_paths,
 )
 
 
