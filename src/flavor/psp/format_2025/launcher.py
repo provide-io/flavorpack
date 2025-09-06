@@ -85,7 +85,7 @@ class PSPFLauncher(PSPFReader):
                         "offset": offset,
                         "size": size,
                         "checksum": checksum,
-                        "encoding": encoding,
+                        "codec": encoding,
                         "purpose": purpose,
                         "lifecycle": lifecycle,
                     }
@@ -194,19 +194,19 @@ class PSPFLauncher(PSPFReader):
 
         # NOTE: Decoding logic must match Go/Rust implementations
         # Decode if needed
-        if slot_entry["encoding"] == 0:  # raw/none
+        if slot_entry["codec"] == 0:  # raw/none
             logger.debug(f"📄 Slot {slot_index} is unencoded (raw)")
             data = slot_data
-        elif slot_entry["encoding"] == 1:  # tar
+        elif slot_entry["codec"] == 1:  # tar
             logger.debug(f"📦 Slot {slot_index} is a tar archive")
             data = slot_data  # Tar archives are extracted later
-        elif slot_entry["encoding"] == 2:  # gzip
+        elif slot_entry["codec"] == 2:  # gzip
             logger.debug(f"🗜️ Decompressing slot {slot_index} with gzip")
             import gzip
 
             data = gzip.decompress(slot_data)
             logger.debug(f"✅ Decompressed to {len(data)} bytes")
-        elif slot_entry["encoding"] == 3:  # tar.gz
+        elif slot_entry["codec"] == 3:  # tar.gz
             logger.debug(f"📦🗜️ Slot {slot_index} is a tar.gz archive")
             data = slot_data  # Will be decompressed and extracted later
         else:

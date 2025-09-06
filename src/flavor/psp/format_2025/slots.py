@@ -201,7 +201,7 @@ class SlotMetadata:
     target: str = field(validator=validators.instance_of(str))  # Target path in workenv
     size: int = field(validator=validators.instance_of(int))
     checksum: str = field(validator=validators.instance_of(str))
-    encoding: str = field(
+    codec: str = field(
         validator=validators.in_(["none", "raw", "gzip", "tar", "tgz", "tar.gz"])
     )
     purpose: str = field()
