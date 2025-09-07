@@ -1,6 +1,11 @@
+// PSPF/2025 Index Block Specification
+// Defines the 8192-byte index structure
 syntax = "proto3";
 
-package flavor.psp.format_2025;
+package pspf_2025.index;
+
+option go_package = "github.com/provide-io/flavorpack/psp/format_2025;pspf2025";
+option java_package = "io.provide.flavorpack.pspf2025";
 
 // Index block definition (implements FEP-0001 Section 2.3)
 message IndexBlock {
