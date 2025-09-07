@@ -1,25 +1,16 @@
-# Core API
+# Core API Module
 
-The FlavorPack Python API provides programmatic access to package creation, verification, and manipulation.
+High-level API functions for building, verifying, and managing FlavorPack packages.
 
-## Overview
+## Module: `flavor.api`
 
-The core API is available through the `flavor.api` module and provides high-level functions for working with PSPF packages.
+The `flavor.api` module provides the main entry points for working with FlavorPack packages programmatically. These functions offer a simplified interface that handles the complexity of package building, verification, and management.
 
-```python
-from flavor.api import (
-    build_package_from_manifest,
-    verify_package,
-    create_package,
-    inspect_package
-)
-```
+## Functions
 
-## Main Functions
+### `build_package_from_manifest`
 
-### build_package_from_manifest
-
-Build a PSPF package from a manifest file (pyproject.toml or JSON).
+Build one or more packages from a manifest file (pyproject.toml or JSON).
 
 ```python
 def build_package_from_manifest(
@@ -38,20 +29,28 @@ def build_package_from_manifest(
 #### Parameters
 
 - **manifest_path** (`Path`): Path to the manifest file (pyproject.toml or manifest.json)
-- **output_path** (`Path | None`): Custom output path for the package. Defaults to `dist/<name>.psp`
-- **launcher_bin** (`Path | None`): Path to launcher binary. Auto-detected if not specified
-- **builder_bin** (`Path | None`): Path to builder binary. Auto-detected if not specified
-- **strip_binaries** (`bool`): Strip debug symbols from binaries. Default: `False`
-- **show_progress** (`bool`): Show build progress. Default: `False`
+- **output_path** (`Path | None`): Directory for output packages. If None, uses current directory
+- **launcher_bin** (`Path | None`): Path to custom launcher binary. If None, uses default
+- **builder_bin** (`Path | None`): Path to custom builder binary (for Go/Rust builders)
+- **strip_binaries** (`bool`): Strip debug symbols from binaries to reduce size
+- **show_progress** (`bool`): Display progress bars during build
 - **private_key_path** (`Path | None`): Path to Ed25519 private key for signing
 - **public_key_path** (`Path | None`): Path to Ed25519 public key
 - **key_seed** (`str | None`): Seed for deterministic key generation
 
 #### Returns
 
-`list[Path]`: List of created package file paths
+`list[Path]`: List of paths to created package files
 
-#### Example
+#### Raises
+
+- **ValueError**: Invalid manifest or missing required fields
+- **BuildError**: Package building failed
+- **FileNotFoundError**: Manifest file not found
+
+#### Examples
+
+##### Basic Usage
 
 ```python
 from pathlib import Path
@@ -59,263 +58,416 @@ from flavor.api import build_package_from_manifest
 
 # Build from pyproject.toml
 packages = build_package_from_manifest(
-    manifest_path=Path("pyproject.toml"),
-    output_path=Path("dist/myapp.psp"),
-    show_progress=True,
-    key_seed="my-secret-seed"
+    manifest_path=Path("pyproject.toml")
 )
-
-print(f"Created packages: {packages}")
+print(f"Created {len(packages)} package(s)")
 ```
 
-### verify_package
-
-Verify the integrity and signature of a PSPF package.
+##### With Custom Output Directory
 
 ```python
-def verify_package(
-    package_path: Path,
-    public_key_path: Path | None = None,
-    verbose: bool = False
-) -> bool
+packages = build_package_from_manifest(
+    manifest_path=Path("pyproject.toml"),
+    output_path=Path("dist/"),
+    strip_binaries=True,
+    show_progress=True
+)
+```
+
+##### Signed Package
+
+```python
+# With explicit keys
+packages = build_package_from_manifest(
+    manifest_path=Path("pyproject.toml"),
+    private_key_path=Path("private.pem"),
+    public_key_path=Path("public.pem")
+)
+
+# With deterministic seed
+packages = build_package_from_manifest(
+    manifest_path=Path("pyproject.toml"),
+    key_seed="my-secret-seed"
+)
+```
+
+##### JSON Manifest
+
+```python
+# Build from JSON manifest (compatible with Go/Rust builders)
+packages = build_package_from_manifest(
+    manifest_path=Path("manifest.json"),
+    builder_bin=Path("ingredients/bin/go-builder")
+)
+```
+
+---
+
+### `verify_package`
+
+Verify the integrity and signature of a package.
+
+```python
+def verify_package(package_path: Path) -> dict
 ```
 
 #### Parameters
 
-- **package_path** (`Path`): Path to the PSPF package file
-- **public_key_path** (`Path | None`): Path to public key for verification. Uses embedded key if not specified
-- **verbose** (`bool`): Show detailed verification output. Default: `False`
+- **package_path** (`Path`): Path to the package file to verify
 
 #### Returns
 
-`bool`: `True` if package is valid and signature verified, `False` otherwise
+`dict`: Verification result with the following keys:
+- **valid** (`bool`): Whether the package is valid
+- **signed** (`bool`): Whether the package is signed
+- **metadata** (`dict | None`): Package metadata if valid
+- **errors** (`list[str]`): List of verification errors
+- **warnings** (`list[str]`): List of verification warnings
 
-#### Example
+#### Examples
 
 ```python
 from pathlib import Path
 from flavor.api import verify_package
 
-# Verify package integrity
-is_valid = verify_package(
-    package_path=Path("dist/myapp.psp"),
-    verbose=True
-)
+result = verify_package(Path("myapp.psp"))
 
-if is_valid:
-    print("✅ Package verified successfully")
-else:
-    print("❌ Package verification failed")
-```
-
-### create_package
-
-Lower-level function to create a package with custom configuration.
-
-```python
-def create_package(
-    name: str,
-    version: str,
-    entry_point: str,
-    source_dir: Path,
-    output_path: Path | None = None,
-    dependencies: list[str] | None = None,
-    **kwargs
-) -> Path
-```
-
-#### Parameters
-
-- **name** (`str`): Package name
-- **version** (`str`): Package version
-- **entry_point** (`str`): Entry point in format "module:function"
-- **source_dir** (`Path`): Directory containing source code
-- **output_path** (`Path | None`): Output path for package
-- **dependencies** (`list[str] | None`): List of pip dependencies
-- **kwargs**: Additional configuration options
-
-#### Returns
-
-`Path`: Path to created package
-
-### inspect_package
-
-Get detailed information about a PSPF package without extracting it.
-
-```python
-def inspect_package(
-    package_path: Path,
-    format: str = "text"
-) -> dict | str
-```
-
-#### Parameters
-
-- **package_path** (`Path`): Path to PSPF package
-- **format** (`str`): Output format - "text", "json", or "dict". Default: "text"
-
-#### Returns
-
-`dict | str`: Package information as dictionary or formatted string
-
-#### Example
-
-```python
-from flavor.api import inspect_package
-from pathlib import Path
-
-# Get package information
-info = inspect_package(
-    package_path=Path("dist/myapp.psp"),
-    format="dict"
-)
-
-print(f"Package: {info['name']} v{info['version']}")
-print(f"Size: {info['size_bytes'] / 1024 / 1024:.2f} MB")
-print(f"Slots: {len(info['slots'])}")
-```
-
-## Packaging Classes
-
-### PackagingOrchestrator
-
-The main class responsible for coordinating the package build process.
-
-```python
-from flavor.packaging.orchestrator import PackagingOrchestrator
-
-orchestrator = PackagingOrchestrator(
-    manifest_data=manifest,
-    manifest_path=Path("pyproject.toml"),
-    output_dir=Path("dist"),
-    launcher_bin=launcher_path,
-    builder_bin=builder_path
-)
-
-packages = orchestrator.build()
-```
-
-### PythonPackager
-
-Handles Python-specific packaging logic including virtual environment creation and dependency resolution.
-
-```python
-from flavor.packaging.python_packager import PythonPackager
-
-packager = PythonPackager(
-    project_name="myapp",
-    version="1.0.0",
-    manifest_path=Path("pyproject.toml")
-)
-
-venv_path = packager.create_environment()
-packager.install_dependencies(dependencies)
-```
-
-## Key Management
-
-### generate_key_pair
-
-Generate an Ed25519 key pair for package signing.
-
-```python
-from flavor.packaging.keys import generate_key_pair
-
-private_key, public_key = generate_key_pair(seed="optional-seed")
-
-# Save keys to files
-with open("private.key", "wb") as f:
-    f.write(private_key)
+if result["valid"]:
+    print("✅ Package is valid")
+    metadata = result["metadata"]
+    print(f"  Name: {metadata['name']}")
+    print(f"  Version: {metadata['version']}")
+    print(f"  Author: {metadata.get('author', 'Unknown')}")
     
-with open("public.key", "wb") as f:
-    f.write(public_key)
+    if result["signed"]:
+        print("  ✅ Signature verified")
+else:
+    print("❌ Package verification failed:")
+    for error in result["errors"]:
+        print(f"  - {error}")
+```
+
+---
+
+### `clean_cache`
+
+Clean the FlavorPack cache directory.
+
+```python
+def clean_cache() -> None
+```
+
+Removes old extraction caches and temporary build files from the FlavorPack cache directory. This helps free up disk space and resolve issues with corrupted caches.
+
+#### Examples
+
+```python
+from flavor.api import clean_cache
+
+# Clean all caches
+clean_cache()
+print("Cache cleaned successfully")
+```
+
+---
+
+### `generate_keys`
+
+Generate a new Ed25519 key pair for package signing.
+
+```python
+def generate_keys(output_dir: Path) -> tuple[Path, Path]
+```
+
+#### Parameters
+
+- **output_dir** (`Path`): Directory where keys should be saved
+
+#### Returns
+
+`tuple[Path, Path]`: Tuple of (private_key_path, public_key_path)
+
+#### Raises
+
+- **OSError**: Unable to create output directory or write keys
+
+#### Examples
+
+```python
+from pathlib import Path
+from flavor.api import generate_keys
+
+# Generate keys in keys/ directory
+private_key, public_key = generate_keys(Path("keys/"))
+print(f"Private key: {private_key}")
+print(f"Public key: {public_key}")
+
+# Use generated keys for signing
+packages = build_package_from_manifest(
+    manifest_path=Path("pyproject.toml"),
+    private_key_path=private_key,
+    public_key_path=public_key
+)
+```
+
+## Cache Management
+
+### `CacheManager`
+
+Manage FlavorPack's cache directory for extracted packages and build artifacts.
+
+```python
+from flavor.cache import CacheManager
+
+class CacheManager:
+    def __init__(self, cache_dir: Path | None = None)
+    def list_cached_packages(self) -> list[dict]
+    def get_cache_size(self) -> int
+    def clean_old_packages(self, days: int = 7) -> int
+    def remove_package(self, package_id: str) -> bool
+```
+
+#### Methods
+
+##### `__init__(cache_dir: Path | None = None)`
+
+Initialize cache manager.
+
+- **cache_dir**: Custom cache directory. If None, uses system default
+
+##### `list_cached_packages() -> list[dict]`
+
+List all cached packages with metadata.
+
+Returns list of dictionaries with:
+- **package_id** (`str`): Unique package identifier
+- **path** (`Path`): Cache directory path
+- **size** (`int`): Size in bytes
+- **created** (`datetime`): Creation time
+- **accessed** (`datetime`): Last access time
+
+##### `get_cache_size() -> int`
+
+Get total cache size in bytes.
+
+##### `clean_old_packages(days: int = 7) -> int`
+
+Remove packages older than specified days.
+
+Returns number of packages removed.
+
+##### `remove_package(package_id: str) -> bool`
+
+Remove specific package from cache.
+
+Returns True if removed, False if not found.
+
+#### Examples
+
+```python
+from flavor.cache import CacheManager
+
+# Initialize manager
+cache = CacheManager()
+
+# List cached packages
+packages = cache.list_cached_packages()
+for pkg in packages:
+    print(f"{pkg['package_id']}: {pkg['size'] / 1024 / 1024:.1f} MB")
+
+# Get total cache size
+size_mb = cache.get_cache_size() / 1024 / 1024
+print(f"Total cache size: {size_mb:.1f} MB")
+
+# Clean old packages
+removed = cache.clean_old_packages(days=30)
+print(f"Removed {removed} old packages")
+
+# Remove specific package
+if cache.remove_package("myapp_1.0.0"):
+    print("Package removed from cache")
 ```
 
 ## Error Handling
 
-The API uses custom exceptions for error handling:
+All API functions may raise the following exceptions:
+
+### Exception Hierarchy
+
+```python
+FlavorException (base)
+├── BuildError        # Package building failures
+├── ValidationError   # Invalid specifications or configurations
+├── PackagingError    # Packaging process errors
+├── CryptoError       # Cryptographic operation failures
+└── VerificationError # Package verification failures
+```
+
+### Error Examples
 
 ```python
 from flavor.exceptions import (
     BuildError,
+    ValidationError,
     PackagingError,
-    VerificationError,
-    ManifestError
+    CryptoError,
+    VerificationError
 )
 
 try:
     packages = build_package_from_manifest(Path("pyproject.toml"))
-except ManifestError as e:
-    print(f"Invalid manifest: {e}")
+except ValidationError as e:
+    # Invalid manifest or configuration
+    print(f"Configuration error: {e}")
 except BuildError as e:
+    # Build process failed
     print(f"Build failed: {e}")
 except PackagingError as e:
+    # Packaging error (e.g., missing files)
     print(f"Packaging error: {e}")
+except CryptoError as e:
+    # Key or signing error
+    print(f"Cryptographic error: {e}")
 ```
 
-## Configuration
-
-### Environment Variables
+## Environment Variables
 
 The API respects the following environment variables:
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `FLAVOR_CACHE_DIR` | Cache directory for work environments | `~/.cache/flavor` |
-| `FLAVOR_LOG_LEVEL` | Logging level | `info` |
-| `FLAVOR_PRIVATE_KEY` | Default private key path | None |
-| `FLAVOR_PUBLIC_KEY` | Default public key path | None |
-| `FLAVOR_INSECURE` | Skip signature verification (dev only) | `false` |
+| `FLAVOR_CACHE` | Cache directory path | `~/.cache/flavor` |
+| `FLAVOR_LOG_LEVEL` | Logging level | `INFO` |
+| `FLAVOR_KEY_SEED` | Default key seed | None |
+| `FLAVOR_INSECURE` | Skip signature verification | `0` |
+| `FLAVOR_WORKENV` | Work environment directory | Auto |
 
-### Manifest Configuration
+## Thread Safety
 
-The API supports both `pyproject.toml` and JSON manifest formats:
+All functions in `flavor.api` are thread-safe and can be called concurrently from multiple threads. However, building the same package from multiple threads simultaneously is not recommended.
 
-#### pyproject.toml
+```python
+import concurrent.futures
+from pathlib import Path
 
-```toml
-[project]
-name = "myapp"
-version = "1.0.0"
-description = "My application"
-requires-python = ">=3.11"
-dependencies = [
-    "click>=8.0",
-    "requests>=2.28"
-]
+def build_package(name: str):
+    manifest = Path(f"{name}/pyproject.toml")
+    return build_package_from_manifest(manifest)
 
-[tool.flavor]
-entry_point = "myapp.cli:main"
-strip_binaries = true
-```
-
-#### manifest.json
-
-```json
-{
-  "package": {
-    "name": "myapp",
-    "version": "1.0.0"
-  },
-  "execution": {
-    "command": "python -m myapp"
-  },
-  "dependencies": {
-    "pip": ["click>=8.0", "requests>=2.28"]
-  }
-}
+# Build multiple packages in parallel
+with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
+    packages = ["app1", "app2", "app3", "app4"]
+    futures = [executor.submit(build_package, pkg) for pkg in packages]
+    results = [f.result() for f in futures]
 ```
 
 ## Best Practices
 
-1. **Always sign packages** for production use
-2. **Use deterministic seeds** for reproducible builds
-3. **Verify packages** before running them
-4. **Cache work environments** to improve performance
-5. **Strip binaries** to reduce package size
+### 1. Always Verify Packages
+
+```python
+def build_and_verify(manifest_path: Path) -> Path:
+    """Build a package and verify it immediately."""
+    packages = build_package_from_manifest(manifest_path)
+    
+    for package in packages:
+        result = verify_package(package)
+        if not result["valid"]:
+            raise BuildError(f"Package verification failed: {result['errors']}")
+    
+    return packages[0]
+```
+
+### 2. Use Context Managers for Cleanup
+
+```python
+from contextlib import contextmanager
+from flavor.cache import CacheManager
+
+@contextmanager
+def build_with_cleanup(manifest_path: Path):
+    """Build package and clean cache on exit."""
+    try:
+        yield build_package_from_manifest(manifest_path)
+    finally:
+        CacheManager().clean_old_packages(days=0)
+```
+
+### 3. Deterministic CI/CD Builds
+
+```python
+import os
+from pathlib import Path
+
+def ci_build(manifest_path: Path) -> list[Path]:
+    """Build package with CI/CD settings."""
+    # Use environment variable for seed
+    seed = os.environ.get("CI_BUILD_SEED", "default-ci-seed")
+    
+    return build_package_from_manifest(
+        manifest_path=manifest_path,
+        output_path=Path("dist/"),
+        strip_binaries=True,
+        key_seed=seed
+    )
+```
+
+### 4. Platform-Specific Builds
+
+```python
+from flavor.utils.platform import get_current_platform
+
+def build_for_current_platform(manifest_path: Path) -> Path:
+    """Build package for current platform."""
+    platform = get_current_platform()
+    
+    packages = build_package_from_manifest(
+        manifest_path=manifest_path,
+        output_path=Path(f"dist/{platform}/")
+    )
+    
+    # Rename with platform suffix
+    package = packages[0]
+    new_name = package.stem + f"_{platform}" + package.suffix
+    new_path = package.parent / new_name
+    package.rename(new_path)
+    
+    return new_path
+```
+
+## Migration from Other Tools
+
+### From setuptools
+
+```python
+# Before: python setup.py bdist_wheel
+# After:
+from flavor.api import build_package_from_manifest
+
+packages = build_package_from_manifest(Path("pyproject.toml"))
+```
+
+### From PyInstaller
+
+```python
+# Before: pyinstaller --onefile app.py
+# After: Create pyproject.toml with:
+"""
+[project]
+name = "app"
+version = "1.0.0"
+
+[tool.flavor]
+entry_point = "app:main"
+"""
+
+packages = build_package_from_manifest(Path("pyproject.toml"))
+```
 
 ## Related Documentation
 
+- [Python API Overview](index.md) - API introduction and concepts
+- [PSPFBuilder](psp/builder.md) - Low-level package building
+- [PSPFReader](psp/reader.md) - Package reading and extraction
 - [CLI Reference](cli.md) - Command-line interface
-- [Package Format](../../spec/pspf-2025.md) - PSPF specification
-- [Examples](../../cookbook/examples/index.md) - Working examples
+- [Packaging Guide](../../guide/packaging/index.md) - High-level packaging guide
