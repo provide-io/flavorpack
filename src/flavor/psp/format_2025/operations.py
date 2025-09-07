@@ -27,25 +27,6 @@ OP_SHA256 = operations_pb2.OP_SHA256
 OP_ED25519_SIGN = operations_pb2.OP_ED25519_SIGN
 OP_TERMINAL = operations_pb2.OP_TERMINAL
 
-# Legacy codec mappings to operation chains
-from flavor.psp.format_2025.constants import (
-    CODEC_RAW,
-    CODEC_TAR, 
-    CODEC_GZIP,
-    CODEC_TGZ,
-)
-
-# Map legacy codec constants to operation chains
-LEGACY_CODEC_TO_OPERATIONS = {
-    CODEC_RAW: [],  # No operations
-    CODEC_TAR: [OP_TAR],
-    CODEC_GZIP: [OP_GZIP],
-    CODEC_TGZ: [OP_TAR, OP_GZIP],  # tar.gz
-}
-
-# Map operation chains back to legacy codecs (for compatibility)
-# This will be initialized after pack_operations is defined
-OPERATIONS_TO_LEGACY_CODEC = {}
 
 
 def pack_operations(operations: list[int]) -> int:
@@ -101,31 +82,6 @@ def unpack_operations(packed: int) -> list[int]:
     return operations
 
 
-def legacy_codec_to_operations(codec: int) -> int:
-    """
-    Convert a legacy codec constant to packed operations.
-    
-    Args:
-        codec: Legacy codec constant (CODEC_RAW, CODEC_TAR, etc.)
-    
-    Returns:
-        Packed operations as 64-bit integer
-    """
-    operations = LEGACY_CODEC_TO_OPERATIONS.get(codec, [])
-    return pack_operations(operations)
-
-
-def operations_to_legacy_codec(packed: int) -> int:
-    """
-    Convert packed operations to legacy codec if possible.
-    
-    Args:
-        packed: Packed operations as 64-bit integer
-    
-    Returns:
-        Legacy codec constant or CODEC_RAW if no mapping exists
-    """
-    return OPERATIONS_TO_LEGACY_CODEC.get(packed, CODEC_RAW)
 
 
 def operations_to_string(packed: int) -> str:
