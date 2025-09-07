@@ -491,5 +491,5 @@ flavor --log-level debug verify problematic.psp
 
 - [API Reference](api.md) - Python API documentation
 - [Package Format](../../spec/pspf-2025.md) - PSPF specification
-- [Configuration Guide](../../guide/configuration.md) - Detailed configuration
+- [Configuration Guide](../../guide/packaging/configuration.md) - Detailed configuration
 - [Troubleshooting](../../troubleshooting/common.md) - Common issues
