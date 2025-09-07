@@ -31,7 +31,7 @@ type PSPFIndex struct {
 	// Performance hints (64 bytes)
 	AccessMode      uint8    // 0=auto, 1=mmap, 2=file, 3=stream
 	CacheStrategy   uint8    // 0=none, 1=lazy, 2=eager, 3=critical
-	EncodingType    uint8    // 0=raw, 1=tar, 2=gzip, 3=tgz
+	CodecType       uint8    // 0=raw, 1=tar, 2=gzip, 3=tgz
 	EncryptionType  uint8    // 0=none, 1=aes256-gcm, 2=chacha20
 	PageSize        uint32   // Optimal page size for alignment
 	MaxMemory       uint64   // Suggested maximum memory usage
