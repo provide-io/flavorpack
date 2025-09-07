@@ -40,8 +40,6 @@ class PythonPackager:
     """
 
     DEFAULT_PYTHON_VERSION = "3.11"
-    # manylinux2014 = glibc 2.17+ (CentOS 7, Amazon Linux 2, Ubuntu 14.04+)
-    MANYLINUX_TAG = "manylinux2014"
 
     def _make_executable(self, file_path: Path) -> None:
         """Make a file executable and strip extended attributes on macOS.
@@ -100,126 +98,6 @@ class PythonPackager:
         # Initialize pip manager
         self.pip_manager = PyPaPipManager(python_version=self.python_version)
 
-    # ╔══════════════════════════════════════════════════════════════════════════════╗
-    # ║                           CRITICAL PyPA HELPER METHODS                          ║
-    # ╠══════════════════════════════════════════════════════════════════════════════╣
-    # ║ ⚠️  WARNING: DO NOT REMOVE OR MODIFY THESE METHODS WITHOUT PRIOR DISCUSSION  ⚠️  ║
-    # ║                                                                                  ║
-    # ║ These PyPA helper methods are ESSENTIAL for correct wheel downloading and       ║
-    # ║ building. They handle critical functionality including:                         ║
-    # ║                                                                                  ║
-    # ║ • Platform-specific wheel selection (manylinux2014 for Linux compatibility)     ║
-    # ║ • Proper dependency resolution that uv pip cannot handle                        ║
-    # ║ • Binary wheel downloading for cross-platform builds                            ║
-    # ║ • Correct Python version targeting                                              ║
-    # ║                                                                                  ║
-    # ║ Removing these will BREAK:                                                      ║
-    # ║ - Linux compatibility (CentOS 7, Amazon Linux, Ubuntu, etc.)                    ║
-    # ║ - Cross-platform package building                                               ║
-    # ║ - Dependency resolution for complex packages                                    ║
-    # ║                                                                                  ║
-    # ║ If you think these should be removed, STOP and discuss first!                   ║
-    # ╚══════════════════════════════════════════════════════════════════════════════╝
-
-    def _get_pypa_pip_install_cmd(
-        self, python_exe: Path, packages: list[str]
-    ) -> list[str]:
-        """
-        Get real pip install command.
-
-        CRITICAL: Must use ACTUAL pip3 NOT uv pip - uv pip is incomplete/broken
-        DO NOT CHANGE THIS TO uv pip - IT WILL BREAK DEPENDENCY RESOLUTION
-        """
-        return [str(python_exe), "-m", "pip", "install"] + packages
-
-    def _get_pypa_pip_wheel_cmd(
-        self, python_exe: Path, wheel_dir: Path, source: Path, no_deps: bool = False
-    ) -> list[str]:
-        """
-        Get real pip wheel command.
-
-        CRITICAL: Must use ACTUAL pip3 NOT uv pip - uv pip is incomplete/broken
-        DO NOT CHANGE THIS TO uv pip - IT WILL BREAK DEPENDENCY RESOLUTION
-        """
-        cmd = [str(python_exe), "-m", "pip", "wheel", "--wheel-dir", str(wheel_dir)]
-        if no_deps:
-            cmd.append("--no-deps")
-        # Note: pip wheel doesn't support --platform flag (that's for download only)
-        # Wheels built locally will automatically use the current platform
-        cmd.append(str(source))
-        return cmd
-
-    # ⚠️ CRITICAL: This method handles manylinux platform tags - DO NOT REMOVE! ⚠️
-    def _get_pypa_pip_download_cmd(
-        self,
-        python_exe: Path,
-        dest_dir: Path,
-        requirements_file: Path | None = None,
-        packages: list[str] | None = None,
-        binary_only: bool = True,
-        platform_tag: str | None = None,
-    ) -> list[str]:
-        """
-        Get real pip download command.
-
-        CRITICAL: Must use ACTUAL pip3 NOT uv pip - uv pip is incomplete/broken
-        DO NOT CHANGE THIS TO uv pip - IT WILL BREAK DEPENDENCY RESOLUTION
-
-        Args:
-            python_exe: Path to Python executable
-            dest_dir: Directory to download wheels to
-            requirements_file: Optional requirements file
-            packages: Optional list of packages to download
-            binary_only: Whether to download only binary wheels
-            platform_tag: Optional platform tag to use (e.g., "manylinux2014_x86_64")
-        """
-        cmd = [str(python_exe), "-m", "pip", "download", "--dest", str(dest_dir)]
-        if binary_only:
-            cmd.extend(["--only-binary", ":all:"])
-
-        # For Linux builds, explicitly request manylinux wheels for maximum compatibility
-        # manylinux2014 = glibc 2.17+ (CentOS 7, Amazon Linux 2, Ubuntu 14.04+)
-        if get_os_name() == "linux" and binary_only:
-            if platform_tag:
-                # Use explicitly provided platform tag
-                cmd.extend(["--platform", platform_tag])
-                logger.debug(f"Added platform constraint: {platform_tag}")
-            else:
-                arch = get_arch_name()
-                logger.trace(
-                    f"Linux build detected, arch={arch}, requesting {self.MANYLINUX_TAG} wheels"
-                )
-
-                # Use manylinux2014 format for maximum compatibility
-                # manylinux2014 = glibc 2.17+ (CentOS 7, Amazon Linux 2, Ubuntu 14.04+)
-                if arch == "amd64":
-                    cmd.extend(["--platform", f"{self.MANYLINUX_TAG}_x86_64"])
-                    logger.debug(
-                        f"Added platform constraint: {self.MANYLINUX_TAG}_x86_64"
-                    )
-                elif arch == "arm64":
-                    # ARM64 doesn't have manylinux2010, use manylinux2014
-                    cmd.extend(["--platform", f"{self.MANYLINUX_TAG}_aarch64"])
-                    logger.debug(
-                        f"Added platform constraint: {self.MANYLINUX_TAG}_aarch64"
-                    )
-                    logger.warning("⚠️ grpcio on CentOS 7 ARM64 may have C++ ABI issues")
-
-            # Also specify Python version to match our target
-            py_parts = self.python_version.split(".")
-            py_major = py_parts[0]
-            py_minor = py_parts[1] if len(py_parts) > 1 else "11"
-            cmd.extend(["--python-version", f"{py_major}.{py_minor}"])
-
-        if requirements_file:
-            cmd.extend(["-r", str(requirements_file)])
-        if packages:
-            cmd.extend(packages)
-        return cmd
-
-    # ╔══════════════════════════════════════════════════════════════════════════════╗
-    # ║                      END OF CRITICAL PyPA HELPER METHODS                        ║
-    # ╚══════════════════════════════════════════════════════════════════════════════╝
 
     def _download_uv_wheel_via_url(self, dest_dir: Path) -> Path | None:
         """Download UV wheel directly from PyPI using urllib - NOT UV!
@@ -382,7 +260,7 @@ class PythonPackager:
 
         with tempfile.TemporaryDirectory() as temp_dir:
             logger.trace(f"Created temp directory for UV download: {temp_dir}")
-            # ⚠️ CRITICAL: Using _get_pypa_pip_download_cmd for correct manylinux handling ⚠️
+            # ⚠️ CRITICAL: Using pip_manager for correct manylinux handling ⚠️
             # DO NOT replace this with direct uv commands - they don't handle platform tags correctly!
             arch = get_arch_name()
             uv_platform_tag = None
@@ -392,7 +270,7 @@ class PythonPackager:
                 elif arch == "arm64":
                     uv_platform_tag = "manylinux2014_aarch64"
 
-            download_cmd = self._get_pypa_pip_download_cmd(
+            download_cmd = self.pip_manager.get_pip_download_command(
                 python_exe=python_exe,
                 dest_dir=Path(temp_dir),
                 packages=["uv"],
@@ -867,7 +745,7 @@ class PythonPackager:
             # but not guaranteed to be in a seeded venv.
             logger.info("📦📥🚀 Installing wheel package into temporary environment")
             # ⚠️ Using PyPA helper - DO NOT replace with uv pip ⚠️
-            install_wheel_cmd = self._get_pypa_pip_install_cmd(python_exe, ["wheel"])
+            install_wheel_cmd = self.pip_manager.get_pip_install_command(python_exe, ["wheel"])
             run_command(
                 install_wheel_cmd,
                 check=True,
