@@ -89,7 +89,7 @@ class TestBreakingInputs:
                     target=filename,  # The evil filename becomes the target
                     size=100,
                     checksum="abc123",
-                    encoding="none",
+                    codec="none",
                     purpose="payload",
                     lifecycle="runtime",
                 )
@@ -135,7 +135,7 @@ class TestBreakingInputs:
                     target="huge.dat",
                     size=size,
                     checksum="abc",
-                    encoding="gzip" if size > 0 else "none",
+                    codec="gzip" if size > 0 else "none",
                     purpose="payload",
                     lifecycle="runtime",
                 )
@@ -232,16 +232,16 @@ class PSPFStateMachine(RuleBasedStateMachine):
     @rule(
         name=st.text(min_size=1, max_size=100),
         size=st.integers(min_value=0, max_value=1024 * 1024),
-        encoding=st.sampled_from(["none", "gzip"]),
+        codec=st.sampled_from(["none", "gzip"]),
     )
-    def add_slot(self, name, size, encoding):
+    def add_slot(self, name, size, codec):
         """Add a slot to the pending list"""
         slot = SlotMetadata(
             index=len(self.slots),
             name=name,
             size=size,
             checksum="test",
-            encoding=encoding,
+            codec=codec,
             purpose="payload",
             lifecycle="runtime",
         )
