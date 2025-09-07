@@ -69,9 +69,12 @@ class SlotDescriptor:
     # Properties (16 bytes)
     original_size: int = field(default=0)  # Uncompressed size
     checksum: int = field(default=0)  # Adler-32 of stored data
-    codec: int = field(default=CODEC_RAW)  # Renamed from compression
+    codec: int = field(default=CODEC_RAW)  # Legacy codec (being phased out)
     encryption: int = field(default=0)
     alignment: int = field(default=SLOT_ALIGNMENT)
+    
+    # New: operations field will replace codec
+    operations: int = field(default=0)  # Packed 64-bit operation chain
 
     # Semantics (8 bytes)
     purpose: int = field(default=PURPOSE_DATA)
@@ -90,49 +93,68 @@ class SlotDescriptor:
     path: Path | None = field(default=None, metadata={"transient": True})
 
     def __attrs_post_init__(self):
-        """Compute name hash if name is provided."""
+        """Compute name hash if name is provided and sync codec/operations."""
         if self.name and not self.name_hash:
             self.name_hash = hash_name(self.name)
+        
+        # Sync codec and operations for backward compatibility
+        if self.codec and not self.operations:
+            # Convert legacy codec to operations
+            from flavor.psp.format_2025.operations import legacy_codec_to_operations
+            object.__setattr__(self, 'operations', legacy_codec_to_operations(self.codec))
+        elif self.operations and not self.codec:
+            # Convert operations to legacy codec if possible
+            from flavor.psp.format_2025.operations import operations_to_legacy_codec
+            object.__setattr__(self, 'codec', operations_to_legacy_codec(self.operations))
 
     def pack(self) -> bytes:
-        """Pack descriptor into 64-byte binary format."""
-        return struct.pack(
+        """Pack descriptor into 64-byte binary format with operations support."""
+        # Use operations field, pack codec into lower 8 bits for compatibility
+        # This allows gradual migration from codec to operations
+        operations_with_codec = self.operations
+        if operations_with_codec == 0 and self.codec != 0:
+            # Legacy: store codec in lowest byte of operations
+            operations_with_codec = self.codec
+        
+        data = struct.pack(
             "<"  # Little-endian
-            "Q"  # id (8)
+            "I"  # id (4)
+            "I"  # reserved/flags (4) 
             "Q"  # name_hash (8)
             "Q"  # offset (8)
             "Q"  # size (8)
             "Q"  # original_size (8)
+            "Q"  # operations (8) - NEW: packed operation chain
             "I"  # checksum (4)
-            "B"  # codec (1)
-            "B"  # encryption (1)
-            "H"  # alignment (2)
             "B"  # purpose (1)
             "B"  # lifecycle (1)
             "B"  # access_hint (1)
             "B"  # priority (1)
             "H"  # permissions (2)
             "H"  # platform (2)
-            "I"  # extended_offset (4)
-            "I",  # extended_size (4)
+            "H"  # alignment (2)
+            "H",  # encryption (2)
             self.id,
+            0,  # reserved/flags for future use
             self.name_hash,
             self.offset,
             self.size,
             self.original_size,
+            operations_with_codec,  # operations or legacy codec
             self.checksum,
-            self.codec,
-            self.encryption,
-            self.alignment,
             self.purpose,
             self.lifecycle,
             self.access_hint,
             self.priority,
             self.permissions,
             self.platform,
-            self.extended_offset,
-            self.extended_size,
+            self.alignment,
+            self.encryption,
         )
+        
+        # Ensure exactly 64 bytes
+        assert len(data) == SLOT_DESCRIPTOR_SIZE, f"Slot descriptor must be {SLOT_DESCRIPTOR_SIZE} bytes, got {len(data)}"
+        return data
 
     @classmethod
     def unpack(cls, data: bytes) -> "SlotDescriptor":
