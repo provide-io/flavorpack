@@ -1,0 +1,72 @@
+syntax = "proto3";
+
+package flavor.psp.format_2025;
+
+import "modules/common.proto";
+
+// Slot entry definition (implements FEP-0001 Section 4.2)
+message SlotEntry {
+  // Identity fields (frequently used - low field numbers)
+  uint64 id = 1;                    // Slot identifier
+  uint64 name_hash = 2;             // Hash of slot name
+  
+  // Location fields
+  uint64 offset = 3;                // File offset to slot data
+  uint64 size = 4;                  // Size of stored data
+  uint64 original_size = 5;         // Uncompressed size
+  
+  // Operation chain (implements FEP-0002)
+  uint64 operations = 6;            // Packed 64-bit operation chain
+  
+  // Integrity
+  uint32 checksum = 7;              // Adler-32 of stored data
+  
+  // Classification and lifecycle
+  Purpose purpose = 8;              // Purpose classification
+  Lifecycle lifecycle = 9;          // Lifecycle management
+  
+  // Performance hints
+  AccessHint access_hint = 10;      // Access pattern hint
+  CachePriority priority = 11;      // Cache priority
+  
+  // System attributes
+  uint32 permissions = 12;          // Unix-style permissions
+  Platform platform = 13;          // Platform hint
+  
+  // Extended info (less frequently used)
+  uint64 extended_offset = 16;      // Extended offset for large files
+  uint64 extended_size = 17;        // Extended size for large files
+  
+  // Runtime fields (not persisted in binary format)
+  string name = 20;                 // Human-readable slot name
+  string source_path = 21;          // Original source path
+  string target_path = 22;          // Target path in workenv
+  
+  // Operation parameters (for complex operations)
+  repeated OperationParams operation_params = 23;
+  
+  // Reserved for future expansion
+  bytes reserved = 31;              // Future use
+}
+
+// Slot metadata for JSON serialization
+message SlotMetadata {
+  uint32 slot = 1;                  // Slot index
+  string id = 2;                    // Slot identifier
+  string source = 3;                // Source path
+  string target = 4;                // Target path
+  uint64 size = 5;                  // Size
+  string checksum = 6;              // Checksum with algorithm prefix
+  string codec = 7;                 // Legacy codec string
+  string purpose = 8;               // Purpose string
+  string lifecycle = 9;             // Lifecycle string
+  string permissions = 10;          // Permissions as string
+}
+
+// Slot table containing all slots
+message SlotTable {
+  repeated SlotEntry slots = 1;     // All slots in package
+  uint32 slot_count = 2;           // Number of slots
+  uint64 total_size = 3;           // Total size of all slots
+  uint32 table_checksum = 4;       // Checksum of entire table
+}

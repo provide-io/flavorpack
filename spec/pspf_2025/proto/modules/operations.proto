@@ -1,0 +1,93 @@
+syntax = "proto3";
+
+package flavor.psp.format_2025;
+
+// Archive operation definitions (implements FEP-0002)
+
+// Operation enumeration - 255 operations total
+enum Operation {
+  // No operation
+  OP_NONE = 0x00;
+  
+  // BUNDLE operations (0x01-0x0F) - Combine multiple files
+  BUNDLE_TAR = 0x01;    // POSIX TAR archive
+  BUNDLE_ZIP = 0x02;    // ZIP archive container
+  BUNDLE_CPIO = 0x03;   // CPIO archive
+  BUNDLE_AR = 0x04;     // AR archive (deb packages)
+  // 0x05-0x0F reserved for future bundlers
+  
+  // COMPRESS operations (0x10-0x2F) - Reduce size
+  COMPRESS_DEFLATE = 0x10;  // Raw DEFLATE algorithm
+  COMPRESS_GZIP = 0x11;     // GZIP (DEFLATE + headers)
+  COMPRESS_BZIP2 = 0x12;    // BZIP2 compression
+  COMPRESS_XZ = 0x13;       // XZ/LZMA2 compression
+  COMPRESS_ZSTD = 0x14;     // Zstandard compression
+  COMPRESS_LZ4 = 0x15;      // LZ4 (very fast)
+  COMPRESS_BROTLI = 0x16;   // Brotli (web-optimized)
+  COMPRESS_SNAPPY = 0x17;   // Snappy (Google)
+  // 0x18-0x2F reserved for future compressors
+  
+  // ENCRYPT operations (0x30-0x3F) - Secure data
+  ENCRYPT_AES256 = 0x30;     // AES-256-GCM
+  ENCRYPT_CHACHA20 = 0x31;   // ChaCha20-Poly1305
+  ENCRYPT_ZIPCRYPTO = 0x32;  // Legacy ZIP encryption
+  ENCRYPT_GPG = 0x33;        // GPG/PGP encryption
+  // 0x34-0x3F reserved for future encryption
+  
+  // ENCODE operations (0x40-0x4F) - Transform encoding
+  ENCODE_BASE64 = 0x40;      // Base64 encoding
+  ENCODE_HEX = 0x41;         // Hexadecimal encoding
+  ENCODE_ASCII85 = 0x42;     // ASCII85 encoding
+  // 0x43-0x4F reserved for future encodings
+  
+  // ZIP compound operations (0x50-0x5F) - ZIP with specific methods
+  ZIP_STORE = 0x50;          // ZIP with no compression
+  ZIP_DEFLATE = 0x51;        // ZIP with DEFLATE compression
+  ZIP_BZIP2 = 0x52;          // ZIP with BZIP2
+  ZIP_LZMA = 0x53;           // ZIP with LZMA
+  ZIP_ENCRYPTED = 0x54;      // ZIP with encryption
+  // 0x55-0x5F reserved for ZIP variants
+  
+  // Other compound formats (0x60-0x6F)
+  SEVENZ_LZMA = 0x60;        // 7-Zip with LZMA
+  RAR_V5 = 0x61;             // RAR version 5
+  // 0x62-0x6F reserved
+  
+  // 0x70-0x7F: Reserved for future standard use
+  // 0x80-0xFF: User-defined operations (128 slots)
+}
+
+// Operation capability flags
+enum OperationCapability {
+  CAPABILITY_NONE = 0;
+  CAPABILITY_BUNDLE = 1;        // Can combine multiple files
+  CAPABILITY_COMPRESS = 2;      // Can compress data
+  CAPABILITY_ENCRYPT = 4;       // Can encrypt data
+  CAPABILITY_STREAM = 8;        // Supports streaming
+  CAPABILITY_RANDOM_ACCESS = 16; // Supports random access
+  CAPABILITY_PRESERVE_PERMS = 32; // Preserves permissions
+}
+
+// Operation metadata
+message OperationInfo {
+  Operation operation = 1;        // Operation enum value
+  string name = 2;               // Human-readable name
+  string category = 3;           // Category (bundle, compress, etc.)
+  uint32 capabilities = 4;       // Capability flags (bitfield)
+  repeated string extensions = 5; // File extensions
+  string description = 6;        // Description
+}
+
+// Operation chain definition
+message OperationChain {
+  repeated Operation operations = 1;  // Operations in processing order
+  uint64 packed_chain = 2;           // 64-bit packed representation
+  bool validated = 3;                // Chain has been validated
+  string validation_error = 4;       // Validation error message
+}
+
+// Operation parameters (for future extensibility)
+message OperationParams {
+  Operation operation = 1;           // Which operation these params apply to
+  map<string, string> params = 2;    // Key-value parameters
+}

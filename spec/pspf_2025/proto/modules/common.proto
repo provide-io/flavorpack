@@ -1,0 +1,61 @@
+syntax = "proto3";
+
+package flavor.psp.format_2025;
+
+// Common types used across PSPF/2025
+
+// Platform enumeration
+enum Platform {
+  PLATFORM_ANY = 0;     // Cross-platform
+  PLATFORM_LINUX = 1;   // Linux
+  PLATFORM_MACOS = 2;    // macOS
+  PLATFORM_WINDOWS = 3; // Windows
+  PLATFORM_BSD = 4;     // BSD variants
+}
+
+// Purpose classification for slots (FEP-0001 Section 4.3)
+enum Purpose {
+  PURPOSE_DATA = 0;    // General data files
+  PURPOSE_CODE = 1;    // Executable code
+  PURPOSE_CONFIG = 2;  // Configuration files  
+  PURPOSE_MEDIA = 3;   // Media/assets
+}
+
+// Lifecycle management (FEP-0001 Section 4.4)
+enum Lifecycle {
+  LIFECYCLE_INIT = 0;       // First run only
+  LIFECYCLE_STARTUP = 1;    // Every startup
+  LIFECYCLE_RUNTIME = 2;    // During execution (default)
+  LIFECYCLE_SHUTDOWN = 3;   // Cleanup phase
+  LIFECYCLE_CACHE = 4;      // Performance cache
+  LIFECYCLE_TEMPORARY = 5;  // Current session
+  LIFECYCLE_LAZY = 6;       // On-demand loading
+  LIFECYCLE_EAGER = 7;      // Immediate loading
+  LIFECYCLE_DEV = 8;        // Development mode
+  LIFECYCLE_CONFIG = 9;     // User-configurable
+  LIFECYCLE_PLATFORM = 10; // Platform-specific
+}
+
+// Access pattern hints
+enum AccessHint {
+  ACCESS_HINT_SEQUENTIAL = 0; // Sequential access pattern
+  ACCESS_HINT_RANDOM = 1;     // Random access pattern
+  ACCESS_HINT_ONCE = 2;       // Access once then discard
+  ACCESS_HINT_PREFETCH = 3;   // Prefetch next slot
+}
+
+// Cache priority levels
+enum CachePriority {
+  CACHE_LOW = 0;      // Evict first
+  CACHE_NORMAL = 1;   // Standard caching
+  CACHE_HIGH = 2;     // Keep in memory
+  CACHE_CRITICAL = 3; // Never evict
+}
+
+// Common string-to-bytes field for metadata
+message StringBytes {
+  oneof value {
+    string str = 1;
+    bytes raw = 2;
+  }
+}

@@ -1,0 +1,85 @@
+syntax = "proto3";
+
+package flavor.psp.format_2025;
+
+// Index block definition (implements FEP-0001 Section 2.3)
+message IndexBlock {
+  // Core identification
+  fixed32 format_version = 1;      // 0x20250001 (PSPF/2025 v1)
+  fixed32 index_checksum = 2;      // Adler-32 of index block
+  
+  // File structure
+  fixed64 package_size = 3;        // Total file size in bytes
+  fixed64 launcher_size = 4;       // Native launcher size
+  fixed64 metadata_offset = 5;     // Offset to JSON metadata
+  fixed64 metadata_size = 6;       // Size of metadata
+  fixed64 slot_table_offset = 7;   // Offset to slot table
+  fixed64 slot_table_size = 8;     // Size of slot table
+  
+  // Slot information
+  fixed32 slot_count = 9;          // Number of slots
+  fixed32 flags = 10;              // Package flags
+  
+  // Security (fixed-size fields)
+  bytes public_key = 11;           // Ed25519 public key (32 bytes)
+  bytes metadata_checksum = 12;    // SHA-256 of metadata (32 bytes)
+  bytes integrity_signature = 13;  // Ed25519 signature (512 bytes max)
+  
+  // Performance hints
+  uint32 access_mode = 16;         // Access mode hints
+  uint32 cache_strategy = 17;      // Cache strategy
+  uint32 codec_type = 18;          // Default codec type
+  uint32 encryption_type = 19;     // Default encryption type
+  uint32 page_size = 20;           // Memory page size hint
+  uint64 max_memory = 21;          // Maximum memory usage
+  uint64 min_memory = 22;          // Minimum memory required
+  uint64 cpu_features = 23;        // Required CPU features
+  uint64 gpu_requirements = 24;    // GPU requirements
+  uint64 numa_hints = 25;          // NUMA topology hints
+  uint32 stream_chunk_size = 26;   // Streaming chunk size
+  
+  // Extended metadata
+  uint64 build_timestamp = 27;     // Build timestamp (Unix time)
+  bytes build_machine = 28;        // Build machine identifier (32 bytes)
+  bytes source_hash = 29;          // Source code hash (32 bytes)
+  bytes dependency_hash = 30;      // Dependency hash (32 bytes)
+  bytes license_id = 31;           // License identifier (16 bytes)
+  bytes provenance_uri = 32;       // Provenance URI (8 bytes)
+  
+  // Capabilities
+  uint64 capabilities = 33;        // Capability flags
+  uint64 requirements = 34;        // Requirement flags
+  uint64 extensions = 35;          // Extension flags
+  uint32 compatibility = 36;       // Compatibility version
+  uint32 protocol_version = 37;    // Protocol version
+  
+  // Future cryptography space
+  bytes future_crypto = 38;        // Future crypto algorithms (512 bytes)
+  
+  // Reserved space for future expansion
+  bytes reserved = 39;             // Reserved (6816 bytes)
+}
+
+// Package flags (bit field)
+enum PackageFlags {
+  FLAG_NONE = 0;
+  FLAG_SIGNED = 1;                 // Package is digitally signed
+  FLAG_ENCRYPTED = 2;              // Package contains encrypted slots
+  FLAG_COMPRESSED = 4;             // Package uses compression
+  FLAG_MMAP_OPTIMIZED = 8;         // Optimized for memory mapping
+  FLAG_STREAMING = 16;             // Supports streaming access
+  FLAG_SPA_ENABLED = 32;           // Staged Payload Architecture (FEP-0004)
+  FLAG_JIT_ENABLED = 64;           // JIT Loading enabled (FEP-0005)
+}
+
+// Capability flags (bit field) 
+enum Capabilities {
+  CAP_MMAP = 1;                    // Memory-mapped support
+  CAP_PAGE_ALIGNED = 2;            // Page-aligned slots
+  CAP_COMPRESSED_INDEX = 4;        // Compressed index
+  CAP_STREAMING = 8;               // Streaming-optimized
+  CAP_PREFETCH = 16;               // Prefetch hints
+  CAP_CACHE_AWARE = 32;            // Cache-aware layout
+  CAP_ENCRYPTED = 64;              // Encrypted slots
+  CAP_SIGNED = 128;                // Digitally signed
+}
