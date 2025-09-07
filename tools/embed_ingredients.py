@@ -76,8 +76,9 @@ def embed_ingredients(platform: str, ingredients_dir: str, version: str) -> bool
     init_file = target_dir / "__init__.py"
     init_file.write_text('''"""Embedded ingredient binaries for Flavor."""
 import os
-import platform
 from pathlib import Path
+
+from provide.foundation.platform import is_windows
 
 
 def get_ingredients_dir() -> Path:
@@ -90,7 +91,7 @@ def get_ingredient_path(ingredient_name: str) -> Path:
     ingredients_dir = get_ingredients_dir()
     
     # Add .exe extension on Windows
-    if platform.system() == 'Windows':
+    if is_windows():
         ingredient_name = f"{ingredient_name}.exe"
     
     ingredient_path = ingredients_dir / ingredient_name

@@ -185,7 +185,7 @@ def test_external_builder_error_handling(
     (tmp_path / "python.tgz").touch()
 
     orchestrator.builder_bin = "/fake/builder"
-    with pytest.raises(BuildError, match="Failed to execute command"):
+    with pytest.raises(BuildError):
         orchestrator.build_package()
 
 

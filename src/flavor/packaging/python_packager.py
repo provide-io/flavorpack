@@ -15,6 +15,7 @@ from typing import Any
 import zipfile
 
 from provide.foundation import logger
+from provide.foundation.errors import retry_on_error
 
 from flavor.psp.format_2025.constants import (
     DEFAULT_DIR_PERMS,
@@ -220,7 +221,12 @@ class PythonPackager:
     # ╚══════════════════════════════════════════════════════════════════════════════╝
 
     def _download_uv_wheel_via_url(self, dest_dir: Path) -> Path | None:
-        """Download UV wheel directly from PyPI using curl/wget.
+        """Download UV wheel directly from PyPI using urllib - NOT UV!
+
+        CRITICAL WARNING: This function downloads the UV BINARY itself using urllib.
+        UV CANNOT DOWNLOAD ITSELF. This is PyPA territory, not UV.
+        
+        DO NOT CONFUSE THIS WITH UV DOWNLOAD OPERATIONS.
 
         This is a fallback method when pip is not available.
 
@@ -233,6 +239,7 @@ class PythonPackager:
         import json
         import shutil
         import urllib.request
+        import urllib.error
 
         logger.info("Downloading UV wheel directly from PyPI")
 
@@ -319,7 +326,12 @@ class PythonPackager:
             return None
 
     def _download_uv_wheel(self, dest_dir: Path) -> Path | None:
-        """Download manylinux2014-compatible UV wheel and extract binary.
+        """Download manylinux2014-compatible UV wheel using PIP - NOT UV!
+
+        CRITICAL WARNING: This function downloads the UV BINARY itself using pip.
+        UV CANNOT DOWNLOAD ITSELF. This is PyPA pip territory.
+        
+        DO NOT CONFUSE THIS WITH UV DOWNLOAD OPERATIONS.
 
         Args:
             dest_dir: Directory to save UV binary to
