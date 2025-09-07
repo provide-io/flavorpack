@@ -24,7 +24,11 @@ from flavor.psp.format_2025.constants import (
 from provide.foundation.platform import get_arch_name, get_os_name
 from flavor.utils import run_command
 from flavor.utils.archive import deterministic_filter
+from flavor.utils.archive_utils import ArchiveUtils
 from flavor.packaging.python.pip_manager import PyPaPipManager
+from flavor.packaging.python.uv_manager import UVManager
+from flavor.packaging.python.wheel_builder import WheelBuilder
+from flavor.packaging.python.dist_manager import PythonDistManager
 
 
 class PythonPackager:
@@ -95,8 +99,12 @@ class PythonPackager:
         # Track processed dependencies to avoid cycles
         self._processed_deps = set()
         
-        # Initialize PyPA pip manager
+        # Initialize specialized managers
         self.pypapip = PyPaPipManager(python_version=self.python_version)
+        self.uv_manager = UVManager()
+        self.wheel_builder = WheelBuilder(python_version=self.python_version)
+        self.dist_manager = PythonDistManager(python_version=self.python_version)
+        self.archive_utils = ArchiveUtils(deterministic=True)
 
 
     def _download_uv_wheel_via_url(self, dest_dir: Path) -> Path | None:
