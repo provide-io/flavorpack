@@ -30,10 +30,10 @@ if result["valid"]:
 
 High-level functions for package operations:
 
-- [`build_package_from_manifest()`](api.md#build_package_from_manifest) - Build packages from pyproject.toml
-- [`verify_package()`](api.md#verify_package) - Verify package integrity and signatures
-- [`clean_cache()`](api.md#clean_cache) - Clean build and extraction caches
-- [`generate_keys()`](api.md#generate_keys) - Generate Ed25519 signing keys
+- `build_package_from_manifest()` - Build packages from pyproject.toml
+- `verify_package()` - Verify package integrity and signatures
+- `clean_cache()` - Clean build and extraction caches
+- `generate_keys()` - Generate Ed25519 signing keys
 
 ### Package Building (`flavor.psp.format_2025`)
 
@@ -385,10 +385,10 @@ packages = build_package_from_manifest(Path("pyproject.toml"))
 
 ### Functions
 
-- [`build_package_from_manifest()`](api.md#build_package_from_manifest)
-- [`verify_package()`](api.md#verify_package)
-- [`clean_cache()`](api.md#clean_cache)
-- [`generate_keys()`](api.md#generate_keys)
+- `build_package_from_manifest()`
+- `verify_package()`
+- `clean_cache()`
+- `generate_keys()`
 - [`build_package()`](psp/builder.md#build_package)
 - [`prepare_slots()`](psp/builder.md#prepare_slots)
 
@@ -400,7 +400,7 @@ packages = build_package_from_manifest(Path("pyproject.toml"))
 - [`PythonPackager`](packaging/python_packager.md#pythonpackager)
 - [`BuildSpec`](psp/builder.md#buildspec)
 - [`SlotSpec`](psp/slots.md#slotspec)
-- [`CacheManager`](api.md#cachemanager)
+- `CacheManager`
 
 ### Constants
 
