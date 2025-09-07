@@ -20,7 +20,7 @@ type SlotMetadata struct {
 	Target      string `json:"target"` // Destination path
 	Size        int64  `json:"size"`
 	Checksum    string `json:"checksum"`
-	Encoding    string `json:"encoding"`
+	Codec    string `json:"codec"`
 	Purpose     string `json:"purpose"`
 	Lifecycle   string `json:"lifecycle"`
 	Resolution  string `json:"resolution,omitempty"`  // When to resolve: build|runtime|lazy
@@ -40,7 +40,7 @@ type SlotDescriptor struct {
 	// Properties (16 bytes)
 	OriginalSize uint64 // 8 bytes: uncompressed size
 	Checksum     uint32 // 4 bytes: adler32 of stored data
-	Encoding     uint8  // 1 byte: 0=raw, 1=tar, 2=gzip, 3=tgz
+	Codec       uint8  // 1 byte: 0=raw, 1=tar, 2=gzip, 3=tgz
 	Encryption   uint8  // 1 byte: encryption type
 	Alignment    uint16 // 2 bytes: alignment requirement
 

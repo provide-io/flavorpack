@@ -46,12 +46,12 @@ pub fn extract_slot(reader: &mut Reader, slot_index: usize, dest_dir: &Path) -> 
     }
 
     let descriptor = &descriptors[slot_index];
-    let desc_encoding = descriptor.encoding;
+    let desc_codec = descriptor.codec;
     // Copy values to avoid unaligned access
     let desc_offset = descriptor.offset;
     let desc_size = descriptor.size;
     trace!(
-        "📏 Slot {slot_index} descriptor: offset={desc_offset:#x}, size={desc_size}, encoding={desc_encoding}"
+        "📏 Slot {slot_index} descriptor: offset={desc_offset:#x}, size={desc_size}, codec={desc_codec}"
     );
 
     // Read slot data using backend (raw/compressed)
@@ -63,7 +63,7 @@ pub fn extract_slot(reader: &mut Reader, slot_index: usize, dest_dir: &Path) -> 
     );
 
     // Decompress based on encoding
-    let decompressed_data = match desc_encoding {
+    let decompressed_data = match desc_codec {
         CODEC_GZIP => {
             // Single file, gzipped
             trace!("🗜️ Decompressing GZIP slot {slot_index}");
@@ -101,10 +101,10 @@ pub fn extract_slot(reader: &mut Reader, slot_index: usize, dest_dir: &Path) -> 
         }
         unknown => {
             error!(
-                "❌ FATAL: Unknown encoding {unknown} for slot {slot_index}"
+                "❌ FATAL: Unknown codec {unknown} for slot {slot_index}"
             );
             return Err(FlavorError::Generic(format!(
-                "Unknown encoding {unknown} for slot {slot_index}"
+                "Unknown codec {unknown} for slot {slot_index}"
             )));
         }
     };
@@ -119,12 +119,12 @@ pub fn extract_slot(reader: &mut Reader, slot_index: usize, dest_dir: &Path) -> 
     let metadata = reader.read_metadata()?;
 
     // Get slot info from metadata
-    let (slot_id, mut slot_target, slot_encoding, slot_purpose) = if slot_index < metadata.slots.len() {
+    let (slot_id, mut slot_target, slot_codec, slot_purpose) = if slot_index < metadata.slots.len() {
         let slot_info = &metadata.slots[slot_index];
         (
             slot_info.id.clone(),
             slot_info.target.clone(),
-            slot_info.encoding.clone(),
+            slot_info.codec.clone(),
             slot_info.purpose.clone(),
         )
     } else {
@@ -140,19 +140,19 @@ pub fn extract_slot(reader: &mut Reader, slot_index: usize, dest_dir: &Path) -> 
     }
 
     debug!(
-        "🎯 Slot {slot_index} encoding: '{slot_encoding}', purpose: '{slot_purpose}', id: '{slot_id}'"
+        "🎯 Slot {slot_index} codec: '{slot_codec}', purpose: '{slot_purpose}', id: '{slot_id}'"
     );
 
-    // Strict encoding validation - no fallthrough allowed
-    match desc_encoding {
+    // Strict codec validation - no fallthrough allowed
+    match desc_codec {
         CODEC_GZIP => {
             // CODEC_GZIP (2) means "Gzipped single file" per the PSPF spec
             if is_tarball(&decompressed_data) {
                 error!(
-                    "❌ FATAL: Slot {slot_index} encoding is GZIP but data is a tarball!"
+                    "❌ FATAL: Slot {slot_index} codec is GZIP but data is a tarball!"
                 );
                 return Err(FlavorError::Generic(format!(
-                    "Encoding mismatch: slot {slot_index} declared as GZIP but contains tar archive"
+                    "Codec mismatch: slot {slot_index} declared as GZIP but contains tar archive"
                 )));
             }
             // For GZIP single files, need to pass the full target path
@@ -168,14 +168,14 @@ pub fn extract_slot(reader: &mut Reader, slot_index: usize, dest_dir: &Path) -> 
             // CODEC_TGZ (3) means "Tar archive, then gzipped"
             if !is_tarball(&decompressed_data) {
                 error!(
-                    "❌ FATAL: Slot {slot_index} encoding is TGZ but data is not a tarball!"
+                    "❌ FATAL: Slot {slot_index} codec is TGZ but data is not a tarball!"
                 );
                 error!(
                     "  First 16 bytes: {:02x?}",
                     &decompressed_data[..16.min(decompressed_data.len())]
                 );
                 return Err(FlavorError::Generic(format!(
-                    "Encoding mismatch: slot {slot_index} declared as TGZ but is not a tar archive"
+                    "Codec mismatch: slot {slot_index} declared as TGZ but is not a tar archive"
                 )));
             }
             debug!("📦 Slot {slot_index} is a tar archive, extracting...");
@@ -185,10 +185,10 @@ pub fn extract_slot(reader: &mut Reader, slot_index: usize, dest_dir: &Path) -> 
             // CODEC_TAR (1) means "Uncompressed tar archive"
             if !is_tarball(&decompressed_data) {
                 error!(
-                    "❌ FATAL: Slot {slot_index} encoding is TAR but data is not a tarball!"
+                    "❌ FATAL: Slot {slot_index} codec is TAR but data is not a tarball!"
                 );
                 return Err(FlavorError::Generic(format!(
-                    "Encoding mismatch: slot {slot_index} declared as TAR but is not a tar archive"
+                    "Codec mismatch: slot {slot_index} declared as TAR but is not a tar archive"
                 )));
             }
             debug!(
@@ -200,22 +200,22 @@ pub fn extract_slot(reader: &mut Reader, slot_index: usize, dest_dir: &Path) -> 
             // CODEC_RAW (0) means "Raw uncompressed data"
             if is_tarball(&decompressed_data) {
                 error!(
-                    "❌ FATAL: Slot {slot_index} encoding is RAW but data is a tarball!"
+                    "❌ FATAL: Slot {slot_index} codec is RAW but data is a tarball!"
                 );
                 return Err(FlavorError::Generic(format!(
-                    "Encoding mismatch: slot {slot_index} declared as RAW but contains tar archive"
+                    "Codec mismatch: slot {slot_index} declared as RAW but contains tar archive"
                 )));
             }
             let output_path = dest_dir.join(&slot_target);
             extract_raw_file(&decompressed_data, &output_path, &descriptors, slot_index)?;
         }
-        unknown_encoding => {
+        unknown_codec => {
             // This case is now handled in the decompression step above
             error!(
-                "❌ FATAL: Unhandled encoding {unknown_encoding} for slot {slot_index} in extraction phase"
+                "❌ FATAL: Unhandled codec {unknown_codec} for slot {slot_index} in extraction phase"
             );
             return Err(FlavorError::Generic(format!(
-                "Unhandled encoding {unknown_encoding} for slot {slot_index} in extraction phase"
+                "Unhandled codec {unknown_codec} for slot {slot_index} in extraction phase"
             )));
         }
     }

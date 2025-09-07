@@ -94,7 +94,7 @@ const (
 	LifecycleConfig    = 9  // User-modifiable configuration files
 	LifecyclePlatform  = 10 // Platform/OS specific content
 
-	// Future encoding formats (not implemented yet):
+	// Future codec formats (not implemented yet):
 	// CodecZstd  = 4 // Zstd compressed single file
 	// CodecTzst  = 5 // Tar archive, then zstd compressed
 	// CodecBrotli = 6 // Brotli compressed single file

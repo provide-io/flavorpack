@@ -6,8 +6,8 @@ import (
 	"io"
 )
 
-func Decompress(data []byte, encoding string) ([]byte, error) {
-	switch encoding {
+func Decompress(data []byte, codec string) ([]byte, error) {
+	switch codec {
 	case "gzip":
 		gr, err := gzip.NewReader(bytes.NewReader(data))
 		if err != nil {

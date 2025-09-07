@@ -190,7 +190,7 @@ func (sp *SlotProcessor) processSlot(index int, slot *Slot) error {
 		"source", slot.Source, "target", slot.Target)
 
 	// Read and process slot data
-	slotData, compressed, encodingMethod, err := sp.loadSlotData(slot)
+	slotData, compressed, codecMethod, err := sp.loadSlotData(slot)
 	if err != nil {
 		return fmt.Errorf("failed to load slot data: %w", err)
 	}
@@ -207,7 +207,7 @@ func (sp *SlotProcessor) processSlot(index int, slot *Slot) error {
 		Target:      slot.Target,
 		Size:        int64(len(slotData)),
 		Checksum:    checksumStr,
-		Encoding:    slot.Encoding,
+		Codec:    slot.Codec,
 		Purpose:     slot.Purpose,
 		Lifecycle:   slot.Lifecycle,
 		Resolution:  slot.Resolution,
@@ -221,7 +221,7 @@ func (sp *SlotProcessor) processSlot(index int, slot *Slot) error {
 		Size:           uint64(len(compressed)),
 		OriginalSize:   uint64(len(slotData)),
 		Checksum:       adler32.Checksum(compressed), // Use adler32 for descriptor
-		Encoding:       encodingMethod,
+		Codec:       codecMethod,
 		Encryption:     0, // no encryption
 		Alignment:      uint16(SlotAlignment),
 		Purpose:        mapPurposeToUint8(slot.Purpose),
@@ -249,7 +249,7 @@ func (sp *SlotProcessor) processSlot(index int, slot *Slot) error {
 //
 // This method reads the slot data from disk and applies any specified
 // encoding. It supports path resolution with {workenv} placeholder and
-// various encoding formats (gzip, tar, tar.gz, none).
+// various codec formats (gzip, tar, tar.gz, none).
 //
 // Args:
 //   slot: The slot configuration containing source path and encoding
@@ -278,30 +278,30 @@ func (sp *SlotProcessor) loadSlotData(slot *Slot) ([]byte, []byte, uint8, error)
 		return nil, nil, 0, fmt.Errorf("failed to read slot from %s: %w", slotPath, err)
 	}
 
-	sp.logger.Debug("📊 Slot size", "original", len(slotData), "encoding", slot.Encoding)
+	sp.logger.Debug("📊 Slot size", "original", len(slotData), "encoding", slot.Codec)
 
 	// Handle encoding
 	var compressed []byte
-	var encodingMethod uint8
+	var codecMethod uint8
 
-	switch slot.Encoding {
+	switch slot.Codec {
 	case "gzip":
 		compressed = slotData
-		encodingMethod = CodecGzip
+		codecMethod = CodecGzip
 	case "tgz", "tar.gz":
 		compressed = slotData
-		encodingMethod = CodecTgz
+		codecMethod = CodecTgz
 	case "tar":
 		compressed = slotData
-		encodingMethod = CodecTar
+		codecMethod = CodecTar
 	case "raw", "none", "":
 		compressed = slotData
-		encodingMethod = CodecRaw
+		codecMethod = CodecRaw
 	default:
-		return nil, nil, 0, fmt.Errorf("unknown encoding: %s", slot.Encoding)
+		return nil, nil, 0, fmt.Errorf("unknown codec: %s", slot.Codec)
 	}
 
-	return slotData, compressed, encodingMethod, nil
+	return slotData, compressed, codecMethod, nil
 }
 
 // GetDescriptors returns the processed slot descriptors

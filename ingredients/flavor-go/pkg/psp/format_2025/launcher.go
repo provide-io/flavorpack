@@ -270,22 +270,22 @@ func showBundleInfo(exePath string, logger hclog.Logger) {
 	builderType := detectBuilderType(metadata)
 
 	totalSize := int64(0)
-	encodingTypes := make(map[string]int)
+	codecTypes := make(map[string]int)
 
 	for _, slot := range metadata.Slots {
 		totalSize += slot.Size
-		if slot.Encoding != "" && slot.Encoding != "none" {
-			encodingTypes[slot.Encoding]++
+		if slot.Codec != "" && slot.Codec != "none" {
+			codecTypes[slot.Codec]++
 		}
 	}
 
-	encodingInfo := "none"
-	if len(encodingTypes) > 0 {
+	codecInfo := "none"
+	if len(codecTypes) > 0 {
 		var types []string
-		for t := range encodingTypes {
+		for t := range codecTypes {
 			types = append(types, t)
 		}
-		encodingInfo = strings.Join(types, ", ")
+		codecInfo = strings.Join(types, ", ")
 	}
 
 	verifyStatus := "✓"
@@ -306,7 +306,7 @@ func showBundleInfo(exePath string, logger hclog.Logger) {
 
 	fmt.Printf("Slots: %d (%s) | Verified: %s\n",
 		len(metadata.Slots),
-		encodingInfo,
+		codecInfo,
 		verifyStatus)
 
 	fmt.Printf("\nRun with: %s\n", metadata.Execution.Command)

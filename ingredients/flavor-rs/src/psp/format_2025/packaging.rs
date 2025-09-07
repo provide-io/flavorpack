@@ -42,8 +42,8 @@ pub fn write_slot(
         slot_path.display()
     );
 
-    // Determine encoding and compress if needed
-    let (processed_data, encoding) = process_slot_data(&slot_data, &slot_info.encoding)?;
+    // Determine codec and compress if needed
+    let (processed_data, encoding) = process_slot_data(&slot_data, &slot_info.codec)?;
 
     // Get current position (this will be the slot offset)
     let offset = out.stream_position()?;
@@ -103,8 +103,8 @@ pub fn write_slot(
 }
 
 /// Process slot data based on encoding
-fn process_slot_data(data: &[u8], encoding_str: &str) -> Result<(Vec<u8>, u8)> {
-    match encoding_str {
+fn process_slot_data(data: &[u8], codec_str: &str) -> Result<(Vec<u8>, u8)> {
+    match codec_str {
         "gzip" => {
             // Single file, gzipped
             let mut encoder = GzEncoder::new(Vec::new(), Compression::best());

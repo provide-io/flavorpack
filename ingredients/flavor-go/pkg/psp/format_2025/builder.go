@@ -84,7 +84,7 @@ type Slot struct {
 	Purpose     string `json:"purpose"`               // Role of the slot
 	Lifecycle   string `json:"lifecycle"`             // Cache management
 	Resolution  string `json:"resolution,omitempty"`  // When to resolve: build|runtime|lazy
-	Encoding    string `json:"encoding"`              // Compression/encoding (string in JSON)
+	Codec    string `json:"codec"`              // Compression/encoding (string in JSON)
 	Permissions string `json:"permissions,omitempty"` // Unix permissions (e.g., "0755")
 }
 

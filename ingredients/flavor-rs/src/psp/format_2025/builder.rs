@@ -278,7 +278,7 @@ impl SlotProcessor {
                 target: slot.target.clone(),
                 size: file_size as i64,
                 checksum: sha256_checksum,
-                encoding: slot.encoding.clone(),
+                codec: slot.codec.clone(),
                 purpose: slot.purpose.clone(),
                 lifecycle: slot.lifecycle.clone(),
                 permissions: slot.permissions.clone().or_else(|| Some(format!("{:04o}", DEFAULT_FILE_PERMS))),
@@ -372,8 +372,8 @@ impl SlotProcessor {
     }
 
     fn create_slot_descriptor(&self, index: usize, slot: &ManifestSlot, file_size: u64, adler_checksum: u32) -> Result<SlotDescriptor> {
-        // Map encoding string to byte value
-        let encoding_value = match slot.encoding.as_str() {
+        // Map codec string to byte value
+        let codec_value = match slot.codec.as_str() {
             "gzip" => CODEC_GZIP,
             "tgz" => CODEC_TGZ,
             "tar" => CODEC_TAR,
@@ -411,7 +411,7 @@ impl SlotProcessor {
         descriptor.size = file_size;
         descriptor.original_size = file_size;
         descriptor.checksum = adler_checksum;
-        descriptor.encoding = encoding_value;
+        descriptor.codec = codec_value;
         descriptor.purpose = purpose_value;
         descriptor.lifecycle = lifecycle_value;
         

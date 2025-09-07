@@ -85,7 +85,7 @@ func (idx *PSPFIndex) Pack() []byte {
 	// Pack performance hints
 	buf[640] = idx.AccessMode
 	buf[641] = idx.CacheStrategy
-	buf[642] = idx.EncodingType
+	buf[642] = idx.CodecType
 	buf[643] = idx.EncryptionType
 	binary.LittleEndian.PutUint32(buf[644:648], idx.PageSize)
 	binary.LittleEndian.PutUint64(buf[648:656], idx.MaxMemory)
@@ -141,7 +141,7 @@ func (idx *PSPFIndex) Unpack(data []byte) error {
 	// Unpack performance hints
 	idx.AccessMode = data[640]
 	idx.CacheStrategy = data[641]
-	idx.EncodingType = data[642]
+	idx.CodecType = data[642]
 	idx.EncryptionType = data[643]
 	idx.PageSize = binary.LittleEndian.Uint32(data[644:648])
 	idx.MaxMemory = binary.LittleEndian.Uint64(data[648:656])

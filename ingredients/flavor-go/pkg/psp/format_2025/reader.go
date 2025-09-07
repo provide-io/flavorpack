@@ -282,7 +282,7 @@ func (r *Reader) ReadSlot(slotIndex int) ([]byte, error) {
 		// Properties (16 bytes)
 		OriginalSize: binary.LittleEndian.Uint64(entryData[32:40]),
 		Checksum:     binary.LittleEndian.Uint32(entryData[40:44]),
-		Encoding:     entryData[44],
+		Codec:     entryData[44],
 		Encryption:   entryData[45],
 		Alignment:    binary.LittleEndian.Uint16(entryData[46:48]),
 		// Semantics (8 bytes)
@@ -313,8 +313,8 @@ func (r *Reader) ReadSlot(slotIndex int) ([]byte, error) {
 		return nil, ErrChecksumMismatch
 	}
 
-	// Decompress if needed based on entry.Encoding
-	switch entry.Encoding {
+	// Decompress if needed based on entry.Codec
+	switch entry.Codec {
 	case CodecRaw: // Raw uncompressed data
 		return slotData, nil
 	case CodecTar: // Uncompressed tar archive
@@ -347,7 +347,7 @@ func (r *Reader) ReadSlot(slotIndex int) ([]byte, error) {
 		// Return the tar archive for extraction
 		return decompressed, nil
 	default:
-		return nil, fmt.Errorf("unsupported encoding type: %d", entry.Encoding)
+		return nil, fmt.Errorf("unsupported codec type: %d", entry.Codec)
 	}
 }
 

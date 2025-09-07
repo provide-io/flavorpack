@@ -65,13 +65,13 @@ pub const PSP_METADATA_FILE: &str = "psp.json";
 /// Index metadata JSON file name (in instance/)
 pub const INDEX_METADATA_FILE: &str = "index.json";
 
-/// Encoding types - describe the actual format of slot data
+/// Codec types - describe the actual format of slot data
 pub const CODEC_RAW: u8 = 0; // Raw uncompressed data
 pub const CODEC_TAR: u8 = 1; // Uncompressed tar archive
 pub const CODEC_GZIP: u8 = 2; // Gzipped single file
 pub const CODEC_TGZ: u8 = 3; // Tar archive, then gzipped (tar.gz)
 
-// Future encoding formats (not implemented yet):
+// Future codec formats (not implemented yet):
 // pub const CODEC_ZSTD: u8 = 4;     // Zstd compressed single file
 // pub const CODEC_TZST: u8 = 5;     // Tar archive, then zstd compressed
 // pub const CODEC_BROTLI: u8 = 6;   // Brotli compressed single file
