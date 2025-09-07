@@ -158,33 +158,45 @@ class SlotDescriptor:
 
     @classmethod
     def unpack(cls, data: bytes) -> "SlotDescriptor":
-        """Unpack descriptor from 64-byte binary data."""
+        """Unpack descriptor from 64-byte binary data with operations support."""
         if len(data) != SLOT_DESCRIPTOR_SIZE:
             raise ValueError(f"Slot descriptor must be {SLOT_DESCRIPTOR_SIZE} bytes")
 
         unpacked = struct.unpack(
-            "<QQQQQIBBHBBBBHHII",  # Fixed: was missing 1 B
+            "<IIQQQQQQIBBBBHHHH",
             data,
         )
 
+        # Extract operations field
+        operations = unpacked[6]
+        
+        # For backward compatibility, if operations looks like a legacy codec
+        # (value < 256), treat it as codec
+        codec = 0
+        if operations < 256:
+            codec = operations
+            # But also keep it as operations for new code
+
         return cls(
             id=unpacked[0],
-            name_hash=unpacked[1],
-            offset=unpacked[2],
-            size=unpacked[3],
-            original_size=unpacked[4],
-            checksum=unpacked[5],
-            codec=unpacked[6],
-            encryption=unpacked[7],
-            alignment=unpacked[8],
-            purpose=unpacked[9],
-            lifecycle=unpacked[10],
-            access_hint=unpacked[11],
-            priority=unpacked[12],
-            permissions=unpacked[13],
-            platform=unpacked[14],
-            extended_offset=unpacked[15],
-            extended_size=unpacked[16],
+            # unpacked[1] is reserved/flags
+            name_hash=unpacked[2],
+            offset=unpacked[3],
+            size=unpacked[4],
+            original_size=unpacked[5],
+            operations=operations,
+            checksum=unpacked[7],
+            purpose=unpacked[8],
+            lifecycle=unpacked[9],
+            access_hint=unpacked[10],
+            priority=unpacked[11],
+            permissions=unpacked[12],
+            platform=unpacked[13],
+            alignment=unpacked[14],
+            encryption=unpacked[15],
+            codec=codec,  # Set for backward compatibility
+            extended_offset=0,  # No longer stored separately
+            extended_size=0,  # No longer stored separately
         )
 
     def to_dict(self) -> dict[str, Any]:
