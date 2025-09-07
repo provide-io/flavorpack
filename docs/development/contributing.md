@@ -384,8 +384,8 @@ Follow conventional commits:
 
 ## Resources
 
-- [Architecture Documentation](ARCHITECTURE.md)
-- [CI/CD Pipeline](CI-CD.md)
-- [User Guide](USER-GUIDE.md)
-- [API Reference](API-REFERENCE.md)
-- [Troubleshooting Guide](TROUBLESHOOTING.md)
+- [Architecture Documentation](architecture.md)
+- [CI/CD Pipeline](ci-cd.md)
+- [User Guide](../guide/index.md)
+- [API Reference](../api/index.md)
+- [Troubleshooting Guide](../troubleshooting/common.md)
