@@ -377,8 +377,8 @@ nav:
       - Getting Support: community/support.md
       - Discussions: community/discussions.md
       - Blog: community/blog.md
-      - Changelog: changelog.md
-      - License: license.md
+      - Changelog: community/changelog.md
+      - License: community/license.md
 
 validation:
   omitted_files: warn
