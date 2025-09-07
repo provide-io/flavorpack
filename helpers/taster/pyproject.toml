@@ -8,9 +8,7 @@ version = "1.0.0"
 description = "Test package for flavor functionality"
 readme = "README.md"
 dependencies = [
-    "click",
-    "cryptography>=45.0.6",
-    "pyvider-telemetry>=0.0.16",
+    "provide-foundation>=0.0.0.dev0",
 ]
 
 [project.scripts]
