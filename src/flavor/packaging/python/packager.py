@@ -107,7 +107,7 @@ class PythonPackager:
         self.archive_utils = ArchiveUtils(deterministic=True)
 
 
-    def _download_uv_wheel_via_url(self, dest_dir: Path) -> Path | None:
+    def _download_uv_wheel_via_url_DEPRECATED(self, dest_dir: Path) -> Path | None:
         """Download UV wheel directly from PyPI using urllib - NOT UV!
 
         CRITICAL WARNING: This function downloads the UV BINARY itself using urllib.
@@ -357,11 +357,11 @@ class PythonPackager:
                 logger.warning(f"Failed to download UV wheel via pip: {e}")
                 logger.info("Attempting direct download from PyPI as fallback")
 
-                # Try direct download as fallback
+                # Use UVManager's download method as fallback
                 try:
-                    return self._download_uv_wheel_via_url(dest_dir)
+                    return self.uv_manager.download_uv_binary(dest_dir)
                 except Exception as fallback_error:
-                    logger.error(f"Direct download also failed: {fallback_error}")
+                    logger.error(f"UVManager download also failed: {fallback_error}")
                     # Re-raise for Linux since UV is critical
                     if get_os_name() == "linux":
                         raise FileNotFoundError(
