@@ -16,7 +16,7 @@
       "codec": "tgz",
       "id": "orchestrate-tar-gz",
       "source": "{workenv}/scripts/orchestrate.tar.gz",
-      "target": "orchestrator"
+      "target": "."
     },
     {
       "slot": 1,
