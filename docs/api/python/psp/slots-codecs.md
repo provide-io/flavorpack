@@ -414,5 +414,5 @@ def adaptive_compress(
 
 ## Related Documentation
 
-- [Performance Guide](../../../guide/performance.md) - Optimization strategies
-- [Compression Guide](../../../guide/compression.md) - Detailed compression guide
+- [Performance Guide](../../../guide/advanced/performance.md) - Optimization strategies
+- [Package Building](../../../guide/packaging/index.md) - Package building guide

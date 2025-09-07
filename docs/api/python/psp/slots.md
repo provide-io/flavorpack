@@ -36,11 +36,6 @@ This documentation is organized into focused sections:
    - Standard purposes (runtime, application, config, etc.)
    - Custom purpose extensions
 
-5. **[Advanced Slot Operations](slots-advanced.md)**
-   - Platform-specific slots
-   - Performance optimization
-   - Parallel processing
-   - Complex slot strategies
 
 ## Quick Start
 

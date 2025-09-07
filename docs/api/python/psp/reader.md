@@ -617,6 +617,6 @@ with PSPFReader("package.psp") as reader:
 
 - [PSPFBuilder](builder.md) - Building packages
 - [Slot Management](slots.md) - Slot specifications
-- [Backend System](../backends.md) - Backend implementation details
+- [Package Format](index.md) - Package format overview
 - [Format Specification](../../../spec/pspf-2025.md) - PSPF format details
 - [Core API](../api.md) - High-level API functions
