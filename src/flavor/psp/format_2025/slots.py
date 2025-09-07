@@ -116,40 +116,44 @@ class SlotDescriptor:
             # Legacy: store codec in lowest byte of operations
             operations_with_codec = self.codec
         
+        # Pack to match the 64-byte format requirement
+        # We need to adjust the format to fit exactly 64 bytes
         data = struct.pack(
             "<"  # Little-endian
-            "I"  # id (4)
-            "I"  # reserved/flags (4) 
+            "Q"  # id (8) - expanded for alignment
             "Q"  # name_hash (8)
             "Q"  # offset (8)
             "Q"  # size (8)
             "Q"  # original_size (8)
-            "Q"  # operations (8) - NEW: packed operation chain
             "I"  # checksum (4)
+            "B"  # codec (1) - keep for compatibility
+            "B"  # encryption (1)
+            "H"  # alignment (2)
             "B"  # purpose (1)
             "B"  # lifecycle (1)
             "B"  # access_hint (1)
             "B"  # priority (1)
             "H"  # permissions (2)
             "H"  # platform (2)
-            "H"  # alignment (2)
-            "H",  # encryption (2)
+            "I"  # extended_offset (4)
+            "I",  # extended_size (4)
             self.id,
-            0,  # reserved/flags for future use
             self.name_hash,
             self.offset,
             self.size,
             self.original_size,
-            operations_with_codec,  # operations or legacy codec
             self.checksum,
+            self.codec if operations_with_codec < 256 else (operations_with_codec & 0xFF),
+            self.encryption,
+            self.alignment,
             self.purpose,
             self.lifecycle,
             self.access_hint,
             self.priority,
             self.permissions,
             self.platform,
-            self.alignment,
-            self.encryption,
+            self.extended_offset,
+            self.extended_size,
         )
         
         # Ensure exactly 64 bytes
@@ -158,45 +162,33 @@ class SlotDescriptor:
 
     @classmethod
     def unpack(cls, data: bytes) -> "SlotDescriptor":
-        """Unpack descriptor from 64-byte binary data with operations support."""
+        """Unpack descriptor from 64-byte binary data."""
         if len(data) != SLOT_DESCRIPTOR_SIZE:
             raise ValueError(f"Slot descriptor must be {SLOT_DESCRIPTOR_SIZE} bytes")
 
         unpacked = struct.unpack(
-            "<IIQQQQQQIBBBBHHHH",
+            "<QQQQQIBBHBBBBHHII",  # Match the pack format exactly
             data,
         )
 
-        # Extract operations field
-        operations = unpacked[6]
-        
-        # For backward compatibility, if operations looks like a legacy codec
-        # (value < 256), treat it as codec
-        codec = 0
-        if operations < 256:
-            codec = operations
-            # But also keep it as operations for new code
-
         return cls(
             id=unpacked[0],
-            # unpacked[1] is reserved/flags
-            name_hash=unpacked[2],
-            offset=unpacked[3],
-            size=unpacked[4],
-            original_size=unpacked[5],
-            operations=operations,
-            checksum=unpacked[7],
-            purpose=unpacked[8],
-            lifecycle=unpacked[9],
-            access_hint=unpacked[10],
-            priority=unpacked[11],
-            permissions=unpacked[12],
-            platform=unpacked[13],
-            alignment=unpacked[14],
-            encryption=unpacked[15],
-            codec=codec,  # Set for backward compatibility
-            extended_offset=0,  # No longer stored separately
-            extended_size=0,  # No longer stored separately
+            name_hash=unpacked[1],
+            offset=unpacked[2],
+            size=unpacked[3],
+            original_size=unpacked[4],
+            checksum=unpacked[5],
+            codec=unpacked[6],
+            encryption=unpacked[7],
+            alignment=unpacked[8],
+            purpose=unpacked[9],
+            lifecycle=unpacked[10],
+            access_hint=unpacked[11],
+            priority=unpacked[12],
+            permissions=unpacked[13],
+            platform=unpacked[14],
+            extended_offset=unpacked[15],
+            extended_size=unpacked[16],
         )
 
     def to_dict(self) -> dict[str, Any]:
