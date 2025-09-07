@@ -225,6 +225,7 @@ extra_javascript:
 nav:
   - Home: index.md
   
+  # SECTION 1: Getting Started (for new users)
   - Getting Started:
     - Overview: getting-started/index.md
     - Installation: getting-started/installation.md
@@ -232,12 +233,13 @@ nav:
     - First Package: getting-started/first-package.md
     - Examples: getting-started/examples.md
   
+  # SECTION 2: User Guide (concepts and how-to)
   - User Guide:
     - Overview: guide/index.md
     
-    - Concepts:
+    - Core Concepts:
       - guide/concepts/index.md
-      - Package Format: guide/concepts/pspf-format.md
+      - PSPF Format: guide/concepts/pspf-format.md
       - Package Structure: guide/concepts/package-structure.md
       - Work Environments: guide/concepts/workenv.md
       - Security Model: guide/concepts/security.md
@@ -258,43 +260,42 @@ nav:
       - Cache Management: guide/usage/cache.md
       - Environment Variables: guide/usage/environment.md
     
-    - Advanced:
+    - Advanced Topics:
       - guide/advanced/index.md
       - Cross-Language Support: guide/advanced/cross-language.md
       - Custom Launchers: guide/advanced/launchers.md
-      - Builder Selection: guide/advanced/builders.md
-      - Performance: guide/advanced/performance.md
+      - Custom Builders: guide/advanced/builders.md
+      - Performance Tuning: guide/advanced/performance.md
       - Debugging: guide/advanced/debugging.md
   
+  # SECTION 3: API Reference (technical documentation)
   - API Reference:
     - Overview: api/index.md
     
     - Python API:
-      - Overview: api/python/index.md
-      - Core Functions: api/python/api.md
-      - Command Line: api/python/cli.md
+      - api/python/index.md
+      - CLI Interface: api/python/cli.md
       
-      - Package Building:
+      - Packaging:
         - api/python/packaging/index.md
         - Orchestrator: api/python/packaging/orchestrator.md
         - Python Packager: api/python/packaging/python_packager.md
         - Key Management: api/python/packaging/keys.md
       
-      - Package Format:
+      - PSPF Format:
         - api/python/psp/index.md
         - Builder: api/python/psp/builder.md
         - Reader: api/python/psp/reader.md
+        - Metadata: api/python/psp/metadata.md
+        - Cryptography: api/python/psp/crypto.md
+        - Launcher: api/python/psp/launcher.md
         
-        - Slots:
-          - Overview: api/python/psp/slots.md
+        - Slot System:
+          - api/python/psp/slots.md
           - Core API: api/python/psp/slots-core.md
           - Lifecycles: api/python/psp/slots-lifecycles.md
           - Compression: api/python/psp/slots-codecs.md
           - Purposes: api/python/psp/slots-purposes.md
-        
-        - Metadata: api/python/psp/metadata.md
-        - Cryptography: api/python/psp/crypto.md
-        - Launcher: api/python/psp/launcher.md
       
       - Utilities:
         - api/python/utils/index.md
@@ -303,60 +304,59 @@ nav:
         - Permissions: api/python/utils/permissions.md
     
     - Native Components:
-      - Overview: api/native/index.md
+      - api/native/index.md
       - Go Implementation: api/native/go.md
       - Rust Implementation: api/native/rust.md
-      - Cross-Language: api/native/cross-language.md
+      - Cross-Language Bridge: api/native/cross-language.md
   
-  - Specification:
-    - Overview: spec/index.md
-    - PSPF 2025 Format: spec/pspf-2025.md
-    - Binary Layout: spec/binary-layout.md
-    - Metadata Format: spec/metadata.md
-    - Slot System: spec/slots.md
-    - Cryptography: spec/crypto.md
+  # SECTION 4: Cookbook (practical examples)
+  - Cookbook:
+    - Overview: cookbook/index.md
     
-    - Enhancement Proposals:
-      - spec/feps/index.md
-      - FEP-0001 Core: spec/feps/fep-0001.md
-      - FEP-0002 Workenv: spec/feps/fep-0002.md
-      - FEP-0003 Security: spec/feps/fep-0003.md
-      - FEP-0004 Staged Payload: spec/feps/fep-0004.md
-      - FEP-0005 JIT Loading: spec/feps/fep-0005.md
+    - Examples:
+      - cookbook/examples/index.md
+      - CLI Tools: cookbook/examples/cli-tool.md
+      - Web Applications: cookbook/examples/web-app.md
+      - Data Pipelines: cookbook/examples/data-pipeline.md
+      - Microservices: cookbook/examples/microservices.md
+      - Machine Learning: cookbook/examples/ml-models.md
+    
+    - Recipes:
+      - cookbook/recipes/index.md
+      - Docker Integration: cookbook/recipes/docker.md
+      - CI/CD Pipelines: cookbook/recipes/ci-cd.md
+      - Multi-Platform Builds: cookbook/recipes/multi-platform.md
+      - Cloud Deployment: cookbook/recipes/cloud.md
+      - Testing Strategies: cookbook/recipes/testing.md
   
-  - Resources:
+  # SECTION 5: Reference (specs, troubleshooting, development)
+  - Reference:
     - Overview: resources/index.md
     
-    - Cookbook:
-      - cookbook/index.md
+    - Specification:
+      - spec/index.md
+      - PSPF 2025 Format: spec/pspf-2025.md
+      - Binary Layout: spec/binary-layout.md
+      - Metadata Format: spec/metadata.md
+      - Cryptography: spec/crypto.md
       
-      - Examples:
-        - cookbook/examples/index.md
-        - CLI Tools: cookbook/examples/cli-tool.md
-        - Web Applications: cookbook/examples/web-app.md
-        - Data Pipelines: cookbook/examples/data-pipeline.md
-        - Microservices: cookbook/examples/microservices.md
-        - Machine Learning: cookbook/examples/ml-models.md
-      
-      - Recipes:
-        - cookbook/recipes/index.md
-        - Docker Integration: cookbook/recipes/docker.md
-        - CI/CD Pipelines: cookbook/recipes/ci-cd.md
-        - Multi-Platform Builds: cookbook/recipes/multi-platform.md
-        - Cloud Deployment: cookbook/recipes/cloud.md
-        - Testing Strategies: cookbook/recipes/testing.md
+      - Enhancement Proposals:
+        - spec/feps/index.md
+        - "FEP-0001: Core Specification": spec/feps/fep-0001.md
+        - "FEP-0002: Work Environments": spec/feps/fep-0002.md
+        - "FEP-0003: Security Model": spec/feps/fep-0003.md
+        - "FEP-0004: Staged Payloads": spec/feps/fep-0004.md
+        - "FEP-0005: JIT Loading": spec/feps/fep-0005.md
     
     - Troubleshooting:
       - troubleshooting/index.md
       - Common Issues: troubleshooting/common.md
       - Error Messages: troubleshooting/errors.md
-      
-      - Platform Issues:
-        - troubleshooting/platforms/index.md
-        - macOS: troubleshooting/platforms/macos.md
-        - Linux: troubleshooting/platforms/linux.md
-        - Windows: troubleshooting/platforms/windows.md
-      
+      - Security Issues: troubleshooting/security.md
+      - Platform-Specific:
+        - macOS Issues: troubleshooting/platforms/macos.md
+        - Linux Issues: troubleshooting/platforms/linux.md
+        - Windows Issues: troubleshooting/platforms/windows.md
       - FAQ: troubleshooting/faq.md
     
     - Development:
@@ -364,21 +364,21 @@ nav:
       - Contributing: development/contributing.md
       - Architecture: development/architecture.md
       - Building Ingredients: development/ingredients.md
-      
       - Testing:
         - development/testing/index.md
         - Unit Tests: development/testing/unit.md
         - Integration Tests: development/testing/integration.md
         - Cross-Language Tests: development/testing/cross-language.md
-      
       - CI/CD: development/ci-cd.md
       - Release Process: development/release.md
     
     - Community:
       - community/index.md
-      - Support: community/support.md
+      - Getting Support: community/support.md
       - Discussions: community/discussions.md
       - Blog: community/blog.md
+      - Changelog: changelog.md
+      - License: license.md
 
 validation:
   omitted_files: warn
