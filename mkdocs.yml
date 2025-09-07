@@ -10,6 +10,9 @@ copyright: Copyright &copy; 2024 provide.io
 theme:
   name: material
   language: en
+  custom_dir: overrides
+  logo: assets/images/logo.svg
+  favicon: assets/images/logo.svg
   
   palette:
     # Light mode
@@ -31,7 +34,7 @@ theme:
         name: Switch to light mode
   
   font:
-    text: Inter
+    text: Poppins
     code: Fira Code
   
   features:
@@ -219,8 +222,8 @@ extra_css:
   - stylesheets/extra.css
 
 extra_javascript:
-  - javascripts/mathjax.js
-  - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js
+  - https://unpkg.com/mermaid@10/dist/mermaid.min.js
+  - javascripts/mermaid-init.js
 
 nav:
   - Home: index.md
