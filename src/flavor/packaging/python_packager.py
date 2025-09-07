@@ -95,8 +95,8 @@ class PythonPackager:
         # Track processed dependencies to avoid cycles
         self._processed_deps = set()
         
-        # Initialize pip manager
-        self.pip_manager = PyPaPipManager(python_version=self.python_version)
+        # Initialize PyPA pip manager
+        self.pypapip = PyPaPipManager(python_version=self.python_version)
 
 
     def _download_uv_wheel_via_url(self, dest_dir: Path) -> Path | None:
@@ -270,7 +270,7 @@ class PythonPackager:
                 elif arch == "arm64":
                     uv_platform_tag = "manylinux2014_aarch64"
 
-            download_cmd = self.pip_manager.get_pip_download_command(
+            download_cmd = self.pypapip._get_pypapip_download_cmd(
                 python_exe=python_exe,
                 dest_dir=Path(temp_dir),
                 packages=["uv"],
@@ -745,7 +745,7 @@ class PythonPackager:
             # but not guaranteed to be in a seeded venv.
             logger.info("📦📥🚀 Installing wheel package into temporary environment")
             # ⚠️ Using PyPA helper - DO NOT replace with uv pip ⚠️
-            install_wheel_cmd = self.pip_manager.get_pip_install_command(python_exe, ["wheel"])
+            install_wheel_cmd = self.pypapip._get_pypapip_install_cmd(python_exe, ["wheel"])
             run_command(
                 install_wheel_cmd,
                 check=True,
@@ -789,7 +789,7 @@ class PythonPackager:
                     name=dep_path.name,
                 )
                 # ⚠️ Using PyPA helper for proper wheel building - DO NOT REMOVE ⚠️
-                wheel_cmd = self._get_pypa_pip_wheel_cmd(
+                wheel_cmd = self.pypapip._get_pypapip_wheel_cmd(
                     python_exe, wheels_dir, dep_path, no_deps=True
                 )
                 logger.trace("💻🚀📋 Command", command=" ".join(wheel_cmd))
@@ -811,7 +811,7 @@ class PythonPackager:
             if wheel_spinner:
                 wheel_spinner.tick()
             # ⚠️ CRITICAL: PyPA helper for main package wheel - DO NOT REPLACE ⚠️
-            main_wheel_cmd = self._get_pypa_pip_wheel_cmd(
+            main_wheel_cmd = self.pypapip._get_pypapip_wheel_cmd(
                 python_exe, wheels_dir, self.manifest_dir, no_deps=True
             )
             logger.trace("💻🚀📋 Command", command=" ".join(main_wheel_cmd))
@@ -873,7 +873,7 @@ class PythonPackager:
 
                     # Download only these specific dependencies
                     # ⚠️ PyPA download with manylinux2014 support - ESSENTIAL FOR LINUX ⚠️
-                    download_cmd = self._get_pypa_pip_download_cmd(
+                    download_cmd = self.pypapip._get_pypapip_download_cmd(
                         python_exe, wheels_dir, requirements_file=Path(req_file.name)
                     )
                     logger.debug(
@@ -893,7 +893,7 @@ class PythonPackager:
                     if file.suffix == ".tar.gz":
                         logger.debug(f"🔄 Converting {file.name} to wheel")
                         # ⚠️ PyPA wheel building - handles complex dependencies correctly ⚠️
-                        build_cmd = self._get_pypa_pip_wheel_cmd(
+                        build_cmd = self.pypapip._get_pypapip_wheel_cmd(
                             python_exe, wheels_dir, file, no_deps=True
                         )
                         run_command(build_cmd, check=False, capture_output=True)

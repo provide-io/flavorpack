@@ -63,22 +63,22 @@ class PyPaPipManager:
     # ║ If you think these should be removed, STOP and discuss first!                   ║
     # ╚══════════════════════════════════════════════════════════════════════════════╝
 
-    def get_pip_install_command(
+    def _get_pypapip_install_cmd(
         self, python_exe: Path, packages: list[str]
     ) -> list[str]:
         """
-        Get real pip install command.
+        Get real PyPA pip install command.
 
         CRITICAL: Must use ACTUAL pip3 NOT uv pip - uv pip is incomplete/broken
         DO NOT CHANGE THIS TO uv pip - IT WILL BREAK DEPENDENCY RESOLUTION
         """
         return [str(python_exe), "-m", "pip", "install"] + packages
 
-    def get_pip_wheel_command(
+    def _get_pypapip_wheel_cmd(
         self, python_exe: Path, wheel_dir: Path, source: Path, no_deps: bool = False
     ) -> list[str]:
         """
-        Get real pip wheel command.
+        Get real PyPA pip wheel command.
 
         CRITICAL: Must use ACTUAL pip3 NOT uv pip - uv pip is incomplete/broken
         DO NOT CHANGE THIS TO uv pip - IT WILL BREAK DEPENDENCY RESOLUTION
@@ -92,7 +92,7 @@ class PyPaPipManager:
         return cmd
 
     # ⚠️ CRITICAL: This method handles manylinux platform tags - DO NOT REMOVE! ⚠️
-    def get_pip_download_command(
+    def _get_pypapip_download_cmd(
         self,
         python_exe: Path,
         dest_dir: Path,
@@ -176,7 +176,7 @@ class PyPaPipManager:
         """
         logger.info("🌐📥 Downloading wheels from requirements file")
         
-        download_cmd = self.get_pip_download_command(
+        download_cmd = self._get_pypapip_download_cmd(
             python_exe=python_exe,
             dest_dir=dest_dir,
             requirements_file=requirements_file,
@@ -208,7 +208,7 @@ class PyPaPipManager:
             
         logger.info(f"🌐📥 Downloading wheels for {len(packages)} packages")
         
-        download_cmd = self.get_pip_download_command(
+        download_cmd = self._get_pypapip_download_cmd(
             python_exe=python_exe,
             dest_dir=dest_dir,
             packages=packages,
@@ -237,7 +237,7 @@ class PyPaPipManager:
         """
         logger.info(f"🔨📦 Building wheel from source: {source_path.name}")
         
-        wheel_cmd = self.get_pip_wheel_command(
+        wheel_cmd = self._get_pypapip_wheel_cmd(
             python_exe=python_exe,
             wheel_dir=wheel_dir,
             source=source_path,
@@ -268,7 +268,7 @@ class PyPaPipManager:
             
         logger.info(f"📦📥 Installing {len(packages)} packages")
         
-        install_cmd = self.get_pip_install_command(python_exe, packages)
+        install_cmd = self._get_pypapip_install_cmd(python_exe, packages)
         
         logger.debug("💻 Installing packages", command=" ".join(install_cmd))
         run_command(install_cmd, check=True, capture_output=True)
