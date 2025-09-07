@@ -24,6 +24,7 @@ from flavor.psp.format_2025.constants import (
 from provide.foundation.platform import get_arch_name, get_os_name
 from provide.foundation.process import run_command
 from flavor.utils.archive import deterministic_filter
+from flavor.packaging.python.pip_manager import PyPaPipManager
 
 
 class PythonPackager:
@@ -95,6 +96,9 @@ class PythonPackager:
 
         # Track processed dependencies to avoid cycles
         self._processed_deps = set()
+        
+        # Initialize pip manager
+        self.pip_manager = PyPaPipManager(python_version=self.python_version)
 
     # ╔══════════════════════════════════════════════════════════════════════════════╗
     # ║                           CRITICAL PyPA HELPER METHODS                          ║
