@@ -25,7 +25,7 @@ from provide.foundation.platform import get_arch_name, get_os_name
 from flavor.utils import run_command
 from flavor.utils.archive import deterministic_filter
 from flavor.utils.archive_utils import ArchiveUtils
-from flavor.packaging.python.pip_manager import PyPaPipManager
+from flavor.packaging.python.pypapip_manager import PyPaPipManager
 from flavor.packaging.python.uv_manager import UVManager
 from flavor.packaging.python.wheel_builder import WheelBuilder
 from flavor.packaging.python.dist_manager import PythonDistManager
