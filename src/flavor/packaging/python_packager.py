@@ -22,7 +22,7 @@ from flavor.psp.format_2025.constants import (
     DEFAULT_EXECUTABLE_PERMS,
 )
 from provide.foundation.platform import get_arch_name, get_os_name
-from provide.foundation.process import run_command
+from flavor.utils import run_command
 from flavor.utils.archive import deterministic_filter
 from flavor.packaging.python.pip_manager import PyPaPipManager
 
