@@ -3,7 +3,7 @@
 #
 """Python-specific packaging utilities for FlavorPack."""
 
-from flavor.packaging.python.pip_manager import PyPaPipManager
+from flavor.packaging.python.pypapip_manager import PyPaPipManager
 
 __all__ = [
     "PyPaPipManager",

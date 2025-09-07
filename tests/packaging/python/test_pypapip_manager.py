@@ -9,7 +9,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from flavor.packaging.python.pip_manager import PyPaPipManager
+from flavor.packaging.python.pypapip_manager import PyPaPipManager
 
 
 class TestPyPaPipManager:
