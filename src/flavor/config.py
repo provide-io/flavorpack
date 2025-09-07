@@ -10,6 +10,7 @@ dictionaries.
 from typing import Any
 
 from attrs import define, field
+from provide.foundation.config import BaseConfig, field as config_field
 
 from flavor.exceptions import ValidationError
 
@@ -18,10 +19,24 @@ from flavor.exceptions import ValidationError
 class RuntimeRuntimeConfig:
     """Configuration for the sandboxed runtime environment variables."""
 
-    unset: list[str] = field(factory=list)
-    passthrough: list[str] = field(factory=list)
-    set_vars: dict[str, str | int | bool] = field(factory=dict)
-    map_vars: dict[str, str] = field(factory=dict)
+    unset: list[str] = config_field(
+        factory=list,
+        description="Environment variables to unset",
+        env_var="FLAVOR_RUNTIME_ENV_UNSET"
+    )
+    passthrough: list[str] = config_field(
+        factory=list,
+        description="Environment variables to pass through",
+        env_var="FLAVOR_RUNTIME_ENV_PASSTHROUGH"
+    )
+    set_vars: dict[str, str | int | bool] = config_field(
+        factory=dict,
+        description="Environment variables to set"
+    )
+    map_vars: dict[str, str] = config_field(
+        factory=dict,
+        description="Environment variable mappings"
+    )
 
 
 @define(frozen=True, kw_only=True)
@@ -35,23 +50,40 @@ class ExecutionConfig:
 class BuildConfig:
     """Build-related configuration from the manifest."""
 
-    dependencies: list[str] = field(factory=list)
+    dependencies: list[str] = config_field(
+        factory=list,
+        description="Build dependencies",
+        env_var="FLAVOR_BUILD_DEPENDENCIES"
+    )
 
 
 @define(frozen=True, kw_only=True)
 class MetadataConfig:
     """Metadata-related configuration from the manifest."""
 
-    package_name: str | None = field(default=None)
+    package_name: str | None = config_field(
+        default=None,
+        description="Override package name",
+        env_var="FLAVOR_METADATA_PACKAGE_NAME"
+    )
 
 
 @define(frozen=True, kw_only=True)
-class FlavorConfig:
+class FlavorConfig(BaseConfig):
     """Top-level structured configuration for the `[tool.flavor]` section."""
 
-    name: str
-    version: str
-    entry_point: str
+    name: str = config_field(
+        description="Package name",
+        env_var="FLAVOR_PACKAGE_NAME"
+    )
+    version: str = config_field(
+        description="Package version", 
+        env_var="FLAVOR_VERSION"
+    )
+    entry_point: str = config_field(
+        description="Application entry point",
+        env_var="FLAVOR_ENTRY_POINT"
+    )
     metadata: MetadataConfig = field(factory=MetadataConfig)
     build: BuildConfig = field(factory=BuildConfig)
     execution: ExecutionConfig = field(factory=ExecutionConfig)
