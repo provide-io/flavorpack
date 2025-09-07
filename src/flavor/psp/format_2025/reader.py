@@ -23,9 +23,9 @@ from flavor.psp.format_2025.backends import (
 from flavor.psp.format_2025.constants import (
     ACCESS_AUTO,
     ACCESS_MMAP,
-    ENCODING_GZIP,
-    ENCODING_TAR,
-    ENCODING_TGZ,
+    CODEC_GZIP,
+    CODEC_TAR,
+    CODEC_TGZ,
     HEADER_SIZE,
     MAGIC_TRAILER_SIZE,
     MAGIC_WAND_EMOJI_BYTES,
@@ -313,12 +313,12 @@ class PSPFReader:
             )
 
         # Decompress if needed based on encoding
-        if descriptor.encoding == ENCODING_GZIP:
+        if descriptor.codec == CODEC_GZIP:
             return gzip.decompress(slot_data)
-        elif descriptor.encoding == ENCODING_TGZ:
+        elif descriptor.codec == CODEC_TGZ:
             # For tar.gz, decompress gzip layer (tar extraction happens later)
             return gzip.decompress(slot_data)
-        elif descriptor.encoding == ENCODING_TAR:
+        elif descriptor.codec == CODEC_TAR:
             # Uncompressed tar, no decompression needed
             return slot_data
         else:

@@ -51,7 +51,7 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
             data=script_path,  # Pass as Path so it reads the file content
             purpose="payload",
             lifecycle="runtime",
-            encoding="none",
+            codec="none",
             target="app.py",  # Extract with this name
         )
         builder.build(bundle_path)
@@ -141,7 +141,7 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
                     target=f"binary-{platform}",
                     size=6,
                     checksum="abc",
-                    encoding="none",
+                    codec="none",
                     purpose="binary",
                     lifecycle="runtime",
                     # Platform-specific handling would be done at a different level
@@ -162,7 +162,7 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
                 data=slot.source,
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,
-                encoding=slot.encoding,
+                codec=slot.codec,
             )
         builder.build(bundle_path)
 
@@ -217,7 +217,7 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
         dummy_file.write_text("dummy")
 
         builder = PSPFBuilder().metadata(**metadata)
-        builder = builder.add_slot(id="dummy", data=dummy_file, encoding="none")
+        builder = builder.add_slot(id="dummy", data=dummy_file, codec="none")
         builder.build(bundle_path)
 
         reader = PSPFReader(bundle_path)
@@ -291,7 +291,7 @@ def _select_platform_slots(launcher, platform: str) -> list:
                 target="binary-darwin-arm64",
                 size=6,
                 checksum="abc",
-                encoding="none",
+                codec="none",
                 purpose="binary",
                 lifecycle="runtime",
                 # Platform would be handled differently

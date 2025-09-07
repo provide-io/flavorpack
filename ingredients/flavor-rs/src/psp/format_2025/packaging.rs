@@ -19,7 +19,7 @@ use flate2::write::GzEncoder;
 use flate2::Compression;
 use log::{debug, info, trace};
 
-use super::constants::{ENCODING_GZIP, ENCODING_RAW, ENCODING_TAR, ENCODING_TGZ, HEADER_SIZE};
+use super::constants::{CODEC_GZIP, CODEC_RAW, CODEC_TAR, CODEC_TGZ, HEADER_SIZE};
 use super::index::Index;
 use super::metadata::{Metadata, SlotMetadata};
 use super::slots::SlotDescriptor;
@@ -42,8 +42,8 @@ pub fn write_slot(
         slot_path.display()
     );
 
-    // Determine encoding and compress if needed
-    let (processed_data, encoding) = process_slot_data(&slot_data, &slot_info.encoding)?;
+    // Determine codec and compress if needed
+    let (processed_data, codec) = process_slot_data(&slot_data, &slot_info.codec)?;
 
     // Get current position (this will be the slot offset)
     let offset = out.stream_position()?;
@@ -78,7 +78,7 @@ pub fn write_slot(
         size: processed_data.len() as u64,
         original_size: slot_data.len() as u64,
         checksum: adler::adler32_slice(&processed_data),
-        encoding,
+        codec,
         encryption: 0,
         alignment: 0,
         purpose: get_purpose_byte(&slot_info.purpose),
@@ -103,8 +103,8 @@ pub fn write_slot(
 }
 
 /// Process slot data based on encoding
-fn process_slot_data(data: &[u8], encoding_str: &str) -> Result<(Vec<u8>, u8)> {
-    match encoding_str {
+fn process_slot_data(data: &[u8], codec_str: &str) -> Result<(Vec<u8>, u8)> {
+    match codec_str {
         "gzip" => {
             // Single file, gzipped
             let mut encoder = GzEncoder::new(Vec::new(), Compression::best());
@@ -115,7 +115,7 @@ fn process_slot_data(data: &[u8], encoding_str: &str) -> Result<(Vec<u8>, u8)> {
                 data.len(),
                 compressed.len()
             );
-            Ok((compressed, ENCODING_GZIP))
+            Ok((compressed, CODEC_GZIP))
         }
         "tgz" | "tar.gz" => {
             // Tar archive, then gzipped - assume data is already a tar
@@ -127,17 +127,17 @@ fn process_slot_data(data: &[u8], encoding_str: &str) -> Result<(Vec<u8>, u8)> {
                 data.len(),
                 compressed.len()
             );
-            Ok((compressed, ENCODING_TGZ))
+            Ok((compressed, CODEC_TGZ))
         }
         "tar" => {
             // Uncompressed tar
             trace!("  📦 Using uncompressed tar ({} bytes)", data.len());
-            Ok((data.to_vec(), ENCODING_TAR))
+            Ok((data.to_vec(), CODEC_TAR))
         }
         _ => {
             // Raw/uncompressed
             trace!("  📄 Using raw data ({} bytes)", data.len());
-            Ok((data.to_vec(), ENCODING_RAW))
+            Ok((data.to_vec(), CODEC_RAW))
         }
     }
 }
