@@ -136,16 +136,3 @@ message SlotTable {
   uint64 created_at = 6;           // Creation timestamp
   map<string, string> metadata = 7; // Additional metadata
 }
-
-// Slot table containing all slots
-message SlotTable {
-  repeated SlotEntry slots = 1;     // All slots in package
-  uint32 slot_count = 2;           // Number of slots
-  uint64 total_size = 3;           // Total size of all slots
-  uint32 table_checksum = 4;       // Adler-32 of entire table
-  
-  // Table metadata
-  uint32 version = 5;              // Table format version
-  uint64 created_at = 6;           // Creation timestamp
-  map<string, string> metadata = 7; // Additional metadata
-}

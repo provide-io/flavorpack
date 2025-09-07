@@ -79,6 +79,7 @@ enum PackageFlags {
 
 // Capability flags (bit field) 
 enum Capabilities {
+  CAP_NONE = 0;                    // No capabilities
   CAP_MMAP = 1;                    // Memory-mapped support
   CAP_PAGE_ALIGNED = 2;            // Page-aligned slots
   CAP_COMPRESSED_INDEX = 4;        // Compressed index

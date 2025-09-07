@@ -64,6 +64,7 @@ enum KeyType {
 
 // Key usage flags
 enum KeyUsage {
+  KEY_USAGE_NONE = 0;                 // No usage
   KEY_USAGE_SIGN = 1;                 // Can sign data
   KEY_USAGE_VERIFY = 2;               // Can verify signatures
   KEY_USAGE_ENCRYPT = 4;              // Can encrypt data

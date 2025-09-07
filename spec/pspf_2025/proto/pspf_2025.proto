@@ -6,7 +6,6 @@ package pspf_2025;
 
 option go_package = "github.com/provide-io/flavorpack/psp/format_2025;pspf2025";
 option java_package = "io.provide.flavorpack.pspf2025";
-option python_package = "flavor.psp.format_2025.models";
 
 // Import all module definitions
 import "modules/operations.proto"; 
