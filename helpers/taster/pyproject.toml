@@ -8,7 +8,7 @@ version = "1.0.0"
 description = "Test package for flavor functionality"
 readme = "README.md"
 dependencies = [
-    "provide-foundation>=0.0.0.dev0",
+    "provide-foundation[cli,crypto]>=0.0.0.dev0",
 ]
 
 [project.scripts]
