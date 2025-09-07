@@ -369,5 +369,5 @@ slots = [
 
 ## Related Documentation
 
-- [Performance Guide](../../../guide/performance.md) - Optimization strategies
-- [Cache Management](../../../guide/cache.md) - Cache configuration
+- [Performance Guide](../../../guide/advanced/performance.md) - Optimization strategies
+- [Cache Management](../../../guide/usage/cache.md) - Cache configuration

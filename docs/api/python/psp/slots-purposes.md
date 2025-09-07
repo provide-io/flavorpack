@@ -473,5 +473,4 @@ def create_custom_slot(
 
 ## Related Documentation
 
-- [Package Structure](../../../guide/structure.md) - Package organization
-- [Best Practices](../../../guide/best-practices.md) - Packaging guidelines
+- [Packaging Guide](../../../guide/packaging/index.md) - Package organization and best practices
