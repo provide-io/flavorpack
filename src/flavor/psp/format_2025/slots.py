@@ -98,21 +98,7 @@ class SlotDescriptor:
         """Pack descriptor into 64-byte binary format."""
         # Pack to 64-byte format with operations
         data = struct.pack(
-            "<"  # Little-endian
-            "Q"  # id (8)
-            "Q"  # name_hash (8)
-            "Q"  # offset (8)
-            "Q"  # size (8)
-            "Q"  # original_size (8)
-            "Q"  # operations (8) - full 64-bit operation chain
-            "I"  # checksum (4)
-            "B"  # encryption (1)
-            "B"  # alignment (1)
-            "B"  # purpose (1)
-            "B"  # lifecycle (1)
-            "B"  # access_hint (1)
-            "B"  # priority (1)
-            "H"  # permissions (2)
+            "<QQQQQQQIBBBBBBH",  # 6Q (48) + Q (8) + I (4) + 6B (6) + H (2) = 68 bytes - need to fix
             self.id,
             self.name_hash,
             self.offset,
