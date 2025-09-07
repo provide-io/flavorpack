@@ -470,7 +470,6 @@ def create_custom_slot(
 - [Slot Core API](slots-core.md) - Core classes and functions
 - [Slot Lifecycles](slots-lifecycles.md) - Loading behaviors
 - [Slot Codecs](slots-codecs.md) - Compression methods
-- [Advanced Slot Operations](slots-advanced.md) - Platform-specific handling
 
 ## Related Documentation
 

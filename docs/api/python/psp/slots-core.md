@@ -318,7 +318,6 @@ except PackagingError as e:
 - [Slot Lifecycles](slots-lifecycles.md) - Loading behaviors and cache policies
 - [Slot Codecs](slots-codecs.md) - Compression methods and strategies
 - [Slot Purposes](slots-purposes.md) - Semantic slot types
-- [Advanced Slot Operations](slots-advanced.md) - Platform-specific and optimization
 
 ## Related Documentation
 
