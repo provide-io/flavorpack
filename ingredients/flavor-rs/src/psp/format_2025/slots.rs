@@ -140,7 +140,7 @@ impl SlotDescriptor {
             size,
             original_size,
             checksum,
-            encoding,
+            codec,
             encryption,
             alignment,
             purpose,

@@ -43,7 +43,7 @@ pub fn write_slot(
     );
 
     // Determine codec and compress if needed
-    let (processed_data, encoding) = process_slot_data(&slot_data, &slot_info.codec)?;
+    let (processed_data, codec) = process_slot_data(&slot_data, &slot_info.codec)?;
 
     // Get current position (this will be the slot offset)
     let offset = out.stream_position()?;
@@ -78,7 +78,7 @@ pub fn write_slot(
         size: processed_data.len() as u64,
         original_size: slot_data.len() as u64,
         checksum: adler::adler32_slice(&processed_data),
-        encoding,
+        codec,
         encryption: 0,
         alignment: 0,
         purpose: get_purpose_byte(&slot_info.purpose),
