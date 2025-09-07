@@ -2,9 +2,7 @@
 
 Low-level API for building Progressive Secure Package Format (PSPF) packages.
 
-## Module: `flavor.psp.format_2025.builder`
-
-The builder module provides both functional and object-oriented interfaces for creating PSPF packages. It supports immutable patterns, slot management, metadata assembly, and cryptographic signing.
+::: flavor.psp.format_2025.builder
 
 ## Core Function
 

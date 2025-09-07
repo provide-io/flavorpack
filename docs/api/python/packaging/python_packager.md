@@ -2,9 +2,7 @@
 
 Managing Python environments and dependency collection for package building.
 
-## Module: `flavor.packaging.python_packager`
-
-The python_packager module handles Python-specific packaging tasks including virtual environment creation, dependency resolution, and runtime bundling.
+::: flavor.packaging.python_packager
 
 ## PythonPackager Class
 

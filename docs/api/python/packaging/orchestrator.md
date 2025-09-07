@@ -2,9 +2,7 @@
 
 Coordinate the complete Python package building workflow.
 
-## Module: `flavor.packaging.orchestrator`
-
-The orchestrator module manages the complete packaging pipeline, coordinating between manifest parsing, environment preparation, dependency installation, and package building.
+::: flavor.packaging.orchestrator
 
 ## PackagingOrchestrator Class
 

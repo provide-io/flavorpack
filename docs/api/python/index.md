@@ -30,10 +30,7 @@ if result["valid"]:
 
 High-level functions for package operations:
 
-- `build_package_from_manifest()` - Build packages from pyproject.toml
-- `verify_package()` - Verify package integrity and signatures
-- `clean_cache()` - Clean build and extraction caches
-- `generate_keys()` - Generate Ed25519 signing keys
+::: flavor.api
 
 ### Package Building (`flavor.psp.format_2025`)
 
