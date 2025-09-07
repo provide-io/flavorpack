@@ -705,10 +705,7 @@ class PythonPackager:
 
 
     def _create_metadata(self, metadata_dir: Path) -> None:
-            if wheel_spinner:
-                wheel_spinner.tick()
-
-            # Find UV binary - check if we're running inside a PSP workenv first
+        # Find UV binary - check if we're running inside a PSP workenv first
             uv_cmd = self._find_uv_command()
             logger.debug("🔍📦📋 Using UV command", command=uv_cmd)
 
@@ -937,9 +934,6 @@ class PythonPackager:
                 logger.debug(
                     "📦📋📋 ... and more wheels", additional_count=len(wheel_files) - 5
                 )
-
-        if wheel_spinner:
-            wheel_spinner.finish()
 
     def _create_metadata(self, metadata_dir: Path) -> None:
         """Create metadata files."""
