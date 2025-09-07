@@ -43,7 +43,7 @@ class FlavorVerifier:
                     "index": i,
                     "id": slot_data.get("id", f"slot_{i}"),
                     "size": slot_data.get("size", 0),
-                    "encoding": slot_data.get("encoding", "raw"),
+                    "codec": slot_data.get("codec", "raw"),
                     "purpose": slot_data.get("purpose", ""),
                     "lifecycle": slot_data.get("lifecycle", ""),
                     "target": slot_data.get("target", ""),
@@ -55,7 +55,7 @@ class FlavorVerifier:
                 slot_info = {
                     k: v
                     for k, v in slot_info.items()
-                    if v or k in ["index", "id", "size", "encoding"]
+                    if v or k in ["index", "id", "size", "codec"]
                 }
                 slots_info.append(slot_info)
 

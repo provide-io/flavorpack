@@ -12,10 +12,10 @@ from attrs import define, field, validators
 from flavor.psp.format_2025.constants import (
     ACCESS_HINT_SEQUENTIAL,
     CACHE_NORMAL,
-    ENCODING_GZIP,
-    ENCODING_RAW,
-    ENCODING_TAR,
-    ENCODING_TGZ,
+    CODEC_GZIP,
+    CODEC_RAW,
+    CODEC_TAR,
+    CODEC_TGZ,
     LIFECYCLE_CACHE,
     LIFECYCLE_CONFIG,
     LIFECYCLE_DEV,
@@ -69,7 +69,7 @@ class SlotDescriptor:
     # Properties (16 bytes)
     original_size: int = field(default=0)  # Uncompressed size
     checksum: int = field(default=0)  # Adler-32 of stored data
-    encoding: int = field(default=ENCODING_RAW)  # Renamed from compression
+    codec: int = field(default=CODEC_RAW)  # Renamed from compression
     encryption: int = field(default=0)
     alignment: int = field(default=SLOT_ALIGNMENT)
 
@@ -104,7 +104,7 @@ class SlotDescriptor:
             "Q"  # size (8)
             "Q"  # original_size (8)
             "I"  # checksum (4)
-            "B"  # encoding (1)
+            "B"  # codec (1)
             "B"  # encryption (1)
             "H"  # alignment (2)
             "B"  # purpose (1)
@@ -121,7 +121,7 @@ class SlotDescriptor:
             self.size,
             self.original_size,
             self.checksum,
-            self.encoding,
+            self.codec,
             self.encryption,
             self.alignment,
             self.purpose,
@@ -152,7 +152,7 @@ class SlotDescriptor:
             size=unpacked[3],
             original_size=unpacked[4],
             checksum=unpacked[5],
-            encoding=unpacked[6],
+            codec=unpacked[6],
             encryption=unpacked[7],
             alignment=unpacked[8],
             purpose=unpacked[9],
@@ -174,7 +174,7 @@ class SlotDescriptor:
             "size": self.size,
             "original_size": self.original_size,
             "checksum": self.checksum,
-            "encoding": self.encoding,
+            "codec": self.codec,
             "encryption": self.encryption,
             "alignment": self.alignment,
             "purpose": self.purpose,
@@ -201,7 +201,7 @@ class SlotMetadata:
     target: str = field(validator=validators.instance_of(str))  # Target path in workenv
     size: int = field(validator=validators.instance_of(int))
     checksum: str = field(validator=validators.instance_of(str))
-    encoding: str = field(
+    codec: str = field(
         validator=validators.in_(["none", "raw", "gzip", "tar", "tgz", "tar.gz"])
     )
     purpose: str = field()
@@ -253,13 +253,13 @@ class SlotMetadata:
             "dev": LIFECYCLE_DEV,
             "config": LIFECYCLE_CONFIG,
         }
-        encoding_map = {
-            "none": ENCODING_RAW,
-            "raw": ENCODING_RAW,
-            "tar": ENCODING_TAR,
-            "gzip": ENCODING_GZIP,
-            "tgz": ENCODING_TGZ,
-            "tar.gz": ENCODING_TGZ,
+        codec_map = {
+            "none": CODEC_RAW,
+            "raw": CODEC_RAW,
+            "tar": CODEC_TAR,
+            "gzip": CODEC_GZIP,
+            "tgz": CODEC_TGZ,
+            "tar.gz": CODEC_TGZ,
         }
 
         # Convert hex checksum to integer
@@ -273,7 +273,7 @@ class SlotMetadata:
             size=self.size,
             original_size=self.size,
             checksum=checksum_int & 0xFFFFFFFF,  # Truncate to 32-bit
-            encoding=encoding_map.get(self.encoding, 0),  # Maps encoding string to int
+            codec=codec_map.get(self.codec, 0),  # Maps codec string to int
             purpose=purpose_map.get(normalize_purpose(self.purpose), PURPOSE_DATA),
             lifecycle=lifecycle_map.get(self.lifecycle, LIFECYCLE_RUNTIME),
             path=None,
@@ -301,7 +301,7 @@ class SlotMetadata:
             "target": self.target,
             "size": self.size,
             "checksum": self.checksum,  # Prefixed format (e.g., "sha256:...")
-            "encoding": self.encoding,
+            "codec": self.codec,
             "purpose": self.purpose,
             "lifecycle": self.lifecycle,
             "permissions": self.permissions,
@@ -351,7 +351,7 @@ class SlotView:
     def content(self) -> bytes:
         """Get decompressed content."""
         if self._decompressed is None:
-            if self.descriptor.encoding == ENCODING_RAW:
+            if self.descriptor.codec == CODEC_RAW:
                 self._decompressed = (
                     bytes(self.data) if isinstance(self.data, memoryview) else self.data
                 )
@@ -359,9 +359,9 @@ class SlotView:
                 # Decompress based on encoding type
                 import zlib
 
-                if self.descriptor.encoding == 2:  # ENCODING_GZIP
+                if self.descriptor.codec == 2:  # CODEC_GZIP
                     self._decompressed = zlib.decompress(self.data)
-                elif self.descriptor.encoding == 3:  # ENCODING_TGZ
+                elif self.descriptor.codec == 3:  # CODEC_TGZ
                     # For tar.gz, return as-is (launcher handles extraction)
                     self._decompressed = (
                         bytes(self.data)
@@ -370,7 +370,7 @@ class SlotView:
                     )
                 else:
                     raise ValueError(
-                        f"Unsupported encoding: {self.descriptor.encoding}"
+                        f"Unsupported codec: {self.descriptor.codec}"
                     )
         return self._decompressed
 

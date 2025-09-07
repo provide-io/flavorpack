@@ -237,7 +237,7 @@ class TestMetadataAssembly:
             "index": 0,
             "name": "payload",
             "size": 1024,
-            "encoding": "gzip",
+            "codec": "gzip",
         }
 
         metadata = assemble_metadata(basic_spec, [mock_slot], mock_launcher_info)

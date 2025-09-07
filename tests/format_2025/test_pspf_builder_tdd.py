@@ -43,7 +43,7 @@ def sample_slot(temp_dir):
         target="test",
         size=len("Hello, World!"),
         checksum="abc123",
-        encoding="none",
+        codec="none",
         purpose="data",
         lifecycle="runtime",
     )
@@ -109,7 +109,7 @@ class TestBuildSpec:
             target="test",
             size=10,
             checksum="abc",
-            encoding="none",
+            codec="none",
             purpose="data",
             lifecycle="runtime",
         )
@@ -266,7 +266,7 @@ class TestValidateSpec:
                 target="",
                 size=-1,  # Invalid: negative size
                 checksum="",
-                encoding="invalid",  # Invalid encoding
+                codec="invalid",  # Invalid encoding
                 purpose="data",
                 lifecycle="runtime",
             )

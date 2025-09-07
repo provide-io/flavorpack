@@ -29,10 +29,10 @@ from flavor.psp.format_2025.constants import (
     DEFAULT_EXECUTABLE_PERMS,
     DEFAULT_MAX_MEMORY,
     DEFAULT_MIN_MEMORY,
-    ENCODING_GZIP,
-    ENCODING_RAW,
-    ENCODING_TAR,
-    ENCODING_TGZ,
+    CODEC_GZIP,
+    CODEC_RAW,
+    CODEC_TAR,
+    CODEC_TGZ,
     LIFECYCLE_CACHE,
     LIFECYCLE_CONFIG,
     LIFECYCLE_DEV,
@@ -191,7 +191,7 @@ def prepare_slots(
         data = _load_slot_data(slot)
 
         # Determine encoding (no compression, just metadata)
-        slot_data, encoding_type = _determine_encoding(data, slot.encoding, options)
+        slot_data, codec_type = _determine_codec(data, slot.codec, options)
 
         # Calculate checksums with prefixes
         checksum_str = calculate_checksum(slot_data, "sha256")
@@ -205,7 +205,7 @@ def prepare_slots(
                 metadata=slot,
                 data=data,
                 compressed_data=slot_data if slot_data != data else None,
-                encoding_type=encoding_type,  # Now encoding type, not compression
+                codec_type=codec_type,  # Now codec type, not compression
                 checksum=checksum_adler32,  # Binary descriptor uses raw Adler-32
             )
         )
@@ -215,7 +215,7 @@ def prepare_slots(
             name=slot.id,
             raw_size=len(data),
             compressed_size=len(slot_data),
-            encoding=encoding_type,
+            codec=codec_type,
             checksum=checksum_str[:8],
         )
 
@@ -302,25 +302,25 @@ def _load_slot_data(slot: SlotMetadata) -> bytes:
         return slot_path.read_bytes()
 
 
-def _determine_encoding(
-    data: bytes, encoding: str, options: BuildOptions
+def _determine_codec(
+    data: bytes, codec: str, options: BuildOptions
 ) -> tuple[bytes, int]:
-    """Determine encoding constant for the data format.
+    """Determine codec constant for the data format.
 
     Note: This does NOT compress data - the orchestrator/packer handles that.
-    We just map the encoding string to the appropriate constant.
+    We just map the codec string to the appropriate constant.
     """
-    encoding_lower = encoding.lower()
+    codec_lower = codec.lower()
 
-    # Map encoding strings to constants
-    if encoding_lower in ("none", "raw", ""):
-        return data, ENCODING_RAW
-    elif encoding_lower == "tar":
-        return data, ENCODING_TAR
-    elif encoding_lower == "gzip":
-        return data, ENCODING_GZIP
-    elif encoding_lower in ("tgz", "tar.gz"):
-        return data, ENCODING_TGZ
+    # Map codec strings to constants
+    if codec_lower in ("none", "raw", ""):
+        return data, CODEC_RAW
+    elif codec_lower == "tar":
+        return data, CODEC_TAR
+    elif codec_lower == "gzip":
+        return data, CODEC_GZIP
+    elif codec_lower in ("tgz", "tar.gz"):
+        return data, CODEC_TGZ
     # Future formats (not implemented yet):
     # elif encoding_lower == "zstd":
     #     return data, ENCODING_ZSTD
@@ -335,8 +335,8 @@ def _determine_encoding(
     # elif encoding_lower == "7z":
     #     return data, ENCODING_7Z
     else:
-        logger.warning(f"Unknown encoding '{encoding}', using ENCODING_RAW")
-        return data, ENCODING_RAW
+        logger.warning(f"Unknown codec '{codec}', using CODEC_RAW")
+        return data, CODEC_RAW
 
 
 def _write_package(
@@ -456,7 +456,7 @@ def _write_package(
                     size=len(data_to_write),
                     original_size=len(slot.data),
                     checksum=slot.checksum,
-                    encoding=slot.encoding_type,  # Using encoding field now
+                    codec=slot.codec_type,  # Using codec field now
                     purpose=_map_purpose(slot.metadata.purpose),
                     lifecycle=_map_lifecycle(slot.metadata.lifecycle),
                     permissions=slot_permissions,
@@ -573,7 +573,7 @@ class PSPFBuilder:
         data: bytes | str | Path,
         purpose: str = "data",
         lifecycle: str = "runtime",
-        encoding: str = "gzip",
+        codec: str = "gzip",
         target: str | None = None,
         permissions: str | None = None,
     ) -> "PSPFBuilder":
@@ -585,7 +585,7 @@ class PSPFBuilder:
             data: Slot data (bytes, string, or path to file/directory)
             purpose: Slot purpose (data, code, config, media)
             lifecycle: Slot lifecycle (runtime, cached, temporary)
-            encoding: Compression encoding (none, gzip)
+            codec: Compression codec (none, gzip)
             target: Target location relative to workenv (default: None)
             permissions: Unix permissions as octal string (e.g., "0755")
         """
@@ -620,7 +620,7 @@ class PSPFBuilder:
             target=target or id,
             size=size,
             checksum="",  # Will be calculated during build
-            encoding=encoding,
+            codec=codec,
             purpose=purpose,
             lifecycle=lifecycle,
             permissions=permissions,
