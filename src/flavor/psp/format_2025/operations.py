@@ -44,12 +44,8 @@ LEGACY_CODEC_TO_OPERATIONS = {
 }
 
 # Map operation chains back to legacy codecs (for compatibility)
-OPERATIONS_TO_LEGACY_CODEC = {
-    0: CODEC_RAW,  # No operations
-    pack_operations([OP_TAR]): CODEC_TAR,
-    pack_operations([OP_GZIP]): CODEC_GZIP,
-    pack_operations([OP_TAR, OP_GZIP]): CODEC_TGZ,
-}
+# This will be initialized after pack_operations is defined
+OPERATIONS_TO_LEGACY_CODEC = {}
 
 
 def pack_operations(operations: list[int]) -> int:
