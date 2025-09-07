@@ -460,10 +460,10 @@ class PythonPackager:
         logger.info(f"Handling UV binary for {current_os}_{current_arch}")
 
         if current_os == "linux":
-            # Download manylinux2014-compatible UV wheel for Linux
+            # Download manylinux2014-compatible UV wheel for Linux using UVManager
             logger.info("Linux detected: downloading manylinux2014-compatible UV")
             try:
-                payload_uv = self._download_uv_wheel(bin_dir)
+                payload_uv = self.uv_manager.download_uv_binary(bin_dir)
                 if not payload_uv:
                     # If download returns None on Linux, this is a critical error
                     # since we need manylinux compatibility
@@ -680,23 +680,31 @@ class PythonPackager:
         return all_deps
 
     def _build_wheels(self, wheels_dir: Path) -> None:
-        """Build wheels for the package and its dependencies."""
-        logger.info("🎯🔨🚀 Starting wheel building process")
-        logger.debug(
-            "📁🔧📋 Wheel build configuration",
-            wheels_dir=str(wheels_dir),
-            manifest_dir=str(self.manifest_dir),
+        """Build wheels for the package and its dependencies - delegates to WheelBuilder."""
+        logger.info("🎯🔨🚀 Starting wheel building process (using WheelBuilder)")
+        
+        # Use WheelBuilder for complete wheel building and dependency resolution
+        build_result = self.wheel_builder.build_and_resolve_project(
+            python_exe=Path(sys.executable),
+            project_dir=self.manifest_dir,
+            build_dir=wheels_dir.parent,
+            requirements_file=self._get_requirements_file(),
+            extra_packages=self.build_config.get("dependencies", []),
         )
+        
+        logger.info(f"✅ WheelBuilder completed: {build_result['total_wheels']} wheels built")
+    
+    def _get_requirements_file(self) -> Path | None:
+        """Get requirements file if it exists."""
+        possible_files = ["requirements.txt", "requirements.in", "pyproject.toml"]
+        for filename in possible_files:
+            req_file = self.manifest_dir / filename
+            if req_file.exists():
+                return req_file
+        return None
 
-        wheel_spinner = None
-        if self.progress:
-            wheel_spinner = self.progress.create_spinner(description="Building wheels")
 
-        with tempfile.TemporaryDirectory() as build_env_dir:
-            build_venv = Path(build_env_dir) / "venv"
-
-            logger.info("🔧🏗️🚀 Creating temporary build environment")
-            logger.debug("📁🔧📋 Build environment path", path=str(build_venv))
+    def _create_metadata(self, metadata_dir: Path) -> None:
             if wheel_spinner:
                 wheel_spinner.tick()
 
