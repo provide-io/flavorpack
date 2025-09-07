@@ -345,7 +345,7 @@ class PythonPackager:
         try:
             logger.trace("Checking if pip is available")
             result = run_command(
-                pip_check_cmd, check=True, capture_output=True, log_command=False
+                pip_check_cmd, check=True, capture_output=True
             )
             logger.trace(f"pip is available: {result.stdout.strip()}")
         except Exception:
