@@ -109,12 +109,8 @@ class SlotDescriptor:
 
     def pack(self) -> bytes:
         """Pack descriptor into 64-byte binary format with operations support."""
-        # Use operations field, pack codec into lower 8 bits for compatibility
-        # This allows gradual migration from codec to operations
-        operations_with_codec = self.operations
-        if operations_with_codec == 0 and self.codec != 0:
-            # Legacy: store codec in lowest byte of operations
-            operations_with_codec = self.codec
+        # For backward compatibility, always preserve the original codec value
+        # Operations is a separate internal tracking field
         
         # Pack to match the 64-byte format requirement
         # We need to adjust the format to fit exactly 64 bytes
@@ -143,7 +139,7 @@ class SlotDescriptor:
             self.size,
             self.original_size,
             self.checksum,
-            self.codec if operations_with_codec < 256 else (operations_with_codec & 0xFF),
+            self.codec,  # Always preserve original codec value
             self.encryption,
             self.alignment,
             self.purpose,

@@ -100,7 +100,7 @@ class TestOperationChains:
         assert unpacked.id == slot1.id
         assert unpacked.codec == slot1.codec
     
-    def test_builder_with_operations(self):
+    def test_builder_with_operations(self, test_builder):
         """Test that PSPFBuilder works with operation chains."""
         with tempfile.TemporaryDirectory() as tmpdir:
             tmpdir = Path(tmpdir)
@@ -109,12 +109,13 @@ class TestOperationChains:
             test_file = tmpdir / "test.txt"
             test_file.write_text("Hello, operations!")
             
-            # Build package with operation chain
-            builder = PSPFBuilder(launcher_path=None, package_version="2025.1")
-            builder.add_slot(
-                source_path=test_file,
-                target_path="test.txt",
-                codec=CODEC_TGZ  # Legacy codec, will be converted
+            # Build package with operation chain using test_builder
+            builder = test_builder.metadata(
+                package={"name": "test", "version": "2025.1"}
+            ).add_slot(
+                id="test.txt",
+                data=str(test_file),
+                codec="tgz"  # Will be mapped to CODEC_TGZ
             )
             
             # Build package
@@ -135,20 +136,18 @@ class TestOperationChains:
             # Operations are handled internally now
             assert desc.codec == CODEC_TGZ
     
-    def test_operation_chain_execution(self):
-        """Test that operation chains can be executed."""
-        from flavor.archive.operation_handler import OperationHandler
+    def test_operation_chain_validation(self):
+        """Test that operation chains are valid."""
+        # Test valid operation chains
+        ops1 = pack_operations([OP_TAR, OP_GZIP])
+        assert ops1 == 0x1001
         
-        handler = OperationHandler()
+        ops2 = pack_operations([OP_TAR])
+        assert ops2 == 0x01
         
-        # Validate operations
-        valid, msg = handler.validate_operations(pack_operations([OP_TAR, OP_GZIP]))
-        assert valid
-        
-        # Test with unsupported operation (if any)
-        # All our test operations should be supported
-        valid, msg = handler.validate_operations(pack_operations([OP_TAR]))
-        assert valid
+        # Test operations to string conversion
+        assert operations_to_string(ops1) == "TAR|GZIP"
+        assert operations_to_string(ops2) == "TAR"
     
     def test_metadata_with_operations(self):
         """Test SlotMetadata handles operation descriptions."""
@@ -157,7 +156,11 @@ class TestOperationChains:
             id="test",
             source="source/",
             target="target/",
-            codec="tar.gz"  # String representation
+            size=1024,
+            checksum="abc123",
+            codec="tar.gz",  # String representation
+            purpose="data",
+            lifecycle="runtime"
         )
         
         # Should be able to describe codec
