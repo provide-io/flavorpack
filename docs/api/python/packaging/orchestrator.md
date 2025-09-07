@@ -614,5 +614,5 @@ if __name__ == "__main__":
 - [PythonPackager](python_packager.md) - Python environment management
 - [Key Management](keys.md) - Package signing
 - [PSPFBuilder](../psp/builder.md) - Low-level package building
-- [Core API](../api.md) - High-level API functions
+- [Python API](../index.md) - High-level API functions
 - [Packaging Guide](../../../guide/packaging/index.md) - User guide

@@ -551,4 +551,4 @@ with concurrent.futures.ThreadPoolExecutor() as executor:
 - [Slot Management](slots.md) - Detailed slot documentation
 - [Metadata](metadata.md) - Metadata assembly and validation
 - [Format Specification](../../../spec/pspf-2025.md) - PSPF format details
-- [Core API](../api.md) - High-level API functions
+- [Core API](../index.md) - High-level API functions
