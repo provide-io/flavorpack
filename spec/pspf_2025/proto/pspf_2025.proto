@@ -1,32 +1,42 @@
+// PSPF/2025 Main Protocol Buffer Definition
+// This is the root proto file that imports all modules
 syntax = "proto3";
 
-package flavor.psp.format_2025;
+package pspf_2025;
 
+option go_package = "github.com/provide-io/flavorpack/psp/format_2025;pspf2025";
+option java_package = "io.provide.flavorpack.pspf2025";
 option python_package = "flavor.psp.format_2025.models";
-option go_package = "github.com/provide-io/flavorpack/ingredients/flavor-go/pkg/psp/format_2025/models";
 
 // Import all module definitions
-import "modules/common.proto";
 import "modules/operations.proto"; 
 import "modules/slots.proto";
 import "modules/index.proto";
 import "modules/metadata.proto";
 import "modules/crypto.proto";
+import "modules/jit.proto";
+import "modules/spa.proto";
 
 // Complete PSPF package definition
 message PSPFPackage {
-  // Core index block (implements FEP-0001)
-  IndexBlock index = 1;
+  // Core index block (8192 bytes)
+  index.IndexBlock index = 1;
   
-  // Package metadata (implements FEP-0001)
-  PackageMetadata metadata = 2;
+  // Package metadata (JSON)
+  metadata.PackageMetadata metadata = 2;
   
-  // All slots in package (implements FEP-0001, FEP-0002)
-  repeated SlotEntry slots = 3;
+  // All slots in package
+  repeated slots.SlotEntry slots = 3;
   
-  // Cryptographic information (implements FEP-0007)
-  CryptoInfo crypto = 4;
+  // Cryptographic information
+  crypto.CryptoInfo crypto = 4;
   
-  // Execution configuration
-  ExecutionConfig execution = 5;
+  // Operation chains for each slot
+  repeated operations.OperationChain operation_chains = 5;
+  
+  // JIT loading configuration
+  jit.JITSystemConfig jit_config = 6;
+  
+  // Staged Payload Architecture config
+  spa.SPASystemConfig spa_config = 7;
 }

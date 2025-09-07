@@ -1,8 +1,11 @@
+// PSPF/2025 Package Metadata Specification
+// Defines JSON metadata structure and configuration
 syntax = "proto3";
 
-package flavor.psp.format_2025;
+package pspf_2025.metadata;
 
-import "modules/slots.proto";
+option go_package = "github.com/provide-io/flavorpack/psp/format_2025;pspf2025";
+option java_package = "io.provide.flavorpack.pspf2025";
 
 // Package metadata (implements FEP-0001 Section 5)
 message PackageMetadata {
@@ -28,8 +31,9 @@ message PackageMetadata {
   Requirements requirements = 11;      // System requirements
   
   // Extensions (for advanced features)
-  SpaConfig spa = 16;                 // Staged Payload Architecture (FEP-0004)
+  SpaConfig spa = 16;                 // Staged Payload Architecture (FEP-0007)
   JitConfig jit = 17;                 // JIT Loading configuration (FEP-0005)
+  SecurityConfig security = 18;       // Security configuration (FEP-0004)
   
   // Custom metadata
   map<string, string> custom = 20;    // Custom key-value metadata
@@ -95,9 +99,36 @@ message SpaConfig {
 // JIT Loading configuration (FEP-0005)
 message JitConfig {
   bool enabled = 1;                   // JIT enabled
-  string strategy = 2;                // Loading strategy
-  string cache_dir = 3;               // Cache directory
-  uint64 max_cache_size = 4;          // Maximum cache size
-  uint32 network_timeout_ms = 5;      // Network timeout
+  string strategy = 2;                // Loading strategy (aggressive, lazy, balanced)
+  string cache_dir = 3;               // Cache directory path
+  uint64 max_cache_size = 4;          // Maximum cache size in bytes
+  uint32 network_timeout_ms = 5;      // Network timeout in milliseconds
   repeated uint32 background_slots = 6; // Slots to load in background
+}
+
+// Slot metadata for JSON serialization
+message SlotMetadata {
+  uint32 slot = 1;                    // Slot index
+  string id = 2;                      // Slot identifier
+  string source = 3;                  // Source path
+  string target = 4;                  // Target path in workenv
+  uint64 size = 5;                    // Size in bytes
+  string checksum = 6;                // Checksum with algorithm prefix
+  string operations = 7;              // Operation chain string
+  string purpose = 8;                 // Purpose classification
+  string lifecycle = 9;               // Lifecycle type
+  string permissions = 10;            // Unix permissions as string
+  map<string, string> metadata = 11;  // Additional metadata
+}
+
+// Security configuration (FEP-0004)
+message SecurityConfig {
+  bool require_signature = 1;         // Require valid signature
+  bool allow_unsigned = 2;            // Allow unsigned packages in insecure mode
+  string key_source = 3;              // Key source (embedded, file, network)
+  repeated string trusted_keys = 4;   // List of trusted public keys
+  string signature_algorithm = 5;     // Signature algorithm (ed25519)
+  bool verify_checksums = 6;          // Verify all checksums
+  bool sandbox_enabled = 7;           // Enable sandboxing
+  repeated string capabilities = 8;   // Required capabilities
 }

@@ -1,8 +1,13 @@
+// PSPF/2025 Cryptographic Specification
+// Defines digital signatures, integrity, and encryption
 syntax = "proto3";
 
-package flavor.psp.format_2025;
+package pspf_2025.crypto;
 
-// Cryptographic information (implements FEP-0007)
+option go_package = "github.com/provide-io/flavorpack/psp/format_2025;pspf2025";
+option java_package = "io.provide.flavorpack.pspf2025";
+
+// Cryptographic information (implements FEP-0004)
 message CryptoInfo {
   // Digital signature information
   SignatureInfo signature = 1;       // Package signature
