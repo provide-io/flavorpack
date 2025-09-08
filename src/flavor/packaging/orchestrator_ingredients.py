@@ -281,9 +281,9 @@ def create_python_builder_metadata(
 ) -> dict[str, Any]:
     """Create metadata for Python builder."""
     windows = is_windows()
-    bin_dir = "Scripts" if is_windows else "bin"
+    bin_dir = "Scripts" if windows else "bin"
     # Use the exact Python binary name that UV provides
-    if is_windows:
+    if windows:
         python_exe = "python.exe"
     else:
         # UV installs Python as python3 on all Unix platforms
@@ -328,7 +328,7 @@ def create_python_builder_metadata(
         "setup_commands": [
             {
                 "type": "enumerate_and_execute",
-                "command": f"{{workenv}}/{bin_dir}/{'uv.exe' if is_windows else 'uv'} pip install --python {python_path} --no-deps",
+                "command": f"{{workenv}}/{bin_dir}/{'uv.exe' if windows else 'uv'} pip install --python {python_path} --no-deps",
                 "enumerate": {"path": "{workenv}/wheels", "pattern": "*.whl"},
             },
             {
