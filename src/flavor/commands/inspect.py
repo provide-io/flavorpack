@@ -61,7 +61,7 @@ def inspect_command(package_file: str, output_json: bool) -> None:
                             if i < len(slots_metadata)
                             else "unknown",
                             "size": slot.size,
-                            "encoding": slots_metadata[i].get("encoding", "raw")
+                            "codec": slots_metadata[i].get("codec", "raw")
                             if i < len(slots_metadata)
                             else "raw",
                         }
@@ -111,11 +111,11 @@ def inspect_command(package_file: str, output_json: bool) -> None:
                         slot_meta = slots_metadata[i]
                         slot_name = slot_meta.get("id", f"slot_{i}")
                         slot_purpose = slot_meta.get("purpose", "")
-                        slot_encoding = slot_meta.get("encoding", "raw")
+                        slot_codec = slot_meta.get("codec", "raw")
                     else:
                         slot_name = f"slot_{i}"
                         slot_purpose = ""
-                        slot_encoding = "raw"
+                        slot_codec = "raw"
 
                     # Format slot info
                     slot_size = format_size(slot.size)
@@ -124,8 +124,8 @@ def inspect_command(package_file: str, output_json: bool) -> None:
                     # Add purpose if available
                     if slot_purpose:
                         slot_info += f" - {slot_purpose}"
-                    if slot_encoding != "raw":
-                        slot_info += f" [{slot_encoding}]"
+                    if slot_codec != "raw":
+                        slot_info += f" [{slot_codec}]"
 
                     click.echo(f"{prefix} {slot_info}")
 

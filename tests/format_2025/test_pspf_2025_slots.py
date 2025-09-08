@@ -38,7 +38,7 @@ class TestPSPFSlots:
                 target="config",
                 size=len(text_data),
                 checksum=hashlib.sha256(text_data.encode()).hexdigest(),
-                encoding="gzip",
+                codec="gzip",
                 purpose="config",
                 lifecycle="runtime",
             )
@@ -57,7 +57,7 @@ class TestPSPFSlots:
                 target="library",
                 size=len(binary_data),
                 checksum=hashlib.sha256(binary_data).hexdigest(),
-                encoding="none",  # Binary files often don't compress well
+                codec="none",  # Binary files often don't compress well
                 purpose="library",
                 lifecycle="init",
             )
@@ -76,7 +76,7 @@ class TestPSPFSlots:
                 target="wheel",
                 size=len(temp_data),
                 checksum=hashlib.sha256(temp_data).hexdigest(),
-                encoding="none",
+                codec="none",
                 purpose="payload",
                 lifecycle="temp",
             )
@@ -93,7 +93,7 @@ class TestPSPFSlots:
             target="test-runtime",
             size=1024,
             checksum="abc123",
-            encoding="gzip",
+            codec="gzip",
             purpose="payload",
             lifecycle="runtime",
         )
@@ -113,7 +113,7 @@ class TestPSPFSlots:
             target="test-init",
             size=1024,
             checksum="abc123",
-            encoding="gzip",
+            codec="gzip",
             purpose="payload",
             lifecycle="init",
         )
@@ -133,7 +133,7 @@ class TestPSPFSlots:
             target="test-temp",
             size=1024,
             checksum="abc123",
-            encoding="gzip",
+            codec="gzip",
             purpose="payload",
             lifecycle="temp",
         )
@@ -153,7 +153,7 @@ class TestPSPFSlots:
             target="test-cache",
             size=1024,
             checksum="abc123",
-            encoding="gzip",
+            codec="gzip",
             purpose="config",
             lifecycle="cache",
         )
@@ -179,7 +179,7 @@ class TestPSPFSlots:
                 builder = builder.add_slot(
                     id=slot.id,
                     data=slot.source,
-                    encoding=slot.encoding,
+                    codec=slot.codec,
                     purpose=slot.purpose,
                     lifecycle=slot.lifecycle,
                 )
@@ -220,7 +220,7 @@ class TestPSPFSlots:
             target="compressed",
             size=len(data),
             checksum=hashlib.sha256(data).hexdigest(),
-            encoding="gzip",
+            codec="gzip",
             purpose="payload",
             lifecycle="runtime",
         )
@@ -237,7 +237,7 @@ class TestPSPFSlots:
             .add_slot(
                 id="compressed",
                 data=slot_path,
-                encoding="gzip",
+                codec="gzip",
                 purpose="payload",
                 lifecycle="runtime",
             )
@@ -248,7 +248,7 @@ class TestPSPFSlots:
         # Verify the slot is stored with compression by checking metadata
         reader = PSPFReader(bundle_path)
         metadata_read = reader.read_metadata()
-        assert metadata_read["slots"][0]["encoding"] == "gzip"
+        assert metadata_read["slots"][0]["codec"] == "gzip"
 
     def test_slot_compression_none(self, temp_dir, test_builder):
         """Test no compression."""
@@ -263,7 +263,7 @@ class TestPSPFSlots:
             target="uncompressed",
             size=len(data),
             checksum=hashlib.sha256(data).hexdigest(),
-            encoding="none",
+            codec="none",
             purpose="payload",
             lifecycle="runtime",
         )
@@ -280,7 +280,7 @@ class TestPSPFSlots:
             .add_slot(
                 id="uncompressed",
                 data=slot_path,
-                encoding="none",
+                codec="none",
                 purpose="payload",
                 lifecycle="runtime",
             )
@@ -291,7 +291,7 @@ class TestPSPFSlots:
         # Verify the slot is stored without compression
         reader = PSPFReader(bundle_path)
         metadata_read = reader.read_metadata()
-        assert metadata_read["slots"][0]["encoding"] == "none"
+        assert metadata_read["slots"][0]["codec"] == "none"
 
     def test_slot_checksum_verification(self, temp_dir, test_builder):
         """Test slot checksum verification."""
@@ -309,7 +309,7 @@ class TestPSPFSlots:
             target="checksum_test",
             size=len(data),
             checksum=expected_checksum,
-            encoding="none",
+            codec="none",
             purpose="payload",
             lifecycle="runtime",
         )
@@ -326,7 +326,7 @@ class TestPSPFSlots:
             .add_slot(
                 id=slot.id,
                 data=slot.source,
-                encoding=slot.encoding,
+                codec=slot.codec,
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,
             )
@@ -352,7 +352,7 @@ class TestPSPFSlots:
                 builder = builder.add_slot(
                     id=slot.id,
                     data=slot.source,
-                    encoding=slot.encoding,
+                    codec=slot.codec,
                     purpose=slot.purpose,
                     lifecycle=slot.lifecycle,
                 )
@@ -395,7 +395,7 @@ class TestPSPFSlots:
             target="cached_slot",
             size=slot_path.stat().st_size,
             checksum=hashlib.sha256(slot_path.read_bytes()).hexdigest(),
-            encoding="gzip",
+            codec="gzip",
             purpose="payload",
             lifecycle="runtime",
         )
@@ -412,7 +412,7 @@ class TestPSPFSlots:
             .add_slot(
                 id=slot.id,
                 data=slot.source,
-                encoding=slot.encoding,
+                codec=slot.codec,
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,
             )
@@ -437,7 +437,7 @@ class TestPSPFSlots:
             target="test_slot",
             size=2048,
             checksum="deadbeef",
-            encoding="none",  # Binary files often don't compress well
+            codec="none",  # Binary files often don't compress well
             purpose="library",
             lifecycle="init",
         )
@@ -451,7 +451,7 @@ class TestPSPFSlots:
         assert slot_dict["size"] == 2048
         # Checksum gets prefixed in to_dict
         assert "deadbeef" in slot_dict["checksum"]
-        assert slot_dict["encoding"] == "none"
+        assert slot_dict["codec"] == "none"
         assert slot_dict["purpose"] == "library"
         assert slot_dict["lifecycle"] == "init"
         # Source and target should be included in serialized metadata
@@ -472,7 +472,7 @@ class TestPSPFSlots:
             target="large_slot",
             size=len(large_data),
             checksum=hashlib.sha256(large_data).hexdigest(),
-            encoding="none",
+            codec="none",
             purpose="payload",
             lifecycle="runtime",
         )
@@ -489,7 +489,7 @@ class TestPSPFSlots:
             .add_slot(
                 id=slot.id,
                 data=slot.source,
-                encoding=slot.encoding,
+                codec=slot.codec,
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,
             )

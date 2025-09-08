@@ -13,16 +13,16 @@
       "slot": 0,
       "purpose": "payload",
       "lifecycle": "cached",
-      "encoding": "gzip",
+      "codec": "tgz",
       "id": "orchestrate-tar-gz",
       "source": "{workenv}/scripts/orchestrate.tar.gz",
-      "target": "orchestrator/orchestrate.tar.gz"
+      "target": "."
     },
     {
       "slot": 1,
       "purpose": "payload",
       "lifecycle": "cached",
-      "encoding": "raw",
+      "codec": "raw",
       "id": "slot1/utilities-tar-gz",
       "source": "{workenv}/slots/utilities.tar.gz",
       "target": "slot1/utilities.tar.gz"
@@ -31,7 +31,7 @@
       "slot": 2,
       "purpose": "tool",
       "lifecycle": "cached",
-      "encoding": "raw",
+      "codec": "raw",
       "id": "slot2/flavor-go-builder",
       "source": "{workenv}/../../ingredients/bin/flavor-go-builder-darwin_arm64",
       "target": "slot2/flavor-go-builder-darwin_arm64",
@@ -41,7 +41,7 @@
       "slot": 3,
       "purpose": "payload",
       "lifecycle": "cached",
-      "encoding": "raw",
+      "codec": "raw",
       "id": "slot3/scripts-tar-gz",
       "source": "{workenv}/slots/scripts.tar.gz",
       "target": "slot3/scripts.tar.gz"

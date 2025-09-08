@@ -1,7 +1,7 @@
 // helpers/flavor-rs/src/psp/format_2025/slots.rs
 // PSPF 2025 Slot Management - Enhanced 64-byte descriptors
 
-use super::constants::{ENCODING_RAW, SLOT_ALIGNMENT, PURPOSE_PAYLOAD, LIFECYCLE_CACHE, ACCESS_HINT_SEQUENTIAL, CACHE_NORMAL, DEFAULT_FILE_PERMS, SLOT_DESCRIPTOR_SIZE, PAGE_SIZE};
+use super::constants::{CODEC_RAW, SLOT_ALIGNMENT, PURPOSE_PAYLOAD, LIFECYCLE_CACHE, ACCESS_HINT_SEQUENTIAL, CACHE_NORMAL, DEFAULT_FILE_PERMS, SLOT_DESCRIPTOR_SIZE, PAGE_SIZE};
 use std::path::PathBuf;
 
 /// Slot descriptor - 64 bytes total
@@ -19,7 +19,7 @@ pub struct SlotDescriptor {
     // Properties (16 bytes)
     pub original_size: u64, // Uncompressed size
     pub checksum: u32,      // Adler-32 of stored data
-    pub encoding: u8,       // 0=raw, 1=tar, 2=gzip, 3=tgz
+    pub codec: u8,       // 0=raw, 1=tar, 2=gzip, 3=tgz
     pub encryption: u8,     // 0=none, 1=aes256-gcm
     pub alignment: u16,     // Required alignment
 
@@ -46,7 +46,7 @@ impl SlotDescriptor {
             size: 0,
             original_size: 0,
             checksum: 0,
-            encoding: ENCODING_RAW,
+            codec: CODEC_RAW,
             encryption: 0,
             alignment: SLOT_ALIGNMENT as u16,
             purpose: PURPOSE_PAYLOAD,
@@ -91,7 +91,7 @@ impl SlotDescriptor {
         bytes[24..32].copy_from_slice(&self.size.to_le_bytes());
         bytes[32..40].copy_from_slice(&self.original_size.to_le_bytes());
         bytes[40..44].copy_from_slice(&self.checksum.to_le_bytes());
-        bytes[44] = self.encoding;
+        bytes[44] = self.codec;
         bytes[45] = self.encryption;
         bytes[46..48].copy_from_slice(&self.alignment.to_le_bytes());
         bytes[48] = self.purpose;
@@ -121,7 +121,7 @@ impl SlotDescriptor {
         let size = u64::from_le_bytes(data[24..32].try_into().ok()?);
         let original_size = u64::from_le_bytes(data[32..40].try_into().ok()?);
         let checksum = u32::from_le_bytes(data[40..44].try_into().ok()?);
-        let encoding = data[44];
+        let codec = data[44];
         let encryption = data[45];
         let alignment = u16::from_le_bytes(data[46..48].try_into().ok()?);
         let purpose = data[48];
@@ -140,7 +140,7 @@ impl SlotDescriptor {
             size,
             original_size,
             checksum,
-            encoding,
+            codec,
             encryption,
             alignment,
             purpose,
@@ -156,10 +156,10 @@ impl SlotDescriptor {
 }
 
 
-/// Slot encoding types
+/// Slot codec types
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub enum Encoding {
+pub enum Codec {
     None = 0,
     Gzip = 1,
     Zstd = 2,

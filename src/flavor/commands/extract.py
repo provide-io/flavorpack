@@ -139,17 +139,17 @@ def extract_all_command(package_file: str, output_dir: str, force: bool) -> None
                 if i < len(slots_metadata):
                     slot_meta = slots_metadata[i]
                     slot_name = slot_meta.get("id", f"slot_{i}")
-                    slot_encoding = slot_meta.get("encoding", "raw")
+                    slot_codec = slot_meta.get("codec", "raw")
                 else:
                     slot_name = f"slot_{i}"
-                    slot_encoding = "raw"
+                    slot_codec = "raw"
 
                 # Determine output filename
                 filename = f"{i:02d}_{slot_name}"
                 # Add appropriate extension based on encoding
-                if slot_encoding in ["tar", "tgz"]:
-                    filename += f".{slot_encoding}"
-                elif slot_encoding == "gzip":
+                if slot_codec in ["tar", "tgz"]:
+                    filename += f".{slot_codec}"
+                elif slot_codec == "gzip":
                     filename += ".gz"
 
                 output_file = output / filename
