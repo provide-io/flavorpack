@@ -258,4 +258,4 @@ prepared = [prepare_slot(spec) for spec in slots]
 - [PSPFReader](reader.md) - Reading and extracting slots
 - [Metadata](metadata.md) - Package metadata
 - [Format Specification](../../../spec/pspf-2025.md) - PSPF format details
-- [Core API](../api.md) - High-level slot management
+- [Core API](../index.md) - High-level slot management

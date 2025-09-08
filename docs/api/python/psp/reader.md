@@ -619,4 +619,4 @@ with PSPFReader("package.psp") as reader:
 - [Slot Management](slots.md) - Slot specifications
 - [Package Format](index.md) - Package format overview
 - [Format Specification](../../../spec/pspf-2025.md) - PSPF format details
-- [Core API](../api.md) - High-level API functions
+- [Core API](../index.md) - High-level API functions

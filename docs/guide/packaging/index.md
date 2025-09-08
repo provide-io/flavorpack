@@ -400,5 +400,5 @@ lifecycle = "lazy"
 - [Python Packaging](python.md) - Python-specific features
 - [Package Signing](signing.md) - Security and signatures
 - [Platform Support](platforms.md) - Cross-platform packaging
-- [API Reference](../../api/python/api.md) - Python API
+- [API Reference](../../api/python/index.md) - Python API
 - [Troubleshooting](../../troubleshooting/index.md) - Common issues
