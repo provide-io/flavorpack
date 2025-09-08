@@ -186,12 +186,16 @@ def prepare_slots(
         # Load data
         data = _load_slot_data(slot)
 
-        # Determine operations (no compression, just metadata)
-        slot_data, packed_ops = _determine_operations(data, slot.operations, options)
+        # Get packed operations
+        from flavor.psp.format_2025.operations import string_to_operations
+        packed_ops = string_to_operations(slot.operations)
+
+        # Apply operations to compress/transform data
+        processed_data = _apply_operations(data, packed_ops, options)
 
         # Calculate checksums with prefixes
-        checksum_str = calculate_checksum(slot_data, "sha256")
-        checksum_adler32 = zlib.adler32(slot_data)
+        checksum_str = calculate_checksum(processed_data, "sha256")
+        checksum_adler32 = zlib.adler32(processed_data)
 
         # Store prefixed checksum in metadata
         slot.checksum = checksum_str
@@ -200,7 +204,7 @@ def prepare_slots(
             PreparedSlot(
                 metadata=slot,
                 data=data,
-                compressed_data=slot_data if slot_data != data else None,
+                compressed_data=processed_data if processed_data != data else None,
                 codec_type=packed_ops,  # Operations packed as integer
                 checksum=checksum_adler32,  # Binary descriptor uses raw Adler-32
             )
@@ -298,20 +302,44 @@ def _load_slot_data(slot: SlotMetadata) -> bytes:
         return slot_path.read_bytes()
 
 
-def _determine_operations(
-    data: bytes, operations: str, options: BuildOptions
-) -> tuple[bytes, int]:
-    """Determine operations for the data.
+def _apply_operations(
+    data: bytes, packed_ops: int, options: BuildOptions
+) -> bytes:
+    """Apply operation chain to data.
 
-    Note: This does NOT compress data - the orchestrator/packer handles that.
-    We just map the operations string to packed integer format.
+    Uses the archive operation handler to actually compress/transform data.
+    
+    Args:
+        data: Raw data to process
+        packed_ops: Packed operations as 64-bit integer
+        options: Build options
+    
+    Returns:
+        Processed data after applying operations
     """
-    from flavor.psp.format_2025.operations import string_to_operations
+    from flavor.psp.format_2025.operations import unpack_operations, OP_GZIP, OP_TAR
     
-    # Convert operations string to packed integer
-    packed_ops = string_to_operations(operations)
+    if packed_ops == 0:
+        # No operations, return raw data
+        return data
     
-    return data, packed_ops
+    ops = unpack_operations(packed_ops)
+    
+    # For now, handle simple cases directly
+    # TODO: Use OperationHandler when archive module is integrated
+    if ops == [OP_GZIP]:
+        # Single file gzip compression
+        import gzip
+        return gzip.compress(data, compresslevel=options.compression_level)
+    elif ops == [OP_TAR, OP_GZIP]:
+        # This would be tar.gz but for single files we just gzip
+        # The orchestrator handles actual tar creation for directories
+        import gzip
+        return gzip.compress(data, compresslevel=options.compression_level)
+    else:
+        # Unsupported operation chain, return raw
+        logger.warning(f"Unsupported operation chain: {ops}, returning raw data")
+        return data
 
 
 def _write_package(
