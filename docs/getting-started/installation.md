@@ -305,4 +305,4 @@ After installation:
 - 📖 Follow the [Quick Start](quickstart.md) guide
 - 🎯 Create your [First Package](first-package.md)
 - 🔧 Explore [Configuration Options](../guide/packaging/configuration.md)
-- 📚 Read about [Core Concepts](../guide/concepts/)
+- 📚 Read about [Core Concepts](../guide/concepts/index.md)

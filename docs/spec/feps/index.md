@@ -21,9 +21,9 @@ _Implementation notes coming soon_
 
 ## Related Documentation
 
-- [Getting Started](../getting-started/index.md)
-- [User Guide](../guide/index.md)
-- [API Reference](../api/index.md)
+- [Getting Started](../../getting-started/index.md)
+- [User Guide](../../guide/index.md)
+- [API Reference](../../api/index.md)
 
 ## Next Steps
 

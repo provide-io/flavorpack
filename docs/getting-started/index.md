@@ -116,7 +116,7 @@ Now that you have FlavorPack installed:
 
 If you run into issues:
 
-1. Check the [Troubleshooting Guide](../TROUBLESHOOTING.md)
+1. Check the [Troubleshooting Guide](../troubleshooting/index.md)
 2. Search [existing issues](https://github.com/provide-io/flavorpack/issues)
 3. Join the [discussions](https://github.com/provide-io/flavorpack/discussions)
 4. Open a [new issue](https://github.com/provide-io/flavorpack/issues/new)
