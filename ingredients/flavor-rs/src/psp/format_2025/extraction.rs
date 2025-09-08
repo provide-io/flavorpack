@@ -67,52 +67,46 @@ pub fn extract_slot(reader: &mut Reader, slot_index: usize, dest_dir: &Path) -> 
         slot_index
     );
 
-    // Decompress based on encoding
-    let decompressed_data = match desc_codec {
-        CODEC_GZIP => {
-            // Single file, gzipped
-            trace!("🗜️ Decompressing GZIP slot {slot_index}");
-            let mut decoder = GzDecoder::new(&slot_data[..]);
-            let mut decompressed = Vec::new();
-            decoder
-                .read_to_end(&mut decompressed)
-                .map_err(|e| FlavorError::Generic(format!("Failed to decompress GZIP: {e}")))?;
-            trace!(
-                "✅ Decompressed {} -> {} bytes",
-                slot_data.len(),
-                decompressed.len()
-            );
-            decompressed
-        }
-        CODEC_TGZ => {
-            // Tar archive, then gzipped
-            trace!("🗜️ Decompressing TGZ slot {slot_index}");
-            let mut decoder = GzDecoder::new(&slot_data[..]);
-            let mut decompressed = Vec::new();
-            decoder
-                .read_to_end(&mut decompressed)
-                .map_err(|e| FlavorError::Generic(format!("Failed to decompress TGZ: {e}")))?;
-            trace!(
-                "✅ Decompressed tar.gz {} -> {} bytes",
-                slot_data.len(),
-                decompressed.len()
-            );
-            decompressed
-        }
-        CODEC_RAW | CODEC_TAR => {
-            // Raw uncompressed data or uncompressed tar
-            trace!("📄 Using raw/uncompressed data for slot {slot_index}");
-            slot_data
-        }
-        unknown => {
-            error!(
-                "❌ FATAL: Unknown codec {unknown} for slot {slot_index}"
-            );
-            return Err(FlavorError::Generic(format!(
-                "Unknown codec {unknown} for slot {slot_index}"
-            )));
-        }
-    };
+    // Process data based on operations
+    use crate::psp::format_2025::constants::{OP_TAR, OP_GZIP};
+    
+    let mut processed_data = slot_data;
+    
+    // Apply operations in reverse order (since they're applied forward during packing)
+    for &op in operations.iter().rev() {
+        processed_data = match op {
+            OP_GZIP => {
+                // Decompress gzip
+                trace!("🗜️ Decompressing GZIP operation for slot {slot_index}");
+                let mut decoder = GzDecoder::new(&processed_data[..]);
+                let mut decompressed = Vec::new();
+                decoder
+                    .read_to_end(&mut decompressed)
+                    .map_err(|e| FlavorError::Generic(format!("Failed to decompress GZIP: {e}")))?;
+                trace!(
+                    "✅ Decompressed {} -> {} bytes",
+                    processed_data.len(),
+                    decompressed.len()
+                );
+                decompressed
+            }
+            OP_TAR => {
+                // TAR operation - no processing needed during extraction
+                trace!("📦 TAR operation for slot {slot_index} (will extract later)");
+                processed_data
+            }
+            unknown_op => {
+                error!(
+                    "❌ FATAL: Unknown operation {unknown_op} for slot {slot_index}"
+                );
+                return Err(FlavorError::Generic(format!(
+                    "Unknown operation {unknown_op} for slot {slot_index}"
+                )));
+            }
+        };
+    }
+    
+    let decompressed_data = processed_data;
 
     trace!(
         "📊 Slot {} decompressed size: {} bytes",
