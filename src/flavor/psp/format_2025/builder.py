@@ -302,25 +302,20 @@ def _load_slot_data(slot: SlotMetadata) -> bytes:
         return slot_path.read_bytes()
 
 
-def _determine_codec(
-    data: bytes, codec: str, options: BuildOptions
+def _determine_operations(
+    data: bytes, operations: str, options: BuildOptions
 ) -> tuple[bytes, int]:
-    """Determine codec constant for the data format.
+    """Determine operations for the data.
 
     Note: This does NOT compress data - the orchestrator/packer handles that.
-    We just map the codec string to the appropriate constant.
+    We just map the operations string to packed integer format.
     """
-    codec_lower = codec.lower()
-
-    # Map codec strings to constants
-    if codec_lower in ("none", "raw", ""):
-        return data, CODEC_RAW
-    elif codec_lower == "tar":
-        return data, CODEC_TAR
-    elif codec_lower == "gzip":
-        return data, CODEC_GZIP
-    elif codec_lower in ("tgz", "tar.gz"):
-        return data, CODEC_TGZ
+    from flavor.psp.format_2025.operations import string_to_operations
+    
+    # Convert operations string to packed integer
+    packed_ops = string_to_operations(operations)
+    
+    return data, packed_ops
     # Future formats (not implemented yet):
     # elif encoding_lower == "zstd":
     #     return data, ENCODING_ZSTD
@@ -573,7 +568,7 @@ class PSPFBuilder:
         data: bytes | str | Path,
         purpose: str = "data",
         lifecycle: str = "runtime",
-        codec: str = "gzip",
+        operations: str = "gzip",
         target: str | None = None,
         permissions: str | None = None,
     ) -> "PSPFBuilder":
@@ -585,7 +580,7 @@ class PSPFBuilder:
             data: Slot data (bytes, string, or path to file/directory)
             purpose: Slot purpose (data, code, config, media)
             lifecycle: Slot lifecycle (runtime, cached, temporary)
-            codec: Compression codec (none, gzip)
+            operations: Operation chain (e.g., "tar.gz", "TAR|GZIP")
             target: Target location relative to workenv (default: None)
             permissions: Unix permissions as octal string (e.g., "0755")
         """
@@ -620,7 +615,7 @@ class PSPFBuilder:
             target=target or id,
             size=size,
             checksum="",  # Will be calculated during build
-            codec=codec,
+            operations=operations,
             purpose=purpose,
             lifecycle=lifecycle,
             permissions=permissions,
