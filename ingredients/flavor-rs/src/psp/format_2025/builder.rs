@@ -373,7 +373,7 @@ impl SlotProcessor {
 
     fn create_slot_descriptor(&self, index: usize, slot: &ManifestSlot, file_size: u64, adler_checksum: u32) -> Result<SlotDescriptor> {
         // Map codec string to byte value
-        let codec_value = match slot.codec.as_str() {
+        let codec_value = match slot.operations.as_str() {
             "gzip" => CODEC_GZIP,
             "tgz" => CODEC_TGZ,
             "tar" => CODEC_TAR,
