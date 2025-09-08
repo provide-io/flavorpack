@@ -90,8 +90,12 @@ class SlotDescriptor:
         """Pack descriptor into 64-byte binary format."""
         # Pack to exactly 64 bytes:
         # 7Q (56) + 8B (8) = 64
+        # Split permissions into two bytes (low and high)
+        perm_low = self.permissions & 0xFF
+        perm_high = (self.permissions >> 8) & 0xFF
+        
         data = struct.pack(
-            "<QQQQQQQBBBBBBBB",
+            "<QQQQQQQBBBBBBBBB",
             self.id,
             self.name_hash,
             self.offset,
@@ -105,7 +109,8 @@ class SlotDescriptor:
             self.lifecycle,
             self.access_hint,
             self.priority,
-            self.permissions & 0xFF,
+            perm_low,  # permissions low byte
+            perm_high,  # permissions high byte  
             self.platform,
         )
         
