@@ -176,7 +176,7 @@ FlavorPack is part of the [provide.io](https://provide.io) ecosystem, committed 
 
 ## License
 
-FlavorPack is licensed under the Apache License 2.0. See the [License](license.md) page for details.
+FlavorPack is licensed under the Apache License 2.0. See the [License](community/license.md) page for details.
 
 ---
 
