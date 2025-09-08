@@ -214,7 +214,7 @@ def prepare_slots(
             "🎰🔍📋 Slot prepared",
             name=slot.id,
             raw_size=len(data),
-            compressed_size=len(slot_data),
+            compressed_size=len(processed_data),
             operations=packed_ops,
             checksum=checksum_str[:8],
         )
