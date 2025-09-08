@@ -2,7 +2,6 @@
 // PSPF 2025 Operations - Protobuf-based operation chains
 
 use log::{debug, trace};
-use super::constants::*;
 
 /// Pack operation chain into 64-bit integer
 /// Operations are packed as 8-bit values in little-endian order

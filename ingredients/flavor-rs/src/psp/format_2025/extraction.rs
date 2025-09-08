@@ -46,12 +46,17 @@ pub fn extract_slot(reader: &mut Reader, slot_index: usize, dest_dir: &Path) -> 
     }
 
     let descriptor = &descriptors[slot_index];
-    let desc_codec = descriptor.codec;
+    
+    // Use operations instead of codec
+    use crate::psp::format_2025::operations::unpack_operations;
+    let operations = unpack_operations(descriptor.operations);
+    
     // Copy values to avoid unaligned access
     let desc_offset = descriptor.offset;
     let desc_size = descriptor.size;
     trace!(
-        "📏 Slot {slot_index} descriptor: offset={desc_offset:#x}, size={desc_size}, codec={desc_codec}"
+        "📏 Slot {slot_index} descriptor: offset={desc_offset:#x}, size={desc_size}, operations={:?}",
+        operations
     );
 
     // Read slot data using backend (raw/compressed)
