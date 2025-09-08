@@ -304,9 +304,9 @@ dtruss ./myapp.psp 2>&1 | grep -E "open|stat"
 ## Getting Help
 
 ### Check Documentation
-1. Review [User Guide](USER-GUIDE.md)
-2. Check [API Reference](API-REFERENCE.md)
-3. Read [Architecture](ARCHITECTURE.md)
+1. Review [User Guide](../guide/index.md)
+2. Check [API Reference](../api/index.md)
+3. Read [Architecture](../development/architecture.md)
 
 ### Debugging Checklist
 - [ ] Using latest version?

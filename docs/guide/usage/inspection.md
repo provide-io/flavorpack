@@ -24,9 +24,9 @@ _Getting started content coming soon_
 
 ## Related Documentation
 
-- [Getting Started](../getting-started/index.md)
-- [API Reference](../api/index.md)
-- [Troubleshooting](../troubleshooting/index.md)
+- [Getting Started](../../getting-started/index.md)
+- [API Reference](../../api/index.md)
+- [Troubleshooting](../../troubleshooting/index.md)
 
 ## Next Steps
 
