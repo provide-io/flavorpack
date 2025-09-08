@@ -294,8 +294,8 @@ def generate_operation_tests():
         ([OP_GZIP], 0x10, "single GZIP"),
         ([OP_TAR], 0x01, "single TAR"),
         ([OP_TAR, OP_GZIP], 0x1001, "TAR + GZIP"),
-        ([OP_TAR, OP_BZIP2], 0x1101, "TAR + BZIP2"),
-        ([OP_TAR, OP_ZSTD], 0x1201, "TAR + ZSTD"),
+        ([OP_TAR, OP_BZIP2], 0x1301, "TAR + BZIP2"),  # Fixed: BZIP2 is 0x13
+        ([OP_TAR, OP_ZSTD], 0x1b01, "TAR + ZSTD"),  # Fixed: ZSTD is 0x1b
         ([OP_TAR, OP_GZIP, OP_AES256_GCM], 0x311001, "TAR + GZIP + AES256_GCM"),
     ]
     

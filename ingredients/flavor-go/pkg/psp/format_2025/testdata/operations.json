@@ -35,8 +35,8 @@
       1,
       19
     ],
-    "packed": 4353,
-    "packed_hex": "0x0000000000001101",
+    "packed": 4865,
+    "packed_hex": "0x0000000000001301",
     "description": "TAR + BZIP2"
   },
   {
@@ -44,8 +44,8 @@
       1,
       27
     ],
-    "packed": 4609,
-    "packed_hex": "0x0000000000001201",
+    "packed": 6913,
+    "packed_hex": "0x0000000000001b01",
     "description": "TAR + ZSTD"
   },
   {
