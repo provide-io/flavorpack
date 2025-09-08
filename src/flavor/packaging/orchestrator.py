@@ -22,7 +22,7 @@ from flavor.packaging.orchestrator_ingredients import (
     find_launcher_executable,
     write_manifest_file,
 )
-from flavor.packaging.python_packager import PythonPackager
+from flavor.packaging.python.packager import PythonPackager
 from flavor.psp.metadata.paths import validate_metadata_dict
 from flavor.utils.subprocess import run_command
 

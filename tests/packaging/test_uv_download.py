@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from flavor.packaging.python_packager import PythonPackager
+from flavor.packaging.python.packager import PythonPackager
 
 
 class TestUVDownload:
