@@ -1,0 +1,180 @@
+// PSPF/2025 Operation Chain Specification
+// Defines the 255 operation types and chain packing format
+syntax = "proto3";
+
+package pspf_2025.operations;
+
+option go_package = "github.com/provide-io/flavorpack/psp/format_2025;pspf2025";
+option java_package = "io.provide.flavorpack.pspf2025";
+
+// Complete operation enumeration (255 total)
+enum Operation {
+  // 0x00: No operation
+  OP_NONE = 0x00;
+
+  // 0x01-0x0F: Bundle operations (15 slots)
+  OP_TAR = 0x01;
+  OP_TAR_SORTED = 0x02;
+  OP_TAR_STREAM = 0x03;
+  OP_CPIO = 0x04;
+  OP_CPIO_NEWC = 0x05;
+  OP_AR = 0x06;
+  OP_AR_BSD = 0x07;
+  OP_ZIP_STORE = 0x08;
+  OP_ZIP_STREAM = 0x09;
+  OP_7Z = 0x0A;
+  OP_RAR = 0x0B;
+  OP_PAX = 0x0C;
+  OP_USTAR = 0x0D;
+  OP_BUNDLE_RESERVED_E = 0x0E;
+  OP_BUNDLE_RESERVED_F = 0x0F;
+
+  // 0x10-0x2F: Compression operations (32 slots)
+  OP_GZIP = 0x10;
+  OP_GZIP_FAST = 0x11;
+  OP_GZIP_BEST = 0x12;
+  OP_BZIP2 = 0x13;
+  OP_BZIP2_FAST = 0x14;
+  OP_BZIP2_BEST = 0x15;
+  OP_XZ = 0x16;
+  OP_XZ_FAST = 0x17;
+  OP_XZ_BEST = 0x18;
+  OP_LZMA = 0x19;
+  OP_LZMA2 = 0x1A;
+  OP_ZSTD = 0x1B;
+  OP_ZSTD_FAST = 0x1C;
+  OP_ZSTD_BEST = 0x1D;
+  OP_LZ4 = 0x1E;
+  OP_LZ4_HC = 0x1F;
+  OP_SNAPPY = 0x20;
+  OP_BROTLI = 0x21;
+  OP_BROTLI_TEXT = 0x22;
+  OP_DEFLATE = 0x23;
+  OP_DEFLATE64 = 0x24;
+  OP_PPM = 0x25;
+  OP_PPMD = 0x26;
+  // 0x27-0x2F reserved
+
+  // 0x30-0x4F: Encryption operations (32 slots)
+  OP_AES128_GCM = 0x30;
+  OP_AES256_GCM = 0x31;
+  OP_AES128_CBC = 0x32;
+  OP_AES256_CBC = 0x33;
+  OP_AES128_CTR = 0x34;
+  OP_AES256_CTR = 0x35;
+  OP_CHACHA20_POLY1305 = 0x36;
+  OP_XCHACHA20_POLY1305 = 0x37;
+  OP_SALSA20 = 0x38;
+  OP_XSALSA20_POLY1305 = 0x39;
+  OP_RSA_2048 = 0x3A;
+  OP_RSA_4096 = 0x3B;
+  OP_ED25519 = 0x3C;
+  OP_X25519 = 0x3D;
+  OP_SECP256K1 = 0x3E;
+  OP_SECP256R1 = 0x3F;
+  OP_NACL_BOX = 0x40;
+  OP_NACL_SECRETBOX = 0x41;
+  OP_AGE = 0x42;
+  OP_PGP = 0x43;
+  // 0x44-0x4F reserved
+
+  // 0x50-0x6F: Encoding operations (32 slots)  
+  OP_BASE64 = 0x50;
+  OP_BASE64_URL = 0x51;
+  OP_BASE32 = 0x52;
+  OP_BASE16 = 0x53;
+  OP_HEX = 0x54;
+  OP_ASCII85 = 0x55;
+  OP_UUENCODE = 0x56;
+  OP_XXENCODE = 0x57;
+  OP_QUOTED_PRINTABLE = 0x58;
+  OP_PUNYCODE = 0x59;
+  OP_PERCENT = 0x5A;
+  // 0x5B-0x6F reserved
+
+  // 0x70-0x8F: Hash operations (32 slots)
+  OP_SHA256 = 0x70;
+  OP_SHA512 = 0x71;
+  OP_SHA3_256 = 0x72;
+  OP_SHA3_512 = 0x73;
+  OP_BLAKE2B = 0x74;
+  OP_BLAKE2S = 0x75;
+  OP_BLAKE3 = 0x76;
+  OP_MD5 = 0x77;
+  OP_SHA1 = 0x78;
+  OP_XXHASH = 0x79;
+  OP_XXHASH3 = 0x7A;
+  OP_SIPHASH = 0x7B;
+  OP_HIGHWAYHASH = 0x7C;
+  OP_ADLER32 = 0x7D;
+  OP_CRC32 = 0x7E;
+  OP_CRC64 = 0x7F;
+  // 0x80-0x8F reserved
+
+  // 0x90-0xAF: Signature operations (32 slots)
+  OP_ED25519_SIGN = 0x90;
+  OP_RSA_PSS = 0x91;
+  OP_RSA_PKCS1 = 0x92;
+  OP_ECDSA_P256 = 0x93;
+  OP_ECDSA_P384 = 0x94;
+  OP_ECDSA_P521 = 0x95;
+  OP_EDDSA = 0x96;
+  OP_HMAC_SHA256 = 0x97;
+  OP_HMAC_SHA512 = 0x98;
+  // 0x99-0xAF reserved
+
+  // 0xB0-0xCF: Transform operations (32 slots)
+  OP_SPLIT = 0xB0;
+  OP_MERGE = 0xB1;
+  OP_DEDUPE = 0xB2;
+  OP_DELTA = 0xB3;
+  OP_PATCH = 0xB4;
+  // 0xB5-0xCF reserved
+
+  // 0xD0-0xEF: Custom operations (32 slots)
+  // 0xF0-0xFE: Reserved operations (15 slots)
+  OP_TERMINAL = 0xFF;  // Chain terminator
+}
+
+// Operation chain representation
+message OperationChain {
+  // Packed 64-bit integer containing up to 8 operations
+  uint64 packed = 1;
+  
+  // Optional expanded representation for clarity
+  repeated uint32 operations = 2;
+  
+  // Human-readable description
+  string description = 3;
+}
+
+// Operation capability requirements
+message OperationCapability {
+  Operation operation = 1;
+  
+  // Required system capabilities
+  repeated string required_capabilities = 2;
+  
+  // Input/output constraints
+  string input_format = 3;
+  string output_format = 4;
+  
+  // Performance characteristics
+  uint32 cpu_cost = 5;      // Relative CPU cost (1-100)
+  uint32 memory_cost = 6;    // Relative memory cost (1-100)
+  bool streaming = 7;        // Supports streaming mode
+  bool seekable = 8;         // Supports random access
+}
+
+// Operation configuration
+message OperationConfig {
+  Operation operation = 1;
+  
+  // Operation-specific parameters
+  map<string, string> parameters = 2;
+  
+  // Buffer sizes and limits
+  uint32 buffer_size = 3;
+  uint32 max_memory = 4;
+  uint32 timeout_ms = 5;
+}
