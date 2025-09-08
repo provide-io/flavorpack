@@ -13,7 +13,7 @@
       "id": "pyvider-test",
       "source": "scripts/pyvider_test.py",
       "target": "scripts/pyvider_test.py",
-      "encoding": "none",
+      "codec": "none",
       "purpose": "executable",
       "lifecycle": "runtime",
       "permissions": "0755"

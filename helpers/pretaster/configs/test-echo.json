@@ -18,7 +18,7 @@
       "target": "scripts/echo_test.py",
       "purpose": "payload",
       "lifecycle": "cached",
-      "encoding": "raw",
+      "codec": "raw",
       "permissions": "0755",
       "resolution": "build"
     }

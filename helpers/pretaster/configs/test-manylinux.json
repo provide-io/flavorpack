@@ -13,7 +13,7 @@
       "id": "manylinux-test",
       "source": "scripts/combo_test.py",
       "target": "scripts/combo_test.py",
-      "encoding": "none",
+      "codec": "none",
       "purpose": "executable",
       "lifecycle": "runtime",
       "permissions": "0755"
