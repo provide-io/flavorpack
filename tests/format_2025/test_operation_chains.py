@@ -13,9 +13,8 @@ from flavor.psp.format_2025.reader import PSPFReader
 from flavor.psp.format_2025.operations import (
     OP_TAR, OP_GZIP, OP_BZIP2, OP_ZSTD, OP_AES256_GCM,
     pack_operations, unpack_operations, operations_to_string,
-    string_to_operations, legacy_codec_to_operations
+    string_to_operations
 )
-from flavor.psp.format_2025.constants import CODEC_RAW, CODEC_TAR, CODEC_GZIP, CODEC_TGZ
 from flavor.psp.format_2025.slots import SlotDescriptor, SlotMetadata
 
 
@@ -63,34 +62,37 @@ class TestOperationChains:
         assert string_to_operations("tar.gz") == pack_operations([OP_TAR, OP_GZIP])
         assert string_to_operations("tar.bz2") == pack_operations([OP_TAR, OP_BZIP2])
     
-    def test_legacy_codec_compatibility(self):
-        """Test backward compatibility with legacy codec constants."""
-        assert legacy_codec_to_operations(CODEC_RAW) == 0
-        assert legacy_codec_to_operations(CODEC_TAR) == pack_operations([OP_TAR])
-        assert legacy_codec_to_operations(CODEC_GZIP) == pack_operations([OP_GZIP])
-        assert legacy_codec_to_operations(CODEC_TGZ) == pack_operations([OP_TAR, OP_GZIP])
+    def test_common_operation_chains(self):
+        """Test common operation chain patterns."""
+        # RAW (no operations)
+        assert pack_operations([]) == 0
+        # Single operations
+        assert pack_operations([OP_TAR]) == 0x01
+        assert pack_operations([OP_GZIP]) == 0x10
+        # Common combinations
+        assert pack_operations([OP_TAR, OP_GZIP]) == 0x1001  # tar.gz
     
     def test_slot_descriptor_with_operations(self):
         """Test SlotDescriptor handles operations correctly."""
-        # Create with legacy codec
+        # Create with operations
         slot1 = SlotDescriptor(
             id=1,
             name="test",
-            codec=CODEC_TGZ,
+            operations=pack_operations([OP_TAR, OP_GZIP]),
             size=1024
         )
-        # Should auto-convert to operations
+        # Verify operations are stored correctly
         assert slot1.operations == pack_operations([OP_TAR, OP_GZIP])
         
-        # Create with operations
+        # Create with different operations
         slot2 = SlotDescriptor(
             id=2,
             name="test2",
             operations=pack_operations([OP_TAR, OP_BZIP2]),
             size=2048
         )
-        # Should set codec for compatibility
-        assert slot2.codec == CODEC_RAW  # No direct mapping
+        # Verify operations
+        assert slot2.operations == pack_operations([OP_TAR, OP_BZIP2])
         
         # Pack and unpack
         packed = slot1.pack()

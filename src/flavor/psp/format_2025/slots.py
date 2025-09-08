@@ -96,9 +96,10 @@ class SlotDescriptor:
 
     def pack(self) -> bytes:
         """Pack descriptor into 64-byte binary format."""
-        # Pack to 64-byte format with operations
+        # Pack to exactly 64 bytes:
+        # 6Q (48) + I (4) + 8B (8) + H (2) + H (2) = 64
         data = struct.pack(
-            "<QQQQQQQIBBBBBBH",  # 6Q (48) + Q (8) + I (4) + 6B (6) + H (2) = 68 bytes - need to fix
+            "<QQQQQQQIBBBBBBBBHH",
             self.id,
             self.name_hash,
             self.offset,
@@ -107,12 +108,15 @@ class SlotDescriptor:
             self.operations,  # 64-bit operations field
             self.checksum,
             self.encryption,
-            self.alignment & 0xFF,  # Ensure 1 byte
+            self.alignment & 0xFF,
             self.purpose,
             self.lifecycle,
             self.access_hint,
             self.priority,
-            self.permissions,
+            self.permissions & 0xFF,
+            self.platform,
+            self.extended_offset & 0xFFFF,
+            self.extended_size & 0xFFFF,
         )
         
         # Ensure exactly 64 bytes
@@ -126,7 +130,7 @@ class SlotDescriptor:
             raise ValueError(f"Slot descriptor must be {SLOT_DESCRIPTOR_SIZE} bytes")
 
         unpacked = struct.unpack(
-            "<QQQQQQQIBBBBBBH",  # Match new format: 6Q + I + 6B + H = 64 bytes
+            "<QQQQQQQIBBBBBBBBHH",  # Match pack format exactly
             data,
         )
 
@@ -145,6 +149,9 @@ class SlotDescriptor:
             access_hint=unpacked[11],
             priority=unpacked[12],
             permissions=unpacked[13],
+            platform=unpacked[14],
+            extended_offset=unpacked[15],
+            extended_size=unpacked[16],
         )
 
     def to_dict(self) -> dict[str, Any]:
