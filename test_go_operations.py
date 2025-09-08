@@ -1,85 +1,47 @@
 #!/usr/bin/env python3
 """Test that Go can read packages created with the new operations system."""
 
-import json
-import tempfile
+import subprocess
 from pathlib import Path
 
-from flavor.psp.format_2025.builder import PSPBuilder
-from flavor.psp.format_2025.operations import pack_operations, OP_TAR, OP_GZIP
+from flavor.psp.format_2025.operations import pack_operations, unpack_operations, OP_TAR, OP_GZIP
 from flavor.psp.format_2025.slots import SlotDescriptor
 
 
 def create_test_package():
     """Create a minimal test package with operations."""
-    print("📦 Creating test package with operations...")
+    print("📦 Testing Python operations system...")
     
-    # Create a temporary directory for test data
-    with tempfile.TemporaryDirectory() as tmpdir:
-        tmpdir = Path(tmpdir)
-        
-        # Create some test files
-        test_file = tmpdir / "test.txt"
-        test_file.write_text("Hello from Python operations!")
-        
-        # Create a minimal manifest
-        manifest = {
-            "package": {
-                "name": "test-operations",
-                "version": "1.0.0",
-            },
-            "slots": [
-                {
-                    "id": "test",
-                    "source": str(test_file),
-                    "target": "test.txt",
-                    "codec": "gzip",  # This will be converted to operations
-                }
-            ]
-        }
-        
-        # Build options
-        from flavor.psp.format_2025.spec import BuildOptions
-        options = BuildOptions(
-            manifest_path=tmpdir / "manifest.json",
-            output_path=tmpdir / "test.psp",
-            key_seed="test123",
-            compression_level=6,
-        )
-        
-        # Write manifest
-        manifest_path = tmpdir / "manifest.json"
-        manifest_path.write_text(json.dumps(manifest, indent=2))
-        
-        # Build the package
-        print("🔨 Building package...")
-        builder = PSPBuilder(options)
-        
-        # Create a slot descriptor with operations
-        descriptor = SlotDescriptor(
-            id=1,
-            name="test.txt",
-            size=100,
-            original_size=100,
-            operations=pack_operations([OP_TAR, OP_GZIP]),  # TAR + GZIP
-            checksum=0x12345678,
-        )
-        
-        print(f"📊 Slot operations: 0x{descriptor.operations:016x}")
-        print(f"   - Represents: TAR + GZIP")
-        
-        # For now, just verify the operations field works
-        packed = descriptor.pack()
-        assert len(packed) == 64, f"Descriptor must be 64 bytes, got {len(packed)}"
-        
-        # Unpack and verify
-        from flavor.psp.format_2025.slots import SlotDescriptor as SD
-        unpacked = SD.unpack(packed)
-        assert unpacked.operations == descriptor.operations
-        
-        print("✅ Python operations test passed!")
-        
-        return tmpdir / "test.psp"
+    # Create a slot descriptor with operations
+    descriptor = SlotDescriptor(
+        id=1,
+        name="test.txt",
+        size=100,
+        original_size=100,
+        operations=pack_operations([OP_TAR, OP_GZIP]),  # TAR + GZIP
+        checksum=0x12345678,
+    )
+    
+    print(f"📊 Slot operations: 0x{descriptor.operations:016x}")
+    print(f"   - Represents: TAR + GZIP")
+    
+    # Test packing
+    packed = descriptor.pack()
+    assert len(packed) == 64, f"Descriptor must be 64 bytes, got {len(packed)}"
+    print(f"✅ Packed to {len(packed)} bytes")
+    
+    # Test unpacking
+    unpacked = SlotDescriptor.unpack(packed)
+    assert unpacked.operations == descriptor.operations
+    print(f"✅ Unpacked operations: 0x{unpacked.operations:016x}")
+    
+    # Verify operations unpacking
+    ops = unpack_operations(unpacked.operations)
+    assert ops == [OP_TAR, OP_GZIP]
+    print(f"✅ Operations list: {ops}")
+    
+    print("✅ Python operations test passed!")
+    return True
 
 
 def test_go_compatibility():
