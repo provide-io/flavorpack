@@ -65,10 +65,12 @@ def cli(ctx: click.Context, log_level: str) -> None:
     ctx.ensure_object(dict)
     ctx.obj["log_level"] = log_level
 
-    from provide.foundation.logger import setup_logging
+    # Skip logging setup when running under pytest to avoid I/O conflicts
+    if "pytest" not in sys.modules:
+        from provide.foundation.logger import setup_logging
 
-    # Set up structured logging with foundation logger
-    setup_logging(level=log_level.upper())
+        # Set up structured logging with foundation logger
+        setup_logging(level=log_level.upper())
 
 
 # Register simple commands
