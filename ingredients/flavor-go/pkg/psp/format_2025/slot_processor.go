@@ -190,7 +190,7 @@ func (sp *SlotProcessor) processSlot(index int, slot *Slot) error {
 		"source", slot.Source, "target", slot.Target)
 
 	// Read and process slot data
-	slotData, compressed, codecMethod, err := sp.loadSlotData(slot)
+	slotData, compressed, _, err := sp.loadSlotData(slot)
 	if err != nil {
 		return fmt.Errorf("failed to load slot data: %w", err)
 	}
@@ -214,24 +214,36 @@ func (sp *SlotProcessor) processSlot(index int, slot *Slot) error {
 		Permissions: slot.Permissions,
 	}
 
-	// Create slot descriptor with all required fields
+	// Determine operations based on codec
+	var operations uint64
+	switch slot.Codec {
+	case "gzip":
+		operations = PackOperations([]uint8{OP_GZIP})
+	case "tgz", "tar.gz":
+		operations = PackOperations([]uint8{OP_TAR, OP_GZIP})
+	case "tar":
+		operations = PackOperations([]uint8{OP_TAR})
+	default:
+		operations = 0 // No operations (raw)
+	}
+
+	// Create slot descriptor with new structure
 	descriptor := SlotDescriptor{
 		ID:             uint64(index),
+		NameHash:       HashName(slot.Target),
 		Offset:         0, // Will be set during write phase
 		Size:           uint64(len(compressed)),
 		OriginalSize:   uint64(len(slotData)),
-		Checksum:       adler32.Checksum(compressed), // Use adler32 for descriptor
-		Codec:       codecMethod,
-		Encryption:     0, // no encryption
-		Alignment:      uint16(SlotAlignment),
+		Operations:     operations,
+		Checksum:       uint64(adler32.Checksum(compressed)), // Cast to uint64
 		Purpose:        mapPurposeToUint8(slot.Purpose),
 		Lifecycle:      mapLifecycleToUint8(slot.Lifecycle),
-		AccessHint:     0,   // sequential
 		Priority:       128, // normal priority
-		Permissions:    parsePermissions(slot.Permissions),
-		Platform:       0, // all platforms
-		ExtendedOffset: 0,
-		ExtendedSize:   0,
+		Platform:       0,   // all platforms
+		Reserved1:      0,
+		Reserved2:      0,
+		Permissions:    uint8(parsePermissions(slot.Permissions) & 0xFF),
+		PermissionsHigh: uint8(parsePermissions(slot.Permissions) >> 8),
 	}
 
 	// Store processed data
@@ -280,28 +292,11 @@ func (sp *SlotProcessor) loadSlotData(slot *Slot) ([]byte, []byte, uint8, error)
 
 	sp.logger.Debug("📊 Slot size", "original", len(slotData), "encoding", slot.Codec)
 
-	// Handle encoding
-	var compressed []byte
-	var codecMethod uint8
+	// For now, we don't actually compress here - that's handled elsewhere
+	// This function just validates and prepares the data
+	compressed := slotData
 
-	switch slot.Codec {
-	case "gzip":
-		compressed = slotData
-		codecMethod = CodecGzip
-	case "tgz", "tar.gz":
-		compressed = slotData
-		codecMethod = CodecTgz
-	case "tar":
-		compressed = slotData
-		codecMethod = CodecTar
-	case "raw", "none", "":
-		compressed = slotData
-		codecMethod = CodecRaw
-	default:
-		return nil, nil, 0, fmt.Errorf("unknown codec: %s", slot.Codec)
-	}
-
-	return slotData, compressed, codecMethod, nil
+	return slotData, compressed, 0, nil
 }
 
 // GetDescriptors returns the processed slot descriptors
