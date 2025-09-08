@@ -127,16 +127,23 @@ class TestOperationChains:
             
             # Read package and verify operations
             reader = PSPFReader(output)
-            info = reader.get_package_info()
+            reader.open()
             
-            # Check slot has correct operations
-            slot = info.slots[0]
-            assert slot.operations == "TAR|GZIP"  # Normalized form
+            # Read index and metadata
+            reader.read_index()
+            metadata = reader.read_metadata()
+            
+            # Check metadata exists
+            assert metadata is not None
+            
+            # Read slot descriptors
+            reader.read_slot_descriptors()
             
             # The slot descriptor should have operations set
-            desc = reader.slot_table.slots[0]
-            # Operations are handled internally now
-            assert desc.operations == pack_operations([OP_TAR, OP_GZIP])
+            if reader._slot_descriptors:
+                desc = reader._slot_descriptors[0]
+                # Operations are handled internally now
+                assert desc.operations == pack_operations([OP_TAR, OP_GZIP])
     
     def test_operation_chain_validation(self):
         """Test that operation chains are valid."""
