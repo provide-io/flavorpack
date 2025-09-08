@@ -24,7 +24,7 @@ from flavor.packaging.orchestrator_ingredients import (
 )
 from flavor.packaging.python.packager import PythonPackager
 from flavor.psp.metadata.paths import validate_metadata_dict
-from flavor.utils.subprocess import run_command
+from provide.foundation.process import run_command
 
 
 class PackagingOrchestrator:
