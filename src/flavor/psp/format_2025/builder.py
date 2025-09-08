@@ -190,8 +190,8 @@ def prepare_slots(
         # Load data
         data = _load_slot_data(slot)
 
-        # Determine encoding (no compression, just metadata)
-        slot_data, codec_type = _determine_codec(data, slot.codec, options)
+        # Determine operations (no compression, just metadata)
+        slot_data, packed_ops = _determine_operations(data, slot.operations, options)
 
         # Calculate checksums with prefixes
         checksum_str = calculate_checksum(slot_data, "sha256")
@@ -205,7 +205,7 @@ def prepare_slots(
                 metadata=slot,
                 data=data,
                 compressed_data=slot_data if slot_data != data else None,
-                codec_type=codec_type,  # Now codec type, not compression
+                codec_type=packed_ops,  # Operations packed as integer
                 checksum=checksum_adler32,  # Binary descriptor uses raw Adler-32
             )
         )
@@ -451,7 +451,7 @@ def _write_package(
                     size=len(data_to_write),
                     original_size=len(slot.data),
                     checksum=slot.checksum,
-                    codec=slot.codec_type,  # Using codec field now
+                    operations=slot.codec_type,  # Operations packed as integer
                     purpose=_map_purpose(slot.metadata.purpose),
                     lifecycle=_map_lifecycle(slot.metadata.lifecycle),
                     permissions=slot_permissions,
