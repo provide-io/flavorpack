@@ -243,8 +243,8 @@ fn set_file_permissions(
 
     // Get permissions from descriptor
     let descriptor = &descriptors[slot_index];
-    // Copy to avoid unaligned access
-    let perms = descriptor.permissions;
+    // Combine both permission bytes (low and high)
+    let perms = u16::from(descriptor.permissions) | (u16::from(descriptor.permissions_high) << 8);
     let mode = if perms != 0 {
         u32::from(perms)
     } else {
