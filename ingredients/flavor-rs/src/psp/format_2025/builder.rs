@@ -278,7 +278,7 @@ impl SlotProcessor {
                 target: slot.target.clone(),
                 size: file_size as i64,
                 checksum: sha256_checksum,
-                codec: slot.codec.clone(),
+                codec: slot.operations.clone(),
                 purpose: slot.purpose.clone(),
                 lifecycle: slot.lifecycle.clone(),
                 permissions: slot.permissions.clone().or_else(|| Some(format!("{:04o}", DEFAULT_FILE_PERMS))),

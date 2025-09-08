@@ -16,7 +16,7 @@
       "target": "scripts/env_test.py",
       "purpose": "payload",
       "lifecycle": "cached",
-      "codec": "none",
+      "operations": "none",
       "permissions": "0755"
     }
   ],

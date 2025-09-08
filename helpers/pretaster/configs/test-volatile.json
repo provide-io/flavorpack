@@ -13,7 +13,7 @@
       "id": "combo-test-py",
       "source": "scripts/combo_test.py",
       "target": "scripts/combo_test.py",
-      "codec": "none",
+      "operations": "none",
       "purpose": "executable",
       "lifecycle": "runtime",
       "permissions": "0755"
@@ -22,7 +22,7 @@
       "id": "volatile-data",
       "source": "src/volatile-test.txt",
       "target": "volatile-data",
-      "codec": "none",
+      "operations": "none",
       "purpose": "data",
       "lifecycle": "volatile"
     },
@@ -30,7 +30,7 @@
       "id": "init-setup",
       "source": "src/init-test.txt", 
       "target": "init-setup",
-      "codec": "none",
+      "operations": "none",
       "purpose": "data",
       "lifecycle": "init"
     }

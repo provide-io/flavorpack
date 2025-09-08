@@ -17,7 +17,7 @@
       "slot": 0,
       "purpose": "payload",
       "lifecycle": "cached",
-      "codec": "raw",
+      "operations": "raw",
       "id": "simple-test-sh",
       "source": "{workenv}/scripts/simple_test.sh",
       "target": "scripts/simple_test.sh",

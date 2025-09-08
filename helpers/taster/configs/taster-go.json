@@ -15,7 +15,7 @@
       "slot": 0,
       "purpose": "payload",
       "lifecycle": "cached",
-      "codec": "tgz",
+      "operations": "tgz",
       "id": "taster-py",
       "source": "{workenv}",
       "target": ".",
