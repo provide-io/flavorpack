@@ -29,10 +29,6 @@ from flavor.psp.format_2025.constants import (
     DEFAULT_EXECUTABLE_PERMS,
     DEFAULT_MAX_MEMORY,
     DEFAULT_MIN_MEMORY,
-    CODEC_GZIP,
-    CODEC_RAW,
-    CODEC_TAR,
-    CODEC_TGZ,
     LIFECYCLE_CACHE,
     LIFECYCLE_CONFIG,
     LIFECYCLE_DEV,
@@ -215,7 +211,7 @@ def prepare_slots(
             name=slot.id,
             raw_size=len(data),
             compressed_size=len(slot_data),
-            codec=codec_type,
+            operations=packed_ops,
             checksum=checksum_str[:8],
         )
 
@@ -316,22 +312,6 @@ def _determine_operations(
     packed_ops = string_to_operations(operations)
     
     return data, packed_ops
-    # Future formats (not implemented yet):
-    # elif encoding_lower == "zstd":
-    #     return data, ENCODING_ZSTD
-    # elif encoding_lower in ("tzst", "tar.zst"):
-    #     return data, ENCODING_TZST
-    # elif encoding_lower == "brotli":
-    #     return data, ENCODING_BROTLI
-    # elif encoding_lower in ("tbr", "tar.br"):
-    #     return data, ENCODING_TBR
-    # elif encoding_lower == "zip":
-    #     return data, ENCODING_ZIP
-    # elif encoding_lower == "7z":
-    #     return data, ENCODING_7Z
-    else:
-        logger.warning(f"Unknown codec '{codec}', using CODEC_RAW")
-        return data, CODEC_RAW
 
 
 def _write_package(
