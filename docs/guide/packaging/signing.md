@@ -577,5 +577,5 @@ xcrun altool --notarize-app \
 
 - [Cryptographic Specification](../../spec/crypto.md) - Technical details
 - [Security Model](../../guide/concepts/security.md) - Security architecture
-- [Package Verification](../../api/python/api.md#verify_package) - API reference
+- [Package Verification](../../api/python/index.md#verify_package) - API reference
 - [Troubleshooting](../../troubleshooting/index.md#signature-and-security) - Common issues

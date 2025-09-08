@@ -15,13 +15,13 @@
         <link rel="canonical" href="https://flavorpack.io/spec/binary-layout/">
       
       
-        <link rel="prev" href="../">
+        <link rel="prev" href="../pspf-2025/">
       
       
-        <link rel="next" href="../crypto/">
+        <link rel="next" href="../metadata/">
       
       
-      <link rel="icon" href="../../assets/images/favicon.png">
+      <link rel="icon" href="../../assets/images/logo.svg">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.18">
     
     
@@ -47,8 +47,8 @@
         
         
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,700,700i%7CFira+Code:400,400i,700,700i&display=fallback">
-        <style>:root{--md-text-font:"Inter";--md-code-font:"Fira Code"}</style>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Poppins:300,300i,400,400i,700,700i%7CFira+Code:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Poppins";--md-code-font:"Fira Code"}</style>
       
     
     
@@ -92,7 +92,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#binary-layout" class="md-skip">
+        <a href="#binary-layout-specification" class="md-skip">
           Skip to content
         </a>
       
@@ -114,8 +114,7 @@
   <nav class="md-header__inner md-grid" aria-label="Header">
     <a href="../.." title="FlavorPack Documentation" class="md-header__button md-logo" aria-label="FlavorPack Documentation" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <img src="../../assets/images/logo.svg" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -250,7 +249,7 @@
   
     
   
-  FlavorPack Documentation
+  Home
 
       </a>
     </li>
@@ -262,17 +261,20 @@
   
   
   
-    <li class="md-tabs__item">
-      <a href="../../DOCUMENTATION_STATUS/" class="md-tabs__link">
-        
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../getting-started/" class="md-tabs__link">
+          
   
   
     
   
-  FlavorPack Documentation Status
+  Getting Started
 
-      </a>
-    </li>
+        </a>
+      </li>
+    
   
 
       
@@ -281,17 +283,20 @@
   
   
   
-    <li class="md-tabs__item">
-      <a href="../../SUMMARY/" class="md-tabs__link">
-        
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../guide/" class="md-tabs__link">
+          
   
   
     
   
-  Summary
+  User Guide
 
-      </a>
-    </li>
+        </a>
+      </li>
+    
   
 
       
@@ -300,169 +305,42 @@
   
   
   
-    <li class="md-tabs__item">
-      <a href="../../changelog/" class="md-tabs__link">
-        
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../api/" class="md-tabs__link">
+          
   
   
     
   
-  Changelog
+  API Reference
 
-      </a>
-    </li>
+        </a>
+      </li>
+    
   
 
       
         
   
   
-  
-  
-    <li class="md-tabs__item">
-      <a href="../../license/" class="md-tabs__link">
-        
   
   
     
-  
-  License
-
-      </a>
-    </li>
-  
-
-      
-        
-  
-  
-  
-  
-    <li class="md-tabs__item">
-      <a href="../../api/" class="md-tabs__link">
-        
-  
-  
     
-  
-  Api
-
-      </a>
-    </li>
-  
-
-      
-        
-  
-  
-  
-  
-    <li class="md-tabs__item">
-      <a href="../../community/" class="md-tabs__link">
-        
-  
-  
-    
-  
-  Community
-
-      </a>
-    </li>
-  
-
-      
-        
-  
-  
-  
-  
-    <li class="md-tabs__item">
-      <a href="../../cookbook/" class="md-tabs__link">
-        
+      <li class="md-tabs__item">
+        <a href="../../cookbook/" class="md-tabs__link">
+          
   
   
     
   
   Cookbook
 
-      </a>
-    </li>
-  
-
-      
-        
-  
-  
-  
-  
-    <li class="md-tabs__item">
-      <a href="../../development/" class="md-tabs__link">
-        
-  
-  
+        </a>
+      </li>
     
-  
-  Development
-
-      </a>
-    </li>
-  
-
-      
-        
-  
-  
-  
-  
-    <li class="md-tabs__item">
-      <a href="../../getting-started/" class="md-tabs__link">
-        
-  
-  
-    
-  
-  Getting started
-
-      </a>
-    </li>
-  
-
-      
-        
-  
-  
-  
-  
-    <li class="md-tabs__item">
-      <a href="../../guide/" class="md-tabs__link">
-        
-  
-  
-    
-  
-  Guide
-
-      </a>
-    </li>
-  
-
-      
-        
-  
-  
-  
-  
-    <li class="md-tabs__item">
-      <a href="../../resources/" class="md-tabs__link">
-        
-  
-  
-    
-  
-  Resources
-
-      </a>
-    </li>
   
 
       
@@ -473,36 +351,20 @@
     
   
   
-    <li class="md-tabs__item md-tabs__item--active">
-      <a href="../" class="md-tabs__link">
-        
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../../resources/" class="md-tabs__link">
+          
   
   
     
   
-  Spec
+  Reference
 
-      </a>
-    </li>
-  
-
-      
-        
-  
-  
-  
-  
-    <li class="md-tabs__item">
-      <a href="../../troubleshooting/" class="md-tabs__link">
-        
-  
-  
+        </a>
+      </li>
     
-  
-  Troubleshooting
-
-      </a>
-    </li>
   
 
       
@@ -538,8 +400,7 @@
   <label class="md-nav__title" for="__drawer">
     <a href="../.." title="FlavorPack Documentation" class="md-nav__button md-logo" aria-label="FlavorPack Documentation" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <img src="../../assets/images/logo.svg" alt="logo">
 
     </a>
     FlavorPack Documentation
@@ -571,95 +432,7 @@
   
   
   <span class="md-ellipsis">
-    FlavorPack Documentation
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../DOCUMENTATION_STATUS/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    FlavorPack Documentation Status
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../SUMMARY/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Summary
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../changelog/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Changelog
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../license/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    License
+    Home
     
   </span>
   
@@ -678,63 +451,11 @@
     
     
       
-        
-      
-        
-      
-    
-    
-    
-      
-      
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+      
         
-          
-          <div class="md-nav__link md-nav__container">
-            <a href="../../api/" class="md-nav__link ">
-              
-  
-  
-  <span class="md-ellipsis">
-    Api
-    
-  </span>
-  
-
-            </a>
-            
-              
-              <label class="md-nav__link " for="__nav_6" id="__nav_6_label" tabindex="0">
-                <span class="md-nav__icon md-icon"></span>
-              </label>
-            
-          </div>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6">
-            <span class="md-nav__icon md-icon"></span>
-            Api
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    
-    
       
         
       
@@ -757,16 +478,16 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_1" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../api/native/" class="md-nav__link ">
+            <a href="../../getting-started/" class="md-nav__link ">
               
   
   
   <span class="md-ellipsis">
-    Native
+    Getting Started
     
   </span>
   
@@ -774,16 +495,247 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_6_1" id="__nav_6_1_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_2" id="__nav_2_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_1_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6_1">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
             <span class="md-nav__icon md-icon"></span>
-            Native
+            Getting Started
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Installation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Quick Start
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/first-package/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    First Package
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Examples
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../guide/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    User Guide
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            User Guide
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../guide/concepts/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    Core Concepts
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            Core Concepts
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
             
@@ -794,12 +746,12 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/native/cross-language/" class="md-nav__link">
+      <a href="../../guide/concepts/pspf-format/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Cross-Language API
+    PSPF Format
     
   </span>
   
@@ -817,12 +769,12 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/native/go/" class="md-nav__link">
+      <a href="../../guide/concepts/package-structure/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Go Ingredients
+    Package Structure
     
   </span>
   
@@ -840,12 +792,35 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/native/rust/" class="md-nav__link">
+      <a href="../../guide/concepts/workenv/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Rust Ingredients
+    Work Environments
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/concepts/security/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Security Model
     
   </span>
   
@@ -881,6 +856,8 @@
       
         
       
+        
+      
     
     
     
@@ -896,16 +873,16 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_2" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_3" >
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../api/python/" class="md-nav__link ">
+            <a href="../../guide/packaging/" class="md-nav__link ">
               
   
   
   <span class="md-ellipsis">
-    Python
+    Building Packages
     
   </span>
   
@@ -913,16 +890,16 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_6_2" id="__nav_6_2_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_2_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6_2">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
             <span class="md-nav__icon md-icon"></span>
-            Python
+            Building Packages
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
             
@@ -933,7 +910,217 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/python/cli/" class="md-nav__link">
+      <a href="../../guide/packaging/python/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Python Applications
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/packaging/manifest/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Manifest Files
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/packaging/configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Configuration
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/packaging/signing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Signing Packages
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/packaging/platforms/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Platform Support
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../guide/usage/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    Using Packages
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_4" id="__nav_3_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            Using Packages
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/usage/running/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Running Packages
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/usage/cli/" class="md-nav__link">
         
   
   
@@ -955,6 +1142,426 @@
   
   
   
+    <li class="md-nav__item">
+      <a href="../../guide/usage/inspection/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Inspecting Packages
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/usage/cache/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Cache Management
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/usage/environment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Environment Variables
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../guide/advanced/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    Advanced Topics
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_5" id="__nav_3_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_5">
+            <span class="md-nav__icon md-icon"></span>
+            Advanced Topics
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/advanced/cross-language/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Cross-Language Support
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/advanced/launchers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Custom Launchers
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/advanced/builders/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Custom Builders
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/advanced/performance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Performance Tuning
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/advanced/debugging/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Debugging
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../api/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    API Reference
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4" id="__nav_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            API Reference
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../api/python/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    Python API
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4_2" id="__nav_4_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2">
+            <span class="md-nav__icon md-icon"></span>
+            Python API
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/python/cli/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    CLI Interface
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
     
     
       
@@ -979,7 +1586,7 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_2_2" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_2_2" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -996,41 +1603,18 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_6_2_2" id="__nav_6_2_2_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_4_2_2" id="__nav_4_2_2_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_2_2_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6_2_2">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_2_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2_2">
             <span class="md-nav__icon md-icon"></span>
             Packaging
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../api/python/packaging/keys/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Key Management API
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
             
               
                 
@@ -1044,7 +1628,7 @@
   
   
   <span class="md-ellipsis">
-    Packaging Orchestrator API
+    Orchestrator
     
   </span>
   
@@ -1067,7 +1651,30 @@
   
   
   <span class="md-ellipsis">
-    Python Packager API
+    Python Packager
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/python/packaging/keys/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Key Management
     
   </span>
   
@@ -1107,14 +1714,6 @@
       
         
       
-        
-      
-        
-      
-        
-      
-        
-      
     
     
     
@@ -1130,7 +1729,7 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_2_3" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_2_3" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -1139,7 +1738,7 @@
   
   
   <span class="md-ellipsis">
-    Psp
+    PSPF Format
     
   </span>
   
@@ -1147,16 +1746,16 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_6_2_3" id="__nav_6_2_3_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_4_2_3" id="__nav_4_2_3_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_2_3_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6_2_3">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_2_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2_3">
             <span class="md-nav__icon md-icon"></span>
-            Psp
+            PSPF Format
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
             
@@ -1172,7 +1771,53 @@
   
   
   <span class="md-ellipsis">
-    PSPFBuilder API
+    Builder
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/python/psp/reader/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Reader
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/python/psp/metadata/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Metadata
     
   </span>
   
@@ -1195,7 +1840,7 @@
   
   
   <span class="md-ellipsis">
-    Cryptography API
+    Cryptography
     
   </span>
   
@@ -1235,68 +1880,61 @@
   
   
   
-    <li class="md-nav__item">
-      <a href="../../api/python/psp/metadata/" class="md-nav__link">
+    
+    
+      
         
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_2_3_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../api/python/psp/slots/" class="md-nav__link ">
+              
   
   
   <span class="md-ellipsis">
-    Package Metadata API
+    Slot System
     
   </span>
   
 
-      </a>
-    </li>
-  
-
-              
+            </a>
             
               
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../api/python/psp/reader/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    PSPFReader API
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
+              <label class="md-nav__link " for="__nav_4_2_3_6" id="__nav_4_2_3_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
             
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../api/python/psp/slots-codecs/" class="md-nav__link">
+          </div>
         
-  
-  
-  <span class="md-ellipsis">
-    Slot Compression Codecs
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_4_2_3_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2_3_6">
+            <span class="md-nav__icon md-icon"></span>
+            Slot System
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
             
               
                 
@@ -1310,7 +1948,7 @@
   
   
   <span class="md-ellipsis">
-    Slot Management Core API
+    Core API
     
   </span>
   
@@ -1333,7 +1971,30 @@
   
   
   <span class="md-ellipsis">
-    Slot Lifecycles
+    Lifecycles
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/python/psp/slots-codecs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Compression
     
   </span>
   
@@ -1356,7 +2017,7 @@
   
   
   <span class="md-ellipsis">
-    Slot Purposes
+    Purposes
     
   </span>
   
@@ -1367,24 +2028,9 @@
 
               
             
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../api/python/psp/slots/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Slot Management API
-    
-  </span>
-  
-
-      </a>
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -1428,7 +2074,7 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_2_4" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_2_4" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -1437,7 +2083,7 @@
   
   
   <span class="md-ellipsis">
-    Utils
+    Utilities
     
   </span>
   
@@ -1445,18 +2091,41 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_6_2_4" id="__nav_6_2_4_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_4_2_4" id="__nav_4_2_4_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_2_4_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6_2_4">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_2_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2_4">
             <span class="md-nav__icon md-icon"></span>
-            Utils
+            Utilities
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/python/utils/platform/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Platform Detection
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -1470,7 +2139,7 @@
   
   
   <span class="md-ellipsis">
-    Archive
+    Archive Handling
     
   </span>
   
@@ -1504,54 +2173,24 @@
 
               
             
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
               
                 
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../api/python/utils/platform/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Platform
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
-      
-      
   
   
   
@@ -1580,16 +2219,16 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_3" >
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../community/" class="md-nav__link ">
+            <a href="../../api/native/" class="md-nav__link ">
               
   
   
   <span class="md-ellipsis">
-    Community
+    Native Components
     
   </span>
   
@@ -1597,16 +2236,16 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_7" id="__nav_7_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_4_3" id="__nav_4_3_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3">
             <span class="md-nav__icon md-icon"></span>
-            Community
+            Native Components
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
             
@@ -1617,12 +2256,12 @@
   
   
     <li class="md-nav__item">
-      <a href="../../community/blog/" class="md-nav__link">
+      <a href="../../api/native/go/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Blog
+    Go Implementation
     
   </span>
   
@@ -1640,12 +2279,12 @@
   
   
     <li class="md-nav__item">
-      <a href="../../community/discussions/" class="md-nav__link">
+      <a href="../../api/native/rust/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Discussions
+    Rust Implementation
     
   </span>
   
@@ -1663,17 +2302,25 @@
   
   
     <li class="md-nav__item">
-      <a href="../../community/support/" class="md-nav__link">
+      <a href="../../api/native/cross-language/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Support
+    Cross-Language Bridge
     
   </span>
   
 
       </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -1696,6 +2343,10 @@
     
       
         
+          
+        
+      
+        
       
         
       
@@ -1714,7 +2365,7 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -1731,18 +2382,20 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_8" id="__nav_8_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_8">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             Cookbook
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
             
               
                 
@@ -1778,7 +2431,7 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8_1" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_2" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -1795,14 +2448,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_8_1" id="__nav_8_1_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_5_2" id="__nav_5_2_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_1_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_8_1">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_2">
             <span class="md-nav__icon md-icon"></span>
             Examples
           </label>
@@ -1821,6 +2474,29 @@
   
   <span class="md-ellipsis">
     CLI Tools
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cookbook/examples/web-app/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Web Applications
     
   </span>
   
@@ -1900,29 +2576,6 @@
 
               
             
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../cookbook/examples/web-app/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Web Applications
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
           </ul>
         </nav>
       
@@ -1965,7 +2618,7 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8_2" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_3" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -1982,64 +2635,18 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_8_2" id="__nav_8_2_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_5_3" id="__nav_5_3_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_2_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_8_2">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_3">
             <span class="md-nav__icon md-icon"></span>
             Recipes
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../cookbook/recipes/ci-cd/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    CI/CD Pipelines
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../cookbook/recipes/cloud/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Cloud Deployment
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
             
               
                 
@@ -2071,12 +2678,58 @@
   
   
     <li class="md-nav__item">
+      <a href="../../cookbook/recipes/ci-cd/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    CI/CD Pipelines
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../cookbook/recipes/multi-platform/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     Multi-Platform Builds
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cookbook/recipes/cloud/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Cloud Deployment
     
   </span>
   
@@ -2129,1313 +2782,15 @@
       
   
   
+    
   
   
+  
     
     
       
-        
-      
-        
-      
-        
-      
-        
-      
-        
-      
-        
-      
-    
-    
-    
-      
-      
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
         
           
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_9" >
-        
-          
-          <div class="md-nav__link md-nav__container">
-            <a href="../../development/" class="md-nav__link ">
-              
-  
-  
-  <span class="md-ellipsis">
-    Development
-    
-  </span>
-  
-
-            </a>
-            
-              
-              <label class="md-nav__link " for="__nav_9" id="__nav_9_label" tabindex="0">
-                <span class="md-nav__icon md-icon"></span>
-              </label>
-            
-          </div>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_9">
-            <span class="md-nav__icon md-icon"></span>
-            Development
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../development/architecture/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Flavor Pack Architecture
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../development/ci-cd/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    CI/CD Pipeline
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../development/contributing/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Development Guide
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../development/ingredients/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Building Ingredients
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../development/release/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Release Process
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    
-    
-      
-        
-      
-        
-      
-        
-      
-    
-    
-    
-      
-      
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_9_6" >
-        
-          
-          <div class="md-nav__link md-nav__container">
-            <a href="../../development/testing/" class="md-nav__link ">
-              
-  
-  
-  <span class="md-ellipsis">
-    Testing
-    
-  </span>
-  
-
-            </a>
-            
-              
-              <label class="md-nav__link " for="__nav_9_6" id="__nav_9_6_label" tabindex="0">
-                <span class="md-nav__icon md-icon"></span>
-              </label>
-            
-          </div>
-        
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_9_6_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_9_6">
-            <span class="md-nav__icon md-icon"></span>
-            Testing
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../development/testing/cross-language/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Cross-Language Tests
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../development/testing/integration/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Integration Tests
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../development/testing/unit/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Unit Tests
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    
-    
-      
-        
-      
-        
-      
-        
-      
-        
-      
-    
-    
-    
-      
-      
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_10" >
-        
-          
-          <div class="md-nav__link md-nav__container">
-            <a href="../../getting-started/" class="md-nav__link ">
-              
-  
-  
-  <span class="md-ellipsis">
-    Getting started
-    
-  </span>
-  
-
-            </a>
-            
-              
-              <label class="md-nav__link " for="__nav_10" id="__nav_10_label" tabindex="0">
-                <span class="md-nav__icon md-icon"></span>
-              </label>
-            
-          </div>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_10">
-            <span class="md-nav__icon md-icon"></span>
-            Getting started
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../getting-started/examples/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Examples
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../getting-started/first-package/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Creating Your First Package
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../getting-started/installation/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Installation
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../getting-started/quickstart/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Quick Start
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    
-    
-      
-        
-      
-        
-      
-        
-      
-        
-      
-    
-    
-    
-      
-      
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_11" >
-        
-          
-          <div class="md-nav__link md-nav__container">
-            <a href="../../guide/" class="md-nav__link ">
-              
-  
-  
-  <span class="md-ellipsis">
-    Guide
-    
-  </span>
-  
-
-            </a>
-            
-              
-              <label class="md-nav__link " for="__nav_11" id="__nav_11_label" tabindex="0">
-                <span class="md-nav__icon md-icon"></span>
-              </label>
-            
-          </div>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_11">
-            <span class="md-nav__icon md-icon"></span>
-            Guide
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    
-    
-      
-        
-      
-        
-      
-        
-      
-        
-      
-        
-      
-    
-    
-    
-      
-      
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_11_1" >
-        
-          
-          <div class="md-nav__link md-nav__container">
-            <a href="../../guide/advanced/" class="md-nav__link ">
-              
-  
-  
-  <span class="md-ellipsis">
-    Advanced
-    
-  </span>
-  
-
-            </a>
-            
-              
-              <label class="md-nav__link " for="__nav_11_1" id="__nav_11_1_label" tabindex="0">
-                <span class="md-nav__icon md-icon"></span>
-              </label>
-            
-          </div>
-        
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_11_1_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_11_1">
-            <span class="md-nav__icon md-icon"></span>
-            Advanced
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../guide/advanced/builders/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Builder Selection
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../guide/advanced/cross-language/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Cross-Language Support
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../guide/advanced/debugging/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Debugging
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../guide/advanced/launchers/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Custom Launchers
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../guide/advanced/performance/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Performance Optimization
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    
-    
-      
-        
-      
-        
-      
-        
-      
-        
-      
-    
-    
-    
-      
-      
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_11_2" >
-        
-          
-          <div class="md-nav__link md-nav__container">
-            <a href="../../guide/concepts/" class="md-nav__link ">
-              
-  
-  
-  <span class="md-ellipsis">
-    Concepts
-    
-  </span>
-  
-
-            </a>
-            
-              
-              <label class="md-nav__link " for="__nav_11_2" id="__nav_11_2_label" tabindex="0">
-                <span class="md-nav__icon md-icon"></span>
-              </label>
-            
-          </div>
-        
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_11_2_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_11_2">
-            <span class="md-nav__icon md-icon"></span>
-            Concepts
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../guide/concepts/package-structure/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Package Structure
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../guide/concepts/pspf-format/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Understanding the PSPF Format
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../guide/concepts/security/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Security Model
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../guide/concepts/workenv/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Work Environments
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    
-    
-      
-        
-      
-        
-      
-        
-      
-        
-      
-        
-      
-    
-    
-    
-      
-      
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_11_3" >
-        
-          
-          <div class="md-nav__link md-nav__container">
-            <a href="../../guide/packaging/" class="md-nav__link ">
-              
-  
-  
-  <span class="md-ellipsis">
-    Packaging
-    
-  </span>
-  
-
-            </a>
-            
-              
-              <label class="md-nav__link " for="__nav_11_3" id="__nav_11_3_label" tabindex="0">
-                <span class="md-nav__icon md-icon"></span>
-              </label>
-            
-          </div>
-        
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_11_3_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_11_3">
-            <span class="md-nav__icon md-icon"></span>
-            Packaging
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../guide/packaging/configuration/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Package Configuration
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../guide/packaging/manifest/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Manifest Files
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../guide/packaging/platforms/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Platform Support
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../guide/packaging/python/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Python Applications
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../guide/packaging/signing/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Signing &amp; Verification
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    
-    
-      
-        
-      
-        
-      
-        
-      
-        
-      
-        
-      
-    
-    
-    
-      
-      
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_11_4" >
-        
-          
-          <div class="md-nav__link md-nav__container">
-            <a href="../../guide/usage/" class="md-nav__link ">
-              
-  
-  
-  <span class="md-ellipsis">
-    Usage
-    
-  </span>
-  
-
-            </a>
-            
-              
-              <label class="md-nav__link " for="__nav_11_4" id="__nav_11_4_label" tabindex="0">
-                <span class="md-nav__icon md-icon"></span>
-              </label>
-            
-          </div>
-        
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_11_4_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_11_4">
-            <span class="md-nav__icon md-icon"></span>
-            Usage
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../guide/usage/cache/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Cache Management
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../guide/usage/cli/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Command Line Interface
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../guide/usage/environment/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Environment Variables
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../guide/usage/inspection/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Extracting &amp; Inspecting
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../guide/usage/running/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Running Packages
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../resources/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Resources
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-    
-  
-  
-  
-    
-    
-      
         
       
         
@@ -3462,7 +2817,76 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../resources/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    Reference
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6" id="__nav_6_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            Reference
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_2" checked>
         
           
           <div class="md-nav__link md-nav__container">
@@ -3471,7 +2895,7 @@
   
   
   <span class="md-ellipsis">
-    Spec
+    Specification
     
   </span>
   
@@ -3479,18 +2903,41 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_13" id="__nav_13_label" tabindex="">
+              <label class="md-nav__link " for="__nav_6_2" id="__nav_6_2_label" tabindex="">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_13">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_6_2">
             <span class="md-nav__icon md-icon"></span>
-            Spec
+            Specification
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../pspf-2025/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    PSPF 2025 Format
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -3549,44 +2996,38 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#overall-structure" class="md-nav__link">
+  <a href="#format-overview" class="md-nav__link">
     <span class="md-ellipsis">
-      Overall Structure
+      Format Overview
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#index-block" class="md-nav__link">
+  <a href="#native-launcher" class="md-nav__link">
     <span class="md-ellipsis">
-      Index Block
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Index Block">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#structure-8192-bytes" class="md-nav__link">
-    <span class="md-ellipsis">
-      Structure (8192 bytes)
+      Native Launcher
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#field-details" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#index-block-8192-bytes" class="md-nav__link">
     <span class="md-ellipsis">
-      Field Details
+      Index Block (8192 bytes)
     </span>
   </a>
   
 </li>
-        
-      </ul>
-    </nav>
+      
+        <li class="md-nav__item">
+  <a href="#metadata-section" class="md-nav__link">
+    <span class="md-ellipsis">
+      Metadata Section
+    </span>
+  </a>
   
 </li>
       
@@ -3597,29 +3038,14 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Slot Table">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#slot-entry-32-bytes-each" class="md-nav__link">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data-slots" class="md-nav__link">
     <span class="md-ellipsis">
-      Slot Entry (32 bytes each)
+      Data Slots
     </span>
   </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#encoding-types" class="md-nav__link">
-    <span class="md-ellipsis">
-      Encoding Types
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -3633,47 +3059,71 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#alignment-and-padding" class="md-nav__link">
+  <a href="#offset-calculations" class="md-nav__link">
     <span class="md-ellipsis">
-      Alignment and Padding
+      Offset Calculations
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#size-limits" class="md-nav__link">
+  <a href="#signature-verification" class="md-nav__link">
     <span class="md-ellipsis">
-      Size Limits
+      Signature Verification
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#reading-process" class="md-nav__link">
+  <a href="#compression-methods" class="md-nav__link">
     <span class="md-ellipsis">
-      Reading Process
+      Compression Methods
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#writing-process" class="md-nav__link">
+  <a href="#platform-considerations" class="md-nav__link">
     <span class="md-ellipsis">
-      Writing Process
+      Platform Considerations
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Platform Considerations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#linux" class="md-nav__link">
+    <span class="md-ellipsis">
+      Linux
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#compatibility-notes" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#macos" class="md-nav__link">
     <span class="md-ellipsis">
-      Compatibility Notes
+      macOS
     </span>
   </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#windows" class="md-nav__link">
+    <span class="md-ellipsis">
+      Windows
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -3702,35 +3152,12 @@
   
   
     <li class="md-nav__item">
-      <a href="../crypto/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Cryptographic Security
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../metadata/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Metadata Structure
+    Metadata Format
     
   </span>
   
@@ -3748,17 +3175,212 @@
   
   
     <li class="md-nav__item">
-      <a href="../pspf-2025/" class="md-nav__link">
+      <a href="../crypto/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    PSPF 2025 Edition
+    Cryptography
     
   </span>
   
 
       </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_2_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../feps/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    Enhancement Proposals
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6_2_5" id="__nav_6_2_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_2_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_2_5">
+            <span class="md-nav__icon md-icon"></span>
+            Enhancement Proposals
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../feps/fep-0001/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    FEP-0001: Core Specification
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../feps/fep-0002/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    FEP-0002: Work Environments
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../feps/fep-0003/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    FEP-0003: Security Model
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../feps/fep-0004/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    FEP-0004: Staged Payloads
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../feps/fep-0005/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    FEP-0005: JIT Loading
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -3801,201 +3423,7 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13_5" >
-        
-          
-          <div class="md-nav__link md-nav__container">
-            <a href="../feps/" class="md-nav__link ">
-              
-  
-  
-  <span class="md-ellipsis">
-    Feps
-    
-  </span>
-  
-
-            </a>
-            
-              
-              <label class="md-nav__link " for="__nav_13_5" id="__nav_13_5_label" tabindex="">
-                <span class="md-nav__icon md-icon"></span>
-              </label>
-            
-          </div>
-        
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_13_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_13_5">
-            <span class="md-nav__icon md-icon"></span>
-            Feps
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../feps/fep-0001/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    FEP-0001: Progressive Secure Package Format (PSPF/2025) Core Specification
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../feps/fep-0002/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    FEP-0002: Working Environment Management Specification
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../feps/fep-0003/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    FEP-0003: Runtime Security Model Specification
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../feps/fep-0004/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    FEP-0004: Staged Payload Architecture Specification
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../feps/fep-0005/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    FEP-0005: Just-In-Time Loading Specification
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    
-    
-      
-        
-      
-        
-      
-        
-      
-        
-      
-        
-      
-    
-    
-    
-      
-      
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_14" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_3" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -4012,14 +3440,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_14" id="__nav_14_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_6_3" id="__nav_6_3_label" tabindex="">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_14_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_14">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_3">
             <span class="md-nav__icon md-icon"></span>
             Troubleshooting
           </label>
@@ -4037,7 +3465,7 @@
   
   
   <span class="md-ellipsis">
-    Troubleshooting Guide
+    Common Issues
     
   </span>
   
@@ -4060,30 +3488,7 @@
   
   
   <span class="md-ellipsis">
-    Error Messages Reference
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../troubleshooting/faq/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Frequently Asked Questions
+    Error Messages
     
   </span>
   
@@ -4106,7 +3511,7 @@
   
   
   <span class="md-ellipsis">
-    Security Troubleshooting
+    Security Issues
     
   </span>
   
@@ -4130,6 +3535,8 @@
       
         
       
+        
+      
     
     
     
@@ -4145,33 +3552,26 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_14_5" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_3_4" >
         
           
-          <div class="md-nav__link md-nav__container">
-            <a href="../../troubleshooting/platforms/linux/" class="md-nav__link ">
-              
+          <label class="md-nav__link" for="__nav_6_3_4" id="__nav_6_3_4_label" tabindex="0">
+            
   
   
   <span class="md-ellipsis">
-    Platforms
+    Platform-Specific
     
   </span>
   
 
-            </a>
-            
-              
-              <label class="md-nav__link " for="__nav_14_5" id="__nav_14_5_label" tabindex="0">
-                <span class="md-nav__icon md-icon"></span>
-              </label>
-            
-          </div>
-        
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_14_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_14_5">
             <span class="md-nav__icon md-icon"></span>
-            Platforms
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            Platform-Specific
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
             
@@ -4187,7 +3587,30 @@
   
   
   <span class="md-ellipsis">
-    macOS Troubleshooting
+    macOS Issues
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../troubleshooting/platforms/linux/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Linux Issues
     
   </span>
   
@@ -4210,7 +3633,557 @@
   
   
   <span class="md-ellipsis">
-    Windows Troubleshooting
+    Windows Issues
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../troubleshooting/faq/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    FAQ
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../development/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    Development
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6_4" id="__nav_6_4_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_4">
+            <span class="md-nav__icon md-icon"></span>
+            Development
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Contributing
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Architecture
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/ingredients/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Building Ingredients
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_4_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../development/testing/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    Testing
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6_4_4" id="__nav_6_4_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_4_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_4_4">
+            <span class="md-nav__icon md-icon"></span>
+            Testing
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/testing/unit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Unit Tests
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/testing/integration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Integration Tests
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/testing/cross-language/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Cross-Language Tests
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/ci-cd/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    CI/CD
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/release/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Release Process
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../community/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    Community
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6_5" id="__nav_6_5_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_5">
+            <span class="md-nav__icon md-icon"></span>
+            Community
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../community/support/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Getting Support
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../community/discussions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Discussions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../community/blog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Blog
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../community/changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Changelog
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../community/license/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    License
     
   </span>
   
@@ -4268,342 +4241,218 @@
   
 
 
-<h1 id="binary-layout">Binary Layout<a class="headerlink" href="#binary-layout" title="Permanent link">&para;</a></h1>
-<p>The PSPF/2025 binary format specification defines the structure of FlavorPack packages.</p>
-<h2 id="overall-structure">Overall Structure<a class="headerlink" href="#overall-structure" title="Permanent link">&para;</a></h2>
-<div class="language-text highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Text Only</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1">1</a></span>
-<span class="normal"><a href="#__codelineno-0-2">2</a></span>
-<span class="normal"><a href="#__codelineno-0-3">3</a></span>
-<span class="normal"><a href="#__codelineno-0-4">4</a></span>
-<span class="normal"><a href="#__codelineno-0-5">5</a></span>
-<span class="normal"><a href="#__codelineno-0-6">6</a></span>
-<span class="normal"><a href="#__codelineno-0-7">7</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a>Offset  Size    Content
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a>0       varies  Launcher Binary
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a>N       8192    Index Block
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4"></a>N+8192  varies  Metadata (gzipped JSON)
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5"></a>...     varies  Slot Table
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6"></a>...     varies  Slot Data
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7"></a>EOF-8   8       Magic Footer (📦🪄)
+<h1 id="binary-layout-specification">Binary Layout Specification<a class="headerlink" href="#binary-layout-specification" title="Permanent link">&para;</a></h1>
+<p>The PSPF binary layout defines the precise structure of FlavorPack package files.</p>
+<h2 id="format-overview">Format Overview<a class="headerlink" href="#format-overview" title="Permanent link">&para;</a></h2>
+<div class="language-text highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Text Only</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1"> 1</a></span>
+<span class="normal"><a href="#__codelineno-0-2"> 2</a></span>
+<span class="normal"><a href="#__codelineno-0-3"> 3</a></span>
+<span class="normal"><a href="#__codelineno-0-4"> 4</a></span>
+<span class="normal"><a href="#__codelineno-0-5"> 5</a></span>
+<span class="normal"><a href="#__codelineno-0-6"> 6</a></span>
+<span class="normal"><a href="#__codelineno-0-7"> 7</a></span>
+<span class="normal"><a href="#__codelineno-0-8"> 8</a></span>
+<span class="normal"><a href="#__codelineno-0-9"> 9</a></span>
+<span class="normal"><a href="#__codelineno-0-10">10</a></span>
+<span class="normal"><a href="#__codelineno-0-11">11</a></span>
+<span class="normal"><a href="#__codelineno-0-12">12</a></span>
+<span class="normal"><a href="#__codelineno-0-13">13</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a>┌─────────────────────────────────────┐
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a>│          Native Launcher            │  Variable size (platform-specific)
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a>├─────────────────────────────────────┤
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4"></a>│           Index Block               │  8192 bytes (fixed)
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5"></a>├─────────────────────────────────────┤
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6"></a>│         Metadata Section            │  Variable size (gzipped JSON)
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7"></a>├─────────────────────────────────────┤
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8"></a>│          Slot Table                 │  Variable size
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9"></a>├─────────────────────────────────────┤
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10"></a>│           Data Slots                │  Variable size (tar.gz archives)
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11"></a>├─────────────────────────────────────┤
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12"></a>│         Magic Footer                │  8 bytes (📦🪄)
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13"></a>└─────────────────────────────────────┘
 </span></code></pre></div></td></tr></table></div>
-<h2 id="index-block">Index Block<a class="headerlink" href="#index-block" title="Permanent link">&para;</a></h2>
-<p>The index block is a fixed 8192-byte structure at offset N (where N is the launcher size).</p>
-<h3 id="structure-8192-bytes">Structure (8192 bytes)<a class="headerlink" href="#structure-8192-bytes" title="Permanent link">&para;</a></h3>
-<table>
-<thead>
-<tr>
-<th>Offset</th>
-<th>Size</th>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>0</td>
-<td>4</td>
-<td>magic</td>
-<td>Format identifier (0x50535046 "PSPF")</td>
-</tr>
-<tr>
-<td>4</td>
-<td>2</td>
-<td>version_major</td>
-<td>Format major version (0x2025)</td>
-</tr>
-<tr>
-<td>6</td>
-<td>2</td>
-<td>version_minor</td>
-<td>Format minor version</td>
-</tr>
-<tr>
-<td>8</td>
-<td>8</td>
-<td>metadata_offset</td>
-<td>Offset to metadata section</td>
-</tr>
-<tr>
-<td>16</td>
-<td>8</td>
-<td>metadata_size</td>
-<td>Size of metadata (compressed)</td>
-</tr>
-<tr>
-<td>24</td>
-<td>8</td>
-<td>slots_offset</td>
-<td>Offset to slot table</td>
-</tr>
-<tr>
-<td>32</td>
-<td>4</td>
-<td>slot_count</td>
-<td>Number of slots</td>
-</tr>
-<tr>
-<td>36</td>
-<td>32</td>
-<td>public_key</td>
-<td>Ed25519 public key</td>
-</tr>
-<tr>
-<td>68</td>
-<td>64</td>
-<td>signature</td>
-<td>Ed25519 signature</td>
-</tr>
-<tr>
-<td>132</td>
-<td>8060</td>
-<td>reserved</td>
-<td>Reserved for future use</td>
-</tr>
-</tbody>
-</table>
-<h3 id="field-details">Field Details<a class="headerlink" href="#field-details" title="Permanent link">&para;</a></h3>
-<h4 id="magic-number">Magic Number<a class="headerlink" href="#magic-number" title="Permanent link">&para;</a></h4>
+<h2 id="native-launcher">Native Launcher<a class="headerlink" href="#native-launcher" title="Permanent link">&para;</a></h2>
+<p>Platform-specific executable that handles package execution:</p>
 <ul>
-<li><strong>Value</strong>: <code>0x50535046</code> (ASCII "PSPF")</li>
-<li><strong>Purpose</strong>: Identifies file as PSPF format</li>
-<li><strong>Endianness</strong>: Little-endian</li>
+<li><strong>Linux</strong>: Static ELF binary (musl libc)</li>
+<li><strong>macOS</strong>: Mach-O binary (dynamic linking)</li>
+<li><strong>Windows</strong>: PE executable</li>
 </ul>
-<h4 id="version-fields">Version Fields<a class="headerlink" href="#version-fields" title="Permanent link">&para;</a></h4>
-<ul>
-<li><strong>Major</strong>: Year-based (e.g., 0x2025 for 2025)</li>
-<li><strong>Minor</strong>: Incremental within year</li>
-<li><strong>Compatibility</strong>: Major version changes break compatibility</li>
-</ul>
-<h4 id="offsets">Offsets<a class="headerlink" href="#offsets" title="Permanent link">&para;</a></h4>
-<ul>
-<li>All offsets are absolute from file start</li>
-<li>Stored as 64-bit unsigned integers</li>
-<li>Little-endian byte order</li>
-</ul>
-<h4 id="cryptographic-fields">Cryptographic Fields<a class="headerlink" href="#cryptographic-fields" title="Permanent link">&para;</a></h4>
-<ul>
-<li><strong>public_key</strong>: 32-byte Ed25519 public key</li>
-<li><strong>signature</strong>: 64-byte Ed25519 signature over metadata hash</li>
-</ul>
+<h2 id="index-block-8192-bytes">Index Block (8192 bytes)<a class="headerlink" href="#index-block-8192-bytes" title="Permanent link">&para;</a></h2>
+<p>Fixed-size block containing package metadata and signatures:</p>
+<div class="language-c highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">C</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-1-1"> 1</a></span>
+<span class="normal"><a href="#__codelineno-1-2"> 2</a></span>
+<span class="normal"><a href="#__codelineno-1-3"> 3</a></span>
+<span class="normal"><a href="#__codelineno-1-4"> 4</a></span>
+<span class="normal"><a href="#__codelineno-1-5"> 5</a></span>
+<span class="normal"><a href="#__codelineno-1-6"> 6</a></span>
+<span class="normal"><a href="#__codelineno-1-7"> 7</a></span>
+<span class="normal"><a href="#__codelineno-1-8"> 8</a></span>
+<span class="normal"><a href="#__codelineno-1-9"> 9</a></span>
+<span class="normal"><a href="#__codelineno-1-10">10</a></span>
+<span class="normal"><a href="#__codelineno-1-11">11</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1"></a><span class="k">struct</span><span class="w"> </span><span class="nc">IndexBlock</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2"></a><span class="w">    </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">magic</span><span class="p">;</span><span class="w">              </span><span class="c1">// 0x46534850 (&quot;PSPF&quot;)</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3"></a><span class="w">    </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">version</span><span class="p">;</span><span class="w">            </span><span class="c1">// Format version (0x20250001)</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4"></a><span class="w">    </span><span class="kt">uint64_t</span><span class="w"> </span><span class="n">metadata_offset</span><span class="p">;</span><span class="w">    </span><span class="c1">// Offset to metadata section</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5"></a><span class="w">    </span><span class="kt">uint64_t</span><span class="w"> </span><span class="n">metadata_size</span><span class="p">;</span><span class="w">      </span><span class="c1">// Size of metadata section</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6"></a><span class="w">    </span><span class="kt">uint64_t</span><span class="w"> </span><span class="n">slot_table_offset</span><span class="p">;</span><span class="w">  </span><span class="c1">// Offset to slot table</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7"></a><span class="w">    </span><span class="kt">uint64_t</span><span class="w"> </span><span class="n">slot_table_size</span><span class="p">;</span><span class="w">    </span><span class="c1">// Size of slot table</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8"></a><span class="w">    </span><span class="kt">uint8_t</span><span class="w">  </span><span class="n">signature</span><span class="p">[</span><span class="mi">64</span><span class="p">];</span><span class="w">      </span><span class="c1">// Ed25519 signature</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9"></a><span class="w">    </span><span class="kt">uint8_t</span><span class="w">  </span><span class="n">public_key</span><span class="p">[</span><span class="mi">32</span><span class="p">];</span><span class="w">     </span><span class="c1">// Ed25519 public key</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10"></a><span class="w">    </span><span class="kt">uint8_t</span><span class="w">  </span><span class="n">reserved</span><span class="p">[</span><span class="mi">8024</span><span class="p">];</span><span class="w">     </span><span class="c1">// Reserved for future use</span>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11"></a><span class="p">};</span>
+</span></code></pre></div></td></tr></table></div>
+<h2 id="metadata-section">Metadata Section<a class="headerlink" href="#metadata-section" title="Permanent link">&para;</a></h2>
+<p>Gzip-compressed JSON containing package configuration:</p>
+<div class="language-json highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">JSON</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-2-1"> 1</a></span>
+<span class="normal"><a href="#__codelineno-2-2"> 2</a></span>
+<span class="normal"><a href="#__codelineno-2-3"> 3</a></span>
+<span class="normal"><a href="#__codelineno-2-4"> 4</a></span>
+<span class="normal"><a href="#__codelineno-2-5"> 5</a></span>
+<span class="normal"><a href="#__codelineno-2-6"> 6</a></span>
+<span class="normal"><a href="#__codelineno-2-7"> 7</a></span>
+<span class="normal"><a href="#__codelineno-2-8"> 8</a></span>
+<span class="normal"><a href="#__codelineno-2-9"> 9</a></span>
+<span class="normal"><a href="#__codelineno-2-10">10</a></span>
+<span class="normal"><a href="#__codelineno-2-11">11</a></span>
+<span class="normal"><a href="#__codelineno-2-12">12</a></span>
+<span class="normal"><a href="#__codelineno-2-13">13</a></span>
+<span class="normal"><a href="#__codelineno-2-14">14</a></span>
+<span class="normal"><a href="#__codelineno-2-15">15</a></span>
+<span class="normal"><a href="#__codelineno-2-16">16</a></span>
+<span class="normal"><a href="#__codelineno-2-17">17</a></span>
+<span class="normal"><a href="#__codelineno-2-18">18</a></span>
+<span class="normal"><a href="#__codelineno-2-19">19</a></span>
+<span class="normal"><a href="#__codelineno-2-20">20</a></span>
+<span class="normal"><a href="#__codelineno-2-21">21</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1"></a><span class="p">{</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2"></a><span class="w">    </span><span class="nt">&quot;format_version&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2025.1&quot;</span><span class="p">,</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3"></a><span class="w">    </span><span class="nt">&quot;package&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4"></a><span class="w">        </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;my-app&quot;</span><span class="p">,</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5"></a><span class="w">        </span><span class="nt">&quot;version&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1.0.0&quot;</span><span class="p">,</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6"></a><span class="w">        </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Example application&quot;</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7"></a><span class="w">    </span><span class="p">},</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8"></a><span class="w">    </span><span class="nt">&quot;slots&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9"></a><span class="w">        </span><span class="p">{</span>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10"></a><span class="w">            </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11"></a><span class="w">            </span><span class="nt">&quot;purpose&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;runtime&quot;</span><span class="p">,</span>
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12"></a><span class="w">            </span><span class="nt">&quot;compression&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;gzip&quot;</span><span class="p">,</span>
+</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13"></a><span class="w">            </span><span class="nt">&quot;size&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">12345678</span>
+</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14"></a><span class="w">        </span><span class="p">}</span>
+</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15"></a><span class="w">    </span><span class="p">],</span>
+</span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16"></a><span class="w">    </span><span class="nt">&quot;launcher&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-2-17"><a id="__codelineno-2-17" name="__codelineno-2-17"></a><span class="w">        </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;go&quot;</span><span class="p">,</span>
+</span><span id="__span-2-18"><a id="__codelineno-2-18" name="__codelineno-2-18"></a><span class="w">        </span><span class="nt">&quot;version&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1.21.0&quot;</span><span class="p">,</span>
+</span><span id="__span-2-19"><a id="__codelineno-2-19" name="__codelineno-2-19"></a><span class="w">        </span><span class="nt">&quot;features&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;cli&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;workenv&quot;</span><span class="p">]</span>
+</span><span id="__span-2-20"><a id="__codelineno-2-20" name="__codelineno-2-20"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-2-21"><a id="__codelineno-2-21" name="__codelineno-2-21"></a><span class="p">}</span>
+</span></code></pre></div></td></tr></table></div>
 <h2 id="slot-table">Slot Table<a class="headerlink" href="#slot-table" title="Permanent link">&para;</a></h2>
-<p>Located at <code>slots_offset</code>, contains <code>slot_count</code> entries.</p>
-<h3 id="slot-entry-32-bytes-each">Slot Entry (32 bytes each)<a class="headerlink" href="#slot-entry-32-bytes-each" title="Permanent link">&para;</a></h3>
+<p>Array of slot descriptors:</p>
+<div class="language-c highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">C</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-3-1"> 1</a></span>
+<span class="normal"><a href="#__codelineno-3-2"> 2</a></span>
+<span class="normal"><a href="#__codelineno-3-3"> 3</a></span>
+<span class="normal"><a href="#__codelineno-3-4"> 4</a></span>
+<span class="normal"><a href="#__codelineno-3-5"> 5</a></span>
+<span class="normal"><a href="#__codelineno-3-6"> 6</a></span>
+<span class="normal"><a href="#__codelineno-3-7"> 7</a></span>
+<span class="normal"><a href="#__codelineno-3-8"> 8</a></span>
+<span class="normal"><a href="#__codelineno-3-9"> 9</a></span>
+<span class="normal"><a href="#__codelineno-3-10">10</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1"></a><span class="k">struct</span><span class="w"> </span><span class="nc">SlotDescriptor</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2"></a><span class="w">    </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">slot_id</span><span class="p">;</span><span class="w">        </span><span class="c1">// Slot identifier</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3"></a><span class="w">    </span><span class="kt">uint64_t</span><span class="w"> </span><span class="n">offset</span><span class="p">;</span><span class="w">         </span><span class="c1">// Offset from file start</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4"></a><span class="w">    </span><span class="kt">uint64_t</span><span class="w"> </span><span class="n">compressed_size</span><span class="p">;</span><span class="w"> </span><span class="c1">// Compressed data size</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5"></a><span class="w">    </span><span class="kt">uint64_t</span><span class="w"> </span><span class="n">uncompressed_size</span><span class="p">;</span><span class="w"> </span><span class="c1">// Uncompressed data size</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6"></a><span class="w">    </span><span class="kt">uint8_t</span><span class="w">  </span><span class="n">hash</span><span class="p">[</span><span class="mi">32</span><span class="p">];</span><span class="w">       </span><span class="c1">// SHA-256 hash of uncompressed data</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7"></a><span class="w">    </span><span class="kt">uint8_t</span><span class="w">  </span><span class="n">compression</span><span class="p">;</span><span class="w">    </span><span class="c1">// Compression method (0=none, 1=gzip)</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8"></a><span class="w">    </span><span class="kt">uint8_t</span><span class="w">  </span><span class="n">purpose</span><span class="p">;</span><span class="w">        </span><span class="c1">// Slot purpose (0=runtime, 1=app, 2=data)</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9"></a><span class="w">    </span><span class="kt">uint8_t</span><span class="w">  </span><span class="n">reserved</span><span class="p">[</span><span class="mi">6</span><span class="p">];</span><span class="w">    </span><span class="c1">// Reserved</span>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10"></a><span class="p">};</span>
+</span></code></pre></div></td></tr></table></div>
+<h2 id="data-slots">Data Slots<a class="headerlink" href="#data-slots" title="Permanent link">&para;</a></h2>
+<p>Compressed tar.gz archives containing package contents:</p>
+<ul>
+<li><strong>Slot 0</strong>: Python runtime and dependencies</li>
+<li><strong>Slot 1</strong>: Application code and assets</li>
+<li><strong>Slot 2+</strong>: Additional resources</li>
+</ul>
+<h2 id="magic-footer">Magic Footer<a class="headerlink" href="#magic-footer" title="Permanent link">&para;</a></h2>
+<p>8-byte identifier at end of file:</p>
+<div class="language-text highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Text Only</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-4-1">1</a></span>
+<span class="normal"><a href="#__codelineno-4-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1"></a>Bytes: 0xF0 0x9F 0x93 0xA6 0xF0 0x9F 0xAA 0x84
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2"></a>UTF-8: 📦🪄 (package + magic wand emojis)
+</span></code></pre></div></td></tr></table></div>
+<h2 id="offset-calculations">Offset Calculations<a class="headerlink" href="#offset-calculations" title="Permanent link">&para;</a></h2>
+<p>All offsets are calculated from the start of the file:</p>
+<ol>
+<li><strong>Launcher Size</strong>: Determined by reading native executable headers</li>
+<li><strong>Index Block</strong>: Starts immediately after launcher</li>
+<li><strong>Metadata</strong>: At <code>launcher_size + 8192 + metadata_offset</code></li>
+<li><strong>Slot Table</strong>: At <code>launcher_size + 8192 + slot_table_offset</code></li>
+<li><strong>Data Slots</strong>: At offsets specified in slot descriptors</li>
+</ol>
+<h2 id="signature-verification">Signature Verification<a class="headerlink" href="#signature-verification" title="Permanent link">&para;</a></h2>
+<p>Ed25519 signature covers:</p>
+<ol>
+<li>Index block (excluding signature field)</li>
+<li>Metadata section (compressed)</li>
+<li>Slot table</li>
+<li>All data slots (compressed)</li>
+</ol>
+<h2 id="compression-methods">Compression Methods<a class="headerlink" href="#compression-methods" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
-<th>Offset</th>
-<th>Size</th>
-<th>Field</th>
-<th>Description</th>
+<th>ID</th>
+<th>Method</th>
+<th>Notes</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>0</td>
-<td>8</td>
-<td>offset</td>
-<td>Absolute offset to slot data</td>
-</tr>
-<tr>
-<td>8</td>
-<td>8</td>
-<td>size</td>
-<td>Size of slot data</td>
-</tr>
-<tr>
-<td>16</td>
-<td>4</td>
-<td>encoding</td>
-<td>Compression/encoding type</td>
-</tr>
-<tr>
-<td>20</td>
-<td>4</td>
-<td>checksum</td>
-<td>CRC32 checksum</td>
-</tr>
-<tr>
-<td>24</td>
-<td>8</td>
-<td>reserved</td>
-<td>Reserved for future use</td>
-</tr>
-</tbody>
-</table>
-<h3 id="encoding-types">Encoding Types<a class="headerlink" href="#encoding-types" title="Permanent link">&para;</a></h3>
-<table>
-<thead>
-<tr>
-<th>Value</th>
-<th>Encoding</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>0</td>
-<td>raw</td>
-<td>Uncompressed data</td>
+<td>None</td>
+<td>Raw data</td>
 </tr>
 <tr>
 <td>1</td>
-<td>tar</td>
-<td>Tar archive</td>
+<td>Gzip</td>
+<td>Standard compression</td>
 </tr>
 <tr>
 <td>2</td>
-<td>gzip</td>
-<td>Gzipped single file</td>
+<td>Brotli</td>
+<td>High compression (future)</td>
 </tr>
 <tr>
 <td>3</td>
-<td>tgz</td>
-<td>Gzipped tar archive</td>
+<td>Zstd</td>
+<td>Fast compression (future)</td>
 </tr>
 </tbody>
 </table>
-<h2 id="magic-footer">Magic Footer<a class="headerlink" href="#magic-footer" title="Permanent link">&para;</a></h2>
-<p>The last 8 bytes of the file contain the magic footer.</p>
+<h2 id="platform-considerations">Platform Considerations<a class="headerlink" href="#platform-considerations" title="Permanent link">&para;</a></h2>
+<h3 id="linux">Linux<a class="headerlink" href="#linux" title="Permanent link">&para;</a></h3>
 <ul>
-<li><strong>Content</strong>: UTF-8 encoded "📦🪄" </li>
-<li><strong>Hex</strong>: <code>0xF0 0x9F 0x93 0xA6 0xF0 0x9F 0xAA 0x84</code></li>
-<li><strong>Purpose</strong>: Quick file type identification</li>
-<li><strong>Validation</strong>: Must be present for valid PSPF</li>
+<li>Static linking with musl libc</li>
+<li>No external dependencies</li>
+<li>Works on all distributions</li>
 </ul>
-<h2 id="alignment-and-padding">Alignment and Padding<a class="headerlink" href="#alignment-and-padding" title="Permanent link">&para;</a></h2>
+<h3 id="macos">macOS<a class="headerlink" href="#macos" title="Permanent link">&para;</a></h3>
 <ul>
-<li>Index block is always 8192 bytes (8KB aligned)</li>
-<li>Slot data is 4KB aligned for optimal I/O</li>
-<li>Padding bytes are zeros</li>
+<li>Code signing required for distribution</li>
+<li>Notarization for Gatekeeper bypass</li>
+<li>Universal binaries for Intel/Apple Silicon</li>
 </ul>
-<h2 id="size-limits">Size Limits<a class="headerlink" href="#size-limits" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>Component</th>
-<th>Maximum Size</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Launcher</td>
-<td>100 MB</td>
-</tr>
-<tr>
-<td>Metadata</td>
-<td>10 MB (compressed)</td>
-</tr>
-<tr>
-<td>Single Slot</td>
-<td>4 GB</td>
-</tr>
-<tr>
-<td>Total Package</td>
-<td>No hard limit</td>
-</tr>
-<tr>
-<td>Slot Count</td>
-<td>4,294,967,295</td>
-</tr>
-</tbody>
-</table>
-<h2 id="reading-process">Reading Process<a class="headerlink" href="#reading-process" title="Permanent link">&para;</a></h2>
-<ol>
-<li><strong>Identify Format</strong></li>
-<li>Check last 8 bytes for magic footer</li>
-<li>
-<p>If present, file is PSPF format</p>
-</li>
-<li>
-<p><strong>Find Index</strong></p>
-</li>
-<li>Scan backwards from footer</li>
-<li>Look for index magic number</li>
-<li>
-<p>Validate index structure</p>
-</li>
-<li>
-<p><strong>Read Index</strong></p>
-</li>
-<li>Parse 8192-byte index block</li>
-<li>Extract offsets and counts</li>
-<li>
-<p>Verify signature</p>
-</li>
-<li>
-<p><strong>Load Metadata</strong></p>
-</li>
-<li>Read compressed metadata at offset</li>
-<li>Decompress with gzip</li>
-<li>
-<p>Parse JSON structure</p>
-</li>
-<li>
-<p><strong>Access Slots</strong></p>
-</li>
-<li>Read slot table</li>
-<li>Map slots to metadata</li>
-<li>Extract on demand</li>
-</ol>
-<h2 id="writing-process">Writing Process<a class="headerlink" href="#writing-process" title="Permanent link">&para;</a></h2>
-<ol>
-<li><strong>Prepare Components</strong></li>
-<li>Select launcher binary</li>
-<li>Create metadata JSON</li>
-<li>
-<p>Prepare slot data</p>
-</li>
-<li>
-<p><strong>Calculate Offsets</strong></p>
-</li>
-<li>Launcher size → index offset</li>
-<li>Index + 8192 → metadata offset</li>
-<li>
-<p>Metadata + size → slots offset</p>
-</li>
-<li>
-<p><strong>Generate Keys</strong></p>
-</li>
-<li>Create Ed25519 key pair</li>
-<li>
-<p>Or use deterministic seed</p>
-</li>
-<li>
-<p><strong>Write Structure</strong></p>
-</li>
-<li>Write launcher binary</li>
-<li>Write index block (unsigned)</li>
-<li>Write compressed metadata</li>
-<li>Write slot table</li>
-<li>
-<p>Write slot data</p>
-</li>
-<li>
-<p><strong>Sign Package</strong></p>
-</li>
-<li>Hash metadata</li>
-<li>Sign with private key</li>
-<li>
-<p>Update index signature field</p>
-</li>
-<li>
-<p><strong>Finalize</strong></p>
-</li>
-<li>Write magic footer</li>
-<li>Flush to disk</li>
-</ol>
-<h2 id="compatibility-notes">Compatibility Notes<a class="headerlink" href="#compatibility-notes" title="Permanent link">&para;</a></h2>
+<h3 id="windows">Windows<a class="headerlink" href="#windows" title="Permanent link">&para;</a></h3>
 <ul>
-<li>PSPF/2025 is not backward compatible with earlier formats</li>
-<li>Future minor versions maintain read compatibility</li>
-<li>Major version changes require format migration</li>
-<li>Platform-specific launchers maintain cross-platform packages</li>
+<li>Authenticode signing recommended</li>
+<li>SmartScreen compatibility</li>
+<li>PowerShell execution policy considerations</li>
 </ul>
 <h2 id="related-documentation">Related Documentation<a class="headerlink" href="#related-documentation" title="Permanent link">&para;</a></h2>
 <ul>
-<li><a href="../metadata/">Metadata Structure</a></li>
-<li><a href="slots.md">Slot Specifications</a></li>
-<li><a href="../crypto/">Cryptographic Security</a></li>
-<li><a href="../pspf-2025/">Package Format Overview</a></li>
+<li><a href="../pspf-2025/">PSPF Format Overview</a></li>
+<li><a href="../crypto/">Cryptography Specification</a></li>
+<li><a href="../metadata/">Metadata Format</a></li>
 </ul>
 
 
@@ -4644,7 +4493,7 @@
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../" class="md-footer__link md-footer__link--prev" aria-label="Previous: Spec">
+          <a href="../pspf-2025/" class="md-footer__link md-footer__link--prev" aria-label="Previous: PSPF 2025 Format">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -4654,20 +4503,20 @@
                 Previous
               </span>
               <div class="md-ellipsis">
-                Spec
+                PSPF 2025 Format
               </div>
             </div>
           </a>
         
         
           
-          <a href="../crypto/" class="md-footer__link md-footer__link--next" aria-label="Next: Cryptographic Security">
+          <a href="../metadata/" class="md-footer__link md-footer__link--next" aria-label="Next: Metadata Format">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Cryptographic Security
+                Metadata Format
               </div>
             </div>
             <div class="md-footer__button md-icon">
@@ -4827,9 +4676,9 @@
     
       <script src="../../assets/javascripts/bundle.92b07e13.min.js"></script>
       
-        <script src="../../javascripts/mathjax.js"></script>
+        <script src="https://unpkg.com/mermaid@10/dist/mermaid.min.js"></script>
       
-        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+        <script src="../../javascripts/mermaid-init.js"></script>
       
     
   </body>

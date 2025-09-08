@@ -2,9 +2,7 @@
 
 Managing Python environments and dependency collection for package building.
 
-## Module: `flavor.packaging.python_packager`
-
-The python_packager module handles Python-specific packaging tasks including virtual environment creation, dependency resolution, and runtime bundling.
+::: flavor.packaging.python_packager
 
 ## PythonPackager Class
 
@@ -733,6 +731,6 @@ bundle = asyncio.run(build_python_package(Path.cwd(), requirements))
 
 - [PackagingOrchestrator](orchestrator.md) - High-level packaging coordination
 - [Key Management](keys.md) - Package signing
-- [Core API](../api.md) - High-level API functions
+- [Core API](../index.md) - High-level API functions
 - [Work Environments](../../../guide/concepts/workenv.md) - Environment management guide
 - [Python Applications](../../../guide/packaging/python.md) - Python packaging guide

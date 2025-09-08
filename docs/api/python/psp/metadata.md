@@ -744,4 +744,4 @@ except ValidationError as e:
 - [PSPFReader](reader.md) - Reading package metadata
 - [Slot Management](slots.md) - Slot specifications
 - [Format Specification](../../../spec/pspf-2025.md) - PSPF format details
-- [Core API](../api.md) - High-level metadata management
+- [Core API](../index.md) - High-level metadata management

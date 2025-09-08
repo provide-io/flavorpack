@@ -2,6 +2,8 @@
 
 Comprehensive documentation for the FlavorPack command-line interface.
 
+::: flavor.cli
+
 ## Overview
 
 The `flavor` CLI provides commands for building, verifying, and managing PSPF packages. It's the primary tool for creating self-contained Python applications.
