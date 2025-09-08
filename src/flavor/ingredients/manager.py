@@ -13,7 +13,7 @@ from typing import Any
 
 from provide.foundation import logger
 
-from flavor.utils.platform import get_platform_string
+from provide.foundation.platform import get_platform_string
 from provide.foundation.process import run_command
 
 
