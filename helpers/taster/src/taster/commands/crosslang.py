@@ -11,7 +11,7 @@ import click
 from provide.foundation import logger
 
 from flavor.ingredients.manager import IngredientManager as HelperManager
-from flavor.utils.subprocess import run_command
+from provide.foundation.process import run_command
 
 
 class CrossLangTester:
