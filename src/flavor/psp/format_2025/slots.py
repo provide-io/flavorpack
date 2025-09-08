@@ -95,7 +95,7 @@ class SlotDescriptor:
         perm_high = (self.permissions >> 8) & 0xFF
         
         data = struct.pack(
-            "<QQQQQQQBBBBBBBBB",
+            "<QQQQQQQBBBBBBBB",
             self.id,
             self.name_hash,
             self.offset,
@@ -103,15 +103,14 @@ class SlotDescriptor:
             self.original_size,
             self.operations,  # 64-bit operations field
             self.checksum,
-            self.encryption & 0xFF,
-            self.alignment & 0xFF,
-            self.purpose,
-            self.lifecycle,
-            self.access_hint,
-            self.priority,
-            perm_low,  # permissions low byte
-            perm_high,  # permissions high byte  
-            self.platform,
+            self.purpose,      # byte 56
+            self.lifecycle,    # byte 57
+            self.priority,     # byte 58
+            self.platform,     # byte 59
+            0,                 # byte 60: reserved1
+            0,                 # byte 61: reserved2
+            perm_low,          # byte 62: permissions low byte
+            perm_high,         # byte 63: permissions high byte
         )
         
         # Ensure exactly 64 bytes
@@ -129,6 +128,11 @@ class SlotDescriptor:
             data,
         )
 
+        # Reconstruct full permissions from two bytes
+        perm_low = unpacked[13]   # byte 62
+        perm_high = unpacked[14]  # byte 63
+        permissions = perm_low | (perm_high << 8)
+
         return cls(
             id=unpacked[0],
             name_hash=unpacked[1],
@@ -137,14 +141,13 @@ class SlotDescriptor:
             original_size=unpacked[4],
             operations=unpacked[5],  # 64-bit operations
             checksum=unpacked[6],
-            encryption=unpacked[7],
-            alignment=unpacked[8],
-            purpose=unpacked[9],
-            lifecycle=unpacked[10],
-            access_hint=unpacked[11],
-            priority=unpacked[12],
-            permissions=unpacked[13],
-            platform=unpacked[14],
+            purpose=unpacked[7],      # byte 56
+            lifecycle=unpacked[8],    # byte 57
+            priority=unpacked[9],     # byte 58  
+            platform=unpacked[10],    # byte 59
+            # bytes 60-61 are reserved
+            permissions=permissions,  # reconstructed from bytes 62-63
+            # Note: encryption, alignment, access_hint are not persisted in the binary format
         )
 
     def to_dict(self) -> dict[str, Any]:
