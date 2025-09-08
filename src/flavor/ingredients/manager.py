@@ -203,7 +203,6 @@ class IngredientManager:
                 check=False,
                 timeout=2,
                 env={**os.environ, "FLAVOR_LAUNCHER_CLI": "true"},
-                log_command=False,
             )
             if result.returncode == 0:
                 # Parse version from output
@@ -454,7 +453,6 @@ class IngredientManager:
                         check=False,
                         timeout=5,
                         env=env,
-                        log_command=False,
                     )
 
                     if result.returncode == 0:

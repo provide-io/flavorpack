@@ -189,7 +189,6 @@ class BundleExecutor:
                 env=env,
                 capture_output=True,
                 check=False,  # We want to handle the exit code ourselves
-                log_command=False,  # Already logged above
             )
 
             # Log result

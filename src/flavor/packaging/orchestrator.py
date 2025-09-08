@@ -81,7 +81,6 @@ class PackagingOrchestrator:
                 capture_output=True,
                 check=False,
                 timeout=5,
-                log_command=False,
             )
         except Exception as e:
             raise BuildError(f"Failed to execute command: {e}") from e
