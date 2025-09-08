@@ -12,10 +12,6 @@ from attrs import define, field, validators
 from flavor.psp.format_2025.constants import (
     ACCESS_HINT_SEQUENTIAL,
     CACHE_NORMAL,
-    CODEC_GZIP,
-    CODEC_RAW,
-    CODEC_TAR,
-    CODEC_TGZ,
     LIFECYCLE_CACHE,
     LIFECYCLE_CONFIG,
     LIFECYCLE_DEV,
