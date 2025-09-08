@@ -142,8 +142,28 @@ pub fn extract_slot(reader: &mut Reader, slot_index: usize, dest_dir: &Path) -> 
         "🎯 Slot {slot_index} codec: '{slot_codec}', purpose: '{slot_purpose}', id: '{slot_id}'"
     );
 
-    // Strict codec validation - no fallthrough allowed
-    match desc_codec {
+    // Process based on operations
+    if operations.contains(&OP_TAR) {
+        // Has TAR operation - extract as tarball
+        if !is_tarball(&decompressed_data) {
+            error!(
+                "❌ FATAL: Slot {slot_index} has TAR operation but data is not a tarball!"
+            );
+            return Err(FlavorError::Generic(format!(
+                "Operation mismatch: slot {slot_index} has TAR operation but is not a tar archive"
+            )));
+        }
+        debug!("📦 Slot {slot_index} is a tar archive, extracting...");
+        extract_tarball(&decompressed_data, dest_dir)?;
+    } else {
+        // No TAR operation - treat as single file
+        let target_path = dest_dir.join(&slot_target);
+        extract_single_file(
+            &decompressed_data,
+            &target_path,
+            &descriptors,
+            slot_index,
+        )?;
         CODEC_GZIP => {
             // CODEC_GZIP (2) means "Gzipped single file" per the PSPF spec
             if is_tarball(&decompressed_data) {
