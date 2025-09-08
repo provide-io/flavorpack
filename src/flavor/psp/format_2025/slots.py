@@ -81,10 +81,6 @@ class SlotDescriptor:
     permissions: int = field(default=0o644)  # Unix-style
     platform: int = field(default=0)  # 0=any, 1=linux, 2=mac, 3=windows
 
-    # Extended info (8 bytes)
-    extended_offset: int = field(default=0)
-    extended_size: int = field(default=0)
-
     # Optional runtime fields (not persisted)
     name: str = field(default="", metadata={"transient": True})
     path: Path | None = field(default=None, metadata={"transient": True})
@@ -97,9 +93,9 @@ class SlotDescriptor:
     def pack(self) -> bytes:
         """Pack descriptor into 64-byte binary format."""
         # Pack to exactly 64 bytes:
-        # 6Q (48) + I (4) + 8B (8) + H (2) + H (2) = 64
+        # 7Q (56) + 8B (8) = 64
         data = struct.pack(
-            "<QQQQQQQIBBBBBBBBHH",
+            "<QQQQQQQBBBBBBBB",
             self.id,
             self.name_hash,
             self.offset,
@@ -107,7 +103,7 @@ class SlotDescriptor:
             self.original_size,
             self.operations,  # 64-bit operations field
             self.checksum,
-            self.encryption,
+            self.encryption & 0xFF,
             self.alignment & 0xFF,
             self.purpose,
             self.lifecycle,
@@ -115,8 +111,6 @@ class SlotDescriptor:
             self.priority,
             self.permissions & 0xFF,
             self.platform,
-            self.extended_offset & 0xFFFF,
-            self.extended_size & 0xFFFF,
         )
         
         # Ensure exactly 64 bytes
@@ -130,7 +124,7 @@ class SlotDescriptor:
             raise ValueError(f"Slot descriptor must be {SLOT_DESCRIPTOR_SIZE} bytes")
 
         unpacked = struct.unpack(
-            "<QQQQQQQIBBBBBBBBHH",  # Match pack format exactly
+            "<QQQQQQQBBBBBBBB",  # Match pack format exactly
             data,
         )
 
@@ -150,8 +144,6 @@ class SlotDescriptor:
             priority=unpacked[12],
             permissions=unpacked[13],
             platform=unpacked[14],
-            extended_offset=unpacked[15],
-            extended_size=unpacked[16],
         )
 
     def to_dict(self) -> dict[str, Any]:

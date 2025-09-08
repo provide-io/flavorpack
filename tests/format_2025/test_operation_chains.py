@@ -100,7 +100,7 @@ class TestOperationChains:
         
         unpacked = SlotDescriptor.unpack(packed)
         assert unpacked.id == slot1.id
-        assert unpacked.codec == slot1.codec
+        assert unpacked.operations == slot1.operations
     
     def test_builder_with_operations(self, test_builder):
         """Test that PSPFBuilder works with operation chains."""
@@ -117,7 +117,7 @@ class TestOperationChains:
             ).add_slot(
                 id="test.txt",
                 data=str(test_file),
-                codec="tgz"  # Will be mapped to CODEC_TGZ
+                operations="tar.gz"  # Operation chain string
             )
             
             # Build package
@@ -129,14 +129,14 @@ class TestOperationChains:
             reader = PSPFReader(output)
             info = reader.get_package_info()
             
-            # Check slot has correct codec
+            # Check slot has correct operations
             slot = info.slots[0]
-            assert slot.codec == CODEC_TGZ
+            assert slot.operations == "TAR|GZIP"  # Normalized form
             
             # The slot descriptor should have operations set
             desc = reader.slot_table.slots[0]
             # Operations are handled internally now
-            assert desc.codec == CODEC_TGZ
+            assert desc.operations == pack_operations([OP_TAR, OP_GZIP])
     
     def test_operation_chain_validation(self):
         """Test that operation chains are valid."""
@@ -160,63 +160,15 @@ class TestOperationChains:
             target="target/",
             size=1024,
             checksum="abc123",
-            codec="tar.gz",  # String representation
+            operations="tar.gz",  # String representation
             purpose="data",
             lifecycle="runtime"
         )
         
-        # Should be able to describe codec
-        assert meta.codec == "tar.gz"
+        # Should be able to describe operations
+        assert meta.operations == "tar.gz"
         
         # Convert to dict for JSON
         data = meta.to_dict()
-        assert data["codec"] == "tar.gz"
+        assert data["operations"] == "tar.gz"
 
-
-class TestBackwardCompatibility:
-    """Ensure the new system maintains backward compatibility."""
-    
-    def test_existing_packages_still_readable(self):
-        """Test that packages built with old system are still readable."""
-        # This would test actual legacy packages if we had them
-        # For now, verify the codec mapping works
-        assert CODEC_RAW == 0
-        assert CODEC_TAR == 1
-        assert CODEC_GZIP == 2
-        assert CODEC_TGZ == 3
-    
-    def test_codec_field_preserved(self):
-        """Test that codec field is preserved for compatibility."""
-        slot = SlotDescriptor(
-            id=1,
-            name="compat",
-            codec=CODEC_TGZ
-        )
-        
-        # Pack and unpack
-        data = slot.pack()
-        restored = SlotDescriptor.unpack(data)
-        
-        # Codec should be preserved
-        assert restored.codec == CODEC_TGZ
-    
-    def test_mixed_codec_and_operations(self):
-        """Test handling of mixed codec and operations."""
-        # Create slot with codec
-        slot1 = SlotDescriptor(id=1, codec=CODEC_TAR)
-        assert slot1.operations == pack_operations([OP_TAR])
-        
-        # Create slot with operations
-        ops = pack_operations([OP_TAR, OP_GZIP])
-        slot2 = SlotDescriptor(id=2, operations=ops)
-        assert slot2.codec == CODEC_TGZ  # Should map to TGZ
-        
-        # Verify both pack/unpack correctly
-        data1 = slot1.pack()
-        data2 = slot2.pack()
-        
-        restored1 = SlotDescriptor.unpack(data1)
-        restored2 = SlotDescriptor.unpack(data2)
-        
-        assert restored1.codec == CODEC_TAR
-        assert restored2.codec == CODEC_TGZ
