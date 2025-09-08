@@ -64,11 +64,8 @@ const (
 	// IndexMetadataFile is the index metadata JSON file name (in instance/)
 	IndexMetadataFile = "index.json"
 
-	// Codec types - describe the actual format of slot data
-	CodecRaw  = 0 // Raw uncompressed data
-	CodecTar  = 1 // Uncompressed tar archive
-	CodecGzip = 2 // Gzipped single file
-	CodecTgz  = 3 // Tar archive, then gzipped (tar.gz)
+	// Legacy codec constants - REMOVED
+	// Use operations (OP_TAR, OP_GZIP, etc.) instead
 
 	// Purpose types - aligned with Python naming
 	PurposeData   = 0 // General data files

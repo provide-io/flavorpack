@@ -288,8 +288,8 @@ func (r *Reader) ReadSlot(slotIndex int) ([]byte, error) {
 		return nil, err
 	}
 
-	// Verify checksum of compressed data
-	if adler32.Checksum(slotData) != entry.Checksum {
+	// Verify checksum of compressed data (entry.Checksum is uint64 but only uses lower 32 bits)
+	if uint64(adler32.Checksum(slotData)) != entry.Checksum {
 		return nil, ErrChecksumMismatch
 	}
 
