@@ -74,7 +74,7 @@ pub fn write_slot(
     use crate::psp::format_2025::operations::pack_operations;
     use crate::psp::format_2025::constants::{OP_TAR, OP_GZIP, CODEC_RAW, CODEC_TAR, CODEC_GZIP, CODEC_TGZ};
     
-    let operations = match codec {
+    let operations = match operations_str {
         CODEC_RAW => pack_operations(&[]),
         CODEC_TAR => pack_operations(&[OP_TAR]),
         CODEC_GZIP => pack_operations(&[OP_GZIP]),
@@ -111,9 +111,9 @@ pub fn write_slot(
     Ok(descriptor)
 }
 
-/// Process slot data based on encoding
-fn process_slot_data(data: &[u8], codec_str: &str) -> Result<(Vec<u8>, u8)> {
-    match codec_str {
+/// Process slot data based on operations
+fn process_slot_data(data: &[u8], operations_str: &str) -> Result<(Vec<u8>, u8)> {
+    match operations_str {
         "gzip" => {
             // Single file, gzipped
             let mut encoder = GzEncoder::new(Vec::new(), Compression::best());
