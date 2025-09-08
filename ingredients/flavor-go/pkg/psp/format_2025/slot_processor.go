@@ -207,16 +207,16 @@ func (sp *SlotProcessor) processSlot(index int, slot *Slot) error {
 		Target:      slot.Target,
 		Size:        int64(len(slotData)),
 		Checksum:    checksumStr,
-		Codec:    slot.Codec,
+		Codec:    slot.Operations,
 		Purpose:     slot.Purpose,
 		Lifecycle:   slot.Lifecycle,
 		Resolution:  slot.Resolution,
 		Permissions: slot.Permissions,
 	}
 
-	// Determine operations based on codec
+	// Determine operations from operations field
 	var operations uint64
-	switch slot.Codec {
+	switch slot.Operations {
 	case "gzip":
 		operations = PackOperations([]uint8{OP_GZIP})
 	case "tgz", "tar.gz":
@@ -290,7 +290,7 @@ func (sp *SlotProcessor) loadSlotData(slot *Slot) ([]byte, []byte, uint8, error)
 		return nil, nil, 0, fmt.Errorf("failed to read slot from %s: %w", slotPath, err)
 	}
 
-	sp.logger.Debug("📊 Slot size", "original", len(slotData), "encoding", slot.Codec)
+	sp.logger.Debug("📊 Slot size", "original", len(slotData), "operations", slot.Operations)
 
 	// For now, we don't actually compress here - that's handled elsewhere
 	// This function just validates and prepares the data
