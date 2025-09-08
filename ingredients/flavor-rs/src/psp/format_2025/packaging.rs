@@ -42,8 +42,8 @@ pub fn write_slot(
         slot_path.display()
     );
 
-    // Determine codec and compress if needed
-    let (processed_data, codec) = process_slot_data(&slot_data, &slot_info.codec)?;
+    // Determine operations and compress if needed
+    let (processed_data, operations_str) = process_slot_data(&slot_data, &slot_info.operations)?;
 
     // Get current position (this will be the slot offset)
     let offset = out.stream_position()?;
