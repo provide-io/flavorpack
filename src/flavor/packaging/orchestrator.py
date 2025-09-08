@@ -218,7 +218,7 @@ class PackagingOrchestrator:
                 .add_slot(
                     id="uv",
                     data=uv_tarball,
-                    encoding="gzip",
+                    codec="gzip",
                     purpose="tool",
                     lifecycle="runtime",
                     target="bin/uv",
@@ -227,7 +227,7 @@ class PackagingOrchestrator:
                 .add_slot(
                     id="python",
                     data=python_tarball,
-                    encoding="tgz",
+                    codec="tgz",
                     purpose="runtime",
                     lifecycle="runtime",
                     target="{workenv}",
@@ -235,7 +235,7 @@ class PackagingOrchestrator:
                 .add_slot(
                     id="wheels",
                     data=wheels_tarball,
-                    encoding="tgz",
+                    codec="tgz",
                     purpose="payload",
                     lifecycle="cache",
                     target="wheels",

@@ -53,19 +53,19 @@ PACKAGE_CHECKSUM_FILE = "package.checksum"
 PSP_METADATA_FILE = "psp.json"
 INDEX_METADATA_FILE = "index.json"
 
-# Encoding types - describe the actual format of slot data
-ENCODING_RAW = 0  # Raw uncompressed data
-ENCODING_TAR = 1  # Uncompressed tar archive
-ENCODING_GZIP = 2  # Gzipped single file
-ENCODING_TGZ = 3  # Tar archive, then gzipped (tar.gz)
+# Codec types - describe the actual format of slot data
+CODEC_RAW = 0  # Raw uncompressed data
+CODEC_TAR = 1  # Uncompressed tar archive
+CODEC_GZIP = 2  # Gzipped single file
+CODEC_TGZ = 3  # Tar archive, then gzipped (tar.gz)
 
-# Future encoding formats (not implemented yet):
-# ENCODING_ZSTD = 4     # Zstd compressed single file
-# ENCODING_TZST = 5     # Tar archive, then zstd compressed
-# ENCODING_BROTLI = 6   # Brotli compressed single file
-# ENCODING_TBR = 7      # Tar archive, then brotli compressed
-# ENCODING_ZIP = 8      # Zip archive (would need zipfile module)
-# ENCODING_7Z = 9       # 7-zip archive (would need py7zr module)
+# Future codec formats (not implemented yet):
+# CODEC_ZSTD = 4     # Zstd compressed single file
+# CODEC_TZST = 5     # Tar archive, then zstd compressed
+# CODEC_BROTLI = 6   # Brotli compressed single file
+# CODEC_TBR = 7      # Tar archive, then brotli compressed
+# CODEC_ZIP = 8      # Zip archive (would need zipfile module)
+# CODEC_7Z = 9       # 7-zip archive (would need py7zr module)
 
 # Checksum algorithms
 CHECKSUM_ADLER32 = 0  # Default, fast

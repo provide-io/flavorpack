@@ -42,21 +42,21 @@ pub fn show_info(exe_path: &Path) -> i32 {
         "unknown/flavor-builder".to_string()
     };
 
-    // Calculate total size and encoding info
+    // Calculate total size and codec info
     let mut total_size = 0i64;
-    let mut encoding_types = std::collections::HashMap::new();
+    let mut codec_types = std::collections::HashMap::new();
     
     for slot in &metadata.slots {
         total_size += slot.size;
-        if !slot.encoding.is_empty() && slot.encoding != "none" {
-            *encoding_types.entry(slot.encoding.clone()).or_insert(0) += 1;
+        if !slot.codec.is_empty() && slot.codec != "none" {
+            *codec_types.entry(slot.codec.clone()).or_insert(0) += 1;
         }
     }
 
-    let encoding_info = if encoding_types.is_empty() {
+    let codec_info = if codec_types.is_empty() {
         "none".to_string()
     } else {
-        encoding_types.keys().cloned().collect::<Vec<_>>().join(", ")
+        codec_types.keys().cloned().collect::<Vec<_>>().join(", ")
     };
 
     // Verification is now handled internally by read_index/read_metadata
@@ -83,7 +83,7 @@ pub fn show_info(exe_path: &Path) -> i32 {
     }
     println!();
     println!("📊 Package Details:");
-    println!("  Slots: {} ({})", metadata.slots.len(), encoding_info);
+    println!("  Slots: {} ({})", metadata.slots.len(), codec_info);
     println!("  Total Size: {:.2} MB", total_size as f64 / 1_048_576.0);
     println!("  Verified: {}", verified);
     println!();

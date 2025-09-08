@@ -44,7 +44,7 @@ pub struct ManifestSlot {
     pub source: String,        // Source path within the package
     pub target: String,        // Destination path in workenv
     #[serde(default)]
-    pub encoding: String,      // Compression/encoding type
+    pub codec: String,      // Compression/encoding type
     #[serde(default = "default_purpose")]
     pub purpose: String,       // Role of the slot
     #[serde(default = "default_lifecycle")]

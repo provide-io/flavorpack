@@ -43,7 +43,7 @@ class TestPSPFIntegration:
                 target="test1.txt",
                 size=19,
                 checksum="",
-                encoding="none",
+                codec="none",
                 purpose="data",
                 lifecycle="init",
             ),
@@ -54,7 +54,7 @@ class TestPSPFIntegration:
                 target="test2.json",
                 size=17,
                 checksum="",
-                encoding="none",
+                codec="none",
                 purpose="config",
                 lifecycle="runtime",
             ),
@@ -65,7 +65,7 @@ class TestPSPFIntegration:
                 target="config.yaml",
                 size=11,
                 checksum="",
-                encoding="none",
+                codec="none",
                 purpose="config",
                 lifecycle="init",
             ),
@@ -84,7 +84,7 @@ class TestPSPFIntegration:
             builder_instance = builder_instance.add_slot(
                 id=slot.id,
                 data=slot.source,
-                encoding=slot.encoding,
+                codec=slot.codec,
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,
             )
@@ -116,11 +116,11 @@ class TestPSPFIntegration:
 
         # Verify first slot
         assert descriptors[0].size > 0
-        assert descriptors[0].encoding == 0  # none
+        assert descriptors[0].codec == 0  # none
         assert descriptors[0].purpose == 0  # data
 
         # Verify second slot (not compressed)
-        assert descriptors[1].encoding == 0  # none
+        assert descriptors[1].codec == 0  # none
         assert descriptors[1].purpose == 2  # config
 
         # Read and verify slot data
@@ -206,7 +206,7 @@ class TestPSPFIntegration:
                 target="large.bin",
                 size=10000,
                 checksum="",
-                encoding="none",
+                codec="none",
                 purpose="data",
                 lifecycle="init",
             ),
@@ -219,7 +219,7 @@ class TestPSPFIntegration:
             builder_instance = builder_instance.add_slot(
                 id=slot.id,
                 data=slot.source,
-                encoding=slot.encoding,
+                codec=slot.codec,
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,
             )

@@ -32,7 +32,7 @@ pub struct Index {
     // Performance hints (64 bytes)
     pub access_mode: u8,        // 0=auto, 1=mmap, 2=file, 3=stream
     pub cache_strategy: u8,     // 0=none, 1=lazy, 2=eager, 3=critical
-    pub encoding_type: u8,      // 0=raw, 1=tar, 2=gzip, 3=tgz
+    pub codec_type: u8,      // 0=raw, 1=tar, 2=gzip, 3=tgz
     pub encryption_type: u8,    // 0=none, 1=aes256-gcm, 2=chacha20
     pub page_size: u32,         // Optimal page size for alignment
     pub max_memory: u64,        // Suggested maximum memory usage
@@ -84,7 +84,7 @@ impl Index {
             integrity_signature: [0; 512],
             access_mode: 0,
             cache_strategy: 0,
-            encoding_type: 0,
+            codec_type: 0,
             encryption_type: 0,
             page_size: 4096,
             max_memory: 0,
@@ -169,7 +169,7 @@ impl Index {
         // Parse performance hints
         index.access_mode = data[640];
         index.cache_strategy = data[641];
-        index.encoding_type = data[642];
+        index.codec_type = data[642];
         index.encryption_type = data[643];
         index.page_size = u32::from_le_bytes(data[644..648].try_into()
             .map_err(|_| FlavorError::Generic("Invalid page size bytes".into()))?);
@@ -237,7 +237,7 @@ impl Index {
         // Pack performance hints
         bytes[640] = self.access_mode;
         bytes[641] = self.cache_strategy;
-        bytes[642] = self.encoding_type;
+        bytes[642] = self.codec_type;
         bytes[643] = self.encryption_type;
         bytes[644..648].copy_from_slice(&self.page_size.to_le_bytes());
         bytes[648..656].copy_from_slice(&self.max_memory.to_le_bytes());

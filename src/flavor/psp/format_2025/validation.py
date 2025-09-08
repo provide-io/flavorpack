@@ -89,7 +89,7 @@ def validate_slots(slots: list[SlotMetadata]) -> list[str]:
     Checks for:
     - Unique indices
     - Valid paths
-    - Valid encoding
+    - Valid codec
     - Valid sizes
     - Valid names
     """
@@ -118,8 +118,8 @@ def validate_slots(slots: list[SlotMetadata]) -> list[str]:
         if slot.size < 0:
             errors.append(f"📏 Slot '{slot.id}' has negative size: {slot.size}")
 
-        # Check encoding validity
-        valid_encodings = [
+        # Check codec validity
+        valid_codecs = [
             "none",
             "raw",
             "gzip",
@@ -129,10 +129,10 @@ def validate_slots(slots: list[SlotMetadata]) -> list[str]:
             "zstd",
             "brotli",
         ]
-        if slot.encoding not in valid_encodings:
+        if slot.codec not in valid_codecs:
             errors.append(
-                f"🗜️ Slot '{slot.id}' has invalid encoding '{slot.encoding}'. "
-                f"Valid options: {', '.join(valid_encodings)}"
+                f"🗜️ Slot '{slot.id}' has invalid codec '{slot.codec}'. "
+                f"Valid options: {', '.join(valid_codecs)}"
             )
 
         # Check source path existence if provided
