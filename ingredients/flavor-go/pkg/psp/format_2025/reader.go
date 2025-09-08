@@ -397,8 +397,8 @@ func (r *Reader) ExtractSlot(slotIndex int, destDir string) (string, error) {
 		return "", err
 	}
 
-	// Extract permissions field (bytes 52-54)
-	slotPermissions := binary.LittleEndian.Uint16(entryData[52:54])
+	// Extract permissions field (bytes 62-64)
+	slotPermissions := binary.LittleEndian.Uint16(entryData[62:64])
 
 	// Target field specifies where to extract (relative to workenv)
 	// Substitute {workenv} placeholder with the actual destDir
