@@ -53,7 +53,7 @@ type SlotDescriptor struct {
 	PermissionsHigh uint8 // Unix permissions (upper 8 bits)
 }
 
-const SlotDescriptorSize = 64 // Size of packed descriptor
+// SlotDescriptorSize is defined in constants.go
 
 var slotLogger = hclog.New(&hclog.LoggerOptions{
 	Name:  "pspf2025.slots",
