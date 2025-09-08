@@ -18,10 +18,6 @@ use tar::Archive;
 
 #[cfg(unix)]
 use super::constants::DEFAULT_DIR_PERMS;
-use super::constants::{
-    CODEC_GZIP, CODEC_RAW,
-    CODEC_TAR, CODEC_TGZ,
-};
 use super::reader::Reader;
 use super::slots::SlotDescriptor;
 use crate::exceptions::{FlavorError, Result};
