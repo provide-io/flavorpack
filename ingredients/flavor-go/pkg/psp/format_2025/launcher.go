@@ -274,8 +274,8 @@ func showBundleInfo(exePath string, logger hclog.Logger) {
 
 	for _, slot := range metadata.Slots {
 		totalSize += slot.Size
-		if slot.Codec != "" && slot.Codec != "none" {
-			codecTypes[slot.Codec]++
+		if slot.Operations != "" && slot.Operations != "none" {
+			codecTypes[slot.Operations]++
 		}
 	}
 

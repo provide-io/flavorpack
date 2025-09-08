@@ -23,7 +23,7 @@ type SlotMetadata struct {
 	Target      string `json:"target"` // Destination path
 	Size        int64  `json:"size"`
 	Checksum    string `json:"checksum"`
-	Codec    string `json:"codec"`
+	Operations  string `json:"operations"` // Operation chain (e.g., "gzip", "tar|gzip")
 	Purpose     string `json:"purpose"`
 	Lifecycle   string `json:"lifecycle"`
 	Resolution  string `json:"resolution,omitempty"`  // When to resolve: build|runtime|lazy
