@@ -6,7 +6,9 @@ to ensure cross-language compatibility.
 """
 
 import json
+import logging
 import struct
+import sys
 from pathlib import Path
 
 from flavor.psp.format_2025.operations import (
@@ -16,13 +18,42 @@ from flavor.psp.format_2025.operations import (
 )
 from flavor.psp.format_2025.slots import SlotDescriptor
 
+# Configure logging with emojis
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(levelname)s %(message)s',
+    stream=sys.stdout
+)
+logger = logging.getLogger(__name__)
+
+# Custom log levels with emojis
+def log_trace(msg: str):
+    logger.debug(f"🔍 [TRACE] {msg}")
+
+def log_debug(msg: str):
+    logger.debug(f"🐛 [DEBUG] {msg}")
+
+def log_info(msg: str):
+    logger.info(f"📊 [INFO] {msg}")
+
+def log_success(msg: str):
+    logger.info(f"✅ [SUCCESS] {msg}")
+
+def log_warning(msg: str):
+    logger.warning(f"⚠️  [WARN] {msg}")
+
+def log_error(msg: str):
+    logger.error(f"❌ [ERROR] {msg}")
+
 
 def generate_slot_descriptors():
     """Generate various SlotDescriptor test cases."""
     
+    log_info("🎯 Starting slot descriptor generation")
     test_cases = []
     
     # Test case 1: No operations (raw)
+    log_debug("Creating test case 1: raw data with no operations")
     desc1 = SlotDescriptor(
         id=1,
         name="test_raw.txt",
@@ -34,71 +65,89 @@ def generate_slot_descriptors():
         purpose=0,  # data
         lifecycle=0,  # runtime
     )
+    log_trace(f"Descriptor 1: ID={desc1.id}, operations=0x{desc1.operations:016x}")
     test_cases.append({
         "name": "raw_data",
         "description": "Raw data with no operations",
         "descriptor": desc1,
         "expected_operations": []
     })
+    log_success("Test case 1 created: raw_data")
     
     # Test case 2: Single GZIP operation
+    log_debug("Creating test case 2: single GZIP operation")
+    packed_gzip = pack_operations([OP_GZIP])
+    log_trace(f"Packing [OP_GZIP] -> 0x{packed_gzip:016x}")
     desc2 = SlotDescriptor(
         id=2,
         name="test_gzip.txt",
         offset=1024,
         size=512,
         original_size=1000,
-        operations=pack_operations([OP_GZIP]),
+        operations=packed_gzip,
         checksum=0xABCDEF01,
         purpose=1,  # code
         lifecycle=2,  # startup
     )
+    log_trace(f"Descriptor 2: ID={desc2.id}, operations=0x{desc2.operations:016x}")
     test_cases.append({
         "name": "gzip_only",
         "description": "Single GZIP operation",
         "descriptor": desc2,
         "expected_operations": [OP_GZIP]
     })
+    log_success("Test case 2 created: gzip_only")
     
     # Test case 3: TAR + GZIP (tar.gz)
+    log_debug("Creating test case 3: TAR + GZIP chain (tar.gz)")
+    packed_tar_gzip = pack_operations([OP_TAR, OP_GZIP])
+    log_trace(f"Packing [OP_TAR, OP_GZIP] -> 0x{packed_tar_gzip:016x}")
     desc3 = SlotDescriptor(
         id=42,
         name="archive.tar.gz",
         offset=8192,
         size=4096,
         original_size=16384,
-        operations=pack_operations([OP_TAR, OP_GZIP]),
+        operations=packed_tar_gzip,
         checksum=0xDEADBEEF,
         purpose=0,  # data
         lifecycle=1,  # cached
     )
+    log_trace(f"Descriptor 3: ID={desc3.id}, operations=0x{desc3.operations:016x}")
     test_cases.append({
         "name": "tar_gzip",
         "description": "TAR followed by GZIP (tar.gz)",
         "descriptor": desc3,
         "expected_operations": [OP_TAR, OP_GZIP]
     })
+    log_success("Test case 3 created: tar_gzip")
     
     # Test case 4: Complex chain
+    log_debug("Creating test case 4: complex operation chain")
+    packed_complex = pack_operations([OP_TAR, OP_ZSTD, OP_AES256_GCM])
+    log_trace(f"Packing [OP_TAR, OP_ZSTD, OP_AES256_GCM] -> 0x{packed_complex:016x}")
     desc4 = SlotDescriptor(
         id=999,
         name="complex.data",
         offset=65536,
         size=32768,
         original_size=131072,
-        operations=pack_operations([OP_TAR, OP_ZSTD, OP_AES256_GCM]),
+        operations=packed_complex,
         checksum=0xCAFEBABE,
         purpose=2,  # config
         lifecycle=0,  # runtime
         permissions=0o755,
     )
+    log_trace(f"Descriptor 4: ID={desc4.id}, operations=0x{desc4.operations:016x}")
     test_cases.append({
         "name": "complex_chain",
         "description": "TAR -> ZSTD -> AES256_GCM",
         "descriptor": desc4,
         "expected_operations": [OP_TAR, OP_ZSTD, OP_AES256_GCM]
     })
+    log_success("Test case 4 created: complex_chain")
     
+    log_info(f"📦 Generated {len(test_cases)} slot descriptor test cases")
     return test_cases
 
 
