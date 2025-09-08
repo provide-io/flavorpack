@@ -10,7 +10,7 @@ import click
 
 from flavor.api import build_package_from_manifest
 from flavor.ingredients import IngredientManager as HelperManager
-from flavor.utils.subprocess import run_command
+from provide.foundation.process import run_command
 
 
 @click.command("slot-test")

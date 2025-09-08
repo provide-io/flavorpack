@@ -10,11 +10,7 @@ from flavor.utils.platform import (
     normalize_platform_components,
 )
 
-# Re-export subprocess utilities
-from flavor.utils.subprocess import (
-    run_command,
-    run_command_simple,
-)
+# Subprocess utilities removed - use provide.foundation.process directly
 
 # Re-export XOR utilities
 from flavor.utils.xor import (
@@ -31,9 +27,7 @@ __all__ = [
     "get_os_version",
     "get_cpu_type",
     "normalize_platform_components",
-    # Subprocess utilities
-    "run_command",
-    "run_command_simple",
+    # Subprocess utilities removed - use provide.foundation.process directly
     # XOR utilities
     "XOR_KEY",
     "xor_encode",

@@ -224,3 +224,4 @@ pytest -m security
 - **NO simple/quick tests** - use the proper testing framework
 - Cross-language compatibility must be verified through pretaster
 - If pretaster/taster aren't available, note that testing is blocked - don't create alternatives
+- no. you should not be writing your own examples. you should be using fucking pretaster.
