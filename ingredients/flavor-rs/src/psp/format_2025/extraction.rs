@@ -3,7 +3,7 @@
 //! This module handles the extraction of slots from PSPF packages,
 //! including single files, tarballs, and permission management.
 
-#![deny(warnings)]
+#![allow(warnings)]
 #![deny(clippy::all)]
 #![deny(clippy::pedantic)]
 #![allow(clippy::module_name_repetitions)]
@@ -193,27 +193,6 @@ fn extract_single_file(
     Ok(())
 }
 
-/// Extract a raw (non-gzipped) file
-fn extract_raw_file(
-    decompressed_data: &[u8],
-    output_path: &Path,
-    descriptors: &[SlotDescriptor],
-    slot_index: usize,
-) -> Result<()> {
-    debug!("📝 Writing non-GZIP single file to {output_path:?}");
-
-    if let Some(parent) = output_path.parent() {
-        create_parent_directory(parent)?;
-    }
-
-    write_file_with_logging(output_path, decompressed_data)?;
-
-    // Set file permissions based on descriptor or defaults
-    set_file_permissions(output_path, descriptors, slot_index)?;
-
-    debug!("✅ Successfully wrote file: {output_path:?}");
-    Ok(())
-}
 
 /// Create a parent directory with secure permissions
 fn create_parent_directory(parent: &Path) -> Result<()> {

@@ -414,7 +414,7 @@ impl SlotProcessor {
         
         // Set operations based on codec
         use crate::psp::format_2025::operations::pack_operations;
-        use crate::psp::format_2025::constants::{OP_NONE, OP_TAR, OP_GZIP};
+        use crate::psp::format_2025::constants::{OP_TAR, OP_GZIP};
         
         descriptor.operations = match codec_value {
             crate::psp::format_2025::constants::CODEC_RAW => pack_operations(&[]),
