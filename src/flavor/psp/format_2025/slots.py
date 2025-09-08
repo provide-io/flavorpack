@@ -177,15 +177,19 @@ class SlotDescriptor:
 class SlotMetadata:
     """Metadata for a slot in the PSPF package."""
 
+    # Required fields first (no defaults)
     index: int = field(validator=validators.instance_of(int))
     id: str = field(validator=validators.instance_of(str))  # Slot identifier
     source: str = field(validator=validators.instance_of(str))  # Source path
     target: str = field(validator=validators.instance_of(str))  # Target path in workenv
     size: int = field(validator=validators.instance_of(int))
     checksum: str = field(validator=validators.instance_of(str))
+    
+    # Optional fields with defaults
     operations: str = field(default="RAW")  # Operation chain string like "TAR|GZIP"
-    purpose: str = field()
+    purpose: str = field(default="data")
     lifecycle: str = field(
+        default="runtime",
         validator=validators.in_(
             [
                 # Timing-based
