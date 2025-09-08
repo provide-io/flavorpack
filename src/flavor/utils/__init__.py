@@ -1,7 +1,7 @@
 """Utility functions for flavor."""
 
-# Re-export platform utilities
-from flavor.utils.platform import (
+# Re-export platform utilities (from foundation directly)
+from provide.foundation.platform import (
     get_arch_name,
     get_cpu_type,
     get_os_name,
