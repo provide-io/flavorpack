@@ -38,7 +38,7 @@ class TestPSPFSlots:
                 target="config",
                 size=len(text_data),
                 checksum=hashlib.sha256(text_data.encode()).hexdigest(),
-                codec="gzip",
+                operations="gzip",
                 purpose="config",
                 lifecycle="runtime",
             )
@@ -57,7 +57,7 @@ class TestPSPFSlots:
                 target="library",
                 size=len(binary_data),
                 checksum=hashlib.sha256(binary_data).hexdigest(),
-                codec="none",  # Binary files often don't compress well
+                operations="none",  # Binary files often don't compress well
                 purpose="library",
                 lifecycle="init",
             )
@@ -76,7 +76,7 @@ class TestPSPFSlots:
                 target="wheel",
                 size=len(temp_data),
                 checksum=hashlib.sha256(temp_data).hexdigest(),
-                codec="none",
+                operations="none",
                 purpose="payload",
                 lifecycle="temp",
             )
@@ -93,7 +93,7 @@ class TestPSPFSlots:
             target="test-runtime",
             size=1024,
             checksum="abc123",
-            codec="gzip",
+            operations="gzip",
             purpose="payload",
             lifecycle="runtime",
         )
@@ -113,7 +113,7 @@ class TestPSPFSlots:
             target="test-init",
             size=1024,
             checksum="abc123",
-            codec="gzip",
+            operations="gzip",
             purpose="payload",
             lifecycle="init",
         )
@@ -133,7 +133,7 @@ class TestPSPFSlots:
             target="test-temp",
             size=1024,
             checksum="abc123",
-            codec="gzip",
+            operations="gzip",
             purpose="payload",
             lifecycle="temp",
         )
@@ -153,7 +153,7 @@ class TestPSPFSlots:
             target="test-cache",
             size=1024,
             checksum="abc123",
-            codec="gzip",
+            operations="gzip",
             purpose="config",
             lifecycle="cache",
         )
@@ -179,7 +179,7 @@ class TestPSPFSlots:
                 builder = builder.add_slot(
                     id=slot.id,
                     data=slot.source,
-                    codec=slot.codec,
+                    operations=slot.operations,
                     purpose=slot.purpose,
                     lifecycle=slot.lifecycle,
                 )
@@ -220,7 +220,7 @@ class TestPSPFSlots:
             target="compressed",
             size=len(data),
             checksum=hashlib.sha256(data).hexdigest(),
-            codec="gzip",
+            operations="gzip",
             purpose="payload",
             lifecycle="runtime",
         )
@@ -237,7 +237,7 @@ class TestPSPFSlots:
             .add_slot(
                 id="compressed",
                 data=slot_path,
-                codec="gzip",
+                operations="gzip",
                 purpose="payload",
                 lifecycle="runtime",
             )
@@ -263,7 +263,7 @@ class TestPSPFSlots:
             target="uncompressed",
             size=len(data),
             checksum=hashlib.sha256(data).hexdigest(),
-            codec="none",
+            operations="none",
             purpose="payload",
             lifecycle="runtime",
         )
@@ -280,7 +280,7 @@ class TestPSPFSlots:
             .add_slot(
                 id="uncompressed",
                 data=slot_path,
-                codec="none",
+                operations="none",
                 purpose="payload",
                 lifecycle="runtime",
             )
@@ -309,7 +309,7 @@ class TestPSPFSlots:
             target="checksum_test",
             size=len(data),
             checksum=expected_checksum,
-            codec="none",
+            operations="none",
             purpose="payload",
             lifecycle="runtime",
         )
@@ -326,7 +326,7 @@ class TestPSPFSlots:
             .add_slot(
                 id=slot.id,
                 data=slot.source,
-                codec=slot.codec,
+                operations=slot.operations,
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,
             )
@@ -352,7 +352,7 @@ class TestPSPFSlots:
                 builder = builder.add_slot(
                     id=slot.id,
                     data=slot.source,
-                    codec=slot.codec,
+                    operations=slot.operations,
                     purpose=slot.purpose,
                     lifecycle=slot.lifecycle,
                 )
@@ -395,7 +395,7 @@ class TestPSPFSlots:
             target="cached_slot",
             size=slot_path.stat().st_size,
             checksum=hashlib.sha256(slot_path.read_bytes()).hexdigest(),
-            codec="gzip",
+            operations="gzip",
             purpose="payload",
             lifecycle="runtime",
         )
@@ -412,7 +412,7 @@ class TestPSPFSlots:
             .add_slot(
                 id=slot.id,
                 data=slot.source,
-                codec=slot.codec,
+                operations=slot.operations,
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,
             )
@@ -437,7 +437,7 @@ class TestPSPFSlots:
             target="test_slot",
             size=2048,
             checksum="deadbeef",
-            codec="none",  # Binary files often don't compress well
+            operations="none",  # Binary files often don't compress well
             purpose="library",
             lifecycle="init",
         )
@@ -472,7 +472,7 @@ class TestPSPFSlots:
             target="large_slot",
             size=len(large_data),
             checksum=hashlib.sha256(large_data).hexdigest(),
-            codec="none",
+            operations="none",
             purpose="payload",
             lifecycle="runtime",
         )
@@ -489,7 +489,7 @@ class TestPSPFSlots:
             .add_slot(
                 id=slot.id,
                 data=slot.source,
-                codec=slot.codec,
+                operations=slot.operations,
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,
             )
