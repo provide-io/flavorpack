@@ -271,30 +271,10 @@ func (r *Reader) ReadSlot(slotIndex int) ([]byte, error) {
 		return nil, err
 	}
 
-	// Unpack the 64-byte descriptor
-	entry := SlotDescriptor{
-		// Identity (16 bytes)
-		ID:       binary.LittleEndian.Uint64(entryData[0:8]),
-		NameHash: binary.LittleEndian.Uint64(entryData[8:16]),
-		// Location (16 bytes)
-		Offset: binary.LittleEndian.Uint64(entryData[16:24]),
-		Size:   binary.LittleEndian.Uint64(entryData[24:32]),
-		// Properties (16 bytes)
-		OriginalSize: binary.LittleEndian.Uint64(entryData[32:40]),
-		Checksum:     binary.LittleEndian.Uint32(entryData[40:44]),
-		Codec:     entryData[44],
-		Encryption:   entryData[45],
-		Alignment:    binary.LittleEndian.Uint16(entryData[46:48]),
-		// Semantics (8 bytes)
-		Purpose:     entryData[48],
-		Lifecycle:   entryData[49],
-		AccessHint:  entryData[50],
-		Priority:    entryData[51],
-		Permissions: binary.LittleEndian.Uint16(entryData[52:54]),
-		Platform:    binary.LittleEndian.Uint16(entryData[54:56]),
-		// Extended (8 bytes)
-		ExtendedOffset: binary.LittleEndian.Uint32(entryData[56:60]),
-		ExtendedSize:   binary.LittleEndian.Uint32(entryData[60:64]),
+	// Unpack the 64-byte descriptor using the new format
+	entry, err := UnpackSlotDescriptor(entryData[:])
+	if err != nil {
+		return nil, fmt.Errorf("failed to unpack slot descriptor: %w", err)
 	}
 
 	// Read slot data
@@ -313,42 +293,48 @@ func (r *Reader) ReadSlot(slotIndex int) ([]byte, error) {
 		return nil, ErrChecksumMismatch
 	}
 
-	// Decompress if needed based on entry.Codec
-	switch entry.Codec {
-	case CodecRaw: // Raw uncompressed data
-		return slotData, nil
-	case CodecTar: // Uncompressed tar archive
-		// Return as-is, caller will extract tar
-		return slotData, nil
-	case CodecGzip: // Single file, gzipped
-		gz, err := gzip.NewReader(bytes.NewReader(slotData))
-		if err != nil {
-			return nil, fmt.Errorf("failed to create gzip reader: %w", err)
+	// Decompress based on operations chain
+	operations := UnpackOperations(entry.Operations)
+	
+	// Apply operations in reverse order (unwrap the layers)
+	result := slotData
+	for i := len(operations) - 1; i >= 0; i-- {
+		op := operations[i]
+		switch op {
+		case OP_GZIP:
+			// Decompress gzip
+			gz, err := gzip.NewReader(bytes.NewReader(result))
+			if err != nil {
+				return nil, fmt.Errorf("failed to create gzip reader: %w", err)
+			}
+			decompressed, err := io.ReadAll(gz)
+			gz.Close()
+			if err != nil {
+				return nil, fmt.Errorf("failed to decompress gzip data: %w", err)
+			}
+			result = decompressed
+			
+		case OP_TAR:
+			// TAR is handled by caller, just return the data
+			// (TAR is a bundle format, not compression)
+			continue
+			
+		case OP_BZIP2, OP_ZSTD, OP_XZ:
+			// These would need additional libraries
+			return nil, fmt.Errorf("operation %s not yet implemented", OperationName(op))
+			
+		case OP_AES256_GCM:
+			// Encryption would need key material
+			return nil, fmt.Errorf("encryption operation %s not yet implemented", OperationName(op))
+			
+		default:
+			if op != OP_NONE {
+				return nil, fmt.Errorf("unknown operation: 0x%02x", op)
+			}
 		}
-		defer gz.Close()
-
-		decompressed, err := io.ReadAll(gz)
-		if err != nil {
-			return nil, fmt.Errorf("failed to decompress gzip data: %w", err)
-		}
-		return decompressed, nil
-	case CodecTgz: // Tar archive, then gzipped
-		// First decompress the gzip layer
-		gz, err := gzip.NewReader(bytes.NewReader(slotData))
-		if err != nil {
-			return nil, fmt.Errorf("failed to create gzip reader for tar.gz: %w", err)
-		}
-		defer gz.Close()
-
-		decompressed, err := io.ReadAll(gz)
-		if err != nil {
-			return nil, fmt.Errorf("failed to decompress tar.gz: %w", err)
-		}
-		// Return the tar archive for extraction
-		return decompressed, nil
-	default:
-		return nil, fmt.Errorf("unsupported codec type: %d", entry.Codec)
 	}
+	
+	return result, nil
 }
 
 // isTarball checks if data is a tar archive
