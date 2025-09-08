@@ -207,7 +207,7 @@ func (sp *SlotProcessor) processSlot(index int, slot *Slot) error {
 		Target:      slot.Target,
 		Size:        int64(len(slotData)),
 		Checksum:    checksumStr,
-		Codec:    slot.Operations,
+		Operations:  slot.Operations,
 		Purpose:     slot.Purpose,
 		Lifecycle:   slot.Lifecycle,
 		Resolution:  slot.Resolution,
