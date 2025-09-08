@@ -14,7 +14,7 @@ from typing import Any
 from provide.foundation.logger import logger
 from provide.foundation.process import run_command
 
-from flavor.packaging.python.pip_manager import PyPaPipManager
+from flavor.packaging.python.pypapip_manager import PyPaPipManager
 from flavor.packaging.python.uv_manager import UVManager
 
 

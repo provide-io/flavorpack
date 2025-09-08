@@ -10,7 +10,7 @@ import sys
 
 import pytest
 
-from flavor.packaging.python.pip_manager import PyPaPipManager
+from flavor.packaging.python.pypapip_manager import PyPaPipManager
 from flavor.packaging.python.uv_manager import UVManager
 from flavor.packaging.python.wheel_builder import WheelBuilder
 from flavor.packaging.python.dist_manager import PythonDistManager
