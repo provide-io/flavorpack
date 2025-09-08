@@ -482,9 +482,7 @@ dependencies = [
     { name = "cryptography" },
     { name = "httpx" },
     { name = "provide-foundation", extra = ["all"] },
-    { name = "pyyaml" },
     { name = "uv" },
-    { name = "wheel" },
 ]
 
 [package.dev-dependencies]
@@ -535,9 +533,7 @@ requires-dist = [
     { name = "cryptography", specifier = ">=41.0.4" },
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "provide-foundation", extras = ["all"], specifier = ">=0.0.0.dev0" },
-    { name = "pyyaml", specifier = ">=6.0" },
     { name = "uv", specifier = ">=0.8.13" },
-    { name = "wheel", specifier = ">=0.40.0" },
 ]
 
 [package.metadata.requires-dev]
@@ -2214,15 +2210,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/79/3e/c0bdc27cf06f4e47680bd5803a07cb3dfd17de84cde92dd217dcb9e05253/wcmatch-10.1.tar.gz", hash = "sha256:f11f94208c8c8484a16f4f48638a85d771d9513f4ab3f37595978801cb9465af", size = 117421, upload-time = "2025-06-22T19:14:02.49Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/eb/d8/0d1d2e9d3fabcf5d6840362adcf05f8cf3cd06a73358140c3a97189238ae/wcmatch-10.1-py3-none-any.whl", hash = "sha256:5848ace7dbb0476e5e55ab63c6bbd529745089343427caa5537f230cc01beb8a", size = 39854, upload-time = "2025-06-22T19:14:00.978Z" },
-]
-
-[[package]]
-name = "wheel"
-version = "0.45.1"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/8a/98/2d9906746cdc6a6ef809ae6338005b3f21bb568bea3165cfc6a243fdc25c/wheel-0.45.1.tar.gz", hash = "sha256:661e1abd9198507b1409a20c02106d9670b2576e916d58f520316666abca6729", size = 107545, upload-time = "2024-11-23T00:18:23.513Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/0b/2c/87f3254fd8ffd29e4c02732eee68a83a1d3c346ae39bc6822dcbcb697f2b/wheel-0.45.1-py3-none-any.whl", hash = "sha256:708e7481cc80179af0e556bbf0cc00b8444c7321e2700b8d8580231d13017248", size = 72494, upload-time = "2024-11-23T00:18:21.207Z" },
 ]
 
 [[package]]
