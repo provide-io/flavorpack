@@ -346,6 +346,24 @@ class PythonSlotBuilder:
         import sys
         python_exe = Path(sys.executable)
         
+        # Process local dependencies from [tool.flavor.build].dependencies
+        local_deps = self.build_config.get("dependencies", [])
+        if local_deps:
+            logger.info(f"📦🔗 Processing {len(local_deps)} local dependencies")
+            for dep in local_deps:
+                dep_path = self.manifest_dir / dep
+                if dep_path.exists() and dep_path.is_dir():
+                    logger.info(f"🔗 Building local dependency: {dep_path.name}")
+                    # Build wheel for local dependency
+                    dep_wheel = self.wheel_builder.build_wheel_from_source(
+                        python_exe=python_exe,
+                        source_path=dep_path,
+                        wheel_dir=wheels_dir,
+                    )
+                    logger.info(f"✅ Built local dependency wheel: {dep_wheel.name}")
+                else:
+                    logger.warning(f"⚠️ Local dependency not found: {dep_path}")
+        
         # The WheelBuilder should handle dependency resolution from the project itself
         # We shouldn't need to manually extract dependencies here
         build_result = self.wheel_builder.build_and_resolve_project(
