@@ -10,7 +10,7 @@ from typing import Any
 
 from provide.foundation import logger
 
-from flavor.utils.subprocess import run_command
+from provide.foundation.process import run_command
 
 
 class BundleExecutor:

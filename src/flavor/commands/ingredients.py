@@ -8,7 +8,7 @@ import os
 
 import click
 
-from flavor.utils.subprocess import run_command
+from provide.foundation.process import run_command
 
 
 @click.group("ingredients")

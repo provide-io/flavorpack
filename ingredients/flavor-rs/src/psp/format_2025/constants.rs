@@ -151,5 +151,23 @@ pub const DEFAULT_FILE_PERMS: u16 = 0o600; // Read/write for owner only
 pub const DEFAULT_EXECUTABLE_PERMS: u16 = 0o700; // Read/write/execute for owner only
 pub const DEFAULT_DIR_PERMS: u16 = 0o700; // Read/write/execute for owner only (secure by default)
 
+// ==================== Operation Constants ====================
+// From protobuf-generated operations (must match Python/Go)
+
+/// No operation - raw data
+pub const OP_NONE: u8 = 0x00;
+
+/// Archive operations
+pub const OP_TAR: u8 = 0x01;
+
+/// Compression operations  
+pub const OP_GZIP: u8 = 0x10;
+pub const OP_BZIP2: u8 = 0x13;
+pub const OP_XZ: u8 = 0x18;
+pub const OP_ZSTD: u8 = 0x1B;
+
+/// Encryption operations
+pub const OP_AES256_GCM: u8 = 0x31;
+
 
 // 📦💾🔍🪄

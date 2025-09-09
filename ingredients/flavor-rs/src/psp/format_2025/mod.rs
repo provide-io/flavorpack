@@ -15,6 +15,7 @@ pub mod launcher;
 pub mod locking;
 pub mod manifest;
 pub mod metadata;
+pub mod operations;
 pub mod packaging;
 pub mod paths;
 pub mod reader;

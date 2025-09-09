@@ -9,7 +9,7 @@ from pathlib import Path
 import click
 
 from flavor.psp.format_2025.reader import PSPFReader
-from flavor.utils.formatting import format_size
+from provide.foundation.utils.formatting import format_size
 
 
 @click.command("extract")

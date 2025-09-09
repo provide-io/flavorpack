@@ -70,25 +70,34 @@ pub fn write_slot(
         hasher.finish()
     };
     
-    // Create descriptor
+    // Create descriptor with operations
+    use crate::psp::format_2025::operations::pack_operations;
+    use crate::psp::format_2025::constants::{OP_TAR, OP_GZIP, CODEC_RAW, CODEC_TAR, CODEC_GZIP, CODEC_TGZ};
+    
+    let operations = match codec {
+        CODEC_RAW => pack_operations(&[]),
+        CODEC_TAR => pack_operations(&[OP_TAR]),
+        CODEC_GZIP => pack_operations(&[OP_GZIP]),
+        CODEC_TGZ => pack_operations(&[OP_TAR, OP_GZIP]),
+        _ => pack_operations(&[]),
+    };
+    
     let descriptor = SlotDescriptor {
         id: slot_index as u64,
         name_hash,
         offset,
         size: processed_data.len() as u64,
         original_size: slot_data.len() as u64,
-        checksum: adler::adler32_slice(&processed_data),
-        codec,
-        encryption: 0,
-        alignment: 0,
+        operations,
+        checksum: adler::adler32_slice(&processed_data) as u64,
         purpose: get_purpose_byte(&slot_info.purpose),
         lifecycle: get_lifecycle_byte(&slot_info.lifecycle),
-        access_hint: 0,
         priority: 0,
-        permissions,
         platform: 0,
-        extended_offset: 0,
-        extended_size: 0,
+        reserved1: 0,
+        reserved2: 0,
+        permissions: (permissions & 0xFF) as u8,
+        permissions_high: ((permissions >> 8) & 0xFF) as u8,
     };
 
     // Copy values to avoid unaligned access
