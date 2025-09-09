@@ -17,7 +17,7 @@
       "slot": 0,
       "purpose": "payload",
       "lifecycle": "cached",
-      "encoding": "raw",
+      "operations": "raw",
       "id": "test-with-taster-sh",
       "source": "{workenv}/scripts/test-with-taster.sh",
       "target": "scripts/test-with-taster.sh",
@@ -27,7 +27,7 @@
       "slot": 1,
       "purpose": "payload",
       "lifecycle": "cached",
-      "encoding": "raw",
+      "operations": "raw",
       "id": "taster-psp",
       "source": "{workenv}/scripts/taster.psp",
       "target": "bin/taster.psp"

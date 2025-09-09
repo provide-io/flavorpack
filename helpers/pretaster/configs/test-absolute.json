@@ -13,7 +13,7 @@
       "slot": 0,
       "purpose": "payload",
       "lifecycle": "cached",
-      "encoding": "raw",
+      "operations": "raw",
       "id": "minimal-test-sh",
       "source": "/REDACTED_ABS_PATH",
       "target": "minimal_test.sh",
