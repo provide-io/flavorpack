@@ -4,6 +4,7 @@ import tempfile
 
 from cryptography.hazmat.primitives.asymmetric import ed25519
 import pytest
+from provide.foundation.logger.setup.testing import reset_foundation_setup_for_testing
 
 from flavor.psp.format_2025.builder import PSPFBuilder
 
@@ -20,6 +21,15 @@ def key_pair() -> tuple[ed25519.Ed25519PrivateKey, ed25519.Ed25519PublicKey]:
     private_key = ed25519.Ed25519PrivateKey.generate()
     public_key = private_key.public_key()
     return private_key, public_key
+
+
+@pytest.fixture(autouse=True)
+def reset_foundation_logging():
+    """Reset foundation logging state before each test to avoid conflicts."""
+    reset_foundation_setup_for_testing()
+    yield
+    # Reset again after test to ensure clean state
+    reset_foundation_setup_for_testing()
 
 
 @pytest.fixture(autouse=True)
