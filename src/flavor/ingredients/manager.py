@@ -56,6 +56,10 @@ class IngredientManager:
 
         # Detect current platform using centralized utility
         self.current_platform = get_platform_string()
+        
+        # Binary loader for complex operations
+        from flavor.ingredients.binary_loader import BinaryLoader
+        self._binary_loader = BinaryLoader(self)
 
     def list_ingredients(
         self, platform_filter: bool = False
@@ -245,29 +249,8 @@ class IngredientManager:
     def build_ingredients(
         self, language: str | None = None, force: bool = False
     ) -> list[Path]:
-        """Build ingredient binaries from source.
-
-        Args:
-            language: Build only ingredients for this language (go/rust), or all if None
-            force: Force rebuild even if binaries exist
-
-        Returns:
-            List of paths to built binaries
-        """
-        built = []
-
-        languages = []
-        languages = [language] if language else ["go", "rust"]
-
-        for lang in languages:
-            if lang == "go":
-                built.extend(self._build_go_ingredients(force))
-            elif lang == "rust":
-                built.extend(self._build_rust_ingredients(force))
-            else:
-                logger.warning(f"Unknown language: {lang}")
-
-        return built
+        """Build ingredient binaries from source."""
+        return self._binary_loader.build_ingredients(language, force)
 
     def _build_go_ingredients(self, force: bool = False) -> list[Path]:
         """Build Go ingredients."""
