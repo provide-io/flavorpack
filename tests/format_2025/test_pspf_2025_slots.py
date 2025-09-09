@@ -248,7 +248,7 @@ class TestPSPFSlots:
         # Verify the slot is stored with compression by checking metadata
         reader = PSPFReader(bundle_path)
         metadata_read = reader.read_metadata()
-        assert metadata_read["slots"][0]["codec"] == "gzip"
+        assert metadata_read["slots"][0]["operations"] == "gzip"
 
     def test_slot_compression_none(self, temp_dir, test_builder):
         """Test no compression."""
@@ -291,7 +291,7 @@ class TestPSPFSlots:
         # Verify the slot is stored without compression
         reader = PSPFReader(bundle_path)
         metadata_read = reader.read_metadata()
-        assert metadata_read["slots"][0]["codec"] == "none"
+        assert metadata_read["slots"][0]["operations"] == "none"
 
     def test_slot_checksum_verification(self, temp_dir, test_builder):
         """Test slot checksum verification."""
@@ -451,7 +451,7 @@ class TestPSPFSlots:
         assert slot_dict["size"] == 2048
         # Checksum gets prefixed in to_dict
         assert "deadbeef" in slot_dict["checksum"]
-        assert slot_dict["codec"] == "none"
+        assert slot_dict["operations"] == "none"
         assert slot_dict["purpose"] == "library"
         assert slot_dict["lifecycle"] == "init"
         # Source and target should be included in serialized metadata

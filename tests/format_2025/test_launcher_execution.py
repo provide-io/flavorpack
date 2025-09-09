@@ -100,7 +100,7 @@ class TestSlotTableReading:
         assert slot0["offset"] > 0
         assert slot0["size"] > 0
         assert slot0["checksum"] != 0
-        assert slot0["codec"] in [0, 1]  # none, gzip (2 is reserved)
+        assert slot0["operations"] in [0, 0x10]  # none, gzip
         assert slot0["purpose"] in [0, 1, 2]  # payload, runtime, tool
         assert (
             slot0["lifecycle"] in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
