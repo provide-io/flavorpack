@@ -12,7 +12,7 @@ from typing import Dict, List, Optional
 
 # Import run_command from flavor.utils
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
-from flavor.utils.subprocess import run_command
+from provide.foundation.process import run_command
 
 
 def get_project_root() -> Path:

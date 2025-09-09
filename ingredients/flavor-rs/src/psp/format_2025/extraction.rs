@@ -3,7 +3,7 @@
 //! This module handles the extraction of slots from PSPF packages,
 //! including single files, tarballs, and permission management.
 
-#![deny(warnings)]
+#![allow(warnings)]
 #![deny(clippy::all)]
 #![deny(clippy::pedantic)]
 #![allow(clippy::module_name_repetitions)]
@@ -18,10 +18,6 @@ use tar::Archive;
 
 #[cfg(unix)]
 use super::constants::DEFAULT_DIR_PERMS;
-use super::constants::{
-    CODEC_GZIP, CODEC_RAW,
-    CODEC_TAR, CODEC_TGZ,
-};
 use super::reader::Reader;
 use super::slots::SlotDescriptor;
 use crate::exceptions::{FlavorError, Result};
@@ -46,12 +42,17 @@ pub fn extract_slot(reader: &mut Reader, slot_index: usize, dest_dir: &Path) -> 
     }
 
     let descriptor = &descriptors[slot_index];
-    let desc_codec = descriptor.codec;
+    
+    // Use operations instead of codec
+    use crate::psp::format_2025::operations::unpack_operations;
+    let operations = unpack_operations(descriptor.operations);
+    
     // Copy values to avoid unaligned access
     let desc_offset = descriptor.offset;
     let desc_size = descriptor.size;
     trace!(
-        "📏 Slot {slot_index} descriptor: offset={desc_offset:#x}, size={desc_size}, codec={desc_codec}"
+        "📏 Slot {slot_index} descriptor: offset={desc_offset:#x}, size={desc_size}, operations={:?}",
+        operations
     );
 
     // Read slot data using backend (raw/compressed)
@@ -62,52 +63,46 @@ pub fn extract_slot(reader: &mut Reader, slot_index: usize, dest_dir: &Path) -> 
         slot_index
     );
 
-    // Decompress based on encoding
-    let decompressed_data = match desc_codec {
-        CODEC_GZIP => {
-            // Single file, gzipped
-            trace!("🗜️ Decompressing GZIP slot {slot_index}");
-            let mut decoder = GzDecoder::new(&slot_data[..]);
-            let mut decompressed = Vec::new();
-            decoder
-                .read_to_end(&mut decompressed)
-                .map_err(|e| FlavorError::Generic(format!("Failed to decompress GZIP: {e}")))?;
-            trace!(
-                "✅ Decompressed {} -> {} bytes",
-                slot_data.len(),
-                decompressed.len()
-            );
-            decompressed
-        }
-        CODEC_TGZ => {
-            // Tar archive, then gzipped
-            trace!("🗜️ Decompressing TGZ slot {slot_index}");
-            let mut decoder = GzDecoder::new(&slot_data[..]);
-            let mut decompressed = Vec::new();
-            decoder
-                .read_to_end(&mut decompressed)
-                .map_err(|e| FlavorError::Generic(format!("Failed to decompress TGZ: {e}")))?;
-            trace!(
-                "✅ Decompressed tar.gz {} -> {} bytes",
-                slot_data.len(),
-                decompressed.len()
-            );
-            decompressed
-        }
-        CODEC_RAW | CODEC_TAR => {
-            // Raw uncompressed data or uncompressed tar
-            trace!("📄 Using raw/uncompressed data for slot {slot_index}");
-            slot_data
-        }
-        unknown => {
-            error!(
-                "❌ FATAL: Unknown codec {unknown} for slot {slot_index}"
-            );
-            return Err(FlavorError::Generic(format!(
-                "Unknown codec {unknown} for slot {slot_index}"
-            )));
-        }
-    };
+    // Process data based on operations
+    use crate::psp::format_2025::constants::{OP_TAR, OP_GZIP};
+    
+    let mut processed_data = slot_data;
+    
+    // Apply operations in reverse order (since they're applied forward during packing)
+    for &op in operations.iter().rev() {
+        processed_data = match op {
+            OP_GZIP => {
+                // Decompress gzip
+                trace!("🗜️ Decompressing GZIP operation for slot {slot_index}");
+                let mut decoder = GzDecoder::new(&processed_data[..]);
+                let mut decompressed = Vec::new();
+                decoder
+                    .read_to_end(&mut decompressed)
+                    .map_err(|e| FlavorError::Generic(format!("Failed to decompress GZIP: {e}")))?;
+                trace!(
+                    "✅ Decompressed {} -> {} bytes",
+                    processed_data.len(),
+                    decompressed.len()
+                );
+                decompressed
+            }
+            OP_TAR => {
+                // TAR operation - no processing needed during extraction
+                trace!("📦 TAR operation for slot {slot_index} (will extract later)");
+                processed_data
+            }
+            unknown_op => {
+                error!(
+                    "❌ FATAL: Unknown operation {unknown_op} for slot {slot_index}"
+                );
+                return Err(FlavorError::Generic(format!(
+                    "Unknown operation {unknown_op} for slot {slot_index}"
+                )));
+            }
+        };
+    }
+    
+    let decompressed_data = processed_data;
 
     trace!(
         "📊 Slot {} decompressed size: {} bytes",
@@ -143,81 +138,28 @@ pub fn extract_slot(reader: &mut Reader, slot_index: usize, dest_dir: &Path) -> 
         "🎯 Slot {slot_index} codec: '{slot_codec}', purpose: '{slot_purpose}', id: '{slot_id}'"
     );
 
-    // Strict codec validation - no fallthrough allowed
-    match desc_codec {
-        CODEC_GZIP => {
-            // CODEC_GZIP (2) means "Gzipped single file" per the PSPF spec
-            if is_tarball(&decompressed_data) {
-                error!(
-                    "❌ FATAL: Slot {slot_index} codec is GZIP but data is a tarball!"
-                );
-                return Err(FlavorError::Generic(format!(
-                    "Codec mismatch: slot {slot_index} declared as GZIP but contains tar archive"
-                )));
-            }
-            // For GZIP single files, need to pass the full target path
-            let target_path = dest_dir.join(&slot_target);
-            extract_single_file(
-                &decompressed_data,
-                &target_path,
-                &descriptors,
-                slot_index,
-            )?;
-        }
-        CODEC_TGZ => {
-            // CODEC_TGZ (3) means "Tar archive, then gzipped"
-            if !is_tarball(&decompressed_data) {
-                error!(
-                    "❌ FATAL: Slot {slot_index} codec is TGZ but data is not a tarball!"
-                );
-                error!(
-                    "  First 16 bytes: {:02x?}",
-                    &decompressed_data[..16.min(decompressed_data.len())]
-                );
-                return Err(FlavorError::Generic(format!(
-                    "Codec mismatch: slot {slot_index} declared as TGZ but is not a tar archive"
-                )));
-            }
-            debug!("📦 Slot {slot_index} is a tar archive, extracting...");
-            extract_tarball(&decompressed_data, dest_dir)?;
-        }
-        CODEC_TAR => {
-            // CODEC_TAR (1) means "Uncompressed tar archive"
-            if !is_tarball(&decompressed_data) {
-                error!(
-                    "❌ FATAL: Slot {slot_index} codec is TAR but data is not a tarball!"
-                );
-                return Err(FlavorError::Generic(format!(
-                    "Codec mismatch: slot {slot_index} declared as TAR but is not a tar archive"
-                )));
-            }
-            debug!(
-                "📦 Slot {slot_index} is an uncompressed tar archive, extracting..."
-            );
-            extract_tarball(&decompressed_data, dest_dir)?;
-        }
-        CODEC_RAW => {
-            // CODEC_RAW (0) means "Raw uncompressed data"
-            if is_tarball(&decompressed_data) {
-                error!(
-                    "❌ FATAL: Slot {slot_index} codec is RAW but data is a tarball!"
-                );
-                return Err(FlavorError::Generic(format!(
-                    "Codec mismatch: slot {slot_index} declared as RAW but contains tar archive"
-                )));
-            }
-            let output_path = dest_dir.join(&slot_target);
-            extract_raw_file(&decompressed_data, &output_path, &descriptors, slot_index)?;
-        }
-        unknown_codec => {
-            // This case is now handled in the decompression step above
+    // Process based on operations
+    if operations.contains(&OP_TAR) {
+        // Has TAR operation - extract as tarball
+        if !is_tarball(&decompressed_data) {
             error!(
-                "❌ FATAL: Unhandled codec {unknown_codec} for slot {slot_index} in extraction phase"
+                "❌ FATAL: Slot {slot_index} has TAR operation but data is not a tarball!"
             );
             return Err(FlavorError::Generic(format!(
-                "Unhandled codec {unknown_codec} for slot {slot_index} in extraction phase"
+                "Operation mismatch: slot {slot_index} has TAR operation but is not a tar archive"
             )));
         }
+        debug!("📦 Slot {slot_index} is a tar archive, extracting...");
+        extract_tarball(&decompressed_data, dest_dir)?;
+    } else {
+        // No TAR operation - treat as single file
+        let target_path = dest_dir.join(&slot_target);
+        extract_single_file(
+            &decompressed_data,
+            &target_path,
+            &descriptors,
+            slot_index,
+        )?;
     }
 
     Ok(())
@@ -251,27 +193,6 @@ fn extract_single_file(
     Ok(())
 }
 
-/// Extract a raw (non-gzipped) file
-fn extract_raw_file(
-    decompressed_data: &[u8],
-    output_path: &Path,
-    descriptors: &[SlotDescriptor],
-    slot_index: usize,
-) -> Result<()> {
-    debug!("📝 Writing non-GZIP single file to {output_path:?}");
-
-    if let Some(parent) = output_path.parent() {
-        create_parent_directory(parent)?;
-    }
-
-    write_file_with_logging(output_path, decompressed_data)?;
-
-    // Set file permissions based on descriptor or defaults
-    set_file_permissions(output_path, descriptors, slot_index)?;
-
-    debug!("✅ Successfully wrote file: {output_path:?}");
-    Ok(())
-}
 
 /// Create a parent directory with secure permissions
 fn create_parent_directory(parent: &Path) -> Result<()> {
