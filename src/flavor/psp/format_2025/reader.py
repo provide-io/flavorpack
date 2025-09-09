@@ -53,6 +53,10 @@ class PSPFReader:
         self._launcher_size: int | None = None
         self._slot_descriptors: list[SlotDescriptor] | None = None
         self.mode = mode
+        
+        # Slot extractor for extraction operations
+        from flavor.psp.format_2025.extraction import SlotExtractor
+        self._extractor = SlotExtractor(self)
 
     def __enter__(self):
         """Context manager entry."""
@@ -326,38 +330,26 @@ class PSPFReader:
             return slot_data
 
     def get_slot_view(self, slot_index: int) -> SlotView:
-        """Get a lazy view of a slot.
-
-        Args:
-            slot_index: Index of the slot
-
-        Returns:
-            SlotView: Lazy view that loads data on demand
-        """
-        if not self._backend:
-            self.open()
-
-        descriptors = self.read_slot_descriptors()
-
-        if slot_index < 0 or slot_index >= len(descriptors):
-            raise ValueError(f"Invalid slot index: {slot_index}")
-
-        return SlotView(descriptors[slot_index], self._backend)
+        """Get a lazy view of a slot."""
+        return self._extractor.get_slot_view(slot_index)
 
     def stream_slot(self, slot_index: int, chunk_size: int = 8192):
-        """Stream a slot in chunks.
-
-        Args:
-            slot_index: Index of the slot to stream
-            chunk_size: Size of chunks to yield
-
-        Yields:
-            bytes: Chunks of slot data
-        """
-        view = self.get_slot_view(slot_index)
-        yield from view.stream(chunk_size)
+        """Stream a slot in chunks."""
+        return self._extractor.stream_slot(slot_index, chunk_size)
 
     def verify_all_checksums(self) -> bool:
+        """Verify all slot checksums."""
+        return self._extractor.verify_all_checksums()
+    
+    def extract_slot(self, slot_index: int, dest_dir: Path) -> Path:
+        """Extract a slot to a directory."""
+        return self._extractor.extract_slot(slot_index, dest_dir)
+    
+    def verify_slot_integrity(self, slot_index: int) -> bool:
+        """Verify integrity of a specific slot."""
+        return self._extractor.verify_slot_integrity(slot_index)
+
+    def _original_verify_all_checksums(self) -> bool:
         """Verify all slot checksums.
 
         Returns:
