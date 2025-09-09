@@ -510,6 +510,14 @@ func (r *Reader) ExtractSlot(slotIndex int, destDir string) (string, error) {
 		perm = os.FileMode(DefaultFilePerms) // 0600 - secure by default
 	}
 
+	// Debug: Check what we're writing
+	minLen := 16
+	if len(decompressed) < minLen {
+		minLen = len(decompressed)
+	}
+	fmt.Fprintf(os.Stderr, "DEBUG: Writing slot %d to %s, data len=%d, first bytes: %x\n", 
+	    slotIndex, destPath, len(decompressed), decompressed[:minLen])
+
 	if err := os.WriteFile(destPath, decompressed, perm); err != nil {
 		return "", fmt.Errorf("%w: failed to write slot %d to disk: %v", ErrSlotExtractionFailed, slotIndex, err)
 	}
