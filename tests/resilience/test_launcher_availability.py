@@ -157,7 +157,7 @@ class TestLauncherReproducibility:
     @patch("os.access", return_value=True)
     @patch("flavor.packaging.orchestrator.run_command")
     @patch("flavor.psp.format_2025.builder.build_package")
-    @patch("flavor.packaging.python_packager.PythonPackager.prepare_artifacts")
+    @patch("flavor.packaging.python.packager.PythonPackager.prepare_artifacts")
     @patch("flavor.packaging.orchestrator_ingredients.create_python_slot_tarballs")
     @patch("builtins.open")
     def test_reproducible_builds_with_same_launcher(

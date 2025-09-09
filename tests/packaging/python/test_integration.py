@@ -140,8 +140,8 @@ version = "1.0.0"
     
     def test_pypapip_manylinux_compatibility(self):
         """Test PyPaPipManager manylinux compatibility."""
-        with patch("flavor.packaging.python.pip_manager.get_os_name") as mock_os:
-            with patch("flavor.packaging.python.pip_manager.get_arch_name") as mock_arch:
+        with patch("flavor.packaging.python.pypapip_manager.get_os_name") as mock_os:
+            with patch("flavor.packaging.python.pypapip_manager.get_arch_name") as mock_arch:
                 mock_os.return_value = "linux"
                 mock_arch.return_value = "amd64"
                 

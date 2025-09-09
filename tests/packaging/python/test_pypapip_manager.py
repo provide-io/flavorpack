@@ -70,7 +70,7 @@ class TestPyPaPipManager:
         ]
         assert cmd == expected
     
-    @patch("flavor.packaging.python.pip_manager.get_os_name")
+    @patch("flavor.packaging.python.pypapip_manager.get_os_name")
     def test_get_pypapip_download_cmd_non_linux(self, mock_os_name):
         """Test PyPA pip download command on non-Linux systems."""
         mock_os_name.return_value = "darwin"
@@ -89,8 +89,8 @@ class TestPyPaPipManager:
         ]
         assert cmd == expected
     
-    @patch("flavor.packaging.python.pip_manager.get_arch_name")
-    @patch("flavor.packaging.python.pip_manager.get_os_name")
+    @patch("flavor.packaging.python.pypapip_manager.get_arch_name")
+    @patch("flavor.packaging.python.pypapip_manager.get_os_name")
     def test_get_pypapip_download_cmd_linux_amd64(self, mock_os_name, mock_arch_name):
         """Test CRITICAL manylinux2014 handling for Linux amd64."""
         mock_os_name.return_value = "linux"
@@ -112,8 +112,8 @@ class TestPyPaPipManager:
         ]
         assert cmd == expected
     
-    @patch("flavor.packaging.python.pip_manager.get_arch_name")
-    @patch("flavor.packaging.python.pip_manager.get_os_name")
+    @patch("flavor.packaging.python.pypapip_manager.get_arch_name")
+    @patch("flavor.packaging.python.pypapip_manager.get_os_name")
     def test_get_pypapip_download_cmd_linux_arm64(self, mock_os_name, mock_arch_name):
         """Test CRITICAL manylinux2014 handling for Linux ARM64."""
         mock_os_name.return_value = "linux"
@@ -180,8 +180,8 @@ class TestPyPaPipManager:
         assert manager_312.python_version == "3.12"
         
         # Test that platform tags use correct Python version
-        with patch("flavor.packaging.python.pip_manager.get_os_name", return_value="linux"), \
-             patch("flavor.packaging.python.pip_manager.get_arch_name", return_value="amd64"):
+        with patch("flavor.packaging.python.pypapip_manager.get_os_name", return_value="linux"), \
+             patch("flavor.packaging.python.pypapip_manager.get_arch_name", return_value="amd64"):
             
             cmd_310 = manager_310._get_pypapip_download_cmd(
                 Path("/usr/bin/python3"), Path("/tmp"), packages=["test"]
@@ -194,7 +194,7 @@ class TestPyPaPipManager:
             assert "--python-version" in cmd_310 and "3.10" in cmd_310
             assert "--python-version" in cmd_312 and "3.12" in cmd_312
     
-    @patch("flavor.packaging.python.pip_manager.run_command")
+    @patch("flavor.packaging.python.pypapip_manager.run_command")
     def test_download_wheels_from_requirements(self, mock_run_command):
         """Test downloading wheels from requirements file."""
         mock_result = Mock()
@@ -230,7 +230,7 @@ class TestPyPaPipManager:
         finally:
             requirements_file.unlink()
     
-    @patch("flavor.packaging.python.pip_manager.run_command")
+    @patch("flavor.packaging.python.pypapip_manager.run_command")
     def test_build_wheel_from_source(self, mock_run_command):
         """Test building wheel from source directory."""
         mock_result = Mock()
@@ -259,7 +259,7 @@ class TestPyPaPipManager:
         # Verify check=True for error handling
         assert kwargs["check"] is True
     
-    @patch("flavor.packaging.python.pip_manager.run_command")
+    @patch("flavor.packaging.python.pypapip_manager.run_command")
     def test_install_packages(self, mock_run_command):
         """Test installing packages."""
         mock_result = Mock()
@@ -288,7 +288,7 @@ class TestPyPaPipManager:
         dest_dir = Path("/tmp/wheels")
         
         # These should not raise exceptions and should not call run_command
-        with patch("flavor.packaging.python.pip_manager.run_command") as mock_run:
+        with patch("flavor.packaging.python.pypapip_manager.run_command") as mock_run:
             self.pip_manager.download_wheels_for_packages(python_exe, [], dest_dir)
             self.pip_manager.install_packages(python_exe, [])
             
@@ -309,8 +309,8 @@ class TestPyPaPipManagerCriticalFeatures:
         assert self.pip_manager.MANYLINUX_TAG == "manylinux2014"
         
         # Verify it's used in Linux platform tags
-        with patch("flavor.packaging.python.pip_manager.get_os_name", return_value="linux"), \
-             patch("flavor.packaging.python.pip_manager.get_arch_name", return_value="amd64"):
+        with patch("flavor.packaging.python.pypapip_manager.get_os_name", return_value="linux"), \
+             patch("flavor.packaging.python.pypapip_manager.get_arch_name", return_value="amd64"):
             
             cmd = self.pip_manager._get_pypapip_download_cmd(
                 Path("/usr/bin/python3"), Path("/tmp"), packages=["test"]
@@ -319,8 +319,8 @@ class TestPyPaPipManagerCriticalFeatures:
             # Must contain manylinux2014_x86_64 for CentOS 7+ compatibility
             assert "manylinux2014_x86_64" in cmd
     
-    @patch("flavor.packaging.python.pip_manager.get_os_name")
-    @patch("flavor.packaging.python.pip_manager.get_arch_name")
+    @patch("flavor.packaging.python.pypapip_manager.get_os_name")
+    @patch("flavor.packaging.python.pypapip_manager.get_arch_name")
     def test_linux_platforms_always_get_manylinux_tags(self, mock_arch, mock_os):
         """CRITICAL: Linux builds must always get manylinux2014 tags."""
         mock_os.return_value = "linux"

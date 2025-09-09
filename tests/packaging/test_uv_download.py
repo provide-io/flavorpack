@@ -22,9 +22,9 @@ class TestUVDownload:
         )
 
         with (
-            patch("flavor.packaging.python_packager.get_os_name", return_value="linux"),
+            patch("flavor.packaging.python.packager.get_os_name", return_value="linux"),
             patch(
-                "flavor.packaging.python_packager.get_arch_name", return_value="amd64"
+                "flavor.packaging.python.packager.get_arch_name", return_value="amd64"
             ),
         ):
             cmd = packager._get_pypa_pip_download_cmd(
@@ -51,9 +51,9 @@ class TestUVDownload:
         )
 
         with (
-            patch("flavor.packaging.python_packager.get_os_name", return_value="linux"),
+            patch("flavor.packaging.python.packager.get_os_name", return_value="linux"),
             patch(
-                "flavor.packaging.python_packager.get_arch_name", return_value="arm64"
+                "flavor.packaging.python.packager.get_arch_name", return_value="arm64"
             ),
         ):
             cmd = packager._get_pypa_pip_download_cmd(
@@ -79,10 +79,10 @@ class TestUVDownload:
 
         with (
             patch(
-                "flavor.packaging.python_packager.get_os_name", return_value="darwin"
+                "flavor.packaging.python.packager.get_os_name", return_value="darwin"
             ),
             patch(
-                "flavor.packaging.python_packager.get_arch_name", return_value="arm64"
+                "flavor.packaging.python.packager.get_arch_name", return_value="arm64"
             ),
         ):
             cmd = packager._get_pypa_pip_download_cmd(
@@ -129,12 +129,12 @@ class TestUVDownload:
 
             # Need to mock at the actual usage location in the module
             with (
-                patch("flavor.packaging.python_packager.run_command", mock_run),
+                patch("flavor.packaging.python.packager.run_command", mock_run),
                 patch(
-                    "flavor.packaging.python_packager.get_os_name", return_value="linux"
+                    "flavor.packaging.python.packager.get_os_name", return_value="linux"
                 ),
                 patch(
-                    "flavor.packaging.python_packager.get_arch_name",
+                    "flavor.packaging.python.packager.get_arch_name",
                     return_value="amd64",
                 ),
                 patch.object(Path, "glob", return_value=[fake_wheel]),
@@ -160,10 +160,10 @@ class TestUVDownload:
 
             with (
                 patch(
-                    "flavor.packaging.python_packager.get_os_name", return_value="linux"
+                    "flavor.packaging.python.packager.get_os_name", return_value="linux"
                 ),
                 patch(
-                    "flavor.packaging.python_packager.get_arch_name",
+                    "flavor.packaging.python.packager.get_arch_name",
                     return_value="amd64",
                 ),
                 patch.object(packager, "_download_uv_wheel", return_value=None),
@@ -218,12 +218,12 @@ class TestUVDownload:
             import json
 
             with (
-                patch("flavor.packaging.python_packager.run_command", mock_run),
+                patch("flavor.packaging.python.packager.run_command", mock_run),
                 patch(
-                    "flavor.packaging.python_packager.get_os_name", return_value="linux"
+                    "flavor.packaging.python.packager.get_os_name", return_value="linux"
                 ),
                 patch(
-                    "flavor.packaging.python_packager.get_arch_name",
+                    "flavor.packaging.python.packager.get_arch_name",
                     return_value="amd64",
                 ),
                 patch("urllib.request.urlopen") as mock_urlopen,
@@ -264,11 +264,11 @@ class TestUVDownload:
 
             with (
                 patch(
-                    "flavor.packaging.python_packager.get_os_name",
+                    "flavor.packaging.python.packager.get_os_name",
                     return_value="darwin",
                 ),
                 patch(
-                    "flavor.packaging.python_packager.get_arch_name",
+                    "flavor.packaging.python.packager.get_arch_name",
                     return_value="arm64",
                 ),
                 patch.object(packager, "_find_uv_command", return_value=fake_uv_path),

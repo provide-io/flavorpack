@@ -322,7 +322,7 @@ class TestPythonDistManager:
             result = self.dist_manager.validate_distribution(dist_info)
             assert result is False
     
-    @patch.object(PythonDistManager, 'wheel_builder')
+    @patch('flavor.packaging.python.dist_manager.WheelBuilder')
     @patch.object(PythonDistManager, 'create_python_environment')
     @patch.object(PythonDistManager, 'install_wheels_to_environment')
     @patch.object(PythonDistManager, 'prepare_site_packages')

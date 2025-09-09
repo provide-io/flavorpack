@@ -341,7 +341,7 @@ class TestWheelBuilderCriticalFeatures:
             
             python_exe = Path("/usr/bin/python3")
             
-            with patch.object(self.wheel_builder.pypapip, 'download_wheels_from_requirements') as mock_download:
+            with patch('flavor.packaging.python.pypapip_manager.PyPaPipManager.download_wheels_from_requirements') as mock_download:
                 # Even with use_uv_for_download=True, should still use PyPA pip
                 self.wheel_builder.download_wheels_for_resolved_deps(
                     python_exe, requirements_file, wheel_dir,
