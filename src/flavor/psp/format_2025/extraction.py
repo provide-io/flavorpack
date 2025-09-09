@@ -42,7 +42,7 @@ class SlotExtractor:
             raise IndexError(f"Slot index {slot_index} out of range")
 
         descriptor = descriptors[slot_index]
-        return SlotView(self.reader._backend, descriptor)
+        return SlotView(descriptor, self.reader._backend)
 
     def stream_slot(self, slot_index: int, chunk_size: int = 8192):
         """Stream a slot in chunks.
@@ -55,13 +55,18 @@ class SlotExtractor:
             bytes: Chunks of slot data
         """
         view = self.get_slot_view(slot_index)
-        offset = 0
-        while offset < len(view):
-            chunk = view[offset:offset + chunk_size]
-            if not chunk:
-                break
-            yield chunk
-            offset += chunk_size
+        # Use the SlotView's built-in streaming if available
+        if hasattr(view, 'stream'):
+            yield from view.stream(chunk_size)
+        else:
+            # Fallback to manual chunking
+            offset = 0
+            while offset < len(view):
+                chunk = view[offset:offset + chunk_size]
+                if not chunk:
+                    break
+                yield chunk
+                offset += chunk_size
 
     def verify_all_checksums(self) -> bool:
         """Verify all slot checksums.
