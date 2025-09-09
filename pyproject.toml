@@ -36,6 +36,7 @@ dependencies = [
     "PyYAML>=6.0",
     "uv>=0.8.13",
     "provide-foundation[all]>=0.0.0.dev0",
+    "httpx>=0.28.1",
 ]
 keywords = ["packaging", "pspf", "flavor", "executable", "bundle"]
 
