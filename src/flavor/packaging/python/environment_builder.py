@@ -17,6 +17,7 @@ from provide.foundation.process import run_command
 from flavor.utils.archive import deterministic_filter
 from flavor.packaging.python.uv_manager import UVManager
 from flavor.packaging.python.pypapip_manager import PyPaPipManager
+from flavor.packaging.python.dependency_resolver import DependencyResolver
 from flavor.psp.format_2025.constants import DEFAULT_EXECUTABLE_PERMS
 
 
@@ -45,6 +46,7 @@ class PythonEnvironmentBuilder:
         self.uv_manager = UVManager()
         self.pypapip = PyPaPipManager()
         self.uv_exe = "uv.exe" if is_windows else "uv"
+        self._dependency_resolver = DependencyResolver(is_windows)
 
     def _make_executable(self, file_path: Path) -> None:
         """Make a file executable (Unix-like systems only)."""
@@ -57,47 +59,8 @@ class PythonEnvironmentBuilder:
         self._make_executable(dest)
 
     def find_uv_command(self, raise_if_not_found: bool = True) -> str | None:
-        """Find the UV command.
-
-        Args:
-            raise_if_not_found: If True, raise FileNotFoundError if UV not found.
-                              If False, return None if not found.
-
-        Returns:
-            Path to UV binary, or None if not found and raise_if_not_found is False
-        """
-        # Method 1: Check if UV is in PATH
-        system_uv = shutil.which("uv")
-        if system_uv:
-            logger.info("🔍✅📋 Found UV in PATH", path=system_uv)
-            return system_uv
-
-        # Method 2: Check common installation locations
-        possible_uv_locations = [
-            Path(sys.prefix) / "Scripts" / "uv.exe"
-            if self.is_windows
-            else Path(sys.prefix) / "bin" / "uv",
-            Path(sys.executable).parent / ("uv.exe" if self.is_windows else "uv"),
-        ]
-
-        # Check PSP workenv location
-        python_path = Path(sys.executable)
-        workenv_bin = (
-            python_path.parent.parent / "bin" / ("uv.exe" if self.is_windows else "uv")
-        )
-        possible_uv_locations.append(workenv_bin)
-
-        for uv_loc in possible_uv_locations:
-            if uv_loc.exists():
-                logger.info("🔍✅📋 Found UV at", path=str(uv_loc))
-                return str(uv_loc)
-
-        # Not found
-        if raise_if_not_found:
-            error_msg = f"UV binary not found in PATH or common locations. Python: {sys.executable}"
-            logger.error("🔍❌📋 UV not found", details=error_msg)
-            raise FileNotFoundError(error_msg)
-        return None
+        """Find the UV command."""
+        return self._dependency_resolver.find_uv_command(raise_if_not_found)
 
     def download_uv_wheel(self, dest_dir: Path) -> Path | None:
         """Download manylinux2014-compatible UV wheel using PIP - NOT UV!
