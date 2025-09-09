@@ -127,16 +127,19 @@ class OperationHandler:
             logger.debug(f"🗜️ Compressed with GZIP using foundation: {output}")
             return output
         
-        # For streams, fall back to direct implementation
-        import gzip
-        import io
-        
-        if isinstance(source, BinaryIO):
-            compressed = io.BytesIO()
-            with gzip.GzipFile(fileobj=compressed, mode='wb', compresslevel=6) as gz:
-                gz.write(source.read())
-            compressed.seek(0)
-            return compressed
+        # For streams, use foundation stream API
+        elif hasattr(source, 'read'):
+            import io
+            
+            if output is None:
+                output = io.BytesIO()
+            
+            compressor = GzipCompressor()
+            compressor.compress(source, output)
+            output.seek(0)
+            
+            logger.debug(f"🗜️ Compressed stream with GZIP using foundation")
+            return output
         
         return source
     
@@ -160,6 +163,34 @@ class OperationHandler:
                         f_out.write(f_in.read())
                 
                 logger.debug(f"🗜️ Compressed with BZIP2 (fallback): {output}")
+                return output
+        
+        # For streams, use foundation stream API if available
+        elif hasattr(source, 'read'):
+            import io
+            
+            try:
+                if output is None:
+                    output = io.BytesIO()
+                
+                compressor = Bzip2Compressor()
+                compressor.compress(source, output)
+                output.seek(0)
+                
+                logger.debug(f"🗜️ Compressed stream with BZIP2 using foundation")
+                return output
+            except (ImportError, AttributeError):
+                # Fall back to manual implementation
+                import bz2
+                
+                if output is None:
+                    output = io.BytesIO()
+                
+                compressed_data = bz2.compress(source.read(), compresslevel=9)
+                output.write(compressed_data)
+                output.seek(0)
+                
+                logger.debug(f"🗜️ Compressed stream with BZIP2 (fallback)")
                 return output
         
         return source
@@ -247,21 +278,68 @@ class OperationHandler:
                 
                 logger.debug(f"🗜️ Decompressed GZIP using foundation: {output}")
                 return output
+            
+            elif hasattr(source, 'read'):
+                import io
+                
+                if output is None:
+                    output = io.BytesIO()
+                
+                compressor = GzipCompressor()
+                compressor.decompress(source, output)
+                output.seek(0)
+                
+                logger.debug(f"🗜️ Decompressed GZIP stream using foundation")
+                return output
                 
         elif op == Operation.COMPRESS_BZIP2:
             # Decompress BZIP2
-            import bz2
-            
             if isinstance(source, Path):
                 if output is None:
                     output = source.with_suffix("")  # Remove .bz2
                 
-                with bz2.open(source, 'rb') as f_in:
-                    with open(output, 'wb') as f_out:
-                        f_out.write(f_in.read())
+                try:
+                    compressor = Bzip2Compressor()
+                    compressor.decompress_file(source, output)
+                    
+                    logger.debug(f"🗜️ Decompressed BZIP2 using foundation: {output}")
+                    return output
+                except (ImportError, AttributeError):
+                    # Fall back to manual implementation
+                    import bz2
+                    with bz2.open(source, 'rb') as f_in:
+                        with open(output, 'wb') as f_out:
+                            f_out.write(f_in.read())
+                    
+                    logger.debug(f"🗜️ Decompressed BZIP2 (fallback): {output}")
+                    return output
+            
+            elif hasattr(source, 'read'):
+                import io
                 
-                logger.debug(f"🗜️ Decompressed BZIP2: {output}")
-                return output
+                try:
+                    if output is None:
+                        output = io.BytesIO()
+                    
+                    compressor = Bzip2Compressor()
+                    compressor.decompress(source, output)
+                    output.seek(0)
+                    
+                    logger.debug(f"🗜️ Decompressed BZIP2 stream using foundation")
+                    return output
+                except (ImportError, AttributeError):
+                    # Fall back to manual implementation
+                    import bz2
+                    
+                    if output is None:
+                        output = io.BytesIO()
+                    
+                    decompressed_data = bz2.decompress(source.read())
+                    output.write(decompressed_data)
+                    output.seek(0)
+                    
+                    logger.debug(f"🗜️ Decompressed BZIP2 stream (fallback)")
+                    return output
         
         return source
     
