@@ -48,8 +48,8 @@ pub fn show_info(exe_path: &Path) -> i32 {
     
     for slot in &metadata.slots {
         total_size += slot.size;
-        if !slot.codec.is_empty() && slot.codec != "none" {
-            *codec_types.entry(slot.codec.clone()).or_insert(0) += 1;
+        if !slot.operations.is_empty() && slot.operations != "none" {
+            *codec_types.entry(slot.operations.clone()).or_insert(0) += 1;
         }
     }
 

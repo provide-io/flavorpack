@@ -114,12 +114,12 @@ pub fn extract_slot(reader: &mut Reader, slot_index: usize, dest_dir: &Path) -> 
     let metadata = reader.read_metadata()?;
 
     // Get slot info from metadata
-    let (slot_id, mut slot_target, slot_codec, slot_purpose) = if slot_index < metadata.slots.len() {
+    let (slot_id, mut slot_target, slot_operations, slot_purpose) = if slot_index < metadata.slots.len() {
         let slot_info = &metadata.slots[slot_index];
         (
             slot_info.id.clone(),
             slot_info.target.clone(),
-            slot_info.codec.clone(),
+            slot_info.operations.clone(),
             slot_info.purpose.clone(),
         )
     } else {
@@ -135,7 +135,7 @@ pub fn extract_slot(reader: &mut Reader, slot_index: usize, dest_dir: &Path) -> 
     }
 
     debug!(
-        "🎯 Slot {slot_index} codec: '{slot_codec}', purpose: '{slot_purpose}', id: '{slot_id}'"
+        "🎯 Slot {slot_index} operations: '{slot_operations}', purpose: '{slot_purpose}', id: '{slot_id}'"
     );
 
     // Process based on operations
