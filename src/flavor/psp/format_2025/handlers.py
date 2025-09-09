@@ -12,8 +12,14 @@ import lzma
 from pathlib import Path
 from typing import BinaryIO
 
-from provide.foundation.archive.capabilities import ArchiveCapability
-from provide.foundation.archive.tar import TarArchive
+from provide.foundation.archive import GzipCompressor, TarArchive
+from enum import IntFlag
+
+class ArchiveCapability(IntFlag):
+    """Archive capability flags."""
+    BUNDLE = 1
+    COMPRESS = 2
+    ENCRYPT = 4
 
 from flavor.psp.format_2025.operations import (
     OP_TAR, OP_GZIP, OP_BZIP2, OP_XZ, OP_ZSTD,

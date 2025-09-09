@@ -331,21 +331,31 @@ def _apply_operations(
     
     ops = unpack_operations(packed_ops)
     
-    # For now, handle simple cases directly
-    # TODO: Use OperationHandler when archive module is available in provide.foundation
-    if ops == [OP_GZIP]:
-        # Single file gzip compression
+    # Use provide.foundation archive operations
+    try:
+        from provide.foundation.archive import GzipCompressor
+        
+        if ops == [OP_GZIP]:
+            # Single file gzip compression
+            compressor = GzipCompressor(level=options.compression_level)
+            return compressor.compress(data)
+        elif ops == [OP_TAR, OP_GZIP]:
+            # This would be tar.gz but for single files we just gzip
+            # The orchestrator handles actual tar creation for directories  
+            compressor = GzipCompressor(level=options.compression_level)
+            return compressor.compress(data)
+        else:
+            # Unsupported operation chain, return raw
+            logger.warning(f"Unsupported operation chain: {ops}, returning raw data")
+            return data
+    except ImportError:
+        # Fallback to direct implementation if provide.foundation not available
         import gzip
-        return gzip.compress(data, compresslevel=options.compression_level)
-    elif ops == [OP_TAR, OP_GZIP]:
-        # This would be tar.gz but for single files we just gzip
-        # The orchestrator handles actual tar creation for directories  
-        import gzip
-        return gzip.compress(data, compresslevel=options.compression_level)
-    else:
-        # Unsupported operation chain, return raw
-        logger.warning(f"Unsupported operation chain: {ops}, returning raw data")
-        return data
+        if ops == [OP_GZIP] or ops == [OP_TAR, OP_GZIP]:
+            return gzip.compress(data, compresslevel=options.compression_level)
+        else:
+            logger.warning(f"Unsupported operation chain: {ops}, returning raw data")
+            return data
 
 
 def _write_package(

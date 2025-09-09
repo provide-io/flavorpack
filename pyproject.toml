@@ -33,6 +33,7 @@ dependencies = [
     "pip>=25.2",
     "uv>=0.8.13",
     "httpx>=0.28.1",
+    "cryptography>=44.0.0",
 ]
 keywords = ["packaging", "pspf", "flavor", "executable", "bundle"]
 
