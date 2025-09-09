@@ -325,13 +325,23 @@ def _apply_operations(
     
     ops = unpack_operations(packed_ops)
     
+    # Check if data is already gzipped (starts with gzip magic bytes)
+    is_gzipped = len(data) >= 3 and data[0:3] == b'\x1f\x8b\x08'
+    
     # For now, handle simple cases directly
     # TODO: Use OperationHandler when archive module is integrated
     if ops == [OP_GZIP]:
         # Single file gzip compression
+        if is_gzipped:
+            logger.trace("📦 Data is already gzipped, skipping compression")
+            return data
         import gzip
         return gzip.compress(data, compresslevel=options.compression_level)
     elif ops == [OP_TAR, OP_GZIP]:
+        # Check if it's already a tar.gz file
+        if is_gzipped:
+            logger.trace("📦 Data is already tar.gz, skipping compression")
+            return data
         # This would be tar.gz but for single files we just gzip
         # The orchestrator handles actual tar creation for directories
         import gzip

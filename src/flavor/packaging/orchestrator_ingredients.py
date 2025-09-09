@@ -67,8 +67,8 @@ def create_slot_tarballs(
         if bar:
             bar.increment()
 
-        wheels_tarball = temp_dir / "wheels.tar.gz"
-        with tarfile.open(wheels_tarball, "w:gz") as tar:
+        wheels_tarball = temp_dir / "wheels.tar"
+        with tarfile.open(wheels_tarball, "w") as tar:
             wheels_dir = artifacts["payload_dir"] / "wheels"
             for wheel in wheels_dir.glob("*.whl"):
                 tar.add(wheel, arcname=f"wheels/{wheel.name}")
@@ -375,8 +375,8 @@ def create_python_slot_tarballs(
         if bar:
             bar.increment()
 
-        wheels_tarball = temp_dir / "wheels.tar.gz"
-        with tarfile.open(wheels_tarball, "w:gz") as tar:
+        wheels_tarball = temp_dir / "wheels.tar"
+        with tarfile.open(wheels_tarball, "w") as tar:
             wheels_dir = artifacts["payload_dir"] / "wheels"
             for wheel in wheels_dir.glob("*.whl"):
                 tar.add(wheel, arcname=f"wheels/{wheel.name}")
