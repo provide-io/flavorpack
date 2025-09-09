@@ -17,6 +17,7 @@ from provide.foundation import logger
 
 from flavor.psp.format_2025.constants import DISK_SPACE_MULTIPLIER, SLOT_DESCRIPTOR_SIZE
 from flavor.psp.format_2025.reader import PSPFReader
+from flavor.psp.format_2025.workenv import WorkEnvManager
 from provide.foundation.process import run_command
 
 
@@ -28,6 +29,7 @@ class PSPFLauncher(PSPFReader):
         self.bundle_path = bundle_path
         self.cache_dir = Path.home() / ".cache" / "flavor"
         self.cache_dir.mkdir(parents=True, exist_ok=True)
+        self._workenv_manager = WorkEnvManager(self)
 
     @contextmanager
     def acquire_lock(self, lock_file: Path, timeout: float = 30.0):
@@ -265,74 +267,8 @@ class PSPFLauncher(PSPFReader):
                 raise  # Re-raise the exception
 
     def setup_workenv(self) -> Path:
-        """Setup work environment for bundle execution.
-
-        Creates a work environment directory, extracts slots, and runs setup commands.
-        Uses cache validation to avoid re-extraction when possible.
-        Handles lifecycle-based slot cleanup (e.g., 'init' slots removed after setup).
-
-        Returns:
-            Path: Path to the work environment directory
-        """
-        logger.debug(f"🔧 Setting up work environment for {self.bundle_path}")
-
-        # NOTE: This matches Go's work environment setup logic
-        metadata = self.read_metadata()
-        package_name = metadata["package"]["name"]
-        package_version = metadata["package"]["version"]
-
-        # Create work environment directory
-        workenv_base = Path.home() / ".cache" / "flavor" / "workenv"
-        workenv_dir = workenv_base / f"{package_name}_{package_version}"
-        workenv_dir.mkdir(parents=True, exist_ok=True)
-
-        logger.info(f"📁 Work environment: {workenv_dir}")
-
-        # Check cache validity
-        cache_valid = False
-        if "cache_validation" in metadata:
-            cache_validation = metadata["cache_validation"]
-            check_file = cache_validation.get("check_file", "")
-            expected_content = cache_validation.get("expected_content", "")
-
-            # Substitute placeholders
-            check_file = check_file.replace("{workenv}", str(workenv_dir))
-            check_file = check_file.replace("{version}", package_version)
-
-            check_path = Path(check_file)
-            logger.debug(f"🔍 Checking cache validity: {check_path}")
-
-            if check_path.exists():
-                actual_content = check_path.read_text().strip()
-                if actual_content == expected_content.replace(
-                    "{version}", package_version
-                ):
-                    cache_valid = True
-                    logger.debug("✅ Cache is valid")
-                else:
-                    logger.debug(
-                        f"❌ Cache content mismatch: expected '{expected_content}', got '{actual_content}'"
-                    )
-            else:
-                logger.debug(f"❌ Cache validation file not found: {check_path}")
-
-        # Extract slots if cache is invalid
-        if not cache_valid:
-            logger.info("📤 Extracting slots (cache invalid)")
-            extracted_slots = self.extract_all_slots(workenv_dir)
-
-            # Run setup commands
-            if "setup_commands" in metadata:
-                self._run_setup_commands(
-                    metadata["setup_commands"], workenv_dir, metadata
-                )
-
-            # Handle lifecycle-based cleanup
-            self._cleanup_lifecycle_slots(workenv_dir, metadata, extracted_slots)
-        else:
-            logger.info("✅ Using cached work environment")
-
-        return workenv_dir
+        """Setup work environment for bundle execution."""
+        return self._workenv_manager.setup_workenv(self.bundle_path)
 
     def _cleanup_lifecycle_slots(
         self, workenv_dir: Path, metadata: dict, extracted_slots: dict[int, Path]
