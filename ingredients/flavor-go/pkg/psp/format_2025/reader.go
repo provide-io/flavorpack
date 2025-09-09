@@ -296,7 +296,10 @@ func (r *Reader) ReadSlot(slotIndex int) ([]byte, error) {
 	// Decompress based on operations chain
 	operations := UnpackOperations(entry.Operations)
 	
-	logger := hclog.L()
+	logger := r.logger
+	if logger == nil {
+		logger = hclog.L()
+	}
 	logger.Trace("🔍 Slot operations", "operations", fmt.Sprintf("%#x", entry.Operations), "unpacked", operations)
 	
 	// Apply operations in reverse order (unwrap the layers)
@@ -362,7 +365,10 @@ func isTarball(data []byte) bool {
 
 // ExtractSlot extracts a slot to the specified directory
 func (r *Reader) ExtractSlot(slotIndex int, destDir string) (string, error) {
-	logger := hclog.L()
+	logger := r.logger
+	if logger == nil {
+		logger = hclog.L()
+	}
 	
 	metadata, err := r.ReadMetadata()
 	if err != nil {
