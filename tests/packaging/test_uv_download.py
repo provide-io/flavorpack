@@ -160,10 +160,10 @@ class TestUVDownload:
 
             with (
                 patch(
-                    "flavor.packaging.python.dependency_resolver.get_os_name", return_value="linux"
+                    "flavor.packaging.python.slot_builder.get_os_name", return_value="linux"
                 ),
                 patch(
-                    "flavor.packaging.python.dependency_resolver.get_arch_name",
+                    "flavor.packaging.python.slot_builder.get_arch_name",
                     return_value="amd64",
                 ),
                 patch.object(packager.slot_builder.uv_manager, "download_uv_binary", return_value=None),
