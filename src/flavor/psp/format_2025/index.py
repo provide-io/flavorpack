@@ -15,7 +15,6 @@ from flavor.psp.format_2025.constants import (
     DEFAULT_CHUNK_SIZE,
     DEFAULT_MAX_MEMORY,
     DEFAULT_MIN_MEMORY,
-    CODEC_RAW,
     HEADER_SIZE,
     PSPF_VERSION,
 )
@@ -105,7 +104,7 @@ class PSPFIndex:
     # Performance hints
     access_mode: int = field(default=ACCESS_AUTO)
     cache_strategy: int = field(default=CACHE_NORMAL)
-    codec_type: int = field(default=CODEC_RAW)
+    codec_type: int = field(default=0)  # 0 = no operations (raw)
     encryption_type: int = field(default=0)
     page_size: int = field(default=4096)
     max_memory: int = field(default=DEFAULT_MAX_MEMORY)

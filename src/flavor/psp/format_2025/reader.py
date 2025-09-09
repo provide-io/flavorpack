@@ -23,9 +23,6 @@ from flavor.psp.format_2025.backends import (
 from flavor.psp.format_2025.constants import (
     ACCESS_AUTO,
     ACCESS_MMAP,
-    CODEC_GZIP,
-    CODEC_TAR,
-    CODEC_TGZ,
     HEADER_SIZE,
     MAGIC_TRAILER_SIZE,
     MAGIC_WAND_EMOJI_BYTES,
@@ -312,13 +309,17 @@ class PSPFReader:
                 f"Slot {slot_index} checksum mismatch: expected {descriptor.checksum}, got {actual_checksum}"
             )
 
-        # Decompress if needed based on encoding
-        if descriptor.codec == CODEC_GZIP:
+        # Decompress if needed based on operations
+        from flavor.psp.format_2025.operations import unpack_operations, OP_GZIP, OP_TAR
+        
+        ops = unpack_operations(descriptor.operations)
+        
+        if ops == [OP_GZIP]:
             return gzip.decompress(slot_data)
-        elif descriptor.codec == CODEC_TGZ:
+        elif ops == [OP_TAR, OP_GZIP]:
             # For tar.gz, decompress gzip layer (tar extraction happens later)
             return gzip.decompress(slot_data)
-        elif descriptor.codec == CODEC_TAR:
+        elif ops == [OP_TAR]:
             # Uncompressed tar, no decompression needed
             return slot_data
         else:

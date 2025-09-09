@@ -14,7 +14,6 @@ from flavor.psp.format_2025.constants import (
     ACCESS_FILE,
     ACCESS_MMAP,
     ACCESS_STREAM,
-    CODEC_RAW,
     SLOT_DESCRIPTOR_SIZE,
 )
 from flavor.psp.format_2025.index import PSPFIndex
@@ -45,7 +44,7 @@ class TestReaderBackends:
                 size=100,
                 original_size=100,
                 checksum=zlib.adler32(b"TEST DATA 1" * 9 + b"T"),  # 100 bytes
-                codec=CODEC_RAW,
+                operations=0,
             )
             f.write(slot1.pack())
 
@@ -56,7 +55,7 @@ class TestReaderBackends:
                 size=200,
                 original_size=200,
                 checksum=zlib.adler32(b"TEST DATA 2" * 18 + b"TD"),  # 200 bytes
-                codec=CODEC_RAW,
+                operations=0,
             )
             f.write(slot2.pack())
 

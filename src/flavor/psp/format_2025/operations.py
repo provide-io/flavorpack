@@ -168,12 +168,3 @@ def string_to_operations(op_string: str) -> int:
             raise ValueError(f"Unknown operation: {part}")
     
     return pack_operations(operations)
-
-
-# Initialize the reverse mapping
-OPERATIONS_TO_LEGACY_CODEC = {
-    0: CODEC_RAW,
-    pack_operations([OP_TAR]): CODEC_TAR,
-    pack_operations([OP_GZIP]): CODEC_GZIP,
-    pack_operations([OP_TAR, OP_GZIP]): CODEC_TGZ,
-}

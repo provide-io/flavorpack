@@ -53,19 +53,9 @@ PACKAGE_CHECKSUM_FILE = "package.checksum"
 PSP_METADATA_FILE = "psp.json"
 INDEX_METADATA_FILE = "index.json"
 
-# Codec types - describe the actual format of slot data
-CODEC_RAW = 0  # Raw uncompressed data
-CODEC_TAR = 1  # Uncompressed tar archive
-CODEC_GZIP = 2  # Gzipped single file
-CODEC_TGZ = 3  # Tar archive, then gzipped (tar.gz)
-
-# Future codec formats (not implemented yet):
-# CODEC_ZSTD = 4     # Zstd compressed single file
-# CODEC_TZST = 5     # Tar archive, then zstd compressed
-# CODEC_BROTLI = 6   # Brotli compressed single file
-# CODEC_TBR = 7      # Tar archive, then brotli compressed
-# CODEC_ZIP = 8      # Zip archive (would need zipfile module)
-# CODEC_7Z = 9       # 7-zip archive (would need py7zr module)
+# Operation chains have replaced the legacy codec system
+# See flavor.psp.format_2025.operations for the new system
+# Operations are packed into 64-bit integers allowing up to 8 chained operations
 
 # Checksum algorithms
 CHECKSUM_ADLER32 = 0  # Default, fast

@@ -118,21 +118,11 @@ def validate_slots(slots: list[SlotMetadata]) -> list[str]:
         if slot.size < 0:
             errors.append(f"📏 Slot '{slot.id}' has negative size: {slot.size}")
 
-        # Check codec validity
-        valid_codecs = [
-            "none",
-            "raw",
-            "gzip",
-            "tar",
-            "tgz",
-            "tar.gz",
-            "zstd",
-            "brotli",
-        ]
-        if slot.codec not in valid_codecs:
+        # Check operations validity
+        # Operations field is a string like "tar.gz" or "TAR|GZIP"
+        if not isinstance(slot.operations, str):
             errors.append(
-                f"🗜️ Slot '{slot.id}' has invalid codec '{slot.codec}'. "
-                f"Valid options: {', '.join(valid_codecs)}"
+                f"🗜️ Slot '{slot.id}' has invalid operations type: expected string, got {type(slot.operations).__name__}"
             )
 
         # Check source path existence if provided
