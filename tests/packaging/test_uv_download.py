@@ -166,7 +166,7 @@ class TestUVDownload:
                     "flavor.packaging.python.dependency_resolver.get_arch_name",
                     return_value="amd64",
                 ),
-                patch.object(packager.env_builder, "download_uv_wheel", return_value=None),
+                patch.object(packager.slot_builder.uv_manager, "download_uv_binary", return_value=None),
                 patch.object(packager.slot_builder, "_build_wheels"),
             ):
                 # Should raise error on Linux when UV download fails
