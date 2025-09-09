@@ -48,7 +48,7 @@ pub struct SlotMetadata {
     pub target: String,        // Destination in workenv
     pub size: i64,            // Size as stored in package
     pub checksum: String,
-    pub codec: String,     // Indicates compression type
+    pub operations: String,   // Operation chain (e.g., "gzip", "tar|gzip")
     pub purpose: String,
     pub lifecycle: String,
     #[serde(skip_serializing_if = "Option::is_none")]
