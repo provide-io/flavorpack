@@ -54,18 +54,9 @@ def create_slot_tarballs(
     slots = {}
 
     with progress.task(total=3, description="Creating slots") as bar:
-        # UV is a single gzipped binary, not a tarball
-        uv_gzip = temp_dir / "uv.gz"
+        # UV is a single binary (builder will compress it)
         uv_path = artifacts["payload_dir"] / "bin" / uv_exe
-
-        # Gzip the UV binary directly
-        import gzip
-
-        with open(uv_path, "rb") as f_in:
-            with gzip.open(uv_gzip, "wb", compresslevel=9) as f_out:
-                f_out.write(f_in.read())
-
-        slots["uv"] = uv_gzip
+        slots["uv"] = uv_path
         if bar:
             bar.increment()
 
@@ -373,16 +364,8 @@ def create_python_slot_tarballs(
     uv_exe = "uv.exe" if windows else "uv"
 
     with progress.task(total=3, description="Creating slots") as bar:
-        # UV slot - single gzipped binary
-        uv_gzip = temp_dir / "uv.gz"
+        # UV slot - single binary (builder will compress it)
         uv_path = artifacts["payload_dir"] / "bin" / uv_exe
-
-        # Gzip the UV binary directly
-        import gzip
-
-        with open(uv_path, "rb") as f_in:
-            with gzip.open(uv_gzip, "wb", compresslevel=9) as f_out:
-                f_out.write(f_in.read())
         if bar:
             bar.increment()
 
@@ -400,4 +383,4 @@ def create_python_slot_tarballs(
         if bar:
             bar.increment()
 
-    return uv_gzip, python_tarball, wheels_tarball
+    return uv_path, python_tarball, wheels_tarball
