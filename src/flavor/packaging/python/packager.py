@@ -75,21 +75,6 @@ class PythonPackager:
         self.venv_bin_dir = "Scripts" if self.is_windows else "bin"
         self.uv_exe = "uv.exe" if self.is_windows else "uv"
         
-        # Extract runtime dependencies and add to build_config
-        # This ensures project dependencies are included when building wheels
-        if "extra_packages" not in self.build_config:
-            self.build_config["extra_packages"] = []
-        
-        # Get runtime dependencies from pyproject.toml
-        try:
-            runtime_deps = self.get_runtime_dependencies()
-            if runtime_deps:
-                logger.info(f"📦 Found {len(runtime_deps)} runtime dependencies to include")
-                self.build_config["extra_packages"].extend(runtime_deps)
-                logger.debug("Runtime dependencies added to build", deps=runtime_deps)
-        except Exception as e:
-            # Don't fail if we can't read dependencies, just log warning
-            logger.warning(f"Could not extract runtime dependencies: {e}")
         
         # Initialize manager instances
         self.pypapip = PyPaPipManager()
