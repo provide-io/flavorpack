@@ -10,7 +10,7 @@ from pathlib import Path
 
 import attrs
 from flavor.exceptions import BuildError
-from flavor.psp.format_2025.builder import build_package
+# Avoid circular import - import build_package in build method
 from flavor.psp.format_2025.slots import SlotMetadata
 from flavor.psp.format_2025.spec import BuildResult, BuildSpec, KeyConfig
 
@@ -156,4 +156,6 @@ class PSPFBuilder:
         if isinstance(output_path, str):
             output_path = Path(output_path)
 
+        # Import here to avoid circular import
+        from flavor.psp.format_2025.builder import build_package
         return build_package(self._spec, output_path)
