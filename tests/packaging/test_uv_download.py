@@ -22,9 +22,9 @@ class TestUVDownload:
         )
 
         with (
-            patch("flavor.packaging.python.dependency_resolver.get_os_name", return_value="linux"),
+            patch("flavor.packaging.python.pypapip_manager.get_os_name", return_value="linux"),
             patch(
-                "flavor.packaging.python.dependency_resolver.get_arch_name", return_value="amd64"
+                "flavor.packaging.python.pypapip_manager.get_arch_name", return_value="amd64"
             ),
         ):
             cmd = packager.pypapip._get_pypapip_download_cmd(
@@ -51,9 +51,9 @@ class TestUVDownload:
         )
 
         with (
-            patch("flavor.packaging.python.dependency_resolver.get_os_name", return_value="linux"),
+            patch("flavor.packaging.python.pypapip_manager.get_os_name", return_value="linux"),
             patch(
-                "flavor.packaging.python.dependency_resolver.get_arch_name", return_value="arm64"
+                "flavor.packaging.python.pypapip_manager.get_arch_name", return_value="arm64"
             ),
         ):
             cmd = packager.pypapip._get_pypapip_download_cmd(
@@ -79,7 +79,7 @@ class TestUVDownload:
 
         with (
             patch(
-                "flavor.packaging.python.packager.get_os_name", return_value="darwin"
+                "flavor.packaging.python.pypapip_manager.get_os_name", return_value="darwin"
             ),
             patch(
                 "flavor.packaging.python.dependency_resolver.get_arch_name", return_value="arm64"
