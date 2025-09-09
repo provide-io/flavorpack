@@ -305,10 +305,8 @@ def _load_slot_data(slot: SlotMetadata) -> bytes:
 def _apply_operations(
     data: bytes, packed_ops: int, options: BuildOptions
 ) -> bytes:
-    """Apply operation chain to data.
+    """Apply operation chain to data using the new ChainProcessor.
 
-    Uses the archive operation handler to actually compress/transform data.
-    
     Args:
         data: Raw data to process
         packed_ops: Packed operations as 64-bit integer
@@ -317,7 +315,8 @@ def _apply_operations(
     Returns:
         Processed data after applying operations
     """
-    from flavor.psp.format_2025.operations import unpack_operations, OP_GZIP, OP_TAR
+    from flavor.archive import ArchiveChain, ChainProcessor
+    import io
     
     if packed_ops == 0:
         # No operations, return raw data
@@ -329,32 +328,39 @@ def _apply_operations(
         logger.trace("⚠️ Data appears to be already gzipped, returning as-is to avoid double compression")
         return data
     
-    ops = unpack_operations(packed_ops)
-    
-    # Use provide.foundation archive operations if available
     try:
-        from provide.foundation.archive import GzipCompressor
-        from io import BytesIO
+        # Create chain from packed operations
+        chain = ArchiveChain(packed_ops)
+        processor = ChainProcessor()
         
-        if ops == [OP_GZIP] or ops == [OP_TAR, OP_GZIP]:
-            # Single file gzip compression or tar.gz (for single files we just gzip)
-            compressor = GzipCompressor(level=options.compression_level)
-            input_stream = BytesIO(data)
-            output_stream = BytesIO()
-            compressor.compress(input_stream, output_stream)
+        # Validate chain
+        is_valid, msg = processor.validate_chain(chain)
+        if not is_valid:
+            logger.warning(f"⚠️ Invalid operation chain: {msg}, returning raw data")
+            return data
+        
+        # Process data through chain
+        input_stream = io.BytesIO(data)
+        output_stream = processor.process(input_stream, chain)
+        
+        if isinstance(output_stream, io.BytesIO):
             return output_stream.getvalue()
         else:
-            # Unsupported operation chain, return raw
-            logger.warning(f"Unsupported operation chain: {ops}, returning raw data")
-            return data
-    except (ImportError, Exception) as e:
-        # Fallback to direct implementation if provide.foundation not available or fails
-        logger.trace(f"Using fallback gzip implementation: {e}")
-        import gzip
-        if ops == [OP_GZIP] or ops == [OP_TAR, OP_GZIP]:
+            # If processor returns a file path, read it
+            with open(output_stream, 'rb') as f:
+                return f.read()
+    
+    except Exception as e:
+        # Fallback to direct implementation if chain processing fails
+        logger.trace(f"🔧 Chain processing failed, using fallback: {e}")
+        from flavor.psp.format_2025.operations import unpack_operations, OP_GZIP
+        
+        ops = unpack_operations(packed_ops)
+        if OP_GZIP in ops:
+            import gzip
             return gzip.compress(data, compresslevel=options.compression_level)
         else:
-            logger.warning(f"Unsupported operation chain: {ops}, returning raw data")
+            logger.warning(f"⚠️ Unsupported fallback operation chain: {ops}, returning raw data")
             return data
 
 
