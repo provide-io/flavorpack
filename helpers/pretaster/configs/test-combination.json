@@ -15,7 +15,7 @@
       "slot": 0,
       "purpose": "payload",
       "lifecycle": "cached",
-      "encoding": "raw",
+      "codec": "raw",
       "id": "combo-test-py",
       "source": "scripts/combo_test.py",
       "target": "scripts/combo_test.py",
