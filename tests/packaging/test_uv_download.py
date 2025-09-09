@@ -27,7 +27,7 @@ class TestUVDownload:
                 "flavor.packaging.python.packager.get_arch_name", return_value="amd64"
             ),
         ):
-            cmd = packager._get_pypa_pip_download_cmd(
+            cmd = packager.pypapip._get_pypapip_download_cmd(
                 python_exe=Path("/usr/bin/python3"),
                 dest_dir=Path("/tmp"),
                 packages=["uv"],
@@ -56,7 +56,7 @@ class TestUVDownload:
                 "flavor.packaging.python.packager.get_arch_name", return_value="arm64"
             ),
         ):
-            cmd = packager._get_pypa_pip_download_cmd(
+            cmd = packager.pypapip._get_pypapip_download_cmd(
                 python_exe=Path("/usr/bin/python3"),
                 dest_dir=Path("/tmp"),
                 packages=["uv"],
@@ -85,7 +85,7 @@ class TestUVDownload:
                 "flavor.packaging.python.packager.get_arch_name", return_value="arm64"
             ),
         ):
-            cmd = packager._get_pypa_pip_download_cmd(
+            cmd = packager.pypapip._get_pypapip_download_cmd(
                 python_exe=Path("/usr/bin/python3"),
                 dest_dir=Path("/tmp"),
                 packages=["uv"],
@@ -139,7 +139,7 @@ class TestUVDownload:
                 ),
                 patch.object(Path, "glob", return_value=[fake_wheel]),
             ):
-                result = packager._download_uv_wheel(temp_path)
+                result = packager.env_builder.download_uv_wheel(temp_path)
 
                 # Should return the path to the extracted UV binary
                 assert result is not None
@@ -166,7 +166,7 @@ class TestUVDownload:
                     "flavor.packaging.python.packager.get_arch_name",
                     return_value="amd64",
                 ),
-                patch.object(packager, "_download_uv_wheel", return_value=None),
+                patch.object(packager.env_builder, "download_uv_wheel", return_value=None),
                 patch.object(packager, "_build_wheels"),
             ):
                 # Should raise error on Linux when UV download fails
@@ -241,7 +241,7 @@ class TestUVDownload:
                 # The download should try pip first, fail, then try direct download
                 # Since we're mocking the URL download, it will fail on extraction
                 # but that's OK for this test
-                result = packager._download_uv_wheel(temp_path)
+                result = packager.env_builder.download_uv_wheel(temp_path)
 
                 # Verify that urlopen was called (fallback was attempted)
                 assert mock_urlopen.called
@@ -271,7 +271,7 @@ class TestUVDownload:
                     "flavor.packaging.python.packager.get_arch_name",
                     return_value="arm64",
                 ),
-                patch.object(packager, "_find_uv_command", return_value=fake_uv_path),
+                patch.object(packager.env_builder, "find_uv_command", return_value=fake_uv_path),
                 patch.object(packager, "_copy_executable"),
                 patch.object(packager, "_build_wheels"),
                 patch.object(packager, "_create_metadata"),

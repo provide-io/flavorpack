@@ -219,8 +219,7 @@ class TestWheelBuilder:
         with pytest.raises(ValueError, match="Either requirements_file or packages must be provided"):
             self.wheel_builder.resolve_dependencies(python_exe)
     
-    @patch.object(WheelBuilder, 'pypapip')
-    def test_download_wheels_for_resolved_deps(self, mock_pypapip):
+    def test_download_wheels_for_resolved_deps(self):
         """Test downloading wheels for resolved dependencies."""
         with tempfile.TemporaryDirectory() as temp_dir:
             wheel_dir = Path(temp_dir) / "wheels"
@@ -236,14 +235,16 @@ class TestWheelBuilder:
             
             python_exe = Path("/usr/bin/python3")
             
-            result = self.wheel_builder.download_wheels_for_resolved_deps(
-                python_exe, requirements_file, wheel_dir
-            )
-            
-            # Verify PyPA pip was used for download
-            mock_pypapip.download_wheels_from_requirements.assert_called_once_with(
-                python_exe, requirements_file, wheel_dir
-            )
+            # Patch the pypapip instance method
+            with patch.object(self.wheel_builder.pypapip, 'download_wheels_from_requirements') as mock_download:
+                result = self.wheel_builder.download_wheels_for_resolved_deps(
+                    python_exe, requirements_file, wheel_dir
+                )
+                
+                # Verify PyPA pip was used for download
+                mock_download.assert_called_once_with(
+                    python_exe, requirements_file, wheel_dir
+                )
             
             # Verify result contains wheel files
             assert len(result) == 2

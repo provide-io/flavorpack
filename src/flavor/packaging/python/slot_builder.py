@@ -342,9 +342,13 @@ class PythonSlotBuilder:
         """Build wheels for the package and its dependencies - delegates to WheelBuilder."""
         logger.info("🎯🔨🚀 Starting wheel building process (using WheelBuilder)")
         
+        # Create a temporary Python environment for building
+        import sys
+        python_exe = Path(sys.executable)
+        
         # Use WheelBuilder for complete wheel building and dependency resolution
         build_result = self.wheel_builder.build_and_resolve_project(
-            python_exe=Path(self.env_builder.find_uv_command()),
+            python_exe=python_exe,
             project_dir=self.manifest_dir,
             build_dir=wheels_dir.parent,
             extra_packages=self.build_config.get("extra_packages", []),
