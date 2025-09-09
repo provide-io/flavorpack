@@ -346,27 +346,13 @@ class PythonSlotBuilder:
         import sys
         python_exe = Path(sys.executable)
         
-        # Get project dependencies from pyproject.toml
-        import tomllib
-        pyproject_path = self.manifest_dir / "pyproject.toml"
-        if pyproject_path.exists():
-            with open(pyproject_path, "rb") as f:
-                pyproject_data = tomllib.load(f)
-            project_deps = pyproject_data.get("project", {}).get("dependencies", [])
-        else:
-            project_deps = []
-        
-        # Combine project dependencies with any extra packages
-        all_packages = project_deps + self.build_config.get("extra_packages", [])
-        
-        logger.info(f"📦 Resolving dependencies", count=len(all_packages), packages=all_packages[:5])
-        
-        # Use WheelBuilder for complete wheel building and dependency resolution
+        # The WheelBuilder should handle dependency resolution from the project itself
+        # We shouldn't need to manually extract dependencies here
         build_result = self.wheel_builder.build_and_resolve_project(
             python_exe=python_exe,
             project_dir=self.manifest_dir,
             build_dir=wheels_dir.parent,
-            extra_packages=all_packages,
+            extra_packages=self.build_config.get("extra_packages", []),
         )
         
         logger.info(
