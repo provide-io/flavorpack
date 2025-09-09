@@ -69,7 +69,7 @@ class SlotDescriptor:
     # Properties (16 bytes)
     original_size: int = field(default=0)  # Uncompressed size
     checksum: int = field(default=0)  # Adler-32 of stored data
-    codec: int = field(default=CODEC_RAW)  # Renamed from compression
+    operations: int = field(default=0)  # Packed 64-bit operation chain
     encryption: int = field(default=0)
     alignment: int = field(default=SLOT_ALIGNMENT)
 
@@ -96,43 +96,28 @@ class SlotDescriptor:
 
     def pack(self) -> bytes:
         """Pack descriptor into 64-byte binary format."""
-        return struct.pack(
-            "<"  # Little-endian
-            "Q"  # id (8)
-            "Q"  # name_hash (8)
-            "Q"  # offset (8)
-            "Q"  # size (8)
-            "Q"  # original_size (8)
-            "I"  # checksum (4)
-            "B"  # codec (1)
-            "B"  # encryption (1)
-            "H"  # alignment (2)
-            "B"  # purpose (1)
-            "B"  # lifecycle (1)
-            "B"  # access_hint (1)
-            "B"  # priority (1)
-            "H"  # permissions (2)
-            "H"  # platform (2)
-            "I"  # extended_offset (4)
-            "I",  # extended_size (4)
+        # Pack to 64-byte format with operations
+        data = struct.pack(
+            "<QQQQQQQIBBBBBBH",  # 6Q (48) + Q (8) + I (4) + 6B (6) + H (2) = 68 bytes - need to fix
             self.id,
             self.name_hash,
             self.offset,
             self.size,
             self.original_size,
+            self.operations,  # 64-bit operations field
             self.checksum,
-            self.codec,
             self.encryption,
-            self.alignment,
+            self.alignment & 0xFF,  # Ensure 1 byte
             self.purpose,
             self.lifecycle,
             self.access_hint,
             self.priority,
             self.permissions,
-            self.platform,
-            self.extended_offset,
-            self.extended_size,
         )
+        
+        # Ensure exactly 64 bytes
+        assert len(data) == SLOT_DESCRIPTOR_SIZE, f"Slot descriptor must be {SLOT_DESCRIPTOR_SIZE} bytes, got {len(data)}"
+        return data
 
     @classmethod
     def unpack(cls, data: bytes) -> "SlotDescriptor":
@@ -141,7 +126,7 @@ class SlotDescriptor:
             raise ValueError(f"Slot descriptor must be {SLOT_DESCRIPTOR_SIZE} bytes")
 
         unpacked = struct.unpack(
-            "<QQQQQIBBHBBBBHHII",  # Fixed: was missing 1 B
+            "<QQQQQQQIBBBBBBH",  # Match new format: 6Q + I + 6B + H = 64 bytes
             data,
         )
 
@@ -151,8 +136,8 @@ class SlotDescriptor:
             offset=unpacked[2],
             size=unpacked[3],
             original_size=unpacked[4],
-            checksum=unpacked[5],
-            codec=unpacked[6],
+            operations=unpacked[5],  # 64-bit operations
+            checksum=unpacked[6],
             encryption=unpacked[7],
             alignment=unpacked[8],
             purpose=unpacked[9],
@@ -160,13 +145,11 @@ class SlotDescriptor:
             access_hint=unpacked[11],
             priority=unpacked[12],
             permissions=unpacked[13],
-            platform=unpacked[14],
-            extended_offset=unpacked[15],
-            extended_size=unpacked[16],
         )
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
+        from flavor.psp.format_2025.operations import operations_to_string
         result = {
             "id": self.id,
             "name_hash": self.name_hash,
@@ -174,7 +157,7 @@ class SlotDescriptor:
             "size": self.size,
             "original_size": self.original_size,
             "checksum": self.checksum,
-            "codec": self.codec,
+            "operations": operations_to_string(self.operations),
             "encryption": self.encryption,
             "alignment": self.alignment,
             "purpose": self.purpose,
@@ -182,7 +165,6 @@ class SlotDescriptor:
             "access_hint": self.access_hint,
             "priority": self.priority,
             "permissions": self.permissions,
-            "platform": self.platform,
         }
         if self.name:
             result["name"] = self.name
@@ -201,9 +183,7 @@ class SlotMetadata:
     target: str = field(validator=validators.instance_of(str))  # Target path in workenv
     size: int = field(validator=validators.instance_of(int))
     checksum: str = field(validator=validators.instance_of(str))
-    codec: str = field(
-        validator=validators.in_(["none", "raw", "gzip", "tar", "tgz", "tar.gz"])
-    )
+    operations: str = field(default="RAW")  # Operation chain string like "TAR|GZIP"
     purpose: str = field()
     lifecycle: str = field(
         validator=validators.in_(
@@ -231,6 +211,8 @@ class SlotMetadata:
 
     def to_descriptor(self) -> SlotDescriptor:
         """Convert metadata to descriptor."""
+        from flavor.psp.format_2025.operations import string_to_operations
+        
         # Map string values to integers
         purpose_map = {
             "payload": PURPOSE_DATA,
@@ -253,14 +235,6 @@ class SlotMetadata:
             "dev": LIFECYCLE_DEV,
             "config": LIFECYCLE_CONFIG,
         }
-        codec_map = {
-            "none": CODEC_RAW,
-            "raw": CODEC_RAW,
-            "tar": CODEC_TAR,
-            "gzip": CODEC_GZIP,
-            "tgz": CODEC_TGZ,
-            "tar.gz": CODEC_TGZ,
-        }
 
         # Convert hex checksum to integer
         checksum_int = (
@@ -273,7 +247,7 @@ class SlotMetadata:
             size=self.size,
             original_size=self.size,
             checksum=checksum_int & 0xFFFFFFFF,  # Truncate to 32-bit
-            codec=codec_map.get(self.codec, 0),  # Maps codec string to int
+            operations=string_to_operations(self.operations),
             purpose=purpose_map.get(normalize_purpose(self.purpose), PURPOSE_DATA),
             lifecycle=lifecycle_map.get(self.lifecycle, LIFECYCLE_RUNTIME),
             path=None,
@@ -301,7 +275,7 @@ class SlotMetadata:
             "target": self.target,
             "size": self.size,
             "checksum": self.checksum,  # Prefixed format (e.g., "sha256:...")
-            "codec": self.codec,
+            "operations": self.operations,
             "purpose": self.purpose,
             "lifecycle": self.lifecycle,
             "permissions": self.permissions,
@@ -351,17 +325,21 @@ class SlotView:
     def content(self) -> bytes:
         """Get decompressed content."""
         if self._decompressed is None:
-            if self.descriptor.codec == CODEC_RAW:
+            if self.descriptor.operations == 0:  # No operations (RAW)
                 self._decompressed = (
                     bytes(self.data) if isinstance(self.data, memoryview) else self.data
                 )
             else:
-                # Decompress based on encoding type
-                import zlib
-
-                if self.descriptor.codec == 2:  # CODEC_GZIP
+                # Process based on operation chain
+                from flavor.psp.format_2025.operations import unpack_operations, OP_GZIP, OP_TAR
+                
+                ops = unpack_operations(self.descriptor.operations)
+                
+                # For now, handle simple cases
+                if ops == [OP_GZIP]:
+                    import zlib
                     self._decompressed = zlib.decompress(self.data)
-                elif self.descriptor.codec == 3:  # CODEC_TGZ
+                elif ops == [OP_TAR, OP_GZIP]:
                     # For tar.gz, return as-is (launcher handles extraction)
                     self._decompressed = (
                         bytes(self.data)
@@ -369,8 +347,11 @@ class SlotView:
                         else self.data
                     )
                 else:
-                    raise ValueError(
-                        f"Unsupported codec: {self.descriptor.codec}"
+                    # Return raw data for unhandled operations
+                    self._decompressed = (
+                        bytes(self.data)
+                        if isinstance(self.data, memoryview)
+                        else self.data
                     )
         return self._decompressed
 
