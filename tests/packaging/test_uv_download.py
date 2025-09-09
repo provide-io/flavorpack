@@ -22,9 +22,9 @@ class TestUVDownload:
         )
 
         with (
-            patch("flavor.packaging.python.packager.get_os_name", return_value="linux"),
+            patch("flavor.packaging.python.dependency_resolver.get_os_name", return_value="linux"),
             patch(
-                "flavor.packaging.python.packager.get_arch_name", return_value="amd64"
+                "flavor.packaging.python.dependency_resolver.get_arch_name", return_value="amd64"
             ),
         ):
             cmd = packager.pypapip._get_pypapip_download_cmd(
@@ -129,12 +129,12 @@ class TestUVDownload:
 
             # Need to mock at the actual usage location in the module
             with (
-                patch("flavor.packaging.python.packager.run_command", mock_run),
+                patch("flavor.packaging.python.dependency_resolver.run_command", mock_run),
                 patch(
-                    "flavor.packaging.python.packager.get_os_name", return_value="linux"
+                    "flavor.packaging.python.dependency_resolver.get_os_name", return_value="linux"
                 ),
                 patch(
-                    "flavor.packaging.python.packager.get_arch_name",
+                    "flavor.packaging.python.dependency_resolver.get_arch_name",
                     return_value="amd64",
                 ),
                 patch.object(Path, "glob", return_value=[fake_wheel]),
