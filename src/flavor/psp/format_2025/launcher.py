@@ -449,7 +449,6 @@ class PSPFLauncher(PSPFReader):
                             cwd=workenv_dir,
                             capture_output=True,
                             check=True,
-                            log_command=True,
                         )
                         logger.debug("✅ Command succeeded")
                     except Exception as e:
@@ -486,7 +485,6 @@ class PSPFLauncher(PSPFReader):
                                 cwd=workenv_dir,
                                 capture_output=True,
                                 check=True,
-                                log_command=True,
                             )
                         except Exception as e:
                             logger.error(

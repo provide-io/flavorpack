@@ -46,7 +46,6 @@ def ingredient_list(verbose: bool) -> None:
                 capture_output=True,
                 check=False,
                 timeout=2,
-                log_command=False,
             )
             if result.returncode == 0:
                 # Parse version from output (first line usually)

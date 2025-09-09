@@ -81,7 +81,6 @@ class PackagingOrchestrator:
                 capture_output=True,
                 check=False,
                 timeout=5,
-                log_command=False,
             )
         except Exception as e:
             raise BuildError(f"Failed to execute command: {e}") from e
@@ -218,7 +217,7 @@ class PackagingOrchestrator:
                 .add_slot(
                     id="uv",
                     data=uv_tarball,
-                    codec="gzip",
+                    operations="gzip",
                     purpose="tool",
                     lifecycle="runtime",
                     target="bin/uv",
@@ -227,7 +226,7 @@ class PackagingOrchestrator:
                 .add_slot(
                     id="python",
                     data=python_tarball,
-                    codec="tgz",
+                    operations="tgz",
                     purpose="runtime",
                     lifecycle="runtime",
                     target="{workenv}",
@@ -235,7 +234,7 @@ class PackagingOrchestrator:
                 .add_slot(
                     id="wheels",
                     data=wheels_tarball,
-                    codec="tgz",
+                    operations="tgz",
                     purpose="payload",
                     lifecycle="cache",
                     target="wheels",
