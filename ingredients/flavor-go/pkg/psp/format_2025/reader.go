@@ -345,19 +345,10 @@ func isTarball(data []byte) bool {
 		if string(data[257:262]) == "ustar" {
 			return true
 		}
-		// Also check if it looks like a tar header (name field is ASCII)
-		isASCII := true
-		for i := 0; i < 100 && i < len(data); i++ {
-			if data[i] == 0 {
-				break
-			}
-			if data[i] < 32 || data[i] > 126 {
-				isASCII = false
-				break
-			}
+		// Also check for GNU tar format (oldgnu)
+		if string(data[257:265]) == "ustar  \x00" {
+			return true
 		}
-		// We no longer use tar archives, so just check if it looks like text
-		return isASCII && len(data) >= 512
 	}
 	return false
 }
