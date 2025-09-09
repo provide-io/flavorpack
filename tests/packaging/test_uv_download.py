@@ -167,7 +167,7 @@ class TestUVDownload:
                     return_value="amd64",
                 ),
                 patch.object(packager.env_builder, "download_uv_wheel", return_value=None),
-                patch.object(packager, "_build_wheels"),
+                patch.object(packager.slot_builder, "_build_wheels"),
             ):
                 # Should raise error on Linux when UV download fails
                 with pytest.raises(FileNotFoundError, match="manylinux2014"):
@@ -273,7 +273,7 @@ class TestUVDownload:
                 ),
                 patch.object(packager.env_builder, "find_uv_command", return_value=fake_uv_path),
                 patch.object(packager, "_copy_executable"),
-                patch.object(packager, "_build_wheels"),
+                patch.object(packager.slot_builder, "_build_wheels"),
                 patch.object(packager, "_create_metadata"),
                 patch.object(packager, "_create_python_placeholder"),
                 patch("tarfile.open"),
