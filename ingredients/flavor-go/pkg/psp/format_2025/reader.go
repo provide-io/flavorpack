@@ -296,13 +296,19 @@ func (r *Reader) ReadSlot(slotIndex int) ([]byte, error) {
 	// Decompress based on operations chain
 	operations := UnpackOperations(entry.Operations)
 	
+	logger := hclog.L()
+	logger.Trace("🔍 Slot operations", "operations", fmt.Sprintf("%#x", entry.Operations), "unpacked", operations)
+	
 	// Apply operations in reverse order (unwrap the layers)
 	result := slotData
 	for i := len(operations) - 1; i >= 0; i-- {
 		op := operations[i]
+		logger.Trace("🔄 Processing operation", "op", fmt.Sprintf("%#x", op), "name", OperationName(op))
+		
 		switch op {
 		case OP_GZIP:
 			// Decompress gzip
+			logger.Trace("📦 Decompressing GZIP", "inputSize", len(result))
 			gz, err := gzip.NewReader(bytes.NewReader(result))
 			if err != nil {
 				return nil, fmt.Errorf("failed to create gzip reader: %w", err)
@@ -312,6 +318,7 @@ func (r *Reader) ReadSlot(slotIndex int) ([]byte, error) {
 			if err != nil {
 				return nil, fmt.Errorf("failed to decompress gzip data: %w", err)
 			}
+			logger.Trace("✅ GZIP decompressed", "outputSize", len(decompressed))
 			result = decompressed
 			
 		case OP_TAR:
@@ -355,6 +362,8 @@ func isTarball(data []byte) bool {
 
 // ExtractSlot extracts a slot to the specified directory
 func (r *Reader) ExtractSlot(slotIndex int, destDir string) (string, error) {
+	logger := hclog.L()
+	
 	metadata, err := r.ReadMetadata()
 	if err != nil {
 		return "", err
@@ -365,6 +374,8 @@ func (r *Reader) ExtractSlot(slotIndex int, destDir string) (string, error) {
 	}
 
 	slotMeta := metadata.Slots[slotIndex]
+	logger.Trace("🔍 Extracting slot", "index", slotIndex, "id", slotMeta.ID, "target", slotMeta.Target)
+	
 	// ReadSlot already handles decompression based on the slot's encoding!
 	decompressed, err := r.ReadSlot(slotIndex)
 	if err != nil {
@@ -413,7 +424,10 @@ func (r *Reader) ExtractSlot(slotIndex int, destDir string) (string, error) {
 	}
 
 	// Check if this is a tarball that needs extraction
-	if isTarball(decompressed) {
+	isTar := isTarball(decompressed)
+	logger.Trace("🔍 Slot data check", "isTarball", isTar, "dataLen", len(decompressed), "destPath", destPath)
+	
+	if isTar {
 
 		// Ensure extraction directory exists
 		if err := os.MkdirAll(extractDir, os.FileMode(DefaultDirPerms)); err != nil {
@@ -495,6 +509,7 @@ func (r *Reader) ExtractSlot(slotIndex int, destDir string) (string, error) {
 	if info, err := os.Stat(destPath); err == nil && info.IsDir() {
 		// This is the case where Python tarball goes to cache root
 		// Just return the directory since it's a tarball that will be extracted
+		logger.Trace("🔍 Destination is existing directory, skipping write", "destPath", destPath)
 		return destPath, nil
 	}
 
@@ -510,18 +525,19 @@ func (r *Reader) ExtractSlot(slotIndex int, destDir string) (string, error) {
 		perm = os.FileMode(DefaultFilePerms) // 0600 - secure by default
 	}
 
-	// Debug: Check what we're writing
-	minLen := 16
-	if len(decompressed) < minLen {
-		minLen = len(decompressed)
+	// Log what we're about to write
+	logger.Trace("📝 Writing single file", "destPath", destPath, "dataLen", len(decompressed), "permissions", fmt.Sprintf("%04o", perm))
+	
+	// Check first few bytes to see if it's still compressed
+	if len(decompressed) >= 3 && decompressed[0] == 0x1f && decompressed[1] == 0x8b && decompressed[2] == 0x08 {
+		logger.Warn("⚠️ Data appears to still be gzipped!", "firstBytes", fmt.Sprintf("%x", decompressed[:10]))
 	}
-	fmt.Fprintf(os.Stderr, "DEBUG: Writing slot %d to %s, data len=%d, first bytes: %x\n", 
-	    slotIndex, destPath, len(decompressed), decompressed[:minLen])
 
 	if err := os.WriteFile(destPath, decompressed, perm); err != nil {
 		return "", fmt.Errorf("%w: failed to write slot %d to disk: %v", ErrSlotExtractionFailed, slotIndex, err)
 	}
 
+	logger.Trace("✅ Wrote file", "path", destPath, "size", len(decompressed))
 	return destPath, nil
 }
 
