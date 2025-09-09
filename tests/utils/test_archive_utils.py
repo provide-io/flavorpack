@@ -217,7 +217,6 @@ class TestArchiveUtils:
             source_dir = temp_path / "source"
             source_dir.mkdir()
             (source_dir / "file1.txt").write_text("Content 1")
-            (source_dir / "subdir" / "file2.txt").write_text("Content 2")
             (source_dir / "subdir").mkdir(exist_ok=True)
             (source_dir / "subdir" / "file2.txt").write_text("Content 2")
             
