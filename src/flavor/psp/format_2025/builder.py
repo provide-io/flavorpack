@@ -331,25 +331,25 @@ def _apply_operations(
     
     ops = unpack_operations(packed_ops)
     
-    # Use provide.foundation archive operations
+    # Use provide.foundation archive operations if available
     try:
         from provide.foundation.archive import GzipCompressor
+        from io import BytesIO
         
-        if ops == [OP_GZIP]:
-            # Single file gzip compression
+        if ops == [OP_GZIP] or ops == [OP_TAR, OP_GZIP]:
+            # Single file gzip compression or tar.gz (for single files we just gzip)
             compressor = GzipCompressor(level=options.compression_level)
-            return compressor.compress(data)
-        elif ops == [OP_TAR, OP_GZIP]:
-            # This would be tar.gz but for single files we just gzip
-            # The orchestrator handles actual tar creation for directories  
-            compressor = GzipCompressor(level=options.compression_level)
-            return compressor.compress(data)
+            input_stream = BytesIO(data)
+            output_stream = BytesIO()
+            compressor.compress(input_stream, output_stream)
+            return output_stream.getvalue()
         else:
             # Unsupported operation chain, return raw
             logger.warning(f"Unsupported operation chain: {ops}, returning raw data")
             return data
-    except ImportError:
-        # Fallback to direct implementation if provide.foundation not available
+    except (ImportError, Exception) as e:
+        # Fallback to direct implementation if provide.foundation not available or fails
+        logger.trace(f"Using fallback gzip implementation: {e}")
         import gzip
         if ops == [OP_GZIP] or ops == [OP_TAR, OP_GZIP]:
             return gzip.compress(data, compresslevel=options.compression_level)
