@@ -353,14 +353,15 @@ class PythonSlotBuilder:
             for dep in local_deps:
                 dep_path = self.manifest_dir / dep
                 if dep_path.exists() and dep_path.is_dir():
-                    logger.info(f"🔗 Building local dependency with its dependencies: {dep_path.name}")
-                    # Build the local dependency and resolve its dependencies
-                    dep_build_result = self.wheel_builder.build_and_resolve_project(
+                    logger.info(f"🔗 Building local dependency (wheel only): {dep_path.name}")
+                    # Build just the wheel for the local dependency, not its dependencies
+                    # Local dependencies are build-time dependencies, we don't need their runtime deps
+                    dep_wheel = self.wheel_builder.build_wheel_from_source(
                         python_exe=python_exe,
-                        project_dir=dep_path,
-                        build_dir=wheels_dir.parent,
+                        source_path=dep_path,
+                        wheel_dir=wheels_dir,
                     )
-                    logger.info(f"✅ Built local dependency with {dep_build_result['total_wheels']} wheels")
+                    logger.info(f"✅ Built local dependency wheel: {dep_wheel.name}")
                 else:
                     logger.warning(f"⚠️ Local dependency not found: {dep_path}")
         
