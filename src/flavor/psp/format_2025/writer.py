@@ -23,9 +23,9 @@ from flavor.psp.format_2025.constants import (
     SLOT_DESCRIPTOR_SIZE,
 )
 from flavor.psp.format_2025.index import PSPFIndex
+from flavor.psp.format_2025.checksums import calculate_checksum
 from flavor.psp.format_2025.metadata.assembly import (
     assemble_metadata,
-    calculate_checksum,
     extract_launcher_version,
     load_launcher_binary,
 )
