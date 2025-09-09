@@ -317,7 +317,7 @@ def _apply_operations(
     Returns:
         Processed data after applying operations
     """
-    from flavor.psp.format_2025.handlers import OperationHandler
+    from flavor.psp.format_2025.operations import unpack_operations, OP_GZIP, OP_TAR
     
     if packed_ops == 0:
         # No operations, return raw data
@@ -329,9 +329,23 @@ def _apply_operations(
         logger.trace("⚠️ Data appears to be already gzipped, returning as-is to avoid double compression")
         return data
     
-    # Use OperationHandler to process the data
-    handler = OperationHandler()
-    return handler.process_chain(data, packed_ops, reverse=False)
+    ops = unpack_operations(packed_ops)
+    
+    # For now, handle simple cases directly
+    # TODO: Use OperationHandler when archive module is available in provide.foundation
+    if ops == [OP_GZIP]:
+        # Single file gzip compression
+        import gzip
+        return gzip.compress(data, compresslevel=options.compression_level)
+    elif ops == [OP_TAR, OP_GZIP]:
+        # This would be tar.gz but for single files we just gzip
+        # The orchestrator handles actual tar creation for directories  
+        import gzip
+        return gzip.compress(data, compresslevel=options.compression_level)
+    else:
+        # Unsupported operation chain, return raw
+        logger.warning(f"Unsupported operation chain: {ops}, returning raw data")
+        return data
 
 
 def _write_package(
