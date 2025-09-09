@@ -9,6 +9,7 @@ import gzip
 import hashlib
 import tempfile
 import zipfile
+import zlib
 from pathlib import Path
 
 from provide.foundation import logger
@@ -82,14 +83,14 @@ class SlotExtractor:
                 # Read raw slot data
                 slot_data = self.reader.read_slot(i)
 
-                # Calculate checksum
-                actual_checksum = hashlib.sha256(slot_data).digest()
+                # Calculate checksum (use Adler32 to match binary format)
+                actual_checksum = zlib.adler32(slot_data) & 0xFFFFFFFF
 
                 if actual_checksum != descriptor.checksum:
                     logger.error(
                         f"Slot {i} checksum mismatch: "
-                        f"expected {descriptor.checksum.hex()}, "
-                        f"got {actual_checksum.hex()}"
+                        f"expected {descriptor.checksum:08x}, "
+                        f"got {actual_checksum:08x}"
                     )
                     return False
 
@@ -272,8 +273,8 @@ class SlotExtractor:
             descriptor = descriptors[slot_index]
             slot_data = self.reader.read_slot(slot_index)
 
-            # Verify checksum
-            actual_checksum = hashlib.sha256(slot_data).digest()
+            # Verify checksum (use Adler32 to match binary format)
+            actual_checksum = zlib.adler32(slot_data) & 0xFFFFFFFF
             if actual_checksum != descriptor.checksum:
                 logger.error(f"Slot {slot_index} checksum verification failed")
                 return False
