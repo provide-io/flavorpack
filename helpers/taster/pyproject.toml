@@ -24,7 +24,7 @@ version = "1.0.0"
 entry_point = "taster.cli:main"
 
 [tool.flavor.build]
-# dependencies = ["../.."]
+dependencies = ["../.."]
 
 [tool.flavor.execution]
 # Runtime environment configuration for testing
