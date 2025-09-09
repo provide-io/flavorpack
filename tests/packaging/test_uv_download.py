@@ -51,9 +51,9 @@ class TestUVDownload:
         )
 
         with (
-            patch("flavor.packaging.python.packager.get_os_name", return_value="linux"),
+            patch("flavor.packaging.python.dependency_resolver.get_os_name", return_value="linux"),
             patch(
-                "flavor.packaging.python.packager.get_arch_name", return_value="arm64"
+                "flavor.packaging.python.dependency_resolver.get_arch_name", return_value="arm64"
             ),
         ):
             cmd = packager.pypapip._get_pypapip_download_cmd(
@@ -82,7 +82,7 @@ class TestUVDownload:
                 "flavor.packaging.python.packager.get_os_name", return_value="darwin"
             ),
             patch(
-                "flavor.packaging.python.packager.get_arch_name", return_value="arm64"
+                "flavor.packaging.python.dependency_resolver.get_arch_name", return_value="arm64"
             ),
         ):
             cmd = packager.pypapip._get_pypapip_download_cmd(
@@ -160,10 +160,10 @@ class TestUVDownload:
 
             with (
                 patch(
-                    "flavor.packaging.python.packager.get_os_name", return_value="linux"
+                    "flavor.packaging.python.dependency_resolver.get_os_name", return_value="linux"
                 ),
                 patch(
-                    "flavor.packaging.python.packager.get_arch_name",
+                    "flavor.packaging.python.dependency_resolver.get_arch_name",
                     return_value="amd64",
                 ),
                 patch.object(packager.env_builder, "download_uv_wheel", return_value=None),
@@ -218,12 +218,12 @@ class TestUVDownload:
             import json
 
             with (
-                patch("flavor.packaging.python.packager.run_command", mock_run),
+                patch("flavor.packaging.python.dependency_resolver.run_command", mock_run),
                 patch(
-                    "flavor.packaging.python.packager.get_os_name", return_value="linux"
+                    "flavor.packaging.python.dependency_resolver.get_os_name", return_value="linux"
                 ),
                 patch(
-                    "flavor.packaging.python.packager.get_arch_name",
+                    "flavor.packaging.python.dependency_resolver.get_arch_name",
                     return_value="amd64",
                 ),
                 patch("urllib.request.urlopen") as mock_urlopen,
@@ -268,7 +268,7 @@ class TestUVDownload:
                     return_value="darwin",
                 ),
                 patch(
-                    "flavor.packaging.python.packager.get_arch_name",
+                    "flavor.packaging.python.dependency_resolver.get_arch_name",
                     return_value="arm64",
                 ),
                 patch.object(packager.env_builder, "find_uv_command", return_value=fake_uv_path),
