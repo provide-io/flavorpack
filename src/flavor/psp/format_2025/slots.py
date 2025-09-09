@@ -12,10 +12,6 @@ from attrs import define, field, validators
 from flavor.psp.format_2025.constants import (
     ACCESS_HINT_SEQUENTIAL,
     CACHE_NORMAL,
-    CODEC_GZIP,
-    CODEC_RAW,
-    CODEC_TAR,
-    CODEC_TGZ,
     LIFECYCLE_CACHE,
     LIFECYCLE_CONFIG,
     LIFECYCLE_DEV,
@@ -81,10 +77,6 @@ class SlotDescriptor:
     permissions: int = field(default=0o644)  # Unix-style
     platform: int = field(default=0)  # 0=any, 1=linux, 2=mac, 3=windows
 
-    # Extended info (8 bytes)
-    extended_offset: int = field(default=0)
-    extended_size: int = field(default=0)
-
     # Optional runtime fields (not persisted)
     name: str = field(default="", metadata={"transient": True})
     path: Path | None = field(default=None, metadata={"transient": True})
@@ -96,9 +88,10 @@ class SlotDescriptor:
 
     def pack(self) -> bytes:
         """Pack descriptor into 64-byte binary format."""
-        # Pack to 64-byte format with operations
+        # Pack to exactly 64 bytes:
+        # 7Q (56) + 8B (8) = 64
         data = struct.pack(
-            "<QQQQQQQIBBBBBBH",  # 6Q (48) + Q (8) + I (4) + 6B (6) + H (2) = 68 bytes - need to fix
+            "<QQQQQQQBBBBBBBB",
             self.id,
             self.name_hash,
             self.offset,
@@ -106,13 +99,14 @@ class SlotDescriptor:
             self.original_size,
             self.operations,  # 64-bit operations field
             self.checksum,
-            self.encryption,
-            self.alignment & 0xFF,  # Ensure 1 byte
+            self.encryption & 0xFF,
+            self.alignment & 0xFF,
             self.purpose,
             self.lifecycle,
             self.access_hint,
             self.priority,
-            self.permissions,
+            self.permissions & 0xFF,
+            self.platform,
         )
         
         # Ensure exactly 64 bytes
@@ -126,7 +120,7 @@ class SlotDescriptor:
             raise ValueError(f"Slot descriptor must be {SLOT_DESCRIPTOR_SIZE} bytes")
 
         unpacked = struct.unpack(
-            "<QQQQQQQIBBBBBBH",  # Match new format: 6Q + I + 6B + H = 64 bytes
+            "<QQQQQQQBBBBBBBB",  # Match pack format exactly
             data,
         )
 
@@ -145,6 +139,7 @@ class SlotDescriptor:
             access_hint=unpacked[11],
             priority=unpacked[12],
             permissions=unpacked[13],
+            platform=unpacked[14],
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -177,15 +172,19 @@ class SlotDescriptor:
 class SlotMetadata:
     """Metadata for a slot in the PSPF package."""
 
+    # Required fields first (no defaults)
     index: int = field(validator=validators.instance_of(int))
     id: str = field(validator=validators.instance_of(str))  # Slot identifier
     source: str = field(validator=validators.instance_of(str))  # Source path
     target: str = field(validator=validators.instance_of(str))  # Target path in workenv
     size: int = field(validator=validators.instance_of(int))
     checksum: str = field(validator=validators.instance_of(str))
+    
+    # Optional fields with defaults
     operations: str = field(default="RAW")  # Operation chain string like "TAR|GZIP"
-    purpose: str = field()
+    purpose: str = field(default="data")
     lifecycle: str = field(
+        default="runtime",
         validator=validators.in_(
             [
                 # Timing-based

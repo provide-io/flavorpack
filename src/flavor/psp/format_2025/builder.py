@@ -29,10 +29,6 @@ from flavor.psp.format_2025.constants import (
     DEFAULT_EXECUTABLE_PERMS,
     DEFAULT_MAX_MEMORY,
     DEFAULT_MIN_MEMORY,
-    CODEC_GZIP,
-    CODEC_RAW,
-    CODEC_TAR,
-    CODEC_TGZ,
     LIFECYCLE_CACHE,
     LIFECYCLE_CONFIG,
     LIFECYCLE_DEV,
@@ -190,12 +186,16 @@ def prepare_slots(
         # Load data
         data = _load_slot_data(slot)
 
-        # Determine encoding (no compression, just metadata)
-        slot_data, codec_type = _determine_codec(data, slot.codec, options)
+        # Get packed operations
+        from flavor.psp.format_2025.operations import string_to_operations
+        packed_ops = string_to_operations(slot.operations)
+
+        # Apply operations to compress/transform data
+        processed_data = _apply_operations(data, packed_ops, options)
 
         # Calculate checksums with prefixes
-        checksum_str = calculate_checksum(slot_data, "sha256")
-        checksum_adler32 = zlib.adler32(slot_data)
+        checksum_str = calculate_checksum(processed_data, "sha256")
+        checksum_adler32 = zlib.adler32(processed_data)
 
         # Store prefixed checksum in metadata
         slot.checksum = checksum_str
@@ -204,8 +204,8 @@ def prepare_slots(
             PreparedSlot(
                 metadata=slot,
                 data=data,
-                compressed_data=slot_data if slot_data != data else None,
-                codec_type=codec_type,  # Now codec type, not compression
+                compressed_data=processed_data if processed_data != data else None,
+                codec_type=packed_ops,  # Operations packed as integer
                 checksum=checksum_adler32,  # Binary descriptor uses raw Adler-32
             )
         )
@@ -214,8 +214,8 @@ def prepare_slots(
             "🎰🔍📋 Slot prepared",
             name=slot.id,
             raw_size=len(data),
-            compressed_size=len(slot_data),
-            codec=codec_type,
+            compressed_size=len(processed_data),
+            operations=packed_ops,
             checksum=checksum_str[:8],
         )
 
@@ -302,41 +302,44 @@ def _load_slot_data(slot: SlotMetadata) -> bytes:
         return slot_path.read_bytes()
 
 
-def _determine_codec(
-    data: bytes, codec: str, options: BuildOptions
-) -> tuple[bytes, int]:
-    """Determine codec constant for the data format.
+def _apply_operations(
+    data: bytes, packed_ops: int, options: BuildOptions
+) -> bytes:
+    """Apply operation chain to data.
 
-    Note: This does NOT compress data - the orchestrator/packer handles that.
-    We just map the codec string to the appropriate constant.
+    Uses the archive operation handler to actually compress/transform data.
+    
+    Args:
+        data: Raw data to process
+        packed_ops: Packed operations as 64-bit integer
+        options: Build options
+    
+    Returns:
+        Processed data after applying operations
     """
-    codec_lower = codec.lower()
-
-    # Map codec strings to constants
-    if codec_lower in ("none", "raw", ""):
-        return data, CODEC_RAW
-    elif codec_lower == "tar":
-        return data, CODEC_TAR
-    elif codec_lower == "gzip":
-        return data, CODEC_GZIP
-    elif codec_lower in ("tgz", "tar.gz"):
-        return data, CODEC_TGZ
-    # Future formats (not implemented yet):
-    # elif encoding_lower == "zstd":
-    #     return data, ENCODING_ZSTD
-    # elif encoding_lower in ("tzst", "tar.zst"):
-    #     return data, ENCODING_TZST
-    # elif encoding_lower == "brotli":
-    #     return data, ENCODING_BROTLI
-    # elif encoding_lower in ("tbr", "tar.br"):
-    #     return data, ENCODING_TBR
-    # elif encoding_lower == "zip":
-    #     return data, ENCODING_ZIP
-    # elif encoding_lower == "7z":
-    #     return data, ENCODING_7Z
+    from flavor.psp.format_2025.operations import unpack_operations, OP_GZIP, OP_TAR
+    
+    if packed_ops == 0:
+        # No operations, return raw data
+        return data
+    
+    ops = unpack_operations(packed_ops)
+    
+    # For now, handle simple cases directly
+    # TODO: Use OperationHandler when archive module is integrated
+    if ops == [OP_GZIP]:
+        # Single file gzip compression
+        import gzip
+        return gzip.compress(data, compresslevel=options.compression_level)
+    elif ops == [OP_TAR, OP_GZIP]:
+        # This would be tar.gz but for single files we just gzip
+        # The orchestrator handles actual tar creation for directories
+        import gzip
+        return gzip.compress(data, compresslevel=options.compression_level)
     else:
-        logger.warning(f"Unknown codec '{codec}', using CODEC_RAW")
-        return data, CODEC_RAW
+        # Unsupported operation chain, return raw
+        logger.warning(f"Unsupported operation chain: {ops}, returning raw data")
+        return data
 
 
 def _write_package(
@@ -456,7 +459,7 @@ def _write_package(
                     size=len(data_to_write),
                     original_size=len(slot.data),
                     checksum=slot.checksum,
-                    codec=slot.codec_type,  # Using codec field now
+                    operations=slot.codec_type,  # Operations packed as integer
                     purpose=_map_purpose(slot.metadata.purpose),
                     lifecycle=_map_lifecycle(slot.metadata.lifecycle),
                     permissions=slot_permissions,
@@ -573,7 +576,7 @@ class PSPFBuilder:
         data: bytes | str | Path,
         purpose: str = "data",
         lifecycle: str = "runtime",
-        codec: str = "gzip",
+        operations: str = "gzip",
         target: str | None = None,
         permissions: str | None = None,
     ) -> "PSPFBuilder":
@@ -585,7 +588,7 @@ class PSPFBuilder:
             data: Slot data (bytes, string, or path to file/directory)
             purpose: Slot purpose (data, code, config, media)
             lifecycle: Slot lifecycle (runtime, cached, temporary)
-            codec: Compression codec (none, gzip)
+            operations: Operation chain (e.g., "tar.gz", "TAR|GZIP")
             target: Target location relative to workenv (default: None)
             permissions: Unix permissions as octal string (e.g., "0755")
         """
@@ -620,7 +623,7 @@ class PSPFBuilder:
             target=target or id,
             size=size,
             checksum="",  # Will be calculated during build
-            codec=codec,
+            operations=operations,
             purpose=purpose,
             lifecycle=lifecycle,
             permissions=permissions,

@@ -46,7 +46,7 @@ class TestSlotTableReading:
                     target="payload",
                     size=slot1_path.stat().st_size,
                     checksum=hashlib.sha256(slot1_path.read_bytes()).hexdigest(),
-                    codec="none",
+                    operations="none",
                     purpose="payload",
                     lifecycle="runtime",
                 ),
@@ -57,7 +57,7 @@ class TestSlotTableReading:
                     target="script",
                     size=slot2_path.stat().st_size,
                     checksum=hashlib.sha256(slot2_path.read_bytes()).hexdigest(),
-                    codec="gzip",
+                    operations="gzip",
                     purpose="tool",
                     lifecycle="temp",
                 ),
@@ -79,7 +79,7 @@ class TestSlotTableReading:
                     data=slot.source,
                     purpose=slot.purpose,
                     lifecycle=slot.lifecycle,
-                    codec=slot.codec,
+                    operations=slot.operations,
                 )
 
             builder.build(output_path=bundle_path)
@@ -169,7 +169,7 @@ class TestSlotExtraction:
                     checksum=hashlib.sha256(
                         compressed_data
                     ).hexdigest(),  # Checksum of compressed data
-                    codec="gzip",  # Mark as gzip since we're providing compressed data
+                    operations="gzip",  # Mark as gzip since we're providing compressed data
                     purpose="payload",
                     lifecycle="runtime",
                 ),
@@ -180,7 +180,7 @@ class TestSlotExtraction:
                     target="script",
                     size=len(slot2_content),
                     checksum=hashlib.sha256(slot2_content.encode()).hexdigest(),
-                    codec="none",
+                    operations="none",
                     purpose="tool",
                     lifecycle="temp",
                 ),
@@ -200,7 +200,7 @@ class TestSlotExtraction:
                     data=slot.source,
                     purpose=slot.purpose,
                     lifecycle=slot.lifecycle,
-                    codec=slot.codec,
+                    operations=slot.operations,
                 )
 
             builder.build(output_path=bundle_path)
@@ -299,7 +299,7 @@ class TestWorkEnvironment:
                 target="python_runtime",
                 size=runtime_tar.stat().st_size,
                 checksum=hashlib.sha256(runtime_tar.read_bytes()).hexdigest(),
-                codec="tgz",  # Tarball that needs extraction
+                operations="tgz",  # Tarball that needs extraction
                 purpose="runtime",
                 lifecycle="runtime",
             )
@@ -332,7 +332,7 @@ class TestWorkEnvironment:
                 data=Path(slot.source),  # Convert to Path so it reads the file
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,
-                codec=slot.codec,
+                operations=slot.operations,
             )
 
             builder.build(output_path=bundle_path)
@@ -421,7 +421,7 @@ sys.exit(0)
                 target="main.py",
                 size=script_path.stat().st_size,
                 checksum=hashlib.sha256(script_path.read_bytes()).hexdigest(),
-                codec="none",
+                operations="none",
                 purpose="payload",
                 lifecycle="runtime",
             )
@@ -444,7 +444,7 @@ sys.exit(0)
                 data=Path(slot.source),  # Convert to Path so it reads the file
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,
-                codec=slot.codec,
+                operations=slot.operations,
             )
 
             builder.build(output_path=bundle_path)

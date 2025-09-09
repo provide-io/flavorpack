@@ -75,7 +75,7 @@ class PSPFLauncher(PSPFReader):
                 offset = descriptor.offset
                 size = descriptor.size  # Compressed size
                 checksum = descriptor.checksum
-                codec = descriptor.codec
+                operations = descriptor.operations
                 purpose = descriptor.purpose
                 lifecycle = descriptor.lifecycle
 
@@ -85,7 +85,7 @@ class PSPFLauncher(PSPFReader):
                         "offset": offset,
                         "size": size,
                         "checksum": checksum,
-                        "codec": codec,
+                        "operations": operations,
                         "purpose": purpose,
                         "lifecycle": lifecycle,
                     }
@@ -171,7 +171,7 @@ class PSPFLauncher(PSPFReader):
 
         slot_entry = slot_table[slot_index]
         logger.debug(
-            f"📍 Slot {slot_index}: offset={slot_entry['offset']}, size={slot_entry['size']}, codec={slot_entry['codec']}"
+            f"📍 Slot {slot_index}: offset={slot_entry['offset']}, size={slot_entry['size']}, operations={slot_entry['operations']}"
         )
 
         # Read slot data from bundle
@@ -194,24 +194,24 @@ class PSPFLauncher(PSPFReader):
 
         # NOTE: Decoding logic must match Go/Rust implementations
         # Decode if needed
-        if slot_entry["codec"] == 0:  # raw/none
+        if slot_entry["operations"] == 0:  # raw/none
             logger.debug(f"📄 Slot {slot_index} is unencoded (raw)")
             data = slot_data
-        elif slot_entry["codec"] == 1:  # tar
+        elif slot_entry["operations"] == 0x01:  # tar
             logger.debug(f"📦 Slot {slot_index} is a tar archive")
             data = slot_data  # Tar archives are extracted later
-        elif slot_entry["codec"] == 2:  # gzip
+        elif slot_entry["operations"] == 0x10:  # gzip
             logger.debug(f"🗜️ Decompressing slot {slot_index} with gzip")
             import gzip
 
             data = gzip.decompress(slot_data)
             logger.debug(f"✅ Decompressed to {len(data)} bytes")
-        elif slot_entry["codec"] == 3:  # tar.gz
+        elif slot_entry["operations"] == 0x1001:  # tar.gz
             logger.debug(f"📦🗜️ Slot {slot_index} is a tar.gz archive")
             data = slot_data  # Will be decompressed and extracted later
         else:
-            logger.error(f"❌ Unsupported codec method: {slot_entry['codec']}")
-            raise ValueError(f"Unsupported codec method: {slot_entry['codec']}")
+            logger.error(f"❌ Unsupported operations: {slot_entry['operations']}")
+            raise ValueError(f"Unsupported operations: {slot_entry['operations']}")
 
         # Get slot name from metadata - use target for extraction path
         metadata = self.read_metadata()
