@@ -317,39 +317,21 @@ def _apply_operations(
     Returns:
         Processed data after applying operations
     """
-    from flavor.psp.format_2025.operations import unpack_operations, OP_GZIP, OP_TAR
+    from flavor.psp.format_2025.handlers import OperationHandler
     
     if packed_ops == 0:
         # No operations, return raw data
         return data
     
-    ops = unpack_operations(packed_ops)
-    
-    # Check if data is already gzipped (starts with gzip magic bytes)
-    is_gzipped = len(data) >= 3 and data[0:3] == b'\x1f\x8b\x08'
-    
-    # For now, handle simple cases directly
-    # TODO: Use OperationHandler when archive module is integrated
-    if ops == [OP_GZIP]:
-        # Single file gzip compression
-        if is_gzipped:
-            logger.trace("📦 Data is already gzipped, skipping compression")
-            return data
-        import gzip
-        return gzip.compress(data, compresslevel=options.compression_level)
-    elif ops == [OP_TAR, OP_GZIP]:
-        # Check if it's already a tar.gz file
-        if is_gzipped:
-            logger.trace("📦 Data is already tar.gz, skipping compression")
-            return data
-        # This would be tar.gz but for single files we just gzip
-        # The orchestrator handles actual tar creation for directories
-        import gzip
-        return gzip.compress(data, compresslevel=options.compression_level)
-    else:
-        # Unsupported operation chain, return raw
-        logger.warning(f"Unsupported operation chain: {ops}, returning raw data")
+    # Check if data is already compressed (common issue with pre-compressed files)
+    # GZIP magic bytes: 1f 8b 08
+    if len(data) >= 3 and data[0:3] == b'\x1f\x8b\x08':
+        logger.trace("⚠️ Data appears to be already gzipped, returning as-is to avoid double compression")
         return data
+    
+    # Use OperationHandler to process the data
+    handler = OperationHandler()
+    return handler.process_chain(data, packed_ops, reverse=False)
 
 
 def _write_package(
