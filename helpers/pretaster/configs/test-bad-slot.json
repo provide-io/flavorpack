@@ -10,7 +10,7 @@
       "slot": 1,
       "purpose": "payload",
       "lifecycle": "cached",
-      "encoding": "raw",
+      "operations": "raw",
       "id": "taster-lite-sh",
       "source": "scripts/taster_lite.sh",
       "target": "scripts/taster_lite.sh",
