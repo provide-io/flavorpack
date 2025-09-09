@@ -420,16 +420,19 @@ class TestArchiveUtilsCriticalFeatures:
                 time.sleep(0.1)
                 (source_dir / "file2.txt").write_text("Content 2")
             
-            # Create archives from both directories
-            archive1 = temp_path / "archive1.tar.gz"
-            archive2 = temp_path / "archive2.tar.gz"
+            # Create archives from both directories 
+            # Use same filename to ensure gzip headers are identical
+            archive_path = temp_path / "archive.tar.gz"
             
-            self.archive_utils.create_tar_gz(temp_path / "source_0", archive1)
-            self.archive_utils.create_tar_gz(temp_path / "source_1", archive2)
+            self.archive_utils.create_tar_gz(temp_path / "source_0", archive_path)
+            content1 = archive_path.read_bytes()
+            
+            # Delete and recreate with same name
+            archive_path.unlink()
+            self.archive_utils.create_tar_gz(temp_path / "source_1", archive_path)
+            content2 = archive_path.read_bytes()
             
             # Archives should be identical in deterministic mode
-            content1 = archive1.read_bytes()
-            content2 = archive2.read_bytes()
             assert content1 == content2, "Deterministic archives should be identical"
     
     def test_sorting_ensures_determinism(self):
