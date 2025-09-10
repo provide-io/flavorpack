@@ -5,14 +5,17 @@ import contextlib
 import json
 import os
 from pathlib import Path
-import shutil
-import tempfile
 import time
+
+from provide.foundation.env import get_env
+from provide.foundation.file.directory import temp_dir
+from provide.foundation.file.formats import read_json
+from provide.foundation.file.safe import safe_rmtree
 
 
 def get_cache_dir() -> Path:
     """Get the cache directory for Flavor packages."""
-    cache_dir = os.environ.get("FLAVOR_CACHE")
+    cache_dir = get_env("FLAVOR_CACHE")
     if cache_dir:
         return Path(cache_dir)
 
@@ -20,14 +23,14 @@ def get_cache_dir() -> Path:
     if os.name == "posix":
         if "darwin" in os.uname().sysname.lower():
             # macOS
-            base = Path(os.environ.get("TMPDIR", "/var/folders"))
+            base = Path(get_env("TMPDIR", "/var/folders"))
             return base / "pspf" / "workenv"
         else:
             # Linux
-            return Path(tempfile.gettempdir()) / "pspf" / "workenv"
+            return temp_dir().parent / "pspf" / "workenv"
     else:
         # Windows
-        return Path(os.environ.get("TEMP", tempfile.gettempdir())) / "pspf" / "workenv"
+        return temp_dir().parent / "pspf" / "workenv"
 
 
 class CacheManager:
@@ -78,12 +81,11 @@ class CacheManager:
             metadata_file = instance_metadata_dir / "package" / "psp.json"
             if metadata_file.exists():
                 try:
-                    with metadata_file.open() as f:
-                        metadata = json.load(f)
-                        pkg = metadata.get("package", metadata)
-                        info["name"] = pkg.get("name", "unknown")
-                        info["version"] = pkg.get("version", "unknown")
-                except (json.JSONDecodeError, KeyError):
+                    metadata = read_json(metadata_file)
+                    pkg = metadata.get("package", metadata)
+                    info["name"] = pkg.get("name", "unknown")
+                    info["version"] = pkg.get("version", "unknown")
+                except (OSError, KeyError):
                     info["name"] = "unknown"
                     info["version"] = "unknown"
             else:
@@ -137,7 +139,7 @@ class CacheManager:
             if should_remove:
                 # Remove the directory
                 try:
-                    shutil.rmtree(entry)
+                    safe_rmtree(entry)
                     removed.append(entry.name)
                 except OSError:
                     pass
@@ -187,15 +189,14 @@ class CacheManager:
         metadata_file = instance_metadata_dir / "package" / "psp.json"
         if metadata_file.exists():
             try:
-                with metadata_file.open() as f:
-                    metadata = json.load(f)
-                    pkg = metadata.get("package", metadata)
-                    info["package_info"] = {
-                        "name": pkg.get("name"),
-                        "version": pkg.get("version"),
-                        "builder": metadata.get("build", {}).get("builder"),
-                    }
-            except (OSError, json.JSONDecodeError):
+                metadata = read_json(metadata_file)
+                pkg = metadata.get("package", metadata)
+                info["package_info"] = {
+                    "name": pkg.get("name"),
+                    "version": pkg.get("version"),
+                    "builder": metadata.get("build", {}).get("builder"),
+                }
+            except OSError:
                 pass
 
         return info
@@ -212,7 +213,7 @@ class CacheManager:
         package_dir = self.cache_dir / package_id
         if package_dir.exists() and package_dir.is_dir():
             try:
-                shutil.rmtree(package_dir)
+                safe_rmtree(package_dir)
                 return True
             except OSError:
                 return False

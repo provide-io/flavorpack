@@ -9,6 +9,8 @@ from pathlib import Path
 # No typing imports needed with Python 3.11+
 import tomllib
 
+from provide.foundation.file.safe import safe_rmtree
+
 from flavor.packaging.keys import generate_key_pair
 from flavor.packaging.orchestrator import PackagingOrchestrator
 
@@ -168,9 +170,7 @@ def clean_cache() -> None:
     """Removes cached Go binaries."""
     cache_dir = Path.home() / ".cache" / "flavor"
     if cache_dir.exists():
-        import shutil
-
-        shutil.rmtree(cache_dir, ignore_errors=True)
+        safe_rmtree(cache_dir)
 
 
 def generate_keys(output_dir: Path) -> tuple[Path, Path]:
