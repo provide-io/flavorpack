@@ -7,6 +7,7 @@
 from pathlib import Path
 
 import click
+from provide.foundation.file.safe import safe_rmtree
 
 
 @click.command("clean")
@@ -102,9 +103,7 @@ def clean_command(all: bool, ingredients: bool, dry_run: bool, yes: bool) -> Non
                         click.echo("Aborted.")
                         return
 
-                    import shutil
-
-                    shutil.rmtree(ingredient_dir)
+                    safe_rmtree(ingredient_dir)
                     click.secho(
                         f"✅ Removed {len(ingredients_list)} ingredient binaries",
                         fg="green",

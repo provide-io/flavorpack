@@ -5,8 +5,9 @@
 
 import os
 from pathlib import Path
-import tempfile
 from typing import Any
+
+from provide.foundation.file.directory import temp_dir
 
 from provide.foundation import logger
 from provide.foundation.errors import log_only_error_context, with_error_handling
@@ -184,8 +185,7 @@ class PackagingOrchestrator:
             progress=progress,
         )
 
-        with tempfile.TemporaryDirectory(prefix="flavor_build_") as temp_dir_str:
-            temp_dir = Path(temp_dir_str)
+        with temp_dir(prefix="flavor_build_") as temp_dir:
 
             logger.info("Preparing Python artifacts...")
             with progress.task(
@@ -309,8 +309,7 @@ class PackagingOrchestrator:
             progress=progress,
         )
 
-        with tempfile.TemporaryDirectory(prefix="flavor_build_") as temp_dir_str:
-            temp_dir = Path(temp_dir_str)
+        with temp_dir(prefix="flavor_build_") as temp_dir:
 
             logger.info("Preparing Python artifacts...")
             with progress.task(
@@ -383,8 +382,7 @@ class PackagingOrchestrator:
         progress = ProgressReporter(enabled=self.show_progress)
 
         # Write the manifest to a temporary file
-        with tempfile.TemporaryDirectory(prefix="flavor_json_build_") as temp_dir_str:
-            temp_dir = Path(temp_dir_str)
+        with temp_dir(prefix="flavor_json_build_") as temp_dir:
 
             # Transform nested JSON manifest to flat structure expected by external builders
             flat_manifest = {
