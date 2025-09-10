@@ -14,6 +14,7 @@ import tarfile
 import zlib
 
 from provide.foundation import logger
+from provide.foundation.file.safe import safe_rmtree
 
 from flavor.config.defaults import DEFAULT_DISK_SPACE_MULTIPLIER, DEFAULT_SLOT_DESCRIPTOR_SIZE
 from flavor.psp.format_2025.reader import PSPFReader
@@ -142,9 +143,7 @@ class PSPFLauncher(PSPFReader):
             logger.error(
                 f"❌ Extraction interrupted or failed: {e}. Cleaning up partial extraction."
             )
-            import shutil
-
-            shutil.rmtree(workenv_dir, ignore_errors=True)
+            safe_rmtree(workenv_dir)
             raise  # Re-raise the exception
 
     def extract_slot(
