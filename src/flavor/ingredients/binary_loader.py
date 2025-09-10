@@ -12,6 +12,7 @@ import shutil
 from typing import Any
 
 from provide.foundation import logger
+from provide.foundation.file.directory import ensure_dir
 from provide.foundation.platform import get_platform_string
 from provide.foundation.process import run_command
 
@@ -157,7 +158,7 @@ class BinaryLoader:
             return built_binaries
 
         # Make sure bin directory exists
-        self.manager.ingredients_bin.mkdir(parents=True, exist_ok=True)
+        ensure_dir(self.manager.ingredients_bin)
 
         # Build Go components
         for component in ["launcher", "builder"]:
@@ -205,7 +206,7 @@ class BinaryLoader:
             return built_binaries
 
         # Make sure bin directory exists
-        self.manager.ingredients_bin.mkdir(parents=True, exist_ok=True)
+        ensure_dir(self.manager.ingredients_bin)
 
         # Build Rust components
         for component in ["launcher", "builder"]:

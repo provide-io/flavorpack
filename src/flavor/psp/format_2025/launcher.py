@@ -14,7 +14,7 @@ import tarfile
 import zlib
 
 from provide.foundation import logger
-from provide.foundation.file.directory import safe_rmtree
+from provide.foundation.file.directory import safe_rmtree, ensure_dir
 
 from flavor.config.defaults import DEFAULT_DISK_SPACE_MULTIPLIER, DEFAULT_SLOT_DESCRIPTOR_SIZE
 from flavor.psp.format_2025.reader import PSPFReader
@@ -29,7 +29,7 @@ class PSPFLauncher(PSPFReader):
         super().__init__(bundle_path)
         self.bundle_path = bundle_path
         self.cache_dir = Path.home() / ".cache" / "flavor"
-        self.cache_dir.mkdir(parents=True, exist_ok=True)
+        ensure_dir(self.cache_dir)
         self._workenv_manager = WorkEnvManager(self)
 
     @contextmanager
