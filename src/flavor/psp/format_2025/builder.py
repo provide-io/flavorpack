@@ -323,23 +323,39 @@ def _apply_operations(
         # No operations, return raw data
         return data
     
+    # Check if data is already compressed (common issue with pre-compressed files)
+    # GZIP magic bytes: 1f 8b 08
+    if len(data) >= 3 and data[0:3] == b'\x1f\x8b\x08':
+        logger.trace("⚠️ Data appears to be already gzipped, returning as-is to avoid double compression")
+        return data
+    
     ops = unpack_operations(packed_ops)
     
-    # For now, handle simple cases directly
-    # TODO: Use OperationHandler when archive module is integrated
-    if ops == [OP_GZIP]:
-        # Single file gzip compression
+    # Use provide.foundation archive operations if available
+    try:
+        from provide.foundation.archive import GzipCompressor
+        from io import BytesIO
+        
+        if ops == [OP_GZIP] or ops == [OP_TAR, OP_GZIP]:
+            # Single file gzip compression or tar.gz (for single files we just gzip)
+            compressor = GzipCompressor(level=options.compression_level)
+            input_stream = BytesIO(data)
+            output_stream = BytesIO()
+            compressor.compress(input_stream, output_stream)
+            return output_stream.getvalue()
+        else:
+            # Unsupported operation chain, return raw
+            logger.warning(f"Unsupported operation chain: {ops}, returning raw data")
+            return data
+    except (ImportError, Exception) as e:
+        # Fallback to direct implementation if provide.foundation not available or fails
+        logger.trace(f"Using fallback gzip implementation: {e}")
         import gzip
-        return gzip.compress(data, compresslevel=options.compression_level)
-    elif ops == [OP_TAR, OP_GZIP]:
-        # This would be tar.gz but for single files we just gzip
-        # The orchestrator handles actual tar creation for directories
-        import gzip
-        return gzip.compress(data, compresslevel=options.compression_level)
-    else:
-        # Unsupported operation chain, return raw
-        logger.warning(f"Unsupported operation chain: {ops}, returning raw data")
-        return data
+        if ops == [OP_GZIP] or ops == [OP_TAR, OP_GZIP]:
+            return gzip.compress(data, compresslevel=options.compression_level)
+        else:
+            logger.warning(f"Unsupported operation chain: {ops}, returning raw data")
+            return data
 
 
 def _write_package(
