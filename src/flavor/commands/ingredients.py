@@ -8,7 +8,7 @@ import os
 
 import click
 
-from flavor.utils.subprocess import run_command
+from provide.foundation.process import run_command
 
 
 @click.group("ingredients")
@@ -46,7 +46,6 @@ def ingredient_list(verbose: bool) -> None:
                 capture_output=True,
                 check=False,
                 timeout=2,
-                log_command=False,
             )
             if result.returncode == 0:
                 # Parse version from output (first line usually)

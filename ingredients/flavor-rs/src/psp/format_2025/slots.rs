@@ -1,39 +1,31 @@
 // helpers/flavor-rs/src/psp/format_2025/slots.rs
 // PSPF 2025 Slot Management - Enhanced 64-byte descriptors
 
-use super::constants::{CODEC_RAW, SLOT_ALIGNMENT, PURPOSE_PAYLOAD, LIFECYCLE_CACHE, ACCESS_HINT_SEQUENTIAL, CACHE_NORMAL, DEFAULT_FILE_PERMS, SLOT_DESCRIPTOR_SIZE, PAGE_SIZE};
+use super::constants::{PURPOSE_PAYLOAD, LIFECYCLE_CACHE, CACHE_NORMAL, DEFAULT_FILE_PERMS, SLOT_DESCRIPTOR_SIZE, PAGE_SIZE};
 use std::path::PathBuf;
 
 /// Slot descriptor - 64 bytes total
 #[repr(C, packed)]
 #[derive(Clone, Copy, Debug)]
 pub struct SlotDescriptor {
-    // Identity (16 bytes)
-    pub id: u64,        // Unique slot ID
-    pub name_hash: u64, // xxHash64 of slot name
+    // Core fields (56 bytes total - 7x uint64)
+    pub id: u64,           // Unique slot ID
+    pub name_hash: u64,    // xxHash64 of slot name  
+    pub offset: u64,       // Byte offset in file
+    pub size: u64,         // Size as stored (compressed)
+    pub original_size: u64,// Uncompressed size
+    pub operations: u64,   // Packed operation chain (up to 8 ops)
+    pub checksum: u64,     // SHA256 checksum (first 8 bytes)
 
-    // Location (16 bytes)
-    pub offset: u64, // Byte offset in file
-    pub size: u64,   // Size as stored (compressed)
-
-    // Properties (16 bytes)
-    pub original_size: u64, // Uncompressed size
-    pub checksum: u32,      // Adler-32 of stored data
-    pub codec: u8,       // 0=raw, 1=tar, 2=gzip, 3=tgz
-    pub encryption: u8,     // 0=none, 1=aes256-gcm
-    pub alignment: u16,     // Required alignment
-
-    // Semantics (8 bytes)
-    pub purpose: u8,      // 0=data, 1=code, 2=config, 3=media
-    pub lifecycle: u8,    // 0=permanent, 1=cached, 2=temporary
-    pub access_hint: u8,  // 0=sequential, 1=random, 2=once
-    pub priority: u8,     // 0-255 (higher = keep in memory)
-    pub permissions: u16, // Unix-style permissions
-    pub platform: u16,    // Platform requirements
-
-    // Extended info (8 bytes)
-    pub extended_offset: u32, // Offset to extended metadata
-    pub extended_size: u32,   // Size of extended metadata
+    // Metadata fields (8 bytes total - 8x uint8)
+    pub purpose: u8,          // 0=data, 1=code, 2=config, 3=media
+    pub lifecycle: u8,        // 0=init, 1=startup, 2=runtime, etc.
+    pub priority: u8,         // 0-255 (higher = keep in memory)
+    pub platform: u8,         // Platform requirements
+    pub reserved1: u8,        // Reserved for future use
+    pub reserved2: u8,        // Reserved for future use
+    pub permissions: u8,      // Unix-style permissions (low byte)
+    pub permissions_high: u8, // Unix-style permissions (high byte)
 }
 
 impl SlotDescriptor {
@@ -45,18 +37,16 @@ impl SlotDescriptor {
             offset: 0,
             size: 0,
             original_size: 0,
+            operations: 0, // No operations (raw data)
             checksum: 0,
-            codec: CODEC_RAW,
-            encryption: 0,
-            alignment: SLOT_ALIGNMENT as u16,
             purpose: PURPOSE_PAYLOAD,
             lifecycle: LIFECYCLE_CACHE,
-            access_hint: ACCESS_HINT_SEQUENTIAL,
             priority: CACHE_NORMAL,
-            permissions: DEFAULT_FILE_PERMS,
             platform: 0,
-            extended_offset: 0,
-            extended_size: 0,
+            reserved1: 0,
+            reserved2: 0,
+            permissions: (DEFAULT_FILE_PERMS & 0xFF) as u8,
+            permissions_high: ((DEFAULT_FILE_PERMS >> 8) & 0xFF) as u8,
         }
     }
 
@@ -84,24 +74,24 @@ impl SlotDescriptor {
     pub fn pack(&self) -> [u8; SLOT_DESCRIPTOR_SIZE] {
         let mut bytes = [0u8; SLOT_DESCRIPTOR_SIZE];
         
-        // Pack fields manually in little-endian byte order
+        // Pack 7x uint64 fields (56 bytes)
         bytes[0..8].copy_from_slice(&self.id.to_le_bytes());
         bytes[8..16].copy_from_slice(&self.name_hash.to_le_bytes());
         bytes[16..24].copy_from_slice(&self.offset.to_le_bytes());
         bytes[24..32].copy_from_slice(&self.size.to_le_bytes());
         bytes[32..40].copy_from_slice(&self.original_size.to_le_bytes());
-        bytes[40..44].copy_from_slice(&self.checksum.to_le_bytes());
-        bytes[44] = self.codec;
-        bytes[45] = self.encryption;
-        bytes[46..48].copy_from_slice(&self.alignment.to_le_bytes());
-        bytes[48] = self.purpose;
-        bytes[49] = self.lifecycle;
-        bytes[50] = self.access_hint;
-        bytes[51] = self.priority;
-        bytes[52..54].copy_from_slice(&self.permissions.to_le_bytes());
-        bytes[54..56].copy_from_slice(&self.platform.to_le_bytes());
-        bytes[56..60].copy_from_slice(&self.extended_offset.to_le_bytes());
-        bytes[60..64].copy_from_slice(&self.extended_size.to_le_bytes());
+        bytes[40..48].copy_from_slice(&self.operations.to_le_bytes());
+        bytes[48..56].copy_from_slice(&self.checksum.to_le_bytes());
+        
+        // Pack 8x uint8 fields (8 bytes)
+        bytes[56] = self.purpose;
+        bytes[57] = self.lifecycle;
+        bytes[58] = self.priority;
+        bytes[59] = self.platform;
+        bytes[60] = self.reserved1;
+        bytes[61] = self.reserved2;
+        bytes[62] = self.permissions;
+        bytes[63] = self.permissions_high;
 
         bytes
     }
@@ -112,26 +102,26 @@ impl SlotDescriptor {
             return None;
         }
 
-        // Unpack fields manually from little-endian byte order
         use std::convert::TryInto;
         
+        // Unpack 7x uint64 fields (56 bytes)
         let id = u64::from_le_bytes(data[0..8].try_into().ok()?);
         let name_hash = u64::from_le_bytes(data[8..16].try_into().ok()?);
         let offset = u64::from_le_bytes(data[16..24].try_into().ok()?);
         let size = u64::from_le_bytes(data[24..32].try_into().ok()?);
         let original_size = u64::from_le_bytes(data[32..40].try_into().ok()?);
-        let checksum = u32::from_le_bytes(data[40..44].try_into().ok()?);
-        let codec = data[44];
-        let encryption = data[45];
-        let alignment = u16::from_le_bytes(data[46..48].try_into().ok()?);
-        let purpose = data[48];
-        let lifecycle = data[49];
-        let access_hint = data[50];
-        let priority = data[51];
-        let permissions = u16::from_le_bytes(data[52..54].try_into().ok()?);
-        let platform = u16::from_le_bytes(data[54..56].try_into().ok()?);
-        let extended_offset = u32::from_le_bytes(data[56..60].try_into().ok()?);
-        let extended_size = u32::from_le_bytes(data[60..64].try_into().ok()?);
+        let operations = u64::from_le_bytes(data[40..48].try_into().ok()?);
+        let checksum = u64::from_le_bytes(data[48..56].try_into().ok()?);
+        
+        // Unpack 8x uint8 fields (8 bytes)
+        let purpose = data[56];
+        let lifecycle = data[57];
+        let priority = data[58];
+        let platform = data[59];
+        let reserved1 = data[60];
+        let reserved2 = data[61];
+        let permissions = data[62];
+        let permissions_high = data[63];
 
         Some(SlotDescriptor {
             id,
@@ -139,18 +129,16 @@ impl SlotDescriptor {
             offset,
             size,
             original_size,
+            operations,
             checksum,
-            codec,
-            encryption,
-            alignment,
             purpose,
             lifecycle,
-            access_hint,
             priority,
-            permissions,
             platform,
-            extended_offset,
-            extended_size,
+            reserved1,
+            reserved2,
+            permissions,
+            permissions_high,
         })
     }
 }

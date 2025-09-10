@@ -155,7 +155,7 @@ def create_builder_manifest(
             {
                 "id": "uv",
                 "source": str(slots["uv"]),
-                "codec": "gzip",
+                "operations": "gzip",
                 "purpose": "tool",
                 "lifecycle": "cache",
                 "target": f"bin/{uv_exe}",  # For gzip encoding, this is treated as full file path
@@ -165,7 +165,7 @@ def create_builder_manifest(
             {
                 "id": "python",
                 "source": str(slots["python"]),
-                "codec": "tgz",
+                "operations": "tgz",
                 "purpose": "runtime",
                 "lifecycle": "cache",
                 "target": "{workenv}",
@@ -173,7 +173,7 @@ def create_builder_manifest(
             {
                 "id": "wheels",
                 "source": str(slots["wheels"]),
-                "codec": "tgz",
+                "operations": "tgz",
                 "purpose": "payload",
                 "lifecycle": "init",
                 "target": "wheels",
