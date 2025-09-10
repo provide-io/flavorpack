@@ -224,7 +224,7 @@ class TestTasterMMapBackends:
 
     def test_page_aligned_access(self, large_test_file):
         """Test page-aligned access for optimal performance."""
-        from flavor.config.defaults import DEFAULT_DEFAULT_PAGE_SIZE
+        from flavor.config.defaults import DEFAULT_PAGE_SIZE
 
         backend = MMapBackend()
         backend.open(large_test_file)
