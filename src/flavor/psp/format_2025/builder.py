@@ -196,12 +196,14 @@ def prepare_slots(
         from flavor.psp.format_2025.operations import string_to_operations
         packed_ops = string_to_operations(slot.operations)
 
-        # Calculate checksums on raw data (before compression) to match Rust/Go builders
-        checksum_str = calculate_checksum(data, "sha256") 
-        checksum_adler32 = zlib.adler32(data)
-
         # Apply operations to compress/transform data
         processed_data = _apply_operations(data, packed_ops, options)
+
+        # Calculate checksums on the final data that will be written (compressed data)
+        # This matches what Rust/Go builders do - checksum the actual slot content
+        data_to_checksum = processed_data if processed_data != data else data
+        checksum_str = calculate_checksum(data_to_checksum, "sha256") 
+        checksum_adler32 = zlib.adler32(data_to_checksum)
 
         # Store prefixed checksum in metadata
         slot.checksum = checksum_str
@@ -212,7 +214,7 @@ def prepare_slots(
                 data=data,
                 compressed_data=processed_data if processed_data != data else None,
                 codec_type=packed_ops,  # Operations packed as integer
-                checksum=checksum_adler32,  # Binary descriptor uses raw Adler-32
+                checksum=checksum_adler32,  # Binary descriptor uses checksum of final data
             )
         )
 
