@@ -92,7 +92,7 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
             f.seek(-4, 2)
             magic = f.read(4).decode("utf-8")
 
-        assert magic == TRAILER_END_MAGIC
+        assert magic == TRAILER_END_MAGIC.decode('utf-8')
 
     def test_magic_wand_selection(self, temp_dir, test_builder):
         """Test magic wand emoji selection."""
@@ -115,7 +115,7 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
             f.seek(-4, 2)
             magic = f.read(4).decode("utf-8")
 
-        assert magic == TRAILER_END_MAGIC
+        assert magic == TRAILER_END_MAGIC.decode('utf-8')
 
     def test_compression_selection(self, temp_dir, test_builder):
         """Test automatic compression selection."""
@@ -379,7 +379,7 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
             f.seek(-4, 2)
             magic = f.read(4).decode("utf-8")
 
-        assert magic == TRAILER_END_MAGIC
+        assert magic == TRAILER_END_MAGIC.decode('utf-8')
 
     def test_size_optimization(self, temp_dir, test_builder):
         """Test size optimization build mode."""
