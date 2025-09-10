@@ -81,11 +81,15 @@ class SlotExtractor:
             logger.debug(f"Verifying checksums for {len(descriptors)} slots")
 
             for i, descriptor in enumerate(descriptors):
-                # Read raw slot data
-                slot_data = self.reader.read_slot(i)
+                # Read raw slot data (before decompression) using backend directly
+                raw_slot_data = self.reader._backend.read_slot(descriptor)
+                
+                # Convert to bytes if memoryview
+                if isinstance(raw_slot_data, memoryview):
+                    raw_slot_data = bytes(raw_slot_data)
 
-                # Calculate checksum (use Adler32 to match binary format)
-                actual_checksum = zlib.adler32(slot_data) & 0xFFFFFFFF
+                # Calculate checksum (use Adler32 to match binary format on raw data)
+                actual_checksum = zlib.adler32(raw_slot_data) & 0xFFFFFFFF
 
                 if actual_checksum != descriptor.checksum:
                     logger.error(
