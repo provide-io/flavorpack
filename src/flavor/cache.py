@@ -10,7 +10,7 @@ import time
 from provide.foundation.env import get_env
 from provide.foundation.file.directory import temp_dir
 from provide.foundation.file.formats import read_json
-from provide.foundation.file.safe import safe_rmtree
+from provide.foundation.file.directory import safe_rmtree
 
 
 def get_cache_dir() -> Path:

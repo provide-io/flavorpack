@@ -14,7 +14,7 @@ import tarfile
 import zlib
 
 from provide.foundation import logger
-from provide.foundation.file.safe import safe_rmtree
+from provide.foundation.file.directory import safe_rmtree
 
 from flavor.config.defaults import DEFAULT_DISK_SPACE_MULTIPLIER, DEFAULT_SLOT_DESCRIPTOR_SIZE
 from flavor.psp.format_2025.reader import PSPFReader

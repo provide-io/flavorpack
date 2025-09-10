@@ -11,7 +11,7 @@ import shlex
 
 from provide.foundation import logger
 from provide.foundation.process import run_command
-from provide.foundation.file.safe import safe_rmtree
+from provide.foundation.file.directory import safe_rmtree
 
 
 class WorkEnvManager:

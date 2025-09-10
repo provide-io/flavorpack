@@ -9,7 +9,7 @@ from pathlib import Path
 # No typing imports needed with Python 3.11+
 import tomllib
 
-from provide.foundation.file.safe import safe_rmtree
+from provide.foundation.file.directory import safe_rmtree
 
 from flavor.packaging.keys import generate_key_pair
 from flavor.packaging.orchestrator import PackagingOrchestrator

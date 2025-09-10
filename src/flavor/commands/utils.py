@@ -7,7 +7,7 @@
 from pathlib import Path
 
 import click
-from provide.foundation.file.safe import safe_rmtree
+from provide.foundation.file.directory import safe_rmtree
 
 
 @click.command("clean")

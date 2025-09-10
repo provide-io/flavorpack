@@ -4,12 +4,12 @@ Operation handler that uses provide.foundation.archive for implementation.
 Maps PSPF/2025 operation chains to foundation archive capabilities.
 """
 
+import tempfile
 from pathlib import Path
 from typing import BinaryIO
 
 from provide.foundation.archive import TarArchive, GzipCompressor, Bzip2Compressor
 from provide.foundation.file.directory import temp_dir
-from provide.foundation.file.temp import temp_file
 from provide.foundation.logger import logger
 
 from flavor.archive.operations import Operation
@@ -106,7 +106,7 @@ class OperationHandler:
         """Handle TAR bundling using foundation TarArchive."""
         if isinstance(source, Path) and source.is_dir():
             if output is None:
-                output = temp_file(suffix=".tar")
+                output = Path(tempfile.mktemp(suffix=".tar"))
             
             tar_archive = TarArchive()
             tar_archive.create_from_directory(source, output)
