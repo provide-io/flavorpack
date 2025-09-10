@@ -304,7 +304,7 @@ class TestHypothesisPipeIntegration:
     """Test piping data through taster with hypothesis"""
 
     @given(data=st.binary(min_size=0, max_size=10 * 1024))
-    @settings(max_examples=20)
+    @settings(max_examples=20, deadline=1000)  # Increased deadline for launcher startup
     def test_pipe_stdin_stdout(self, data):
         """Test piping arbitrary binary data through taster"""
         # Skip if taster not available
@@ -326,7 +326,7 @@ class TestHypothesisPipeIntegration:
         data=st.binary(min_size=1, max_size=1024),
         corruption_prob=st.floats(min_value=0.0, max_value=0.5),
     )
-    @settings(max_examples=10)
+    @settings(max_examples=10, deadline=1000)  # Increased deadline for launcher startup
     def test_pipe_corruption(self, data, corruption_prob):
         """Test corruption command"""
         taster_path = Path(__file__).parents[1] / "dist" / "taster.psp"
@@ -363,7 +363,7 @@ class TestHypothesisPipeIntegration:
             max_size=10,
         )
     )
-    @settings(max_examples=20)
+    @settings(max_examples=20, deadline=1000)  # Increased deadline for launcher startup
     def test_pipe_json_validation(self, json_obj):
         """Test JSON validation through pipe"""
         taster_path = Path(__file__).parents[1] / "dist" / "taster.psp"
