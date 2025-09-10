@@ -365,7 +365,7 @@ class TestPSPFCore:
             f.seek(-DEFAULT_MAGIC_TRAILER_SIZE, 2)
             trailer = f.read(DEFAULT_MAGIC_TRAILER_SIZE)
 
-        assert trailer[:4] == PACKAGE_EMOJI_BYTES
+        assert trailer[:4] == TRAILER_START_MAGIC
         assert trailer[-4:] == TRAILER_END_MAGIC
 
     def test_empty_bundle(self, temp_dir, test_builder):
