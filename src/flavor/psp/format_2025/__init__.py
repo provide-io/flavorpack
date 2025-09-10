@@ -6,15 +6,13 @@ Progressive Secure Package Format (2025 Edition)
 
 from flavor.psp.format_2025.builder import PSPFBuilder, build_package
 from flavor.config.defaults import (
-    HEADER_SIZE,
-    MAGIC_TRAILER_SIZE,
-    MAGIC_WAND_EMOJI,
-    MAGIC_WAND_EMOJI_BYTES,
-    PACKAGE_EMOJI,
-    PACKAGE_EMOJI_BYTES,
+    DEFAULT_HEADER_SIZE,
+    DEFAULT_MAGIC_TRAILER_SIZE,
+    DEFAULT_SLOT_ALIGNMENT,
+    DEFAULT_SLOT_DESCRIPTOR_SIZE,
     PSPF_VERSION,
-    SLOT_ALIGNMENT,
-    SLOT_DESCRIPTOR_SIZE,
+    TRAILER_END_MAGIC,
+    TRAILER_START_MAGIC,
 )
 from provide.foundation.crypto import generate_key_pair, sign_data, verify_signature
 from flavor.psp.format_2025.executor import BundleExecutor
@@ -34,16 +32,14 @@ from flavor.psp.format_2025.spec import (
 from flavor.psp.format_2025.validation import validate_complete, validate_spec
 
 __all__ = [
-    "HEADER_SIZE",
-    "MAGIC_TRAILER_SIZE",
-    "MAGIC_WAND_EMOJI",
-    "MAGIC_WAND_EMOJI_BYTES",
-    "PACKAGE_EMOJI",
-    "PACKAGE_EMOJI_BYTES",
     # Constants
+    "DEFAULT_HEADER_SIZE",
+    "DEFAULT_MAGIC_TRAILER_SIZE",
+    "DEFAULT_SLOT_ALIGNMENT",
+    "DEFAULT_SLOT_DESCRIPTOR_SIZE",
     "PSPF_VERSION",
-    "SLOT_ALIGNMENT",
-    "SLOT_DESCRIPTOR_SIZE",
+    "TRAILER_END_MAGIC",
+    "TRAILER_START_MAGIC",
     "BuildOptions",
     "BuildResult",
     # Spec Classes

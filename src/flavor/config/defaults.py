@@ -14,6 +14,10 @@ DEFAULT_SLOT_DESCRIPTOR_SIZE = 64  # Descriptor size
 DEFAULT_MAGIC_TRAILER_SIZE = 8200  # Index block with markers
 DEFAULT_SLOT_ALIGNMENT = 8  # Minimum alignment
 
+# Magic bytes for format markers (replacing emoji bytes)
+TRAILER_START_MAGIC = bytes([0xF0, 0x9F, 0x93, 0xA6])  # Start marker (was 📦)
+TRAILER_END_MAGIC = bytes([0xF0, 0x9F, 0xAA, 0x84])  # End marker (was 🪄)
+
 # =================================
 # Platform-specific defaults
 # =================================
