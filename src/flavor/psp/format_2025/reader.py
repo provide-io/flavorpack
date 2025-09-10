@@ -53,6 +53,10 @@ class PSPFReader:
         self._launcher_size: int | None = None
         self._slot_descriptors: list[SlotDescriptor] | None = None
         self.mode = mode
+        
+        # Slot extractor for extraction operations
+        from flavor.psp.format_2025.extraction import SlotExtractor
+        self._extractor = SlotExtractor(self)
 
     def __enter__(self):
         """Context manager entry."""
@@ -326,75 +330,25 @@ class PSPFReader:
             return slot_data
 
     def get_slot_view(self, slot_index: int) -> SlotView:
-        """Get a lazy view of a slot.
-
-        Args:
-            slot_index: Index of the slot
-
-        Returns:
-            SlotView: Lazy view that loads data on demand
-        """
-        if not self._backend:
-            self.open()
-
-        descriptors = self.read_slot_descriptors()
-
-        if slot_index < 0 or slot_index >= len(descriptors):
-            raise ValueError(f"Invalid slot index: {slot_index}")
-
-        return SlotView(descriptors[slot_index], self._backend)
+        """Get a lazy view of a slot."""
+        return self._extractor.get_slot_view(slot_index)
 
     def stream_slot(self, slot_index: int, chunk_size: int = 8192):
-        """Stream a slot in chunks.
-
-        Args:
-            slot_index: Index of the slot to stream
-            chunk_size: Size of chunks to yield
-
-        Yields:
-            bytes: Chunks of slot data
-        """
-        view = self.get_slot_view(slot_index)
-        yield from view.stream(chunk_size)
+        """Stream a slot in chunks."""
+        return self._extractor.stream_slot(slot_index, chunk_size)
 
     def verify_all_checksums(self) -> bool:
-        """Verify all slot checksums.
+        """Verify all slot checksums."""
+        return self._extractor.verify_all_checksums()
+    
+    def extract_slot(self, slot_index: int, dest_dir: Path) -> Path:
+        """Extract a slot to a directory."""
+        return self._extractor.extract_slot(slot_index, dest_dir)
+    
+    def verify_slot_integrity(self, slot_index: int) -> bool:
+        """Verify integrity of a specific slot."""
+        return self._extractor.verify_slot_integrity(slot_index)
 
-        Returns:
-            bool: True if all checksums are valid, False otherwise
-        """
-        if not self._backend:
-            self.open()
-
-        try:
-            descriptors = self.read_slot_descriptors()
-
-            if not descriptors:
-                logger.debug("✅ No slots to verify")
-                return True
-
-            for i, descriptor in enumerate(descriptors):
-                # Read slot data
-                slot_data = self._backend.read_slot(descriptor)
-
-                # Convert to bytes if memoryview
-                if isinstance(slot_data, memoryview):
-                    slot_data = bytes(slot_data)
-
-                # Verify checksum
-                actual_checksum = zlib.adler32(slot_data)
-                if actual_checksum != descriptor.checksum:
-                    logger.error(
-                        f"❌ Slot {i} checksum mismatch: expected {descriptor.checksum}, got {actual_checksum}"
-                    )
-                    return False
-
-            logger.debug(f"✅ All {len(descriptors)} slot checksums verified")
-            return True
-
-        except Exception as e:
-            logger.error(f"❌ Error verifying checksums: {e}")
-            return False
 
     def verify_signature(self) -> bool:
         """Verify bundle signature.
@@ -464,46 +418,6 @@ class PSPFReader:
                 "error": str(e),
             }
 
-    def extract_slot(self, slot_index: int, dest_dir: Path) -> Path:
-        """Extract a slot to a directory.
-
-        Args:
-            slot_index: Index of slot to extract
-            dest_dir: Destination directory
-
-        Returns:
-            Path: Path to extracted content
-        """
-        metadata = self.read_metadata()
-        slot_data = self.read_slot(slot_index)
-
-        if slot_index < len(metadata.get("slots", [])):
-            slot_info = metadata["slots"][slot_index]
-            slot_name = slot_info.get("name", f"slot_{slot_index}")
-        else:
-            slot_name = f"slot_{slot_index}"
-
-        # Check if it's a tarball
-        if self._is_tarball(slot_data):
-            logger.debug(f"📦 Slot {slot_index} is a tarball, extracting...")
-            with tarfile.open(fileobj=io.BytesIO(slot_data), mode="r") as tar:
-                # Use the filter parameter to avoid Python 3.14 deprecation warning
-                tar.extractall(dest_dir, filter="data")
-            return dest_dir
-        else:
-            # Single file
-            output_path = dest_dir / slot_name
-            dest_dir.mkdir(parents=True, exist_ok=True)
-            output_path.write_bytes(slot_data)
-            logger.debug(f"📝 Wrote single file to {output_path}")
-            return output_path
-
-    def _is_tarball(self, data: bytes) -> bool:
-        """Check if data looks like a tarball."""
-        if len(data) > 512:
-            # Check for tar magic at offset 257
-            return data[257:262] == b"ustar"
-        return False
 
     def get_backend(self) -> Backend:
         """Get the backend for advanced operations."""

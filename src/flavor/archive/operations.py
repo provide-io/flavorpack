@@ -26,8 +26,8 @@ class Operation(IntEnum):
     BUNDLE_AR = 0x04        # AR archive (deb packages)
     
     # COMPRESS operations (0x10-0x2F) - Reduce size
-    COMPRESS_DEFLATE = 0x10   # Raw DEFLATE algorithm
-    COMPRESS_GZIP = 0x11      # GZIP (DEFLATE + headers)
+    COMPRESS_GZIP = 0x10      # GZIP (DEFLATE + headers)
+    COMPRESS_DEFLATE = 0x11   # Raw DEFLATE algorithm
     COMPRESS_BZIP2 = 0x12     # BZIP2 compression
     COMPRESS_XZ = 0x13        # XZ/LZMA2 compression
     COMPRESS_ZSTD = 0x14      # Zstandard
