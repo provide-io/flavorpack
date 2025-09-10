@@ -22,9 +22,9 @@ class TestUVDownload:
         )
 
         with (
-            patch("flavor.packaging.python.packager.get_os_name", return_value="linux"),
+            patch("flavor.packaging.python.pypapip_manager.get_os_name", return_value="linux"),
             patch(
-                "flavor.packaging.python.packager.get_arch_name", return_value="amd64"
+                "flavor.packaging.python.pypapip_manager.get_arch_name", return_value="amd64"
             ),
         ):
             cmd = packager.pypapip._get_pypapip_download_cmd(
@@ -51,9 +51,9 @@ class TestUVDownload:
         )
 
         with (
-            patch("flavor.packaging.python.packager.get_os_name", return_value="linux"),
+            patch("flavor.packaging.python.pypapip_manager.get_os_name", return_value="linux"),
             patch(
-                "flavor.packaging.python.packager.get_arch_name", return_value="arm64"
+                "flavor.packaging.python.pypapip_manager.get_arch_name", return_value="arm64"
             ),
         ):
             cmd = packager.pypapip._get_pypapip_download_cmd(
@@ -79,10 +79,10 @@ class TestUVDownload:
 
         with (
             patch(
-                "flavor.packaging.python.packager.get_os_name", return_value="darwin"
+                "flavor.packaging.python.pypapip_manager.get_os_name", return_value="darwin"
             ),
             patch(
-                "flavor.packaging.python.packager.get_arch_name", return_value="arm64"
+                "flavor.packaging.python.dependency_resolver.get_arch_name", return_value="arm64"
             ),
         ):
             cmd = packager.pypapip._get_pypapip_download_cmd(
@@ -129,12 +129,12 @@ class TestUVDownload:
 
             # Need to mock at the actual usage location in the module
             with (
-                patch("flavor.packaging.python.packager.run_command", mock_run),
+                patch("flavor.packaging.python.dependency_resolver.run_command", mock_run),
                 patch(
-                    "flavor.packaging.python.packager.get_os_name", return_value="linux"
+                    "flavor.packaging.python.dependency_resolver.get_os_name", return_value="linux"
                 ),
                 patch(
-                    "flavor.packaging.python.packager.get_arch_name",
+                    "flavor.packaging.python.dependency_resolver.get_arch_name",
                     return_value="amd64",
                 ),
                 patch.object(Path, "glob", return_value=[fake_wheel]),
@@ -160,13 +160,13 @@ class TestUVDownload:
 
             with (
                 patch(
-                    "flavor.packaging.python.packager.get_os_name", return_value="linux"
+                    "flavor.packaging.python.slot_builder.get_os_name", return_value="linux"
                 ),
                 patch(
-                    "flavor.packaging.python.packager.get_arch_name",
+                    "flavor.packaging.python.slot_builder.get_arch_name",
                     return_value="amd64",
                 ),
-                patch.object(packager.env_builder, "download_uv_wheel", return_value=None),
+                patch.object(packager.slot_builder.uv_manager, "download_uv_binary", return_value=None),
                 patch.object(packager.slot_builder, "_build_wheels"),
             ):
                 # Should raise error on Linux when UV download fails
@@ -202,50 +202,24 @@ class TestUVDownload:
 
             mock_run = MagicMock(side_effect=mock_run_side_effect)
 
-            # Mock urllib to return fake PyPI data
-            fake_pypi_response = {
-                "info": {"version": "0.8.14"},
-                "releases": {
-                    "0.8.14": [
-                        {
-                            "filename": "uv-0.8.14-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
-                            "url": "https://fake.url/uv.whl",
-                        }
-                    ]
-                },
-            }
-
-            import json
-
             with (
-                patch("flavor.packaging.python.packager.run_command", mock_run),
+                patch("flavor.packaging.python.dependency_resolver.run_command", mock_run),
+                patch("flavor.packaging.python.uv_manager.run_command", mock_run),
                 patch(
-                    "flavor.packaging.python.packager.get_os_name", return_value="linux"
+                    "flavor.packaging.python.dependency_resolver.get_os_name", return_value="linux"
                 ),
                 patch(
-                    "flavor.packaging.python.packager.get_arch_name",
+                    "flavor.packaging.python.dependency_resolver.get_arch_name",
                     return_value="amd64",
                 ),
-                patch("urllib.request.urlopen") as mock_urlopen,
             ):
-                # Mock PyPI JSON response
-                mock_pypi = MagicMock()
-                mock_pypi.read.return_value = json.dumps(fake_pypi_response).encode()
 
-                # Mock wheel download
-                mock_wheel = MagicMock()
-                mock_wheel.read.return_value = b"fake wheel content"
-
-                mock_urlopen.side_effect = [mock_pypi, mock_wheel]
-
-                # The download should try pip first, fail, then try direct download
-                # Since we're mocking the URL download, it will fail on extraction
-                # but that's OK for this test
+                # The download should try pip first, fail, then return None
+                # There is no direct URL fallback in the current implementation
                 result = packager.env_builder.download_uv_wheel(temp_path)
 
-                # Verify that urlopen was called (fallback was attempted)
-                assert mock_urlopen.called
-                assert mock_urlopen.call_count >= 1  # At least PyPI JSON was fetched
+                # Verify that the download failed as expected
+                assert result is None
 
     def test_prepare_artifacts_non_linux_fallback(self):
         """Test that prepare_artifacts falls back to host UV on non-Linux."""
@@ -268,14 +242,14 @@ class TestUVDownload:
                     return_value="darwin",
                 ),
                 patch(
-                    "flavor.packaging.python.packager.get_arch_name",
+                    "flavor.packaging.python.dependency_resolver.get_arch_name",
                     return_value="arm64",
                 ),
                 patch.object(packager.env_builder, "find_uv_command", return_value=fake_uv_path),
                 patch.object(packager, "_copy_executable"),
                 patch.object(packager.slot_builder, "_build_wheels"),
-                patch.object(packager, "_create_metadata"),
-                patch.object(packager, "_create_python_placeholder"),
+                patch.object(packager.slot_builder, "_create_metadata"),
+                patch.object(packager.env_builder, "create_python_placeholder"),
                 patch("tarfile.open"),
             ):
                 # Don't pre-create directories - let the method create them

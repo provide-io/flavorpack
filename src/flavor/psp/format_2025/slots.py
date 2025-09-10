@@ -376,5 +376,13 @@ class SlotView:
             for i in range(0, len(data), chunk_size):
                 yield data[i : i + chunk_size]
 
+    def __len__(self) -> int:
+        """Return length of the slot content for sequence-like behavior."""
+        return len(self.content)
+
+    def __getitem__(self, key):
+        """Support slicing and indexing for sequence-like behavior."""
+        return self.content[key]
+
 
 # 📦🎰🗂️🪄
