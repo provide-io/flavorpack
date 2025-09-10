@@ -308,7 +308,7 @@ class TestHypothesisPipeIntegration:
     def test_pipe_stdin_stdout(self, data):
         """Test piping arbitrary binary data through taster"""
         # Skip if taster not available
-        taster_path = Path(__file__).parents[3] / "dist" / "taster.psp"
+        taster_path = Path(__file__).parents[1] / "dist" / "taster.psp"
         if not taster_path.exists():
             pytest.skip("taster.psp not built")
 
@@ -329,7 +329,7 @@ class TestHypothesisPipeIntegration:
     @settings(max_examples=10)
     def test_pipe_corruption(self, data, corruption_prob):
         """Test corruption command"""
-        taster_path = Path(__file__).parents[3] / "dist" / "taster.psp"
+        taster_path = Path(__file__).parents[1] / "dist" / "taster.psp"
         if not taster_path.exists():
             pytest.skip("taster.psp not built")
 
@@ -366,7 +366,7 @@ class TestHypothesisPipeIntegration:
     @settings(max_examples=20)
     def test_pipe_json_validation(self, json_obj):
         """Test JSON validation through pipe"""
-        taster_path = Path(__file__).parents[3] / "dist" / "taster.psp"
+        taster_path = Path(__file__).parents[1] / "dist" / "taster.psp"
         if not taster_path.exists():
             pytest.skip("taster.psp not built")
 
