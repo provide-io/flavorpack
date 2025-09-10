@@ -89,7 +89,7 @@ class TestBreakingInputs:
                     target=filename,  # The evil filename becomes the target
                     size=100,
                     checksum="abc123",
-                    codec="none",
+                    operations="RAW",
                     purpose="payload",
                     lifecycle="runtime",
                 )
@@ -135,7 +135,7 @@ class TestBreakingInputs:
                     target="huge.dat",
                     size=size,
                     checksum="abc",
-                    codec="gzip" if size > 0 else "none",
+                    operations="GZIP" if size > 0 else "RAW",
                     purpose="payload",
                     lifecycle="runtime",
                 )
