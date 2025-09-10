@@ -124,7 +124,7 @@ class TestPSPFCore:
             magic = f.read(4)
 
         magic_str = magic.decode("utf-8")
-        assert magic_str == MAGIC_WAND_EMOJI
+        assert magic == TRAILER_END_MAGIC
 
     def test_magic_wand_footer(self, temp_dir, simple_metadata, test_builder):
         """Test magic wand emoji footer."""
@@ -144,7 +144,7 @@ class TestPSPFCore:
             magic = f.read(4)
 
         magic_str = magic.decode("utf-8")
-        assert magic_str == MAGIC_WAND_EMOJI
+        assert magic == TRAILER_END_MAGIC
 
     def test_index_block_location(self, temp_dir, simple_metadata, test_builder):
         """Test index block is at launcher_size offset."""
@@ -163,12 +163,12 @@ class TestPSPFCore:
         # Check MagicTrailer at end of file
         with open(bundle_path, "rb") as f:
             # Seek to start of MagicTrailer
-            f.seek(-MAGIC_TRAILER_SIZE, 2)
-            trailer = f.read(MAGIC_TRAILER_SIZE)
+            f.seek(-DEFAULT_MAGIC_TRAILER_SIZE, 2)
+            trailer = f.read(DEFAULT_MAGIC_TRAILER_SIZE)
 
         # Verify MagicTrailer structure
-        assert trailer[:4] == PACKAGE_EMOJI_BYTES  # 📦 at start
-        assert trailer[-4:] == MAGIC_WAND_EMOJI_BYTES  # 🪄 at end
+        assert trailer[:4] == TRAILER_START_MAGIC  # 📦 at start
+        assert trailer[-4:] == TRAILER_END_MAGIC  # 🪄 at end
 
         # Verify index version in trailer
         index_version = struct.unpack("<I", trailer[4:8])[0]
@@ -178,11 +178,11 @@ class TestPSPFCore:
         """Test index block is exactly 256 bytes."""
         # FORMAT is now an attrs field, so we need to access it from an instance
         index = PSPFIndex()
-        assert struct.calcsize(index.FORMAT) == HEADER_SIZE
+        assert struct.calcsize(index.FORMAT) == DEFAULT_HEADER_SIZE
 
         # Also test packing
         packed = index.pack()
-        assert len(packed) == HEADER_SIZE
+        assert len(packed) == DEFAULT_HEADER_SIZE
 
     def test_index_checksum(self, temp_dir, simple_metadata, test_builder):
         """Test index block checksum validation."""
@@ -309,12 +309,12 @@ class TestPSPFCore:
             f.seek(index.slot_table_offset)
             for i in range(index.slot_count):
                 # Read the full 64-byte descriptor
-                entry_data = f.read(SLOT_DESCRIPTOR_SIZE)
+                entry_data = f.read(DEFAULT_SLOT_DESCRIPTOR_SIZE)
                 # Offset is at bytes 16-24 in the 64-byte descriptor
                 offset = struct.unpack("<Q", entry_data[16:24])[0]
 
                 # Verify alignment
-                assert offset % SLOT_ALIGNMENT == 0, (
+                assert offset % DEFAULT_SLOT_ALIGNMENT == 0, (
                     f"Slot {i} not aligned (offset={offset})"
                 )
 
@@ -362,11 +362,11 @@ class TestPSPFCore:
 
         # Verify MagicTrailer at end of file
         with open(bundle_path, "rb") as f:
-            f.seek(-MAGIC_TRAILER_SIZE, 2)
-            trailer = f.read(MAGIC_TRAILER_SIZE)
+            f.seek(-DEFAULT_MAGIC_TRAILER_SIZE, 2)
+            trailer = f.read(DEFAULT_MAGIC_TRAILER_SIZE)
 
         assert trailer[:4] == PACKAGE_EMOJI_BYTES
-        assert trailer[-4:] == MAGIC_WAND_EMOJI_BYTES
+        assert trailer[-4:] == TRAILER_END_MAGIC
 
     def test_empty_bundle(self, temp_dir, test_builder):
         """Test building bundle with no slots."""

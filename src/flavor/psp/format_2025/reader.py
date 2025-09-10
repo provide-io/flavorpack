@@ -152,7 +152,7 @@ class PSPFReader:
 
         # Read index from MagicTrailer
         index_data = self.read_magic_trailer()
-        logger.debug("📦 Parsing index from MagicTrailer", size=HEADER_SIZE)
+        logger.debug("📦 Parsing index from MagicTrailer", size=DEFAULT_HEADER_SIZE)
 
         # Convert to bytes if memoryview
         if isinstance(index_data, memoryview):
@@ -262,8 +262,8 @@ class PSPFReader:
 
         # Read all slot descriptors
         for i in range(index.slot_count):
-            offset = index.slot_table_offset + (i * SLOT_DESCRIPTOR_SIZE)
-            data = self._backend.read_at(offset, SLOT_DESCRIPTOR_SIZE)
+            offset = index.slot_table_offset + (i * DEFAULT_SLOT_DESCRIPTOR_SIZE)
+            data = self._backend.read_at(offset, DEFAULT_SLOT_DESCRIPTOR_SIZE)
 
             # Convert to bytes if memoryview
             if isinstance(data, memoryview):

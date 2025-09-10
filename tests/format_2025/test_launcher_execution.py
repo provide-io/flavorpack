@@ -12,7 +12,7 @@ import tempfile
 import pytest
 
 from flavor.psp.format_2025 import (
-    SLOT_ALIGNMENT,
+    DEFAULT_SLOT_ALIGNMENT,
     PSPFBuilder,
     PSPFLauncher,
     SlotMetadata,
@@ -112,13 +112,13 @@ class TestSlotTableReading:
         assert slot1["size"] > 0
 
     def test_slot_table_alignment(self, test_bundle_with_slots):
-        """Test that slots are properly aligned to SLOT_ALIGNMENT boundaries."""
+        """Test that slots are properly aligned to DEFAULT_SLOT_ALIGNMENT boundaries."""
         launcher = PSPFLauncher(test_bundle_with_slots)
         slot_table = launcher.read_slot_table()
 
         for slot in slot_table:
             # Each slot should start at an 8-byte aligned offset
-            assert slot["offset"] % SLOT_ALIGNMENT == 0
+            assert slot["offset"] % DEFAULT_SLOT_ALIGNMENT == 0
 
     def test_slot_table_binary_format(self, test_bundle_with_slots):
         """Test that slot table entries are exactly 64 bytes each."""
