@@ -13,6 +13,7 @@ import zlib
 from pathlib import Path
 
 from provide.foundation import logger
+from provide.foundation.file.directory import ensure_dir
 
 from flavor.archive import ArchiveChain, ChainProcessor
 from flavor.config.defaults import DEFAULT_SLOT_ALIGNMENT
@@ -123,7 +124,7 @@ class SlotExtractor:
         slot_meta = metadata.get("slots", [{}])[slot_index] if metadata else {}
 
         # Create extraction directory
-        dest_dir.mkdir(parents=True, exist_ok=True)
+        ensure_dir(dest_dir)
 
         # Read slot data
         slot_data = self.reader.read_slot(slot_index)
@@ -209,7 +210,7 @@ class SlotExtractor:
         import io
         
         extraction_dir = dest_dir / slot_name
-        extraction_dir.mkdir(exist_ok=True)
+        ensure_dir(extraction_dir)
         
         try:
             with tarfile.open(fileobj=io.BytesIO(tar_data), mode='r:*') as tar:
@@ -235,7 +236,7 @@ class SlotExtractor:
         import io
         
         extraction_dir = dest_dir / slot_name
-        extraction_dir.mkdir(exist_ok=True)
+        ensure_dir(extraction_dir)
         
         try:
             with zipfile.ZipFile(io.BytesIO(zip_data), 'r') as zip_ref:

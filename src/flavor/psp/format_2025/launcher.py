@@ -14,7 +14,7 @@ import tarfile
 import zlib
 
 from provide.foundation import logger
-from provide.foundation.file.directory import safe_rmtree, ensure_dir
+from provide.foundation.file.directory import safe_rmtree, ensure_dir, ensure_parent_dir
 
 from flavor.config.defaults import DEFAULT_DISK_SPACE_MULTIPLIER, DEFAULT_SLOT_DESCRIPTOR_SIZE
 from flavor.psp.format_2025.reader import PSPFReader
@@ -255,7 +255,7 @@ class PSPFLauncher(PSPFReader):
             # Write single file
             output_path = workenv_dir / slot_name
             try:
-                output_path.parent.mkdir(parents=True, exist_ok=True)
+                ensure_parent_dir(output_path)
                 output_path.write_bytes(data)
                 logger.debug(f"✅ Wrote {len(data)} bytes to {output_path}")
                 return output_path
