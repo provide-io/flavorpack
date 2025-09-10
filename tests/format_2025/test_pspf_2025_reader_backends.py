@@ -14,7 +14,7 @@ from flavor.config.defaults import (
     ACCESS_FILE,
     ACCESS_MMAP,
     ACCESS_STREAM,
-    DEFAULT_DEFAULT_SLOT_DESCRIPTOR_SIZE,
+    DEFAULT_SLOT_DESCRIPTOR_SIZE,
 )
 from flavor.psp.format_2025.index import PSPFIndex
 from flavor.psp.format_2025.reader import PSPFReader, read_bundle, verify_bundle
