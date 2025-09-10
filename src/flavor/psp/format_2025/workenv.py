@@ -11,6 +11,7 @@ import shlex
 
 from provide.foundation import logger
 from provide.foundation.process import run_command
+from provide.foundation.file.safe import safe_rmtree
 
 
 class WorkEnvManager:
@@ -120,8 +121,6 @@ class WorkEnvManager:
             metadata: Package metadata
             extracted_slots: Mapping of slot index to extracted paths
         """
-        import shutil
-
         # Get slot metadata
         slots = metadata.get("slots", [])
 
@@ -138,7 +137,7 @@ class WorkEnvManager:
                     )
                     if slot_path.exists():
                         if slot_path.is_dir():
-                            shutil.rmtree(slot_path, ignore_errors=True)
+                            safe_rmtree(slot_path)
                         else:
                             slot_path.unlink(missing_ok=True)
                 elif lifecycle == "temp":
