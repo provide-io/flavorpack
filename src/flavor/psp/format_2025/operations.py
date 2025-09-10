@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 PSPF/2025 Operation Chain System
-Bridges the legacy codec constants with the new packed operation chains
+Implements packed operation chains for slot transformations
 """
 
 # Import generated protobuf operations
