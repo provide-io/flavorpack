@@ -14,7 +14,7 @@ from flavor.packaging.python.pypapip_manager import PyPaPipManager
 from flavor.packaging.python.uv_manager import UVManager
 from flavor.packaging.python.wheel_builder import WheelBuilder
 from flavor.packaging.python.dist_manager import PythonDistManager
-from flavor.utils.archive_utils import ArchiveUtils
+from provide.foundation.archive import TarArchive, GzipCompressor
 
 
 class TestPythonPackagingIntegration:
@@ -29,7 +29,8 @@ class TestPythonPackagingIntegration:
         self.uv_manager = UVManager()
         self.wheel_builder = WheelBuilder(python_version=self.python_version)
         self.dist_manager = PythonDistManager(python_version=self.python_version)
-        self.archive_utils = ArchiveUtils(deterministic=True)
+        self.tar_archive = TarArchive(deterministic=True)
+        self.gzip_compressor = GzipCompressor()
     
     def test_managers_initialization_compatible(self):
         """Test that all managers initialize without conflicts."""
@@ -43,7 +44,7 @@ class TestPythonPackagingIntegration:
         assert hasattr(self.uv_manager, '_get_uv_venv_cmd')
         assert hasattr(self.wheel_builder, 'build_wheel_from_source')
         assert hasattr(self.dist_manager, 'create_python_environment')
-        assert hasattr(self.archive_utils, 'create_tar_gz')
+        assert hasattr(self.tar_archive, 'create')
     
     def test_python_version_consistency(self):
         """Test that Python version is consistent across managers."""
@@ -119,24 +120,35 @@ version = "1.0.0"
         assert result is None
     
     def test_archive_utils_deterministic_output(self):
-        """Test ArchiveUtils produces deterministic output."""
+        """Test foundation archive tools produce deterministic output."""
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
             
             # Create identical test structures
+            source_dirs = []
+            tar_files = []
             for i in range(2):
                 source_dir = temp_path / f"source_{i}"
                 source_dir.mkdir()
                 (source_dir / "file.txt").write_text("Content")
+                source_dirs.append(source_dir)
                 
-                # Create archives
-                archive_path = temp_path / f"archive_{i}.tar.gz"
-                self.archive_utils.create_tar_gz(source_dir, archive_path)
+                # Create tar files (deterministic)
+                tar_path = temp_path / f"archive_{i}.tar"
+                self.tar_archive.create(source_dir, tar_path)
+                tar_files.append(tar_path)
+            
+            # Tar files should be identical
+            tar_0_bytes = tar_files[0].read_bytes()
+            tar_1_bytes = tar_files[1].read_bytes()
+            assert tar_0_bytes == tar_1_bytes
                 
-            # Archives should be identical
-            archive_0 = (temp_path / "archive_0.tar.gz").read_bytes()
-            archive_1 = (temp_path / "archive_1.tar.gz").read_bytes()
-            assert archive_0 == archive_1
+            # Compress using bytes to avoid filename in gzip header
+            gz_0_bytes = self.gzip_compressor.compress_bytes(tar_0_bytes)
+            gz_1_bytes = self.gzip_compressor.compress_bytes(tar_1_bytes)
+            
+            # Compressed bytes should be identical 
+            assert gz_0_bytes == gz_1_bytes
     
     def test_pypapip_manylinux_compatibility(self):
         """Test PyPaPipManager manylinux compatibility."""
