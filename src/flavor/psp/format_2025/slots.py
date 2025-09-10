@@ -181,10 +181,16 @@ class SlotMetadata:
 
     # Required fields first (no defaults)
     index: int = field(validator=validators.instance_of(int))
-    id: str = field(validator=validators.instance_of(str))  # Slot identifier
+    id: str = field(validator=[
+        validators.instance_of(str),
+        validators.min_len(1)  # Slot ID cannot be empty
+    ])  # Slot identifier
     source: str = field(validator=validators.instance_of(str))  # Source path
     target: str = field(validator=validators.instance_of(str))  # Target path in workenv
-    size: int = field(validator=validators.instance_of(int))
+    size: int = field(validator=[
+        validators.instance_of(int),
+        validators.ge(0)  # Size must be non-negative
+    ])
     checksum: str = field(validator=validators.instance_of(str))
     
     # Optional fields with defaults
