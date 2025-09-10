@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from provide.foundation.file.directory import temp_dir
+from provide.foundation.file.formats import write_json
 
 from provide.foundation import logger
 from provide.foundation.errors import log_only_error_context, with_error_handling
@@ -406,7 +407,7 @@ class PackagingOrchestrator:
 
             # Write manifest directly to file
             manifest_path = build_temp_dir / "manifest.json"
-            manifest_path.write_text(json.dumps(flat_manifest, indent=2))
+            write_json(manifest_path, flat_manifest, indent=2)
             logger.info(f"Using JSON manifest at: {manifest_path}")
 
             # Find executables
