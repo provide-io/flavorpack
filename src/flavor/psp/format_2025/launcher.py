@@ -15,7 +15,7 @@ import zlib
 
 from provide.foundation import logger
 
-from flavor.psp.format_2025.constants import DISK_SPACE_MULTIPLIER, SLOT_DESCRIPTOR_SIZE
+from flavor.config.defaults import DISK_SPACE_MULTIPLIER, SLOT_DESCRIPTOR_SIZE
 from flavor.psp.format_2025.reader import PSPFReader
 from flavor.psp.format_2025.workenv import WorkEnvManager
 from provide.foundation.process import run_command

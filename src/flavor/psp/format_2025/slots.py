@@ -9,7 +9,7 @@ import zlib
 
 from attrs import define, field, validators
 
-from flavor.psp.format_2025.constants import (
+from flavor.config.defaults import (
     ACCESS_HINT_SEQUENTIAL,
     CACHE_NORMAL,
     LIFECYCLE_CACHE,

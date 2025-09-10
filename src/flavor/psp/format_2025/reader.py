@@ -20,7 +20,7 @@ from flavor.psp.format_2025.backends import (
     StreamBackend,
     create_backend,
 )
-from flavor.psp.format_2025.constants import (
+from flavor.config.defaults import (
     ACCESS_AUTO,
     ACCESS_MMAP,
     HEADER_SIZE,

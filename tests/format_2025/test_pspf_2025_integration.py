@@ -7,7 +7,7 @@ import tempfile
 
 import pytest
 
-from flavor.psp.format_2025.constants import (
+from flavor.config.defaults import (
     ACCESS_MMAP,
 )
 from flavor.psp.format_2025.reader import PSPFReader
@@ -233,7 +233,7 @@ class TestPSPFIntegration:
             descriptors = reader.read_slot_descriptors()
 
             # Check if slot is page-aligned
-            from flavor.psp.format_2025.constants import PAGE_SIZE
+            from flavor.config.defaults import PAGE_SIZE
 
             slot_offset = descriptors[0].offset
 

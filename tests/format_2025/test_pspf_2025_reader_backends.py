@@ -9,7 +9,7 @@ import zlib
 import pytest
 
 from flavor.psp.format_2025.backends import FileBackend, MMapBackend, StreamBackend
-from flavor.psp.format_2025.constants import (
+from flavor.config.defaults import (
     ACCESS_AUTO,
     ACCESS_FILE,
     ACCESS_MMAP,

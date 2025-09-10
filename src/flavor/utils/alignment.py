@@ -1,6 +1,6 @@
 """Memory and file alignment utilities."""
 
-from flavor.psp.format_2025.constants import PAGE_SIZE, SLOT_ALIGNMENT
+from flavor.config.defaults import PAGE_SIZE, SLOT_ALIGNMENT
 
 
 def align_offset(offset: int, alignment: int = SLOT_ALIGNMENT) -> int:

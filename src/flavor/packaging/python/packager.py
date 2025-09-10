@@ -15,7 +15,7 @@ from typing import Any
 from provide.foundation import logger
 from provide.foundation.platform import get_arch_name, get_os_name
 
-from flavor.psp.format_2025.constants import (
+from flavor.config.defaults import (
     DEFAULT_DIR_PERMS,
     DEFAULT_EXECUTABLE_PERMS,
 )

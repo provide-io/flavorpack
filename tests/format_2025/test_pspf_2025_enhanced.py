@@ -6,7 +6,7 @@ import struct
 
 import pytest
 
-from flavor.psp.format_2025.constants import (
+from flavor.config.defaults import (
     ACCESS_AUTO,
     ACCESS_MMAP,
     CACHE_NORMAL,
@@ -109,7 +109,7 @@ class TestPlatformSpecific:
         """Page size should be set based on platform."""
         import sys
 
-        from flavor.psp.format_2025.constants import PAGE_SIZE
+        from flavor.config.defaults import PAGE_SIZE
 
         if sys.platform == "darwin":
             # macOS, especially Apple Silicon
@@ -120,7 +120,7 @@ class TestPlatformSpecific:
 
     def test_access_modes(self):
         """Access modes should be defined."""
-        from flavor.psp.format_2025.constants import (
+        from flavor.config.defaults import (
             ACCESS_AUTO,
             ACCESS_FILE,
             ACCESS_STREAM,

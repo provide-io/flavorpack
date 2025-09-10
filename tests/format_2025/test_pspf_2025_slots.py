@@ -14,7 +14,7 @@ from flavor.psp.format_2025 import (
     PSPFReader,
     SlotMetadata,
 )
-from flavor.psp.format_2025.constants import SLOT_DESCRIPTOR_SIZE
+from flavor.config.defaults import SLOT_DESCRIPTOR_SIZE
 
 
 class TestPSPFSlots:

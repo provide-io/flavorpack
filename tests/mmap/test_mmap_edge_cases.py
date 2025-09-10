@@ -18,7 +18,7 @@ from flavor.psp.format_2025.backends import (
     MMapBackend,
     create_backend,
 )
-from flavor.psp.format_2025.constants import PAGE_SIZE
+from flavor.config.defaults import PAGE_SIZE
 
 
 @pytest.mark.mmap

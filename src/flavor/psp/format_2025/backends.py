@@ -13,7 +13,7 @@ from typing import BinaryIO
 
 from provide.foundation import logger
 
-from flavor.psp.format_2025.constants import (
+from flavor.config.defaults import (
     ACCESS_AUTO,
     ACCESS_FILE,
     ACCESS_MMAP,

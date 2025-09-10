@@ -5,7 +5,7 @@ from pathlib import Path
 
 from provide.foundation import logger
 
-from flavor.psp.format_2025.constants import (
+from flavor.config.defaults import (
     DEFAULT_DIR_PERMS,
     DEFAULT_EXECUTABLE_PERMS,
     DEFAULT_FILE_PERMS,

@@ -13,7 +13,7 @@ from pathlib import Path
 from provide.foundation import logger
 from provide.foundation.crypto import sign_data
 
-from flavor.psp.format_2025.constants import (
+from flavor.config.defaults import (
     DEFAULT_EXECUTABLE_PERMS,
     MAGIC_TRAILER_SIZE,
     MAGIC_WAND_EMOJI_BYTES,
@@ -210,7 +210,7 @@ def _write_trailer(f, index: PSPFIndex) -> None:
 
 def _map_purpose(purpose: str) -> int:
     """Map purpose string to integer constant."""
-    from flavor.psp.format_2025.constants import (
+    from flavor.config.defaults import (
         PURPOSE_CODE,
         PURPOSE_CONFIG, 
         PURPOSE_DATA,
@@ -228,7 +228,7 @@ def _map_purpose(purpose: str) -> int:
 
 def _map_lifecycle(lifecycle: str) -> int:
     """Map lifecycle string to integer constant."""
-    from flavor.psp.format_2025.constants import (
+    from flavor.config.defaults import (
         LIFECYCLE_CACHE,
         LIFECYCLE_CONFIG,
         LIFECYCLE_DEV,

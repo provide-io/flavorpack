@@ -5,7 +5,7 @@ Progressive Secure Package Format (2025 Edition)
 """
 
 from flavor.psp.format_2025.builder import PSPFBuilder, build_package
-from flavor.psp.format_2025.constants import (
+from flavor.config.defaults import (
     HEADER_SIZE,
     MAGIC_TRAILER_SIZE,
     MAGIC_WAND_EMOJI,

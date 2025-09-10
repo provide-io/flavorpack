@@ -7,7 +7,7 @@ import zlib
 
 from attrs import Factory, define, field
 
-from flavor.psp.format_2025.constants import (
+from flavor.config.defaults import (
     ACCESS_AUTO,
     CACHE_NORMAL,
     CAPABILITY_MMAP,
