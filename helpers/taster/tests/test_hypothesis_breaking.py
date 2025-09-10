@@ -232,17 +232,19 @@ class PSPFStateMachine(RuleBasedStateMachine):
     @rule(
         name=st.text(min_size=1, max_size=100),
         size=st.integers(min_value=0, max_value=1024 * 1024),
-        codec=st.sampled_from(["none", "gzip"]),
+        operations=st.sampled_from(["RAW", "GZIP"]),
     )
-    def add_slot(self, name, size, codec):
+    def add_slot(self, name, size, operations):
         """Add a slot to the pending list"""
         slot = SlotMetadata(
             index=len(self.slots),
-            name=name,
+            id=name,
+            source="/tmp/test.txt",
+            target=name,
             size=size,
             checksum="test",
-            codec=codec,
-            purpose="payload",
+            operations=operations,
+            purpose="data",
             lifecycle="runtime",
         )
         self.slots.append(slot)
