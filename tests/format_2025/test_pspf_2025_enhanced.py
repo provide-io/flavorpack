@@ -109,14 +109,14 @@ class TestPlatformSpecific:
         """Page size should be set based on platform."""
         import sys
 
-        from flavor.config.defaults import PAGE_SIZE
+        from flavor.config.defaults import DEFAULT_PAGE_SIZE
 
         if sys.platform == "darwin":
             # macOS, especially Apple Silicon
-            assert PAGE_SIZE == 16384
+            assert DEFAULT_PAGE_SIZE == 16384
         else:
             # Linux/Windows
-            assert PAGE_SIZE == 4096
+            assert DEFAULT_PAGE_SIZE == 4096
 
     def test_access_modes(self):
         """Access modes should be defined."""

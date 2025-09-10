@@ -224,17 +224,17 @@ class TestTasterMMapBackends:
 
     def test_page_aligned_access(self, large_test_file):
         """Test page-aligned access for optimal performance."""
-        from flavor.config.defaults import PAGE_SIZE
+        from flavor.config.defaults import DEFAULT_DEFAULT_PAGE_SIZE
 
         backend = MMapBackend()
         backend.open(large_test_file)
 
         # Access at page boundaries
         for i in range(5):
-            offset = i * PAGE_SIZE
+            offset = i * DEFAULT_PAGE_SIZE
             if offset < large_test_file.stat().st_size:
-                data = backend.read_at(offset, PAGE_SIZE)
-                assert len(data) <= PAGE_SIZE
+                data = backend.read_at(offset, DEFAULT_PAGE_SIZE)
+                assert len(data) <= DEFAULT_PAGE_SIZE
 
         backend.close()
 
