@@ -243,7 +243,9 @@ class PythonDistManager:
         cleanup_patterns = [
             "**/__pycache__",
             "**/*.py[co]",  # .pyc and .pyo files (if not needed)
-            "**/tests",  # test directories
+            "**/tests",
+            "**/test",
+            "**/*test*",
             "**/*.dist-info/RECORD",  # Often contains absolute paths
             "**/*.egg-info",
         ]

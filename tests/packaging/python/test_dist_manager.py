@@ -229,8 +229,8 @@ class TestPythonDistManager:
             site_packages = Path(temp_dir) / "site-packages"
             
             # Create test structure with files to be cleaned
-            test_package = site_packages / "test_package"
-            test_package.mkdir(parents=True)
+            example_package = site_packages / "example_package"
+            example_package.mkdir(parents=True)
             
             # Files that should be removed
             pycache_dir = test_package / "__pycache__"
