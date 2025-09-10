@@ -188,7 +188,9 @@ class PyPaPipManager:
         result = run_command(download_cmd, check=False, capture_output=True)
         
         if result.returncode != 0:
-            logger.warning(f"Some wheels could not be downloaded: {result.stderr}")
+            error_msg = f"Failed to download required wheels: {result.stderr}"
+            logger.error(error_msg)
+            raise RuntimeError(error_msg)
         else:
             logger.info("✅ Successfully downloaded all wheels")
 
@@ -220,7 +222,9 @@ class PyPaPipManager:
         result = run_command(download_cmd, check=False, capture_output=True)
         
         if result.returncode != 0:
-            logger.warning(f"Some wheels could not be downloaded: {result.stderr}")
+            error_msg = f"Failed to download required packages: {result.stderr}"
+            logger.error(error_msg)
+            raise RuntimeError(error_msg)
         else:
             logger.info("✅ Successfully downloaded all wheels")
 
