@@ -168,7 +168,7 @@ def _write_slots(f, slots: list[PreparedSlot], spec: BuildSpec, index: PSPFIndex
         slot_permissions = parse_permissions(slot.metadata.permissions)
         # DEBUG: Print alignment decision
         alignment_value = PAGE_SIZE if spec.options.page_aligned else SLOT_ALIGNMENT
-        logger.debug(f"🐛 Slot {i}: page_aligned={spec.options.page_aligned}, PAGE_SIZE={PAGE_SIZE}, SLOT_ALIGNMENT={SLOT_ALIGNMENT}, chosen={alignment_value}")
+        print(f"🐛 DEBUG: Slot {i}: page_aligned={spec.options.page_aligned}, PAGE_SIZE={PAGE_SIZE}, SLOT_ALIGNMENT={SLOT_ALIGNMENT}, chosen={alignment_value}")
         descriptor = SlotDescriptor(
             id=i,
             name=slot.metadata.id,
