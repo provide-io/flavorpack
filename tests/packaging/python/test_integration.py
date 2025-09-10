@@ -124,14 +124,16 @@ version = "1.0.0"
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
             
-            # Create identical test structures
-            source_dirs = []
+            # Create identical test structures with same directory name
             tar_files = []
             for i in range(2):
-                source_dir = temp_path / f"source_{i}"
+                # Use the same source directory name for consistent archive structure
+                source_dir = temp_path / "source"  # Same name for both
+                if source_dir.exists():
+                    import shutil
+                    shutil.rmtree(source_dir)
                 source_dir.mkdir()
                 (source_dir / "file.txt").write_text("Content")
-                source_dirs.append(source_dir)
                 
                 # Create tar files (deterministic)
                 tar_path = temp_path / f"archive_{i}.tar"
