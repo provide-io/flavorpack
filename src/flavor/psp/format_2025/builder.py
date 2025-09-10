@@ -196,12 +196,12 @@ def prepare_slots(
         from flavor.psp.format_2025.operations import string_to_operations
         packed_ops = string_to_operations(slot.operations)
 
+        # Calculate checksums on raw data (before compression) to match Rust/Go builders
+        checksum_str = calculate_checksum(data, "sha256") 
+        checksum_adler32 = zlib.adler32(data)
+
         # Apply operations to compress/transform data
         processed_data = _apply_operations(data, packed_ops, options)
-
-        # Calculate checksums with prefixes
-        checksum_str = calculate_checksum(processed_data, "sha256")
-        checksum_adler32 = zlib.adler32(processed_data)
 
         # Store prefixed checksum in metadata
         slot.checksum = checksum_str
