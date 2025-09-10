@@ -181,7 +181,7 @@ class PackagingOrchestrator:
             entry_point=self.entry_point,
             build_config=self.build_config,
             python_version=self.python_version,
-            progress_reporter=progress,
+            progress=progress,
         )
 
         with tempfile.TemporaryDirectory(prefix="flavor_build_") as temp_dir_str:
@@ -306,7 +306,7 @@ class PackagingOrchestrator:
             entry_point=self.entry_point,
             build_config=self.build_config,
             python_version=self.python_version,
-            progress_reporter=progress,
+            progress=progress,
         )
 
         with tempfile.TemporaryDirectory(prefix="flavor_build_") as temp_dir_str:
