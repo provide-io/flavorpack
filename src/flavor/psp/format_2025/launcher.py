@@ -15,7 +15,7 @@ import zlib
 
 from provide.foundation import logger
 
-from flavor.config.defaults import DISK_SPACE_MULTIPLIER, SLOT_DESCRIPTOR_SIZE
+from flavor.config.defaults import DEFAULT_DISK_SPACE_MULTIPLIER, DEFAULT_SLOT_DESCRIPTOR_SIZE
 from flavor.psp.format_2025.reader import PSPFReader
 from flavor.psp.format_2025.workenv import WorkEnvManager
 from provide.foundation.process import run_command
@@ -62,10 +62,10 @@ class PSPFLauncher(PSPFReader):
 
             # Read each 64-byte slot descriptor (new format)
             for i in range(index.slot_count):
-                entry_data = f.read(SLOT_DESCRIPTOR_SIZE)
-                if len(entry_data) != SLOT_DESCRIPTOR_SIZE:
+                entry_data = f.read(DEFAULT_SLOT_DESCRIPTOR_SIZE)
+                if len(entry_data) != DEFAULT_SLOT_DESCRIPTOR_SIZE:
                     raise ValueError(
-                        f"Invalid slot table entry {i}: expected {SLOT_DESCRIPTOR_SIZE} bytes, got {len(entry_data)}"
+                        f"Invalid slot table entry {i}: expected {DEFAULT_SLOT_DESCRIPTOR_SIZE} bytes, got {len(entry_data)}"
                     )
 
                 # Use SlotDescriptor to unpack
@@ -108,7 +108,7 @@ class PSPFLauncher(PSPFReader):
 
         # Calculate total size needed (compressed size * multiplier for safety)
         slot_table = self.read_slot_table()
-        total_needed = sum(slot["size"] * DISK_SPACE_MULTIPLIER for slot in slot_table)
+        total_needed = sum(slot["size"] * DEFAULT_DISK_SPACE_MULTIPLIER for slot in slot_table)
 
         # Use the utility function
         check_disk_space(workenv_dir, total_needed)
