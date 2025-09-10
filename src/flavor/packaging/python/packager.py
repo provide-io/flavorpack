@@ -110,6 +110,10 @@ class PythonPackager:
             platform=f"{'windows' if self.is_windows else 'unix'}",
         )
 
+    def _copy_executable(self, src: Path | str, dest: Path) -> None:
+        """Copy a file and preserve executable permissions."""
+        return self.env_builder._copy_executable(src, dest)
+
     def prepare_artifacts(self, work_dir: Path) -> dict[str, Path]:
         """
         Prepare all artifacts needed for flavor assembly.

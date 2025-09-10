@@ -33,8 +33,8 @@ class TestUVManager:
         manager_no_config = UVManager()
         assert manager_no_config.config is not None
     
-    @patch("flavor.packaging.python.uv_manager.get_arch_name")
-    @patch("flavor.packaging.python.uv_manager.get_os_name")
+    @patch("provide.foundation.platform.get_arch_name")
+    @patch("provide.foundation.platform.get_os_name")
     def test_get_metadata_linux_amd64(self, mock_os_name, mock_arch_name):
         """Test metadata generation for Linux amd64."""
         mock_os_name.return_value = "linux"
@@ -49,8 +49,8 @@ class TestUVManager:
         assert "x86_64-unknown-linux-gnu" in metadata.download_url
         assert metadata.executable_name == "uv"
     
-    @patch("flavor.packaging.python.uv_manager.get_arch_name")
-    @patch("flavor.packaging.python.uv_manager.get_os_name")
+    @patch("provide.foundation.platform.get_arch_name")
+    @patch("provide.foundation.platform.get_os_name")
     def test_get_metadata_darwin_arm64(self, mock_os_name, mock_arch_name):
         """Test metadata generation for macOS ARM64."""
         mock_os_name.return_value = "darwin"
@@ -64,8 +64,8 @@ class TestUVManager:
         assert metadata.arch == "arm64"
         assert "aarch64-apple-darwin" in metadata.download_url
     
-    @patch("flavor.packaging.python.uv_manager.get_arch_name")
-    @patch("flavor.packaging.python.uv_manager.get_os_name")
+    @patch("provide.foundation.platform.get_arch_name")
+    @patch("provide.foundation.platform.get_os_name")
     def test_get_metadata_windows_amd64(self, mock_os_name, mock_arch_name):
         """Test metadata generation for Windows amd64."""
         mock_os_name.return_value = "windows"
@@ -79,8 +79,8 @@ class TestUVManager:
         assert metadata.arch == "amd64"
         assert "x86_64-pc-windows-msvc" in metadata.download_url
     
-    @patch("flavor.packaging.python.uv_manager.get_arch_name")
-    @patch("flavor.packaging.python.uv_manager.get_os_name")
+    @patch("provide.foundation.platform.get_arch_name")
+    @patch("provide.foundation.platform.get_os_name")
     def test_get_metadata_unsupported_platform(self, mock_os_name, mock_arch_name):
         """Test error handling for unsupported platforms."""
         mock_os_name.return_value = "freebsd"
@@ -89,8 +89,8 @@ class TestUVManager:
         with pytest.raises(ToolNotFoundError, match="Unsupported platform: freebsd"):
             self.uv_manager.get_metadata("0.1.45")
     
-    @patch("flavor.packaging.python.uv_manager.get_arch_name")
-    @patch("flavor.packaging.python.uv_manager.get_os_name")
+    @patch("provide.foundation.platform.get_arch_name")
+    @patch("provide.foundation.platform.get_os_name")
     def test_get_metadata_unsupported_arch(self, mock_os_name, mock_arch_name):
         """Test error handling for unsupported architectures."""
         mock_os_name.return_value = "linux"
