@@ -13,9 +13,9 @@ from flavor.config.defaults import (
     CAPABILITY_MMAP,
     CAPABILITY_SIGNED,
     DEFAULT_CHUNK_SIZE,
+    DEFAULT_HEADER_SIZE,
     DEFAULT_MAX_MEMORY,
     DEFAULT_MIN_MEMORY,
-    HEADER_SIZE,
     PSPF_VERSION,
 )
 
@@ -229,8 +229,8 @@ class PSPFIndex:
     @classmethod
     def unpack(cls, data: bytes) -> "PSPFIndex":
         """Unpack index from binary data."""
-        if len(data) != HEADER_SIZE:
-            raise ValueError(f"Index must be {HEADER_SIZE} bytes, got {len(data)}")
+        if len(data) != DEFAULT_HEADER_SIZE:
+            raise ValueError(f"Index must be {DEFAULT_HEADER_SIZE} bytes, got {len(data)}")
 
         # Get the format string from a default instance
         format_str = cls().FORMAT
