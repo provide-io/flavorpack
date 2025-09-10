@@ -278,7 +278,7 @@ impl SlotProcessor {
                 target: slot.target.clone(),
                 size: file_size as i64,
                 checksum: sha256_checksum,
-                codec: slot.codec.clone(),
+                operations: slot.operations.clone(),
                 purpose: slot.purpose.clone(),
                 lifecycle: slot.lifecycle.clone(),
                 permissions: slot.permissions.clone().or_else(|| Some(format!("{:04o}", DEFAULT_FILE_PERMS))),
@@ -373,7 +373,7 @@ impl SlotProcessor {
 
     fn create_slot_descriptor(&self, index: usize, slot: &ManifestSlot, file_size: u64, adler_checksum: u32) -> Result<SlotDescriptor> {
         // Map codec string to byte value
-        let codec_value = match slot.codec.as_str() {
+        let codec_value = match slot.operations.as_str() {
             "gzip" => CODEC_GZIP,
             "tgz" => CODEC_TGZ,
             "tar" => CODEC_TAR,
@@ -410,19 +410,30 @@ impl SlotProcessor {
         descriptor = descriptor.with_name(&slot.id);
         descriptor.size = file_size;
         descriptor.original_size = file_size;
-        descriptor.checksum = adler_checksum;
-        descriptor.codec = codec_value;
+        descriptor.checksum = adler_checksum as u64;
+        
+        // Set operations based on codec
+        use crate::psp::format_2025::operations::pack_operations;
+        use crate::psp::format_2025::constants::{OP_TAR, OP_GZIP};
+        
+        descriptor.operations = match codec_value {
+            crate::psp::format_2025::constants::CODEC_RAW => pack_operations(&[]),
+            crate::psp::format_2025::constants::CODEC_TAR => pack_operations(&[OP_TAR]),
+            crate::psp::format_2025::constants::CODEC_GZIP => pack_operations(&[OP_GZIP]),
+            crate::psp::format_2025::constants::CODEC_TGZ => pack_operations(&[OP_TAR, OP_GZIP]),
+            _ => pack_operations(&[]),
+        };
         descriptor.purpose = purpose_value;
         descriptor.lifecycle = lifecycle_value;
         
         // Parse permissions
-        descriptor.permissions = if let Some(ref perm_str) = slot.permissions {
+        let perms = if let Some(ref perm_str) = slot.permissions {
             u16::from_str_radix(perm_str.trim_start_matches('0'), 8).unwrap_or(DEFAULT_FILE_PERMS)
         } else {
             DEFAULT_FILE_PERMS
         };
-        
-        descriptor.alignment = SLOT_ALIGNMENT as u16;
+        descriptor.permissions = (perms & 0xFF) as u8;
+        descriptor.permissions_high = ((perms >> 8) & 0xFF) as u8;
         
         trace!(
             "📍 Slot {}: {} size {} bytes, checksum {:08x}",

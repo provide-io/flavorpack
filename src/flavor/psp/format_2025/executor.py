@@ -10,7 +10,7 @@ from typing import Any
 
 from provide.foundation import logger
 
-from flavor.utils.subprocess import run_command
+from provide.foundation.process import run_command
 
 
 class BundleExecutor:
@@ -189,7 +189,6 @@ class BundleExecutor:
                 env=env,
                 capture_output=True,
                 check=False,  # We want to handle the exit code ourselves
-                log_command=False,  # Already logged above
             )
 
             # Log result
