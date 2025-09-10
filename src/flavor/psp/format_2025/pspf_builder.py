@@ -62,6 +62,9 @@ class PSPFBuilder:
             target: Target location relative to workenv (default: None)
             permissions: Unix permissions as octal string (e.g., "0755")
         """
+        # Validate slot ID
+        if not id or not id.strip():
+            raise BuildError("Slot ID cannot be empty")
         # Determine path and size
         if isinstance(data, bytes):
             # Write to temp file securely
