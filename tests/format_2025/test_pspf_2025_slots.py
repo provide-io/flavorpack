@@ -10,11 +10,11 @@ import os
 import pytest
 
 from flavor.psp.format_2025 import (
-    SLOT_ALIGNMENT,
+    DEFAULT_SLOT_ALIGNMENT,
     PSPFReader,
     SlotMetadata,
 )
-from flavor.config.defaults import SLOT_DESCRIPTOR_SIZE
+from flavor.config.defaults import DEFAULT_SLOT_DESCRIPTOR_SIZE
 
 
 class TestPSPFSlots:
@@ -370,15 +370,15 @@ class TestPSPFSlots:
 
             for i in range(index.slot_count):
                 # Each entry is now 64 bytes (SlotDescriptor)
-                entry = f.read(SLOT_DESCRIPTOR_SIZE)
-                assert len(entry) == SLOT_DESCRIPTOR_SIZE
+                entry = f.read(DEFAULT_SLOT_DESCRIPTOR_SIZE)
+                assert len(entry) == DEFAULT_SLOT_DESCRIPTOR_SIZE
 
                 # Use SlotDescriptor to unpack
                 descriptor = SlotDescriptor.unpack(entry)
 
                 # Verify descriptor fields
                 assert descriptor.offset > 0
-                assert descriptor.offset % SLOT_ALIGNMENT == 0
+                assert descriptor.offset % DEFAULT_SLOT_ALIGNMENT == 0
                 assert descriptor.size > 0
                 assert descriptor.checksum != 0
 

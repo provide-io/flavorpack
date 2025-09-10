@@ -18,7 +18,7 @@ from flavor.psp.format_2025.backends import (
     MMapBackend,
     create_backend,
 )
-from flavor.config.defaults import PAGE_SIZE
+from flavor.config.defaults import DEFAULT_DEFAULT_PAGE_SIZE
 
 
 @pytest.mark.mmap
@@ -62,9 +62,9 @@ class TestMMapEdgeCases:
 
     def test_exact_page_boundary(self):
         """Test reads exactly on page boundaries."""
-        # Create file with exactly PAGE_SIZE bytes
+        # Create file with exactly DEFAULT_PAGE_SIZE bytes
         with tempfile.NamedTemporaryFile(delete=False) as f:
-            f.write(b"A" * PAGE_SIZE)
+            f.write(b"A" * DEFAULT_PAGE_SIZE)
             path = Path(f.name)
 
         try:
@@ -72,13 +72,13 @@ class TestMMapEdgeCases:
             backend.open(path)
 
             # Read exactly one page
-            data = backend.read_at(0, PAGE_SIZE)
-            assert len(data) == PAGE_SIZE
-            assert bytes(data) == b"A" * PAGE_SIZE
+            data = backend.read_at(0, DEFAULT_PAGE_SIZE)
+            assert len(data) == DEFAULT_PAGE_SIZE
+            assert bytes(data) == b"A" * DEFAULT_PAGE_SIZE
 
             # Try to read one byte past
             with pytest.raises(Exception):
-                backend.read_at(0, PAGE_SIZE + 1)
+                backend.read_at(0, DEFAULT_PAGE_SIZE + 1)
 
             backend.close()
         finally:
@@ -102,8 +102,8 @@ class TestMMapEdgeCases:
                 (101, 103),  # Larger primes
                 (1009, 1013),  # Even larger
                 (4093, 4099),  # Near page boundary
-                (PAGE_SIZE - 1, 2),  # Crossing page boundary
-                (PAGE_SIZE + 1, 10),  # Just after page
+                (DEFAULT_PAGE_SIZE - 1, 2),  # Crossing page boundary
+                (DEFAULT_PAGE_SIZE + 1, 10),  # Just after page
             ]
 
             for offset, size in test_cases:
