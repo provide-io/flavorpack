@@ -205,7 +205,7 @@ markers = [
 
 [tool.coverage.run]
 branch = false
-source = ["flavor"]
+source = ["src/flavor"]
 parallel = true
 omit = ["*/protocols/tfprotov6/protobuf/*", "*/protocols/tfprotov6/handlers/validate_resource_config.py"]
 
