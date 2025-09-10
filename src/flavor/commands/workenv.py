@@ -9,6 +9,8 @@ import json
 
 import click
 
+from provide.foundation.file.formats import read_json
+
 
 @click.group("workenv")
 def workenv_group() -> None:
@@ -179,8 +181,7 @@ def workenv_inspect(package_id: str, output_json: bool) -> None:
             index_file = Path(info["metadata_dir"]) / "instance" / "index.json"
             if index_file.exists():
                 try:
-                    with open(index_file) as f:
-                        index_data = json.load(f)
+                    index_data = read_json(index_file)
 
                     click.echo("\n📋 Index Metadata:")
                     click.echo(

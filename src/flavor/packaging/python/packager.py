@@ -13,6 +13,7 @@ import tomllib
 from typing import Any
 
 from provide.foundation import logger
+from provide.foundation.file.formats import write_json
 from provide.foundation.platform import get_arch_name, get_os_name
 
 from flavor.config.defaults import (
@@ -323,8 +324,7 @@ class PythonPackager:
 
     def _write_json(self, path: Path, data: dict[str, Any]) -> None:
         """Write JSON data to file."""
-        with open(path, "w") as f:
-            json.dump(data, f, indent=2)
+        write_json(path, data, indent=2)
 
     def __repr__(self) -> str:
         """String representation of the packager."""
