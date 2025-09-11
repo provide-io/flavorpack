@@ -1,5 +1,6 @@
-// PSPF/2025 Operation Chain Specification
+// PSPF/2025 Operation Chain Specification - v0 Implementation
 // Defines the 255 operation types and chain packing format
+// v0 REQUIRED operations: OP_NONE, OP_TAR, OP_GZIP, OP_BZIP2, OP_XZ, OP_ZSTD
 syntax = "proto3";
 
 package pspf_2025.operations;
@@ -8,52 +9,53 @@ option go_package = "github.com/provide-io/flavorpack/psp/format_2025;pspf2025";
 option java_package = "io.provide.flavorpack.pspf2025";
 
 // Complete operation enumeration (255 total)
+// v0 implementation marks: [REQUIRED] [FUTURE]
 enum Operation {
   // 0x00: No operation
-  OP_NONE = 0x00;
+  OP_NONE = 0x00;  // [REQUIRED] v0
 
   // 0x01-0x0F: Bundle operations (15 slots)
-  OP_TAR = 0x01;
-  OP_TAR_SORTED = 0x02;
-  OP_TAR_STREAM = 0x03;
-  OP_CPIO = 0x04;
-  OP_CPIO_NEWC = 0x05;
-  OP_AR = 0x06;
-  OP_AR_BSD = 0x07;
-  OP_ZIP_STORE = 0x08;
-  OP_ZIP_STREAM = 0x09;
-  OP_7Z = 0x0A;
-  OP_RAR = 0x0B;
-  OP_PAX = 0x0C;
-  OP_USTAR = 0x0D;
-  OP_BUNDLE_RESERVED_E = 0x0E;
-  OP_BUNDLE_RESERVED_F = 0x0F;
+  OP_TAR = 0x01;              // [REQUIRED] v0 - POSIX TAR archive
+  OP_TAR_SORTED = 0x02;       // [FUTURE] - Deterministic TAR with sorted entries
+  OP_TAR_STREAM = 0x03;       // [FUTURE] - Streaming TAR format
+  OP_CPIO = 0x04;             // [FUTURE] - CPIO archive format
+  OP_CPIO_NEWC = 0x05;        // [FUTURE] - CPIO new ASCII format
+  OP_AR = 0x06;               // [FUTURE] - Unix AR archive
+  OP_AR_BSD = 0x07;           // [FUTURE] - BSD AR format variant
+  OP_ZIP_STORE = 0x08;        // [FUTURE] - ZIP with no compression
+  OP_ZIP_STREAM = 0x09;       // [FUTURE] - Streaming ZIP format
+  OP_7Z = 0x0A;               // [FUTURE] - 7-Zip archive format
+  OP_RAR = 0x0B;              // [FUTURE] - RAR archive format
+  OP_PAX = 0x0C;              // [FUTURE] - POSIX.1-2001 PAR format
+  OP_USTAR = 0x0D;            // [FUTURE] - POSIX USTAR format
+  OP_BUNDLE_RESERVED_E = 0x0E; // [FUTURE] - Reserved for bundle operations
+  OP_BUNDLE_RESERVED_F = 0x0F; // [FUTURE] - Reserved for bundle operations
 
   // 0x10-0x2F: Compression operations (32 slots)
-  OP_GZIP = 0x10;
-  OP_GZIP_FAST = 0x11;
-  OP_GZIP_BEST = 0x12;
-  OP_BZIP2 = 0x13;
-  OP_BZIP2_FAST = 0x14;
-  OP_BZIP2_BEST = 0x15;
-  OP_XZ = 0x16;
-  OP_XZ_FAST = 0x17;
-  OP_XZ_BEST = 0x18;
-  OP_LZMA = 0x19;
-  OP_LZMA2 = 0x1A;
-  OP_ZSTD = 0x1B;
-  OP_ZSTD_FAST = 0x1C;
-  OP_ZSTD_BEST = 0x1D;
-  OP_LZ4 = 0x1E;
-  OP_LZ4_HC = 0x1F;
-  OP_SNAPPY = 0x20;
-  OP_BROTLI = 0x21;
-  OP_BROTLI_TEXT = 0x22;
-  OP_DEFLATE = 0x23;
-  OP_DEFLATE64 = 0x24;
-  OP_PPM = 0x25;
-  OP_PPMD = 0x26;
-  // 0x27-0x2F reserved
+  OP_GZIP = 0x10;             // [REQUIRED] v0 - GZIP compression
+  OP_GZIP_FAST = 0x11;        // [FUTURE] - GZIP with fast compression
+  OP_GZIP_BEST = 0x12;        // [FUTURE] - GZIP with best compression
+  OP_BZIP2 = 0x13;            // [REQUIRED] v0 - BZIP2 compression
+  OP_BZIP2_FAST = 0x14;       // [FUTURE] - BZIP2 with fast compression
+  OP_BZIP2_BEST = 0x15;       // [FUTURE] - BZIP2 with best compression
+  OP_XZ = 0x16;               // [REQUIRED] v0 - XZ/LZMA2 compression
+  OP_XZ_FAST = 0x17;          // [FUTURE] - XZ with fast compression
+  OP_XZ_BEST = 0x18;          // [FUTURE] - XZ with best compression
+  OP_LZMA = 0x19;             // [FUTURE] - Legacy LZMA compression
+  OP_LZMA2 = 0x1A;            // [FUTURE] - LZMA2 compression algorithm
+  OP_ZSTD = 0x1B;             // [REQUIRED] v0 - Zstandard compression
+  OP_ZSTD_FAST = 0x1C;        // [FUTURE] - ZSTD with fast compression
+  OP_ZSTD_BEST = 0x1D;        // [FUTURE] - ZSTD with best compression
+  OP_LZ4 = 0x1E;              // [FUTURE] - LZ4 compression
+  OP_LZ4_HC = 0x1F;           // [FUTURE] - LZ4 high compression
+  OP_SNAPPY = 0x20;           // [FUTURE] - Google Snappy compression
+  OP_BROTLI = 0x21;           // [FUTURE] - Google Brotli compression
+  OP_BROTLI_TEXT = 0x22;      // [FUTURE] - Brotli optimized for text
+  OP_DEFLATE = 0x23;          // [FUTURE] - DEFLATE compression
+  OP_DEFLATE64 = 0x24;        // [FUTURE] - Enhanced DEFLATE
+  OP_PPM = 0x25;              // [FUTURE] - Prediction by Partial Matching
+  OP_PPMD = 0x26;             // [FUTURE] - PPM variant D
+  // 0x27-0x2F reserved for future compression algorithms
 
   // 0x30-0x4F: Encryption operations (32 slots)
   OP_AES128_GCM = 0x30;
