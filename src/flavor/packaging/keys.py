@@ -9,6 +9,8 @@ from pathlib import Path
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ed25519
 
+from provide.foundation.file.directory import ensure_dir
+
 
 def generate_key_pair(keys_dir: Path) -> tuple[Path, Path]:
     """Generates a new Ed25519 key pair and saves them to PEM files.
@@ -53,7 +55,7 @@ def generate_key_pair(keys_dir: Path) -> tuple[Path, Path]:
     private_key_path = keys_dir / "flavor-private.key"
     public_key_path = keys_dir / "flavor-public.key"
 
-    keys_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
+    ensure_dir(keys_dir, mode=0o700)
 
     # Write private key with restricted permissions
     private_key_path.write_bytes(private_pem)

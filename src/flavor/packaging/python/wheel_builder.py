@@ -13,6 +13,7 @@ from typing import Any
 
 from provide.foundation.logger import logger
 from provide.foundation.process import run_command
+from provide.foundation.file.directory import ensure_dir
 
 from flavor.packaging.python.pypapip_manager import PyPaPipManager
 from flavor.packaging.python.uv_manager import UVManager
@@ -248,7 +249,7 @@ class WheelBuilder:
         """
         logger.info(f"🌐📥 Downloading wheels for resolved dependencies")
         
-        wheel_dir.mkdir(parents=True, exist_ok=True)
+        ensure_dir(wheel_dir)
         
         # Always use PyPA pip for wheel downloads to ensure manylinux compatibility
         # UV pip doesn't handle platform tags as reliably
@@ -301,8 +302,8 @@ class WheelBuilder:
         # Create build directories
         wheel_dir = build_dir / "wheels"
         deps_dir = build_dir / "deps"
-        wheel_dir.mkdir(parents=True, exist_ok=True)
-        deps_dir.mkdir(parents=True, exist_ok=True)
+        ensure_dir(wheel_dir)
+        ensure_dir(deps_dir)
         
         # Build main project wheel
         project_wheel = self.build_wheel_from_source(

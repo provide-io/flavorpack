@@ -11,7 +11,7 @@ import shlex
 
 from provide.foundation import logger
 from provide.foundation.process import run_command
-from provide.foundation.file.directory import safe_rmtree
+from provide.foundation.file.directory import safe_rmtree, ensure_dir, ensure_parent_dir
 
 
 class WorkEnvManager:
@@ -44,7 +44,7 @@ class WorkEnvManager:
         # Create work environment directory
         workenv_base = Path.home() / ".cache" / "flavor" / "workenv"
         workenv_dir = workenv_base / f"{package_name}_{package_version}"
-        workenv_dir.mkdir(parents=True, exist_ok=True)
+        ensure_dir(workenv_dir)
 
         logger.info(f"📁 Work environment: {workenv_dir}")
 
@@ -205,7 +205,7 @@ class WorkEnvManager:
             file_path = file_path / ".extracted"
 
         # Ensure parent directory exists
-        file_path.parent.mkdir(parents=True, exist_ok=True)
+        ensure_parent_dir(file_path)
         file_path.write_text(content)
 
         logger.debug(f"✅ Wrote file: {file_path}")

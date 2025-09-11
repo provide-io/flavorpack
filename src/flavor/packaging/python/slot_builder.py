@@ -13,6 +13,7 @@ from typing import Any
 
 from provide.foundation import logger
 from provide.foundation.platform import get_arch_name, get_os_name
+from provide.foundation.file.directory import ensure_dir
 from flavor.config.defaults import DEFAULT_DIR_PERMS, DEFAULT_EXECUTABLE_PERMS
 from flavor.packaging.python.uv_manager import UVManager
 from flavor.packaging.python.environment_builder import PythonEnvironmentBuilder
@@ -95,21 +96,21 @@ class PythonSlotBuilder:
 
         # Create payload structure
         payload_dir = work_dir / "payload"
-        payload_dir.mkdir(mode=DEFAULT_DIR_PERMS)
+        ensure_dir(payload_dir, mode=DEFAULT_DIR_PERMS)
         artifacts["payload_dir"] = payload_dir
         if prep_bar:
             prep_bar.increment()
 
         # Build wheels
         wheels_dir = payload_dir / "wheels"
-        wheels_dir.mkdir(mode=DEFAULT_DIR_PERMS)
+        ensure_dir(wheels_dir, mode=DEFAULT_DIR_PERMS)
         self._build_wheels(wheels_dir)
         if prep_bar:
             prep_bar.increment()
 
         # Ensure bin directory exists for UV binary
         bin_dir = payload_dir / "bin"
-        bin_dir.mkdir(mode=DEFAULT_DIR_PERMS, exist_ok=True)
+        ensure_dir(bin_dir, mode=DEFAULT_DIR_PERMS)
         logger.debug(f"Created bin directory: {bin_dir}")
 
         # Handle UV binary - download manylinux2014 version on Linux, copy from host on other platforms
@@ -175,7 +176,7 @@ class PythonSlotBuilder:
 
         # Create metadata
         metadata_dir = payload_dir / "metadata"
-        metadata_dir.mkdir(mode=DEFAULT_DIR_PERMS)
+        ensure_dir(metadata_dir, mode=DEFAULT_DIR_PERMS)
         self._create_metadata(metadata_dir)
         if prep_bar:
             prep_bar.increment()
@@ -195,7 +196,7 @@ class PythonSlotBuilder:
 
         # Create metadata archive (separate for selective extraction)
         metadata_content = work_dir / "metadata_content"
-        metadata_content.mkdir(mode=DEFAULT_DIR_PERMS)
+        ensure_dir(metadata_content, mode=DEFAULT_DIR_PERMS)
         # For now empty, but could contain launcher-specific metadata
         metadata_tgz = work_dir / "metadata.tgz"
         with tarfile.open(metadata_tgz, "w:gz", compresslevel=9) as tar:

@@ -10,6 +10,7 @@ from pathlib import Path
 import tomllib
 
 from provide.foundation.file.directory import safe_rmtree
+from provide.foundation.file.formats import read_json
 
 from flavor.packaging.keys import generate_key_pair
 from flavor.packaging.orchestrator import PackagingOrchestrator
@@ -32,8 +33,7 @@ def build_package_from_manifest(
 
     if manifest_type == "json":
         # Handle JSON manifest (compatible with Rust/Go builders)
-        with manifest_path.open("r") as f:
-            manifest_data = json.load(f)
+        manifest_data = read_json(manifest_path)
 
         # Extract required fields from JSON manifest
         package_config = manifest_data.get("package", {})
