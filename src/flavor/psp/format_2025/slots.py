@@ -95,7 +95,7 @@ class SlotDescriptor:
         perm_high = (self.permissions >> 8) & 0xFF
         
         data = struct.pack(
-            "<QQQQQQQBBBBBBBB",
+            "<QQQQQQQBBBBHBB",
             self.id,
             self.name_hash,
             self.offset,
@@ -107,8 +107,7 @@ class SlotDescriptor:
             self.lifecycle,    # byte 57
             self.priority,     # byte 58
             self.platform,     # byte 59
-            0,                 # byte 60: reserved1
-            0,                 # byte 61: reserved2
+            self.alignment,    # bytes 60-61: alignment (H = 2 bytes)
             perm_low,          # byte 62: permissions low byte
             perm_high,         # byte 63: permissions high byte
         )
@@ -124,13 +123,13 @@ class SlotDescriptor:
             raise ValueError(f"Slot descriptor must be {SLOT_DESCRIPTOR_SIZE} bytes")
 
         unpacked = struct.unpack(
-            "<QQQQQQQBBBBBBBB",  # Match pack format exactly
+            "<QQQQQQQBBBBHBB",  # Match pack format exactly
             data,
         )
 
         # Reconstruct full permissions from two bytes
-        perm_low = unpacked[13]   # byte 62
-        perm_high = unpacked[14]  # byte 63
+        perm_low = unpacked[12]   # byte 62
+        perm_high = unpacked[13]  # byte 63
         permissions = perm_low | (perm_high << 8)
 
         return cls(
@@ -145,9 +144,9 @@ class SlotDescriptor:
             lifecycle=unpacked[8],    # byte 57
             priority=unpacked[9],     # byte 58  
             platform=unpacked[10],    # byte 59
-            # bytes 60-61 are reserved
+            alignment=unpacked[11],   # bytes 60-61: alignment
             permissions=permissions,  # reconstructed from bytes 62-63
-            # Note: encryption, alignment, access_hint are not persisted in the binary format
+            # Note: encryption, access_hint are not persisted in the binary format
         )
 
     def to_dict(self) -> dict[str, Any]:
