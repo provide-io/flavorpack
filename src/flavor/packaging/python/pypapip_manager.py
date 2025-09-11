@@ -119,6 +119,13 @@ class PyPaPipManager:
         if binary_only:
             cmd.extend(["--only-binary", ":all:"])
 
+        # Always specify Python version to ensure correct wheel selection
+        py_parts = self.python_version.split(".")
+        py_major = py_parts[0]
+        py_minor = py_parts[1] if len(py_parts) > 1 else "11"
+        cmd.extend(["--python-version", f"{py_major}.{py_minor}"])
+        logger.debug(f"Added Python version constraint: {py_major}.{py_minor}")
+
         # Handle platform tags
         if platform_tag:
             # Use explicitly provided platform tag (works on any OS)
@@ -146,12 +153,6 @@ class PyPaPipManager:
                     f"Added platform constraint: {self.MANYLINUX_TAG}_aarch64"
                 )
                 logger.warning("⚠️ grpcio on CentOS 7 ARM64 may have C++ ABI issues")
-
-            # Also specify Python version to match our target
-            py_parts = self.python_version.split(".")
-            py_major = py_parts[0]
-            py_minor = py_parts[1] if len(py_parts) > 1 else "11"
-            cmd.extend(["--python-version", f"{py_major}.{py_minor}"])
 
         if requirements_file:
             cmd.extend(["-r", str(requirements_file)])

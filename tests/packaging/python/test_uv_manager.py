@@ -203,7 +203,8 @@ class TestUVManager:
             
             expected = [
                 "/usr/local/bin/uv", "pip", "compile", 
-                "/tmp/requirements.in", "--output-file", "/tmp/requirements.txt"
+                "/tmp/requirements.in", "--output-file", "/tmp/requirements.txt",
+                "--no-strip-extras"
             ]
             assert cmd == expected
     
@@ -220,6 +221,7 @@ class TestUVManager:
             expected = [
                 "/usr/local/bin/uv", "pip", "compile", 
                 "/tmp/requirements.in", "--output-file", "/tmp/requirements.txt",
+                "--no-strip-extras",
                 "--python-version", "3.11"
             ]
             assert cmd == expected
