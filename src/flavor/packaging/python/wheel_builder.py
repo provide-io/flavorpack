@@ -253,12 +253,24 @@ class WheelBuilder:
         # Always use PyPA pip for wheel downloads to ensure manylinux compatibility
         # UV pip doesn't handle platform tags as reliably
         logger.debug("Using PyPA pip for reliable wheel downloads")
-        self.pypapip.download_wheels_from_requirements(
-            python_exe, requirements_file, wheel_dir
-        )
+        
+        try:
+            self.pypapip.download_wheels_from_requirements(
+                python_exe, requirements_file, wheel_dir
+            )
+        except RuntimeError as e:
+            logger.error(f"❌ Failed to download dependencies: {e}")
+            raise
         
         # Return list of downloaded wheels
         wheel_files = list(wheel_dir.glob("*.whl"))
+        
+        # Validate we got at least some wheels
+        if not wheel_files:
+            error_msg = "No wheel files were downloaded - package would be broken"
+            logger.error(error_msg)
+            raise RuntimeError(error_msg)
+        
         logger.info(f"✅ Downloaded {len(wheel_files)} wheel files")
         
         return wheel_files
