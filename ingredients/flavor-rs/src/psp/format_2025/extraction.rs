@@ -249,7 +249,7 @@ fn set_file_permissions(
         u32::from(perms)
     } else {
         // Default to secure file permissions
-        u32::from(crate::psp::format_2025::constants::DEFAULT_FILE_PERMS) // 0600
+        u32::from(crate::psp::format_2025::defaults::DEFAULT_FILE_PERMS) // 0600
     };
 
     match fs::set_permissions(path, fs::Permissions::from_mode(mode)) {
