@@ -9,12 +9,12 @@ import zlib
 import pytest
 
 from flavor.psp.format_2025.backends import FileBackend, MMapBackend, StreamBackend
-from flavor.psp.format_2025.constants import (
+from flavor.config.defaults import (
     ACCESS_AUTO,
     ACCESS_FILE,
     ACCESS_MMAP,
     ACCESS_STREAM,
-    SLOT_DESCRIPTOR_SIZE,
+    DEFAULT_SLOT_DESCRIPTOR_SIZE,
 )
 from flavor.psp.format_2025.index import PSPFIndex
 from flavor.psp.format_2025.reader import PSPFReader, read_bundle, verify_bundle
@@ -34,7 +34,7 @@ class TestReaderBackends:
 
             # Prepare slot descriptors
             slot_table_offset = 100  # After launcher
-            data_offset = slot_table_offset + (2 * SLOT_DESCRIPTOR_SIZE)
+            data_offset = slot_table_offset + (2 * DEFAULT_SLOT_DESCRIPTOR_SIZE)
 
             # Write slot descriptors (2 x 64 bytes)
             slot1 = SlotDescriptor(
@@ -71,7 +71,7 @@ class TestReaderBackends:
             index.launcher_size = 100
             index.slot_table_offset = slot_table_offset
             index.slot_count = 2
-            index.slot_table_size = 2 * SLOT_DESCRIPTOR_SIZE
+            index.slot_table_size = 2 * DEFAULT_SLOT_DESCRIPTOR_SIZE
             index.package_size = package_size + 8200  # Include MagicTrailer size
 
             # Calculate checksum with zeroed checksum field

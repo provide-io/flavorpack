@@ -1,9 +1,9 @@
 """Memory and file alignment utilities."""
 
-from flavor.psp.format_2025.constants import PAGE_SIZE, SLOT_ALIGNMENT
+from flavor.config.defaults import DEFAULT_PAGE_SIZE, DEFAULT_SLOT_ALIGNMENT
 
 
-def align_offset(offset: int, alignment: int = SLOT_ALIGNMENT) -> int:
+def align_offset(offset: int, alignment: int = DEFAULT_SLOT_ALIGNMENT) -> int:
     """Align offset to specified boundary.
 
     Args:
@@ -25,10 +25,10 @@ def align_to_page(offset: int) -> int:
     Returns:
         Page-aligned offset
     """
-    return align_offset(offset, PAGE_SIZE)
+    return align_offset(offset, DEFAULT_PAGE_SIZE)
 
 
-def is_aligned(offset: int, alignment: int = SLOT_ALIGNMENT) -> bool:
+def is_aligned(offset: int, alignment: int = DEFAULT_SLOT_ALIGNMENT) -> bool:
     """Check if offset is aligned to boundary.
 
     Args:
@@ -41,7 +41,7 @@ def is_aligned(offset: int, alignment: int = SLOT_ALIGNMENT) -> bool:
     return (offset & (alignment - 1)) == 0
 
 
-def calculate_padding(current_offset: int, alignment: int = SLOT_ALIGNMENT) -> int:
+def calculate_padding(current_offset: int, alignment: int = DEFAULT_SLOT_ALIGNMENT) -> int:
     """Calculate padding needed to align to boundary.
 
     Args:

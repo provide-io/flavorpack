@@ -20,15 +20,19 @@ from provide.foundation import logger
 
 from flavor.exceptions import BuildError
 from flavor.psp.format_2025.checksums import calculate_checksum
-from flavor.psp.format_2025.constants import (
+from flavor.config.defaults import (
     ACCESS_AUTO,
     CACHE_NORMAL,
     CAPABILITY_MMAP,
     CAPABILITY_PAGE_ALIGNED,
     CAPABILITY_SIGNED,
     DEFAULT_EXECUTABLE_PERMS,
+    DEFAULT_MAGIC_TRAILER_SIZE,
     DEFAULT_MAX_MEMORY,
     DEFAULT_MIN_MEMORY,
+    DEFAULT_PAGE_SIZE,
+    DEFAULT_SLOT_ALIGNMENT,
+    DEFAULT_SLOT_DESCRIPTOR_SIZE,
     LIFECYCLE_CACHE,
     LIFECYCLE_CONFIG,
     LIFECYCLE_DEV,
@@ -40,16 +44,10 @@ from flavor.psp.format_2025.constants import (
     LIFECYCLE_SHUTDOWN,
     LIFECYCLE_STARTUP,
     LIFECYCLE_TEMPORARY,
-    MAGIC_TRAILER_SIZE,
-    MAGIC_WAND_EMOJI_BYTES,
-    PACKAGE_EMOJI_BYTES,
-    PAGE_SIZE,
     PURPOSE_CODE,
     PURPOSE_CONFIG,
     PURPOSE_DATA,
     PURPOSE_MEDIA,
-    SLOT_ALIGNMENT,
-    SLOT_DESCRIPTOR_SIZE,
 )
 from provide.foundation.crypto import sign_data
 from flavor.psp.format_2025.index import PSPFIndex

@@ -9,9 +9,11 @@ import zlib
 
 from attrs import define, field, validators
 
-from flavor.psp.format_2025.constants import (
+from flavor.config.defaults import (
     ACCESS_HINT_SEQUENTIAL,
     CACHE_NORMAL,
+    DEFAULT_SLOT_ALIGNMENT,
+    DEFAULT_SLOT_DESCRIPTOR_SIZE,
     LIFECYCLE_CACHE,
     LIFECYCLE_CONFIG,
     LIFECYCLE_DEV,
@@ -25,8 +27,6 @@ from flavor.psp.format_2025.constants import (
     PURPOSE_CODE,
     PURPOSE_CONFIG,
     PURPOSE_DATA,
-    SLOT_ALIGNMENT,
-    SLOT_DESCRIPTOR_SIZE,
 )
 from provide.foundation.crypto import hash_name
 
@@ -81,7 +81,7 @@ class SlotDescriptor:
     checksum: int = field(default=0)  # Adler-32 of stored data
     operations: int = field(default=0)  # Packed 64-bit operation chain
     encryption: int = field(default=0)
-    alignment: int = field(default=SLOT_ALIGNMENT)
+    alignment: int = field(default=DEFAULT_SLOT_ALIGNMENT)
 
     # Semantics (8 bytes)
     purpose: int = field(default=PURPOSE_DATA)
@@ -127,14 +127,14 @@ class SlotDescriptor:
         )
         
         # Ensure exactly 64 bytes
-        assert len(data) == SLOT_DESCRIPTOR_SIZE, f"Slot descriptor must be {SLOT_DESCRIPTOR_SIZE} bytes, got {len(data)}"
+        assert len(data) == DEFAULT_SLOT_DESCRIPTOR_SIZE, f"Slot descriptor must be {DEFAULT_SLOT_DESCRIPTOR_SIZE} bytes, got {len(data)}"
         return data
 
     @classmethod
     def unpack(cls, data: bytes) -> "SlotDescriptor":
         """Unpack descriptor from 64-byte binary data."""
-        if len(data) != SLOT_DESCRIPTOR_SIZE:
-            raise ValueError(f"Slot descriptor must be {SLOT_DESCRIPTOR_SIZE} bytes")
+        if len(data) != DEFAULT_SLOT_DESCRIPTOR_SIZE:
+            raise ValueError(f"Slot descriptor must be {DEFAULT_SLOT_DESCRIPTOR_SIZE} bytes")
 
         unpacked = struct.unpack(
             "<QQQQQQQBBBBHBB",  # Match pack format exactly

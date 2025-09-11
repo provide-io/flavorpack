@@ -260,7 +260,7 @@ class DependencyResolver:
         Returns:
             Path to extracted UV binary or None
         """
-        from flavor.psp.format_2025.constants import DEFAULT_EXECUTABLE_PERMS
+        from flavor.config.defaults import DEFAULT_EXECUTABLE_PERMS
         
         try:
             with zipfile.ZipFile(uv_wheel, "r") as wheel_zip:
