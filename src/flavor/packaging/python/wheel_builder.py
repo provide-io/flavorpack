@@ -297,12 +297,32 @@ class WheelBuilder:
             python_exe, project_dir, wheel_dir
         )
         
+        # Extract project dependencies from pyproject.toml if not already in extra_packages
+        project_dependencies = []
+        pyproject_path = project_dir / "pyproject.toml"
+        if pyproject_path.exists() and not requirements_file:
+            import tomllib
+            try:
+                with open(pyproject_path, "rb") as f:
+                    pyproject_data = tomllib.load(f)
+                project_dependencies = pyproject_data.get("project", {}).get("dependencies", [])
+                if project_dependencies:
+                    logger.info(f"📦📝 Found {len(project_dependencies)} project dependencies in {project_dir.name}")
+                    logger.debug("Project dependencies", deps=project_dependencies)
+            except Exception as e:
+                logger.warning(f"Could not extract dependencies from pyproject.toml: {e}")
+        
+        # Combine all packages to resolve
+        all_packages = list(extra_packages or [])
+        if project_dependencies:
+            all_packages.extend(project_dependencies)
+        
         # Resolve dependencies
-        if requirements_file or extra_packages:
+        if requirements_file or all_packages:
             locked_requirements = self.resolve_dependencies(
                 python_exe=python_exe,
                 requirements_file=requirements_file,
-                packages=extra_packages,
+                packages=all_packages if all_packages else None,
                 output_dir=deps_dir,
             )
             

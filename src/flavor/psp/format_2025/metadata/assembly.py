@@ -59,6 +59,8 @@ def load_launcher_binary(launcher_type: str) -> bytes:
         Path(xdg_cache) / "flavor" / "helpers" / "bin",  # XDG cache location
         Path.home() / ".cache" / "flavor" / "helpers" / "bin",  # Fallback cache
         Path.cwd() / "workenv" / "flavors" / platform_str,
+        Path.cwd() / "ingredients" / "bin",  # Development ingredients
+        Path.cwd() / "src" / "flavor" / "ingredients" / "bin",  # Installed ingredients
         Path.cwd(),
     ]
 
