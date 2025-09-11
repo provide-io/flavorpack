@@ -1,102 +1,51 @@
 package format_2025
 
 // =================================
-// PSPF Format defaults
+// Platform-specific defaults
 // =================================
 const (
-	// Format version
-	DefaultPSPFVersion        = 0x20250001
-	DefaultHeaderSize         = 8192  // Future-proof 8KB index block
-	DefaultSlotDescriptorSize = 64    // Descriptor size
-	DefaultMagicTrailerSize   = 8200  // Index block with markers
-	DefaultSlotAlignment      = 8     // Minimum alignment
-
 	// Platform-specific page sizes
-	DefaultPageSize      = 4096 // Default for Linux/Windows
-	DefaultPageSizeMacOS = 16384 // macOS, especially M1/M2
-	DefaultCacheLine     = 64
-	DefaultCacheLineMacOS = 128
+	PageSize      = 4096 // Default for Linux/Windows
+	PageSizeMacOS = 16384 // macOS, especially M1/M2
+	CacheLine     = 64
+	CacheLineMacOS = 128
 )
 
 // =================================
 // File permissions defaults
 // =================================
 const (
-	DefaultFilePerms       = 0o600 // Read/write for owner only
-	DefaultExecutablePerms = 0o700 // Read/write/execute for owner only
-	DefaultDirPerms        = 0o700 // Read/write/execute for owner only
+	FilePerms       = 0o600 // Read/write for owner only
+	ExecutablePerms = 0o700 // Read/write/execute for owner only
+	DirPerms        = 0o700 // Read/write/execute for owner only
 )
 
 // =================================
 // Disk and memory defaults
 // =================================
 const (
-	DefaultDiskSpaceMultiplier = 2               // Require 2x compressed size for extraction
-	DefaultMaxMemory          = 128 * 1024 * 1024 // 128MB
-	DefaultMinMemory          = 8 * 1024 * 1024   // 8MB
-	DefaultChunkSize          = 64 * 1024         // 64KB for streaming
+	DiskSpaceMultiplier = 2               // Require 2x compressed size for extraction
+	MaxMemory          = 128 * 1024 * 1024 // 128MB
+	MinMemory          = 8 * 1024 * 1024   // 8MB
+	ChunkSize          = 64 * 1024         // 64KB for streaming
 )
 
 // =================================
 // Path constants
 // =================================
 const (
-	DefaultPSPFHiddenPrefix     = "."
-	DefaultPSPFSuffix          = ".pspf"
-	DefaultInstanceDir         = "instance"
-	DefaultPackageDir          = "package"
-	DefaultTmpDir              = "tmp"
-	DefaultExtractDir          = "extract"
-	DefaultLogDir              = "log"
-	DefaultLockFile            = "lock"
-	DefaultCompleteFile        = "complete"
-	DefaultPackageChecksumFile = "package.checksum"
-	DefaultPSPMetadataFile     = "psp.json"
-	DefaultIndexMetadataFile   = "index.json"
-)
-
-// =================================
-// Checksum algorithms
-// =================================
-const (
-	ChecksumAdler32 = 0 // Default, fast
-	ChecksumCRC32   = 1 // More robust than Adler-32
-	ChecksumSHA256  = 2 // First 4 bytes of SHA256
-	ChecksumXXHash  = 3 // Very fast, good distribution
-)
-
-// =================================
-// Purpose types
-// =================================
-const (
-	DefaultPurposeData   = 0 // General data files
-	DefaultPurposeCode   = 1 // Executable code
-	DefaultPurposeConfig = 2 // Configuration files
-	DefaultPurposeMedia  = 3 // Media/assets
-)
-
-// =================================
-// Lifecycle types
-// =================================
-const (
-	// Timing-based
-	DefaultLifecycleInit     = 0 // First run only, removed after initialization
-	DefaultLifecycleStartup  = 1 // Extracted/executed at every startup
-	DefaultLifecycleRuntime  = 2 // Available during application execution (default)
-	DefaultLifecycleShutdown = 3 // Executed during cleanup/exit phase
-	
-	// Retention-based
-	DefaultLifecycleCache     = 4 // Kept for performance, can be regenerated
-	DefaultLifecycleTemporary = 5 // Removed after current session ends
-	
-	// Access-based
-	DefaultLifecycleLazy  = 6 // Loaded on-demand, not extracted initially
-	DefaultLifecycleEager = 7 // Loaded immediately on startup
-	
-	// Environment-based
-	DefaultLifecycleDev      = 8  // Only extracted in development/debug mode
-	DefaultLifecycleConfig   = 9  // User-modifiable configuration files
-	DefaultLifecyclePlatform = 10 // Platform/OS specific content
+	PSPFHiddenPrefix     = "."
+	PSPFSuffix          = ".pspf"
+	InstanceDir         = "instance"
+	PackageDir          = "package"
+	TmpDir              = "tmp"
+	ExtractDir          = "extract"
+	LogDir              = "log"
+	LockFile            = "lock"
+	CompleteFile        = "complete"
+	PackageChecksumFile = "package.checksum"
+	PSPMetadataFile     = "psp.json"
+	IndexMetadataFile   = "index.json"
 )
 
 // =================================

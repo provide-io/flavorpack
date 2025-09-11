@@ -158,7 +158,7 @@ func checkDiskSpace(paths *WorkenvPaths, metadata *Metadata, logger hclog.Logger
 	// Calculate total size needed (compressed size * DiskSpaceMultiplier for safety)
 	var totalSizeNeeded int64
 	for _, slot := range metadata.Slots {
-		totalSizeNeeded += slot.Size * DiskSpaceMultiplier
+		totalSizeNeeded += slot.Size * DefaultDiskSpaceMultiplier
 	}
 
 	// Get available disk space
