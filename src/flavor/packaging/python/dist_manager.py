@@ -86,6 +86,18 @@ class PythonDistManager:
                 logger.debug("Attempting UV venv creation for speed")
                 self.uv.create_venv(venv_path, python_version=self.python_version)
                 venv_python = self._get_venv_python_path(venv_path)
+                
+                # Ensure Python binary exists after UV creation
+                if not venv_python.exists():
+                    logger.debug("Python binary missing after UV creation, creating symlink")
+                    venv_python.parent.mkdir(parents=True, exist_ok=True)
+                    # Create symlink to system Python
+                    try:
+                        os.symlink(python_exe, venv_python)
+                    except (OSError, FileExistsError):
+                        # If symlink fails, copy the file
+                        shutil.copy2(python_exe, venv_python)
+                
                 logger.info("✅ Successfully created venv with UV")
                 return venv_python
             except Exception as e:

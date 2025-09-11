@@ -327,3 +327,24 @@ class PSPFLauncher(PSPFReader):
                 "working_directory": os.getcwd(),
                 "error": str(e),
             }
+
+    def verify_integrity(self) -> dict[str, bool]:
+        """
+        Verify package integrity including signatures and checksums.
+        
+        Returns:
+            Dictionary with verification results:
+            - valid: Overall validity
+            - signature_valid: Signature verification result
+            - tamper_detected: Whether tampering was detected
+        """
+        from flavor.psp.security import verify_package_integrity
+        
+        if not self.bundle_path:
+            return {
+                "valid": False,
+                "signature_valid": False,
+                "tamper_detected": True
+            }
+        
+        return verify_package_integrity(self.bundle_path)

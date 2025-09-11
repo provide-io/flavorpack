@@ -31,6 +31,20 @@ from flavor.psp.format_2025.constants import (
 from provide.foundation.crypto import hash_name
 
 
+def validate_operations_string(instance, attribute, value: str) -> None:
+    """Validate that operations string is valid."""
+    if not isinstance(value, str):
+        raise ValueError(f"Operations must be a string, got {type(value)}")
+    
+    try:
+        # Import here to avoid circular imports
+        from flavor.psp.format_2025.operations import string_to_operations
+        # This will raise ValueError if invalid
+        string_to_operations(value)
+    except ValueError as e:
+        raise ValueError(f"Invalid operations string '{value}': {e}")
+
+
 def normalize_purpose(value: str) -> str:
     """Normalize purpose field to spec-compliant values for internal use."""
     purpose_map = {
@@ -184,11 +198,17 @@ class SlotMetadata:
     id: str = field(validator=validators.instance_of(str))  # Slot identifier
     source: str = field(validator=validators.instance_of(str))  # Source path
     target: str = field(validator=validators.instance_of(str))  # Target path in workenv
-    size: int = field(validator=validators.instance_of(int))
+    size: int = field(validator=[
+        validators.instance_of(int),
+        validators.ge(0)  # Size must be non-negative
+    ])
     checksum: str = field(validator=validators.instance_of(str))
     
     # Optional fields with defaults
-    operations: str = field(default="RAW")  # Operation chain string like "TAR|GZIP"
+    operations: str = field(
+        default="RAW",
+        validator=[validators.instance_of(str), validate_operations_string]
+    )  # Operation chain string like "TAR|GZIP"
     purpose: str = field(default="data")
     lifecycle: str = field(
         default="runtime",
