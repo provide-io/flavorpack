@@ -42,7 +42,6 @@ class TestReaderBackends:
                 name="test1.txt",
                 offset=data_offset,
                 size=100,
-                original_size=100,
                 checksum=zlib.adler32(b"TEST DATA 1" * 9 + b"T"),  # 100 bytes
                 operations=0,
             )
@@ -53,7 +52,6 @@ class TestReaderBackends:
                 name="test2.txt",
                 offset=data_offset + 100,
                 size=200,
-                original_size=200,
                 checksum=zlib.adler32(b"TEST DATA 2" * 18 + b"TD"),  # 200 bytes
                 operations=0,
             )
