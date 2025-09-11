@@ -66,30 +66,33 @@ def normalize_purpose(value: str) -> str:
 
 @define
 class SlotDescriptor:
-    """Enhanced slot descriptor - 64 bytes total."""
+    """Slot descriptor - exactly 64 bytes to match specification."""
 
-    # Identity (16 bytes)
-    id: int = field(validator=validators.instance_of(int))
-    name_hash: int = field(default=0)  # Will be computed from name
+    # Identity (12 bytes)
+    id: int = field(validator=validators.instance_of(int))  # 4 bytes (uint32)
+    name_hash: int = field(default=0)  # 8 bytes (uint64, xxHash64)
 
-    # Location (16 bytes)
-    offset: int = field(default=0)
-    size: int = field(default=0)  # Size as stored (compressed)
+    # Location (20 bytes) 
+    offset: int = field(default=0)      # 8 bytes (uint64)
+    size: int = field(default=0)        # 8 bytes (uint64, size as stored)
+    checksum: int = field(default=0)    # 4 bytes (uint32, Adler-32)
 
-    # Properties (16 bytes)
-    original_size: int = field(default=0)  # Uncompressed size
-    checksum: int = field(default=0)  # Adler-32 of stored data
-    operations: int = field(default=0)  # Packed 64-bit operation chain
-    encryption: int = field(default=0)
-    alignment: int = field(default=DEFAULT_SLOT_ALIGNMENT)
+    # Properties (12 bytes)
+    operations: int = field(default=0)      # 8 bytes (uint64, packed operations)
+    original_size: int = field(default=0)   # 4 bytes (uint32, sufficient for v0)
 
-    # Semantics (8 bytes)
-    purpose: int = field(default=PURPOSE_DATA)
-    lifecycle: int = field(default=LIFECYCLE_RUNTIME)
-    access_hint: int = field(default=ACCESS_HINT_SEQUENTIAL)
-    priority: int = field(default=CACHE_NORMAL)
-    permissions: int = field(default=0o644)  # Unix-style
-    platform: int = field(default=0)  # 0=any, 1=linux, 2=mac, 3=windows
+    # Classification (4 bytes)
+    purpose: int = field(default=PURPOSE_DATA)         # 1 byte (uint8)
+    lifecycle: int = field(default=LIFECYCLE_RUNTIME)  # 1 byte (uint8)
+    permissions: int = field(default=0o644)            # 2 bytes (uint16, Unix-style)
+
+    # Platform & Flags (4 bytes)
+    platform: int = field(default=0)       # 2 bytes (uint16, 0=any)
+    flags: int = field(default=0)           # 2 bytes (uint16, slot flags)
+
+    # Reserved (12 bytes) 
+    reserved1: int = field(default=0)       # 4 bytes (uint32)
+    reserved2: int = field(default=0)       # 8 bytes (uint64)
 
     # Optional runtime fields (not persisted)
     name: str = field(default="", metadata={"transient": True})
