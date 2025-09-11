@@ -104,29 +104,42 @@ class SlotDescriptor:
             self.name_hash = hash_name(self.name)
 
     def pack(self) -> bytes:
-        """Pack descriptor into 64-byte binary format."""
-        # Pack to exactly 64 bytes:
-        # 7Q (56) + 8B (8) = 64
-        # Split permissions into two bytes (low and high)
-        perm_low = self.permissions & 0xFF
-        perm_high = (self.permissions >> 8) & 0xFF
+        """Pack descriptor into exactly 64-byte binary format matching spec."""
+        # Validate id fits in 32-bit
+        if self.id > 0xFFFFFFFF:
+            raise ValueError(f"Slot ID must fit in 32 bits, got {self.id}")
+        
+        # Validate original_size fits in 32-bit (v0 limit)
+        if self.original_size > 0xFFFFFFFF:
+            raise ValueError(f"Original size must fit in 32 bits for v0, got {self.original_size}")
         
         data = struct.pack(
-            "<QQQQQQQBBBBHBB",
-            self.id,
-            self.name_hash,
-            self.offset,
-            self.size,
-            self.original_size,
-            self.operations,  # 64-bit operations field
-            self.checksum,
-            self.purpose,      # byte 56
-            self.lifecycle,    # byte 57
-            self.priority,     # byte 58
-            self.platform,     # byte 59
-            self.alignment,    # bytes 60-61: alignment (H = 2 bytes)
-            perm_low,          # byte 62: permissions low byte
-            perm_high,         # byte 63: permissions high byte
+            "<IQQQLQIBBHHII",
+            # Identity (12 bytes)
+            self.id,           # 4 bytes: uint32
+            self.name_hash,    # 8 bytes: uint64
+            
+            # Location (20 bytes)
+            self.offset,       # 8 bytes: uint64
+            self.size,         # 8 bytes: uint64
+            self.checksum,     # 4 bytes: uint32
+            
+            # Properties (12 bytes)
+            self.operations,   # 8 bytes: uint64
+            self.original_size, # 4 bytes: uint32
+            
+            # Classification (4 bytes)
+            self.purpose,      # 1 byte: uint8
+            self.lifecycle,    # 1 byte: uint8
+            self.permissions,  # 2 bytes: uint16
+            
+            # Platform & Flags (4 bytes)
+            self.platform,     # 2 bytes: uint16
+            self.flags,        # 2 bytes: uint16
+            
+            # Reserved (12 bytes)
+            self.reserved1,    # 4 bytes: uint32
+            self.reserved2,    # 8 bytes: uint64
         )
         
         # Ensure exactly 64 bytes
@@ -135,35 +148,41 @@ class SlotDescriptor:
 
     @classmethod
     def unpack(cls, data: bytes) -> "SlotDescriptor":
-        """Unpack descriptor from 64-byte binary data."""
+        """Unpack descriptor from 64-byte binary data matching spec."""
         if len(data) != DEFAULT_SLOT_DESCRIPTOR_SIZE:
             raise ValueError(f"Slot descriptor must be {DEFAULT_SLOT_DESCRIPTOR_SIZE} bytes")
 
         unpacked = struct.unpack(
-            "<QQQQQQQBBBBHBB",  # Match pack format exactly
+            "<IQQQLQIBBHHII",  # Match pack format exactly
             data,
         )
 
-        # Reconstruct full permissions from two bytes
-        perm_low = unpacked[12]   # byte 62
-        perm_high = unpacked[13]  # byte 63
-        permissions = perm_low | (perm_high << 8)
-
         return cls(
-            id=unpacked[0],
-            name_hash=unpacked[1],
-            offset=unpacked[2],
-            size=unpacked[3],
-            original_size=unpacked[4],
-            operations=unpacked[5],  # 64-bit operations
-            checksum=unpacked[6],
-            purpose=unpacked[7],      # byte 56
-            lifecycle=unpacked[8],    # byte 57
-            priority=unpacked[9],     # byte 58  
-            platform=unpacked[10],    # byte 59
-            alignment=unpacked[11],   # bytes 60-61: alignment
-            permissions=permissions,  # reconstructed from bytes 62-63
-            # Note: encryption, access_hint are not persisted in the binary format
+            # Identity (12 bytes)
+            id=unpacked[0],           # 4 bytes: uint32
+            name_hash=unpacked[1],    # 8 bytes: uint64
+            
+            # Location (20 bytes)
+            offset=unpacked[2],       # 8 bytes: uint64
+            size=unpacked[3],         # 8 bytes: uint64
+            checksum=unpacked[4],     # 4 bytes: uint32
+            
+            # Properties (12 bytes)
+            operations=unpacked[5],   # 8 bytes: uint64
+            original_size=unpacked[6], # 4 bytes: uint32
+            
+            # Classification (4 bytes)
+            purpose=unpacked[7],      # 1 byte: uint8
+            lifecycle=unpacked[8],    # 1 byte: uint8
+            permissions=unpacked[9],  # 2 bytes: uint16
+            
+            # Platform & Flags (4 bytes)
+            platform=unpacked[10],    # 2 bytes: uint16
+            flags=unpacked[11],       # 2 bytes: uint16
+            
+            # Reserved (12 bytes)
+            reserved1=unpacked[12],   # 4 bytes: uint32
+            reserved2=unpacked[13],   # 8 bytes: uint64
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -177,13 +196,11 @@ class SlotDescriptor:
             "original_size": self.original_size,
             "checksum": self.checksum,
             "operations": operations_to_string(self.operations),
-            "encryption": self.encryption,
-            "alignment": self.alignment,
             "purpose": self.purpose,
             "lifecycle": self.lifecycle,
-            "access_hint": self.access_hint,
-            "priority": self.priority,
             "permissions": self.permissions,
+            "platform": self.platform,
+            "flags": self.flags,
         }
         if self.name:
             result["name"] = self.name
