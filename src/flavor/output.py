@@ -141,14 +141,14 @@ def get_output_handler(
     Returns:
         Configured OutputHandler
     """
-    from provide.foundation.env import get_env
+    import os
 
     format_env = format_env or "FLAVOR_OUTPUT_FORMAT"
     file_env = file_env or "FLAVOR_OUTPUT_FILE"
 
-    format_str = get_env(format_env, "text").lower()
+    format_str = os.getenv(format_env, "text").lower()
     output_format = OutputFormat.JSON if format_str == "json" else OutputFormat.TEXT
 
-    output_file = get_env(file_env)
+    output_file = os.getenv(file_env)
 
     return OutputHandler(format=output_format, file=output_file)
