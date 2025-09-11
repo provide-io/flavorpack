@@ -12,6 +12,7 @@ from pathlib import Path
 
 from provide.foundation import logger
 from provide.foundation.crypto import sign_data
+from provide.foundation.file.directory import ensure_parent_dir
 
 from flavor.config.defaults import (
     DEFAULT_EXECUTABLE_PERMS,
@@ -58,7 +59,7 @@ def write_package(
         Total package size in bytes
     """
     # Ensure output directory exists
-    output_path.parent.mkdir(parents=True, exist_ok=True)
+    ensure_parent_dir(output_path)
 
     # Load launcher
     launcher_data = _load_launcher(spec)

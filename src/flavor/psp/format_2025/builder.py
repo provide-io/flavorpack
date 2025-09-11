@@ -199,9 +199,11 @@ def prepare_slots(
         # Apply operations to compress/transform data
         processed_data = _apply_operations(data, packed_ops, options)
 
-        # Calculate checksums with prefixes
-        checksum_str = calculate_checksum(processed_data, "sha256")
-        checksum_adler32 = zlib.adler32(processed_data)
+        # Calculate checksums on the final data that will be written (compressed data)
+        # This matches what Rust/Go builders do - checksum the actual slot content
+        data_to_checksum = processed_data if processed_data != data else data
+        checksum_str = calculate_checksum(data_to_checksum, "sha256") 
+        checksum_adler32 = zlib.adler32(data_to_checksum)
 
         # Store prefixed checksum in metadata
         slot.checksum = checksum_str
@@ -212,7 +214,7 @@ def prepare_slots(
                 data=data,
                 compressed_data=processed_data if processed_data != data else None,
                 codec_type=packed_ops,  # Operations packed as integer
-                checksum=checksum_adler32,  # Binary descriptor uses raw Adler-32
+                checksum=checksum_adler32,  # Binary descriptor uses checksum of final data
             )
         )
 

@@ -16,6 +16,7 @@ from typing import Any
 
 from provide.foundation.logger import logger
 from provide.foundation.process import run_command
+from provide.foundation.file.directory import ensure_dir, ensure_parent_dir
 
 from flavor.packaging.python.pypapip_manager import PyPaPipManager
 from flavor.packaging.python.uv_manager import UVManager
@@ -78,7 +79,7 @@ class PythonDistManager:
             logger.debug(f"Removing existing venv: {venv_path}")
             shutil.rmtree(venv_path)
         
-        venv_path.parent.mkdir(parents=True, exist_ok=True)
+        ensure_parent_dir(venv_path)
         
         # Try UV first for speed if enabled
         if self.use_uv_for_venv and self.uv:
@@ -90,7 +91,7 @@ class PythonDistManager:
                 # Ensure Python binary exists after UV creation
                 if not venv_python.exists():
                     logger.debug("Python binary missing after UV creation, creating symlink")
-                    venv_python.parent.mkdir(parents=True, exist_ok=True)
+                    ensure_parent_dir(venv_python)
                     # Create symlink to system Python
                     try:
                         os.symlink(python_exe, venv_python)
@@ -298,8 +299,8 @@ class PythonDistManager:
         venv_dir = build_dir / "venv"
         dist_dir = output_dir / "dist"
         
-        build_dir.mkdir(parents=True, exist_ok=True)
-        dist_dir.mkdir(parents=True, exist_ok=True)
+        ensure_dir(build_dir)
+        ensure_dir(dist_dir)
         
         # Build wheels for project and dependencies
         logger.info("Building wheels and resolving dependencies")

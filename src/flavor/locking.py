@@ -3,7 +3,7 @@
 from contextlib import contextmanager
 from pathlib import Path
 
-from provide.foundation.file.directory import temp_dir
+from provide.foundation.file.directory import temp_dir, ensure_dir
 from provide.foundation.file.lock import FileLock
 
 
@@ -18,7 +18,7 @@ class LockManager:
 
     def __init__(self, lock_dir: Path | None = None) -> None:
         self.lock_dir = lock_dir or Path.home() / ".cache" / "flavor" / "locks"
-        self.lock_dir.mkdir(parents=True, exist_ok=True)
+        ensure_dir(self.lock_dir)
         self.held_locks = set()
 
     @contextmanager

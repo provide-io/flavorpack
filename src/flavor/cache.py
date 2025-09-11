@@ -8,9 +8,8 @@ from pathlib import Path
 import time
 
 from provide.foundation.env import get_env
-from provide.foundation.file.directory import temp_dir
+from provide.foundation.file.directory import temp_dir, safe_rmtree, ensure_dir
 from provide.foundation.file.formats import read_json
-from provide.foundation.file.directory import safe_rmtree
 
 
 def get_cache_dir() -> Path:
@@ -43,8 +42,7 @@ class CacheManager:
             cache_dir: Override cache directory (defaults to system cache)
         """
         self.cache_dir = cache_dir or get_cache_dir()
-        if not self.cache_dir.exists():
-            self.cache_dir.mkdir(parents=True, exist_ok=True)
+        ensure_dir(self.cache_dir)
 
     def list_cached(self) -> list[dict]:
         """List all cached packages.

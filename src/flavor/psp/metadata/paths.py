@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any
 
 from provide.foundation.platform import get_os_name, get_arch_name
+from provide.foundation.file.directory import ensure_dir
 
 
 def validate_metadata_path(path: str) -> str:
@@ -352,7 +353,7 @@ def create_workenv_directories(
             dir_path = Path(full_path)
 
             # Create directory
-            dir_path.mkdir(parents=True, exist_ok=True)
+            ensure_dir(dir_path)
 
             # Set permissions if specified
             if mode_str:
