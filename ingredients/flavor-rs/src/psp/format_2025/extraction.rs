@@ -17,7 +17,7 @@ use log::{debug, error, trace};
 use tar::Archive;
 
 #[cfg(unix)]
-use super::constants::DEFAULT_DIR_PERMS;
+use super::defaults::DEFAULT_DIR_PERMS;
 use super::reader::Reader;
 use super::slots::SlotDescriptor;
 use crate::exceptions::{FlavorError, Result};
