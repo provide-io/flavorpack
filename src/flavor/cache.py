@@ -9,11 +9,12 @@ import time
 
 from provide.foundation.file.directory import temp_dir, safe_rmtree, ensure_dir
 from provide.foundation.file.formats import read_json
+from provide.foundation.utils.env import get_str
 
 
 def get_cache_dir() -> Path:
     """Get the cache directory for Flavor packages."""
-    cache_dir = os.getenv("FLAVOR_CACHE")
+    cache_dir = get_str("FLAVOR_CACHE")
     if cache_dir:
         return Path(cache_dir)
 
@@ -21,7 +22,7 @@ def get_cache_dir() -> Path:
     if os.name == "posix":
         if "darwin" in os.uname().sysname.lower():
             # macOS
-            base = Path(os.getenv("TMPDIR", "/var/folders"))
+            base = Path(get_str("TMPDIR", "/var/folders"))
             return base / "pspf" / "workenv"
         else:
             # Linux
