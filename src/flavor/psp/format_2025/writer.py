@@ -166,6 +166,9 @@ def _write_slots(f, slots: list[PreparedSlot], spec: BuildSpec, index: PSPFIndex
 
         # Create descriptor
         slot_permissions = parse_permissions(slot.metadata.permissions)
+        # DEBUG: Log alignment decision for diagnostics
+        alignment_value = PAGE_SIZE if spec.options.page_aligned else SLOT_ALIGNMENT
+        logger.debug(f"🐛 Slot {i}: page_aligned={spec.options.page_aligned}, PAGE_SIZE={PAGE_SIZE}, SLOT_ALIGNMENT={SLOT_ALIGNMENT}, chosen={alignment_value}")
         descriptor = SlotDescriptor(
             id=i,
             name=slot.metadata.id,
@@ -177,7 +180,7 @@ def _write_slots(f, slots: list[PreparedSlot], spec: BuildSpec, index: PSPFIndex
             purpose=_map_purpose(slot.metadata.purpose),
             lifecycle=_map_lifecycle(slot.metadata.lifecycle),
             permissions=slot_permissions,
-            alignment=PAGE_SIZE if spec.options.page_aligned else SLOT_ALIGNMENT,
+            alignment=alignment_value,
         )
         descriptors.append(descriptor)
 
