@@ -100,13 +100,8 @@ class TestLauncherAvailability:
     @patch("flavor.packaging.orchestrator.find_launcher_executable")
     @patch("pathlib.Path.exists", return_value=True)
     @patch("os.access", return_value=True)
-    @patch(
-        "flavor.packaging.orchestrator.run_command",
-        side_effect=OSError("Corrupted binary"),
-    )
     def test_corrupted_launcher_detection(
         self,
-        mock_run,
         mock_access,
         mock_exists,
         mock_find,
@@ -116,8 +111,25 @@ class TestLauncherAvailability:
         """Test BuildError is raised if launcher is corrupted and cannot be executed."""
         mock_find.return_value = Path("/fake/corrupted-launcher")
         orchestrator = orchestrator_factory()
-        with pytest.raises(BuildError, match="Failed to execute command"):
-            orchestrator.build_package()
+        
+        # Mock only the specific launcher version check to fail
+        with patch("flavor.packaging.orchestrator.run_command") as mock_run:
+            # Configure mock to fail only for launcher --version calls
+            def run_command_side_effect(cmd, **kwargs):
+                if len(cmd) >= 2 and cmd[1] == "--version" and "corrupted-launcher" in cmd[0]:
+                    raise OSError("Corrupted binary")
+                # For other commands, return a successful mock result
+                from unittest.mock import MagicMock
+                result = MagicMock()
+                result.returncode = 0
+                result.stdout = ""
+                result.stderr = ""
+                return result
+            
+            mock_run.side_effect = run_command_side_effect
+            
+            with pytest.raises(BuildError, match="Failed to execute command"):
+                orchestrator.build_package()
 
     @patch("flavor.packaging.orchestrator.find_launcher_executable")
     @patch("pathlib.Path.exists", return_value=True)
