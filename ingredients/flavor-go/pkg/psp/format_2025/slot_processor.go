@@ -131,7 +131,7 @@ func mapLifecycleToUint8(lifecycle string) uint8 {
 // parsePermissions parses permission string (e.g., "0755") to uint16
 func parsePermissions(permStr string) uint16 {
 	if permStr == "" {
-		return uint16(DefaultFilePerms)
+		return uint16(FilePerms)
 	}
 
 	// Parse octal string (e.g., "0755" -> 0o755)
@@ -140,7 +140,7 @@ func parsePermissions(permStr string) uint16 {
 		return uint16(parsed)
 	}
 
-	return uint16(DefaultFilePerms) // fallback to default
+	return uint16(FilePerms) // fallback to default
 }
 
 // hashSlotName is defined in builder.go and reused here
@@ -177,7 +177,7 @@ func (sp *SlotProcessor) processSlot(index int, slot *Slot) error {
 		slot.Resolution = "build"
 	}
 	if slot.Permissions == "" {
-		slot.Permissions = fmt.Sprintf("%04o", DefaultFilePerms)
+		slot.Permissions = fmt.Sprintf("%04o", FilePerms)
 	}
 
 	// Validate slot number if provided

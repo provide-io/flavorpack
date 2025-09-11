@@ -6,7 +6,7 @@ import (
 	"io"
 
 	"github.com/dsnet/compress/bzip2"
-	"github.com/provide-io/flavorpack/pkg/psp/operations"
+	"github.com/provide-io/flavor/go/flavor/pkg/psp/operations"
 )
 
 func init() {
@@ -22,8 +22,8 @@ type Bzip2Operation struct {
 func NewBzip2Operation() *Bzip2Operation {
 	return &Bzip2Operation{
 		BaseOperation: operations.BaseOperation{
-			ID:   operations.OP_BZIP2,
-			Name: "BZIP2",
+			OpID:   operations.OP_BZIP2,
+			OpName: "BZIP2",
 		},
 	}
 }

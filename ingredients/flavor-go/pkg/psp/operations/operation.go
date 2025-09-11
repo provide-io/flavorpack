@@ -49,16 +49,16 @@ type Operation interface {
 
 // BaseOperation provides common functionality for operations
 type BaseOperation struct {
-	id   uint8
-	name string
+	OpID   uint8
+	OpName string
 }
 
 func (o *BaseOperation) ID() uint8 {
-	return o.id
+	return o.OpID
 }
 
 func (o *BaseOperation) Name() string {
-	return o.name
+	return o.OpName
 }
 
 func (o *BaseOperation) CanReverse() bool {

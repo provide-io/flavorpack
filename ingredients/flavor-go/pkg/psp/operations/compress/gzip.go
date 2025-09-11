@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/provide-io/flavorpack/pkg/psp/operations"
+	"github.com/provide-io/flavor/go/flavor/pkg/psp/operations"
 )
 
 func init() {
@@ -23,8 +23,8 @@ type GzipOperation struct {
 func NewGzipOperation() *GzipOperation {
 	return &GzipOperation{
 		BaseOperation: operations.BaseOperation{
-			ID:   operations.OP_GZIP,
-			Name: "GZIP",
+			OpID:   operations.OP_GZIP,
+			OpName: "GZIP",
 		},
 	}
 }

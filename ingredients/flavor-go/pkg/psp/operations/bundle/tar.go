@@ -7,7 +7,7 @@ import (
 	"io"
 	"time"
 
-	"github.com/provide-io/flavorpack/pkg/psp/operations"
+	"github.com/provide-io/flavor/go/flavor/pkg/psp/operations"
 )
 
 func init() {
@@ -24,8 +24,8 @@ type TarOperation struct {
 func NewTarOperation() *TarOperation {
 	return &TarOperation{
 		BaseOperation: operations.BaseOperation{
-			ID:   operations.OP_TAR,
-			Name: "TAR",
+			OpID:   operations.OP_TAR,
+			OpName: "TAR",
 		},
 	}
 }

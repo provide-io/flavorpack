@@ -436,7 +436,7 @@ func (r *Reader) ExtractSlot(slotIndex int, destDir string) (string, error) {
 	if isTar {
 
 		// Ensure extraction directory exists
-		if err := os.MkdirAll(extractDir, os.FileMode(DefaultDirPerms)); err != nil {
+		if err := os.MkdirAll(extractDir, os.FileMode(DirPerms)); err != nil {
 			return "", fmt.Errorf("%w: failed to create extraction directory for slot %d: %v", ErrSlotExtractionFailed, slotIndex, err)
 		}
 
@@ -459,7 +459,7 @@ func (r *Reader) ExtractSlot(slotIndex int, destDir string) (string, error) {
 				}
 			case tar.TypeReg:
 				// Ensure parent directory exists
-				if err := os.MkdirAll(filepath.Dir(target), os.FileMode(DefaultDirPerms)); err != nil {
+				if err := os.MkdirAll(filepath.Dir(target), os.FileMode(DirPerms)); err != nil {
 					return "", err
 				}
 
@@ -488,7 +488,7 @@ func (r *Reader) ExtractSlot(slotIndex int, destDir string) (string, error) {
 				}
 			case tar.TypeSymlink:
 				// Ensure parent directory exists
-				if err := os.MkdirAll(filepath.Dir(target), os.FileMode(DefaultDirPerms)); err != nil {
+				if err := os.MkdirAll(filepath.Dir(target), os.FileMode(DirPerms)); err != nil {
 					return "", err
 				}
 
@@ -519,7 +519,7 @@ func (r *Reader) ExtractSlot(slotIndex int, destDir string) (string, error) {
 		return destPath, nil
 	}
 
-	if err := os.MkdirAll(filepath.Dir(destPath), os.FileMode(DefaultDirPerms)); err != nil {
+	if err := os.MkdirAll(filepath.Dir(destPath), os.FileMode(DirPerms)); err != nil {
 		return "", err
 	}
 
@@ -528,7 +528,7 @@ func (r *Reader) ExtractSlot(slotIndex int, destDir string) (string, error) {
 	if slotPermissions != 0 {
 		perm = os.FileMode(slotPermissions)
 	} else {
-		perm = os.FileMode(DefaultFilePerms) // 0600 - secure by default
+		perm = os.FileMode(FilePerms) // 0600 - secure by default
 	}
 
 	// Log what we're about to write
