@@ -5,8 +5,9 @@
 
 import os
 from pathlib import Path
-import tempfile
 from typing import Any
+
+from provide.foundation.file.directory import temp_dir
 
 from provide.foundation import logger
 from provide.foundation.errors import log_only_error_context, with_error_handling
@@ -184,20 +185,19 @@ class PackagingOrchestrator:
             progress=progress,
         )
 
-        with tempfile.TemporaryDirectory(prefix="flavor_build_") as temp_dir_str:
-            temp_dir = Path(temp_dir_str)
+        with temp_dir(prefix="flavor_build_") as build_temp_dir:
 
             logger.info("Preparing Python artifacts...")
             with progress.task(
                 total=5, description="Preparing Python artifacts"
             ) as bar:
-                artifacts = python_packager.prepare_artifacts(temp_dir)
+                artifacts = python_packager.prepare_artifacts(build_temp_dir)
                 if bar:
                     bar.finish()
 
             logger.info("Creating slot tarballs...")
             uv_tarball, python_tarball, wheels_tarball = create_python_slot_tarballs(
-                temp_dir, artifacts, progress
+                build_temp_dir, artifacts, progress
             )
 
             launcher_path = self._launcher_path
@@ -309,19 +309,18 @@ class PackagingOrchestrator:
             progress=progress,
         )
 
-        with tempfile.TemporaryDirectory(prefix="flavor_build_") as temp_dir_str:
-            temp_dir = Path(temp_dir_str)
+        with temp_dir(prefix="flavor_build_") as build_temp_dir:
 
             logger.info("Preparing Python artifacts...")
             with progress.task(
                 total=5, description="Preparing Python artifacts"
             ) as bar:
-                artifacts = python_packager.prepare_artifacts(temp_dir)
+                artifacts = python_packager.prepare_artifacts(build_temp_dir)
                 if bar:
                     bar.finish()
 
             logger.info("Creating slot tarballs...")
-            slots = create_slot_tarballs(temp_dir, artifacts, progress)
+            slots = create_slot_tarballs(build_temp_dir, artifacts, progress)
 
             key_paths = {
                 "private": self.package_integrity_key_path,
@@ -331,7 +330,7 @@ class PackagingOrchestrator:
                 self.package_name, self.version, self.build_config, slots, key_paths
             )
 
-            manifest_path = write_manifest_file(manifest, temp_dir)
+            manifest_path = write_manifest_file(manifest, build_temp_dir)
             packager_executable = find_builder_executable(self.builder_bin)
             launcher_executable = self._launcher_path
 
@@ -383,8 +382,7 @@ class PackagingOrchestrator:
         progress = ProgressReporter(enabled=self.show_progress)
 
         # Write the manifest to a temporary file
-        with tempfile.TemporaryDirectory(prefix="flavor_json_build_") as temp_dir_str:
-            temp_dir = Path(temp_dir_str)
+        with temp_dir(prefix="flavor_json_build_") as build_temp_dir:
 
             # Transform nested JSON manifest to flat structure expected by external builders
             flat_manifest = {
@@ -407,7 +405,7 @@ class PackagingOrchestrator:
                 flat_manifest["env"] = self.build_config["execution"]["environment"]
 
             # Write manifest directly to file
-            manifest_path = temp_dir / "manifest.json"
+            manifest_path = build_temp_dir / "manifest.json"
             manifest_path.write_text(json.dumps(flat_manifest, indent=2))
             logger.info(f"Using JSON manifest at: {manifest_path}")
 
