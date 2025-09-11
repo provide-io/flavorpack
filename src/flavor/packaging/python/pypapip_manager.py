@@ -119,33 +119,33 @@ class PyPaPipManager:
         if binary_only:
             cmd.extend(["--only-binary", ":all:"])
 
-        # For Linux builds, explicitly request manylinux wheels for maximum compatibility
-        # manylinux2014 = glibc 2.17+ (CentOS 7, Amazon Linux 2, Ubuntu 14.04+)
-        if get_os_name() == "linux" and binary_only:
-            if platform_tag:
-                # Use explicitly provided platform tag
-                cmd.extend(["--platform", platform_tag])
-                logger.debug(f"Added platform constraint: {platform_tag}")
-            else:
-                arch = get_arch_name()
-                logger.trace(
-                    f"Linux build detected, arch={arch}, requesting {self.MANYLINUX_TAG} wheels"
-                )
+        # Handle platform tags
+        if platform_tag:
+            # Use explicitly provided platform tag (works on any OS)
+            cmd.extend(["--platform", platform_tag])
+            logger.debug(f"Added platform constraint: {platform_tag}")
+        elif get_os_name() == "linux" and binary_only:
+            # For Linux builds, explicitly request manylinux wheels for maximum compatibility
+            # manylinux2014 = glibc 2.17+ (CentOS 7, Amazon Linux 2, Ubuntu 14.04+)
+            arch = get_arch_name()
+            logger.trace(
+                f"Linux build detected, arch={arch}, requesting {self.MANYLINUX_TAG} wheels"
+            )
 
-                # Use manylinux2014 format for maximum compatibility
-                # manylinux2014 = glibc 2.17+ (CentOS 7, Amazon Linux 2, Ubuntu 14.04+)
-                if arch == "amd64":
-                    cmd.extend(["--platform", f"{self.MANYLINUX_TAG}_x86_64"])
-                    logger.debug(
-                        f"Added platform constraint: {self.MANYLINUX_TAG}_x86_64"
-                    )
-                elif arch == "arm64":
-                    # ARM64 doesn't have manylinux2010, use manylinux2014
-                    cmd.extend(["--platform", f"{self.MANYLINUX_TAG}_aarch64"])
-                    logger.debug(
-                        f"Added platform constraint: {self.MANYLINUX_TAG}_aarch64"
-                    )
-                    logger.warning("⚠️ grpcio on CentOS 7 ARM64 may have C++ ABI issues")
+            # Use manylinux2014 format for maximum compatibility
+            # manylinux2014 = glibc 2.17+ (CentOS 7, Amazon Linux 2, Ubuntu 14.04+)
+            if arch == "amd64":
+                cmd.extend(["--platform", f"{self.MANYLINUX_TAG}_x86_64"])
+                logger.debug(
+                    f"Added platform constraint: {self.MANYLINUX_TAG}_x86_64"
+                )
+            elif arch == "arm64":
+                # ARM64 doesn't have manylinux2010, use manylinux2014
+                cmd.extend(["--platform", f"{self.MANYLINUX_TAG}_aarch64"])
+                logger.debug(
+                    f"Added platform constraint: {self.MANYLINUX_TAG}_aarch64"
+                )
+                logger.warning("⚠️ grpcio on CentOS 7 ARM64 may have C++ ABI issues")
 
             # Also specify Python version to match our target
             py_parts = self.python_version.split(".")
