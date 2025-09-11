@@ -320,8 +320,9 @@ class TestWorkEnvironment:
                         "content": "{version}",
                     },
                     {
-                        "type": "execute",
-                        "command": "chmod +x {workenv}/python_runtime/python",
+                        "type": "chmod",
+                        "path": "{workenv}/python_runtime/python",
+                        "mode": "755",
                     },
                 ],
             )

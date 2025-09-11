@@ -1,15 +1,11 @@
 #!/usr/bin/env python3
 """
 PSPF/2025 Operation Chain System
-Bridges the legacy codec constants with the new packed operation chains
+Implements packed operation chains for slot transformations
 """
 
-import sys
-from pathlib import Path
-
 # Import generated protobuf operations
-sys.path.insert(0, str(Path(__file__).parent / "generated"))
-from modules import operations_pb2
+from flavor.psp.format_2025.generated.modules import operations_pb2
 
 # Re-export operation constants for convenience
 OP_NONE = operations_pb2.OP_NONE

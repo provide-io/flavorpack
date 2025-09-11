@@ -41,7 +41,11 @@ fi
 # Create required tar.gz archives for test packages
 echo "📦 Creating test archives..."
 if [ -f scripts/orchestrate.sh ]; then
-    tar czf scripts/orchestrate.tar.gz -C scripts orchestrate.sh
+    # Create orchestrator directory structure for the tar
+    mkdir -p /tmp/orchestrator
+    cp scripts/orchestrate.sh /tmp/orchestrator/
+    tar czf scripts/orchestrate.tar.gz -C /tmp orchestrator/
+    rm -rf /tmp/orchestrator
     echo "  ✅ Created scripts/orchestrate.tar.gz"
 fi
 
