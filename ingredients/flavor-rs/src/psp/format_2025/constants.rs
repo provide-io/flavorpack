@@ -1,173 +1,19 @@
-// helpers/flavor-rs/src/psp/format_2025/constants.rs
-// PSPF 2025 Format Constants - Enhanced Memory-Mapped Version
+// ingredients/flavor-rs/src/psp/format_2025/constants.rs
+// Core format constants that never change
+// For defaults and configuration, see defaults.rs
 
 // Individual emoji bytes for MagicTrailer bookends
 pub const PACKAGE_EMOJI_BYTES: &[u8] = &[0xF0, 0x9F, 0x93, 0xA6];  // 📦 as bytes (MagicTrailer start)
 pub const MAGIC_WAND_EMOJI_BYTES: &[u8] = &[0xF0, 0x9F, 0xAA, 0x84];  // 🪄 as bytes (MagicTrailer end)
 
-/// Format version - keeping as v1
+// Format version - immutable
 pub const PSPF_VERSION: u32 = 0x20250001;
 pub const FORMAT_VERSION: u32 = PSPF_VERSION; // Alias for compatibility
 
-/// Size constants
-pub const HEADER_SIZE: usize = 8192; // Future-proof 8KB index block
-pub const SLOT_DESCRIPTOR_SIZE: usize = 64; // Descriptor size
+// Fixed sizes - part of the format specification
+pub const HEADER_SIZE: usize = 8192; // Index block size
+pub const SLOT_DESCRIPTOR_SIZE: usize = 64; // Slot descriptor size
 pub const MAGIC_TRAILER_SIZE: usize = 8200; // 📦 (4) + index (8192) + 🪄 (4)
-pub const SLOT_ALIGNMENT: u64 = 8;
-
-// Platform-specific page sizes
-#[cfg(target_os = "macos")]
-pub const PAGE_SIZE: usize = 16384; // macOS, especially M1/M2
-#[cfg(target_os = "linux")]
-pub const PAGE_SIZE: usize = 4096;
-#[cfg(target_os = "windows")]
-pub const PAGE_SIZE: usize = 4096;
-#[cfg(not(any(target_os = "macos", target_os = "linux", target_os = "windows")))]
-pub const PAGE_SIZE: usize = 4096; // Default
-
-/// Disk space safety multiplier - require 2x compressed size for extraction
-pub const DISK_SPACE_MULTIPLIER: u64 = 2;
-
-// ==================== Path Constants ====================
-/// Hidden directory prefix for metadata
-pub const PSPF_HIDDEN_PREFIX: &str = ".";
-
-/// Suffix for metadata directory
-pub const PSPF_SUFFIX: &str = ".pspf";
-
-/// Instance metadata directory (persistent across extractions)
-pub const INSTANCE_DIR: &str = "instance";
-
-/// Package metadata directory (replaced each extraction)
-pub const PACKAGE_DIR: &str = "package";
-
-/// Temporary extraction directory
-pub const TMP_DIR: &str = "tmp";
-
-/// Extract operations directory (under instance)
-pub const EXTRACT_DIR: &str = "extract";
-
-/// Log directory (under instance)
-pub const LOG_DIR: &str = "log";
-
-/// Lock file name (in instance/extract/)
-pub const LOCK_FILE: &str = "lock";
-
-/// Completion marker file name (in instance/extract/)
-pub const COMPLETE_FILE: &str = "complete";
-
-/// Package checksum file name (in instance/)
-pub const PACKAGE_CHECKSUM_FILE: &str = "package.checksum";
-
-/// PSP metadata JSON file name (in package/)
-pub const PSP_METADATA_FILE: &str = "psp.json";
-
-/// Index metadata JSON file name (in instance/)
-pub const INDEX_METADATA_FILE: &str = "index.json";
-
-/// Codec types - describe the actual format of slot data
-pub const CODEC_RAW: u8 = 0; // Raw uncompressed data
-pub const CODEC_TAR: u8 = 1; // Uncompressed tar archive
-pub const CODEC_GZIP: u8 = 2; // Gzipped single file
-pub const CODEC_TGZ: u8 = 3; // Tar archive, then gzipped (tar.gz)
-
-// Future codec formats (not implemented yet):
-// pub const CODEC_ZSTD: u8 = 4;     // Zstd compressed single file
-// pub const CODEC_TZST: u8 = 5;     // Tar archive, then zstd compressed
-// pub const CODEC_BROTLI: u8 = 6;   // Brotli compressed single file
-// pub const CODEC_TBR: u8 = 7;      // Tar archive, then brotli compressed
-// pub const CODEC_ZIP: u8 = 8;      // Zip archive
-// pub const CODEC_7Z: u8 = 9;       // 7-zip archive
-
-/// Purpose types - aligned with Python naming
-pub const PURPOSE_DATA: u8 = 0; // General data files
-pub const PURPOSE_CODE: u8 = 1; // Executable code  
-pub const PURPOSE_CONFIG: u8 = 2; // Configuration files
-pub const PURPOSE_MEDIA: u8 = 3; // Media/assets
-
-// Legacy aliases for backward compatibility
-pub const PURPOSE_PAYLOAD: u8 = PURPOSE_DATA; // Deprecated: use PURPOSE_DATA
-pub const PURPOSE_RUNTIME: u8 = PURPOSE_CODE; // Deprecated: use PURPOSE_CODE
-pub const PURPOSE_TOOL: u8 = PURPOSE_CONFIG; // Deprecated: use PURPOSE_CONFIG
-
-/// Lifecycle types - must match Python/Go builders
-pub const LIFECYCLE_INIT: u8 = 0; // First run only, removed after initialization
-pub const LIFECYCLE_STARTUP: u8 = 1; // Extracted/executed at every startup
-pub const LIFECYCLE_RUNTIME: u8 = 2; // Available during application execution (default)
-pub const LIFECYCLE_SHUTDOWN: u8 = 3; // Executed during cleanup/exit phase
-pub const LIFECYCLE_CACHE: u8 = 4; // Kept for performance, can be regenerated
-pub const LIFECYCLE_TEMPORARY: u8 = 5; // Removed after current session ends
-pub const LIFECYCLE_LAZY: u8 = 6; // Loaded on-demand, not extracted initially
-pub const LIFECYCLE_EAGER: u8 = 7; // Loaded immediately on startup
-pub const LIFECYCLE_DEV: u8 = 8; // Only extracted in development/debug mode
-pub const LIFECYCLE_CONFIG: u8 = 9; // User-modifiable configuration files
-pub const LIFECYCLE_PLATFORM: u8 = 10; // Platform/OS specific content
-
-/// Access modes
-pub const ACCESS_FILE: u8 = 0; // Traditional file I/O
-pub const ACCESS_MMAP: u8 = 1; // Memory-mapped access
-pub const ACCESS_AUTO: u8 = 2; // Choose based on size/system
-pub const ACCESS_STREAM: u8 = 3; // Streaming access
-
-/// Cache priorities
-pub const CACHE_LOW: u8 = 0; // Evict first
-pub const CACHE_NORMAL: u8 = 1; // Standard caching
-pub const CACHE_HIGH: u8 = 2; // Keep in memory
-pub const CACHE_CRITICAL: u8 = 3; // Never evict
-
-/// Access hints (bit flags for slot descriptor)
-pub const ACCESS_HINT_SEQUENTIAL: u8 = 0; // Sequential access pattern
-pub const ACCESS_HINT_RANDOM: u8 = 1; // Random access pattern
-pub const ACCESS_HINT_ONCE: u8 = 2; // Access once then discard
-pub const ACCESS_HINT_PREFETCH: u8 = 3; // Prefetch next slot
-
-/// Feature flags for capabilities field
-pub const CAPABILITY_MMAP: u64 = 1 << 0; // Has memory-mapped support
-pub const CAPABILITY_PAGE_ALIGNED: u64 = 1 << 1; // Page-aligned slots
-pub const CAPABILITY_COMPRESSED_INDEX: u64 = 1 << 2; // Compressed index
-pub const CAPABILITY_STREAMING: u64 = 1 << 3; // Streaming-optimized
-pub const CAPABILITY_PREFETCH: u64 = 1 << 4; // Has prefetch hints
-pub const CAPABILITY_CACHE_AWARE: u64 = 1 << 5; // Cache-aware layout
-pub const CAPABILITY_ENCRYPTED: u64 = 1 << 6; // Has encrypted slots
-pub const CAPABILITY_SIGNED: u64 = 1 << 7; // Digitally signed
-
-/// Signature algorithms
-pub const SIGNATURE_NONE: [u8; 8] = *b"\x00\x00\x00\x00\x00\x00\x00\x00";
-pub const SIGNATURE_ED25519: [u8; 8] = *b"ED25519\x00";
-pub const SIGNATURE_RSA4096: [u8; 8] = *b"RSA4096\x00";
-
-/// Metadata formats
-pub const METADATA_JSON: [u8; 8] = *b"JSON\x00\x00\x00\x00";
-pub const METADATA_CBOR: [u8; 8] = *b"CBOR\x00\x00\x00\x00";
-pub const METADATA_MSGPACK: [u8; 8] = *b"MSGPACK\x00";
-
-/// Default values
-pub const DEFAULT_MAX_MEMORY: u64 = 128 * 1024 * 1024; // 128MB
-pub const DEFAULT_MIN_MEMORY: u64 = 8 * 1024 * 1024; // 8MB
-pub const DEFAULT_CHUNK_SIZE: usize = 64 * 1024; // 64KB for streaming
-
-/// Default file permissions (Unix-style)
-pub const DEFAULT_FILE_PERMS: u16 = 0o600; // Read/write for owner only
-pub const DEFAULT_EXECUTABLE_PERMS: u16 = 0o700; // Read/write/execute for owner only
-pub const DEFAULT_DIR_PERMS: u16 = 0o700; // Read/write/execute for owner only (secure by default)
-
-// ==================== Operation Constants ====================
-// From protobuf-generated operations (must match Python/Go)
-
-/// No operation - raw data
-pub const OP_NONE: u8 = 0x00;
-
-/// Archive operations
-pub const OP_TAR: u8 = 0x01;
-
-/// Compression operations  
-pub const OP_GZIP: u8 = 0x10;
-pub const OP_BZIP2: u8 = 0x13;
-pub const OP_XZ: u8 = 0x18;
-pub const OP_ZSTD: u8 = 0x1B;
-
-/// Encryption operations
-pub const OP_AES256_GCM: u8 = 0x31;
-
+pub const SLOT_ALIGNMENT: u64 = 8; // Slots must be 8-byte aligned
 
 // 📦💾🔍🪄
