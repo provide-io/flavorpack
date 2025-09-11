@@ -85,7 +85,7 @@ class TestPyPaPipManager:
         
         expected = [
             "/usr/bin/python3", "-m", "pip", "download", "--dest", "/tmp/downloads",
-            "--only-binary", ":all:", "requests"
+            "--only-binary", ":all:", "--python-version", "3.11", "requests"
         ]
         assert cmd == expected
     
@@ -107,8 +107,8 @@ class TestPyPaPipManager:
         # CRITICAL: Must include manylinux2014_x86_64 platform tag for Linux compatibility
         expected = [
             "/usr/bin/python3", "-m", "pip", "download", "--dest", "/tmp/downloads",
-            "--only-binary", ":all:", "--platform", "manylinux2014_x86_64",
-            "--python-version", "3.11", "numpy"
+            "--only-binary", ":all:", "--python-version", "3.11",
+            "--platform", "manylinux2014_x86_64", "numpy"
         ]
         assert cmd == expected
     
@@ -127,11 +127,11 @@ class TestPyPaPipManager:
             python_exe, dest_dir, packages=packages, binary_only=True
         )
         
-        # CRITICAL: Must include manylinux2014_aarch64 platform tag for ARM64 Linux
+        # CRITICAL: Must include manylinux_2_17_aarch64 platform tag for ARM64 Linux
         expected = [
             "/usr/bin/python3", "-m", "pip", "download", "--dest", "/tmp/downloads",
-            "--only-binary", ":all:", "--platform", "manylinux2014_aarch64",
-            "--python-version", "3.11", "scipy"
+            "--only-binary", ":all:", "--python-version", "3.11",
+            "--platform", "manylinux_2_17_aarch64", "scipy"
         ]
         assert cmd == expected
     
@@ -148,7 +148,8 @@ class TestPyPaPipManager:
         
         expected = [
             "/usr/bin/python3", "-m", "pip", "download", "--dest", "/tmp/downloads",
-            "--only-binary", ":all:", "--platform", "linux_x86_64", "wheel"
+            "--only-binary", ":all:", "--python-version", "3.11",
+            "--platform", "linux_x86_64", "wheel"
         ]
         assert cmd == expected
     
@@ -164,7 +165,8 @@ class TestPyPaPipManager:
         
         expected = [
             "/usr/bin/python3", "-m", "pip", "download", "--dest", "/tmp/downloads",
-            "--only-binary", ":all:", "-r", "/tmp/requirements.txt"
+            "--only-binary", ":all:", "--python-version", "3.11",
+            "-r", "/tmp/requirements.txt"
         ]
         assert cmd == expected
     
@@ -328,7 +330,7 @@ class TestPyPaPipManagerCriticalFeatures:
         # Test both supported architectures
         for arch, expected_tag in [
             ("amd64", "manylinux2014_x86_64"),
-            ("arm64", "manylinux2014_aarch64"),
+            ("arm64", "manylinux_2_17_aarch64"),
         ]:
             mock_arch.return_value = arch
             
