@@ -15,7 +15,7 @@ from pathlib import Path
 from provide.foundation import logger
 
 from flavor.archive import ArchiveChain, ChainProcessor
-from flavor.psp.format_2025.constants import SLOT_ALIGNMENT
+from flavor.config.defaults import DEFAULT_SLOT_ALIGNMENT
 from flavor.psp.format_2025.slots import SlotView
 
 

@@ -18,7 +18,7 @@ from flavor.psp.format_2025.backends import (
     MMapBackend,
     create_backend,
 )
-from flavor.psp.format_2025.constants import PAGE_SIZE
+from flavor.config.defaults import DEFAULT_PAGE_SIZE
 
 
 @contextmanager
@@ -282,7 +282,7 @@ class TestMMapPerformance:
 
             # Sequential access (should minimize page faults)
             with measure_time("Sequential access"):
-                for offset in range(0, size, PAGE_SIZE):
+                for offset in range(0, size, DEFAULT_PAGE_SIZE):
                     _ = backend.read_at(offset, 1)  # Touch first byte of each page
 
             usage_after_seq = resource.getrusage(resource.RUSAGE_SELF)
@@ -296,7 +296,7 @@ class TestMMapPerformance:
             backend.open(path)
 
             # Random access (should cause more page faults)
-            offsets = list(range(0, size, PAGE_SIZE))
+            offsets = list(range(0, size, DEFAULT_PAGE_SIZE))
             random.shuffle(offsets)
 
             usage_before = resource.getrusage(resource.RUSAGE_SELF)
@@ -320,13 +320,13 @@ class TestMMapPerformance:
             faults_before = usage_before.ru_minflt
 
             with measure_time("With prefetch hints"):
-                for offset in range(0, size, PAGE_SIZE * 16):
+                for offset in range(0, size, DEFAULT_PAGE_SIZE * 16):
                     # Prefetch next 16 pages
-                    backend.prefetch(offset, PAGE_SIZE * 16)
+                    backend.prefetch(offset, DEFAULT_PAGE_SIZE * 16)
                     # Then access them
                     for i in range(16):
-                        if offset + i * PAGE_SIZE < size:
-                            _ = backend.read_at(offset + i * PAGE_SIZE, 1)
+                        if offset + i * DEFAULT_PAGE_SIZE < size:
+                            _ = backend.read_at(offset + i * DEFAULT_PAGE_SIZE, 1)
 
             usage_after_prefetch = resource.getrusage(resource.RUSAGE_SELF)
             faults_prefetch = usage_after_prefetch.ru_minflt - faults_before
@@ -357,7 +357,7 @@ class TestMMapPerformance:
             elif access_pattern == "random":
                 offsets = [random.randint(0, size - read_size) for _ in range(1000)]
             elif access_pattern == "strided":
-                stride = PAGE_SIZE * 4  # Skip 4 pages between reads
+                stride = DEFAULT_PAGE_SIZE * 4  # Skip 4 pages between reads
                 offsets = list(range(0, size - read_size, stride))
 
             # Test mmap
