@@ -155,7 +155,7 @@ def _write_slots(f, slots: list[PreparedSlot], spec: BuildSpec, index: PSPFIndex
     descriptors = []
     for i, slot in enumerate(slots):
         # Align if needed
-        if spec.options.page_aligned and i > 0:
+        if spec.options.page_aligned:
             current = f.tell()
             aligned = align_to_page(current)
             if aligned > current:

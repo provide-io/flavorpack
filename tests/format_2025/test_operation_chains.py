@@ -49,10 +49,10 @@ class TestOperationChains:
     
     def test_operations_to_string(self):
         """Test converting operations to human-readable strings."""
-        assert operations_to_string(0) == "RAW"
-        assert operations_to_string(pack_operations([OP_TAR])) == "TAR"
-        assert operations_to_string(pack_operations([OP_TAR, OP_GZIP])) == "TAR|GZIP"
-        assert operations_to_string(pack_operations([OP_TAR, OP_BZIP2])) == "TAR|BZIP2"
+        assert operations_to_string(0) == "raw"
+        assert operations_to_string(pack_operations([OP_TAR])) == "tar"
+        assert operations_to_string(pack_operations([OP_TAR, OP_GZIP])) == "tar.gz"  # Common chain
+        assert operations_to_string(pack_operations([OP_TAR, OP_BZIP2])) == "tar.bz2"  # Common chain
     
     def test_string_to_operations(self):
         """Test parsing operation strings."""
@@ -155,8 +155,8 @@ class TestOperationChains:
         assert ops2 == 0x01
         
         # Test operations to string conversion
-        assert operations_to_string(ops1) == "TAR|GZIP"
-        assert operations_to_string(ops2) == "TAR"
+        assert operations_to_string(ops1) == "tar.gz"  # Common chain
+        assert operations_to_string(ops2) == "tar"
     
     def test_metadata_with_operations(self):
         """Test SlotMetadata handles operation descriptions."""
