@@ -294,6 +294,56 @@ enum PackageFlags {
 };
 ```
 
+### 4.5 Slot Descriptor Format
+
+Each slot in the package is described by a 64-byte descriptor with the following binary layout:
+
+```c
+struct SlotDescriptor {
+    // === Identity (16 bytes) ===
+    uint64_t id;            // Unique slot identifier (8 bytes)
+    uint64_t name_hash;     // xxHash64 of slot name (8 bytes)
+    
+    // === Location (20 bytes) ===
+    uint64_t offset;        // File offset to slot data (8 bytes)
+    uint64_t size;          // Size of stored data (8 bytes)
+    uint32_t checksum;      // Adler-32 of stored data (4 bytes)
+    
+    // === Properties (8 bytes) ===
+    uint64_t operations;    // Packed operation chain (8 bytes)
+    
+    // === Classification (4 bytes) ===
+    uint8_t purpose;        // Purpose type (1 byte)
+    uint8_t lifecycle;      // Lifecycle management (1 byte)
+    uint16_t permissions;   // Unix-style permissions (2 bytes)
+    
+    // === Platform & Flags (4 bytes) ===
+    uint16_t platform;      // Platform hint (2 bytes)
+    uint16_t flags;         // Slot-specific flags (2 bytes)
+    
+    // === Reserved (12 bytes) ===
+    uint32_t reserved1;     // Reserved for future use (4 bytes)
+    uint32_t reserved2;     // Reserved for future use (4 bytes)
+    uint32_t reserved3;     // Reserved for future use (4 bytes)
+};
+```
+
+**Field Descriptions**:
+- `id`: 64-bit unique identifier for the slot
+- `name_hash`: Hash of the human-readable slot name for fast lookup
+- `offset`: Byte offset from the beginning of the package file to the slot data
+- `size`: Size of the slot data as stored (may be compressed)
+- `checksum`: Adler-32 checksum of the stored data for integrity verification
+- `operations`: Packed operation chain (up to 8 operations, each 8 bits)
+- `purpose`: Classification of slot contents (0=data, 1=code, 2=config, 3=media)
+- `lifecycle`: When the slot should be extracted/loaded
+- `permissions`: Unix-style file permissions
+- `platform`: Platform hint for optimization (0=any, 1=linux, 2=darwin, 3=windows)
+- `flags`: Slot-specific flags for runtime behavior
+- `reserved1-3`: Reserved for future expansion
+
+Total size: **64 bytes exactly**
+
 ## 5. Operation Chain System
 
 ### 5.1 Operation Categories
