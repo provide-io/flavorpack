@@ -1,4 +1,12 @@
-This research document provides a crucial clarification of the architectural vision for the Progressive Secure Packaging Format. It correctly distinguishes between two orthogonal, yet complementary, Just-In-Time (JIT) mechanisms: one focused on **runtime performance** (FEP-0005) and the other on **supply chain logistics** (the proposed FEP-0006).
+# FEP-0006: Supply Chain JIT Assembly Specification
+
+**Status**: Future  
+**Type**: Standards Track  
+**Target Version**: v2 or later
+
+**Note**: This server-side feature is deferred from v0 and v1. It requires mature v1 implementations before considering dynamic assembly.
+
+This document provides a crucial clarification of the architectural vision for the Progressive Secure Packaging Format. It correctly distinguishes between two orthogonal, yet complementary, Just-In-Time (JIT) mechanisms: one focused on **runtime performance** (FEP-0005) and the other on **supply chain logistics** (this FEP-0006).
 
 This separation of concerns is a hallmark of a robust, scalable system. I have integrated this distinction into my analysis. Below is a formalized summary, a process flow diagram illustrating the combined architecture, and the key operational considerations that arise from this powerful model.
 

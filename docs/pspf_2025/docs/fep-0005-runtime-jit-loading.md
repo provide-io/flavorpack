@@ -1,9 +1,12 @@
 # FEP-0005: Just-In-Time Loading Specification
 
-**Status**: Proposed  
+**Status**: Future  
 **Type**: Standards Track  
 **Created**: 2025-09-02  
 **Updated**: 2025-09-03  
+**Target Version**: v1 or later
+
+**Note**: This feature is deferred from v0 to focus on core functionality. v0 implementations are not required to support JIT loading.  
 
 ## 1. Introduction
 

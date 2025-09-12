@@ -1,5 +1,6 @@
-// PSPF/2025 Operation Chain Specification
+// PSPF/2025 Operation Chain Specification - v0 Implementation
 // Defines the 255 operation types and chain packing format
+// v0 REQUIRED operations: OP_NONE, OP_TAR, OP_GZIP, OP_BZIP2, OP_XZ, OP_ZSTD
 syntax = "proto3";
 
 package pspf_2025.operations;
@@ -8,132 +9,133 @@ option go_package = "github.com/provide-io/flavorpack/psp/format_2025;pspf2025";
 option java_package = "io.provide.flavorpack.pspf2025";
 
 // Complete operation enumeration (255 total)
+// v0 implementation marks: [REQUIRED] [FUTURE]
 enum Operation {
   // 0x00: No operation
-  OP_NONE = 0x00;
+  OP_NONE = 0x00;  // [REQUIRED] v0
 
   // 0x01-0x0F: Bundle operations (15 slots)
-  OP_TAR = 0x01;
-  OP_TAR_SORTED = 0x02;
-  OP_TAR_STREAM = 0x03;
-  OP_CPIO = 0x04;
-  OP_CPIO_NEWC = 0x05;
-  OP_AR = 0x06;
-  OP_AR_BSD = 0x07;
-  OP_ZIP_STORE = 0x08;
-  OP_ZIP_STREAM = 0x09;
-  OP_7Z = 0x0A;
-  OP_RAR = 0x0B;
-  OP_PAX = 0x0C;
-  OP_USTAR = 0x0D;
-  OP_BUNDLE_RESERVED_E = 0x0E;
-  OP_BUNDLE_RESERVED_F = 0x0F;
+  OP_TAR = 0x01;              // [REQUIRED] v0 - POSIX TAR archive
+  OP_TAR_SORTED = 0x02;       // [FUTURE] - Deterministic TAR with sorted entries
+  OP_TAR_STREAM = 0x03;       // [FUTURE] - Streaming TAR format
+  OP_CPIO = 0x04;             // [FUTURE] - CPIO archive format
+  OP_CPIO_NEWC = 0x05;        // [FUTURE] - CPIO new ASCII format
+  OP_AR = 0x06;               // [FUTURE] - Unix AR archive
+  OP_AR_BSD = 0x07;           // [FUTURE] - BSD AR format variant
+  OP_ZIP_STORE = 0x08;        // [FUTURE] - ZIP with no compression
+  OP_ZIP_STREAM = 0x09;       // [FUTURE] - Streaming ZIP format
+  OP_7Z = 0x0A;               // [FUTURE] - 7-Zip archive format
+  OP_RAR = 0x0B;              // [FUTURE] - RAR archive format
+  OP_PAX = 0x0C;              // [FUTURE] - POSIX.1-2001 PAR format
+  OP_USTAR = 0x0D;            // [FUTURE] - POSIX USTAR format
+  OP_BUNDLE_RESERVED_E = 0x0E; // [FUTURE] - Reserved for bundle operations
+  OP_BUNDLE_RESERVED_F = 0x0F; // [FUTURE] - Reserved for bundle operations
 
   // 0x10-0x2F: Compression operations (32 slots)
-  OP_GZIP = 0x10;
-  OP_GZIP_FAST = 0x11;
-  OP_GZIP_BEST = 0x12;
-  OP_BZIP2 = 0x13;
-  OP_BZIP2_FAST = 0x14;
-  OP_BZIP2_BEST = 0x15;
-  OP_XZ = 0x16;
-  OP_XZ_FAST = 0x17;
-  OP_XZ_BEST = 0x18;
-  OP_LZMA = 0x19;
-  OP_LZMA2 = 0x1A;
-  OP_ZSTD = 0x1B;
-  OP_ZSTD_FAST = 0x1C;
-  OP_ZSTD_BEST = 0x1D;
-  OP_LZ4 = 0x1E;
-  OP_LZ4_HC = 0x1F;
-  OP_SNAPPY = 0x20;
-  OP_BROTLI = 0x21;
-  OP_BROTLI_TEXT = 0x22;
-  OP_DEFLATE = 0x23;
-  OP_DEFLATE64 = 0x24;
-  OP_PPM = 0x25;
-  OP_PPMD = 0x26;
-  // 0x27-0x2F reserved
+  OP_GZIP = 0x10;             // [REQUIRED] v0 - GZIP compression
+  OP_GZIP_FAST = 0x11;        // [FUTURE] - GZIP with fast compression
+  OP_GZIP_BEST = 0x12;        // [FUTURE] - GZIP with best compression
+  OP_BZIP2 = 0x13;            // [REQUIRED] v0 - BZIP2 compression
+  OP_BZIP2_FAST = 0x14;       // [FUTURE] - BZIP2 with fast compression
+  OP_BZIP2_BEST = 0x15;       // [FUTURE] - BZIP2 with best compression
+  OP_XZ = 0x16;               // [REQUIRED] v0 - XZ/LZMA2 compression
+  OP_XZ_FAST = 0x17;          // [FUTURE] - XZ with fast compression
+  OP_XZ_BEST = 0x18;          // [FUTURE] - XZ with best compression
+  OP_LZMA = 0x19;             // [FUTURE] - Legacy LZMA compression
+  OP_LZMA2 = 0x1A;            // [FUTURE] - LZMA2 compression algorithm
+  OP_ZSTD = 0x1B;             // [REQUIRED] v0 - Zstandard compression
+  OP_ZSTD_FAST = 0x1C;        // [FUTURE] - ZSTD with fast compression
+  OP_ZSTD_BEST = 0x1D;        // [FUTURE] - ZSTD with best compression
+  OP_LZ4 = 0x1E;              // [FUTURE] - LZ4 compression
+  OP_LZ4_HC = 0x1F;           // [FUTURE] - LZ4 high compression
+  OP_SNAPPY = 0x20;           // [FUTURE] - Google Snappy compression
+  OP_BROTLI = 0x21;           // [FUTURE] - Google Brotli compression
+  OP_BROTLI_TEXT = 0x22;      // [FUTURE] - Brotli optimized for text
+  OP_DEFLATE = 0x23;          // [FUTURE] - DEFLATE compression
+  OP_DEFLATE64 = 0x24;        // [FUTURE] - Enhanced DEFLATE
+  OP_PPM = 0x25;              // [FUTURE] - Prediction by Partial Matching
+  OP_PPMD = 0x26;             // [FUTURE] - PPM variant D
+  // 0x27-0x2F reserved for future compression algorithms
 
   // 0x30-0x4F: Encryption operations (32 slots)
-  OP_AES128_GCM = 0x30;
-  OP_AES256_GCM = 0x31;
-  OP_AES128_CBC = 0x32;
-  OP_AES256_CBC = 0x33;
-  OP_AES128_CTR = 0x34;
-  OP_AES256_CTR = 0x35;
-  OP_CHACHA20_POLY1305 = 0x36;
-  OP_XCHACHA20_POLY1305 = 0x37;
-  OP_SALSA20 = 0x38;
-  OP_XSALSA20_POLY1305 = 0x39;
-  OP_RSA_2048 = 0x3A;
-  OP_RSA_4096 = 0x3B;
-  OP_ED25519 = 0x3C;
-  OP_X25519 = 0x3D;
-  OP_SECP256K1 = 0x3E;
-  OP_SECP256R1 = 0x3F;
-  OP_NACL_BOX = 0x40;
-  OP_NACL_SECRETBOX = 0x41;
-  OP_AGE = 0x42;
-  OP_PGP = 0x43;
-  // 0x44-0x4F reserved
+  OP_AES128_GCM = 0x30;         // [FUTURE] - AES-128 with GCM mode
+  OP_AES256_GCM = 0x31;         // [FUTURE] - AES-256 with GCM mode
+  OP_AES128_CBC = 0x32;         // [FUTURE] - AES-128 with CBC mode
+  OP_AES256_CBC = 0x33;         // [FUTURE] - AES-256 with CBC mode
+  OP_AES128_CTR = 0x34;         // [FUTURE] - AES-128 with CTR mode
+  OP_AES256_CTR = 0x35;         // [FUTURE] - AES-256 with CTR mode
+  OP_CHACHA20_POLY1305 = 0x36;  // [FUTURE] - ChaCha20-Poly1305 AEAD
+  OP_XCHACHA20_POLY1305 = 0x37; // [FUTURE] - XChaCha20-Poly1305 AEAD
+  OP_SALSA20 = 0x38;            // [FUTURE] - Salsa20 stream cipher
+  OP_XSALSA20_POLY1305 = 0x39;  // [FUTURE] - XSalsa20-Poly1305 AEAD
+  OP_RSA_2048 = 0x3A;           // [FUTURE] - RSA-2048 encryption
+  OP_RSA_4096 = 0x3B;           // [FUTURE] - RSA-4096 encryption
+  OP_ED25519 = 0x3C;            // [FUTURE] - Ed25519 signature scheme
+  OP_X25519 = 0x3D;             // [FUTURE] - X25519 key exchange
+  OP_SECP256K1 = 0x3E;          // [FUTURE] - secp256k1 elliptic curve
+  OP_SECP256R1 = 0x3F;          // [FUTURE] - secp256r1 elliptic curve
+  OP_NACL_BOX = 0x40;           // [FUTURE] - NaCl public key encryption
+  OP_NACL_SECRETBOX = 0x41;     // [FUTURE] - NaCl secret key encryption
+  OP_AGE = 0x42;                // [FUTURE] - Age encryption format
+  OP_PGP = 0x43;                // [FUTURE] - OpenPGP encryption
+  // 0x44-0x4F reserved for future encryption operations
 
   // 0x50-0x6F: Encoding operations (32 slots)  
-  OP_BASE64 = 0x50;
-  OP_BASE64_URL = 0x51;
-  OP_BASE32 = 0x52;
-  OP_BASE16 = 0x53;
-  OP_HEX = 0x54;
-  OP_ASCII85 = 0x55;
-  OP_UUENCODE = 0x56;
-  OP_XXENCODE = 0x57;
-  OP_QUOTED_PRINTABLE = 0x58;
-  OP_PUNYCODE = 0x59;
-  OP_PERCENT = 0x5A;
-  // 0x5B-0x6F reserved
+  OP_BASE64 = 0x50;             // [FUTURE] - Base64 encoding
+  OP_BASE64_URL = 0x51;         // [FUTURE] - URL-safe Base64 encoding
+  OP_BASE32 = 0x52;             // [FUTURE] - Base32 encoding
+  OP_BASE16 = 0x53;             // [FUTURE] - Base16 (hexadecimal) encoding
+  OP_HEX = 0x54;                // [FUTURE] - Hexadecimal encoding
+  OP_ASCII85 = 0x55;            // [FUTURE] - ASCII85 encoding
+  OP_UUENCODE = 0x56;           // [FUTURE] - UUencoding
+  OP_XXENCODE = 0x57;           // [FUTURE] - XXencoding
+  OP_QUOTED_PRINTABLE = 0x58;   // [FUTURE] - Quoted-printable encoding
+  OP_PUNYCODE = 0x59;           // [FUTURE] - Punycode encoding
+  OP_PERCENT = 0x5A;            // [FUTURE] - Percent encoding (URL encoding)
+  // 0x5B-0x6F reserved for future encoding operations
 
   // 0x70-0x8F: Hash operations (32 slots)
-  OP_SHA256 = 0x70;
-  OP_SHA512 = 0x71;
-  OP_SHA3_256 = 0x72;
-  OP_SHA3_512 = 0x73;
-  OP_BLAKE2B = 0x74;
-  OP_BLAKE2S = 0x75;
-  OP_BLAKE3 = 0x76;
-  OP_MD5 = 0x77;
-  OP_SHA1 = 0x78;
-  OP_XXHASH = 0x79;
-  OP_XXHASH3 = 0x7A;
-  OP_SIPHASH = 0x7B;
-  OP_HIGHWAYHASH = 0x7C;
-  OP_ADLER32 = 0x7D;
-  OP_CRC32 = 0x7E;
-  OP_CRC64 = 0x7F;
-  // 0x80-0x8F reserved
+  OP_SHA256 = 0x70;             // [FUTURE] - SHA-256 hash
+  OP_SHA512 = 0x71;             // [FUTURE] - SHA-512 hash
+  OP_SHA3_256 = 0x72;           // [FUTURE] - SHA3-256 hash
+  OP_SHA3_512 = 0x73;           // [FUTURE] - SHA3-512 hash
+  OP_BLAKE2B = 0x74;            // [FUTURE] - BLAKE2b hash
+  OP_BLAKE2S = 0x75;            // [FUTURE] - BLAKE2s hash
+  OP_BLAKE3 = 0x76;             // [FUTURE] - BLAKE3 hash
+  OP_MD5 = 0x77;                // [FUTURE] - MD5 hash (legacy)
+  OP_SHA1 = 0x78;               // [FUTURE] - SHA-1 hash (legacy)
+  OP_XXHASH = 0x79;             // [FUTURE] - xxHash fast hash
+  OP_XXHASH3 = 0x7A;            // [FUTURE] - xxHash3 fast hash
+  OP_SIPHASH = 0x7B;            // [FUTURE] - SipHash secure hash
+  OP_HIGHWAYHASH = 0x7C;        // [FUTURE] - HighwayHash fast hash
+  OP_ADLER32 = 0x7D;            // [FUTURE] - Adler-32 checksum
+  OP_CRC32 = 0x7E;              // [FUTURE] - CRC-32 checksum
+  OP_CRC64 = 0x7F;              // [FUTURE] - CRC-64 checksum
+  // 0x80-0x8F reserved for future hash operations
 
   // 0x90-0xAF: Signature operations (32 slots)
-  OP_ED25519_SIGN = 0x90;
-  OP_RSA_PSS = 0x91;
-  OP_RSA_PKCS1 = 0x92;
-  OP_ECDSA_P256 = 0x93;
-  OP_ECDSA_P384 = 0x94;
-  OP_ECDSA_P521 = 0x95;
-  OP_EDDSA = 0x96;
-  OP_HMAC_SHA256 = 0x97;
-  OP_HMAC_SHA512 = 0x98;
-  // 0x99-0xAF reserved
+  OP_ED25519_SIGN = 0x90;       // [FUTURE] - Ed25519 digital signature
+  OP_RSA_PSS = 0x91;            // [FUTURE] - RSA-PSS signature scheme
+  OP_RSA_PKCS1 = 0x92;          // [FUTURE] - RSA PKCS#1 v1.5 signature
+  OP_ECDSA_P256 = 0x93;         // [FUTURE] - ECDSA with P-256 curve
+  OP_ECDSA_P384 = 0x94;         // [FUTURE] - ECDSA with P-384 curve
+  OP_ECDSA_P521 = 0x95;         // [FUTURE] - ECDSA with P-521 curve
+  OP_EDDSA = 0x96;              // [FUTURE] - EdDSA signature scheme
+  OP_HMAC_SHA256 = 0x97;        // [FUTURE] - HMAC with SHA-256
+  OP_HMAC_SHA512 = 0x98;        // [FUTURE] - HMAC with SHA-512
+  // 0x99-0xAF reserved for future signature operations
 
   // 0xB0-0xCF: Transform operations (32 slots)
-  OP_SPLIT = 0xB0;
-  OP_MERGE = 0xB1;
-  OP_DEDUPE = 0xB2;
-  OP_DELTA = 0xB3;
-  OP_PATCH = 0xB4;
-  // 0xB5-0xCF reserved
+  OP_SPLIT = 0xB0;              // [FUTURE] - Split data into chunks
+  OP_MERGE = 0xB1;              // [FUTURE] - Merge data chunks
+  OP_DEDUPE = 0xB2;             // [FUTURE] - Deduplication
+  OP_DELTA = 0xB3;              // [FUTURE] - Delta compression
+  OP_PATCH = 0xB4;              // [FUTURE] - Apply delta patch
+  // 0xB5-0xCF reserved for future transform operations
 
-  // 0xD0-0xEF: Custom operations (32 slots)
-  // 0xF0-0xFE: Reserved operations (15 slots)
-  OP_TERMINAL = 0xFF;  // Chain terminator
+  // 0xD0-0xEF: Custom operations (32 slots) - [FUTURE]
+  // 0xF0-0xFE: Reserved operations (15 slots) - [FUTURE]
+  OP_TERMINAL = 0xFF;           // [FUTURE] - Chain terminator
 }
 
 // Operation chain representation
