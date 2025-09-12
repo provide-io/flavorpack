@@ -1,7 +1,8 @@
 // helpers/flavor-rs/src/psp/format_2025/slots.rs
 // PSPF 2025 Slot Management - Enhanced 64-byte descriptors
 
-use super::constants::{PURPOSE_PAYLOAD, LIFECYCLE_CACHE, CACHE_NORMAL, DEFAULT_FILE_PERMS, SLOT_DESCRIPTOR_SIZE, PAGE_SIZE};
+use super::constants::{SLOT_DESCRIPTOR_SIZE, PurposePayload, LifecycleCache};
+use super::defaults::{CACHE_NORMAL, DEFAULT_FILE_PERMS, DEFAULT_PAGE_SIZE};
 use std::path::PathBuf;
 
 /// Slot descriptor - 64 bytes total
@@ -39,8 +40,8 @@ impl SlotDescriptor {
             original_size: 0,
             operations: 0, // No operations (raw data)
             checksum: 0,
-            purpose: PURPOSE_PAYLOAD,
-            lifecycle: LIFECYCLE_CACHE,
+            purpose: PurposePayload,
+            lifecycle: LifecycleCache,
             priority: CACHE_NORMAL,
             platform: 0,
             reserved1: 0,
@@ -206,7 +207,7 @@ pub fn align_offset(offset: u64, alignment: u64) -> u64 {
 
 /// Align offset to page boundary for optimal mmap
 pub fn align_to_page(offset: u64) -> u64 {
-    align_offset(offset, PAGE_SIZE as u64)
+    align_offset(offset, DEFAULT_PAGE_SIZE as u64)
 }
 
 // 📦🎰🗂️🪄

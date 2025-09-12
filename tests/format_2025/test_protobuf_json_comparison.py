@@ -82,7 +82,6 @@ class TestProtobufFormat:
             name_hash=0x123456789ABCDEF0,
             offset=1024,
             size=4096,
-            original_size=8192,
             operations=ops,
             checksum=0x12345678,
             purpose=slots_pb2.PURPOSE_CODE,

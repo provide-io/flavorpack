@@ -155,7 +155,7 @@ def _write_slots(f, slots: list[PreparedSlot], spec: BuildSpec, index: PSPFIndex
     descriptors = []
     for i, slot in enumerate(slots):
         # Align if needed
-        if spec.options.page_aligned and i > 0:
+        if spec.options.page_aligned:
             current = f.tell()
             aligned = align_to_page(current)
             if aligned > current:
@@ -175,13 +175,11 @@ def _write_slots(f, slots: list[PreparedSlot], spec: BuildSpec, index: PSPFIndex
             name=slot.metadata.id,
             offset=slot_offset,
             size=len(data_to_write),
-            original_size=len(slot.data),
             checksum=slot.checksum,
             operations=slot.codec_type,
             purpose=_map_purpose(slot.metadata.purpose),
             lifecycle=_map_lifecycle(slot.metadata.lifecycle),
             permissions=slot_permissions,
-            alignment=alignment_value,
         )
         descriptors.append(descriptor)
 

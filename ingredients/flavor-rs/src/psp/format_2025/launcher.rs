@@ -2,7 +2,7 @@
 
 use crate::api::LaunchOptions;
 use crate::exceptions::{FlavorError, Result};
-use crate::psp::format_2025::constants::DEFAULT_DIR_PERMS;
+use crate::psp::format_2025::defaults::DEFAULT_DIR_PERMS;
 use crate::utils::get_cache_dir;
 use log::{debug, error, info, trace, warn};
 use std::collections::HashMap;
@@ -14,7 +14,7 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::atomic::{AtomicBool, Ordering};
 
-use super::constants::DISK_SPACE_MULTIPLIER;
+use super::defaults::DEFAULT_DISK_SPACE_MULTIPLIER;
 use super::execution::{
     check_workenv_validity_full, execute_setup_commands,
     save_index_metadata, save_package_checksum, substitute_placeholders,
@@ -116,7 +116,7 @@ fn get_workenv_paths(package_path: &Path) -> WorkenvPaths {
 fn check_disk_space(paths: &WorkenvPaths, metadata: &Metadata) -> Result<()> {
     // Calculate total size needed (compressed size * DISK_SPACE_MULTIPLIER for safety)
     let _total_size_needed: u64 = metadata.slots.iter()
-        .map(|slot| slot.size as u64 * DISK_SPACE_MULTIPLIER)
+        .map(|slot| slot.size as u64 * DEFAULT_DISK_SPACE_MULTIPLIER)
         .sum();
     
     // Get available disk space

@@ -169,7 +169,6 @@ class TestEnhancedSlots:
             id=999,
             name="data.db",
             size=1024 * 1024,
-            original_size=2048 * 1024,
             checksum=0xABCDEF00,
             operations=1,  # gzip
             lifecycle=0,  # permanent
@@ -181,7 +180,6 @@ class TestEnhancedSlots:
 
         assert unpacked.id == 999
         assert unpacked.size == 1024 * 1024
-        assert unpacked.original_size == 2048 * 1024
         assert unpacked.checksum == 0xABCDEF00
         assert unpacked.operations == 1
         assert unpacked.lifecycle == 0

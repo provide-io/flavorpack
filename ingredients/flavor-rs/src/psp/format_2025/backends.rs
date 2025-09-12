@@ -9,7 +9,7 @@ use std::io::{Read, Seek, SeekFrom};
 use std::path::Path;
 use std::time::Instant;
 
-use super::constants::{DEFAULT_CHUNK_SIZE, ACCESS_AUTO, ACCESS_MMAP, ACCESS_STREAM, ACCESS_FILE};
+use super::defaults::{DEFAULT_CHUNK_SIZE, ACCESS_AUTO, ACCESS_MMAP, ACCESS_STREAM, ACCESS_FILE};
 use super::slots::SlotDescriptor;
 use crate::exceptions::{FlavorError, Result};
 
