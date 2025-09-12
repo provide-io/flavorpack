@@ -68,8 +68,8 @@ def normalize_purpose(value: str) -> str:
 class SlotDescriptor:
     """Slot descriptor - exactly 64 bytes to match specification."""
 
-    # Identity (12 bytes)
-    id: int = field(validator=validators.instance_of(int))  # 4 bytes (uint32)
+    # Identity (16 bytes)
+    id: int = field(validator=validators.instance_of(int))  # 8 bytes (uint64)
     name_hash: int = field(default=0)  # 8 bytes (uint64, xxHash64)
 
     # Location (20 bytes) 
@@ -77,9 +77,8 @@ class SlotDescriptor:
     size: int = field(default=0)        # 8 bytes (uint64, size as stored)
     checksum: int = field(default=0)    # 4 bytes (uint32, Adler-32)
 
-    # Properties (12 bytes)
+    # Properties (8 bytes)
     operations: int = field(default=0)      # 8 bytes (uint64, packed operations)
-    original_size: int = field(default=0)   # 4 bytes (uint32, sufficient for v0)
 
     # Classification (4 bytes)
     purpose: int = field(default=PURPOSE_DATA)         # 1 byte (uint8)
@@ -92,7 +91,8 @@ class SlotDescriptor:
 
     # Reserved (12 bytes) 
     reserved1: int = field(default=0)       # 4 bytes (uint32)
-    reserved2: int = field(default=0)       # 8 bytes (uint64)
+    reserved2: int = field(default=0)       # 4 bytes (uint32)
+    reserved3: int = field(default=0)       # 4 bytes (uint32)
 
     # Optional runtime fields (not persisted)
     name: str = field(default="", metadata={"transient": True})
@@ -105,18 +105,10 @@ class SlotDescriptor:
 
     def pack(self) -> bytes:
         """Pack descriptor into exactly 64-byte binary format matching spec."""
-        # Validate id fits in 32-bit
-        if self.id > 0xFFFFFFFF:
-            raise ValueError(f"Slot ID must fit in 32 bits, got {self.id}")
-        
-        # Validate original_size fits in 32-bit (v0 limit)
-        if self.original_size > 0xFFFFFFFF:
-            raise ValueError(f"Original size must fit in 32 bits for v0, got {self.original_size}")
-        
         data = struct.pack(
-            "<IQQQLQIBBHHII",
-            # Identity (12 bytes)
-            self.id,           # 4 bytes: uint32
+            "<QQQQLQBBHHHIII",
+            # Identity (16 bytes)
+            self.id,           # 8 bytes: uint64
             self.name_hash,    # 8 bytes: uint64
             
             # Location (20 bytes)
@@ -124,9 +116,8 @@ class SlotDescriptor:
             self.size,         # 8 bytes: uint64
             self.checksum,     # 4 bytes: uint32
             
-            # Properties (12 bytes)
+            # Properties (8 bytes)
             self.operations,   # 8 bytes: uint64
-            self.original_size, # 4 bytes: uint32
             
             # Classification (4 bytes)
             self.purpose,      # 1 byte: uint8
@@ -139,7 +130,8 @@ class SlotDescriptor:
             
             # Reserved (12 bytes)
             self.reserved1,    # 4 bytes: uint32
-            self.reserved2,    # 8 bytes: uint64
+            self.reserved2,    # 4 bytes: uint32
+            self.reserved3,    # 4 bytes: uint32
         )
         
         # Ensure exactly 64 bytes
@@ -153,13 +145,13 @@ class SlotDescriptor:
             raise ValueError(f"Slot descriptor must be {DEFAULT_SLOT_DESCRIPTOR_SIZE} bytes")
 
         unpacked = struct.unpack(
-            "<IQQQLQIBBHHII",  # Match pack format exactly
+            "<QQQQLQBBHHHIII",  # Match pack format exactly
             data,
         )
 
         return cls(
-            # Identity (12 bytes)
-            id=unpacked[0],           # 4 bytes: uint32
+            # Identity (16 bytes)
+            id=unpacked[0],           # 8 bytes: uint64
             name_hash=unpacked[1],    # 8 bytes: uint64
             
             # Location (20 bytes)
@@ -167,22 +159,22 @@ class SlotDescriptor:
             size=unpacked[3],         # 8 bytes: uint64
             checksum=unpacked[4],     # 4 bytes: uint32
             
-            # Properties (12 bytes)
+            # Properties (8 bytes)
             operations=unpacked[5],   # 8 bytes: uint64
-            original_size=unpacked[6], # 4 bytes: uint32
             
             # Classification (4 bytes)
-            purpose=unpacked[7],      # 1 byte: uint8
-            lifecycle=unpacked[8],    # 1 byte: uint8
-            permissions=unpacked[9],  # 2 bytes: uint16
+            purpose=unpacked[6],      # 1 byte: uint8
+            lifecycle=unpacked[7],    # 1 byte: uint8
+            permissions=unpacked[8],  # 2 bytes: uint16
             
             # Platform & Flags (4 bytes)
-            platform=unpacked[10],    # 2 bytes: uint16
-            flags=unpacked[11],       # 2 bytes: uint16
+            platform=unpacked[9],     # 2 bytes: uint16
+            flags=unpacked[10],       # 2 bytes: uint16
             
             # Reserved (12 bytes)
-            reserved1=unpacked[12],   # 4 bytes: uint32
-            reserved2=unpacked[13],   # 8 bytes: uint64
+            reserved1=unpacked[11],   # 4 bytes: uint32
+            reserved2=unpacked[12],   # 4 bytes: uint32
+            reserved3=unpacked[13],   # 4 bytes: uint32
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -193,7 +185,6 @@ class SlotDescriptor:
             "name_hash": self.name_hash,
             "offset": self.offset,
             "size": self.size,
-            "original_size": self.original_size,
             "checksum": self.checksum,
             "operations": operations_to_string(self.operations),
             "purpose": self.purpose,
@@ -291,7 +282,6 @@ class SlotMetadata:
             id=self.index,
             name=self.id,
             size=self.size,
-            original_size=self.size,
             checksum=checksum_int & 0xFFFFFFFF,  # Truncate to 32-bit
             operations=string_to_operations(self.operations),
             purpose=purpose_map.get(normalize_purpose(self.purpose), PURPOSE_DATA),
