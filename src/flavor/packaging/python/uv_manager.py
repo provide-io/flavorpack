@@ -232,6 +232,9 @@ class UVManager(BaseToolManager):
         
         cmd = [str(uv_exe), "pip", "compile", str(input_file), "--output-file", str(output_file)]
         
+        # Include extras in resolution to properly handle packages like provide-foundation[all]
+        cmd.append("--no-strip-extras")
+        
         if python_version:
             cmd.extend(["--python-version", python_version])
         

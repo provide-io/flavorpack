@@ -14,8 +14,9 @@ import tarfile
 import zlib
 
 from provide.foundation import logger
+from provide.foundation.file.directory import safe_rmtree, ensure_dir, ensure_parent_dir
 
-from flavor.psp.format_2025.constants import DISK_SPACE_MULTIPLIER, SLOT_DESCRIPTOR_SIZE
+from flavor.config.defaults import DEFAULT_DISK_SPACE_MULTIPLIER, DEFAULT_SLOT_DESCRIPTOR_SIZE
 from flavor.psp.format_2025.reader import PSPFReader
 from flavor.psp.format_2025.workenv import WorkEnvManager
 from provide.foundation.process import run_command
@@ -28,7 +29,7 @@ class PSPFLauncher(PSPFReader):
         super().__init__(bundle_path)
         self.bundle_path = bundle_path
         self.cache_dir = Path.home() / ".cache" / "flavor"
-        self.cache_dir.mkdir(parents=True, exist_ok=True)
+        ensure_dir(self.cache_dir)
         self._workenv_manager = WorkEnvManager(self)
 
     @contextmanager
@@ -62,10 +63,10 @@ class PSPFLauncher(PSPFReader):
 
             # Read each 64-byte slot descriptor (new format)
             for i in range(index.slot_count):
-                entry_data = f.read(SLOT_DESCRIPTOR_SIZE)
-                if len(entry_data) != SLOT_DESCRIPTOR_SIZE:
+                entry_data = f.read(DEFAULT_SLOT_DESCRIPTOR_SIZE)
+                if len(entry_data) != DEFAULT_SLOT_DESCRIPTOR_SIZE:
                     raise ValueError(
-                        f"Invalid slot table entry {i}: expected {SLOT_DESCRIPTOR_SIZE} bytes, got {len(entry_data)}"
+                        f"Invalid slot table entry {i}: expected {DEFAULT_SLOT_DESCRIPTOR_SIZE} bytes, got {len(entry_data)}"
                     )
 
                 # Use SlotDescriptor to unpack
@@ -108,7 +109,7 @@ class PSPFLauncher(PSPFReader):
 
         # Calculate total size needed (compressed size * multiplier for safety)
         slot_table = self.read_slot_table()
-        total_needed = sum(slot["size"] * DISK_SPACE_MULTIPLIER for slot in slot_table)
+        total_needed = sum(slot["size"] * DEFAULT_DISK_SPACE_MULTIPLIER for slot in slot_table)
 
         # Use the utility function
         check_disk_space(workenv_dir, total_needed)
@@ -142,9 +143,7 @@ class PSPFLauncher(PSPFReader):
             logger.error(
                 f"❌ Extraction interrupted or failed: {e}. Cleaning up partial extraction."
             )
-            import shutil
-
-            shutil.rmtree(workenv_dir, ignore_errors=True)
+            safe_rmtree(workenv_dir)
             raise  # Re-raise the exception
 
     def extract_slot(
@@ -256,7 +255,7 @@ class PSPFLauncher(PSPFReader):
             # Write single file
             output_path = workenv_dir / slot_name
             try:
-                output_path.parent.mkdir(parents=True, exist_ok=True)
+                ensure_parent_dir(output_path)
                 output_path.write_bytes(data)
                 logger.debug(f"✅ Wrote {len(data)} bytes to {output_path}")
                 return output_path
@@ -327,3 +326,24 @@ class PSPFLauncher(PSPFReader):
                 "working_directory": os.getcwd(),
                 "error": str(e),
             }
+
+    def verify_integrity(self) -> dict[str, bool]:
+        """
+        Verify package integrity including signatures and checksums.
+        
+        Returns:
+            Dictionary with verification results:
+            - valid: Overall validity
+            - signature_valid: Signature verification result
+            - tamper_detected: Whether tampering was detected
+        """
+        from flavor.psp.security import verify_package_integrity
+        
+        if not self.bundle_path:
+            return {
+                "valid": False,
+                "signature_valid": False,
+                "tamper_detected": True
+            }
+        
+        return verify_package_integrity(self.bundle_path)

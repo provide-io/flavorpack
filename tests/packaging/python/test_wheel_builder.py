@@ -342,9 +342,14 @@ class TestWheelBuilderCriticalFeatures:
             
             python_exe = Path("/usr/bin/python3")
             
-            with patch('flavor.packaging.python.pypapip_manager.PyPaPipManager.download_wheels_from_requirements') as mock_download:
+            def mock_download_side_effect(python_exe, requirements_file, wheel_dir):
+                # Create fake wheel files to simulate successful download
+                fake_wheel = wheel_dir / "requests-2.28.0-py3-none-any.whl"
+                fake_wheel.write_bytes(b"fake wheel content")
+            
+            with patch('flavor.packaging.python.pypapip_manager.PyPaPipManager.download_wheels_from_requirements', side_effect=mock_download_side_effect) as mock_download:
                 # Even with use_uv_for_download=True, should still use PyPA pip
-                self.wheel_builder.download_wheels_for_resolved_deps(
+                result = self.wheel_builder.download_wheels_for_resolved_deps(
                     python_exe, requirements_file, wheel_dir,
                     use_uv_for_download=True  # This should be ignored
                 )
@@ -353,6 +358,10 @@ class TestWheelBuilderCriticalFeatures:
                 mock_download.assert_called_once_with(
                     python_exe, requirements_file, wheel_dir
                 )
+                
+                # Verify wheel files were returned
+                assert len(result) == 1
+                assert result[0].name == "requests-2.28.0-py3-none-any.whl"
     
     def test_dependency_resolution_has_uv_fallback(self):
         """CRITICAL: Dependency resolution must have UV + pip-tools fallback chain."""

@@ -33,12 +33,12 @@ class TestUVManager:
         manager_no_config = UVManager()
         assert manager_no_config.config is not None
     
-    @patch("provide.foundation.platform.get_arch_name")
-    @patch("provide.foundation.platform.get_os_name")
-    def test_get_metadata_linux_amd64(self, mock_os_name, mock_arch_name):
+    @patch("platform.machine")
+    @patch("platform.system")
+    def test_get_metadata_linux_amd64(self, mock_system, mock_machine):
         """Test metadata generation for Linux amd64."""
-        mock_os_name.return_value = "linux"
-        mock_arch_name.return_value = "amd64"
+        mock_system.return_value = "Linux"
+        mock_machine.return_value = "x86_64"
         
         metadata = self.uv_manager.get_metadata("0.1.45")
         
@@ -49,12 +49,12 @@ class TestUVManager:
         assert "x86_64-unknown-linux-gnu" in metadata.download_url
         assert metadata.executable_name == "uv"
     
-    @patch("provide.foundation.platform.get_arch_name")
-    @patch("provide.foundation.platform.get_os_name")
-    def test_get_metadata_darwin_arm64(self, mock_os_name, mock_arch_name):
+    @patch("platform.machine")
+    @patch("platform.system")
+    def test_get_metadata_darwin_arm64(self, mock_system, mock_machine):
         """Test metadata generation for macOS ARM64."""
-        mock_os_name.return_value = "darwin"
-        mock_arch_name.return_value = "arm64"
+        mock_system.return_value = "Darwin"
+        mock_machine.return_value = "arm64"
         
         metadata = self.uv_manager.get_metadata("0.1.45")
         
@@ -64,12 +64,12 @@ class TestUVManager:
         assert metadata.arch == "arm64"
         assert "aarch64-apple-darwin" in metadata.download_url
     
-    @patch("provide.foundation.platform.get_arch_name")
-    @patch("provide.foundation.platform.get_os_name")
-    def test_get_metadata_windows_amd64(self, mock_os_name, mock_arch_name):
+    @patch("platform.machine")
+    @patch("platform.system")
+    def test_get_metadata_windows_amd64(self, mock_system, mock_machine):
         """Test metadata generation for Windows amd64."""
-        mock_os_name.return_value = "windows"
-        mock_arch_name.return_value = "amd64"
+        mock_system.return_value = "Windows"
+        mock_machine.return_value = "x86_64"
         
         metadata = self.uv_manager.get_metadata("0.1.45")
         
@@ -79,22 +79,22 @@ class TestUVManager:
         assert metadata.arch == "amd64"
         assert "x86_64-pc-windows-msvc" in metadata.download_url
     
-    @patch("provide.foundation.platform.get_arch_name")
-    @patch("provide.foundation.platform.get_os_name")
-    def test_get_metadata_unsupported_platform(self, mock_os_name, mock_arch_name):
+    @patch("platform.machine")
+    @patch("platform.system")
+    def test_get_metadata_unsupported_platform(self, mock_system, mock_machine):
         """Test error handling for unsupported platforms."""
-        mock_os_name.return_value = "freebsd"
-        mock_arch_name.return_value = "amd64"
+        mock_system.return_value = "FreeBSD"
+        mock_machine.return_value = "x86_64"
         
         with pytest.raises(ToolNotFoundError, match="Unsupported platform: freebsd"):
             self.uv_manager.get_metadata("0.1.45")
     
-    @patch("provide.foundation.platform.get_arch_name")
-    @patch("provide.foundation.platform.get_os_name")
-    def test_get_metadata_unsupported_arch(self, mock_os_name, mock_arch_name):
+    @patch("platform.machine")
+    @patch("platform.system")
+    def test_get_metadata_unsupported_arch(self, mock_system, mock_machine):
         """Test error handling for unsupported architectures."""
-        mock_os_name.return_value = "linux"
-        mock_arch_name.return_value = "riscv64"
+        mock_system.return_value = "Linux"
+        mock_machine.return_value = "riscv64"
         
         with pytest.raises(ToolNotFoundError, match="Unsupported Linux architecture: riscv64"):
             self.uv_manager.get_metadata("0.1.45")
@@ -203,7 +203,8 @@ class TestUVManager:
             
             expected = [
                 "/usr/local/bin/uv", "pip", "compile", 
-                "/tmp/requirements.in", "--output-file", "/tmp/requirements.txt"
+                "/tmp/requirements.in", "--output-file", "/tmp/requirements.txt",
+                "--no-strip-extras"
             ]
             assert cmd == expected
     
@@ -220,6 +221,7 @@ class TestUVManager:
             expected = [
                 "/usr/local/bin/uv", "pip", "compile", 
                 "/tmp/requirements.in", "--output-file", "/tmp/requirements.txt",
+                "--no-strip-extras",
                 "--python-version", "3.11"
             ]
             assert cmd == expected

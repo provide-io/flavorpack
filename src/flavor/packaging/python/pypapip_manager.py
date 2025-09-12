@@ -119,39 +119,40 @@ class PyPaPipManager:
         if binary_only:
             cmd.extend(["--only-binary", ":all:"])
 
-        # For Linux builds, explicitly request manylinux wheels for maximum compatibility
-        # manylinux2014 = glibc 2.17+ (CentOS 7, Amazon Linux 2, Ubuntu 14.04+)
-        if get_os_name() == "linux" and binary_only:
-            if platform_tag:
-                # Use explicitly provided platform tag
-                cmd.extend(["--platform", platform_tag])
-                logger.debug(f"Added platform constraint: {platform_tag}")
-            else:
-                arch = get_arch_name()
-                logger.trace(
-                    f"Linux build detected, arch={arch}, requesting {self.MANYLINUX_TAG} wheels"
+        # Always specify Python version to ensure correct wheel selection
+        py_parts = self.python_version.split(".")
+        py_major = py_parts[0]
+        py_minor = py_parts[1] if len(py_parts) > 1 else "11"
+        cmd.extend(["--python-version", f"{py_major}.{py_minor}"])
+        logger.debug(f"Added Python version constraint: {py_major}.{py_minor}")
+
+        # Handle platform tags
+        if platform_tag:
+            # Use explicitly provided platform tag (works on any OS)
+            cmd.extend(["--platform", platform_tag])
+            logger.debug(f"Added platform constraint: {platform_tag}")
+        elif get_os_name() == "linux" and binary_only:
+            # For Linux builds, explicitly request manylinux wheels for maximum compatibility
+            # manylinux2014 = glibc 2.17+ (CentOS 7, Amazon Linux 2, Ubuntu 14.04+)
+            arch = get_arch_name()
+            logger.trace(
+                f"Linux build detected, arch={arch}, requesting {self.MANYLINUX_TAG} wheels"
+            )
+
+            # Use manylinux2014 format for maximum compatibility
+            # manylinux2014 = glibc 2.17+ (CentOS 7, Amazon Linux 2, Ubuntu 14.04+)
+            if arch == "amd64":
+                cmd.extend(["--platform", f"{self.MANYLINUX_TAG}_x86_64"])
+                logger.debug(
+                    f"Added platform constraint: {self.MANYLINUX_TAG}_x86_64"
                 )
-
-                # Use manylinux2014 format for maximum compatibility
-                # manylinux2014 = glibc 2.17+ (CentOS 7, Amazon Linux 2, Ubuntu 14.04+)
-                if arch == "amd64":
-                    cmd.extend(["--platform", f"{self.MANYLINUX_TAG}_x86_64"])
-                    logger.debug(
-                        f"Added platform constraint: {self.MANYLINUX_TAG}_x86_64"
-                    )
-                elif arch == "arm64":
-                    # ARM64 doesn't have manylinux2010, use manylinux2014
-                    cmd.extend(["--platform", f"{self.MANYLINUX_TAG}_aarch64"])
-                    logger.debug(
-                        f"Added platform constraint: {self.MANYLINUX_TAG}_aarch64"
-                    )
-                    logger.warning("⚠️ grpcio on CentOS 7 ARM64 may have C++ ABI issues")
-
-            # Also specify Python version to match our target
-            py_parts = self.python_version.split(".")
-            py_major = py_parts[0]
-            py_minor = py_parts[1] if len(py_parts) > 1 else "11"
-            cmd.extend(["--python-version", f"{py_major}.{py_minor}"])
+            elif arch == "arm64":
+                # ARM64 uses the new manylinux format (manylinux_2_17 = glibc 2.17 = manylinux2014)
+                cmd.extend(["--platform", "manylinux_2_17_aarch64"])
+                logger.debug(
+                    "Added platform constraint: manylinux_2_17_aarch64"
+                )
+                logger.warning("⚠️ grpcio on CentOS 7 ARM64 may have C++ ABI issues")
 
         if requirements_file:
             cmd.extend(["-r", str(requirements_file)])
@@ -187,7 +188,9 @@ class PyPaPipManager:
         result = run_command(download_cmd, check=False, capture_output=True)
         
         if result.returncode != 0:
-            logger.warning(f"Some wheels could not be downloaded: {result.stderr}")
+            error_msg = f"Failed to download required wheels: {result.stderr}"
+            logger.error(error_msg)
+            raise RuntimeError(error_msg)
         else:
             logger.info("✅ Successfully downloaded all wheels")
 
@@ -219,7 +222,9 @@ class PyPaPipManager:
         result = run_command(download_cmd, check=False, capture_output=True)
         
         if result.returncode != 0:
-            logger.warning(f"Some wheels could not be downloaded: {result.stderr}")
+            error_msg = f"Failed to download required packages: {result.stderr}"
+            logger.error(error_msg)
+            raise RuntimeError(error_msg)
         else:
             logger.info("✅ Successfully downloaded all wheels")
 

@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any
 
 from provide.foundation import logger
+from provide.foundation.file.directory import ensure_dir
 from provide.foundation.platform import get_platform_string
 
 
@@ -48,8 +49,8 @@ class IngredientManager:
         self.rust_src_dir = self.ingredients_dir / "flavor-rs"
 
         # Ensure ingredients directories exist
-        self.ingredients_dir.mkdir(exist_ok=True)
-        self.ingredients_bin.mkdir(exist_ok=True)
+        ensure_dir(self.ingredients_dir)
+        ensure_dir(self.ingredients_bin)
 
         # Detect current platform using centralized utility
         self.current_platform = get_platform_string()

@@ -229,15 +229,15 @@ class TestPythonDistManager:
             site_packages = Path(temp_dir) / "site-packages"
             
             # Create test structure with files to be cleaned
-            test_package = site_packages / "test_package"
-            test_package.mkdir(parents=True)
+            example_package = site_packages / "example_package"
+            example_package.mkdir(parents=True)
             
             # Files that should be removed
-            pycache_dir = test_package / "__pycache__"
+            pycache_dir = example_package / "__pycache__"
             pycache_dir.mkdir()
             (pycache_dir / "test.pyc").touch()
             
-            test_dir = test_package / "tests"
+            test_dir = example_package / "tests"
             test_dir.mkdir()
             (test_dir / "test_something.py").touch()
             
@@ -246,8 +246,8 @@ class TestPythonDistManager:
             (egg_info / "PKG-INFO").touch()
             
             # Files that should remain
-            (test_package / "__init__.py").touch()
-            (test_package / "main.py").touch()
+            (example_package / "__init__.py").touch()
+            (example_package / "main.py").touch()
             
             self.dist_manager._cleanup_site_packages(site_packages)
             
@@ -257,8 +257,8 @@ class TestPythonDistManager:
             assert not egg_info.exists()
             
             # Verify important files remain
-            assert (test_package / "__init__.py").exists()
-            assert (test_package / "main.py").exists()
+            assert (example_package / "__init__.py").exists()
+            assert (example_package / "main.py").exists()
     
     def test_get_directory_size(self):
         """Test directory size calculation."""
@@ -322,13 +322,12 @@ class TestPythonDistManager:
             result = self.dist_manager.validate_distribution(dist_info)
             assert result is False
     
-    @patch('flavor.packaging.python.dist_manager.WheelBuilder')
     @patch.object(PythonDistManager, 'create_python_environment')
     @patch.object(PythonDistManager, 'install_wheels_to_environment')
     @patch.object(PythonDistManager, 'prepare_site_packages')
     @patch("shutil.copytree")
     def test_create_standalone_distribution(
-        self, mock_copytree, mock_prepare, mock_install, mock_create_env, mock_wheel_builder
+        self, mock_copytree, mock_prepare, mock_install, mock_create_env
     ):
         """Test complete standalone distribution creation."""
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -336,7 +335,8 @@ class TestPythonDistManager:
             project_dir.mkdir()
             output_dir = Path(temp_dir) / "output"
             
-            # Mock wheel building
+            # Mock wheel building by replacing the instance attribute
+            mock_wheel_builder = Mock()
             build_info = {
                 "project_wheel": Path(temp_dir) / "project-1.0.0-py3-none-any.whl",
                 "dependency_wheels": [Path(temp_dir) / "dep-1.0.0-py3-none-any.whl"],
@@ -345,6 +345,7 @@ class TestPythonDistManager:
                 "total_wheels": 2,
             }
             mock_wheel_builder.build_and_resolve_project.return_value = build_info
+            self.dist_manager.wheel_builder = mock_wheel_builder
             
             # Mock environment creation
             venv_python = Path(temp_dir) / "venv" / "bin" / "python"
