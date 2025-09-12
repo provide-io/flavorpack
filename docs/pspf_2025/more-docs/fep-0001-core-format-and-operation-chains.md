@@ -1,9 +1,9 @@
 # FEP-0001: Core Format & Operation Chains Specification
 
-**Status**: Draft  
+**Status**: Active  
 **Type**: Standards Track  
 **Created**: 2025-01-08  
-**Consolidates**: Original FEP-0001 (Core Format) and FEP-0002 (Operation Chains)
+**Version**: v0 (Minimum Viable Implementation)
 **Authoritative Schema**: `proto/modules/index.proto`, `proto/modules/slots.proto`, `proto/modules/operations.proto`
 
 ## 1. Introduction
@@ -17,10 +17,11 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "S
 ### 1.2. Design Goals
 
 1. Enable composable archive operations through operation chains
-2. Support 255 extensible operation types with room for growth
+2. Support core operation types with extensibility for future growth
 3. Provide efficient 64-bit packed encoding for chains
 4. Enable memory-mapped access for large packages
 5. Ensure cross-language binary compatibility via a canonical schema
+6. Maintain simplicity and debuggability for v0 implementation
 
 ### 1.3. Scope
 
@@ -147,52 +148,58 @@ struct IndexBlock {
 
 Operations are 8-bit values organized into fixed categories, defined in `proto/modules/operations.proto`:
 
-| Range     | Category      | Description                | Count |
-|-----------|---------------|----------------------------|-------|
-| 0x00      | NONE          | No operation               | 1     |
-| 0x01-0x0F | BUNDLE        | Combine files (TAR, ZIP)   | 15    |
-| 0x10-0x2F | COMPRESS      | Reduce size (GZIP, ZSTD)   | 32    |
-| 0x30-0x4F | ENCRYPT       | Secure data (AES, ChaCha)  | 32    |
-| 0x50-0x6F | ENCODE        | Transform (Base64, Hex)    | 32    |
-| 0x70-0x8F | HASH          | Hashing algorithms         | 32    |
-| 0x90-0xAF | SIGNATURE     | Signature algorithms       | 32    |
-| 0xB0-0xCF | TRANSFORM     | Data transformation        | 32    |
-| 0xD0-0xEF | CUSTOM        | Custom operations          | 32    |
-| 0xF0-0xFF | RESERVED      | Reserved for future use    | 16    |
+| Range     | Category      | v0 Status     | Description                |
+|-----------|---------------|---------------|----------------------------|
+| 0x00      | NONE          | REQUIRED      | No operation               |
+| 0x01-0x0F | BUNDLE        | PARTIAL       | Combine files (TAR only)   |
+| 0x10-0x2F | COMPRESS      | PARTIAL       | Core compression formats   |
+| 0x30-0x4F | ENCRYPT       | FUTURE        | Secure data operations     |
+| 0x50-0x6F | ENCODE        | FUTURE        | Transform operations       |
+| 0x70-0x8F | HASH          | FUTURE        | Hashing algorithms         |
+| 0x90-0xAF | SIGNATURE     | FUTURE        | Signature algorithms       |
+| 0xB0-0xCF | TRANSFORM     | FUTURE        | Data transformation        |
+| 0xD0-0xEF | CUSTOM        | FUTURE        | Custom operations          |
+| 0xF0-0xFF | RESERVED      | FUTURE        | Reserved for future use    |
 
-### 3.2. Standard Operations
+### 3.2. v0 Required Operations
 
-A subset of standard operations MUST be supported by all compliant implementations. The full list is in `operations.proto`.
+All v0 compliant implementations MUST support these operations:
 
 #### Bundle Operations (0x01-0x0F)
 ```
-0x01  OP_TAR
-0x04  OP_CPIO
-0x08  OP_ZIP_STORE
+0x01  OP_TAR        POSIX TAR archive (REQUIRED)
 ```
 
 #### Compress Operations (0x10-0x2F)
 ```
-0x10  OP_GZIP
-0x13  OP_BZIP2
-0x16  OP_XZ
-0x1B  OP_ZSTD
-0x1E  OP_LZ4
-0x21  OP_BROTLI
-0x20  OP_SNAPPY
+0x10  OP_GZIP       GZIP compression (REQUIRED)
+0x13  OP_BZIP2      BZIP2 compression (REQUIRED)
+0x16  OP_XZ         XZ/LZMA2 compression (REQUIRED)
+0x1B  OP_ZSTD       Zstandard compression (REQUIRED)
 ```
 
-#### Encrypt Operations (0x30-0x4F)
+#### Reserved for Future
 ```
-0x31  OP_AES256_GCM
-0x36  OP_CHACHA20_POLY1305
+0x04  OP_CPIO       CPIO archive (Future)
+0x08  OP_ZIP_STORE  ZIP archive (Future)
+0x1E  OP_LZ4        LZ4 compression (Future)
+0x21  OP_BROTLI     Brotli compression (Future)
+0x31  OP_AES256_GCM AES-256 encryption (Future)
 ```
 
-### 3.3. Operation Chain Encoding
+### 3.3. v0 Operation Chain Examples
+
+All v0 implementations MUST support these common chains:
+- RAW data: `[]` (no operations)
+- Compressed: `[OP_GZIP]`
+- Archive: `[OP_TAR]`
+- Archive + Compressed: `[OP_TAR, OP_GZIP]`, `[OP_TAR, OP_BZIP2]`, `[OP_TAR, OP_XZ]`, `[OP_TAR, OP_ZSTD]`
+
+### 3.4. Operation Chain Encoding
 
 Operation chains are packed into a 64-bit little-endian integer with each byte representing one operation.
 
-### 3.4. Chain Processing Rules
+### 3.5. Chain Processing Rules
 
 **Package Creation (Forward Processing):**
 `Input → Op1 → Op2 → ... → Stored Data`
@@ -208,35 +215,36 @@ The slot table is an array of 64-byte descriptors located at `slot_table_offset`
 
 ### 4.2. Slot Descriptor Structure
 
-Each slot descriptor is exactly 64 bytes. Its structure is a physical representation of the fields defined in `proto/modules/slots.proto:SlotEntry`. The following C-style struct is a **non-normative representation** for clarity:
+Each slot descriptor is exactly 64 bytes. Its structure is defined in `proto/modules/slots.proto:SlotEntry`. The following C-style struct shows the exact binary layout:
 
 ```c
-// Normative definition is in slots.proto. This is for illustration.
+// Exact binary representation - MUST match this layout
 struct SlotDescriptor {
     // Identity (12 bytes)
-    uint32_t id;              // Slot identifier
-    uint64_t name_hash;       // xxHash64 of slot name
+    uint32_t id;              // Slot identifier (4 bytes)
+    uint64_t name_hash;       // xxHash64 of slot name (8 bytes)
     
-    // Location (24 bytes)
-    uint64_t offset;          // File offset to slot data
-    uint64_t size;            // Size as stored (compressed)
-    uint64_t original_size;   // Uncompressed size
+    // Location (20 bytes)
+    uint64_t offset;          // File offset to slot data (8 bytes)
+    uint64_t size;            // Size as stored (8 bytes)
+    uint32_t checksum;        // Adler-32 of stored data (4 bytes)
     
     // Properties (12 bytes)
-    uint64_t operations;      // Packed operation chain
-    uint32_t checksum;        // Adler-32 of stored data
+    uint64_t operations;      // Packed operation chain (8 bytes)
+    uint32_t original_size;   // Uncompressed size (4 bytes, sufficient for v0)
     
     // Classification (4 bytes)
-    uint8_t  purpose;         // Purpose enum (see 4.3)
-    uint8_t  lifecycle;       // Lifecycle enum (see 4.4)
-    uint16_t platform;        // Platform hint enum
+    uint8_t  purpose;         // Purpose enum (1 byte)
+    uint8_t  lifecycle;       // Lifecycle enum (1 byte)
+    uint16_t permissions;     // Unix-style permissions (2 bytes)
     
-    // Permissions & Flags (4 bytes)
-    uint16_t permissions;     // Unix-style permissions
-    uint16_t flags;           // Slot-specific flags
+    // Platform & Flags (4 bytes)
+    uint16_t platform;        // Platform hint enum (2 bytes)
+    uint16_t flags;           // Slot-specific flags (2 bytes)
     
-    // Reserved (8 bytes)
-    uint64_t reserved;        // Future use
+    // Reserved (12 bytes)
+    uint32_t reserved1;       // Future use (4 bytes)
+    uint64_t reserved2;       // Future use (8 bytes)
 };
 ```
 
@@ -260,18 +268,21 @@ The authoritative list is in `proto/modules/slots.proto`.
 
 | Value | Name                     | Description                      |
 |-------|--------------------------|----------------------------------|
-| 0     | LIFECYCLE_INIT           | Pre-verification (PVP)           |
-| 1     | LIFECYCLE_EAGER          | Extract before execution         |
-| 2     | LIFECYCLE_STARTUP        | Extract at startup               |
-| 3     | LIFECYCLE_RUNTIME        | Extract on first use             |
-| ...   | ...                      | ...                              |
-| 11    | LIFECYCLE_JIT_LOCAL      | JIT from package on demand       |
-| 12    | LIFECYCLE_JIT_NETWORK    | JIT from network on demand       |
-| ...   | ...                      | (16 total defined)               |
+| 0     | LIFECYCLE_INIT           | First run only, then removed     |
+| 1     | LIFECYCLE_STARTUP        | Extract at every startup         |
+| 2     | LIFECYCLE_RUNTIME        | Extract on first use (default)   |
+| 3     | LIFECYCLE_SHUTDOWN       | Extract during cleanup           |
+| 4     | LIFECYCLE_CACHE          | Performance cache, can regenerate|
+| 5     | LIFECYCLE_TEMPORARY      | Remove after session ends       |
+| 6     | LIFECYCLE_LAZY           | Load on-demand                   |
+| 7     | LIFECYCLE_EAGER          | Load immediately on startup      |
+| 8     | LIFECYCLE_DEV            | Development mode only            |
+| 9     | LIFECYCLE_CONFIG         | User-modifiable config files    |
+| 10    | LIFECYCLE_PLATFORM       | Platform/OS specific content     |
 
 ## 5. Package Metadata
 
-Package metadata is stored at `metadata_offset`. It MUST use the wire format defined in FEP-0002, based on the schema in `proto/modules/metadata.proto`.
+Package metadata is stored at `metadata_offset`. For v0, it MUST use JSON format as defined in FEP-0002, based on the schema in `proto/modules/metadata.proto`.
 
 ## 6. Binary Compatibility
 
@@ -279,12 +290,24 @@ All multi-byte integers MUST use little-endian byte order. All strings MUST use 
 
 ## 7. Implementation Requirements
 
-A minimal PSPF reader MUST:
-1. Validate magic trailer.
-2. Parse the 8192-byte index block.
-3. Verify index checksum.
-4. Support operations: `OP_NONE`, `OP_TAR`, `OP_GZIP`.
-5. Extract slots with proper operation chain reversal.
+### 7.1. Minimum v0 Implementation
+
+A v0 compliant PSPF implementation MUST:
+1. Validate magic trailer (📦 and 🪄 emojis)
+2. Parse the 8192-byte index block correctly
+3. Verify index checksum (Adler-32)
+4. Support all required operations: `OP_NONE`, `OP_TAR`, `OP_GZIP`, `OP_BZIP2`, `OP_XZ`, `OP_ZSTD`
+5. Extract slots with proper operation chain reversal
+6. Parse JSON metadata format
+7. Verify Ed25519 signatures
+
+### 7.2. Cross-Language Compatibility
+
+v0 implementations in Python, Go, and Rust MUST:
+- Produce bit-identical packages for the same input and operations
+- Successfully read packages created by other v0 implementations
+- Use identical operation processing algorithms
+- Handle the same set of required operations
 
 ## 8. Security Considerations
 

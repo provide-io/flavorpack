@@ -1,27 +1,27 @@
 #!/usr/bin/env python3
 """
-PSPF/2025 Operation Chain System
-Implements packed operation chains for slot transformations
+PSPF/2025 v0 Operation Chain System
+Implements packed operation chains for slot transformations using v0 required operations only.
 """
 
-# Import generated protobuf operations
-from flavor.psp.format_2025.generated.modules import operations_pb2
+# Import v0 constants
+from flavor.psp.format_2025.constants import (
+    OP_NONE,
+    OP_TAR,
+    OP_GZIP,
+    OP_BZIP2,
+    OP_XZ,
+    OP_ZSTD,
+    V0_REQUIRED_OPERATIONS,
+    OPERATION_CHAINS,
+)
 
-# Re-export operation constants for convenience
-OP_NONE = operations_pb2.OP_NONE
-OP_TAR = operations_pb2.OP_TAR
-OP_GZIP = operations_pb2.OP_GZIP
-OP_BZIP2 = operations_pb2.OP_BZIP2
-OP_XZ = operations_pb2.OP_XZ
-OP_ZSTD = operations_pb2.OP_ZSTD
-OP_LZ4 = operations_pb2.OP_LZ4
-OP_BROTLI = operations_pb2.OP_BROTLI
-OP_AES256_GCM = operations_pb2.OP_AES256_GCM
-OP_CHACHA20_POLY1305 = operations_pb2.OP_CHACHA20_POLY1305
-OP_BASE64 = operations_pb2.OP_BASE64
-OP_SHA256 = operations_pb2.OP_SHA256
-OP_ED25519_SIGN = operations_pb2.OP_ED25519_SIGN
-OP_TERMINAL = operations_pb2.OP_TERMINAL
+# Import generated protobuf operations for name lookup
+try:
+    from flavor.psp.format_2025.generated.modules import operations_pb2
+    _HAS_PROTOBUF = True
+except ImportError:
+    _HAS_PROTOBUF = False
 
 
 
@@ -38,6 +38,9 @@ def pack_operations(operations: list[int]) -> int:
     Returns:
         Packed 64-bit integer
     
+    Raises:
+        ValueError: If operation is invalid or unsupported in v0
+    
     Example:
         >>> pack_operations([OP_TAR, OP_GZIP])
         0x1001  # 0x01 | (0x10 << 8)
@@ -45,10 +48,15 @@ def pack_operations(operations: list[int]) -> int:
     if len(operations) > 8:
         raise ValueError(f"Maximum 8 operations allowed, got {len(operations)}")
     
-    packed = 0
-    for i, op in enumerate(operations):
+    # Validate all operations are supported in v0
+    for op in operations:
         if op < 0 or op > 255:
             raise ValueError(f"Operation {op} out of range (0-255)")
+        if op != OP_NONE and op not in V0_REQUIRED_OPERATIONS:
+            raise ValueError(f"Operation 0x{op:02x} not supported in v0")
+    
+    packed = 0
+    for i, op in enumerate(operations):
         packed |= (op & 0xFF) << (i * 8)
     
     return packed
@@ -71,7 +79,7 @@ def unpack_operations(packed: int) -> list[int]:
     operations = []
     for i in range(8):
         op = (packed >> (i * 8)) & 0xFF
-        if op == 0 or op == OP_TERMINAL:
+        if op == 0:  # OP_NONE terminates the chain
             break
         operations.append(op)
     
@@ -88,28 +96,57 @@ def operations_to_string(packed: int) -> str:
         packed: Packed operations as 64-bit integer
     
     Returns:
-        String representation like "TAR|GZIP"
+        String representation like "TAR|GZIP" or standard format like "tar.gz"
     
     Example:
         >>> operations_to_string(0x1001)
-        "TAR|GZIP"
+        "tar.gz"
     """
     if packed == 0:
-        return "RAW"
+        return "raw"
     
     operations = unpack_operations(packed)
+    
+    # Check for common operation chains first
+    for name, ops in OPERATION_CHAINS.items():
+        if operations == ops:
+            return name
+    
+    # Fall back to pipe format
     names = []
     for op in operations:
-        try:
-            name = operations_pb2.Operation.Name(op)
-            # Remove OP_ prefix for readability
-            if name.startswith("OP_"):
-                name = name[3:]
-            names.append(name)
-        except ValueError:
-            names.append(f"UNKNOWN_{op:02x}")
+        name = _get_operation_name(op)
+        names.append(name.lower())
     
     return "|".join(names)
+
+
+def _get_operation_name(op: int) -> str:
+    """Get human-readable name for operation."""
+    op_names = {
+        OP_NONE: "NONE",
+        OP_TAR: "TAR", 
+        OP_GZIP: "GZIP",
+        OP_BZIP2: "BZIP2",
+        OP_XZ: "XZ",
+        OP_ZSTD: "ZSTD",
+    }
+    
+    name = op_names.get(op)
+    if name:
+        return name
+    
+    # Try protobuf lookup if available
+    if _HAS_PROTOBUF:
+        try:
+            name = operations_pb2.Operation.Name(op)
+            if name.startswith("OP_"):
+                name = name[3:]
+            return name
+        except (ValueError, AttributeError):
+            pass
+    
+    return f"UNKNOWN_{op:02x}"
 
 
 def string_to_operations(op_string: str) -> int:
@@ -117,50 +154,63 @@ def string_to_operations(op_string: str) -> int:
     Parse operation string to packed operations.
     
     Args:
-        op_string: String like "TAR|GZIP" or "tar.gz"
+        op_string: String like "tar|gzip", "tar.gz", or "raw"
     
     Returns:
         Packed operations as 64-bit integer
     
+    Raises:
+        ValueError: If operation string is invalid or uses unsupported operations
+    
     Example:
-        >>> string_to_operations("TAR|GZIP")
-        0x1001
         >>> string_to_operations("tar.gz")
         0x1001
+        >>> string_to_operations("tar|gzip")
+        0x1001
     """
-    if not op_string or op_string.upper() == "RAW":
+    if not op_string or op_string.lower() == "raw":
         return 0
     
-    # Handle legacy codec strings
-    if op_string == "tar":
-        return pack_operations([OP_TAR])
-    elif op_string == "gz" or op_string == "gzip":
-        return pack_operations([OP_GZIP])
-    elif op_string == "tar.gz" or op_string == "tgz":
-        return pack_operations([OP_TAR, OP_GZIP])
-    elif op_string == "tar.bz2" or op_string == "tbz2":
-        return pack_operations([OP_TAR, OP_BZIP2])
-    elif op_string == "tar.xz" or op_string == "txz":
-        return pack_operations([OP_TAR, OP_XZ])
-    elif op_string == "tar.zst" or op_string == "tzst":
-        return pack_operations([OP_TAR, OP_ZSTD])
+    op_string = op_string.lower()
     
-    # Parse pipe-separated operations
-    operations = []
-    for part in op_string.split("|"):
-        part = part.strip().upper()
-        if not part:
-            continue
-        
-        # Add OP_ prefix if not present
-        if not part.startswith("OP_"):
-            part = "OP_" + part
-        
-        # Look up operation
-        try:
-            op = getattr(operations_pb2, part)
-            operations.append(op)
-        except AttributeError:
-            raise ValueError(f"Unknown operation: {part}")
+    # Check for exact match in operation chains first
+    if op_string in OPERATION_CHAINS:
+        return pack_operations(OPERATION_CHAINS[op_string])
     
-    return pack_operations(operations)
+    # Handle pipe-separated operations
+    if "|" in op_string:
+        operations = []
+        for part in op_string.split("|"):
+            part = part.strip().upper()
+            if not part:
+                continue
+            
+            # Map to v0 operation constants
+            op_map = {
+                "TAR": OP_TAR,
+                "GZIP": OP_GZIP,
+                "BZIP2": OP_BZIP2,
+                "XZ": OP_XZ,
+                "ZSTD": OP_ZSTD,
+            }
+            
+            if part in op_map:
+                operations.append(op_map[part])
+            else:
+                raise ValueError(f"Unsupported v0 operation: {part}")
+        
+        return pack_operations(operations)
+    
+    # Single operation
+    single_ops = {
+        "tar": [OP_TAR],
+        "gzip": [OP_GZIP],
+        "bzip2": [OP_BZIP2], 
+        "xz": [OP_XZ],
+        "zstd": [OP_ZSTD],
+    }
+    
+    if op_string in single_ops:
+        return pack_operations(single_ops[op_string])
+    
+    raise ValueError(f"Unknown v0 operation string: {op_string}")

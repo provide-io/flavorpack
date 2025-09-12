@@ -1,9 +1,12 @@
-# FEP-0004: Staged Payload Architecture Specification
+# FEP-0007: Staged Payload Architecture Specification
 
-**Status**: Proposed  
+**Status**: Future  
 **Type**: Standards Track  
 **Created**: 2025-08-28  
 **Updated**: 2025-09-03  
+**Target Version**: v1 or later
+
+**Note**: This advanced feature is deferred from v0 due to complexity. v0 implementations are not required to support SPA.  
 
 ## 1. Introduction
 
