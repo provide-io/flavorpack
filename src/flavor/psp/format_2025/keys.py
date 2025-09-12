@@ -10,7 +10,7 @@ import hashlib
 from pathlib import Path
 
 from provide.foundation import logger
-
+from provide.foundation.file.directory import ensure_dir
 from provide.foundation.crypto import generate_key_pair
 from flavor.psp.format_2025.spec import KeyConfig
 
@@ -170,7 +170,7 @@ def save_keys_to_path(private_key: bytes, public_key: bytes, key_path: Path) -> 
         key_path: Directory to save keys in
     """
     # Ensure directory exists
-    key_path.mkdir(parents=True, exist_ok=True)
+    ensure_dir(key_path)
 
     private_key_path = key_path / "flavor-private.key"
     public_key_path = key_path / "flavor-public.key"

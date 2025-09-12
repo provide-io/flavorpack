@@ -13,9 +13,10 @@ import zlib
 from pathlib import Path
 
 from provide.foundation import logger
+from provide.foundation.file.directory import ensure_dir
 
 from flavor.archive import ArchiveChain, ChainProcessor
-from flavor.psp.format_2025.constants import SLOT_ALIGNMENT
+from flavor.config.defaults import DEFAULT_SLOT_ALIGNMENT
 from flavor.psp.format_2025.slots import SlotView
 
 
@@ -80,11 +81,15 @@ class SlotExtractor:
             logger.debug(f"Verifying checksums for {len(descriptors)} slots")
 
             for i, descriptor in enumerate(descriptors):
-                # Read raw slot data
-                slot_data = self.reader.read_slot(i)
+                # Read raw slot data (before decompression) using backend directly
+                raw_slot_data = self.reader._backend.read_slot(descriptor)
+                
+                # Convert to bytes if memoryview
+                if isinstance(raw_slot_data, memoryview):
+                    raw_slot_data = bytes(raw_slot_data)
 
-                # Calculate checksum (use Adler32 to match binary format)
-                actual_checksum = zlib.adler32(slot_data) & 0xFFFFFFFF
+                # Calculate checksum (use Adler32 to match binary format on raw data)
+                actual_checksum = zlib.adler32(raw_slot_data) & 0xFFFFFFFF
 
                 if actual_checksum != descriptor.checksum:
                     logger.error(
@@ -123,7 +128,7 @@ class SlotExtractor:
         slot_meta = metadata.get("slots", [{}])[slot_index] if metadata else {}
 
         # Create extraction directory
-        dest_dir.mkdir(parents=True, exist_ok=True)
+        ensure_dir(dest_dir)
 
         # Read slot data
         slot_data = self.reader.read_slot(slot_index)
@@ -209,7 +214,7 @@ class SlotExtractor:
         import io
         
         extraction_dir = dest_dir / slot_name
-        extraction_dir.mkdir(exist_ok=True)
+        ensure_dir(extraction_dir)
         
         try:
             with tarfile.open(fileobj=io.BytesIO(tar_data), mode='r:*') as tar:
@@ -235,7 +240,7 @@ class SlotExtractor:
         import io
         
         extraction_dir = dest_dir / slot_name
-        extraction_dir.mkdir(exist_ok=True)
+        ensure_dir(extraction_dir)
         
         try:
             with zipfile.ZipFile(io.BytesIO(zip_data), 'r') as zip_ref:

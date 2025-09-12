@@ -9,9 +9,11 @@ import zlib
 
 from attrs import define, field, validators
 
-from flavor.psp.format_2025.constants import (
+from flavor.config.defaults import (
     ACCESS_HINT_SEQUENTIAL,
     CACHE_NORMAL,
+    DEFAULT_SLOT_ALIGNMENT,
+    DEFAULT_SLOT_DESCRIPTOR_SIZE,
     LIFECYCLE_CACHE,
     LIFECYCLE_CONFIG,
     LIFECYCLE_DEV,
@@ -25,10 +27,22 @@ from flavor.psp.format_2025.constants import (
     PURPOSE_CODE,
     PURPOSE_CONFIG,
     PURPOSE_DATA,
-    SLOT_ALIGNMENT,
-    SLOT_DESCRIPTOR_SIZE,
 )
 from provide.foundation.crypto import hash_name
+
+
+def validate_operations_string(instance, attribute, value: str) -> None:
+    """Validate that operations string is valid."""
+    if not isinstance(value, str):
+        raise ValueError(f"Operations must be a string, got {type(value)}")
+    
+    try:
+        # Import here to avoid circular imports
+        from flavor.psp.format_2025.operations import string_to_operations
+        # This will raise ValueError if invalid
+        string_to_operations(value)
+    except ValueError as e:
+        raise ValueError(f"Invalid operations string '{value}': {e}")
 
 
 def normalize_purpose(value: str) -> str:
@@ -67,7 +81,7 @@ class SlotDescriptor:
     checksum: int = field(default=0)  # Adler-32 of stored data
     operations: int = field(default=0)  # Packed 64-bit operation chain
     encryption: int = field(default=0)
-    alignment: int = field(default=SLOT_ALIGNMENT)
+    alignment: int = field(default=DEFAULT_SLOT_ALIGNMENT)
 
     # Semantics (8 bytes)
     purpose: int = field(default=PURPOSE_DATA)
@@ -95,7 +109,7 @@ class SlotDescriptor:
         perm_high = (self.permissions >> 8) & 0xFF
         
         data = struct.pack(
-            "<QQQQQQQBBBBBBBB",
+            "<QQQQQQQBBBBHBB",
             self.id,
             self.name_hash,
             self.offset,
@@ -107,30 +121,29 @@ class SlotDescriptor:
             self.lifecycle,    # byte 57
             self.priority,     # byte 58
             self.platform,     # byte 59
-            0,                 # byte 60: reserved1
-            0,                 # byte 61: reserved2
+            self.alignment,    # bytes 60-61: alignment (H = 2 bytes)
             perm_low,          # byte 62: permissions low byte
             perm_high,         # byte 63: permissions high byte
         )
         
         # Ensure exactly 64 bytes
-        assert len(data) == SLOT_DESCRIPTOR_SIZE, f"Slot descriptor must be {SLOT_DESCRIPTOR_SIZE} bytes, got {len(data)}"
+        assert len(data) == DEFAULT_SLOT_DESCRIPTOR_SIZE, f"Slot descriptor must be {DEFAULT_SLOT_DESCRIPTOR_SIZE} bytes, got {len(data)}"
         return data
 
     @classmethod
     def unpack(cls, data: bytes) -> "SlotDescriptor":
         """Unpack descriptor from 64-byte binary data."""
-        if len(data) != SLOT_DESCRIPTOR_SIZE:
-            raise ValueError(f"Slot descriptor must be {SLOT_DESCRIPTOR_SIZE} bytes")
+        if len(data) != DEFAULT_SLOT_DESCRIPTOR_SIZE:
+            raise ValueError(f"Slot descriptor must be {DEFAULT_SLOT_DESCRIPTOR_SIZE} bytes")
 
         unpacked = struct.unpack(
-            "<QQQQQQQBBBBBBBB",  # Match pack format exactly
+            "<QQQQQQQBBBBHBB",  # Match pack format exactly
             data,
         )
 
         # Reconstruct full permissions from two bytes
-        perm_low = unpacked[13]   # byte 62
-        perm_high = unpacked[14]  # byte 63
+        perm_low = unpacked[12]   # byte 62
+        perm_high = unpacked[13]  # byte 63
         permissions = perm_low | (perm_high << 8)
 
         return cls(
@@ -145,9 +158,9 @@ class SlotDescriptor:
             lifecycle=unpacked[8],    # byte 57
             priority=unpacked[9],     # byte 58  
             platform=unpacked[10],    # byte 59
-            # bytes 60-61 are reserved
+            alignment=unpacked[11],   # bytes 60-61: alignment
             permissions=permissions,  # reconstructed from bytes 62-63
-            # Note: encryption, alignment, access_hint are not persisted in the binary format
+            # Note: encryption, access_hint are not persisted in the binary format
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -185,11 +198,17 @@ class SlotMetadata:
     id: str = field(validator=validators.instance_of(str))  # Slot identifier
     source: str = field(validator=validators.instance_of(str))  # Source path
     target: str = field(validator=validators.instance_of(str))  # Target path in workenv
-    size: int = field(validator=validators.instance_of(int))
+    size: int = field(validator=[
+        validators.instance_of(int),
+        validators.ge(0)  # Size must be non-negative
+    ])
     checksum: str = field(validator=validators.instance_of(str))
     
     # Optional fields with defaults
-    operations: str = field(default="RAW")  # Operation chain string like "TAR|GZIP"
+    operations: str = field(
+        default="RAW",
+        validator=[validators.instance_of(str), validate_operations_string]
+    )  # Operation chain string like "TAR|GZIP"
     purpose: str = field(default="data")
     lifecycle: str = field(
         default="runtime",

@@ -10,6 +10,8 @@ import click
 
 from flavor.psp.format_2025.reader import PSPFReader
 from provide.foundation.utils.formatting import format_size
+from provide.foundation.file.formats import write_json
+from provide.foundation.file.directory import ensure_parent_dir, ensure_dir
 
 
 @click.command("extract")
@@ -83,7 +85,7 @@ def extract_command(
             data = reader.read_slot(slot_index)
 
             # Write to output
-            output.parent.mkdir(parents=True, exist_ok=True)
+            ensure_parent_dir(output)
             output.write_bytes(data)
 
             click.secho(
@@ -121,7 +123,7 @@ def extract_all_command(package_file: str, output_dir: str, force: bool) -> None
     output = Path(output_dir)
 
     # Create output directory
-    output.mkdir(parents=True, exist_ok=True)
+    ensure_dir(output)
 
     try:
         with PSPFReader(package_path) as reader:
@@ -172,9 +174,7 @@ def extract_all_command(package_file: str, output_dir: str, force: bool) -> None
             # Also write metadata
             metadata_file = output / "metadata.json"
             if not metadata_file.exists() or force:
-                import json
-
-                metadata_file.write_text(json.dumps(metadata, indent=2))
+                write_json(metadata_file, metadata, indent=2)
                 click.echo(f"📋 Metadata → {metadata_file}")
 
             click.secho(f"✅ Extracted all slots to {output}", fg="green")

@@ -6,17 +6,17 @@ import struct
 
 import pytest
 
-from flavor.psp.format_2025.constants import (
+from flavor.config.defaults import (
     ACCESS_AUTO,
     ACCESS_MMAP,
     CACHE_NORMAL,
     CAPABILITY_MMAP,
     DEFAULT_MAX_MEMORY,
     DEFAULT_MIN_MEMORY,
-    HEADER_SIZE,
-    MAGIC_TRAILER_SIZE,
-    MAGIC_WAND_EMOJI_BYTES,
-    PACKAGE_EMOJI_BYTES,
+    DEFAULT_HEADER_SIZE,
+    DEFAULT_MAGIC_TRAILER_SIZE,
+    TRAILER_END_MAGIC,
+    TRAILER_START_MAGIC,
     PSPF_VERSION,
 )
 from flavor.psp.format_2025.index import PSPFIndex
@@ -27,7 +27,7 @@ class TestEnhancedConstants:
 
     def test_header_size(self):
         """Header should be 8192 bytes (8KB)."""
-        assert HEADER_SIZE == 8192
+        assert DEFAULT_HEADER_SIZE == 8192
 
     def test_version_format(self):
         """Version should be 0x20250001."""
@@ -35,12 +35,12 @@ class TestEnhancedConstants:
 
     def test_magic_trailer_emojis(self):
         """MagicTrailer should have both emojis."""
-        assert PACKAGE_EMOJI_BYTES == b"\xf0\x9f\x93\xa6"  # 📦 in UTF-8
-        assert MAGIC_WAND_EMOJI_BYTES == b"\xf0\x9f\xaa\x84"  # 🪄 in UTF-8
-        assert MAGIC_TRAILER_SIZE == 8200  # 4 + 8192 + 4
+        assert TRAILER_START_MAGIC == b"\xf0\x9f\x93\xa6"  # 📦 in UTF-8
+        assert TRAILER_END_MAGIC == b"\xf0\x9f\xaa\x84"  # 🪄 in UTF-8
+        assert DEFAULT_MAGIC_TRAILER_SIZE == 8200  # 4 + 8192 + 4
         # MagicTrailer consists of 📦 + 8192-byte index + 🪄
         assert (
-            len(PACKAGE_EMOJI_BYTES + MAGIC_WAND_EMOJI_BYTES) == 8
+            len(TRAILER_START_MAGIC + TRAILER_END_MAGIC) == 8
         )  # Both emojis = 8 bytes
 
 
@@ -109,18 +109,18 @@ class TestPlatformSpecific:
         """Page size should be set based on platform."""
         import sys
 
-        from flavor.psp.format_2025.constants import PAGE_SIZE
+        from flavor.config.defaults import DEFAULT_PAGE_SIZE
 
         if sys.platform == "darwin":
             # macOS, especially Apple Silicon
-            assert PAGE_SIZE == 16384
+            assert DEFAULT_PAGE_SIZE == 16384
         else:
             # Linux/Windows
-            assert PAGE_SIZE == 4096
+            assert DEFAULT_PAGE_SIZE == 4096
 
     def test_access_modes(self):
         """Access modes should be defined."""
-        from flavor.psp.format_2025.constants import (
+        from flavor.config.defaults import (
             ACCESS_AUTO,
             ACCESS_FILE,
             ACCESS_STREAM,

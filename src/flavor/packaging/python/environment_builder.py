@@ -14,11 +14,12 @@ from typing import Any
 from provide.foundation import logger
 from provide.foundation.platform import get_arch_name, get_os_name
 from provide.foundation.process import run_command
+from provide.foundation.file.directory import ensure_dir
 from flavor.utils.archive import deterministic_filter
 from flavor.packaging.python.uv_manager import UVManager
 from flavor.packaging.python.pypapip_manager import PyPaPipManager
 from flavor.packaging.python.dependency_resolver import DependencyResolver
-from flavor.psp.format_2025.constants import DEFAULT_EXECUTABLE_PERMS
+from flavor.config.defaults import DEFAULT_EXECUTABLE_PERMS
 
 
 class PythonEnvironmentBuilder:
@@ -281,7 +282,7 @@ class PythonEnvironmentBuilder:
                 )
                 with tempfile.TemporaryDirectory() as temp_dir:
                     python_dir = Path(temp_dir) / "python"
-                    python_dir.mkdir()
+                    ensure_dir(python_dir)
                     (python_dir / "README.txt").write_text(
                         f"Python {self.python_version} distribution placeholder\n"
                         "In production, this would contain the full Python distribution."

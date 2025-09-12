@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import BinaryIO
 
 from provide.foundation.archive import TarArchive, GzipCompressor, Bzip2Compressor
+from provide.foundation.file.directory import temp_dir
 from provide.foundation.logger import logger
 
 from flavor.archive.operations import Operation
@@ -259,6 +260,8 @@ class OperationHandler:
         if op == Operation.BUNDLE_TAR:
             # Extract TAR using foundation
             if output is None:
+                # Need to use temp_dir as a context manager to get a path
+                import tempfile
                 output = Path(tempfile.mkdtemp())
             
             tar_archive = TarArchive()

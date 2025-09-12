@@ -20,14 +20,14 @@ from flavor.psp.format_2025.backends import (
     StreamBackend,
     create_backend,
 )
-from flavor.psp.format_2025.constants import (
+from flavor.config.defaults import (
     ACCESS_AUTO,
     ACCESS_MMAP,
-    HEADER_SIZE,
-    MAGIC_TRAILER_SIZE,
-    MAGIC_WAND_EMOJI_BYTES,
-    PACKAGE_EMOJI_BYTES,
-    SLOT_DESCRIPTOR_SIZE,
+    DEFAULT_HEADER_SIZE,
+    DEFAULT_MAGIC_TRAILER_SIZE,
+    DEFAULT_SLOT_DESCRIPTOR_SIZE,
+    TRAILER_END_MAGIC,
+    TRAILER_START_MAGIC,
 )
 from provide.foundation.crypto import verify_signature
 from flavor.psp.format_2025.index import PSPFIndex
@@ -96,17 +96,17 @@ class PSPFReader:
         # Read MagicTrailer at end of file
         file_size = self.bundle_path.stat().st_size
         trailer = self._backend.read_at(
-            file_size - MAGIC_TRAILER_SIZE, MAGIC_TRAILER_SIZE
+            file_size - DEFAULT_MAGIC_TRAILER_SIZE, DEFAULT_MAGIC_TRAILER_SIZE
         )
 
         # Convert to bytes if memoryview
         if isinstance(trailer, memoryview):
             trailer = bytes(trailer)
 
-        # Verify emoji bookends (📦 at start, 🪄 at end)
+        # Verify magic bytes at start and end
         return (
-            trailer[:4] == PACKAGE_EMOJI_BYTES
-            and trailer[-4:] == MAGIC_WAND_EMOJI_BYTES
+            trailer[:4] == TRAILER_START_MAGIC
+            and trailer[-4:] == TRAILER_END_MAGIC
         )
 
     def read_magic_trailer(self) -> bytes:
@@ -118,25 +118,25 @@ class PSPFReader:
 
         # Read MagicTrailer (last 8200 bytes)
         trailer = self._backend.read_at(
-            file_size - MAGIC_TRAILER_SIZE, MAGIC_TRAILER_SIZE
+            file_size - DEFAULT_MAGIC_TRAILER_SIZE, DEFAULT_MAGIC_TRAILER_SIZE
         )
 
         # Convert to bytes if memoryview
         if isinstance(trailer, memoryview):
             trailer = bytes(trailer)
 
-        # Verify emoji bookends
-        if trailer[:4] != PACKAGE_EMOJI_BYTES:
-            raise ValueError("Invalid MagicTrailer: missing 📦 at start")
-        if trailer[-4:] != MAGIC_WAND_EMOJI_BYTES:
-            raise ValueError("Invalid MagicTrailer: missing 🪄 at end")
+        # Verify magic bytes
+        if trailer[:4] != TRAILER_START_MAGIC:
+            raise ValueError("Invalid MagicTrailer: missing start marker")
+        if trailer[-4:] != TRAILER_END_MAGIC:
+            raise ValueError("Invalid MagicTrailer: missing end marker")
 
-        # Extract index from between emojis
-        index_data = trailer[4 : 4 + HEADER_SIZE]
+        # Extract index from between magic markers
+        index_data = trailer[4 : 4 + DEFAULT_HEADER_SIZE]
 
         logger.debug(
             "🔍 Found index in MagicTrailer",
-            trailer_size=MAGIC_TRAILER_SIZE,
+            trailer_size=DEFAULT_MAGIC_TRAILER_SIZE,
             file_size=file_size,
         )
 
@@ -152,7 +152,7 @@ class PSPFReader:
 
         # Read index from MagicTrailer
         index_data = self.read_magic_trailer()
-        logger.debug("📦 Parsing index from MagicTrailer", size=HEADER_SIZE)
+        logger.debug("📦 Parsing index from MagicTrailer", size=DEFAULT_HEADER_SIZE)
 
         # Convert to bytes if memoryview
         if isinstance(index_data, memoryview):
@@ -262,8 +262,8 @@ class PSPFReader:
 
         # Read all slot descriptors
         for i in range(index.slot_count):
-            offset = index.slot_table_offset + (i * SLOT_DESCRIPTOR_SIZE)
-            data = self._backend.read_at(offset, SLOT_DESCRIPTOR_SIZE)
+            offset = index.slot_table_offset + (i * DEFAULT_SLOT_DESCRIPTOR_SIZE)
+            data = self._backend.read_at(offset, DEFAULT_SLOT_DESCRIPTOR_SIZE)
 
             # Convert to bytes if memoryview
             if isinstance(data, memoryview):
