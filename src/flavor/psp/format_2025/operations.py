@@ -168,7 +168,7 @@ def string_to_operations(op_string: str) -> int:
         >>> string_to_operations("tar|gzip")
         0x1001
     """
-    if not op_string or op_string.lower() == "raw":
+    if not op_string or op_string.lower() in ("raw", "none"):
         return 0
     
     op_string = op_string.lower()

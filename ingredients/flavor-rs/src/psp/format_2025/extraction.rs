@@ -17,7 +17,7 @@ use log::{debug, error, trace};
 use tar::Archive;
 
 #[cfg(unix)]
-use super::constants::DEFAULT_DIR_PERMS;
+use super::defaults::DEFAULT_DIR_PERMS;
 use super::reader::Reader;
 use super::slots::SlotDescriptor;
 use crate::exceptions::{FlavorError, Result};
@@ -249,7 +249,7 @@ fn set_file_permissions(
         u32::from(perms)
     } else {
         // Default to secure file permissions
-        u32::from(crate::psp::format_2025::constants::DEFAULT_FILE_PERMS) // 0600
+        u32::from(crate::psp::format_2025::defaults::DEFAULT_FILE_PERMS) // 0600
     };
 
     match fs::set_permissions(path, fs::Permissions::from_mode(mode)) {
