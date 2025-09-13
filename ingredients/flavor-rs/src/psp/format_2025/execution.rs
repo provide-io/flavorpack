@@ -304,7 +304,7 @@ pub fn execute_setup_commands(
 
                     // Parse octal mode (e.g., "700" -> 0o700)
                     let mode =
-                        u32::from_str_radix(mode_str, 8).unwrap_or(crate::psp::format_2025::constants::DEFAULT_EXECUTABLE_PERMS as u32);
+                        u32::from_str_radix(mode_str, 8).unwrap_or(crate::psp::format_2025::defaults::DEFAULT_EXECUTABLE_PERMS as u32);
 
                     let file_pattern = substitute_placeholders(file_pattern, workenv_dir, package);
 

@@ -6,7 +6,8 @@ use std::path::Path;
 use std::time::Instant;
 
 use super::backends::{create_backend, Backend, MMapBackend};
-use super::constants::{ACCESS_AUTO, MAGIC_TRAILER_SIZE, PACKAGE_EMOJI_BYTES, MAGIC_WAND_EMOJI_BYTES, HEADER_SIZE, SLOT_DESCRIPTOR_SIZE};
+use super::constants::{MAGIC_TRAILER_SIZE, PACKAGE_EMOJI_BYTES, MAGIC_WAND_EMOJI_BYTES, HEADER_SIZE, SLOT_DESCRIPTOR_SIZE};
+use super::defaults::ACCESS_AUTO;
 use super::debug::debug_dump;
 use super::extraction::extract_slot;
 use super::index::Index;

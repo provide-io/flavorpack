@@ -189,6 +189,8 @@ log_cli_level = "WARNING"
 filterwarnings = [
     "ignore::DeprecationWarning",
     "ignore::PendingDeprecationWarning",
+    "ignore::pytest.PytestUnraisableExceptionWarning",
+    "ignore:Exception ignored in.*BaseSubprocessTransport:pytest.PytestUnraisableExceptionWarning",
 ]
 markers = [
     "unit: Fast, isolated unit tests",

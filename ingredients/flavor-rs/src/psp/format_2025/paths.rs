@@ -1,7 +1,7 @@
 //! Path management for PSPF/2025 workenv structure
 
 use std::path::{Path, PathBuf};
-use super::constants::{PSPF_HIDDEN_PREFIX, PSPF_SUFFIX, PSP_METADATA_FILE, INSTANCE_DIR, PACKAGE_DIR, TMP_DIR, EXTRACT_DIR, LOG_DIR, LOCK_FILE, COMPLETE_FILE, PACKAGE_CHECKSUM_FILE, INDEX_METADATA_FILE};
+use super::defaults::{DEFAULT_PSPF_HIDDEN_PREFIX, DEFAULT_PSPF_SUFFIX, DEFAULT_PSP_METADATA_FILE, DEFAULT_INSTANCE_DIR, DEFAULT_PACKAGE_DIR, DEFAULT_TMP_DIR, DEFAULT_EXTRACT_DIR, DEFAULT_LOG_DIR, DEFAULT_LOCK_FILE, DEFAULT_COMPLETE_FILE, DEFAULT_PACKAGE_CHECKSUM_FILE, DEFAULT_INDEX_METADATA_FILE};
 
 /// Manages all paths for a workenv with instance and package metadata
 #[derive(Debug, Clone)]
@@ -45,22 +45,22 @@ impl WorkenvPaths {
     pub fn metadata(&self) -> PathBuf {
         self.cache_dir
             .join("workenv")
-            .join(format!("{}{}{}", PSPF_HIDDEN_PREFIX, self.workenv_name, PSPF_SUFFIX))
+            .join(format!("{}{}{}", DEFAULT_PSPF_HIDDEN_PREFIX, self.workenv_name, DEFAULT_PSPF_SUFFIX))
     }
     
     /// Get the instance metadata directory (persistent)
     pub fn instance(&self) -> PathBuf {
-        self.metadata().join(INSTANCE_DIR)
+        self.metadata().join(DEFAULT_INSTANCE_DIR)
     }
     
     /// Get the package metadata directory (replaced each extraction)
     pub fn package_metadata(&self) -> PathBuf {
-        self.metadata().join(PACKAGE_DIR)
+        self.metadata().join(DEFAULT_PACKAGE_DIR)
     }
     
     /// Get the temporary extraction directory root
     pub fn tmp(&self) -> PathBuf {
-        self.metadata().join(TMP_DIR)
+        self.metadata().join(DEFAULT_TMP_DIR)
     }
     
     /// Get a specific temp extraction directory for a PID
@@ -72,39 +72,39 @@ impl WorkenvPaths {
     
     /// Get the extract operations directory
     pub fn extract(&self) -> PathBuf {
-        self.instance().join(EXTRACT_DIR)
+        self.instance().join(DEFAULT_EXTRACT_DIR)
     }
     
     /// Get the log directory
     pub fn log(&self) -> PathBuf {
-        self.instance().join(LOG_DIR)
+        self.instance().join(DEFAULT_LOG_DIR)
     }
     
     /// Get the lock file path
     pub fn lock_file(&self) -> PathBuf {
-        self.extract().join(LOCK_FILE)
+        self.extract().join(DEFAULT_LOCK_FILE)
     }
     
     /// Get the completion marker file path
     pub fn complete_file(&self) -> PathBuf {
-        self.extract().join(COMPLETE_FILE)
+        self.extract().join(DEFAULT_COMPLETE_FILE)
     }
     
     /// Get the package checksum file path
     pub fn checksum_file(&self) -> PathBuf {
-        self.instance().join(PACKAGE_CHECKSUM_FILE)
+        self.instance().join(DEFAULT_PACKAGE_CHECKSUM_FILE)
     }
     
     /// Get the index metadata file path
     pub fn index_metadata_file(&self) -> PathBuf {
-        self.instance().join(INDEX_METADATA_FILE)
+        self.instance().join(DEFAULT_INDEX_METADATA_FILE)
     }
     
     // ==================== Package Metadata Paths ====================
     
     /// Get the PSP metadata JSON file path
     pub fn psp_metadata_file(&self) -> PathBuf {
-        self.package_metadata().join(PSP_METADATA_FILE)
+        self.package_metadata().join(DEFAULT_PSP_METADATA_FILE)
     }
     
     // ==================== Utility Methods ====================
