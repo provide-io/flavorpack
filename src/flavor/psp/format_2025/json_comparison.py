@@ -205,7 +205,6 @@ def create_new_format_protobuf():
         name_hash=0x123456789ABCDEF0,  # xxHash64("python-runtime")
         offset=10498048,
         size=52428800,
-        original_size=104857600,
         operations=ops0,  # Packed: 0x0000000000001001
         checksum=0x12345678,
         purpose=slots_pb2.PURPOSE_RUNTIME,
@@ -229,7 +228,6 @@ def create_new_format_protobuf():
         name_hash=0xFEDCBA9876543210,  # xxHash64("application")
         offset=62926848,
         size=1048576,
-        original_size=2097152,
         operations=ops1,  # Packed: 0x0000000031100001
         checksum=0x87654321,
         purpose=slots_pb2.PURPOSE_CODE,
@@ -252,7 +250,6 @@ def create_new_format_protobuf():
         name_hash=0xABCDEF0123456789,  # xxHash64("dependencies")
         offset=63975424,
         size=10485760,
-        original_size=20971520,
         operations=ops2,  # Packed: 0x0000000000001301
         checksum=0xFEDCBA98,
         purpose=slots_pb2.PURPOSE_LIBRARY,

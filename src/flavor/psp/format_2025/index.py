@@ -48,8 +48,8 @@ class PSPFIndex:
             # Performance hints (64 bytes)
             "B"  # access_mode
             "B"  # cache_strategy
-            "B"  # encoding_type
-            "B"  # encryption_type
+            "B"  # reserved_hint1 (was codec_type)
+            "B"  # reserved_hint2 (was encryption_type)
             "I"  # page_size
             "Q"  # max_memory
             "Q"  # min_memory
@@ -104,8 +104,8 @@ class PSPFIndex:
     # Performance hints
     access_mode: int = field(default=ACCESS_AUTO)
     cache_strategy: int = field(default=CACHE_NORMAL)
-    codec_type: int = field(default=0)  # 0 = no operations (raw)
-    encryption_type: int = field(default=0)
+    reserved_hint1: int = field(default=0)  # Was codec_type, now reserved
+    reserved_hint2: int = field(default=0)  # Was encryption_type, now reserved
     page_size: int = field(default=4096)
     max_memory: int = field(default=DEFAULT_MAX_MEMORY)
     min_memory: int = field(default=DEFAULT_MIN_MEMORY)
@@ -154,8 +154,8 @@ class PSPFIndex:
             self.integrity_signature,
             self.access_mode,
             self.cache_strategy,
-            self.codec_type,
-            self.encryption_type,
+            self.reserved_hint1,
+            self.reserved_hint2,
             self.page_size,
             self.max_memory,
             self.min_memory,
@@ -200,8 +200,8 @@ class PSPFIndex:
             self.integrity_signature,
             self.access_mode,
             self.cache_strategy,
-            self.codec_type,
-            self.encryption_type,
+            self.reserved_hint1,
+            self.reserved_hint2,
             self.page_size,
             self.max_memory,
             self.min_memory,
@@ -252,8 +252,8 @@ class PSPFIndex:
             integrity_signature=unpacked[12],
             access_mode=unpacked[13],
             cache_strategy=unpacked[14],
-            codec_type=unpacked[15],
-            encryption_type=unpacked[16],
+            reserved_hint1=unpacked[15],
+            reserved_hint2=unpacked[16],
             page_size=unpacked[17],
             max_memory=unpacked[18],
             min_memory=unpacked[19],

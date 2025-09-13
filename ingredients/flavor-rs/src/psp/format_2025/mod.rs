@@ -5,6 +5,7 @@ pub mod builder;
 pub mod checksums;
 pub mod cli;
 pub mod constants;
+pub mod defaults;
 pub mod crypto;
 pub mod debug;
 pub mod execution;

@@ -97,27 +97,27 @@ class TestLauncherAvailability:
             orchestrator.build_package()
         mock_os_access.assert_called_with(launcher_path, os.X_OK)
 
-    @patch("flavor.packaging.orchestrator.find_launcher_executable")
-    @patch("pathlib.Path.exists", return_value=True)
-    @patch("os.access", return_value=True)
-    @patch(
-        "flavor.packaging.orchestrator.run_command",
-        side_effect=OSError("Corrupted binary"),
-    )
+    @patch("flavor.packaging.orchestrator.run_command")
     def test_corrupted_launcher_detection(
         self,
-        mock_run,
-        mock_access,
-        mock_exists,
-        mock_find,
+        mock_run_command,
         orchestrator_factory,
-        manifest_file,
+        tmp_path,
     ):
         """Test BuildError is raised if launcher is corrupted and cannot be executed."""
-        mock_find.return_value = Path("/fake/corrupted-launcher")
-        orchestrator = orchestrator_factory()
+        # Create a fake launcher file
+        launcher_path = tmp_path / "fake-launcher"
+        launcher_path.touch()
+        launcher_path.chmod(0o755)
+        
+        # Mock run_command to simulate corrupted launcher
+        mock_run_command.side_effect = OSError("Corrupted binary")
+        
+        orchestrator = orchestrator_factory(launcher_bin=str(launcher_path))
+        
+        # Test that the launcher detection fails properly
         with pytest.raises(BuildError, match="Failed to execute command"):
-            orchestrator.build_package()
+            orchestrator._detect_launcher_type(launcher_path)
 
     @patch("flavor.packaging.orchestrator.find_launcher_executable")
     @patch("pathlib.Path.exists", return_value=True)

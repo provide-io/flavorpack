@@ -11,7 +11,7 @@ import pytest
 from flavor.psp.format_2025.builder import PSPFBuilder
 from flavor.psp.format_2025.reader import PSPFReader
 from flavor.psp.format_2025.operations import (
-    OP_TAR, OP_GZIP, OP_BZIP2, OP_ZSTD, OP_AES256_GCM,
+    OP_TAR, OP_GZIP, OP_BZIP2, OP_ZSTD,
     pack_operations, unpack_operations, operations_to_string,
     string_to_operations
 )
@@ -36,9 +36,9 @@ class TestOperationChains:
         assert unpack_operations(packed2) == ops2
         
         # Three operations
-        ops3 = [OP_TAR, OP_GZIP, OP_AES256_GCM]
+        ops3 = [OP_TAR, OP_GZIP, OP_BZIP2]
         packed3 = pack_operations(ops3)
-        assert packed3 == 0x311001  # 0x01 | (0x10 << 8) | (0x31 << 16)
+        assert packed3 == 0x131001  # 0x01 | (0x10 << 8) | (0x13 << 16)
         assert unpack_operations(packed3) == ops3
         
         # Maximum 8 operations
@@ -49,10 +49,10 @@ class TestOperationChains:
     
     def test_operations_to_string(self):
         """Test converting operations to human-readable strings."""
-        assert operations_to_string(0) == "RAW"
-        assert operations_to_string(pack_operations([OP_TAR])) == "TAR"
-        assert operations_to_string(pack_operations([OP_TAR, OP_GZIP])) == "TAR|GZIP"
-        assert operations_to_string(pack_operations([OP_TAR, OP_BZIP2])) == "TAR|BZIP2"
+        assert operations_to_string(0) == "raw"
+        assert operations_to_string(pack_operations([OP_TAR])) == "tar"
+        assert operations_to_string(pack_operations([OP_TAR, OP_GZIP])) == "tar.gz"  # Common chain
+        assert operations_to_string(pack_operations([OP_TAR, OP_BZIP2])) == "tar.bz2"  # Common chain
     
     def test_string_to_operations(self):
         """Test parsing operation strings."""
@@ -155,8 +155,8 @@ class TestOperationChains:
         assert ops2 == 0x01
         
         # Test operations to string conversion
-        assert operations_to_string(ops1) == "TAR|GZIP"
-        assert operations_to_string(ops2) == "TAR"
+        assert operations_to_string(ops1) == "tar.gz"  # Common chain
+        assert operations_to_string(ops2) == "tar"
     
     def test_metadata_with_operations(self):
         """Test SlotMetadata handles operation descriptions."""
