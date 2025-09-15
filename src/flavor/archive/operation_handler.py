@@ -22,7 +22,7 @@ class OperationHandler:
     Maps operation IDs to appropriate foundation archive handlers.
     """
     
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize operation handler with foundation-based handlers."""
         self._handlers = self._init_handlers()
         

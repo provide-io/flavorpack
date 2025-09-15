@@ -30,7 +30,7 @@ class ArchiveChain:
     Provides validation, optimization, and serialization for operation chains.
     """
     
-    def __init__(self, operations: list[int] | int | None = None):
+    def __init__(self, operations: list[int] | int | None = None) -> None:
         """
         Initialize archive chain.
         
@@ -136,7 +136,7 @@ class ArchiveChain:
         """Developer representation."""
         return f"ArchiveChain({self._operations})"
     
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: object) -> bool:
         """Compare chains for equality."""
         if not isinstance(other, ArchiveChain):
             return False
@@ -154,7 +154,7 @@ class ChainProcessor:
     Coordinates between operation chains and actual archive implementations.
     """
     
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize chain processor with handler registry."""
         from flavor.archive.operation_handler import OperationHandler
         self._handler = OperationHandler()
