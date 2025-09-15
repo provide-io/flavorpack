@@ -212,16 +212,22 @@ func validatePackageChecksum(paths *WorkenvPaths, currentChecksum uint32, logger
 	}
 
 	// Checksum mismatch - this is a potential security issue
-	insecureMode := isEnvTrue("FLAVOR_INSECURE")
-	if insecureMode {
+	validationLevel := getValidationLevel()
+	switch validationLevel {
+	case ValidationNone, ValidationMinimal:
 		logger.Warn("⚠️ SECURITY WARNING: Package checksum mismatch!", "cached", storedChecksum, "current", currentChecksumStr)
 		logger.Warn("⚠️ Cache may be compromised or package has changed")
-		logger.Warn("⚠️ Continuing due to FLAVOR_INSECURE=1")
+		logger.Warn("⚠️ Continuing due to validation level", "level", validationLevel)
 		return false, nil
-	} else {
+	case ValidationRelaxed:
+		logger.Warn("⚠️ SECURITY WARNING: Package checksum mismatch!", "cached", storedChecksum, "current", currentChecksumStr)
+		logger.Warn("⚠️ Cache may be compromised or package has changed")
+		logger.Warn("⚠️ Continuing due to relaxed validation")
+		return false, nil
+	default: // ValidationStrict, ValidationStandard
 		logger.Error("🚨 CRITICAL: Package checksum mismatch!", "cached", storedChecksum, "current", currentChecksumStr)
 		logger.Error("🚨 Cache may be compromised or package has changed")
-		logger.Error("🚨 Refusing to continue. Set FLAVOR_INSECURE=1 to bypass (NOT RECOMMENDED)")
+		logger.Error("🚨 Refusing to continue. Set FLAVOR_VALIDATION=relaxed to bypass (NOT RECOMMENDED)")
 		return false, fmt.Errorf("package checksum mismatch: cached=%s, current=%s", storedChecksum, currentChecksumStr)
 	}
 }

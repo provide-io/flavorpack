@@ -26,6 +26,48 @@ const (
 	ExitIOError         = 106
 )
 
+// ValidationLevel represents different levels of security validation
+type ValidationLevel int
+
+const (
+	ValidationStrict   ValidationLevel = iota // Default - full security checks, fail on any issue
+	ValidationStandard                        // Normal validation, warnings for minor issues
+	ValidationRelaxed                         // Skip signature checks, warn on checksum mismatches
+	ValidationMinimal                         // Only critical checks, continue on most warnings
+	ValidationNone                            // Skip all validation (testing only)
+)
+
+func getValidationLevel() ValidationLevel {
+	// Check new FLAVOR_VALIDATION variable first
+	if val := os.Getenv("FLAVOR_VALIDATION"); val != "" {
+		switch strings.ToLower(val) {
+		case "strict":
+			return ValidationStrict
+		case "standard":
+			return ValidationStandard
+		case "relaxed":
+			return ValidationRelaxed
+		case "minimal":
+			return ValidationMinimal
+		case "none":
+			return ValidationNone
+		}
+	}
+
+	// Backward compatibility: check FLAVOR_INSECURE
+	if val := os.Getenv("FLAVOR_INSECURE"); val != "" {
+		// Show deprecation warning
+		fmt.Fprintf(os.Stderr, "⚠️ DEPRECATED: FLAVOR_INSECURE is deprecated, use FLAVOR_VALIDATION=none instead\n")
+
+		valLower := strings.ToLower(val)
+		if val == "1" || valLower == "true" || valLower == "on" || valLower == "yes" {
+			return ValidationNone
+		}
+	}
+
+	return ValidationStandard // Default to standard validation with warnings
+}
+
 func isEnvTrue(key string) bool {
 	val := os.Getenv(key)
 	if val == "" {
