@@ -172,9 +172,6 @@ def validate_slots(slots: list[SlotMetadata]) -> list[str]:
             "platform",
             "persistent",
             "volatile",
-            "install",  # Legacy names
-            "permanent",
-            "cached",
             "temporary",  # New names
         ]
         if slot.lifecycle not in valid_lifecycles:

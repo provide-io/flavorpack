@@ -90,16 +90,8 @@ PURPOSE_NAMES = {
 PURPOSE_FROM_STRING = {
     "code": PURPOSE_CODE,
     "data": PURPOSE_DATA,
-    "config": PURPOSE_CONFIG, 
+    "config": PURPOSE_CONFIG,
     "media": PURPOSE_MEDIA,
-    # Legacy mappings
-    "payload": PURPOSE_DATA,
-    "runtime": PURPOSE_CODE,
-    "tool": PURPOSE_CONFIG,
-    "library": PURPOSE_CODE,
-    "asset": PURPOSE_MEDIA,
-    "binary": PURPOSE_CODE,
-    "installer": PURPOSE_CONFIG,
 }
 
 # =================================
@@ -163,9 +155,6 @@ PLATFORM_NAMES = {
 # =================================
 # Default Values
 # =================================
-DEFAULT_PERMISSIONS = 0o644      # Read/write for owner, read for others
-DEFAULT_EXECUTABLE_PERMS = 0o755 # Read/write/execute for owner, read/execute for others
-DEFAULT_DIR_PERMS = 0o755        # Read/write/execute for owner, read/execute for others
 
 DEFAULT_ALIGNMENT = 8            # 8-byte alignment
 DEFAULT_PAGE_SIZE = 4096         # 4KB pages (Linux/Windows default)
