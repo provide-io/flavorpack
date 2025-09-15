@@ -41,28 +41,12 @@ Homepage = "https://github.com/provide-io/flavor"
 
 [dependency-groups]
 dev = [
-    "black>=23.9.1",
-    "coverage>=7.3.2",
-    "mypy>=1.5.1",
-    "pre-commit>=3.5.0",
-    "pytest>=7.4.2",
-    "pytest-cov>=4.1.0",
-    "pytest-json-report>=1.5.0",
-    "ruff>=0.1.0",
-    "types-attrs>=19.1.0",
-    "types-click>=7.1.8",
-    "bandit>=1.8.3",
-    "hypothesis>=6.131.0",
-    "pytest-asyncio>=0.25.0",
-    "pytest-mock>=3.14.0",
-    "pytest-xdist>=3.6.0",
-    "twine>=6.0.0",
-    "types-protobuf>=6.30.2.20250516",
-    "psutil>=5.9.0",
-    "behave>=1.3.1",
-    "ty>=0.0.1a19",
-    "pytest-timeout>=2.4.0",
+    "provide-testkit[all]",
 ]
+
+[tool.uv.sources]
+provide-foundation = { workspace = true }
+provide-testkit = { workspace = true }
 
 docs = [
     "mkdocs>=1.6.0",
