@@ -15,7 +15,8 @@ from flavor.config.defaults import (
     TRAILER_END_MAGIC,
     TRAILER_START_MAGIC,
 )
-from flavor.psp.format_2025.builder import PSPFBuilder, build_package
+from flavor.psp.format_2025.builder import build_package
+from flavor.psp.format_2025.pspf_builder import PSPFBuilder
 from flavor.psp.format_2025.executor import BundleExecutor
 from flavor.psp.format_2025.index import PSPFIndex
 from flavor.psp.format_2025.keys import create_key_config, resolve_keys

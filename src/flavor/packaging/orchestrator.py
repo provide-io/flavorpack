@@ -172,7 +172,7 @@ class PackagingOrchestrator:
             entry_point=self.entry_point,
         )
         from flavor.progress import ProgressReporter
-        from flavor.psp.format_2025.builder import PSPFBuilder
+        from flavor.psp.format_2025.pspf_builder import PSPFBuilder
 
         progress = ProgressReporter(enabled=self.show_progress)
 
