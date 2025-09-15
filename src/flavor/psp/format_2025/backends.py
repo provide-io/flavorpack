@@ -100,7 +100,9 @@ class MMapBackend(Backend):
 
         elapsed = time.perf_counter() - start_time
         logger.debug(
-            "✅ MMap opened", elapsed_ms=elapsed * 1000, pages=file_size // DEFAULT_PAGE_SIZE
+            "✅ MMap opened",
+            elapsed_ms=elapsed * 1000,
+            pages=file_size // DEFAULT_PAGE_SIZE,
         )
 
     def close(self) -> None:
@@ -179,7 +181,10 @@ class MMapBackend(Backend):
     def prefetch(self, offset: int, size: int) -> None:
         """Hint to OS to prefetch pages."""
         logger.debug(
-            "📥 Prefetching pages", offset=offset, size=size, pages=size // DEFAULT_PAGE_SIZE
+            "📥 Prefetching pages",
+            offset=offset,
+            size=size,
+            pages=size // DEFAULT_PAGE_SIZE,
         )
 
         if hasattr(os, "posix_fadvise") and self.file:

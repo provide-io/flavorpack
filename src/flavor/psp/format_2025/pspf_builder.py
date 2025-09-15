@@ -161,8 +161,10 @@ class PSPFBuilder:
         try:
             # Import here to avoid circular import
             from flavor.psp.format_2025.builder import build_package
+
             return build_package(self._spec, output_path)
         except (BuildError, ValueError) as e:
             # Convert exceptions to BuildResult format
             from flavor.psp.format_2025.spec import BuildResult
+
             return BuildResult(success=False, errors=[str(e)])

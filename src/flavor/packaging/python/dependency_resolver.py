@@ -22,9 +22,9 @@ from flavor.packaging.python.uv_manager import UVManager
 class DependencyResolver:
     """Handles Python dependency resolution and tool management."""
 
-    def __init__(self, is_windows: bool = False):
+    def __init__(self, is_windows: bool = False) -> None:
         """Initialize dependency resolver.
-        
+
         Args:
             is_windows: Whether building for Windows
         """
@@ -53,15 +53,18 @@ class DependencyResolver:
         # 3. UV from current virtual environment
         # 4. UV via pipx
 
-
         # Check if UV is in PATH
         uv_path = shutil.which("uv")
         if uv_path:
             logger.debug(f"Found UV in PATH: {uv_path}")
             try:
-                result = run_command([uv_path, "--version"], capture_output=True, timeout=10)
+                result = run_command(
+                    [uv_path, "--version"], capture_output=True, timeout=10
+                )
                 if result.returncode == 0:
-                    logger.trace(f"UV version check successful: {result.stdout.strip()}")
+                    logger.trace(
+                        f"UV version check successful: {result.stdout.strip()}"
+                    )
                     return uv_path
                 else:
                     logger.warning(f"UV version check failed: {result.stderr}")
@@ -95,7 +98,7 @@ class DependencyResolver:
 
         CRITICAL WARNING: This function downloads the UV BINARY itself using pip.
         UV CANNOT DOWNLOAD ITSELF. This is PyPA pip territory.
-        
+
         DO NOT CONFUSE THIS WITH UV DOWNLOAD OPERATIONS.
 
         Args:
@@ -130,7 +133,7 @@ class DependencyResolver:
 
     def _ensure_pip_available(self) -> bool:
         """Ensure pip is available for downloading UV.
-        
+
         Returns:
             True if pip is available
         """
@@ -148,10 +151,10 @@ class DependencyResolver:
 
     def _install_pip(self, python_exe: Path) -> bool:
         """Install pip using ensurepip or UV.
-        
+
         Args:
             python_exe: Path to Python executable
-            
+
         Returns:
             True if pip was installed successfully
         """
@@ -180,10 +183,10 @@ class DependencyResolver:
 
     def _download_uv_with_pip(self, temp_dir: str) -> Path | None:
         """Download UV wheel using pip.
-        
+
         Args:
             temp_dir: Temporary directory for download
-            
+
         Returns:
             Path to downloaded UV wheel or None
         """
@@ -252,11 +255,11 @@ class DependencyResolver:
 
     def _extract_uv_from_wheel(self, uv_wheel: Path, dest_dir: Path) -> Path | None:
         """Extract UV binary from wheel.
-        
+
         Args:
             uv_wheel: Path to UV wheel file
             dest_dir: Destination directory for UV binary
-            
+
         Returns:
             Path to extracted UV binary or None
         """
@@ -264,9 +267,7 @@ class DependencyResolver:
 
         try:
             with zipfile.ZipFile(uv_wheel, "r") as wheel_zip:
-                logger.trace(
-                    f"Wheel contents (first 10): {wheel_zip.namelist()[:10]}"
-                )
+                logger.trace(f"Wheel contents (first 10): {wheel_zip.namelist()[:10]}")
                 # UV binary is typically at uv/uv in the wheel
                 for name in wheel_zip.namelist():
                     if name.endswith("/uv") or name == "uv":
@@ -286,6 +287,7 @@ class DependencyResolver:
                         # Make executable (Unix-like systems only)
                         if not self.is_windows:
                             import os
+
                             os.chmod(uv_path, DEFAULT_EXECUTABLE_PERMS)
 
                         return uv_path
@@ -298,10 +300,10 @@ class DependencyResolver:
 
     def _fallback_download_uv(self, dest_dir: Path) -> Path | None:
         """Fallback UV download using UVManager.
-        
+
         Args:
             dest_dir: Destination directory
-            
+
         Returns:
             Path to UV binary or None
         """

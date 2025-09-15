@@ -41,7 +41,9 @@ def is_aligned(offset: int, alignment: int = DEFAULT_SLOT_ALIGNMENT) -> bool:
     return (offset & (alignment - 1)) == 0
 
 
-def calculate_padding(current_offset: int, alignment: int = DEFAULT_SLOT_ALIGNMENT) -> int:
+def calculate_padding(
+    current_offset: int, alignment: int = DEFAULT_SLOT_ALIGNMENT
+) -> int:
     """Calculate padding needed to align to boundary.
 
     Args:

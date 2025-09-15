@@ -17,7 +17,7 @@ from flavor.archive.operations import Operation
 class OperationHandler:
     """
     Handles individual archive operations using provide.foundation implementations.
-    
+
     Maps operation IDs to appropriate foundation archive handlers.
     """
 
@@ -41,16 +41,16 @@ class OperationHandler:
         self,
         operation: int,
         source: Path | BinaryIO,
-        output: Path | BinaryIO | None = None
+        output: Path | BinaryIO | None = None,
     ) -> Path | BinaryIO:
         """
         Apply a single operation to source data.
-        
+
         Args:
             operation: Operation ID to apply
             source: Source file path or binary stream
             output: Optional output path or stream
-            
+
         Returns:
             Processed data as Path or BinaryIO
         """
@@ -65,16 +65,16 @@ class OperationHandler:
         self,
         operation: int,
         source: Path | BinaryIO,
-        output: Path | BinaryIO | None = None
+        output: Path | BinaryIO | None = None,
     ) -> Path | BinaryIO:
         """
         Reverse a single operation (for extraction).
-        
+
         Args:
             operation: Operation ID to reverse
             source: Source data
             output: Optional output location
-            
+
         Returns:
             Processed data
         """
@@ -83,10 +83,10 @@ class OperationHandler:
     def supports_operation(self, operation: int) -> bool:
         """
         Check if operation is supported by this handler.
-        
+
         Args:
             operation: Operation ID to check
-            
+
         Returns:
             True if operation is supported
         """
@@ -95,13 +95,15 @@ class OperationHandler:
     def get_supported_operations(self) -> set[int]:
         """
         Get set of all supported operation IDs.
-        
+
         Returns:
             Set of supported operation IDs
         """
         return set(self._handlers.keys())
 
-    def _handle_tar(self, source: Path | BinaryIO, output: Path | BinaryIO | None) -> Path | BinaryIO:
+    def _handle_tar(
+        self, source: Path | BinaryIO, output: Path | BinaryIO | None
+    ) -> Path | BinaryIO:
         """Handle TAR bundling using foundation TarArchive."""
         if isinstance(source, Path) and source.is_dir():
             if output is None:
@@ -117,7 +119,9 @@ class OperationHandler:
 
         return source
 
-    def _handle_gzip(self, source: Path | BinaryIO, output: Path | BinaryIO | None) -> Path | BinaryIO:
+    def _handle_gzip(
+        self, source: Path | BinaryIO, output: Path | BinaryIO | None
+    ) -> Path | BinaryIO:
         """Handle GZIP compression using foundation GzipCompressor."""
         if isinstance(source, Path):
             if output is None:
@@ -130,7 +134,7 @@ class OperationHandler:
             return output
 
         # For streams, use foundation stream API
-        elif hasattr(source, 'read'):
+        elif hasattr(source, "read"):
             import io
 
             if output is None:
@@ -145,7 +149,9 @@ class OperationHandler:
 
         return source
 
-    def _handle_bzip2(self, source: Path | BinaryIO, output: Path | BinaryIO | None) -> Path | BinaryIO:
+    def _handle_bzip2(
+        self, source: Path | BinaryIO, output: Path | BinaryIO | None
+    ) -> Path | BinaryIO:
         """Handle BZIP2 compression using foundation Bzip2Compressor."""
         if isinstance(source, Path):
             if output is None:
@@ -160,15 +166,16 @@ class OperationHandler:
             except (ImportError, AttributeError):
                 # Fall back to direct implementation if foundation doesn't have it
                 import bz2
-                with open(source, 'rb') as f_in:
-                    with bz2.open(output, 'wb', compresslevel=9) as f_out:
+
+                with open(source, "rb") as f_in:
+                    with bz2.open(output, "wb", compresslevel=9) as f_out:
                         f_out.write(f_in.read())
 
                 logger.debug(f"🗜️ Compressed with BZIP2 (fallback): {output}")
                 return output
 
         # For streams, use foundation stream API if available
-        elif hasattr(source, 'read'):
+        elif hasattr(source, "read"):
             import io
 
             try:
@@ -197,7 +204,9 @@ class OperationHandler:
 
         return source
 
-    def _handle_xz(self, source: Path | BinaryIO, output: Path | BinaryIO | None) -> Path | BinaryIO:
+    def _handle_xz(
+        self, source: Path | BinaryIO, output: Path | BinaryIO | None
+    ) -> Path | BinaryIO:
         """Handle XZ/LZMA compression (stdlib fallback)."""
         import lzma
 
@@ -205,8 +214,8 @@ class OperationHandler:
             if output is None:
                 output = source.with_suffix(source.suffix + ".xz")
 
-            with open(source, 'rb') as f_in:
-                with lzma.open(output, 'wb', preset=6) as f_out:
+            with open(source, "rb") as f_in:
+                with lzma.open(output, "wb", preset=6) as f_out:
                     f_out.write(f_in.read())
 
             logger.debug(f"🗜️ Compressed with XZ (stdlib): {output}")
@@ -214,7 +223,9 @@ class OperationHandler:
 
         return source
 
-    def _handle_zstd(self, source: Path | BinaryIO, output: Path | BinaryIO | None) -> Path | BinaryIO:
+    def _handle_zstd(
+        self, source: Path | BinaryIO, output: Path | BinaryIO | None
+    ) -> Path | BinaryIO:
         """Handle Zstandard compression (optional)."""
         try:
             import zstandard as zstd
@@ -227,7 +238,7 @@ class OperationHandler:
                 output = source.with_suffix(source.suffix + ".zst")
 
             cctx = zstd.ZstdCompressor(level=3)
-            with open(source, 'rb') as f_in, open(output, 'wb') as f_out:
+            with open(source, "rb") as f_in, open(output, "wb") as f_out:
                 f_out.write(cctx.compress(f_in.read()))
 
             logger.debug(f"🗜️ Compressed with ZSTD: {output}")
@@ -235,25 +246,31 @@ class OperationHandler:
 
         return source
 
-    def _handle_aes256_gcm(self, source: Path | BinaryIO, output: Path | BinaryIO | None) -> Path | BinaryIO:
+    def _handle_aes256_gcm(
+        self, source: Path | BinaryIO, output: Path | BinaryIO | None
+    ) -> Path | BinaryIO:
         """Handle AES-256-GCM encryption (not implemented)."""
         logger.warning("⚠️ AES-256-GCM encryption not yet implemented")
         return source
 
-    def _handle_chacha20(self, source: Path | BinaryIO, output: Path | BinaryIO | None) -> Path | BinaryIO:
+    def _handle_chacha20(
+        self, source: Path | BinaryIO, output: Path | BinaryIO | None
+    ) -> Path | BinaryIO:
         """Handle ChaCha20-Poly1305 encryption (not implemented)."""
         logger.warning("⚠️ ChaCha20-Poly1305 encryption not yet implemented")
         return source
 
-    def _reverse_operation(self, op: int, source: Path | BinaryIO, output: Path | BinaryIO | None) -> Path | BinaryIO:
+    def _reverse_operation(
+        self, op: int, source: Path | BinaryIO, output: Path | BinaryIO | None
+    ) -> Path | BinaryIO:
         """
         Reverse an operation (for extraction).
-        
+
         Args:
             op: Operation to reverse
             source: Source data
             output: Optional output location
-            
+
         Returns:
             Processed data
         """
@@ -262,6 +279,7 @@ class OperationHandler:
             if output is None:
                 # Need to use temp_dir as a context manager to get a path
                 import tempfile
+
                 output = Path(tempfile.mkdtemp())
 
             tar_archive = TarArchive()
@@ -282,7 +300,7 @@ class OperationHandler:
                 logger.debug(f"🗜️ Decompressed GZIP using foundation: {output}")
                 return output
 
-            elif hasattr(source, 'read'):
+            elif hasattr(source, "read"):
                 import io
 
                 if output is None:
@@ -310,14 +328,15 @@ class OperationHandler:
                 except (ImportError, AttributeError):
                     # Fall back to manual implementation
                     import bz2
-                    with bz2.open(source, 'rb') as f_in:
-                        with open(output, 'wb') as f_out:
+
+                    with bz2.open(source, "rb") as f_in:
+                        with open(output, "wb") as f_out:
                             f_out.write(f_in.read())
 
                     logger.debug(f"🗜️ Decompressed BZIP2 (fallback): {output}")
                     return output
 
-            elif hasattr(source, 'read'):
+            elif hasattr(source, "read"):
                 import io
 
                 try:
@@ -349,10 +368,10 @@ class OperationHandler:
     def validate_operations(self, operations: int) -> tuple[bool, str]:
         """
         Validate operations - deprecated, use ChainProcessor instead.
-        
+
         Args:
             operations: Packed operation chain
-            
+
         Returns:
             Tuple of (is_valid, error_message)
         """
