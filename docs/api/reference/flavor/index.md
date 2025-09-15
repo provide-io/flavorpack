@@ -1,0 +1,3 @@
+# `flavor.flavor`
+
+::: flavor.flavor
