@@ -343,22 +343,45 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 		return nil, fmt.Errorf("failed to read index: %w", err)
 	}
 
-	skipVerification := isEnvTrue("FLAVOR_INSECURE")
+	validationLevel := getValidationLevel()
 
-	if !skipVerification {
-		logger.Debug("🔍 Verifying package integrity")
+	switch validationLevel {
+	case ValidationNone:
+		fmt.Fprintf(os.Stderr, "⚠️ SECURITY WARNING: Skipping all integrity verification (FLAVOR_VALIDATION=none)\n")
+		fmt.Fprintf(os.Stderr, "⚠️ This is NOT RECOMMENDED for production use\n")
+		logger.Warn("⚠️ INSECURE MODE: Skipping integrity verification", "level", validationLevel)
+	default:
+		logger.Debug("🔍 Verifying package integrity", "level", validationLevel)
 		valid, err := reader.VerifyIntegritySeal()
 		if err != nil {
-			logger.Error("❌ Failed to verify integrity seal", "error", err)
-			return nil, fmt.Errorf("failed to verify integrity seal: %w", err)
+			switch validationLevel {
+			case ValidationMinimal, ValidationRelaxed:
+				fmt.Fprintf(os.Stderr, "⚠️ SECURITY WARNING: Failed to verify integrity seal: %v\n", err)
+				fmt.Fprintf(os.Stderr, "⚠️ Continuing due to validation level: %v\n", validationLevel)
+				logger.Warn("⚠️ Failed to verify integrity seal, continuing", "error", err, "level", validationLevel)
+			default: // ValidationStrict, ValidationStandard
+				logger.Error("❌ Failed to verify integrity seal", "error", err)
+				return nil, fmt.Errorf("failed to verify integrity seal: %w", err)
+			}
+		} else if !valid {
+			switch validationLevel {
+			case ValidationMinimal, ValidationRelaxed:
+				fmt.Fprintf(os.Stderr, "⚠️ SECURITY WARNING: Package integrity verification failed\n")
+				fmt.Fprintf(os.Stderr, "⚠️ Package may be corrupted or tampered with\n")
+				fmt.Fprintf(os.Stderr, "⚠️ Continuing due to validation level: %v\n", validationLevel)
+				logger.Warn("⚠️ Package integrity verification failed, continuing", "level", validationLevel)
+			default: // ValidationStrict, ValidationStandard
+				if validationLevel == ValidationStandard {
+					fmt.Fprintf(os.Stderr, "🚨 SECURITY WARNING: Package integrity verification failed\n")
+					fmt.Fprintf(os.Stderr, "🚨 Package may be corrupted or tampered with\n")
+					fmt.Fprintf(os.Stderr, "🚨 Set FLAVOR_VALIDATION=relaxed to bypass (NOT RECOMMENDED)\n")
+				}
+				logger.Error("❌ Package integrity verification failed")
+				return nil, errors.New("package integrity verification failed")
+			}
+		} else {
+			logger.Debug("✅ Package integrity verified")
 		}
-		if !valid {
-			logger.Error("❌ Package integrity verification failed")
-			return nil, errors.New("package integrity verification failed")
-		}
-		logger.Debug("✅ Package integrity verified")
-	} else {
-		logger.Warn("⚠️ INSECURE MODE: Skipping integrity verification (FLAVOR_INSECURE=1)")
 	}
 
 	metadata, err := reader.ReadMetadata()

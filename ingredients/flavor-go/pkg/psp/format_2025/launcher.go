@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/config"
 	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
@@ -65,7 +66,22 @@ func getValidationLevel() ValidationLevel {
 		}
 	}
 
-	return ValidationStandard // Default to standard validation with warnings
+	// Use default from config
+	defaults := config.GetValidationDefaults()
+	switch strings.ToLower(defaults.DefaultValidationLevel) {
+	case "strict":
+		return ValidationStrict
+	case "standard":
+		return ValidationStandard
+	case "relaxed":
+		return ValidationRelaxed
+	case "minimal":
+		return ValidationMinimal
+	case "none":
+		return ValidationNone
+	default:
+		return ValidationStandard // Fallback to standard if config is invalid
+	}
 }
 
 func isEnvTrue(key string) bool {
