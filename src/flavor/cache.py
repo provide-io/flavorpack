@@ -7,7 +7,8 @@ import os
 from pathlib import Path
 import time
 
-from provide.foundation.file.directory import temp_dir, safe_rmtree, ensure_dir
+from provide.foundation.file.directory import safe_rmtree, ensure_dir
+from provide.foundation.file.temp import temp_dir
 from provide.foundation.file.formats import read_json
 from provide.foundation.utils.env import get_str
 
