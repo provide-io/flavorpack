@@ -73,7 +73,7 @@ else:
 The `PSPFBuilder` class provides a fluent interface for incrementally building package specifications.
 
 ```python
-from flavor.psp.format_2025.builder import PSPFBuilder
+from flavor.psp.format_2025.pspf_builder import PSPFBuilder
 
 class PSPFBuilder:
     def __init__(self)
@@ -240,7 +240,7 @@ if result.success:
 
 ```python
 from pathlib import Path
-from flavor.psp.format_2025.builder import PSPFBuilder
+from flavor.psp.format_2025.pspf_builder import PSPFBuilder
 from flavor.psp.format_2025.spec import SlotSpec, KeyConfig, BuildOptions
 
 # Create builder
