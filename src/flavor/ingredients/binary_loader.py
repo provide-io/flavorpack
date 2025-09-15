@@ -16,6 +16,7 @@ from provide.foundation.file.directory import ensure_dir
 from provide.foundation.platform import get_platform_string
 from provide.foundation.process import run_command
 
+from flavor.config.defaults import DEFAULT_EXECUTABLE_PERMS
 from flavor.ingredients.manager import IngredientInfo
 
 
@@ -97,7 +98,7 @@ class BinaryLoader:
                 # Make sure it's executable
                 if not os.access(embedded_path, os.X_OK):
                     try:
-                        embedded_path.chmod(0o755)
+                        embedded_path.chmod(DEFAULT_EXECUTABLE_PERMS)
                     except (OSError, PermissionError):
                         pass  # Continue even if we can't set permissions
                 logger.debug(f"Found ingredient at: {embedded_path}")
@@ -189,7 +190,7 @@ class BinaryLoader:
                 logger.info(f"✅ Built {component}: {binary_path}")
                 built_binaries.append(binary_path)
                 # Make executable
-                binary_path.chmod(0o755)
+                binary_path.chmod(DEFAULT_EXECUTABLE_PERMS)
             else:
                 logger.error(f"❌ Failed to build {component}")
                 if result.stderr:
@@ -241,7 +242,7 @@ class BinaryLoader:
                     shutil.copy2(source_path, binary_path)
                     built_binaries.append(binary_path)
                     # Make executable
-                    binary_path.chmod(0o755)
+                    binary_path.chmod(DEFAULT_EXECUTABLE_PERMS)
                 else:
                     logger.error(f"❌ Built but can't find {component} binary at {source_path}")
             else:
