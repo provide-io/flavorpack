@@ -5,21 +5,21 @@ Handles bundle execution, slot extraction, and work environment setup.
 """
 
 from contextlib import contextmanager
-import glob
 import io
 import os
 from pathlib import Path
-import shlex
 import tarfile
 import zlib
 
 from provide.foundation import logger
-from provide.foundation.file.directory import safe_rmtree, ensure_dir, ensure_parent_dir
+from provide.foundation.file.directory import ensure_dir, ensure_parent_dir, safe_rmtree
 
-from flavor.config.defaults import DEFAULT_DISK_SPACE_MULTIPLIER, DEFAULT_SLOT_DESCRIPTOR_SIZE
+from flavor.config.defaults import (
+    DEFAULT_DISK_SPACE_MULTIPLIER,
+    DEFAULT_SLOT_DESCRIPTOR_SIZE,
+)
 from flavor.psp.format_2025.reader import PSPFReader
 from flavor.psp.format_2025.workenv import WorkEnvManager
-from provide.foundation.process import run_command
 
 
 class PSPFLauncher(PSPFReader):
@@ -338,12 +338,12 @@ class PSPFLauncher(PSPFReader):
             - tamper_detected: Whether tampering was detected
         """
         from flavor.psp.security import verify_package_integrity
-        
+
         if not self.bundle_path:
             return {
                 "valid": False,
                 "signature_valid": False,
                 "tamper_detected": True
             }
-        
+
         return verify_package_integrity(self.bundle_path)

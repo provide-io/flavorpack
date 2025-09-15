@@ -5,7 +5,6 @@ Binary loading and building for ingredients.
 Handles the complex logic of finding, building, and testing ingredient binaries.
 """
 
-import hashlib
 import os
 from pathlib import Path
 import shutil
@@ -17,7 +16,6 @@ from provide.foundation.platform import get_platform_string
 from provide.foundation.process import run_command
 
 from flavor.config.defaults import DEFAULT_EXECUTABLE_PERMS
-from flavor.ingredients.manager import IngredientInfo
 
 
 class BinaryLoader:

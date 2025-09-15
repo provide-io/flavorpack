@@ -77,7 +77,7 @@ class FlavorConfig(BaseConfig):
         env_var="FLAVOR_PACKAGE_NAME"
     )
     version: str = config_field(
-        description="Package version", 
+        description="Package version",
         env_var="FLAVOR_VERSION"
     )
     entry_point: str = config_field(

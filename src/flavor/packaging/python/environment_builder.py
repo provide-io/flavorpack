@@ -6,20 +6,20 @@
 import os
 from pathlib import Path
 import shutil
-import sys
 import tarfile
 import tempfile
 from typing import Any
 
 from provide.foundation import logger
+from provide.foundation.file.directory import ensure_dir
 from provide.foundation.platform import get_arch_name, get_os_name
 from provide.foundation.process import run_command
-from provide.foundation.file.directory import ensure_dir
-from flavor.utils.archive import deterministic_filter
-from flavor.packaging.python.uv_manager import UVManager
-from flavor.packaging.python.pypapip_manager import PyPaPipManager
-from flavor.packaging.python.dependency_resolver import DependencyResolver
+
 from flavor.config.defaults import DEFAULT_EXECUTABLE_PERMS
+from flavor.packaging.python.dependency_resolver import DependencyResolver
+from flavor.packaging.python.pypapip_manager import PyPaPipManager
+from flavor.packaging.python.uv_manager import UVManager
+from flavor.utils.archive import deterministic_filter
 
 
 class PythonEnvironmentBuilder:

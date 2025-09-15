@@ -4,22 +4,16 @@
 
 from contextlib import contextmanager
 import gzip
-import io
 import json
 from pathlib import Path
 import struct
-import tarfile
 from typing import Any
 import zlib
 
 from cryptography.exceptions import InvalidSignature
 from provide.foundation import logger
+from provide.foundation.crypto import verify_signature
 
-from flavor.psp.format_2025.backends import (
-    Backend,
-    StreamBackend,
-    create_backend,
-)
 from flavor.config.defaults import (
     ACCESS_AUTO,
     ACCESS_MMAP,
@@ -29,7 +23,11 @@ from flavor.config.defaults import (
     TRAILER_END_MAGIC,
     TRAILER_START_MAGIC,
 )
-from provide.foundation.crypto import verify_signature
+from flavor.psp.format_2025.backends import (
+    Backend,
+    StreamBackend,
+    create_backend,
+)
 from flavor.psp.format_2025.index import PSPFIndex
 from flavor.psp.format_2025.slots import SlotDescriptor, SlotView
 
@@ -53,7 +51,7 @@ class PSPFReader:
         self._launcher_size: int | None = None
         self._slot_descriptors: list[SlotDescriptor] | None = None
         self.mode = mode
-        
+
         # Slot extractor for extraction operations
         from flavor.psp.format_2025.extraction import SlotExtractor
         self._extractor = SlotExtractor(self)
@@ -307,10 +305,10 @@ class PSPFReader:
             )
 
         # Decompress if needed based on operations
-        from flavor.psp.format_2025.operations import unpack_operations, OP_GZIP, OP_TAR
-        
+        from flavor.psp.format_2025.operations import OP_GZIP, OP_TAR, unpack_operations
+
         ops = unpack_operations(descriptor.operations)
-        
+
         if ops == [OP_GZIP]:
             return gzip.decompress(slot_data)
         elif ops == [OP_TAR, OP_GZIP]:
@@ -333,11 +331,11 @@ class PSPFReader:
     def verify_all_checksums(self) -> bool:
         """Verify all slot checksums."""
         return self._extractor.verify_all_checksums()
-    
+
     def extract_slot(self, slot_index: int, dest_dir: Path) -> Path:
         """Extract a slot to a directory."""
         return self._extractor.extract_slot(slot_index, dest_dir)
-    
+
     def verify_slot_integrity(self, slot_index: int) -> bool:
         """Verify integrity of a specific slot."""
         return self._extractor.verify_slot_integrity(slot_index)

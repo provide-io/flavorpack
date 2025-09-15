@@ -11,7 +11,6 @@ from provide.foundation.platform import (
 )
 
 # Subprocess utilities removed - use provide.foundation.process directly
-
 # Re-export XOR utilities
 from flavor.utils.xor import (
     XOR_KEY,

@@ -29,7 +29,7 @@ MAGIC_TRAILER_SIZE = 8200  # Start magic + index + end magic
 # Core operations that MUST be supported in v0
 OP_NONE = 0x00      # No operation
 
-# Bundle operations (0x01-0x0F) 
+# Bundle operations (0x01-0x0F)
 OP_TAR = 0x01       # POSIX TAR archive (REQUIRED)
 
 # Compression operations (0x10-0x2F)
@@ -52,20 +52,20 @@ V0_REQUIRED_OPERATIONS = {
 OPERATION_CHAINS = {
     # Raw data
     "raw": [],
-    
-    # Single operations  
+
+    # Single operations
     "gzip": [OP_GZIP],
     "bzip2": [OP_BZIP2],
     "xz": [OP_XZ],
     "zstd": [OP_ZSTD],
     "tar": [OP_TAR],
-    
+
     # Common compound operations
     "tar.gz": [OP_TAR, OP_GZIP],
     "tar.bz2": [OP_TAR, OP_BZIP2],
     "tar.xz": [OP_TAR, OP_XZ],
     "tar.zst": [OP_TAR, OP_ZSTD],
-    
+
     # Alternative names
     "tgz": [OP_TAR, OP_GZIP],
     "tbz2": [OP_TAR, OP_BZIP2],
@@ -76,13 +76,13 @@ OPERATION_CHAINS = {
 # Slot Purpose Types
 # =================================
 PURPOSE_CODE = 0    # Executable code
-PURPOSE_DATA = 1    # Application data  
+PURPOSE_DATA = 1    # Application data
 PURPOSE_CONFIG = 2  # Configuration files
 PURPOSE_MEDIA = 3   # Media/assets
 
 PURPOSE_NAMES = {
     PURPOSE_CODE: "code",
-    PURPOSE_DATA: "data", 
+    PURPOSE_DATA: "data",
     PURPOSE_CONFIG: "config",
     PURPOSE_MEDIA: "media",
 }
@@ -112,7 +112,7 @@ LIFECYCLE_PLATFORM = 10   # Platform/OS specific content
 LIFECYCLE_NAMES = {
     LIFECYCLE_INIT: "init",
     LIFECYCLE_STARTUP: "startup",
-    LIFECYCLE_RUNTIME: "runtime", 
+    LIFECYCLE_RUNTIME: "runtime",
     LIFECYCLE_SHUTDOWN: "shutdown",
     LIFECYCLE_CACHE: "cache",
     LIFECYCLE_TEMPORARY: "temporary",
@@ -200,13 +200,13 @@ ERROR_CORRUPT_DATA = 7
 # =================================
 METADATA_REQUIRED_FIELDS = [
     "format_version",
-    "package", 
+    "package",
     "slots",
 ]
 
 SLOT_REQUIRED_FIELDS = [
     "id",
-    "name", 
+    "name",
     "purpose",
     "lifecycle",
     "operations",

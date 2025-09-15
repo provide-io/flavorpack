@@ -6,7 +6,6 @@ Compatible with protobuf enum values for serialization.
 """
 
 from enum import IntEnum
-from typing import Any
 
 
 class Operation(IntEnum):
@@ -15,16 +14,16 @@ class Operation(IntEnum):
     
     Values are fixed for compatibility - NEVER change existing values!
     """
-    
+
     # No operation
     NONE = 0x00
-    
+
     # BUNDLE operations (0x01-0x0F) - Combine multiple files
     BUNDLE_TAR = 0x01       # POSIX TAR archive
-    BUNDLE_ZIP = 0x02       # ZIP archive container  
+    BUNDLE_ZIP = 0x02       # ZIP archive container
     BUNDLE_CPIO = 0x03      # CPIO archive
     BUNDLE_AR = 0x04        # AR archive (deb packages)
-    
+
     # COMPRESS operations (0x10-0x2F) - Reduce size
     COMPRESS_GZIP = 0x10      # GZIP (DEFLATE + headers)
     COMPRESS_DEFLATE = 0x11   # Raw DEFLATE algorithm
@@ -34,25 +33,25 @@ class Operation(IntEnum):
     COMPRESS_LZ4 = 0x15       # LZ4 (very fast)
     COMPRESS_BROTLI = 0x16    # Brotli (web-optimized)
     COMPRESS_SNAPPY = 0x17    # Snappy (Google)
-    
+
     # ENCRYPT operations (0x30-0x3F) - Secure data
     ENCRYPT_AES256 = 0x30     # AES-256-GCM
     ENCRYPT_CHACHA20 = 0x31   # ChaCha20-Poly1305
     ENCRYPT_ZIPCRYPTO = 0x32  # Legacy ZIP encryption
     ENCRYPT_GPG = 0x33        # GPG/PGP encryption
-    
+
     # ENCODE operations (0x40-0x4F) - Transform encoding
     ENCODE_BASE64 = 0x40      # Base64 encoding
     ENCODE_HEX = 0x41         # Hexadecimal encoding
     ENCODE_ASCII85 = 0x42     # ASCII85 encoding
-    
+
     # ZIP compound operations (0x50-0x5F)
     ZIP_STORE = 0x50          # ZIP with no compression
     ZIP_DEFLATE = 0x51        # ZIP with DEFLATE
     ZIP_BZIP2 = 0x52          # ZIP with BZIP2
     ZIP_LZMA = 0x53           # ZIP with LZMA
     ZIP_ENCRYPTED = 0x54      # ZIP with encryption
-    
+
     # Other compound formats (0x60-0x6F)
     SEVENZ_LZMA = 0x60        # 7-Zip with LZMA
     RAR_V5 = 0x61             # RAR version 5
@@ -77,7 +76,7 @@ OPERATION_INFO = {
         "category": "none",
         "capabilities": Capability.NONE,
     },
-    
+
     # Bundlers
     Operation.BUNDLE_TAR: {
         "name": "TAR",
@@ -99,7 +98,7 @@ OPERATION_INFO = {
         "category": "bundle",
         "capabilities": Capability.BUNDLE,
     },
-    
+
     # Compressors
     Operation.COMPRESS_DEFLATE: {
         "name": "DEFLATE",
@@ -131,7 +130,7 @@ OPERATION_INFO = {
         "category": "compress",
         "capabilities": Capability.COMPRESS | Capability.STREAM,
     },
-    
+
     # Encryptors
     Operation.ENCRYPT_AES256: {
         "name": "AES256",
@@ -143,7 +142,7 @@ OPERATION_INFO = {
         "category": "encrypt",
         "capabilities": Capability.ENCRYPT | Capability.STREAM,
     },
-    
+
     # Encoders
     Operation.ENCODE_BASE64: {
         "name": "BASE64",
@@ -155,7 +154,7 @@ OPERATION_INFO = {
         "category": "encode",
         "capabilities": Capability.NONE,
     },
-    
+
     # ZIP variants
     Operation.ZIP_STORE: {
         "name": "ZIP_STORE",
@@ -193,13 +192,13 @@ def pack_operations(operations: list[int]) -> int:
     """
     if len(operations) > 8:
         raise ValueError(f"Maximum 8 operations supported, got {len(operations)}")
-    
+
     packed = 0
     for i, op in enumerate(operations):
         if op < 0 or op > 0xFF:
             raise ValueError(f"Operation {op} out of range (0-255)")
         packed |= (op & 0xFF) << (i * 8)
-    
+
     return packed
 
 
@@ -218,7 +217,7 @@ def unpack_operations(packed: int) -> list[int]:
     """
     operations = []
     temp = packed
-    
+
     for _ in range(8):
         op = temp & 0xFF
         if op != 0:  # Skip NONE operations
@@ -226,7 +225,7 @@ def unpack_operations(packed: int) -> list[int]:
         temp >>= 8
         if temp == 0:
             break
-    
+
     return operations
 
 
@@ -269,10 +268,10 @@ def validate_operation_chain(operations: list[int]) -> tuple[bool, str]:
     """
     if not operations:
         return True, ""
-    
+
     if len(operations) > 8:
         return False, "Chain exceeds 8 operations"
-    
+
     # Check for duplicate operations
     seen = set()
     for op in operations:
@@ -280,20 +279,20 @@ def validate_operation_chain(operations: list[int]) -> tuple[bool, str]:
             name = get_operation_name(op)
             return False, f"Duplicate operation: {name}"
         seen.add(op)
-    
+
     # Check for invalid sequences
     categories = [get_operation_category(op) for op in operations]
-    
+
     # Multiple bundlers usually doesn't make sense
     bundle_count = categories.count("bundle")
     if bundle_count > 2:
         return False, f"Too many bundle operations ({bundle_count})"
-    
+
     # Multiple encryptions might be intentional but warn
     encrypt_count = categories.count("encrypt")
     if encrypt_count > 2:
         return False, f"Too many encryption operations ({encrypt_count})"
-    
+
     return True, ""
 
 
@@ -306,7 +305,7 @@ def format_operation_chain(operations: list[int]) -> str:
     """
     if not operations:
         return "NONE"
-    
+
     names = [get_operation_name(op) for op in operations]
     return " -> ".join(names)
 
@@ -320,10 +319,10 @@ def parse_operation_string(chain_str: str) -> list[int]:
     """
     if not chain_str or chain_str == "NONE":
         return []
-    
+
     parts = [p.strip() for p in chain_str.split("->")]
     operations = []
-    
+
     for part in parts:
         # Try to find matching operation
         found = False
@@ -333,7 +332,7 @@ def parse_operation_string(chain_str: str) -> list[int]:
                 operations.append(op_enum.value)
                 found = True
                 break
-        
+
         if not found:
             # Try parsing as hex
             if part.startswith("0x") or part.startswith("0X"):
@@ -344,5 +343,5 @@ def parse_operation_string(chain_str: str) -> list[int]:
                     raise ValueError(f"Unknown operation: {part}")
             else:
                 raise ValueError(f"Unknown operation: {part}")
-    
+
     return operations

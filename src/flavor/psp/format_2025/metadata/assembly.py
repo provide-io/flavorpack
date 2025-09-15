@@ -6,10 +6,11 @@ from pathlib import Path
 import socket
 from typing import Any
 
+from provide.foundation.platform import get_arch_name, get_os_name, get_platform_string
+
 from flavor.psp.format_2025.checksums import calculate_checksum
 from flavor.psp.format_2025.spec import BuildSpec
 from flavor.psp.metadata.paths import validate_metadata_dict
-from provide.foundation.platform import get_arch_name, get_os_name, get_platform_string
 
 # Fallback version for development/unknown versions
 FALLBACK_VERSION = "0.0.0-dev"

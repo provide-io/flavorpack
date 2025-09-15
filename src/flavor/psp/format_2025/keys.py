@@ -11,8 +11,8 @@ import os
 from pathlib import Path
 
 from provide.foundation import logger
-from provide.foundation.file.directory import ensure_dir
 from provide.foundation.crypto import generate_key_pair
+from provide.foundation.file.directory import ensure_dir
 
 from flavor.config.defaults import DEFAULT_FILE_PERMS
 from flavor.psp.format_2025.spec import KeyConfig
