@@ -344,20 +344,7 @@ nav:
   - Reference:
     - Overview: resources/index.md
     
-    - Specification:
-      - spec/index.md
-      - PSPF 2025 Format: spec/pspf-2025.md
-      - Binary Layout: spec/binary-layout.md
-      - Metadata Format: spec/metadata.md
-      - Cryptography: spec/crypto.md
-      
-      - Enhancement Proposals:
-        - spec/feps/index.md
-        - "FEP-0001: Core Specification": spec/feps/fep-0001.md
-        - "FEP-0002: Work Environments": spec/feps/fep-0002.md
-        - "FEP-0003: Security Model": spec/feps/fep-0003.md
-        - "FEP-0004: Staged Payloads": spec/feps/fep-0004.md
-        - "FEP-0005: JIT Loading": spec/feps/fep-0005.md
+    # Specification section removed - files don't exist yet
     
     - Troubleshooting:
       - troubleshooting/index.md

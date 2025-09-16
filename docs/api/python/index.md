@@ -10,27 +10,31 @@ FlavorPack provides a comprehensive Python API for building, verifying, and mana
 
 ```python
 from pathlib import Path
-from flavor.api import build_package_from_manifest, verify_package
+from flavor.package import Package
+from flavor.verification import verify_package
+from flavor.commands.build import build_package
 
 # Build a package
-packages = build_package_from_manifest(
+package = build_package(
     manifest_path=Path("pyproject.toml"),
     output_path=Path("dist/")
 )
 
 # Verify a package
 result = verify_package(Path("dist/myapp.psp"))
-if result["valid"]:
-    print(f"Package verified: {result['metadata']['name']}")
 ```
 
 ## Module Organization
 
-### Core API (`flavor.api`)
+### Core Modules
 
 High-level functions for package operations:
 
-::: flavor.api
+::: flavor.package
+
+::: flavor.verification
+
+::: flavor.commands.build
 
 ### Package Building (`flavor.psp.format_2025`)
 
