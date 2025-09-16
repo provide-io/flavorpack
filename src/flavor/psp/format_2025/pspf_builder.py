@@ -5,11 +5,13 @@ PSPF Fluent Builder - Immutable builder pattern for PSPF packages.
 Provides a chainable API for constructing build specifications.
 """
 
-import tempfile
 from pathlib import Path
+import tempfile
 
 import attrs
+
 from flavor.exceptions import BuildError
+
 # Avoid circular import - import build_package in build method
 from flavor.psp.format_2025.slots import SlotMetadata
 from flavor.psp.format_2025.spec import BuildResult, BuildSpec, KeyConfig

@@ -7,12 +7,12 @@ import os
 from pathlib import Path
 from typing import Any
 
-from provide.foundation.file.temp import temp_dir
-from provide.foundation.file.formats import write_json
-
 from provide.foundation import logger
-from provide.foundation.errors import log_only_error_context, with_error_handling
+from provide.foundation.errors import log_only_error_context
+from provide.foundation.file.formats import write_json
+from provide.foundation.file.temp import temp_dir
 from provide.foundation.platform import get_platform_string, is_windows
+from provide.foundation.process import run_command
 
 from flavor.exceptions import BuildError
 from flavor.ingredients.manager import IngredientManager
@@ -26,7 +26,6 @@ from flavor.packaging.orchestrator_ingredients import (
 )
 from flavor.packaging.python.packager import PythonPackager
 from flavor.psp.metadata.paths import validate_metadata_dict
-from provide.foundation.process import run_command
 
 
 class PackagingOrchestrator:
@@ -86,7 +85,7 @@ class PackagingOrchestrator:
             )
         except Exception as e:
             raise BuildError(f"Failed to execute command: {e}") from e
-        
+
         output = result.stdout.lower()
         logger.trace("🔍📤📋 Launcher version output", output=result.stdout.strip())
 
@@ -173,7 +172,7 @@ class PackagingOrchestrator:
             entry_point=self.entry_point,
         )
         from flavor.progress import ProgressReporter
-        from flavor.psp.format_2025.builder import PSPFBuilder
+        from flavor.psp.format_2025.pspf_builder import PSPFBuilder
 
         progress = ProgressReporter(enabled=self.show_progress)
 
@@ -376,7 +375,6 @@ class PackagingOrchestrator:
     def _build_with_json_manifest(self) -> None:
         """Build package using a JSON manifest directly with external builders."""
         logger.info("Building package with JSON manifest and external builder...")
-        import json
 
         from flavor.progress import ProgressReporter
 

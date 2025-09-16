@@ -7,16 +7,16 @@ import json
 from pathlib import Path
 import shutil
 import tarfile
-import tempfile
 import tomllib
 from typing import Any
 
 from provide.foundation import logger
-from provide.foundation.platform import get_arch_name, get_os_name
 from provide.foundation.file.directory import ensure_dir
+from provide.foundation.platform import get_arch_name, get_os_name
+
 from flavor.config.defaults import DEFAULT_DIR_PERMS, DEFAULT_EXECUTABLE_PERMS
-from flavor.packaging.python.uv_manager import UVManager
 from flavor.packaging.python.environment_builder import PythonEnvironmentBuilder
+from flavor.packaging.python.uv_manager import UVManager
 
 
 class PythonSlotBuilder:
@@ -342,11 +342,11 @@ class PythonSlotBuilder:
     def _build_wheels(self, wheels_dir: Path) -> None:
         """Build wheels for the package and its dependencies - delegates to WheelBuilder."""
         logger.info("🎯🔨🚀 Starting wheel building process (using WheelBuilder)")
-        
+
         # Create a temporary Python environment for building
         import sys
         python_exe = Path(sys.executable)
-        
+
         # Process local dependencies from [tool.flavor.build].dependencies
         local_deps = self.build_config.get("dependencies", [])
         if local_deps:
@@ -365,7 +365,7 @@ class PythonSlotBuilder:
                     logger.info(f"✅ Built local dependency wheel: {dep_wheel.name}")
                 else:
                     logger.warning(f"⚠️ Local dependency not found: {dep_path}")
-        
+
         # The WheelBuilder should handle dependency resolution from the project itself
         # We shouldn't need to manually extract dependencies here
         build_result = self.wheel_builder.build_and_resolve_project(
@@ -374,7 +374,7 @@ class PythonSlotBuilder:
             build_dir=wheels_dir.parent,
             extra_packages=self.build_config.get("extra_packages", []),
         )
-        
+
         logger.info(
             "✅ Wheel building completed",
             total_wheels=build_result["total_wheels"],
@@ -410,11 +410,11 @@ class PythonSlotBuilder:
             self.manifest_dir / "requirements" / "base.txt",
             self.manifest_dir / "requirements" / "requirements.txt",
         ]
-        
+
         for req_file in possible_files:
             if req_file.exists():
                 logger.debug(f"Found requirements file: {req_file}")
                 return req_file
-        
+
         logger.debug("No requirements file found")
         return None

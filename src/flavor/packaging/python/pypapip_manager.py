@@ -29,10 +29,10 @@ class PyPaPipManager:
     
     DO NOT REPLACE pip commands with uv pip - they have different capabilities!
     """
-    
+
     # manylinux2014 = glibc 2.17+ (CentOS 7, Amazon Linux 2, Ubuntu 14.04+)
     MANYLINUX_TAG = "manylinux2014"
-    
+
     def __init__(self, python_version: str = "3.11"):
         """
         Initialize the pip manager.
@@ -41,7 +41,7 @@ class PyPaPipManager:
             python_version: Target Python version for pip operations
         """
         self.python_version = python_version
-    
+
     # ╔══════════════════════════════════════════════════════════════════════════════╗
     # ║                           CRITICAL PyPA HELPER METHODS                          ║
     # ╠══════════════════════════════════════════════════════════════════════════════╣
@@ -163,7 +163,7 @@ class PyPaPipManager:
     # ╔══════════════════════════════════════════════════════════════════════════════╗
     # ║                      END OF CRITICAL PyPA HELPER METHODS                        ║
     # ╚══════════════════════════════════════════════════════════════════════════════╝
-    
+
     def download_wheels_from_requirements(
         self, python_exe: Path, requirements_file: Path, dest_dir: Path
     ) -> None:
@@ -176,17 +176,17 @@ class PyPaPipManager:
             dest_dir: Directory to download wheels to
         """
         logger.info("🌐📥 Downloading wheels from requirements file")
-        
+
         download_cmd = self._get_pypapip_download_cmd(
             python_exe=python_exe,
             dest_dir=dest_dir,
             requirements_file=requirements_file,
             binary_only=True,
         )
-        
+
         logger.debug("💻 Downloading requirements", command=" ".join(download_cmd))
         result = run_command(download_cmd, check=False, capture_output=True)
-        
+
         if result.returncode != 0:
             error_msg = f"Failed to download required wheels: {result.stderr}"
             logger.error(error_msg)
@@ -208,19 +208,19 @@ class PyPaPipManager:
         if not packages:
             logger.debug("No packages to download")
             return
-            
+
         logger.info(f"🌐📥 Downloading wheels for {len(packages)} packages")
-        
+
         download_cmd = self._get_pypapip_download_cmd(
             python_exe=python_exe,
             dest_dir=dest_dir,
             packages=packages,
             binary_only=True,
         )
-        
+
         logger.debug("💻 Downloading packages", command=" ".join(download_cmd))
         result = run_command(download_cmd, check=False, capture_output=True)
-        
+
         if result.returncode != 0:
             error_msg = f"Failed to download required packages: {result.stderr}"
             logger.error(error_msg)
@@ -241,17 +241,17 @@ class PyPaPipManager:
             no_deps: Whether to build without dependencies
         """
         logger.info(f"🔨📦 Building wheel from source: {source_path.name}")
-        
+
         wheel_cmd = self._get_pypapip_wheel_cmd(
             python_exe=python_exe,
             wheel_dir=wheel_dir,
             source=source_path,
             no_deps=no_deps,
         )
-        
+
         logger.debug("💻 Building wheel", command=" ".join(wheel_cmd))
         result = run_command(wheel_cmd, check=True, capture_output=True)
-        
+
         if result.stdout:
             # Look for the wheel filename in output
             for line in result.stdout.strip().split("\n"):
@@ -270,12 +270,12 @@ class PyPaPipManager:
         if not packages:
             logger.debug("No packages to install")
             return
-            
+
         logger.info(f"📦📥 Installing {len(packages)} packages")
-        
+
         install_cmd = self._get_pypapip_install_cmd(python_exe, packages)
-        
+
         logger.debug("💻 Installing packages", command=" ".join(install_cmd))
         run_command(install_cmd, check=True, capture_output=True)
-        
+
         logger.info("✅ Successfully installed packages")

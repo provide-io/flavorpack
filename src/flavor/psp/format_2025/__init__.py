@@ -4,7 +4,8 @@ PSPF 2025 Format Implementation
 Progressive Secure Package Format (2025 Edition)
 """
 
-from flavor.psp.format_2025.builder import PSPFBuilder, build_package
+from provide.foundation.crypto import generate_key_pair, sign_data, verify_signature
+
 from flavor.config.defaults import (
     DEFAULT_HEADER_SIZE,
     DEFAULT_MAGIC_TRAILER_SIZE,
@@ -14,14 +15,14 @@ from flavor.config.defaults import (
     TRAILER_END_MAGIC,
     TRAILER_START_MAGIC,
 )
-from provide.foundation.crypto import generate_key_pair, sign_data, verify_signature
+from flavor.psp.format_2025.builder import build_package
+from flavor.psp.format_2025.pspf_builder import PSPFBuilder
 from flavor.psp.format_2025.executor import BundleExecutor
 from flavor.psp.format_2025.index import PSPFIndex
 from flavor.psp.format_2025.keys import create_key_config, resolve_keys
 from flavor.psp.format_2025.launcher import PSPFLauncher
 from flavor.psp.format_2025.reader import PSPFReader
 from flavor.psp.format_2025.slots import SlotMetadata
-from flavor.utils.alignment import align_offset
 from flavor.psp.format_2025.spec import (
     BuildOptions,
     BuildResult,
@@ -30,6 +31,7 @@ from flavor.psp.format_2025.spec import (
     PreparedSlot,
 )
 from flavor.psp.format_2025.validation import validate_complete, validate_spec
+from flavor.utils.alignment import align_offset
 
 __all__ = [
     # Constants

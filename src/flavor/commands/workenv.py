@@ -8,7 +8,6 @@ import datetime
 import json
 
 import click
-
 from provide.foundation.file.formats import read_json
 
 

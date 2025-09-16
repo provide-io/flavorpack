@@ -7,8 +7,8 @@ Handles the low-level binary writing and file operations for PSPF packages.
 
 import gzip
 import json
-import zlib
 from pathlib import Path
+import zlib
 
 from provide.foundation import logger
 from provide.foundation.crypto import sign_data
@@ -23,8 +23,8 @@ from flavor.config.defaults import (
     TRAILER_END_MAGIC,
     TRAILER_START_MAGIC,
 )
-from flavor.psp.format_2025.index import PSPFIndex
 from flavor.psp.format_2025.checksums import calculate_checksum
+from flavor.psp.format_2025.index import PSPFIndex
 from flavor.psp.format_2025.metadata.assembly import (
     assemble_metadata,
     extract_launcher_version,
@@ -130,7 +130,7 @@ def _write_metadata(f, metadata_compressed: bytes, index: PSPFIndex) -> None:
     """Write compressed metadata and update index."""
     metadata_offset = f.tell()
     logger.debug(f"Metadata offset: {metadata_offset}, size: {len(metadata_compressed)}")
-    
+
     f.write(metadata_compressed)
     logger.debug(f"Position after metadata: {f.tell()}")
 
@@ -195,7 +195,7 @@ def _write_trailer(f, index: PSPFIndex) -> None:
     """Write magic trailer with index."""
     current_pos = f.tell()
     logger.debug(f"Position before MagicTrailer: {current_pos}")
-    
+
     # Update package size
     index.package_size = current_pos + DEFAULT_MAGIC_TRAILER_SIZE
 
@@ -211,11 +211,11 @@ def _map_purpose(purpose: str) -> int:
     """Map purpose string to integer constant."""
     from flavor.config.defaults import (
         PURPOSE_CODE,
-        PURPOSE_CONFIG, 
+        PURPOSE_CONFIG,
         PURPOSE_DATA,
         PURPOSE_MEDIA,
     )
-    
+
     mapping = {
         "code": PURPOSE_CODE,
         "config": PURPOSE_CONFIG,
@@ -240,7 +240,7 @@ def _map_lifecycle(lifecycle: str) -> int:
         LIFECYCLE_STARTUP,
         LIFECYCLE_TEMPORARY,
     )
-    
+
     mapping = {
         "cache": LIFECYCLE_CACHE,
         "cached": LIFECYCLE_CACHE,

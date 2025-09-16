@@ -7,9 +7,9 @@
 from pathlib import Path
 
 import click
+from provide.foundation.utils.formatting import format_size
 
 from flavor.psp.format_2025.reader import PSPFReader
-from provide.foundation.utils.formatting import format_size
 
 
 @click.command("inspect")

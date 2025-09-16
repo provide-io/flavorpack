@@ -3,7 +3,6 @@
 #
 """Public API for the Flavor build tool."""
 
-import json
 from pathlib import Path
 
 # No typing imports needed with Python 3.11+

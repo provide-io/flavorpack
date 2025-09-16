@@ -10,8 +10,8 @@ import os
 from pathlib import Path
 from typing import Any
 
-from provide.foundation.platform import get_os_name, get_arch_name
 from provide.foundation.file.directory import ensure_dir
+from provide.foundation.platform import get_arch_name, get_os_name
 
 
 def validate_metadata_path(path: str) -> str:

@@ -10,13 +10,13 @@ from pathlib import Path
 import shlex
 
 from provide.foundation import logger
+from provide.foundation.file.directory import ensure_dir, ensure_parent_dir, safe_rmtree
 from provide.foundation.process import run_command
-from provide.foundation.file.directory import safe_rmtree, ensure_dir, ensure_parent_dir
 
 
 class WorkEnvManager:
     """Manages PSPF work environments."""
-    
+
     def __init__(self, reader):
         """Initialize with reference to PSPFReader."""
         self.reader = reader
@@ -108,7 +108,7 @@ class WorkEnvManager:
                     )
             else:
                 logger.debug(f"❌ Cache validation file not found: {check_path}")
-        
+
         return cache_valid
 
     def _cleanup_lifecycle_slots(

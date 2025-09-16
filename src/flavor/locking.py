@@ -4,7 +4,6 @@ from contextlib import contextmanager
 from pathlib import Path
 
 from provide.foundation.file.directory import ensure_dir
-from provide.foundation.file.temp import temp_dir
 from provide.foundation.file.lock import FileLock
 
 
@@ -38,13 +37,13 @@ class LockManager:
             LockError: When unable to acquire lock
         """
         lock_file = self.lock_dir / f"{name}.lock"
-        
+
         file_lock = FileLock(lock_file, timeout=timeout)
         try:
             acquired = file_lock.acquire(blocking=True)
             if not acquired:
                 raise LockError(f"Timeout acquiring lock: {name}")
-            
+
             self.held_locks.add(lock_file)
             try:
                 yield lock_file

@@ -7,7 +7,6 @@
 import os
 
 import click
-
 from provide.foundation.process import run_command
 
 

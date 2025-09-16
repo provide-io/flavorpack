@@ -14,13 +14,14 @@ import zipfile
 from provide.foundation import logger
 from provide.foundation.platform import get_arch_name, get_os_name
 from provide.foundation.process import run_command
-from flavor.packaging.python.uv_manager import UVManager
+
 from flavor.packaging.python.pypapip_manager import PyPaPipManager
+from flavor.packaging.python.uv_manager import UVManager
 
 
 class DependencyResolver:
     """Handles Python dependency resolution and tool management."""
-    
+
     def __init__(self, is_windows: bool = False):
         """Initialize dependency resolver.
         
@@ -52,7 +53,6 @@ class DependencyResolver:
         # 3. UV from current virtual environment
         # 4. UV via pipx
 
-        import shutil
 
         # Check if UV is in PATH
         uv_path = shutil.which("uv")
@@ -113,18 +113,18 @@ class DependencyResolver:
 
         with tempfile.TemporaryDirectory() as temp_dir:
             logger.trace(f"Created temp directory for UV download: {temp_dir}")
-            
+
             # Download UV wheel using pip
             uv_wheel = self._download_uv_with_pip(temp_dir)
             if not uv_wheel:
                 return self._fallback_download_uv(dest_dir)
-            
+
             # Extract UV binary from wheel
             uv_path = self._extract_uv_from_wheel(uv_wheel, dest_dir)
             if uv_path:
                 logger.info("✅ Successfully downloaded manylinux2014 UV binary")
                 return uv_path
-                
+
             logger.error("UV binary not found in wheel")
             return self._fallback_download_uv(dest_dir)
 
@@ -136,7 +136,7 @@ class DependencyResolver:
         """
         python_exe = Path(sys.executable)
         pip_check_cmd = [str(python_exe), "-m", "pip", "--version"]
-        
+
         try:
             logger.trace("Checking if pip is available")
             result = run_command(pip_check_cmd, check=True, capture_output=True)
@@ -174,7 +174,7 @@ class DependencyResolver:
                     return True
                 except Exception as e:
                     logger.error(f"Failed to install pip via UV: {e}")
-            
+
             logger.error("Cannot install pip - no method available")
             return False
 
@@ -188,7 +188,7 @@ class DependencyResolver:
             Path to downloaded UV wheel or None
         """
         python_exe = Path(sys.executable)
-        
+
         # ⚠️ CRITICAL: Using pip_manager for correct manylinux handling ⚠️
         # DO NOT replace this with direct uv commands - they don't handle platform tags correctly!
         arch = get_arch_name()
@@ -243,7 +243,7 @@ class DependencyResolver:
             if not uv_wheel:
                 logger.warning("UV wheel not found after download")
                 return None
-                
+
             return uv_wheel
 
         except Exception as e:
@@ -261,7 +261,7 @@ class DependencyResolver:
             Path to extracted UV binary or None
         """
         from flavor.config.defaults import DEFAULT_EXECUTABLE_PERMS
-        
+
         try:
             with zipfile.ZipFile(uv_wheel, "r") as wheel_zip:
                 logger.trace(
@@ -287,11 +287,11 @@ class DependencyResolver:
                         if not self.is_windows:
                             import os
                             os.chmod(uv_path, DEFAULT_EXECUTABLE_PERMS)
-                        
+
                         return uv_path
-                        
+
             return None
-            
+
         except Exception as e:
             logger.error(f"Failed to extract UV from wheel: {e}")
             return None
@@ -306,7 +306,7 @@ class DependencyResolver:
             Path to UV binary or None
         """
         logger.info("Attempting direct download from PyPI as fallback")
-        
+
         try:
             return self.uv_manager.download_uv_binary(dest_dir)
         except Exception as fallback_error:
