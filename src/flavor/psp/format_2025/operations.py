@@ -19,28 +19,28 @@ from flavor.psp.format_2025.constants import (
 # Import generated protobuf operations for name lookup
 try:
     from flavor.psp.format_2025.generated.modules import operations_pb2
+
     _HAS_PROTOBUF = True
 except ImportError:
     _HAS_PROTOBUF = False
 
 
-
 def pack_operations(operations: list[int]) -> int:
     """
     Pack a list of operations into a 64-bit integer.
-    
+
     Each operation takes 8 bits, allowing up to 8 operations in the chain.
     Operations are packed in execution order (first operation in LSB).
-    
+
     Args:
         operations: List of operation constants (max 8)
-    
+
     Returns:
         Packed 64-bit integer
-    
+
     Raises:
         ValueError: If operation is invalid or unsupported in v0
-    
+
     Example:
         >>> pack_operations([OP_TAR, OP_GZIP])
         0x1001  # 0x01 | (0x10 << 8)
@@ -65,13 +65,13 @@ def pack_operations(operations: list[int]) -> int:
 def unpack_operations(packed: int) -> list[int]:
     """
     Unpack a 64-bit integer into a list of operations.
-    
+
     Args:
         packed: Packed 64-bit integer
-    
+
     Returns:
         List of operation constants
-    
+
     Example:
         >>> unpack_operations(0x1001)
         [OP_TAR, OP_GZIP]
@@ -86,18 +86,16 @@ def unpack_operations(packed: int) -> list[int]:
     return operations
 
 
-
-
 def operations_to_string(packed: int) -> str:
     """
     Convert packed operations to human-readable string.
-    
+
     Args:
         packed: Packed operations as 64-bit integer
-    
+
     Returns:
         String representation like "TAR|GZIP" or standard format like "tar.gz"
-    
+
     Example:
         >>> operations_to_string(0x1001)
         "tar.gz"
@@ -152,16 +150,16 @@ def _get_operation_name(op: int) -> str:
 def string_to_operations(op_string: str) -> int:
     """
     Parse operation string to packed operations.
-    
+
     Args:
         op_string: String like "tar|gzip", "tar.gz", or "raw"
-    
+
     Returns:
         Packed operations as 64-bit integer
-    
+
     Raises:
         ValueError: If operation string is invalid or uses unsupported operations
-    
+
     Example:
         >>> string_to_operations("tar.gz")
         0x1001

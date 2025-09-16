@@ -17,26 +17,26 @@ from provide.foundation.process import run_command
 class PyPaPipManager:
     """
     Dedicated PyPA pip command management.
-    
+
     Handles all pip-specific operations with proper platform support
     and manylinux2014 compatibility for Linux.
-    
+
     CRITICAL: This class contains essential PyPA functionality for:
     - Platform-specific wheel selection (manylinux2014 for Linux compatibility)
-    - Proper dependency resolution that uv pip cannot handle 
+    - Proper dependency resolution that uv pip cannot handle
     - Binary wheel downloading for cross-platform builds
     - Correct Python version targeting
-    
+
     DO NOT REPLACE pip commands with uv pip - they have different capabilities!
     """
 
     # manylinux2014 = glibc 2.17+ (CentOS 7, Amazon Linux 2, Ubuntu 14.04+)
     MANYLINUX_TAG = "manylinux2014"
 
-    def __init__(self, python_version: str = "3.11"):
+    def __init__(self, python_version: str = "3.11") -> None:
         """
         Initialize the pip manager.
-        
+
         Args:
             python_version: Target Python version for pip operations
         """
@@ -72,7 +72,7 @@ class PyPaPipManager:
         CRITICAL: Must use ACTUAL pip3 NOT uv pip - uv pip is incomplete/broken
         DO NOT CHANGE THIS TO uv pip - IT WILL BREAK DEPENDENCY RESOLUTION
         """
-        return [str(python_exe), "-m", "pip", "install"] + packages
+        return [str(python_exe), "-m", "pip", "install", *packages]
 
     def _get_pypapip_wheel_cmd(
         self, python_exe: Path, wheel_dir: Path, source: Path, no_deps: bool = False
@@ -143,15 +143,11 @@ class PyPaPipManager:
             # manylinux2014 = glibc 2.17+ (CentOS 7, Amazon Linux 2, Ubuntu 14.04+)
             if arch == "amd64":
                 cmd.extend(["--platform", f"{self.MANYLINUX_TAG}_x86_64"])
-                logger.debug(
-                    f"Added platform constraint: {self.MANYLINUX_TAG}_x86_64"
-                )
+                logger.debug(f"Added platform constraint: {self.MANYLINUX_TAG}_x86_64")
             elif arch == "arm64":
                 # ARM64 uses the new manylinux format (manylinux_2_17 = glibc 2.17 = manylinux2014)
                 cmd.extend(["--platform", "manylinux_2_17_aarch64"])
-                logger.debug(
-                    "Added platform constraint: manylinux_2_17_aarch64"
-                )
+                logger.debug("Added platform constraint: manylinux_2_17_aarch64")
                 logger.warning("⚠️ grpcio on CentOS 7 ARM64 may have C++ ABI issues")
 
         if requirements_file:
@@ -169,7 +165,7 @@ class PyPaPipManager:
     ) -> None:
         """
         Download wheels for packages listed in requirements file.
-        
+
         Args:
             python_exe: Path to Python executable
             requirements_file: Path to requirements.txt file
@@ -199,9 +195,9 @@ class PyPaPipManager:
     ) -> None:
         """
         Download wheels for specified packages.
-        
+
         Args:
-            python_exe: Path to Python executable  
+            python_exe: Path to Python executable
             packages: List of package names/requirements
             dest_dir: Directory to download wheels to
         """
@@ -233,7 +229,7 @@ class PyPaPipManager:
     ) -> None:
         """
         Build wheel from source directory.
-        
+
         Args:
             python_exe: Path to Python executable
             source_path: Path to source directory with setup.py or pyproject.toml
@@ -262,7 +258,7 @@ class PyPaPipManager:
     def install_packages(self, python_exe: Path, packages: list[str]) -> None:
         """
         Install packages using pip.
-        
+
         Args:
             python_exe: Path to Python executable
             packages: List of package names/requirements to install

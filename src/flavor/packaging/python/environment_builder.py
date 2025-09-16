@@ -31,9 +31,9 @@ class PythonEnvironmentBuilder:
         is_windows: bool = False,
         manylinux_tag: str = "manylinux2014",
         progress: Any = None,
-    ):
+    ) -> None:
         """Initialize environment builder.
-        
+
         Args:
             python_version: Python version to use (e.g., "3.11")
             is_windows: Whether building for Windows

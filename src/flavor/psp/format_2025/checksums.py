@@ -91,7 +91,9 @@ def parse_checksum(checksum_str: str) -> tuple[str, str]:
         raise ValidationError("Empty checksum string")
 
     if ":" not in checksum_str:
-        raise ValidationError(f"Checksum must use prefixed format (algorithm:value): {checksum_str}")
+        raise ValidationError(
+            f"Checksum must use prefixed format (algorithm:value): {checksum_str}"
+        )
 
     parts = checksum_str.split(":", 1)
     if len(parts) != 2:

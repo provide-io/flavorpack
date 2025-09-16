@@ -109,7 +109,9 @@ class PSPFLauncher(PSPFReader):
 
         # Calculate total size needed (compressed size * multiplier for safety)
         slot_table = self.read_slot_table()
-        total_needed = sum(slot["size"] * DEFAULT_DISK_SPACE_MULTIPLIER for slot in slot_table)
+        total_needed = sum(
+            slot["size"] * DEFAULT_DISK_SPACE_MULTIPLIER for slot in slot_table
+        )
 
         # Use the utility function
         check_disk_space(workenv_dir, total_needed)
@@ -273,7 +275,6 @@ class PSPFLauncher(PSPFReader):
         """Substitute {slot:N} references in command."""
         return self._workenv_manager.substitute_slot_references(command, workenv_dir)
 
-
     def execute(self, args: list[str] | None = None) -> dict:
         """Execute the bundle.
 
@@ -330,7 +331,7 @@ class PSPFLauncher(PSPFReader):
     def verify_integrity(self) -> dict[str, bool]:
         """
         Verify package integrity including signatures and checksums.
-        
+
         Returns:
             Dictionary with verification results:
             - valid: Overall validity
@@ -340,10 +341,6 @@ class PSPFLauncher(PSPFReader):
         from flavor.psp.security import verify_package_integrity
 
         if not self.bundle_path:
-            return {
-                "valid": False,
-                "signature_valid": False,
-                "tamper_detected": True
-            }
+            return {"valid": False, "signature_valid": False, "tamper_detected": True}
 
         return verify_package_integrity(self.bundle_path)

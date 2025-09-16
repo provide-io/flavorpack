@@ -159,6 +159,7 @@ def prepare_slots(
 
         # Get packed operations
         from flavor.psp.format_2025.operations import string_to_operations
+
         packed_ops = string_to_operations(slot.operations)
 
         # Apply operations to compress/transform data
@@ -275,16 +276,14 @@ def _load_slot_data(slot: SlotMetadata) -> bytes:
         return slot_path.read_bytes()
 
 
-def _apply_operations(
-    data: bytes, packed_ops: int, options: BuildOptions
-) -> bytes:
+def _apply_operations(data: bytes, packed_ops: int, options: BuildOptions) -> bytes:
     """Apply operation chain to data using the new ChainProcessor.
 
     Args:
         data: Raw data to process
         packed_ops: Packed operations as 64-bit integer
         options: Build options
-    
+
     Returns:
         Processed data after applying operations
     """
@@ -298,8 +297,10 @@ def _apply_operations(
 
     # Check if data is already compressed (common issue with pre-compressed files)
     # GZIP magic bytes: 1f 8b 08
-    if len(data) >= 3 and data[0:3] == b'\x1f\x8b\x08':
-        logger.trace("⚠️ Data appears to be already gzipped, returning as-is to avoid double compression")
+    if len(data) >= 3 and data[0:3] == b"\x1f\x8b\x08":
+        logger.trace(
+            "⚠️ Data appears to be already gzipped, returning as-is to avoid double compression"
+        )
         return data
 
     try:
@@ -321,7 +322,7 @@ def _apply_operations(
             return output_stream.getvalue()
         else:
             # If processor returns a file path, read it
-            with open(output_stream, 'rb') as f:
+            with open(output_stream, "rb") as f:
                 return f.read()
 
     except Exception as e:
@@ -332,9 +333,12 @@ def _apply_operations(
         ops = unpack_operations(packed_ops)
         if OP_GZIP in ops:
             import gzip
+
             return gzip.compress(data, compresslevel=options.compression_level)
         else:
-            logger.warning(f"⚠️ Unsupported fallback operation chain: {ops}, returning raw data")
+            logger.warning(
+                f"⚠️ Unsupported fallback operation chain: {ops}, returning raw data"
+            )
             return data
 
 

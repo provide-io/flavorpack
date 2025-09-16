@@ -21,7 +21,7 @@ from flavor.psp.format_2025.slots import SlotView
 class SlotExtractor:
     """Handles PSPF slot extraction operations."""
 
-    def __init__(self, reader):
+    def __init__(self, reader) -> None:
         """Initialize with reference to PSPFReader."""
         self.reader = reader
 
@@ -56,13 +56,13 @@ class SlotExtractor:
         """
         view = self.get_slot_view(slot_index)
         # Use the SlotView's built-in streaming if available
-        if hasattr(view, 'stream'):
+        if hasattr(view, "stream"):
             yield from view.stream(chunk_size)
         else:
             # Fallback to manual chunking
             offset = 0
             while offset < len(view):
-                chunk = view[offset:offset + chunk_size]
+                chunk = view[offset : offset + chunk_size]
                 if not chunk:
                     break
                 yield chunk
@@ -144,10 +144,7 @@ class SlotExtractor:
                     temp_file.flush()
 
                     result = processor.process(
-                        Path(temp_file.name),
-                        chain,
-                        output=dest_dir,
-                        reverse=True
+                        Path(temp_file.name), chain, output=dest_dir, reverse=True
                     )
 
                     if isinstance(result, Path):
@@ -155,16 +152,18 @@ class SlotExtractor:
                     else:
                         # Write processed data to destination
                         output_path = dest_dir / f"slot_{slot_index}"
-                        if hasattr(result, 'read'):
-                            with open(output_path, 'wb') as f:
+                        if hasattr(result, "read"):
+                            with open(output_path, "wb") as f:
                                 f.write(result.read())
                         else:
-                            with open(output_path, 'wb') as f:
+                            with open(output_path, "wb") as f:
                                 f.write(result)
                         return output_path
 
             except Exception as e:
-                logger.warning(f"Failed to reverse operations for slot {slot_index}: {e}")
+                logger.warning(
+                    f"Failed to reverse operations for slot {slot_index}: {e}"
+                )
                 # Fall through to direct extraction
 
         # No operations or operation reversal failed - extract directly
@@ -206,7 +205,9 @@ class SlotExtractor:
         tar_signature = data[257:262]
         return tar_signature in [b"ustar", b"ustar\x00"]
 
-    def _extract_tar_data(self, tar_data: bytes, dest_dir: Path, slot_name: str) -> Path:
+    def _extract_tar_data(
+        self, tar_data: bytes, dest_dir: Path, slot_name: str
+    ) -> Path:
         """Extract TAR data to directory."""
         import io
         import tarfile
@@ -215,10 +216,10 @@ class SlotExtractor:
         ensure_dir(extraction_dir)
 
         try:
-            with tarfile.open(fileobj=io.BytesIO(tar_data), mode='r:*') as tar:
+            with tarfile.open(fileobj=io.BytesIO(tar_data), mode="r:*") as tar:
                 # Security check - prevent path traversal
                 for member in tar.getmembers():
-                    if member.name.startswith('/') or '..' in member.name:
+                    if member.name.startswith("/") or ".." in member.name:
                         logger.warning(f"Skipping unsafe path in TAR: {member.name}")
                         continue
 
@@ -233,7 +234,9 @@ class SlotExtractor:
             raw_file.write_bytes(tar_data)
             return raw_file
 
-    def _extract_zip_data(self, zip_data: bytes, dest_dir: Path, slot_name: str) -> Path:
+    def _extract_zip_data(
+        self, zip_data: bytes, dest_dir: Path, slot_name: str
+    ) -> Path:
         """Extract ZIP data to directory."""
         import io
 
@@ -241,10 +244,10 @@ class SlotExtractor:
         ensure_dir(extraction_dir)
 
         try:
-            with zipfile.ZipFile(io.BytesIO(zip_data), 'r') as zip_ref:
+            with zipfile.ZipFile(io.BytesIO(zip_data), "r") as zip_ref:
                 # Security check - prevent path traversal
                 for member in zip_ref.namelist():
-                    if member.startswith('/') or '..' in member:
+                    if member.startswith("/") or ".." in member:
                         logger.warning(f"Skipping unsafe path in ZIP: {member}")
                         continue
 

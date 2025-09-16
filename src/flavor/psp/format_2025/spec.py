@@ -214,15 +214,11 @@ class PreparedSlot:
     metadata: SlotMetadata = field(validator=validators.instance_of(SlotMetadata))
     data: bytes = field(validator=validators.instance_of(bytes))
     compressed_data: bytes | None = field(default=None)
-    codec_type: int = field(
-        default=0
-    )  # Renamed from compression_type for consistency
+    codec_type: int = field(default=0)  # Renamed from compression_type for consistency
     checksum: int = field(default=0)
     offset: int | None = field(default=None)
 
-    def with_codec(
-        self, compressed_data: bytes, codec_type: int
-    ) -> "PreparedSlot":
+    def with_codec(self, compressed_data: bytes, codec_type: int) -> "PreparedSlot":
         """Return new PreparedSlot with codec applied."""
         return attrs.evolve(
             self, compressed_data=compressed_data, codec_type=codec_type

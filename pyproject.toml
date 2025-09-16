@@ -43,11 +43,6 @@ Homepage = "https://github.com/provide-io/flavor"
 dev = [
     "provide-testkit[all]",
 ]
-
-[tool.uv.sources]
-provide-foundation = { workspace = true }
-provide-testkit = { workspace = true }
-
 docs = [
     "mkdocs>=1.6.0",
     "mkdocs-material>=9.5.0",
@@ -64,6 +59,10 @@ docs = [
     "mike>=2.0.0",
     "mkdocs-mermaid2-plugin>=1.1.0",
 ]
+
+[tool.uv.sources]
+provide-foundation = { workspace = true }
+provide-testkit = { workspace = true }
 
 [project.scripts]
 flavor = "flavor.cli:main"
