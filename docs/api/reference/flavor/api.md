@@ -1,3 +1,3 @@
-# `flavor.flavor.api`
+# `flavor` API
 
-::: flavor.flavor.api
+::: flavor
