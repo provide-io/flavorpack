@@ -1,8 +1,8 @@
-# Flavor API
+# Commands API
 
-Auto-generated API documentation for `flavor`.
+Auto-generated API documentation for `flavor.commands`.
 
-::: flavor
+::: flavor.commands
     options:
       show_root_heading: false
       members_order: source

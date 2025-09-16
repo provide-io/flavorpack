@@ -1,8 +1,8 @@
-# Flavor API
+# Psp API
 
-Auto-generated API documentation for `flavor`.
+Auto-generated API documentation for `flavor.psp`.
 
-::: flavor
+::: flavor.psp
     options:
       show_root_heading: false
       members_order: source

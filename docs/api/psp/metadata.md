@@ -1,8 +1,8 @@
-# Flavor API
+# Metadata API
 
-Auto-generated API documentation for `flavor`.
+Auto-generated API documentation for `flavor.psp.metadata`.
 
-::: flavor
+::: flavor.psp.metadata
     options:
       show_root_heading: false
       members_order: source
