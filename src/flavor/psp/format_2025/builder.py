@@ -68,7 +68,6 @@ from flavor.psp.format_2025.spec import (
 )
 from flavor.psp.format_2025.writer import write_package
 
-# Re-export for backward compatibility
 from flavor.psp.format_2025.pspf_builder import PSPFBuilder
 from flavor.psp.format_2025.validation import validate_complete
 from flavor.utils.alignment import align_offset, align_to_page

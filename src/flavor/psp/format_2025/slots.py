@@ -12,6 +12,7 @@ from attrs import define, field, validators
 from flavor.config.defaults import (
     ACCESS_HINT_SEQUENTIAL,
     CACHE_NORMAL,
+    DEFAULT_FILE_PERMS,
     DEFAULT_SLOT_ALIGNMENT,
     DEFAULT_SLOT_DESCRIPTOR_SIZE,
     LIFECYCLE_CACHE,
@@ -83,7 +84,7 @@ class SlotDescriptor:
     # Classification (4 bytes)
     purpose: int = field(default=PURPOSE_DATA)         # 1 byte (uint8)
     lifecycle: int = field(default=LIFECYCLE_RUNTIME)  # 1 byte (uint8)
-    permissions: int = field(default=0o644)            # 2 bytes (uint16, Unix-style)
+    permissions: int = field(default=DEFAULT_FILE_PERMS)  # 2 bytes (uint16, Unix-style)
 
     # Platform & Flags (4 bytes)
     platform: int = field(default=0)       # 2 bytes (uint16, 0=any)
