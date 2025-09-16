@@ -238,11 +238,11 @@ class TestUVDownload:
 
             with (
                 patch(
-                    "flavor.packaging.python.packager.get_os_name",
+                    "provide.foundation.platform.get_os_name",
                     return_value="darwin",
                 ),
                 patch(
-                    "flavor.packaging.python.dependency_resolver.get_arch_name",
+                    "provide.foundation.platform.get_arch_name",
                     return_value="arm64",
                 ),
                 patch.object(packager.env_builder, "find_uv_command", return_value=fake_uv_path),

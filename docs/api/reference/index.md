@@ -1,18 +1,4 @@
-"""Generate API reference documentation pages."""
-
-from provide.foundation.docs import generate_api_docs
-
-def main():
-    """Generate API reference pages for FlavorPack."""
-    # Generate API documentation for the flavor package
-    stats = generate_api_docs(
-        src_root="src",
-        api_dir="api/reference",
-        package_prefix="flavor",
-        skip_patterns={"__pycache__", "test", "tests", "ingredients"},
-        show_source=True,
-        show_inheritance=True,
-        custom_index_content="""# FlavorPack API Reference
+# FlavorPack API Reference
 
 FlavorPack is a cross-language packaging system implementing the Progressive Secure Package Format (PSPF/2025).
 
@@ -68,10 +54,3 @@ from flavor.psp.format_2025.operations import pack_operations, OperationType
 # Create operation chain: TAR → GZIP
 operations = pack_operations([OperationType.TAR, OperationType.GZIP])
 ```
-""",
-    )
-
-    print(f"✅ Generated API documentation: {stats['processed_files']} files processed, {stats['skipped_files']} skipped")
-
-if __name__ == "__main__":
-    main()
