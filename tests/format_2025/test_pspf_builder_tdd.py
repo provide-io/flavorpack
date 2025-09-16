@@ -10,7 +10,8 @@ import tempfile
 import attrs
 import pytest
 
-from flavor.psp.format_2025.builder import PSPFBuilder, build_package
+from flavor.psp.format_2025.builder import build_package
+from flavor.psp.format_2025.pspf_builder import PSPFBuilder
 from flavor.psp.format_2025.keys import resolve_keys
 from flavor.psp.format_2025.slots import SlotMetadata
 

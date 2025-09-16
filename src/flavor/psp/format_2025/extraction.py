@@ -6,23 +6,21 @@ Provides extraction, streaming, and verification operations for PSPF slots.
 """
 
 import gzip
-import hashlib
+from pathlib import Path
 import tempfile
 import zipfile
 import zlib
-from pathlib import Path
 
 from provide.foundation import logger
 from provide.foundation.file.directory import ensure_dir
 
 from flavor.archive import ArchiveChain, ChainProcessor
-from flavor.config.defaults import DEFAULT_SLOT_ALIGNMENT
 from flavor.psp.format_2025.slots import SlotView
 
 
 class SlotExtractor:
     """Handles PSPF slot extraction operations."""
-    
+
     def __init__(self, reader):
         """Initialize with reference to PSPFReader."""
         self.reader = reader
@@ -83,7 +81,7 @@ class SlotExtractor:
             for i, descriptor in enumerate(descriptors):
                 # Read raw slot data (before decompression) using backend directly
                 raw_slot_data = self.reader._backend.read_slot(descriptor)
-                
+
                 # Convert to bytes if memoryview
                 if isinstance(raw_slot_data, memoryview):
                     raw_slot_data = bytes(raw_slot_data)
@@ -144,14 +142,14 @@ class SlotExtractor:
                 with tempfile.NamedTemporaryFile() as temp_file:
                     temp_file.write(slot_data)
                     temp_file.flush()
-                    
+
                     result = processor.process(
-                        Path(temp_file.name), 
-                        chain, 
+                        Path(temp_file.name),
+                        chain,
                         output=dest_dir,
                         reverse=True
                     )
-                    
+
                     if isinstance(result, Path):
                         return result
                     else:
@@ -171,7 +169,7 @@ class SlotExtractor:
 
         # No operations or operation reversal failed - extract directly
         slot_name = slot_meta.get("id", f"slot_{slot_index}")
-        
+
         # Try to detect content type and extract appropriately
         if slot_data.startswith(b"\x1f\x8b"):
             # GZIP compressed data
@@ -185,15 +183,15 @@ class SlotExtractor:
                     return output_path
             except Exception:
                 logger.warning("Failed to decompress GZIP data, extracting raw")
-                
+
         elif self._is_tar_data(slot_data):
             # TAR archive
             return self._extract_tar_data(slot_data, dest_dir, slot_name)
-            
+
         elif slot_data.startswith(b"PK"):
             # ZIP archive
             return self._extract_zip_data(slot_data, dest_dir, slot_name)
-        
+
         # Default: write as single file
         output_path = dest_dir / slot_name
         output_path.write_bytes(slot_data)
@@ -203,19 +201,19 @@ class SlotExtractor:
         """Check if data appears to be a TAR archive."""
         if len(data) < 512:
             return False
-        
+
         # Check for TAR signature at offset 257
         tar_signature = data[257:262]
         return tar_signature in [b"ustar", b"ustar\x00"]
 
     def _extract_tar_data(self, tar_data: bytes, dest_dir: Path, slot_name: str) -> Path:
         """Extract TAR data to directory."""
-        import tarfile
         import io
-        
+        import tarfile
+
         extraction_dir = dest_dir / slot_name
         ensure_dir(extraction_dir)
-        
+
         try:
             with tarfile.open(fileobj=io.BytesIO(tar_data), mode='r:*') as tar:
                 # Security check - prevent path traversal
@@ -223,11 +221,11 @@ class SlotExtractor:
                     if member.name.startswith('/') or '..' in member.name:
                         logger.warning(f"Skipping unsafe path in TAR: {member.name}")
                         continue
-                
+
                 tar.extractall(extraction_dir)
                 logger.debug(f"Extracted TAR archive to {extraction_dir}")
                 return extraction_dir
-                
+
         except Exception as e:
             logger.error(f"Failed to extract TAR data: {e}")
             # Fall back to writing raw data
@@ -238,10 +236,10 @@ class SlotExtractor:
     def _extract_zip_data(self, zip_data: bytes, dest_dir: Path, slot_name: str) -> Path:
         """Extract ZIP data to directory."""
         import io
-        
+
         extraction_dir = dest_dir / slot_name
         ensure_dir(extraction_dir)
-        
+
         try:
             with zipfile.ZipFile(io.BytesIO(zip_data), 'r') as zip_ref:
                 # Security check - prevent path traversal
@@ -249,11 +247,11 @@ class SlotExtractor:
                     if member.startswith('/') or '..' in member:
                         logger.warning(f"Skipping unsafe path in ZIP: {member}")
                         continue
-                
+
                 zip_ref.extractall(extraction_dir)
                 logger.debug(f"Extracted ZIP archive to {extraction_dir}")
                 return extraction_dir
-                
+
         except Exception as e:
             logger.error(f"Failed to extract ZIP data: {e}")
             # Fall back to writing raw data
