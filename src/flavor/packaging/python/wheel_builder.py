@@ -22,10 +22,10 @@ from flavor.packaging.python.uv_manager import UVManager
 class WheelBuilder:
     """
     Wheel builder with sophisticated dependency resolution.
-    
+
     Combines the speed of UV with the reliability of PyPA pip for complex
     Python package building scenarios.
-    
+
     This class handles:
     - Source package wheel building
     - Complex dependency resolution
@@ -33,10 +33,10 @@ class WheelBuilder:
     - Proper manylinux compatibility
     """
 
-    def __init__(self, python_version: str = "3.11"):
+    def __init__(self, python_version: str = "3.11") -> None:
         """
         Initialize the wheel builder.
-        
+
         Args:
             python_version: Target Python version for wheel building
         """
@@ -58,14 +58,14 @@ class WheelBuilder:
     ) -> Path:
         """
         Build wheel from Python source package.
-        
+
         Args:
             python_exe: Python executable to use
             source_path: Path to source directory
             wheel_dir: Directory to place built wheel
             use_isolation: Whether to use build isolation
             build_options: Additional build options
-            
+
         Returns:
             Path to the built wheel file
         """
@@ -110,14 +110,14 @@ class WheelBuilder:
     def _find_built_wheel(self, wheel_dir: Path, package_name: str) -> Path:
         """
         Find the wheel file that was just built.
-        
+
         Args:
             wheel_dir: Directory containing wheel files
             package_name: Name of the package that was built
-            
+
         Returns:
             Path to the built wheel file
-            
+
         Raises:
             FileNotFoundError: If no wheel file is found
         """
@@ -146,14 +146,14 @@ class WheelBuilder:
     ) -> Path:
         """
         Resolve dependencies and create a locked requirements file.
-        
+
         Args:
             python_exe: Python executable to use
             requirements_file: Input requirements file
             packages: List of packages to resolve
             output_dir: Directory for output files
             use_uv_for_resolution: Whether to use UV for fast resolution
-            
+
         Returns:
             Path to locked requirements file
         """
@@ -199,7 +199,7 @@ class WheelBuilder:
     ) -> None:
         """
         Resolve dependencies using pip-tools as fallback.
-        
+
         Args:
             python_exe: Python executable to use
             input_file: Input requirements file
@@ -207,14 +207,21 @@ class WheelBuilder:
         """
         # First ensure pip-tools is available
         pip_compile_cmd = [
-            str(python_exe), "-m", "piptools", "compile",
+            str(python_exe),
+            "-m",
+            "piptools",
+            "compile",
             str(input_file),
-            "--output-file", str(output_file),
-            "--resolver", "backtracking",  # Use modern resolver
+            "--output-file",
+            str(output_file),
+            "--resolver",
+            "backtracking",  # Use modern resolver
         ]
 
         try:
-            logger.debug("💻 Compiling with pip-tools", command=" ".join(pip_compile_cmd))
+            logger.debug(
+                "💻 Compiling with pip-tools", command=" ".join(pip_compile_cmd)
+            )
             run_command(pip_compile_cmd, check=True, capture_output=True)
         except Exception:
             # If pip-tools not available, install it first
@@ -225,7 +232,9 @@ class WheelBuilder:
             run_command(install_cmd, check=True, capture_output=True)
 
             # Try again
-            logger.debug("💻 Retrying with pip-tools", command=" ".join(pip_compile_cmd))
+            logger.debug(
+                "💻 Retrying with pip-tools", command=" ".join(pip_compile_cmd)
+            )
             run_command(pip_compile_cmd, check=True, capture_output=True)
 
     def download_wheels_for_resolved_deps(
@@ -237,13 +246,13 @@ class WheelBuilder:
     ) -> list[Path]:
         """
         Download wheels for resolved dependencies.
-        
+
         Args:
             python_exe: Python executable to use
             requirements_file: Locked requirements file
             wheel_dir: Directory to download wheels to
             use_uv_for_download: Whether to use UV for downloading
-            
+
         Returns:
             List of downloaded wheel file paths
         """
@@ -286,14 +295,14 @@ class WheelBuilder:
     ) -> dict[str, Any]:
         """
         Complete wheel building and dependency resolution for a project.
-        
+
         Args:
             python_exe: Python executable to use
             project_dir: Project source directory
             build_dir: Directory for build artifacts
             requirements_file: Optional requirements file
             extra_packages: Additional packages to include
-            
+
         Returns:
             Dictionary with build information and file paths
         """
@@ -306,24 +315,29 @@ class WheelBuilder:
         ensure_dir(deps_dir)
 
         # Build main project wheel
-        project_wheel = self.build_wheel_from_source(
-            python_exe, project_dir, wheel_dir
-        )
+        project_wheel = self.build_wheel_from_source(python_exe, project_dir, wheel_dir)
 
         # Extract project dependencies from pyproject.toml if not already in extra_packages
         project_dependencies = []
         pyproject_path = project_dir / "pyproject.toml"
         if pyproject_path.exists() and not requirements_file:
             import tomllib
+
             try:
                 with open(pyproject_path, "rb") as f:
                     pyproject_data = tomllib.load(f)
-                project_dependencies = pyproject_data.get("project", {}).get("dependencies", [])
+                project_dependencies = pyproject_data.get("project", {}).get(
+                    "dependencies", []
+                )
                 if project_dependencies:
-                    logger.info(f"📦📝 Found {len(project_dependencies)} project dependencies in {project_dir.name}")
+                    logger.info(
+                        f"📦📝 Found {len(project_dependencies)} project dependencies in {project_dir.name}"
+                    )
                     logger.debug("Project dependencies", deps=project_dependencies)
             except Exception as e:
-                logger.warning(f"Could not extract dependencies from pyproject.toml: {e}")
+                logger.warning(
+                    f"Could not extract dependencies from pyproject.toml: {e}"
+                )
 
         # Combine all packages to resolve
         all_packages = list(extra_packages or [])
@@ -355,5 +369,7 @@ class WheelBuilder:
             "total_wheels": len(dependency_wheels) + 1,  # +1 for project wheel
         }
 
-        logger.info(f"✅ Completed project build with {build_info['total_wheels']} wheels")
+        logger.info(
+            f"✅ Completed project build with {build_info['total_wheels']} wheels"
+        )
         return build_info

@@ -26,13 +26,13 @@ from provide.foundation.tools.base import (
 class UVManager(BaseToolManager):
     """
     UV tool manager extending Foundation's BaseToolManager.
-    
+
     Handles UV-specific operations with proper platform support
     for fast Python package management operations.
-    
+
     CRITICAL: This class is for UV-specific operations where speed matters.
     For complex dependency resolution, use PyPaPipManager instead.
-    
+
     DO NOT REPLACE PyPA pip commands with uv pip - they have different capabilities!
     """
 
@@ -40,10 +40,10 @@ class UVManager(BaseToolManager):
     executable_name = "uv"
     supported_platforms = ["linux", "darwin", "windows"]
 
-    def __init__(self, config: BaseConfig | None = None):
+    def __init__(self, config: BaseConfig | None = None) -> None:
         """
         Initialize the UV manager.
-        
+
         Args:
             config: Foundation configuration (can be None for default)
         """
@@ -59,13 +59,13 @@ class UVManager(BaseToolManager):
     def get_metadata(self, version: str) -> ToolMetadata:
         """
         Get metadata for a specific UV version.
-        
+
         Args:
             version: UV version string
-            
+
         Returns:
             ToolMetadata with UV download information
-            
+
         Raises:
             ToolNotFoundError: If version metadata cannot be retrieved
         """
@@ -114,7 +114,7 @@ class UVManager(BaseToolManager):
     def get_available_versions(self) -> list[str]:
         """
         Get list of available UV versions from GitHub releases.
-        
+
         Returns:
             List of version strings available for download
         """
@@ -125,7 +125,7 @@ class UVManager(BaseToolManager):
     def find_system_uv(self) -> Path | None:
         """
         Find system-installed UV executable.
-        
+
         Returns:
             Path to UV executable if found, None otherwise
         """
@@ -142,13 +142,13 @@ class UVManager(BaseToolManager):
     def get_uv_executable(self, version: str | None = None) -> Path:
         """
         Get path to UV executable, installing if necessary.
-        
+
         Args:
             version: Specific version to use (None for system UV)
-            
+
         Returns:
             Path to UV executable
-            
+
         Raises:
             ToolNotFoundError: If UV cannot be found or installed
         """
@@ -170,12 +170,12 @@ class UVManager(BaseToolManager):
     ) -> list[str]:
         """
         Get UV venv creation command.
-        
+
         Args:
             python_exe: Python executable to use for UV
             venv_path: Path where venv should be created
             python_version: Specific Python version constraint
-            
+
         Returns:
             Command list for UV venv creation
         """
@@ -189,16 +189,19 @@ class UVManager(BaseToolManager):
         return cmd
 
     def _get_uv_pip_install_cmd(
-        self, venv_python: Path, packages: list[str], requirements_file: Path | None = None
+        self,
+        venv_python: Path,
+        packages: list[str],
+        requirements_file: Path | None = None,
     ) -> list[str]:
         """
         Get UV pip install command.
-        
+
         Args:
             venv_python: Python executable in venv
             packages: List of package names to install
             requirements_file: Optional requirements file
-            
+
         Returns:
             Command list for UV pip install
         """
@@ -219,18 +222,25 @@ class UVManager(BaseToolManager):
     ) -> list[str]:
         """
         Get UV pip-compile command for dependency resolution.
-        
+
         Args:
             input_file: Input requirements file
             output_file: Output compiled requirements file
             python_version: Target Python version
-            
+
         Returns:
             Command list for UV pip-compile
         """
         uv_exe = self.get_uv_executable()
 
-        cmd = [str(uv_exe), "pip", "compile", str(input_file), "--output-file", str(output_file)]
+        cmd = [
+            str(uv_exe),
+            "pip",
+            "compile",
+            str(input_file),
+            "--output-file",
+            str(output_file),
+        ]
 
         # Include extras in resolution to properly handle packages like provide-foundation[all]
         cmd.append("--no-strip-extras")
@@ -243,7 +253,7 @@ class UVManager(BaseToolManager):
     def create_venv(self, venv_path: Path, python_version: str | None = None) -> None:
         """
         Create virtual environment using UV.
-        
+
         Args:
             venv_path: Path where venv should be created
             python_version: Specific Python version constraint
@@ -251,7 +261,9 @@ class UVManager(BaseToolManager):
         logger.info(f"🐍📦 Creating venv with UV: {venv_path}")
 
         # Use current Python for UV execution
-        python_exe = Path("/usr/bin/python3")  # This will be replaced by actual discovery
+        python_exe = Path(
+            "/usr/bin/python3"
+        )  # This will be replaced by actual discovery
 
         venv_cmd = self._get_uv_venv_cmd(python_exe, venv_path, python_version)
 
@@ -261,11 +273,14 @@ class UVManager(BaseToolManager):
         logger.info("✅ Successfully created UV venv")
 
     def install_packages_fast(
-        self, venv_python: Path, packages: list[str], requirements_file: Path | None = None
+        self,
+        venv_python: Path,
+        packages: list[str],
+        requirements_file: Path | None = None,
     ) -> None:
         """
         Install packages using UV pip for speed.
-        
+
         Args:
             venv_python: Python executable in target venv
             packages: List of package names to install
@@ -277,7 +292,9 @@ class UVManager(BaseToolManager):
 
         logger.info("🌐📥 Installing packages with UV (fast mode)")
 
-        install_cmd = self._get_uv_pip_install_cmd(venv_python, packages, requirements_file)
+        install_cmd = self._get_uv_pip_install_cmd(
+            venv_python, packages, requirements_file
+        )
 
         logger.debug("💻 Installing packages with UV", command=" ".join(install_cmd))
         run_command(install_cmd, check=True, capture_output=True)
@@ -289,7 +306,7 @@ class UVManager(BaseToolManager):
     ) -> None:
         """
         Compile requirements file using UV pip-compile.
-        
+
         Args:
             input_file: Input requirements.in file
             output_file: Output requirements.txt file
@@ -297,24 +314,28 @@ class UVManager(BaseToolManager):
         """
         logger.info(f"📝🔧 Compiling requirements: {input_file} -> {output_file}")
 
-        compile_cmd = self._get_uv_pip_compile_cmd(input_file, output_file, python_version)
+        compile_cmd = self._get_uv_pip_compile_cmd(
+            input_file, output_file, python_version
+        )
 
         logger.debug("💻 Compiling requirements with UV", command=" ".join(compile_cmd))
         run_command(compile_cmd, check=True, capture_output=True)
 
         logger.info("✅ Successfully compiled requirements with UV")
 
-    def download_uv_binary(self, dest_dir: Path, python_exe: Path | None = None) -> Path | None:
+    def download_uv_binary(
+        self, dest_dir: Path, python_exe: Path | None = None
+    ) -> Path | None:
         """
         Download UV binary for packaging (manylinux2014 on Linux).
-        
+
         CRITICAL: This downloads the UV binary itself, not packages using UV.
         UV cannot download itself - this uses PyPA pip or direct download.
-        
+
         Args:
             dest_dir: Directory to save UV binary to
             python_exe: Python executable to use for pip (optional)
-            
+
         Returns:
             Path to UV binary if successful, None otherwise
         """
@@ -381,6 +402,7 @@ class UVManager(BaseToolManager):
 
                             # Make executable
                             import os
+
                             os.chmod(uv_path, 0o755)
 
                             logger.info("✅ Successfully downloaded UV binary")

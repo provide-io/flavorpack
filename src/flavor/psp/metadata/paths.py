@@ -221,8 +221,6 @@ def make_relative_to_workenv(absolute_path: str, workenv_dir: str) -> str:
     return validate_metadata_path(absolute_path)
 
 
-
-
 def substitute_placeholders(path: str, workenv_path: Path) -> str:
     """
     Substitute placeholders in a path string.

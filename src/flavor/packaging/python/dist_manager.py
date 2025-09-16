@@ -25,7 +25,7 @@ from flavor.packaging.python.wheel_builder import WheelBuilder
 class PythonDistManager:
     """
     Python distribution manager for FlavorPack packaging.
-    
+
     Handles creation and management of Python distributions including:
     - Virtual environment creation and management
     - Package installation from wheels
@@ -33,10 +33,10 @@ class PythonDistManager:
     - Site-packages optimization for packaging
     """
 
-    def __init__(self, python_version: str = "3.11", use_uv_for_venv: bool = True):
+    def __init__(self, python_version: str = "3.11", use_uv_for_venv: bool = True) -> None:
         """
         Initialize the Python distribution manager.
-        
+
         Args:
             python_version: Target Python version for distributions
             use_uv_for_venv: Whether to use UV for fast venv creation
@@ -59,12 +59,12 @@ class PythonDistManager:
     ) -> Path:
         """
         Create a Python virtual environment.
-        
+
         Args:
             venv_path: Path where venv should be created
             python_exe: Specific Python executable to use
             copy_python: Whether to copy Python binary instead of symlink
-            
+
         Returns:
             Path to the Python executable in the created venv
         """
@@ -89,7 +89,9 @@ class PythonDistManager:
 
                 # Ensure Python binary exists after UV creation
                 if not venv_python.exists():
-                    logger.debug("Python binary missing after UV creation, creating symlink")
+                    logger.debug(
+                        "Python binary missing after UV creation, creating symlink"
+                    )
                     ensure_parent_dir(venv_python)
                     # Create symlink to system Python
                     try:
@@ -120,10 +122,10 @@ class PythonDistManager:
     def _get_venv_python_path(self, venv_path: Path) -> Path:
         """
         Get the Python executable path within a venv.
-        
+
         Args:
             venv_path: Path to the virtual environment
-            
+
         Returns:
             Path to the Python executable
         """
@@ -140,7 +142,7 @@ class PythonDistManager:
     ) -> None:
         """
         Install wheel files to a Python environment.
-        
+
         Args:
             venv_python: Python executable in target environment
             wheel_files: List of wheel files to install
@@ -172,11 +174,11 @@ class PythonDistManager:
     ) -> Path:
         """
         Prepare site-packages directory for packaging.
-        
+
         Args:
             venv_python: Python executable in environment
             optimization_level: Python bytecode optimization level
-            
+
         Returns:
             Path to the prepared site-packages directory
         """
@@ -186,7 +188,9 @@ class PythonDistManager:
         if os.name == "nt":
             site_packages = venv_path / "Lib" / "site-packages"
         else:
-            site_packages = venv_path / "lib" / f"python{self.python_version}" / "site-packages"
+            site_packages = (
+                venv_path / "lib" / f"python{self.python_version}" / "site-packages"
+            )
 
         if not site_packages.exists():
             raise FileNotFoundError(f"Site-packages not found: {site_packages}")
@@ -205,19 +209,23 @@ class PythonDistManager:
     ) -> None:
         """
         Compile Python files to bytecode for faster loading.
-        
+
         Args:
             venv_python: Python executable to use for compilation
             site_packages: Site-packages directory to compile
             optimization_level: Bytecode optimization level
         """
-        logger.debug(f"Compiling Python files with optimization level {optimization_level}")
+        logger.debug(
+            f"Compiling Python files with optimization level {optimization_level}"
+        )
 
         compile_cmd = [
-            str(venv_python), "-m", "compileall",
+            str(venv_python),
+            "-m",
+            "compileall",
             "-b",  # Write bytecode files
             f"-j{os.cpu_count() or 1}",  # Use multiple processes
-            str(site_packages)
+            str(site_packages),
         ]
 
         if optimization_level > 0:
@@ -234,7 +242,7 @@ class PythonDistManager:
     def _cleanup_site_packages(self, site_packages: Path) -> None:
         """
         Clean up unnecessary files from site-packages.
-        
+
         Args:
             site_packages: Site-packages directory to clean
         """
@@ -265,7 +273,9 @@ class PythonDistManager:
                 except Exception as e:
                     logger.debug(f"Failed to remove {path}: {e}")
 
-        logger.debug(f"Cleanup complete: removed {files_removed} files, {dirs_removed} directories")
+        logger.debug(
+            f"Cleanup complete: removed {files_removed} files, {dirs_removed} directories"
+        )
 
     def create_standalone_distribution(
         self,
@@ -277,14 +287,14 @@ class PythonDistManager:
     ) -> dict[str, Any]:
         """
         Create a complete standalone Python distribution.
-        
+
         Args:
             project_dir: Project source directory
             output_dir: Directory for distribution output
             requirements_file: Optional requirements file
             python_exe: Specific Python executable to use
             extra_packages: Additional packages to include
-            
+
         Returns:
             Dictionary with distribution information and paths
         """
@@ -344,17 +354,19 @@ class PythonDistManager:
         }
 
         logger.info("✅ Standalone distribution created successfully")
-        logger.info(f"📊 Distribution size: {dist_info['distribution_size'] / (1024*1024):.1f} MB")
+        logger.info(
+            f"📊 Distribution size: {dist_info['distribution_size'] / (1024 * 1024):.1f} MB"
+        )
 
         return dist_info
 
     def _get_directory_size(self, directory: Path) -> int:
         """
         Get the total size of a directory in bytes.
-        
+
         Args:
             directory: Directory to measure
-            
+
         Returns:
             Total size in bytes
         """
@@ -370,10 +382,10 @@ class PythonDistManager:
     def validate_distribution(self, dist_info: dict[str, Any]) -> bool:
         """
         Validate a created distribution.
-        
+
         Args:
             dist_info: Distribution information dictionary
-            
+
         Returns:
             True if distribution is valid, False otherwise
         """
@@ -398,7 +410,9 @@ class PythonDistManager:
                     found_critical += 1
 
             if found_critical == 0:
-                logger.warning("No critical Python infrastructure found in site-packages")
+                logger.warning(
+                    "No critical Python infrastructure found in site-packages"
+                )
 
             # Check distribution size is reasonable
             size_mb = dist_info["distribution_size"] / (1024 * 1024)

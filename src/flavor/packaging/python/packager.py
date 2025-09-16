@@ -23,7 +23,7 @@ from flavor.packaging.python.wheel_builder import WheelBuilder
 class PythonPackager:
     """
     Python packager that owns all Python-specific packaging logic.
-    
+
     This class orchestrates the packaging process by delegating to specialized modules:
     - PythonEnvironmentBuilder: Handles Python environment setup and distribution
     - PythonSlotBuilder: Manages slot preparation and artifact assembly
@@ -44,7 +44,7 @@ class PythonPackager:
         build_config: dict[str, Any] | None = None,
         python_version: str = "3.11",
         progress: Any = None,
-    ):
+    ) -> None:
         """
         Initialize the Python packager.
 
@@ -67,7 +67,6 @@ class PythonPackager:
         self.is_windows = sys.platform == "win32"
         self.venv_bin_dir = "Scripts" if self.is_windows else "bin"
         self.uv_exe = "uv.exe" if self.is_windows else "uv"
-
 
         # Initialize manager instances
         self.pypapip = PyPaPipManager()
@@ -110,7 +109,7 @@ class PythonPackager:
     def prepare_artifacts(self, work_dir: Path) -> dict[str, Path]:
         """
         Prepare all artifacts needed for flavor assembly.
-        
+
         Delegates to PythonSlotBuilder for the actual preparation.
 
         Returns:
@@ -164,9 +163,7 @@ class PythonPackager:
         """
         pyproject_path = self.manifest_dir / "pyproject.toml"
         if not pyproject_path.exists():
-            raise FileNotFoundError(
-                f"No pyproject.toml found in {self.manifest_dir}"
-            )
+            raise FileNotFoundError(f"No pyproject.toml found in {self.manifest_dir}")
 
         try:
             with open(pyproject_path, "rb") as f:
@@ -210,7 +207,9 @@ class PythonPackager:
             "version": project.get("version", "0.0.1"),
             "description": project.get("description", ""),
             "dependencies": project.get("dependencies", []),
-            "python_requires": project.get("requires-python", f">={self.python_version}"),
+            "python_requires": project.get(
+                "requires-python", f">={self.python_version}"
+            ),
             "entry_points": project.get("scripts", {}),
             "flavor_config": tool_flavor,
         }
@@ -218,7 +217,7 @@ class PythonPackager:
     def download_uv_binary(self, dest_dir: Path) -> Path | None:
         """
         Download UV binary for packaging.
-        
+
         Delegates to environment builder for the actual download.
 
         Args:
@@ -253,9 +252,14 @@ class PythonPackager:
             # Fall back to standard venv
             logger.debug("Using standard venv module")
             import venv
+
             venv.create(venv_dir, with_pip=True)
 
-        python_exe = venv_dir / self.venv_bin_dir / ("python.exe" if self.is_windows else "python")
+        python_exe = (
+            venv_dir
+            / self.venv_bin_dir
+            / ("python.exe" if self.is_windows else "python")
+        )
 
         # Ensure pip and wheel are installed
         if python_exe.exists():
@@ -264,6 +268,7 @@ class PythonPackager:
                 python_exe, ["pip", "wheel", "setuptools"]
             )
             from provide.foundation.process import run_command
+
             run_command(install_cmd, check=True, capture_output=True)
 
         return python_exe

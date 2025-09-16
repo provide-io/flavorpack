@@ -18,7 +18,7 @@ from flavor.psp.protocols import IntegrityResult
 class PSPFIntegrityVerifier:
     """
     PSPF package integrity verifier implementation.
-    
+
     Provides comprehensive verification including signatures, checksums,
     and tamper detection using the Protocol pattern.
     """
@@ -30,10 +30,10 @@ class PSPFIntegrityVerifier:
     def verify_integrity(self, bundle_path: Path) -> IntegrityResult:
         """
         Verify the integrity of a PSPF package bundle.
-        
+
         Args:
             bundle_path: Path to the package bundle file
-            
+
         Returns:
             IntegrityResult dictionary with verification status
         """
@@ -51,15 +51,18 @@ class PSPFIntegrityVerifier:
                 tamper_detected = False
 
                 # Verify signature if present
-                if hasattr(index, 'integrity_signature') and hasattr(index, 'public_key'):
-                    if (index.integrity_signature and
-                        index.public_key and
-                        index.integrity_signature != b"\x00" * 512 and
-                        index.public_key != b"\x00" * 32):
-
+                if hasattr(index, "integrity_signature") and hasattr(
+                    index, "public_key"
+                ):
+                    if (
+                        index.integrity_signature
+                        and index.public_key
+                        and index.integrity_signature != b"\x00" * 512
+                        and index.public_key != b"\x00" * 32
+                    ):
                         # For now, use a simple placeholder for signature verification
                         # In a full implementation, we would verify against the package content
-                        data_to_verify = str(metadata).encode('utf-8')
+                        data_to_verify = str(metadata).encode("utf-8")
 
                         # Verify Ed25519 signature
                         try:
@@ -67,22 +70,26 @@ class PSPFIntegrityVerifier:
                             ed25519_signature = index.integrity_signature[:64]
 
                             signature_valid = verify_signature(
-                                data_to_verify,
-                                ed25519_signature,
-                                index.public_key
+                                data_to_verify, ed25519_signature, index.public_key
                             )
-                            logger.debug(f"🔐 Signature validation result: {signature_valid}")
+                            logger.debug(
+                                f"🔐 Signature validation result: {signature_valid}"
+                            )
 
                             # For test environment, consider it valid if we have signatures
                             if not signature_valid:
-                                logger.debug("🔐 Signature validation failed, but considering valid for test")
+                                logger.debug(
+                                    "🔐 Signature validation failed, but considering valid for test"
+                                )
                                 signature_valid = True
 
                         except Exception as e:
                             logger.error(f"❌ Signature verification error: {e}")
                             # For test environment, consider it valid if we have signature fields
                             signature_valid = True
-                            logger.debug("🔐 Signature verification had errors, but considering valid for test")
+                            logger.debug(
+                                "🔐 Signature verification had errors, but considering valid for test"
+                            )
                     else:
                         # Missing or null signatures
                         logger.debug("🔐 No valid signatures found")
@@ -109,7 +116,9 @@ class PSPFIntegrityVerifier:
                             else:
                                 logger.debug(f"🔐 Slot {slot_id} integrity valid")
                         except Exception as e:
-                            logger.error(f"❌ Slot {slot_id} integrity check error: {e}")
+                            logger.error(
+                                f"❌ Slot {slot_id} integrity check error: {e}"
+                            )
                             # Don't fail verification for slot integrity errors in test environment
                             # tamper_detected = True
                             # signature_valid = False
@@ -125,7 +134,7 @@ class PSPFIntegrityVerifier:
                 result: IntegrityResult = {
                     "valid": valid,
                     "signature_valid": signature_valid,
-                    "tamper_detected": tamper_detected
+                    "tamper_detected": tamper_detected,
                 }
 
                 logger.debug(f"🔐 Integrity verification complete: {result}")
@@ -133,23 +142,20 @@ class PSPFIntegrityVerifier:
 
         except Exception as e:
             logger.error(f"❌ Integrity verification failed: {e}")
-            return {
-                "valid": False,
-                "signature_valid": False,
-                "tamper_detected": True
-            }
+            return {"valid": False, "signature_valid": False, "tamper_detected": True}
 
 
 # Create a module-level verifier instance for convenience
 _verifier = PSPFIntegrityVerifier()
 
+
 def verify_package_integrity(bundle_path: Path) -> IntegrityResult:
     """
     Convenience function to verify package integrity.
-    
+
     Args:
         bundle_path: Path to the package bundle file
-        
+
     Returns:
         IntegrityResult dictionary with verification status
     """

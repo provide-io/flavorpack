@@ -54,6 +54,7 @@ class PSPFReader:
 
         # Slot extractor for extraction operations
         from flavor.psp.format_2025.extraction import SlotExtractor
+
         self._extractor = SlotExtractor(self)
 
     def __enter__(self):
@@ -102,10 +103,7 @@ class PSPFReader:
             trailer = bytes(trailer)
 
         # Verify magic bytes at start and end
-        return (
-            trailer[:4] == TRAILER_START_MAGIC
-            and trailer[-4:] == TRAILER_END_MAGIC
-        )
+        return trailer[:4] == TRAILER_START_MAGIC and trailer[-4:] == TRAILER_END_MAGIC
 
     def read_magic_trailer(self) -> bytes:
         """Read MagicTrailer and extract index data."""
@@ -237,7 +235,6 @@ class PSPFReader:
         # Parse JSON
         self._metadata = json.loads(metadata_data.decode("utf-8"))
 
-
         return self._metadata
 
     def read_slot_descriptors(self) -> list[SlotDescriptor]:
@@ -340,7 +337,6 @@ class PSPFReader:
         """Verify integrity of a specific slot."""
         return self._extractor.verify_slot_integrity(slot_index)
 
-
     def verify_signature(self) -> bool:
         """Verify bundle signature.
 
@@ -408,7 +404,6 @@ class PSPFReader:
                 "tamper_detected": True,
                 "error": str(e),
             }
-
 
     def get_backend(self) -> Backend:
         """Get the backend for advanced operations."""

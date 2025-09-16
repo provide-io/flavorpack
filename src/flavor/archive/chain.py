@@ -23,14 +23,14 @@ from flavor.archive.operations import (
 class ArchiveChain:
     """
     Represents a sequence of archive operations.
-    
+
     Provides validation, optimization, and serialization for operation chains.
     """
 
     def __init__(self, operations: list[int] | int | None = None) -> None:
         """
         Initialize archive chain.
-        
+
         Args:
             operations: List of operation IDs or packed 64-bit integer
         """
@@ -41,7 +41,9 @@ class ArchiveChain:
         elif isinstance(operations, list):
             self._operations = operations.copy()
         else:
-            raise TypeError(f"operations must be list[int], int, or None, got {type(operations)}")
+            raise TypeError(
+                f"operations must be list[int], int, or None, got {type(operations)}"
+            )
 
         # Validate chain on creation
         is_valid, error = validate_operation_chain(self._operations)
@@ -68,26 +70,26 @@ class ArchiveChain:
         """Check if chain has no operations."""
         return len(self._operations) == 0
 
-    def add_operation(self, operation: int) -> 'ArchiveChain':
+    def add_operation(self, operation: int) -> "ArchiveChain":
         """
         Add operation to end of chain (returns new chain).
-        
+
         Args:
             operation: Operation ID to add
-            
+
         Returns:
             New ArchiveChain with operation added
         """
-        new_ops = self._operations + [operation]
+        new_ops = [*self._operations, operation]
         return ArchiveChain(new_ops)
 
-    def remove_operation(self, index: int) -> 'ArchiveChain':
+    def remove_operation(self, index: int) -> "ArchiveChain":
         """
         Remove operation at index (returns new chain).
-        
+
         Args:
             index: Index of operation to remove
-            
+
         Returns:
             New ArchiveChain with operation removed
         """
@@ -95,14 +97,14 @@ class ArchiveChain:
         del new_ops[index]
         return ArchiveChain(new_ops)
 
-    def reverse(self) -> 'ArchiveChain':
+    def reverse(self) -> "ArchiveChain":
         """Get reversed chain for extraction."""
         return ArchiveChain(list(reversed(self._operations)))
 
-    def optimize(self) -> 'ArchiveChain':
+    def optimize(self) -> "ArchiveChain":
         """
         Remove redundant operations and optimize chain.
-        
+
         Returns:
             Optimized ArchiveChain
         """
@@ -147,13 +149,14 @@ class ArchiveChain:
 class ChainProcessor:
     """
     Executes archive operation chains using registered handlers.
-    
+
     Coordinates between operation chains and actual archive implementations.
     """
 
     def __init__(self) -> None:
         """Initialize chain processor with handler registry."""
         from flavor.archive.operation_handler import OperationHandler
+
         self._handler = OperationHandler()
 
     def process(
@@ -161,17 +164,17 @@ class ChainProcessor:
         source: Path | BinaryIO,
         chain: ArchiveChain,
         output: Path | BinaryIO | None = None,
-        reverse: bool = False
+        reverse: bool = False,
     ) -> Path | BinaryIO:
         """
         Process data through operation chain.
-        
+
         Args:
             source: Source file path or binary stream
             chain: ArchiveChain to execute
             output: Optional output path or stream
             reverse: If True, apply operations in reverse (for extraction)
-            
+
         Returns:
             Processed data as Path or BinaryIO
         """
@@ -182,16 +185,20 @@ class ChainProcessor:
         processing_chain = chain.reverse() if reverse else chain
 
         logger.debug(f"🔗 Processing chain: {processing_chain}")
-        logger.debug(f"📊 Operations: {[hex(op) for op in processing_chain.operations]} (reverse={reverse})")
+        logger.debug(
+            f"📊 Operations: {[hex(op) for op in processing_chain.operations]} (reverse={reverse})"
+        )
 
         current = source
 
         for i, op in enumerate(processing_chain.operations):
             op_name = get_operation_name(op)
-            logger.debug(f"🔧 Step {i+1}/{len(processing_chain)}: {op_name} (0x{op:02x})")
+            logger.debug(
+                f"🔧 Step {i + 1}/{len(processing_chain)}: {op_name} (0x{op:02x})"
+            )
 
             # For the last operation, use the final output destination
-            is_last = (i == len(processing_chain) - 1)
+            is_last = i == len(processing_chain) - 1
             step_output = output if is_last else None
 
             try:
@@ -200,22 +207,24 @@ class ChainProcessor:
                 else:
                     current = self._handler.apply_operation(op, current, step_output)
 
-                logger.debug(f"✅ Step {i+1} completed: {type(current).__name__}")
+                logger.debug(f"✅ Step {i + 1} completed: {type(current).__name__}")
 
             except Exception as e:
-                logger.error(f"❌ Step {i+1} failed: {e}")
+                logger.error(f"❌ Step {i + 1} failed: {e}")
                 raise
 
-        logger.debug(f"✅ Chain processing complete: {len(processing_chain)} operations")
+        logger.debug(
+            f"✅ Chain processing complete: {len(processing_chain)} operations"
+        )
         return current
 
     def validate_chain(self, chain: ArchiveChain) -> tuple[bool, str]:
         """
         Validate that a chain is executable.
-        
+
         Args:
             chain: ArchiveChain to validate
-            
+
         Returns:
             Tuple of (is_valid, error_message)
         """

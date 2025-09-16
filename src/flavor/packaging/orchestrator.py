@@ -71,7 +71,7 @@ class PackagingOrchestrator:
 
     @log_only_error_context(
         context_provider=lambda: {"operation": "detect_launcher_type"},
-        log_level="trace"
+        log_level="trace",
     )
     def _detect_launcher_type(self, launcher_path: Path) -> str:
         """Detect launcher type by running the binary with --version."""
@@ -105,7 +105,7 @@ class PackagingOrchestrator:
     @log_only_error_context(
         context_provider=lambda: {"operation": "build_package"},
         log_level="debug",
-        log_success=True
+        log_success=True,
     )
     def build_package(self) -> None:
         logger.info("🎯🏗️🚀 Orchestrator starting build process")
@@ -160,7 +160,7 @@ class PackagingOrchestrator:
 
     @log_only_error_context(
         context_provider=lambda: {"operation": "build_with_python_builder"},
-        log_level="debug"
+        log_level="debug",
     )
     def _build_with_python_builder(self) -> None:
         """Build package using the internal Python PSPF builder."""
@@ -186,7 +186,6 @@ class PackagingOrchestrator:
         )
 
         with temp_dir(prefix="flavor_build_") as build_temp_dir:
-
             logger.info("Preparing Python artifacts...")
             with progress.task(
                 total=5, description="Preparing Python artifacts"
@@ -204,8 +203,7 @@ class PackagingOrchestrator:
             launcher_type = self._detect_launcher_type(launcher_path)
             logger.info(f"Detected launcher type: {launcher_type}")
 
-            windows = is_windows()
-            uv_exe = "uv.exe" if windows else "uv"
+            is_windows()
             metadata = create_python_builder_metadata(
                 self.package_name, self.version, self.build_config
             )
@@ -285,7 +283,7 @@ class PackagingOrchestrator:
 
     @log_only_error_context(
         context_provider=lambda: {"operation": "build_with_external_builder"},
-        log_level="debug"
+        log_level="debug",
     )
     def _build_with_external_builder(self) -> None:
         """Build package using an external builder binary (Go/Rust)."""
@@ -310,7 +308,6 @@ class PackagingOrchestrator:
         )
 
         with temp_dir(prefix="flavor_build_") as build_temp_dir:
-
             logger.info("Preparing Python artifacts...")
             with progress.task(
                 total=5, description="Preparing Python artifacts"
@@ -382,7 +379,6 @@ class PackagingOrchestrator:
 
         # Write the manifest to a temporary file
         with temp_dir(prefix="flavor_json_build_") as build_temp_dir:
-
             # Transform nested JSON manifest to flat structure expected by external builders
             flat_manifest = {
                 "name": self.build_config.get("package", {}).get(

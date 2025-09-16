@@ -33,9 +33,9 @@ class PythonSlotBuilder:
         build_config: dict[str, Any] | None = None,
         progress: Any = None,
         wheel_builder: Any = None,
-    ):
+    ) -> None:
         """Initialize slot builder.
-        
+
         Args:
             manifest_dir: Directory containing package manifest
             package_name: Name of the package
@@ -70,6 +70,7 @@ class PythonSlotBuilder:
         shutil.copy2(src, dest)
         if not self.is_windows:
             import os
+
             os.chmod(dest, DEFAULT_EXECUTABLE_PERMS)
 
     def prepare_artifacts(self, work_dir: Path) -> dict[str, Path]:
@@ -231,7 +232,7 @@ class PythonSlotBuilder:
             seen = set()
             logger.info("🔍🔄🚀 Starting transitive dependency resolution")
 
-        indent = "  " * depth
+        "  " * depth
 
         # Normalize the path to avoid duplicates
         dep_path = dep_path.resolve()
@@ -345,6 +346,7 @@ class PythonSlotBuilder:
 
         # Create a temporary Python environment for building
         import sys
+
         python_exe = Path(sys.executable)
 
         # Process local dependencies from [tool.flavor.build].dependencies
@@ -354,7 +356,9 @@ class PythonSlotBuilder:
             for dep in local_deps:
                 dep_path = self.manifest_dir / dep
                 if dep_path.exists() and dep_path.is_dir():
-                    logger.info(f"🔗 Building local dependency (wheel only): {dep_path.name}")
+                    logger.info(
+                        f"🔗 Building local dependency (wheel only): {dep_path.name}"
+                    )
                     # Build just the wheel for the local dependency, not its dependencies
                     # Local dependencies are build-time dependencies, we don't need their runtime deps
                     dep_wheel = self.wheel_builder.build_wheel_from_source(

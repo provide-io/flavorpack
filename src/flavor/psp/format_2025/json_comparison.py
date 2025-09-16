@@ -29,7 +29,7 @@ def create_old_format_json():
         "package": {
             "name": "hello-world",
             "version": "1.0.0",
-            "description": "Example Python application"
+            "description": "Example Python application",
         },
         "slots": [
             {
@@ -41,7 +41,7 @@ def create_old_format_json():
                 "checksum": "sha256:abcd1234...",
                 "codec": "tar.gz",  # String-based codec chain
                 "purpose": "runtime",
-                "lifecycle": "eager"
+                "lifecycle": "eager",
             },
             {
                 "slot": 1,
@@ -52,7 +52,7 @@ def create_old_format_json():
                 "checksum": "sha256:ef567890...",
                 "codec": "tar.gz.encrypted",  # String concatenation
                 "purpose": "code",
-                "lifecycle": "startup"
+                "lifecycle": "startup",
             },
             {
                 "slot": 2,
@@ -63,21 +63,19 @@ def create_old_format_json():
                 "checksum": "sha256:9876fedc...",
                 "codec": "tar.bz2",  # Different compression
                 "purpose": "library",
-                "lifecycle": "runtime"
-            }
+                "lifecycle": "runtime",
+            },
         ],
         "execution": {
             "command": "python",
             "args": ["-m", "app.main"],
-            "env": {
-                "PYTHONPATH": "/app:/lib"
-            }
+            "env": {"PYTHONPATH": "/app:/lib"},
         },
         "security": {
             "signed": True,
             "signature": "base64:MEUCIQDx...",
-            "public_key": "ed25519:MCowBQYDK..."
-        }
+            "public_key": "ed25519:MCowBQYDK...",
+        },
     }
 
 
@@ -99,7 +97,7 @@ def create_new_format_protobuf():
         format_version="2025.1",
         description="Example Python application",
         author="Developer",
-        license="MIT"
+        license="MIT",
     )
 
     # Add execution config
@@ -135,7 +133,7 @@ def create_new_format_protobuf():
         operations="TAR|GZIP",  # Human-readable for JSON
         purpose="runtime",
         lifecycle="eager",
-        permissions="755"
+        permissions="755",
     )
 
     slot1 = metadata_pb2.SlotMetadata(
@@ -148,7 +146,7 @@ def create_new_format_protobuf():
         operations="TAR|GZIP|AES256_GCM",
         purpose="code",
         lifecycle="startup",
-        permissions="644"
+        permissions="644",
     )
 
     slot2 = metadata_pb2.SlotMetadata(
@@ -161,7 +159,7 @@ def create_new_format_protobuf():
         operations="TAR|BZIP2",
         purpose="library",
         lifecycle="runtime",
-        permissions="644"
+        permissions="644",
     )
 
     metadata.slots.extend([slot0, slot1, slot2])
@@ -195,17 +193,17 @@ def create_new_format_protobuf():
         slot_table_offset=10493952,
         slot_table_size=4096,
         slot_count=3,
-        flags=index_pb2.FLAG_SIGNED | index_pb2.FLAG_COMPRESSED | index_pb2.FLAG_SPA_ENABLED | index_pb2.FLAG_JIT_ENABLED
+        flags=index_pb2.FLAG_SIGNED
+        | index_pb2.FLAG_COMPRESSED
+        | index_pb2.FLAG_SPA_ENABLED
+        | index_pb2.FLAG_JIT_ENABLED,
     )
 
     # Create slot entries with packed operations
     slot_entries = []
 
     # Slot 0: TAR + GZIP
-    ops0 = pack_operations([
-        operations_pb2.OP_TAR,
-        operations_pb2.OP_GZIP
-    ])
+    ops0 = pack_operations([operations_pb2.OP_TAR, operations_pb2.OP_GZIP])
     slot0_entry = slots_pb2.SlotEntry(
         id=0,
         name_hash=0x123456789ABCDEF0,  # xxHash64("python-runtime")
@@ -220,15 +218,13 @@ def create_new_format_protobuf():
         flags=0,
         name="python-runtime",
         source_path="runtime/python311",
-        target_path="python"
+        target_path="python",
     )
 
     # Slot 1: TAR + GZIP + AES256_GCM
-    ops1 = pack_operations([
-        operations_pb2.OP_TAR,
-        operations_pb2.OP_GZIP,
-        operations_pb2.OP_AES256_GCM
-    ])
+    ops1 = pack_operations(
+        [operations_pb2.OP_TAR, operations_pb2.OP_GZIP, operations_pb2.OP_AES256_GCM]
+    )
     slot1_entry = slots_pb2.SlotEntry(
         id=1,
         name_hash=0xFEDCBA9876543210,  # xxHash64("application")
@@ -243,14 +239,11 @@ def create_new_format_protobuf():
         flags=0,
         name="application",
         source_path="src/",
-        target_path="app"
+        target_path="app",
     )
 
     # Slot 2: TAR + BZIP2
-    ops2 = pack_operations([
-        operations_pb2.OP_TAR,
-        operations_pb2.OP_BZIP2
-    ])
+    ops2 = pack_operations([operations_pb2.OP_TAR, operations_pb2.OP_BZIP2])
     slot2_entry = slots_pb2.SlotEntry(
         id=2,
         name_hash=0xABCDEF0123456789,  # xxHash64("dependencies")
@@ -265,7 +258,7 @@ def create_new_format_protobuf():
         flags=0,
         name="dependencies",
         source_path="site-packages/",
-        target_path="lib"
+        target_path="lib",
     )
 
     # Configure JIT for slot 2
@@ -281,8 +274,8 @@ def create_new_format_protobuf():
     # Create crypto info
     crypto = crypto_pb2.CryptoInfo()
     crypto.signature.algorithm = crypto_pb2.SIGNATURE_ED25519
-    crypto.signature.public_key = b'\x00' * 32  # Ed25519 public key
-    crypto.signature.signature = b'\x00' * 64  # Ed25519 signature
+    crypto.signature.public_key = b"\x00" * 32  # Ed25519 public key
+    crypto.signature.signature = b"\x00" * 64  # Ed25519 signature
     crypto.signature.timestamp = 1735344000
     crypto.signature.key_id = "main-signing-key"
 
@@ -296,8 +289,7 @@ def create_new_format_protobuf():
     # Add operation chains for clarity
     for slot in slot_entries:
         chain = operations_pb2.OperationChain(
-            packed=slot.operations,
-            description=f"Operations for slot {slot.id}"
+            packed=slot.operations, description=f"Operations for slot {slot.id}"
         )
         # Unpack for clarity
         ops = []
@@ -313,7 +305,7 @@ def create_new_format_protobuf():
     return package
 
 
-def main():
+def main() -> None:
     """Compare old and new JSON structures"""
 
     # Create old format
@@ -323,12 +315,14 @@ def main():
     new_proto = create_new_format_protobuf()
 
     # Convert protobuf to JSON
-    new_json = json.loads(json_format.MessageToJson(
-        new_proto,
-        always_print_fields_with_no_presence=False,
-        preserving_proto_field_name=True,
-        use_integers_for_enums=False  # Use enum names for readability
-    ))
+    new_json = json.loads(
+        json_format.MessageToJson(
+            new_proto,
+            always_print_fields_with_no_presence=False,
+            preserving_proto_field_name=True,
+            use_integers_for_enums=False,  # Use enum names for readability
+        )
+    )
 
     # Print comparison
     print("=" * 80)
@@ -348,31 +342,31 @@ def main():
 1. OPERATION CHAINS:
    Old: "codec": "tar.gz.encrypted" (string concatenation)
    New: "operations": 0x31100001 (packed 64-bit: TAR|GZIP|AES256_GCM)
-   
+
 2. SLOT METADATA:
    Old: Simple flat structure with mixed concerns
    New: Structured with purpose, lifecycle, platform, permissions
-   
+
 3. CRYPTOGRAPHY:
    Old: Basic signature and public key
    New: Full crypto info with algorithms, key management, trust chains
-   
+
 4. ADVANCED FEATURES:
    Old: Not supported
    New: SPA (Staged Payload Architecture) and JIT loading configurations
-   
+
 5. TYPE SAFETY:
    Old: Strings and loose typing
    New: Strongly typed enums and structured messages
-   
+
 6. EXTENSIBILITY:
    Old: Limited, requires format changes
    New: Protocol buffer extensibility, backward/forward compatible
-   
+
 7. PERFORMANCE:
    Old: String parsing for operations
    New: Direct bitwise operations on packed integers
-   
+
 8. CROSS-LANGUAGE:
    Old: JSON-only, language-specific parsers
    New: Protobuf with native code generation for Python, Go, Rust

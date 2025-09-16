@@ -4,6 +4,7 @@
 #
 """Ingredient management system for Flavor launchers and builders."""
 
+import contextlib
 from dataclasses import dataclass
 import hashlib
 import os
@@ -57,6 +58,7 @@ class IngredientManager:
 
         # Binary loader for complex operations
         from flavor.ingredients.binary_loader import BinaryLoader
+
         self._binary_loader = BinaryLoader(self)
 
     def list_ingredients(
@@ -102,9 +104,7 @@ class IngredientManager:
                     if info:
                         # Check if we already have this ingredient from dev build
                         existing_names = [
-                            i.name
-                            for sublist in ingredients.values()
-                            for i in sublist
+                            i.name for sublist in ingredients.values() for i in sublist
                         ]
                         if info.name not in existing_names:
                             if info.type == "launcher":
@@ -169,25 +169,26 @@ class IngredientManager:
         # Calculate checksum if file is reasonable size
         checksum = None
         if size < 100 * 1024 * 1024:  # Less than 100MB
-            try:
+            with contextlib.suppress(OSError, MemoryError):
                 checksum = hashlib.sha256(path.read_bytes()).hexdigest()[:16]
-            except (OSError, MemoryError):
-                pass
 
         # Try to extract version info
         version = None
         try:
             # Try to get version from the binary (if it supports --version)
-            result = run_command([str(path), "--version"], check=False, capture_output=True, text=True)
+            result = run_command(
+                [str(path), "--version"], check=False, capture_output=True, text=True
+            )
             if result.returncode == 0 and result.stdout:
                 output = result.stdout.strip()
                 # Extract version from output (look for patterns like "v1.2.3" or "1.2.3")
                 import re
-                match = re.search(r'(\d+\.\d+\.\d+)', output)
+
+                match = re.search(r"(\d+\.\d+\.\d+)", output)
                 if match:
                     version = match.group(1)
                 else:
-                    version = output.split('\n')[0][:20]  # First line, truncated
+                    version = output.split("\n")[0][:20]  # First line, truncated
         except (OSError, Exception):
             pass
 
