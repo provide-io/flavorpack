@@ -204,7 +204,7 @@ No, packages are signed but not encrypted. For sensitive data, encrypt files bef
 Yes, but it's not recommended:
 
 ```bash
-FLAVOR_INSECURE=1 ./myapp.psp
+FLAVOR_VALIDATION=none ./myapp.psp
 ```
 
 ### How secure are FlavorPack packages?

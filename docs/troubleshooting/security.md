@@ -101,8 +101,8 @@ flavor keys convert --input old.key --output new.key
 # Use separate keys for development
 flavor keygen --output dev-keys/
 
-# Enable insecure mode for local testing only
-export FLAVOR_INSECURE=1
+# Disable validation for local testing only
+export FLAVOR_VALIDATION=none
 ```
 
 ### Production Environment
@@ -126,7 +126,7 @@ flavor verify myapp.psp && ./myapp.psp
 
 **Warning**: "Running in insecure mode - signatures not verified"
 
-**Solution**: Remove `FLAVOR_INSECURE=1` from environment for production use
+**Solution**: Set `FLAVOR_VALIDATION=standard` or `strict` for production use
 
 ### Weak Key Warning
 

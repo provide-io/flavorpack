@@ -35,7 +35,7 @@ source env.sh
 make build-ingredients
 
 # Build the taster package
-FLAVOR_INSECURE=1 flavor pack --manifest helpers/taster/pyproject.toml \
+FLAVOR_VALIDATION=none flavor pack --manifest helpers/taster/pyproject.toml \
   --output helpers/taster/dist/taster.psp \
   --key-seed test123 \
   --launcher-bin ingredients/bin/flavor-rs-launcher-darwin_arm64
@@ -101,8 +101,8 @@ python -m pytest tests/test_verify_json.py -v
 Tests can be configured with environment variables:
 
 ```bash
-# Enable insecure mode for testing
-export FLAVOR_INSECURE=1
+# Disable validation for testing
+export FLAVOR_VALIDATION=none
 
 # Increase logging for debugging
 export FLAVOR_LOG_LEVEL=debug
@@ -383,7 +383,7 @@ chmod +x dist/taster.psp
 
 **Test failures**: Run with insecure mode for development
 ```bash
-FLAVOR_INSECURE=1 python -m pytest tests/ -v
+FLAVOR_VALIDATION=none python -m pytest tests/ -v
 ```
 
 **Import errors**: Ensure you're in the correct directory and environment
