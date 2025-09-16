@@ -1,9 +1,9 @@
 """Display package and system information"""
 
 import os
+from pathlib import Path
 import platform
 import sys
-from pathlib import Path
 
 import click
 

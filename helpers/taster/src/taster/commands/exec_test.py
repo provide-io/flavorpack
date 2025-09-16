@@ -1,16 +1,14 @@
 #!/usr/bin/env python3
 """Test direct execution vs script execution to diagnose permission issues."""
 
-import os
-import sys
-import tempfile
 from pathlib import Path
+import tempfile
 
 import click
-
-from flavor.package import build_package_from_manifest
-from flavor.ingredients import IngredientManager as HelperManager
 from provide.foundation.process import run_command
+
+from flavor.ingredients import IngredientManager as HelperManager
+from flavor.package import build_package_from_manifest
 
 
 @click.command("exec-test")

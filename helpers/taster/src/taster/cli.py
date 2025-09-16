@@ -2,8 +2,8 @@
 """Taster CLI - Minimal entry point that loads commands from modules"""
 
 import os
-import sys
 from pathlib import Path
+import sys
 
 # Set up Windows Unicode support early
 if sys.platform == "win32":
@@ -48,8 +48,8 @@ from taster.commands.file import file_command
 from taster.commands.launcher_test import launcher_test_command
 from taster.commands.mmap import mmap_command
 from taster.commands.package import package_command
-from taster.commands.slot_test import slot_test_command
 from taster.commands.pipe import pipe_command
+from taster.commands.slot_test import slot_test_command
 
 
 def get_program_name():

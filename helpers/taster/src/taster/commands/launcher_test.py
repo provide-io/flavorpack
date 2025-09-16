@@ -2,15 +2,15 @@
 """Test launcher execution with a minimal Python package."""
 
 import json
+from pathlib import Path
 import sys
 import tempfile
-from pathlib import Path
 
 import click
-
-from flavor.package import build_package_from_manifest
-from flavor.ingredients import IngredientManager as HelperManager
 from provide.foundation.process import run_command
+
+from flavor.ingredients import IngredientManager as HelperManager
+from flavor.package import build_package_from_manifest
 
 
 @click.command("launcher-test")

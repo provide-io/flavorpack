@@ -2,12 +2,11 @@
 """Tests for the crosslang command."""
 
 import json
-import tempfile
 from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
-import pytest
-import click.testing
+import tempfile
+from unittest.mock import MagicMock, Mock, patch
 
+import click.testing
 from taster.commands.crosslang import CrossLangTester, crosslang_command
 
 
@@ -68,7 +67,6 @@ class TestCrossLangTester:
             assert result == output_file
             assert len(tester.results["build_tests"]) == 1
             assert tester.results["build_tests"][0]["success"] is True
-
 
     def test_verify_with_python(self):
         """Test Python verification."""
@@ -272,7 +270,7 @@ class TestCrossLangCommand:
                 assert result.exit_code == 0
 
                 # Check file was written
-                with open(output_file, "r") as f:
+                with open(output_file) as f:
                     written_data = json.load(f)
                 assert written_data == test_results
         finally:

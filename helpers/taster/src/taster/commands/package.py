@@ -1,18 +1,22 @@
 """Package management commands using Flavor API"""
 
 from pathlib import Path
+import sys
 
 import click
-import sys
 
 
 def _get_flavor_api():
     """Get the Flavor API."""
     try:
         import flavor.api as flavor_api
+
         return flavor_api
     except ImportError:
-        click.echo("Error: Flavor API not available. Ensure flavor package is installed.", err=True)
+        click.echo(
+            "Error: Flavor API not available. Ensure flavor package is installed.",
+            err=True,
+        )
         sys.exit(1)
 
 
@@ -127,8 +131,8 @@ def clean_cache() -> None:
 def test_json(builder_bin, launcher_bin) -> None:
     """Test JSON manifest support"""
     import json
-    import tempfile
     import subprocess
+    import tempfile
 
     flavor_api = _get_flavor_api()
 
@@ -178,7 +182,7 @@ def test_json(builder_bin, launcher_bin) -> None:
             result = subprocess.run([str(output_path)], capture_output=True, text=True)
 
             if result.returncode == 0:
-                click.echo(f"✅ Package executed successfully")
+                click.echo("✅ Package executed successfully")
                 if result.stdout:
                     click.echo(f"  Output: {result.stdout.strip()}")
             else:

@@ -2,13 +2,11 @@
 """Tests for the verify command with JSON output support."""
 
 import json
-import tempfile
 from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
-import pytest
-import click.testing
-import sys
+import tempfile
+from unittest.mock import patch
 
+import click.testing
 from taster.commands.verify import verify_command
 
 
@@ -86,7 +84,7 @@ class TestVerifyCommand:
                     assert result.exit_code == 0
 
                     # Check file contents
-                    with open(output_path, "r") as f:
+                    with open(output_path) as f:
                         output_data = json.load(f)
                     assert output_data["verification"] == verification_result
             finally:

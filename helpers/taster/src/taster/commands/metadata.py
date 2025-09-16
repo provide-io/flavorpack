@@ -17,9 +17,7 @@ def metadata_command() -> None:
     # Try to load metadata from workenv
     workenv = os.environ.get("FLAVOR_WORKENV")
     if not workenv:
-        click.secho(
-            "❌ FLAVOR_WORKENV not set - not running in flavor pack", fg="red"
-        )
+        click.secho("❌ FLAVOR_WORKENV not set - not running in flavor pack", fg="red")
         return
 
     workenv_path = Path(workenv)

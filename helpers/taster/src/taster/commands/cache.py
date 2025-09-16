@@ -1,9 +1,9 @@
 """Cache management commands for taster."""
 
-from pathlib import Path
-import shutil
 import json
 import os
+from pathlib import Path
+import shutil
 
 import click
 
@@ -115,23 +115,28 @@ def inspect(workenv, output_json, all) -> None:
     cache_locations = [
         Path.home() / "Library" / "Caches" / "flavor" / "workenv",  # macOS
         Path.home() / ".cache" / "flavor" / "workenv",  # Linux/fallback
-        Path("/var/folders") / os.environ.get("USER", "unknown") / "*" / "*" / "pspf" / "workenv",  # macOS temp
+        Path("/var/folders")
+        / os.environ.get("USER", "unknown")
+        / "*"
+        / "*"
+        / "pspf"
+        / "workenv",  # macOS temp
         Path("/tmp/pspf/workenv"),  # Linux temp
     ]
-    
+
     results = {}
-    
+
     for cache_base in cache_locations:
         # Handle glob patterns
         if "*" in str(cache_base):
             cache_dirs = list(Path("/").glob(str(cache_base).lstrip("/")))
         else:
             cache_dirs = [cache_base] if cache_base.exists() else []
-        
+
         for cache_dir in cache_dirs:
             if not cache_dir.exists():
                 continue
-                
+
             if all:
                 # Inspect all workenvs
                 for entry in cache_dir.iterdir():
@@ -142,14 +147,14 @@ def inspect(workenv, output_json, all) -> None:
                 _inspect_workenv(workenv, cache_dir, results)
                 if results:
                     break  # Found it, stop searching
-    
+
     if not results:
         if workenv:
             click.echo(f"❌ Workenv '{workenv}' not found in any cache location")
         else:
             click.echo("❌ No cached workenvs found")
         return
-    
+
     if output_json:
         click.echo(json.dumps(results, indent=2, default=str))
     else:
@@ -162,7 +167,7 @@ def _inspect_workenv(name: str, cache_dir: Path, results: dict) -> None:
     workenv_dir = cache_dir / name
     if not workenv_dir.exists():
         return
-    
+
     info = {
         "cache_location": str(cache_dir),
         "workenv_path": str(workenv_dir),
@@ -173,22 +178,24 @@ def _inspect_workenv(name: str, cache_dir: Path, results: dict) -> None:
         "extraction_complete": False,
         "size_mb": 0,
     }
-    
+
     # Calculate size
     try:
-        total_size = sum(f.stat().st_size for f in workenv_dir.rglob("*") if f.is_file())
+        total_size = sum(
+            f.stat().st_size for f in workenv_dir.rglob("*") if f.is_file()
+        )
         info["size_mb"] = round(total_size / 1024 / 1024, 2)
     except:
         pass
-    
+
     # Check for metadata directories
     instance_metadata_dir = cache_dir / f".{name}.pspf"
     package_metadata_dir = workenv_dir / ".pspf"
-    
+
     if instance_metadata_dir.exists():
         info["metadata_type"] = "instance"
         info["metadata_dir"] = str(instance_metadata_dir)
-        
+
         # Read index.json
         index_file = instance_metadata_dir / "instance" / "index.json"
         if index_file.exists():
@@ -197,14 +204,14 @@ def _inspect_workenv(name: str, cache_dir: Path, results: dict) -> None:
                     info["index_metadata"] = json.load(f)
             except:
                 pass
-        
+
         # Check extraction complete
         complete_markers = [
             instance_metadata_dir / "instance" / "extract" / "complete",
             instance_metadata_dir / "instance" / "extraction.complete",
         ]
         info["extraction_complete"] = any(m.exists() for m in complete_markers)
-        
+
         # Read package metadata
         psp_file = instance_metadata_dir / "package" / "psp.json"
         if psp_file.exists():
@@ -213,11 +220,11 @@ def _inspect_workenv(name: str, cache_dir: Path, results: dict) -> None:
                     info["package_metadata"] = json.load(f)
             except:
                 pass
-    
+
     elif package_metadata_dir.exists():
         info["metadata_type"] = "package"
         info["metadata_dir"] = str(package_metadata_dir)
-        
+
         # Read package metadata
         psp_file = package_metadata_dir / "psp.json"
         if psp_file.exists():
@@ -226,7 +233,7 @@ def _inspect_workenv(name: str, cache_dir: Path, results: dict) -> None:
                     info["package_metadata"] = json.load(f)
             except:
                 pass
-    
+
     results[name] = info
 
 
@@ -238,12 +245,12 @@ def _print_workenv_info(name: str, info: dict) -> None:
     click.echo(f"📁 Location: {info['workenv_path']}")
     click.echo(f"💾 Size: {info['size_mb']} MB")
     click.echo(f"🗂️  Metadata Type: {info.get('metadata_type', 'none')}")
-    
+
     if info.get("extraction_complete"):
         click.echo("✅ Extraction: Complete")
     else:
         click.echo("⚠️  Extraction: Incomplete or not started")
-    
+
     # Display index metadata if available
     if info.get("index_metadata"):
         idx = info["index_metadata"]
@@ -253,23 +260,25 @@ def _print_workenv_info(name: str, info: dict) -> None:
         click.echo(f"  Launcher Size: {idx.get('launcher_size', 0):,} bytes")
         click.echo(f"  Slot Count: {idx.get('slot_count', 0)}")
         click.echo(f"  Index Checksum: {idx.get('index_checksum', 'N/A')}")
-        if idx.get('build_timestamp'):
+        if idx.get("build_timestamp"):
             click.echo(f"  Build Timestamp: {idx.get('build_timestamp')}")
-    
+
     # Display package metadata if available
     if info.get("package_metadata"):
         pkg = info["package_metadata"].get("package", {})
         click.echo("\n📦 Package Info:")
         click.echo(f"  Name: {pkg.get('name', 'unknown')}")
         click.echo(f"  Version: {pkg.get('version', 'unknown')}")
-        
+
         # Show slots info if available
         if "slots" in info["package_metadata"]:
             slots = info["package_metadata"]["slots"]
             click.echo(f"\n📂 Slots ({len(slots)}):")
             for slot in slots[:5]:  # Show first 5 slots
-                click.echo(f"  [{slot['index']}] {slot['name']}: {slot.get('size', 0):,} bytes ({slot.get('lifecycle', 'unknown')})")
+                click.echo(
+                    f"  [{slot['index']}] {slot['name']}: {slot.get('size', 0):,} bytes ({slot.get('lifecycle', 'unknown')})"
+                )
             if len(slots) > 5:
                 click.echo(f"  ... and {len(slots) - 5} more")
-    
+
     click.echo()

@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """Hypothesis-based tests designed to break PSPF handling"""
 
+from pathlib import Path
 import subprocess
 import tempfile
-from pathlib import Path
 
+from hypothesis import assume, given, settings, strategies as st
+from hypothesis.stateful import RuleBasedStateMachine, initialize, invariant, rule
 import pytest
-from hypothesis import given, strategies as st, settings, assume
-from hypothesis.stateful import RuleBasedStateMachine, rule, initialize, invariant
 
 from flavor.psp.format_2025 import PSPFBuilder, PSPFReader, SlotMetadata
 

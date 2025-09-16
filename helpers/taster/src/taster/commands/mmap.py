@@ -4,10 +4,10 @@
 
 import mmap
 import os
+from pathlib import Path
 import resource
 import sys
 import tracemalloc
-from pathlib import Path
 
 import click
 

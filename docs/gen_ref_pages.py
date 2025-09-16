@@ -2,6 +2,7 @@
 
 from provide.foundation.docs import generate_api_docs
 
+
 def main():
     """Generate API reference pages for FlavorPack."""
     # Generate API documentation for the flavor package
@@ -71,7 +72,10 @@ operations = pack_operations([OperationType.TAR, OperationType.GZIP])
 """,
     )
 
-    print(f"✅ Generated API documentation: {stats['processed_files']} files processed, {stats['skipped_files']} skipped")
+    print(
+        f"✅ Generated API documentation: {stats['processed_files']} files processed, {stats['skipped_files']} skipped"
+    )
+
 
 if __name__ == "__main__":
     main()

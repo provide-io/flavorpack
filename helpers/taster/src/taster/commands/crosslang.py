@@ -9,9 +9,9 @@ import tempfile
 
 import click
 from provide.foundation import logger
+from provide.foundation.process import run_command
 
 from flavor.ingredients.manager import IngredientManager as HelperManager
-from provide.foundation.process import run_command
 
 
 class CrossLangTester:
@@ -31,26 +31,32 @@ class CrossLangTester:
 
         # Initialize helper manager for finding helpers
         self.helper_manager = HelperManager()
-        
-        logger.debug("Initializing CrossLangTester", 
-                    cwd=str(Path.cwd()),
-                    initial_ingredients_bin=str(self.helper_manager.ingredients_bin),
-                    initial_ingredients_dir=str(self.helper_manager.ingredients_dir))
-        
+
+        logger.debug(
+            "Initializing CrossLangTester",
+            cwd=str(Path.cwd()),
+            initial_ingredients_bin=str(self.helper_manager.ingredients_bin),
+            initial_ingredients_dir=str(self.helper_manager.ingredients_dir),
+        )
+
         # When running crosslang tests, we need actual ingredient binaries
         # Look for FLAVOR_INGREDIENTS_DIR environment variable first
         ingredients_dir = os.environ.get("FLAVOR_INGREDIENTS_DIR")
         if ingredients_dir:
             ingredients_path = Path(ingredients_dir)
-            logger.debug("Found FLAVOR_INGREDIENTS_DIR env var", 
-                        path=ingredients_dir,
-                        exists=ingredients_path.exists())
+            logger.debug(
+                "Found FLAVOR_INGREDIENTS_DIR env var",
+                path=ingredients_dir,
+                exists=ingredients_path.exists(),
+            )
             if ingredients_path.exists():
                 self.helper_manager.ingredients_bin = ingredients_path / "bin"
                 self.helper_manager.ingredients_dir = ingredients_path
-                logger.info("Using ingredients from FLAVOR_INGREDIENTS_DIR",
-                           ingredients_bin=str(self.helper_manager.ingredients_bin),
-                           ingredients_dir=str(self.helper_manager.ingredients_dir))
+                logger.info(
+                    "Using ingredients from FLAVOR_INGREDIENTS_DIR",
+                    ingredients_bin=str(self.helper_manager.ingredients_bin),
+                    ingredients_dir=str(self.helper_manager.ingredients_dir),
+                )
         else:
             logger.debug("No FLAVOR_INGREDIENTS_DIR env var, searching directory tree")
             # Try to find ingredients relative to the current working directory
@@ -62,24 +68,30 @@ class CrossLangTester:
                 if ingredients_bin.exists():
                     self.helper_manager.ingredients_bin = ingredients_bin
                     self.helper_manager.ingredients_dir = parent / "ingredients"
-                    logger.info("Found ingredients in directory tree",
-                               ingredients_bin=str(ingredients_bin),
-                               ingredients_dir=str(parent / "ingredients"))
+                    logger.info(
+                        "Found ingredients in directory tree",
+                        ingredients_bin=str(ingredients_bin),
+                        ingredients_dir=str(parent / "ingredients"),
+                    )
                     break
             else:
                 logger.warning("No ingredients/bin directory found in directory tree")
-        
+
         # Log final state and contents
-        logger.debug("Final ingredient paths",
-                    ingredients_bin=str(self.helper_manager.ingredients_bin),
-                    ingredients_dir=str(self.helper_manager.ingredients_dir),
-                    bin_exists=self.helper_manager.ingredients_bin.exists())
-        
+        logger.debug(
+            "Final ingredient paths",
+            ingredients_bin=str(self.helper_manager.ingredients_bin),
+            ingredients_dir=str(self.helper_manager.ingredients_dir),
+            bin_exists=self.helper_manager.ingredients_bin.exists(),
+        )
+
         if self.helper_manager.ingredients_bin.exists():
             files = list(self.helper_manager.ingredients_bin.glob("*"))
-            logger.debug("Ingredients bin contents", 
-                        file_count=len(files),
-                        files=[f.name for f in files])
+            logger.debug(
+                "Ingredients bin contents",
+                file_count=len(files),
+                files=[f.name for f in files],
+            )
 
         # Find taster directory - look for manifest files
         current = Path.cwd()
@@ -394,7 +406,9 @@ entry_point = "crosslang_test:main"
                     "error",
                 )
                 # Show all available ingredients for debugging
-                all_ingredients = self.helper_manager.list_ingredients(platform_filter=False)
+                all_ingredients = self.helper_manager.list_ingredients(
+                    platform_filter=False
+                )
                 all_launchers = all_ingredients.get("launchers", [])
                 if all_launchers:
                     self.log(

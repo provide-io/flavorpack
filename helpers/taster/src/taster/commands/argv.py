@@ -1,8 +1,8 @@
 """Test argv[0] and command information"""
 
 import os
-import sys
 from pathlib import Path
+import sys
 
 import click
 
