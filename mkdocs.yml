@@ -5,6 +5,9 @@ site_url: https://foundry.provide.io/flavorpack/
 repo_url: https://github.com/provide-io/flavorpack
 repo_name: provide-io/flavorpack
 edit_uri: edit/main/docs/
+
+# Development server configuration
+dev_addr: '127.0.0.1:8007'
 copyright: Copyright &copy; 2024 provide.io
 
 # Standalone mode settings
