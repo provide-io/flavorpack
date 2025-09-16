@@ -239,13 +239,6 @@ class PSPFReader:
         # Parse JSON
         self._metadata = json.loads(metadata_data.decode("utf-8"))
 
-        # Remove the old conditional that was checking metadata_format
-        if False:  # Keep structure for now
-            # Legacy tar.gz format
-            with tarfile.open(fileobj=io.BytesIO(metadata_data), mode="r:gz") as tar:
-                psp_member = tar.getmember("psp.json")
-                psp_data = tar.extractfile(psp_member).read()
-                self._metadata = json.loads(psp_data)
 
         return self._metadata
 
