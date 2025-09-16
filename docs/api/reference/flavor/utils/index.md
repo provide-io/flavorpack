@@ -1,3 +1,3 @@
-# `flavor.flavor.utils`
+# `flavor.utils`
 
-::: flavor.flavor.utils
+::: flavor.utils

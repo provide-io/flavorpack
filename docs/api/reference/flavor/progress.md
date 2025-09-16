@@ -1,3 +1,3 @@
-# `flavor.flavor.progress`
+# `flavor.progress`
 
-::: flavor.flavor.progress
+::: flavor.progress

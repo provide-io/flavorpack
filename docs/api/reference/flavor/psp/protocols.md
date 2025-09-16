@@ -1,3 +1,3 @@
-# `flavor.flavor.psp.protocols`
+# `flavor.psp.protocols`
 
-::: flavor.flavor.psp.protocols
+::: flavor.psp.protocols

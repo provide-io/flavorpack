@@ -1,3 +1,3 @@
-# `flavor.flavor.exceptions`
+# `flavor.exceptions`
 
-::: flavor.flavor.exceptions
+::: flavor.exceptions
