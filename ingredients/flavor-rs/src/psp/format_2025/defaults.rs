@@ -169,3 +169,74 @@ pub const DEFAULT_EXTRACT_OVERWRITE: bool = false;
 // =================================
 pub const DEFAULT_LAUNCHER_LOG_LEVEL: &str = "INFO";
 pub const DEFAULT_LAUNCHER_TIMEOUT: f64 = 30.0; // seconds
+
+// =================================
+// Validation defaults
+// =================================
+pub const DEFAULT_VALIDATION_LEVEL: &str = "standard"; // Default validation level
+
+/// ValidationLevel represents different levels of security validation
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ValidationLevel {
+    /// Full security checks, fail on any issue (most secure)
+    Strict,
+    /// Normal validation, warnings for minor issues (default)
+    Standard,
+    /// Skip signature checks, warn on checksum mismatches
+    Relaxed,
+    /// Only critical checks, continue on most warnings
+    Minimal,
+    /// Skip all validation (testing only, NOT RECOMMENDED)
+    None,
+}
+
+impl ValidationLevel {
+    /// Parse validation level from string (case insensitive)
+    pub fn from_str(s: &str) -> Option<Self> {
+        match s.to_lowercase().as_str() {
+            "strict" => Some(ValidationLevel::Strict),
+            "standard" => Some(ValidationLevel::Standard),
+            "relaxed" => Some(ValidationLevel::Relaxed),
+            "minimal" => Some(ValidationLevel::Minimal),
+            "none" => Some(ValidationLevel::None),
+            _ => None,
+        }
+    }
+
+    /// Convert validation level to string
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            ValidationLevel::Strict => "strict",
+            ValidationLevel::Standard => "standard",
+            ValidationLevel::Relaxed => "relaxed",
+            ValidationLevel::Minimal => "minimal",
+            ValidationLevel::None => "none",
+        }
+    }
+}
+
+/// Get the current validation level from environment or default
+pub fn get_validation_level() -> ValidationLevel {
+    use std::env;
+
+    // Check new FLAVOR_VALIDATION variable first
+    if let Ok(val) = env::var("FLAVOR_VALIDATION") {
+        if let Some(level) = ValidationLevel::from_str(&val) {
+            return level;
+        }
+    }
+
+    // Backward compatibility: check FLAVOR_INSECURE
+    if let Ok(val) = env::var("FLAVOR_INSECURE") {
+        // Show deprecation warning
+        eprintln!("⚠️ DEPRECATED: FLAVOR_INSECURE is deprecated, use FLAVOR_VALIDATION=none instead");
+
+        let val_lower = val.to_lowercase();
+        if val == "1" || val_lower == "true" || val_lower == "on" || val_lower == "yes" {
+            return ValidationLevel::None;
+        }
+    }
+
+    // Use default from constants
+    ValidationLevel::from_str(DEFAULT_VALIDATION_LEVEL).unwrap_or(ValidationLevel::Standard)
+}

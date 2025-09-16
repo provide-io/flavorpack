@@ -142,3 +142,10 @@ const (
 	DefaultLauncherLogLevel = "INFO"
 	DefaultLauncherTimeout  = 30.0 // seconds
 )
+
+// =================================
+// Validation defaults
+// =================================
+const (
+	DefaultValidationLevel = "standard" // Default validation level
+)
