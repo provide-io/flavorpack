@@ -8,7 +8,7 @@ from pathlib import Path
 
 import click
 
-from flavor.api import build_package_from_manifest
+from flavor.package import build_package_from_manifest
 from flavor.ingredients import IngredientManager as HelperManager
 from provide.foundation.process import run_command
 
