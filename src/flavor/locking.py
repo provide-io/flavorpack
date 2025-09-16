@@ -3,7 +3,8 @@
 from contextlib import contextmanager
 from pathlib import Path
 
-from provide.foundation.file.directory import temp_dir, ensure_dir
+from provide.foundation.file.directory import ensure_dir
+from provide.foundation.file.temp import temp_dir
 from provide.foundation.file.lock import FileLock
 
 

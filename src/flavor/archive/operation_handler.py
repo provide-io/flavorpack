@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import BinaryIO
 
 from provide.foundation.archive import TarArchive, GzipCompressor, Bzip2Compressor
-from provide.foundation.file.directory import temp_dir
+from provide.foundation.file.temp import temp_dir
 from provide.foundation.logger import logger
 
 from flavor.archive.operations import Operation
