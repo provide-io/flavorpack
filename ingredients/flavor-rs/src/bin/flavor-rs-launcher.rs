@@ -145,7 +145,6 @@ fn run() -> i32 {
     // Launch the package with the provided arguments.
     let remaining_args = args[1..].to_vec();
     let options = LaunchOptions {
-        insecure: env::var("FLAVOR_INSECURE").unwrap_or_default() == "1",
         workdir: None,
     };
 
