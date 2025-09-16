@@ -415,10 +415,8 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
                     ValidationLevel::Standard => {
                         eprintln!("🚨 SECURITY WARNING: Package signature verification failed");
                         eprintln!("🚨 Package may be corrupted or tampered with");
-                        eprintln!("🚨 Set FLAVOR_VALIDATION=relaxed to bypass (NOT RECOMMENDED)");
-                        return Err(FlavorError::Generic(
-                            "Package signature verification failed".to_string(),
-                        ));
+                        eprintln!("🚨 Continuing with standard validation (use FLAVOR_VALIDATION=strict to enforce)");
+                        warn!("⚠️ Package signature verification failed, continuing with standard validation");
                     }
                     ValidationLevel::Strict => {
                         error!("❌ Package signature verification failed");

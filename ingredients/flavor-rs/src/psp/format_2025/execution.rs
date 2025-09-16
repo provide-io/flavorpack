@@ -51,13 +51,10 @@ fn validate_package_checksum(paths: &WorkenvPaths, current_checksum: u32) -> Res
                         eprintln!("🚨 SECURITY WARNING: Package checksum mismatch! cached: {}, current: {}",
                                   stored_checksum, current_checksum_str);
                         eprintln!("🚨 Cache may be compromised or package has changed");
-                        eprintln!("🚨 Set FLAVOR_VALIDATION=relaxed to bypass (NOT RECOMMENDED)");
-                        log::error!("🚨 CRITICAL: Package checksum mismatch! cached: {}, current: {}",
-                                  stored_checksum, current_checksum_str);
-                        Err(FlavorError::Generic(format!(
-                            "package checksum mismatch: cached={}, current={}",
-                            stored_checksum, current_checksum_str
-                        )))
+                        eprintln!("🚨 Continuing with standard validation (use FLAVOR_VALIDATION=strict to enforce)");
+                        warn!("⚠️ Package checksum mismatch, continuing with standard validation: cached: {}, current: {}",
+                              stored_checksum, current_checksum_str);
+                        Ok(false)
                     }
                     ValidationLevel::Strict => {
                         log::error!("🚨 CRITICAL: Package checksum mismatch! cached: {}, current: {}",

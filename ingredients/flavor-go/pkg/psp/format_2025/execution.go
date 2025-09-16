@@ -224,7 +224,13 @@ func validatePackageChecksum(paths *WorkenvPaths, currentChecksum uint32, logger
 		logger.Warn("⚠️ Cache may be compromised or package has changed")
 		logger.Warn("⚠️ Continuing due to relaxed validation")
 		return false, nil
-	default: // ValidationStrict, ValidationStandard
+	case ValidationStandard:
+		fmt.Fprintf(os.Stderr, "🚨 SECURITY WARNING: Package checksum mismatch! cached=%s, current=%s\n", storedChecksum, currentChecksumStr)
+		fmt.Fprintf(os.Stderr, "🚨 Cache may be compromised or package has changed\n")
+		fmt.Fprintf(os.Stderr, "🚨 Continuing with standard validation (use FLAVOR_VALIDATION=strict to enforce)\n")
+		logger.Warn("⚠️ Package checksum mismatch, continuing with standard validation", "cached", storedChecksum, "current", currentChecksumStr)
+		return false, nil
+	default: // ValidationStrict
 		logger.Error("🚨 CRITICAL: Package checksum mismatch!", "cached", storedChecksum, "current", currentChecksumStr)
 		logger.Error("🚨 Cache may be compromised or package has changed")
 		logger.Error("🚨 Refusing to continue. Set FLAVOR_VALIDATION=relaxed to bypass (NOT RECOMMENDED)")
@@ -370,12 +376,12 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 				fmt.Fprintf(os.Stderr, "⚠️ Package may be corrupted or tampered with\n")
 				fmt.Fprintf(os.Stderr, "⚠️ Continuing due to validation level: %v\n", validationLevel)
 				logger.Warn("⚠️ Package integrity verification failed, continuing", "level", validationLevel)
-			default: // ValidationStrict, ValidationStandard
-				if validationLevel == ValidationStandard {
-					fmt.Fprintf(os.Stderr, "🚨 SECURITY WARNING: Package integrity verification failed\n")
-					fmt.Fprintf(os.Stderr, "🚨 Package may be corrupted or tampered with\n")
-					fmt.Fprintf(os.Stderr, "🚨 Set FLAVOR_VALIDATION=relaxed to bypass (NOT RECOMMENDED)\n")
-				}
+			case ValidationStandard:
+				fmt.Fprintf(os.Stderr, "🚨 SECURITY WARNING: Package integrity verification failed\n")
+				fmt.Fprintf(os.Stderr, "🚨 Package may be corrupted or tampered with\n")
+				fmt.Fprintf(os.Stderr, "🚨 Continuing with standard validation (use FLAVOR_VALIDATION=strict to enforce)\n")
+				logger.Warn("⚠️ Package integrity verification failed, continuing with standard validation")
+			default: // ValidationStrict
 				logger.Error("❌ Package integrity verification failed")
 				return nil, errors.New("package integrity verification failed")
 			}
