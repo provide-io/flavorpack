@@ -379,7 +379,7 @@ flavor verify package.psp --public-key correct.pub
 sha256sum package.psp
 
 # Allow unsigned (development only)
-FLAVOR_INSECURE=1 ./package.psp
+FLAVOR_VALIDATION=none ./package.psp
 ```
 
 #### "Checksum mismatch for slot: {slot_id}"

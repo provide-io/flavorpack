@@ -383,7 +383,7 @@ The CLI respects these environment variables:
 | `FLAVOR_PUBLIC_KEY` | Default public key path | None |
 | `FLAVOR_KEY_SEED` | Default key generation seed | None |
 | `FLAVOR_WORKENV_BASE` | Base directory for workenv | Current directory |
-| `FLAVOR_INSECURE` | Skip signature verification (dev only!) | `false` |
+| `FLAVOR_VALIDATION` | Validation level (strict/standard/relaxed/minimal/none) | `standard` |
 | `FLAVOR_BUILDER` | Preferred builder (go/rust/python) | Auto-detect |
 | `PYTHONIOENCODING` | Python I/O encoding (Windows) | `utf-8` |
 | `PYTHONUTF8` | Enable UTF-8 mode (Windows) | `1` |

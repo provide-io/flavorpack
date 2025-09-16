@@ -173,3 +173,8 @@ DEFAULT_EXTRACT_OVERWRITE = False
 # =================================
 DEFAULT_LAUNCHER_LOG_LEVEL = "INFO"
 DEFAULT_LAUNCHER_TIMEOUT = 30.0
+
+# =================================
+# Validation defaults
+# =================================
+DEFAULT_VALIDATION_LEVEL = "standard"  # Default validation level

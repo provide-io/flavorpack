@@ -22,8 +22,6 @@ pub struct BuildOptions {
 /// Options for launching a package
 #[derive(Debug, Default)]
 pub struct LaunchOptions {
-    /// Skip integrity verification
-    pub insecure: bool,
     /// Working directory for extraction
     pub workdir: Option<String>,
 }

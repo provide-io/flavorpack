@@ -233,7 +233,7 @@ use_case: public_distribution
 ```bash
 # Signature verification
 FLAVOR_VERIFY_SIGNATURES=1      # Enable verification (default)
-FLAVOR_INSECURE=1               # Skip verification (DANGER!)
+FLAVOR_VALIDATION=none          # Skip verification (DANGER!)
 
 # Key management
 FLAVOR_KEY_PATH=/secure/keys    # Key directory
