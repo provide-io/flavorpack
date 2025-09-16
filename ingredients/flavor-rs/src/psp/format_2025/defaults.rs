@@ -219,21 +219,10 @@ impl ValidationLevel {
 pub fn get_validation_level() -> ValidationLevel {
     use std::env;
 
-    // Check new FLAVOR_VALIDATION variable first
+    // Check FLAVOR_VALIDATION variable
     if let Ok(val) = env::var("FLAVOR_VALIDATION") {
         if let Some(level) = ValidationLevel::from_str(&val) {
             return level;
-        }
-    }
-
-    // Backward compatibility: check FLAVOR_INSECURE
-    if let Ok(val) = env::var("FLAVOR_INSECURE") {
-        // Show deprecation warning
-        eprintln!("⚠️ DEPRECATED: FLAVOR_INSECURE is deprecated, use FLAVOR_VALIDATION=none instead");
-
-        let val_lower = val.to_lowercase();
-        if val == "1" || val_lower == "true" || val_lower == "on" || val_lower == "yes" {
-            return ValidationLevel::None;
         }
     }
 

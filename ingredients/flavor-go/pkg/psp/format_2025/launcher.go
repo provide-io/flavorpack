@@ -38,7 +38,7 @@ const (
 )
 
 func getValidationLevel() ValidationLevel {
-	// Check new FLAVOR_VALIDATION variable first
+	// Check FLAVOR_VALIDATION variable
 	if val := os.Getenv("FLAVOR_VALIDATION"); val != "" {
 		switch strings.ToLower(val) {
 		case "strict":
@@ -50,17 +50,6 @@ func getValidationLevel() ValidationLevel {
 		case "minimal":
 			return ValidationMinimal
 		case "none":
-			return ValidationNone
-		}
-	}
-
-	// Backward compatibility: check FLAVOR_INSECURE
-	if val := os.Getenv("FLAVOR_INSECURE"); val != "" {
-		// Show deprecation warning
-		fmt.Fprintf(os.Stderr, "⚠️ DEPRECATED: FLAVOR_INSECURE is deprecated, use FLAVOR_VALIDATION=none instead\n")
-
-		valLower := strings.ToLower(val)
-		if val == "1" || valLower == "true" || valLower == "on" || valLower == "yes" {
 			return ValidationNone
 		}
 	}

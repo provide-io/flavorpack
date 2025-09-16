@@ -85,7 +85,7 @@ EOF
     
     # Run package and capture exit code
     set +e
-    FLAVOR_INSECURE=1 "$package_file" 2>/dev/null
+    FLAVOR_VALIDATION=none "$package_file" 2>/dev/null
     local actual_code=$?
     set -e
     

@@ -29,25 +29,46 @@ fn validate_package_checksum(paths: &WorkenvPaths, current_checksum: u32) -> Res
                 Ok(true)
             } else {
                 // Checksum mismatch - this is a potential security issue
-                let insecure_mode = env::var("FLAVOR_INSECURE")
-                    .map(|v| v == "1" || v.to_lowercase() == "true")
-                    .unwrap_or(false);
-                
-                if insecure_mode {
-                    warn!("⚠️ SECURITY WARNING: Package checksum mismatch! cached: {}, current: {}", 
-                          stored_checksum, current_checksum_str);
-                    warn!("⚠️ Cache may be compromised or package has changed");
-                    warn!("⚠️ Continuing due to FLAVOR_INSECURE=1");
-                    Ok(false)
-                } else {
-                    log::error!("🚨 CRITICAL: Package checksum mismatch! cached: {}, current: {}", 
+                use crate::psp::format_2025::defaults::{get_validation_level, ValidationLevel};
+
+                let validation_level = get_validation_level();
+                match validation_level {
+                    ValidationLevel::None | ValidationLevel::Minimal => {
+                        warn!("⚠️ SECURITY WARNING: Package checksum mismatch! cached: {}, current: {}",
                               stored_checksum, current_checksum_str);
-                    log::error!("🚨 Cache may be compromised or package has changed");
-                    log::error!("🚨 Refusing to continue. Set FLAVOR_INSECURE=1 to bypass (NOT RECOMMENDED)");
-                    Err(FlavorError::Generic(format!(
-                        "package checksum mismatch: cached={}, current={}",
-                        stored_checksum, current_checksum_str
-                    )))
+                        warn!("⚠️ Cache may be compromised or package has changed");
+                        warn!("⚠️ Continuing due to validation level: {:?}", validation_level);
+                        Ok(false)
+                    }
+                    ValidationLevel::Relaxed => {
+                        warn!("⚠️ SECURITY WARNING: Package checksum mismatch! cached: {}, current: {}",
+                              stored_checksum, current_checksum_str);
+                        warn!("⚠️ Cache may be compromised or package has changed");
+                        warn!("⚠️ Continuing due to relaxed validation");
+                        Ok(false)
+                    }
+                    ValidationLevel::Standard => {
+                        eprintln!("🚨 SECURITY WARNING: Package checksum mismatch! cached: {}, current: {}",
+                                  stored_checksum, current_checksum_str);
+                        eprintln!("🚨 Cache may be compromised or package has changed");
+                        eprintln!("🚨 Set FLAVOR_VALIDATION=relaxed to bypass (NOT RECOMMENDED)");
+                        log::error!("🚨 CRITICAL: Package checksum mismatch! cached: {}, current: {}",
+                                  stored_checksum, current_checksum_str);
+                        Err(FlavorError::Generic(format!(
+                            "package checksum mismatch: cached={}, current={}",
+                            stored_checksum, current_checksum_str
+                        )))
+                    }
+                    ValidationLevel::Strict => {
+                        log::error!("🚨 CRITICAL: Package checksum mismatch! cached: {}, current: {}",
+                                  stored_checksum, current_checksum_str);
+                        log::error!("🚨 Cache may be compromised or package has changed");
+                        log::error!("🚨 Refusing to continue. Set FLAVOR_VALIDATION=relaxed to bypass (NOT RECOMMENDED)");
+                        Err(FlavorError::Generic(format!(
+                            "package checksum mismatch: cached={}, current={}",
+                            stored_checksum, current_checksum_str
+                        )))
+                    }
                 }
             }
         }

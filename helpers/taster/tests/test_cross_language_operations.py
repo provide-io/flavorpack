@@ -48,7 +48,7 @@ class TestCrossLanguageOperations:
         
         # Use taster to run crosslang verification which tests operations
         result = subprocess.run(
-            ["FLAVOR_INSECURE=1", str(taster_path), "crosslang", "--json"],
+            ["FLAVOR_VALIDATION=none", str(taster_path), "crosslang", "--json"],
             shell=True,
             capture_output=True,
             text=True,
@@ -108,7 +108,7 @@ class TestCrossLanguageOperations:
         
         # Test that we can call taster's package verification
         result = subprocess.run(
-            ["FLAVOR_INSECURE=1", str(taster_path), "verify", str(taster_path)],
+            ["FLAVOR_VALIDATION=none", str(taster_path), "verify", str(taster_path)],
             shell=True,
             capture_output=True,
             text=True,

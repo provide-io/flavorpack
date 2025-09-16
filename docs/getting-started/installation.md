@@ -234,7 +234,7 @@ Optional environment variables for customization:
 | `FLAVOR_LOG_LEVEL` | Logging level (debug, info, warn, error) | `info` |
 | `FLAVOR_PRIVATE_KEY` | Path to private signing key | None |
 | `FLAVOR_PUBLIC_KEY` | Path to public verification key | None |
-| `FLAVOR_INSECURE` | Skip signature verification (development only) | `false` |
+| `FLAVOR_VALIDATION` | Validation level: strict, standard, relaxed, minimal, none | `standard` |
 
 ## Platform-Specific Notes
 
