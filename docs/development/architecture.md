@@ -199,8 +199,8 @@ Every PSPF package includes:
 - Tamper detection built into format
 
 ### Security Best Practices
-- Never use `FLAVOR_INSECURE=1` in production
-- Always test packages WITHOUT insecure flags
+- Never use `FLAVOR_VALIDATION=none` in production
+- Always test packages with proper validation levels
 - Use deterministic builds for audit trails
 - Never commit keys or secrets
 
@@ -300,7 +300,7 @@ workenv/flavor_darwin_arm64/bin/pytest --cov=flavor
 
 **Runtime**:
 - `FLAVOR_WORKENV` - Set by launcher when running as PSP
-- `FLAVOR_INSECURE` - Skip signature verification (TESTING ONLY)
+- `FLAVOR_VALIDATION` - Validation level (strict/standard/relaxed/minimal/none)
 - `FLAVOR_LOG_LEVEL` - Runtime logging level
 
 ### Platform Detection
@@ -405,8 +405,8 @@ The cache validation process uses checksums to ensure integrity:
 1. Check if workenv directory exists
 2. Verify extraction completion marker exists
 3. Compare saved checksum with package checksum
-4. If `FLAVOR_INSECURE=1`: Log warning on mismatch but continue
-5. If secure mode: Fatal error on checksum mismatch
+4. Based on `FLAVOR_VALIDATION` level: warn/continue or fail
+5. Strict validation: Fatal error on checksum mismatch
 6. Re-extract if cache invalid or incomplete
 
 ## Key Design Decisions

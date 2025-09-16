@@ -390,18 +390,46 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
     // Read index for checksum validation
     let index = reader.read_index()?.clone();
 
-    // Verify integrity unless explicitly skipped
-    if !options.insecure {
-        debug!("🔍 Verifying package integrity");
-        // Call verifier
-        let verify_result = super::verifier::verify(package_path)?;
-        if !verify_result.signature_valid {
-            return Err(FlavorError::Generic(
-                "Package signature verification failed".to_string(),
-            ));
+    // Verify integrity based on validation level
+    use crate::psp::format_2025::defaults::{get_validation_level, ValidationLevel};
+
+    let validation_level = get_validation_level();
+    match validation_level {
+        ValidationLevel::None => {
+            eprintln!("⚠️ SECURITY WARNING: Skipping all integrity verification (FLAVOR_VALIDATION=none)");
+            eprintln!("⚠️ This is NOT RECOMMENDED for production use");
+            warn!("⚠️ VALIDATION DISABLED: Skipping integrity verification");
         }
-    } else {
-        warn!("⚠️ INSECURE MODE: Skipping integrity verification");
+        _ => {
+            debug!("🔍 Verifying package integrity (level: {:?})", validation_level);
+            // Call verifier
+            let verify_result = super::verifier::verify(package_path)?;
+            if !verify_result.signature_valid {
+                match validation_level {
+                    ValidationLevel::Minimal | ValidationLevel::Relaxed => {
+                        eprintln!("⚠️ SECURITY WARNING: Package signature verification failed");
+                        eprintln!("⚠️ Package may be corrupted or tampered with");
+                        eprintln!("⚠️ Continuing due to validation level: {:?}", validation_level);
+                        warn!("⚠️ Package signature verification failed, continuing");
+                    }
+                    ValidationLevel::Standard => {
+                        eprintln!("🚨 SECURITY WARNING: Package signature verification failed");
+                        eprintln!("🚨 Package may be corrupted or tampered with");
+                        eprintln!("🚨 Continuing with standard validation (use FLAVOR_VALIDATION=strict to enforce)");
+                        warn!("⚠️ Package signature verification failed, continuing with standard validation");
+                    }
+                    ValidationLevel::Strict => {
+                        error!("❌ Package signature verification failed");
+                        return Err(FlavorError::Generic(
+                            "Package signature verification failed".to_string(),
+                        ));
+                    }
+                    ValidationLevel::None => unreachable!(), // Already handled above
+                }
+            } else {
+                debug!("✅ Package integrity verified");
+            }
+        }
     }
 
     // Read metadata and clone to avoid borrow issues
