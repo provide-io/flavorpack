@@ -12,10 +12,10 @@ FlavorPack provides a comprehensive Python API for building, verifying, and mana
 from pathlib import Path
 from flavor.package import Package
 from flavor.verification import verify_package
-from flavor.commands.build import build_package
+from flavor.commands.package import package_command
 
 # Build a package
-package = build_package(
+package_command(
     manifest_path=Path("pyproject.toml"),
     output_path=Path("dist/")
 )
@@ -34,7 +34,7 @@ High-level functions for package operations:
 
 ::: flavor.verification
 
-::: flavor.commands.build
+::: flavor.commands.package
 
 ### Package Building (`flavor.psp.format_2025`)
 
