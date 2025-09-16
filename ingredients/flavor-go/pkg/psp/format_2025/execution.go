@@ -355,7 +355,7 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 	case ValidationNone:
 		fmt.Fprintf(os.Stderr, "⚠️ SECURITY WARNING: Skipping all integrity verification (FLAVOR_VALIDATION=none)\n")
 		fmt.Fprintf(os.Stderr, "⚠️ This is NOT RECOMMENDED for production use\n")
-		logger.Warn("⚠️ INSECURE MODE: Skipping integrity verification", "level", validationLevel)
+		logger.Warn("⚠️ VALIDATION DISABLED: Skipping integrity verification", "level", validationLevel)
 	default:
 		logger.Debug("🔍 Verifying package integrity", "level", validationLevel)
 		valid, err := reader.VerifyIntegritySeal()

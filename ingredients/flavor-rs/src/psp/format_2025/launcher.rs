@@ -398,7 +398,7 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
         ValidationLevel::None => {
             eprintln!("⚠️ SECURITY WARNING: Skipping all integrity verification (FLAVOR_VALIDATION=none)");
             eprintln!("⚠️ This is NOT RECOMMENDED for production use");
-            warn!("⚠️ INSECURE MODE: Skipping integrity verification");
+            warn!("⚠️ VALIDATION DISABLED: Skipping integrity verification");
         }
         _ => {
             debug!("🔍 Verifying package integrity (level: {:?})", validation_level);
