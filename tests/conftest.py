@@ -4,7 +4,7 @@ import tempfile
 
 from cryptography.hazmat.primitives.asymmetric import ed25519
 import pytest
-from provide.foundation.logger.setup.testing import reset_foundation_setup_for_testing
+from provide.testkit.logger import reset_foundation_setup_for_testing
 
 from flavor.psp.format_2025.builder import PSPFBuilder
 

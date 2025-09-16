@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 from typing import Any
 
-from provide.foundation.file.directory import temp_dir
+from provide.foundation.file.temp import temp_dir
 from provide.foundation.file.formats import write_json
 
 from provide.foundation import logger
