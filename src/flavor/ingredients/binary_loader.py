@@ -57,12 +57,11 @@ class BinaryLoader:
 
             # Also check for files without platform suffix but with version
             for file in bin_dir.glob(f"{name}-*"):
-                if file.is_file() and file.name not in platform_specific_names:
-                    # Check if this is for current platform or has no platform
-                    if self.current_platform in file.name or not any(
+                if (file.is_file() and file.name not in platform_specific_names and
+                    (self.current_platform in file.name or not any(
                         plat in file.name for plat in ["linux", "darwin", "windows"]
-                    ):
-                        platform_specific_names.append(file.name)
+                    ))):
+                    platform_specific_names.append(file.name)
 
         # Optionally add current package version as a search pattern
         try:

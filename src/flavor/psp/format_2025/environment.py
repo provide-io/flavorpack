@@ -80,9 +80,8 @@ def process_runtime_env(env_map: dict[str, str], runtime_env: dict[str, Any]) ->
             if pattern == key:
                 return True
             # Glob pattern match
-            if "*" in pattern or "?" in pattern:
-                if fnmatch.fnmatch(key, pattern):
-                    return True
+            if ("*" in pattern or "?" in pattern) and fnmatch.fnmatch(key, pattern):
+                return True
         return False
 
     # Process unset operations first (highest priority)
@@ -137,9 +136,8 @@ def process_runtime_env(env_map: dict[str, str], runtime_env: dict[str, Any]) ->
         missing = []
         for pattern in pass_patterns:
             # Only check exact matches for requirements
-            if "*" not in pattern and "?" not in pattern:
-                if pattern not in env_map:
-                    missing.append(pattern)
+            if "*" not in pattern and "?" not in pattern and pattern not in env_map:
+                missing.append(pattern)
 
         if missing:
             plog.warning(
