@@ -94,7 +94,9 @@ def load_launcher_binary(launcher_type: str) -> bytes:
         f"   • {searched_paths[0] if searched_paths else 'No paths'}\n"
         f"   • {searched_paths[1] if len(searched_paths) > 1 else '...'}\n"
         f"   • {searched_paths[2] if len(searched_paths) > 2 else '...'}\n"
-        f"   • ... and {len(searched_paths) - 3} more" if len(searched_paths) > 3 else ""
+        f"   • ... and {len(searched_paths) - 3} more"
+        if len(searched_paths) > 3
+        else ""
     )
 
 
@@ -202,14 +204,11 @@ def create_launcher_metadata(launcher_info: dict[str, Any]) -> dict[str, Any]:
 
 def create_verification_metadata(spec: BuildSpec) -> dict[str, Any]:
     """Create verification section metadata."""
-    # Check if insecure mode is enabled
-    insecure = getattr(spec.options, "insecure_mode", False)
-
-    # Start with base verification metadata
+    # Always require verification - use FLAVOR_VALIDATION environment variable to control behavior
     verification = {
         "integrity_seal": {"required": True, "algorithm": "ed25519"},
         "signed": True,
-        "require_verification": not insecure,
+        "require_verification": True,
     }
 
     # If trust_signatures was provided in spec metadata, include it

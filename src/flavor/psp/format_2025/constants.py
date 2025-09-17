@@ -219,6 +219,4 @@ SLOT_REQUIRED_FIELDS = [
 PSPF_FILE_EXTENSION = ".pspf"
 PSPF_MIME_TYPE = "application/vnd.pspf"
 
-# Development flags
-DEBUG_SKIP_SIGNATURE_CHECK = False  # Only for development
-DEBUG_VERBOSE_OPERATIONS = False  # Log all operation steps
+# Debug constants removed - use FLAVOR_VALIDATION environment variable instead

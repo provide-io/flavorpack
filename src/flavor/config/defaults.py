@@ -180,11 +180,11 @@ DEFAULT_LAUNCHER_TIMEOUT = 30.0
 DEFAULT_VALIDATION_LEVEL = "standard"  # Default validation level
 
 # Validation levels (matching Go/Rust implementations)
-VALIDATION_STRICT = "strict"     # Full security, fail on any issue
-VALIDATION_STANDARD = "standard" # Normal validation, warn on minor issues
-VALIDATION_RELAXED = "relaxed"   # Skip signatures, warn on checksums
-VALIDATION_MINIMAL = "minimal"   # Critical checks only
-VALIDATION_NONE = "none"        # Skip all (testing only)
+VALIDATION_STRICT = "strict"  # Full security, fail on any issue
+VALIDATION_STANDARD = "standard"  # Normal validation, warn on minor issues
+VALIDATION_RELAXED = "relaxed"  # Skip signatures, warn on checksums
+VALIDATION_MINIMAL = "minimal"  # Critical checks only
+VALIDATION_NONE = "none"  # Skip all (testing only)
 
 VALIDATION_LEVELS = {
     VALIDATION_STRICT: 0,

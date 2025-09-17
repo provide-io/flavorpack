@@ -6,8 +6,8 @@ This module provides security-related functionality for PSP packages,
 including integrity verification, signature validation, and tamper detection.
 """
 
-import os
 from enum import IntEnum
+import os
 from pathlib import Path
 
 from provide.foundation import logger
@@ -18,7 +18,6 @@ from flavor.config.defaults import (
     VALIDATION_MINIMAL,
     VALIDATION_NONE,
     VALIDATION_RELAXED,
-    VALIDATION_STANDARD,
     VALIDATION_STRICT,
 )
 from flavor.psp.format_2025.reader import PSPFReader
@@ -27,11 +26,12 @@ from flavor.psp.protocols import IntegrityResult
 
 class ValidationLevel(IntEnum):
     """Validation levels matching Go/Rust implementations."""
-    STRICT = 0    # Full security, fail on any issue
+
+    STRICT = 0  # Full security, fail on any issue
     STANDARD = 1  # Normal validation, warn on minor issues
-    RELAXED = 2   # Skip signatures, warn on checksums
-    MINIMAL = 3   # Critical checks only
-    NONE = 4      # Skip all (testing only)
+    RELAXED = 2  # Skip signatures, warn on checksums
+    MINIMAL = 3  # Critical checks only
+    NONE = 4  # Skip all (testing only)
 
 
 def get_validation_level() -> ValidationLevel:
@@ -51,7 +51,9 @@ def get_validation_level() -> ValidationLevel:
     elif val == VALIDATION_MINIMAL:
         return ValidationLevel.MINIMAL
     elif val == VALIDATION_NONE:
-        logger.warning("⚠️ SECURITY WARNING: Validation disabled (FLAVOR_VALIDATION=none)")
+        logger.warning(
+            "⚠️ SECURITY WARNING: Validation disabled (FLAVOR_VALIDATION=none)"
+        )
         logger.warning("⚠️ This is NOT RECOMMENDED for production use")
         return ValidationLevel.NONE
     else:  # VALIDATION_STANDARD or unknown
@@ -70,7 +72,7 @@ class PSPFIntegrityVerifier:
         """Initialize the verifier."""
         pass
 
-    def verify_integrity(self, bundle_path: Path) -> IntegrityResult:
+    def verify_integrity(self, bundle_path: Path) -> IntegrityResult:  # noqa: C901
         """
         Verify the integrity of a PSPF package bundle.
 
@@ -106,8 +108,13 @@ class PSPFIntegrityVerifier:
                 tamper_detected = False
 
                 # Skip signature verification for relaxed/minimal levels
-                if validation_level in (ValidationLevel.RELAXED, ValidationLevel.MINIMAL):
-                    logger.debug("🔐 Skipping signature verification due to validation level")
+                if validation_level in (
+                    ValidationLevel.RELAXED,
+                    ValidationLevel.MINIMAL,
+                ):
+                    logger.debug(
+                        "🔐 Skipping signature verification due to validation level"
+                    )
                     signature_valid = True
                 else:
                     # Verify signature if present
@@ -139,27 +146,45 @@ class PSPFIntegrityVerifier:
                                 # Handle signature validation failure based on level
                                 if not signature_valid:
                                     if validation_level == ValidationLevel.STRICT:
-                                        logger.error("❌ Package integrity verification failed")
+                                        logger.error(
+                                            "❌ Package integrity verification failed"
+                                        )
                                         tamper_detected = True
                                         signature_valid = False
                                     elif validation_level == ValidationLevel.STANDARD:
-                                        logger.warning("🚨 SECURITY WARNING: Package integrity verification failed")
-                                        logger.warning("🚨 Package may be corrupted or tampered with")
-                                        logger.warning("🚨 Continuing with standard validation (use FLAVOR_VALIDATION=strict to enforce)")
-                                        signature_valid = False  # Report as invalid but continue
+                                        logger.warning(
+                                            "🚨 SECURITY WARNING: Package integrity verification failed"
+                                        )
+                                        logger.warning(
+                                            "🚨 Package may be corrupted or tampered with"
+                                        )
+                                        logger.warning(
+                                            "🚨 Continuing with standard validation (use FLAVOR_VALIDATION=strict to enforce)"
+                                        )
+                                        signature_valid = (
+                                            False  # Report as invalid but continue
+                                        )
 
                             except Exception as e:
                                 if validation_level == ValidationLevel.STRICT:
-                                    logger.error(f"❌ Signature verification error: {e}")
+                                    logger.error(
+                                        f"❌ Signature verification error: {e}"
+                                    )
                                     raise
                                 else:
-                                    logger.warning(f"⚠️ Signature verification error: {e}")
-                                    logger.warning("⚠️ Continuing due to validation level")
+                                    logger.warning(
+                                        f"⚠️ Signature verification error: {e}"
+                                    )
+                                    logger.warning(
+                                        "⚠️ Continuing due to validation level"
+                                    )
                                     signature_valid = False
                         else:
                             # Missing or null signatures
                             if validation_level == ValidationLevel.STRICT:
-                                logger.error("🔐 No valid signatures found - package unsigned")
+                                logger.error(
+                                    "🔐 No valid signatures found - package unsigned"
+                                )
                                 signature_valid = False
                             else:
                                 logger.debug("🔐 No valid signatures found")
@@ -185,27 +210,45 @@ class PSPFIntegrityVerifier:
                                 is_valid = reader.verify_slot_integrity(i)
                                 if not is_valid:
                                     if validation_level == ValidationLevel.STRICT:
-                                        logger.error(f"❌ Slot {i} integrity check failed - package corrupted")
+                                        logger.error(
+                                            f"❌ Slot {i} integrity check failed - package corrupted"
+                                        )
                                         tamper_detected = True
                                         signature_valid = False
                                     elif validation_level == ValidationLevel.STANDARD:
-                                        logger.warning(f"🚨 SECURITY WARNING: Slot {i} integrity check failed")
-                                        logger.warning(f"🚨 Slot may be corrupted or tampered with")
-                                        logger.warning("🚨 Continuing with standard validation (use FLAVOR_VALIDATION=strict to enforce)")
+                                        logger.warning(
+                                            f"🚨 SECURITY WARNING: Slot {i} integrity check failed"
+                                        )
+                                        logger.warning(
+                                            "🚨 Slot may be corrupted or tampered with"
+                                        )
+                                        logger.warning(
+                                            "🚨 Continuing with standard validation (use FLAVOR_VALIDATION=strict to enforce)"
+                                        )
                                         # Don't set tamper_detected for standard level
                                     else:  # RELAXED
-                                        logger.warning(f"⚠️ Slot {i} integrity check failed")
-                                        logger.warning("⚠️ Continuing due to relaxed validation")
+                                        logger.warning(
+                                            f"⚠️ Slot {i} integrity check failed"
+                                        )
+                                        logger.warning(
+                                            "⚠️ Continuing due to relaxed validation"
+                                        )
                                 else:
                                     logger.debug(f"🔐 Slot {slot_id} integrity valid")
                             except Exception as e:
                                 if validation_level == ValidationLevel.STRICT:
-                                    logger.error(f"❌ Slot {slot_id} integrity check error: {e}")
+                                    logger.error(
+                                        f"❌ Slot {slot_id} integrity check error: {e}"
+                                    )
                                     tamper_detected = True
                                     signature_valid = False
                                 else:
-                                    logger.warning(f"⚠️ Slot {slot_id} integrity check error: {e}")
-                                    logger.warning("⚠️ Continuing due to validation level")
+                                    logger.warning(
+                                        f"⚠️ Slot {slot_id} integrity check error: {e}"
+                                    )
+                                    logger.warning(
+                                        "⚠️ Continuing due to validation level"
+                                    )
 
                     except Exception as e:
                         if validation_level == ValidationLevel.STRICT:
@@ -216,19 +259,30 @@ class PSPFIntegrityVerifier:
                             logger.warning(f"⚠️ Slot verification error: {e}")
                             logger.warning("⚠️ Continuing due to validation level")
                 else:
-                    logger.debug("🔐 Skipping slot verification due to minimal validation level")
+                    logger.debug(
+                        "🔐 Skipping slot verification due to minimal validation level"
+                    )
 
                 # Overall validity depends on validation level
                 if validation_level == ValidationLevel.STRICT:
                     # Strict: must have valid signature and no tampering
-                    valid = signature_valid and not tamper_detected and metadata is not None
+                    valid = (
+                        signature_valid and not tamper_detected and metadata is not None
+                    )
                     if not valid:
-                        logger.error("❌ Package integrity verification failed under strict validation")
-                elif validation_level in (ValidationLevel.STANDARD, ValidationLevel.RELAXED):
+                        logger.error(
+                            "❌ Package integrity verification failed under strict validation"
+                        )
+                elif validation_level in (
+                    ValidationLevel.STANDARD,
+                    ValidationLevel.RELAXED,
+                ):
                     # Standard/Relaxed: metadata must be readable, warnings for other issues
                     valid = metadata is not None
                     if not signature_valid or tamper_detected:
-                        logger.debug("🔐 Package has integrity issues but continuing due to validation level")
+                        logger.debug(
+                            "🔐 Package has integrity issues but continuing due to validation level"
+                        )
                 else:  # MINIMAL
                     # Minimal: only check if we can read metadata
                     valid = metadata is not None
@@ -239,17 +293,27 @@ class PSPFIntegrityVerifier:
                     "tamper_detected": tamper_detected,
                 }
 
-                logger.debug(f"🔐 Integrity verification complete: {result} (level: {validation_level.name})")
+                logger.debug(
+                    f"🔐 Integrity verification complete: {result} (level: {validation_level.name})"
+                )
                 return result
 
         except Exception as e:
             if validation_level == ValidationLevel.STRICT:
                 logger.error(f"❌ Integrity verification failed: {e}")
-                return {"valid": False, "signature_valid": False, "tamper_detected": True}
+                return {
+                    "valid": False,
+                    "signature_valid": False,
+                    "tamper_detected": True,
+                }
             else:
                 logger.warning(f"⚠️ Integrity verification error: {e}")
                 logger.warning("⚠️ Continuing due to validation level")
-                return {"valid": True, "signature_valid": False, "tamper_detected": False}
+                return {
+                    "valid": True,
+                    "signature_valid": False,
+                    "tamper_detected": False,
+                }
 
 
 # Create a module-level verifier instance for convenience
