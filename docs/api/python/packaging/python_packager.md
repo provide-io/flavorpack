@@ -2,7 +2,7 @@
 
 Managing Python environments and dependency collection for package building.
 
-::: flavor.packaging.python_packager
+::: flavor.packaging.python.packager
 
 ## PythonPackager Class
 
@@ -11,7 +11,7 @@ Managing Python environments and dependency collection for package building.
 The `PythonPackager` class manages Python environment preparation and dependency collection.
 
 ```python
-from flavor.packaging.python_packager import PythonPackager
+from flavor.packaging.python.packager import PythonPackager
 
 class PythonPackager:
     def __init__(self, config: PackagerConfig | None = None)
@@ -52,7 +52,7 @@ class PackagerConfig:
 #### Example
 
 ```python
-from flavor.packaging.python_packager import PythonPackager, PackagerConfig
+from flavor.packaging.python.packager import PythonPackager, PackagerConfig
 
 # Default configuration
 packager = PythonPackager()
@@ -93,7 +93,7 @@ async def create_environment(
 ##### Example
 
 ```python
-from flavor.packaging.python_packager import EnvironmentSpec
+from flavor.packaging.python.packager import EnvironmentSpec
 
 spec = EnvironmentSpec(
     name="myapp-env",
@@ -258,7 +258,7 @@ class ResolvedDependency:
 ### Resolution Example
 
 ```python
-from flavor.packaging.python_packager import DependencyResolver
+from flavor.packaging.python.packager import DependencyResolver
 
 resolver = DependencyResolver()
 
@@ -309,7 +309,7 @@ class VirtualEnvManager:
 ### Example
 
 ```python
-from flavor.packaging.python_packager import VirtualEnvManager
+from flavor.packaging.python.packager import VirtualEnvManager
 
 manager = VirtualEnvManager(backend="venv")
 
@@ -371,7 +371,7 @@ class PackageFilters:
 ### Collection Example
 
 ```python
-from flavor.packaging.python_packager import (
+from flavor.packaging.python.packager import (
     SitePackagesCollector,
     PackageFilters
 )
@@ -440,7 +440,7 @@ class BundleResult:
 ### Bundling Example
 
 ```python
-from flavor.packaging.python_packager import (
+from flavor.packaging.python.packager import (
     RuntimeBundler,
     BundleOptions
 )
@@ -500,7 +500,7 @@ class PipManager:
 ### Example
 
 ```python
-from flavor.packaging.python_packager import PipManager
+from flavor.packaging.python.packager import PipManager
 
 pip = PipManager(env_path)
 
@@ -664,7 +664,7 @@ async def safe_package_build(spec: EnvironmentSpec) -> Path:
 ```python
 import asyncio
 from pathlib import Path
-from flavor.packaging.python_packager import (
+from flavor.packaging.python.packager import (
     PythonPackager,
     PackagerConfig,
     EnvironmentSpec
