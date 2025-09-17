@@ -1,8 +1,8 @@
-# Flavor API
+# Archive API
 
-Auto-generated API documentation for `flavor`.
+Auto-generated API documentation for `flavor.archive`.
 
-::: flavor
+::: flavor.archive
     options:
       show_root_heading: false
       members_order: source

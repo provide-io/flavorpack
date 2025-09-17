@@ -1,8 +1,8 @@
-# Flavor API
+# Utils API
 
-Auto-generated API documentation for `flavor`.
+Auto-generated API documentation for `flavor.utils`.
 
-::: flavor
+::: flavor.utils
     options:
       show_root_heading: false
       members_order: source

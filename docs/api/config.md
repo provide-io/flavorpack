@@ -1,8 +1,8 @@
-# Flavor API
+# Config API
 
-Auto-generated API documentation for `flavor`.
+Auto-generated API documentation for `flavor.config`.
 
-::: flavor
+::: flavor.config
     options:
       show_root_heading: false
       members_order: source
