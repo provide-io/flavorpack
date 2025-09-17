@@ -8,7 +8,7 @@ from pathlib import Path
 
 import click
 
-from flavor.api import verify_package
+from flavor.package import verify_package
 
 
 @click.command("verify")
