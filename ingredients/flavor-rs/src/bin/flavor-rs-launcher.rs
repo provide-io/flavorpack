@@ -165,17 +165,16 @@ fn run() -> i32 {
                 eprintln!("This package's cryptographic signature could not be verified.");
                 eprintln!("This may indicate the package has been tampered with or was not properly signed.");
                 eprintln!("");
-                eprintln!("To bypass signature verification (NOT RECOMMENDED for production):");
-                eprintln!("  export FLAVOR_INSECURE=1");
-                eprintln!("");
+                eprintln!("To use different validation levels, set FLAVOR_VALIDATION environment variable:");
+                eprintln!("  export FLAVOR_VALIDATION=relaxed  # Skip signatures");
                 eprintln!("For more details, run with FLAVOR_LOG_LEVEL=debug");
             } else if error_msg.contains("checksum") {
                 eprintln!("❌ Package integrity check failed: {}", error_msg);
                 eprintln!("");
                 eprintln!("The package appears to be corrupted or modified.");
                 eprintln!("");
-                eprintln!("To bypass integrity checks (NOT RECOMMENDED):");
-                eprintln!("  export FLAVOR_INSECURE=1");
+                eprintln!("To use different validation levels, set FLAVOR_VALIDATION environment variable:");
+                eprintln!("  export FLAVOR_VALIDATION=none  # Skip all checks (testing only)");
             } else {
                 eprintln!("❌ Failed to launch package: {}", error_msg);
                 eprintln!("");

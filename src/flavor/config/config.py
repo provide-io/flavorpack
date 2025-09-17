@@ -9,11 +9,17 @@ dictionaries.
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
 from attrs import define, field
 from provide.foundation.config import BaseConfig, field as config_field
+from provide.foundation.config.env import RuntimeConfig
 
+from flavor.config.defaults import (
+    DEFAULT_VALIDATION_LEVEL,
+    VALIDATION_LEVELS,
+)
 from flavor.exceptions import ValidationError
 
 
@@ -21,22 +27,10 @@ from flavor.exceptions import ValidationError
 class RuntimeRuntimeConfig:
     """Configuration for the sandboxed runtime environment variables."""
 
-    unset: list[str] = config_field(
-        factory=list,
-        description="Environment variables to unset",
-        env_var="FLAVOR_RUNTIME_ENV_UNSET",
-    )
-    passthrough: list[str] = config_field(
-        factory=list,
-        description="Environment variables to pass through",
-        env_var="FLAVOR_RUNTIME_ENV_PASSTHROUGH",
-    )
-    set_vars: dict[str, str | int | bool] = config_field(
-        factory=dict, description="Environment variables to set"
-    )
-    map_vars: dict[str, str] = config_field(
-        factory=dict, description="Environment variable mappings"
-    )
+    unset: list[str] = field(factory=list)
+    passthrough: list[str] = field(factory=list)
+    set_vars: dict[str, str | int | bool] = field(factory=dict)
+    map_vars: dict[str, str] = field(factory=dict)
 
 
 @define(frozen=True, kw_only=True)
@@ -50,15 +44,101 @@ class ExecutionConfig:
 class BuildConfig:
     """Build-related configuration from the manifest."""
 
-    dependencies: list[str] = config_field(
-        factory=list,
-        description="Build dependencies",
-        env_var="FLAVOR_BUILD_DEPENDENCIES",
+    dependencies: list[str] = field(factory=list)
+
+
+@define(frozen=True, kw_only=True)
+class SecurityConfig(RuntimeConfig):
+    """Security and validation configuration."""
+
+    validation_level: str = config_field(
+        default=DEFAULT_VALIDATION_LEVEL,
+        description="Package validation level (strict/standard/relaxed/minimal/none)",
+        env_var="FLAVOR_VALIDATION",
+    )
+
+    def __attrs_post_init__(self) -> None:
+        """Validate the security configuration after initialization."""
+        if self.validation_level not in VALIDATION_LEVELS:
+            valid_levels = ", ".join(VALIDATION_LEVELS.keys())
+            raise ValidationError(
+                f"Invalid validation level '{self.validation_level}'. "
+                f"Must be one of: {valid_levels}"
+            )
+
+
+@define(frozen=True, kw_only=True)
+class PathsConfig(RuntimeConfig):
+    """Path and directory configuration."""
+
+    builder_bin: str | None = config_field(
+        default=None,
+        description="Path to custom builder binary",
+        env_var="FLAVOR_BUILDER_BIN",
+    )
+    launcher_bin: str | None = config_field(
+        default=None,
+        description="Path to custom launcher binary",
+        env_var="FLAVOR_LAUNCHER_BIN",
+    )
+    workenv_base: str | None = config_field(
+        default=None,
+        description="Base directory for work environment",
+        env_var="FLAVOR_WORKENV_BASE",
+    )
+    xdg_cache_home: str | None = config_field(
+        default=None,
+        description="XDG cache directory",
+        env_var="XDG_CACHE_HOME",
+    )
+
+    @property
+    def effective_cache_home(self) -> Path:
+        """Get effective cache home directory with fallback."""
+        if self.xdg_cache_home:
+            return Path(self.xdg_cache_home)
+        return Path("~/.cache").expanduser()
+
+    @property
+    def effective_workenv_base(self) -> Path:
+        """Get effective work environment base with fallback."""
+        if self.workenv_base:
+            return Path(self.workenv_base)
+        return Path.cwd()
+
+
+@define(frozen=True, kw_only=True)
+class UVConfig(RuntimeConfig):
+    """UV (Python package manager) configuration."""
+
+    cache_dir: str | None = config_field(
+        default=None,
+        description="UV cache directory",
+        env_var="UV_CACHE_DIR",
+    )
+    python_install_dir: str | None = config_field(
+        default=None,
+        description="UV Python installation directory",
+        env_var="UV_PYTHON_INSTALL_DIR",
+    )
+    system_python: str | None = config_field(
+        default=None,
+        description="UV system Python setting",
+        env_var="UV_SYSTEM_PYTHON",
     )
 
 
 @define(frozen=True, kw_only=True)
-class MetadataConfig:
+class SystemConfig:
+    """System and environment configuration."""
+
+    uv: UVConfig = field(factory=UVConfig)
+    paths: PathsConfig = field(factory=PathsConfig)
+    security: SecurityConfig = field(factory=SecurityConfig)
+
+
+@define(frozen=True, kw_only=True)
+class MetadataConfig(RuntimeConfig):
     """Metadata-related configuration from the manifest."""
 
     package_name: str | None = config_field(
@@ -80,9 +160,10 @@ class FlavorConfig(BaseConfig):
     metadata: MetadataConfig = field(factory=MetadataConfig)
     build: BuildConfig = field(factory=BuildConfig)
     execution: ExecutionConfig = field(factory=ExecutionConfig)
+    system: SystemConfig = field(factory=SystemConfig)
 
     @classmethod
-    def from_dict(
+    def from_pyproject_dict(
         cls, config: dict[str, Any], project_defaults: dict[str, Any]
     ) -> FlavorConfig:
         """
@@ -135,6 +216,9 @@ class FlavorConfig(BaseConfig):
         )
         execution = ExecutionConfig(runtime_env=runtime_env)
 
+        # System configuration (loaded from environment variables)
+        system = SystemConfig()
+
         return cls(
             name=name,
             version=version,
@@ -142,4 +226,5 @@ class FlavorConfig(BaseConfig):
             metadata=metadata,
             build=build,
             execution=execution,
+            system=system,
         )
