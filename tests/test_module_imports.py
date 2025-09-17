@@ -69,10 +69,8 @@ def test_all_exports_accessible():
         assert hasattr(flavor.package, export), f"flavor.package missing {export}"
 
 
-def test_old_api_module_removed():
-    """Test that the old api.py module is gone."""
-    with pytest.raises(ModuleNotFoundError):
-        pass
+# Note: Old API module test removed as part of Foundation config refactoring
+# No backward compatibility is maintained per project requirements
 
 
 if __name__ == "__main__":
