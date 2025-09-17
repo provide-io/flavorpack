@@ -3,6 +3,8 @@
 #
 "Core logic for building Flavor packages by orchestrating the Go packager CLI."
 
+from __future__ import annotations
+
 import os
 from pathlib import Path
 from typing import Any

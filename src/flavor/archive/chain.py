@@ -5,6 +5,9 @@ Provides ArchiveChain data structure and ChainProcessor execution engine
 for composable operation chains without heavy dependencies.
 """
 
+from __future__ import annotations
+
+
 from pathlib import Path
 from typing import BinaryIO
 

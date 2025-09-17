@@ -1,6 +1,9 @@
 #
 # flavor/__init__.py
 #
+from __future__ import annotations
+
+
 """
 This package contains the core logic for building and verifying the
 Pyvider Secure Package Format (Flavor).

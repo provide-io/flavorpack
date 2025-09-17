@@ -2,6 +2,9 @@
 #
 # flavor/cli.py
 #
+from __future__ import annotations
+
+
 "The `flavor` command-line interface."
 
 import importlib.metadata

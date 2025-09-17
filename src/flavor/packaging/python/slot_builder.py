@@ -1,6 +1,9 @@
 #
 # flavor/packaging/python/slot_builder.py
 #
+from __future__ import annotations
+
+
 """Slot builder for Python packages."""
 
 import json

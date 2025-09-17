@@ -6,6 +6,9 @@ This module provides both pure functions and a fluent builder interface
 for creating PSPF packages.
 """
 
+from __future__ import annotations
+
+
 import io
 from pathlib import Path
 import tarfile

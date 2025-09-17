@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """Metadata assembly for PSPF packages."""
 
+from __future__ import annotations
+
+
 import datetime
 from pathlib import Path
 import socket

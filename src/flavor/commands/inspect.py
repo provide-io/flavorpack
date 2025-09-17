@@ -2,6 +2,9 @@
 #
 # flavor/commands/inspect.py
 #
+from __future__ import annotations
+
+
 """Inspect command for the flavor CLI - quick package overview."""
 
 from pathlib import Path

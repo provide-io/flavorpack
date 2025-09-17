@@ -1,6 +1,9 @@
 #
 # flavor/packaging/python/pip_manager.py
 #
+from __future__ import annotations
+
+
 """PyPA pip command management for FlavorPack packaging.
 
 This module handles all pip-specific operations with proper platform support

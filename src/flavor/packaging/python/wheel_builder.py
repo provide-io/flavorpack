@@ -1,6 +1,9 @@
 #
 # flavor/packaging/python/wheel_builder.py
 #
+from __future__ import annotations
+
+
 """Wheel building and dependency resolution for FlavorPack packaging.
 
 This module provides wheel building with complex dependency resolution logic,

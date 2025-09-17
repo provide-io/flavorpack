@@ -2,6 +2,9 @@
 # src/flavor/psp/format_2025/index.py
 # PSPF 2025 Index Block Implementation - Enhanced 512-byte Header
 
+from __future__ import annotations
+
+
 import struct
 import zlib
 

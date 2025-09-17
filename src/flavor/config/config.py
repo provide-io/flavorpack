@@ -7,6 +7,9 @@ type safety, default values, and clearer code compared to using unstructured
 dictionaries.
 """
 
+from __future__ import annotations
+
+
 from typing import Any
 
 from attrs import define, field

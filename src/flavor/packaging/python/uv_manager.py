@@ -1,6 +1,9 @@
 #
 # flavor/packaging/python/uv_manager.py
 #
+from __future__ import annotations
+
+
 """UV tool manager for FlavorPack packaging.
 
 This module provides UV (uv) command management with Foundation integration

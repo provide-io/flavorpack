@@ -1,6 +1,9 @@
 #
 # flavor/api.py
 #
+from __future__ import annotations
+
+
 """Public API for the Flavor build tool."""
 
 from pathlib import Path

@@ -2,6 +2,9 @@
 #
 # flavor/commands/__init__.py
 #
+from __future__ import annotations
+
+
 """Command modules for the flavor CLI."""
 
 from flavor.commands.ingredients import ingredient_group

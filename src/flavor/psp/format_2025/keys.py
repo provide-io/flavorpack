@@ -6,6 +6,9 @@ Provides pure functions for key resolution, generation, and persistence.
 Supports multiple key sources with clear priority ordering.
 """
 
+from __future__ import annotations
+
+
 import hashlib
 import os
 from pathlib import Path

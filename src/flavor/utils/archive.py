@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """Archive utility functions."""
 
+from __future__ import annotations
+
+
 import tarfile
 
 

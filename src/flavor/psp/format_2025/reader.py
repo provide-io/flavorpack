@@ -2,6 +2,9 @@
 # src/flavor/psp/format_2025/reader.py
 # PSPF 2025 Bundle Reader - Uses backend system for flexible access
 
+from __future__ import annotations
+
+
 from contextlib import contextmanager
 import gzip
 import json

@@ -5,6 +5,9 @@ Environment variable management for PSPF/2025 packages.
 Handles platform-specific environment variables and layered environment processing.
 """
 
+from __future__ import annotations
+
+
 import fnmatch
 from typing import Any
 

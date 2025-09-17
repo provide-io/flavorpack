@@ -2,6 +2,9 @@
 #
 # flavor/output.py
 #
+from __future__ import annotations
+
+
 """Output formatting and redirection for Flavor tools."""
 
 from enum import Enum

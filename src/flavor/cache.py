@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """Cache management for Flavor packages."""
 
+from __future__ import annotations
+
+
 import contextlib
 import os
 from pathlib import Path
