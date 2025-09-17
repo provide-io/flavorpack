@@ -2,8 +2,6 @@
 #
 # flavor/commands/workenv.py
 #
-from __future__ import annotations
-
 """Work environment management commands for the flavor CLI."""
 
 import datetime

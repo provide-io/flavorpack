@@ -1,7 +1,5 @@
 """File-based locking mechanism for Flavor."""
 
-from __future__ import annotations
-
 from contextlib import contextmanager
 from pathlib import Path
 

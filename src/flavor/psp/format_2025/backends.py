@@ -2,8 +2,6 @@
 # src/flavor/psp/format_2025/backends.py
 # Backend implementations for PSPF bundle access - mmap, file, and stream
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 from contextlib import suppress
 import mmap

@@ -2,8 +2,6 @@
 Flavorpack configuration module.
 """
 
-from __future__ import annotations
-
 from flavor.config.config import (
     BuildConfig,
     ExecutionConfig,

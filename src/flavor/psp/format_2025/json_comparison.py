@@ -4,8 +4,6 @@ JSON Structure Comparison: Old vs New PSPF/2025 Format
 Shows the evolution from text-based operation chains to packed integers
 """
 
-from __future__ import annotations
-
 import json
 from pathlib import Path
 import sys

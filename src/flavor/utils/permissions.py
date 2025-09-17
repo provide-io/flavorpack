@@ -1,7 +1,5 @@
 """File permission utilities."""
 
-from __future__ import annotations
-
 from pathlib import Path
 
 from provide.foundation import logger

@@ -1,8 +1,6 @@
 #
 # flavor/packaging/__init__.py
 #
-from __future__ import annotations
-
 """
 This package contains the core logic for packaging and
 verification of Progressive Secure Provider Format (Flavor) packages.

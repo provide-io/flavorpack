@@ -2,8 +2,6 @@
 #
 # flavor/commands/verify.py
 #
-from __future__ import annotations
-
 """Verify command for the flavor CLI."""
 
 from pathlib import Path

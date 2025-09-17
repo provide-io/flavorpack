@@ -6,8 +6,6 @@ All validation functions are pure and return lists of error messages.
 Empty list means validation passed.
 """
 
-from __future__ import annotations
-
 from pathlib import Path
 from typing import Any
 

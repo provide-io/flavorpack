@@ -1,7 +1,5 @@
 """Memory and file alignment utilities."""
 
-from __future__ import annotations
-
 from flavor.config.defaults import DEFAULT_PAGE_SIZE, DEFAULT_SLOT_ALIGNMENT
 
 

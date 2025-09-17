@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 """Progress reporting utilities for Flavor."""
 
-from __future__ import annotations
-
 from contextlib import contextmanager
 import time
 from typing import Any, ClassVar

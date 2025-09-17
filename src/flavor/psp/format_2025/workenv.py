@@ -5,8 +5,6 @@ PSPF Work Environment Management
 Handles work environment setup, caching, lifecycle management, and setup commands.
 """
 
-from __future__ import annotations
-
 from pathlib import Path
 import shlex
 

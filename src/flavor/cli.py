@@ -4,8 +4,6 @@
 #
 "The `flavor` command-line interface."
 
-from __future__ import annotations
-
 import importlib.metadata
 import os
 import sys

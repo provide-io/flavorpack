@@ -1,8 +1,6 @@
 #
 # flavor/packaging/python/dist_manager.py
 #
-from __future__ import annotations
-
 """Python distribution management for FlavorPack packaging.
 
 This module provides Python distribution handling including virtual environment

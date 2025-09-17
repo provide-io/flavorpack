@@ -5,8 +5,6 @@ This module defines all operation types without requiring protobuf.
 Compatible with protobuf enum values for serialization.
 """
 
-from __future__ import annotations
-
 from enum import IntEnum
 
 

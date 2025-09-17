@@ -5,8 +5,6 @@ PSPF Slot Extraction - Handles slot data extraction and streaming.
 Provides extraction, streaming, and verification operations for PSPF slots.
 """
 
-from __future__ import annotations
-
 import gzip
 from pathlib import Path
 import tempfile

@@ -3,8 +3,6 @@
 Custom exceptions for the flavor pack.
 """
 
-from __future__ import annotations
-
 from provide.foundation.errors import FoundationError
 
 

@@ -2,8 +2,6 @@
 #
 # flavor/commands/utils.py
 #
-from __future__ import annotations
-
 """Utility commands for the flavor CLI."""
 
 from pathlib import Path

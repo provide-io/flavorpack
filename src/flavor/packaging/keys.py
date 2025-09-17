@@ -2,8 +2,6 @@
 #
 # flavor/packaging/keys.py
 #
-from __future__ import annotations
-
 """Key generation for PSPF packages using Ed25519."""
 
 from pathlib import Path

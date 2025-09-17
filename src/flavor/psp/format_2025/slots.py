@@ -2,8 +2,6 @@
 # src/flavor/psp/format_2025/slots.py
 # PSPF 2025 Slot Management - Enhanced 64-byte descriptors
 
-from __future__ import annotations
-
 from pathlib import Path
 import struct
 from typing import Any
@@ -43,7 +41,7 @@ def validate_operations_string(instance, attribute, value: str) -> None:
         # This will raise ValueError if invalid
         string_to_operations(value)
     except ValueError as e:
-        raise ValueError(f"Invalid operations string '{value}': {e}")
+        raise ValueError(f"Invalid operations string '{value}': {e}") from e
 
 
 def normalize_purpose(value: str) -> str:

@@ -4,8 +4,6 @@ Operation handler that uses provide.foundation.archive for implementation.
 Maps PSPF/2025 operation chains to foundation archive capabilities.
 """
 
-from __future__ import annotations
-
 from pathlib import Path
 from typing import BinaryIO
 
