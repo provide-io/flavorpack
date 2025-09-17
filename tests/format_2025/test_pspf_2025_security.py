@@ -7,6 +7,8 @@ Tests ephemeral keys, integrity sealing, and tamper detection.
 import hashlib
 import json
 import struct
+from unittest.mock import patch
+import os
 
 import pytest
 
@@ -17,11 +19,13 @@ from flavor.psp.format_2025 import (
     SlotMetadata,
     generate_key_pair,
 )
+from flavor.config import reset_flavor_config
 
 
 @pytest.mark.security
 @pytest.mark.integration
 @pytest.mark.requires_ingredients
+@patch.dict(os.environ, {"FLAVOR_VALIDATION": "strict"})
 class TestPSPFSecurity:
     """Test PSPF security features."""
 
@@ -136,6 +140,7 @@ class TestPSPFSecurity:
 
     def test_integrity_seal_verification(self, secure_bundle):
         """Test integrity seal verification."""
+        reset_flavor_config()  # Reset to pick up FLAVOR_VALIDATION=strict from patch
         launcher = PSPFLauncher(secure_bundle)
         result = launcher.verify_integrity()
 
@@ -295,6 +300,7 @@ class TestPSPFSecurity:
 
     def test_emoji_magic_corruption(self, temp_dir, test_builder):
         """Test detection of corrupted emoji magic."""
+        reset_flavor_config()  # Reset to pick up FLAVOR_VALIDATION=strict from patch
         bundle_path = temp_dir / "magic_corrupt.psp"
         # Use test_builder from fixture
         result = test_builder.metadata(
