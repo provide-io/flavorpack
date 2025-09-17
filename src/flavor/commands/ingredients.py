@@ -38,7 +38,7 @@ def ingredient_list(verbose: bool) -> None:
     click.echo("=" * 60)
 
     # Ingredient function to get version
-    def get_version(ingredient_path):
+    def get_version(ingredient_path: Path) -> str | None:
         try:
             result = run_command(
                 [str(ingredient_path), "--version"],

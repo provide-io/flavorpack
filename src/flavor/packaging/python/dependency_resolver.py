@@ -276,7 +276,7 @@ class DependencyResolver:
                         logger.debug(f"Extracting UV binary from {name}")
                         with (
                             wheel_zip.open(name) as src,
-                            open(uv_path, "wb") as dst,
+                            uv_path.open("wb") as dst,
                         ):
                             content = src.read()
                             dst.write(content)
