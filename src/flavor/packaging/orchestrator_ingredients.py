@@ -92,11 +92,7 @@ def create_builder_manifest(
     uv_exe = "uv.exe" if windows else "uv"
     bin_dir = "Scripts" if is_windows else "bin"
     # Use the exact Python binary name that UV provides
-    if is_windows:
-        python_exe = "python.exe"
-    else:
-        # UV installs Python as python3 on all Unix platforms
-        python_exe = "python3"
+    python_exe = "python.exe" if is_windows else "python3"  # UV installs Python as python3 on all Unix platforms
     python_path = f"{{workenv}}/{bin_dir}/{python_exe}"
     package_exe = get_cli_executable_name(package_name, build_config, windows)
 
@@ -275,11 +271,7 @@ def create_python_builder_metadata(
     windows = is_windows()
     bin_dir = "Scripts" if windows else "bin"
     # Use the exact Python binary name that UV provides
-    if windows:
-        python_exe = "python.exe"
-    else:
-        # UV installs Python as python3 on all Unix platforms
-        python_exe = "python3"
+    python_exe = "python.exe" if windows else "python3"  # UV installs Python as python3 on all Unix platforms
     python_path = f"{{workenv}}/{bin_dir}/{python_exe}"
     package_exe = get_cli_executable_name(package_name, build_config, windows)
 

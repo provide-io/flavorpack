@@ -1,5 +1,6 @@
 """File-based locking mechanism for Flavor."""
 
+from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -22,7 +23,7 @@ class LockManager:
         self.held_locks = set()
 
     @contextmanager
-    def lock(self, name: str, timeout: float = 30.0):
+    def lock(self, name: str, timeout: float = 30.0) -> Generator[None, None, None]:
         """
         Acquire a named lock.
 
