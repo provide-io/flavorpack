@@ -6,13 +6,56 @@ This module provides security-related functionality for PSP packages,
 including integrity verification, signature validation, and tamper detection.
 """
 
+import os
+from enum import IntEnum
 from pathlib import Path
 
 from provide.foundation import logger
 from provide.foundation.crypto.signatures import verify_signature
 
+from flavor.config.defaults import (
+    DEFAULT_VALIDATION_LEVEL,
+    VALIDATION_MINIMAL,
+    VALIDATION_NONE,
+    VALIDATION_RELAXED,
+    VALIDATION_STANDARD,
+    VALIDATION_STRICT,
+)
 from flavor.psp.format_2025.reader import PSPFReader
 from flavor.psp.protocols import IntegrityResult
+
+
+class ValidationLevel(IntEnum):
+    """Validation levels matching Go/Rust implementations."""
+    STRICT = 0    # Full security, fail on any issue
+    STANDARD = 1  # Normal validation, warn on minor issues
+    RELAXED = 2   # Skip signatures, warn on checksums
+    MINIMAL = 3   # Critical checks only
+    NONE = 4      # Skip all (testing only)
+
+
+def get_validation_level() -> ValidationLevel:
+    """
+    Get validation level from environment, matching Go/Rust behavior.
+
+    Returns:
+        ValidationLevel: The current validation level
+    """
+    # Check FLAVOR_VALIDATION environment variable
+    val = os.getenv("FLAVOR_VALIDATION", DEFAULT_VALIDATION_LEVEL).lower()
+
+    if val == VALIDATION_STRICT:
+        return ValidationLevel.STRICT
+    elif val == VALIDATION_RELAXED:
+        return ValidationLevel.RELAXED
+    elif val == VALIDATION_MINIMAL:
+        return ValidationLevel.MINIMAL
+    elif val == VALIDATION_NONE:
+        logger.warning("⚠️ SECURITY WARNING: Validation disabled (FLAVOR_VALIDATION=none)")
+        logger.warning("⚠️ This is NOT RECOMMENDED for production use")
+        return ValidationLevel.NONE
+    else:  # VALIDATION_STANDARD or unknown
+        return ValidationLevel.STANDARD
 
 
 class PSPFIntegrityVerifier:
