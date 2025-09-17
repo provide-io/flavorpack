@@ -35,7 +35,9 @@ def build_package_from_manifest(
         config_data = _parse_toml_manifest(manifest_path)
 
     manifest_dir = manifest_path.parent.absolute()
-    output_flavor_path = _determine_output_path(output_path, manifest_dir, config_data["package_name"])
+    output_flavor_path = _determine_output_path(
+        output_path, manifest_dir, config_data["package_name"]
+    )
     private_key_path, public_key_path = _setup_key_paths(
         private_key_path, public_key_path, manifest_dir, key_seed
     )
@@ -44,8 +46,17 @@ def build_package_from_manifest(
     config_data["build_config"]["cli_scripts"] = config_data["cli_scripts"]
 
     orchestrator = _create_orchestrator(
-        config_data, manifest_dir, output_flavor_path, private_key_path, public_key_path,
-        launcher_bin, builder_bin, strip_binaries, show_progress, key_seed, manifest_type
+        config_data,
+        manifest_dir,
+        output_flavor_path,
+        private_key_path,
+        public_key_path,
+        launcher_bin,
+        builder_bin,
+        strip_binaries,
+        show_progress,
+        key_seed,
+        manifest_type,
     )
     orchestrator.build_package()
     return [output_flavor_path]
@@ -131,7 +142,9 @@ def _parse_toml_manifest(manifest_path: Path) -> dict:
     }
 
 
-def _get_version_from_toml(project_config: dict, manifest_path: Path, project_name: str) -> str:
+def _get_version_from_toml(
+    project_config: dict, manifest_path: Path, project_name: str
+) -> str:
     """Extract version from TOML config, handling dynamic versions."""
     version = project_config.get("version")
     if version:
@@ -152,13 +165,16 @@ def _get_version_from_toml(project_config: dict, manifest_path: Path, project_na
     # Try to get from package metadata if installed
     try:
         import importlib.metadata
+
         return importlib.metadata.version(project_name)
     except Exception:
         # Fall back to a default version if all else fails
         return "0.0.0"
 
 
-def _get_entry_point_from_toml(flavor_config: dict, project_name: str, cli_scripts: dict) -> str:
+def _get_entry_point_from_toml(
+    flavor_config: dict, project_name: str, cli_scripts: dict
+) -> str:
     """Extract entry point from TOML config."""
     entry_point = flavor_config.get("entry_point")
     if entry_point:
@@ -175,9 +191,9 @@ def _get_entry_point_from_toml(flavor_config: dict, project_name: str, cli_scrip
 def _get_package_name_from_toml(flavor_config: dict, project_name: str) -> str:
     """Extract package name from TOML config."""
     # First check directly under [tool.flavor], then under [tool.flavor.metadata]
-    return flavor_config.get("package_name") or flavor_config.get(
-        "metadata", {}
-    ).get("package_name", project_name)
+    return flavor_config.get("package_name") or flavor_config.get("metadata", {}).get(
+        "package_name", project_name
+    )
 
 
 def _get_build_config_from_toml(flavor_config: dict, manifest_path: Path) -> dict:
@@ -196,7 +212,9 @@ def _get_build_config_from_toml(flavor_config: dict, manifest_path: Path) -> dic
     return build_config
 
 
-def _determine_output_path(output_path: Path | None, manifest_dir: Path, package_name: str) -> Path:
+def _determine_output_path(
+    output_path: Path | None, manifest_dir: Path, package_name: str
+) -> Path:
     """Determine the output path for the package."""
     return output_path if output_path else manifest_dir / "dist" / f"{package_name}.psp"
 
