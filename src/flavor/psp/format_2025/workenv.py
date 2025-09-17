@@ -7,8 +7,6 @@ Handles work environment setup, caching, lifecycle management, and setup command
 
 from __future__ import annotations
 
-
-import glob
 from pathlib import Path
 import shlex
 
@@ -257,8 +255,7 @@ class WorkEnvManager:
         command_template = cmd.get("command", "")
 
         # Find matching files
-        search_path = workenv_dir / pattern
-        matches = glob.glob(str(search_path))
+        matches = list(workenv_dir.glob(pattern))
 
         logger.debug(f"📂 Found {len(matches)} files matching {pattern}")
 

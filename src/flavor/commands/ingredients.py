@@ -4,7 +4,6 @@
 #
 from __future__ import annotations
 
-
 """Ingredient management commands for the flavor CLI."""
 
 import os

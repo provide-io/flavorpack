@@ -4,7 +4,6 @@
 #
 from __future__ import annotations
 
-
 """Ingredient management system for Flavor launchers and builders."""
 
 import contextlib

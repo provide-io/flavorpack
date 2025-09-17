@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-
-import os
 from pathlib import Path
 
 from provide.foundation import logger
@@ -44,7 +42,7 @@ def set_file_permissions(path: Path, mode: int) -> None:
         mode: Unix permission mode
     """
     try:
-        os.chmod(path, mode)
+        Path(path).chmod(mode)
         logger.debug(f"Set permissions {oct(mode)} on {path}")
     except OSError as e:
         logger.warning(f"Could not set permissions on {path}: {e}")

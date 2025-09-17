@@ -4,7 +4,6 @@
 
 from __future__ import annotations
 
-
 from pathlib import Path
 import struct
 from typing import Any
@@ -138,7 +137,7 @@ class SlotDescriptor:
         return data
 
     @classmethod
-    def unpack(cls, data: bytes) -> "SlotDescriptor":
+    def unpack(cls, data: bytes) -> SlotDescriptor:
         """Unpack descriptor from 64-byte binary data matching spec."""
         if len(data) != DEFAULT_SLOT_DESCRIPTOR_SIZE:
             raise ValueError(
@@ -317,7 +316,7 @@ class SlotMetadata:
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "SlotMetadata":
+    def from_dict(cls, data: dict[str, Any]) -> SlotMetadata:
         """Create from dictionary."""
         # Convert path strings to Path objects if present
         if "source" in data and data["source"] is not None:

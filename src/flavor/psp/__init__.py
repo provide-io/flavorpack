@@ -3,7 +3,6 @@
 #
 from __future__ import annotations
 
-
 """PSP (Progressive Secure Package) flavor implementation."""
 
 # The old PSPFlavor has been moved to scraps

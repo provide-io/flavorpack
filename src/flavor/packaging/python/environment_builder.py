@@ -3,7 +3,6 @@
 #
 from __future__ import annotations
 
-
 """Environment builder for Python packages."""
 
 import os

@@ -9,7 +9,6 @@ dictionaries.
 
 from __future__ import annotations
 
-
 from typing import Any
 
 from attrs import define, field
@@ -85,7 +84,7 @@ class FlavorConfig(BaseConfig):
     @classmethod
     def from_dict(
         cls, config: dict[str, Any], project_defaults: dict[str, Any]
-    ) -> "FlavorConfig":
+    ) -> FlavorConfig:
         """
         Factory method to create a validated FlavorConfig from a dictionary.
 

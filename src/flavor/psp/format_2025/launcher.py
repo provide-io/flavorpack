@@ -6,7 +6,6 @@ Handles bundle execution, slot extraction, and work environment setup.
 
 from __future__ import annotations
 
-
 from contextlib import contextmanager
 import io
 import os

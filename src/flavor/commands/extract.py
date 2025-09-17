@@ -4,7 +4,6 @@
 #
 from __future__ import annotations
 
-
 """Extract command for the flavor CLI - extract slots from packages."""
 
 from pathlib import Path

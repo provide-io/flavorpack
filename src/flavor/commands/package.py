@@ -4,7 +4,6 @@
 #
 from __future__ import annotations
 
-
 """Package command for the flavor CLI."""
 
 from pathlib import Path

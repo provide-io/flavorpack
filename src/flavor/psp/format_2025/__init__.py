@@ -6,7 +6,6 @@ Progressive Secure Package Format (2025 Edition)
 
 from __future__ import annotations
 
-
 from provide.foundation.crypto import generate_key_pair, sign_data, verify_signature
 
 from flavor.config.defaults import (

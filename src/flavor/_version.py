@@ -1,13 +1,12 @@
 #
 # version.py
 #
-from __future__ import annotations
-
-
 """
 Version handling for provide-foundation.
 Integrates VERSION logic from flavorpack with robust fallback mechanisms.
 """
+
+from __future__ import annotations
 
 from pathlib import Path
 

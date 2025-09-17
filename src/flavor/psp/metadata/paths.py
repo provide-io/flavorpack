@@ -8,7 +8,6 @@ This makes it clear to developers that paths are relative to the work environmen
 
 from __future__ import annotations
 
-
 import os
 from pathlib import Path
 from typing import Any

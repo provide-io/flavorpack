@@ -6,7 +6,6 @@ Maps PSPF/2025 operation chains to foundation archive capabilities.
 
 from __future__ import annotations
 
-
 from pathlib import Path
 from typing import BinaryIO
 
@@ -170,9 +169,11 @@ class OperationHandler:
                 # Fall back to direct implementation if foundation doesn't have it
                 import bz2
 
-                with open(source, "rb") as f_in:
-                    with bz2.open(output, "wb", compresslevel=9) as f_out:
-                        f_out.write(f_in.read())
+                with (
+                    source.open("rb") as f_in,
+                    bz2.open(output, "wb", compresslevel=9) as f_out,
+                ):
+                    f_out.write(f_in.read())
 
                 logger.debug(f"🗜️ Compressed with BZIP2 (fallback): {output}")
                 return output
@@ -217,9 +218,8 @@ class OperationHandler:
             if output is None:
                 output = source.with_suffix(source.suffix + ".xz")
 
-            with open(source, "rb") as f_in:
-                with lzma.open(output, "wb", preset=6) as f_out:
-                    f_out.write(f_in.read())
+            with source.open("rb") as f_in, lzma.open(output, "wb", preset=6) as f_out:
+                f_out.write(f_in.read())
 
             logger.debug(f"🗜️ Compressed with XZ (stdlib): {output}")
             return output
@@ -241,7 +241,7 @@ class OperationHandler:
                 output = source.with_suffix(source.suffix + ".zst")
 
             cctx = zstd.ZstdCompressor(level=3)
-            with open(source, "rb") as f_in, open(output, "wb") as f_out:
+            with source.open("rb") as f_in, output.open("wb") as f_out:
                 f_out.write(cctx.compress(f_in.read()))
 
             logger.debug(f"🗜️ Compressed with ZSTD: {output}")
@@ -332,9 +332,8 @@ class OperationHandler:
                     # Fall back to manual implementation
                     import bz2
 
-                    with bz2.open(source, "rb") as f_in:
-                        with open(output, "wb") as f_out:
-                            f_out.write(f_in.read())
+                    with bz2.open(source, "rb") as f_in, output.open("wb") as f_out:
+                        f_out.write(f_in.read())
 
                     logger.debug(f"🗜️ Decompressed BZIP2 (fallback): {output}")
                     return output

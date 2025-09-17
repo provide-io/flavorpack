@@ -1,10 +1,9 @@
 #
 # flavor/verification.py
 #
-from __future__ import annotations
-
-
 """Package verification for PSPF/2025 bundles."""
+
+from __future__ import annotations
 
 from pathlib import Path
 

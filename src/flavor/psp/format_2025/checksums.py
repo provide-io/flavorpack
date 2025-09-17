@@ -8,7 +8,6 @@ Format: "algorithm:hexvalue" (e.g., "sha256:abc123...", "adler32:deadbeef")
 
 from __future__ import annotations
 
-
 import hashlib
 import zlib
 

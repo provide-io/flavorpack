@@ -7,7 +7,6 @@ for composable operation chains without heavy dependencies.
 
 from __future__ import annotations
 
-
 from pathlib import Path
 from typing import BinaryIO
 
@@ -73,7 +72,7 @@ class ArchiveChain:
         """Check if chain has no operations."""
         return len(self._operations) == 0
 
-    def add_operation(self, operation: int) -> "ArchiveChain":
+    def add_operation(self, operation: int) -> ArchiveChain:
         """
         Add operation to end of chain (returns new chain).
 
@@ -86,7 +85,7 @@ class ArchiveChain:
         new_ops = [*self._operations, operation]
         return ArchiveChain(new_ops)
 
-    def remove_operation(self, index: int) -> "ArchiveChain":
+    def remove_operation(self, index: int) -> ArchiveChain:
         """
         Remove operation at index (returns new chain).
 
@@ -100,11 +99,11 @@ class ArchiveChain:
         del new_ops[index]
         return ArchiveChain(new_ops)
 
-    def reverse(self) -> "ArchiveChain":
+    def reverse(self) -> ArchiveChain:
         """Get reversed chain for extraction."""
         return ArchiveChain(list(reversed(self._operations)))
 
-    def optimize(self) -> "ArchiveChain":
+    def optimize(self) -> ArchiveChain:
         """
         Remove redundant operations and optimize chain.
 

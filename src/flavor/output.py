@@ -4,7 +4,6 @@
 #
 from __future__ import annotations
 
-
 """Output formatting and redirection for Flavor tools."""
 
 from enum import Enum
@@ -41,7 +40,7 @@ class OutputHandler:
         self._file_handle: TextIO | None = None
         self._output_buffer: list[dict[str, Any]] = []
 
-    def __enter__(self) -> "OutputHandler":
+    def __enter__(self) -> OutputHandler:
         """Context manager entry."""
         if self._output_file and self._output_file not in ("STDOUT", "STDERR"):
             self._file_handle = Path(self._output_file).open("w")

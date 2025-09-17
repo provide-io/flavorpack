@@ -10,7 +10,6 @@ These are the canonical values for the PSPF/2025 v0 format.
 # =================================
 from __future__ import annotations
 
-
 PSPF_VERSION = 0x20250001  # PSPF/2025 v1 format identifier
 FORMAT_VERSION_STRING = "2025.0.0"  # String version for JSON metadata
 

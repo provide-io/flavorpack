@@ -5,7 +5,6 @@ All defaults are defined here instead of inline in field definitions.
 
 from __future__ import annotations
 
-
 import sys
 
 # =================================

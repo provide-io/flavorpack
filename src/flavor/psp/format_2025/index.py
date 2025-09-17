@@ -4,7 +4,6 @@
 
 from __future__ import annotations
 
-
 import struct
 import zlib
 
@@ -230,7 +229,7 @@ class PSPFIndex:
         return data
 
     @classmethod
-    def unpack(cls, data: bytes) -> "PSPFIndex":
+    def unpack(cls, data: bytes) -> PSPFIndex:
         """Unpack index from binary data."""
         if len(data) != DEFAULT_HEADER_SIZE:
             raise ValueError(

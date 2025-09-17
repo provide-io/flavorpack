@@ -3,7 +3,6 @@
 
 from __future__ import annotations
 
-
 from contextlib import contextmanager
 import time
 from typing import Any, ClassVar

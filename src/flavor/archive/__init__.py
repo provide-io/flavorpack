@@ -7,7 +7,6 @@ Works with or without protobuf installed.
 
 from __future__ import annotations
 
-
 from flavor.archive.chain import ArchiveChain, ChainProcessor
 from flavor.archive.operations import (
     Operation,

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-
 from .assembly import (
     assemble_metadata,
     create_build_metadata,

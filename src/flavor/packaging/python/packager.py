@@ -3,7 +3,6 @@
 #
 from __future__ import annotations
 
-
 """Python packager that owns all Python-specific packaging logic."""
 
 from pathlib import Path

@@ -7,7 +7,6 @@ Provides a chainable API for constructing build specifications.
 
 from __future__ import annotations
 
-
 from pathlib import Path
 import tempfile
 
@@ -32,11 +31,11 @@ class PSPFBuilder:
         self._spec = spec or BuildSpec()
 
     @classmethod
-    def create(cls) -> "PSPFBuilder":
+    def create(cls) -> PSPFBuilder:
         """Create a new builder instance."""
         return cls()
 
-    def metadata(self, **kwargs) -> "PSPFBuilder":
+    def metadata(self, **kwargs) -> PSPFBuilder:
         """
         Set metadata fields.
 
@@ -54,7 +53,7 @@ class PSPFBuilder:
         operations: str = "gzip",
         target: str | None = None,
         permissions: str | None = None,
-    ) -> "PSPFBuilder":
+    ) -> PSPFBuilder:
         """
         Add a slot to the package.
 
@@ -113,7 +112,7 @@ class PSPFBuilder:
         private: bytes | None = None,
         public: bytes | None = None,
         path: Path | None = None,
-    ) -> "PSPFBuilder":
+    ) -> PSPFBuilder:
         """
         Configure signing keys.
 
@@ -129,7 +128,7 @@ class PSPFBuilder:
         new_spec = self._spec.with_keys(key_config)
         return PSPFBuilder(new_spec)
 
-    def with_options(self, **kwargs) -> "PSPFBuilder":
+    def with_options(self, **kwargs) -> PSPFBuilder:
         """
         Set build options.
 

@@ -7,7 +7,6 @@ Handles platform-specific environment variables and layered environment processi
 
 from __future__ import annotations
 
-
 import fnmatch
 from typing import Any
 

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-
 from flavor.ingredients.manager import IngredientInfo, IngredientManager
 
 __all__ = ["IngredientInfo", "IngredientManager"]
