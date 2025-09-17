@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from flavor.psp.format_2025.builder import PSPFBuilder
+from flavor.psp.format_2025.pspf_builder import PSPFBuilder
 from flavor.psp.format_2025.reader import PSPFReader
 from flavor.psp.format_2025.operations import (
     OP_TAR, OP_GZIP, OP_BZIP2, OP_ZSTD,

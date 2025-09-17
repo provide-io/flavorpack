@@ -4,15 +4,16 @@
 #
 """Ingredient management system for Flavor launchers and builders."""
 
+import contextlib
 from dataclasses import dataclass
 import hashlib
 import os
 from pathlib import Path
 from typing import Any
 
-from provide.foundation import logger
 from provide.foundation.file.directory import ensure_dir
 from provide.foundation.platform import get_platform_string
+from provide.foundation.process import run_command
 
 
 @dataclass
@@ -54,9 +55,10 @@ class IngredientManager:
 
         # Detect current platform using centralized utility
         self.current_platform = get_platform_string()
-        
+
         # Binary loader for complex operations
         from flavor.ingredients.binary_loader import BinaryLoader
+
         self._binary_loader = BinaryLoader(self)
 
     def list_ingredients(
@@ -102,9 +104,7 @@ class IngredientManager:
                     if info:
                         # Check if we already have this ingredient from dev build
                         existing_names = [
-                            i.name
-                            for sublist in ingredients.values()
-                            for i in sublist
+                            i.name for sublist in ingredients.values() for i in sublist
                         ]
                         if info.name not in existing_names:
                             if info.type == "launcher":
@@ -140,18 +140,18 @@ class IngredientManager:
             IngredientInfo object or None if not a valid ingredient
         """
         name = path.name
-        
+
         # Determine type and language from filename
         ingredient_type = None
         language = None
-        
+
         if "launcher" in name:
             ingredient_type = "launcher"
         elif "builder" in name:
             ingredient_type = "builder"
         else:
             return None
-            
+
         if name.startswith("flavor-go-"):
             language = "go"
         elif name.startswith("flavor-rs-"):
@@ -169,24 +169,26 @@ class IngredientManager:
         # Calculate checksum if file is reasonable size
         checksum = None
         if size < 100 * 1024 * 1024:  # Less than 100MB
-            try:
+            with contextlib.suppress(OSError, MemoryError):
                 checksum = hashlib.sha256(path.read_bytes()).hexdigest()[:16]
-            except (OSError, MemoryError):
-                pass
 
         # Try to extract version info
         version = None
         try:
             # Try to get version from the binary (if it supports --version)
-            result = os.popen(f'"{path}" --version 2>/dev/null').read().strip()
-            if result:
+            result = run_command(
+                [str(path), "--version"], check=False, capture_output=True, text=True
+            )
+            if result.returncode == 0 and result.stdout:
+                output = result.stdout.strip()
                 # Extract version from output (look for patterns like "v1.2.3" or "1.2.3")
                 import re
-                match = re.search(r'(\d+\.\d+\.\d+)', result)
+
+                match = re.search(r"(\d+\.\d+\.\d+)", output)
                 if match:
                     version = match.group(1)
                 else:
-                    version = result.split('\n')[0][:20]  # First line, truncated
+                    version = output.split("\n")[0][:20]  # First line, truncated
         except (OSError, Exception):
             pass
 

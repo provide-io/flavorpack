@@ -193,7 +193,7 @@ for package in packages:
 ### Custom Package Building
 
 ```python
-from flavor.psp.format_2025.builder import PSPFBuilder
+from flavor.psp.format_2025.pspf_builder import PSPFBuilder
 from flavor.psp.format_2025.spec import BuildSpec, SlotSpec
 
 # Create builder

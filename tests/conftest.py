@@ -4,9 +4,9 @@ import tempfile
 
 from cryptography.hazmat.primitives.asymmetric import ed25519
 import pytest
-from provide.foundation.logger.setup.testing import reset_foundation_setup_for_testing
+from provide.testkit.logger import reset_foundation_setup_for_testing
 
-from flavor.psp.format_2025.builder import PSPFBuilder
+from flavor.psp.format_2025.pspf_builder import PSPFBuilder
 
 # Mock launcher data - matches approximate size of real launchers
 # This should be validated against real launchers in integration tests

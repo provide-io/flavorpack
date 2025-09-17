@@ -22,20 +22,18 @@ class RuntimeRuntimeConfig:
     unset: list[str] = config_field(
         factory=list,
         description="Environment variables to unset",
-        env_var="FLAVOR_RUNTIME_ENV_UNSET"
+        env_var="FLAVOR_RUNTIME_ENV_UNSET",
     )
     passthrough: list[str] = config_field(
         factory=list,
         description="Environment variables to pass through",
-        env_var="FLAVOR_RUNTIME_ENV_PASSTHROUGH"
+        env_var="FLAVOR_RUNTIME_ENV_PASSTHROUGH",
     )
     set_vars: dict[str, str | int | bool] = config_field(
-        factory=dict,
-        description="Environment variables to set"
+        factory=dict, description="Environment variables to set"
     )
     map_vars: dict[str, str] = config_field(
-        factory=dict,
-        description="Environment variable mappings"
+        factory=dict, description="Environment variable mappings"
     )
 
 
@@ -53,7 +51,7 @@ class BuildConfig:
     dependencies: list[str] = config_field(
         factory=list,
         description="Build dependencies",
-        env_var="FLAVOR_BUILD_DEPENDENCIES"
+        env_var="FLAVOR_BUILD_DEPENDENCIES",
     )
 
 
@@ -64,7 +62,7 @@ class MetadataConfig:
     package_name: str | None = config_field(
         default=None,
         description="Override package name",
-        env_var="FLAVOR_METADATA_PACKAGE_NAME"
+        env_var="FLAVOR_METADATA_PACKAGE_NAME",
     )
 
 
@@ -72,17 +70,10 @@ class MetadataConfig:
 class FlavorConfig(BaseConfig):
     """Top-level structured configuration for the `[tool.flavor]` section."""
 
-    name: str = config_field(
-        description="Package name",
-        env_var="FLAVOR_PACKAGE_NAME"
-    )
-    version: str = config_field(
-        description="Package version", 
-        env_var="FLAVOR_VERSION"
-    )
+    name: str = config_field(description="Package name", env_var="FLAVOR_PACKAGE_NAME")
+    version: str = config_field(description="Package version", env_var="FLAVOR_VERSION")
     entry_point: str = config_field(
-        description="Application entry point",
-        env_var="FLAVOR_ENTRY_POINT"
+        description="Application entry point", env_var="FLAVOR_ENTRY_POINT"
     )
     metadata: MetadataConfig = field(factory=MetadataConfig)
     build: BuildConfig = field(factory=BuildConfig)

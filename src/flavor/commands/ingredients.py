@@ -7,7 +7,6 @@
 import os
 
 import click
-
 from provide.foundation.process import run_command
 
 
@@ -70,9 +69,8 @@ def ingredient_list(verbose: bool) -> None:
             click.echo(f"    Path: {launcher.path}")
             if launcher.checksum:
                 click.echo(f"    SHA256: {launcher.checksum}")
-            if verbose:
-                if launcher.built_from:
-                    click.echo(f"    Source: {launcher.built_from}")
+            if verbose and launcher.built_from:
+                click.echo(f"    Source: {launcher.built_from}")
 
     if ingredients["builders"]:
         click.echo("\n🔨 Builders:")
@@ -88,9 +86,8 @@ def ingredient_list(verbose: bool) -> None:
             click.echo(f"    Path: {builder.path}")
             if builder.checksum:
                 click.echo(f"    SHA256: {builder.checksum}")
-            if verbose:
-                if builder.built_from:
-                    click.echo(f"    Source: {builder.built_from}")
+            if verbose and builder.built_from:
+                click.echo(f"    Source: {builder.built_from}")
 
 
 @ingredient_group.command("build")

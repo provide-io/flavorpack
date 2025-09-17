@@ -74,7 +74,7 @@ flavor pack --key-seed test123
 flavor verify myapp.psp --strict
 
 # For testing only (NEVER in production)
-FLAVOR_INSECURE=1 ./myapp.psp
+FLAVOR_VALIDATION=none ./myapp.psp
 ```
 
 #### Missing Dependencies

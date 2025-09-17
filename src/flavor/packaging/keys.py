@@ -8,8 +8,9 @@ from pathlib import Path
 
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ed25519
-
 from provide.foundation.file.directory import ensure_dir
+
+from flavor.config.defaults import DEFAULT_FILE_PERMS
 
 
 def generate_key_pair(keys_dir: Path) -> tuple[Path, Path]:
@@ -59,11 +60,11 @@ def generate_key_pair(keys_dir: Path) -> tuple[Path, Path]:
 
     # Write private key with restricted permissions
     private_key_path.write_bytes(private_pem)
-    private_key_path.chmod(0o600)
+    private_key_path.chmod(DEFAULT_FILE_PERMS)
 
     # Write public key
     public_key_path.write_bytes(public_pem)
-    public_key_path.chmod(0o644)  # Public key can be readable
+    public_key_path.chmod(DEFAULT_FILE_PERMS)  # Use same security level
 
     return private_key_path, public_key_path
 

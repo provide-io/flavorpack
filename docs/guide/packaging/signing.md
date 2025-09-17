@@ -218,7 +218,7 @@ Packages are automatically verified when executed:
 ./myapp.psp
 
 # Disable verification (DANGEROUS - development only!)
-FLAVOR_INSECURE=1 ./myapp.psp
+FLAVOR_VALIDATION=none ./myapp.psp
 ```
 
 ### Manual Verification

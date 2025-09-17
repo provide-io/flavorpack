@@ -7,11 +7,11 @@
 from pathlib import Path
 
 import click
+from provide.foundation.file.directory import ensure_dir, ensure_parent_dir
+from provide.foundation.file.formats import write_json
+from provide.foundation.utils.formatting import format_size
 
 from flavor.psp.format_2025.reader import PSPFReader
-from provide.foundation.utils.formatting import format_size
-from provide.foundation.file.formats import write_json
-from provide.foundation.file.directory import ensure_parent_dir, ensure_dir
 
 
 @click.command("extract")

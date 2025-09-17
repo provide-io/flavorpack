@@ -10,8 +10,8 @@ import os
 from pathlib import Path
 from typing import Any
 
-from provide.foundation.platform import get_os_name, get_arch_name
 from provide.foundation.file.directory import ensure_dir
+from provide.foundation.platform import get_arch_name, get_os_name
 
 
 def validate_metadata_path(path: str) -> str:
@@ -219,8 +219,6 @@ def make_relative_to_workenv(absolute_path: str, workenv_dir: str) -> str:
     # Path is not under workenv - just return with {workenv} prefix
     # This shouldn't normally happen but handle gracefully
     return validate_metadata_path(absolute_path)
-
-
 
 
 def substitute_placeholders(path: str, workenv_path: Path) -> str:

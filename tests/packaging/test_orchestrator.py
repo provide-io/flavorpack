@@ -62,7 +62,7 @@ def setup_payload_dir(tmp_path: Path) -> Path:
 
 @patch("os.access", return_value=True)
 @patch("pathlib.Path.exists", return_value=True)
-@patch("flavor.psp.format_2025.builder.PSPFBuilder")
+@patch("flavor.psp.format_2025.pspf_builder.PSPFBuilder")
 @patch("flavor.packaging.orchestrator.PythonPackager")
 @patch("flavor.packaging.orchestrator.find_launcher_executable")
 @patch("flavor.packaging.orchestrator.PackagingOrchestrator._detect_launcher_type")

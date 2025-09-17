@@ -4,22 +4,16 @@
 
 from contextlib import contextmanager
 import gzip
-import io
 import json
 from pathlib import Path
 import struct
-import tarfile
 from typing import Any
 import zlib
 
 from cryptography.exceptions import InvalidSignature
 from provide.foundation import logger
+from provide.foundation.crypto import verify_signature
 
-from flavor.psp.format_2025.backends import (
-    Backend,
-    StreamBackend,
-    create_backend,
-)
 from flavor.config.defaults import (
     ACCESS_AUTO,
     ACCESS_MMAP,
@@ -29,7 +23,11 @@ from flavor.config.defaults import (
     TRAILER_END_MAGIC,
     TRAILER_START_MAGIC,
 )
-from provide.foundation.crypto import verify_signature
+from flavor.psp.format_2025.backends import (
+    Backend,
+    StreamBackend,
+    create_backend,
+)
 from flavor.psp.format_2025.index import PSPFIndex
 from flavor.psp.format_2025.slots import SlotDescriptor, SlotView
 
@@ -53,9 +51,10 @@ class PSPFReader:
         self._launcher_size: int | None = None
         self._slot_descriptors: list[SlotDescriptor] | None = None
         self.mode = mode
-        
+
         # Slot extractor for extraction operations
         from flavor.psp.format_2025.extraction import SlotExtractor
+
         self._extractor = SlotExtractor(self)
 
     def __enter__(self):
@@ -104,10 +103,7 @@ class PSPFReader:
             trailer = bytes(trailer)
 
         # Verify magic bytes at start and end
-        return (
-            trailer[:4] == TRAILER_START_MAGIC
-            and trailer[-4:] == TRAILER_END_MAGIC
-        )
+        return trailer[:4] == TRAILER_START_MAGIC and trailer[-4:] == TRAILER_END_MAGIC
 
     def read_magic_trailer(self) -> bytes:
         """Read MagicTrailer and extract index data."""
@@ -239,14 +235,6 @@ class PSPFReader:
         # Parse JSON
         self._metadata = json.loads(metadata_data.decode("utf-8"))
 
-        # Remove the old conditional that was checking metadata_format
-        if False:  # Keep structure for now
-            # Legacy tar.gz format
-            with tarfile.open(fileobj=io.BytesIO(metadata_data), mode="r:gz") as tar:
-                psp_member = tar.getmember("psp.json")
-                psp_data = tar.extractfile(psp_member).read()
-                self._metadata = json.loads(psp_data)
-
         return self._metadata
 
     def read_slot_descriptors(self) -> list[SlotDescriptor]:
@@ -314,10 +302,10 @@ class PSPFReader:
             )
 
         # Decompress if needed based on operations
-        from flavor.psp.format_2025.operations import unpack_operations, OP_GZIP, OP_TAR
-        
+        from flavor.psp.format_2025.operations import OP_GZIP, OP_TAR, unpack_operations
+
         ops = unpack_operations(descriptor.operations)
-        
+
         if ops == [OP_GZIP]:
             return gzip.decompress(slot_data)
         elif ops == [OP_TAR, OP_GZIP]:
@@ -340,15 +328,14 @@ class PSPFReader:
     def verify_all_checksums(self) -> bool:
         """Verify all slot checksums."""
         return self._extractor.verify_all_checksums()
-    
+
     def extract_slot(self, slot_index: int, dest_dir: Path) -> Path:
         """Extract a slot to a directory."""
         return self._extractor.extract_slot(slot_index, dest_dir)
-    
+
     def verify_slot_integrity(self, slot_index: int) -> bool:
         """Verify integrity of a specific slot."""
         return self._extractor.verify_slot_integrity(slot_index)
-
 
     def verify_signature(self) -> bool:
         """Verify bundle signature.
@@ -417,7 +404,6 @@ class PSPFReader:
                 "tamper_detected": True,
                 "error": str(e),
             }
-
 
     def get_backend(self) -> Backend:
         """Get the backend for advanced operations."""

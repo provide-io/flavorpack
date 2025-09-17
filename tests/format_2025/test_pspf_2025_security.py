@@ -371,7 +371,7 @@ class TestPSPFSecurity:
 
     def test_build_reproducibility(self, temp_dir):
         """Test build reproducibility aspects."""
-        from flavor.psp.format_2025.builder import PSPFBuilder
+        from flavor.psp.format_2025.pspf_builder import PSPFBuilder
 
         metadata = {
             "format": "PSPF/2025",

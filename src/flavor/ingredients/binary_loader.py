@@ -5,7 +5,6 @@ Binary loading and building for ingredients.
 Handles the complex logic of finding, building, and testing ingredient binaries.
 """
 
-import hashlib
 import os
 from pathlib import Path
 import shutil
@@ -16,13 +15,13 @@ from provide.foundation.file.directory import ensure_dir
 from provide.foundation.platform import get_platform_string
 from provide.foundation.process import run_command
 
-from flavor.ingredients.manager import IngredientInfo
+from flavor.config.defaults import DEFAULT_EXECUTABLE_PERMS
 
 
 class BinaryLoader:
     """Handles ingredient binary loading, building, and testing."""
 
-    def __init__(self, manager):
+    def __init__(self, manager) -> None:
         """Initialize with reference to parent manager."""
         self.manager = manager
 
@@ -97,7 +96,7 @@ class BinaryLoader:
                 # Make sure it's executable
                 if not os.access(embedded_path, os.X_OK):
                     try:
-                        embedded_path.chmod(0o755)
+                        embedded_path.chmod(DEFAULT_EXECUTABLE_PERMS)
                     except (OSError, PermissionError):
                         pass  # Continue even if we can't set permissions
                 logger.debug(f"Found ingredient at: {embedded_path}")
@@ -189,7 +188,7 @@ class BinaryLoader:
                 logger.info(f"✅ Built {component}: {binary_path}")
                 built_binaries.append(binary_path)
                 # Make executable
-                binary_path.chmod(0o755)
+                binary_path.chmod(DEFAULT_EXECUTABLE_PERMS)
             else:
                 logger.error(f"❌ Failed to build {component}")
                 if result.stderr:
@@ -202,7 +201,9 @@ class BinaryLoader:
         built_binaries = []
 
         if not self.manager.rust_src_dir.exists():
-            logger.warning(f"Rust source directory not found: {self.manager.rust_src_dir}")
+            logger.warning(
+                f"Rust source directory not found: {self.manager.rust_src_dir}"
+            )
             return built_binaries
 
         # Make sure bin directory exists
@@ -235,15 +236,24 @@ class BinaryLoader:
 
             if result.returncode == 0:
                 # Copy from target/release to bin
-                source_path = self.manager.rust_src_dir / "target" / "release" / f"flavor-rs-{component}"
+                source_path = (
+                    self.manager.rust_src_dir
+                    / "target"
+                    / "release"
+                    / f"flavor-rs-{component}"
+                )
                 if source_path.exists():
-                    logger.info(f"✅ Built and copying {component}: {source_path} → {binary_path}")
+                    logger.info(
+                        f"✅ Built and copying {component}: {source_path} → {binary_path}"
+                    )
                     shutil.copy2(source_path, binary_path)
                     built_binaries.append(binary_path)
                     # Make executable
-                    binary_path.chmod(0o755)
+                    binary_path.chmod(DEFAULT_EXECUTABLE_PERMS)
                 else:
-                    logger.error(f"❌ Built but can't find {component} binary at {source_path}")
+                    logger.error(
+                        f"❌ Built but can't find {component} binary at {source_path}"
+                    )
             else:
                 logger.error(f"❌ Failed to build {component}")
                 if result.stderr:

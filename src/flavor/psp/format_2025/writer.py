@@ -7,8 +7,8 @@ Handles the low-level binary writing and file operations for PSPF packages.
 
 import gzip
 import json
-import zlib
 from pathlib import Path
+import zlib
 
 from provide.foundation import logger
 from provide.foundation.crypto import sign_data
@@ -23,8 +23,8 @@ from flavor.config.defaults import (
     TRAILER_END_MAGIC,
     TRAILER_START_MAGIC,
 )
-from flavor.psp.format_2025.index import PSPFIndex
 from flavor.psp.format_2025.checksums import calculate_checksum
+from flavor.psp.format_2025.index import PSPFIndex
 from flavor.psp.format_2025.metadata.assembly import (
     assemble_metadata,
     extract_launcher_version,
@@ -129,8 +129,10 @@ def _create_launcher_info(launcher_data: bytes) -> dict:
 def _write_metadata(f, metadata_compressed: bytes, index: PSPFIndex) -> None:
     """Write compressed metadata and update index."""
     metadata_offset = f.tell()
-    logger.debug(f"Metadata offset: {metadata_offset}, size: {len(metadata_compressed)}")
-    
+    logger.debug(
+        f"Metadata offset: {metadata_offset}, size: {len(metadata_compressed)}"
+    )
+
     f.write(metadata_compressed)
     logger.debug(f"Position after metadata: {f.tell()}")
 
@@ -141,7 +143,9 @@ def _write_metadata(f, metadata_compressed: bytes, index: PSPFIndex) -> None:
     index.metadata_checksum = checksum.to_bytes(4, "little") + b"\x00" * 28
 
 
-def _write_slots(f, slots: list[PreparedSlot], spec: BuildSpec, index: PSPFIndex) -> None:
+def _write_slots(
+    f, slots: list[PreparedSlot], spec: BuildSpec, index: PSPFIndex
+) -> None:
     """Write slot table and data."""
     # Slot table position
     slot_table_offset = align_offset(f.tell(), DEFAULT_SLOT_ALIGNMENT)
@@ -168,8 +172,12 @@ def _write_slots(f, slots: list[PreparedSlot], spec: BuildSpec, index: PSPFIndex
         # Create descriptor
         slot_permissions = parse_permissions(slot.metadata.permissions)
         # DEBUG: Log alignment decision for diagnostics
-        alignment_value = DEFAULT_PAGE_SIZE if spec.options.page_aligned else DEFAULT_SLOT_ALIGNMENT
-        logger.debug(f"🐛 Slot {i}: page_aligned={spec.options.page_aligned}, PAGE_SIZE={DEFAULT_PAGE_SIZE}, SLOT_ALIGNMENT={DEFAULT_SLOT_ALIGNMENT}, chosen={alignment_value}")
+        alignment_value = (
+            DEFAULT_PAGE_SIZE if spec.options.page_aligned else DEFAULT_SLOT_ALIGNMENT
+        )
+        logger.debug(
+            f"🐛 Slot {i}: page_aligned={spec.options.page_aligned}, PAGE_SIZE={DEFAULT_PAGE_SIZE}, SLOT_ALIGNMENT={DEFAULT_SLOT_ALIGNMENT}, chosen={alignment_value}"
+        )
         descriptor = SlotDescriptor(
             id=i,
             name=slot.metadata.id,
@@ -195,7 +203,7 @@ def _write_trailer(f, index: PSPFIndex) -> None:
     """Write magic trailer with index."""
     current_pos = f.tell()
     logger.debug(f"Position before MagicTrailer: {current_pos}")
-    
+
     # Update package size
     index.package_size = current_pos + DEFAULT_MAGIC_TRAILER_SIZE
 
@@ -211,11 +219,11 @@ def _map_purpose(purpose: str) -> int:
     """Map purpose string to integer constant."""
     from flavor.config.defaults import (
         PURPOSE_CODE,
-        PURPOSE_CONFIG, 
+        PURPOSE_CONFIG,
         PURPOSE_DATA,
         PURPOSE_MEDIA,
     )
-    
+
     mapping = {
         "code": PURPOSE_CODE,
         "config": PURPOSE_CONFIG,
@@ -240,7 +248,7 @@ def _map_lifecycle(lifecycle: str) -> int:
         LIFECYCLE_STARTUP,
         LIFECYCLE_TEMPORARY,
     )
-    
+
     mapping = {
         "cache": LIFECYCLE_CACHE,
         "cached": LIFECYCLE_CACHE,

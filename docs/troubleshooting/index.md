@@ -464,7 +464,7 @@ export FLAVOR_PARALLEL_EXTRACTION=1
 export FLAVOR_CACHE_SIZE=10GB
 
 # Security
-export FLAVOR_INSECURE=1  # Skip verification (DANGER!)
+export FLAVOR_VALIDATION=none  # Skip verification (DANGER!)
 export FLAVOR_VERIFY_SIGNATURES=1
 ```
 

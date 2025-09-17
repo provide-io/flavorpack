@@ -1,11 +1,14 @@
 site_name: FlavorPack Documentation
 site_description: Progressive Secure Package Format (PSPF/2025) - Cross-language packaging system for self-contained executables
 site_author: provide.io
-site_url: https://flavorpack.io
+site_url: https://foundry.provide.io/flavorpack/
 repo_url: https://github.com/provide-io/flavorpack
 repo_name: provide-io/flavorpack
 edit_uri: edit/main/docs/
 copyright: Copyright &copy; 2024 provide.io
+
+# Standalone mode settings
+docs_dir: docs
 
 theme:
   name: material
