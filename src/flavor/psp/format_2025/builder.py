@@ -170,7 +170,7 @@ def prepare_slots(
         # This matches what Rust/Go builders do - checksum the actual slot content
         data_to_checksum = processed_data if processed_data != data else data
         checksum_str = calculate_checksum(data_to_checksum, "sha256")
-        checksum_adler32 = zlib.adler32(data_to_checksum)
+        checksum_adler32 = zlib.adler32(data_to_checksum) & 0xFFFFFFFF
 
         # Store prefixed checksum in metadata
         slot.checksum = checksum_str
