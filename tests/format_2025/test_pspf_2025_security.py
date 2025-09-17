@@ -25,7 +25,6 @@ from flavor.config import reset_flavor_config
 @pytest.mark.security
 @pytest.mark.integration
 @pytest.mark.requires_ingredients
-@patch.dict(os.environ, {"FLAVOR_VALIDATION": "strict"})
 class TestPSPFSecurity:
     """Test PSPF security features."""
 
@@ -138,6 +137,7 @@ class TestPSPFSecurity:
         assert index.public_key != b"\x00" * 32
         assert index.integrity_signature != b"\x00" * 512
 
+    @patch.dict(os.environ, {"FLAVOR_VALIDATION": "strict"})
     def test_integrity_seal_verification(self, secure_bundle):
         """Test integrity seal verification."""
         reset_flavor_config()  # Reset to pick up FLAVOR_VALIDATION=strict from patch
@@ -298,6 +298,7 @@ class TestPSPFSecurity:
             tampered_index.index_checksum == original_checksum
         )  # Checksum field unchanged
 
+    @patch.dict(os.environ, {"FLAVOR_VALIDATION": "strict"})
     def test_emoji_magic_corruption(self, temp_dir, test_builder):
         """Test detection of corrupted emoji magic."""
         reset_flavor_config()  # Reset to pick up FLAVOR_VALIDATION=strict from patch
@@ -323,8 +324,10 @@ class TestPSPFSecurity:
         result = launcher.verify_integrity()
         assert not result["valid"], "Should fail integrity check with bad magic"
 
+    @patch.dict(os.environ, {"FLAVOR_VALIDATION": "standard"})
     def test_missing_integrity_seal(self, temp_dir, test_builder):
         """Test handling of missing integrity seal."""
+        reset_flavor_config()  # Reset to pick up FLAVOR_VALIDATION=standard from patch
         # Create metadata without seal requirement
         metadata = {
             "format": "PSPF/2025",
