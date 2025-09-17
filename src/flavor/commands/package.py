@@ -123,87 +123,115 @@ def pack_command(
     if not quiet:
         safe_echo("🚀 Packaging application...")
 
-    # Set workenv base if provided via flag
-    if workenv_base:
-        import os
-
-        os.environ["FLAVOR_WORKENV_BASE"] = workenv_base
+    _setup_workenv_base(workenv_base)
 
     try:
-        built_artifacts = build_package_from_manifest(
-            Path(pyproject_toml_path),
-            output_path=Path(output_path) if output_path else None,
-            launcher_bin=Path(launcher_bin) if launcher_bin else None,
-            builder_bin=Path(builder_bin) if builder_bin else None,
-            strip_binaries=strip,
-            show_progress=progress and not quiet,
-            private_key_path=Path(private_key) if private_key else None,
-            public_key_path=Path(public_key) if public_key else None,
-            key_seed=key_seed,
+        built_artifacts = _build_package_artifacts(
+            pyproject_toml_path, output_path, launcher_bin, builder_bin,
+            strip, progress, quiet, private_key, public_key, key_seed
         )
-        for artifact in built_artifacts:
-            if not quiet:
-                try:
-                    click.secho(
-                        f"✅ Successfully built artifact at {artifact}",
-                        fg="green",
-                    )
-                except UnicodeEncodeError:
-                    click.secho(
-                        f"[OK] Successfully built artifact at {artifact}",
-                        fg="green",
-                    )
 
-            # Show optimization results if strip was used
-            if strip and not quiet:
-                safe_echo("  📉 Binary optimized (debug symbols stripped)")
-
-            # Verify the package if requested
-            if verify:
-                if not quiet:
-                    safe_echo(f"🔍 Verifying {artifact}...")
-                try:
-                    result = verify_package(artifact)
-                    if result["signature_valid"]:
-                        if not quiet:
-                            try:
-                                click.secho(
-                                    "  ✅ Package verified successfully", fg="green"
-                                )
-                            except UnicodeEncodeError:
-                                click.secho(
-                                    "  [OK] Package verified successfully", fg="green"
-                                )
-                    else:
-                        try:
-                            click.secho("  ❌ Package verification failed", fg="red")
-                        except UnicodeEncodeError:
-                            click.secho(
-                                "  [ERROR] Package verification failed", fg="red"
-                            )
-                        raise BuildError(f"Verification failed for {artifact}")
-                except Exception as e:
-                    try:
-                        click.secho(f"  ❌ Verification error: {e}", fg="red")
-                    except UnicodeEncodeError:
-                        click.secho(f"  [ERROR] Verification error: {e}", fg="red")
-                    raise BuildError(f"Verification failed for {artifact}: {e}") from e
-
-        if built_artifacts:
-            if not quiet:
-                try:
-                    click.secho("✅ All targets built successfully.", fg="green")
-                except UnicodeEncodeError:
-                    click.secho("[OK] All targets built successfully.", fg="green")
-        else:
-            try:
-                click.secho("⚠️ No targets were specified or built.", fg="yellow")
-            except UnicodeEncodeError:
-                click.secho("[WARN] No targets were specified or built.", fg="yellow")
+        _process_built_artifacts(built_artifacts, verify, strip, quiet)
+        _show_final_results(built_artifacts, quiet)
 
     except (BuildError, PackagingError, click.UsageError) as e:
-        try:
-            click.secho(f"❌ Packaging Failed:\n{e}", fg="red", err=True)
-        except UnicodeEncodeError:
-            click.secho(f"[ERROR] Packaging Failed:\n{e}", fg="red", err=True)
+        _safe_click_secho(f"❌ Packaging Failed:\n{e}", "[ERROR] Packaging Failed:\n{e}", fg="red", err=True)
         raise click.Abort() from e
+
+
+def _setup_workenv_base(workenv_base: str | None) -> None:
+    """Set workenv base if provided via flag."""
+    if workenv_base:
+        import os
+        os.environ["FLAVOR_WORKENV_BASE"] = workenv_base
+
+
+def _build_package_artifacts(
+    pyproject_toml_path: str, output_path: str | None, launcher_bin: str | None,
+    builder_bin: str | None, strip: bool, progress: bool, quiet: bool,
+    private_key: str | None, public_key: str | None, key_seed: str | None
+) -> list[Path]:
+    """Build package artifacts using the build_package_from_manifest function."""
+    return build_package_from_manifest(
+        Path(pyproject_toml_path),
+        output_path=Path(output_path) if output_path else None,
+        launcher_bin=Path(launcher_bin) if launcher_bin else None,
+        builder_bin=Path(builder_bin) if builder_bin else None,
+        strip_binaries=strip,
+        show_progress=progress and not quiet,
+        private_key_path=Path(private_key) if private_key else None,
+        public_key_path=Path(public_key) if public_key else None,
+        key_seed=key_seed,
+    )
+
+
+def _process_built_artifacts(built_artifacts: list[Path], verify: bool, strip: bool, quiet: bool) -> None:
+    """Process each built artifact with verification and optimization reporting."""
+    for artifact in built_artifacts:
+        if not quiet:
+            _safe_click_secho(
+                f"✅ Successfully built artifact at {artifact}",
+                f"[OK] Successfully built artifact at {artifact}",
+                fg="green"
+            )
+
+        if strip and not quiet:
+            safe_echo("  📉 Binary optimized (debug symbols stripped)")
+
+        if verify:
+            _verify_artifact(artifact, quiet)
+
+
+def _verify_artifact(artifact: Path, quiet: bool) -> None:
+    """Verify a single artifact and handle the results."""
+    if not quiet:
+        safe_echo(f"🔍 Verifying {artifact}...")
+
+    try:
+        result = verify_package(artifact)
+        if result["signature_valid"]:
+            if not quiet:
+                _safe_click_secho(
+                    "  ✅ Package verified successfully",
+                    "  [OK] Package verified successfully",
+                    fg="green"
+                )
+        else:
+            _safe_click_secho(
+                "  ❌ Package verification failed",
+                "  [ERROR] Package verification failed",
+                fg="red"
+            )
+            raise BuildError(f"Verification failed for {artifact}")
+    except Exception as e:
+        _safe_click_secho(
+            f"  ❌ Verification error: {e}",
+            f"  [ERROR] Verification error: {e}",
+            fg="red"
+        )
+        raise BuildError(f"Verification failed for {artifact}: {e}") from e
+
+
+def _show_final_results(built_artifacts: list[Path], quiet: bool) -> None:
+    """Show final results of the packaging process."""
+    if built_artifacts:
+        if not quiet:
+            _safe_click_secho(
+                "✅ All targets built successfully.",
+                "[OK] All targets built successfully.",
+                fg="green"
+            )
+    else:
+        _safe_click_secho(
+            "⚠️ No targets were specified or built.",
+            "[WARN] No targets were specified or built.",
+            fg="yellow"
+        )
+
+
+def _safe_click_secho(unicode_msg: str, fallback_msg: str, **kwargs) -> None:
+    """Safely echo with Unicode fallback handling."""
+    try:
+        click.secho(unicode_msg, **kwargs)
+    except UnicodeEncodeError:
+        click.secho(fallback_msg, **kwargs)
