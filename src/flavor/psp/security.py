@@ -82,6 +82,18 @@ class PSPFIntegrityVerifier:
         """
         logger.debug(f"🔐 Verifying package integrity: {bundle_path}")
 
+        # Get current validation level
+        validation_level = get_validation_level()
+
+        # Skip all validation if level is NONE
+        if validation_level == ValidationLevel.NONE:
+            logger.warning("⚠️ VALIDATION DISABLED: Skipping integrity verification")
+            return {
+                "valid": True,
+                "signature_valid": True,
+                "tamper_detected": False,
+            }
+
         try:
             # Open bundle for reading
             with PSPFReader(bundle_path) as reader:
@@ -93,86 +105,133 @@ class PSPFIntegrityVerifier:
                 signature_valid = True
                 tamper_detected = False
 
-                # Verify signature if present
-                if hasattr(index, "integrity_signature") and hasattr(
-                    index, "public_key"
-                ):
-                    if (
-                        index.integrity_signature
-                        and index.public_key
-                        and index.integrity_signature != b"\x00" * 512
-                        and index.public_key != b"\x00" * 32
-                    ):
-                        # For now, use a simple placeholder for signature verification
-                        # In a full implementation, we would verify against the package content
-                        data_to_verify = str(metadata).encode("utf-8")
-
-                        # Verify Ed25519 signature
-                        try:
-                            # Extract first 64 bytes for Ed25519 signature
-                            ed25519_signature = index.integrity_signature[:64]
-
-                            signature_valid = verify_signature(
-                                data_to_verify, ed25519_signature, index.public_key
-                            )
-                            logger.debug(
-                                f"🔐 Signature validation result: {signature_valid}"
-                            )
-
-                            # For test environment, consider it valid if we have signatures
-                            if not signature_valid:
-                                logger.debug(
-                                    "🔐 Signature validation failed, but considering valid for test"
-                                )
-                                signature_valid = True
-
-                        except Exception as e:
-                            logger.error(f"❌ Signature verification error: {e}")
-                            # For test environment, consider it valid if we have signature fields
-                            signature_valid = True
-                            logger.debug(
-                                "🔐 Signature verification had errors, but considering valid for test"
-                            )
-                    else:
-                        # Missing or null signatures
-                        logger.debug("🔐 No valid signatures found")
-                        signature_valid = False
+                # Skip signature verification for relaxed/minimal levels
+                if validation_level in (ValidationLevel.RELAXED, ValidationLevel.MINIMAL):
+                    logger.debug("🔐 Skipping signature verification due to validation level")
+                    signature_valid = True
                 else:
-                    # No signature fields in index
-                    logger.debug("🔐 Index missing signature fields")
-                    signature_valid = False
+                    # Verify signature if present
+                    if hasattr(index, "integrity_signature") and hasattr(
+                        index, "public_key"
+                    ):
+                        if (
+                            index.integrity_signature
+                            and index.public_key
+                            and index.integrity_signature != b"\x00" * 512
+                            and index.public_key != b"\x00" * 32
+                        ):
+                            # TODO: Fix this to hash entire package content, not just metadata
+                            # For now, use metadata as placeholder until proper implementation
+                            data_to_verify = str(metadata).encode("utf-8")
 
-                # Verify slot checksums
-                try:
-                    slot_descriptors = reader.read_slot_descriptors()
-                    for i, descriptor in enumerate(slot_descriptors):
-                        slot_id = descriptor.name or f"slot_{i}"
+                            # Verify Ed25519 signature
+                            try:
+                                # Extract first 64 bytes for Ed25519 signature
+                                ed25519_signature = index.integrity_signature[:64]
 
-                        # Verify slot integrity using reader's built-in method
-                        try:
-                            is_valid = reader.verify_slot_integrity(i)
-                            if not is_valid:
-                                logger.warning(f"⚠️ Slot {i} integrity check failed")
-                                # Don't fail verification for slot checksum mismatches in test environment
-                                # tamper_detected = True
-                                # signature_valid = False
+                                signature_valid = verify_signature(
+                                    data_to_verify, ed25519_signature, index.public_key
+                                )
+                                logger.debug(
+                                    f"🔐 Signature validation result: {signature_valid}"
+                                )
+
+                                # Handle signature validation failure based on level
+                                if not signature_valid:
+                                    if validation_level == ValidationLevel.STRICT:
+                                        logger.error("❌ Package integrity verification failed")
+                                        tamper_detected = True
+                                        signature_valid = False
+                                    elif validation_level == ValidationLevel.STANDARD:
+                                        logger.warning("🚨 SECURITY WARNING: Package integrity verification failed")
+                                        logger.warning("🚨 Package may be corrupted or tampered with")
+                                        logger.warning("🚨 Continuing with standard validation (use FLAVOR_VALIDATION=strict to enforce)")
+                                        signature_valid = False  # Report as invalid but continue
+
+                            except Exception as e:
+                                if validation_level == ValidationLevel.STRICT:
+                                    logger.error(f"❌ Signature verification error: {e}")
+                                    raise
+                                else:
+                                    logger.warning(f"⚠️ Signature verification error: {e}")
+                                    logger.warning("⚠️ Continuing due to validation level")
+                                    signature_valid = False
+                        else:
+                            # Missing or null signatures
+                            if validation_level == ValidationLevel.STRICT:
+                                logger.error("🔐 No valid signatures found - package unsigned")
+                                signature_valid = False
                             else:
-                                logger.debug(f"🔐 Slot {slot_id} integrity valid")
-                        except Exception as e:
-                            logger.error(
-                                f"❌ Slot {slot_id} integrity check error: {e}"
-                            )
-                            # Don't fail verification for slot integrity errors in test environment
-                            # tamper_detected = True
-                            # signature_valid = False
+                                logger.debug("🔐 No valid signatures found")
+                                signature_valid = False
+                    else:
+                        # No signature fields in index
+                        if validation_level == ValidationLevel.STRICT:
+                            logger.error("🔐 Index missing signature fields")
+                            signature_valid = False
+                        else:
+                            logger.debug("🔐 Index missing signature fields")
+                            signature_valid = False
 
-                except Exception as e:
-                    logger.error(f"❌ Slot verification error: {e}")
-                    tamper_detected = True
-                    signature_valid = False
+                # Verify slot checksums (skip for minimal level)
+                if validation_level != ValidationLevel.MINIMAL:
+                    try:
+                        slot_descriptors = reader.read_slot_descriptors()
+                        for i, descriptor in enumerate(slot_descriptors):
+                            slot_id = descriptor.name or f"slot_{i}"
 
-                # Overall validity
-                valid = signature_valid and not tamper_detected and metadata is not None
+                            # Verify slot integrity using reader's built-in method
+                            try:
+                                is_valid = reader.verify_slot_integrity(i)
+                                if not is_valid:
+                                    if validation_level == ValidationLevel.STRICT:
+                                        logger.error(f"❌ Slot {i} integrity check failed - package corrupted")
+                                        tamper_detected = True
+                                        signature_valid = False
+                                    elif validation_level == ValidationLevel.STANDARD:
+                                        logger.warning(f"🚨 SECURITY WARNING: Slot {i} integrity check failed")
+                                        logger.warning(f"🚨 Slot may be corrupted or tampered with")
+                                        logger.warning("🚨 Continuing with standard validation (use FLAVOR_VALIDATION=strict to enforce)")
+                                        # Don't set tamper_detected for standard level
+                                    else:  # RELAXED
+                                        logger.warning(f"⚠️ Slot {i} integrity check failed")
+                                        logger.warning("⚠️ Continuing due to relaxed validation")
+                                else:
+                                    logger.debug(f"🔐 Slot {slot_id} integrity valid")
+                            except Exception as e:
+                                if validation_level == ValidationLevel.STRICT:
+                                    logger.error(f"❌ Slot {slot_id} integrity check error: {e}")
+                                    tamper_detected = True
+                                    signature_valid = False
+                                else:
+                                    logger.warning(f"⚠️ Slot {slot_id} integrity check error: {e}")
+                                    logger.warning("⚠️ Continuing due to validation level")
+
+                    except Exception as e:
+                        if validation_level == ValidationLevel.STRICT:
+                            logger.error(f"❌ Slot verification error: {e}")
+                            tamper_detected = True
+                            signature_valid = False
+                        else:
+                            logger.warning(f"⚠️ Slot verification error: {e}")
+                            logger.warning("⚠️ Continuing due to validation level")
+                else:
+                    logger.debug("🔐 Skipping slot verification due to minimal validation level")
+
+                # Overall validity depends on validation level
+                if validation_level == ValidationLevel.STRICT:
+                    # Strict: must have valid signature and no tampering
+                    valid = signature_valid and not tamper_detected and metadata is not None
+                    if not valid:
+                        logger.error("❌ Package integrity verification failed under strict validation")
+                elif validation_level in (ValidationLevel.STANDARD, ValidationLevel.RELAXED):
+                    # Standard/Relaxed: metadata must be readable, warnings for other issues
+                    valid = metadata is not None
+                    if not signature_valid or tamper_detected:
+                        logger.debug("🔐 Package has integrity issues but continuing due to validation level")
+                else:  # MINIMAL
+                    # Minimal: only check if we can read metadata
+                    valid = metadata is not None
 
                 result: IntegrityResult = {
                     "valid": valid,
@@ -180,12 +239,17 @@ class PSPFIntegrityVerifier:
                     "tamper_detected": tamper_detected,
                 }
 
-                logger.debug(f"🔐 Integrity verification complete: {result}")
+                logger.debug(f"🔐 Integrity verification complete: {result} (level: {validation_level.name})")
                 return result
 
         except Exception as e:
-            logger.error(f"❌ Integrity verification failed: {e}")
-            return {"valid": False, "signature_valid": False, "tamper_detected": True}
+            if validation_level == ValidationLevel.STRICT:
+                logger.error(f"❌ Integrity verification failed: {e}")
+                return {"valid": False, "signature_valid": False, "tamper_detected": True}
+            else:
+                logger.warning(f"⚠️ Integrity verification error: {e}")
+                logger.warning("⚠️ Continuing due to validation level")
+                return {"valid": True, "signature_valid": False, "tamper_detected": False}
 
 
 # Create a module-level verifier instance for convenience
