@@ -1,3 +1,3 @@
-# `flavor.flavor.verification`
+# `flavor.verification`
 
-::: flavor.flavor.verification
+::: flavor.verification

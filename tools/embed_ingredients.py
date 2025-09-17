@@ -2,20 +2,20 @@
 """Embed platform-specific ingredients into the Flavor package."""
 
 import argparse
+from pathlib import Path
 import shutil
 import sys
-from pathlib import Path
 
 
 def embed_ingredients(platform: str, ingredients_dir: str, version: str) -> bool:
     """
     Embed platform-specific ingredients into src/flavor/ingredients.
-    
+
     Args:
         platform: Target platform (e.g., darwin_arm64, linux_amd64)
         ingredients_dir: Directory containing ingredient binaries
         version: Flavor version
-    
+
     Returns:
         True if successful, False otherwise
     """
@@ -23,28 +23,28 @@ def embed_ingredients(platform: str, ingredients_dir: str, version: str) -> bool
     if not ingredients_path.exists():
         print(f"❌ Ingredients directory not found: {ingredients_path}")
         return False
-    
+
     # Create target directory - use ingredients/bin to avoid conflict with ingredients.py
     target_dir = Path("src/flavor/ingredients/bin")
     target_dir.mkdir(parents=True, exist_ok=True)
-    
+
     # Ingredient binary names
     ingredient_names = [
         "flavor-go-builder",
-        "flavor-go-launcher", 
+        "flavor-go-launcher",
         "flavor-rs-builder",
-        "flavor-rs-launcher"
+        "flavor-rs-launcher",
     ]
-    
+
     ingredients_copied = 0
     for ingredient in ingredient_names:
         # Try different naming patterns
         patterns = [
             f"{ingredient}-{version}-{platform}",
             f"{ingredient}-{platform}",
-            ingredient
+            ingredient,
         ]
-        
+
         for pattern in patterns:
             source = ingredients_path / pattern
             if source.exists():
@@ -52,26 +52,26 @@ def embed_ingredients(platform: str, ingredients_dir: str, version: str) -> bool
                 target_name = ingredient
                 if platform.startswith("windows"):
                     target_name += ".exe"
-                
+
                 target = target_dir / target_name
-                
+
                 # Copy the ingredient
                 shutil.copy2(source, target)
-                
+
                 # Make executable (Unix-like systems)
                 if not platform.startswith("windows"):
                     target.chmod(0o755)
-                
+
                 print(f"  ✓ Embedded {ingredient}")
                 ingredients_copied += 1
                 break
         else:
             print(f"  ⚠️  Ingredient not found: {ingredient}")
-    
+
     if ingredients_copied == 0:
         print("❌ No ingredients were embedded")
         return False
-    
+
     # Create __init__.py for ingredients/bin package
     init_file = target_dir / "__init__.py"
     init_file.write_text('''"""Embedded ingredient binaries for Flavor."""
@@ -126,20 +126,24 @@ def get_rs_launcher() -> Path:
     """Get path to Rust launcher."""
     return get_ingredient_path('flavor-rs-launcher')
 ''')
-    
+
     print(f"✅ Embedded {ingredients_copied} ingredients for {platform}")
     return True
 
 
 def main():
     """Main entry point."""
-    parser = argparse.ArgumentParser(description="Embed ingredients for platform-specific wheel")
+    parser = argparse.ArgumentParser(
+        description="Embed ingredients for platform-specific wheel"
+    )
     parser.add_argument("platform", help="Target platform (e.g., darwin_arm64)")
-    parser.add_argument("ingredients_dir", help="Directory containing ingredient binaries")
+    parser.add_argument(
+        "ingredients_dir", help="Directory containing ingredient binaries"
+    )
     parser.add_argument("version", help="Flavor version")
-    
+
     args = parser.parse_args()
-    
+
     success = embed_ingredients(args.platform, args.ingredients_dir, args.version)
     sys.exit(0 if success else 1)
 

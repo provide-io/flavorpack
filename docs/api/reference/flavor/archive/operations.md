@@ -1,3 +1,3 @@
-# `flavor.flavor.archive.operations`
+# `flavor.archive.operations`
 
-::: flavor.flavor.archive.operations
+::: flavor.archive.operations

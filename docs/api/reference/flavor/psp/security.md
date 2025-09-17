@@ -1,3 +1,3 @@
-# `flavor.flavor.psp.security`
+# `flavor.psp.security`
 
-::: flavor.flavor.psp.security
+::: flavor.psp.security

@@ -1,3 +1,3 @@
-# `flavor.flavor.config`
+# `flavor.config`
 
-::: flavor.flavor.config
+::: flavor.config

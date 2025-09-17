@@ -1,3 +1,3 @@
-# `flavor.flavor.commands.workenv`
+# `flavor.commands.workenv`
 
-::: flavor.flavor.commands.workenv
+::: flavor.commands.workenv

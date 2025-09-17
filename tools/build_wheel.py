@@ -2,28 +2,22 @@
 """Build platform-specific wheels with embedded ingredients."""
 
 import argparse
-import os
+from pathlib import Path
 import shutil
 import subprocess
 import sys
-import tempfile
-from pathlib import Path
-from typing import Dict, List, Optional
 
 # We'll import run_command directly without going through flavor.__init__
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+
 
 # Import just the subprocess utility to avoid circular imports
 def run_command(cmd, **kwargs):
     """Run a command and return the result."""
     # Use subprocess directly to avoid import issues during build
-    result = subprocess.run(
-        cmd,
-        capture_output=True,
-        text=True,
-        **kwargs
-    )
+    result = subprocess.run(cmd, capture_output=True, text=True, **kwargs)
     return result
+
 
 # Platform to wheel tag mapping
 PLATFORM_TAGS = {
@@ -45,17 +39,17 @@ def get_project_root() -> Path:
 def get_version() -> str:
     """Get the current Flavor version from VERSION file or pyproject.toml."""
     root = get_project_root()
-    
+
     # Try VERSION file first
     version_file = root / "VERSION"
     if version_file.exists():
         return version_file.read_text().strip()
-    
+
     # Fall back to pyproject.toml
     pyproject_path = root / "pyproject.toml"
     with open(pyproject_path) as f:
         for line in f:
-            if line.startswith('version = '):
+            if line.startswith("version = "):
                 return line.split('"')[1]
     return "0.3.0"  # Default fallback
 
@@ -69,27 +63,27 @@ def clean_build_artifacts():
         root / "src/flavor.egg-info",
         root / "src/flavor/ingredients/bin",
     ]
-    
+
     for dir_path in dirs_to_clean:
         if dir_path.exists():
             shutil.rmtree(dir_path)
             print(f"  ✓ Cleaned {dir_path.relative_to(root)}")
 
 
-def download_ingredients(platform: str, version: str) -> Optional[Path]:
+def download_ingredients(platform: str, version: str) -> Path | None:
     """
     Download ingredient artifacts for the specified platform.
-    
+
     In CI, these would come from the ingredient pipeline.
     For local builds, assumes ingredients are already built.
     """
     ingredients_dir = get_project_root() / "ingredients" / "bin"
-    
+
     if not ingredients_dir.exists():
         print(f"❌ Ingredients directory not found: {ingredients_dir}")
         print("  Run 'make build-ingredients' first")
         return None
-    
+
     # Check if platform-specific ingredients exist
     required_ingredients = [
         f"flavor-go-builder-{version}-{platform}",
@@ -97,7 +91,7 @@ def download_ingredients(platform: str, version: str) -> Optional[Path]:
         f"flavor-rs-builder-{version}-{platform}",
         f"flavor-rs-launcher-{version}-{platform}",
     ]
-    
+
     # Also check without version suffix
     alt_ingredients = [
         f"flavor-go-builder-{platform}",
@@ -105,7 +99,7 @@ def download_ingredients(platform: str, version: str) -> Optional[Path]:
         f"flavor-rs-builder-{platform}",
         f"flavor-rs-launcher-{platform}",
     ]
-    
+
     # Check for generic ingredients (no platform suffix)
     generic_ingredients = [
         "flavor-go-builder",
@@ -113,73 +107,77 @@ def download_ingredients(platform: str, version: str) -> Optional[Path]:
         "flavor-rs-builder",
         "flavor-rs-launcher",
     ]
-    
+
     ingredients_found = False
     for ingredient_set in [required_ingredients, alt_ingredients, generic_ingredients]:
-        if all((ingredients_dir / h).exists() or (ingredients_dir / f"{h}.exe").exists() 
-               for h in ingredient_set):
+        if all(
+            (ingredients_dir / h).exists() or (ingredients_dir / f"{h}.exe").exists()
+            for h in ingredient_set
+        ):
             ingredients_found = True
             break
-    
+
     if not ingredients_found:
         print(f"⚠️  Platform-specific ingredients not found for {platform}")
         print(f"  Looking in: {ingredients_dir}")
-        
+
         # List available ingredients
         if ingredients_dir.exists():
             print("  Available ingredients:")
             for f in sorted(ingredients_dir.iterdir()):
                 if f.is_file():
                     print(f"    - {f.name}")
-    
+
     return ingredients_dir
 
 
-def build_platform_wheel(platform: str, output_dir: Path) -> Optional[Path]:
+def build_platform_wheel(platform: str, output_dir: Path) -> Path | None:
     """
     Build a platform-specific wheel with embedded ingredients.
-    
+
     Args:
         platform: Target platform
         output_dir: Directory to output the wheel
-    
+
     Returns:
         Path to the built wheel, or None if failed
     """
     print(f"\n🎯 Building wheel for {platform}")
-    
+
     version = get_version()
     root = get_project_root()
-    
+
     # Get ingredients directory
     ingredients_dir = download_ingredients(platform, version)
     if not ingredients_dir:
         return None
-    
+
     # Clean previous artifacts
     clean_build_artifacts()
-    
+
     # Embed ingredients
     print("📦 Embedding ingredients...")
-    embed_result = run_command([
-        sys.executable, 
-        str(root / "tools" / "embed_ingredients.py"),
-        platform,
-        str(ingredients_dir),
-        version
-    ])
-    
+    embed_result = run_command(
+        [
+            sys.executable,
+            str(root / "tools" / "embed_ingredients.py"),
+            platform,
+            str(ingredients_dir),
+            version,
+        ]
+    )
+
     if embed_result.returncode != 0:
         print(f"❌ Failed to embed ingredients: {embed_result.stderr}")
         return None
-    
+
     # Build the wheel
     print("🔨 Building wheel...")
-    
+
     # Create a custom setup.py that sets the platform tag
     wheel_tag = PLATFORM_TAGS[platform]
     setup_py = root / "setup.py"
-    setup_py.write_text(f'''
+    setup_py.write_text('''
 """Temporary setup.py for building platform-specific wheel."""
 from setuptools import setup
 from setuptools.dist import Distribution
@@ -194,105 +192,114 @@ class BinaryDistribution(Distribution):
 if __name__ == "__main__":
     setup(distclass=BinaryDistribution)
 ''')
-    
+
     try:
         # Build using pip3 wheel - CRITICAL: must use pip3 for proper dependency resolution
-        build_result = run_command([
-            "pip3", "wheel",  # Using pip3 is critical for wheel building
-            "--no-deps",
-            "--wheel-dir", str(output_dir),
-            str(root)
-        ])
-        
+        build_result = run_command(
+            [
+                "pip3",
+                "wheel",  # Using pip3 is critical for wheel building
+                "--no-deps",
+                "--wheel-dir",
+                str(output_dir),
+                str(root),
+            ]
+        )
+
         if build_result.returncode != 0:
             print(f"❌ Wheel build failed: {build_result.stderr}")
             return None
-        
+
         # Find the built wheel
         wheels = list(output_dir.glob("*.whl"))
         if not wheels:
             print("❌ No wheel was created")
             return None
-        
+
         wheel_file = wheels[0]
-        
+
         # Rename wheel with correct platform tag and Python version range
         wheel_name = wheel_file.name
         import re
-        
+
         # Always rename to support Python 3.11-3.14
         match = re.match(r"([\w_]+)-([\d.]+)-(.*)\.whl", wheel_name)
         if match:
             pkg_name, pkg_version, tags = match.groups()
-            
+
             # Build new tags for Python 3.11-3.14 support
             # Use py311 for Python 3.11+ compatibility
             # Format: name-version-pyver-abi-platform
             new_name = f"{pkg_name}-{pkg_version}-py311-none-{wheel_tag}.whl"
             new_wheel = output_dir / new_name
-            
+
             # Rename the wheel
             wheel_file.rename(new_wheel)
             wheel_file = new_wheel
             print(f"  ✓ Renamed for Python 3.11+ support: {new_name}")
-        
+
         print(f"✅ Built wheel: {wheel_file.name}")
         return wheel_file
-        
+
     finally:
         # Clean up temporary setup.py
         if setup_py.exists():
             setup_py.unlink()
-        
+
         # Clean embedded ingredients
         ingredients_pkg = root / "src" / "flavor" / "ingredients" / "bin"
         if ingredients_pkg.exists():
             shutil.rmtree(ingredients_pkg)
 
 
-def build_universal_wheel(output_dir: Path) -> Optional[Path]:
+def build_universal_wheel(output_dir: Path) -> Path | None:
     """Build a universal wheel without embedded ingredients."""
     print("\n🌍 Building universal wheel (no embedded ingredients)")
-    
+
     root = get_project_root()
     clean_build_artifacts()
-    
+
     # Build using standard Python build
-    build_result = run_command([
-        sys.executable, "-m", "build",
-        "--wheel",
-        "--outdir", str(output_dir),
-        str(root)
-    ])
-    
+    build_result = run_command(
+        [
+            sys.executable,
+            "-m",
+            "build",
+            "--wheel",
+            "--outdir",
+            str(output_dir),
+            str(root),
+        ]
+    )
+
     if build_result.returncode != 0:
         print(f"❌ Universal wheel build failed: {build_result.stderr}")
         return None
-    
+
     # Find the built wheel
     wheels = list(output_dir.glob("*.whl"))
     if wheels:
         print(f"✅ Built universal wheel: {wheels[0].name}")
         return wheels[0]
-    
+
     return None
 
 
-def build_all_wheels(output_dir: Path) -> List[Path]:
+def build_all_wheels(output_dir: Path) -> list[Path]:
     """Build wheels for all supported platforms."""
     wheels = []
-    
+
     # Build platform-specific wheels
     for platform in ALL_PLATFORMS:
         wheel = build_platform_wheel(platform, output_dir)
         if wheel:
             wheels.append(wheel)
-    
+
     # Build universal wheel as fallback
     universal = build_universal_wheel(output_dir)
     if universal:
         wheels.append(universal)
-    
+
     return wheels
 
 
@@ -304,33 +311,31 @@ def main():
     parser.add_argument(
         "--platform",
         choices=ALL_PLATFORMS + ["universal"],
-        help="Target platform (or 'universal' for no ingredients)"
+        help="Target platform (or 'universal' for no ingredients)",
     )
     parser.add_argument(
-        "--all",
-        action="store_true",
-        help="Build wheels for all platforms"
+        "--all", action="store_true", help="Build wheels for all platforms"
     )
     parser.add_argument(
         "--output-dir",
         type=Path,
         default=Path("dist"),
-        help="Output directory for wheels (default: dist)"
+        help="Output directory for wheels (default: dist)",
     )
-    
+
     args = parser.parse_args()
-    
+
     # Validate arguments
     if not args.all and not args.platform:
         parser.error("Either --platform or --all must be specified")
-    
+
     # Create output directory
     args.output_dir.mkdir(parents=True, exist_ok=True)
-    
+
     # Build wheels
     if args.all:
         wheels = build_all_wheels(args.output_dir)
-        
+
         print("\n" + "=" * 60)
         print("📦 Build Summary")
         print("=" * 60)
@@ -342,12 +347,12 @@ def main():
         else:
             print("❌ No wheels were built successfully")
             sys.exit(1)
-    
+
     elif args.platform == "universal":
         wheel = build_universal_wheel(args.output_dir)
         if not wheel:
             sys.exit(1)
-    
+
     else:
         wheel = build_platform_wheel(args.platform, args.output_dir)
         if not wheel:

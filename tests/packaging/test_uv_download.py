@@ -22,9 +22,13 @@ class TestUVDownload:
         )
 
         with (
-            patch("flavor.packaging.python.pypapip_manager.get_os_name", return_value="linux"),
             patch(
-                "flavor.packaging.python.pypapip_manager.get_arch_name", return_value="amd64"
+                "flavor.packaging.python.pypapip_manager.get_os_name",
+                return_value="linux",
+            ),
+            patch(
+                "flavor.packaging.python.pypapip_manager.get_arch_name",
+                return_value="amd64",
             ),
         ):
             cmd = packager.pypapip._get_pypapip_download_cmd(
@@ -51,9 +55,13 @@ class TestUVDownload:
         )
 
         with (
-            patch("flavor.packaging.python.pypapip_manager.get_os_name", return_value="linux"),
             patch(
-                "flavor.packaging.python.pypapip_manager.get_arch_name", return_value="arm64"
+                "flavor.packaging.python.pypapip_manager.get_os_name",
+                return_value="linux",
+            ),
+            patch(
+                "flavor.packaging.python.pypapip_manager.get_arch_name",
+                return_value="arm64",
             ),
         ):
             cmd = packager.pypapip._get_pypapip_download_cmd(
@@ -79,10 +87,12 @@ class TestUVDownload:
 
         with (
             patch(
-                "flavor.packaging.python.pypapip_manager.get_os_name", return_value="darwin"
+                "flavor.packaging.python.pypapip_manager.get_os_name",
+                return_value="darwin",
             ),
             patch(
-                "flavor.packaging.python.dependency_resolver.get_arch_name", return_value="arm64"
+                "flavor.packaging.python.dependency_resolver.get_arch_name",
+                return_value="arm64",
             ),
         ):
             cmd = packager.pypapip._get_pypapip_download_cmd(
@@ -129,9 +139,12 @@ class TestUVDownload:
 
             # Need to mock at the actual usage location in the module
             with (
-                patch("flavor.packaging.python.dependency_resolver.run_command", mock_run),
                 patch(
-                    "flavor.packaging.python.dependency_resolver.get_os_name", return_value="linux"
+                    "flavor.packaging.python.dependency_resolver.run_command", mock_run
+                ),
+                patch(
+                    "flavor.packaging.python.dependency_resolver.get_os_name",
+                    return_value="linux",
                 ),
                 patch(
                     "flavor.packaging.python.dependency_resolver.get_arch_name",
@@ -160,13 +173,18 @@ class TestUVDownload:
 
             with (
                 patch(
-                    "flavor.packaging.python.slot_builder.get_os_name", return_value="linux"
+                    "flavor.packaging.python.slot_builder.get_os_name",
+                    return_value="linux",
                 ),
                 patch(
                     "flavor.packaging.python.slot_builder.get_arch_name",
                     return_value="amd64",
                 ),
-                patch.object(packager.slot_builder.uv_manager, "download_uv_binary", return_value=None),
+                patch.object(
+                    packager.slot_builder.uv_manager,
+                    "download_uv_binary",
+                    return_value=None,
+                ),
                 patch.object(packager.slot_builder, "_build_wheels"),
             ):
                 # Should raise error on Linux when UV download fails
@@ -203,17 +221,19 @@ class TestUVDownload:
             mock_run = MagicMock(side_effect=mock_run_side_effect)
 
             with (
-                patch("flavor.packaging.python.dependency_resolver.run_command", mock_run),
+                patch(
+                    "flavor.packaging.python.dependency_resolver.run_command", mock_run
+                ),
                 patch("flavor.packaging.python.uv_manager.run_command", mock_run),
                 patch(
-                    "flavor.packaging.python.dependency_resolver.get_os_name", return_value="linux"
+                    "flavor.packaging.python.dependency_resolver.get_os_name",
+                    return_value="linux",
                 ),
                 patch(
                     "flavor.packaging.python.dependency_resolver.get_arch_name",
                     return_value="amd64",
                 ),
             ):
-
                 # The download should try pip first, fail, then return None
                 # There is no direct URL fallback in the current implementation
                 result = packager.env_builder.download_uv_wheel(temp_path)
@@ -245,7 +265,9 @@ class TestUVDownload:
                     "provide.foundation.platform.get_arch_name",
                     return_value="arm64",
                 ),
-                patch.object(packager.env_builder, "find_uv_command", return_value=fake_uv_path),
+                patch.object(
+                    packager.env_builder, "find_uv_command", return_value=fake_uv_path
+                ),
                 patch.object(packager, "_copy_executable"),
                 patch.object(packager.slot_builder, "_build_wheels"),
                 patch.object(packager.slot_builder, "_create_metadata"),
