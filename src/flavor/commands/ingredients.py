@@ -5,6 +5,7 @@
 """Ingredient management commands for the flavor CLI."""
 
 import os
+from pathlib import Path
 
 import click
 from provide.foundation.process import run_command

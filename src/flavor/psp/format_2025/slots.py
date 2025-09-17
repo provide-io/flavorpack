@@ -2,6 +2,8 @@
 # src/flavor/psp/format_2025/slots.py
 # PSPF 2025 Slot Management - Enhanced 64-byte descriptors
 
+from __future__ import annotations
+
 from pathlib import Path
 import struct
 from typing import Any

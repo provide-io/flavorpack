@@ -9,7 +9,7 @@ import os
 from pathlib import Path
 import sys
 import time
-from typing import BinaryIO
+from typing import Any, BinaryIO
 
 from provide.foundation import logger
 
@@ -203,7 +203,12 @@ class MMapBackend(Backend):
     def __enter__(self):
         return self
 
-    def __exit__(self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: Any) -> None:
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: Any,
+    ) -> None:
         self.close()
 
 
@@ -297,7 +302,12 @@ class FileBackend(Backend):
     def __enter__(self):
         return self
 
-    def __exit__(self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: Any) -> None:
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: Any,
+    ) -> None:
         self.close()
 
 
@@ -344,7 +354,12 @@ class StreamBackend(Backend):
     def __enter__(self):
         return self
 
-    def __exit__(self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: Any) -> None:
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: Any,
+    ) -> None:
         self.close()
 
 
@@ -408,7 +423,12 @@ class HybridBackend(Backend):
     def __enter__(self):
         return self
 
-    def __exit__(self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: Any) -> None:
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: Any,
+    ) -> None:
         self.close()
 
 

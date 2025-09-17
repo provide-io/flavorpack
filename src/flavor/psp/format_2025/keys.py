@@ -7,7 +7,6 @@ Supports multiple key sources with clear priority ordering.
 """
 
 import hashlib
-import os
 from pathlib import Path
 
 from provide.foundation import logger
@@ -183,7 +182,7 @@ def save_keys_to_path(private_key: bytes, public_key: bytes, key_path: Path) -> 
     public_key_path.write_bytes(public_key)
 
     # Set restrictive permissions on private key
-    os.chmod(private_key_path, DEFAULT_FILE_PERMS)
+    private_key_path.chmod(DEFAULT_FILE_PERMS)
 
     logger.info(f"💾 Saved keys to {key_path}")
     logger.debug(f"   Public key hash: {hashlib.sha256(public_key).hexdigest()[:8]}")

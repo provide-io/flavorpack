@@ -286,9 +286,7 @@ class DependencyResolver:
 
                         # Make executable (Unix-like systems only)
                         if not self.is_windows:
-                            import os
-
-                            os.chmod(uv_path, DEFAULT_EXECUTABLE_PERMS)
+                            uv_path.chmod(DEFAULT_EXECUTABLE_PERMS)
 
                         return uv_path
 

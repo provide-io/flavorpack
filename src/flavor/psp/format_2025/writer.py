@@ -8,6 +8,7 @@ Handles the low-level binary writing and file operations for PSPF packages.
 import gzip
 import json
 from pathlib import Path
+from typing import BinaryIO
 import zlib
 
 from provide.foundation import logger
@@ -126,7 +127,7 @@ def _create_launcher_info(launcher_data: bytes) -> dict:
     }
 
 
-def _write_metadata(f, metadata_compressed: bytes, index: PSPFIndex) -> None:
+def _write_metadata(f: BinaryIO, metadata_compressed: bytes, index: PSPFIndex) -> None:
     """Write compressed metadata and update index."""
     metadata_offset = f.tell()
     logger.debug(
@@ -144,7 +145,7 @@ def _write_metadata(f, metadata_compressed: bytes, index: PSPFIndex) -> None:
 
 
 def _write_slots(
-    f, slots: list[PreparedSlot], spec: BuildSpec, index: PSPFIndex
+    f: BinaryIO, slots: list[PreparedSlot], spec: BuildSpec, index: PSPFIndex
 ) -> None:
     """Write slot table and data."""
     # Slot table position
@@ -199,7 +200,7 @@ def _write_slots(
     f.seek(end_of_slots)
 
 
-def _write_trailer(f, index: PSPFIndex) -> None:
+def _write_trailer(f: BinaryIO, index: PSPFIndex) -> None:
     """Write magic trailer with index."""
     current_pos = f.tell()
     logger.debug(f"Position before MagicTrailer: {current_pos}")

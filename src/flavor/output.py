@@ -4,6 +4,8 @@
 #
 """Output formatting and redirection for Flavor tools."""
 
+from __future__ import annotations
+
 from enum import Enum
 import json
 from pathlib import Path
