@@ -1,3 +1,3 @@
-# `flavor.flavor.archive`
+# `flavor.archive`
 
-::: flavor.flavor.archive
+::: flavor.archive

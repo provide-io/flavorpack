@@ -109,12 +109,12 @@ class TestLauncherAvailability:
         launcher_path = tmp_path / "fake-launcher"
         launcher_path.touch()
         launcher_path.chmod(0o755)
-        
+
         # Mock run_command to simulate corrupted launcher
         mock_run_command.side_effect = OSError("Corrupted binary")
-        
+
         orchestrator = orchestrator_factory(launcher_bin=str(launcher_path))
-        
+
         # Test that the launcher detection fails properly
         with pytest.raises(BuildError, match="Failed to execute command"):
             orchestrator._detect_launcher_type(launcher_path)

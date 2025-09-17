@@ -1,3 +1,3 @@
-# `flavor.flavor.packaging`
+# `flavor.packaging`
 
-::: flavor.flavor.packaging
+::: flavor.packaging

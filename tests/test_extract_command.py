@@ -2,11 +2,9 @@
 """Tests for the extract commands."""
 
 import json
-from pathlib import Path
 import tarfile
 
 import click.testing
-import pytest
 
 from flavor.cli import cli
 
@@ -75,7 +73,9 @@ class TestExtractCommand:
         runner = click.testing.CliRunner()
         output_dir = tmp_path / "extracted"
 
-        result = runner.invoke(cli, ["extract-all", str(mock_test_package), str(output_dir)])
+        result = runner.invoke(
+            cli, ["extract-all", str(mock_test_package), str(output_dir)]
+        )
 
         assert result.exit_code == 0
         assert output_dir.exists()
@@ -103,7 +103,9 @@ class TestExtractCommand:
         existing = output_dir / "00_main"
         existing.write_text("existing")
 
-        result = runner.invoke(cli, ["extract-all", str(mock_test_package), str(output_dir)])
+        result = runner.invoke(
+            cli, ["extract-all", str(mock_test_package), str(output_dir)]
+        )
 
         assert result.exit_code == 0
         assert "⏭️  Skipping 00_main (exists)" in result.output

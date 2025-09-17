@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 """Simple test script for builder/launcher combinations."""
+
 import os
 import sys
+
 
 def handle_command(cmd, *args):
     """Handle different test commands."""
     if cmd == "info":
         print("📦 Combination Test Package")
-        print(f"  Package: pretaster-combination")
-        print(f"  Version: 1.0.0")
+        print("  Package: pretaster-combination")
+        print("  Version: 1.0.0")
         print(f"  Python: {sys.executable}")
         print(f"  Workenv: {os.getenv('FLAVOR_WORKENV', 'Not set')}")
         return 0
@@ -43,72 +45,77 @@ def handle_command(cmd, *args):
     elif cmd == "volatile-test":
         # Test volatile and init lifecycle slots
         print("🧪 Testing lifecycle slot behavior:")
-        workenv = os.getenv('FLAVOR_WORKENV', '/tmp')
-        
+        workenv = os.getenv("FLAVOR_WORKENV", "/tmp")
+
         # Check if volatile slot exists (should always be extracted fresh)
-        volatile_path = os.path.join(workenv, 'volatile-data')
+        volatile_path = os.path.join(workenv, "volatile-data")
         if os.path.exists(volatile_path):
             print(f"  ✅ Volatile slot found: {volatile_path}")
-            with open(volatile_path, 'r') as f:
+            with open(volatile_path) as f:
                 content = f.read()
                 print(f"     Content: {content[:50]}...")
         else:
             print(f"  ❌ Volatile slot NOT found: {volatile_path}")
-        
+
         # Check if init slot exists (should be removed after setup)
-        init_path = os.path.join(workenv, 'init-setup')
+        init_path = os.path.join(workenv, "init-setup")
         if os.path.exists(init_path):
             print(f"  ❌ Init slot still exists (should be removed): {init_path}")
             return 1
         else:
-            print(f"  ✅ Init slot properly removed after setup")
-        
+            print("  ✅ Init slot properly removed after setup")
+
         return 0
     elif cmd == "manylinux-test":
         # Test that manylinux2014 platform tags are working
         print("🧪 Testing manylinux2014 wheel downloads...")
         print("=" * 60)
-        
+
+        from pathlib import Path
         import subprocess
         import tempfile
-        from pathlib import Path
-        
+
         # Test packages that require binary wheels
-        test_packages = ['cryptography', 'cffi']
-        
+        test_packages = ["cryptography", "cffi"]
+
         with tempfile.TemporaryDirectory() as temp_dir:
             # Build the download command as PythonPackager would
             cmd = [
-                'pip3', 'download',
-                '--dest', temp_dir,
-                '--only-binary', ':all:',
-                '--platform', 'manylinux2014_x86_64',
-                '--python-version', '3.11'
+                "pip3",
+                "download",
+                "--dest",
+                temp_dir,
+                "--only-binary",
+                ":all:",
+                "--platform",
+                "manylinux2014_x86_64",
+                "--python-version",
+                "3.11",
             ] + test_packages
-            
+
             print("Testing download command:")
-            print(' '.join(cmd))
+            print(" ".join(cmd))
             print()
-            
+
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
-            
+
             if result.returncode == 0:
-                wheels = list(Path(temp_dir).glob('*.whl'))
+                wheels = list(Path(temp_dir).glob("*.whl"))
                 print(f"✅ Downloaded {len(wheels)} wheels")
-                
+
                 # Check each package
                 for pkg in test_packages:
                     found = False
                     for wheel in wheels:
                         if pkg in wheel.name.lower():
-                            if 'manylinux' in wheel.name:
+                            if "manylinux" in wheel.name:
                                 print(f"  ✅ {pkg}: {wheel.name[:50]}...")
                                 found = True
                                 break
                     if not found:
                         print(f"  ❌ {pkg}: Not found")
                         return 1
-                
+
                 print("\n✅ manylinux2014 downloads working correctly!")
                 return 0
             else:
@@ -118,12 +125,13 @@ def handle_command(cmd, *args):
         print(f"❌ Unknown command: {cmd}")
         return 1
 
+
 if __name__ == "__main__":
     args = sys.argv[1:]
     if not args:
         print("Usage: combo_test.py <command> [args...]")
         sys.exit(1)
-    
+
     cmd = args[0]
     cmd_args = args[1:] if len(args) > 1 else []
     exit_code = handle_command(cmd, *cmd_args)

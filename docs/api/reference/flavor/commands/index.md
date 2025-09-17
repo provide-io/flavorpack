@@ -1,3 +1,3 @@
-# `flavor.flavor.commands`
+# `flavor.commands`
 
-::: flavor.flavor.commands
+::: flavor.commands
