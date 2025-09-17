@@ -7,7 +7,7 @@ Pyvider Secure Package Format (Flavor).
 """
 
 from flavor._version import __version__
-from flavor.api import (
+from flavor.package import (
     build_package_from_manifest,
     clean_cache,
     verify_package,

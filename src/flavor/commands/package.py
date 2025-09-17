@@ -8,7 +8,7 @@ from pathlib import Path
 
 import click
 
-from flavor.api import build_package_from_manifest, verify_package
+from flavor.package import build_package_from_manifest, verify_package
 from flavor.exceptions import BuildError, PackagingError
 
 
