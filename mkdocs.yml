@@ -280,45 +280,7 @@ nav:
       - Debugging: guide/advanced/debugging.md
   
   # SECTION 3: API Reference (technical documentation)
-  - API Reference:
-    - Overview: api/index.md
-    
-    - Python API:
-      - api/python/index.md
-      - CLI Interface: api/python/cli.md
-      
-      - Packaging:
-        - api/python/packaging/index.md
-        - Orchestrator: api/python/packaging/orchestrator.md
-        - Python Packager: api/python/packaging/python_packager.md
-        - Key Management: api/python/packaging/keys.md
-      
-      - PSPF Format:
-        - api/python/psp/index.md
-        - Builder: api/python/psp/builder.md
-        - Reader: api/python/psp/reader.md
-        - Metadata: api/python/psp/metadata.md
-        - Cryptography: api/python/psp/crypto.md
-        - Launcher: api/python/psp/launcher.md
-        
-        - Slot System:
-          - api/python/psp/slots.md
-          - Core API: api/python/psp/slots-core.md
-          - Lifecycles: api/python/psp/slots-lifecycles.md
-          - Compression: api/python/psp/slots-codecs.md
-          - Purposes: api/python/psp/slots-purposes.md
-      
-      - Utilities:
-        - api/python/utils/index.md
-        - Platform Detection: api/python/utils/platform.md
-        - Archive Handling: api/python/utils/archive.md
-        - Permissions: api/python/utils/permissions.md
-    
-    - Native Components:
-      - api/native/index.md
-      - Go Implementation: api/native/go.md
-      - Rust Implementation: api/native/rust.md
-      - Cross-Language Bridge: api/native/cross-language.md
+  - API Reference: api/reference/
   
   # SECTION 4: Cookbook (practical examples)
   - Cookbook:
@@ -343,8 +305,9 @@ nav:
   # SECTION 5: Reference (specs, troubleshooting, development)
   - Reference:
     - Overview: resources/index.md
-    
-    # Specification section removed - files don't exist yet
+
+    - Specification:
+      - PSPF 2025: spec/pspf-2025.md
     
     - Troubleshooting:
       - troubleshooting/index.md
