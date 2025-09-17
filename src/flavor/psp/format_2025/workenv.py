@@ -10,14 +10,14 @@ from pathlib import Path
 import shlex
 
 from provide.foundation import logger
+from provide.foundation.file.directory import ensure_dir, ensure_parent_dir, safe_rmtree
 from provide.foundation.process import run_command
-from provide.foundation.file.directory import safe_rmtree, ensure_dir, ensure_parent_dir
 
 
 class WorkEnvManager:
     """Manages PSPF work environments."""
-    
-    def __init__(self, reader):
+
+    def __init__(self, reader) -> None:
         """Initialize with reference to PSPFReader."""
         self.reader = reader
 
@@ -73,12 +73,12 @@ class WorkEnvManager:
         self, metadata: dict, workenv_dir: Path, package_version: str
     ) -> bool:
         """Check if work environment cache is valid.
-        
+
         Args:
             metadata: Package metadata
             workenv_dir: Work environment directory
             package_version: Package version
-            
+
         Returns:
             True if cache is valid
         """
@@ -108,7 +108,7 @@ class WorkEnvManager:
                     )
             else:
                 logger.debug(f"❌ Cache validation file not found: {check_path}")
-        
+
         return cache_valid
 
     def _cleanup_lifecycle_slots(
@@ -180,7 +180,7 @@ class WorkEnvManager:
         self, cmd: dict, workenv_dir: Path, metadata: dict
     ) -> None:
         """Handle file writing command.
-        
+
         Args:
             cmd: Command dictionary
             workenv_dir: Work environment directory
@@ -198,9 +198,7 @@ class WorkEnvManager:
         # Handle different path scenarios
         if file_path.exists() and file_path.is_dir():
             # Path exists and is a directory - can't write to it directly
-            logger.debug(
-                f"📁 Path is a directory, creating file inside: {file_path}"
-            )
+            logger.debug(f"📁 Path is a directory, creating file inside: {file_path}")
             # Write to a file with the same base name inside the directory
             file_path = file_path / ".extracted"
 
@@ -214,7 +212,7 @@ class WorkEnvManager:
         self, cmd: dict, workenv_dir: Path, metadata: dict
     ) -> None:
         """Handle command execution.
-        
+
         Args:
             cmd: Command dictionary
             workenv_dir: Work environment directory
@@ -241,15 +239,13 @@ class WorkEnvManager:
         except Exception as e:
             logger.error(f"❌ Command failed: {command}")
             logger.error(f"❌ Error details: {e!s}")
-            raise RuntimeError(
-                f"Setup command failed: {command}. Error: {e!s}"
-            ) from e
+            raise RuntimeError(f"Setup command failed: {command}. Error: {e!s}") from e
 
         logger.debug("✅ Command succeeded")
 
     def _run_enumerate_execute_command(self, cmd: dict, workenv_dir: Path) -> None:
         """Handle file enumeration and execution command.
-        
+
         Args:
             cmd: Command dictionary
             workenv_dir: Work environment directory
@@ -279,9 +275,7 @@ class WorkEnvManager:
                     check=True,
                 )
             except Exception as e:
-                logger.error(
-                    f"❌ Command failed for {file_path}: {command}"
-                )
+                logger.error(f"❌ Command failed for {file_path}: {command}")
                 logger.error(f"❌ Error: {e}")
                 # Continue with other files instead of failing
 
@@ -291,12 +285,12 @@ class WorkEnvManager:
         self, text: str, workenv_dir: Path, metadata: dict
     ) -> str:
         """Substitute common placeholders in text.
-        
+
         Args:
             text: Text with placeholders
             workenv_dir: Work environment directory
             metadata: Package metadata
-            
+
         Returns:
             Text with placeholders substituted
         """
@@ -321,8 +315,7 @@ class WorkEnvManager:
         for i, slot in enumerate(metadata.get("slots", [])):
             placeholder = f"{{slot:{i}}}"
             if placeholder in command:
-                # Use "id" field if available, fallback to "name" for compatibility
-                slot_name = slot.get("id", slot.get("name", f"slot_{i}"))
+                slot_name = slot.get("id", f"slot_{i}")
                 slot_path = workenv_dir / slot_name
                 command = command.replace(placeholder, str(slot_path))
                 logger.debug(f"🔄 Substituted {placeholder} -> {slot_path}")

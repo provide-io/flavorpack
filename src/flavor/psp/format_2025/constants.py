@@ -13,7 +13,7 @@ FORMAT_VERSION_STRING = "2025.0.0"  # String version for JSON metadata
 
 # Magic bytes for package trailer
 TRAILER_START_MAGIC = bytes([0xF0, 0x9F, 0x93, 0xA6])  # 📦 emoji
-TRAILER_END_MAGIC = bytes([0xF0, 0x9F, 0xAA, 0x84])    # 🪄 emoji
+TRAILER_END_MAGIC = bytes([0xF0, 0x9F, 0xAA, 0x84])  # 🪄 emoji
 
 # =================================
 # Binary Structure Sizes
@@ -27,16 +27,16 @@ MAGIC_TRAILER_SIZE = 8200  # Start magic + index + end magic
 # =================================
 
 # Core operations that MUST be supported in v0
-OP_NONE = 0x00      # No operation
+OP_NONE = 0x00  # No operation
 
-# Bundle operations (0x01-0x0F) 
-OP_TAR = 0x01       # POSIX TAR archive (REQUIRED)
+# Bundle operations (0x01-0x0F)
+OP_TAR = 0x01  # POSIX TAR archive (REQUIRED)
 
 # Compression operations (0x10-0x2F)
-OP_GZIP = 0x10      # GZIP compression (REQUIRED)
-OP_BZIP2 = 0x13     # BZIP2 compression (REQUIRED)
-OP_XZ = 0x16        # XZ/LZMA2 compression (REQUIRED)
-OP_ZSTD = 0x1B      # Zstandard compression (REQUIRED)
+OP_GZIP = 0x10  # GZIP compression (REQUIRED)
+OP_BZIP2 = 0x13  # BZIP2 compression (REQUIRED)
+OP_XZ = 0x16  # XZ/LZMA2 compression (REQUIRED)
+OP_ZSTD = 0x1B  # Zstandard compression (REQUIRED)
 
 # v0 Required Operations Set
 V0_REQUIRED_OPERATIONS = {
@@ -52,20 +52,17 @@ V0_REQUIRED_OPERATIONS = {
 OPERATION_CHAINS = {
     # Raw data
     "raw": [],
-    
-    # Single operations  
+    # Single operations
     "gzip": [OP_GZIP],
     "bzip2": [OP_BZIP2],
     "xz": [OP_XZ],
     "zstd": [OP_ZSTD],
     "tar": [OP_TAR],
-    
     # Common compound operations
     "tar.gz": [OP_TAR, OP_GZIP],
     "tar.bz2": [OP_TAR, OP_BZIP2],
     "tar.xz": [OP_TAR, OP_XZ],
     "tar.zst": [OP_TAR, OP_ZSTD],
-    
     # Alternative names
     "tgz": [OP_TAR, OP_GZIP],
     "tbz2": [OP_TAR, OP_BZIP2],
@@ -75,14 +72,14 @@ OPERATION_CHAINS = {
 # =================================
 # Slot Purpose Types
 # =================================
-PURPOSE_CODE = 0    # Executable code
-PURPOSE_DATA = 1    # Application data  
+PURPOSE_CODE = 0  # Executable code
+PURPOSE_DATA = 1  # Application data
 PURPOSE_CONFIG = 2  # Configuration files
-PURPOSE_MEDIA = 3   # Media/assets
+PURPOSE_MEDIA = 3  # Media/assets
 
 PURPOSE_NAMES = {
     PURPOSE_CODE: "code",
-    PURPOSE_DATA: "data", 
+    PURPOSE_DATA: "data",
     PURPOSE_CONFIG: "config",
     PURPOSE_MEDIA: "media",
 }
@@ -90,37 +87,29 @@ PURPOSE_NAMES = {
 PURPOSE_FROM_STRING = {
     "code": PURPOSE_CODE,
     "data": PURPOSE_DATA,
-    "config": PURPOSE_CONFIG, 
+    "config": PURPOSE_CONFIG,
     "media": PURPOSE_MEDIA,
-    # Legacy mappings
-    "payload": PURPOSE_DATA,
-    "runtime": PURPOSE_CODE,
-    "tool": PURPOSE_CONFIG,
-    "library": PURPOSE_CODE,
-    "asset": PURPOSE_MEDIA,
-    "binary": PURPOSE_CODE,
-    "installer": PURPOSE_CONFIG,
 }
 
 # =================================
 # Slot Lifecycle Types (v0 only)
 # =================================
-LIFECYCLE_INIT = 0        # First run only, then removed
-LIFECYCLE_STARTUP = 1     # Extract at every startup
-LIFECYCLE_RUNTIME = 2     # Extract on first use (default)
-LIFECYCLE_SHUTDOWN = 3    # Extract during cleanup
-LIFECYCLE_CACHE = 4       # Performance cache, can regenerate
-LIFECYCLE_TEMPORARY = 5   # Remove after session ends
-LIFECYCLE_LAZY = 6        # Load on-demand
-LIFECYCLE_EAGER = 7       # Load immediately on startup
-LIFECYCLE_DEV = 8         # Development mode only
-LIFECYCLE_CONFIG = 9      # User-modifiable config files
-LIFECYCLE_PLATFORM = 10   # Platform/OS specific content
+LIFECYCLE_INIT = 0  # First run only, then removed
+LIFECYCLE_STARTUP = 1  # Extract at every startup
+LIFECYCLE_RUNTIME = 2  # Extract on first use (default)
+LIFECYCLE_SHUTDOWN = 3  # Extract during cleanup
+LIFECYCLE_CACHE = 4  # Performance cache, can regenerate
+LIFECYCLE_TEMPORARY = 5  # Remove after session ends
+LIFECYCLE_LAZY = 6  # Load on-demand
+LIFECYCLE_EAGER = 7  # Load immediately on startup
+LIFECYCLE_DEV = 8  # Development mode only
+LIFECYCLE_CONFIG = 9  # User-modifiable config files
+LIFECYCLE_PLATFORM = 10  # Platform/OS specific content
 
 LIFECYCLE_NAMES = {
     LIFECYCLE_INIT: "init",
     LIFECYCLE_STARTUP: "startup",
-    LIFECYCLE_RUNTIME: "runtime", 
+    LIFECYCLE_RUNTIME: "runtime",
     LIFECYCLE_SHUTDOWN: "shutdown",
     LIFECYCLE_CACHE: "cache",
     LIFECYCLE_TEMPORARY: "temporary",
@@ -163,32 +152,29 @@ PLATFORM_NAMES = {
 # =================================
 # Default Values
 # =================================
-DEFAULT_PERMISSIONS = 0o644      # Read/write for owner, read for others
-DEFAULT_EXECUTABLE_PERMS = 0o755 # Read/write/execute for owner, read/execute for others
-DEFAULT_DIR_PERMS = 0o755        # Read/write/execute for owner, read/execute for others
 
-DEFAULT_ALIGNMENT = 8            # 8-byte alignment
-DEFAULT_PAGE_SIZE = 4096         # 4KB pages (Linux/Windows default)
+DEFAULT_ALIGNMENT = 8  # 8-byte alignment
+DEFAULT_PAGE_SIZE = 4096  # 4KB pages (Linux/Windows default)
 
 DEFAULT_MAX_MEMORY = 128 * 1024 * 1024  # 128MB
-DEFAULT_MIN_MEMORY = 8 * 1024 * 1024    # 8MB
-DEFAULT_CHUNK_SIZE = 64 * 1024          # 64KB
+DEFAULT_MIN_MEMORY = 8 * 1024 * 1024  # 8MB
+DEFAULT_CHUNK_SIZE = 64 * 1024  # 64KB
 
 # =================================
 # Package Flags
 # =================================
-FLAG_MEMORY_MAPPED = 1 << 0      # Package supports memory mapping
-FLAG_SIGNED = 1 << 1             # Package is digitally signed
-FLAG_COMPRESSED = 1 << 2         # Package uses compression
-FLAG_ENCRYPTED = 1 << 3          # Package has encrypted slots
+FLAG_MEMORY_MAPPED = 1 << 0  # Package supports memory mapping
+FLAG_SIGNED = 1 << 1  # Package is digitally signed
+FLAG_COMPRESSED = 1 << 2  # Package uses compression
+FLAG_ENCRYPTED = 1 << 3  # Package has encrypted slots
 
 # =================================
 # Validation Limits
 # =================================
-MAX_SLOT_COUNT = 65535           # Maximum slots per package
-MAX_PACKAGE_SIZE = 2**63 - 1     # Maximum package size (64-bit)
-MAX_SLOT_SIZE = 2**32 - 1        # Maximum slot size (32-bit for v0)
-MAX_OPERATION_CHAIN_LENGTH = 8   # Maximum operations in chain
+MAX_SLOT_COUNT = 65535  # Maximum slots per package
+MAX_PACKAGE_SIZE = 2**63 - 1  # Maximum package size (64-bit)
+MAX_SLOT_SIZE = 2**32 - 1  # Maximum slot size (32-bit for v0)
+MAX_OPERATION_CHAIN_LENGTH = 8  # Maximum operations in chain
 
 # String limits
 MAX_PACKAGE_NAME_LENGTH = 255
@@ -211,13 +197,13 @@ ERROR_CORRUPT_DATA = 7
 # =================================
 METADATA_REQUIRED_FIELDS = [
     "format_version",
-    "package", 
+    "package",
     "slots",
 ]
 
 SLOT_REQUIRED_FIELDS = [
     "id",
-    "name", 
+    "name",
     "purpose",
     "lifecycle",
     "operations",
@@ -233,4 +219,4 @@ PSPF_MIME_TYPE = "application/vnd.pspf"
 
 # Development flags
 DEBUG_SKIP_SIGNATURE_CHECK = False  # Only for development
-DEBUG_VERBOSE_OPERATIONS = False    # Log all operation steps
+DEBUG_VERBOSE_OPERATIONS = False  # Log all operation steps

@@ -7,16 +7,16 @@ import json
 from pathlib import Path
 import shutil
 import tarfile
-import tempfile
 import tomllib
 from typing import Any
 
 from provide.foundation import logger
-from provide.foundation.platform import get_arch_name, get_os_name
 from provide.foundation.file.directory import ensure_dir
+from provide.foundation.platform import get_arch_name, get_os_name
+
 from flavor.config.defaults import DEFAULT_DIR_PERMS, DEFAULT_EXECUTABLE_PERMS
-from flavor.packaging.python.uv_manager import UVManager
 from flavor.packaging.python.environment_builder import PythonEnvironmentBuilder
+from flavor.packaging.python.uv_manager import UVManager
 
 
 class PythonSlotBuilder:
@@ -33,9 +33,9 @@ class PythonSlotBuilder:
         build_config: dict[str, Any] | None = None,
         progress: Any = None,
         wheel_builder: Any = None,
-    ):
+    ) -> None:
         """Initialize slot builder.
-        
+
         Args:
             manifest_dir: Directory containing package manifest
             package_name: Name of the package
@@ -70,6 +70,7 @@ class PythonSlotBuilder:
         shutil.copy2(src, dest)
         if not self.is_windows:
             import os
+
             os.chmod(dest, DEFAULT_EXECUTABLE_PERMS)
 
     def prepare_artifacts(self, work_dir: Path) -> dict[str, Path]:
@@ -231,7 +232,7 @@ class PythonSlotBuilder:
             seen = set()
             logger.info("🔍🔄🚀 Starting transitive dependency resolution")
 
-        indent = "  " * depth
+        "  " * depth
 
         # Normalize the path to avoid duplicates
         dep_path = dep_path.resolve()
@@ -342,11 +343,12 @@ class PythonSlotBuilder:
     def _build_wheels(self, wheels_dir: Path) -> None:
         """Build wheels for the package and its dependencies - delegates to WheelBuilder."""
         logger.info("🎯🔨🚀 Starting wheel building process (using WheelBuilder)")
-        
+
         # Create a temporary Python environment for building
         import sys
+
         python_exe = Path(sys.executable)
-        
+
         # Process local dependencies from [tool.flavor.build].dependencies
         local_deps = self.build_config.get("dependencies", [])
         if local_deps:
@@ -354,7 +356,9 @@ class PythonSlotBuilder:
             for dep in local_deps:
                 dep_path = self.manifest_dir / dep
                 if dep_path.exists() and dep_path.is_dir():
-                    logger.info(f"🔗 Building local dependency (wheel only): {dep_path.name}")
+                    logger.info(
+                        f"🔗 Building local dependency (wheel only): {dep_path.name}"
+                    )
                     # Build just the wheel for the local dependency, not its dependencies
                     # Local dependencies are build-time dependencies, we don't need their runtime deps
                     dep_wheel = self.wheel_builder.build_wheel_from_source(
@@ -365,7 +369,7 @@ class PythonSlotBuilder:
                     logger.info(f"✅ Built local dependency wheel: {dep_wheel.name}")
                 else:
                     logger.warning(f"⚠️ Local dependency not found: {dep_path}")
-        
+
         # The WheelBuilder should handle dependency resolution from the project itself
         # We shouldn't need to manually extract dependencies here
         build_result = self.wheel_builder.build_and_resolve_project(
@@ -374,7 +378,7 @@ class PythonSlotBuilder:
             build_dir=wheels_dir.parent,
             extra_packages=self.build_config.get("extra_packages", []),
         )
-        
+
         logger.info(
             "✅ Wheel building completed",
             total_wheels=build_result["total_wheels"],
@@ -410,11 +414,11 @@ class PythonSlotBuilder:
             self.manifest_dir / "requirements" / "base.txt",
             self.manifest_dir / "requirements" / "requirements.txt",
         ]
-        
+
         for req_file in possible_files:
             if req_file.exists():
                 logger.debug(f"Found requirements file: {req_file}")
                 return req_file
-        
+
         logger.debug("No requirements file found")
         return None

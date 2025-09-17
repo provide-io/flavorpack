@@ -342,7 +342,7 @@ FLAVOR_LOG_LEVEL=debug ./test.psp --help
 export FLAVOR_LOG_LEVEL=debug  # or trace
 
 # Skip security (TESTING ONLY)
-export FLAVOR_INSECURE=1
+export FLAVOR_VALIDATION=none
 
 # Force cache location
 export XDG_CACHE_HOME=/custom/cache

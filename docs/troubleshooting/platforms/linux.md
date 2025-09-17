@@ -680,8 +680,8 @@ export FLAVOR_CACHE=/var/cache/flavor
 # Log level
 export FLAVOR_LOG_LEVEL=debug
 
-# Insecure mode (development only)
-export FLAVOR_INSECURE=1
+# Validation disabled (development only)
+export FLAVOR_VALIDATION=none
 
 # Work environment
 export FLAVOR_WORKENV=/tmp/flavor/work

@@ -7,8 +7,8 @@ import tarfile
 from typing import Any
 
 from provide.foundation import logger
-from provide.foundation.platform import is_windows
 from provide.foundation.file.formats import write_json
+from provide.foundation.platform import is_windows
 
 from flavor.exceptions import BuildError
 

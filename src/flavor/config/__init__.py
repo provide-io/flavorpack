@@ -3,17 +3,17 @@ Flavorpack configuration module.
 """
 
 from flavor.config.config import (
-    FlavorConfig,
     BuildConfig,
     ExecutionConfig,
+    FlavorConfig,
     MetadataConfig,
     RuntimeRuntimeConfig,
 )
 
 __all__ = [
-    "FlavorConfig",
     "BuildConfig",
     "ExecutionConfig",
+    "FlavorConfig",
     "MetadataConfig",
     "RuntimeRuntimeConfig",
 ]

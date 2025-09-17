@@ -60,10 +60,11 @@ pub fn show_info(exe_path: &Path) -> i32 {
     };
 
     // Verification is now handled internally by read_index/read_metadata
-    let verified = if std::env::var("FLAVOR_INSECURE").unwrap_or_default() == "1" {
-        "✓ (skipped)".to_string()
-    } else {
-        "✓".to_string()
+    use crate::psp::format_2025::defaults::{get_validation_level, ValidationLevel};
+
+    let verified = match get_validation_level() {
+        ValidationLevel::None => "✓ (skipped)".to_string(),
+        _ => "✓".to_string(),
     };
 
     // Copy packed fields to local variables to avoid unaligned access.

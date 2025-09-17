@@ -76,8 +76,7 @@ def parse_checksum(checksum_str: str) -> tuple[str, str]:
     """
     Parse algorithm and value from a checksum string.
 
-    Handles both prefixed ("sha256:abc123") and legacy (unprefixed) formats.
-    Legacy format assumes SHA-256 for backward compatibility.
+    Requires prefixed format ("sha256:abc123").
 
     Args:
         checksum_str: The checksum string to parse
@@ -91,37 +90,20 @@ def parse_checksum(checksum_str: str) -> tuple[str, str]:
     if not checksum_str:
         raise ValidationError("Empty checksum string")
 
-    if ":" in checksum_str:
-        # Prefixed format
-        parts = checksum_str.split(":", 1)
-        if len(parts) != 2:
-            raise ValidationError(f"Invalid checksum format: {checksum_str}")
+    if ":" not in checksum_str:
+        raise ValidationError(
+            f"Checksum must use prefixed format (algorithm:value): {checksum_str}"
+        )
 
-        algo, value = parts
-        if algo not in SUPPORTED_ALGORITHMS:
-            raise ValidationError(f"Unknown checksum algorithm: {algo}")
+    parts = checksum_str.split(":", 1)
+    if len(parts) != 2:
+        raise ValidationError(f"Invalid checksum format: {checksum_str}")
 
-        return algo, value
-    else:
-        # Legacy format - assume SHA-256
-        # Check if it looks like a hex string
-        try:
-            int(checksum_str, 16)
-        except ValueError as e:
-            raise ValidationError(f"Invalid hex checksum: {checksum_str}") from e
+    algo, value = parts
+    if algo not in SUPPORTED_ALGORITHMS:
+        raise ValidationError(f"Unknown checksum algorithm: {algo}")
 
-        # Guess algorithm based on length
-        if len(checksum_str) == 64:
-            return "sha256", checksum_str
-        elif len(checksum_str) == 128:
-            return "sha512", checksum_str
-        elif len(checksum_str) == 8:
-            return "adler32", checksum_str
-        elif len(checksum_str) == 32:
-            return "md5", checksum_str
-        else:
-            # Default to SHA-256 for unknown lengths
-            return "sha256", checksum_str
+    return algo, value
 
 
 def normalize_checksum(checksum_str: str) -> str:
