@@ -1,8 +1,8 @@
-# Flavor API
+# Ingredients API
 
-Auto-generated API documentation for `flavor`.
+Auto-generated API documentation for `flavor.ingredients`.
 
-::: flavor
+::: flavor.ingredients
     options:
       show_root_heading: false
       members_order: source

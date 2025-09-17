@@ -1,8 +1,8 @@
-# Flavor API
+# Python API
 
-Auto-generated API documentation for `flavor`.
+Auto-generated API documentation for `flavor.packaging.python`.
 
-::: flavor
+::: flavor.packaging.python
     options:
       show_root_heading: false
       members_order: source
