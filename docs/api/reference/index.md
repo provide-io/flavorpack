@@ -5,22 +5,22 @@ FlavorPack is a cross-language packaging system implementing the Progressive Sec
 ## Core Modules
 
 ### Packaging System
-- [`flavor.packaging`](reference/flavor/packaging/index.md) - Build orchestration and management
-- [`flavor.packaging.orchestrator`](reference/flavor/packaging/orchestrator.md) - Main build coordinator
-- [`flavor.packaging.python_packager`](reference/flavor/packaging/python_packager.md) - Python-specific packaging
+- [`flavor.packaging`](flavor/packaging/index.md) - Build orchestration and management
+- [`flavor.packaging.orchestrator`](flavor/packaging/orchestrator.md) - Main build coordinator
+- [`flavor.packaging.python.packager`](flavor/packaging/python/packager.md) - Python-specific packaging
 
 ### PSPF Format Implementation
-- [`flavor.psp.format_2025`](reference/flavor/psp/format_2025/index.md) - PSPF 2025 implementation
-- [`flavor.psp.format_2025.builder`](reference/flavor/psp/format_2025/builder.md) - Package building
-- [`flavor.psp.format_2025.reader`](reference/flavor/psp/format_2025/reader.md) - Package reading
-- [`flavor.psp.format_2025.crypto`](reference/flavor/psp/format_2025/crypto.md) - Cryptographic operations
+- [`flavor.psp.format_2025`](flavor/psp/format_2025/index.md) - PSPF 2025 implementation
+- [`flavor.psp.format_2025.builder`](flavor/psp/format_2025/builder.md) - Package building
+- [`flavor.psp.format_2025.reader`](flavor/psp/format_2025/reader.md) - Package reading
+- [`flavor.psp.format_2025.constants`](flavor/psp/format_2025/constants.md) - Format constants
 
 ### Command Line Interface
-- [`flavor.cli`](reference/flavor/cli/index.md) - CLI framework and commands
+- [`flavor.cli`](flavor/cli.md) - CLI framework and commands
 
 ### Operations and Handlers
-- [`flavor.psp.format_2025.operations`](reference/flavor/psp/format_2025/operations.md) - Operation chain management
-- [`flavor.archive`](reference/flavor/archive/index.md) - Archive operation handlers
+- [`flavor.psp.format_2025.operations`](flavor/psp/format_2025/operations.md) - Operation chain management
+- [`flavor.archive`](flavor/archive/index.md) - Archive operation handlers
 
 ## Usage Examples
 
