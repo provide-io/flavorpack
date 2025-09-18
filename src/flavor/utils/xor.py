@@ -1,6 +1,8 @@
 """XOR encoding utilities for PSPF magic bytes obfuscation."""
 
 # XOR key - digits of π (memorable, non-obvious)
+from __future__ import annotations
+
 XOR_KEY = bytes([3, 1, 4, 1, 5, 9, 2, 6])  # First 8 digits of π
 
 

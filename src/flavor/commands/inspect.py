@@ -131,9 +131,9 @@ def inspect_command(package_file: str, output_json: bool) -> None:
 
                 click.echo()  # Empty line at end
 
-    except FileNotFoundError:
+    except FileNotFoundError as e:
         click.secho(f"❌ Package not found: {package_file}", fg="red", err=True)
-        raise click.Abort()
+        raise click.Abort() from e
     except Exception as e:
         click.secho(f"❌ Error inspecting package: {e}", fg="red", err=True)
-        raise click.Abort()
+        raise click.Abort() from e

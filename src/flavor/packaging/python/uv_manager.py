@@ -396,14 +396,12 @@ class UVManager(BaseToolManager):
                             logger.debug(f"Extracting UV binary from {name}")
                             with (
                                 wheel_zip.open(name) as src,
-                                open(uv_path, "wb") as dst,
+                                uv_path.open("wb") as dst,
                             ):
                                 dst.write(src.read())
 
                             # Make executable
-                            import os
-
-                            os.chmod(uv_path, 0o755)
+                            uv_path.chmod(0o755)
 
                             logger.info("✅ Successfully downloaded UV binary")
                             return uv_path

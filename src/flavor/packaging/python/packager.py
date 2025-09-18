@@ -166,7 +166,7 @@ class PythonPackager:
             raise FileNotFoundError(f"No pyproject.toml found in {self.manifest_dir}")
 
         try:
-            with open(pyproject_path, "rb") as f:
+            with pyproject_path.open("rb") as f:
                 pyproject_data = tomllib.load(f)
 
             # Check for required fields
@@ -196,7 +196,7 @@ class PythonPackager:
             Dictionary with package metadata
         """
         pyproject_path = self.manifest_dir / "pyproject.toml"
-        with open(pyproject_path, "rb") as f:
+        with pyproject_path.open("rb") as f:
             pyproject_data = tomllib.load(f)
 
         project = pyproject_data.get("project", {})
@@ -313,7 +313,7 @@ class PythonPackager:
             List of build dependency specifications
         """
         pyproject_path = self.manifest_dir / "pyproject.toml"
-        with open(pyproject_path, "rb") as f:
+        with pyproject_path.open("rb") as f:
             pyproject_data = tomllib.load(f)
 
         build_system = pyproject_data.get("build-system", {})

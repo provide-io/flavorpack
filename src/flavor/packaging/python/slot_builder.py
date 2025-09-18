@@ -69,9 +69,7 @@ class PythonSlotBuilder:
         """Copy a file and preserve executable permissions."""
         shutil.copy2(src, dest)
         if not self.is_windows:
-            import os
-
-            os.chmod(dest, DEFAULT_EXECUTABLE_PERMS)
+            dest.chmod(DEFAULT_EXECUTABLE_PERMS)
 
     def prepare_artifacts(self, work_dir: Path) -> dict[str, Path]:
         """
@@ -403,7 +401,7 @@ class PythonSlotBuilder:
 
     def _write_json(self, path: Path, data: dict[str, Any]) -> None:
         """Write JSON data to file."""
-        with open(path, "w") as f:
+        with path.open("w") as f:
             json.dump(data, f, indent=2)
 
     def _get_requirements_file(self) -> Path | None:

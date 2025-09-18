@@ -5,6 +5,7 @@
 """Package command for the flavor CLI."""
 
 from pathlib import Path
+from typing import Any
 
 import click
 
@@ -12,7 +13,7 @@ from flavor.exceptions import BuildError, PackagingError
 from flavor.package import build_package_from_manifest, verify_package
 
 
-def safe_echo(message: str, **kwargs) -> None:
+def safe_echo(message: str, **kwargs: Any) -> None:
     """Echo a message, handling Windows encoding issues."""
     try:
         click.echo(message, **kwargs)

@@ -40,7 +40,7 @@ class IngredientManager:
         self.ingredients_bin = self.ingredients_dir / "bin"
 
         # Also check XDG cache location for installed ingredients
-        xdg_cache = os.environ.get("XDG_CACHE_HOME", os.path.expanduser("~/.cache"))
+        xdg_cache = os.environ.get("XDG_CACHE_HOME", str(Path("~/.cache").expanduser()))
         self.installed_ingredients_bin = (
             Path(xdg_cache) / "flavor" / "ingredients" / "bin"
         )

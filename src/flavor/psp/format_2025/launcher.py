@@ -6,7 +6,6 @@ Handles bundle execution, slot extraction, and work environment setup.
 
 from contextlib import contextmanager
 import io
-import os
 from pathlib import Path
 import tarfile
 import zlib
@@ -324,7 +323,7 @@ class PSPFLauncher(PSPFReader):
                 "command": None,
                 "args": args or [],
                 "pid": None,
-                "working_directory": os.getcwd(),
+                "working_directory": str(Path.cwd()),
                 "error": str(e),
             }
 

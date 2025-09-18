@@ -8,7 +8,10 @@ Handles the complex logic of finding, building, and testing ingredient binaries.
 import os
 from pathlib import Path
 import shutil
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from flavor.ingredients.manager import IngredientManager
 
 from provide.foundation import logger
 from provide.foundation.file.directory import ensure_dir
@@ -21,7 +24,7 @@ from flavor.config.defaults import DEFAULT_EXECUTABLE_PERMS
 class BinaryLoader:
     """Handles ingredient binary loading, building, and testing."""
 
-    def __init__(self, manager) -> None:
+    def __init__(self, manager: IngredientManager) -> None:
         """Initialize with reference to parent manager."""
         self.manager = manager
 

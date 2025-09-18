@@ -5,6 +5,7 @@
 """Ingredient management commands for the flavor CLI."""
 
 import os
+from pathlib import Path
 
 import click
 from provide.foundation.process import run_command
@@ -38,7 +39,7 @@ def ingredient_list(verbose: bool) -> None:
     click.echo("=" * 60)
 
     # Ingredient function to get version
-    def get_version(ingredient_path):
+    def get_version(ingredient_path: Path) -> str | None:
         try:
             result = run_command(
                 [str(ingredient_path), "--version"],
