@@ -330,7 +330,7 @@ class PSPFReader:
         """Get a lazy view of a slot."""
         return self._extractor.get_slot_view(slot_index)
 
-    def stream_slot(self, slot_index: int, chunk_size: int = 8192):
+    def stream_slot(self, slot_index: int, chunk_size: int = 8192) -> Any:
         """Stream a slot in chunks."""
         return self._extractor.stream_slot(slot_index, chunk_size)
 
