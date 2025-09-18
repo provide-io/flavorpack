@@ -25,7 +25,7 @@ def run_go_tests():
     """Run Go operation tests and check results."""
     print("🔧 Running Go operation tests...")
 
-    go_dir = Path("ingredients/flavor-go/pkg/psp/format_2025")
+    go_dir = Path("src/flavor-go/pkg/psp/format_2025")
     if not go_dir.exists():
         print(f"❌ Go directory not found: {go_dir}")
         return False
@@ -96,7 +96,7 @@ def compare_test_vectors():
 
     # Load the generated test vectors
     test_file = Path(
-        "ingredients/flavor-go/pkg/psp/format_2025/testdata/operations.json"
+        "src/flavor-go/pkg/psp/format_2025/testdata/operations.json"
     )
     if not test_file.exists():
         print(f"❌ Test vectors not found: {test_file}")

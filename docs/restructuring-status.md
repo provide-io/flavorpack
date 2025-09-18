@@ -29,40 +29,40 @@ flavorpack/
 ## Migration Checklist
 
 ### Phase 1: Directory Structure Creation
-- [ ] Create `src/flavor-go/` directory
-- [ ] Create `src/flavor-rust/` directory
-- [ ] Create `tests/pretaster/` directory
-- [ ] Create `tests/taster/` directory
-- [ ] Create `dist/bin/` directory structure
-- [ ] Create `build/` directory
+- [x] Create `src/flavor-go/` directory
+- [x] Create `src/flavor-rust/` directory
+- [x] Create `tests/pretaster/` directory
+- [x] Create `tests/taster/` directory
+- [x] Create `dist/bin/` directory structure
+- [x] Create `build/` directory
 
 ### Phase 2: Source Code Movement
-- [ ] Move `ingredients/flavor-go/` → `src/flavor-go/`
-- [ ] Move `ingredients/flavor-rs/` → `src/flavor-rust/`
-- [ ] Move `helpers/pretaster/` → `tests/pretaster/`
-- [ ] Move `helpers/taster/` → `tests/taster/`
-- [ ] Move `ingredients/build.sh` → `./build.sh` (root)
+- [x] Move `ingredients/flavor-go/` → `src/flavor-go/`
+- [x] Move `ingredients/flavor-rs/` → `src/flavor-rust/`
+- [x] Move `helpers/pretaster/` → `tests/pretaster/`
+- [x] Move `helpers/taster/` → `tests/taster/`
+- [x] Move `ingredients/build.sh` → `./build.sh` (root)
 
 ### Phase 3: Python Code Updates
 Files requiring path updates:
-- [ ] `helpers/taster/src/taster/commands/mmap.py`
-- [ ] `helpers/taster/src/taster/commands/test.py`
-- [ ] `helpers/taster/src/taster/commands/crosslang.py`
-- [ ] `helpers/taster/tests/test_crosslang.py`
-- [ ] `scripts/verify_operations.py`
-- [ ] `scripts/generate_test_vectors.py`
-- [ ] `tests/format_2025/test_mmap_backends.py`
+- [x] `tests/taster/src/taster/commands/mmap.py` (no changes needed)
+- [x] `tests/taster/src/taster/commands/test.py`
+- [x] `tests/taster/src/taster/commands/crosslang.py`
+- [x] `tests/taster/tests/test_crosslang.py`
+- [x] `scripts/verify_operations.py`
+- [x] `scripts/generate_test_vectors.py`
+- [x] `tests/format_2025/test_mmap_backends.py`
 
 ### Phase 4: Build System Updates
-- [ ] Update root `Makefile` paths
-  - [ ] Change `ingredients/flavor-go` → `src/flavor-go`
-  - [ ] Change `ingredients/flavor-rs` → `src/flavor-rust`
-  - [ ] Change `helpers/pretaster` → `tests/pretaster`
-  - [ ] Change `helpers/taster` → `tests/taster`
-  - [ ] Change output to `dist/bin/$(PLATFORM)/`
-- [ ] Create new unified `build.sh` at root
-- [ ] Update `helpers/pretaster/build.sh` paths
-- [ ] Update `src/flavor/ingredients/manager.py` to load from `dist/bin/`
+- [x] Update root `Makefile` paths
+  - [x] Change `ingredients/flavor-go` → `src/flavor-go`
+  - [x] Change `ingredients/flavor-rs` → `src/flavor-rust`
+  - [x] Change `helpers/pretaster` → `tests/pretaster`
+  - [x] Change `helpers/taster` → `tests/taster`
+  - [x] Change output to `dist/bin/$(PLATFORM)/`
+- [x] Create new unified `build.sh` at root
+- [x] Update `tests/pretaster/build.sh` paths
+- [x] Update `src/flavor/ingredients/manager.py` to load from `dist/bin/`
 
 ### Phase 5: GitHub Actions Updates
 Workflows requiring updates:

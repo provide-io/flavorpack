@@ -1,0 +1,35 @@
+{
+  "name": "pretaster-simple-test",
+  "version": "1.0.0",
+  "description": "Simple test without large files",
+  "command": "/bin/bash {workenv}/scripts/simple_test.sh",
+  "environment": {
+    "TEST_MODE": "lite"
+  },
+  "package": {
+    "name": "pretaster-simple-test",
+    "version": "1.0.0",
+    "description": "Simple test without large files"
+  },
+  "format": "PSPF/2025",
+  "slots": [
+    {
+      "slot": 0,
+      "purpose": "payload",
+      "lifecycle": "cached",
+      "operations": "raw",
+      "id": "simple-test-sh",
+      "source": "{workenv}/scripts/simple_test.sh",
+      "target": "scripts/simple_test.sh",
+      "permissions": "0755"
+    }
+  ],
+  "execution": {
+    "command": "/bin/bash {workenv}/scripts/simple_test.sh",
+    "args": [],
+    "env": {
+      "TEST_MODE": "lite"
+    },
+    "primary_slot": 0
+  }
+}

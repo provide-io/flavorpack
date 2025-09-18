@@ -1,0 +1,28 @@
+{
+  "name": "absolute-test",
+  "version": "1.0.0",
+  "description": "Test with absolute paths",
+  "command": "/bin/bash /tmp/absolute_test.sh",
+  "package": {
+    "name": "absolute-test",
+    "version": "1.0.0"
+  },
+  "format": "PSPF/2025",
+  "slots": [
+    {
+      "slot": 0,
+      "purpose": "payload",
+      "lifecycle": "cached",
+      "operations": "raw",
+      "id": "minimal-test-sh",
+      "source": "/Users/tim/code/gh/provide-io/flavorpack/helpers/pretaster/scripts/minimal_test.sh",
+      "target": "minimal_test.sh",
+      "permissions": "0755"
+    }
+  ],
+  "execution": {
+    "command": "/bin/bash /tmp/absolute_test.sh",
+    "args": [],
+    "primary_slot": 0
+  }
+}
