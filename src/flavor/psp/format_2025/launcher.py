@@ -186,7 +186,7 @@ class PSPFLauncher(PSPFReader):
         if verify_checksum:
             # NOTE: Use adler32 to match Go/Rust implementations
             # Checksum is of the slot data as it exists in the file (compressed or not)
-            actual_checksum = zlib.adler32(slot_data)
+            actual_checksum = zlib.adler32(slot_data) & 0xFFFFFFFF
             if actual_checksum != slot_entry["checksum"]:
                 logger.error(
                     f"❌ Checksum mismatch for slot {slot_index}: expected {slot_entry['checksum']}, got {actual_checksum}"

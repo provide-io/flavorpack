@@ -181,7 +181,7 @@ class PSPFIndex:
         )
 
         # Calculate checksum with checksum field set to 0
-        checksum = zlib.adler32(data)
+        checksum = zlib.adler32(data) & 0xFFFFFFFF
         self.index_checksum = checksum
 
         # Repack with the correct checksum

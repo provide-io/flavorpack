@@ -140,7 +140,7 @@ def _write_metadata(f: BinaryIO, metadata_compressed: bytes, index: PSPFIndex) -
     # Update index
     index.metadata_offset = metadata_offset
     index.metadata_size = len(metadata_compressed)
-    checksum = zlib.adler32(metadata_compressed)
+    checksum = zlib.adler32(metadata_compressed) & 0xFFFFFFFF
     index.metadata_checksum = checksum.to_bytes(4, "little") + b"\x00" * 28
 
 
