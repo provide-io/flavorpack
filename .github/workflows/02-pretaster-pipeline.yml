@@ -127,7 +127,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: pretaster-packages-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
-          path: helpers/pretaster/dist/
+          path: tests/pretaster/dist/
 
   test-crosslang:
     name: 🧪 Test Cross-Language Chain
@@ -196,7 +196,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: crosslang-logs-${{ matrix.platform }}-${{ github.run_id }}
-          path: helpers/pretaster/logs/
+          path: tests/pretaster/logs/
 
   test-pretaster:
     name: 🧪 Build Pretaster ${{ matrix.name }}
@@ -258,7 +258,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: pretaster-logs-${{ matrix.platform }}-${{ github.run_id }}
-          path: helpers/pretaster/logs/
+          path: tests/pretaster/logs/
 
   validate:
     name: ✅ Validate PSPF Compatibility
