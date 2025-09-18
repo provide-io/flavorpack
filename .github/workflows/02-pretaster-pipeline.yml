@@ -97,7 +97,7 @@ jobs:
           ls -la ingredients/bin/
       
       - name: 🔨 Build Pretaster packages
-        working-directory: helpers/pretaster
+        working-directory: tests/pretaster
         run: |
           export FLAVOR_WORKENV_BASE=$(pwd)
           export FLAVOR_LOG_LEVEL=info
