@@ -79,9 +79,22 @@ def load_launcher_binary(launcher_type: str) -> bytes:
             searched_paths.append(str(base_path / launcher_name))
 
     raise FileNotFoundError(
-        f"Could not find {launcher_base} binary. "
-        f"Build it first with 'flavor helpers build'. "
-        f"Searched paths: {', '.join(searched_paths[:3])}..."
+        f"❌ Could not find {launcher_base} binary!\n"
+        "\n"
+        "🔧 To fix this issue, run one of:\n"
+        "   • cd ingredients && ./build.sh     (build both Go and Rust launchers)\n"
+        "   • make build-ingredients           (if using make)\n"
+        "   • flavor ingredients build         (if flavor CLI is available)\n"
+        "\n"
+        "💡 Or specify a custom launcher with:\n"
+        "   • --launcher-bin /path/to/launcher (command line)\n"
+        "   • FLAVOR_LAUNCHER_BIN=/path/to/launcher (environment variable)\n"
+        "\n"
+        f"🔍 Searched {len(searched_paths)} locations including:\n"
+        f"   • {searched_paths[0] if searched_paths else 'No paths'}\n"
+        f"   • {searched_paths[1] if len(searched_paths) > 1 else '...'}\n"
+        f"   • {searched_paths[2] if len(searched_paths) > 2 else '...'}\n"
+        f"   • ... and {len(searched_paths) - 3} more" if len(searched_paths) > 3 else ""
     )
 
 

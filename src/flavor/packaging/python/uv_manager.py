@@ -153,9 +153,8 @@ class UVManager(BaseToolManager):
             ToolNotFoundError: If UV cannot be found or installed
         """
         # Try system UV first if enabled and no version specified
-        if self.use_system_uv and version is None:
-            if system_uv := self.find_system_uv():
-                return system_uv
+        if self.use_system_uv and version is None and (system_uv := self.find_system_uv()):
+            return system_uv
 
         # Install specific version if requested
         if version:

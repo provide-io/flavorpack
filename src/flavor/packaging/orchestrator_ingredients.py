@@ -92,11 +92,7 @@ def create_builder_manifest(
     uv_exe = "uv.exe" if windows else "uv"
     bin_dir = "Scripts" if is_windows else "bin"
     # Use the exact Python binary name that UV provides
-    if is_windows:
-        python_exe = "python.exe"
-    else:
-        # UV installs Python as python3 on all Unix platforms
-        python_exe = "python3"
+    python_exe = "python.exe" if is_windows else "python3"  # UV installs Python as python3 on all Unix platforms
     python_path = f"{{workenv}}/{bin_dir}/{python_exe}"
     package_exe = get_cli_executable_name(package_name, build_config, windows)
 
@@ -233,7 +229,20 @@ def find_builder_executable(builder_bin: str | None) -> Path:
         try:
             return manager.get_ingredient("flavor-go-builder")
         except FileNotFoundError as e:
-            raise BuildError(f"No builder found: {e}") from e
+            raise BuildError(
+                "❌ No builder binaries found!\n"
+                "\n"
+                "🔧 To fix this issue, run one of:\n"
+                "   • cd ingredients && ./build.sh     (build both Go and Rust builders)\n"
+                "   • make build-ingredients           (if using make)\n"
+                "   • flavor ingredients build         (if flavor CLI is available)\n"
+                "\n"
+                "💡 Or specify a custom builder with:\n"
+                "   • --builder-bin /path/to/builder   (command line)\n"
+                "   • FLAVOR_BUILDER_BIN=/path/to/builder (environment variable)\n"
+                "\n"
+                f"🔍 Searched locations: {manager.ingredients_bin}, {manager.installed_ingredients_bin}"
+            ) from e
 
 
 def find_launcher_executable(launcher_bin: str | None) -> Path:
@@ -264,7 +273,18 @@ def find_launcher_executable(launcher_bin: str | None) -> Path:
             return manager.get_ingredient("flavor-go-launcher")
         except FileNotFoundError as e:
             raise BuildError(
-                "No launcher binary found. Specify with --launcher-bin or ensure helpers are built."
+                "❌ No launcher binaries found!\n"
+                "\n"
+                "🔧 To fix this issue, run one of:\n"
+                "   • cd ingredients && ./build.sh     (build both Go and Rust launchers)\n"
+                "   • make build-ingredients           (if using make)\n"
+                "   • flavor ingredients build         (if flavor CLI is available)\n"
+                "\n"
+                "💡 Or specify a custom launcher with:\n"
+                "   • --launcher-bin /path/to/launcher (command line)\n"
+                "   • FLAVOR_LAUNCHER_BIN=/path/to/launcher (environment variable)\n"
+                "\n"
+                f"🔍 Searched locations: {manager.ingredients_bin}, {manager.installed_ingredients_bin}"
             ) from e
 
 
@@ -275,11 +295,7 @@ def create_python_builder_metadata(
     windows = is_windows()
     bin_dir = "Scripts" if windows else "bin"
     # Use the exact Python binary name that UV provides
-    if windows:
-        python_exe = "python.exe"
-    else:
-        # UV installs Python as python3 on all Unix platforms
-        python_exe = "python3"
+    python_exe = "python.exe" if windows else "python3"  # UV installs Python as python3 on all Unix platforms
     python_path = f"{{workenv}}/{bin_dir}/{python_exe}"
     package_exe = get_cli_executable_name(package_name, build_config, windows)
 
