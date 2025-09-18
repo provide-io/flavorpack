@@ -3,7 +3,7 @@
 .PHONY: all build clean test install fmt lint security fuzz check deps release
 
 # Configuration
-BIN_DIR ?= ../bin
+BIN_DIR ?= ../../dist/bin
 XDG_CACHE_HOME ?= $(HOME)/.cache
 FLAVOR_HELPERS_DIR ?= $(XDG_CACHE_HOME)/flavor/helpers/bin
 CARGO_FLAGS ?= --release
