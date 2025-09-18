@@ -24,6 +24,7 @@ class OperationHandler:
     def __init__(self) -> None:
         """Initialize operation handler with foundation-based handlers."""
         self._handlers = self._init_handlers()
+        self._reverse_handlers = self._init_reverse_handlers()
 
     def _init_handlers(self) -> dict[int, callable]:
         """Initialize operation handlers mapping to foundation tools."""
@@ -35,6 +36,18 @@ class OperationHandler:
             Operation.COMPRESS_ZSTD: self._handle_zstd,
             Operation.ENCRYPT_AES256: self._handle_aes256_gcm,
             Operation.ENCRYPT_CHACHA20: self._handle_chacha20,
+        }
+
+    def _init_reverse_handlers(self) -> dict[int, callable]:
+        """Initialize reverse operation handlers mapping."""
+        return {
+            Operation.BUNDLE_TAR: self._reverse_tar,
+            Operation.COMPRESS_GZIP: self._reverse_gzip,
+            Operation.COMPRESS_BZIP2: self._reverse_bzip2,
+            Operation.COMPRESS_XZ: self._reverse_xz,
+            Operation.COMPRESS_ZSTD: self._reverse_zstd,
+            Operation.ENCRYPT_AES256: self._reverse_aes256_gcm,
+            Operation.ENCRYPT_CHACHA20: self._reverse_chacha20,
         }
 
     def apply_operation(
@@ -275,94 +288,159 @@ class OperationHandler:
         Returns:
             Processed data
         """
-        if op == Operation.BUNDLE_TAR:
-            # Extract TAR using foundation
+        handler = self._reverse_handlers.get(op)
+        if handler:
+            return handler(source, output)
+
+        logger.warning(f"⚠️ No reverse handler for operation 0x{op:02x}")
+        return source
+
+    def _reverse_tar(
+        self, source: Path | BinaryIO, output: Path | BinaryIO | None
+    ) -> Path | BinaryIO:
+        """Reverse TAR operation (extract)."""
+        if output is None:
+            import tempfile
+            output = Path(tempfile.mkdtemp())
+
+        tar_archive = TarArchive()
+        tar_archive.extract_to_directory(source, output)
+
+        logger.debug(f"📦 Extracted TAR using foundation: {output}")
+        return output
+
+    def _reverse_gzip(
+        self, source: Path | BinaryIO, output: Path | BinaryIO | None
+    ) -> Path | BinaryIO:
+        """Reverse GZIP operation (decompress)."""
+        if isinstance(source, Path):
             if output is None:
-                # Need to use temp_dir as a context manager to get a path
-                import tempfile
+                output = source.with_suffix("")  # Remove .gz
 
-                output = Path(tempfile.mkdtemp())
+            compressor = GzipCompressor()
+            compressor.decompress_file(source, output)
 
-            tar_archive = TarArchive()
-            tar_archive.extract_to_directory(source, output)
-
-            logger.debug(f"📦 Extracted TAR using foundation: {output}")
+            logger.debug(f"🗜️ Decompressed GZIP using foundation: {output}")
             return output
 
-        elif op == Operation.COMPRESS_GZIP:
-            # Decompress GZIP using foundation
-            if isinstance(source, Path):
-                if output is None:
-                    output = source.with_suffix("")  # Remove .gz
+        elif hasattr(source, "read"):
+            import io
 
-                compressor = GzipCompressor()
+            if output is None:
+                output = io.BytesIO()
+
+            compressor = GzipCompressor()
+            compressor.decompress(source, output)
+            output.seek(0)
+
+            logger.debug("🗜️ Decompressed GZIP stream using foundation")
+            return output
+
+        return source
+
+    def _reverse_bzip2(
+        self, source: Path | BinaryIO, output: Path | BinaryIO | None
+    ) -> Path | BinaryIO:
+        """Reverse BZIP2 operation (decompress)."""
+        if isinstance(source, Path):
+            if output is None:
+                output = source.with_suffix("")  # Remove .bz2
+
+            try:
+                compressor = Bzip2Compressor()
                 compressor.decompress_file(source, output)
 
-                logger.debug(f"🗜️ Decompressed GZIP using foundation: {output}")
+                logger.debug(f"🗜️ Decompressed BZIP2 using foundation: {output}")
+                return output
+            except (ImportError, AttributeError):
+                import bz2
+                with bz2.open(source, "rb") as f_in, output.open("wb") as f_out:
+                    f_out.write(f_in.read())
+
+                logger.debug(f"🗜️ Decompressed BZIP2 (fallback): {output}")
                 return output
 
-            elif hasattr(source, "read"):
-                import io
+        elif hasattr(source, "read"):
+            import io
+
+            try:
+                if output is None:
+                    output = io.BytesIO()
+
+                compressor = Bzip2Compressor()
+                compressor.decompress(source, output)
+                output.seek(0)
+
+                logger.debug("🗜️ Decompressed BZIP2 stream using foundation")
+                return output
+            except (ImportError, AttributeError):
+                import bz2
 
                 if output is None:
                     output = io.BytesIO()
 
-                compressor = GzipCompressor()
-                compressor.decompress(source, output)
+                decompressed_data = bz2.decompress(source.read())
+                output.write(decompressed_data)
                 output.seek(0)
 
-                logger.debug("🗜️ Decompressed GZIP stream using foundation")
+                logger.debug("🗜️ Decompressed BZIP2 stream (fallback)")
                 return output
 
-        elif op == Operation.COMPRESS_BZIP2:
-            # Decompress BZIP2
-            if isinstance(source, Path):
-                if output is None:
-                    output = source.with_suffix("")  # Remove .bz2
+        return source
 
-                try:
-                    compressor = Bzip2Compressor()
-                    compressor.decompress_file(source, output)
+    def _reverse_xz(
+        self, source: Path | BinaryIO, output: Path | BinaryIO | None
+    ) -> Path | BinaryIO:
+        """Reverse XZ operation (decompress)."""
+        import lzma
 
-                    logger.debug(f"🗜️ Decompressed BZIP2 using foundation: {output}")
-                    return output
-                except (ImportError, AttributeError):
-                    # Fall back to manual implementation
-                    import bz2
+        if isinstance(source, Path):
+            if output is None:
+                output = source.with_suffix("")  # Remove .xz
 
-                    with bz2.open(source, "rb") as f_in, output.open("wb") as f_out:
-                        f_out.write(f_in.read())
+            with lzma.open(source, "rb") as f_in, output.open("wb") as f_out:
+                f_out.write(f_in.read())
 
-                    logger.debug(f"🗜️ Decompressed BZIP2 (fallback): {output}")
-                    return output
+            logger.debug(f"🗜️ Decompressed XZ (stdlib): {output}")
+            return output
 
-            elif hasattr(source, "read"):
-                import io
+        return source
 
-                try:
-                    if output is None:
-                        output = io.BytesIO()
+    def _reverse_zstd(
+        self, source: Path | BinaryIO, output: Path | BinaryIO | None
+    ) -> Path | BinaryIO:
+        """Reverse ZSTD operation (decompress)."""
+        try:
+            import zstandard as zstd
+        except ImportError:
+            logger.warning("⚠️ zstandard not installed, skipping ZSTD reversal")
+            return source
 
-                    compressor = Bzip2Compressor()
-                    compressor.decompress(source, output)
-                    output.seek(0)
+        if isinstance(source, Path):
+            if output is None:
+                output = source.with_suffix("")  # Remove .zst
 
-                    logger.debug("🗜️ Decompressed BZIP2 stream using foundation")
-                    return output
-                except (ImportError, AttributeError):
-                    # Fall back to manual implementation
-                    import bz2
+            dctx = zstd.ZstdDecompressor()
+            with source.open("rb") as f_in, output.open("wb") as f_out:
+                f_out.write(dctx.decompress(f_in.read()))
 
-                    if output is None:
-                        output = io.BytesIO()
+            logger.debug(f"🗜️ Decompressed ZSTD: {output}")
+            return output
 
-                    decompressed_data = bz2.decompress(source.read())
-                    output.write(decompressed_data)
-                    output.seek(0)
+        return source
 
-                    logger.debug("🗜️ Decompressed BZIP2 stream (fallback)")
-                    return output
+    def _reverse_aes256_gcm(
+        self, source: Path | BinaryIO, output: Path | BinaryIO | None
+    ) -> Path | BinaryIO:
+        """Reverse AES-256-GCM operation (decrypt) - not implemented."""
+        logger.warning("⚠️ AES-256-GCM decryption not yet implemented")
+        return source
 
+    def _reverse_chacha20(
+        self, source: Path | BinaryIO, output: Path | BinaryIO | None
+    ) -> Path | BinaryIO:
+        """Reverse ChaCha20-Poly1305 operation (decrypt) - not implemented."""
+        logger.warning("⚠️ ChaCha20-Poly1305 decryption not yet implemented")
         return source
 
     def validate_operations(self, operations: int) -> tuple[bool, str]:
