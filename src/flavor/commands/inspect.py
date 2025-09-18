@@ -5,6 +5,7 @@
 """Inspect command for the flavor CLI - quick package overview."""
 
 from pathlib import Path
+from typing import Any
 
 import click
 from provide.foundation.utils.formatting import format_size
@@ -53,7 +54,7 @@ def inspect_command(package_file: str, output_json: bool) -> None:
 
 
 def _output_json_format(
-    package_path, index, metadata, slot_descriptors, slots_metadata
+    package_path: Path, index: Any, metadata: dict[str, Any], slot_descriptors: list[Any], slots_metadata: list[dict[str, Any]]
 ) -> None:
     """Output package information in JSON format."""
     import json
@@ -87,10 +88,9 @@ def _output_json_format(
 
 
 def _output_human_format(
-    package_path, index, metadata, slot_descriptors, slots_metadata
+    package_path: Path, index: Any, metadata: dict[str, Any], slot_descriptors: list[Any], slots_metadata: list[dict[str, Any]]
 ) -> None:
     """Output package information in human-readable format."""
-    from datetime import datetime
 
     file_size = package_path.stat().st_size
     launcher_size = index.launcher_size
@@ -135,7 +135,7 @@ def _format_build_time(build_time: str) -> str:
         return build_time  # Keep original timestamp if parsing fails
 
 
-def _output_slot_details(slot_descriptors, slots_metadata) -> None:
+def _output_slot_details(slot_descriptors: list[Any], slots_metadata: list[dict[str, Any]]) -> None:
     """Output detailed slot information."""
     for i, slot in enumerate(slot_descriptors):
         is_last = i == len(slot_descriptors) - 1
