@@ -35,7 +35,7 @@ cd flavor
 source env.sh
 
 # Build the Go and Rust ingredients
-./ingredients/build.sh
+./build.sh
 ```
 
 ### Creating Your First Package
@@ -82,12 +82,12 @@ Flavor Pack consists of three main components:
    - Creates manifests and handles Python packaging
    - Provides CLI interface for package operations
 
-2. **Native Launchers** (`ingredients/flavor-{go,rs}/`)
+2. **Native Launchers** (`src/flavor-go/`, `src/flavor-rust/`)
    - Extract and execute packages at runtime
    - Perform Ed25519 signature verification
    - Manage workenv caching and lifecycle
 
-3. **Native Builders** (`ingredients/flavor-{go,rs}/`)
+3. **Native Builders** (`src/flavor-go/`, `src/flavor-rust/`)
    - Assemble PSPF packages from manifests
    - Implement the PSPF/2025 binary format
    - Handle slot packing and metadata encoding
@@ -105,23 +105,22 @@ Every PSPF package includes cryptographic integrity verification:
 
 ```bash
 # Run the test suite
-workenv/flavor_*/bin/pytest tests/
+make test
 
 # Run with coverage
-workenv/flavor_*/bin/pytest --cov=src/flavor --cov-report=term-missing
+make test-cov
 
 # Test cross-language compatibility
-./test-all-combinations.sh
+make validate-pspf
 
 # Run specific test categories
-workenv/flavor_*/bin/pytest -m unit        # Fast unit tests
-workenv/flavor_*/bin/pytest -m integration # Integration tests
-workenv/flavor_*/bin/pytest -m security    # Security tests
+pytest -m unit        # Fast unit tests
+pytest -m integration # Integration tests
+pytest -m security    # Security tests
 
-# Test ingredients with Taster
-cd helpers/taster
-../../workenv/flavor_*/bin/flavor pack --manifest pyproject.toml --output taster.psp
-./taster.psp --help
+# Test ingredients with Pretaster
+cd tests/pretaster
+make test
 ```
 
 ## 🙏 Acknowledgments
