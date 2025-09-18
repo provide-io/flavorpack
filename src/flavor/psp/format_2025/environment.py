@@ -69,10 +69,20 @@ def process_runtime_env(env_map: dict[str, str], runtime_env: dict[str, Any]) ->
     """
     plog.debug("🔧 Processing runtime environment configuration")
 
-    # Build list of patterns to preserve (pass patterns)
     pass_patterns = runtime_env.get("pass", [])
+    should_preserve = _create_preserve_checker(pass_patterns)
 
-    # Helper to check if a variable should be preserved
+    _process_unset_operations(env_map, runtime_env, should_preserve)
+    _process_map_operations(env_map, runtime_env, should_preserve)
+    _process_set_operations(env_map, runtime_env)
+    _verify_pass_requirements(pass_patterns, env_map)
+
+    plog.debug("✅ Runtime environment processing complete")
+
+
+def _create_preserve_checker(pass_patterns: list[str]):
+    """Create a function to check if a variable should be preserved."""
+
     def should_preserve(key: str) -> bool:
         """Check if a key matches any pass pattern."""
         for pattern in pass_patterns:
@@ -80,73 +90,105 @@ def process_runtime_env(env_map: dict[str, str], runtime_env: dict[str, Any]) ->
             if pattern == key:
                 return True
             # Glob pattern match
-            if "*" in pattern or "?" in pattern:
-                if fnmatch.fnmatch(key, pattern):
-                    return True
+            if ("*" in pattern or "?" in pattern) and fnmatch.fnmatch(key, pattern):
+                return True
         return False
 
-    # Process unset operations first (highest priority)
-    if runtime_env.get("unset"):
-        unset_patterns = runtime_env["unset"]
-        plog.debug(f"🗑️ Processing {len(unset_patterns)} unset patterns")
+    return should_preserve
 
-        for pattern in unset_patterns:
-            if pattern == "*":
-                # Special case: unset all except preserved
-                keys_to_remove = [k for k in env_map if not should_preserve(k)]
-                for key in keys_to_remove:
-                    del env_map[key]
-                    plog.trace(f"  🗑️ Unset: {key}")
-            elif "*" in pattern or "?" in pattern:
-                # Glob pattern
-                keys_to_remove = [
-                    k
-                    for k in env_map
-                    if fnmatch.fnmatch(k, pattern) and not should_preserve(k)
-                ]
-                for key in keys_to_remove:
-                    del env_map[key]
-                    plog.trace(f"  🗑️ Unset (glob): {key}")
-            else:
-                # Exact match
-                if pattern in env_map and not should_preserve(pattern):
-                    del env_map[pattern]
-                    plog.debug(f"🗑️ Unset: {pattern}")
 
-    # Process map operations (variable renaming)
-    if runtime_env.get("map"):
-        map_ops = runtime_env["map"]
-        plog.debug(f"🔄 Processing {len(map_ops)} map operations")
+def _process_unset_operations(
+    env_map: dict[str, str], runtime_env: dict[str, Any], should_preserve
+) -> None:
+    """Process unset operations first (highest priority)."""
+    if not runtime_env.get("unset"):
+        return
 
-        for old_key, new_key in map_ops.items():
-            if old_key in env_map and not should_preserve(old_key):
-                env_map[new_key] = env_map.pop(old_key)
-                plog.debug(f"🔄 Mapped: {old_key} -> {new_key}")
+    unset_patterns = runtime_env["unset"]
+    plog.debug(f"🗑️ Processing {len(unset_patterns)} unset patterns")
 
-    # Process set operations (add/override variables)
-    if runtime_env.get("set"):
-        set_ops = runtime_env["set"]
-        plog.debug(f"📝 Processing {len(set_ops)} set operations")
+    for pattern in unset_patterns:
+        if pattern == "*":
+            _unset_all_except_preserved(env_map, should_preserve)
+        elif "*" in pattern or "?" in pattern:
+            _unset_glob_pattern(env_map, pattern, should_preserve)
+        else:
+            _unset_exact_match(env_map, pattern, should_preserve)
 
-        for key, value in set_ops.items():
-            env_map[key] = value
-            plog.debug(f"📝 Set: {key} = '{value}'")
 
-    # Verify all required pass patterns are satisfied
-    if pass_patterns:
-        missing = []
-        for pattern in pass_patterns:
-            # Only check exact matches for requirements
-            if "*" not in pattern and "?" not in pattern:
-                if pattern not in env_map:
-                    missing.append(pattern)
+def _unset_all_except_preserved(env_map: dict[str, str], should_preserve) -> None:
+    """Unset all variables except those marked to preserve."""
+    keys_to_remove = [k for k in env_map if not should_preserve(k)]
+    for key in keys_to_remove:
+        del env_map[key]
+        plog.trace(f"  🗑️ Unset: {key}")
 
-        if missing:
-            plog.warning(
-                f"⚠️ Required environment variables not found: {', '.join(missing)}"
-            )
 
-    plog.debug("✅ Runtime environment processing complete")
+def _unset_glob_pattern(env_map: dict[str, str], pattern: str, should_preserve) -> None:
+    """Unset variables matching glob pattern."""
+    keys_to_remove = [
+        k for k in env_map if fnmatch.fnmatch(k, pattern) and not should_preserve(k)
+    ]
+    for key in keys_to_remove:
+        del env_map[key]
+        plog.trace(f"  🗑️ Unset (glob): {key}")
+
+
+def _unset_exact_match(env_map: dict[str, str], pattern: str, should_preserve) -> None:
+    """Unset variable with exact match."""
+    if pattern in env_map and not should_preserve(pattern):
+        del env_map[pattern]
+        plog.debug(f"🗑️ Unset: {pattern}")
+
+
+def _process_map_operations(
+    env_map: dict[str, str], runtime_env: dict[str, Any], should_preserve
+) -> None:
+    """Process map operations (variable renaming)."""
+    if not runtime_env.get("map"):
+        return
+
+    map_ops = runtime_env["map"]
+    plog.debug(f"🔄 Processing {len(map_ops)} map operations")
+
+    for old_key, new_key in map_ops.items():
+        if old_key in env_map and not should_preserve(old_key):
+            env_map[new_key] = env_map.pop(old_key)
+            plog.debug(f"🔄 Mapped: {old_key} -> {new_key}")
+
+
+def _process_set_operations(
+    env_map: dict[str, str], runtime_env: dict[str, Any]
+) -> None:
+    """Process set operations (add/override variables)."""
+    if not runtime_env.get("set"):
+        return
+
+    set_ops = runtime_env["set"]
+    plog.debug(f"📝 Processing {len(set_ops)} set operations")
+
+    for key, value in set_ops.items():
+        env_map[key] = value
+        plog.debug(f"📝 Set: {key} = '{value}'")
+
+
+def _verify_pass_requirements(
+    pass_patterns: list[str], env_map: dict[str, str]
+) -> None:
+    """Verify all required pass patterns are satisfied."""
+    if not pass_patterns:
+        return
+
+    missing = []
+    for pattern in pass_patterns:
+        # Only check exact matches for requirements
+        if "*" not in pattern and "?" not in pattern and pattern not in env_map:
+            missing.append(pattern)
+
+    if missing:
+        plog.warning(
+            f"⚠️ Required environment variables not found: {', '.join(missing)}"
+        )
 
 
 def set_platform_environment(env: dict[str, str]) -> None:

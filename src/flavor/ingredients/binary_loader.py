@@ -5,6 +5,8 @@ Binary loading and building for ingredients.
 Handles the complex logic of finding, building, and testing ingredient binaries.
 """
 
+from __future__ import annotations
+
 import os
 from pathlib import Path
 import shutil
@@ -45,84 +47,15 @@ class BinaryLoader:
         Raises:
             FileNotFoundError: If ingredient not found
         """
-        platform_specific_names = []
-
-        # Primary search: Look in the bin directory for ANY versioned ingredients
-        bin_dir = Path(__file__).parent / "bin"
-        if bin_dir.exists():
-            # Use glob to find all files matching the pattern with any version
-            for file in bin_dir.glob(f"{name}-*-{self.current_platform}"):
-                if file.is_file():
-                    platform_specific_names.append(file.name)
-
-            # Also check for files without platform suffix but with version
-            for file in bin_dir.glob(f"{name}-*"):
-                if file.is_file() and file.name not in platform_specific_names:
-                    # Check if this is for current platform or has no platform
-                    if self.current_platform in file.name or not any(
-                        plat in file.name for plat in ["linux", "darwin", "windows"]
-                    ):
-                        platform_specific_names.append(file.name)
-
-        # Optionally add current package version as a search pattern
-        try:
-            from flavor._version import __version__
-
-            if __version__ and __version__ != "0.0.0":
-                platform_specific_names.append(
-                    f"{name}-{__version__}-{self.current_platform}"
-                )
-        except ImportError:
-            pass
-
-        # Add non-versioned patterns as fallbacks
-        platform_specific_names.extend(
-            [
-                f"{name}-{self.current_platform}",  # e.g., flavor-rs-launcher-linux_arm64
-                name,  # Fallback to exact name
-            ]
-        )
-
-        # Remove duplicates while preserving order
-        seen = set()
-        unique_names = []
-        for n in platform_specific_names:
-            if n not in seen:
-                seen.add(n)
-                unique_names.append(n)
-        platform_specific_names = unique_names
+        platform_specific_names = self._generate_ingredient_names(name)
 
         for specific_name in platform_specific_names:
-            # 1. Check embedded ingredients from wheel installation (ingredients/bin/)
-            embedded_path = Path(__file__).parent / "bin" / specific_name
-            if embedded_path.exists():
-                # Make sure it's executable
-                if not os.access(embedded_path, os.X_OK):
-                    try:
-                        embedded_path.chmod(DEFAULT_EXECUTABLE_PERMS)
-                    except (OSError, PermissionError):
-                        pass  # Continue even if we can't set permissions
-                logger.debug(f"Found ingredient at: {embedded_path}")
-                return embedded_path
-
-            # 2. Check bundled with package (for PyPI wheels - old location)
-            bundled_path = (
-                Path(__file__).parent
-                / "ingredients"
-                / self.current_platform
-                / specific_name
-            )
-            if bundled_path.exists():
-                logger.debug(f"Found ingredient at: {bundled_path}")
-                return bundled_path
-
-            # 3. Check local development ingredients
-            local_path = self.manager.ingredients_bin / specific_name
-            if local_path.exists():
-                logger.debug(f"Found ingredient at: {local_path}")
-                return local_path
+            found_path = self._search_ingredient_locations(specific_name)
+            if found_path:
+                return found_path
 
         # Not found
+        bin_dir = Path(__file__).parent / "bin"
         raise FileNotFoundError(
             f"Ingredient '{name}' not found for platform {self.current_platform}.\n"
             f"Tried names: {platform_specific_names}\n"
@@ -341,3 +274,111 @@ class BinaryLoader:
                 results["failed"].append({"name": ingredient.name, "error": str(e)})
 
         return results
+
+    def _generate_ingredient_names(self, name: str) -> list[str]:
+        """Generate list of possible ingredient names to search for."""
+        platform_specific_names = []
+
+        # Primary search: Look in the bin directory for ANY versioned ingredients
+        bin_dir = Path(__file__).parent / "bin"
+        if bin_dir.exists():
+            platform_specific_names.extend(
+                self._find_versioned_ingredients(bin_dir, name)
+            )
+
+        # Add package version as search pattern
+        package_version_name = self._get_package_version_name(name)
+        if package_version_name:
+            platform_specific_names.append(package_version_name)
+
+        # Add fallback patterns
+        platform_specific_names.extend(
+            [
+                f"{name}-{self.current_platform}",  # e.g., flavor-rs-launcher-linux_arm64
+                name,  # Fallback to exact name
+            ]
+        )
+
+        return self._remove_duplicates(platform_specific_names)
+
+    def _find_versioned_ingredients(self, bin_dir: Path, name: str) -> list[str]:
+        """Find versioned ingredients in bin directory."""
+        found_names = []
+
+        # Use glob to find all files matching the pattern with any version
+        for file in bin_dir.glob(f"{name}-*-{self.current_platform}"):
+            if file.is_file():
+                found_names.append(file.name)
+
+        # Also check for files without platform suffix but with version
+        for file in bin_dir.glob(f"{name}-*"):
+            if (
+                file.is_file()
+                and file.name not in found_names
+                and (
+                    self.current_platform in file.name
+                    or not any(
+                        plat in file.name for plat in ["linux", "darwin", "windows"]
+                    )
+                )
+            ):
+                found_names.append(file.name)
+
+        return found_names
+
+    def _get_package_version_name(self, name: str) -> str | None:
+        """Get ingredient name with package version if available."""
+        try:
+            from flavor._version import __version__
+
+            if __version__ and __version__ != "0.0.0":
+                return f"{name}-{__version__}-{self.current_platform}"
+        except ImportError:
+            pass
+        return None
+
+    def _remove_duplicates(self, names: list[str]) -> list[str]:
+        """Remove duplicates from names list while preserving order."""
+        seen = set()
+        unique_names = []
+        for n in names:
+            if n not in seen:
+                seen.add(n)
+                unique_names.append(n)
+        return unique_names
+
+    def _search_ingredient_locations(self, specific_name: str) -> Path | None:
+        """Search for ingredient in all known locations."""
+        # 1. Check embedded ingredients from wheel installation (ingredients/bin/)
+        embedded_path = Path(__file__).parent / "bin" / specific_name
+        if embedded_path.exists():
+            self._ensure_executable(embedded_path)
+            logger.debug(f"Found ingredient at: {embedded_path}")
+            return embedded_path
+
+        # 2. Check bundled with package (for PyPI wheels - old location)
+        bundled_path = (
+            Path(__file__).parent
+            / "ingredients"
+            / self.current_platform
+            / specific_name
+        )
+        if bundled_path.exists():
+            logger.debug(f"Found ingredient at: {bundled_path}")
+            return bundled_path
+
+        # 3. Check local development ingredients
+        local_path = self.manager.ingredients_bin / specific_name
+        if local_path.exists():
+            logger.debug(f"Found ingredient at: {local_path}")
+            return local_path
+
+        return None
+
+    def _ensure_executable(self, path: Path) -> None:
+        """Ensure the given path is executable."""
+        if not os.access(path, os.X_OK):
+            try:
+                path.chmod(DEFAULT_EXECUTABLE_PERMS)
+            except (OSError, PermissionError):
+                pass  # Continue even if we can't set permissions
