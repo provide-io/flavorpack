@@ -33,7 +33,7 @@
       "lifecycle": "cached",
       "operations": "raw",
       "id": "slot2/flavor-go-builder",
-      "source": "{workenv}/../../ingredients/bin/flavor-go-builder-darwin_arm64",
+      "source": "{workenv}/../../dist/bin/flavor-go-builder-darwin_arm64",
       "target": "slot2/flavor-go-builder-darwin_arm64",
       "permissions": "0755"
     },

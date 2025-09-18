@@ -21,7 +21,7 @@ cd "$SCRIPT_DIR/.."
 rm -rf ~/.cache/flavor/workenv 2>/dev/null || true
 
 # Build helpers if needed
-if [[ ! -f "../../ingredients/bin/flavor-rs-launcher-darwin_arm64" ]]; then
+if [[ ! -f "../../dist/bin/flavor-rs-launcher-darwin_arm64" ]]; then
     make build-helpers >/dev/null 2>&1
 fi
 
@@ -76,8 +76,8 @@ EOF
 EOF
     
     # Build package
-    local builder_bin="../../ingredients/bin/flavor-${builder}-builder-darwin_arm64"
-    local launcher_bin="../../ingredients/bin/flavor-${launcher}-launcher-darwin_arm64"
+    local builder_bin="../../dist/bin/flavor-${builder}-builder-darwin_arm64"
+    local launcher_bin="../../dist/bin/flavor-${launcher}-launcher-darwin_arm64"
     if ! $builder_bin --manifest configs/test-exit.json --launcher-bin "$launcher_bin" --output "$package_file" --key-seed test123 --log-level error 2>&1 | grep -v "^🦀\|^🐹" >/dev/null; then
         echo -e "${RED}❌ Failed to build package${NC}"
         return 1

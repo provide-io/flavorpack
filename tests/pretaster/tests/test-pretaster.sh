@@ -13,7 +13,7 @@ FAILED_TESTS=""
 # Get directories
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PRETASTER_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-HELPERS_DIR="$(cd "$PRETASTER_DIR/../../ingredients" && pwd)"
+HELPERS_DIR="$(cd "$PRETASTER_DIR/../../dist" && pwd)"
 
 # Change to pretaster directory
 cd "$PRETASTER_DIR"
