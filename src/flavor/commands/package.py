@@ -127,15 +127,28 @@ def pack_command(
 
     try:
         built_artifacts = _build_package_artifacts(
-            pyproject_toml_path, output_path, launcher_bin, builder_bin,
-            strip, progress, quiet, private_key, public_key, key_seed
+            pyproject_toml_path,
+            output_path,
+            launcher_bin,
+            builder_bin,
+            strip,
+            progress,
+            quiet,
+            private_key,
+            public_key,
+            key_seed,
         )
 
         _process_built_artifacts(built_artifacts, verify, strip, quiet)
         _show_final_results(built_artifacts, quiet)
 
     except (BuildError, PackagingError, click.UsageError) as e:
-        _safe_click_secho(f"❌ Packaging Failed:\n{e}", "[ERROR] Packaging Failed:\n{e}", fg="red", err=True)
+        _safe_click_secho(
+            f"❌ Packaging Failed:\n{e}",
+            "[ERROR] Packaging Failed:\n{e}",
+            fg="red",
+            err=True,
+        )
         raise click.Abort() from e
 
 
@@ -143,13 +156,21 @@ def _setup_workenv_base(workenv_base: str | None) -> None:
     """Set workenv base if provided via flag."""
     if workenv_base:
         import os
+
         os.environ["FLAVOR_WORKENV_BASE"] = workenv_base
 
 
 def _build_package_artifacts(
-    pyproject_toml_path: str, output_path: str | None, launcher_bin: str | None,
-    builder_bin: str | None, strip: bool, progress: bool, quiet: bool,
-    private_key: str | None, public_key: str | None, key_seed: str | None
+    pyproject_toml_path: str,
+    output_path: str | None,
+    launcher_bin: str | None,
+    builder_bin: str | None,
+    strip: bool,
+    progress: bool,
+    quiet: bool,
+    private_key: str | None,
+    public_key: str | None,
+    key_seed: str | None,
 ) -> list[Path]:
     """Build package artifacts using the build_package_from_manifest function."""
     return build_package_from_manifest(
@@ -165,14 +186,16 @@ def _build_package_artifacts(
     )
 
 
-def _process_built_artifacts(built_artifacts: list[Path], verify: bool, strip: bool, quiet: bool) -> None:
+def _process_built_artifacts(
+    built_artifacts: list[Path], verify: bool, strip: bool, quiet: bool
+) -> None:
     """Process each built artifact with verification and optimization reporting."""
     for artifact in built_artifacts:
         if not quiet:
             _safe_click_secho(
                 f"✅ Successfully built artifact at {artifact}",
                 f"[OK] Successfully built artifact at {artifact}",
-                fg="green"
+                fg="green",
             )
 
         if strip and not quiet:
@@ -194,20 +217,20 @@ def _verify_artifact(artifact: Path, quiet: bool) -> None:
                 _safe_click_secho(
                     "  ✅ Package verified successfully",
                     "  [OK] Package verified successfully",
-                    fg="green"
+                    fg="green",
                 )
         else:
             _safe_click_secho(
                 "  ❌ Package verification failed",
                 "  [ERROR] Package verification failed",
-                fg="red"
+                fg="red",
             )
             raise BuildError(f"Verification failed for {artifact}")
     except Exception as e:
         _safe_click_secho(
             f"  ❌ Verification error: {e}",
             f"  [ERROR] Verification error: {e}",
-            fg="red"
+            fg="red",
         )
         raise BuildError(f"Verification failed for {artifact}: {e}") from e
 
@@ -219,13 +242,13 @@ def _show_final_results(built_artifacts: list[Path], quiet: bool) -> None:
             _safe_click_secho(
                 "✅ All targets built successfully.",
                 "[OK] All targets built successfully.",
-                fg="green"
+                fg="green",
             )
     else:
         _safe_click_secho(
             "⚠️ No targets were specified or built.",
             "[WARN] No targets were specified or built.",
-            fg="yellow"
+            fg="yellow",
         )
 
 
