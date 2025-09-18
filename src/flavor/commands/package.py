@@ -8,8 +8,8 @@ from pathlib import Path
 
 import click
 
-from flavor.api import build_package_from_manifest, verify_package
 from flavor.exceptions import BuildError, PackagingError
+from flavor.package import build_package_from_manifest, verify_package
 
 
 def safe_echo(message: str, **kwargs) -> None:

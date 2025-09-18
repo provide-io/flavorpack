@@ -1,3 +1,3 @@
-# `flavor.flavor.locking`
+# `flavor.locking`
 
-::: flavor.flavor.locking
+::: flavor.locking

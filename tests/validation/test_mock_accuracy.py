@@ -6,7 +6,6 @@ These tests ensure that our mock launchers accurately represent real launcher be
 They should be run as integration tests with real ingredients available.
 """
 
-
 import pytest
 
 from flavor.psp.format_2025 import PSPFBuilder, PSPFReader

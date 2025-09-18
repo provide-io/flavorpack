@@ -11,13 +11,13 @@ from flavor.config.defaults import (
     ACCESS_MMAP,
     CACHE_NORMAL,
     CAPABILITY_MMAP,
-    DEFAULT_MAX_MEMORY,
-    DEFAULT_MIN_MEMORY,
     DEFAULT_HEADER_SIZE,
     DEFAULT_MAGIC_TRAILER_SIZE,
+    DEFAULT_MAX_MEMORY,
+    DEFAULT_MIN_MEMORY,
+    PSPF_VERSION,
     TRAILER_END_MAGIC,
     TRAILER_START_MAGIC,
-    PSPF_VERSION,
 )
 from flavor.psp.format_2025.index import PSPFIndex
 

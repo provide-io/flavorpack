@@ -1,3 +1,3 @@
-# `flavor.flavor.output`
+# `flavor.output`
 
-::: flavor.flavor.output
+::: flavor.output

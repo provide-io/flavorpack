@@ -9,12 +9,12 @@ import os
 
 import pytest
 
+from flavor.config.defaults import DEFAULT_SLOT_DESCRIPTOR_SIZE
 from flavor.psp.format_2025 import (
     DEFAULT_SLOT_ALIGNMENT,
     PSPFReader,
     SlotMetadata,
 )
-from flavor.config.defaults import DEFAULT_SLOT_DESCRIPTOR_SIZE
 
 
 class TestPSPFSlots:

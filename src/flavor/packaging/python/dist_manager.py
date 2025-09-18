@@ -33,7 +33,9 @@ class PythonDistManager:
     - Site-packages optimization for packaging
     """
 
-    def __init__(self, python_version: str = "3.11", use_uv_for_venv: bool = True) -> None:
+    def __init__(
+        self, python_version: str = "3.11", use_uv_for_venv: bool = True
+    ) -> None:
         """
         Initialize the Python distribution manager.
 

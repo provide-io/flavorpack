@@ -1,3 +1,3 @@
-# `flavor.flavor.utils.xor`
+# `flavor.utils.xor`
 
-::: flavor.flavor.utils.xor
+::: flavor.utils.xor

@@ -1,3 +1,3 @@
-# `flavor.flavor.cli`
+# `flavor.cli`
 
-::: flavor.flavor.cli
+::: flavor.cli
