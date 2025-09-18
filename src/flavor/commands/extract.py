@@ -92,12 +92,12 @@ def extract_command(
                 f"✅ Extracted {format_size(len(data))} to {output}", fg="green"
             )
 
-    except FileNotFoundError:
+    except FileNotFoundError as e:
         click.secho(f"❌ Package not found: {package_file}", fg="red", err=True)
-        raise click.Abort()
+        raise click.Abort() from e
     except Exception as e:
         click.secho(f"❌ Error extracting slot: {e}", fg="red", err=True)
-        raise click.Abort()
+        raise click.Abort() from e
 
 
 @click.command("extract-all")
@@ -179,9 +179,9 @@ def extract_all_command(package_file: str, output_dir: str, force: bool) -> None
 
             click.secho(f"✅ Extracted all slots to {output}", fg="green")
 
-    except FileNotFoundError:
+    except FileNotFoundError as e:
         click.secho(f"❌ Package not found: {package_file}", fg="red", err=True)
-        raise click.Abort()
+        raise click.Abort() from e
     except Exception as e:
         click.secho(f"❌ Error extracting: {e}", fg="red", err=True)
-        raise click.Abort()
+        raise click.Abort() from e

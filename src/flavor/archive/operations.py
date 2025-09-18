@@ -337,8 +337,8 @@ def parse_operation_string(chain_str: str) -> list[int]:
                 try:
                     op_val = int(part, 16)
                     operations.append(op_val)
-                except ValueError:
-                    raise ValueError(f"Unknown operation: {part}")
+                except ValueError as e:
+                    raise ValueError(f"Unknown operation: {part}") from e
             else:
                 raise ValueError(f"Unknown operation: {part}")
 

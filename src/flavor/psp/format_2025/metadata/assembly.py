@@ -50,7 +50,7 @@ def load_launcher_binary(launcher_type: str) -> bytes:
     ]
 
     # Get XDG_CACHE_HOME with fallback to ~/.cache
-    xdg_cache = os.environ.get("XDG_CACHE_HOME", os.path.expanduser("~/.cache"))
+    xdg_cache = os.environ.get("XDG_CACHE_HOME", str(Path("~/.cache").expanduser()))
 
     # Search paths - prioritize helpers/bin first, then XDG cache location
     base_search_paths = [

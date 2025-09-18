@@ -52,7 +52,7 @@ class PythonEnvironmentBuilder:
     def _make_executable(self, file_path: Path) -> None:
         """Make a file executable (Unix-like systems only)."""
         if not self.is_windows:
-            os.chmod(file_path, DEFAULT_EXECUTABLE_PERMS)
+            file_path.chmod(DEFAULT_EXECUTABLE_PERMS)
 
     def _copy_executable(self, src: Path | str, dest: Path) -> None:
         """Copy a file and preserve executable permissions."""

@@ -37,11 +37,10 @@ def validate_metadata(metadata: dict[str, Any]) -> bool:
     if "workenv" in metadata and "directories" in metadata["workenv"]:
         dirs = metadata["workenv"]["directories"]
         for dir_info in dirs:
-            if "path" in dir_info:
-                if not dir_info["path"].startswith("{workenv}"):
-                    raise ValueError(
-                        f"Workenv directory path must start with {{workenv}}: {dir_info['path']}"
-                    )
+            if "path" in dir_info and not dir_info["path"].startswith("{workenv}"):
+                raise ValueError(
+                    f"Workenv directory path must start with {{workenv}}: {dir_info['path']}"
+                )
             if "mode" in dir_info:
                 # Validate mode format
                 mode = dir_info["mode"]
