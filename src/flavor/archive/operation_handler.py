@@ -301,6 +301,7 @@ class OperationHandler:
         """Reverse TAR operation (extract)."""
         if output is None:
             import tempfile
+
             output = Path(tempfile.mkdtemp())
 
         tar_archive = TarArchive()
@@ -354,6 +355,7 @@ class OperationHandler:
                 return output
             except (ImportError, AttributeError):
                 import bz2
+
                 with bz2.open(source, "rb") as f_in, output.open("wb") as f_out:
                     f_out.write(f_in.read())
 

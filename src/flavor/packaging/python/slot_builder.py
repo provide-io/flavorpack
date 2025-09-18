@@ -321,7 +321,9 @@ class PythonSlotBuilder:
         if dep_path not in all_deps:
             all_deps.append(dep_path)
             logger.info(
-                "📦➕✅ Added to dependency list", name=dep_path.name, depth=depth  # noqa: RUF001
+                "📦➕✅ Added to dependency list",
+                name=dep_path.name,
+                depth=depth,
             )
 
         if depth == 0:

@@ -54,7 +54,11 @@ def inspect_command(package_file: str, output_json: bool) -> None:
 
 
 def _output_json_format(
-    package_path: Path, index: Any, metadata: dict[str, Any], slot_descriptors: list[Any], slots_metadata: list[dict[str, Any]]
+    package_path: Path,
+    index: Any,
+    metadata: dict[str, Any],
+    slot_descriptors: list[Any],
+    slots_metadata: list[dict[str, Any]],
 ) -> None:
     """Output package information in JSON format."""
     import json
@@ -88,7 +92,11 @@ def _output_json_format(
 
 
 def _output_human_format(
-    package_path: Path, index: Any, metadata: dict[str, Any], slot_descriptors: list[Any], slots_metadata: list[dict[str, Any]]
+    package_path: Path,
+    index: Any,
+    metadata: dict[str, Any],
+    slot_descriptors: list[Any],
+    slots_metadata: list[dict[str, Any]],
 ) -> None:
     """Output package information in human-readable format."""
 
@@ -135,7 +143,9 @@ def _format_build_time(build_time: str) -> str:
         return build_time  # Keep original timestamp if parsing fails
 
 
-def _output_slot_details(slot_descriptors: list[Any], slots_metadata: list[dict[str, Any]]) -> None:
+def _output_slot_details(
+    slot_descriptors: list[Any], slots_metadata: list[dict[str, Any]]
+) -> None:
     """Output detailed slot information."""
     for i, slot in enumerate(slot_descriptors):
         is_last = i == len(slot_descriptors) - 1
