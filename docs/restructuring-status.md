@@ -66,22 +66,22 @@ Files requiring path updates:
 
 ### Phase 5: GitHub Actions Updates
 Workflows requiring updates:
-- [ ] `.github/workflows/01-ingredient-prep.yml`
-- [ ] `.github/workflows/02-pretaster-pipeline.yml`
+- [x] `.github/workflows/01-ingredient-prep.yml` (already correct)
+- [x] `.github/workflows/02-pretaster-pipeline.yml`
 - [ ] `.github/workflows/03-flavor-pipeline.yml`
-- [ ] `.github/workflows/04-taster-pipeline.yml`
-- [ ] `.github/workflows/05-code-quality.yml`
+- [x] `.github/workflows/04-taster-pipeline.yml`
+- [x] `.github/workflows/05-code-quality.yml`
 - [ ] `.github/workflows/06-security-scan.yml`
 - [ ] `.github/workflows/07-dependency-audit.yml`
-- [ ] `.github/workflows/08-license-compliance.yml`
-- [ ] `.github/workflows/compatibility-check.yml`
+- [x] `.github/workflows/08-license-compliance.yml`
+- [x] `.github/workflows/compatibility-check.yml`
 
 ### Phase 6: Configuration Updates
-- [ ] Update `.gitignore`
-  - [ ] Add `/dist/`
-  - [ ] Add `/build/`
-  - [ ] Add `*.psp` at root
-  - [ ] Remove `ingredients/bin/`
+- [x] Update `.gitignore`
+  - [x] Add `/dist/`
+  - [x] Add `/build/` (already present)
+  - [x] Add `*.psp` at root (already present)
+  - [x] Remove `helpers/bin/` references
 - [ ] Update `CLAUDE.md` with new structure
 - [ ] Update `README.md` build instructions
 
@@ -96,6 +96,9 @@ Workflows requiring updates:
 - [ ] Remove old `ingredients/` directory
 - [ ] Remove old `helpers/` directory
 - [ ] Remove any obsolete configuration
+
+### Phase X: Deprecated Items Moved to Stale
+- [x] Move `tests/archive/` to `stale/archive/` (deprecated archive module tests)
 
 ## Impact Analysis
 
@@ -124,6 +127,9 @@ If issues arise:
 
 ## Status Log
 - **2025-01-18 10:45**: Document created, migration plan established
+- **2025-09-18 11:20**: Phase 5 - Updated GitHub Actions workflows (5/9 complete)
+- **2025-09-18 11:25**: Phase 6 - Updated .gitignore configuration
+- **2025-09-18 11:25**: Phase X - Moved deprecated archive tests to stale/
 - *Updates will be added here as tasks complete*
 
 ## Notes

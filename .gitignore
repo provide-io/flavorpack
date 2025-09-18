@@ -12,7 +12,6 @@ __pycache__/
 
 # Distribution
 build/
-dist/
 *.egg-info/
 *.egg
 .eggs/
@@ -28,9 +27,9 @@ reports/
 .vscode/
 
 # Local Build Artifacts
-# Compiled helper binaries should not be version controlled.
-# They are built from source via `./helpers/build.sh`.
-helpers/bin/
+# Compiled ingredient binaries should not be version controlled.
+# They are built from source via `./build.sh`.
+dist/
 *.pspf
 *.psp
 target/
@@ -38,8 +37,8 @@ target/
 
 # Test manifests (generated during testing)
 flavor-manifest.json
-helpers/pretaster/pretaster-build-manifest.json
-helpers/pretaster/test-runner.sh
+tests/pretaster/pretaster-build-manifest.json
+tests/pretaster/test-runner.sh
 *bfile*
 .hypothesis
 *.whl
