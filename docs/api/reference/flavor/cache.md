@@ -1,3 +1,3 @@
-# `flavor.flavor.cache`
+# `flavor.cache`
 
-::: flavor.flavor.cache
+::: flavor.cache

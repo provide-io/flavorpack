@@ -8,7 +8,6 @@ import zlib
 
 import pytest
 
-from flavor.psp.format_2025.backends import FileBackend, MMapBackend, StreamBackend
 from flavor.config.defaults import (
     ACCESS_AUTO,
     ACCESS_FILE,
@@ -16,6 +15,7 @@ from flavor.config.defaults import (
     ACCESS_STREAM,
     DEFAULT_SLOT_DESCRIPTOR_SIZE,
 )
+from flavor.psp.format_2025.backends import FileBackend, MMapBackend, StreamBackend
 from flavor.psp.format_2025.index import PSPFIndex
 from flavor.psp.format_2025.reader import PSPFReader, read_bundle, verify_bundle
 from flavor.psp.format_2025.slots import SlotDescriptor

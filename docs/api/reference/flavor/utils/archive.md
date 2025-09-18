@@ -1,3 +1,3 @@
-# `flavor.flavor.utils.archive`
+# `flavor.utils.archive`
 
-::: flavor.flavor.utils.archive
+::: flavor.utils.archive

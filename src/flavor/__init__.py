@@ -7,12 +7,12 @@ Pyvider Secure Package Format (Flavor).
 """
 
 from flavor._version import __version__
-from flavor.api import (
+from flavor.exceptions import BuildError, VerificationError
+from flavor.package import (
     build_package_from_manifest,
     clean_cache,
     verify_package,
 )
-from flavor.exceptions import BuildError, VerificationError
 
 __all__ = [
     "BuildError",

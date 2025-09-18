@@ -2,10 +2,8 @@
 """Tests for the inspect command."""
 
 import json
-from pathlib import Path
 
 import click.testing
-import pytest
 
 from flavor.cli import cli
 

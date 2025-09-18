@@ -11,6 +11,7 @@ import time
 
 import pytest
 
+from flavor.config.defaults import DEFAULT_PAGE_SIZE
 from flavor.psp.format_2025.backends import (
     ACCESS_AUTO,
     ACCESS_FILE,
@@ -18,7 +19,6 @@ from flavor.psp.format_2025.backends import (
     MMapBackend,
     create_backend,
 )
-from flavor.config.defaults import DEFAULT_PAGE_SIZE
 
 
 @pytest.mark.mmap

@@ -238,7 +238,9 @@ class TestPSPFIntegration:
             slot_offset = descriptors[0].offset
 
             # Data section offset should be page-aligned
-            assert slot_offset % DEFAULT_PAGE_SIZE == 0, f"Slot offset {slot_offset} is not page-aligned"
+            assert slot_offset % DEFAULT_PAGE_SIZE == 0, (
+                f"Slot offset {slot_offset} is not page-aligned"
+            )
 
 
 # 🧪📦🗺️🪄

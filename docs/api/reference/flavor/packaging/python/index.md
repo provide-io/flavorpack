@@ -1,3 +1,3 @@
-# `flavor.flavor.packaging.python`
+# `flavor.packaging.python`
 
-::: flavor.flavor.packaging.python
+::: flavor.packaging.python

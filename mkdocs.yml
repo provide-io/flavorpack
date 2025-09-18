@@ -5,6 +5,9 @@ site_url: https://foundry.provide.io/flavorpack/
 repo_url: https://github.com/provide-io/flavorpack
 repo_name: provide-io/flavorpack
 edit_uri: edit/main/docs/
+
+# Development server configuration
+dev_addr: '127.0.0.1:8007'
 copyright: Copyright &copy; 2024 provide.io
 
 # Standalone mode settings
@@ -93,11 +96,14 @@ plugins:
           paths: [src]
           options:
             docstring_style: google
-            docstring_section_style: list
             show_source: true
+            show_root_heading: true
             show_symbol_type_heading: true
             show_symbol_type_toc: true
-            show_root_heading: true
+            show_signature_annotations: true
+            show_bases: true
+            merge_init_into_class: true
+            separate_signature: true
             show_root_toc_entry: true
             show_object_full_path: false
             show_category_heading: true
@@ -274,45 +280,7 @@ nav:
       - Debugging: guide/advanced/debugging.md
   
   # SECTION 3: API Reference (technical documentation)
-  - API Reference:
-    - Overview: api/index.md
-    
-    - Python API:
-      - api/python/index.md
-      - CLI Interface: api/python/cli.md
-      
-      - Packaging:
-        - api/python/packaging/index.md
-        - Orchestrator: api/python/packaging/orchestrator.md
-        - Python Packager: api/python/packaging/python_packager.md
-        - Key Management: api/python/packaging/keys.md
-      
-      - PSPF Format:
-        - api/python/psp/index.md
-        - Builder: api/python/psp/builder.md
-        - Reader: api/python/psp/reader.md
-        - Metadata: api/python/psp/metadata.md
-        - Cryptography: api/python/psp/crypto.md
-        - Launcher: api/python/psp/launcher.md
-        
-        - Slot System:
-          - api/python/psp/slots.md
-          - Core API: api/python/psp/slots-core.md
-          - Lifecycles: api/python/psp/slots-lifecycles.md
-          - Compression: api/python/psp/slots-codecs.md
-          - Purposes: api/python/psp/slots-purposes.md
-      
-      - Utilities:
-        - api/python/utils/index.md
-        - Platform Detection: api/python/utils/platform.md
-        - Archive Handling: api/python/utils/archive.md
-        - Permissions: api/python/utils/permissions.md
-    
-    - Native Components:
-      - api/native/index.md
-      - Go Implementation: api/native/go.md
-      - Rust Implementation: api/native/rust.md
-      - Cross-Language Bridge: api/native/cross-language.md
+  - API Reference: api/reference/
   
   # SECTION 4: Cookbook (practical examples)
   - Cookbook:
@@ -337,21 +305,9 @@ nav:
   # SECTION 5: Reference (specs, troubleshooting, development)
   - Reference:
     - Overview: resources/index.md
-    
+
     - Specification:
-      - spec/index.md
-      - PSPF 2025 Format: spec/pspf-2025.md
-      - Binary Layout: spec/binary-layout.md
-      - Metadata Format: spec/metadata.md
-      - Cryptography: spec/crypto.md
-      
-      - Enhancement Proposals:
-        - spec/feps/index.md
-        - "FEP-0001: Core Specification": spec/feps/fep-0001.md
-        - "FEP-0002: Work Environments": spec/feps/fep-0002.md
-        - "FEP-0003: Security Model": spec/feps/fep-0003.md
-        - "FEP-0004: Staged Payloads": spec/feps/fep-0004.md
-        - "FEP-0005: JIT Loading": spec/feps/fep-0005.md
+      - PSPF 2025: spec/pspf-2025.md
     
     - Troubleshooting:
       - troubleshooting/index.md
