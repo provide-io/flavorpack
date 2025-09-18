@@ -186,21 +186,35 @@ markers = [
 ]
 
 [tool.coverage.run]
-branch = false
-source = ["flavor"]
+branch = true
+source = ["src/flavor"]
 parallel = false
 omit = [
     "*/protocols/tfprotov6/protobuf/*",
     "*/protocols/tfprotov6/handlers/validate_resource_config.py",
     "*/generated/*",
     "**/*_pb2.py",
-    "**/*_pb2.pyi"
+    "**/*_pb2.pyi",
+    "*/tests/*",
+    "*/test_*",
+    "*/_version.py"
 ]
 
 [tool.coverage.report]
 show_missing = true
 skip_covered = true
-exclude_lines = ["pragma: no cover", "raise NotImplementedError", "if __name__ == .__main__.:", "if TYPE_CHECKING:", "def __repr__", "def __str__", "pass"]
+precision = 2
+fail_under = 80
+exclude_lines = [
+    "pragma: no cover",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "def __repr__",
+    "def __str__",
+    "pass",
+    "..."
+]
 
 
 [tool.flavor]
