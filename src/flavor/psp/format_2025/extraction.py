@@ -277,19 +277,33 @@ class SlotExtractor:
                 return False
 
             descriptor = descriptors[slot_index]
-            slot_data = self.reader.read_slot(slot_index)
 
-            # Verify checksum (use Adler32 to match binary format)
-            actual_checksum = zlib.adler32(slot_data) & 0xFFFFFFFF
+            # Read raw slot data (before decompression) using backend directly
+            # This is the data that was actually checksummed during building
+            raw_slot_data = self.reader._backend.read_slot(descriptor)
+
+            # Convert to bytes if memoryview
+            if isinstance(raw_slot_data, memoryview):
+                raw_slot_data = bytes(raw_slot_data)
+
+            # Verify checksum (use Adler32 to match binary format on raw compressed data)
+            # This must match what was checksummed during building (compressed data)
+            actual_checksum = zlib.adler32(raw_slot_data) & 0xFFFFFFFF
+
+            # DEBUG: Log checksum details for troubleshooting
+            logger.info(
+                f"🔍🧪 Slot {slot_index} extraction verify: expected={descriptor.checksum:08x}, actual={actual_checksum:08x}, size={len(raw_slot_data)}"
+            )
+
             if actual_checksum != descriptor.checksum:
                 logger.error(f"Slot {slot_index} checksum verification failed")
                 return False
 
-            # Verify size
-            if len(slot_data) != descriptor.size:
+            # Verify size (compressed size matches what's in the file)
+            if len(raw_slot_data) != descriptor.size:
                 logger.error(
                     f"Slot {slot_index} size mismatch: "
-                    f"expected {descriptor.size}, got {len(slot_data)}"
+                    f"expected {descriptor.size}, got {len(raw_slot_data)}"
                 )
                 return False
 
