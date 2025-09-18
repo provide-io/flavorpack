@@ -47,7 +47,7 @@ def calculate_checksum(data: bytes, algorithm: str = "sha256") -> str:
         return f"md5:{digest}"
     elif algorithm == "adler32":
         # Adler32 returns an integer, format as 8-char hex
-        checksum = zlib.adler32(data)
+        checksum = zlib.adler32(data) & 0xFFFFFFFF
         return f"adler32:{checksum:08x}"
     else:
         raise ValueError(f"Unsupported checksum algorithm: {algorithm}")

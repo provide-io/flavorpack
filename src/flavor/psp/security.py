@@ -7,14 +7,13 @@ including integrity verification, signature validation, and tamper detection.
 """
 
 from enum import IntEnum
-import os
 from pathlib import Path
 
 from provide.foundation import logger
 from provide.foundation.crypto.signatures import verify_signature
 
+from flavor.config import get_flavor_config
 from flavor.config.defaults import (
-    DEFAULT_VALIDATION_LEVEL,
     VALIDATION_MINIMAL,
     VALIDATION_NONE,
     VALIDATION_RELAXED,
@@ -36,13 +35,14 @@ class ValidationLevel(IntEnum):
 
 def get_validation_level() -> ValidationLevel:
     """
-    Get validation level from environment, matching Go/Rust behavior.
+    Get validation level from Foundation config, matching Go/Rust behavior.
 
     Returns:
         ValidationLevel: The current validation level
     """
-    # Check FLAVOR_VALIDATION environment variable
-    val = os.getenv("FLAVOR_VALIDATION", DEFAULT_VALIDATION_LEVEL).lower()
+    # Get validation level from Foundation config system
+    config = get_flavor_config()
+    val = config.system.security.validation_level.lower()
 
     if val == VALIDATION_STRICT:
         return ValidationLevel.STRICT

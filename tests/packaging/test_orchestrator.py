@@ -14,7 +14,7 @@ from flavor.packaging.orchestrator import PackagingOrchestrator
 @pytest.fixture
 def mock_flavor_config() -> FlavorConfig:
     """Provides a default FlavorConfig object for tests."""
-    return FlavorConfig.from_dict(
+    return FlavorConfig.from_pyproject_dict(
         config={
             "build": {},
             "execution": {},
