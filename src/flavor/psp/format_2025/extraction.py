@@ -291,7 +291,7 @@ class SlotExtractor:
             actual_checksum = zlib.adler32(raw_slot_data) & 0xFFFFFFFF
 
             # DEBUG: Log checksum details for troubleshooting
-            logger.info(
+            logger.debug(
                 f"🔍🧪 Slot {slot_index} extraction verify: expected={descriptor.checksum:08x}, actual={actual_checksum:08x}, size={len(raw_slot_data)}"
             )
 
