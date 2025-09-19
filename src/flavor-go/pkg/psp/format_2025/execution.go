@@ -326,6 +326,18 @@ func checkWorkenvValidity(paths *WorkenvPaths, index *PSPFIndex, metadata *Metad
 		return false, nil
 	}
 
+	// Check that workenv directory exists and is not empty
+	workenvDir := paths.Workenv()
+	entries, err := os.ReadDir(workenvDir)
+	if err != nil {
+		logger.Debug("🔍 Workenv directory does not exist or cannot be read")
+		return false, nil
+	}
+	if len(entries) == 0 {
+		logger.Debug("🔍 Workenv directory is empty")
+		return false, nil
+	}
+
 	// Check package checksum
 	return validatePackageChecksum(paths, index.IndexChecksum, logger)
 }
@@ -568,37 +580,89 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 		for _, entry := range entries {
 			fileName := entry.Name()
 			source := filepath.Join(tempExtractDir, fileName)
-			dest := filepath.Join(workenvDir, fileName)
 
-			// Remove destination if it exists (for overwrite)
-			if _, err := os.Stat(dest); err == nil {
-				if entry.IsDir() {
-					os.RemoveAll(dest)
-				} else {
-					os.Remove(dest)
+			// Special handling for slot 0 - move contents to workenv root
+			if strings.HasPrefix(fileName, "slot_0_") && entry.IsDir() {
+				logger.Debug("🎯 Moving slot 0 contents to workenv root", "slotDir", fileName)
+				// Read contents of slot 0 directory
+				slotEntries, err := os.ReadDir(source)
+				if err != nil {
+					logger.Error("❌ Failed to read slot 0 directory", "error", err)
+					os.RemoveAll(tempExtractDir)
+					return nil, fmt.Errorf("failed to read slot 0 directory: %w", err)
 				}
-			}
 
-			// Move from temp to final location
-			logger.Debug("Moving", "from", source, "to", dest)
-			if err := os.Rename(source, dest); err != nil {
-				// If rename fails (e.g., cross-filesystem), fall back to copy
-				logger.Warn("Rename failed, falling back to copy", "error", err)
-				if entry.IsDir() {
-					// Recursive copy for directories
-					if err := copyDirAll(source, dest); err != nil {
-						logger.Error("❌ Failed to copy directory", "error", err)
-						os.RemoveAll(tempExtractDir)
-						return nil, fmt.Errorf("failed to copy directory: %w", err)
+				// Move each item from slot 0 directory to workenv root
+				for _, slotEntry := range slotEntries {
+					slotSource := filepath.Join(source, slotEntry.Name())
+					slotDest := filepath.Join(workenvDir, slotEntry.Name())
+
+					// Remove destination if it exists (for overwrite)
+					if _, err := os.Stat(slotDest); err == nil {
+						if slotEntry.IsDir() {
+							os.RemoveAll(slotDest)
+						} else {
+							os.Remove(slotDest)
+						}
 					}
-					os.RemoveAll(source)
-				} else {
-					if err := copyFile(source, dest); err != nil {
-						logger.Error("❌ Failed to copy file", "error", err)
-						os.RemoveAll(tempExtractDir)
-						return nil, fmt.Errorf("failed to copy file: %w", err)
+
+					logger.Debug("Moving slot 0 content", "from", slotSource, "to", slotDest)
+					if err := os.Rename(slotSource, slotDest); err != nil {
+						// If rename fails (e.g., cross-filesystem), fall back to copy
+						logger.Warn("Rename failed, falling back to copy", "error", err)
+						if slotEntry.IsDir() {
+							if err := copyDirAll(slotSource, slotDest); err != nil {
+								logger.Error("❌ Failed to copy slot 0 directory", "error", err)
+								os.RemoveAll(tempExtractDir)
+								return nil, fmt.Errorf("failed to copy slot 0 directory: %w", err)
+							}
+							os.RemoveAll(slotSource)
+						} else {
+							if err := copyFile(slotSource, slotDest); err != nil {
+								logger.Error("❌ Failed to copy slot 0 file", "error", err)
+								os.RemoveAll(tempExtractDir)
+								return nil, fmt.Errorf("failed to copy slot 0 file: %w", err)
+							}
+							os.Remove(slotSource)
+						}
 					}
-					os.Remove(source)
+				}
+				// Remove empty slot 0 directory
+				os.RemoveAll(source)
+			} else {
+				// Regular handling for other slots
+				dest := filepath.Join(workenvDir, fileName)
+
+				// Remove destination if it exists (for overwrite)
+				if _, err := os.Stat(dest); err == nil {
+					if entry.IsDir() {
+						os.RemoveAll(dest)
+					} else {
+						os.Remove(dest)
+					}
+				}
+
+				// Move from temp to final location
+				logger.Debug("Moving", "from", source, "to", dest)
+				if err := os.Rename(source, dest); err != nil {
+					// If rename fails (e.g., cross-filesystem), fall back to copy
+					logger.Warn("Rename failed, falling back to copy", "error", err)
+					if entry.IsDir() {
+						// Recursive copy for directories
+						if err := copyDirAll(source, dest); err != nil {
+							logger.Error("❌ Failed to copy directory", "error", err)
+							os.RemoveAll(tempExtractDir)
+							return nil, fmt.Errorf("failed to copy directory: %w", err)
+						}
+						os.RemoveAll(source)
+					} else {
+						if err := copyFile(source, dest); err != nil {
+							logger.Error("❌ Failed to copy file", "error", err)
+							os.RemoveAll(tempExtractDir)
+							return nil, fmt.Errorf("failed to copy file: %w", err)
+						}
+						os.Remove(source)
+					}
 				}
 			}
 		}

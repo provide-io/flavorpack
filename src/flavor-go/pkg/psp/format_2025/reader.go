@@ -417,12 +417,13 @@ func (r *Reader) ExtractSlot(slotIndex int, destDir string) (string, error) {
 		targetPath = strings.ReplaceAll(targetPath, "{workenv}", "")
 	}
 
-	// If targetPath is empty after stripping {workenv}, extract directly to destDir
+	// If targetPath is empty after stripping {workenv}, extract to slot-specific subdirectory
 	var destPath, extractDir string
 	if targetPath == "" {
-		// Target was "{workenv}" - extract directly to destDir
-		destPath = destDir
-		extractDir = destDir
+		// Target was "{workenv}" or "." - extract to slot-specific subdirectory to support atomic move
+		slotSubdir := fmt.Sprintf("slot_%d_%s", slotIndex, slotMeta.ID)
+		destPath = filepath.Join(destDir, slotSubdir)
+		extractDir = destPath
 	} else {
 		// Target has a subpath - join it with destDir
 		destPath = filepath.Join(destDir, targetPath)
