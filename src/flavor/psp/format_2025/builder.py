@@ -159,7 +159,10 @@ def prepare_slots(
         data = _load_slot_data(slot)
 
         # Get packed operations
-        from flavor.psp.format_2025.operations import string_to_operations, unpack_operations
+        from flavor.psp.format_2025.operations import (
+            string_to_operations,
+            unpack_operations,
+        )
 
         packed_ops = string_to_operations(slot.operations)
         # Debug: Log what operations we're creating
@@ -185,7 +188,9 @@ def prepare_slots(
             slot_id=slot.id,
             input_size=len(data),
             output_size=len(processed_data) if processed_data != data else len(data),
-            compression_ratio=f"{len(processed_data)/len(data):.2f}" if processed_data != data and len(data) > 0 else "1.00",
+            compression_ratio=f"{len(processed_data) / len(data):.2f}"
+            if processed_data != data and len(data) > 0
+            else "1.00",
             operations_applied=len(unpacked_ops),
         )
 

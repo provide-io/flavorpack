@@ -86,8 +86,12 @@ class SlotDescriptor:
     platform: int = field(default=0)  # 1 byte (uint8)
     reserved1: int = field(default=0)  # 1 byte (uint8)
     reserved2: int = field(default=0)  # 1 byte (uint8)
-    permissions: int = field(default=DEFAULT_FILE_PERMS & 0xFF)  # 1 byte (uint8, low byte)
-    permissions_high: int = field(default=(DEFAULT_FILE_PERMS >> 8) & 0xFF)  # 1 byte (uint8, high byte)
+    permissions: int = field(
+        default=DEFAULT_FILE_PERMS & 0xFF
+    )  # 1 byte (uint8, low byte)
+    permissions_high: int = field(
+        default=(DEFAULT_FILE_PERMS >> 8) & 0xFF
+    )  # 1 byte (uint8, high byte)
 
     # Optional runtime fields (not persisted)
     name: str = field(default="", metadata={"transient": True})
@@ -129,38 +133,36 @@ class SlotDescriptor:
 
     @classmethod
     def unpack(cls, data: bytes) -> SlotDescriptor:
-        """Unpack descriptor from 64-byte binary data matching spec."""
+        """Unpack descriptor from 64-byte binary data matching Rust spec."""
         if len(data) != DEFAULT_SLOT_DESCRIPTOR_SIZE:
             raise ValueError(
                 f"Slot descriptor must be {DEFAULT_SLOT_DESCRIPTOR_SIZE} bytes"
             )
 
+        # Unpack using the new 64-byte format: 7 uint64 + 8 uint8
         unpacked = struct.unpack(
-            "<QQQQLQBBHHHIII",  # Match pack format exactly
+            "<QQQQQQQBBBBBBBB",  # 7 uint64 + 8 uint8 = 64 bytes
             data,
         )
 
         return cls(
-            # Identity (16 bytes)
-            id=unpacked[0],  # 8 bytes: uint64
-            name_hash=unpacked[1],  # 8 bytes: uint64
-            # Location (20 bytes)
-            offset=unpacked[2],  # 8 bytes: uint64
-            size=unpacked[3],  # 8 bytes: uint64
-            checksum=unpacked[4],  # 4 bytes: uint32
-            # Properties (8 bytes)
-            operations=unpacked[5],  # 8 bytes: uint64
-            # Classification (4 bytes)
-            purpose=unpacked[6],  # 1 byte: uint8
-            lifecycle=unpacked[7],  # 1 byte: uint8
-            permissions=unpacked[8],  # 2 bytes: uint16
-            # Platform & Flags (4 bytes)
-            platform=unpacked[9],  # 2 bytes: uint16
-            flags=unpacked[10],  # 2 bytes: uint16
-            # Reserved (12 bytes)
-            reserved1=unpacked[11],  # 4 bytes: uint32
-            reserved2=unpacked[12],  # 4 bytes: uint32
-            reserved3=unpacked[13],  # 4 bytes: uint32
+            # Core fields (56 bytes - 7x uint64)
+            id=unpacked[0],
+            name_hash=unpacked[1],
+            offset=unpacked[2],
+            size=unpacked[3],
+            original_size=unpacked[4],
+            operations=unpacked[5],
+            checksum=unpacked[6],
+            # Metadata fields (8 bytes - 8x uint8)
+            purpose=unpacked[7],
+            lifecycle=unpacked[8],
+            priority=unpacked[9],
+            platform=unpacked[10],
+            reserved1=unpacked[11],
+            reserved2=unpacked[12],
+            permissions=unpacked[13],
+            permissions_high=unpacked[14],
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -178,7 +180,6 @@ class SlotDescriptor:
             "lifecycle": self.lifecycle,
             "permissions": self.permissions,
             "platform": self.platform,
-            "flags": self.flags,
         }
         if self.name:
             result["name"] = self.name
