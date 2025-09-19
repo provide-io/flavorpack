@@ -271,15 +271,15 @@ class PackagingOrchestrator:
             if not result.success:
                 raise BuildError(f"Package build failed: {'; '.join(result.errors)}")
 
-            if self.show_progress:
-                final_size = Path(self.output_flavor_path).stat().st_size / (
-                    1024 * 1024
+            # Always show completion message, detailed info only with progress flag
+            final_size = Path(self.output_flavor_path).stat().st_size / (
+                1024 * 1024
+            )
+            logger.info(f"✅ Package built successfully: {final_size:.1f} MB")
+            if self.show_progress and result.metadata and "duration_seconds" in result.metadata:
+                logger.info(
+                    f"⏱️  Build time: {result.metadata['duration_seconds']:.2f}s"
                 )
-                logger.info(f"✅ Package built successfully: {final_size:.1f} MB")
-                if result.metadata and "duration_seconds" in result.metadata:
-                    logger.info(
-                        f"⏱️  Build time: {result.metadata['duration_seconds']:.2f}s"
-                    )
 
     @log_only_error_context(
         context_provider=lambda: {"operation": "build_with_external_builder"},
@@ -363,11 +363,11 @@ class PackagingOrchestrator:
             if spinner:
                 spinner.finish()
 
-            if self.show_progress:
-                final_size = Path(self.output_flavor_path).stat().st_size / (
-                    1024 * 1024
-                )
-                logger.info(f"✅ Package built successfully: {final_size:.1f} MB")
+            # Always show completion message
+            final_size = Path(self.output_flavor_path).stat().st_size / (
+                1024 * 1024
+            )
+            logger.info(f"✅ Package built successfully: {final_size:.1f} MB")
 
     def _build_with_json_manifest(self) -> None:
         """Build package using a JSON manifest directly with external builders."""
@@ -441,8 +441,8 @@ class PackagingOrchestrator:
             if spinner:
                 spinner.finish()
 
-            if self.show_progress:
-                final_size = Path(self.output_flavor_path).stat().st_size / (
-                    1024 * 1024
-                )
-                logger.info(f"✅ Package built successfully: {final_size:.1f} MB")
+            # Always show completion message
+            final_size = Path(self.output_flavor_path).stat().st_size / (
+                1024 * 1024
+            )
+            logger.info(f"✅ Package built successfully: {final_size:.1f} MB")
