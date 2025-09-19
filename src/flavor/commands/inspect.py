@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any
 
 import click
-from provide.foundation.utils.formatting import format_size
+from provide.foundation.formatting import format_size
 
 from flavor.psp.format_2025.reader import PSPFReader
 
