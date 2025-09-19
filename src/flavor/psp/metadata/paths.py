@@ -304,7 +304,7 @@ def parse_mode(mode_str: str) -> int:
 
     # Try to parse as octal
     try:
-        mode = int(mode_str, 8) if mode_str.startswith("0") else int(mode_str, 8)
+        mode = int(mode_str, 8)
 
         # Validate range
         if mode < 0 or mode > 0o777:

@@ -252,7 +252,7 @@ def _show_final_results(built_artifacts: list[Path], quiet: bool) -> None:
         )
 
 
-def _safe_click_secho(unicode_msg: str, fallback_msg: str, **kwargs) -> None:
+def _safe_click_secho(unicode_msg: str, fallback_msg: str, **kwargs: Any) -> None:
     """Safely echo with Unicode fallback handling."""
     try:
         click.secho(unicode_msg, **kwargs)

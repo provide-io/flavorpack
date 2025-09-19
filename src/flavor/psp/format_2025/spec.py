@@ -105,7 +105,7 @@ class BuildSpec:
     # Build options
     options: BuildOptions = field(factory=BuildOptions)
 
-    def with_metadata(self, **kwargs) -> BuildSpec:
+    def with_metadata(self, **kwargs: Any) -> BuildSpec:
         """
         Return new BuildSpec with updated metadata.
 
@@ -199,7 +199,7 @@ class BuildResult:
         new_warnings = [*self.warnings, warning]
         return attrs.evolve(self, warnings=new_warnings)
 
-    def with_metadata(self, **kwargs) -> BuildResult:
+    def with_metadata(self, **kwargs: Any) -> BuildResult:
         """Return new BuildResult with updated metadata."""
         new_metadata = {**self.metadata, **kwargs}
         return attrs.evolve(self, metadata=new_metadata)
