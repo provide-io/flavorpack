@@ -146,17 +146,17 @@ jobs:
           
           # Build Rust ingredients
           echo "🦀 Building Rust ingredients..."
-          cd src/flavor-rs
-          
-          # Set version via environment variable for build.rs
-          export FLAVOR_VERSION="$VERSION"
-          
-          # Build with specified target (musl for Linux, native for macOS)
-          cargo build --release --target ${{ matrix.rust_target }}
-          cp target/${{ matrix.rust_target }}/release/flavor-rs-builder ../../dist/bin/flavor-rs-builder-$VERSION-$PLATFORM
-          cp target/${{ matrix.rust_target }}/release/flavor-rs-launcher ../../dist/bin/flavor-rs-launcher-$VERSION-$PLATFORM
-          
-          cd ../..
+          (
+            cd src/flavor-rs
+
+            # Set version via environment variable for build.rs
+            export FLAVOR_VERSION="$VERSION"
+
+            # Build with specified target (musl for Linux, native for macOS)
+            cargo build --release --target ${{ matrix.rust_target }}
+            cp target/${{ matrix.rust_target }}/release/flavor-rs-builder ../../dist/bin/flavor-rs-builder-$VERSION-$PLATFORM
+            cp target/${{ matrix.rust_target }}/release/flavor-rs-launcher ../../dist/bin/flavor-rs-launcher-$VERSION-$PLATFORM
+          )
           
           # Make executable
           chmod +x dist/bin/* 2>/dev/null || true
