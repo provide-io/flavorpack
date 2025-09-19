@@ -98,7 +98,7 @@ def _create_preserve_checker(pass_patterns: list[str]):
 
 
 def _process_unset_operations(
-    env_map: dict[str, str], runtime_env: dict[str, Any], should_preserve
+    env_map: dict[str, str], runtime_env: dict[str, Any], should_preserve: Any
 ) -> None:
     """Process unset operations first (highest priority)."""
     if not runtime_env.get("unset"):

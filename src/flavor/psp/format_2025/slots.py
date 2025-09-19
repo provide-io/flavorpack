@@ -31,7 +31,7 @@ from flavor.config.defaults import (
 )
 
 
-def validate_operations_string(instance, attribute, value: str) -> None:
+def validate_operations_string(instance: Any, attribute: Any, value: str) -> None:
     """Validate that operations string is valid."""
     if not isinstance(value, str):
         raise ValueError(f"Operations must be a string, got {type(value)}")
@@ -99,7 +99,7 @@ class SlotDescriptor:
     name: str = field(default="", metadata={"transient": True})
     path: Path | None = field(default=None, metadata={"transient": True})
 
-    def __attrs_post_init__(self):
+    def __attrs_post_init__(self) -> None:
         """Compute name hash if name is provided."""
         if self.name and not self.name_hash:
             self.name_hash = hash_name(self.name)
@@ -342,7 +342,7 @@ class SlotMetadata:
 class SlotView:
     """Lazy view into a slot - doesn't load data until accessed."""
 
-    def __init__(self, descriptor: SlotDescriptor, backend=None) -> None:
+    def __init__(self, descriptor: SlotDescriptor, backend: Any = None) -> None:
         self.descriptor = descriptor
         self.backend = backend
         self._data = None
@@ -398,7 +398,7 @@ class SlotView:
         """Compute Adler-32 checksum of data."""
         return zlib.adler32(data) & 0xFFFFFFFF
 
-    def stream(self, chunk_size: int = 8192):
+    def stream(self, chunk_size: int = 8192) -> Any:
         """Stream slot data in chunks."""
         if self.backend and hasattr(self.backend, "stream_slot"):
             yield from self.backend.stream_slot(self.descriptor, chunk_size)
@@ -412,7 +412,7 @@ class SlotView:
         """Return length of the slot content for sequence-like behavior."""
         return len(self.content)
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: Any) -> Any:
         """Support slicing and indexing for sequence-like behavior."""
         return self.content[key]
 
