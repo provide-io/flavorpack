@@ -146,7 +146,7 @@ jobs:
           
           # Build Rust ingredients
           echo "🦀 Building Rust ingredients..."
-          cd src/flavor-rust
+          cd src/flavor-rs
           
           # Set version via environment variable for build.rs
           export FLAVOR_VERSION="$VERSION"

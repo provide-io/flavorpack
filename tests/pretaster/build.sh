@@ -9,7 +9,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 PROJECT_ROOT=$(dirname $(dirname "$SCRIPT_DIR"))
 BIN_DIR="$PROJECT_ROOT/dist/bin"
 GO_DIR="$PROJECT_ROOT/src/flavor-go"
-RUST_DIR="$PROJECT_ROOT/src/flavor-rust"
+RUST_DIR="$PROJECT_ROOT/src/flavor-rs"
 
 # --- Logging ---
 log_info() { echo -e "ℹ️  $1"; }
