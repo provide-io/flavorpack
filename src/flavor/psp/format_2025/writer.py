@@ -168,6 +168,17 @@ def _write_slots(
 
         slot_offset = f.tell()
         data_to_write = slot.get_data_to_write()
+
+        # DEBUG: Log checksum details for troubleshooting
+        actual_checksum_of_written_data = zlib.adler32(data_to_write) & 0xFFFFFFFF
+        logger.debug(
+            f"🔍📝 Slot {i} write checksum debug: stored={slot.checksum:08x}, actual_written={actual_checksum_of_written_data:08x}, size={len(data_to_write)}"
+        )
+        if slot.checksum != actual_checksum_of_written_data:
+            logger.warning(
+                f"⚠️ Slot {i} checksum mismatch at write time! stored={slot.checksum:08x}, actual={actual_checksum_of_written_data:08x}"
+            )
+
         f.write(data_to_write)
 
         # Create descriptor

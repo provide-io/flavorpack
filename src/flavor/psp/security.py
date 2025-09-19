@@ -127,9 +127,20 @@ class PSPFIntegrityVerifier:
                             and index.integrity_signature != b"\x00" * 512
                             and index.public_key != b"\x00" * 32
                         ):
-                            # TODO: Fix this to hash entire package content, not just metadata
-                            # For now, use metadata as placeholder until proper implementation
-                            data_to_verify = str(metadata).encode("utf-8")
+                            # Get the original metadata JSON that was signed during building
+                            # Read compressed metadata from file
+                            metadata_compressed = reader._backend.read_at(
+                                index.metadata_offset, index.metadata_size
+                            )
+
+                            # Convert to bytes if memoryview
+                            if isinstance(metadata_compressed, memoryview):
+                                metadata_compressed = bytes(metadata_compressed)
+
+                            # Decompress to get the original JSON that was signed
+                            import gzip
+
+                            metadata_json = gzip.decompress(metadata_compressed)
 
                             # Verify Ed25519 signature
                             try:
@@ -137,7 +148,7 @@ class PSPFIntegrityVerifier:
                                 ed25519_signature = index.integrity_signature[:64]
 
                                 signature_valid = verify_signature(
-                                    data_to_verify, ed25519_signature, index.public_key
+                                    metadata_json, ed25519_signature, index.public_key
                                 )
                                 logger.debug(
                                     f"🔐 Signature validation result: {signature_valid}"
