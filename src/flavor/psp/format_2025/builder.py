@@ -7,6 +7,7 @@ for creating PSPF packages.
 """
 
 import io
+import os
 from pathlib import Path
 import tarfile
 import time
@@ -169,7 +170,7 @@ def prepare_slots(
         # This matches what Rust/Go builders do - checksum the actual slot content
         data_to_checksum = processed_data if processed_data != data else data
         checksum_str = calculate_checksum(data_to_checksum, "sha256")
-        checksum_adler32 = zlib.adler32(data_to_checksum)
+        checksum_adler32 = zlib.adler32(data_to_checksum) & 0xFFFFFFFF
 
         # Store prefixed checksum in metadata
         slot.checksum = checksum_str
@@ -250,10 +251,8 @@ def _load_slot_data(slot: SlotMetadata) -> bytes:
     # Resolve {workenv} if present in source path
     slot_path = Path(slot.source) if slot.source else Path()
     if "{workenv}" in str(slot_path):
-        import os
-
         # Priority: 1. FLAVOR_WORKENV_BASE env var, 2. Current working directory
-        base_dir = os.environ.get("FLAVOR_WORKENV_BASE", os.getcwd())
+        base_dir = os.environ.get("FLAVOR_WORKENV_BASE", str(Path.cwd()))
         slot_path = Path(str(slot_path).replace("{workenv}", base_dir))
         logger.debug(
             f"📍 Resolved slot path: {slot.source} -> {slot_path} (base: {base_dir})"
@@ -322,7 +321,7 @@ def _apply_operations(data: bytes, packed_ops: int, options: BuildOptions) -> by
             return output_stream.getvalue()
         else:
             # If processor returns a file path, read it
-            with open(output_stream, "rb") as f:
+            with Path(output_stream).open("rb") as f:
                 return f.read()
 
     except Exception as e:

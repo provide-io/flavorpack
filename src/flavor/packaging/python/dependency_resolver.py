@@ -276,7 +276,7 @@ class DependencyResolver:
                         logger.debug(f"Extracting UV binary from {name}")
                         with (
                             wheel_zip.open(name) as src,
-                            open(uv_path, "wb") as dst,
+                            uv_path.open("wb") as dst,
                         ):
                             content = src.read()
                             dst.write(content)
@@ -286,9 +286,7 @@ class DependencyResolver:
 
                         # Make executable (Unix-like systems only)
                         if not self.is_windows:
-                            import os
-
-                            os.chmod(uv_path, DEFAULT_EXECUTABLE_PERMS)
+                            uv_path.chmod(DEFAULT_EXECUTABLE_PERMS)
 
                         return uv_path
 

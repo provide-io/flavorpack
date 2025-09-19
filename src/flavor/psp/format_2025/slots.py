@@ -2,6 +2,8 @@
 # src/flavor/psp/format_2025/slots.py
 # PSPF 2025 Slot Management - Enhanced 64-byte descriptors
 
+from __future__ import annotations
+
 from pathlib import Path
 import struct
 from typing import Any
@@ -41,7 +43,7 @@ def validate_operations_string(instance, attribute, value: str) -> None:
         # This will raise ValueError if invalid
         string_to_operations(value)
     except ValueError as e:
-        raise ValueError(f"Invalid operations string '{value}': {e}")
+        raise ValueError(f"Invalid operations string '{value}': {e}") from e
 
 
 def normalize_purpose(value: str) -> str:
@@ -135,7 +137,7 @@ class SlotDescriptor:
         return data
 
     @classmethod
-    def unpack(cls, data: bytes) -> "SlotDescriptor":
+    def unpack(cls, data: bytes) -> SlotDescriptor:
         """Unpack descriptor from 64-byte binary data matching spec."""
         if len(data) != DEFAULT_SLOT_DESCRIPTOR_SIZE:
             raise ValueError(
@@ -314,7 +316,7 @@ class SlotMetadata:
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "SlotMetadata":
+    def from_dict(cls, data: dict[str, Any]) -> SlotMetadata:
         """Create from dictionary."""
         # Convert path strings to Path objects if present
         if "source" in data and data["source"] is not None:

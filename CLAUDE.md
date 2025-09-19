@@ -226,3 +226,5 @@ pytest -m security
 - If pretaster/taster aren't available, note that testing is blocked - don't create alternatives
 - no. you should not be writing your own examples. you should be using fucking pretaster.
 - Rather than "no hardcoded defaults" i mean "no inline defaults." defaults may be stored in a common file for the project. either defaults.py or constants.py, and THOSE will ALWAYS be used instead of inline defaults.
+- "import annotations" is okay so I can use the unquoted types.
+- After writing each Python file, run the code quality tools - ruff check --fix --unsafe-fixes, ty check, mypy, ruff format, then run each of the tools again. this way CQ is performed during the dev process.%

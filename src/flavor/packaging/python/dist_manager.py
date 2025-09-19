@@ -97,7 +97,7 @@ class PythonDistManager:
                     ensure_parent_dir(venv_python)
                     # Create symlink to system Python
                     try:
-                        os.symlink(python_exe, venv_python)
+                        Path(venv_python).symlink_to(python_exe)
                     except (OSError, FileExistsError):
                         # If symlink fails, copy the file
                         shutil.copy2(python_exe, venv_python)

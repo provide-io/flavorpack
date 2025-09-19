@@ -67,10 +67,9 @@ def cli(ctx: click.Context, log_level: str) -> None:
 
     # Skip logging setup when running under pytest to avoid I/O conflicts
     if "pytest" not in sys.modules:
-        from provide.foundation.logger import setup_logging
-
-        # Set up structured logging with foundation logger
-        setup_logging(level=log_level.upper())
+        # Foundation logger auto-configures on first use
+        # The logger will auto-configure based on the log level
+        os.environ["FOUNDATION_LOG_LEVEL"] = log_level.upper()
 
 
 # Register simple commands

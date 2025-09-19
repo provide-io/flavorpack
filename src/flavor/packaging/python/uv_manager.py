@@ -153,9 +153,8 @@ class UVManager(BaseToolManager):
             ToolNotFoundError: If UV cannot be found or installed
         """
         # Try system UV first if enabled and no version specified
-        if self.use_system_uv and version is None:
-            if system_uv := self.find_system_uv():
-                return system_uv
+        if self.use_system_uv and version is None and (system_uv := self.find_system_uv()):
+            return system_uv
 
         # Install specific version if requested
         if version:
@@ -396,14 +395,12 @@ class UVManager(BaseToolManager):
                             logger.debug(f"Extracting UV binary from {name}")
                             with (
                                 wheel_zip.open(name) as src,
-                                open(uv_path, "wb") as dst,
+                                uv_path.open("wb") as dst,
                             ):
                                 dst.write(src.read())
 
                             # Make executable
-                            import os
-
-                            os.chmod(uv_path, 0o755)
+                            uv_path.chmod(0o755)
 
                             logger.info("✅ Successfully downloaded UV binary")
                             return uv_path
