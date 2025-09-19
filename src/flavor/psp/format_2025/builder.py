@@ -281,19 +281,24 @@ def _load_slot_data(slot: SlotMetadata) -> bytes:
 
 
 def _apply_operations(data: bytes, packed_ops: int, options: BuildOptions) -> bytes:
-    """Apply operation chain to data using the new ChainProcessor.
+    """Apply v0 operation chain to data using direct implementation.
 
     Args:
         data: Raw data to process
-        packed_ops: Packed operations as 64-bit integer
+        packed_ops: Packed v0 operations as 64-bit integer
         options: Build options
 
     Returns:
-        Processed data after applying operations
+        Processed data after applying v0 operations
     """
-    import io
-
-    from flavor.archive import ArchiveChain, ChainProcessor
+    from flavor.psp.format_2025.operations import (
+        OP_BZIP2,
+        OP_GZIP,
+        OP_TAR,
+        OP_XZ,
+        OP_ZSTD,
+        unpack_operations,
+    )
 
     if packed_ops == 0:
         # No operations, return raw data
@@ -307,43 +312,47 @@ def _apply_operations(data: bytes, packed_ops: int, options: BuildOptions) -> by
         )
         return data
 
-    try:
-        # Create chain from packed operations
-        chain = ArchiveChain(packed_ops)
-        processor = ChainProcessor()
+    # Unpack v0 operations
+    ops = unpack_operations(packed_ops)
+    logger.debug(f"🔧 Applying v0 operations: {[hex(op) for op in ops]}")
 
-        # Validate chain
-        is_valid, msg = processor.validate_chain(chain)
-        if not is_valid:
-            logger.warning(f"⚠️ Invalid operation chain: {msg}, returning raw data")
-            return data
-
-        # Process data through chain
-        input_stream = io.BytesIO(data)
-        output_stream = processor.process(input_stream, chain)
-
-        if isinstance(output_stream, io.BytesIO):
-            return output_stream.getvalue()
-        else:
-            # If processor returns a file path, read it
-            with Path(output_stream).open("rb") as f:
-                return f.read()
-
-    except Exception as e:
-        # Fallback to direct implementation if chain processing fails
-        logger.trace(f"🔧 Chain processing failed, using fallback: {e}")
-        from flavor.psp.format_2025.operations import OP_GZIP, unpack_operations
-
-        ops = unpack_operations(packed_ops)
-        if OP_GZIP in ops:
+    # Apply operations in sequence
+    result = data
+    for op in ops:
+        if op == OP_TAR:
+            # TAR is handled by the slot builder - data should already be tar format
+            logger.trace("📦 TAR operation (data should already be tar format)")
+            continue
+        elif op == OP_GZIP:
             import gzip
 
-            return gzip.compress(data, compresslevel=options.compression_level)
+            logger.trace("🗜️ Applying GZIP compression")
+            result = gzip.compress(result, compresslevel=options.compression_level)
+        elif op == OP_BZIP2:
+            import bz2
+
+            logger.trace("🗜️ Applying BZIP2 compression")
+            result = bz2.compress(result, compresslevel=9)
+        elif op == OP_XZ:
+            import lzma
+
+            logger.trace("🗜️ Applying XZ compression")
+            result = lzma.compress(result, preset=6)
+        elif op == OP_ZSTD:
+            try:
+                import zstandard as zstd
+
+                logger.trace("🗜️ Applying ZSTD compression")
+                cctx = zstd.ZstdCompressor(level=3)
+                result = cctx.compress(result)
+            except ImportError:
+                logger.warning("⚠️ ZSTD not available, skipping operation")
         else:
-            logger.warning(
-                f"⚠️ Unsupported fallback operation chain: {ops}, returning raw data"
-            )
-            return data
+            logger.warning(f"⚠️ Unsupported v0 operation: 0x{op:02x}")
+            # Don't fail - just skip unsupported operations
+
+    logger.debug(f"✅ Operations complete: {len(data)} -> {len(result)} bytes")
+    return result
 
 
 # Package writing is now handled by the writer module
