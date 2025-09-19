@@ -196,7 +196,7 @@ def _write_slots(
             offset=slot_offset,
             size=len(data_to_write),
             checksum=slot.checksum,
-            operations=slot.codec_type,
+            operations=slot.operations,
             purpose=_map_purpose(slot.metadata.purpose),
             lifecycle=_map_lifecycle(slot.metadata.lifecycle),
             permissions=slot_permissions,

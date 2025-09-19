@@ -185,7 +185,7 @@ def prepare_slots(
                 metadata=slot,
                 data=data,
                 compressed_data=processed_data if processed_data != data else None,
-                codec_type=packed_ops,  # Operations packed as integer
+                operations=packed_ops,  # Operations packed as integer
                 checksum=checksum_adler32,  # Binary descriptor uses checksum of final data
             )
         )
