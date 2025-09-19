@@ -93,6 +93,9 @@ class SlotDescriptor:
     name: str = field(default="", metadata={"transient": True})
     path: Path | None = field(default=None, metadata={"transient": True})
 
+    # Legacy compatibility field (not persisted)
+    flags: int = field(default=0, metadata={"transient": True})
+
     def __attrs_post_init__(self) -> None:
         """Compute name hash if name is provided."""
         if self.name and not self.name_hash:
