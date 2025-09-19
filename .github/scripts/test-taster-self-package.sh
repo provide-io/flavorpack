@@ -23,15 +23,21 @@ echo "Testing Taster basic functionality..."
 echo "Testing Taster self-packaging..."
 
 # Check if taster has flavor API available for self-packaging
-if "${TASTER_PSP}" package --help >/dev/null 2>&1; then
+# Try to actually invoke the build command with help to test if flavor.api imports work
+if "${TASTER_PSP}" package build --help >/dev/null 2>&1; then
   echo "✅ Flavor API available, testing self-packaging..."
 
   # Use Taster's package command to package itself
-  "${TASTER_PSP}" package build \
+  if "${TASTER_PSP}" package build \
     pyproject.toml \
     --output taster-self-packaged.psp \
     --launcher-bin "${LAUNCHER}" \
-    --key-seed "taster-self-test"
+    --key-seed "taster-self-test"; then
+    echo "✅ Self-packaging command succeeded"
+  else
+    echo "❌ Self-packaging command failed even though API was available"
+    exit 1
+  fi
 else
   echo "⚠️ Flavor API not available in bundled taster, skipping self-packaging test"
   echo "   This is expected for minimal taster packages"
