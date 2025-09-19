@@ -172,6 +172,11 @@ def prepare_slots(
         checksum_str = calculate_checksum(data_to_checksum, "sha256")
         checksum_adler32 = zlib.adler32(data_to_checksum) & 0xFFFFFFFF
 
+        # DEBUG: Log checksum calculation details
+        logger.debug(
+            f"🔍🏗️ Slot {len(prepared)} checksum calculation: adler32={checksum_adler32:08x}, size={len(data_to_checksum)}, processed={processed_data is not data}"
+        )
+
         # Store prefixed checksum in metadata
         slot.checksum = checksum_str
 

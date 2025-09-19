@@ -296,9 +296,18 @@ class PSPFReader:
 
         # Verify checksum
         actual_checksum = zlib.adler32(slot_data) & 0xFFFFFFFF
+
+        # DEBUG: Log checksum details for troubleshooting
+        logger.debug(
+            f"🔍📖 Slot {slot_index} read checksum debug: expected={descriptor.checksum:08x}, actual={actual_checksum:08x}, size={len(slot_data)}"
+        )
+
         if actual_checksum != descriptor.checksum:
+            logger.error(
+                f"❌ Slot {slot_index} checksum mismatch: expected {descriptor.checksum:08x}, got {actual_checksum:08x}, size={len(slot_data)}"
+            )
             raise ValueError(
-                f"Slot {slot_index} checksum mismatch: expected {descriptor.checksum}, got {actual_checksum}"
+                f"Slot {slot_index} checksum mismatch: expected {descriptor.checksum:08x}, got {actual_checksum:08x}"
             )
 
         # Decompress if needed based on operations
