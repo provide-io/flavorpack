@@ -31,27 +31,45 @@ pub const CODEC_TAR: u8 = 2;
 pub const CODEC_TGZ: u8 = 3;
 
 // Purpose types - part of format spec
-pub const PURPOSE_DATA: u8 = 0;   // General data files
-pub const PURPOSE_CODE: u8 = 1;   // Executable code
-pub const PURPOSE_CONFIG: u8 = 2; // Configuration files
-pub const PURPOSE_MEDIA: u8 = 3;  // Media/assets
+#[allow(non_upper_case_globals)]
+pub const PurposeData: u8 = 0;   // General data files
+#[allow(non_upper_case_globals)]
+pub const PurposeCode: u8 = 1;   // Executable code
+#[allow(non_upper_case_globals)]
+pub const PurposeConfig: u8 = 2; // Configuration files
+#[allow(non_upper_case_globals)]
+pub const PurposeMedia: u8 = 3;  // Media/assets
 
 // Legacy aliases
-pub const PURPOSE_PAYLOAD: u8 = PURPOSE_DATA;   // Deprecated: use PURPOSE_DATA
-pub const PURPOSE_RUNTIME: u8 = PURPOSE_CODE;   // Deprecated: use PURPOSE_CODE
-pub const PURPOSE_TOOL: u8 = PURPOSE_CONFIG;    // Deprecated: use PURPOSE_CONFIG
+#[allow(non_upper_case_globals)]
+pub const PurposePayload: u8 = PurposeData;   // Deprecated: use PurposeData
+#[allow(non_upper_case_globals)]
+pub const PurposeRuntime: u8 = PurposeCode;   // Deprecated: use PurposeCode
+#[allow(non_upper_case_globals)]
+pub const PurposeTool: u8 = PurposeConfig;    // Deprecated: use PurposeConfig
 
 // Lifecycle types - part of format spec
-pub const LIFECYCLE_INIT: u8 = 0;      // First run only, removed after initialization
-pub const LIFECYCLE_STARTUP: u8 = 1;   // Extracted/executed at every startup
-pub const LIFECYCLE_RUNTIME: u8 = 2;   // Available during application execution (default)
-pub const LIFECYCLE_SHUTDOWN: u8 = 3;  // Executed during cleanup/exit phase
-pub const LIFECYCLE_CACHE: u8 = 4;     // Kept for performance, can be regenerated
-pub const LIFECYCLE_TEMPORARY: u8 = 5; // Removed after current session ends
-pub const LIFECYCLE_LAZY: u8 = 6;      // Loaded on-demand, not extracted initially
-pub const LIFECYCLE_EAGER: u8 = 7;     // Loaded immediately on startup
-pub const LIFECYCLE_DEV: u8 = 8;       // Only extracted in development/debug mode
-pub const LIFECYCLE_CONFIG: u8 = 9;    // User-modifiable configuration files
-pub const LIFECYCLE_PLATFORM: u8 = 10; // Platform/OS specific content
+#[allow(non_upper_case_globals)]
+pub const LifecycleInit: u8 = 0;      // First run only, removed after initialization
+#[allow(non_upper_case_globals)]
+pub const LifecycleStartup: u8 = 1;   // Extracted/executed at every startup
+#[allow(non_upper_case_globals)]
+pub const LifecycleRuntime: u8 = 2;   // Available during application execution (default)
+#[allow(non_upper_case_globals)]
+pub const LifecycleShutdown: u8 = 3;  // Executed during cleanup/exit phase
+#[allow(non_upper_case_globals)]
+pub const LifecycleCache: u8 = 4;     // Kept for performance, can be regenerated
+#[allow(non_upper_case_globals)]
+pub const LifecycleTemporary: u8 = 5; // Removed after current session ends
+#[allow(non_upper_case_globals)]
+pub const LifecycleLazy: u8 = 6;      // Loaded on-demand, not extracted initially
+#[allow(non_upper_case_globals)]
+pub const LifecycleEager: u8 = 7;     // Loaded immediately on startup
+#[allow(non_upper_case_globals)]
+pub const LifecycleDev: u8 = 8;       // Only extracted in development/debug mode
+#[allow(non_upper_case_globals)]
+pub const LifecycleConfig: u8 = 9;    // User-modifiable configuration files
+#[allow(non_upper_case_globals)]
+pub const LifecyclePlatform: u8 = 10; // Platform/OS specific content
 
 // 📦💾🔍🪄

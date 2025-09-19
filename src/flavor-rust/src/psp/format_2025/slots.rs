@@ -1,7 +1,7 @@
 // helpers/flavor-rs/src/psp/format_2025/slots.rs
 // PSPF 2025 Slot Management - Enhanced 64-byte descriptors
 
-use super::constants::{SLOT_DESCRIPTOR_SIZE, PurposePayload, LifecycleCache};
+use super::constants::{SLOT_DESCRIPTOR_SIZE, PURPOSE_PAYLOAD, LIFECYCLE_CACHE};
 use super::defaults::{CACHE_NORMAL, DEFAULT_FILE_PERMS, DEFAULT_PAGE_SIZE};
 use std::path::PathBuf;
 
