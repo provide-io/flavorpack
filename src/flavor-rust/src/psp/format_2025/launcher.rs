@@ -581,6 +581,18 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
             // Use hidden .{workenv}.pspf/package/ structure as a sibling to workenv
             let package_metadata_dir = paths.metadata().join("package");
             fs::create_dir_all(&package_metadata_dir)?;
+
+            // Set secure permissions on metadata directory and its parent
+            #[cfg(unix)]
+            {
+                use std::os::unix::fs::PermissionsExt;
+                let permissions = fs::Permissions::from_mode(DEFAULT_DIR_PERMS as u32);
+                // Set permissions on both the metadata parent directory and package subdirectory
+                let metadata_parent = paths.metadata();
+                fs::set_permissions(&metadata_parent, permissions.clone())?;
+                fs::set_permissions(&package_metadata_dir, permissions)?;
+                debug!("🔒 Set secure permissions on metadata directories");
+            }
             let metadata_file = package_metadata_dir.join("psp.json");
             let metadata_json = serde_json::to_string_pretty(&metadata)?;
             fs::write(&metadata_file, metadata_json)?;
