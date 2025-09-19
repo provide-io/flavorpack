@@ -35,8 +35,8 @@ class IngredientManager:
 
     def __init__(self) -> None:
         """Initialize the ingredient manager."""
-        self.flavor_root = Path(__file__).parent.parent.parent
-        self.ingredients_dir = self.flavor_root / "ingredients"
+        self.flavor_root = Path(__file__).parent.parent.parent.parent
+        self.ingredients_dir = self.flavor_root / "dist"
         self.ingredients_bin = self.ingredients_dir / "bin"
 
         # Also check XDG cache location for installed ingredients
@@ -45,9 +45,9 @@ class IngredientManager:
             Path(xdg_cache) / "flavor" / "ingredients" / "bin"
         )
 
-        # Source directories are in ingredients/<language>
-        self.go_src_dir = self.ingredients_dir / "flavor-go"
-        self.rust_src_dir = self.ingredients_dir / "flavor-rs"
+        # Source directories are in src/<language>
+        self.go_src_dir = self.flavor_root / "src" / "flavor-go"
+        self.rust_src_dir = self.flavor_root / "src" / "flavor-rust"
 
         # Ensure ingredients directories exist
         ensure_dir(self.ingredients_dir)

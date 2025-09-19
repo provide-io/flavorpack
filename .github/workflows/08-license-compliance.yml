@@ -116,16 +116,16 @@ jobs:
           echo "- Python files with license headers: $PY_WITH_LICENSE / $PY_TOTAL" >> $GITHUB_STEP_SUMMARY
           
           # Check Go files
-          if [ -d "ingredients/flavor-go" ]; then
-            GO_WITH_LICENSE=$(find ingredients/flavor-go -name "*.go" -type f -exec grep -l "Copyright\|License" {} \; 2>/dev/null | wc -l)
-            GO_TOTAL=$(find ingredients/flavor-go -name "*.go" -type f 2>/dev/null | wc -l)
+          if [ -d "src/flavor-go" ]; then
+            GO_WITH_LICENSE=$(find src/flavor-go -name "*.go" -type f -exec grep -l "Copyright\|License" {} \; 2>/dev/null | wc -l)
+            GO_TOTAL=$(find src/flavor-go -name "*.go" -type f 2>/dev/null | wc -l)
             echo "- Go files with license headers: $GO_WITH_LICENSE / $GO_TOTAL" >> $GITHUB_STEP_SUMMARY
           fi
           
           # Check Rust files
-          if [ -d "ingredients/flavor-rs" ]; then
-            RS_WITH_LICENSE=$(find ingredients/flavor-rs -name "*.rs" -type f -exec grep -l "Copyright\|License" {} \; 2>/dev/null | wc -l)
-            RS_TOTAL=$(find ingredients/flavor-rs -name "*.rs" -type f 2>/dev/null | wc -l)
+          if [ -d "src/flavor-rust" ]; then
+            RS_WITH_LICENSE=$(find src/flavor-rust -name "*.rs" -type f -exec grep -l "Copyright\|License" {} \; 2>/dev/null | wc -l)
+            RS_TOTAL=$(find src/flavor-rust -name "*.rs" -type f 2>/dev/null | wc -l)
             echo "- Rust files with license headers: $RS_WITH_LICENSE / $RS_TOTAL" >> $GITHUB_STEP_SUMMARY
           fi
 
@@ -333,7 +333,7 @@ jobs:
           echo "## 🐹 Go License Compliance" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
-          cd ingredients/flavor-go
+          cd src/flavor-go
           
           # Generate license report
           go-licenses report ./... --ignore github.com/livingstaccato 2>&1 | tee go-licenses.txt || true
@@ -352,7 +352,7 @@ jobs:
           echo "### Go License Compliance Check" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
-          cd ingredients/flavor-go
+          cd src/flavor-go
           
           # Check for problematic licenses
           VIOLATIONS=0
@@ -390,7 +390,7 @@ jobs:
         with:
           name: go-license-reports
           path: |
-            ingredients/flavor-go/go-licenses.*
+            src/flavor-go/go-licenses.*
 
   # Rust License Compliance
   rust-license:
@@ -415,7 +415,7 @@ jobs:
           echo "## 🦀 Rust License Compliance" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
-          cd ingredients/flavor-rs
+          cd src/flavor-rust
           
           # Generate license report
           cargo license --json > rust-licenses.json 2>&1 || true
@@ -432,7 +432,7 @@ jobs:
           echo "### Rust License Compliance Check" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
-          cd ingredients/flavor-rs
+          cd src/flavor-rust
           
           # Create cargo-deny config for license checking
           cat > deny.toml << 'EOF'
@@ -495,9 +495,9 @@ jobs:
         with:
           name: rust-license-reports
           path: |
-            ingredients/flavor-rs/rust-licenses.*
-            ingredients/flavor-rs/cargo-deny-licenses.log
-            ingredients/flavor-rs/deny.toml
+            src/flavor-rust/rust-licenses.*
+            src/flavor-rust/cargo-deny-licenses.log
+            src/flavor-rust/deny.toml
 
   # SBOM Generation
   sbom-generation:

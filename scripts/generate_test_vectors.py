@@ -171,11 +171,11 @@ def save_test_vectors(test_cases):
     log_info("💾 Starting to save test vectors")
 
     # Create output directories
-    go_testdata = Path("ingredients/flavor-go/pkg/psp/format_2025/testdata")
+    go_testdata = Path("src/flavor-go/pkg/psp/format_2025/testdata")
     log_debug(f"Creating Go testdata directory: {go_testdata}")
     go_testdata.mkdir(parents=True, exist_ok=True)
 
-    rust_testdata = Path("ingredients/flavor-rs/src/psp/format_2025/testdata")
+    rust_testdata = Path("src/flavor-rust/src/psp/format_2025/testdata")
     log_debug(f"Creating Rust testdata directory: {rust_testdata}")
     rust_testdata.mkdir(parents=True, exist_ok=True)
 
@@ -337,7 +337,7 @@ def main():
 
     # Save operation test cases
     log_info("📝 Saving operation test cases")
-    go_testdata = Path("ingredients/flavor-go/pkg/psp/format_2025/testdata")
+    go_testdata = Path("src/flavor-go/pkg/psp/format_2025/testdata")
     op_file = go_testdata / "operations.json"
     log_debug(f"Writing operation tests to {op_file}")
 

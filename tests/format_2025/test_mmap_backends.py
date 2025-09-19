@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# helpers/taster/tests/format_2025/test_mmap_backends.py
+# tests/format_2025/test_mmap_backends.py
 # Tests for memory-mapped I/O backends in taster
 
 from pathlib import Path
