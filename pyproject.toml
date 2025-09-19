@@ -50,7 +50,6 @@ docs = [
 
 [tool.uv.sources]
 provide-foundation = { workspace = true }
-provide-testkit = { workspace = true }
 
 [project.scripts]
 flavor = "flavor.cli:main"
