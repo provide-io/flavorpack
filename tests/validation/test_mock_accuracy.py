@@ -18,17 +18,15 @@ class TestMockAccuracy:
     """Validate that our mocks accurately represent real behavior."""
 
     @pytest.fixture(autouse=True)
-    def use_real_launcher(self, monkeypatch, request):
+    def use_real_launcher(self, monkeypatch, request) -> None:
         """Override the global mock to use real launchers for these tests."""
         # Skip the global mock fixture for this test class
-        from flavor.psp.format_2025.metadata import assembly
-
         # Store the original function
-        original_load_launcher = assembly.load_launcher_binary
-
         # The global mock has already patched it, so we need to get the real one
         import importlib
         import sys
+
+        from flavor.psp.format_2025.metadata import assembly
 
         # Remove the module from cache to force reimport
         if "flavor.psp.format_2025.metadata.assembly" in sys.modules:
@@ -48,7 +46,7 @@ class TestMockAccuracy:
     @pytest.mark.skip(
         reason="Mock vs real launcher validation should be periodic integration test, not unit test"
     )
-    def test_launcher_size_assumption(self):
+    def test_launcher_size_assumption(self) -> None:
         """Verify mock launcher size is reasonable.
 
         The mock doesn't need to match exactly, but should be in a reasonable range
@@ -57,7 +55,7 @@ class TestMockAccuracy:
         from flavor.psp.format_2025.metadata.assembly import load_launcher_binary
 
         try:
-            real_launcher = load_launcher_binary("rust")
+            load_launcher_binary("rust")
 
             # Mock should be at least minimally sized
             assert MOCK_LAUNCHER_SIZE >= 100, "Mock launcher too small to be realistic"
@@ -72,7 +70,7 @@ class TestMockAccuracy:
     @pytest.mark.skip(
         reason="Mock structure validation should be periodic integration test comparing with real launchers"
     )
-    def test_mock_package_structure(self, temp_dir):
+    def test_mock_package_structure(self, temp_dir) -> None:
         """Verify packages built with mocks have valid PSPF structure."""
         # This test uses the mock which is fine - we're testing the mock creates valid structure
         from flavor.psp.format_2025.metadata import assembly
@@ -114,7 +112,7 @@ class TestMockAccuracy:
         assert metadata["format"] == "PSPF/2025"
         assert metadata["package"]["name"] == "mock-test"
 
-    def test_mock_launcher_content(self):
+    def test_mock_launcher_content(self) -> None:
         """Verify mock launcher has expected format markers."""
         # Our mock should have some identifying content
         assert b"FAKE_LAUNCHER_FOR_TEST" in MOCK_LAUNCHER_DATA
@@ -122,7 +120,7 @@ class TestMockAccuracy:
         # Mock should be properly padded
         assert len(MOCK_LAUNCHER_DATA) == MOCK_LAUNCHER_SIZE
 
-    def test_build_with_mock_vs_real(self, temp_dir):
+    def test_build_with_mock_vs_real(self, temp_dir) -> None:
         """Compare package structure built with mock vs real launcher.
 
         This test builds two packages - one with mock and one with real launcher,
@@ -165,7 +163,7 @@ class TestMockAccuracy:
 
         try:
             # Try to load real launcher first to see if it's available
-            real_launcher_data = assembly_fresh.load_launcher_binary("rust")
+            assembly_fresh.load_launcher_binary("rust")
 
             # If we got here, real launcher exists, so build with it
             with unittest.mock.patch.object(
@@ -195,18 +193,18 @@ class TestMockAccuracy:
 class TestMockContract:
     """Ensure mock launcher follows the expected contract."""
 
-    def test_mock_is_bytes(self):
+    def test_mock_is_bytes(self) -> None:
         """Mock launcher should be bytes."""
         assert isinstance(MOCK_LAUNCHER_DATA, bytes)
 
-    def test_mock_has_minimum_size(self):
+    def test_mock_has_minimum_size(self) -> None:
         """Mock launcher should have minimum size."""
         assert len(MOCK_LAUNCHER_DATA) >= 100
 
-    def test_mock_size_matches_constant(self):
+    def test_mock_size_matches_constant(self) -> None:
         """Mock data length should match declared size."""
         assert len(MOCK_LAUNCHER_DATA) == MOCK_LAUNCHER_SIZE
 
-    def test_mock_has_identifier(self):
+    def test_mock_has_identifier(self) -> None:
         """Mock should have identifying marker for debugging."""
         assert b"FAKE_LAUNCHER_FOR_TEST" in MOCK_LAUNCHER_DATA

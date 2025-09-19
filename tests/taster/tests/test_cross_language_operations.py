@@ -15,7 +15,7 @@ from flavor.psp.format_2025.operations import operations_to_string, string_to_op
 class TestCrossLanguageOperations:
     """Test operations field compatibility between Python, Go, and Rust."""
 
-    def test_operations_serialization_compatibility(self):
+    def test_operations_serialization_compatibility(self) -> None:
         """Test that operations field is serialized consistently across languages."""
         # Test various operation chain combinations
         test_operations = [
@@ -44,7 +44,7 @@ class TestCrossLanguageOperations:
                 f"Packed operations out of 64-bit range: {packed_ops}"
             )
 
-    def test_taster_operations_verification(self):
+    def test_taster_operations_verification(self) -> None:
         """Test that taster can verify packages with various operations."""
         # Skip if taster not available
         taster_path = Path(__file__).parents[1] / "dist" / "taster.psp"
@@ -77,7 +77,7 @@ class TestCrossLanguageOperations:
             except json.JSONDecodeError as e:
                 pytest.fail(f"Invalid JSON output: {e}, output: {result.stdout}")
 
-    def test_slot_descriptor_operations_field(self):
+    def test_slot_descriptor_operations_field(self) -> None:
         """Test that SlotDescriptor properly handles operations field."""
         from flavor.psp.format_2025.slots import SlotDescriptor
 
@@ -88,7 +88,7 @@ class TestCrossLanguageOperations:
             ("TAR|GZIP", string_to_operations("TAR|GZIP")),
         ]
 
-        for ops_string, expected_packed in test_cases:
+        for ops_string, _expected_packed in test_cases:
             descriptor = SlotDescriptor(
                 id=1,
                 operations=string_to_operations(ops_string),
@@ -109,7 +109,7 @@ class TestCrossLanguageOperations:
             assert restored_ops == ops_string
 
     @pytest.mark.requires_ingredients
-    def test_cross_language_package_verification(self):
+    def test_cross_language_package_verification(self) -> None:
         """Test that packages built with different languages verify consistently."""
         # Skip if taster not available
         taster_path = Path(__file__).parents[1] / "dist" / "taster.psp"
@@ -131,7 +131,7 @@ class TestCrossLanguageOperations:
         # Should have some output indicating success
         assert result.stdout or not result.stderr, "No verification output produced"
 
-    def test_metadata_operations_compatibility(self):
+    def test_metadata_operations_compatibility(self) -> None:
         """Test that SlotMetadata properly converts to SlotDescriptor operations."""
         from flavor.psp.format_2025.slots import SlotDescriptor, SlotMetadata
 
@@ -161,7 +161,7 @@ class TestCrossLanguageOperations:
         restored_ops = operations_to_string(unpacked_descriptor.operations)
         assert restored_ops == "TAR|GZIP"
 
-    def test_operations_error_handling(self):
+    def test_operations_error_handling(self) -> None:
         """Test that invalid operations are handled gracefully."""
         # Test invalid operation strings
         invalid_operations = [

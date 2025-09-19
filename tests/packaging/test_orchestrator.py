@@ -76,7 +76,7 @@ def test_python_builder_flow(
     orchestrator: PackagingOrchestrator,
     setup_payload_dir: Path,
     tmp_path: Path,
-):
+) -> None:
     """Test the default Python builder flow is orchestrated correctly."""
     mock_find_launcher.return_value = Path("/path/to/flavor-rs-launcher")
     mock_detect_launcher.return_value = "rust"
@@ -125,7 +125,7 @@ def test_external_builder_command_construction(
     orchestrator: PackagingOrchestrator,
     setup_payload_dir: Path,
     tmp_path: Path,
-):
+) -> None:
     """Verify the orchestrator calls the external builder with correct arguments."""
     mock_find_builder.return_value = Path("/path/to/flavor-rs-builder")
     mock_find_launcher.return_value = Path("/path/to/flavor-rs-launcher")
@@ -172,7 +172,7 @@ def test_external_builder_error_handling(
     orchestrator: PackagingOrchestrator,
     setup_payload_dir: Path,
     tmp_path: Path,
-):
+) -> None:
     """Verify that BuildError from run_command is propagated correctly."""
     mock_find_builder.return_value = Path("/fake/builder")
     mock_find_launcher.return_value = Path("/fake/launcher")
@@ -190,7 +190,9 @@ def test_external_builder_error_handling(
 
 
 @patch("flavor.packaging.orchestrator.find_launcher_executable")
-def test_launcher_not_found(mock_find_launcher, orchestrator: PackagingOrchestrator):
+def test_launcher_not_found(
+    mock_find_launcher, orchestrator: PackagingOrchestrator
+) -> None:
     """Test that a BuildError is raised if the launcher binary is not found."""
     mock_find_launcher.return_value.exists.return_value = False
     with pytest.raises(BuildError, match="Launcher binary not found"):
@@ -204,7 +206,7 @@ def test_launcher_not_executable(
     mock_find_launcher,
     orchestrator: PackagingOrchestrator,
     tmp_path: Path,
-):
+) -> None:
     """Test that a BuildError is raised if the launcher binary is not executable."""
     launcher_path = tmp_path / "launcher"
     launcher_path.touch()
@@ -215,7 +217,9 @@ def test_launcher_not_executable(
 
 
 @patch("flavor.packaging.orchestrator.run_command")
-def test_launcher_type_detection(mock_run_command, orchestrator: PackagingOrchestrator):
+def test_launcher_type_detection(
+    mock_run_command, orchestrator: PackagingOrchestrator
+) -> None:
     """Test the launcher type detection logic for Go and Rust."""
     mock_run_command.return_value.stdout = "flavor-go-launcher version 1.2.3"
     assert orchestrator._detect_launcher_type(Path("go-launcher")) == "go"

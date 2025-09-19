@@ -26,7 +26,7 @@ class TestPackageSecurity:
 
         shutil.rmtree(self.temp_dir)
 
-    def test_signature_verification_required(self):
+    def test_signature_verification_required(self) -> None:
         """Ensure packages cannot run without valid signature."""
         # Create a package without signature
         package_path = self.temp_dir / "unsigned.psp"
@@ -44,7 +44,7 @@ class TestPackageSecurity:
         builder.build(package_path)
         # Package should have been signed (ephemeral keys generated automatically)
 
-    def test_tampered_package_detection(self):
+    def test_tampered_package_detection(self) -> None:
         """Ensure tampered packages are detected."""
         # Create a valid signed package
         package_path = self.temp_dir / "signed.psp"
@@ -87,7 +87,7 @@ class TestPackageSecurity:
         # For now we'll just check that it runs without error
         assert isinstance(result, dict), "verify_integrity should return a dict"
 
-    def test_path_traversal_prevention(self):
+    def test_path_traversal_prevention(self) -> None:
         """Ensure path traversal attacks are prevented."""
         test_cases = [
             "../../../etc/passwd",
@@ -97,14 +97,14 @@ class TestPackageSecurity:
             "C:\\Windows\\System32\\config\\sam",
         ]
 
-        for malicious_path in test_cases:
+        for _malicious_path in test_cases:
             # The builder should reject malicious paths
-            builder = PSPFBuilder()
+            PSPFBuilder()
             # For now, we skip validation testing as the builder doesn't validate paths
             # This would need to be implemented in the builder
             pass
 
-    def test_command_injection_prevention(self):
+    def test_command_injection_prevention(self) -> None:
         """Ensure command injection is prevented."""
         test_cases = [
             "test; rm -rf /",
@@ -115,9 +115,9 @@ class TestPackageSecurity:
             "test\n/bin/sh",
         ]
 
-        for malicious_input in test_cases:
+        for _malicious_input in test_cases:
             # Ensure malicious commands in metadata are sanitized
-            builder = PSPFBuilder()
+            PSPFBuilder()
             # Method removed - skip this test
             pass
             # with pytest.raises(Exception, match="invalid.*character|command"):
@@ -127,13 +127,12 @@ class TestPackageSecurity:
             #         }
             #     })
 
-    def test_zip_bomb_prevention(self):
+    def test_zip_bomb_prevention(self) -> None:
         """Ensure zip bombs are detected and prevented."""
         # Create a highly compressed file that expands enormously
-        small_data = b"A" * 1024  # 1KB
 
         # Compress it claiming it's huge
-        builder = PSPFBuilder()
+        PSPFBuilder()
 
         # The builder doesn't have add_compressed_slot, use add_slot with encoding
         # For now, we skip zip bomb testing as it would need to be implemented
@@ -144,16 +143,16 @@ class TestPackageSecurity:
         #         uncompressed_size=10 * 1024 * 1024 * 1024  # Claims 10GB
         #     )
 
-    def test_memory_exhaustion_prevention(self):
+    def test_memory_exhaustion_prevention(self) -> None:
         """Ensure memory exhaustion attacks are prevented."""
         # Try to allocate huge amounts of memory
-        builder = PSPFBuilder()
+        PSPFBuilder()
 
         # The add_slot method exists but doesn't have claimed_size parameter
         # Memory limit testing would need to be implemented differently
         pass
 
-    def test_symlink_escape_prevention(self):
+    def test_symlink_escape_prevention(self) -> None:
         """Ensure symlinks cannot escape package sandbox."""
         # Create a package with symlink
         link_path = self.temp_dir / "evil_link"
@@ -163,7 +162,7 @@ class TestPackageSecurity:
         # would need to be implemented in the builder
         pass
 
-    def test_race_condition_prevention(self):
+    def test_race_condition_prevention(self) -> None:
         """Ensure race conditions during extraction are handled."""
         import threading
 
@@ -190,7 +189,7 @@ class TestPackageSecurity:
         # Try concurrent extraction using PSPFLauncher
         results = []
 
-        def extract():
+        def extract() -> None:
             try:
                 launcher = PSPFLauncher(package_path)
                 launcher.extract_all_slots(extract_dir)
@@ -208,7 +207,7 @@ class TestPackageSecurity:
         # The launcher handles concurrent access properly
         assert results.count("success") == 10, "All threads should successfully extract"
 
-    def test_environment_variable_sanitization(self):
+    def test_environment_variable_sanitization(self) -> None:
         """Ensure environment variables are properly sanitized."""
         dangerous_vars = {
             "LD_PRELOAD": "/tmp/evil.so",
@@ -218,24 +217,24 @@ class TestPackageSecurity:
             "PS4": "$(whoami)",
         }
 
-        builder = PSPFBuilder()
+        PSPFBuilder()
 
-        for var, value in dangerous_vars.items():
+        for _var, _value in dangerous_vars.items():
             # Method removed - skip this test
             pass
             # with pytest.raises(Exception, match="forbidden.*variable|invalid.*env"):
             #     builder.set_runtime_env({"set": {var: value}})
 
-    def test_resource_limits_enforcement(self):
+    def test_resource_limits_enforcement(self) -> None:
         """Ensure resource limits are enforced."""
         # Test file count limit
-        builder = PSPFBuilder()
+        PSPFBuilder()
 
         # The add_slot method exists, but file count limits would need
         # to be implemented in the builder
         pass
 
-    def test_permission_preservation(self):
+    def test_permission_preservation(self) -> None:
         """Ensure file permissions are not escalated."""
         # Create a test file with specific permissions
         test_file = self.temp_dir / "test_perms.sh"
@@ -273,7 +272,7 @@ class TestPackageSecurity:
 class TestCryptographicSecurity:
     """Test cryptographic security features."""
 
-    def test_key_strength(self):
+    def test_key_strength(self) -> None:
         """Ensure keys meet minimum strength requirements."""
         private_key, public_key = generate_ephemeral_keys()
 
@@ -281,7 +280,7 @@ class TestCryptographicSecurity:
         assert len(public_key) == 32
         assert len(private_key) == 32  # Ed25519 private key is 32 bytes
 
-    def test_signature_algorithm(self):
+    def test_signature_algorithm(self) -> None:
         """Ensure proper signature algorithm is used."""
         from provide.foundation.crypto import sign_data, verify_signature
 
@@ -303,7 +302,7 @@ class TestCryptographicSecurity:
         is_valid_wrong = verify_signature(wrong_data, signature, public_key)
         assert not is_valid_wrong, "Signature should be invalid for different data"
 
-    def test_random_seed_quality(self):
+    def test_random_seed_quality(self) -> None:
         """Ensure random seeds are cryptographically secure."""
         seeds = set()
         for _ in range(100):

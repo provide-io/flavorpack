@@ -90,7 +90,7 @@ class TestReaderBackends:
         # Cleanup
         path.unlink(missing_ok=True)
 
-    def test_reader_with_mmap_backend(self, test_bundle):
+    def test_reader_with_mmap_backend(self, test_bundle) -> None:
         """Test reader with memory-mapped backend."""
         reader = PSPFReader(test_bundle, mode=ACCESS_MMAP)
         reader.open()
@@ -121,7 +121,7 @@ class TestReaderBackends:
 
         reader.close()
 
-    def test_reader_with_file_backend(self, test_bundle):
+    def test_reader_with_file_backend(self, test_bundle) -> None:
         """Test reader with file I/O backend."""
         reader = PSPFReader(test_bundle, mode=ACCESS_FILE)
         reader.open()
@@ -140,7 +140,7 @@ class TestReaderBackends:
 
         reader.close()
 
-    def test_reader_with_stream_backend(self, test_bundle):
+    def test_reader_with_stream_backend(self, test_bundle) -> None:
         """Test reader with streaming backend."""
         reader = PSPFReader(test_bundle, mode=ACCESS_STREAM)
         reader.open()
@@ -162,7 +162,7 @@ class TestReaderBackends:
 
         reader.close()
 
-    def test_reader_context_manager(self, test_bundle):
+    def test_reader_context_manager(self, test_bundle) -> None:
         """Test reader as context manager."""
         with PSPFReader(test_bundle, mode=ACCESS_MMAP) as reader:
             index = reader.read_index()
@@ -171,7 +171,7 @@ class TestReaderBackends:
         # Backend should be closed automatically
         assert reader._backend is None
 
-    def test_reader_auto_backend(self, test_bundle):
+    def test_reader_auto_backend(self, test_bundle) -> None:
         """Test automatic backend selection."""
         reader = PSPFReader(test_bundle, mode=ACCESS_AUTO)
         reader.open()
@@ -182,7 +182,7 @@ class TestReaderBackends:
 
         reader.close()
 
-    def test_read_bundle_convenience(self, test_bundle):
+    def test_read_bundle_convenience(self, test_bundle) -> None:
         """Test convenience function."""
         # With mmap
         reader = read_bundle(test_bundle, use_mmap=True)
@@ -194,17 +194,17 @@ class TestReaderBackends:
         assert reader.get_backend() is not None
         reader.close()
 
-    def test_verify_bundle_basic(self, test_bundle):
+    def test_verify_bundle_basic(self, test_bundle) -> None:
         """Test basic bundle verification."""
         # Note: Our test bundle doesn't have proper metadata or signatures,
         # so we just test that it doesn't crash
         try:
-            result = verify_bundle(test_bundle)
+            verify_bundle(test_bundle)
             # May fail due to missing metadata, that's ok for this test
         except:
             pass  # Expected for minimal test bundle
 
-    def test_switch_backends(self, test_bundle):
+    def test_switch_backends(self, test_bundle) -> None:
         """Test switching between backends."""
         reader = PSPFReader(test_bundle, mode=ACCESS_FILE)
         reader.open()
@@ -226,7 +226,7 @@ class TestReaderBackends:
 
         reader.close()
 
-    def test_lazy_slot_view(self, test_bundle):
+    def test_lazy_slot_view(self, test_bundle) -> None:
         """Test lazy slot loading with SlotView."""
         with PSPFReader(test_bundle, mode=ACCESS_MMAP) as reader:
             # Get a lazy view

@@ -39,24 +39,24 @@ def create_modern_cached_package(
 class TestCacheManager:
     """Test the CacheManager class."""
 
-    def setup_method(self):
+    def setup_method(self) -> None:
         """Set up test environment."""
         self.temp_dir = Path(tempfile.mkdtemp())
         self.cache_dir = self.temp_dir / "cache"
         self.cache_dir.mkdir()
 
-    def teardown_method(self):
+    def teardown_method(self) -> None:
         """Clean up test environment."""
         if self.temp_dir.exists():
             shutil.rmtree(self.temp_dir)
 
-    def test_cache_manager_initialization(self):
+    def test_cache_manager_initialization(self) -> None:
         """Test CacheManager initializes with correct directory."""
         manager = CacheManager(cache_dir=self.cache_dir)
         assert manager.cache_dir == self.cache_dir
         assert manager.cache_dir.exists()
 
-    def test_list_cached_packages(self):
+    def test_list_cached_packages(self) -> None:
         """Test listing cached packages with the modern layout."""
         create_modern_cached_package(self.cache_dir, "abc123", "test1", "1.0.0")
         create_modern_cached_package(self.cache_dir, "def456", "test2", "2.0.0")
@@ -73,7 +73,7 @@ class TestCacheManager:
         assert any(p["name"] == "test2" for p in cached)
         assert not any(p.get("id") == "ghi789" for p in cached)
 
-    def test_get_cache_size(self):
+    def test_get_cache_size(self) -> None:
         """Test calculating total cache size."""
         pkg1_dir, _ = create_modern_cached_package(
             self.cache_dir, "pkg1", "app1", "1.0"
@@ -91,7 +91,7 @@ class TestCacheManager:
 
         assert 5900 < total_size < 6200
 
-    def test_clean_old_packages(self):
+    def test_clean_old_packages(self) -> None:
         """Test cleaning packages older than specified days."""
         pkg_old_dir, _ = create_modern_cached_package(
             self.cache_dir, "old_pkg", "old", "1.0"
@@ -111,7 +111,7 @@ class TestCacheManager:
         assert not pkg_old_dir.exists()
         assert pkg_new_dir.exists()
 
-    def test_remove_specific_package(self):
+    def test_remove_specific_package(self) -> None:
         """Test removing a specific cached package."""
         pkg_id = "test_pkg_123"
         pkg_dir, _ = create_modern_cached_package(self.cache_dir, pkg_id, "app", "1.0")
@@ -122,7 +122,7 @@ class TestCacheManager:
         assert success is True
         assert not pkg_dir.exists()
 
-    def test_remove_nonexistent_package(self):
+    def test_remove_nonexistent_package(self) -> None:
         """Test removing a package that doesn't exist."""
         manager = CacheManager(cache_dir=self.cache_dir)
         success = manager.remove("nonexistent")
@@ -133,18 +133,18 @@ class TestCacheManager:
 class TestCacheCLICommands:
     """Test cache-related CLI commands."""
 
-    def setup_method(self):
+    def setup_method(self) -> None:
         """Set up test environment."""
         self.runner = CliRunner()
         self.temp_dir = Path(tempfile.mkdtemp())
 
-    def teardown_method(self):
+    def teardown_method(self) -> None:
         """Clean up test environment."""
         if self.temp_dir.exists():
             shutil.rmtree(self.temp_dir)
 
     @patch("flavor.cache.get_cache_dir")
-    def test_cache_list_command(self, mock_cache_dir):
+    def test_cache_list_command(self, mock_cache_dir) -> None:
         """Test 'flavor workenv list' command."""
         mock_cache_dir.return_value = self.temp_dir
 
@@ -157,7 +157,7 @@ class TestCacheCLICommands:
         assert "1.0.0" in result.output
 
     @patch("flavor.cache.get_cache_dir")
-    def test_cache_clean_command(self, mock_cache_dir):
+    def test_cache_clean_command(self, mock_cache_dir) -> None:
         """Test 'flavor workenv clean' command."""
         mock_cache_dir.return_value = self.temp_dir
 
@@ -169,7 +169,7 @@ class TestCacheCLICommands:
         assert "Removed" in result.output and "cached package(s)" in result.output
 
     @patch("flavor.cache.get_cache_dir")
-    def test_cache_clean_with_age(self, mock_cache_dir):
+    def test_cache_clean_with_age(self, mock_cache_dir) -> None:
         """Test 'flavor workenv clean --older-than' command."""
         mock_cache_dir.return_value = self.temp_dir
         create_modern_cached_package(self.temp_dir, "old_pkg", "old", "1.0")
@@ -182,7 +182,7 @@ class TestCacheCLICommands:
         assert "Removed" in result.output and "cached package(s)" in result.output
 
     @patch("flavor.cache.get_cache_dir")
-    def test_cache_remove_command(self, mock_cache_dir):
+    def test_cache_remove_command(self, mock_cache_dir) -> None:
         """Test 'flavor workenv remove' command."""
         mock_cache_dir.return_value = self.temp_dir
 
@@ -195,7 +195,7 @@ class TestCacheCLICommands:
         assert not pkg_dir.exists()
 
     @patch("flavor.cache.get_cache_dir")
-    def test_cache_inspect_command(self, mock_cache_dir):
+    def test_cache_inspect_command(self, mock_cache_dir) -> None:
         """Test 'flavor workenv inspect' command."""
         mock_cache_dir.return_value = self.temp_dir
 

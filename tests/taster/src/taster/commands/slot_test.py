@@ -14,7 +14,7 @@ from flavor.package import build_package_from_manifest
 @click.command("slot-test")
 @click.option("--verbose", "-v", is_flag=True, help="Verbose output")
 @click.option("--json-output", is_flag=True, help="Output results as JSON")
-def slot_test_command(verbose, json_output):
+def slot_test_command(verbose, json_output) -> None:
     """🎰 Test {slot:N} substitution patterns."""
 
     if not json_output:

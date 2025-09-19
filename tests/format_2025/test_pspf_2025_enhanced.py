@@ -25,15 +25,15 @@ from flavor.psp.format_2025.index import PSPFIndex
 class TestEnhancedConstants:
     """Test enhanced constants and sizes."""
 
-    def test_header_size(self):
+    def test_header_size(self) -> None:
         """Header should be 8192 bytes (8KB)."""
         assert DEFAULT_HEADER_SIZE == 8192
 
-    def test_version_format(self):
+    def test_version_format(self) -> None:
         """Version should be 0x20250001."""
         assert PSPF_VERSION == 0x20250001
 
-    def test_magic_trailer_emojis(self):
+    def test_magic_trailer_emojis(self) -> None:
         """MagicTrailer should have both emojis."""
         assert TRAILER_START_MAGIC == b"\xf0\x9f\x93\xa6"  # 📦 in UTF-8
         assert TRAILER_END_MAGIC == b"\xf0\x9f\xaa\x84"  # 🪄 in UTF-8
@@ -47,13 +47,13 @@ class TestEnhancedConstants:
 class TestEnhancedIndex:
     """Test enhanced 512-byte index structure."""
 
-    def test_index_size(self):
+    def test_index_size(self) -> None:
         """Index should pack to exactly 8192 bytes (8KB)."""
         index = PSPFIndex()
         packed = index.pack()
         assert len(packed) == 8192
 
-    def test_index_fields(self):
+    def test_index_fields(self) -> None:
         """Test new index fields."""
         index = PSPFIndex()
 
@@ -66,7 +66,7 @@ class TestEnhancedIndex:
         # SLOT_DESCRIPTOR_SIZE is a constant (64), not an index field
         assert index.page_size == 4096
 
-    def test_pack_unpack_roundtrip(self):
+    def test_pack_unpack_roundtrip(self) -> None:
         """Pack and unpack should preserve data."""
         index = PSPFIndex()
         index.package_size = 1234567
@@ -81,7 +81,7 @@ class TestEnhancedIndex:
         assert unpacked.max_memory == 256 * 1024 * 1024
         assert unpacked.index_checksum != 0  # Should have checksum
 
-    def test_checksum_validation(self):
+    def test_checksum_validation(self) -> None:
         """Checksum should be calculated correctly."""
         index = PSPFIndex()
         packed = index.pack()
@@ -105,7 +105,7 @@ class TestEnhancedIndex:
 class TestPlatformSpecific:
     """Test platform-specific features."""
 
-    def test_page_size(self):
+    def test_page_size(self) -> None:
         """Page size should be set based on platform."""
         import sys
 
@@ -118,7 +118,7 @@ class TestPlatformSpecific:
             # Linux/Windows
             assert DEFAULT_PAGE_SIZE == 4096
 
-    def test_access_modes(self):
+    def test_access_modes(self) -> None:
         """Access modes should be defined."""
         from flavor.config.defaults import (
             ACCESS_AUTO,
@@ -145,7 +145,7 @@ class TestCleanup:
 class TestEnhancedSlots:
     """Test enhanced 64-byte slot descriptors."""
 
-    def test_slot_descriptor_size(self):
+    def test_slot_descriptor_size(self) -> None:
         """Slot descriptor should pack to exactly 64 bytes."""
         from flavor.psp.format_2025.slots import SlotDescriptor
 
@@ -153,7 +153,7 @@ class TestEnhancedSlots:
         packed = slot.pack()
         assert len(packed) == 64
 
-    def test_slot_name_hashing(self):
+    def test_slot_name_hashing(self) -> None:
         """Slot names should be hashed for fast lookup."""
         from flavor.psp.format_2025.slots import SlotDescriptor, hash_name
 
@@ -161,7 +161,7 @@ class TestEnhancedSlots:
         expected_hash = hash_name("main.py")
         assert slot.name_hash == expected_hash
 
-    def test_slot_pack_unpack_roundtrip(self):
+    def test_slot_pack_unpack_roundtrip(self) -> None:
         """Pack and unpack should preserve slot data."""
         from flavor.psp.format_2025.slots import SlotDescriptor
 
@@ -172,7 +172,8 @@ class TestEnhancedSlots:
             checksum=0xABCDEF00,
             operations=1,  # gzip
             lifecycle=0,  # permanent
-            permissions=0o755,
+            permissions=0o755 & 0xFF,  # Low byte
+            permissions_high=(0o755 >> 8) & 0xFF,  # High byte
         )
 
         packed = slot.pack()
@@ -183,9 +184,10 @@ class TestEnhancedSlots:
         assert unpacked.checksum == 0xABCDEF00
         assert unpacked.operations == 1
         assert unpacked.lifecycle == 0
-        assert unpacked.permissions == 0o755
+        assert unpacked.permissions == 0o755 & 0xFF
+        assert unpacked.permissions_high == (0o755 >> 8) & 0xFF
 
-    def test_slot_view_lazy_loading(self):
+    def test_slot_view_lazy_loading(self) -> None:
         """SlotView should support lazy loading."""
         from flavor.psp.format_2025.slots import SlotDescriptor, SlotView
 

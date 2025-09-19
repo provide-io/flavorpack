@@ -4,7 +4,7 @@
 import sys
 
 
-def test_imports():
+def test_imports() -> int:
     """Test that critical binary packages can be imported."""
     print("🧪 Testing package imports...")
 
@@ -18,7 +18,7 @@ def test_imports():
     failed = []
     for package_name, import_name in packages_to_test:
         try:
-            module = __import__(import_name)
+            __import__(import_name)
             print(f"  ✅ {package_name}: imported successfully")
             # For cryptography, verify it's working
             if package_name == "cryptography":
