@@ -169,14 +169,25 @@ def _write_slots(
         slot_offset = f.tell()
         data_to_write = slot.get_data_to_write()
 
-        # DEBUG: Log checksum details for troubleshooting
+        # Verify checksum integrity at write time
         actual_checksum_of_written_data = zlib.adler32(data_to_write) & 0xFFFFFFFF
-        logger.debug(
-            f"🔍📝 Slot {i} write checksum debug: stored={slot.checksum:08x}, actual_written={actual_checksum_of_written_data:08x}, size={len(data_to_write)}"
+        logger.trace(
+            "🔍 Verifying slot data before write",
+            slot_index=i,
+            slot_id=slot.metadata.id,
+            stored_checksum=f"{slot.checksum:08x}",
+            computed_checksum=f"{actual_checksum_of_written_data:08x}",
+            data_size=len(data_to_write),
+            slot_offset=f"{slot_offset:#x}",
         )
         if slot.checksum != actual_checksum_of_written_data:
             logger.warning(
-                f"⚠️ Slot {i} checksum mismatch at write time! stored={slot.checksum:08x}, actual={actual_checksum_of_written_data:08x}"
+                "⚠️ Slot checksum mismatch at write time",
+                slot_index=i,
+                slot_id=slot.metadata.id,
+                stored_checksum=f"{slot.checksum:08x}",
+                actual_checksum=f"{actual_checksum_of_written_data:08x}",
+                data_size=len(data_to_write),
             )
 
         f.write(data_to_write)
@@ -188,7 +199,13 @@ def _write_slots(
             DEFAULT_PAGE_SIZE if spec.options.page_aligned else DEFAULT_SLOT_ALIGNMENT
         )
         logger.debug(
-            f"🐛 Slot {i}: page_aligned={spec.options.page_aligned}, PAGE_SIZE={DEFAULT_PAGE_SIZE}, SLOT_ALIGNMENT={DEFAULT_SLOT_ALIGNMENT}, chosen={alignment_value}"
+            "🔧 Slot alignment decision",
+            slot_index=i,
+            slot_id=slot.metadata.id,
+            page_aligned=spec.options.page_aligned,
+            page_size=DEFAULT_PAGE_SIZE,
+            slot_alignment=DEFAULT_SLOT_ALIGNMENT,
+            chosen_alignment=alignment_value,
         )
         # Convert 32-bit checksum to 64-bit for new format
         checksum_64 = slot.checksum & 0xFFFFFFFF if slot.checksum else 0
@@ -206,6 +223,21 @@ def _write_slots(
             permissions=slot_permissions & 0xFF,  # Low byte
             permissions_high=(slot_permissions >> 8) & 0xFF,  # High byte
         )
+
+        logger.debug(
+            "📋 Created slot descriptor",
+            slot_index=i,
+            slot_id=slot.metadata.id,
+            offset=f"{slot_offset:#x}",
+            stored_size=len(data_to_write),
+            original_size=len(slot.data),
+            operations=f"{slot.operations:#018x}",
+            checksum=f"{checksum_64:#x}",
+            purpose=_map_purpose(slot.metadata.purpose),
+            lifecycle=_map_lifecycle(slot.metadata.lifecycle),
+            permissions=f"{slot_permissions:#o}",
+        )
+
         descriptors.append(descriptor)
 
     # Write descriptor table

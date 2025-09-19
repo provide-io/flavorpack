@@ -173,17 +173,41 @@ def prepare_slots(
         )
 
         # Apply operations to compress/transform data
+        logger.trace(
+            "🗜️ Applying operations to slot data",
+            slot_id=slot.id,
+            input_size=len(data),
+            operations=unpacked_ops,
+        )
         processed_data = _apply_operations(data, packed_ops, options)
+        logger.debug(
+            "🗜️ Slot compression complete",
+            slot_id=slot.id,
+            input_size=len(data),
+            output_size=len(processed_data) if processed_data != data else len(data),
+            compression_ratio=f"{len(processed_data)/len(data):.2f}" if processed_data != data and len(data) > 0 else "1.00",
+            operations_applied=len(unpacked_ops),
+        )
 
         # Calculate checksums on the final data that will be written (compressed data)
         # This matches what Rust/Go builders do - checksum the actual slot content
         data_to_checksum = processed_data if processed_data != data else data
+        logger.trace(
+            "🔍 Computing checksums for slot",
+            slot_id=slot.id,
+            checksum_data_size=len(data_to_checksum),
+            checksum_type="adler32+sha256",
+        )
         checksum_str = calculate_checksum(data_to_checksum, "sha256")
         checksum_adler32 = zlib.adler32(data_to_checksum) & 0xFFFFFFFF
 
-        # DEBUG: Log checksum calculation details
         logger.debug(
-            f"🔍🏗️ Slot {len(prepared)} checksum calculation: adler32={checksum_adler32:08x}, size={len(data_to_checksum)}, processed={processed_data is not data}"
+            "🔍 Slot checksum calculation complete",
+            slot_id=slot.id,
+            adler32=f"{checksum_adler32:08x}",
+            sha256_prefix=checksum_str[:16],
+            data_size=len(data_to_checksum),
+            processed_data=processed_data is not data,
         )
 
         # Store prefixed checksum in metadata
