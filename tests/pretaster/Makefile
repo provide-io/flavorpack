@@ -8,7 +8,7 @@ SHELL := /bin/bash
 .DEFAULT_GOAL := help
 
 # Paths
-INGREDIENTS_DIR := ../../ingredients
+INGREDIENTS_DIR := ../../dist
 BIN_DIR := $(INGREDIENTS_DIR)/bin
 DIST_DIR := dist
 LOGS_DIR := logs
@@ -110,14 +110,14 @@ ifdef FLAVOR_WORKENV
 	$(call print,"📦 Running in PSP - skipping helper build",$(YELLOW))
 else
 	$(call print,"🔨 Building helpers...",$(BLUE))
-	@cd $(INGREDIENTS_DIR) && ./build.sh
+	@cd ../.. && ./build.sh
 	$(call print,"✅ Helpers built successfully",$(GREEN))
 endif
 
 .PHONY: build-go
 build-go: ## Build only Go helpers
 	$(call print,"🐹 Building Go helpers...",$(BLUE))
-	@cd $(INGREDIENTS_DIR)/flavor-go && \
+	@cd ../../src/flavor-go && \
 		go build -o $(BIN_DIR)/flavor-go-builder-$(PLATFORM) cmd/flavor-go-builder/main.go && \
 		go build -o $(BIN_DIR)/flavor-go-launcher-$(PLATFORM) cmd/flavor-go-launcher/main.go
 	$(call print,"✅ Go helpers built",$(GREEN))
@@ -125,7 +125,7 @@ build-go: ## Build only Go helpers
 .PHONY: build-rust
 build-rust: ## Build only Rust helpers
 	$(call print,"🦀 Building Rust helpers...",$(BLUE))
-	@cd $(INGREDIENTS_DIR)/flavor-rs && \
+	@cd ../../src/flavor-rust && \
 		cargo build --release && \
 		cp target/release/flavor-rs-builder $(BIN_DIR)/flavor-rs-builder-$(PLATFORM) && \
 		cp target/release/flavor-rs-launcher $(BIN_DIR)/flavor-rs-launcher-$(PLATFORM)
