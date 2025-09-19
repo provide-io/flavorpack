@@ -10,7 +10,7 @@ from typing import Any
 from provide.foundation import logger
 from provide.foundation.errors import log_only_error_context
 from provide.foundation.file.formats import write_json
-from provide.foundation.file.temp import temp_dir
+from provide.foundation.file import temp_dir
 from provide.foundation.platform import get_platform_string, is_windows
 from provide.foundation.process import run_command
 
