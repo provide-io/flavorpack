@@ -68,7 +68,7 @@ version = {file = "VERSION"}
 
 [tool.setuptools.package-data]
 flavor = [
-    "ingredients/**/*",  # Platform-specific ingredient binaries
+    "ingredients/bin/**/*",  # Platform-specific ingredient binaries
 ]
 
 [tool.setuptools.packages.find]
@@ -156,7 +156,7 @@ addopts = [
     "--strict-markers",
     "--disable-warnings",
     "--color=yes",
-    "--ignore=helpers/taster/tests",
+    "--ignore=tests/taster/tests",
 ]
 # Uncomment these for CI/reporting
 # addopts = [

@@ -103,10 +103,10 @@ The project has a polyglot architecture with three main layers:
    - `psp/format_2025/launcher.py` - Launcher management
    - `psp/format_2025/crypto.py` - Ed25519 signing/verification
 
-2. **Native Ingredients** (`ingredients/`)
+2. **Native Ingredients** (`src/`)
    - `flavor-go/` - Go builder and launcher implementations
-   - `flavor-rs/` - Rust builder and launcher implementations
-   - Built binaries are embedded in `src/flavor/ingredients/bin/`
+   - `flavor-rust/` - Rust builder and launcher implementations
+   - Built binaries are placed in `dist/bin/` and embedded during packaging
 
 3. **PSPF Package Structure**
    - Native launcher binary (platform-specific)
@@ -158,7 +158,7 @@ Packages use numbered slots for different components:
 Packages extract to cached work environments for efficiency. The cache is validated using checksums and signatures. See `src/flavor/psp/format_2025/launcher.py`.
 
 ### Cross-Language Testing
-The `helpers/pretaster/` tool validates PSPF packages across all builder/launcher combinations to ensure compatibility.
+The `tests/pretaster/` tool validates PSPF packages across all builder/launcher combinations to ensure compatibility.
 
 ## Important Files
 
@@ -168,9 +168,9 @@ The `helpers/pretaster/` tool validates PSPF packages across all builder/launche
 - `src/flavor/psp/format_2025/operations.py` - Operation chain packing/unpacking
 - `src/flavor/psp/format_2025/handlers.py` - Maps operations to implementations
 - `src/flavor/psp/format_2025/slots.py` - SlotDescriptor with operations field
-- `ingredients/flavor-go/pkg/psp/format_2025/constants.go` - Go format constants
-- `ingredients/flavor-rs/src/psp/format_2025/constants.rs` - Rust format constants
-- `helpers/pretaster/pretaster` - PSPF validation tool
+- `src/flavor-go/pkg/psp/format_2025/constants.go` - Go format constants
+- `src/flavor-rust/src/psp/format_2025/constants.rs` - Rust format constants
+- `tests/pretaster/` - PSPF validation tools
 
 ## Testing Strategy
 
