@@ -162,9 +162,15 @@ def prepare_slots(
         from flavor.psp.format_2025.operations import string_to_operations, unpack_operations
 
         packed_ops = string_to_operations(slot.operations)
-        # DEBUG: Log what operations we're creating
+        # Debug: Log what operations we're creating
         unpacked_ops = unpack_operations(packed_ops)
-        print(f"DEBUG: Slot {slot.id}: '{slot.operations}' -> {packed_ops:#018x} -> {unpacked_ops}")
+        logger.debug(
+            "🔧 Operations conversion for slot",
+            slot_id=slot.id,
+            operations_string=slot.operations,
+            packed_operations=f"{packed_ops:#018x}",
+            unpacked_operations=unpacked_ops,
+        )
 
         # Apply operations to compress/transform data
         processed_data = _apply_operations(data, packed_ops, options)
@@ -199,6 +205,8 @@ def prepare_slots(
             raw_size=len(data),
             compressed_size=len(processed_data),
             operations=packed_ops,
+            operations_hex=f"{packed_ops:#018x}",
+            operations_unpacked=unpacked_ops,
             checksum=checksum_str[:8],
         )
 
