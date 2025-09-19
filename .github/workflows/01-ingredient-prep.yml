@@ -150,6 +150,23 @@ jobs:
             -o ../../dist/bin/flavor-go-launcher-$VERSION-$PLATFORM \
             cmd/flavor-go-launcher/main.go
 
+      - name: 🔍 Debug Rust environment
+        if: steps.cache.outputs.cache-hit != 'true'
+        shell: bash
+        working-directory: src/flavor-rs
+        run: |
+          echo "🔍 Debugging Rust build environment..."
+          echo "Working directory: $(pwd)"
+          echo "Contents of current directory:"
+          ls -la
+          echo "Contents of src/bin/:"
+          ls -la src/bin/ || echo "src/bin/ does not exist"
+          echo "Cargo.toml contents:"
+          cat Cargo.toml
+          echo "Rust toolchain:"
+          rustc --version
+          cargo --version
+
       - name: 🦀 Build Rust ingredients
         if: steps.cache.outputs.cache-hit != 'true'
         shell: bash
