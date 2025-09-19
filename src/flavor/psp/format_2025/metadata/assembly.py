@@ -50,7 +50,7 @@ def load_launcher_binary(launcher_type: str) -> bytes:
     ]
 
     # Get XDG_CACHE_HOME with fallback to ~/.cache
-    xdg_cache = os.environ.get("XDG_CACHE_HOME", os.path.expanduser("~/.cache"))
+    xdg_cache = os.environ.get("XDG_CACHE_HOME", str(Path("~/.cache").expanduser()))
 
     # Search paths - prioritize helpers/bin first, then XDG cache location
     base_search_paths = [
@@ -79,9 +79,24 @@ def load_launcher_binary(launcher_type: str) -> bytes:
             searched_paths.append(str(base_path / launcher_name))
 
     raise FileNotFoundError(
-        f"Could not find {launcher_base} binary. "
-        f"Build it first with 'flavor helpers build'. "
-        f"Searched paths: {', '.join(searched_paths[:3])}..."
+        f"❌ Could not find {launcher_base} binary!\n"
+        "\n"
+        "🔧 To fix this issue, run one of:\n"
+        "   • cd ingredients && ./build.sh     (build both Go and Rust launchers)\n"
+        "   • make build-ingredients           (if using make)\n"
+        "   • flavor ingredients build         (if flavor CLI is available)\n"
+        "\n"
+        "💡 Or specify a custom launcher with:\n"
+        "   • --launcher-bin /path/to/launcher (command line)\n"
+        "   • FLAVOR_LAUNCHER_BIN=/path/to/launcher (environment variable)\n"
+        "\n"
+        f"🔍 Searched {len(searched_paths)} locations including:\n"
+        f"   • {searched_paths[0] if searched_paths else 'No paths'}\n"
+        f"   • {searched_paths[1] if len(searched_paths) > 1 else '...'}\n"
+        f"   • {searched_paths[2] if len(searched_paths) > 2 else '...'}\n"
+        f"   • ... and {len(searched_paths) - 3} more"
+        if len(searched_paths) > 3
+        else ""
     )
 
 
@@ -189,14 +204,11 @@ def create_launcher_metadata(launcher_info: dict[str, Any]) -> dict[str, Any]:
 
 def create_verification_metadata(spec: BuildSpec) -> dict[str, Any]:
     """Create verification section metadata."""
-    # Check if insecure mode is enabled
-    insecure = getattr(spec.options, "insecure_mode", False)
-
-    # Start with base verification metadata
+    # Always require verification - use FLAVOR_VALIDATION environment variable to control behavior
     verification = {
         "integrity_seal": {"required": True, "algorithm": "ed25519"},
         "signed": True,
-        "require_verification": not insecure,
+        "require_verification": True,
     }
 
     # If trust_signatures was provided in spec metadata, include it

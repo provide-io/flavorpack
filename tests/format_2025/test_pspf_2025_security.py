@@ -7,6 +7,8 @@ Tests ephemeral keys, integrity sealing, and tamper detection.
 import hashlib
 import json
 import struct
+from unittest.mock import patch
+import os
 
 import pytest
 
@@ -14,9 +16,9 @@ from flavor.psp.format_2025 import (
     PSPFBuilder,
     PSPFLauncher,
     PSPFReader,
-    SlotMetadata,
     generate_key_pair,
 )
+from flavor.config import reset_flavor_config
 
 
 @pytest.mark.security
@@ -32,37 +34,24 @@ class TestPSPFSecurity:
         payload_path = temp_dir / "secure.py"
         payload_path.write_text("print('Secure payload')")
 
-        slot = SlotMetadata(
-            index=0,
-            id="secure_payload",
-            source=str(payload_path),
-            target="secure_payload",
-            size=payload_path.stat().st_size,
-            checksum=hashlib.sha256(payload_path.read_bytes()).hexdigest(),
-            operations="gzip",
-            purpose="payload",
-            lifecycle="runtime",
-        )
-
         metadata = {
             "format": "PSPF/2025",
             "package": {"name": "secure-bundle", "version": "1.0.0"},
-            "slots": [slot.to_dict()],
             "verification": {
                 "integrity_seal": {"required": True, "algorithm": "ed25519"}
             },
         }
 
         bundle_path = temp_dir / "secure.psp"
-        # Use test_builder from fixture
+        # Use test_builder from fixture - let it handle slot metadata and checksums
         result = (
             test_builder.metadata(**metadata)
             .add_slot(
-                slot.id,
-                slot.source,
-                operations=slot.operations,
-                purpose=slot.purpose,
-                lifecycle=slot.lifecycle,
+                id="secure_payload",
+                data=payload_path,
+                operations="gzip",
+                purpose="payload",
+                lifecycle="runtime",
             )
             .build(bundle_path)
         )
@@ -134,8 +123,10 @@ class TestPSPFSecurity:
         assert index.public_key != b"\x00" * 32
         assert index.integrity_signature != b"\x00" * 512
 
+    @patch.dict(os.environ, {"FLAVOR_VALIDATION": "strict"})
     def test_integrity_seal_verification(self, secure_bundle):
         """Test integrity seal verification."""
+        reset_flavor_config()  # Reset to pick up FLAVOR_VALIDATION=strict from patch
         launcher = PSPFLauncher(secure_bundle)
         result = launcher.verify_integrity()
 
@@ -202,18 +193,6 @@ class TestPSPFSecurity:
         slot_path = temp_dir / "data.txt"
         original_data = b"Original slot data"
         slot_path.write_bytes(original_data)
-
-        slot = SlotMetadata(
-            index=0,
-            id="data",
-            source=str(slot_path),
-            target="data",
-            size=len(original_data),
-            checksum=hashlib.sha256(original_data).hexdigest(),
-            operations="none",
-            purpose="payload",
-            lifecycle="runtime",
-        )
 
         bundle_path = temp_dir / "slot_tamper.psp"
         # Create a builder with metadata and slot
@@ -293,8 +272,10 @@ class TestPSPFSecurity:
             tampered_index.index_checksum == original_checksum
         )  # Checksum field unchanged
 
+    @patch.dict(os.environ, {"FLAVOR_VALIDATION": "strict"})
     def test_emoji_magic_corruption(self, temp_dir, test_builder):
         """Test detection of corrupted emoji magic."""
+        reset_flavor_config()  # Reset to pick up FLAVOR_VALIDATION=strict from patch
         bundle_path = temp_dir / "magic_corrupt.psp"
         # Use test_builder from fixture
         result = test_builder.metadata(
@@ -317,8 +298,10 @@ class TestPSPFSecurity:
         result = launcher.verify_integrity()
         assert not result["valid"], "Should fail integrity check with bad magic"
 
+    @patch.dict(os.environ, {"FLAVOR_VALIDATION": "standard"})
     def test_missing_integrity_seal(self, temp_dir, test_builder):
         """Test handling of missing integrity seal."""
+        reset_flavor_config()  # Reset to pick up FLAVOR_VALIDATION=standard from patch
         # Create metadata without seal requirement
         metadata = {
             "format": "PSPF/2025",

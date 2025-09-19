@@ -165,7 +165,7 @@ class WheelBuilder:
         # Create input requirements file if packages provided
         if packages and not requirements_file:
             requirements_file = output_dir / "requirements.in"
-            with open(requirements_file, "w") as f:
+            with requirements_file.open("w") as f:
                 for package in packages:
                     f.write(f"{package}\n")
 
@@ -324,7 +324,7 @@ class WheelBuilder:
             import tomllib
 
             try:
-                with open(pyproject_path, "rb") as f:
+                with pyproject_path.open("rb") as f:
                     pyproject_data = tomllib.load(f)
                 project_dependencies = pyproject_data.get("project", {}).get(
                     "dependencies", []

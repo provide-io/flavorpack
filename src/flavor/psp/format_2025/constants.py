@@ -8,6 +8,8 @@ These are the canonical values for the PSPF/2025 v0 format.
 # =================================
 # Format Version and Magic
 # =================================
+from __future__ import annotations
+
 PSPF_VERSION = 0x20250001  # PSPF/2025 v1 format identifier
 FORMAT_VERSION_STRING = "2025.0.0"  # String version for JSON metadata
 
@@ -217,6 +219,4 @@ SLOT_REQUIRED_FIELDS = [
 PSPF_FILE_EXTENSION = ".pspf"
 PSPF_MIME_TYPE = "application/vnd.pspf"
 
-# Development flags
-DEBUG_SKIP_SIGNATURE_CHECK = False  # Only for development
-DEBUG_VERBOSE_OPERATIONS = False  # Log all operation steps
+# Debug constants removed - use FLAVOR_VALIDATION environment variable instead

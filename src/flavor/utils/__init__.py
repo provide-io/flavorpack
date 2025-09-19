@@ -1,6 +1,8 @@
 """Utility functions for flavor."""
 
 # Re-export platform utilities (from foundation directly)
+from __future__ import annotations
+
 from provide.foundation.platform import (
     get_arch_name,
     get_cpu_type,

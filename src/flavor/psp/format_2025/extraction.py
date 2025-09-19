@@ -153,10 +153,10 @@ class SlotExtractor:
                         # Write processed data to destination
                         output_path = dest_dir / f"slot_{slot_index}"
                         if hasattr(result, "read"):
-                            with open(output_path, "wb") as f:
+                            with output_path.open("wb") as f:
                                 f.write(result.read())
                         else:
-                            with open(output_path, "wb") as f:
+                            with output_path.open("wb") as f:
                                 f.write(result)
                         return output_path
 

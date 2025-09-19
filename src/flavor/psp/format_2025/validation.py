@@ -66,9 +66,9 @@ def validate_metadata(metadata: dict[str, Any]) -> list[str]:
     version = None
     if "version" in metadata:
         version = metadata["version"]
-    elif "package" in metadata and isinstance(metadata["package"], dict):
-        if "version" in metadata["package"]:
-            version = metadata["package"]["version"]
+    elif ("package" in metadata and isinstance(metadata["package"], dict) and
+          "version" in metadata["package"]):
+        version = metadata["package"]["version"]
 
     if version and not str(version).strip():
         errors.append("🏷️ Package version cannot be empty if provided")
@@ -181,10 +181,8 @@ def validate_slots(slots: list[SlotMetadata]) -> list[str]:
             )
 
         # Check checksum format if provided
-        if slot.checksum:
-            # Checksum should be hex string or similar
-            if not isinstance(slot.checksum, str):
-                errors.append(f"🔐 Slot '{slot.id}' checksum must be a string")
+        if slot.checksum and not isinstance(slot.checksum, str):
+            errors.append(f"🔐 Slot '{slot.id}' checksum must be a string")
 
     return errors
 

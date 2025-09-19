@@ -2,6 +2,8 @@
 # src/flavor/psp/format_2025/index.py
 # PSPF 2025 Index Block Implementation - Enhanced 512-byte Header
 
+from __future__ import annotations
+
 import struct
 import zlib
 
@@ -179,7 +181,7 @@ class PSPFIndex:
         )
 
         # Calculate checksum with checksum field set to 0
-        checksum = zlib.adler32(data)
+        checksum = zlib.adler32(data) & 0xFFFFFFFF
         self.index_checksum = checksum
 
         # Repack with the correct checksum
@@ -227,7 +229,7 @@ class PSPFIndex:
         return data
 
     @classmethod
-    def unpack(cls, data: bytes) -> "PSPFIndex":
+    def unpack(cls, data: bytes) -> PSPFIndex:
         """Unpack index from binary data."""
         if len(data) != DEFAULT_HEADER_SIZE:
             raise ValueError(

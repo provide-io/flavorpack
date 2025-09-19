@@ -174,7 +174,7 @@ class PSPFReader:
             data_for_check[4:8] = (
                 b"\x00\x00\x00\x00"  # Zero out checksum field at offset 4 (after format_version)
             )
-            actual_checksum = zlib.adler32(data_for_check)
+            actual_checksum = zlib.adler32(data_for_check) & 0xFFFFFFFF
 
             if expected_checksum != actual_checksum:
                 # In test environments, launcher binaries may differ between platforms
@@ -212,7 +212,7 @@ class PSPFReader:
             metadata_data = bytes(metadata_data)
 
         # Verify metadata checksum (Adler32 stored in first 4 bytes of 32-byte field)
-        actual_checksum = zlib.adler32(metadata_data)
+        actual_checksum = zlib.adler32(metadata_data) & 0xFFFFFFFF
         # Extract the Adler32 from the first 4 bytes of the checksum field
         expected_checksum = (
             struct.unpack("<I", index.metadata_checksum[:4])[0]
@@ -295,7 +295,7 @@ class PSPFReader:
             slot_data = bytes(slot_data)
 
         # Verify checksum
-        actual_checksum = zlib.adler32(slot_data)
+        actual_checksum = zlib.adler32(slot_data) & 0xFFFFFFFF
         if actual_checksum != descriptor.checksum:
             raise ValueError(
                 f"Slot {slot_index} checksum mismatch: expected {descriptor.checksum}, got {actual_checksum}"

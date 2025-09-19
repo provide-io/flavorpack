@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from flavor import api
+from flavor import build_package_from_manifest
 
 
 @pytest.fixture
@@ -35,7 +35,7 @@ my-test-package = "my_app.main:cli"
 name = "my-flavor-name"
 """
     pyproject_path = pyproject_factory(pyproject_content)
-    artifacts = api.build_package_from_manifest(pyproject_path)
+    artifacts = build_package_from_manifest(pyproject_path)
 
     assert artifacts is not None
     mock_build.assert_called_once()
@@ -55,7 +55,7 @@ version = "1.2.3"
     pyproject_path = pyproject_factory(pyproject_content)
 
     with pytest.raises(ValueError, match="Project entry_point must be defined"):
-        api.build_package_from_manifest(pyproject_path)
+        build_package_from_manifest(pyproject_path)
 
 
 def test_build_package_from_manifest_missing_version(pyproject_factory):
@@ -71,4 +71,4 @@ my-test-package = "my_app.main:cli"
     pyproject_path = pyproject_factory(pyproject_content)
 
     with pytest.raises(ValueError, match="Project version must be defined"):
-        api.build_package_from_manifest(pyproject_path)
+        build_package_from_manifest(pyproject_path)

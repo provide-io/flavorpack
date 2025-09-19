@@ -5,9 +5,14 @@ PSPF Work Environment Management
 Handles work environment setup, caching, lifecycle management, and setup commands.
 """
 
-import glob
+from __future__ import annotations
+
 from pathlib import Path
 import shlex
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from flavor.psp.format_2025.reader import PSPFReader
 
 from provide.foundation import logger
 from provide.foundation.file.directory import ensure_dir, ensure_parent_dir, safe_rmtree
@@ -17,7 +22,7 @@ from provide.foundation.process import run_command
 class WorkEnvManager:
     """Manages PSPF work environments."""
 
-    def __init__(self, reader) -> None:
+    def __init__(self, reader: PSPFReader) -> None:
         """Initialize with reference to PSPFReader."""
         self.reader = reader
 
@@ -254,8 +259,7 @@ class WorkEnvManager:
         command_template = cmd.get("command", "")
 
         # Find matching files
-        search_path = workenv_dir / pattern
-        matches = glob.glob(str(search_path))
+        matches = list(workenv_dir.glob(pattern))
 
         logger.debug(f"📂 Found {len(matches)} files matching {pattern}")
 

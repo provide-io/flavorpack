@@ -40,7 +40,7 @@ class IngredientManager:
         self.ingredients_bin = self.ingredients_dir / "bin"
 
         # Also check XDG cache location for installed ingredients
-        xdg_cache = os.environ.get("XDG_CACHE_HOME", os.path.expanduser("~/.cache"))
+        xdg_cache = os.environ.get("XDG_CACHE_HOME", str(Path("~/.cache").expanduser()))
         self.installed_ingredients_bin = (
             Path(xdg_cache) / "flavor" / "ingredients" / "bin"
         )
@@ -185,10 +185,7 @@ class IngredientManager:
                 import re
 
                 match = re.search(r"(\d+\.\d+\.\d+)", output)
-                if match:
-                    version = match.group(1)
-                else:
-                    version = output.split("\n")[0][:20]  # First line, truncated
+                version = match.group(1) if match else output.split("\n")[0][:20]  # First line, truncated
         except (OSError, Exception):
             pass
 
