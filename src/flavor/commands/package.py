@@ -25,7 +25,7 @@ def safe_echo(message: str, **kwargs: Any) -> None:
         message = message.replace("🔍", "[VERIFY]")
         message = message.replace("📦", "[PACKAGE]")
         message = message.replace("⚠️", "[WARN]")
-        message = message.replace("ℹ️", "[INFO]")
+        message = message.replace("ℹ️", "[INFO]")  # noqa: RUF001
         click.echo(message, **kwargs)
 
 

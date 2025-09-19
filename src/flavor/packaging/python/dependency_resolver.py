@@ -191,16 +191,7 @@ class DependencyResolver:
             Path to downloaded UV wheel or None
         """
         python_exe = Path(sys.executable)
-
-        # ⚠️ CRITICAL: Using pip_manager for correct manylinux handling ⚠️
-        # DO NOT replace this with direct uv commands - they don't handle platform tags correctly!
-        arch = get_arch_name()
-        uv_platform_tag = None
-        if get_os_name() == "linux":
-            if arch == "amd64":
-                uv_platform_tag = "manylinux2014_x86_64"
-            elif arch == "arm64":
-                uv_platform_tag = "manylinux2014_aarch64"
+        uv_platform_tag = self._get_uv_platform_tag()
 
         download_cmd = self.pypapip._get_pypapip_download_cmd(
             python_exe=python_exe,
@@ -211,47 +202,62 @@ class DependencyResolver:
         )
 
         try:
-            logger.debug("Running UV download command", cmd=" ".join(download_cmd))
-            logger.trace(f"Full command: {download_cmd}")
-            result = run_command(download_cmd, check=True, capture_output=True)
-            if result.stdout:
-                logger.trace(f"Download stdout: {result.stdout.strip()}")
-            if result.stderr:
-                logger.trace(f"Download stderr: {result.stderr.strip()}")
-
-            # Find the downloaded wheel
-            logger.trace(f"Searching for UV wheel in {temp_dir}")
-            all_files = list(Path(temp_dir).iterdir())
-            logger.trace(f"Files in temp dir: {[f.name for f in all_files]}")
-
-            uv_wheel = None
-            for file in Path(temp_dir).glob("uv-*.whl"):
-                uv_wheel = file
-                logger.debug(f"Found UV wheel: {uv_wheel.name}")
-                # Check the wheel name to verify it's manylinux2014
-                if "manylinux" in uv_wheel.name:
-                    if (
-                        "manylinux2014" in uv_wheel.name
-                        or "manylinux_2_17" in uv_wheel.name
-                    ):
-                        logger.info(
-                            f"✅ Confirmed manylinux2014 wheel: {uv_wheel.name}"
-                        )
-                    else:
-                        logger.warning(
-                            f"⚠️ UV wheel is not manylinux2014: {uv_wheel.name}"
-                        )
-                break
-
-            if not uv_wheel:
-                logger.warning("UV wheel not found after download")
+            result = self._execute_download_command(download_cmd)
+            if not result:
                 return None
 
-            return uv_wheel
+            return self._find_downloaded_uv_wheel(temp_dir)
 
         except Exception as e:
             logger.warning(f"Failed to download UV wheel via pip: {e}")
             return None
+
+    def _get_uv_platform_tag(self) -> str | None:
+        """Get platform tag for UV wheel download."""
+        # ⚠️ CRITICAL: Using pip_manager for correct manylinux handling ⚠️
+        # DO NOT replace this with direct uv commands - they don't handle platform tags correctly!
+        arch = get_arch_name()
+        if get_os_name() == "linux":
+            if arch == "amd64":
+                return "manylinux2014_x86_64"
+            elif arch == "arm64":
+                return "manylinux2014_aarch64"
+        return None
+
+    def _execute_download_command(self, download_cmd: list[str]) -> bool:
+        """Execute pip download command and log results."""
+        logger.debug("Running UV download command", cmd=" ".join(download_cmd))
+        logger.trace(f"Full command: {download_cmd}")
+
+        result = run_command(download_cmd, check=True, capture_output=True)
+        if result.stdout:
+            logger.trace(f"Download stdout: {result.stdout.strip()}")
+        if result.stderr:
+            logger.trace(f"Download stderr: {result.stderr.strip()}")
+
+        return True
+
+    def _find_downloaded_uv_wheel(self, temp_dir: str) -> Path | None:
+        """Find and validate downloaded UV wheel."""
+        logger.trace(f"Searching for UV wheel in {temp_dir}")
+        all_files = list(Path(temp_dir).iterdir())
+        logger.trace(f"Files in temp dir: {[f.name for f in all_files]}")
+
+        for file in Path(temp_dir).glob("uv-*.whl"):
+            logger.debug(f"Found UV wheel: {file.name}")
+            self._validate_manylinux_wheel(file)
+            return file
+
+        logger.warning("UV wheel not found after download")
+        return None
+
+    def _validate_manylinux_wheel(self, uv_wheel: Path) -> None:
+        """Validate that UV wheel is manylinux2014 compatible."""
+        if "manylinux" in uv_wheel.name:
+            if "manylinux2014" in uv_wheel.name or "manylinux_2_17" in uv_wheel.name:
+                logger.info(f"✅ Confirmed manylinux2014 wheel: {uv_wheel.name}")
+            else:
+                logger.warning(f"⚠️ UV wheel is not manylinux2014: {uv_wheel.name}")
 
     def _extract_uv_from_wheel(self, uv_wheel: Path, dest_dir: Path) -> Path | None:
         """Extract UV binary from wheel.
