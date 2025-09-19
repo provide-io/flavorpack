@@ -190,16 +190,21 @@ def _write_slots(
         logger.debug(
             f"🐛 Slot {i}: page_aligned={spec.options.page_aligned}, PAGE_SIZE={DEFAULT_PAGE_SIZE}, SLOT_ALIGNMENT={DEFAULT_SLOT_ALIGNMENT}, chosen={alignment_value}"
         )
+        # Convert 32-bit checksum to 64-bit for new format
+        checksum_64 = slot.checksum & 0xFFFFFFFF if slot.checksum else 0
+
         descriptor = SlotDescriptor(
             id=i,
             name=slot.metadata.id,
             offset=slot_offset,
             size=len(data_to_write),
-            checksum=slot.checksum,
+            original_size=len(slot.data),  # Uncompressed size
             operations=slot.operations,
+            checksum=checksum_64,  # 64-bit field now
             purpose=_map_purpose(slot.metadata.purpose),
             lifecycle=_map_lifecycle(slot.metadata.lifecycle),
-            permissions=slot_permissions,
+            permissions=slot_permissions & 0xFF,  # Low byte
+            permissions_high=(slot_permissions >> 8) & 0xFF,  # High byte
         )
         descriptors.append(descriptor)
 
