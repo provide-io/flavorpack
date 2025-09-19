@@ -107,31 +107,39 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y musl-tools
       
-      - name: 🔨 Build ingredients
+      - name: 🧹 Clean and setup
         if: steps.cache.outputs.cache-hit != 'true'
         shell: bash
         run: |
-          echo "🔨 Building ingredients for ${{ matrix.platform }}"
-          
-          # Clean old binaries to prevent accumulation
           echo "🧹 Cleaning old binaries..."
           rm -rf dist/bin
           mkdir -p dist/bin
-          
+
           # Extract platform parts
           PLATFORM="${{ matrix.platform }}"
           OS=$(echo $PLATFORM | cut -d_ -f1)
           ARCH=$(echo $PLATFORM | cut -d_ -f2)
           VERSION="${{ needs.setup.outputs.version }}"
-          
+
+          echo "🔨 Building ingredients for $PLATFORM (version $VERSION)"
+
+      - name: 🐹 Build Go ingredients
+        if: steps.cache.outputs.cache-hit != 'true'
+        shell: bash
+        working-directory: src/flavor-go
+        run: |
+          # Extract platform parts
+          PLATFORM="${{ matrix.platform }}"
+          OS=$(echo $PLATFORM | cut -d_ -f1)
+          ARCH=$(echo $PLATFORM | cut -d_ -f2)
+          VERSION="${{ needs.setup.outputs.version }}"
+
           # Map to Go env vars
           export GOOS=$OS
           export GOARCH=$ARCH
-          
-          # Build Go ingredients
+
           echo "🐹 Building Go ingredients..."
-          cd src/flavor-go
-          
+
           # Builder (with -buildvcs=false to avoid git issues in CI)
           go build -buildvcs=false -ldflags "-X main.Version=$VERSION" \
             -o ../../dist/bin/flavor-go-builder-$VERSION-$PLATFORM \
@@ -141,28 +149,37 @@ jobs:
           go build -buildvcs=false -ldflags "-X main.Version=$VERSION" \
             -o ../../dist/bin/flavor-go-launcher-$VERSION-$PLATFORM \
             cmd/flavor-go-launcher/main.go
-          
-          cd ../..
-          
-          # Build Rust ingredients
+
+      - name: 🦀 Build Rust ingredients
+        if: steps.cache.outputs.cache-hit != 'true'
+        shell: bash
+        working-directory: src/flavor-rs
+        run: |
+          # Extract platform parts
+          PLATFORM="${{ matrix.platform }}"
+          VERSION="${{ needs.setup.outputs.version }}"
+
+          # Set version via environment variable for build.rs
+          export FLAVOR_VERSION="$VERSION"
+
           echo "🦀 Building Rust ingredients..."
-          (
-            cd src/flavor-rs
 
-            # Set version via environment variable for build.rs
-            export FLAVOR_VERSION="$VERSION"
+          # Build with specified target (musl for Linux, native for macOS)
+          cargo build --release --target ${{ matrix.rust_target }}
+          cp target/${{ matrix.rust_target }}/release/flavor-rs-builder ../../dist/bin/flavor-rs-builder-$VERSION-$PLATFORM
+          cp target/${{ matrix.rust_target }}/release/flavor-rs-launcher ../../dist/bin/flavor-rs-launcher-$VERSION-$PLATFORM
 
-            # Build with specified target (musl for Linux, native for macOS)
-            cargo build --release --target ${{ matrix.rust_target }}
-            cp target/${{ matrix.rust_target }}/release/flavor-rs-builder ../../dist/bin/flavor-rs-builder-$VERSION-$PLATFORM
-            cp target/${{ matrix.rust_target }}/release/flavor-rs-launcher ../../dist/bin/flavor-rs-launcher-$VERSION-$PLATFORM
-          )
-          
+      - name: ✅ Finalize build
+        if: steps.cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          PLATFORM="${{ matrix.platform }}"
+
           # Make executable
           chmod +x dist/bin/* 2>/dev/null || true
 
-          echo "✅ Build complete for ${{ matrix.platform }}"
-          ls -la dist/bin/*-${{ matrix.platform }}*
+          echo "✅ Build complete for $PLATFORM"
+          ls -la dist/bin/*-$PLATFORM*
       
       - name: 📦 Package artifacts
         shell: bash
