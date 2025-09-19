@@ -16,10 +16,17 @@ from generated.modules import (
     crypto_pb2,
     index_pb2,
     metadata_pb2,
-    operations_pb2,
     slots_pb2,
 )
 from google.protobuf import json_format
+
+# Import v0 constants for operation packing
+from flavor.psp.format_2025.constants import (
+    OP_TAR,
+    OP_GZIP,
+    OP_BZIP2,
+)
+from flavor.psp.format_2025.operations import pack_operations
 
 
 def create_old_format_json():
@@ -79,12 +86,7 @@ def create_old_format_json():
     }
 
 
-def pack_operations(ops):
-    """Pack operation list into 64-bit integer"""
-    packed = 0
-    for i, op in enumerate(ops[:8]):  # Max 8 operations
-        packed |= (op & 0xFF) << (i * 8)
-    return packed
+# Remove local pack_operations - using the official one from operations.py
 
 
 def create_new_format_protobuf():
@@ -202,8 +204,8 @@ def create_new_format_protobuf():
     # Create slot entries with packed operations
     slot_entries = []
 
-    # Slot 0: TAR + GZIP
-    ops0 = pack_operations([operations_pb2.OP_TAR, operations_pb2.OP_GZIP])
+    # Slot 0: TAR + GZIP (using v0 constants)
+    ops0 = pack_operations([OP_TAR, OP_GZIP])
     slot0_entry = slots_pb2.SlotEntry(
         id=0,
         name_hash=0x123456789ABCDEF0,  # xxHash64("python-runtime")
@@ -221,16 +223,14 @@ def create_new_format_protobuf():
         target_path="python",
     )
 
-    # Slot 1: TAR + GZIP + AES256_GCM
-    ops1 = pack_operations(
-        [operations_pb2.OP_TAR, operations_pb2.OP_GZIP, operations_pb2.OP_AES256_GCM]
-    )
+    # Slot 1: TAR + GZIP (v0 doesn't support AES256_GCM - using only supported operations)
+    ops1 = pack_operations([OP_TAR, OP_GZIP])
     slot1_entry = slots_pb2.SlotEntry(
         id=1,
         name_hash=0xFEDCBA9876543210,  # xxHash64("application")
         offset=62926848,
         size=1048576,
-        operations=ops1,  # Packed: 0x0000000031100001
+        operations=ops1,  # Packed: 0x0000000000001001 (TAR + GZIP)
         checksum=0x87654321,
         purpose=slots_pb2.PURPOSE_CODE,
         lifecycle=slots_pb2.LIFECYCLE_STARTUP,
@@ -242,14 +242,14 @@ def create_new_format_protobuf():
         target_path="app",
     )
 
-    # Slot 2: TAR + BZIP2
-    ops2 = pack_operations([operations_pb2.OP_TAR, operations_pb2.OP_BZIP2])
+    # Slot 2: TAR + BZIP2 (using v0 constants)
+    ops2 = pack_operations([OP_TAR, OP_BZIP2])
     slot2_entry = slots_pb2.SlotEntry(
         id=2,
         name_hash=0xABCDEF0123456789,  # xxHash64("dependencies")
         offset=63975424,
         size=10485760,
-        operations=ops2,  # Packed: 0x0000000000001301
+        operations=ops2,  # Packed: 0x0000000000001301 (TAR + BZIP2)
         checksum=0xFEDCBA98,
         purpose=slots_pb2.PURPOSE_LIBRARY,
         lifecycle=slots_pb2.LIFECYCLE_RUNTIME,
