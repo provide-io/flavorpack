@@ -360,7 +360,9 @@ def create_workenv_directories(
             elif not dir_path.exists():
                 # Apply default permissions for new directories
                 # Default is 0777 & ~umask
-                default_mode = 0o777 & ~parse_mode(umask) if umask else 0o700  # Default to owner-only
+                default_mode = (
+                    0o777 & ~parse_mode(umask) if umask else 0o700
+                )  # Default to owner-only
                 dir_path.chmod(default_mode)
     finally:
         # Restore original umask
