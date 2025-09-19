@@ -31,27 +31,27 @@ pub const CODEC_TAR: u8 = 2;
 pub const CODEC_TGZ: u8 = 3;
 
 // Purpose types - part of format spec
-pub const PurposeData: u8 = 0;   // General data files
-pub const PurposeCode: u8 = 1;   // Executable code  
-pub const PurposeConfig: u8 = 2; // Configuration files
-pub const PurposeMedia: u8 = 3;  // Media/assets
+pub const PURPOSE_DATA: u8 = 0;   // General data files
+pub const PURPOSE_CODE: u8 = 1;   // Executable code
+pub const PURPOSE_CONFIG: u8 = 2; // Configuration files
+pub const PURPOSE_MEDIA: u8 = 3;  // Media/assets
 
 // Legacy aliases
-pub const PurposePayload: u8 = PurposeData;   // Deprecated: use PurposeData
-pub const PurposeRuntime: u8 = PurposeCode;   // Deprecated: use PurposeCode
-pub const PurposeTool: u8 = PurposeConfig;    // Deprecated: use PurposeConfig
+pub const PURPOSE_PAYLOAD: u8 = PURPOSE_DATA;   // Deprecated: use PURPOSE_DATA
+pub const PURPOSE_RUNTIME: u8 = PURPOSE_CODE;   // Deprecated: use PURPOSE_CODE
+pub const PURPOSE_TOOL: u8 = PURPOSE_CONFIG;    // Deprecated: use PURPOSE_CONFIG
 
 // Lifecycle types - part of format spec
-pub const LifecycleInit: u8 = 0;      // First run only, removed after initialization
-pub const LifecycleStartup: u8 = 1;   // Extracted/executed at every startup
-pub const LifecycleRuntime: u8 = 2;   // Available during application execution (default)
-pub const LifecycleShutdown: u8 = 3;  // Executed during cleanup/exit phase
-pub const LifecycleCache: u8 = 4;     // Kept for performance, can be regenerated
-pub const LifecycleTemporary: u8 = 5; // Removed after current session ends
-pub const LifecycleLazy: u8 = 6;      // Loaded on-demand, not extracted initially
-pub const LifecycleEager: u8 = 7;     // Loaded immediately on startup
-pub const LifecycleDev: u8 = 8;       // Only extracted in development/debug mode
-pub const LifecycleConfig: u8 = 9;    // User-modifiable configuration files
-pub const LifecyclePlatform: u8 = 10; // Platform/OS specific content
+pub const LIFECYCLE_INIT: u8 = 0;      // First run only, removed after initialization
+pub const LIFECYCLE_STARTUP: u8 = 1;   // Extracted/executed at every startup
+pub const LIFECYCLE_RUNTIME: u8 = 2;   // Available during application execution (default)
+pub const LIFECYCLE_SHUTDOWN: u8 = 3;  // Executed during cleanup/exit phase
+pub const LIFECYCLE_CACHE: u8 = 4;     // Kept for performance, can be regenerated
+pub const LIFECYCLE_TEMPORARY: u8 = 5; // Removed after current session ends
+pub const LIFECYCLE_LAZY: u8 = 6;      // Loaded on-demand, not extracted initially
+pub const LIFECYCLE_EAGER: u8 = 7;     // Loaded immediately on startup
+pub const LIFECYCLE_DEV: u8 = 8;       // Only extracted in development/debug mode
+pub const LIFECYCLE_CONFIG: u8 = 9;    // User-modifiable configuration files
+pub const LIFECYCLE_PLATFORM: u8 = 10; // Platform/OS specific content
 
 // 📦💾🔍🪄
