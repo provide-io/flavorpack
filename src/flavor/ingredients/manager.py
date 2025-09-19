@@ -185,7 +185,9 @@ class IngredientManager:
                 import re
 
                 match = re.search(r"(\d+\.\d+\.\d+)", output)
-                version = match.group(1) if match else output.split("\n")[0][:20]  # First line, truncated
+                version = (
+                    match.group(1) if match else output.split("\n")[0][:20]
+                )  # First line, truncated
         except (OSError, Exception):
             pass
 

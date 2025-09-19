@@ -66,8 +66,11 @@ def validate_metadata(metadata: dict[str, Any]) -> list[str]:
     version = None
     if "version" in metadata:
         version = metadata["version"]
-    elif ("package" in metadata and isinstance(metadata["package"], dict) and
-          "version" in metadata["package"]):
+    elif (
+        "package" in metadata
+        and isinstance(metadata["package"], dict)
+        and "version" in metadata["package"]
+    ):
         version = metadata["package"]["version"]
 
     if version and not str(version).strip():

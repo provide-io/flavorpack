@@ -11,7 +11,15 @@ help: ## Show this help message
 
 .PHONY: test
 test: ## Run Python tests
-	source env.sh && pytest tests/
+	source .venv/bin/activate && pytest tests/
+
+.PHONY: test-cov
+test-cov: ## Run Python tests with coverage
+	source .venv/bin/activate && pytest --cov=src/flavor --cov-report=term-missing --cov-report=html tests/
+
+.PHONY: test-cov-xml
+test-cov-xml: ## Run Python tests with XML coverage for CI
+	source .venv/bin/activate && pytest --cov=src/flavor --cov-report=xml --cov-report=term tests/
 
 .PHONY: build-ingredients
 build-ingredients: ## Build all ingredients (Go and Rust)
