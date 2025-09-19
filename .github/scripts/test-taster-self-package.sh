@@ -23,8 +23,8 @@ echo "Testing Taster basic functionality..."
 echo "Testing Taster self-packaging..."
 
 # Check if taster has flavor API available for self-packaging
-# Try to actually invoke the build command with help to test if flavor.api imports work
-if "${TASTER_PSP}" package build --help >/dev/null 2>&1; then
+# Use a more direct approach to check if flavorpack is actually importable
+if "${TASTER_PSP}" -c "import flavor.api; print('Flavor API available')" >/dev/null 2>&1; then
   echo "✅ Flavor API available, testing self-packaging..."
 
   # Use Taster's package command to package itself
@@ -40,7 +40,7 @@ if "${TASTER_PSP}" package build --help >/dev/null 2>&1; then
   fi
 else
   echo "⚠️ Flavor API not available in bundled taster, skipping self-packaging test"
-  echo "   This is expected for minimal taster packages"
+  echo "   This is expected for minimal taster packages that don't include flavorpack"
 
   # Create a dummy file so the rest of the test doesn't fail
   touch taster-self-packaged.psp
