@@ -35,8 +35,8 @@ class IngredientManager:
 
     def __init__(self) -> None:
         """Initialize the ingredient manager."""
-        self.flavor_root = Path(__file__).parent.parent.parent
-        self.ingredients_dir = self.flavor_root / "ingredients"
+        self.flavor_root = Path(__file__).parent.parent.parent.parent
+        self.ingredients_dir = self.flavor_root / "dist"
         self.ingredients_bin = self.ingredients_dir / "bin"
 
         # Also check XDG cache location for installed ingredients
@@ -45,9 +45,9 @@ class IngredientManager:
             Path(xdg_cache) / "flavor" / "ingredients" / "bin"
         )
 
-        # Source directories are in ingredients/<language>
-        self.go_src_dir = self.ingredients_dir / "flavor-go"
-        self.rust_src_dir = self.ingredients_dir / "flavor-rs"
+        # Source directories are in src/<language>
+        self.go_src_dir = self.flavor_root / "src" / "flavor-go"
+        self.rust_src_dir = self.flavor_root / "src" / "flavor-rust"
 
         # Ensure ingredients directories exist
         ensure_dir(self.ingredients_dir)
@@ -141,60 +141,20 @@ class IngredientManager:
         """
         name = path.name
 
-        # Determine type and language from filename
-        ingredient_type = None
-        language = None
-
-        if "launcher" in name:
-            ingredient_type = "launcher"
-        elif "builder" in name:
-            ingredient_type = "builder"
-        else:
+        # Parse type and language from filename
+        ingredient_type, language = self._parse_ingredient_identity(name)
+        if not ingredient_type or not language:
             return None
 
-        if name.startswith("flavor-go-"):
-            language = "go"
-        elif name.startswith("flavor-rs-"):
-            language = "rust"
-        else:
+        # Get file stats
+        size = self._get_file_size(path)
+        if size is None:
             return None
 
-        # Get basic file stats
-        try:
-            stat = path.stat()
-            size = stat.st_size
-        except (OSError, FileNotFoundError):
-            return None
-
-        # Calculate checksum if file is reasonable size
-        checksum = None
-        if size < 100 * 1024 * 1024:  # Less than 100MB
-            with contextlib.suppress(OSError, MemoryError):
-                checksum = hashlib.sha256(path.read_bytes()).hexdigest()[:16]
-
-        # Try to extract version info
-        version = None
-        try:
-            # Try to get version from the binary (if it supports --version)
-            result = run_command(
-                [str(path), "--version"], check=False, capture_output=True, text=True
-            )
-            if result.returncode == 0 and result.stdout:
-                output = result.stdout.strip()
-                # Extract version from output (look for patterns like "v1.2.3" or "1.2.3")
-                import re
-
-                match = re.search(r"(\d+\.\d+\.\d+)", output)
-                version = match.group(1) if match else output.split("\n")[0][:20]  # First line, truncated
-        except (OSError, Exception):
-            pass
-
-        # Determine if built from source
-        built_from = None
-        if self.go_src_dir.exists() and language == "go":
-            built_from = self.go_src_dir
-        elif self.rust_src_dir.exists() and language == "rust":
-            built_from = self.rust_src_dir
+        # Calculate checksum and version
+        checksum = self._calculate_checksum(path, size)
+        version = self._extract_version(path)
+        built_from = self._determine_build_source(language)
 
         return IngredientInfo(
             name=name,
@@ -206,6 +166,66 @@ class IngredientManager:
             version=version,
             built_from=built_from,
         )
+
+    def _parse_ingredient_identity(self, name: str) -> tuple[str | None, str | None]:
+        """Parse ingredient type and language from filename."""
+        ingredient_type = None
+        language = None
+
+        if "launcher" in name:
+            ingredient_type = "launcher"
+        elif "builder" in name:
+            ingredient_type = "builder"
+
+        if name.startswith("flavor-go-"):
+            language = "go"
+        elif name.startswith("flavor-rs-"):
+            language = "rust"
+
+        return ingredient_type, language
+
+    def _get_file_size(self, path: Path) -> int | None:
+        """Get file size, return None if file can't be accessed."""
+        try:
+            return path.stat().st_size
+        except (OSError, FileNotFoundError):
+            return None
+
+    def _calculate_checksum(self, path: Path, size: int) -> str | None:
+        """Calculate SHA256 checksum for reasonable-sized files."""
+        if size >= 100 * 1024 * 1024:  # Skip files larger than 100MB
+            return None
+
+        with contextlib.suppress(OSError, MemoryError):
+            return hashlib.sha256(path.read_bytes()).hexdigest()[:16]
+        return None
+
+    def _extract_version(self, path: Path) -> str | None:
+        """Try to extract version from binary using --version flag."""
+        try:
+            result = run_command(
+                [str(path), "--version"], check=False, capture_output=True, text=True
+            )
+            if result.returncode == 0 and result.stdout:
+                return self._parse_version_output(result.stdout.strip())
+        except (OSError, Exception):
+            pass
+        return None
+
+    def _parse_version_output(self, output: str) -> str:
+        """Parse version string from command output."""
+        import re
+
+        match = re.search(r"(\d+\.\d+\.\d+)", output)
+        return match.group(1) if match else output.split("\n")[0][:20]
+
+    def _determine_build_source(self, language: str) -> Path | None:
+        """Determine if ingredient was built from local source."""
+        if language == "go" and self.go_src_dir.exists():
+            return self.go_src_dir
+        elif language == "rust" and self.rust_src_dir.exists():
+            return self.rust_src_dir
+        return None
 
     def build_ingredients(
         self, language: str | None = None, force: bool = False

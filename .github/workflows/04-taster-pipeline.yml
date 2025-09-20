@@ -165,7 +165,7 @@ jobs:
             "${{ needs.setup.outputs.version }}"
           
           # Export path for subsequent steps
-          echo "taster_path=$PWD/helpers/taster/taster-${{ needs.setup.outputs.version }}-${{ matrix.platform }}.psp" >> $GITHUB_OUTPUT
+          echo "taster_path=$PWD/tests/taster/taster-${{ needs.setup.outputs.version }}-${{ matrix.platform }}.psp" >> $GITHUB_OUTPUT
 
       - name: 🔍 Verify Built Package
         shell: bash
@@ -220,8 +220,8 @@ jobs:
         with:
           name: taster-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
           path: |
-            helpers/taster/taster-${{ needs.setup.outputs.version }}-${{ matrix.platform }}.psp
-            helpers/taster/taster-${{ needs.setup.outputs.version }}-${{ matrix.platform }}.exe
+            tests/taster/taster-${{ needs.setup.outputs.version }}-${{ matrix.platform }}.psp
+            tests/taster/taster-${{ needs.setup.outputs.version }}-${{ matrix.platform }}.exe
 
       - name: 📤 Upload test results
         if: always()
@@ -268,7 +268,7 @@ jobs:
       - name: 🧪 Test 1 - Flavor pack with explicit launcher
         run: |
           source workenv/bin/activate
-          cd helpers/taster
+          cd tests/taster
           
           echo "=== Flavor pack with explicit launcher from ingredients ==="
           # Use the launcher from ingredients that was downloaded
@@ -294,7 +294,7 @@ jobs:
       - name: 🧪 Test 2a - Taster help
         run: |
           source workenv/bin/activate
-          cd helpers/taster
+          cd tests/taster
           
           echo "=== Testing Taster help command ==="
           ./taster-bundled.psp --help
@@ -303,7 +303,7 @@ jobs:
       - name: 🧪 Test 2b - Taster info
         run: |
           source workenv/bin/activate
-          cd helpers/taster
+          cd tests/taster
           
           echo "=== Testing Taster info command ==="
           ./taster-bundled.psp info
@@ -312,7 +312,7 @@ jobs:
       - name: 🧪 Test 2c - Taster env
         run: |
           source workenv/bin/activate
-          cd helpers/taster
+          cd tests/taster
           
           echo "=== Testing Taster env command ==="
           ./taster-bundled.psp env
@@ -321,7 +321,7 @@ jobs:
       - name: 🧪 Test 2d - Taster cache info
         run: |
           source workenv/bin/activate
-          cd helpers/taster
+          cd tests/taster
           
           echo "=== Testing Taster cache info command ==="
           ./taster-bundled.psp cache info
@@ -330,7 +330,7 @@ jobs:
       - name: 🧪 Test 2e - Taster exit
         run: |
           source workenv/bin/activate
-          cd helpers/taster
+          cd tests/taster
           
           echo "=== Testing Taster exit command ==="
           ./taster-bundled.psp exit 0 --message "Test success"
@@ -339,7 +339,7 @@ jobs:
       - name: 🧪 Test 3a - Check launcher location
         run: |
           source workenv/bin/activate
-          cd helpers/taster
+          cd tests/taster
           
           echo "=== Checking launcher location ==="
           FLAVOR_LOCATION=$(python -c "import flavor; import os; print(os.path.dirname(flavor.__file__))")
@@ -357,7 +357,7 @@ jobs:
       - name: 🧪 Test 3b - Build with Rust launcher
         run: |
           source workenv/bin/activate
-          cd helpers/taster
+          cd tests/taster
           
           echo "=== Testing with Rust launcher ==="
           if [ "$LAUNCHER_SOURCE" = "wheel" ]; then
@@ -384,7 +384,7 @@ jobs:
       - name: 🧪 Test 3c - Build with Go launcher  
         run: |
           source workenv/bin/activate
-          cd helpers/taster
+          cd tests/taster
           
           echo "=== Testing with Go launcher ==="
           if [ "$LAUNCHER_SOURCE" = "wheel" ]; then
@@ -411,7 +411,7 @@ jobs:
       - name: 🧪 Test 4 - Pipe operations
         run: |
           source workenv/bin/activate
-          cd helpers/taster
+          cd tests/taster
           
           echo "=== Testing pipe operations ==="
           if [ -f "taster-bundled.psp" ]; then
@@ -425,7 +425,7 @@ jobs:
       - name: 🧪 Test 5 - Signal handling
         run: |
           source workenv/bin/activate
-          cd helpers/taster
+          cd tests/taster
           
           echo "=== Testing signal handling ==="
           if command -v timeout >/dev/null 2>&1; then
@@ -438,7 +438,7 @@ jobs:
       - name: 🧪 Test 6 - Memory-mapped I/O
         run: |
           source workenv/bin/activate
-          cd helpers/taster
+          cd tests/taster
           
           echo "=== Testing memory-mapped I/O ==="
           if ./taster-bundled.psp --help | grep -q mmap; then
@@ -451,7 +451,7 @@ jobs:
       - name: 🧪 Test 7 - Taster self-packaging
         run: |
           source workenv/bin/activate
-          cd helpers/taster
+          cd tests/taster
           
           echo "=== Testing Taster self-packaging capability ==="
           

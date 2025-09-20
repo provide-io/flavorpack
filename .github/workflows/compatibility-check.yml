@@ -45,20 +45,20 @@ jobs:
       
       - name: 🔨 Build AMD64 binaries
         run: |
-          cd ingredients
-          
+          cd src
+
           # Go builds (static by default with CGO_ENABLED=0)
           cd flavor-go
           make clean
           GOOS=linux GOARCH=amd64 CGO_ENABLED=0 make build
           cd ..
-          
+
           # Rust builds (musl for static linking)
-          cd flavor-rs
+          cd flavor-rust
           make clean
           cargo build --release --target x86_64-unknown-linux-musl
-          cp target/x86_64-unknown-linux-musl/release/flavor-rs-builder ../bin/flavor-rs-builder-linux_amd64
-          cp target/x86_64-unknown-linux-musl/release/flavor-rs-launcher ../bin/flavor-rs-launcher-linux_amd64
+          cp target/x86_64-unknown-linux-musl/release/flavor-rs-builder ../../dist/bin/flavor-rs-builder-linux_amd64
+          cp target/x86_64-unknown-linux-musl/release/flavor-rs-launcher ../../dist/bin/flavor-rs-launcher-linux_amd64
           cd ..
       
       # ARM64 builds disabled temporarily - focusing on AMD64 testing
@@ -88,7 +88,7 @@ jobs:
           echo "Verifying static linking for all binaries..."
           failed=0
           
-          for binary in ingredients/bin/flavor-*-linux_*; do
+          for binary in dist/bin/flavor-*-linux_*; do
             if [ -f "$binary" ]; then
               echo -n "Checking $(basename $binary): "
               # Check if binary is static - either file says "statically linked" or ldd says "not a dynamic executable"
@@ -115,7 +115,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: static-binaries
-          path: ingredients/bin/
+          path: dist/bin/
           retention-days: 7
 
   # Test on core Linux distributions
@@ -143,10 +143,10 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: static-binaries
-          path: ingredients/bin/
+          path: dist/bin/
       
       - name: 🔧 Set permissions
-        run: chmod +x ingredients/bin/*
+        run: chmod +x dist/bin/*
       
       - name: 🐳 Test on ${{ matrix.distro.name }}
         run: |
@@ -158,8 +158,8 @@ jobs:
           
           # Run comprehensive tests in container
           docker run --rm \
-            -v $PWD/ingredients/bin:/test \
-            -v $PWD/helpers/pretaster:/pretaster \
+            -v $PWD/dist/bin:/test \
+            -v $PWD/tests/pretaster:/pretaster \
             ${{ matrix.distro.image }} sh -c '
             
             echo "📋 System Information:"
@@ -227,10 +227,10 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: static-binaries
-          path: ingredients/bin/
+          path: dist/bin/
       
       - name: 🔧 Set permissions
-        run: chmod +x ingredients/bin/*
+        run: chmod +x dist/bin/*
       
       - name: 🐳 Test on ${{ matrix.distro.name }}
         run: |
@@ -275,17 +275,17 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: static-binaries
-          path: ingredients/bin/
+          path: dist/bin/
       
       - name: 🔧 Set permissions
-        run: chmod +x ingredients/bin/*
+        run: chmod +x dist/bin/*
       
       - name: 🦾 Test ARM64 on ${{ matrix.distro.name }}
         run: |
           echo "Testing ARM64 binaries on ${{ matrix.distro.name }}"
           
           docker run --rm --platform linux/arm64 \
-            -v $PWD/ingredients/bin:/test \
+            -v $PWD/dist/bin:/test \
             ${{ matrix.distro.image }} sh -c '
             cd /test
             echo "Architecture: $(uname -m)"
@@ -322,10 +322,10 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: static-binaries
-          path: ingredients/bin/
+          path: dist/bin/
       
       - name: 🔧 Set permissions
-        run: chmod +x ingredients/bin/*
+        run: chmod +x dist/bin/*
       
       - name: 🔬 Run pretaster on ${{ matrix.distro.name }}
         run: |
@@ -339,7 +339,7 @@ jobs:
             ${{ matrix.distro.install }}
             
             # Install pretaster
-            cd helpers/pretaster
+            cd tests/pretaster
             pip3 install --break-system-packages . || pip3 install .
             
             # Run tests

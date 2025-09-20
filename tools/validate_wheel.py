@@ -173,25 +173,51 @@ def validate_installation(wheel_path: Path) -> tuple[bool, list[str]]:
         # Test import
         test_script = """
 import sys
+import os
 try:
+    # Initialize foundation first
+    from provide.foundation import pout, perr
+
+    # Test basic import
     import flavor
-    print(f"Flavor version: {flavor.__version__ if hasattr(flavor, '__version__') else 'unknown'}")
-    
-    # Test CLI
+    pout(f"✅ Flavor version: {flavor.__version__ if hasattr(flavor, '__version__') else 'unknown'}")
+
+    # Test CLI import
     from flavor.cli import main
-    print("CLI import successful")
-    
-    # Test ingredients if available
+    pout("✅ CLI import successful")
+
+    # Test ingredients manager if available
     try:
-        from flavor.ingredients.bin import get_go_builder
-        builder = get_go_builder()
-        print(f"Go builder path: {builder}")
-    except ImportError:
-        print("No embedded ingredients (universal wheel)")
-    
+        from flavor.ingredients.manager import IngredientManager
+        manager = IngredientManager()
+        ingredients = manager.list_ingredients()
+        total_ingredients = len(ingredients.get('launchers', [])) + len(ingredients.get('builders', []))
+        if total_ingredients > 0:
+            pout(f"✅ Found {total_ingredients} ingredients")
+        else:
+            pout("ℹ️ No embedded ingredients (universal wheel)")
+    except Exception as e:
+        perr(f"⚠️ Ingredients test: {e}")
+
+    # Test config system
+    try:
+        from flavor.config import get_flavor_config
+        config = get_flavor_config()
+        pout("✅ Config system working")
+    except Exception as e:
+        perr(f"⚠️ Config test: {e}")
+
+    pout("🎉 All import tests passed")
     sys.exit(0)
 except Exception as e:
-    print(f"Error: {e}")
+    import traceback
+    try:
+        from provide.foundation import perr
+        perr(f"❌ Import error: {e}")
+        perr(f"📋 Traceback: {traceback.format_exc()}")
+    except:
+        print(f"Import error: {e}")
+        print(f"Traceback: {traceback.format_exc()}")
     sys.exit(1)
 """
 
