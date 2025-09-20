@@ -1,8 +1,10 @@
 """Security tests for package integrity and validation."""
+
 from __future__ import annotations
 
+from unittest.mock import patch
+
 import pytest
-from unittest.mock import patch, MagicMock
 
 from flavor.psp.format_2025.crypto import (
     generate_keypair,
@@ -25,7 +27,7 @@ class TestPackageIntegrity:
 
         # Ed25519 keys have specific lengths
         assert len(private_key) == 32  # 32 bytes for Ed25519 private key
-        assert len(public_key) == 32   # 32 bytes for Ed25519 public key
+        assert len(public_key) == 32  # 32 bytes for Ed25519 public key
 
     @pytest.mark.security
     def test_signature_creation_and_verification(self) -> None:
@@ -49,8 +51,8 @@ class TestPackageIntegrity:
     def test_signature_verification_fails_wrong_key(self) -> None:
         """Test that signature verification fails with wrong public key."""
         # Generate two keypairs
-        private_key1, public_key1 = generate_keypair()
-        private_key2, public_key2 = generate_keypair()
+        private_key1, _public_key1 = generate_keypair()
+        _private_key2, public_key2 = generate_keypair()
 
         test_data = b"Test data for wrong key verification"
 
@@ -108,11 +110,11 @@ class TestPackageIntegrity:
         # - FLAVOR_VALIDATION=none should skip checks
 
         # Mock environment variable
-        with patch.dict('os.environ', {'FLAVOR_VALIDATION': 'strict'}):
+        with patch.dict("os.environ", {"FLAVOR_VALIDATION": "strict"}):
             # Test would verify strict validation behavior
             pass
 
-        with patch.dict('os.environ', {'FLAVOR_VALIDATION': 'none'}):
+        with patch.dict("os.environ", {"FLAVOR_VALIDATION": "none"}):
             # Test would verify that validation is skipped
             pass
 

@@ -26,7 +26,7 @@ from flavor.psp.format_2025.backends import (
 class TestMMapEdgeCases:
     """Test edge cases and corner scenarios for mmap."""
 
-    def test_empty_file_mmap(self):
+    def test_empty_file_mmap(self) -> None:
         """Test mmap with empty file."""
         with tempfile.NamedTemporaryFile(delete=False) as f:
             path = Path(f.name)
@@ -38,7 +38,7 @@ class TestMMapEdgeCases:
         finally:
             path.unlink(missing_ok=True)
 
-    def test_single_byte_file(self):
+    def test_single_byte_file(self) -> None:
         """Test mmap with single byte file."""
         with tempfile.NamedTemporaryFile(delete=False) as f:
             f.write(b"X")
@@ -60,7 +60,7 @@ class TestMMapEdgeCases:
         finally:
             path.unlink(missing_ok=True)
 
-    def test_exact_page_boundary(self):
+    def test_exact_page_boundary(self) -> None:
         """Test reads exactly on page boundaries."""
         # Create file with exactly DEFAULT_PAGE_SIZE bytes
         with tempfile.NamedTemporaryFile(delete=False) as f:
@@ -84,7 +84,7 @@ class TestMMapEdgeCases:
         finally:
             path.unlink(missing_ok=True)
 
-    def test_unaligned_access_patterns(self):
+    def test_unaligned_access_patterns(self) -> None:
         """Test various unaligned access patterns."""
         with tempfile.NamedTemporaryFile(delete=False) as f:
             # Write pattern: [0-255] repeated
@@ -118,7 +118,7 @@ class TestMMapEdgeCases:
         finally:
             path.unlink(missing_ok=True)
 
-    def test_multiple_overlapping_views(self):
+    def test_multiple_overlapping_views(self) -> None:
         """Test multiple overlapping memory views."""
         with tempfile.NamedTemporaryFile(delete=False) as f:
             f.write(b"0123456789" * 1000)  # 10KB
@@ -153,7 +153,7 @@ class TestMMapEdgeCases:
         finally:
             path.unlink(missing_ok=True)
 
-    def test_file_growth_after_mmap(self):
+    def test_file_growth_after_mmap(self) -> None:
         """Test behavior when file grows after mmap."""
         with tempfile.NamedTemporaryFile(delete=False, mode="w+b") as f:
             f.write(b"INITIAL" * 100)  # 700 bytes
@@ -188,7 +188,7 @@ class TestMMapEdgeCases:
         finally:
             path.unlink(missing_ok=True)
 
-    def test_concurrent_read_stress(self):
+    def test_concurrent_read_stress(self) -> None:
         """Stress test with concurrent reads from multiple threads."""
         # Create test file with known pattern
         with tempfile.NamedTemporaryFile(delete=False) as f:
@@ -204,7 +204,7 @@ class TestMMapEdgeCases:
 
             errors = []
 
-            def reader_thread(thread_id, iterations=100):
+            def reader_thread(thread_id, iterations=100) -> None:
                 """Read random chunks and verify."""
                 import random
 
@@ -240,7 +240,7 @@ class TestMMapEdgeCases:
         finally:
             path.unlink(missing_ok=True)
 
-    def test_memory_pressure_handling(self):
+    def test_memory_pressure_handling(self) -> None:
         """Test behavior under memory pressure."""
         # Create a large file
         size_mb = 50
@@ -282,7 +282,7 @@ class TestMMapEdgeCases:
         finally:
             path.unlink(missing_ok=True)
 
-    def test_readonly_file_access(self):
+    def test_readonly_file_access(self) -> None:
         """Test mmap with read-only file."""
         with tempfile.NamedTemporaryFile(delete=False) as f:
             f.write(b"READONLY" * 100)
@@ -305,7 +305,7 @@ class TestMMapEdgeCases:
             os.chmod(path, 0o644)
             path.unlink(missing_ok=True)
 
-    def test_backend_reuse_after_close(self):
+    def test_backend_reuse_after_close(self) -> None:
         """Test that backend cannot be reused after close."""
         with tempfile.NamedTemporaryFile(delete=False) as f:
             f.write(b"TEST" * 100)
@@ -347,7 +347,7 @@ class TestMMapEdgeCases:
         (10 * 1024 * 1024, 64 * 1024, ACCESS_AUTO),  # 10MB file, 64KB chunks, auto
     ],
 )
-def test_parameterized_read_patterns(file_size, chunk_size, backend_type):
+def test_parameterized_read_patterns(file_size, chunk_size, backend_type) -> None:
     """Parameterized test for various file sizes and access patterns."""
     with tempfile.NamedTemporaryFile(delete=False) as f:
         # Create file with predictable pattern
@@ -372,10 +372,7 @@ def test_parameterized_read_patterns(file_size, chunk_size, backend_type):
             assert len(chunk) == read_size
 
             # Calculate checksum for verification
-            if isinstance(chunk, memoryview):
-                chunk_bytes = bytes(chunk)
-            else:
-                chunk_bytes = chunk
+            chunk_bytes = bytes(chunk) if isinstance(chunk, memoryview) else chunk
             checksums.append(hashlib.md5(chunk_bytes).hexdigest())
 
             # Verify content matches pattern
@@ -415,7 +412,7 @@ def test_parameterized_read_patterns(file_size, chunk_size, backend_type):
         "invalid_size",
     ],
 )
-def test_error_handling(error_type):
+def test_error_handling(error_type) -> None:
     """Test error handling for various failure scenarios."""
     if error_type == "file_not_found":
         backend = MMapBackend()

@@ -67,7 +67,7 @@ def memory_profile(command, interval, json_output) -> None:
         proc.terminate()
 
     # Wait for completion
-    stdout, stderr = proc.communicate()
+    _stdout, _stderr = proc.communicate()
     end_time = time.time() - start_time
 
     # Calculate statistics

@@ -17,7 +17,7 @@ from flavor.utils import (
 class TestPlatformDetection:
     """Test platform detection utility functions."""
 
-    def test_get_os_name(self):
+    def test_get_os_name(self) -> None:
         """Test OS name detection and normalization."""
         os_name = get_os_name()
 
@@ -34,7 +34,7 @@ class TestPlatformDetection:
             assert os_name == "windows"
 
     @patch("platform.system")
-    def test_get_os_name_normalization(self, mock_system):
+    def test_get_os_name_normalization(self, mock_system) -> None:
         """Test OS name normalization for various inputs."""
         test_cases = [
             ("Darwin", "darwin"),
@@ -49,7 +49,7 @@ class TestPlatformDetection:
             mock_system.return_value = input_os
             assert get_os_name() == expected_os
 
-    def test_get_arch_name(self):
+    def test_get_arch_name(self) -> None:
         """Test architecture detection and normalization."""
         arch_name = get_arch_name()
 
@@ -68,7 +68,7 @@ class TestPlatformDetection:
             assert arch_name == "x86"
 
     @patch("platform.machine")
-    def test_get_arch_name_normalization(self, mock_machine):
+    def test_get_arch_name_normalization(self, mock_machine) -> None:
         """Test architecture normalization for various inputs."""
         test_cases = [
             ("x86_64", "amd64"),
@@ -87,7 +87,7 @@ class TestPlatformDetection:
             mock_machine.return_value = input_arch
             assert get_arch_name() == expected_arch
 
-    def test_get_platform_string(self):
+    def test_get_platform_string(self) -> None:
         """Test platform string generation."""
         platform_str = get_platform_string()
 
@@ -105,7 +105,7 @@ class TestPlatformDetection:
 
     @patch("platform.system")
     @patch("platform.machine")
-    def test_get_platform_string_combinations(self, mock_machine, mock_system):
+    def test_get_platform_string_combinations(self, mock_machine, mock_system) -> None:
         """Test various platform string combinations."""
         test_cases = [
             ("Darwin", "x86_64", "darwin_amd64"),
@@ -121,7 +121,7 @@ class TestPlatformDetection:
             mock_machine.return_value = arch_name
             assert get_platform_string() == expected_platform
 
-    def test_get_os_version(self):
+    def test_get_os_version(self) -> None:
         """Test OS version detection."""
         version = get_os_version()
 
@@ -137,7 +137,9 @@ class TestPlatformDetection:
     @patch("platform.system")
     @patch("platform.release")
     @patch("platform.version")
-    def test_get_os_version_by_system(self, mock_version, mock_release, mock_system):
+    def test_get_os_version_by_system(
+        self, mock_version, mock_release, mock_system
+    ) -> None:
         """Test OS version detection for different systems."""
         # macOS
         mock_system.return_value = "Darwin"
@@ -166,7 +168,7 @@ class TestPlatformDetection:
         assert version is not None
         assert "10" in version
 
-    def test_get_cpu_type(self):
+    def test_get_cpu_type(self) -> None:
         """Test CPU information detection."""
         cpu_info = get_cpu_type()
 
@@ -179,7 +181,7 @@ class TestPlatformDetection:
             # Could be "Apple M1", "Intel Core i7", "AMD Ryzen", etc.
 
     @patch("platform.processor")
-    def test_get_cpu_type_values(self, mock_processor):
+    def test_get_cpu_type_values(self, mock_processor) -> None:
         """Test CPU type detection with known values."""
         test_cases = [
             "Apple M1 Pro",
@@ -206,7 +208,7 @@ class TestPlatformDetection:
                 # Empty processor info might return None
                 assert cpu_type is None or cpu_type == ""
 
-    def test_platform_consistency(self):
+    def test_platform_consistency(self) -> None:
         """Test that all platform functions return consistent results."""
         # Get all values
         os_name = get_os_name()
@@ -221,7 +223,7 @@ class TestPlatformDetection:
         assert get_arch_name() == arch_name
         assert get_platform_string() == platform_str
 
-    def test_platform_functions_no_exceptions(self):
+    def test_platform_functions_no_exceptions(self) -> None:
         """Test that platform functions handle errors gracefully."""
         # All functions should work without raising exceptions
         try:
@@ -235,15 +237,15 @@ class TestPlatformDetection:
             assert platform_str is not None
 
             # These may return None but shouldn't raise
-            os_version = get_os_version()
-            cpu_type = get_cpu_type()
+            get_os_version()
+            get_cpu_type()
 
         except Exception as e:
             pytest.fail(f"Platform function raised exception: {e}")
 
     @patch("platform.system")
     @patch("platform.machine")
-    def test_unknown_platform_handling(self, mock_machine, mock_system):
+    def test_unknown_platform_handling(self, mock_machine, mock_system) -> None:
         """Test handling of unknown platform values."""
         # Unknown OS
         mock_system.return_value = "UnknownOS"

@@ -9,7 +9,7 @@ from flavor.psp.metadata.validators import validate_metadata
 class TestMetadataValidation:
     """Test validation of PSPF metadata structures."""
 
-    def test_workenv_directories_validation(self):
+    def test_workenv_directories_validation(self) -> None:
         """Test workenv.directories paths must use {workenv} prefix."""
         # Valid metadata with {workenv} prefix
         valid_metadata = {
@@ -41,7 +41,7 @@ class TestMetadataValidation:
         with pytest.raises(ValueError, match="must start with \\{workenv\\}"):
             validate_metadata(invalid_metadata)
 
-    def test_workenv_env_validation(self):
+    def test_workenv_env_validation(self) -> None:
         """Test workenv.env values can use placeholders."""
         metadata = {
             "format": "PSPF/2025",
@@ -58,7 +58,7 @@ class TestMetadataValidation:
         # Should validate successfully
         assert validate_metadata(metadata) is True
 
-    def test_workenv_umask_validation(self):
+    def test_workenv_umask_validation(self) -> None:
         """Test workenv.umask validation."""
         # Valid umask values
         valid_umasks = ["0077", "0022", "0002", "077", "22"]
@@ -75,7 +75,7 @@ class TestMetadataValidation:
             with pytest.raises(ValueError, match="Invalid umask"):
                 validate_metadata(metadata)
 
-    def test_execution_env_renamed(self):
+    def test_execution_env_renamed(self) -> None:
         """Test that execution.environment was renamed to execution.env."""
         # Old format (should fail)
         old_metadata = {
@@ -102,7 +102,7 @@ class TestMetadataValidation:
 
         assert validate_metadata(new_metadata) is True
 
-    def test_runtime_env_operations(self):
+    def test_runtime_env_operations(self) -> None:
         """Test runtime.env security operations validation."""
         metadata = {
             "format": "PSPF/2025",
@@ -124,7 +124,7 @@ class TestMetadataValidation:
 
         assert validate_metadata(metadata) is True
 
-    def test_directory_mode_validation(self):
+    def test_directory_mode_validation(self) -> None:
         """Test validation of directory mode values."""
         # Valid modes
         valid_modes = ["0700", "0755", "0750", "0777", "700", "755"]
@@ -147,7 +147,7 @@ class TestMetadataValidation:
             with pytest.raises(ValueError, match="Invalid mode"):
                 validate_metadata(metadata)
 
-    def test_complete_metadata_structure(self):
+    def test_complete_metadata_structure(self) -> None:
         """Test complete metadata structure with all sections."""
         metadata = {
             "format": "PSPF/2025",
@@ -182,7 +182,7 @@ class TestMetadataValidation:
 
         assert validate_metadata(metadata) is True
 
-    def test_placeholder_validation_in_paths(self):
+    def test_placeholder_validation_in_paths(self) -> None:
         """Test that placeholders are validated in directory paths."""
         # Valid placeholders
         valid_metadata = {
@@ -212,7 +212,7 @@ class TestMetadataValidation:
         # Should still validate (unknown placeholders are left as-is)
         assert validate_metadata(metadata_with_unknown) is True
 
-    def test_missing_required_fields(self):
+    def test_missing_required_fields(self) -> None:
         """Test validation fails for missing required fields."""
         # Missing format
         metadata_no_format = {"workenv": {"directories": [{"path": "{workenv}/tmp"}]}}
@@ -229,7 +229,7 @@ class TestMetadataValidation:
         with pytest.raises(ValueError, match="Unsupported format"):
             validate_metadata(metadata_wrong_format)
 
-    def test_empty_workenv_section(self):
+    def test_empty_workenv_section(self) -> None:
         """Test that empty workenv section is valid."""
         metadata = {
             "format": "PSPF/2025",

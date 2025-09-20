@@ -1,18 +1,19 @@
 """Test PSPF format constants and basic operations."""
+
 from __future__ import annotations
 
 import pytest
 
 from flavor.psp.format_2025.constants import (
-    TRAILER_START_MAGIC,
-    TRAILER_END_MAGIC,
     INDEX_BLOCK_SIZE,
-    PSPF_VERSION,
-    OP_TAR,
-    OP_GZIP,
     OP_BZIP2,
+    OP_GZIP,
+    OP_TAR,
     OP_XZ,
     OP_ZSTD,
+    PSPF_VERSION,
+    TRAILER_END_MAGIC,
+    TRAILER_START_MAGIC,
 )
 
 
@@ -22,7 +23,7 @@ class TestPSPFConstants:
     def test_magic_trailer_format(self) -> None:
         """Test that magic trailer has correct format."""
         assert TRAILER_START_MAGIC == b"\xf0\x9f\x93\xa6"  # 📦
-        assert TRAILER_END_MAGIC == b"\xf0\x9f\xaa\x84"    # 🪄
+        assert TRAILER_END_MAGIC == b"\xf0\x9f\xaa\x84"  # 🪄
         assert len(TRAILER_START_MAGIC) == 4
         assert len(TRAILER_END_MAGIC) == 4
 

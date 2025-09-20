@@ -13,7 +13,7 @@ from taster.commands.crosslang import CrossLangTester, crosslang_command
 class TestCrossLangTester:
     """Test the CrossLangTester class."""
 
-    def test_init(self):
+    def test_init(self) -> None:
         """Test initialization."""
         tester = CrossLangTester(verbose=True, json_output=True)
         assert tester.verbose is True
@@ -22,7 +22,7 @@ class TestCrossLangTester:
         assert "verify_tests" in tester.results
         assert "cli_tests" in tester.results
 
-    def test_log_json_mode(self):
+    def test_log_json_mode(self) -> None:
         """Test that logging is suppressed in JSON mode."""
         tester = CrossLangTester(json_output=True)
         # Should not raise any exceptions
@@ -30,7 +30,7 @@ class TestCrossLangTester:
         tester.log("Error", level="error")
         tester.log("Success", level="success")
 
-    def test_log_normal_mode(self, capsys):
+    def test_log_normal_mode(self, capsys) -> None:
         """Test logging in normal mode."""
         tester = CrossLangTester(json_output=False)
         tester.log("Test message")
@@ -38,7 +38,7 @@ class TestCrossLangTester:
         assert "Test message" in captured.out
 
     @patch("taster.commands.crosslang.run_command")
-    def test_build_with_python(self, mock_run_command):
+    def test_build_with_python(self, mock_run_command) -> None:
         """Test Python builder."""
         mock_run_command.return_value = Mock(
             returncode=0, stderr="", stdout="Built successfully"
@@ -68,7 +68,7 @@ class TestCrossLangTester:
             assert len(tester.results["build_tests"]) == 1
             assert tester.results["build_tests"][0]["success"] is True
 
-    def test_verify_with_python(self):
+    def test_verify_with_python(self) -> None:
         """Test Python verification."""
         with tempfile.NamedTemporaryFile(suffix=".psp") as tmpfile:
             package_path = Path(tmpfile.name)
@@ -92,7 +92,7 @@ class TestCrossLangTester:
                 assert tester.results["verify_tests"][0]["success"] is True
 
     @patch("subprocess.run")
-    def test_verify_with_launcher_cli(self, mock_run):
+    def test_verify_with_launcher_cli(self, mock_run) -> None:
         """Test launcher CLI verification."""
         mock_run.return_value = Mock(returncode=0, stderr="", stdout="Verified")
 
@@ -107,7 +107,7 @@ class TestCrossLangTester:
             assert tester.results["verify_tests"][0]["verifier"] == "go_cli"
 
     @patch("subprocess.run")
-    def test_test_cli_command(self, mock_run):
+    def test_test_cli_command(self, mock_run) -> None:
         """Test CLI command testing."""
         mock_run.return_value = Mock(returncode=0, stderr="", stdout="Help text")
 
@@ -121,7 +121,7 @@ class TestCrossLangTester:
             assert len(tester.results["cli_tests"]) == 1
             assert tester.results["cli_tests"][0]["command"] == "--help"
 
-    def test_test_reproducible_build(self):
+    def test_test_reproducible_build(self) -> None:
         """Test reproducible build testing."""
         with tempfile.TemporaryDirectory() as tmpdir:
             taster_dir = Path(tmpdir)
@@ -169,7 +169,7 @@ class TestCrossLangTester:
 
     @patch("subprocess.run")
     @patch("os.chdir")
-    def test_run_all_tests_json_output(self, mock_chdir, mock_run):
+    def test_run_all_tests_json_output(self, mock_chdir, mock_run) -> None:
         """Test running all tests with JSON output."""
         mock_run.return_value = Mock(returncode=0, stderr="", stdout="OK")
 
@@ -200,7 +200,7 @@ class TestCrossLangTester:
 class TestCrossLangCommand:
     """Test the crosslang CLI command."""
 
-    def test_command_basic(self):
+    def test_command_basic(self) -> None:
         """Test basic command invocation."""
         runner = click.testing.CliRunner()
 
@@ -214,7 +214,7 @@ class TestCrossLangCommand:
             assert result.exit_code == 0
             mock_tester.run_all_tests.assert_called_once()
 
-    def test_command_verbose(self):
+    def test_command_verbose(self) -> None:
         """Test verbose flag."""
         runner = click.testing.CliRunner()
 
@@ -228,7 +228,7 @@ class TestCrossLangCommand:
             assert result.exit_code == 0
             mock_tester_class.assert_called_with(verbose=True, json_output=False)
 
-    def test_command_json_output(self):
+    def test_command_json_output(self) -> None:
         """Test JSON output flag."""
         runner = click.testing.CliRunner()
 
@@ -242,7 +242,7 @@ class TestCrossLangCommand:
             assert result.exit_code == 0
             mock_tester_class.assert_called_with(verbose=False, json_output=True)
 
-    def test_command_output_file(self):
+    def test_command_output_file(self) -> None:
         """Test output to file."""
         runner = click.testing.CliRunner()
 
@@ -276,7 +276,7 @@ class TestCrossLangCommand:
         finally:
             Path(output_file).unlink(missing_ok=True)
 
-    def test_command_failure(self):
+    def test_command_failure(self) -> None:
         """Test command with test failures."""
         runner = click.testing.CliRunner()
 

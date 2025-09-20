@@ -13,6 +13,7 @@ from attrs import define, field, validators
 from provide.foundation.crypto import hash_name
 
 from flavor.config.defaults import (
+    CACHE_NORMAL,
     DEFAULT_FILE_PERMS,
     DEFAULT_SLOT_DESCRIPTOR_SIZE,
     LIFECYCLE_CACHE,
@@ -69,31 +70,28 @@ def normalize_purpose(value: str) -> str:
 class SlotDescriptor:
     """Slot descriptor - exactly 64 bytes to match specification."""
 
-    # Identity (16 bytes)
+    # Core fields (56 bytes total - 7x uint64) - must match Rust layout exactly
     id: int = field(validator=validators.instance_of(int))  # 8 bytes (uint64)
     name_hash: int = field(default=0)  # 8 bytes (uint64, xxHash64)
-
-    # Location (20 bytes)
     offset: int = field(default=0)  # 8 bytes (uint64)
     size: int = field(default=0)  # 8 bytes (uint64, size as stored)
-    checksum: int = field(default=0)  # 4 bytes (uint32, Adler-32)
-
-    # Properties (8 bytes)
+    original_size: int = field(default=0)  # 8 bytes (uint64, uncompressed size)
     operations: int = field(default=0)  # 8 bytes (uint64, packed operations)
+    checksum: int = field(default=0)  # 8 bytes (uint64, SHA256 first 8 bytes)
 
-    # Classification (4 bytes)
+    # Metadata fields (8 bytes total - 8x uint8) - must match Rust layout exactly
     purpose: int = field(default=PURPOSE_DATA)  # 1 byte (uint8)
     lifecycle: int = field(default=LIFECYCLE_RUNTIME)  # 1 byte (uint8)
-    permissions: int = field(default=DEFAULT_FILE_PERMS)  # 2 bytes (uint16, Unix-style)
-
-    # Platform & Flags (4 bytes)
-    platform: int = field(default=0)  # 2 bytes (uint16, 0=any)
-    flags: int = field(default=0)  # 2 bytes (uint16, slot flags)
-
-    # Reserved (12 bytes)
-    reserved1: int = field(default=0)  # 4 bytes (uint32)
-    reserved2: int = field(default=0)  # 4 bytes (uint32)
-    reserved3: int = field(default=0)  # 4 bytes (uint32)
+    priority: int = field(default=CACHE_NORMAL)  # 1 byte (uint8)
+    platform: int = field(default=0)  # 1 byte (uint8)
+    reserved1: int = field(default=0)  # 1 byte (uint8)
+    reserved2: int = field(default=0)  # 1 byte (uint8)
+    permissions: int = field(
+        default=DEFAULT_FILE_PERMS & 0xFF
+    )  # 1 byte (uint8, low byte)
+    permissions_high: int = field(
+        default=(DEFAULT_FILE_PERMS >> 8) & 0xFF
+    )  # 1 byte (uint8, high byte)
 
     # Optional runtime fields (not persisted)
     name: str = field(default="", metadata={"transient": True})
@@ -105,29 +103,26 @@ class SlotDescriptor:
             self.name_hash = hash_name(self.name)
 
     def pack(self) -> bytes:
-        """Pack descriptor into exactly 64-byte binary format matching spec."""
+        """Pack descriptor into exactly 64-byte binary format matching Rust spec."""
         data = struct.pack(
-            "<QQQQLQBBHHHIII",
-            # Identity (16 bytes)
+            "<QQQQQQQBBBBBBBB",
+            # Core fields (56 bytes - 7x uint64) - matches Rust exactly
             self.id,  # 8 bytes: uint64
             self.name_hash,  # 8 bytes: uint64
-            # Location (20 bytes)
             self.offset,  # 8 bytes: uint64
             self.size,  # 8 bytes: uint64
-            self.checksum,  # 4 bytes: uint32
-            # Properties (8 bytes)
+            self.original_size,  # 8 bytes: uint64
             self.operations,  # 8 bytes: uint64
-            # Classification (4 bytes)
+            self.checksum,  # 8 bytes: uint64
+            # Metadata fields (8 bytes - 8x uint8) - matches Rust exactly
             self.purpose,  # 1 byte: uint8
             self.lifecycle,  # 1 byte: uint8
-            self.permissions,  # 2 bytes: uint16
-            # Platform & Flags (4 bytes)
-            self.platform,  # 2 bytes: uint16
-            self.flags,  # 2 bytes: uint16
-            # Reserved (12 bytes)
-            self.reserved1,  # 4 bytes: uint32
-            self.reserved2,  # 4 bytes: uint32
-            self.reserved3,  # 4 bytes: uint32
+            self.priority,  # 1 byte: uint8
+            self.platform,  # 1 byte: uint8
+            self.reserved1,  # 1 byte: uint8
+            self.reserved2,  # 1 byte: uint8
+            self.permissions,  # 1 byte: uint8
+            self.permissions_high,  # 1 byte: uint8
         )
 
         # Ensure exactly 64 bytes
@@ -138,38 +133,36 @@ class SlotDescriptor:
 
     @classmethod
     def unpack(cls, data: bytes) -> SlotDescriptor:
-        """Unpack descriptor from 64-byte binary data matching spec."""
+        """Unpack descriptor from 64-byte binary data matching Rust spec."""
         if len(data) != DEFAULT_SLOT_DESCRIPTOR_SIZE:
             raise ValueError(
                 f"Slot descriptor must be {DEFAULT_SLOT_DESCRIPTOR_SIZE} bytes"
             )
 
+        # Unpack using the new 64-byte format: 7 uint64 + 8 uint8
         unpacked = struct.unpack(
-            "<QQQQLQBBHHHIII",  # Match pack format exactly
+            "<QQQQQQQBBBBBBBB",  # 7 uint64 + 8 uint8 = 64 bytes
             data,
         )
 
         return cls(
-            # Identity (16 bytes)
-            id=unpacked[0],  # 8 bytes: uint64
-            name_hash=unpacked[1],  # 8 bytes: uint64
-            # Location (20 bytes)
-            offset=unpacked[2],  # 8 bytes: uint64
-            size=unpacked[3],  # 8 bytes: uint64
-            checksum=unpacked[4],  # 4 bytes: uint32
-            # Properties (8 bytes)
-            operations=unpacked[5],  # 8 bytes: uint64
-            # Classification (4 bytes)
-            purpose=unpacked[6],  # 1 byte: uint8
-            lifecycle=unpacked[7],  # 1 byte: uint8
-            permissions=unpacked[8],  # 2 bytes: uint16
-            # Platform & Flags (4 bytes)
-            platform=unpacked[9],  # 2 bytes: uint16
-            flags=unpacked[10],  # 2 bytes: uint16
-            # Reserved (12 bytes)
-            reserved1=unpacked[11],  # 4 bytes: uint32
-            reserved2=unpacked[12],  # 4 bytes: uint32
-            reserved3=unpacked[13],  # 4 bytes: uint32
+            # Core fields (56 bytes - 7x uint64)
+            id=unpacked[0],
+            name_hash=unpacked[1],
+            offset=unpacked[2],
+            size=unpacked[3],
+            original_size=unpacked[4],
+            operations=unpacked[5],
+            checksum=unpacked[6],
+            # Metadata fields (8 bytes - 8x uint8)
+            purpose=unpacked[7],
+            lifecycle=unpacked[8],
+            priority=unpacked[9],
+            platform=unpacked[10],
+            reserved1=unpacked[11],
+            reserved2=unpacked[12],
+            permissions=unpacked[13],
+            permissions_high=unpacked[14],
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -187,7 +180,6 @@ class SlotDescriptor:
             "lifecycle": self.lifecycle,
             "permissions": self.permissions,
             "platform": self.platform,
-            "flags": self.flags,
         }
         if self.name:
             result["name"] = self.name

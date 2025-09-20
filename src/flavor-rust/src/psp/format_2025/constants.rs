@@ -31,27 +31,45 @@ pub const CODEC_TAR: u8 = 2;
 pub const CODEC_TGZ: u8 = 3;
 
 // Purpose types - part of format spec
+#[allow(non_upper_case_globals)]
 pub const PurposeData: u8 = 0;   // General data files
-pub const PurposeCode: u8 = 1;   // Executable code  
+#[allow(non_upper_case_globals)]
+pub const PurposeCode: u8 = 1;   // Executable code
+#[allow(non_upper_case_globals)]
 pub const PurposeConfig: u8 = 2; // Configuration files
+#[allow(non_upper_case_globals)]
 pub const PurposeMedia: u8 = 3;  // Media/assets
 
 // Legacy aliases
+#[allow(non_upper_case_globals)]
 pub const PurposePayload: u8 = PurposeData;   // Deprecated: use PurposeData
+#[allow(non_upper_case_globals)]
 pub const PurposeRuntime: u8 = PurposeCode;   // Deprecated: use PurposeCode
+#[allow(non_upper_case_globals)]
 pub const PurposeTool: u8 = PurposeConfig;    // Deprecated: use PurposeConfig
 
 // Lifecycle types - part of format spec
+#[allow(non_upper_case_globals)]
 pub const LifecycleInit: u8 = 0;      // First run only, removed after initialization
+#[allow(non_upper_case_globals)]
 pub const LifecycleStartup: u8 = 1;   // Extracted/executed at every startup
+#[allow(non_upper_case_globals)]
 pub const LifecycleRuntime: u8 = 2;   // Available during application execution (default)
+#[allow(non_upper_case_globals)]
 pub const LifecycleShutdown: u8 = 3;  // Executed during cleanup/exit phase
+#[allow(non_upper_case_globals)]
 pub const LifecycleCache: u8 = 4;     // Kept for performance, can be regenerated
+#[allow(non_upper_case_globals)]
 pub const LifecycleTemporary: u8 = 5; // Removed after current session ends
+#[allow(non_upper_case_globals)]
 pub const LifecycleLazy: u8 = 6;      // Loaded on-demand, not extracted initially
+#[allow(non_upper_case_globals)]
 pub const LifecycleEager: u8 = 7;     // Loaded immediately on startup
+#[allow(non_upper_case_globals)]
 pub const LifecycleDev: u8 = 8;       // Only extracted in development/debug mode
+#[allow(non_upper_case_globals)]
 pub const LifecycleConfig: u8 = 9;    // User-modifiable configuration files
+#[allow(non_upper_case_globals)]
 pub const LifecyclePlatform: u8 = 10; // Platform/OS specific content
 
 // 📦💾🔍🪄

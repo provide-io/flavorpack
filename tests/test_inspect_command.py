@@ -11,7 +11,7 @@ from flavor.cli import cli
 class TestInspectCommand:
     """Test the inspect command."""
 
-    def test_inspect_basic(self, mock_test_package):
+    def test_inspect_basic(self, mock_test_package) -> None:
         """Test basic inspect command output."""
         runner = click.testing.CliRunner()
         result = runner.invoke(cli, ["inspect", str(mock_test_package)])
@@ -22,7 +22,7 @@ class TestInspectCommand:
         assert "Launcher:" in result.output
         assert "Slots:" in result.output
 
-    def test_inspect_json(self, mock_test_package):
+    def test_inspect_json(self, mock_test_package) -> None:
         """Test JSON output of inspect command."""
         runner = click.testing.CliRunner()
         result = runner.invoke(cli, ["inspect", "--json", str(mock_test_package)])
@@ -49,7 +49,7 @@ class TestInspectCommand:
         assert isinstance(data["slots"], list)
         assert len(data["slots"]) == 3  # main, config, wheels
 
-    def test_inspect_nonexistent_file(self):
+    def test_inspect_nonexistent_file(self) -> None:
         """Test inspect with non-existent file."""
         runner = click.testing.CliRunner()
         result = runner.invoke(cli, ["inspect", "/tmp/nonexistent.psp"])
@@ -58,7 +58,7 @@ class TestInspectCommand:
         # Click validates file existence, so we get a different error message
         assert "does not exist" in result.output.lower()
 
-    def test_inspect_slot_metadata(self, mock_test_package):
+    def test_inspect_slot_metadata(self, mock_test_package) -> None:
         """Test that slot metadata is properly displayed."""
         runner = click.testing.CliRunner()
         result = runner.invoke(cli, ["inspect", "--json", str(mock_test_package)])

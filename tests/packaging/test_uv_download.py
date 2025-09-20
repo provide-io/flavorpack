@@ -12,7 +12,7 @@ from flavor.packaging.python.packager import PythonPackager
 class TestUVDownload:
     """Test UV download functionality."""
 
-    def test_pypa_pip_download_cmd_linux_amd64(self):
+    def test_pypa_pip_download_cmd_linux_amd64(self) -> None:
         """Test that pip download command includes manylinux2014 for Linux AMD64."""
         packager = PythonPackager(
             manifest_dir=Path("/tmp"),
@@ -45,7 +45,7 @@ class TestUVDownload:
             assert "--only-binary" in cmd
             assert ":all:" in cmd
 
-    def test_pypa_pip_download_cmd_linux_arm64(self):
+    def test_pypa_pip_download_cmd_linux_arm64(self) -> None:
         """Test that pip download command includes manylinux2014 for Linux ARM64."""
         packager = PythonPackager(
             manifest_dir=Path("/tmp"),
@@ -76,7 +76,7 @@ class TestUVDownload:
             assert "manylinux_2_17_aarch64" in cmd
             assert "--python-version" in cmd
 
-    def test_pypa_pip_download_cmd_non_linux(self):
+    def test_pypa_pip_download_cmd_non_linux(self) -> None:
         """Test that pip download command doesn't add platform constraints on non-Linux."""
         packager = PythonPackager(
             manifest_dir=Path("/tmp"),
@@ -106,7 +106,7 @@ class TestUVDownload:
             assert "manylinux2014" not in " ".join(cmd)
             assert "--only-binary" in cmd  # But binary-only should still be there
 
-    def test_download_uv_wheel_validates_manylinux(self):
+    def test_download_uv_wheel_validates_manylinux(self) -> None:
         """Test that _download_uv_wheel validates the wheel is manylinux2014."""
         packager = PythonPackager(
             manifest_dir=Path("/tmp"),
@@ -159,7 +159,7 @@ class TestUVDownload:
                 assert result.name == "uv"
                 assert result.exists()
 
-    def test_prepare_artifacts_linux_requires_uv(self):
+    def test_prepare_artifacts_linux_requires_uv(self) -> None:
         """Test that prepare_artifacts raises error on Linux if UV download fails."""
         packager = PythonPackager(
             manifest_dir=Path("/tmp"),
@@ -191,7 +191,7 @@ class TestUVDownload:
                 with pytest.raises(FileNotFoundError, match="manylinux2014"):
                     packager.prepare_artifacts(work_path)
 
-    def test_download_uv_wheel_direct_fallback(self):
+    def test_download_uv_wheel_direct_fallback(self) -> None:
         """Test that _download_uv_wheel falls back to direct download when pip fails."""
         packager = PythonPackager(
             manifest_dir=Path("/tmp"),
@@ -241,7 +241,7 @@ class TestUVDownload:
                 # Verify that the download failed as expected
                 assert result is None
 
-    def test_prepare_artifacts_non_linux_fallback(self):
+    def test_prepare_artifacts_non_linux_fallback(self) -> None:
         """Test that prepare_artifacts falls back to host UV on non-Linux."""
         packager = PythonPackager(
             manifest_dir=Path("/tmp"),

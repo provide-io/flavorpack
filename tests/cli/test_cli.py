@@ -38,7 +38,7 @@ def test_cli_pack_and_verify(tmp_path: Path) -> None:
         # Check that build was called with correct parameters
         args, kwargs = mock_build.call_args
         assert args[0] == pyproject_path
-        assert kwargs.get("strip_binaries") == False
+        assert not kwargs.get("strip_binaries")
 
     fake_package_file = tmp_path / "fake.psp"
     fake_package_file.touch()

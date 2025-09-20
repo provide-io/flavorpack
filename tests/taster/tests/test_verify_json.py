@@ -13,7 +13,7 @@ from taster.commands.verify import verify_command
 class TestVerifyCommand:
     """Test the verify command with JSON output."""
 
-    def test_verify_basic(self):
+    def test_verify_basic(self) -> None:
         """Test basic verification without JSON."""
         runner = click.testing.CliRunner()
 
@@ -36,7 +36,7 @@ class TestVerifyCommand:
                 assert "PSPF PACKAGE VERIFICATION" in result.output
                 assert "✅ Signature verification: PASSED" in result.output
 
-    def test_verify_json_output(self):
+    def test_verify_json_output(self) -> None:
         """Test verification with JSON output."""
         runner = click.testing.CliRunner()
 
@@ -61,7 +61,7 @@ class TestVerifyCommand:
                 assert output_data["exists"] is True
                 assert output_data["verification"] == verification_result
 
-    def test_verify_json_output_to_file(self):
+    def test_verify_json_output_to_file(self) -> None:
         """Test verification with JSON output to file."""
         runner = click.testing.CliRunner()
 
@@ -90,7 +90,7 @@ class TestVerifyCommand:
             finally:
                 Path(output_path).unlink(missing_ok=True)
 
-    def test_verify_package_not_found(self):
+    def test_verify_package_not_found(self) -> None:
         """Test verification when package doesn't exist."""
         runner = click.testing.CliRunner()
 
@@ -98,7 +98,7 @@ class TestVerifyCommand:
         assert result.exit_code == 0
         assert "Package file not found" in result.output
 
-    def test_verify_package_not_found_json(self):
+    def test_verify_package_not_found_json(self) -> None:
         """Test verification when package doesn't exist with JSON output."""
         runner = click.testing.CliRunner()
 
@@ -110,7 +110,7 @@ class TestVerifyCommand:
         assert "error" in output_data
         assert "not found" in output_data["error"]
 
-    def test_verify_with_error(self):
+    def test_verify_with_error(self) -> None:
         """Test verification when an error occurs."""
         runner = click.testing.CliRunner()
 
@@ -125,7 +125,7 @@ class TestVerifyCommand:
                 assert result.exit_code == 0
                 assert "Verification failed" in result.output
 
-    def test_verify_with_error_json(self):
+    def test_verify_with_error_json(self) -> None:
         """Test verification error with JSON output."""
         runner = click.testing.CliRunner()
 
@@ -143,7 +143,7 @@ class TestVerifyCommand:
                 assert "error" in output_data
                 assert "Verification error" in output_data["error"]
 
-    def test_verify_fallback_basic_checks(self):
+    def test_verify_fallback_basic_checks(self) -> None:
         """Test fallback to basic checks when flavor module not available."""
         runner = click.testing.CliRunner()
 
@@ -160,7 +160,7 @@ class TestVerifyCommand:
                 assert "Basic Information" in result.output
                 assert "PSPF2025 magic found" in result.output
 
-    def test_verify_fallback_basic_checks_json(self):
+    def test_verify_fallback_basic_checks_json(self) -> None:
         """Test fallback to basic checks with JSON output."""
         runner = click.testing.CliRunner()
 
@@ -180,7 +180,7 @@ class TestVerifyCommand:
                 assert "warning" in output_data
                 assert "not available" in output_data["warning"]
 
-    def test_verify_uses_current_executable(self):
+    def test_verify_uses_current_executable(self) -> None:
         """Test that verify uses current executable when no path provided."""
         runner = click.testing.CliRunner()
 
@@ -197,7 +197,7 @@ class TestVerifyCommand:
                     assert result.exit_code == 0
                     mock_verifier.verify_package.assert_called_once()
 
-    def test_verify_signature_failed(self):
+    def test_verify_signature_failed(self) -> None:
         """Test output when signature verification fails."""
         runner = click.testing.CliRunner()
 

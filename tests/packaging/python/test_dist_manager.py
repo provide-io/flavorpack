@@ -14,11 +14,11 @@ from flavor.packaging.python.dist_manager import PythonDistManager
 class TestPythonDistManager:
     """Test PythonDistManager functionality."""
 
-    def setup_method(self):
+    def setup_method(self) -> None:
         """Set up test fixtures."""
         self.dist_manager = PythonDistManager(python_version="3.11")
 
-    def test_initialization(self):
+    def test_initialization(self) -> None:
         """Test PythonDistManager initialization."""
         assert self.dist_manager.python_version == "3.11"
         assert self.dist_manager.use_uv_for_venv is True
@@ -31,7 +31,7 @@ class TestPythonDistManager:
         assert manager_no_uv.uv is None
 
     @patch("flavor.packaging.python.dist_manager.run_command")
-    def test_create_python_environment_with_uv(self, mock_run_command):
+    def test_create_python_environment_with_uv(self, mock_run_command) -> None:
         """Test Python environment creation using UV."""
         mock_result = Mock()
         mock_result.returncode = 0
@@ -61,7 +61,7 @@ class TestPythonDistManager:
                 assert result.exists()
 
     @patch("flavor.packaging.python.dist_manager.run_command")
-    def test_create_python_environment_fallback_to_venv(self, mock_run_command):
+    def test_create_python_environment_fallback_to_venv(self, mock_run_command) -> None:
         """Test fallback to standard venv when UV fails."""
         mock_result = Mock()
         mock_result.returncode = 0
@@ -102,7 +102,7 @@ class TestPythonDistManager:
                 # Verify result
                 assert result.name == "python"
 
-    def test_get_venv_python_path_unix(self):
+    def test_get_venv_python_path_unix(self) -> None:
         """Test getting venv Python path on Unix systems."""
         with tempfile.TemporaryDirectory() as temp_dir:
             venv_path = Path(temp_dir) / "venv"
@@ -112,7 +112,7 @@ class TestPythonDistManager:
                 expected = venv_path / "bin" / "python"
                 assert result == expected
 
-    def test_get_venv_python_path_windows(self):
+    def test_get_venv_python_path_windows(self) -> None:
         """Test getting venv Python path on Windows."""
         with tempfile.TemporaryDirectory() as temp_dir:
             venv_path = Path(temp_dir) / "venv"
@@ -123,7 +123,7 @@ class TestPythonDistManager:
                 assert result == expected
 
     @patch("flavor.packaging.python.dist_manager.run_command")
-    def test_install_wheels_to_environment(self, mock_run_command):
+    def test_install_wheels_to_environment(self, mock_run_command) -> None:
         """Test installing wheels to Python environment."""
         mock_result = Mock()
         mock_result.returncode = 0
@@ -156,7 +156,7 @@ class TestPythonDistManager:
             # Verify error handling enabled
             assert kwargs["check"] is True
 
-    def test_install_wheels_empty_list(self):
+    def test_install_wheels_empty_list(self) -> None:
         """Test installing empty wheel list does nothing."""
         venv_python = Path("/tmp/venv/bin/python")
 
@@ -167,7 +167,7 @@ class TestPythonDistManager:
             mock_run.assert_not_called()
 
     @patch("flavor.packaging.python.dist_manager.run_command")
-    def test_prepare_site_packages(self, mock_run_command):
+    def test_prepare_site_packages(self, mock_run_command) -> None:
         """Test site-packages preparation."""
         mock_result = Mock()
         mock_result.returncode = 0
@@ -206,7 +206,7 @@ class TestPythonDistManager:
             # Verify result
             assert result == site_packages
 
-    def test_compile_python_files(self):
+    def test_compile_python_files(self) -> None:
         """Test Python file compilation."""
         with tempfile.TemporaryDirectory() as temp_dir:
             venv_python = Path(temp_dir) / "venv" / "bin" / "python"
@@ -227,7 +227,7 @@ class TestPythonDistManager:
                 assert f"-j{os.cpu_count() or 1}" in cmd
                 assert str(site_packages) in cmd
 
-    def test_cleanup_site_packages(self):
+    def test_cleanup_site_packages(self) -> None:
         """Test site-packages cleanup."""
         with tempfile.TemporaryDirectory() as temp_dir:
             site_packages = Path(temp_dir) / "site-packages"
@@ -264,7 +264,7 @@ class TestPythonDistManager:
             assert (example_package / "__init__.py").exists()
             assert (example_package / "main.py").exists()
 
-    def test_get_directory_size(self):
+    def test_get_directory_size(self) -> None:
         """Test directory size calculation."""
         with tempfile.TemporaryDirectory() as temp_dir:
             test_dir = Path(temp_dir) / "test"
@@ -281,7 +281,7 @@ class TestPythonDistManager:
             size = self.dist_manager._get_directory_size(test_dir)
             assert size == 11  # 5 + 6 bytes
 
-    def test_validate_distribution_valid(self):
+    def test_validate_distribution_valid(self) -> None:
         """Test distribution validation with valid distribution."""
         with tempfile.TemporaryDirectory() as temp_dir:
             site_packages = Path(temp_dir) / "site-packages"
@@ -299,7 +299,7 @@ class TestPythonDistManager:
             result = self.dist_manager.validate_distribution(dist_info)
             assert result is True
 
-    def test_validate_distribution_empty(self):
+    def test_validate_distribution_empty(self) -> None:
         """Test distribution validation with empty site-packages."""
         with tempfile.TemporaryDirectory() as temp_dir:
             site_packages = Path(temp_dir) / "site-packages"
@@ -313,7 +313,7 @@ class TestPythonDistManager:
             result = self.dist_manager.validate_distribution(dist_info)
             assert result is False
 
-    def test_validate_distribution_missing(self):
+    def test_validate_distribution_missing(self) -> None:
         """Test distribution validation with missing site-packages."""
         with tempfile.TemporaryDirectory() as temp_dir:
             site_packages = Path(temp_dir) / "nonexistent"
@@ -332,7 +332,7 @@ class TestPythonDistManager:
     @patch("shutil.copytree")
     def test_create_standalone_distribution(
         self, mock_copytree, mock_prepare, mock_install, mock_create_env
-    ):
+    ) -> None:
         """Test complete standalone distribution creation."""
         with tempfile.TemporaryDirectory() as temp_dir:
             project_dir = Path(temp_dir) / "myproject"
@@ -388,11 +388,11 @@ class TestPythonDistManager:
 class TestPythonDistManagerCriticalFeatures:
     """Test CRITICAL features that must never be broken."""
 
-    def setup_method(self):
+    def setup_method(self) -> None:
         """Set up test fixtures."""
         self.dist_manager = PythonDistManager()
 
-    def test_uses_separate_managers(self):
+    def test_uses_separate_managers(self) -> None:
         """CRITICAL: Must use separate specialized managers."""
         assert hasattr(self.dist_manager, "pypapip")
         assert hasattr(self.dist_manager, "uv")
@@ -403,7 +403,7 @@ class TestPythonDistManagerCriticalFeatures:
         assert self.dist_manager.pypapip is not self.dist_manager.wheel_builder
         assert self.dist_manager.uv is not self.dist_manager.wheel_builder
 
-    def test_uv_fallback_behavior(self):
+    def test_uv_fallback_behavior(self) -> None:
         """CRITICAL: UV must have fallback to standard tools."""
         # UV can be disabled
         manager_no_uv = PythonDistManager(use_uv_for_venv=False)
@@ -413,7 +413,7 @@ class TestPythonDistManagerCriticalFeatures:
         assert hasattr(manager_no_uv, "pypapip")
         assert hasattr(manager_no_uv, "wheel_builder")
 
-    def test_always_uses_pypapip_for_installation(self):
+    def test_always_uses_pypapip_for_installation(self) -> None:
         """CRITICAL: Must always use PyPA pip for wheel installation."""
         with tempfile.TemporaryDirectory() as temp_dir:
             venv_python = Path(temp_dir) / "venv" / "bin" / "python"
@@ -432,7 +432,7 @@ class TestPythonDistManagerCriticalFeatures:
                 # Must use pip, not uv pip
                 assert cmd[1:4] == ["-m", "pip", "install"]
 
-    def test_site_packages_cleanup_preserves_critical_files(self):
+    def test_site_packages_cleanup_preserves_critical_files(self) -> None:
         """CRITICAL: Cleanup must not remove critical Python files."""
         with tempfile.TemporaryDirectory() as temp_dir:
             site_packages = Path(temp_dir) / "site-packages"
@@ -472,7 +472,7 @@ class TestPythonDistManagerCriticalFeatures:
                     f"File not removed: {removable_file}"
                 )
 
-    def test_distribution_validation_comprehensive(self):
+    def test_distribution_validation_comprehensive(self) -> None:
         """CRITICAL: Distribution validation must be thorough."""
         with tempfile.TemporaryDirectory() as temp_dir:
             site_packages = Path(temp_dir) / "site-packages"

@@ -11,7 +11,7 @@ from flavor.psp.metadata.paths import substitute_placeholders
 class TestPlatformPlaceholders:
     """Test platform-specific placeholder substitution."""
 
-    def test_substitute_workenv_placeholder(self):
+    def test_substitute_workenv_placeholder(self) -> None:
         """Test that {workenv} placeholder is correctly substituted."""
         workenv_path = Path("/test/workenv")
 
@@ -23,7 +23,7 @@ class TestPlatformPlaceholders:
         result = substitute_placeholders("{workenv}/var/{workenv}/log", workenv_path)
         assert result == "/test/workenv/var//test/workenv/log"
 
-    def test_substitute_os_placeholder(self):
+    def test_substitute_os_placeholder(self) -> None:
         """Test that {os} placeholder is correctly substituted."""
         workenv_path = Path("/test/workenv")
 
@@ -36,7 +36,7 @@ class TestPlatformPlaceholders:
         result = substitute_placeholders("/path/{os}/bin", workenv_path)
         assert "darwin" in result or "linux" in result or "windows" in result
 
-    def test_substitute_arch_placeholder(self):
+    def test_substitute_arch_placeholder(self) -> None:
         """Test that {arch} placeholder is correctly substituted."""
         workenv_path = Path("/test/workenv")
 
@@ -49,7 +49,7 @@ class TestPlatformPlaceholders:
         result = substitute_placeholders("/path/{arch}/lib", workenv_path)
         assert "amd64" in result or "arm64" in result or "x86" in result
 
-    def test_substitute_platform_placeholder(self):
+    def test_substitute_platform_placeholder(self) -> None:
         """Test that {platform} placeholder is correctly substituted."""
         workenv_path = Path("/test/workenv")
 
@@ -63,7 +63,7 @@ class TestPlatformPlaceholders:
         assert parts[0] in ["darwin", "linux", "windows"]
         assert parts[1] in ["amd64", "arm64", "x86", "i386"]
 
-    def test_nested_placeholders(self):
+    def test_nested_placeholders(self) -> None:
         """Test nested and combined placeholders."""
         workenv_path = Path("/test/workenv")
 
@@ -80,7 +80,7 @@ class TestPlatformPlaceholders:
         assert result.startswith("/test/workenv/cache/")
         assert "_" in result.split("/")[-1]  # platform should have underscore
 
-    def test_invalid_placeholders(self):
+    def test_invalid_placeholders(self) -> None:
         """Test that invalid placeholders are left as-is."""
         workenv_path = Path("/test/workenv")
 
@@ -96,7 +96,7 @@ class TestPlatformPlaceholders:
         result = substitute_placeholders("{}/path", workenv_path)
         assert result == "{}/path"
 
-    def test_mixed_placeholders(self):
+    def test_mixed_placeholders(self) -> None:
         """Test mixing valid and invalid placeholders."""
         workenv_path = Path("/test/workenv")
 
@@ -106,7 +106,7 @@ class TestPlatformPlaceholders:
         assert result.startswith("/test/workenv/{unknown}/")
         assert not result.endswith("{os}")
 
-    def test_environment_variable_placeholders(self):
+    def test_environment_variable_placeholders(self) -> None:
         """Test placeholders in environment variable values."""
         workenv_path = Path("/test/workenv")
 
@@ -119,7 +119,7 @@ class TestPlatformPlaceholders:
             "ARCH_BIN": "/usr/local/{arch}/bin",
         }
 
-        for var, value in env_vars.items():
+        for _var, value in env_vars.items():
             result = substitute_placeholders(value, workenv_path)
             # Should not contain unsubstituted valid placeholders
             if "{workenv}" in value:
@@ -131,7 +131,7 @@ class TestPlatformPlaceholders:
             if "{platform}" in value:
                 assert "{platform}" not in result
 
-    def test_windows_path_placeholders(self):
+    def test_windows_path_placeholders(self) -> None:
         """Test placeholders with Windows-style paths."""
         workenv_path = Path("C:\\test\\workenv")
 

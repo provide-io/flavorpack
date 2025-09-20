@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -61,7 +60,13 @@ class TestSecurityConfig:
 
     def test_all_valid_validation_levels(self) -> None:
         """Test all valid validation levels."""
-        for level in [VALIDATION_STRICT, VALIDATION_STANDARD, VALIDATION_RELAXED, VALIDATION_MINIMAL, VALIDATION_NONE]:
+        for level in [
+            VALIDATION_STRICT,
+            VALIDATION_STANDARD,
+            VALIDATION_RELAXED,
+            VALIDATION_MINIMAL,
+            VALIDATION_NONE,
+        ]:
             config = SecurityConfig(validation_level=level)
             assert config.validation_level == level
 
@@ -77,12 +82,15 @@ class TestPathsConfig:
         assert config.workenv_base is None
         assert config.xdg_cache_home is None
 
-    @patch.dict(os.environ, {
-        "FLAVOR_BUILDER_BIN": "/custom/builder",
-        "FLAVOR_LAUNCHER_BIN": "/custom/launcher",
-        "FLAVOR_WORKENV_BASE": "/custom/workenv",
-        "XDG_CACHE_HOME": "/custom/cache",
-    })
+    @patch.dict(
+        os.environ,
+        {
+            "FLAVOR_BUILDER_BIN": "/custom/builder",
+            "FLAVOR_LAUNCHER_BIN": "/custom/launcher",
+            "FLAVOR_WORKENV_BASE": "/custom/workenv",
+            "XDG_CACHE_HOME": "/custom/cache",
+        },
+    )
     def test_paths_from_env(self) -> None:
         """Test paths loaded from environment variables."""
         config = PathsConfig.from_env()
@@ -123,11 +131,14 @@ class TestUVConfig:
         assert config.python_install_dir is None
         assert config.system_python is None
 
-    @patch.dict(os.environ, {
-        "UV_CACHE_DIR": "/custom/uv/cache",
-        "UV_PYTHON_INSTALL_DIR": "/custom/uv/python",
-        "UV_SYSTEM_PYTHON": "1",
-    })
+    @patch.dict(
+        os.environ,
+        {
+            "UV_CACHE_DIR": "/custom/uv/cache",
+            "UV_PYTHON_INSTALL_DIR": "/custom/uv/python",
+            "UV_SYSTEM_PYTHON": "1",
+        },
+    )
     def test_uv_config_from_env(self) -> None:
         """Test UV configuration from environment variables."""
         config = UVConfig.from_env()
@@ -146,11 +157,14 @@ class TestSystemConfig:
         assert isinstance(config.paths, PathsConfig)
         assert isinstance(config.security, SecurityConfig)
 
-    @patch.dict(os.environ, {
-        "FLAVOR_VALIDATION": "strict",
-        "FLAVOR_BUILDER_BIN": "/custom/builder",
-        "UV_CACHE_DIR": "/custom/uv/cache",
-    })
+    @patch.dict(
+        os.environ,
+        {
+            "FLAVOR_VALIDATION": "strict",
+            "FLAVOR_BUILDER_BIN": "/custom/builder",
+            "UV_CACHE_DIR": "/custom/uv/cache",
+        },
+    )
     def test_system_config_from_env(self) -> None:
         """Test system configuration with environment variables."""
         config = SystemConfig(
@@ -169,9 +183,7 @@ class TestFlavorConfig:
     def test_minimal_flavor_config(self) -> None:
         """Test minimal FlavorConfig creation."""
         config = FlavorConfig(
-            name="test-app",
-            version="1.0.0",
-            entry_point="test.main:app"
+            name="test-app", version="1.0.0", entry_point="test.main:app"
         )
         assert config.name == "test-app"
         assert config.version == "1.0.0"
@@ -192,7 +204,7 @@ class TestFlavorConfig:
                 security=SecurityConfig.from_env(),
                 paths=PathsConfig.from_env(),
                 uv=UVConfig.from_env(),
-            )
+            ),
         )
         assert config.system.security.validation_level == "strict"
 
@@ -223,7 +235,9 @@ class TestFlavorConfig:
 
     def test_from_pyproject_dict_missing_entry_point(self) -> None:
         """Test error when entry_point is missing."""
-        with pytest.raises(ValidationError, match="Project entry_point must be defined"):
+        with pytest.raises(
+            ValidationError, match="Project entry_point must be defined"
+        ):
             FlavorConfig.from_pyproject_dict({}, {"name": "test", "version": "1.0.0"})
 
 
@@ -244,9 +258,7 @@ class TestGlobalConfig:
     def test_set_flavor_config(self) -> None:
         """Test setting custom flavor config."""
         custom_config = FlavorConfig(
-            name="custom-app",
-            version="2.0.0",
-            entry_point="custom.main:app"
+            name="custom-app", version="2.0.0", entry_point="custom.main:app"
         )
 
         set_flavor_config(custom_config)
@@ -331,9 +343,7 @@ class TestSecurityIntegration:
             name="test-app",
             version="1.0.0",
             entry_point="test.main:app",
-            system=SystemConfig(
-                security=SecurityConfig(validation_level="strict")
-            )
+            system=SystemConfig(security=SecurityConfig(validation_level="strict")),
         )
 
         set_flavor_config(custom_config)
@@ -358,7 +368,7 @@ class TestRuntimeRuntimeConfig:
             unset=["VAR1", "VAR2"],
             passthrough=["PATH", "HOME"],
             set_vars={"DEBUG": True, "PORT": 8080},
-            map_vars={"OLD_VAR": "NEW_VAR"}
+            map_vars={"OLD_VAR": "NEW_VAR"},
         )
         assert config.unset == ["VAR1", "VAR2"]
         assert config.passthrough == ["PATH", "HOME"]
@@ -414,10 +424,7 @@ class TestExecutionConfig:
 
     def test_execution_config_with_custom_runtime(self) -> None:
         """Test execution configuration with custom runtime environment."""
-        runtime_env = RuntimeRuntimeConfig(
-            unset=["DEBUG"],
-            passthrough=["PATH"]
-        )
+        runtime_env = RuntimeRuntimeConfig(unset=["DEBUG"], passthrough=["PATH"])
         config = ExecutionConfig(runtime_env=runtime_env)
         assert config.runtime_env.unset == ["DEBUG"]
         assert config.runtime_env.passthrough == ["PATH"]
