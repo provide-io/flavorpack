@@ -54,7 +54,7 @@ jobs:
           cd ..
 
           # Rust builds (musl for static linking)
-          cd flavor-rust
+          cd flavor-rs
           make clean
           cargo build --release --target x86_64-unknown-linux-musl
           cp target/x86_64-unknown-linux-musl/release/flavor-rs-builder ../../dist/bin/flavor-rs-builder-linux_amd64
@@ -236,7 +236,7 @@ jobs:
         run: |
           echo "Testing on ${{ matrix.distro.name }} (glibc ${{ matrix.distro.glibc }})"
           
-          docker run --rm -v $PWD/ingredients/bin:/test ${{ matrix.distro.image }} sh -c '
+          docker run --rm -v $PWD/dist/bin:/test ${{ matrix.distro.image }} sh -c '
             cd /test
             for binary in flavor-*-linux_amd64; do
               if [ -f "$binary" ]; then

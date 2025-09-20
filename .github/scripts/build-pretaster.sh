@@ -107,7 +107,7 @@ RUNNER_EOF
 }
 
 # Navigate to pretaster directory
-cd helpers/pretaster
+cd tests/pretaster
 
 # Create output directory
 mkdir -p "../../$OUTPUT_DIR"

@@ -48,10 +48,6 @@ docs = [
     "mkdocs-mermaid2-plugin>=1.1.0",
 ]
 
-[tool.uv.sources]
-provide-foundation = { workspace = true }
-provide-testkit = { workspace = true }
-
 [project.scripts]
 flavor = "flavor.cli:main"
 

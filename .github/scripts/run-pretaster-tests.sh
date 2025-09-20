@@ -61,7 +61,7 @@ for file in ingredients/bin/flavor-*-$VERSION-$PLATFORM; do
 done
 
 # Change to pretaster directory
-cd helpers/pretaster
+cd tests/pretaster
 
 # Set workenv base for builders to resolve {workenv} placeholders
 export FLAVOR_WORKENV_BASE="$(pwd)"

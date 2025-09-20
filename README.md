@@ -82,12 +82,12 @@ Flavor Pack consists of three main components:
    - Creates manifests and handles Python packaging
    - Provides CLI interface for package operations
 
-2. **Native Launchers** (`src/flavor-go/`, `src/flavor-rust/`)
+2. **Native Launchers** (`src/flavor-go/`, `src/flavor-rs/`)
    - Extract and execute packages at runtime
    - Perform Ed25519 signature verification
    - Manage workenv caching and lifecycle
 
-3. **Native Builders** (`src/flavor-go/`, `src/flavor-rust/`)
+3. **Native Builders** (`src/flavor-go/`, `src/flavor-rs/`)
    - Assemble PSPF packages from manifests
    - Implement the PSPF/2025 binary format
    - Handle slot packing and metadata encoding
