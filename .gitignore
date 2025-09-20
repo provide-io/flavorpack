@@ -3,7 +3,10 @@
 .venv
 venv/
 env/
-workenv/
+# Project workenv directory (but not Rust source directories)
+/workenv/
+# Allow Rust workenv source modules
+!src/*/src/workenv/
 
 # Python cache
 __pycache__/
@@ -42,7 +45,12 @@ tests/pretaster/test-runner.sh
 *bfile*
 .hypothesis
 *.whl
-bin/
+# Build artifacts and binaries (but not Rust src/bin/ source directories)
+/bin/
+dist/bin/
+**/target/**/bin/
+# Allow Rust source directories
+!src/*/src/bin/
 core
 *.local.json
 *.local.json

@@ -175,7 +175,7 @@ def save_test_vectors(test_cases):
     log_debug(f"Creating Go testdata directory: {go_testdata}")
     go_testdata.mkdir(parents=True, exist_ok=True)
 
-    rust_testdata = Path("src/flavor-rust/src/psp/format_2025/testdata")
+    rust_testdata = Path("src/flavor-rs/src/psp/format_2025/testdata")
     log_debug(f"Creating Rust testdata directory: {rust_testdata}")
     rust_testdata.mkdir(parents=True, exist_ok=True)
 

@@ -47,7 +47,7 @@ class IngredientManager:
 
         # Source directories are in src/<language>
         self.go_src_dir = self.flavor_root / "src" / "flavor-go"
-        self.rust_src_dir = self.flavor_root / "src" / "flavor-rust"
+        self.rust_src_dir = self.flavor_root / "src" / "flavor-rs"
 
         # Ensure ingredients directories exist
         ensure_dir(self.ingredients_dir)
