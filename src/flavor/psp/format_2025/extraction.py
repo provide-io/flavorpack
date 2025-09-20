@@ -7,14 +7,12 @@ Provides extraction, streaming, and verification operations for PSPF slots.
 
 import gzip
 from pathlib import Path
-import tempfile
 import zipfile
 import zlib
 
 from provide.foundation import logger
 from provide.foundation.file.directory import ensure_dir
 
-from flavor.archive import ArchiveChain, ChainProcessor
 from flavor.psp.format_2025.slots import SlotView
 
 
@@ -131,38 +129,18 @@ class SlotExtractor:
         # Read slot data
         slot_data = self.reader.read_slot(slot_index)
 
-        # Apply reverse operations if any
+        # Apply reverse v0 operations if any
         if descriptor.operations != 0:
             try:
-                # Create operation chain and reverse it
-                chain = ArchiveChain(descriptor.operations)
-                processor = ChainProcessor()
-
-                # Process in reverse for extraction
-                with tempfile.NamedTemporaryFile() as temp_file:
-                    temp_file.write(slot_data)
-                    temp_file.flush()
-
-                    result = processor.process(
-                        Path(temp_file.name), chain, output=dest_dir, reverse=True
-                    )
-
-                    if isinstance(result, Path):
-                        return result
-                    else:
-                        # Write processed data to destination
-                        output_path = dest_dir / f"slot_{slot_index}"
-                        if hasattr(result, "read"):
-                            with output_path.open("wb") as f:
-                                f.write(result.read())
-                        else:
-                            with output_path.open("wb") as f:
-                                f.write(result)
-                        return output_path
-
+                processed_data = self._reverse_v0_operations(
+                    slot_data, descriptor.operations
+                )
+                if processed_data != slot_data:
+                    # Operations were applied, use processed data
+                    slot_data = processed_data
             except Exception as e:
                 logger.warning(
-                    f"Failed to reverse operations for slot {slot_index}: {e}"
+                    f"Failed to reverse v0 operations for slot {slot_index}: {e}"
                 )
                 # Fall through to direct extraction
 
@@ -277,19 +255,33 @@ class SlotExtractor:
                 return False
 
             descriptor = descriptors[slot_index]
-            slot_data = self.reader.read_slot(slot_index)
 
-            # Verify checksum (use Adler32 to match binary format)
-            actual_checksum = zlib.adler32(slot_data) & 0xFFFFFFFF
+            # Read raw slot data (before decompression) using backend directly
+            # This is the data that was actually checksummed during building
+            raw_slot_data = self.reader._backend.read_slot(descriptor)
+
+            # Convert to bytes if memoryview
+            if isinstance(raw_slot_data, memoryview):
+                raw_slot_data = bytes(raw_slot_data)
+
+            # Verify checksum (use Adler32 to match binary format on raw compressed data)
+            # This must match what was checksummed during building (compressed data)
+            actual_checksum = zlib.adler32(raw_slot_data) & 0xFFFFFFFF
+
+            # DEBUG: Log checksum details for troubleshooting
+            logger.debug(
+                f"🔍🧪 Slot {slot_index} extraction verify: expected={descriptor.checksum:08x}, actual={actual_checksum:08x}, size={len(raw_slot_data)}"
+            )
+
             if actual_checksum != descriptor.checksum:
                 logger.error(f"Slot {slot_index} checksum verification failed")
                 return False
 
-            # Verify size
-            if len(slot_data) != descriptor.size:
+            # Verify size (compressed size matches what's in the file)
+            if len(raw_slot_data) != descriptor.size:
                 logger.error(
                     f"Slot {slot_index} size mismatch: "
-                    f"expected {descriptor.size}, got {len(slot_data)}"
+                    f"expected {descriptor.size}, got {len(raw_slot_data)}"
                 )
                 return False
 
@@ -299,3 +291,69 @@ class SlotExtractor:
         except Exception as e:
             logger.error(f"Slot {slot_index} integrity check failed: {e}")
             return False
+
+    def _reverse_v0_operations(self, data: bytes, packed_ops: int) -> bytes:
+        """Reverse v0 operations for extraction.
+
+        Args:
+            data: Compressed/processed data
+            packed_ops: Packed v0 operations
+
+        Returns:
+            Decompressed/unprocessed data
+        """
+        from flavor.psp.format_2025.operations import (
+            OP_BZIP2,
+            OP_GZIP,
+            OP_TAR,
+            OP_XZ,
+            OP_ZSTD,
+            unpack_operations,
+        )
+
+        if packed_ops == 0:
+            return data
+
+        # Unpack v0 operations
+        ops = unpack_operations(packed_ops)
+        logger.debug(f"🔧 Reversing v0 operations: {[hex(op) for op in ops]}")
+
+        # Reverse operations in reverse order
+        result = data
+        for op in reversed(ops):
+            if op == OP_TAR:
+                # TAR extraction is handled separately - don't reverse here
+                logger.trace("📦 TAR operation (will be extracted separately)")
+                continue
+            elif op == OP_GZIP:
+                import gzip
+
+                logger.trace("🗜️ Reversing GZIP compression")
+                result = gzip.decompress(result)
+            elif op == OP_BZIP2:
+                import bz2
+
+                logger.trace("🗜️ Reversing BZIP2 compression")
+                result = bz2.decompress(result)
+            elif op == OP_XZ:
+                import lzma
+
+                logger.trace("🗜️ Reversing XZ compression")
+                result = lzma.decompress(result)
+            elif op == OP_ZSTD:
+                try:
+                    import zstandard as zstd
+
+                    logger.trace("🗜️ Reversing ZSTD compression")
+                    dctx = zstd.ZstdDecompressor()
+                    result = dctx.decompress(result)
+                except ImportError:
+                    logger.warning("⚠️ ZSTD not available for decompression")
+                    return data  # Return original data if can't decompress
+            else:
+                logger.warning(f"⚠️ Unsupported v0 operation for reversal: 0x{op:02x}")
+
+        logger.debug(
+            f"✅ Reverse operations complete: {len(data)} -> {len(result)} bytes"
+        )
+        return result

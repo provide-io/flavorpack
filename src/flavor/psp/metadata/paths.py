@@ -304,7 +304,7 @@ def parse_mode(mode_str: str) -> int:
 
     # Try to parse as octal
     try:
-        mode = int(mode_str, 8) if mode_str.startswith("0") else int(mode_str, 8)
+        mode = int(mode_str, 8)
 
         # Validate range
         if mode < 0 or mode > 0o777:
@@ -360,7 +360,9 @@ def create_workenv_directories(
             elif not dir_path.exists():
                 # Apply default permissions for new directories
                 # Default is 0777 & ~umask
-                default_mode = 0o777 & ~parse_mode(umask) if umask else 0o700  # Default to owner-only
+                default_mode = (
+                    0o777 & ~parse_mode(umask) if umask else 0o700
+                )  # Default to owner-only
                 dir_path.chmod(default_mode)
     finally:
         # Restore original umask

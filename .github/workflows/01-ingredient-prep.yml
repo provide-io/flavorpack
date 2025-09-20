@@ -34,8 +34,8 @@ jobs:
       - name: 🔑 Calculate cache key base
         id: cache
         run: |
-          # Hash the ingredients directory to detect changes
-          HELPERS_HASH=$(find ingredients -type f -name "*.go" -o -name "*.rs" -o -name "Cargo.toml" -o -name "go.mod" | xargs sha256sum | sha256sum | cut -d' ' -f1 | head -c 16)
+          # Hash the src directory to detect changes
+          HELPERS_HASH=$(find src -type f -name "*.go" -o -name "*.rs" -o -name "Cargo.toml" -o -name "go.mod" | xargs sha256sum | sha256sum | cut -d' ' -f1 | head -c 16)
           echo "key_base=ingredients-$HELPERS_HASH" >> $GITHUB_OUTPUT
           echo "🔑 Cache key base: ingredients-$HELPERS_HASH"
       
@@ -82,7 +82,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            ingredients/bin/*-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
+            dist/bin/*-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
             artifacts/*.zip
           key: ${{ needs.setup.outputs.cache_key_base }}-${{ matrix.platform }}-${{ needs.setup.outputs.version }}
           # No restore-keys - only use exact version match to prevent old binary accumulation
@@ -115,8 +115,8 @@ jobs:
           
           # Clean old binaries to prevent accumulation
           echo "🧹 Cleaning old binaries..."
-          rm -rf ingredients/bin
-          mkdir -p ingredients/bin
+          rm -rf dist/bin
+          mkdir -p dist/bin
           
           # Extract platform parts
           PLATFORM="${{ matrix.platform }}"
@@ -130,45 +130,45 @@ jobs:
           
           # Build Go ingredients
           echo "🐹 Building Go ingredients..."
-          cd ingredients/flavor-go
+          cd src/flavor-go
           
           # Builder (with -buildvcs=false to avoid git issues in CI)
           go build -buildvcs=false -ldflags "-X main.Version=$VERSION" \
-            -o ../bin/flavor-go-builder-$VERSION-$PLATFORM \
+            -o ../../dist/bin/flavor-go-builder-$VERSION-$PLATFORM \
             cmd/flavor-go-builder/main.go
-          
+
           # Launcher (with -buildvcs=false to avoid git issues in CI)
           go build -buildvcs=false -ldflags "-X main.Version=$VERSION" \
-            -o ../bin/flavor-go-launcher-$VERSION-$PLATFORM \
+            -o ../../dist/bin/flavor-go-launcher-$VERSION-$PLATFORM \
             cmd/flavor-go-launcher/main.go
           
           cd ../..
           
           # Build Rust ingredients
           echo "🦀 Building Rust ingredients..."
-          cd ingredients/flavor-rs
+          cd src/flavor-rust
           
           # Set version via environment variable for build.rs
           export FLAVOR_VERSION="$VERSION"
           
           # Build with specified target (musl for Linux, native for macOS)
           cargo build --release --target ${{ matrix.rust_target }}
-          cp target/${{ matrix.rust_target }}/release/flavor-rs-builder ../bin/flavor-rs-builder-$VERSION-$PLATFORM
-          cp target/${{ matrix.rust_target }}/release/flavor-rs-launcher ../bin/flavor-rs-launcher-$VERSION-$PLATFORM
+          cp target/${{ matrix.rust_target }}/release/flavor-rs-builder ../../dist/bin/flavor-rs-builder-$VERSION-$PLATFORM
+          cp target/${{ matrix.rust_target }}/release/flavor-rs-launcher ../../dist/bin/flavor-rs-launcher-$VERSION-$PLATFORM
           
           cd ../..
           
           # Make executable
-          chmod +x ingredients/bin/* 2>/dev/null || true
-          
+          chmod +x dist/bin/* 2>/dev/null || true
+
           echo "✅ Build complete for ${{ matrix.platform }}"
-          ls -la ingredients/bin/*-${{ matrix.platform }}*
+          ls -la dist/bin/*-${{ matrix.platform }}*
       
       - name: 📦 Package artifacts
         shell: bash
         run: |
           mkdir -p artifacts
-          cd ingredients/bin
+          cd dist/bin
           # Only package binaries for the CURRENT version and platform
           zip -r ../../artifacts/flavor-ingredients-${{ needs.setup.outputs.version }}-${{ matrix.platform }}.zip \
             *-${{ needs.setup.outputs.version }}-${{ matrix.platform }} || true
@@ -182,7 +182,7 @@ jobs:
           mkdir -p test-results
           .github/scripts/test-binaries.sh \
             "${{ matrix.platform }}" \
-            ingredients/bin \
+            dist/bin \
             test-results
       
       - name: 📊 Generate metadata

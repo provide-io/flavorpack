@@ -1,0 +1,82 @@
+{
+  "name": "pretaster-orchestrate",
+  "version": "1.0.0",
+  "description": "Multi-slot orchestration test with complex slot interactions",
+  "package": {
+    "name": "pretaster-orchestrate",
+    "version": "1.0.0",
+    "description": "Multi-slot orchestration test with complex slot interactions"
+  },
+  "format": "PSPF/2025",
+  "slots": [
+    {
+      "slot": 0,
+      "purpose": "payload",
+      "lifecycle": "cached",
+      "operations": "tgz",
+      "id": "orchestrate-tar-gz",
+      "source": "{workenv}/scripts/orchestrate.tar.gz",
+      "target": "."
+    },
+    {
+      "slot": 1,
+      "purpose": "payload",
+      "lifecycle": "cached",
+      "operations": "raw",
+      "id": "slot1/utilities-tar-gz",
+      "source": "{workenv}/slots/utilities.tar.gz",
+      "target": "slot1/utilities.tar.gz"
+    },
+    {
+      "slot": 2,
+      "purpose": "tool",
+      "lifecycle": "cached",
+      "operations": "raw",
+      "id": "slot2/flavor-go-builder",
+      "source": "{workenv}/../../dist/bin/flavor-go-builder-darwin_arm64",
+      "target": "slot2/flavor-go-builder-darwin_arm64",
+      "permissions": "0755"
+    },
+    {
+      "slot": 3,
+      "purpose": "payload",
+      "lifecycle": "cached",
+      "operations": "raw",
+      "id": "slot3/scripts-tar-gz",
+      "source": "{workenv}/slots/scripts.tar.gz",
+      "target": "slot3/scripts.tar.gz"
+    }
+  ],
+  "runtime": {
+    "env": {
+      "unset": [
+        "*"
+      ],
+      "pass": [
+        "PATH",
+        "HOME",
+        "USER",
+        "LANG",
+        "LC_*",
+        "TERM",
+        "FLAVOR_*"
+      ],
+      "set": {
+        "ORCHESTRATE_MODE": "full",
+        "SLOT_COUNT": "4"
+      }
+    }
+  },
+  "command": "/bin/bash {workenv}/orchestrator/orchestrate.sh",
+  "environment": {
+    "TEST_MODE": "orchestration"
+  },
+  "execution": {
+    "command": "/bin/bash {workenv}/orchestrator/orchestrate.sh",
+    "args": [],
+    "env": {
+      "TEST_MODE": "orchestration"
+    },
+    "primary_slot": 0
+  }
+}

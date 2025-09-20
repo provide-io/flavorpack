@@ -62,7 +62,7 @@ class PSPFReader:
         self.open()
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         """Context manager exit."""
         self.close()
 
@@ -296,9 +296,18 @@ class PSPFReader:
 
         # Verify checksum
         actual_checksum = zlib.adler32(slot_data) & 0xFFFFFFFF
+
+        # DEBUG: Log checksum details for troubleshooting
+        logger.debug(
+            f"🔍📖 Slot {slot_index} read checksum debug: expected={descriptor.checksum:08x}, actual={actual_checksum:08x}, size={len(slot_data)}"
+        )
+
         if actual_checksum != descriptor.checksum:
+            logger.error(
+                f"❌ Slot {slot_index} checksum mismatch: expected {descriptor.checksum:08x}, got {actual_checksum:08x}, size={len(slot_data)}"
+            )
             raise ValueError(
-                f"Slot {slot_index} checksum mismatch: expected {descriptor.checksum}, got {actual_checksum}"
+                f"Slot {slot_index} checksum mismatch: expected {descriptor.checksum:08x}, got {actual_checksum:08x}"
             )
 
         # Decompress if needed based on operations
@@ -321,7 +330,7 @@ class PSPFReader:
         """Get a lazy view of a slot."""
         return self._extractor.get_slot_view(slot_index)
 
-    def stream_slot(self, slot_index: int, chunk_size: int = 8192):
+    def stream_slot(self, slot_index: int, chunk_size: int = 8192) -> Any:
         """Stream a slot in chunks."""
         return self._extractor.stream_slot(slot_index, chunk_size)
 

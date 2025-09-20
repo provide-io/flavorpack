@@ -11,24 +11,32 @@ help: ## Show this help message
 
 .PHONY: test
 test: ## Run Python tests
-	source env.sh && pytest tests/
+	source workenv/bin/activate && pytest tests/
+
+.PHONY: test-cov
+test-cov: ## Run Python tests with coverage
+	source workenv/bin/activate && pytest --cov=src/flavor --cov-report=term-missing --cov-report=html tests/
+
+.PHONY: test-cov-xml
+test-cov-xml: ## Run Python tests with XML coverage for CI
+	source workenv/bin/activate && pytest --cov=src/flavor --cov-report=xml --cov-report=term tests/
 
 .PHONY: build-ingredients
 build-ingredients: ## Build all ingredients (Go and Rust)
-	cd ingredients && ./build.sh
+	./build.sh
 
 # PSPF Validation with Pretaster
 .PHONY: validate-pspf
 validate-pspf: ## Run PSPF compatibility tests with pretaster
-	@cd helpers/pretaster && make test
+	@cd tests/pretaster && make test
 
 .PHONY: validate-pspf-full
 validate-pspf-full: ## Run full PSPF validation suite with pretaster
-	@cd helpers/pretaster && make all
+	@cd tests/pretaster && make all
 
 .PHONY: validate-pspf-combo
 validate-pspf-combo: ## Test all builder/launcher combinations
-	@cd helpers/pretaster && make combo-test
+	@cd tests/pretaster && make combo-test
 
 .PHONY: validate-package
 validate-package: ## Validate a PSPF package (usage: make validate-package PACKAGE=path/to/package.psp)
@@ -40,11 +48,11 @@ validate-package: ## Validate a PSPF package (usage: make validate-package PACKA
 
 .PHONY: clean-cache
 clean-cache: ## Clean Flavor workenv cache
-	@cd helpers/pretaster && make clean-cache
+	@cd tests/pretaster && make clean-cache
 
 .PHONY: pretaster-logs
 pretaster-logs: ## Show pretaster test logs
-	@cd helpers/pretaster && make show-logs
+	@cd tests/pretaster && make show-logs
 
 # ==================== Release Management ====================
 
@@ -89,7 +97,7 @@ release-test: ## Test release process locally
 .PHONY: release-clean
 release-clean: ## Clean release artifacts
 	@rm -rf dist/ build/ *.egg-info src/flavor.egg-info
-	@rm -rf src/flavor/ingredients/bin
+	@rm -rf dist/bin
 	@find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
 	@echo "✨ Release artifacts cleaned"
 

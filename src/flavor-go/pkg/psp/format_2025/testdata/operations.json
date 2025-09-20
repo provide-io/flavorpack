@@ -1,0 +1,61 @@
+[
+  {
+    "operations": [],
+    "packed": 0,
+    "packed_hex": "0x0000000000000000",
+    "description": "empty/raw"
+  },
+  {
+    "operations": [
+      16
+    ],
+    "packed": 16,
+    "packed_hex": "0x0000000000000010",
+    "description": "single GZIP"
+  },
+  {
+    "operations": [
+      1
+    ],
+    "packed": 1,
+    "packed_hex": "0x0000000000000001",
+    "description": "single TAR"
+  },
+  {
+    "operations": [
+      1,
+      16
+    ],
+    "packed": 4097,
+    "packed_hex": "0x0000000000001001",
+    "description": "TAR + GZIP"
+  },
+  {
+    "operations": [
+      1,
+      19
+    ],
+    "packed": 4865,
+    "packed_hex": "0x0000000000001301",
+    "description": "TAR + BZIP2"
+  },
+  {
+    "operations": [
+      1,
+      27
+    ],
+    "packed": 6913,
+    "packed_hex": "0x0000000000001b01",
+    "description": "TAR + ZSTD"
+  },
+  {
+    "operations": [
+      1,
+      16,
+      49
+    ],
+    "packed": 3215361,
+    "packed_hex": "0x0000000000311001",
+    "description": "TAR + GZIP + AES256_GCM"
+  }
+]

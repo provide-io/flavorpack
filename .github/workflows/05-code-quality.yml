@@ -93,7 +93,7 @@ jobs:
           
           # Black formatting
           echo "### Black Formatting" >> $GITHUB_STEP_SUMMARY
-          if black --check --diff src/ ingredients/ tests/ 2>&1 | tee black.log; then
+          if black --check --diff src/ src/ tests/ 2>&1 | tee black.log; then
             echo "✅ Black formatting passed" >> $GITHUB_STEP_SUMMARY
           else
             echo "❌ Black formatting issues found" >> $GITHUB_STEP_SUMMARY
@@ -104,7 +104,7 @@ jobs:
           
           # isort import sorting
           echo "### Import Sorting" >> $GITHUB_STEP_SUMMARY
-          if isort --check-only --diff src/ ingredients/ tests/ 2>&1 | tee isort.log; then
+          if isort --check-only --diff src/ src/ tests/ 2>&1 | tee isort.log; then
             echo "✅ Import sorting passed" >> $GITHUB_STEP_SUMMARY
           else
             echo "❌ Import sorting issues found" >> $GITHUB_STEP_SUMMARY
@@ -123,8 +123,8 @@ jobs:
           
           # Ruff - Fast Python linter
           echo "### Ruff Analysis" >> $GITHUB_STEP_SUMMARY
-          ruff check src/ ingredients/ tests/ --statistics --output-format=json > ruff.json || true
-          ruff check src/ ingredients/ tests/ --statistics 2>&1 | tee ruff.log || true
+          ruff check src/ src/ tests/ --statistics --output-format=json > ruff.json || true
+          ruff check src/ src/ tests/ --statistics 2>&1 | tee ruff.log || true
           
           if [ -s ruff.log ]; then
             echo "⚠️ Ruff found issues:" >> $GITHUB_STEP_SUMMARY
@@ -145,7 +145,7 @@ jobs:
           
           # Flake8 with plugins
           echo "### Flake8 Analysis" >> $GITHUB_STEP_SUMMARY
-          flake8 src/ ingredients/ tests/ \
+          flake8 src/ src/ tests/ \
             --count \
             --statistics \
             --max-line-length=100 \
@@ -308,7 +308,7 @@ jobs:
           
           # Vulture - Find dead code
           echo "### Unused Code (Vulture)" >> $GITHUB_STEP_SUMMARY
-          vulture src/ ingredients/ --min-confidence 80 2>&1 | tee vulture.log || true
+          vulture src/ src/ --min-confidence 80 2>&1 | tee vulture.log || true
           
           DEAD_CODE_COUNT=$(wc -l < vulture.log)
           if [ "$DEAD_CODE_COUNT" -gt 0 ]; then
@@ -431,7 +431,7 @@ jobs:
           go-version: '1.21'
           cache: true
           cache-dependency-path: |
-            ingredients/flavor-go/go.sum
+            src/flavor-go/go.sum
       
       - name: 📦 Install Go Quality Tools
         run: |
@@ -450,7 +450,7 @@ jobs:
       - name: 🔍 Go Linting
         continue-on-error: true
         run: |
-          cd ingredients/flavor-go
+          cd src/flavor-go
           echo "## 🐹 Go Code Quality" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
@@ -506,8 +506,8 @@ jobs:
         with:
           name: go-quality-reports
           path: |
-            ingredients/flavor-go/*.log
-            ingredients/flavor-go/*.json
+            src/flavor-go/*.log
+            src/flavor-go/*.json
 
   # Rust Code Quality
   rust-quality:
@@ -533,7 +533,7 @@ jobs:
       - name: 🔍 Rust Linting
         continue-on-error: true
         run: |
-          cd ingredients/flavor-rs
+          cd src/flavor-rs
           echo "## 🦀 Rust Code Quality" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
@@ -576,7 +576,7 @@ jobs:
         with:
           name: rust-quality-reports
           path: |
-            ingredients/flavor-rs/*.log
+            src/flavor-rs/*.log
 
   # Aggregate Quality Report
   quality-report:
