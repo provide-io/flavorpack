@@ -489,19 +489,34 @@ jobs:
             echo "✅ Cargo deny checks passed" >> $GITHUB_STEP_SUMMARY
           fi
       
+      - name: 📦 Cache Cargo Geiger
+        uses: actions/cache@v4
+        id: cache-geiger
+        with:
+          path: ~/.cargo/bin/cargo-geiger
+          key: cargo-geiger-${{ runner.os }}-v1
+
       - name: 🔬 Cargo Geiger (Unsafe Code Usage)
         continue-on-error: true
         run: |
           echo "### Unsafe Code Analysis" >> $GITHUB_STEP_SUMMARY
-          
-          cargo install cargo-geiger
-          
+
+          # Install geiger only if not cached
+          if [ ! -f ~/.cargo/bin/cargo-geiger ]; then
+            echo "Installing cargo-geiger..."
+            # Try cargo-binstall first for faster installation
+            cargo install cargo-binstall --quiet || true
+            cargo binstall --no-confirm cargo-geiger || cargo install cargo-geiger --quiet
+          else
+            echo "Using cached cargo-geiger"
+          fi
+
           cd ingredients/flavor-rs
-          
+
           # Run cargo geiger
           cargo geiger --output-format Json > cargo-geiger.json 2>&1 || true
           cargo geiger 2>&1 | tee cargo-geiger.log || true
-          
+
           echo "**Unsafe code usage:**" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
           tail -20 cargo-geiger.log >> $GITHUB_STEP_SUMMARY

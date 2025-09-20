@@ -517,18 +517,39 @@ jobs:
       - name: 📥 Checkout
         uses: actions/checkout@v4
       
-      - name: 🦀 Setup Rust
-        uses: dtolnay/rust-toolchain@stable
+      - name: 🔧 Setup Rust Toolchain with Cache
+        uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
+          toolchain: stable
           components: rustfmt, clippy
-      
+          cache: true
+
+      - name: 📦 Cache Rust Quality Tools
+        uses: actions/cache@v4
+        id: cache-rust-tools
+        with:
+          path: |
+            ~/.cargo/bin/cargo-audit
+            ~/.cargo/bin/cargo-outdated
+            ~/.cargo/bin/cargo-machete
+            ~/.cargo/bin/cargo-deny
+            ~/.cargo/bin/cargo-geiger
+          key: rust-tools-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}-v1
+          restore-keys: |
+            rust-tools-${{ runner.os }}-v1
+
       - name: 📦 Install Rust Quality Tools
+        if: steps.cache-rust-tools.outputs.cache-hit != 'true'
         run: |
-          cargo install cargo-audit
-          cargo install cargo-outdated
-          cargo install cargo-machete
-          cargo install cargo-deny
-          cargo install cargo-geiger
+          # Use cargo-binstall for faster installation when possible
+          cargo install cargo-binstall --quiet || true
+
+          # Try binstall first, fallback to cargo install
+          cargo binstall --no-confirm cargo-audit || cargo install cargo-audit --quiet
+          cargo binstall --no-confirm cargo-outdated || cargo install cargo-outdated --quiet
+          cargo binstall --no-confirm cargo-machete || cargo install cargo-machete --quiet
+          cargo binstall --no-confirm cargo-deny || cargo install cargo-deny --quiet
+          cargo binstall --no-confirm cargo-geiger || cargo install cargo-geiger --quiet
       
       - name: 🔍 Rust Linting
         continue-on-error: true
