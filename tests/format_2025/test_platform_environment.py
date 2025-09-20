@@ -13,7 +13,7 @@ from flavor.psp.format_2025.environment import set_platform_environment
 class TestPlatformEnvironment:
     """Test platform-specific environment variable handling."""
 
-    def test_flavor_os_variable(self):
+    def test_flavor_os_variable(self) -> None:
         """Test FLAVOR_OS is set correctly."""
         env = {}
         set_platform_environment(env)
@@ -30,7 +30,7 @@ class TestPlatformEnvironment:
         elif platform.system().lower() == "windows":
             assert env["FLAVOR_OS"] == "windows"
 
-    def test_flavor_arch_variable(self):
+    def test_flavor_arch_variable(self) -> None:
         """Test FLAVOR_ARCH is set correctly."""
         env = {}
         set_platform_environment(env)
@@ -46,7 +46,7 @@ class TestPlatformEnvironment:
         elif machine in ["aarch64", "arm64"]:
             assert env["FLAVOR_ARCH"] == "arm64"
 
-    def test_flavor_platform_variable(self):
+    def test_flavor_platform_variable(self) -> None:
         """Test FLAVOR_PLATFORM combines OS and arch."""
         env = {}
         set_platform_environment(env)
@@ -61,7 +61,7 @@ class TestPlatformEnvironment:
         assert parts[0] == env["FLAVOR_OS"]
         assert parts[1] == env["FLAVOR_ARCH"]
 
-    def test_flavor_os_version(self):
+    def test_flavor_os_version(self) -> None:
         """Test FLAVOR_OS_VERSION contains version info."""
         env = {}
         set_platform_environment(env)
@@ -72,7 +72,7 @@ class TestPlatformEnvironment:
             # Should contain some version-like string
             # Could be "15.6", "5.10.0", "10.0.19041", etc.
 
-    def test_flavor_cpu_type(self):
+    def test_flavor_cpu_type(self) -> None:
         """Test FLAVOR_CPU_TYPE contains CPU info."""
         env = {}
         set_platform_environment(env)
@@ -82,7 +82,7 @@ class TestPlatformEnvironment:
             assert len(env["FLAVOR_CPU_TYPE"]) > 0
             # Could be "Apple M1", "Intel Core i7", "AMD Ryzen", etc.
 
-    def test_platform_env_override_protection(self):
+    def test_platform_env_override_protection(self) -> None:
         """Test that platform variables cannot be overridden by user."""
         # Start with user-provided environment
         env = {
@@ -103,7 +103,7 @@ class TestPlatformEnvironment:
 
     @patch("platform.system")
     @patch("platform.machine")
-    def test_os_normalization(self, mock_machine, mock_system):
+    def test_os_normalization(self, mock_machine, mock_system) -> None:
         """Test OS name normalization."""
         test_cases = [
             ("Darwin", "darwin"),
@@ -123,7 +123,7 @@ class TestPlatformEnvironment:
 
     @patch("platform.system")
     @patch("platform.machine")
-    def test_arch_normalization(self, mock_machine, mock_system):
+    def test_arch_normalization(self, mock_machine, mock_system) -> None:
         """Test architecture name normalization."""
         test_cases = [
             ("x86_64", "amd64"),
@@ -142,7 +142,7 @@ class TestPlatformEnvironment:
             set_platform_environment(env)
             assert env["FLAVOR_ARCH"] == expected_arch
 
-    def test_environment_layer_ordering(self):
+    def test_environment_layer_ordering(self) -> None:
         """Test that platform variables are set in correct order."""
         # Initial environment with various layers
         base_env = {
@@ -152,17 +152,10 @@ class TestPlatformEnvironment:
         }
 
         # Runtime env (security layer)
-        runtime_env = {
-            "unset": ["SENSITIVE_VAR"],
-            "pass": ["PATH", "HOME"],
-            "set": {"SAFE_VAR": "value"},
-        }
 
         # Workenv env
-        workenv_env = {"TMPDIR": "{workenv}/tmp", "XDG_CACHE_HOME": "{workenv}/cache"}
 
         # Execution env
-        execution_env = {"APP_MODE": "production"}
 
         # Platform environment should be set last (highest priority)
         final_env = base_env.copy()
@@ -180,7 +173,7 @@ class TestPlatformEnvironment:
         assert final_env["FLAVOR_OS"] != "wrong"
         assert final_env["FLAVOR_OS"] in ["darwin", "linux", "windows"]
 
-    def test_platform_env_completeness(self):
+    def test_platform_env_completeness(self) -> None:
         """Test that all required platform variables are set."""
         env = {}
         set_platform_environment(env)
@@ -191,10 +184,9 @@ class TestPlatformEnvironment:
             assert var in env, f"Missing required variable: {var}"
 
         # Optional variables (may or may not be present)
-        optional = ["FLAVOR_OS_VERSION", "FLAVOR_CPU_TYPE"]
         # Just check they're either present or not, no error
 
-    def test_platform_string_format(self):
+    def test_platform_string_format(self) -> None:
         """Test platform string formatting."""
         env = {}
         set_platform_environment(env)
@@ -213,7 +205,7 @@ class TestPlatformEnvironment:
         assert arch_part == env["FLAVOR_ARCH"]
 
     @patch.dict(os.environ, {"FLAVOR_WORKENV": "/custom/workenv"})
-    def test_platform_env_with_workenv(self):
+    def test_platform_env_with_workenv(self) -> None:
         """Test platform environment with FLAVOR_WORKENV set."""
         env = {}
         set_platform_environment(env)

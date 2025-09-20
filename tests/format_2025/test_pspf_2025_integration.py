@@ -30,7 +30,7 @@ class TestPSPFIntegration:
 
             yield data_dir
 
-    def test_build_and_read_bundle(self, test_data_dir, test_builder):
+    def test_build_and_read_bundle(self, test_data_dir, test_builder) -> None:
         """Test building and reading a bundle."""
         output_file = test_data_dir / "test.psp"
 
@@ -157,7 +157,7 @@ class TestPSPFIntegration:
 
         reader.close()
 
-    def test_backend_switching(self, test_data_dir, test_builder):
+    def test_backend_switching(self, test_data_dir, test_builder) -> None:
         """Test switching between backends."""
         output_file = test_data_dir / "test.psp"
 
@@ -190,7 +190,7 @@ class TestPSPFIntegration:
 
         reader.close()
 
-    def test_page_aligned_slots(self, test_data_dir, test_builder):
+    def test_page_aligned_slots(self, test_data_dir, test_builder) -> None:
         """Test page-aligned slot optimization."""
         output_file = test_data_dir / "aligned.psp"
 

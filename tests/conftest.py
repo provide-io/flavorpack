@@ -33,7 +33,7 @@ def reset_foundation_logging():
 
 
 @pytest.fixture(autouse=True)
-def mock_launcher_loading(monkeypatch):
+def mock_launcher_loading(monkeypatch) -> None:
     """Automatically mock launcher loading for all tests.
 
     This fixture is applied to ALL tests automatically. Tests that need

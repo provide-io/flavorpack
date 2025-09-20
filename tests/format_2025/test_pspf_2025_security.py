@@ -4,21 +4,20 @@ PSPF 2025 Security Tests
 Tests ephemeral keys, integrity sealing, and tamper detection.
 """
 
-import hashlib
 import json
+import os
 import struct
 from unittest.mock import patch
-import os
 
 import pytest
 
+from flavor.config import reset_flavor_config
 from flavor.psp.format_2025 import (
     PSPFBuilder,
     PSPFLauncher,
     PSPFReader,
     generate_key_pair,
 )
-from flavor.config import reset_flavor_config
 
 
 @pytest.mark.security
@@ -59,7 +58,7 @@ class TestPSPFSecurity:
 
         return bundle_path
 
-    def test_ephemeral_key_generation(self, test_builder):
+    def test_ephemeral_key_generation(self, test_builder) -> None:
         """Test ephemeral key pair generation."""
         # Generate multiple key pairs
         keys = []
@@ -80,7 +79,7 @@ class TestPSPFSecurity:
             assert len(public) == 32
             assert private != public
 
-    def test_ephemeral_key_in_bundle(self, temp_dir, test_builder):
+    def test_ephemeral_key_in_bundle(self, temp_dir, test_builder) -> None:
         """Test ephemeral key is included in bundle."""
         bundle_path = temp_dir / "ephemeral.psp"
         # Use test_builder from fixture
@@ -99,7 +98,7 @@ class TestPSPFSecurity:
         assert index.public_key != b"\x00" * 32
         assert len(index.public_key) == 32
 
-    def test_integrity_seal_creation(self, secure_bundle):
+    def test_integrity_seal_creation(self, secure_bundle) -> None:
         """Test integrity seal is created during build."""
         reader = PSPFReader(secure_bundle)
         index = reader.read_index()
@@ -124,7 +123,7 @@ class TestPSPFSecurity:
         assert index.integrity_signature != b"\x00" * 512
 
     @patch.dict(os.environ, {"FLAVOR_VALIDATION": "strict"})
-    def test_integrity_seal_verification(self, secure_bundle):
+    def test_integrity_seal_verification(self, secure_bundle) -> None:
         """Test integrity seal verification."""
         reset_flavor_config()  # Reset to pick up FLAVOR_VALIDATION=strict from patch
         launcher = PSPFLauncher(secure_bundle)
@@ -134,7 +133,7 @@ class TestPSPFSecurity:
         assert result["signature_valid"]
         assert not result["tamper_detected"]
 
-    def test_metadata_tampering_detection(self, secure_bundle):
+    def test_metadata_tampering_detection(self, secure_bundle) -> None:
         """Test detection of tampered metadata."""
         # Read original bundle
         reader = PSPFReader(secure_bundle)
@@ -177,7 +176,7 @@ class TestPSPFSecurity:
 
         # Verify tampering is detected
         reader = PSPFReader(tampered_path)
-        result = reader.verify_integrity()
+        reader.verify_integrity()
 
         # The integrity check should fail due to tampering
         # Note: PSPFReader.verify_integrity() might not detect all tampering
@@ -187,7 +186,7 @@ class TestPSPFSecurity:
         # assert result['tamper_detected'] or not result['signature_valid'], "Should detect tampered metadata"
         pass  # Tampering detection implementation may vary
 
-    def test_slot_tampering_detection(self, temp_dir, test_builder):
+    def test_slot_tampering_detection(self, temp_dir, test_builder) -> None:
         """Test detection of tampered slot data."""
         # Create bundle with slot
         slot_path = temp_dir / "data.txt"
@@ -223,16 +222,14 @@ class TestPSPFSecurity:
         # Note: The extraction might not raise an exception but could return an error
         # or the checksum validation might happen at a different stage
         try:
-            result = launcher.extract_slot(
-                0, temp_dir / "extracted", verify_checksum=True
-            )
+            launcher.extract_slot(0, temp_dir / "extracted", verify_checksum=True)
             # If extraction succeeds despite tampering, that might be the expected behavior
             # depending on implementation details
         except Exception as e:
             # If it does raise an exception, verify it's about checksums
             assert "checksum" in str(e).lower() or "tamper" in str(e).lower()
 
-    def test_index_checksum_validation(self, temp_dir, test_builder):
+    def test_index_checksum_validation(self, temp_dir, test_builder) -> None:
         """Test index block checksum validation."""
         bundle_path = temp_dir / "index_check.psp"
         # Use test_builder from fixture
@@ -273,7 +270,7 @@ class TestPSPFSecurity:
         )  # Checksum field unchanged
 
     @patch.dict(os.environ, {"FLAVOR_VALIDATION": "strict"})
-    def test_emoji_magic_corruption(self, temp_dir, test_builder):
+    def test_emoji_magic_corruption(self, temp_dir, test_builder) -> None:
         """Test detection of corrupted emoji magic."""
         reset_flavor_config()  # Reset to pick up FLAVOR_VALIDATION=strict from patch
         bundle_path = temp_dir / "magic_corrupt.psp"
@@ -299,7 +296,7 @@ class TestPSPFSecurity:
         assert not result["valid"], "Should fail integrity check with bad magic"
 
     @patch.dict(os.environ, {"FLAVOR_VALIDATION": "standard"})
-    def test_missing_integrity_seal(self, temp_dir, test_builder):
+    def test_missing_integrity_seal(self, temp_dir, test_builder) -> None:
         """Test handling of missing integrity seal."""
         reset_flavor_config()  # Reset to pick up FLAVOR_VALIDATION=standard from patch
         # Create metadata without seal requirement
@@ -319,7 +316,7 @@ class TestPSPFSecurity:
         result = launcher.verify_integrity()
         assert result["valid"]
 
-    def test_trust_signatures(self, temp_dir, test_builder):
+    def test_trust_signatures(self, temp_dir, test_builder) -> None:
         """Test trust signature handling."""
         # Create bundle with trust signatures
         metadata = {
@@ -352,7 +349,7 @@ class TestPSPFSecurity:
         assert "trust_signatures" in read_metadata["verification"]
         assert len(read_metadata["verification"]["trust_signatures"]["signers"]) == 1
 
-    def test_build_reproducibility(self, temp_dir):
+    def test_build_reproducibility(self, temp_dir) -> None:
         """Test build reproducibility aspects."""
         from flavor.psp.format_2025.pspf_builder import PSPFBuilder
 

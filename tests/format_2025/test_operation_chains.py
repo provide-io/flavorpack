@@ -23,7 +23,7 @@ from flavor.psp.format_2025.slots import SlotDescriptor, SlotMetadata
 class TestOperationChains:
     """Test the operation chain packing system."""
 
-    def test_pack_unpack_operations(self):
+    def test_pack_unpack_operations(self) -> None:
         """Test packing and unpacking operation chains."""
         # Single operation
         ops1 = [OP_TAR]
@@ -48,7 +48,7 @@ class TestOperationChains:
         packed8 = pack_operations(ops8)
         assert unpack_operations(packed8) == ops8
 
-    def test_operations_to_string(self):
+    def test_operations_to_string(self) -> None:
         """Test converting operations to human-readable strings."""
         assert operations_to_string(0) == "raw"
         assert operations_to_string(pack_operations([OP_TAR])) == "tar"
@@ -59,7 +59,7 @@ class TestOperationChains:
             operations_to_string(pack_operations([OP_TAR, OP_BZIP2])) == "tar.bz2"
         )  # Common chain
 
-    def test_string_to_operations(self):
+    def test_string_to_operations(self) -> None:
         """Test parsing operation strings."""
         assert string_to_operations("RAW") == 0
         assert string_to_operations("TAR") == pack_operations([OP_TAR])
@@ -67,7 +67,7 @@ class TestOperationChains:
         assert string_to_operations("tar.gz") == pack_operations([OP_TAR, OP_GZIP])
         assert string_to_operations("tar.bz2") == pack_operations([OP_TAR, OP_BZIP2])
 
-    def test_common_operation_chains(self):
+    def test_common_operation_chains(self) -> None:
         """Test common operation chain patterns."""
         # RAW (no operations)
         assert pack_operations([]) == 0
@@ -77,7 +77,7 @@ class TestOperationChains:
         # Common combinations
         assert pack_operations([OP_TAR, OP_GZIP]) == 0x1001  # tar.gz
 
-    def test_slot_descriptor_with_operations(self):
+    def test_slot_descriptor_with_operations(self) -> None:
         """Test SlotDescriptor handles operations correctly."""
         # Create with operations
         slot1 = SlotDescriptor(
@@ -104,7 +104,7 @@ class TestOperationChains:
         assert unpacked.id == slot1.id
         assert unpacked.operations == slot1.operations
 
-    def test_builder_with_operations(self, test_builder):
+    def test_builder_with_operations(self, test_builder) -> None:
         """Test that PSPFBuilder works with operation chains."""
         with tempfile.TemporaryDirectory() as tmpdir:
             tmpdir = Path(tmpdir)
@@ -147,7 +147,7 @@ class TestOperationChains:
                 # Operations are handled internally now
                 assert desc.operations == pack_operations([OP_TAR, OP_GZIP])
 
-    def test_operation_chain_validation(self):
+    def test_operation_chain_validation(self) -> None:
         """Test that operation chains are valid."""
         # Test valid operation chains
         ops1 = pack_operations([OP_TAR, OP_GZIP])
@@ -160,7 +160,7 @@ class TestOperationChains:
         assert operations_to_string(ops1) == "tar.gz"  # Common chain
         assert operations_to_string(ops2) == "tar"
 
-    def test_metadata_with_operations(self):
+    def test_metadata_with_operations(self) -> None:
         """Test SlotMetadata handles operation descriptions."""
         meta = SlotMetadata(
             index=0,

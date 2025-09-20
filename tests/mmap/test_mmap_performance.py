@@ -37,7 +37,7 @@ class TestMMapPerformance:
     """Performance benchmarks for mmap operations."""
 
     @pytest.mark.slow
-    def test_large_file_100mb(self):
+    def test_large_file_100mb(self) -> None:
         """Test mmap with 100MB file."""
         size = 100 * 1024 * 1024  # 100MB
 
@@ -100,7 +100,7 @@ class TestMMapPerformance:
         finally:
             path.unlink(missing_ok=True)
 
-    def test_memory_efficiency(self):
+    def test_memory_efficiency(self) -> None:
         """Test memory efficiency of mmap vs file backend."""
         import tracemalloc
 
@@ -166,7 +166,7 @@ class TestMMapPerformance:
         finally:
             path.unlink(missing_ok=True)
 
-    def test_concurrent_access_performance(self):
+    def test_concurrent_access_performance(self) -> None:
         """Test performance with concurrent access patterns."""
         import queue
         import threading
@@ -182,7 +182,7 @@ class TestMMapPerformance:
         try:
             results = queue.Queue()
 
-            def worker(backend_type, worker_id, iterations=100):
+            def worker(backend_type, worker_id, iterations=100) -> None:
                 """Worker thread for concurrent access."""
                 backend = create_backend(backend_type, path)
                 backend.open(path)
@@ -262,7 +262,7 @@ class TestMMapPerformance:
         finally:
             path.unlink(missing_ok=True)
 
-    def test_page_fault_behavior(self):
+    def test_page_fault_behavior(self) -> None:
         """Test page fault behavior and prefetching."""
         import resource
 
@@ -339,7 +339,7 @@ class TestMMapPerformance:
             path.unlink(missing_ok=True)
 
     @pytest.mark.parametrize("access_pattern", ["sequential", "random", "strided"])
-    def test_access_patterns(self, access_pattern):
+    def test_access_patterns(self, access_pattern) -> None:
         """Test different access patterns and their performance."""
         size = 10 * 1024 * 1024  # 10MB
         read_size = 4096  # 4KB reads
@@ -410,7 +410,7 @@ class TestMMapPerformance:
 class TestMMapResourceManagement:
     """Test resource management and cleanup."""
 
-    def test_multiple_backend_lifecycle(self):
+    def test_multiple_backend_lifecycle(self) -> None:
         """Test creating and destroying many backends."""
         size = 1024 * 1024  # 1MB
 
@@ -435,7 +435,7 @@ class TestMMapResourceManagement:
             # Should not leak file descriptors
             # Check by trying to open many at once
             backends = []
-            for i in range(50):
+            for _i in range(50):
                 b = MMapBackend()
                 b.open(path)
                 backends.append(b)
@@ -452,7 +452,7 @@ class TestMMapResourceManagement:
         finally:
             path.unlink(missing_ok=True)
 
-    def test_view_cleanup_on_close(self):
+    def test_view_cleanup_on_close(self) -> None:
         """Test that views are properly cleaned up on close."""
         size = 1024 * 1024  # 1MB
 
@@ -487,7 +487,7 @@ class TestMMapResourceManagement:
         finally:
             path.unlink(missing_ok=True)
 
-    def test_context_manager_cleanup(self):
+    def test_context_manager_cleanup(self) -> None:
         """Test cleanup via context manager."""
         size = 1024 * 1024  # 1MB
 

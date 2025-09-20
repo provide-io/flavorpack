@@ -19,7 +19,7 @@ import pspf_2025_pb2
 class TestProtobufFormat:
     """Test the new protobuf-based PSPF/2025 format"""
 
-    def test_operation_packing(self):
+    def test_operation_packing(self) -> None:
         """Test packing operations into 64-bit integers"""
 
         def pack_operations(ops):
@@ -68,7 +68,7 @@ class TestProtobufFormat:
         unpacked3 = unpack_operations(packed3)
         assert unpacked3[:7] == ops3[:7]  # Terminal stops unpacking
 
-    def test_slot_entry_creation(self):
+    def test_slot_entry_creation(self) -> None:
         """Test creating slot entries with packed operations"""
 
         def pack_operations(ops):
@@ -98,7 +98,7 @@ class TestProtobufFormat:
         assert slot.lifecycle == slots_pb2.LIFECYCLE_EAGER
         assert slot.permissions == 0o755
 
-    def test_metadata_with_features(self):
+    def test_metadata_with_features(self) -> None:
         """Test metadata with SPA and JIT features"""
 
         metadata = metadata_pb2.PackageMetadata(
@@ -122,7 +122,7 @@ class TestProtobufFormat:
         assert metadata.jit.enabled is True
         assert metadata.jit.strategy == "aggressive"
 
-    def test_index_block_flags(self):
+    def test_index_block_flags(self) -> None:
         """Test index block with feature flags"""
 
         index = index_pb2.IndexBlock(
@@ -144,7 +144,7 @@ class TestProtobufFormat:
         assert index.flags & index_pb2.FLAG_SPA_ENABLED
         assert index.flags & index_pb2.FLAG_JIT_ENABLED
 
-    def test_crypto_info(self):
+    def test_crypto_info(self) -> None:
         """Test cryptographic information"""
 
         crypto = crypto_pb2.CryptoInfo()
@@ -159,7 +159,7 @@ class TestProtobufFormat:
         assert len(crypto.signature.signature) == 64
         assert crypto.signature.key_id == "test-key"
 
-    def test_full_package_creation(self):
+    def test_full_package_creation(self) -> None:
         """Test creating a complete PSPF package with all components"""
 
         def pack_operations(ops):
@@ -206,7 +206,7 @@ class TestProtobufFormat:
         assert package.slots[0].operations == 0x1001  # TAR | GZIP
         assert package.slots[1].operations == 0x1301  # TAR | BZIP2
 
-    def test_json_serialization(self):
+    def test_json_serialization(self) -> None:
         """Test protobuf to JSON serialization"""
 
         # Create a simple metadata
@@ -236,7 +236,7 @@ class TestProtobufFormat:
 class TestFormatComparison:
     """Test comparison between old and new formats"""
 
-    def test_old_format_structure(self):
+    def test_old_format_structure(self) -> None:
         """Verify old format structure"""
 
         old_format = {
@@ -256,7 +256,7 @@ class TestFormatComparison:
         assert old_format["slots"][0]["codec"] == "tar.gz"
         assert "operations" not in old_format["slots"][0]
 
-    def test_new_format_advantages(self):
+    def test_new_format_advantages(self) -> None:
         """Test advantages of new format"""
 
         def pack_operations(ops):
@@ -294,7 +294,7 @@ class TestFormatComparison:
         # - Direct bitwise operations
         # - Type-safe enums
 
-    def test_operation_chain_limits(self):
+    def test_operation_chain_limits(self) -> None:
         """Test operation chain packing limits"""
 
         def pack_operations(ops):
@@ -320,7 +320,7 @@ class TestFormatComparison:
         assert packed < 2**64  # Fits in 64 bits
 
         # Test with more than 8 operations (should truncate)
-        too_many_ops = max_ops + [operations_pb2.OP_DEDUPE, operations_pb2.OP_DELTA]
+        too_many_ops = [*max_ops, operations_pb2.OP_DEDUPE, operations_pb2.OP_DELTA]
         packed_truncated = pack_operations(too_many_ops)
         packed_max = pack_operations(max_ops)
         assert packed_truncated == packed_max  # Same result, extra ops ignored

@@ -15,11 +15,11 @@ from flavor.packaging.python.wheel_builder import WheelBuilder
 class TestWheelBuilder:
     """Test WheelBuilder functionality."""
 
-    def setup_method(self):
+    def setup_method(self) -> None:
         """Set up test fixtures."""
         self.wheel_builder = WheelBuilder(python_version="3.11")
 
-    def test_initialization(self):
+    def test_initialization(self) -> None:
         """Test WheelBuilder initialization."""
         assert self.wheel_builder.python_version == "3.11"
         assert hasattr(self.wheel_builder, "pypapip")
@@ -30,7 +30,7 @@ class TestWheelBuilder:
         assert builder_312.python_version == "3.12"
 
     @patch("flavor.packaging.python.wheel_builder.run_command")
-    def test_build_wheel_from_source_basic(self, mock_run_command):
+    def test_build_wheel_from_source_basic(self, mock_run_command) -> None:
         """Test basic wheel building from source."""
         mock_result = Mock()
         mock_result.returncode = 0
@@ -70,7 +70,7 @@ class TestWheelBuilder:
             assert kwargs["check"] is True
 
     @patch("flavor.packaging.python.wheel_builder.run_command")
-    def test_build_wheel_with_options(self, mock_run_command):
+    def test_build_wheel_with_options(self, mock_run_command) -> None:
         """Test wheel building with custom build options."""
         mock_result = Mock()
         mock_result.returncode = 0
@@ -94,7 +94,7 @@ class TestWheelBuilder:
                 "no-build-isolation": False,
             }
 
-            result = self.wheel_builder.build_wheel_from_source(
+            self.wheel_builder.build_wheel_from_source(
                 python_exe,
                 source_path,
                 wheel_dir,
@@ -103,7 +103,7 @@ class TestWheelBuilder:
             )
 
             # Verify command includes custom options
-            args, kwargs = mock_run_command.call_args
+            args, _kwargs = mock_run_command.call_args
             cmd = args[0]
 
             assert "--no-build-isolation" in cmd
@@ -111,7 +111,7 @@ class TestWheelBuilder:
             assert "--config-settings" in cmd
             assert "key=value" in cmd
 
-    def test_find_built_wheel_exact_match(self):
+    def test_find_built_wheel_exact_match(self) -> None:
         """Test finding built wheel with exact package name match."""
         with tempfile.TemporaryDirectory() as temp_dir:
             wheel_dir = Path(temp_dir)
@@ -125,7 +125,7 @@ class TestWheelBuilder:
             result = self.wheel_builder._find_built_wheel(wheel_dir, "mypackage")
             assert result.name == "mypackage-1.0.0-py3-none-any.whl"
 
-    def test_find_built_wheel_no_match_returns_newest(self):
+    def test_find_built_wheel_no_match_returns_newest(self) -> None:
         """Test finding built wheel returns newest when no exact match."""
         with tempfile.TemporaryDirectory() as temp_dir:
             wheel_dir = Path(temp_dir)
@@ -143,7 +143,7 @@ class TestWheelBuilder:
             result = self.wheel_builder._find_built_wheel(wheel_dir, "unknown")
             assert result.name == "package2-2.0.0-py3-none-any.whl"
 
-    def test_find_built_wheel_no_wheels_raises_error(self):
+    def test_find_built_wheel_no_wheels_raises_error(self) -> None:
         """Test finding built wheel raises error when no wheels exist."""
         with tempfile.TemporaryDirectory() as temp_dir:
             wheel_dir = Path(temp_dir)
@@ -151,7 +151,7 @@ class TestWheelBuilder:
             with pytest.raises(FileNotFoundError):
                 self.wheel_builder._find_built_wheel(wheel_dir, "mypackage")
 
-    def test_resolve_dependencies_with_packages(self):
+    def test_resolve_dependencies_with_packages(self) -> None:
         """Test dependency resolution with package list."""
         with tempfile.TemporaryDirectory() as temp_dir:
             output_dir = Path(temp_dir)
@@ -185,7 +185,7 @@ class TestWheelBuilder:
                 assert result.name == "requirements.txt"
 
     @patch("flavor.packaging.python.wheel_builder.run_command")
-    def test_resolve_dependencies_fallback_to_pip_tools(self, mock_run_command):
+    def test_resolve_dependencies_fallback_to_pip_tools(self, mock_run_command) -> None:
         """Test fallback to pip-tools when UV fails."""
         with tempfile.TemporaryDirectory() as temp_dir:
             output_dir = Path(temp_dir)
@@ -222,7 +222,7 @@ class TestWheelBuilder:
 
                 assert result.name == "requirements.txt"
 
-    def test_resolve_dependencies_no_input_raises_error(self):
+    def test_resolve_dependencies_no_input_raises_error(self) -> None:
         """Test error when no requirements file or packages provided."""
         python_exe = Path("/usr/bin/python3")
 
@@ -231,7 +231,7 @@ class TestWheelBuilder:
         ):
             self.wheel_builder.resolve_dependencies(python_exe)
 
-    def test_download_wheels_for_resolved_deps(self):
+    def test_download_wheels_for_resolved_deps(self) -> None:
         """Test downloading wheels for resolved dependencies."""
         with tempfile.TemporaryDirectory() as temp_dir:
             wheel_dir = Path(temp_dir) / "wheels"
@@ -268,7 +268,7 @@ class TestWheelBuilder:
             assert any(wheel.name == "click-8.0.0-py3-none-any.whl" for wheel in result)
 
     @patch("flavor.packaging.python.wheel_builder.run_command")
-    def test_build_and_resolve_project_complete(self, mock_run_command):
+    def test_build_and_resolve_project_complete(self, mock_run_command) -> None:
         """Test complete project building and resolution."""
         mock_result = Mock()
         mock_result.returncode = 0
@@ -287,11 +287,14 @@ class TestWheelBuilder:
             python_exe = Path("/usr/bin/python3")
 
             # Mock dependency resolution and wheel creation
-            with patch.object(
-                self.wheel_builder, "resolve_dependencies"
-            ) as mock_resolve, patch.object(
-                self.wheel_builder, "download_wheels_for_resolved_deps"
-            ) as mock_download:
+            with (
+                patch.object(
+                    self.wheel_builder, "resolve_dependencies"
+                ) as mock_resolve,
+                patch.object(
+                    self.wheel_builder, "download_wheels_for_resolved_deps"
+                ) as mock_download,
+            ):
                 # Setup mock returns
                 locked_reqs = build_dir / "deps" / "requirements.txt"
                 locked_reqs.parent.mkdir(parents=True)
@@ -338,11 +341,11 @@ class TestWheelBuilder:
 class TestWheelBuilderCriticalFeatures:
     """Test CRITICAL features that must never be broken."""
 
-    def setup_method(self):
+    def setup_method(self) -> None:
         """Set up test fixtures."""
         self.wheel_builder = WheelBuilder()
 
-    def test_uses_pypapip_for_wheel_building(self):
+    def test_uses_pypapip_for_wheel_building(self) -> None:
         """CRITICAL: Must use PyPA pip for wheel building, not UV."""
         # Verify PyPA pip manager is available
         assert hasattr(self.wheel_builder, "pypapip")
@@ -354,7 +357,7 @@ class TestWheelBuilderCriticalFeatures:
         # Verify no direct UV wheel building methods
         assert not hasattr(self.wheel_builder, "_get_uv_wheel_cmd")
 
-    def test_always_uses_pypapip_for_wheel_downloads(self):
+    def test_always_uses_pypapip_for_wheel_downloads(self) -> None:
         """CRITICAL: Must always use PyPA pip for wheel downloads (manylinux compatibility)."""
         with tempfile.TemporaryDirectory() as temp_dir:
             wheel_dir = Path(temp_dir)
@@ -363,7 +366,9 @@ class TestWheelBuilderCriticalFeatures:
 
             python_exe = Path("/usr/bin/python3")
 
-            def mock_download_side_effect(python_exe, requirements_file, wheel_dir):
+            def mock_download_side_effect(
+                python_exe, requirements_file, wheel_dir
+            ) -> None:
                 # Create fake wheel files to simulate successful download
                 fake_wheel = wheel_dir / "requests-2.28.0-py3-none-any.whl"
                 fake_wheel.write_bytes(b"fake wheel content")
@@ -389,7 +394,7 @@ class TestWheelBuilderCriticalFeatures:
                 assert len(result) == 1
                 assert result[0].name == "requests-2.28.0-py3-none-any.whl"
 
-    def test_dependency_resolution_has_uv_fallback(self):
+    def test_dependency_resolution_has_uv_fallback(self) -> None:
         """CRITICAL: Dependency resolution must have UV + pip-tools fallback chain."""
         python_exe = Path("/usr/bin/python3")
         packages = ["requests"]
@@ -401,7 +406,7 @@ class TestWheelBuilderCriticalFeatures:
             with patch.object(self.wheel_builder.uv, "compile_requirements") as mock_uv:
                 mock_uv.return_value = output_dir / "requirements.txt"
 
-                result = self.wheel_builder.resolve_dependencies(
+                self.wheel_builder.resolve_dependencies(
                     python_exe,
                     packages=packages,
                     output_dir=output_dir,
@@ -410,7 +415,7 @@ class TestWheelBuilderCriticalFeatures:
 
                 mock_uv.assert_called_once()
 
-    def test_build_isolation_configurable(self):
+    def test_build_isolation_configurable(self) -> None:
         """CRITICAL: Build isolation must be configurable for complex packages."""
         with tempfile.TemporaryDirectory() as temp_dir:
             source_path = Path(temp_dir) / "package"
@@ -436,7 +441,7 @@ class TestWheelBuilderCriticalFeatures:
                 cmd = args[0]
                 assert "--no-build-isolation" in cmd
 
-    def test_manager_separation_maintained(self):
+    def test_manager_separation_maintained(self) -> None:
         """CRITICAL: PyPA pip and UV managers must remain separate and distinct."""
         # Verify both managers are separate instances
         assert self.wheel_builder.pypapip is not self.wheel_builder.uv

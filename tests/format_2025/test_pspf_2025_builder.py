@@ -51,7 +51,7 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
 
         return manifest_path
 
-    def test_automatic_launcher_selection_python(self, temp_dir, test_builder):
+    def test_automatic_launcher_selection_python(self, temp_dir, test_builder) -> None:
         """Test automatic Python launcher selection."""
         # Create Python wheel
         wheel_path = temp_dir / "app.whl"
@@ -94,7 +94,7 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
 
         assert magic == TRAILER_END_MAGIC.decode("utf-8")
 
-    def test_magic_wand_selection(self, temp_dir, test_builder):
+    def test_magic_wand_selection(self, temp_dir, test_builder) -> None:
         """Test magic wand emoji selection."""
         bundle_path = temp_dir / "magic_wand.psp"
 
@@ -117,7 +117,7 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
 
         assert magic == TRAILER_END_MAGIC.decode("utf-8")
 
-    def test_compression_selection(self, temp_dir, test_builder):
+    def test_compression_selection(self, temp_dir, test_builder) -> None:
         """Test automatic compression selection."""
         # Create different file types
         text_path = temp_dir / "text.json"
@@ -189,7 +189,7 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
     # Removed test_build_validation_missing_file as current builder doesn't validate file existence
     # The builder creates slots even if the source file doesn't exist
 
-    def test_build_validation_invalid_purpose(self, temp_dir, test_builder):
+    def test_build_validation_invalid_purpose(self, temp_dir, test_builder) -> None:
         """Test validation of slot purpose."""
         valid_purposes = [
             "payload",
@@ -218,7 +218,7 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
             # Should not raise
             assert slot.purpose in valid_purposes
 
-    def test_build_validation_duplicate_indices(self, temp_dir, test_builder):
+    def test_build_validation_duplicate_indices(self, temp_dir, test_builder) -> None:
         """Test handling of duplicate slot indices."""
         slot1 = SlotMetadata(
             index=0,
@@ -248,7 +248,7 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
         # In real implementation, might auto-assign indices
         assert slot1.index == slot2.index
 
-    def test_incremental_build(self, temp_dir, test_builder):
+    def test_incremental_build(self, temp_dir, test_builder) -> None:
         """Test incremental build optimization."""
         # Create initial slots
         slots = []
@@ -313,7 +313,7 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
         metadata = reader.read_metadata()
         assert metadata["package"]["version"] == "1.1"
 
-    def test_cross_platform_build(self, temp_dir, test_builder):
+    def test_cross_platform_build(self, temp_dir, test_builder) -> None:
         """Test cross-platform building."""
         # Simulate building for different target
         bundle_path = temp_dir / "cross_platform.psp"
@@ -334,7 +334,7 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
 
         assert bundle_path.exists()
 
-    def test_reproducible_build(self, temp_dir, test_builder):
+    def test_reproducible_build(self, temp_dir, test_builder) -> None:
         """Test reproducible build mode."""
         slot_path = temp_dir / "data.txt"
         slot_path.write_text("Reproducible content")
@@ -381,7 +381,7 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
 
         assert magic == TRAILER_END_MAGIC.decode("utf-8")
 
-    def test_size_optimization(self, temp_dir, test_builder):
+    def test_size_optimization(self, temp_dir, test_builder) -> None:
         """Test size optimization build mode."""
         # Create compressible content
         large_path = temp_dir / "large.txt"
@@ -418,14 +418,14 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
 
         # Verify bundle was created
         bundle_size = bundle_path.stat().st_size
-        original_size = large_path.stat().st_size
+        large_path.stat().st_size
 
         # Bundle exists and is reasonable size (includes launcher)
         assert bundle_size > 0
         # The bundle includes a ~2.6MB launcher, so it will be larger than small text files
         assert bundle_path.exists()
 
-    def test_persistent_key_signing(self, temp_dir, test_builder):
+    def test_persistent_key_signing(self, temp_dir, test_builder) -> None:
         """Test signing with persistent keys."""
         # In real implementation, would use actual crypto keys
         metadata = {
@@ -458,7 +458,7 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
         assert read_metadata["verification"]["integrity_seal"]["required"]
         assert read_metadata["verification"]["trust_signatures"]["required"]
 
-    def test_multi_slot_bundling(self, temp_dir, test_builder):
+    def test_multi_slot_bundling(self, temp_dir, test_builder) -> None:
         """Test bundling many slots."""
         slots = []
 

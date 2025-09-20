@@ -21,7 +21,7 @@ def pyproject_factory(tmp_path):
 
 
 @patch("flavor.packaging.orchestrator.PackagingOrchestrator.build_package")
-def test_build_package_from_manifest_success(mock_build, pyproject_factory):
+def test_build_package_from_manifest_success(mock_build, pyproject_factory) -> None:
     """Verify build_package_from_manifest succeeds with a valid config."""
     pyproject_content = """
 [project]
@@ -41,7 +41,7 @@ name = "my-flavor-name"
     mock_build.assert_called_once()
 
 
-def test_build_package_from_manifest_missing_config(pyproject_factory):
+def test_build_package_from_manifest_missing_config(pyproject_factory) -> None:
     """Verify build_package_from_manifest fails if essential config is missing."""
     # This pyproject.toml is missing the entry_point (via [project.scripts])
     pyproject_content = """
@@ -58,7 +58,7 @@ version = "1.2.3"
         build_package_from_manifest(pyproject_path)
 
 
-def test_build_package_from_manifest_missing_version(pyproject_factory):
+def test_build_package_from_manifest_missing_version(pyproject_factory) -> None:
     """Verify build_package_from_manifest fails if version is missing."""
     pyproject_content = """
 [project]

@@ -175,10 +175,6 @@ sys.exit(0)
 """)
 
         # Create custom script in the package
-        script_content = """#!/bin/sh
-echo "✅ Shell script execution successful!"
-exit 0
-"""
 
         manifest = temp_dir / "pyproject.toml"
         manifest.write_text("""
