@@ -329,7 +329,7 @@ jobs:
           
           echo "### Gosec Security Scan" >> $GITHUB_STEP_SUMMARY
           
-          cd ingredients/flavor-go
+          cd src/flavor-go
           
           # Run gosec
           gosec -fmt json -out gosec.json ./... 2>&1 | tee gosec.log || true
@@ -363,7 +363,7 @@ jobs:
           # Install nancy
           go install github.com/sonatype-nexus-community/nancy@latest
           
-          cd ingredients/flavor-go
+          cd src/flavor-go
           
           # Run nancy
           go list -json -deps ./... | nancy sleuth 2>&1 | tee nancy.log || true
@@ -385,7 +385,7 @@ jobs:
           # Install govulncheck
           go install golang.org/x/vuln/cmd/govulncheck@latest
           
-          cd ingredients/flavor-go
+          cd src/flavor-go
           
           # Run govulncheck
           govulncheck -json ./... > govulncheck.json 2>&1 || true
@@ -406,8 +406,8 @@ jobs:
         with:
           name: go-security-results
           path: |
-            ingredients/flavor-go/*.json
-            ingredients/flavor-go/*.log
+            src/flavor-go/*.json
+            src/flavor-go/*.log
 
   # Rust Security
   rust-security:
@@ -430,7 +430,7 @@ jobs:
           
           echo "### Cargo Audit" >> $GITHUB_STEP_SUMMARY
           
-          cd ingredients/flavor-rs
+          cd src/flavor-rs
           
           # Run cargo audit
           cargo audit --json > cargo-audit.json 2>&1 || true
@@ -452,7 +452,7 @@ jobs:
           
           cargo install cargo-deny
           
-          cd ingredients/flavor-rs
+          cd src/flavor-rs
           
           # Create default deny.toml if not exists
           if [ ! -f deny.toml ]; then
@@ -489,29 +489,15 @@ jobs:
             echo "✅ Cargo deny checks passed" >> $GITHUB_STEP_SUMMARY
           fi
       
-      - name: 📦 Cache Cargo Geiger
-        uses: actions/cache@v4
-        id: cache-geiger
-        with:
-          path: ~/.cargo/bin/cargo-geiger
-          key: cargo-geiger-${{ runner.os }}-v1
-
       - name: 🔬 Cargo Geiger (Unsafe Code Usage)
         continue-on-error: true
         run: |
           echo "### Unsafe Code Analysis" >> $GITHUB_STEP_SUMMARY
 
-          # Install geiger only if not cached
-          if [ ! -f ~/.cargo/bin/cargo-geiger ]; then
-            echo "Installing cargo-geiger..."
-            # Try cargo-binstall first for faster installation
-            cargo install cargo-binstall --quiet || true
-            cargo binstall --no-confirm cargo-geiger || cargo install cargo-geiger --quiet
-          else
-            echo "Using cached cargo-geiger"
-          fi
+          # Install cargo-geiger
+          cargo install cargo-geiger
 
-          cd ingredients/flavor-rs
+          cd src/flavor-rs
 
           # Run cargo geiger
           cargo geiger --output-format Json > cargo-geiger.json 2>&1 || true
@@ -528,9 +514,9 @@ jobs:
         with:
           name: rust-security-results
           path: |
-            ingredients/flavor-rs/*.json
-            ingredients/flavor-rs/*.log
-            ingredients/flavor-rs/deny.toml
+            src/flavor-rs/*.json
+            src/flavor-rs/*.log
+            src/flavor-rs/deny.toml
 
   # Container Security Scan
   container-security:

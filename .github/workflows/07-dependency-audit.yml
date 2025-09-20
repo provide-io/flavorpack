@@ -252,7 +252,7 @@ jobs:
           echo "## 🐹 Go Dependency Analysis" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
-          cd ingredients/flavor-go
+          cd src/flavor-go
           
           # List dependencies
           echo "### Direct Dependencies" >> $GITHUB_STEP_SUMMARY
@@ -272,7 +272,7 @@ jobs:
           echo "### Go Vulnerability Scan" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
-          cd ingredients/flavor-go
+          cd src/flavor-go
           
           # Install vulnerability scanner
           go install golang.org/x/vuln/cmd/govulncheck@latest
@@ -307,7 +307,7 @@ jobs:
           echo "### Go License Analysis" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
-          cd ingredients/flavor-go
+          cd src/flavor-go
           
           # Install go-licenses
           go install github.com/google/go-licenses@latest
@@ -337,7 +337,7 @@ jobs:
           echo "### Go Module Updates" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
-          cd ingredients/flavor-go
+          cd src/flavor-go
           
           # Check for updates
           go list -u -m all > go-updates.txt 2>&1
@@ -362,7 +362,7 @@ jobs:
           echo "### Module Tidiness" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
-          cd ingredients/flavor-go
+          cd src/flavor-go
           
           # Check if go.mod is tidy
           if go mod tidy -v 2>&1 | tee go-mod-tidy.log | grep -q "unused"; then
@@ -380,9 +380,9 @@ jobs:
         with:
           name: go-dependency-reports
           path: |
-            ingredients/flavor-go/*.json
-            ingredients/flavor-go/*.txt
-            ingredients/flavor-go/*.log
+            src/flavor-go/*.json
+            src/flavor-go/*.txt
+            src/flavor-go/*.log
 
   # Rust Dependency Audit
   rust-deps:
@@ -412,7 +412,7 @@ jobs:
           echo "## 🦀 Rust Dependency Analysis" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
-          cd ingredients/flavor-rs
+          cd src/flavor-rs
           
           echo "### Dependency Tree" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
@@ -440,7 +440,7 @@ jobs:
           echo "### Rust Security Audit" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
-          cd ingredients/flavor-rs
+          cd src/flavor-rs
           
           # Run cargo audit
           cargo audit --json > cargo-audit-deps.json 2>&1 || true
@@ -461,7 +461,7 @@ jobs:
           echo "### Rust License Analysis" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
-          cd ingredients/flavor-rs
+          cd src/flavor-rs
           
           # Generate license report
           cargo license --json > cargo-licenses.json 2>&1 || true
@@ -489,7 +489,7 @@ jobs:
           echo "### Rust Crate Updates" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
-          cd ingredients/flavor-rs
+          cd src/flavor-rs
           
           # Check outdated crates
           cargo outdated --format json > cargo-outdated.json 2>&1 || true
@@ -519,7 +519,7 @@ jobs:
           echo "### Unused Dependencies" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
-          cd ingredients/flavor-rs
+          cd src/flavor-rs
           
           # Check for unused dependencies
           cargo machete 2>&1 | tee cargo-machete.log || true
@@ -539,9 +539,9 @@ jobs:
         with:
           name: rust-dependency-reports
           path: |
-            ingredients/flavor-rs/*.json
-            ingredients/flavor-rs/*.txt
-            ingredients/flavor-rs/*.log
+            src/flavor-rs/*.json
+            src/flavor-rs/*.txt
+            src/flavor-rs/*.log
 
   # Dependency Report and Update PR
   dependency-report:
