@@ -91,7 +91,8 @@ def handle_command(cmd, *args):
                 "manylinux2014_x86_64",
                 "--python-version",
                 "3.11",
-            ] + test_packages
+                *test_packages,
+            ]
 
             print("Testing download command:")
             print(" ".join(cmd))

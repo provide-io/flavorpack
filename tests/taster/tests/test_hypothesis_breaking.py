@@ -75,14 +75,14 @@ class TestBreakingInputs:
 
     @given(filename=BreakingInputStrategies.evil_filenames)
     @settings(max_examples=50)
-    def test_evil_filenames(self, filename):
+    def test_evil_filenames(self, filename) -> None:
         """Test handling of malicious filenames"""
         with tempfile.TemporaryDirectory() as tmpdir:
             tmpdir = Path(tmpdir)
 
             # Try to create a slot with evil filename
             try:
-                slot = SlotMetadata(
+                SlotMetadata(
                     index=0,
                     id=filename,
                     source="/tmp/test.txt",
@@ -118,7 +118,7 @@ class TestBreakingInputs:
 
     @given(size=BreakingInputStrategies.extreme_sizes)
     @settings(max_examples=50)
-    def test_extreme_sizes(self, size):
+    def test_extreme_sizes(self, size) -> None:
         """Test handling of extreme file sizes"""
         with tempfile.TemporaryDirectory() as tmpdir:
             tmpdir = Path(tmpdir)
@@ -163,7 +163,7 @@ class TestBreakingInputs:
 
     @given(json_data=BreakingInputStrategies.malformed_json)
     @settings(max_examples=50)
-    def test_malformed_json_metadata(self, json_data):
+    def test_malformed_json_metadata(self, json_data) -> None:
         """Test handling of malformed JSON in metadata"""
         with tempfile.TemporaryDirectory() as tmpdir:
             tmpdir = Path(tmpdir)
@@ -177,7 +177,7 @@ class TestBreakingInputs:
 
             try:
                 with open(json_file) as f:
-                    data = json.load(f)
+                    json.load(f)
                 # If it parsed successfully, check if it's one of the edge cases
                 # that Python's JSON parser might accept
                 if "NaN" in json_data or "Infinity" in json_data:
@@ -195,7 +195,7 @@ class TestBreakingInputs:
 
     @given(binary_data=BreakingInputStrategies.binary_chaos)
     @settings(max_examples=50)
-    def test_binary_chaos(self, binary_data):
+    def test_binary_chaos(self, binary_data) -> None:
         """Test handling of chaotic binary data"""
         with tempfile.TemporaryDirectory() as tmpdir:
             tmpdir = Path(tmpdir)
@@ -218,14 +218,14 @@ class TestBreakingInputs:
 class PSPFStateMachine(RuleBasedStateMachine):
     """Stateful testing of PSPF operations"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.tmpdir = tempfile.mkdtemp()
         self.bundles = []
         self.slots = []
 
     @initialize()
-    def setup(self):
+    def setup(self) -> None:
         """Initialize test state"""
         self.tmpdir = Path(self.tmpdir)
 
@@ -234,7 +234,7 @@ class PSPFStateMachine(RuleBasedStateMachine):
         size=st.integers(min_value=0, max_value=1024 * 1024),
         operations=st.sampled_from(["RAW", "GZIP"]),
     )
-    def add_slot(self, name, size, operations):
+    def add_slot(self, name, size, operations) -> None:
         """Add a slot to the pending list"""
         slot = SlotMetadata(
             index=len(self.slots),
@@ -250,7 +250,7 @@ class PSPFStateMachine(RuleBasedStateMachine):
         self.slots.append(slot)
 
     @rule()
-    def build_bundle(self):
+    def build_bundle(self) -> None:
         """Build a bundle with current slots"""
         if not self.slots:
             return
@@ -272,7 +272,7 @@ class PSPFStateMachine(RuleBasedStateMachine):
             pass
 
     @rule()
-    def read_random_bundle(self):
+    def read_random_bundle(self) -> None:
         """Read a random bundle"""
         if not self.bundles:
             return
@@ -290,7 +290,7 @@ class PSPFStateMachine(RuleBasedStateMachine):
             pass
 
     @invariant()
-    def bundles_exist(self):
+    def bundles_exist(self) -> None:
         """Check that created bundles still exist"""
         for bundle in self.bundles:
             assert bundle.exists() or not bundle.exists()  # Tautology but checks access
@@ -305,7 +305,7 @@ class TestHypothesisPipeIntegration:
 
     @given(data=st.binary(min_size=0, max_size=10 * 1024))
     @settings(max_examples=20, deadline=1000)  # Increased deadline for launcher startup
-    def test_pipe_stdin_stdout(self, data):
+    def test_pipe_stdin_stdout(self, data) -> None:
         """Test piping arbitrary binary data through taster"""
         # Skip if taster not available
         taster_path = Path(__file__).parents[1] / "dist" / "taster.psp"
@@ -327,7 +327,7 @@ class TestHypothesisPipeIntegration:
         corruption_prob=st.floats(min_value=0.0, max_value=0.5),
     )
     @settings(max_examples=10, deadline=1000)  # Increased deadline for launcher startup
-    def test_pipe_corruption(self, data, corruption_prob):
+    def test_pipe_corruption(self, data, corruption_prob) -> None:
         """Test corruption command"""
         taster_path = Path(__file__).parents[1] / "dist" / "taster.psp"
         if not taster_path.exists():
@@ -364,7 +364,7 @@ class TestHypothesisPipeIntegration:
         )
     )
     @settings(max_examples=20, deadline=1000)  # Increased deadline for launcher startup
-    def test_pipe_json_validation(self, json_obj):
+    def test_pipe_json_validation(self, json_obj) -> None:
         """Test JSON validation through pipe"""
         taster_path = Path(__file__).parents[1] / "dist" / "taster.psp"
         if not taster_path.exists():

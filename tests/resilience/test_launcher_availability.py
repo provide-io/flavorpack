@@ -71,7 +71,7 @@ class TestLauncherAvailability:
     @patch("flavor.packaging.orchestrator.find_launcher_executable")
     def test_missing_launcher_error(
         self, mock_find_launcher, orchestrator_factory, manifest_file
-    ):
+    ) -> None:
         """Test BuildError is raised when launcher binary does not exist."""
         mock_find_launcher.return_value.exists.return_value = False
         orchestrator = orchestrator_factory(launcher_bin="/fake/launcher")
@@ -87,7 +87,7 @@ class TestLauncherAvailability:
         orchestrator_factory,
         tmp_path,
         manifest_file,
-    ):
+    ) -> None:
         """Test BuildError is raised when launcher binary is not executable."""
         launcher_path = tmp_path / "unexecutable-launcher"
         launcher_path.touch()
@@ -103,7 +103,7 @@ class TestLauncherAvailability:
         mock_run_command,
         orchestrator_factory,
         tmp_path,
-    ):
+    ) -> None:
         """Test BuildError is raised if launcher is corrupted and cannot be executed."""
         # Create a fake launcher file
         launcher_path = tmp_path / "fake-launcher"
@@ -135,7 +135,7 @@ class TestLauncherAvailability:
         mock_find,
         orchestrator_factory,
         manifest_file,
-    ):
+    ) -> None:
         """Test that a warning is logged for a platform mismatch."""
         mock_find.return_value = Path("launcher-windows-amd64")
         orchestrator = orchestrator_factory()
@@ -178,7 +178,7 @@ class TestLauncherReproducibility:
         orchestrator_factory,
         tmp_path,
         manifest_file,
-    ):
+    ) -> None:
         """Test that builds with the same launcher are reproducible."""
         # Mock os.stat to return proper size for the mock paths
         import stat as stat_module

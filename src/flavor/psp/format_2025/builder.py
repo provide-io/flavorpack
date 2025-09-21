@@ -159,22 +159,60 @@ def prepare_slots(
         data = _load_slot_data(slot)
 
         # Get packed operations
-        from flavor.psp.format_2025.operations import string_to_operations
+        from flavor.psp.format_2025.operations import (
+            string_to_operations,
+            unpack_operations,
+        )
 
         packed_ops = string_to_operations(slot.operations)
+        # Debug: Log what operations we're creating
+        unpacked_ops = unpack_operations(packed_ops)
+        logger.debug(
+            "🔧 Operations conversion for slot",
+            slot_id=slot.id,
+            operations_string=slot.operations,
+            packed_operations=f"{packed_ops:#018x}",
+            unpacked_operations=unpacked_ops,
+        )
 
         # Apply operations to compress/transform data
+        logger.trace(
+            "🗜️ Applying operations to slot data",
+            slot_id=slot.id,
+            input_size=len(data),
+            operations=unpacked_ops,
+        )
         processed_data = _apply_operations(data, packed_ops, options)
+        logger.debug(
+            "🗜️ Slot compression complete",
+            slot_id=slot.id,
+            input_size=len(data),
+            output_size=len(processed_data) if processed_data != data else len(data),
+            compression_ratio=f"{len(processed_data) / len(data):.2f}"
+            if processed_data != data and len(data) > 0
+            else "1.00",
+            operations_applied=len(unpacked_ops),
+        )
 
         # Calculate checksums on the final data that will be written (compressed data)
         # This matches what Rust/Go builders do - checksum the actual slot content
         data_to_checksum = processed_data if processed_data != data else data
+        logger.trace(
+            "🔍 Computing checksums for slot",
+            slot_id=slot.id,
+            checksum_data_size=len(data_to_checksum),
+            checksum_type="adler32+sha256",
+        )
         checksum_str = calculate_checksum(data_to_checksum, "sha256")
         checksum_adler32 = zlib.adler32(data_to_checksum) & 0xFFFFFFFF
 
-        # DEBUG: Log checksum calculation details
         logger.debug(
-            f"🔍🏗️ Slot {len(prepared)} checksum calculation: adler32={checksum_adler32:08x}, size={len(data_to_checksum)}, processed={processed_data is not data}"
+            "🔍 Slot checksum calculation complete",
+            slot_id=slot.id,
+            adler32=f"{checksum_adler32:08x}",
+            sha256_prefix=checksum_str[:16],
+            data_size=len(data_to_checksum),
+            processed_data=processed_data is not data,
         )
 
         # Store prefixed checksum in metadata
@@ -185,7 +223,7 @@ def prepare_slots(
                 metadata=slot,
                 data=data,
                 compressed_data=processed_data if processed_data != data else None,
-                codec_type=packed_ops,  # Operations packed as integer
+                operations=packed_ops,  # Operations packed as integer
                 checksum=checksum_adler32,  # Binary descriptor uses checksum of final data
             )
         )
@@ -196,6 +234,8 @@ def prepare_slots(
             raw_size=len(data),
             compressed_size=len(processed_data),
             operations=packed_ops,
+            operations_hex=f"{packed_ops:#018x}",
+            operations_unpacked=unpacked_ops,
             checksum=checksum_str[:8],
         )
 

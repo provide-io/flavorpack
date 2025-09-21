@@ -1,10 +1,11 @@
 """Test operation chain packing and unpacking."""
+
 from __future__ import annotations
 
 import pytest
 
+from flavor.psp.format_2025.constants import OP_BZIP2, OP_GZIP, OP_TAR, OP_XZ
 from flavor.psp.format_2025.operations import pack_operations, unpack_operations
-from flavor.psp.format_2025.constants import OP_TAR, OP_GZIP, OP_BZIP2, OP_XZ
 
 
 class TestOperationChains:
@@ -70,17 +71,17 @@ class TestOperationChains:
         """Test that more than 8 operations raises an error."""
         # Try to pack 9 operations
         ops = [OP_TAR] * 9
-        with pytest.raises(ValueError, match="too many operations"):
+        with pytest.raises(ValueError, match="Maximum 8 operations"):
             pack_operations(ops)
 
     @pytest.mark.unit
     def test_invalid_operation_value(self) -> None:
         """Test that invalid operation values raise errors."""
         # Operations must be 0-255 (8-bit)
-        with pytest.raises(ValueError, match="invalid operation"):
+        with pytest.raises(ValueError, match="out of range"):
             pack_operations([256])
 
-        with pytest.raises(ValueError, match="invalid operation"):
+        with pytest.raises(ValueError, match="out of range"):
             pack_operations([-1])
 
     @pytest.mark.unit

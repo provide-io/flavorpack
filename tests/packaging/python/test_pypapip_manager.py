@@ -13,11 +13,11 @@ from flavor.packaging.python.pypapip_manager import PyPaPipManager
 class TestPyPaPipManager:
     """Test PyPA pip manager critical functionality."""
 
-    def setup_method(self):
+    def setup_method(self) -> None:
         """Set up test fixtures."""
         self.pip_manager = PyPaPipManager(python_version="3.11")
 
-    def test_initialization(self):
+    def test_initialization(self) -> None:
         """Test PyPaPipManager initialization."""
         assert self.pip_manager.python_version == "3.11"
         assert self.pip_manager.MANYLINUX_TAG == "manylinux2014"
@@ -26,7 +26,7 @@ class TestPyPaPipManager:
         custom_manager = PyPaPipManager(python_version="3.12")
         assert custom_manager.python_version == "3.12"
 
-    def test_get_pypapip_install_cmd(self):
+    def test_get_pypapip_install_cmd(self) -> None:
         """Test PyPA pip install command generation."""
         python_exe = Path("/usr/bin/python3")
         packages = ["numpy", "scipy"]
@@ -36,7 +36,7 @@ class TestPyPaPipManager:
         expected = ["/usr/bin/python3", "-m", "pip", "install", "numpy", "scipy"]
         assert cmd == expected
 
-    def test_get_pypapip_wheel_cmd_basic(self):
+    def test_get_pypapip_wheel_cmd_basic(self) -> None:
         """Test PyPA pip wheel command generation."""
         python_exe = Path("/usr/bin/python3")
         wheel_dir = Path("/tmp/wheels")
@@ -57,7 +57,7 @@ class TestPyPaPipManager:
         ]
         assert cmd == expected
 
-    def test_get_pypapip_wheel_cmd_no_deps(self):
+    def test_get_pypapip_wheel_cmd_no_deps(self) -> None:
         """Test PyPA pip wheel command with no-deps flag."""
         python_exe = Path("/usr/bin/python3")
         wheel_dir = Path("/tmp/wheels")
@@ -80,7 +80,7 @@ class TestPyPaPipManager:
         assert cmd == expected
 
     @patch("flavor.packaging.python.pypapip_manager.get_os_name")
-    def test_get_pypapip_download_cmd_non_linux(self, mock_os_name):
+    def test_get_pypapip_download_cmd_non_linux(self, mock_os_name) -> None:
         """Test PyPA pip download command on non-Linux systems."""
         mock_os_name.return_value = "darwin"
 
@@ -109,7 +109,9 @@ class TestPyPaPipManager:
 
     @patch("flavor.packaging.python.pypapip_manager.get_arch_name")
     @patch("flavor.packaging.python.pypapip_manager.get_os_name")
-    def test_get_pypapip_download_cmd_linux_amd64(self, mock_os_name, mock_arch_name):
+    def test_get_pypapip_download_cmd_linux_amd64(
+        self, mock_os_name, mock_arch_name
+    ) -> None:
         """Test CRITICAL manylinux2014 handling for Linux amd64."""
         mock_os_name.return_value = "linux"
         mock_arch_name.return_value = "amd64"
@@ -142,7 +144,9 @@ class TestPyPaPipManager:
 
     @patch("flavor.packaging.python.pypapip_manager.get_arch_name")
     @patch("flavor.packaging.python.pypapip_manager.get_os_name")
-    def test_get_pypapip_download_cmd_linux_arm64(self, mock_os_name, mock_arch_name):
+    def test_get_pypapip_download_cmd_linux_arm64(
+        self, mock_os_name, mock_arch_name
+    ) -> None:
         """Test CRITICAL manylinux2014 handling for Linux ARM64."""
         mock_os_name.return_value = "linux"
         mock_arch_name.return_value = "arm64"
@@ -173,7 +177,7 @@ class TestPyPaPipManager:
         ]
         assert cmd == expected
 
-    def test_get_pypapip_download_cmd_explicit_platform(self):
+    def test_get_pypapip_download_cmd_explicit_platform(self) -> None:
         """Test explicit platform tag override."""
         python_exe = Path("/usr/bin/python3")
         dest_dir = Path("/tmp/downloads")
@@ -204,7 +208,7 @@ class TestPyPaPipManager:
         ]
         assert cmd == expected
 
-    def test_get_pypapip_download_cmd_requirements_file(self):
+    def test_get_pypapip_download_cmd_requirements_file(self) -> None:
         """Test download command with requirements file."""
         python_exe = Path("/usr/bin/python3")
         dest_dir = Path("/tmp/downloads")
@@ -230,7 +234,7 @@ class TestPyPaPipManager:
         ]
         assert cmd == expected
 
-    def test_python_version_parsing(self):
+    def test_python_version_parsing(self) -> None:
         """Test Python version parsing for platform tags."""
         # Test different version formats
         manager_310 = PyPaPipManager(python_version="3.10")
@@ -264,7 +268,7 @@ class TestPyPaPipManager:
             assert "--python-version" in cmd_312 and "3.12" in cmd_312
 
     @patch("flavor.packaging.python.pypapip_manager.run_command")
-    def test_download_wheels_from_requirements(self, mock_run_command):
+    def test_download_wheels_from_requirements(self, mock_run_command) -> None:
         """Test downloading wheels from requirements file."""
         mock_result = Mock()
         mock_result.returncode = 0
@@ -285,7 +289,7 @@ class TestPyPaPipManager:
 
             # Verify run_command was called
             mock_run_command.assert_called_once()
-            args, kwargs = mock_run_command.call_args
+            args, _kwargs = mock_run_command.call_args
 
             # Verify command structure
             cmd = args[0]
@@ -300,7 +304,7 @@ class TestPyPaPipManager:
             requirements_file.unlink()
 
     @patch("flavor.packaging.python.pypapip_manager.run_command")
-    def test_build_wheel_from_source(self, mock_run_command):
+    def test_build_wheel_from_source(self, mock_run_command) -> None:
         """Test building wheel from source directory."""
         mock_result = Mock()
         mock_result.returncode = 0
@@ -329,7 +333,7 @@ class TestPyPaPipManager:
         assert kwargs["check"] is True
 
     @patch("flavor.packaging.python.pypapip_manager.run_command")
-    def test_install_packages(self, mock_run_command):
+    def test_install_packages(self, mock_run_command) -> None:
         """Test installing packages."""
         mock_result = Mock()
         mock_result.returncode = 0
@@ -351,7 +355,7 @@ class TestPyPaPipManager:
         # Verify error handling enabled
         assert kwargs["check"] is True
 
-    def test_empty_package_lists_handled_gracefully(self):
+    def test_empty_package_lists_handled_gracefully(self) -> None:
         """Test that empty package lists are handled without errors."""
         python_exe = Path("/usr/bin/python3")
         dest_dir = Path("/tmp/wheels")
@@ -368,11 +372,11 @@ class TestPyPaPipManager:
 class TestPyPaPipManagerCriticalFeatures:
     """Test CRITICAL features that must never be broken."""
 
-    def setup_method(self):
+    def setup_method(self) -> None:
         """Set up test fixtures."""
         self.pip_manager = PyPaPipManager(python_version="3.11")
 
-    def test_manylinux2014_constant_never_changes(self):
+    def test_manylinux2014_constant_never_changes(self) -> None:
         """CRITICAL: manylinux2014 tag must never change - breaks Linux compatibility."""
         # This test ensures the manylinux tag never accidentally changes
         assert self.pip_manager.MANYLINUX_TAG == "manylinux2014"
@@ -397,7 +401,9 @@ class TestPyPaPipManagerCriticalFeatures:
 
     @patch("flavor.packaging.python.pypapip_manager.get_os_name")
     @patch("flavor.packaging.python.pypapip_manager.get_arch_name")
-    def test_linux_platforms_always_get_manylinux_tags(self, mock_arch, mock_os):
+    def test_linux_platforms_always_get_manylinux_tags(
+        self, mock_arch, mock_os
+    ) -> None:
         """CRITICAL: Linux builds must always get manylinux2014 tags."""
         mock_os.return_value = "linux"
 
@@ -421,7 +427,7 @@ class TestPyPaPipManagerCriticalFeatures:
             assert "--python-version" in cmd
             assert "3.11" in cmd
 
-    def test_method_names_are_debug_resistant(self):
+    def test_method_names_are_debug_resistant(self) -> None:
         """CRITICAL: Method names must be debug-resistant to prevent confusion."""
         # Ensure the critical methods exist with correct names
         assert hasattr(self.pip_manager, "_get_pypapip_install_cmd")
@@ -433,7 +439,7 @@ class TestPyPaPipManagerCriticalFeatures:
         assert callable(self.pip_manager._get_pypapip_wheel_cmd)
         assert callable(self.pip_manager._get_pypapip_download_cmd)
 
-    def test_never_uses_uv_pip_in_commands(self):
+    def test_never_uses_uv_pip_in_commands(self) -> None:
         """CRITICAL: Commands must NEVER use 'uv pip' - only real pip."""
         python_exe = Path("/usr/bin/python3")
         dest_dir = Path("/tmp")
@@ -452,7 +458,7 @@ class TestPyPaPipManagerCriticalFeatures:
             assert cmd[1:4] == ["-m", "pip", cmd[3]]  # [python, -m, pip, {command}]
             assert "uv" not in cmd
 
-    def test_binary_only_flag_always_present_for_downloads(self):
+    def test_binary_only_flag_always_present_for_downloads(self) -> None:
         """CRITICAL: binary-only flag must be present to avoid compilation issues."""
         python_exe = Path("/usr/bin/python3")
         dest_dir = Path("/tmp")

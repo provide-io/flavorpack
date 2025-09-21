@@ -19,7 +19,7 @@ from flavor.psp.format_2025.spec import BuildSpec, KeyConfig
 class TestBuildMetadata:
     """Test build metadata creation."""
 
-    def test_create_build_metadata(self):
+    def test_create_build_metadata(self) -> None:
         """Test build metadata creation with current platform info."""
         metadata = create_build_metadata()
 
@@ -37,7 +37,7 @@ class TestBuildMetadata:
         assert metadata["platform"]["arch"] in ["arm64", "amd64", "x86_64"]
         assert "host" in metadata["platform"]
 
-    def test_build_metadata_deterministic_flag(self):
+    def test_build_metadata_deterministic_flag(self) -> None:
         """Test deterministic build flag."""
         # With seed
         metadata = create_build_metadata(deterministic=True)
@@ -56,7 +56,7 @@ class TestLauncherMetadata:
         """Mock launcher binary data."""
         return b"FAKE_LAUNCHER_BINARY" * 1000  # Fake binary data
 
-    def test_get_launcher_info(self, mock_launcher_binary):
+    def test_get_launcher_info(self, mock_launcher_binary) -> None:
         """Test launcher info extraction."""
         with patch(
             "flavor.psp.format_2025.metadata.assembly.load_launcher_binary"
@@ -74,7 +74,7 @@ class TestLauncherMetadata:
             assert "capabilities" in info
             assert isinstance(info["capabilities"], list)
 
-    def test_launcher_info_go(self, mock_launcher_binary):
+    def test_launcher_info_go(self, mock_launcher_binary) -> None:
         """Test Go launcher info."""
         with patch(
             "flavor.psp.format_2025.metadata.assembly.load_launcher_binary"
@@ -84,7 +84,7 @@ class TestLauncherMetadata:
             info = get_launcher_info("go")
             assert info["tool"] == "flavor-go-launcher"
 
-    def test_launcher_info_python_uses_rust(self, mock_launcher_binary):
+    def test_launcher_info_python_uses_rust(self, mock_launcher_binary) -> None:
         """Test Python launcher uses Rust launcher."""
         with patch(
             "flavor.psp.format_2025.metadata.assembly.load_launcher_binary"
@@ -94,7 +94,7 @@ class TestLauncherMetadata:
             info = get_launcher_info("python")
             assert info["tool"] == "flavor-rs-launcher"
 
-    def test_launcher_checksum_consistency(self, mock_launcher_binary):
+    def test_launcher_checksum_consistency(self, mock_launcher_binary) -> None:
         """Test launcher checksum is consistent."""
         with patch(
             "flavor.psp.format_2025.metadata.assembly.load_launcher_binary"
@@ -105,7 +105,7 @@ class TestLauncherMetadata:
             info2 = get_launcher_info("rust")
             assert info1["checksum"] == info2["checksum"]
 
-    def test_create_launcher_metadata(self, mock_launcher_binary):
+    def test_create_launcher_metadata(self, mock_launcher_binary) -> None:
         """Test launcher metadata structure creation."""
         launcher_info = {
             "data": mock_launcher_binary,
@@ -127,7 +127,7 @@ class TestLauncherMetadata:
 class TestVerificationMetadata:
     """Test verification metadata creation."""
 
-    def test_create_verification_metadata_default(self):
+    def test_create_verification_metadata_default(self) -> None:
         """Test verification metadata with defaults."""
         spec = BuildSpec()
         metadata = create_verification_metadata(spec)
@@ -137,7 +137,7 @@ class TestVerificationMetadata:
         assert metadata["signed"] is True
         assert metadata["require_verification"] is True
 
-    def test_create_verification_metadata_with_seed(self):
+    def test_create_verification_metadata_with_seed(self) -> None:
         """Test verification metadata with deterministic key."""
 
         spec = BuildSpec().with_keys(KeyConfig(key_seed="test-seed"))
@@ -146,7 +146,7 @@ class TestVerificationMetadata:
         assert metadata["signed"] is True
         assert metadata["require_verification"] is True
 
-    def test_create_verification_metadata_insecure(self):
+    def test_create_verification_metadata_insecure(self) -> None:
         """Test verification metadata defaults to requiring verification."""
         # Since BuildOptions doesn't have insecure_mode, verification is always required
         spec = BuildSpec()
@@ -178,7 +178,7 @@ class TestMetadataAssembly:
             "capabilities": ["mmap"],
         }
 
-    def test_assemble_complete_metadata(self, basic_spec, mock_launcher_info):
+    def test_assemble_complete_metadata(self, basic_spec, mock_launcher_info) -> None:
         """Test complete metadata assembly."""
         slots = []  # Empty slots for now
 
@@ -213,7 +213,7 @@ class TestMetadataAssembly:
 
     def test_assemble_metadata_with_optional_sections(
         self, basic_spec, mock_launcher_info
-    ):
+    ) -> None:
         """Test metadata assembly with optional sections."""
         spec = basic_spec.with_metadata(
             cache_validation={"check_file": "{workenv}/marker"},
@@ -229,7 +229,7 @@ class TestMetadataAssembly:
         assert "runtime" in metadata
         assert "workenv" in metadata
 
-    def test_assemble_metadata_with_slots(self, basic_spec, mock_launcher_info):
+    def test_assemble_metadata_with_slots(self, basic_spec, mock_launcher_info) -> None:
         """Test metadata assembly includes slot information."""
         # Create mock slots
         mock_slot = MagicMock()
@@ -245,7 +245,7 @@ class TestMetadataAssembly:
         assert len(metadata["slots"]) == 1
         assert metadata["slots"][0]["name"] == "payload"
 
-    def test_metadata_features_tracking(self, basic_spec, mock_launcher_info):
+    def test_metadata_features_tracking(self, basic_spec, mock_launcher_info) -> None:
         """Test that metadata tracks features used."""
         spec = basic_spec.with_metadata(
             workenv={"directories": [{"path": "tmp"}]},

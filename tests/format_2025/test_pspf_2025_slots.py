@@ -84,7 +84,7 @@ class TestPSPFSlots:
 
         return slots
 
-    def test_slot_lifecycle_runtime(self, temp_dir, test_builder):
+    def test_slot_lifecycle_runtime(self, temp_dir, test_builder) -> None:
         """Test runtime slot lifecycle metadata."""
         slot = SlotMetadata(
             index=0,
@@ -104,7 +104,7 @@ class TestPSPFSlots:
         assert slot_dict["id"] == "test-runtime"
         # Runtime slots available during application execution
 
-    def test_slot_lifecycle_init(self, temp_dir, test_builder):
+    def test_slot_lifecycle_init(self, temp_dir, test_builder) -> None:
         """Test init slot lifecycle metadata."""
         slot = SlotMetadata(
             index=0,
@@ -124,7 +124,7 @@ class TestPSPFSlots:
         assert slot_dict["id"] == "test-init"
         # Init slots removed after initialization
 
-    def test_slot_lifecycle_temp(self, temp_dir, test_builder):
+    def test_slot_lifecycle_temp(self, temp_dir, test_builder) -> None:
         """Test temp slot lifecycle metadata."""
         slot = SlotMetadata(
             index=0,
@@ -144,7 +144,7 @@ class TestPSPFSlots:
         assert slot_dict["id"] == "test-temp"
         # Temp slots removed after current session
 
-    def test_slot_lifecycle_cache(self, temp_dir, test_builder):
+    def test_slot_lifecycle_cache(self, temp_dir, test_builder) -> None:
         """Test cache slot lifecycle metadata."""
         slot = SlotMetadata(
             index=0,
@@ -164,7 +164,7 @@ class TestPSPFSlots:
         assert slot_dict["purpose"] == "config"
         # Cache slots kept for performance, can be regenerated
 
-    def test_multiple_slots(self, temp_dir, test_slots, test_builder):
+    def test_multiple_slots(self, temp_dir, test_slots, test_builder) -> None:
         """Test bundle with multiple slots."""
         metadata = {
             "format": "PSPF/2025",
@@ -206,14 +206,14 @@ class TestPSPFSlots:
             assert slot_meta["lifecycle"] == slot.lifecycle
             assert slot_meta["purpose"] == slot.purpose
 
-    def test_slot_compression_gzip(self, temp_dir, test_builder):
+    def test_slot_compression_gzip(self, temp_dir, test_builder) -> None:
         """Test gzip compression."""
         # Create highly compressible data
         data = b"REPEAT" * 1000
         slot_path = temp_dir / "compress.txt"
         slot_path.write_bytes(data)
 
-        slot = SlotMetadata(
+        SlotMetadata(
             index=0,
             id="compressed",
             source=str(slot_path),
@@ -250,13 +250,13 @@ class TestPSPFSlots:
         metadata_read = reader.read_metadata()
         assert metadata_read["slots"][0]["operations"] == "gzip"
 
-    def test_slot_compression_none(self, temp_dir, test_builder):
+    def test_slot_compression_none(self, temp_dir, test_builder) -> None:
         """Test no compression."""
         data = b"NOCOMPRESS" * 100
         slot_path = temp_dir / "nocompress.bin"
         slot_path.write_bytes(data)
 
-        slot = SlotMetadata(
+        SlotMetadata(
             index=0,
             id="uncompressed",
             source=str(slot_path),
@@ -293,7 +293,7 @@ class TestPSPFSlots:
         metadata_read = reader.read_metadata()
         assert metadata_read["slots"][0]["operations"] == "none"
 
-    def test_slot_checksum_verification(self, temp_dir, test_builder):
+    def test_slot_checksum_verification(self, temp_dir, test_builder) -> None:
         """Test slot checksum verification."""
         # Create slot with known checksum
         data = b"CHECKSUM_TEST"
@@ -338,7 +338,7 @@ class TestPSPFSlots:
         reader = PSPFReader(bundle_path)
         assert reader.verify_all_checksums()
 
-    def test_slot_table_structure(self, temp_dir, test_slots, test_builder):
+    def test_slot_table_structure(self, temp_dir, test_slots, test_builder) -> None:
         """Test slot table binary structure."""
         bundle_path = temp_dir / "table.psp"
         # Use test_builder from fixture with fluent API
@@ -368,7 +368,7 @@ class TestPSPFSlots:
         with open(bundle_path, "rb") as f:
             f.seek(index.slot_table_offset)
 
-            for i in range(index.slot_count):
+            for _i in range(index.slot_count):
                 # Each entry is now 64 bytes (SlotDescriptor)
                 entry = f.read(DEFAULT_SLOT_DESCRIPTOR_SIZE)
                 assert len(entry) == DEFAULT_SLOT_DESCRIPTOR_SIZE
@@ -382,7 +382,7 @@ class TestPSPFSlots:
                 assert descriptor.size > 0
                 assert descriptor.checksum != 0
 
-    def test_slot_extraction_caching(self, temp_dir, test_builder):
+    def test_slot_extraction_caching(self, temp_dir, test_builder) -> None:
         """Test slot caching metadata."""
         # Create a bundle with a cacheable slot
         slot_path = temp_dir / "cached.txt"
@@ -428,7 +428,7 @@ class TestPSPFSlots:
             slot_meta["lifecycle"] == "runtime"
         )  # Runtime slots available during execution
 
-    def test_slot_metadata_serialization(self, test_builder):
+    def test_slot_metadata_serialization(self, test_builder) -> None:
         """Test SlotMetadata to_dict serialization."""
         slot = SlotMetadata(
             index=5,
@@ -458,7 +458,7 @@ class TestPSPFSlots:
         assert "source" in slot_dict
         assert "target" in slot_dict
 
-    def test_large_slot_handling(self, temp_dir, test_builder):
+    def test_large_slot_handling(self, temp_dir, test_builder) -> None:
         """Test handling of large slots."""
         # Create a 10MB slot
         large_data = os.urandom(10 * 1024 * 1024)

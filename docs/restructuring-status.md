@@ -15,7 +15,7 @@ flavorpack/
 ├── src/
 │   ├── flavor/          # Python package (existing)
 │   ├── flavor-go/       # Go implementations
-│   └── flavor-rust/     # Rust implementations
+│   └── flavor-rs/       # Rust implementations
 ├── tests/
 │   ├── pretaster/       # Test orchestrator
 │   └── taster/          # Test package source
@@ -38,7 +38,7 @@ flavorpack/
 
 ### Phase 2: Source Code Movement
 - [x] Move `ingredients/flavor-go/` → `src/flavor-go/`
-- [x] Move `ingredients/flavor-rs/` → `src/flavor-rust/`
+- [x] Move `ingredients/flavor-rs/` → `src/flavor-rs/`
 - [x] Move `helpers/pretaster/` → `tests/pretaster/`
 - [x] Move `helpers/taster/` → `tests/taster/`
 - [x] Move `ingredients/build.sh` → `./build.sh` (root)
@@ -56,7 +56,7 @@ Files requiring path updates:
 ### Phase 4: Build System Updates
 - [x] Update root `Makefile` paths
   - [x] Change `ingredients/flavor-go` → `src/flavor-go`
-  - [x] Change `ingredients/flavor-rs` → `src/flavor-rust`
+  - [x] Change `ingredients/flavor-rs` → `src/flavor-rs`
   - [x] Change `helpers/pretaster` → `tests/pretaster`
   - [x] Change `helpers/taster` → `tests/taster`
   - [x] Change output to `dist/bin/$(PLATFORM)/`

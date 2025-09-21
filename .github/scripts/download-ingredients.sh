@@ -13,6 +13,10 @@ echo "   Artifact directory: $ARTIFACT_DIR"
 echo "   Version: $VERSION"
 echo "   Platforms: $PLATFORMS"
 
+# Remove existing ingredients symlink if it exists, then create directory
+if [ -L "ingredients" ]; then
+    rm -f ingredients
+fi
 mkdir -p ingredients/bin
 
 for platform in $PLATFORMS; do

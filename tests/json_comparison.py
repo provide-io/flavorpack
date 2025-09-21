@@ -22,9 +22,9 @@ from google.protobuf import json_format
 
 # Import v0 constants for operation packing
 from flavor.psp.format_2025.constants import (
-    OP_TAR,
-    OP_GZIP,
     OP_BZIP2,
+    OP_GZIP,
+    OP_TAR,
 )
 from flavor.psp.format_2025.operations import pack_operations
 

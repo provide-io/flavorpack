@@ -90,7 +90,7 @@ mod runtime_impl {
 
     mod patterns {
         use glob::Pattern;
-        use log::{debug, trace};
+        use log::debug;
         use std::collections::{HashMap, HashSet};
         use crate::exceptions::{FlavorError, Result};
 

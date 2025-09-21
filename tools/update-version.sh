@@ -31,8 +31,8 @@ sed -i '' "s/^const VERSION: &str = \".*\";/const VERSION: \&str = \"$NEW_VERSIO
 sed -i '' "s/^const VERSION: &str = \".*\";/const VERSION: \&str = \"$NEW_VERSION\";/" ingredients/flavor-rs/src/bin/flavor-rs-launcher.rs
 
 # Update pretaster manifest
-sed -i '' "s/\"version\": \".*\"/\"version\": \"$NEW_VERSION\"/" helpers/pretaster/pretaster-manifest.json
-sed -i '' "s/\"PRETASTER_VERSION\": \".*\"/\"PRETASTER_VERSION\": \"$NEW_VERSION\"/" helpers/pretaster/pretaster-manifest.json
+sed -i '' "s/\"version\": \".*\"/\"version\": \"$NEW_VERSION\"/" tests/pretaster/pretaster-manifest.json
+sed -i '' "s/\"PRETASTER_VERSION\": \".*\"/\"PRETASTER_VERSION\": \"$NEW_VERSION\"/" tests/pretaster/pretaster-manifest.json
 
 # Update build_wheel.py fallback
 sed -i '' "s/return \".*\"  # Default fallback/return \"$NEW_VERSION\"  # Default fallback/" tools/build_wheel.py
@@ -45,7 +45,7 @@ echo "  - pyproject.toml"
 echo "  - ingredients/flavor-go/cmd/*/main.go"
 echo "  - ingredients/flavor-rs/Cargo.toml"
 echo "  - ingredients/flavor-rs/src/bin/*.rs"
-echo "  - helpers/pretaster/pretaster-manifest.json"
+echo "  - tests/pretaster/pretaster-manifest.json"
 echo "  - tools/build_wheel.py"
 echo ""
 echo "Don't forget to:"

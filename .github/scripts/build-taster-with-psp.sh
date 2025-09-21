@@ -24,11 +24,11 @@ echo "Testing Flavor PSP..."
 "${FLAVOR_PSP}" --help
 
 # Build Taster
-cd helpers/taster
+cd tests/taster
 
 echo "Building Taster with launcher: ${LAUNCHER}"
 
-# Adjust launcher path since we're changing to helpers/taster
+# Adjust launcher path since we're changing to tests/taster
 LAUNCHER_PATH="../../${LAUNCHER}"
 
 ../../"${FLAVOR_PSP}" pack \
