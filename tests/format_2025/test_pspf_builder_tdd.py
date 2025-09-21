@@ -70,7 +70,7 @@ def minimal_spec(sample_slot):
 class TestBuildSpec:
     """Test the immutable BuildSpec data structure."""
 
-    def test_build_spec_is_immutable(self):
+    def test_build_spec_is_immutable(self) -> None:
         """BuildSpec should be truly immutable."""
         if not BuildSpec:
             pytest.skip("BuildSpec not implemented yet")
@@ -82,14 +82,13 @@ class TestBuildSpec:
             spec.metadata = {"name": "other"}
 
         # Should not be able to modify nested structures
-        original_metadata = spec.metadata
         spec.metadata["name"] = "modified"  # This modifies the dict
 
         # But a proper implementation should have made a copy
         new_spec = BuildSpec(metadata={"name": "app"})
         assert new_spec.metadata["name"] == "app"
 
-    def test_build_spec_with_methods_return_new_instances(self):
+    def test_build_spec_with_methods_return_new_instances(self) -> None:
         """with_* methods should return new instances."""
         if not BuildSpec:
             pytest.skip("BuildSpec not implemented yet")
@@ -119,7 +118,7 @@ class TestBuildSpec:
         assert len(new_spec.slots) == 0
         assert len(newer_spec.slots) == 1
 
-    def test_build_spec_with_keys(self):
+    def test_build_spec_with_keys(self) -> None:
         """BuildSpec should support key configuration."""
         if not BuildSpec or not KeyConfig:
             pytest.skip("BuildSpec/KeyConfig not implemented yet")
@@ -135,7 +134,7 @@ class TestBuildSpec:
 class TestKeyConfig:
     """Test the KeyConfig data structure."""
 
-    def test_key_config_options(self):
+    def test_key_config_options(self) -> None:
         """KeyConfig should support all key options."""
         if not KeyConfig:
             pytest.skip("KeyConfig not implemented yet")
@@ -164,25 +163,25 @@ class TestKeyConfig:
 class TestBuildOptions:
     """Test the BuildOptions data structure."""
 
-    def test_build_options_defaults(self):
+    def test_build_options_defaults(self) -> None:
         """BuildOptions should have sensible defaults."""
         if not BuildOptions:
             pytest.skip("BuildOptions not implemented yet")
 
         options = BuildOptions()
-        assert options.enable_mmap == True
-        assert options.page_aligned == True
-        assert options.strip_binaries == False
+        assert options.enable_mmap
+        assert options.page_aligned
+        assert not options.strip_binaries
         assert options.compression == "gzip"
-        assert options.launcher_bin == None
+        assert options.launcher_bin is None
 
-    def test_build_options_customization(self):
+    def test_build_options_customization(self) -> None:
         """BuildOptions should be customizable."""
         if not BuildOptions:
             pytest.skip("BuildOptions not implemented yet")
 
         options = BuildOptions(enable_mmap=False, compression="none")
-        assert options.enable_mmap == False
+        assert not options.enable_mmap
         assert options.compression == "none"
         # launcher_type removed, using launcher_bin instead
 
@@ -195,7 +194,7 @@ class TestBuildOptions:
 class TestBuildPackageFunction:
     """Test the pure build_package function."""
 
-    def test_build_package_is_pure_function(self, temp_dir, minimal_spec):
+    def test_build_package_is_pure_function(self, temp_dir, minimal_spec) -> None:
         """build_package should be a pure function with no side effects."""
         if not build_package:
             pytest.skip("build_package not implemented yet")
@@ -214,7 +213,7 @@ class TestBuildPackageFunction:
         if result1.success:
             assert output1.stat().st_size == output2.stat().st_size
 
-    def test_build_package_validates_spec(self, temp_dir):
+    def test_build_package_validates_spec(self, temp_dir) -> None:
         """build_package should validate the spec before building."""
         if not build_package or not BuildSpec:
             pytest.skip("build_package/BuildSpec not implemented yet")
@@ -223,11 +222,11 @@ class TestBuildPackageFunction:
         invalid_spec = BuildSpec(metadata={})
         result = build_package(invalid_spec, temp_dir / "invalid.psp")
 
-        assert result.success == False
+        assert not result.success
         assert len(result.errors) > 0
         assert "name" in str(result.errors).lower()
 
-    def test_build_package_creates_output(self, temp_dir, minimal_spec):
+    def test_build_package_creates_output(self, temp_dir, minimal_spec) -> None:
         """build_package should create the output file."""
         if not build_package:
             pytest.skip("build_package not implemented yet")
@@ -235,7 +234,7 @@ class TestBuildPackageFunction:
         output = temp_dir / "test.psp"
         result = build_package(minimal_spec, output)
 
-        assert result.success == True
+        assert result.success
         assert output.exists()
         assert output.stat().st_size > 0
 
@@ -243,7 +242,7 @@ class TestBuildPackageFunction:
 class TestValidateSpec:
     """Test the validate_spec function."""
 
-    def test_validate_missing_package_name(self):
+    def test_validate_missing_package_name(self) -> None:
         """Should detect missing package name."""
         if not validate_spec or not BuildSpec:
             pytest.skip("validate_spec/BuildSpec not implemented yet")
@@ -254,7 +253,7 @@ class TestValidateSpec:
         assert len(errors) > 0
         assert any("name" in e.lower() for e in errors)
 
-    def test_validate_invalid_slots(self):
+    def test_validate_invalid_slots(self) -> None:
         """Should detect invalid slots."""
         if not validate_spec or not BuildSpec:
             pytest.skip("validate_spec/BuildSpec not implemented yet")
@@ -272,7 +271,7 @@ class TestValidateSpec:
                 lifecycle="runtime",
             )
 
-    def test_validate_valid_spec(self, minimal_spec):
+    def test_validate_valid_spec(self, minimal_spec) -> None:
         """Should accept valid spec."""
         if not validate_spec:
             pytest.skip("validate_spec not implemented yet")
@@ -284,7 +283,7 @@ class TestValidateSpec:
 class TestResolveKeys:
     """Test the resolve_keys function."""
 
-    def test_resolve_explicit_keys(self):
+    def test_resolve_explicit_keys(self) -> None:
         """Should use explicit keys when provided."""
         if not resolve_keys or not KeyConfig:
             pytest.skip("resolve_keys/KeyConfig not implemented yet")
@@ -297,7 +296,7 @@ class TestResolveKeys:
         assert private == b"explicit_private"
         assert public == b"explicit_public"
 
-    def test_resolve_deterministic_keys(self):
+    def test_resolve_deterministic_keys(self) -> None:
         """Should generate deterministic keys from seed."""
         if not resolve_keys or not KeyConfig:
             pytest.skip("resolve_keys/KeyConfig not implemented yet")
@@ -313,7 +312,7 @@ class TestResolveKeys:
         assert len(private1) == 32  # Ed25519 private key size
         assert len(public1) == 32  # Ed25519 public key size
 
-    def test_resolve_ephemeral_keys(self):
+    def test_resolve_ephemeral_keys(self) -> None:
         """Should generate ephemeral keys when no config."""
         if not resolve_keys or not KeyConfig:
             pytest.skip("resolve_keys/KeyConfig not implemented yet")
@@ -329,7 +328,7 @@ class TestResolveKeys:
         assert len(private1) == 32
         assert len(public1) == 32
 
-    def test_resolve_keys_priority(self):
+    def test_resolve_keys_priority(self) -> None:
         """Should respect key priority: explicit > seed > path > ephemeral."""
         if not resolve_keys or not KeyConfig:
             pytest.skip("resolve_keys/KeyConfig not implemented yet")
@@ -338,7 +337,7 @@ class TestResolveKeys:
         config = KeyConfig(
             private_key=b"explicit", public_key=b"public", key_seed="ignored"
         )
-        private, public = resolve_keys(config)
+        private, _public = resolve_keys(config)
         assert private == b"explicit"
 
 
@@ -350,7 +349,7 @@ class TestResolveKeys:
 class TestPSPFBuilder:
     """Test the fluent builder interface."""
 
-    def test_builder_create(self):
+    def test_builder_create(self) -> None:
         """Should create new builder."""
         if not PSPFBuilder:
             pytest.skip("PSPFBuilder not implemented yet")
@@ -359,7 +358,7 @@ class TestPSPFBuilder:
         assert builder is not None
         assert isinstance(builder, PSPFBuilder)
 
-    def test_builder_fluent_interface(self, temp_dir):
+    def test_builder_fluent_interface(self, temp_dir) -> None:
         """Should support fluent/chainable interface."""
         if not PSPFBuilder:
             pytest.skip("PSPFBuilder not implemented yet")
@@ -375,10 +374,10 @@ class TestPSPFBuilder:
             .build(output)
         )
 
-        assert result.success == True
+        assert result.success
         assert output.exists()
 
-    def test_builder_incremental(self, temp_dir):
+    def test_builder_incremental(self, temp_dir) -> None:
         """Should support incremental building."""
         if not PSPFBuilder:
             pytest.skip("PSPFBuilder not implemented yet")
@@ -399,10 +398,10 @@ class TestPSPFBuilder:
         output = temp_dir / "incremental.psp"
         result = builder.build(output)
 
-        assert result.success == True
+        assert result.success
         assert output.exists()
 
-    def test_builder_immutable_chaining(self):
+    def test_builder_immutable_chaining(self) -> None:
         """Each builder method should return new instance."""
         if not PSPFBuilder:
             pytest.skip("PSPFBuilder not implemented yet")
@@ -420,7 +419,7 @@ class TestPSPFBuilder:
         assert builder2._spec.metadata == {"name": "test"}
         assert len(builder3._spec.slots) == 1
 
-    def test_builder_with_path_slots(self, temp_dir):
+    def test_builder_with_path_slots(self, temp_dir) -> None:
         """Should support adding slots from file paths."""
         if not PSPFBuilder:
             pytest.skip("PSPFBuilder not implemented yet")
@@ -442,7 +441,7 @@ class TestPSPFBuilder:
             .build(output)
         )
 
-        assert result.success == True
+        assert result.success
         assert output.exists()
 
 
@@ -454,7 +453,7 @@ class TestPSPFBuilder:
 class TestIntegration:
     """End-to-end integration tests."""
 
-    def test_full_build_pipeline(self, temp_dir):
+    def test_full_build_pipeline(self, temp_dir) -> None:
         """Test complete build pipeline."""
         if not all([BuildSpec, build_package, PSPFBuilder]):
             pytest.skip("Not all components implemented yet")
@@ -486,7 +485,7 @@ class TestIntegration:
             .build(output)
         )
 
-        assert result.success == True
+        assert result.success
         assert output.exists()
 
         # Verify the package can be read
@@ -507,7 +506,7 @@ class TestIntegration:
         assert any(s.get("name", s.get("id")) == "main" for s in slots_metadata)
         assert any(s.get("name", s.get("id")) == "config" for s in slots_metadata)
 
-    def test_error_handling(self, temp_dir):
+    def test_error_handling(self, temp_dir) -> None:
         """Test comprehensive error handling."""
         if not all([PSPFBuilder, BuildResult]):
             pytest.skip("Not all components implemented yet")
@@ -519,7 +518,7 @@ class TestIntegration:
             .build(temp_dir / "invalid.psp")
         )
 
-        assert result.success == False
+        assert not result.success
         assert len(result.errors) > 0
 
         # Invalid slot
@@ -530,7 +529,7 @@ class TestIntegration:
             .build(temp_dir / "invalid2.psp")
         )
 
-        assert result.success == False
+        assert not result.success
         assert len(result.errors) > 0
 
         # Non-existent file
@@ -541,7 +540,7 @@ class TestIntegration:
             .build(temp_dir / "invalid3.psp")
         )
 
-        assert result.success == False
+        assert not result.success
         assert any(
             "not found" in e.lower() or "exist" in e.lower() for e in result.errors
         )
@@ -556,7 +555,7 @@ class TestPerformance:
     """Test performance characteristics."""
 
     @pytest.mark.slow
-    def test_large_package_build(self, temp_dir):
+    def test_large_package_build(self, temp_dir) -> None:
         """Should handle large packages efficiently."""
         if not PSPFBuilder:
             pytest.skip("PSPFBuilder not implemented yet")
@@ -580,11 +579,11 @@ class TestPerformance:
 
         elapsed = time.time() - start
 
-        assert result.success == True
+        assert result.success
         assert elapsed < 5.0  # Should complete in reasonable time
 
     @pytest.mark.slow
-    def test_many_slots_build(self, temp_dir):
+    def test_many_slots_build(self, temp_dir) -> None:
         """Should handle many slots efficiently."""
         if not PSPFBuilder:
             pytest.skip("PSPFBuilder not implemented yet")
@@ -603,7 +602,7 @@ class TestPerformance:
         result = builder.build(output)
         elapsed = time.time() - start
 
-        assert result.success == True
+        assert result.success
         assert elapsed < 2.0  # Should be fast even with many slots
 
 

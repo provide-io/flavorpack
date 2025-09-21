@@ -123,9 +123,9 @@ jobs:
           fi
           
           # Check Rust files
-          if [ -d "src/flavor-rust" ]; then
-            RS_WITH_LICENSE=$(find src/flavor-rust -name "*.rs" -type f -exec grep -l "Copyright\|License" {} \; 2>/dev/null | wc -l)
-            RS_TOTAL=$(find src/flavor-rust -name "*.rs" -type f 2>/dev/null | wc -l)
+          if [ -d "src/flavor-rs" ]; then
+            RS_WITH_LICENSE=$(find src/flavor-rs -name "*.rs" -type f -exec grep -l "Copyright\|License" {} \; 2>/dev/null | wc -l)
+            RS_TOTAL=$(find src/flavor-rs -name "*.rs" -type f 2>/dev/null | wc -l)
             echo "- Rust files with license headers: $RS_WITH_LICENSE / $RS_TOTAL" >> $GITHUB_STEP_SUMMARY
           fi
 
@@ -415,7 +415,7 @@ jobs:
           echo "## 🦀 Rust License Compliance" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
-          cd src/flavor-rust
+          cd src/flavor-rs
           
           # Generate license report
           cargo license --json > rust-licenses.json 2>&1 || true
@@ -432,7 +432,7 @@ jobs:
           echo "### Rust License Compliance Check" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
-          cd src/flavor-rust
+          cd src/flavor-rs
           
           # Create cargo-deny config for license checking
           cat > deny.toml << 'EOF'
@@ -495,9 +495,9 @@ jobs:
         with:
           name: rust-license-reports
           path: |
-            src/flavor-rust/rust-licenses.*
-            src/flavor-rust/cargo-deny-licenses.log
-            src/flavor-rust/deny.toml
+            src/flavor-rs/rust-licenses.*
+            src/flavor-rs/cargo-deny-licenses.log
+            src/flavor-rs/deny.toml
 
   # SBOM Generation
   sbom-generation:

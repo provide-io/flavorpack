@@ -20,7 +20,7 @@ from flavor.packaging.python.wheel_builder import WheelBuilder
 class TestPythonPackagingIntegration:
     """Test integration between all Python packaging managers."""
 
-    def setup_method(self):
+    def setup_method(self) -> None:
         """Set up test fixtures."""
         self.python_version = "3.11"
 
@@ -32,7 +32,7 @@ class TestPythonPackagingIntegration:
         self.tar_archive = TarArchive(deterministic=True)
         self.gzip_compressor = GzipCompressor()
 
-    def test_managers_initialization_compatible(self):
+    def test_managers_initialization_compatible(self) -> None:
         """Test that all managers initialize without conflicts."""
         # All managers should be independent instances
         assert self.pypapip is not self.uv_manager
@@ -46,7 +46,7 @@ class TestPythonPackagingIntegration:
         assert hasattr(self.dist_manager, "create_python_environment")
         assert hasattr(self.tar_archive, "create")
 
-    def test_python_version_consistency(self):
+    def test_python_version_consistency(self) -> None:
         """Test that Python version is consistent across managers."""
         assert self.pypapip.python_version == self.python_version
         assert self.wheel_builder.python_version == self.python_version
@@ -56,7 +56,7 @@ class TestPythonPackagingIntegration:
     @patch("flavor.packaging.python.dist_manager.run_command")
     def test_wheel_builder_dist_manager_integration(
         self, mock_dist_run, mock_wheel_run
-    ):
+    ) -> None:
         """Test WheelBuilder and PythonDistManager working together."""
         # Mock successful command execution
         mock_result = Mock()
@@ -85,10 +85,8 @@ version = "1.0.0"
 
             # Mock the managers' dependencies
             with patch.object(self.wheel_builder, "pypapip") as mock_pypapip:
-                with patch.object(self.wheel_builder, "uv") as mock_uv:
-                    with patch.object(
-                        self.dist_manager, "pypapip"
-                    ) as mock_dist_pypapip:
+                with patch.object(self.wheel_builder, "uv"):
+                    with patch.object(self.dist_manager, "pypapip"):
                         # Mock wheel building
                         mock_pypapip._get_pypapip_wheel_cmd.return_value = [
                             "python",
@@ -115,7 +113,7 @@ version = "1.0.0"
                         assert result.name.endswith(".whl")
 
     @patch("shutil.which")
-    def test_uv_manager_system_detection(self, mock_which):
+    def test_uv_manager_system_detection(self, mock_which) -> None:
         """Test UVManager system UV detection."""
         # Test when UV is found
         mock_which.return_value = "/usr/local/bin/uv"
@@ -128,7 +126,7 @@ version = "1.0.0"
         result = self.uv_manager.find_system_uv()
         assert result is None
 
-    def test_archive_utils_deterministic_output(self):
+    def test_archive_utils_deterministic_output(self) -> None:
         """Test foundation archive tools produce deterministic output."""
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
@@ -162,7 +160,7 @@ version = "1.0.0"
             # Compressed bytes should be identical
             assert gz_0_bytes == gz_1_bytes
 
-    def test_pypapip_manylinux_compatibility(self):
+    def test_pypapip_manylinux_compatibility(self) -> None:
         """Test PyPaPipManager manylinux compatibility."""
         with patch("flavor.packaging.python.pypapip_manager.get_os_name") as mock_os:
             with patch(
@@ -184,7 +182,7 @@ version = "1.0.0"
                 assert "--python-version" in cmd
                 assert "3.11" in cmd
 
-    def test_manager_error_isolation(self):
+    def test_manager_error_isolation(self) -> None:
         """Test that errors in one manager don't affect others."""
         # Test that UV manager errors don't affect PyPA pip
         with patch.object(self.uv_manager, "find_system_uv") as mock_uv_find:
@@ -199,7 +197,7 @@ version = "1.0.0"
             assert cmd == expected
 
     @patch("flavor.packaging.python.dist_manager.run_command")
-    def test_dist_manager_wheel_installation(self, mock_run_command):
+    def test_dist_manager_wheel_installation(self, mock_run_command) -> None:
         """Test PythonDistManager wheel installation integration."""
         mock_result = Mock()
         mock_result.returncode = 0
@@ -230,7 +228,7 @@ version = "1.0.0"
             assert cmd[1:4] == ["-m", "pip", "install"]
             assert "--no-deps" in cmd
 
-    def test_all_managers_use_same_python_version(self):
+    def test_all_managers_use_same_python_version(self) -> None:
         """Test that all managers can be configured with the same Python version."""
         test_version = "3.12"
 
@@ -251,13 +249,13 @@ version = "1.0.0"
 class TestPackagingWorkflow:
     """Test realistic packaging workflows using all managers together."""
 
-    def test_complete_packaging_workflow_mock(self):
+    def test_complete_packaging_workflow_mock(self) -> None:
         """Test complete packaging workflow with mocked operations."""
         python_version = "3.11"
 
         # Initialize managers
-        pypapip = PyPaPipManager(python_version=python_version)
-        uv_manager = UVManager()
+        PyPaPipManager(python_version=python_version)
+        UVManager()
         wheel_builder = WheelBuilder(python_version=python_version)
         dist_manager = PythonDistManager(python_version=python_version)
         tar_archive = TarArchive(deterministic=True)
@@ -339,7 +337,7 @@ setup(name='test-project', version='1.0.0', py_modules=['main'])
                     # 4. Basic validation - archive exists and has content
                     assert archive_path.stat().st_size > 0
 
-    def test_error_handling_across_managers(self):
+    def test_error_handling_across_managers(self) -> None:
         """Test error handling when managers interact."""
         wheel_builder = WheelBuilder(python_version="3.11")
 

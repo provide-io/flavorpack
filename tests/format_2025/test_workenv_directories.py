@@ -19,7 +19,7 @@ from flavor.psp.metadata.paths import (
 class TestWorkenvDirectories:
     """Test workenv directory validation and creation."""
 
-    def test_workenv_paths_require_prefix(self):
+    def test_workenv_paths_require_prefix(self) -> None:
         """All workenv directory paths MUST start with {workenv}."""
         # Valid paths with {workenv} prefix
         valid_paths = [
@@ -39,7 +39,7 @@ class TestWorkenvDirectories:
             with pytest.raises(ValueError, match="must start with \\{workenv\\}"):
                 validate_workenv_paths([{"path": path}])
 
-    def test_directory_creation_with_mode(self):
+    def test_directory_creation_with_mode(self) -> None:
         """Test directories are created with specified mode."""
         with tempfile.TemporaryDirectory() as tmpdir:
             workenv = Path(tmpdir) / "workenv"
@@ -62,7 +62,7 @@ class TestWorkenvDirectories:
             cache_stat = (workenv / "cache").stat()
             assert stat.S_IMODE(cache_stat.st_mode) == 0o750
 
-    def test_directory_umask_default(self):
+    def test_directory_umask_default(self) -> None:
         """Test default umask is applied when no mode specified."""
         with tempfile.TemporaryDirectory() as tmpdir:
             workenv = Path(tmpdir) / "workenv"
@@ -101,7 +101,7 @@ class TestWorkenvDirectories:
                 # Restore original umask
                 os.umask(old_umask)
 
-    def test_directory_umask_override(self):
+    def test_directory_umask_override(self) -> None:
         """Test umask can be overridden in metadata."""
         with tempfile.TemporaryDirectory() as tmpdir:
             workenv = Path(tmpdir) / "workenv"
@@ -130,7 +130,7 @@ class TestWorkenvDirectories:
                 # Restore original umask
                 os.umask(old_umask)
 
-    def test_nested_directory_creation(self):
+    def test_nested_directory_creation(self) -> None:
         """Test creation of nested directories."""
         with tempfile.TemporaryDirectory() as tmpdir:
             workenv = Path(tmpdir) / "workenv"
@@ -156,7 +156,7 @@ class TestWorkenvDirectories:
             # Platform dir should contain underscore (os_arch format)
             assert "_" in subdirs[0].name
 
-    def test_directory_mode_parsing(self):
+    def test_directory_mode_parsing(self) -> None:
         """Test parsing of mode strings."""
         with tempfile.TemporaryDirectory() as tmpdir:
             workenv = Path(tmpdir) / "workenv"
@@ -175,7 +175,7 @@ class TestWorkenvDirectories:
             assert (workenv / "octal2").exists()
             assert (workenv / "octal3").exists()
 
-    def test_existing_directory_handling(self):
+    def test_existing_directory_handling(self) -> None:
         """Test handling of existing directories."""
         with tempfile.TemporaryDirectory() as tmpdir:
             workenv = Path(tmpdir) / "workenv"
@@ -193,7 +193,7 @@ class TestWorkenvDirectories:
             existing_stat = existing_dir.stat()
             assert stat.S_IMODE(existing_stat.st_mode) == 0o700
 
-    def test_symlink_in_path_handling(self):
+    def test_symlink_in_path_handling(self) -> None:
         """Test handling of symlinks in directory paths."""
         with tempfile.TemporaryDirectory() as tmpdir:
             workenv = Path(tmpdir) / "workenv"
@@ -212,7 +212,7 @@ class TestWorkenvDirectories:
             # Should create subdir in the real directory
             assert (real_dir / "subdir").exists()
 
-    def test_permission_error_handling(self):
+    def test_permission_error_handling(self) -> None:
         """Test handling of permission errors during directory creation."""
         with tempfile.TemporaryDirectory() as tmpdir:
             workenv = Path(tmpdir) / "workenv"
@@ -227,7 +227,7 @@ class TestWorkenvDirectories:
             with pytest.raises(PermissionError):
                 create_workenv_directories(directories, workenv)
 
-    def test_invalid_mode_handling(self):
+    def test_invalid_mode_handling(self) -> None:
         """Test handling of invalid mode values."""
         with tempfile.TemporaryDirectory() as tmpdir:
             workenv = Path(tmpdir) / "workenv"

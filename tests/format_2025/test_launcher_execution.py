@@ -86,7 +86,7 @@ class TestSlotTableReading:
 
             yield bundle_path
 
-    def test_read_slot_table_structure(self, test_bundle_with_slots):
+    def test_read_slot_table_structure(self, test_bundle_with_slots) -> None:
         """Test that we can read the slot table structure correctly."""
         launcher = PSPFLauncher(test_bundle_with_slots)
 
@@ -111,7 +111,7 @@ class TestSlotTableReading:
         assert slot1["offset"] > slot0["offset"]
         assert slot1["size"] > 0
 
-    def test_slot_table_alignment(self, test_bundle_with_slots):
+    def test_slot_table_alignment(self, test_bundle_with_slots) -> None:
         """Test that slots are properly aligned to DEFAULT_SLOT_ALIGNMENT boundaries."""
         launcher = PSPFLauncher(test_bundle_with_slots)
         slot_table = launcher.read_slot_table()
@@ -120,7 +120,7 @@ class TestSlotTableReading:
             # Each slot should start at an 8-byte aligned offset
             assert slot["offset"] % DEFAULT_SLOT_ALIGNMENT == 0
 
-    def test_slot_table_binary_format(self, test_bundle_with_slots):
+    def test_slot_table_binary_format(self, test_bundle_with_slots) -> None:
         """Test that slot table entries are exactly 64 bytes each."""
         launcher = PSPFLauncher(test_bundle_with_slots)
         index = launcher.read_index()
@@ -210,7 +210,7 @@ class TestSlotExtraction:
     @pytest.mark.skip(
         reason="PSPFLauncher API slot extraction not implemented - tests Python API not covered by taster/pretaster"
     )
-    def test_extract_single_slot(self, bundle_with_compressed_slots):
+    def test_extract_single_slot(self, bundle_with_compressed_slots) -> None:
         """Test extracting a single slot to filesystem - catches slot storage format bugs."""
         bundle_path, expected_content = bundle_with_compressed_slots
         launcher = PSPFLauncher(bundle_path)
@@ -235,7 +235,7 @@ class TestSlotExtraction:
     )
     def test_extract_slot_with_checksum_verification(
         self, bundle_with_compressed_slots
-    ):
+    ) -> None:
         """Test that extraction verifies checksums - catches missing integrity validation."""
         bundle_path, _ = bundle_with_compressed_slots
         launcher = PSPFLauncher(bundle_path)
@@ -250,7 +250,7 @@ class TestSlotExtraction:
     @pytest.mark.skip(
         reason="PSPFLauncher bulk extraction not implemented - Python API coordination logic not covered by taster"
     )
-    def test_extract_all_slots(self, bundle_with_compressed_slots):
+    def test_extract_all_slots(self, bundle_with_compressed_slots) -> None:
         """Test extracting all slots at once - catches slot extraction coordination bugs."""
         bundle_path, _ = bundle_with_compressed_slots
         launcher = PSPFLauncher(bundle_path)
@@ -340,7 +340,7 @@ class TestWorkEnvironment:
 
             yield bundle_path
 
-    def test_setup_workenv_creates_structure(self, bundle_with_setup_commands):
+    def test_setup_workenv_creates_structure(self, bundle_with_setup_commands) -> None:
         """Test that setup_workenv creates the correct directory structure."""
         launcher = PSPFLauncher(bundle_with_setup_commands)
 
@@ -356,7 +356,7 @@ class TestWorkEnvironment:
         )
         assert expected_name in str(workenv_dir)
 
-    def test_cache_validation(self, bundle_with_setup_commands):
+    def test_cache_validation(self, bundle_with_setup_commands) -> None:
         """Test that cache validation works correctly."""
         launcher = PSPFLauncher(bundle_with_setup_commands)
 
@@ -375,7 +375,7 @@ class TestWorkEnvironment:
         # Should return the same directory
         assert workenv_dir == workenv_dir2
 
-    def test_setup_commands_execution(self, bundle_with_setup_commands):
+    def test_setup_commands_execution(self, bundle_with_setup_commands) -> None:
         """Test that setup commands are executed correctly."""
         launcher = PSPFLauncher(bundle_with_setup_commands)
 
@@ -387,7 +387,7 @@ class TestWorkEnvironment:
         assert validation_file.read_text() == "1.0.0"
 
         # Check that chmod command worked (file should be executable)
-        python_file = workenv_dir / "python_runtime" / "python"
+        workenv_dir / "python_runtime" / "python"
         # Skip chmod check for now - write_file is the main functionality being tested
         # The chmod command execution depends on platform-specific behavior
         # if python_file.exists():
@@ -452,7 +452,7 @@ sys.exit(0)
 
             yield bundle_path
 
-    def test_slot_substitution_in_command(self, executable_bundle):
+    def test_slot_substitution_in_command(self, executable_bundle) -> None:
         """Test that {slot:N} references are substituted correctly."""
         launcher = PSPFLauncher(executable_bundle)
 
@@ -469,7 +469,7 @@ sys.exit(0)
         assert "{slot:0}" not in substituted
         assert "main.py" in substituted
 
-    def test_environment_variables(self, executable_bundle):
+    def test_environment_variables(self, executable_bundle) -> None:
         """Test that environment variables are set correctly."""
         launcher = PSPFLauncher(executable_bundle)
 
@@ -477,7 +477,7 @@ sys.exit(0)
 
         # Check that PSPF-specific env vars would be set
         # This is a placeholder - actual implementation would set these
-        assert result["executed"] == True
+        assert result["executed"]
 
 
 # Run tests with: pytest tests/test_pspf_launcher_production.py -xvs

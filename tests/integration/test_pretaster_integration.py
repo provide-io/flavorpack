@@ -1,8 +1,9 @@
 """Integration tests for pretaster PSPF validation."""
+
 from __future__ import annotations
 
-import subprocess
 from pathlib import Path
+import subprocess
 
 import pytest
 
@@ -151,4 +152,6 @@ class TestPretasterIntegration:
         )
 
         # Should show package metadata
-        assert result.returncode == 0 or "not found" in result.stderr  # flavor may not be in PATH
+        assert (
+            result.returncode == 0 or "not found" in result.stderr
+        )  # flavor may not be in PATH

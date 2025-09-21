@@ -477,6 +477,15 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
     // Create the directory if it doesn't exist
     fs::create_dir_all(&workenv_path)?;
 
+    // Set secure permissions on workenv directory
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let permissions = fs::Permissions::from_mode(DEFAULT_DIR_PERMS as u32);
+        fs::set_permissions(&workenv_path, permissions)?;
+        debug!("🔒 Set secure permissions {} on workenv directory", DEFAULT_DIR_PERMS);
+    }
+
     info!("📁 Work environment: {workenv_path:?}");
 
     // Setup workenv directories if specified
@@ -535,6 +544,16 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
             // Create temporary extraction directory
             let temp_extract_dir = paths.temp_extraction(std::process::id());
             fs::create_dir_all(&temp_extract_dir)?;
+
+            // Set secure permissions on temp extraction directory
+            #[cfg(unix)]
+            {
+                use std::os::unix::fs::PermissionsExt;
+                let permissions = fs::Permissions::from_mode(DEFAULT_DIR_PERMS as u32);
+                fs::set_permissions(&temp_extract_dir, permissions)?;
+                debug!("🔒 Set secure permissions on temp extraction directory");
+            }
+
             info!("📁 Created temporary extraction directory: {:?}", temp_extract_dir);
             trace!("🗂️ Extracting to temp before atomic move");
 
@@ -562,6 +581,18 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
             // Use hidden .{workenv}.pspf/package/ structure as a sibling to workenv
             let package_metadata_dir = paths.metadata().join("package");
             fs::create_dir_all(&package_metadata_dir)?;
+
+            // Set secure permissions on metadata directory and its parent
+            #[cfg(unix)]
+            {
+                use std::os::unix::fs::PermissionsExt;
+                let permissions = fs::Permissions::from_mode(DEFAULT_DIR_PERMS as u32);
+                // Set permissions on both the metadata parent directory and package subdirectory
+                let metadata_parent = paths.metadata();
+                fs::set_permissions(&metadata_parent, permissions.clone())?;
+                fs::set_permissions(&package_metadata_dir, permissions)?;
+                debug!("🔒 Set secure permissions on metadata directories");
+            }
             let metadata_file = package_metadata_dir.join("psp.json");
             let metadata_json = serde_json::to_string_pretty(&metadata)?;
             fs::write(&metadata_file, metadata_json)?;

@@ -125,7 +125,7 @@ build-go: ## Build only Go helpers
 .PHONY: build-rust
 build-rust: ## Build only Rust helpers
 	$(call print,"🦀 Building Rust helpers...",$(BLUE))
-	@cd ../../src/flavor-rust && \
+	@cd ../../src/flavor-rs && \
 		cargo build --release && \
 		cp target/release/flavor-rs-builder $(BIN_DIR)/flavor-rs-builder-$(PLATFORM) && \
 		cp target/release/flavor-rs-launcher $(BIN_DIR)/flavor-rs-launcher-$(PLATFORM)

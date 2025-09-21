@@ -12,7 +12,7 @@ from flavor.cli import cli
 class TestExtractCommand:
     """Test the extract command."""
 
-    def test_extract_single_slot(self, mock_test_package, tmp_path):
+    def test_extract_single_slot(self, mock_test_package, tmp_path) -> None:
         """Test extracting a single slot."""
         runner = click.testing.CliRunner()
         output_file = tmp_path / "extracted.tar"
@@ -28,7 +28,7 @@ class TestExtractCommand:
         assert "Extracting slot 2: wheels" in result.output
         assert "✅ Extracted" in result.output
 
-    def test_extract_invalid_slot(self, mock_test_package, tmp_path):
+    def test_extract_invalid_slot(self, mock_test_package, tmp_path) -> None:
         """Test extracting an invalid slot index."""
         runner = click.testing.CliRunner()
         output_file = tmp_path / "extracted.tgz"
@@ -41,7 +41,7 @@ class TestExtractCommand:
         assert result.exit_code != 0
         assert "Invalid slot index 99" in result.output
 
-    def test_extract_existing_file_no_force(self, mock_test_package, tmp_path):
+    def test_extract_existing_file_no_force(self, mock_test_package, tmp_path) -> None:
         """Test extracting to an existing file without force."""
         runner = click.testing.CliRunner()
         output_file = tmp_path / "extracted.tgz"
@@ -55,7 +55,9 @@ class TestExtractCommand:
         assert "Output file already exists" in result.output
         assert "Use --force to overwrite" in result.output
 
-    def test_extract_existing_file_with_force(self, mock_test_package, tmp_path):
+    def test_extract_existing_file_with_force(
+        self, mock_test_package, tmp_path
+    ) -> None:
         """Test extracting to an existing file with force."""
         runner = click.testing.CliRunner()
         output_file = tmp_path / "extracted.tgz"
@@ -68,7 +70,7 @@ class TestExtractCommand:
         assert result.exit_code == 0
         assert output_file.stat().st_size > len("existing content")
 
-    def test_extract_all_slots(self, mock_test_package, tmp_path):
+    def test_extract_all_slots(self, mock_test_package, tmp_path) -> None:
         """Test extracting all slots."""
         runner = click.testing.CliRunner()
         output_dir = tmp_path / "extracted"
@@ -93,7 +95,7 @@ class TestExtractCommand:
         assert "package" in metadata
         assert "slots" in metadata
 
-    def test_extract_all_with_existing_files(self, mock_test_package, tmp_path):
+    def test_extract_all_with_existing_files(self, mock_test_package, tmp_path) -> None:
         """Test extract-all with existing files (skip)."""
         runner = click.testing.CliRunner()
         output_dir = tmp_path / "extracted"
@@ -112,7 +114,7 @@ class TestExtractCommand:
         # Should still extract other files
         assert "01_config" in result.output
 
-    def test_extract_all_with_force(self, mock_test_package, tmp_path):
+    def test_extract_all_with_force(self, mock_test_package, tmp_path) -> None:
         """Test extract-all with force flag."""
         runner = click.testing.CliRunner()
         output_dir = tmp_path / "extracted"
@@ -131,7 +133,7 @@ class TestExtractCommand:
         # File should be overwritten
         assert existing.stat().st_size > len("existing")
 
-    def test_extract_slot_contents_valid(self, mock_test_package, tmp_path):
+    def test_extract_slot_contents_valid(self, mock_test_package, tmp_path) -> None:
         """Test that extracted slot contents are valid."""
         runner = click.testing.CliRunner()
         output_file = tmp_path / "wheels.tar"

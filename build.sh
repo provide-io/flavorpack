@@ -10,7 +10,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 PROJECT_ROOT="$SCRIPT_DIR"
 BIN_DIR="$SCRIPT_DIR/dist/bin"
 GO_DIR="$SCRIPT_DIR/src/flavor-go"
-RUST_DIR="$SCRIPT_DIR/src/flavor-rust"
+RUST_DIR="$SCRIPT_DIR/src/flavor-rs"
 
 # Detect platform
 OS=$(uname -s | tr '[:upper:]' '[:lower:]')

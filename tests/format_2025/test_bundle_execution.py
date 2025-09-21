@@ -58,7 +58,7 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
 
         return bundle_path
 
-    def test_slot_substitution_single(self, temp_dir):
+    def test_slot_substitution_single(self, temp_dir) -> None:
         """Test single slot substitution in command."""
         launcher = PSPFLauncher()
         launcher.cache_dir = temp_dir
@@ -73,7 +73,7 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
         expected = f"{slot0_path}/bin/python -m myapp"
         assert substituted == expected
 
-    def test_slot_substitution_multiple(self, temp_dir):
+    def test_slot_substitution_multiple(self, temp_dir) -> None:
         """Test multiple slot substitution."""
         launcher = PSPFLauncher()
         launcher.cache_dir = temp_dir
@@ -95,7 +95,7 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
         expected = f"{slot0_path}/bin/python -m {slot1_path}/app --config {slot2_path}/config.json"
         assert substituted == expected
 
-    def test_environment_substitution(self, temp_dir):
+    def test_environment_substitution(self, temp_dir) -> None:
         """Test environment variable slot substitution."""
         launcher = PSPFLauncher()
         launcher.cache_dir = temp_dir
@@ -111,7 +111,7 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
         assert substituted_env["MYAPP_VERSION"] == "1.2.3"
         assert substituted_env["MYAPP_CONFIG"] == f"{slot2_path}/config"
 
-    def test_missing_slot_reference(self):
+    def test_missing_slot_reference(self) -> None:
         """Test handling of missing slot reference."""
         launcher = PSPFLauncher()
 
@@ -124,7 +124,7 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
     # The taster tool already provides comprehensive argument passing tests
     # through its argv_command functionality
 
-    def test_platform_specific_slot_selection(self, temp_dir):
+    def test_platform_specific_slot_selection(self, temp_dir) -> None:
         """Test platform-specific slot selection."""
         # Create bundle with platform-specific slots
         slots = []
@@ -174,7 +174,7 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
         assert len(selected) == 1
         assert selected[0].id == "binary-darwin-arm64"
 
-    def test_working_directory_setup(self, temp_dir, executable_bundle):
+    def test_working_directory_setup(self, temp_dir, executable_bundle) -> None:
         """Test working directory is set correctly."""
         launcher = PSPFLauncher(executable_bundle)
 
@@ -198,7 +198,7 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
     # The pretaster tool validates exit codes across all builder/launcher combinations
     # in its combination-tests.sh script
 
-    def test_resource_limits(self, temp_dir):
+    def test_resource_limits(self, temp_dir) -> None:
         """Test resource limit application."""
         metadata = {
             "format": "PSPF/2025",
@@ -233,7 +233,7 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
     # The taster tool provides comprehensive signal handling tests through
     # its signals_command functionality
 
-    def test_execution_error_handling(self, temp_dir):
+    def test_execution_error_handling(self, temp_dir) -> None:
         """Test handling of execution errors."""
         # Create bundle with invalid command
         metadata = {

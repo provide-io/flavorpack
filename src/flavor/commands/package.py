@@ -126,6 +126,9 @@ def pack_command(
     _setup_workenv_base(workenv_base)
 
     try:
+        if not quiet:
+            safe_echo("📦 Building package artifacts...")
+
         built_artifacts = _build_package_artifacts(
             pyproject_toml_path,
             output_path,
@@ -138,6 +141,9 @@ def pack_command(
             public_key,
             key_seed,
         )
+
+        if not quiet:
+            safe_echo("🔍 Processing and verifying artifacts...")
 
         _process_built_artifacts(built_artifacts, verify, strip, quiet)
         _show_final_results(built_artifacts, quiet)

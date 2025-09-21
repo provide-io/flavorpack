@@ -16,12 +16,12 @@ from flavor.packaging.python.uv_manager import UVManager
 class TestUVManager:
     """Test UV manager functionality."""
 
-    def setup_method(self):
+    def setup_method(self) -> None:
         """Set up test fixtures."""
         self.config = BaseConfig()
         self.uv_manager = UVManager(self.config)
 
-    def test_initialization(self):
+    def test_initialization(self) -> None:
         """Test UVManager initialization."""
         assert self.uv_manager.tool_name == "uv"
         assert self.uv_manager.executable_name == "uv"
@@ -34,7 +34,7 @@ class TestUVManager:
 
     @patch("platform.machine")
     @patch("platform.system")
-    def test_get_metadata_linux_amd64(self, mock_system, mock_machine):
+    def test_get_metadata_linux_amd64(self, mock_system, mock_machine) -> None:
         """Test metadata generation for Linux amd64."""
         mock_system.return_value = "Linux"
         mock_machine.return_value = "x86_64"
@@ -50,7 +50,7 @@ class TestUVManager:
 
     @patch("platform.machine")
     @patch("platform.system")
-    def test_get_metadata_darwin_arm64(self, mock_system, mock_machine):
+    def test_get_metadata_darwin_arm64(self, mock_system, mock_machine) -> None:
         """Test metadata generation for macOS ARM64."""
         mock_system.return_value = "Darwin"
         mock_machine.return_value = "arm64"
@@ -65,7 +65,7 @@ class TestUVManager:
 
     @patch("platform.machine")
     @patch("platform.system")
-    def test_get_metadata_windows_amd64(self, mock_system, mock_machine):
+    def test_get_metadata_windows_amd64(self, mock_system, mock_machine) -> None:
         """Test metadata generation for Windows amd64."""
         mock_system.return_value = "Windows"
         mock_machine.return_value = "x86_64"
@@ -80,7 +80,7 @@ class TestUVManager:
 
     @patch("platform.machine")
     @patch("platform.system")
-    def test_get_metadata_unsupported_platform(self, mock_system, mock_machine):
+    def test_get_metadata_unsupported_platform(self, mock_system, mock_machine) -> None:
         """Test error handling for unsupported platforms."""
         mock_system.return_value = "FreeBSD"
         mock_machine.return_value = "x86_64"
@@ -90,7 +90,7 @@ class TestUVManager:
 
     @patch("platform.machine")
     @patch("platform.system")
-    def test_get_metadata_unsupported_arch(self, mock_system, mock_machine):
+    def test_get_metadata_unsupported_arch(self, mock_system, mock_machine) -> None:
         """Test error handling for unsupported architectures."""
         mock_system.return_value = "Linux"
         mock_machine.return_value = "riscv64"
@@ -100,7 +100,7 @@ class TestUVManager:
         ):
             self.uv_manager.get_metadata("0.1.45")
 
-    def test_get_available_versions(self):
+    def test_get_available_versions(self) -> None:
         """Test getting available UV versions."""
         versions = self.uv_manager.get_available_versions()
 
@@ -113,7 +113,7 @@ class TestUVManager:
             assert versions[i] >= versions[i + 1]
 
     @patch("shutil.which")
-    def test_find_system_uv_found(self, mock_which):
+    def test_find_system_uv_found(self, mock_which) -> None:
         """Test finding system UV when it exists."""
         mock_which.return_value = "/usr/local/bin/uv"
 
@@ -123,7 +123,7 @@ class TestUVManager:
         mock_which.assert_called_once_with("uv")
 
     @patch("shutil.which")
-    def test_find_system_uv_not_found(self, mock_which):
+    def test_find_system_uv_not_found(self, mock_which) -> None:
         """Test finding system UV when it doesn't exist."""
         mock_which.return_value = None
 
@@ -132,7 +132,7 @@ class TestUVManager:
         assert result is None
         mock_which.assert_called_once_with("uv")
 
-    def test_get_uv_venv_cmd_basic(self):
+    def test_get_uv_venv_cmd_basic(self) -> None:
         """Test UV venv command generation."""
         with patch.object(self.uv_manager, "get_uv_executable") as mock_get_uv:
             mock_get_uv.return_value = Path("/usr/local/bin/uv")
@@ -145,7 +145,7 @@ class TestUVManager:
             expected = ["/usr/local/bin/uv", "venv", "/tmp/test_venv"]
             assert cmd == expected
 
-    def test_get_uv_venv_cmd_with_python_version(self):
+    def test_get_uv_venv_cmd_with_python_version(self) -> None:
         """Test UV venv command with Python version."""
         with patch.object(self.uv_manager, "get_uv_executable") as mock_get_uv:
             mock_get_uv.return_value = Path("/usr/local/bin/uv")
@@ -164,7 +164,7 @@ class TestUVManager:
             ]
             assert cmd == expected
 
-    def test_get_uv_pip_install_cmd_packages(self):
+    def test_get_uv_pip_install_cmd_packages(self) -> None:
         """Test UV pip install command with packages."""
         with patch.object(self.uv_manager, "get_uv_executable") as mock_get_uv:
             mock_get_uv.return_value = Path("/usr/local/bin/uv")
@@ -185,7 +185,7 @@ class TestUVManager:
             ]
             assert cmd == expected
 
-    def test_get_uv_pip_install_cmd_requirements_file(self):
+    def test_get_uv_pip_install_cmd_requirements_file(self) -> None:
         """Test UV pip install command with requirements file."""
         with patch.object(self.uv_manager, "get_uv_executable") as mock_get_uv:
             mock_get_uv.return_value = Path("/usr/local/bin/uv")
@@ -208,7 +208,7 @@ class TestUVManager:
             ]
             assert cmd == expected
 
-    def test_get_uv_pip_compile_cmd_basic(self):
+    def test_get_uv_pip_compile_cmd_basic(self) -> None:
         """Test UV pip-compile command generation."""
         with patch.object(self.uv_manager, "get_uv_executable") as mock_get_uv:
             mock_get_uv.return_value = Path("/usr/local/bin/uv")
@@ -229,7 +229,7 @@ class TestUVManager:
             ]
             assert cmd == expected
 
-    def test_get_uv_pip_compile_cmd_with_python_version(self):
+    def test_get_uv_pip_compile_cmd_with_python_version(self) -> None:
         """Test UV pip-compile command with Python version."""
         with patch.object(self.uv_manager, "get_uv_executable") as mock_get_uv:
             mock_get_uv.return_value = Path("/usr/local/bin/uv")
@@ -255,7 +255,7 @@ class TestUVManager:
             assert cmd == expected
 
     @patch("flavor.packaging.python.uv_manager.run_command")
-    def test_create_venv(self, mock_run_command):
+    def test_create_venv(self, mock_run_command) -> None:
         """Test UV venv creation."""
         mock_result = Mock()
         mock_result.returncode = 0
@@ -281,7 +281,7 @@ class TestUVManager:
             assert kwargs["check"] is True
 
     @patch("flavor.packaging.python.uv_manager.run_command")
-    def test_install_packages_fast(self, mock_run_command):
+    def test_install_packages_fast(self, mock_run_command) -> None:
         """Test UV fast package installation."""
         mock_result = Mock()
         mock_result.returncode = 0
@@ -310,7 +310,7 @@ class TestUVManager:
             assert kwargs["check"] is True
 
     @patch("flavor.packaging.python.uv_manager.run_command")
-    def test_compile_requirements(self, mock_run_command):
+    def test_compile_requirements(self, mock_run_command) -> None:
         """Test UV requirements compilation."""
         mock_result = Mock()
         mock_result.returncode = 0
@@ -338,7 +338,7 @@ class TestUVManager:
             # Verify error handling enabled
             assert kwargs["check"] is True
 
-    def test_empty_package_lists_handled_gracefully(self):
+    def test_empty_package_lists_handled_gracefully(self) -> None:
         """Test that empty package lists are handled without errors."""
         venv_python = Path("/tmp/venv/bin/python")
 
@@ -353,11 +353,11 @@ class TestUVManager:
 class TestUVManagerCriticalFeatures:
     """Test CRITICAL features that must never be broken."""
 
-    def setup_method(self):
+    def setup_method(self) -> None:
         """Set up test fixtures."""
         self.uv_manager = UVManager()
 
-    def test_tool_manager_inheritance(self):
+    def test_tool_manager_inheritance(self) -> None:
         """CRITICAL: UVManager must properly extend BaseToolManager."""
         from provide.foundation.tools.base import BaseToolManager
 
@@ -367,7 +367,7 @@ class TestUVManagerCriticalFeatures:
         assert hasattr(self.uv_manager, "get_metadata")
         assert hasattr(self.uv_manager, "get_available_versions")
 
-    def test_method_names_are_debug_resistant(self):
+    def test_method_names_are_debug_resistant(self) -> None:
         """CRITICAL: Method names must be debug-resistant to prevent confusion."""
         # Ensure the critical methods exist with correct names
         assert hasattr(self.uv_manager, "_get_uv_venv_cmd")
@@ -379,7 +379,7 @@ class TestUVManagerCriticalFeatures:
         assert callable(self.uv_manager._get_uv_pip_install_cmd)
         assert callable(self.uv_manager._get_uv_pip_compile_cmd)
 
-    def test_never_replaces_pip_commands(self):
+    def test_never_replaces_pip_commands(self) -> None:
         """CRITICAL: UV methods must be clearly separate from pip methods."""
         # UV methods should have UV prefix to avoid confusion with pip methods
         assert not hasattr(self.uv_manager, "_get_pip_install_cmd")
@@ -395,7 +395,7 @@ class TestUVManagerCriticalFeatures:
         for method in uv_methods:
             assert "uv" in method.lower()
 
-    def test_system_uv_preference_configurable(self):
+    def test_system_uv_preference_configurable(self) -> None:
         """CRITICAL: System UV preference must be configurable."""
         assert hasattr(self.uv_manager, "use_system_uv")
         assert isinstance(self.uv_manager.use_system_uv, bool)

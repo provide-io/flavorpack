@@ -73,7 +73,7 @@ def detect_bundle_mmap():
 
     # Check 2: Memory usage patterns
     tracemalloc.start()
-    current, peak = tracemalloc.get_traced_memory()
+    current, _peak = tracemalloc.get_traced_memory()
     tracemalloc.stop()
 
     # Low traced memory with large bundle suggests mmap
