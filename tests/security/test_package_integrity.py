@@ -4,13 +4,12 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-import pytest
-
-from flavor.psp.format_2025.crypto import (
+from provide.foundation.crypto import (
     generate_keypair,
     sign_data,
     verify_signature,
 )
+import pytest
 
 
 class TestPackageIntegrity:
