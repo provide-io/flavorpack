@@ -95,7 +95,14 @@ def test_python_builder_flow(
     mock_builder_instance.add_slot.return_value = mock_builder_instance
     mock_builder_instance.with_options.return_value = mock_builder_instance
     mock_builder_instance.with_keys.return_value = mock_builder_instance
-    mock_builder_instance.build.return_value = mock_build_result
+    # Set up mock to create the output file as a side effect
+    def create_mock_file(output_path):
+        """Side effect to create mock output file."""
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_bytes(b"mock package content" * 1000)
+        return mock_build_result
+
+    mock_builder_instance.build.side_effect = create_mock_file
 
     orchestrator.build_package()
 
@@ -139,6 +146,17 @@ def test_external_builder_command_construction(
     (tmp_path / "python.tgz").touch()
 
     orchestrator.builder_bin = "/path/to/flavor-rs-builder"
+
+    # Set up mock run_command to create the output file as a side effect
+    def create_mock_file_external(*args, **kwargs):
+        """Side effect to create mock output file for external builder."""
+        output_path = Path(orchestrator.output_flavor_path)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_bytes(b"mock package content from external builder" * 1000)
+        return None  # run_command returns None on success
+
+    mock_run_command.side_effect = create_mock_file_external
+
     orchestrator.build_package()
 
     mock_python_packager.assert_called_once()
