@@ -95,6 +95,7 @@ def test_python_builder_flow(
     mock_builder_instance.add_slot.return_value = mock_builder_instance
     mock_builder_instance.with_options.return_value = mock_builder_instance
     mock_builder_instance.with_keys.return_value = mock_builder_instance
+
     # Set up mock to create the output file as a side effect
     def create_mock_file(output_path):
         """Side effect to create mock output file."""
@@ -148,7 +149,7 @@ def test_external_builder_command_construction(
     orchestrator.builder_bin = "/path/to/flavor-rs-builder"
 
     # Set up mock run_command to create the output file as a side effect
-    def create_mock_file_external(*args, **kwargs):
+    def create_mock_file_external(*args, **kwargs) -> None:
         """Side effect to create mock output file for external builder."""
         output_path = Path(orchestrator.output_flavor_path)
         output_path.parent.mkdir(parents=True, exist_ok=True)

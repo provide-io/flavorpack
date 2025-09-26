@@ -160,8 +160,10 @@ class TestLauncherReproducibility:
     @patch("flavor.packaging.python.packager.PythonPackager.prepare_artifacts")
     @patch("flavor.packaging.orchestrator_ingredients.create_python_slot_tarballs")
     @patch("builtins.open")
+    @patch("flavor.packaging.orchestrator.IngredientManager")
     def test_reproducible_builds_with_same_launcher(
         self,
+        mock_ingredient_manager,
         mock_open,
         mock_create_slot_tarballs,
         mock_prepare_artifacts,
