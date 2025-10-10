@@ -10,7 +10,7 @@ import hashlib
 from pathlib import Path
 
 from provide.foundation import logger
-from provide.foundation.crypto import generate_key_pair
+from provide.foundation.crypto import generate_ed25519_keypair
 from provide.foundation.file.directory import ensure_dir
 
 from flavor.config.defaults import DEFAULT_FILE_PERMS
@@ -103,7 +103,7 @@ def generate_ephemeral_keys() -> tuple[bytes, bytes]:
     Returns:
         Tuple of (private_key, public_key) as bytes
     """
-    private_key, public_key = generate_key_pair()
+    private_key, public_key = generate_ed25519_keypair()
 
     logger.debug(
         f"✨ Generated ephemeral keys (public key hash: {hashlib.sha256(public_key).hexdigest()[:8]})"
