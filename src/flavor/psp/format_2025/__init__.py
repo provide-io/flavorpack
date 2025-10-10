@@ -59,7 +59,7 @@ __all__ = [
     "build_package",
     "create_key_config",
     # Functions
-    "generate_key_pair",
+    "generate_ed25519_keypair",
     "resolve_keys",
     "sign_data",
     "validate_complete",
