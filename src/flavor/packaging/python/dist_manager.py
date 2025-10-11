@@ -9,11 +9,11 @@ setup, package installation, and distribution preparation for PSPF packaging.
 
 import os
 from pathlib import Path
-import shutil
+import shutil  # Only kept for copytree which Foundation doesn't provide
 import sys
 from typing import Any
 
-from provide.foundation.file.directory import ensure_dir, ensure_parent_dir
+from provide.foundation.file import ensure_dir, ensure_parent_dir, safe_copy, safe_rmtree
 from provide.foundation.logger import logger
 from provide.foundation.process import run_command
 
@@ -78,7 +78,7 @@ class PythonDistManager:
         # Remove existing venv if present
         if venv_path.exists():
             logger.debug(f"Removing existing venv: {venv_path}")
-            shutil.rmtree(venv_path)
+            safe_rmtree(venv_path, missing_ok=False)
 
         ensure_parent_dir(venv_path)
 
@@ -100,7 +100,7 @@ class PythonDistManager:
                         Path(venv_python).symlink_to(python_exe)
                     except (OSError, FileExistsError):
                         # If symlink fails, copy the file
-                        shutil.copy2(python_exe, venv_python)
+                        safe_copy(python_exe, venv_python, preserve_mode=True, overwrite=True)
 
                 logger.info("✅ Successfully created venv with UV")
                 return venv_python
@@ -267,7 +267,7 @@ class PythonDistManager:
             for path in site_packages.glob(pattern):
                 try:
                     if path.is_dir():
-                        shutil.rmtree(path)
+                        safe_rmtree(path, missing_ok=False)
                         dirs_removed += 1
                     else:
                         path.unlink()
@@ -339,7 +339,7 @@ class PythonDistManager:
         # Copy site-packages to distribution directory
         dist_site_packages = dist_dir / "site-packages"
         if dist_site_packages.exists():
-            shutil.rmtree(dist_site_packages)
+            safe_rmtree(dist_site_packages, missing_ok=False)
 
         logger.info("Copying site-packages to distribution")
         shutil.copytree(site_packages, dist_site_packages)
