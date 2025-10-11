@@ -68,6 +68,8 @@ def cli(ctx: click.Context, log_level: str) -> None:
     # Skip logging setup when running under pytest to avoid I/O conflicts
     if "pytest" not in sys.modules:
         # Foundation logger auto-configures on first use
+        # Set service name for OpenObserve/telemetry (uses OTEL standard)
+        os.environ.setdefault("PROVIDE_SERVICE_NAME", "flavor")
         # The logger will auto-configure based on the log level
         os.environ["FOUNDATION_LOG_LEVEL"] = log_level.upper()
 
