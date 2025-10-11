@@ -35,7 +35,16 @@ from flavor.psp.format_2025.spec import (
     PreparedSlot,
 )
 from flavor.psp.format_2025.validation import validate_complete, validate_spec
-from provide.foundation.file import align_offset
+from provide.foundation.file import align_offset as _align_offset
+
+
+# PSPF-specific wrapper with correct default alignment
+def align_offset(offset: int, alignment: int = DEFAULT_SLOT_ALIGNMENT) -> int:
+    """Align offset to PSPF slot boundary (DEFAULT_SLOT_ALIGNMENT).
+
+    This wraps foundation's align_offset with PSPF's specific default.
+    """
+    return _align_offset(offset, alignment)
 
 __all__ = [
     # Constants
