@@ -105,7 +105,7 @@ class PSPFLauncher(PSPFReader):
         Raises:
             OSError: If insufficient disk space available
         """
-        from flavor.utils.disk import check_disk_space
+        from provide.foundation.file import check_disk_space
 
         # Calculate total size needed (compressed size * multiplier for safety)
         slot_table = self.read_slot_table()

@@ -35,7 +35,7 @@ from flavor.psp.format_2025.spec import (
     PreparedSlot,
 )
 from flavor.psp.format_2025.validation import validate_complete, validate_spec
-from flavor.utils.alignment import align_offset
+from provide.foundation.file import align_offset
 
 __all__ = [
     # Constants
