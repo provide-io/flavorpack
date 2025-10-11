@@ -104,10 +104,8 @@ def _initialize_foundation(log_level: str, log_file: Path | None = None) -> Stru
 
         # Initialize Foundation with explicit config
         # This overrides any auto-initialization that may have occurred
-        print(f"DEBUG: About to call hub.initialize_foundation with service_name={config.service_name}")
         hub = get_hub()
         hub.initialize_foundation(config)
-        print(f"DEBUG: Completed hub.initialize_foundation")
 
         # Create logger AFTER Foundation initialization
         # This ensures service_name="flavor" is properly set in OTLP resources
@@ -126,8 +124,8 @@ def _initialize_foundation(log_level: str, log_file: Path | None = None) -> Stru
             file_handler.setFormatter(formatter)
             logging.getLogger().addHandler(file_handler)
 
-        log.debug(
-            "🔧 Foundation initialized",
+        log.info(
+            "🔧 Foundation explicitly re-initialized",
             service="flavor",
             log_level=level_name,
             log_file=str(log_file) if log_file else None,
