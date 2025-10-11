@@ -11,10 +11,12 @@ import logging
 import os
 from pathlib import Path
 import sys
+from typing import cast
 
 import click
 from provide.foundation import LoggingConfig, TelemetryConfig, get_hub
 from provide.foundation.logger import get_logger
+from provide.foundation.logger.types import LogLevelStr
 
 # Set up Windows Unicode support early
 if sys.platform == "win32":
@@ -72,6 +74,9 @@ def _initialize_foundation(log_level: str, log_file: Path | None = None) -> None
             level = getattr(logging, level_upper, logging.INFO)
             level_name = logging.getLevelName(level)
 
+        # Cast to LogLevelStr for type safety
+        log_level_typed = cast(LogLevelStr, level_name)
+
         # Load base config from environment (preserves OpenObserve/OTLP auto-configuration)
         from attrs import evolve
 
@@ -83,7 +88,7 @@ def _initialize_foundation(log_level: str, log_file: Path | None = None) -> None
             service_name="flavor",  # Set service name for OpenObserve/OTLP telemetry
             logging=LoggingConfig(
                 console_formatter="key_value",  # Use Foundation's default formatter
-                default_level=level_name,
+                default_level=log_level_typed,
                 das_emoji_prefix_enabled=True,  # Enable DAS emoji prefixes
                 logger_name_emoji_prefix_enabled=False,  # Keep output clean
             ),
@@ -143,12 +148,12 @@ def _initialize_foundation(log_level: str, log_file: Path | None = None) -> None
 )
 @click.option(
     "--log-file",
-    type=click.Path(path_type=Path),
+    type=click.Path(),
     default=None,
     help="Write logs to file in addition to console.",
 )
 @click.pass_context
-def cli(ctx: click.Context, log_level: str, log_file: Path | None) -> None:
+def cli(ctx: click.Context, log_level: str, log_file: str | None) -> None:
     """PSPF (Progressive Secure Package Format) Build Tool."""
     ctx.ensure_object(dict)
     ctx.obj["log_level"] = log_level
@@ -156,7 +161,8 @@ def cli(ctx: click.Context, log_level: str, log_file: Path | None) -> None:
 
     # Skip Foundation setup when running under pytest to avoid conflicts
     if "pytest" not in sys.modules:
-        _initialize_foundation(log_level, log_file)
+        log_file_path = Path(log_file) if log_file else None
+        _initialize_foundation(log_level, log_file_path)
 
 
 # Register simple commands
