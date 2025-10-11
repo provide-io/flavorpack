@@ -6,7 +6,6 @@ Handles the low-level binary writing and file operations for PSPF packages.
 """
 
 import gzip
-import json
 from pathlib import Path
 from typing import BinaryIO
 import zlib
@@ -14,6 +13,7 @@ import zlib
 from provide.foundation import logger
 from provide.foundation.crypto import sign_data
 from provide.foundation.file.directory import ensure_parent_dir
+from provide.foundation.serialization import json_dumps
 
 from flavor.config.defaults import (
     DEFAULT_EXECUTABLE_PERMS,
@@ -75,7 +75,7 @@ def write_package(
 
     # Create and compress metadata
     metadata = assemble_metadata(spec, slots, launcher_info)
-    metadata_json = json.dumps(metadata, indent=2).encode("utf-8")
+    metadata_json = json_dumps(metadata, indent=2).encode("utf-8")
     metadata_compressed = gzip.compress(metadata_json, mtime=0)
 
     # Sign metadata

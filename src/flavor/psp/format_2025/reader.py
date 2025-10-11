@@ -4,7 +4,6 @@
 
 from contextlib import contextmanager
 import gzip
-import json
 from pathlib import Path
 import struct
 from typing import Any
@@ -13,6 +12,7 @@ import zlib
 from cryptography.exceptions import InvalidSignature
 from provide.foundation import logger
 from provide.foundation.crypto import verify_signature
+from provide.foundation.serialization import json_loads
 
 from flavor.config.defaults import (
     ACCESS_AUTO,
@@ -233,7 +233,7 @@ class PSPFReader:
             pass
 
         # Parse JSON
-        self._metadata = json.loads(metadata_data.decode("utf-8"))
+        self._metadata = json_loads(metadata_data.decode("utf-8"))
 
         return self._metadata
 

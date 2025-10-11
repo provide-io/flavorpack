@@ -7,10 +7,11 @@
 from __future__ import annotations
 
 from enum import Enum
-import json
 from pathlib import Path
 import sys
 from typing import Any, TextIO
+
+from provide.foundation.serialization import json_dumps
 
 
 class OutputFormat(Enum):
@@ -66,7 +67,7 @@ class OutputHandler:
         """Flush buffered JSON output."""
         if self._output_buffer:
             stream = self._get_output_stream()
-            json.dump(self._output_buffer, stream, indent=2)
+            stream.write(json_dumps(self._output_buffer, indent=2))
             stream.write("\n")
             stream.flush()
             self._output_buffer.clear()
