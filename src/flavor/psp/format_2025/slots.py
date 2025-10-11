@@ -287,7 +287,7 @@ class SlotMetadata:
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
-        from flavor.psp.format_2025.checksums import calculate_checksum
+        from provide.foundation.crypto import format_checksum as calculate_checksum
 
         # Ensure checksum has prefix
         if not self.checksum:
