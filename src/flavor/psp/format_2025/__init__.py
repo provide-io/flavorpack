@@ -6,9 +6,6 @@ Progressive Secure Package Format (2025 Edition)
 
 from provide.foundation.crypto import generate_ed25519_keypair, sign_data, verify_signature
 
-# Alias for backward compatibility
-generate_key_pair = generate_ed25519_keypair
-
 from flavor.config.defaults import (
     DEFAULT_HEADER_SIZE,
     DEFAULT_MAGIC_TRAILER_SIZE,
@@ -63,7 +60,6 @@ __all__ = [
     "create_key_config",
     # Functions
     "generate_ed25519_keypair",
-    "generate_key_pair",  # Alias for backward compatibility
     "resolve_keys",
     "sign_data",
     "validate_complete",

@@ -16,7 +16,7 @@ from flavor.psp.format_2025 import (
     PSPFBuilder,
     PSPFLauncher,
     PSPFReader,
-    generate_key_pair,
+    generate_ed25519_keypair,
 )
 
 
@@ -63,7 +63,7 @@ class TestPSPFSecurity:
         # Generate multiple key pairs
         keys = []
         for _ in range(5):
-            private_key, public_key = generate_key_pair()
+            private_key, public_key = generate_ed25519_keypair()
             keys.append((private_key, public_key))
 
         # Verify all keys are unique
