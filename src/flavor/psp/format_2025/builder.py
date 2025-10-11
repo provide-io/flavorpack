@@ -6,10 +6,8 @@ This module provides both pure functions and a fluent builder interface
 for creating PSPF packages.
 """
 
-import io
 import os
 from pathlib import Path
-import tarfile
 import time
 import zlib
 
@@ -25,6 +23,7 @@ from flavor.config.defaults import (
     DEFAULT_MIN_MEMORY,
 )
 from flavor.exceptions import BuildError
+from flavor.psp.format_2025 import handlers
 from flavor.psp.format_2025.checksums import calculate_checksum
 from flavor.psp.format_2025.index import PSPFIndex
 from flavor.psp.format_2025.keys import resolve_keys
@@ -39,7 +38,6 @@ from flavor.psp.format_2025.spec import (
 )
 from flavor.psp.format_2025.validation import validate_complete
 from flavor.psp.format_2025.writer import write_package
-from flavor.utils.archive import deterministic_filter
 
 # =============================================================================
 # Pure Functions
@@ -307,21 +305,14 @@ def _load_slot_data(slot: SlotMetadata) -> bytes:
         raise BuildError(f"Slot path does not exist: {slot_path}")
 
     if slot_path.is_dir():
-        # Create tarball for directory deterministically
-        buffer = io.BytesIO()
-        with tarfile.open(fileobj=buffer, mode="w") as tar:
-            # Add files in a sorted, deterministic order
-            for path_item in sorted(slot_path.rglob("*")):
-                arcname = path_item.relative_to(slot_path)
-                tar.add(path_item, arcname=arcname, filter=deterministic_filter)
-        buffer.seek(0)
-        return buffer.read()
+        # Create tarball for directory using Foundation's TarArchive
+        return handlers.create_tar_archive(slot_path, deterministic=True)
     else:
         return slot_path.read_bytes()
 
 
 def _apply_operations(data: bytes, packed_ops: int, options: BuildOptions) -> bytes:
-    """Apply v0 operation chain to data using direct implementation.
+    """Apply v0 operation chain to data using Foundation handlers.
 
     Args:
         data: Raw data to process
@@ -331,19 +322,6 @@ def _apply_operations(data: bytes, packed_ops: int, options: BuildOptions) -> by
     Returns:
         Processed data after applying v0 operations
     """
-    from flavor.psp.format_2025.operations import (
-        OP_BZIP2,
-        OP_GZIP,
-        OP_TAR,
-        OP_XZ,
-        OP_ZSTD,
-        unpack_operations,
-    )
-
-    if packed_ops == 0:
-        # No operations, return raw data
-        return data
-
     # Check if data is already compressed (common issue with pre-compressed files)
     # GZIP magic bytes: 1f 8b 08
     if len(data) >= 3 and data[0:3] == b"\x1f\x8b\x08":
@@ -352,47 +330,13 @@ def _apply_operations(data: bytes, packed_ops: int, options: BuildOptions) -> by
         )
         return data
 
-    # Unpack v0 operations
-    ops = unpack_operations(packed_ops)
-    logger.debug(f"🔧 Applying v0 operations: {[hex(op) for op in ops]}")
-
-    # Apply operations in sequence
-    result = data
-    for op in ops:
-        if op == OP_TAR:
-            # TAR is handled by the slot builder - data should already be tar format
-            logger.trace("📦 TAR operation (data should already be tar format)")
-            continue
-        elif op == OP_GZIP:
-            import gzip
-
-            logger.trace("🗜️ Applying GZIP compression")
-            result = gzip.compress(result, compresslevel=options.compression_level)
-        elif op == OP_BZIP2:
-            import bz2
-
-            logger.trace("🗜️ Applying BZIP2 compression")
-            result = bz2.compress(result, compresslevel=9)
-        elif op == OP_XZ:
-            import lzma
-
-            logger.trace("🗜️ Applying XZ compression")
-            result = lzma.compress(result, preset=6)
-        elif op == OP_ZSTD:
-            try:
-                import zstandard as zstd
-
-                logger.trace("🗜️ Applying ZSTD compression")
-                cctx = zstd.ZstdCompressor(level=3)
-                result = cctx.compress(result)
-            except ImportError:
-                logger.warning("⚠️ ZSTD not available, skipping operation")
-        else:
-            logger.warning(f"⚠️ Unsupported v0 operation: 0x{op:02x}")
-            # Don't fail - just skip unsupported operations
-
-    logger.debug(f"✅ Operations complete: {len(data)} -> {len(result)} bytes")
-    return result
+    # Use Foundation handlers to apply operations
+    return handlers.apply_operations(
+        data=data,
+        packed_ops=packed_ops,
+        compression_level=options.compression_level,
+        deterministic=options.reproducible,
+    )
 
 
 # Package writing is now handled by the writer module
