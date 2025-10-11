@@ -13,7 +13,12 @@ import shutil  # Only kept for copytree which Foundation doesn't provide
 import sys
 from typing import Any
 
-from provide.foundation.file import ensure_dir, ensure_parent_dir, safe_copy, safe_rmtree
+from provide.foundation.file import (
+    ensure_dir,
+    ensure_parent_dir,
+    safe_copy,
+    safe_rmtree,
+)
 from provide.foundation.logger import logger
 from provide.foundation.process import run_command
 
@@ -100,7 +105,9 @@ class PythonDistManager:
                         Path(venv_python).symlink_to(python_exe)
                     except (OSError, FileExistsError):
                         # If symlink fails, copy the file
-                        safe_copy(python_exe, venv_python, preserve_mode=True, overwrite=True)
+                        safe_copy(
+                            python_exe, venv_python, preserve_mode=True, overwrite=True
+                        )
 
                 logger.info("✅ Successfully created venv with UV")
                 return venv_python

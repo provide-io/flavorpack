@@ -181,7 +181,9 @@ class BinaryLoader:
                     logger.info(
                         f"✅ Built and copying {component}: {source_path} → {binary_path}"
                     )
-                    safe_copy(source_path, binary_path, preserve_mode=True, overwrite=True)
+                    safe_copy(
+                        source_path, binary_path, preserve_mode=True, overwrite=True
+                    )
                     built_binaries.append(binary_path)
                     # Make executable
                     binary_path.chmod(DEFAULT_EXECUTABLE_PERMS)
