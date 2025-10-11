@@ -1,10 +1,21 @@
-"""Disk space and filesystem utilities."""
+"""Disk space and filesystem utilities.
 
-import os
+DEPRECATED: This module is a compatibility shim. Import directly from:
+    from provide.foundation.file import (
+        check_disk_space,
+        get_available_space,
+        get_disk_usage,
+        format_bytes,
+    )
+"""
+
 from pathlib import Path
 
-from provide.foundation import logger
-from provide.foundation.file import ensure_dir
+from provide.foundation.file import (
+    check_disk_space as _check_disk_space,
+    ensure_dir,
+    get_available_space as _get_available_space,
+)
 
 
 def check_disk_space(path: Path, required_bytes: int) -> None:
@@ -16,35 +27,14 @@ def check_disk_space(path: Path, required_bytes: int) -> None:
 
     Raises:
         OSError: If insufficient disk space is available
+
+    Note:
+        This wraps foundation's check_disk_space with raise_on_insufficient=True
+        to maintain backward compatibility with flavorpack's original API.
     """
-    try:
-        # Use parent directory if path doesn't exist yet
-        check_path = path if path.exists() else path.parent
-
-        # Get available disk space using os.statvfs (Unix-like systems)
-        stat_result = os.statvfs(check_path)
-        available = stat_result.f_bavail * stat_result.f_frsize
-
-        # Convert to GB for human-readable logging
-        required_gb = required_bytes / (1024 * 1024 * 1024)
-        available_gb = available / (1024 * 1024 * 1024)
-
-        logger.debug(
-            f"💾 Disk space check: need {required_gb:.2f} GB, have {available_gb:.2f} GB"
-        )
-
-        if available < required_bytes:
-            logger.error(
-                f"❌ Insufficient disk space: need {required_gb:.2f} GB, have {available_gb:.2f} GB"
-            )
-            raise OSError(
-                f"Insufficient disk space: need {required_gb:.2f} GB, have {available_gb:.2f} GB"
-            )
-
-    except (AttributeError, OSError) as e:
-        # statvfs not available on Windows or check failed
-        logger.warning(f"⚠️ Could not check disk space: {e}")
-        # Don't fail if we can't check (matches Go/Rust behavior)
+    # Foundation's version has raise_on_insufficient parameter,
+    # flavorpack's original always raises
+    _check_disk_space(path, required_bytes, raise_on_insufficient=True)
 
 
 def get_available_space(path: Path) -> int | None:
@@ -56,12 +46,7 @@ def get_available_space(path: Path) -> int | None:
     Returns:
         Available bytes or None if unable to determine
     """
-    try:
-        check_path = path if path.exists() else path.parent
-        stat_result = os.statvfs(check_path)
-        return stat_result.f_bavail * stat_result.f_frsize
-    except (AttributeError, OSError):
-        return None
+    return _get_available_space(path)
 
 
 def ensure_directory(path: Path, mode: int = 0o700) -> None:
@@ -73,3 +58,10 @@ def ensure_directory(path: Path, mode: int = 0o700) -> None:
     """
     # Use foundation's ensure_dir which does the same thing
     ensure_dir(path, mode=mode)
+
+
+__all__ = [
+    "check_disk_space",
+    "ensure_directory",
+    "get_available_space",
+]
