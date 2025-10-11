@@ -11,6 +11,7 @@ from pathlib import Path
 
 from provide.foundation import logger
 from provide.foundation.crypto import generate_ed25519_keypair
+from provide.foundation.file import atomic_write_bytes
 from provide.foundation.file.directory import ensure_dir
 
 from flavor.config.defaults import DEFAULT_FILE_PERMS
@@ -177,9 +178,9 @@ def save_keys_to_path(private_key: bytes, public_key: bytes, key_path: Path) -> 
     private_key_path = key_path / "flavor-private.key"
     public_key_path = key_path / "flavor-public.key"
 
-    # Save keys
-    private_key_path.write_bytes(private_key)
-    public_key_path.write_bytes(public_key)
+    # Save keys atomically for safety
+    atomic_write_bytes(private_key_path, private_key)
+    atomic_write_bytes(public_key_path, public_key)
 
     # Set restrictive permissions on private key
     private_key_path.chmod(DEFAULT_FILE_PERMS)
