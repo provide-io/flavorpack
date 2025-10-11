@@ -4,7 +4,11 @@ PSPF 2025 Format Implementation
 Progressive Secure Package Format (2025 Edition)
 """
 
-from provide.foundation.crypto import generate_ed25519_keypair, sign_data, verify_signature
+from provide.foundation.crypto import (
+    generate_ed25519_keypair,
+    sign_data,
+    verify_signature,
+)
 
 from flavor.config.defaults import (
     DEFAULT_HEADER_SIZE,
