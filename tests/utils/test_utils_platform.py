@@ -36,7 +36,7 @@ class TestPlatformDetection:
     @patch("provide.foundation.platform.detection.platform.system")
     def test_get_os_name_normalization(self, mock_system) -> None:
         """Test OS name normalization for various inputs."""
-        from provide.foundation.utils.caching import clear_cache
+        from provide.foundation.platform.detection import get_os_name as foundation_get_os_name
 
         test_cases = [
             ("Darwin", "darwin"),
@@ -48,7 +48,7 @@ class TestPlatformDetection:
         ]
 
         for input_os, expected_os in test_cases:
-            clear_cache()  # Clear cached values before each test
+            foundation_get_os_name.cache_clear()  # Clear cached values before each test
             mock_system.return_value = input_os
             assert get_os_name() == expected_os
 
@@ -73,7 +73,7 @@ class TestPlatformDetection:
     @patch("provide.foundation.platform.detection.platform.machine")
     def test_get_arch_name_normalization(self, mock_machine) -> None:
         """Test architecture normalization for various inputs."""
-        from provide.foundation.utils.caching import clear_cache
+        from provide.foundation.platform.detection import get_arch_name as foundation_get_arch_name
 
         test_cases = [
             ("x86_64", "amd64"),
@@ -89,7 +89,7 @@ class TestPlatformDetection:
         ]
 
         for input_arch, expected_arch in test_cases:
-            clear_cache()  # Clear cached values before each test
+            foundation_get_arch_name.cache_clear()  # Clear cached values before each test
             mock_machine.return_value = input_arch
             assert get_arch_name() == expected_arch
 
@@ -113,7 +113,7 @@ class TestPlatformDetection:
     @patch("provide.foundation.platform.detection.platform.machine")
     def test_get_platform_string_combinations(self, mock_machine, mock_system) -> None:
         """Test various platform string combinations."""
-        from provide.foundation.utils.caching import clear_cache
+        from provide.foundation.platform.detection import get_os_name as foundation_get_os_name, get_arch_name as foundation_get_arch_name, get_platform_string as foundation_get_platform_string
 
         test_cases = [
             ("Darwin", "x86_64", "darwin_amd64"),
@@ -125,7 +125,10 @@ class TestPlatformDetection:
         ]
 
         for os_name, arch_name, expected_platform in test_cases:
-            clear_cache()  # Clear cached values before each test
+            # Clear all cached values before each test
+            foundation_get_os_name.cache_clear()
+            foundation_get_arch_name.cache_clear()
+            foundation_get_platform_string.cache_clear()
             mock_system.return_value = os_name
             mock_machine.return_value = arch_name
             assert get_platform_string() == expected_platform
@@ -151,10 +154,10 @@ class TestPlatformDetection:
         self, mock_mac_ver, mock_version, mock_release, mock_system
     ) -> None:
         """Test OS version detection for different systems."""
-        from provide.foundation.utils.caching import clear_cache
+        from provide.foundation.platform.detection import get_os_version as foundation_get_os_version
 
         # macOS
-        clear_cache()
+        foundation_get_os_version.cache_clear()
         mock_system.return_value = "Darwin"
         mock_mac_ver.return_value = ("14.6", "", "")
         mock_release.return_value = "23.6.0"
@@ -166,7 +169,7 @@ class TestPlatformDetection:
         assert version == "14.6"
 
         # Linux
-        clear_cache()
+        foundation_get_os_version.cache_clear()
         mock_system.return_value = "Linux"
         mock_release.return_value = "5.15.0-88-generic"
         mock_version.return_value = "#98-Ubuntu SMP Mon Oct 2 15:18:56 UTC 2023"
@@ -176,7 +179,7 @@ class TestPlatformDetection:
         assert "5.15" in version or "5.15.0" in version
 
         # Windows
-        clear_cache()
+        foundation_get_os_version.cache_clear()
         mock_system.return_value = "Windows"
         mock_release.return_value = "10"
         mock_version.return_value = "10.0.19045"
@@ -200,7 +203,7 @@ class TestPlatformDetection:
     @patch("provide.foundation.platform.detection.platform.processor")
     def test_get_cpu_type_values(self, mock_processor) -> None:
         """Test CPU type detection with known values."""
-        from provide.foundation.utils.caching import clear_cache
+        from provide.foundation.platform.detection import get_cpu_type as foundation_get_cpu_type
 
         test_cases = [
             ("Apple M1 Pro", lambda cpu: "Apple" in cpu and "M1" in cpu),
@@ -211,7 +214,7 @@ class TestPlatformDetection:
         ]
 
         for processor_info, validator in test_cases:
-            clear_cache()
+            foundation_get_cpu_type.cache_clear()
             mock_processor.return_value = processor_info
             cpu_type = get_cpu_type()
 
@@ -261,10 +264,10 @@ class TestPlatformDetection:
     @patch("provide.foundation.platform.detection.platform.machine")
     def test_unknown_platform_handling(self, mock_machine, mock_system) -> None:
         """Test handling of unknown platform values."""
-        from provide.foundation.utils.caching import clear_cache
+        from provide.foundation.platform.detection import get_os_name as foundation_get_os_name, get_arch_name as foundation_get_arch_name
 
         # Unknown OS
-        clear_cache()
+        foundation_get_os_name.cache_clear()
         mock_system.return_value = "UnknownOS"
         mock_machine.return_value = "x86_64"
 
@@ -273,7 +276,7 @@ class TestPlatformDetection:
         assert os_name == "unknownos"
 
         # Unknown architecture
-        clear_cache()
+        foundation_get_arch_name.cache_clear()
         mock_system.return_value = "Linux"
         mock_machine.return_value = "unknown_arch"
 
