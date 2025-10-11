@@ -19,6 +19,11 @@ class TestPlatformDetection:
 
     def test_get_os_name(self) -> None:
         """Test OS name detection and normalization."""
+        from provide.foundation.platform.detection import get_os_name as foundation_get_os_name
+
+        # Clear cache to ensure we get fresh values
+        foundation_get_os_name.cache_clear()
+
         os_name = get_os_name()
 
         # Should return normalized names
@@ -54,6 +59,11 @@ class TestPlatformDetection:
 
     def test_get_arch_name(self) -> None:
         """Test architecture detection and normalization."""
+        from provide.foundation.platform.detection import get_arch_name as foundation_get_arch_name
+
+        # Clear cache to ensure we get fresh values
+        foundation_get_arch_name.cache_clear()
+
         arch_name = get_arch_name()
 
         # Should return normalized architecture names
@@ -95,6 +105,13 @@ class TestPlatformDetection:
 
     def test_get_platform_string(self) -> None:
         """Test platform string generation."""
+        from provide.foundation.platform.detection import get_os_name as foundation_get_os_name, get_arch_name as foundation_get_arch_name, get_platform_string as foundation_get_platform_string
+
+        # Clear cache to ensure we get fresh values
+        foundation_get_os_name.cache_clear()
+        foundation_get_arch_name.cache_clear()
+        foundation_get_platform_string.cache_clear()
+
         platform_str = get_platform_string()
 
         # Should be os_arch format
