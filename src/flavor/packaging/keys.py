@@ -8,7 +8,7 @@ from pathlib import Path
 
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ed25519
-from provide.foundation.file import atomic_write_bytes
+from provide.foundation.file import atomic_write
 from provide.foundation.file.directory import ensure_dir
 
 from flavor.config.defaults import DEFAULT_FILE_PERMS
@@ -60,11 +60,11 @@ def generate_key_pair(keys_dir: Path) -> tuple[Path, Path]:
     ensure_dir(keys_dir, mode=0o700)
 
     # Write private key with restricted permissions (atomic for safety)
-    atomic_write_bytes(private_key_path, private_pem)
+    atomic_write(private_key_path, private_pem)
     private_key_path.chmod(DEFAULT_FILE_PERMS)
 
     # Write public key (atomic for safety)
-    atomic_write_bytes(public_key_path, public_pem)
+    atomic_write(public_key_path, public_pem)
     public_key_path.chmod(DEFAULT_FILE_PERMS)  # Use same security level
 
     return private_key_path, public_key_path

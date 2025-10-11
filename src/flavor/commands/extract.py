@@ -7,7 +7,7 @@
 from pathlib import Path
 
 import click
-from provide.foundation.file import atomic_write_bytes
+from provide.foundation.file import atomic_write
 from provide.foundation.file.directory import ensure_dir, ensure_parent_dir
 from provide.foundation.file.formats import write_json
 from provide.foundation.formatting import format_size
@@ -87,7 +87,7 @@ def extract_command(
 
             # Write to output (atomic for safety)
             ensure_parent_dir(output)
-            atomic_write_bytes(output, data)
+            atomic_write(output, data)
 
             click.secho(
                 f"✅ Extracted {format_size(len(data))} to {output}", fg="green"
@@ -169,7 +169,7 @@ def extract_all_command(package_file: str, output_dir: str, force: bool) -> None
                 data = reader.read_slot(i)
 
                 # Write to file (atomic for safety)
-                atomic_write_bytes(output_file, data)
+                atomic_write(output_file, data)
                 click.echo(f"   → {output_file}")
 
             # Also write metadata
