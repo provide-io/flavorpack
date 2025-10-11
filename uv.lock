@@ -616,7 +616,6 @@ wheels = [
 name = "flavorpack"
 source = { editable = "." }
 dependencies = [
-    { name = "httpx" },
     { name = "pip" },
     { name = "provide-foundation", extra = ["all"] },
     { name = "uv" },
@@ -633,7 +632,6 @@ docs = [
 
 [package.metadata]
 requires-dist = [
-    { name = "httpx", specifier = ">=0.28.1" },
     { name = "pip", specifier = ">=25.2" },
     { name = "provide-foundation", extras = ["all"], specifier = ">=0.0.0.dev0" },
     { name = "uv", specifier = ">=0.8.13" },
@@ -2199,7 +2197,7 @@ wheels = [
 
 [[package]]
 name = "provide-foundation"
-version = "0.0.32"
+version = "0.0.34"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiofiles" },
@@ -2208,9 +2206,9 @@ dependencies = [
     { name = "structlog" },
     { name = "tomli-w" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/61/ea/921d6868bb36cf61b51a55af38c792a04940aed5e14bf715f4738401c5f7/provide_foundation-0.0.32.tar.gz", hash = "sha256:f15008a7d90ea250b2148217daeeb9b8c25d98a02397e70169c23156025b7538", size = 358743, upload-time = "2025-10-10T04:04:40.637Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/da/34/00d5f787988a5e20bf9dd36ba114a0d602ba95a417d4063bc0b13a81b6a4/provide_foundation-0.0.34.tar.gz", hash = "sha256:94773e5c738b17b7cebc65af8802178eb0523fbc1b1f8ed9086eecd09a6a5667", size = 376199, upload-time = "2025-10-11T23:50:40.345Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/97/9a/984282d723dc28f210f5b8269c3b1925f051c014aa1d65271e9a0007094a/provide_foundation-0.0.32-py3-none-any.whl", hash = "sha256:c18a757434fc198ffc847173a19b1a0de13d6f238b033a72b405903a15c3cda8", size = 490481, upload-time = "2025-10-10T04:04:38.852Z" },
+    { url = "https://files.pythonhosted.org/packages/33/76/e0c479cd66b5faef08c1fa4f942349428b7dea0d18cfe189050f2f5bbe52/provide_foundation-0.0.34-py3-none-any.whl", hash = "sha256:c68ba54932af1524fbd9f1f55e8c7aa564c37f0d938ccd6ec1a244fb10e85778", size = 514575, upload-time = "2025-10-11T23:50:38.914Z" },
 ]
 
 [package.optional-dependencies]
@@ -2222,6 +2220,7 @@ all = [
     { name = "opentelemetry-exporter-otlp-proto-grpc" },
     { name = "opentelemetry-exporter-otlp-proto-http" },
     { name = "opentelemetry-sdk" },
+    { name = "zstandard" },
 ]
 
 [[package]]
