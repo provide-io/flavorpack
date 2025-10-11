@@ -17,6 +17,7 @@ import click
 from provide.foundation import LoggingConfig, TelemetryConfig, get_hub
 from provide.foundation.logger import get_logger
 from provide.foundation.logger.types import LogLevelStr
+from structlog.typing import FilteringBoundLogger as StructLogger
 
 # Set up Windows Unicode support early
 if sys.platform == "win32":
@@ -49,18 +50,25 @@ try:
 except importlib.metadata.PackageNotFoundError:
     __version__ = "0.0.0-dev"
 
-log = get_logger(__name__)
+# Logger is created AFTER Foundation initialization to ensure correct service_name
+# See _initialize_foundation() for logger creation
 
 
-def _initialize_foundation(log_level: str, log_file: Path | None = None) -> None:
+def _initialize_foundation(log_level: str, log_file: Path | None = None) -> StructLogger:
     """Initialize Foundation logging and telemetry.
 
     Configures provide-foundation with service name, log level, and optional file output.
     Uses Foundation's public API to properly override auto-initialization.
 
+    IMPORTANT: Creates logger AFTER Foundation init to ensure service_name="flavor"
+    is properly set in OpenTelemetry/OTLP resources.
+
     Args:
         log_level: Log level string (trace, debug, info, warning, error)
         log_file: Optional path to log file
+
+    Returns:
+        Configured logger with correct service_name
     """
     try:
         # Map log level string to logging constant
@@ -99,6 +107,10 @@ def _initialize_foundation(log_level: str, log_file: Path | None = None) -> None
         hub = get_hub()
         hub.initialize_foundation(config)
 
+        # Create logger AFTER Foundation initialization
+        # This ensures service_name="flavor" is properly set in OTLP resources
+        log = get_logger(__name__)
+
         # Add file handler if specified
         if log_file:
             file_handler = logging.FileHandler(str(log_file), encoding="utf-8")
@@ -119,6 +131,8 @@ def _initialize_foundation(log_level: str, log_file: Path | None = None) -> None
             log_file=str(log_file) if log_file else None,
         )
 
+        return log
+
     except Exception as e:
         # Fallback to basic logging if Foundation setup fails
         logging.basicConfig(
@@ -127,6 +141,8 @@ def _initialize_foundation(log_level: str, log_file: Path | None = None) -> None
             force=True,
         )
         print(f"⚠️  Failed to initialize Foundation logging: {e}")
+        # Return a basic logger as fallback
+        return get_logger(__name__)
 
 
 @click.group(context_settings=dict(help_option_names=["-h", "--help"]))
@@ -162,7 +178,8 @@ def cli(ctx: click.Context, log_level: str, log_file: str | None) -> None:
     # Skip Foundation setup when running under pytest to avoid conflicts
     if "pytest" not in sys.modules:
         log_file_path = Path(log_file) if log_file else None
-        _initialize_foundation(log_level, log_file_path)
+        log = _initialize_foundation(log_level, log_file_path)
+        ctx.obj["log"] = log  # Store logger in context for subcommands
 
 
 # Register simple commands
