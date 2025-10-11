@@ -247,12 +247,12 @@ def reverse_operations(data: bytes, packed_ops: int) -> bytes:
                     zstd_compressor = ZstdCompressor()
                     result = zstd_compressor.decompress_bytes(result)
                     logger.trace("🗜️ Reversed ZSTD compression", output_size=len(result))
-                except ImportError:
+                except ImportError as e:
                     logger.error("❌ ZSTD library not available for decompression")
                     raise ArchiveError(
                         "ZSTD decompression required but zstandard library not installed. "
                         "Install with: pip install provide-foundation[compression]"
-                    )
+                    ) from e
             else:
                 logger.warning(f"⚠️ Unsupported operation for reversal: {op}")
 
