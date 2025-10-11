@@ -4,7 +4,7 @@ PSPF 2025 Format Implementation
 Progressive Secure Package Format (2025 Edition)
 """
 
-from provide.foundation.crypto import generate_key_pair, sign_data, verify_signature
+from provide.foundation.crypto import generate_ed25519_keypair, sign_data, verify_signature
 
 from flavor.config.defaults import (
     DEFAULT_HEADER_SIZE,
@@ -59,7 +59,7 @@ __all__ = [
     "build_package",
     "create_key_config",
     # Functions
-    "generate_key_pair",
+    "generate_ed25519_keypair",
     "resolve_keys",
     "sign_data",
     "validate_complete",
