@@ -12,6 +12,7 @@ is critical. For complex dependency resolution, use PyPaPipManager instead.
 
 from pathlib import Path
 
+from provide.foundation import retry
 from provide.foundation.config import BaseConfig
 from provide.foundation.logger import logger
 from provide.foundation.platform import get_arch_name, get_os_name
@@ -326,6 +327,15 @@ class UVManager(BaseToolManager):
 
         logger.info("✅ Successfully compiled requirements with UV")
 
+    @retry(
+        ConnectionError,
+        TimeoutError,
+        OSError,
+        max_attempts=3,
+        base_delay=1.0,
+        backoff="exponential",
+        jitter=True,
+    )
     def download_uv_binary(
         self, dest_dir: Path, python_exe: Path | None = None
     ) -> Path | None:
@@ -341,6 +351,9 @@ class UVManager(BaseToolManager):
 
         Returns:
             Path to UV binary if successful, None otherwise
+
+        Retries:
+            Up to 3 attempts with exponential backoff for network errors
         """
         import sys
         import tempfile

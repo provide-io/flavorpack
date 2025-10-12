@@ -8,7 +8,7 @@ from pathlib import Path
 import tarfile
 import tempfile
 
-from provide.foundation import logger
+from provide.foundation import logger, retry
 from provide.foundation.archive import deterministic_filter
 from provide.foundation.file import ensure_dir, safe_copy
 from provide.foundation.platform import get_arch_name, get_os_name
@@ -87,8 +87,21 @@ class PythonEnvironmentBuilder:
 
             self._create_python_tarball(python_install_dir, python_tgz)
 
+    @retry(
+        ConnectionError,
+        TimeoutError,
+        OSError,
+        max_attempts=3,
+        base_delay=1.0,
+        backoff="exponential",
+        jitter=True,
+    )
     def _install_python_with_uv(self, uv_install_dir: str) -> Path | None:
-        """Install Python using UV and return installation directory."""
+        """Install Python using UV and return installation directory.
+
+        Retries:
+            Up to 3 attempts with exponential backoff for network errors
+        """
         uv_cmd = self.find_uv_command()
         self._log_uv_environment()
 

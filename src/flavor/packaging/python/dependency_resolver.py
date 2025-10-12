@@ -11,7 +11,7 @@ import sys
 import tempfile
 import zipfile
 
-from provide.foundation import logger
+from provide.foundation import logger, retry
 from provide.foundation.platform import get_arch_name, get_os_name
 from provide.foundation.process import run_command
 
@@ -93,6 +93,15 @@ class DependencyResolver:
 
         return None
 
+    @retry(
+        ConnectionError,
+        TimeoutError,
+        OSError,
+        max_attempts=3,
+        base_delay=1.0,
+        backoff="exponential",
+        jitter=True,
+    )
     def download_uv_wheel(self, dest_dir: Path) -> Path | None:
         """Download manylinux2014-compatible UV wheel using PIP - NOT UV!
 
@@ -106,6 +115,9 @@ class DependencyResolver:
 
         Returns:
             Path to UV binary if successful, None otherwise
+
+        Retries:
+            Up to 3 attempts with exponential backoff for network errors
         """
         logger.info("📦 Downloading manylinux2014-compatible UV wheel")
         logger.debug(f"Platform: {get_os_name()}, Architecture: {get_arch_name()}")
@@ -224,8 +236,21 @@ class DependencyResolver:
                 return "manylinux2014_aarch64"
         return None
 
+    @retry(
+        ConnectionError,
+        TimeoutError,
+        OSError,
+        max_attempts=3,
+        base_delay=1.0,
+        backoff="exponential",
+        jitter=True,
+    )
     def _execute_download_command(self, download_cmd: list[str]) -> bool:
-        """Execute pip download command and log results."""
+        """Execute pip download command and log results.
+
+        Retries:
+            Up to 3 attempts with exponential backoff for network errors
+        """
         logger.debug("Running UV download command", cmd=" ".join(download_cmd))
         logger.trace(f"Full command: {download_cmd}")
 
