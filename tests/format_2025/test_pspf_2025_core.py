@@ -23,7 +23,7 @@ from flavor.psp.format_2025 import (
     PSPFReader,
     SlotMetadata,
     align_offset,
-    generate_key_pair,
+    generate_ed25519_keypair,
 )
 
 
@@ -59,7 +59,7 @@ class TestPSPFCore:
 
     def test_ephemeral_keys_available(self, test_builder) -> None:
         """Test ephemeral key generation."""
-        private_key, public_key = generate_key_pair()
+        private_key, public_key = generate_ed25519_keypair()
         assert private_key is not None
         assert public_key is not None
         assert len(private_key) == 32
