@@ -143,12 +143,17 @@ class TestPretasterIntegration:
 
         package = package_files[0]
 
+        # Prepare environment - disable telemetry to avoid OTLP connection errors
+        env = os.environ.copy()
+        env["PROVIDE_TELEMETRY_DISABLED"] = "1"
+
         # Test package inspection (should work without ingredients)
         result = subprocess.run(
             ["flavor", "inspect", str(package)],
             capture_output=True,
             text=True,
             timeout=30,
+            env=env,
         )
 
         # Should show package metadata
