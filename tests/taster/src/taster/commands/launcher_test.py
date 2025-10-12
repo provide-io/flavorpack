@@ -7,7 +7,7 @@ import sys
 import tempfile
 
 import click
-from provide.foundation.process import run_command
+from provide.foundation.process import run
 
 from flavor.ingredients import IngredientManager as HelperManager
 from flavor.package import build_package_from_manifest
@@ -109,7 +109,7 @@ entry_point = "test_app.__main__:main"
                 env["RUST_BACKTRACE"] = "1"
             env["FLAVOR_EXEC_MODE"] = exec_mode
 
-            result = run_command(
+            result = run(
                 [str(package_path)],
                 capture_output=True,
                 check=False,
@@ -136,7 +136,7 @@ entry_point = "test_app.__main__:main"
                 # Additional verification
                 if verbose:
                     click.secho("\n🔍 Package details:", fg="cyan")
-                    info_result = run_command(
+                    info_result = run(
                         [str(package_path), "info"],
                         capture_output=True,
                         check=False,
