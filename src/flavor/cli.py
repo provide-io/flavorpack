@@ -124,8 +124,8 @@ def _initialize_foundation(log_level: str, log_file: Path | None = None) -> Stru
             file_handler.setFormatter(formatter)
             logging.getLogger().addHandler(file_handler)
 
-        log.debug(
-            "🔧 Foundation initialized",
+        log.info(
+            "🔧 Foundation explicitly re-initialized",
             service="flavor",
             log_level=level_name,
             log_file=str(log_file) if log_file else None,
