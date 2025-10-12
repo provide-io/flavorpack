@@ -7,7 +7,6 @@ import os
 from pathlib import Path
 import tarfile
 import tempfile
-from typing import Any
 
 from provide.foundation import logger
 from provide.foundation.archive import deterministic_filter
