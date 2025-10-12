@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING
 import zlib
 
 from provide.foundation import logger
+from provide.foundation.file import atomic_write
 from provide.foundation.file.directory import ensure_dir
 
 from flavor.psp.format_2025 import handlers
@@ -159,10 +160,10 @@ class SlotExtractor:
             return handlers.extract_archive(slot_data, dest_dir, descriptor.operations)
         except Exception as e:
             logger.warning(f"Handler extraction failed, falling back to raw write: {e}")
-            # Fallback: write raw data
+            # Fallback: write raw data (atomic for safety)
             slot_name = str(slot_meta.get("id", f"slot_{slot_index}"))
             output_path: Path = dest_dir / slot_name
-            output_path.write_bytes(slot_data)
+            atomic_write(output_path, slot_data)
             return output_path
 
     def verify_slot_integrity(self, slot_index: int) -> bool:
