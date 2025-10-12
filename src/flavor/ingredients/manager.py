@@ -13,7 +13,7 @@ from typing import Any
 
 from provide.foundation.file.directory import ensure_dir
 from provide.foundation.platform import get_platform_string
-from provide.foundation.process import run_command
+from provide.foundation.process import run
 
 
 @dataclass
@@ -203,7 +203,7 @@ class IngredientManager:
     def _extract_version(self, path: Path) -> str | None:
         """Try to extract version from binary using --version flag."""
         try:
-            result = run_command(
+            result = run(
                 [str(path), "--version"], check=False, capture_output=True, text=True
             )
             if result.returncode == 0 and result.stdout:
