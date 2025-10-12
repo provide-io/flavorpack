@@ -182,7 +182,7 @@ markers = [
 
 [tool.coverage.run]
 branch = true
-source = ["src/flavor"]
+source = ["flavor"]
 parallel = false
 omit = [
     "*/protocols/tfprotov6/protobuf/*",
@@ -197,7 +197,7 @@ omit = [
 
 [tool.coverage.report]
 show_missing = true
-skip_covered = true
+skip_covered = false
 precision = 2
 fail_under = 80
 exclude_lines = [
