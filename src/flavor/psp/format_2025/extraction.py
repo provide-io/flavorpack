@@ -5,21 +5,27 @@ PSPF Slot Extraction - Handles slot data extraction and streaming.
 Provides extraction, streaming, and verification operations for PSPF slots.
 """
 
-import gzip
+from __future__ import annotations
+
+from collections.abc import Iterator
 from pathlib import Path
-import zipfile
+from typing import TYPE_CHECKING
 import zlib
 
 from provide.foundation import logger
 from provide.foundation.file.directory import ensure_dir
 
+from flavor.psp.format_2025 import handlers
 from flavor.psp.format_2025.slots import SlotView
+
+if TYPE_CHECKING:
+    from flavor.psp.format_2025.reader import PSPFReader
 
 
 class SlotExtractor:
     """Handles PSPF slot extraction operations."""
 
-    def __init__(self, reader) -> None:
+    def __init__(self, reader: PSPFReader) -> None:
         """Initialize with reference to PSPFReader."""
         self.reader = reader
 
@@ -42,7 +48,7 @@ class SlotExtractor:
         descriptor = descriptors[slot_index]
         return SlotView(descriptor, self.reader._backend)
 
-    def stream_slot(self, slot_index: int, chunk_size: int = 8192):
+    def stream_slot(self, slot_index: int, chunk_size: int = 8192) -> Iterator[bytes]:
         """Stream a slot in chunks.
 
         Args:
@@ -78,6 +84,9 @@ class SlotExtractor:
 
             for i, descriptor in enumerate(descriptors):
                 # Read raw slot data (before decompression) using backend directly
+                if not self.reader._backend:
+                    logger.error("Backend not available")
+                    return False
                 raw_slot_data = self.reader._backend.read_slot(descriptor)
 
                 # Convert to bytes if memoryview
@@ -144,101 +153,17 @@ class SlotExtractor:
                 )
                 # Fall through to direct extraction
 
-        # No operations or operation reversal failed - extract directly
-        slot_name = slot_meta.get("id", f"slot_{slot_index}")
-
-        # Try to detect content type and extract appropriately
-        if slot_data.startswith(b"\x1f\x8b"):
-            # GZIP compressed data
-            try:
-                decompressed = gzip.decompress(slot_data)
-                if self._is_tar_data(decompressed):
-                    return self._extract_tar_data(decompressed, dest_dir, slot_name)
-                else:
-                    output_path = dest_dir / slot_name
-                    output_path.write_bytes(decompressed)
-                    return output_path
-            except Exception:
-                logger.warning("Failed to decompress GZIP data, extracting raw")
-
-        elif self._is_tar_data(slot_data):
-            # TAR archive
-            return self._extract_tar_data(slot_data, dest_dir, slot_name)
-
-        elif slot_data.startswith(b"PK"):
-            # ZIP archive
-            return self._extract_zip_data(slot_data, dest_dir, slot_name)
-
-        # Default: write as single file
-        output_path = dest_dir / slot_name
-        output_path.write_bytes(slot_data)
-        return output_path
-
-    def _is_tar_data(self, data: bytes) -> bool:
-        """Check if data appears to be a TAR archive."""
-        if len(data) < 512:
-            return False
-
-        # Check for TAR signature at offset 257
-        tar_signature = data[257:262]
-        return tar_signature in [b"ustar", b"ustar\x00"]
-
-    def _extract_tar_data(
-        self, tar_data: bytes, dest_dir: Path, slot_name: str
-    ) -> Path:
-        """Extract TAR data to directory."""
-        import io
-        import tarfile
-
-        extraction_dir = dest_dir / slot_name
-        ensure_dir(extraction_dir)
-
+        # Use Foundation handlers for extraction
+        # This handles all archive types and operations
         try:
-            with tarfile.open(fileobj=io.BytesIO(tar_data), mode="r:*") as tar:
-                # Security check - prevent path traversal
-                for member in tar.getmembers():
-                    if member.name.startswith("/") or ".." in member.name:
-                        logger.warning(f"Skipping unsafe path in TAR: {member.name}")
-                        continue
-
-                tar.extractall(extraction_dir)
-                logger.debug(f"Extracted TAR archive to {extraction_dir}")
-                return extraction_dir
-
+            return handlers.extract_archive(slot_data, dest_dir, descriptor.operations)
         except Exception as e:
-            logger.error(f"Failed to extract TAR data: {e}")
-            # Fall back to writing raw data
-            raw_file = dest_dir / f"{slot_name}.tar"
-            raw_file.write_bytes(tar_data)
-            return raw_file
-
-    def _extract_zip_data(
-        self, zip_data: bytes, dest_dir: Path, slot_name: str
-    ) -> Path:
-        """Extract ZIP data to directory."""
-        import io
-
-        extraction_dir = dest_dir / slot_name
-        ensure_dir(extraction_dir)
-
-        try:
-            with zipfile.ZipFile(io.BytesIO(zip_data), "r") as zip_ref:
-                # Security check - prevent path traversal
-                for member in zip_ref.namelist():
-                    if member.startswith("/") or ".." in member:
-                        logger.warning(f"Skipping unsafe path in ZIP: {member}")
-                        continue
-
-                zip_ref.extractall(extraction_dir)
-                logger.debug(f"Extracted ZIP archive to {extraction_dir}")
-                return extraction_dir
-
-        except Exception as e:
-            logger.error(f"Failed to extract ZIP data: {e}")
-            # Fall back to writing raw data
-            raw_file = dest_dir / f"{slot_name}.zip"
-            raw_file.write_bytes(zip_data)
-            return raw_file
+            logger.warning(f"Handler extraction failed, falling back to raw write: {e}")
+            # Fallback: write raw data
+            slot_name = str(slot_meta.get("id", f"slot_{slot_index}"))
+            output_path: Path = dest_dir / slot_name
+            output_path.write_bytes(slot_data)
+            return output_path
 
     def verify_slot_integrity(self, slot_index: int) -> bool:
         """Verify integrity of a specific slot.
@@ -258,6 +183,9 @@ class SlotExtractor:
 
             # Read raw slot data (before decompression) using backend directly
             # This is the data that was actually checksummed during building
+            if not self.reader._backend:
+                logger.error("Backend not available")
+                return False
             raw_slot_data = self.reader._backend.read_slot(descriptor)
 
             # Convert to bytes if memoryview
@@ -293,7 +221,7 @@ class SlotExtractor:
             return False
 
     def _reverse_v0_operations(self, data: bytes, packed_ops: int) -> bytes:
-        """Reverse v0 operations for extraction.
+        """Reverse v0 operations for extraction using Foundation handlers.
 
         Args:
             data: Compressed/processed data
@@ -302,58 +230,4 @@ class SlotExtractor:
         Returns:
             Decompressed/unprocessed data
         """
-        from flavor.psp.format_2025.operations import (
-            OP_BZIP2,
-            OP_GZIP,
-            OP_TAR,
-            OP_XZ,
-            OP_ZSTD,
-            unpack_operations,
-        )
-
-        if packed_ops == 0:
-            return data
-
-        # Unpack v0 operations
-        ops = unpack_operations(packed_ops)
-        logger.debug(f"🔧 Reversing v0 operations: {[hex(op) for op in ops]}")
-
-        # Reverse operations in reverse order
-        result = data
-        for op in reversed(ops):
-            if op == OP_TAR:
-                # TAR extraction is handled separately - don't reverse here
-                logger.trace("📦 TAR operation (will be extracted separately)")
-                continue
-            elif op == OP_GZIP:
-                import gzip
-
-                logger.trace("🗜️ Reversing GZIP compression")
-                result = gzip.decompress(result)
-            elif op == OP_BZIP2:
-                import bz2
-
-                logger.trace("🗜️ Reversing BZIP2 compression")
-                result = bz2.decompress(result)
-            elif op == OP_XZ:
-                import lzma
-
-                logger.trace("🗜️ Reversing XZ compression")
-                result = lzma.decompress(result)
-            elif op == OP_ZSTD:
-                try:
-                    import zstandard as zstd
-
-                    logger.trace("🗜️ Reversing ZSTD compression")
-                    dctx = zstd.ZstdDecompressor()
-                    result = dctx.decompress(result)
-                except ImportError:
-                    logger.warning("⚠️ ZSTD not available for decompression")
-                    return data  # Return original data if can't decompress
-            else:
-                logger.warning(f"⚠️ Unsupported v0 operation for reversal: 0x{op:02x}")
-
-        logger.debug(
-            f"✅ Reverse operations complete: {len(data)} -> {len(result)} bytes"
-        )
-        return result
+        return handlers.reverse_operations(data, packed_ops)
