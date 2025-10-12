@@ -137,7 +137,11 @@ class TestSlotTableReading:
 @pytest.mark.taster
 @pytest.mark.integration
 class TestSlotExtraction:
-    """Test slot extraction functionality."""
+    """Test slot extraction functionality.
+
+    NOTE: Some tests are skipped pending PSPFLauncher API implementation.
+    These tests verify Python API methods not covered by taster/pretaster.
+    """
 
     @pytest.fixture
     def bundle_with_compressed_slots(self):
