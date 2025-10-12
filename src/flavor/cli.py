@@ -13,6 +13,15 @@ from pathlib import Path
 import sys
 from typing import cast
 
+# Set Foundation setup log level BEFORE importing Foundation
+# This prevents auto-initialization from emitting debug/trace logs
+# Uses FOUNDATION_LOG_LEVEL if set, otherwise uses ERROR to suppress setup noise
+if "FOUNDATION_SETUP_LOG_LEVEL" not in os.environ:
+    foundation_level = os.environ.get(
+        "FOUNDATION_LOG_LEVEL", os.environ.get("PROVIDE_LOG_LEVEL", "ERROR")
+    )
+    os.environ["FOUNDATION_SETUP_LOG_LEVEL"] = foundation_level
+
 import click
 from provide.foundation import LoggingConfig, TelemetryConfig, get_hub
 from provide.foundation.logger import get_logger
@@ -55,7 +64,7 @@ except importlib.metadata.PackageNotFoundError:
 
 
 def _initialize_foundation(
-    log_level: str, log_file: Path | None = None
+    log_level: str | None, log_file: Path | None = None
 ) -> StructLogger:
     """Initialize Foundation logging and telemetry.
 
@@ -66,43 +75,67 @@ def _initialize_foundation(
     is properly set in OpenTelemetry/OTLP resources.
 
     Args:
-        log_level: Log level string (trace, debug, info, warning, error)
+        log_level: Log level string (trace, debug, info, warning, error) or None to use env
         log_file: Optional path to log file
 
     Returns:
         Configured logger with correct service_name
     """
     try:
-        # Map log level string to logging constant
-        level_upper = log_level.upper()
-        if level_upper == "TRACE":
-            from provide.foundation.logger.trace import TRACE_LEVEL_NUM
-
-            level = TRACE_LEVEL_NUM
-            level_name = "TRACE"
-        else:
-            level = getattr(logging, level_upper, logging.INFO)
-            level_name = logging.getLevelName(level)
-
-        # Cast to LogLevelStr for type safety
-        log_level_typed = cast(LogLevelStr, level_name)
-
         # Load base config from environment (preserves OpenObserve/OTLP auto-configuration)
         from attrs import evolve
 
         base_config = TelemetryConfig.from_env()
 
-        # Override service_name and logging settings for flavorpack
-        config = evolve(
-            base_config,
-            service_name="flavor",  # Set service name for OpenObserve/OTLP telemetry
-            logging=LoggingConfig(
-                console_formatter="key_value",  # Use Foundation's default formatter
-                default_level=log_level_typed,
-                das_emoji_prefix_enabled=True,  # Enable DAS emoji prefixes
-                logger_name_emoji_prefix_enabled=False,  # Keep output clean
-            ),
-        )
+        # Determine effective log level (CLI override or from environment)
+        if log_level is not None:
+            # Map log level string to logging constant
+            level_upper = log_level.upper()
+            if level_upper == "TRACE":
+                from provide.foundation.logger.trace import TRACE_LEVEL_NUM
+
+                level = TRACE_LEVEL_NUM
+                level_name = "TRACE"
+            else:
+                level = getattr(logging, level_upper, logging.INFO)
+                level_name = logging.getLevelName(level)
+
+            # Cast to LogLevelStr for type safety
+            log_level_typed = cast(LogLevelStr, level_name)
+
+            # Override service_name and logging settings for flavorpack
+            config = evolve(
+                base_config,
+                service_name="flavor",  # Set service name for OpenObserve/OTLP telemetry
+                logging=LoggingConfig(
+                    console_formatter="key_value",  # Use Foundation's default formatter
+                    default_level=log_level_typed,
+                    foundation_setup_log_level=log_level_typed,  # Control Foundation init logs
+                    das_emoji_prefix_enabled=True,  # Enable DAS emoji prefixes
+                    logger_name_emoji_prefix_enabled=False,  # Keep output clean
+                ),
+            )
+        else:
+            # No CLI override - use environment config but set service_name and formatter
+            config = evolve(
+                base_config,
+                service_name="flavor",  # Set service name for OpenObserve/OTLP telemetry
+                logging=evolve(
+                    base_config.logging,
+                    console_formatter="key_value",  # Use Foundation's default formatter
+                    foundation_setup_log_level=base_config.logging.default_level,  # Match setup to default
+                    das_emoji_prefix_enabled=True,  # Enable DAS emoji prefixes
+                    logger_name_emoji_prefix_enabled=False,  # Keep output clean
+                ),
+            )
+            level_name = base_config.logging.default_level
+            level_upper = level_name.upper()
+            if level_upper == "TRACE":
+                from provide.foundation.logger.trace import TRACE_LEVEL_NUM
+
+                level = TRACE_LEVEL_NUM
+            else:
+                level = getattr(logging, level_upper, logging.INFO)
 
         # Initialize Foundation with explicit config
         # This overrides any auto-initialization that may have occurred
@@ -161,8 +194,8 @@ def _initialize_foundation(
         ["trace", "debug", "info", "warning", "error"],
         case_sensitive=False,
     ),
-    default="info",
-    help="Set logging level (default: info).",
+    default=None,
+    help="Set logging level (default: from FOUNDATION_LOG_LEVEL env or info).",
 )
 @click.option(
     "--log-file",
@@ -171,7 +204,7 @@ def _initialize_foundation(
     help="Write logs to file in addition to console.",
 )
 @click.pass_context
-def cli(ctx: click.Context, log_level: str, log_file: str | None) -> None:
+def cli(ctx: click.Context, log_level: str | None, log_file: str | None) -> None:
     """PSPF (Progressive Secure Package Format) Build Tool."""
     ctx.ensure_object(dict)
     ctx.obj["log_level"] = log_level
