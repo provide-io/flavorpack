@@ -12,11 +12,14 @@ from pathlib import Path
 
 from provide.foundation import logger
 from provide.foundation.archive import (
+    ArchiveLimits,
     ArchiveOperation as FoundationOp,
     Bzip2Compressor,
+    DEFAULT_LIMITS,
     GzipCompressor,
     TarArchive,
 )
+from provide.foundation.archive.base import ArchiveError
 from provide.foundation.file import temp_file
 
 from flavor.psp.format_2025.constants import (
@@ -130,43 +133,59 @@ def apply_operations(
         Processed data after applying operation chain
 
     Raises:
-        ValueError: If operations are invalid
+        ValueError: If operations are invalid or compression_level out of range
         ArchiveError: If operation execution fails
     """
     if packed_ops == 0:
         logger.trace("📦 No operations, returning raw data")
         return data
 
-    # Unpack and map operations
-    pspf_ops = unpack_operations(packed_ops)
-    logger.debug(
-        "🔧 Applying PSPF operation chain",
-        operations=[f"0x{op:02x}" for op in pspf_ops],
-        data_size=len(data),
-    )
+    if not (1 <= compression_level <= 9):
+        raise ValueError(f"Compression level must be 1-9, got {compression_level}")
 
-    foundation_ops = map_operations(pspf_ops)
+    try:
+        # Unpack and map operations
+        pspf_ops = unpack_operations(packed_ops)
+        logger.debug(
+            "🔧 Applying PSPF operation chain",
+            operations=[f"0x{op:02x}" for op in pspf_ops],
+            data_size=len(data),
+            compression_level=compression_level,
+        )
 
-    # Skip TAR if present (handled during slot loading)
-    if FoundationOp.TAR in foundation_ops:
-        logger.trace("📦 TAR operation detected - data should already be tar format")
-        foundation_ops = [op for op in foundation_ops if op != FoundationOp.TAR]
-        if not foundation_ops:
-            return data
+        foundation_ops = map_operations(pspf_ops)
 
-    # Apply compression operations
-    result = data
-    for op in foundation_ops:
-        result = _apply_single_operation(result, op, compression_level)
+        # Skip TAR if present (handled during slot loading)
+        if FoundationOp.TAR in foundation_ops:
+            logger.trace("📦 TAR operation detected - data should already be tar format")
+            foundation_ops = [op for op in foundation_ops if op != FoundationOp.TAR]
+            if not foundation_ops:
+                return data
 
-    logger.debug(
-        "✅ Operation chain applied",
-        input_size=len(data),
-        output_size=len(result),
-        compression_ratio=f"{len(result) / len(data):.2f}" if len(data) > 0 else "N/A",
-    )
+        # Apply compression operations
+        result = data
+        for op in foundation_ops:
+            result = _apply_single_operation(result, op, compression_level)
 
-    return result
+        logger.debug(
+            "✅ Operation chain applied",
+            input_size=len(data),
+            output_size=len(result),
+            compression_ratio=f"{len(result) / len(data):.2f}" if len(data) > 0 else "N/A",
+        )
+
+        return result
+
+    except ValueError:
+        raise
+    except Exception as e:
+        logger.error(
+            "❌ Failed to apply operations",
+            error=str(e),
+            error_type=type(e).__name__,
+            operations=f"0x{packed_ops:016x}",
+        )
+        raise ArchiveError(f"Operation application failed: {e}") from e
 
 
 def reverse_operations(data: bytes, packed_ops: int) -> bytes:
@@ -187,60 +206,76 @@ def reverse_operations(data: bytes, packed_ops: int) -> bytes:
         logger.trace("📦 No operations to reverse")
         return data
 
-    # Unpack PSPF operations
-    pspf_ops = unpack_operations(packed_ops)
-    logger.debug(
-        "🔄 Reversing PSPF operation chain",
-        operations=[f"0x{op:02x}" for op in pspf_ops],
-        data_size=len(data),
-    )
+    try:
+        # Unpack PSPF operations
+        pspf_ops = unpack_operations(packed_ops)
+        logger.debug(
+            "🔄 Reversing PSPF operation chain",
+            operations=[f"0x{op:02x}" for op in pspf_ops],
+            data_size=len(data),
+        )
 
-    # Map to Foundation operations
-    foundation_ops = map_operations(pspf_ops)
+        # Map to Foundation operations
+        foundation_ops = map_operations(pspf_ops)
 
-    # Reverse operations in reverse order
-    result = data
-    for op in reversed(foundation_ops):
-        if op == FoundationOp.TAR:
-            # TAR extraction is handled separately by extract_archive()
-            logger.trace("📦 TAR operation (will be extracted separately)")
-            continue
-        elif op == FoundationOp.GZIP:
-            gzip_compressor = GzipCompressor(
-                level=6
-            )  # level doesn't matter for decompression
-            result = gzip_compressor.decompress_bytes(result)
-            logger.trace("🗜️ Reversed GZIP compression", output_size=len(result))
-        elif op == FoundationOp.BZIP2:
-            bzip2_compressor = Bzip2Compressor(level=9)
-            result = bzip2_compressor.decompress_bytes(result)
-            logger.trace("🗜️ Reversed BZIP2 compression", output_size=len(result))
-        elif op == FoundationOp.XZ:
-            import lzma
+        # Reverse operations in reverse order
+        result = data
+        for op in reversed(foundation_ops):
+            if op == FoundationOp.TAR:
+                # TAR extraction is handled separately by extract_archive()
+                logger.trace("📦 TAR operation (will be extracted separately)")
+                continue
+            elif op == FoundationOp.GZIP:
+                gzip_compressor = GzipCompressor(
+                    level=6
+                )  # level doesn't matter for decompression
+                result = gzip_compressor.decompress_bytes(result)
+                logger.trace("🗜️ Reversed GZIP compression", output_size=len(result))
+            elif op == FoundationOp.BZIP2:
+                bzip2_compressor = Bzip2Compressor(level=9)
+                result = bzip2_compressor.decompress_bytes(result)
+                logger.trace("🗜️ Reversed BZIP2 compression", output_size=len(result))
+            elif op == FoundationOp.XZ:
+                import lzma
 
-            result = lzma.decompress(result)
-            logger.trace("🗜️ Reversed XZ compression", output_size=len(result))
-        elif op == FoundationOp.ZSTD:
-            try:
-                import zstandard as zstd
+                result = lzma.decompress(result)
+                logger.trace("🗜️ Reversed XZ compression", output_size=len(result))
+            elif op == FoundationOp.ZSTD:
+                try:
+                    import zstandard as zstd
 
-                dctx = zstd.ZstdDecompressor()
-                result = dctx.decompress(result)
-                logger.trace("🗜️ Reversed ZSTD compression", output_size=len(result))
-            except ImportError:
-                logger.warning("⚠️ ZSTD not available for decompression")
-                return data
-        else:
-            logger.warning(f"⚠️ Unsupported operation for reversal: {op}")
+                    dctx = zstd.ZstdDecompressor()
+                    result = dctx.decompress(result)
+                    logger.trace("🗜️ Reversed ZSTD compression", output_size=len(result))
+                except ImportError:
+                    logger.error("❌ ZSTD library not available for decompression")
+                    raise ArchiveError(
+                        "ZSTD decompression required but zstandard library not installed"
+                    )
+            else:
+                logger.warning(f"⚠️ Unsupported operation for reversal: {op}")
 
-    logger.debug(
-        "✅ Reverse operations complete",
-        input_size=len(data),
-        output_size=len(result),
-        expansion_ratio=f"{len(result) / len(data):.2f}" if len(data) > 0 else "N/A",
-    )
+        logger.debug(
+            "✅ Reverse operations complete",
+            input_size=len(data),
+            output_size=len(result),
+            expansion_ratio=f"{len(result) / len(data):.2f}" if len(data) > 0 else "N/A",
+        )
 
-    return result
+        return result
+
+    except ValueError:
+        raise
+    except ArchiveError:
+        raise
+    except Exception as e:
+        logger.error(
+            "❌ Failed to reverse operations",
+            error=str(e),
+            error_type=type(e).__name__,
+            operations=f"0x{packed_ops:016x}",
+        )
+        raise ArchiveError(f"Operation reversal failed: {e}") from e
 
 
 def create_tar_archive(source: Path, deterministic: bool = True) -> bytes:
@@ -255,71 +290,127 @@ def create_tar_archive(source: Path, deterministic: bool = True) -> bytes:
 
     Raises:
         ArchiveError: If archive creation fails
+        FileNotFoundError: If source does not exist
     """
+    if not source.exists():
+        raise FileNotFoundError(f"Source path does not exist: {source}")
+
     logger.debug(
-        "📦 Creating TAR archive", source=str(source), deterministic=deterministic
+        "📦 Creating TAR archive",
+        source=str(source),
+        deterministic=deterministic,
+        is_dir=source.is_dir(),
     )
 
-    tar_impl = TarArchive(deterministic=deterministic)
+    try:
+        tar_impl = TarArchive(deterministic=deterministic)
 
-    # Foundation's TarArchive expects to write to a file
-    # Use a BytesIO buffer to capture the output
-    with temp_file(suffix=".tar", cleanup=True) as temp_path:
-        tar_impl.create(source, temp_path)
-        result = temp_path.read_bytes()
+        # Foundation's TarArchive expects to write to a file
+        # Use a BytesIO buffer to capture the output
+        with temp_file(suffix=".tar", cleanup=True) as temp_path:
+            tar_impl.create(source, temp_path)
+            result = temp_path.read_bytes()
 
-    logger.debug("✅ TAR archive created", size=len(result))
-    return result
+        logger.debug("✅ TAR archive created", size=len(result))
+        return result
+
+    except ArchiveError:
+        raise
+    except Exception as e:
+        logger.error(
+            "❌ Failed to create TAR archive",
+            error=str(e),
+            error_type=type(e).__name__,
+            source=str(source),
+        )
+        raise ArchiveError(f"TAR creation failed: {e}") from e
 
 
-def extract_archive(data: bytes, dest: Path, packed_ops: int) -> Path:
-    """Extract archive data using Foundation's extractors.
+def extract_archive(
+    data: bytes,
+    dest: Path,
+    packed_ops: int,
+    limits: ArchiveLimits | None = None,
+) -> Path:
+    """Extract archive data using Foundation's extractors with security limits.
 
     Args:
         data: Archive data (potentially compressed)
         dest: Destination directory
         packed_ops: Packed PSPF operations to determine format
+        limits: Optional extraction limits (uses DEFAULT_LIMITS if None)
 
     Returns:
         Path to extracted content
 
     Raises:
-        ArchiveError: If extraction fails
+        ArchiveError: If extraction fails or violates security limits
+        ValueError: If operations are invalid
     """
+    if limits is None:
+        limits = DEFAULT_LIMITS
+
     logger.debug(
         "📂 Extracting archive",
         data_size=len(data),
         dest=str(dest),
         operations=f"0x{packed_ops:016x}",
+        limits_enabled=limits.enabled,
     )
 
-    # First, reverse compression operations
-    decompressed = reverse_operations(data, packed_ops)
+    try:
+        # First, reverse compression operations
+        decompressed = reverse_operations(data, packed_ops)
 
-    # Determine if TAR extraction is needed
-    pspf_ops = unpack_operations(packed_ops) if packed_ops != 0 else []
-    needs_tar_extract = OP_TAR in pspf_ops
+        # Determine if TAR extraction is needed
+        pspf_ops = unpack_operations(packed_ops) if packed_ops != 0 else []
+        needs_tar_extract = OP_TAR in pspf_ops
 
-    if needs_tar_extract:
-        # Extract TAR using Foundation
-        logger.debug("📦 Extracting TAR archive")
-        tar_impl = TarArchive()
+        if needs_tar_extract:
+            # Extract TAR using Foundation with security limits
+            logger.debug("📦 Extracting TAR archive with security limits")
+            tar_impl = TarArchive()
 
-        # Write decompressed data to temp file, then extract
-        with temp_file(suffix=".tar", cleanup=True) as temp_path:
-            temp_path.write_bytes(decompressed)
-            tar_impl.extract(temp_path, dest)
+            # Write decompressed data to temp file, then extract with limits
+            with temp_file(suffix=".tar", cleanup=True) as temp_path:
+                temp_path.write_bytes(decompressed)
+                tar_impl.extract(temp_path, dest, limits=limits)
 
-        logger.debug("✅ TAR extracted", dest=str(dest))
-        return dest
+            logger.debug("✅ TAR extracted", dest=str(dest), file_count=len(list(dest.rglob("*"))))
+            return dest
 
-    # Not an archive, just write the data
-    output_file = dest / "data"
-    dest.mkdir(parents=True, exist_ok=True)
-    output_file.write_bytes(decompressed)
+        # Not an archive, just write the data
+        logger.debug("📄 Writing raw data (no TAR operation)")
+        output_file = dest / "data"
+        dest.mkdir(parents=True, exist_ok=True)
+        output_file.write_bytes(decompressed)
 
-    logger.debug("✅ Data written", path=str(output_file))
-    return output_file
+        logger.debug("✅ Data written", path=str(output_file), size=len(decompressed))
+        return output_file
+
+    except ArchiveError as e:
+        logger.error(
+            "❌ Archive extraction failed",
+            error=str(e),
+            dest=str(dest),
+            data_size=len(data),
+        )
+        raise
+    except ValueError as e:
+        logger.error(
+            "❌ Invalid operation chain",
+            error=str(e),
+            operations=f"0x{packed_ops:016x}",
+        )
+        raise
+    except Exception as e:
+        logger.error(
+            "❌ Unexpected extraction error",
+            error=str(e),
+            error_type=type(e).__name__,
+            dest=str(dest),
+        )
+        raise ArchiveError(f"Extraction failed: {e}") from e
 
 
 __all__ = [

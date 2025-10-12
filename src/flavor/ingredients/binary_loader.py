@@ -9,14 +9,13 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-import shutil
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from flavor.ingredients.manager import IngredientManager
 
 from provide.foundation import logger
-from provide.foundation.file.directory import ensure_dir
+from provide.foundation.file import ensure_dir, safe_copy
 from provide.foundation.platform import get_platform_string
 from provide.foundation.process import run_command
 
@@ -182,7 +181,9 @@ class BinaryLoader:
                     logger.info(
                         f"✅ Built and copying {component}: {source_path} → {binary_path}"
                     )
-                    shutil.copy2(source_path, binary_path)
+                    safe_copy(
+                        source_path, binary_path, preserve_mode=True, overwrite=True
+                    )
                     built_binaries.append(binary_path)
                     # Make executable
                     binary_path.chmod(DEFAULT_EXECUTABLE_PERMS)

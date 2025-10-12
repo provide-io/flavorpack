@@ -5,13 +5,12 @@
 
 import json
 from pathlib import Path
-import shutil
 import tarfile
 import tomllib
 from typing import Any
 
 from provide.foundation import logger
-from provide.foundation.file.directory import ensure_dir
+from provide.foundation.file import ensure_dir, safe_copy
 from provide.foundation.platform import get_arch_name, get_os_name
 
 from flavor.config.defaults import DEFAULT_DIR_PERMS, DEFAULT_EXECUTABLE_PERMS
@@ -67,7 +66,7 @@ class PythonSlotBuilder:
 
     def _copy_executable(self, src: Path | str, dest: Path) -> None:
         """Copy a file and preserve executable permissions."""
-        shutil.copy2(src, dest)
+        safe_copy(src, dest, preserve_mode=True, overwrite=True)
         if not self.is_windows:
             dest.chmod(DEFAULT_EXECUTABLE_PERMS)
 
