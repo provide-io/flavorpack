@@ -10,6 +10,14 @@ import importlib.metadata
 import os
 import sys
 
+# Set Foundation's setup log level before importing Foundation
+# This controls Foundation's own initialization logs
+if "FOUNDATION_SETUP_LOG_LEVEL" not in os.environ:
+    # Default to ERROR to suppress Foundation's debug/trace initialization logs
+    # unless explicitly set via FOUNDATION_LOG_LEVEL
+    setup_level = os.environ.get("FOUNDATION_LOG_LEVEL", "ERROR")
+    os.environ["FOUNDATION_SETUP_LOG_LEVEL"] = setup_level
+
 import click
 from provide.foundation import CLIContext
 
