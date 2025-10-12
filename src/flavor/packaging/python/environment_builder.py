@@ -18,7 +18,7 @@ from flavor.config.defaults import DEFAULT_EXECUTABLE_PERMS
 from flavor.packaging.python.dependency_resolver import DependencyResolver
 from flavor.packaging.python.pypapip_manager import PyPaPipManager
 from flavor.packaging.python.uv_manager import UVManager
-from flavor.utils.archive import deterministic_filter
+from provide.foundation.archive import deterministic_filter
 
 
 class PythonEnvironmentBuilder:

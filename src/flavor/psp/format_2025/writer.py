@@ -33,8 +33,12 @@ from flavor.psp.format_2025.metadata.assembly import (
 )
 from flavor.psp.format_2025.slots import SlotDescriptor
 from flavor.psp.format_2025.spec import BuildSpec, PreparedSlot
-from flavor.utils.alignment import align_offset, align_to_page
-from flavor.utils.permissions import parse_permissions, set_file_permissions
+from provide.foundation.file import (
+    align_offset,
+    align_to_page,
+    parse_permissions,
+    set_file_permissions,
+)
 
 
 def write_package(
