@@ -10,16 +10,18 @@ import importlib.metadata
 import os
 import sys
 
-# Set Foundation's setup log level before importing Foundation
-# This controls Foundation's own initialization logs
-if "FOUNDATION_SETUP_LOG_LEVEL" not in os.environ:
-    # Default to ERROR to suppress Foundation's debug/trace initialization logs
-    # unless explicitly set via FOUNDATION_LOG_LEVEL
-    setup_level = os.environ.get("FOUNDATION_LOG_LEVEL", "ERROR")
-    os.environ["FOUNDATION_SETUP_LOG_LEVEL"] = setup_level
-
 import click
 from provide.foundation import CLIContext
+
+# Import all commands at module level
+from flavor.commands.extract import extract_all_command, extract_command
+from flavor.commands.ingredients import ingredient_group
+from flavor.commands.inspect import inspect_command
+from flavor.commands.keygen import keygen_command
+from flavor.commands.package import pack_command
+from flavor.commands.utils import clean_command
+from flavor.commands.verify import verify_command
+from flavor.commands.workenv import workenv_group
 
 # Set up Windows Unicode support early
 if sys.platform == "win32":
@@ -36,16 +38,6 @@ if sys.platform == "win32":
         kernel32.SetConsoleMode(kernel32.GetStdHandle(-11), 7)
     except Exception:
         pass  # Ignore if we can't enable ANSI
-
-# Import all commands at module level
-from flavor.commands.extract import extract_all_command, extract_command
-from flavor.commands.ingredients import ingredient_group
-from flavor.commands.inspect import inspect_command
-from flavor.commands.keygen import keygen_command
-from flavor.commands.package import pack_command
-from flavor.commands.utils import clean_command
-from flavor.commands.verify import verify_command
-from flavor.commands.workenv import workenv_group
 
 try:
     __version__ = importlib.metadata.version("flavor")
@@ -68,6 +60,7 @@ def cli(ctx: click.Context) -> None:
     Configure logging via environment variables:
     - FOUNDATION_LOG_LEVEL: Set log level (trace, debug, info, warning, error)
     - FOUNDATION_LOG_FILE: Write logs to file
+    - FOUNDATION_SETUP_LOG_LEVEL: Control Foundation's initialization logs
     """
     ctx.ensure_object(dict)
 
