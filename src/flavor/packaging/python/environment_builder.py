@@ -5,13 +5,12 @@
 
 import os
 from pathlib import Path
-import shutil
 import tarfile
 import tempfile
 from typing import Any
 
 from provide.foundation import logger
-from provide.foundation.file.directory import ensure_dir
+from provide.foundation.file import ensure_dir, safe_copy
 from provide.foundation.platform import get_arch_name, get_os_name
 from provide.foundation.process import run_command
 
@@ -56,7 +55,7 @@ class PythonEnvironmentBuilder:
 
     def _copy_executable(self, src: Path | str, dest: Path) -> None:
         """Copy a file and preserve executable permissions."""
-        shutil.copy2(src, dest)
+        safe_copy(src, dest, preserve_mode=True, overwrite=True)
         self._make_executable(dest)
 
     def find_uv_command(self, raise_if_not_found: bool = True) -> str | None:
