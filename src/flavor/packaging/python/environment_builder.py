@@ -29,7 +29,6 @@ class PythonEnvironmentBuilder:
         python_version: str = "3.11",
         is_windows: bool = False,
         manylinux_tag: str = "manylinux2014",
-        progress: Any = None,
     ) -> None:
         """Initialize environment builder.
 
@@ -37,12 +36,10 @@ class PythonEnvironmentBuilder:
             python_version: Python version to use (e.g., "3.11")
             is_windows: Whether building for Windows
             manylinux_tag: Manylinux tag for Linux compatibility
-            progress: Optional progress tracker
         """
         self.python_version = python_version
         self.is_windows = is_windows
         self.manylinux_tag = manylinux_tag
-        self.progress = progress
         self.uv_manager = UVManager()
         self.pypapip = PyPaPipManager()
         self.uv_exe = "uv.exe" if is_windows else "uv"
@@ -78,10 +75,6 @@ class PythonEnvironmentBuilder:
             machine=get_arch_name(),
         )
 
-        python_spinner = self._create_progress_spinner(
-            f"Downloading Python {self.python_version}"
-        )
-
         with tempfile.TemporaryDirectory() as uv_install_dir:
             logger.debug(
                 "📁🏗️✅ Created temporary UV install directory", path=uv_install_dir
@@ -90,22 +83,10 @@ class PythonEnvironmentBuilder:
             python_install_dir = self._install_python_with_uv(uv_install_dir)
 
             if not python_install_dir:
-                self._create_fallback_python_tarball(python_tgz, python_spinner)
+                self._create_fallback_python_tarball(python_tgz)
                 return
 
             self._create_python_tarball(python_install_dir, python_tgz)
-
-        if python_spinner:
-            python_spinner.finish()
-
-    def _create_progress_spinner(self, description: str):
-        """Create and initialize progress spinner."""
-        python_spinner = None
-        if self.progress:
-            python_spinner = self.progress.create_spinner(description=description)
-            if python_spinner:
-                python_spinner.tick()
-        return python_spinner
 
     def _install_python_with_uv(self, uv_install_dir: str) -> Path | None:
         """Install Python using UV and return installation directory."""
@@ -289,7 +270,7 @@ class PythonEnvironmentBuilder:
             size_mb=total_size // 1024 // 1024,
         )
 
-    def _create_fallback_python_tarball(self, python_tgz: Path, python_spinner) -> None:
+    def _create_fallback_python_tarball(self, python_tgz: Path) -> None:
         """Create a fallback Python tarball when installation fails."""
         logger.warning("Could not find UV-installed Python at expected location")
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -301,8 +282,6 @@ class PythonEnvironmentBuilder:
             )
             with tarfile.open(python_tgz, "w:gz", compresslevel=9) as tar:
                 tar.add(python_dir, arcname=".")
-        if python_spinner:
-            python_spinner.finish()
 
     def _create_python_tarball(
         self, python_install_dir: Path, python_tgz: Path
