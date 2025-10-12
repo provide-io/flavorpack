@@ -11,6 +11,7 @@ import tarfile
 import zlib
 
 from provide.foundation import logger
+from provide.foundation.file import atomic_write
 from provide.foundation.file.directory import ensure_dir, ensure_parent_dir, safe_rmtree
 
 from flavor.config.defaults import (
@@ -253,11 +254,11 @@ class PSPFLauncher(PSPFReader):
                 )
                 raise  # Re-raise the exception
         else:
-            # Write single file
+            # Write single file (atomic for safety)
             output_path = workenv_dir / slot_name
             try:
                 ensure_parent_dir(output_path)
-                output_path.write_bytes(data)
+                atomic_write(output_path, data)
                 logger.debug(f"✅ Wrote {len(data)} bytes to {output_path}")
                 return output_path
             except (OSError, PermissionError) as e:

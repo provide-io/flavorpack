@@ -12,10 +12,10 @@ from pathlib import Path
 
 from provide.foundation import logger
 from provide.foundation.archive import (
+    DEFAULT_LIMITS,
     ArchiveLimits,
     ArchiveOperation as FoundationOp,
     Bzip2Compressor,
-    DEFAULT_LIMITS,
     GzipCompressor,
     TarArchive,
 )
@@ -157,7 +157,9 @@ def apply_operations(
 
         # Skip TAR if present (handled during slot loading)
         if FoundationOp.TAR in foundation_ops:
-            logger.trace("📦 TAR operation detected - data should already be tar format")
+            logger.trace(
+                "📦 TAR operation detected - data should already be tar format"
+            )
             foundation_ops = [op for op in foundation_ops if op != FoundationOp.TAR]
             if not foundation_ops:
                 return data
@@ -171,7 +173,9 @@ def apply_operations(
             "✅ Operation chain applied",
             input_size=len(data),
             output_size=len(result),
-            compression_ratio=f"{len(result) / len(data):.2f}" if len(data) > 0 else "N/A",
+            compression_ratio=f"{len(result) / len(data):.2f}"
+            if len(data) > 0
+            else "N/A",
         )
 
         return result
@@ -259,7 +263,9 @@ def reverse_operations(data: bytes, packed_ops: int) -> bytes:
             "✅ Reverse operations complete",
             input_size=len(data),
             output_size=len(result),
-            expansion_ratio=f"{len(result) / len(data):.2f}" if len(data) > 0 else "N/A",
+            expansion_ratio=f"{len(result) / len(data):.2f}"
+            if len(data) > 0
+            else "N/A",
         )
 
         return result
@@ -376,7 +382,11 @@ def extract_archive(
                 temp_path.write_bytes(decompressed)
                 tar_impl.extract(temp_path, dest, limits=limits)
 
-            logger.debug("✅ TAR extracted", dest=str(dest), file_count=len(list(dest.rglob("*"))))
+            logger.debug(
+                "✅ TAR extracted",
+                dest=str(dest),
+                file_count=len(list(dest.rglob("*"))),
+            )
             return dest
 
         # Not an archive, just write the data

@@ -15,6 +15,7 @@ if TYPE_CHECKING:
     from flavor.psp.format_2025.reader import PSPFReader
 
 from provide.foundation import logger
+from provide.foundation.file import atomic_write_text
 from provide.foundation.file.directory import ensure_dir, ensure_parent_dir, safe_rmtree
 from provide.foundation.process import run_command
 
@@ -207,9 +208,9 @@ class WorkEnvManager:
             # Write to a file with the same base name inside the directory
             file_path = file_path / ".extracted"
 
-        # Ensure parent directory exists
+        # Ensure parent directory exists and write file (atomic for safety)
         ensure_parent_dir(file_path)
-        file_path.write_text(content)
+        atomic_write_text(file_path, content)
 
         logger.debug(f"✅ Wrote file: {file_path}")
 

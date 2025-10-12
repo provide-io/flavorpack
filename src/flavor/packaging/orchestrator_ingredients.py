@@ -1,6 +1,5 @@
 """Helper functions for PackagingOrchestrator to reduce complexity."""
 
-import json
 import os
 from pathlib import Path
 import tarfile
@@ -9,6 +8,7 @@ from typing import Any
 from provide.foundation import logger
 from provide.foundation.file.formats import write_json
 from provide.foundation.platform import is_windows
+from provide.foundation.serialization import json_dumps
 
 from flavor.exceptions import BuildError
 
@@ -200,7 +200,7 @@ def write_manifest_file(manifest: dict[str, Any], temp_dir: Path) -> Path:
     manifest_path = temp_dir / "manifest.json"
     write_json(manifest_path, manifest, indent=2)
     logger.info(f"Generated manifest at: {manifest_path}")
-    logger.debug(f"Manifest content: {json.dumps(manifest, indent=2)}")
+    logger.debug(f"Manifest content: {json_dumps(manifest, indent=2)}")
     return manifest_path
 
 
