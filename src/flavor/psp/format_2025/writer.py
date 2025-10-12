@@ -24,7 +24,7 @@ from flavor.config.defaults import (
     TRAILER_END_MAGIC,
     TRAILER_START_MAGIC,
 )
-from flavor.psp.format_2025.checksums import calculate_checksum
+from provide.foundation.crypto import format_checksum as calculate_checksum
 from flavor.psp.format_2025.index import PSPFIndex
 from flavor.psp.format_2025.metadata.assembly import (
     assemble_metadata,
