@@ -5,9 +5,15 @@
 """Utility commands for the flavor CLI."""
 
 from pathlib import Path
+from typing import Any
 
 import click
 from provide.foundation.file.directory import safe_rmtree
+
+from flavor.console import echo, get_command_logger
+
+# Get structured logger for this command
+log = get_command_logger("clean")
 
 
 @click.command("clean")
@@ -34,12 +40,20 @@ from provide.foundation.file.directory import safe_rmtree
 )
 def clean_command(all: bool, ingredients: bool, dry_run: bool, yes: bool) -> None:
     """Clean work environment cache (default) or ingredients."""
+    log.debug(
+        "Clean command started",
+        all=all,
+        ingredients=ingredients,
+        dry_run=dry_run,
+        yes=yes,
+    )
+
     # Determine what to clean
     clean_workenv = not ingredients or all
     clean_ingredients = ingredients or all
 
     if dry_run:
-        click.echo("🔍 DRY RUN - Nothing will be removed\n")
+        echo("🔍 DRY RUN - Nothing will be removed\n")
 
     total_freed = 0
 
@@ -72,24 +86,25 @@ def _clean_workenv_cache(dry_run: bool, yes: bool) -> int:
     if not yes and not click.confirm(
         f"Remove {len(cached)} cached packages ({size_mb:.1f} MB)?"
     ):
-        click.echo("Aborted.")
+        echo("Aborted.")
         return 0
 
     removed = manager.clean()
     if removed:
-        click.secho(f"✅ Removed {len(removed)} cached packages", fg="green")
+        log.info("Removed cached packages", count=len(removed), size_bytes=size)
+        echo(f"✅ Removed {len(removed)} cached packages")
         return size
 
     return 0
 
 
-def _show_workenv_dry_run(cached: list, size_mb: float) -> None:
+def _show_workenv_dry_run(cached: list[dict[str, Any]], size_mb: float) -> None:
     """Show what would be removed from workenv cache."""
-    click.echo(f"Would remove {len(cached)} cached packages ({size_mb:.1f} MB):")
+    echo(f"Would remove {len(cached)} cached packages ({size_mb:.1f} MB):")
     for pkg in cached:
         pkg_size_mb = pkg["size"] / (1024 * 1024)
         name = pkg.get("name", pkg["id"])
-        click.echo(f"  - {name} ({pkg_size_mb:.1f} MB)")
+        echo(f"  - {name} ({pkg_size_mb:.1f} MB)")
 
 
 def _clean_ingredient_binaries(dry_run: bool, yes: bool) -> int:
@@ -112,14 +127,16 @@ def _clean_ingredient_binaries(dry_run: bool, yes: bool) -> int:
     if not yes and not click.confirm(
         f"Remove {len(ingredients_list)} ingredient binaries ({size_mb:.1f} MB)?"
     ):
-        click.echo("Aborted.")
+        echo("Aborted.")
         return 0
 
     safe_rmtree(ingredient_dir)
-    click.secho(
-        f"✅ Removed {len(ingredients_list)} ingredient binaries",
-        fg="green",
+    log.info(
+        "Removed ingredient binaries",
+        count=len(ingredients_list),
+        size_bytes=total_size,
     )
+    echo(f"✅ Removed {len(ingredients_list)} ingredient binaries")
     return total_size
 
 
@@ -131,16 +148,17 @@ def _get_ingredient_files(ingredient_dir: Path) -> list[Path]:
 
 def _show_ingredients_dry_run(ingredients_list: list[Path], size_mb: float) -> None:
     """Show what ingredient binaries would be removed."""
-    click.echo(
+    echo(
         f"\nWould remove {len(ingredients_list)} ingredient binaries ({size_mb:.1f} MB):"
     )
     for ingredient in ingredients_list:
         h_size_mb = ingredient.stat().st_size / (1024 * 1024)
-        click.echo(f"  - {ingredient.name} ({h_size_mb:.1f} MB)")
+        echo(f"  - {ingredient.name} ({h_size_mb:.1f} MB)")
 
 
 def _show_total_freed(dry_run: bool, total_freed: int) -> None:
     """Show total space freed if not a dry run."""
     if not dry_run and total_freed > 0:
         freed_mb = total_freed / (1024 * 1024)
-        click.secho(f"\n💾 Total freed: {freed_mb:.1f} MB", fg="green")
+        log.info("Total space freed", size_mb=freed_mb, size_bytes=total_freed)
+        echo(f"\n💾 Total freed: {freed_mb:.1f} MB")
