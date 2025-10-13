@@ -12,7 +12,11 @@ from provide.foundation.file.directory import ensure_dir, ensure_parent_dir
 from provide.foundation.file.formats import write_json
 from provide.foundation.formatting import format_size
 
+from flavor.console import echo, echo_error, get_command_logger
 from flavor.psp.format_2025.reader import PSPFReader
+
+# Get structured logger for this command
+log = get_command_logger("extract")
 
 
 @click.command("extract")
@@ -47,11 +51,19 @@ def extract_command(
     """
     package_path = Path(package_file)
     output = Path(output_path)
+    log.debug(
+        "Extracting slot",
+        package=str(package_path),
+        slot_index=slot_index,
+        output=str(output),
+        force=force,
+    )
 
     # Check if output exists
     if output.exists() and not force:
-        click.secho(f"❌ Output file already exists: {output}", fg="red", err=True)
-        click.echo("Use --force to overwrite", err=True)
+        log.error("Output file already exists", output=str(output))
+        echo_error(f"❌ Output file already exists: {output}")
+        echo_error("Use --force to overwrite")
         raise click.Abort()
 
     try:
@@ -63,10 +75,13 @@ def extract_command(
 
             # Validate slot index
             if slot_index < 0 or slot_index >= len(slot_descriptors):
-                click.secho(
-                    f"❌ Invalid slot index {slot_index}. Package has {len(slot_descriptors)} slots (0-{len(slot_descriptors) - 1})",
-                    fg="red",
-                    err=True,
+                log.error(
+                    "Invalid slot index",
+                    slot_index=slot_index,
+                    slot_count=len(slot_descriptors),
+                )
+                echo_error(
+                    f"❌ Invalid slot index {slot_index}. Package has {len(slot_descriptors)} slots (0-{len(slot_descriptors) - 1})"
                 )
                 raise click.Abort()
 
@@ -78,7 +93,7 @@ def extract_command(
                 if slot_index < len(slots_metadata)
                 else f"slot_{slot_index}"
             )
-            click.echo(
+            echo(
                 f"Extracting slot {slot_index}: {slot_name} ({format_size(slot.size)})"
             )
 
@@ -89,15 +104,21 @@ def extract_command(
             ensure_parent_dir(output)
             atomic_write(output, data)
 
-            click.secho(
-                f"✅ Extracted {format_size(len(data))} to {output}", fg="green"
+            log.info(
+                "Slot extracted successfully",
+                slot_index=slot_index,
+                size=len(data),
+                output=str(output),
             )
+            echo(f"✅ Extracted {format_size(len(data))} to {output}")
 
     except FileNotFoundError as e:
-        click.secho(f"❌ Package not found: {package_file}", fg="red", err=True)
+        log.error("Package not found", package=package_file)
+        echo_error(f"❌ Package not found: {package_file}")
         raise click.Abort() from e
     except Exception as e:
-        click.secho(f"❌ Error extracting slot: {e}", fg="red", err=True)
+        log.error("Error extracting slot", error=str(e), package=package_file)
+        echo_error(f"❌ Error extracting slot: {e}")
         raise click.Abort() from e
 
 
@@ -122,6 +143,12 @@ def extract_all_command(package_file: str, output_dir: str, force: bool) -> None
     """Extract all slots from a flavor package to a directory."""
     package_path = Path(package_file)
     output = Path(output_dir)
+    log.debug(
+        "Extracting all slots",
+        package=str(package_path),
+        output_dir=str(output),
+        force=force,
+    )
 
     # Create output directory
     ensure_dir(output)
@@ -133,9 +160,7 @@ def extract_all_command(package_file: str, output_dir: str, force: bool) -> None
             metadata = reader.read_metadata()
             slots_metadata = metadata.get("slots", [])
 
-            click.echo(
-                f"Extracting {len(slot_descriptors)} slots from {package_path.name}"
-            )
+            echo(f"Extracting {len(slot_descriptors)} slots from {package_path.name}")
 
             for i, slot in enumerate(slot_descriptors):
                 # Get slot metadata
@@ -159,30 +184,36 @@ def extract_all_command(package_file: str, output_dir: str, force: bool) -> None
 
                 # Check if exists
                 if output_file.exists() and not force:
-                    click.echo(f"⏭️  Skipping {filename} (exists)")
+                    echo(f"⏭️  Skipping {filename} (exists)")
                     continue
 
                 # Extract slot data
-                click.echo(
-                    f"📦 Extracting slot {i}: {slot_name} ({format_size(slot.size)})"
-                )
+                log.debug("Extracting slot", slot_index=i, slot_name=slot_name)
+                echo(f"📦 Extracting slot {i}: {slot_name} ({format_size(slot.size)})")
                 data = reader.read_slot(i)
 
                 # Write to file (atomic for safety)
                 atomic_write(output_file, data)
-                click.echo(f"   → {output_file}")
+                echo(f"   → {output_file}")
 
             # Also write metadata
             metadata_file = output / "metadata.json"
             if not metadata_file.exists() or force:
                 write_json(metadata_file, metadata, indent=2)
-                click.echo(f"📋 Metadata → {metadata_file}")
+                echo(f"📋 Metadata → {metadata_file}")
 
-            click.secho(f"✅ Extracted all slots to {output}", fg="green")
+            log.info(
+                "All slots extracted successfully",
+                slot_count=len(slot_descriptors),
+                output_dir=str(output),
+            )
+            echo(f"✅ Extracted all slots to {output}")
 
     except FileNotFoundError as e:
-        click.secho(f"❌ Package not found: {package_file}", fg="red", err=True)
+        log.error("Package not found", package=package_file)
+        echo_error(f"❌ Package not found: {package_file}")
         raise click.Abort() from e
     except Exception as e:
-        click.secho(f"❌ Error extracting: {e}", fg="red", err=True)
+        log.error("Error extracting", error=str(e), package=package_file)
+        echo_error(f"❌ Error extracting: {e}")
         raise click.Abort() from e
