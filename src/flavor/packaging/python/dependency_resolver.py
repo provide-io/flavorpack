@@ -13,7 +13,7 @@ import zipfile
 
 from provide.foundation import logger, retry
 from provide.foundation.platform import get_arch_name, get_os_name
-from provide.foundation.process import run_command
+from provide.foundation.process import run
 
 from flavor.packaging.python.pypapip_manager import PyPaPipManager
 from flavor.packaging.python.uv_manager import UVManager
@@ -58,7 +58,7 @@ class DependencyResolver:
         if uv_path:
             logger.debug(f"Found UV in PATH: {uv_path}")
             try:
-                result = run_command(
+                result = run(
                     [uv_path, "--version"], capture_output=True, timeout=10
                 )
                 if result.returncode == 0:
@@ -76,7 +76,7 @@ class DependencyResolver:
         if pipx_uv:
             try:
                 logger.trace("Checking if UV is available via pipx")
-                result = run_command(
+                result = run(
                     ["pipx", "run", "uv", "--version"], capture_output=True, timeout=15
                 )
                 if result.returncode == 0:
@@ -154,7 +154,7 @@ class DependencyResolver:
 
         try:
             logger.trace("Checking if pip is available")
-            result = run_command(pip_check_cmd, check=True, capture_output=True)
+            result = run(pip_check_cmd, check=True, capture_output=True)
             logger.trace(f"pip is available: {result.stdout.strip()}")
             return True
         except Exception:
@@ -174,7 +174,7 @@ class DependencyResolver:
             # First try ensurepip
             ensurepip_cmd = [str(python_exe), "-m", "ensurepip", "--default-pip"]
             logger.debug("Installing pip using ensurepip")
-            run_command(ensurepip_cmd, check=True, capture_output=True)
+            run(ensurepip_cmd, check=True, capture_output=True)
             logger.info("✅ pip installed successfully")
             return True
         except Exception:
@@ -184,7 +184,7 @@ class DependencyResolver:
             if uv_cmd:
                 uv_pip_cmd = [uv_cmd, "pip", "install", "pip"]
                 try:
-                    run_command(uv_pip_cmd, check=True, capture_output=True)
+                    run(uv_pip_cmd, check=True, capture_output=True)
                     logger.info("✅ pip installed via UV")
                     return True
                 except Exception as e:
@@ -254,7 +254,7 @@ class DependencyResolver:
         logger.debug("Running UV download command", cmd=" ".join(download_cmd))
         logger.trace(f"Full command: {download_cmd}")
 
-        result = run_command(download_cmd, check=True, capture_output=True)
+        result = run(download_cmd, check=True, capture_output=True)
         if result.stdout:
             logger.trace(f"Download stdout: {result.stdout.strip()}")
         if result.stderr:

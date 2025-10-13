@@ -12,7 +12,7 @@ from provide.foundation.errors import log_only_error_context
 from provide.foundation.file import temp_dir
 from provide.foundation.file.formats import write_json
 from provide.foundation.platform import get_platform_string, is_windows
-from provide.foundation.process import run_command
+from provide.foundation.process import run
 
 from flavor.exceptions import BuildError
 from flavor.ingredients.manager import IngredientManager
@@ -77,7 +77,7 @@ class PackagingOrchestrator:
         """Detect launcher type by running the binary with --version."""
         logger.debug("🔍🚀📋 Detecting launcher type", path=str(launcher_path))
         try:
-            result = run_command(
+            result = run(
                 [str(launcher_path), "--version"],
                 capture_output=True,
                 check=False,
@@ -331,7 +331,7 @@ class PackagingOrchestrator:
                     build_cmd_args.extend(["--public-key", self.public_key_path])
 
             logger.info("Building flavor pack...")
-            run_command(build_cmd_args, check=True, capture_output=True)
+            run(build_cmd_args, check=True, capture_output=True)
 
             # Always show completion message
             final_size = Path(self.output_flavor_path).stat().st_size / (1024 * 1024)
@@ -396,7 +396,7 @@ class PackagingOrchestrator:
                     build_cmd_args.extend(["--public-key", self.public_key_path])
 
             logger.info("Building package...")
-            run_command(build_cmd_args, check=True, capture_output=True)
+            run(build_cmd_args, check=True, capture_output=True)
 
             # Always show completion message
             final_size = Path(self.output_flavor_path).stat().st_size / (1024 * 1024)

@@ -262,9 +262,9 @@ class PythonPackager:
             install_cmd = self.pypapip._get_pypapip_install_cmd(
                 python_exe, ["pip", "wheel", "setuptools"]
             )
-            from provide.foundation.process import run_command
+            from provide.foundation.process import run
 
-            run_command(install_cmd, check=True, capture_output=True)
+            run(install_cmd, check=True, capture_output=True)
 
         return python_exe
 

@@ -16,7 +16,7 @@ from provide.foundation import retry
 from provide.foundation.config import BaseConfig
 from provide.foundation.logger import logger
 from provide.foundation.platform import get_arch_name, get_os_name
-from provide.foundation.process import run_command
+from provide.foundation.process import run
 from provide.foundation.tools.base import (
     BaseToolManager,
     ToolMetadata,
@@ -272,7 +272,7 @@ class UVManager(BaseToolManager):
         venv_cmd = self._get_uv_venv_cmd(python_exe, venv_path, python_version)
 
         logger.debug("💻 Creating UV venv", command=" ".join(venv_cmd))
-        run_command(venv_cmd, check=True, capture_output=True)
+        run(venv_cmd, check=True, capture_output=True)
 
         logger.info("✅ Successfully created UV venv")
 
@@ -301,7 +301,7 @@ class UVManager(BaseToolManager):
         )
 
         logger.debug("💻 Installing packages with UV", command=" ".join(install_cmd))
-        run_command(install_cmd, check=True, capture_output=True)
+        run(install_cmd, check=True, capture_output=True)
 
         logger.info("✅ Successfully installed packages with UV")
 
@@ -323,7 +323,7 @@ class UVManager(BaseToolManager):
         )
 
         logger.debug("💻 Compiling requirements with UV", command=" ".join(compile_cmd))
-        run_command(compile_cmd, check=True, capture_output=True)
+        run(compile_cmd, check=True, capture_output=True)
 
         logger.info("✅ Successfully compiled requirements with UV")
 
@@ -390,7 +390,7 @@ class UVManager(BaseToolManager):
 
             try:
                 logger.debug("Downloading UV wheel", cmd=" ".join(download_cmd))
-                run_command(download_cmd, check=True, capture_output=True)
+                run(download_cmd, check=True, capture_output=True)
 
                 # Find the downloaded wheel
                 uv_wheel = None

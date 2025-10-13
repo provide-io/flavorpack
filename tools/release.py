@@ -8,7 +8,7 @@ import sys
 
 # Import run_command from flavor.utils
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
-from provide.foundation.process import run_command
+from provide.foundation.process import run
 
 
 def get_project_root() -> Path:
@@ -28,7 +28,7 @@ def get_current_version() -> str:
 
 def check_git_status() -> bool:
     """Check if git working directory is clean."""
-    result = run_command(["git", "status", "--porcelain"])
+    result = run(["git", "status", "--porcelain"])
     if result.stdout.strip():
         print("⚠️  Git working directory is not clean:")
         print(result.stdout)
@@ -38,14 +38,14 @@ def check_git_status() -> bool:
 
 def check_branch() -> str:
     """Get current git branch."""
-    result = run_command(["git", "rev-parse", "--abbrev-ref", "HEAD"])
+    result = run(["git", "rev-parse", "--abbrev-ref", "HEAD"])
     return result.stdout.strip()
 
 
 def run_tests() -> bool:
     """Run test suite."""
     print("\n🧪 Running tests...")
-    result = run_command(
+    result = run(
         [sys.executable, "-m", "pytest", "tests/", "-q", "--tb=short"],
         cwd=get_project_root(),
     )
@@ -69,7 +69,7 @@ def build_ingredients() -> bool:
         print("⚠️  ingredients/build.sh not found, skipping ingredient build")
         return True
 
-    result = run_command(["./build.sh"], cwd=ingredients_dir)
+    result = run(["./build.sh"], cwd=ingredients_dir)
     if result.returncode != 0:
         print("❌ Ingredient build failed")
         return False
@@ -87,7 +87,7 @@ def build_wheels(platforms: list[str] | None = None) -> list[Path]:
     if platforms:
         wheels = []
         for platform in platforms:
-            result = run_command(
+            result = run(
                 build_cmd + ["--platform", platform], cwd=get_project_root()
             )
             if result.returncode == 0:
@@ -97,7 +97,7 @@ def build_wheels(platforms: list[str] | None = None) -> list[Path]:
                 wheels.extend(platform_wheels)
         return wheels
     else:
-        result = run_command(build_cmd + ["--all"], cwd=get_project_root())
+        result = run(build_cmd + ["--all"], cwd=get_project_root())
 
         if result.returncode != 0:
             print("❌ Wheel build failed")
@@ -112,7 +112,7 @@ def validate_wheels(wheels: list[Path]) -> bool:
     print("\n🔍 Validating wheels...")
 
     for wheel in wheels:
-        result = run_command(
+        result = run(
             [sys.executable, "tools/validate_wheel.py", str(wheel)],
             cwd=get_project_root(),
         )
@@ -130,13 +130,13 @@ def create_git_tag(version: str, push: bool = False) -> bool:
     tag = f"v{version}"
 
     # Check if tag already exists
-    result = run_command(["git", "tag", "-l", tag])
+    result = run(["git", "tag", "-l", tag])
     if result.stdout.strip():
         print(f"⚠️  Tag {tag} already exists")
         return False
 
     # Create tag
-    result = run_command(["git", "tag", "-a", tag, "-m", f"Release {version}"])
+    result = run(["git", "tag", "-a", tag, "-m", f"Release {version}"])
 
     if result.returncode != 0:
         print(f"❌ Failed to create tag {tag}")
@@ -145,7 +145,7 @@ def create_git_tag(version: str, push: bool = False) -> bool:
     print(f"✅ Created tag {tag}")
 
     if push:
-        result = run_command(["git", "push", "origin", tag])
+        result = run(["git", "push", "origin", tag])
         if result.returncode != 0:
             print(f"❌ Failed to push tag {tag}")
             return False
@@ -160,7 +160,7 @@ def upload_to_pypi(wheels: list[Path], test: bool = False) -> bool:
     print(f"\n📤 Uploading to {'Test' if test else ''}PyPI...")
 
     # Check if twine is installed
-    result = run_command([sys.executable, "-m", "pip", "show", "twine"])
+    result = run([sys.executable, "-m", "pip", "show", "twine"])
     if result.returncode != 0:
         print("❌ twine is not installed. Run: pip install twine")
         return False
@@ -171,7 +171,7 @@ def upload_to_pypi(wheels: list[Path], test: bool = False) -> bool:
         cmd.extend(["--repository", "testpypi"])
     cmd.extend([str(w) for w in wheels])
 
-    result = run_command(cmd)
+    result = run(cmd)
     if result.returncode != 0:
         print(f"❌ Upload to {'Test' if test else ''}PyPI failed")
         return False
