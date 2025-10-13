@@ -32,7 +32,6 @@ dependencies = [
     "provide-foundation[all]>=0.0.0.dev0",
     "pip>=25.2",
     "uv>=0.8.13",
-    "httpx>=0.28.1",
 ]
 keywords = ["packaging", "pspf", "flavor", "executable", "bundle"]
 

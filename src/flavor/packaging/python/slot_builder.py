@@ -3,15 +3,14 @@
 #
 """Slot builder for Python packages."""
 
-import json
 from pathlib import Path
-import shutil
 import tarfile
 import tomllib
 from typing import Any
 
 from provide.foundation import logger
-from provide.foundation.file.directory import ensure_dir
+from provide.foundation.file import ensure_dir, safe_copy
+from provide.foundation.file.formats import write_json
 from provide.foundation.platform import get_arch_name, get_os_name
 
 from flavor.config.defaults import DEFAULT_DIR_PERMS, DEFAULT_EXECUTABLE_PERMS
@@ -67,7 +66,7 @@ class PythonSlotBuilder:
 
     def _copy_executable(self, src: Path | str, dest: Path) -> None:
         """Copy a file and preserve executable permissions."""
-        shutil.copy2(src, dest)
+        safe_copy(src, dest, preserve_mode=True, overwrite=True)
         if not self.is_windows:
             dest.chmod(DEFAULT_EXECUTABLE_PERMS)
 
@@ -403,8 +402,7 @@ class PythonSlotBuilder:
 
     def _write_json(self, path: Path, data: dict[str, Any]) -> None:
         """Write JSON data to file."""
-        with path.open("w") as f:
-            json.dump(data, f, indent=2)
+        write_json(path, data, indent=2)
 
     def _get_requirements_file(self) -> Path | None:
         """Get requirements file from various possible locations."""

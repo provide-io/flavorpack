@@ -101,10 +101,12 @@ class TestPlatformEnvironment:
         assert env["FLAVOR_OS"] in ["darwin", "linux", "windows"]
         assert env["FLAVOR_ARCH"] in ["amd64", "arm64", "x86", "i386"]
 
-    @patch("platform.system")
-    @patch("platform.machine")
+    @patch("provide.foundation.platform.detection.platform.system")
+    @patch("provide.foundation.platform.detection.platform.machine")
     def test_os_normalization(self, mock_machine, mock_system) -> None:
         """Test OS name normalization."""
+        from provide.foundation.platform.detection import get_os_name as foundation_get_os_name, get_arch_name as foundation_get_arch_name, get_platform_string as foundation_get_platform_string
+
         test_cases = [
             ("Darwin", "darwin"),
             ("Linux", "linux"),
@@ -116,15 +118,21 @@ class TestPlatformEnvironment:
         mock_machine.return_value = "x86_64"
 
         for input_os, expected_os in test_cases:
+            # Clear cached values before each test
+            foundation_get_os_name.cache_clear()
+            foundation_get_arch_name.cache_clear()
+            foundation_get_platform_string.cache_clear()
             mock_system.return_value = input_os
             env = {}
             set_platform_environment(env)
             assert env["FLAVOR_OS"] == expected_os
 
-    @patch("platform.system")
-    @patch("platform.machine")
+    @patch("provide.foundation.platform.detection.platform.system")
+    @patch("provide.foundation.platform.detection.platform.machine")
     def test_arch_normalization(self, mock_machine, mock_system) -> None:
         """Test architecture name normalization."""
+        from provide.foundation.platform.detection import get_os_name as foundation_get_os_name, get_arch_name as foundation_get_arch_name, get_platform_string as foundation_get_platform_string
+
         test_cases = [
             ("x86_64", "amd64"),
             ("AMD64", "amd64"),
@@ -137,6 +145,10 @@ class TestPlatformEnvironment:
         mock_system.return_value = "Linux"
 
         for input_arch, expected_arch in test_cases:
+            # Clear cached values before each test
+            foundation_get_os_name.cache_clear()
+            foundation_get_arch_name.cache_clear()
+            foundation_get_platform_string.cache_clear()
             mock_machine.return_value = input_arch
             env = {}
             set_platform_environment(env)

@@ -4,7 +4,11 @@ PSPF 2025 Format Implementation
 Progressive Secure Package Format (2025 Edition)
 """
 
-from provide.foundation.crypto import generate_ed25519_keypair, sign_data, verify_signature
+from provide.foundation.crypto import (
+    generate_ed25519_keypair,
+    sign_data,
+    verify_signature,
+)
 
 from flavor.config.defaults import (
     DEFAULT_HEADER_SIZE,
@@ -31,7 +35,6 @@ from flavor.psp.format_2025.spec import (
     PreparedSlot,
 )
 from flavor.psp.format_2025.validation import validate_complete, validate_spec
-from flavor.utils.alignment import align_offset
 
 __all__ = [
     # Constants
@@ -55,7 +58,6 @@ __all__ = [
     "PSPFReader",
     "PreparedSlot",
     "SlotMetadata",
-    "align_offset",
     "build_package",
     "create_key_config",
     # Functions

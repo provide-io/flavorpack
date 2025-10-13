@@ -4,12 +4,12 @@
 """Python packager that owns all Python-specific packaging logic."""
 
 from pathlib import Path
-import shutil
 import sys
 import tomllib
 from typing import Any
 
 from provide.foundation import logger
+from provide.foundation.file import safe_rmtree
 from provide.foundation.file.formats import write_json
 
 from flavor.packaging.python.dist_manager import PythonDistManager
@@ -293,7 +293,10 @@ class PythonPackager:
         for dir_path in dirs_to_clean:
             if dir_path.exists():
                 logger.trace(f"Removing {dir_path}")
-                shutil.rmtree(dir_path, ignore_errors=True)
+                try:
+                    safe_rmtree(dir_path, missing_ok=True)
+                except Exception as e:
+                    logger.debug(f"Failed to remove {dir_path}: {e}")
 
     def get_runtime_dependencies(self) -> list[str]:
         """
