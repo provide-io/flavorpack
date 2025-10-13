@@ -9,6 +9,7 @@ and manylinux2014 compatibility for maximum Linux distribution coverage.
 
 from pathlib import Path
 
+from provide.foundation import retry
 from provide.foundation.logger import logger
 from provide.foundation.platform import get_arch_name, get_os_name
 from provide.foundation.process import run_command
@@ -160,6 +161,15 @@ class PyPaPipManager:
     # ║                      END OF CRITICAL PyPA HELPER METHODS                        ║
     # ╚══════════════════════════════════════════════════════════════════════════════╝
 
+    @retry(
+        ConnectionError,
+        TimeoutError,
+        OSError,
+        max_attempts=3,
+        base_delay=1.0,
+        backoff="exponential",
+        jitter=True,
+    )
     def download_wheels_from_requirements(
         self, python_exe: Path, requirements_file: Path, dest_dir: Path
     ) -> None:
@@ -170,6 +180,9 @@ class PyPaPipManager:
             python_exe: Path to Python executable
             requirements_file: Path to requirements.txt file
             dest_dir: Directory to download wheels to
+
+        Retries:
+            Up to 3 attempts with exponential backoff for network errors
         """
         logger.info("🌐📥 Downloading wheels from requirements file")
 
@@ -190,6 +203,15 @@ class PyPaPipManager:
         else:
             logger.info("✅ Successfully downloaded all wheels")
 
+    @retry(
+        ConnectionError,
+        TimeoutError,
+        OSError,
+        max_attempts=3,
+        base_delay=1.0,
+        backoff="exponential",
+        jitter=True,
+    )
     def download_wheels_for_packages(
         self, python_exe: Path, packages: list[str], dest_dir: Path
     ) -> None:
@@ -200,6 +222,9 @@ class PyPaPipManager:
             python_exe: Path to Python executable
             packages: List of package names/requirements
             dest_dir: Directory to download wheels to
+
+        Retries:
+            Up to 3 attempts with exponential backoff for network errors
         """
         if not packages:
             logger.debug("No packages to download")

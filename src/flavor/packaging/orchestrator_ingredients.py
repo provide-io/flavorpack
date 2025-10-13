@@ -37,14 +37,13 @@ def get_cli_executable_name(
 
 
 def create_slot_tarballs(
-    temp_dir: Path, artifacts: dict[str, Path], progress: Any
+    temp_dir: Path, artifacts: dict[str, Path]
 ) -> dict[str, Path]:
     """Create tarball files for each slot.
 
     Args:
         temp_dir: Temporary directory for build
         artifacts: Dictionary of prepared artifacts
-        progress: Progress reporter instance
 
     Returns:
         Dictionary mapping slot names to tarball paths
@@ -54,28 +53,21 @@ def create_slot_tarballs(
 
     slots = {}
 
-    with progress.task(total=3, description="Creating slots") as bar:
-        # UV is a single binary (builder will compress it)
-        uv_path = artifacts["payload_dir"] / "bin" / uv_exe
-        slots["uv"] = uv_path
-        if bar:
-            bar.increment()
+    # UV is a single binary (builder will compress it)
+    uv_path = artifacts["payload_dir"] / "bin" / uv_exe
+    slots["uv"] = uv_path
 
-        python_tarball = artifacts.get("python_tgz")
-        if not python_tarball:
-            raise BuildError("Python runtime tarball not found")
-        slots["python"] = python_tarball
-        if bar:
-            bar.increment()
+    python_tarball = artifacts.get("python_tgz")
+    if not python_tarball:
+        raise BuildError("Python runtime tarball not found")
+    slots["python"] = python_tarball
 
-        wheels_tarball = temp_dir / "wheels.tar"
-        with tarfile.open(wheels_tarball, "w") as tar:
-            wheels_dir = artifacts["payload_dir"] / "wheels"
-            for wheel in wheels_dir.glob("*.whl"):
-                tar.add(wheel, arcname=f"wheels/{wheel.name}")
-        slots["wheels"] = wheels_tarball
-        if bar:
-            bar.increment()
+    wheels_tarball = temp_dir / "wheels.tar"
+    with tarfile.open(wheels_tarball, "w") as tar:
+        wheels_dir = artifacts["payload_dir"] / "wheels"
+        for wheel in wheels_dir.glob("*.whl"):
+            tar.add(wheel, arcname=f"wheels/{wheel.name}")
+    slots["wheels"] = wheels_tarball
 
     return slots
 
@@ -378,30 +370,23 @@ def create_python_builder_metadata(
 
 
 def create_python_slot_tarballs(
-    temp_dir: Path, artifacts: dict[str, Path], progress: Any
+    temp_dir: Path, artifacts: dict[str, Path]
 ) -> tuple[Path, Path, Path]:
     """Create slot tarballs for Python builder."""
     windows = is_windows()
     uv_exe = "uv.exe" if windows else "uv"
 
-    with progress.task(total=3, description="Creating slots") as bar:
-        # UV slot - single binary (builder will compress it)
-        uv_path = artifacts["payload_dir"] / "bin" / uv_exe
-        if bar:
-            bar.increment()
+    # UV slot - single binary (builder will compress it)
+    uv_path = artifacts["payload_dir"] / "bin" / uv_exe
 
-        python_tarball = artifacts.get("python_tgz")
-        if not python_tarball:
-            raise BuildError("Python runtime tarball not found")
-        if bar:
-            bar.increment()
+    python_tarball = artifacts.get("python_tgz")
+    if not python_tarball:
+        raise BuildError("Python runtime tarball not found")
 
-        wheels_tarball = temp_dir / "wheels.tar"
-        with tarfile.open(wheels_tarball, "w") as tar:
-            wheels_dir = artifacts["payload_dir"] / "wheels"
-            for wheel in wheels_dir.glob("*.whl"):
-                tar.add(wheel, arcname=f"wheels/{wheel.name}")
-        if bar:
-            bar.increment()
+    wheels_tarball = temp_dir / "wheels.tar"
+    with tarfile.open(wheels_tarball, "w") as tar:
+        wheels_dir = artifacts["payload_dir"] / "wheels"
+        for wheel in wheels_dir.glob("*.whl"):
+            tar.add(wheel, arcname=f"wheels/{wheel.name}")
 
     return uv_path, python_tarball, wheels_tarball

@@ -37,7 +37,7 @@ pytest tests/format_2025/test_pspf_2025_core.py
 pytest tests/cli/test_cli.py -v
 
 # Run with coverage
-pytest --cov=src/flavor --cov-report=term-missing
+pytest --cov=flavor --cov-report=term-missing
 
 # Run PSPF validation tests
 make validate-pspf
