@@ -4,10 +4,11 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
+from cryptography.exceptions import InvalidSignature
 from provide.foundation.crypto import (
+    Ed25519Signer,
+    Ed25519Verifier,
     generate_ed25519_keypair,
-    sign_data,
-    verify_signature,
 )
 import pytest
 
@@ -38,13 +39,14 @@ class TestPackageIntegrity:
         test_data = b"Hello, PSPF security test!"
 
         # Sign data
-        signature = sign_data(test_data, private_key)
+        signer = Ed25519Signer(private_key)
+        signature = signer.sign(test_data)
         assert isinstance(signature, bytes)
         assert len(signature) == 64  # Ed25519 signatures are 64 bytes
 
         # Verify signature
-        is_valid = verify_signature(test_data, signature, public_key)
-        assert is_valid is True
+        verifier = Ed25519Verifier(public_key)
+        verifier.verify(test_data, signature)  # Raises InvalidSignature on failure
 
     @pytest.mark.security
     def test_signature_verification_fails_wrong_key(self) -> None:
@@ -56,11 +58,13 @@ class TestPackageIntegrity:
         test_data = b"Test data for wrong key verification"
 
         # Sign with first key
-        signature = sign_data(test_data, private_key1)
+        signer = Ed25519Signer(private_key1)
+        signature = signer.sign(test_data)
 
         # Verify with second key (should fail)
-        is_valid = verify_signature(test_data, signature, public_key2)
-        assert is_valid is False
+        verifier = Ed25519Verifier(public_key2)
+        with pytest.raises(InvalidSignature):
+            verifier.verify(test_data, signature)
 
     @pytest.mark.security
     def test_signature_verification_fails_modified_data(self) -> None:
@@ -71,11 +75,13 @@ class TestPackageIntegrity:
         modified_data = b"Modified data"
 
         # Sign original data
-        signature = sign_data(original_data, private_key)
+        signer = Ed25519Signer(private_key)
+        signature = signer.sign(original_data)
 
         # Verify with modified data (should fail)
-        is_valid = verify_signature(modified_data, signature, public_key)
-        assert is_valid is False
+        verifier = Ed25519Verifier(public_key)
+        with pytest.raises(InvalidSignature):
+            verifier.verify(modified_data, signature)
 
     @pytest.mark.security
     def test_validation_level_enforcement(self) -> None:

@@ -10,7 +10,7 @@ from enum import IntEnum
 from pathlib import Path
 
 from provide.foundation import logger
-from provide.foundation.crypto.signatures import verify_signature
+from provide.foundation.crypto import Ed25519Verifier
 
 from flavor.config import get_flavor_config
 from flavor.config.defaults import (
@@ -147,41 +147,35 @@ class PSPFIntegrityVerifier:
                                 # Extract first 64 bytes for Ed25519 signature
                                 ed25519_signature = index.integrity_signature[:64]
 
-                                signature_valid = verify_signature(
-                                    metadata_json, ed25519_signature, index.public_key
-                                )
+                                verifier = Ed25519Verifier(index.public_key)
+                                verifier.verify(metadata_json, ed25519_signature)
+                                signature_valid = True
                                 logger.debug(
                                     f"🔐 Signature validation result: {signature_valid}"
                                 )
 
-                                # Handle signature validation failure based on level
-                                if not signature_valid:
-                                    if validation_level == ValidationLevel.STRICT:
-                                        logger.error(
-                                            "❌ Package integrity verification failed"
-                                        )
-                                        tamper_detected = True
-                                        signature_valid = False
-                                    elif validation_level == ValidationLevel.STANDARD:
-                                        logger.warning(
-                                            "🚨 SECURITY WARNING: Package integrity verification failed"
-                                        )
-                                        logger.warning(
-                                            "🚨 Package may be corrupted or tampered with"
-                                        )
-                                        logger.warning(
-                                            "🚨 Continuing with standard validation (use FLAVOR_VALIDATION=strict to enforce)"
-                                        )
-                                        signature_valid = (
-                                            False  # Report as invalid but continue
-                                        )
-
                             except Exception as e:
+                                # Handle signature validation failure based on level
+                                signature_valid = False
                                 if validation_level == ValidationLevel.STRICT:
                                     logger.error(
                                         f"❌ Signature verification error: {e}"
                                     )
+                                    tamper_detected = True
                                     raise
+                                elif validation_level == ValidationLevel.STANDARD:
+                                    logger.warning(
+                                        f"⚠️ Signature verification error: {e}"
+                                    )
+                                    logger.warning(
+                                        "🚨 SECURITY WARNING: Package integrity verification failed"
+                                    )
+                                    logger.warning(
+                                        "🚨 Package may be corrupted or tampered with"
+                                    )
+                                    logger.warning(
+                                        "🚨 Continuing with standard validation (use FLAVOR_VALIDATION=strict to enforce)"
+                                    )
                                 else:
                                     logger.warning(
                                         f"⚠️ Signature verification error: {e}"
@@ -189,7 +183,6 @@ class PSPFIntegrityVerifier:
                                     logger.warning(
                                         "⚠️ Continuing due to validation level"
                                     )
-                                    signature_valid = False
                         else:
                             # Missing or null signatures
                             if validation_level == ValidationLevel.STRICT:
