@@ -11,7 +11,7 @@ from typing import Any, BinaryIO
 import zlib
 
 from provide.foundation import logger
-from provide.foundation.crypto import format_checksum as calculate_checksum, sign_data
+from provide.foundation.crypto import Ed25519Signer, format_checksum as calculate_checksum
 from provide.foundation.file import (
     align_offset,
     align_to_page,
@@ -82,7 +82,8 @@ def write_package(
     metadata_compressed = gzip.compress(metadata_json, mtime=0)
 
     # Sign metadata
-    signature = sign_data(metadata_json, private_key)
+    signer = Ed25519Signer(private_key)
+    signature = signer.sign(metadata_json)
     padded_signature = signature + b"\x00" * (512 - 64)
     index.integrity_signature = padded_signature
 

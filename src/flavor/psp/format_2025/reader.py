@@ -11,7 +11,7 @@ import zlib
 
 from cryptography.exceptions import InvalidSignature
 from provide.foundation import logger
-from provide.foundation.crypto import verify_signature
+from provide.foundation.crypto import Ed25519Verifier
 from provide.foundation.serialization import json_loads
 
 from flavor.config.defaults import (
@@ -377,7 +377,8 @@ class PSPFReader:
         metadata_json = gzip.decompress(metadata_compressed)
 
         try:
-            verify_signature(metadata_json, signature, index.public_key)
+            verifier = Ed25519Verifier(index.public_key)
+            verifier.verify(metadata_json, signature)
             return True
         except InvalidSignature:
             return False
