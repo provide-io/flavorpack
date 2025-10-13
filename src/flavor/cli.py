@@ -54,7 +54,9 @@ except importlib.metadata.PackageNotFoundError:
 # See _initialize_foundation() for logger creation
 
 
-def _initialize_foundation(log_level: str, log_file: Path | None = None) -> StructLogger:
+def _initialize_foundation(
+    log_level: str, log_file: Path | None = None
+) -> StructLogger:
     """Initialize Foundation logging and telemetry.
 
     Configures provide-foundation with service name, log level, and optional file output.
