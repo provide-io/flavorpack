@@ -5,10 +5,10 @@
 """Work environment management commands for the flavor CLI."""
 
 import datetime
-import json
 
 import click
 from provide.foundation.file.formats import read_json
+from provide.foundation.serialization import json_dumps
 
 
 @click.group("workenv")
@@ -154,7 +154,7 @@ def workenv_inspect(package_id: str, output_json: bool) -> None:
 
     if output_json:
         # Output as JSON
-        click.echo(json.dumps(info, indent=2, default=str))
+        click.echo(json_dumps(info, indent=2, default=str))
     else:
         # Human-readable output
         click.echo("=" * 60)

@@ -8,6 +8,7 @@ import hashlib
 import json
 import struct
 
+from provide.foundation.file import align_offset
 import pytest
 
 from flavor.psp.format_2025 import (
@@ -22,8 +23,7 @@ from flavor.psp.format_2025 import (
     PSPFIndex,
     PSPFReader,
     SlotMetadata,
-    align_offset,
-    generate_key_pair,
+    generate_ed25519_keypair,
 )
 
 
@@ -59,7 +59,7 @@ class TestPSPFCore:
 
     def test_ephemeral_keys_available(self, test_builder) -> None:
         """Test ephemeral key generation."""
-        private_key, public_key = generate_key_pair()
+        private_key, public_key = generate_ed25519_keypair()
         assert private_key is not None
         assert public_key is not None
         assert len(private_key) == 32
@@ -325,15 +325,15 @@ class TestPSPFCore:
                 )
 
     def test_align_offset_function(self, test_builder) -> None:
-        """Test offset alignment function."""
-        # Test various offsets
-        assert align_offset(0) == 0
-        assert align_offset(1) == 8
-        assert align_offset(7) == 8
-        assert align_offset(8) == 8
-        assert align_offset(9) == 16
-        assert align_offset(100) == 104
-        assert align_offset(104) == 104
+        """Test offset alignment function with PSPF slot alignment (8 bytes)."""
+        # Test various offsets with DEFAULT_SLOT_ALIGNMENT (8)
+        assert align_offset(0, DEFAULT_SLOT_ALIGNMENT) == 0
+        assert align_offset(1, DEFAULT_SLOT_ALIGNMENT) == 8
+        assert align_offset(7, DEFAULT_SLOT_ALIGNMENT) == 8
+        assert align_offset(8, DEFAULT_SLOT_ALIGNMENT) == 8
+        assert align_offset(9, DEFAULT_SLOT_ALIGNMENT) == 16
+        assert align_offset(100, DEFAULT_SLOT_ALIGNMENT) == 104
+        assert align_offset(104, DEFAULT_SLOT_ALIGNMENT) == 104
 
     def test_reader_verify_magic(self, temp_dir, simple_metadata, test_builder) -> None:
         """Test magic verification."""

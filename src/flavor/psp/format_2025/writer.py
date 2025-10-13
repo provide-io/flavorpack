@@ -6,7 +6,6 @@ Handles the low-level binary writing and file operations for PSPF packages.
 """
 
 import gzip
-import json
 from pathlib import Path
 from typing import BinaryIO
 import zlib
@@ -14,6 +13,7 @@ import zlib
 from provide.foundation import logger
 from provide.foundation.crypto import sign_data
 from provide.foundation.file.directory import ensure_parent_dir
+from provide.foundation.serialization import json_dumps
 
 from flavor.config.defaults import (
     DEFAULT_EXECUTABLE_PERMS,
@@ -24,7 +24,7 @@ from flavor.config.defaults import (
     TRAILER_END_MAGIC,
     TRAILER_START_MAGIC,
 )
-from flavor.psp.format_2025.checksums import calculate_checksum
+from provide.foundation.crypto import format_checksum as calculate_checksum
 from flavor.psp.format_2025.index import PSPFIndex
 from flavor.psp.format_2025.metadata.assembly import (
     assemble_metadata,
@@ -33,8 +33,12 @@ from flavor.psp.format_2025.metadata.assembly import (
 )
 from flavor.psp.format_2025.slots import SlotDescriptor
 from flavor.psp.format_2025.spec import BuildSpec, PreparedSlot
-from flavor.utils.alignment import align_offset, align_to_page
-from flavor.utils.permissions import parse_permissions, set_file_permissions
+from provide.foundation.file import (
+    align_offset,
+    align_to_page,
+    parse_permissions,
+    set_file_permissions,
+)
 
 
 def write_package(
@@ -75,7 +79,7 @@ def write_package(
 
     # Create and compress metadata
     metadata = assemble_metadata(spec, slots, launcher_info)
-    metadata_json = json.dumps(metadata, indent=2).encode("utf-8")
+    metadata_json = json_dumps(metadata, indent=2).encode("utf-8")
     metadata_compressed = gzip.compress(metadata_json, mtime=0)
 
     # Sign metadata

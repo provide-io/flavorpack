@@ -9,6 +9,7 @@ from typing import Any
 
 import click
 from provide.foundation.formatting import format_size
+from provide.foundation.serialization import json_dumps
 
 from flavor.psp.format_2025.reader import PSPFReader
 
@@ -61,8 +62,6 @@ def _output_json_format(
     slots_metadata: list[dict[str, Any]],
 ) -> None:
     """Output package information in JSON format."""
-    import json
-
     output = {
         "package": str(package_path.name),
         "format": f"PSPF/0x{index.format_version:08x}",
@@ -88,7 +87,7 @@ def _output_json_format(
             for i, slot in enumerate(slot_descriptors)
         ],
     }
-    click.echo(json.dumps(output, indent=2))
+    click.echo(json_dumps(output, indent=2))
 
 
 def _output_human_format(
