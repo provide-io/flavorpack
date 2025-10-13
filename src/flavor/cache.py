@@ -6,10 +6,10 @@ import os
 from pathlib import Path
 import time
 
-from provide.foundation.utils.environment import get_str
 from provide.foundation.file import temp_dir
 from provide.foundation.file.directory import ensure_dir, safe_rmtree
 from provide.foundation.file.formats import read_json
+from provide.foundation.utils.environment import get_str
 
 
 def get_cache_dir() -> Path:
@@ -61,9 +61,7 @@ class CacheManager:
                 continue
 
             # Check for the modern completion marker
-            completion_marker = (
-                instance_metadata_dir / "instance" / "extract" / "complete"
-            )
+            completion_marker = instance_metadata_dir / "instance" / "extract" / "complete"
             if not completion_marker.exists():
                 continue
 

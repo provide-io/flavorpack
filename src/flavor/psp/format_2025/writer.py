@@ -134,9 +134,7 @@ def _create_launcher_info(launcher_data: bytes) -> dict[str, Any]:
 def _write_metadata(f: BinaryIO, metadata_compressed: bytes, index: PSPFIndex) -> None:
     """Write compressed metadata and update index."""
     metadata_offset = f.tell()
-    logger.debug(
-        f"Metadata offset: {metadata_offset}, size: {len(metadata_compressed)}"
-    )
+    logger.debug(f"Metadata offset: {metadata_offset}, size: {len(metadata_compressed)}")
 
     f.write(metadata_compressed)
     logger.debug(f"Position after metadata: {f.tell()}")
@@ -148,9 +146,7 @@ def _write_metadata(f: BinaryIO, metadata_compressed: bytes, index: PSPFIndex) -
     index.metadata_checksum = checksum.to_bytes(4, "little") + b"\x00" * 28
 
 
-def _write_slots(
-    f: BinaryIO, slots: list[PreparedSlot], spec: BuildSpec, index: PSPFIndex
-) -> None:
+def _write_slots(f: BinaryIO, slots: list[PreparedSlot], spec: BuildSpec, index: PSPFIndex) -> None:
     """Write slot table and data."""
     # Slot table position
     slot_table_offset = align_offset(f.tell(), DEFAULT_SLOT_ALIGNMENT)
@@ -199,9 +195,7 @@ def _write_slots(
         # Create descriptor
         slot_permissions = parse_permissions(slot.metadata.permissions)
         # DEBUG: Log alignment decision for diagnostics
-        alignment_value = (
-            DEFAULT_PAGE_SIZE if spec.options.page_aligned else DEFAULT_SLOT_ALIGNMENT
-        )
+        alignment_value = DEFAULT_PAGE_SIZE if spec.options.page_aligned else DEFAULT_SLOT_ALIGNMENT
         logger.debug(
             "🔧 Slot alignment decision",
             slot_index=i,

@@ -50,6 +50,9 @@ __all__ = [
     # Spec Classes
     "BuildSpec",
     "BundleExecutor",
+    # Crypto Classes
+    "Ed25519Signer",
+    "Ed25519Verifier",
     "KeyConfig",
     "PSPFBuilder",
     # Core Classes
@@ -60,9 +63,6 @@ __all__ = [
     "SlotMetadata",
     "build_package",
     "create_key_config",
-    # Crypto Classes
-    "Ed25519Signer",
-    "Ed25519Verifier",
     # Functions
     "generate_ed25519_keypair",
     "resolve_keys",
