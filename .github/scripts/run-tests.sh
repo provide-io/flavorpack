@@ -19,7 +19,7 @@ if python -m pip show pytest-json-report >/dev/null 2>&1; then
 fi
 
 # Always generate coverage data for all tests
-TEST_CMD="$TEST_CMD --cov=src/flavor"
+TEST_CMD="$TEST_CMD --cov=flavor"
 TEST_CMD="$TEST_CMD --cov-report=xml:coverage.xml"
 TEST_CMD="$TEST_CMD --cov-report=html:htmlcov"
 TEST_CMD="$TEST_CMD --cov-report=term-missing"

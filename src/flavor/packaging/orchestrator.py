@@ -171,10 +171,7 @@ class PackagingOrchestrator:
             manifest_dir=str(self.manifest_dir),
             entry_point=self.entry_point,
         )
-        from flavor.progress import ProgressReporter
         from flavor.psp.format_2025.pspf_builder import PSPFBuilder
-
-        progress = ProgressReporter(enabled=self.show_progress)
 
         python_packager = PythonPackager(
             manifest_dir=self.manifest_dir,
@@ -182,21 +179,15 @@ class PackagingOrchestrator:
             entry_point=self.entry_point,
             build_config=self.build_config,
             python_version=self.python_version,
-            progress=progress,
         )
 
         with temp_dir(prefix="flavor_build_") as build_temp_dir:
             logger.info("Preparing Python artifacts...")
-            with progress.task(
-                total=5, description="Preparing Python artifacts"
-            ) as bar:
-                artifacts = python_packager.prepare_artifacts(build_temp_dir)
-                if bar:
-                    bar.finish()
+            artifacts = python_packager.prepare_artifacts(build_temp_dir)
 
             logger.info("Creating slot tarballs...")
             uv_tarball, python_tarball, wheels_tarball = create_python_slot_tarballs(
-                build_temp_dir, artifacts, progress
+                build_temp_dir, artifacts
             )
 
             launcher_path = self._launcher_path
@@ -259,14 +250,7 @@ class PackagingOrchestrator:
                 public_key = load_public_key_raw(Path(self.public_key_path))
                 builder = builder.with_keys(private=private_key, public=public_key)
 
-            spinner = progress.create_spinner(description="Building PSPF package")
-            if spinner:
-                spinner.tick()
-
             result = builder.build(Path(self.output_flavor_path))
-
-            if spinner:
-                spinner.finish()
 
             if not result.success:
                 raise BuildError(f"Package build failed: {'; '.join(result.errors)}")
@@ -291,14 +275,11 @@ class PackagingOrchestrator:
         """Build package using an external builder binary (Go/Rust)."""
         logger.info("Building package with external builder...")
         from flavor.packaging.orchestrator_ingredients import create_slot_tarballs
-        from flavor.progress import ProgressReporter
 
         # If we have a JSON manifest, we can use it directly with external builders
         if self.manifest_type == "json":
             self._build_with_json_manifest()
             return
-
-        progress = ProgressReporter(enabled=self.show_progress)
 
         python_packager = PythonPackager(
             manifest_dir=self.manifest_dir,
@@ -306,20 +287,14 @@ class PackagingOrchestrator:
             entry_point=self.entry_point,
             build_config=self.build_config,
             python_version=self.python_version,
-            progress=progress,
         )
 
         with temp_dir(prefix="flavor_build_") as build_temp_dir:
             logger.info("Preparing Python artifacts...")
-            with progress.task(
-                total=5, description="Preparing Python artifacts"
-            ) as bar:
-                artifacts = python_packager.prepare_artifacts(build_temp_dir)
-                if bar:
-                    bar.finish()
+            artifacts = python_packager.prepare_artifacts(build_temp_dir)
 
             logger.info("Creating slot tarballs...")
-            slots = create_slot_tarballs(build_temp_dir, artifacts, progress)
+            slots = create_slot_tarballs(build_temp_dir, artifacts)
 
             key_paths = {
                 "private": self.package_integrity_key_path,
@@ -356,14 +331,7 @@ class PackagingOrchestrator:
                     build_cmd_args.extend(["--public-key", self.public_key_path])
 
             logger.info("Building flavor pack...")
-            spinner = progress.create_spinner(description="Building PSPF package")
-            if spinner:
-                spinner.tick()
-
             run_command(build_cmd_args, check=True, capture_output=True)
-
-            if spinner:
-                spinner.finish()
 
             # Always show completion message
             final_size = Path(self.output_flavor_path).stat().st_size / (1024 * 1024)
@@ -372,10 +340,6 @@ class PackagingOrchestrator:
     def _build_with_json_manifest(self) -> None:
         """Build package using a JSON manifest directly with external builders."""
         logger.info("Building package with JSON manifest and external builder...")
-
-        from flavor.progress import ProgressReporter
-
-        progress = ProgressReporter(enabled=self.show_progress)
 
         # Write the manifest to a temporary file
         with temp_dir(prefix="flavor_json_build_") as build_temp_dir:
@@ -432,14 +396,7 @@ class PackagingOrchestrator:
                     build_cmd_args.extend(["--public-key", self.public_key_path])
 
             logger.info("Building package...")
-            spinner = progress.create_spinner(description="Building PSPF package")
-            if spinner:
-                spinner.tick()
-
             run_command(build_cmd_args, check=True, capture_output=True)
-
-            if spinner:
-                spinner.finish()
 
             # Always show completion message
             final_size = Path(self.output_flavor_path).stat().st_size / (1024 * 1024)

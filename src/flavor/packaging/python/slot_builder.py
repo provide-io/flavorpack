@@ -30,7 +30,6 @@ class PythonSlotBuilder:
         is_windows: bool = False,
         manylinux_tag: str = "manylinux2014",
         build_config: dict[str, Any] | None = None,
-        progress: Any = None,
         wheel_builder: Any = None,
     ) -> None:
         """Initialize slot builder.
@@ -43,7 +42,6 @@ class PythonSlotBuilder:
             is_windows: Whether building for Windows
             manylinux_tag: Manylinux tag for Linux compatibility
             build_config: Build configuration dictionary
-            progress: Optional progress tracker
             wheel_builder: WheelBuilder instance for building wheels
         """
         self.manifest_dir = manifest_dir
@@ -53,14 +51,12 @@ class PythonSlotBuilder:
         self.is_windows = is_windows
         self.manylinux_tag = manylinux_tag
         self.build_config = build_config or {}
-        self.progress = progress
         self.wheel_builder = wheel_builder
         self.uv_manager = UVManager()
         self.env_builder = PythonEnvironmentBuilder(
             python_version=python_version,
             is_windows=is_windows,
             manylinux_tag=manylinux_tag,
-            progress=progress,
         )
         self.uv_exe = "uv.exe" if is_windows else "uv"
 
@@ -83,28 +79,15 @@ class PythonSlotBuilder:
         """
         artifacts = {}
 
-        # Create progress bar for preparation steps
-        prep_bar = None
-        if self.progress:
-            prep_bar = self.progress.create_bar(
-                total=5, description="Preparing artifacts"
-            )
-            if prep_bar:
-                prep_bar.start()
-
         # Create payload structure
         payload_dir = work_dir / "payload"
         ensure_dir(payload_dir, mode=DEFAULT_DIR_PERMS)
         artifacts["payload_dir"] = payload_dir
-        if prep_bar:
-            prep_bar.increment()
 
         # Build wheels
         wheels_dir = payload_dir / "wheels"
         ensure_dir(wheels_dir, mode=DEFAULT_DIR_PERMS)
         self._build_wheels(wheels_dir)
-        if prep_bar:
-            prep_bar.increment()
 
         # Ensure bin directory exists for UV binary
         bin_dir = payload_dir / "bin"
@@ -169,15 +152,11 @@ class PythonSlotBuilder:
                 raise FileNotFoundError(
                     "UV binary not found on host system. Cannot build Python package without UV."
                 )
-        if prep_bar:
-            prep_bar.increment()
 
         # Create metadata
         metadata_dir = payload_dir / "metadata"
         ensure_dir(metadata_dir, mode=DEFAULT_DIR_PERMS)
         self._create_metadata(metadata_dir)
-        if prep_bar:
-            prep_bar.increment()
 
         # Create payload archive with gzip -9 compression
         logger.info("Creating payload archive with maximum compression...")
@@ -205,9 +184,6 @@ class PythonSlotBuilder:
         python_tgz = work_dir / "python.tgz"
         self.env_builder.create_python_placeholder(python_tgz)
         artifacts["python_tgz"] = python_tgz
-        if prep_bar:
-            prep_bar.increment()
-            prep_bar.finish()
 
         return artifacts
 

@@ -152,7 +152,7 @@ workenv/flavor_*/bin/pytest -m security    # Security tests
 workenv/flavor_*/bin/pytest -m taster      # Taster tests
 
 # Run with coverage
-workenv/flavor_*/bin/pytest --cov=src/flavor --cov-report=term-missing
+workenv/flavor_*/bin/pytest --cov=flavor --cov-report=term-missing
 
 # Run specific test file
 workenv/flavor_*/bin/pytest tests/test_pspf_2025_core.py -xvs
