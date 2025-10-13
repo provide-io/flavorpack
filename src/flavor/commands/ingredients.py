@@ -8,7 +8,7 @@ import os
 from pathlib import Path
 
 import click
-from provide.foundation.process import run_command
+from provide.foundation.process import run
 
 from flavor.console import echo, echo_error, get_command_logger
 
@@ -46,7 +46,7 @@ def ingredient_list(verbose: bool) -> None:
     # Ingredient function to get version
     def get_version(ingredient_path: Path) -> str | None:
         try:
-            result = run_command(
+            result = run(
                 [str(ingredient_path), "--version"],
                 capture_output=True,
                 check=False,

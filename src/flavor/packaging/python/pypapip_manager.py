@@ -12,7 +12,7 @@ from pathlib import Path
 from provide.foundation import retry
 from provide.foundation.logger import logger
 from provide.foundation.platform import get_arch_name, get_os_name
-from provide.foundation.process import run_command
+from provide.foundation.process import run
 
 
 class PyPaPipManager:
@@ -194,7 +194,7 @@ class PyPaPipManager:
         )
 
         logger.debug("💻 Downloading requirements", command=" ".join(download_cmd))
-        result = run_command(download_cmd, check=False, capture_output=True)
+        result = run(download_cmd, check=False, capture_output=True)
 
         if result.returncode != 0:
             error_msg = f"Failed to download required wheels: {result.stderr}"
@@ -240,7 +240,7 @@ class PyPaPipManager:
         )
 
         logger.debug("💻 Downloading packages", command=" ".join(download_cmd))
-        result = run_command(download_cmd, check=False, capture_output=True)
+        result = run(download_cmd, check=False, capture_output=True)
 
         if result.returncode != 0:
             error_msg = f"Failed to download required packages: {result.stderr}"
@@ -271,7 +271,7 @@ class PyPaPipManager:
         )
 
         logger.debug("💻 Building wheel", command=" ".join(wheel_cmd))
-        result = run_command(wheel_cmd, check=True, capture_output=True)
+        result = run(wheel_cmd, check=True, capture_output=True)
 
         if result.stdout:
             # Look for the wheel filename in output
@@ -297,6 +297,6 @@ class PyPaPipManager:
         install_cmd = self._get_pypapip_install_cmd(python_exe, packages)
 
         logger.debug("💻 Installing packages", command=" ".join(install_cmd))
-        run_command(install_cmd, check=True, capture_output=True)
+        run(install_cmd, check=True, capture_output=True)
 
         logger.info("✅ Successfully installed packages")

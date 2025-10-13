@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 from provide.foundation import logger
 from provide.foundation.file import atomic_write_text
 from provide.foundation.file.directory import ensure_dir, ensure_parent_dir, safe_rmtree
-from provide.foundation.process import run_command
+from provide.foundation.process import run
 
 
 class WorkEnvManager:
@@ -233,9 +233,9 @@ class WorkEnvManager:
         args = shlex.split(command)
         logger.debug(f"🔧 Executing command args: {args}")
 
-        # Use the shared run_command utility
+        # Use the shared run utility
         try:
-            run_command(
+            run(
                 args,
                 cwd=workenv_dir,
                 capture_output=True,
@@ -273,7 +273,7 @@ class WorkEnvManager:
             args = shlex.split(command)
 
             try:
-                run_command(
+                run(
                     args,
                     cwd=workenv_dir,
                     capture_output=True,

@@ -20,7 +20,7 @@ from provide.foundation.file import (
     safe_rmtree,
 )
 from provide.foundation.logger import logger
-from provide.foundation.process import run_command
+from provide.foundation.process import run
 
 from flavor.packaging.python.pypapip_manager import PyPaPipManager
 from flavor.packaging.python.uv_manager import UVManager
@@ -122,7 +122,7 @@ class PythonDistManager:
             venv_cmd.append("--copies")
 
         logger.debug("💻 Creating venv", command=" ".join(venv_cmd))
-        run_command(venv_cmd, check=True, capture_output=True)
+        run(venv_cmd, check=True, capture_output=True)
 
         venv_python = self._get_venv_python_path(venv_path)
         logger.info("✅ Successfully created Python environment")
@@ -174,7 +174,7 @@ class PythonDistManager:
         install_cmd.insert(-len(wheel_paths), "--no-deps")
 
         logger.debug("💻 Installing wheels", command=" ".join(install_cmd))
-        run_command(install_cmd, check=True, capture_output=True)
+        run(install_cmd, check=True, capture_output=True)
 
         logger.info("✅ Successfully installed wheels to environment")
 
@@ -241,7 +241,7 @@ class PythonDistManager:
             compile_cmd.insert(3, f"-O{optimization_level}")
 
         logger.debug("💻 Compiling Python files", command=" ".join(compile_cmd))
-        result = run_command(compile_cmd, check=False, capture_output=True)
+        result = run(compile_cmd, check=False, capture_output=True)
 
         if result.returncode != 0:
             logger.warning(f"Python compilation had issues: {result.stderr}")
