@@ -267,12 +267,12 @@ class TestPyPaPipManager:
             assert "--python-version" in cmd_310 and "3.10" in cmd_310
             assert "--python-version" in cmd_312 and "3.12" in cmd_312
 
-    @patch("flavor.packaging.python.pypapip_manager.run_command")
-    def test_download_wheels_from_requirements(self, mock_run_command) -> None:
+    @patch("flavor.packaging.python.pypapip_manager.run")
+    def test_download_wheels_from_requirements(self, mock_run) -> None:
         """Test downloading wheels from requirements file."""
         mock_result = Mock()
         mock_result.returncode = 0
-        mock_run_command.return_value = mock_result
+        mock_run.return_value = mock_result
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
             f.write("numpy\nscipy\n")
@@ -287,9 +287,9 @@ class TestPyPaPipManager:
                 python_exe, requirements_file, dest_dir
             )
 
-            # Verify run_command was called
-            mock_run_command.assert_called_once()
-            args, _kwargs = mock_run_command.call_args
+            # Verify run was called
+            mock_run.assert_called_once()
+            args, _kwargs = mock_run.call_args
 
             # Verify command structure
             cmd = args[0]
@@ -303,13 +303,13 @@ class TestPyPaPipManager:
         finally:
             requirements_file.unlink()
 
-    @patch("flavor.packaging.python.pypapip_manager.run_command")
-    def test_build_wheel_from_source(self, mock_run_command) -> None:
+    @patch("flavor.packaging.python.pypapip_manager.run")
+    def test_build_wheel_from_source(self, mock_run) -> None:
         """Test building wheel from source directory."""
         mock_result = Mock()
         mock_result.returncode = 0
         mock_result.stdout = "Built wheel: mypackage-1.0.0-py3-none-any.whl"
-        mock_run_command.return_value = mock_result
+        mock_run.return_value = mock_result
 
         python_exe = Path("/usr/bin/python3")
         source_path = Path("/tmp/mypackage")
@@ -317,9 +317,9 @@ class TestPyPaPipManager:
 
         self.pip_manager.build_wheel_from_source(python_exe, source_path, wheel_dir)
 
-        # Verify run_command was called with correct arguments
-        mock_run_command.assert_called_once()
-        args, kwargs = mock_run_command.call_args
+        # Verify run was called with correct arguments
+        mock_run.assert_called_once()
+        args, kwargs = mock_run.call_args
 
         cmd = args[0]
         assert cmd[0] == "/usr/bin/python3"
@@ -332,21 +332,21 @@ class TestPyPaPipManager:
         # Verify check=True for error handling
         assert kwargs["check"] is True
 
-    @patch("flavor.packaging.python.pypapip_manager.run_command")
-    def test_install_packages(self, mock_run_command) -> None:
+    @patch("flavor.packaging.python.pypapip_manager.run")
+    def test_install_packages(self, mock_run) -> None:
         """Test installing packages."""
         mock_result = Mock()
         mock_result.returncode = 0
-        mock_run_command.return_value = mock_result
+        mock_run.return_value = mock_result
 
         python_exe = Path("/usr/bin/python3")
         packages = ["requests", "urllib3"]
 
         self.pip_manager.install_packages(python_exe, packages)
 
-        # Verify run_command was called
-        mock_run_command.assert_called_once()
-        args, kwargs = mock_run_command.call_args
+        # Verify run was called
+        mock_run.assert_called_once()
+        args, kwargs = mock_run.call_args
 
         cmd = args[0]
         expected = ["/usr/bin/python3", "-m", "pip", "install", "requests", "urllib3"]
@@ -360,12 +360,12 @@ class TestPyPaPipManager:
         python_exe = Path("/usr/bin/python3")
         dest_dir = Path("/tmp/wheels")
 
-        # These should not raise exceptions and should not call run_command
-        with patch("flavor.packaging.python.pypapip_manager.run_command") as mock_run:
+        # These should not raise exceptions and should not call run
+        with patch("flavor.packaging.python.pypapip_manager.run") as mock_run:
             self.pip_manager.download_wheels_for_packages(python_exe, [], dest_dir)
             self.pip_manager.install_packages(python_exe, [])
 
-            # Should not have called run_command for empty lists
+            # Should not have called run for empty lists
             mock_run.assert_not_called()
 
 

@@ -29,13 +29,13 @@ class TestWheelBuilder:
         builder_312 = WheelBuilder(python_version="3.12")
         assert builder_312.python_version == "3.12"
 
-    @patch("flavor.packaging.python.wheel_builder.run_command")
-    def test_build_wheel_from_source_basic(self, mock_run_command) -> None:
+    @patch("flavor.packaging.python.wheel_builder.run")
+    def test_build_wheel_from_source_basic(self, mock_run) -> None:
         """Test basic wheel building from source."""
         mock_result = Mock()
         mock_result.returncode = 0
         mock_result.stdout = "Built wheel: mypackage-1.0.0-py3-none-any.whl"
-        mock_run_command.return_value = mock_result
+        mock_run.return_value = mock_result
 
         with tempfile.TemporaryDirectory() as temp_dir:
             source_path = Path(temp_dir) / "mypackage"
@@ -53,9 +53,9 @@ class TestWheelBuilder:
                 python_exe, source_path, wheel_dir
             )
 
-            # Verify run_command was called
-            mock_run_command.assert_called_once()
-            args, kwargs = mock_run_command.call_args
+            # Verify run was called
+            mock_run.assert_called_once()
+            args, kwargs = mock_run.call_args
 
             cmd = args[0]
             assert cmd[0] == "/usr/bin/python3"
@@ -69,13 +69,13 @@ class TestWheelBuilder:
             assert result.name == "mypackage-1.0.0-py3-none-any.whl"
             assert kwargs["check"] is True
 
-    @patch("flavor.packaging.python.wheel_builder.run_command")
-    def test_build_wheel_with_options(self, mock_run_command) -> None:
+    @patch("flavor.packaging.python.wheel_builder.run")
+    def test_build_wheel_with_options(self, mock_run) -> None:
         """Test wheel building with custom build options."""
         mock_result = Mock()
         mock_result.returncode = 0
         mock_result.stdout = "Built wheel: mypackage-1.0.0-py3-none-any.whl"
-        mock_run_command.return_value = mock_result
+        mock_run.return_value = mock_result
 
         with tempfile.TemporaryDirectory() as temp_dir:
             source_path = Path(temp_dir) / "mypackage"
@@ -103,7 +103,7 @@ class TestWheelBuilder:
             )
 
             # Verify command includes custom options
-            args, _kwargs = mock_run_command.call_args
+            args, _kwargs = mock_run.call_args
             cmd = args[0]
 
             assert "--no-build-isolation" in cmd
@@ -184,8 +184,8 @@ class TestWheelBuilder:
                 # Result should be locked requirements file
                 assert result.name == "requirements.txt"
 
-    @patch("flavor.packaging.python.wheel_builder.run_command")
-    def test_resolve_dependencies_fallback_to_pip_tools(self, mock_run_command) -> None:
+    @patch("flavor.packaging.python.wheel_builder.run")
+    def test_resolve_dependencies_fallback_to_pip_tools(self, mock_run) -> None:
         """Test fallback to pip-tools when UV fails."""
         with tempfile.TemporaryDirectory() as temp_dir:
             output_dir = Path(temp_dir)
@@ -201,7 +201,7 @@ class TestWheelBuilder:
                 mock_uv_compile.side_effect = Exception("UV failed")
 
                 # Mock successful pip-tools execution
-                mock_run_command.return_value = Mock(returncode=0)
+                mock_run.return_value = Mock(returncode=0)
 
                 result = self.wheel_builder.resolve_dependencies(
                     python_exe,
@@ -213,8 +213,8 @@ class TestWheelBuilder:
                 mock_uv_compile.assert_called_once()
 
                 # Verify pip-tools was called as fallback
-                mock_run_command.assert_called()
-                args = mock_run_command.call_args_list[-1][0]
+                mock_run.assert_called()
+                args = mock_run.call_args_list[-1][0]
                 cmd = args[0]
                 assert "-m" in cmd
                 assert "piptools" in cmd
@@ -267,13 +267,13 @@ class TestWheelBuilder:
             )
             assert any(wheel.name == "click-8.0.0-py3-none-any.whl" for wheel in result)
 
-    @patch("flavor.packaging.python.wheel_builder.run_command")
-    def test_build_and_resolve_project_complete(self, mock_run_command) -> None:
+    @patch("flavor.packaging.python.wheel_builder.run")
+    def test_build_and_resolve_project_complete(self, mock_run) -> None:
         """Test complete project building and resolution."""
         mock_result = Mock()
         mock_result.returncode = 0
         mock_result.stdout = "Built wheel: myproject-1.0.0-py3-none-any.whl"
-        mock_run_command.return_value = mock_result
+        mock_run.return_value = mock_result
 
         with tempfile.TemporaryDirectory() as temp_dir:
             project_dir = Path(temp_dir) / "myproject"
@@ -323,7 +323,7 @@ class TestWheelBuilder:
                 )
 
                 # Verify all operations were called
-                mock_run_command.assert_called()  # For wheel building
+                mock_run.assert_called()  # For wheel building
                 mock_resolve.assert_called_once()
                 mock_download.assert_called_once()
 
@@ -429,7 +429,7 @@ class TestWheelBuilderCriticalFeatures:
 
             python_exe = Path("/usr/bin/python3")
 
-            with patch("flavor.packaging.python.wheel_builder.run_command") as mock_run:
+            with patch("flavor.packaging.python.wheel_builder.run") as mock_run:
                 mock_run.return_value = Mock(returncode=0, stdout="Built wheel")
 
                 # Test with isolation disabled
