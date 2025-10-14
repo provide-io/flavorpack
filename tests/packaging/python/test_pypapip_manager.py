@@ -42,9 +42,7 @@ class TestPyPaPipManager:
         wheel_dir = Path("/tmp/wheels")
         source_dir = Path("/tmp/mypackage")
 
-        cmd = self.pip_manager._get_pypapip_wheel_cmd(
-            python_exe, wheel_dir, source_dir, no_deps=False
-        )
+        cmd = self.pip_manager._get_pypapip_wheel_cmd(python_exe, wheel_dir, source_dir, no_deps=False)
 
         expected = [
             "/usr/bin/python3",
@@ -63,9 +61,7 @@ class TestPyPaPipManager:
         wheel_dir = Path("/tmp/wheels")
         source_dir = Path("/tmp/mypackage")
 
-        cmd = self.pip_manager._get_pypapip_wheel_cmd(
-            python_exe, wheel_dir, source_dir, no_deps=True
-        )
+        cmd = self.pip_manager._get_pypapip_wheel_cmd(python_exe, wheel_dir, source_dir, no_deps=True)
 
         expected = [
             "/usr/bin/python3",
@@ -109,9 +105,7 @@ class TestPyPaPipManager:
 
     @patch("flavor.packaging.python.pypapip_manager.get_arch_name")
     @patch("flavor.packaging.python.pypapip_manager.get_os_name")
-    def test_get_pypapip_download_cmd_linux_amd64(
-        self, mock_os_name, mock_arch_name
-    ) -> None:
+    def test_get_pypapip_download_cmd_linux_amd64(self, mock_os_name, mock_arch_name) -> None:
         """Test CRITICAL manylinux2014 handling for Linux amd64."""
         mock_os_name.return_value = "linux"
         mock_arch_name.return_value = "amd64"
@@ -144,9 +138,7 @@ class TestPyPaPipManager:
 
     @patch("flavor.packaging.python.pypapip_manager.get_arch_name")
     @patch("flavor.packaging.python.pypapip_manager.get_os_name")
-    def test_get_pypapip_download_cmd_linux_arm64(
-        self, mock_os_name, mock_arch_name
-    ) -> None:
+    def test_get_pypapip_download_cmd_linux_arm64(self, mock_os_name, mock_arch_name) -> None:
         """Test CRITICAL manylinux2014 handling for Linux ARM64."""
         mock_os_name.return_value = "linux"
         mock_arch_name.return_value = "arm64"
@@ -283,9 +275,7 @@ class TestPyPaPipManager:
             python_exe = Path("/usr/bin/python3")
             dest_dir = Path("/tmp/wheels")
 
-            self.pip_manager.download_wheels_from_requirements(
-                python_exe, requirements_file, dest_dir
-            )
+            self.pip_manager.download_wheels_from_requirements(python_exe, requirements_file, dest_dir)
 
             # Verify run was called
             mock_run.assert_called_once()
@@ -401,9 +391,7 @@ class TestPyPaPipManagerCriticalFeatures:
 
     @patch("flavor.packaging.python.pypapip_manager.get_os_name")
     @patch("flavor.packaging.python.pypapip_manager.get_arch_name")
-    def test_linux_platforms_always_get_manylinux_tags(
-        self, mock_arch, mock_os
-    ) -> None:
+    def test_linux_platforms_always_get_manylinux_tags(self, mock_arch, mock_os) -> None:
         """CRITICAL: Linux builds must always get manylinux2014 tags."""
         mock_os.return_value = "linux"
 
@@ -446,12 +434,8 @@ class TestPyPaPipManagerCriticalFeatures:
 
         # Test all command generation methods
         install_cmd = self.pip_manager._get_pypapip_install_cmd(python_exe, ["test"])
-        wheel_cmd = self.pip_manager._get_pypapip_wheel_cmd(
-            python_exe, dest_dir, dest_dir
-        )
-        download_cmd = self.pip_manager._get_pypapip_download_cmd(
-            python_exe, dest_dir, packages=["test"]
-        )
+        wheel_cmd = self.pip_manager._get_pypapip_wheel_cmd(python_exe, dest_dir, dest_dir)
+        download_cmd = self.pip_manager._get_pypapip_download_cmd(python_exe, dest_dir, packages=["test"])
 
         # All commands must use "python -m pip", never "uv pip"
         for cmd in [install_cmd, wheel_cmd, download_cmd]:

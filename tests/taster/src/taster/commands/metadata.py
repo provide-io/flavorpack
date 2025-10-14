@@ -86,9 +86,7 @@ def metadata_command() -> None:
     if "slots" in metadata:
         click.secho("\n📁 Slots:", fg="blue")
         for slot in metadata["slots"]:
-            click.echo(
-                f"  [{slot['index']}] {slot['name']} ({slot.get('purpose', 'unknown')})"
-            )
+            click.echo(f"  [{slot['index']}] {slot['name']} ({slot.get('purpose', 'unknown')})")
 
     if "execution" in metadata:
         click.secho("\n⚙️ Execution:", fg="magenta")

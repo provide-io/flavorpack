@@ -182,9 +182,7 @@ class TestFlavorConfig:
 
     def test_minimal_flavor_config(self) -> None:
         """Test minimal FlavorConfig creation."""
-        config = FlavorConfig(
-            name="test-app", version="1.0.0", entry_point="test.main:app"
-        )
+        config = FlavorConfig(name="test-app", version="1.0.0", entry_point="test.main:app")
         assert config.name == "test-app"
         assert config.version == "1.0.0"
         assert config.entry_point == "test.main:app"
@@ -235,9 +233,7 @@ class TestFlavorConfig:
 
     def test_from_pyproject_dict_missing_entry_point(self) -> None:
         """Test error when entry_point is missing."""
-        with pytest.raises(
-            ValidationError, match="Project entry_point must be defined"
-        ):
+        with pytest.raises(ValidationError, match="Project entry_point must be defined"):
             FlavorConfig.from_pyproject_dict({}, {"name": "test", "version": "1.0.0"})
 
 
@@ -257,9 +253,7 @@ class TestGlobalConfig:
 
     def test_set_flavor_config(self) -> None:
         """Test setting custom flavor config."""
-        custom_config = FlavorConfig(
-            name="custom-app", version="2.0.0", entry_point="custom.main:app"
-        )
+        custom_config = FlavorConfig(name="custom-app", version="2.0.0", entry_point="custom.main:app")
 
         set_flavor_config(custom_config)
         retrieved_config = get_flavor_config()

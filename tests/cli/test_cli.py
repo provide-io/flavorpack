@@ -31,9 +31,7 @@ def test_cli_pack_and_verify(tmp_path: Path) -> None:
                 cli_main,
                 ["pack", "--manifest", str(pyproject_path)],
             )
-            assert pack_result.exit_code == 0, (
-                f"Pack command failed: {pack_result.output}"
-            )
+            assert pack_result.exit_code == 0, f"Pack command failed: {pack_result.output}"
 
         # Check that build was called with correct parameters
         args, kwargs = mock_build.call_args
@@ -54,9 +52,7 @@ def test_cli_pack_and_verify(tmp_path: Path) -> None:
             "signature_valid": True,
         }
         verify_result = runner.invoke(cli_main, ["verify", str(fake_package_file)])
-        assert verify_result.exit_code == 0, (
-            f"Verify command failed: {verify_result.output}"
-        )
+        assert verify_result.exit_code == 0, f"Verify command failed: {verify_result.output}"
         mock_verify.assert_called_once_with(fake_package_file)
 
 

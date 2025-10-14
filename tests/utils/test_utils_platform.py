@@ -105,7 +105,11 @@ class TestPlatformDetection:
 
     def test_get_platform_string(self) -> None:
         """Test platform string generation."""
-        from provide.foundation.platform.detection import get_os_name as foundation_get_os_name, get_arch_name as foundation_get_arch_name, get_platform_string as foundation_get_platform_string
+        from provide.foundation.platform.detection import (
+            get_os_name as foundation_get_os_name,
+            get_arch_name as foundation_get_arch_name,
+            get_platform_string as foundation_get_platform_string,
+        )
 
         # Clear cache to ensure we get fresh values
         foundation_get_os_name.cache_clear()
@@ -130,7 +134,11 @@ class TestPlatformDetection:
     @patch("provide.foundation.platform.detection.platform.machine")
     def test_get_platform_string_combinations(self, mock_machine, mock_system) -> None:
         """Test various platform string combinations."""
-        from provide.foundation.platform.detection import get_os_name as foundation_get_os_name, get_arch_name as foundation_get_arch_name, get_platform_string as foundation_get_platform_string
+        from provide.foundation.platform.detection import (
+            get_os_name as foundation_get_os_name,
+            get_arch_name as foundation_get_arch_name,
+            get_platform_string as foundation_get_platform_string,
+        )
 
         test_cases = [
             ("Darwin", "x86_64", "darwin_amd64"),
@@ -167,9 +175,7 @@ class TestPlatformDetection:
     @patch("provide.foundation.platform.detection.platform.release")
     @patch("provide.foundation.platform.detection.platform.version")
     @patch("provide.foundation.platform.detection.platform.mac_ver")
-    def test_get_os_version_by_system(
-        self, mock_mac_ver, mock_version, mock_release, mock_system
-    ) -> None:
+    def test_get_os_version_by_system(self, mock_mac_ver, mock_version, mock_release, mock_system) -> None:
         """Test OS version detection for different systems."""
         from provide.foundation.platform.detection import get_os_version as foundation_get_os_version
 
@@ -281,7 +287,10 @@ class TestPlatformDetection:
     @patch("provide.foundation.platform.detection.platform.machine")
     def test_unknown_platform_handling(self, mock_machine, mock_system) -> None:
         """Test handling of unknown platform values."""
-        from provide.foundation.platform.detection import get_os_name as foundation_get_os_name, get_arch_name as foundation_get_arch_name
+        from provide.foundation.platform.detection import (
+            get_os_name as foundation_get_os_name,
+            get_arch_name as foundation_get_arch_name,
+        )
 
         # Unknown OS
         foundation_get_os_name.cache_clear()

@@ -133,13 +133,9 @@ def get_rs_launcher() -> Path:
 
 def main():
     """Main entry point."""
-    parser = argparse.ArgumentParser(
-        description="Embed ingredients for platform-specific wheel"
-    )
+    parser = argparse.ArgumentParser(description="Embed ingredients for platform-specific wheel")
     parser.add_argument("platform", help="Target platform (e.g., darwin_arm64)")
-    parser.add_argument(
-        "ingredients_dir", help="Directory containing ingredient binaries"
-    )
+    parser.add_argument("ingredients_dir", help="Directory containing ingredient binaries")
     parser.add_argument("version", help="Flavor version")
 
     args = parser.parse_args()

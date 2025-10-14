@@ -52,12 +52,8 @@ class TestOperationChains:
         """Test converting operations to human-readable strings."""
         assert operations_to_string(0) == "raw"
         assert operations_to_string(pack_operations([OP_TAR])) == "tar"
-        assert (
-            operations_to_string(pack_operations([OP_TAR, OP_GZIP])) == "tar.gz"
-        )  # Common chain
-        assert (
-            operations_to_string(pack_operations([OP_TAR, OP_BZIP2])) == "tar.bz2"
-        )  # Common chain
+        assert operations_to_string(pack_operations([OP_TAR, OP_GZIP])) == "tar.gz"  # Common chain
+        assert operations_to_string(pack_operations([OP_TAR, OP_BZIP2])) == "tar.bz2"  # Common chain
 
     def test_string_to_operations(self) -> None:
         """Test parsing operation strings."""
@@ -80,9 +76,7 @@ class TestOperationChains:
     def test_slot_descriptor_with_operations(self) -> None:
         """Test SlotDescriptor handles operations correctly."""
         # Create with operations
-        slot1 = SlotDescriptor(
-            id=1, name="test", operations=pack_operations([OP_TAR, OP_GZIP]), size=1024
-        )
+        slot1 = SlotDescriptor(id=1, name="test", operations=pack_operations([OP_TAR, OP_GZIP]), size=1024)
         # Verify operations are stored correctly
         assert slot1.operations == pack_operations([OP_TAR, OP_GZIP])
 
@@ -114,9 +108,7 @@ class TestOperationChains:
             test_file.write_text("Hello, operations!")
 
             # Build package with operation chain using test_builder
-            builder = test_builder.metadata(
-                package={"name": "test", "version": "2025.1"}
-            ).add_slot(
+            builder = test_builder.metadata(package={"name": "test", "version": "2025.1"}).add_slot(
                 id="test.txt",
                 data=str(test_file),
                 operations="tar.gz",  # Operation chain string

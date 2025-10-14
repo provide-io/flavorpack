@@ -40,9 +40,7 @@ class TestCrossLangTester:
     @patch("taster.commands.crosslang.run_command")
     def test_build_with_python(self, mock_run_command) -> None:
         """Test Python builder."""
-        mock_run_command.return_value = Mock(
-            returncode=0, stderr="", stdout="Built successfully"
-        )
+        mock_run_command.return_value = Mock(returncode=0, stderr="", stdout="Built successfully")
 
         with tempfile.TemporaryDirectory() as tmpdir:
             taster_dir = Path(tmpdir) / "tests/taster"
@@ -149,9 +147,7 @@ class TestCrossLangTester:
                 mock_instance = MagicMock()
                 mock_instance.__enter__.return_value = mock_instance
                 mock_instance.__exit__.return_value = None
-                mock_instance.read_index.return_value = Mock(
-                    launcher_size=13
-                )  # len(b"FAKE_LAUNCHER")
+                mock_instance.read_index.return_value = Mock(launcher_size=13)  # len(b"FAKE_LAUNCHER")
                 mock_reader.return_value = mock_instance
 
                 # Patch build_with_launcher to use our mock
@@ -250,9 +246,7 @@ class TestCrossLangCommand:
             output_file = tmpfile.name
 
         try:
-            with patch(
-                "taster.commands.crosslang.CrossLangTester"
-            ) as mock_tester_class:
+            with patch("taster.commands.crosslang.CrossLangTester") as mock_tester_class:
                 test_results = {
                     "build_tests": [],
                     "verify_tests": [],
@@ -264,9 +258,7 @@ class TestCrossLangCommand:
                 mock_tester.results = test_results
                 mock_tester_class.return_value = mock_tester
 
-                result = runner.invoke(
-                    crosslang_command, ["--json", "--output-file", output_file]
-                )
+                result = runner.invoke(crosslang_command, ["--json", "--output-file", output_file])
                 assert result.exit_code == 0
 
                 # Check file was written

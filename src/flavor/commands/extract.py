@@ -41,9 +41,7 @@ log = get_command_logger("extract")
     is_flag=True,
     help="Overwrite existing output file",
 )
-def extract_command(
-    package_file: str, slot_index: int, output_path: str, force: bool
-) -> None:
+def extract_command(package_file: str, slot_index: int, output_path: str, force: bool) -> None:
     """Extract a specific slot from a flavor package.
 
     SLOT_INDEX is the 0-based index of the slot to extract.
@@ -93,9 +91,7 @@ def extract_command(
                 if slot_index < len(slots_metadata)
                 else f"slot_{slot_index}"
             )
-            echo(
-                f"Extracting slot {slot_index}: {slot_name} ({format_size(slot.size)})"
-            )
+            echo(f"Extracting slot {slot_index}: {slot_name} ({format_size(slot.size)})")
 
             # Extract the slot data
             data = reader.read_slot(slot_index)

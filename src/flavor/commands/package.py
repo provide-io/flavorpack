@@ -142,9 +142,7 @@ def pack_command(
         _process_built_artifacts(built_artifacts, verify, strip, quiet)
         _show_final_results(built_artifacts, quiet)
 
-        log.info(
-            "Packaging completed successfully", artifact_count=len(built_artifacts)
-        )
+        log.info("Packaging completed successfully", artifact_count=len(built_artifacts))
 
     except (BuildError, PackagingError, click.UsageError) as e:
         log.error("Packaging failed", error=str(e), manifest=pyproject_toml_path)
@@ -186,14 +184,10 @@ def _build_package_artifacts(
     )
 
 
-def _process_built_artifacts(
-    built_artifacts: list[Path], verify: bool, strip: bool, quiet: bool
-) -> None:
+def _process_built_artifacts(built_artifacts: list[Path], verify: bool, strip: bool, quiet: bool) -> None:
     """Process each built artifact with verification and optimization reporting."""
     for artifact in built_artifacts:
-        log.debug(
-            "Processing artifact", artifact=str(artifact), verify=verify, strip=strip
-        )
+        log.debug("Processing artifact", artifact=str(artifact), verify=verify, strip=strip)
         if not quiet:
             echo(f"✅ Successfully built artifact at {artifact}")
 

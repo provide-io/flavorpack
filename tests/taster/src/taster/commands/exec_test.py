@@ -75,10 +75,7 @@ command = "{workenv}/bin/python3.11 -m binary_test"
                 timeout=5,
             )
 
-            if (
-                result.returncode == 0
-                and "Binary execution successful" in result.stdout
-            ):
+            if result.returncode == 0 and "Binary execution successful" in result.stdout:
                 click.secho("  ✅ Binary execution: PASSED", fg="green")
             else:
                 click.secho("  ❌ Binary execution: FAILED", fg="red")
@@ -144,10 +141,7 @@ entry_point = "script_test.__main__:main"
                     timeout=5,
                 )
 
-                if (
-                    result.returncode == 0
-                    and "Script execution successful" in result.stdout
-                ):
+                if result.returncode == 0 and "Script execution successful" in result.stdout:
                     click.secho(f"      ✅ {mode} mode: PASSED", fg="green")
                 else:
                     click.secho(f"      ❌ {mode} mode: FAILED", fg="red")
@@ -219,10 +213,7 @@ setup_commands = [
                 timeout=5,
             )
 
-            if (
-                result.returncode == 0
-                and "Direct shell execution successful" in result.stdout
-            ):
+            if result.returncode == 0 and "Direct shell execution successful" in result.stdout:
                 click.secho("  ✅ Direct workenv execution: PASSED", fg="green")
             else:
                 click.secho("  ❌ Direct workenv execution: FAILED", fg="red")

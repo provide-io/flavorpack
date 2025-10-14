@@ -27,9 +27,7 @@ def package_command() -> None:
 
 
 @package_command.command("build")
-@click.argument(
-    "manifest", type=click.Path(exists=True, path_type=Path), default="pyproject.toml"
-)
+@click.argument("manifest", type=click.Path(exists=True, path_type=Path), default="pyproject.toml")
 @click.option("--output", "-o", type=click.Path(path_type=Path), help="Output path")
 @click.option(
     "--launcher-bin",

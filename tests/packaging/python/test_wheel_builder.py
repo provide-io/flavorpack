@@ -49,9 +49,7 @@ class TestWheelBuilder:
 
             python_exe = Path("/usr/bin/python3")
 
-            result = self.wheel_builder.build_wheel_from_source(
-                python_exe, source_path, wheel_dir
-            )
+            result = self.wheel_builder.build_wheel_from_source(python_exe, source_path, wheel_dir)
 
             # Verify run was called
             mock_run.assert_called_once()
@@ -159,9 +157,7 @@ class TestWheelBuilder:
             packages = ["requests", "click"]
 
             # Mock UV compile_requirements to succeed
-            with patch.object(
-                self.wheel_builder.uv, "compile_requirements"
-            ) as mock_compile:
+            with patch.object(self.wheel_builder.uv, "compile_requirements") as mock_compile:
                 result = self.wheel_builder.resolve_dependencies(
                     python_exe, packages=packages, output_dir=output_dir
                 )
@@ -195,9 +191,7 @@ class TestWheelBuilder:
             python_exe = Path("/usr/bin/python3")
 
             # Mock UV to fail
-            with patch.object(
-                self.wheel_builder.uv, "compile_requirements"
-            ) as mock_uv_compile:
+            with patch.object(self.wheel_builder.uv, "compile_requirements") as mock_uv_compile:
                 mock_uv_compile.side_effect = Exception("UV failed")
 
                 # Mock successful pip-tools execution
@@ -226,9 +220,7 @@ class TestWheelBuilder:
         """Test error when no requirements file or packages provided."""
         python_exe = Path("/usr/bin/python3")
 
-        with pytest.raises(
-            ValueError, match="Either requirements_file or packages must be provided"
-        ):
+        with pytest.raises(ValueError, match="Either requirements_file or packages must be provided"):
             self.wheel_builder.resolve_dependencies(python_exe)
 
     def test_download_wheels_for_resolved_deps(self) -> None:
@@ -256,15 +248,11 @@ class TestWheelBuilder:
                 )
 
                 # Verify PyPA pip was used for download
-                mock_download.assert_called_once_with(
-                    python_exe, requirements_file, wheel_dir
-                )
+                mock_download.assert_called_once_with(python_exe, requirements_file, wheel_dir)
 
             # Verify result contains wheel files
             assert len(result) == 2
-            assert any(
-                wheel.name == "requests-2.28.0-py3-none-any.whl" for wheel in result
-            )
+            assert any(wheel.name == "requests-2.28.0-py3-none-any.whl" for wheel in result)
             assert any(wheel.name == "click-8.0.0-py3-none-any.whl" for wheel in result)
 
     @patch("flavor.packaging.python.wheel_builder.run")
@@ -288,12 +276,8 @@ class TestWheelBuilder:
 
             # Mock dependency resolution and wheel creation
             with (
-                patch.object(
-                    self.wheel_builder, "resolve_dependencies"
-                ) as mock_resolve,
-                patch.object(
-                    self.wheel_builder, "download_wheels_for_resolved_deps"
-                ) as mock_download,
+                patch.object(self.wheel_builder, "resolve_dependencies") as mock_resolve,
+                patch.object(self.wheel_builder, "download_wheels_for_resolved_deps") as mock_download,
             ):
                 # Setup mock returns
                 locked_reqs = build_dir / "deps" / "requirements.txt"
@@ -366,9 +350,7 @@ class TestWheelBuilderCriticalFeatures:
 
             python_exe = Path("/usr/bin/python3")
 
-            def mock_download_side_effect(
-                python_exe, requirements_file, wheel_dir
-            ) -> None:
+            def mock_download_side_effect(python_exe, requirements_file, wheel_dir) -> None:
                 # Create fake wheel files to simulate successful download
                 fake_wheel = wheel_dir / "requests-2.28.0-py3-none-any.whl"
                 fake_wheel.write_bytes(b"fake wheel content")
@@ -386,9 +368,7 @@ class TestWheelBuilderCriticalFeatures:
                 )
 
                 # Verify PyPA pip was used
-                mock_download.assert_called_once_with(
-                    python_exe, requirements_file, wheel_dir
-                )
+                mock_download.assert_called_once_with(python_exe, requirements_file, wheel_dir)
 
                 # Verify wheel files were returned
                 assert len(result) == 1

@@ -64,9 +64,7 @@ class PyPaPipManager:
     # ║ If you think these should be removed, STOP and discuss first!                   ║
     # ╚══════════════════════════════════════════════════════════════════════════════╝
 
-    def _get_pypapip_install_cmd(
-        self, python_exe: Path, packages: list[str]
-    ) -> list[str]:
+    def _get_pypapip_install_cmd(self, python_exe: Path, packages: list[str]) -> list[str]:
         """
         Get real PyPA pip install command.
 
@@ -136,9 +134,7 @@ class PyPaPipManager:
             # For Linux builds, explicitly request manylinux wheels for maximum compatibility
             # manylinux2014 = glibc 2.17+ (CentOS 7, Amazon Linux 2, Ubuntu 14.04+)
             arch = get_arch_name()
-            logger.trace(
-                f"Linux build detected, arch={arch}, requesting {self.MANYLINUX_TAG} wheels"
-            )
+            logger.trace(f"Linux build detected, arch={arch}, requesting {self.MANYLINUX_TAG} wheels")
 
             # Use manylinux2014 format for maximum compatibility
             # manylinux2014 = glibc 2.17+ (CentOS 7, Amazon Linux 2, Ubuntu 14.04+)
@@ -212,9 +208,7 @@ class PyPaPipManager:
         backoff="exponential",
         jitter=True,
     )
-    def download_wheels_for_packages(
-        self, python_exe: Path, packages: list[str], dest_dir: Path
-    ) -> None:
+    def download_wheels_for_packages(self, python_exe: Path, packages: list[str], dest_dir: Path) -> None:
         """
         Download wheels for specified packages.
 

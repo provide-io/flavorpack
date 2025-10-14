@@ -58,13 +58,9 @@ class DependencyResolver:
         if uv_path:
             logger.debug(f"Found UV in PATH: {uv_path}")
             try:
-                result = run(
-                    [uv_path, "--version"], capture_output=True, timeout=10
-                )
+                result = run([uv_path, "--version"], capture_output=True, timeout=10)
                 if result.returncode == 0:
-                    logger.trace(
-                        f"UV version check successful: {result.stdout.strip()}"
-                    )
+                    logger.trace(f"UV version check successful: {result.stdout.strip()}")
                     return uv_path
                 else:
                     logger.warning(f"UV version check failed: {result.stderr}")
@@ -76,9 +72,7 @@ class DependencyResolver:
         if pipx_uv:
             try:
                 logger.trace("Checking if UV is available via pipx")
-                result = run(
-                    ["pipx", "run", "uv", "--version"], capture_output=True, timeout=15
-                )
+                result = run(["pipx", "run", "uv", "--version"], capture_output=True, timeout=15)
                 if result.returncode == 0:
                     logger.debug("UV found via pipx")
                     return "pipx run uv"
@@ -311,9 +305,7 @@ class DependencyResolver:
                         ):
                             content = src.read()
                             dst.write(content)
-                            logger.trace(
-                                f"Extracted UV binary, size: {len(content)} bytes"
-                            )
+                            logger.trace(f"Extracted UV binary, size: {len(content)} bytes")
 
                         # Make executable (Unix-like systems only)
                         if not self.is_windows:

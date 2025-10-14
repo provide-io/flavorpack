@@ -105,7 +105,11 @@ class TestPlatformEnvironment:
     @patch("provide.foundation.platform.detection.platform.machine")
     def test_os_normalization(self, mock_machine, mock_system) -> None:
         """Test OS name normalization."""
-        from provide.foundation.platform.detection import get_os_name as foundation_get_os_name, get_arch_name as foundation_get_arch_name, get_platform_string as foundation_get_platform_string
+        from provide.foundation.platform.detection import (
+            get_os_name as foundation_get_os_name,
+            get_arch_name as foundation_get_arch_name,
+            get_platform_string as foundation_get_platform_string,
+        )
 
         test_cases = [
             ("Darwin", "darwin"),
@@ -131,7 +135,11 @@ class TestPlatformEnvironment:
     @patch("provide.foundation.platform.detection.platform.machine")
     def test_arch_normalization(self, mock_machine, mock_system) -> None:
         """Test architecture name normalization."""
-        from provide.foundation.platform.detection import get_os_name as foundation_get_os_name, get_arch_name as foundation_get_arch_name, get_platform_string as foundation_get_platform_string
+        from provide.foundation.platform.detection import (
+            get_os_name as foundation_get_os_name,
+            get_arch_name as foundation_get_arch_name,
+            get_platform_string as foundation_get_platform_string,
+        )
 
         test_cases = [
             ("x86_64", "amd64"),

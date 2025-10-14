@@ -40,9 +40,7 @@ class IntegrityVerifierProtocol(Protocol):
 class ExtractorProtocol(Protocol):
     """Protocol for package slot extraction."""
 
-    def extract_slot(
-        self, slot_index: int, dest_dir: Path, *, verify_checksum: bool = True
-    ) -> Path:
+    def extract_slot(self, slot_index: int, dest_dir: Path, *, verify_checksum: bool = True) -> Path:
         """Extract a specific slot to a directory.
 
         Args:

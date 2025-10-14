@@ -82,19 +82,13 @@ def info(verbose) -> None:
             if item.is_dir():
                 cache_count += 1
                 if verbose:
-                    item_size = sum(
-                        f.stat().st_size for f in item.rglob("*") if f.is_file()
-                    )
+                    item_size = sum(f.stat().st_size for f in item.rglob("*") if f.is_file())
                     total_size += item_size
                     click.echo(f"  {item.name}: {item_size / 1024 / 1024:.2f} MB")
                 else:
-                    total_size += sum(
-                        f.stat().st_size for f in item.rglob("*") if f.is_file()
-                    )
+                    total_size += sum(f.stat().st_size for f in item.rglob("*") if f.is_file())
 
-        click.echo(
-            f"Flavor cache: {cache_count} entries, {total_size / 1024 / 1024:.2f} MB total"
-        )
+        click.echo(f"Flavor cache: {cache_count} entries, {total_size / 1024 / 1024:.2f} MB total")
     else:
         click.echo("Flavor cache: empty")
 
@@ -181,9 +175,7 @@ def _inspect_workenv(name: str, cache_dir: Path, results: dict) -> None:
 
     # Calculate size
     try:
-        total_size = sum(
-            f.stat().st_size for f in workenv_dir.rglob("*") if f.is_file()
-        )
+        total_size = sum(f.stat().st_size for f in workenv_dir.rglob("*") if f.is_file())
         info["size_mb"] = round(total_size / 1024 / 1024, 2)
     except:
         pass

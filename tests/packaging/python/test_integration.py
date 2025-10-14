@@ -54,9 +54,7 @@ class TestPythonPackagingIntegration:
 
     @patch("flavor.packaging.python.wheel_builder.run")
     @patch("flavor.packaging.python.dist_manager.run")
-    def test_wheel_builder_dist_manager_integration(
-        self, mock_dist_run, mock_wheel_run
-    ) -> None:
+    def test_wheel_builder_dist_manager_integration(self, mock_dist_run, mock_wheel_run) -> None:
         """Test WheelBuilder and PythonDistManager working together."""
         # Mock successful command execution
         mock_result = Mock()
@@ -71,9 +69,7 @@ class TestPythonPackagingIntegration:
             # Create mock project structure
             project_dir = temp_path / "test_project"
             project_dir.mkdir()
-            (project_dir / "setup.py").write_text(
-                "from setuptools import setup; setup(name='test')"
-            )
+            (project_dir / "setup.py").write_text("from setuptools import setup; setup(name='test')")
             (project_dir / "pyproject.toml").write_text("""
 [project]
 name = "test-project"
@@ -163,9 +159,7 @@ version = "1.0.0"
     def test_pypapip_manylinux_compatibility(self) -> None:
         """Test PyPaPipManager manylinux compatibility."""
         with patch("flavor.packaging.python.pypapip_manager.get_os_name") as mock_os:
-            with patch(
-                "flavor.packaging.python.pypapip_manager.get_arch_name"
-            ) as mock_arch:
+            with patch("flavor.packaging.python.pypapip_manager.get_arch_name") as mock_arch:
                 mock_os.return_value = "linux"
                 mock_arch.return_value = "amd64"
 
@@ -275,9 +269,7 @@ setup(name='test-project', version='1.0.0', py_modules=['main'])
 
             # Mock all the complex operations
             with patch.object(wheel_builder, "build_and_resolve_project") as mock_build:
-                with patch.object(
-                    dist_manager, "create_standalone_distribution"
-                ) as mock_dist:
+                with patch.object(dist_manager, "create_standalone_distribution") as mock_dist:
                     # Mock successful wheel building
                     wheel_dir = temp_path / "wheels"
                     wheel_dir.mkdir()
@@ -350,9 +342,7 @@ setup(name='test-project', version='1.0.0', py_modules=['main'])
 
             # Should handle errors gracefully
             with patch.object(wheel_builder, "pypapip") as mock_pypapip:
-                mock_pypapip._get_pypapip_wheel_cmd.side_effect = Exception(
-                    "Build failed"
-                )
+                mock_pypapip._get_pypapip_wheel_cmd.side_effect = Exception("Build failed")
 
                 with pytest.raises(Exception):
                     wheel_builder.build_wheel_from_source(

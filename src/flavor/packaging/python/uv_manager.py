@@ -154,11 +154,7 @@ class UVManager(BaseToolManager):
             ToolNotFoundError: If UV cannot be found or installed
         """
         # Try system UV first if enabled and no version specified
-        if (
-            self.use_system_uv
-            and version is None
-            and (system_uv := self.find_system_uv())
-        ):
+        if self.use_system_uv and version is None and (system_uv := self.find_system_uv()):
             return system_uv
 
         # Install specific version if requested
@@ -265,9 +261,7 @@ class UVManager(BaseToolManager):
         logger.info(f"🐍📦 Creating venv with UV: {venv_path}")
 
         # Use current Python for UV execution
-        python_exe = Path(
-            "/usr/bin/python3"
-        )  # This will be replaced by actual discovery
+        python_exe = Path("/usr/bin/python3")  # This will be replaced by actual discovery
 
         venv_cmd = self._get_uv_venv_cmd(python_exe, venv_path, python_version)
 
@@ -296,9 +290,7 @@ class UVManager(BaseToolManager):
 
         logger.info("🌐📥 Installing packages with UV (fast mode)")
 
-        install_cmd = self._get_uv_pip_install_cmd(
-            venv_python, packages, requirements_file
-        )
+        install_cmd = self._get_uv_pip_install_cmd(venv_python, packages, requirements_file)
 
         logger.debug("💻 Installing packages with UV", command=" ".join(install_cmd))
         run(install_cmd, check=True, capture_output=True)
@@ -318,9 +310,7 @@ class UVManager(BaseToolManager):
         """
         logger.info(f"📝🔧 Compiling requirements: {input_file} -> {output_file}")
 
-        compile_cmd = self._get_uv_pip_compile_cmd(
-            input_file, output_file, python_version
-        )
+        compile_cmd = self._get_uv_pip_compile_cmd(input_file, output_file, python_version)
 
         logger.debug("💻 Compiling requirements with UV", command=" ".join(compile_cmd))
         run(compile_cmd, check=True, capture_output=True)
@@ -336,9 +326,7 @@ class UVManager(BaseToolManager):
         backoff="exponential",
         jitter=True,
     )
-    def download_uv_binary(
-        self, dest_dir: Path, python_exe: Path | None = None
-    ) -> Path | None:
+    def download_uv_binary(self, dest_dir: Path, python_exe: Path | None = None) -> Path | None:
         """
         Download UV binary for packaging (manylinux2014 on Linux).
 

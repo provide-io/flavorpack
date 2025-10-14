@@ -86,12 +86,8 @@ class SlotDescriptor:
     platform: int = field(default=0)  # 1 byte (uint8)
     reserved1: int = field(default=0)  # 1 byte (uint8)
     reserved2: int = field(default=0)  # 1 byte (uint8)
-    permissions: int = field(
-        default=DEFAULT_FILE_PERMS & 0xFF
-    )  # 1 byte (uint8, low byte)
-    permissions_high: int = field(
-        default=(DEFAULT_FILE_PERMS >> 8) & 0xFF
-    )  # 1 byte (uint8, high byte)
+    permissions: int = field(default=DEFAULT_FILE_PERMS & 0xFF)  # 1 byte (uint8, low byte)
+    permissions_high: int = field(default=(DEFAULT_FILE_PERMS >> 8) & 0xFF)  # 1 byte (uint8, high byte)
 
     # Optional runtime fields (not persisted)
     name: str = field(default="", metadata={"transient": True})
@@ -135,9 +131,7 @@ class SlotDescriptor:
     def unpack(cls, data: bytes) -> SlotDescriptor:
         """Unpack descriptor from 64-byte binary data matching Rust spec."""
         if len(data) != DEFAULT_SLOT_DESCRIPTOR_SIZE:
-            raise ValueError(
-                f"Slot descriptor must be {DEFAULT_SLOT_DESCRIPTOR_SIZE} bytes"
-            )
+            raise ValueError(f"Slot descriptor must be {DEFAULT_SLOT_DESCRIPTOR_SIZE} bytes")
 
         # Unpack using the new 64-byte format: 7 uint64 + 8 uint8
         unpacked = struct.unpack(
@@ -232,9 +226,7 @@ class SlotMetadata:
             ]
         ),
     )
-    permissions: str | None = field(
-        default=None
-    )  # Unix permissions as octal string (e.g., "0755")
+    permissions: str | None = field(default=None)  # Unix permissions as octal string (e.g., "0755")
 
     def to_descriptor(self) -> SlotDescriptor:
         """Convert metadata to descriptor."""
@@ -264,9 +256,7 @@ class SlotMetadata:
         }
 
         # Convert hex checksum to integer
-        checksum_int = (
-            int(self.checksum, 16) if isinstance(self.checksum, str) else self.checksum
-        )
+        checksum_int = int(self.checksum, 16) if isinstance(self.checksum, str) else self.checksum
 
         return SlotDescriptor(
             id=self.index,
@@ -312,17 +302,9 @@ class SlotMetadata:
         """Create from dictionary."""
         # Convert path strings to Path objects if present
         if "source" in data and data["source"] is not None:
-            data["source"] = (
-                Path(data["source"])
-                if isinstance(data["source"], str)
-                else data["source"]
-            )
+            data["source"] = Path(data["source"]) if isinstance(data["source"], str) else data["source"]
         if "target" in data and data["target"] is not None:
-            data["target"] = (
-                Path(data["target"])
-                if isinstance(data["target"], str)
-                else data["target"]
-            )
+            data["target"] = Path(data["target"]) if isinstance(data["target"], str) else data["target"]
 
         # Filter out any extra keys that aren't part of the class
         valid_fields = {f.name for f in cls.__attrs_attrs__}
@@ -352,9 +334,7 @@ class SlotView:
         """Get decompressed content."""
         if self._decompressed is None:
             if self.descriptor.operations == 0:  # No operations (RAW)
-                self._decompressed = (
-                    bytes(self.data) if isinstance(self.data, memoryview) else self.data
-                )
+                self._decompressed = bytes(self.data) if isinstance(self.data, memoryview) else self.data
             else:
                 # Process based on operation chain
                 from flavor.psp.format_2025.operations import (
@@ -372,18 +352,10 @@ class SlotView:
                     self._decompressed = zlib.decompress(self.data)
                 elif ops == [OP_TAR, OP_GZIP]:
                     # For tar.gz, return as-is (launcher handles extraction)
-                    self._decompressed = (
-                        bytes(self.data)
-                        if isinstance(self.data, memoryview)
-                        else self.data
-                    )
+                    self._decompressed = bytes(self.data) if isinstance(self.data, memoryview) else self.data
                 else:
                     # Return raw data for unhandled operations
-                    self._decompressed = (
-                        bytes(self.data)
-                        if isinstance(self.data, memoryview)
-                        else self.data
-                    )
+                    self._decompressed = bytes(self.data) if isinstance(self.data, memoryview) else self.data
         return self._decompressed
 
     def compute_checksum(self, data: bytes) -> int:

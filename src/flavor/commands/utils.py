@@ -83,9 +83,7 @@ def _clean_workenv_cache(dry_run: bool, yes: bool) -> int:
         _show_workenv_dry_run(cached, size_mb)
         return 0
 
-    if not yes and not click.confirm(
-        f"Remove {len(cached)} cached packages ({size_mb:.1f} MB)?"
-    ):
+    if not yes and not click.confirm(f"Remove {len(cached)} cached packages ({size_mb:.1f} MB)?"):
         echo("Aborted.")
         return 0
 
@@ -148,9 +146,7 @@ def _get_ingredient_files(ingredient_dir: Path) -> list[Path]:
 
 def _show_ingredients_dry_run(ingredients_list: list[Path], size_mb: float) -> None:
     """Show what ingredient binaries would be removed."""
-    echo(
-        f"\nWould remove {len(ingredients_list)} ingredient binaries ({size_mb:.1f} MB):"
-    )
+    echo(f"\nWould remove {len(ingredients_list)} ingredient binaries ({size_mb:.1f} MB):")
     for ingredient in ingredients_list:
         h_size_mb = ingredient.stat().st_size / (1024 * 1024)
         echo(f"  - {ingredient.name} ({h_size_mb:.1f} MB)")
