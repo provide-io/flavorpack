@@ -5,7 +5,7 @@ from pathlib import Path
 import tempfile
 
 import click
-from provide.foundation.process import run_command
+from provide.foundation.process import run
 
 from flavor.ingredients import IngredientManager as HelperManager
 from flavor.package import build_package_from_manifest
@@ -67,7 +67,7 @@ command = "{workenv}/bin/python3.11 -m binary_test"
             if verbose:
                 env["FLAVOR_LOG_LEVEL"] = "debug"
 
-            result = run_command(
+            result = run(
                 [str(package_path)],
                 capture_output=True,
                 check=False,
@@ -136,7 +136,7 @@ entry_point = "script_test.__main__:main"
                 if verbose:
                     env["FLAVOR_LOG_LEVEL"] = "debug"
 
-                result = run_command(
+                result = run(
                     [str(package_path)],
                     capture_output=True,
                     check=False,
@@ -211,7 +211,7 @@ setup_commands = [
             if verbose:
                 env["FLAVOR_LOG_LEVEL"] = "debug"
 
-            result = run_command(
+            result = run(
                 [str(package_path)],
                 capture_output=True,
                 check=False,

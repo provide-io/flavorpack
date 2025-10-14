@@ -12,10 +12,11 @@ is critical. For complex dependency resolution, use PyPaPipManager instead.
 
 from pathlib import Path
 
+from provide.foundation import retry
 from provide.foundation.config import BaseConfig
 from provide.foundation.logger import logger
 from provide.foundation.platform import get_arch_name, get_os_name
-from provide.foundation.process import run_command
+from provide.foundation.process import run
 from provide.foundation.tools.base import (
     BaseToolManager,
     ToolMetadata,
@@ -271,7 +272,7 @@ class UVManager(BaseToolManager):
         venv_cmd = self._get_uv_venv_cmd(python_exe, venv_path, python_version)
 
         logger.debug("💻 Creating UV venv", command=" ".join(venv_cmd))
-        run_command(venv_cmd, check=True, capture_output=True)
+        run(venv_cmd, check=True, capture_output=True)
 
         logger.info("✅ Successfully created UV venv")
 
@@ -300,7 +301,7 @@ class UVManager(BaseToolManager):
         )
 
         logger.debug("💻 Installing packages with UV", command=" ".join(install_cmd))
-        run_command(install_cmd, check=True, capture_output=True)
+        run(install_cmd, check=True, capture_output=True)
 
         logger.info("✅ Successfully installed packages with UV")
 
@@ -322,10 +323,19 @@ class UVManager(BaseToolManager):
         )
 
         logger.debug("💻 Compiling requirements with UV", command=" ".join(compile_cmd))
-        run_command(compile_cmd, check=True, capture_output=True)
+        run(compile_cmd, check=True, capture_output=True)
 
         logger.info("✅ Successfully compiled requirements with UV")
 
+    @retry(
+        ConnectionError,
+        TimeoutError,
+        OSError,
+        max_attempts=3,
+        base_delay=1.0,
+        backoff="exponential",
+        jitter=True,
+    )
     def download_uv_binary(
         self, dest_dir: Path, python_exe: Path | None = None
     ) -> Path | None:
@@ -341,6 +351,9 @@ class UVManager(BaseToolManager):
 
         Returns:
             Path to UV binary if successful, None otherwise
+
+        Retries:
+            Up to 3 attempts with exponential backoff for network errors
         """
         import sys
         import tempfile
@@ -377,7 +390,7 @@ class UVManager(BaseToolManager):
 
             try:
                 logger.debug("Downloading UV wheel", cmd=" ".join(download_cmd))
-                run_command(download_cmd, check=True, capture_output=True)
+                run(download_cmd, check=True, capture_output=True)
 
                 # Find the downloaded wheel
                 uv_wheel = None

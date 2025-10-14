@@ -12,6 +12,7 @@ import time
 import zlib
 
 from provide.foundation import logger
+from provide.foundation.crypto import format_checksum as calculate_checksum
 
 from flavor.config.defaults import (
     ACCESS_AUTO,
@@ -24,7 +25,6 @@ from flavor.config.defaults import (
 )
 from flavor.exceptions import BuildError
 from flavor.psp.format_2025 import handlers
-from provide.foundation.crypto import format_checksum as calculate_checksum
 from flavor.psp.format_2025.index import PSPFIndex
 from flavor.psp.format_2025.keys import resolve_keys
 from flavor.psp.format_2025.slots import (

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 import subprocess
 
@@ -28,6 +29,10 @@ class TestPretasterIntegration:
         if not any(dist_dir.glob("flavor-*-builder-*")):
             pytest.skip("Ingredients not built - run ./build.sh first")
 
+        # Prepare environment - disable telemetry to avoid OTLP connection errors
+        env = os.environ.copy()
+        env["PROVIDE_TELEMETRY_DISABLED"] = "1"
+
         # Run pretaster core tests
         result = subprocess.run(
             ["make", "test-core"],
@@ -35,6 +40,7 @@ class TestPretasterIntegration:
             capture_output=True,
             text=True,
             timeout=300,  # 5 minute timeout
+            env=env,
         )
 
         # Check that tests passed
@@ -50,6 +56,10 @@ class TestPretasterIntegration:
 
         echo_package = pretaster_dir / "dist" / "echo-test.psp"
 
+        # Prepare environment - disable telemetry to avoid OTLP connection errors
+        env = os.environ.copy()
+        env["PROVIDE_TELEMETRY_DISABLED"] = "1"
+
         # Build echo package if needed
         if not echo_package.exists():
             subprocess.run(
@@ -57,6 +67,7 @@ class TestPretasterIntegration:
                 cwd=pretaster_dir,
                 check=True,
                 capture_output=True,
+                env=env,
             )
 
         # Execute echo package
@@ -65,6 +76,7 @@ class TestPretasterIntegration:
             capture_output=True,
             text=True,
             timeout=30,
+            env=env,
         )
 
         assert result.returncode == 0
@@ -79,6 +91,10 @@ class TestPretasterIntegration:
 
         shell_package = pretaster_dir / "dist" / "shell-test.psp"
 
+        # Prepare environment - disable telemetry to avoid OTLP connection errors
+        env = os.environ.copy()
+        env["PROVIDE_TELEMETRY_DISABLED"] = "1"
+
         # Build shell package if needed
         if not shell_package.exists():
             subprocess.run(
@@ -86,6 +102,7 @@ class TestPretasterIntegration:
                 cwd=pretaster_dir,
                 check=True,
                 capture_output=True,
+                env=env,
             )
 
         # Execute shell package
@@ -94,6 +111,7 @@ class TestPretasterIntegration:
             capture_output=True,
             text=True,
             timeout=30,
+            env=env,
         )
 
         assert result.returncode == 0
@@ -109,6 +127,10 @@ class TestPretasterIntegration:
 
         orchestrate_package = pretaster_dir / "dist" / "orchestrate-test.psp"
 
+        # Prepare environment - disable telemetry to avoid OTLP connection errors
+        env = os.environ.copy()
+        env["PROVIDE_TELEMETRY_DISABLED"] = "1"
+
         # Build orchestration package if needed
         if not orchestrate_package.exists():
             subprocess.run(
@@ -116,6 +138,7 @@ class TestPretasterIntegration:
                 cwd=pretaster_dir,
                 check=True,
                 capture_output=True,
+                env=env,
             )
 
         # Execute orchestration package
@@ -124,6 +147,7 @@ class TestPretasterIntegration:
             capture_output=True,
             text=True,
             timeout=60,  # Longer timeout for complex test
+            env=env,
         )
 
         assert result.returncode == 0
@@ -143,12 +167,17 @@ class TestPretasterIntegration:
 
         package = package_files[0]
 
+        # Prepare environment - disable telemetry to avoid OTLP connection errors
+        env = os.environ.copy()
+        env["PROVIDE_TELEMETRY_DISABLED"] = "1"
+
         # Test package inspection (should work without ingredients)
         result = subprocess.run(
             ["flavor", "inspect", str(package)],
             capture_output=True,
             text=True,
             timeout=30,
+            env=env,
         )
 
         # Should show package metadata

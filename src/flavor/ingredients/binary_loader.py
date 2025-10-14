@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 from provide.foundation import logger
 from provide.foundation.file import ensure_dir, safe_copy
 from provide.foundation.platform import get_platform_string
-from provide.foundation.process import run_command
+from provide.foundation.process import run
 
 from flavor.config.defaults import DEFAULT_EXECUTABLE_PERMS
 
@@ -107,7 +107,7 @@ class BinaryLoader:
             logger.info(f"Building Go {component}...")
 
             # Run go build
-            result = run_command(
+            result = run(
                 [
                     "go",
                     "build",
@@ -157,7 +157,7 @@ class BinaryLoader:
             logger.info(f"Building Rust {component}...")
 
             # Run cargo build
-            result = run_command(
+            result = run(
                 [
                     "cargo",
                     "build",
@@ -250,7 +250,7 @@ class BinaryLoader:
         for ingredient in all_ingredients:
             try:
                 # Test with --version flag
-                result = run_command(
+                result = run(
                     [str(ingredient.path), "--version"],
                     capture_output=True,
                     timeout=5,

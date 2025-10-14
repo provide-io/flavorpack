@@ -43,7 +43,6 @@ class PythonPackager:
         entry_point: str,
         build_config: dict[str, Any] | None = None,
         python_version: str = "3.11",
-        progress: Any = None,
     ) -> None:
         """
         Initialize the Python packager.
@@ -54,14 +53,12 @@ class PythonPackager:
             entry_point: Entry point for the package (e.g., "module:function")
             build_config: Build configuration from pyproject.toml
             python_version: Python version to use (e.g., "3.11")
-            progress: Optional progress tracker for UI feedback
         """
         self.manifest_dir = manifest_dir
         self.package_name = package_name
         self.entry_point = entry_point
         self.build_config = build_config or {}
         self.python_version = python_version
-        self.progress = progress
 
         # Platform detection
         self.is_windows = sys.platform == "win32"
@@ -80,7 +77,6 @@ class PythonPackager:
             python_version=python_version,
             is_windows=self.is_windows,
             manylinux_tag=self.MANYLINUX_TAG,
-            progress=progress,
         )
         self.slot_builder = PythonSlotBuilder(
             manifest_dir=manifest_dir,
@@ -90,7 +86,6 @@ class PythonPackager:
             is_windows=self.is_windows,
             manylinux_tag=self.MANYLINUX_TAG,
             build_config=build_config,
-            progress=progress,
             wheel_builder=self.wheel_builder,
         )
 
@@ -267,9 +262,9 @@ class PythonPackager:
             install_cmd = self.pypapip._get_pypapip_install_cmd(
                 python_exe, ["pip", "wheel", "setuptools"]
             )
-            from provide.foundation.process import run_command
+            from provide.foundation.process import run
 
-            run_command(install_cmd, check=True, capture_output=True)
+            run(install_cmd, check=True, capture_output=True)
 
         return python_exe
 
