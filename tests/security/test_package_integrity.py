@@ -39,7 +39,7 @@ class TestPackageIntegrity:
         test_data = b"Hello, PSPF security test!"
 
         # Sign data
-        signer = Ed25519Signer(private_key)
+        signer = Ed25519Signer(private_key=private_key)
         signature = signer.sign(test_data)
         assert isinstance(signature, bytes)
         assert len(signature) == 64  # Ed25519 signatures are 64 bytes
@@ -58,7 +58,7 @@ class TestPackageIntegrity:
         test_data = b"Test data for wrong key verification"
 
         # Sign with first key
-        signer = Ed25519Signer(private_key1)
+        signer = Ed25519Signer(private_key=private_key1)
         signature = signer.sign(test_data)
 
         # Verify with second key (should fail)
@@ -75,7 +75,7 @@ class TestPackageIntegrity:
         modified_data = b"Modified data"
 
         # Sign original data
-        signer = Ed25519Signer(private_key)
+        signer = Ed25519Signer(private_key=private_key)
         signature = signer.sign(original_data)
 
         # Verify with modified data (should fail)

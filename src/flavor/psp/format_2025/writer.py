@@ -82,7 +82,7 @@ def write_package(
     metadata_compressed = gzip.compress(metadata_json, mtime=0)
 
     # Sign metadata
-    signer = Ed25519Signer(private_key)
+    signer = Ed25519Signer(private_key=private_key)
     signature = signer.sign(metadata_json)
     padded_signature = signature + b"\x00" * (512 - 64)
     index.integrity_signature = padded_signature
