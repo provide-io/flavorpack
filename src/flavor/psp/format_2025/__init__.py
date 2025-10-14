@@ -5,9 +5,9 @@ Progressive Secure Package Format (2025 Edition)
 """
 
 from provide.foundation.crypto import (
+    Ed25519Signer,
+    Ed25519Verifier,
     generate_ed25519_keypair,
-    sign_data,
-    verify_signature,
 )
 
 from flavor.config.defaults import (
@@ -50,6 +50,9 @@ __all__ = [
     # Spec Classes
     "BuildSpec",
     "BundleExecutor",
+    # Crypto Classes
+    "Ed25519Signer",
+    "Ed25519Verifier",
     "KeyConfig",
     "PSPFBuilder",
     # Core Classes
@@ -63,8 +66,6 @@ __all__ = [
     # Functions
     "generate_ed25519_keypair",
     "resolve_keys",
-    "sign_data",
     "validate_complete",
     "validate_spec",
-    "verify_signature",
 ]
