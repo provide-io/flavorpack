@@ -142,8 +142,7 @@ class PSPFIntegrityVerifier:
                                 ed25519_signature = index.integrity_signature[:64]
 
                                 verifier = Ed25519Verifier(index.public_key)
-                                verifier.verify(metadata_json, ed25519_signature)
-                                signature_valid = True
+                                signature_valid = verifier.verify(metadata_json, ed25519_signature)
                                 logger.debug(f"🔐 Signature validation result: {signature_valid}")
 
                             except Exception as e:
