@@ -11,7 +11,7 @@ from typing import Any, BinaryIO
 import zlib
 
 from provide.foundation import logger
-from provide.foundation.crypto import format_checksum as calculate_checksum, sign_data
+from provide.foundation.crypto import Ed25519Signer, format_checksum as calculate_checksum
 from provide.foundation.file import (
     align_offset,
     align_to_page,
@@ -82,7 +82,8 @@ def write_package(
     metadata_compressed = gzip.compress(metadata_json, mtime=0)
 
     # Sign metadata
-    signature = sign_data(metadata_json, private_key)
+    signer = Ed25519Signer(private_key)
+    signature = signer.sign(metadata_json)
     padded_signature = signature + b"\x00" * (512 - 64)
     index.integrity_signature = padded_signature
 
@@ -133,9 +134,7 @@ def _create_launcher_info(launcher_data: bytes) -> dict[str, Any]:
 def _write_metadata(f: BinaryIO, metadata_compressed: bytes, index: PSPFIndex) -> None:
     """Write compressed metadata and update index."""
     metadata_offset = f.tell()
-    logger.debug(
-        f"Metadata offset: {metadata_offset}, size: {len(metadata_compressed)}"
-    )
+    logger.debug(f"Metadata offset: {metadata_offset}, size: {len(metadata_compressed)}")
 
     f.write(metadata_compressed)
     logger.debug(f"Position after metadata: {f.tell()}")
@@ -147,9 +146,7 @@ def _write_metadata(f: BinaryIO, metadata_compressed: bytes, index: PSPFIndex) -
     index.metadata_checksum = checksum.to_bytes(4, "little") + b"\x00" * 28
 
 
-def _write_slots(
-    f: BinaryIO, slots: list[PreparedSlot], spec: BuildSpec, index: PSPFIndex
-) -> None:
+def _write_slots(f: BinaryIO, slots: list[PreparedSlot], spec: BuildSpec, index: PSPFIndex) -> None:
     """Write slot table and data."""
     # Slot table position
     slot_table_offset = align_offset(f.tell(), DEFAULT_SLOT_ALIGNMENT)
@@ -198,9 +195,7 @@ def _write_slots(
         # Create descriptor
         slot_permissions = parse_permissions(slot.metadata.permissions)
         # DEBUG: Log alignment decision for diagnostics
-        alignment_value = (
-            DEFAULT_PAGE_SIZE if spec.options.page_aligned else DEFAULT_SLOT_ALIGNMENT
-        )
+        alignment_value = DEFAULT_PAGE_SIZE if spec.options.page_aligned else DEFAULT_SLOT_ALIGNMENT
         logger.debug(
             "🔧 Slot alignment decision",
             slot_index=i,
