@@ -13,7 +13,7 @@ from typing import Any
 
 from provide.foundation.file.directory import ensure_dir
 from provide.foundation.logger import logger
-from provide.foundation.process import run_command
+from provide.foundation.process import run
 
 from flavor.packaging.python.pypapip_manager import PyPaPipManager
 from flavor.packaging.python.uv_manager import UVManager
@@ -92,7 +92,7 @@ class WheelBuilder:
                     wheel_cmd.extend([f"--{option}", str(value)])
 
         logger.debug("💻 Building wheel", command=" ".join(wheel_cmd))
-        result = run_command(wheel_cmd, check=True, capture_output=True)
+        result = run(wheel_cmd, check=True, capture_output=True)
 
         # Find the built wheel
         built_wheel = self._find_built_wheel(wheel_dir, source_path.name)
@@ -222,20 +222,20 @@ class WheelBuilder:
             logger.debug(
                 "💻 Compiling with pip-tools", command=" ".join(pip_compile_cmd)
             )
-            run_command(pip_compile_cmd, check=True, capture_output=True)
+            run(pip_compile_cmd, check=True, capture_output=True)
         except Exception:
             # If pip-tools not available, install it first
             logger.debug("pip-tools not found, installing")
             install_cmd = self.pypapip._get_pypapip_install_cmd(
                 python_exe, ["pip-tools"]
             )
-            run_command(install_cmd, check=True, capture_output=True)
+            run(install_cmd, check=True, capture_output=True)
 
             # Try again
             logger.debug(
                 "💻 Retrying with pip-tools", command=" ".join(pip_compile_cmd)
             )
-            run_command(pip_compile_cmd, check=True, capture_output=True)
+            run(pip_compile_cmd, check=True, capture_output=True)
 
     def download_wheels_for_resolved_deps(
         self,

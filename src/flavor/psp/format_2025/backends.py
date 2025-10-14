@@ -117,13 +117,11 @@ class MMapBackend(Backend):
         self._views.clear()
 
         if self.mmap:
-            try:
+            with suppress(BufferError):
+                # BufferError expected if external code holds memoryview references
+                # The mmap will be cleaned up by Python's GC when all references are released
                 self.mmap.close()
                 logger.debug("✅ MMap closed successfully")
-            except BufferError as e:
-                # If views still exist, just clear our reference
-                logger.warning("⚠️ BufferError on mmap close", error=str(e))
-                pass
             self.mmap = None
         if self.file:
             self.file.close()

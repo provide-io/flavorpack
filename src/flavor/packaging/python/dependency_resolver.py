@@ -11,9 +11,9 @@ import sys
 import tempfile
 import zipfile
 
-from provide.foundation import logger
+from provide.foundation import logger, retry
 from provide.foundation.platform import get_arch_name, get_os_name
-from provide.foundation.process import run_command
+from provide.foundation.process import run
 
 from flavor.packaging.python.pypapip_manager import PyPaPipManager
 from flavor.packaging.python.uv_manager import UVManager
@@ -58,7 +58,7 @@ class DependencyResolver:
         if uv_path:
             logger.debug(f"Found UV in PATH: {uv_path}")
             try:
-                result = run_command(
+                result = run(
                     [uv_path, "--version"], capture_output=True, timeout=10
                 )
                 if result.returncode == 0:
@@ -76,7 +76,7 @@ class DependencyResolver:
         if pipx_uv:
             try:
                 logger.trace("Checking if UV is available via pipx")
-                result = run_command(
+                result = run(
                     ["pipx", "run", "uv", "--version"], capture_output=True, timeout=15
                 )
                 if result.returncode == 0:
@@ -93,6 +93,15 @@ class DependencyResolver:
 
         return None
 
+    @retry(
+        ConnectionError,
+        TimeoutError,
+        OSError,
+        max_attempts=3,
+        base_delay=1.0,
+        backoff="exponential",
+        jitter=True,
+    )
     def download_uv_wheel(self, dest_dir: Path) -> Path | None:
         """Download manylinux2014-compatible UV wheel using PIP - NOT UV!
 
@@ -106,6 +115,9 @@ class DependencyResolver:
 
         Returns:
             Path to UV binary if successful, None otherwise
+
+        Retries:
+            Up to 3 attempts with exponential backoff for network errors
         """
         logger.info("📦 Downloading manylinux2014-compatible UV wheel")
         logger.debug(f"Platform: {get_os_name()}, Architecture: {get_arch_name()}")
@@ -142,7 +154,7 @@ class DependencyResolver:
 
         try:
             logger.trace("Checking if pip is available")
-            result = run_command(pip_check_cmd, check=True, capture_output=True)
+            result = run(pip_check_cmd, check=True, capture_output=True)
             logger.trace(f"pip is available: {result.stdout.strip()}")
             return True
         except Exception:
@@ -162,7 +174,7 @@ class DependencyResolver:
             # First try ensurepip
             ensurepip_cmd = [str(python_exe), "-m", "ensurepip", "--default-pip"]
             logger.debug("Installing pip using ensurepip")
-            run_command(ensurepip_cmd, check=True, capture_output=True)
+            run(ensurepip_cmd, check=True, capture_output=True)
             logger.info("✅ pip installed successfully")
             return True
         except Exception:
@@ -172,7 +184,7 @@ class DependencyResolver:
             if uv_cmd:
                 uv_pip_cmd = [uv_cmd, "pip", "install", "pip"]
                 try:
-                    run_command(uv_pip_cmd, check=True, capture_output=True)
+                    run(uv_pip_cmd, check=True, capture_output=True)
                     logger.info("✅ pip installed via UV")
                     return True
                 except Exception as e:
@@ -224,12 +236,25 @@ class DependencyResolver:
                 return "manylinux2014_aarch64"
         return None
 
+    @retry(
+        ConnectionError,
+        TimeoutError,
+        OSError,
+        max_attempts=3,
+        base_delay=1.0,
+        backoff="exponential",
+        jitter=True,
+    )
     def _execute_download_command(self, download_cmd: list[str]) -> bool:
-        """Execute pip download command and log results."""
+        """Execute pip download command and log results.
+
+        Retries:
+            Up to 3 attempts with exponential backoff for network errors
+        """
         logger.debug("Running UV download command", cmd=" ".join(download_cmd))
         logger.trace(f"Full command: {download_cmd}")
 
-        result = run_command(download_cmd, check=True, capture_output=True)
+        result = run(download_cmd, check=True, capture_output=True)
         if result.stdout:
             logger.trace(f"Download stdout: {result.stdout.strip()}")
         if result.stderr:

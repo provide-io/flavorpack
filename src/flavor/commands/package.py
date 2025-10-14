@@ -5,28 +5,15 @@
 """Package command for the flavor CLI."""
 
 from pathlib import Path
-from typing import Any
 
 import click
 
+from flavor.console import echo, echo_error, get_command_logger
 from flavor.exceptions import BuildError, PackagingError
 from flavor.package import build_package_from_manifest, verify_package
 
-
-def safe_echo(message: str, **kwargs: Any) -> None:
-    """Echo a message, handling Windows encoding issues."""
-    try:
-        click.echo(message, **kwargs)
-    except UnicodeEncodeError:
-        # On Windows, replace emojis with ASCII alternatives
-        message = message.replace("🚀", "[LAUNCH]")
-        message = message.replace("✅", "[OK]")
-        message = message.replace("❌", "[ERROR]")
-        message = message.replace("🔍", "[VERIFY]")
-        message = message.replace("📦", "[PACKAGE]")
-        message = message.replace("⚠️", "[WARN]")
-        message = message.replace("ℹ️", "[INFO]")  # noqa: RUF001
-        click.echo(message, **kwargs)
+# Get structured logger for this command
+log = get_command_logger("pack")
 
 
 @click.command("pack")
@@ -120,14 +107,21 @@ def pack_command(
     output_file: str | None,
 ) -> None:
     """Pack the application for one or more target platforms."""
+    log.debug(
+        "Starting package command",
+        manifest=pyproject_toml_path,
+        output_path=output_path,
+        quiet=quiet,
+    )
+
     if not quiet:
-        safe_echo("🚀 Packaging application...")
+        echo("🚀 Packaging application...")
 
     _setup_workenv_base(workenv_base)
 
     try:
         if not quiet:
-            safe_echo("📦 Building package artifacts...")
+            echo("📦 Building package artifacts...")
 
         built_artifacts = _build_package_artifacts(
             pyproject_toml_path,
@@ -143,18 +137,18 @@ def pack_command(
         )
 
         if not quiet:
-            safe_echo("🔍 Processing and verifying artifacts...")
+            echo("🔍 Processing and verifying artifacts...")
 
         _process_built_artifacts(built_artifacts, verify, strip, quiet)
         _show_final_results(built_artifacts, quiet)
 
-    except (BuildError, PackagingError, click.UsageError) as e:
-        _safe_click_secho(
-            f"❌ Packaging Failed:\n{e}",
-            "[ERROR] Packaging Failed:\n{e}",
-            fg="red",
-            err=True,
+        log.info(
+            "Packaging completed successfully", artifact_count=len(built_artifacts)
         )
+
+    except (BuildError, PackagingError, click.UsageError) as e:
+        log.error("Packaging failed", error=str(e), manifest=pyproject_toml_path)
+        echo_error(f"❌ Packaging Failed:\n{e}")
         raise click.Abort() from e
 
 
@@ -197,15 +191,14 @@ def _process_built_artifacts(
 ) -> None:
     """Process each built artifact with verification and optimization reporting."""
     for artifact in built_artifacts:
+        log.debug(
+            "Processing artifact", artifact=str(artifact), verify=verify, strip=strip
+        )
         if not quiet:
-            _safe_click_secho(
-                f"✅ Successfully built artifact at {artifact}",
-                f"[OK] Successfully built artifact at {artifact}",
-                fg="green",
-            )
+            echo(f"✅ Successfully built artifact at {artifact}")
 
         if strip and not quiet:
-            safe_echo("  📉 Binary optimized (debug symbols stripped)")
+            echo("  📉 Binary optimized (debug symbols stripped)")
 
         if verify:
             _verify_artifact(artifact, quiet)
@@ -213,54 +206,32 @@ def _process_built_artifacts(
 
 def _verify_artifact(artifact: Path, quiet: bool) -> None:
     """Verify a single artifact and handle the results."""
+    log.debug("Verifying artifact", artifact=str(artifact))
     if not quiet:
-        safe_echo(f"🔍 Verifying {artifact}...")
+        echo(f"🔍 Verifying {artifact}...")
 
     try:
         result = verify_package(artifact)
         if result["signature_valid"]:
+            log.info("Package verified successfully", artifact=str(artifact))
             if not quiet:
-                _safe_click_secho(
-                    "  ✅ Package verified successfully",
-                    "  [OK] Package verified successfully",
-                    fg="green",
-                )
+                echo("  ✅ Package verified successfully")
         else:
-            _safe_click_secho(
-                "  ❌ Package verification failed",
-                "  [ERROR] Package verification failed",
-                fg="red",
-            )
+            log.error("Package verification failed", artifact=str(artifact))
+            echo_error("  ❌ Package verification failed")
             raise BuildError(f"Verification failed for {artifact}")
     except Exception as e:
-        _safe_click_secho(
-            f"  ❌ Verification error: {e}",
-            f"  [ERROR] Verification error: {e}",
-            fg="red",
-        )
+        log.error("Verification error", artifact=str(artifact), error=str(e))
+        echo_error(f"  ❌ Verification error: {e}")
         raise BuildError(f"Verification failed for {artifact}: {e}") from e
 
 
 def _show_final_results(built_artifacts: list[Path], quiet: bool) -> None:
     """Show final results of the packaging process."""
     if built_artifacts:
+        log.info("All targets built successfully", artifact_count=len(built_artifacts))
         if not quiet:
-            _safe_click_secho(
-                "✅ All targets built successfully.",
-                "[OK] All targets built successfully.",
-                fg="green",
-            )
+            echo("✅ All targets built successfully.")
     else:
-        _safe_click_secho(
-            "⚠️ No targets were specified or built.",
-            "[WARN] No targets were specified or built.",
-            fg="yellow",
-        )
-
-
-def _safe_click_secho(unicode_msg: str, fallback_msg: str, **kwargs: Any) -> None:
-    """Safely echo with Unicode fallback handling."""
-    try:
-        click.secho(unicode_msg, **kwargs)
-    except UnicodeEncodeError:
-        click.secho(fallback_msg, **kwargs)
+        log.warning("No targets were specified or built")
+        echo("⚠️ No targets were specified or built.")

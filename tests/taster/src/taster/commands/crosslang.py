@@ -9,7 +9,7 @@ import tempfile
 
 import click
 from provide.foundation import logger
-from provide.foundation.process import run_command
+from provide.foundation.process import run
 
 from flavor.ingredients.manager import IngredientManager as HelperManager
 
@@ -179,7 +179,7 @@ entry_point = "crosslang_test:main"
 
         try:
             # Run the build command from the test directory
-            result = run_command(
+            result = run(
                 cmd,
                 cwd=temp_dir,
                 capture_output=True,
@@ -294,7 +294,7 @@ entry_point = "crosslang_test:main"
 
         # Use info command to verify the package works
         cmd = [str(package_path), "info"]
-        result = run_command(cmd, capture_output=True, check=False, env=env)
+        result = run(cmd, capture_output=True, check=False, env=env)
         success = result.returncode == 0
 
         self.results["verify_tests"].append(
@@ -311,7 +311,7 @@ entry_point = "crosslang_test:main"
     def test_cli_command(self, package_path, command):
         """Test a CLI command."""
         cmd = [str(package_path), *command.split()]
-        result = run_command(cmd, capture_output=True, check=False)
+        result = run(cmd, capture_output=True, check=False)
 
         # Some commands exit non-zero intentionally (like --help)
         success = result.returncode in [0, 1, 2]  # Allow common exit codes

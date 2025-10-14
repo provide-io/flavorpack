@@ -9,7 +9,11 @@ from typing import Any
 
 import click
 
+from flavor.console import echo, echo_error, get_command_logger
 from flavor.package import verify_package
+
+# Get structured logger for this command
+log = get_command_logger("verify")
 
 
 @click.command("verify")
@@ -21,9 +25,16 @@ from flavor.package import verify_package
 def verify_command(package_file: str) -> None:
     """Verifies a flavor package."""
     final_package_file = Path(package_file)
-    click.echo(f"🔍 Verifying package '{final_package_file}'...")
+    log.debug("Starting package verification", package=str(final_package_file))
+    echo(f"🔍 Verifying package '{final_package_file}'...")
+
     try:
         result = verify_package(final_package_file)
+        log.debug(
+            "Package verification completed",
+            format=result.get("format"),
+            signature_valid=result.get("signature_valid"),
+        )
 
         _display_basic_info(result)
         if result["format"] == "PSPF/2025":
@@ -31,20 +42,21 @@ def verify_command(package_file: str) -> None:
         _display_signature_status(result)
 
     except Exception as e:
-        click.secho(f"❌ Verification failed: {e}", fg="red", err=True)
+        log.error("Verification failed", error=str(e), package=str(final_package_file))
+        echo_error(f"❌ Verification failed: {e}")
         raise click.Abort() from e
 
 
 def _display_basic_info(result: dict[str, Any]) -> None:
     """Display basic package information."""
-    click.echo(f"\nPackage Format: {result['format']}")
-    click.echo(f"Version: {result['version']}")
-    click.echo(f"Launcher Size: {result['launcher_size'] / (1024 * 1024):.1f} MB")
+    echo(f"\nPackage Format: {result['format']}")
+    echo(f"Version: {result['version']}")
+    echo(f"Launcher Size: {result['launcher_size'] / (1024 * 1024):.1f} MB")
 
 
 def _display_pspf_info(result: dict[str, Any]) -> None:
     """Display PSPF-specific package information."""
-    click.echo(f"Slot Count: {result['slot_count']}")
+    echo(f"Slot Count: {result['slot_count']}")
 
     _display_package_metadata(result)
     _display_build_metadata(result)
@@ -55,9 +67,7 @@ def _display_package_metadata(result: dict[str, Any]) -> None:
     """Display package metadata."""
     if "package" in result:
         pkg = result["package"]
-        click.echo(
-            f"Package: {pkg.get('name', 'unknown')} v{pkg.get('version', 'unknown')}"
-        )
+        echo(f"Package: {pkg.get('name', 'unknown')} v{pkg.get('version', 'unknown')}")
 
 
 def _display_build_metadata(result: dict[str, Any]) -> None:
@@ -65,17 +75,17 @@ def _display_build_metadata(result: dict[str, Any]) -> None:
     if result.get("build"):
         build = result["build"]
         if "timestamp" in build:
-            click.echo(f"Built: {build['timestamp']}")
+            echo(f"Built: {build['timestamp']}")
         if "builder_version" in build:
-            click.echo(f"Builder: {build['builder_version']}")
+            echo(f"Builder: {build['builder_version']}")
         if "launcher_type" in build:
-            click.echo(f"Launcher Type: {build['launcher_type']}")
+            echo(f"Launcher Type: {build['launcher_type']}")
 
 
 def _display_slot_information(result: dict[str, Any]) -> None:
     """Display comprehensive slot information."""
     if "slots" in result:
-        click.echo("\nSlots:")
+        echo("\nSlots:")
         for slot in result["slots"]:
             _display_single_slot(slot)
 
@@ -96,7 +106,7 @@ def _display_single_slot(slot: dict[str, Any]) -> None:
     if slot.get("codec") and slot["codec"] != "raw":
         slot_line += f" [{slot['codec']}]"
 
-    click.echo(slot_line)
+    echo(slot_line)
 
     # Additional metadata on separate lines
     metadata_fields = [
@@ -110,13 +120,15 @@ def _display_single_slot(slot: dict[str, Any]) -> None:
 
     for field, label in metadata_fields:
         if slot.get(field):
-            click.echo(f"      {label}: {slot[field]}")
+            echo(f"      {label}: {slot[field]}")
 
 
 def _display_signature_status(result: dict[str, Any]) -> None:
     """Display signature verification status."""
     if result["signature_valid"]:
-        click.secho("\n✅ Signature verification successful", fg="green")
+        log.info("Signature verification successful")
+        echo("\n✅ Signature verification successful")
     else:
-        click.secho("\n❌ Signature verification failed", fg="red")
+        log.error("Signature verification failed")
+        echo_error("\n❌ Signature verification failed")
         raise click.Abort()

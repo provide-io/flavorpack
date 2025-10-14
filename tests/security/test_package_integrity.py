@@ -78,22 +78,6 @@ class TestPackageIntegrity:
         assert is_valid is False
 
     @pytest.mark.security
-    @pytest.mark.skip(reason="Seed-based generation not supported in foundation API")
-    def test_deterministic_signing_with_seed(self) -> None:
-        """Test deterministic key generation from seed."""
-        # This test is skipped because provide.foundation.crypto
-        # uses secure random generation rather than seed-based generation
-        pass
-
-    @pytest.mark.security
-    @pytest.mark.skip(reason="Seed-based generation not supported in foundation API")
-    def test_different_seeds_produce_different_keys(self) -> None:
-        """Test that different seeds produce different keys."""
-        # This test is skipped because provide.foundation.crypto
-        # uses secure random generation rather than seed-based generation
-        pass
-
-    @pytest.mark.security
     def test_validation_level_enforcement(self) -> None:
         """Test that validation levels are properly enforced."""
         # This would test different validation modes:

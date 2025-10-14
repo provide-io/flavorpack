@@ -11,7 +11,11 @@ import click
 from provide.foundation.formatting import format_size
 from provide.foundation.serialization import json_dumps
 
+from flavor.console import echo, echo_error, get_command_logger
 from flavor.psp.format_2025.reader import PSPFReader
+
+# Get structured logger for this command
+log = get_command_logger("inspect")
 
 
 @click.command("inspect")
@@ -29,6 +33,7 @@ from flavor.psp.format_2025.reader import PSPFReader
 def inspect_command(package_file: str, output_json: bool) -> None:
     """Quick inspection of a flavor package."""
     package_path = Path(package_file)
+    log.debug("Inspecting package", package=str(package_path), output_json=output_json)
 
     try:
         with PSPFReader(package_path) as reader:
@@ -36,6 +41,12 @@ def inspect_command(package_file: str, output_json: bool) -> None:
             metadata = reader.read_metadata()
             slot_descriptors = reader.read_slot_descriptors()
             slots_metadata = metadata.get("slots", [])
+
+            log.debug(
+                "Package inspection completed",
+                format_version=f"0x{index.format_version:08x}",
+                slot_count=len(slot_descriptors),
+            )
 
             if output_json:
                 _output_json_format(
@@ -47,10 +58,12 @@ def inspect_command(package_file: str, output_json: bool) -> None:
                 )
 
     except FileNotFoundError as e:
-        click.secho(f"❌ Package not found: {package_file}", fg="red", err=True)
+        log.error("Package not found", package=package_file)
+        echo_error(f"❌ Package not found: {package_file}")
         raise click.Abort() from e
     except Exception as e:
-        click.secho(f"❌ Error inspecting package: {e}", fg="red", err=True)
+        log.error("Error inspecting package", package=package_file, error=str(e))
+        echo_error(f"❌ Error inspecting package: {e}")
         raise click.Abort() from e
 
 
@@ -87,7 +100,7 @@ def _output_json_format(
             for i, slot in enumerate(slot_descriptors)
         ],
     }
-    click.echo(json_dumps(output, indent=2))
+    echo(json_dumps(output, indent=2))
 
 
 def _output_human_format(
@@ -103,9 +116,9 @@ def _output_human_format(
     launcher_size = index.launcher_size
 
     # Package header
-    click.echo(f"\nPackage: {package_path.name} ({format_size(file_size)})")
-    click.echo(f"├── Format: PSPF/0x{index.format_version:08x}")
-    click.echo(
+    echo(f"\nPackage: {package_path.name} ({format_size(file_size)})")
+    echo(f"├── Format: PSPF/0x{index.format_version:08x}")
+    echo(
         f"├── Launcher: {metadata.get('build', {}).get('launcher_type', 'Unknown')} ({format_size(launcher_size)})"
     )
 
@@ -114,18 +127,18 @@ def _output_human_format(
         metadata.get("build", {}).get("timestamp", "Unknown")
     )
     builder_version = metadata.get("build", {}).get("builder_version", "Unknown")
-    click.echo(f"├── Built: {build_time} with {builder_version}")
+    echo(f"├── Built: {build_time} with {builder_version}")
 
     # Package info
     pkg_name = metadata.get("package", {}).get("name", "Unknown")
     pkg_version = metadata.get("package", {}).get("version", "Unknown")
     if pkg_name != "Unknown":
-        click.echo(f"├── Package: {pkg_name} v{pkg_version}")
+        echo(f"├── Package: {pkg_name} v{pkg_version}")
 
     # Slots
-    click.echo(f"└── Slots: {len(slot_descriptors)}")
+    echo(f"└── Slots: {len(slot_descriptors)}")
     _output_slot_details(slot_descriptors, slots_metadata)
-    click.echo()  # Empty line at end
+    echo("")  # Empty line at end
 
 
 def _format_build_time(build_time: str) -> str:
@@ -171,4 +184,4 @@ def _output_slot_details(
         if slot_codec != "raw":
             slot_info += f" [{slot_codec}]"
 
-        click.echo(f"{prefix} {slot_info}")
+        echo(f"{prefix} {slot_info}")

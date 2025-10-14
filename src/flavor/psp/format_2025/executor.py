@@ -9,7 +9,7 @@ import shlex
 from typing import Any
 
 from provide.foundation import logger
-from provide.foundation.process import run_command
+from provide.foundation.process import run
 
 
 class BundleExecutor:
@@ -182,7 +182,7 @@ class BundleExecutor:
             command_args = shlex.split(command)
 
             # Execute the command using shared utility (no shell=True for security)
-            result = run_command(
+            result = run(
                 command_args,
                 cwd=self.workenv_dir,
                 env=env,

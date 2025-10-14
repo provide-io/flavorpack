@@ -15,11 +15,11 @@ test: ## Run Python tests
 
 .PHONY: test-cov
 test-cov: ## Run Python tests with coverage
-	source workenv/bin/activate && pytest --cov=src/flavor --cov-report=term-missing --cov-report=html tests/
+	source workenv/bin/activate && pytest --cov=flavor --cov-report=term-missing --cov-report=html tests/
 
 .PHONY: test-cov-xml
 test-cov-xml: ## Run Python tests with XML coverage for CI
-	source workenv/bin/activate && pytest --cov=src/flavor --cov-report=xml --cov-report=term tests/
+	source workenv/bin/activate && pytest --cov=flavor --cov-report=xml --cov-report=term tests/
 
 .PHONY: build-ingredients
 build-ingredients: ## Build all ingredients (Go and Rust)

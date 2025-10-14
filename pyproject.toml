@@ -145,11 +145,11 @@ python_functions = ["test_*"]
 pythonpath = ["src", "."]
 norecursedirs = [".git", "build", "dist", "*.egg-info", ".venv", "htmlcov", ".hypothesis", "__pycache__", "*/generated/*"]
 asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
 addopts = [
     "-v",
     "--tb=short",
     "--strict-markers",
-    "--disable-warnings",
     "--color=yes",
     "--ignore=tests/taster/tests",
 ]
@@ -182,7 +182,7 @@ markers = [
 
 [tool.coverage.run]
 branch = true
-source = ["src/flavor"]
+source = ["flavor"]
 parallel = false
 omit = [
     "*/protocols/tfprotov6/protobuf/*",
@@ -197,7 +197,7 @@ omit = [
 
 [tool.coverage.report]
 show_missing = true
-skip_covered = true
+skip_covered = false
 precision = 2
 fail_under = 80
 exclude_lines = [
