@@ -220,10 +220,10 @@ jobs:
           
           ### Python Wheels
           Platform-specific wheels with embedded Go and Rust ingredients:
-          - `flavorpack-${{ needs.prepare.outputs.version }}-py311-none-manylinux2014_x86_64.whl` - Linux x86_64
-          - `flavorpack-${{ needs.prepare.outputs.version }}-py311-none-manylinux2014_aarch64.whl` - Linux ARM64
-          - `flavorpack-${{ needs.prepare.outputs.version }}-py311-none-macosx_10_9_x86_64.whl` - macOS Intel
-          - `flavorpack-${{ needs.prepare.outputs.version }}-py311-none-macosx_11_0_arm64.whl` - macOS Apple Silicon
+          - `flavorpack-${{ needs.prepare.outputs.version }}-py3-none-manylinux2014_x86_64.whl` - Linux x86_64
+          - `flavorpack-${{ needs.prepare.outputs.version }}-py3-none-manylinux2014_aarch64.whl` - Linux ARM64
+          - `flavorpack-${{ needs.prepare.outputs.version }}-py3-none-macosx_10_9_x86_64.whl` - macOS Intel
+          - `flavorpack-${{ needs.prepare.outputs.version }}-py3-none-macosx_11_0_arm64.whl` - macOS Apple Silicon
           
           ### Self-Contained PSP Packages
           Ready-to-run executables (no Python required):

@@ -20,7 +20,7 @@ python -m build --wheel --outdir dist/
 # Fix the platform tags
 for wheel in dist/*.whl; do
     if [[ $(basename "$wheel") =~ py3-none-any ]]; then
-        new_wheel=$(echo "$wheel" | sed "s/py3-none-any/py311-none-$PLATFORM_TAG/")
+        new_wheel=$(echo "$wheel" | sed "s/py3-none-any/py3-none-$PLATFORM_TAG/")
         mv "$wheel" "$new_wheel"
         echo "✅ Created: $(basename "$new_wheel")"
     else
