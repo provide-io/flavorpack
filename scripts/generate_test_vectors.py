@@ -21,9 +21,7 @@ from flavor.psp.format_2025.operations import (
 from flavor.psp.format_2025.slots import SlotDescriptor
 
 # Configure logging with emojis
-logging.basicConfig(
-    level=logging.DEBUG, format="%(levelname)s %(message)s", stream=sys.stdout
-)
+logging.basicConfig(level=logging.DEBUG, format="%(levelname)s %(message)s", stream=sys.stdout)
 logger = logging.getLogger(__name__)
 
 
@@ -280,9 +278,7 @@ var TestVectors = []struct {
         log_trace(f"Generating Go constant for {case['name']}")
         # Format hex as Go byte array
         hex_str = case["hex"]
-        bytes_str = ", ".join(
-            [f"0x{hex_str[i : i + 2]}" for i in range(0, len(hex_str), 2)]
-        )
+        bytes_str = ", ".join([f"0x{hex_str[i : i + 2]}" for i in range(0, len(hex_str), 2)])
 
         go_code += f"""    {{
         Name:        "{case["name"]}",

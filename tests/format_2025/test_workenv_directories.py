@@ -94,9 +94,7 @@ class TestWorkenvDirectories:
                             # On macOS, default umask is often 0o022, giving 0o755
                             # On Linux, it's often 0o077, giving 0o700
                             mode = stat.S_IMODE(dir_stat.st_mode)
-                            assert mode in (0o700, 0o755), (
-                                f"Expected 0o700 or 0o755, got {oct(mode)}"
-                            )
+                            assert mode in (0o700, 0o755), f"Expected 0o700 or 0o755, got {oct(mode)}"
             finally:
                 # Restore original umask
                 os.umask(old_umask)

@@ -111,8 +111,7 @@ def download_ingredients(platform: str, version: str) -> Path | None:
     ingredients_found = False
     for ingredient_set in [required_ingredients, alt_ingredients, generic_ingredients]:
         if all(
-            (ingredients_dir / h).exists() or (ingredients_dir / f"{h}.exe").exists()
-            for h in ingredient_set
+            (ingredients_dir / h).exists() or (ingredients_dir / f"{h}.exe").exists() for h in ingredient_set
         ):
             ingredients_found = True
             break
@@ -313,9 +312,7 @@ def main():
         choices=ALL_PLATFORMS + ["universal"],
         help="Target platform (or 'universal' for no ingredients)",
     )
-    parser.add_argument(
-        "--all", action="store_true", help="Build wheels for all platforms"
-    )
+    parser.add_argument("--all", action="store_true", help="Build wheels for all platforms")
     parser.add_argument(
         "--output-dir",
         type=Path,

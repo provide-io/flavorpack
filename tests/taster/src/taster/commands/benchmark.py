@@ -20,9 +20,7 @@ def benchmark_command() -> None:
 
 @benchmark_command.command("memory")
 @click.argument("command", nargs=-1, required=True)
-@click.option(
-    "--interval", type=float, default=0.1, help="Sampling interval in seconds"
-)
+@click.option("--interval", type=float, default=0.1, help="Sampling interval in seconds")
 @click.option("--json-output", is_flag=True, help="Output as JSON")
 def memory_profile(command, interval, json_output) -> None:
     """Track memory usage of a command"""
@@ -195,9 +193,7 @@ def speed_test(iterations, warmup) -> None:
 @benchmark_command.command("concurrent")
 @click.option("--workers", type=int, default=10, help="Number of concurrent workers")
 @click.option("--duration", type=int, default=10, help="Test duration in seconds")
-@click.option(
-    "--operation", type=click.Choice(["build", "read", "mixed"]), default="mixed"
-)
+@click.option("--operation", type=click.Choice(["build", "read", "mixed"]), default="mixed")
 def concurrent_test(workers, duration, operation) -> None:
     """Test concurrent PSPF operations"""
 
@@ -233,9 +229,7 @@ def concurrent_test(workers, duration, operation) -> None:
 
             while not stop_event.is_set():
                 try:
-                    if operation == "build" or (
-                        operation == "mixed" and ops_count % 2 == 0
-                    ):
+                    if operation == "build" or (operation == "mixed" and ops_count % 2 == 0):
                         # Build operation
                         builder = PSPFBuilder()
                         bundle_path = tmpdir / f"worker_{worker_id}_{ops_count}.psp"
@@ -301,9 +295,7 @@ def concurrent_test(workers, duration, operation) -> None:
     click.echo(f"Total operations: {total_ops}")
     click.echo(f"Operations/second: {total_ops / duration:.1f}")
     click.echo(f"Total errors: {total_errors}")
-    click.echo(
-        f"Error rate: {total_errors / total_ops * 100:.2f}%" if total_ops > 0 else "N/A"
-    )
+    click.echo(f"Error rate: {total_errors / total_ops * 100:.2f}%" if total_ops > 0 else "N/A")
 
     if worker_results:
         click.echo("\nPer-worker statistics:")
@@ -349,9 +341,7 @@ def leak_detector(command, threshold) -> None:
                     leak_detected = True
 
                 # Show progress
-                click.echo(
-                    f"\rRSS: {current_rss:.1f}MB (Δ{growth:+.1f}MB)", nl=False, err=True
-                )
+                click.echo(f"\rRSS: {current_rss:.1f}MB (Δ{growth:+.1f}MB)", nl=False, err=True)
 
                 time.sleep(1)
 

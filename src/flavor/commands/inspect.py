@@ -49,13 +49,9 @@ def inspect_command(package_file: str, output_json: bool) -> None:
             )
 
             if output_json:
-                _output_json_format(
-                    package_path, index, metadata, slot_descriptors, slots_metadata
-                )
+                _output_json_format(package_path, index, metadata, slot_descriptors, slots_metadata)
             else:
-                _output_human_format(
-                    package_path, index, metadata, slot_descriptors, slots_metadata
-                )
+                _output_human_format(package_path, index, metadata, slot_descriptors, slots_metadata)
 
     except FileNotFoundError as e:
         log.error("Package not found", package=package_file)
@@ -86,16 +82,12 @@ def _output_json_format(
         "slots": [
             {
                 "index": i,
-                "name": slots_metadata[i].get("id", f"slot_{i}")
-                if i < len(slots_metadata)
-                else f"slot_{i}",
+                "name": slots_metadata[i].get("id", f"slot_{i}") if i < len(slots_metadata) else f"slot_{i}",
                 "purpose": slots_metadata[i].get("purpose", "unknown")
                 if i < len(slots_metadata)
                 else "unknown",
                 "size": slot.size,
-                "codec": slots_metadata[i].get("codec", "raw")
-                if i < len(slots_metadata)
-                else "raw",
+                "codec": slots_metadata[i].get("codec", "raw") if i < len(slots_metadata) else "raw",
             }
             for i, slot in enumerate(slot_descriptors)
         ],
@@ -123,9 +115,7 @@ def _output_human_format(
     )
 
     # Build info
-    build_time = _format_build_time(
-        metadata.get("build", {}).get("timestamp", "Unknown")
-    )
+    build_time = _format_build_time(metadata.get("build", {}).get("timestamp", "Unknown"))
     builder_version = metadata.get("build", {}).get("builder_version", "Unknown")
     echo(f"├── Built: {build_time} with {builder_version}")
 
@@ -155,9 +145,7 @@ def _format_build_time(build_time: str) -> str:
         return build_time  # Keep original timestamp if parsing fails
 
 
-def _output_slot_details(
-    slot_descriptors: list[Any], slots_metadata: list[dict[str, Any]]
-) -> None:
+def _output_slot_details(slot_descriptors: list[Any], slots_metadata: list[dict[str, Any]]) -> None:
     """Output detailed slot information."""
     for i, slot in enumerate(slot_descriptors):
         is_last = i == len(slot_descriptors) - 1

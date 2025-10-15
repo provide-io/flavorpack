@@ -33,9 +33,7 @@ class SignalTester:
                 self.original_handlers[sig] = signal.signal(sig, self.signal_handler)
                 click.echo(f"  ✅ Installed handler for {signal.Signals(sig).name}")
             except Exception as e:
-                click.echo(
-                    f"  ⚠️ Could not install handler for {signal.Signals(sig).name}: {e}"
-                )
+                click.echo(f"  ⚠️ Could not install handler for {signal.Signals(sig).name}: {e}")
 
     def restore_handlers(self) -> None:
         """Restore original handlers"""
@@ -46,12 +44,8 @@ class SignalTester:
 @click.command("signals")
 @click.option("--test-mode", is_flag=True, help="Run automated test")
 @click.option("--timeout", default=10, help="Timeout for signal test")
-@click.option(
-    "--sleep", type=float, help="Just sleep for N seconds (simpler than full test)"
-)
-@click.option(
-    "--exit-code", type=int, default=0, help="Exit code to use on signal/timeout"
-)
+@click.option("--sleep", type=float, help="Just sleep for N seconds (simpler than full test)")
+@click.option("--exit-code", type=int, default=0, help="Exit code to use on signal/timeout")
 def signals_command(test_mode, timeout, sleep, exit_code) -> None:
     """🛑 Test signal handling (SIGTERM/SIGINT)"""
 
@@ -78,11 +72,7 @@ def signals_command(test_mode, timeout, sleep, exit_code) -> None:
         try:
             handler = signal.getsignal(sig)
             handler_name = (
-                "DEFAULT"
-                if handler == signal.SIG_DFL
-                else "IGNORE"
-                if handler == signal.SIG_IGN
-                else "CUSTOM"
+                "DEFAULT" if handler == signal.SIG_DFL else "IGNORE" if handler == signal.SIG_IGN else "CUSTOM"
             )
             click.echo(f"  {signal.Signals(sig).name}: {handler_name}")
         except (ValueError, AttributeError):
@@ -121,9 +111,7 @@ def signals_command(test_mode, timeout, sleep, exit_code) -> None:
         # Report results
         click.secho("\n📋 Test Results:", fg="cyan")
         if tester.signals_received:
-            click.secho(
-                f"  ✅ Received {len(tester.signals_received)} signals", fg="green"
-            )
+            click.secho(f"  ✅ Received {len(tester.signals_received)} signals", fg="green")
             for sig_name, sig_time in tester.signals_received:
                 click.echo(f"    • {sig_name} at {sig_time:.2f}")
         else:
@@ -151,9 +139,7 @@ def signals_command(test_mode, timeout, sleep, exit_code) -> None:
             start_time = time.time()
             while time.time() - start_time < timeout:
                 remaining = timeout - (time.time() - start_time)
-                sys.stdout.write(
-                    f"\r⏳ Waiting for signals... {remaining:.1f}s remaining"
-                )
+                sys.stdout.write(f"\r⏳ Waiting for signals... {remaining:.1f}s remaining")
                 sys.stdout.flush()
                 time.sleep(0.1)
             click.echo("\n\n⏰ Timeout reached")
@@ -176,8 +162,7 @@ def signals_command(test_mode, timeout, sleep, exit_code) -> None:
 
     launcher_name = (
         "rust"
-        if "FLAVOR_COMMAND_NAME" not in os.environ
-        or os.environ.get("FLAVOR_COMMAND_NAME") == sys.argv[0]
+        if "FLAVOR_COMMAND_NAME" not in os.environ or os.environ.get("FLAVOR_COMMAND_NAME") == sys.argv[0]
         else "go"
     )
 

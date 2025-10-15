@@ -110,9 +110,7 @@ def collect_test_metadata(output_dir: Path) -> None:
             "percent_covered": totals.get("percent_covered", 0),
             "files_analyzed": len(data.get("files", {})),
         }
-        (output_dir / "coverage-summary.json").write_text(
-            json.dumps(coverage_summary, indent=2)
-        )
+        (output_dir / "coverage-summary.json").write_text(json.dumps(coverage_summary, indent=2))
 
     # Git info
     git_info = {
@@ -126,10 +124,7 @@ def collect_test_metadata(output_dir: Path) -> None:
     env_vars = {
         k: v
         for k, v in os.environ.items()
-        if any(
-            k.startswith(p)
-            for p in ["PYTHON", "PIP", "UV", "PYTEST", "GITHUB", "CI", "FLAVOR"]
-        )
+        if any(k.startswith(p) for p in ["PYTHON", "PIP", "UV", "PYTEST", "GITHUB", "CI", "FLAVOR"])
     }
     (output_dir / "environment.json").write_text(json.dumps(env_vars, indent=2))
 
@@ -186,9 +181,9 @@ def combine_test_results(input_dir: Path, output_file: Path) -> None:
                                 if "summary" not in platform_data:
                                     platform_data["summary"] = {}
                                 for key in ["total", "passed", "failed", "skipped"]:
-                                    platform_data["summary"][key] = platform_data[
-                                        "summary"
-                                    ].get(key, 0) + data["summary"].get(key, 0)
+                                    platform_data["summary"][key] = platform_data["summary"].get(
+                                        key, 0
+                                    ) + data["summary"].get(key, 0)
                 except Exception as e:
                     print(f"    ⚠️ Error reading {test_file}: {e}")
 
@@ -199,9 +194,7 @@ def combine_test_results(input_dir: Path, output_file: Path) -> None:
                 # Update totals
                 if "summary" in platform_data:
                     for key in ["total_tests", "passed", "failed", "skipped"]:
-                        combined["summary"][key] += platform_data["summary"].get(
-                            key.replace("_tests", ""), 0
-                        )
+                        combined["summary"][key] += platform_data["summary"].get(key.replace("_tests", ""), 0)
         else:
             print(f"  ⚠️ No test results for {platform_name}")
 
@@ -220,9 +213,7 @@ def combine_test_results(input_dir: Path, output_file: Path) -> None:
     print(f"\n✅ Results saved to {output_file}")
 
 
-def generate_platform_metadata(
-    platform_name: str, version: str, cache_hit: bool = False
-) -> None:
+def generate_platform_metadata(platform_name: str, version: str, cache_hit: bool = False) -> None:
     """Generate platform-specific build metadata."""
     output_dir = Path("artifacts/metadata")
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -301,9 +292,7 @@ def main():
             print("Usage: test-metadata.py combine <input_dir> [output_file]")
             sys.exit(1)
         input_dir = Path(sys.argv[2])
-        output_file = Path(
-            sys.argv[3] if len(sys.argv) > 3 else "combined-test-report.json"
-        )
+        output_file = Path(sys.argv[3] if len(sys.argv) > 3 else "combined-test-report.json")
         combine_test_results(input_dir, output_file)
 
     elif command == "platform":

@@ -80,9 +80,7 @@ class BundleExecutor:
             # Use "target" field for actual file path, fallback to "id" or "name"
             slot_name = slots[primary_slot].get(
                 "target",
-                slots[primary_slot].get(
-                    "id", slots[primary_slot].get("name", f"slot_{primary_slot}")
-                ),
+                slots[primary_slot].get("id", slots[primary_slot].get("name", f"slot_{primary_slot}")),
             )
             # For tarballs, use {workenv} placeholder
             if slot_name.endswith(".tar.gz") or slot_name.endswith(".tgz"):
@@ -116,9 +114,7 @@ class BundleExecutor:
                 # Use "target" field for actual file path, fallback to "id" or "name"
                 slot_name = slots[slot_idx].get(
                     "target",
-                    slots[slot_idx].get(
-                        "id", slots[slot_idx].get("name", f"slot_{slot_idx}")
-                    ),
+                    slots[slot_idx].get("id", slots[slot_idx].get("name", f"slot_{slot_idx}")),
                 )
                 # Build the path to the extracted slot
                 slot_path = self.workenv_dir / slot_name
@@ -194,30 +190,21 @@ class BundleExecutor:
             if result.returncode == 0:
                 logger.info("✅ Execution completed successfully (exit code: 0)")
             else:
-                logger.warning(
-                    f"⚠️ Execution completed with exit code: {result.returncode}"
-                )
+                logger.warning(f"⚠️ Execution completed with exit code: {result.returncode}")
                 if result.stderr:
-                    logger.debug(
-                        f"📝 stderr: {result.stderr[:500]}"
-                    )  # Log first 500 chars
+                    logger.debug(f"📝 stderr: {result.stderr[:500]}")  # Log first 500 chars
 
-            crashed = (
-                result.returncode < 0
-            )  # Negative return codes often indicate a crash due to a signal
+            crashed = result.returncode < 0  # Negative return codes often indicate a crash due to a signal
             return {
                 "exit_code": result.returncode,
                 "stdout": result.stdout,
                 "stderr": result.stderr,
                 "executed": True,
                 "command": command,
-                "args": args
-                or [],  # Return the original user args, not the parsed command
+                "args": args or [],  # Return the original user args, not the parsed command
                 "pid": os.getpid(),  # Current process PID since we don't have access to subprocess PID
                 "working_directory": str(self.workenv_dir),
-                "error": None
-                if result.returncode == 0
-                else f"Process exited with code {result.returncode}",
+                "error": None if result.returncode == 0 else f"Process exited with code {result.returncode}",
                 "crashed": crashed,
             }
 

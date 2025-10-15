@@ -14,9 +14,7 @@ from flavor.package import build_package_from_manifest
 
 
 @click.command("launcher-test")
-@click.option(
-    "--launcher", "-l", help="Specific launcher to test (e.g., flavor-rs-launcher)"
-)
+@click.option("--launcher", "-l", help="Specific launcher to test (e.g., flavor-rs-launcher)")
 @click.option("--verbose", "-v", is_flag=True, help="Verbose output")
 @click.option("--key-seed", default="test123", help="Key seed for deterministic builds")
 @click.option(
@@ -44,9 +42,7 @@ def launcher_test_command(launcher, verbose, key_seed, exec_mode) -> None:
             launcher_path = helper_manager.get_helper("flavor-rs-launcher")
             launcher_name = "flavor-rs-launcher"
         except FileNotFoundError:
-            click.secho(
-                "❌ Rust launcher not found. Run 'flavor helpers build'.", fg="red"
-            )
+            click.secho("❌ Rust launcher not found. Run 'flavor helpers build'.", fg="red")
             sys.exit(1)
 
     click.secho(f"🚀 Testing launcher: {launcher_name}", fg="cyan", bold=True)
@@ -164,9 +160,7 @@ entry_point = "test_app.__main__:main"
 
                         with PSPFReader(package_path) as reader:
                             metadata = reader.read_metadata()
-                            click.echo(
-                                f"Package metadata: {json.dumps(metadata, indent=2)[:500]}"
-                            )
+                            click.echo(f"Package metadata: {json.dumps(metadata, indent=2)[:500]}")
                     except Exception as e:
                         click.echo(f"Could not read metadata: {e}")
 

@@ -61,12 +61,8 @@ def detect_bundle_mmap():
                 # Check memory maps
                 for mmap_region in process.memory_maps():
                     if bundle_path in mmap_region.path:
-                        indicators.append(
-                            f"🗺️ Bundle is memory-mapped: {mmap_region.path}"
-                        )
-                        indicators.append(
-                            f"  • Size: {mmap_region.rss / 1024 / 1024:.2f} MB"
-                        )
+                        indicators.append(f"🗺️ Bundle is memory-mapped: {mmap_region.path}")
+                        indicators.append(f"  • Size: {mmap_region.rss / 1024 / 1024:.2f} MB")
                         indicators.append(f"  • Permissions: {mmap_region.perms}")
         except Exception as e:
             indicators.append(f"⚠️ Could not check process info: {e}")
@@ -86,9 +82,7 @@ def detect_bundle_mmap():
 
     # Check 3: Resource usage
     usage = resource.getrusage(resource.RUSAGE_SELF)
-    indicators.append(
-        f"📊 Page faults: {usage.ru_minflt} minor, {usage.ru_majflt} major"
-    )
+    indicators.append(f"📊 Page faults: {usage.ru_minflt} minor, {usage.ru_majflt} major")
 
     # Check 4: Backend detection via environment
     if os.environ.get("FLAVOR_BACKEND") == "mmap":
@@ -125,9 +119,7 @@ def test_mmap_operations():
                     _ = m[0]
                     _ = m[size // 2]
                     _ = m[-1]
-                    results.append(
-                        f"✅ Successfully mapped {size / 1024 / 1024:.0f}MB file"
-                    )
+                    results.append(f"✅ Successfully mapped {size / 1024 / 1024:.0f}MB file")
 
             Path(f.name).unlink()
     except Exception as e:

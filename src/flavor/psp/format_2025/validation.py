@@ -66,11 +66,7 @@ def validate_metadata(metadata: dict[str, Any]) -> list[str]:
     version = None
     if "version" in metadata:
         version = metadata["version"]
-    elif (
-        "package" in metadata
-        and isinstance(metadata["package"], dict)
-        and "version" in metadata["package"]
-    ):
+    elif "package" in metadata and isinstance(metadata["package"], dict) and "version" in metadata["package"]:
         version = metadata["package"]["version"]
 
     if version and not str(version).strip():
@@ -132,13 +128,9 @@ def validate_slots(slots: list[SlotMetadata]) -> list[str]:
         if slot.source:
             source_path = Path(slot.source)
             if not source_path.exists():
-                errors.append(
-                    f"📁 Slot '{slot.id}' source does not exist: {slot.source}"
-                )
+                errors.append(f"📁 Slot '{slot.id}' source does not exist: {slot.source}")
             elif not source_path.is_file() and not source_path.is_dir():
-                errors.append(
-                    f"📁 Slot '{slot.id}' source is neither file nor directory: {slot.source}"
-                )
+                errors.append(f"📁 Slot '{slot.id}' source is neither file nor directory: {slot.source}")
 
         # Check purpose validity
         valid_purposes = [
@@ -202,19 +194,13 @@ def validate_key_config(spec: BuildSpec) -> list[str]:
     # If explicit keys provided, both must be present
     if key_config.private_key or key_config.public_key:
         if not (key_config.private_key and key_config.public_key):
-            errors.append(
-                "🔑 When providing explicit keys, both private and public keys are required"
-            )
+            errors.append("🔑 When providing explicit keys, both private and public keys are required")
 
         # Check key sizes (Ed25519 keys)
         if key_config.private_key and len(key_config.private_key) != 32:
-            errors.append(
-                f"🔑 Private key must be 32 bytes for Ed25519, got {len(key_config.private_key)}"
-            )
+            errors.append(f"🔑 Private key must be 32 bytes for Ed25519, got {len(key_config.private_key)}")
         if key_config.public_key and len(key_config.public_key) != 32:
-            errors.append(
-                f"🔑 Public key must be 32 bytes for Ed25519, got {len(key_config.public_key)}"
-            )
+            errors.append(f"🔑 Public key must be 32 bytes for Ed25519, got {len(key_config.public_key)}")
 
     # If key path provided, check it exists
     if key_config.key_path:
@@ -237,9 +223,7 @@ def validate_build_options(spec: BuildSpec) -> list[str]:
 
     # Check compression level
     if options.compression_level < 0 or options.compression_level > 9:
-        errors.append(
-            f"🗜️ Compression level must be 0-9, got {options.compression_level}"
-        )
+        errors.append(f"🗜️ Compression level must be 0-9, got {options.compression_level}")
 
     # Check page alignment consistency
     if options.page_aligned and not options.enable_mmap:

@@ -69,9 +69,7 @@ def ingredient_list(verbose: bool) -> None:
                 echo("")  # Add newline between entries
             size_mb = launcher.size / (1024 * 1024)
             version = get_version(launcher.path) or launcher.version or "unknown"
-            echo(
-                f"  • {launcher.name} ({launcher.language}, {size_mb:.1f} MB) - {version}"
-            )
+            echo(f"  • {launcher.name} ({launcher.language}, {size_mb:.1f} MB) - {version}")
             echo(f"    Path: {launcher.path}")
             if launcher.checksum:
                 echo(f"    SHA256: {launcher.checksum}")
@@ -86,9 +84,7 @@ def ingredient_list(verbose: bool) -> None:
                 echo("")  # Add newline between entries
             size_mb = builder.size / (1024 * 1024)
             version = get_version(builder.path) or builder.version or "unknown"
-            echo(
-                f"  • {builder.name} ({builder.language}, {size_mb:.1f} MB) - {version}"
-            )
+            echo(f"  • {builder.name} ({builder.language}, {size_mb:.1f} MB) - {version}")
             echo(f"    Path: {builder.path}")
             if builder.checksum:
                 echo(f"    SHA256: {builder.checksum}")

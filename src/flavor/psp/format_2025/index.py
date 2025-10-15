@@ -232,9 +232,7 @@ class PSPFIndex:
     def unpack(cls, data: bytes) -> PSPFIndex:
         """Unpack index from binary data."""
         if len(data) != DEFAULT_HEADER_SIZE:
-            raise ValueError(
-                f"Index must be {DEFAULT_HEADER_SIZE} bytes, got {len(data)}"
-            )
+            raise ValueError(f"Index must be {DEFAULT_HEADER_SIZE} bytes, got {len(data)}")
 
         # Get the format string from a default instance
         format_str = cls().FORMAT
