@@ -71,27 +71,10 @@ where = ["src"]
 include = ["flavor*"]
 namespaces = false
 
-[tool.black]
-line-length = 88
-target-version = ['py38', 'py39', 'py310', 'py311', 'py312']
-include = '\.pyi?$'
-exclude = '''
-/(
-    \.git
-  | \.hg
-  | \.mypy_cache
-  | \.tox
-  | \.venv
-  | _build
-  | buck-out
-  | build
-  | dist
-)/
-'''
-
 [tool.ruff]
-line-length = 88
+line-length = 111
 indent-width = 4
+target-version = "py311"
 exclude = ["**/*pb2*.py", "**/generated/**"]
 
 [tool.ruff.lint]
@@ -137,15 +120,16 @@ ignore_errors = true
 disable = ["C0330", "C0326"]
 
 [tool.pytest.ini_options]
+log_cli = true
+log_cli_level = "DEBUG"
 minversion = "6.0"
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
 testpaths = ["tests"]
+pythonpath = ["src", "."]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-pythonpath = ["src", "."]
-norecursedirs = [".git", "build", "dist", "*.egg-info", ".venv", "htmlcov", ".hypothesis", "__pycache__", "*/generated/*"]
-asyncio_mode = "auto"
-asyncio_default_fixture_loop_scope = "function"
 addopts = [
     "-v",
     "--tb=short",
@@ -153,14 +137,7 @@ addopts = [
     "--color=yes",
     "--ignore=tests/taster/tests",
 ]
-# Uncomment these for CI/reporting
-# addopts = [
-#     "--junitxml=reports/junit.xml",
-#     "--html=reports/report.html",
-#     "--self-contained-html",
-# ]
-log_cli = true
-log_cli_level = "WARNING"
+norecursedirs = [".git", "build", "dist", "*.egg-info", ".venv", "htmlcov", ".hypothesis", "__pycache__", "*/generated/*"]
 filterwarnings = [
     "ignore::DeprecationWarning",
     "ignore::PendingDeprecationWarning",
