@@ -107,23 +107,18 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          cache: 'pip'
-      
+
+      - name: 📦 Install uv
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
       - name: 📦 Install dependencies
         run: |
-          # Set up virtual environment
-          python -m venv workenv
-          source workenv/bin/activate
-          
-          # Install uv for faster dependency resolution
-          pip install uv
-          
-          # Install pytest first to ensure it's available
-          uv pip install pytest pytest-cov pytest-xdist
-          
-          # Install flavor and test dependencies
-          uv pip install -e ".[dev,test]"
-          
+          # Initialize uv project and sync dependencies with dev group
+          # This properly installs PEP 735 dependency groups including provide-testkit
+          uv sync --group dev
+
           # Install sibling packages if needed
           if [ -f "../pyvider-telemetry/pyproject.toml" ]; then
             uv pip install -e "../pyvider-telemetry"
@@ -131,7 +126,8 @@ jobs:
       
       - name: 🧪 Run tests
         run: |
-          source workenv/bin/activate
+          # Activate uv-managed virtual environment
+          source .venv/bin/activate
           .github/scripts/run-tests.sh "${{ matrix.marker }}" "${{ matrix.path }}" "${{ inputs.test_filter }}"
       
       - name: 📊 Collect Test Metadata
