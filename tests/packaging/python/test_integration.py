@@ -52,8 +52,8 @@ class TestPythonPackagingIntegration:
         assert self.wheel_builder.python_version == self.python_version
         assert self.dist_manager.python_version == self.python_version
 
-    @patch("flavor.packaging.python.wheel_builder.run_command")
-    @patch("flavor.packaging.python.dist_manager.run_command")
+    @patch("flavor.packaging.python.wheel_builder.run")
+    @patch("flavor.packaging.python.dist_manager.run")
     def test_wheel_builder_dist_manager_integration(
         self, mock_dist_run, mock_wheel_run
     ) -> None:
@@ -196,12 +196,12 @@ version = "1.0.0"
             expected = ["/usr/bin/python", "-m", "pip", "install", "test-package"]
             assert cmd == expected
 
-    @patch("flavor.packaging.python.dist_manager.run_command")
-    def test_dist_manager_wheel_installation(self, mock_run_command) -> None:
+    @patch("flavor.packaging.python.dist_manager.run")
+    def test_dist_manager_wheel_installation(self, mock_run) -> None:
         """Test PythonDistManager wheel installation integration."""
         mock_result = Mock()
         mock_result.returncode = 0
-        mock_run_command.return_value = mock_result
+        mock_run.return_value = mock_result
 
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
@@ -221,8 +221,8 @@ version = "1.0.0"
             self.dist_manager.install_wheels_to_environment(venv_python, wheel_files)
 
             # Verify PyPA pip was used (not UV pip)
-            mock_run_command.assert_called_once()
-            args = mock_run_command.call_args[0]
+            mock_run.assert_called_once()
+            args = mock_run.call_args[0]
             cmd = args[0]
 
             assert cmd[1:4] == ["-m", "pip", "install"]
