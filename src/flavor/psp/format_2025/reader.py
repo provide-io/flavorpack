@@ -11,7 +11,7 @@ import zlib
 
 from cryptography.exceptions import InvalidSignature
 from provide.foundation import logger
-from provide.foundation.crypto import verify_signature
+from provide.foundation.crypto import Ed25519Verifier
 from provide.foundation.serialization import json_loads
 
 from flavor.config.defaults import (
@@ -42,9 +42,7 @@ class PSPFReader:
             bundle_path: Path to PSPF bundle
             mode: Backend mode (ACCESS_AUTO, ACCESS_MMAP, ACCESS_FILE, etc.)
         """
-        self.bundle_path = (
-            Path(bundle_path) if isinstance(bundle_path, str) else bundle_path
-        )
+        self.bundle_path = Path(bundle_path) if isinstance(bundle_path, str) else bundle_path
         self._backend: Backend | None = None
         self._index: PSPFIndex | None = None
         self._metadata: dict[str, Any] | None = None
@@ -94,9 +92,7 @@ class PSPFReader:
 
         # Read MagicTrailer at end of file
         file_size = self.bundle_path.stat().st_size
-        trailer = self._backend.read_at(
-            file_size - DEFAULT_MAGIC_TRAILER_SIZE, DEFAULT_MAGIC_TRAILER_SIZE
-        )
+        trailer = self._backend.read_at(file_size - DEFAULT_MAGIC_TRAILER_SIZE, DEFAULT_MAGIC_TRAILER_SIZE)
 
         # Convert to bytes if memoryview
         if isinstance(trailer, memoryview):
@@ -113,9 +109,7 @@ class PSPFReader:
         file_size = self.bundle_path.stat().st_size
 
         # Read MagicTrailer (last 8200 bytes)
-        trailer = self._backend.read_at(
-            file_size - DEFAULT_MAGIC_TRAILER_SIZE, DEFAULT_MAGIC_TRAILER_SIZE
-        )
+        trailer = self._backend.read_at(file_size - DEFAULT_MAGIC_TRAILER_SIZE, DEFAULT_MAGIC_TRAILER_SIZE)
 
         # Convert to bytes if memoryview
         if isinstance(trailer, memoryview):
@@ -203,9 +197,7 @@ class PSPFReader:
         index = self.read_index()
 
         # Read metadata using backend
-        metadata_data = self._backend.read_at(
-            index.metadata_offset, index.metadata_size
-        )
+        metadata_data = self._backend.read_at(index.metadata_offset, index.metadata_size)
 
         # Convert to bytes if memoryview
         if isinstance(metadata_data, memoryview):
@@ -215,9 +207,7 @@ class PSPFReader:
         actual_checksum = zlib.adler32(metadata_data) & 0xFFFFFFFF
         # Extract the Adler32 from the first 4 bytes of the checksum field
         expected_checksum = (
-            struct.unpack("<I", index.metadata_checksum[:4])[0]
-            if index.metadata_checksum
-            else 0
+            struct.unpack("<I", index.metadata_checksum[:4])[0] if index.metadata_checksum else 0
         )
         if expected_checksum != 0 and actual_checksum != expected_checksum:
             raise ValueError(
@@ -281,9 +271,7 @@ class PSPFReader:
         descriptors = self.read_slot_descriptors()
 
         if slot_index < 0 or slot_index >= len(descriptors):
-            raise ValueError(
-                f"Invalid slot index: {slot_index} (have {len(descriptors)} slots)"
-            )
+            raise ValueError(f"Invalid slot index: {slot_index} (have {len(descriptors)} slots)")
 
         descriptor = descriptors[slot_index]
 
@@ -363,9 +351,7 @@ class PSPFReader:
         signature = index.integrity_signature[:64]  # First 64 bytes, rest is padding
 
         # Get the metadata to verify (uncompressed JSON)
-        metadata_compressed = self._backend.read_at(
-            index.metadata_offset, index.metadata_size
-        )
+        metadata_compressed = self._backend.read_at(index.metadata_offset, index.metadata_size)
 
         # Convert to bytes if memoryview
         if isinstance(metadata_compressed, memoryview):
@@ -377,7 +363,8 @@ class PSPFReader:
         metadata_json = gzip.decompress(metadata_compressed)
 
         try:
-            verify_signature(metadata_json, signature, index.public_key)
+            verifier = Ed25519Verifier(index.public_key)
+            verifier.verify(metadata_json, signature)
             return True
         except InvalidSignature:
             return False
