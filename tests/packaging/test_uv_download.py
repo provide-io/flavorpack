@@ -119,10 +119,7 @@ class TestUVDownload:
             temp_path = Path(temp_dir)
 
             # Create a fake wheel file
-            fake_wheel = (
-                temp_path
-                / "uv-0.8.14-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
-            )
+            fake_wheel = temp_path / "uv-0.8.14-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
 
             # Create a minimal wheel with UV binary
             import zipfile
@@ -139,9 +136,7 @@ class TestUVDownload:
 
             # Need to mock at the actual usage location in the module
             with (
-                patch(
-                    "flavor.packaging.python.dependency_resolver.run", mock_run
-                ),
+                patch("flavor.packaging.python.dependency_resolver.run", mock_run),
                 patch(
                     "flavor.packaging.python.dependency_resolver.get_os_name",
                     return_value="linux",
@@ -221,9 +216,7 @@ class TestUVDownload:
             mock_run = MagicMock(side_effect=mock_run_side_effect)
 
             with (
-                patch(
-                    "flavor.packaging.python.dependency_resolver.run", mock_run
-                ),
+                patch("flavor.packaging.python.dependency_resolver.run", mock_run),
                 patch("flavor.packaging.python.uv_manager.run", mock_run),
                 patch(
                     "flavor.packaging.python.dependency_resolver.get_os_name",
@@ -265,9 +258,7 @@ class TestUVDownload:
                     "provide.foundation.platform.get_arch_name",
                     return_value="arm64",
                 ),
-                patch.object(
-                    packager.env_builder, "find_uv_command", return_value=fake_uv_path
-                ),
+                patch.object(packager.env_builder, "find_uv_command", return_value=fake_uv_path),
                 patch.object(packager, "_copy_executable"),
                 patch.object(packager.slot_builder, "_build_wheels"),
                 patch.object(packager.slot_builder, "_create_metadata"),

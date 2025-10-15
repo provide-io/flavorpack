@@ -179,11 +179,7 @@ class TestPackageSecurity:
         slot_file = self.temp_dir / "test.dat"
         slot_file.write_bytes(b"data")
 
-        builder = (
-            PSPFBuilder()
-            .metadata(**metadata)
-            .add_slot(id="test.dat", data=slot_file, operations="none")
-        )
+        builder = PSPFBuilder().metadata(**metadata).add_slot(id="test.dat", data=slot_file, operations="none")
         builder.build(package_path)
 
         # Try concurrent extraction using PSPFLauncher
@@ -249,9 +245,7 @@ class TestPackageSecurity:
 
         package_path = self.temp_dir / "perms.psp"
         builder = (
-            PSPFBuilder()
-            .metadata(**metadata)
-            .add_slot(id="test_perms.sh", data=test_file, operations="none")
+            PSPFBuilder().metadata(**metadata).add_slot(id="test_perms.sh", data=test_file, operations="none")
         )
         builder.build(package_path)
 
@@ -264,9 +258,7 @@ class TestPackageSecurity:
             # Check that permissions weren't escalated
             stat_info = extracted_file.stat()
             # File should not be executable if it wasn't originally
-            assert not (stat_info.st_mode & 0o111), (
-                "File should not have execute permissions"
-            )
+            assert not (stat_info.st_mode & 0o111), "File should not have execute permissions"
 
 
 class TestCryptographicSecurity:

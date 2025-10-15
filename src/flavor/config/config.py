@@ -62,8 +62,7 @@ class SecurityConfig(RuntimeConfig):
         if self.validation_level not in VALIDATION_LEVELS:
             valid_levels = ", ".join(VALIDATION_LEVELS.keys())
             raise ValidationError(
-                f"Invalid validation level '{self.validation_level}'. "
-                f"Must be one of: {valid_levels}"
+                f"Invalid validation level '{self.validation_level}'. Must be one of: {valid_levels}"
             )
 
 
@@ -154,18 +153,14 @@ class FlavorConfig(BaseConfig):
 
     name: str = config_field(description="Package name", env_var="FLAVOR_PACKAGE_NAME")
     version: str = config_field(description="Package version", env_var="FLAVOR_VERSION")
-    entry_point: str = config_field(
-        description="Application entry point", env_var="FLAVOR_ENTRY_POINT"
-    )
+    entry_point: str = config_field(description="Application entry point", env_var="FLAVOR_ENTRY_POINT")
     metadata: MetadataConfig = field(factory=MetadataConfig)
     build: BuildConfig = field(factory=BuildConfig)
     execution: ExecutionConfig = field(factory=ExecutionConfig)
     system: SystemConfig = field(factory=SystemConfig)
 
     @classmethod
-    def from_pyproject_dict(
-        cls, config: dict[str, Any], project_defaults: dict[str, Any]
-    ) -> FlavorConfig:
+    def from_pyproject_dict(cls, config: dict[str, Any], project_defaults: dict[str, Any]) -> FlavorConfig:
         """
         Factory method to create a validated FlavorConfig from a dictionary.
 
@@ -181,9 +176,7 @@ class FlavorConfig(BaseConfig):
         """
         name = config.get("name") or project_defaults.get("name")
         if not name:
-            raise ValidationError(
-                "Project name must be defined in [project].name or [tool.flavor].name"
-            )
+            raise ValidationError("Project name must be defined in [project].name or [tool.flavor].name")
 
         version = config.get("version") or project_defaults.get("version")
         if not version:

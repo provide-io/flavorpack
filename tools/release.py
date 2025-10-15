@@ -87,9 +87,7 @@ def build_wheels(platforms: list[str] | None = None) -> list[Path]:
     if platforms:
         wheels = []
         for platform in platforms:
-            result = run(
-                build_cmd + ["--platform", platform], cwd=get_project_root()
-            )
+            result = run(build_cmd + ["--platform", platform], cwd=get_project_root())
             if result.returncode == 0:
                 # Find the built wheel
                 dist_dir = get_project_root() / "dist"
@@ -218,9 +216,7 @@ See [CHANGELOG.md](CHANGELOG.md) for detailed changes.
 def main():
     """Main entry point."""
     parser = argparse.ArgumentParser(description="Orchestrate Flavor release process")
-    parser.add_argument(
-        "--version", help="Version to release (default: from pyproject.toml)"
-    )
+    parser.add_argument("--version", help="Version to release (default: from pyproject.toml)")
     parser.add_argument(
         "--platforms",
         nargs="+",
@@ -233,23 +229,13 @@ def main():
         help="Specific platforms to build (default: all)",
     )
     parser.add_argument("--skip-tests", action="store_true", help="Skip running tests")
-    parser.add_argument(
-        "--skip-ingredients", action="store_true", help="Skip building ingredients"
-    )
-    parser.add_argument(
-        "--skip-validation", action="store_true", help="Skip wheel validation"
-    )
-    parser.add_argument(
-        "--test-pypi", action="store_true", help="Upload to TestPyPI instead of PyPI"
-    )
+    parser.add_argument("--skip-ingredients", action="store_true", help="Skip building ingredients")
+    parser.add_argument("--skip-validation", action="store_true", help="Skip wheel validation")
+    parser.add_argument("--test-pypi", action="store_true", help="Upload to TestPyPI instead of PyPI")
     parser.add_argument("--no-upload", action="store_true", help="Don't upload to PyPI")
     parser.add_argument("--tag", action="store_true", help="Create git tag for release")
-    parser.add_argument(
-        "--push-tag", action="store_true", help="Push git tag to origin"
-    )
-    parser.add_argument(
-        "--dry-run", action="store_true", help="Perform dry run (no uploads or tags)"
-    )
+    parser.add_argument("--push-tag", action="store_true", help="Push git tag to origin")
+    parser.add_argument("--dry-run", action="store_true", help="Perform dry run (no uploads or tags)")
 
     args = parser.parse_args()
 

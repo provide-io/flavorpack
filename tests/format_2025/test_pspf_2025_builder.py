@@ -31,9 +31,7 @@ class TestPSPFBuilder:
         manifest_data = {
             "name": "myapp",
             "version": "1.0.0",
-            "slots": [
-                {"path": str(wheel_path), "purpose": "payload", "lifecycle": "runtime"}
-            ],
+            "slots": [{"path": str(wheel_path), "purpose": "payload", "lifecycle": "runtime"}],
         }
 
         manifest_path = temp_dir / "manifest.toml"
@@ -72,9 +70,7 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
         bundle_path = temp_dir / "auto_python.psp"
         # Use test_builder from fixture
         result = (
-            test_builder.metadata(
-                format="PSPF/2025", package={"name": "test", "version": "1.0"}
-            )
+            test_builder.metadata(format="PSPF/2025", package={"name": "test", "version": "1.0"})
             .add_slot(
                 id=slot.id,
                 data=slot.source,
@@ -167,9 +163,7 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
 
         bundle_path = temp_dir / "compressed.psp"
         # Use test_builder from fixture
-        builder = test_builder.metadata(
-            format="PSPF/2025", package={"name": "test", "version": "1.0"}
-        )
+        builder = test_builder.metadata(format="PSPF/2025", package={"name": "test", "version": "1.0"})
         for slot in slots:
             builder = builder.add_slot(
                 id=slot.id,
@@ -273,9 +267,7 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
         # First build
         bundle_path = temp_dir / "incremental.psp"
         # Use test_builder from fixture
-        builder = test_builder.metadata(
-            format="PSPF/2025", package={"name": "test", "version": "1.0"}
-        )
+        builder = test_builder.metadata(format="PSPF/2025", package={"name": "test", "version": "1.0"})
         for slot in slots:
             builder = builder.add_slot(
                 id=slot.id,
@@ -289,14 +281,10 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
 
         # Modify one slot
         Path(slots[1].source).write_bytes(b"MODIFIED" * 100)
-        slots[1].checksum = hashlib.sha256(
-            Path(slots[1].source).read_bytes()
-        ).hexdigest()
+        slots[1].checksum = hashlib.sha256(Path(slots[1].source).read_bytes()).hexdigest()
 
         # Incremental build (in real impl would reuse unchanged slots)
-        builder = test_builder.metadata(
-            format="PSPF/2025", package={"name": "test", "version": "1.1"}
-        )
+        builder = test_builder.metadata(format="PSPF/2025", package={"name": "test", "version": "1.1"})
         for slot in slots:
             builder = builder.add_slot(
                 id=slot.id,
@@ -325,11 +313,7 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
             "package": {"name": "test", "version": "1.0"},
             "target_platform": "linux-amd64",
         }
-        result = (
-            test_builder.metadata(**metadata, allow_empty=True)
-            .with_options()
-            .build(bundle_path)
-        )
+        result = test_builder.metadata(**metadata, allow_empty=True).with_options().build(bundle_path)
         assert result.success, f"Build failed: {result.errors}"
 
         assert bundle_path.exists()
@@ -360,9 +344,7 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
         # Use test_builder from fixture
 
         result = (
-            test_builder.metadata(
-                format="PSPF/2025", package={"name": "test", "version": "1.0"}
-            )
+            test_builder.metadata(format="PSPF/2025", package={"name": "test", "version": "1.0"})
             .add_slot(
                 id=slot.id,
                 data=slot.source,
@@ -402,9 +384,7 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
         bundle_path = temp_dir / "optimized.psp"
         # Use test_builder from fixture
         result = (
-            test_builder.metadata(
-                format="PSPF/2025", package={"name": "test", "version": "1.0"}
-            )
+            test_builder.metadata(format="PSPF/2025", package={"name": "test", "version": "1.0"})
             .add_slot(
                 id=slot.id,
                 data=slot.source,
@@ -488,9 +468,7 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
 
         bundle_path = temp_dir / "multi_slot.psp"
         # Use test_builder from fixture
-        builder = test_builder.metadata(
-            format="PSPF/2025", package={"name": "complex-app", "version": "1.0"}
-        )
+        builder = test_builder.metadata(format="PSPF/2025", package={"name": "complex-app", "version": "1.0"})
         for slot in slots:
             builder = builder.add_slot(
                 id=slot.id,

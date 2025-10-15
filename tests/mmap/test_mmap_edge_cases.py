@@ -110,9 +110,7 @@ class TestMMapEdgeCases:
                 if offset + size <= len(pattern):
                     data = backend.read_at(offset, size)
                     expected = pattern[offset : offset + size]
-                    assert bytes(data) == expected, (
-                        f"Failed at offset={offset}, size={size}"
-                    )
+                    assert bytes(data) == expected, f"Failed at offset={offset}, size={size}"
 
             backend.close()
         finally:
@@ -216,9 +214,7 @@ class TestMMapEdgeCases:
                         # Verify we got the right chunk
                         expected_start = str(chunk_idx).encode()
                         if not bytes(data).startswith(expected_start):
-                            errors.append(
-                                f"Thread {thread_id}: Wrong data at chunk {chunk_idx}"
-                            )
+                            errors.append(f"Thread {thread_id}: Wrong data at chunk {chunk_idx}")
                     except Exception as e:
                         errors.append(f"Thread {thread_id}: {e}")
                     time.sleep(0.0001)  # Small delay

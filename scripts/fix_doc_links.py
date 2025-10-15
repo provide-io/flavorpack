@@ -23,69 +23,47 @@ def fix_relative_links(file_path: Path) -> bool:
             content = re.sub(r"\]\(\.\./guide/", "](../../guide/", content)
             content = re.sub(r"\]\(\.\./cookbook/", "](../../cookbook/", content)
             content = re.sub(r"\]\(\.\./development/", "](../../development/", content)
-            content = re.sub(
-                r"\]\(\.\./getting-started/", "](../../getting-started/", content
-            )
+            content = re.sub(r"\]\(\.\./getting-started/", "](../../getting-started/", content)
             content = re.sub(r"\]\(\.\./api/", "](../../api/", content)
-            content = re.sub(
-                r"\]\(\.\./troubleshooting/", "](../../troubleshooting/", content
-            )
+            content = re.sub(r"\]\(\.\./troubleshooting/", "](../../troubleshooting/", content)
         elif depth == 3:  # api/python/packaging/index.md, api/python/psp/index.md
             # Fix links to go up three levels
             content = re.sub(r"\]\(\.\./guide/", "](../../../guide/", content)
             content = re.sub(r"\]\(\.\./cookbook/", "](../../../cookbook/", content)
-            content = re.sub(
-                r"\]\(\.\./development/", "](../../../development/", content
-            )
-            content = re.sub(
-                r"\]\(\.\./getting-started/", "](../../../getting-started/", content
-            )
+            content = re.sub(r"\]\(\.\./development/", "](../../../development/", content)
+            content = re.sub(r"\]\(\.\./getting-started/", "](../../../getting-started/", content)
             content = re.sub(r"\]\(\.\./api/", "](../../../api/", content)
-            content = re.sub(
-                r"\]\(\.\./troubleshooting/", "](../../../troubleshooting/", content
-            )
+            content = re.sub(r"\]\(\.\./troubleshooting/", "](../../../troubleshooting/", content)
 
     elif "cookbook/" in str(rel_path):
         if depth == 2:  # cookbook/examples/index.md, cookbook/recipes/index.md
             # Fix links like ../getting-started/index.md -> ../../getting-started/index.md
-            content = re.sub(
-                r"\]\(\.\./getting-started/", "](../../getting-started/", content
-            )
+            content = re.sub(r"\]\(\.\./getting-started/", "](../../getting-started/", content)
             content = re.sub(r"\]\(\.\./guide/", "](../../guide/", content)
             content = re.sub(r"\]\(\.\./api/", "](../../api/", content)
             content = re.sub(r"\]\(\.\./development/", "](../../development/", content)
-            content = re.sub(
-                r"\]\(\.\./troubleshooting/", "](../../troubleshooting/", content
-            )
+            content = re.sub(r"\]\(\.\./troubleshooting/", "](../../troubleshooting/", content)
 
     elif "development/testing/" in str(rel_path):
         if depth == 2:  # development/testing/index.md
             # Fix links like ../getting-started/index.md -> ../../getting-started/index.md
-            content = re.sub(
-                r"\]\(\.\./getting-started/", "](../../getting-started/", content
-            )
+            content = re.sub(r"\]\(\.\./getting-started/", "](../../getting-started/", content)
             content = re.sub(r"\]\(\.\./guide/", "](../../guide/", content)
             content = re.sub(r"\]\(\.\./api/", "](../../api/", content)
 
     elif "guide/" in str(rel_path):
         if depth == 2:  # guide/concepts/index.md, guide/advanced/index.md, etc.
             # Fix links like ../getting-started/index.md -> ../../getting-started/index.md
-            content = re.sub(
-                r"\]\(\.\./getting-started/", "](../../getting-started/", content
-            )
+            content = re.sub(r"\]\(\.\./getting-started/", "](../../getting-started/", content)
             content = re.sub(r"\]\(\.\./api/", "](../../api/", content)
-            content = re.sub(
-                r"\]\(\.\./troubleshooting/", "](../../troubleshooting/", content
-            )
+            content = re.sub(r"\]\(\.\./troubleshooting/", "](../../troubleshooting/", content)
             content = re.sub(r"\]\(\.\./cookbook/", "](../../cookbook/", content)
             content = re.sub(r"\]\(\.\./development/", "](../../development/", content)
 
     elif "troubleshooting/platforms/" in str(rel_path):
         if depth == 2:  # troubleshooting/platforms/macos.md
             # Fix links like ../getting-started/index.md -> ../../getting-started/index.md
-            content = re.sub(
-                r"\]\(\.\./getting-started/", "](../../getting-started/", content
-            )
+            content = re.sub(r"\]\(\.\./getting-started/", "](../../getting-started/", content)
             content = re.sub(r"\]\(\.\./guide/", "](../../guide/", content)
             content = re.sub(r"\]\(\.\./api/", "](../../api/", content)
 

@@ -12,10 +12,7 @@ import click
 def get_launcher_type() -> str:
     """Detect launcher type from environment and behavior"""
     # Check if FLAVOR_COMMAND_NAME != argv[0] (Go launcher limitation)
-    if (
-        "FLAVOR_COMMAND_NAME" in os.environ
-        and os.environ["FLAVOR_COMMAND_NAME"] != sys.argv[0]
-    ):
+    if "FLAVOR_COMMAND_NAME" in os.environ and os.environ["FLAVOR_COMMAND_NAME"] != sys.argv[0]:
         return "go"
     return "rust"
 

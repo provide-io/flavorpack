@@ -88,9 +88,7 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
         slot2_path.mkdir()
 
         command = "{slot:0}/bin/python -m {slot:1}/app --config {slot:2}/config.json"
-        substituted = launcher._substitute_slots(
-            command, {0: slot0_path, 1: slot1_path, 2: slot2_path}
-        )
+        substituted = launcher._substitute_slots(command, {0: slot0_path, 1: slot1_path, 2: slot2_path})
 
         expected = f"{slot0_path}/bin/python -m {slot1_path}/app --config {slot2_path}/config.json"
         assert substituted == expected

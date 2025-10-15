@@ -95,9 +95,7 @@ class TestUVManager:
         mock_system.return_value = "Linux"
         mock_machine.return_value = "riscv64"
 
-        with pytest.raises(
-            ToolNotFoundError, match="Unsupported Linux architecture: riscv64"
-        ):
+        with pytest.raises(ToolNotFoundError, match="Unsupported Linux architecture: riscv64"):
             self.uv_manager.get_metadata("0.1.45")
 
     def test_get_available_versions(self) -> None:
@@ -193,9 +191,7 @@ class TestUVManager:
             venv_python = Path("/tmp/venv/bin/python")
             requirements_file = Path("/tmp/requirements.txt")
 
-            cmd = self.uv_manager._get_uv_pip_install_cmd(
-                venv_python, [], requirements_file
-            )
+            cmd = self.uv_manager._get_uv_pip_install_cmd(venv_python, [], requirements_file)
 
             expected = [
                 "/usr/local/bin/uv",
@@ -237,9 +233,7 @@ class TestUVManager:
             input_file = Path("/tmp/requirements.in")
             output_file = Path("/tmp/requirements.txt")
 
-            cmd = self.uv_manager._get_uv_pip_compile_cmd(
-                input_file, output_file, "3.11"
-            )
+            cmd = self.uv_manager._get_uv_pip_compile_cmd(input_file, output_file, "3.11")
 
             expected = [
                 "/usr/local/bin/uv",
@@ -387,9 +381,7 @@ class TestUVManagerCriticalFeatures:
         assert not hasattr(self.uv_manager, "_get_pip_download_cmd")
 
         # All UV methods should be clearly prefixed
-        uv_methods = [
-            method for method in dir(self.uv_manager) if method.startswith("_get_uv_")
-        ]
+        uv_methods = [method for method in dir(self.uv_manager) if method.startswith("_get_uv_")]
         assert len(uv_methods) >= 3  # At least the three core methods
 
         for method in uv_methods:

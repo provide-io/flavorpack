@@ -184,12 +184,8 @@ class TestTasterMMapBackends:
         # Create slot descriptors at different positions
         slots = [
             SlotDescriptor(id=0, offset=0, size=100, checksum=0, operations=0),
-            SlotDescriptor(
-                id=1, offset=5 * 1024 * 1024, size=100, checksum=0, operations=0
-            ),
-            SlotDescriptor(
-                id=2, offset=10 * 1024 * 1024 - 100, size=100, checksum=0, operations=0
-            ),
+            SlotDescriptor(id=1, offset=5 * 1024 * 1024, size=100, checksum=0, operations=0),
+            SlotDescriptor(id=2, offset=10 * 1024 * 1024 - 100, size=100, checksum=0, operations=0),
         ]
 
         # Read slots

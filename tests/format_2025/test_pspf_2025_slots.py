@@ -424,9 +424,7 @@ class TestPSPFSlots:
         reader = PSPFReader(bundle_path)
         metadata = reader.read_metadata()
         slot_meta = metadata["slots"][0]
-        assert (
-            slot_meta["lifecycle"] == "runtime"
-        )  # Runtime slots available during execution
+        assert slot_meta["lifecycle"] == "runtime"  # Runtime slots available during execution
 
     def test_slot_metadata_serialization(self, test_builder) -> None:
         """Test SlotMetadata to_dict serialization."""

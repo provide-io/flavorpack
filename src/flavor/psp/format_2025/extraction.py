@@ -142,16 +142,12 @@ class SlotExtractor:
         # Apply reverse v0 operations if any
         if descriptor.operations != 0:
             try:
-                processed_data = self._reverse_v0_operations(
-                    slot_data, descriptor.operations
-                )
+                processed_data = self._reverse_v0_operations(slot_data, descriptor.operations)
                 if processed_data != slot_data:
                     # Operations were applied, use processed data
                     slot_data = processed_data
             except Exception as e:
-                logger.warning(
-                    f"Failed to reverse v0 operations for slot {slot_index}: {e}"
-                )
+                logger.warning(f"Failed to reverse v0 operations for slot {slot_index}: {e}")
                 # Fall through to direct extraction
 
         # Use Foundation handlers for extraction
@@ -209,8 +205,7 @@ class SlotExtractor:
             # Verify size (compressed size matches what's in the file)
             if len(raw_slot_data) != descriptor.size:
                 logger.error(
-                    f"Slot {slot_index} size mismatch: "
-                    f"expected {descriptor.size}, got {len(raw_slot_data)}"
+                    f"Slot {slot_index} size mismatch: expected {descriptor.size}, got {len(raw_slot_data)}"
                 )
                 return False
 

@@ -17,12 +17,8 @@ def pipe_command() -> None:
 
 
 @pipe_command.command("stdin")
-@click.option(
-    "--format", type=click.Choice(["raw", "json", "base64", "hex"]), default="raw"
-)
-@click.option(
-    "--output", type=click.Choice(["stdout", "stderr", "file"]), default="stdout"
-)
+@click.option("--format", type=click.Choice(["raw", "json", "base64", "hex"]), default="raw")
+@click.option("--output", type=click.Choice(["stdout", "stderr", "file"]), default="stdout")
 @click.option("--file", type=click.Path(path_type=Path), help="Output file path")
 @click.option(
     "--transform",
@@ -95,9 +91,7 @@ def process_stdin(format, output, file, transform, buffer_size) -> None:
 
 
 @pipe_command.command("stress")
-@click.option(
-    "--size", type=int, default=1024 * 1024, help="Size of data to generate (bytes)"
-)
+@click.option("--size", type=int, default=1024 * 1024, help="Size of data to generate (bytes)")
 @click.option(
     "--pattern",
     type=click.Choice(["random", "zeros", "ones", "pattern"]),
@@ -174,9 +168,7 @@ def fuzz_input(seed, mutations) -> None:
 
 
 @pipe_command.command("validate")
-@click.option(
-    "--schema", type=click.Choice(["json", "pspf", "manifest"]), default="json"
-)
+@click.option("--schema", type=click.Choice(["json", "pspf", "manifest"]), default="json")
 @click.option("--strict", is_flag=True, help="Strict validation mode")
 def validate_input(schema, strict) -> None:
     """Validate piped input against schemas"""
@@ -227,9 +219,7 @@ def validate_input(schema, strict) -> None:
 
 
 @pipe_command.command("corrupt")
-@click.option(
-    "--probability", type=float, default=0.01, help="Corruption probability (0-1)"
-)
+@click.option("--probability", type=float, default=0.01, help="Corruption probability (0-1)")
 @click.option(
     "--type",
     "corruption_type",

@@ -179,9 +179,7 @@ class WheelBuilder:
             try:
                 # Try UV pip-compile for speed
                 logger.debug("Attempting UV pip-compile for fast resolution")
-                self.uv.compile_requirements(
-                    requirements_file, locked_requirements, self.python_version
-                )
+                self.uv.compile_requirements(requirements_file, locked_requirements, self.python_version)
                 logger.info("✅ Successfully resolved dependencies with UV")
                 return locked_requirements
             except Exception as e:
@@ -194,9 +192,7 @@ class WheelBuilder:
         logger.info("✅ Successfully resolved dependencies with pip-tools")
         return locked_requirements
 
-    def _resolve_with_pip_tools(
-        self, python_exe: Path, input_file: Path, output_file: Path
-    ) -> None:
+    def _resolve_with_pip_tools(self, python_exe: Path, input_file: Path, output_file: Path) -> None:
         """
         Resolve dependencies using pip-tools as fallback.
 
@@ -219,22 +215,16 @@ class WheelBuilder:
         ]
 
         try:
-            logger.debug(
-                "💻 Compiling with pip-tools", command=" ".join(pip_compile_cmd)
-            )
+            logger.debug("💻 Compiling with pip-tools", command=" ".join(pip_compile_cmd))
             run(pip_compile_cmd, check=True, capture_output=True)
         except Exception:
             # If pip-tools not available, install it first
             logger.debug("pip-tools not found, installing")
-            install_cmd = self.pypapip._get_pypapip_install_cmd(
-                python_exe, ["pip-tools"]
-            )
+            install_cmd = self.pypapip._get_pypapip_install_cmd(python_exe, ["pip-tools"])
             run(install_cmd, check=True, capture_output=True)
 
             # Try again
-            logger.debug(
-                "💻 Retrying with pip-tools", command=" ".join(pip_compile_cmd)
-            )
+            logger.debug("💻 Retrying with pip-tools", command=" ".join(pip_compile_cmd))
             run(pip_compile_cmd, check=True, capture_output=True)
 
     def download_wheels_for_resolved_deps(
@@ -265,9 +255,7 @@ class WheelBuilder:
         logger.debug("Using PyPA pip for reliable wheel downloads")
 
         try:
-            self.pypapip.download_wheels_from_requirements(
-                python_exe, requirements_file, wheel_dir
-            )
+            self.pypapip.download_wheels_from_requirements(python_exe, requirements_file, wheel_dir)
         except RuntimeError as e:
             logger.error(f"❌ Failed to download dependencies: {e}")
             raise
@@ -326,18 +314,14 @@ class WheelBuilder:
             try:
                 with pyproject_path.open("rb") as f:
                     pyproject_data = tomllib.load(f)
-                project_dependencies = pyproject_data.get("project", {}).get(
-                    "dependencies", []
-                )
+                project_dependencies = pyproject_data.get("project", {}).get("dependencies", [])
                 if project_dependencies:
                     logger.info(
                         f"📦📝 Found {len(project_dependencies)} project dependencies in {project_dir.name}"
                     )
                     logger.debug("Project dependencies", deps=project_dependencies)
             except Exception as e:
-                logger.warning(
-                    f"Could not extract dependencies from pyproject.toml: {e}"
-                )
+                logger.warning(f"Could not extract dependencies from pyproject.toml: {e}")
 
         # Combine all packages to resolve
         all_packages = list(extra_packages or [])
@@ -369,7 +353,5 @@ class WheelBuilder:
             "total_wheels": len(dependency_wheels) + 1,  # +1 for project wheel
         }
 
-        logger.info(
-            f"✅ Completed project build with {build_info['total_wheels']} wheels"
-        )
+        logger.info(f"✅ Completed project build with {build_info['total_wheels']} wheels")
         return build_info

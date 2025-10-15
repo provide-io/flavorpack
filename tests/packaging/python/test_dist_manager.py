@@ -49,9 +49,7 @@ class TestPythonDistManager:
                 venv_python.parent.mkdir(parents=True)
                 venv_python.touch()
 
-                result = self.dist_manager.create_python_environment(
-                    venv_path, python_exe
-                )
+                result = self.dist_manager.create_python_environment(venv_path, python_exe)
 
                 # Verify UV was used
                 mock_uv_create.assert_called_once_with(venv_path, python_version="3.11")
@@ -85,9 +83,7 @@ class TestPythonDistManager:
 
                 mock_run.side_effect = mock_venv_creation
 
-                result = self.dist_manager.create_python_environment(
-                    venv_path, python_exe
-                )
+                result = self.dist_manager.create_python_environment(venv_path, python_exe)
 
                 # Verify UV was attempted
                 mock_uv_create.assert_called_once()
@@ -190,9 +186,7 @@ class TestPythonDistManager:
             pycache_dir.mkdir()
             (pycache_dir / "test.pyc").touch()
 
-            result = self.dist_manager.prepare_site_packages(
-                venv_python, optimization_level=1
-            )
+            result = self.dist_manager.prepare_site_packages(venv_python, optimization_level=1)
 
             # Verify compilation was attempted
             mock_run.assert_called()
@@ -360,9 +354,7 @@ class TestPythonDistManager:
             site_packages.mkdir()
             mock_prepare.return_value = site_packages
 
-            result = self.dist_manager.create_standalone_distribution(
-                project_dir, output_dir
-            )
+            result = self.dist_manager.create_standalone_distribution(project_dir, output_dir)
 
             # Verify all steps were called
             mock_wheel_builder.build_and_resolve_project.assert_called_once()
@@ -423,9 +415,7 @@ class TestPythonDistManagerCriticalFeatures:
             with patch("flavor.packaging.python.dist_manager.run") as mock_run:
                 mock_run.return_value = Mock(returncode=0)
 
-                self.dist_manager.install_wheels_to_environment(
-                    venv_python, wheel_files
-                )
+                self.dist_manager.install_wheels_to_environment(venv_python, wheel_files)
 
                 args = mock_run.call_args[0]
                 cmd = args[0]
@@ -468,9 +458,7 @@ class TestPythonDistManagerCriticalFeatures:
 
             # Verify removable files are gone
             for removable_file in removable_files:
-                assert not removable_file.exists(), (
-                    f"File not removed: {removable_file}"
-                )
+                assert not removable_file.exists(), f"File not removed: {removable_file}"
 
     def test_distribution_validation_comprehensive(self) -> None:
         """CRITICAL: Distribution validation must be thorough."""

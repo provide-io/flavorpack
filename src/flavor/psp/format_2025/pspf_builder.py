@@ -76,9 +76,7 @@ class PSPFBuilder:
             size = len(data)
         elif isinstance(data, str):
             # Write string to temp file securely
-            with tempfile.NamedTemporaryFile(
-                mode="w", delete=False, encoding="utf-8"
-            ) as temp_file:
+            with tempfile.NamedTemporaryFile(mode="w", delete=False, encoding="utf-8") as temp_file:
                 temp_file.write(data)
                 temp_path = Path(temp_file.name)
             path = temp_path
@@ -122,9 +120,7 @@ class PSPFBuilder:
             public: Explicit public key bytes
             path: Path to load keys from
         """
-        key_config = KeyConfig(
-            private_key=private, public_key=public, key_seed=seed, key_path=path
-        )
+        key_config = KeyConfig(private_key=private, public_key=public, key_seed=seed, key_path=path)
         new_spec = self._spec.with_keys(key_config)
         return PSPFBuilder(new_spec)
 

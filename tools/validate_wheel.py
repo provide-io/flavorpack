@@ -221,9 +221,7 @@ except Exception as e:
     sys.exit(1)
 """
 
-        result = subprocess.run(
-            [str(python), "-c", test_script], capture_output=True, text=True
-        )
+        result = subprocess.run([str(python), "-c", test_script], capture_output=True, text=True)
 
         if result.returncode == 0:
             messages.append("  ✓ Import test passed")
@@ -314,12 +312,8 @@ def validate_all_wheels(dist_dir: Path, full: bool = False) -> bool:
 def main():
     """Main entry point."""
     parser = argparse.ArgumentParser(description="Validate Flavor wheels")
-    parser.add_argument(
-        "wheel", nargs="?", type=Path, help="Path to wheel file to validate"
-    )
-    parser.add_argument(
-        "--all", action="store_true", help="Validate all wheels in dist/"
-    )
+    parser.add_argument("wheel", nargs="?", type=Path, help="Path to wheel file to validate")
+    parser.add_argument("--all", action="store_true", help="Validate all wheels in dist/")
     parser.add_argument(
         "--full",
         action="store_true",

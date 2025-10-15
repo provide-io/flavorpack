@@ -32,17 +32,11 @@ class TestCrossLanguageOperations:
             unpacked_ops = operations_to_string(packed_ops)
 
             # Verify round-trip consistency
-            assert unpacked_ops == ops_string, (
-                f"Round-trip failed for {ops_string}: got {unpacked_ops}"
-            )
+            assert unpacked_ops == ops_string, f"Round-trip failed for {ops_string}: got {unpacked_ops}"
 
             # Verify packed value is a valid 64-bit integer
-            assert isinstance(packed_ops, int), (
-                f"Packed operations should be int, got {type(packed_ops)}"
-            )
-            assert 0 <= packed_ops < 2**64, (
-                f"Packed operations out of 64-bit range: {packed_ops}"
-            )
+            assert isinstance(packed_ops, int), f"Packed operations should be int, got {type(packed_ops)}"
+            assert 0 <= packed_ops < 2**64, f"Packed operations out of 64-bit range: {packed_ops}"
 
     def test_taster_operations_verification(self) -> None:
         """Test that taster can verify packages with various operations."""
@@ -71,9 +65,7 @@ class TestCrossLanguageOperations:
 
             try:
                 results = json.loads(result.stdout)
-                assert isinstance(results, dict), (
-                    "Cross-lang results should be a dictionary"
-                )
+                assert isinstance(results, dict), "Cross-lang results should be a dictionary"
             except json.JSONDecodeError as e:
                 pytest.fail(f"Invalid JSON output: {e}, output: {result.stdout}")
 
@@ -171,7 +163,5 @@ class TestCrossLanguageOperations:
         ]
 
         for invalid_op in invalid_operations:
-            with pytest.raises(
-                ValueError, match="Unknown operation|Invalid operations"
-            ):
+            with pytest.raises(ValueError, match="Unknown operation|Invalid operations"):
                 string_to_operations(invalid_op)

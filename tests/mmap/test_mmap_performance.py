@@ -60,9 +60,7 @@ class TestMMapPerformance:
             with measure_time("MMap sequential read (100MB)"):
                 data = []
                 for offset in range(0, size, 1024 * 1024):  # 1MB chunks
-                    chunk = mmap_backend.read_at(
-                        offset, min(1024 * 1024, size - offset)
-                    )
+                    chunk = mmap_backend.read_at(offset, min(1024 * 1024, size - offset))
                     data.append(len(chunk))
             assert sum(data) == size
 
@@ -83,9 +81,7 @@ class TestMMapPerformance:
             with measure_time("File sequential read (100MB)"):
                 data = []
                 for offset in range(0, size, 1024 * 1024):
-                    chunk = file_backend.read_at(
-                        offset, min(1024 * 1024, size - offset)
-                    )
+                    chunk = file_backend.read_at(offset, min(1024 * 1024, size - offset))
                     data.append(len(chunk))
             assert sum(data) == size
 
@@ -159,9 +155,7 @@ class TestMMapPerformance:
             file_backend.close()
 
             # MMap should use significantly less heap memory
-            assert peak_mmap < peak_file * 0.5, (
-                "MMap should use less than 50% of file backend memory"
-            )
+            assert peak_mmap < peak_file * 0.5, "MMap should use less than 50% of file backend memory"
 
         finally:
             path.unlink(missing_ok=True)
@@ -228,9 +222,7 @@ class TestMMapPerformance:
             mmap_times = []
             while not results.empty():
                 r = results.get()
-                assert r["errors"] == 0, (
-                    f"MMap worker {r['worker']} had {r['errors']} errors"
-                )
+                assert r["errors"] == 0, f"MMap worker {r['worker']} had {r['errors']} errors"
                 mmap_times.append(r["time"])
 
             # Test with file backend
@@ -246,9 +238,7 @@ class TestMMapPerformance:
             file_times = []
             while not results.empty():
                 r = results.get()
-                assert r["errors"] == 0, (
-                    f"File worker {r['worker']} had {r['errors']} errors"
-                )
+                assert r["errors"] == 0, f"File worker {r['worker']} had {r['errors']} errors"
                 file_times.append(r["time"])
 
             avg_mmap = sum(mmap_times) / len(mmap_times)

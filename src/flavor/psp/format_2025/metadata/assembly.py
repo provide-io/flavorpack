@@ -116,9 +116,7 @@ def extract_launcher_version(launcher_data: bytes) -> str:
     ]
 
     # Search in first 100KB of binary to avoid scanning entire file
-    search_data = (
-        launcher_data[:102400] if len(launcher_data) > 102400 else launcher_data
-    )
+    search_data = launcher_data[:102400] if len(launcher_data) > 102400 else launcher_data
 
     for pattern in patterns:
         match = re.search(pattern, search_data, re.IGNORECASE)
@@ -212,13 +210,8 @@ def create_verification_metadata(spec: BuildSpec) -> dict[str, Any]:
     }
 
     # If trust_signatures was provided in spec metadata, include it
-    if (
-        "verification" in spec.metadata
-        and "trust_signatures" in spec.metadata["verification"]
-    ):
-        verification["trust_signatures"] = spec.metadata["verification"][
-            "trust_signatures"
-        ]
+    if "verification" in spec.metadata and "trust_signatures" in spec.metadata["verification"]:
+        verification["trust_signatures"] = spec.metadata["verification"]["trust_signatures"]
 
     return verification
 
@@ -248,9 +241,7 @@ def detect_features_used(spec: BuildSpec) -> list[str]:
     return features
 
 
-def assemble_metadata(
-    spec: BuildSpec, slots: list[Any], launcher_info: dict[str, Any]
-) -> dict[str, Any]:
+def assemble_metadata(spec: BuildSpec, slots: list[Any], launcher_info: dict[str, Any]) -> dict[str, Any]:
     """Assemble complete metadata structure."""
     # Core metadata
     metadata = {

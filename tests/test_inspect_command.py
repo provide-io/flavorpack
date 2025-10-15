@@ -86,9 +86,7 @@ class TestInspectCommand:
             assert "codec" in slot
 
         # Check that we have expected slot IDs
-        slot_ids = [
-            s["name"] for s in slots
-        ]  # JSON returns ID as "name" for compatibility
+        slot_ids = [s["name"] for s in slots]  # JSON returns ID as "name" for compatibility
         assert "main" in slot_ids
         assert "config" in slot_ids
         assert "wheels" in slot_ids
