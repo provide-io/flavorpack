@@ -140,7 +140,7 @@ class TestUVDownload:
             # Need to mock at the actual usage location in the module
             with (
                 patch(
-                    "flavor.packaging.python.dependency_resolver.run_command", mock_run
+                    "flavor.packaging.python.dependency_resolver.run", mock_run
                 ),
                 patch(
                     "flavor.packaging.python.dependency_resolver.get_os_name",
@@ -203,7 +203,7 @@ class TestUVDownload:
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
 
-            # Mock run_command to fail on pip download but succeed on pip check
+            # Mock run to fail on pip download but succeed on pip check
             def mock_run_side_effect(*args, **kwargs):
                 cmd = args[0]
                 # Allow pip --version check to succeed
@@ -222,9 +222,9 @@ class TestUVDownload:
 
             with (
                 patch(
-                    "flavor.packaging.python.dependency_resolver.run_command", mock_run
+                    "flavor.packaging.python.dependency_resolver.run", mock_run
                 ),
-                patch("flavor.packaging.python.uv_manager.run_command", mock_run),
+                patch("flavor.packaging.python.uv_manager.run", mock_run),
                 patch(
                     "flavor.packaging.python.dependency_resolver.get_os_name",
                     return_value="linux",

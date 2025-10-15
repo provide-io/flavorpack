@@ -119,13 +119,13 @@ def test_python_builder_flow(
 @patch("pathlib.Path.exists", return_value=True)
 @patch("flavor.packaging.orchestrator.find_launcher_executable")
 @patch("flavor.packaging.orchestrator.find_builder_executable")
-@patch("flavor.packaging.orchestrator.run_command")
+@patch("flavor.packaging.orchestrator.run")
 @patch("flavor.packaging.orchestrator.PythonPackager")
 @patch("flavor.packaging.orchestrator.PackagingOrchestrator._detect_launcher_type")
 def test_external_builder_command_construction(
     mock_detect_launcher,
     mock_python_packager,
-    mock_run_command,
+    mock_run,
     mock_find_builder,
     mock_find_launcher,
     mock_path_exists,
@@ -148,23 +148,23 @@ def test_external_builder_command_construction(
 
     orchestrator.builder_bin = "/path/to/flavor-rs-builder"
 
-    # Set up mock run_command to create the output file as a side effect
+    # Set up mock run to create the output file as a side effect
     def create_mock_file_external(*args, **kwargs) -> None:
         """Side effect to create mock output file for external builder."""
         output_path = Path(orchestrator.output_flavor_path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
         output_path.write_bytes(b"mock package content from external builder" * 1000)
-        return None  # run_command returns None on success
+        return None  # run returns None on success
 
-    mock_run_command.side_effect = create_mock_file_external
+    mock_run.side_effect = create_mock_file_external
 
     orchestrator.build_package()
 
     mock_python_packager.assert_called_once()
     mock_packager_instance.prepare_artifacts.assert_called_once()
-    mock_run_command.assert_called_once()
+    mock_run.assert_called_once()
 
-    call_args = mock_run_command.call_args[0][0]
+    call_args = mock_run.call_args[0][0]
     assert call_args[0] == "/path/to/flavor-rs-builder"
     assert "--manifest" in call_args
     assert "--output" in call_args
@@ -178,12 +178,12 @@ def test_external_builder_command_construction(
 @patch("flavor.packaging.orchestrator.find_launcher_executable")
 @patch("flavor.packaging.orchestrator.find_builder_executable")
 @patch(
-    "flavor.packaging.orchestrator.run_command", side_effect=BuildError("Build failed")
+    "flavor.packaging.orchestrator.run", side_effect=BuildError("Build failed")
 )
 @patch("flavor.packaging.orchestrator.PythonPackager")
 def test_external_builder_error_handling(
     mock_python_packager,
-    mock_run_command,
+    mock_run,
     mock_find_builder,
     mock_find_launcher,
     mock_path_exists,
@@ -192,7 +192,7 @@ def test_external_builder_error_handling(
     setup_payload_dir: Path,
     tmp_path: Path,
 ) -> None:
-    """Verify that BuildError from run_command is propagated correctly."""
+    """Verify that BuildError from run is propagated correctly."""
     mock_find_builder.return_value = Path("/fake/builder")
     mock_find_launcher.return_value = Path("/fake/launcher")
 
@@ -235,16 +235,16 @@ def test_launcher_not_executable(
         orchestrator.build_package()
 
 
-@patch("flavor.packaging.orchestrator.run_command")
+@patch("flavor.packaging.orchestrator.run")
 def test_launcher_type_detection(
-    mock_run_command, orchestrator: PackagingOrchestrator
+    mock_run, orchestrator: PackagingOrchestrator
 ) -> None:
     """Test the launcher type detection logic for Go and Rust."""
-    mock_run_command.return_value.stdout = "flavor-go-launcher version 1.2.3"
+    mock_run.return_value.stdout = "flavor-go-launcher version 1.2.3"
     assert orchestrator._detect_launcher_type(Path("go-launcher")) == "go"
 
-    mock_run_command.return_value.stdout = "flavor-rs-launcher 0.5.0"
+    mock_run.return_value.stdout = "flavor-rs-launcher 0.5.0"
     assert orchestrator._detect_launcher_type(Path("rs-launcher")) == "rust"
 
-    mock_run_command.return_value.stdout = "some other launcher"
+    mock_run.return_value.stdout = "some other launcher"
     assert orchestrator._detect_launcher_type(Path("unknown-launcher")) == "rust"

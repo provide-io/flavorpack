@@ -97,10 +97,10 @@ class TestLauncherAvailability:
             orchestrator.build_package()
         mock_os_access.assert_called_with(launcher_path, os.X_OK)
 
-    @patch("flavor.packaging.orchestrator.run_command")
+    @patch("flavor.packaging.orchestrator.run")
     def test_corrupted_launcher_detection(
         self,
-        mock_run_command,
+        mock_run,
         orchestrator_factory,
         tmp_path,
     ) -> None:
@@ -110,8 +110,8 @@ class TestLauncherAvailability:
         launcher_path.touch()
         launcher_path.chmod(0o755)
 
-        # Mock run_command to simulate corrupted launcher
-        mock_run_command.side_effect = OSError("Corrupted binary")
+        # Mock run to simulate corrupted launcher
+        mock_run.side_effect = OSError("Corrupted binary")
 
         orchestrator = orchestrator_factory(launcher_bin=str(launcher_path))
 
@@ -155,7 +155,7 @@ class TestLauncherReproducibility:
     @patch("flavor.packaging.orchestrator.find_launcher_executable")
     @patch("pathlib.Path.exists", return_value=True)
     @patch("os.access", return_value=True)
-    @patch("flavor.packaging.orchestrator.run_command")
+    @patch("flavor.packaging.orchestrator.run")
     @patch("flavor.psp.format_2025.builder.build_package")
     @patch("flavor.packaging.python.packager.PythonPackager.prepare_artifacts")
     @patch("flavor.packaging.orchestrator_ingredients.create_python_slot_tarballs")
