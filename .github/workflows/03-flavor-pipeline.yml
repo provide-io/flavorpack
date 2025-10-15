@@ -109,25 +109,28 @@ jobs:
           python-version: '3.11'
 
       - name: 📦 Install uv
-        run: |
-          curl -LsSf https://astral.sh/uv/install.sh | sh
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
 
       - name: 📦 Install dependencies
         run: |
-          # Initialize uv project and sync dependencies with dev group
-          # This properly installs PEP 735 dependency groups including provide-testkit
-          uv sync --group dev
+          # Create virtual environment
+          uv venv workenv
+          source workenv/bin/activate
+
+          # Install project with dev dependency group
+          # PEP 735 dependency groups work with uv pip install when using --group flag
+          uv pip install --group dev -e .
 
           # Install sibling packages if needed
           if [ -f "../pyvider-telemetry/pyproject.toml" ]; then
             uv pip install -e "../pyvider-telemetry"
           fi
-      
+
       - name: 🧪 Run tests
         run: |
-          # Activate uv-managed virtual environment
-          source .venv/bin/activate
+          source workenv/bin/activate
           .github/scripts/run-tests.sh "${{ matrix.marker }}" "${{ matrix.path }}" "${{ inputs.test_filter }}"
       
       - name: 📊 Collect Test Metadata
