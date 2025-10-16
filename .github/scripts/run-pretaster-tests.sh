@@ -18,32 +18,34 @@ echo "🧪 Running pretaster tests for $PLATFORM"
 echo "📦 Ingredient version: $VERSION"
 echo "🎯 Test suite: $TEST_SUITE"
 
-# Extract or copy platform-specific ingredients
-echo "📥 Setting up ingredients for $PLATFORM..."
-mkdir -p ingredients/bin 2>/dev/null || {
-    echo "⚠️ Could not create ingredients/bin in $(pwd), will use alternative location"
-    # If we can't create it here, we'll rely on the ingredients-dist copy later
-}
+# Extract or copy platform-specific ingredients (skip if using pre-built PRETASTER_PSP)
+if [ -z "$PRETASTER_PSP" ]; then
+    echo "📥 Setting up ingredients for $PLATFORM..."
+    mkdir -p ingredients/bin
 
-# Check if ingredients are already extracted (actions/download-artifact extracts them)
-if [ -d "ingredients-dist" ] && [ "$(ls -A ingredients-dist 2>/dev/null)" ]; then
-    # Check if they're individual files (already extracted)
-    if [ -f "ingredients-dist/flavor-go-builder-$VERSION-$PLATFORM" ] || \
-       [ -f "ingredients-dist/flavor-rs-builder-$VERSION-$PLATFORM" ]; then
-        echo "📂 Ingredients already extracted, copying..."
-        cp -f ingredients-dist/* ingredients/bin/ 2>/dev/null || true
-    # Or if they're zipped
-    elif [ -f "ingredients-dist/flavor-ingredients-$VERSION-$PLATFORM.zip" ]; then
-        echo "📦 Extracting zipped ingredients..."
-        unzip -o "ingredients-dist/flavor-ingredients-$VERSION-$PLATFORM.zip" -d ingredients/bin/
-    elif [ -f "ingredients-dist/flavor-ingredients-$VERSION-all.zip" ]; then
-        echo "📦 Extracting all-platform ingredients..."
-        unzip -o "ingredients-dist/flavor-ingredients-$VERSION-all.zip" -d ingredients/bin/
+    # Check if ingredients are already extracted (actions/download-artifact extracts them)
+    if [ -d "ingredients-dist" ] && [ "$(ls -A ingredients-dist 2>/dev/null)" ]; then
+        # Check if they're individual files (already extracted)
+        if [ -f "ingredients-dist/flavor-go-builder-$VERSION-$PLATFORM" ] || \
+           [ -f "ingredients-dist/flavor-rs-builder-$VERSION-$PLATFORM" ]; then
+            echo "📂 Ingredients already extracted, copying..."
+            cp -f ingredients-dist/* ingredients/bin/ 2>/dev/null || true
+        # Or if they're zipped
+        elif [ -f "ingredients-dist/flavor-ingredients-$VERSION-$PLATFORM.zip" ]; then
+            echo "📦 Extracting zipped ingredients..."
+            unzip -o "ingredients-dist/flavor-ingredients-$VERSION-$PLATFORM.zip" -d ingredients/bin/
+        elif [ -f "ingredients-dist/flavor-ingredients-$VERSION-all.zip" ]; then
+            echo "📦 Extracting all-platform ingredients..."
+            unzip -o "ingredients-dist/flavor-ingredients-$VERSION-all.zip" -d ingredients/bin/
+        else
+            echo "⚠️ No ingredients found in ingredients-dist/, will rely on existing ingredients/bin/"
+        fi
     else
-        echo "⚠️ No ingredients found in ingredients-dist/, will rely on existing ingredients/bin/"
+        echo "⚠️ No ingredients-dist/ directory, will rely on existing ingredients/bin/"
     fi
 else
-    echo "⚠️ No ingredients-dist/ directory, will rely on existing ingredients/bin/"
+    echo "📦 Using pre-built PRETASTER_PSP, skipping repo-root ingredient setup"
+    echo "   Ingredients will be set up in pretaster context"
 fi
 
 # Make ingredients executable

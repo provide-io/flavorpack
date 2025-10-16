@@ -185,10 +185,14 @@ jobs:
           chmod +x "$PRETASTER_PSP" 2>/dev/null || true
           
           # Run tests with the absolute path to the PSP
+          # Use "all" as default if test_suite input is not provided (e.g., workflow_run triggers)
+          TEST_SUITE="${{ inputs.test_suite }}"
+          TEST_SUITE="${TEST_SUITE:-all}"
+
           .github/scripts/run-pretaster-tests.sh \
             "${{ matrix.platform }}" \
             "${{ needs.setup.outputs.version }}" \
-            "${{ inputs.test_suite }}" \
+            "$TEST_SUITE" \
             "$PRETASTER_PSP"
       
       - name: 📤 Upload test logs
