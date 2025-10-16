@@ -20,7 +20,10 @@ echo "🎯 Test suite: $TEST_SUITE"
 
 # Extract or copy platform-specific ingredients
 echo "📥 Setting up ingredients for $PLATFORM..."
-mkdir -p ingredients/bin
+mkdir -p ingredients/bin 2>/dev/null || {
+    echo "⚠️ Could not create ingredients/bin in $(pwd), will use alternative location"
+    # If we can't create it here, we'll rely on the ingredients-dist copy later
+}
 
 # Check if ingredients are already extracted (actions/download-artifact extracts them)
 if [ -d "ingredients-dist" ] && [ "$(ls -A ingredients-dist 2>/dev/null)" ]; then
@@ -44,21 +47,25 @@ else
 fi
 
 # Make ingredients executable
-chmod +x ingredients/bin/* || true
+chmod +x ingredients/bin/* 2>/dev/null || true
 
 # List available ingredients
-echo "📦 Available ingredients:"
-ls -la ingredients/bin/
+if [ -d "ingredients/bin" ]; then
+    echo "📦 Available ingredients:"
+    ls -la ingredients/bin/
 
-# Create symlinks for pretaster to find the ingredients
-for file in ingredients/bin/flavor-*-$VERSION-$PLATFORM; do
-    if [ -f "$file" ]; then
-        # Create symlink without version and platform suffix
-        base_name=$(basename "$file" | sed "s/-$VERSION-$PLATFORM//")
-        ln -sf "$(basename "$file")" "ingredients/bin/$base_name"
-        echo "Created symlink: ingredients/bin/$base_name -> $(basename "$file")"
-    fi
-done
+    # Create symlinks for pretaster to find the ingredients
+    for file in ingredients/bin/flavor-*-$VERSION-$PLATFORM; do
+        if [ -f "$file" ]; then
+            # Create symlink without version and platform suffix
+            base_name=$(basename "$file" | sed "s/-$VERSION-$PLATFORM//")
+            ln -sf "$(basename "$file")" "ingredients/bin/$base_name"
+            echo "Created symlink: ingredients/bin/$base_name -> $(basename "$file")"
+        fi
+    done
+else
+    echo "⚠️ ingredients/bin/ directory not available at repo root, will be set up in pretaster context"
+fi
 
 # Change to pretaster directory
 cd tests/pretaster
