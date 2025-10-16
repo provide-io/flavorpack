@@ -101,9 +101,7 @@ class TestProtobufFormat:
     def test_metadata_with_features(self) -> None:
         """Test metadata with SPA and JIT features"""
 
-        metadata = metadata_pb2.PackageMetadata(
-            name="test-package", version="1.0.0", format_version="2025.1"
-        )
+        metadata = metadata_pb2.PackageMetadata(name="test-package", version="1.0.0", format_version="2025.1")
 
         # Enable SPA
         metadata.spa.enabled = True
@@ -189,9 +187,7 @@ class TestProtobufFormat:
         )
         slot2 = slots_pb2.SlotEntry(
             id=1,
-            operations=pack_operations(
-                [operations_pb2.OP_TAR, operations_pb2.OP_BZIP2]
-            ),
+            operations=pack_operations([operations_pb2.OP_TAR, operations_pb2.OP_BZIP2]),
             purpose=slots_pb2.PURPOSE_DATA,
         )
         package.slots.extend([slot1, slot2])
@@ -210,14 +206,10 @@ class TestProtobufFormat:
         """Test protobuf to JSON serialization"""
 
         # Create a simple metadata
-        metadata = metadata_pb2.PackageMetadata(
-            name="json-test", version="1.0.0", format_version="2025.1"
-        )
+        metadata = metadata_pb2.PackageMetadata(name="json-test", version="1.0.0", format_version="2025.1")
 
         # Add a slot
-        slot = metadata_pb2.SlotMetadata(
-            slot=0, id="test-slot", size=1024, operations="TAR|GZIP"
-        )
+        slot = metadata_pb2.SlotMetadata(slot=0, id="test-slot", size=1024, operations="TAR|GZIP")
         metadata.slots.append(slot)
 
         # Convert to JSON

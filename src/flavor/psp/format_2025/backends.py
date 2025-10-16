@@ -47,9 +47,7 @@ class Backend(ABC):
         """Read slot data based on descriptor."""
         pass
 
-    def stream_slot(
-        self, descriptor: SlotDescriptor, chunk_size: int = DEFAULT_CHUNK_SIZE
-    ):
+    def stream_slot(self, descriptor: SlotDescriptor, chunk_size: int = DEFAULT_CHUNK_SIZE):
         """Stream slot data in chunks."""
         offset = descriptor.offset
         remaining = descriptor.size
@@ -278,9 +276,7 @@ class FileBackend(Backend):
                 for _ in range(20):
                     self._cache.pop(next(iter(self._cache)))
                     evicted += 1
-                logger.debug(
-                    "🗑️ Cache eviction", evicted=evicted, remaining=len(self._cache)
-                )
+                logger.debug("🗑️ Cache eviction", evicted=evicted, remaining=len(self._cache))
 
         elapsed = time.perf_counter() - start_time
         logger.debug(
@@ -381,9 +377,7 @@ class HybridBackend(Backend):
 
         # Memory-map just the header region
         map_size = min(self.header_size, file_size)
-        self.header_mmap = mmap.mmap(
-            self.file.fileno(), map_size, access=mmap.ACCESS_READ
-        )
+        self.header_mmap = mmap.mmap(self.file.fileno(), map_size, access=mmap.ACCESS_READ)
 
     def close(self) -> None:
         """Close mappings and file."""
@@ -455,9 +449,7 @@ def create_backend(mode: int = ACCESS_AUTO, path: Path | None = None) -> Backend
                 )
             else:
                 mode = ACCESS_FILE
-                logger.debug(
-                    "🤖 Auto-selected file backend", file_size_kb=file_size / 1024
-                )
+                logger.debug("🤖 Auto-selected file backend", file_size_kb=file_size / 1024)
         else:
             mode = ACCESS_FILE
             logger.debug("🤖 Default to file backend", path_exists=False)

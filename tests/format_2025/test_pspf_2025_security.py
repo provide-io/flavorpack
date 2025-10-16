@@ -36,9 +36,7 @@ class TestPSPFSecurity:
         metadata = {
             "format": "PSPF/2025",
             "package": {"name": "secure-bundle", "version": "1.0.0"},
-            "verification": {
-                "integrity_seal": {"required": True, "algorithm": "ed25519"}
-            },
+            "verification": {"integrity_seal": {"required": True, "algorithm": "ed25519"}},
         }
 
         bundle_path = temp_dir / "secure.psp"
@@ -251,9 +249,7 @@ class TestPSPFSecurity:
         with open(bundle_path, "r+b") as f:
             magic_trailer_start = file_size - 8200
             index_start = magic_trailer_start + 4  # Skip 📦 emoji
-            package_size_offset = (
-                index_start + 8
-            )  # Skip format_version (4) and index_checksum (4)
+            package_size_offset = index_start + 8  # Skip format_version (4) and index_checksum (4)
             f.seek(package_size_offset)
             f.write(struct.pack("<Q", 0xDEADBEEF))  # Write invalid package size
 
@@ -265,9 +261,7 @@ class TestPSPFSecurity:
         # Verify the field was actually tampered with
         assert tampered_index.package_size == 0xDEADBEEF
         # And the checksum should be different if recalculated
-        assert (
-            tampered_index.index_checksum == original_checksum
-        )  # Checksum field unchanged
+        assert tampered_index.index_checksum == original_checksum  # Checksum field unchanged
 
     @patch.dict(os.environ, {"FLAVOR_VALIDATION": "strict"})
     def test_emoji_magic_corruption(self, temp_dir, test_builder) -> None:
@@ -364,16 +358,12 @@ class TestPSPFSecurity:
 
         # Create builder without seed for non-deterministic builds
         ephemeral_builder = PSPFBuilder.create()
-        result1 = ephemeral_builder.metadata(**metadata, allow_empty=True).build(
-            bundle1_path
-        )
+        result1 = ephemeral_builder.metadata(**metadata, allow_empty=True).build(bundle1_path)
         assert result1.success, f"Build failed: {result1.errors}"
 
         # Create another builder without seed
         ephemeral_builder2 = PSPFBuilder.create()
-        result2 = ephemeral_builder2.metadata(**metadata, allow_empty=True).build(
-            bundle2_path
-        )
+        result2 = ephemeral_builder2.metadata(**metadata, allow_empty=True).build(bundle2_path)
         assert result2.success, f"Build failed: {result2.errors}"
 
         # Compare bundles

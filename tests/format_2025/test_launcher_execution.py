@@ -102,9 +102,20 @@ class TestSlotTableReading:
         assert slot0["checksum"] != 0
         assert slot0["operations"] in [0, 0x10]  # none, gzip
         assert slot0["purpose"] in [0, 1, 2]  # payload, runtime, tool
-        assert (
-            slot0["lifecycle"] in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
-        )  # init, startup, runtime, shutdown, cache, temp, volatile, lazy, eager, dev, config, platform
+        assert slot0["lifecycle"] in [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+        ]  # init, startup, runtime, shutdown, cache, temp, volatile, lazy, eager, dev, config, platform
 
         # Check second slot
         slot1 = slot_table[1]
@@ -170,9 +181,7 @@ class TestSlotExtraction:
                     source=str(slot1_path),
                     target="compressed_payload",
                     size=len(compressed_data),  # Size of compressed data
-                    checksum=hashlib.sha256(
-                        compressed_data
-                    ).hexdigest(),  # Checksum of compressed data
+                    checksum=hashlib.sha256(compressed_data).hexdigest(),  # Checksum of compressed data
                     operations="gzip",  # Mark as gzip since we're providing compressed data
                     purpose="payload",
                     lifecycle="runtime",
@@ -237,9 +246,7 @@ class TestSlotExtraction:
     @pytest.mark.skip(
         reason="PSPFLauncher integrity verification not implemented - critical security feature not covered by taster"
     )
-    def test_extract_slot_with_checksum_verification(
-        self, bundle_with_compressed_slots
-    ) -> None:
+    def test_extract_slot_with_checksum_verification(self, bundle_with_compressed_slots) -> None:
         """Test that extraction verifies checksums - catches missing integrity validation."""
         bundle_path, _ = bundle_with_compressed_slots
         launcher = PSPFLauncher(bundle_path)
@@ -355,9 +362,7 @@ class TestWorkEnvironment:
 
         # Check that package-specific directory is created
         metadata = launcher.read_metadata()
-        expected_name = (
-            f"{metadata['package']['name']}_{metadata['package']['version']}"
-        )
+        expected_name = f"{metadata['package']['name']}_{metadata['package']['version']}"
         assert expected_name in str(workenv_dir)
 
     def test_cache_validation(self, bundle_with_setup_commands) -> None:

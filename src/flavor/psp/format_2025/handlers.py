@@ -72,9 +72,7 @@ def map_operations(pspf_ops: list[int]) -> list[FoundationOp]:
     return foundation_ops
 
 
-def _apply_single_operation(
-    data: bytes, op: FoundationOp, compression_level: int
-) -> bytes:
+def _apply_single_operation(data: bytes, op: FoundationOp, compression_level: int) -> bytes:
     """Apply a single compression operation.
 
     Args:
@@ -156,9 +154,7 @@ def apply_operations(
 
         # Skip TAR if present (handled during slot loading)
         if FoundationOp.TAR in foundation_ops:
-            logger.trace(
-                "📦 TAR operation detected - data should already be tar format"
-            )
+            logger.trace("📦 TAR operation detected - data should already be tar format")
             foundation_ops = [op for op in foundation_ops if op != FoundationOp.TAR]
             if not foundation_ops:
                 return data
@@ -172,9 +168,7 @@ def apply_operations(
             "✅ Operation chain applied",
             input_size=len(data),
             output_size=len(result),
-            compression_ratio=f"{len(result) / len(data):.2f}"
-            if len(data) > 0
-            else "N/A",
+            compression_ratio=f"{len(result) / len(data):.2f}" if len(data) > 0 else "N/A",
         )
 
         return result
@@ -229,9 +223,7 @@ def reverse_operations(data: bytes, packed_ops: int) -> bytes:
                 logger.trace("📦 TAR operation (will be extracted separately)")
                 continue
             elif op == FoundationOp.GZIP:
-                gzip_compressor = GzipCompressor(
-                    level=6
-                )  # level doesn't matter for decompression
+                gzip_compressor = GzipCompressor(level=6)  # level doesn't matter for decompression
                 result = gzip_compressor.decompress_bytes(result)
                 logger.trace("🗜️ Reversed GZIP compression", output_size=len(result))
             elif op == FoundationOp.BZIP2:
@@ -260,9 +252,7 @@ def reverse_operations(data: bytes, packed_ops: int) -> bytes:
             "✅ Reverse operations complete",
             input_size=len(data),
             output_size=len(result),
-            expansion_ratio=f"{len(result) / len(data):.2f}"
-            if len(data) > 0
-            else "N/A",
+            expansion_ratio=f"{len(result) / len(data):.2f}" if len(data) > 0 else "N/A",
         )
 
         return result

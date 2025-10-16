@@ -14,9 +14,7 @@ from flavor.cache import CacheManager
 from flavor.cli import cli
 
 
-def create_modern_cached_package(
-    cache_dir: Path, pkg_name: str, app_name: str, version: str
-):
+def create_modern_cached_package(cache_dir: Path, pkg_name: str, app_name: str, version: str):
     """Helper function to create a cached package with the modern layout."""
     content_dir = cache_dir / pkg_name
     content_dir.mkdir()
@@ -75,15 +73,11 @@ class TestCacheManager:
 
     def test_get_cache_size(self) -> None:
         """Test calculating total cache size."""
-        pkg1_dir, _ = create_modern_cached_package(
-            self.cache_dir, "pkg1", "app1", "1.0"
-        )
+        pkg1_dir, _ = create_modern_cached_package(self.cache_dir, "pkg1", "app1", "1.0")
         (pkg1_dir / "file1.txt").write_text("x" * 1000)
         (pkg1_dir / "file2.txt").write_text("y" * 2000)
 
-        pkg2_dir, _ = create_modern_cached_package(
-            self.cache_dir, "pkg2", "app2", "1.0"
-        )
+        pkg2_dir, _ = create_modern_cached_package(self.cache_dir, "pkg2", "app2", "1.0")
         (pkg2_dir / "file3.txt").write_text("z" * 3000)
 
         manager = CacheManager(cache_dir=self.cache_dir)
@@ -93,12 +87,8 @@ class TestCacheManager:
 
     def test_clean_old_packages(self) -> None:
         """Test cleaning packages older than specified days."""
-        pkg_old_dir, _ = create_modern_cached_package(
-            self.cache_dir, "old_pkg", "old", "1.0"
-        )
-        pkg_new_dir, _ = create_modern_cached_package(
-            self.cache_dir, "new_pkg", "new", "1.0"
-        )
+        pkg_old_dir, _ = create_modern_cached_package(self.cache_dir, "old_pkg", "old", "1.0")
+        pkg_new_dir, _ = create_modern_cached_package(self.cache_dir, "new_pkg", "new", "1.0")
 
         old_time = time.time() - (86400 * 31)
         os.utime(pkg_old_dir, (old_time, old_time))
@@ -174,9 +164,7 @@ class TestCacheCLICommands:
         mock_cache_dir.return_value = self.temp_dir
         create_modern_cached_package(self.temp_dir, "old_pkg", "old", "1.0")
 
-        result = self.runner.invoke(
-            cli, ["workenv", "clean", "--older-than", "0", "--yes"]
-        )
+        result = self.runner.invoke(cli, ["workenv", "clean", "--older-than", "0", "--yes"])
 
         assert result.exit_code == 0
         assert "Removed" in result.output and "cached package(s)" in result.output

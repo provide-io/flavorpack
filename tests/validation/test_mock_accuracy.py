@@ -33,15 +33,11 @@ class TestMockAccuracy:
             del sys.modules["flavor.psp.format_2025.metadata.assembly"]
 
         # Reimport to get the original function
-        assembly_module = importlib.import_module(
-            "flavor.psp.format_2025.metadata.assembly"
-        )
+        assembly_module = importlib.import_module("flavor.psp.format_2025.metadata.assembly")
 
         # Now assembly_module.load_launcher_binary is the real function
         # But the test still has the mock, so we need to explicitly restore it
-        monkeypatch.setattr(
-            assembly, "load_launcher_binary", assembly_module.load_launcher_binary
-        )
+        monkeypatch.setattr(assembly, "load_launcher_binary", assembly_module.load_launcher_binary)
 
     def test_mock_launcher_content(self) -> None:
         """Verify mock launcher has expected format markers."""
@@ -67,9 +63,7 @@ class TestMockAccuracy:
         def mock_launcher(launcher_type):
             return MOCK_LAUNCHER_DATA
 
-        with unittest.mock.patch.object(
-            assembly, "load_launcher_binary", mock_launcher
-        ):
+        with unittest.mock.patch.object(assembly, "load_launcher_binary", mock_launcher):
             builder1 = PSPFBuilder.create().with_keys(seed="test")
             result1 = builder1.metadata(
                 format="PSPF/2025",
@@ -88,9 +82,7 @@ class TestMockAccuracy:
 
         if "flavor.psp.format_2025.metadata.assembly" in sys.modules:
             del sys.modules["flavor.psp.format_2025.metadata.assembly"]
-        assembly_fresh = importlib.import_module(
-            "flavor.psp.format_2025.metadata.assembly"
-        )
+        assembly_fresh = importlib.import_module("flavor.psp.format_2025.metadata.assembly")
 
         try:
             # Try to load real launcher first to see if it's available

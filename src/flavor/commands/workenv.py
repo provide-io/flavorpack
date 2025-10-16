@@ -188,13 +188,9 @@ def workenv_inspect(package_id: str, output_json: bool) -> None:
                     index_data = read_json(index_file)
 
                     echo("\n📋 Index Metadata:")
-                    echo(
-                        f"  Format Version: 0x{index_data.get('format_version', 0):08x}"
-                    )
+                    echo(f"  Format Version: 0x{index_data.get('format_version', 0):08x}")
                     echo(f"  Package Size: {index_data.get('package_size', 0):,} bytes")
-                    echo(
-                        f"  Launcher Size: {index_data.get('launcher_size', 0):,} bytes"
-                    )
+                    echo(f"  Launcher Size: {index_data.get('launcher_size', 0):,} bytes")
                     echo(f"  Slot Count: {index_data.get('slot_count', 0)}")
                     echo(f"  Index Checksum: {index_data.get('index_checksum', 'N/A')}")
 

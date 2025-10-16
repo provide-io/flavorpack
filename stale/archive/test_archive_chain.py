@@ -38,9 +38,7 @@ class TestArchiveChain:
     def test_chain_packed_representation(self):
         """Test packed integer representation."""
         chain = ArchiveChain([Operation.BUNDLE_TAR, Operation.COMPRESS_GZIP])
-        expected_packed = pack_operations(
-            [Operation.BUNDLE_TAR, Operation.COMPRESS_GZIP]
-        )
+        expected_packed = pack_operations([Operation.BUNDLE_TAR, Operation.COMPRESS_GZIP])
         assert chain.packed == expected_packed
 
     def test_chain_string_representation(self):
@@ -91,9 +89,7 @@ class TestArchiveChain:
         import flavor.archive.chain
 
         # Temporarily bypass validation to test optimization
-        original_chain = flavor.archive.chain.ArchiveChain.__new__(
-            flavor.archive.chain.ArchiveChain
-        )
+        original_chain = flavor.archive.chain.ArchiveChain.__new__(flavor.archive.chain.ArchiveChain)
         original_chain._operations = [
             Operation.BUNDLE_TAR,
             Operation.BUNDLE_TAR,

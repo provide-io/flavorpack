@@ -172,8 +172,7 @@ class PythonPackager:
             # Check entry point format
             if self.entry_point and ":" not in self.entry_point:
                 raise ValueError(
-                    f"Invalid entry point format: {self.entry_point}. "
-                    "Expected format: 'module:function'"
+                    f"Invalid entry point format: {self.entry_point}. Expected format: 'module:function'"
                 )
 
             logger.info("✅ Manifest validation passed")
@@ -202,9 +201,7 @@ class PythonPackager:
             "version": project.get("version", "0.0.1"),
             "description": project.get("description", ""),
             "dependencies": project.get("dependencies", []),
-            "python_requires": project.get(
-                "requires-python", f">={self.python_version}"
-            ),
+            "python_requires": project.get("requires-python", f">={self.python_version}"),
             "entry_points": project.get("scripts", {}),
             "flavor_config": tool_flavor,
         }
@@ -250,18 +247,12 @@ class PythonPackager:
 
             venv.create(venv_dir, with_pip=True)
 
-        python_exe = (
-            venv_dir
-            / self.venv_bin_dir
-            / ("python.exe" if self.is_windows else "python")
-        )
+        python_exe = venv_dir / self.venv_bin_dir / ("python.exe" if self.is_windows else "python")
 
         # Ensure pip and wheel are installed
         if python_exe.exists():
             logger.debug("Installing pip and wheel in build environment")
-            install_cmd = self.pypapip._get_pypapip_install_cmd(
-                python_exe, ["pip", "wheel", "setuptools"]
-            )
+            install_cmd = self.pypapip._get_pypapip_install_cmd(python_exe, ["pip", "wheel", "setuptools"])
             from provide.foundation.process import run
 
             run(install_cmd, check=True, capture_output=True)

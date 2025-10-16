@@ -106,9 +106,7 @@ def build_package(spec: BuildSpec, output_path: Path) -> BuildResult:
         index = create_index(spec, prepared_slots, public_key)
 
         # Write package using writer module
-        package_size = write_package(
-            spec, output_path, prepared_slots, index, private_key, public_key
-        )
+        package_size = write_package(spec, output_path, prepared_slots, index, private_key, public_key)
         logger.debug("✍️✅📋 Package written", size_bytes=package_size)
     except Exception as e:
         logger.error("✍️🏗️❌ Package writing failed", error=str(e))
@@ -135,9 +133,7 @@ def build_package(spec: BuildSpec, output_path: Path) -> BuildResult:
     )
 
 
-def prepare_slots(
-    slots: list[SlotMetadata], options: BuildOptions
-) -> list[PreparedSlot]:
+def prepare_slots(slots: list[SlotMetadata], options: BuildOptions) -> list[PreparedSlot]:
     """
     Prepare slots for packaging.
 
@@ -240,9 +236,7 @@ def prepare_slots(
     return prepared
 
 
-def create_index(
-    spec: BuildSpec, slots: list[PreparedSlot], public_key: bytes
-) -> PSPFIndex:
+def create_index(spec: BuildSpec, slots: list[PreparedSlot], public_key: bytes) -> PSPFIndex:
     """
     Create PSPF index structure.
 
@@ -297,9 +291,7 @@ def _load_slot_data(slot: SlotMetadata) -> bytes:
         # Priority: 1. FLAVOR_WORKENV_BASE env var, 2. Current working directory
         base_dir = os.environ.get("FLAVOR_WORKENV_BASE", str(Path.cwd()))
         slot_path = Path(str(slot_path).replace("{workenv}", base_dir))
-        logger.debug(
-            f"📍 Resolved slot path: {slot.source} -> {slot_path} (base: {base_dir})"
-        )
+        logger.debug(f"📍 Resolved slot path: {slot.source} -> {slot_path} (base: {base_dir})")
 
     if not slot_path.exists():
         raise BuildError(f"Slot path does not exist: {slot_path}")
@@ -325,9 +317,7 @@ def _apply_operations(data: bytes, packed_ops: int, options: BuildOptions) -> by
     # Check if data is already compressed (common issue with pre-compressed files)
     # GZIP magic bytes: 1f 8b 08
     if len(data) >= 3 and data[0:3] == b"\x1f\x8b\x08":
-        logger.trace(
-            "⚠️ Data appears to be already gzipped, returning as-is to avoid double compression"
-        )
+        logger.trace("⚠️ Data appears to be already gzipped, returning as-is to avoid double compression")
         return data
 
     # Use Foundation handlers to apply operations

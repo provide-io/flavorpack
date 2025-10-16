@@ -9,7 +9,6 @@ import struct
 from typing import Any
 import zlib
 
-from cryptography.exceptions import InvalidSignature
 from provide.foundation import logger
 from provide.foundation.crypto import Ed25519Verifier
 from provide.foundation.serialization import json_loads
@@ -362,12 +361,8 @@ class PSPFReader:
 
         metadata_json = gzip.decompress(metadata_compressed)
 
-        try:
-            verifier = Ed25519Verifier(index.public_key)
-            verifier.verify(metadata_json, signature)
-            return True
-        except InvalidSignature:
-            return False
+        verifier = Ed25519Verifier(index.public_key)
+        return verifier.verify(metadata_json, signature)
 
     def verify_integrity(self) -> dict:
         """Verify complete package integrity.

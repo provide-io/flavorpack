@@ -51,9 +51,7 @@ class BreakingInputStrategies:
         st.just('{"key": Infinity}'),
         st.just('{"key": 1e308}'),  # Near infinity
         st.just('{"key": -1e308}'),
-        st.just(
-            '{"recursive": {"recursive": {"recursive": ...'
-        ),  # Incomplete recursion
+        st.just('{"recursive": {"recursive": {"recursive": ...'),  # Incomplete recursion
     )
 
     # Binary chaos
@@ -99,9 +97,7 @@ class TestBreakingInputs:
                 bundle_path = tmpdir / "evil.psp"
 
                 # This should either sanitize or reject the filename
-                builder = builder.metadata(
-                    format="PSPF/2025", package={"name": "evil", "version": "1.0"}
-                )
+                builder = builder.metadata(format="PSPF/2025", package={"name": "evil", "version": "1.0"})
                 builder.build(bundle_path)
 
                 # If it succeeded, verify the name was sanitized
@@ -259,9 +255,7 @@ class PSPFStateMachine(RuleBasedStateMachine):
         bundle_path = self.tmpdir / f"bundle_{len(self.bundles)}.psp"
 
         try:
-            builder = builder.metadata(
-                format="PSPF/2025", package={"name": "test", "version": "1.0"}
-            )
+            builder = builder.metadata(format="PSPF/2025", package={"name": "test", "version": "1.0"})
             builder.build(bundle_path)
 
             if bundle_path.exists():
@@ -356,9 +350,7 @@ class TestHypothesisPipeIntegration:
     @given(
         json_obj=st.dictionaries(
             st.text(min_size=1, max_size=10),
-            st.one_of(
-                st.integers(), st.floats(allow_nan=False), st.text(), st.booleans()
-            ),
+            st.one_of(st.integers(), st.floats(allow_nan=False), st.text(), st.booleans()),
             min_size=0,
             max_size=10,
         )

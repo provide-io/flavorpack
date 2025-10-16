@@ -288,9 +288,7 @@ class TestResolveKeys:
         if not resolve_keys or not KeyConfig:
             pytest.skip("resolve_keys/KeyConfig not implemented yet")
 
-        config = KeyConfig(
-            private_key=b"explicit_private", public_key=b"explicit_public"
-        )
+        config = KeyConfig(private_key=b"explicit_private", public_key=b"explicit_public")
 
         private, public = resolve_keys(config)
         assert private == b"explicit_private"
@@ -334,9 +332,7 @@ class TestResolveKeys:
             pytest.skip("resolve_keys/KeyConfig not implemented yet")
 
         # When both explicit and seed, explicit wins
-        config = KeyConfig(
-            private_key=b"explicit", public_key=b"public", key_seed="ignored"
-        )
+        config = KeyConfig(private_key=b"explicit", public_key=b"public", key_seed="ignored")
         private, _public = resolve_keys(config)
         assert private == b"explicit"
 
@@ -512,11 +508,7 @@ class TestIntegration:
             pytest.skip("Not all components implemented yet")
 
         # Missing required metadata
-        result = (
-            PSPFBuilder.create()
-            .add_slot(id="data", data=b"content")
-            .build(temp_dir / "invalid.psp")
-        )
+        result = PSPFBuilder.create().add_slot(id="data", data=b"content").build(temp_dir / "invalid.psp")
 
         assert not result.success
         assert len(result.errors) > 0
@@ -541,9 +533,7 @@ class TestIntegration:
         )
 
         assert not result.success
-        assert any(
-            "not found" in e.lower() or "exist" in e.lower() for e in result.errors
-        )
+        assert any("not found" in e.lower() or "exist" in e.lower() for e in result.errors)
 
 
 # =============================================================================

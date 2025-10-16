@@ -179,11 +179,7 @@ class TestPackageSecurity:
         slot_file = self.temp_dir / "test.dat"
         slot_file.write_bytes(b"data")
 
-        builder = (
-            PSPFBuilder()
-            .metadata(**metadata)
-            .add_slot(id="test.dat", data=slot_file, operations="none")
-        )
+        builder = PSPFBuilder().metadata(**metadata).add_slot(id="test.dat", data=slot_file, operations="none")
         builder.build(package_path)
 
         # Try concurrent extraction using PSPFLauncher
@@ -249,9 +245,7 @@ class TestPackageSecurity:
 
         package_path = self.temp_dir / "perms.psp"
         builder = (
-            PSPFBuilder()
-            .metadata(**metadata)
-            .add_slot(id="test_perms.sh", data=test_file, operations="none")
+            PSPFBuilder().metadata(**metadata).add_slot(id="test_perms.sh", data=test_file, operations="none")
         )
         builder.build(package_path)
 
@@ -264,9 +258,7 @@ class TestPackageSecurity:
             # Check that permissions weren't escalated
             stat_info = extracted_file.stat()
             # File should not be executable if it wasn't originally
-            assert not (stat_info.st_mode & 0o111), (
-                "File should not have execute permissions"
-            )
+            assert not (stat_info.st_mode & 0o111), "File should not have execute permissions"
 
 
 class TestCryptographicSecurity:
@@ -282,7 +274,7 @@ class TestCryptographicSecurity:
 
     def test_signature_algorithm(self) -> None:
         """Ensure proper signature algorithm is used."""
-        from provide.foundation.crypto import sign_data, verify_signature
+        from provide.foundation.crypto import Ed25519Signer, Ed25519Verifier
 
         # Generate keys
         private_key, public_key = generate_ephemeral_keys()
@@ -291,15 +283,17 @@ class TestCryptographicSecurity:
         test_data = b"test data for signature"
 
         # Create signature
-        signature = sign_data(test_data, private_key)
+        signer = Ed25519Signer(private_key=private_key)
+        signature = signer.sign(test_data)
 
         # Verify signature
-        is_valid = verify_signature(test_data, signature, public_key)
+        verifier = Ed25519Verifier(public_key)
+        is_valid = verifier.verify(test_data, signature)
         assert is_valid, "Signature should be valid"
 
         # Test with wrong data
         wrong_data = b"different data"
-        is_valid_wrong = verify_signature(wrong_data, signature, public_key)
+        is_valid_wrong = verifier.verify(wrong_data, signature)
         assert not is_valid_wrong, "Signature should be invalid for different data"
 
     def test_random_seed_quality(self) -> None:

@@ -145,9 +145,7 @@ class PythonSlotBuilder:
                 artifacts["uv_binary"] = work_uv
                 logger.debug(f"UV binary copied to work dir: {work_uv}")
             else:
-                logger.warning(
-                    "📦⚠️❌ UV not found on host system, package will require UV at runtime"
-                )
+                logger.warning("📦⚠️❌ UV not found on host system, package will require UV at runtime")
                 # We still need to provide UV somehow - this is a critical error for Python packages
                 raise FileNotFoundError(
                     "UV binary not found on host system. Cannot build Python package without UV."
@@ -244,9 +242,7 @@ class PythonSlotBuilder:
                     pyproject = tomllib.load(f)
 
                 # Look for flavor build dependencies
-                flavor_build = (
-                    pyproject.get("tool", {}).get("flavor", {}).get("build", {})
-                )
+                flavor_build = pyproject.get("tool", {}).get("flavor", {}).get("build", {})
                 sub_deps = flavor_build.get("dependencies", [])
 
                 if sub_deps:
@@ -269,9 +265,7 @@ class PythonSlotBuilder:
                             depth=depth + 1,
                         )
                         # Get all transitive dependencies of this sub-dependency
-                        transitive = self.resolve_transitive_dependencies(
-                            sub_dep_path, seen, depth + 1
-                        )
+                        transitive = self.resolve_transitive_dependencies(sub_dep_path, seen, depth + 1)
                         all_deps.extend(transitive)
                     else:
                         logger.warning(
@@ -288,9 +282,7 @@ class PythonSlotBuilder:
                     depth=depth,
                 )
         else:
-            logger.debug(
-                "📄🔍⚠️ No pyproject.toml found", path=str(pyproject_path), depth=depth
-            )
+            logger.debug("📄🔍⚠️ No pyproject.toml found", path=str(pyproject_path), depth=depth)
 
         # Add this dependency after its dependencies (post-order)
         if dep_path not in all_deps:
@@ -302,9 +294,7 @@ class PythonSlotBuilder:
             )
 
         if depth == 0:
-            logger.info(
-                "🎯📊✅ Total transitive dependencies found", count=len(all_deps)
-            )
+            logger.info("🎯📊✅ Total transitive dependencies found", count=len(all_deps))
             for i, dep in enumerate(all_deps, 1):
                 logger.info(
                     "📦📋✅ Transitive dependency",
@@ -331,9 +321,7 @@ class PythonSlotBuilder:
             for dep in local_deps:
                 dep_path = self.manifest_dir / dep
                 if dep_path.exists() and dep_path.is_dir():
-                    logger.info(
-                        f"🔗 Building local dependency (wheel only): {dep_path.name}"
-                    )
+                    logger.info(f"🔗 Building local dependency (wheel only): {dep_path.name}")
                     # Build just the wheel for the local dependency, not its dependencies
                     # Local dependencies are build-time dependencies, we don't need their runtime deps
                     dep_wheel = self.wheel_builder.build_wheel_from_source(

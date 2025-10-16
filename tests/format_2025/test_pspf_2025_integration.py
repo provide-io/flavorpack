@@ -88,9 +88,7 @@ class TestPSPFIntegration:
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,
             )
-        result = builder_instance.with_options(
-            enable_mmap=True, page_aligned=True
-        ).build(output_file)
+        result = builder_instance.with_options(enable_mmap=True, page_aligned=True).build(output_file)
         assert result.success, f"Build failed: {result.errors}"
 
         # Verify file was created
@@ -223,9 +221,7 @@ class TestPSPFIntegration:
                 purpose=slot.purpose,
                 lifecycle=slot.lifecycle,
             )
-        result = builder_instance.with_options(
-            enable_mmap=True, page_aligned=True
-        ).build(output_file)
+        result = builder_instance.with_options(enable_mmap=True, page_aligned=True).build(output_file)
         assert result.success, f"Build failed: {result.errors}"
 
         # Read and verify alignment
@@ -238,9 +234,7 @@ class TestPSPFIntegration:
             slot_offset = descriptors[0].offset
 
             # Data section offset should be page-aligned
-            assert slot_offset % DEFAULT_PAGE_SIZE == 0, (
-                f"Slot offset {slot_offset} is not page-aligned"
-            )
+            assert slot_offset % DEFAULT_PAGE_SIZE == 0, f"Slot offset {slot_offset} is not page-aligned"
 
 
 # 🧪📦🗺️🪄

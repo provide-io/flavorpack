@@ -63,9 +63,7 @@ class BuildOptions:
     strip_binaries: bool = field(default=False)
 
     # Compression settings
-    compression: str = field(
-        default="gzip", validator=validators.in_(["none", "gzip", "zstd", "brotli"])
-    )
+    compression: str = field(default="gzip", validator=validators.in_(["none", "gzip", "zstd", "brotli"]))
     compression_level: int = field(default=6, validator=validators.instance_of(int))
 
     # Launcher selection
@@ -75,9 +73,7 @@ class BuildOptions:
     reproducible: bool = field(default=False)
     verbose: bool = field(default=False)
 
-    def with_compression(
-        self, compression: str, level: int | None = None
-    ) -> BuildOptions:
+    def with_compression(self, compression: str, level: int | None = None) -> BuildOptions:
         """Return new BuildOptions with updated compression settings."""
         updates = {"compression": compression}
         if level is not None:
@@ -222,9 +218,7 @@ class PreparedSlot:
 
     def with_codec(self, compressed_data: bytes, operations: int) -> PreparedSlot:
         """Return new PreparedSlot with operations applied."""
-        return attrs.evolve(
-            self, compressed_data=compressed_data, operations=operations
-        )
+        return attrs.evolve(self, compressed_data=compressed_data, operations=operations)
 
     def with_offset(self, offset: int) -> PreparedSlot:
         """Return new PreparedSlot with offset set."""

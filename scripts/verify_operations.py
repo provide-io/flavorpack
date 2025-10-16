@@ -80,9 +80,7 @@ def verify_python_operations():
         # Test unpacking
         unpacked = unpack_operations(expected_packed)
         if unpacked != ops:
-            print(
-                f"❌ Python unpack failed for {description}: got {unpacked}, want {ops}"
-            )
+            print(f"❌ Python unpack failed for {description}: got {unpacked}, want {ops}")
             all_passed = False
         else:
             print(f"✅ Python unpack OK: 0x{expected_packed:016x} → {unpacked}")
@@ -95,9 +93,7 @@ def compare_test_vectors():
     print("📊 Comparing test vectors...")
 
     # Load the generated test vectors
-    test_file = Path(
-        "src/flavor-go/pkg/psp/format_2025/testdata/operations.json"
-    )
+    test_file = Path("src/flavor-go/pkg/psp/format_2025/testdata/operations.json")
     if not test_file.exists():
         print(f"❌ Test vectors not found: {test_file}")
         return False
@@ -115,9 +111,7 @@ def compare_test_vectors():
         # Check Python implementation
         packed = pack_operations(ops)
         if packed != expected:
-            print(
-                f"❌ Mismatch for {v['description']}: Python={packed}, Expected={expected}"
-            )
+            print(f"❌ Mismatch for {v['description']}: Python={packed}, Expected={expected}")
             all_correct = False
         else:
             print(f"✅ {v['description']}: 0x{packed:016x}")
@@ -157,9 +151,7 @@ def check_operation_constants():
 
         actual_value = mapping[name]
         if actual_value != expected_value:
-            print(
-                f"❌ Wrong value for {name}: got 0x{actual_value:02X}, want 0x{expected_value:02X}"
-            )
+            print(f"❌ Wrong value for {name}: got 0x{actual_value:02X}, want 0x{expected_value:02X}")
             all_correct = False
         else:
             print(f"✅ {name} = 0x{actual_value:02X}")

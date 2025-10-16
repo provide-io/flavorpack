@@ -61,9 +61,7 @@ class BinaryLoader:
             f"Searched in: {bin_dir}, {self.manager.ingredients_bin}"
         )
 
-    def build_ingredients(
-        self, language: str | None = None, force: bool = False
-    ) -> list[Path]:
+    def build_ingredients(self, language: str | None = None, force: bool = False) -> list[Path]:
         """Build ingredient binaries from source.
 
         Args:
@@ -136,9 +134,7 @@ class BinaryLoader:
         built_binaries = []
 
         if not self.manager.rust_src_dir.exists():
-            logger.warning(
-                f"Rust source directory not found: {self.manager.rust_src_dir}"
-            )
+            logger.warning(f"Rust source directory not found: {self.manager.rust_src_dir}")
             return built_binaries
 
         # Make sure bin directory exists
@@ -171,26 +167,15 @@ class BinaryLoader:
 
             if result.returncode == 0:
                 # Copy from target/release to bin
-                source_path = (
-                    self.manager.rust_src_dir
-                    / "target"
-                    / "release"
-                    / f"flavor-rs-{component}"
-                )
+                source_path = self.manager.rust_src_dir / "target" / "release" / f"flavor-rs-{component}"
                 if source_path.exists():
-                    logger.info(
-                        f"✅ Built and copying {component}: {source_path} → {binary_path}"
-                    )
-                    safe_copy(
-                        source_path, binary_path, preserve_mode=True, overwrite=True
-                    )
+                    logger.info(f"✅ Built and copying {component}: {source_path} → {binary_path}")
+                    safe_copy(source_path, binary_path, preserve_mode=True, overwrite=True)
                     built_binaries.append(binary_path)
                     # Make executable
                     binary_path.chmod(DEFAULT_EXECUTABLE_PERMS)
                 else:
-                    logger.error(
-                        f"❌ Built but can't find {component} binary at {source_path}"
-                    )
+                    logger.error(f"❌ Built but can't find {component} binary at {source_path}")
             else:
                 logger.error(f"❌ Failed to build {component}")
                 if result.stderr:
@@ -283,9 +268,7 @@ class BinaryLoader:
         # Primary search: Look in the bin directory for ANY versioned ingredients
         bin_dir = Path(__file__).parent / "bin"
         if bin_dir.exists():
-            platform_specific_names.extend(
-                self._find_versioned_ingredients(bin_dir, name)
-            )
+            platform_specific_names.extend(self._find_versioned_ingredients(bin_dir, name))
 
         # Add package version as search pattern
         package_version_name = self._get_package_version_name(name)
@@ -318,9 +301,7 @@ class BinaryLoader:
                 and file.name not in found_names
                 and (
                     self.current_platform in file.name
-                    or not any(
-                        plat in file.name for plat in ["linux", "darwin", "windows"]
-                    )
+                    or not any(plat in file.name for plat in ["linux", "darwin", "windows"])
                 )
             ):
                 found_names.append(file.name)
@@ -358,12 +339,7 @@ class BinaryLoader:
             return embedded_path
 
         # 2. Check bundled with package (for PyPI wheels - old location)
-        bundled_path = (
-            Path(__file__).parent
-            / "ingredients"
-            / self.current_platform
-            / specific_name
-        )
+        bundled_path = Path(__file__).parent / "ingredients" / self.current_platform / specific_name
         if bundled_path.exists():
             logger.debug(f"Found ingredient at: {bundled_path}")
             return bundled_path
