@@ -107,28 +107,27 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          cache: 'pip'
-      
+
+      - name: 📦 Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+
       - name: 📦 Install dependencies
         run: |
-          # Set up virtual environment
-          python -m venv workenv
+          # Create virtual environment
+          uv venv workenv
           source workenv/bin/activate
-          
-          # Install uv for faster dependency resolution
-          pip install uv
-          
-          # Install pytest first to ensure it's available
-          uv pip install pytest pytest-cov pytest-xdist
-          
-          # Install flavor and test dependencies
-          uv pip install -e ".[dev,test]"
-          
+
+          # Install project with dev dependency group
+          # PEP 735 dependency groups work with uv pip install when using --group flag
+          uv pip install --group dev -e .
+
           # Install sibling packages if needed
           if [ -f "../pyvider-telemetry/pyproject.toml" ]; then
             uv pip install -e "../pyvider-telemetry"
           fi
-      
+
       - name: 🧪 Run tests
         run: |
           source workenv/bin/activate
