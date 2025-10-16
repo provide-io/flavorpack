@@ -95,9 +95,7 @@ class TestUVManager:
         mock_system.return_value = "Linux"
         mock_machine.return_value = "riscv64"
 
-        with pytest.raises(
-            ToolNotFoundError, match="Unsupported Linux architecture: riscv64"
-        ):
+        with pytest.raises(ToolNotFoundError, match="Unsupported Linux architecture: riscv64"):
             self.uv_manager.get_metadata("0.1.45")
 
     def test_get_available_versions(self) -> None:
@@ -193,9 +191,7 @@ class TestUVManager:
             venv_python = Path("/tmp/venv/bin/python")
             requirements_file = Path("/tmp/requirements.txt")
 
-            cmd = self.uv_manager._get_uv_pip_install_cmd(
-                venv_python, [], requirements_file
-            )
+            cmd = self.uv_manager._get_uv_pip_install_cmd(venv_python, [], requirements_file)
 
             expected = [
                 "/usr/local/bin/uv",
@@ -237,9 +233,7 @@ class TestUVManager:
             input_file = Path("/tmp/requirements.in")
             output_file = Path("/tmp/requirements.txt")
 
-            cmd = self.uv_manager._get_uv_pip_compile_cmd(
-                input_file, output_file, "3.11"
-            )
+            cmd = self.uv_manager._get_uv_pip_compile_cmd(input_file, output_file, "3.11")
 
             expected = [
                 "/usr/local/bin/uv",
@@ -254,12 +248,12 @@ class TestUVManager:
             ]
             assert cmd == expected
 
-    @patch("flavor.packaging.python.uv_manager.run_command")
-    def test_create_venv(self, mock_run_command) -> None:
+    @patch("flavor.packaging.python.uv_manager.run")
+    def test_create_venv(self, mock_run) -> None:
         """Test UV venv creation."""
         mock_result = Mock()
         mock_result.returncode = 0
-        mock_run_command.return_value = mock_result
+        mock_run.return_value = mock_result
 
         with patch.object(self.uv_manager, "get_uv_executable") as mock_get_uv:
             mock_get_uv.return_value = Path("/usr/local/bin/uv")
@@ -268,9 +262,9 @@ class TestUVManager:
 
             self.uv_manager.create_venv(venv_path)
 
-            # Verify run_command was called
-            mock_run_command.assert_called_once()
-            args, kwargs = mock_run_command.call_args
+            # Verify run was called
+            mock_run.assert_called_once()
+            args, kwargs = mock_run.call_args
 
             cmd = args[0]
             assert cmd[0] == "/usr/local/bin/uv"
@@ -280,12 +274,12 @@ class TestUVManager:
             # Verify error handling enabled
             assert kwargs["check"] is True
 
-    @patch("flavor.packaging.python.uv_manager.run_command")
-    def test_install_packages_fast(self, mock_run_command) -> None:
+    @patch("flavor.packaging.python.uv_manager.run")
+    def test_install_packages_fast(self, mock_run) -> None:
         """Test UV fast package installation."""
         mock_result = Mock()
         mock_result.returncode = 0
-        mock_run_command.return_value = mock_result
+        mock_run.return_value = mock_result
 
         with patch.object(self.uv_manager, "get_uv_executable") as mock_get_uv:
             mock_get_uv.return_value = Path("/usr/local/bin/uv")
@@ -295,9 +289,9 @@ class TestUVManager:
 
             self.uv_manager.install_packages_fast(venv_python, packages)
 
-            # Verify run_command was called
-            mock_run_command.assert_called_once()
-            args, kwargs = mock_run_command.call_args
+            # Verify run was called
+            mock_run.assert_called_once()
+            args, kwargs = mock_run.call_args
 
             cmd = args[0]
             assert cmd[0] == "/usr/local/bin/uv"
@@ -309,12 +303,12 @@ class TestUVManager:
             # Verify error handling enabled
             assert kwargs["check"] is True
 
-    @patch("flavor.packaging.python.uv_manager.run_command")
-    def test_compile_requirements(self, mock_run_command) -> None:
+    @patch("flavor.packaging.python.uv_manager.run")
+    def test_compile_requirements(self, mock_run) -> None:
         """Test UV requirements compilation."""
         mock_result = Mock()
         mock_result.returncode = 0
-        mock_run_command.return_value = mock_result
+        mock_run.return_value = mock_result
 
         with patch.object(self.uv_manager, "get_uv_executable") as mock_get_uv:
             mock_get_uv.return_value = Path("/usr/local/bin/uv")
@@ -324,9 +318,9 @@ class TestUVManager:
 
             self.uv_manager.compile_requirements(input_file, output_file)
 
-            # Verify run_command was called
-            mock_run_command.assert_called_once()
-            args, kwargs = mock_run_command.call_args
+            # Verify run was called
+            mock_run.assert_called_once()
+            args, kwargs = mock_run.call_args
 
             cmd = args[0]
             assert cmd[0] == "/usr/local/bin/uv"
@@ -342,11 +336,11 @@ class TestUVManager:
         """Test that empty package lists are handled without errors."""
         venv_python = Path("/tmp/venv/bin/python")
 
-        # Should not raise exceptions and should not call run_command
-        with patch("flavor.packaging.python.uv_manager.run_command") as mock_run:
+        # Should not raise exceptions and should not call run
+        with patch("flavor.packaging.python.uv_manager.run") as mock_run:
             self.uv_manager.install_packages_fast(venv_python, [])
 
-            # Should not have called run_command for empty lists
+            # Should not have called run for empty lists
             mock_run.assert_not_called()
 
 
@@ -387,9 +381,7 @@ class TestUVManagerCriticalFeatures:
         assert not hasattr(self.uv_manager, "_get_pip_download_cmd")
 
         # All UV methods should be clearly prefixed
-        uv_methods = [
-            method for method in dir(self.uv_manager) if method.startswith("_get_uv_")
-        ]
+        uv_methods = [method for method in dir(self.uv_manager) if method.startswith("_get_uv_")]
         assert len(uv_methods) >= 3  # At least the three core methods
 
         for method in uv_methods:

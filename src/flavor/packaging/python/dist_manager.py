@@ -38,9 +38,7 @@ class PythonDistManager:
     - Site-packages optimization for packaging
     """
 
-    def __init__(
-        self, python_version: str = "3.11", use_uv_for_venv: bool = True
-    ) -> None:
+    def __init__(self, python_version: str = "3.11", use_uv_for_venv: bool = True) -> None:
         """
         Initialize the Python distribution manager.
 
@@ -96,18 +94,14 @@ class PythonDistManager:
 
                 # Ensure Python binary exists after UV creation
                 if not venv_python.exists():
-                    logger.debug(
-                        "Python binary missing after UV creation, creating symlink"
-                    )
+                    logger.debug("Python binary missing after UV creation, creating symlink")
                     ensure_parent_dir(venv_python)
                     # Create symlink to system Python
                     try:
                         Path(venv_python).symlink_to(python_exe)
                     except (OSError, FileExistsError):
                         # If symlink fails, copy the file
-                        safe_copy(
-                            python_exe, venv_python, preserve_mode=True, overwrite=True
-                        )
+                        safe_copy(python_exe, venv_python, preserve_mode=True, overwrite=True)
 
                 logger.info("✅ Successfully created venv with UV")
                 return venv_python
@@ -178,9 +172,7 @@ class PythonDistManager:
 
         logger.info("✅ Successfully installed wheels to environment")
 
-    def prepare_site_packages(
-        self, venv_python: Path, optimization_level: int = 1
-    ) -> Path:
+    def prepare_site_packages(self, venv_python: Path, optimization_level: int = 1) -> Path:
         """
         Prepare site-packages directory for packaging.
 
@@ -197,9 +189,7 @@ class PythonDistManager:
         if os.name == "nt":
             site_packages = venv_path / "Lib" / "site-packages"
         else:
-            site_packages = (
-                venv_path / "lib" / f"python{self.python_version}" / "site-packages"
-            )
+            site_packages = venv_path / "lib" / f"python{self.python_version}" / "site-packages"
 
         if not site_packages.exists():
             raise FileNotFoundError(f"Site-packages not found: {site_packages}")
@@ -213,9 +203,7 @@ class PythonDistManager:
         logger.info("✅ Site-packages prepared for packaging")
         return site_packages
 
-    def _compile_python_files(
-        self, venv_python: Path, site_packages: Path, optimization_level: int
-    ) -> None:
+    def _compile_python_files(self, venv_python: Path, site_packages: Path, optimization_level: int) -> None:
         """
         Compile Python files to bytecode for faster loading.
 
@@ -224,9 +212,7 @@ class PythonDistManager:
             site_packages: Site-packages directory to compile
             optimization_level: Bytecode optimization level
         """
-        logger.debug(
-            f"Compiling Python files with optimization level {optimization_level}"
-        )
+        logger.debug(f"Compiling Python files with optimization level {optimization_level}")
 
         compile_cmd = [
             str(venv_python),
@@ -282,9 +268,7 @@ class PythonDistManager:
                 except Exception as e:
                     logger.debug(f"Failed to remove {path}: {e}")
 
-        logger.debug(
-            f"Cleanup complete: removed {files_removed} files, {dirs_removed} directories"
-        )
+        logger.debug(f"Cleanup complete: removed {files_removed} files, {dirs_removed} directories")
 
     def create_standalone_distribution(
         self,
@@ -363,9 +347,7 @@ class PythonDistManager:
         }
 
         logger.info("✅ Standalone distribution created successfully")
-        logger.info(
-            f"📊 Distribution size: {dist_info['distribution_size'] / (1024 * 1024):.1f} MB"
-        )
+        logger.info(f"📊 Distribution size: {dist_info['distribution_size'] / (1024 * 1024):.1f} MB")
 
         return dist_info
 
@@ -419,9 +401,7 @@ class PythonDistManager:
                     found_critical += 1
 
             if found_critical == 0:
-                logger.warning(
-                    "No critical Python infrastructure found in site-packages"
-                )
+                logger.warning("No critical Python infrastructure found in site-packages")
 
             # Check distribution size is reasonable
             size_mb = dist_info["distribution_size"] / (1024 * 1024)

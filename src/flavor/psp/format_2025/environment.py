@@ -126,9 +126,7 @@ def _unset_all_except_preserved(env_map: dict[str, str], should_preserve) -> Non
 
 def _unset_glob_pattern(env_map: dict[str, str], pattern: str, should_preserve) -> None:
     """Unset variables matching glob pattern."""
-    keys_to_remove = [
-        k for k in env_map if fnmatch.fnmatch(k, pattern) and not should_preserve(k)
-    ]
+    keys_to_remove = [k for k in env_map if fnmatch.fnmatch(k, pattern) and not should_preserve(k)]
     for key in keys_to_remove:
         del env_map[key]
         plog.trace(f"  🗑️ Unset (glob): {key}")
@@ -141,9 +139,7 @@ def _unset_exact_match(env_map: dict[str, str], pattern: str, should_preserve) -
         plog.debug(f"🗑️ Unset: {pattern}")
 
 
-def _process_map_operations(
-    env_map: dict[str, str], runtime_env: dict[str, Any], should_preserve
-) -> None:
+def _process_map_operations(env_map: dict[str, str], runtime_env: dict[str, Any], should_preserve) -> None:
     """Process map operations (variable renaming)."""
     if not runtime_env.get("map"):
         return
@@ -157,9 +153,7 @@ def _process_map_operations(
             plog.debug(f"🔄 Mapped: {old_key} -> {new_key}")
 
 
-def _process_set_operations(
-    env_map: dict[str, str], runtime_env: dict[str, Any]
-) -> None:
+def _process_set_operations(env_map: dict[str, str], runtime_env: dict[str, Any]) -> None:
     """Process set operations (add/override variables)."""
     if not runtime_env.get("set"):
         return
@@ -172,9 +166,7 @@ def _process_set_operations(
         plog.debug(f"📝 Set: {key} = '{value}'")
 
 
-def _verify_pass_requirements(
-    pass_patterns: list[str], env_map: dict[str, str]
-) -> None:
+def _verify_pass_requirements(pass_patterns: list[str], env_map: dict[str, str]) -> None:
     """Verify all required pass patterns are satisfied."""
     if not pass_patterns:
         return
@@ -186,9 +178,7 @@ def _verify_pass_requirements(
             missing.append(pattern)
 
     if missing:
-        plog.warning(
-            f"⚠️ Required environment variables not found: {', '.join(missing)}"
-        )
+        plog.warning(f"⚠️ Required environment variables not found: {', '.join(missing)}")
 
 
 def set_platform_environment(env: dict[str, str]) -> None:

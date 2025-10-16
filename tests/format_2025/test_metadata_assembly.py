@@ -58,9 +58,7 @@ class TestLauncherMetadata:
 
     def test_get_launcher_info(self, mock_launcher_binary) -> None:
         """Test launcher info extraction."""
-        with patch(
-            "flavor.psp.format_2025.metadata.assembly.load_launcher_binary"
-        ) as mock_load:
+        with patch("flavor.psp.format_2025.metadata.assembly.load_launcher_binary") as mock_load:
             mock_load.return_value = mock_launcher_binary
 
             info = get_launcher_info("rust")
@@ -76,9 +74,7 @@ class TestLauncherMetadata:
 
     def test_launcher_info_go(self, mock_launcher_binary) -> None:
         """Test Go launcher info."""
-        with patch(
-            "flavor.psp.format_2025.metadata.assembly.load_launcher_binary"
-        ) as mock_load:
+        with patch("flavor.psp.format_2025.metadata.assembly.load_launcher_binary") as mock_load:
             mock_load.return_value = mock_launcher_binary
 
             info = get_launcher_info("go")
@@ -86,9 +82,7 @@ class TestLauncherMetadata:
 
     def test_launcher_info_python_uses_rust(self, mock_launcher_binary) -> None:
         """Test Python launcher uses Rust launcher."""
-        with patch(
-            "flavor.psp.format_2025.metadata.assembly.load_launcher_binary"
-        ) as mock_load:
+        with patch("flavor.psp.format_2025.metadata.assembly.load_launcher_binary") as mock_load:
             mock_load.return_value = mock_launcher_binary
 
             info = get_launcher_info("python")
@@ -96,9 +90,7 @@ class TestLauncherMetadata:
 
     def test_launcher_checksum_consistency(self, mock_launcher_binary) -> None:
         """Test launcher checksum is consistent."""
-        with patch(
-            "flavor.psp.format_2025.metadata.assembly.load_launcher_binary"
-        ) as mock_load:
+        with patch("flavor.psp.format_2025.metadata.assembly.load_launcher_binary") as mock_load:
             mock_load.return_value = mock_launcher_binary
 
             info1 = get_launcher_info("rust")
@@ -211,9 +203,7 @@ class TestMetadataAssembly:
         assert "compatibility" in metadata
         assert metadata["compatibility"]["min_format_version"] == "1.0.0"
 
-    def test_assemble_metadata_with_optional_sections(
-        self, basic_spec, mock_launcher_info
-    ) -> None:
+    def test_assemble_metadata_with_optional_sections(self, basic_spec, mock_launcher_info) -> None:
         """Test metadata assembly with optional sections."""
         spec = basic_spec.with_metadata(
             cache_validation={"check_file": "{workenv}/marker"},

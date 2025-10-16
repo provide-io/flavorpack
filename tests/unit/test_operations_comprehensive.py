@@ -48,9 +48,7 @@ class TestOperationPacking:
                 assert packed == expected_packed, f"Pack failed for {operations_list}"
 
                 unpacked = unpack_operations(packed)
-                assert unpacked == operations_list, (
-                    f"Unpack failed for {operations_list}"
-                )
+                assert unpacked == operations_list, f"Unpack failed for {operations_list}"
 
     def test_common_combinations(self) -> None:
         """Test common operation combinations."""
@@ -68,9 +66,7 @@ class TestOperationPacking:
 
             # Test unpacking
             unpacked = unpack_operations(packed)
-            assert unpacked == operations_list, (
-                f"Round-trip failed for {operations_list}"
-            )
+            assert unpacked == operations_list, f"Round-trip failed for {operations_list}"
 
             # Test string conversion produces valid output
             string_result = operations_to_string(packed)
@@ -87,9 +83,7 @@ class TestOperationPacking:
         for operations_list, expected_string in string_test_cases:
             packed = pack_operations(operations_list)
             string_result = operations_to_string(packed)
-            assert string_result == expected_string, (
-                f"String conversion failed for {operations_list}"
-            )
+            assert string_result == expected_string, f"String conversion failed for {operations_list}"
 
     def test_operation_chain_constants(self) -> None:
         """Test all predefined operation chains."""
@@ -103,15 +97,11 @@ class TestOperationPacking:
             # Test manual packing
             packed_manual = pack_operations(operations_list)
 
-            assert packed_from_string == packed_manual, (
-                f"Mismatch for chain '{chain_name}'"
-            )
+            assert packed_from_string == packed_manual, f"Mismatch for chain '{chain_name}'"
 
             # Test round-trip
             unpacked = unpack_operations(packed_from_string)
-            assert unpacked == operations_list, (
-                f"Round-trip failed for chain '{chain_name}'"
-            )
+            assert unpacked == operations_list, f"Round-trip failed for chain '{chain_name}'"
 
     def test_max_operations_chain(self) -> None:
         """Test maximum length operation chain (8 operations)."""
@@ -178,9 +168,7 @@ class TestOperationPacking:
         for string_input, expected_operations in test_cases:
             packed = string_to_operations(string_input)
             unpacked = unpack_operations(packed)
-            assert unpacked == expected_operations, (
-                f"String parsing failed for '{string_input}'"
-            )
+            assert unpacked == expected_operations, f"String parsing failed for '{string_input}'"
 
     def test_invalid_string_operations(self) -> None:
         """Test invalid operation strings."""
@@ -219,9 +207,7 @@ class TestOperationPacking:
 
             # Verify round-trip
             unpacked = unpack_operations(packed)
-            assert unpacked == operations_list, (
-                f"Round-trip failed for {operations_list}"
-            )
+            assert unpacked == operations_list, f"Round-trip failed for {operations_list}"
 
     def test_v0_operations_coverage(self) -> None:
         """Test that all v0 required operations can be packed/unpacked."""
@@ -232,9 +218,7 @@ class TestOperationPacking:
             # Test single operation
             packed = pack_operations([operation])
             unpacked = unpack_operations(packed)
-            assert unpacked == [operation], (
-                f"V0 operation {operation:#02x} failed round-trip"
-            )
+            assert unpacked == [operation], f"V0 operation {operation:#02x} failed round-trip"
 
     def test_operation_byte_positions(self) -> None:
         """Test that operations are packed in correct byte positions."""

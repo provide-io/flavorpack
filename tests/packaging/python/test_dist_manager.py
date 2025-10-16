@@ -30,12 +30,12 @@ class TestPythonDistManager:
         manager_no_uv = PythonDistManager(use_uv_for_venv=False)
         assert manager_no_uv.uv is None
 
-    @patch("flavor.packaging.python.dist_manager.run_command")
-    def test_create_python_environment_with_uv(self, mock_run_command) -> None:
+    @patch("flavor.packaging.python.dist_manager.run")
+    def test_create_python_environment_with_uv(self, mock_run) -> None:
         """Test Python environment creation using UV."""
         mock_result = Mock()
         mock_result.returncode = 0
-        mock_run_command.return_value = mock_result
+        mock_run.return_value = mock_result
 
         with tempfile.TemporaryDirectory() as temp_dir:
             venv_path = Path(temp_dir) / "test_venv"
@@ -49,9 +49,7 @@ class TestPythonDistManager:
                 venv_python.parent.mkdir(parents=True)
                 venv_python.touch()
 
-                result = self.dist_manager.create_python_environment(
-                    venv_path, python_exe
-                )
+                result = self.dist_manager.create_python_environment(venv_path, python_exe)
 
                 # Verify UV was used
                 mock_uv_create.assert_called_once_with(venv_path, python_version="3.11")
@@ -60,12 +58,12 @@ class TestPythonDistManager:
                 assert result == venv_python
                 assert result.exists()
 
-    @patch("flavor.packaging.python.dist_manager.run_command")
-    def test_create_python_environment_fallback_to_venv(self, mock_run_command) -> None:
+    @patch("flavor.packaging.python.dist_manager.run")
+    def test_create_python_environment_fallback_to_venv(self, mock_run) -> None:
         """Test fallback to standard venv when UV fails."""
         mock_result = Mock()
         mock_result.returncode = 0
-        mock_run_command.return_value = mock_result
+        mock_run.return_value = mock_result
 
         with tempfile.TemporaryDirectory() as temp_dir:
             venv_path = Path(temp_dir) / "test_venv"
@@ -83,18 +81,16 @@ class TestPythonDistManager:
                     venv_python.touch()
                     return mock_result
 
-                mock_run_command.side_effect = mock_venv_creation
+                mock_run.side_effect = mock_venv_creation
 
-                result = self.dist_manager.create_python_environment(
-                    venv_path, python_exe
-                )
+                result = self.dist_manager.create_python_environment(venv_path, python_exe)
 
                 # Verify UV was attempted
                 mock_uv_create.assert_called_once()
 
                 # Verify standard venv was used as fallback
-                mock_run_command.assert_called_once()
-                args = mock_run_command.call_args[0]
+                mock_run.assert_called_once()
+                args = mock_run.call_args[0]
                 cmd = args[0]
                 assert cmd[0] == "/usr/bin/python3"
                 assert cmd[1:4] == ["-m", "venv", str(venv_path)]
@@ -122,12 +118,12 @@ class TestPythonDistManager:
                 expected = venv_path / "Scripts" / "python.exe"
                 assert result == expected
 
-    @patch("flavor.packaging.python.dist_manager.run_command")
-    def test_install_wheels_to_environment(self, mock_run_command) -> None:
+    @patch("flavor.packaging.python.dist_manager.run")
+    def test_install_wheels_to_environment(self, mock_run) -> None:
         """Test installing wheels to Python environment."""
         mock_result = Mock()
         mock_result.returncode = 0
-        mock_run_command.return_value = mock_result
+        mock_run.return_value = mock_result
 
         with tempfile.TemporaryDirectory() as temp_dir:
             venv_python = Path(temp_dir) / "venv" / "bin" / "python"
@@ -142,9 +138,9 @@ class TestPythonDistManager:
 
             self.dist_manager.install_wheels_to_environment(venv_python, wheel_files)
 
-            # Verify run_command was called
-            mock_run_command.assert_called_once()
-            args, kwargs = mock_run_command.call_args
+            # Verify run was called
+            mock_run.assert_called_once()
+            args, kwargs = mock_run.call_args
 
             cmd = args[0]
             assert cmd[0] == str(venv_python)
@@ -160,18 +156,18 @@ class TestPythonDistManager:
         """Test installing empty wheel list does nothing."""
         venv_python = Path("/tmp/venv/bin/python")
 
-        with patch("flavor.packaging.python.dist_manager.run_command") as mock_run:
+        with patch("flavor.packaging.python.dist_manager.run") as mock_run:
             self.dist_manager.install_wheels_to_environment(venv_python, [])
 
-            # Should not call run_command for empty list
+            # Should not call run for empty list
             mock_run.assert_not_called()
 
-    @patch("flavor.packaging.python.dist_manager.run_command")
-    def test_prepare_site_packages(self, mock_run_command) -> None:
+    @patch("flavor.packaging.python.dist_manager.run")
+    def test_prepare_site_packages(self, mock_run) -> None:
         """Test site-packages preparation."""
         mock_result = Mock()
         mock_result.returncode = 0
-        mock_run_command.return_value = mock_result
+        mock_run.return_value = mock_result
 
         with tempfile.TemporaryDirectory() as temp_dir:
             venv_path = Path(temp_dir) / "venv"
@@ -190,13 +186,11 @@ class TestPythonDistManager:
             pycache_dir.mkdir()
             (pycache_dir / "test.pyc").touch()
 
-            result = self.dist_manager.prepare_site_packages(
-                venv_python, optimization_level=1
-            )
+            result = self.dist_manager.prepare_site_packages(venv_python, optimization_level=1)
 
             # Verify compilation was attempted
-            mock_run_command.assert_called()
-            args = mock_run_command.call_args[0]
+            mock_run.assert_called()
+            args = mock_run.call_args[0]
             cmd = args[0]
             assert cmd[0] == str(venv_python)
             assert cmd[1:3] == ["-m", "compileall"]
@@ -213,7 +207,7 @@ class TestPythonDistManager:
             site_packages = Path(temp_dir) / "site-packages"
             site_packages.mkdir()
 
-            with patch("flavor.packaging.python.dist_manager.run_command") as mock_run:
+            with patch("flavor.packaging.python.dist_manager.run") as mock_run:
                 mock_run.return_value = Mock(returncode=0)
 
                 self.dist_manager._compile_python_files(venv_python, site_packages, 2)
@@ -360,9 +354,7 @@ class TestPythonDistManager:
             site_packages.mkdir()
             mock_prepare.return_value = site_packages
 
-            result = self.dist_manager.create_standalone_distribution(
-                project_dir, output_dir
-            )
+            result = self.dist_manager.create_standalone_distribution(project_dir, output_dir)
 
             # Verify all steps were called
             mock_wheel_builder.build_and_resolve_project.assert_called_once()
@@ -420,12 +412,10 @@ class TestPythonDistManagerCriticalFeatures:
             wheel_files = [Path(temp_dir) / "test.whl"]
             wheel_files[0].touch()
 
-            with patch("flavor.packaging.python.dist_manager.run_command") as mock_run:
+            with patch("flavor.packaging.python.dist_manager.run") as mock_run:
                 mock_run.return_value = Mock(returncode=0)
 
-                self.dist_manager.install_wheels_to_environment(
-                    venv_python, wheel_files
-                )
+                self.dist_manager.install_wheels_to_environment(venv_python, wheel_files)
 
                 args = mock_run.call_args[0]
                 cmd = args[0]
@@ -468,9 +458,7 @@ class TestPythonDistManagerCriticalFeatures:
 
             # Verify removable files are gone
             for removable_file in removable_files:
-                assert not removable_file.exists(), (
-                    f"File not removed: {removable_file}"
-                )
+                assert not removable_file.exists(), f"File not removed: {removable_file}"
 
     def test_distribution_validation_comprehensive(self) -> None:
         """CRITICAL: Distribution validation must be thorough."""

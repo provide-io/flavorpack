@@ -144,13 +144,9 @@ def load_keys_from_path(key_path: Path) -> tuple[bytes, bytes]:
 
     # Validate key sizes
     if len(private_key) != 32:
-        raise ValueError(
-            f"🔑 Invalid private key size: expected 32 bytes, got {len(private_key)}"
-        )
+        raise ValueError(f"🔑 Invalid private key size: expected 32 bytes, got {len(private_key)}")
     if len(public_key) != 32:
-        raise ValueError(
-            f"🔑 Invalid public key size: expected 32 bytes, got {len(public_key)}"
-        )
+        raise ValueError(f"🔑 Invalid public key size: expected 32 bytes, got {len(public_key)}")
 
     logger.debug(
         f"📁 Loaded keys from {key_path} (public key hash: {hashlib.sha256(public_key).hexdigest()[:8]})"
@@ -220,10 +216,6 @@ def create_key_config(
     sources = sum([private_key is not None, seed is not None, key_path is not None])
 
     if sources > 1:
-        raise ValueError(
-            "🔑 Only one key source can be specified (explicit, seed, or path)"
-        )
+        raise ValueError("🔑 Only one key source can be specified (explicit, seed, or path)")
 
-    return KeyConfig(
-        private_key=private_key, public_key=public_key, key_seed=seed, key_path=key_path
-    )
+    return KeyConfig(private_key=private_key, public_key=public_key, key_seed=seed, key_path=key_path)

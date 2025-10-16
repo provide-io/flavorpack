@@ -69,9 +69,7 @@ class TestLauncherAvailability:
     """Test launcher availability and error handling with focused unit tests."""
 
     @patch("flavor.packaging.orchestrator.find_launcher_executable")
-    def test_missing_launcher_error(
-        self, mock_find_launcher, orchestrator_factory, manifest_file
-    ) -> None:
+    def test_missing_launcher_error(self, mock_find_launcher, orchestrator_factory, manifest_file) -> None:
         """Test BuildError is raised when launcher binary does not exist."""
         mock_find_launcher.return_value.exists.return_value = False
         orchestrator = orchestrator_factory(launcher_bin="/fake/launcher")
@@ -97,10 +95,10 @@ class TestLauncherAvailability:
             orchestrator.build_package()
         mock_os_access.assert_called_with(launcher_path, os.X_OK)
 
-    @patch("flavor.packaging.orchestrator.run_command")
+    @patch("flavor.packaging.orchestrator.run")
     def test_corrupted_launcher_detection(
         self,
-        mock_run_command,
+        mock_run,
         orchestrator_factory,
         tmp_path,
     ) -> None:
@@ -110,8 +108,8 @@ class TestLauncherAvailability:
         launcher_path.touch()
         launcher_path.chmod(0o755)
 
-        # Mock run_command to simulate corrupted launcher
-        mock_run_command.side_effect = OSError("Corrupted binary")
+        # Mock run to simulate corrupted launcher
+        mock_run.side_effect = OSError("Corrupted binary")
 
         orchestrator = orchestrator_factory(launcher_bin=str(launcher_path))
 
@@ -123,9 +121,7 @@ class TestLauncherAvailability:
     @patch("pathlib.Path.exists", return_value=True)
     @patch("os.access", return_value=True)
     @patch("flavor.packaging.orchestrator.logger.warning")
-    @patch(
-        "flavor.packaging.orchestrator.PackagingOrchestrator._build_with_python_builder"
-    )
+    @patch("flavor.packaging.orchestrator.PackagingOrchestrator._build_with_python_builder")
     def test_wrong_platform_launcher_warning(
         self,
         mock_build,
@@ -155,7 +151,7 @@ class TestLauncherReproducibility:
     @patch("flavor.packaging.orchestrator.find_launcher_executable")
     @patch("pathlib.Path.exists", return_value=True)
     @patch("os.access", return_value=True)
-    @patch("flavor.packaging.orchestrator.run_command")
+    @patch("flavor.packaging.orchestrator.run")
     @patch("flavor.psp.format_2025.builder.build_package")
     @patch("flavor.packaging.python.packager.PythonPackager.prepare_artifacts")
     @patch("flavor.packaging.orchestrator_ingredients.create_python_slot_tarballs")
@@ -234,20 +230,11 @@ class TestLauncherReproducibility:
         original_path_open = Path.open  # Store original Path.open
 
         def mock_open_side_effect(file, mode="r", *args, **kwargs):
-            if (
-                file.resolve()
-                == mock_prepare_artifacts.return_value["uv_binary"].resolve()
-            ):
+            if file.resolve() == mock_prepare_artifacts.return_value["uv_binary"].resolve():
                 return io.BytesIO(b"mock uv content")
-            elif (
-                file.resolve()
-                == mock_prepare_artifacts.return_value["python_tgz"].resolve()
-            ):
+            elif file.resolve() == mock_prepare_artifacts.return_value["python_tgz"].resolve():
                 return io.BytesIO(b"mock python tgz content")
-            elif (
-                file.resolve()
-                == mock_prepare_artifacts.return_value["wheels_tgz"].resolve()
-            ):
+            elif file.resolve() == mock_prepare_artifacts.return_value["wheels_tgz"].resolve():
                 return io.BytesIO(b"mock wheels tgz content")
             else:
                 # Call the original Path.open for other files (e.g., manifest_file)
@@ -257,29 +244,19 @@ class TestLauncherReproducibility:
 
         # Mock prepare_artifacts to return deterministic paths
         mock_uv_path = MagicMock(spec=Path)
-        mock_uv_path.open.return_value.__enter__.return_value = io.BytesIO(
-            b"mock uv content"
-        )
+        mock_uv_path.open.return_value.__enter__.return_value = io.BytesIO(b"mock uv content")
         mock_uv_path.resolve.return_value = Path("/mock/payload_dir/bin/uv")
         mock_uv_path.stat.return_value.st_size = 15  # Length of "mock uv content"
         mock_uv_path.exists.return_value = True
         mock_python_tgz_path = MagicMock(spec=Path)
-        mock_python_tgz_path.open.return_value.__enter__.return_value = io.BytesIO(
-            b"mock python tgz content"
-        )
+        mock_python_tgz_path.open.return_value.__enter__.return_value = io.BytesIO(b"mock python tgz content")
         mock_python_tgz_path.resolve.return_value = Path("/mock/python.tgz")
-        mock_python_tgz_path.stat.return_value.st_size = (
-            23  # Length of "mock python tgz content"
-        )
+        mock_python_tgz_path.stat.return_value.st_size = 23  # Length of "mock python tgz content"
         mock_python_tgz_path.exists.return_value = True
         mock_wheels_tgz_path = MagicMock(spec=Path)
-        mock_wheels_tgz_path.open.return_value.__enter__.return_value = io.BytesIO(
-            b"mock wheels tgz content"
-        )
+        mock_wheels_tgz_path.open.return_value.__enter__.return_value = io.BytesIO(b"mock wheels tgz content")
         mock_wheels_tgz_path.resolve.return_value = Path("/mock/wheels.tgz")
-        mock_wheels_tgz_path.stat.return_value.st_size = (
-            23  # Length of "mock wheels tgz content"
-        )
+        mock_wheels_tgz_path.stat.return_value.st_size = 23  # Length of "mock wheels tgz content"
         mock_wheels_tgz_path.exists.return_value = True
 
         mock_prepare_artifacts.return_value = {
@@ -294,31 +271,21 @@ class TestLauncherReproducibility:
         mock_uv_gz.__str__.return_value = "/tmp/flavor_build_deterministic/uv.gz"
         mock_uv_gz.stat.return_value.st_size = 100
         mock_uv_gz.exists.return_value = True
-        mock_uv_gz.open.return_value.__enter__.return_value = io.BytesIO(
-            b"mock uv gz content"
-        )
+        mock_uv_gz.open.return_value.__enter__.return_value = io.BytesIO(b"mock uv gz content")
         mock_uv_gz.open.return_value.__exit__.return_value = None
 
         mock_python_tar = MagicMock(spec=Path)
-        mock_python_tar.__str__.return_value = (
-            "/tmp/flavor_build_deterministic/python.tar.gz"
-        )
+        mock_python_tar.__str__.return_value = "/tmp/flavor_build_deterministic/python.tar.gz"
         mock_python_tar.stat.return_value.st_size = 200
         mock_python_tar.exists.return_value = True
-        mock_python_tar.open.return_value.__enter__.return_value = io.BytesIO(
-            b"mock python tar content"
-        )
+        mock_python_tar.open.return_value.__enter__.return_value = io.BytesIO(b"mock python tar content")
         mock_python_tar.open.return_value.__exit__.return_value = None
 
         mock_wheels_tar = MagicMock(spec=Path)
-        mock_wheels_tar.__str__.return_value = (
-            "/tmp/flavor_build_deterministic/wheels.tar.gz"
-        )
+        mock_wheels_tar.__str__.return_value = "/tmp/flavor_build_deterministic/wheels.tar.gz"
         mock_wheels_tar.stat.return_value.st_size = 300
         mock_wheels_tar.exists.return_value = True
-        mock_wheels_tar.open.return_value.__enter__.return_value = io.BytesIO(
-            b"mock wheels tar content"
-        )
+        mock_wheels_tar.open.return_value.__enter__.return_value = io.BytesIO(b"mock wheels tar content")
         mock_wheels_tar.open.return_value.__exit__.return_value = None
 
         mock_create_slot_tarballs.return_value = (
@@ -332,14 +299,10 @@ class TestLauncherReproducibility:
         launcher_path.chmod(0o755)
         mock_find.return_value = launcher_path
 
-        orchestrator1 = orchestrator_factory(
-            key_seed="test-seed", output_flavor_path=tmp_path / "test1.psp"
-        )
+        orchestrator1 = orchestrator_factory(key_seed="test-seed", output_flavor_path=tmp_path / "test1.psp")
         orchestrator1.build_package()
 
-        orchestrator2 = orchestrator_factory(
-            key_seed="test-seed", output_flavor_path=tmp_path / "test2.psp"
-        )
+        orchestrator2 = orchestrator_factory(key_seed="test-seed", output_flavor_path=tmp_path / "test2.psp")
         orchestrator2.build_package()
 
         assert mock_build.call_count == 2

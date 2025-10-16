@@ -41,9 +41,7 @@ def env_command() -> None:
     # Display categories
     for category, vars in categories.items():
         if vars:
-            click.secho(
-                f"\n📁 {category} ({len(vars)} variables):", fg="blue", bold=True
-            )
+            click.secho(f"\n📁 {category} ({len(vars)} variables):", fg="blue", bold=True)
             for var in sorted(vars)[:5]:
                 value = env_vars.get(var, "")
                 if len(value) > 50:

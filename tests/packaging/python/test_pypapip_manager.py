@@ -42,9 +42,7 @@ class TestPyPaPipManager:
         wheel_dir = Path("/tmp/wheels")
         source_dir = Path("/tmp/mypackage")
 
-        cmd = self.pip_manager._get_pypapip_wheel_cmd(
-            python_exe, wheel_dir, source_dir, no_deps=False
-        )
+        cmd = self.pip_manager._get_pypapip_wheel_cmd(python_exe, wheel_dir, source_dir, no_deps=False)
 
         expected = [
             "/usr/bin/python3",
@@ -63,9 +61,7 @@ class TestPyPaPipManager:
         wheel_dir = Path("/tmp/wheels")
         source_dir = Path("/tmp/mypackage")
 
-        cmd = self.pip_manager._get_pypapip_wheel_cmd(
-            python_exe, wheel_dir, source_dir, no_deps=True
-        )
+        cmd = self.pip_manager._get_pypapip_wheel_cmd(python_exe, wheel_dir, source_dir, no_deps=True)
 
         expected = [
             "/usr/bin/python3",
@@ -109,9 +105,7 @@ class TestPyPaPipManager:
 
     @patch("flavor.packaging.python.pypapip_manager.get_arch_name")
     @patch("flavor.packaging.python.pypapip_manager.get_os_name")
-    def test_get_pypapip_download_cmd_linux_amd64(
-        self, mock_os_name, mock_arch_name
-    ) -> None:
+    def test_get_pypapip_download_cmd_linux_amd64(self, mock_os_name, mock_arch_name) -> None:
         """Test CRITICAL manylinux2014 handling for Linux amd64."""
         mock_os_name.return_value = "linux"
         mock_arch_name.return_value = "amd64"
@@ -144,9 +138,7 @@ class TestPyPaPipManager:
 
     @patch("flavor.packaging.python.pypapip_manager.get_arch_name")
     @patch("flavor.packaging.python.pypapip_manager.get_os_name")
-    def test_get_pypapip_download_cmd_linux_arm64(
-        self, mock_os_name, mock_arch_name
-    ) -> None:
+    def test_get_pypapip_download_cmd_linux_arm64(self, mock_os_name, mock_arch_name) -> None:
         """Test CRITICAL manylinux2014 handling for Linux ARM64."""
         mock_os_name.return_value = "linux"
         mock_arch_name.return_value = "arm64"
@@ -267,12 +259,12 @@ class TestPyPaPipManager:
             assert "--python-version" in cmd_310 and "3.10" in cmd_310
             assert "--python-version" in cmd_312 and "3.12" in cmd_312
 
-    @patch("flavor.packaging.python.pypapip_manager.run_command")
-    def test_download_wheels_from_requirements(self, mock_run_command) -> None:
+    @patch("flavor.packaging.python.pypapip_manager.run")
+    def test_download_wheels_from_requirements(self, mock_run) -> None:
         """Test downloading wheels from requirements file."""
         mock_result = Mock()
         mock_result.returncode = 0
-        mock_run_command.return_value = mock_result
+        mock_run.return_value = mock_result
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
             f.write("numpy\nscipy\n")
@@ -283,13 +275,11 @@ class TestPyPaPipManager:
             python_exe = Path("/usr/bin/python3")
             dest_dir = Path("/tmp/wheels")
 
-            self.pip_manager.download_wheels_from_requirements(
-                python_exe, requirements_file, dest_dir
-            )
+            self.pip_manager.download_wheels_from_requirements(python_exe, requirements_file, dest_dir)
 
-            # Verify run_command was called
-            mock_run_command.assert_called_once()
-            args, _kwargs = mock_run_command.call_args
+            # Verify run was called
+            mock_run.assert_called_once()
+            args, _kwargs = mock_run.call_args
 
             # Verify command structure
             cmd = args[0]
@@ -303,13 +293,13 @@ class TestPyPaPipManager:
         finally:
             requirements_file.unlink()
 
-    @patch("flavor.packaging.python.pypapip_manager.run_command")
-    def test_build_wheel_from_source(self, mock_run_command) -> None:
+    @patch("flavor.packaging.python.pypapip_manager.run")
+    def test_build_wheel_from_source(self, mock_run) -> None:
         """Test building wheel from source directory."""
         mock_result = Mock()
         mock_result.returncode = 0
         mock_result.stdout = "Built wheel: mypackage-1.0.0-py3-none-any.whl"
-        mock_run_command.return_value = mock_result
+        mock_run.return_value = mock_result
 
         python_exe = Path("/usr/bin/python3")
         source_path = Path("/tmp/mypackage")
@@ -317,9 +307,9 @@ class TestPyPaPipManager:
 
         self.pip_manager.build_wheel_from_source(python_exe, source_path, wheel_dir)
 
-        # Verify run_command was called with correct arguments
-        mock_run_command.assert_called_once()
-        args, kwargs = mock_run_command.call_args
+        # Verify run was called with correct arguments
+        mock_run.assert_called_once()
+        args, kwargs = mock_run.call_args
 
         cmd = args[0]
         assert cmd[0] == "/usr/bin/python3"
@@ -332,21 +322,21 @@ class TestPyPaPipManager:
         # Verify check=True for error handling
         assert kwargs["check"] is True
 
-    @patch("flavor.packaging.python.pypapip_manager.run_command")
-    def test_install_packages(self, mock_run_command) -> None:
+    @patch("flavor.packaging.python.pypapip_manager.run")
+    def test_install_packages(self, mock_run) -> None:
         """Test installing packages."""
         mock_result = Mock()
         mock_result.returncode = 0
-        mock_run_command.return_value = mock_result
+        mock_run.return_value = mock_result
 
         python_exe = Path("/usr/bin/python3")
         packages = ["requests", "urllib3"]
 
         self.pip_manager.install_packages(python_exe, packages)
 
-        # Verify run_command was called
-        mock_run_command.assert_called_once()
-        args, kwargs = mock_run_command.call_args
+        # Verify run was called
+        mock_run.assert_called_once()
+        args, kwargs = mock_run.call_args
 
         cmd = args[0]
         expected = ["/usr/bin/python3", "-m", "pip", "install", "requests", "urllib3"]
@@ -360,12 +350,12 @@ class TestPyPaPipManager:
         python_exe = Path("/usr/bin/python3")
         dest_dir = Path("/tmp/wheels")
 
-        # These should not raise exceptions and should not call run_command
-        with patch("flavor.packaging.python.pypapip_manager.run_command") as mock_run:
+        # These should not raise exceptions and should not call run
+        with patch("flavor.packaging.python.pypapip_manager.run") as mock_run:
             self.pip_manager.download_wheels_for_packages(python_exe, [], dest_dir)
             self.pip_manager.install_packages(python_exe, [])
 
-            # Should not have called run_command for empty lists
+            # Should not have called run for empty lists
             mock_run.assert_not_called()
 
 
@@ -401,9 +391,7 @@ class TestPyPaPipManagerCriticalFeatures:
 
     @patch("flavor.packaging.python.pypapip_manager.get_os_name")
     @patch("flavor.packaging.python.pypapip_manager.get_arch_name")
-    def test_linux_platforms_always_get_manylinux_tags(
-        self, mock_arch, mock_os
-    ) -> None:
+    def test_linux_platforms_always_get_manylinux_tags(self, mock_arch, mock_os) -> None:
         """CRITICAL: Linux builds must always get manylinux2014 tags."""
         mock_os.return_value = "linux"
 
@@ -446,12 +434,8 @@ class TestPyPaPipManagerCriticalFeatures:
 
         # Test all command generation methods
         install_cmd = self.pip_manager._get_pypapip_install_cmd(python_exe, ["test"])
-        wheel_cmd = self.pip_manager._get_pypapip_wheel_cmd(
-            python_exe, dest_dir, dest_dir
-        )
-        download_cmd = self.pip_manager._get_pypapip_download_cmd(
-            python_exe, dest_dir, packages=["test"]
-        )
+        wheel_cmd = self.pip_manager._get_pypapip_wheel_cmd(python_exe, dest_dir, dest_dir)
+        download_cmd = self.pip_manager._get_pypapip_download_cmd(python_exe, dest_dir, packages=["test"])
 
         # All commands must use "python -m pip", never "uv pip"
         for cmd in [install_cmd, wheel_cmd, download_cmd]:

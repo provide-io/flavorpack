@@ -66,9 +66,7 @@ class TestVerifyCommand:
         runner = click.testing.CliRunner()
 
         with tempfile.NamedTemporaryFile(suffix=".psp") as tmpfile:
-            with tempfile.NamedTemporaryFile(
-                mode="w", suffix=".json", delete=False
-            ) as output_file:
+            with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as output_file:
                 output_path = output_file.name
 
             try:
@@ -117,9 +115,7 @@ class TestVerifyCommand:
         with tempfile.NamedTemporaryFile(suffix=".psp") as tmpfile:
             # Mock FlavorVerifier to raise an exception
             with patch("flavor.verification.FlavorVerifier") as mock_verifier:
-                mock_verifier.verify_package.side_effect = Exception(
-                    "Verification error"
-                )
+                mock_verifier.verify_package.side_effect = Exception("Verification error")
 
                 result = runner.invoke(verify_command, [tmpfile.name])
                 assert result.exit_code == 0
@@ -132,9 +128,7 @@ class TestVerifyCommand:
         with tempfile.NamedTemporaryFile(suffix=".psp") as tmpfile:
             # Mock FlavorVerifier to raise an exception
             with patch("flavor.verification.FlavorVerifier") as mock_verifier:
-                mock_verifier.verify_package.side_effect = Exception(
-                    "Verification error"
-                )
+                mock_verifier.verify_package.side_effect = Exception("Verification error")
 
                 result = runner.invoke(verify_command, [tmpfile.name, "--json"])
                 assert result.exit_code == 0

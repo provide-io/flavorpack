@@ -41,9 +41,7 @@ class IngredientManager:
 
         # Also check XDG cache location for installed ingredients
         xdg_cache = os.environ.get("XDG_CACHE_HOME", str(Path("~/.cache").expanduser()))
-        self.installed_ingredients_bin = (
-            Path(xdg_cache) / "flavor" / "ingredients" / "bin"
-        )
+        self.installed_ingredients_bin = Path(xdg_cache) / "flavor" / "ingredients" / "bin"
 
         # Source directories are in src/<language>
         self.go_src_dir = self.flavor_root / "src" / "flavor-go"
@@ -61,9 +59,7 @@ class IngredientManager:
 
         self._binary_loader = BinaryLoader(self)
 
-    def list_ingredients(
-        self, platform_filter: bool = False
-    ) -> dict[str, list[IngredientInfo]]:
+    def list_ingredients(self, platform_filter: bool = False) -> dict[str, list[IngredientInfo]]:
         """List all available ingredients.
 
         Args:
@@ -78,9 +74,7 @@ class IngredientManager:
         if self.ingredients_bin.exists():
             for ingredient_path in self.ingredients_bin.iterdir():
                 if ingredient_path.is_file():
-                    if platform_filter and not self._is_platform_compatible(
-                        ingredient_path.name
-                    ):
+                    if platform_filter and not self._is_platform_compatible(ingredient_path.name):
                         continue
 
                     info = self._get_ingredient_info(ingredient_path)
@@ -95,17 +89,13 @@ class IngredientManager:
         if embedded_bin.exists():
             for ingredient_path in embedded_bin.iterdir():
                 if ingredient_path.is_file():
-                    if platform_filter and not self._is_platform_compatible(
-                        ingredient_path.name
-                    ):
+                    if platform_filter and not self._is_platform_compatible(ingredient_path.name):
                         continue
 
                     info = self._get_ingredient_info(ingredient_path)
                     if info:
                         # Check if we already have this ingredient from dev build
-                        existing_names = [
-                            i.name for sublist in ingredients.values() for i in sublist
-                        ]
+                        existing_names = [i.name for sublist in ingredients.values() for i in sublist]
                         if info.name not in existing_names:
                             if info.type == "launcher":
                                 ingredients["launchers"].append(info)
@@ -203,9 +193,7 @@ class IngredientManager:
     def _extract_version(self, path: Path) -> str | None:
         """Try to extract version from binary using --version flag."""
         try:
-            result = run(
-                [str(path), "--version"], check=False, capture_output=True, text=True
-            )
+            result = run([str(path), "--version"], check=False, capture_output=True, text=True)
             if result.returncode == 0 and result.stdout:
                 return self._parse_version_output(result.stdout.strip())
         except (OSError, Exception):
@@ -227,9 +215,7 @@ class IngredientManager:
             return self.rust_src_dir
         return None
 
-    def build_ingredients(
-        self, language: str | None = None, force: bool = False
-    ) -> list[Path]:
+    def build_ingredients(self, language: str | None = None, force: bool = False) -> list[Path]:
         """Build ingredient binaries from source."""
         return self._binary_loader.build_ingredients(language, force)
 

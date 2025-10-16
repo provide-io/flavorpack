@@ -80,15 +80,11 @@ def verify_command(package_path, output_json, output_file) -> None:
                 click.secho("\n📋 Verification Results:", fg="green")
                 click.echo(f"  Format: {result.get('format', 'unknown')}")
                 click.echo(f"  Version: {result.get('version', 'unknown')}")
-                click.echo(
-                    f"  Launcher Size: {result.get('launcher_size', 0) / 1024:.1f} KB"
-                )
+                click.echo(f"  Launcher Size: {result.get('launcher_size', 0) / 1024:.1f} KB")
 
                 if "package" in result:
                     pkg = result["package"]
-                    click.echo(
-                        f"  Package: {pkg.get('name', 'unknown')} v{pkg.get('version', 'unknown')}"
-                    )
+                    click.echo(f"  Package: {pkg.get('name', 'unknown')} v{pkg.get('version', 'unknown')}")
 
                 if "slots" in result:
                     click.echo(f"  Slots: {len(result['slots'])}")
@@ -146,9 +142,7 @@ def verify_command(package_path, output_json, output_file) -> None:
             basic_info["read_error"] = str(e)
 
         result_obj["basic_info"] = basic_info
-        result_obj["warning"] = (
-            "Flavor verification module not available, running basic checks only"
-        )
+        result_obj["warning"] = "Flavor verification module not available, running basic checks only"
 
         if output_json:
             output = json.dumps(result_obj, indent=2)

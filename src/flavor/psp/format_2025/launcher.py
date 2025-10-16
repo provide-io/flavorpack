@@ -109,9 +109,7 @@ class PSPFLauncher(PSPFReader):
 
         # Calculate total size needed (compressed size * multiplier for safety)
         slot_table = self.read_slot_table()
-        total_needed = sum(
-            slot["size"] * DEFAULT_DISK_SPACE_MULTIPLIER for slot in slot_table
-        )
+        total_needed = sum(slot["size"] * DEFAULT_DISK_SPACE_MULTIPLIER for slot in slot_table)
 
         # Use the utility function
         check_disk_space(workenv_dir, total_needed)
@@ -142,15 +140,11 @@ class PSPFLauncher(PSPFReader):
             logger.info(f"✅ Extracted all {len(extracted_paths)} slots")
             return extracted_paths
         except Exception as e:
-            logger.error(
-                f"❌ Extraction interrupted or failed: {e}. Cleaning up partial extraction."
-            )
+            logger.error(f"❌ Extraction interrupted or failed: {e}. Cleaning up partial extraction.")
             safe_rmtree(workenv_dir)
             raise  # Re-raise the exception
 
-    def extract_slot(
-        self, slot_index: int, workenv_dir: Path, verify_checksum: bool = False
-    ) -> Path:
+    def extract_slot(self, slot_index: int, workenv_dir: Path, verify_checksum: bool = False) -> Path:
         """Extract a single slot.
 
         Args:
@@ -167,9 +161,7 @@ class PSPFLauncher(PSPFReader):
         slot_table = self.read_slot_table()
 
         if slot_index < 0 or slot_index >= len(slot_table):
-            logger.error(
-                f"❌ Invalid slot index: {slot_index} (have {len(slot_table)} slots)"
-            )
+            logger.error(f"❌ Invalid slot index: {slot_index} (have {len(slot_table)} slots)")
             raise ValueError(f"Invalid slot index: {slot_index}")
 
         slot_entry = slot_table[slot_index]
@@ -222,9 +214,7 @@ class PSPFLauncher(PSPFReader):
         if "slots" in metadata and slot_index < len(metadata["slots"]):
             slot_meta = metadata["slots"][slot_index]
             # Use "target" field for extraction path, fallback to "id" or "name"
-            slot_name = slot_meta.get(
-                "target", slot_meta.get("id", slot_meta.get("name", slot_name))
-            )
+            slot_name = slot_meta.get("target", slot_meta.get("id", slot_meta.get("name", slot_name)))
         logger.debug(f"📝 Slot {slot_index} name: {slot_name}")
 
         # NOTE: Tarball extraction logic matches Go's tar extraction
@@ -249,9 +239,7 @@ class PSPFLauncher(PSPFReader):
                 # Return the base directory
                 return workenv_dir
             except (OSError, PermissionError, tarfile.ReadError) as e:
-                logger.error(
-                    f"❌ Disk or tarball error extracting slot {slot_index} to {workenv_dir}: {e}"
-                )
+                logger.error(f"❌ Disk or tarball error extracting slot {slot_index} to {workenv_dir}: {e}")
                 raise  # Re-raise the exception
         else:
             # Write single file (atomic for safety)
@@ -262,9 +250,7 @@ class PSPFLauncher(PSPFReader):
                 logger.debug(f"✅ Wrote {len(data)} bytes to {output_path}")
                 return output_path
             except (OSError, PermissionError) as e:
-                logger.error(
-                    f"❌ Disk error writing slot {slot_index} to {output_path}: {e}"
-                )
+                logger.error(f"❌ Disk error writing slot {slot_index} to {output_path}: {e}")
                 raise  # Re-raise the exception
 
     def setup_workenv(self) -> Path:
@@ -305,9 +291,7 @@ class PSPFLauncher(PSPFReader):
             # Use the executor for actual process execution
             from flavor.psp.format_2025.executor import BundleExecutor
 
-            logger.debug(
-                f"🔍 Metadata command: {metadata.get('execution', {}).get('command', 'N/A')}"
-            )
+            logger.debug(f"🔍 Metadata command: {metadata.get('execution', {}).get('command', 'N/A')}")
             logger.debug(f"🔍 Workenv dir: {workenv_dir}")
             executor = BundleExecutor(metadata, workenv_dir)
 

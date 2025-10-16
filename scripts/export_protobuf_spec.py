@@ -16,9 +16,7 @@ import yaml
 from flavor.psp.format_2025.generated.modules import operations_pb2
 
 # Configure logging with emojis
-logging.basicConfig(
-    level=logging.DEBUG, format="%(levelname)s %(message)s", stream=sys.stdout
-)
+logging.basicConfig(level=logging.DEBUG, format="%(levelname)s %(message)s", stream=sys.stdout)
 logger = logging.getLogger(__name__)
 
 
@@ -264,9 +262,7 @@ def export_operation_names_only():
     log_success(f"Exported {len(names)} operation names to {output_path}")
 
     # Also create a simple mapping file
-    mapping = {
-        value.name: value.number for value in operations_pb2.Operation.DESCRIPTOR.values
-    }
+    mapping = {value.name: value.number for value in operations_pb2.Operation.DESCRIPTOR.values}
     mapping_path = Path("spec/pspf_2025/operation_mapping.json")
     with open(mapping_path, "w") as f:
         json.dump(mapping, f, indent=2, sort_keys=True)

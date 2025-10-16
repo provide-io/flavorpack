@@ -46,19 +46,14 @@ def argv_command() -> None:
     if any(expected in sys.argv[0] for expected in expected_names):
         click.secho(f"  ✅ argv[0] shows flavor binary name: {sys.argv[0]}", fg="green")
     else:
-        click.secho(
-            f"  ⚠️ argv[0] might not be set correctly: {sys.argv[0]}", fg="yellow"
-        )
+        click.secho(f"  ⚠️ argv[0] might not be set correctly: {sys.argv[0]}", fg="yellow")
 
     # Check launcher type
     click.secho("\n🚀 Launcher Detection:", fg="blue")
 
     # Rust launcher sets argv[0] properly
     # Go launcher cannot set argv[0] and uses FLAVOR_COMMAND_NAME
-    if (
-        "FLAVOR_COMMAND_NAME" in os.environ
-        and os.environ["FLAVOR_COMMAND_NAME"] != sys.argv[0]
-    ):
+    if "FLAVOR_COMMAND_NAME" in os.environ and os.environ["FLAVOR_COMMAND_NAME"] != sys.argv[0]:
         click.echo("  Launcher: Likely Go (using FLAVOR_COMMAND_NAME fallback)")
         click.echo(f"    - argv[0]: {sys.argv[0]}")
         click.echo(f"    - FLAVOR_COMMAND_NAME: {os.environ['FLAVOR_COMMAND_NAME']}")

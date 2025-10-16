@@ -13,9 +13,7 @@ from provide.foundation.serialization import json_dumps
 from flavor.exceptions import BuildError
 
 
-def get_cli_executable_name(
-    package_name: str, build_config: dict[str, Any], windows: bool
-) -> str:
+def get_cli_executable_name(package_name: str, build_config: dict[str, Any], windows: bool) -> str:
     """Get the CLI executable name from build config or fallback to package name.
 
     Args:
@@ -36,9 +34,7 @@ def get_cli_executable_name(
         return f"{package_name}.exe" if windows else package_name
 
 
-def create_slot_tarballs(
-    temp_dir: Path, artifacts: dict[str, Path]
-) -> dict[str, Path]:
+def create_slot_tarballs(temp_dir: Path, artifacts: dict[str, Path]) -> dict[str, Path]:
     """Create tarball files for each slot.
 
     Args:
@@ -251,9 +247,7 @@ def find_launcher_executable(launcher_bin: str | None) -> Path:
     if env_bin:
         path = Path(env_bin)
         if not path.exists():
-            raise BuildError(
-                f"Launcher binary from FLAVOR_LAUNCHER_BIN not found: {env_bin}"
-            )
+            raise BuildError(f"Launcher binary from FLAVOR_LAUNCHER_BIN not found: {env_bin}")
         return path
 
     from flavor.ingredients.manager import IngredientManager
@@ -289,9 +283,7 @@ def create_python_builder_metadata(
     windows = is_windows()
     bin_dir = "Scripts" if windows else "bin"
     # Use the exact Python binary name that UV provides
-    python_exe = (
-        "python.exe" if windows else "python3"
-    )  # UV installs Python as python3 on all Unix platforms
+    python_exe = "python.exe" if windows else "python3"  # UV installs Python as python3 on all Unix platforms
     python_path = f"{{workenv}}/{bin_dir}/{python_exe}"
     package_exe = get_cli_executable_name(package_name, build_config, windows)
 
@@ -369,9 +361,7 @@ def create_python_builder_metadata(
     return metadata
 
 
-def create_python_slot_tarballs(
-    temp_dir: Path, artifacts: dict[str, Path]
-) -> tuple[Path, Path, Path]:
+def create_python_slot_tarballs(temp_dir: Path, artifacts: dict[str, Path]) -> tuple[Path, Path, Path]:
     """Create slot tarballs for Python builder."""
     windows = is_windows()
     uv_exe = "uv.exe" if windows else "uv"

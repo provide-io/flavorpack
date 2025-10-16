@@ -64,9 +64,7 @@ class WorkEnvManager:
 
             # Run setup commands
             if "setup_commands" in metadata:
-                self._run_setup_commands(
-                    metadata["setup_commands"], workenv_dir, metadata
-                )
+                self._run_setup_commands(metadata["setup_commands"], workenv_dir, metadata)
 
             # Handle lifecycle-based cleanup
             self._cleanup_lifecycle_slots(workenv_dir, metadata, extracted_slots)
@@ -75,9 +73,7 @@ class WorkEnvManager:
 
         return workenv_dir
 
-    def _check_cache_validity(
-        self, metadata: dict, workenv_dir: Path, package_version: str
-    ) -> bool:
+    def _check_cache_validity(self, metadata: dict, workenv_dir: Path, package_version: str) -> bool:
         """Check if work environment cache is valid.
 
         Args:
@@ -103,9 +99,7 @@ class WorkEnvManager:
 
             if check_path.exists():
                 actual_content = check_path.read_text().strip()
-                if actual_content == expected_content.replace(
-                    "{version}", package_version
-                ):
+                if actual_content == expected_content.replace("{version}", package_version):
                     cache_valid = True
                     logger.debug("✅ Cache is valid")
                 else:
@@ -138,9 +132,7 @@ class WorkEnvManager:
                 # Handle different lifecycle values
                 if lifecycle == "init":
                     # 'init' lifecycle: remove after initialization
-                    logger.debug(
-                        f"🗑️ Removing 'init' lifecycle slot {slot_idx}: {slot_path}"
-                    )
+                    logger.debug(f"🗑️ Removing 'init' lifecycle slot {slot_idx}: {slot_path}")
                     if slot_path.exists():
                         if slot_path.is_dir():
                             safe_rmtree(slot_path)
@@ -148,13 +140,9 @@ class WorkEnvManager:
                             slot_path.unlink(missing_ok=True)
                 elif lifecycle == "temp":
                     # 'temp' lifecycle: mark for cleanup after session
-                    logger.debug(
-                        f"🕐 Slot {slot_idx} marked as 'temp' - will be cleaned after session"
-                    )
+                    logger.debug(f"🕐 Slot {slot_idx} marked as 'temp' - will be cleaned after session")
 
-    def _run_setup_commands(
-        self, setup_commands: list, workenv_dir: Path, metadata: dict
-    ) -> None:
+    def _run_setup_commands(self, setup_commands: list, workenv_dir: Path, metadata: dict) -> None:
         """Run setup commands for work environment.
 
         Args:
@@ -182,9 +170,7 @@ class WorkEnvManager:
             else:
                 logger.warning("⚠️ String setup commands not supported")
 
-    def _run_write_file_command(
-        self, cmd: dict, workenv_dir: Path, metadata: dict
-    ) -> None:
+    def _run_write_file_command(self, cmd: dict, workenv_dir: Path, metadata: dict) -> None:
         """Handle file writing command.
 
         Args:
@@ -214,9 +200,7 @@ class WorkEnvManager:
 
         logger.debug(f"✅ Wrote file: {file_path}")
 
-    def _run_execute_command(
-        self, cmd: dict, workenv_dir: Path, metadata: dict
-    ) -> None:
+    def _run_execute_command(self, cmd: dict, workenv_dir: Path, metadata: dict) -> None:
         """Handle command execution.
 
         Args:
@@ -286,9 +270,7 @@ class WorkEnvManager:
 
         logger.debug(f"✅ Processed {len(matches)} files")
 
-    def _substitute_placeholders(
-        self, text: str, workenv_dir: Path, metadata: dict
-    ) -> str:
+    def _substitute_placeholders(self, text: str, workenv_dir: Path, metadata: dict) -> str:
         """Substitute common placeholders in text.
 
         Args:

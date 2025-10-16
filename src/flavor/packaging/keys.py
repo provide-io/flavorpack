@@ -85,9 +85,7 @@ def load_private_key_raw(key_path: Path) -> bytes:
 
     pem_data = key_path.read_bytes()
     try:
-        private_key = serialization.load_pem_private_key(
-            pem_data, password=None, backend=default_backend()
-        )
+        private_key = serialization.load_pem_private_key(pem_data, password=None, backend=default_backend())
     except Exception as e:
         raise ValueError(
             f"Failed to load private key from {key_path}: {e}\n"

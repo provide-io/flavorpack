@@ -116,11 +116,7 @@ target = "config.json"
                     error = None
                 else:
                     status = "❌ Failed"
-                    error = (
-                        str(result.error)
-                        if hasattr(result, "error")
-                        else "Unknown error"
-                    )
+                    error = str(result.error) if hasattr(result, "error") else "Unknown error"
 
             except Exception as e:
                 status = "❌ Failed"
@@ -158,9 +154,7 @@ target = "config.json"
 
         for result in results:
             status_color = "green" if "✅" in result["status"] else "red"
-            click.secho(
-                f"  {result['status']} {result['description']}", fg=status_color
-            )
+            click.secho(f"  {result['status']} {result['description']}", fg=status_color)
 
         passed = len([r for r in results if "✅" in r["status"]])
         total = len(results)

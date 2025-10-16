@@ -64,9 +64,7 @@ def _validate_workenv_directories(directories: list[dict[str, Any]]) -> None:
     """Validate workenv directories configuration."""
     for dir_info in directories:
         if "path" in dir_info and not dir_info["path"].startswith("{workenv}"):
-            raise ValueError(
-                f"Workenv directory path must start with {{workenv}}: {dir_info['path']}"
-            )
+            raise ValueError(f"Workenv directory path must start with {{workenv}}: {dir_info['path']}")
         if "mode" in dir_info:
             _validate_mode(dir_info["mode"])
 
