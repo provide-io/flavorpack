@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """
+"""
 PSPF Build Validation - Pure functions for validating build specifications.
 
 All validation functions are pure and return lists of error messages.

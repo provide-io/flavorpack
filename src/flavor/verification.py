@@ -6,6 +6,7 @@
 # flavor/verification.py
 #
 """Package verification for PSPF/2025 bundles.from pathlib import Path
+"""
 
 from flavor.psp.format_2025 import PSPFReader
 

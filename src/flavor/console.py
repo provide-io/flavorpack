@@ -7,6 +7,7 @@
 # flavor/console.py
 #
 """Centralized console output utilities for Flavor CLI.
+"""
 
 This module provides Unicode-safe console output functions that wrap
 Foundation's console utilities. Foundation handles emoji display automatically

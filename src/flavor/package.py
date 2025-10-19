@@ -6,6 +6,7 @@
 # flavor/api.py
 #
 """Public API for the Flavor build tool.from pathlib import Path
+"""
 
 # No typing imports needed with Python 3.11+
 import tomllib

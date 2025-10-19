@@ -7,6 +7,7 @@
 # flavor/commands/inspect.py
 #
 """Inspect command for the flavor CLI - quick package overview.from pathlib import Path
+"""
 from typing import Any
 
 import click

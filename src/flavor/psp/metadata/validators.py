@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """
+"""
 Metadata validation functions for PSP packages.
 
 This module contains validation logic for package metadata structures.

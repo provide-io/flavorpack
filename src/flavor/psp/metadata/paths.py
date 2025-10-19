@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """
+"""
 Path validation and normalization for PSPF metadata.
 
 Ensures all paths in metadata use the {workenv} placeholder for portability.

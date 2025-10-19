@@ -7,6 +7,7 @@
 # flavor/commands/extract.py
 #
 """Extract command for the flavor CLI - extract slots from packages.from pathlib import Path
+"""
 
 import click
 from provide.foundation.file import atomic_write

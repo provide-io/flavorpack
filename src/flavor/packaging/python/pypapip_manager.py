@@ -6,6 +6,7 @@
 # flavor/packaging/python/pip_manager.py
 #
 """PyPA pip command management for FlavorPack packaging.
+"""
 
 This module handles all pip-specific operations with proper platform support
 and manylinux2014 compatibility for maximum Linux distribution coverage.

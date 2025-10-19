@@ -7,6 +7,7 @@
 # flavor/commands/package.py
 #
 """Package command for the flavor CLI.from pathlib import Path
+"""
 
 import click
 

@@ -6,6 +6,7 @@
 # flavor/packaging/python/dist_manager.py
 #
 """Python distribution management for FlavorPack packaging.
+"""
 
 This module provides Python distribution handling including virtual environment
 setup, package installation, and distribution preparation for PSPF packaging.

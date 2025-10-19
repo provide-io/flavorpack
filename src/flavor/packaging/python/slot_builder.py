@@ -6,6 +6,7 @@
 # flavor/packaging/python/slot_builder.py
 #
 """Slot builder for Python packages.from pathlib import Path
+"""
 import tarfile
 import tomllib
 from typing import Any

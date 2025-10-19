@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """
+"""
 PSPF Build Specification - Immutable data structures for package building.
 
 This module defines the core data structures used throughout the PSPF builder
