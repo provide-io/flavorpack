@@ -12,8 +12,6 @@ for Python package management operations that benefit from uv's performance.
 
 IMPORTANT: UV commands are used for specific operations where performance
 is critical. For complex dependency resolution, use PyPaPipManager instead.
-"""
-
 from pathlib import Path
 
 from provide.foundation import retry

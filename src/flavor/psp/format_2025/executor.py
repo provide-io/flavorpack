@@ -5,8 +5,6 @@
 
 """PSPF 2025 Bundle Executor
 Handles process execution with environment setup and variable substitution.
-"""
-
 import os
 from pathlib import Path
 import shlex

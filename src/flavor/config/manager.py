@@ -5,8 +5,6 @@
 
 """This module provides the configuration management logic for FlavorPack,
 including environment variable loading and global configuration management.
-"""
-
 from __future__ import annotations
 
 import os

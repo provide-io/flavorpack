@@ -3,9 +3,7 @@
 # SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-"""Cache management for Flavor packages."""
-
-import contextlib
+"""Cache management for Flavor packages.import contextlib
 import os
 from pathlib import Path
 import time

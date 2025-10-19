@@ -9,8 +9,6 @@ This module uses the `attrs` library to define typed, immutable classes that
 represent the configuration for building a Flavor package. This approach provides
 type safety, default values, and clearer code compared to using unstructured
 dictionaries.
-"""
-
 from __future__ import annotations
 
 from pathlib import Path

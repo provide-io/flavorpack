@@ -7,8 +7,6 @@
 Python Dependency Resolution
 
 Handles downloading, extracting, and managing Python dependencies and tools.
-"""
-
 from pathlib import Path
 import shutil
 import sys

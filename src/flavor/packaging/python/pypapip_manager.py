@@ -9,8 +9,6 @@
 
 This module handles all pip-specific operations with proper platform support
 and manylinux2014 compatibility for maximum Linux distribution coverage.
-"""
-
 from pathlib import Path
 
 from provide.foundation import retry

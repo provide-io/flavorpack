@@ -6,9 +6,7 @@
 #
 # flavor/commands/ingredients.py
 #
-"""Ingredient management commands for the flavor CLI."""
-
-import os
+"""Ingredient management commands for the flavor CLI.import os
 from pathlib import Path
 
 import click

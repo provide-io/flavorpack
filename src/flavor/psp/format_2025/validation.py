@@ -8,8 +8,6 @@ PSPF Build Validation - Pure functions for validating build specifications.
 
 All validation functions are pure and return lists of error messages.
 Empty list means validation passed.
-"""
-
 from pathlib import Path
 from typing import Any
 

@@ -6,9 +6,7 @@
 #
 # flavor/commands/utils.py
 #
-"""Utility commands for the flavor CLI."""
-
-from pathlib import Path
+"""Utility commands for the flavor CLI.from pathlib import Path
 from typing import Any
 
 import click

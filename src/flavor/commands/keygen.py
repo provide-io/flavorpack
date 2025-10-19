@@ -6,9 +6,7 @@
 #
 # flavor/commands/keygen.py
 #
-"""Key generation command for the flavor CLI."""
-
-from pathlib import Path
+"""Key generation command for the flavor CLI.from pathlib import Path
 
 import click
 

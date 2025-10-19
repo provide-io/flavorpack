@@ -7,8 +7,6 @@
 Binary loading and building for ingredients.
 
 Handles the complex logic of finding, building, and testing ingredient binaries.
-"""
-
 from __future__ import annotations
 
 import os

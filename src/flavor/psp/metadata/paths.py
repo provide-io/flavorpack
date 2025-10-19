@@ -8,8 +8,6 @@ Path validation and normalization for PSPF metadata.
 
 Ensures all paths in metadata use the {workenv} placeholder for portability.
 This makes it clear to developers that paths are relative to the work environment.
-"""
-
 import os
 from pathlib import Path
 from typing import Any

@@ -7,8 +7,6 @@
 Environment variable management for PSPF/2025 packages.
 
 Handles platform-specific environment variables and layered environment processing.
-"""
-
 import fnmatch
 from typing import Any
 

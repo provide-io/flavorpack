@@ -7,8 +7,6 @@
 Metadata validation functions for PSP packages.
 
 This module contains validation logic for package metadata structures.
-"""
-
 from typing import Any
 
 

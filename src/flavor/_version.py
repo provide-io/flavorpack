@@ -6,8 +6,6 @@
 """Version handling for flavorpack.
 
 This module uses the shared versioning utility from provide-foundation.
-"""
-
 from provide.foundation.utils.versioning import get_version
 
 __version__ = get_version("flavorpack", caller_file=__file__)

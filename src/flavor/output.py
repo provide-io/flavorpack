@@ -6,9 +6,7 @@
 #
 # flavor/output.py
 #
-"""Output formatting and redirection for Flavor tools."""
-
-from __future__ import annotations
+"""Output formatting and redirection for Flavor tools.from __future__ import annotations
 
 from enum import Enum
 from pathlib import Path

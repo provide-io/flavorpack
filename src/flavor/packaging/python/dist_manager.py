@@ -9,8 +9,6 @@
 
 This module provides Python distribution handling including virtual environment
 setup, package installation, and distribution preparation for PSPF packaging.
-"""
-
 import os
 from pathlib import Path
 import shutil  # Only kept for copytree which Foundation doesn't provide

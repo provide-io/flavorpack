@@ -5,8 +5,6 @@
 
 """
 Custom exceptions for the flavor pack.
-"""
-
 from provide.foundation.errors import FoundationError
 
 
