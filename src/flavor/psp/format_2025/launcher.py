@@ -6,6 +6,8 @@
 """PSPF 2025 Bundle Launcher
 
 Handles bundle execution, slot extraction, and work environment setup.
+"""
+
 from contextlib import contextmanager
 import io
 from pathlib import Path

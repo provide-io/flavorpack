@@ -8,6 +8,8 @@ PSPF Builder - Functional package builder with immutable patterns.
 
 This module provides both pure functions and a fluent builder interface
 for creating PSPF packages.
+"""
+
 import os
 from pathlib import Path
 import time

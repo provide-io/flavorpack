@@ -6,6 +6,8 @@
 """PSPF 2025 Format Implementation
 
 Progressive Secure Package Format (2025 Edition)
+"""
+
 from provide.foundation.crypto import (
     Ed25519Signer,
     Ed25519Verifier,

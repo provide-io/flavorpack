@@ -8,6 +8,8 @@ PSP Protocol Definitions - Type-safe interfaces for PSP operations.
 
 Defines protocols for common PSP operations that can be implemented by different
 format versions (PSPF/2025, future formats, etc.).
+"""
+
 from pathlib import Path
 from typing import Protocol, TypedDict
 

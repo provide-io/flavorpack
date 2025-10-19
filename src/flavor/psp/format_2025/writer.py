@@ -7,6 +7,8 @@
 PSPF Package Writer - Binary serialization for PSPF packages.
 
 Handles the low-level binary writing and file operations for PSPF packages.
+"""
+
 import gzip
 from pathlib import Path
 from typing import Any, BinaryIO

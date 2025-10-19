@@ -5,7 +5,7 @@
 
 """Centralized default values for Flavorpack configuration.
 All defaults are defined here instead of inline in field definitions.
-import sys
+"""
 
 # =================================
 # PSPF Format defaults
