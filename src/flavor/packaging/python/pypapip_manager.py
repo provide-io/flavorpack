@@ -142,10 +142,10 @@ class PyPaPipManager:
                 cmd.extend(["--platform", f"{self.MANYLINUX_TAG}_x86_64"])
                 logger.debug(f"Added platform constraint: {self.MANYLINUX_TAG}_x86_64")
             elif arch == "arm64":
-                # ARM64 uses manylinux2014 tag (same as x86_64 for consistency)
-                # manylinux2014_aarch64 = manylinux_2_17_aarch64 (glibc 2.17)
-                cmd.extend(["--platform", f"{self.MANYLINUX_TAG}_aarch64"])
-                logger.debug(f"Added platform constraint: {self.MANYLINUX_TAG}_aarch64")
+                # ARM64 uses manylinux_2_17_aarch64 (glibc 2.17, equivalent to manylinux2014)
+                # Per PEP 600, ARM64 requires the explicit version format
+                cmd.extend(["--platform", "manylinux_2_17_aarch64"])
+                logger.debug("Added platform constraint: manylinux_2_17_aarch64")
                 logger.warning("⚠️ grpcio on CentOS 7 ARM64 may have C++ ABI issues")
 
         if requirements_file:
