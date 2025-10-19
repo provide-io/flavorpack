@@ -1,4 +1,8 @@
-#!/usr/bin/env python3
+# flavor/packaging/keys.py
+#
+# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 #
 # flavor/packaging/keys.py
 #
@@ -173,3 +177,6 @@ def load_public_key_raw(key_path: Path) -> bytes:
             f"To generate new Ed25519 keys, delete the existing keys and run:\n"
             f"  flavor keygen --output keys/"
         )
+
+
+# 🌶️📦📄🪄

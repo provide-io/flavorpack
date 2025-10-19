@@ -1,4 +1,8 @@
-#!/usr/bin/env python3
+# flavor/commands/keygen.py
+#
+# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 #
 # flavor/commands/keygen.py
 #
@@ -35,3 +39,6 @@ def keygen_command(out_dir: str) -> None:
         log.error("Keygen failed", error=str(e), out_dir=out_dir)
         echo_error(f"❌ Keygen failed: {e}")
         raise click.Abort() from e
+
+
+# 🌶️📦🖥️🪄

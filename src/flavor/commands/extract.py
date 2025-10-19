@@ -1,4 +1,8 @@
-#!/usr/bin/env python3
+# flavor/commands/extract.py
+#
+# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 #
 # flavor/commands/extract.py
 #
@@ -213,3 +217,6 @@ def extract_all_command(package_file: str, output_dir: str, force: bool) -> None
         log.error("Error extracting", error=str(e), package=package_file)
         echo_error(f"❌ Error extracting: {e}")
         raise click.Abort() from e
+
+
+# 🌶️📦🖥️🪄

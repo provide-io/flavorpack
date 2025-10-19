@@ -1,4 +1,8 @@
-#!/usr/bin/env python3
+# flavor/output.py
+#
+# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 #
 # flavor/output.py
 #
@@ -155,3 +159,6 @@ def get_output_handler(
     output_file = get_env(file_env)
 
     return OutputHandler(format=output_format, file=output_file)
+
+
+# 🌶️📦📄🪄

@@ -1,4 +1,8 @@
-#!/usr/bin/env python3
+# flavor/psp/metadata/paths.py
+#
+# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 """
 Path validation and normalization for PSPF metadata.
 
@@ -364,3 +368,6 @@ def create_workenv_directories(
         # Restore original umask
         if old_umask is not None:
             os.umask(old_umask)
+
+
+# 🌶️📦➡️🪄

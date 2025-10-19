@@ -1,4 +1,8 @@
-#!/usr/bin/env python3
+# flavor/psp/protocols.py
+#
+# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 """
 PSP Protocol Definitions - Type-safe interfaces for PSP operations.
 
@@ -52,3 +56,6 @@ class ExtractorProtocol(Protocol):
             Path to the extracted content
         """
         ...
+
+
+# 🌶️📦📡🪄

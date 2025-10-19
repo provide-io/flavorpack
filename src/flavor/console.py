@@ -1,4 +1,8 @@
-#!/usr/bin/env python3
+# flavor/console.py
+#
+# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 #
 # flavor/console.py
 #
@@ -72,3 +76,6 @@ def get_command_logger(command_name: str) -> Any:
         log.error("Packaging failed", error=str(e))
     """
     return get_logger(f"flavor.commands.{command_name}")
+
+
+# 🌶️📦📄🪄

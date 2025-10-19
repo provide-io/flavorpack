@@ -1,4 +1,8 @@
-#!/usr/bin/env python3
+# flavor/psp/format_2025/handlers.py
+#
+# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 """
 PSPF Operation Handlers - Bridge between PSPF operations and Foundation archive tools.
 
@@ -417,3 +421,4 @@ __all__ = [
     "map_operations",
     "reverse_operations",
 ]
+# 🌶️📦🔄🪄

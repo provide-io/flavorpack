@@ -1,4 +1,8 @@
-#!/usr/bin/env python3
+# flavor/psp/metadata/validators.py
+#
+# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 """
 Metadata validation functions for PSP packages.
 
@@ -119,3 +123,6 @@ def _parse_octal_umask(umask: str) -> int:
         return int(umask, 8)
     else:
         return int(umask, 8)
+
+
+# 🌶️📦📄🪄

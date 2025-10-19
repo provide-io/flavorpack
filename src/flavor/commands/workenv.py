@@ -1,4 +1,8 @@
-#!/usr/bin/env python3
+# flavor/commands/workenv.py
+#
+# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 #
 # flavor/commands/workenv.py
 #
@@ -218,3 +222,6 @@ def workenv_inspect(package_id: str, output_json: bool) -> None:
                 echo(f"  Builder: {pkg.get('builder')}")
 
         echo("")
+
+
+# 🌶️📦🖥️🪄

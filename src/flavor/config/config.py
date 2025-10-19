@@ -1,5 +1,9 @@
-"""
-Structured configuration models for the `[tool.flavor]` section of `pyproject.toml`.
+# flavor/config/config.py
+#
+# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+"""Structured configuration models for the `[tool.flavor]` section of `pyproject.toml`.
 
 This module uses the `attrs` library to define typed, immutable classes that
 represent the configuration for building a Flavor package. This approach provides
@@ -221,3 +225,6 @@ class FlavorConfig(BaseConfig):
             execution=execution,
             system=system,
         )
+
+
+# 🌶️📦⚙️🪄

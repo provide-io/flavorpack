@@ -1,4 +1,7 @@
-"""File-based locking mechanism for Flavor."""
+# flavor/locking.py
+#
+# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
 
 from collections.abc import Generator
 from contextlib import contextmanager
@@ -64,3 +67,4 @@ class LockManager:
 
 # Global default instance
 default_lock_manager = LockManager()
+# 🌶️📦📄🪄

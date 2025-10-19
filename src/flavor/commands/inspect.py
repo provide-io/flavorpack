@@ -1,4 +1,8 @@
-#!/usr/bin/env python3
+# flavor/commands/inspect.py
+#
+# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 #
 # flavor/commands/inspect.py
 #
@@ -173,3 +177,6 @@ def _output_slot_details(slot_descriptors: list[Any], slots_metadata: list[dict[
             slot_info += f" [{slot_codec}]"
 
         echo(f"{prefix} {slot_info}")
+
+
+# 🌶️📦🖥️🪄

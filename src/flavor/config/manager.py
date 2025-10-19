@@ -1,6 +1,9 @@
-"""FlavorPack Configuration Manager.
+# flavor/config/manager.py
+#
+# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
 
-This module provides the configuration management logic for FlavorPack,
+"""This module provides the configuration management logic for FlavorPack,
 including environment variable loading and global configuration management.
 """
 
@@ -114,3 +117,6 @@ def set_flavor_config(config: FlavorConfig | None) -> None:
 def reset_flavor_config() -> None:
     """Reset the global configuration to force reload from environment."""
     _config_manager.reset_config()
+
+
+# 🌶️📦⚙️🪄

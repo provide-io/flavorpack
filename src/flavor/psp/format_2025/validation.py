@@ -1,4 +1,8 @@
-#!/usr/bin/env python3
+# flavor/psp/format_2025/validation.py
+#
+# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 """
 PSPF Build Validation - Pure functions for validating build specifications.
 
@@ -246,3 +250,6 @@ def validate_complete(spec: BuildSpec) -> list[str]:
     errors.extend(validate_build_options(spec))
 
     return errors
+
+
+# 🌶️📦✅🪄

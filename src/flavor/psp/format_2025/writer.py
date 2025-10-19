@@ -1,4 +1,8 @@
-#!/usr/bin/env python3
+# flavor/psp/format_2025/writer.py
+#
+# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 """
 PSPF Package Writer - Binary serialization for PSPF packages.
 
@@ -313,3 +317,6 @@ def _map_lifecycle(lifecycle: str) -> int:
         "temporary": LIFECYCLE_TEMPORARY,
     }
     return mapping.get(lifecycle.lower(), LIFECYCLE_RUNTIME)
+
+
+# 🌶️📦📄🪄

@@ -1,4 +1,8 @@
+# flavor/packaging/python/packager.py
 #
+# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 # flavor/packaging/python/packager.py
 #
 """Python packager that owns all Python-specific packaging logic."""
@@ -319,3 +323,6 @@ class PythonPackager:
             f"python={self.python_version}, "
             f"platform={'windows' if self.is_windows else 'unix'})"
         )
+
+
+# 🌶️📦📄🪄

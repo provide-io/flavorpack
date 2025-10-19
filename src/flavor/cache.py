@@ -1,4 +1,8 @@
-#!/usr/bin/env python3
+# flavor/cache.py
+#
+# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 """Cache management for Flavor packages."""
 
 import contextlib
@@ -231,3 +235,6 @@ class CacheManager:
                 with contextlib.suppress(OSError):
                     total += filepath.stat().st_size
         return total
+
+
+# 🌶️📦📄🪄

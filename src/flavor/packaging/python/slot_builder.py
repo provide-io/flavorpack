@@ -1,4 +1,8 @@
+# flavor/packaging/python/slot_builder.py
 #
+# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 # flavor/packaging/python/slot_builder.py
 #
 """Slot builder for Python packages."""
@@ -384,3 +388,6 @@ class PythonSlotBuilder:
 
         logger.debug("No requirements file found")
         return None
+
+
+# 🌶️📦📄🪄

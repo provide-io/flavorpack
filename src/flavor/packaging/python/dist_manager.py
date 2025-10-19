@@ -1,4 +1,8 @@
+# flavor/packaging/python/dist_manager.py
 #
+# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 # flavor/packaging/python/dist_manager.py
 #
 """Python distribution management for FlavorPack packaging.
@@ -414,3 +418,6 @@ class PythonDistManager:
         except Exception as e:
             logger.error(f"Distribution validation failed: {e}")
             return False
+
+
+# 🌶️📦📋🪄

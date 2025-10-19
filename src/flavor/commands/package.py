@@ -1,4 +1,8 @@
-#!/usr/bin/env python3
+# flavor/commands/package.py
+#
+# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 #
 # flavor/commands/package.py
 #
@@ -229,3 +233,6 @@ def _show_final_results(built_artifacts: list[Path], quiet: bool) -> None:
     else:
         log.warning("No targets were specified or built")
         echo("⚠️ No targets were specified or built.")
+
+
+# 🌶️📦🖥️🪄

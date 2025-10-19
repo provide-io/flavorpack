@@ -1,4 +1,8 @@
+# flavor/packaging/python/uv_manager.py
 #
+# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 # flavor/packaging/python/uv_manager.py
 #
 """UV tool manager for FlavorPack packaging.
@@ -416,3 +420,6 @@ class UVManager(BaseToolManager):
             except Exception as e:
                 logger.error(f"Failed to download UV binary: {e}")
                 return None
+
+
+# 🌶️📦📋🪄

@@ -1,4 +1,8 @@
+# flavor/verification.py
 #
+# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 # flavor/verification.py
 #
 """Package verification for PSPF/2025 bundles."""
@@ -68,3 +72,4 @@ class FlavorVerifier:
 
 
 # 🔍 📦 ✅
+# 🌶️📦📄🪄

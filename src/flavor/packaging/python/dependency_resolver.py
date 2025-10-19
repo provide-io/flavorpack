@@ -1,4 +1,8 @@
-#!/usr/bin/env python3
+# flavor/packaging/python/dependency_resolver.py
+#
+# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 """
 Python Dependency Resolution
 
@@ -340,3 +344,6 @@ class DependencyResolver:
                     f"Failed to download UV wheel via both pip and direct URL: {fallback_error}"
                 ) from fallback_error
             return None  # For non-Linux, we can fall back to host UV
+
+
+# 🌶️📦📄🪄

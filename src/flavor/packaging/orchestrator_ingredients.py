@@ -1,4 +1,7 @@
-"""Helper functions for PackagingOrchestrator to reduce complexity."""
+# flavor/packaging/orchestrator_ingredients.py
+#
+# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
 
 import os
 from pathlib import Path
@@ -380,3 +383,6 @@ def create_python_slot_tarballs(temp_dir: Path, artifacts: dict[str, Path]) -> t
             tar.add(wheel, arcname=f"wheels/{wheel.name}")
 
     return uv_path, python_tarball, wheels_tarball
+
+
+# 🌶️📦📄🪄

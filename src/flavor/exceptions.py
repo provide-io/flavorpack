@@ -1,4 +1,8 @@
-#!/usr/bin/env python3
+# flavor/exceptions.py
+#
+# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 """
 Custom exceptions for the flavor pack.
 """
@@ -40,3 +44,6 @@ class VerificationError(FlavorException):
     """Raised for errors during package verification."""
 
     pass
+
+
+# 🌶️📦🐛🪄
