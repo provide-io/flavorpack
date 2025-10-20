@@ -7,6 +7,9 @@
 #![deny(clippy::all)]
 #![deny(clippy::pedantic)]
 #![allow(clippy::module_name_repetitions)]
+#![allow(clippy::too_many_lines)]
+#![allow(clippy::items_after_statements)]
+#![allow(clippy::unnecessary_debug_formatting)]
 
 use std::fs;
 use std::io::Read;
@@ -23,6 +26,13 @@ use super::slots::SlotDescriptor;
 use crate::exceptions::{FlavorError, Result};
 
 /// Extract a slot to the specified directory
+///
+/// # Errors
+///
+/// Returns an error if:
+/// - The slot cannot be read
+/// - Extraction fails
+/// - File operations fail
 pub fn extract_slot(reader: &mut Reader, slot_index: usize, dest_dir: &Path) -> Result<()> {
     trace!("🎯 Extracting slot {slot_index} to {dest_dir:?}");
 
@@ -51,8 +61,7 @@ pub fn extract_slot(reader: &mut Reader, slot_index: usize, dest_dir: &Path) -> 
     let desc_offset = descriptor.offset;
     let desc_size = descriptor.size;
     trace!(
-        "📏 Slot {slot_index} descriptor: offset={desc_offset:#x}, size={desc_size}, operations={:?}",
-        operations
+        "📏 Slot {slot_index} descriptor: offset={desc_offset:#x}, size={desc_size}, operations={operations:?}"
     );
 
     // Read slot data using backend (raw/compressed)
@@ -288,6 +297,13 @@ fn is_tarball(data: &[u8]) -> bool {
 }
 
 /// Extract a tarball to a directory
+///
+/// # Errors
+///
+/// Returns an error if:
+/// - Directory creation fails
+/// - Tarball extraction fails
+/// - Permission setting fails
 pub fn extract_tarball(data: &[u8], dest_dir: &Path) -> Result<()> {
     debug!("📦 Extracting tarball to {dest_dir:?}");
 
@@ -333,6 +349,10 @@ pub fn extract_tarball(data: &[u8], dest_dir: &Path) -> Result<()> {
 }
 
 /// Check if a gzipped data is a tarball
+///
+/// # Errors
+///
+/// Returns an error if decompression fails
 pub fn is_gzipped_tarball(data: &[u8]) -> Result<bool> {
     // Try to decompress and check if it's a tarball
     let mut decoder = GzDecoder::new(data);
