@@ -9,7 +9,7 @@ __all__ = ["IngredientInfo", "IngredientManager"]
 
 # Try to import embedded ingredients if available
 try:
-    import flavor.ingredients.bin as _bin_module
+    import flavor.ingredients.bin as _bin_module  # type: ignore[import-untyped]
 
     # Re-export available functions
     __all__.extend(

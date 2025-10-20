@@ -19,6 +19,9 @@ from provide.foundation.utils import get_version
 from flavor.psp.format_2025.spec import BuildSpec
 from flavor.psp.metadata.paths import validate_metadata_dict
 
+# Default version for launcher when extraction fails
+DEFAULT_LAUNCHER_VERSION = "unknown"
+
 
 def get_flavor_version() -> str:
     """Get the version of flavor-python from VERSION file or package metadata."""
@@ -127,7 +130,7 @@ def extract_launcher_version(launcher_data: bytes) -> str:
                 return version
 
     # Fallback to unknown version
-    return FALLBACK_VERSION
+    return DEFAULT_LAUNCHER_VERSION
 
 
 def get_launcher_capabilities(launcher_type: str) -> list[str]:

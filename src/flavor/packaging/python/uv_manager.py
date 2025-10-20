@@ -16,6 +16,7 @@ is critical. For complex dependency resolution, use PyPaPipManager instead.
 
 from __future__ import annotations
 
+import asyncio
 from pathlib import Path
 from typing import ClassVar
 
@@ -167,11 +168,11 @@ class UVManager(BaseToolManager):
 
         # Install specific version if requested
         if version:
-            return self.install(version)
+            return asyncio.run(self.install(version))
 
         # Install latest as fallback
         logger.info("Installing UV as system UV not available")
-        return self.install("latest")
+        return asyncio.run(self.install("latest"))
 
     def _get_uv_venv_cmd(
         self, python_exe: Path, venv_path: Path, python_version: str | None = None

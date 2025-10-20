@@ -34,7 +34,12 @@ class PSPFLauncher(PSPFReader):
     """Launch PSPF bundles."""
 
     def __init__(self, bundle_path: Path | None = None) -> None:
-        super().__init__(bundle_path)
+        if bundle_path is None:
+            # Allow None for testing purposes, parent class will handle it
+            bundle_path_arg: Path | str = ""
+        else:
+            bundle_path_arg = bundle_path
+        super().__init__(bundle_path_arg)
         self.bundle_path = bundle_path
         self.cache_dir = Path.home() / ".cache" / "flavor"
         ensure_dir(self.cache_dir)
@@ -269,7 +274,7 @@ class PSPFLauncher(PSPFReader):
         """Substitute {slot:N} references in command."""
         return self._workenv_manager.substitute_slot_references(command, workenv_dir)
 
-    def execute(self, args: list[str] | None = None) -> dict:
+    def execute(self, args: list[str] | None = None) -> dict[str, Any]:
         """Execute the bundle.
 
         Sets up the work environment, extracts slots, and executes the main command
@@ -330,12 +335,15 @@ class PSPFLauncher(PSPFReader):
             - signature_valid: Signature verification result
             - tamper_detected: Whether tampering was detected
         """
+        from flavor.psp.protocols import IntegrityResult
         from flavor.psp.security import verify_package_integrity
 
         if not self.bundle_path:
             return {"valid": False, "signature_valid": False, "tamper_detected": True}
 
-        return verify_package_integrity(self.bundle_path)
+        result: IntegrityResult = verify_package_integrity(self.bundle_path)
+        # IntegrityResult is a TypedDict with bool values, which is compatible with dict[str, bool]
+        return dict(result)  # type: ignore[arg-type]
 
 
 # 🌶️📦📄🪄

@@ -298,7 +298,8 @@ class PythonPackager:
             List of runtime dependency specifications
         """
         metadata = self.get_package_metadata()
-        return metadata.get("dependencies", [])
+        deps = metadata.get("dependencies", [])
+        return list(deps) if isinstance(deps, list) else []
 
     def get_build_dependencies(self) -> list[str]:
         """
@@ -312,7 +313,8 @@ class PythonPackager:
             pyproject_data = tomllib.load(f)
 
         build_system = pyproject_data.get("build-system", {})
-        return build_system.get("requires", [])
+        requires = build_system.get("requires", [])
+        return list(requires) if isinstance(requires, list) else []
 
     def _write_json(self, path: Path, data: dict[str, Any]) -> None:
         """Write JSON data to file."""

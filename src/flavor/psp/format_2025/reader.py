@@ -97,6 +97,7 @@ class PSPFReader:
         if not self._backend:
             self.open()
 
+        assert self._backend is not None
         # Read MagicTrailer at end of file
         file_size = self.bundle_path.stat().st_size
         trailer = self._backend.read_at(file_size - DEFAULT_MAGIC_TRAILER_SIZE, DEFAULT_MAGIC_TRAILER_SIZE)
@@ -113,6 +114,7 @@ class PSPFReader:
         if not self._backend:
             self.open()
 
+        assert self._backend is not None
         file_size = self.bundle_path.stat().st_size
 
         # Read MagicTrailer (last 8200 bytes)
@@ -193,7 +195,7 @@ class PSPFReader:
 
         return self._index
 
-    def read_metadata(self) -> dict:
+    def read_metadata(self) -> dict[str, Any]:
         """Read and parse metadata."""
         if self._metadata:
             return self._metadata
@@ -201,6 +203,7 @@ class PSPFReader:
         if not self._backend:
             self.open()
 
+        assert self._backend is not None
         index = self.read_index()
 
         # Read metadata using backend
@@ -239,6 +242,7 @@ class PSPFReader:
         if not self._backend:
             self.open()
 
+        assert self._backend is not None
         index = self.read_index()
         descriptors = []
 
@@ -272,6 +276,7 @@ class PSPFReader:
         if not self._backend:
             self.open()
 
+        assert self._backend is not None
         descriptors = self.read_slot_descriptors()
 
         if slot_index < 0 or slot_index >= len(descriptors):
@@ -349,6 +354,7 @@ class PSPFReader:
         if not self._backend:
             self.open()
 
+        assert self._backend is not None
         index = self.read_index()
 
         # Get the signature from the index block
@@ -367,9 +373,9 @@ class PSPFReader:
         metadata_json = gzip.decompress(metadata_compressed)
 
         verifier = Ed25519Verifier(index.public_key)
-        return verifier.verify(metadata_json, signature)
+        return verifier.verify(metadata_json, signature)  # type: ignore[no-any-return]
 
-    def verify_integrity(self) -> dict:
+    def verify_integrity(self) -> dict[str, Any]:
         """Verify complete package integrity.
 
         Returns:
@@ -405,6 +411,7 @@ class PSPFReader:
         """Get the backend for advanced operations."""
         if not self._backend:
             self.open()
+        assert self._backend is not None
         return self._backend
 
     def use_mmap(self) -> None:

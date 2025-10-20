@@ -18,7 +18,7 @@ import os
 from pathlib import Path
 import shutil  # Only kept for copytree which Foundation doesn't provide
 import sys
-from typing import Any
+from typing import Any, cast
 
 from provide.foundation.file import (
     ensure_dir,
@@ -354,7 +354,7 @@ class PythonDistManager:
         }
 
         logger.info("✅ Standalone distribution created successfully")
-        logger.info(f"📊 Distribution size: {dist_info['distribution_size'] / (1024 * 1024):.1f} MB")
+        logger.info(f"📊 Distribution size: {cast(int, dist_info['distribution_size']) / (1024 * 1024):.1f} MB")
 
         return dist_info
 
