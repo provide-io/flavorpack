@@ -84,7 +84,7 @@ type Slot struct {
 	Purpose     string `json:"purpose"`               // Role of the slot
 	Lifecycle   string `json:"lifecycle"`             // Cache management
 	Resolution  string `json:"resolution,omitempty"`  // When to resolve: build|runtime|lazy
-	Operations string `json:"operations"`         // Operations chain (e.g., "gzip", "tar.gz")
+	Operations  string `json:"operations"`            // Operations chain (e.g., "gzip", "tar.gz")
 	Permissions string `json:"permissions,omitempty"` // Unix permissions (e.g., "0755")
 }
 

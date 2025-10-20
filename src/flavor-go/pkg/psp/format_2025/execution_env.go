@@ -80,15 +80,14 @@ func logEnvironmentTrace(env []string, logger hclog.Logger) {
 // isSensitiveKey checks if an environment variable key is sensitive and should be redacted in logs.
 func isSensitiveKey(key string) bool {
 	sensitiveKeys := map[string]bool{
-		"SSH_AUTH_SOCK":        true,
+		"SSH_AUTH_SOCK":         true,
 		"AWS_SECRET_ACCESS_KEY": true,
-		"GITHUB_TOKEN":         true,
-		"HF_TOKEN":             true,
-		"OPENAI_API_KEY":       true,
-		"PASSWORD":             true,
+		"GITHUB_TOKEN":          true,
+		"HF_TOKEN":              true,
+		"OPENAI_API_KEY":        true,
+		"PASSWORD":              true,
 	}
 	return sensitiveKeys[key]
 }
 
 // 🌶️📦🖥️🪄
-
