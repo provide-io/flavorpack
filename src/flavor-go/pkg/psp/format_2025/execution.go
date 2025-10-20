@@ -313,27 +313,23 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 					slotSource := filepath.Join(source, slotEntry.Name())
 					slotDest := filepath.Join(workenvDir, slotEntry.Name())
 
-					// Remove destination if it exists (for overwrite)
-					if _, err := os.Stat(slotDest); err == nil {
-						if slotEntry.IsDir() {
-							os.RemoveAll(slotDest)
-						} else {
-							os.Remove(slotDest)
-						}
-					}
-
 					logger.Debug("Moving slot 0 content", "from", slotSource, "to", slotDest)
-					if err := os.Rename(slotSource, slotDest); err != nil {
-						// If rename fails (e.g., cross-filesystem), fall back to copy
-						logger.Warn("Rename failed, falling back to copy", "error", err)
-						if slotEntry.IsDir() {
-							if err := copyDirAll(slotSource, slotDest); err != nil {
-								logger.Error("❌ Failed to copy slot 0 directory", "error", err)
-								os.RemoveAll(tempExtractDir)
-								return nil, fmt.Errorf("failed to copy slot 0 directory: %w", err)
-							}
-							os.RemoveAll(slotSource)
-						} else {
+
+					// For directories, merge instead of replacing
+					if slotEntry.IsDir() {
+						// Always use copyDirAll which merges directories
+						if err := copyDirAll(slotSource, slotDest); err != nil {
+							logger.Error("❌ Failed to copy slot 0 directory", "error", err)
+							os.RemoveAll(tempExtractDir)
+							return nil, fmt.Errorf("failed to copy slot 0 directory: %w", err)
+						}
+						os.RemoveAll(slotSource)
+					} else {
+						// For files, remove destination and move
+						os.Remove(slotDest)  // Remove existing file if any
+						if err := os.Rename(slotSource, slotDest); err != nil {
+							// If rename fails (e.g., cross-filesystem), fall back to copy
+							logger.Warn("Rename failed, falling back to copy", "error", err)
 							if err := copyFile(slotSource, slotDest); err != nil {
 								logger.Error("❌ Failed to copy slot 0 file", "error", err)
 								os.RemoveAll(tempExtractDir)
@@ -361,27 +357,23 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 				slotSource := filepath.Join(source, slotEntry.Name())
 				slotDest := filepath.Join(workenvDir, slotEntry.Name())
 
-				// Remove destination if it exists (for overwrite)
-				if _, err := os.Stat(slotDest); err == nil {
-					if slotEntry.IsDir() {
-						os.RemoveAll(slotDest)
-					} else {
-						os.Remove(slotDest)
-					}
-				}
-
 				logger.Debug("Moving slot content", "from", slotSource, "to", slotDest)
-				if err := os.Rename(slotSource, slotDest); err != nil {
-					// If rename fails (e.g., cross-filesystem), fall back to copy
-					logger.Warn("Rename failed, falling back to copy", "error", err)
-					if slotEntry.IsDir() {
-						if err := copyDirAll(slotSource, slotDest); err != nil {
-							logger.Error("❌ Failed to copy slot directory", "error", err)
-							os.RemoveAll(tempExtractDir)
-							return nil, fmt.Errorf("failed to copy slot directory: %w", err)
-						}
-						os.RemoveAll(slotSource)
-					} else {
+
+				// For directories, merge instead of replacing
+				if slotEntry.IsDir() {
+					// Always use copyDirAll which merges directories
+					if err := copyDirAll(slotSource, slotDest); err != nil {
+						logger.Error("❌ Failed to copy slot directory", "error", err)
+						os.RemoveAll(tempExtractDir)
+						return nil, fmt.Errorf("failed to copy slot directory: %w", err)
+					}
+					os.RemoveAll(slotSource)
+				} else {
+					// For files, remove destination and move
+					os.Remove(slotDest)  // Remove existing file if any
+					if err := os.Rename(slotSource, slotDest); err != nil {
+						// If rename fails (e.g., cross-filesystem), fall back to copy
+						logger.Warn("Rename failed, falling back to copy", "error", err)
 						if err := copyFile(slotSource, slotDest); err != nil {
 							logger.Error("❌ Failed to copy slot file", "error", err)
 							os.RemoveAll(tempExtractDir)
