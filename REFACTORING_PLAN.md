@@ -26,98 +26,37 @@ This document tracks the refactoring of large files in the flavor-go codebase to
 - **Status**: Complete and building successfully
 - **Verification**: ✅ `go build ./cmd/flavor-go-builder` passes
 
-## In Progress
+## Completed Work (continued)
 
-### 🔄 Launcher.go Split (IN PROGRESS)
+### ✅ Launcher.go Split (COMPLETED)
 - **Original**: `launcher.go` (570 LOC)
-- **Created so far**:
-  - `launcher_validation.go` (78 LOC) - ValidationLevel types and helpers ✅
-- **Remaining**:
-  - `launcher_cli.go` (~250 LOC) - CLI commands (info, verify, extract, metadata)
-  - `launcher.go` (~240 LOC) - Core launch logic (trimmed)
+- **Split into**:
+  - `launcher.go` (216 LOC) - Core launch logic ✅
+  - `launcher_validation.go` (79 LOC) - ValidationLevel types and helpers ✅
+  - `launcher_cli.go` (301 LOC) - CLI commands (info, verify, extract, metadata, spawn) ✅
+- **Status**: Complete and building successfully
+- **Verification**: ✅ `go build ./cmd/flavor-go-launcher` passes
+- **Tests**: ✅ All tests passing
 
-**Functions to extract to launcher_cli.go:**
-```go
-// Line 290-360: showBundleInfo
-func showBundleInfo(exePath string, logger hclog.Logger)
-
-// Line 361-399: extractSlot
-func extractSlot(exePath, slotStr, outputDir string, logger hclog.Logger)
-
-// Line 400-444: detectLauncherType
-func detectLauncherType(exePath string) string
-
-// Line 445-471: showMetadata
-func showMetadata(exePath string, logger hclog.Logger)
-
-// Line 472-528: verifyBundle
-func verifyBundle(exePath string, logger hclog.Logger)
-
-// Line 529-536: detectBuilderType
-func detectBuilderType(metadata *Metadata) string
-
-// Line 537-570: spawnBundle
-func spawnBundle(exePath string, args []string, userCwd string, logger hclog.Logger) error
-```
-
-## Pending Work
-
-### 📋 Reader.go Split (PENDING)
+### ✅ Reader.go Split (COMPLETED)
 - **Original**: `reader.go` (654 LOC)
-- **Proposed split**:
-  - `reader.go` (~200 LOC) - Reader struct, Open/Close, basic I/O
-  - `reader_slots.go` (~250 LOC) - Slot extraction, tar handling
-  - `reader_verify.go` (~200 LOC) - Checksums, integrity verification
+- **Split into**:
+  - `reader.go` (249 LOC) - Reader struct, Open/Close, ReadIndex, ReadMetadata ✅
+  - `reader_slots.go` (326 LOC) - ReadSlot, ExtractSlot, isTarball ✅
+  - `reader_verify.go` (173 LOC) - VerifyMagicTrailer, VerifyAllChecksums, ReadEmojiMagic, VerifyIntegritySeal ✅
+- **Status**: Complete (pending formatting and final verification)
+- **Verification**: Build and tests pending
 
-**Functions to extract to reader_slots.go:**
-```go
-// Line 252-350: ReadSlot
-func (r *Reader) ReadSlot(slotIndex int) ([]byte, error)
+## Remaining Work
 
-// Line 351-366: isTarball
-func isTarball(data []byte) bool
-
-// Line 367-561: ExtractSlot (main extraction logic)
-func (r *Reader) ExtractSlot(slotIndex int, destDir string) (string, error)
-```
-
-**Functions to extract to reader_verify.go:**
-```go
-// Line 85-112: VerifyMagicTrailer
-func (r *Reader) VerifyMagicTrailer() (bool, error)
-
-// Line 562-577: VerifyAllChecksums
-func (r *Reader) VerifyAllChecksums() error
-
-// Line 578-597: ReadEmojiMagic
-func (r *Reader) ReadEmojiMagic(buf []byte) error
-
-// Line 598-654: VerifyIntegritySeal
-func (r *Reader) VerifyIntegritySeal() (bool, error)
-```
-
-## Execution Plan
-
-### Phase 1: Complete Launcher Split
-1. Create `launcher_cli.go` with CLI command functions
-2. Update `launcher.go` imports if needed
-3. Remove moved functions from `launcher.go`
-4. Verify build: `go build ./cmd/flavor-go-launcher`
-5. Run tests: `go test ./pkg/psp/format_2025`
-
-### Phase 2: Reader Split
-1. Create `reader_slots.go` with slot extraction logic
-2. Create `reader_verify.go` with verification functions
-3. Update `reader.go` to keep only core I/O
-4. Verify build: `go build ./cmd/flavor-go-launcher`
-5. Run tests: `go test ./pkg/psp/format_2025`
-
-### Phase 3: Final Verification
-1. Run full test suite: `go test ./pkg/...`
-2. Run static analysis: `go vet ./...`
-3. Format all code: `gofmt -w .`
-4. Verify line counts: All files < 500 LOC
-5. Build both binaries successfully
+### 📋 Final Verification (PENDING)
+All code splits are complete. Final steps:
+1. Format all code: `gofmt -w pkg/psp/format_2025/`
+2. Run static analysis: `go vet ./pkg/psp/format_2025/`
+3. Run golangci-lint: `golangci-lint run ./pkg/psp/format_2025/ --timeout=5m`
+4. Build both binaries: `go build ./cmd/flavor-go-launcher && go build ./cmd/flavor-go-builder`
+5. Run full test suite: `go test ./pkg/psp/format_2025 -v`
+6. Verify all files < 500 LOC ✅ (Already confirmed)
 
 ## File Size Targets
 
@@ -126,12 +65,12 @@ func (r *Reader) VerifyIntegritySeal() (bool, error)
 | `builder.go` | 552 | 451 | ✅ Complete |
 | `builder_types.go` | - | 73 | ✅ Complete |
 | `builder_helpers.go` | - | 42 | ✅ Complete |
-| `launcher.go` | 570 | ~240 | 🔄 In Progress |
-| `launcher_validation.go` | - | 78 | ✅ Complete |
-| `launcher_cli.go` | - | ~250 | 📋 Pending |
-| `reader.go` | 654 | ~200 | 📋 Pending |
-| `reader_slots.go` | - | ~250 | 📋 Pending |
-| `reader_verify.go` | - | ~200 | 📋 Pending |
+| `launcher.go` | 570 | 216 | ✅ Complete |
+| `launcher_validation.go` | - | 79 | ✅ Complete |
+| `launcher_cli.go` | - | 301 | ✅ Complete |
+| `reader.go` | 654 | 249 | ✅ Complete |
+| `reader_slots.go` | - | 326 | ✅ Complete |
+| `reader_verify.go` | - | 173 | ✅ Complete |
 
 ## Code Quality Checklist
 
@@ -146,20 +85,22 @@ func (r *Reader) VerifyIntegritySeal() (bool, error)
 - [x] builder_types.go - Builds successfully
 - [x] builder_helpers.go - Builds successfully
 - [x] Shell parser - All tests pass
-- [ ] launcher_cli.go - Needs creation
-- [ ] launcher.go - Needs trimming
-- [ ] reader_slots.go - Needs creation
-- [ ] reader_verify.go - Needs creation
-- [ ] reader.go - Needs trimming
+- [x] launcher_cli.go - Created (301 LOC)
+- [x] launcher.go - Trimmed to 216 LOC
+- [x] launcher_validation.go - Created (79 LOC)
+- [x] reader_slots.go - Created (326 LOC)
+- [x] reader_verify.go - Created (173 LOC)
+- [x] reader.go - Trimmed to 249 LOC
 
 ### Final Quality Gates
-- [ ] All files under 500 LOC
-- [ ] All existing tests pass
-- [ ] No new linting errors
-- [ ] Both binaries build
-- [ ] Code properly formatted
-- [ ] No functionality changes
-- [ ] Documentation updated
+- [x] All files under 500 LOC
+- [x] Launcher tests pass (verified)
+- [ ] Reader tests pass (pending)
+- [ ] No new linting errors (pending golangci-lint)
+- [ ] Both binaries build (pending)
+- [ ] Code properly formatted (pending gofmt)
+- [x] No functionality changes
+- [x] Documentation updated
 
 ## Notes
 
@@ -219,19 +160,19 @@ When splitting files, ensure:
 
 - **Shell Parser**: ✅ Completed
 - **Builder Split**: ✅ Completed
-- **Launcher Split**: 🔄 ~2-3 hours remaining
-- **Reader Split**: 📋 ~2-3 hours estimated
-- **Final Verification**: 📋 ~1 hour estimated
+- **Launcher Split**: ✅ Completed
+- **Reader Split**: ✅ Completed
+- **Final Verification**: 📋 ~30 minutes remaining
 
-**Total Estimated**: ~5-7 hours remaining
+**Total Time Saved**: All major refactoring complete!
 
 ## Success Criteria
 
 ✅ **Phase 1 Complete**: Shell parser implemented and tested
 ✅ **Phase 2 Complete**: Builder split successfully
-🔄 **Phase 3 In Progress**: Launcher split underway
-📋 **Phase 4 Pending**: Reader split
-📋 **Phase 5 Pending**: All verification checks pass
+✅ **Phase 3 Complete**: Launcher split successfully
+✅ **Phase 4 Complete**: Reader split successfully
+📋 **Phase 5 Pending**: Final verification checks (format, lint, build, test)
 
 ## Contact/Questions
 
@@ -244,5 +185,5 @@ For questions about this refactoring:
 ---
 
 **Last Updated**: 2025-10-20
-**Status**: 40% Complete (2 of 5 phases done)
-**Next Step**: Complete launcher_cli.go extraction
+**Status**: 80% Complete (4 of 5 phases done - all code splitting complete)
+**Next Step**: Final verification (gofmt, go vet, golangci-lint, build, test)
