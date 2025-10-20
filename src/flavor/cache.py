@@ -5,6 +5,7 @@ import contextlib
 import os
 from pathlib import Path
 import time
+from typing import Any, cast
 
 from provide.foundation.file.directory import ensure_dir, safe_rmtree
 from provide.foundation.file.formats import read_json
@@ -54,13 +55,13 @@ class CacheManager:
         self.cache_dir = cache_dir or get_cache_dir()
         ensure_dir(self.cache_dir)
 
-    def list_cached(self) -> list[dict[str, str | int | float]]:
+    def list_cached(self) -> list[dict[str, str | int | float | None]]:
         """List all cached packages.
 
         Returns:
             List of cached package information
         """
-        cached = []
+        cached: list[dict[str, str | int | float | None]] = []
 
         for entry in self.cache_dir.iterdir():
             if not entry.is_dir() or entry.name.startswith("."):
@@ -75,7 +76,7 @@ class CacheManager:
             if not completion_marker.exists():
                 continue
 
-            info = {
+            info: dict[str, str | int | float | None] = {
                 "id": entry.name,
                 "path": str(entry),
                 "size": self._get_dir_size(entry),
@@ -100,7 +101,7 @@ class CacheManager:
 
             cached.append(info)
 
-        return sorted(cached, key=lambda x: x["modified"], reverse=True)
+        return sorted(cached, key=lambda x: cast(float, x["modified"]), reverse=True)
 
     def get_cache_size(self) -> int:
         """Get total size of cache in bytes.
@@ -152,7 +153,7 @@ class CacheManager:
 
         return removed
 
-    def inspect_workenv(self, workenv_name: str) -> dict[str, str | bool | None | dict[str, str | None]]:
+    def inspect_workenv(self, workenv_name: str) -> dict[str, Any]:
         """Inspect a specific workenv.
 
         Args:

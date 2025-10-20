@@ -75,7 +75,7 @@ class BuildOptions:
 
     def with_compression(self, compression: str, level: int | None = None) -> BuildOptions:
         """Return new BuildOptions with updated compression settings."""
-        updates = {"compression": compression}
+        updates: dict[str, Any] = {"compression": compression}
         if level is not None:
             updates["compression_level"] = level
         return attrs.evolve(self, **updates)

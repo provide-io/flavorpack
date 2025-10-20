@@ -37,7 +37,9 @@ class BinaryLoader:
     @property
     def current_platform(self) -> str:
         """Get current platform string."""
-        return get_platform_string()
+        platform = get_platform_string()
+        assert isinstance(platform, str)
+        return platform
 
     def get_ingredient(self, name: str) -> Path:
         """Get path to a ingredient binary.
@@ -197,7 +199,7 @@ class BinaryLoader:
         Returns:
             List of removed binary paths
         """
-        removed_paths = []
+        removed_paths: list[Path] = []
 
         if not self.manager.ingredients_bin.exists():
             return removed_paths
@@ -228,7 +230,7 @@ class BinaryLoader:
         Returns:
             Test results dict with 'passed' and 'failed' lists
         """
-        results = {"passed": [], "failed": []}
+        results: dict[str, list[dict[str, Any]]] = {"passed": [], "failed": []}
 
         ingredients = self.manager.list_ingredients()
 
@@ -316,7 +318,7 @@ class BinaryLoader:
     def _get_package_version_name(self, name: str) -> str | None:
         """Get ingredient name with package version if available."""
         try:
-            from flavor._version import __version__
+            from flavor._version import __version__  # type: ignore[import-untyped]
 
             if __version__ and __version__ != "0.0.0":
                 return f"{name}-{__version__}-{self.current_platform}"
