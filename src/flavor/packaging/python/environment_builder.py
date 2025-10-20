@@ -5,8 +5,11 @@
 
 # flavor/packaging/python/environment_builder.py
 #
-"""Environment builder for Python packages.import os
-"""
+"""Environment builder for Python packages."""
+
+from __future__ import annotations
+
+import os
 from pathlib import Path
 import tarfile
 import tempfile
