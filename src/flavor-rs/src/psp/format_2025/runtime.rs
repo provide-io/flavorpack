@@ -45,11 +45,17 @@ mod runtime_impl {
         // Process unset operations first (highest priority)
         if let Some(unset_patterns) = &runtime_env.unset {
             if !unset_patterns.is_empty() {
-                if let Err(e) = UnsetOperation::new(unset_patterns, &pattern_processor)
+                debug!("📋 Unset patterns found: {:?}", unset_patterns);
+                match UnsetOperation::new(unset_patterns, &pattern_processor)
                     .execute(env_map) {
-                    debug!("⚠️ Error during unset operations: {}", e);
+                    Ok(_) => debug!("✅ Unset operations completed successfully"),
+                    Err(e) => debug!("⚠️ Error during unset operations: {}", e),
                 }
+            } else {
+                debug!("📭 No unset patterns (empty list)");
             }
+        } else {
+            debug!("📭 No unset patterns configured");
         }
         
         // Process map operations (variable renaming)
