@@ -198,7 +198,7 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 		defer ReleaseLock(paths, logger)
 
 		// Extract and merge slots to workenv
-		slotPaths, err = extractAndMergeSlotsToWorkenv(reader, metadata, paths, logger)
+		slotPaths, err = extractAndMergeSlotsToWorkenv(reader, metadata, paths, index, logger)
 		if err != nil {
 			return nil, err
 		}

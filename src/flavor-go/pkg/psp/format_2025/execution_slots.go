@@ -17,6 +17,7 @@ func extractAndMergeSlotsToWorkenv(
 	reader *Reader,
 	metadata *Metadata,
 	paths *WorkenvPaths,
+	index *PSPFIndex,
 	logger hclog.Logger,
 ) (map[int]string, error) {
 	slotPaths := make(map[int]string)
@@ -253,7 +254,7 @@ func extractAndMergeSlotsToWorkenv(
 	}
 
 	// Save index metadata for inspection
-	if err := saveIndexMetadata(paths, nil, logger); err != nil {
+	if err := saveIndexMetadata(paths, index, logger); err != nil {
 		logger.Debug("⚠️ Failed to save index metadata", "error", err)
 	}
 
