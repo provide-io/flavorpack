@@ -1,10 +1,13 @@
-#!/usr/bin/env python3
+# flavor/commands/ingredients.py
+#
+# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 #
 # flavor/commands/ingredients.py
 #
-"""Ingredient management commands for the flavor CLI."""
-
-import os
+"""Ingredient management commands for the flavor CLI.import os
+"""
 from pathlib import Path
 
 import click
@@ -252,3 +255,6 @@ def ingredient_test(lang: str) -> None:
         echo("\n✅ All tests passed")
     else:
         echo("\n⚠️  No tests were run")
+
+
+# 🌶️📦🖥️🪄

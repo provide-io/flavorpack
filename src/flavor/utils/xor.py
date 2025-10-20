@@ -1,4 +1,7 @@
-"""XOR encoding utilities for PSPF magic bytes obfuscation."""
+# flavor/utils/xor.py
+#
+# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
 
 # XOR key - digits of π (memorable, non-obvious)
 from __future__ import annotations
@@ -34,3 +37,6 @@ def xor_decode(data: bytes, key: bytes = XOR_KEY) -> bytes:
         XOR decoded bytes
     """
     return xor_encode(data, key)  # XOR is its own inverse
+
+
+# 🌶️📦📄🪄
