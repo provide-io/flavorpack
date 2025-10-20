@@ -1,14 +1,11 @@
-# flavor/psp/format_2025/keys.py
-#
-# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
-
-"""
+#!/usr/bin/env python3
 """
 PSPF Key Management - Functions for handling cryptographic keys.
 
 Provides pure functions for key resolution, generation, and persistence.
 Supports multiple key sources with clear priority ordering.
+"""
+
 import hashlib
 from pathlib import Path
 

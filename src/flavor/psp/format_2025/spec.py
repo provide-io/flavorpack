@@ -1,14 +1,11 @@
-# flavor/psp/format_2025/spec.py
-#
-# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
-
-"""
+#!/usr/bin/env python3
 """
 PSPF Build Specification - Immutable data structures for package building.
 
 This module defines the core data structures used throughout the PSPF builder
 system, emphasizing immutability and functional programming patterns.
+"""
+
 from __future__ import annotations
 
 from pathlib import Path
