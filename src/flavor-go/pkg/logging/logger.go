@@ -40,7 +40,7 @@ func NewLogger(name string, level string, output io.Writer) hclog.Logger {
 func GetLogLevel() string {
 	level := os.Getenv("FLAVOR_LOG_LEVEL")
 	if level == "" {
-		level = "warn"  // Default to warn for production safety
+		level = "warn" // Default to warn for production safety
 	}
 	return level
 }

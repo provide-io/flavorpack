@@ -30,11 +30,12 @@ var (
 //   - Empty input returns empty slice
 //
 // Examples:
-//   Split(`cmd arg1 arg2`) => ["cmd", "arg1", "arg2"]
-//   Split(`cmd "arg with spaces"`) => ["cmd", "arg with spaces"]
-//   Split(`cmd 'single quotes'`) => ["cmd", "single quotes"]
-//   Split(`cmd arg\ with\ spaces`) => ["cmd", "arg with spaces"]
-//   Split(`python -c "print('hello')"`) => ["python", "-c", "print('hello')"]
+//
+//	Split(`cmd arg1 arg2`) => ["cmd", "arg1", "arg2"]
+//	Split(`cmd "arg with spaces"`) => ["cmd", "arg with spaces"]
+//	Split(`cmd 'single quotes'`) => ["cmd", "single quotes"]
+//	Split(`cmd arg\ with\ spaces`) => ["cmd", "arg with spaces"]
+//	Split(`python -c "print('hello')"`) => ["python", "-c", "print('hello')"]
 func Split(input string) ([]string, error) {
 	if input == "" {
 		return []string{}, nil
