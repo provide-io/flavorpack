@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"compress/gzip"
 	"crypto/ed25519"
-	"encoding/binary"
 	"fmt"
 	"io"
 )
@@ -132,42 +131,4 @@ func (r *Reader) VerifyIntegritySeal() (bool, error) {
 		return false, ErrSignatureInvalid
 	}
 	return true, nil
-}
-
-// ReadMagicTrailer reads the entire magic trailer for debugging
-func (r *Reader) ReadMagicTrailer() ([]byte, error) {
-	if err := r.Open(); err != nil {
-		return nil, err
-	}
-
-	info, err := r.file.Stat()
-	if err != nil {
-		return nil, err
-	}
-
-	// Validate file size
-	if info.Size() < MagicTrailerSize {
-		return nil, fmt.Errorf("file too small for PSPF format (need %d bytes, got %d)", MagicTrailerSize, info.Size())
-	}
-
-	trailer := make([]byte, MagicTrailerSize)
-	if _, err := r.file.ReadAt(trailer, info.Size()-MagicTrailerSize); err != nil {
-		return nil, err
-	}
-
-	// Verify the emoji magic footer
-	emojiMagic := trailer[len(trailer)-8:]
-	expectedEmoji := []byte{0xF0, 0x9F, 0x93, 0xA6, 0xF0, 0x9F, 0xAA, 0x84} // 📦🪄
-	if !bytes.Equal(emojiMagic, expectedEmoji) {
-		return nil, ErrInvalidEmojiMagic
-	}
-
-	// Verify version (8 bytes before emoji magic)
-	versionBytes := trailer[len(trailer)-16 : len(trailer)-8]
-	version := binary.LittleEndian.Uint64(versionBytes)
-	if version != MagicVersion {
-		return nil, ErrInvalidVersion
-	}
-
-	return trailer, nil
 }

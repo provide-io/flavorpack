@@ -1,10 +1,8 @@
 package format_2025
 
 import (
-	"archive/tar"
 	"bytes"
 	"compress/gzip"
-	"crypto/ed25519"
 	"encoding/binary"
 	"encoding/json"
 	"errors"
@@ -12,8 +10,6 @@ import (
 	"hash/adler32"
 	"io"
 	"os"
-	"path/filepath"
-	"strings"
 
 	"github.com/hashicorp/go-hclog"
 )
@@ -79,34 +75,6 @@ func (r *Reader) Close() error {
 		return err
 	}
 	return nil
-}
-
-// VerifyMagicTrailer verifies the MagicTrailer emoji bookends
-func (r *Reader) VerifyMagicTrailer() (bool, error) {
-	if err := r.Open(); err != nil {
-		return false, err
-	}
-
-	// Get file size
-	info, err := r.file.Stat()
-	if err != nil {
-		return false, err
-	}
-
-	// Read MagicTrailer (last 8200 bytes)
-	trailer := make([]byte, MagicTrailerSize)
-	if _, err := r.file.ReadAt(trailer, info.Size()-MagicTrailerSize); err != nil {
-		return false, err
-	}
-
-	// Verify emoji bookends (📦 at start, 🪄 at end)
-	if !bytes.Equal(trailer[:4], PackageEmojiBytes) {
-		return false, ErrInvalidEmojiMagic
-	}
-	if !bytes.Equal(trailer[MagicTrailerSize-4:], MagicWandEmojiBytes) {
-		return false, ErrInvalidEmojiMagic
-	}
-	return true, nil
 }
 
 // ReadMagicTrailer reads the MagicTrailer and returns the index data
