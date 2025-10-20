@@ -11,6 +11,10 @@ from provide.foundation.file.directory import ensure_dir, safe_rmtree
 from provide.foundation.file.formats import read_json
 from provide.foundation.utils.environment import get_str
 
+from flavor.console import get_command_logger
+
+log = get_command_logger("cache")
+
 
 def get_cache_dir() -> Path:
     """Get the cache directory for Flavor packages.
@@ -23,15 +27,20 @@ def get_cache_dir() -> Path:
     # Check FLAVOR_CACHE override first
     cache_dir = get_str("FLAVOR_CACHE")
     if cache_dir:
+        log.trace(f"🗂️ Using FLAVOR_CACHE: {cache_dir}")
         return Path(cache_dir)
 
     # Use XDG_CACHE_HOME if set (respects XDG Base Directory standard)
     xdg_cache = get_str("XDG_CACHE_HOME")
     if xdg_cache:
-        return Path(xdg_cache) / "flavor" / "workenv"
+        result = Path(xdg_cache) / "flavor" / "workenv"
+        log.trace(f"🗂️ Using XDG_CACHE_HOME: {result}")
+        return result
 
     # Default to ~/.cache/flavor/workenv
-    return Path.home() / ".cache" / "flavor" / "workenv"
+    default = Path.home() / ".cache" / "flavor" / "workenv"
+    log.trace(f"🗂️ Using default cache: {default}")
+    return default
 
 
 class CacheManager:
