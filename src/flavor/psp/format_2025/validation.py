@@ -92,7 +92,7 @@ def validate_slots(slots: list[SlotMetadata]) -> list[str]:
     - Valid sizes
     - Valid names
     """
-    errors = []
+    errors: list[str] = []
 
     if not slots:
         return errors  # Empty slots is valid

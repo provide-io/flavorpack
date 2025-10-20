@@ -13,6 +13,7 @@ setup, package installation, and distribution preparation for PSPF packaging.
 
 from __future__ import annotations
 
+import contextlib
 import os
 from pathlib import Path
 import shutil  # Only kept for copytree which Foundation doesn't provide
@@ -370,10 +371,8 @@ class PythonDistManager:
         total_size = 0
         for path in directory.rglob("*"):
             if path.is_file():
-                try:
+                with contextlib.suppress(OSError, FileNotFoundError):
                     total_size += path.stat().st_size
-                except (OSError, FileNotFoundError):
-                    pass  # Skip files we can't access
         return total_size
 
     def validate_distribution(self, dist_info: dict[str, Any]) -> bool:

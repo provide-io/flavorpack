@@ -6,11 +6,15 @@
 # src/flavor/psp/format_2025/reader.py
 # PSPF 2025 Bundle Reader - Uses backend system for flexible access
 
+from __future__ import annotations
+
+from collections.abc import Generator
+import contextlib
 from contextlib import contextmanager
 import gzip
 from pathlib import Path
 import struct
-from typing import Any
+from typing import Any, Self
 import zlib
 
 from provide.foundation import logger
@@ -58,7 +62,7 @@ class PSPFReader:
 
         self._extractor = SlotExtractor(self)
 
-    def __enter__(self):
+    def __enter__(self) -> Self:
         """Context manager entry."""
         self.open()
         return self
@@ -80,7 +84,7 @@ class PSPFReader:
             self._backend = None
 
     @contextmanager
-    def extraction_lock(self, extract_dir: Path, timeout: float = 30.0):
+    def extraction_lock(self, extract_dir: Path, timeout: float = 30.0) -> Generator[Path, None, None]:
         """Acquire an extraction lock for a given directory."""
         from flavor.locking import default_lock_manager
 
@@ -219,11 +223,8 @@ class PSPFReader:
 
         # Parse metadata (always gzipped JSON in current implementation)
         # Decompress first
-        try:
+        with contextlib.suppress(gzip.BadGzipFile):
             metadata_data = gzip.decompress(metadata_data)
-        except gzip.BadGzipFile:
-            # Not compressed, use as-is
-            pass
 
         # Parse JSON
         self._metadata = json_loads(metadata_data.decode("utf-8"))

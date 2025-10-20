@@ -3,6 +3,9 @@
 #
 """Environment builder for Python packages."""
 
+from __future__ import annotations
+
+from collections.abc import Callable
 import os
 from pathlib import Path
 import tarfile
@@ -297,10 +300,12 @@ class PythonEnvironmentBuilder:
 
         self._log_tarball_stats(python_tgz, stats["bytes_added"])
 
-    def _create_tarball_filter(self, stats: dict[str, int]):
+    def _create_tarball_filter(
+        self, stats: dict[str, int]
+    ) -> Callable[[tarfile.TarInfo], tarfile.TarInfo | None]:
         """Create filter function for tarball creation."""
 
-        def filter_and_reorganize(tarinfo):
+        def filter_and_reorganize(tarinfo: tarfile.TarInfo) -> tarfile.TarInfo | None:
             # Skip EXTERNALLY-MANAGED files
             if tarinfo.name.endswith("EXTERNALLY-MANAGED"):
                 logger.trace(f"  ⏭️ Skipping: {tarinfo.name} (EXTERNALLY-MANAGED)")

@@ -8,10 +8,14 @@
 Handles bundle execution, slot extraction, and work environment setup.
 """
 
+from __future__ import annotations
+
+from collections.abc import Generator
 from contextlib import contextmanager
 import io
 from pathlib import Path
 import tarfile
+from typing import Any
 import zlib
 
 from provide.foundation import logger
@@ -37,14 +41,14 @@ class PSPFLauncher(PSPFReader):
         self._workenv_manager = WorkEnvManager(self)
 
     @contextmanager
-    def acquire_lock(self, lock_file: Path, timeout: float = 30.0):
+    def acquire_lock(self, lock_file: Path, timeout: float = 30.0) -> Generator[Path, None, None]:
         """Acquire a file-based lock for extraction."""
         from flavor.locking import default_lock_manager
 
         with default_lock_manager.lock(lock_file.name, timeout=timeout) as lock:
             yield lock
 
-    def read_slot_table(self) -> list[dict]:
+    def read_slot_table(self) -> list[dict[str, Any]]:
         """Read the slot table from the bundle.
 
         Returns:

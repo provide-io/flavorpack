@@ -17,6 +17,7 @@ is critical. For complex dependency resolution, use PyPaPipManager instead.
 from __future__ import annotations
 
 from pathlib import Path
+from typing import ClassVar
 
 from provide.foundation import retry
 from provide.foundation.config import BaseConfig
@@ -45,7 +46,7 @@ class UVManager(BaseToolManager):
 
     tool_name = "uv"
     executable_name = "uv"
-    supported_platforms = ["linux", "darwin", "windows"]
+    supported_platforms: ClassVar[list[str]] = ["linux", "darwin", "windows"]
 
     def __init__(self, config: BaseConfig | None = None) -> None:
         """

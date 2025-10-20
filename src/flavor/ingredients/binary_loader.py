@@ -88,7 +88,7 @@ class BinaryLoader:
 
     def _build_go_ingredients(self, force: bool = False) -> list[Path]:
         """Build Go ingredients."""
-        built_binaries = []
+        built_binaries: list[Path] = []
 
         if not self.manager.go_src_dir.exists():
             logger.warning(f"Go source directory not found: {self.manager.go_src_dir}")
@@ -136,7 +136,7 @@ class BinaryLoader:
 
     def _build_rust_ingredients(self, force: bool = False) -> list[Path]:
         """Build Rust ingredients."""
-        built_binaries = []
+        built_binaries: list[Path] = []
 
         if not self.manager.rust_src_dir.exists():
             logger.warning(f"Rust source directory not found: {self.manager.rust_src_dir}")
