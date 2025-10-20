@@ -179,7 +179,7 @@ fn get_lifecycle_byte(lifecycle: &str) -> u8 {
         "dev" => 8,
         "config" => 9,
         "platform" => 10,
-        "runtime" | _ => 2, // default to runtime
+        _ => 2, // default to runtime
     }
 }
 
