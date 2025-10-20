@@ -1,4 +1,7 @@
-"""Utility functions for flavor."""
+# flavor/utils/__init__.py
+#
+# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
 
 # Re-export platform utilities (from foundation directly)
 from __future__ import annotations
@@ -34,3 +37,4 @@ __all__ = [
     "xor_decode",
     "xor_encode",
 ]
+# 🌶️📦📦🪄

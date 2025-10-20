@@ -1,4 +1,8 @@
-#!/usr/bin/env python3
+# flavor/cli.py
+#
+# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 #
 # flavor/cli.py
 #
@@ -89,3 +93,4 @@ main = cli
 
 if __name__ == "__main__":
     cli()
+# 🌶️📦🖥️🪄

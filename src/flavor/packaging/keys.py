@@ -1,10 +1,13 @@
-#!/usr/bin/env python3
+# flavor/packaging/keys.py
+#
+# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 #
 # flavor/packaging/keys.py
 #
-"""Key generation for PSPF packages using Ed25519."""
-
-from pathlib import Path
+"""Key generation for PSPF packages using Ed25519.from pathlib import Path
+"""
 
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ed25519
@@ -173,3 +176,6 @@ def load_public_key_raw(key_path: Path) -> bytes:
             f"To generate new Ed25519 keys, delete the existing keys and run:\n"
             f"  flavor keygen --output keys/"
         )
+
+
+# 🌶️📦📄🪄

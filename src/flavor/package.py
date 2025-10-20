@@ -1,9 +1,12 @@
+# flavor/package.py
 #
+# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 # flavor/api.py
 #
-"""Public API for the Flavor build tool."""
-
-from pathlib import Path
+"""Public API for the Flavor build tool.from pathlib import Path
+"""
 
 # No typing imports needed with Python 3.11+
 import tomllib
@@ -255,3 +258,6 @@ def _create_orchestrator(
         key_seed=key_seed,
         manifest_type=manifest_type,
     )
+
+
+# 🌶️📦📄🪄

@@ -1,15 +1,18 @@
+# flavor/packaging/python/uv_manager.py
 #
+# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 # flavor/packaging/python/uv_manager.py
 #
 """UV tool manager for FlavorPack packaging.
+"""
 
 This module provides UV (uv) command management with Foundation integration
 for Python package management operations that benefit from uv's performance.
 
 IMPORTANT: UV commands are used for specific operations where performance
 is critical. For complex dependency resolution, use PyPaPipManager instead.
-"""
-
 from pathlib import Path
 
 from provide.foundation import retry
@@ -416,3 +419,6 @@ class UVManager(BaseToolManager):
             except Exception as e:
                 logger.error(f"Failed to download UV binary: {e}")
                 return None
+
+
+# 🌶️📦📋🪄

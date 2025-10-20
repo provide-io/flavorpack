@@ -1,12 +1,15 @@
+# flavor/packaging/python/pypapip_manager.py
 #
+# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 # flavor/packaging/python/pip_manager.py
 #
 """PyPA pip command management for FlavorPack packaging.
+"""
 
 This module handles all pip-specific operations with proper platform support
 and manylinux2014 compatibility for maximum Linux distribution coverage.
-"""
-
 from pathlib import Path
 
 from provide.foundation import retry
@@ -295,3 +298,6 @@ class PyPaPipManager:
         run(install_cmd, check=True, capture_output=True)
 
         logger.info("✅ Successfully installed packages")
+
+
+# 🌶️📦📋🪄

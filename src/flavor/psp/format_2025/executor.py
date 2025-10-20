@@ -1,5 +1,9 @@
-"""
-PSPF 2025 Bundle Executor
+# flavor/psp/format_2025/executor.py
+#
+# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+"""PSPF 2025 Bundle Executor
 Handles process execution with environment setup and variable substitution.
 """
 
@@ -222,3 +226,6 @@ class BundleExecutor:
                 "error": str(e),
                 "returncode": 1,  # Add returncode for consistency
             }
+
+
+# 🌶️📦⚡🪄

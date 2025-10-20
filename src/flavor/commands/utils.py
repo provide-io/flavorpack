@@ -1,10 +1,13 @@
-#!/usr/bin/env python3
+# flavor/commands/utils.py
+#
+# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 #
 # flavor/commands/utils.py
 #
-"""Utility commands for the flavor CLI."""
-
-from pathlib import Path
+"""Utility commands for the flavor CLI.from pathlib import Path
+"""
 from typing import Any
 
 import click
@@ -158,3 +161,6 @@ def _show_total_freed(dry_run: bool, total_freed: int) -> None:
         freed_mb = total_freed / (1024 * 1024)
         log.info("Total space freed", size_mb=freed_mb, size_bytes=total_freed)
         echo(f"\n💾 Total freed: {freed_mb:.1f} MB")
+
+
+# 🌶️📦🖥️🪄

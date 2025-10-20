@@ -1,12 +1,15 @@
+# flavor/packaging/python/dist_manager.py
 #
+# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 # flavor/packaging/python/dist_manager.py
 #
 """Python distribution management for FlavorPack packaging.
+"""
 
 This module provides Python distribution handling including virtual environment
 setup, package installation, and distribution preparation for PSPF packaging.
-"""
-
 import os
 from pathlib import Path
 import shutil  # Only kept for copytree which Foundation doesn't provide
@@ -414,3 +417,6 @@ class PythonDistManager:
         except Exception as e:
             logger.error(f"Distribution validation failed: {e}")
             return False
+
+
+# 🌶️📦📋🪄
