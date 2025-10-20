@@ -65,7 +65,7 @@ class IngredientManager:
 
         self._binary_loader = BinaryLoader(self)
 
-    def list_ingredients(self, platform_filter: bool = False) -> dict[str, list[IngredientInfo]]:
+    def list_ingredients(self, platform_filter: bool = False) -> dict[str, list[IngredientInfo]]:  # noqa: C901
         """List all available ingredients.
 
         Args:

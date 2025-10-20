@@ -156,7 +156,7 @@ class PSPFLauncher(PSPFReader):
             safe_rmtree(workenv_dir)
             raise  # Re-raise the exception
 
-    def extract_slot(self, slot_index: int, workenv_dir: Path, verify_checksum: bool = False) -> Path:
+    def extract_slot(self, slot_index: int, workenv_dir: Path, verify_checksum: bool = False) -> Path:  # noqa: C901
         """Extract a single slot.
 
         Args:

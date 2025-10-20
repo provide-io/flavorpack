@@ -159,7 +159,7 @@ def workenv_remove(package_id: str, yes: bool) -> None:
     is_flag=True,
     help="Output as JSON format",
 )
-def workenv_inspect(package_id: str, output_json: bool) -> None:
+def workenv_inspect(package_id: str, output_json: bool) -> None:  # noqa: C901
     """Inspect detailed metadata for a cached package extraction."""
     from flavor.cache import CacheManager
 

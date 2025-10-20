@@ -259,6 +259,40 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 			return nil, fmt.Errorf("failed to read temp directory: %w", err)
 		}
 
+		// Process slots in reverse order (highest index first) so earlier slots don't get overwritten
+		// This ensures slot_N_* directories are merged before slot_0_* and regular files
+		sort.SliceStable(entries, func(i, j int) bool {
+			nameI := entries[i].Name()
+			nameJ := entries[j].Name()
+
+			// Extract slot numbers for slot_N_* directories
+			var slotI, slotJ int = -1, -1
+			if _, err := fmt.Sscanf(nameI, "slot_%d_", &slotI); err == nil && entries[i].IsDir() {
+				// nameI is a slot directory
+			} else {
+				slotI = -1
+			}
+			if _, err := fmt.Sscanf(nameJ, "slot_%d_", &slotJ); err == nil && entries[j].IsDir() {
+				// nameJ is a slot directory
+			} else {
+				slotJ = -1
+			}
+
+			// Both are slot directories - sort by slot number in reverse (higher first)
+			if slotI >= 0 && slotJ >= 0 {
+				return slotI > slotJ
+			}
+			// Only one is a slot directory - slot directories come first
+			if slotI >= 0 {
+				return true
+			}
+			if slotJ >= 0 {
+				return false
+			}
+			// Neither are slot directories - keep original order
+			return false
+		})
+
 		for _, entry := range entries {
 			fileName := entry.Name()
 			source := filepath.Join(tempExtractDir, fileName)
