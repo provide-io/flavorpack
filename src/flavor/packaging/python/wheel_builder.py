@@ -13,8 +13,8 @@ combining UV performance where appropriate with PyPA pip compatibility.
 
 from __future__ import annotations
 
-import tempfile
 from pathlib import Path
+import tempfile
 from typing import Any
 
 from provide.foundation.file.directory import ensure_dir
@@ -279,6 +279,99 @@ class WheelBuilder:
 
         return wheel_files
 
+    def build_wheels_from_local_sources_only(
+        self,
+        python_exe: Path,
+        project_dir: Path,
+        wheel_dir: Path,
+        all_packages: list[str],
+    ) -> list[Path]:
+        """
+        Build wheels ONLY from local source packages.
+
+        CRITICAL: This method ensures that flavor pack NEVER downloads wheels from PyPI.
+        All wheels must be built from local source code.
+
+        Args:
+            python_exe: Python executable to use
+            project_dir: Project source directory
+            wheel_dir: Directory to place built wheels
+            all_packages: List of package specs (can include local paths or simple names)
+
+        Returns:
+            List of built wheel file paths
+        """
+
+        logger.info(
+            "🔨📦 Building wheels from LOCAL SOURCES ONLY (no PyPI downloads)",
+            package_count=len(all_packages),
+        )
+
+        built_wheels = []
+
+        for package_spec in all_packages:
+            logger.debug(f"Processing package spec: {package_spec}")
+
+            # Parse package spec - could be a name, a path, or a version spec
+            # Split on ==, >=, <=, >, <, ~=, !=
+            package_name = (
+                package_spec.split(">")[0].split("<")[0].split("=")[0].split("~")[0].split("!")[0].strip()
+            )
+
+            # Try to find the package as a local directory in project or siblings
+            local_package_dir = None
+
+            # Check if it's an absolute or relative path
+            if "/" in package_spec or "\\" in package_spec:
+                potential_path = Path(package_spec).resolve()
+                if potential_path.exists() and potential_path.is_dir():
+                    local_package_dir = potential_path
+                    logger.debug(f"Found local package path: {local_package_dir}")
+
+            # Check relative to project directory
+            if not local_package_dir:
+                relative_path = project_dir / package_name
+                if relative_path.exists() and relative_path.is_dir():
+                    local_package_dir = relative_path
+                    logger.debug(f"Found local package in project dir: {local_package_dir}")
+
+            # Check in parent directory (common for monorepos)
+            if not local_package_dir:
+                parent_path = project_dir.parent / package_name
+                if parent_path.exists() and parent_path.is_dir():
+                    local_package_dir = parent_path
+                    logger.debug(f"Found local package in parent dir: {local_package_dir}")
+
+            # If found locally, build it
+            if local_package_dir:
+                logger.info(f"🔨 Building local package: {package_name} from {local_package_dir}")
+                try:
+                    wheel = self.build_wheel_from_source(
+                        python_exe=python_exe,
+                        source_path=local_package_dir,
+                        wheel_dir=wheel_dir,
+                    )
+                    built_wheels.append(wheel)
+                    logger.info(f"✅ Built local package wheel: {wheel.name}")
+                except Exception as e:
+                    logger.error(f"❌ Failed to build local package {package_name}: {e}")
+                    raise
+            else:
+                # Package not found locally - this is an error in packaging mode
+                logger.error(
+                    f"❌ Package '{package_name}' not found locally",
+                    spec=package_spec,
+                    project_dir=str(project_dir),
+                )
+                raise FileNotFoundError(
+                    f"Package '{package_name}' must be available as a local source in packaging mode. "
+                    f"Searched in: {project_dir}, {project_dir.parent}. "
+                    f"Remote PyPI downloads are not allowed during 'flavor pack'."
+                )
+
+        logger.info(f"✅ Successfully built {len(built_wheels)} wheels from local sources")
+        return built_wheels
+
     def build_and_resolve_project(
         self,
         python_exe: Path,
@@ -290,17 +383,21 @@ class WheelBuilder:
         """
         Complete wheel building and dependency resolution for a project.
 
+        CRITICAL: This method builds ALL wheels from LOCAL sources only.
+        It does NOT download wheels from PyPI. This ensures reproducible,
+        controlled packaging where all sources are available locally.
+
         Args:
             python_exe: Python executable to use
             project_dir: Project source directory
             build_dir: Directory for build artifacts
-            requirements_file: Optional requirements file
+            requirements_file: Optional requirements file (currently unused for local-only mode)
             extra_packages: Additional packages to include
 
         Returns:
             Dictionary with build information and file paths
         """
-        logger.info(f"🏗️📦 Building and resolving project: {project_dir.name}")
+        logger.info(f"🏗️📦 Building and resolving project from LOCAL SOURCES: {project_dir.name}")
 
         # Create build directories
         wheel_dir = build_dir / "wheels"
@@ -311,7 +408,7 @@ class WheelBuilder:
         # Build main project wheel
         project_wheel = self.build_wheel_from_source(python_exe, project_dir, wheel_dir)
 
-        # Extract project dependencies from pyproject.toml if not already in extra_packages
+        # Extract project dependencies from pyproject.toml
         project_dependencies = []
         pyproject_path = project_dir / "pyproject.toml"
         if pyproject_path.exists() and not requirements_file:
@@ -334,32 +431,28 @@ class WheelBuilder:
         if project_dependencies:
             all_packages.extend(project_dependencies)
 
-        # Resolve dependencies
-        if requirements_file or all_packages:
-            locked_requirements = self.resolve_dependencies(
+        # Build dependency wheels from LOCAL SOURCES ONLY
+        dependency_wheels = []
+        if all_packages:
+            logger.info(f"🔨 Building {len(all_packages)} dependency wheels from local sources")
+            dependency_wheels = self.build_wheels_from_local_sources_only(
                 python_exe=python_exe,
-                requirements_file=requirements_file,
-                packages=all_packages if all_packages else None,
-                output_dir=deps_dir,
+                project_dir=project_dir,
+                wheel_dir=wheel_dir,
+                all_packages=all_packages,
             )
-
-            # Download dependency wheels
-            dependency_wheels = self.download_wheels_for_resolved_deps(
-                python_exe, locked_requirements, wheel_dir
-            )
-        else:
-            locked_requirements = None
-            dependency_wheels = []
 
         build_info = {
             "project_wheel": project_wheel,
             "dependency_wheels": dependency_wheels,
-            "locked_requirements": locked_requirements,
+            "locked_requirements": None,
             "wheel_dir": wheel_dir,
             "total_wheels": len(dependency_wheels) + 1,  # +1 for project wheel
         }
 
-        logger.info(f"✅ Completed project build with {build_info['total_wheels']} wheels")
+        logger.info(
+            f"✅ Completed project build with {build_info['total_wheels']} wheels (all from local sources)"
+        )
         return build_info
 
 
