@@ -333,6 +333,16 @@ fn prepare_command(
         }
     }
 
+    // Set FLAVOR_CACHE to the HOST's cache directory if not already set
+    // This ensures the packaged tool can access cached packages from the HOST
+    if !env_map.contains_key("FLAVOR_CACHE") {
+        if let Some(home) = env_map.get("HOME") {
+            let flavor_cache = format!("{}/.cache/flavor/workenv", home);
+            debug!("🗂️ Setting FLAVOR_CACHE to HOST cache: {}", flavor_cache);
+            env_map.insert("FLAVOR_CACHE".to_string(), flavor_cache);
+        }
+    }
+
     // Add execution environment variables (layer 3)
     for (key, value) in &metadata.execution.env {
         env_map.insert(key.clone(), value.clone());
