@@ -192,6 +192,12 @@ exclude_lines = [
 package_name = "flavor"
 entry_point = "flavor.cli:main"
 
+[tool.flavor.execution]
+# Pass all environment variables through, especially cache-related ones
+# This ensures the packaged flavor can access the workenv cache
+[tool.flavor.execution.runtime.env]
+pass = ["*"]
+
 [tool.flavor.build]
 dependencies = []
 
