@@ -310,6 +310,54 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 				}
 				// Remove empty slot 0 directory
 				os.RemoveAll(source)
+		} else if strings.HasPrefix(fileName, "slot_") && entry.IsDir() {
+			// Handle other slot_N_* directories (where target was {workenv}) - merge to root
+			logger.Debug("🎯 Moving slot contents to workenv root", "slotDir", fileName)
+			// Read contents of slot directory
+			slotEntries, err := os.ReadDir(source)
+			if err != nil {
+				logger.Error("❌ Failed to read slot directory", "error", err)
+				os.RemoveAll(tempExtractDir)
+				return nil, fmt.Errorf("failed to read slot directory: %w", err)
+			}
+
+			// Move each item from slot directory to workenv root
+			for _, slotEntry := range slotEntries {
+				slotSource := filepath.Join(source, slotEntry.Name())
+				slotDest := filepath.Join(workenvDir, slotEntry.Name())
+
+				// Remove destination if it exists (for overwrite)
+				if _, err := os.Stat(slotDest); err == nil {
+					if slotEntry.IsDir() {
+						os.RemoveAll(slotDest)
+					} else {
+						os.Remove(slotDest)
+					}
+				}
+
+				logger.Debug("Moving slot content", "from", slotSource, "to", slotDest)
+				if err := os.Rename(slotSource, slotDest); err != nil {
+					// If rename fails (e.g., cross-filesystem), fall back to copy
+					logger.Warn("Rename failed, falling back to copy", "error", err)
+					if slotEntry.IsDir() {
+						if err := copyDirAll(slotSource, slotDest); err != nil {
+							logger.Error("❌ Failed to copy slot directory", "error", err)
+							os.RemoveAll(tempExtractDir)
+							return nil, fmt.Errorf("failed to copy slot directory: %w", err)
+						}
+						os.RemoveAll(slotSource)
+					} else {
+						if err := copyFile(slotSource, slotDest); err != nil {
+							logger.Error("❌ Failed to copy slot file", "error", err)
+							os.RemoveAll(tempExtractDir)
+							return nil, fmt.Errorf("failed to copy slot file: %w", err)
+						}
+						os.Remove(slotSource)
+					}
+				}
+			}
+			// Remove empty slot directory
+			os.RemoveAll(source)
 			} else {
 				// Regular handling for other slots
 				dest := filepath.Join(workenvDir, fileName)
