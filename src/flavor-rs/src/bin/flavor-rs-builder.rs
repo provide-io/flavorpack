@@ -50,7 +50,7 @@ fn main() {
     }));
     
     // Wrap main logic in catch_unwind for extra safety
-    let result = panic::catch_unwind(|| run());
+    let result = panic::catch_unwind(run);
     
     match result {
         Ok(exit_code) => process::exit(exit_code),

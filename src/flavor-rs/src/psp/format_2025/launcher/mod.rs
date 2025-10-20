@@ -38,6 +38,10 @@ use super::reader::Reader;
 use crate::CHILD_PID;
 static EXTRACTING: AtomicBool = AtomicBool::new(false);
 
+// Type alias for extraction result to reduce complexity
+type SlotPaths = std::collections::HashMap<usize, PathBuf>;
+type ExtractionResult = ((SlotPaths, Vec<PathBuf>), PathBuf);
+
 /// Launch a PSPF/2025 package
 ///
 /// # Errors
@@ -47,6 +51,7 @@ static EXTRACTING: AtomicBool = AtomicBool::new(false);
 /// - Signature verification fails (in strict mode)
 /// - Extraction fails
 /// - Command execution fails
+#[allow(clippy::cognitive_complexity)]
 pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> Result<i32> {
     info!("PSPF Rust Launcher starting...");
     debug!("🦀 Rust launcher starting");
@@ -78,25 +83,23 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
             debug!("🔍 Verifying package integrity (level: {:?})", validation_level);
             // Call verifier
             let verify_result = super::verifier::verify(package_path)?;
-            if !verify_result.signature_valid {
-                if matches!(validation_level, ValidationLevel::Minimal | ValidationLevel::Relaxed) {
-                    eprintln!("⚠️ SECURITY WARNING: Package signature verification failed");
-                    eprintln!("⚠️ Package may be corrupted or tampered with");
-                    eprintln!("⚠️ Continuing due to validation level: {:?}", validation_level);
-                    warn!("⚠️ Package signature verification failed, continuing");
-                } else if matches!(validation_level, ValidationLevel::Standard) {
-                    eprintln!("🚨 SECURITY WARNING: Package signature verification failed");
-                    eprintln!("🚨 Package may be corrupted or tampered with");
-                    eprintln!("🚨 Continuing with standard validation (use FLAVOR_VALIDATION=strict to enforce)");
-                    warn!("⚠️ Package signature verification failed, continuing with standard validation");
-                } else if matches!(validation_level, ValidationLevel::Strict) {
-                    error!("❌ Package signature verification failed");
-                    return Err(FlavorError::Generic(
-                        "Package signature verification failed".to_string(),
-                    ));
-                }
-            } else {
+            if verify_result.signature_valid {
                 debug!("✅ Package integrity verified");
+            } else if matches!(validation_level, ValidationLevel::Minimal | ValidationLevel::Relaxed) {
+                eprintln!("⚠️ SECURITY WARNING: Package signature verification failed");
+                eprintln!("⚠️ Package may be corrupted or tampered with");
+                eprintln!("⚠️ Continuing due to validation level: {:?}", validation_level);
+                warn!("⚠️ Package signature verification failed, continuing");
+            } else if matches!(validation_level, ValidationLevel::Standard) {
+                eprintln!("🚨 SECURITY WARNING: Package signature verification failed");
+                eprintln!("🚨 Package may be corrupted or tampered with");
+                eprintln!("🚨 Continuing with standard validation (use FLAVOR_VALIDATION=strict to enforce)");
+                warn!("⚠️ Package signature verification failed, continuing with standard validation");
+            } else if matches!(validation_level, ValidationLevel::Strict) {
+                error!("❌ Package signature verification failed");
+                return Err(FlavorError::Generic(
+                    "Package signature verification failed".to_string(),
+                ));
             }
     }
 
@@ -226,7 +229,7 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
             trace!("🗂️ Extracting to temp before atomic move");
 
             // Extract slots to temporary directory
-            let extraction_result = (|| -> Result<((std::collections::HashMap<usize, PathBuf>, Vec<PathBuf>), PathBuf)> {
+            let extraction_result = (|| -> Result<ExtractionResult> {
                 let (slot_path_map, init_slots) = extract_slots(&mut reader, &temp_extract_dir)?;
                 Ok(((slot_path_map, init_slots), temp_extract_dir.clone()))
             })();
@@ -444,7 +447,9 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
 
             // Only set argv[0] for binary executables, not scripts
             // Scripts with shebangs can fail with permission denied when argv[0] is changed
-            if !is_script {
+            if is_script {
+                info!("🚀 Executing script: {executable}");
+            } else {
                 // Get the binary name for argv[0]
                 let binary_name = package_path
                     .file_name()
@@ -453,8 +458,6 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
                 // Set argv[0] to the binary name
                 cmd.arg0(binary_name);
                 info!("🚀 Executing binary: {executable} with argv[0]={binary_name}");
-            } else {
-                info!("🚀 Executing script: {executable}");
             }
 
             debug!("🚀 Full command with args: {cmd_args:?}");
