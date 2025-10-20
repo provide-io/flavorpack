@@ -96,9 +96,10 @@ mod tests {
         let ops: Vec<u8> = vec![];
         let packed = pack_operations(&ops);
         assert_eq!(packed, 0);
-        
+
         let unpacked = unpack_operations(0);
-        assert_eq!(unpacked, vec![]);
+        let expected: Vec<u8> = vec![];
+        assert_eq!(unpacked, expected);
     }
 
     #[test]
