@@ -1,7 +1,6 @@
 //! Metadata creation and compression
 
 use super::super::checksums::{calculate_checksum, ChecksumAlgorithm};
-use super::super::defaults::{CAPABILITY_MMAP, CAPABILITY_SIGNED};
 use super::super::index::Index;
 use super::super::manifest::BuildManifest;
 use super::super::metadata::{Metadata, PackageInfo, ExecutionInfo, VerificationInfo, IntegritySealInfo, BuildInfo, PlatformInfo, LauncherInfo, CompatibilityInfo, CacheValidationInfo, RuntimeInfo, WorkenvInfo};
