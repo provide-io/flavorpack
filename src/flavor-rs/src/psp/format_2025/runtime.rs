@@ -19,7 +19,7 @@ mod runtime_impl {
     use patterns::PatternProcessor;
     use operations::{UnsetOperation, MapOperation, SetOperation};
     
-    use log::{debug, trace};
+    use log::debug;
     use std::collections::HashMap;
     
     /// Process runtime environment configuration
@@ -195,13 +195,17 @@ mod runtime_impl {
             
             pub(super) fn execute(&self, env_map: &mut HashMap<String, String>) -> Result<()> {
                 debug!("🗑️ Processing {} unset patterns", self.patterns.len());
-                
+
                 for pattern in self.patterns {
+                    debug!("  Processing unset pattern: '{}'", pattern);
                     if pattern == "*" {
+                        debug!("  Match: unset all except preserved");
                         self.unset_all_except_preserved(env_map)?;
                     } else if pattern.contains('*') || pattern.contains('?') {
+                        debug!("  Match: glob pattern");
                         self.unset_glob_pattern(pattern, env_map)?;
                     } else {
+                        debug!("  Match: exact pattern");
                         self.unset_exact_match(pattern, env_map)?;
                     }
                 }
@@ -210,17 +214,23 @@ mod runtime_impl {
             }
             
             fn unset_all_except_preserved(&self, env_map: &mut HashMap<String, String>) -> Result<()> {
+                debug!("🔄 Unsetting all variables except preserved patterns");
                 let all_keys: Vec<String> = env_map.keys().cloned().collect();
+                let mut preserved_count = 0;
+                let mut unset_count = 0;
 
                 for key in all_keys {
                     if !self.processor.should_preserve(&key) {
                         env_map.remove(&key);
                         trace!("  🗑️ Unset: {}", key);
+                        unset_count += 1;
                     } else {
                         trace!("  ✅ Preserved: {}", key);
+                        preserved_count += 1;
                     }
                 }
 
+                debug!("  Summary: {} preserved, {} unset", preserved_count, unset_count);
                 Ok(())
             }
             
