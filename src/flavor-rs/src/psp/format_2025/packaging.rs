@@ -10,6 +10,7 @@
 #![allow(clippy::cast_possible_truncation)]
 
 use crate::psp::format_2025::defaults::DEFAULT_FILE_PERMS;
+use crate::psp::format_2025::operations::pack_operations;
 use std::fs::File;
 use std::io::{Seek, SeekFrom, Write};
 use std::path::Path;
@@ -26,6 +27,13 @@ use super::slots::SlotDescriptor;
 use crate::exceptions::Result;
 
 /// Write a slot to the package file
+///
+/// # Errors
+///
+/// Returns an error if:
+/// - The slot file cannot be read
+/// - Data processing fails
+/// - Writing to the output file fails
 pub fn write_slot(
     out: &mut File,
     slot_path: &Path,
@@ -64,22 +72,18 @@ pub fn write_slot(
     let name_hash = {
         use std::collections::hash_map::DefaultHasher;
         use std::hash::{Hash, Hasher};
-        
+
         let mut hasher = DefaultHasher::new();
         slot_info.id.hash(&mut hasher);
         hasher.finish()
     };
-    
-    // Create descriptor with operations
-    use crate::psp::format_2025::operations::pack_operations;
 
     // Parse operation string (e.g., "0" for raw, "1" for tar, "16" for gzip, "3" for tgz)
     let operations = match operations_str {
-        0 => pack_operations(&[]),           // Raw
+        3 => pack_operations(&[OP_TAR, OP_GZIP]), // TGZ
         1 => pack_operations(&[OP_TAR]),     // TAR only
         16 => pack_operations(&[OP_GZIP]),   // GZIP only
-        3 => pack_operations(&[OP_TAR, OP_GZIP]), // TGZ
-        _ => pack_operations(&[]),
+        _ => pack_operations(&[]),           // Raw or unknown
     };
     
     let descriptor = SlotDescriptor {
@@ -89,7 +93,7 @@ pub fn write_slot(
         size: processed_data.len() as u64,
         original_size: slot_data.len() as u64,
         operations,
-        checksum: adler::adler32_slice(&processed_data) as u64,
+        checksum: u64::from(adler::adler32_slice(&processed_data)),
         purpose: get_purpose_byte(&slot_info.purpose),
         lifecycle: get_lifecycle_byte(&slot_info.lifecycle),
         priority: 0,
@@ -167,7 +171,6 @@ fn get_lifecycle_byte(lifecycle: &str) -> u8 {
     match lifecycle {
         "init" => 0,
         "startup" => 1,
-        "runtime" => 2,
         "shutdown" => 3,
         "cache" => 4,
         "temporary" => 5,
@@ -176,11 +179,15 @@ fn get_lifecycle_byte(lifecycle: &str) -> u8 {
         "dev" => 8,
         "config" => 9,
         "platform" => 10,
-        _ => 2, // default to runtime
+        "runtime" | _ => 2, // default to runtime
     }
 }
 
 /// Write the index block to the file
+///
+/// # Errors
+///
+/// Returns an error if writing to the output file fails
 pub fn write_index_block(out: &mut File, index: &Index) -> Result<()> {
     // Get index bytes
     let index_bytes = index.pack();
@@ -193,6 +200,13 @@ pub fn write_index_block(out: &mut File, index: &Index) -> Result<()> {
 }
 
 /// Write metadata to the package
+///
+/// # Errors
+///
+/// Returns an error if:
+/// - Metadata serialization fails
+/// - Compression fails
+/// - Writing to the output file fails
 pub fn write_metadata(out: &mut File, metadata: &Metadata) -> Result<(u64, u32, u32)> {
     // Get current position (metadata offset)
     let metadata_offset = out.stream_position()?;
@@ -225,6 +239,10 @@ pub fn write_metadata(out: &mut File, metadata: &Metadata) -> Result<(u64, u32, 
 }
 
 /// Write slot descriptors to the package
+///
+/// # Errors
+///
+/// Returns an error if writing to the output file fails
 pub fn write_descriptors(out: &mut File, descriptors: &[SlotDescriptor]) -> Result<u64> {
     // Get current position (descriptor table offset)
     let table_offset = out.stream_position()?;
@@ -246,6 +264,13 @@ pub fn write_descriptors(out: &mut File, descriptors: &[SlotDescriptor]) -> Resu
 }
 
 /// Calculate and write package checksum
+///
+/// # Errors
+///
+/// Returns an error if:
+/// - File size cannot be determined
+/// - Checksum calculation fails
+/// - Writing fails
 pub fn finalize_package(out: &mut File) -> Result<()> {
     // Get file size
     let file_size = out.stream_position()?;

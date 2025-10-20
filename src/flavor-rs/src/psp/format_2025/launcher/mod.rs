@@ -39,6 +39,14 @@ use crate::CHILD_PID;
 static EXTRACTING: AtomicBool = AtomicBool::new(false);
 
 /// Launch a PSPF/2025 package
+///
+/// # Errors
+///
+/// Returns an error if:
+/// - The package cannot be read or is invalid
+/// - Signature verification fails (in strict mode)
+/// - Extraction fails
+/// - Command execution fails
 pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> Result<i32> {
     info!("PSPF Rust Launcher starting...");
     debug!("🦀 Rust launcher starting");
@@ -62,42 +70,34 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
     use crate::psp::format_2025::defaults::{get_validation_level, ValidationLevel};
 
     let validation_level = get_validation_level();
-    match validation_level {
-        ValidationLevel::None => {
-            eprintln!("⚠️ SECURITY WARNING: Skipping all integrity verification (FLAVOR_VALIDATION=none)");
-            eprintln!("⚠️ This is NOT RECOMMENDED for production use");
-            warn!("⚠️ VALIDATION DISABLED: Skipping integrity verification");
-        }
-        _ => {
+    if matches!(validation_level, ValidationLevel::None) {
+        eprintln!("⚠️ SECURITY WARNING: Skipping all integrity verification (FLAVOR_VALIDATION=none)");
+        eprintln!("⚠️ This is NOT RECOMMENDED for production use");
+        warn!("⚠️ VALIDATION DISABLED: Skipping integrity verification");
+    } else {
             debug!("🔍 Verifying package integrity (level: {:?})", validation_level);
             // Call verifier
             let verify_result = super::verifier::verify(package_path)?;
             if !verify_result.signature_valid {
-                match validation_level {
-                    ValidationLevel::Minimal | ValidationLevel::Relaxed => {
-                        eprintln!("⚠️ SECURITY WARNING: Package signature verification failed");
-                        eprintln!("⚠️ Package may be corrupted or tampered with");
-                        eprintln!("⚠️ Continuing due to validation level: {:?}", validation_level);
-                        warn!("⚠️ Package signature verification failed, continuing");
-                    }
-                    ValidationLevel::Standard => {
-                        eprintln!("🚨 SECURITY WARNING: Package signature verification failed");
-                        eprintln!("🚨 Package may be corrupted or tampered with");
-                        eprintln!("🚨 Continuing with standard validation (use FLAVOR_VALIDATION=strict to enforce)");
-                        warn!("⚠️ Package signature verification failed, continuing with standard validation");
-                    }
-                    ValidationLevel::Strict => {
-                        error!("❌ Package signature verification failed");
-                        return Err(FlavorError::Generic(
-                            "Package signature verification failed".to_string(),
-                        ));
-                    }
-                    ValidationLevel::None => unreachable!(), // Already handled above
+                if matches!(validation_level, ValidationLevel::Minimal | ValidationLevel::Relaxed) {
+                    eprintln!("⚠️ SECURITY WARNING: Package signature verification failed");
+                    eprintln!("⚠️ Package may be corrupted or tampered with");
+                    eprintln!("⚠️ Continuing due to validation level: {:?}", validation_level);
+                    warn!("⚠️ Package signature verification failed, continuing");
+                } else if matches!(validation_level, ValidationLevel::Standard) {
+                    eprintln!("🚨 SECURITY WARNING: Package signature verification failed");
+                    eprintln!("🚨 Package may be corrupted or tampered with");
+                    eprintln!("🚨 Continuing with standard validation (use FLAVOR_VALIDATION=strict to enforce)");
+                    warn!("⚠️ Package signature verification failed, continuing with standard validation");
+                } else if matches!(validation_level, ValidationLevel::Strict) {
+                    error!("❌ Package signature verification failed");
+                    return Err(FlavorError::Generic(
+                        "Package signature verification failed".to_string(),
+                    ));
                 }
             } else {
                 debug!("✅ Package integrity verified");
             }
-        }
     }
 
     // Read metadata and clone to avoid borrow issues
@@ -128,13 +128,13 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
         let cache_dir = PathBuf::from(custom_workenv).parent()
             .and_then(|p| p.parent())
             .map(|p| p.to_path_buf())
-            .unwrap_or_else(|| get_cache_dir());
+            .unwrap_or_else(get_cache_dir);
         WorkenvPaths::new(cache_dir, package_path)
     } else if let Some(ref workdir) = options.workdir {
         let cache_dir = PathBuf::from(workdir).parent()
             .and_then(|p| p.parent())
             .map(|p| p.to_path_buf())
-            .unwrap_or_else(|| get_cache_dir());
+            .unwrap_or_else(get_cache_dir);
         WorkenvPaths::new(cache_dir, package_path)
     } else {
         get_workenv_paths(package_path)
@@ -172,10 +172,7 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
         .map(|v| v.to_lowercase() != "false" && v != "0")
         .unwrap_or(true);
 
-    let workenv_valid = if !use_cache {
-        info!("📦 FLAVOR_WORKENV_CACHE=false, forcing fresh extraction");
-        false
-    } else {
+    let workenv_valid = if use_cache {
         debug!("🔍 Checking cache validity");
         trace!("📂 Checking workenv at: {:?}", workenv_path);
         let checksum = index.index_checksum;
@@ -194,6 +191,9 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
                 return Err(e);
             }
         }
+    } else {
+        info!("📦 FLAVOR_WORKENV_CACHE=false, forcing fresh extraction");
+        false
     };
 
     let (_slot_paths, _init_paths) = if workenv_valid {

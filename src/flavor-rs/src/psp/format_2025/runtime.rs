@@ -39,20 +39,20 @@ mod runtime_impl {
         debug!("🔧 Processing runtime environment configuration");
         
         // Build pattern processor for pass/preserve operations
-        let pass_patterns = runtime_env.pass.as_ref().map(|v| v.as_slice()).unwrap_or(&[]);
+        let pass_patterns = runtime_env.pass.as_deref().unwrap_or(&[]);
         let pattern_processor = PatternProcessor::new(pass_patterns);
         
         // Process unset operations first (highest priority)
         if let Some(unset_patterns) = &runtime_env.unset {
-            if !unset_patterns.is_empty() {
+            if unset_patterns.is_empty() {
+                debug!("📭 No unset patterns (empty list)");
+            } else {
                 debug!("📋 Unset patterns found: {:?}", unset_patterns);
                 match UnsetOperation::new(unset_patterns, &pattern_processor)
                     .execute(env_map) {
                     Ok(_) => debug!("✅ Unset operations completed successfully"),
                     Err(e) => debug!("⚠️ Error during unset operations: {}", e),
                 }
-            } else {
-                debug!("📭 No unset patterns (empty list)");
             }
         } else {
             debug!("📭 No unset patterns configured");
@@ -226,13 +226,13 @@ mod runtime_impl {
                 let mut unset_count = 0;
 
                 for key in all_keys {
-                    if !self.processor.should_preserve(&key) {
+                    if self.processor.should_preserve(&key) {
+                        trace!("  ✅ Preserved: {}", key);
+                        preserved_count += 1;
+                    } else {
                         env_map.remove(&key);
                         trace!("  🗑️ Unset: {}", key);
                         unset_count += 1;
-                    } else {
-                        trace!("  ✅ Preserved: {}", key);
-                        preserved_count += 1;
                     }
                 }
 
@@ -261,10 +261,8 @@ mod runtime_impl {
             }
             
             fn unset_exact_match(&self, key: &str, env_map: &mut HashMap<String, String>) -> Result<()> {
-                if !self.processor.should_preserve(key) {
-                    if env_map.remove(key).is_some() {
-                        debug!("🗑️ Unset: {}", key);
-                    }
+                if !self.processor.should_preserve(key) && env_map.remove(key).is_some() {
+                    debug!("🗑️ Unset: {}", key);
                 }
                 Ok(())
             }

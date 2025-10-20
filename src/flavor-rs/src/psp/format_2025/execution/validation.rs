@@ -142,7 +142,7 @@ pub fn save_index_metadata(paths: &WorkenvPaths, index: &Index) -> Result<()> {
         slot_count,
         flags,
         index_checksum: format!("{:08x}", index_checksum_val),
-        metadata_checksum: hex::encode(&metadata_checksum),
+        metadata_checksum: hex::encode(metadata_checksum),
         build_timestamp,
         page_size,
         capabilities,
