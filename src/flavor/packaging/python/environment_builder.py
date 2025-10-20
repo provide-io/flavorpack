@@ -1,13 +1,7 @@
-# flavor/packaging/python/environment_builder.py
 #
-# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
-
 # flavor/packaging/python/environment_builder.py
 #
 """Environment builder for Python packages."""
-
-from __future__ import annotations
 
 import os
 from pathlib import Path
@@ -341,6 +335,3 @@ class PythonEnvironmentBuilder:
         logger.info(
             f"✅ Python tarball created: {tarball_size:,} bytes (compression: {compression_ratio:.1f}%)"
         )
-
-
-# 🌶️📦📄🪄
