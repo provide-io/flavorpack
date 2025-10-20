@@ -6,12 +6,15 @@
 # flavor/packaging/python/wheel_builder.py
 #
 """Wheel building and dependency resolution for FlavorPack packaging.
-"""
 
 This module provides wheel building with complex dependency resolution logic,
 combining UV performance where appropriate with PyPA pip compatibility.
-from pathlib import Path
+"""
+
+from __future__ import annotations
+
 import tempfile
+from pathlib import Path
 from typing import Any
 
 from provide.foundation.file.directory import ensure_dir
