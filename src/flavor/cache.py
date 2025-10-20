@@ -13,23 +13,25 @@ from provide.foundation.utils.environment import get_str
 
 
 def get_cache_dir() -> Path:
-    """Get the cache directory for Flavor packages."""
+    """Get the cache directory for Flavor packages.
+
+    Uses XDG Base Directory specification:
+    - FLAVOR_CACHE environment variable if set
+    - XDG_CACHE_HOME if set
+    - ~/.cache/flavor/workenv by default
+    """
+    # Check FLAVOR_CACHE override first
     cache_dir = get_str("FLAVOR_CACHE")
     if cache_dir:
         return Path(cache_dir)
 
-    # Default cache locations
-    if os.name == "posix":
-        if "darwin" in os.uname().sysname.lower():
-            # macOS
-            base = Path(get_str("TMPDIR", default="/var/folders"))
-            return base / "pspf" / "workenv"
-        else:
-            # Linux
-            return temp_dir().parent / "pspf" / "workenv"
-    else:
-        # Windows
-        return temp_dir().parent / "pspf" / "workenv"
+    # Use XDG_CACHE_HOME if set (respects XDG Base Directory standard)
+    xdg_cache = get_str("XDG_CACHE_HOME")
+    if xdg_cache:
+        return Path(xdg_cache) / "flavor" / "workenv"
+
+    # Default to ~/.cache/flavor/workenv
+    return Path.home() / ".cache" / "flavor" / "workenv"
 
 
 class CacheManager:
