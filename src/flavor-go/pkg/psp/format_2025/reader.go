@@ -417,21 +417,31 @@ func (r *Reader) ExtractSlot(slotIndex int, destDir string) (string, error) {
 		targetPath = strings.ReplaceAll(targetPath, "{workenv}", "")
 	}
 
-	// If targetPath is empty or "." after stripping {workenv}, extract to slot-specific subdirectory
+	// Determine extraction paths based on target and whether it's a TAR archive
 	var destPath, extractDir string
+
+	// Check if this is a tarball first (needed for logic below)
+	isTar := isTarball(decompressed)
+
 	if targetPath == "" || targetPath == "." {
-		// Target was "{workenv}" or "." - extract to slot-specific subdirectory to support atomic move
-		slotSubdir := fmt.Sprintf("slot_%d_%s", slotIndex, slotMeta.ID)
-		destPath = filepath.Join(destDir, slotSubdir)
-		extractDir = destPath
+		// Target was "{workenv}" or "."
+		if isTar {
+			// TAR slots targeting {workenv}: extract directly to destDir (matches Rust behavior)
+			// The tarball contents will be extracted directly to destDir
+			destPath = destDir
+			extractDir = destDir
+		} else {
+			// Non-TAR slots targeting {workenv}: extract to slot-specific subdirectory for atomic move
+			slotSubdir := fmt.Sprintf("slot_%d_%s", slotIndex, slotMeta.ID)
+			destPath = filepath.Join(destDir, slotSubdir)
+			extractDir = destPath
+		}
 	} else {
 		// Target has a subpath - join it with destDir
 		destPath = filepath.Join(destDir, targetPath)
 		extractDir = filepath.Dir(destPath)
 	}
 
-	// Check if this is a tarball that needs extraction
-	isTar := isTarball(decompressed)
 	logger.Trace("🔍 Slot data check", "isTarball", isTar, "dataLen", len(decompressed), "destPath", destPath)
 
 	if isTar {
