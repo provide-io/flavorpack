@@ -68,6 +68,7 @@ flavor = [
 [tool.setuptools.packages.find]
 where = ["src"]
 include = ["flavor*"]
+exclude = ["flavor.ingredients.bin*"]
 namespaces = false
 
 [tool.ruff]
