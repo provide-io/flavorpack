@@ -6,8 +6,7 @@
 #
 # flavor/commands/inspect.py
 #
-"""Inspect command for the flavor CLI - quick package overview.
-"""
+"""Inspect command for the flavor CLI - quick package overview."""
 
 from __future__ import annotations
 

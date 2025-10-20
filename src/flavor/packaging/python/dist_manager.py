@@ -14,9 +14,9 @@ setup, package installation, and distribution preparation for PSPF packaging.
 from __future__ import annotations
 
 import os
+from pathlib import Path
 import shutil  # Only kept for copytree which Foundation doesn't provide
 import sys
-from pathlib import Path
 from typing import Any
 
 from provide.foundation.file import (

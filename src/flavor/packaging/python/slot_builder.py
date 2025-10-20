@@ -9,9 +9,9 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 import tarfile
 import tomllib
-from pathlib import Path
 from typing import Any
 
 from provide.foundation import logger

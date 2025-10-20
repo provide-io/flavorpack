@@ -11,6 +11,7 @@ Handles the complex logic of finding, building, and testing ingredient binaries.
 
 from __future__ import annotations
 
+import contextlib
 import os
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -359,7 +360,5 @@ class BinaryLoader:
     def _ensure_executable(self, path: Path) -> None:
         """Ensure the given path is executable."""
         if not os.access(path, os.X_OK):
-            try:
+            with contextlib.suppress(OSError, PermissionError):
                 path.chmod(DEFAULT_EXECUTABLE_PERMS)
-            except (OSError, PermissionError):
-                pass  # Continue even if we can't set permissions

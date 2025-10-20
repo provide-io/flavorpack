@@ -6,7 +6,6 @@ import os
 from pathlib import Path
 import time
 
-from provide.foundation.file import temp_dir
 from provide.foundation.file.directory import ensure_dir, safe_rmtree
 from provide.foundation.file.formats import read_json
 from provide.foundation.utils.environment import get_str
@@ -55,7 +54,7 @@ class CacheManager:
         self.cache_dir = cache_dir or get_cache_dir()
         ensure_dir(self.cache_dir)
 
-    def list_cached(self) -> list[dict]:
+    def list_cached(self) -> list[dict[str, str | int | float]]:
         """List all cached packages.
 
         Returns:
@@ -153,7 +152,7 @@ class CacheManager:
 
         return removed
 
-    def inspect_workenv(self, workenv_name: str) -> dict:
+    def inspect_workenv(self, workenv_name: str) -> dict[str, str | bool | None | dict[str, str | None]]:
         """Inspect a specific workenv.
 
         Args:

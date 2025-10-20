@@ -9,8 +9,8 @@
 
 from __future__ import annotations
 
-import tomllib
 from pathlib import Path
+import tomllib
 
 from provide.foundation.file.directory import safe_rmtree
 from provide.foundation.file.formats import read_json

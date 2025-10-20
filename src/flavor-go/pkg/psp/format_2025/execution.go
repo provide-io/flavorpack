@@ -555,9 +555,15 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 	cmd.Args = append([]string{binaryName}, cmdArgs...)
 	logger.Debug("🏷️ Attempted to set argv[0] (Go limitation: won't work)", "argv0", binaryName, "original", originalCmd, "fullArgs", cmd.Args)
 
+	// Setup environment variables in proper layering order
 	parentEnv := os.Environ()
 	logger.Debug("🌍 Inheriting parent environment", "vars_count", len(parentEnv))
 	cmd.Env = parentEnv
+
+	// Set FLAVOR_CACHE BEFORE workenv environment (which overwrites HOME)
+	cmd.Env = setFlavorCacheBeforeWorkenv(cmd.Env, logger)
+
+	// Add FLAVOR_* variables
 	cmd.Env = append(cmd.Env, fmt.Sprintf("FLAVOR_WORKENV=%s", workenvDir))
 	logger.Debug("➕ Added FLAVOR_WORKENV", "path", workenvDir)
 
@@ -568,6 +574,7 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 		"FLAVOR_ORIGINAL_COMMAND", originalCmd,
 		"FLAVOR_COMMAND_NAME", binaryName)
 
+	// Prepend workenv/bin to PATH
 	pathFound := false
 	for i, env := range cmd.Env {
 		if strings.HasPrefix(env, "PATH=") {
@@ -580,11 +587,13 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 		cmd.Env = append(cmd.Env, fmt.Sprintf("PATH=%s/bin", workenvDir))
 	}
 
+	// Process runtime.env configuration
 	if metadata.Runtime != nil && metadata.Runtime.Env != nil {
 		logger.Debug("🔄 Processing runtime.env configuration")
 		cmd.Env = processRuntimeEnv(cmd.Env, metadata.Runtime.Env, logger)
 	}
 
+	// Add package-defined environment variables
 	if metadata.Execution.Environment != nil {
 		logger.Debug("➕ Adding package-defined environment variables", "count", len(metadata.Execution.Environment))
 		for k, v := range metadata.Execution.Environment {
@@ -608,15 +617,7 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 	logger.Debug("🎯 Command details", "args", cmd.Args[1:], "cwd", cmd.Dir)
 	logger.Debug("📊 Final environment state", "total_vars", len(cmd.Env))
 
-	if logger.IsTrace() {
-		logger.Trace("🌍 Environment variables being passed to subprocess:")
-		for _, env := range cmd.Env {
-			parts := strings.SplitN(env, "=", 2)
-			if len(parts) == 2 {
-				logger.Trace("  →", "key", parts[0], "value", parts[1])
-			}
-		}
-	}
+	logEnvironmentTrace(cmd.Env, logger)
 
 	return cmd, nil
 }
