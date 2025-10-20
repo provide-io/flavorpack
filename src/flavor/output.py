@@ -145,7 +145,7 @@ def get_output_handler(
     Returns:
         Configured OutputHandler
     """
-    from provide.foundation.env import get_env
+    from provide.foundation.env import get_env  # type: ignore[import-untyped]
 
     format_env = format_env or "FLAVOR_OUTPUT_FORMAT"
     file_env = file_env or "FLAVOR_OUTPUT_FILE"

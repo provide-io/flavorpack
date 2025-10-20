@@ -24,6 +24,7 @@ from provide.foundation.config import BaseConfig
 from provide.foundation.logger import logger
 from provide.foundation.platform import get_arch_name, get_os_name
 from provide.foundation.process import run
+from provide.foundation.resilience.types import BackoffStrategy
 from provide.foundation.tools.base import (
     BaseToolManager,
     ToolMetadata,
@@ -330,7 +331,7 @@ class UVManager(BaseToolManager):
         OSError,
         max_attempts=3,
         base_delay=1.0,
-        backoff="exponential",
+        backoff=BackoffStrategy.EXPONENTIAL,
         jitter=True,
     )
     def download_uv_binary(self, dest_dir: Path, python_exe: Path | None = None) -> Path | None:

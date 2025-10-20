@@ -102,7 +102,7 @@ func LaunchWithLogLevel(exePath string, args []string, cliLogLevel, cliLogSource
 		logLevel = envLevel
 		logSource = "FLAVOR_LOG_LEVEL"
 	} else {
-		logLevel = "info"
+		logLevel = "warn"  // Default to warn for production safety
 		logSource = "default"
 	}
 

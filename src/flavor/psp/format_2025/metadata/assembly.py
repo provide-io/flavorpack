@@ -14,23 +14,15 @@ from typing import Any
 
 from provide.foundation.crypto import format_checksum as calculate_checksum
 from provide.foundation.platform import get_arch_name, get_os_name, get_platform_string
+from provide.foundation.utils import get_version
 
 from flavor.psp.format_2025.spec import BuildSpec
 from flavor.psp.metadata.paths import validate_metadata_dict
 
-# Fallback version for development/unknown versions
-FALLBACK_VERSION = "0.0.0-dev"
-
 
 def get_flavor_version() -> str:
-    """Get the version of flavor-python."""
-    try:
-        from importlib.metadata import version
-
-        return version("flavor")
-    except (ImportError, Exception):
-        # Fallback for development or if package not installed
-        return FALLBACK_VERSION
+    """Get the version of flavor-python from VERSION file or package metadata."""
+    return get_version("flavorpack", caller_file=__file__)
 
 
 def load_launcher_binary(launcher_type: str) -> bytes:
