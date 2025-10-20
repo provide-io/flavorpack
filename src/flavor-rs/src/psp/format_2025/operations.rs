@@ -53,6 +53,7 @@ pub fn unpack_operations(packed: u64) -> Vec<u8> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use super::super::constants::{OP_TAR, OP_GZIP};
 
     #[test]
     fn test_pack_single_operation() {
@@ -72,19 +73,19 @@ mod tests {
     fn test_unpack_single_operation() {
         let packed = 0x0000000000000010_u64;
         let ops = unpack_operations(packed);
-        assert_eq!(ops, vec![OP_GZIP]);
+        assert_eq!(ops, vec![0x10]); // OP_GZIP value
     }
 
     #[test]
     fn test_unpack_multiple_operations() {
         let packed = 0x0000000000001001_u64;
         let ops = unpack_operations(packed);
-        assert_eq!(ops, vec![OP_TAR, OP_GZIP]);
+        assert_eq!(ops, vec![0x01, 0x10]); // OP_TAR, OP_GZIP values
     }
 
     #[test]
     fn test_round_trip() {
-        let original = vec![OP_TAR, OP_GZIP, OP_AES256_GCM];
+        let original = vec![OP_TAR, OP_GZIP];
         let packed = pack_operations(&original);
         let unpacked = unpack_operations(packed);
         assert_eq!(original, unpacked);

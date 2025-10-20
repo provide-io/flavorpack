@@ -8,7 +8,7 @@ pub const MAGIC_WAND_EMOJI_BYTES: &[u8] = &[0xF0, 0x9F, 0xAA, 0x84];  // 🪄 as
 
 // Format version - immutable
 pub const PSPF_VERSION: u32 = 0x20250001;
-pub const FORMAT_VERSION: u32 = PSPF_VERSION; // Alias for compatibility
+pub const FORMAT_VERSION: u32 = PSPF_VERSION;
 
 // Fixed sizes - part of the format specification
 pub const HEADER_SIZE: usize = 8192; // Index block size
@@ -24,12 +24,6 @@ pub const OP_BZIP2: u8 = 0x13; // BZIP2 compression (REQUIRED)
 pub const OP_XZ: u8 = 0x16;    // XZ/LZMA2 compression (REQUIRED)
 pub const OP_ZSTD: u8 = 0x1B;  // Zstandard compression (REQUIRED)
 
-// Legacy codec constants (for compatibility)
-pub const CODEC_RAW: u8 = 0;
-pub const CODEC_GZIP: u8 = 1;
-pub const CODEC_TAR: u8 = 2;
-pub const CODEC_TGZ: u8 = 3;
-
 // Purpose types - part of format spec
 #[allow(non_upper_case_globals)]
 pub const PurposeData: u8 = 0;   // General data files
@@ -39,14 +33,6 @@ pub const PurposeCode: u8 = 1;   // Executable code
 pub const PurposeConfig: u8 = 2; // Configuration files
 #[allow(non_upper_case_globals)]
 pub const PurposeMedia: u8 = 3;  // Media/assets
-
-// Legacy aliases
-#[allow(non_upper_case_globals)]
-pub const PurposePayload: u8 = PurposeData;   // Deprecated: use PurposeData
-#[allow(non_upper_case_globals)]
-pub const PurposeRuntime: u8 = PurposeCode;   // Deprecated: use PurposeCode
-#[allow(non_upper_case_globals)]
-pub const PurposeTool: u8 = PurposeConfig;    // Deprecated: use PurposeConfig
 
 // Lifecycle types - part of format spec
 #[allow(non_upper_case_globals)]
