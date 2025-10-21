@@ -2,7 +2,7 @@
 
 use super::checksums::{calculate_checksum, ChecksumAlgorithm};
 use super::{
-    constants::{HEADER_SIZE, CODEC_GZIP, CODEC_TGZ, CODEC_TAR, CODEC_RAW, SLOT_ALIGNMENT, SLOT_DESCRIPTOR_SIZE, MAGIC_TRAILER_SIZE, PACKAGE_EMOJI_BYTES, MAGIC_WAND_EMOJI_BYTES},
+    constants::{HEADER_SIZE, OP_TAR, OP_GZIP, SLOT_ALIGNMENT, SLOT_DESCRIPTOR_SIZE, MAGIC_TRAILER_SIZE, PACKAGE_EMOJI_BYTES, MAGIC_WAND_EMOJI_BYTES},
     defaults::{CAPABILITY_MMAP, CAPABILITY_SIGNED, DEFAULT_FILE_PERMS, DEFAULT_DIR_PERMS},
     index::Index,
     keys::load_or_generate_keys,
@@ -373,13 +373,28 @@ impl SlotProcessor {
     }
 
     fn create_slot_descriptor(&self, index: usize, slot: &ManifestSlot, file_size: u64, adler_checksum: u32) -> Result<SlotDescriptor> {
-        // Map codec string to byte value
-        let codec_value = match slot.operations.as_str() {
-            "gzip" => CODEC_GZIP,
-            "tgz" => CODEC_TGZ,
-            "tar" => CODEC_TAR,
-            "raw" | "none" | "" => CODEC_RAW,
-            _ => CODEC_RAW,
+        // Parse operations from comma-separated string (e.g., "tar,gzip")
+        use crate::psp::format_2025::operations::pack_operations;
+
+        let operations = if slot.operations.is_empty() || slot.operations == "none" || slot.operations == "raw" {
+            vec![]
+        } else if slot.operations == "tgz" {
+            // Special case for "tgz" shorthand
+            vec![OP_TAR, OP_GZIP]
+        } else {
+            // Parse comma-separated operations
+            slot.operations.split(',')
+                .map(|s| s.trim())
+                .filter(|s| !s.is_empty())
+                .filter_map(|s| match s {
+                    "tar" => Some(OP_TAR),
+                    "gzip" => Some(OP_GZIP),
+                    _ => {
+                        log::warn!("Unknown operation: {}, skipping", s);
+                        None
+                    }
+                })
+                .collect::<Vec<u8>>()
         };
 
         // Map purpose string to byte value
@@ -412,18 +427,7 @@ impl SlotProcessor {
         descriptor.size = file_size;
         descriptor.original_size = file_size;
         descriptor.checksum = adler_checksum as u64;
-        
-        // Set operations based on codec
-        use crate::psp::format_2025::operations::pack_operations;
-        use crate::psp::format_2025::constants::{OP_TAR, OP_GZIP};
-        
-        descriptor.operations = match codec_value {
-            crate::psp::format_2025::constants::CODEC_RAW => pack_operations(&[]),
-            crate::psp::format_2025::constants::CODEC_TAR => pack_operations(&[OP_TAR]),
-            crate::psp::format_2025::constants::CODEC_GZIP => pack_operations(&[OP_GZIP]),
-            crate::psp::format_2025::constants::CODEC_TGZ => pack_operations(&[OP_TAR, OP_GZIP]),
-            _ => pack_operations(&[]),
-        };
+        descriptor.operations = pack_operations(&operations);
         descriptor.purpose = purpose_value;
         descriptor.lifecycle = lifecycle_value;
         
