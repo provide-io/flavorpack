@@ -56,6 +56,7 @@ pub const DEFAULT_COMPLETE_FILE: &str = "complete";
 pub const DEFAULT_PACKAGE_CHECKSUM_FILE: &str = "package.checksum";
 pub const DEFAULT_PSP_METADATA_FILE: &str = "psp.json";
 pub const DEFAULT_INDEX_METADATA_FILE: &str = "index.json";
+pub const DEFAULT_CACHE_SUBDIR: &str = ".cache/flavor/workenv";
 
 // =================================
 // Checksum algorithms

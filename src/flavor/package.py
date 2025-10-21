@@ -3,13 +3,14 @@
 # SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-# flavor/api.py
+# flavor/package.py
 #
-"""Public API for the Flavor build tool.from pathlib import Path
-"""
+"""Public API for the Flavor build tool."""
 
-# No typing imports needed with Python 3.11+
+from __future__ import annotations
+
 import tomllib
+from pathlib import Path
 
 from provide.foundation.file.directory import safe_rmtree
 from provide.foundation.file.formats import read_json

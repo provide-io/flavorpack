@@ -5,9 +5,12 @@
 
 # flavor/packaging/python/packager.py
 #
-"""Python packager that owns all Python-specific packaging logic.from pathlib import Path
-"""
+"""Python packager that owns all Python-specific packaging logic."""
+
+from __future__ import annotations
+
 import sys
+from pathlib import Path
 import tomllib
 from typing import Any
 

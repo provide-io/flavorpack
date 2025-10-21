@@ -6,8 +6,11 @@
 #
 # flavor/ingredients.py
 #
-"""Ingredient management system for Flavor launchers and builders.import contextlib
-"""
+"""Ingredient management system for Flavor launchers and builders."""
+
+from __future__ import annotations
+
+import contextlib
 from dataclasses import dataclass
 import hashlib
 import os
