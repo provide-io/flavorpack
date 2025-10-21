@@ -1,4 +1,7 @@
-"""Flavor ingredients module for managing ingredient binaries."""
+# flavor/ingredients/__init__.py
+#
+# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
 
 from flavor.ingredients.manager import IngredientInfo, IngredientManager
 
@@ -27,3 +30,4 @@ try:
 except ImportError:
     # No embedded ingredients - this is fine for development or universal wheels
     pass
+# 🌶️📦📦🪄

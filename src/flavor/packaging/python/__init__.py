@@ -1,10 +1,14 @@
-#
 # flavor/packaging/python/__init__.py
 #
-"""Python-specific packaging utilities for FlavorPack."""
+# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
 
-from flavor.packaging.python.pypapip_manager import PyPaPipManager
+# flavor/packaging/python/__init__.py
+#
+"""Python-specific packaging utilities for FlavorPack.from flavor.packaging.python.pypapip_manager import PyPaPipManager
+"""
 
 __all__ = [
     "PyPaPipManager",
 ]
+# 🌶️📦📦🪄

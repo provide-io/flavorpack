@@ -1,12 +1,15 @@
+# flavor/packaging/python/wheel_builder.py
 #
+# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 # flavor/packaging/python/wheel_builder.py
 #
 """Wheel building and dependency resolution for FlavorPack packaging.
+"""
 
 This module provides wheel building with complex dependency resolution logic,
 combining UV performance where appropriate with PyPA pip compatibility.
-"""
-
 from pathlib import Path
 import tempfile
 from typing import Any
@@ -355,3 +358,6 @@ class WheelBuilder:
 
         logger.info(f"✅ Completed project build with {build_info['total_wheels']} wheels")
         return build_info
+
+
+# 🌶️📦📄🪄

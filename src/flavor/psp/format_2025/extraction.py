@@ -1,4 +1,8 @@
-#!/usr/bin/env python3
+# flavor/psp/format_2025/extraction.py
+#
+# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 """
 PSPF Slot Extraction - Handles slot data extraction and streaming.
 
@@ -227,3 +231,6 @@ class SlotExtractor:
             Decompressed/unprocessed data
         """
         return handlers.reverse_operations(data, packed_ops)
+
+
+# 🌶️📦📄🪄

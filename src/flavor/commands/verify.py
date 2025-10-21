@@ -1,10 +1,13 @@
-#!/usr/bin/env python3
+# flavor/commands/verify.py
+#
+# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 #
 # flavor/commands/verify.py
 #
-"""Verify command for the flavor CLI."""
-
-from pathlib import Path
+"""Verify command for the flavor CLI.from pathlib import Path
+"""
 from typing import Any
 
 import click
@@ -132,3 +135,6 @@ def _display_signature_status(result: dict[str, Any]) -> None:
         log.error("Signature verification failed")
         echo_error("\n❌ Signature verification failed")
         raise click.Abort()
+
+
+# 🌶️📦🖥️🪄

@@ -1,10 +1,13 @@
-#!/usr/bin/env python3
+# flavor/commands/__init__.py
+#
+# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 #
 # flavor/commands/__init__.py
 #
-"""Command modules for the flavor CLI."""
-
-from flavor.commands.ingredients import ingredient_group
+"""Command modules for the flavor CLI.from flavor.commands.ingredients import ingredient_group
+"""
 from flavor.commands.inspect import inspect_command
 from flavor.commands.keygen import keygen_command
 from flavor.commands.package import pack_command
@@ -21,3 +24,4 @@ __all__ = [
     "verify_command",
     "workenv_group",
 ]
+# 🌶️📦📦🪄

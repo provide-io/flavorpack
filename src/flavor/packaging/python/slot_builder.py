@@ -1,9 +1,12 @@
-#
 # flavor/packaging/python/slot_builder.py
 #
-"""Slot builder for Python packages."""
+# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
 
-from pathlib import Path
+# flavor/packaging/python/slot_builder.py
+#
+"""Slot builder for Python packages.from pathlib import Path
+"""
 import tarfile
 import tomllib
 from typing import Any
@@ -384,3 +387,6 @@ class PythonSlotBuilder:
 
         logger.debug("No requirements file found")
         return None
+
+
+# 🌶️📦📄🪄

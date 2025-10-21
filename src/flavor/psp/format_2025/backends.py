@@ -1,4 +1,8 @@
-#!/usr/bin/env python3
+# flavor/psp/format_2025/backends.py
+#
+# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 # src/flavor/psp/format_2025/backends.py
 # Backend implementations for PSPF bundle access - mmap, file, and stream
 
@@ -466,4 +470,4 @@ def create_backend(mode: int = ACCESS_AUTO, path: Path | None = None) -> Backend
         return HybridBackend()
 
 
-# 📦💾🗺️🪄
+# 🌶️📦📄🪄
