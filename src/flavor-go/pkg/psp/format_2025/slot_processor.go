@@ -12,7 +12,7 @@ import (
 )
 
 // SlotProcessor handles slot processing for PSPF packages.
-// 
+//
 // This abstraction encapsulates all slot-related operations including loading,
 // processing, and preparing slot data for package assembly. It aligns with the
 // Rust and Python implementations for cross-language consistency in the PSPF/2025
@@ -156,8 +156,9 @@ func parsePermissions(permStr string) uint16 {
 // - Creates slot metadata for JSON format
 //
 // Args:
-//   index: The slot index (0-based)
-//   slot: The slot configuration from the manifest
+//
+//	index: The slot index (0-based)
+//	slot: The slot configuration from the manifest
 //
 // Returns an error if the slot cannot be processed.
 func (sp *SlotProcessor) processSlot(index int, slot *Slot) error {
@@ -229,20 +230,20 @@ func (sp *SlotProcessor) processSlot(index int, slot *Slot) error {
 
 	// Create slot descriptor with new structure
 	descriptor := SlotDescriptor{
-		ID:             uint64(index),
-		NameHash:       HashName(slot.Target),
-		Offset:         0, // Will be set during write phase
-		Size:           uint64(len(compressed)),
-		OriginalSize:   uint64(len(slotData)),
-		Operations:     operations,
-		Checksum:       uint64(adler32.Checksum(compressed)), // Cast to uint64
-		Purpose:        mapPurposeToUint8(slot.Purpose),
-		Lifecycle:      mapLifecycleToUint8(slot.Lifecycle),
-		Priority:       128, // normal priority
-		Platform:       0,   // all platforms
-		Reserved1:      0,
-		Reserved2:      0,
-		Permissions:    uint8(parsePermissions(slot.Permissions) & 0xFF),
+		ID:              uint64(index),
+		NameHash:        HashName(slot.Target),
+		Offset:          0, // Will be set during write phase
+		Size:            uint64(len(compressed)),
+		OriginalSize:    uint64(len(slotData)),
+		Operations:      operations,
+		Checksum:        uint64(adler32.Checksum(compressed)), // Cast to uint64
+		Purpose:         mapPurposeToUint8(slot.Purpose),
+		Lifecycle:       mapLifecycleToUint8(slot.Lifecycle),
+		Priority:        128, // normal priority
+		Platform:        0,   // all platforms
+		Reserved1:       0,
+		Reserved2:       0,
+		Permissions:     uint8(parsePermissions(slot.Permissions) & 0xFF),
 		PermissionsHigh: uint8(parsePermissions(slot.Permissions) >> 8),
 	}
 
@@ -264,7 +265,8 @@ func (sp *SlotProcessor) processSlot(index int, slot *Slot) error {
 // various codec formats (gzip, tar, tar.gz, none).
 //
 // Args:
-//   slot: The slot configuration containing source path and encoding
+//
+//	slot: The slot configuration containing source path and encoding
 //
 // Returns:
 //   - Original uncompressed data

@@ -9,6 +9,9 @@ Environment variable management for PSPF/2025 packages.
 Handles platform-specific environment variables and layered environment processing.
 """
 
+from __future__ import annotations
+
+from collections.abc import Callable
 import fnmatch
 from typing import Any
 
@@ -84,7 +87,7 @@ def process_runtime_env(env_map: dict[str, str], runtime_env: dict[str, Any]) ->
     plog.debug("✅ Runtime environment processing complete")
 
 
-def _create_preserve_checker(pass_patterns: list[str]):
+def _create_preserve_checker(pass_patterns: list[str]) -> Callable[[str], bool]:
     """Create a function to check if a variable should be preserved."""
 
     def should_preserve(key: str) -> bool:
@@ -102,7 +105,7 @@ def _create_preserve_checker(pass_patterns: list[str]):
 
 
 def _process_unset_operations(
-    env_map: dict[str, str], runtime_env: dict[str, Any], should_preserve: Any
+    env_map: dict[str, str], runtime_env: dict[str, Any], should_preserve: Callable[[str], bool]
 ) -> None:
     """Process unset operations first (highest priority)."""
     if not runtime_env.get("unset"):
@@ -120,7 +123,7 @@ def _process_unset_operations(
             _unset_exact_match(env_map, pattern, should_preserve)
 
 
-def _unset_all_except_preserved(env_map: dict[str, str], should_preserve) -> None:
+def _unset_all_except_preserved(env_map: dict[str, str], should_preserve: Callable[[str], bool]) -> None:
     """Unset all variables except those marked to preserve."""
     keys_to_remove = [k for k in env_map if not should_preserve(k)]
     for key in keys_to_remove:
@@ -128,7 +131,7 @@ def _unset_all_except_preserved(env_map: dict[str, str], should_preserve) -> Non
         plog.trace(f"  🗑️ Unset: {key}")
 
 
-def _unset_glob_pattern(env_map: dict[str, str], pattern: str, should_preserve) -> None:
+def _unset_glob_pattern(env_map: dict[str, str], pattern: str, should_preserve: Callable[[str], bool]) -> None:
     """Unset variables matching glob pattern."""
     keys_to_remove = [k for k in env_map if fnmatch.fnmatch(k, pattern) and not should_preserve(k)]
     for key in keys_to_remove:
@@ -136,14 +139,16 @@ def _unset_glob_pattern(env_map: dict[str, str], pattern: str, should_preserve) 
         plog.trace(f"  🗑️ Unset (glob): {key}")
 
 
-def _unset_exact_match(env_map: dict[str, str], pattern: str, should_preserve) -> None:
+def _unset_exact_match(env_map: dict[str, str], pattern: str, should_preserve: Callable[[str], bool]) -> None:
     """Unset variable with exact match."""
     if pattern in env_map and not should_preserve(pattern):
         del env_map[pattern]
         plog.debug(f"🗑️ Unset: {pattern}")
 
 
-def _process_map_operations(env_map: dict[str, str], runtime_env: dict[str, Any], should_preserve) -> None:
+def _process_map_operations(
+    env_map: dict[str, str], runtime_env: dict[str, Any], should_preserve: Callable[[str], bool]
+) -> None:
     """Process map operations (variable renaming)."""
     if not runtime_env.get("map"):
         return

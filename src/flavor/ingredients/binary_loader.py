@@ -11,6 +11,7 @@ Handles the complex logic of finding, building, and testing ingredient binaries.
 
 from __future__ import annotations
 
+import contextlib
 import os
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -36,7 +37,9 @@ class BinaryLoader:
     @property
     def current_platform(self) -> str:
         """Get current platform string."""
-        return get_platform_string()
+        platform = get_platform_string()
+        assert isinstance(platform, str)
+        return platform
 
     def get_ingredient(self, name: str) -> Path:
         """Get path to a ingredient binary.
@@ -87,7 +90,7 @@ class BinaryLoader:
 
     def _build_go_ingredients(self, force: bool = False) -> list[Path]:
         """Build Go ingredients."""
-        built_binaries = []
+        built_binaries: list[Path] = []
 
         if not self.manager.go_src_dir.exists():
             logger.warning(f"Go source directory not found: {self.manager.go_src_dir}")
@@ -135,7 +138,7 @@ class BinaryLoader:
 
     def _build_rust_ingredients(self, force: bool = False) -> list[Path]:
         """Build Rust ingredients."""
-        built_binaries = []
+        built_binaries: list[Path] = []
 
         if not self.manager.rust_src_dir.exists():
             logger.warning(f"Rust source directory not found: {self.manager.rust_src_dir}")
@@ -196,7 +199,7 @@ class BinaryLoader:
         Returns:
             List of removed binary paths
         """
-        removed_paths = []
+        removed_paths: list[Path] = []
 
         if not self.manager.ingredients_bin.exists():
             return removed_paths
@@ -227,7 +230,7 @@ class BinaryLoader:
         Returns:
             Test results dict with 'passed' and 'failed' lists
         """
-        results = {"passed": [], "failed": []}
+        results: dict[str, list[dict[str, Any]]] = {"passed": [], "failed": []}
 
         ingredients = self.manager.list_ingredients()
 
@@ -315,7 +318,7 @@ class BinaryLoader:
     def _get_package_version_name(self, name: str) -> str | None:
         """Get ingredient name with package version if available."""
         try:
-            from flavor._version import __version__
+            from flavor._version import __version__  # type: ignore[import-untyped]
 
             if __version__ and __version__ != "0.0.0":
                 return f"{name}-{__version__}-{self.current_platform}"
@@ -359,7 +362,5 @@ class BinaryLoader:
     def _ensure_executable(self, path: Path) -> None:
         """Ensure the given path is executable."""
         if not os.access(path, os.X_OK):
-            try:
+            with contextlib.suppress(OSError, PermissionError):
                 path.chmod(DEFAULT_EXECUTABLE_PERMS)
-            except (OSError, PermissionError):
-                pass  # Continue even if we can't set permissions

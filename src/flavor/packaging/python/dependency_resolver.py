@@ -14,6 +14,7 @@ import zipfile
 from provide.foundation import logger, retry
 from provide.foundation.platform import get_arch_name, get_os_name
 from provide.foundation.process import run
+from provide.foundation.resilience.types import BackoffStrategy
 
 from flavor.packaging.python.pypapip_manager import PyPaPipManager
 from flavor.packaging.python.uv_manager import UVManager
@@ -93,7 +94,7 @@ class DependencyResolver:
         OSError,
         max_attempts=3,
         base_delay=1.0,
-        backoff="exponential",
+        backoff=BackoffStrategy.EXPONENTIAL,
         jitter=True,
     )
     def download_uv_wheel(self, dest_dir: Path) -> Path | None:
@@ -236,7 +237,7 @@ class DependencyResolver:
         OSError,
         max_attempts=3,
         base_delay=1.0,
-        backoff="exponential",
+        backoff=BackoffStrategy.EXPONENTIAL,
         jitter=True,
     )
     def _execute_download_command(self, download_cmd: list[str]) -> bool:

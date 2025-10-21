@@ -65,7 +65,7 @@ class IngredientManager:
 
         self._binary_loader = BinaryLoader(self)
 
-    def list_ingredients(self, platform_filter: bool = False) -> dict[str, list[IngredientInfo]]:
+    def list_ingredients(self, platform_filter: bool = False) -> dict[str, list[IngredientInfo]]:  # noqa: C901
         """List all available ingredients.
 
         Args:
@@ -74,7 +74,7 @@ class IngredientManager:
         Returns:
             Dict with keys 'launchers' and 'builders', each containing IngredientInfo lists
         """
-        ingredients = {"launchers": [], "builders": []}
+        ingredients: dict[str, list[IngredientInfo]] = {"launchers": [], "builders": []}
 
         # Search for ingredients in bin directory
         if self.ingredients_bin.exists():

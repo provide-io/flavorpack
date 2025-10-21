@@ -35,7 +35,7 @@ def ingredient_group() -> None:
     is_flag=True,
     help="Show detailed information",
 )
-def ingredient_list(verbose: bool) -> None:
+def ingredient_list(verbose: bool) -> None:  # noqa: C901
     """List available ingredient binaries."""
     from flavor.ingredients.manager import IngredientManager
 

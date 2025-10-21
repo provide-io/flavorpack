@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from pathlib import Path
 import shlex
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from flavor.psp.format_2025.reader import PSPFReader
@@ -64,7 +64,13 @@ class WorkEnvManager:
         # Extract slots if cache is invalid
         if not cache_valid:
             logger.info("📤 Extracting slots (cache invalid)")
-            extracted_slots = self.reader.extract_all_slots(workenv_dir)
+            # Extract all slots by iterating through slot count
+            extracted_slots: dict[int, Path] = {}
+            assert self.reader._index is not None
+            slot_count = self.reader._index.slot_count
+            for slot_idx in range(slot_count):
+                slot_path = self.reader.extract_slot(slot_idx, workenv_dir)
+                extracted_slots[slot_idx] = slot_path
 
             # Run setup commands
             if "setup_commands" in metadata:
@@ -77,7 +83,7 @@ class WorkEnvManager:
 
         return workenv_dir
 
-    def _check_cache_validity(self, metadata: dict, workenv_dir: Path, package_version: str) -> bool:
+    def _check_cache_validity(self, metadata: dict[str, Any], workenv_dir: Path, package_version: str) -> bool:
         """Check if work environment cache is valid.
 
         Args:
@@ -116,7 +122,7 @@ class WorkEnvManager:
         return cache_valid
 
     def _cleanup_lifecycle_slots(
-        self, workenv_dir: Path, metadata: dict, extracted_slots: dict[int, Path]
+        self, workenv_dir: Path, metadata: dict[str, Any], extracted_slots: dict[int, Path]
     ) -> None:
         """Clean up slots based on their lifecycle after setup.
 
@@ -146,7 +152,7 @@ class WorkEnvManager:
                     # 'temp' lifecycle: mark for cleanup after session
                     logger.debug(f"🕐 Slot {slot_idx} marked as 'temp' - will be cleaned after session")
 
-    def _run_setup_commands(self, setup_commands: list, workenv_dir: Path, metadata: dict) -> None:
+    def _run_setup_commands(self, setup_commands: list[Any], workenv_dir: Path, metadata: dict[str, Any]) -> None:
         """Run setup commands for work environment.
 
         Args:
@@ -174,7 +180,7 @@ class WorkEnvManager:
             else:
                 logger.warning("⚠️ String setup commands not supported")
 
-    def _run_write_file_command(self, cmd: dict, workenv_dir: Path, metadata: dict) -> None:
+    def _run_write_file_command(self, cmd: dict[str, Any], workenv_dir: Path, metadata: dict[str, Any]) -> None:
         """Handle file writing command.
 
         Args:
@@ -204,7 +210,7 @@ class WorkEnvManager:
 
         logger.debug(f"✅ Wrote file: {file_path}")
 
-    def _run_execute_command(self, cmd: dict, workenv_dir: Path, metadata: dict) -> None:
+    def _run_execute_command(self, cmd: dict[str, Any], workenv_dir: Path, metadata: dict[str, Any]) -> None:
         """Handle command execution.
 
         Args:
@@ -237,7 +243,7 @@ class WorkEnvManager:
 
         logger.debug("✅ Command succeeded")
 
-    def _run_enumerate_execute_command(self, cmd: dict, workenv_dir: Path) -> None:
+    def _run_enumerate_execute_command(self, cmd: dict[str, Any], workenv_dir: Path) -> None:
         """Handle file enumeration and execution command.
 
         Args:
@@ -274,7 +280,7 @@ class WorkEnvManager:
 
         logger.debug(f"✅ Processed {len(matches)} files")
 
-    def _substitute_placeholders(self, text: str, workenv_dir: Path, metadata: dict) -> str:
+    def _substitute_placeholders(self, text: str, workenv_dir: Path, metadata: dict[str, Any]) -> str:
         """Substitute common placeholders in text.
 
         Args:

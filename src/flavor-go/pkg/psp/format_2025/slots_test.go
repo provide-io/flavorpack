@@ -136,17 +136,17 @@ func TestPythonSlotVectors(t *testing.T) {
 		Offset      int    `json:"offset"`
 		Hex         string `json:"hex"`
 		Fields      struct {
-			ID          uint64 `json:"id"`
-			NameHash    uint64 `json:"name_hash"`
-			Offset      uint64 `json:"offset"`
-			Size        uint64 `json:"size"`
-			OriginalSize uint64 `json:"original_size"`
-			Operations  uint64 `json:"operations"`
+			ID            uint64 `json:"id"`
+			NameHash      uint64 `json:"name_hash"`
+			Offset        uint64 `json:"offset"`
+			Size          uint64 `json:"size"`
+			OriginalSize  uint64 `json:"original_size"`
+			Operations    uint64 `json:"operations"`
 			OperationsHex string `json:"operations_hex"`
-			Checksum    uint32 `json:"checksum"`
-			Purpose     uint8  `json:"purpose"`
-			Lifecycle   uint8  `json:"lifecycle"`
-			Permissions uint16 `json:"permissions"`
+			Checksum      uint32 `json:"checksum"`
+			Purpose       uint8  `json:"purpose"`
+			Lifecycle     uint8  `json:"lifecycle"`
+			Permissions   uint16 `json:"permissions"`
 		} `json:"fields"`
 		ExpectedOperations []uint8 `json:"expected_operations"`
 	}
@@ -234,8 +234,8 @@ func TestHashName(t *testing.T) {
 		name     string
 		expected uint64
 	}{
-		{"test_raw.txt", 0},  // Will be computed
-		{"test_gzip.txt", 0}, // Will be computed
+		{"test_raw.txt", 0},   // Will be computed
+		{"test_gzip.txt", 0},  // Will be computed
 		{"archive.tar.gz", 0}, // Will be computed
 	}
 

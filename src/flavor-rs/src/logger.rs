@@ -82,7 +82,7 @@ impl JsonLogger {
             "info" => Level::Info,
             "warn" => Level::Warn,
             "error" => Level::Error,
-            _ => Level::Info,
+            _ => Level::Warn,  // Default to Warn for production safety
         };
 
         let logger = Box::new(JsonLogger::new(level, log_path));
@@ -98,8 +98,8 @@ impl JsonLogger {
 
     /// Initialize the JSON logger (backward compatibility)
     pub fn init() {
-        // Check FLAVOR_LOG_LEVEL for JSON mode
-        let log_level = env::var("FLAVOR_LOG_LEVEL").unwrap_or_else(|_| "info".to_string());
+        // Check FLAVOR_LOG_LEVEL for JSON mode, default to warn for production safety
+        let log_level = env::var("FLAVOR_LOG_LEVEL").unwrap_or_else(|_| "warn".to_string());
         Self::init_with_level(&log_level, "FLAVOR_LOG_LEVEL");
     }
 }

@@ -14,23 +14,18 @@ from typing import Any
 
 from provide.foundation.crypto import format_checksum as calculate_checksum
 from provide.foundation.platform import get_arch_name, get_os_name, get_platform_string
+from provide.foundation.utils import get_version
 
 from flavor.psp.format_2025.spec import BuildSpec
 from flavor.psp.metadata.paths import validate_metadata_dict
 
-# Fallback version for development/unknown versions
-FALLBACK_VERSION = "0.0.0-dev"
+# Default version for launcher when extraction fails
+DEFAULT_LAUNCHER_VERSION = "unknown"
 
 
 def get_flavor_version() -> str:
-    """Get the version of flavor-python."""
-    try:
-        from importlib.metadata import version
-
-        return version("flavor")
-    except (ImportError, Exception):
-        # Fallback for development or if package not installed
-        return FALLBACK_VERSION
+    """Get the version of flavor-python from VERSION file or package metadata."""
+    return get_version("flavorpack", caller_file=__file__)
 
 
 def load_launcher_binary(launcher_type: str) -> bytes:
@@ -76,7 +71,9 @@ def load_launcher_binary(launcher_type: str) -> bytes:
         for launcher_name in launcher_names:
             path = base_path / launcher_name
             if path.exists():
-                return path.read_bytes()
+                data = path.read_bytes()
+                assert isinstance(data, bytes)
+                return data
 
     # Build helpful error message showing all searched paths
     searched_paths = []
@@ -133,7 +130,7 @@ def extract_launcher_version(launcher_data: bytes) -> str:
                 return version
 
     # Fallback to unknown version
-    return FALLBACK_VERSION
+    return DEFAULT_LAUNCHER_VERSION
 
 
 def get_launcher_capabilities(launcher_type: str) -> list[str]:
@@ -173,24 +170,26 @@ def get_launcher_info(launcher_type: str) -> dict[str, Any]:
 
 def create_build_metadata(deterministic: bool = False) -> dict[str, Any]:
     """Create build section metadata."""
-    build_meta = {
+    platform_info: dict[str, Any] = {
+        "os": get_os_name(),
+        "arch": get_arch_name(),
+    }
+
+    build_meta: dict[str, Any] = {
         "tool": "flavor-python",
         "tool_version": get_flavor_version(),
         "deterministic": deterministic,
-        "platform": {
-            "os": get_os_name(),
-            "arch": get_arch_name(),
-        },
+        "platform": platform_info,
     }
 
     # Only add non-deterministic fields if not in deterministic mode
     if not deterministic:
         build_meta["timestamp"] = datetime.datetime.now(datetime.UTC).isoformat()
-        build_meta["platform"]["host"] = socket.gethostname()
+        platform_info["host"] = socket.gethostname()
     else:
         # Use fixed timestamp for deterministic builds
         build_meta["timestamp"] = "2025-01-01T00:00:00+00:00"
-        build_meta["platform"]["host"] = "deterministic-build"
+        platform_info["host"] = "deterministic-build"
 
     return build_meta
 

@@ -12,7 +12,7 @@ var (
 const (
 	// Format version - immutable
 	PSPFVersion = 0x20250001
-	
+
 	// Fixed sizes - part of the format specification
 	IndexSize          = 8192 // Index block size
 	MagicTrailerSize   = 8200 // 📦 (4) + index (8192) + 🪄 (4)

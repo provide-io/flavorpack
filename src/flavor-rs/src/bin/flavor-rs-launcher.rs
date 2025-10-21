@@ -33,11 +33,11 @@ fn run() -> i32 {
     }
     
     log::debug!("🚀 Launcher process started");
-    log::trace!("Launcher starting");
-    
+    log::trace!("📝 Launcher initializing");
+
     // --- Argument and Environment Parsing ---
     let args: Vec<String> = env::args().collect();
-    log::trace!("Arguments: {:?}", args);
+    log::trace!("📋 Arguments: {:?}", args);
     
     // ⚠️ CRITICAL: NEVER intercept command line arguments unless in CLI mode!
     // The launcher must pass ALL arguments to the package entrypoint unchanged.
@@ -49,7 +49,7 @@ fn run() -> i32 {
             path
         },
         Err(e) => {
-            log::error!("Failed to get executable path: {}", e);
+            log::error!("❌ Failed to get executable path: {}", e);
             return EXIT_IO_ERROR;
         }
     };
@@ -140,7 +140,7 @@ fn run() -> i32 {
     // The launcher MUST NOT intercept any arguments (including --version).
     // All command-line arguments belong to the packaged application, not the launcher.
     
-    log::trace!("Not in CLI mode, passing all arguments to entrypoint");
+    log::trace!("🔄 Not in CLI mode, passing all arguments to entrypoint");
 
     // Launch the package with the provided arguments.
     let remaining_args = args[1..].to_vec();
@@ -148,14 +148,14 @@ fn run() -> i32 {
         workdir: None,
     };
 
-    log::debug!("Attempting to launch package: {:?}", exe_path);
+    log::debug!("🚀 Attempting to launch package: {:?}", exe_path);
     match launch_package(&exe_path, &remaining_args, options) {
         Ok(code) => {
-            log::debug!("Package launched successfully, exit code: {}", code);
+            log::debug!("✅ Package launched successfully, exit code: {}", code);
             code
         },
         Err(e) => {
-            log::error!("Launch error: {}", e);
+            log::error!("❌ Launch error: {}", e);
             
             // Provide helpful error messages based on the error type
             let error_msg = e.to_string();

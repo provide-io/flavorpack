@@ -4,7 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"fmt"
-	
+
 	"github.com/hashicorp/go-hclog"
 )
 
@@ -43,13 +43,13 @@ type SlotDescriptor struct {
 	Checksum     uint64 // Checksum of stored data (32-bit value in 64-bit field)
 
 	// Metadata fields (8 bytes total - 8x uint8)
-	Purpose     uint8 // 0=data, 1=code, 2=config, 3=media
-	Lifecycle   uint8 // When to extract/use
-	Priority    uint8 // Cache priority hint
-	Platform    uint8 // Platform requirements
-	Reserved1   uint8 // Reserved for future use
-	Reserved2   uint8 // Reserved for future use
-	Permissions uint8 // Unix permissions (lower 8 bits)
+	Purpose         uint8 // 0=data, 1=code, 2=config, 3=media
+	Lifecycle       uint8 // When to extract/use
+	Priority        uint8 // Cache priority hint
+	Platform        uint8 // Platform requirements
+	Reserved1       uint8 // Reserved for future use
+	Reserved2       uint8 // Reserved for future use
+	Permissions     uint8 // Unix permissions (lower 8 bits)
 	PermissionsHigh uint8 // Unix permissions (upper 8 bits)
 }
 
@@ -68,7 +68,7 @@ func (d *SlotDescriptor) Pack() []byte {
 	)
 
 	buf := make([]byte, SlotDescriptorSize)
-	
+
 	// Pack 7 uint64 fields (56 bytes)
 	binary.LittleEndian.PutUint64(buf[0:8], d.ID)
 	binary.LittleEndian.PutUint64(buf[8:16], d.NameHash)
@@ -77,7 +77,7 @@ func (d *SlotDescriptor) Pack() []byte {
 	binary.LittleEndian.PutUint64(buf[32:40], d.OriginalSize)
 	binary.LittleEndian.PutUint64(buf[40:48], d.Operations)
 	binary.LittleEndian.PutUint64(buf[48:56], d.Checksum)
-	
+
 	// Pack 8 uint8 fields (8 bytes)
 	buf[56] = d.Purpose
 	buf[57] = d.Lifecycle
@@ -87,11 +87,11 @@ func (d *SlotDescriptor) Pack() []byte {
 	buf[61] = d.Reserved2
 	buf[62] = d.Permissions
 	buf[63] = d.PermissionsHigh
-	
+
 	slotLogger.Debug("✅ Packed slot descriptor",
 		"size", len(buf),
 	)
-	
+
 	return buf
 }
 
@@ -104,9 +104,9 @@ func UnpackSlotDescriptor(data []byte) (*SlotDescriptor, error) {
 		)
 		return nil, fmt.Errorf("invalid descriptor size: expected %d, got %d", SlotDescriptorSize, len(data))
 	}
-	
+
 	slotLogger.Trace("📂 Unpacking slot descriptor")
-	
+
 	d := &SlotDescriptor{
 		// Unpack uint64 fields
 		ID:           binary.LittleEndian.Uint64(data[0:8]),
@@ -116,7 +116,7 @@ func UnpackSlotDescriptor(data []byte) (*SlotDescriptor, error) {
 		OriginalSize: binary.LittleEndian.Uint64(data[32:40]),
 		Operations:   binary.LittleEndian.Uint64(data[40:48]),
 		Checksum:     binary.LittleEndian.Uint64(data[48:56]),
-		
+
 		// Unpack uint8 fields
 		Purpose:         data[56],
 		Lifecycle:       data[57],
@@ -127,12 +127,12 @@ func UnpackSlotDescriptor(data []byte) (*SlotDescriptor, error) {
 		Permissions:     data[62],
 		PermissionsHigh: data[63],
 	}
-	
+
 	slotLogger.Debug("✅ Unpacked slot descriptor",
 		"id", d.ID,
 		"operations", fmt.Sprintf("0x%016x", d.Operations),
 	)
-	
+
 	return d, nil
 }
 

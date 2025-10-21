@@ -127,6 +127,7 @@ class PSPFIntegrityVerifier:
                         ):
                             # Get the original metadata JSON that was signed during building
                             # Read compressed metadata from file
+                            assert reader._backend is not None
                             metadata_compressed = reader._backend.read_at(
                                 index.metadata_offset, index.metadata_size
                             )
