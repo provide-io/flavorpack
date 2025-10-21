@@ -6,14 +6,17 @@
 # flavor/packaging/python/dist_manager.py
 #
 """Python distribution management for FlavorPack packaging.
-"""
 
 This module provides Python distribution handling including virtual environment
 setup, package installation, and distribution preparation for PSPF packaging.
+"""
+
+from __future__ import annotations
+
 import os
-from pathlib import Path
 import shutil  # Only kept for copytree which Foundation doesn't provide
 import sys
+from pathlib import Path
 from typing import Any
 
 from provide.foundation.file import (

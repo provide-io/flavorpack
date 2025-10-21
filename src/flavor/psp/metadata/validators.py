@@ -1,13 +1,10 @@
-# flavor/psp/metadata/validators.py
-#
-# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
-
-"""
+#!/usr/bin/env python3
 """
 Metadata validation functions for PSP packages.
 
 This module contains validation logic for package metadata structures.
+"""
+
 from typing import Any
 
 

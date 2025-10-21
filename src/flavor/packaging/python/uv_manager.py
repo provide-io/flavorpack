@@ -6,13 +6,16 @@
 # flavor/packaging/python/uv_manager.py
 #
 """UV tool manager for FlavorPack packaging.
-"""
 
 This module provides UV (uv) command management with Foundation integration
 for Python package management operations that benefit from uv's performance.
 
 IMPORTANT: UV commands are used for specific operations where performance
 is critical. For complex dependency resolution, use PyPaPipManager instead.
+"""
+
+from __future__ import annotations
+
 from pathlib import Path
 
 from provide.foundation import retry

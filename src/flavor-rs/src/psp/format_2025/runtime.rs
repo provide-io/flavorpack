@@ -19,7 +19,7 @@ mod runtime_impl {
     use patterns::PatternProcessor;
     use operations::{UnsetOperation, MapOperation, SetOperation};
     
-    use log::{debug};
+    use log::debug;
     use std::collections::HashMap;
     
     /// Process runtime environment configuration
@@ -45,11 +45,17 @@ mod runtime_impl {
         // Process unset operations first (highest priority)
         if let Some(unset_patterns) = &runtime_env.unset {
             if !unset_patterns.is_empty() {
-                if let Err(e) = UnsetOperation::new(unset_patterns, &pattern_processor)
+                debug!("📋 Unset patterns found: {:?}", unset_patterns);
+                match UnsetOperation::new(unset_patterns, &pattern_processor)
                     .execute(env_map) {
-                    debug!("⚠️ Error during unset operations: {}", e);
+                    Ok(_) => debug!("✅ Unset operations completed successfully"),
+                    Err(e) => debug!("⚠️ Error during unset operations: {}", e),
                 }
+            } else {
+                debug!("📭 No unset patterns (empty list)");
             }
+        } else {
+            debug!("📭 No unset patterns configured");
         }
         
         // Process map operations (variable renaming)
@@ -90,7 +96,7 @@ mod runtime_impl {
 
     mod patterns {
         use glob::Pattern;
-        use log::debug;
+        use log::{debug, trace};
         use std::collections::{HashMap, HashSet};
         use crate::exceptions::{FlavorError, Result};
 
@@ -135,17 +141,20 @@ mod runtime_impl {
             
             pub(super) fn should_preserve(&self, key: &str) -> bool {
                 if self.exact_matches.contains(key) {
+                    trace!("✅ Variable '{}' matches exact pattern", key);
                     return true;
                 }
-                
+
                 for pattern in &self.patterns {
                     if let CompiledPattern::Glob(glob) = pattern {
                         if glob.matches(key) {
+                            trace!("✅ Variable '{}' matches glob pattern: {}", key, glob);
                             return true;
                         }
                     }
                 }
-                
+
+                trace!("❌ Variable '{}' does not match any preserve pattern", key);
                 false
             }
             
@@ -192,13 +201,17 @@ mod runtime_impl {
             
             pub(super) fn execute(&self, env_map: &mut HashMap<String, String>) -> Result<()> {
                 debug!("🗑️ Processing {} unset patterns", self.patterns.len());
-                
+
                 for pattern in self.patterns {
+                    debug!("  Processing unset pattern: '{}'", pattern);
                     if pattern == "*" {
+                        debug!("  Match: unset all except preserved");
                         self.unset_all_except_preserved(env_map)?;
                     } else if pattern.contains('*') || pattern.contains('?') {
+                        debug!("  Match: glob pattern");
                         self.unset_glob_pattern(pattern, env_map)?;
                     } else {
+                        debug!("  Match: exact pattern");
                         self.unset_exact_match(pattern, env_map)?;
                     }
                 }
@@ -207,15 +220,23 @@ mod runtime_impl {
             }
             
             fn unset_all_except_preserved(&self, env_map: &mut HashMap<String, String>) -> Result<()> {
+                debug!("🔄 Unsetting all variables except preserved patterns");
                 let all_keys: Vec<String> = env_map.keys().cloned().collect();
-                
+                let mut preserved_count = 0;
+                let mut unset_count = 0;
+
                 for key in all_keys {
                     if !self.processor.should_preserve(&key) {
                         env_map.remove(&key);
                         trace!("  🗑️ Unset: {}", key);
+                        unset_count += 1;
+                    } else {
+                        trace!("  ✅ Preserved: {}", key);
+                        preserved_count += 1;
                     }
                 }
-                
+
+                debug!("  Summary: {} preserved, {} unset", preserved_count, unset_count);
                 Ok(())
             }
             

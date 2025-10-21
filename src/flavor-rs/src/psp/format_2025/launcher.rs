@@ -314,6 +314,17 @@ fn prepare_command(
     // Prepare environment
     let mut env_map: HashMap<String, String> = env::vars().collect();
 
+    // Set FLAVOR_CACHE to the HOST's cache directory BEFORE workenv env is applied
+    // This ensures we use the HOST's HOME, not the workenv's HOME
+    // This ensures the packaged tool can access cached packages from the HOST
+    if !env_map.contains_key("FLAVOR_CACHE") {
+        if let Some(home) = env_map.get("HOME") {
+            let flavor_cache = format!("{}/{}", home, crate::psp::format_2025::defaults::DEFAULT_CACHE_SUBDIR);
+            debug!("🗂️ Setting FLAVOR_CACHE to HOST cache: {}", flavor_cache);
+            env_map.insert("FLAVOR_CACHE".to_string(), flavor_cache);
+        }
+    }
+
     // Process runtime.env if present
     if let Some(runtime_info) = &metadata.runtime {
         if let Some(runtime_env) = &runtime_info.env {
@@ -328,7 +339,10 @@ fn prepare_command(
             for (key, value) in workenv_env {
                 let expanded_value =
                     substitute_placeholders(value, workenv_path, &metadata.package);
-                env_map.insert(key.clone(), expanded_value);
+                // Don't override FLAVOR_CACHE if it's already set
+                if key != "FLAVOR_CACHE" || !env_map.contains_key("FLAVOR_CACHE") {
+                    env_map.insert(key.clone(), expanded_value);
+                }
             }
         }
     }

@@ -5,10 +5,13 @@
 
 # flavor/packaging/python/slot_builder.py
 #
-"""Slot builder for Python packages.from pathlib import Path
-"""
+"""Slot builder for Python packages."""
+
+from __future__ import annotations
+
 import tarfile
 import tomllib
+from pathlib import Path
 from typing import Any
 
 from provide.foundation import logger

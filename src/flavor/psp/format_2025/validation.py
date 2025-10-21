@@ -1,14 +1,11 @@
-# flavor/psp/format_2025/validation.py
-#
-# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
-
-"""
+#!/usr/bin/env python3
 """
 PSPF Build Validation - Pure functions for validating build specifications.
 
 All validation functions are pure and return lists of error messages.
 Empty list means validation passed.
+"""
+
 from pathlib import Path
 from typing import Any
 
