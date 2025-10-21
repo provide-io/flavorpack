@@ -96,7 +96,7 @@ impl JsonLogger {
         (actual_level.to_string(), source.to_string())
     }
 
-    /// Initialize the JSON logger (backward compatibility)
+    /// Initialize the JSON logger with default settings
     pub fn init() {
         // Check FLAVOR_LOG_LEVEL for JSON mode, default to warn for production safety
         let log_level = env::var("FLAVOR_LOG_LEVEL").unwrap_or_else(|_| "warn".to_string());

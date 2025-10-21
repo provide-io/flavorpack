@@ -173,7 +173,7 @@ fn extract_single_file(
     slot_index: usize,
 ) -> Result<()> {
     // This is a single gzipped file (not a tarball)
-    // Per PSPF spec: CODEC_GZIP = single file that has been gzipped
+    // Per PSPF spec: OP_GZIP = single file that has been gzipped
     // dest_dir IS the full file path (e.g., bin/uv)
     debug!("📝 Writing single gzipped file directly to {dest_dir:?}");
 

@@ -19,7 +19,7 @@ use flate2::write::GzEncoder;
 use flate2::Compression;
 use log::{debug, info, trace};
 
-use super::constants::{CODEC_GZIP, CODEC_RAW, CODEC_TAR, CODEC_TGZ, HEADER_SIZE};
+use super::constants::{HEADER_SIZE, OP_TAR, OP_GZIP};
 use super::index::Index;
 use super::metadata::{Metadata, SlotMetadata};
 use super::slots::SlotDescriptor;
@@ -72,13 +72,13 @@ pub fn write_slot(
     
     // Create descriptor with operations
     use crate::psp::format_2025::operations::pack_operations;
-    use crate::psp::format_2025::constants::{OP_TAR, OP_GZIP, CODEC_RAW, CODEC_TAR, CODEC_GZIP, CODEC_TGZ};
-    
+
+    // Parse operation string (e.g., "0" for raw, "1" for tar, "16" for gzip, "3" for tgz)
     let operations = match operations_str {
-        CODEC_RAW => pack_operations(&[]),
-        CODEC_TAR => pack_operations(&[OP_TAR]),
-        CODEC_GZIP => pack_operations(&[OP_GZIP]),
-        CODEC_TGZ => pack_operations(&[OP_TAR, OP_GZIP]),
+        0 => pack_operations(&[]),           // Raw
+        1 => pack_operations(&[OP_TAR]),     // TAR only
+        16 => pack_operations(&[OP_GZIP]),   // GZIP only
+        3 => pack_operations(&[OP_TAR, OP_GZIP]), // TGZ
         _ => pack_operations(&[]),
     };
     
@@ -124,7 +124,7 @@ fn process_slot_data(data: &[u8], operations_str: &str) -> Result<(Vec<u8>, u8)>
                 data.len(),
                 compressed.len()
             );
-            Ok((compressed, CODEC_GZIP))
+            Ok((compressed, 16)) // OP_GZIP
         }
         "tgz" | "tar.gz" => {
             // Tar archive, then gzipped - assume data is already a tar
@@ -136,17 +136,17 @@ fn process_slot_data(data: &[u8], operations_str: &str) -> Result<(Vec<u8>, u8)>
                 data.len(),
                 compressed.len()
             );
-            Ok((compressed, CODEC_TGZ))
+            Ok((compressed, 3)) // Legacy indicator for TAR+GZIP
         }
         "tar" => {
             // Uncompressed tar
             trace!("  📦 Using uncompressed tar ({} bytes)", data.len());
-            Ok((data.to_vec(), CODEC_TAR))
+            Ok((data.to_vec(), 1)) // OP_TAR
         }
         _ => {
             // Raw/uncompressed
             trace!("  📄 Using raw data ({} bytes)", data.len());
-            Ok((data.to_vec(), CODEC_RAW))
+            Ok((data.to_vec(), 0)) // No operations
         }
     }
 }
