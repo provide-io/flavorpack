@@ -323,14 +323,16 @@ class SlotView:
     def __init__(self, descriptor: SlotDescriptor, backend: Any = None) -> None:
         self.descriptor = descriptor
         self.backend = backend
-        self._data = None
-        self._decompressed = None
+        self._data: bytes | memoryview | None = None
+        self._decompressed: bytes | None = None
 
     @property
     def data(self) -> bytes | memoryview:
         """Get raw slot data (compressed if applicable)."""
         if self._data is None and self.backend:
             self._data = self.backend.read_slot(self.descriptor)
+        if self._data is None:
+            raise ValueError("No data available for slot")
         return self._data
 
     @property

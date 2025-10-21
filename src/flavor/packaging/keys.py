@@ -6,8 +6,7 @@
 #
 # flavor/packaging/keys.py
 #
-"""Key generation for PSPF packages using Ed25519.
-"""
+"""Key generation for PSPF packages using Ed25519."""
 
 from __future__ import annotations
 

@@ -22,6 +22,19 @@ from flavor.psp.format_2025.constants import (
     V0_REQUIRED_OPERATIONS,
 )
 
+# Export key operations for external use
+__all__ = [
+    "OP_BZIP2",
+    "OP_GZIP",
+    "OP_NONE",
+    "OP_TAR",
+    "OP_XZ",
+    "OP_ZSTD",
+    "operations_to_string",
+    "pack_operations",
+    "unpack_operations",
+]
+
 # Import generated protobuf operations for name lookup
 try:
     from flavor.psp.format_2025.generated.modules import operations_pb2

@@ -295,19 +295,19 @@ func (r *Reader) ReadSlot(slotIndex int) ([]byte, error) {
 
 	// Decompress based on operations chain
 	operations := UnpackOperations(entry.Operations)
-	
+
 	logger := r.logger
 	if logger == nil {
 		logger = hclog.L()
 	}
 	logger.Trace("🔍 Slot operations", "operations", fmt.Sprintf("%#x", entry.Operations), "unpacked", operations)
-	
+
 	// Apply operations in reverse order (unwrap the layers)
 	result := slotData
 	for i := len(operations) - 1; i >= 0; i-- {
 		op := operations[i]
 		logger.Trace("🔄 Processing operation", "op", fmt.Sprintf("%#x", op), "name", OperationName(op))
-		
+
 		switch op {
 		case OP_GZIP:
 			// Decompress gzip
@@ -323,27 +323,27 @@ func (r *Reader) ReadSlot(slotIndex int) ([]byte, error) {
 			}
 			logger.Trace("✅ GZIP decompressed", "outputSize", len(decompressed))
 			result = decompressed
-			
+
 		case OP_TAR:
 			// TAR is handled by caller, just return the data
 			// (TAR is a bundle format, not compression)
 			continue
-			
+
 		case OP_BZIP2, OP_ZSTD, OP_XZ:
 			// These would need additional libraries
 			return nil, fmt.Errorf("operation %s not yet implemented", OperationName(op))
-			
+
 		case OP_AES256_GCM:
 			// Encryption would need key material
 			return nil, fmt.Errorf("encryption operation %s not yet implemented", OperationName(op))
-			
+
 		default:
 			if op != OP_NONE {
 				return nil, fmt.Errorf("unknown operation: 0x%02x", op)
 			}
 		}
 	}
-	
+
 	return result, nil
 }
 
@@ -369,7 +369,7 @@ func (r *Reader) ExtractSlot(slotIndex int, destDir string) (string, error) {
 	if logger == nil {
 		logger = hclog.L()
 	}
-	
+
 	metadata, err := r.ReadMetadata()
 	if err != nil {
 		return "", err
@@ -381,7 +381,7 @@ func (r *Reader) ExtractSlot(slotIndex int, destDir string) (string, error) {
 
 	slotMeta := metadata.Slots[slotIndex]
 	logger.Trace("🔍 Extracting slot", "index", slotIndex, "id", slotMeta.ID, "target", slotMeta.Target)
-	
+
 	// ReadSlot already handles decompression based on the slot's encoding!
 	decompressed, err := r.ReadSlot(slotIndex)
 	if err != nil {
@@ -417,23 +417,33 @@ func (r *Reader) ExtractSlot(slotIndex int, destDir string) (string, error) {
 		targetPath = strings.ReplaceAll(targetPath, "{workenv}", "")
 	}
 
-	// If targetPath is empty or "." after stripping {workenv}, extract to slot-specific subdirectory
+	// Determine extraction paths based on target and whether it's a TAR archive
 	var destPath, extractDir string
+
+	// Check if this is a tarball first (needed for logic below)
+	isTar := isTarball(decompressed)
+
 	if targetPath == "" || targetPath == "." {
-		// Target was "{workenv}" or "." - extract to slot-specific subdirectory to support atomic move
-		slotSubdir := fmt.Sprintf("slot_%d_%s", slotIndex, slotMeta.ID)
-		destPath = filepath.Join(destDir, slotSubdir)
-		extractDir = destPath
+		// Target was "{workenv}" or "."
+		if isTar {
+			// TAR slots targeting {workenv}: extract directly to destDir (matches Rust behavior)
+			// The tarball contents will be extracted directly to destDir
+			destPath = destDir
+			extractDir = destDir
+		} else {
+			// Non-TAR slots targeting {workenv}: extract to slot-specific subdirectory for atomic move
+			slotSubdir := fmt.Sprintf("slot_%d_%s", slotIndex, slotMeta.ID)
+			destPath = filepath.Join(destDir, slotSubdir)
+			extractDir = destPath
+		}
 	} else {
 		// Target has a subpath - join it with destDir
 		destPath = filepath.Join(destDir, targetPath)
 		extractDir = filepath.Dir(destPath)
 	}
 
-	// Check if this is a tarball that needs extraction
-	isTar := isTarball(decompressed)
 	logger.Trace("🔍 Slot data check", "isTarball", isTar, "dataLen", len(decompressed), "destPath", destPath)
-	
+
 	if isTar {
 
 		// Ensure extraction directory exists
@@ -534,7 +544,7 @@ func (r *Reader) ExtractSlot(slotIndex int, destDir string) (string, error) {
 
 	// Log what we're about to write
 	logger.Trace("📝 Writing single file", "destPath", destPath, "dataLen", len(decompressed), "permissions", fmt.Sprintf("%04o", perm))
-	
+
 	// Check first few bytes to see if it's still compressed
 	if len(decompressed) >= 3 && decompressed[0] == 0x1f && decompressed[1] == 0x8b && decompressed[2] == 0x08 {
 		logger.Warn("⚠️ Data appears to still be gzipped!", "firstBytes", fmt.Sprintf("%x", decompressed[:10]))

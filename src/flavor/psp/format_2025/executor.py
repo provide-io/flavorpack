@@ -7,8 +7,11 @@
 Handles process execution with environment setup and variable substitution.
 """
 
+from __future__ import annotations
+
 import os
 from pathlib import Path
+import re
 import shlex
 from typing import Any
 
@@ -19,7 +22,7 @@ from provide.foundation.process import run
 class BundleExecutor:
     """Executes PSPF bundles with proper environment and substitution."""
 
-    def __init__(self, metadata: dict, workenv_dir: Path) -> None:
+    def __init__(self, metadata: dict[str, Any], workenv_dir: Path) -> None:
         """Initialize executor with metadata and work environment.
 
         Args:
@@ -108,9 +111,8 @@ class BundleExecutor:
         Returns:
             str: Command with slot references substituted
         """
-        import re
 
-        def replace_slot(match):
+        def replace_slot(match: re.Match[str]) -> str:
             slot_idx = int(match.group(1))
             slots = self.metadata.get("slots", [])
 

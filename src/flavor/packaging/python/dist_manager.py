@@ -13,11 +13,12 @@ setup, package installation, and distribution preparation for PSPF packaging.
 
 from __future__ import annotations
 
+import contextlib
 import os
+from pathlib import Path
 import shutil  # Only kept for copytree which Foundation doesn't provide
 import sys
-from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from provide.foundation.file import (
     ensure_dir,
@@ -353,7 +354,7 @@ class PythonDistManager:
         }
 
         logger.info("✅ Standalone distribution created successfully")
-        logger.info(f"📊 Distribution size: {dist_info['distribution_size'] / (1024 * 1024):.1f} MB")
+        logger.info(f"📊 Distribution size: {cast(int, dist_info['distribution_size']) / (1024 * 1024):.1f} MB")
 
         return dist_info
 
@@ -370,10 +371,8 @@ class PythonDistManager:
         total_size = 0
         for path in directory.rglob("*"):
             if path.is_file():
-                try:
+                with contextlib.suppress(OSError, FileNotFoundError):
                     total_size += path.stat().st_size
-                except (OSError, FileNotFoundError):
-                    pass  # Skip files we can't access
         return total_size
 
     def validate_distribution(self, dist_info: dict[str, Any]) -> bool:

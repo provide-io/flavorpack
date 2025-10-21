@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from pathlib import Path
 import tempfile
+from typing import Any
 
 import attrs
 
@@ -35,7 +36,7 @@ class PSPFBuilder:
         """Create a new builder instance."""
         return cls()
 
-    def metadata(self, **kwargs) -> PSPFBuilder:
+    def metadata(self, **kwargs: Any) -> PSPFBuilder:
         """
         Set metadata fields.
 
@@ -124,7 +125,7 @@ class PSPFBuilder:
         new_spec = self._spec.with_keys(key_config)
         return PSPFBuilder(new_spec)
 
-    def with_options(self, **kwargs) -> PSPFBuilder:
+    def with_options(self, **kwargs: Any) -> PSPFBuilder:
         """
         Set build options.
 

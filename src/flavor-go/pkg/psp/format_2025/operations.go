@@ -12,66 +12,66 @@ const (
 	OP_NONE uint8 = 0x00
 
 	// 0x01-0x0F: Bundle operations (15 slots)
-	OP_TAR         uint8 = 0x01
-	OP_TAR_SORTED  uint8 = 0x02
-	OP_TAR_STREAM  uint8 = 0x03
-	OP_CPIO        uint8 = 0x04
-	OP_CPIO_NEWC   uint8 = 0x05
-	OP_AR          uint8 = 0x06
-	OP_AR_BSD      uint8 = 0x07
-	OP_ZIP_STORE   uint8 = 0x08
-	OP_ZIP_STREAM  uint8 = 0x09
-	OP_7Z          uint8 = 0x0A
-	OP_RAR         uint8 = 0x0B
-	OP_PAX         uint8 = 0x0C
-	OP_USTAR       uint8 = 0x0D
+	OP_TAR        uint8 = 0x01
+	OP_TAR_SORTED uint8 = 0x02
+	OP_TAR_STREAM uint8 = 0x03
+	OP_CPIO       uint8 = 0x04
+	OP_CPIO_NEWC  uint8 = 0x05
+	OP_AR         uint8 = 0x06
+	OP_AR_BSD     uint8 = 0x07
+	OP_ZIP_STORE  uint8 = 0x08
+	OP_ZIP_STREAM uint8 = 0x09
+	OP_7Z         uint8 = 0x0A
+	OP_RAR        uint8 = 0x0B
+	OP_PAX        uint8 = 0x0C
+	OP_USTAR      uint8 = 0x0D
 
 	// 0x10-0x2F: Compression operations (32 slots)
-	OP_GZIP       uint8 = 0x10
-	OP_GZIP_FAST  uint8 = 0x11
-	OP_GZIP_BEST  uint8 = 0x12
-	OP_BZIP2      uint8 = 0x13
-	OP_BZIP2_FAST uint8 = 0x14
-	OP_BZIP2_BEST uint8 = 0x15
-	OP_XZ         uint8 = 0x16
-	OP_XZ_FAST    uint8 = 0x17
-	OP_XZ_BEST    uint8 = 0x18
-	OP_LZMA       uint8 = 0x19
-	OP_LZMA2      uint8 = 0x1A
-	OP_ZSTD       uint8 = 0x1B
-	OP_ZSTD_FAST  uint8 = 0x1C
-	OP_ZSTD_BEST  uint8 = 0x1D
-	OP_LZ4        uint8 = 0x1E
-	OP_LZ4_HC     uint8 = 0x1F
-	OP_SNAPPY     uint8 = 0x20
-	OP_BROTLI     uint8 = 0x21
+	OP_GZIP        uint8 = 0x10
+	OP_GZIP_FAST   uint8 = 0x11
+	OP_GZIP_BEST   uint8 = 0x12
+	OP_BZIP2       uint8 = 0x13
+	OP_BZIP2_FAST  uint8 = 0x14
+	OP_BZIP2_BEST  uint8 = 0x15
+	OP_XZ          uint8 = 0x16
+	OP_XZ_FAST     uint8 = 0x17
+	OP_XZ_BEST     uint8 = 0x18
+	OP_LZMA        uint8 = 0x19
+	OP_LZMA2       uint8 = 0x1A
+	OP_ZSTD        uint8 = 0x1B
+	OP_ZSTD_FAST   uint8 = 0x1C
+	OP_ZSTD_BEST   uint8 = 0x1D
+	OP_LZ4         uint8 = 0x1E
+	OP_LZ4_HC      uint8 = 0x1F
+	OP_SNAPPY      uint8 = 0x20
+	OP_BROTLI      uint8 = 0x21
 	OP_BROTLI_TEXT uint8 = 0x22
-	OP_DEFLATE    uint8 = 0x23
-	OP_DEFLATE64  uint8 = 0x24
-	OP_PPM        uint8 = 0x25
-	OP_PPMD       uint8 = 0x26
+	OP_DEFLATE     uint8 = 0x23
+	OP_DEFLATE64   uint8 = 0x24
+	OP_PPM         uint8 = 0x25
+	OP_PPMD        uint8 = 0x26
 
 	// 0x30-0x4F: Encryption operations (32 slots)
-	OP_AES128_GCM        uint8 = 0x30
-	OP_AES256_GCM        uint8 = 0x31
-	OP_AES128_CBC        uint8 = 0x32
-	OP_AES256_CBC        uint8 = 0x33
-	OP_AES128_CTR        uint8 = 0x34
-	OP_AES256_CTR        uint8 = 0x35
-	OP_CHACHA20_POLY1305 uint8 = 0x36
+	OP_AES128_GCM         uint8 = 0x30
+	OP_AES256_GCM         uint8 = 0x31
+	OP_AES128_CBC         uint8 = 0x32
+	OP_AES256_CBC         uint8 = 0x33
+	OP_AES128_CTR         uint8 = 0x34
+	OP_AES256_CTR         uint8 = 0x35
+	OP_CHACHA20_POLY1305  uint8 = 0x36
 	OP_XCHACHA20_POLY1305 uint8 = 0x37
-	OP_SALSA20           uint8 = 0x38
-	OP_XSALSA20_POLY1305 uint8 = 0x39
-	OP_RSA_2048          uint8 = 0x3A
-	OP_RSA_4096          uint8 = 0x3B
-	OP_ED25519           uint8 = 0x3C
-	OP_X25519            uint8 = 0x3D
-	OP_SECP256K1         uint8 = 0x3E
-	OP_SECP256R1         uint8 = 0x3F
-	OP_NACL_BOX          uint8 = 0x40
-	OP_NACL_SECRETBOX    uint8 = 0x41
-	OP_AGE               uint8 = 0x42
-	OP_PGP               uint8 = 0x43
+	OP_SALSA20            uint8 = 0x38
+	OP_XSALSA20_POLY1305  uint8 = 0x39
+	OP_RSA_2048           uint8 = 0x3A
+	OP_RSA_4096           uint8 = 0x3B
+	OP_ED25519            uint8 = 0x3C
+	OP_X25519             uint8 = 0x3D
+	OP_SECP256K1          uint8 = 0x3E
+	OP_SECP256R1          uint8 = 0x3F
+	OP_NACL_BOX           uint8 = 0x40
+	OP_NACL_SECRETBOX     uint8 = 0x41
+	OP_AGE                uint8 = 0x42
+	OP_PGP                uint8 = 0x43
 
 	// 0x50-0x6F: Encoding operations (32 slots)
 	OP_BASE64           uint8 = 0x50
@@ -192,7 +192,7 @@ func UnpackOperations(packed uint64) []uint8 {
 // operationNames maps operation constants to their names
 var operationNames = map[uint8]string{
 	OP_NONE: "NONE",
-	
+
 	// Bundle operations
 	OP_TAR:        "TAR",
 	OP_TAR_SORTED: "TAR_SORTED",
@@ -207,7 +207,7 @@ var operationNames = map[uint8]string{
 	OP_RAR:        "RAR",
 	OP_PAX:        "PAX",
 	OP_USTAR:      "USTAR",
-	
+
 	// Compression operations
 	OP_GZIP:        "GZIP",
 	OP_GZIP_FAST:   "GZIP_FAST",
@@ -232,7 +232,7 @@ var operationNames = map[uint8]string{
 	OP_DEFLATE64:   "DEFLATE64",
 	OP_PPM:         "PPM",
 	OP_PPMD:        "PPMD",
-	
+
 	// Encryption operations
 	OP_AES128_GCM:         "AES128_GCM",
 	OP_AES256_GCM:         "AES256_GCM",

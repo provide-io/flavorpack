@@ -37,16 +37,22 @@ def resolve_keys(config: KeyConfig) -> tuple[bytes, bytes]:
     # Priority 1: Explicit keys
     if config.has_explicit_keys():
         logger.info("🔑 Using explicitly provided keys")
+        # Type assertion: we know both are not None due to has_explicit_keys() check
+        assert config.private_key is not None and config.public_key is not None
         return config.private_key, config.public_key
 
     # Priority 2: Deterministic from seed
     if config.has_seed():
         logger.info("🌱 Generating deterministic keys from seed")
+        # Type assertion: we know key_seed is not None due to has_seed() check
+        assert config.key_seed is not None
         return generate_deterministic_keys(config.key_seed)
 
     # Priority 3: Load from path
     if config.has_path():
         logger.info(f"📁 Loading keys from {config.key_path}")
+        # Type assertion: we know key_path is not None due to has_path() check
+        assert config.key_path is not None
         return load_keys_from_path(config.key_path)
 
     # Priority 4: Generate ephemeral

@@ -6,8 +6,7 @@
 #
 # flavor/commands/package.py
 #
-"""Package command for the flavor CLI.
-"""
+"""Package command for the flavor CLI."""
 
 from __future__ import annotations
 

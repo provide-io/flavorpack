@@ -9,8 +9,9 @@
 
 from __future__ import annotations
 
-import tomllib
 from pathlib import Path
+import tomllib
+from typing import Any
 
 from provide.foundation.file.directory import safe_rmtree
 from provide.foundation.file.formats import read_json
@@ -64,7 +65,7 @@ def build_package_from_manifest(
     return [output_flavor_path]
 
 
-def verify_package(package_path: Path) -> dict:
+def verify_package(package_path: Path) -> dict[str, Any]:
     """Verifies a Flavor package."""
     from .verification import FlavorVerifier
 
@@ -83,7 +84,7 @@ def generate_keys(output_dir: Path) -> tuple[Path, Path]:
     return generate_key_pair(output_dir)
 
 
-def _parse_json_manifest(manifest_path: Path) -> dict:
+def _parse_json_manifest(manifest_path: Path) -> dict[str, Any]:
     """Parse JSON manifest and extract required configuration."""
     manifest_data = read_json(manifest_path)
 
@@ -114,7 +115,7 @@ def _parse_json_manifest(manifest_path: Path) -> dict:
     }
 
 
-def _parse_toml_manifest(manifest_path: Path) -> dict:
+def _parse_toml_manifest(manifest_path: Path) -> dict[str, Any]:
     """Parse TOML manifest and extract required configuration."""
     with manifest_path.open("rb") as f:
         pyproject = tomllib.load(f)
@@ -144,11 +145,11 @@ def _parse_toml_manifest(manifest_path: Path) -> dict:
     }
 
 
-def _get_version_from_toml(project_config: dict, manifest_path: Path, project_name: str) -> str:
+def _get_version_from_toml(project_config: dict[str, Any], manifest_path: Path, project_name: str) -> str:
     """Extract version from TOML config, handling dynamic versions."""
     version = project_config.get("version")
     if version:
-        return version
+        return str(version)
 
     # Check if version is dynamic
     dynamic_fields = project_config.get("dynamic", [])
@@ -170,29 +171,30 @@ def _get_version_from_toml(project_config: dict, manifest_path: Path, project_na
         return "0.0.0"
 
 
-def _get_entry_point_from_toml(flavor_config: dict, project_name: str, cli_scripts: dict) -> str:
+def _get_entry_point_from_toml(flavor_config: dict[str, Any], project_name: str, cli_scripts: dict[str, Any]) -> str:
     """Extract entry point from TOML config."""
     entry_point = flavor_config.get("entry_point")
     if entry_point:
-        return entry_point
+        return str(entry_point)
 
     if project_name in cli_scripts:
-        return cli_scripts[project_name]
+        return str(cli_scripts[project_name])
 
     raise ValueError("Project entry_point must be defined in [project.scripts] or [tool.flavor.entry_point]")
 
 
-def _get_package_name_from_toml(flavor_config: dict, project_name: str) -> str:
+def _get_package_name_from_toml(flavor_config: dict[str, Any], project_name: str) -> str:
     """Extract package name from TOML config."""
     # First check directly under [tool.flavor], then under [tool.flavor.metadata]
-    return flavor_config.get("package_name") or flavor_config.get("metadata", {}).get(
+    pkg_name = flavor_config.get("package_name") or flavor_config.get("metadata", {}).get(
         "package_name", project_name
     )
+    return str(pkg_name)
 
 
-def _get_build_config_from_toml(flavor_config: dict, manifest_path: Path) -> dict:
+def _get_build_config_from_toml(flavor_config: dict[str, Any], manifest_path: Path) -> dict[str, Any]:
     """Extract build config from TOML, merging with buildconfig.toml if present."""
-    build_config = flavor_config.get("build", {})
+    build_config: dict[str, Any] = flavor_config.get("build", {})
 
     # Load build config from pyproject.toml, then override with buildconfig.toml if it exists
     buildconfig_path = manifest_path.parent / "buildconfig.toml"
@@ -230,7 +232,7 @@ def _setup_key_paths(
 
 
 def _create_orchestrator(
-    config_data: dict,
+    config_data: dict[str, Any],
     manifest_dir: Path,
     output_flavor_path: Path,
     private_key_path: Path,
