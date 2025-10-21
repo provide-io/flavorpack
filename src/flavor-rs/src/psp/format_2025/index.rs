@@ -300,18 +300,18 @@ impl Index {
         // Log first 72 bytes of the index (core fields)
         debug!("First 72 bytes of index (with checksum zeroed):");
         let mut hex_line = String::new();
-        for i in 0..72 {
+        for (i, byte) in data_copy.iter().enumerate().take(72) {
             if i % 16 == 0 {
                 if !hex_line.is_empty() {
-                    debug!("{}", hex_line);
+                    debug!("{hex_line}");
                     hex_line.clear();
                 }
                 hex_line = format!("  {:04x}: ", i);
             }
-            hex_line.push_str(&format!("{:02x} ", data_copy[i]));
+            hex_line.push_str(&format!("{byte:02x} "));
         }
         if !hex_line.is_empty() {
-            debug!("{}", hex_line);
+            debug!("{hex_line}");
         }
 
         let calculated = adler::adler32_slice(&data_copy);

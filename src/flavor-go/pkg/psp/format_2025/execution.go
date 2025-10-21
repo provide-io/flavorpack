@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/utils/shellparse"
 )
 
 var (
@@ -311,7 +312,12 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 				if len(cmdArgs) > 0 {
 					setupExec = exec.Command(cmdToRun, cmdArgs...)
 				} else {
-					parts := strings.Fields(cmdToRun)
+					// Use shell-aware parser to handle quoted arguments
+					parts, err := shellparse.Split(cmdToRun)
+					if err != nil {
+						logger.Error("❌ Failed to parse setup command", "command", cmdToRun, "error", err)
+						return nil, fmt.Errorf("failed to parse setup command %q: %w", cmdToRun, err)
+					}
 					if len(parts) == 0 {
 						continue
 					}
@@ -367,7 +373,12 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 		}
 	}
 
-	parts := strings.Fields(command)
+	// Use shell-aware parser to handle quoted arguments
+	parts, err := shellparse.Split(command)
+	if err != nil {
+		logger.Error("❌ Failed to parse command", "command", command, "error", err)
+		return nil, fmt.Errorf("failed to parse command %q: %w", command, err)
+	}
 	if len(parts) == 0 {
 		logger.Error("Empty command")
 		return nil, errors.New("empty command")

@@ -30,11 +30,12 @@ var (
 //   - Empty input returns empty slice
 //
 // Examples:
-//   Split(`cmd arg1 arg2`) => ["cmd", "arg1", "arg2"]
-//   Split(`cmd "arg with spaces"`) => ["cmd", "arg with spaces"]
-//   Split(`cmd 'single quotes'`) => ["cmd", "single quotes"]
-//   Split(`cmd arg\ with\ spaces`) => ["cmd", "arg with spaces"]
-//   Split(`python -c "print('hello')"`) => ["python", "-c", "print('hello')"]
+//
+//	Split(`cmd arg1 arg2`) => ["cmd", "arg1", "arg2"]
+//	Split(`cmd "arg with spaces"`) => ["cmd", "arg with spaces"]
+//	Split(`cmd 'single quotes'`) => ["cmd", "single quotes"]
+//	Split(`cmd arg\ with\ spaces`) => ["cmd", "arg with spaces"]
+//	Split(`python -c "print('hello')"`) => ["python", "-c", "print('hello')"]
 func Split(input string) ([]string, error) {
 	if input == "" {
 		return []string{}, nil
@@ -43,6 +44,7 @@ func Split(input string) ([]string, error) {
 	var result []string
 	var current strings.Builder
 	var inSingleQuote, inDoubleQuote bool
+	var sawQuotes bool // Track if we've seen quotes for empty string handling
 
 	runes := []rune(input)
 	length := len(runes)
@@ -81,6 +83,7 @@ func Split(input string) ([]string, error) {
 			if inSingleQuote {
 				// Closing single quote
 				inSingleQuote = false
+				sawQuotes = true
 			} else {
 				// Opening single quote
 				inSingleQuote = true
@@ -93,6 +96,7 @@ func Split(input string) ([]string, error) {
 			if inDoubleQuote {
 				// Closing double quote
 				inDoubleQuote = false
+				sawQuotes = true
 			} else {
 				// Opening double quote
 				inDoubleQuote = true
@@ -102,10 +106,11 @@ func Split(input string) ([]string, error) {
 
 		// Handle whitespace (word separators)
 		if unicode.IsSpace(ch) && !inSingleQuote && !inDoubleQuote {
-			// End current word if we have accumulated characters
-			if current.Len() > 0 {
+			// End current word if we have accumulated characters or saw quotes
+			if current.Len() > 0 || sawQuotes {
 				result = append(result, current.String())
 				current.Reset()
+				sawQuotes = false
 			}
 			continue
 		}
@@ -123,8 +128,8 @@ func Split(input string) ([]string, error) {
 		return nil, fmt.Errorf("%w: unclosed %s quote", ErrUnclosedQuote, quoteType)
 	}
 
-	// Add final word if present
-	if current.Len() > 0 {
+	// Add final word if present or if we saw quotes (empty quoted string)
+	if current.Len() > 0 || sawQuotes {
 		result = append(result, current.String())
 	}
 

@@ -7,16 +7,19 @@
 #![deny(
     // Safety
     unsafe_code,
-    
-    // Correctness  
+
+    // Correctness
     missing_debug_implementations,
     unreachable_pub,
-    
+
     // Future compatibility
     future_incompatible,
-    
+
     // Rust 2018 idioms
     rust_2018_idioms,
+
+    // All warnings must be fixed
+    warnings,
 )]
 
 #![warn(
