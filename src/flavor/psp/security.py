@@ -1,4 +1,8 @@
-#!/usr/bin/env python3
+# flavor/psp/security.py
+#
+# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 """
 PSP Security - Integrity verification and cryptographic operations.
 
@@ -288,3 +292,6 @@ def verify_package_integrity(bundle_path: Path) -> IntegrityResult:
         IntegrityResult dictionary with verification status
     """
     return _verifier.verify_integrity(bundle_path)
+
+
+# 🌶️📦📄🪄

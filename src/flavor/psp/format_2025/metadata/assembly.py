@@ -1,7 +1,10 @@
-#!/usr/bin/env python3
-"""Metadata assembly for PSPF packages."""
+# flavor/psp/format_2025/metadata/assembly.py
+#
+# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
 
-import datetime
+"""Metadata assembly for PSPF packages.import datetime"""
+
 from pathlib import Path
 import socket
 from typing import Any
@@ -266,3 +269,6 @@ def assemble_metadata(spec: BuildSpec, slots: list[Any], launcher_info: dict[str
 
     # Validate all paths use {workenv}
     return validate_metadata_dict(metadata)
+
+
+# 🌶️📦📄🪄

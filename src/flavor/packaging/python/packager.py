@@ -1,9 +1,12 @@
-#
 # flavor/packaging/python/packager.py
 #
-"""Python packager that owns all Python-specific packaging logic."""
+# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
 
-from pathlib import Path
+# flavor/packaging/python/packager.py
+#
+"""Python packager that owns all Python-specific packaging logic.from pathlib import Path
+"""
 import sys
 import tomllib
 from typing import Any
@@ -319,3 +322,6 @@ class PythonPackager:
             f"python={self.python_version}, "
             f"platform={'windows' if self.is_windows else 'unix'})"
         )
+
+
+# 🌶️📦📄🪄

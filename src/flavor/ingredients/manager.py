@@ -1,10 +1,13 @@
-#!/usr/bin/env python3
+# flavor/ingredients/manager.py
+#
+# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 #
 # flavor/ingredients.py
 #
-"""Ingredient management system for Flavor launchers and builders."""
-
-import contextlib
+"""Ingredient management system for Flavor launchers and builders.import contextlib
+"""
 from dataclasses import dataclass
 import hashlib
 import os
@@ -245,3 +248,6 @@ class IngredientManager:
     def get_ingredient(self, name: str) -> Path:
         """Get path to a ingredient binary."""
         return self._binary_loader.get_ingredient(name)
+
+
+# 🌶️📦📋🪄

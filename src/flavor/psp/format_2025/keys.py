@@ -1,11 +1,14 @@
-#!/usr/bin/env python3
+# flavor/psp/format_2025/keys.py
+#
+# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+"""
 """
 PSPF Key Management - Functions for handling cryptographic keys.
 
 Provides pure functions for key resolution, generation, and persistence.
 Supports multiple key sources with clear priority ordering.
-"""
-
 import hashlib
 from pathlib import Path
 
@@ -219,3 +222,6 @@ def create_key_config(
         raise ValueError("🔑 Only one key source can be specified (explicit, seed, or path)")
 
     return KeyConfig(private_key=private_key, public_key=public_key, key_seed=seed, key_path=key_path)
+
+
+# 🌶️📦📄🪄

@@ -1,4 +1,8 @@
-#!/usr/bin/env python3
+# flavor/psp/format_2025/workenv.py
+#
+# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 """
 PSPF Work Environment Management
 
@@ -308,3 +312,6 @@ class WorkEnvManager:
                 logger.debug(f"🔄 Substituted {placeholder} -> {slot_path}")
 
         return command
+
+
+# 🌶️📦📄🪄

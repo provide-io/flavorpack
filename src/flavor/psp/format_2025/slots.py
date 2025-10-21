@@ -1,4 +1,8 @@
-#!/usr/bin/env python3
+# flavor/psp/format_2025/slots.py
+#
+# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 # src/flavor/psp/format_2025/slots.py
 # PSPF 2025 Slot Management - Enhanced 64-byte descriptors
 
@@ -381,4 +385,4 @@ class SlotView:
         return self.content[key]
 
 
-# 📦🎰🗂️🪄
+# 🌶️📦📄🪄
