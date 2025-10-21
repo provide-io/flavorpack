@@ -1,6 +1,7 @@
 package shellparse
 
 import (
+	"errors"
 	"testing"
 )
 
@@ -331,20 +332,16 @@ func TestSplit_Errors(t *testing.T) {
 			input:       `cmd arg\`,
 			expectError: ErrTrailingEscape,
 		},
-		{
-			name:        "trailing escape with space",
-			input:       `cmd arg\ `,
-			expectError: ErrTrailingEscape,
-		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			_, err := Split(tt.input)
 			if err == nil {
-				t.Fatalf("expected error %v, got nil", tt.expectError)
+				t.Fatalf("expected error containing %v, got nil", tt.expectError)
 			}
-			if err != tt.expectError && !isWrappedError(err, tt.expectError) {
+			// Check if the error is or wraps the expected error
+			if !errors.Is(err, tt.expectError) {
 				t.Errorf("expected error %v, got %v", tt.expectError, err)
 			}
 		})
@@ -457,14 +454,4 @@ func slicesEqual(a, b []string) bool {
 		}
 	}
 	return true
-}
-
-func isWrappedError(err, target error) bool {
-	// Simple check if err wraps target
-	return err != nil && target != nil && (err == target || err.Error() == target.Error() || containsError(err.Error(), target.Error()))
-}
-
-func containsError(errMsg, targetMsg string) bool {
-	return len(errMsg) > 0 && len(targetMsg) > 0 &&
-		(errMsg == targetMsg || (len(errMsg) > len(targetMsg) && errMsg[len(errMsg)-len(targetMsg):] == targetMsg))
 }

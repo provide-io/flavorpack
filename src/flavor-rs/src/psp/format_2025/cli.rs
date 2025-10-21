@@ -196,12 +196,11 @@ pub fn verify_bundle(exe_path: &Path) -> i32 {
 
 /// Extract a specific slot
 pub fn extract_slot(exe_path: &Path, slot_str: &str, output_dir: &str) -> i32 {
-    let slot_index = match slot_str.parse::<usize>() {
-        Ok(idx) => idx,
-        Err(_) => {
-            eprintln!("Error: Invalid slot index: {}", slot_str);
-            return 1;
-        }
+    let slot_index = if let Ok(idx) = slot_str.parse::<usize>() {
+        idx
+    } else {
+        eprintln!("Error: Invalid slot index: {}", slot_str);
+        return 1;
     };
 
     let mut reader = match Reader::new(exe_path) {

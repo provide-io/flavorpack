@@ -125,6 +125,7 @@ impl Reader {
     }
 
     /// Read and parse metadata
+    #[allow(clippy::cognitive_complexity)]
     pub fn read_metadata(&mut self) -> Result<&Metadata> {
         if self.metadata.is_none() {
             // Ensure index is loaded

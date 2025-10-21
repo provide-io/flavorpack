@@ -45,12 +45,12 @@ pub fn try_acquire_lock(paths: &WorkenvPaths) -> Result<bool> {
         // Try to read the PID from the lock file
         if let Ok(contents) = fs::read_to_string(&lock_path) {
             if let Ok(old_pid) = contents.trim().parse::<u32>() {
-                if !is_process_running(old_pid) {
-                    info!("🧹 Removing stale lock from dead process (PID: {old_pid})");
-                    fs::remove_file(&lock_path)?;
-                } else {
+                if is_process_running(old_pid) {
                     debug!("🔒 Lock held by active process (PID: {old_pid})");
                     return Ok(false);
+                } else {
+                    info!("🧹 Removing stale lock from dead process (PID: {old_pid})");
+                    fs::remove_file(&lock_path)?;
                 }
             } else {
                 // Invalid PID in lock file, remove it

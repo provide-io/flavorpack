@@ -1,11 +1,20 @@
 //! PSPF/2025 package launcher
 
+mod filesystem;
+mod workenv;
+mod extraction;
+mod command;
+
+use filesystem::{copy_dir_all, fix_shebangs};
+use workenv::{get_workenv_paths, check_disk_space, setup_workenv_directories};
+use extraction::{extract_slots, build_slot_paths};
+use command::prepare_command;
+
 use crate::api::LaunchOptions;
 use crate::exceptions::{FlavorError, Result};
 use crate::psp::format_2025::defaults::DEFAULT_DIR_PERMS;
 use crate::utils::get_cache_dir;
 use log::{debug, error, info, trace, warn};
-use std::collections::HashMap;
 use std::env;
 use std::fs;
 #[cfg(unix)]
@@ -14,382 +23,40 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::atomic::{AtomicBool, Ordering};
 
-use super::defaults::DEFAULT_DISK_SPACE_MULTIPLIER;
 use super::execution::{
     check_workenv_validity_full, execute_setup_commands,
-    save_index_metadata, save_package_checksum, substitute_placeholders,
+    save_index_metadata, save_package_checksum,
 };
 use super::locking::{
-    cleanup_stale_extractions, mark_extraction_complete, release_lock, 
+    cleanup_stale_extractions, mark_extraction_complete, release_lock,
     try_acquire_lock, wait_for_extraction,
 };
 use super::paths::WorkenvPaths;
-use super::metadata::{Metadata, WorkenvInfo};
 use super::reader::Reader;
-use super::runtime::process_runtime_env;
 
 // Use CHILD_PID from lib.rs
 use crate::CHILD_PID;
 static EXTRACTING: AtomicBool = AtomicBool::new(false);
 
-/// Helper function to recursively copy a directory
-fn copy_dir_all(src: &Path, dst: &Path) -> Result<()> {
-    fs::create_dir_all(dst)?;
-    for entry in fs::read_dir(src)? {
-        let entry = entry?;
-        let src_path = entry.path();
-        let dst_path = dst.join(entry.file_name());
-        
-        if src_path.is_dir() {
-            copy_dir_all(&src_path, &dst_path)?;
-        } else {
-            fs::copy(&src_path, &dst_path)?;
-        }
-    }
-    Ok(())
-}
-
-/// Fix shebangs in scripts after atomic move
-fn fix_shebangs(bin_dir: &Path, old_prefix: &Path, new_prefix: &Path) -> Result<()> {
-    use std::io::{Read, Write};
-    
-    if !bin_dir.exists() {
-        return Ok(());
-    }
-    
-    for entry in fs::read_dir(bin_dir)? {
-        let entry = entry?;
-        let path = entry.path();
-        
-        if path.is_file() {
-            // Read first few bytes to check for shebang
-            let mut file = fs::File::open(&path)?;
-            let mut header = [0u8; 2];
-            if file.read_exact(&mut header).is_ok() && &header == b"#!" {
-                // Read entire file
-                file = fs::File::open(&path)?;
-                let mut content = Vec::new();
-                file.read_to_end(&mut content)?;
-                
-                // Find end of first line
-                if let Some(newline_pos) = content.iter().position(|&b| b == b'\n') {
-                    let first_line = &content[0..newline_pos];
-                    let old_prefix_str = old_prefix.to_string_lossy();
-                    let old_prefix_bytes = old_prefix_str.as_bytes();
-                    
-                    // Check if the shebang contains the old prefix
-                    if first_line.windows(old_prefix_bytes.len())
-                        .any(|window| window == old_prefix_bytes) 
-                    {
-                        // Replace old prefix with new prefix in first line
-                        let mut new_content = Vec::new();
-                        let first_line_str = String::from_utf8_lossy(first_line);
-                        let new_prefix_str = new_prefix.to_string_lossy();
-                        let new_first_line = first_line_str.replace(
-                            old_prefix_str.as_ref(),
-                            new_prefix_str.as_ref()
-                        );
-                        new_content.extend_from_slice(new_first_line.as_bytes());
-                        new_content.extend_from_slice(&content[newline_pos..]);
-                        
-                        // Write back the modified content
-                        let mut file = fs::File::create(&path)?;
-                        file.write_all(&new_content)?;
-                        
-                        debug!("Fixed shebang in {:?}", path.file_name().unwrap_or_default());
-                    }
-                }
-            }
-        }
-    }
-    
-    Ok(())
-}
-
-/// Calculate a deterministic cache path for a package
-fn get_workenv_paths(package_path: &Path) -> WorkenvPaths {
-    let cache_base = get_cache_dir();
-    WorkenvPaths::new(cache_base, package_path)
-}
-
-/// Check if there's enough disk space for extraction
-fn check_disk_space(paths: &WorkenvPaths, metadata: &Metadata) -> Result<()> {
-    // Calculate total size needed (compressed size * DISK_SPACE_MULTIPLIER for safety)
-    let _total_size_needed: u64 = metadata.slots.iter()
-        .map(|slot| slot.size as u64 * DEFAULT_DISK_SPACE_MULTIPLIER)
-        .sum();
-    
-    // Get available disk space
-    #[cfg(unix)]
-    {
-        // Safe disk space check using fs2 crate alternative or simplified check
-        let workenv_path = paths.workenv();
-        
-        // Try to create a small test file to check if we can write
-        // This is a simpler but less precise check than statvfs
-        let test_file = workenv_path.join(".space_test");
-        match std::fs::create_dir_all(&workenv_path) {
-            Ok(_) => {
-                match std::fs::write(&test_file, b"test") {
-                    Ok(_) => {
-                        let _ = std::fs::remove_file(&test_file);
-                        debug!("✅ Disk space check passed (write test successful)");
-                    }
-                    Err(e) => {
-                        warn!("⚠️ Disk write test failed: {}", e);
-                        // Don't fail the process, just warn
-                    }
-                }
-            }
-            Err(e) => {
-                warn!("⚠️ Could not create workenv directory: {}", e);
-                return Err(FlavorError::Generic(format!(
-                    "Cannot create workenv directory: {}",
-                    e
-                )));
-            }
-        }
-    }
-    
-    #[cfg(not(unix))]
-    {
-        warn!("⚠️ Disk space check not implemented for this platform");
-    }
-    
-    Ok(())
-}
-
-/// Setup workenv directories with proper permissions
-fn setup_workenv_directories(workenv_path: &Path, workenv_info: &WorkenvInfo) -> Result<()> {
-    if let Some(ref directories) = workenv_info.directories {
-        for dir_spec in directories {
-            // Substitute {workenv} placeholder in the path
-            let path_str = if dir_spec.path.starts_with("{workenv}/") {
-                &dir_spec.path["{workenv}/".len()..]
-            } else if dir_spec.path == "{workenv}" {
-                ""
-            } else {
-                &dir_spec.path
-            };
-
-            let dir_path = if path_str.is_empty() {
-                workenv_path.to_path_buf()
-            } else {
-                workenv_path.join(path_str)
-            };
-            debug!("📁 Creating directory: {:?}", dir_path);
-            fs::create_dir_all(&dir_path)?;
-
-            // Set permissions on Unix systems
-            #[cfg(unix)]
-            {
-                use std::os::unix::fs::PermissionsExt;
-
-                // Use specified mode or default to 0700 (user-only access)
-                let mode_str = dir_spec.mode.as_deref().unwrap_or("0700");
-
-                // Parse octal mode string (e.g., "0700")
-                if let Ok(mode) = u32::from_str_radix(mode_str.trim_start_matches('0'), 8) {
-                    let permissions = fs::Permissions::from_mode(mode);
-                    fs::set_permissions(&dir_path, permissions)?;
-                    debug!("🔒 Set permissions {} on {:?}", mode_str, dir_path);
-                } else {
-                    // Fallback to default dir permissions if parsing fails
-                    let permissions = fs::Permissions::from_mode(DEFAULT_DIR_PERMS as u32);
-                    fs::set_permissions(&dir_path, permissions)?;
-                    debug!("🔒 Set default permissions {} on {:?}", DEFAULT_DIR_PERMS, dir_path);
-                }
-            }
-        }
-    }
-    Ok(())
-}
-
-/// Extract slots from the package  
-fn extract_slots(
-    reader: &mut Reader,
-    workenv_path: &Path,
-) -> Result<(HashMap<usize, PathBuf>, Vec<PathBuf>)> {
-    // Re-read metadata inside this function to avoid borrow issues
-    debug!("📖 Reading metadata for slot extraction");
-    let metadata = match reader.read_metadata() {
-        Ok(m) => m.clone(),
-        Err(e) => {
-            error!("🚨 Failed to read metadata: {}", e);
-            return Err(e);
-        }
-    };
-    let mut slot_paths = HashMap::new();
-    let mut init_paths = Vec::new();
-
-    info!("📤 Extracting {} slots...", metadata.slots.len());
-    
-    // Print extraction progress to stderr
-    use std::io::Write;
-    let stderr = std::io::stderr();
-    let mut stderr_handle = stderr.lock();
-
-    // Extract slots by index
-    for i in 0..metadata.slots.len() {
-        let slot = &metadata.slots[i];
-        debug!(
-            "📦 Extracting slot {}: {} ({} bytes)",
-            slot.index, slot.id, slot.size
-        );
-        trace!("  Source: {}", slot.source);
-        trace!("  Target: {}", slot.target);
-        trace!("  Lifecycle: {}", slot.lifecycle);
-        trace!("  Permissions: {:?}", slot.permissions);
-        
-        // Write progress to stderr
-        let _ = writeln!(
-            stderr_handle,
-            "[{}/{}] Extracting {}...",
-            i + 1,
-            metadata.slots.len(),
-            slot.id
-        );
-
-        // Determine extraction path
-        // Target field specifies where to extract (relative to workenv)
-        // But extract_slot expects a directory, so we need to pass workenv_path
-        // The extract_slot function will use the metadata to determine the target path
-        
-        // Extract the slot to workenv (it will use metadata.target internally)
-        reader.extract_slot(i, workenv_path)?;
-
-        let extracted_path = workenv_path.join(&slot.target);
-        debug!("✅ Extracted to: {extracted_path:?}");
-
-        // Track init slots for later cleanup (removed after initialization)
-        if slot.lifecycle == "init" {
-            debug!("📌 Marking slot {} as init for cleanup", slot.index);
-            init_paths.push(extracted_path.clone());
-        }
-
-        slot_paths.insert(i, extracted_path);
-    }
-
-    Ok((slot_paths, init_paths))
-}
-
-/// Build slot paths without extraction (when cache is valid)
-fn build_slot_paths(metadata: &Metadata, workenv_path: &Path) -> HashMap<usize, PathBuf> {
-    let mut slot_paths = HashMap::new();
-
-    for slot in &metadata.slots {
-        // Target field specifies where to extract (relative to workenv)
-        let slot_path = workenv_path.join(&slot.target);
-        slot_paths.insert(slot.index, slot_path);
-    }
-
-    slot_paths
-}
-
-/// Prepare the command to execute
-fn prepare_command(
-    metadata: &Metadata,
-    workenv_path: &Path,
-    package_path: &Path,
-    args: &[String],
-) -> Result<(String, Vec<String>, HashMap<String, String>)> {
-    // Substitute placeholders in command
-    let command =
-        substitute_placeholders(&metadata.execution.command, workenv_path, &metadata.package);
-
-    debug!("🎯 Final command: {command}");
-
-    // Split command into parts
-    let mut command_parts: Vec<String> = command.split_whitespace().map(String::from).collect();
-    if command_parts.is_empty() {
-        return Err(FlavorError::Generic("No command specified".to_string()));
-    }
-
-    let executable = command_parts.remove(0);
-
-    // Combine command args with user args
-    let mut all_args = command_parts;
-    all_args.extend_from_slice(args);
-
-    // Prepare environment
-    let mut env_map: HashMap<String, String> = env::vars().collect();
-
-    // Set FLAVOR_CACHE to the HOST's cache directory BEFORE workenv env is applied
-    // This ensures we use the HOST's HOME, not the workenv's HOME
-    // This ensures the packaged tool can access cached packages from the HOST
-    if !env_map.contains_key("FLAVOR_CACHE") {
-        if let Some(home) = env_map.get("HOME") {
-            let flavor_cache = format!("{}/{}", home, crate::psp::format_2025::defaults::DEFAULT_CACHE_SUBDIR);
-            debug!("🗂️ Setting FLAVOR_CACHE to HOST cache: {}", flavor_cache);
-            env_map.insert("FLAVOR_CACHE".to_string(), flavor_cache);
-        }
-    }
-
-    // Process runtime.env if present
-    if let Some(runtime_info) = &metadata.runtime {
-        if let Some(runtime_env) = &runtime_info.env {
-            debug!("🔄 Processing runtime.env configuration");
-            process_runtime_env(&mut env_map, runtime_env);
-        }
-    }
-
-    // Add workenv environment variables (layer 2)
-    if let Some(ref workenv_info) = metadata.workenv {
-        if let Some(ref workenv_env) = workenv_info.env {
-            for (key, value) in workenv_env {
-                let expanded_value =
-                    substitute_placeholders(value, workenv_path, &metadata.package);
-                // Don't override FLAVOR_CACHE if it's already set
-                if key != "FLAVOR_CACHE" || !env_map.contains_key("FLAVOR_CACHE") {
-                    env_map.insert(key.clone(), expanded_value);
-                }
-            }
-        }
-    }
-
-    // Add execution environment variables (layer 3)
-    for (key, value) in &metadata.execution.env {
-        env_map.insert(key.clone(), value.clone());
-    }
-
-    // Add FLAVOR_WORKENV
-    env_map.insert(
-        "FLAVOR_WORKENV".to_string(),
-        workenv_path.to_string_lossy().to_string(),
-    );
-
-    // Add FLAVOR_COMMAND_NAME for the binary name
-    let binary_name = package_path
-        .file_name()
-        .and_then(|n| n.to_str())
-        .map(|s| s.to_string())
-        .unwrap_or_else(|| package_path.to_string_lossy().to_string());
-    env_map.insert("FLAVOR_COMMAND_NAME".to_string(), binary_name);
-    env_map.insert(
-        "FLAVOR_ORIGINAL_COMMAND".to_string(),
-        package_path.to_string_lossy().to_string(),
-    );
-
-    // Prepend workenv/bin to PATH
-    if let Some(path) = env_map.get("PATH") {
-        let new_path = format!("{}/bin:{}", workenv_path.display(), path);
-        env_map.insert("PATH".to_string(), new_path);
-    } else {
-        env_map.insert(
-            "PATH".to_string(),
-            format!("{}/bin", workenv_path.display()),
-        );
-    }
-
-    Ok((executable, all_args, env_map))
-}
+// Type alias for extraction result to reduce complexity
+type SlotPaths = std::collections::HashMap<usize, PathBuf>;
+type ExtractionResult = ((SlotPaths, Vec<PathBuf>), PathBuf);
 
 /// Launch a PSPF/2025 package
+///
+/// # Errors
+///
+/// Returns an error if:
+/// - The package cannot be read or is invalid
+/// - Signature verification fails (in strict mode)
+/// - Extraction fails
+/// - Command execution fails
+#[allow(clippy::cognitive_complexity)]
 pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> Result<i32> {
     info!("PSPF Rust Launcher starting...");
     debug!("🦀 Rust launcher starting");
     debug!("📖 Reading PSPF bundle");
-    
+
     // Log environment variables at trace level
     trace!("🔧 Environment variables: {} total", std::env::vars().count());
     for (key, value) in std::env::vars() {
@@ -400,7 +67,7 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
 
     // Create reader for the bundle
     let mut reader = Reader::new(package_path)?;
-    
+
     // Read index for checksum validation
     let index = reader.read_index()?.clone();
 
@@ -408,42 +75,32 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
     use crate::psp::format_2025::defaults::{get_validation_level, ValidationLevel};
 
     let validation_level = get_validation_level();
-    match validation_level {
-        ValidationLevel::None => {
-            eprintln!("⚠️ SECURITY WARNING: Skipping all integrity verification (FLAVOR_VALIDATION=none)");
-            eprintln!("⚠️ This is NOT RECOMMENDED for production use");
-            warn!("⚠️ VALIDATION DISABLED: Skipping integrity verification");
-        }
-        _ => {
+    if matches!(validation_level, ValidationLevel::None) {
+        eprintln!("⚠️ SECURITY WARNING: Skipping all integrity verification (FLAVOR_VALIDATION=none)");
+        eprintln!("⚠️ This is NOT RECOMMENDED for production use");
+        warn!("⚠️ VALIDATION DISABLED: Skipping integrity verification");
+    } else {
             debug!("🔍 Verifying package integrity (level: {:?})", validation_level);
             // Call verifier
             let verify_result = super::verifier::verify(package_path)?;
-            if !verify_result.signature_valid {
-                match validation_level {
-                    ValidationLevel::Minimal | ValidationLevel::Relaxed => {
-                        eprintln!("⚠️ SECURITY WARNING: Package signature verification failed");
-                        eprintln!("⚠️ Package may be corrupted or tampered with");
-                        eprintln!("⚠️ Continuing due to validation level: {:?}", validation_level);
-                        warn!("⚠️ Package signature verification failed, continuing");
-                    }
-                    ValidationLevel::Standard => {
-                        eprintln!("🚨 SECURITY WARNING: Package signature verification failed");
-                        eprintln!("🚨 Package may be corrupted or tampered with");
-                        eprintln!("🚨 Continuing with standard validation (use FLAVOR_VALIDATION=strict to enforce)");
-                        warn!("⚠️ Package signature verification failed, continuing with standard validation");
-                    }
-                    ValidationLevel::Strict => {
-                        error!("❌ Package signature verification failed");
-                        return Err(FlavorError::Generic(
-                            "Package signature verification failed".to_string(),
-                        ));
-                    }
-                    ValidationLevel::None => unreachable!(), // Already handled above
-                }
-            } else {
+            if verify_result.signature_valid {
                 debug!("✅ Package integrity verified");
+            } else if matches!(validation_level, ValidationLevel::Minimal | ValidationLevel::Relaxed) {
+                eprintln!("⚠️ SECURITY WARNING: Package signature verification failed");
+                eprintln!("⚠️ Package may be corrupted or tampered with");
+                eprintln!("⚠️ Continuing due to validation level: {:?}", validation_level);
+                warn!("⚠️ Package signature verification failed, continuing");
+            } else if matches!(validation_level, ValidationLevel::Standard) {
+                eprintln!("🚨 SECURITY WARNING: Package signature verification failed");
+                eprintln!("🚨 Package may be corrupted or tampered with");
+                eprintln!("🚨 Continuing with standard validation (use FLAVOR_VALIDATION=strict to enforce)");
+                warn!("⚠️ Package signature verification failed, continuing with standard validation");
+            } else if matches!(validation_level, ValidationLevel::Strict) {
+                error!("❌ Package signature verification failed");
+                return Err(FlavorError::Generic(
+                    "Package signature verification failed".to_string(),
+                ));
             }
-        }
     }
 
     // Read metadata and clone to avoid borrow issues
@@ -474,18 +131,18 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
         let cache_dir = PathBuf::from(custom_workenv).parent()
             .and_then(|p| p.parent())
             .map(|p| p.to_path_buf())
-            .unwrap_or_else(|| get_cache_dir());
+            .unwrap_or_else(get_cache_dir);
         WorkenvPaths::new(cache_dir, package_path)
     } else if let Some(ref workdir) = options.workdir {
         let cache_dir = PathBuf::from(workdir).parent()
             .and_then(|p| p.parent())
             .map(|p| p.to_path_buf())
-            .unwrap_or_else(|| get_cache_dir());
+            .unwrap_or_else(get_cache_dir);
         WorkenvPaths::new(cache_dir, package_path)
     } else {
         get_workenv_paths(package_path)
     };
-    
+
     let workenv_path = paths.workenv();
 
     // Create the directory if it doesn't exist
@@ -518,10 +175,7 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
         .map(|v| v.to_lowercase() != "false" && v != "0")
         .unwrap_or(true);
 
-    let workenv_valid = if !use_cache {
-        info!("📦 FLAVOR_WORKENV_CACHE=false, forcing fresh extraction");
-        false
-    } else {
+    let workenv_valid = if use_cache {
         debug!("🔍 Checking cache validity");
         trace!("📂 Checking workenv at: {:?}", workenv_path);
         let checksum = index.index_checksum;
@@ -540,6 +194,9 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
                 return Err(e);
             }
         }
+    } else {
+        info!("📦 FLAVOR_WORKENV_CACHE=false, forcing fresh extraction");
+        false
     };
 
     let (_slot_paths, _init_paths) = if workenv_valid {
@@ -548,7 +205,7 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
     } else {
         // Check disk space before extraction
         check_disk_space(&paths, &metadata)?;
-        
+
         // Try to acquire lock for extraction
         let acquired_lock = try_acquire_lock(&paths)?;
 
@@ -572,7 +229,7 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
             trace!("🗂️ Extracting to temp before atomic move");
 
             // Extract slots to temporary directory
-            let extraction_result = (|| -> Result<((HashMap<usize, PathBuf>, Vec<PathBuf>), PathBuf)> {
+            let extraction_result = (|| -> Result<ExtractionResult> {
                 let (slot_path_map, init_slots) = extract_slots(&mut reader, &temp_extract_dir)?;
                 Ok(((slot_path_map, init_slots), temp_extract_dir.clone()))
             })();
@@ -656,7 +313,7 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
 
             // Atomically move extracted content from temp to final location
             info!("🔄 Moving extracted content to final location...");
-            
+
             // List all top-level items in temp directory
             let entries = fs::read_dir(&temp_dir)?;
             for entry in entries {
@@ -664,7 +321,7 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
                 let file_name = entry.file_name();
                 let source = entry.path();
                 let dest = workenv_path.join(&file_name);
-                
+
                 // Remove destination if it exists (for overwrite)
                 if dest.exists() {
                     if dest.is_dir() {
@@ -673,7 +330,7 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
                         fs::remove_file(&dest)?;
                     }
                 }
-                
+
                 // Move from temp to final location
                 debug!("Moving {:?} to {:?}", source, dest);
                 if let Err(e) = fs::rename(&source, &dest) {
@@ -689,7 +346,7 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
                     }
                 }
             }
-            
+
             // Fix shebangs in bin directory
             let bin_dir = workenv_path.join("bin");
             if bin_dir.exists() {
@@ -698,7 +355,7 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
                     warn!("⚠️ Failed to fix some shebangs: {}", e);
                 }
             }
-            
+
             // Remove the now-empty temp directory
             if let Err(e) = fs::remove_dir_all(&temp_extract_dir) {
                 debug!("⚠️ Failed to remove temp directory: {}", e);
@@ -712,7 +369,7 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
             // Mark extraction as complete
             mark_extraction_complete(&paths)?;
             EXTRACTING.store(false, Ordering::SeqCst);
-            
+
             // Save package checksum for future cache validation
             if let Err(e) = save_package_checksum(&paths, index.index_checksum) {
                 debug!("⚠️ Failed to save package checksum: {}", e);
@@ -773,7 +430,7 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
                 let reader = BufReader::new(file);
                 if let Some(Ok(first_line)) = reader.lines().next() {
                     let has_shebang = first_line.starts_with("#!");
-                    debug!("🔍 Checking if executable is script: {} - First line: {:?} - Has shebang: {}", 
+                    debug!("🔍 Checking if executable is script: {} - First line: {:?} - Has shebang: {}",
                            executable, &first_line[..first_line.len().min(50)], has_shebang);
                     has_shebang
                 } else {
@@ -790,7 +447,9 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
 
             // Only set argv[0] for binary executables, not scripts
             // Scripts with shebangs can fail with permission denied when argv[0] is changed
-            if !is_script {
+            if is_script {
+                info!("🚀 Executing script: {executable}");
+            } else {
                 // Get the binary name for argv[0]
                 let binary_name = package_path
                     .file_name()
@@ -799,8 +458,6 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
                 // Set argv[0] to the binary name
                 cmd.arg0(binary_name);
                 info!("🚀 Executing binary: {executable} with argv[0]={binary_name}");
-            } else {
-                info!("🚀 Executing script: {executable}");
             }
 
             debug!("🚀 Full command with args: {cmd_args:?}");
