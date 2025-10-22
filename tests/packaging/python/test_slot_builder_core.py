@@ -7,9 +7,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from unittest.mock import Mock, patch, call
-import tarfile
-import tomllib
+from unittest.mock import Mock, call, patch
 
 import pytest
 
@@ -63,36 +61,43 @@ class TestSlotBuilderInit:
 class TestCopyExecutable:
     """Test _copy_executable method."""
 
-    @patch("flavor.packaging.python.slot_builder.safe_copy")
-    def test_copy_executable_unix(self, mock_copy: Mock) -> None:
+    def test_copy_executable_unix(self, tmp_path: Path) -> None:
         """Test copying executable on Unix."""
         builder = PythonSlotBuilder(
-            manifest_dir=Path("/tmp/test"),
+            manifest_dir=tmp_path,
             package_name="testpkg",
             entry_point="testpkg:main",
             is_windows=False,
         )
 
-        src = Path("/src/uv")
-        dest = Path("/dest/uv")
+        src = tmp_path / "src" / "uv"
+        src.parent.mkdir(parents=True)
+        src.write_text("#!/bin/sh\necho uv")
+
+        dest = tmp_path / "dest" / "uv"
+        dest.parent.mkdir(parents=True)
 
         builder._copy_executable(src, dest)
 
-        mock_copy.assert_called_once_with(src, dest, preserve_mode=True, overwrite=True)
-        # Note: chmod is called in the actual code, but we can't easily test it without mocking Path
+        # Verify file was copied and is executable
+        assert dest.exists()
+        # Check that permissions include execute bit
+        import stat
+
+        assert dest.stat().st_mode & stat.S_IXUSR
 
     @patch("flavor.packaging.python.slot_builder.safe_copy")
-    def test_copy_executable_windows(self, mock_copy: Mock) -> None:
+    def test_copy_executable_windows(self, mock_copy: Mock, tmp_path: Path) -> None:
         """Test copying executable on Windows (no chmod)."""
         builder = PythonSlotBuilder(
-            manifest_dir=Path("/tmp/test"),
+            manifest_dir=tmp_path,
             package_name="testpkg",
             entry_point="testpkg:main",
             is_windows=True,
         )
 
-        src = Path("C:\\src\\uv.exe")
-        dest = Path("C:\\dest\\uv.exe")
+        src = tmp_path / "src" / "uv.exe"
+        dest = tmp_path / "dest" / "uv.exe"
 
         builder._copy_executable(src, dest)
 

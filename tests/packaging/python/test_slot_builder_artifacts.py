@@ -7,8 +7,8 @@
 from __future__ import annotations
 
 from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
 import tarfile
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -20,7 +20,6 @@ class TestPrepareArtifactsLinux:
 
     @patch("flavor.packaging.python.slot_builder.get_arch_name")
     @patch("flavor.packaging.python.slot_builder.get_os_name")
-    @patch("flavor.packaging.python.slot_builder.ensure_dir")
     @patch.object(PythonSlotBuilder, "_build_wheels")
     @patch.object(PythonSlotBuilder, "_create_metadata")
     @patch.object(PythonSlotBuilder, "_copy_executable")
@@ -29,7 +28,6 @@ class TestPrepareArtifactsLinux:
         mock_copy: Mock,
         mock_create_meta: Mock,
         mock_build_wheels: Mock,
-        mock_ensure_dir: Mock,
         mock_get_os: Mock,
         mock_get_arch: Mock,
         tmp_path: Path,
@@ -59,7 +57,7 @@ class TestPrepareArtifactsLinux:
         work_dir.mkdir()
 
         # Mock env_builder to avoid actual python placeholder creation
-        builder.env_builder.create_python_placeholder = Mock()
+        builder.env_builder.create_python_placeholder = Mock()  # type: ignore[method-assign]
 
         artifacts = builder.prepare_artifacts(work_dir)
 
@@ -78,8 +76,10 @@ class TestPrepareArtifactsLinux:
 
     @patch("flavor.packaging.python.slot_builder.get_arch_name")
     @patch("flavor.packaging.python.slot_builder.get_os_name")
+    @patch.object(PythonSlotBuilder, "_build_wheels")
     def test_prepare_artifacts_linux_uv_download_failure(
         self,
+        mock_build_wheels: Mock,
         mock_get_os: Mock,
         mock_get_arch: Mock,
         tmp_path: Path,
@@ -106,13 +106,15 @@ class TestPrepareArtifactsLinux:
         work_dir.mkdir()
 
         # Should raise FileNotFoundError when UV download fails on Linux
-        with pytest.raises(FileNotFoundError, match="Failed to download.*compatible UV wheel for Linux"):
+        with pytest.raises(FileNotFoundError, match=r"Failed to download.*compatible UV wheel for Linux"):
             builder.prepare_artifacts(work_dir)
 
     @patch("flavor.packaging.python.slot_builder.get_arch_name")
     @patch("flavor.packaging.python.slot_builder.get_os_name")
+    @patch.object(PythonSlotBuilder, "_build_wheels")
     def test_prepare_artifacts_linux_uv_download_exception(
         self,
+        mock_build_wheels: Mock,
         mock_get_os: Mock,
         mock_get_arch: Mock,
         tmp_path: Path,
@@ -148,7 +150,6 @@ class TestPrepareArtifactsNonLinux:
 
     @patch("flavor.packaging.python.slot_builder.get_arch_name")
     @patch("flavor.packaging.python.slot_builder.get_os_name")
-    @patch("flavor.packaging.python.slot_builder.ensure_dir")
     @patch.object(PythonSlotBuilder, "_build_wheels")
     @patch.object(PythonSlotBuilder, "_create_metadata")
     @patch.object(PythonSlotBuilder, "_copy_executable")
@@ -157,7 +158,6 @@ class TestPrepareArtifactsNonLinux:
         mock_copy: Mock,
         mock_create_meta: Mock,
         mock_build_wheels: Mock,
-        mock_ensure_dir: Mock,
         mock_get_os: Mock,
         mock_get_arch: Mock,
         tmp_path: Path,
@@ -177,8 +177,8 @@ class TestPrepareArtifactsNonLinux:
             entry_point="testpkg:main",
             wheel_builder=mock_wheel_builder,
         )
-        builder.env_builder.find_uv_command = Mock(return_value=host_uv)
-        builder.env_builder.create_python_placeholder = Mock()
+        builder.env_builder.find_uv_command = Mock(return_value=host_uv)  # type: ignore[method-assign]
+        builder.env_builder.create_python_placeholder = Mock()  # type: ignore[method-assign]
 
         work_dir = tmp_path / "work"
         work_dir.mkdir()
@@ -193,8 +193,10 @@ class TestPrepareArtifactsNonLinux:
 
     @patch("flavor.packaging.python.slot_builder.get_arch_name")
     @patch("flavor.packaging.python.slot_builder.get_os_name")
+    @patch.object(PythonSlotBuilder, "_build_wheels")
     def test_prepare_artifacts_macos_uv_not_found(
         self,
+        mock_build_wheels: Mock,
         mock_get_os: Mock,
         mock_get_arch: Mock,
         tmp_path: Path,
@@ -210,7 +212,7 @@ class TestPrepareArtifactsNonLinux:
             entry_point="testpkg:main",
             wheel_builder=mock_wheel_builder,
         )
-        builder.env_builder.find_uv_command = Mock(return_value=None)
+        builder.env_builder.find_uv_command = Mock(return_value=None)  # type: ignore[method-assign]
 
         work_dir = tmp_path / "work"
         work_dir.mkdir()
@@ -221,7 +223,6 @@ class TestPrepareArtifactsNonLinux:
 
     @patch("flavor.packaging.python.slot_builder.get_arch_name")
     @patch("flavor.packaging.python.slot_builder.get_os_name")
-    @patch("flavor.packaging.python.slot_builder.ensure_dir")
     @patch.object(PythonSlotBuilder, "_build_wheels")
     @patch.object(PythonSlotBuilder, "_create_metadata")
     @patch.object(PythonSlotBuilder, "_copy_executable")
@@ -230,7 +231,6 @@ class TestPrepareArtifactsNonLinux:
         mock_copy: Mock,
         mock_create_meta: Mock,
         mock_build_wheels: Mock,
-        mock_ensure_dir: Mock,
         mock_get_os: Mock,
         mock_get_arch: Mock,
         tmp_path: Path,
@@ -251,8 +251,8 @@ class TestPrepareArtifactsNonLinux:
             is_windows=True,
             wheel_builder=mock_wheel_builder,
         )
-        builder.env_builder.find_uv_command = Mock(return_value=host_uv)
-        builder.env_builder.create_python_placeholder = Mock()
+        builder.env_builder.find_uv_command = Mock(return_value=host_uv)  # type: ignore[method-assign]
+        builder.env_builder.create_python_placeholder = Mock()  # type: ignore[method-assign]
 
         work_dir = tmp_path / "work"
         work_dir.mkdir()
@@ -300,8 +300,8 @@ class TestPrepareArtifactsArchiveCreation:
             entry_point="testpkg:main",
             wheel_builder=mock_wheel_builder,
         )
-        builder.env_builder.find_uv_command = Mock(return_value=host_uv)
-        builder.env_builder.create_python_placeholder = Mock()
+        builder.env_builder.find_uv_command = Mock(return_value=host_uv)  # type: ignore[method-assign]
+        builder.env_builder.create_python_placeholder = Mock()  # type: ignore[method-assign]
 
         work_dir = tmp_path / "work"
         work_dir.mkdir()
@@ -347,8 +347,8 @@ class TestPrepareArtifactsArchiveCreation:
             entry_point="testpkg:main",
             wheel_builder=mock_wheel_builder,
         )
-        builder.env_builder.find_uv_command = Mock(return_value=host_uv)
-        builder.env_builder.create_python_placeholder = Mock()
+        builder.env_builder.find_uv_command = Mock(return_value=host_uv)  # type: ignore[method-assign]
+        builder.env_builder.create_python_placeholder = Mock()  # type: ignore[method-assign]
 
         work_dir = tmp_path / "work"
         work_dir.mkdir()
@@ -395,8 +395,8 @@ class TestPrepareArtifactsArchiveCreation:
             entry_point="testpkg:main",
             wheel_builder=mock_wheel_builder,
         )
-        builder.env_builder.find_uv_command = Mock(return_value=host_uv)
-        builder.env_builder.create_python_placeholder = Mock()
+        builder.env_builder.find_uv_command = Mock(return_value=host_uv)  # type: ignore[method-assign]
+        builder.env_builder.create_python_placeholder = Mock()  # type: ignore[method-assign]
 
         work_dir = tmp_path / "work"
         work_dir.mkdir()
