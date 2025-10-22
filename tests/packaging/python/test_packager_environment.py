@@ -242,6 +242,5 @@ class TestGetPythonBinaryInfo:
             assert info["manager"] == "system"
 
 
-@pytest.mark.unit
 
 # 🌶️🧪📦
