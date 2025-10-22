@@ -21,7 +21,7 @@ class TestPlatformEnvironment:
 
     def test_flavor_os_variable(self) -> None:
         """Test FLAVOR_OS is set correctly."""
-        env = {}
+        env: dict[str, str] = {}
         set_platform_environment(env)
 
         assert "FLAVOR_OS" in env
@@ -38,7 +38,7 @@ class TestPlatformEnvironment:
 
     def test_flavor_arch_variable(self) -> None:
         """Test FLAVOR_ARCH is set correctly."""
-        env = {}
+        env: dict[str, str] = {}
         set_platform_environment(env)
 
         assert "FLAVOR_ARCH" in env
@@ -54,7 +54,7 @@ class TestPlatformEnvironment:
 
     def test_flavor_platform_variable(self) -> None:
         """Test FLAVOR_PLATFORM combines OS and arch."""
-        env = {}
+        env: dict[str, str] = {}
         set_platform_environment(env)
 
         assert "FLAVOR_PLATFORM" in env
@@ -69,7 +69,7 @@ class TestPlatformEnvironment:
 
     def test_flavor_os_version(self) -> None:
         """Test FLAVOR_OS_VERSION contains version info."""
-        env = {}
+        env: dict[str, str] = {}
         set_platform_environment(env)
 
         # OS version may or may not be available
@@ -80,7 +80,7 @@ class TestPlatformEnvironment:
 
     def test_flavor_cpu_type(self) -> None:
         """Test FLAVOR_CPU_TYPE contains CPU info."""
-        env = {}
+        env: dict[str, str] = {}
         set_platform_environment(env)
 
         # CPU type may or may not be available
@@ -109,7 +109,7 @@ class TestPlatformEnvironment:
 
     @patch("provide.foundation.platform.detection.platform.system")
     @patch("provide.foundation.platform.detection.platform.machine")
-    def test_os_normalization(self, mock_machine, mock_system) -> None:
+    def test_os_normalization(self, mock_machine: MagicMock, mock_system: MagicMock) -> None:
         """Test OS name normalization."""
         from provide.foundation.platform.detection import (
             get_arch_name as foundation_get_arch_name,
@@ -133,13 +133,13 @@ class TestPlatformEnvironment:
             foundation_get_arch_name.cache_clear()
             foundation_get_platform_string.cache_clear()
             mock_system.return_value = input_os
-            env = {}
+            env: dict[str, str] = {}
             set_platform_environment(env)
             assert env["FLAVOR_OS"] == expected_os
 
     @patch("provide.foundation.platform.detection.platform.system")
     @patch("provide.foundation.platform.detection.platform.machine")
-    def test_arch_normalization(self, mock_machine, mock_system) -> None:
+    def test_arch_normalization(self, mock_machine: MagicMock, mock_system: MagicMock) -> None:
         """Test architecture name normalization."""
         from provide.foundation.platform.detection import (
             get_arch_name as foundation_get_arch_name,
@@ -164,7 +164,7 @@ class TestPlatformEnvironment:
             foundation_get_arch_name.cache_clear()
             foundation_get_platform_string.cache_clear()
             mock_machine.return_value = input_arch
-            env = {}
+            env: dict[str, str] = {}
             set_platform_environment(env)
             assert env["FLAVOR_ARCH"] == expected_arch
 
@@ -201,7 +201,7 @@ class TestPlatformEnvironment:
 
     def test_platform_env_completeness(self) -> None:
         """Test that all required platform variables are set."""
-        env = {}
+        env: dict[str, str] = {}
         set_platform_environment(env)
 
         # Required variables
@@ -214,7 +214,7 @@ class TestPlatformEnvironment:
 
     def test_platform_string_format(self) -> None:
         """Test platform string formatting."""
-        env = {}
+        env: dict[str, str] = {}
         set_platform_environment(env)
 
         platform_str = env["FLAVOR_PLATFORM"]
@@ -233,7 +233,7 @@ class TestPlatformEnvironment:
     @patch.dict(os.environ, {"FLAVOR_WORKENV": "/custom/workenv"})
     def test_platform_env_with_workenv(self) -> None:
         """Test platform environment with FLAVOR_WORKENV set."""
-        env = {}
+        env: dict[str, str] = {}
         set_platform_environment(env)
 
         # Should still set platform variables
@@ -276,7 +276,7 @@ class TestRuntimeEnvProcessing:
     def test_empty_runtime_env(self) -> None:
         """Test with empty runtime env (no operations)."""
         env = {"FOO": "bar", "BAZ": "qux"}
-        runtime = {}
+        runtime: dict[str, Any] = {}
 
         process_runtime_env(env, runtime)
 
@@ -388,7 +388,7 @@ class TestRuntimeEnvProcessing:
     def test_runtime_env_missing_keys_in_config(self) -> None:
         """Test runtime env with missing keys in configuration."""
         env = {"FOO": "bar"}
-        runtime = {"pass": [], "unset": [], "map": {}, "set": {}}
+        runtime: dict[str, Any] = {"pass": [], "unset": [], "map": {}, "set": {}}
 
         process_runtime_env(env, runtime)
 

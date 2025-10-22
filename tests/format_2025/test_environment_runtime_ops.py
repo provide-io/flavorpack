@@ -1,5 +1,9 @@
 """Test runtime environment operations (unset, map, set, pass verification, layers)."""
 
+from __future__ import annotations
+
+from typing import Any
+
 import pytest
 
 from flavor.psp.format_2025.environment import (
@@ -144,7 +148,7 @@ class TestUnsetOperations:
     def test_empty_unset_list(self) -> None:
         """Test with empty unset list (no-op)."""
         env = {"A": "1", "B": "2"}
-        runtime = {"unset": []}
+        runtime: dict[str, Any] = {"unset": []}
 
         process_runtime_env(env, runtime)
 
@@ -231,7 +235,7 @@ class TestMapOperations:
     def test_empty_map_dict(self) -> None:
         """Test with empty map dict (no-op)."""
         env = {"A": "1", "B": "2"}
-        runtime = {"map": {}}
+        runtime: dict[str, Any] = {"map": {}}
 
         process_runtime_env(env, runtime)
 
@@ -263,7 +267,7 @@ class TestSetOperations:
 
     def test_set_multiple_variables(self) -> None:
         """Test setting multiple variables."""
-        env = {}
+        env: dict[str, str] = {}
         runtime = {"set": {"A": "1", "B": "2", "C": "3"}}
 
         process_runtime_env(env, runtime)
@@ -273,7 +277,7 @@ class TestSetOperations:
     def test_empty_set_dict(self) -> None:
         """Test with empty set dict (no-op)."""
         env = {"A": "1", "B": "2"}
-        runtime = {"set": {}}
+        runtime: dict[str, Any] = {"set": {}}
 
         process_runtime_env(env, runtime)
 
@@ -331,7 +335,7 @@ class TestPassVerification:
     def test_empty_pass_list(self) -> None:
         """Test with empty pass list (no requirements)."""
         env = {"A": "1"}
-        runtime = {"pass": []}
+        runtime: dict[str, Any] = {"pass": []}
 
         process_runtime_env(env, runtime)
 
