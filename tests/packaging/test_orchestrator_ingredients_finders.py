@@ -56,7 +56,7 @@ class TestFindBuilderExecutable:
         with pytest.raises(BuildError, match=r"Builder binary not found: /tmp/nonexistent"):
             find_builder_executable(None)
 
-    @patch("flavor.packaging.orchestrator_ingredients.IngredientManager")
+    @patch("flavor.ingredients.manager.IngredientManager")
     def test_rust_builder_found(self, mock_manager_class: Mock) -> None:
         """Test find_builder_executable finds Rust builder."""
         mock_manager = Mock()
@@ -69,7 +69,7 @@ class TestFindBuilderExecutable:
         assert result == rust_builder
         mock_manager.get_ingredient.assert_called_once_with("flavor-rs-builder")
 
-    @patch("flavor.packaging.orchestrator_ingredients.IngredientManager")
+    @patch("flavor.ingredients.manager.IngredientManager")
     def test_rust_not_found_fallback_to_go(self, mock_manager_class: Mock) -> None:
         """Test find_builder_executable falls back to Go when Rust not found."""
         mock_manager = Mock()
@@ -89,7 +89,7 @@ class TestFindBuilderExecutable:
         mock_manager.get_ingredient.assert_any_call("flavor-rs-builder")
         mock_manager.get_ingredient.assert_any_call("flavor-go-builder")
 
-    @patch("flavor.packaging.orchestrator_ingredients.IngredientManager")
+    @patch("flavor.ingredients.manager.IngredientManager")
     def test_no_builders_found(self, mock_manager_class: Mock) -> None:
         """Test find_builder_executable when no builders are found."""
         mock_manager = Mock()
@@ -155,7 +155,7 @@ class TestFindLauncherExecutable:
         with pytest.raises(BuildError, match=r"Launcher binary from FLAVOR_LAUNCHER_BIN not found"):
             find_launcher_executable(None)
 
-    @patch("flavor.packaging.orchestrator_ingredients.IngredientManager")
+    @patch("flavor.ingredients.manager.IngredientManager")
     def test_rust_launcher_found(self, mock_manager_class: Mock) -> None:
         """Test find_launcher_executable finds Rust launcher."""
         mock_manager = Mock()
@@ -168,7 +168,7 @@ class TestFindLauncherExecutable:
         assert result == rust_launcher
         mock_manager.get_ingredient.assert_called_once_with("flavor-rs-launcher")
 
-    @patch("flavor.packaging.orchestrator_ingredients.IngredientManager")
+    @patch("flavor.ingredients.manager.IngredientManager")
     def test_rust_not_found_fallback_to_go(self, mock_manager_class: Mock) -> None:
         """Test find_launcher_executable falls back to Go when Rust not found."""
         mock_manager = Mock()
@@ -188,7 +188,7 @@ class TestFindLauncherExecutable:
         mock_manager.get_ingredient.assert_any_call("flavor-rs-launcher")
         mock_manager.get_ingredient.assert_any_call("flavor-go-launcher")
 
-    @patch("flavor.packaging.orchestrator_ingredients.IngredientManager")
+    @patch("flavor.ingredients.manager.IngredientManager")
     def test_no_launchers_found(self, mock_manager_class: Mock) -> None:
         """Test find_launcher_executable when no launchers are found."""
         mock_manager = Mock()
