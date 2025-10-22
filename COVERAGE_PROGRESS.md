@@ -1,15 +1,15 @@
 # Code Coverage Progress - Path to 100%
 
 **Date**: 2025-10-22
-**Current Coverage**: 78.74% (from 61.74% baseline)
+**Current Coverage**: 79.88% (from 61.74% baseline)
 **Target**: 100%
-**Status**: Phase 5.2 Complete (11 of 15 phases)
+**Status**: Phase 5.3 Complete (12 of 15 phases)
 
 ---
 
 ## 🚀 Today's Session Summary (2025-10-22)
 
-**Coverage Improvement**: 77.19% → 78.74% (+1.55%)
+**Coverage Improvement**: 77.19% → 79.88% (+2.69%)
 
 **Phases Completed**:
 1. ✅ **Phase 5.2**: packaging/python/slot_builder.py (44.76% → 99.52%, +54.76%)
@@ -21,10 +21,21 @@
    - Archive creation (payload.tgz, metadata.tgz, python.tgz)
    - All error paths and platform-specific logic covered
 
+2. ✅ **Phase 5.3**: packaging/orchestrator_ingredients.py (47.53% → 99.38%, +51.85%)
+   - 41 tests across 3 files (345 + 220 + 385 = 950 LOC)
+   - CLI executable name resolution (with/without cli_scripts)
+   - Slot tarball creation (Unix/Windows, multiple wheels)
+   - Python slot tarballs (UV binary, python runtime, wheels archive)
+   - Builder/launcher executable finding (Rust/Go fallback, env vars, custom paths)
+   - Builder manifest creation (workenv setup, runtime env configs)
+   - Python builder metadata (all runtime env options: unset/pass/set/map)
+   - Bug fix: `is_windows` function call in create_builder_manifest
+
 **Totals**:
-- **Tests Added**: 40 new tests (all passing)
-- **Statements Covered**: +87 statements
-- **Files Created**: 4 test files (1386 LOC total)
+- **Tests Added**: 81 new tests (all passing)
+- **Statements Covered**: +195 statements
+- **Files Created**: 7 test files (2336 LOC total)
+- **Bugs Fixed**: 1 (is_windows function call)
 
 ## 🚀 Previous Session Summary (2025-10-21)
 
@@ -241,10 +252,11 @@
 |------|----------|---------|-------|--------|
 | packaging/python/packager.py | 35.38% | 100% | 30 | ✅ Complete |
 | packaging/python/slot_builder.py | 44.76% | 99.52% | 40 | ✅ Complete |
+| packaging/orchestrator_ingredients.py | 47.53% | 99.38% | 41 | ✅ Complete |
 
-**Total New Tests**: 70 tests
-**Lines Covered**: +168 statements covered
-**Impact**: Project coverage improved from 76.05% → 78.74% (+2.69%)
+**Total New Tests**: 111 tests
+**Lines Covered**: +276 statements covered
+**Impact**: Project coverage improved from 76.05% → 79.88% (+3.83%)
 
 ---
 
@@ -410,8 +422,38 @@
 - **Remaining**: Line 294->302 (one partial branch in dependency resolution)
 - **Impact**: +87 statements covered
 
+#### 5.3 packaging/orchestrator_ingredients.py (47.53% → 99.38%) ✅ COMPLETE
+- **Test Files**:
+  - `tests/packaging/test_orchestrator_ingredients_core.py` (345 LOC)
+  - `tests/packaging/test_orchestrator_ingredients_finders.py` (220 LOC)
+  - `tests/packaging/test_orchestrator_ingredients_manifests.py` (385 LOC)
+- **Tests**: 41 comprehensive tests (all passing)
+- **Coverage**: 99.38% (128 statements, 0 missed, 1 partial branch)
+- **Test Classes**:
+  - TestGetCliExecutableName (6 tests) - Executable naming with/without cli_scripts
+  - TestCreateSlotTarballs (4 tests) - UV, Python, wheels slot creation
+  - TestWriteManifestFile (1 test) - Manifest JSON writing
+  - TestCreatePythonSlotTarballs (4 tests) - Python-specific slot creation
+  - TestFindBuilderExecutable (7 tests) - Builder discovery (param/env/manager)
+  - TestFindLauncherExecutable (7 tests) - Launcher discovery (param/env/manager)
+  - TestCreateBuilderManifest (8 tests) - External builder manifest generation
+  - TestCreatePythonBuilderMetadata (4 tests) - Python builder metadata
+- **Covers**:
+  - `get_cli_executable_name()` - CLI script detection, Windows .exe handling
+  - `create_slot_tarballs()` - UV binary, Python runtime, wheels archive
+  - `create_python_slot_tarballs()` - Tuple return of UV/Python/wheels paths
+  - `find_builder_executable()` - Custom path, env var, Rust/Go fallback, error messages
+  - `find_launcher_executable()` - Custom path, env var, Rust/Go fallback, error messages
+  - `create_builder_manifest()` - Workenv setup, runtime env (unset/pass/set/map)
+  - `create_python_builder_metadata()` - Metadata structure, runtime env configs
+  - `write_manifest_file()` - JSON serialization delegation
+  - Unix/Windows path handling (bin vs Scripts)
+  - Error handling for missing binaries with helpful messages
+- **Bug Fixed**: Line 84-88 - Changed `is_windows` to `windows` (function call)
+- **Remaining**: Line 360->364 (one partial branch in metadata creation)
+- **Impact**: +108 statements covered
+
 Files remaining to complete:
-- orchestrator_ingredients.py (47.53%)
 - psp/format_2025/keys.py (48.24%)
 - psp/format_2025/extraction.py (48.55%)
 
