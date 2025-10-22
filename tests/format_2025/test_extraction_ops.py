@@ -153,9 +153,7 @@ class TestExtractSlot:
 
     @patch("flavor.psp.format_2025.extraction.handlers")
     @patch("flavor.psp.format_2025.extraction.ensure_dir")
-    def test_extract_slot_success(
-        self, mock_ensure_dir: Mock, mock_handlers: Mock, tmp_path: Path
-    ) -> None:
+    def test_extract_slot_success(self, mock_ensure_dir: Mock, mock_handlers: Mock, tmp_path: Path) -> None:
         """Test successful slot extraction."""
         mock_reader = Mock()
         mock_backend = Mock()
@@ -184,9 +182,7 @@ class TestExtractSlot:
 
         assert result == extracted_path
         mock_ensure_dir.assert_called_once_with(tmp_path)
-        mock_handlers.extract_archive.assert_called_once_with(
-            slot_data, tmp_path, 0x10
-        )
+        mock_handlers.extract_archive.assert_called_once_with(slot_data, tmp_path, 0x10)
 
     @patch("flavor.psp.format_2025.extraction.handlers")
     @patch("flavor.psp.format_2025.extraction.ensure_dir")
@@ -319,16 +315,12 @@ class TestExtractSlot:
         extractor = SlotExtractor(mock_reader)
 
         # Mock _reverse_v0_operations to use handler
-        with patch.object(
-            extractor, "_reverse_v0_operations", return_value=decompressed_data
-        ):
+        with patch.object(extractor, "_reverse_v0_operations", return_value=decompressed_data):
             result = extractor.extract_slot(0, tmp_path)
 
         assert result == extracted_path
         # Should call extract_archive with decompressed data
-        mock_handlers.extract_archive.assert_called_once_with(
-            decompressed_data, tmp_path, 0x10
-        )
+        mock_handlers.extract_archive.assert_called_once_with(decompressed_data, tmp_path, 0x10)
 
 
 class TestReverseV0Operations:
@@ -349,9 +341,7 @@ class TestReverseV0Operations:
         result = extractor._reverse_v0_operations(input_data, operations)
 
         assert result == output_data
-        mock_handlers.reverse_operations.assert_called_once_with(
-            input_data, operations
-        )
+        mock_handlers.reverse_operations.assert_called_once_with(input_data, operations)
 
 
 if __name__ == "__main__":

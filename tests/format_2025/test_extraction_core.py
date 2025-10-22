@@ -6,7 +6,6 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 from unittest.mock import Mock, patch
 import zlib
 
@@ -163,14 +162,23 @@ class TestStreamSlot:
         mock_reader.read_slot_descriptors.return_value = [descriptor]
 
         # Mock SlotView without stream method
-        mock_view = Mock(spec=[])  # No stream attribute
-        mock_view.__len__.return_value = 15
-        mock_view.__getitem__.side_effect = [
-            b"12345",  # First chunk
-            b"67890",  # Second chunk
-            b"ABCDE",  # Third chunk
-            b"",       # Empty - end of data
-        ]
+        # Need to create a mock that supports len() and indexing
+        class MockView:
+            def __len__(self) -> int:
+                return 15
+
+            def __getitem__(self, key: slice) -> bytes:
+                # Return chunks based on offset
+                if key.start == 0:
+                    return b"12345"
+                elif key.start == 5:
+                    return b"67890"
+                elif key.start == 10:
+                    return b"ABCDE"
+                else:
+                    return b""
+
+        mock_view = MockView()
 
         extractor = SlotExtractor(mock_reader)
 
@@ -218,14 +226,11 @@ class TestVerifySlotIntegrity:
         checksum = zlib.adler32(raw_data) & 0xFFFFFFFF
 
         descriptor = SlotDescriptor(
+            id=0,
             offset=0,
             size=len(raw_data),
             checksum=checksum,
             operations=0,
-            target_path="test",
-            permissions=0o644,
-            lifecycle=0,
-            purpose=0,
         )
         mock_reader.read_slot_descriptors.return_value = [descriptor]
         mock_backend.read_slot.return_value = raw_data
@@ -245,14 +250,11 @@ class TestVerifySlotIntegrity:
         wrong_checksum = 0x99999999
 
         descriptor = SlotDescriptor(
+            id=0,
             offset=0,
             size=len(raw_data),
             checksum=wrong_checksum,
             operations=0,
-            target_path="test",
-            permissions=0o644,
-            lifecycle=0,
-            purpose=0,
         )
         mock_reader.read_slot_descriptors.return_value = [descriptor]
         mock_backend.read_slot.return_value = raw_data
@@ -272,14 +274,11 @@ class TestVerifySlotIntegrity:
         checksum = zlib.adler32(raw_data) & 0xFFFFFFFF
 
         descriptor = SlotDescriptor(
+            id=0,
             offset=0,
             size=999,  # Wrong size
             checksum=checksum,
             operations=0,
-            target_path="test",
-            permissions=0o644,
-            lifecycle=0,
-            purpose=0,
         )
         mock_reader.read_slot_descriptors.return_value = [descriptor]
         mock_backend.read_slot.return_value = raw_data
@@ -330,14 +329,11 @@ class TestVerifySlotIntegrity:
         checksum = zlib.adler32(raw_data) & 0xFFFFFFFF
 
         descriptor = SlotDescriptor(
+            id=0,
             offset=0,
             size=len(raw_data),
             checksum=checksum,
             operations=0,
-            target_path="test",
-            permissions=0o644,
-            lifecycle=0,
-            purpose=0,
         )
         mock_reader.read_slot_descriptors.return_value = [descriptor]
         # Return memoryview instead of bytes
