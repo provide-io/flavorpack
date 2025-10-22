@@ -68,6 +68,7 @@ flavor = [
 [tool.setuptools.packages.find]
 where = ["src"]
 include = ["flavor*"]
+exclude = ["flavor.ingredients.bin*"]
 namespaces = false
 
 [tool.ruff]
@@ -191,6 +192,15 @@ exclude_lines = [
 [tool.flavor]
 package_name = "flavor"
 entry_point = "flavor.cli:main"
+
+[tool.flavor.execution]
+# Pass all environment variables through, especially cache-related ones
+# This ensures the packaged flavor can access the workenv cache
+[tool.flavor.execution.runtime.env]
+# Unset all variables except those matching pass patterns
+unset = ["*"]
+# Pass through all environment variables (except those explicitly unset)
+pass = ["*"]
 
 [tool.flavor.build]
 dependencies = []

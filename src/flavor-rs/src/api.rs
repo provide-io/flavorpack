@@ -17,6 +17,8 @@ pub struct BuildOptions {
     pub public_key_path: Option<std::path::PathBuf>,
     /// Seed for deterministic key generation
     pub key_seed: Option<String>,
+    /// Base directory for workenv resolution
+    pub workenv_base: Option<std::path::PathBuf>,
 }
 
 /// Options for launching a package

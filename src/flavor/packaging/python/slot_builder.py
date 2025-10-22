@@ -5,8 +5,11 @@
 
 # flavor/packaging/python/slot_builder.py
 #
-"""Slot builder for Python packages.from pathlib import Path
-"""
+"""Slot builder for Python packages."""
+
+from __future__ import annotations
+
+from pathlib import Path
 import tarfile
 import tomllib
 from typing import Any
@@ -188,7 +191,7 @@ class PythonSlotBuilder:
 
         return artifacts
 
-    def resolve_transitive_dependencies(
+    def resolve_transitive_dependencies(  # noqa: C901
         self, dep_path: Path, seen: set[Path] | None = None, depth: int = 0
     ) -> list[Path]:
         """
@@ -291,7 +294,7 @@ class PythonSlotBuilder:
         if dep_path not in all_deps:
             all_deps.append(dep_path)
             logger.info(
-                "📦➕✅ Added to dependency list",
+                "📦+✅ Added to dependency list",
                 name=dep_path.name,
                 depth=depth,
             )

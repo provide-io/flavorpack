@@ -1,14 +1,11 @@
-# flavor/psp/format_2025/validation.py
-#
-# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
-
-"""
+#!/usr/bin/env python3
 """
 PSPF Build Validation - Pure functions for validating build specifications.
 
 All validation functions are pure and return lists of error messages.
 Empty list means validation passed.
+"""
+
 from pathlib import Path
 from typing import Any
 
@@ -39,7 +36,7 @@ def validate_spec(spec: BuildSpec) -> list[str]:
     return errors
 
 
-def validate_metadata(metadata: dict[str, Any]) -> list[str]:
+def validate_metadata(metadata: dict[str, Any]) -> list[str]:  # noqa: C901
     """
     Validate package metadata.
 
@@ -84,7 +81,7 @@ def validate_metadata(metadata: dict[str, Any]) -> list[str]:
     return errors
 
 
-def validate_slots(slots: list[SlotMetadata]) -> list[str]:
+def validate_slots(slots: list[SlotMetadata]) -> list[str]:  # noqa: C901
     """
     Validate slot configurations.
 
@@ -95,7 +92,7 @@ def validate_slots(slots: list[SlotMetadata]) -> list[str]:
     - Valid sizes
     - Valid names
     """
-    errors = []
+    errors: list[str] = []
 
     if not slots:
         return errors  # Empty slots is valid

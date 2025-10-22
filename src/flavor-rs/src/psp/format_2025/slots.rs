@@ -144,17 +144,6 @@ impl SlotDescriptor {
     }
 }
 
-
-/// Slot codec types
-#[repr(u8)]
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub enum Codec {
-    None = 0,
-    Gzip = 1,
-    Zstd = 2,
-    Brotli = 3,
-}
-
 /// Slot purpose types
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, PartialEq)]

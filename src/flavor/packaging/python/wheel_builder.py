@@ -6,10 +6,13 @@
 # flavor/packaging/python/wheel_builder.py
 #
 """Wheel building and dependency resolution for FlavorPack packaging.
-"""
 
 This module provides wheel building with complex dependency resolution logic,
 combining UV performance where appropriate with PyPA pip compatibility.
+"""
+
+from __future__ import annotations
+
 from pathlib import Path
 import tempfile
 from typing import Any
@@ -287,6 +290,10 @@ class WheelBuilder:
         """
         Complete wheel building and dependency resolution for a project.
 
+        CRITICAL: The PROJECT wheel is ALWAYS built from LOCAL SOURCE.
+        Runtime dependencies are resolved and downloaded from PyPI as normal.
+        This ensures the packaged project is never downloaded from PyPI.
+
         Args:
             python_exe: Python executable to use
             project_dir: Project source directory
@@ -297,7 +304,10 @@ class WheelBuilder:
         Returns:
             Dictionary with build information and file paths
         """
-        logger.info(f"🏗️📦 Building and resolving project: {project_dir.name}")
+        logger.info(
+            f"🏗️📦 Building and resolving project: {project_dir.name} "
+            "(PROJECT from LOCAL SOURCE, dependencies from PyPI)"
+        )
 
         # Create build directories
         wheel_dir = build_dir / "wheels"
@@ -305,10 +315,11 @@ class WheelBuilder:
         ensure_dir(wheel_dir)
         ensure_dir(deps_dir)
 
-        # Build main project wheel
+        # Build main project wheel FROM LOCAL SOURCE (never from PyPI)
+        logger.info("🔨 Building PROJECT wheel from LOCAL SOURCE")
         project_wheel = self.build_wheel_from_source(python_exe, project_dir, wheel_dir)
 
-        # Extract project dependencies from pyproject.toml if not already in extra_packages
+        # Extract project dependencies from pyproject.toml
         project_dependencies = []
         pyproject_path = project_dir / "pyproject.toml"
         if pyproject_path.exists() and not requirements_file:
@@ -331,8 +342,13 @@ class WheelBuilder:
         if project_dependencies:
             all_packages.extend(project_dependencies)
 
-        # Resolve dependencies
+        # Resolve and download dependency wheels from PyPI
+        dependency_wheels = []
         if requirements_file or all_packages:
+            logger.info(
+                f"🌐 Resolving {len(all_packages)} runtime dependencies from PyPI "
+                "(only runtime deps, not the project itself)"
+            )
             locked_requirements = self.resolve_dependencies(
                 python_exe=python_exe,
                 requirements_file=requirements_file,
@@ -346,7 +362,6 @@ class WheelBuilder:
             )
         else:
             locked_requirements = None
-            dependency_wheels = []
 
         build_info = {
             "project_wheel": project_wheel,
@@ -356,7 +371,10 @@ class WheelBuilder:
             "total_wheels": len(dependency_wheels) + 1,  # +1 for project wheel
         }
 
-        logger.info(f"✅ Completed project build with {build_info['total_wheels']} wheels")
+        logger.info(
+            f"✅ Completed project build with {build_info['total_wheels']} wheels "
+            "(project from local source + dependencies from PyPI)"
+        )
         return build_info
 
 

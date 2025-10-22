@@ -11,7 +11,7 @@ fn main() {
     }));
     
     // Wrap main logic in catch_unwind for extra safety
-    let result = panic::catch_unwind(|| run());
+    let result = panic::catch_unwind(run);
     
     match result {
         Ok(exit_code) => process::exit(exit_code),
@@ -33,11 +33,11 @@ fn run() -> i32 {
     }
     
     log::debug!("🚀 Launcher process started");
-    log::trace!("Launcher starting");
-    
+    log::trace!("📝 Launcher initializing");
+
     // --- Argument and Environment Parsing ---
     let args: Vec<String> = env::args().collect();
-    log::trace!("Arguments: {:?}", args);
+    log::trace!("📋 Arguments: {:?}", args);
     
     // ⚠️ CRITICAL: NEVER intercept command line arguments unless in CLI mode!
     // The launcher must pass ALL arguments to the package entrypoint unchanged.
@@ -49,7 +49,7 @@ fn run() -> i32 {
             path
         },
         Err(e) => {
-            log::error!("Failed to get executable path: {}", e);
+            log::error!("❌ Failed to get executable path: {}", e);
             return EXIT_IO_ERROR;
         }
     };
@@ -82,7 +82,7 @@ fn run() -> i32 {
     }
     
     // Determine if running in CLI mode ONLY from the environment variable.
-    let cli_mode = env::var("FLAVOR_LAUNCHER_CLI").map_or(false, |v| v == "1" || v.to_lowercase() == "true");
+    let cli_mode = env::var("FLAVOR_LAUNCHER_CLI").is_ok_and(|v| v == "1" || v.to_lowercase() == "true");
 
     // --- CLI Mode Execution ---
     if cli_mode {
@@ -107,7 +107,7 @@ fn run() -> i32 {
                     EXIT_INVALID_ARGS
                 } else {
                     match flavor::psp::format_2025::cli::extract_slot(&exe_path, &command_args[1], &command_args[2]) {
-                        code if code == 0 => 0,
+                        0 => 0,
                         _ => EXIT_EXTRACTION_ERROR,
                     }
                 }
@@ -140,7 +140,7 @@ fn run() -> i32 {
     // The launcher MUST NOT intercept any arguments (including --version).
     // All command-line arguments belong to the packaged application, not the launcher.
     
-    log::trace!("Not in CLI mode, passing all arguments to entrypoint");
+    log::trace!("🔄 Not in CLI mode, passing all arguments to entrypoint");
 
     // Launch the package with the provided arguments.
     let remaining_args = args[1..].to_vec();
@@ -148,36 +148,36 @@ fn run() -> i32 {
         workdir: None,
     };
 
-    log::debug!("Attempting to launch package: {:?}", exe_path);
+    log::debug!("🚀 Attempting to launch package: {:?}", exe_path);
     match launch_package(&exe_path, &remaining_args, options) {
         Ok(code) => {
-            log::debug!("Package launched successfully, exit code: {}", code);
+            log::debug!("✅ Package launched successfully, exit code: {}", code);
             code
         },
         Err(e) => {
-            log::error!("Launch error: {}", e);
+            log::error!("❌ Launch error: {}", e);
             
             // Provide helpful error messages based on the error type
             let error_msg = e.to_string();
             if error_msg.contains("signature verification failed") || error_msg.contains("Signature verification failed") {
                 eprintln!("❌ Package signature verification failed");
-                eprintln!("");
+                eprintln!();
                 eprintln!("This package's cryptographic signature could not be verified.");
                 eprintln!("This may indicate the package has been tampered with or was not properly signed.");
-                eprintln!("");
+                eprintln!();
                 eprintln!("To use different validation levels, set FLAVOR_VALIDATION environment variable:");
                 eprintln!("  export FLAVOR_VALIDATION=relaxed  # Skip signatures");
                 eprintln!("For more details, run with FLAVOR_LOG_LEVEL=debug");
             } else if error_msg.contains("checksum") {
                 eprintln!("❌ Package integrity check failed: {}", error_msg);
-                eprintln!("");
+                eprintln!();
                 eprintln!("The package appears to be corrupted or modified.");
-                eprintln!("");
+                eprintln!();
                 eprintln!("To use different validation levels, set FLAVOR_VALIDATION environment variable:");
                 eprintln!("  export FLAVOR_VALIDATION=none  # Skip all checks (testing only)");
             } else {
                 eprintln!("❌ Failed to launch package: {}", error_msg);
-                eprintln!("");
+                eprintln!();
                 eprintln!("For more details, run with FLAVOR_LOG_LEVEL=debug");
             }
             

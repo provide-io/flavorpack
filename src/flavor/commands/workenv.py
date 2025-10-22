@@ -6,8 +6,11 @@
 #
 # flavor/commands/workenv.py
 #
-"""Work environment management commands for the flavor CLI.import datetime
-"""
+"""Work environment management commands for the flavor CLI."""
+
+from __future__ import annotations
+
+import datetime
 
 import click
 from provide.foundation.file.formats import read_json
@@ -41,7 +44,9 @@ def workenv_list() -> None:
     echo("=" * 60)
 
     for pkg in cached:
-        size_mb = pkg["size"] / (1024 * 1024)
+        # Type check: size should be int or float from cache manager
+        pkg_size = pkg["size"]
+        size_mb = pkg_size / (1024 * 1024) if isinstance(pkg_size, (int, float)) else 0.0
         name = pkg.get("name", pkg["id"])
         version = pkg.get("version", "")
 
@@ -53,7 +58,12 @@ def workenv_list() -> None:
         echo(f"   ID: {pkg['id']}")
         echo(f"   Size: {size_mb:.1f} MB")
 
-        modified = datetime.datetime.fromtimestamp(pkg["modified"])
+        # Type check: modified should be a float timestamp
+        modified_ts = pkg.get("modified", 0)
+        if isinstance(modified_ts, (int, float)):
+            modified = datetime.datetime.fromtimestamp(modified_ts)
+        else:
+            modified = datetime.datetime.now()
         echo(f"   Modified: {modified.strftime('%Y-%m-%d %H:%M:%S')}")
 
 
@@ -149,7 +159,7 @@ def workenv_remove(package_id: str, yes: bool) -> None:
     is_flag=True,
     help="Output as JSON format",
 )
-def workenv_inspect(package_id: str, output_json: bool) -> None:
+def workenv_inspect(package_id: str, output_json: bool) -> None:  # noqa: C901
     """Inspect detailed metadata for a cached package extraction."""
     from flavor.cache import CacheManager
 

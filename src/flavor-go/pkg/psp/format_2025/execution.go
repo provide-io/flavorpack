@@ -1,7 +1,6 @@
 package format_2025
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -11,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/utils/shellparse"
 )
 
 var (
@@ -198,178 +198,10 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 		}
 		defer ReleaseLock(paths, logger)
 
-		// Create temporary extraction directory
-		tempExtractDir := paths.TempExtraction(os.Getpid())
-		if err := os.MkdirAll(tempExtractDir, os.FileMode(DirPerms)); err != nil {
-			logger.Error("❌ Failed to create temp extraction directory", "error", err)
-			return nil, fmt.Errorf("failed to create temp extraction directory: %w", err)
-		}
-		logger.Info("📁 Created temporary extraction directory", "path", tempExtractDir)
-
-		// Extract to temporary directory
-		logger.Info("📤 Extracting slots to temp directory", "count", len(metadata.Slots))
-
-		// Progress reporting to stderr
-		for i, slot := range metadata.Slots {
-			logger.Debug("📦 Extracting slot", "index", i, "id", slot.ID, "size", slot.Size)
-
-			// Write progress to stderr
-			fmt.Fprintf(os.Stderr, "[%d/%d] Extracting %s...\n", i+1, len(metadata.Slots), slot.ID)
-			slotPath, err := reader.ExtractSlot(i, tempExtractDir)
-			if err != nil {
-				logger.Error("❌ Failed to extract slot, cleaning up", "error", err)
-				os.RemoveAll(tempExtractDir)
-				return nil, fmt.Errorf("%w: %v", ErrSlotExtractionFailed, err)
-			}
-			logger.Debug("✅ Extracted slot", "path", slotPath)
-			slotPaths[slot.Slot] = slotPath
-		}
-
-		// Write metadata to package metadata directory directly in cache (not in temp)
-		// Use hidden .{workenv}.pspf/package/ structure as a sibling to workenv
-		packageMetadataDir := filepath.Join(paths.Metadata(), "package")
-		if err := os.MkdirAll(packageMetadataDir, os.FileMode(DirPerms)); err != nil {
-			logger.Error("❌ Failed to create package metadata directory", "error", err)
-			os.RemoveAll(tempExtractDir)
-			return nil, fmt.Errorf("failed to create package metadata directory: %w", err)
-		}
-		metadataFile := filepath.Join(packageMetadataDir, "psp.json")
-		metadataJSON, err := json.MarshalIndent(metadata, "", "  ")
+		// Extract and merge slots to workenv
+		slotPaths, err = extractAndMergeSlotsToWorkenv(reader, metadata, paths, index, logger)
 		if err != nil {
-			logger.Error("❌ Failed to marshal metadata", "error", err)
-			os.RemoveAll(tempExtractDir)
-			return nil, fmt.Errorf("failed to marshal metadata: %w", err)
-		}
-		if err := os.WriteFile(metadataFile, metadataJSON, 0644); err != nil {
-			logger.Error("❌ Failed to write metadata", "error", err)
-			os.RemoveAll(tempExtractDir)
-			return nil, fmt.Errorf("failed to write metadata: %w", err)
-		}
-		logger.Debug("📝 Wrote metadata to cache location", "path", metadataFile)
-
-		// Atomically move extracted content from temp to final location
-		logger.Info("🔄 Moving extracted content to final location...")
-
-		// List all top-level items in temp directory
-		entries, err := os.ReadDir(tempExtractDir)
-		if err != nil {
-			logger.Error("❌ Failed to read temp directory", "error", err)
-			os.RemoveAll(tempExtractDir)
-			return nil, fmt.Errorf("failed to read temp directory: %w", err)
-		}
-
-		for _, entry := range entries {
-			fileName := entry.Name()
-			source := filepath.Join(tempExtractDir, fileName)
-
-			// Special handling for slot 0 - move contents to workenv root
-			if strings.HasPrefix(fileName, "slot_0_") && entry.IsDir() {
-				logger.Debug("🎯 Moving slot 0 contents to workenv root", "slotDir", fileName)
-				// Read contents of slot 0 directory
-				slotEntries, err := os.ReadDir(source)
-				if err != nil {
-					logger.Error("❌ Failed to read slot 0 directory", "error", err)
-					os.RemoveAll(tempExtractDir)
-					return nil, fmt.Errorf("failed to read slot 0 directory: %w", err)
-				}
-
-				// Move each item from slot 0 directory to workenv root
-				for _, slotEntry := range slotEntries {
-					slotSource := filepath.Join(source, slotEntry.Name())
-					slotDest := filepath.Join(workenvDir, slotEntry.Name())
-
-					// Remove destination if it exists (for overwrite)
-					if _, err := os.Stat(slotDest); err == nil {
-						if slotEntry.IsDir() {
-							os.RemoveAll(slotDest)
-						} else {
-							os.Remove(slotDest)
-						}
-					}
-
-					logger.Debug("Moving slot 0 content", "from", slotSource, "to", slotDest)
-					if err := os.Rename(slotSource, slotDest); err != nil {
-						// If rename fails (e.g., cross-filesystem), fall back to copy
-						logger.Warn("Rename failed, falling back to copy", "error", err)
-						if slotEntry.IsDir() {
-							if err := copyDirAll(slotSource, slotDest); err != nil {
-								logger.Error("❌ Failed to copy slot 0 directory", "error", err)
-								os.RemoveAll(tempExtractDir)
-								return nil, fmt.Errorf("failed to copy slot 0 directory: %w", err)
-							}
-							os.RemoveAll(slotSource)
-						} else {
-							if err := copyFile(slotSource, slotDest); err != nil {
-								logger.Error("❌ Failed to copy slot 0 file", "error", err)
-								os.RemoveAll(tempExtractDir)
-								return nil, fmt.Errorf("failed to copy slot 0 file: %w", err)
-							}
-							os.Remove(slotSource)
-						}
-					}
-				}
-				// Remove empty slot 0 directory
-				os.RemoveAll(source)
-			} else {
-				// Regular handling for other slots
-				dest := filepath.Join(workenvDir, fileName)
-
-				// Remove destination if it exists (for overwrite)
-				if _, err := os.Stat(dest); err == nil {
-					if entry.IsDir() {
-						os.RemoveAll(dest)
-					} else {
-						os.Remove(dest)
-					}
-				}
-
-				// Move from temp to final location
-				logger.Debug("Moving", "from", source, "to", dest)
-				if err := os.Rename(source, dest); err != nil {
-					// If rename fails (e.g., cross-filesystem), fall back to copy
-					logger.Warn("Rename failed, falling back to copy", "error", err)
-					if entry.IsDir() {
-						// Recursive copy for directories
-						if err := copyDirAll(source, dest); err != nil {
-							logger.Error("❌ Failed to copy directory", "error", err)
-							os.RemoveAll(tempExtractDir)
-							return nil, fmt.Errorf("failed to copy directory: %w", err)
-						}
-						os.RemoveAll(source)
-					} else {
-						if err := copyFile(source, dest); err != nil {
-							logger.Error("❌ Failed to copy file", "error", err)
-							os.RemoveAll(tempExtractDir)
-							return nil, fmt.Errorf("failed to copy file: %w", err)
-						}
-						os.Remove(source)
-					}
-				}
-			}
-		}
-
-		// Fix shebangs in bin directory
-		binDir := filepath.Join(workenvDir, "bin")
-		if _, err := os.Stat(binDir); err == nil {
-			logger.Info("🔧 Fixing shebangs in scripts...")
-			if err := fixShebangs(binDir, tempExtractDir, workenvDir, logger); err != nil {
-				logger.Warn("⚠️ Failed to fix some shebangs", "error", err)
-			}
-		}
-
-		// Remove the now-empty temp directory
-		if err := os.RemoveAll(tempExtractDir); err != nil {
-			logger.Debug("⚠️ Failed to remove temp directory", "error", err)
-		}
-
-		// Save index metadata for inspection
-		if err := saveIndexMetadata(paths, index, logger); err != nil {
-			logger.Debug("⚠️ Failed to save index metadata", "error", err)
-		}
-
-		// Mark extraction as complete
-		if err := MarkExtractionComplete(paths, logger); err != nil {
-			logger.Debug("⚠️ Failed to mark extraction complete", "error", err)
+			return nil, err
 		}
 
 		// Save package checksum for future cache validation
@@ -381,14 +213,14 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 		for i, slot := range metadata.Slots {
 			if slot.Lifecycle == "volatile" {
 				logger.Debug("📦 Extracting volatile slot", "index", i, "id", slot.ID)
-				slotPath, err := reader.ExtractSlot(i, workenvDir)
+				slotPath, err := reader.ExtractSlot(i, paths.Workenv())
 				if err != nil {
 					logger.Error("❌ Failed to extract slot", "error", fmt.Errorf("%w: %v", ErrSlotExtractionFailed, err))
 					return nil, fmt.Errorf("%w: %v", ErrSlotExtractionFailed, err)
 				}
 				slotPaths[slot.Slot] = slotPath
 			} else {
-				slotPaths[slot.Slot] = workenvDir
+				slotPaths[slot.Slot] = paths.Workenv()
 			}
 		}
 	}
@@ -480,7 +312,12 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 				if len(cmdArgs) > 0 {
 					setupExec = exec.Command(cmdToRun, cmdArgs...)
 				} else {
-					parts := strings.Fields(cmdToRun)
+					// Use shell-aware parser to handle quoted arguments
+					parts, err := shellparse.Split(cmdToRun)
+					if err != nil {
+						logger.Error("❌ Failed to parse setup command", "command", cmdToRun, "error", err)
+						return nil, fmt.Errorf("failed to parse setup command %q: %w", cmdToRun, err)
+					}
 					if len(parts) == 0 {
 						continue
 					}
@@ -536,7 +373,12 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 		}
 	}
 
-	parts := strings.Fields(command)
+	// Use shell-aware parser to handle quoted arguments
+	parts, err := shellparse.Split(command)
+	if err != nil {
+		logger.Error("❌ Failed to parse command", "command", command, "error", err)
+		return nil, fmt.Errorf("failed to parse command %q: %w", command, err)
+	}
 	if len(parts) == 0 {
 		logger.Error("Empty command")
 		return nil, errors.New("empty command")
@@ -555,9 +397,15 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 	cmd.Args = append([]string{binaryName}, cmdArgs...)
 	logger.Debug("🏷️ Attempted to set argv[0] (Go limitation: won't work)", "argv0", binaryName, "original", originalCmd, "fullArgs", cmd.Args)
 
+	// Setup environment variables in proper layering order
 	parentEnv := os.Environ()
 	logger.Debug("🌍 Inheriting parent environment", "vars_count", len(parentEnv))
 	cmd.Env = parentEnv
+
+	// Set FLAVOR_CACHE BEFORE workenv environment (which overwrites HOME)
+	cmd.Env = setFlavorCacheBeforeWorkenv(cmd.Env, logger)
+
+	// Add FLAVOR_* variables
 	cmd.Env = append(cmd.Env, fmt.Sprintf("FLAVOR_WORKENV=%s", workenvDir))
 	logger.Debug("➕ Added FLAVOR_WORKENV", "path", workenvDir)
 
@@ -568,6 +416,7 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 		"FLAVOR_ORIGINAL_COMMAND", originalCmd,
 		"FLAVOR_COMMAND_NAME", binaryName)
 
+	// Prepend workenv/bin to PATH
 	pathFound := false
 	for i, env := range cmd.Env {
 		if strings.HasPrefix(env, "PATH=") {
@@ -580,11 +429,13 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 		cmd.Env = append(cmd.Env, fmt.Sprintf("PATH=%s/bin", workenvDir))
 	}
 
+	// Process runtime.env configuration
 	if metadata.Runtime != nil && metadata.Runtime.Env != nil {
 		logger.Debug("🔄 Processing runtime.env configuration")
 		cmd.Env = processRuntimeEnv(cmd.Env, metadata.Runtime.Env, logger)
 	}
 
+	// Add package-defined environment variables
 	if metadata.Execution.Environment != nil {
 		logger.Debug("➕ Adding package-defined environment variables", "count", len(metadata.Execution.Environment))
 		for k, v := range metadata.Execution.Environment {
@@ -608,15 +459,7 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 	logger.Debug("🎯 Command details", "args", cmd.Args[1:], "cwd", cmd.Dir)
 	logger.Debug("📊 Final environment state", "total_vars", len(cmd.Env))
 
-	if logger.IsTrace() {
-		logger.Trace("🌍 Environment variables being passed to subprocess:")
-		for _, env := range cmd.Env {
-			parts := strings.SplitN(env, "=", 2)
-			if len(parts) == 2 {
-				logger.Trace("  →", "key", parts[0], "value", parts[1])
-			}
-		}
-	}
+	logEnvironmentTrace(cmd.Env, logger)
 
 	return cmd, nil
 }

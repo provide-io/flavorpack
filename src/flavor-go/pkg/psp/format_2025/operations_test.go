@@ -73,7 +73,7 @@ func TestOperationPacking(t *testing.T) {
 			)
 
 			packed := PackOperations(tc.operations)
-			
+
 			logger.Debug("📦 Packed operations",
 				"input", tc.operations,
 				"output", fmt.Sprintf("0x%016x", packed),
@@ -224,10 +224,10 @@ func TestPythonTestVectors(t *testing.T) {
 	}
 
 	var testVectors []struct {
-		Operations []uint8 `json:"operations"`
-		Packed     uint64  `json:"packed"`
-		PackedHex  string  `json:"packed_hex"`
-		Description string `json:"description"`
+		Operations  []uint8 `json:"operations"`
+		Packed      uint64  `json:"packed"`
+		PackedHex   string  `json:"packed_hex"`
+		Description string  `json:"description"`
 	}
 
 	if err := json.Unmarshal(data, &testVectors); err != nil {

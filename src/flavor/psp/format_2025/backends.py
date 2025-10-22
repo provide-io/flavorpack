@@ -6,14 +6,17 @@
 # src/flavor/psp/format_2025/backends.py
 # Backend implementations for PSPF bundle access - mmap, file, and stream
 
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
+from collections.abc import Generator
 from contextlib import suppress
 import mmap
 import os
 from pathlib import Path
 import sys
 import time
-from typing import Any, BinaryIO
+from typing import Any, BinaryIO, Self
 
 from provide.foundation import logger
 
@@ -51,7 +54,9 @@ class Backend(ABC):
         """Read slot data based on descriptor."""
         pass
 
-    def stream_slot(self, descriptor: SlotDescriptor, chunk_size: int = DEFAULT_CHUNK_SIZE):
+    def stream_slot(
+        self, descriptor: SlotDescriptor, chunk_size: int = DEFAULT_CHUNK_SIZE
+    ) -> Generator[bytes | memoryview, None, None]:
         """Stream slot data in chunks."""
         offset = descriptor.offset
         remaining = descriptor.size
@@ -71,7 +76,7 @@ class MMapBackend(Backend):
         self.file: BinaryIO | None = None
         self.mmap: mmap.mmap | None = None
         self.path: Path | None = None
-        self._views = []  # Track memory views for cleanup
+        self._views: list[memoryview] = []  # Track memory views for cleanup
 
     def open(self, path: Path) -> None:
         """Open file and create memory mapping."""
@@ -187,9 +192,9 @@ class MMapBackend(Backend):
             pages=size // DEFAULT_PAGE_SIZE,
         )
 
-        if hasattr(os, "posix_fadvise") and self.file:
+        if hasattr(os, "posix_fadvise") and hasattr(os, "POSIX_FADV_WILLNEED") and self.file:
             # Linux: hint that we'll need this data soon
-            os.posix_fadvise(self.file.fileno(), offset, size, os.POSIX_FADV_WILLNEED)
+            os.posix_fadvise(self.file.fileno(), offset, size, os.POSIX_FADV_WILLNEED)  # type: ignore[attr-defined]
             logger.debug("✅ posix_fadvise called")
         elif sys.platform == "win32" and self.mmap:
             # Windows: touch pages to load them
@@ -200,7 +205,7 @@ class MMapBackend(Backend):
         else:
             logger.debug("⚠️ Prefetch not available on this platform")
 
-    def __enter__(self):
+    def __enter__(self) -> Self:
         return self
 
     def __exit__(
@@ -218,7 +223,7 @@ class FileBackend(Backend):
     def __init__(self) -> None:
         self.file: BinaryIO | None = None
         self.path: Path | None = None
-        self._cache = {}  # Simple cache for frequently accessed regions
+        self._cache: dict[tuple[int, int], bytes] = {}  # Simple cache for frequently accessed regions
 
     def open(self, path: Path) -> None:
         """Open file with buffered I/O."""
@@ -297,7 +302,7 @@ class FileBackend(Backend):
         """Read slot data."""
         return self.read_at(descriptor.offset, descriptor.size)
 
-    def __enter__(self):
+    def __enter__(self) -> Self:
         return self
 
     def __exit__(
@@ -344,12 +349,14 @@ class StreamBackend(Backend):
         # For streaming, we don't read the whole slot at once
         return self.read_at(descriptor.offset, min(descriptor.size, self.chunk_size))
 
-    def stream_slot(self, descriptor: SlotDescriptor, chunk_size: int | None = None):
+    def stream_slot(
+        self, descriptor: SlotDescriptor, chunk_size: int | None = None
+    ) -> Generator[bytes | memoryview, None, None]:
         """Stream slot data in chunks."""
         chunk_size = chunk_size or self.chunk_size
         return super().stream_slot(descriptor, chunk_size)
 
-    def __enter__(self):
+    def __enter__(self) -> Self:
         return self
 
     def __exit__(
@@ -369,7 +376,7 @@ class HybridBackend(Backend):
         self.file: BinaryIO | None = None
         self.header_mmap: mmap.mmap | None = None
         self.path: Path | None = None
-        self._views = []  # Track memory views
+        self._views: list[memoryview] = []  # Track memory views
 
     def open(self, path: Path) -> None:
         """Open with partial memory mapping."""
@@ -403,7 +410,7 @@ class HybridBackend(Backend):
             raise RuntimeError("Backend not opened")
 
         # Use mmap for header region
-        if offset + size <= len(self.header_mmap):
+        if self.header_mmap and offset + size <= len(self.header_mmap):
             view = memoryview(self.header_mmap)[offset : offset + size]
             self._views.append(view)  # Track for cleanup
             return view
@@ -416,7 +423,7 @@ class HybridBackend(Backend):
         """Read slot using appropriate method."""
         return self.read_at(descriptor.offset, descriptor.size)
 
-    def __enter__(self):
+    def __enter__(self) -> Self:
         return self
 
     def __exit__(
