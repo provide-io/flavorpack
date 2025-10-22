@@ -157,6 +157,11 @@ markers = [
     "requires_ingredients: Tests that need Go/Rust ingredients built",
 ]
 
+[tool.mutmut]
+  paths_to_mutate = "src/flavor/"
+  tests_dir = "tests/"
+  runner = "pytest"
+
 [tool.coverage.run]
 branch = true
 source_pkgs = ["flavor"]
