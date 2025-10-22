@@ -10,7 +10,6 @@ from __future__ import annotations
 from pathlib import Path
 from unittest.mock import Mock, patch
 
-import pytest
 from click.testing import CliRunner
 
 from flavor.cli import main as cli_main
@@ -204,6 +203,86 @@ class TestIngredientList:
         assert result.exit_code == 0
         assert "unknown" in result.output  # Falls back to unknown version
 
+    @patch("flavor.ingredients.manager.IngredientManager")
+    @patch("flavor.commands.ingredients.run")
+    def test_list_version_empty_output(self, mock_run: Mock, mock_manager_class: Mock, tmp_path: Path) -> None:
+        """Test list command handles empty version output."""
+        mock_manager = Mock()
+        launcher_info = IngredientInfo(
+            name="launcher", path=tmp_path / "launcher", type="launcher", language="go", size=1_000_000
+        )
+        mock_manager.list_ingredients.return_value = {"launchers": [launcher_info], "builders": []}
+        mock_manager_class.return_value = mock_manager
+
+        # Simulate successful run but empty output
+        mock_run.return_value = Mock(returncode=0, stdout="")
+
+        runner = CliRunner()
+        result = runner.invoke(cli_main, ["ingredients", "list"])
+
+        assert result.exit_code == 0
+        assert "unknown" in result.output  # Falls back to unknown version
+
+    @patch("flavor.ingredients.manager.IngredientManager")
+    @patch("flavor.commands.ingredients.run")
+    def test_list_multiple_builders_sorted(
+        self, mock_run: Mock, mock_manager_class: Mock, tmp_path: Path
+    ) -> None:
+        """Test list command with multiple builders shows newlines between entries."""
+        mock_manager = Mock()
+        builder_a = IngredientInfo(
+            name="a-builder", path=tmp_path / "a", type="builder", language="rust", size=1_000_000
+        )
+        builder_z = IngredientInfo(
+            name="z-builder", path=tmp_path / "z", type="builder", language="rust", size=1_000_000
+        )
+        mock_manager.list_ingredients.return_value = {
+            "launchers": [],
+            "builders": [builder_z, builder_a],  # Unsorted
+        }
+        mock_manager_class.return_value = mock_manager
+
+        mock_run.return_value = Mock(returncode=0, stdout="1.0.0\n")
+
+        runner = CliRunner()
+        result = runner.invoke(cli_main, ["ingredients", "list"])
+
+        assert result.exit_code == 0
+        # Check that a-builder appears before z-builder
+        a_pos = result.output.find("a-builder")
+        z_pos = result.output.find("z-builder")
+        assert a_pos < z_pos
+
+    @patch("flavor.ingredients.manager.IngredientManager")
+    @patch("flavor.commands.ingredients.run")
+    def test_list_verbose_mode_builders(
+        self, mock_run: Mock, mock_manager_class: Mock, tmp_path: Path
+    ) -> None:
+        """Test list verbose mode shows builder source paths."""
+        mock_manager = Mock()
+        builder_path = tmp_path / "builder"
+        source_path = tmp_path / "src"
+        builder_info = IngredientInfo(
+            name="builder",
+            path=builder_path,
+            type="builder",
+            language="rust",
+            size=3_000_000,
+            checksum="def456",
+            version="2.0.0",
+            built_from=source_path,
+        )
+        mock_manager.list_ingredients.return_value = {"launchers": [], "builders": [builder_info]}
+        mock_manager_class.return_value = mock_manager
+
+        mock_run.return_value = Mock(returncode=0, stdout="2.0.0\n")
+
+        runner = CliRunner()
+        result = runner.invoke(cli_main, ["ingredients", "list", "--verbose"])
+
+        assert result.exit_code == 0
+        assert f"Source: {source_path}" in result.output
+
 
 class TestIngredientBuild:
     """Test suite for 'flavor ingredients build' command."""
@@ -298,7 +377,9 @@ class TestIngredientClean:
 
     @patch("flavor.ingredients.manager.IngredientManager")
     @patch("click.confirm")
-    def test_clean_all_with_confirmation(self, mock_confirm: Mock, mock_manager_class: Mock, tmp_path: Path) -> None:
+    def test_clean_all_with_confirmation(
+        self, mock_confirm: Mock, mock_manager_class: Mock, tmp_path: Path
+    ) -> None:
         """Test clean command with user confirmation."""
         mock_confirm.return_value = True
         mock_manager = Mock()
@@ -392,9 +473,7 @@ class TestIngredientInfo:
     """Test suite for 'flavor ingredients info' command."""
 
     @patch("flavor.ingredients.manager.IngredientManager")
-    def test_info_ingredient_found_executable(
-        self, mock_manager_class: Mock, tmp_path: Path
-    ) -> None:
+    def test_info_ingredient_found_executable(self, mock_manager_class: Mock, tmp_path: Path) -> None:
         """Test info command for found ingredient that is executable."""
         mock_manager = Mock()
         launcher_path = tmp_path / "launcher.bin"
