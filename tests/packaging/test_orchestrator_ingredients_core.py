@@ -7,16 +7,17 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
 
 from flavor.exceptions import BuildError
 from flavor.packaging.orchestrator_ingredients import (
-    get_cli_executable_name,
-    create_slot_tarballs,
-    write_manifest_file,
     create_python_slot_tarballs,
+    create_slot_tarballs,
+    get_cli_executable_name,
+    write_manifest_file,
 )
 
 
@@ -48,19 +49,19 @@ class TestGetCliExecutableName:
 
     def test_without_cli_scripts_unix(self) -> None:
         """Test without CLI scripts on Unix."""
-        build_config = {}
+        build_config: dict[str, Any] = {}
         result = get_cli_executable_name("mypackage", build_config, windows=False)
         assert result == "mypackage"
 
     def test_without_cli_scripts_windows(self) -> None:
         """Test without CLI scripts on Windows."""
-        build_config = {}
+        build_config: dict[str, Any] = {}
         result = get_cli_executable_name("mypackage", build_config, windows=True)
         assert result == "mypackage.exe"
 
     def test_with_empty_cli_scripts(self) -> None:
         """Test with empty CLI scripts dict."""
-        build_config = {"cli_scripts": {}}
+        build_config: dict[str, Any] = {"cli_scripts": {}}
         result = get_cli_executable_name("mypackage", build_config, windows=False)
         assert result == "mypackage"
 
@@ -157,9 +158,7 @@ class TestCreateSlotTarballs:
             create_slot_tarballs(tmp_path, artifacts)
 
     @patch("flavor.packaging.orchestrator_ingredients.is_windows")
-    def test_create_slot_tarballs_with_multiple_wheels(
-        self, mock_is_windows: Mock, tmp_path: Path
-    ) -> None:
+    def test_create_slot_tarballs_with_multiple_wheels(self, mock_is_windows: Mock, tmp_path: Path) -> None:
         """Test creating slot tarballs with multiple wheels."""
         mock_is_windows.return_value = False
 
@@ -190,6 +189,7 @@ class TestCreateSlotTarballs:
         # Verify wheels tarball was created
         assert slots["wheels"].exists()
         import tarfile
+
         with tarfile.open(slots["wheels"], "r") as tar:
             members = tar.getmembers()
             assert len(members) == 2
@@ -224,9 +224,7 @@ class TestCreatePythonSlotTarballs:
     """Test create_python_slot_tarballs function."""
 
     @patch("flavor.packaging.orchestrator_ingredients.is_windows")
-    def test_create_python_slot_tarballs_unix(
-        self, mock_is_windows: Mock, tmp_path: Path
-    ) -> None:
+    def test_create_python_slot_tarballs_unix(self, mock_is_windows: Mock, tmp_path: Path) -> None:
         """Test creating Python slot tarballs on Unix."""
         mock_is_windows.return_value = False
 
@@ -250,9 +248,7 @@ class TestCreatePythonSlotTarballs:
             "python_tgz": python_tgz,
         }
 
-        uv_path, python_tarball, wheels_tarball = create_python_slot_tarballs(
-            tmp_path, artifacts
-        )
+        uv_path, python_tarball, wheels_tarball = create_python_slot_tarballs(tmp_path, artifacts)
 
         assert uv_path == uv_binary
         assert python_tarball == python_tgz
@@ -260,9 +256,7 @@ class TestCreatePythonSlotTarballs:
         assert wheels_tarball.name == "wheels.tar"
 
     @patch("flavor.packaging.orchestrator_ingredients.is_windows")
-    def test_create_python_slot_tarballs_windows(
-        self, mock_is_windows: Mock, tmp_path: Path
-    ) -> None:
+    def test_create_python_slot_tarballs_windows(self, mock_is_windows: Mock, tmp_path: Path) -> None:
         """Test creating Python slot tarballs on Windows."""
         mock_is_windows.return_value = True
 
@@ -284,16 +278,12 @@ class TestCreatePythonSlotTarballs:
             "python_tgz": python_tgz,
         }
 
-        uv_path, python_tarball, wheels_tarball = create_python_slot_tarballs(
-            tmp_path, artifacts
-        )
+        uv_path, _python_tarball, _wheels_tarball = create_python_slot_tarballs(tmp_path, artifacts)
 
         assert uv_path.name == "uv.exe"
 
     @patch("flavor.packaging.orchestrator_ingredients.is_windows")
-    def test_create_python_slot_tarballs_missing_python(
-        self, mock_is_windows: Mock, tmp_path: Path
-    ) -> None:
+    def test_create_python_slot_tarballs_missing_python(self, mock_is_windows: Mock, tmp_path: Path) -> None:
         """Test creating Python slot tarballs with missing Python."""
         mock_is_windows.return_value = False
 
@@ -316,9 +306,7 @@ class TestCreatePythonSlotTarballs:
             create_python_slot_tarballs(tmp_path, artifacts)
 
     @patch("flavor.packaging.orchestrator_ingredients.is_windows")
-    def test_create_python_slot_tarballs_with_wheels(
-        self, mock_is_windows: Mock, tmp_path: Path
-    ) -> None:
+    def test_create_python_slot_tarballs_with_wheels(self, mock_is_windows: Mock, tmp_path: Path) -> None:
         """Test creating Python slot tarballs with actual wheels."""
         mock_is_windows.return_value = False
 
@@ -342,12 +330,11 @@ class TestCreatePythonSlotTarballs:
             "python_tgz": python_tgz,
         }
 
-        uv_path, python_tarball, wheels_tarball = create_python_slot_tarballs(
-            tmp_path, artifacts
-        )
+        _uv_path, _python_tarball, wheels_tarball = create_python_slot_tarballs(tmp_path, artifacts)
 
         # Verify wheels were added to tarball
         import tarfile
+
         with tarfile.open(wheels_tarball, "r") as tar:
             members = tar.getmembers()
             assert len(members) == 1

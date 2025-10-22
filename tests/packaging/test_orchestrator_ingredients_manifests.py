@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -30,7 +31,7 @@ class TestCreateBuilderManifest:
             "wheels": tmp_path / "wheels.tar",
         }
 
-        key_paths = {"private": None, "public": None}
+        key_paths: dict[str, str | None] = {"private": None, "public": None}
 
         manifest = create_builder_manifest(
             package_name="testpkg",
@@ -42,9 +43,7 @@ class TestCreateBuilderManifest:
 
         assert manifest["name"] == "testpkg"
         assert manifest["version"] == "1.0.0"
-        # Note: Due to bug in source code (line 84 uses `is_windows` instead of `windows`),
-        # this always uses Scripts even when mocked to False
-        assert manifest["command"] == "{workenv}/Scripts/testpkg"
+        assert manifest["command"] == "{workenv}/bin/testpkg"
         assert "cache_validation" in manifest
         assert "workenv" in manifest
         assert "setup_commands" in manifest
@@ -53,9 +52,7 @@ class TestCreateBuilderManifest:
         assert "runtime" not in manifest  # No runtime env config
 
     @patch("flavor.packaging.orchestrator_ingredients.is_windows", return_value=False)
-    def test_create_builder_manifest_with_cli_scripts(
-        self, mock_is_windows: Path, tmp_path: Path
-    ) -> None:
+    def test_create_builder_manifest_with_cli_scripts(self, mock_is_windows: Path, tmp_path: Path) -> None:
         """Test creating builder manifest with CLI scripts."""
 
         slots = {
@@ -64,7 +61,7 @@ class TestCreateBuilderManifest:
             "wheels": tmp_path / "wheels.tar",
         }
 
-        key_paths = {"private": None, "public": None}
+        key_paths: dict[str, str | None] = {"private": None, "public": None}
 
         build_config = {"cli_scripts": {"mytool": "pkg.cli:main"}}
 
@@ -76,9 +73,7 @@ class TestCreateBuilderManifest:
             key_paths=key_paths,
         )
 
-        # Note: Due to bug in source code (line 84 uses `is_windows` instead of `windows`),
-        # this always uses Scripts even when mocked to False
-        assert manifest["command"] == "{workenv}/Scripts/mytool"
+        assert manifest["command"] == "{workenv}/bin/mytool"
 
     @patch("flavor.packaging.orchestrator_ingredients.is_windows", return_value=False)
     def test_create_builder_manifest_with_runtime_env_unset(
@@ -92,7 +87,7 @@ class TestCreateBuilderManifest:
             "wheels": tmp_path / "wheels.tar",
         }
 
-        key_paths = {"private": None, "public": None}
+        key_paths: dict[str, str | None] = {"private": None, "public": None}
 
         build_config = {
             "execution": {
@@ -118,9 +113,7 @@ class TestCreateBuilderManifest:
         assert manifest["runtime"]["env"]["unset"] == ["DEBUG", "TEMP_VAR"]
 
     @patch("flavor.packaging.orchestrator_ingredients.is_windows", return_value=False)
-    def test_create_builder_manifest_with_runtime_env_set(
-        self, mock_is_windows: Path, tmp_path: Path
-    ) -> None:
+    def test_create_builder_manifest_with_runtime_env_set(self, mock_is_windows: Path, tmp_path: Path) -> None:
         """Test creating builder manifest with runtime env set."""
 
         slots = {
@@ -129,7 +122,7 @@ class TestCreateBuilderManifest:
             "wheels": tmp_path / "wheels.tar",
         }
 
-        key_paths = {"private": None, "public": None}
+        key_paths: dict[str, str | None] = {"private": None, "public": None}
 
         build_config = {
             "execution": {
@@ -166,7 +159,7 @@ class TestCreateBuilderManifest:
             "wheels": tmp_path / "wheels.tar",
         }
 
-        key_paths = {"private": None, "public": None}
+        key_paths: dict[str, str | None] = {"private": None, "public": None}
 
         build_config = {
             "execution": {
@@ -192,9 +185,7 @@ class TestCreateBuilderManifest:
         assert manifest["runtime"]["env"]["pass"] == ["PATH", "HOME"]
 
     @patch("flavor.packaging.orchestrator_ingredients.is_windows", return_value=False)
-    def test_create_builder_manifest_with_runtime_env_map(
-        self, mock_is_windows: Path, tmp_path: Path
-    ) -> None:
+    def test_create_builder_manifest_with_runtime_env_map(self, mock_is_windows: Path, tmp_path: Path) -> None:
         """Test creating builder manifest with runtime env map."""
 
         slots = {
@@ -203,7 +194,7 @@ class TestCreateBuilderManifest:
             "wheels": tmp_path / "wheels.tar",
         }
 
-        key_paths = {"private": None, "public": None}
+        key_paths: dict[str, str | None] = {"private": None, "public": None}
 
         build_config = {
             "execution": {
@@ -229,9 +220,7 @@ class TestCreateBuilderManifest:
         assert manifest["runtime"]["env"]["map"] == {"OLD_VAR": "NEW_VAR"}
 
     @patch("flavor.packaging.orchestrator_ingredients.is_windows", return_value=False)
-    def test_create_builder_manifest_with_all_runtime_env(
-        self, mock_is_windows: Path, tmp_path: Path
-    ) -> None:
+    def test_create_builder_manifest_with_all_runtime_env(self, mock_is_windows: Path, tmp_path: Path) -> None:
         """Test creating builder manifest with all runtime env options."""
 
         slots = {
@@ -240,7 +229,7 @@ class TestCreateBuilderManifest:
             "wheels": tmp_path / "wheels.tar",
         }
 
-        key_paths = {"private": None, "public": None}
+        key_paths: dict[str, str | None] = {"private": None, "public": None}
 
         build_config = {
             "execution": {
@@ -283,9 +272,9 @@ class TestCreateBuilderManifest:
             "wheels": tmp_path / "wheels.tar",
         }
 
-        key_paths = {"private": None, "public": None}
+        key_paths: dict[str, str | None] = {"private": None, "public": None}
 
-        build_config = {
+        build_config: dict[str, Any] = {
             "execution": {
                 "runtime": {
                     "env": {
@@ -333,9 +322,7 @@ class TestCreatePythonBuilderMetadata:
         assert "runtime" not in metadata
 
     @patch("flavor.packaging.orchestrator_ingredients.is_windows", return_value=False)
-    def test_create_python_builder_metadata_with_runtime_env(
-        self, mock_is_windows: Path
-    ) -> None:
+    def test_create_python_builder_metadata_with_runtime_env(self, mock_is_windows: Path) -> None:
         """Test creating Python builder metadata with runtime env."""
 
         build_config = {
@@ -380,9 +367,7 @@ class TestCreatePythonBuilderMetadata:
         assert "uv.exe" in uv_command
 
     @patch("flavor.packaging.orchestrator_ingredients.is_windows", return_value=False)
-    def test_create_python_builder_metadata_with_cli_scripts(
-        self, mock_is_windows: Path
-    ) -> None:
+    def test_create_python_builder_metadata_with_cli_scripts(self, mock_is_windows: Path) -> None:
         """Test creating Python builder metadata with CLI scripts."""
 
         build_config = {"cli_scripts": {"mytool": "pkg.cli:main"}}
