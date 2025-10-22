@@ -140,8 +140,12 @@ class TestListIngredients:
         with patch("flavor.ingredients.manager.Path") as mock_path_class:
             mock_embedded_bin = Mock(spec=Path)
             mock_embedded_bin.exists.return_value = True
+            mock_embedded_bin.exists.return_value = True
             mock_embedded_bin.iterdir.return_value = [mock_embedded_launcher]
-            mock_path_class.return_value = mock_embedded_bin
+
+            mock_file_path.parent = Mock()
+            mock_file_path.parent.__truediv__ = Mock(return_value=mock_embedded_bin)
+            mock_path_class.return_value = mock_file_path
 
             manager._get_ingredient_info = Mock(return_value=IngredientInfo(
                 name="flavor-go-launcher-linux_amd64",
@@ -191,8 +195,12 @@ class TestListIngredients:
         with patch("flavor.ingredients.manager.Path") as mock_path_class:
             mock_embedded_bin = Mock(spec=Path)
             mock_embedded_bin.exists.return_value = True
+            mock_embedded_bin.exists.return_value = True
             mock_embedded_bin.iterdir.return_value = [mock_embedded_launcher]
-            mock_path_class.return_value = mock_embedded_bin
+
+            mock_file_path.parent = Mock()
+            mock_file_path.parent.__truediv__ = Mock(return_value=mock_embedded_bin)
+            mock_path_class.return_value = mock_file_path
 
             ingredients = manager.list_ingredients()
 
