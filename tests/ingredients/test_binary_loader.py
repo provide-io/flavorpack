@@ -152,8 +152,9 @@ class TestBuildGoIngredients:
         """Test building go ingredients when source directory doesn't exist."""
         mock_get_platform.return_value = "linux_x86_64"
         mock_manager = Mock()
-        mock_manager.go_src_dir = tmp_path / "nonexistent"
-        mock_manager.go_src_dir.exists.return_value = False
+        mock_go_src = Mock()
+        mock_go_src.exists.return_value = False
+        mock_manager.go_src_dir = mock_go_src
 
         loader = BinaryLoader(mock_manager)
         result = loader._build_go_ingredients(force=False)
@@ -453,8 +454,15 @@ class TestTestIngredients:
         mock_manager = Mock()
 
         # Mock list_ingredients to return test data
-        launcher_info = Mock(name="go-launcher", language="go", path=tmp_path / "launcher")
-        builder_info = Mock(name="rs-builder", language="rust", path=tmp_path / "builder")
+        launcher_info = Mock()
+        launcher_info.name = "go-launcher"
+        launcher_info.language = "go"
+        launcher_info.path = tmp_path / "launcher"
+
+        builder_info = Mock()
+        builder_info.name = "rs-builder"
+        builder_info.language = "rust"
+        builder_info.path = tmp_path / "builder"
         mock_manager.list_ingredients.return_value = {
             "launchers": [launcher_info],
             "builders": [builder_info],
@@ -480,8 +488,16 @@ class TestTestIngredients:
         mock_get_platform.return_value = "linux_x86_64"
         mock_manager = Mock()
 
-        launcher_info = Mock(name="go-launcher", language="go", path=tmp_path / "launcher")
-        builder_info = Mock(name="rs-builder", language="rust", path=tmp_path / "builder")
+        launcher_info = Mock()
+        launcher_info.name = "go-launcher"
+        launcher_info.language = "go"
+        launcher_info.path = tmp_path / "launcher"
+
+        builder_info = Mock()
+        builder_info.name = "rs-builder"
+        builder_info.language = "rust"
+        builder_info.path = tmp_path / "builder"
+
         mock_manager.list_ingredients.return_value = {
             "launchers": [launcher_info],
             "builders": [builder_info],
@@ -510,7 +526,10 @@ class TestTestIngredients:
         mock_get_platform.return_value = "linux_x86_64"
         mock_manager = Mock()
 
-        launcher_info = Mock(name="go-launcher", language="go", path=tmp_path / "launcher")
+        launcher_info = Mock()
+        launcher_info.name = "go-launcher"
+        launcher_info.language = "go"
+        launcher_info.path = tmp_path / "launcher"
         mock_manager.list_ingredients.return_value = {"launchers": [launcher_info], "builders": []}
 
         # Mock exception
@@ -533,8 +552,15 @@ class TestTestIngredients:
         mock_get_platform.return_value = "linux_x86_64"
         mock_manager = Mock()
 
-        go_launcher = Mock(name="go-launcher", language="go", path=tmp_path / "go")
-        rs_builder = Mock(name="rs-builder", language="rust", path=tmp_path / "rs")
+        go_launcher = Mock()
+        go_launcher.name = "go-launcher"
+        go_launcher.language = "go"
+        go_launcher.path = tmp_path / "go"
+
+        rs_builder = Mock()
+        rs_builder.name = "rs-builder"
+        rs_builder.language = "rust"
+        rs_builder.path = tmp_path / "rs"
         mock_manager.list_ingredients.return_value = {
             "launchers": [go_launcher],
             "builders": [rs_builder],
