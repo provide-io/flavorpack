@@ -6,8 +6,11 @@
 #
 # flavor/packaging/keys.py
 #
-"""Key generation for PSPF packages using Ed25519.from pathlib import Path
-"""
+"""Key generation for PSPF packages using Ed25519."""
+
+from __future__ import annotations
+
+from pathlib import Path
 
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ed25519

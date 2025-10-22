@@ -32,8 +32,8 @@ pub struct Index {
     // Performance hints (64 bytes)
     pub access_mode: u8,        // 0=auto, 1=mmap, 2=file, 3=stream
     pub cache_strategy: u8,     // 0=none, 1=lazy, 2=eager, 3=critical
-    pub codec_type: u8,      // 0=raw, 1=tar, 2=gzip, 3=tgz
     pub encryption_type: u8,    // 0=none, 1=aes256-gcm, 2=chacha20
+    pub reserved_hint: u8,      // Reserved for future use
     pub page_size: u32,         // Optimal page size for alignment
     pub max_memory: u64,        // Suggested maximum memory usage
     pub min_memory: u64,        // Minimum required memory
@@ -84,8 +84,8 @@ impl Index {
             integrity_signature: [0; 512],
             access_mode: 0,
             cache_strategy: 0,
-            codec_type: 0,
             encryption_type: 0,
+            reserved_hint: 0,
             page_size: 4096,
             max_memory: 0,
             min_memory: 0,
@@ -169,8 +169,8 @@ impl Index {
         // Parse performance hints
         index.access_mode = data[640];
         index.cache_strategy = data[641];
-        index.codec_type = data[642];
-        index.encryption_type = data[643];
+        index.encryption_type = data[642];
+        index.reserved_hint = data[643];
         index.page_size = u32::from_le_bytes(data[644..648].try_into()
             .map_err(|_| FlavorError::Generic("Invalid page size bytes".into()))?);
         index.max_memory = u64::from_le_bytes(data[648..656].try_into()
@@ -237,8 +237,8 @@ impl Index {
         // Pack performance hints
         bytes[640] = self.access_mode;
         bytes[641] = self.cache_strategy;
-        bytes[642] = self.codec_type;
-        bytes[643] = self.encryption_type;
+        bytes[642] = self.encryption_type;
+        bytes[643] = self.reserved_hint;
         bytes[644..648].copy_from_slice(&self.page_size.to_le_bytes());
         bytes[648..656].copy_from_slice(&self.max_memory.to_le_bytes());
         bytes[656..664].copy_from_slice(&self.min_memory.to_le_bytes());
@@ -300,18 +300,18 @@ impl Index {
         // Log first 72 bytes of the index (core fields)
         debug!("First 72 bytes of index (with checksum zeroed):");
         let mut hex_line = String::new();
-        for i in 0..72 {
+        for (i, byte) in data_copy.iter().enumerate().take(72) {
             if i % 16 == 0 {
                 if !hex_line.is_empty() {
-                    debug!("{}", hex_line);
+                    debug!("{hex_line}");
                     hex_line.clear();
                 }
                 hex_line = format!("  {:04x}: ", i);
             }
-            hex_line.push_str(&format!("{:02x} ", data_copy[i]));
+            hex_line.push_str(&format!("{byte:02x} "));
         }
         if !hex_line.is_empty() {
-            debug!("{}", hex_line);
+            debug!("{hex_line}");
         }
 
         let calculated = adler::adler32_slice(&data_copy);

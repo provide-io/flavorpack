@@ -10,12 +10,12 @@
 
 from __future__ import annotations
 
-import importlib.metadata
 import os
 import sys
 
 import click
 from provide.foundation import CLIContext
+from provide.foundation.utils import get_version
 
 # Import all commands at module level
 from flavor.commands.extract import extract_all_command, extract_command
@@ -43,10 +43,7 @@ if sys.platform == "win32":
     except Exception:
         pass  # Ignore if we can't enable ANSI
 
-try:
-    __version__ = importlib.metadata.version("flavor")
-except importlib.metadata.PackageNotFoundError:
-    __version__ = "0.0.0-dev"
+__version__ = get_version("flavorpack", caller_file=__file__)
 
 
 @click.group(context_settings=dict(help_option_names=["-h", "--help"]))

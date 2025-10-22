@@ -6,11 +6,15 @@
 # src/flavor/psp/format_2025/reader.py
 # PSPF 2025 Bundle Reader - Uses backend system for flexible access
 
+from __future__ import annotations
+
+from collections.abc import Generator
+import contextlib
 from contextlib import contextmanager
 import gzip
 from pathlib import Path
 import struct
-from typing import Any
+from typing import Any, Self
 import zlib
 
 from provide.foundation import logger
@@ -58,7 +62,7 @@ class PSPFReader:
 
         self._extractor = SlotExtractor(self)
 
-    def __enter__(self):
+    def __enter__(self) -> Self:
         """Context manager entry."""
         self.open()
         return self
@@ -80,7 +84,7 @@ class PSPFReader:
             self._backend = None
 
     @contextmanager
-    def extraction_lock(self, extract_dir: Path, timeout: float = 30.0):
+    def extraction_lock(self, extract_dir: Path, timeout: float = 30.0) -> Generator[Path, None, None]:
         """Acquire an extraction lock for a given directory."""
         from flavor.locking import default_lock_manager
 
@@ -93,6 +97,7 @@ class PSPFReader:
         if not self._backend:
             self.open()
 
+        assert self._backend is not None
         # Read MagicTrailer at end of file
         file_size = self.bundle_path.stat().st_size
         trailer = self._backend.read_at(file_size - DEFAULT_MAGIC_TRAILER_SIZE, DEFAULT_MAGIC_TRAILER_SIZE)
@@ -109,6 +114,7 @@ class PSPFReader:
         if not self._backend:
             self.open()
 
+        assert self._backend is not None
         file_size = self.bundle_path.stat().st_size
 
         # Read MagicTrailer (last 8200 bytes)
@@ -189,7 +195,7 @@ class PSPFReader:
 
         return self._index
 
-    def read_metadata(self) -> dict:
+    def read_metadata(self) -> dict[str, Any]:
         """Read and parse metadata."""
         if self._metadata:
             return self._metadata
@@ -197,6 +203,7 @@ class PSPFReader:
         if not self._backend:
             self.open()
 
+        assert self._backend is not None
         index = self.read_index()
 
         # Read metadata using backend
@@ -219,11 +226,8 @@ class PSPFReader:
 
         # Parse metadata (always gzipped JSON in current implementation)
         # Decompress first
-        try:
+        with contextlib.suppress(gzip.BadGzipFile):
             metadata_data = gzip.decompress(metadata_data)
-        except gzip.BadGzipFile:
-            # Not compressed, use as-is
-            pass
 
         # Parse JSON
         self._metadata = json_loads(metadata_data.decode("utf-8"))
@@ -238,6 +242,7 @@ class PSPFReader:
         if not self._backend:
             self.open()
 
+        assert self._backend is not None
         index = self.read_index()
         descriptors = []
 
@@ -271,6 +276,7 @@ class PSPFReader:
         if not self._backend:
             self.open()
 
+        assert self._backend is not None
         descriptors = self.read_slot_descriptors()
 
         if slot_index < 0 or slot_index >= len(descriptors):
@@ -348,6 +354,7 @@ class PSPFReader:
         if not self._backend:
             self.open()
 
+        assert self._backend is not None
         index = self.read_index()
 
         # Get the signature from the index block
@@ -366,9 +373,9 @@ class PSPFReader:
         metadata_json = gzip.decompress(metadata_compressed)
 
         verifier = Ed25519Verifier(index.public_key)
-        return verifier.verify(metadata_json, signature)
+        return verifier.verify(metadata_json, signature)  # type: ignore[no-any-return]
 
-    def verify_integrity(self) -> dict:
+    def verify_integrity(self) -> dict[str, Any]:
         """Verify complete package integrity.
 
         Returns:
@@ -404,6 +411,7 @@ class PSPFReader:
         """Get the backend for advanced operations."""
         if not self._backend:
             self.open()
+        assert self._backend is not None
         return self._backend
 
     def use_mmap(self) -> None:

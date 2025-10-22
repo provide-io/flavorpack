@@ -1,12 +1,12 @@
+#
 # flavor/packaging/python/environment_builder.py
 #
-# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
+"""Environment builder for Python packages."""
 
-# flavor/packaging/python/environment_builder.py
-#
-"""Environment builder for Python packages.import os
-"""
+from __future__ import annotations
+
+from collections.abc import Callable
+import os
 from pathlib import Path
 import tarfile
 import tempfile
@@ -16,6 +16,7 @@ from provide.foundation.archive import deterministic_filter
 from provide.foundation.file import ensure_dir, safe_copy
 from provide.foundation.platform import get_arch_name, get_os_name
 from provide.foundation.process import run
+from provide.foundation.resilience.types import BackoffStrategy
 
 from flavor.config.defaults import DEFAULT_EXECUTABLE_PERMS
 from flavor.packaging.python.dependency_resolver import DependencyResolver
@@ -92,7 +93,7 @@ class PythonEnvironmentBuilder:
         OSError,
         max_attempts=3,
         base_delay=1.0,
-        backoff="exponential",
+        backoff=BackoffStrategy.EXPONENTIAL,
         jitter=True,
     )
     def _install_python_with_uv(self, uv_install_dir: str) -> Path | None:
@@ -102,6 +103,10 @@ class PythonEnvironmentBuilder:
             Up to 3 attempts with exponential backoff for network errors
         """
         uv_cmd = self.find_uv_command()
+        if uv_cmd is None:
+            logger.error("UV command not found")
+            return None
+
         self._log_uv_environment()
 
         # Install Python with UV
@@ -300,10 +305,12 @@ class PythonEnvironmentBuilder:
 
         self._log_tarball_stats(python_tgz, stats["bytes_added"])
 
-    def _create_tarball_filter(self, stats: dict[str, int]):
+    def _create_tarball_filter(
+        self, stats: dict[str, int]
+    ) -> Callable[[tarfile.TarInfo], tarfile.TarInfo | None]:
         """Create filter function for tarball creation."""
 
-        def filter_and_reorganize(tarinfo):
+        def filter_and_reorganize(tarinfo: tarfile.TarInfo) -> tarfile.TarInfo | None:
             # Skip EXTERNALLY-MANAGED files
             if tarinfo.name.endswith("EXTERNALLY-MANAGED"):
                 logger.trace(f"  ⏭️ Skipping: {tarinfo.name} (EXTERNALLY-MANAGED)")
@@ -338,6 +345,3 @@ class PythonEnvironmentBuilder:
         logger.info(
             f"✅ Python tarball created: {tarball_size:,} bytes (compression: {compression_ratio:.1f}%)"
         )
-
-
-# 🌶️📦📄🪄

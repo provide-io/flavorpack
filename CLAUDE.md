@@ -18,9 +18,6 @@ All Linux binaries are built as static executables:
 
 ### Environment Setup
 ```bash
-# Set up virtual environment and install dependencies
-source env.sh
-
 # Build Go and Rust ingredients (required for packaging)
 make build-ingredients
 # or

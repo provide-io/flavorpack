@@ -50,7 +50,7 @@ fn main() {
     }));
     
     // Wrap main logic in catch_unwind for extra safety
-    let result = panic::catch_unwind(|| run());
+    let result = panic::catch_unwind(run);
     
     match result {
         Ok(exit_code) => process::exit(exit_code),
@@ -70,14 +70,6 @@ fn run() -> i32 {
 
     let args = Args::parse();
 
-    // Set workenv base if provided
-    if let Some(ref base) = args.workenv_base {
-        // SAFETY: This is called once at program startup before any threads are spawned
-        unsafe {
-            env::set_var("FLAVOR_WORKENV_BASE", base.display().to_string());
-        }
-    }
-
     // Initialize logging with level if provided
     if let Some(ref level) = args.log_level {
         flavor::logger::JsonLogger::init_with_level(level, "CLI --log-level");
@@ -91,6 +83,7 @@ fn run() -> i32 {
         private_key_path: args.private_key,
         public_key_path: args.public_key,
         key_seed: args.key_seed,
+        workenv_base: args.workenv_base,
     };
 
     match build_package(&args.manifest, &args.output, options) {

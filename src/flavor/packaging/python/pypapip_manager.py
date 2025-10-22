@@ -3,19 +3,23 @@
 # SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-# flavor/packaging/python/pip_manager.py
+# flavor/packaging/python/pypapip_manager.py
 #
 """PyPA pip command management for FlavorPack packaging.
-"""
 
 This module handles all pip-specific operations with proper platform support
 and manylinux2014 compatibility for maximum Linux distribution coverage.
+"""
+
+from __future__ import annotations
+
 from pathlib import Path
 
 from provide.foundation import retry
 from provide.foundation.logger import logger
 from provide.foundation.platform import get_arch_name, get_os_name
 from provide.foundation.process import run
+from provide.foundation.resilience.types import BackoffStrategy
 
 
 class PyPaPipManager:
@@ -167,7 +171,7 @@ class PyPaPipManager:
         OSError,
         max_attempts=3,
         base_delay=1.0,
-        backoff="exponential",
+        backoff=BackoffStrategy.EXPONENTIAL,
         jitter=True,
     )
     def download_wheels_from_requirements(
@@ -209,7 +213,7 @@ class PyPaPipManager:
         OSError,
         max_attempts=3,
         base_delay=1.0,
-        backoff="exponential",
+        backoff=BackoffStrategy.EXPONENTIAL,
         jitter=True,
     )
     def download_wheels_for_packages(self, python_exe: Path, packages: list[str], dest_dir: Path) -> None:

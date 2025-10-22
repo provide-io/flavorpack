@@ -6,20 +6,26 @@
 # flavor/packaging/python/uv_manager.py
 #
 """UV tool manager for FlavorPack packaging.
-"""
 
 This module provides UV (uv) command management with Foundation integration
 for Python package management operations that benefit from uv's performance.
 
 IMPORTANT: UV commands are used for specific operations where performance
 is critical. For complex dependency resolution, use PyPaPipManager instead.
+"""
+
+from __future__ import annotations
+
+import asyncio
 from pathlib import Path
+from typing import ClassVar
 
 from provide.foundation import retry
 from provide.foundation.config import BaseConfig
 from provide.foundation.logger import logger
 from provide.foundation.platform import get_arch_name, get_os_name
 from provide.foundation.process import run
+from provide.foundation.resilience.types import BackoffStrategy
 from provide.foundation.tools.base import (
     BaseToolManager,
     ToolMetadata,
@@ -42,7 +48,7 @@ class UVManager(BaseToolManager):
 
     tool_name = "uv"
     executable_name = "uv"
-    supported_platforms = ["linux", "darwin", "windows"]
+    supported_platforms: ClassVar[list[str]] = ["linux", "darwin", "windows"]
 
     def __init__(self, config: BaseConfig | None = None) -> None:
         """
@@ -162,11 +168,11 @@ class UVManager(BaseToolManager):
 
         # Install specific version if requested
         if version:
-            return self.install(version)
+            return asyncio.run(self.install(version))
 
         # Install latest as fallback
         logger.info("Installing UV as system UV not available")
-        return self.install("latest")
+        return asyncio.run(self.install("latest"))
 
     def _get_uv_venv_cmd(
         self, python_exe: Path, venv_path: Path, python_version: str | None = None
@@ -326,7 +332,7 @@ class UVManager(BaseToolManager):
         OSError,
         max_attempts=3,
         base_delay=1.0,
-        backoff="exponential",
+        backoff=BackoffStrategy.EXPONENTIAL,
         jitter=True,
     )
     def download_uv_binary(self, dest_dir: Path, python_exe: Path | None = None) -> Path | None:

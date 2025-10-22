@@ -5,9 +5,9 @@ package format_2025
 // =================================
 const (
 	// Platform-specific page sizes
-	PageSize      = 4096 // Default for Linux/Windows
-	PageSizeMacOS = 16384 // macOS, especially M1/M2
-	CacheLine     = 64
+	PageSize       = 4096  // Default for Linux/Windows
+	PageSizeMacOS  = 16384 // macOS, especially M1/M2
+	CacheLine      = 64
 	CacheLineMacOS = 128
 )
 
@@ -24,17 +24,17 @@ const (
 // Disk and memory defaults
 // =================================
 const (
-	DiskSpaceMultiplier = 2               // Require 2x compressed size for extraction
-	MaxMemory          = 128 * 1024 * 1024 // 128MB
-	MinMemory          = 8 * 1024 * 1024   // 8MB
-	ChunkSize          = 64 * 1024         // 64KB for streaming
+	DiskSpaceMultiplier = 2                 // Require 2x compressed size for extraction
+	MaxMemory           = 128 * 1024 * 1024 // 128MB
+	MinMemory           = 8 * 1024 * 1024   // 8MB
+	ChunkSize           = 64 * 1024         // 64KB for streaming
 )
 
 // =================================
 // Path constants
 // =================================
 const (
-	PSPFHiddenPrefix     = "."
+	PSPFHiddenPrefix    = "."
 	PSPFSuffix          = ".pspf"
 	InstanceDir         = "instance"
 	PackageDir          = "package"

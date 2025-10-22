@@ -56,6 +56,7 @@ pub const DEFAULT_COMPLETE_FILE: &str = "complete";
 pub const DEFAULT_PACKAGE_CHECKSUM_FILE: &str = "package.checksum";
 pub const DEFAULT_PSP_METADATA_FILE: &str = "psp.json";
 pub const DEFAULT_INDEX_METADATA_FILE: &str = "index.json";
+pub const DEFAULT_CACHE_SUBDIR: &str = ".cache/flavor/workenv";
 
 // =================================
 // Checksum algorithms
@@ -192,13 +193,14 @@ pub enum ValidationLevel {
 
 impl ValidationLevel {
     /// Parse validation level from string (case insensitive)
-    pub fn from_str(s: &str) -> Option<Self> {
+    #[must_use]
+    pub fn parse(s: &str) -> Option<Self> {
         match s.to_lowercase().as_str() {
-            "strict" => Some(ValidationLevel::Strict),
-            "standard" => Some(ValidationLevel::Standard),
-            "relaxed" => Some(ValidationLevel::Relaxed),
-            "minimal" => Some(ValidationLevel::Minimal),
-            "none" => Some(ValidationLevel::None),
+            "strict" => Some(Self::Strict),
+            "standard" => Some(Self::Standard),
+            "relaxed" => Some(Self::Relaxed),
+            "minimal" => Some(Self::Minimal),
+            "none" => Some(Self::None),
             _ => None,
         }
     }
@@ -221,11 +223,11 @@ pub fn get_validation_level() -> ValidationLevel {
 
     // Check FLAVOR_VALIDATION variable
     if let Ok(val) = env::var("FLAVOR_VALIDATION") {
-        if let Some(level) = ValidationLevel::from_str(&val) {
+        if let Some(level) = ValidationLevel::parse(&val) {
             return level;
         }
     }
 
     // Use default from constants
-    ValidationLevel::from_str(DEFAULT_VALIDATION_LEVEL).unwrap_or(ValidationLevel::Standard)
+    ValidationLevel::parse(DEFAULT_VALIDATION_LEVEL).unwrap_or(ValidationLevel::Standard)
 }

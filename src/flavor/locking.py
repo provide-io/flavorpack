@@ -23,10 +23,10 @@ class LockManager:
     def __init__(self, lock_dir: Path | None = None) -> None:
         self.lock_dir = lock_dir or Path.home() / ".cache" / "flavor" / "locks"
         ensure_dir(self.lock_dir)
-        self.held_locks = set()
+        self.held_locks: set[Path] = set()
 
     @contextmanager
-    def lock(self, name: str, timeout: float = 30.0) -> Generator[None, None, None]:
+    def lock(self, name: str, timeout: float = 30.0) -> Generator[Path, None, None]:
         """
         Acquire a named lock.
 

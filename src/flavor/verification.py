@@ -5,8 +5,12 @@
 
 # flavor/verification.py
 #
-"""Package verification for PSPF/2025 bundles.from pathlib import Path
-"""
+"""Package verification for PSPF/2025 bundles."""
+
+from __future__ import annotations
+
+from pathlib import Path
+from typing import Any
 
 from flavor.psp.format_2025 import PSPFReader
 
@@ -15,7 +19,7 @@ class FlavorVerifier:
     """Verifies PSPF/2025 packages only."""
 
     @classmethod
-    def verify_package(cls, package_path: Path) -> dict:
+    def verify_package(cls, package_path: Path) -> dict[str, Any]:
         """
         Verify a PSPF/2025 package.
 
