@@ -52,7 +52,7 @@
    - Memory view handling, backend availability checks
 
 5. ✅ **Phase 6.1**: psp/format_2025/workenv.py (50.28% → 98.31%, +48.03%)
-   - 32 tests in 1 file (621 LOC)
+   - 32 tests across 2 files (310 + 363 = 673 LOC)
    - WorkEnvManager initialization and setup_workenv method
    - Cache validation (valid/invalid/missing/mismatch)
    - Lifecycle-based slot cleanup (init/temp/runtime)
@@ -64,7 +64,7 @@
 **Totals**:
 - **Tests Added**: 169 new tests (all passing)
 - **Statements Covered**: +345 statements
-- **Files Created**: 11 test files (4077 LOC total)
+- **Files Created**: 12 test files (4089 LOC total, all <500 LOC)
 - **Bugs Fixed**: 2 (is_windows function call, Path to str conversion)
 
 ## 🚀 Previous Session Summary (2025-10-21)
@@ -538,7 +538,9 @@
 ### Phase 6: Final Push (50-100%) - IN PROGRESS
 
 #### 6.1 psp/format_2025/workenv.py (50.28% → 98.31%) ✅ COMPLETE
-- **Test File**: `tests/format_2025/test_workenv.py` (621 LOC)
+- **Test Files**:
+  - `tests/format_2025/test_workenv_core.py` (310 LOC)
+  - `tests/format_2025/test_workenv_commands.py` (363 LOC)
 - **Tests**: 32 comprehensive tests (all passing)
 - **Coverage**: 98.31% (135 statements, 0 missed, 3 partial branches)
 - **Test Classes**:
