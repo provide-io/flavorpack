@@ -17,6 +17,17 @@ from flavor.psp.format_2025 import (
 from flavor.psp.format_2025.constants import SLOT_DESCRIPTOR_SIZE
 
 
+class TestPSPFSlotsOperations:
+    """Test PSPF slot management."""
+
+    def test_slot_compression_none(self, temp_dir, test_builder):
+        """Test no compression."""
+        data = b"NOCOMPRESS" * 100
+        slot_path = temp_dir / "nocompress.bin"
+        slot_path.write_bytes(data)
+
+        slot = SlotMetadata(
+            index=0,
             id="uncompressed",
             source=str(slot_path),
             target="uncompressed",

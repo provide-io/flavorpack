@@ -250,11 +250,3 @@ class TestPSPFSlots:
         metadata_read = reader.read_metadata()
         assert metadata_read["slots"][0]["codec"] == "gzip"
 
-    def test_slot_compression_none(self, temp_dir, test_builder):
-        """Test no compression."""
-        data = b"NOCOMPRESS" * 100
-        slot_path = temp_dir / "nocompress.bin"
-        slot_path.write_bytes(data)
-
-        slot = SlotMetadata(
-            index=0,
