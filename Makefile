@@ -27,23 +27,58 @@ test-mutation: ## Run mutation testing quality tests
 	@source workenv/bin/activate && pytest -m mutation -v
 
 .PHONY: mutmut
-mutmut: ## Run mutation testing with mutmut
+mutmut: ## Run mutation testing with mutmut (legacy)
 	@echo "🧬 Running mutation testing..."
 	@source workenv/bin/activate && mutmut run
 
 .PHONY: mutmut-results
-mutmut-results: ## Show mutation testing results
+mutmut-results: ## Show mutation testing results (legacy)
 	@source workenv/bin/activate && mutmut results
 
 .PHONY: mutmut-html
-mutmut-html: ## Generate HTML mutation testing report
+mutmut-html: ## Generate HTML mutation testing report (legacy)
 	@source workenv/bin/activate && mutmut html
 	@echo "📊 HTML report generated in html/"
 
 .PHONY: mutmut-clean
 mutmut-clean: ## Clean mutation testing artifacts
-	@rm -rf mutants/ .mutmut-cache html/
+	@rm -rf mutants/ .mutmut-cache html/ .mutation-artifacts/
 	@echo "🧹 Mutation testing artifacts cleaned"
+
+# Testkit Mutation Testing (Recommended)
+.PHONY: mutation-all
+mutation-all: ## Run mutation testing on all code (testkit)
+	@echo "🧬 Running mutation testing with testkit..."
+	@source workenv/bin/activate && testkit quality mutate src/flavor
+
+.PHONY: mutation-security
+mutation-security: ## Run mutation testing on security-critical modules
+	@echo "🔒 Testing security-critical modules..."
+	@source workenv/bin/activate && testkit quality mutate src/flavor --priority critical
+
+.PHONY: mutation-core
+mutation-core: ## Run mutation testing on core PSPF modules
+	@echo "🎯 Testing core modules..."
+	@source workenv/bin/activate && testkit quality mutate src/flavor --priority high
+
+.PHONY: mutation-changed
+mutation-changed: ## Run mutation testing on changed files only
+	@echo "📝 Testing changed files..."
+	@source workenv/bin/activate && testkit quality mutate src/flavor --changed-only
+
+.PHONY: mutation-module
+mutation-module: ## Run mutation testing on specific module (usage: make mutation-module MODULE=path/to/module.py)
+	@if [ -z "$(MODULE)" ]; then \
+		echo "Usage: make mutation-module MODULE=path/to/module.py"; \
+		exit 1; \
+	fi
+	@echo "🎯 Testing module: $(MODULE)..."
+	@source workenv/bin/activate && testkit quality mutate src/flavor --module $(MODULE)
+
+.PHONY: mutation-report
+mutation-report: ## Generate HTML mutation testing report
+	@echo "📊 Generating mutation report..."
+	@source workenv/bin/activate && testkit quality mutate src/flavor --format html
 
 .PHONY: build-ingredients
 build-ingredients: ## Build all ingredients (Go and Rust)
