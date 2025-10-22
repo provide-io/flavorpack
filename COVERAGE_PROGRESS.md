@@ -1,9 +1,9 @@
 # Code Coverage Progress - Path to 100%
 
 **Date**: 2025-10-21
-**Current Coverage**: ~63% (from 61.74% baseline)
+**Current Coverage**: 67.29% (from 61.74% baseline)
 **Target**: 100%
-**Status**: Phase 2 Complete (4 of 15 phases)
+**Status**: Phase 3.1 Complete (5 of 15 phases)
 
 ---
 
@@ -68,6 +68,19 @@
     - Slot integrity verification
     - Metadata read failures
 
+### Phase 3: Very Low Coverage Files (IN PROGRESS)
+
+#### 3.1 commands/ingredients.py (11.93% → 99.54%) ✅
+- **Test File**: `tests/cli/test_ingredients_command.py`
+- **Tests**: 34 comprehensive tests
+- **Coverage**: 99.54% (150 statements, 148 covered, 1 unreachable branch)
+- **Covers**:
+  - `flavor ingredients list` (empty, verbose, version detection, sorting)
+  - `flavor ingredients build` (all languages, force flag)
+  - `flavor ingredients clean` (confirmations, language filters)
+  - `flavor ingredients info` (found/not found, executable checks)
+  - `flavor ingredients test` (passed/failed/skipped scenarios)
+
 ---
 
 ## 📊 Phase 2 Summary
@@ -87,15 +100,14 @@
 
 ## 🎯 Remaining Work (Phases 3-6)
 
-### Phase 3: Very Low Coverage (<20%) - 486 statements
+### Phase 3: Very Low Coverage (<20%) - ~336 statements remaining
 
-#### 3.1 commands/ingredients.py (11.93% → 100%)
-- **Current**: 150 statements, 124 missed
-- **Missing**: `flavor ingredients list/build/verify` commands
-- **Test File**: Create `tests/cli/test_ingredients_command.py`
-- **Approach**: Mock `IngredientManager`, test CLI output
+#### 3.1 commands/ingredients.py ✅ COMPLETE (11.93% → 99.54%)
+- **Completed**: 34 tests, 99.54% coverage
+- **Test File**: `tests/cli/test_ingredients_command.py`
+- **Impact**: +148 statements covered
 
-#### 3.2 commands/utils.py (17.27% → 100%)
+#### 3.2 commands/utils.py (17.27% → 100%) ⏳ IN PROGRESS
 - **Current**: 82 statements, 63 missed
 - **Missing**: `flavor clean` command variations
 - **Test File**: Create `tests/cli/test_utils_command.py`
