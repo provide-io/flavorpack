@@ -9,7 +9,7 @@
 
 ## 🚀 Today's Session Summary (2025-10-22)
 
-**Coverage Improvement**: 77.19% → 79.88% (+2.69%)
+**Coverage Improvement**: 77.19% → 80.47% (+3.28%)
 
 **Phases Completed**:
 1. ✅ **Phase 5.2**: packaging/python/slot_builder.py (44.76% → 99.52%, +54.76%)
@@ -31,10 +31,20 @@
    - Python builder metadata (all runtime env options: unset/pass/set/map)
    - Bug fix: `is_windows` function call in create_builder_manifest
 
+3. ✅ **Phase 5.4**: psp/format_2025/keys.py (48.24% → 100%, +51.76%)
+   - 29 tests in 1 file (411 LOC)
+   - Key resolution with priority ordering (explicit → seed → path → ephemeral)
+   - Deterministic key generation from seed (SHA256-based, reproducible)
+   - Ephemeral key generation (random, cryptographically secure)
+   - Key loading from filesystem (validation, error handling)
+   - Key saving with atomic writes and restrictive permissions
+   - KeyConfig creation with validation (single source enforcement)
+   - Full error handling for all edge cases
+
 **Totals**:
-- **Tests Added**: 81 new tests (all passing)
-- **Statements Covered**: +195 statements
-- **Files Created**: 7 test files (2336 LOC total)
+- **Tests Added**: 110 new tests (all passing)
+- **Statements Covered**: +231 statements
+- **Files Created**: 8 test files (2747 LOC total)
 - **Bugs Fixed**: 1 (is_windows function call)
 
 ## 🚀 Previous Session Summary (2025-10-21)
@@ -253,10 +263,11 @@
 | packaging/python/packager.py | 35.38% | 100% | 30 | ✅ Complete |
 | packaging/python/slot_builder.py | 44.76% | 99.52% | 40 | ✅ Complete |
 | packaging/orchestrator_ingredients.py | 47.53% | 99.38% | 41 | ✅ Complete |
+| psp/format_2025/keys.py | 48.24% | 100% | 29 | ✅ Complete |
 
-**Total New Tests**: 111 tests
-**Lines Covered**: +276 statements covered
-**Impact**: Project coverage improved from 76.05% → 79.88% (+3.83%)
+**Total New Tests**: 140 tests
+**Lines Covered**: +312 statements covered
+**Impact**: Project coverage improved from 76.05% → 80.47% (+4.42%)
 
 ---
 
@@ -453,8 +464,30 @@
 - **Remaining**: Line 360->364 (one partial branch in metadata creation)
 - **Impact**: +108 statements covered
 
+#### 5.4 psp/format_2025/keys.py (48.24% → 100%) ✅ COMPLETE
+- **Test File**: `tests/format_2025/test_keys_resolution.py` (411 LOC)
+- **Tests**: 29 comprehensive tests (all passing)
+- **Coverage**: 100% (67 statements, 0 missed, 18 branches all covered)
+- **Test Classes**:
+  - TestResolveKeys (6 tests) - Priority-based key resolution
+  - TestGenerateDeterministicKeys (4 tests) - Deterministic generation from seed
+  - TestGenerateEphemeralKeys (3 tests) - Random ephemeral key generation
+  - TestLoadKeysFromPath (5 tests) - Filesystem key loading with validation
+  - TestSaveKeysToPath (3 tests) - Atomic key saving with permissions
+  - TestCreateKeyConfig (8 tests) - Configuration validation and error handling
+- **Covers**:
+  - `resolve_keys()` - Priority ordering: explicit > seed > path > ephemeral
+  - `generate_deterministic_keys()` - SHA256-based deterministic generation, reproducible
+  - `generate_ephemeral_keys()` - Random Ed25519 key generation
+  - `load_keys_from_path()` - Load from filesystem, validate sizes, error handling
+  - `save_keys_to_path()` - Atomic writes, directory creation, restrictive permissions
+  - `create_key_config()` - Validation (both keys required, single source only)
+  - Ed25519 cryptography integration (private→public key derivation)
+  - All error paths: missing files, invalid sizes, conflicting sources
+- **Remaining**: None - 100% coverage achieved
+- **Impact**: +36 statements covered
+
 Files remaining to complete:
-- psp/format_2025/keys.py (48.24%)
 - psp/format_2025/extraction.py (48.55%)
 
 ### Phase 6: Final Push (50-100%)
