@@ -171,8 +171,9 @@ class TestBuildGoIngredients:
         """Test building go ingredients when binaries exist and force=False."""
         mock_get_platform.return_value = "darwin_arm64"
         mock_manager = Mock()
-        mock_manager.go_src_dir = tmp_path / "go_src"
-        mock_manager.go_src_dir.exists.return_value = True
+        mock_go_src = Mock()
+        mock_go_src.exists.return_value = True
+        mock_manager.go_src_dir = mock_go_src
         mock_manager.ingredients_bin = tmp_path / "bin"
 
         # Create existing binaries
@@ -202,8 +203,9 @@ class TestBuildGoIngredients:
         """Test successful go ingredients build."""
         mock_get_platform.return_value = "linux_x86_64"
         mock_manager = Mock()
-        mock_manager.go_src_dir = tmp_path / "go_src"
-        mock_manager.go_src_dir.exists.return_value = True
+        mock_go_src = Mock()
+        mock_go_src.exists.return_value = True
+        mock_manager.go_src_dir = mock_go_src
         mock_manager.ingredients_bin = tmp_path / "bin"
 
         bin_dir = tmp_path / "bin"
@@ -237,8 +239,9 @@ class TestBuildGoIngredients:
         """Test go ingredients build failure."""
         mock_get_platform.return_value = "linux_x86_64"
         mock_manager = Mock()
-        mock_manager.go_src_dir = tmp_path / "go_src"
-        mock_manager.go_src_dir.exists.return_value = True
+        mock_go_src = Mock()
+        mock_go_src.exists.return_value = True
+        mock_manager.go_src_dir = mock_go_src
         mock_manager.ingredients_bin = tmp_path / "bin"
 
         bin_dir = tmp_path / "bin"
@@ -267,8 +270,9 @@ class TestBuildRustIngredients:
         """Test building rust ingredients when source directory doesn't exist."""
         mock_get_platform.return_value = "linux_x86_64"
         mock_manager = Mock()
-        mock_manager.rust_src_dir = tmp_path / "nonexistent"
-        mock_manager.rust_src_dir.exists.return_value = False
+        mock_rust_src = Mock()
+        mock_rust_src.exists.return_value = False
+        mock_manager.rust_src_dir = mock_rust_src
 
         loader = BinaryLoader(mock_manager)
         result = loader._build_rust_ingredients(force=False)
@@ -291,11 +295,9 @@ class TestBuildRustIngredients:
         """Test successful rust ingredients build."""
         mock_get_platform.return_value = "linux_x86_64"
         mock_manager = Mock()
-        mock_manager.rust_src_dir = tmp_path / "rust_src"
-        mock_manager.rust_src_dir.exists.return_value = True
-        mock_manager.rust_src_dir.__truediv__ = lambda self, x: (
-            tmp_path / "rust_src" / x
-        )
+        mock_rust_src = tmp_path / "rust_src"
+        mock_rust_src.mkdir()
+        mock_manager.rust_src_dir = mock_rust_src
         mock_manager.ingredients_bin = tmp_path / "bin"
 
         bin_dir = tmp_path / "bin"
@@ -334,16 +336,12 @@ class TestBuildRustIngredients:
         """Test rust build succeeds but binary not found in target/release."""
         mock_get_platform.return_value = "linux_x86_64"
         mock_manager = Mock()
-        mock_manager.rust_src_dir = tmp_path / "rust_src"
-        mock_manager.rust_src_dir.exists.return_value = True
-
-        # Mock the path chain
-        target_release = Mock()
-        target_release.exists.return_value = False
-        mock_manager.rust_src_dir.__truediv__ = lambda self, x: target_release if x == "target" else Mock()
-
+        mock_rust_src = tmp_path / "rust_src"
+        mock_rust_src.mkdir()
+        mock_manager.rust_src_dir = mock_rust_src
         mock_manager.ingredients_bin = tmp_path / "bin"
 
+        # Create rust_src but not the target/release binaries
         # Mock successful build but file doesn't exist
         mock_run.return_value = Mock(returncode=0)
 
@@ -361,8 +359,9 @@ class TestCleanIngredients:
         """Test clean when ingredients bin doesn't exist."""
         mock_get_platform.return_value = "linux_x86_64"
         mock_manager = Mock()
-        mock_manager.ingredients_bin = tmp_path / "nonexistent"
-        mock_manager.ingredients_bin.exists.return_value = False
+        mock_bin = Mock()
+        mock_bin.exists.return_value = False
+        mock_manager.ingredients_bin = mock_bin
 
         loader = BinaryLoader(mock_manager)
         result = loader.clean_ingredients()
@@ -386,10 +385,6 @@ class TestCleanIngredients:
         other_file.write_text("text")
 
         mock_manager.ingredients_bin = bin_dir
-        mock_manager.ingredients_bin.exists.return_value = True
-        mock_manager.ingredients_bin.glob = lambda pattern: (
-            [go_launcher, rs_builder] if pattern == "flavor-*" else []
-        )
 
         loader = BinaryLoader(mock_manager)
         result = loader.clean_ingredients(language=None)
@@ -410,8 +405,6 @@ class TestCleanIngredients:
         go_launcher.write_text("binary")
 
         mock_manager.ingredients_bin = bin_dir
-        mock_manager.ingredients_bin.exists.return_value = True
-        mock_manager.ingredients_bin.glob = lambda pattern: [go_launcher] if pattern == "flavor-go-*" else []
 
         loader = BinaryLoader(mock_manager)
         result = loader.clean_ingredients(language="go")
@@ -431,8 +424,6 @@ class TestCleanIngredients:
         rs_builder.write_text("binary")
 
         mock_manager.ingredients_bin = bin_dir
-        mock_manager.ingredients_bin.exists.return_value = True
-        mock_manager.ingredients_bin.glob = lambda pattern: [rs_builder] if pattern == "flavor-rs-*" else []
 
         loader = BinaryLoader(mock_manager)
         result = loader.clean_ingredients(language="rust")
