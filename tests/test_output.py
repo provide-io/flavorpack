@@ -352,7 +352,7 @@ class TestGetOutputHandler:
 
     def test_default_output_handler(self) -> None:
         """Test get_output_handler with defaults."""
-        with patch("flavor.output.get_env", return_value="text"):
+        with patch("provide.foundation.env.get_env", return_value="text"):
             handler = get_output_handler()
 
         assert handler.format == OutputFormat.TEXT
@@ -418,7 +418,7 @@ class TestGetOutputHandler:
                 return "/custom/path.log"
             return default
 
-        with patch("flavor.output.get_env", side_effect=mock_get_env):
+        with patch("provide.foundation.env.get_env", side_effect=mock_get_env):
             handler = get_output_handler(format_env="CUSTOM_FORMAT", file_env="CUSTOM_FILE")
 
         assert handler.format == OutputFormat.JSON
@@ -434,7 +434,7 @@ class TestGetOutputHandler:
                 return "/default/path.log"
             return default
 
-        with patch("flavor.output.get_env", side_effect=mock_get_env):
+        with patch("provide.foundation.env.get_env", side_effect=mock_get_env):
             handler = get_output_handler()
 
         assert handler.format == OutputFormat.JSON
