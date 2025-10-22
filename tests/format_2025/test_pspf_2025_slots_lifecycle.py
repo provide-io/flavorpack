@@ -10,7 +10,7 @@ import os
 import pytest
 
 from flavor.psp.format_2025 import (
-    SLOT_ALIGNMENT,
+    DEFAULT_SLOT_ALIGNMENT,
     PSPFReader,
     SlotMetadata,
 )

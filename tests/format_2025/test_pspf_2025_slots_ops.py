@@ -10,7 +10,7 @@ import os
 import pytest
 
 from flavor.psp.format_2025 import (
-    SLOT_ALIGNMENT,
+    DEFAULT_SLOT_ALIGNMENT,
     PSPFReader,
     SlotMetadata,
 )
@@ -148,7 +148,7 @@ class TestPSPFSlotsOperations:
 
                 # Verify descriptor fields
                 assert descriptor.offset > 0
-                assert descriptor.offset % SLOT_ALIGNMENT == 0
+                assert descriptor.offset % DEFAULT_SLOT_ALIGNMENT == 0
                 assert descriptor.size > 0
                 assert descriptor.checksum != 0
 
