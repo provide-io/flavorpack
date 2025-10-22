@@ -6,7 +6,11 @@ from unittest.mock import patch
 
 import pytest
 
-from flavor.psp.format_2025.environment import set_platform_environment
+from flavor.psp.format_2025.environment import (
+    apply_environment_layers,
+    process_runtime_env,
+    set_platform_environment,
+)
 
 
 @pytest.mark.unit
