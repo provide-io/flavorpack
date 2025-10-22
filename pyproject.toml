@@ -159,7 +159,7 @@ markers = [
 
 [tool.mutmut]
 paths_to_mutate = ["src/flavor"]
-tests_dir = "tests"
+tests_dir = ["tests"]
 runner = "pytest"
 
 [tool.coverage.run]
