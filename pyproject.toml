@@ -159,8 +159,9 @@ markers = [
 
 [tool.coverage.run]
 branch = true
-source = ["flavor"]
-parallel = false
+source_pkgs = ["flavor"]
+parallel = true
+concurrency = ["multiprocessing"]
 omit = [
     "*/protocols/tfprotov6/protobuf/*",
     "*/protocols/tfprotov6/handlers/validate_resource_config.py",
