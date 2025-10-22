@@ -24,28 +24,14 @@ test-cov-xml: ## Run Python tests with XML coverage for CI
 # Mutation Testing
 .PHONY: test-mutation
 test-mutation: ## Run mutation testing quality tests
-	@source workenv/bin/activate && pytest -m mutation -v
+	@pytest -m mutation -v
 
-.PHONY: mutmut
-mutmut: ## Run mutation testing with mutmut (legacy)
-	@echo "🧬 Running mutation testing..."
-	@source workenv/bin/activate && mutmut run
-
-.PHONY: mutmut-results
-mutmut-results: ## Show mutation testing results (legacy)
-	@source workenv/bin/activate && mutmut results
-
-.PHONY: mutmut-html
-mutmut-html: ## Generate HTML mutation testing report (legacy)
-	@source workenv/bin/activate && mutmut html
-	@echo "📊 HTML report generated in html/"
-
-.PHONY: mutmut-clean
-mutmut-clean: ## Clean mutation testing artifacts
+.PHONY: mutation-clean
+mutation-clean: ## Clean mutation testing artifacts
 	@rm -rf mutants/ .mutmut-cache html/ .mutation-artifacts/
 	@echo "🧹 Mutation testing artifacts cleaned"
 
-# Testkit Mutation Testing (Recommended)
+# Testkit Mutation Testing
 .PHONY: mutation-all
 mutation-all: ## Run mutation testing on all code (testkit)
 	@echo "🧬 Running mutation testing with provide-testkit..."
