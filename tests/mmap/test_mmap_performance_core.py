@@ -395,5 +395,3 @@ class TestMMapPerformance:
             path.unlink(missing_ok=True)
 
 
-@pytest.mark.mmap
-@pytest.mark.slow
