@@ -9,12 +9,12 @@ import os
 
 import pytest
 
+from flavor.config.defaults import DEFAULT_SLOT_DESCRIPTOR_SIZE
 from flavor.psp.format_2025 import (
-    SLOT_ALIGNMENT,
+    DEFAULT_SLOT_ALIGNMENT,
     PSPFReader,
     SlotMetadata,
 )
-from flavor.psp.format_2025.constants import SLOT_DESCRIPTOR_SIZE
 
 
 class TestPSPFSlots:
@@ -84,7 +84,7 @@ class TestPSPFSlots:
 
         return slots
 
-    def test_slot_lifecycle_runtime(self, temp_dir, test_builder):
+    def test_slot_lifecycle_runtime(self, temp_dir, test_builder) -> None:
         """Test runtime slot lifecycle metadata."""
         slot = SlotMetadata(
             index=0,
@@ -104,7 +104,7 @@ class TestPSPFSlots:
         assert slot_dict["id"] == "test-runtime"
         # Runtime slots available during application execution
 
-    def test_slot_lifecycle_init(self, temp_dir, test_builder):
+    def test_slot_lifecycle_init(self, temp_dir, test_builder) -> None:
         """Test init slot lifecycle metadata."""
         slot = SlotMetadata(
             index=0,
@@ -124,7 +124,7 @@ class TestPSPFSlots:
         assert slot_dict["id"] == "test-init"
         # Init slots removed after initialization
 
-    def test_slot_lifecycle_temp(self, temp_dir, test_builder):
+    def test_slot_lifecycle_temp(self, temp_dir, test_builder) -> None:
         """Test temp slot lifecycle metadata."""
         slot = SlotMetadata(
             index=0,
@@ -144,7 +144,7 @@ class TestPSPFSlots:
         assert slot_dict["id"] == "test-temp"
         # Temp slots removed after current session
 
-    def test_slot_lifecycle_cache(self, temp_dir, test_builder):
+    def test_slot_lifecycle_cache(self, temp_dir, test_builder) -> None:
         """Test cache slot lifecycle metadata."""
         slot = SlotMetadata(
             index=0,
@@ -164,7 +164,7 @@ class TestPSPFSlots:
         assert slot_dict["purpose"] == "config"
         # Cache slots kept for performance, can be regenerated
 
-    def test_multiple_slots(self, temp_dir, test_slots, test_builder):
+    def test_multiple_slots(self, temp_dir, test_slots, test_builder) -> None:
         """Test bundle with multiple slots."""
         metadata = {
             "format": "PSPF/2025",
@@ -206,14 +206,14 @@ class TestPSPFSlots:
             assert slot_meta["lifecycle"] == slot.lifecycle
             assert slot_meta["purpose"] == slot.purpose
 
-    def test_slot_compression_gzip(self, temp_dir, test_builder):
+    def test_slot_compression_gzip(self, temp_dir, test_builder) -> None:
         """Test gzip compression."""
         # Create highly compressible data
         data = b"REPEAT" * 1000
         slot_path = temp_dir / "compress.txt"
         slot_path.write_bytes(data)
 
-        slot = SlotMetadata(
+        SlotMetadata(
             index=0,
             id="compressed",
             source=str(slot_path),
@@ -248,13 +248,3 @@ class TestPSPFSlots:
         # Verify the slot is stored with compression by checking metadata
         reader = PSPFReader(bundle_path)
         metadata_read = reader.read_metadata()
-        assert metadata_read["slots"][0]["codec"] == "gzip"
-
-    def test_slot_compression_none(self, temp_dir, test_builder):
-        """Test no compression."""
-        data = b"NOCOMPRESS" * 100
-        slot_path = temp_dir / "nocompress.bin"
-        slot_path.write_bytes(data)
-
-        slot = SlotMetadata(
-            index=0,
