@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 from pathlib import Path
-from unittest.mock import Mock, patch
 
-import pytest
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import dsa, ec, ed25519, rsa
+import pytest
 
 from flavor.packaging.keys import generate_key_pair, load_private_key_raw, load_public_key_raw
 
@@ -93,7 +92,7 @@ class TestGenerateKeyPair:
         stored_public = serialization.load_pem_public_key(public_pem)
 
         # Compare public key bytes
-        derived_bytes = derived_public.public_bytes(
+        derived_bytes = derived_public.public_bytes(  # type: ignore[attr-defined]
             encoding=serialization.Encoding.Raw, format=serialization.PublicFormat.Raw
         )
         stored_bytes = stored_public.public_bytes(  # type: ignore[attr-defined]
@@ -160,14 +159,14 @@ class TestLoadPrivateKeyRaw:
         rsa_key_path = tmp_path / "rsa.key"
         rsa_key_path.write_bytes(rsa_pem)
 
-        with pytest.raises(ValueError, match="Incompatible key type.*RSA"):
+        with pytest.raises(ValueError, match=r"Incompatible key type.*RSA"):
             load_private_key_raw(rsa_key_path)
 
     def test_load_private_key_raw_ec_key_error(self, tmp_path: Path) -> None:
         """Test loading EC key raises helpful error."""
         # Generate EC key
         ec_key = ec.generate_private_key(ec.SECP256R1())
-        ec_pem = ec_key.private_bytes(
+        ec_pem = ec_key.private_bytes(  # type: ignore[attr-defined]
             encoding=serialization.Encoding.PEM,
             format=serialization.PrivateFormat.PKCS8,
             encryption_algorithm=serialization.NoEncryption(),
@@ -176,14 +175,14 @@ class TestLoadPrivateKeyRaw:
         ec_key_path = tmp_path / "ec.key"
         ec_key_path.write_bytes(ec_pem)
 
-        with pytest.raises(ValueError, match="Incompatible key type.*EC"):
+        with pytest.raises(ValueError, match=r"Incompatible key type.*EC"):
             load_private_key_raw(ec_key_path)
 
     def test_load_private_key_raw_dsa_key_error(self, tmp_path: Path) -> None:
         """Test loading DSA key raises helpful error."""
         # Generate DSA key
         dsa_key = dsa.generate_private_key(key_size=2048)
-        dsa_pem = dsa_key.private_bytes(
+        dsa_pem = dsa_key.private_bytes(  # type: ignore[attr-defined]
             encoding=serialization.Encoding.PEM,
             format=serialization.PrivateFormat.PKCS8,
             encryption_algorithm=serialization.NoEncryption(),
@@ -192,7 +191,7 @@ class TestLoadPrivateKeyRaw:
         dsa_key_path = tmp_path / "dsa.key"
         dsa_key_path.write_bytes(dsa_pem)
 
-        with pytest.raises(ValueError, match="Incompatible key type.*DSA"):
+        with pytest.raises(ValueError, match=r"Incompatible key type.*DSA"):
             load_private_key_raw(dsa_key_path)
 
     def test_load_private_key_raw_helpful_error_message(self, tmp_path: Path) -> None:
@@ -258,7 +257,7 @@ class TestLoadPublicKeyRaw:
         rsa_pub_path = tmp_path / "rsa_pub.key"
         rsa_pub_path.write_bytes(rsa_pub_pem)
 
-        with pytest.raises(ValueError, match="Incompatible key type.*RSA"):
+        with pytest.raises(ValueError, match=r"Incompatible key type.*RSA"):
             load_public_key_raw(rsa_pub_path)
 
     def test_load_public_key_raw_ec_key_error(self, tmp_path: Path) -> None:
@@ -274,7 +273,7 @@ class TestLoadPublicKeyRaw:
         ec_pub_path = tmp_path / "ec_pub.key"
         ec_pub_path.write_bytes(ec_pub_pem)
 
-        with pytest.raises(ValueError, match="Incompatible key type.*EC"):
+        with pytest.raises(ValueError, match=r"Incompatible key type.*EC"):
             load_public_key_raw(ec_pub_path)
 
     def test_load_public_key_raw_dsa_key_error(self, tmp_path: Path) -> None:
@@ -290,7 +289,7 @@ class TestLoadPublicKeyRaw:
         dsa_pub_path = tmp_path / "dsa_pub.key"
         dsa_pub_path.write_bytes(dsa_pub_pem)
 
-        with pytest.raises(ValueError, match="Incompatible key type.*DSA"):
+        with pytest.raises(ValueError, match=r"Incompatible key type.*DSA"):
             load_public_key_raw(dsa_pub_path)
 
     def test_load_public_key_raw_helpful_error_message(self, tmp_path: Path) -> None:
