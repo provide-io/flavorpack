@@ -49,22 +49,22 @@ mutmut-clean: ## Clean mutation testing artifacts
 .PHONY: mutation-all
 mutation-all: ## Run mutation testing on all code (testkit)
 	@echo "🧬 Running mutation testing with provide-testkit..."
-	@source workenv/bin/activate && provide-testkit quality mutate src/flavor
+	@python -m provide.testkit quality mutate src/flavor
 
 .PHONY: mutation-security
 mutation-security: ## Run mutation testing on security-critical modules
 	@echo "🔒 Testing security-critical modules..."
-	@source workenv/bin/activate && provide-testkit quality mutate src/flavor --priority critical
+	@python -m provide.testkit quality mutate src/flavor --priority critical
 
 .PHONY: mutation-core
 mutation-core: ## Run mutation testing on core PSPF modules
 	@echo "🎯 Testing core modules..."
-	@source workenv/bin/activate && provide-testkit quality mutate src/flavor --priority high
+	@python -m provide.testkit quality mutate src/flavor --priority high
 
 .PHONY: mutation-changed
 mutation-changed: ## Run mutation testing on changed files only
 	@echo "📝 Testing changed files..."
-	@source workenv/bin/activate && provide-testkit quality mutate src/flavor --changed-only
+	@python -m provide.testkit quality mutate src/flavor --changed-only
 
 .PHONY: mutation-module
 mutation-module: ## Run mutation testing on specific module (usage: make mutation-module MODULE=path/to/module.py)
@@ -73,12 +73,12 @@ mutation-module: ## Run mutation testing on specific module (usage: make mutatio
 		exit 1; \
 	fi
 	@echo "🎯 Testing module: $(MODULE)..."
-	@source workenv/bin/activate && provide-testkit quality mutate src/flavor --module $(MODULE)
+	@python -m provide.testkit quality mutate src/flavor --module $(MODULE)
 
 .PHONY: mutation-report
 mutation-report: ## Generate HTML mutation testing report
 	@echo "📊 Generating mutation report..."
-	@source workenv/bin/activate && provide-testkit quality mutate src/flavor --format html
+	@python -m provide.testkit quality mutate src/flavor --format html
 
 .PHONY: build-ingredients
 build-ingredients: ## Build all ingredients (Go and Rust)
