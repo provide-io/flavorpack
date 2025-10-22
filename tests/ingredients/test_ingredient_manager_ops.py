@@ -49,7 +49,9 @@ class TestListIngredients:
 
     def test_list_ingredients_with_files(self) -> None:
         """Test listing ingredients with actual files."""
-        manager = self.setup_manager()
+        # Mock __file__ to avoid Path resolution issues
+        with patch("flavor.ingredients.manager.__file__", "/fake/path/manager.py"):
+            manager = self.setup_manager()
 
         # Create mock files
         mock_launcher = Mock(spec=Path)
@@ -88,7 +90,9 @@ class TestListIngredients:
 
     def test_list_ingredients_platform_filter(self) -> None:
         """Test listing ingredients with platform filter."""
-        manager = self.setup_manager()
+        # Mock __file__ to avoid Path resolution issues
+        with patch("flavor.ingredients.manager.__file__", "/fake/path/manager.py"):
+            manager = self.setup_manager()
 
         # Create mock files for different platforms
         mock_compatible = Mock(spec=Path)
@@ -125,7 +129,9 @@ class TestListIngredients:
 
     def test_list_ingredients_with_embedded(self) -> None:
         """Test listing ingredients includes embedded ingredients."""
-        manager = self.setup_manager()
+        # Mock __file__ to avoid Path resolution issues
+        with patch("flavor.ingredients.manager.__file__", "/fake/path/manager.py"):
+            manager = self.setup_manager()
 
         # No ingredients in build directory
         manager.ingredients_bin = Mock(spec=Path)
@@ -162,7 +168,9 @@ class TestListIngredients:
 
     def test_list_ingredients_deduplicates_embedded(self) -> None:
         """Test embedded ingredients don't duplicate dev-built ones."""
-        manager = self.setup_manager()
+        # Mock __file__ to avoid Path resolution issues
+        with patch("flavor.ingredients.manager.__file__", "/fake/path/manager.py"):
+            manager = self.setup_manager()
 
         # Mock dev-built launcher
         mock_dev_launcher = Mock(spec=Path)
@@ -210,7 +218,9 @@ class TestListIngredients:
 
     def test_list_ingredients_ignores_invalid_files(self) -> None:
         """Test listing ignores files that don't parse as valid ingredients."""
-        manager = self.setup_manager()
+        # Mock __file__ to avoid Path resolution issues
+        with patch("flavor.ingredients.manager.__file__", "/fake/path/manager.py"):
+            manager = self.setup_manager()
 
         mock_invalid = Mock(spec=Path)
         mock_invalid.is_file.return_value = True
@@ -234,9 +244,11 @@ class TestListIngredients:
 
     def test_list_ingredients_nonexistent_directory(self) -> None:
         """Test listing ingredients when directory doesn't exist."""
-        manager = self.setup_manager()
-        manager.ingredients_bin = Mock(spec=Path)
-        manager.ingredients_bin.exists.return_value = False
+        # Mock __file__ to avoid Path resolution issues
+        with patch("flavor.ingredients.manager.__file__", "/fake/path/manager.py"):
+            manager = self.setup_manager()
+            manager.ingredients_bin = Mock(spec=Path)
+            manager.ingredients_bin.exists.return_value = False
 
         with patch("flavor.ingredients.manager.Path") as mock_path_class:
             mock_embedded = Mock(spec=Path)
