@@ -1,15 +1,15 @@
 # Code Coverage Progress - Path to 100%
 
 **Date**: 2025-10-21
-**Current Coverage**: 73.80% (from 61.74% baseline)
+**Current Coverage**: 76.05% (from 61.74% baseline)
 **Target**: 100%
-**Status**: Phase 4.2 Complete, Phase 4.3 Ready (8 of 15 phases)
+**Status**: Phase 4.3 Complete (9 of 15 phases)
 
 ---
 
 ## 🚀 Today's Session Summary (2025-10-21)
 
-**Coverage Improvement**: 71.75% → 73.80% (+2.05%)
+**Coverage Improvement**: 71.75% → 76.05% (+4.30%)
 
 **Phases Completed**:
 1. ✅ **Phase 3.4**: environment.py (21.77% → 98.64%, +76.87%)
@@ -24,10 +24,15 @@
    - 23 tests in 1 file (367 LOC)
    - Ed25519 key generation, PEM loading, integration testing
 
+4. ✅ **Phase 4.3**: psp/format_2025/handlers.py (29.13% → 100%, +70.87%)
+   - 55 tests across 3 files (381 + 299 + 158 LOC)
+   - Operation mapping, compression/decompression, TAR archive operations
+   - All error paths and edge cases covered
+
 **Totals**:
-- **Tests Added**: 123 new tests (all passing)
-- **Statements Covered**: +255 statements
-- **Files Created**: 5 test files (all under 500 LOC)
+- **Tests Added**: 178 new tests (all passing)
+- **Statements Covered**: +414 statements
+- **Files Created**: 8 test files (all under 500 LOC)
 
 **Key Achievements**:
 - Fixed coverage configuration bug (exclude_lines → exclude_also)
@@ -199,10 +204,11 @@
 |------|----------|---------|-------|--------|
 | ingredients/manager.py | 24.37% | 75.13% | 43 | ✅ Complete |
 | packaging/keys.py | 28.21% | 94.87% | 23 | ✅ Complete |
+| psp/format_2025/handlers.py | 29.13% | 100% | 55 | ✅ Complete |
 
-**Total New Tests**: 66 tests
-**Lines Covered**: +156 statements covered
-**Impact**: Project coverage improved from 72.31% → 73.80% (+1.49%)
+**Total New Tests**: 121 tests
+**Lines Covered**: +315 statements covered
+**Impact**: Project coverage improved from 72.31% → 76.05% (+3.74%)
 
 ---
 
@@ -275,10 +281,33 @@
 - **Remaining**: Lines 126, 174 (fallback for unknown key types - edge case)
 - **Impact**: +40 statements covered
 
-#### 4.3 psp/format_2025/handlers.py (29.13% → 100%)
-
-#### 4.3 psp/format_2025/handlers.py (29.13% → 100%)
-- **Missing**: Operation handler dispatch, chaining, error handling
+#### 4.3 psp/format_2025/handlers.py (29.13% → 100%) ✅ COMPLETE
+- **Test Files**:
+  - `tests/format_2025/test_handlers_operations.py` (381 LOC)
+  - `tests/format_2025/test_handlers_archive.py` (299 LOC)
+  - `tests/format_2025/test_handlers_errors.py` (158 LOC)
+- **Tests**: 55 comprehensive tests (all passing)
+- **Coverage**: 100% (162 statements, 0 missed)
+- **Test Classes**:
+  - TestMapOperations (5 tests) - PSPF to Foundation operation mapping
+  - TestApplySingleOperation (7 tests) - Individual compression operations
+  - TestApplyOperations (10 tests) - Operation chain application
+  - TestReverseOperations (10 tests) - Decompression and operation reversal
+  - TestCreateTarArchive (5 tests) - TAR archive creation
+  - TestExtractArchive (11 tests) - Archive extraction with security limits
+  - TestErrorPaths (7 tests) - Exception handling and edge cases
+- **Covers**:
+  - `map_operations()` - PSPF→Foundation operation mapping, validation
+  - `_apply_single_operation()` - GZIP, BZIP2, XZ, ZSTD compression
+  - `apply_operations()` - Operation chains, compression levels, TAR filtering
+  - `reverse_operations()` - All decompression types, ZSTD ImportError
+  - `create_tar_archive()` - Directory/file archiving, deterministic mode
+  - `extract_archive()` - TAR extraction, raw data, security limits
+  - All error paths: ArchiveError, ValueError, general exceptions
+  - ZSTD availability handling (compression & decompression)
+  - Unsupported operation warnings (defensive code paths)
+- **Remaining**: None - 100% coverage achieved
+- **Impact**: +159 statements covered
 
 ### Phase 5: Moderate Coverage (30-50%) - 421 statements
 
