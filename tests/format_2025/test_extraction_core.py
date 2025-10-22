@@ -36,14 +36,11 @@ class TestGetSlotView:
         mock_reader._backend = None
 
         descriptor = SlotDescriptor(
+            id=0,
             offset=0,
             size=100,
             checksum=0x12345678,
             operations=0,
-            target_path="test",
-            permissions=0o644,
-            lifecycle=0,
-            purpose=0,
         )
         mock_reader.read_slot_descriptors.return_value = [descriptor]
 
@@ -61,14 +58,11 @@ class TestGetSlotView:
         mock_reader._backend = mock_backend
 
         descriptor = SlotDescriptor(
+            id=0,
             offset=0,
             size=100,
             checksum=0x12345678,
             operations=0,
-            target_path="test",
-            permissions=0o644,
-            lifecycle=0,
-            purpose=0,
         )
         mock_reader.read_slot_descriptors.return_value = [descriptor]
 
@@ -99,24 +93,18 @@ class TestGetSlotView:
 
         descriptors = [
             SlotDescriptor(
+                id=0,
                 offset=0,
                 size=100,
                 checksum=0x11111111,
                 operations=0,
-                target_path="slot0",
-                permissions=0o644,
-                lifecycle=0,
-                purpose=0,
             ),
             SlotDescriptor(
+                id=1,
                 offset=100,
                 size=200,
                 checksum=0x22222222,
                 operations=0,
-                target_path="slot1",
-                permissions=0o644,
-                lifecycle=0,
-                purpose=0,
             ),
         ]
         mock_reader.read_slot_descriptors.return_value = descriptors
@@ -139,14 +127,11 @@ class TestStreamSlot:
         mock_reader._backend = mock_backend
 
         descriptor = SlotDescriptor(
+            id=0,
             offset=0,
             size=100,
             checksum=0x12345678,
             operations=0,
-            target_path="test",
-            permissions=0o644,
-            lifecycle=0,
-            purpose=0,
         )
         mock_reader.read_slot_descriptors.return_value = [descriptor]
 
@@ -169,14 +154,11 @@ class TestStreamSlot:
         mock_reader._backend = mock_backend
 
         descriptor = SlotDescriptor(
+            id=0,
             offset=0,
             size=100,
             checksum=0x12345678,
             operations=0,
-            target_path="test",
-            permissions=0o644,
-            lifecycle=0,
-            purpose=0,
         )
         mock_reader.read_slot_descriptors.return_value = [descriptor]
 
@@ -204,14 +186,11 @@ class TestStreamSlot:
         mock_reader._backend = mock_backend
 
         descriptor = SlotDescriptor(
+            id=0,
             offset=0,
             size=100,
             checksum=0x12345678,
             operations=0,
-            target_path="test",
-            permissions=0o644,
-            lifecycle=0,
-            purpose=0,
         )
         mock_reader.read_slot_descriptors.return_value = [descriptor]
 
@@ -328,14 +307,11 @@ class TestVerifySlotIntegrity:
         mock_reader._backend = None
 
         descriptor = SlotDescriptor(
+            id=0,
             offset=0,
             size=100,
             checksum=0x12345678,
             operations=0,
-            target_path="test",
-            permissions=0o644,
-            lifecycle=0,
-            purpose=0,
         )
         mock_reader.read_slot_descriptors.return_value = [descriptor]
 

@@ -33,24 +33,18 @@ class TestVerifyAllChecksums:
 
         descriptors = [
             SlotDescriptor(
+                id=0,
                 offset=0,
                 size=len(data1),
                 checksum=checksum1,
                 operations=0,
-                target_path="slot1",
-                permissions=0o644,
-                lifecycle=0,
-                purpose=0,
             ),
             SlotDescriptor(
+                id=1,
                 offset=len(data1),
                 size=len(data2),
                 checksum=checksum2,
                 operations=0,
-                target_path="slot2",
-                permissions=0o644,
-                lifecycle=0,
-                purpose=0,
             ),
         ]
         mock_reader.read_slot_descriptors.return_value = descriptors
@@ -71,14 +65,11 @@ class TestVerifyAllChecksums:
         wrong_checksum = 0x99999999
 
         descriptor = SlotDescriptor(
+            id=0,
             offset=0,
             size=len(data),
             checksum=wrong_checksum,
             operations=0,
-            target_path="slot",
-            permissions=0o644,
-            lifecycle=0,
-            purpose=0,
         )
         mock_reader.read_slot_descriptors.return_value = [descriptor]
         mock_backend.read_slot.return_value = data
@@ -94,14 +85,11 @@ class TestVerifyAllChecksums:
         mock_reader._backend = None
 
         descriptor = SlotDescriptor(
+            id=0,
             offset=0,
             size=100,
             checksum=0x12345678,
             operations=0,
-            target_path="test",
-            permissions=0o644,
-            lifecycle=0,
-            purpose=0,
         )
         mock_reader.read_slot_descriptors.return_value = [descriptor]
 
@@ -120,14 +108,11 @@ class TestVerifyAllChecksums:
         checksum = zlib.adler32(data) & 0xFFFFFFFF
 
         descriptor = SlotDescriptor(
+            id=0,
             offset=0,
             size=len(data),
             checksum=checksum,
             operations=0,
-            target_path="test",
-            permissions=0o644,
-            lifecycle=0,
-            purpose=0,
         )
         mock_reader.read_slot_descriptors.return_value = [descriptor]
         # Return memoryview instead of bytes
@@ -178,20 +163,19 @@ class TestExtractSlot:
 
         slot_data = b"test slot data"
         descriptor = SlotDescriptor(
+            id=0,
             offset=0,
             size=len(slot_data),
             checksum=0x12345678,
             operations=0x10,  # GZIP operation
-            target_path="test",
-            permissions=0o644,
-            lifecycle=0,
-            purpose=0,
         )
 
         mock_reader.read_metadata.return_value = {}
         mock_reader.read_slot_descriptors.return_value = [descriptor]
         mock_reader.read_slot.return_value = slot_data
 
+        # Mock reverse_operations to return original data
+        mock_handlers.reverse_operations.return_value = slot_data
         extracted_path = tmp_path / "extracted"
         mock_handlers.extract_archive.return_value = extracted_path
 
@@ -236,20 +220,19 @@ class TestExtractSlot:
 
         slot_data = b"test slot data"
         descriptor = SlotDescriptor(
+            id=0,
             offset=0,
             size=len(slot_data),
             checksum=0x12345678,
             operations=0x10,
-            target_path="test",
-            permissions=0o644,
-            lifecycle=0,
-            purpose=0,
         )
 
         mock_reader.read_metadata.return_value = {"slots": [{"id": "myslot"}]}
         mock_reader.read_slot_descriptors.return_value = [descriptor]
         mock_reader.read_slot.return_value = slot_data
 
+        # Mock reverse_operations to return original data
+        mock_handlers.reverse_operations.return_value = slot_data
         # Make handler extraction fail
         mock_handlers.extract_archive.side_effect = Exception("Handler error")
 
@@ -278,20 +261,19 @@ class TestExtractSlot:
 
         slot_data = b"test slot data"
         descriptor = SlotDescriptor(
+            id=0,
             offset=0,
             size=len(slot_data),
             checksum=0x12345678,
             operations=0x10,
-            target_path="test",
-            permissions=0o644,
-            lifecycle=0,
-            purpose=0,
         )
 
         mock_reader.read_metadata.return_value = None
         mock_reader.read_slot_descriptors.return_value = [descriptor]
         mock_reader.read_slot.return_value = slot_data
 
+        # Mock reverse_operations to return original data
+        mock_handlers.reverse_operations.return_value = slot_data
         # Make handler extraction fail to trigger fallback
         mock_handlers.extract_archive.side_effect = Exception("Handler error")
 
@@ -317,14 +299,11 @@ class TestExtractSlot:
         decompressed_data = b"decompressed data"
 
         descriptor = SlotDescriptor(
+            id=0,
             offset=0,
             size=len(compressed_data),
             checksum=0x12345678,
             operations=0x10,  # GZIP
-            target_path="test",
-            permissions=0o644,
-            lifecycle=0,
-            purpose=0,
         )
 
         mock_reader.read_metadata.return_value = {}
