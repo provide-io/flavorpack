@@ -12,7 +12,7 @@ import subprocess
 import pytest
 
 
-@pytest.mark.slow
+@pytest.mark.mutation
 def test_mutmut_configuration_valid() -> None:
     """
     Verify that mutmut configuration in pyproject.toml is valid.
@@ -48,6 +48,7 @@ def test_mutmut_configuration_valid() -> None:
         assert full_path.exists(), f"Mutation path {path} does not exist"
 
 
+@pytest.mark.mutation
 @pytest.mark.slow
 def test_mutmut_can_generate_mutants() -> None:
     """
@@ -79,7 +80,7 @@ def test_mutmut_can_generate_mutants() -> None:
     assert mutants_dir.exists(), "Mutants directory was not created"
 
 
-@pytest.mark.slow
+@pytest.mark.mutation
 def test_mutmut_ignores_generated_code() -> None:
     """
     Verify that mutmut properly excludes generated code from mutation.
@@ -102,6 +103,7 @@ def test_mutmut_ignores_generated_code() -> None:
         assert "_pb2" not in path, "Should not mutate protobuf files"
 
 
+@pytest.mark.mutation
 def test_mutation_testing_dependencies_installed() -> None:
     """
     Verify that mutation testing dependencies are properly installed.

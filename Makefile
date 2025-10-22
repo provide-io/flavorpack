@@ -22,6 +22,10 @@ test-cov-xml: ## Run Python tests with XML coverage for CI
 	source workenv/bin/activate && pytest --cov=flavor --cov-report=xml --cov-report=term tests/
 
 # Mutation Testing
+.PHONY: test-mutation
+test-mutation: ## Run mutation testing quality tests
+	@source workenv/bin/activate && pytest -m mutation -v
+
 .PHONY: mutmut
 mutmut: ## Run mutation testing with mutmut
 	@echo "🧬 Running mutation testing..."
