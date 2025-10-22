@@ -1,13 +1,15 @@
 """Test platform-specific environment variables."""
 
+from __future__ import annotations
+
 import os
 import platform
-from unittest.mock import patch
+from typing import Any
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from flavor.psp.format_2025.environment import (
-    apply_environment_layers,
     process_runtime_env,
     set_platform_environment,
 )
@@ -110,8 +112,8 @@ class TestPlatformEnvironment:
     def test_os_normalization(self, mock_machine, mock_system) -> None:
         """Test OS name normalization."""
         from provide.foundation.platform.detection import (
-            get_os_name as foundation_get_os_name,
             get_arch_name as foundation_get_arch_name,
+            get_os_name as foundation_get_os_name,
             get_platform_string as foundation_get_platform_string,
         )
 
@@ -140,8 +142,8 @@ class TestPlatformEnvironment:
     def test_arch_normalization(self, mock_machine, mock_system) -> None:
         """Test architecture name normalization."""
         from provide.foundation.platform.detection import (
-            get_os_name as foundation_get_os_name,
             get_arch_name as foundation_get_arch_name,
+            get_os_name as foundation_get_os_name,
             get_platform_string as foundation_get_platform_string,
         )
 
@@ -392,4 +394,3 @@ class TestRuntimeEnvProcessing:
 
         # Environment should be unchanged
         assert env == {"FOO": "bar"}
-    """Test preserve pattern matching functionality."""
