@@ -6,8 +6,9 @@
 from __future__ import annotations
 
 from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
 import sys
+import tomllib
+from unittest.mock import patch
 
 import pytest
 
@@ -117,7 +118,7 @@ version = "1.0.0"
             entry_point="module:main",
         )
 
-        with pytest.raises(FileNotFoundError, match="No pyproject.toml found"):
+        with pytest.raises(FileNotFoundError, match=r"No pyproject\.toml found"):
             packager.validate_manifest()
 
     def test_validate_manifest_missing_project_name(self, tmp_path: Path) -> None:
@@ -138,7 +139,7 @@ version = "1.0.0"
             entry_point="module:main",
         )
 
-        with pytest.raises(ValueError, match="missing project.name"):
+        with pytest.raises(ValueError, match=r"missing project\.name"):
             packager.validate_manifest()
 
     def test_validate_manifest_invalid_entry_point_format(self, tmp_path: Path) -> None:
@@ -179,7 +180,7 @@ version = "1.0.0"
             entry_point="module:main",
         )
 
-        with pytest.raises(Exception):  # tomllib will raise parsing error
+        with pytest.raises(tomllib.TOMLDecodeError):  # tomllib will raise parsing error
             packager.validate_manifest()
 
 
@@ -333,25 +334,26 @@ class TestBuildEnvironment:
         python_exe.touch()
 
         # Mock UV being available
-        with patch.object(packager.env_builder, "find_uv_command") as mock_find_uv:
+        with (
+            patch.object(packager.env_builder, "find_uv_command") as mock_find_uv,
+            patch.object(packager.uv, "create_venv") as mock_create_venv,
+            patch.object(packager.pypapip, "_get_pypapip_install_cmd") as mock_get_cmd,
+            patch("provide.foundation.process.run") as mock_run,
+        ):
             mock_find_uv.return_value = "/usr/bin/uv"
+            mock_get_cmd.return_value = ["pip", "install", "pip", "wheel", "setuptools"]
 
-            with patch.object(packager.uv, "create_venv") as mock_create_venv:
-                with patch.object(packager.pypapip, "_get_pypapip_install_cmd") as mock_get_cmd:
-                    mock_get_cmd.return_value = ["pip", "install", "pip", "wheel", "setuptools"]
+            result = packager.create_build_environment(build_dir)
 
-                    with patch("provide.foundation.process.run") as mock_run:
-                        result = packager.create_build_environment(build_dir)
+            # Verify UV was used
+            mock_find_uv.assert_called_once()
+            mock_create_venv.assert_called_once_with(venv_dir, "3.11")
 
-                        # Verify UV was used
-                        mock_find_uv.assert_called_once()
-                        mock_create_venv.assert_called_once_with(venv_dir, "3.11")
+            # Verify pip/wheel installed
+            assert mock_get_cmd.called
+            assert mock_run.called
 
-                        # Verify pip/wheel installed
-                        assert mock_get_cmd.called
-                        assert mock_run.called
-
-                        assert result == python_exe
+            assert result == python_exe
 
     def test_create_build_environment_fallback_venv(self, tmp_path: Path) -> None:
         """Test fallback to standard venv when UV is not available."""
@@ -373,24 +375,25 @@ class TestBuildEnvironment:
         python_exe.touch()
 
         # Mock UV not being available
-        with patch.object(packager.env_builder, "find_uv_command") as mock_find_uv:
+        with (
+            patch.object(packager.env_builder, "find_uv_command") as mock_find_uv,
+            patch("venv.create") as mock_venv_create,
+            patch.object(packager.pypapip, "_get_pypapip_install_cmd") as mock_get_cmd,
+            patch("provide.foundation.process.run") as mock_run,
+        ):
             mock_find_uv.return_value = None
+            mock_get_cmd.return_value = ["pip", "install", "pip", "wheel", "setuptools"]
 
-            with patch("venv.create") as mock_venv_create:
-                with patch.object(packager.pypapip, "_get_pypapip_install_cmd") as mock_get_cmd:
-                    mock_get_cmd.return_value = ["pip", "install", "pip", "wheel", "setuptools"]
+            result = packager.create_build_environment(build_dir)
 
-                    with patch("provide.foundation.process.run") as mock_run:
-                        result = packager.create_build_environment(build_dir)
+            # Verify standard venv was used
+            mock_venv_create.assert_called_once_with(venv_dir, with_pip=True)
 
-                        # Verify standard venv was used
-                        mock_venv_create.assert_called_once_with(venv_dir, with_pip=True)
+            # Verify pip/wheel installed
+            assert mock_get_cmd.called
+            assert mock_run.called
 
-                        # Verify pip/wheel installed
-                        assert mock_get_cmd.called
-                        assert mock_run.called
-
-                        assert result == python_exe
+            assert result == python_exe
 
     def test_create_build_environment_pip_installation(self, tmp_path: Path) -> None:
         """Test pip and wheel installation in build environment."""
@@ -411,18 +414,20 @@ class TestBuildEnvironment:
         python_exe = venv_bin / ("python.exe" if packager.is_windows else "python")
         python_exe.touch()
 
-        with patch.object(packager.env_builder, "find_uv_command", return_value=None):
-            with patch("venv.create"):
-                with patch.object(packager.pypapip, "_get_pypapip_install_cmd") as mock_get_cmd:
-                    install_cmd = ["python", "-m", "pip", "install", "pip", "wheel", "setuptools"]
-                    mock_get_cmd.return_value = install_cmd
+        with (
+            patch.object(packager.env_builder, "find_uv_command", return_value=None),
+            patch("venv.create"),
+            patch.object(packager.pypapip, "_get_pypapip_install_cmd") as mock_get_cmd,
+            patch("provide.foundation.process.run") as mock_run,
+        ):
+            install_cmd = ["python", "-m", "pip", "install", "pip", "wheel", "setuptools"]
+            mock_get_cmd.return_value = install_cmd
 
-                    with patch("provide.foundation.process.run") as mock_run:
-                        packager.create_build_environment(build_dir)
+            packager.create_build_environment(build_dir)
 
-                        # Verify pip install command was called correctly
-                        mock_get_cmd.assert_called_once_with(python_exe, ["pip", "wheel", "setuptools"])
-                        mock_run.assert_called_once_with(install_cmd, check=True, capture_output=True)
+            # Verify pip install command was called correctly
+            mock_get_cmd.assert_called_once_with(python_exe, ["pip", "wheel", "setuptools"])
+            mock_run.assert_called_once_with(install_cmd, check=True, capture_output=True)
 
     def test_create_build_environment_python_not_found(self, tmp_path: Path) -> None:
         """Test when python executable is not found in venv."""
@@ -440,20 +445,25 @@ class TestBuildEnvironment:
 
         # Don't create the python executable
 
-        with patch.object(packager.env_builder, "find_uv_command", return_value=None):
-            with patch("venv.create"):
-                # Python exe doesn't exist, so pip install should be skipped
-                with patch("provide.foundation.process.run") as mock_run:
-                    result = packager.create_build_environment(build_dir)
+        with (
+            patch.object(packager.env_builder, "find_uv_command", return_value=None),
+            patch("venv.create"),
+            patch("provide.foundation.process.run") as mock_run,
+        ):
+            # Python exe doesn't exist, so pip install should be skipped
+            result = packager.create_build_environment(build_dir)
 
-                    # run should not be called since python_exe doesn't exist
-                    mock_run.assert_not_called()
+            # run should not be called since python_exe doesn't exist
+            mock_run.assert_not_called()
 
-                    # Still returns the expected path (even if it doesn't exist)
-                    expected_python = build_dir / "venv" / packager.venv_bin_dir / (
-                        "python.exe" if packager.is_windows else "python"
-                    )
-                    assert result == expected_python
+            # Still returns the expected path (even if it doesn't exist)
+            expected_python = (
+                build_dir
+                / "venv"
+                / packager.venv_bin_dir
+                / ("python.exe" if packager.is_windows else "python")
+            )
+            assert result == expected_python
 
 
 @pytest.mark.unit
@@ -620,7 +630,7 @@ class TestCleanup:
         build_dir = work_dir / "build"
         build_dir.mkdir()
 
-        with patch("provide.foundation.file.safe_rmtree") as mock_rmtree:
+        with patch("flavor.packaging.python.packager.safe_rmtree") as mock_rmtree:
             packager.clean_build_artifacts(work_dir)
 
             # Verify safe_rmtree called for each directory
@@ -647,7 +657,7 @@ class TestCleanup:
 
         # Don't create any directories
 
-        with patch("provide.foundation.file.safe_rmtree") as mock_rmtree:
+        with patch("flavor.packaging.python.packager.safe_rmtree") as mock_rmtree:
             packager.clean_build_artifacts(work_dir)
 
             # Should not call safe_rmtree since directories don't exist
@@ -670,7 +680,7 @@ class TestCleanup:
         payload_dir = work_dir / "payload"
         payload_dir.mkdir()
 
-        with patch("provide.foundation.file.safe_rmtree") as mock_rmtree:
+        with patch("flavor.packaging.python.packager.safe_rmtree") as mock_rmtree:
             mock_rmtree.side_effect = PermissionError("Cannot remove directory")
 
             # Should not raise, just log error
@@ -695,7 +705,7 @@ class TestCleanup:
         payload_dir = work_dir / "payload"
         payload_dir.mkdir()
 
-        with patch("provide.foundation.file.safe_rmtree") as mock_rmtree:
+        with patch("flavor.packaging.python.packager.safe_rmtree") as mock_rmtree:
             packager.clean_build_artifacts(work_dir)
 
             # Verify safe_rmtree called with missing_ok=True
