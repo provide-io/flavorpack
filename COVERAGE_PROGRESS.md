@@ -1,9 +1,9 @@
 # Code Coverage Progress - Path to 100%
 
 **Date**: 2025-10-21
-**Current Coverage**: 67.29% (from 61.74% baseline)
+**Current Coverage**: 68.53% (from 61.74% baseline)
 **Target**: 100%
-**Status**: Phase 3.1 Complete (5 of 15 phases)
+**Status**: Phase 3.2 Complete (6 of 15 phases)
 
 ---
 
@@ -81,6 +81,20 @@
   - `flavor ingredients info` (found/not found, executable checks)
   - `flavor ingredients test` (passed/failed/skipped scenarios)
 
+#### 3.2 commands/utils.py (17.27% → 100%) ✅
+- **Test File**: `tests/cli/test_utils_command.py`
+- **Tests**: 17 comprehensive tests
+- **Coverage**: 100% (82 statements, 82 covered)
+- **Covers**:
+  - `flavor clean` default behavior (workenv only)
+  - `--all` flag (clean both workenv and ingredients)
+  - `--ingredients` flag (ingredients only)
+  - `--dry-run` mode (all combinations)
+  - `--yes` flag (skip confirmations)
+  - User abort scenarios
+  - Empty cache/directory scenarios
+  - Edge cases (.d file exclusion, failed clean operations)
+
 ---
 
 ## 📊 Phase 2 Summary
@@ -100,18 +114,17 @@
 
 ## 🎯 Remaining Work (Phases 3-6)
 
-### Phase 3: Very Low Coverage (<20%) - ~336 statements remaining
+### Phase 3: Very Low Coverage (<20%) - ~254 statements remaining
 
 #### 3.1 commands/ingredients.py ✅ COMPLETE (11.93% → 99.54%)
 - **Completed**: 34 tests, 99.54% coverage
 - **Test File**: `tests/cli/test_ingredients_command.py`
 - **Impact**: +148 statements covered
 
-#### 3.2 commands/utils.py (17.27% → 100%) ⏳ IN PROGRESS
-- **Current**: 82 statements, 63 missed
-- **Missing**: `flavor clean` command variations
-- **Test File**: Create `tests/cli/test_utils_command.py`
-- **Approach**: Test all flag combinations (--all, --ingredients, --dry-run, --yes)
+#### 3.2 commands/utils.py ✅ COMPLETE (17.27% → 100%)
+- **Completed**: 17 tests, 100% coverage
+- **Test File**: `tests/cli/test_utils_command.py`
+- **Impact**: +82 statements covered
 
 #### 3.3 ingredients/binary_loader.py (10.98% → 100%)
 - **Current**: 170 statements, 143 missed
