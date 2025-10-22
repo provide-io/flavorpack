@@ -17,7 +17,7 @@ class TestIngredientManagerInit:
 
     @patch("flavor.ingredients.manager.ensure_dir")
     @patch("flavor.ingredients.manager.get_platform_string")
-    @patch("flavor.ingredients.manager.BinaryLoader")
+    @patch("flavor.ingredients.binary_loader.BinaryLoader")
     def test_initialization(
         self, mock_binary_loader: MagicMock, mock_platform: MagicMock, mock_ensure_dir: MagicMock
     ) -> None:
@@ -40,7 +40,7 @@ class TestIngredientManagerInit:
 
     @patch("flavor.ingredients.manager.ensure_dir")
     @patch("flavor.ingredients.manager.get_platform_string")
-    @patch("flavor.ingredients.manager.BinaryLoader")
+    @patch("flavor.ingredients.binary_loader.BinaryLoader")
     def test_xdg_cache_path(
         self, mock_binary_loader: MagicMock, mock_platform: MagicMock, mock_ensure_dir: MagicMock
     ) -> None:
@@ -60,7 +60,7 @@ class TestPlatformCompatibility:
 
     @patch("flavor.ingredients.manager.ensure_dir")
     @patch("flavor.ingredients.manager.get_platform_string")
-    @patch("flavor.ingredients.manager.BinaryLoader")
+    @patch("flavor.ingredients.binary_loader.BinaryLoader")
     def setup_manager(
         self, mock_binary_loader: MagicMock, mock_platform: MagicMock, mock_ensure_dir: MagicMock
     ) -> IngredientManager:
@@ -95,7 +95,7 @@ class TestIngredientParsing:
 
     @patch("flavor.ingredients.manager.ensure_dir")
     @patch("flavor.ingredients.manager.get_platform_string")
-    @patch("flavor.ingredients.manager.BinaryLoader")
+    @patch("flavor.ingredients.binary_loader.BinaryLoader")
     def setup_manager(
         self, mock_binary_loader: MagicMock, mock_platform: MagicMock, mock_ensure_dir: MagicMock
     ) -> IngredientManager:
@@ -159,7 +159,7 @@ class TestFileOperations:
 
     @patch("flavor.ingredients.manager.ensure_dir")
     @patch("flavor.ingredients.manager.get_platform_string")
-    @patch("flavor.ingredients.manager.BinaryLoader")
+    @patch("flavor.ingredients.binary_loader.BinaryLoader")
     def setup_manager(
         self, mock_binary_loader: MagicMock, mock_platform: MagicMock, mock_ensure_dir: MagicMock
     ) -> IngredientManager:
@@ -239,7 +239,7 @@ class TestVersionExtraction:
 
     @patch("flavor.ingredients.manager.ensure_dir")
     @patch("flavor.ingredients.manager.get_platform_string")
-    @patch("flavor.ingredients.manager.BinaryLoader")
+    @patch("flavor.ingredients.binary_loader.BinaryLoader")
     def setup_manager(
         self, mock_binary_loader: MagicMock, mock_platform: MagicMock, mock_ensure_dir: MagicMock
     ) -> IngredientManager:
@@ -252,7 +252,8 @@ class TestVersionExtraction:
         """Test successful version extraction."""
         manager = self.setup_manager()
         mock_path = Mock(spec=Path)
-        mock_path.__str__.return_value = "/path/to/binary"
+        # Configure __str__ to return a string, not a Mock
+        type(mock_path).__str__ = Mock(return_value="/path/to/binary")
 
         mock_result = Mock()
         mock_result.returncode = 0
@@ -267,7 +268,8 @@ class TestVersionExtraction:
         """Test version extraction failure."""
         manager = self.setup_manager()
         mock_path = Mock(spec=Path)
-        mock_path.__str__.return_value = "/path/to/binary"
+        # Configure __str__ to return a string, not a Mock
+        type(mock_path).__str__ = Mock(return_value="/path/to/binary")
 
         mock_result = Mock()
         mock_result.returncode = 1
@@ -313,7 +315,7 @@ class TestBuildSourceDetermination:
 
     @patch("flavor.ingredients.manager.ensure_dir")
     @patch("flavor.ingredients.manager.get_platform_string")
-    @patch("flavor.ingredients.manager.BinaryLoader")
+    @patch("flavor.ingredients.binary_loader.BinaryLoader")
     def setup_manager(
         self, mock_binary_loader: MagicMock, mock_platform: MagicMock, mock_ensure_dir: MagicMock
     ) -> IngredientManager:
