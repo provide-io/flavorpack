@@ -158,9 +158,9 @@ markers = [
 ]
 
 [tool.mutmut]
-  paths_to_mutate = "src/flavor/"
-  tests_dir = "tests/"
-  runner = "pytest"
+paths_to_mutate = "src/flavor"
+tests_dir = "tests"
+runner = "pytest"
 
 [tool.coverage.run]
 branch = true
