@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import Protocol, TypedDict
 
 
-class IntegrityResult(TypedDict):
+class IntegrityResult(TypedDict):  # pragma: no cover
     """Result of package integrity verification."""
 
     valid: bool
@@ -29,7 +29,7 @@ class IntegrityVerifierProtocol(Protocol):
     regardless of the underlying format implementation.
     """
 
-    def verify_integrity(self, bundle_path: Path) -> IntegrityResult:
+    def verify_integrity(self, bundle_path: Path) -> IntegrityResult:  # pragma: no cover
         """Verify the integrity of a package bundle.
 
         Args:
@@ -44,7 +44,9 @@ class IntegrityVerifierProtocol(Protocol):
 class ExtractorProtocol(Protocol):
     """Protocol for package slot extraction."""
 
-    def extract_slot(self, slot_index: int, dest_dir: Path, *, verify_checksum: bool = True) -> Path:
+    def extract_slot(  # pragma: no cover
+        self, slot_index: int, dest_dir: Path, *, verify_checksum: bool = True
+    ) -> Path:
         """Extract a specific slot to a directory.
 
         Args:
