@@ -93,16 +93,10 @@ pub fn write_slot(
     };
 
     let checksum = compute_slot_checksum(&processed_data);
-    trace!(
-        "🦀 Rust builder computed slot {} checksum:",
-        slot_index
+    debug!(
+        "🦀 Rust builder computed slot {} checksum: {:016x} (data length: {} bytes)",
+        slot_index, checksum, processed_data.len()
     );
-    trace!("  Data length: {} bytes", processed_data.len());
-    trace!(
-        "  First 16 bytes: {:02x?}",
-        &processed_data[..16.min(processed_data.len())]
-    );
-    trace!("  Checksum (u64): {:016x}", checksum);
 
     let descriptor = SlotDescriptor {
         id: slot_index as u64,
