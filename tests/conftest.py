@@ -46,9 +46,9 @@ def mock_launcher_loading(request, monkeypatch) -> None:
     def mock_load_launcher(launcher_type):
         return MOCK_LAUNCHER_DATA
 
-    from flavor.psp.format_2025.metadata import assembly
-
-    monkeypatch.setattr(assembly, "load_launcher_binary", mock_load_launcher)
+    # Patch where the function is used, not just where it's defined
+    monkeypatch.setattr("flavor.psp.format_2025.metadata.assembly.load_launcher_binary", mock_load_launcher)
+    monkeypatch.setattr("flavor.psp.format_2025.writer.load_launcher_binary", mock_load_launcher)
 
 
 @pytest.fixture
