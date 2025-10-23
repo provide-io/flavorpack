@@ -174,14 +174,16 @@ def _write_slots(f: BinaryIO, slots: list[PreparedSlot], spec: BuildSpec, index:
         slot_offset = f.tell()
         data_to_write = slot.get_data_to_write()
 
-        # Verify checksum integrity at write time
-        actual_checksum_of_written_data = zlib.adler32(data_to_write) & 0xFFFFFFFF
+        # Verify checksum integrity at write time (SHA-256 first 8 bytes)
+        import hashlib
+        hash_bytes = hashlib.sha256(data_to_write).digest()[:8]
+        actual_checksum_of_written_data = int.from_bytes(hash_bytes, byteorder="little")
         logger.trace(
             "🔍 Verifying slot data before write",
             slot_index=i,
             slot_id=slot.metadata.id,
-            stored_checksum=f"{slot.checksum:08x}",
-            computed_checksum=f"{actual_checksum_of_written_data:08x}",
+            stored_checksum=f"{slot.checksum:016x}",
+            computed_checksum=f"{actual_checksum_of_written_data:016x}",
             data_size=len(data_to_write),
             slot_offset=f"{slot_offset:#x}",
         )
@@ -190,8 +192,8 @@ def _write_slots(f: BinaryIO, slots: list[PreparedSlot], spec: BuildSpec, index:
                 "⚠️ Slot checksum mismatch at write time",
                 slot_index=i,
                 slot_id=slot.metadata.id,
-                stored_checksum=f"{slot.checksum:08x}",
-                actual_checksum=f"{actual_checksum_of_written_data:08x}",
+                stored_checksum=f"{slot.checksum:016x}",
+                actual_checksum=f"{actual_checksum_of_written_data:016x}",
                 data_size=len(data_to_write),
             )
 
