@@ -14,16 +14,15 @@ use std::io::{BufReader, Read};
 use std::path::{Path, PathBuf};
 use std::time::Instant;
 
-/// Self-referential slot markers
-const SELF_REF_MARKERS: &[&str] = &["$SELF", "$LAUNCHER", "$CURRENT"];
+/// Self-referential slot marker
+const SELF_REF_MARKER: &str = "$SELF";
 
 /// Check if a slot is self-referential
 ///
-/// A slot is self-referential if its source field contains a special marker
-/// ($SELF, $LAUNCHER, or $CURRENT), indicating it references the launcher
-/// itself rather than packaged data.
+/// A slot is self-referential if its source field contains the special marker
+/// ($SELF), indicating it references the launcher itself rather than packaged data.
 fn is_self_referential(source: &str) -> bool {
-    SELF_REF_MARKERS.contains(&source)
+    source == SELF_REF_MARKER
 }
 
 /// Process and validate slot data
