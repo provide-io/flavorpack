@@ -137,6 +137,7 @@ addopts = [
     "--strict-markers",
     "--color=yes",
     "--ignore=tests/taster/tests",
+    "--ignore=tests/pretaster/scripts",
 ]
 norecursedirs = [".git", "build", "dist", "*.egg-info", ".venv", "htmlcov", ".hypothesis", "__pycache__", "*/generated/*"]
 filterwarnings = [
