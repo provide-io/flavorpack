@@ -158,10 +158,11 @@ pub(super) fn compress_and_sign_metadata(
         encoder.finish()?;
     }
 
-    // Calculate checksum
-    let metadata_checksum = adler::adler32_slice(&compressed);
-    let mut checksum_bytes = [0u8; 32];
-    checksum_bytes[0..4].copy_from_slice(&metadata_checksum.to_le_bytes());
+    // Calculate checksum (SHA-256 - full 32 bytes)
+    use sha2::{Digest, Sha256};
+    let mut hasher = Sha256::new();
+    hasher.update(&compressed);
+    let checksum_bytes: [u8; 32] = hasher.finalize().into();
     index.metadata_checksum = checksum_bytes;
 
     Ok(compressed)
