@@ -283,19 +283,6 @@ pub fn finalize_package(out: &mut File) -> Result<()> {
     // Get file size
     let file_size = out.stream_position()?;
 
-    // Calculate whole-file checksum
-    out.seek(SeekFrom::Start(0))?;
-    let mut hasher = Adler32::new();
-    let mut buffer = vec![0u8; 8192];
-    loop {
-        let n = std::io::Read::read(out, &mut buffer)?;
-        if n == 0 {
-            break;
-        }
-        hasher.write_slice(&buffer[..n]);
-    }
-    let _checksum = hasher.checksum();
-
     // Seek back to end
     out.seek(SeekFrom::End(0))?;
 
