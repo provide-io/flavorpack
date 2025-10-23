@@ -216,10 +216,18 @@ class TestHelperMethods:
         mock_manager = Mock()
         loader = BinaryLoader(mock_manager)
 
-        # Simulate ImportError by patching the import to raise
-        with patch("flavor.__version__", side_effect=ImportError):
+        # Simulate missing version by making the import fail
+        # We need to mock the entire flavor module to not have __version__
+        import flavor
+        original_version = getattr(flavor, "__version__", None)
+        try:
+            if hasattr(flavor, "__version__"):
+                delattr(flavor, "__version__")
             result = loader._get_package_version_name("test")
             assert result is None
+        finally:
+            if original_version is not None:
+                flavor.__version__ = original_version
 
     @patch("flavor.ingredients.binary_loader.get_platform_string")
     def test_remove_duplicates(self, mock_get_platform: Mock) -> None:
