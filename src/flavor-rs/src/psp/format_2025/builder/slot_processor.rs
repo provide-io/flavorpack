@@ -74,6 +74,7 @@ impl SlotProcessor {
                 lifecycle: slot.lifecycle.clone(),
                 permissions: slot.permissions.clone().or_else(|| Some(format!("{:04o}", DEFAULT_FILE_PERMS))),
                 resolution: slot.resolution.clone().or_else(|| Some("build".to_string())),
+                self_ref: None,  // Will be set by builder for self-referential slots
             };
             self.metadata_slots.push(slot_meta);
 
