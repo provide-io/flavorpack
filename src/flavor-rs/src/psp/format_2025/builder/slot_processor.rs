@@ -127,7 +127,7 @@ impl SlotProcessor {
             let slot_path = self.resolve_slot_path(&slot.source)?;
 
             // Calculate checksums and size
-            let (file_size, sha256_checksum, adler32_checksum) =
+            let (file_size, sha256_checksum, sha256_u64) =
                 self.calculate_slot_checksums(&slot_path, i)?;
 
             // Create metadata entry
@@ -154,7 +154,7 @@ impl SlotProcessor {
             self.metadata_slots.push(slot_meta);
 
             // Create descriptor
-            let descriptor = self.create_slot_descriptor(i, slot, file_size, adler32_checksum)?;
+            let descriptor = self.create_slot_descriptor(i, slot, file_size, sha256_u64)?;
             self.slot_descriptors.push(descriptor);
 
             // Store path for later streaming
@@ -219,7 +219,7 @@ impl SlotProcessor {
         // Calculate SHA-256 checksum
         let checksum_timer = Instant::now();
         let mut reader = BufReader::with_capacity(8 * 1024 * 1024, slot_file);
-        let sha256_checksum =
+        let sha256_checksum_str =
             calculate_checksum(&mut reader, ChecksumAlgorithm::Sha256).map_err(|e| {
                 FlavorError::Generic(format!(
                     "Failed to calculate SHA256 for slot {}: {}",
@@ -227,27 +227,26 @@ impl SlotProcessor {
                 ))
             })?;
 
-        // Calculate Adler-32 checksum
-        let slot_file2 = File::open(slot_path)?;
-        let mut reader2 = BufReader::with_capacity(8 * 1024 * 1024, slot_file2);
-        let mut adler = adler::Adler32::new();
-        let mut buffer = vec![0u8; 8 * 1024 * 1024];
-        loop {
-            let bytes_read = reader2.read(&mut buffer).map_err(|e| {
-                FlavorError::Generic(format!("Failed to read slot {} for Adler32: {}", index, e))
+        // Parse SHA-256 string (format: "sha256:...") and extract first 8 bytes as u64
+        let sha256_bytes = sha256_checksum_str
+            .strip_prefix("sha256:")
+            .and_then(|hex_str| hex::decode(hex_str).ok())
+            .ok_or_else(|| {
+                FlavorError::Generic(format!("Invalid SHA256 checksum format: {}", sha256_checksum_str))
             })?;
-            if bytes_read == 0 {
-                break;
-            }
-            adler.write_slice(&buffer[..bytes_read]);
-        }
-        let adler32_checksum = adler.checksum();
+
+        // Take first 8 bytes of SHA-256 and convert to little-endian u64
+        let sha256_u64 = u64::from_le_bytes(
+            sha256_bytes[..8]
+                .try_into()
+                .map_err(|_| FlavorError::Generic("SHA256 hash too short".into()))?,
+        );
 
         trace!("☑️ Checksums calculated in {:?}", checksum_timer.elapsed());
-        info!("Slot {}: SHA256 checksum: {}", index, sha256_checksum);
-        info!("Slot {}: Adler32 checksum: {:08x}", index, adler32_checksum);
+        info!("Slot {}: SHA256 checksum: {}", index, sha256_checksum_str);
+        debug!("Slot {}: SHA256 u64 (first 8 bytes): {:016x}", index, sha256_u64);
 
-        Ok((file_size, sha256_checksum, adler32_checksum))
+        Ok((file_size, sha256_checksum_str, sha256_u64))
     }
 
     fn create_slot_descriptor(
@@ -255,7 +254,7 @@ impl SlotProcessor {
         index: usize,
         slot: &ManifestSlot,
         file_size: u64,
-        adler_checksum: u32,
+        sha256_checksum: u64,
     ) -> Result<SlotDescriptor> {
         // Parse operations from comma-separated string (e.g., "tar,gzip")
         let operations = if slot.operations.is_empty()
@@ -312,7 +311,7 @@ impl SlotProcessor {
         descriptor = descriptor.with_name(&slot.id);
         descriptor.size = file_size;
         descriptor.original_size = file_size;
-        descriptor.checksum = adler_checksum as u64;
+        descriptor.checksum = sha256_checksum;
         descriptor.operations = pack_operations(&operations);
         descriptor.purpose = purpose_value;
         descriptor.lifecycle = lifecycle_value;
@@ -326,9 +325,9 @@ impl SlotProcessor {
         descriptor.permissions = (perms & 0xFF) as u8;
         descriptor.permissions_high = ((perms >> 8) & 0xFF) as u8;
 
-        trace!(
-            "📍 Slot {}: {} size {} bytes, checksum {:08x}",
-            index, slot.id, file_size, adler_checksum
+        debug!(
+            "📍 Slot {}: {} size {} bytes, checksum {:016x}",
+            index, slot.id, file_size, sha256_checksum
         );
 
         Ok(descriptor)
