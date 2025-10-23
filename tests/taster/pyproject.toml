@@ -27,8 +27,6 @@ entry_point = "taster.cli:main"
 dependencies = ["../.."]
 
 [tool.flavor.execution]
-# Install wheels then run taster
-command = "{workenv}/bin/uv pip install --quiet {workenv}/wheels/*.whl --python {workenv}/bin/python && {workenv}/bin/taster"
 # Runtime environment configuration for testing
 [tool.flavor.execution.runtime]
 [tool.flavor.execution.runtime.env]
