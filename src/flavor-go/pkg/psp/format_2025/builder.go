@@ -80,7 +80,7 @@ func BuildWithLogLevel(manifestPath, outputPath, launcherBin, privateKeyPath, pu
 	})
 
 	// Log startup messages
-	logger.Info("🐹🐹🐹 Hello from Flavor's PSPF Builder 🐹🐹🐹")
+	logger.Info("🐹🐹🐹 Hello from Flavor's Go Builder 🐹🐹🐹")
 	logger.Debug("Log level", "level", actualLevel, "source", logSource)
 	logger.Info("PSPF Go Builder starting...")
 

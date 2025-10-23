@@ -52,7 +52,7 @@ type ExtractionResult = ((SlotPaths, Vec<PathBuf>), PathBuf);
 /// - Command execution fails
 #[allow(clippy::cognitive_complexity)]
 pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> Result<i32> {
-    info!("🦀🦀🦀 Hello from Flavor's PSPF Launcher 🦀🦀🦀");
+    info!("🦀🦀🦀 Hello from Flavor's Rust Launcher 🦀🦀🦀");
     info!("PSPF Rust Launcher starting...");
     debug!("📖 Reading PSPF bundle");
 
