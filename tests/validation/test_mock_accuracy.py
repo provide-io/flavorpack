@@ -17,9 +17,13 @@ from tests.conftest import MOCK_LAUNCHER_DATA, MOCK_LAUNCHER_SIZE
 class TestMockAccuracy:
     """Validate that our mocks accurately represent real behavior."""
 
-    @pytest.fixture(autouse=True)
+    @pytest.fixture()
     def use_real_launcher(self, monkeypatch, request) -> None:
-        """Override the global mock to use real launchers for these tests."""
+        """Override the global mock to use real launchers for these tests.
+
+        Note: Only use this fixture for tests that explicitly need real launchers.
+        Most tests should work with the global mock.
+        """
         # Skip the global mock fixture for this test class
         # Store the original function
         # The global mock has already patched it, so we need to get the real one
