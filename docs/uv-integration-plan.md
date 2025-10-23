@@ -29,10 +29,27 @@ This document outlines the integration of FlavorPack's PSPF/2025 packaging syste
 
 - **Library Integration**: uv will depend on the `flavor` crate (src/flavor-rs) as a library dependency
 - **Native Rust**: No Python dependency - pure Rust implementation using existing flavor-rs API
+- **MVP Strategy**: Start with reading PSP files (proves integration), then add building (uses same library)
 - **Embedded Launchers**: Both flavor-go-launcher and flavor-rs-launcher binaries embedded in uv
 - **User Choice**: `--launcher` flag allows selection between rust/go/auto
 - **Cross-Compatibility**: Packages created by `uv pack` work with both launcher types
-- **Progressive Implementation**: 5 phases from prototype to production
+- **Progressive Implementation**: 6 phases from prototype to production
+
+### MVP Approach: Reading First, Building Second
+
+**Why this order?**
+1. **Lower Risk**: Reading PSP files is simpler - proves flavor-rs integration works
+2. **Same Library**: If `flavor::verify_package()` works, `flavor::build_package()` will too
+3. **Testable**: Can test with existing FlavorPack-created PSP files immediately
+4. **Logical Flow**: Must understand the format before building it
+
+**Phase 1 delivers both:**
+- `uv pack inspect <file.psp>` - Read and display package info
+- `uv pack verify <file.psp>` - Validate signatures/integrity
+- `uv pack extract <file.psp>` - Extract contents
+- `uv pack build` - Create new packages
+
+This proves round-trip compatibility: FlavorPack → uv (read) → uv (build) → Both launchers (execute)
 
 ### Value Proposition
 
@@ -290,9 +307,11 @@ pub fn generate_manifest(
 
 ---
 
-### Phase 1: Minimal Viable Integration (Week 2-3)
+### Phase 1: PSP Reading & Basic Building (Week 2-3)
 
-**Goal:** Create working prototype that can pack a simple Python app
+**Goal:** Create working prototype that can read existing PSP files and build simple packages
+
+**Rationale:** Reading and building use the same `flavor-rs` library - if we integrate the library to read PSP files, building capability comes nearly for free. The MVP demonstrates both directions of the format.
 
 **Tasks:**
 
@@ -319,7 +338,126 @@ serde_json = "1.0"
 tempfile = "3.0"
 ```
 
-#### 1.2 Create Launcher Embedding Module
+#### 1.2 Create PSP Reading Commands (PRIORITY)
+File: `crates/uv-pack/src/reader.rs`
+```rust
+use flavor::{verify_package, VerifyResult};
+use std::path::Path;
+
+/// Inspect PSP package contents
+pub fn inspect(package_path: &Path) -> Result<()> {
+    let result = verify_package(package_path)?;
+
+    println!("Package: {} v{}", result.package_name, result.package_version);
+    println!("Format: {} ({})", result.format, result.version);
+    println!("Slots: {}", result.slot_count);
+    println!("Signature: {}", if result.signature_valid { "✅ Valid" } else { "❌ Invalid" });
+
+    // Read and display detailed slot information
+    let reader = flavor::psp::format_2025::reader::PSPFReader::new(package_path)?;
+    for slot in reader.slots() {
+        println!("  - {}: {} ({} bytes)", slot.id, slot.purpose, slot.size);
+    }
+
+    Ok(())
+}
+
+/// Verify PSP package integrity
+pub fn verify(package_path: &Path) -> Result<bool> {
+    let result = verify_package(package_path)?;
+
+    if result.signature_valid {
+        println!("✅ Package signature is valid");
+        println!("✅ All checksums verified");
+        Ok(true)
+    } else {
+        println!("❌ Package signature invalid or missing");
+        Ok(false)
+    }
+}
+
+/// Extract PSP package contents
+pub fn extract(package_path: &Path, output_dir: &Path) -> Result<()> {
+    use flavor::psp::format_2025::extraction;
+
+    extraction::extract_package(package_path, output_dir)?;
+    println!("✅ Extracted to: {}", output_dir.display());
+
+    Ok(())
+}
+```
+
+#### 1.3 Add CLI Subcommands
+File: `crates/uv-cli/src/lib.rs`
+```rust
+#[derive(Subcommand)]
+pub enum Commands {
+    // ... existing commands
+
+    /// Work with PSPF packages
+    Pack(PackCommand),
+}
+
+#[derive(Args)]
+pub struct PackCommand {
+    #[command(subcommand)]
+    pub command: PackSubcommand,
+}
+
+#[derive(Subcommand)]
+pub enum PackSubcommand {
+    /// Inspect package contents
+    Inspect(InspectArgs),
+
+    /// Verify package integrity
+    Verify(VerifyArgs),
+
+    /// Extract package contents
+    Extract(ExtractArgs),
+
+    /// Build new package (comes later in Phase 1)
+    Build(BuildArgs),
+}
+
+#[derive(Args)]
+pub struct InspectArgs {
+    /// Path to PSP package
+    pub package: PathBuf,
+}
+
+#[derive(Args)]
+pub struct VerifyArgs {
+    /// Path to PSP package
+    pub package: PathBuf,
+}
+
+#[derive(Args)]
+pub struct ExtractArgs {
+    /// Path to PSP package
+    pub package: PathBuf,
+
+    /// Output directory
+    #[arg(short, long)]
+    pub output: PathBuf,
+}
+```
+
+**Test Reading Commands:**
+```bash
+# Get an existing PSP package from flavorpack
+cp /path/to/flavorpack/tests/fixtures/example.psp /tmp/
+
+# Test inspect
+uv pack inspect /tmp/example.psp
+
+# Test verify
+uv pack verify /tmp/example.psp
+
+# Test extract
+uv pack extract /tmp/example.psp --output /tmp/extracted
+```
+
+#### 1.4 Create Launcher Embedding Module
 File: `crates/uv-pack/src/launchers.rs`
 ```rust
 /// Embedded launcher binaries
@@ -432,44 +570,83 @@ pub struct PackArgs {
 }
 ```
 
-#### 1.5 Implement Command Handler
+#### 1.5 Implement Command Handlers
 File: `crates/uv/src/commands/pack.rs`
 ```rust
-pub async fn pack(args: PackArgs) -> Result<ExitStatus> {
-    let config = PackConfig {
-        project_dir: args.src.unwrap_or_else(|| PathBuf::from(".")),
-        output: args.output.unwrap_or_else(|| /* default */),
-        platform: args.platform.unwrap_or_else(|| current_platform()),
-        launcher_type: parse_launcher_type(&args.launcher)?,
-        sign: args.sign,
-        compression: "gzip".into(),
-    };
+use uv_pack::{reader, builder};
 
-    let package_path = uv_pack::pack(config)?;
+pub async fn pack(command: PackCommand) -> Result<ExitStatus> {
+    match command.command {
+        PackSubcommand::Inspect(args) => {
+            reader::inspect(&args.package)?;
+            Ok(ExitStatus::Success)
+        }
 
-    writeln!(
-        stdout,
-        "✅ Package created: {}",
-        package_path.display()
-    )?;
+        PackSubcommand::Verify(args) => {
+            let valid = reader::verify(&args.package)?;
+            Ok(if valid { ExitStatus::Success } else { ExitStatus::Failure })
+        }
 
-    Ok(ExitStatus::Success)
+        PackSubcommand::Extract(args) => {
+            reader::extract(&args.package, &args.output)?;
+            Ok(ExitStatus::Success)
+        }
+
+        PackSubcommand::Build(args) => {
+            let config = PackConfig {
+                project_dir: args.src.unwrap_or_else(|| PathBuf::from(".")),
+                output: args.output.unwrap_or_else(|| /* default */),
+                platform: args.platform.unwrap_or_else(|| current_platform()),
+                launcher_type: parse_launcher_type(&args.launcher)?,
+                sign: args.sign,
+                compression: "gzip".into(),
+            };
+
+            let package_path = builder::pack(config)?;
+
+            writeln!(
+                stdout,
+                "✅ Package created: {}",
+                package_path.display()
+            )?;
+
+            Ok(ExitStatus::Success)
+        }
+    }
 }
 ```
 
-**Test:**
+**Phase 1 Testing Strategy:**
 ```bash
+# Step 1: Test reading existing PSP files (FIRST)
+# Get a PSP package from flavorpack
+cd /path/to/flavorpack
+make test  # This creates test PSP files
+cp tests/pretaster/packages/*.psp /tmp/test.psp
+
+# Test uv pack reading commands
+uv pack inspect /tmp/test.psp
+uv pack verify /tmp/test.psp
+uv pack extract /tmp/test.psp --output /tmp/extracted
+
+# Step 2: Test building (SECOND - once reading works)
 cd /tmp/hello-world-app
-uv pack --output hello.psp
+uv pack build --output hello.psp
+
+# Step 3: Test round-trip (build then read)
+uv pack inspect hello.psp
+uv pack verify hello.psp
 ./hello.psp
 # → "Hello, World!"
 ```
 
 **Deliverables:**
-- Working `uv pack` command
-- Can package simple Python apps
-- Supports both Rust and Go launchers
-- Basic manifest generation
+- ✅ Working `uv pack inspect` command (reads existing PSP files)
+- ✅ Working `uv pack verify` command (validates signatures)
+- ✅ Working `uv pack extract` command (extracts contents)
+- ✅ Working `uv pack build` command (creates simple Python apps)
+- ✅ Supports both Rust and Go launchers
+- ✅ Round-trip works: build → inspect → verify → execute
 
 ---
 
@@ -887,7 +1064,9 @@ jobs:
   - [ ] flavor-go-launcher (Linux x86_64, macOS arm64, Windows x86_64)
 - [ ] Create `uv/launchers/` directory structure
 
-### Phase 1: Minimal Viable Integration ⬜
+### Phase 1: PSP Reading & Basic Building ⬜
+
+**MVP Focus:** Prove we can integrate flavor-rs by reading PSP files first, then building
 
 #### Crate Setup
 - [ ] Create `crates/uv-pack/` directory
@@ -896,7 +1075,18 @@ jobs:
 - [ ] Create `crates/uv-pack/src/lib.rs` with module structure
 - [ ] Add uv-pack to workspace in root `Cargo.toml`
 
-#### Launcher Embedding
+#### PSP Reading (FIRST - Core MVP)
+- [ ] Create `crates/uv-pack/src/reader.rs`
+- [ ] Implement `inspect()` function using `flavor::verify_package()`
+- [ ] Implement `verify()` function for signature validation
+- [ ] Implement `extract()` function for package extraction
+- [ ] Add CLI subcommands: `inspect`, `verify`, `extract`
+- [ ] Test with existing PSP files from flavorpack
+- [ ] Verify slot reading works
+- [ ] Verify signature validation works
+- [ ] Verify extraction works
+
+#### Launcher Embedding (SECOND)
 - [ ] Create `crates/uv-pack/launchers/` directory
 - [ ] Copy launcher binaries to launchers directory
 - [ ] Create `crates/uv-pack/src/launchers.rs`
@@ -1303,12 +1493,17 @@ test-pack:
 
 ## Success Criteria
 
-### MVP (Phase 1)
-- [ ] `uv pack` command exists and runs
-- [ ] Can pack a simple Python app (hello world)
+### MVP (Phase 1) - Reading + Building
+- [ ] `uv pack inspect` reads and displays PSP package information
+- [ ] `uv pack verify` validates package signatures and checksums
+- [ ] `uv pack extract` extracts package contents to directory
+- [ ] `uv pack build` creates a simple Python app package (hello world)
 - [ ] Package executes and produces correct output
 - [ ] Works with both Rust and Go launchers
+- [ ] Round-trip works: build → inspect → verify → execute
 - [ ] Basic documentation exists
+
+**Success Metric:** Can read FlavorPack-created PSP files AND create new ones that both launchers can execute
 
 ### Feature Complete (Phase 4)
 - [ ] Full dependency resolution and bundling
