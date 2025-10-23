@@ -1,3 +1,0 @@
-# `flavor.psp`
-
-::: flavor.psp
