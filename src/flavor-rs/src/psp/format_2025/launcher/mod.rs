@@ -52,8 +52,8 @@ type ExtractionResult = ((SlotPaths, Vec<PathBuf>), PathBuf);
 /// - Command execution fails
 #[allow(clippy::cognitive_complexity)]
 pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> Result<i32> {
+    info!("🦀🦀🦀 Hello from Flavor's PSPF Launcher 🦀🦀🦀");
     info!("PSPF Rust Launcher starting...");
-    debug!("🦀 Rust launcher starting");
     debug!("📖 Reading PSPF bundle");
 
     // Log environment variables at trace level
