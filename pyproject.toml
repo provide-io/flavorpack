@@ -40,6 +40,7 @@ Homepage = "https://github.com/provide-io/flavor"
 [dependency-groups]
 dev = [
     "provide-testkit[all]",
+    "mutmut>=3.0.0",
 ]
 docs = [
     "provide-testkit[docs]",
@@ -109,7 +110,7 @@ exclude = [
 ]
 
 [[tool.mypy.overrides]]
-module = ["structlog.*", "google.*", "grpc.*", "pytest.*", "jq.*", "psutil.*", "hcl2"]
+module = ["structlog.*", "google.*", "grpc.*", "pytest.*", "jq.*", "psutil.*", "hcl2", "mutmut.*"]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
@@ -155,7 +156,18 @@ markers = [
     "cross_language: Tests involving Go/Rust/Python interaction",
     "stress: Stress and hypothesis-based property tests",
     "requires_ingredients: Tests that need Go/Rust ingredients built",
+    "mutation: Mutation testing related tests",
 ]
+
+[tool.mutmut]
+paths_to_mutate = "src/flavor"
+runner = "pytest"
+# Exclude generated files and test code from mutation
+exclude = ["*/generated/*", "*_pb2.py", "*_pb2.pyi", "*/tests/*", "*/test_*"]
+# Mutation testing requires all tests to pass first
+dict_synonyms = ["dict", "OrderedDict", "defaultdict"]
+# Run tests in parallel for faster mutation testing
+use_patch_file = true
 
 [tool.coverage.run]
 branch = true
