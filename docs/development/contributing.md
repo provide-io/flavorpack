@@ -33,7 +33,7 @@ git clone https://github.com/provide-io/flavor.git
 cd flavor
 
 # Set up the development environment
-source env.sh
+uv sync
 ```
 
 The `env.sh` script automatically:
@@ -55,7 +55,7 @@ The project depends on several packages in the parent directory:
 - `tofusoup`: OpenTofu integration
 - `wrkenv`: Development environment management
 
-These are automatically installed when running `source env.sh`.
+These are automatically installed when running `uv sync`.
 
 ## Building Ingredients
 
@@ -95,7 +95,7 @@ Ingredient binaries are installed to:
 
 1. **Start your day**:
    ```bash
-   source env.sh
+   uv sync
    ./ingredients/build.sh  # If ingredients changed
    ```
 
@@ -310,7 +310,7 @@ workenv/flavor_*/bin/flavor ingredients list
 ```bash
 # Reinstall environment
 rm -rf workenv/
-source env.sh
+uv sync
 ```
 
 **Test failures**:

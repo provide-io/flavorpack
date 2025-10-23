@@ -33,7 +33,7 @@ Choose the installation method that works best for your environment:
     cd flavorpack
     
     # Set up Python environment
-    source env.sh
+    uv sync
     
     # Build native ingredients (Go/Rust launchers)
     ./ingredients/build.sh
