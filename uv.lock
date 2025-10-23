@@ -2207,18 +2207,17 @@ wheels = [
 
 [[package]]
 name = "provide-foundation"
-version = "0.0.1000.post0"
+version = "0.0.1023"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiofiles" },
     { name = "attrs" },
-    { name = "psutil" },
     { name = "structlog" },
     { name = "tomli-w" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/3e/ec/858d3a718c14cbc81ca13ea5b99d2e258dd002525a48dfcc1f3b7f70783b/provide_foundation-0.0.1000.post0.tar.gz", hash = "sha256:2c7b4a3c5b1e042a3e25b44a80795e047d1703ea242d3abe1d8849b50c385ad2", size = 384868, upload-time = "2025-10-15T00:59:39.645Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/c6/80/8db4ec07347d03456dd832456b1634b6da0a43e2a9c553770d507dd679ca/provide_foundation-0.0.1023.tar.gz", hash = "sha256:e4f8413a59238fdf365ce8c5eb2aece00318b903717a20bcf36a5d1ea787e5e1", size = 409459, upload-time = "2025-10-23T21:12:50.057Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/00/4d/2e1cea43140d336cf5b48622d181d9fe2b4d06664678601e3bc4a74cc8ed/provide_foundation-0.0.1000.post0-py3-none-any.whl", hash = "sha256:d32f6345381a09b2b3af21418696dd766dbbe4e439ef9a724dbbb35c36c9ab15", size = 579145, upload-time = "2025-10-15T00:59:37.992Z" },
+    { url = "https://files.pythonhosted.org/packages/4c/2e/883ad06e73dffeaafd4bfec58ac1f02c416928b940ca302931947c3a5621/provide_foundation-0.0.1023-py3-none-any.whl", hash = "sha256:fa7b6eb6869d79da7f0d256102ca7ed3b9e3e687641c4588cbb2563b03f4af7d", size = 613563, upload-time = "2025-10-23T21:12:48.442Z" },
 ]
 
 [package.optional-dependencies]
@@ -2230,6 +2229,9 @@ all = [
     { name = "opentelemetry-exporter-otlp-proto-grpc" },
     { name = "opentelemetry-exporter-otlp-proto-http" },
     { name = "opentelemetry-sdk" },
+    { name = "psutil" },
+    { name = "py-cpuinfo" },
+    { name = "setproctitle" },
     { name = "zstandard" },
 ]
 
