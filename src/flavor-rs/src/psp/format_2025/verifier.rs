@@ -80,6 +80,14 @@ pub fn verify(package_path: &Path) -> Result<VerifyResult> {
     );
 
     // Overall signature validity
+    debug!(
+        "🔍 Verification results: index_checksum={}, metadata_checksum={}, size={}, integrity_seal={}, trailing_magic={}",
+        index_checksum_valid,
+        metadata_checksum_valid,
+        size_valid,
+        integrity_seal_valid,
+        trailing_magic_valid
+    );
     let signature_valid = index_checksum_valid
         && metadata_checksum_valid
         && size_valid
