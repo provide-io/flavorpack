@@ -1,15 +1,15 @@
 # Code Coverage Progress - Path to 100%
 
 **Date**: 2025-10-22
-**Current Coverage**: 80.42% (from 61.74% baseline)
+**Current Coverage**: 82.52% (from 61.74% baseline)
 **Target**: 100%
-**Status**: Phase 5.4 Complete (13 of 15 phases)
+**Status**: Phase 6 Started - workenv.py complete!
 
 ---
 
 ## 🚀 Today's Session Summary (2025-10-22)
 
-**Coverage Improvement**: 77.19% → 80.47% (+3.28%)
+**Coverage Improvement**: 77.19% → 82.52% (+5.33%)
 
 **Phases Completed**:
 1. ✅ **Phase 5.2**: packaging/python/slot_builder.py (44.76% → 99.52%, +54.76%)
@@ -41,11 +41,31 @@
    - KeyConfig creation with validation (single source enforcement)
    - Full error handling for all edge cases
 
+4. ✅ **Phase 5.5**: psp/format_2025/extraction.py (48.55% → 96.38%, +47.83%)
+   - 27 tests across 2 files (361 + 348 = 709 LOC)
+   - SlotExtractor initialization and slot view creation
+   - Slot streaming with chunking (stream method and manual fallback)
+   - Checksum verification (single slot and all slots)
+   - Integrity verification (size and checksum validation)
+   - Slot extraction with handler delegation and fallback
+   - V0 operations reversal for extraction
+   - Memory view handling, backend availability checks
+
+5. ✅ **Phase 6.1**: psp/format_2025/workenv.py (50.28% → 98.31%, +48.03%)
+   - 32 tests across 2 files (310 + 363 = 673 LOC)
+   - WorkEnvManager initialization and setup_workenv method
+   - Cache validation (valid/invalid/missing/mismatch)
+   - Lifecycle-based slot cleanup (init/temp/runtime)
+   - Setup command processing (write_file/execute/enumerate_and_execute)
+   - Command execution with error handling and placeholder substitution
+   - Slot reference substitution ({slot:N} pattern)
+   - Bug fix: Path to str conversion in enumerate_and_execute
+
 **Totals**:
-- **Tests Added**: 110 new tests (all passing)
-- **Statements Covered**: +231 statements
-- **Files Created**: 8 test files (2747 LOC total)
-- **Bugs Fixed**: 1 (is_windows function call)
+- **Tests Added**: 169 new tests (all passing)
+- **Statements Covered**: +345 statements
+- **Files Created**: 12 test files (4089 LOC total, all <500 LOC)
+- **Bugs Fixed**: 2 (is_windows function call, Path to str conversion)
 
 ## 🚀 Previous Session Summary (2025-10-21)
 
@@ -256,7 +276,7 @@
 **Lines Covered**: +315 statements covered
 **Impact**: Project coverage improved from 72.31% → 76.05% (+3.74%)
 
-## 📊 Phase 5 Summary (In Progress)
+## 📊 Phase 5 Summary (Complete) ✅
 
 | File | Baseline | Current | Tests | Status |
 |------|----------|---------|-------|--------|
@@ -264,10 +284,11 @@
 | packaging/python/slot_builder.py | 44.76% | 99.52% | 40 | ✅ Complete |
 | packaging/orchestrator_ingredients.py | 47.53% | 99.38% | 41 | ✅ Complete |
 | psp/format_2025/keys.py | 48.24% | 100% | 29 | ✅ Complete |
+| psp/format_2025/extraction.py | 48.55% | 96.38% | 27 | ✅ Complete |
 
-**Total New Tests**: 140 tests
-**Lines Covered**: +312 statements covered
-**Impact**: Project coverage improved from 76.05% → 80.47% (+4.42%)
+**Total New Tests**: 167 tests
+**Lines Covered**: +363 statements covered
+**Impact**: Project coverage improved from 76.05% → 81.37% (+5.32%)
 
 ---
 
@@ -487,10 +508,67 @@
 - **Remaining**: None - 100% coverage achieved
 - **Impact**: +36 statements covered
 
-Files remaining to complete:
-- psp/format_2025/extraction.py (48.55%)
+#### 5.5 psp/format_2025/extraction.py (48.55% → 96.38%) ✅ COMPLETE
+- **Test Files**:
+  - `tests/format_2025/test_extraction_core.py` (361 LOC)
+  - `tests/format_2025/test_extraction_ops.py` (348 LOC)
+- **Tests**: 27 comprehensive tests (all passing)
+- **Coverage**: 96.38% (104 statements, 3 missed, 2 partial branches)
+- **Test Classes**:
+  - TestSlotExtractorInit (1 test) - Basic initialization
+  - TestGetSlotView (4 tests) - Slot view creation, backend handling
+  - TestStreamSlot (3 tests) - Streaming with/without stream method
+  - TestVerifySlotIntegrity (8 tests) - Single slot integrity checks
+  - TestVerifyAllChecksums (6 tests) - All slots checksum verification
+  - TestExtractSlot (5 tests) - Slot extraction with handlers and fallback
+  - TestReverseV0Operations (1 test) - Operation reversal
+- **Covers**:
+  - `__init__()` - Reader reference initialization
+  - `get_slot_view()` - Lazy slot view creation, backend auto-opening
+  - `stream_slot()` - Chunked streaming (built-in stream method + manual fallback)
+  - `verify_slot_integrity()` - Checksum and size validation for single slot
+  - `verify_all_checksums()` - Batch verification of all slots
+  - `extract_slot()` - Handler delegation, v0 operations reversal, fallback to raw write
+  - `_reverse_v0_operations()` - Delegation to handlers.reverse_operations
+  - Memoryview handling, backend availability checks
+  - Error handling: missing backend, checksum/size mismatches, extraction failures
+- **Remaining**: Lines 76, 147->159, 153-154 (edge cases in manual chunking and v0 ops)
+- **Impact**: +51 statements covered
 
-### Phase 6: Final Push (50-100%)
+### Phase 6: Final Push (50-100%) - IN PROGRESS
+
+#### 6.1 psp/format_2025/workenv.py (50.28% → 98.31%) ✅ COMPLETE
+- **Test Files**:
+  - `tests/format_2025/test_workenv_core.py` (310 LOC)
+  - `tests/format_2025/test_workenv_commands.py` (363 LOC)
+- **Tests**: 32 comprehensive tests (all passing)
+- **Coverage**: 98.31% (135 statements, 0 missed, 3 partial branches)
+- **Test Classes**:
+  - TestWorkEnvManagerInit (1 test) - Basic initialization
+  - TestSetupWorkenv (4 tests) - Setup with valid/invalid cache, setup commands, lifecycle cleanup
+  - TestCheckCacheValidity (4 tests) - Cache validation scenarios
+  - TestCleanupLifecycleSlots (5 tests) - Lifecycle-based cleanup (init/temp/runtime)
+  - TestRunSetupCommands (5 tests) - Setup command processing
+  - TestRunWriteFileCommand (2 tests) - File writing with placeholder substitution
+  - TestRunExecuteCommand (3 tests) - Command execution with error handling
+  - TestRunEnumerateExecuteCommand (3 tests) - File enumeration and batch execution
+  - TestSubstitutePlaceholders (2 tests) - Placeholder substitution
+  - TestSubstituteSlotReferences (3 tests) - Slot reference substitution
+- **Covers**:
+  - `__init__()` - Reader reference initialization
+  - `setup_workenv()` - Work environment setup with cache validation
+  - `_check_cache_validity()` - Cache file validation with placeholder substitution
+  - `_cleanup_lifecycle_slots()` - Lifecycle-based cleanup (init/temp/runtime)
+  - `_run_setup_commands()` - Setup command dispatching
+  - `_run_write_file_command()` - File writing with atomic writes
+  - `_run_execute_command()` - Command execution with shlex parsing and error handling
+  - `_run_enumerate_execute_command()` - File enumeration and batch execution
+  - `_substitute_placeholders()` - Workenv/package/version placeholder substitution
+  - `substitute_slot_references()` - Slot path substitution ({slot:N} pattern)
+  - All error paths and edge cases
+- **Bug Fixed**: Line 263 - Convert Path to str in enumerate_execute (file_path substitution)
+- **Remaining**: Lines 138->137, 146->137, 314->312 (3 partial branches in lifecycle cleanup and slot substitution)
+- **Impact**: +63 statements covered
 
 Complete all remaining files with <100% coverage, focusing on:
 - Branch coverage (BrPart column)
