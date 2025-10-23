@@ -276,17 +276,40 @@ class TestHelperMethods:
         loader = BinaryLoader(mock_manager)
 
         with patch("flavor.ingredients.binary_loader.Path") as mock_path_class:
-            # Mock embedded location to not exist - need 3-level support for parent / "bin" / name
-            mock_path_instance = Mock()
-            mock_embedded_file = Mock()
-            mock_embedded_file.exists.return_value = False
-            # mock_embedded needs to support __truediv__ for the second / operation
-            mock_embedded = Mock()
-            mock_embedded.exists.return_value = False
-            mock_embedded.__truediv__ = lambda self, x: mock_embedded_file
-            # mock_parent needs to return mock_embedded for the first / operation
+            # Need to mock two paths that don't exist:
+            # 1. parent / "bin" / name (3 levels)
+            # 2. parent / "ingredients" / platform / name (4 levels)
+
+            # Mock for final file checks - all return False for exists()
+            mock_final_file = Mock()
+            mock_final_file.exists.return_value = False
+
+            # Mock for platform level (supports / name)
+            mock_platform_dir = Mock()
+            mock_platform_dir.exists.return_value = False
+            mock_platform_dir.__truediv__ = lambda self, x: mock_final_file
+
+            # Mock for intermediate directories (supports / platform or / name)
+            mock_bin_dir = Mock()
+            mock_bin_dir.exists.return_value = False
+            mock_bin_dir.__truediv__ = lambda self, x: mock_final_file
+
+            mock_ingredients_dir = Mock()
+            mock_ingredients_dir.exists.return_value = False
+            mock_ingredients_dir.__truediv__ = lambda self, x: mock_platform_dir
+
+            # Mock parent supports / "bin" and / "ingredients"
+            def mock_parent_truediv(self, x):
+                if x == "bin":
+                    return mock_bin_dir
+                elif x == "ingredients":
+                    return mock_ingredients_dir
+                return Mock()
+
             mock_parent = Mock()
-            mock_parent.__truediv__ = lambda self, x: mock_embedded if x == "bin" else Mock()
+            mock_parent.__truediv__ = mock_parent_truediv
+
+            mock_path_instance = Mock()
             mock_path_instance.parent = mock_parent
             mock_path_class.return_value = mock_path_instance
 
@@ -303,17 +326,40 @@ class TestHelperMethods:
         loader = BinaryLoader(mock_manager)
 
         with patch("flavor.ingredients.binary_loader.Path") as mock_path_class:
-            # Mock embedded location to not exist - need 3-level support for parent / "bin" / name
-            mock_path_instance = Mock()
-            mock_embedded_file = Mock()
-            mock_embedded_file.exists.return_value = False
-            # mock_embedded needs to support __truediv__ for the second / operation
-            mock_embedded = Mock()
-            mock_embedded.exists.return_value = False
-            mock_embedded.__truediv__ = lambda self, x: mock_embedded_file
-            # mock_parent needs to return mock_embedded for the first / operation
+            # Need to mock two paths that don't exist:
+            # 1. parent / "bin" / name (3 levels)
+            # 2. parent / "ingredients" / platform / name (4 levels)
+
+            # Mock for final file checks - all return False for exists()
+            mock_final_file = Mock()
+            mock_final_file.exists.return_value = False
+
+            # Mock for platform level (supports / name)
+            mock_platform_dir = Mock()
+            mock_platform_dir.exists.return_value = False
+            mock_platform_dir.__truediv__ = lambda self, x: mock_final_file
+
+            # Mock for intermediate directories (supports / platform or / name)
+            mock_bin_dir = Mock()
+            mock_bin_dir.exists.return_value = False
+            mock_bin_dir.__truediv__ = lambda self, x: mock_final_file
+
+            mock_ingredients_dir = Mock()
+            mock_ingredients_dir.exists.return_value = False
+            mock_ingredients_dir.__truediv__ = lambda self, x: mock_platform_dir
+
+            # Mock parent supports / "bin" and / "ingredients"
+            def mock_parent_truediv(self, x):
+                if x == "bin":
+                    return mock_bin_dir
+                elif x == "ingredients":
+                    return mock_ingredients_dir
+                return Mock()
+
             mock_parent = Mock()
-            mock_parent.__truediv__ = lambda self, x: mock_embedded if x == "bin" else Mock()
+            mock_parent.__truediv__ = mock_parent_truediv
+
+            mock_path_instance = Mock()
             mock_path_instance.parent = mock_parent
             mock_path_class.return_value = mock_path_instance
 
