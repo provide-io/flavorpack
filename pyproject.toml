@@ -169,6 +169,28 @@ dict_synonyms = ["dict", "OrderedDict", "defaultdict"]
 # Run tests in parallel for faster mutation testing
 use_patch_file = true
 
+[tool.testkit.mutation]
+paths_to_mutate = ["src/flavor"]
+exclude_patterns = ["*/generated/*", "*_pb2.py", "*_pb2.pyi", "*/tests/*", "*/test_*"]
+max_workers = 4
+runner = "pytest"
+
+[tool.testkit.mutation.module_priorities]
+"src/flavor/psp/security.py" = "critical"
+"src/flavor/psp/format_2025/validation.py" = "critical"
+"src/flavor/psp/format_2025/keys.py" = "critical"
+"src/flavor/psp/format_2025/reader.py" = "high"
+"src/flavor/psp/format_2025/writer.py" = "high"
+"src/flavor/psp/format_2025/builder.py" = "high"
+"src/flavor/psp/format_2025/slots.py" = "high"
+"src/flavor/psp/format_2025/handlers.py" = "high"
+
+[tool.testkit.mutation.score_thresholds]
+critical = 100.0
+high = 80.0
+standard = 60.0
+low = 40.0
+
 [tool.coverage.run]
 branch = true
 source_pkgs = ["flavor"]
