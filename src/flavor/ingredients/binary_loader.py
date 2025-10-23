@@ -318,7 +318,7 @@ class BinaryLoader:
     def _get_package_version_name(self, name: str) -> str | None:
         """Get ingredient name with package version if available."""
         try:
-            from flavor._version import __version__  # type: ignore[import-untyped]
+            from flavor import __version__
 
             if __version__ and __version__ != "0.0.0":
                 return f"{name}-{__version__}-{self.current_platform}"
