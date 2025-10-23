@@ -8,7 +8,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
-	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
@@ -62,7 +61,7 @@ func (r *Reader) ReadSlot(slotIndex int) ([]byte, error) {
 
 	logger := r.logger
 	if logger == nil {
-		logger = slog.Default()
+		logger = hclog.L()
 	}
 	logger.Debug("🐹 Go launcher verifying slot checksum",
 		"slot_id", entry.ID,
