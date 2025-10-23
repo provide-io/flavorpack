@@ -212,8 +212,8 @@ def _write_slots(f: BinaryIO, slots: list[PreparedSlot], spec: BuildSpec, index:
             slot_alignment=DEFAULT_SLOT_ALIGNMENT,
             chosen_alignment=alignment_value,
         )
-        # Convert 32-bit checksum to 64-bit for new format
-        checksum_64 = slot.checksum & 0xFFFFFFFF if slot.checksum else 0
+        # Use full 64-bit SHA-256 checksum (first 8 bytes as little-endian u64)
+        checksum_64 = slot.checksum if slot.checksum else 0
 
         descriptor = SlotDescriptor(
             id=i,
