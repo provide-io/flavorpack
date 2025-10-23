@@ -24,26 +24,47 @@ test-cov-xml: ## Run Python tests with XML coverage for CI
 # Mutation Testing
 .PHONY: test-mutation
 test-mutation: ## Run mutation testing quality tests
-	@source workenv/bin/activate && pytest -m mutation -v
+	@pytest -m mutation -v
 
-.PHONY: mutmut
-mutmut: ## Run mutation testing with mutmut
-	@echo "🧬 Running mutation testing..."
-	@source workenv/bin/activate && mutmut run
-
-.PHONY: mutmut-results
-mutmut-results: ## Show mutation testing results
-	@source workenv/bin/activate && mutmut results
-
-.PHONY: mutmut-html
-mutmut-html: ## Generate HTML mutation testing report
-	@source workenv/bin/activate && mutmut html
-	@echo "📊 HTML report generated in html/"
-
-.PHONY: mutmut-clean
-mutmut-clean: ## Clean mutation testing artifacts
-	@rm -rf mutants/ .mutmut-cache html/
+.PHONY: mutation-clean
+mutation-clean: ## Clean mutation testing artifacts
+	@rm -rf mutants/ .mutmut-cache html/ .mutation-artifacts/
 	@echo "🧹 Mutation testing artifacts cleaned"
+
+# Testkit Mutation Testing
+.PHONY: mutation-all
+mutation-all: ## Run mutation testing on all code (testkit)
+	@echo "🧬 Running mutation testing with provide-testkit..."
+	@python -m provide.testkit quality mutate src/flavor
+
+.PHONY: mutation-security
+mutation-security: ## Run mutation testing on security-critical modules
+	@echo "🔒 Testing security-critical modules..."
+	@python -m provide.testkit quality mutate src/flavor --priority critical
+
+.PHONY: mutation-core
+mutation-core: ## Run mutation testing on core PSPF modules
+	@echo "🎯 Testing core modules..."
+	@python -m provide.testkit quality mutate src/flavor --priority high
+
+.PHONY: mutation-changed
+mutation-changed: ## Run mutation testing on changed files only
+	@echo "📝 Testing changed files..."
+	@python -m provide.testkit quality mutate src/flavor --changed-only
+
+.PHONY: mutation-module
+mutation-module: ## Run mutation testing on specific module (usage: make mutation-module MODULE=path/to/module.py)
+	@if [ -z "$(MODULE)" ]; then \
+		echo "Usage: make mutation-module MODULE=path/to/module.py"; \
+		exit 1; \
+	fi
+	@echo "🎯 Testing module: $(MODULE)..."
+	@python -m provide.testkit quality mutate src/flavor --module $(MODULE)
+
+.PHONY: mutation-report
+mutation-report: ## Generate HTML mutation testing report
+	@echo "📊 Generating mutation report..."
+	@python -m provide.testkit quality mutate src/flavor --format html
 
 .PHONY: build-ingredients
 build-ingredients: ## Build all ingredients (Go and Rust)
