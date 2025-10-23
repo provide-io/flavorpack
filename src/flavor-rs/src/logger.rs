@@ -82,7 +82,7 @@ impl JsonLogger {
             "info" => Level::Info,
             "warn" => Level::Warn,
             "error" => Level::Error,
-            _ => Level::Warn,  // Default to Warn for production safety
+            _ => Level::Warn, // Default to Warn for production safety
         };
 
         let logger = Box::new(JsonLogger::new(level, log_path));

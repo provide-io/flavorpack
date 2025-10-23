@@ -26,7 +26,10 @@ use crate::exceptions::Result;
 /// - Package data cannot be read
 /// - Files cannot be written
 pub fn debug_dump(reader: &mut Reader, output_dir: &Path) -> Result<()> {
-    debug!("🔬 Starting comprehensive debug dump to {}", output_dir.display());
+    debug!(
+        "🔬 Starting comprehensive debug dump to {}",
+        output_dir.display()
+    );
     fs::create_dir_all(output_dir)?;
 
     // Dump index
@@ -64,8 +67,7 @@ pub fn debug_dump(reader: &mut Reader, output_dir: &Path) -> Result<()> {
             debug!("💾 Saved parsed metadata.json");
             trace!(
                 "  📦 Package: {} v{}",
-                metadata.package.name,
-                metadata.package.version
+                metadata.package.name, metadata.package.version
             );
             trace!("  🎰 {} slots defined", metadata.slots.len());
         }
@@ -77,7 +79,10 @@ pub fn debug_dump(reader: &mut Reader, output_dir: &Path) -> Result<()> {
     // Analyze slots via descriptors
     analyze_slots(reader, output_dir)?;
 
-    debug!("✨ Debug dump complete! Check {} for results", output_dir.display());
+    debug!(
+        "✨ Debug dump complete! Check {} for results",
+        output_dir.display()
+    );
     debug!("  📁 Files created: index.json, metadata_raw.bin, metadata.json, slot_*_header.bin");
     Ok(())
 }
@@ -167,9 +172,7 @@ fn analyze_slots(reader: &mut Reader, output_dir: &Path) -> Result<()> {
 
         // Read slot header for analysis
         let preview_size = usize::try_from(slot_size).unwrap_or(512).min(512);
-        let slot_preview = reader
-            .backend_mut()
-            .read_at(slot_offset, preview_size)?;
+        let slot_preview = reader.backend_mut().read_at(slot_offset, preview_size)?;
 
         // Identify slot content type
         identify_slot_content(i, &slot_preview);

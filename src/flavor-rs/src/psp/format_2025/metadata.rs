@@ -42,21 +42,21 @@ pub struct PackageInfo {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct SlotMetadata {
     #[serde(rename = "slot")]
-    pub index: usize,         // Position validator
-    pub id: String,           // Arbitrary identifier
-    pub source: String,        // Source path
-    pub target: String,        // Destination in workenv
-    pub size: i64,            // Size as stored in package
+    pub index: usize, // Position validator
+    pub id: String,     // Arbitrary identifier
+    pub source: String, // Source path
+    pub target: String, // Destination in workenv
+    pub size: i64,      // Size as stored in package
     pub checksum: String,
-    pub operations: String,   // Operation chain (e.g., "gzip", "tar|gzip")
+    pub operations: String, // Operation chain (e.g., "gzip", "tar|gzip")
     pub purpose: String,
     pub lifecycle: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub permissions: Option<String>, // Unix permissions as octal string (e.g., "0755")
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub resolution: Option<String>,  // When to resolve: build|runtime|lazy
+    pub resolution: Option<String>, // When to resolve: build|runtime|lazy
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub self_ref: Option<bool>,     // Self-referential slot (references launcher itself)
+    pub self_ref: Option<bool>, // Self-referential slot (references launcher itself)
 }
 
 /// Execution configuration
@@ -142,7 +142,6 @@ pub struct CompatibilityInfo {
     pub min_format_version: String,
     pub features: Vec<String>,
 }
-
 
 /// Cache validation configuration
 #[derive(Debug, Clone, Deserialize, Serialize)]

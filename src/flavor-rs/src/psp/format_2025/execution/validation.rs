@@ -9,7 +9,10 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 
 /// Validate package checksum against cached value
-pub(super) fn validate_package_checksum(paths: &WorkenvPaths, current_checksum: u32) -> Result<bool> {
+pub(super) fn validate_package_checksum(
+    paths: &WorkenvPaths,
+    current_checksum: u32,
+) -> Result<bool> {
     let checksum_path = paths.checksum_file();
 
     // Read stored checksum
@@ -19,42 +22,63 @@ pub(super) fn validate_package_checksum(paths: &WorkenvPaths, current_checksum: 
             let current_checksum_str = format!("{:08x}", current_checksum);
 
             if stored_checksum == current_checksum_str {
-                debug!("✅ Package checksum matches cached version: {}", current_checksum_str);
+                debug!(
+                    "✅ Package checksum matches cached version: {}",
+                    current_checksum_str
+                );
                 Ok(true)
             } else {
                 // Checksum mismatch - this is a potential security issue
-                use crate::psp::format_2025::defaults::{get_validation_level, ValidationLevel};
+                use crate::psp::format_2025::defaults::{ValidationLevel, get_validation_level};
 
                 let validation_level = get_validation_level();
                 match validation_level {
                     ValidationLevel::None | ValidationLevel::Minimal => {
-                        warn!("⚠️ SECURITY WARNING: Package checksum mismatch! cached: {}, current: {}",
-                              stored_checksum, current_checksum_str);
+                        warn!(
+                            "⚠️ SECURITY WARNING: Package checksum mismatch! cached: {}, current: {}",
+                            stored_checksum, current_checksum_str
+                        );
                         warn!("⚠️ Cache may be compromised or package has changed");
-                        warn!("⚠️ Continuing due to validation level: {:?}", validation_level);
+                        warn!(
+                            "⚠️ Continuing due to validation level: {:?}",
+                            validation_level
+                        );
                         Ok(false)
                     }
                     ValidationLevel::Relaxed => {
-                        warn!("⚠️ SECURITY WARNING: Package checksum mismatch! cached: {}, current: {}",
-                              stored_checksum, current_checksum_str);
+                        warn!(
+                            "⚠️ SECURITY WARNING: Package checksum mismatch! cached: {}, current: {}",
+                            stored_checksum, current_checksum_str
+                        );
                         warn!("⚠️ Cache may be compromised or package has changed");
                         warn!("⚠️ Continuing due to relaxed validation");
                         Ok(false)
                     }
                     ValidationLevel::Standard => {
-                        eprintln!("🚨 SECURITY WARNING: Package checksum mismatch! cached: {}, current: {}",
-                                  stored_checksum, current_checksum_str);
+                        eprintln!(
+                            "🚨 SECURITY WARNING: Package checksum mismatch! cached: {}, current: {}",
+                            stored_checksum, current_checksum_str
+                        );
                         eprintln!("🚨 Cache may be compromised or package has changed");
-                        eprintln!("🚨 Continuing with standard validation (use FLAVOR_VALIDATION=strict to enforce)");
-                        warn!("⚠️ Package checksum mismatch, continuing with standard validation: cached: {}, current: {}",
-                              stored_checksum, current_checksum_str);
+                        eprintln!(
+                            "🚨 Continuing with standard validation (use FLAVOR_VALIDATION=strict to enforce)"
+                        );
+                        warn!(
+                            "⚠️ Package checksum mismatch, continuing with standard validation: cached: {}, current: {}",
+                            stored_checksum, current_checksum_str
+                        );
                         Ok(false)
                     }
                     ValidationLevel::Strict => {
-                        log::error!("🚨 CRITICAL: Package checksum mismatch! cached: {}, current: {}",
-                                  stored_checksum, current_checksum_str);
+                        log::error!(
+                            "🚨 CRITICAL: Package checksum mismatch! cached: {}, current: {}",
+                            stored_checksum,
+                            current_checksum_str
+                        );
                         log::error!("🚨 Cache may be compromised or package has changed");
-                        log::error!("🚨 Refusing to continue. Set FLAVOR_VALIDATION=relaxed to bypass (NOT RECOMMENDED)");
+                        log::error!(
+                            "🚨 Refusing to continue. Set FLAVOR_VALIDATION=relaxed to bypass (NOT RECOMMENDED)"
+                        );
                         Err(FlavorError::Generic(format!(
                             "package checksum mismatch: cached={}, current={}",
                             stored_checksum, current_checksum_str

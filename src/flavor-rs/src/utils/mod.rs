@@ -5,7 +5,7 @@ pub mod xor;
 use std::env;
 
 // Re-export XOR functions for convenience
-pub use xor::{xor_decode_default, xor_encode_default, XOR_KEY};
+pub use xor::{XOR_KEY, xor_decode_default, xor_encode_default};
 
 /// Check if an environment variable is set to a truthy value
 /// Accepts: "1", "true", "on", "yes", "t" (case insensitive)
@@ -54,7 +54,7 @@ pub fn get_cache_dir() -> std::path::PathBuf {
     if let Ok(xdg_cache) = env::var("XDG_CACHE_HOME") {
         return PathBuf::from(xdg_cache).join("flavor");
     }
-    
+
     if let Some(home) = env::var_os("HOME") {
         return PathBuf::from(home).join(".cache/flavor");
     }

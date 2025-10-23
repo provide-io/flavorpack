@@ -34,7 +34,7 @@ pub fn show_info(exe_path: &Path) -> i32 {
 
     // Detect launcher type from binary
     let launcher_type = detect_launcher_type(exe_path);
-    
+
     // Get builder type from metadata
     let builder_type = if let Some(build) = &metadata.build {
         build.tool.clone()
@@ -45,7 +45,7 @@ pub fn show_info(exe_path: &Path) -> i32 {
     // Calculate total size and codec info
     let mut total_size = 0i64;
     let mut codec_types = std::collections::HashMap::new();
-    
+
     for slot in &metadata.slots {
         total_size += slot.size;
         if !slot.operations.is_empty() && slot.operations != "none" {
@@ -60,7 +60,7 @@ pub fn show_info(exe_path: &Path) -> i32 {
     };
 
     // Verification is now handled internally by read_index/read_metadata
-    use crate::psp::format_2025::defaults::{get_validation_level, ValidationLevel};
+    use crate::psp::format_2025::defaults::{ValidationLevel, get_validation_level};
 
     let verified = match get_validation_level() {
         ValidationLevel::None => "✓ (skipped)".to_string(),
@@ -128,7 +128,7 @@ pub fn show_metadata(exe_path: &Path) -> i32 {
 /// Verify bundle integrity
 pub fn verify_bundle(exe_path: &Path) -> i32 {
     println!("🔍 Verifying PSPF package: {:?}", exe_path);
-    
+
     let mut reader = match Reader::new(exe_path) {
         Ok(r) => r,
         Err(e) => {
@@ -173,11 +173,15 @@ pub fn verify_bundle(exe_path: &Path) -> i32 {
             if descriptors.len() == metadata.slots.len() {
                 println!("  ✓ All {} slot descriptors valid", metadata.slots.len());
             } else {
-                errors.push(format!("Slot descriptor count mismatch: expected {}, got {}", metadata.slots.len(), descriptors.len()));
+                errors.push(format!(
+                    "Slot descriptor count mismatch: expected {}, got {}",
+                    metadata.slots.len(),
+                    descriptors.len()
+                ));
             }
-        },
+        }
         Err(e) => {
-             errors.push(format!("Failed to read slot descriptors: {}", e));
+            errors.push(format!("Failed to read slot descriptors: {}", e));
         }
     }
 
@@ -192,7 +196,6 @@ pub fn verify_bundle(exe_path: &Path) -> i32 {
         1
     }
 }
-
 
 /// Extract a specific slot
 pub fn extract_slot(exe_path: &Path, slot_str: &str, output_dir: &str) -> i32 {
@@ -220,7 +223,11 @@ pub fn extract_slot(exe_path: &Path, slot_str: &str, output_dir: &str) -> i32 {
     };
 
     if slot_index >= metadata.slots.len() {
-        eprintln!("Error: Slot index {} out of range (0-{})", slot_index, metadata.slots.len() - 1);
+        eprintln!(
+            "Error: Slot index {} out of range (0-{})",
+            slot_index,
+            metadata.slots.len() - 1
+        );
         return 1;
     }
 
@@ -249,7 +256,6 @@ pub fn extract_slot(exe_path: &Path, slot_str: &str, output_dir: &str) -> i32 {
     }
 }
 
-
 /// Detect launcher type from binary
 fn detect_launcher_type(exe_path: &Path) -> String {
     use std::fs::File;
@@ -271,9 +277,13 @@ fn detect_launcher_type(exe_path: &Path) -> String {
         "go".to_string()
     } else if header_str.contains("rust_panic") || header_str.contains("_ZN") {
         "rust".to_string()
-    } else if header_str.starts_with("#!/usr/bin/env python") || header_str.starts_with("#!/usr/bin/python") {
+    } else if header_str.starts_with("#!/usr/bin/env python")
+        || header_str.starts_with("#!/usr/bin/python")
+    {
         "python".to_string()
-    } else if header_str.starts_with("#!/usr/bin/env node") || header_str.starts_with("#!/usr/bin/node") {
+    } else if header_str.starts_with("#!/usr/bin/env node")
+        || header_str.starts_with("#!/usr/bin/node")
+    {
         "node".to_string()
     } else {
         "unknown".to_string()

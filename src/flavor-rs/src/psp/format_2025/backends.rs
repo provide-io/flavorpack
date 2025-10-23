@@ -9,7 +9,7 @@ use std::io::{Read, Seek, SeekFrom};
 use std::path::Path;
 use std::time::Instant;
 
-use super::defaults::{DEFAULT_CHUNK_SIZE, ACCESS_AUTO, ACCESS_MMAP, ACCESS_STREAM, ACCESS_FILE};
+use super::defaults::{ACCESS_AUTO, ACCESS_FILE, ACCESS_MMAP, ACCESS_STREAM, DEFAULT_CHUNK_SIZE};
 use super::slots::SlotDescriptor;
 use crate::exceptions::{FlavorError, Result};
 
@@ -48,7 +48,13 @@ impl std::fmt::Debug for MMapBackend {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("MMapBackend")
             .field("file", &self.file.as_ref().map(|_| "<File>"))
-            .field("mmap", &self.mmap.as_ref().map(|m| format!("<Mmap {} bytes>", m.len())))
+            .field(
+                "mmap",
+                &self
+                    .mmap
+                    .as_ref()
+                    .map(|m| format!("<Mmap {} bytes>", m.len())),
+            )
             .field("path", &self.path)
             .finish()
     }
@@ -348,7 +354,13 @@ impl std::fmt::Debug for HybridBackend {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("HybridBackend")
             .field("file", &self.file.as_ref().map(|_| "<File>"))
-            .field("header_mmap", &self.header_mmap.as_ref().map(|m| format!("<Mmap {} bytes>", m.len())))
+            .field(
+                "header_mmap",
+                &self
+                    .header_mmap
+                    .as_ref()
+                    .map(|m| format!("<Mmap {} bytes>", m.len())),
+            )
             .field("path", &self.path)
             .field("header_size", &self.header_size)
             .finish()

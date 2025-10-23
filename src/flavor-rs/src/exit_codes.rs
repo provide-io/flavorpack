@@ -1,5 +1,5 @@
 //! Standard exit codes for Flavor binaries
-//! 
+//!
 //! These exit codes are used by both builder and launcher to provide
 //! consistent error reporting across the Flavor ecosystem.
 

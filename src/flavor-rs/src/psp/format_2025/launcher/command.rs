@@ -42,7 +42,11 @@ pub(super) fn prepare_command(
     // This ensures the packaged tool can access cached packages from the HOST
     if !env_map.contains_key("FLAVOR_CACHE") {
         if let Some(home) = env_map.get("HOME") {
-            let flavor_cache = format!("{}/{}", home, crate::psp::format_2025::defaults::DEFAULT_CACHE_SUBDIR);
+            let flavor_cache = format!(
+                "{}/{}",
+                home,
+                crate::psp::format_2025::defaults::DEFAULT_CACHE_SUBDIR
+            );
             debug!("🗂️ Setting FLAVOR_CACHE to HOST cache: {}", flavor_cache);
             env_map.insert("FLAVOR_CACHE".to_string(), flavor_cache);
         }

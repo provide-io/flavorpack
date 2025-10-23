@@ -1,12 +1,12 @@
 //! Slot processing and validation
 
-use super::super::constants::{OP_TAR, OP_GZIP};
-use super::super::defaults::{DEFAULT_FILE_PERMS};
+use super::super::checksums::{ChecksumAlgorithm, calculate_checksum};
+use super::super::constants::{OP_GZIP, OP_TAR};
+use super::super::defaults::DEFAULT_FILE_PERMS;
 use super::super::manifest::ManifestSlot;
 use super::super::metadata::SlotMetadata;
 use super::super::operations::pack_operations;
 use super::super::slots::SlotDescriptor;
-use super::super::checksums::{calculate_checksum, ChecksumAlgorithm};
 use crate::exceptions::{FlavorError, Result};
 use log::{debug, error, info, trace};
 use std::fs::File;
@@ -68,7 +68,10 @@ impl SlotProcessor {
 
             // Check if this is a self-referential slot
             if is_self_referential(&slot.source) {
-                info!("✨ Slot {} is self-referential ({}), skipping packaging", i, slot.source);
+                info!(
+                    "✨ Slot {} is self-referential ({}), skipping packaging",
+                    i, slot.source
+                );
 
                 // Create metadata for self-ref slot (no actual data)
                 let slot_meta = SlotMetadata {
@@ -76,14 +79,20 @@ impl SlotProcessor {
                     id: slot.id.clone(),
                     source: slot.source.clone(),
                     target: slot.target.clone(),
-                    size: 0,  // No data to package
-                    checksum: String::new(),  // No checksum needed
-                    operations: String::new(),  // No operations
+                    size: 0,                   // No data to package
+                    checksum: String::new(),   // No checksum needed
+                    operations: String::new(), // No operations
                     purpose: slot.purpose.clone(),
                     lifecycle: slot.lifecycle.clone(),
-                    permissions: slot.permissions.clone().or_else(|| Some(format!("{:04o}", DEFAULT_FILE_PERMS))),
-                    resolution: slot.resolution.clone().or_else(|| Some("build".to_string())),
-                    self_ref: Some(true),  // Mark as self-referential
+                    permissions: slot
+                        .permissions
+                        .clone()
+                        .or_else(|| Some(format!("{:04o}", DEFAULT_FILE_PERMS))),
+                    resolution: slot
+                        .resolution
+                        .clone()
+                        .or_else(|| Some("build".to_string())),
+                    self_ref: Some(true), // Mark as self-referential
                 };
                 self.metadata_slots.push(slot_meta);
 
@@ -91,10 +100,10 @@ impl SlotProcessor {
                 let descriptor = SlotDescriptor {
                     id: i as u64,
                     name_hash: 0,
-                    offset: 0,  // Will be set during finalization
-                    size: 0,  // No data for self-ref slot
+                    offset: 0, // Will be set during finalization
+                    size: 0,   // No data for self-ref slot
                     original_size: 0,
-                    operations: 0,  // No operations
+                    operations: 0, // No operations
                     checksum: 0,
                     purpose: 0,
                     lifecycle: 0,
@@ -110,7 +119,7 @@ impl SlotProcessor {
                 // Add empty path (no file to stream)
                 self.slot_paths.push(PathBuf::new());
 
-                continue;  // Skip normal processing
+                continue; // Skip normal processing
             }
 
             // Normal slot processing (non-self-ref)
@@ -118,7 +127,8 @@ impl SlotProcessor {
             let slot_path = self.resolve_slot_path(&slot.source)?;
 
             // Calculate checksums and size
-            let (file_size, sha256_checksum, adler32_checksum) = self.calculate_slot_checksums(&slot_path, i)?;
+            let (file_size, sha256_checksum, adler32_checksum) =
+                self.calculate_slot_checksums(&slot_path, i)?;
 
             // Create metadata entry
             let slot_meta = SlotMetadata {
@@ -131,9 +141,15 @@ impl SlotProcessor {
                 operations: slot.operations.clone(),
                 purpose: slot.purpose.clone(),
                 lifecycle: slot.lifecycle.clone(),
-                permissions: slot.permissions.clone().or_else(|| Some(format!("{:04o}", DEFAULT_FILE_PERMS))),
-                resolution: slot.resolution.clone().or_else(|| Some("build".to_string())),
-                self_ref: None,  // Normal slot, not self-referential
+                permissions: slot
+                    .permissions
+                    .clone()
+                    .or_else(|| Some(format!("{:04o}", DEFAULT_FILE_PERMS))),
+                resolution: slot
+                    .resolution
+                    .clone()
+                    .or_else(|| Some("build".to_string())),
+                self_ref: None, // Normal slot, not self-referential
             };
             self.metadata_slots.push(slot_meta);
 
@@ -183,9 +199,17 @@ impl SlotProcessor {
         Ok(slot_path)
     }
 
-    fn calculate_slot_checksums(&self, slot_path: &Path, index: usize) -> Result<(u64, String, u32)> {
+    fn calculate_slot_checksums(
+        &self,
+        slot_path: &Path,
+        index: usize,
+    ) -> Result<(u64, String, u32)> {
         let slot_file = File::open(slot_path).map_err(|e| {
-            FlavorError::Generic(format!("Failed to open slot {}: {}", slot_path.display(), e))
+            FlavorError::Generic(format!(
+                "Failed to open slot {}: {}",
+                slot_path.display(),
+                e
+            ))
         })?;
 
         let file_metadata = slot_file.metadata()?;
@@ -195,9 +219,13 @@ impl SlotProcessor {
         // Calculate SHA-256 checksum
         let checksum_timer = Instant::now();
         let mut reader = BufReader::with_capacity(8 * 1024 * 1024, slot_file);
-        let sha256_checksum = calculate_checksum(&mut reader, ChecksumAlgorithm::Sha256).map_err(|e| {
-            FlavorError::Generic(format!("Failed to calculate SHA256 for slot {}: {}", index, e))
-        })?;
+        let sha256_checksum =
+            calculate_checksum(&mut reader, ChecksumAlgorithm::Sha256).map_err(|e| {
+                FlavorError::Generic(format!(
+                    "Failed to calculate SHA256 for slot {}: {}",
+                    index, e
+                ))
+            })?;
 
         // Calculate Adler-32 checksum
         let slot_file2 = File::open(slot_path)?;
@@ -222,16 +250,26 @@ impl SlotProcessor {
         Ok((file_size, sha256_checksum, adler32_checksum))
     }
 
-    fn create_slot_descriptor(&self, index: usize, slot: &ManifestSlot, file_size: u64, adler_checksum: u32) -> Result<SlotDescriptor> {
+    fn create_slot_descriptor(
+        &self,
+        index: usize,
+        slot: &ManifestSlot,
+        file_size: u64,
+        adler_checksum: u32,
+    ) -> Result<SlotDescriptor> {
         // Parse operations from comma-separated string (e.g., "tar,gzip")
-        let operations = if slot.operations.is_empty() || slot.operations == "none" || slot.operations == "raw" {
+        let operations = if slot.operations.is_empty()
+            || slot.operations == "none"
+            || slot.operations == "raw"
+        {
             vec![]
         } else if slot.operations == "tgz" {
             // Special case for "tgz" shorthand
             vec![OP_TAR, OP_GZIP]
         } else {
             // Parse comma-separated operations
-            slot.operations.split(',')
+            slot.operations
+                .split(',')
                 .map(|s| s.trim())
                 .filter(|s| !s.is_empty())
                 .filter_map(|s| match s {
@@ -290,10 +328,7 @@ impl SlotProcessor {
 
         trace!(
             "📍 Slot {}: {} size {} bytes, checksum {:08x}",
-            index,
-            slot.id,
-            file_size,
-            adler_checksum
+            index, slot.id, file_size, adler_checksum
         );
 
         Ok(descriptor)
