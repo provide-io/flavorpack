@@ -33,13 +33,15 @@ def reset_foundation_logging():
 
 
 @pytest.fixture(autouse=True)
-def mock_launcher_loading(monkeypatch) -> None:
-    """Automatically mock launcher loading for all tests.
+def mock_launcher_loading(request, monkeypatch) -> None:
+    """Automatically mock launcher loading for non-integration tests.
 
-    This fixture is applied to ALL tests automatically. Tests that need
-    real launchers should be marked with @pytest.mark.integration and
-    explicitly disable this fixture.
+    Tests marked with @pytest.mark.integration will skip this mock
+    and require real launcher binaries.
     """
+    # Skip mocking for integration tests
+    if request.node.get_closest_marker("integration"):
+        return  # Let integration tests use real binaries
 
     def mock_load_launcher(launcher_type):
         return MOCK_LAUNCHER_DATA
