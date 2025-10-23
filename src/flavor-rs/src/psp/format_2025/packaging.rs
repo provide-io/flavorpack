@@ -92,6 +92,18 @@ pub fn write_slot(
         _ => pack_operations(&[]),                // Raw or unknown
     };
 
+    let checksum = compute_slot_checksum(&processed_data);
+    trace!(
+        "🦀 Rust builder computed slot {} checksum:",
+        slot_index
+    );
+    trace!("  Data length: {} bytes", processed_data.len());
+    trace!(
+        "  First 16 bytes: {:02x?}",
+        &processed_data[..16.min(processed_data.len())]
+    );
+    trace!("  Checksum (u64): {:016x}", checksum);
+
     let descriptor = SlotDescriptor {
         id: slot_index as u64,
         name_hash,
@@ -99,7 +111,7 @@ pub fn write_slot(
         size: processed_data.len() as u64,
         original_size: slot_data.len() as u64,
         operations,
-        checksum: compute_slot_checksum(&processed_data),
+        checksum,
         purpose: get_purpose_byte(&slot_info.purpose),
         lifecycle: get_lifecycle_byte(&slot_info.lifecycle),
         priority: 0,

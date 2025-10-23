@@ -8,6 +8,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
@@ -58,17 +59,24 @@ func (r *Reader) ReadSlot(slotIndex int) ([]byte, error) {
 	// Verify checksum of compressed data (SHA-256 first 8 bytes)
 	hash := sha256.Sum256(slotData)
 	actualChecksum := binary.LittleEndian.Uint64(hash[:8])
+
+	logger := r.logger
+	if logger == nil {
+		logger = slog.Default()
+	}
+	logger.Debug("🐹 Go launcher verifying slot checksum",
+		"slot_id", entry.ID,
+		"data_length", len(slotData),
+		"first_16_bytes", fmt.Sprintf("%02x", slotData[:16]),
+		"computed_checksum", fmt.Sprintf("%016x", actualChecksum),
+		"expected_checksum", fmt.Sprintf("%016x", entry.Checksum))
+
 	if actualChecksum != entry.Checksum {
 		return nil, ErrChecksumMismatch
 	}
 
 	// Decompress based on operations chain
 	operations := UnpackOperations(entry.Operations)
-
-	logger := r.logger
-	if logger == nil {
-		logger = hclog.L()
-	}
 	logger.Trace("🔍 Slot operations", "operations", fmt.Sprintf("%#x", entry.Operations), "unpacked", operations)
 
 	// Apply operations in reverse order (unwrap the layers)
