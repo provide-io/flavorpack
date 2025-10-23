@@ -274,8 +274,11 @@ class TestHelperMethods:
         with patch("flavor.ingredients.binary_loader.Path") as mock_path_class:
             # Mock embedded location to not exist
             mock_path_instance = Mock()
+            mock_embedded_file = Mock()
+            mock_embedded_file.exists.return_value = False
             mock_embedded = Mock()
             mock_embedded.exists.return_value = False
+            mock_embedded.__truediv__ = lambda self, x: mock_embedded_file
             mock_parent = Mock()
             mock_parent.__truediv__ = lambda self, x: mock_embedded
             mock_path_instance.parent = mock_parent
@@ -295,8 +298,11 @@ class TestHelperMethods:
 
         with patch("flavor.ingredients.binary_loader.Path") as mock_path_class:
             mock_path_instance = Mock()
+            mock_embedded_file = Mock()
+            mock_embedded_file.exists.return_value = False
             mock_embedded = Mock()
             mock_embedded.exists.return_value = False
+            mock_embedded.__truediv__ = lambda self, x: mock_embedded_file
             mock_parent = Mock()
             mock_parent.__truediv__ = lambda self, x: mock_embedded
             mock_path_instance.parent = mock_parent
