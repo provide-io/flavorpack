@@ -107,7 +107,7 @@ class TestOutputHandler:
         handler = OutputHandler(format=OutputFormat.TEXT)
         output = StringIO()
 
-        with handler, patch.object(handler, "_get_output_stream", return_value=output):
+        with patch.object(handler, "_get_output_stream", return_value=output), handler:
             handler.write("Hello, world!")
 
         assert output.getvalue() == "Hello, world!\n"
@@ -117,7 +117,7 @@ class TestOutputHandler:
         handler = OutputHandler(format=OutputFormat.TEXT)
         output = StringIO()
 
-        with handler, patch.object(handler, "_get_output_stream", return_value=output):
+        with patch.object(handler, "_get_output_stream", return_value=output), handler:
             handler.write("Hello, world!\n")
 
         # Should not add extra newline
@@ -128,7 +128,7 @@ class TestOutputHandler:
         handler = OutputHandler(format=OutputFormat.TEXT)
         output = StringIO()
 
-        with handler, patch.object(handler, "_get_output_stream", return_value=output):
+        with patch.object(handler, "_get_output_stream", return_value=output), handler:
             handler.write({"name": "test", "value": 42})
 
         assert "name: test\n" in output.getvalue()
@@ -139,7 +139,7 @@ class TestOutputHandler:
         handler = OutputHandler(format=OutputFormat.JSON)
         output = StringIO()
 
-        with handler, patch.object(handler, "_get_output_stream", return_value=output):
+        with patch.object(handler, "_get_output_stream", return_value=output), handler:
             handler.write("test message")
 
         # JSON output is buffered until context exit
@@ -151,7 +151,7 @@ class TestOutputHandler:
         handler = OutputHandler(format=OutputFormat.JSON)
         output = StringIO()
 
-        with handler, patch.object(handler, "_get_output_stream", return_value=output):
+        with patch.object(handler, "_get_output_stream", return_value=output), handler:
             handler.write({"status": "success", "count": 5})
 
         result = output.getvalue()
@@ -163,7 +163,7 @@ class TestOutputHandler:
         handler = OutputHandler(format=OutputFormat.JSON)
         output = StringIO()
 
-        with handler, patch.object(handler, "_get_output_stream", return_value=output):
+        with patch.object(handler, "_get_output_stream", return_value=output), handler:
             handler.write([1, 2, 3])
 
         result = output.getvalue()
@@ -174,7 +174,7 @@ class TestOutputHandler:
         handler = OutputHandler(format=OutputFormat.JSON)
         output = StringIO()
 
-        with handler, patch.object(handler, "_get_output_stream", return_value=output):
+        with patch.object(handler, "_get_output_stream", return_value=output), handler:
             handler.write({"status": "ok"}, extra="metadata", level="info")
 
         result = output.getvalue()
@@ -187,7 +187,7 @@ class TestOutputHandler:
         handler = OutputHandler(format=OutputFormat.JSON)
         output = StringIO()
 
-        with handler, patch.object(handler, "_get_output_stream", return_value=output):
+        with patch.object(handler, "_get_output_stream", return_value=output), handler:
             handler.write("message 1")
             # Nothing written yet (buffered)
             assert output.getvalue() == ""
@@ -204,7 +204,7 @@ class TestOutputHandler:
         handler = OutputHandler(format=OutputFormat.JSON)
         output = StringIO()
 
-        with handler, patch.object(handler, "_get_output_stream", return_value=output):
+        with patch.object(handler, "_get_output_stream", return_value=output), handler:
             handler.write("test")
             assert len(handler._output_buffer) == 1
             handler._flush_json()
@@ -215,7 +215,7 @@ class TestOutputHandler:
         handler = OutputHandler(format=OutputFormat.JSON)
         output = StringIO()
 
-        with handler, patch.object(handler, "_get_output_stream", return_value=output):
+        with patch.object(handler, "_get_output_stream", return_value=output), handler:
             handler._flush_json()
 
         # Should not write anything for empty buffer
@@ -235,7 +235,7 @@ class TestOutputHandler:
         handler = OutputHandler(format=OutputFormat.JSON)
         output = StringIO()
 
-        with handler, patch.object(handler, "_get_output_stream", return_value=output):
+        with patch.object(handler, "_get_output_stream", return_value=output), handler:
             handler.error("Something went wrong")
 
         result = output.getvalue()
@@ -246,7 +246,7 @@ class TestOutputHandler:
         handler = OutputHandler(format=OutputFormat.JSON)
         output = StringIO()
 
-        with handler, patch.object(handler, "_get_output_stream", return_value=output):
+        with patch.object(handler, "_get_output_stream", return_value=output), handler:
             handler.error("Failed", code=500, details="Internal error")
 
         result = output.getvalue()
@@ -259,7 +259,7 @@ class TestOutputHandler:
         handler = OutputHandler(format=OutputFormat.TEXT)
         output = StringIO()
 
-        with handler, patch.object(handler, "_get_output_stream", return_value=output):
+        with patch.object(handler, "_get_output_stream", return_value=output), handler:
             handler.success("Operation completed")
 
         assert "✅ Operation completed\n" in output.getvalue()
@@ -269,7 +269,7 @@ class TestOutputHandler:
         handler = OutputHandler(format=OutputFormat.JSON)
         output = StringIO()
 
-        with handler, patch.object(handler, "_get_output_stream", return_value=output):
+        with patch.object(handler, "_get_output_stream", return_value=output), handler:
             handler.success("Operation completed")
 
         result = output.getvalue()
@@ -280,7 +280,7 @@ class TestOutputHandler:
         handler = OutputHandler(format=OutputFormat.JSON)
         output = StringIO()
 
-        with handler, patch.object(handler, "_get_output_stream", return_value=output):
+        with patch.object(handler, "_get_output_stream", return_value=output), handler:
             handler.success("Done", duration=1.5, items=42)
 
         result = output.getvalue()
@@ -293,7 +293,7 @@ class TestOutputHandler:
         handler = OutputHandler(format=OutputFormat.TEXT)
         output = StringIO()
 
-        with handler, patch.object(handler, "_get_output_stream", return_value=output):
+        with patch.object(handler, "_get_output_stream", return_value=output), handler:
             handler.info("Processing data")
 
         assert "Processing data\n" in output.getvalue()
@@ -303,7 +303,7 @@ class TestOutputHandler:
         handler = OutputHandler(format=OutputFormat.JSON)
         output = StringIO()
 
-        with handler, patch.object(handler, "_get_output_stream", return_value=output):
+        with patch.object(handler, "_get_output_stream", return_value=output), handler:
             handler.info("Processing data")
 
         result = output.getvalue()
@@ -314,7 +314,7 @@ class TestOutputHandler:
         handler = OutputHandler(format=OutputFormat.JSON)
         output = StringIO()
 
-        with handler, patch.object(handler, "_get_output_stream", return_value=output):
+        with patch.object(handler, "_get_output_stream", return_value=output), handler:
             handler.info("Status update", progress=75, stage="validation")
 
         result = output.getvalue()
@@ -327,7 +327,7 @@ class TestOutputHandler:
         handler = OutputHandler(format=OutputFormat.JSON)
         output = StringIO()
 
-        with handler, patch.object(handler, "_get_output_stream", return_value=output):
+        with patch.object(handler, "_get_output_stream", return_value=output), handler:
             handler.write("buffered message")
             # Not flushed yet
             assert output.getvalue() == ""
@@ -341,7 +341,7 @@ class TestOutputHandler:
         output = StringIO()
 
         # TEXT mode writes immediately, no buffering
-        with handler, patch.object(handler, "_get_output_stream", return_value=output):
+        with patch.object(handler, "_get_output_stream", return_value=output), handler:
             handler.write("immediate message")
             # Should already be written
             assert "immediate message" in output.getvalue()
