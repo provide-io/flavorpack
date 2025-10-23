@@ -15,12 +15,18 @@ use std::fs::File;
 use std::io::{Seek, SeekFrom, Write};
 use std::path::Path;
 
-use adler::Adler32;
 use flate2::Compression;
 use flate2::write::GzEncoder;
 use log::{debug, info, trace};
+use sha2::{Digest, Sha256};
 
 use super::constants::{HEADER_SIZE, OP_GZIP, OP_TAR};
+
+/// Compute SHA-256 checksum truncated to first 8 bytes (as u64 little-endian)
+fn compute_slot_checksum(data: &[u8]) -> u64 {
+    let hash = Sha256::digest(data);
+    u64::from_le_bytes(hash[..8].try_into().unwrap())
+}
 use super::index::Index;
 use super::metadata::{Metadata, SlotMetadata};
 use super::slots::SlotDescriptor;
@@ -93,7 +99,7 @@ pub fn write_slot(
         size: processed_data.len() as u64,
         original_size: slot_data.len() as u64,
         operations,
-        checksum: u64::from(adler::adler32_slice(&processed_data)),
+        checksum: compute_slot_checksum(&processed_data),
         purpose: get_purpose_byte(&slot_info.purpose),
         lifecycle: get_lifecycle_byte(&slot_info.lifecycle),
         priority: 0,
@@ -207,7 +213,7 @@ pub fn write_index_block(out: &mut File, index: &Index) -> Result<()> {
 /// - Metadata serialization fails
 /// - Compression fails
 /// - Writing to the output file fails
-pub fn write_metadata(out: &mut File, metadata: &Metadata) -> Result<(u64, u32, u32)> {
+pub fn write_metadata(out: &mut File, metadata: &Metadata) -> Result<(u64, u32, [u8; 32])> {
     // Get current position (metadata offset)
     let metadata_offset = out.stream_position()?;
 
@@ -225,8 +231,10 @@ pub fn write_metadata(out: &mut File, metadata: &Metadata) -> Result<(u64, u32, 
         compressed_metadata.len()
     );
 
-    // Calculate checksum
-    let metadata_checksum = adler::adler32_slice(&compressed_metadata);
+    // Calculate checksum (full SHA-256, 32 bytes)
+    let hash = Sha256::digest(&compressed_metadata);
+    let mut metadata_checksum = [0u8; 32];
+    metadata_checksum.copy_from_slice(&hash);
 
     // Write compressed metadata
     out.write_all(&compressed_metadata)?;

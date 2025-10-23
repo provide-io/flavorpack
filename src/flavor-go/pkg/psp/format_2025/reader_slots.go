@@ -4,9 +4,9 @@ import (
 	"archive/tar"
 	"bytes"
 	"compress/gzip"
+	"crypto/sha256"
 	"encoding/binary"
 	"fmt"
-	"hash/adler32"
 	"io"
 	"os"
 	"path/filepath"
@@ -55,8 +55,10 @@ func (r *Reader) ReadSlot(slotIndex int) ([]byte, error) {
 		return nil, err
 	}
 
-	// Verify checksum of compressed data (entry.Checksum is uint64 but only uses lower 32 bits)
-	if uint64(adler32.Checksum(slotData)) != entry.Checksum {
+	// Verify checksum of compressed data (SHA-256 first 8 bytes)
+	hash := sha256.Sum256(slotData)
+	actualChecksum := binary.LittleEndian.Uint64(hash[:8])
+	if actualChecksum != entry.Checksum {
 		return nil, ErrChecksumMismatch
 	}
 

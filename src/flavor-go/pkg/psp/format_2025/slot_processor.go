@@ -2,8 +2,8 @@ package format_2025
 
 import (
 	"crypto/sha256"
+	"encoding/binary"
 	"fmt"
-	"hash/adler32"
 	"os"
 	"strconv"
 	"strings"
@@ -13,6 +13,12 @@ import (
 
 // SelfRefMarker is the special marker for self-referential slots
 const SelfRefMarker = "$SELF"
+
+// computeSlotChecksum computes SHA-256 checksum truncated to first 8 bytes (uint64)
+func computeSlotChecksum(data []byte) uint64 {
+	hash := sha256.Sum256(data)
+	return binary.LittleEndian.Uint64(hash[:8])
+}
 
 // isSelfReferential checks if a slot references the launcher itself
 func isSelfReferential(source string) bool {
@@ -295,7 +301,7 @@ func (sp *SlotProcessor) processSlot(index int, slot *Slot) error {
 		Size:            uint64(len(compressed)),
 		OriginalSize:    uint64(len(slotData)),
 		Operations:      operations,
-		Checksum:        uint64(adler32.Checksum(compressed)), // Cast to uint64
+		Checksum:        computeSlotChecksum(compressed), // SHA-256 first 8 bytes
 		Purpose:         mapPurposeToUint8(slot.Purpose),
 		Lifecycle:       mapLifecycleToUint8(slot.Lifecycle),
 		Priority:        128, // normal priority
