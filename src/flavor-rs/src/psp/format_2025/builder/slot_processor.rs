@@ -10,7 +10,7 @@ use super::super::slots::SlotDescriptor;
 use crate::exceptions::{FlavorError, Result};
 use log::{debug, error, info, trace};
 use std::fs::File;
-use std::io::{BufReader, Read};
+use std::io::BufReader;
 use std::path::{Path, PathBuf};
 use std::time::Instant;
 
@@ -203,7 +203,7 @@ impl SlotProcessor {
         &self,
         slot_path: &Path,
         index: usize,
-    ) -> Result<(u64, String, u32)> {
+    ) -> Result<(u64, String, u64)> {
         let slot_file = File::open(slot_path).map_err(|e| {
             FlavorError::Generic(format!(
                 "Failed to open slot {}: {}",
