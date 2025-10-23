@@ -204,7 +204,11 @@ class TestHelperMethods:
         mock_manager = Mock()
         loader = BinaryLoader(mock_manager)
 
-        with patch("flavor._version.__version__", "1.2.3", create=True):
+        # Mock the _version module and its __version__ attribute
+        mock_version_module = Mock()
+        mock_version_module.__version__ = "1.2.3"
+
+        with patch.dict("sys.modules", {"flavor._version": mock_version_module}):
             result = loader._get_package_version_name("test")
             assert result == "test-1.2.3-linux_x86_64"
 
