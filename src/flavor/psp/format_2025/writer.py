@@ -146,8 +146,9 @@ def _write_metadata(f: BinaryIO, metadata_compressed: bytes, index: PSPFIndex) -
     # Update index
     index.metadata_offset = metadata_offset
     index.metadata_size = len(metadata_compressed)
-    checksum = zlib.adler32(metadata_compressed) & 0xFFFFFFFF
-    index.metadata_checksum = checksum.to_bytes(4, "little") + b"\x00" * 28
+    # Compute full SHA-256 checksum (32 bytes)
+    import hashlib
+    index.metadata_checksum = hashlib.sha256(metadata_compressed).digest()
 
 
 def _write_slots(f: BinaryIO, slots: list[PreparedSlot], spec: BuildSpec, index: PSPFIndex) -> None:
