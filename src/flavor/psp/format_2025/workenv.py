@@ -260,7 +260,7 @@ class WorkEnvManager:
 
         for file_path in matches:
             # Substitute file path in command
-            command = command_template.replace("{file}", file_path)
+            command = command_template.replace("{file}", str(file_path))
             command = command.replace("{workenv}", str(workenv_dir))
 
             # Parse and execute command using shared utility
