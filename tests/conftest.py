@@ -1,4 +1,5 @@
 from pathlib import Path
+import os
 import shutil
 import tempfile
 
@@ -12,6 +13,62 @@ from flavor.psp.format_2025.pspf_builder import PSPFBuilder
 # This should be validated against real launchers in integration tests
 MOCK_LAUNCHER_SIZE = 124  # Simplified for unit tests
 MOCK_LAUNCHER_DATA = b"FAKE_LAUNCHER_FOR_TEST" + b"\x00" * (MOCK_LAUNCHER_SIZE - 22)
+
+
+def pytest_configure(config):
+    """Register custom markers."""
+    config.addinivalue_line(
+        "markers",
+        "requires_ingredients: mark test as requiring real launcher binaries (auto-skipped if not available)",
+    )
+    config.addinivalue_line(
+        "markers", "integration: mark test as integration test (may require real binaries)"
+    )
+
+
+def pytest_collection_modifyitems(config, items):
+    """Auto-skip tests marked requires_ingredients if binaries not found."""
+    # Check if launcher binaries are available
+    binary_paths = [
+        Path("dist/bin/flavor-rs-launcher-darwin_arm64"),
+        Path("dist/bin/flavor-rs-launcher"),
+        Path("ingredients/bin/flavor-rs-launcher"),
+        Path("helpers/bin/flavor-rs-launcher"),
+        Path.cwd() / "dist" / "bin" / "flavor-rs-launcher-darwin_arm64",
+        Path.cwd() / "dist" / "bin" / "flavor-rs-launcher",
+    ]
+
+    # Check environment variable
+    env_launcher = os.environ.get("FLAVOR_LAUNCHER_BIN")
+    if env_launcher:
+        binary_paths.insert(0, Path(env_launcher))
+
+    binaries_available = any(p.exists() for p in binary_paths)
+
+    if not binaries_available:
+        skip_ingredients = pytest.mark.skip(
+            reason=(
+                "Launcher binaries not found. "
+                "Run 'make build-ingredients' or set FLAVOR_LAUNCHER_BIN environment variable. "
+                f"Searched: {', '.join(str(p) for p in binary_paths[:3])}..."
+            )
+        )
+        skipped_count = 0
+        for item in items:
+            # Skip tests marked with requires_ingredients
+            if "requires_ingredients" in item.keywords:
+                item.add_marker(skip_ingredients)
+                skipped_count += 1
+            # Also skip integration tests (they typically need binaries)
+            elif "integration" in item.keywords and "requires_ingredients" not in item.keywords:
+                item.add_marker(skip_ingredients)
+                skipped_count += 1
+
+        if skipped_count > 0:
+            print(
+                f"\n⚠️  Skipping {skipped_count} integration tests (launcher binaries not found)"
+            )
+            print("   Run 'make build-ingredients' to enable integration tests")
 
 
 @pytest.fixture(scope="session")
