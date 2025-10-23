@@ -80,8 +80,8 @@ pub fn verify(package_path: &Path) -> Result<VerifyResult> {
     );
 
     // Overall signature validity
-    eprintln!(
-        "🔍 DEBUG Verification results: index_checksum={}, metadata_checksum={}, size={}, integrity_seal={}, trailing_magic={}",
+    debug!(
+        "🔍 Verification results: index_checksum={}, metadata_checksum={}, size={}, integrity_seal={}, trailing_magic={}",
         index_checksum_valid,
         metadata_checksum_valid,
         size_valid,
