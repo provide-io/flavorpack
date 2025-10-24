@@ -50,6 +50,32 @@ myapp-1.0.0.psp.exe
 
 ## Packaging Workflow
 
+```mermaid
+sequenceDiagram
+    participant User
+    participant CLI as flavor CLI
+    participant Orch as Orchestrator
+    participant PyPkg as Python Packager
+    participant Builder as Native Builder
+    participant Package as PSPF Package
+
+    User->>CLI: flavor pack pyproject.toml
+    CLI->>Orch: Parse manifest
+    Orch->>PyPkg: Build Python package
+    PyPkg->>PyPkg: Install dependencies
+    PyPkg->>PyPkg: Create runtime tar.gz
+    PyPkg->>PyPkg: Create app tar.gz
+    PyPkg->>Orch: Return slot tarballs
+    Orch->>Builder: Invoke builder binary
+    Builder->>Builder: Load launcher
+    Builder->>Builder: Create index block
+    Builder->>Builder: Assemble package
+    Builder->>Builder: Sign with Ed25519
+    Builder->>Package: Write .psp file
+    Package->>CLI: Package complete
+    CLI->>User: ✅ myapp.psp
+```
+
 ### Step 1: Project Structure
 
 Organize your project with a clear structure:

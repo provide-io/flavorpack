@@ -24,30 +24,54 @@ The system orchestrates Python, Go, and Rust components to create secure, portab
 
 ### High-Level Architecture
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                     Python Orchestrator                      │
-│                    (src/flavor/packaging/)                   │
-│  • High-level packaging logic                                │
-│  • Manifest processing                                       │
-│  • Dependency resolution                                     │
-└────────────────┬────────────────────────┬───────────────────┘
-                 │                        │
-        ┌────────▼────────┐      ┌───────▼────────┐
-        │   Go Helpers    │      │  Rust Helpers  │
-        │ (src/flavor-go/) │      │ (src/flavor-rs/)│
-        │ • Builder       │      │ • Builder      │
-        │ • Launcher      │      │ • Launcher     │
-        └─────────────────┘      └────────────────┘
-                 │                        │
-        ┌────────▼────────────────────────▼────────┐
-        │          PSPF Package (.psp file)        │
-        │  • Launcher binary (platform-specific)   │
-        │  • Index block (8192 bytes)              │
-        │  • Metadata (gzipped JSON)               │
-        │  • Payload slots (tar.gz archives)       │
-        │  • Magic footer (🪄)                     │
-        └───────────────────────────────────────────┘
+```mermaid
+graph TB
+    subgraph "Python Layer"
+        CLI[CLI Commands<br/>flavor pack/verify/inspect]
+        Orch[Packaging Orchestrator<br/>Manifest Processing]
+        PyPkg[Python Packager<br/>Dependency Resolution]
+    end
+
+    subgraph "Native Helpers"
+        GoBuilder[Go Builder<br/>flavor-go-builder]
+        GoLauncher[Go Launcher<br/>flavor-go-launcher]
+        RsBuilder[Rust Builder<br/>flavor-rs-builder]
+        RsLauncher[Rust Launcher<br/>flavor-rs-launcher]
+    end
+
+    subgraph "PSPF Package"
+        Launcher[Launcher Binary<br/>Platform-specific]
+        Index[Index Block<br/>8192 bytes]
+        Meta[Metadata<br/>gzipped JSON]
+        Slots[Payload Slots<br/>tar.gz archives]
+        Magic[Magic Footer<br/>📦🪄]
+    end
+
+    subgraph "Runtime"
+        Cache[Work Environment<br/>~/.cache/flavor]
+        Extract[Slot Extraction]
+        Exec[Application Execution]
+    end
+
+    CLI --> Orch
+    Orch --> PyPkg
+    PyPkg --> GoBuilder
+    PyPkg --> RsBuilder
+
+    GoBuilder --> Launcher
+    RsBuilder --> Launcher
+
+    Launcher --> Index
+    Index --> Meta
+    Meta --> Slots
+    Slots --> Magic
+
+    Launcher -.runs.-> Extract
+    Extract --> Cache
+    Cache --> Exec
+
+    GoLauncher -.embedded.-> Launcher
+    RsLauncher -.embedded.-> Launcher
 ```
 
 ### Design Principles

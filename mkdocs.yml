@@ -88,18 +88,21 @@ plugins:
         - en
   
   - autorefs
-  
+
+  - macros:
+      include_dir: ../provide-foundry/shared-theme/data
+
   # mkdocstrings disabled due to hang with flavorpack's complex import structure
   # API documentation will be generated manually to avoid import loops
-  
+
   # gen-files disabled - gen_ref_pages.py causes hangs by importing flavorpack modules
   # - gen-files:
   #     scripts:
   #       - docs/gen_ref_pages.py
-  
+
   - literate-nav:
       nav_file: SUMMARY.md
-  
+
   - section-index
   
 
@@ -190,12 +193,15 @@ extra:
       make our documentation better.
 
 extra_css:
-  - stylesheets/provide-theme.css
-  - stylesheets/extra.css
+  - ../provide-foundry/shared-theme/stylesheets/provide-theme.css
+  - ../provide-foundry/shared-theme/stylesheets/termynal.css
+  - stylesheets/extra.css  # Project-specific overrides
 
 extra_javascript:
   - https://unpkg.com/mermaid@10/dist/mermaid.min.js
-  - javascripts/mermaid-init.js
+  - ../provide-foundry/shared-theme/javascripts/mermaid-init.js
+  - ../provide-foundry/shared-theme/javascripts/termynal.js
+  - ../provide-foundry/shared-theme/javascripts/custom.js
 
 nav:
   - Home: index.md
