@@ -172,7 +172,7 @@ sudo yum install openssl-devel   # RHEL/CentOS
 ```bash
 # Reinstall environment
 rm -rf workenv/
-source env.sh
+uv sync
 
 # Verify installation
 workenv/flavor_*/bin/python -c "import flavor; print(flavor.__version__)"

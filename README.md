@@ -32,7 +32,7 @@ git clone https://github.com/provide-io/flavor.git
 cd flavor
 
 # Set up environment and install dependencies
-source env.sh
+uv sync
 
 # Build the Go and Rust ingredients
 ./build.sh

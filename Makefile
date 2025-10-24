@@ -21,6 +21,25 @@ test-cov: ## Run Python tests with coverage
 test-cov-xml: ## Run Python tests with XML coverage for CI
 	source workenv/bin/activate && pytest --cov=flavor --cov-report=xml --cov-report=term tests/
 
+# Mutation Testing (using mutmut directly)
+.PHONY: mutation-run
+mutation-run: ## Run mutation testing with mutmut
+	@echo "🧬 Running mutation testing..."
+	@mutmut run
+
+.PHONY: mutation-results
+mutation-results: ## Show mutation testing results
+	@mutmut results
+
+.PHONY: mutation-browse
+mutation-browse: ## Open interactive mutation browser
+	@mutmut browse
+
+.PHONY: mutation-clean
+mutation-clean: ## Clean mutation testing artifacts
+	@rm -rf .mutmut-cache html/
+	@echo "🧹 Mutation testing artifacts cleaned"
+
 .PHONY: build-ingredients
 build-ingredients: ## Build all ingredients (Go and Rust)
 	./build.sh
