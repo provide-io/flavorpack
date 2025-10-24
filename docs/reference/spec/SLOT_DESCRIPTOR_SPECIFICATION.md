@@ -57,8 +57,8 @@ Offset | Size | Type   | Field              | Description
 
 | Value | Name       | Description                              |
 |-------|------------|------------------------------------------|
-| 0     | DATA       | General data files                       |
-| 1     | CODE       | Executable code or bytecode              |
+| 0     | CODE       | Executable code or bytecode              |
+| 1     | DATA       | General data files                       |
 | 2     | CONFIG     | Configuration files                      |
 | 3     | MEDIA      | Media files (images, audio, video)       |
 

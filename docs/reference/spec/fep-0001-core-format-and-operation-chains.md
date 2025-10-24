@@ -329,7 +329,7 @@ struct SlotDescriptor {
 - `original_size`: Original uncompressed size of the slot data
 - `operations`: Packed operation chain (up to 8 operations, each 8 bits)
 - `checksum`: SHA-256 hash of stored data (first 8 bytes, little-endian)
-- `purpose`: Classification of slot contents (0=data, 1=code, 2=config, 3=media)
+- `purpose`: Classification of slot contents (0=code, 1=data, 2=config, 3=media)
 - `lifecycle`: When the slot should be extracted/loaded
 - `priority`: Cache priority hint (0-255, higher = keep in memory longer)
 - `platform`: Platform hint for optimization (0=any, 1=linux, 2=darwin, 3=windows)

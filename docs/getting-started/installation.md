@@ -90,18 +90,7 @@ Best for developers who want the latest features and ability to build custom hel
 
     For now, please use source installation (Method 1 above).
 
-### Method 3: Using Docker
-
-!!! info "Planned for Future Release"
-    Official Docker images are planned for a future release.
-
-    **When available**, you'll be able to use:
-    ```bash
-    docker pull ghcr.io/provide-io/flavorpack:latest
-    docker run -it ghcr.io/provide-io/flavorpack:latest flavor --help
-    ```
-
-### Method 4: Development Container
+### Method 3: Development Container
 
 For VS Code users with the Remote-Containers extension.
 

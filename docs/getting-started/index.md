@@ -58,18 +58,6 @@ Choose the installation method that works best for your environment:
     flavor --version
     ```
 
-=== "Docker"
-
-    ```bash
-    # Pull the official image
-    docker pull ghcr.io/provide-io/flavorpack:latest
-    
-    # Run with your project mounted
-    docker run -v $(pwd):/workspace ghcr.io/provide-io/flavorpack \
-      flavor pack --manifest /workspace/pyproject.toml \
-      --output /workspace/myapp.psp
-    ```
-
 ## Verify Installation
 
 After installation, verify everything is working:
