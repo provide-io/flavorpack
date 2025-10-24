@@ -355,7 +355,7 @@ When reporting issues, include:
 5. Error message and stack trace
 6. Minimal reproduction steps
 
-Report at: https://github.com/provide-io/flavor/issues
+Report at: https://github.com/provide-io/flavorpack/issues
 
 ---
 
