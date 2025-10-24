@@ -17,6 +17,9 @@ FlavorPack can be installed from source. Future releases will support additional
 | Git | 2.25+ | Cloning repository |
 | Make | 3.81+ | Build automation |
 
+!!! info "UV Version Requirement"
+    FlavorPack requires **UV 0.8.13 or later** for full functionality. Earlier versions may have compatibility issues with modern package management features.
+
 ### Supported Platforms
 
 | Platform | Architecture | Status | Binary Type | Notes |
