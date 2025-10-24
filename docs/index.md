@@ -48,7 +48,7 @@ Get started with FlavorPack in under 5 minutes:
     cd flavorpack
     
     # Set up environment
-    source env.sh
+    uv sync
     
     # Build native ingredients
     ./ingredients/build.sh

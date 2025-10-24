@@ -30,11 +30,11 @@ make build-ingredients
 make test
 
 # Run specific test modules
-pytest tests/format_2025/test_pspf_2025_core.py
-pytest tests/cli/test_cli.py -v
+uv run pytest tests/format_2025/test_pspf_2025_core.py
+uv run pytest tests/cli/test_cli.py -v
 
 # Run with coverage
-pytest --cov=flavor --cov-report=term-missing
+uv run pytest --cov=flavor --cov-report=term-missing
 
 # Run PSPF validation tests
 make validate-pspf
@@ -46,13 +46,13 @@ make validate-pspf-combo
 ### Linting and Formatting
 ```bash
 # Format code
-ruff format src/ tests/
+uv run ruff format src/ tests/
 
 # Lint code
-ruff check src/ tests/
+uv run ruff check src/ tests/
 
 # Type checking
-mypy src/flavor
+uv run mypy src/flavor
 ```
 
 ### Package Operations
@@ -179,10 +179,10 @@ The `tests/pretaster/` tool validates PSPF packages across all builder/launcher 
 
 Use pytest markers to run specific test categories:
 ```bash
-pytest -m unit
-pytest -m integration
-pytest -m cross_language
-pytest -m security
+uv run pytest -m unit
+uv run pytest -m integration
+uv run pytest -m cross_language
+uv run pytest -m security
 ```
 - you will remember to NEVER do ad-hoc signing unless SPECIFICALLY REQUESTED, or you suggest it and I approve.
 - make sure to remember to use debug/trace logging instead of "print" statements when debugging.

@@ -53,5 +53,9 @@ dist/bin/
 !src/*/src/bin/
 core
 *.local.json
-*.local.json
 archive_*
+
+# Mutation testing artifacts
+mutants/
+.mutmut-cache
+html/

@@ -40,6 +40,7 @@ Homepage = "https://github.com/provide-io/flavor"
 [dependency-groups]
 dev = [
     "provide-testkit[all]",
+    "mutmut>=3.0.0",
 ]
 docs = [
     "provide-testkit[docs]",
@@ -109,7 +110,7 @@ exclude = [
 ]
 
 [[tool.mypy.overrides]]
-module = ["structlog.*", "google.*", "grpc.*", "pytest.*", "jq.*", "psutil.*", "hcl2"]
+module = ["structlog.*", "google.*", "grpc.*", "pytest.*", "jq.*", "psutil.*", "hcl2", "mutmut.*"]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
@@ -157,9 +158,17 @@ markers = [
     "requires_ingredients: Tests that need Go/Rust ingredients built",
 ]
 
+[tool.mutmut]
+paths_to_mutate = ["src/flavor"]
+tests_dir = "tests"
+runner = "pytest"
+exclude = ["*/generated/*", "*_pb2.py", "*_pb2.pyi", "*/tests/*", "*/test_*"]
+dict_synonyms = ["dict", "OrderedDict", "defaultdict"]
+use_patch_file = true
+
 [tool.coverage.run]
 branch = true
-source = ["flavor"]
+source_pkgs = ["flavor"]
 parallel = false
 omit = [
     "*/protocols/tfprotov6/protobuf/*",
@@ -176,16 +185,14 @@ omit = [
 show_missing = true
 skip_covered = false
 precision = 2
-fail_under = 80
-exclude_lines = [
+fail_under = 60  # Baseline: 61.74% → 63% (Phase 2 complete) as of 2025-10-21
+exclude_also = [
     "pragma: no cover",
     "raise NotImplementedError",
     "if __name__ == .__main__.:",
     "if TYPE_CHECKING:",
     "def __repr__",
     "def __str__",
-    "pass",
-    "..."
 ]
 
 
