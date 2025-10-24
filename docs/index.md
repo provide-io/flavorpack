@@ -49,9 +49,9 @@ Get started with FlavorPack in under 5 minutes:
     
     # Set up environment
     uv sync
-    
+
     # Build native helpers
-    ./helpers/build.sh
+    make build-helpers
     ```
 
 === "Create Package"

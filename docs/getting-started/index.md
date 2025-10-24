@@ -34,10 +34,10 @@ Choose the installation method that works best for your environment:
     
     # Set up Python environment
     uv sync
-    
+
     # Build native helpers (Go/Rust launchers)
-    ./helpers/build.sh
-    
+    make build-helpers
+
     # Verify installation
     flavor --version
     ```

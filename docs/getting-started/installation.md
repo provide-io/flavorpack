@@ -47,10 +47,10 @@ Best for developers who want the latest features and ability to build custom hel
     
     # Install FlavorPack
     uv pip install -e .
-    
-    # Build native helpers
+
+    # Build native helpers (Go and Rust binaries)
     make build-helpers
-    
+
     # Verify installation
     flavor --version
     ```
@@ -144,9 +144,11 @@ FlavorPack requires native launchers and builders written in Go and Rust. These 
 # Build all helpers for current platform
 make build-helpers
 
-# Or use the build script
-cd helpers
+# Or use the build script directly
 ./build.sh
+
+# Built binaries will be in dist/bin/ with platform suffixes
+ls dist/bin/
 ```
 
 ### Manual Build
@@ -154,31 +156,33 @@ cd helpers
 === "Go Components"
 
     ```bash
-    cd helpers/flavor-go
-    
+    cd src/flavor-go
+
     # Build launcher
-    go build -o ../bin/flavor-go-launcher-$(uname -s)_$(uname -m) \
+    go build -o ../../dist/bin/flavor-go-launcher-$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m) \
+      -ldflags="-s -w" \
       ./cmd/flavor-go-launcher
-    
+
     # Build builder
-    go build -o ../bin/flavor-go-builder-$(uname -s)_$(uname -m) \
+    go build -o ../../dist/bin/flavor-go-builder-$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m) \
+      -ldflags="-s -w" \
       ./cmd/flavor-go-builder
     ```
 
 === "Rust Components"
 
     ```bash
-    cd helpers/flavor-rs
-    
+    cd src/flavor-rs
+
     # Build launcher
     cargo build --release --bin flavor-rs-launcher
     cp target/release/flavor-rs-launcher \
-      ../bin/flavor-rs-launcher-$(uname -s)_$(uname -m)
-    
+      ../../dist/bin/flavor-rs-launcher-$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m)
+
     # Build builder
     cargo build --release --bin flavor-rs-builder
     cp target/release/flavor-rs-builder \
-      ../bin/flavor-rs-builder-$(uname -s)_$(uname -m)
+      ../../dist/bin/flavor-rs-builder-$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m)
     ```
 
 ### Cross-Platform Builds

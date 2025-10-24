@@ -35,7 +35,7 @@ The system orchestrates Python, Go, and Rust components to create secure, portab
                  │                        │
         ┌────────▼────────┐      ┌───────▼────────┐
         │   Go Helpers    │      │  Rust Helpers  │
-        │ (helpers/flavor-go)    │ (helpers/flavor-rs)
+        │ (src/flavor-go/) │      │ (src/flavor-rs/)│
         │ • Builder       │      │ • Builder      │
         │ • Launcher      │      │ • Launcher     │
         └─────────────────┘      └────────────────┘
@@ -117,7 +117,7 @@ Key modules:
 - Coordinate with native builders
 - Handle key generation and signing
 
-### Go Helpers (`helpers/flavor-go/`)
+### Go Helpers (`src/flavor-go/`)
 
 **flavor-go-builder** - Creates PSPF packages
 - Reads JSON manifests
@@ -131,7 +131,7 @@ Key modules:
 - Manages workenv lifecycle
 - Executes applications
 
-### Rust Helpers (`helpers/flavor-rs/`)
+### Rust Helpers (`src/flavor-rs/`)
 
 **flavor-rs-builder** - Alternative builder implementation
 - Memory-safe package creation
@@ -212,32 +212,30 @@ The `HelperManager` class finds helpers in order:
 
 1. **Bundled with Package** - For PyPI distribution
    ```
-   src/flavor/helpers/{platform}/flavor-{go,rs}-{builder,launcher}
+   src/flavor/helpers/flavor-{go,rs}-{builder,launcher}-{platform}
    ```
 
 2. **Local Development** - Built from source
    ```
-   helpers/bin/flavor-{go,rs}-{builder,launcher}
+   dist/bin/flavor-{go,rs}-{builder,launcher}-{platform}
    ```
 
 3. **System Cache** - Downloaded or installed
    ```
-   ~/.cache/flavor/helpers/bin/flavor-{go,rs}-{builder,launcher}
+   ~/.cache/flavor/helpers/flavor-{go,rs}-{builder,launcher}-{platform}
    ```
 
 ### Building Helpers
 
 ```bash
 # Build all helpers for current platform
-./helpers/build.sh
+make build-helpers
 
-# Or use make directly
-cd helpers/flavor-go
-make build BIN_DIR=../bin
+# Or use the build script directly
+./build.sh
 
-cd helpers/flavor-rs
-cargo build --release
-cp target/release/flavor-rs-* ../bin/
+# Helpers will be placed in dist/bin/ with platform suffix
+# e.g., dist/bin/flavor-rs-launcher-darwin_arm64
 ```
 
 ### Helper Commands
@@ -265,7 +263,7 @@ flavor helpers test
 
 ### Taster Test Suite
 
-The `helpers/taster/` package provides comprehensive testing:
+The `tests/taster/` package provides comprehensive testing:
 - `exit` - Test exit codes and error handling
 - `file` - Test file I/O and workenv persistence
 - `signals` - Test signal handling
@@ -278,15 +276,18 @@ The `helpers/taster/` package provides comprehensive testing:
 
 ```bash
 # Run all tests
-workenv/flavor_darwin_arm64/bin/pytest
+make test
 
 # Run specific categories
-workenv/flavor_darwin_arm64/bin/pytest -m unit
-workenv/flavor_darwin_arm64/bin/pytest -m integration
-workenv/flavor_darwin_arm64/bin/pytest -m taster
+pytest -m unit
+pytest -m integration
+pytest -m taster
 
 # Run with coverage
-workenv/flavor_darwin_arm64/bin/pytest --cov=flavor
+make test-cov
+
+# Run cross-language compatibility tests
+make validate-pspf
 ```
 
 ## Critical Implementation Notes

@@ -35,7 +35,8 @@ cd flavor
 uv sync
 
 # Build the Go and Rust helpers
-./build.sh
+make build-helpers
+# or directly: ./build.sh
 ```
 
 ### Creating Your First Package
@@ -82,15 +83,10 @@ Flavor Pack consists of three main components:
    - Creates manifests and handles Python packaging
    - Provides CLI interface for package operations
 
-2. **Native Launchers** (`src/flavor-go/`, `src/flavor-rs/`)
-   - Extract and execute packages at runtime
-   - Perform Ed25519 signature verification
-   - Manage workenv caching and lifecycle
-
-3. **Native Builders** (`src/flavor-go/`, `src/flavor-rs/`)
-   - Assemble PSPF packages from manifests
-   - Implement the PSPF/2025 binary format
-   - Handle slot packing and metadata encoding
+2. **Native Helpers** (`src/flavor-go/`, `src/flavor-rs/`)
+   - **Launchers**: Extract and execute packages at runtime, perform Ed25519 signature verification, manage workenv caching
+   - **Builders**: Assemble PSPF packages from manifests, implement the PSPF/2025 binary format, handle slot packing and metadata encoding
+   - Built binaries are placed in `dist/bin/` for distribution
 
 ## 🔒 Security
 
@@ -118,9 +114,8 @@ pytest -m unit        # Fast unit tests
 pytest -m integration # Integration tests
 pytest -m security    # Security tests
 
-# Test helpers with Pretaster
-cd tests/pretaster
-make test
+# Test cross-language compatibility with Pretaster
+make validate-pspf
 ```
 
 ## 🙏 Acknowledgments
