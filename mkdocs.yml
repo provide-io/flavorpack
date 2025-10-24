@@ -18,29 +18,29 @@ theme:
   language: en
   logo: assets/images/logo.svg
   favicon: assets/images/logo.svg
-  
+
   palette:
     # Light mode
     - media: "(prefers-color-scheme: light)"
       scheme: default
-      primary: black
-      accent: deep purple
+      primary: indigo
+      accent: indigo
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
-    
+
     # Dark mode
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
       primary: indigo
-      accent: deep purple
+      accent: indigo
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
-  
+
   font:
-    text: Poppins
-    code: Fira Code
+    text: Roboto
+    code: Roboto Mono
   
   features:
     # Navigation
@@ -185,6 +185,7 @@ extra:
       make our documentation better.
 
 extra_css:
+  - stylesheets/provide-theme.css
   - stylesheets/extra.css
 
 extra_javascript:
