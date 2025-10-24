@@ -7,7 +7,7 @@
 from __future__ import annotations
 
 from unittest.mock import Mock, patch
-import zlib
+import hashlib
 
 import pytest
 
@@ -223,7 +223,8 @@ class TestVerifySlotIntegrity:
         mock_reader._backend = mock_backend
 
         raw_data = b"test slot data"
-        checksum = zlib.adler32(raw_data) & 0xFFFFFFFF
+        hash_bytes = hashlib.sha256(raw_data).digest()[:8]
+        checksum = int.from_bytes(hash_bytes, byteorder="little")
 
         descriptor = SlotDescriptor(
             id=0,
@@ -271,7 +272,8 @@ class TestVerifySlotIntegrity:
         mock_reader._backend = mock_backend
 
         raw_data = b"test slot data"
-        checksum = zlib.adler32(raw_data) & 0xFFFFFFFF
+        hash_bytes = hashlib.sha256(raw_data).digest()[:8]
+        checksum = int.from_bytes(hash_bytes, byteorder="little")
 
         descriptor = SlotDescriptor(
             id=0,
@@ -326,7 +328,8 @@ class TestVerifySlotIntegrity:
         mock_reader._backend = mock_backend
 
         raw_data = b"test slot data"
-        checksum = zlib.adler32(raw_data) & 0xFFFFFFFF
+        hash_bytes = hashlib.sha256(raw_data).digest()[:8]
+        checksum = int.from_bytes(hash_bytes, byteorder="little")
 
         descriptor = SlotDescriptor(
             id=0,

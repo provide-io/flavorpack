@@ -3,6 +3,7 @@
 # Tests for PSPF reader with backend support
 
 from pathlib import Path
+import hashlib
 import tempfile
 import zlib
 
@@ -37,12 +38,20 @@ class TestReaderBackends:
             data_offset = slot_table_offset + (2 * DEFAULT_SLOT_DESCRIPTOR_SIZE)
 
             # Write slot descriptors (2 x 64 bytes)
+            data1 = b"TEST DATA 1" * 9 + b"T"  # 100 bytes
+            data2 = b"TEST DATA 2" * 18 + b"TD"  # 200 bytes
+
+            hash_bytes1 = hashlib.sha256(data1).digest()[:8]
+            checksum1 = int.from_bytes(hash_bytes1, byteorder="little")
+            hash_bytes2 = hashlib.sha256(data2).digest()[:8]
+            checksum2 = int.from_bytes(hash_bytes2, byteorder="little")
+
             slot1 = SlotDescriptor(
                 id=0,
                 name="test1.txt",
                 offset=data_offset,
                 size=100,
-                checksum=zlib.adler32(b"TEST DATA 1" * 9 + b"T"),  # 100 bytes
+                checksum=checksum1,
                 operations=0,
             )
             f.write(slot1.pack())
@@ -52,14 +61,14 @@ class TestReaderBackends:
                 name="test2.txt",
                 offset=data_offset + 100,
                 size=200,
-                checksum=zlib.adler32(b"TEST DATA 2" * 18 + b"TD"),  # 200 bytes
+                checksum=checksum2,
                 operations=0,
             )
             f.write(slot2.pack())
 
             # Write slot data
-            f.write(b"TEST DATA 1" * 9 + b"T")  # 100 bytes
-            f.write(b"TEST DATA 2" * 18 + b"TD")  # 200 bytes
+            f.write(data1)  # 100 bytes
+            f.write(data2)  # 200 bytes
 
             # Calculate final package size (before MagicTrailer)
             package_size = f.tell()
