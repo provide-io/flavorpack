@@ -76,8 +76,8 @@ Best for developers who want the latest features and ability to build custom hel
 
 ### Method 2: Using pip
 
-!!! info "Planned for v0.1.0"
-    PyPI installation is planned for the v0.1.0 release. Currently unavailable.
+!!! info "Planned for Future Release"
+    PyPI installation is planned for a future release. Currently unavailable.
 
     **When available**, installation will be:
     ```bash
@@ -89,8 +89,8 @@ Best for developers who want the latest features and ability to build custom hel
 
 ### Method 3: Using Docker
 
-!!! info "Planned for v0.1.0"
-    Official Docker images are planned for v0.1.0 release.
+!!! info "Planned for Future Release"
+    Official Docker images are planned for a future release.
 
     **When available**, you'll be able to use:
     ```bash

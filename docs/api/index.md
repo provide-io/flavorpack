@@ -67,26 +67,37 @@ except VerificationError as e:
     print(f"Verification failed: {e}")
 ```
 
-## Modules
+## Detailed API Documentation
 
-- `flavor.packaging` - High-level packaging API
-- `flavor.psp.format_2025` - PSPF/2025 implementation
-- `flavor.psp.format_2025.builder` - Package building
-- `flavor.psp.format_2025.reader` - Package reading
-- `flavor.psp.security` - Cryptographic operations and verification
+Explore detailed documentation for each FlavorPack module:
 
-## Documentation Format
+### Core Modules
 
-API documentation will include:
+- **[Packaging API](packaging.md)** - High-level packaging orchestration, manifest processing, and build workflows
+- **[Builder API](builder.md)** - PSPF package building, slot assembly, and format generation
+- **[Reader API](reader.md)** - Package inspection, slot extraction, and metadata reading
+- **[Cryptography API](crypto.md)** - Ed25519 signing, verification, and key management
 
-- Class and function signatures
-- Parameter descriptions
-- Return types
-- Usage examples
-- Related functions
+### Module Organization
+
+```
+flavor/
+├── packaging/          → See: packaging.md
+│   ├── orchestrator.py
+│   └── python_packager.py
+├── psp/
+│   └── format_2025/   → See: builder.md, reader.md
+│       ├── builder.py
+│       ├── reader.py
+│       └── crypto.py  → See: crypto.md
+```
 
 ---
 
-**In the meantime, see:** [User Guide](../guide/index.md) | [Cookbook](../cookbook/index.md)
+## Quick Links
+
+- [User Guide](../guide/index.md) - Learn how to use FlavorPack
+- [Cookbook](../cookbook/index.md) - Practical examples and recipes
+- [CLI Reference](../guide/usage/cli.md) - Command-line interface documentation
 
 **For source code:** [GitHub Repository](https://github.com/provide-io/flavorpack)
