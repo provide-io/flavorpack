@@ -55,6 +55,7 @@ def load_launcher_binary(launcher_type: str) -> bytes:
 
     # Search paths - prioritize helpers/bin first, then XDG cache location
     base_search_paths = [
+        Path.cwd() / "dist" / "bin",  # Built binaries (make build-ingredients)
         Path.cwd() / "helpers" / "bin",
         Path.cwd().parent / "helpers" / "bin",
         Path.cwd().parent.parent / "helpers" / "bin",  # For tests

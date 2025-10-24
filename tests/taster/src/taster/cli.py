@@ -30,7 +30,6 @@ import click
 # Import all commands from modules
 from taster.commands import (
     argv_command,
-    crosslang_command,
     echo_command,
     env_command,
     features_command,
@@ -88,7 +87,6 @@ cli.add_command(shell_command)
 cli.add_command(signals_command)
 cli.add_command(test_command)
 cli.add_command(verify_command)
-cli.add_command(crosslang_command)
 cli.add_command(package_command)
 cli.add_command(pipe_command)
 cli.add_command(mmap_command)
