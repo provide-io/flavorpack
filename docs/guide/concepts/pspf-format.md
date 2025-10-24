@@ -249,22 +249,26 @@ Each slot has:
 
 #### Slot Descriptor Binary Layout (64 bytes)
 
-```mermaid
-graph LR
-    subgraph "Slot Descriptor - 64 bytes"
-        direction TB
-        A["offset<br/>8 bytes<br/>uint64<br/>bytes 0-7"] --> B["size<br/>8 bytes<br/>uint64<br/>bytes 8-15"]
-        B --> C["original_size<br/>8 bytes<br/>uint64<br/>bytes 16-23"]
-        C --> D["data_checksum<br/>32 bytes<br/>SHA-256<br/>bytes 24-55"]
-        D --> E["operations<br/>8 bytes<br/>uint64<br/>bytes 56-63"]
-    end
+!!! info "Complete Specification"
+    The slot descriptor is a precisely defined 64-byte binary structure. For the complete specification including all fields, byte offsets, cross-language implementations, and detailed field descriptions, see [**Slot Descriptor Specification**](../../reference/spec/SLOT_DESCRIPTOR_SPECIFICATION.md).
 
-    style A fill:#e3f2fd
-    style B fill:#fff3e0
-    style C fill:#f3e5f5
-    style D fill:#e8f5e9
-    style E fill:#fce4ec
-```
+**Quick Reference - Field Layout:**
+
+| Offset | Size | Field | Description |
+|--------|------|-------|-------------|
+| 0x00 | 8 bytes | `id` | Unique slot identifier |
+| 0x08 | 8 bytes | `name_hash` | SHA-256 of slot name (first 8 bytes, little-endian) |
+| 0x10 | 8 bytes | `offset` | Byte offset in package file |
+| 0x18 | 8 bytes | `size` | Compressed/stored size |
+| 0x20 | 8 bytes | `original_size` | Uncompressed size |
+| 0x28 | 8 bytes | `operations` | Packed operation chain |
+| 0x30 | 8 bytes | `checksum` | SHA-256 of slot data (first 8 bytes, little-endian) |
+| 0x38 | 1 byte | `purpose` | Purpose classification (code, data, config, media) |
+| 0x39 | 1 byte | `lifecycle` | Lifecycle hint (init, startup, runtime, etc.) |
+| 0x3A | 1 byte | `priority` | Cache priority (0-255) |
+| 0x3B | 1 byte | `platform` | Platform requirements (any, linux, macos, windows) |
+| 0x3C-0x3D | 2 bytes | `reserved` | Reserved for future use |
+| 0x3E-0x3F | 2 bytes | `permissions` | Unix-style permissions (16-bit) |
 
 **Operations Field Encoding** (64-bit packed, up to 8 operations of 8 bits each):
 
