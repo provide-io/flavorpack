@@ -85,6 +85,43 @@ export FLAVOR_OUTPUT_FILE=build.log
 flavor pack --manifest pyproject.toml
 ```
 
+### FLAVOR_BUILDER_BIN
+
+**Default:** Auto-selected
+**Purpose:** Override builder binary location
+
+```bash
+# Use specific builder
+export FLAVOR_BUILDER_BIN=/path/to/flavor-rs-builder-linux_amd64
+flavor pack --manifest pyproject.toml
+```
+
+### FLAVOR_LAUNCHER_BIN
+
+**Default:** Auto-selected
+**Purpose:** Override launcher binary location
+
+```bash
+# Use specific launcher
+export FLAVOR_LAUNCHER_BIN=/path/to/flavor-go-launcher-darwin_arm64
+flavor pack --manifest pyproject.toml
+```
+
+### FLAVOR_VALIDATION
+
+**Default:** `standard`
+**Values:** `strict`, `standard`, `relaxed`, `minimal`, `none`
+**Purpose:** Control validation strictness during build and runtime
+
+```bash
+# Strict validation
+export FLAVOR_VALIDATION=strict
+flavor pack --manifest pyproject.toml
+
+# Disable validation (not recommended)
+export FLAVOR_VALIDATION=none
+```
+
 ---
 
 ## Packaged Application Variables
@@ -270,6 +307,39 @@ os_version = os.environ.get('FLAVOR_OS_VERSION')  # '5.15.0', '14.2', etc.
 ```python
 import os
 cpu_type = os.environ.get('FLAVOR_CPU_TYPE')  # 'x86_64', 'aarch64', etc.
+```
+
+### FLAVOR_WORKENV
+
+**Set by:** FlavorPack launcher
+**Values:** Absolute path to work environment directory
+**Purpose:** Current package's work environment path
+
+```python
+import os
+workenv = os.environ['FLAVOR_WORKENV']  # '/home/user/.cache/flavor/pspf-abc123'
+```
+
+### FLAVOR_PACKAGE
+
+**Set by:** FlavorPack launcher
+**Values:** Package name string
+**Purpose:** Name of the current package
+
+```python
+import os
+pkg_name = os.environ['FLAVOR_PACKAGE']  # 'myapp'
+```
+
+### FLAVOR_VERSION
+
+**Set by:** FlavorPack launcher
+**Values:** Package version string
+**Purpose:** Version of the current package
+
+```python
+import os
+pkg_version = os.environ['FLAVOR_VERSION']  # '1.0.0'
 ```
 
 ---
@@ -514,6 +584,9 @@ export FOUNDATION_LOG_LEVEL=warning
 | `FLAVOR_WORKENV_BASE` | Build | CWD | Workenv base directory |
 | `FLAVOR_OUTPUT_FORMAT` | Build | `text` | Output format (text/json) |
 | `FLAVOR_OUTPUT_FILE` | Build | `STDOUT` | Output destination |
+| `FLAVOR_BUILDER_BIN` | Build | Auto | Override builder binary |
+| `FLAVOR_LAUNCHER_BIN` | Build | Auto | Override launcher binary |
+| `FLAVOR_VALIDATION` | Build/Runtime | `standard` | Validation strictness |
 | `FLAVOR_LOG_LEVEL` | Runtime | `info` | Package log level |
 | `FLAVOR_CACHE` | Runtime | `~/.cache/flavor/workenv` | Cache directory |
 | `FLAVOR_CACHE_VALIDATION` | Runtime | `true` | Enable cache validation |
@@ -527,6 +600,9 @@ export FOUNDATION_LOG_LEVEL=warning
 | `FLAVOR_PLATFORM` | Runtime | Auto | Platform string |
 | `FLAVOR_OS_VERSION` | Runtime | Auto | OS version |
 | `FLAVOR_CPU_TYPE` | Runtime | Auto | CPU type |
+| `FLAVOR_WORKENV` | Runtime | Auto | Workenv path |
+| `FLAVOR_PACKAGE` | Runtime | Auto | Package name |
+| `FLAVOR_VERSION` | Runtime | Auto | Package version |
 
 ---
 

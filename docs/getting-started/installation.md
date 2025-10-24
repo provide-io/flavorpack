@@ -214,11 +214,12 @@ Optional environment variables for customization:
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `FLAVOR_CACHE` | Cache directory for work environments | `~/.cache/flavor/workenv` |
-| `FOUNDATION_LOG_LEVEL` | Logging level (debug, info, warn, error) | `info` |
+| `FOUNDATION_LOG_LEVEL` | Logging level (trace, debug, info, warning, error) | `info` |
 | `FOUNDATION_LOG_FILE` | Log file path for persistent logging | None |
-| `FLAVOR_PRIVATE_KEY` | Path to private signing key | None |
-| `FLAVOR_PUBLIC_KEY` | Path to public verification key | None |
 | `FLAVOR_VALIDATION` | Validation level: strict, standard, relaxed, minimal, none | `standard` |
+
+!!! note "Signing Keys"
+    Signing keys are passed via CLI options (`--private-key` and `--public-key`), not environment variables. See the [Signing Guide](../guide/packaging/signing.md) for details.
 
 ## Platform-Specific Notes
 

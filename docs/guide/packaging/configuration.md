@@ -199,10 +199,10 @@ source = "venv/"
 operations = ["tar", "gzip"]
 
 # Slot metadata
-purpose = "runtime"  # Purpose classification
-lifecycle = "cached"  # Cache behavior
-priority = 100  # Cache priority (0-255)
-platform = "any"  # Platform requirement
+purpose = "code"  # Purpose classification (code, data, config, media)
+lifecycle = "runtime"  # Lifecycle management (default)
+priority = 100  # Cache priority (0-255, higher = keep longer)
+platform = "any"  # Platform requirement (any, linux, darwin, windows)
 
 # Extract location
 extract_to = "."  # Extract to workenv root
@@ -210,18 +210,26 @@ extract_to = "."  # Extract to workenv root
 
 **Lifecycle Options:**
 
-| Lifecycle | Description | Use Case |
-|-----------|-------------|----------|
-| `cached` | Persistent cache (default) | Runtimes, libraries |
-| `volatile` | Temporary, removed on exit | Build artifacts |
-| `persistent` | Never removed from cache | Shared resources |
+| Lifecycle | Value | Description | Use Case |
+|-----------|-------|-------------|----------|
+| `init` | 0 | First run only, then removed | One-time setup |
+| `startup` | 1 | Extract at every startup | Initialization data |
+| `runtime` | 2 | Extract on first use (default) | Application code, libraries |
+| `shutdown` | 3 | Extract during cleanup | Cleanup scripts |
+| `cache` | 4 | Performance cache, can regenerate | Compiled assets |
+| `temporary` | 5 | Remove after session ends | Build artifacts |
+| `lazy` | 6 | Load on-demand | Large optional resources |
+| `eager` | 7 | Load immediately on startup | Critical dependencies |
+| `dev` | 8 | Development mode only | Debug tools |
+| `config` | 9 | User-modifiable config files | Settings |
+| `platform` | 10 | Platform/OS specific content | Platform binaries |
 
 **Purpose Classification:**
 
 | Purpose | Value | Description |
 |---------|-------|-------------|
-| `data` | 0 | Data files |
-| `code` | 1 | Executable code |
+| `code` | 0 | Executable code |
+| `data` | 1 | Application data files |
 | `config` | 2 | Configuration files |
 | `media` | 3 | Media assets |
 
