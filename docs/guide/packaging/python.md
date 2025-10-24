@@ -2,6 +2,23 @@
 
 Complete guide to packaging Python applications with FlavorPack, including dependencies, virtual environments, and Python-specific optimizations.
 
+!!! warning "Feature Status - Alpha Release"
+    This guide documents both **currently implemented** and **planned future** features. Many advanced configuration options shown below are not yet available.
+
+    **Currently Working**:
+    - Basic dependency packaging from `pyproject.toml`
+    - Standard entry points and scripts
+    - Simple package structure
+
+    **Planned Features** (see [Roadmap](../roadmap.md)):
+    - Advanced TOML configuration options
+    - Python version selection
+    - Build environment customization
+    - Runtime optimizations
+    - Platform-specific builds
+
+    Features marked with 🔶 are **planned** but not yet implemented.
+
 ## Overview
 
 FlavorPack provides first-class support for Python applications, handling everything from simple scripts to complex applications with numerous dependencies. This guide covers Python-specific features and best practices for creating efficient, reliable packages.
@@ -18,9 +35,12 @@ FlavorPack provides first-class support for Python applications, handling everyt
 
 ### Specifying Python Version
 
-Configure the Python version in your manifest:
+!!! note "🔶 Planned Feature"
+    Python version selection via manifest is not yet implemented. See [Roadmap](../roadmap.md#python-version-selection).
+    Currently, packages use the Python version from your build environment.
 
 ```toml
+# 🔶 PLANNED - Not yet implemented
 [tool.flavor.python]
 version = "3.11"  # Exact version to use
 ```
@@ -93,9 +113,13 @@ dependencies = [
 
 ### Build Environment
 
+!!! note "🔶 Mostly Planned"
+    Basic venv creation works, but advanced configuration options are not yet implemented. See [Roadmap](../roadmap.md#build-environment-configuration).
+
 FlavorPack creates an isolated virtual environment during build:
 
 ```toml
+# 🔶 PLANNED - Advanced configuration not yet available
 [tool.flavor.build]
 # Custom venv location
 venv_path = ".flavor-venv"
