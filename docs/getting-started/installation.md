@@ -90,7 +90,7 @@ Best for developers who want the latest features and ability to build custom hel
     **When available**, installation will be:
     ```bash
     pip install flavorpack
-    flavor helpers download
+    make build-helpers
     ```
 
     For now, please use source installation (Method 1 above).
@@ -159,7 +159,7 @@ ls dist/bin/
 === "Rust Components"
 
     ```bash
-    cd src/flavor-rs
+    cd src/flavor-rust
 
     # Build launcher
     cargo build --release --bin flavor-rs-launcher
@@ -222,7 +222,8 @@ Optional environment variables for customization:
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `FLAVOR_CACHE_DIR` | Cache directory for work environments | `~/.cache/flavor` |
-| `FLAVOR_LOG_LEVEL` | Logging level (debug, info, warn, error) | `info` |
+| `FOUNDATION_LOG_LEVEL` | Logging level (debug, info, warn, error) | `info` |
+| `FOUNDATION_LOG_FILE` | Log file path for persistent logging | None |
 | `FLAVOR_PRIVATE_KEY` | Path to private signing key | None |
 | `FLAVOR_PUBLIC_KEY` | Path to public verification key | None |
 | `FLAVOR_VALIDATION` | Validation level: strict, standard, relaxed, minimal, none | `standard` |

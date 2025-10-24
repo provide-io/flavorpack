@@ -12,17 +12,17 @@ FlavorPack provides extensive configuration options through manifest files, comm
 
 ### Launcher Selection
 
-Choose which launcher binary to embed in your package:
+Specify which launcher binary to embed in your package:
 
 ```bash
-# Use Rust launcher (default, smallest size)
-flavor pack --launcher-type rust
+# Specify launcher binary (Rust or Go)
+flavor pack --launcher-bin dist/bin/flavor-rs-launcher-linux_amd64
 
 # Use Go launcher
-flavor pack --launcher-type go
+flavor pack --launcher-bin dist/bin/flavor-go-launcher-darwin_arm64
 
-# Specify exact launcher binary
-flavor pack --launcher-bin dist/bin/flavor-rs-launcher-linux_amd64
+# FlavorPack auto-selects if not specified
+flavor pack --manifest pyproject.toml
 ```
 
 **Launcher Comparison:**
@@ -258,8 +258,8 @@ flavor keygen --output keys/
 # Sign package during build
 flavor pack \
     --manifest pyproject.toml \
-    --private-key keys/private.pem \
-    --public-key keys/public.pem \
+    --private-key keys/flavor-private.key \
+    --public-key keys/flavor-public.key \
     --output signed.psp
 ```
 
@@ -298,15 +298,12 @@ flavor pack --validation none
 
 Optimize build performance:
 
-```bash
-# Parallel operations
-export FLAVOR_PARALLEL=4  # Use 4 CPU cores
-
-# Skip compression for faster builds
-flavor pack --no-compress
-
-# Skip signature generation
-flavor pack --no-sign
+```toml
+# Configure in manifest for faster builds
+[[tool.flavor.slots.entries]]
+name = "python-runtime"
+source = "venv/"
+operations = ["tar"]  # No compression for faster builds
 ```
 
 ### Runtime Optimization
@@ -401,15 +398,16 @@ operations = ["tar", "gzip"]  # Faster for macOS
 
 ### Cross-Platform Builds
 
+Build for different platforms by specifying the appropriate launcher:
+
 ```bash
-# Build for all configured platforms
-flavor pack --all-platforms
+# Build for Linux x86_64
+flavor pack --launcher-bin dist/bin/flavor-rs-launcher-linux_amd64 \
+            --output dist/myapp-linux-amd64.psp
 
-# Build for specific platform
-flavor pack --platform linux-amd64
-
-# Output naming pattern
-flavor pack --output "dist/myapp-{platform}.psp"
+# Build for macOS ARM64
+flavor pack --launcher-bin dist/bin/flavor-rs-launcher-darwin_arm64 \
+            --output dist/myapp-darwin-arm64.psp
 ```
 
 ---
@@ -635,21 +633,25 @@ priority = 200  # High priority
 Check manifest syntax:
 
 ```bash
-# Validate manifest
-flavor pack --manifest pyproject.toml --dry-run
-
 # Check for TOML syntax errors
 python -c "import tomli; tomli.load(open('pyproject.toml', 'rb'))"
+
+# Try building the package
+flavor pack --manifest pyproject.toml
 ```
 
 ### Compression failures
 
-```bash
-# Check if compression tool is available
-which gzip zstd xz
+Configure compression in the manifest to use different options:
 
-# Try different compression
-flavor pack --no-compress  # Skip compression
+```toml
+# Use different compression or no compression
+[[tool.flavor.slots.entries]]
+name = "python-runtime"
+source = "venv/"
+operations = ["tar"]  # No compression
+# or
+operations = ["tar", "gzip"]  # Basic compression
 ```
 
 ### Platform mismatch

@@ -20,8 +20,8 @@ graph TD
     G -->|Extraction Failed| K[Check cache & disk space]
 
     D --> L[Run: make build-helpers]
-    E --> M[Run: flavor pack --verbose]
-    F --> N[Add .flavorignore]
+    E --> M[Run: FOUNDATION_LOG_LEVEL=debug flavor pack]
+    F --> N[Optimize slot configuration]
     H --> O[Run: chmod +x package.psp]
     I --> P[Run: flavor verify package.psp]
     J --> Q[Update pyproject.toml]
@@ -66,10 +66,10 @@ export SOURCE_DATE_EPOCH=$(date +%s)
 **Problem**: Package is larger than expected
 
 **Solutions**:
-- Add `.flavorignore` file with exclusion patterns
-- Mark temporary files as volatile slots
-- Exclude development dependencies
-- Use compression: `--compress 9`
+- Exclude development dependencies from your manifest
+- Configure compression in manifest (use `xz` or `zstd` operations)
+- Use `--strip` to remove debug symbols from launcher
+- Optimize slot configuration to include only necessary files
 
 ### Package Execution Issues
 
@@ -121,15 +121,17 @@ FLAVOR_VALIDATION=none ./myapp.psp
 
 **Error**: `Launch failed: No such file or directory`
 
-**Problem**: UV binary extracted to wrong path (`bin/uv/uv` instead of `bin/uv`)
+**Problem**: UV binary extracted to wrong path
 
-**Temporary Workaround**:
+**Solutions**:
 ```bash
-# Use Python builder instead of Go/Rust
-flavor pack --builder python
-```
+# Rebuild helpers to get latest fixes
+make build-helpers
 
-**Permanent Fix**: Update to latest helpers when fix is released
+# Clean cache and rebuild package
+flavor workenv clean -y
+flavor pack --manifest pyproject.toml
+```
 
 #### Cache Directory Full
 

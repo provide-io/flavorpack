@@ -485,8 +485,10 @@ Process CSV files with pandas:
         
         - name: Install FlavorPack
           run: |
-            pip install flavorpack
-            flavor helpers download
+            git clone https://github.com/provide-io/flavorpack.git
+            cd flavorpack
+            uv sync
+            make build-helpers
         
 {% raw %}
         - name: Build Package
@@ -511,15 +513,17 @@ Process CSV files with pandas:
     ```dockerfile
     # Build stage
     FROM python:3.11 AS builder
-    
-    # Install FlavorPack
-    RUN pip install flavorpack
-    RUN flavor helpers download
-    
+
+    # Install FlavorPack from source
+    RUN git clone https://github.com/provide-io/flavorpack.git /flavorpack
+    WORKDIR /flavorpack
+    RUN pip install uv && uv sync && make build-helpers
+    ENV PATH="/flavorpack/.venv/bin:$PATH"
+
     # Copy application
     WORKDIR /app
     COPY . .
-    
+
     # Build package
     RUN flavor pack --manifest pyproject.toml --output app.psp
     

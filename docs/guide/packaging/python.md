@@ -20,21 +20,11 @@ FlavorPack provides first-class support for Python applications, handling everyt
 
 ### Specifying Python Version
 
+Configure the Python version in your manifest:
+
 ```toml
-[tool.flavor.runtime]
-python_version = "3.11"  # Exact version
-# or
-python_version = ">=3.10,<3.13"  # Version range
-```
-
-### Using System Python
-
-```bash
-# Use specific Python interpreter
-flavor pack pyproject.toml --python /usr/bin/python3.11
-
-# Use current Python
-flavor pack pyproject.toml --python $(which python3)
+[tool.flavor.python]
+version = "3.11"  # Exact version to use
 ```
 
 ## Dependency Management
@@ -70,18 +60,7 @@ api = [
 ]
 ```
 
-Build with optional dependencies:
-
-```bash
-# Include specific extras
-flavor pack pyproject.toml --extras api
-
-# Include multiple extras
-flavor pack pyproject.toml --extras "api,docs"
-
-# Include all extras
-flavor pack pyproject.toml --all-extras
-```
+FlavorPack automatically includes all dependencies from your `pyproject.toml` file when building packages.
 
 ### Platform-Specific Dependencies
 

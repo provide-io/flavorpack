@@ -2,33 +2,69 @@
 
 Python API reference documentation for FlavorPack.
 
-## Coming Soon
+## Overview
 
-Comprehensive API documentation is under development.
+FlavorPack provides a function-based API for building and verifying PSPF packages. The API is designed for integration into build systems, CI/CD pipelines, and custom tooling.
 
-## Quick Reference
+## Main API
 
-### Main Classes
+### Imports
 
 ```python
-from flavor import Packager, Package
-from flavor.psp import Builder, Reader
+from flavor import (
+    build_package_from_manifest,
+    verify_package,
+    clean_cache,
+    BuildError,
+    VerificationError,
+    __version__,
+)
 ```
 
-### Common Operations
+### Building Packages
 
 ```python
-# Package creation
-packager = Packager(manifest="pyproject.toml")
-package = packager.build(output="myapp.psp")
+from flavor import build_package_from_manifest
 
-# Package reading
-package = Package.open("myapp.psp")
-metadata = package.metadata()
-package.verify()
+# Build a package from manifest
+package_path = build_package_from_manifest(
+    manifest_path="pyproject.toml",
+    output_path="dist/myapp.psp"
+)
+```
 
-# Package extraction
-package.extract(output_dir="extracted/")
+### Verifying Packages
+
+```python
+from flavor import verify_package
+
+# Verify package integrity and signature
+is_valid = verify_package("myapp.psp")
+```
+
+### Cache Management
+
+```python
+from flavor import clean_cache
+
+# Clean the work environment cache
+clean_cache()
+```
+
+### Exceptions
+
+```python
+from flavor import BuildError, VerificationError
+
+try:
+    build_package_from_manifest("pyproject.toml")
+except BuildError as e:
+    print(f"Build failed: {e}")
+
+try:
+    verify_package("myapp.psp")
+except VerificationError as e:
+    print(f"Verification failed: {e}")
 ```
 
 ## Modules
