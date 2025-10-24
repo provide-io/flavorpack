@@ -798,7 +798,7 @@ entry_point = "ml_model.predict:main"
 id = "models"
 source = "models/"
 lifecycle = "lazy"
-codec = "tgz"
+# Automatic tar.gz compression
 ```
 
 ### Web API Package

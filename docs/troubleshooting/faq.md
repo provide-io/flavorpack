@@ -117,7 +117,7 @@ flavor pack pyproject.toml --platform darwin_arm64
 1. Enable compression:
    ```toml
    [[tool.flavor.slots]]
-   codec = "tgz"
+   # Compression is automatic - tar.gz for directories
    ```
 
 2. Exclude unnecessary files:

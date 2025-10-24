@@ -143,7 +143,7 @@ id = "static"
 source = "static/"
 purpose = "static-resources"
 lifecycle = "cached"
-codec = "tgz"
+# Automatic tar.gz compression
 ```
 
 ### Step 4: Build Package
@@ -242,7 +242,7 @@ Control slot compression:
 [[tool.flavor.slots]]
 id = "large-data"
 source = "data/"
-codec = "tgz"  # Options: raw, tar, gzip, tgz
+# Automatic tar.gz compression  # Options: raw, tar, gzip, tgz
 ```
 
 ### Platform-Specific Builds
