@@ -180,12 +180,10 @@ uv run pytest -m security
 - Rust code must compile with `--warnings-as-errors` (strict mode)
 
 ### SCHEMA IS OPERATIONS-ONLY
-- **NO legacy codec fields** - operations field is the only encoding mechanism (uint64)
-- **64-bit operation chains** - up to 8 operations packed into single integer
-- **Protobuf is source of truth** - all operations defined in .proto files
+- **Operations field** - 64-bit uint64, the only encoding mechanism
+- **Operation chains** - Up to 8 operations packed into single integer
+- **Protobuf** - All operations defined in .proto files
 - **SlotDescriptor format** - See `docs/reference/spec/SLOT_DESCRIPTOR_SPECIFICATION.md` for exact binary layout
-- **Legacy note**: CLI commands may display "codec" for UX, but always read from operations field
-- **Protobuf**: IndexBlock has `codec_type` field marked as RESERVED (do not use)
 
 ### Testing Requirements
 - **ALL tests MUST use pretaster or taster** - NEVER create standalone test files

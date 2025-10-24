@@ -54,8 +54,8 @@ class PSPFIndex:
             # Performance hints (64 bytes)
             "B"  # access_mode
             "B"  # cache_strategy
-            "B"  # reserved_hint1 (was codec_type)
-            "B"  # reserved_hint2 (was encryption_type)
+            "B"  # reserved_hint1
+            "B"  # reserved_hint2
             "I"  # page_size
             "Q"  # max_memory
             "Q"  # min_memory
@@ -110,8 +110,8 @@ class PSPFIndex:
     # Performance hints
     access_mode: int = field(default=ACCESS_AUTO)
     cache_strategy: int = field(default=CACHE_NORMAL)
-    reserved_hint1: int = field(default=0)  # Was codec_type, now reserved
-    reserved_hint2: int = field(default=0)  # Was encryption_type, now reserved
+    reserved_hint1: int = field(default=0)
+    reserved_hint2: int = field(default=0)
     page_size: int = field(default=4096)
     max_memory: int = field(default=DEFAULT_MAX_MEMORY)
     min_memory: int = field(default=DEFAULT_MIN_MEMORY)

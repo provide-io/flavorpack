@@ -233,8 +233,8 @@ struct IndexBlock {
     // === Performance Hints (64 bytes) ===
     uint8_t  access_mode;           // Access pattern hint (0=auto, 1=sequential, 2=random)
     uint8_t  cache_strategy;        // Cache behavior hint (0=normal, 1=aggressive, 2=minimal)
-    uint8_t  reserved_hint1;        // Reserved for future use (was codec_type)
-    uint8_t  reserved_hint2;        // Reserved for future use (was encryption_type)  
+    uint8_t  reserved_hint1;        // Reserved for future use
+    uint8_t  reserved_hint2;        // Reserved for future use  
     uint32_t page_size;             // Preferred memory page size (typically 4096)
     uint64_t max_memory;            // Maximum memory usage hint in bytes
     uint64_t min_memory;            // Minimum memory required in bytes
