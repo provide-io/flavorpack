@@ -54,8 +54,9 @@ class TestGetIngredient:
             # Mock Path(__file__).parent to return our tmp_path
             mock_path_class.__file__ = str(tmp_path / "binary_loader.py")
             mock_path_instance = Mock()
-            mock_path_instance.parent = tmp_path
-            mock_path_instance.parent.__truediv__ = lambda self, x: embedded_bin if x == "bin" else Mock()
+            mock_parent = Mock()
+            mock_parent.__truediv__ = lambda self, x: embedded_bin if x == "bin" else Mock()
+            mock_path_instance.parent = mock_parent
             mock_path_class.return_value = mock_path_instance
 
             loader = BinaryLoader(mock_manager)

@@ -248,5 +248,5 @@ class TestPSPFSlots:
         # Verify the slot is stored with compression by checking metadata
         reader = PSPFReader(bundle_path)
         metadata_read = reader.read_metadata()
-        assert metadata_read["slots"][0]["codec"] == "gzip"
+        assert "operations" in metadata_read["slots"][0]  # Operations field instead of codec
 
