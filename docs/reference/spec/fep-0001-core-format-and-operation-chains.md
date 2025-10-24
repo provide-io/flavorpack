@@ -340,6 +340,8 @@ Total size: **64 bytes exactly**
 
 ## 5. Operation Chain System
 
+> **Implementation Note**: In the current v0 implementation, operation codes are defined directly in language-specific constants files (`constants.py`, `constants.go`, `constants.rs`) rather than generated from Protocol Buffer definitions. The protobuf-based operation registry described in FEP-0003 is planned for future versions to provide cross-language schema validation.
+
 ### 5.1 Operation Categories
 
 Operations are 8-bit values organized into functional categories. Each category occupies a fixed range of the 256-value operation space:
