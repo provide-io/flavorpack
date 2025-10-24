@@ -128,23 +128,19 @@ max_cpu_percent = 80
 ### Runtime Environment
 
 ```toml
-[tool.flavor.execution.runtime_env]
-# Environment variables to unset
+[tool.flavor.execution.runtime]
+[tool.flavor.execution.runtime.env]
+# Environment variables to unset (use "*" to clear all, then selectively pass)
 unset = ["DEBUG", "TESTING"]
 
 # Environment variables to pass through from host
-passthrough = ["HOME", "USER", "PATH"]
+pass = ["HOME", "USER", "PATH", "TERM"]
 
 # Environment variables to set
-[tool.flavor.execution.runtime_env.set_vars]
-APP_ENV = "production"
-LOG_LEVEL = "info"
-PORT = 8080
+set = { APP_ENV = "production", LOG_LEVEL = "info", PORT = "8080" }
 
-# Environment variable mappings (rename)
-[tool.flavor.execution.runtime_env.map_vars]
-HOST_HOME = "APP_HOME"
-HOST_CONFIG = "APP_CONFIG"
+# Environment variable mappings (rename from host to container)
+map = { HOST_HOME = "APP_HOME", HOST_CONFIG = "APP_CONFIG" }
 ```
 
 ### Build Configuration
@@ -237,9 +233,17 @@ lifecycle = "persistent"
 extract_to = "app"
 # Variables: {workenv}, {cache}, {tmp}, {home}
 
-# Compression codec
-codec = "tgz"
-# Options: raw, tar, gzip, tgz, zip, xz, zstd
+# Operation chain for slot data transformation
+# Each slot can specify operations as a packed 64-bit value or use common presets
+# Common operation chains:
+#   - "tar.gz" or "tgz": TAR archive with GZIP compression (default for directories)
+#   - "tar.bz2": TAR archive with BZIP2 compression (better compression)
+#   - "tar.xz": TAR archive with XZ compression (best compression, slower)
+#   - "tar.zst" or "tar.zstd": TAR archive with Zstandard (fast, good compression)
+#   - "gzip" or "gz": GZIP compression only (for single files)
+#   - "raw": No compression (fastest, but larger packages)
+# Operations are applied in sequence and reversed during extraction
+# See FEP-0001 for full operation chain specification
 
 # Platform-specific slot
 platform = "linux_amd64"
@@ -269,7 +273,7 @@ id = "python-venv"
 source = ".venv/"
 purpose = "python-environment"
 lifecycle = "persistent"
-codec = "tgz"
+# Automatic tar.gz compression
 extract_to = "venv"
 ```
 
@@ -281,7 +285,7 @@ id = "static"
 source = "static/"
 purpose = "static-resources"
 lifecycle = "cached"
-codec = "tgz"
+# Automatic tar.gz compression
 extract_to = "{cache}/static"
 ```
 
@@ -320,7 +324,7 @@ id = "models"
 source = "models/"
 purpose = "data-files"
 lifecycle = "lazy"
-codec = "tgz"
+# Automatic tar.gz compression
 size_hint = "500MB"
 optional = true
 ```
@@ -569,7 +573,7 @@ id = "static"
 source = "static/"
 purpose = "static-resources"
 lifecycle = "cached"
-codec = "tgz"
+# Automatic tar.gz compression
 ```
 
 ### CLI Tool with Plugins

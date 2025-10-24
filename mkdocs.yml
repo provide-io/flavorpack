@@ -90,7 +90,7 @@ plugins:
   - autorefs
 
   - macros:
-      include_dir: .shared-theme/data
+      include_dir: docs/.shared-theme/data
 
   # mkdocstrings disabled due to hang with flavorpack's complex import structure
   # API documentation will be generated manually to avoid import loops
