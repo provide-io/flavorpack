@@ -328,14 +328,16 @@ jobs:
       - name: Install FlavorPack
         run: pip install flavor
       
+{% raw %}
       - name: Build package
         run: |
           flavor pack \
             --strip \
             --key-seed "${{ secrets.PACKAGE_KEY }}" \
             --output dist/app-${{ github.ref_name }}.psp
-      
+
       - name: Verify package
+{% endraw %}
         run: flavor verify dist/app-*.psp
       
       - name: Upload artifact

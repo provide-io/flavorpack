@@ -189,7 +189,6 @@ Now that you've created your first package:
 ### Try Examples
 - 💻 [CLI Tool Example](../cookbook/examples/cli-tool.md) - Package a CLI application
 - 🌐 [Web App Example](../cookbook/examples/web-app.md) - Package a Flask/FastAPI app
-- 🤖 [ML Model Example](../cookbook/examples/ml-models.md) - Deploy ML models
 
 ### Get Help
 - 🐛 [Troubleshooting](../troubleshooting/common.md) - Common issues and solutions

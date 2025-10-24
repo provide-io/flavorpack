@@ -4,6 +4,7 @@ Automate FlavorPack packaging in your CI/CD pipelines.
 
 ## GitHub Actions
 
+{% raw %}
 ```yaml
 # .github/workflows/package.yml
 name: Build Package
@@ -66,6 +67,7 @@ jobs:
           asset_name: myapp-${{ matrix.platform }}.psp
           asset_content_type: application/octet-stream
 ```
+{% endraw %}
 
 ## GitLab CI
 

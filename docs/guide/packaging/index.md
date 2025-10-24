@@ -158,7 +158,7 @@ Build with options:
 
 ```bash
 # Sign package with key
-flavor pack pyproject.toml --private-key private.pem
+flavor pack pyproject.toml --private-key keys/flavor-private.key --public-key keys/flavor-public.key
 
 # Use deterministic seed (for CI/CD)
 flavor pack pyproject.toml --key-seed "secret-seed"

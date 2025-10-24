@@ -568,7 +568,6 @@ Explore our cookbook for more detailed examples:
 
 - 📚 [CLI Tools](../cookbook/examples/cli-tool.md) - Command-line applications
 - 🌐 [Web Apps](../cookbook/examples/web-app.md) - Flask, FastAPI, Django
-- 🤖 [ML Models](../cookbook/examples/ml-models.md) - Deploy machine learning models
 - 🔧 [Microservices](../cookbook/examples/microservices.md) - Containerized services
 - 📊 [Data Pipelines](../cookbook/examples/data-pipeline.md) - ETL and data processing
 

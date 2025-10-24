@@ -31,7 +31,6 @@ Builders create PSPF packages from manifests:
 |---------|----------|------|----------|
 | `flavor-go-builder` | Go | ~5.1 MB | Default, full-featured |
 | `flavor-rs-builder` | Rust | ~4.8 MB | Fast, experimental |
-| `flavor-py-builder` | Python | ~1.2 MB | Fallback, pure Python |
 
 ## Directory Structure
 

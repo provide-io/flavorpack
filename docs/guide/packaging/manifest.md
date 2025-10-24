@@ -234,7 +234,7 @@ extract_to = "app"
 # Variables: {workenv}, {cache}, {tmp}, {home}
 
 # Operation chain for slot data transformation
-# Each slot can specify operations as a packed 64-bit value or use common presets
+# Specify operations as string format (converted to uint64 packed operations internally)
 # Common operation chains:
 #   - "tar.gz" or "tgz": TAR archive with GZIP compression (default for directories)
 #   - "tar.bz2": TAR archive with BZIP2 compression (better compression)
@@ -242,7 +242,9 @@ extract_to = "app"
 #   - "tar.zst" or "tar.zstd": TAR archive with Zstandard (fast, good compression)
 #   - "gzip" or "gz": GZIP compression only (for single files)
 #   - "raw": No compression (fastest, but larger packages)
+#   - Custom: "tar|gzip" or "tar|bzip2" (pipe-separated operations)
 # Operations are applied in sequence and reversed during extraction
+# Note: String values are converted to packed uint64 format per PSPF/2025 spec
 # See FEP-0001 for full operation chain specification
 
 # Platform-specific slot
@@ -339,8 +341,8 @@ optional = true
 algorithm = "ed25519"
 
 # Key configuration
-private_key_path = "keys/private.pem"
-public_key_path = "keys/public.pem"
+private_key_path = "keys/flavor-private.key"
+public_key_path = "keys/flavor-public.key"
 
 # Deterministic key seed (for CI/CD)
 key_seed = "${SECRET_SEED}"
@@ -445,7 +447,7 @@ export FLAVOR_RUNTIME_ENV_SET="APP_ENV=production"
 
 # Security
 export FLAVOR_KEY_SEED="secret-seed"
-export FLAVOR_PRIVATE_KEY_PATH="/secure/private.pem"
+export FLAVOR_PRIVATE_KEY_PATH="/secure/flavor-private.key"
 ```
 
 ## Validation
