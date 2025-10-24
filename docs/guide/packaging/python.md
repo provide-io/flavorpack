@@ -351,9 +351,13 @@ dependencies = [
 
 ## Optimization Techniques
 
+!!! note "🔶 Planned Features"
+    Runtime optimization configuration is not yet implemented. See [Roadmap](../roadmap.md#runtime-optimization).
+
 ### Code Optimization
 
 ```toml
+# 🔶 PLANNED - Not yet implemented
 [tool.flavor.runtime]
 # Python optimization level
 optimization_level = 2  # -OO flag
