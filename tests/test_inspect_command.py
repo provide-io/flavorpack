@@ -83,7 +83,7 @@ class TestInspectCommand:
             assert "name" in slot  # This is the ID field returned as "name" in JSON
             assert "purpose" in slot
             assert "size" in slot
-            assert "codec" in slot
+            assert "operations" in slot
 
         # Check that we have expected slot IDs
         slot_ids = [s["name"] for s in slots]  # JSON returns ID as "name" for compatibility
