@@ -4,9 +4,9 @@
 [![Go 1.23+](https://img.shields.io/badge/go-1.23+-00ADD8.svg)](https://golang.org/dl/)
 [![Rust 1.85+](https://img.shields.io/badge/rust-1.85+-orange.svg)](https://www.rust-lang.org/)
 [![CI Pipeline](https://img.shields.io/badge/CI-passing-brightgreen.svg)](https://github.com/provide-io/flavorpack/actions)
-[![Version](https://img.shields.io/badge/version-0.0.1023--alpha-orange.svg)](https://github.com/provide-io/flavorpack/releases)
+[![Version](https://img.shields.io/badge/version-alpha-orange.svg)](https://github.com/provide-io/flavorpack/releases)
 
-> **⚠️ Alpha Software**: FlavorPack is in early development (v0.0.1023). APIs, file formats, and commands may change without notice. Not recommended for production use. Install from source only.
+> **⚠️ Alpha Software**: FlavorPack is in early development. APIs, file formats, and commands may change without notice. Not recommended for production use. Check current version with `flavor --version`. Install from source only.
 
 **FlavorPack** is a cross-language packaging system that creates self-contained, portable executables using the **Progressive Secure Package Format (PSPF) 2025 Edition**. It enables you to ship Python applications as single binaries that "just work" - no installation, no dependencies, no configuration required.
 

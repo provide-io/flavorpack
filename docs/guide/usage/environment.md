@@ -158,20 +158,26 @@ FLAVOR_CACHE=./.cache/flavor ./myapp.psp
 FLAVOR_CACHE="" ./myapp.psp
 ```
 
-### FLAVOR_CACHE_VALIDATION
+### FLAVOR_LAUNCHER_LOG_LEVEL
 
-**Default:** `true`
-**Values:** `true`, `false`
-**Purpose:** Enable/disable cache integrity validation
+**Default:** Inherits from `FLAVOR_LOG_LEVEL`
+**Values:** `trace`, `debug`, `info`, `warn`, `error`
+**Purpose:** Override log level specifically for the launcher binary
 
 ```bash
-# Disable validation (not recommended for production)
-FLAVOR_CACHE_VALIDATION=false ./myapp.psp
+# Debug launcher behavior while keeping app logs minimal
+FLAVOR_LAUNCHER_LOG_LEVEL=debug FLAVOR_LOG_LEVEL=error ./myapp.psp
 ```
 
-!!! warning "Security"
-    Disabling cache validation can allow tampered packages to execute.
-    Only disable in trusted environments.
+### FLAVOR_LOG_PATH
+
+**Default:** None (log to stderr)
+**Purpose:** Write launcher logs to a file
+
+```bash
+# Log launcher output to file
+FLAVOR_LOG_PATH=/tmp/launcher.log ./myapp.psp
+```
 
 ### FLAVOR_LAUNCHER_CLI
 
@@ -588,8 +594,9 @@ export FOUNDATION_LOG_LEVEL=warning
 | `FLAVOR_LAUNCHER_BIN` | Build | Auto | Override launcher binary |
 | `FLAVOR_VALIDATION` | Build/Runtime | `standard` | Validation strictness |
 | `FLAVOR_LOG_LEVEL` | Runtime | `info` | Package log level |
+| `FLAVOR_LAUNCHER_LOG_LEVEL` | Runtime | Inherits | Launcher-specific log level |
+| `FLAVOR_LOG_PATH` | Runtime | - | Launcher log file path |
 | `FLAVOR_CACHE` | Runtime | `~/.cache/flavor/workenv` | Cache directory |
-| `FLAVOR_CACHE_VALIDATION` | Runtime | `true` | Enable cache validation |
 | `FLAVOR_LAUNCHER_CLI` | Runtime | `false` | Launcher CLI mode |
 | `FOUNDATION_LOG_LEVEL` | Tools | `info` | Tool log level |
 | `FOUNDATION_LOG_FILE` | Tools | - | Log file path |

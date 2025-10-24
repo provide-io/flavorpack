@@ -1,7 +1,7 @@
 # Installation
 
 !!! warning "Alpha Release - Source Installation Only"
-    FlavorPack v0.0.1023 is in early alpha. PyPI packages and pre-built binaries are not yet available. **Install from source only.**
+    FlavorPack is in early alpha. PyPI packages and pre-built binaries are not yet available. Check current version with `flavor --version`. **Install from source only.**
 
 FlavorPack can be installed from source. Future releases will support additional installation methods.
 
