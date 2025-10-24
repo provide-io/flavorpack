@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from unittest.mock import Mock, patch
-import zlib
+import hashlib
 
 import pytest
 
@@ -28,8 +28,10 @@ class TestVerifyAllChecksums:
         # Create two slots with valid checksums
         data1 = b"slot 1 data"
         data2 = b"slot 2 data"
-        checksum1 = zlib.adler32(data1) & 0xFFFFFFFF
-        checksum2 = zlib.adler32(data2) & 0xFFFFFFFF
+        hash_bytes1 = hashlib.sha256(data1).digest()[:8]
+        checksum1 = int.from_bytes(hash_bytes1, byteorder="little")
+        hash_bytes2 = hashlib.sha256(data2).digest()[:8]
+        checksum2 = int.from_bytes(hash_bytes2, byteorder="little")
 
         descriptors = [
             SlotDescriptor(
@@ -105,7 +107,8 @@ class TestVerifyAllChecksums:
         mock_reader._backend = mock_backend
 
         data = b"slot data"
-        checksum = zlib.adler32(data) & 0xFFFFFFFF
+        hash_bytes = hashlib.sha256(data).digest()[:8]
+        checksum = int.from_bytes(hash_bytes, byteorder="little")
 
         descriptor = SlotDescriptor(
             id=0,
