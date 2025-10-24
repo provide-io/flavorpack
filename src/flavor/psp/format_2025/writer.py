@@ -146,8 +146,9 @@ def _write_metadata(f: BinaryIO, metadata_compressed: bytes, index: PSPFIndex) -
     # Update index
     index.metadata_offset = metadata_offset
     index.metadata_size = len(metadata_compressed)
-    checksum = zlib.adler32(metadata_compressed) & 0xFFFFFFFF
-    index.metadata_checksum = checksum.to_bytes(4, "little") + b"\x00" * 28
+    # Compute full SHA-256 checksum (32 bytes)
+    import hashlib
+    index.metadata_checksum = hashlib.sha256(metadata_compressed).digest()
 
 
 def _write_slots(f: BinaryIO, slots: list[PreparedSlot], spec: BuildSpec, index: PSPFIndex) -> None:
@@ -173,14 +174,16 @@ def _write_slots(f: BinaryIO, slots: list[PreparedSlot], spec: BuildSpec, index:
         slot_offset = f.tell()
         data_to_write = slot.get_data_to_write()
 
-        # Verify checksum integrity at write time
-        actual_checksum_of_written_data = zlib.adler32(data_to_write) & 0xFFFFFFFF
+        # Verify checksum integrity at write time (SHA-256 first 8 bytes)
+        import hashlib
+        hash_bytes = hashlib.sha256(data_to_write).digest()[:8]
+        actual_checksum_of_written_data = int.from_bytes(hash_bytes, byteorder="little")
         logger.trace(
             "🔍 Verifying slot data before write",
             slot_index=i,
             slot_id=slot.metadata.id,
-            stored_checksum=f"{slot.checksum:08x}",
-            computed_checksum=f"{actual_checksum_of_written_data:08x}",
+            stored_checksum=f"{slot.checksum:016x}",
+            computed_checksum=f"{actual_checksum_of_written_data:016x}",
             data_size=len(data_to_write),
             slot_offset=f"{slot_offset:#x}",
         )
@@ -189,8 +192,8 @@ def _write_slots(f: BinaryIO, slots: list[PreparedSlot], spec: BuildSpec, index:
                 "⚠️ Slot checksum mismatch at write time",
                 slot_index=i,
                 slot_id=slot.metadata.id,
-                stored_checksum=f"{slot.checksum:08x}",
-                actual_checksum=f"{actual_checksum_of_written_data:08x}",
+                stored_checksum=f"{slot.checksum:016x}",
+                actual_checksum=f"{actual_checksum_of_written_data:016x}",
                 data_size=len(data_to_write),
             )
 
@@ -209,8 +212,8 @@ def _write_slots(f: BinaryIO, slots: list[PreparedSlot], spec: BuildSpec, index:
             slot_alignment=DEFAULT_SLOT_ALIGNMENT,
             chosen_alignment=alignment_value,
         )
-        # Convert 32-bit checksum to 64-bit for new format
-        checksum_64 = slot.checksum & 0xFFFFFFFF if slot.checksum else 0
+        # Use full 64-bit SHA-256 checksum (first 8 bytes as little-endian u64)
+        checksum_64 = slot.checksum if slot.checksum else 0
 
         descriptor = SlotDescriptor(
             id=i,

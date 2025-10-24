@@ -27,6 +27,8 @@ use std::time::Instant;
 /// Build a PSPF/2025 package
 pub fn build(manifest_path: &Path, output_path: &Path, options: BuildOptions) -> Result<()> {
     let _start_time = Instant::now();
+    info!("🦀🦀🦀 Hello from Flavor's Rust Builder 🦀🦀🦀");
+    info!("PSPF Rust Builder starting...");
     info!("🔨 Building PSPF/2025 package from: {manifest_path:?}");
     trace!("🔍 Build options: {:?}", options);
 

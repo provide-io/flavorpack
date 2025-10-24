@@ -80,6 +80,14 @@ pub fn verify(package_path: &Path) -> Result<VerifyResult> {
     );
 
     // Overall signature validity
+    debug!(
+        "🔍 Verification results: index_checksum={}, metadata_checksum={}, size={}, integrity_seal={}, trailing_magic={}",
+        index_checksum_valid,
+        metadata_checksum_valid,
+        size_valid,
+        integrity_seal_valid,
+        trailing_magic_valid
+    );
     let signature_valid = index_checksum_valid
         && metadata_checksum_valid
         && size_valid
@@ -119,21 +127,13 @@ fn verify_metadata_checksum(file: &mut File, index: &super::index::Index) -> Res
     let mut metadata_bytes = vec![0u8; index.metadata_size as usize];
     file.read_exact(&mut metadata_bytes)?;
 
-    // Calculate SHA256
+    // Calculate SHA256 (metadata checksum is full 32-byte SHA-256 hash)
     let mut hasher = Sha256::new();
     hasher.update(&metadata_bytes);
-    let _calculated = hasher.finalize();
+    let calculated: [u8; 32] = hasher.finalize().into();
 
-    // Metadata checksum is now u32 Adler-32
-    let mut adler = Adler32::new();
-    adler.write_slice(&metadata_bytes);
-    let calculated = adler.checksum();
-    let expected = u32::from_le_bytes(
-        index.metadata_checksum[0..4]
-            .try_into()
-            .map_err(|_| FlavorError::Generic("Invalid metadata checksum bytes".into()))?,
-    );
-    Ok(calculated == expected)
+    // Compare with expected checksum
+    Ok(calculated == index.metadata_checksum)
 }
 
 /// Verify the trailing magic (4 bytes: 🪄 at the very end)

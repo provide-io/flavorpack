@@ -11,7 +11,7 @@ import os
 from pathlib import Path
 from typing import Any
 
-from provide.foundation import logger
+from provide.foundation import logger, pout
 from provide.foundation.errors import log_only_error_context
 from provide.foundation.file import temp_dir
 from provide.foundation.file.formats import write_json
@@ -186,20 +186,23 @@ class PackagingOrchestrator:
         )
 
         with temp_dir(prefix="flavor_build_") as build_temp_dir:
-            logger.info("Preparing Python artifacts...")
+            pout("📦 Preparing Python runtime artifacts...")
             artifacts = python_packager.prepare_artifacts(build_temp_dir)
 
-            logger.info("Creating slot tarballs...")
+            pout("📝 Creating slot tarballs...")
             uv_tarball, python_tarball, wheels_tarball = create_python_slot_tarballs(build_temp_dir, artifacts)
+            pout("✅ Slot tarballs created (3 slots prepared)")
 
             launcher_path = self._launcher_path
             launcher_type = self._detect_launcher_type(launcher_path)
             logger.info(f"Detected launcher type: {launcher_type}")
 
             is_windows()
+            pout("🔧 Configuring PSPF package metadata...")
             metadata = create_python_builder_metadata(self.package_name, self.version, self.build_config)
             metadata = validate_metadata_dict(metadata)
 
+            pout("📋 Building PSPF package structure...")
             builder = (
                 PSPFBuilder.create()
                 .metadata(**metadata)
@@ -236,6 +239,7 @@ class PackagingOrchestrator:
                 )
             )
 
+            pout("🔐 Setting up package signing keys...")
             if self.key_seed:
                 builder = builder.with_keys(seed=self.key_seed)
             elif self.package_integrity_key_path and self.public_key_path:
@@ -248,6 +252,7 @@ class PackagingOrchestrator:
                 public_key = load_public_key_raw(Path(self.public_key_path))
                 builder = builder.with_keys(private=private_key, public=public_key)
 
+            pout("✍️  Writing PSPF package file...")
             result = builder.build(Path(self.output_flavor_path))
 
             if not result.success:
@@ -255,7 +260,7 @@ class PackagingOrchestrator:
 
             # Always show completion message, detailed info only with progress flag
             final_size = Path(self.output_flavor_path).stat().st_size / (1024 * 1024)
-            logger.info(f"✅ Package built successfully: {final_size:.1f} MB")
+            pout(f"✅ Package built successfully: {final_size:.1f} MB", color="green")
             if self.show_progress and result.metadata and "duration_seconds" in result.metadata:
                 logger.info(f"⏱️  Build time: {result.metadata['duration_seconds']:.2f}s")
 

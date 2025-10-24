@@ -98,14 +98,16 @@ class SlotExtractor:
                 if isinstance(raw_slot_data, memoryview):
                     raw_slot_data = bytes(raw_slot_data)
 
-                # Calculate checksum (use Adler32 to match binary format on raw data)
-                actual_checksum = zlib.adler32(raw_slot_data) & 0xFFFFFFFF
+                # Calculate checksum (use SHA-256 first 8 bytes to match binary format on raw data)
+                import hashlib
+                hash_bytes = hashlib.sha256(raw_slot_data).digest()[:8]
+                actual_checksum = int.from_bytes(hash_bytes, byteorder="little")
 
                 if actual_checksum != descriptor.checksum:
                     logger.error(
                         f"Slot {i} checksum mismatch: "
-                        f"expected {descriptor.checksum:08x}, "
-                        f"got {actual_checksum:08x}"
+                        f"expected {descriptor.checksum:016x}, "
+                        f"got {actual_checksum:016x}"
                     )
                     return False
 
@@ -193,13 +195,15 @@ class SlotExtractor:
             if isinstance(raw_slot_data, memoryview):
                 raw_slot_data = bytes(raw_slot_data)
 
-            # Verify checksum (use Adler32 to match binary format on raw compressed data)
+            # Verify checksum (use SHA-256 first 8 bytes to match binary format on raw compressed data)
             # This must match what was checksummed during building (compressed data)
-            actual_checksum = zlib.adler32(raw_slot_data) & 0xFFFFFFFF
+            import hashlib
+            hash_bytes = hashlib.sha256(raw_slot_data).digest()[:8]
+            actual_checksum = int.from_bytes(hash_bytes, byteorder="little")
 
             # DEBUG: Log checksum details for troubleshooting
             logger.debug(
-                f"🔍🧪 Slot {slot_index} extraction verify: expected={descriptor.checksum:08x}, actual={actual_checksum:08x}, size={len(raw_slot_data)}"
+                f"🔍🧪 Slot {slot_index} extraction verify: expected={descriptor.checksum:016x}, actual={actual_checksum:016x}, size={len(raw_slot_data)}"
             )
 
             if actual_checksum != descriptor.checksum:

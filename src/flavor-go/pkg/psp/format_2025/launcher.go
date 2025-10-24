@@ -77,7 +77,7 @@ func LaunchWithLogLevel(exePath string, args []string, cliLogLevel, cliLogSource
 
 	// Only log startup messages in CLI mode
 	if isEnvTrue("FLAVOR_LAUNCHER_CLI") {
-		logger.Info("🐹🐹🐹 Hello from Flavor's PSPF Launcher 🐹🐹🐹")
+		logger.Info("🐹🐹🐹 Hello from Flavor's Go Launcher 🐹🐹🐹")
 		logger.Debug("Log level", "level", actualLevel, "source", logSource)
 		logger.Info("PSPF Go Launcher starting...")
 	}

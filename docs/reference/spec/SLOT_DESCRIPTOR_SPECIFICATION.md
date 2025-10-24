@@ -12,12 +12,12 @@ The SlotDescriptor uses a **fixed 64-byte layout** with **little-endian byte ord
 Offset | Size | Type   | Field              | Description
 -------|------|--------|--------------------|---------------------------
 0x00   | 8    | uint64 | id                 | Unique slot identifier
-0x08   | 8    | uint64 | name_hash          | xxHash64 of slot name
+0x08   | 8    | uint64 | name_hash          | SHA-256 of slot name (first 8 bytes)
 0x10   | 8    | uint64 | offset             | Byte offset in package
 0x18   | 8    | uint64 | size               | Size as stored (compressed)
 0x20   | 8    | uint64 | original_size      | Uncompressed size
 0x28   | 8    | uint64 | operations         | Packed operation chain
-0x30   | 8    | uint64 | checksum           | SHA256 first 8 bytes
+0x30   | 8    | uint64 | checksum           | SHA-256 of stored data (first 8 bytes)
 0x38   | 1    | uint8  | purpose            | Purpose classification
 0x39   | 1    | uint8  | lifecycle          | Lifecycle management
 0x3A   | 1    | uint8  | priority           | Cache priority hint
@@ -35,12 +35,12 @@ Offset | Size | Type   | Field              | Description
 ### Core Fields (56 bytes - 7 × uint64)
 
 1. **id** (uint64): Unique slot identifier within the package
-2. **name_hash** (uint64): xxHash64 hash of the slot name for fast lookup
+2. **name_hash** (uint64): SHA-256 hash of slot name (first 8 bytes, little-endian) for fast lookup
 3. **offset** (uint64): Byte offset from the start of the package file where slot data begins
 4. **size** (uint64): Size of the slot data as stored in the package (after compression)
 5. **original_size** (uint64): Original uncompressed size of the slot data
 6. **operations** (uint64): Packed operation chain specifying transformations applied to the data
-7. **checksum** (uint64): First 8 bytes of SHA256 hash of the stored slot data
+7. **checksum** (uint64): SHA-256 hash of stored slot data (first 8 bytes, little-endian)
 
 ### Metadata Fields (8 bytes - 8 × uint8)
 
