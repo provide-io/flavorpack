@@ -24,23 +24,60 @@ from flavor import (
 ### Building Packages
 
 ```python
+from pathlib import Path
 from flavor import build_package_from_manifest
 
-# Build a package from manifest
-package_path = build_package_from_manifest(
-    manifest_path="pyproject.toml",
-    output_path="dist/myapp.psp"
+# Basic usage - build from pyproject.toml
+packages = build_package_from_manifest(
+    manifest_path=Path("pyproject.toml")
+)
+# Returns: list[Path] - paths to created packages
+
+# Advanced usage - with custom options
+packages = build_package_from_manifest(
+    manifest_path=Path("pyproject.toml"),
+    output_path=Path("dist/myapp.psp"),
+    launcher_bin=Path("dist/bin/flavor-rs-launcher-darwin_arm64"),
+    builder_bin=Path("dist/bin/flavor-rs-builder-darwin_arm64"),
+    strip_binaries=True,
+    show_progress=True,
+    private_key_path=Path("keys/flavor-private.key"),
+    public_key_path=Path("keys/flavor-public.key"),
 )
 ```
+
+**Parameters:**
+- `manifest_path` (Path): Path to pyproject.toml or JSON manifest
+- `output_path` (Path | None): Custom output path (default: `dist/{package_name}.psp`)
+- `launcher_bin` (Path | None): Path to specific launcher binary
+- `builder_bin` (Path | None): Path to specific builder binary
+- `strip_binaries` (bool): Strip debug symbols from launcher (default: False)
+- `show_progress` (bool): Show progress during build (default: False)
+- `private_key_path` (Path | None): Ed25519 private key for signing
+- `public_key_path` (Path | None): Ed25519 public key for signing
+- `key_seed` (str | None): Deterministic key seed for reproducible builds
+
+**Returns:** `list[Path]` - List of created package paths
 
 ### Verifying Packages
 
 ```python
+from pathlib import Path
 from flavor import verify_package
 
 # Verify package integrity and signature
-is_valid = verify_package("myapp.psp")
+result = verify_package(Path("myapp.psp"))
+# Returns: dict with verification results
 ```
+
+**Parameters:**
+- `package_path` (Path): Path to the .psp package file
+
+**Returns:** `dict[str, Any]` - Verification results including:
+- Signature validity
+- Checksum verification
+- Format validation
+- Metadata inspection
 
 ### Cache Management
 
@@ -50,6 +87,10 @@ from flavor import clean_cache
 # Clean the work environment cache
 clean_cache()
 ```
+
+Removes all cached package extractions from `~/.cache/flavor/`
+
+**Returns:** None
 
 ### Exceptions
 

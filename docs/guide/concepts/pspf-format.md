@@ -506,8 +506,9 @@ Offset    | Component
 
 ## Further Reading
 
-- 📚 [PSPF Specification](../../spec/pspf-2025.md) - Complete format specification
-- 🔧 [Builder Implementation](../../api/python/psp/builder.md) - How packages are created
-- 🔍 [Reader Implementation](../../api/python/psp/reader.md) - How packages are read
+- 📚 [FEP-0001: Core Format Specification](../../reference/spec/fep-0001-core-format-and-operation-chains.md) - Complete PSPF/2025 binary format specification
+- 📋 [Slot Descriptor Specification](../../reference/spec/SLOT_DESCRIPTOR_SPECIFICATION.md) - Detailed slot descriptor format
+- 🔧 [Builder API](../../api/builder.md) - How packages are created programmatically
+- 🔍 [Reader API](../../api/reader.md) - How packages are read and extracted
 - 🔒 [Security Model](security.md) - In-depth security analysis
-- 📦 [FEP-0001](../../spec/feps/fep-0001.md) - Core specification proposal
+- 📦 [Package Structure](package-structure.md) - High-level package organization
