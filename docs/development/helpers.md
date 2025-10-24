@@ -325,13 +325,13 @@ jobs:
       
       - name: Build helpers
         run: |
-          ./helpers/build.sh ${{ matrix.platform }}
+          make build-helpers
       
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
         with:
           name: helpers-${{ matrix.platform }}
-          path: helpers/bin/
+          path: dist/bin/
 ```
 
 ## Development Workflow
@@ -340,7 +340,7 @@ jobs:
 
 1. **Make changes** to helper source
 2. **Build locally**: `./build.sh`
-3. **Test with real package**: `flavor pack --launcher-bin helpers/bin/flavor-rs-launcher`
+3. **Test with real package**: `flavor pack --launcher-bin dist/bin/flavor-rs-launcher-*`
 4. **Run tests**: `./test.sh`
 5. **Commit changes**
 

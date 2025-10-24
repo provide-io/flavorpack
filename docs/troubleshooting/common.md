@@ -11,13 +11,13 @@
 **Solutions**:
 ```bash
 # Rebuild helpers
-./helpers/build.sh
+make build-helpers
 
 # Check helper locations
 flavor helpers list
 
 # Verify helpers exist
-ls -la helpers/bin/
+ls -la dist/bin/
 ```
 
 #### Non-Deterministic Builds
@@ -209,7 +209,7 @@ rustc --version  # Should be 1.75+
 # Clean and rebuild
 cd helpers/flavor-go && go clean && cd ../..
 cd helpers/flavor-rs && cargo clean && cd ../..
-./helpers/build.sh
+make build-helpers
 ```
 
 ## Debug Techniques
@@ -246,7 +246,7 @@ hexdump -C myapp.psp | tail -n 20  # Check magic footer
 
 ```bash
 # Test launcher
-helpers/bin/flavor-rs-launcher --version
+dist/bin/flavor-rs-launcher-* --version
 
 # Test builder with minimal manifest
 cat > test.json << EOF
@@ -256,7 +256,7 @@ cat > test.json << EOF
   "execution": {"command": "echo", "args": ["test"]}
 }
 EOF
-helpers/bin/flavor-go-builder --manifest test.json --output test.psp
+dist/bin/flavor-go-builder-* --manifest test.json --output test.psp
 ```
 
 ### Environment Debugging

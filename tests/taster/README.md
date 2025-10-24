@@ -38,7 +38,7 @@ make build-helpers
 FLAVOR_VALIDATION=none flavor pack --manifest helpers/taster/pyproject.toml \
   --output helpers/taster/dist/taster.psp \
   --key-seed test123 \
-  --launcher-bin helpers/bin/flavor-rs-launcher-darwin_arm64
+  --launcher-bin dist/bin/flavor-rs-launcher-darwin_arm64
 ```
 
 ### Quick Installation
