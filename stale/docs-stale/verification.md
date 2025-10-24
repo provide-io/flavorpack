@@ -1,3 +1,0 @@
-# `flavor.verification`
-
-::: flavor.verification

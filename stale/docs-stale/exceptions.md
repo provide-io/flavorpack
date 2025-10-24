@@ -1,3 +1,0 @@
-# `flavor.exceptions`
-
-::: flavor.exceptions
