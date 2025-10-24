@@ -98,7 +98,7 @@ except InvalidSignature:
 
 1. **Random Keys** (Recommended for production)
    ```bash
-   flavor keygen --output private.pem
+   flavor keygen --out-dir keys/
    ```
 
 2. **Deterministic Keys** (For CI/CD)
@@ -157,18 +157,16 @@ Every component has SHA-256 checksums:
 
 ### Verification Levels
 
-```bash
-# Quick verification (index only)
-flavor verify package.psp --quick
+> **Note**: Currently, the `verify` command performs standard verification only. The following verification modes are planned features for a future release.
 
-# Standard verification (index + metadata)
+```bash
+# Standard verification (index + metadata + signatures)
 flavor verify package.psp
 
-# Deep verification (all slots)
-flavor verify package.psp --deep
-
-# Paranoid mode (extract and verify)
-flavor verify package.psp --paranoid
+# Future planned modes:
+# flavor verify package.psp --quick     # Quick (index only)
+# flavor verify package.psp --deep      # Deep (all slots)
+# flavor verify package.psp --paranoid  # Paranoid (extract and verify)
 ```
 
 ## Execution Security

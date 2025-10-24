@@ -214,9 +214,11 @@ flavor verify package.psp
 
 #### Deep Verification
 
+> **Planned Feature**: Advanced verification modes are planned for a future release. Currently, the `verify` command performs comprehensive verification of all components.
+
 ```bash
-# Verify all components
-flavor verify package.psp --deep
+# Verify all components (standard verification)
+flavor verify package.psp
 
 # Output:
 # ✅ Index block valid
@@ -227,12 +229,15 @@ flavor verify package.psp --deep
 
 #### Verification with External Key
 
-```bash
-# Verify with specific public key
-flavor verify package.psp --public-key trusted.pub
+> **Planned Feature**: External key verification is planned for a future release. Currently, verification uses the public key embedded in the package.
 
-# Verify against multiple trusted keys
-flavor verify package.psp --trusted-keys keys/trusted/
+```bash
+# Current: Verify with embedded public key
+flavor verify package.psp
+
+# Future planned:
+# flavor verify package.psp --public-key trusted.pub
+# flavor verify package.psp --trusted-keys keys/trusted/
 ```
 
 ### Programmatic Verification

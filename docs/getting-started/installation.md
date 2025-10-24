@@ -200,11 +200,10 @@ For production use, generate signing keys:
 
 ```bash
 # Generate new key pair
-flavor keygen --output keys/
+flavor keygen --out-dir keys/
 
-# Configure FlavorPack to use keys
-export FLAVOR_PRIVATE_KEY=keys/flavor-private.key
-export FLAVOR_PUBLIC_KEY=keys/flavor-public.key
+# Keys are used via CLI options, not environment variables
+# See the Signing Guide for details
 ```
 
 ### 3. Environment Variables
