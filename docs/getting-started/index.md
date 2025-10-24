@@ -9,8 +9,8 @@ Before you begin, ensure you have:
 | Component | Minimum Version | Recommended | Notes |
 |-----------|----------------|-------------|-------|
 | Python | 3.11 | 3.12+ | Type hints, modern features |
-| Go | 1.21 | 1.22+ | For building Go helpers |
-| Rust | 1.75 | 1.80+ | For building Rust helpers |
+| Go | 1.23 | Latest | For building Go helpers |
+| Rust | 1.85 | Latest | For building Rust helpers (edition 2024) |
 | UV | 0.1.18 | Latest | Package management |
 | Git | 2.25 | Latest | Version control |
 | Make | 3.81 | 4.0+ | Build automation |
@@ -101,8 +101,8 @@ Now that you have FlavorPack installed:
 ??? question "Build helpers fails with Go/Rust errors"
     Ensure you have the correct versions installed:
     ```bash
-    go version   # Should be 1.21+
-    rustc --version  # Should be 1.75+
+    go version   # Should be 1.23+
+    rustc --version  # Should be 1.85+
     ```
 
 ??? question "Permission denied when running packaged app"

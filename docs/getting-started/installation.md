@@ -12,8 +12,8 @@ FlavorPack can be installed from source. Future releases will support additional
 | Component | Version | Required For |
 |-----------|---------|--------------|
 | Python | 3.11+ | Running FlavorPack |
-| Go | 1.21+ | Building Go helpers |
-| Rust | 1.75+ | Building Rust helpers |
+| Go | 1.23+ | Building Go helpers |
+| Rust | 1.85+ | Building Rust helpers (edition 2024) |
 | Git | 2.25+ | Cloning repository |
 | Make | 3.81+ | Build automation |
 
@@ -108,8 +108,8 @@ For VS Code users with the Remote-Containers extension.
 
 The devcontainer includes:
 - Python 3.11+
-- Go 1.21+
-- Rust 1.75+
+- Go 1.23+
+- Rust 1.85+
 - All required build tools
 - Pre-configured environment
 

@@ -1,8 +1,8 @@
 # 🌶️📦 Flavor Pack: Your Yummy Progressive Secure Polyglot Packaging Toolchain
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-[![Go 1.21+](https://img.shields.io/badge/go-1.21+-00ADD8.svg)](https://golang.org/dl/)
-[![Rust 1.75+](https://img.shields.io/badge/rust-1.75+-orange.svg)](https://www.rust-lang.org/)
+[![Go 1.23+](https://img.shields.io/badge/go-1.23+-00ADD8.svg)](https://golang.org/dl/)
+[![Rust 1.85+](https://img.shields.io/badge/rust-1.85+-orange.svg)](https://www.rust-lang.org/)
 [![CI Pipeline](https://img.shields.io/badge/CI-passing-brightgreen.svg)](https://github.com/provide-io/flavorpack/actions)
 [![Version](https://img.shields.io/badge/version-0.0.1023--alpha-orange.svg)](https://github.com/provide-io/flavorpack/releases)
 
@@ -25,7 +25,7 @@ Flavor Pack (`flavorpack`) is a cross-language packaging system that creates sel
 
 - Python 3.11 or higher
 - UV package manager (`curl -LsSf https://astral.sh/uv/install.sh | sh`)
-- Go 1.21+ and Rust 1.75+ (for building helpers)
+- Go 1.23+ and Rust 1.85+ (for building helpers)
 
 ### Installation (Source Only)
 

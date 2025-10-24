@@ -79,11 +79,11 @@ Makefile                   # Build automation
 ### Prerequisites
 
 #### For Go Helpers
-- Go 1.21 or higher
+- Go 1.23 or higher
 - Make (optional)
 
 #### For Rust Helpers
-- Rust 1.75 or higher
+- Rust 1.85 or higher (edition 2024)
 - Cargo
 - Make (optional)
 
@@ -426,12 +426,12 @@ const VERSION: &str = env!("VERSION");
 
 **Go build fails**: Check Go version
 ```bash
-go version  # Should be 1.21+
+go version  # Should be 1.23+
 ```
 
 **Rust build fails**: Update Rust
 ```bash
-rustup update
+rustup update  # Should be 1.85+
 ```
 
 **Missing dependencies**: Install build tools
