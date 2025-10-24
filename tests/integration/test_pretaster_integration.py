@@ -18,16 +18,16 @@ class TestPretasterIntegration:
         return Path(__file__).parent.parent.parent / "tests" / "pretaster"
 
     @pytest.mark.integration
-    @pytest.mark.requires_ingredients
+    @pytest.mark.requires_helpers
     def test_pretaster_core_suite(self, pretaster_dir: Path) -> None:
         """Test that pretaster core test suite passes."""
         if not pretaster_dir.exists():
             pytest.skip("Pretaster directory not found")
 
-        # Check if ingredients are built
+        # Check if helpers are built
         dist_dir = pretaster_dir.parent.parent / "dist" / "bin"
         if not any(dist_dir.glob("flavor-*-builder-*")):
-            pytest.skip("Ingredients not built - run ./build.sh first")
+            pytest.skip("Helpers not built - run ./build.sh first")
 
         # Prepare environment - disable telemetry to avoid OTLP connection errors
         env = os.environ.copy()
@@ -171,7 +171,7 @@ class TestPretasterIntegration:
         env = os.environ.copy()
         env["PROVIDE_TELEMETRY_DISABLED"] = "1"
 
-        # Test package inspection (should work without ingredients)
+        # Test package inspection (should work without helpers)
         result = subprocess.run(
             ["flavor", "inspect", str(package)],
             capture_output=True,

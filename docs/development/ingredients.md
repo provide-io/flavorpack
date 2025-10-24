@@ -1,10 +1,10 @@
-# Building Ingredients
+# Building Helpers
 
-Ingredients are the native binary components that power FlavorPack's cross-language packaging system.
+Helpers are the native binary components that power FlavorPack's cross-language packaging system.
 
 ## Overview
 
-FlavorPack uses "ingredients" - specialized binaries written in Go and Rust - to handle package building and launching. This architecture provides:
+FlavorPack uses "helpers" - specialized binaries written in Go and Rust - to handle package building and launching. This architecture provides:
 
 1. **Cross-platform support**: Native binaries for each OS/architecture
 2. **Performance**: Compiled code for fast execution
@@ -12,7 +12,7 @@ FlavorPack uses "ingredients" - specialized binaries written in Go and Rust - to
 4. **Small footprint**: Minimal binary sizes
 5. **Security**: Signature verification in native code
 
-## Ingredient Types
+## Helper Types
 
 ### Launchers
 
@@ -36,20 +36,20 @@ Builders create PSPF packages from manifests:
 ## Directory Structure
 
 ```
-ingredients/
+helpers/
 ├── bin/                    # Built binaries
 │   ├── flavor-go-launcher
 │   ├── flavor-rs-launcher
 │   ├── flavor-go-builder
 │   └── flavor-rs-builder
-├── flavor-go/             # Go ingredients
+├── flavor-go/             # Go helpers
 │   ├── cmd/
 │   │   ├── launcher/
 │   │   └── builder/
 │   ├── internal/
 │   ├── go.mod
 │   └── Makefile
-├── flavor-rs/             # Rust ingredients
+├── flavor-rs/             # Rust helpers
 │   ├── src/
 │   │   ├── launcher/
 │   │   └── builder/
@@ -65,25 +65,25 @@ ingredients/
 
 ### Prerequisites
 
-#### For Go Ingredients
+#### For Go Helpers
 - Go 1.21 or higher
 - Make (optional)
 
-#### For Rust Ingredients
+#### For Rust Helpers
 - Rust 1.75 or higher
 - Cargo
 - Make (optional)
 
 ### Quick Build
 
-Build all ingredients for your platform:
+Build all helpers for your platform:
 
 ```bash
-cd ingredients
+cd helpers
 ./build.sh
 ```
 
-This creates binaries in `ingredients/bin/`.
+This creates binaries in `helpers/bin/`.
 
 ### Platform-Specific Build
 
@@ -105,7 +105,7 @@ Build for a specific platform:
 #### Go Launcher
 
 ```bash
-cd ingredients/flavor-go
+cd helpers/flavor-go
 make launcher
 
 # Or directly:
@@ -117,7 +117,7 @@ go build -o ../bin/flavor-go-launcher \
 #### Rust Launcher
 
 ```bash
-cd ingredients/flavor-rs
+cd helpers/flavor-rs
 make launcher
 
 # Or directly:
@@ -128,7 +128,7 @@ cp target/release/launcher ../bin/flavor-rs-launcher
 #### Go Builder
 
 ```bash
-cd ingredients/flavor-go
+cd helpers/flavor-go
 make builder
 
 # Or directly:
@@ -242,17 +242,17 @@ lto = "fat"
 codegen-units = 1
 ```
 
-## Testing Ingredients
+## Testing Helpers
 
 ### Unit Tests
 
 ```bash
 # Go tests
-cd ingredients/flavor-go
+cd helpers/flavor-go
 go test ./...
 
 # Rust tests
-cd ingredients/flavor-rs
+cd helpers/flavor-rs
 cargo test
 ```
 
@@ -276,7 +276,7 @@ FLAVOR_LOG_LEVEL=debug ./test-package.psp
 Test all combinations:
 
 ```bash
-cd ingredients
+cd helpers
 ./test-cross-language.sh
 
 # Tests:
@@ -290,11 +290,11 @@ cd ingredients
 
 ### GitHub Actions Workflow
 
-The ingredient build is automated in CI:
+The helper build is automated in CI:
 
 ```yaml
-# .github/workflows/01-ingredient-prep.yml
-name: Build Ingredients
+# .github/workflows/01-helper-prep.yml
+name: Build Helpers
 
 on:
   workflow_dispatch:
@@ -327,24 +327,24 @@ jobs:
           toolchain: stable
           target: ${{ matrix.rust_target }}
       
-      - name: Build ingredients
+      - name: Build helpers
         run: |
-          ./ingredients/build.sh ${{ matrix.platform }}
+          ./helpers/build.sh ${{ matrix.platform }}
       
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: ingredients-${{ matrix.platform }}
-          path: ingredients/bin/
+          name: helpers-${{ matrix.platform }}
+          path: helpers/bin/
 ```
 
 ## Development Workflow
 
 ### Local Development
 
-1. **Make changes** to ingredient source
+1. **Make changes** to helper source
 2. **Build locally**: `./build.sh`
-3. **Test with real package**: `flavor pack --launcher-bin ingredients/bin/flavor-rs-launcher`
+3. **Test with real package**: `flavor pack --launcher-bin helpers/bin/flavor-rs-launcher`
 4. **Run tests**: `./test.sh`
 5. **Commit changes**
 
@@ -354,7 +354,7 @@ Example: Adding compression support to launcher
 
 1. **Modify launcher code**:
 ```rust
-// ingredients/flavor-rs/src/launcher/extract.rs
+// helpers/flavor-rs/src/launcher/extract.rs
 fn extract_slot_compressed(data: &[u8], codec: Codec) -> Result<Vec<u8>> {
     match codec {
         Codec::Gzip => decompress_gzip(data),
@@ -428,22 +428,22 @@ xcode-select --install
 
 ### Binary Not Found
 
-Ensure ingredients are built:
+Ensure helpers are built:
 ```bash
-ls -la ingredients/bin/
-# Should show all ingredient binaries
+ls -la helpers/bin/
+# Should show all helper binaries
 ```
 
 Add to PATH if needed:
 ```bash
-export PATH="$PATH:$(pwd)/ingredients/bin"
+export PATH="$PATH:$(pwd)/helpers/bin"
 ```
 
 ### Platform Mismatch
 
 Verify binary architecture:
 ```bash
-file ingredients/bin/flavor-go-launcher
+file helpers/bin/flavor-go-launcher
 # Should match your system architecture
 ```
 

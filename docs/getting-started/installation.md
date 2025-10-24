@@ -9,8 +9,8 @@ FlavorPack can be installed in multiple ways depending on your needs. Choose the
 | Component | Version | Required For |
 |-----------|---------|--------------|
 | Python | 3.11+ | Running FlavorPack |
-| Go | 1.21+ | Building Go ingredients |
-| Rust | 1.75+ | Building Rust ingredients |
+| Go | 1.21+ | Building Go helpers |
+| Rust | 1.75+ | Building Rust helpers |
 | Git | 2.25+ | Cloning repository |
 | Make | 3.81+ | Build automation |
 
@@ -29,7 +29,7 @@ FlavorPack can be installed in multiple ways depending on your needs. Choose the
 
 ### Method 1: From Source (Recommended)
 
-Best for developers who want the latest features and ability to build custom ingredients.
+Best for developers who want the latest features and ability to build custom helpers.
 
 === "Linux/macOS"
 
@@ -48,8 +48,8 @@ Best for developers who want the latest features and ability to build custom ing
     # Install FlavorPack
     uv pip install -e .
     
-    # Build native ingredients
-    make build-ingredients
+    # Build native helpers
+    make build-helpers
     
     # Verify installation
     flavor --version
@@ -72,7 +72,7 @@ Best for developers who want the latest features and ability to build custom ing
     # Install FlavorPack
     uv pip install -e .
     
-    # Build native ingredients (requires WSL or Docker)
+    # Build native helpers (requires WSL or Docker)
     # See Windows-specific instructions below
     
     # Verify installation
@@ -87,8 +87,8 @@ For users who want a simple installation without building from source.
 # Install from PyPI
 pip install flavorpack
 
-# Download pre-built ingredients
-flavor ingredients download
+# Download pre-built helpers
+flavor helpers download
 
 # Verify installation
 flavor --version
@@ -134,18 +134,18 @@ The devcontainer includes:
 - All required build tools
 - Pre-configured environment
 
-## Building Native Ingredients
+## Building Native Helpers
 
 FlavorPack requires native launchers and builders written in Go and Rust. These must be built for your platform.
 
 ### Automatic Build
 
 ```bash
-# Build all ingredients for current platform
-make build-ingredients
+# Build all helpers for current platform
+make build-helpers
 
 # Or use the build script
-cd ingredients
+cd helpers
 ./build.sh
 ```
 
@@ -154,7 +154,7 @@ cd ingredients
 === "Go Components"
 
     ```bash
-    cd ingredients/flavor-go
+    cd helpers/flavor-go
     
     # Build launcher
     go build -o ../bin/flavor-go-launcher-$(uname -s)_$(uname -m) \
@@ -168,7 +168,7 @@ cd ingredients
 === "Rust Components"
 
     ```bash
-    cd ingredients/flavor-rs
+    cd helpers/flavor-rs
     
     # Build launcher
     cargo build --release --bin flavor-rs-launcher
@@ -183,7 +183,7 @@ cd ingredients
 
 ### Cross-Platform Builds
 
-For building ingredients for different platforms:
+For building helpers for different platforms:
 
 ```bash
 # Linux static binaries (using Docker)
@@ -204,8 +204,8 @@ make build-windows
 # Check FlavorPack version
 flavor --version
 
-# List available ingredients
-flavor ingredients list
+# List available helpers
+flavor helpers list
 
 # Run tests
 make test
@@ -252,7 +252,7 @@ Optional environment variables for customization:
 
 ### Windows
 
-- **WSL Recommended**: For building ingredients, WSL2 is recommended
+- **WSL Recommended**: For building helpers, WSL2 is recommended
 - **Antivirus**: Some antivirus software may flag self-extracting executables
 - **Path Length**: Be aware of Windows path length limitations
 
@@ -279,7 +279,7 @@ Optional environment variables for customization:
     .venv\Scripts\activate     # Windows
     ```
 
-??? error "Ingredients build fails"
+??? error "Helpers build fails"
     Check that you have all build dependencies:
     ```bash
     # Linux

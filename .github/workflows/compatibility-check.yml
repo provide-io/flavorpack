@@ -16,7 +16,7 @@ on:
         default: true
 
 jobs:
-  # Build fresh ingredients with static linking
+  # Build fresh helpers with static linking
   build-static:
     name: 🔨 Build Static Binaries
     runs-on: ubuntu-latest
@@ -64,7 +64,7 @@ jobs:
       # ARM64 builds disabled temporarily - focusing on AMD64 testing
       # - name: 🔨 Build ARM64 binaries
       #   run: |
-      #     cd ingredients
+      #     cd helpers
       #     
       #     # Go ARM64 builds
       #     cd flavor-go

@@ -282,7 +282,7 @@ nav:
       - development/index.md
       - Contributing: development/contributing.md
       - Architecture: development/architecture.md
-      - Building Ingredients: development/ingredients.md
+      - Building Helpers: development/helpers.md
       - Testing:
         - development/testing/index.md
         - Unit Tests: development/testing/unit.md

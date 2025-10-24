@@ -1,4 +1,4 @@
-// ingredients/flavor-rs/src/psp/operations/mod.rs
+// helpers/flavor-rs/src/psp/operations/mod.rs
 // PSPF/2025 Operation System
 
 pub mod bundle;

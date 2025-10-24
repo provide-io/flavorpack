@@ -1,4 +1,4 @@
-"""Test ingredients/manager.py - Ingredient management system."""
+"""Test helpers/manager.py - Helper management system."""
 
 from __future__ import annotations
 
@@ -7,28 +7,28 @@ from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
-from flavor.ingredients.manager import IngredientInfo, IngredientManager
+from flavor.helpers.manager import HelperInfo, HelperManager
 
 
 @pytest.mark.unit
-class TestIngredientManagerInit:
-    """Test IngredientManager initialization."""
+class TestHelperManagerInit:
+    """Test HelperManager initialization."""
 
-    @patch("flavor.ingredients.manager.ensure_dir")
-    @patch("flavor.ingredients.manager.get_platform_string")
-    @patch("flavor.ingredients.binary_loader.BinaryLoader")
+    @patch("flavor.helpers.manager.ensure_dir")
+    @patch("flavor.helpers.manager.get_platform_string")
+    @patch("flavor.helpers.binary_loader.BinaryLoader")
     def test_initialization(
         self, mock_binary_loader: MagicMock, mock_platform: MagicMock, mock_ensure_dir: MagicMock
     ) -> None:
         """Test manager initialization sets up paths and directories."""
         mock_platform.return_value = "linux_amd64"
 
-        manager = IngredientManager()
+        manager = HelperManager()
 
         # Check paths are set correctly
         assert manager.flavor_root.name == "flavorpack"
-        assert manager.ingredients_dir.name == "dist"
-        assert manager.ingredients_bin.name == "bin"
+        assert manager.helpers_dir.name == "dist"
+        assert manager.helpers_bin.name == "bin"
         assert manager.current_platform == "linux_amd64"
 
         # Check directories were created
@@ -37,9 +37,9 @@ class TestIngredientManagerInit:
         # Check binary loader was initialized
         mock_binary_loader.assert_called_once()
 
-    @patch("flavor.ingredients.manager.ensure_dir")
-    @patch("flavor.ingredients.manager.get_platform_string")
-    @patch("flavor.ingredients.binary_loader.BinaryLoader")
+    @patch("flavor.helpers.manager.ensure_dir")
+    @patch("flavor.helpers.manager.get_platform_string")
+    @patch("flavor.helpers.binary_loader.BinaryLoader")
     def test_xdg_cache_path(
         self, mock_binary_loader: MagicMock, mock_platform: MagicMock, mock_ensure_dir: MagicMock
     ) -> None:
@@ -47,25 +47,25 @@ class TestIngredientManagerInit:
         mock_platform.return_value = "darwin_arm64"
 
         with patch.dict("os.environ", {"XDG_CACHE_HOME": "/custom/cache"}):
-            manager = IngredientManager()
+            manager = HelperManager()
 
-        assert "/custom/cache" in str(manager.installed_ingredients_bin)
-        assert "flavor/ingredients/bin" in str(manager.installed_ingredients_bin)
+        assert "/custom/cache" in str(manager.installed_helpers_bin)
+        assert "flavor/helpers/bin" in str(manager.installed_helpers_bin)
 
 
 @pytest.mark.unit
 class TestPlatformCompatibility:
     """Test platform compatibility checking."""
 
-    @patch("flavor.ingredients.manager.ensure_dir")
-    @patch("flavor.ingredients.manager.get_platform_string")
-    @patch("flavor.ingredients.binary_loader.BinaryLoader")
+    @patch("flavor.helpers.manager.ensure_dir")
+    @patch("flavor.helpers.manager.get_platform_string")
+    @patch("flavor.helpers.binary_loader.BinaryLoader")
     def setup_manager(
         self, mock_binary_loader: MagicMock, mock_platform: MagicMock, mock_ensure_dir: MagicMock
-    ) -> IngredientManager:
+    ) -> HelperManager:
         """Create manager instance for testing."""
         mock_platform.return_value = "linux_amd64"
-        return IngredientManager()
+        return HelperManager()
 
     def test_platform_compatible_exact_match(self) -> None:
         """Test exact platform match is compatible."""
@@ -89,66 +89,66 @@ class TestPlatformCompatibility:
 
 
 @pytest.mark.unit
-class TestIngredientParsing:
-    """Test ingredient identity parsing."""
+class TestHelperParsing:
+    """Test helper identity parsing."""
 
-    @patch("flavor.ingredients.manager.ensure_dir")
-    @patch("flavor.ingredients.manager.get_platform_string")
-    @patch("flavor.ingredients.binary_loader.BinaryLoader")
+    @patch("flavor.helpers.manager.ensure_dir")
+    @patch("flavor.helpers.manager.get_platform_string")
+    @patch("flavor.helpers.binary_loader.BinaryLoader")
     def setup_manager(
         self, mock_binary_loader: MagicMock, mock_platform: MagicMock, mock_ensure_dir: MagicMock
-    ) -> IngredientManager:
+    ) -> HelperManager:
         """Create manager instance for testing."""
         mock_platform.return_value = "linux_amd64"
-        return IngredientManager()
+        return HelperManager()
 
     def test_parse_go_launcher(self) -> None:
         """Test parsing Go launcher identity."""
         manager = self.setup_manager()
-        ingredient_type, language = manager._parse_ingredient_identity("flavor-go-launcher-linux_amd64")
-        assert ingredient_type == "launcher"
+        helper_type, language = manager._parse_helper_identity("flavor-go-launcher-linux_amd64")
+        assert helper_type == "launcher"
         assert language == "go"
 
     def test_parse_rust_builder(self) -> None:
         """Test parsing Rust builder identity."""
         manager = self.setup_manager()
-        ingredient_type, language = manager._parse_ingredient_identity("flavor-rs-builder-darwin_arm64")
-        assert ingredient_type == "builder"
+        helper_type, language = manager._parse_helper_identity("flavor-rs-builder-darwin_arm64")
+        assert helper_type == "builder"
         assert language == "rust"
 
     def test_parse_go_builder(self) -> None:
         """Test parsing Go builder identity."""
         manager = self.setup_manager()
-        ingredient_type, language = manager._parse_ingredient_identity("flavor-go-builder")
-        assert ingredient_type == "builder"
+        helper_type, language = manager._parse_helper_identity("flavor-go-builder")
+        assert helper_type == "builder"
         assert language == "go"
 
     def test_parse_rust_launcher(self) -> None:
         """Test parsing Rust launcher identity."""
         manager = self.setup_manager()
-        ingredient_type, language = manager._parse_ingredient_identity("flavor-rs-launcher")
-        assert ingredient_type == "launcher"
+        helper_type, language = manager._parse_helper_identity("flavor-rs-launcher")
+        assert helper_type == "launcher"
         assert language == "rust"
 
     def test_parse_unknown_format(self) -> None:
         """Test parsing unknown format returns None."""
         manager = self.setup_manager()
-        ingredient_type, language = manager._parse_ingredient_identity("random-file.txt")
-        assert ingredient_type is None
+        helper_type, language = manager._parse_helper_identity("random-file.txt")
+        assert helper_type is None
         assert language is None
 
     def test_parse_missing_type(self) -> None:
         """Test parsing with missing type."""
         manager = self.setup_manager()
-        ingredient_type, language = manager._parse_ingredient_identity("flavor-go-tool")
-        assert ingredient_type is None
+        helper_type, language = manager._parse_helper_identity("flavor-go-tool")
+        assert helper_type is None
         assert language == "go"
 
     def test_parse_missing_language(self) -> None:
         """Test parsing with missing language."""
         manager = self.setup_manager()
-        ingredient_type, language = manager._parse_ingredient_identity("generic-launcher")
-        assert ingredient_type == "launcher"
+        helper_type, language = manager._parse_helper_identity("generic-launcher")
+        assert helper_type == "launcher"
         assert language is None
 
 
@@ -156,15 +156,15 @@ class TestIngredientParsing:
 class TestFileOperations:
     """Test file size and checksum operations."""
 
-    @patch("flavor.ingredients.manager.ensure_dir")
-    @patch("flavor.ingredients.manager.get_platform_string")
-    @patch("flavor.ingredients.binary_loader.BinaryLoader")
+    @patch("flavor.helpers.manager.ensure_dir")
+    @patch("flavor.helpers.manager.get_platform_string")
+    @patch("flavor.helpers.binary_loader.BinaryLoader")
     def setup_manager(
         self, mock_binary_loader: MagicMock, mock_platform: MagicMock, mock_ensure_dir: MagicMock
-    ) -> IngredientManager:
+    ) -> HelperManager:
         """Create manager instance for testing."""
         mock_platform.return_value = "linux_amd64"
-        return IngredientManager()
+        return HelperManager()
 
     def test_get_file_size_success(self) -> None:
         """Test getting file size successfully."""
@@ -236,17 +236,17 @@ class TestFileOperations:
 class TestVersionExtraction:
     """Test version extraction from binaries."""
 
-    @patch("flavor.ingredients.manager.ensure_dir")
-    @patch("flavor.ingredients.manager.get_platform_string")
-    @patch("flavor.ingredients.binary_loader.BinaryLoader")
+    @patch("flavor.helpers.manager.ensure_dir")
+    @patch("flavor.helpers.manager.get_platform_string")
+    @patch("flavor.helpers.binary_loader.BinaryLoader")
     def setup_manager(
         self, mock_binary_loader: MagicMock, mock_platform: MagicMock, mock_ensure_dir: MagicMock
-    ) -> IngredientManager:
+    ) -> HelperManager:
         """Create manager instance for testing."""
         mock_platform.return_value = "linux_amd64"
-        return IngredientManager()
+        return HelperManager()
 
-    @patch("flavor.ingredients.manager.run")
+    @patch("flavor.helpers.manager.run")
     def test_extract_version_success(self, mock_run: MagicMock) -> None:
         """Test successful version extraction."""
         manager = self.setup_manager()
@@ -262,7 +262,7 @@ class TestVersionExtraction:
         version = manager._extract_version(mock_path)
         assert version == "1.2.3"
 
-    @patch("flavor.ingredients.manager.run")
+    @patch("flavor.helpers.manager.run")
     def test_extract_version_failure(self, mock_run: MagicMock) -> None:
         """Test version extraction failure."""
         manager = self.setup_manager()
@@ -277,7 +277,7 @@ class TestVersionExtraction:
         version = manager._extract_version(mock_path)
         assert version is None
 
-    @patch("flavor.ingredients.manager.run")
+    @patch("flavor.helpers.manager.run")
     def test_extract_version_os_error(self, mock_run: MagicMock) -> None:
         """Test version extraction with OS error."""
         manager = self.setup_manager()
@@ -312,15 +312,15 @@ class TestVersionExtraction:
 class TestBuildSourceDetermination:
     """Test build source determination."""
 
-    @patch("flavor.ingredients.manager.ensure_dir")
-    @patch("flavor.ingredients.manager.get_platform_string")
-    @patch("flavor.ingredients.binary_loader.BinaryLoader")
+    @patch("flavor.helpers.manager.ensure_dir")
+    @patch("flavor.helpers.manager.get_platform_string")
+    @patch("flavor.helpers.binary_loader.BinaryLoader")
     def setup_manager(
         self, mock_binary_loader: MagicMock, mock_platform: MagicMock, mock_ensure_dir: MagicMock
-    ) -> IngredientManager:
+    ) -> HelperManager:
         """Create manager instance for testing."""
         mock_platform.return_value = "linux_amd64"
-        return IngredientManager()
+        return HelperManager()
 
     def test_determine_go_source_exists(self) -> None:
         """Test determining Go build source when directory exists."""
@@ -358,12 +358,12 @@ class TestBuildSourceDetermination:
 
 
 @pytest.mark.unit
-class TestIngredientInfo:
-    """Test IngredientInfo dataclass."""
+class TestHelperInfo:
+    """Test HelperInfo dataclass."""
 
-    def test_ingredient_info_creation(self) -> None:
-        """Test creating IngredientInfo object."""
-        info = IngredientInfo(
+    def test_helper_info_creation(self) -> None:
+        """Test creating HelperInfo object."""
+        info = HelperInfo(
             name="flavor-go-launcher",
             path=Path("/path/to/launcher"),
             type="launcher",
@@ -381,9 +381,9 @@ class TestIngredientInfo:
         assert info.checksum == "abcd1234"
         assert info.version == "1.2.3"
 
-    def test_ingredient_info_defaults(self) -> None:
-        """Test IngredientInfo with default values."""
-        info = IngredientInfo(
+    def test_helper_info_defaults(self) -> None:
+        """Test HelperInfo with default values."""
+        info = HelperInfo(
             name="test",
             path=Path("/test"),
             type="launcher",

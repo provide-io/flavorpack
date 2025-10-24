@@ -21,14 +21,14 @@ echo "$NEW_VERSION" > VERSION
 sed -i '' "s/^version = \".*\"/version = \"$NEW_VERSION\"/" pyproject.toml
 
 # Update Go components
-sed -i '' "s/^const version = \".*\"/const version = \"$NEW_VERSION\"/" ingredients/flavor-go/cmd/flavor-go-launcher/main.go
-sed -i '' "s/^const version = \".*\"/const version = \"$NEW_VERSION\"/" ingredients/flavor-go/cmd/flavor-go-builder/main.go
+sed -i '' "s/^const version = \".*\"/const version = \"$NEW_VERSION\"/" helpers/flavor-go/cmd/flavor-go-launcher/main.go
+sed -i '' "s/^const version = \".*\"/const version = \"$NEW_VERSION\"/" helpers/flavor-go/cmd/flavor-go-builder/main.go
 
 # Update Rust components
-sed -i '' "s/version = \".*\"/version = \"$NEW_VERSION\"/" ingredients/flavor-rs/Cargo.toml
+sed -i '' "s/version = \".*\"/version = \"$NEW_VERSION\"/" helpers/flavor-rs/Cargo.toml
 # Use a more precise pattern for Rust const to avoid multiple replacements
-sed -i '' "s/^const VERSION: &str = \".*\";/const VERSION: \&str = \"$NEW_VERSION\";/" ingredients/flavor-rs/src/bin/flavor-rs-builder.rs
-sed -i '' "s/^const VERSION: &str = \".*\";/const VERSION: \&str = \"$NEW_VERSION\";/" ingredients/flavor-rs/src/bin/flavor-rs-launcher.rs
+sed -i '' "s/^const VERSION: &str = \".*\";/const VERSION: \&str = \"$NEW_VERSION\";/" helpers/flavor-rs/src/bin/flavor-rs-builder.rs
+sed -i '' "s/^const VERSION: &str = \".*\";/const VERSION: \&str = \"$NEW_VERSION\";/" helpers/flavor-rs/src/bin/flavor-rs-launcher.rs
 
 # Update pretaster manifest
 sed -i '' "s/\"version\": \".*\"/\"version\": \"$NEW_VERSION\"/" tests/pretaster/pretaster-manifest.json
@@ -42,13 +42,13 @@ echo ""
 echo "Files updated:"
 echo "  - VERSION"
 echo "  - pyproject.toml"
-echo "  - ingredients/flavor-go/cmd/*/main.go"
-echo "  - ingredients/flavor-rs/Cargo.toml"
-echo "  - ingredients/flavor-rs/src/bin/*.rs"
+echo "  - helpers/flavor-go/cmd/*/main.go"
+echo "  - helpers/flavor-rs/Cargo.toml"
+echo "  - helpers/flavor-rs/src/bin/*.rs"
 echo "  - tests/pretaster/pretaster-manifest.json"
 echo "  - tools/build_wheel.py"
 echo ""
 echo "Don't forget to:"
-echo "  1. Run 'cd ingredients/flavor-rs && cargo build' to update Cargo.lock"
+echo "  1. Run 'cd helpers/flavor-rs && cargo build' to update Cargo.lock"
 echo "  2. Commit these changes"
 echo "  3. Tag the release: git tag v$NEW_VERSION"

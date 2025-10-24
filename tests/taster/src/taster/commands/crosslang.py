@@ -11,7 +11,7 @@ import click
 from provide.foundation import logger
 from provide.foundation.process import run as run_command
 
-from flavor.ingredients.manager import IngredientManager as HelperManager
+from flavor.helpers.manager import HelperManager 
 
 
 class CrossLangTester:
@@ -35,43 +35,43 @@ class CrossLangTester:
         logger.debug(
             "Initializing CrossLangTester",
             cwd=str(Path.cwd()),
-            initial_ingredients_bin=str(self.helper_manager.ingredients_bin),
-            initial_ingredients_dir=str(self.helper_manager.ingredients_dir),
+            initial_helpers_bin=str(self.helper_manager.helpers_bin),
+            initial_helpers_dir=str(self.helper_manager.helpers_dir),
         )
 
-        # When running crosslang tests, we need actual ingredient binaries
-        # Look for FLAVOR_INGREDIENTS_DIR environment variable first
-        ingredients_dir = os.environ.get("FLAVOR_INGREDIENTS_DIR")
-        if ingredients_dir:
-            ingredients_path = Path(ingredients_dir)
+        # When running crosslang tests, we need actual helper binaries
+        # Look for FLAVOR_HELPERS_DIR environment variable first
+        helpers_dir = os.environ.get("FLAVOR_HELPERS_DIR")
+        if helpers_dir:
+            helpers_path = Path(helpers_dir)
             logger.debug(
-                "Found FLAVOR_INGREDIENTS_DIR env var",
-                path=ingredients_dir,
-                exists=ingredients_path.exists(),
+                "Found FLAVOR_HELPERS_DIR env var",
+                path=helpers_dir,
+                exists=helpers_path.exists(),
             )
-            if ingredients_path.exists():
-                self.helper_manager.ingredients_bin = ingredients_path / "bin"
-                self.helper_manager.ingredients_dir = ingredients_path
+            if helpers_path.exists():
+                self.helper_manager.helpers_bin = helpers_path / "bin"
+                self.helper_manager.helpers_dir = helpers_path
                 logger.info(
-                    "Using ingredients from FLAVOR_INGREDIENTS_DIR",
-                    ingredients_bin=str(self.helper_manager.ingredients_bin),
-                    ingredients_dir=str(self.helper_manager.ingredients_dir),
+                    "Using helpers from FLAVOR_HELPERS_DIR",
+                    helpers_bin=str(self.helper_manager.helpers_bin),
+                    helpers_dir=str(self.helper_manager.helpers_dir),
                 )
         else:
-            logger.debug("No FLAVOR_INGREDIENTS_DIR env var, searching directory tree")
-            # Try to find ingredients relative to the current working directory
+            logger.debug("No FLAVOR_HELPERS_DIR env var, searching directory tree")
+            # Try to find helpers relative to the current working directory
             # Look up the directory tree for a dist/bin directory
             current = Path.cwd()
             for parent in [current, *current.parents]:
                 dist_bin = parent / "dist" / "bin"
                 logger.trace("Checking for dist/bin", path=str(dist_bin))
                 if dist_bin.exists():
-                    self.helper_manager.ingredients_bin = dist_bin
-                    self.helper_manager.ingredients_dir = parent / "dist"
+                    self.helper_manager.helpers_bin = dist_bin
+                    self.helper_manager.helpers_dir = parent / "dist"
                     logger.info(
-                        "Found ingredients in directory tree",
-                        ingredients_bin=str(dist_bin),
-                        ingredients_dir=str(parent / "dist"),
+                        "Found helpers in directory tree",
+                        helpers_bin=str(dist_bin),
+                        helpers_dir=str(parent / "dist"),
                     )
                     break
             else:
@@ -79,16 +79,16 @@ class CrossLangTester:
 
         # Log final state and contents
         logger.debug(
-            "Final ingredient paths",
-            ingredients_bin=str(self.helper_manager.ingredients_bin),
-            ingredients_dir=str(self.helper_manager.ingredients_dir),
-            bin_exists=self.helper_manager.ingredients_bin.exists(),
+            "Final helper paths",
+            helpers_bin=str(self.helper_manager.helpers_bin),
+            helpers_dir=str(self.helper_manager.helpers_dir),
+            bin_exists=self.helper_manager.helpers_bin.exists(),
         )
 
-        if self.helper_manager.ingredients_bin.exists():
-            files = list(self.helper_manager.ingredients_bin.glob("*"))
+        if self.helper_manager.helpers_bin.exists():
+            files = list(self.helper_manager.helpers_bin.glob("*"))
             logger.debug(
-                "Ingredients bin contents",
+                "Helpers bin contents",
                 file_count=len(files),
                 files=[f.name for f in files],
             )
@@ -392,8 +392,8 @@ entry_point = "crosslang_test:main"
 
         try:
             # Discover all available launchers - filter by platform to avoid cross-platform issues
-            ingredients = self.helper_manager.list_ingredients(platform_filter=True)
-            available_launchers = ingredients.get("launchers", [])
+            helpers = self.helper_manager.list_helpers(platform_filter=True)
+            available_launchers = helpers.get("launchers", [])
 
             # Log current platform for debugging
             current_platform = self.helper_manager.current_platform
@@ -405,11 +405,11 @@ entry_point = "crosslang_test:main"
                     f"   Looking for launchers compatible with: {current_platform}",
                     "error",
                 )
-                # Show all available ingredients for debugging
-                all_ingredients = self.helper_manager.list_ingredients(
+                # Show all available helpers for debugging
+                all_helpers = self.helper_manager.list_helpers(
                     platform_filter=False
                 )
-                all_launchers = all_ingredients.get("launchers", [])
+                all_launchers = all_helpers.get("launchers", [])
                 if all_launchers:
                     self.log(
                         f"   Found {len(all_launchers)} total launchers (all platforms):",

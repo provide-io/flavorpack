@@ -6,7 +6,7 @@ This guide provides comprehensive instructions for setting up the development en
 
 1. [Prerequisites](#prerequisites)
 2. [Environment Setup](#environment-setup)
-3. [Building Ingredients](#building-ingredients)
+3. [Building Helpers](#building-helpers)
 4. [Development Workflow](#development-workflow)
 5. [Testing](#testing)
 6. [Code Quality](#code-quality)
@@ -17,8 +17,8 @@ This guide provides comprehensive instructions for setting up the development en
 
 - **Python 3.11 or higher**
 - **UV package manager**: `curl -LsSf https://astral.sh/uv/install.sh | sh`
-- **Go 1.21+**: For building Go ingredients
-- **Rust 1.75+**: For building Rust ingredients
+- **Go 1.21+**: For building Go helpers
+- **Rust 1.75+**: For building Rust helpers
 - **Git**: For version control
 
 ## Environment Setup
@@ -57,37 +57,37 @@ The project depends on several packages in the parent directory:
 
 These are automatically installed when running `uv sync`.
 
-## Building Ingredients
+## Building Helpers
 
-Flavor Pack's high-performance builders and launchers are written in Go and Rust. Build them after initial setup and whenever you modify ingredient source code.
+Flavor Pack's high-performance builders and launchers are written in Go and Rust. Build them after initial setup and whenever you modify helper source code.
 
-### Build All Ingredients
+### Build All Helpers
 
 ```bash
-# Build Go and Rust ingredients for current platform
-./ingredients/build.sh
+# Build Go and Rust helpers for current platform
+./helpers/build.sh
 ```
 
 ### Manual Build
 
 ```bash
-# Build Go ingredients
-cd ingredients/flavor-go
+# Build Go helpers
+cd helpers/flavor-go
 go build -o ../bin/flavor-go-builder cmd/flavor-go-builder/main.go
 go build -o ../bin/flavor-go-launcher cmd/flavor-go-launcher/main.go
 
-# Build Rust ingredients
-cd ingredients/flavor-rs
+# Build Rust helpers
+cd helpers/flavor-rs
 cargo build --release
 cp target/release/flavor-rs-builder ../bin/
 cp target/release/flavor-rs-launcher ../bin/
 ```
 
-Ingredient binaries are installed to:
-- `ingredients/bin/flavor-go-builder` - Go builder
-- `ingredients/bin/flavor-go-launcher` - Go launcher  
-- `ingredients/bin/flavor-rs-builder` - Rust builder
-- `ingredients/bin/flavor-rs-launcher` - Rust launcher
+Helper binaries are installed to:
+- `helpers/bin/flavor-go-builder` - Go builder
+- `helpers/bin/flavor-go-launcher` - Go launcher  
+- `helpers/bin/flavor-rs-builder` - Rust builder
+- `helpers/bin/flavor-rs-launcher` - Rust launcher
 
 ## Development Workflow
 
@@ -96,10 +96,10 @@ Ingredient binaries are installed to:
 1. **Start your day**:
    ```bash
    uv sync
-   ./ingredients/build.sh  # If ingredients changed
+   ./helpers/build.sh  # If helpers changed
    ```
 
-2. **Make changes**: Edit code in `src/`, `ingredients/`, or `tests/`
+2. **Make changes**: Edit code in `src/`, `helpers/`, or `tests/`
 
 3. **Run tests**:
    ```bash
@@ -137,7 +137,7 @@ Tests are organized with pytest markers:
 - `taster`: Tests using the Taster test suite
 - `slow`: Long-running tests
 - `stress`: Performance and stress tests
-- `requires_ingredients`: Tests that need compiled ingredients
+- `requires_helpers`: Tests that need compiled helpers
 
 ### Running Tests
 
@@ -254,7 +254,7 @@ workenv/flavor_*/bin/flavor pack \
 # Use specific launcher
 workenv/flavor_*/bin/flavor pack \
   --manifest pyproject.toml \
-  --launcher-bin ingredients/bin/flavor-go-launcher \
+  --launcher-bin helpers/bin/flavor-go-launcher \
   --output myapp.psp
 
 # Deterministic build with seed
@@ -277,33 +277,33 @@ workenv/flavor_*/bin/flavor inspect myapp.psp
 workenv/flavor_*/bin/flavor clean --all
 ```
 
-### Ingredient Management
+### Helper Management
 
 ```bash
-# List available ingredients
-workenv/flavor_*/bin/flavor ingredients list
+# List available helpers
+workenv/flavor_*/bin/flavor helpers list
 
-# Build ingredients from Python
-workenv/flavor_*/bin/flavor ingredients build --lang all
+# Build helpers from Python
+workenv/flavor_*/bin/flavor helpers build --lang all
 
-# Test ingredients
-workenv/flavor_*/bin/flavor ingredients test
+# Test helpers
+workenv/flavor_*/bin/flavor helpers test
 
-# Clean ingredient cache
-workenv/flavor_*/bin/flavor ingredients clean --yes
+# Clean helper cache
+workenv/flavor_*/bin/flavor helpers clean --yes
 ```
 
 ## Troubleshooting
 
 ### Common Issues
 
-**Ingredient not found**:
+**Helper not found**:
 ```bash
-# Rebuild ingredients
-./ingredients/build.sh
+# Rebuild helpers
+./helpers/build.sh
 
-# Check ingredient paths
-workenv/flavor_*/bin/flavor ingredients list
+# Check helper paths
+workenv/flavor_*/bin/flavor helpers list
 ```
 
 **Import errors**:
@@ -318,9 +318,9 @@ uv sync
 # Run with verbose output
 workenv/flavor_*/bin/pytest -xvs --tb=short
 
-# Check ingredient versions
-ingredients/bin/flavor-go-launcher --version
-ingredients/bin/flavor-rs-launcher --version
+# Check helper versions
+helpers/bin/flavor-go-launcher --version
+helpers/bin/flavor-rs-launcher --version
 ```
 
 **Package verification fails**:
@@ -378,7 +378,7 @@ Follow conventional commits:
 ### Important Notes
 
 - **ALWAYS use pip3** for wheel operations (never pip or uv pip for wheels)
-- **NEVER add environment-specific logic in ingredients** - they must be generic
+- **NEVER add environment-specific logic in helpers** - they must be generic
 - **Test with Taster first** - if Taster doesn't work, Flavor Pack is broken
 - **Use deterministic builds** for testing (`--key-seed`)
 

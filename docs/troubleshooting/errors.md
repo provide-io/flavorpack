@@ -60,11 +60,11 @@ def main():
 
 **Solution**:
 ```bash
-# Download pre-built ingredients
-flavor ingredients download
+# Download pre-built helpers
+flavor helpers download
 
 # Or build locally
-cd ingredients
+cd helpers
 ./build.sh
 
 # Or specify custom launcher

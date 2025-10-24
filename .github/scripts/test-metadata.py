@@ -243,7 +243,7 @@ def generate_platform_metadata(platform_name: str, version: str, cache_hit: bool
     }
 
     # Check for binaries
-    bin_dir = Path("ingredients/bin")
+    bin_dir = Path("helpers/bin")
     if bin_dir.exists():
         for binary_path in bin_dir.glob(f"*{platform_name}*"):
             if binary_path.is_file():

@@ -1,8 +1,8 @@
-# tests/packaging/test_orchestrator_ingredients_manifests.py
+# tests/packaging/test_orchestrator_helpers_manifests.py
 #
 # SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
-"""Tests for orchestrator_ingredients manifest creation functions."""
+"""Tests for orchestrator_helpers manifest creation functions."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ from unittest.mock import patch
 
 import pytest
 
-from flavor.packaging.orchestrator_ingredients import (
+from flavor.packaging.orchestrator_helpers import (
     create_builder_manifest,
     create_python_builder_metadata,
 )
@@ -21,7 +21,7 @@ from flavor.packaging.orchestrator_ingredients import (
 class TestCreateBuilderManifest:
     """Test create_builder_manifest function."""
 
-    @patch("flavor.packaging.orchestrator_ingredients.is_windows", return_value=False)
+    @patch("flavor.packaging.orchestrator_helpers.is_windows", return_value=False)
     def test_create_builder_manifest_unix_basic(self, mock_is_windows: Path, tmp_path: Path) -> None:
         """Test creating builder manifest on Unix without runtime env."""
 
@@ -51,7 +51,7 @@ class TestCreateBuilderManifest:
         assert "signature" in manifest
         assert "runtime" not in manifest  # No runtime env config
 
-    @patch("flavor.packaging.orchestrator_ingredients.is_windows", return_value=False)
+    @patch("flavor.packaging.orchestrator_helpers.is_windows", return_value=False)
     def test_create_builder_manifest_with_cli_scripts(self, mock_is_windows: Path, tmp_path: Path) -> None:
         """Test creating builder manifest with CLI scripts."""
 
@@ -75,7 +75,7 @@ class TestCreateBuilderManifest:
 
         assert manifest["command"] == "{workenv}/bin/mytool"
 
-    @patch("flavor.packaging.orchestrator_ingredients.is_windows", return_value=False)
+    @patch("flavor.packaging.orchestrator_helpers.is_windows", return_value=False)
     def test_create_builder_manifest_with_runtime_env_unset(
         self, mock_is_windows: Path, tmp_path: Path
     ) -> None:
@@ -112,7 +112,7 @@ class TestCreateBuilderManifest:
         assert "unset" in manifest["runtime"]["env"]
         assert manifest["runtime"]["env"]["unset"] == ["DEBUG", "TEMP_VAR"]
 
-    @patch("flavor.packaging.orchestrator_ingredients.is_windows", return_value=False)
+    @patch("flavor.packaging.orchestrator_helpers.is_windows", return_value=False)
     def test_create_builder_manifest_with_runtime_env_set(self, mock_is_windows: Path, tmp_path: Path) -> None:
         """Test creating builder manifest with runtime env set."""
 
@@ -147,7 +147,7 @@ class TestCreateBuilderManifest:
         assert "set" in manifest["runtime"]["env"]
         assert manifest["runtime"]["env"]["set"] == {"FOO": "bar", "BAZ": "qux"}
 
-    @patch("flavor.packaging.orchestrator_ingredients.is_windows", return_value=False)
+    @patch("flavor.packaging.orchestrator_helpers.is_windows", return_value=False)
     def test_create_builder_manifest_with_runtime_env_pass(
         self, mock_is_windows: Path, tmp_path: Path
     ) -> None:
@@ -184,7 +184,7 @@ class TestCreateBuilderManifest:
         assert "pass" in manifest["runtime"]["env"]
         assert manifest["runtime"]["env"]["pass"] == ["PATH", "HOME"]
 
-    @patch("flavor.packaging.orchestrator_ingredients.is_windows", return_value=False)
+    @patch("flavor.packaging.orchestrator_helpers.is_windows", return_value=False)
     def test_create_builder_manifest_with_runtime_env_map(self, mock_is_windows: Path, tmp_path: Path) -> None:
         """Test creating builder manifest with runtime env map."""
 
@@ -219,7 +219,7 @@ class TestCreateBuilderManifest:
         assert "map" in manifest["runtime"]["env"]
         assert manifest["runtime"]["env"]["map"] == {"OLD_VAR": "NEW_VAR"}
 
-    @patch("flavor.packaging.orchestrator_ingredients.is_windows", return_value=False)
+    @patch("flavor.packaging.orchestrator_helpers.is_windows", return_value=False)
     def test_create_builder_manifest_with_all_runtime_env(self, mock_is_windows: Path, tmp_path: Path) -> None:
         """Test creating builder manifest with all runtime env options."""
 
@@ -260,7 +260,7 @@ class TestCreateBuilderManifest:
         assert "set" in manifest["runtime"]["env"]
         assert "map" in manifest["runtime"]["env"]
 
-    @patch("flavor.packaging.orchestrator_ingredients.is_windows", return_value=False)
+    @patch("flavor.packaging.orchestrator_helpers.is_windows", return_value=False)
     def test_create_builder_manifest_with_empty_runtime_env(
         self, mock_is_windows: Path, tmp_path: Path
     ) -> None:
@@ -303,7 +303,7 @@ class TestCreateBuilderManifest:
 class TestCreatePythonBuilderMetadata:
     """Test create_python_builder_metadata function."""
 
-    @patch("flavor.packaging.orchestrator_ingredients.is_windows", return_value=False)
+    @patch("flavor.packaging.orchestrator_helpers.is_windows", return_value=False)
     def test_create_python_builder_metadata_unix_basic(self, mock_is_windows: Path) -> None:
         """Test creating Python builder metadata on Unix without runtime env."""
 
@@ -321,7 +321,7 @@ class TestCreatePythonBuilderMetadata:
         assert "setup_commands" in metadata
         assert "runtime" not in metadata
 
-    @patch("flavor.packaging.orchestrator_ingredients.is_windows", return_value=False)
+    @patch("flavor.packaging.orchestrator_helpers.is_windows", return_value=False)
     def test_create_python_builder_metadata_with_runtime_env(self, mock_is_windows: Path) -> None:
         """Test creating Python builder metadata with runtime env."""
 
@@ -351,7 +351,7 @@ class TestCreatePythonBuilderMetadata:
         assert metadata["runtime"]["env"]["set"] == {"FOO": "bar"}
         assert metadata["runtime"]["env"]["map"] == {"OLD": "NEW"}
 
-    @patch("flavor.packaging.orchestrator_ingredients.is_windows", return_value=True)
+    @patch("flavor.packaging.orchestrator_helpers.is_windows", return_value=True)
     def test_create_python_builder_metadata_windows(self, mock_is_windows: Path) -> None:
         """Test creating Python builder metadata on Windows."""
 
@@ -366,7 +366,7 @@ class TestCreatePythonBuilderMetadata:
         uv_command = metadata["setup_commands"][0]["command"]
         assert "uv.exe" in uv_command
 
-    @patch("flavor.packaging.orchestrator_ingredients.is_windows", return_value=False)
+    @patch("flavor.packaging.orchestrator_helpers.is_windows", return_value=False)
     def test_create_python_builder_metadata_with_cli_scripts(self, mock_is_windows: Path) -> None:
         """Test creating Python builder metadata with CLI scripts."""
 

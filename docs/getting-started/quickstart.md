@@ -34,11 +34,11 @@ uv pip install -e .
 FlavorPack uses native Go and Rust components for optimal performance:
 
 ```bash
-# Build all ingredients (launchers and builders)
-make build-ingredients
+# Build all helpers (launchers and builders)
+make build-helpers
 
 # Or build individually
-cd ingredients
+cd helpers
 ./build.sh
 ```
 

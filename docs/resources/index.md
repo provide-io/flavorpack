@@ -43,7 +43,7 @@ Resources for contributors and developers.
 ### Getting Involved
 - [Contributing](../development/contributing.md) - How to contribute to FlavorPack
 - [Architecture](../development/architecture.md) - System design and components
-- [Building Ingredients](../development/ingredients.md) - Native component development
+- [Building Helpers](../development/helpers.md) - Native component development
 
 ### Testing
 - [Testing Guide](../development/testing/index.md) - Testing strategy

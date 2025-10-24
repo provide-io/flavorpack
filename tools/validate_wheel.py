@@ -16,8 +16,8 @@ def get_wheel_metadata(wheel_path: Path) -> dict:
         "size_mb": wheel_path.stat().st_size / (1024 * 1024),
         "platform": "unknown",
         "python_version": "unknown",
-        "has_ingredients": False,
-        "ingredients": [],
+        "has_helpers": False,
+        "helpers": [],
         "file_count": 0,
     }
 
@@ -32,26 +32,26 @@ def get_wheel_metadata(wheel_path: Path) -> dict:
         files = whl.namelist()
         metadata["file_count"] = len(files)
 
-        # Check for ingredients - look in ingredients/bin directory
-        ingredient_files = [
+        # Check for helpers - look in helpers/bin directory
+        helper_files = [
             f
             for f in files
-            if "flavor/ingredients/bin/" in f
+            if "flavor/helpers/bin/" in f
             and not f.endswith(".py")
             and not f.endswith("/")
             and "__pycache__" not in f
         ]
 
-        if ingredient_files:
-            metadata["has_ingredients"] = True
-            metadata["ingredients"] = [Path(f).name for f in ingredient_files]
+        if helper_files:
+            metadata["has_helpers"] = True
+            metadata["helpers"] = [Path(f).name for f in helper_files]
 
     return metadata
 
 
-def validate_ingredients(wheel_path: Path) -> tuple[bool, list[str]]:
+def validate_helpers(wheel_path: Path) -> tuple[bool, list[str]]:
     """
-    Validate that ingredients in the wheel are executable.
+    Validate that helpers in the wheel are executable.
 
     Returns:
         (success, messages) tuple
@@ -64,13 +64,13 @@ def validate_ingredients(wheel_path: Path) -> tuple[bool, list[str]]:
         with zipfile.ZipFile(wheel_path, "r") as whl:
             whl.extractall(tmpdir)
 
-        # Find ingredients - look in ingredients/bin directory
-        ingredients_dir = Path(tmpdir) / "flavor" / "ingredients" / "bin"
-        if not ingredients_dir.exists():
-            messages.append("  ⚠️  No ingredients directory found")
+        # Find helpers - look in helpers/bin directory
+        helpers_dir = Path(tmpdir) / "flavor" / "helpers" / "bin"
+        if not helpers_dir.exists():
+            messages.append("  ⚠️  No helpers directory found")
             return True, messages  # Not an error for universal wheels
 
-        # Expected ingredients
+        # Expected helpers
         expected = [
             "flavor-go-builder",
             "flavor-go-launcher",
@@ -78,31 +78,31 @@ def validate_ingredients(wheel_path: Path) -> tuple[bool, list[str]]:
             "flavor-rs-launcher",
         ]
 
-        for ingredient in expected:
-            ingredient_path = ingredients_dir / ingredient
-            if not ingredient_path.exists():
+        for helper in expected:
+            helper_path = helpers_dir / helper
+            if not helper_path.exists():
                 # Check with .exe extension
-                ingredient_path = ingredients_dir / f"{ingredient}.exe"
+                helper_path = helpers_dir / f"{helper}.exe"
 
-            if ingredient_path.exists():
+            if helper_path.exists():
                 # Check if executable
-                if not ingredient_path.is_file():
-                    messages.append(f"  ❌ {ingredient} is not a file")
+                if not helper_path.is_file():
+                    messages.append(f"  ❌ {helper} is not a file")
                     success = False
                 else:
-                    size_kb = ingredient_path.stat().st_size / 1024
-                    messages.append(f"  ✓ {ingredient} ({size_kb:.0f} KB)")
+                    size_kb = helper_path.stat().st_size / 1024
+                    messages.append(f"  ✓ {helper} ({size_kb:.0f} KB)")
 
                     # Make executable first
                     try:
-                        ingredient_path.chmod(0o755)
+                        helper_path.chmod(0o755)
                     except:
                         pass
 
                     # Try to execute with --version
                     try:
                         result = subprocess.run(
-                            [str(ingredient_path), "--version"],
+                            [str(helper_path), "--version"],
                             capture_output=True,
                             text=True,
                             timeout=5,
@@ -115,7 +115,7 @@ def validate_ingredients(wheel_path: Path) -> tuple[bool, list[str]]:
                     except Exception as e:
                         messages.append(f"    ⚠️  Cannot execute: {e}")
             else:
-                messages.append(f"  ❌ {ingredient} not found")
+                messages.append(f"  ❌ {helper} not found")
                 success = False
 
     return success, messages
@@ -186,18 +186,18 @@ try:
     from flavor.cli import main
     pout("✅ CLI import successful")
 
-    # Test ingredients manager if available
+    # Test helpers manager if available
     try:
-        from flavor.ingredients.manager import IngredientManager
-        manager = IngredientManager()
-        ingredients = manager.list_ingredients()
-        total_ingredients = len(ingredients.get('launchers', [])) + len(ingredients.get('builders', []))
-        if total_ingredients > 0:
-            pout(f"✅ Found {total_ingredients} ingredients")
+        from flavor.helpers.manager import HelperManager
+        manager = HelperManager()
+        helpers = manager.list_helpers()
+        total_helpers = len(helpers.get('launchers', [])) + len(helpers.get('builders', []))
+        if total_helpers > 0:
+            pout(f"✅ Found {total_helpers} helpers")
         else:
-            pout("ℹ️ No embedded ingredients (universal wheel)")
+            pout("ℹ️ No embedded helpers (universal wheel)")
     except Exception as e:
-        perr(f"⚠️ Ingredients test: {e}")
+        perr(f"⚠️ Helpers test: {e}")
 
     # Test config system
     try:
@@ -259,14 +259,14 @@ def validate_wheel(wheel_path: Path, full: bool = False) -> bool:
     print(f"  Platform: {metadata['platform']}")
     print(f"  Python: {metadata['python_version']}")
     print(f"  Files: {metadata['file_count']}")
-    print(f"  Has ingredients: {metadata['has_ingredients']}")
+    print(f"  Has helpers: {metadata['has_helpers']}")
 
     all_valid = True
 
-    # Validate ingredients
-    if metadata["has_ingredients"]:
-        print("\n🔧 Validating ingredients:")
-        success, messages = validate_ingredients(wheel_path)
+    # Validate helpers
+    if metadata["has_helpers"]:
+        print("\n🔧 Validating helpers:")
+        success, messages = validate_helpers(wheel_path)
         for msg in messages:
             print(msg)
         if not success:

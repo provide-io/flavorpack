@@ -15,7 +15,7 @@ echo "=========================================================="
 echo ""
 
 # Get helpers directory
-HELPERS_DIR="$(cd "$SCRIPT_DIR/../../../ingredients" && pwd)"
+HELPERS_DIR="$(cd "$SCRIPT_DIR/../../../helpers" && pwd)"
 BIN_DIR="$HELPERS_DIR/bin"
 
 # Test function
