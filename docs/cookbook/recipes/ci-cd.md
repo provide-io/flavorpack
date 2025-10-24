@@ -214,9 +214,10 @@ strategy:
 
 - name: Package with Version
   run: |
+    VERSION=$(cat VERSION)
     flavor pack \
       --manifest pyproject.toml \
-      --output myapp-v${{ steps.version.outputs.VERSION }}.psp
+      --output myapp-v${VERSION}.psp
 ```
 
 ### 5. **Security Scanning**

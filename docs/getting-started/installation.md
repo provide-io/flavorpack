@@ -1,6 +1,9 @@
 # Installation
 
-FlavorPack can be installed in multiple ways depending on your needs. Choose the method that best suits your environment.
+!!! warning "Alpha Release - Source Installation Only"
+    FlavorPack v0.0.1023 is in early alpha. PyPI packages and pre-built binaries are not yet available. **Install from source only.**
+
+FlavorPack can be installed from source. Future releases will support additional installation methods.
 
 ## System Requirements
 
@@ -79,45 +82,29 @@ Best for developers who want the latest features and ability to build custom hel
     flavor --version
     ```
 
-### Method 2: Using pip (Coming Soon)
+### Method 2: Using pip
 
-For users who want a simple installation without building from source.
+!!! info "Planned for v0.1.0"
+    PyPI installation is planned for the v0.1.0 release. Currently unavailable.
 
-```bash
-# Install from PyPI
-pip install flavorpack
+    **When available**, installation will be:
+    ```bash
+    pip install flavorpack
+    flavor helpers download
+    ```
 
-# Download pre-built helpers
-flavor helpers download
-
-# Verify installation
-flavor --version
-```
-
-!!! warning "Limited Availability"
-    PyPI packages are not yet available. This option will be available in a future release.
+    For now, please use source installation (Method 1 above).
 
 ### Method 3: Using Docker
 
-For users who prefer containerized environments or CI/CD pipelines.
+!!! info "Planned for v0.1.0"
+    Official Docker images are planned for v0.1.0 release.
 
-```bash
-# Pull the official image
-docker pull ghcr.io/provide-io/flavorpack:latest
-
-# Run interactively
-docker run -it --rm \
-  -v $(pwd):/workspace \
-  ghcr.io/provide-io/flavorpack:latest \
-  bash
-
-# Or run a command directly
-docker run --rm \
-  -v $(pwd):/workspace \
-  ghcr.io/provide-io/flavorpack:latest \
-  flavor pack --manifest /workspace/pyproject.toml \
-  --output /workspace/myapp.psp
-```
+    **When available**, you'll be able to use:
+    ```bash
+    docker pull ghcr.io/provide-io/flavorpack:latest
+    docker run -it ghcr.io/provide-io/flavorpack:latest flavor --help
+    ```
 
 ### Method 4: Development Container
 

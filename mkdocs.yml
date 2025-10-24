@@ -92,10 +92,25 @@ plugins:
   - macros:
       include_dir: docs/.shared-theme/data
 
-  # mkdocstrings disabled due to hang with flavorpack's complex import structure
-  # API documentation will be generated manually to avoid import loops
+  - mkdocstrings:
+      enabled: true
+      default_handler: python
+      handlers:
+        python:
+          options:
+            show_source: true
+            show_root_heading: true
+            show_root_toc_entry: true
+            show_category_heading: true
+            heading_level: 2
+            members_order: source
+            docstring_style: google
+            docstring_section_style: table
+            merge_init_into_class: true
+            show_signature_annotations: true
+            separate_signature: true
 
-  # gen-files disabled - gen_ref_pages.py causes hangs by importing flavorpack modules
+  # gen-files disabled - not needed for manual API pages
   # - gen-files:
   #     scripts:
   #       - docs/gen_ref_pages.py

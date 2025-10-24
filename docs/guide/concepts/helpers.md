@@ -18,8 +18,8 @@ Create PSPF packages from prepared slots:
 
 | Helper | Language | Size | Performance |
 |--------|----------|------|-------------|
-| `flavor-go-builder` | Go | ~5 MB | Fast |
-| `flavor-rs-builder` | Rust | ~3 MB | Fastest |
+| `flavor-go-builder` | Go | ~3-4 MB | Fast |
+| `flavor-rs-builder` | Rust | ~1 MB | Fastest |
 
 ### Launchers
 
@@ -27,8 +27,12 @@ Embedded executables that extract and run packages:
 
 | Helper | Language | Size | Memory |
 |--------|----------|------|--------|
-| `flavor-go-launcher` | Go | ~3 MB | Low |
-| `flavor-rs-launcher` | Rust | ~2 MB | Lowest |
+| `flavor-go-launcher` | Go | ~3-4 MB | Low |
+| `flavor-rs-launcher` | Rust | ~1 MB | Lowest |
+
+!!! note "Platform Variations"
+    Binary sizes vary by platform and build configuration. Sizes shown are for darwin_arm64.
+    Linux static binaries may be larger. Use `ls -lh dist/bin/` to see actual sizes for your platform.
 
 ## Platform Support
 
