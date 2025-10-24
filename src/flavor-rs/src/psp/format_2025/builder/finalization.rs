@@ -90,6 +90,13 @@ pub(super) fn stream_slot_data(
     trace!("📦 Streaming slot data to output");
 
     for (i, (descriptor, slot_path)) in descriptors.iter_mut().zip(slot_paths).enumerate() {
+        // Skip empty paths (self-referential slots)
+        if slot_path.as_os_str().is_empty() {
+            debug!("⏭️  Skipping slot {} (self-referential, no data)", i);
+            descriptor.offset = 0;  // No offset for self-ref slots
+            continue;
+        }
+
         // Align position
         let current = out.stream_position()?;
         let aligned = align_offset(current, SLOT_ALIGNMENT);
