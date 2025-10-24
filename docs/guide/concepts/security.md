@@ -448,6 +448,6 @@ Working towards:
 ## Related Documentation
 
 - [Cryptographic Specification](../../spec/crypto.md) - Technical crypto details
-- [Package Format](../../spec/pspf-2025.md) - Binary security features
-- [CLI Reference](../../api/python/cli.md#verify) - Verification commands
+- [Package Format](../../reference/spec/fep-0001-core-format-and-operation-chains.md) - Binary security features
+- [CLI Reference](../../api/cli.md#verify) - Verification commands
 - [Troubleshooting](../../troubleshooting/security.md) - Security issues

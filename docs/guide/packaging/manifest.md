@@ -610,4 +610,4 @@ optional = true
 - [Python Packaging](python.md) - Python-specific features
 - [Package Signing](signing.md) - Security configuration
 - [Slots](../../spec/slots.md) - Slot system specification
-- [API Reference](../../api/python/index.md) - Python API
+- [API Reference](../../api/index.md) - Python API

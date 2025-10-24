@@ -386,5 +386,5 @@ with ThreadPoolExecutor(max_workers=4) as executor:
 
 - [Slots](../../spec/slots.md) - Slot system specification
 - [Package Structure](package-structure.md) - Package organization
-- [CLI Reference](../../api/python/cli.md) - Command-line interface
+- [CLI Reference](../../api/cli.md) - Command-line interface
 - [Troubleshooting](../../troubleshooting/index.md) - Common issues

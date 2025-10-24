@@ -52,14 +52,54 @@ dist/bin/
 
 ## Helper Selection
 
-FlavorPack automatically selects appropriate helpers:
+FlavorPack automatically selects appropriate helpers based on platform and availability.
 
-```python
+### Automatic Selection
+
+```bash
 # Auto-select based on platform
-flavor pack  # Uses best available helper
+flavor pack  # Uses best available helper for current platform
 
-# Force specific helper
+# Example: On macOS ARM64, selects:
+# - Builder: flavor-rs-builder-darwin_arm64 (if available, else flavor-go-builder-darwin_arm64)
+# - Launcher: flavor-rs-launcher-darwin_arm64 (if available, else flavor-go-launcher-darwin_arm64)
+```
+
+### Selection Priority
+
+The orchestrator selects helpers in this order:
+
+1. **User-specified** via `--launcher-bin` or `--builder-bin` flags
+2. **Rust helpers** for current platform (preferred for size)
+3. **Go helpers** for current platform (fallback)
+4. **Error** if no compatible helper found
+
+### Manual Selection
+
+```bash
+# Force specific launcher
 flavor pack --launcher-bin dist/bin/flavor-rs-launcher-linux_amd64
+
+# Force specific builder
+flavor pack --builder-bin dist/bin/flavor-go-builder-linux_amd64
+
+# Force both
+flavor pack \
+  --launcher-bin dist/bin/flavor-rs-launcher-darwin_arm64 \
+  --builder-bin dist/bin/flavor-rs-builder-darwin_arm64
+```
+
+### Cross-Platform Builds
+
+To create packages for a different platform:
+
+```bash
+# Build Linux package on macOS (requires Linux launcher)
+flavor pack \
+  --launcher-bin dist/bin/flavor-rs-launcher-linux_amd64 \
+  --output myapp-linux.psp
+
+# The Python build still works, only the launcher differs
 ```
 
 ## Building Helpers
@@ -75,8 +115,115 @@ cd src/flavor-go && go build ./...
 cd src/flavor-rust && cargo build --release
 ```
 
+## Binary Linking Strategy
+
+Understanding how helpers are linked is critical for cross-platform compatibility.
+
+### Linux: Static Linking (musl)
+
+All Linux binaries are built as **static executables** using musl libc:
+
+**Go Helpers:**
+```bash
+CGO_ENABLED=0 go build -ldflags="-s -w" ./cmd/flavor-go-launcher
+```
+
+**Rust Helpers:**
+```bash
+cargo build --release --target x86_64-unknown-linux-musl
+```
+
+**Why Static Linking?**
+- ✅ Works on any Linux distribution (CentOS 7+, Ubuntu, Alpine, etc.)
+- ✅ No glibc version dependencies
+- ✅ No runtime library conflicts
+- ✅ Smaller deployment footprint
+- ⚠️ Slightly larger binary size (~1-2 MB more)
+
+### macOS: Dynamic Linking
+
+macOS helpers use dynamic linking to system libraries:
+
+- Links to system `/usr/lib/libSystem.dylib`
+- Compatible with macOS 11+ (Big Sur and later)
+- Universal binaries support both Intel and Apple Silicon
+
+### Windows: Dynamic Linking
+
+Windows helpers link dynamically to Windows system DLLs:
+
+- Requires Windows 10 or later
+- Standard MSVC runtime libraries
+- No additional dependencies needed
+
+## Platform Compatibility Matrix
+
+| Platform | Architecture | Binary Type | Min OS Version | Notes |
+|----------|-------------|-------------|----------------|-------|
+| Linux | x86_64 (amd64) | Static (musl) | CentOS 7+ | Universal compatibility |
+| Linux | aarch64 (arm64) | Static (musl) | - | ARM64 servers |
+| macOS | x86_64 | Dynamic | macOS 11+ | Intel Macs |
+| macOS | arm64 | Dynamic | macOS 11+ | Apple Silicon |
+| Windows | x86_64 | Dynamic | Windows 10+ | 64-bit only |
+
+## Helper Embedding
+
+When you create a package, the launcher binary is embedded directly:
+
+```
+myapp.psp structure:
+┌─────────────────────┐
+│ Launcher Binary     │ ← Embedded helper (1-5 MB)
+├─────────────────────┤
+│ Index Block         │
+├─────────────────────┤
+│ Metadata + Slots    │
+└─────────────────────┘
+```
+
+This means:
+- **Package size** includes launcher (~1-5 MB base overhead)
+- **No external dependencies** required to run the package
+- **Platform-specific** - Linux packages need Linux launchers
+
+## Troubleshooting
+
+### "helper binary not found"
+
+```bash
+# Check available helpers
+flavor helpers list
+
+# If none found, build them
+make build-helpers
+
+# Or build specific language
+make build-go-helpers
+make build-rust-helpers
+```
+
+### "cannot execute binary file"
+
+Platform mismatch - you're trying to run a Linux package on macOS (or vice versa).
+
+**Solution**: Build platform-specific packages:
+```bash
+# For Linux
+flavor pack --launcher-bin dist/bin/flavor-rs-launcher-linux_amd64
+
+# For macOS
+flavor pack --launcher-bin dist/bin/flavor-rs-launcher-darwin_arm64
+```
+
+### "version GLIBC_X.XX not found" (Linux)
+
+You're using a dynamically-linked binary instead of the static musl binary.
+
+**Solution**: Use the properly built static binaries from `make build-helpers`, which uses musl.
+
 ## See Also
 
-- [Cross-Language Support](../advanced/cross-language.md)
-- [Architecture](../../development/architecture.md)
-- [Building Helpers](../../development/helpers.md)
+- [Cross-Language Support](../advanced/cross-language.md) - How Python, Go, and Rust work together
+- [Architecture](../../development/architecture.md) - Overall system design
+- [Building Helpers](../../development/helpers.md) - Development guide for helpers
+- [Platform Support](../packaging/platforms.md) - Platform-specific packaging guides

@@ -459,7 +459,7 @@ PIP_INDEX_URL=file:///path/to/pip-cache flavor pack
 
 ## Next Steps
 
-- Review the [API Reference](../../api/python/index.md) for detailed function documentation
-- Check the [CLI Reference](../../api/python/cli.md) for all command options
-- Read the [Package Format Specification](../../spec/pspf-2025.md) for technical details
+- Review the [API Reference](../../api/index.md) for detailed function documentation
+- Check the [CLI Reference](../../api/cli.md) for all command options
+- Read the [Package Format Specification](../../reference/spec/fep-0001-core-format-and-operation-chains.md) for technical details
 - See [Troubleshooting Guide](../../troubleshooting/common.md) for common issues
