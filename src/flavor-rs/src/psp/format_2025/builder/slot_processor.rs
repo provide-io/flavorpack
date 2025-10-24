@@ -14,6 +14,18 @@ use std::io::{BufReader, Read};
 use std::path::{Path, PathBuf};
 use std::time::Instant;
 
+/// Self-referential slot markers
+const SELF_REF_MARKERS: &[&str] = &["$SELF", "$LAUNCHER", "$CURRENT"];
+
+/// Check if a slot is self-referential
+///
+/// A slot is self-referential if its source field contains a special marker
+/// ($SELF, $LAUNCHER, or $CURRENT), indicating it references the launcher
+/// itself rather than packaged data.
+fn is_self_referential(source: &str) -> bool {
+    SELF_REF_MARKERS.contains(&source)
+}
+
 /// Process and validate slot data
 pub(super) struct SlotProcessor {
     pub(super) manifest_slots: Vec<ManifestSlot>,
@@ -55,6 +67,54 @@ impl SlotProcessor {
                 }
             }
 
+            // Check if this is a self-referential slot
+            if is_self_referential(&slot.source) {
+                info!("✨ Slot {} is self-referential ({}), skipping packaging", i, slot.source);
+
+                // Create metadata for self-ref slot (no actual data)
+                let slot_meta = SlotMetadata {
+                    index: i,
+                    id: slot.id.clone(),
+                    source: slot.source.clone(),
+                    target: slot.target.clone(),
+                    size: 0,  // No data to package
+                    checksum: String::new(),  // No checksum needed
+                    operations: String::new(),  // No operations
+                    purpose: slot.purpose.clone(),
+                    lifecycle: slot.lifecycle.clone(),
+                    permissions: slot.permissions.clone().or_else(|| Some(format!("{:04o}", DEFAULT_FILE_PERMS))),
+                    resolution: slot.resolution.clone().or_else(|| Some("build".to_string())),
+                    self_ref: Some(true),  // Mark as self-referential
+                };
+                self.metadata_slots.push(slot_meta);
+
+                // Create empty descriptor (size=0, no operations)
+                let descriptor = SlotDescriptor {
+                    id: i as u64,
+                    name_hash: 0,
+                    offset: 0,  // Will be set during finalization
+                    size: 0,  // No data for self-ref slot
+                    original_size: 0,
+                    operations: 0,  // No operations
+                    checksum: 0,
+                    purpose: 0,
+                    lifecycle: 0,
+                    priority: 0,
+                    platform: 0,
+                    reserved1: 0,
+                    reserved2: 0,
+                    permissions: 0,
+                    permissions_high: 0,
+                };
+                self.slot_descriptors.push(descriptor);
+
+                // Add empty path (no file to stream)
+                self.slot_paths.push(PathBuf::new());
+
+                continue;  // Skip normal processing
+            }
+
+            // Normal slot processing (non-self-ref)
             // Resolve slot path
             let slot_path = self.resolve_slot_path(&slot.source)?;
 
@@ -74,6 +134,7 @@ impl SlotProcessor {
                 lifecycle: slot.lifecycle.clone(),
                 permissions: slot.permissions.clone().or_else(|| Some(format!("{:04o}", DEFAULT_FILE_PERMS))),
                 resolution: slot.resolution.clone().or_else(|| Some("build".to_string())),
+                self_ref: None,  // Normal slot, not self-referential
             };
             self.metadata_slots.push(slot_meta);
 
