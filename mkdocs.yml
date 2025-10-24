@@ -213,14 +213,14 @@ nav:
   # SECTION 2: User Guide (concepts and how-to)
   - User Guide:
     - Overview: guide/index.md
-    
+
     - Core Concepts:
       - guide/concepts/index.md
       - PSPF Format: guide/concepts/pspf-format.md
       - Package Structure: guide/concepts/package-structure.md
       - Work Environments: guide/concepts/workenv.md
       - Security Model: guide/concepts/security.md
-    
+
     - Building Packages:
       - guide/packaging/index.md
       - Python Applications: guide/packaging/python.md
@@ -228,6 +228,10 @@ nav:
       - Configuration: guide/packaging/configuration.md
       - Signing Packages: guide/packaging/signing.md
       - Platform Support: guide/packaging/platforms.md
+
+    - Foundry Integration:
+      - wrknv: guide/integration/wrknv.md
+      - pyvider: guide/integration/pyvider.md
     
     - Using Packages:
       - guide/usage/index.md
@@ -256,17 +260,11 @@ nav:
       - cookbook/examples/index.md
       - CLI Tools: cookbook/examples/cli-tool.md
       - Web Applications: cookbook/examples/web-app.md
-      - Data Pipelines: cookbook/examples/data-pipeline.md
-      - Microservices: cookbook/examples/microservices.md
-      - Machine Learning: cookbook/examples/ml-models.md
-    
+
     - Recipes:
       - cookbook/recipes/index.md
       - Docker Integration: cookbook/recipes/docker.md
       - CI/CD Pipelines: cookbook/recipes/ci-cd.md
-      - Multi-Platform Builds: cookbook/recipes/multi-platform.md
-      - Cloud Deployment: cookbook/recipes/cloud.md
-      - Testing Strategies: cookbook/recipes/testing.md
   
   # SECTION 5: Reference (specs, troubleshooting, development)
   - Reference:
