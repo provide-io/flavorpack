@@ -109,17 +109,51 @@ The launcher is a platform-specific executable that:
 - **Manages** the work environment cache
 - **Executes** the packaged application
 
+#### Launcher Flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Launcher as Launcher Binary
+    participant Index as Index Block
+    participant Cache as Work Environment Cache
+    participant App as Application
+
+    User->>Launcher: Execute ./myapp.psp
+    Launcher->>Launcher: Read own binary location
+    Launcher->>Index: Seek to Index Block
+    Index-->>Launcher: Return metadata & offsets
+
+    Launcher->>Cache: Check cache (SHA-256 ID)
+
+    alt Cache exists & valid
+        Cache-->>Launcher: Cache valid
+        Launcher->>Launcher: Use cached workenv
+    else Cache invalid or missing
+        Cache-->>Launcher: Cache invalid
+        Launcher->>Launcher: Extract all slots
+        Launcher->>Cache: Create new workenv
+        Cache-->>Launcher: Workenv ready
+    end
+
+    Launcher->>Launcher: Set FLAVOR_* env vars
+    Launcher->>App: Execute application command
+    App->>App: Run application logic
+    App-->>Launcher: Exit with code
+    Launcher-->>User: Return exit code
+```
+
 === "Go Launcher"
     ```go
     // Lightweight and fast
-    // ~2 MB binary size
+    // ~3-4 MB binary size
     // Cross-platform support
     ```
 
 === "Rust Launcher"
     ```rust
     // Memory-safe and efficient
-    // ~3 MB binary size
+    // ~1 MB binary size
     // Optimal performance
     ```
 

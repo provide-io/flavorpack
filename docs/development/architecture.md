@@ -169,6 +169,66 @@ Key modules:
 
 ## Build Pipeline
 
+### Build Flow Diagram
+
+```mermaid
+flowchart TD
+    Start([flavor pack]) --> ReadManifest[Read pyproject.toml]
+    ReadManifest --> ValidateManifest{Validate<br/>Manifest}
+    ValidateManifest -->|Invalid| Error1[Error: Invalid Manifest]
+    ValidateManifest -->|Valid| CreateVenv[Create Virtual Environment]
+
+    CreateVenv --> InstallDeps[Install Dependencies]
+    InstallDeps --> CreateSlots[Create Slot Archives]
+
+    subgraph "Slot Creation"
+        CreateSlots --> Slot0[Slot 0: Python Runtime<br/>tar + gzip]
+        CreateSlots --> Slot1[Slot 1: Application Code<br/>tar + gzip]
+        CreateSlots --> SlotN[Slot N: Resources<br/>tar + gzip]
+    end
+
+    Slot0 --> SelectHelper{Select<br/>Helper}
+    Slot1 --> SelectHelper
+    SlotN --> SelectHelper
+
+    SelectHelper -->|Available| GoBuilder[flavor-go-builder]
+    SelectHelper -->|Available| RsBuilder[flavor-rs-builder]
+    SelectHelper -->|None| Error2[Error: No Builder Found]
+
+    GoBuilder --> BuildManifest[Generate Builder Manifest JSON]
+    RsBuilder --> BuildManifest
+
+    BuildManifest --> InvokeBuilder[Invoke Native Builder]
+    InvokeBuilder --> AssemblePkg[Assemble PSPF Package]
+
+    AssemblePkg --> SignPkg{Sign<br/>Package?}
+    SignPkg -->|Yes| GenKeys[Generate/Load Ed25519 Keys]
+    SignPkg -->|No| WriteOutput
+
+    GenKeys --> Sign[Sign Package]
+    Sign --> EmbedSig[Embed Signature in Index]
+    EmbedSig --> WriteOutput[Write Output File]
+
+    WriteOutput --> Verify{Verify<br/>Package?}
+    Verify -->|Yes| RunVerify[Run flavor verify]
+    Verify -->|No| Done
+    RunVerify --> CheckSig{Signature<br/>Valid?}
+    CheckSig -->|Yes| Done([✅ Package Built])
+    CheckSig -->|No| Error3[Error: Verification Failed]
+
+    Error1 --> Failed([❌ Build Failed])
+    Error2 --> Failed
+    Error3 --> Failed
+
+    style Start fill:#e1f5ff
+    style Done fill:#c8e6c9
+    style Failed fill:#ffcdd2
+    style GoBuilder fill:#fff9c4
+    style RsBuilder fill:#ffe0b2
+```
+
+### Build Steps Detail
+
 ### Step 1: Manifest Processing
 ```python
 manifest = read_manifest("pyproject.toml")
@@ -227,6 +287,65 @@ Every PSPF package includes:
 - Always test packages with proper validation levels
 - Use deterministic builds for audit trails
 - Never commit keys or secrets
+
+## Runtime Execution Flow
+
+### Package Execution Diagram
+
+```mermaid
+flowchart TD
+    Start([./myapp.psp]) --> LauncherStart[Launcher Starts]
+    LauncherStart --> ReadTrailer[Read Magic Trailer 📦🪄]
+    ReadTrailer --> ValidTrailer{Trailer<br/>Valid?}
+    ValidTrailer -->|No| Error1[Error: Invalid Package]
+    ValidTrailer -->|Yes| ReadIndex[Read Index Block]
+
+    ReadIndex --> ParseIndex[Parse Index Metadata]
+    ParseIndex --> CalcID[Calculate Package ID<br/>SHA-256 checksum]
+    CalcID --> CheckCache{Cache<br/>Exists?}
+
+    CheckCache -->|Yes| ValidateCache[Validate Cache Checksum]
+    CheckCache -->|No| ExtractPkg
+
+    ValidateCache --> CacheValid{Cache<br/>Valid?}
+    CacheValid -->|Yes| UseCached[Use Cached Workenv]
+    CacheValid -->|No| RemoveCache[Remove Invalid Cache]
+    RemoveCache --> ExtractPkg
+
+    ExtractPkg[Extract Package] --> CreateWorkenv[Create Work Environment]
+    CreateWorkenv --> ExtractSlots[Extract All Slots]
+
+    subgraph "Slot Extraction"
+        ExtractSlots --> ExtractSlot0[Extract Slot 0<br/>Python Runtime]
+        ExtractSlots --> ExtractSlot1[Extract Slot 1<br/>Application Code]
+        ExtractSlots --> ExtractSlotN[Extract Slot N<br/>Resources]
+    end
+
+    ExtractSlot0 --> MarkComplete[Mark Extraction Complete]
+    ExtractSlot1 --> MarkComplete
+    ExtractSlotN --> MarkComplete
+
+    MarkComplete --> UseCached
+    UseCached --> SetupEnv[Setup Environment Variables]
+
+    SetupEnv --> LoadMeta[Load Package Metadata]
+    LoadMeta --> ParseCmd[Parse Execution Command]
+    ParseCmd --> SetVars[Set FLAVOR_* Variables]
+
+    SetVars --> ExecApp[Execute Application]
+    ExecApp --> AppRuns[Application Running]
+    AppRuns --> AppExit{App<br/>Exit}
+    AppExit --> Cleanup[Cleanup Resources]
+    Cleanup --> Done([Exit with App Exit Code])
+
+    Error1 --> Failed([❌ Failed])
+
+    style Start fill:#e1f5ff
+    style Done fill:#c8e6c9
+    style Failed fill:#ffcdd2
+    style UseCached fill:#fff9c4
+    style ExtractPkg fill:#ffe0b2
+```
 
 ## Helper System
 
