@@ -80,7 +80,7 @@ func BuildWithLogLevel(manifestPath, outputPath, launcherBin, privateKeyPath, pu
 	})
 
 	// Log startup messages
-	logger.Info("🐹🐹🐹 Hello from Flavor's PSPF Builder 🐹🐹🐹")
+	logger.Info("🐹🐹🐹 Hello from Flavor's Go Builder 🐹🐹🐹")
 	logger.Debug("Log level", "level", actualLevel, "source", logSource)
 	logger.Info("PSPF Go Builder starting...")
 
@@ -399,9 +399,9 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 	out.Read(compressedData)
 	out.Seek(savedPos, 0)
 
-	metadataChecksum := adler32.Checksum(compressedData)
-	// Store as 4 bytes in the 32-byte field
-	binary.LittleEndian.PutUint32(index.MetadataChecksum[:4], metadataChecksum)
+	// Compute full SHA-256 checksum (32 bytes)
+	metadataHash := sha256.Sum256(compressedData)
+	copy(index.MetadataChecksum[:], metadataHash[:])
 
 	// Update package size before writing MagicTrailer
 	// (add 8200 for the trailer that will be written)

@@ -3,11 +3,10 @@ package format_2025
 import (
 	"bytes"
 	"compress/gzip"
-	"encoding/binary"
+	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"hash/adler32"
 	"io"
 	"os"
 
@@ -206,10 +205,9 @@ func (r *Reader) ReadMetadataArchive() ([]byte, error) {
 		return nil, err
 	}
 
-	// Verify checksum (Adler-32 stored in first 4 bytes)
-	expectedChecksum := binary.LittleEndian.Uint32(index.MetadataChecksum[:4])
-	actualChecksum := adler32.Checksum(metadataData)
-	if actualChecksum != expectedChecksum {
+	// Verify checksum (full SHA-256, 32 bytes)
+	actualHash := sha256.Sum256(metadataData)
+	if actualHash != index.MetadataChecksum {
 		return nil, ErrChecksumMismatch
 	}
 

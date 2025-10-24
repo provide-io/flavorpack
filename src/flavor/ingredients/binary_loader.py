@@ -118,7 +118,7 @@ class BinaryLoader:
                     "build",
                     "-o",
                     str(binary_path),
-                    f"./cmd/{component}",
+                    f"./cmd/flavor-go-{component}",
                 ],
                 cwd=self.manager.go_src_dir,
                 capture_output=True,

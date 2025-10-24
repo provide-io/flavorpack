@@ -3,6 +3,7 @@
 
 use super::constants::{LifecycleCache, PurposeData, SLOT_DESCRIPTOR_SIZE};
 use super::defaults::{CACHE_NORMAL, DEFAULT_FILE_PERMS, DEFAULT_PAGE_SIZE};
+use log::trace;
 use std::path::PathBuf;
 
 /// Slot descriptor - 64 bytes total
@@ -82,7 +83,11 @@ impl SlotDescriptor {
         bytes[24..32].copy_from_slice(&self.size.to_le_bytes());
         bytes[32..40].copy_from_slice(&self.original_size.to_le_bytes());
         bytes[40..48].copy_from_slice(&self.operations.to_le_bytes());
-        bytes[48..56].copy_from_slice(&self.checksum.to_le_bytes());
+
+        let checksum_val = self.checksum;  // Copy to avoid packed alignment issues
+        let checksum_bytes = checksum_val.to_le_bytes();
+        trace!("🦀 Packing checksum: value={:016x}, bytes={:02x?}", checksum_val, checksum_bytes);
+        bytes[48..56].copy_from_slice(&checksum_bytes);
 
         // Pack 8x uint8 fields (8 bytes)
         bytes[56] = self.purpose;

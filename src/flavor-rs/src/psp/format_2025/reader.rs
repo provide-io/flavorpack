@@ -186,21 +186,18 @@ impl Reader {
                 }
             }
 
-            // Verify metadata checksum (first 4 bytes of the 32-byte array)
-            let checksum = adler::adler32_slice(&metadata_data);
-            let expected_checksum = u32::from_le_bytes(
-                index.metadata_checksum[0..4]
-                    .try_into()
-                    .map_err(|_| FlavorError::Generic("Invalid metadata checksum bytes".into()))?,
-            );
-            if checksum != expected_checksum {
+            // Verify metadata checksum (full SHA-256, 32 bytes)
+            use sha2::{Digest, Sha256};
+            let actual_hash = Sha256::digest(&metadata_data);
+            let actual_checksum: [u8; 32] = actual_hash.into();
+            if actual_checksum != index.metadata_checksum {
                 debug!(
-                    "❌ Metadata checksum mismatch: expected {:#x}, got {:#x}",
-                    expected_checksum, checksum
+                    "❌ Metadata checksum mismatch: expected {:02x?}, got {:02x?}",
+                    &index.metadata_checksum[..8], &actual_checksum[..8]
                 );
                 return Err(FlavorError::Generic("Metadata checksum mismatch".into()));
             }
-            trace!("✅ Metadata checksum verified: {:#x}", checksum);
+            trace!("✅ Metadata checksum verified (SHA-256)");
 
             // Parse metadata - always gzip compressed for now
             let metadata: Metadata = if true {

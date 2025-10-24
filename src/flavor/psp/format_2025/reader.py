@@ -213,15 +213,13 @@ class PSPFReader:
         if isinstance(metadata_data, memoryview):
             metadata_data = bytes(metadata_data)
 
-        # Verify metadata checksum (Adler32 stored in first 4 bytes of 32-byte field)
-        actual_checksum = zlib.adler32(metadata_data) & 0xFFFFFFFF
-        # Extract the Adler32 from the first 4 bytes of the checksum field
-        expected_checksum = (
-            struct.unpack("<I", index.metadata_checksum[:4])[0] if index.metadata_checksum else 0
-        )
-        if expected_checksum != 0 and actual_checksum != expected_checksum:
+        # Verify metadata checksum (full SHA-256 - 32 bytes)
+        import hashlib
+        actual_checksum = hashlib.sha256(metadata_data).digest()
+        expected_checksum = index.metadata_checksum if index.metadata_checksum else b"\x00" * 32
+        if expected_checksum != b"\x00" * 32 and actual_checksum != expected_checksum:
             raise ValueError(
-                f"Metadata checksum mismatch: expected {expected_checksum}, got {actual_checksum}"
+                f"Metadata checksum mismatch: expected {expected_checksum.hex()[:16]}..., got {actual_checksum.hex()[:16]}..."
             )
 
         # Parse metadata (always gzipped JSON in current implementation)
@@ -291,20 +289,22 @@ class PSPFReader:
         if isinstance(slot_data, memoryview):
             slot_data = bytes(slot_data)
 
-        # Verify checksum
-        actual_checksum = zlib.adler32(slot_data) & 0xFFFFFFFF
+        # Verify checksum (SHA-256 first 8 bytes)
+        import hashlib
+        hash_bytes = hashlib.sha256(slot_data).digest()[:8]
+        actual_checksum = int.from_bytes(hash_bytes, byteorder="little")
 
         # DEBUG: Log checksum details for troubleshooting
         logger.debug(
-            f"🔍📖 Slot {slot_index} read checksum debug: expected={descriptor.checksum:08x}, actual={actual_checksum:08x}, size={len(slot_data)}"
+            f"🔍📖 Slot {slot_index} read checksum debug: expected={descriptor.checksum:016x}, actual={actual_checksum:016x}, size={len(slot_data)}"
         )
 
         if actual_checksum != descriptor.checksum:
             logger.error(
-                f"❌ Slot {slot_index} checksum mismatch: expected {descriptor.checksum:08x}, got {actual_checksum:08x}, size={len(slot_data)}"
+                f"❌ Slot {slot_index} checksum mismatch: expected {descriptor.checksum:016x}, got {actual_checksum:016x}, size={len(slot_data)}"
             )
             raise ValueError(
-                f"Slot {slot_index} checksum mismatch: expected {descriptor.checksum:08x}, got {actual_checksum:08x}"
+                f"Slot {slot_index} checksum mismatch: expected {descriptor.checksum:016x}, got {actual_checksum:016x}"
             )
 
         # Decompress if needed based on operations
