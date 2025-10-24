@@ -208,6 +208,7 @@ nav:
     - foundry/index.md
     - FlavorPack's Role: foundry/architecture.md
     - Design Principles: foundry/principles.md
+    - Roadmap: foundry/roadmap.md
   
   # SECTION 2: User Guide (concepts and how-to)
   - User Guide:
