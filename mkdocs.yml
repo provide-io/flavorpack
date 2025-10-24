@@ -163,7 +163,7 @@ extra:
   version:
     provider: mike
     default: latest
-  
+
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/provide-io/flavorpack
@@ -171,10 +171,15 @@ extra:
       link: https://pypi.org/project/flavorpack/
     - icon: fontawesome/solid/globe
       link: https://provide.io
-  
+
   analytics:
     provider: google
     property: G-XXXXXXXXXX
+
+  # Announcement bar
+  announcement:
+    text: "📦 FlavorPack documentation has been modernized with Foundry integration guides, comprehensive cookbook examples, and professional theming!"
+    link: /foundry/
     
   consent:
     title: Cookie consent
