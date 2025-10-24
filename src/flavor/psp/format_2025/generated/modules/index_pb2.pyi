@@ -99,8 +99,8 @@ class IndexBlock(_message.Message):
     integrity_signature: bytes
     access_mode: int
     cache_strategy: int
-    codec_type: int
-    encryption_type: int
+    reserved_hint1: int
+    reserved_hint2: int
     page_size: int
     max_memory: int
     min_memory: int
@@ -121,4 +121,4 @@ class IndexBlock(_message.Message):
     protocol_version: int
     future_crypto: bytes
     reserved: bytes
-    def __init__(self, format_version: _Optional[int] = ..., index_checksum: _Optional[int] = ..., package_size: _Optional[int] = ..., launcher_size: _Optional[int] = ..., metadata_offset: _Optional[int] = ..., metadata_size: _Optional[int] = ..., slot_table_offset: _Optional[int] = ..., slot_table_size: _Optional[int] = ..., slot_count: _Optional[int] = ..., flags: _Optional[int] = ..., public_key: _Optional[bytes] = ..., metadata_checksum: _Optional[bytes] = ..., integrity_signature: _Optional[bytes] = ..., access_mode: _Optional[int] = ..., cache_strategy: _Optional[int] = ..., codec_type: _Optional[int] = ..., encryption_type: _Optional[int] = ..., page_size: _Optional[int] = ..., max_memory: _Optional[int] = ..., min_memory: _Optional[int] = ..., cpu_features: _Optional[int] = ..., gpu_requirements: _Optional[int] = ..., numa_hints: _Optional[int] = ..., stream_chunk_size: _Optional[int] = ..., build_timestamp: _Optional[int] = ..., build_machine: _Optional[bytes] = ..., source_hash: _Optional[bytes] = ..., dependency_hash: _Optional[bytes] = ..., license_id: _Optional[bytes] = ..., provenance_uri: _Optional[bytes] = ..., capabilities: _Optional[int] = ..., requirements: _Optional[int] = ..., extensions: _Optional[int] = ..., compatibility: _Optional[int] = ..., protocol_version: _Optional[int] = ..., future_crypto: _Optional[bytes] = ..., reserved: _Optional[bytes] = ...) -> None: ...
+    def __init__(self, format_version: _Optional[int] = ..., index_checksum: _Optional[int] = ..., package_size: _Optional[int] = ..., launcher_size: _Optional[int] = ..., metadata_offset: _Optional[int] = ..., metadata_size: _Optional[int] = ..., slot_table_offset: _Optional[int] = ..., slot_table_size: _Optional[int] = ..., slot_count: _Optional[int] = ..., flags: _Optional[int] = ..., public_key: _Optional[bytes] = ..., metadata_checksum: _Optional[bytes] = ..., integrity_signature: _Optional[bytes] = ..., access_mode: _Optional[int] = ..., cache_strategy: _Optional[int] = ..., reserved_hint1: _Optional[int] = ..., reserved_hint2: _Optional[int] = ..., page_size: _Optional[int] = ..., max_memory: _Optional[int] = ..., min_memory: _Optional[int] = ..., cpu_features: _Optional[int] = ..., gpu_requirements: _Optional[int] = ..., numa_hints: _Optional[int] = ..., stream_chunk_size: _Optional[int] = ..., build_timestamp: _Optional[int] = ..., build_machine: _Optional[bytes] = ..., source_hash: _Optional[bytes] = ..., dependency_hash: _Optional[bytes] = ..., license_id: _Optional[bytes] = ..., provenance_uri: _Optional[bytes] = ..., capabilities: _Optional[int] = ..., requirements: _Optional[int] = ..., extensions: _Optional[int] = ..., compatibility: _Optional[int] = ..., protocol_version: _Optional[int] = ..., future_crypto: _Optional[bytes] = ..., reserved: _Optional[bytes] = ...) -> None: ...
