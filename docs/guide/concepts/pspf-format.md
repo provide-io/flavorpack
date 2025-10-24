@@ -247,6 +247,38 @@ Each slot has:
 - **Lifecycle**: persistent, ephemeral, cached
 - **Permissions**: read, write, execute flags
 
+#### Slot Descriptor Binary Layout (64 bytes)
+
+```mermaid
+graph LR
+    subgraph "Slot Descriptor - 64 bytes"
+        direction TB
+        A["offset<br/>8 bytes<br/>uint64<br/>bytes 0-7"] --> B["size<br/>8 bytes<br/>uint64<br/>bytes 8-15"]
+        B --> C["original_size<br/>8 bytes<br/>uint64<br/>bytes 16-23"]
+        C --> D["data_checksum<br/>32 bytes<br/>SHA-256<br/>bytes 24-55"]
+        D --> E["operations<br/>8 bytes<br/>uint64<br/>bytes 56-63"]
+    end
+
+    style A fill:#e3f2fd
+    style B fill:#fff3e0
+    style C fill:#f3e5f5
+    style D fill:#e8f5e9
+    style E fill:#fce4ec
+```
+
+**Operations Field Encoding** (64-bit packed, up to 8 operations of 8 bits each):
+
+```
+Bit Layout:
+┌──────────┬──────────┬──────────┬──────────┬──────────┬──────────┬──────────┬──────────┐
+│  Op 7    │  Op 6    │  Op 5    │  Op 4    │  Op 3    │  Op 2    │  Op 1    │  Op 0    │
+│  (00)    │  (00)    │  (00)    │  (00)    │  (00)    │  (00)    │  (10)    │  (01)    │
+└──────────┴──────────┴──────────┴──────────┴──────────┴──────────┴──────────┴──────────┘
+bits 63-56   55-48      47-40      39-32      31-24      23-16      15-8       7-0
+
+Example: tar.gz = 0x0000000000001001 (Op 0 = 0x01 (tar), Op 1 = 0x10 (gzip))
+```
+
 ### 5. Magic Footer
 
 The emoji magic footer serves multiple purposes:
