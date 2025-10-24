@@ -11,6 +11,14 @@ import (
 	"github.com/hashicorp/go-hclog"
 )
 
+// SelfRefMarker is the special marker for self-referential slots
+const SelfRefMarker = "$SELF"
+
+// isSelfReferential checks if a slot references the launcher itself
+func isSelfReferential(source string) bool {
+	return source == SelfRefMarker
+}
+
 // SlotProcessor handles slot processing for PSPF packages.
 //
 // This abstraction encapsulates all slot-related operations including loading,
@@ -190,7 +198,57 @@ func (sp *SlotProcessor) processSlot(index int, slot *Slot) error {
 	sp.logger.Debug("📂 Processing slot", "index", index, "id", slot.ID,
 		"source", slot.Source, "target", slot.Target)
 
-	// Read and process slot data
+	// Check if this is a self-referential slot
+	if isSelfReferential(slot.Source) {
+		sp.logger.Info("✨ Slot is self-referential, skipping packaging",
+			"index", index, "source", slot.Source)
+
+		// Create metadata for self-ref slot (no actual data)
+		selfRefTrue := true
+		slotMeta := SlotMetadata{
+			Slot:        index,
+			ID:          slot.ID,
+			Source:      slot.Source,
+			Target:      slot.Target,
+			Size:        0,  // No data to package
+			Checksum:    "", // No checksum needed
+			Operations:  "", // No operations
+			Purpose:     slot.Purpose,
+			Lifecycle:   slot.Lifecycle,
+			Resolution:  slot.Resolution,
+			Permissions: slot.Permissions,
+			SelfRef:     &selfRefTrue, // Mark as self-referential
+		}
+
+		// Create empty descriptor (size=0, no operations)
+		descriptor := SlotDescriptor{
+			ID:              uint64(index),
+			NameHash:        HashName(slot.Target),
+			Offset:          0, // Will be set during finalization
+			Size:            0, // No data for self-ref slot
+			OriginalSize:    0,
+			Operations:      0, // No operations
+			Checksum:        0,
+			Purpose:         mapPurposeToUint8(slot.Purpose),
+			Lifecycle:       mapLifecycleToUint8(slot.Lifecycle),
+			Priority:        128,
+			Platform:        0,
+			Reserved1:       0,
+			Reserved2:       0,
+			Permissions:     uint8(parsePermissions(slot.Permissions) & 0xFF),
+			PermissionsHigh: uint8(parsePermissions(slot.Permissions) >> 8),
+		}
+
+		// Store processed data
+		sp.metadataSlots = append(sp.metadataSlots, slotMeta)
+		sp.slotDescriptors = append(sp.slotDescriptors, descriptor)
+		sp.slotData = append(sp.slotData, []byte{}) // Empty data
+
+		sp.logger.Debug("✅ Self-referential slot processed", "index", index, "id", slot.ID)
+		return nil
+	}
+
+	// Normal slot processing - read and process slot data
 	slotData, compressed, _, err := sp.loadSlotData(slot)
 	if err != nil {
 		return fmt.Errorf("failed to load slot data: %w", err)
@@ -213,6 +271,7 @@ func (sp *SlotProcessor) processSlot(index int, slot *Slot) error {
 		Lifecycle:   slot.Lifecycle,
 		Resolution:  slot.Resolution,
 		Permissions: slot.Permissions,
+		SelfRef:     nil, // Normal slot, not self-referential
 	}
 
 	// Determine operations from operations field

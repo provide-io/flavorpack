@@ -128,8 +128,11 @@ fn verify_metadata_checksum(file: &mut File, index: &super::index::Index) -> Res
     let mut adler = Adler32::new();
     adler.write_slice(&metadata_bytes);
     let calculated = adler.checksum();
-    let expected = u32::from_le_bytes(index.metadata_checksum[0..4].try_into()
-        .map_err(|_| FlavorError::Generic("Invalid metadata checksum bytes".into()))?);
+    let expected = u32::from_le_bytes(
+        index.metadata_checksum[0..4]
+            .try_into()
+            .map_err(|_| FlavorError::Generic("Invalid metadata checksum bytes".into()))?,
+    );
     Ok(calculated == expected)
 }
 

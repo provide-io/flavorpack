@@ -18,7 +18,9 @@ pub(super) fn get_workenv_paths(package_path: &Path) -> WorkenvPaths {
 /// Check if there's enough disk space for extraction
 pub(super) fn check_disk_space(paths: &WorkenvPaths, metadata: &Metadata) -> Result<()> {
     // Calculate total size needed (compressed size * DISK_SPACE_MULTIPLIER for safety)
-    let _total_size_needed: u64 = metadata.slots.iter()
+    let _total_size_needed: u64 = metadata
+        .slots
+        .iter()
         .map(|slot| slot.size as u64 * DEFAULT_DISK_SPACE_MULTIPLIER)
         .sum();
 
@@ -63,7 +65,10 @@ pub(super) fn check_disk_space(paths: &WorkenvPaths, metadata: &Metadata) -> Res
 }
 
 /// Setup workenv directories with proper permissions
-pub(super) fn setup_workenv_directories(workenv_path: &Path, workenv_info: &WorkenvInfo) -> Result<()> {
+pub(super) fn setup_workenv_directories(
+    workenv_path: &Path,
+    workenv_info: &WorkenvInfo,
+) -> Result<()> {
     if let Some(ref directories) = workenv_info.directories {
         for dir_spec in directories {
             // Substitute {workenv} placeholder in the path
@@ -100,7 +105,10 @@ pub(super) fn setup_workenv_directories(workenv_path: &Path, workenv_info: &Work
                     // Fallback to default dir permissions if parsing fails
                     let permissions = fs::Permissions::from_mode(DEFAULT_DIR_PERMS as u32);
                     fs::set_permissions(&dir_path, permissions)?;
-                    debug!("🔒 Set default permissions {} on {:?}", DEFAULT_DIR_PERMS, dir_path);
+                    debug!(
+                        "🔒 Set default permissions {} on {:?}",
+                        DEFAULT_DIR_PERMS, dir_path
+                    );
                 }
             }
         }

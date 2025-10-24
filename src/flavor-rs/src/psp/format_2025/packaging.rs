@@ -16,11 +16,11 @@ use std::io::{Seek, SeekFrom, Write};
 use std::path::Path;
 
 use adler::Adler32;
-use flate2::write::GzEncoder;
 use flate2::Compression;
+use flate2::write::GzEncoder;
 use log::{debug, info, trace};
 
-use super::constants::{HEADER_SIZE, OP_TAR, OP_GZIP};
+use super::constants::{HEADER_SIZE, OP_GZIP, OP_TAR};
 use super::index::Index;
 use super::metadata::{Metadata, SlotMetadata};
 use super::slots::SlotDescriptor;
@@ -81,11 +81,11 @@ pub fn write_slot(
     // Parse operation string (e.g., "0" for raw, "1" for tar, "16" for gzip, "3" for tgz)
     let operations = match operations_str {
         3 => pack_operations(&[OP_TAR, OP_GZIP]), // TGZ
-        1 => pack_operations(&[OP_TAR]),     // TAR only
-        16 => pack_operations(&[OP_GZIP]),   // GZIP only
-        _ => pack_operations(&[]),           // Raw or unknown
+        1 => pack_operations(&[OP_TAR]),          // TAR only
+        16 => pack_operations(&[OP_GZIP]),        // GZIP only
+        _ => pack_operations(&[]),                // Raw or unknown
     };
-    
+
     let descriptor = SlotDescriptor {
         id: slot_index as u64,
         name_hash,

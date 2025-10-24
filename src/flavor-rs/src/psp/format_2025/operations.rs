@@ -7,23 +7,33 @@ use log::{debug, trace};
 /// Operations are packed as 8-bit values in little-endian order
 /// Up to 8 operations can be packed (8 bytes × 8 operations = 64 bits)
 pub fn pack_operations(operations: &[u8]) -> u64 {
-    trace!("📦 Packing operations: count={} operations={:?}", operations.len(), operations);
-    
+    trace!(
+        "📦 Packing operations: count={} operations={:?}",
+        operations.len(),
+        operations
+    );
+
     let mut packed: u64 = 0;
-    
+
     for (index, &op) in operations.iter().enumerate() {
         if index >= 8 {
-            log::warn!("⚠️ Too many operations, truncating to 8: provided={}", operations.len());
+            log::warn!(
+                "⚠️ Too many operations, truncating to 8: provided={}",
+                operations.len()
+            );
             break;
         }
-        
+
         let shift = index * 8;
         let op_value = (op as u64) << shift;
         packed |= op_value;
-        
-        trace!("🔧 Packed operation: index={} op={} shift={} current={}", index, op, shift, packed);
+
+        trace!(
+            "🔧 Packed operation: index={} op={} shift={} current={}",
+            index, op, shift, packed
+        );
     }
-    
+
     debug!("✅ Operations packed: result={}", packed);
     packed
 }
@@ -32,28 +42,32 @@ pub fn pack_operations(operations: &[u8]) -> u64 {
 /// Returns vector of operation codes in execution order
 pub fn unpack_operations(packed: u64) -> Vec<u8> {
     trace!("📂 Unpacking operations: packed={}", packed);
-    
+
     let mut operations = Vec::new();
-    
+
     for index in 0..8 {
         let shift = index * 8;
         let mask = 0xFF_u64 << shift;
         let op = ((packed & mask) >> shift) as u8;
-        
+
         if op != 0 {
             trace!("🔍 Unpacked operation: index={} op={}", index, op);
             operations.push(op);
         }
     }
-    
-    debug!("✅ Operations unpacked: count={} operations={:?}", operations.len(), operations);
+
+    debug!(
+        "✅ Operations unpacked: count={} operations={:?}",
+        operations.len(),
+        operations
+    );
     operations
 }
 
 #[cfg(test)]
 mod tests {
+    use super::super::constants::{OP_GZIP, OP_TAR};
     use super::*;
-    use super::super::constants::{OP_TAR, OP_GZIP};
 
     #[test]
     fn test_pack_single_operation() {
