@@ -137,6 +137,7 @@ addopts = [
     "--strict-markers",
     "--color=yes",
     "--ignore=tests/taster/tests",
+    "--ignore=tests/pretaster/scripts",
 ]
 norecursedirs = [".git", "build", "dist", "*.egg-info", ".venv", "htmlcov", ".hypothesis", "__pycache__", "*/generated/*"]
 filterwarnings = [
@@ -215,3 +216,6 @@ dependencies = []
 [tool.flavor.signing]
 private_key_path = "keys/flavor-private.key"
 public_key_path = "keys/flavor-public.key"
+
+[tool.uv.sources]
+provide-foundation = { path = "../provide-foundation", editable = true }
