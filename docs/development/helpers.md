@@ -351,17 +351,27 @@ Example: Adding compression support to launcher
 1. **Modify launcher code**:
 ```rust
 // src/flavor-rs/src/launcher/extract.rs
-fn extract_slot_compressed(data: &[u8], codec: Codec) -> Result<Vec<u8>> {
-    match codec {
-        Codec::Gzip => decompress_gzip(data),
-        Codec::Zstd => decompress_zstd(data),
-        // New codec
-        Codec::Brotli => decompress_brotli(data),
+use flavor::psp::format_2025::operations::unpack_operations;
+
+fn extract_slot(data: &[u8], operations: u64) -> Result<Vec<u8>> {
+    let ops = unpack_operations(operations);
+
+    let mut result = data.to_vec();
+    for op in ops.iter().rev() {
+        result = match op {
+            OP_GZIP => decompress_gzip(&result)?,
+            OP_ZSTD => decompress_zstd(&result)?,
+            OP_TAR => extract_tar(&result)?,
+            // Add new operation
+            OP_BROTLI => decompress_brotli(&result)?,
+            _ => return Err(Error::UnsupportedOperation(*op)),
+        };
     }
+    Ok(result)
 }
 ```
 
-2. **Update builder** to support new codec
+2. **Update builder** to support new operation
 3. **Add tests**
 4. **Update version**
 5. **Rebuild and test**

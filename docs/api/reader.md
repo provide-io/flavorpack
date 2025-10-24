@@ -144,7 +144,7 @@ with PSPFReader(Path("myapp.psp")) as reader:
         {
             "id": str,              # Slot identifier
             "purpose": str,         # Human-readable purpose
-            "codec": str,           # "tar.gz", "raw", etc.
+            "operations": str,      # "tar.gz", "raw", etc.
         }
     ],
     "execution": {

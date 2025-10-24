@@ -273,7 +273,7 @@ purpose = "configuration"
 path = "assets/"
 lifecycle = "persistent"
 purpose = "static-resources"
-codec = "gzip"
+operations = "gzip"
 
 [tool.flavor.slots.templates]
 path = "templates/"

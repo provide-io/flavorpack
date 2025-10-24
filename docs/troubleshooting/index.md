@@ -123,7 +123,7 @@ entry_point = "myapp:main"  # module:function
 ```toml
 # Enable compression
 [[tool.flavor.slots]]
-codec = "tgz"  # Compress with gzip
+operations = "tar.gz"  # Compress with gzip
 
 # Exclude unnecessary files
 [tool.flavor.build]
@@ -488,9 +488,9 @@ export FLAVOR_BUILD_CACHE=~/.cache/flavor/build
 
 **Solutions**:
 ```toml
-# Use appropriate compression
+# Use appropriate operations
 [[tool.flavor.slots]]
-codec = "tar"  # Faster than tgz for large files
+operations = "tar"  # Faster than tar.gz for large files
 
 # Enable parallel extraction
 [tool.flavor.features]
