@@ -2,22 +2,56 @@
 
 Understanding FlavorPack's Go and Rust helper integration.
 
-## Coming Soon
-
-This page is under development. In the meantime, see:
-
-- **[Architecture](../../development/architecture.md)** - System design
-- **[Building Helpers](../../development/helpers.md)** - Build Go/Rust helpers
-
 ## Overview
 
-FlavorPack uses a polyglot architecture:
+FlavorPack uses a polyglot architecture where Python orchestrates native Go and Rust helpers to create high-performance, cross-platform packages.
 
-- **Python** - Orchestration and high-level logic
-- **Go** - Cross-platform builder and launcher
-- **Rust** - High-performance builder and launcher
+```mermaid
+graph TB
+    subgraph "Python Layer"
+        Orch[Orchestrator<br/>Manifest Processing]
+        PyPkg[Python Packager<br/>Dependency Resolution]
+    end
 
-All implementations produce identical PSPF/2025 format packages.
+    subgraph "Native Helpers - Go"
+        GoBuilder[flavor-go-builder<br/>Package Assembly]
+        GoLauncher[flavor-go-launcher<br/>Embedded in .psp]
+    end
+
+    subgraph "Native Helpers - Rust"
+        RsBuilder[flavor-rs-builder<br/>Package Assembly]
+        RsLauncher[flavor-rs-launcher<br/>Embedded in .psp]
+    end
+
+    subgraph "PSPF Package"
+        Package[myapp.psp<br/>Identical format]
+    end
+
+    Orch --> PyPkg
+    PyPkg --> GoBuilder
+    PyPkg --> RsBuilder
+
+    GoBuilder --> Package
+    RsBuilder --> Package
+
+    GoLauncher -.embedded in.-> Package
+    RsLauncher -.embedded in.-> Package
+
+    style Package fill:#e8f5e9
+    style GoBuilder fill:#e3f2fd
+    style RsBuilder fill:#fce4ec
+```
+
+### Language Roles
+
+| Component | Language | Purpose |
+|-----------|----------|---------|
+| **Orchestrator** | Python | High-level packaging logic, manifest parsing |
+| **Builder** | Go/Rust | PSPF package assembly, compression, signing |
+| **Launcher** | Go/Rust | Package extraction, verification, execution |
+| **Runtime** | Python | Packaged application execution |
+
+All helpers produce **identical PSPF/2025 format** packages with full cross-compatibility.
 
 ## Topics to be Covered
 
