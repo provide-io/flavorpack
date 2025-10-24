@@ -46,7 +46,7 @@ CAP_ENCRYPTED: Capabilities
 CAP_SIGNED: Capabilities
 
 class IndexBlock(_message.Message):
-    __slots__ = ("format_version", "index_checksum", "package_size", "launcher_size", "metadata_offset", "metadata_size", "slot_table_offset", "slot_table_size", "slot_count", "flags", "public_key", "metadata_checksum", "integrity_signature", "access_mode", "cache_strategy", "codec_type", "encryption_type", "page_size", "max_memory", "min_memory", "cpu_features", "gpu_requirements", "numa_hints", "stream_chunk_size", "build_timestamp", "build_machine", "source_hash", "dependency_hash", "license_id", "provenance_uri", "capabilities", "requirements", "extensions", "compatibility", "protocol_version", "future_crypto", "reserved")
+    __slots__ = ("format_version", "index_checksum", "package_size", "launcher_size", "metadata_offset", "metadata_size", "slot_table_offset", "slot_table_size", "slot_count", "flags", "public_key", "metadata_checksum", "integrity_signature", "access_mode", "cache_strategy", "reserved_hint1", "reserved_hint2", "page_size", "max_memory", "min_memory", "cpu_features", "gpu_requirements", "numa_hints", "stream_chunk_size", "build_timestamp", "build_machine", "source_hash", "dependency_hash", "license_id", "provenance_uri", "capabilities", "requirements", "extensions", "compatibility", "protocol_version", "future_crypto", "reserved")
     FORMAT_VERSION_FIELD_NUMBER: _ClassVar[int]
     INDEX_CHECKSUM_FIELD_NUMBER: _ClassVar[int]
     PACKAGE_SIZE_FIELD_NUMBER: _ClassVar[int]
