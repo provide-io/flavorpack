@@ -39,17 +39,13 @@ Best for developers who want the latest features and ability to build custom hel
     ```bash
     # Install UV package manager
     curl -LsSf https://astral.sh/uv/install.sh | sh
-    
+
     # Clone the repository
     git clone https://github.com/provide-io/flavorpack.git
     cd flavorpack
-    
-    # Create and activate virtual environment
-    uv venv
-    source .venv/bin/activate
-    
-    # Install FlavorPack
-    uv pip install -e .
+
+    # Set up environment and install dependencies
+    uv sync
 
     # Build native helpers (Go and Rust binaries)
     make build-helpers
@@ -63,21 +59,17 @@ Best for developers who want the latest features and ability to build custom hel
     ```powershell
     # Install UV package manager
     powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
-    
+
     # Clone the repository
     git clone https://github.com/provide-io/flavorpack.git
     cd flavorpack
-    
-    # Create and activate virtual environment
-    uv venv
-    .venv\Scripts\activate
-    
-    # Install FlavorPack
-    uv pip install -e .
-    
+
+    # Set up environment and install dependencies
+    uv sync
+
     # Build native helpers (requires WSL or Docker)
     # See Windows-specific instructions below
-    
+
     # Verify installation
     flavor --version
     ```
@@ -221,7 +213,7 @@ Optional environment variables for customization:
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `FLAVOR_CACHE_DIR` | Cache directory for work environments | `~/.cache/flavor` |
+| `FLAVOR_CACHE` | Cache directory for work environments | `~/.cache/flavor/workenv` |
 | `FOUNDATION_LOG_LEVEL` | Logging level (debug, info, warn, error) | `info` |
 | `FOUNDATION_LOG_FILE` | Log file path for persistent logging | None |
 | `FLAVOR_PRIVATE_KEY` | Path to private signing key | None |

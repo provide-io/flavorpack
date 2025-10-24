@@ -71,9 +71,9 @@ except VerificationError as e:
 
 - `flavor.packaging` - High-level packaging API
 - `flavor.psp.format_2025` - PSPF/2025 implementation
-- `flavor.psp.builder` - Package building
-- `flavor.psp.reader` - Package reading
-- `flavor.psp.crypto` - Cryptographic operations
+- `flavor.psp.format_2025.builder` - Package building
+- `flavor.psp.format_2025.reader` - Package reading
+- `flavor.psp.security` - Cryptographic operations and verification
 
 ## Documentation Format
 
