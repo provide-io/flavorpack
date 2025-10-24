@@ -320,6 +320,7 @@ You can build custom launchers from the Go or Rust source in the `helpers/` dire
 
 Yes, FlavorPack works well in CI/CD:
 
+{% raw %}
 ```yaml
 # GitHub Actions example
 - name: Build package
@@ -327,6 +328,7 @@ Yes, FlavorPack works well in CI/CD:
     pip install flavor
     flavor pack pyproject.toml --key-seed "${{ secrets.FLAVOR_SEED }}"
 ```
+{% endraw %}
 
 ### Can I distribute packages through PyPI?
 

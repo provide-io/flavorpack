@@ -287,6 +287,7 @@ make validate-pspf-combo
 
 The helper build is automated in CI:
 
+{% raw %}
 ```yaml
 # .github/workflows/01-helper-prep.yml
 name: Build Helpers
@@ -305,33 +306,34 @@ jobs:
           - platform: darwin_arm64
             os: macos-latest
             rust_target: aarch64-apple-darwin
-    
+
     runs-on: ${{ matrix.os }}
-    
+
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Setup Go
         uses: actions/setup-go@v4
         with:
           go-version: '1.21'
-      
+
       - name: Setup Rust
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
           target: ${{ matrix.rust_target }}
-      
+
       - name: Build helpers
         run: |
           make build-helpers
-      
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
         with:
           name: helpers-${{ matrix.platform }}
           path: dist/bin/
 ```
+{% endraw %}
 
 ## Development Workflow
 

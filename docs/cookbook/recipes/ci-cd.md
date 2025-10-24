@@ -167,6 +167,7 @@ workflows:
 
 ### 1. **Cache Dependencies**
 
+{% raw %}
 ```yaml
 # GitHub Actions
 - name: Cache UV
@@ -181,6 +182,7 @@ workflows:
     path: dist/bin
     key: ${{ runner.os }}-helpers-${{ hashFiles('src/flavor-go/**', 'src/flavor-rs/**') }}
 ```
+{% endraw %}
 
 ### 2. **Verify Packages**
 

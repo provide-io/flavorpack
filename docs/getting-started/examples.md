@@ -488,12 +488,13 @@ Process CSV files with pandas:
             pip install flavorpack
             flavor helpers download
         
+{% raw %}
         - name: Build Package
           run: |
             flavor pack \
               --manifest pyproject.toml \
               --output ${{ github.event.repository.name }}.psp
-        
+
         - name: Upload Release Asset
           uses: actions/upload-release-asset@v1
           with:
@@ -501,6 +502,7 @@ Process CSV files with pandas:
             asset_path: ./${{ github.event.repository.name }}.psp
             asset_name: ${{ github.event.repository.name }}-${{ github.event.release.tag_name }}.psp
             asset_content_type: application/octet-stream
+{% endraw %}
     ```
 
 ### Docker Multi-Stage Build

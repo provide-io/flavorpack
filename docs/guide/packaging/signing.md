@@ -98,6 +98,7 @@ chmod 600 ~/.flavor/keys/flavor-private.key
 
 #### CI/CD
 
+{% raw %}
 ```yaml
 # GitHub Actions with secrets
 - name: Sign package
@@ -105,7 +106,10 @@ chmod 600 ~/.flavor/keys/flavor-private.key
     FLAVOR_KEY_SEED: ${{ secrets.SIGNING_SEED }}
   run: |
     flavor pack pyproject.toml --key-seed "$FLAVOR_KEY_SEED"
+```
+{% endraw %}
 
+```yaml
 # GitLab CI with protected variables
 sign:
   script:
