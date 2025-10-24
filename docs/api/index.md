@@ -87,6 +87,6 @@ API documentation will include:
 
 ---
 
-**In the meantime, see:** [User Guide](../guide/) | [Cookbook](../cookbook/)
+**In the meantime, see:** [User Guide](../guide/index.md) | [Cookbook](../cookbook/index.md)
 
 **For source code:** [GitHub Repository](https://github.com/provide-io/flavorpack)

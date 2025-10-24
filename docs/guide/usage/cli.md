@@ -569,7 +569,7 @@ flavor workenv inspect pspf-a3f7b9c2d1e4f5a6
 - [Inspecting Packages](inspection.md) - Deep package inspection
 - [Cache Management](cache.md) - Work environment cache details
 - [Environment Variables](environment.md) - All environment variables
-- [Packaging Guide](../packaging/) - Creating packages
+- [Packaging Guide](../packaging/index.md) - Creating packages
 
 ---
 
