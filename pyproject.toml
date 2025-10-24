@@ -145,6 +145,7 @@ filterwarnings = [
     "ignore::PendingDeprecationWarning",
     "ignore::pytest.PytestUnraisableExceptionWarning",
     "ignore:Exception ignored in.*BaseSubprocessTransport:pytest.PytestUnraisableExceptionWarning",
+    "ignore:Module already imported so cannot be rewritten:pytest.PytestAssertRewriteWarning",
 ]
 markers = [
     "unit: Fast, isolated unit tests",
