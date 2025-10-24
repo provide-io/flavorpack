@@ -1,4 +1,5 @@
 from pathlib import Path
+import os
 import shutil
 import tempfile
 
@@ -12,6 +13,62 @@ from flavor.psp.format_2025.pspf_builder import PSPFBuilder
 # This should be validated against real launchers in integration tests
 MOCK_LAUNCHER_SIZE = 124  # Simplified for unit tests
 MOCK_LAUNCHER_DATA = b"FAKE_LAUNCHER_FOR_TEST" + b"\x00" * (MOCK_LAUNCHER_SIZE - 22)
+
+
+def pytest_configure(config):
+    """Register custom markers."""
+    config.addinivalue_line(
+        "markers",
+        "requires_ingredients: mark test as requiring real launcher binaries (auto-skipped if not available)",
+    )
+    config.addinivalue_line(
+        "markers", "integration: mark test as integration test (may require real binaries)"
+    )
+
+
+def pytest_collection_modifyitems(config, items):
+    """Auto-skip tests marked requires_ingredients if binaries not found."""
+    # Check if launcher binaries are available
+    binary_paths = [
+        Path("dist/bin/flavor-rs-launcher-darwin_arm64"),
+        Path("dist/bin/flavor-rs-launcher"),
+        Path("ingredients/bin/flavor-rs-launcher"),
+        Path("helpers/bin/flavor-rs-launcher"),
+        Path.cwd() / "dist" / "bin" / "flavor-rs-launcher-darwin_arm64",
+        Path.cwd() / "dist" / "bin" / "flavor-rs-launcher",
+    ]
+
+    # Check environment variable
+    env_launcher = os.environ.get("FLAVOR_LAUNCHER_BIN")
+    if env_launcher:
+        binary_paths.insert(0, Path(env_launcher))
+
+    binaries_available = any(p.exists() for p in binary_paths)
+
+    if not binaries_available:
+        skip_ingredients = pytest.mark.skip(
+            reason=(
+                "Launcher binaries not found. "
+                "Run 'make build-ingredients' or set FLAVOR_LAUNCHER_BIN environment variable. "
+                f"Searched: {', '.join(str(p) for p in binary_paths[:3])}..."
+            )
+        )
+        skipped_count = 0
+        for item in items:
+            # Skip tests marked with requires_ingredients
+            if "requires_ingredients" in item.keywords:
+                item.add_marker(skip_ingredients)
+                skipped_count += 1
+            # Also skip integration tests (they typically need binaries)
+            elif "integration" in item.keywords and "requires_ingredients" not in item.keywords:
+                item.add_marker(skip_ingredients)
+                skipped_count += 1
+
+        if skipped_count > 0:
+            print(
+                f"\n⚠️  Skipping {skipped_count} integration tests (launcher binaries not found)"
+            )
+            print("   Run 'make build-ingredients' to enable integration tests")
 
 
 @pytest.fixture(scope="session")
@@ -33,20 +90,22 @@ def reset_foundation_logging():
 
 
 @pytest.fixture(autouse=True)
-def mock_launcher_loading(monkeypatch) -> None:
-    """Automatically mock launcher loading for all tests.
+def mock_launcher_loading(request, monkeypatch) -> None:
+    """Automatically mock launcher loading for non-integration tests.
 
-    This fixture is applied to ALL tests automatically. Tests that need
-    real launchers should be marked with @pytest.mark.integration and
-    explicitly disable this fixture.
+    Tests marked with @pytest.mark.integration will skip this mock
+    and require real launcher binaries.
     """
+    # Skip mocking for integration tests
+    if request.node.get_closest_marker("integration"):
+        return  # Let integration tests use real binaries
 
     def mock_load_launcher(launcher_type):
         return MOCK_LAUNCHER_DATA
 
-    from flavor.psp.format_2025.metadata import assembly
-
-    monkeypatch.setattr(assembly, "load_launcher_binary", mock_load_launcher)
+    # Patch where the function is used, not just where it's defined
+    monkeypatch.setattr("flavor.psp.format_2025.metadata.assembly.load_launcher_binary", mock_load_launcher)
+    monkeypatch.setattr("flavor.psp.format_2025.writer.load_launcher_binary", mock_load_launcher)
 
 
 @pytest.fixture
@@ -164,3 +223,73 @@ def mock_test_package(temp_dir, test_builder):
     builder.build(output_path=package_path)
 
     return package_path
+
+
+@pytest.fixture
+def test_slots(temp_dir, test_builder):
+    """Create test slots with different properties for PSPF tests."""
+    import hashlib
+    import os
+
+    from flavor.psp.format_2025 import SlotMetadata
+
+    slots = []
+
+    # Text file (compressible)
+    text_path = temp_dir / "text.json"
+    text_data = '{"key": "value"}' * 100
+    text_path.write_text(text_data)
+
+    slots.append(
+        SlotMetadata(
+            index=0,
+            id="config",
+            source=str(text_path),
+            target="config",
+            size=len(text_data),
+            checksum=hashlib.sha256(text_data.encode()).hexdigest(),
+            operations="gzip",
+            purpose="config",
+            lifecycle="runtime",
+        )
+    )
+
+    # Binary file (less compressible)
+    binary_path = temp_dir / "binary.so"
+    binary_data = os.urandom(1024)
+    binary_path.write_bytes(binary_data)
+
+    slots.append(
+        SlotMetadata(
+            index=1,
+            id="library",
+            source=str(binary_path),
+            target="library",
+            size=len(binary_data),
+            checksum=hashlib.sha256(binary_data).hexdigest(),
+            operations="none",
+            purpose="library",
+            lifecycle="init",
+        )
+    )
+
+    # Temporary file
+    temp_path = temp_dir / "temp.whl"
+    temp_data = b"WHEEL_DATA" * 50
+    temp_path.write_bytes(temp_data)
+
+    slots.append(
+        SlotMetadata(
+            index=2,
+            id="wheel",
+            source=str(temp_path),
+            target="wheel",
+            size=len(temp_data),
+            checksum=hashlib.sha256(temp_data).hexdigest(),
+            operations="none",
+            purpose="payload",
+            lifecycle="temp",
+        )
+    )
+
+    return slots
