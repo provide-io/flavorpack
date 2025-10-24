@@ -19,11 +19,14 @@ flavor [OPTIONS] COMMAND [ARGS]...
 
 ### Environment Variables
 
-Configure logging behavior:
+FlavorPack uses numerous environment variables for configuration and debugging. For a complete reference, see the [Environment Variables Guide](environment.md).
 
-- **FOUNDATION_LOG_LEVEL**: Set log level (`trace`, `debug`, `info`, `warning`, `error`)
+Key variables:
+- **FOUNDATION_LOG_LEVEL**: Set log level for Python components (`trace`, `debug`, `info`, `warning`, `error`)
+- **FLAVOR_LOG_LEVEL**: Set log level for Go/Rust components
 - **FOUNDATION_LOG_FILE**: Write logs to file
-- **FOUNDATION_SETUP_LOG_LEVEL**: Control Foundation's initialization logs
+
+See [Environment Variables](environment.md) for the complete list and detailed examples.
 
 ---
 
