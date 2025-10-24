@@ -44,14 +44,62 @@ Offset | Size | Type   | Field              | Description
 
 ### Metadata Fields (8 bytes - 8 × uint8)
 
-8. **purpose** (uint8): Purpose classification (0=data, 1=code, 2=config, 3=media)
+8. **purpose** (uint8): Purpose classification
 9. **lifecycle** (uint8): Lifecycle management hint (when to extract/use the slot)
 10. **priority** (uint8): Cache priority hint (0-255, higher = keep in memory longer)
-11. **platform** (uint8): Platform requirements (0=any, 1=linux, 2=darwin, 3=windows)
+11. **platform** (uint8): Platform requirements
 12. **reserved1** (uint8): Reserved for future format extensions
 13. **reserved2** (uint8): Reserved for future format extensions
 14. **permissions** (uint8): Unix-style permissions (lower 8 bits)
 15. **permissions_high** (uint8): Unix-style permissions (upper 8 bits)
+
+### Purpose Values
+
+| Value | Name       | Description                              |
+|-------|------------|------------------------------------------|
+| 0     | DATA       | General data files                       |
+| 1     | CODE       | Executable code or bytecode              |
+| 2     | CONFIG     | Configuration files                      |
+| 3     | MEDIA      | Media files (images, audio, video)       |
+
+### Lifecycle Values
+
+| Value | Name       | Description                                      |
+|-------|------------|--------------------------------------------------|
+| 0     | INIT       | First run only, then removed                     |
+| 1     | STARTUP    | Extract at every startup                         |
+| 2     | RUNTIME    | Extract on first use (default)                   |
+| 3     | SHUTDOWN   | Extract during cleanup                           |
+| 4     | CACHE      | Performance cache, can regenerate                |
+| 5     | TEMPORARY  | Remove after session ends                        |
+| 6     | LAZY       | Load on-demand                                   |
+| 7     | EAGER      | Load immediately on startup                      |
+| 8     | DEV        | Development mode only                            |
+| 9     | CONFIG     | User-modifiable config files                     |
+| 10    | PLATFORM   | Platform/OS specific content                     |
+
+### Platform Values
+
+| Value | Name       | Description                              |
+|-------|------------|------------------------------------------|
+| 0     | ANY        | Platform-independent                     |
+| 1     | LINUX      | Linux-specific                           |
+| 2     | MACOS      | macOS (Darwin) specific                  |
+| 3     | WINDOWS    | Windows-specific                         |
+
+### Priority Values
+
+The **priority** field uses the full uint8 range (0-255):
+- **0**: Lowest priority, first to evict from cache
+- **128**: Default priority
+- **255**: Highest priority, keep in cache as long as possible
+
+### Permissions
+
+The **permissions** and **permissions_high** fields combine to form a 16-bit Unix-style permission value:
+- Standard Unix permission bits (user/group/other read/write/execute)
+- Special bits (setuid/setgid/sticky) in upper byte
+- Typical values: 0644 (rw-r--r--), 0755 (rwxr-xr-x)
 
 ## Operation Chain Format
 

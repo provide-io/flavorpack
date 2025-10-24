@@ -495,7 +495,7 @@ function extractSlot(packageData, slotDescriptor):
     slotData = packageData[slotDescriptor.offset:slotDescriptor.offset+slotDescriptor.size]
     
     // 2. Verify stored data checksum
-    computedChecksum = adler32(slotData) & 0xFFFFFFFF
+    computedChecksum = sha256(slotData)[0:8]  // First 8 bytes as uint64
     if computedChecksum != slotDescriptor.checksum:
         return ERROR_CORRUPTED_SLOT
     
@@ -572,9 +572,10 @@ PSPF/2025 uses modern cryptographic algorithms for integrity and authenticity:
 - Signature: 64 bytes (stored in first 64 bytes of 512-byte field)
 - Provides non-repudiation and tamper detection
 
-**Hash Functions**: 
-- SHA-256 for metadata integrity (32 bytes)
-- Adler-32 for fast slot checksums (4 bytes)
+**Hash Functions**:
+- SHA-256 for metadata integrity (32 bytes full hash)
+- SHA-256 for slot data integrity (first 8 bytes)
+- Adler-32 for index block checksums (4 bytes, fast validation)
 
 **Random Number Generation**: Implementations MUST use cryptographically secure random number generators for key generation.
 
@@ -617,7 +618,7 @@ PSPF/2025 implements a explicit trust model:
 | Threat                 | Mitigation                           |
 |------------------------|--------------------------------------|
 | Package tampering      | Ed25519 signatures                   |
-| Content corruption     | Per-slot Adler-32 checksums        |
+| Content corruption     | Per-slot SHA-256 checksums (8 bytes)|
 | Rollback attacks       | Build timestamps                     |
 | Directory traversal    | Path validation during extraction    |
 | Resource exhaustion    | Size limits and memory bounds       |
@@ -803,7 +804,7 @@ This document establishes the PSPF Operation Code Registry managed by IANA. The 
 **Fragment identifier considerations**: Not applicable
 **Additional information**:
 - **Magic number**: 0xF0 0x9F 0x93 0xA6 (📦 emoji)
-- **File extension**: .pspf
+- **File extension**: .psp
 - **Person/organization**: [Contact Information]
 
 ### 11.3 Port Number Registration
