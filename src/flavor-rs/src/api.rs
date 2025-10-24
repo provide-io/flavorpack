@@ -98,13 +98,15 @@ fn detect_package_format(package_path: &Path) -> Result<PackageFormat> {
         file.seek(SeekFrom::End(-4))?;
         let mut magic_wand = [0u8; 4];
         file.read_exact(&mut magic_wand)?;
-        
+
         if magic_wand == *psp::format_2025::constants::MAGIC_WAND_EMOJI_BYTES {
             // Now check for 📦 at the start of the trailer
-            file.seek(SeekFrom::End(-(psp::format_2025::constants::MAGIC_TRAILER_SIZE as i64)))?;
+            file.seek(SeekFrom::End(
+                -(psp::format_2025::constants::MAGIC_TRAILER_SIZE as i64),
+            ))?;
             let mut package_emoji = [0u8; 4];
             file.read_exact(&mut package_emoji)?;
-            
+
             if package_emoji == *psp::format_2025::constants::PACKAGE_EMOJI_BYTES {
                 return Ok(PackageFormat::PSPF2025);
             }

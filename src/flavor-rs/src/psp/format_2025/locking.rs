@@ -34,7 +34,7 @@ pub fn try_acquire_lock(paths: &WorkenvPaths) -> Result<bool> {
     if let Err(e) = fs::create_dir_all(&extract_dir) {
         debug!("Failed to create extract directory: {}", e);
     }
-    
+
     let lock_path = paths.lock_file();
     let pid = std::process::id();
 
@@ -163,12 +163,12 @@ pub fn is_lock_acquired() -> bool {
 /// Clean up stale extraction directories from dead processes
 pub fn cleanup_stale_extractions(paths: &WorkenvPaths) -> Result<()> {
     let tmp_dir = paths.tmp();
-    
+
     // If the directory doesn't exist, nothing to clean
     if !tmp_dir.exists() {
         return Ok(());
     }
-    
+
     // List all directories in tmp/
     if let Ok(entries) = fs::read_dir(&tmp_dir) {
         for entry in entries.flatten() {
@@ -178,7 +178,10 @@ pub fn cleanup_stale_extractions(paths: &WorkenvPaths) -> Result<()> {
                     // Check if process is still running
                     if !is_process_running(pid) {
                         let stale_dir = entry.path();
-                        info!("🧹 Cleaning up stale extraction directory from dead process (PID: {})", pid);
+                        info!(
+                            "🧹 Cleaning up stale extraction directory from dead process (PID: {})",
+                            pid
+                        );
                         if let Err(e) = fs::remove_dir_all(&stale_dir) {
                             debug!("⚠️ Failed to remove stale directory {:?}: {}", stale_dir, e);
                         }
@@ -187,6 +190,6 @@ pub fn cleanup_stale_extractions(paths: &WorkenvPaths) -> Result<()> {
             }
         }
     }
-    
+
     Ok(())
 }

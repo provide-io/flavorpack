@@ -76,7 +76,10 @@ pub(super) fn extract_slots(
 }
 
 /// Build slot paths without extraction (when cache is valid)
-pub(super) fn build_slot_paths(metadata: &Metadata, workenv_path: &Path) -> HashMap<usize, PathBuf> {
+pub(super) fn build_slot_paths(
+    metadata: &Metadata,
+    workenv_path: &Path,
+) -> HashMap<usize, PathBuf> {
     let mut slot_paths = HashMap::new();
 
     for slot in &metadata.slots {

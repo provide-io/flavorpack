@@ -339,6 +339,13 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 
 	// Now write the actual slot data and update descriptors with correct offsets
 	for i, compressed := range slotDataToWrite {
+		// Skip empty data (self-referential slots)
+		if len(compressed) == 0 {
+			logger.Debug("⏭️  Skipping slot (self-referential, no data)", "index", i)
+			slotDescriptors[i].Offset = 0 // No offset for self-ref slots
+			continue
+		}
+
 		// Align position
 		currentPos, _ := out.Seek(0, 1)
 		alignedPos := AlignOffset(currentPos, SlotAlignment)

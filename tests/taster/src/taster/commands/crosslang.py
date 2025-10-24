@@ -9,7 +9,7 @@ import tempfile
 
 import click
 from provide.foundation import logger
-from provide.foundation.process import run_command
+from provide.foundation.process import run as run_command
 
 from flavor.ingredients.manager import IngredientManager as HelperManager
 

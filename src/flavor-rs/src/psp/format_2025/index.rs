@@ -9,8 +9,8 @@ use crate::exceptions::{FlavorError, Result};
 #[derive(Clone, Debug)]
 pub struct Index {
     // Core identification (8 bytes)
-    pub format_version: u32,   // 0x20250001
-    pub index_checksum: u32,   // Adler-32 of index block (with this field as 0)
+    pub format_version: u32, // 0x20250001
+    pub index_checksum: u32, // Adler-32 of index block (with this field as 0)
 
     // File structure (48 bytes)
     pub package_size: u64,      // Total file size
@@ -125,14 +125,26 @@ impl Index {
         use std::convert::TryInto;
 
         let mut index = Index::new();
-        index.format_version = u32::from_le_bytes(data[0..4].try_into()
-            .map_err(|_| FlavorError::Generic("Invalid format version bytes".into()))?);
-        index.index_checksum = u32::from_le_bytes(data[4..8].try_into()
-            .map_err(|_| FlavorError::Generic("Invalid index checksum bytes".into()))?);
-        index.package_size = u64::from_le_bytes(data[8..16].try_into()
-            .map_err(|_| FlavorError::Generic("Invalid package size bytes".into()))?);
-        index.launcher_size = u64::from_le_bytes(data[16..24].try_into()
-            .map_err(|_| FlavorError::Generic("Invalid launcher size bytes".into()))?);
+        index.format_version = u32::from_le_bytes(
+            data[0..4]
+                .try_into()
+                .map_err(|_| FlavorError::Generic("Invalid format version bytes".into()))?,
+        );
+        index.index_checksum = u32::from_le_bytes(
+            data[4..8]
+                .try_into()
+                .map_err(|_| FlavorError::Generic("Invalid index checksum bytes".into()))?,
+        );
+        index.package_size = u64::from_le_bytes(
+            data[8..16]
+                .try_into()
+                .map_err(|_| FlavorError::Generic("Invalid package size bytes".into()))?,
+        );
+        index.launcher_size = u64::from_le_bytes(
+            data[16..24]
+                .try_into()
+                .map_err(|_| FlavorError::Generic("Invalid launcher size bytes".into()))?,
+        );
 
         // Debug: Log the raw bytes we're parsing for metadata offset and size
         debug!(
@@ -144,24 +156,42 @@ impl Index {
             &data[32..40]
         );
 
-        index.metadata_offset = u64::from_le_bytes(data[24..32].try_into()
-            .map_err(|_| FlavorError::Generic("Invalid metadata offset bytes".into()))?);
-        index.metadata_size = u64::from_le_bytes(data[32..40].try_into()
-            .map_err(|_| FlavorError::Generic("Invalid metadata size bytes".into()))?);
+        index.metadata_offset = u64::from_le_bytes(
+            data[24..32]
+                .try_into()
+                .map_err(|_| FlavorError::Generic("Invalid metadata offset bytes".into()))?,
+        );
+        index.metadata_size = u64::from_le_bytes(
+            data[32..40]
+                .try_into()
+                .map_err(|_| FlavorError::Generic("Invalid metadata size bytes".into()))?,
+        );
 
         // Copy to locals before logging to avoid alignment issues
         let meta_off = index.metadata_offset;
         let meta_sz = index.metadata_size;
         debug!("Parsed metadata_offset: 0x{:016x} ({})", meta_off, meta_off);
         debug!("Parsed metadata_size: {} bytes", meta_sz);
-        index.slot_table_offset = u64::from_le_bytes(data[40..48].try_into()
-            .map_err(|_| FlavorError::Generic("Invalid slot table offset bytes".into()))?);
-        index.slot_table_size = u64::from_le_bytes(data[48..56].try_into()
-            .map_err(|_| FlavorError::Generic("Invalid slot table size bytes".into()))?);
-        index.slot_count = u32::from_le_bytes(data[56..60].try_into()
-            .map_err(|_| FlavorError::Generic("Invalid slot count bytes".into()))?);
-        index.flags = u32::from_le_bytes(data[60..64].try_into()
-            .map_err(|_| FlavorError::Generic("Invalid flags bytes".into()))?);
+        index.slot_table_offset = u64::from_le_bytes(
+            data[40..48]
+                .try_into()
+                .map_err(|_| FlavorError::Generic("Invalid slot table offset bytes".into()))?,
+        );
+        index.slot_table_size = u64::from_le_bytes(
+            data[48..56]
+                .try_into()
+                .map_err(|_| FlavorError::Generic("Invalid slot table size bytes".into()))?,
+        );
+        index.slot_count = u32::from_le_bytes(
+            data[56..60]
+                .try_into()
+                .map_err(|_| FlavorError::Generic("Invalid slot count bytes".into()))?,
+        );
+        index.flags = u32::from_le_bytes(
+            data[60..64]
+                .try_into()
+                .map_err(|_| FlavorError::Generic("Invalid flags bytes".into()))?,
+        );
         index.public_key.copy_from_slice(&data[64..96]);
         index.metadata_checksum.copy_from_slice(&data[96..128]);
         index.integrity_signature.copy_from_slice(&data[128..640]);
@@ -171,25 +201,49 @@ impl Index {
         index.cache_strategy = data[641];
         index.encryption_type = data[642];
         index.reserved_hint = data[643];
-        index.page_size = u32::from_le_bytes(data[644..648].try_into()
-            .map_err(|_| FlavorError::Generic("Invalid page size bytes".into()))?);
-        index.max_memory = u64::from_le_bytes(data[648..656].try_into()
-            .map_err(|_| FlavorError::Generic("Invalid max memory bytes".into()))?);
-        index.min_memory = u64::from_le_bytes(data[656..664].try_into()
-            .map_err(|_| FlavorError::Generic("Invalid min memory bytes".into()))?);
-        index.cpu_features = u64::from_le_bytes(data[664..672].try_into()
-            .map_err(|_| FlavorError::Generic("Invalid CPU features bytes".into()))?);
-        index.gpu_requirements = u64::from_le_bytes(data[672..680].try_into()
-            .map_err(|_| FlavorError::Generic("Invalid GPU requirements bytes".into()))?);
-        index.numa_hints = u64::from_le_bytes(data[680..688].try_into()
-            .map_err(|_| FlavorError::Generic("Invalid NUMA hints bytes".into()))?);
-        index.stream_chunk_size = u32::from_le_bytes(data[688..692].try_into()
-            .map_err(|_| FlavorError::Generic("Invalid stream chunk size bytes".into()))?);
+        index.page_size = u32::from_le_bytes(
+            data[644..648]
+                .try_into()
+                .map_err(|_| FlavorError::Generic("Invalid page size bytes".into()))?,
+        );
+        index.max_memory = u64::from_le_bytes(
+            data[648..656]
+                .try_into()
+                .map_err(|_| FlavorError::Generic("Invalid max memory bytes".into()))?,
+        );
+        index.min_memory = u64::from_le_bytes(
+            data[656..664]
+                .try_into()
+                .map_err(|_| FlavorError::Generic("Invalid min memory bytes".into()))?,
+        );
+        index.cpu_features = u64::from_le_bytes(
+            data[664..672]
+                .try_into()
+                .map_err(|_| FlavorError::Generic("Invalid CPU features bytes".into()))?,
+        );
+        index.gpu_requirements = u64::from_le_bytes(
+            data[672..680]
+                .try_into()
+                .map_err(|_| FlavorError::Generic("Invalid GPU requirements bytes".into()))?,
+        );
+        index.numa_hints = u64::from_le_bytes(
+            data[680..688]
+                .try_into()
+                .map_err(|_| FlavorError::Generic("Invalid NUMA hints bytes".into()))?,
+        );
+        index.stream_chunk_size = u32::from_le_bytes(
+            data[688..692]
+                .try_into()
+                .map_err(|_| FlavorError::Generic("Invalid stream chunk size bytes".into()))?,
+        );
         index.padding1.copy_from_slice(&data[692..704]);
 
         // Parse extended metadata
-        index.build_timestamp = u64::from_le_bytes(data[704..712].try_into()
-            .map_err(|_| FlavorError::Generic("Invalid build timestamp bytes".into()))?);
+        index.build_timestamp = u64::from_le_bytes(
+            data[704..712]
+                .try_into()
+                .map_err(|_| FlavorError::Generic("Invalid build timestamp bytes".into()))?,
+        );
         index.build_machine.copy_from_slice(&data[712..744]);
         index.source_hash.copy_from_slice(&data[744..776]);
         index.dependency_hash.copy_from_slice(&data[776..808]);
@@ -197,16 +251,31 @@ impl Index {
         index.provenance_uri.copy_from_slice(&data[824..832]);
 
         // Parse capabilities
-        index.capabilities = u64::from_le_bytes(data[832..840].try_into()
-            .map_err(|_| FlavorError::Generic("Invalid capabilities bytes".into()))?);
-        index.requirements = u64::from_le_bytes(data[840..848].try_into()
-            .map_err(|_| FlavorError::Generic("Invalid requirements bytes".into()))?);
-        index.extensions = u64::from_le_bytes(data[848..856].try_into()
-            .map_err(|_| FlavorError::Generic("Invalid extensions bytes".into()))?);
-        index.compatibility = u32::from_le_bytes(data[856..860].try_into()
-            .map_err(|_| FlavorError::Generic("Invalid compatibility bytes".into()))?);
-        index.protocol_version = u32::from_le_bytes(data[860..864].try_into()
-            .map_err(|_| FlavorError::Generic("Invalid protocol version bytes".into()))?);
+        index.capabilities = u64::from_le_bytes(
+            data[832..840]
+                .try_into()
+                .map_err(|_| FlavorError::Generic("Invalid capabilities bytes".into()))?,
+        );
+        index.requirements = u64::from_le_bytes(
+            data[840..848]
+                .try_into()
+                .map_err(|_| FlavorError::Generic("Invalid requirements bytes".into()))?,
+        );
+        index.extensions = u64::from_le_bytes(
+            data[848..856]
+                .try_into()
+                .map_err(|_| FlavorError::Generic("Invalid extensions bytes".into()))?,
+        );
+        index.compatibility = u32::from_le_bytes(
+            data[856..860]
+                .try_into()
+                .map_err(|_| FlavorError::Generic("Invalid compatibility bytes".into()))?,
+        );
+        index.protocol_version = u32::from_le_bytes(
+            data[860..864]
+                .try_into()
+                .map_err(|_| FlavorError::Generic("Invalid protocol version bytes".into()))?,
+        );
 
         // Parse future crypto and reserved
         index.future_crypto.copy_from_slice(&data[864..1376]);

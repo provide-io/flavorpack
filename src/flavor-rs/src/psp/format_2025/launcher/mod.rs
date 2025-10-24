@@ -1,14 +1,14 @@
 //! PSPF/2025 package launcher
 
+mod command;
+mod extraction;
 mod filesystem;
 mod workenv;
-mod extraction;
-mod command;
 
-use filesystem::{copy_dir_all, fix_shebangs};
-use workenv::{get_workenv_paths, check_disk_space, setup_workenv_directories};
-use extraction::{extract_slots, build_slot_paths};
 use command::prepare_command;
+use extraction::{build_slot_paths, extract_slots};
+use filesystem::{copy_dir_all, fix_shebangs};
+use workenv::{check_disk_space, get_workenv_paths, setup_workenv_directories};
 
 use crate::api::LaunchOptions;
 use crate::exceptions::{FlavorError, Result};
@@ -24,12 +24,11 @@ use std::process::Command;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 use super::execution::{
-    check_workenv_validity_full, execute_setup_commands,
-    save_index_metadata, save_package_checksum,
+    check_workenv_validity_full, execute_setup_commands, save_index_metadata, save_package_checksum,
 };
 use super::locking::{
-    cleanup_stale_extractions, mark_extraction_complete, release_lock,
-    try_acquire_lock, wait_for_extraction,
+    cleanup_stale_extractions, mark_extraction_complete, release_lock, try_acquire_lock,
+    wait_for_extraction,
 };
 use super::paths::WorkenvPaths;
 use super::reader::Reader;
@@ -58,7 +57,10 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
     debug!("📖 Reading PSPF bundle");
 
     // Log environment variables at trace level
-    trace!("🔧 Environment variables: {} total", std::env::vars().count());
+    trace!(
+        "🔧 Environment variables: {} total",
+        std::env::vars().count()
+    );
     for (key, value) in std::env::vars() {
         if key.starts_with("FLAVOR_") {
             trace!("📝 Environment variable: {}={}", key, value);
@@ -72,35 +74,48 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
     let index = reader.read_index()?.clone();
 
     // Verify integrity based on validation level
-    use crate::psp::format_2025::defaults::{get_validation_level, ValidationLevel};
+    use crate::psp::format_2025::defaults::{ValidationLevel, get_validation_level};
 
     let validation_level = get_validation_level();
     if matches!(validation_level, ValidationLevel::None) {
-        eprintln!("⚠️ SECURITY WARNING: Skipping all integrity verification (FLAVOR_VALIDATION=none)");
+        eprintln!(
+            "⚠️ SECURITY WARNING: Skipping all integrity verification (FLAVOR_VALIDATION=none)"
+        );
         eprintln!("⚠️ This is NOT RECOMMENDED for production use");
         warn!("⚠️ VALIDATION DISABLED: Skipping integrity verification");
     } else {
-            debug!("🔍 Verifying package integrity (level: {:?})", validation_level);
-            // Call verifier
-            let verify_result = super::verifier::verify(package_path)?;
-            if verify_result.signature_valid {
-                debug!("✅ Package integrity verified");
-            } else if matches!(validation_level, ValidationLevel::Minimal | ValidationLevel::Relaxed) {
-                eprintln!("⚠️ SECURITY WARNING: Package signature verification failed");
-                eprintln!("⚠️ Package may be corrupted or tampered with");
-                eprintln!("⚠️ Continuing due to validation level: {:?}", validation_level);
-                warn!("⚠️ Package signature verification failed, continuing");
-            } else if matches!(validation_level, ValidationLevel::Standard) {
-                eprintln!("🚨 SECURITY WARNING: Package signature verification failed");
-                eprintln!("🚨 Package may be corrupted or tampered with");
-                eprintln!("🚨 Continuing with standard validation (use FLAVOR_VALIDATION=strict to enforce)");
-                warn!("⚠️ Package signature verification failed, continuing with standard validation");
-            } else if matches!(validation_level, ValidationLevel::Strict) {
-                error!("❌ Package signature verification failed");
-                return Err(FlavorError::Generic(
-                    "Package signature verification failed".to_string(),
-                ));
-            }
+        debug!(
+            "🔍 Verifying package integrity (level: {:?})",
+            validation_level
+        );
+        // Call verifier
+        let verify_result = super::verifier::verify(package_path)?;
+        if verify_result.signature_valid {
+            debug!("✅ Package integrity verified");
+        } else if matches!(
+            validation_level,
+            ValidationLevel::Minimal | ValidationLevel::Relaxed
+        ) {
+            eprintln!("⚠️ SECURITY WARNING: Package signature verification failed");
+            eprintln!("⚠️ Package may be corrupted or tampered with");
+            eprintln!(
+                "⚠️ Continuing due to validation level: {:?}",
+                validation_level
+            );
+            warn!("⚠️ Package signature verification failed, continuing");
+        } else if matches!(validation_level, ValidationLevel::Standard) {
+            eprintln!("🚨 SECURITY WARNING: Package signature verification failed");
+            eprintln!("🚨 Package may be corrupted or tampered with");
+            eprintln!(
+                "🚨 Continuing with standard validation (use FLAVOR_VALIDATION=strict to enforce)"
+            );
+            warn!("⚠️ Package signature verification failed, continuing with standard validation");
+        } else if matches!(validation_level, ValidationLevel::Strict) {
+            error!("❌ Package signature verification failed");
+            return Err(FlavorError::Generic(
+                "Package signature verification failed".to_string(),
+            ));
+        }
     }
 
     // Read metadata and clone to avoid borrow issues
@@ -128,13 +143,15 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
             "📁 Using custom work environment from FLAVOR_WORKENV: {}",
             custom_workenv
         );
-        let cache_dir = PathBuf::from(custom_workenv).parent()
+        let cache_dir = PathBuf::from(custom_workenv)
+            .parent()
             .and_then(|p| p.parent())
             .map(|p| p.to_path_buf())
             .unwrap_or_else(get_cache_dir);
         WorkenvPaths::new(cache_dir, package_path)
     } else if let Some(ref workdir) = options.workdir {
-        let cache_dir = PathBuf::from(workdir).parent()
+        let cache_dir = PathBuf::from(workdir)
+            .parent()
             .and_then(|p| p.parent())
             .map(|p| p.to_path_buf())
             .unwrap_or_else(get_cache_dir);
@@ -154,7 +171,10 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
         use std::os::unix::fs::PermissionsExt;
         let permissions = fs::Permissions::from_mode(DEFAULT_DIR_PERMS as u32);
         fs::set_permissions(&workenv_path, permissions)?;
-        debug!("🔒 Set secure permissions {} on workenv directory", DEFAULT_DIR_PERMS);
+        debug!(
+            "🔒 Set secure permissions {} on workenv directory",
+            DEFAULT_DIR_PERMS
+        );
     }
 
     info!("📁 Work environment: {workenv_path:?}");
@@ -225,7 +245,10 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
                 debug!("🔒 Set secure permissions on temp extraction directory");
             }
 
-            info!("📁 Created temporary extraction directory: {:?}", temp_extract_dir);
+            info!(
+                "📁 Created temporary extraction directory: {:?}",
+                temp_extract_dir
+            );
             trace!("🗂️ Extracting to temp before atomic move");
 
             // Extract slots to temporary directory
@@ -430,8 +453,12 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
                 let reader = BufReader::new(file);
                 if let Some(Ok(first_line)) = reader.lines().next() {
                     let has_shebang = first_line.starts_with("#!");
-                    debug!("🔍 Checking if executable is script: {} - First line: {:?} - Has shebang: {}",
-                           executable, &first_line[..first_line.len().min(50)], has_shebang);
+                    debug!(
+                        "🔍 Checking if executable is script: {} - First line: {:?} - Has shebang: {}",
+                        executable,
+                        &first_line[..first_line.len().min(50)],
+                        has_shebang
+                    );
                     has_shebang
                 } else {
                     debug!("🔍 Could not read first line of {}", executable);
