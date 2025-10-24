@@ -356,7 +356,7 @@ flavor pack pyproject.toml --key-seed "my-secret-seed"
 Enable verbose output:
 
 ```bash
-FLAVOR_LOG_LEVEL=debug flavor pack pyproject.toml
+FOUNDATION_LOG_LEVEL=debug flavor pack pyproject.toml
 ```
 
 ### Cache Issues

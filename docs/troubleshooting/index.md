@@ -37,7 +37,7 @@ export FOUNDATION_LOG_LEVEL=debug
 FOUNDATION_LOG_LEVEL=debug flavor pack pyproject.toml
 
 # Debug package execution
-FOUNDATION_LOG_LEVEL=debug ./myapp.psp
+FLAVOR_LOG_LEVEL=debug ./myapp.psp
 ```
 
 ## Common Issues
@@ -427,7 +427,7 @@ export FLAVOR_NO_CACHE=1
 
 ```bash
 # Maximum verbosity
-FLAVOR_LOG_LEVEL=trace flavor pack pyproject.toml
+FOUNDATION_LOG_LEVEL=trace flavor pack pyproject.toml
 
 # Log to file
 FLAVOR_LOG_FILE=build.log flavor pack pyproject.toml
@@ -558,7 +558,7 @@ uname -a
 flavor inspect problematic.psp
 
 # Error logs
-FLAVOR_LOG_LEVEL=debug flavor pack pyproject.toml 2>&1 | tee error.log
+FOUNDATION_LOG_LEVEL=debug flavor pack pyproject.toml 2>&1 | tee error.log
 
 # Environment
 env | grep FLAVOR

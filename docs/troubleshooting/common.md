@@ -605,7 +605,7 @@ dist/bin/flavor-rs-launcher-linux_amd64 --version
 dist/bin/flavor-go-builder-linux_amd64 --help
 
 # 3. Check helper selection
-FLAVOR_LOG_LEVEL=debug flavor pack 2>&1 | grep -i "helper"
+FOUNDATION_LOG_LEVEL=debug flavor pack 2>&1 | grep -i "helper"
 
 # 4. Force specific helper
 flavor pack \

@@ -120,19 +120,21 @@ sign:
 
 ### Key Rotation
 
-Implement regular key rotation:
+Implement regular key rotation by rebuilding packages with new keys:
 
 ```bash
 # Generate new key
-flavor keygen --output keys/2024-01.pem
+flavor keygen --out-dir keys/2024-01
 
-# Re-sign existing packages
-for package in dist/*.psp; do
-  flavor resign "$package" --private-key keys/2024-01.pem
+# Rebuild packages with new key
+for manifest in projects/*/pyproject.toml; do
+  flavor pack --manifest "$manifest" \
+    --private-key keys/2024-01/flavor-private.key \
+    --public-key keys/2024-01/flavor-public.key
 done
 
 # Archive old key
-mv keys/2023-12.pem keys/archive/
+mv keys/2023-12 keys/archive/
 ```
 
 ## Signing Process
@@ -146,45 +148,39 @@ mv keys/2023-12.pem keys/archive/
 
 ### Build-Time Signing
 
-Sign packages during build:
+All signing happens during package build with `flavor pack`:
 
 ```bash
-# Basic signing
-flavor pack pyproject.toml --private-key private.pem
+# Basic signing with key files
+flavor pack pyproject.toml \
+  --private-key keys/flavor-private.key \
+  --public-key keys/flavor-public.key
 
-# With deterministic seed
+# With deterministic seed (for reproducible builds)
 flavor pack pyproject.toml --key-seed "secret-seed"
 
-# With key from environment
-export FLAVOR_PRIVATE_KEY_PATH=~/.flavor/keys/prod.pem
-flavor pack pyproject.toml
+# Signing is automatic - no separate sign command needed
 ```
 
-### Post-Build Signing
+!!! note "No Post-Build Signing"
+    FlavorPack does not support signing packages after they've been built. Signing happens only during `flavor pack`. To re-sign a package, rebuild it with new keys.
 
-Sign existing unsigned packages:
+### Batch Building with Signing
 
-```bash
-# Sign unsigned package
-flavor sign unsigned.psp --private-key private.pem --output signed.psp
-
-# Re-sign with new key
-flavor resign signed.psp --private-key new-key.pem
-```
-
-### Batch Signing
-
-Sign multiple packages:
+Build and sign multiple packages:
 
 ```bash
 #!/bin/bash
-# sign-all.sh
+# build-and-sign-all.sh
 
-KEY_FILE="$1"
-for package in dist/*.psp; do
-  echo "Signing $package..."
-  flavor sign "$package" --private-key "$KEY_FILE" \
-    --output "signed/$(basename $package)"
+PRIVATE_KEY="$1"
+PUBLIC_KEY="$2"
+
+for manifest in projects/*/pyproject.toml; do
+  echo "Building and signing $manifest..."
+  flavor pack --manifest "$manifest" \
+    --private-key "$PRIVATE_KEY" \
+    --public-key "$PUBLIC_KEY"
 done
 ```
 
@@ -304,19 +300,21 @@ apt-get install myapp-signing-keys
 flavor verify package.psp --trusted-keys /etc/flavor/trusted-keys/
 ```
 
-### 3. Web of Trust
+### 3. Web of Trust (Future)
 
-Multiple signatures from trusted parties:
+!!! info "Planned Feature"
+    Multiple signatures from trusted parties is planned for a future release.
 
-```bash
-# Sign with multiple keys
-flavor pack pyproject.toml --private-key key1.pem
-flavor cosign package.psp --private-key key2.pem
-flavor cosign package.psp --private-key key3.pem
+    **Planned workflow:**
+    ```bash
+    # Sign with multiple keys (not yet implemented)
+    flavor pack pyproject.toml --private-key key1.pem
+    flavor cosign package.psp --private-key key2.pem
+    flavor cosign package.psp --private-key key3.pem
 
-# Verify requires threshold
-flavor verify package.psp --min-signatures 2
-```
+    # Verify requires threshold
+    flavor verify package.psp --min-signatures 2
+    ```
 
 ### 4. Certificate Authority (Future)
 
@@ -330,31 +328,33 @@ ca_bundle = "/etc/ssl/certs/ca-certificates.crt"
 
 ## Key Distribution
 
-### Public Key Formats
+### Public Key Format
 
-Export public keys in various formats:
+FlavorPack generates keys in PEM format:
 
 ```bash
-# Raw binary (32 bytes)
-flavor keygen --export-public raw > key.raw
+# Generate keys
+flavor keygen --out-dir keys
 
-# PEM format
-flavor keygen --export-public pem > key.pem
-
-# SSH format
-flavor keygen --export-public ssh > key.pub
-
-# JSON Web Key
-flavor keygen --export-public jwk > key.json
+# Public key is in PEM format
+cat keys/flavor-public.key
+# -----BEGIN PUBLIC KEY-----
+# ...
+# -----END PUBLIC KEY-----
 ```
+
+!!! info "Key Format Conversion"
+    For other formats (SSH, JWK, etc.), use standard tools like `ssh-keygen` or `openssl` to convert the PEM-formatted public key.
 
 ### Distribution Channels
 
 #### 1. Package Metadata
 
+The public key is automatically embedded in every signed package's index block. Recipients can extract it for verification:
+
 ```bash
-# Embed in package documentation
-flavor pack pyproject.toml --embed-key-info
+# Inspect package to see embedded public key
+flavor inspect package.psp
 ```
 
 #### 2. Key Servers
@@ -388,7 +388,7 @@ git commit -m "Add signing public keys"
 1. **Generate keys on secure systems**
    ```bash
    # Use air-gapped machine for production keys
-   flavor keygen --output /secure/usb/prod.pem
+   flavor keygen --out-dir /secure/usb/prod-keys
    ```
 
 2. **Use unique keys per environment**
@@ -402,7 +402,7 @@ git commit -m "Add signing public keys"
 3. **Rotate keys regularly**
    ```bash
    # Quarterly rotation for production
-   flavor keygen --output "keys/$(date +%Y-Q%q).pem"
+   flavor keygen --out-dir "keys/$(date +%Y-Q%q)"
    ```
 
 4. **Verify packages before distribution**
@@ -486,8 +486,10 @@ flavor verify package.psp --public-key correct-key.pub
 # Check package integrity
 sha256sum package.psp
 
-# Re-sign if corrupted
-flavor resign package.psp --private-key private.pem
+# If corrupted, rebuild the package
+flavor pack --manifest pyproject.toml \
+  --private-key keys/flavor-private.key \
+  --public-key keys/flavor-public.key
 ```
 
 #### "Key format not recognized"
@@ -505,54 +507,78 @@ openssl pkey -in key.pem -text | head -1
 
 ```bash
 # Verbose verification
-FLAVOR_LOG_LEVEL=debug flavor verify package.psp
+FOUNDATION_LOG_LEVEL=debug flavor verify package.psp
 
 # Inspect signature details
-flavor inspect package.psp --show-signature
+flavor inspect package.psp
 
-# Extract and examine public key
-flavor extract-key package.psp > embedded.pub
-openssl pkey -in embedded.pub -pubin -text
+# The inspect command shows:
+# - Package signature status
+# - Embedded public key (first 16 bytes)
+# - Format version and metadata
 ```
 
-## Advanced Topics
+## Advanced Topics (Future Features)
 
-### Multi-Signature Packages
+The following features are planned for future releases:
 
-```python
-# Sign with multiple keys
-from flavor.signing import multi_sign
+### Multi-Signature Packages (Planned)
 
-multi_sign("package.psp", [
-    "key1.pem",
-    "key2.pem", 
-    "key3.pem"
-])
-```
+!!! info "Future Feature"
+    Support for multiple signatures per package is under development.
 
-### Threshold Signatures
+    **Planned API:**
+    ```python
+    # Sign with multiple keys (not yet implemented)
+    from flavor.signing import multi_sign
 
-```toml
-[tool.flavor.security.multisig]
-required_signatures = 2
-total_signers = 3
-```
+    multi_sign("package.psp", [
+        "key1.pem",
+        "key2.pem",
+        "key3.pem"
+    ])
+    ```
 
-### Hardware Token Integration
+### Threshold Signatures (Planned)
 
-```bash
-# YubiKey signing
-flavor pack pyproject.toml --pkcs11-module /usr/lib/opensc-pkcs11.so
-```
+!!! info "Future Feature"
+    Threshold signature schemes (N-of-M signatures required) are planned.
 
-### Notarization
+    **Planned manifest format:**
+    ```toml
+    [tool.flavor.security.multisig]
+    required_signatures = 2
+    total_signers = 3
+    ```
 
-```bash
-# macOS notarization
-xcrun altool --notarize-app \
-  --primary-bundle-id "com.example.myapp" \
-  --file package.psp
-```
+### Hardware Token Integration (Planned)
+
+!!! info "Future Feature"
+    PKCS#11 hardware token support (YubiKey, HSM, etc.) is planned.
+
+    **Planned workflow:**
+    ```bash
+    # YubiKey signing (not yet implemented)
+    flavor pack pyproject.toml --pkcs11-module /usr/lib/opensc-pkcs11.so
+    ```
+
+### Notarization (Platform-Specific)
+
+!!! info "Platform-Specific"
+    For macOS code signing and notarization, use Apple's standard tools after building:
+
+    ```bash
+    # Build package
+    flavor pack pyproject.toml --output myapp.psp
+
+    # Sign with codesign (macOS only)
+    codesign --sign "Developer ID" myapp.psp
+
+    # Notarize with Apple (macOS only)
+    xcrun notarytool submit myapp.psp \
+      --apple-id "developer@example.com" \
+      --team-id "TEAMID"
+    ```
 
 ## Related Documentation
 
