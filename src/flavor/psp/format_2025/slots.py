@@ -11,7 +11,6 @@ from __future__ import annotations
 from pathlib import Path
 import struct
 from typing import Any
-import zlib
 
 from attrs import define, field, validators
 from provide.foundation.crypto import hash_name
@@ -361,6 +360,7 @@ class SlotView:
     def compute_checksum(self, data: bytes) -> int:
         """Compute SHA-256 checksum of data (first 8 bytes as uint64)."""
         import hashlib
+
         hash_bytes = hashlib.sha256(data).digest()[:8]
         return int.from_bytes(hash_bytes, byteorder="little")
 

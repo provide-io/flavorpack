@@ -354,7 +354,9 @@ class PythonDistManager:
         }
 
         logger.info("✅ Standalone distribution created successfully")
-        logger.info(f"📊 Distribution size: {cast(int, dist_info['distribution_size']) / (1024 * 1024):.1f} MB")
+        logger.info(
+            f"📊 Distribution size: {cast(int, dist_info['distribution_size']) / (1024 * 1024):.1f} MB"
+        )
 
         return dist_info
 

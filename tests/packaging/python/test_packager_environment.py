@@ -7,7 +7,6 @@ from __future__ import annotations
 
 from pathlib import Path
 import sys
-import tomllib
 from unittest.mock import patch
 
 import pytest
@@ -240,7 +239,6 @@ class TestGetPythonBinaryInfo:
             assert info["path"] == sys.executable
             assert info["is_system"] is True
             assert info["manager"] == "system"
-
 
 
 # 🌶️🧪📦

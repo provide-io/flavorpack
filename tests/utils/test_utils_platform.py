@@ -106,8 +106,8 @@ class TestPlatformDetection:
     def test_get_platform_string(self) -> None:
         """Test platform string generation."""
         from provide.foundation.platform.detection import (
-            get_os_name as foundation_get_os_name,
             get_arch_name as foundation_get_arch_name,
+            get_os_name as foundation_get_os_name,
             get_platform_string as foundation_get_platform_string,
         )
 
@@ -135,8 +135,8 @@ class TestPlatformDetection:
     def test_get_platform_string_combinations(self, mock_machine, mock_system) -> None:
         """Test various platform string combinations."""
         from provide.foundation.platform.detection import (
-            get_os_name as foundation_get_os_name,
             get_arch_name as foundation_get_arch_name,
+            get_os_name as foundation_get_os_name,
             get_platform_string as foundation_get_platform_string,
         )
 
@@ -288,8 +288,8 @@ class TestPlatformDetection:
     def test_unknown_platform_handling(self, mock_machine, mock_system) -> None:
         """Test handling of unknown platform values."""
         from provide.foundation.platform.detection import (
-            get_os_name as foundation_get_os_name,
             get_arch_name as foundation_get_arch_name,
+            get_os_name as foundation_get_os_name,
         )
 
         # Unknown OS

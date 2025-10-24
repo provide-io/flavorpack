@@ -89,20 +89,20 @@ def get_helpers_dir() -> Path:
 def get_helper_path(helper_name: str) -> Path:
     """Get the path to a specific helper binary."""
     helpers_dir = get_helpers_dir()
-    
+
     # Add .exe extension on Windows
     if is_windows():
         helper_name = f"{helper_name}.exe"
-    
+
     helper_path = helpers_dir / helper_name
-    
+
     # Make executable if needed
     if helper_path.exists() and not os.access(helper_path, os.X_OK):
         try:
             helper_path.chmod(0o755)
         except:
             pass
-    
+
     return helper_path
 
 
@@ -131,7 +131,7 @@ def get_rs_launcher() -> Path:
     return True
 
 
-def main():
+def main() -> None:
     """Main entry point."""
     parser = argparse.ArgumentParser(description="Embed helpers for platform-specific wheel")
     parser.add_argument("platform", help="Target platform (e.g., darwin_arm64)")

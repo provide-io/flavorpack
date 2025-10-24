@@ -2,6 +2,8 @@
 """Validate Flavor wheels for correctness and completeness."""
 
 import argparse
+import builtins
+import contextlib
 from pathlib import Path
 import subprocess
 import sys
@@ -94,10 +96,8 @@ def validate_helpers(wheel_path: Path) -> tuple[bool, list[str]]:
                     messages.append(f"  ✓ {helper} ({size_kb:.0f} KB)")
 
                     # Make executable first
-                    try:
+                    with contextlib.suppress(builtins.BaseException):
                         helper_path.chmod(0o755)
-                    except:
-                        pass
 
                     # Try to execute with --version
                     try:
@@ -309,7 +309,7 @@ def validate_all_wheels(dist_dir: Path, full: bool = False) -> bool:
     return all_valid
 
 
-def main():
+def main() -> None:
     """Main entry point."""
     parser = argparse.ArgumentParser(description="Validate Flavor wheels")
     parser.add_argument("wheel", nargs="?", type=Path, help="Path to wheel file to validate")

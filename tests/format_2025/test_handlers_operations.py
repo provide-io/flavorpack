@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
-from provide.foundation.archive import ArchiveLimits, ArchiveOperation
+from provide.foundation.archive import ArchiveOperation
 from provide.foundation.archive.base import ArchiveError
 import pytest
 
@@ -19,8 +18,6 @@ from flavor.psp.format_2025.constants import (
 )
 from flavor.psp.format_2025.handlers import (
     apply_operations,
-    create_tar_archive,
-    extract_archive,
     map_operations,
     reverse_operations,
 )
@@ -377,5 +374,3 @@ class TestReverseOperations:
         decompressed = reverse_operations(compressed, packed_ops)
 
         assert decompressed == data
-
-

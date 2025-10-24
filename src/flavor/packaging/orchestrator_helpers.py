@@ -83,9 +83,7 @@ def create_builder_manifest(
     uv_exe = "uv.exe" if windows else "uv"
     bin_dir = "Scripts" if windows else "bin"
     # Use the exact Python binary name that UV provides
-    python_exe = (
-        "python.exe" if windows else "python3"
-    )  # UV installs Python as python3 on all Unix platforms
+    python_exe = "python.exe" if windows else "python3"  # UV installs Python as python3 on all Unix platforms
     python_path = f"{{workenv}}/{bin_dir}/{python_exe}"
     package_exe = get_cli_executable_name(package_name, build_config, windows)
 

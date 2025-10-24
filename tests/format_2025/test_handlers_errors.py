@@ -5,27 +5,20 @@ from __future__ import annotations
 from pathlib import Path
 from unittest.mock import Mock, patch
 
-from provide.foundation.archive import ArchiveLimits, ArchiveOperation
+from provide.foundation.archive import ArchiveOperation
 from provide.foundation.archive.base import ArchiveError
 import pytest
 
 from flavor.psp.format_2025.constants import (
-    OP_BZIP2,
     OP_GZIP,
-    OP_NONE,
     OP_TAR,
-    OP_XZ,
-    OP_ZSTD,
 )
 from flavor.psp.format_2025.handlers import (
     apply_operations,
     create_tar_archive,
-    extract_archive,
-    map_operations,
     reverse_operations,
 )
 from flavor.psp.format_2025.operations import pack_operations
-
 
 
 @pytest.mark.unit
@@ -116,7 +109,6 @@ class TestErrorPaths:
 
     def test_apply_single_operation_unsupported_warning(self) -> None:
         """Test unsupported operation warning in _apply_single_operation."""
-        from provide.foundation.archive import ArchiveOperation
 
         from flavor.psp.format_2025.handlers import _apply_single_operation
 

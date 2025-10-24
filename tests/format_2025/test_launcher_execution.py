@@ -3,7 +3,6 @@ Test suite for production-ready PSPFLauncher implementation.
 Using TDD approach to drive the implementation.
 """
 
-import gzip
 import hashlib
 from pathlib import Path
 import tarfile

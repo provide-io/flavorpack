@@ -1,5 +1,5 @@
-from pathlib import Path
 import os
+from pathlib import Path
 import shutil
 import tempfile
 
@@ -16,7 +16,7 @@ MOCK_LAUNCHER_SIZE = 124  # Simplified for unit tests
 MOCK_LAUNCHER_DATA = b"FAKE_LAUNCHER_FOR_TEST" + b"\x00" * (MOCK_LAUNCHER_SIZE - 22)
 
 
-def pytest_configure(config):
+def pytest_configure(config) -> None:
     """Register custom markers."""
     config.addinivalue_line(
         "markers",
@@ -27,7 +27,7 @@ def pytest_configure(config):
     )
 
 
-def pytest_collection_modifyitems(config, items):
+def pytest_collection_modifyitems(config, items) -> None:
     """Auto-skip tests marked requires_helpers if binaries not found."""
     # Check if launcher binaries are available
     binary_paths = [
@@ -57,18 +57,14 @@ def pytest_collection_modifyitems(config, items):
         skipped_count = 0
         for item in items:
             # Skip tests marked with requires_helpers
-            if "requires_helpers" in item.keywords:
-                item.add_marker(skip_helpers)
-                skipped_count += 1
-            # Also skip integration tests (they typically need binaries)
-            elif "integration" in item.keywords and "requires_helpers" not in item.keywords:
+            if "requires_helpers" in item.keywords or (
+                "integration" in item.keywords and "requires_helpers" not in item.keywords
+            ):
                 item.add_marker(skip_helpers)
                 skipped_count += 1
 
         if skipped_count > 0:
-            print(
-                f"\n⚠️  Skipping {skipped_count} integration tests (launcher binaries not found)"
-            )
+            print(f"\n⚠️  Skipping {skipped_count} integration tests (launcher binaries not found)")
             print("   Run 'make build-helpers' to enable integration tests")
 
 
