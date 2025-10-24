@@ -167,11 +167,6 @@ export XDG_CACHE_HOME=/custom/cache
 ./myapp.psp
 ```
 
-### FLAVOR_WORKENV
-
-**Deprecated:** Use `FLAVOR_CACHE` instead
-**Purpose:** Legacy cache directory override
-
 ---
 
 ## Logging Variables
@@ -556,6 +551,21 @@ export FOUNDATION_LOG_LEVEL=warning
     - Never commit `.env` files with secrets
     - Use manifest `unset` for sensitive variables
     - Use `pass` to explicitly allow variables
+
+---
+
+## Deprecated Variables
+
+!!! danger "Do Not Use"
+    These variables are deprecated and should not be used in new code. They are documented here only for reference when maintaining legacy configurations.
+
+### FLAVOR_WORKENV
+
+**Status:** Deprecated
+**Replacement:** Use `FLAVOR_CACHE` instead
+**Purpose:** Legacy cache directory override (no longer supported)
+
+This variable has been replaced by `FLAVOR_CACHE`. Using `FLAVOR_WORKENV` may result in undefined behavior.
 
 ---
 

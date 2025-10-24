@@ -13,10 +13,8 @@ FlavorPack provides first-class support for Python applications, handling everyt
 | Python Version | Support Level | Notes |
 |---------------|--------------|-------|
 | 3.12+ | Full | Recommended for new projects |
-| 3.11 | Full | Default in most examples |
-| 3.10 | Full | Good compatibility |
-| 3.9 | Limited | Minimum supported version |
-| 3.8 | None | End of life October 2024 |
+| 3.11 | Full | Minimum required version |
+| 3.10 and older | None | Not supported |
 
 ### Specifying Python Version
 

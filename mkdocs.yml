@@ -8,7 +8,7 @@ edit_uri: edit/main/docs/
 
 # Development server configuration
 dev_addr: '127.0.0.1:8007'
-copyright: Copyright &copy; 2024 provide.io
+copyright: Copyright &copy; 2024-2025 provide.io
 
 # Standalone mode settings
 docs_dir: docs
@@ -276,7 +276,7 @@ nav:
       - Debugging: guide/advanced/debugging.md
   
   # SECTION 3: API Reference (technical documentation)
-  - API Reference: api/reference/
+  - API Reference: api/index.md
   
   # SECTION 4: Cookbook (practical examples)
   - Cookbook:
