@@ -61,16 +61,9 @@ flavor verify myapp.psp
 
 ## 📦 PSPF Format
 
-The Progressive Secure Package Format is a polyglot file format that works as both an OS executable and a structured package:
+The Progressive Secure Package Format is a polyglot file format that works as both an OS executable and a structured package. Each `.psp` file contains a native launcher, package metadata, and compressed data slots.
 
-```
-[Native Launcher] → Go or Rust executable
-[8192-byte Index] → Format metadata and offsets
-[Metadata] → Gzipped JSON manifest
-[Slot Table] → Slot descriptors
-[Slots 0..N] → Application code, runtime, dependencies
-[📦🪄] → 8-byte emoji magic footer
-```
+See the [PSPF Format Specification](docs/reference/spec/fep-0001-core-format-and-operation-chains.md#32-package-structure-overview) for the complete binary layout diagram and technical details.
 
 ## 📚 Documentation
 

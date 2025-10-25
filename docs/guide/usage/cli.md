@@ -19,11 +19,14 @@ flavor [OPTIONS] COMMAND [ARGS]...
 
 ### Environment Variables
 
-Configure logging behavior:
+FlavorPack uses numerous environment variables for configuration and debugging. For a complete reference, see the [Environment Variables Guide](environment.md).
 
-- **FOUNDATION_LOG_LEVEL**: Set log level (`trace`, `debug`, `info`, `warning`, `error`)
+Key variables:
+- **FOUNDATION_LOG_LEVEL**: Set log level for Python components (`trace`, `debug`, `info`, `warning`, `error`)
+- **FLAVOR_LOG_LEVEL**: Set log level for Go/Rust components
 - **FOUNDATION_LOG_FILE**: Write logs to file
-- **FOUNDATION_SETUP_LOG_LEVEL**: Control Foundation's initialization logs
+
+See [Environment Variables](environment.md) for the complete list and detailed examples.
 
 ---
 
@@ -531,9 +534,8 @@ flavor helpers build [OPTIONS]
 
 | Option | Description |
 |--------|-------------|
-| `--lang LANGUAGE` | Build helpers for specific language (go, rust, or all) |
-| `--platform PLATFORM` | Target platform (e.g., linux_amd64, darwin_arm64) |
-| `--force` | Rebuild even if helpers already exist |
+| `--lang [go\|rust\|all]` | Build helpers for specific language (default: all) |
+| `-f, --force` | Rebuild even if helpers already exist |
 
 **Examples:**
 
@@ -546,9 +548,6 @@ flavor helpers build --lang rust
 
 # Build only Go helpers
 flavor helpers build --lang go
-
-# Build for specific platform
-flavor helpers build --platform linux_amd64
 
 # Force rebuild
 flavor helpers build --force
@@ -594,8 +593,7 @@ flavor helpers test [OPTIONS]
 
 | Option | Description |
 |--------|-------------|
-| `--helper HELPER_NAME` | Test specific helper |
-| `--verbose` | Show detailed test output |
+| `--lang [go\|rust\|all]` | Test helpers for specific language (default: all) |
 
 **Examples:**
 
@@ -603,11 +601,11 @@ flavor helpers test [OPTIONS]
 # Test all helpers
 flavor helpers test
 
-# Test specific helper
-flavor helpers test --helper flavor-rs-launcher-darwin_arm64
+# Test only Rust helpers
+flavor helpers test --lang rust
 
-# Verbose output
-flavor helpers test --verbose
+# Test only Go helpers
+flavor helpers test --lang go
 ```
 
 ---
