@@ -1,6 +1,6 @@
 #!/bin/bash
-# Get the ingredient pipeline run ID to use
-# Usage: get-ingredient-run.sh [run-id]
+# Get the helper pipeline run ID to use
+# Usage: get-helper-run.sh [run-id]
 
 set -e
 
@@ -9,14 +9,14 @@ SPECIFIED_RUN="${1:-}"
 if [ -n "$SPECIFIED_RUN" ]; then
     # Use specified run
     RUN_ID="$SPECIFIED_RUN"
-    echo "📌 Using specified Ingredient Pipeline run: $RUN_ID"
+    echo "📌 Using specified Helper Pipeline run: $RUN_ID"
 else
-    # Get latest successful ingredient pipeline run
-    echo "🔍 Finding latest successful Ingredient Pipeline run..."
-    RUN_ID=$(gh run list --workflow=01-ingredient-prep.yml --status=success --limit=1 --json databaseId -q '.[0].databaseId')
+    # Get latest successful helper pipeline run
+    echo "🔍 Finding latest successful Helper Pipeline run..."
+    RUN_ID=$(gh run list --workflow=01-helper-prep.yml --status=success --limit=1 --json databaseId -q '.[0].databaseId')
     
     if [ -z "$RUN_ID" ]; then
-        echo "❌ No successful Ingredient Pipeline runs found"
+        echo "❌ No successful Helper Pipeline runs found"
         exit 1
     fi
     
@@ -32,7 +32,7 @@ if [ -z "$VERSION" ]; then
     echo "⚠️ Could not extract version from run, using default: $VERSION"
 fi
 
-echo "📦 Ingredient version: $VERSION"
+echo "📦 Helper version: $VERSION"
 
 # Output for GitHub Actions
 if [ -n "$GITHUB_OUTPUT" ]; then

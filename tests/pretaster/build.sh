@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# build.sh - Compiles Go and Rust ingredient binaries into ingredients/bin/
+# build.sh - Compiles Go and Rust helper binaries into helpers/bin/
 #
 set -eo pipefail
 
@@ -30,20 +30,20 @@ check_tool cargo
 log_success "All build tools found."
 
 # --- Main Build ---
-log_info "Starting build for Go and Rust ingredients..."
+log_info "Starting build for Go and Rust helpers..."
 mkdir -p "$BIN_DIR"
 
-# --- Build Go Ingredients ---
-log_info "Building Go ingredients..."
+# --- Build Go Helpers ---
+log_info "Building Go helpers..."
 make -C "$GO_DIR" build BIN_DIR="$BIN_DIR"
-log_success "Go ingredients built successfully."
+log_success "Go helpers built successfully."
 
-# --- Build Rust Ingredients ---
-log_info "Building Rust ingredients..."
+# --- Build Rust Helpers ---
+log_info "Building Rust helpers..."
 make -C "$RUST_DIR" build BIN_DIR="$BIN_DIR"
-log_success "Rust ingredients built successfully."
+log_success "Rust helpers built successfully."
 
 # --- Finalization ---
 log_info "Setting executable permissions..."
 chmod +x "$BIN_DIR"/flavor-*
-log_success "All ingredients are built and located in '$BIN_DIR'."
+log_success "All helpers are built and located in '$BIN_DIR'."

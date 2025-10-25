@@ -233,14 +233,14 @@ def create_mock_package():
     return package
 ```
 
-### Mock Ingredients
+### Mock Helpers
 
 Test with mock Go/Rust binaries:
 
 ```python
 @pytest.fixture
-def mock_ingredients(tmp_path):
-    """Create mock ingredient binaries."""
+def mock_helpers(tmp_path):
+    """Create mock helper binaries."""
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()
     

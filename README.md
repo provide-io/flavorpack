@@ -22,7 +22,7 @@ Flavor Pack (`flavorpack`) is a cross-language packaging system that creates sel
 
 - Python 3.11 or higher
 - UV package manager (`curl -LsSf https://astral.sh/uv/install.sh | sh`)
-- Go 1.21+ and Rust 1.75+ (for building ingredients)
+- Go 1.21+ and Rust 1.75+ (for building helpers)
 
 ### Installation
 
@@ -34,7 +34,7 @@ cd flavor
 # Set up environment and install dependencies
 uv sync
 
-# Build the Go and Rust ingredients
+# Build the Go and Rust helpers
 ./build.sh
 ```
 
@@ -118,7 +118,7 @@ pytest -m unit        # Fast unit tests
 pytest -m integration # Integration tests
 pytest -m security    # Security tests
 
-# Test ingredients with Pretaster
+# Test helpers with Pretaster
 cd tests/pretaster
 make test
 ```

@@ -17,16 +17,16 @@ The FlavorPack CI/CD system consists of multiple independent GitHub Actions work
 
 ## Main Workflows
 
-### 01 - Ingredient Prep
+### 01 - Helper Prep
 
-**File**: `.github/workflows/01-ingredient-prep.yml`
+**File**: `.github/workflows/01-helper-prep.yml`
 
-**Purpose**: Build and validate Go/Rust ingredients for all platforms
+**Purpose**: Build and validate Go/Rust helpers for all platforms
 
 **Key Features**:
-- Builds ingredients for multiple platforms using matrix strategy
-- Creates versioned artifacts (e.g., `flavor-ingredients-0.3.0-linux_amd64`)
-- Validates ingredient functionality with basic tests
+- Builds helpers for multiple platforms using matrix strategy
+- Creates versioned artifacts (e.g., `flavor-helpers-0.3.0-linux_amd64`)
+- Validates helper functionality with basic tests
 - Uploads artifacts for downstream workflows
 
 **Platform Matrix**:
@@ -76,7 +76,7 @@ The FlavorPack CI/CD system consists of multiple independent GitHub Actions work
 **Purpose**: Test the Taster comprehensive test package
 
 **Key Features**:
-- Downloads ingredient artifacts from ingredient pipeline
+- Downloads helper artifacts from helper pipeline
 - Builds Taster PSP package
 - Runs comprehensive test suite
 - Validates Python packaging functionality
@@ -133,8 +133,8 @@ The FlavorPack CI/CD system consists of multiple independent GitHub Actions work
 
 ### Build Scripts
 
-**`.github/scripts/build-platform-ingredients.sh`**
-- Builds Go and Rust ingredients for a specific platform
+**`.github/scripts/build-platform-helpers.sh`**
+- Builds Go and Rust helpers for a specific platform
 - Handles cross-compilation settings
 - Creates platform-specific binaries
 
@@ -180,12 +180,12 @@ The FlavorPack CI/CD system consists of multiple independent GitHub Actions work
 
 ### Naming Convention
 ```
-flavor-ingredients-{version}-{platform}
-flavor-ingredients-{version}-all
+flavor-helpers-{version}-{platform}
+flavor-helpers-{version}-all
 ```
 
 ### Artifact Contents
-- Platform-specific ingredient binaries
+- Platform-specific helper binaries
 - Version-stamped for traceability
 - Includes both builders and launchers
 
@@ -193,9 +193,9 @@ flavor-ingredients-{version}-all
 ```yaml
 - uses: dawidd6/action-download-artifact@v6
   with:
-    workflow: 01-ingredient-prep.yml
-    name: flavor-ingredients-0.3.0-linux_amd64
-    path: ./ingredients
+    workflow: 01-helper-prep.yml
+    name: flavor-helpers-0.3.0-linux_amd64
+    path: ./helpers
     workflow_conclusion: success
 ```
 
@@ -225,7 +225,7 @@ curl https://raw.githubusercontent.com/nektos/act/master/install.sh | bash
 act -W .github/workflows/03-flavor-pipeline.yml
 
 # Run with specific event
-act workflow_dispatch -W .github/workflows/01-ingredient-prep.yml
+act workflow_dispatch -W .github/workflows/01-helper-prep.yml
 
 # Run with secrets
 act -s GITHUB_TOKEN=$GITHUB_TOKEN
@@ -287,8 +287,8 @@ Currently disabled due to UTF-8 encoding issues with emoji characters in test sc
 
 ### Common Issues
 
-**Ingredient artifacts not found**
-- Ensure ingredient pipeline ran successfully
+**Helper artifacts not found**
+- Ensure helper pipeline ran successfully
 - Check artifact names match expected pattern
 - Verify workflow_conclusion is "success"
 
@@ -298,7 +298,7 @@ Currently disabled due to UTF-8 encoding issues with emoji characters in test sc
 - Use proper encoding declarations
 
 **PSP execution fails**
-- Verify ingredients are built correctly
+- Verify helpers are built correctly
 - Check manifest format (must be nested PSPF/2025)
 - Ensure launcher binary is executable
 
@@ -322,14 +322,14 @@ Currently disabled due to UTF-8 encoding issues with emoji characters in test sc
 
 4. **Test locally before CI**:
    ```bash
-   .github/scripts/build-platform-ingredients.sh darwin_arm64
+   .github/scripts/build-platform-helpers.sh darwin_arm64
    ```
 
 ## Future Improvements
 
 1. **Re-enable Windows Support**: Fix UTF-8 encoding issues
 2. **Parallel Test Execution**: Run platform tests concurrently
-3. **Caching Strategy**: Cache built ingredients between runs
+3. **Caching Strategy**: Cache built helpers between runs
 4. **Performance Metrics**: Add timing and size metrics
 5. **Automated Releases**: Create releases from successful builds
 

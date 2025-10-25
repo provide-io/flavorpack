@@ -1,9 +1,9 @@
-# tests/ingredients/test_binary_loader_build.py
+# tests/helpers/test_binary_loader_build.py
 #
 # SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-"""Tests for flavor.ingredients.binary_loader - Build and clean operations."""
+"""Tests for flavor.helpers.binary_loader - Build and clean operations."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from flavor.ingredients.binary_loader import BinaryLoader
+from flavor.helpers.binary_loader import BinaryLoader
 
 
 class TestBinaryLoaderInit:
@@ -24,7 +24,7 @@ class TestBinaryLoaderInit:
         loader = BinaryLoader(mock_manager)
         assert loader.manager is mock_manager
 
-    @patch("flavor.ingredients.binary_loader.get_platform_string")
+    @patch("flavor.helpers.binary_loader.get_platform_string")
     def test_current_platform_property(self, mock_get_platform: Mock) -> None:
         """Test current_platform property."""
         mock_get_platform.return_value = "linux_x86_64"
@@ -33,24 +33,24 @@ class TestBinaryLoaderInit:
         assert loader.current_platform == "linux_x86_64"
 
 
-class TestGetIngredient:
-    """Test get_ingredient method."""
+class TestGetHelper:
+    """Test get_helper method."""
 
-    @patch("flavor.ingredients.binary_loader.get_platform_string")
-    def test_get_ingredient_found_embedded(self, mock_get_platform: Mock, tmp_path: Path) -> None:
-        """Test get_ingredient finds embedded ingredient."""
+    @patch("flavor.helpers.binary_loader.get_platform_string")
+    def test_get_helper_found_embedded(self, mock_get_platform: Mock, tmp_path: Path) -> None:
+        """Test get_helper finds embedded helper."""
         mock_get_platform.return_value = "darwin_arm64"
         mock_manager = Mock()
-        mock_manager.ingredients_bin = tmp_path / "dist_bin"
+        mock_manager.helpers_bin = tmp_path / "dist_bin"
 
         # Create embedded bin directory
         embedded_bin = tmp_path / "embedded_bin"
         embedded_bin.mkdir()
-        ingredient_file = embedded_bin / "flavor-go-launcher-darwin_arm64"
-        ingredient_file.write_text("binary")
-        ingredient_file.chmod(0o755)
+        helper_file = embedded_bin / "flavor-go-launcher-darwin_arm64"
+        helper_file.write_text("binary")
+        helper_file.chmod(0o755)
 
-        with patch("flavor.ingredients.binary_loader.Path") as mock_path_class:
+        with patch("flavor.helpers.binary_loader.Path") as mock_path_class:
             # Mock Path(__file__).parent to return our tmp_path
             mock_path_class.__file__ = str(tmp_path / "binary_loader.py")
             mock_path_instance = Mock()
@@ -60,95 +60,95 @@ class TestGetIngredient:
             mock_path_class.return_value = mock_path_instance
 
             loader = BinaryLoader(mock_manager)
-            # Mock the _search_ingredient_locations to return our file
-            with patch.object(loader, "_search_ingredient_locations", return_value=ingredient_file):
-                result = loader.get_ingredient("flavor-go-launcher")
-                assert result == ingredient_file
+            # Mock the _search_helper_locations to return our file
+            with patch.object(loader, "_search_helper_locations", return_value=helper_file):
+                result = loader.get_helper("flavor-go-launcher")
+                assert result == helper_file
 
-    @patch("flavor.ingredients.binary_loader.get_platform_string")
-    def test_get_ingredient_not_found(self, mock_get_platform: Mock, tmp_path: Path) -> None:
-        """Test get_ingredient raises FileNotFoundError when not found."""
+    @patch("flavor.helpers.binary_loader.get_platform_string")
+    def test_get_helper_not_found(self, mock_get_platform: Mock, tmp_path: Path) -> None:
+        """Test get_helper raises FileNotFoundError when not found."""
         mock_get_platform.return_value = "linux_x86_64"
         mock_manager = Mock()
-        mock_manager.ingredients_bin = tmp_path / "bin"
+        mock_manager.helpers_bin = tmp_path / "bin"
 
         loader = BinaryLoader(mock_manager)
-        # Mock _search_ingredient_locations to return None (not found)
-        with patch.object(loader, "_search_ingredient_locations", return_value=None):
-            with pytest.raises(FileNotFoundError, match="Ingredient 'test-ingredient' not found"):
-                loader.get_ingredient("test-ingredient")
+        # Mock _search_helper_locations to return None (not found)
+        with patch.object(loader, "_search_helper_locations", return_value=None):
+            with pytest.raises(FileNotFoundError, match="Helper 'test-helper' not found"):
+                loader.get_helper("test-helper")
 
 
-class TestBuildIngredients:
-    """Test build_ingredients methods."""
+class TestBuildHelpers:
+    """Test build_helpers methods."""
 
-    @patch("flavor.ingredients.binary_loader.get_platform_string")
-    def test_build_ingredients_all(self, mock_get_platform: Mock, tmp_path: Path) -> None:
-        """Test building all ingredients (go and rust)."""
+    @patch("flavor.helpers.binary_loader.get_platform_string")
+    def test_build_helpers_all(self, mock_get_platform: Mock, tmp_path: Path) -> None:
+        """Test building all helpers (go and rust)."""
         mock_get_platform.return_value = "linux_x86_64"
         mock_manager = Mock()
         mock_manager.go_src_dir = tmp_path / "go_src"
         mock_manager.rust_src_dir = tmp_path / "rust_src"
-        mock_manager.ingredients_bin = tmp_path / "bin"
+        mock_manager.helpers_bin = tmp_path / "bin"
 
         loader = BinaryLoader(mock_manager)
 
         go_binaries = [tmp_path / "go-launcher", tmp_path / "go-builder"]
         rust_binaries = [tmp_path / "rs-launcher", tmp_path / "rs-builder"]
 
-        with patch.object(loader, "_build_go_ingredients", return_value=go_binaries):
-            with patch.object(loader, "_build_rust_ingredients", return_value=rust_binaries):
-                result = loader.build_ingredients(language=None, force=False)
+        with patch.object(loader, "_build_go_helpers", return_value=go_binaries):
+            with patch.object(loader, "_build_rust_helpers", return_value=rust_binaries):
+                result = loader.build_helpers(language=None, force=False)
 
                 assert len(result) == 4
                 assert go_binaries[0] in result
                 assert rust_binaries[0] in result
 
-    @patch("flavor.ingredients.binary_loader.get_platform_string")
-    def test_build_ingredients_go_only(self, mock_get_platform: Mock, tmp_path: Path) -> None:
-        """Test building go ingredients only."""
+    @patch("flavor.helpers.binary_loader.get_platform_string")
+    def test_build_helpers_go_only(self, mock_get_platform: Mock, tmp_path: Path) -> None:
+        """Test building go helpers only."""
         mock_get_platform.return_value = "linux_x86_64"
         mock_manager = Mock()
         loader = BinaryLoader(mock_manager)
 
         go_binaries = [tmp_path / "go-launcher"]
 
-        with patch.object(loader, "_build_go_ingredients", return_value=go_binaries) as mock_go:
-            with patch.object(loader, "_build_rust_ingredients") as mock_rust:
-                result = loader.build_ingredients(language="go", force=True)
+        with patch.object(loader, "_build_go_helpers", return_value=go_binaries) as mock_go:
+            with patch.object(loader, "_build_rust_helpers") as mock_rust:
+                result = loader.build_helpers(language="go", force=True)
 
                 mock_go.assert_called_once_with(True)
                 mock_rust.assert_not_called()
                 assert result == go_binaries
 
-    @patch("flavor.ingredients.binary_loader.get_platform_string")
-    def test_build_ingredients_rust_only(self, mock_get_platform: Mock, tmp_path: Path) -> None:
-        """Test building rust ingredients only."""
+    @patch("flavor.helpers.binary_loader.get_platform_string")
+    def test_build_helpers_rust_only(self, mock_get_platform: Mock, tmp_path: Path) -> None:
+        """Test building rust helpers only."""
         mock_get_platform.return_value = "linux_x86_64"
         mock_manager = Mock()
         loader = BinaryLoader(mock_manager)
 
         rust_binaries = [tmp_path / "rs-builder"]
 
-        with patch.object(loader, "_build_go_ingredients") as mock_go:
-            with patch.object(loader, "_build_rust_ingredients", return_value=rust_binaries) as mock_rust:
-                result = loader.build_ingredients(language="rust", force=False)
+        with patch.object(loader, "_build_go_helpers") as mock_go:
+            with patch.object(loader, "_build_rust_helpers", return_value=rust_binaries) as mock_rust:
+                result = loader.build_helpers(language="rust", force=False)
 
                 mock_go.assert_not_called()
                 mock_rust.assert_called_once_with(False)
                 assert result == rust_binaries
 
 
-class TestBuildGoIngredients:
-    """Test _build_go_ingredients method."""
+class TestBuildGoHelpers:
+    """Test _build_go_helpers method."""
 
-    @patch("flavor.ingredients.binary_loader.ensure_dir")
-    @patch("flavor.ingredients.binary_loader.run")
-    @patch("flavor.ingredients.binary_loader.get_platform_string")
-    def test_build_go_ingredients_source_not_found(
+    @patch("flavor.helpers.binary_loader.ensure_dir")
+    @patch("flavor.helpers.binary_loader.run")
+    @patch("flavor.helpers.binary_loader.get_platform_string")
+    def test_build_go_helpers_source_not_found(
         self, mock_get_platform: Mock, mock_run: Mock, mock_ensure_dir: Mock, tmp_path: Path
     ) -> None:
-        """Test building go ingredients when source directory doesn't exist."""
+        """Test building go helpers when source directory doesn't exist."""
         mock_get_platform.return_value = "linux_x86_64"
         mock_manager = Mock()
         mock_go_src = Mock()
@@ -156,18 +156,18 @@ class TestBuildGoIngredients:
         mock_manager.go_src_dir = mock_go_src
 
         loader = BinaryLoader(mock_manager)
-        result = loader._build_go_ingredients(force=False)
+        result = loader._build_go_helpers(force=False)
 
         assert result == []
         mock_run.assert_not_called()
 
-    @patch("flavor.ingredients.binary_loader.ensure_dir")
-    @patch("flavor.ingredients.binary_loader.run")
-    @patch("flavor.ingredients.binary_loader.get_platform_string")
-    def test_build_go_ingredients_already_exists_no_force(
+    @patch("flavor.helpers.binary_loader.ensure_dir")
+    @patch("flavor.helpers.binary_loader.run")
+    @patch("flavor.helpers.binary_loader.get_platform_string")
+    def test_build_go_helpers_already_exists_no_force(
         self, mock_get_platform: Mock, mock_run: Mock, mock_ensure_dir: Mock, tmp_path: Path
     ) -> None:
-        """Test building go ingredients when binaries exist and force=False."""
+        """Test building go helpers when binaries exist and force=False."""
         mock_get_platform.return_value = "darwin_arm64"
         mock_manager = Mock()
         mock_go_src = Mock()
@@ -185,22 +185,22 @@ class TestBuildGoIngredients:
         # Mock Path operations for the binary paths - create Mock with __truediv__
         mock_bin = Mock()
         mock_bin.__truediv__ = lambda self, x: bin_dir / x
-        mock_manager.ingredients_bin = mock_bin
+        mock_manager.helpers_bin = mock_bin
 
         loader = BinaryLoader(mock_manager)
-        result = loader._build_go_ingredients(force=False)
+        result = loader._build_go_helpers(force=False)
 
         # Should return existing binaries without building
         assert len(result) == 2
         mock_run.assert_not_called()
 
-    @patch("flavor.ingredients.binary_loader.ensure_dir")
-    @patch("flavor.ingredients.binary_loader.run")
-    @patch("flavor.ingredients.binary_loader.get_platform_string")
-    def test_build_go_ingredients_success(
+    @patch("flavor.helpers.binary_loader.ensure_dir")
+    @patch("flavor.helpers.binary_loader.run")
+    @patch("flavor.helpers.binary_loader.get_platform_string")
+    def test_build_go_helpers_success(
         self, mock_get_platform: Mock, mock_run: Mock, mock_ensure_dir: Mock, tmp_path: Path
     ) -> None:
-        """Test successful go ingredients build."""
+        """Test successful go helpers build."""
         mock_get_platform.return_value = "linux_x86_64"
         mock_manager = Mock()
         mock_go_src = Mock()
@@ -223,21 +223,21 @@ class TestBuildGoIngredients:
 
         mock_bin = Mock()
         mock_bin.__truediv__ = mock_truediv
-        mock_manager.ingredients_bin = mock_bin
+        mock_manager.helpers_bin = mock_bin
 
         loader = BinaryLoader(mock_manager)
-        result = loader._build_go_ingredients(force=True)
+        result = loader._build_go_helpers(force=True)
 
         assert len(result) == 2
         assert mock_run.call_count == 2
 
-    @patch("flavor.ingredients.binary_loader.ensure_dir")
-    @patch("flavor.ingredients.binary_loader.run")
-    @patch("flavor.ingredients.binary_loader.get_platform_string")
-    def test_build_go_ingredients_build_failure(
+    @patch("flavor.helpers.binary_loader.ensure_dir")
+    @patch("flavor.helpers.binary_loader.run")
+    @patch("flavor.helpers.binary_loader.get_platform_string")
+    def test_build_go_helpers_build_failure(
         self, mock_get_platform: Mock, mock_run: Mock, mock_ensure_dir: Mock, tmp_path: Path
     ) -> None:
-        """Test go ingredients build failure."""
+        """Test go helpers build failure."""
         mock_get_platform.return_value = "linux_x86_64"
         mock_manager = Mock()
         mock_go_src = Mock()
@@ -253,24 +253,24 @@ class TestBuildGoIngredients:
         # Create Mock with __truediv__
         mock_bin = Mock()
         mock_bin.__truediv__ = lambda self, name: bin_dir / name
-        mock_manager.ingredients_bin = mock_bin
+        mock_manager.helpers_bin = mock_bin
 
         loader = BinaryLoader(mock_manager)
-        result = loader._build_go_ingredients(force=True)
+        result = loader._build_go_helpers(force=True)
 
         assert result == []
 
 
-class TestBuildRustIngredients:
-    """Test _build_rust_ingredients method."""
+class TestBuildRustHelpers:
+    """Test _build_rust_helpers method."""
 
-    @patch("flavor.ingredients.binary_loader.ensure_dir")
-    @patch("flavor.ingredients.binary_loader.run")
-    @patch("flavor.ingredients.binary_loader.get_platform_string")
-    def test_build_rust_ingredients_source_not_found(
+    @patch("flavor.helpers.binary_loader.ensure_dir")
+    @patch("flavor.helpers.binary_loader.run")
+    @patch("flavor.helpers.binary_loader.get_platform_string")
+    def test_build_rust_helpers_source_not_found(
         self, mock_get_platform: Mock, mock_run: Mock, mock_ensure_dir: Mock, tmp_path: Path
     ) -> None:
-        """Test building rust ingredients when source directory doesn't exist."""
+        """Test building rust helpers when source directory doesn't exist."""
         mock_get_platform.return_value = "linux_x86_64"
         mock_manager = Mock()
         mock_rust_src = Mock()
@@ -278,16 +278,16 @@ class TestBuildRustIngredients:
         mock_manager.rust_src_dir = mock_rust_src
 
         loader = BinaryLoader(mock_manager)
-        result = loader._build_rust_ingredients(force=False)
+        result = loader._build_rust_helpers(force=False)
 
         assert result == []
         mock_run.assert_not_called()
 
-    @patch("flavor.ingredients.binary_loader.ensure_dir")
-    @patch("flavor.ingredients.binary_loader.safe_copy")
-    @patch("flavor.ingredients.binary_loader.run")
-    @patch("flavor.ingredients.binary_loader.get_platform_string")
-    def test_build_rust_ingredients_success(
+    @patch("flavor.helpers.binary_loader.ensure_dir")
+    @patch("flavor.helpers.binary_loader.safe_copy")
+    @patch("flavor.helpers.binary_loader.run")
+    @patch("flavor.helpers.binary_loader.get_platform_string")
+    def test_build_rust_helpers_success(
         self,
         mock_get_platform: Mock,
         mock_run: Mock,
@@ -295,7 +295,7 @@ class TestBuildRustIngredients:
         mock_ensure_dir: Mock,
         tmp_path: Path,
     ) -> None:
-        """Test successful rust ingredients build."""
+        """Test successful rust helpers build."""
         mock_get_platform.return_value = "linux_x86_64"
         mock_manager = Mock()
         mock_rust_src = tmp_path / "rust_src"
@@ -323,19 +323,19 @@ class TestBuildRustIngredients:
 
         mock_bin = Mock()
         mock_bin.__truediv__ = mock_truediv
-        mock_manager.ingredients_bin = mock_bin
+        mock_manager.helpers_bin = mock_bin
 
         loader = BinaryLoader(mock_manager)
-        result = loader._build_rust_ingredients(force=True)
+        result = loader._build_rust_helpers(force=True)
 
         assert len(result) == 2
         assert mock_run.call_count == 2
         assert mock_safe_copy.call_count == 2
 
-    @patch("flavor.ingredients.binary_loader.ensure_dir")
-    @patch("flavor.ingredients.binary_loader.run")
-    @patch("flavor.ingredients.binary_loader.get_platform_string")
-    def test_build_rust_ingredients_built_but_not_found(
+    @patch("flavor.helpers.binary_loader.ensure_dir")
+    @patch("flavor.helpers.binary_loader.run")
+    @patch("flavor.helpers.binary_loader.get_platform_string")
+    def test_build_rust_helpers_built_but_not_found(
         self, mock_get_platform: Mock, mock_run: Mock, mock_ensure_dir: Mock, tmp_path: Path
     ) -> None:
         """Test rust build succeeds but binary not found in target/release."""
@@ -344,44 +344,44 @@ class TestBuildRustIngredients:
         mock_rust_src = tmp_path / "rust_src"
         mock_rust_src.mkdir()
         mock_manager.rust_src_dir = mock_rust_src
-        mock_manager.ingredients_bin = tmp_path / "bin"
+        mock_manager.helpers_bin = tmp_path / "bin"
 
         # Create rust_src but not the target/release binaries
         # Mock successful build but file doesn't exist
         mock_run.return_value = Mock(returncode=0)
 
         loader = BinaryLoader(mock_manager)
-        result = loader._build_rust_ingredients(force=True)
+        result = loader._build_rust_helpers(force=True)
 
         assert result == []
 
 
-class TestCleanIngredients:
-    """Test clean_ingredients method."""
+class TestCleanHelpers:
+    """Test clean_helpers method."""
 
-    @patch("flavor.ingredients.binary_loader.get_platform_string")
-    def test_clean_ingredients_dir_not_exist(self, mock_get_platform: Mock, tmp_path: Path) -> None:
-        """Test clean when ingredients bin doesn't exist."""
+    @patch("flavor.helpers.binary_loader.get_platform_string")
+    def test_clean_helpers_dir_not_exist(self, mock_get_platform: Mock, tmp_path: Path) -> None:
+        """Test clean when helpers bin doesn't exist."""
         mock_get_platform.return_value = "linux_x86_64"
         mock_manager = Mock()
         mock_bin = Mock()
         mock_bin.exists.return_value = False
-        mock_manager.ingredients_bin = mock_bin
+        mock_manager.helpers_bin = mock_bin
 
         loader = BinaryLoader(mock_manager)
-        result = loader.clean_ingredients()
+        result = loader.clean_helpers()
 
         assert result == []
 
-    @patch("flavor.ingredients.binary_loader.get_platform_string")
-    def test_clean_ingredients_all(self, mock_get_platform: Mock, tmp_path: Path) -> None:
-        """Test cleaning all ingredients."""
+    @patch("flavor.helpers.binary_loader.get_platform_string")
+    def test_clean_helpers_all(self, mock_get_platform: Mock, tmp_path: Path) -> None:
+        """Test cleaning all helpers."""
         mock_get_platform.return_value = "linux_x86_64"
         mock_manager = Mock()
         bin_dir = tmp_path / "bin"
         bin_dir.mkdir()
 
-        # Create some ingredient files
+        # Create some helper files
         go_launcher = bin_dir / "flavor-go-launcher"
         rs_builder = bin_dir / "flavor-rs-builder"
         other_file = bin_dir / "other.txt"
@@ -389,18 +389,18 @@ class TestCleanIngredients:
         rs_builder.write_text("binary")
         other_file.write_text("text")
 
-        mock_manager.ingredients_bin = bin_dir
+        mock_manager.helpers_bin = bin_dir
 
         loader = BinaryLoader(mock_manager)
-        result = loader.clean_ingredients(language=None)
+        result = loader.clean_helpers(language=None)
 
         assert len(result) == 2
         assert go_launcher in result
         assert rs_builder in result
 
-    @patch("flavor.ingredients.binary_loader.get_platform_string")
-    def test_clean_ingredients_go_only(self, mock_get_platform: Mock, tmp_path: Path) -> None:
-        """Test cleaning go ingredients only."""
+    @patch("flavor.helpers.binary_loader.get_platform_string")
+    def test_clean_helpers_go_only(self, mock_get_platform: Mock, tmp_path: Path) -> None:
+        """Test cleaning go helpers only."""
         mock_get_platform.return_value = "linux_x86_64"
         mock_manager = Mock()
         bin_dir = tmp_path / "bin"
@@ -409,17 +409,17 @@ class TestCleanIngredients:
         go_launcher = bin_dir / "flavor-go-launcher"
         go_launcher.write_text("binary")
 
-        mock_manager.ingredients_bin = bin_dir
+        mock_manager.helpers_bin = bin_dir
 
         loader = BinaryLoader(mock_manager)
-        result = loader.clean_ingredients(language="go")
+        result = loader.clean_helpers(language="go")
 
         assert len(result) == 1
         assert go_launcher in result
 
-    @patch("flavor.ingredients.binary_loader.get_platform_string")
-    def test_clean_ingredients_rust_only(self, mock_get_platform: Mock, tmp_path: Path) -> None:
-        """Test cleaning rust ingredients only."""
+    @patch("flavor.helpers.binary_loader.get_platform_string")
+    def test_clean_helpers_rust_only(self, mock_get_platform: Mock, tmp_path: Path) -> None:
+        """Test cleaning rust helpers only."""
         mock_get_platform.return_value = "linux_x86_64"
         mock_manager = Mock()
         bin_dir = tmp_path / "bin"
@@ -428,10 +428,10 @@ class TestCleanIngredients:
         rs_builder = bin_dir / "flavor-rs-builder"
         rs_builder.write_text("binary")
 
-        mock_manager.ingredients_bin = bin_dir
+        mock_manager.helpers_bin = bin_dir
 
         loader = BinaryLoader(mock_manager)
-        result = loader.clean_ingredients(language="rust")
+        result = loader.clean_helpers(language="rust")
 
         assert len(result) == 1
         assert rs_builder in result

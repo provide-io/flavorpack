@@ -55,15 +55,15 @@ def load_launcher_binary(launcher_type: str) -> bytes:
 
     # Search paths - prioritize helpers/bin first, then XDG cache location
     base_search_paths = [
-        Path.cwd() / "dist" / "bin",  # Built binaries (make build-ingredients)
+        Path.cwd() / "dist" / "bin",  # Built binaries (make build-helpers)
         Path.cwd() / "helpers" / "bin",
         Path.cwd().parent / "helpers" / "bin",
         Path.cwd().parent.parent / "helpers" / "bin",  # For tests
         Path(xdg_cache) / "flavor" / "helpers" / "bin",  # XDG cache location
         Path.home() / ".cache" / "flavor" / "helpers" / "bin",  # Fallback cache
         Path.cwd() / "workenv" / "flavors" / platform_str,
-        Path.cwd() / "ingredients" / "bin",  # Development ingredients
-        Path.cwd() / "src" / "flavor" / "ingredients" / "bin",  # Installed ingredients
+        Path.cwd() / "helpers" / "bin",  # Development helpers
+        Path.cwd() / "src" / "flavor" / "helpers" / "bin",  # Installed helpers
         Path.cwd(),
     ]
 
@@ -86,9 +86,9 @@ def load_launcher_binary(launcher_type: str) -> bytes:
         f"❌ Could not find {launcher_base} binary!\n"
         "\n"
         "🔧 To fix this issue, run one of:\n"
-        "   • cd ingredients && ./build.sh     (build both Go and Rust launchers)\n"
-        "   • make build-ingredients           (if using make)\n"
-        "   • flavor ingredients build         (if flavor CLI is available)\n"
+        "   • cd helpers && ./build.sh     (build both Go and Rust launchers)\n"
+        "   • make build-helpers           (if using make)\n"
+        "   • flavor helpers build         (if flavor CLI is available)\n"
         "\n"
         "💡 Or specify a custom launcher with:\n"
         "   • --launcher-bin /path/to/launcher (command line)\n"

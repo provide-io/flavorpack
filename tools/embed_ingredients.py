@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Embed platform-specific ingredients into the Flavor package."""
+"""Embed platform-specific helpers into the Flavor package."""
 
 import argparse
 from pathlib import Path
@@ -7,140 +7,140 @@ import shutil
 import sys
 
 
-def embed_ingredients(platform: str, ingredients_dir: str, version: str) -> bool:
+def embed_helpers(platform: str, helpers_dir: str, version: str) -> bool:
     """
-    Embed platform-specific ingredients into src/flavor/ingredients.
+    Embed platform-specific helpers into src/flavor/helpers.
 
     Args:
         platform: Target platform (e.g., darwin_arm64, linux_amd64)
-        ingredients_dir: Directory containing ingredient binaries
+        helpers_dir: Directory containing helper binaries
         version: Flavor version
 
     Returns:
         True if successful, False otherwise
     """
-    ingredients_path = Path(ingredients_dir)
-    if not ingredients_path.exists():
-        print(f"❌ Ingredients directory not found: {ingredients_path}")
+    helpers_path = Path(helpers_dir)
+    if not helpers_path.exists():
+        print(f"❌ Helpers directory not found: {helpers_path}")
         return False
 
-    # Create target directory - use ingredients/bin to avoid conflict with ingredients.py
-    target_dir = Path("src/flavor/ingredients/bin")
+    # Create target directory - use helpers/bin to avoid conflict with helpers.py
+    target_dir = Path("src/flavor/helpers/bin")
     target_dir.mkdir(parents=True, exist_ok=True)
 
-    # Ingredient binary names
-    ingredient_names = [
+    # Helper binary names
+    helper_names = [
         "flavor-go-builder",
         "flavor-go-launcher",
         "flavor-rs-builder",
         "flavor-rs-launcher",
     ]
 
-    ingredients_copied = 0
-    for ingredient in ingredient_names:
+    helpers_copied = 0
+    for helper in helper_names:
         # Try different naming patterns
         patterns = [
-            f"{ingredient}-{version}-{platform}",
-            f"{ingredient}-{platform}",
-            ingredient,
+            f"{helper}-{version}-{platform}",
+            f"{helper}-{platform}",
+            helper,
         ]
 
         for pattern in patterns:
-            source = ingredients_path / pattern
+            source = helpers_path / pattern
             if source.exists():
                 # Determine target name
-                target_name = ingredient
+                target_name = helper
                 if platform.startswith("windows"):
                     target_name += ".exe"
 
                 target = target_dir / target_name
 
-                # Copy the ingredient
+                # Copy the helper
                 shutil.copy2(source, target)
 
                 # Make executable (Unix-like systems)
                 if not platform.startswith("windows"):
                     target.chmod(0o755)
 
-                print(f"  ✓ Embedded {ingredient}")
-                ingredients_copied += 1
+                print(f"  ✓ Embedded {helper}")
+                helpers_copied += 1
                 break
         else:
-            print(f"  ⚠️  Ingredient not found: {ingredient}")
+            print(f"  ⚠️  Helper not found: {helper}")
 
-    if ingredients_copied == 0:
-        print("❌ No ingredients were embedded")
+    if helpers_copied == 0:
+        print("❌ No helpers were embedded")
         return False
 
-    # Create __init__.py for ingredients/bin package
+    # Create __init__.py for helpers/bin package
     init_file = target_dir / "__init__.py"
-    init_file.write_text('''"""Embedded ingredient binaries for Flavor."""
+    init_file.write_text('''"""Embedded helper binaries for Flavor."""
 import os
 from pathlib import Path
 
 from provide.foundation.platform import is_windows
 
 
-def get_ingredients_dir() -> Path:
-    """Get the directory containing ingredient binaries."""
+def get_helpers_dir() -> Path:
+    """Get the directory containing helper binaries."""
     return Path(__file__).parent
 
 
-def get_ingredient_path(ingredient_name: str) -> Path:
-    """Get the path to a specific ingredient binary."""
-    ingredients_dir = get_ingredients_dir()
+def get_helper_path(helper_name: str) -> Path:
+    """Get the path to a specific helper binary."""
+    helpers_dir = get_helpers_dir()
     
     # Add .exe extension on Windows
     if is_windows():
-        ingredient_name = f"{ingredient_name}.exe"
+        helper_name = f"{helper_name}.exe"
     
-    ingredient_path = ingredients_dir / ingredient_name
+    helper_path = helpers_dir / helper_name
     
     # Make executable if needed
-    if ingredient_path.exists() and not os.access(ingredient_path, os.X_OK):
+    if helper_path.exists() and not os.access(helper_path, os.X_OK):
         try:
-            ingredient_path.chmod(0o755)
+            helper_path.chmod(0o755)
         except:
             pass
     
-    return ingredient_path
+    return helper_path
 
 
-# Ingredient shortcuts
+# Helper shortcuts
 def get_go_builder() -> Path:
     """Get path to Go builder."""
-    return get_ingredient_path('flavor-go-builder')
+    return get_helper_path('flavor-go-builder')
 
 
 def get_go_launcher() -> Path:
     """Get path to Go launcher."""
-    return get_ingredient_path('flavor-go-launcher')
+    return get_helper_path('flavor-go-launcher')
 
 
 def get_rs_builder() -> Path:
     """Get path to Rust builder."""
-    return get_ingredient_path('flavor-rs-builder')
+    return get_helper_path('flavor-rs-builder')
 
 
 def get_rs_launcher() -> Path:
     """Get path to Rust launcher."""
-    return get_ingredient_path('flavor-rs-launcher')
+    return get_helper_path('flavor-rs-launcher')
 ''')
 
-    print(f"✅ Embedded {ingredients_copied} ingredients for {platform}")
+    print(f"✅ Embedded {helpers_copied} helpers for {platform}")
     return True
 
 
 def main():
     """Main entry point."""
-    parser = argparse.ArgumentParser(description="Embed ingredients for platform-specific wheel")
+    parser = argparse.ArgumentParser(description="Embed helpers for platform-specific wheel")
     parser.add_argument("platform", help="Target platform (e.g., darwin_arm64)")
-    parser.add_argument("ingredients_dir", help="Directory containing ingredient binaries")
+    parser.add_argument("helpers_dir", help="Directory containing helper binaries")
     parser.add_argument("version", help="Flavor version")
 
     args = parser.parse_args()
 
-    success = embed_ingredients(args.platform, args.ingredients_dir, args.version)
+    success = embed_helpers(args.platform, args.helpers_dir, args.version)
     sys.exit(0 if success else 1)
 
 

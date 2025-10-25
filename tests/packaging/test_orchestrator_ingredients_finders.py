@@ -1,8 +1,8 @@
-# tests/packaging/test_orchestrator_ingredients_finders.py
+# tests/packaging/test_orchestrator_helpers_finders.py
 #
 # SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
-"""Tests for orchestrator_ingredients finder functions."""
+"""Tests for orchestrator_helpers finder functions."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from flavor.exceptions import BuildError
-from flavor.packaging.orchestrator_ingredients import (
+from flavor.packaging.orchestrator_helpers import (
     find_builder_executable,
     find_launcher_executable,
 )
@@ -56,27 +56,27 @@ class TestFindBuilderExecutable:
         with pytest.raises(BuildError, match=r"Builder binary not found: /tmp/nonexistent"):
             find_builder_executable(None)
 
-    @patch("flavor.ingredients.manager.IngredientManager")
+    @patch("flavor.helpers.manager.HelperManager")
     def test_rust_builder_found(self, mock_manager_class: Mock) -> None:
         """Test find_builder_executable finds Rust builder."""
         mock_manager = Mock()
         rust_builder = Path("/path/to/flavor-rs-builder")
-        mock_manager.get_ingredient.return_value = rust_builder
+        mock_manager.get_helper.return_value = rust_builder
         mock_manager_class.return_value = mock_manager
 
         result = find_builder_executable(None)
 
         assert result == rust_builder
-        mock_manager.get_ingredient.assert_called_once_with("flavor-rs-builder")
+        mock_manager.get_helper.assert_called_once_with("flavor-rs-builder")
 
-    @patch("flavor.ingredients.manager.IngredientManager")
+    @patch("flavor.helpers.manager.HelperManager")
     def test_rust_not_found_fallback_to_go(self, mock_manager_class: Mock) -> None:
         """Test find_builder_executable falls back to Go when Rust not found."""
         mock_manager = Mock()
         go_builder = Path("/path/to/flavor-go-builder")
 
         # First call (Rust) raises FileNotFoundError, second call (Go) succeeds
-        mock_manager.get_ingredient.side_effect = [
+        mock_manager.get_helper.side_effect = [
             FileNotFoundError("Rust builder not found"),
             go_builder,
         ]
@@ -85,19 +85,19 @@ class TestFindBuilderExecutable:
         result = find_builder_executable(None)
 
         assert result == go_builder
-        assert mock_manager.get_ingredient.call_count == 2
-        mock_manager.get_ingredient.assert_any_call("flavor-rs-builder")
-        mock_manager.get_ingredient.assert_any_call("flavor-go-builder")
+        assert mock_manager.get_helper.call_count == 2
+        mock_manager.get_helper.assert_any_call("flavor-rs-builder")
+        mock_manager.get_helper.assert_any_call("flavor-go-builder")
 
-    @patch("flavor.ingredients.manager.IngredientManager")
+    @patch("flavor.helpers.manager.HelperManager")
     def test_no_builders_found(self, mock_manager_class: Mock) -> None:
         """Test find_builder_executable when no builders are found."""
         mock_manager = Mock()
-        mock_manager.ingredients_bin = Path("/ingredients/bin")
-        mock_manager.installed_ingredients_bin = Path("/installed/bin")
+        mock_manager.helpers_bin = Path("/helpers/bin")
+        mock_manager.installed_helpers_bin = Path("/installed/bin")
 
         # Both Rust and Go raise FileNotFoundError
-        mock_manager.get_ingredient.side_effect = FileNotFoundError("Not found")
+        mock_manager.get_helper.side_effect = FileNotFoundError("Not found")
         mock_manager_class.return_value = mock_manager
 
         with pytest.raises(BuildError, match=r"❌ No builder binaries found!"):
@@ -108,12 +108,12 @@ class TestFindBuilderExecutable:
             find_builder_executable(None)
         except BuildError as e:
             error_msg = str(e)
-            assert "cd ingredients && ./build.sh" in error_msg
-            assert "make build-ingredients" in error_msg
-            assert "flavor ingredients build" in error_msg
+            assert "cd helpers && ./build.sh" in error_msg
+            assert "make build-helpers" in error_msg
+            assert "flavor helpers build" in error_msg
             assert "--builder-bin" in error_msg
             assert "FLAVOR_BUILDER_BIN" in error_msg
-            assert "/ingredients/bin" in error_msg
+            assert "/helpers/bin" in error_msg
             assert "/installed/bin" in error_msg
 
 
@@ -155,27 +155,27 @@ class TestFindLauncherExecutable:
         with pytest.raises(BuildError, match=r"Launcher binary from FLAVOR_LAUNCHER_BIN not found"):
             find_launcher_executable(None)
 
-    @patch("flavor.ingredients.manager.IngredientManager")
+    @patch("flavor.helpers.manager.HelperManager")
     def test_rust_launcher_found(self, mock_manager_class: Mock) -> None:
         """Test find_launcher_executable finds Rust launcher."""
         mock_manager = Mock()
         rust_launcher = Path("/path/to/flavor-rs-launcher")
-        mock_manager.get_ingredient.return_value = rust_launcher
+        mock_manager.get_helper.return_value = rust_launcher
         mock_manager_class.return_value = mock_manager
 
         result = find_launcher_executable(None)
 
         assert result == rust_launcher
-        mock_manager.get_ingredient.assert_called_once_with("flavor-rs-launcher")
+        mock_manager.get_helper.assert_called_once_with("flavor-rs-launcher")
 
-    @patch("flavor.ingredients.manager.IngredientManager")
+    @patch("flavor.helpers.manager.HelperManager")
     def test_rust_not_found_fallback_to_go(self, mock_manager_class: Mock) -> None:
         """Test find_launcher_executable falls back to Go when Rust not found."""
         mock_manager = Mock()
         go_launcher = Path("/path/to/flavor-go-launcher")
 
         # First call (Rust) raises FileNotFoundError, second call (Go) succeeds
-        mock_manager.get_ingredient.side_effect = [
+        mock_manager.get_helper.side_effect = [
             FileNotFoundError("Rust launcher not found"),
             go_launcher,
         ]
@@ -184,19 +184,19 @@ class TestFindLauncherExecutable:
         result = find_launcher_executable(None)
 
         assert result == go_launcher
-        assert mock_manager.get_ingredient.call_count == 2
-        mock_manager.get_ingredient.assert_any_call("flavor-rs-launcher")
-        mock_manager.get_ingredient.assert_any_call("flavor-go-launcher")
+        assert mock_manager.get_helper.call_count == 2
+        mock_manager.get_helper.assert_any_call("flavor-rs-launcher")
+        mock_manager.get_helper.assert_any_call("flavor-go-launcher")
 
-    @patch("flavor.ingredients.manager.IngredientManager")
+    @patch("flavor.helpers.manager.HelperManager")
     def test_no_launchers_found(self, mock_manager_class: Mock) -> None:
         """Test find_launcher_executable when no launchers are found."""
         mock_manager = Mock()
-        mock_manager.ingredients_bin = Path("/ingredients/bin")
-        mock_manager.installed_ingredients_bin = Path("/installed/bin")
+        mock_manager.helpers_bin = Path("/helpers/bin")
+        mock_manager.installed_helpers_bin = Path("/installed/bin")
 
         # Both Rust and Go raise FileNotFoundError
-        mock_manager.get_ingredient.side_effect = FileNotFoundError("Not found")
+        mock_manager.get_helper.side_effect = FileNotFoundError("Not found")
         mock_manager_class.return_value = mock_manager
 
         with pytest.raises(BuildError, match=r"❌ No launcher binaries found!"):
@@ -207,12 +207,12 @@ class TestFindLauncherExecutable:
             find_launcher_executable(None)
         except BuildError as e:
             error_msg = str(e)
-            assert "cd ingredients && ./build.sh" in error_msg
-            assert "make build-ingredients" in error_msg
-            assert "flavor ingredients build" in error_msg
+            assert "cd helpers && ./build.sh" in error_msg
+            assert "make build-helpers" in error_msg
+            assert "flavor helpers build" in error_msg
             assert "--launcher-bin" in error_msg
             assert "FLAVOR_LAUNCHER_BIN" in error_msg
-            assert "/ingredients/bin" in error_msg
+            assert "/helpers/bin" in error_msg
             assert "/installed/bin" in error_msg
 
 

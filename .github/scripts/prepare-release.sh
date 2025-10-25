@@ -35,8 +35,8 @@ else
     sed -i "s/^version = \".*\"/version = \"${VERSION}\"/" pyproject.toml
 fi
 
-# Update version in ingredient configurations if they exist
-for config in ingredients/*/Cargo.toml; do
+# Update version in helper configurations if they exist
+for config in helpers/*/Cargo.toml; do
     if [ -f "$config" ]; then
         echo "📝 Updating $(basename $(dirname "$config"))/Cargo.toml"
         if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -47,7 +47,7 @@ for config in ingredients/*/Cargo.toml; do
     fi
 done
 
-for config in ingredients/*/go.mod; do
+for config in helpers/*/go.mod; do
     if [ -f "$config" ]; then
         # Go modules don't have version in go.mod, but we can update any version constants
         dir=$(dirname "$config")

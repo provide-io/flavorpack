@@ -100,7 +100,7 @@ class TestCrossLanguageOperations:
             restored_ops = operations_to_string(unpacked_descriptor.operations)
             assert restored_ops == ops_string
 
-    @pytest.mark.requires_ingredients
+    @pytest.mark.requires_helpers
     def test_cross_language_package_verification(self) -> None:
         """Test that packages built with different languages verify consistently."""
         # Skip if taster not available

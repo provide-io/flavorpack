@@ -50,8 +50,8 @@ Get started with FlavorPack in under 5 minutes:
     # Set up environment
     uv sync
     
-    # Build native ingredients
-    ./ingredients/build.sh
+    # Build native helpers
+    ./helpers/build.sh
     ```
 
 === "Create Package"
@@ -124,8 +124,8 @@ The PSPF 2025 format provides a robust, secure, and efficient packaging solution
 | Component | Minimum Version | Recommended | Notes |
 |-----------|----------------|-------------|-------|
 | Python | 3.11 | 3.12+ | Type hints, modern features |
-| Go | 1.21 | 1.22+ | For building Go ingredients |
-| Rust | 1.75 | 1.80+ | For building Rust ingredients |
+| Go | 1.21 | 1.22+ | For building Go helpers |
+| Rust | 1.75 | 1.80+ | For building Rust helpers |
 | UV | 0.1.18 | Latest | Package management |
 | Git | 2.25 | Latest | Version control |
 | Make | 3.81 | 4.0+ | Build automation |

@@ -3,7 +3,7 @@
 Mock Validation Tests
 
 These tests ensure that our mock launchers accurately represent real launcher behavior.
-They should be run as integration tests with real ingredients available.
+They should be run as integration tests with real helpers available.
 """
 
 import pytest
@@ -13,7 +13,7 @@ from tests.conftest import MOCK_LAUNCHER_DATA, MOCK_LAUNCHER_SIZE
 
 
 @pytest.mark.integration
-@pytest.mark.requires_ingredients
+@pytest.mark.requires_helpers
 class TestMockAccuracy:
     """Validate that our mocks accurately represent real behavior."""
 

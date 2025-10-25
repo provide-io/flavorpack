@@ -1,12 +1,12 @@
-# flavor/ingredients/binary_loader.py
+# flavor/helpers/binary_loader.py
 #
 # SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
 """
-Binary loading and building for ingredients.
+Binary loading and building for helpers.
 
-Handles the complex logic of finding, building, and testing ingredient binaries.
+Handles the complex logic of finding, building, and testing helper binaries.
 """
 
 from __future__ import annotations
@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from flavor.ingredients.manager import IngredientManager
+    from flavor.helpers.manager import HelperManager
 
 from provide.foundation import logger
 from provide.foundation.file import ensure_dir, safe_copy
@@ -28,9 +28,9 @@ from flavor.config.defaults import DEFAULT_EXECUTABLE_PERMS
 
 
 class BinaryLoader:
-    """Handles ingredient binary loading, building, and testing."""
+    """Handles helper binary loading, building, and testing."""
 
-    def __init__(self, manager: IngredientManager) -> None:
+    def __init__(self, manager: HelperManager) -> None:
         """Initialize with reference to parent manager."""
         self.manager = manager
 
@@ -41,35 +41,35 @@ class BinaryLoader:
         assert isinstance(platform, str)
         return platform
 
-    def get_ingredient(self, name: str) -> Path:
-        """Get path to a ingredient binary.
+    def get_helper(self, name: str) -> Path:
+        """Get path to a helper binary.
 
         Args:
-            name: Ingredient name (e.g., "flavor-rs-launcher")
+            name: Helper name (e.g., "flavor-rs-launcher")
 
         Returns:
-            Path to the ingredient binary
+            Path to the helper binary
 
         Raises:
-            FileNotFoundError: If ingredient not found
+            FileNotFoundError: If helper not found
         """
-        platform_specific_names = self._generate_ingredient_names(name)
+        platform_specific_names = self._generate_helper_names(name)
 
         for specific_name in platform_specific_names:
-            found_path = self._search_ingredient_locations(specific_name)
+            found_path = self._search_helper_locations(specific_name)
             if found_path:
                 return found_path
 
         # Not found
         bin_dir = Path(__file__).parent / "bin"
         raise FileNotFoundError(
-            f"Ingredient '{name}' not found for platform {self.current_platform}.\n"
+            f"Helper '{name}' not found for platform {self.current_platform}.\n"
             f"Tried names: {platform_specific_names}\n"
-            f"Searched in: {bin_dir}, {self.manager.ingredients_bin}"
+            f"Searched in: {bin_dir}, {self.manager.helpers_bin}"
         )
 
-    def build_ingredients(self, language: str | None = None, force: bool = False) -> list[Path]:
-        """Build ingredient binaries from source.
+    def build_helpers(self, language: str | None = None, force: bool = False) -> list[Path]:
+        """Build helper binaries from source.
 
         Args:
             language: Language to build ("go", "rust", or None for all)
@@ -81,15 +81,15 @@ class BinaryLoader:
         built_binaries = []
 
         if language is None or language == "go":
-            built_binaries.extend(self._build_go_ingredients(force))
+            built_binaries.extend(self._build_go_helpers(force))
 
         if language is None or language == "rust":
-            built_binaries.extend(self._build_rust_ingredients(force))
+            built_binaries.extend(self._build_rust_helpers(force))
 
         return built_binaries
 
-    def _build_go_ingredients(self, force: bool = False) -> list[Path]:
-        """Build Go ingredients."""
+    def _build_go_helpers(self, force: bool = False) -> list[Path]:
+        """Build Go helpers."""
         built_binaries: list[Path] = []
 
         if not self.manager.go_src_dir.exists():
@@ -97,12 +97,12 @@ class BinaryLoader:
             return built_binaries
 
         # Make sure bin directory exists
-        ensure_dir(self.manager.ingredients_bin)
+        ensure_dir(self.manager.helpers_bin)
 
         # Build Go components
         for component in ["launcher", "builder"]:
             binary_name = f"flavor-go-{component}-{self.current_platform}"
-            binary_path = self.manager.ingredients_bin / binary_name
+            binary_path = self.manager.helpers_bin / binary_name
 
             if binary_path.exists() and not force:
                 logger.debug(f"Go {component} already exists: {binary_path}")
@@ -136,8 +136,8 @@ class BinaryLoader:
 
         return built_binaries
 
-    def _build_rust_ingredients(self, force: bool = False) -> list[Path]:
-        """Build Rust ingredients."""
+    def _build_rust_helpers(self, force: bool = False) -> list[Path]:
+        """Build Rust helpers."""
         built_binaries: list[Path] = []
 
         if not self.manager.rust_src_dir.exists():
@@ -145,12 +145,12 @@ class BinaryLoader:
             return built_binaries
 
         # Make sure bin directory exists
-        ensure_dir(self.manager.ingredients_bin)
+        ensure_dir(self.manager.helpers_bin)
 
         # Build Rust components
         for component in ["launcher", "builder"]:
             binary_name = f"flavor-rs-{component}-{self.current_platform}"
-            binary_path = self.manager.ingredients_bin / binary_name
+            binary_path = self.manager.helpers_bin / binary_name
 
             if binary_path.exists() and not force:
                 logger.debug(f"Rust {component} already exists: {binary_path}")
@@ -190,8 +190,8 @@ class BinaryLoader:
 
         return built_binaries
 
-    def clean_ingredients(self, language: str | None = None) -> list[Path]:
-        """Clean built ingredient binaries.
+    def clean_helpers(self, language: str | None = None) -> list[Path]:
+        """Clean built helper binaries.
 
         Args:
             language: Language to clean ("go", "rust", or None for all)
@@ -201,7 +201,7 @@ class BinaryLoader:
         """
         removed_paths: list[Path] = []
 
-        if not self.manager.ingredients_bin.exists():
+        if not self.manager.helpers_bin.exists():
             return removed_paths
 
         patterns = []
@@ -213,7 +213,7 @@ class BinaryLoader:
             patterns = ["flavor-rs-*"]
 
         for pattern in patterns:
-            for binary_path in self.manager.ingredients_bin.glob(pattern):
+            for binary_path in self.manager.helpers_bin.glob(pattern):
                 if binary_path.is_file():
                     logger.info(f"Removing {binary_path}")
                     binary_path.unlink()
@@ -221,8 +221,8 @@ class BinaryLoader:
 
         return removed_paths
 
-    def test_ingredients(self, language: str | None = None) -> dict[str, Any]:
-        """Test ingredient binaries.
+    def test_helpers(self, language: str | None = None) -> dict[str, Any]:
+        """Test helper binaries.
 
         Args:
             language: Language to test ("go", "rust", or None for all)
@@ -232,18 +232,18 @@ class BinaryLoader:
         """
         results: dict[str, list[dict[str, Any]]] = {"passed": [], "failed": []}
 
-        ingredients = self.manager.list_ingredients()
+        helpers = self.manager.list_helpers()
 
         # Filter by language if specified
-        all_ingredients = ingredients["launchers"] + ingredients["builders"]
+        all_helpers = helpers["launchers"] + helpers["builders"]
         if language:
-            all_ingredients = [i for i in all_ingredients if i.language == language]
+            all_helpers = [i for i in all_helpers if i.language == language]
 
-        for ingredient in all_ingredients:
+        for helper in all_helpers:
             try:
                 # Test with --version flag
                 result = run(
-                    [str(ingredient.path), "--version"],
+                    [str(helper.path), "--version"],
                     capture_output=True,
                     timeout=5,
                 )
@@ -251,31 +251,31 @@ class BinaryLoader:
                 if result.returncode == 0:
                     results["passed"].append(
                         {
-                            "name": ingredient.name,
+                            "name": helper.name,
                             "version": result.stdout.strip() if result.stdout else None,
                         }
                     )
                 else:
                     results["failed"].append(
                         {
-                            "name": ingredient.name,
+                            "name": helper.name,
                             "error": f"Exit code {result.returncode}",
                             "stderr": result.stderr[:200] if result.stderr else None,
                         }
                     )
             except Exception as e:
-                results["failed"].append({"name": ingredient.name, "error": str(e)})
+                results["failed"].append({"name": helper.name, "error": str(e)})
 
         return results
 
-    def _generate_ingredient_names(self, name: str) -> list[str]:
-        """Generate list of possible ingredient names to search for."""
+    def _generate_helper_names(self, name: str) -> list[str]:
+        """Generate list of possible helper names to search for."""
         platform_specific_names = []
 
-        # Primary search: Look in the bin directory for ANY versioned ingredients
+        # Primary search: Look in the bin directory for ANY versioned helpers
         bin_dir = Path(__file__).parent / "bin"
         if bin_dir.exists():
-            platform_specific_names.extend(self._find_versioned_ingredients(bin_dir, name))
+            platform_specific_names.extend(self._find_versioned_helpers(bin_dir, name))
 
         # Add package version as search pattern
         package_version_name = self._get_package_version_name(name)
@@ -292,8 +292,8 @@ class BinaryLoader:
 
         return self._remove_duplicates(platform_specific_names)
 
-    def _find_versioned_ingredients(self, bin_dir: Path, name: str) -> list[str]:
-        """Find versioned ingredients in bin directory."""
+    def _find_versioned_helpers(self, bin_dir: Path, name: str) -> list[str]:
+        """Find versioned helpers in bin directory."""
         found_names = []
 
         # Use glob to find all files matching the pattern with any version
@@ -316,7 +316,7 @@ class BinaryLoader:
         return found_names
 
     def _get_package_version_name(self, name: str) -> str | None:
-        """Get ingredient name with package version if available."""
+        """Get helper name with package version if available."""
         try:
             from flavor import __version__
 
@@ -336,25 +336,25 @@ class BinaryLoader:
                 unique_names.append(n)
         return unique_names
 
-    def _search_ingredient_locations(self, specific_name: str) -> Path | None:
-        """Search for ingredient in all known locations."""
-        # 1. Check embedded ingredients from wheel installation (ingredients/bin/)
+    def _search_helper_locations(self, specific_name: str) -> Path | None:
+        """Search for helper in all known locations."""
+        # 1. Check embedded helpers from wheel installation (helpers/bin/)
         embedded_path = Path(__file__).parent / "bin" / specific_name
         if embedded_path.exists():
             self._ensure_executable(embedded_path)
-            logger.debug(f"Found ingredient at: {embedded_path}")
+            logger.debug(f"Found helper at: {embedded_path}")
             return embedded_path
 
         # 2. Check bundled with package (for PyPI wheels - old location)
-        bundled_path = Path(__file__).parent / "ingredients" / self.current_platform / specific_name
+        bundled_path = Path(__file__).parent / "helpers" / self.current_platform / specific_name
         if bundled_path.exists():
-            logger.debug(f"Found ingredient at: {bundled_path}")
+            logger.debug(f"Found helper at: {bundled_path}")
             return bundled_path
 
-        # 3. Check local development ingredients
-        local_path = self.manager.ingredients_bin / specific_name
+        # 3. Check local development helpers
+        local_path = self.manager.helpers_bin / specific_name
         if local_path.exists():
-            logger.debug(f"Found ingredient at: {local_path}")
+            logger.debug(f"Found helper at: {local_path}")
             return local_path
 
         return None

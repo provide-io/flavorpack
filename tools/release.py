@@ -58,23 +58,23 @@ def run_tests() -> bool:
     return True
 
 
-def build_ingredients() -> bool:
-    """Build ingredient binaries."""
-    print("\n🔨 Building ingredients...")
-    ingredients_dir = get_project_root() / "ingredients"
+def build_helpers() -> bool:
+    """Build helper binaries."""
+    print("\n🔨 Building helpers...")
+    helpers_dir = get_project_root() / "helpers"
 
     # Check if build script exists
-    build_script = ingredients_dir / "build.sh"
+    build_script = helpers_dir / "build.sh"
     if not build_script.exists():
-        print("⚠️  ingredients/build.sh not found, skipping ingredient build")
+        print("⚠️  helpers/build.sh not found, skipping helper build")
         return True
 
-    result = run(["./build.sh"], cwd=ingredients_dir)
+    result = run(["./build.sh"], cwd=helpers_dir)
     if result.returncode != 0:
-        print("❌ Ingredient build failed")
+        print("❌ Helper build failed")
         return False
 
-    print("✅ Ingredients built successfully")
+    print("✅ Helpers built successfully")
     return True
 
 
@@ -229,7 +229,7 @@ def main():
         help="Specific platforms to build (default: all)",
     )
     parser.add_argument("--skip-tests", action="store_true", help="Skip running tests")
-    parser.add_argument("--skip-ingredients", action="store_true", help="Skip building ingredients")
+    parser.add_argument("--skip-helpers", action="store_true", help="Skip building helpers")
     parser.add_argument("--skip-validation", action="store_true", help="Skip wheel validation")
     parser.add_argument("--test-pypi", action="store_true", help="Upload to TestPyPI instead of PyPI")
     parser.add_argument("--no-upload", action="store_true", help="Don't upload to PyPI")
@@ -271,10 +271,10 @@ def main():
             print("\n❌ Release aborted due to test failures")
             return 1
 
-    # Build ingredients
-    if not args.skip_ingredients:
-        if not build_ingredients():
-            print("\n❌ Release aborted due to ingredient build failure")
+    # Build helpers
+    if not args.skip_helpers:
+        if not build_helpers():
+            print("\n❌ Release aborted due to helper build failure")
             return 1
 
     # Build wheels

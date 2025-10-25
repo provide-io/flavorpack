@@ -4,20 +4,20 @@
 
 ### Package Building Issues
 
-#### Ingredient Not Found
+#### Helper Not Found
 
-**Error**: `Ingredient binary 'flavor-rs-launcher' not found`
+**Error**: `Helper binary 'flavor-rs-launcher' not found`
 
 **Solutions**:
 ```bash
-# Rebuild ingredients
-./ingredients/build.sh
+# Rebuild helpers
+./helpers/build.sh
 
-# Check ingredient locations
-flavor ingredients list
+# Check helper locations
+flavor helpers list
 
-# Verify ingredients exist
-ls -la ingredients/bin/
+# Verify helpers exist
+ls -la helpers/bin/
 ```
 
 #### Non-Deterministic Builds
@@ -101,7 +101,7 @@ FLAVOR_VALIDATION=none ./myapp.psp
 flavor pack --builder python
 ```
 
-**Permanent Fix**: Update to latest ingredients when fix is released
+**Permanent Fix**: Update to latest helpers when fix is released
 
 #### Cache Directory Full
 
@@ -194,7 +194,7 @@ FLAVOR_CACHE_DIR=$(mktemp -d) pytest
 pytest tests/test_specific.py -xvs --tb=short
 ```
 
-#### Ingredient Build Failures
+#### Helper Build Failures
 
 **Error**: Go or Rust compilation errors
 
@@ -207,9 +207,9 @@ go version  # Should be 1.21+
 rustc --version  # Should be 1.75+
 
 # Clean and rebuild
-cd ingredients/flavor-go && go clean && cd ../..
-cd ingredients/flavor-rs && cargo clean && cd ../..
-./ingredients/build.sh
+cd helpers/flavor-go && go clean && cd ../..
+cd helpers/flavor-rs && cargo clean && cd ../..
+./helpers/build.sh
 ```
 
 ## Debug Techniques
@@ -242,11 +242,11 @@ hexdump -C myapp.psp | head -n 50  # View header
 hexdump -C myapp.psp | tail -n 20  # Check magic footer
 ```
 
-### Test Ingredients Directly
+### Test Helpers Directly
 
 ```bash
 # Test launcher
-ingredients/bin/flavor-rs-launcher --version
+helpers/bin/flavor-rs-launcher --version
 
 # Test builder with minimal manifest
 cat > test.json << EOF
@@ -256,7 +256,7 @@ cat > test.json << EOF
   "execution": {"command": "echo", "args": ["test"]}
 }
 EOF
-ingredients/bin/flavor-go-builder --manifest test.json --output test.psp
+helpers/bin/flavor-go-builder --manifest test.json --output test.psp
 ```
 
 ### Environment Debugging
@@ -310,7 +310,7 @@ dtruss ./myapp.psp 2>&1 | grep -E "open|stat"
 
 ### Debugging Checklist
 - [ ] Using latest version?
-- [ ] Ingredients built correctly?
+- [ ] Helpers built correctly?
 - [ ] Platform supported?
 - [ ] Dependencies listed?
 - [ ] Permissions correct?
@@ -323,7 +323,7 @@ When reporting issues, include:
 1. Flavor version: `flavor --version`
 2. Platform: `uname -a`
 3. Python version: `python --version`
-4. Ingredient versions: `flavor ingredients list`
+4. Helper versions: `flavor helpers list`
 5. Error message and stack trace
 6. Minimal reproduction steps
 

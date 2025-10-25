@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build platform-specific wheels with embedded ingredients."""
+"""Build platform-specific wheels with embedded helpers."""
 
 import argparse
 from pathlib import Path
@@ -61,7 +61,7 @@ def clean_build_artifacts():
         root / "build",
         root / "dist",
         root / "src/flavor.egg-info",
-        root / "src/flavor/ingredients/bin",
+        root / "src/flavor/helpers/bin",
     ]
 
     for dir_path in dirs_to_clean:
@@ -70,22 +70,22 @@ def clean_build_artifacts():
             print(f"  ✓ Cleaned {dir_path.relative_to(root)}")
 
 
-def download_ingredients(platform: str, version: str) -> Path | None:
+def download_helpers(platform: str, version: str) -> Path | None:
     """
-    Download ingredient artifacts for the specified platform.
+    Download helper artifacts for the specified platform.
 
-    In CI, these would come from the ingredient pipeline.
-    For local builds, assumes ingredients are already built.
+    In CI, these would come from the helper pipeline.
+    For local builds, assumes helpers are already built.
     """
-    ingredients_dir = get_project_root() / "ingredients" / "bin"
+    helpers_dir = get_project_root() / "helpers" / "bin"
 
-    if not ingredients_dir.exists():
-        print(f"❌ Ingredients directory not found: {ingredients_dir}")
-        print("  Run 'make build-ingredients' first")
+    if not helpers_dir.exists():
+        print(f"❌ Helpers directory not found: {helpers_dir}")
+        print("  Run 'make build-helpers' first")
         return None
 
-    # Check if platform-specific ingredients exist
-    required_ingredients = [
+    # Check if platform-specific helpers exist
+    required_helpers = [
         f"flavor-go-builder-{version}-{platform}",
         f"flavor-go-launcher-{version}-{platform}",
         f"flavor-rs-builder-{version}-{platform}",
@@ -93,46 +93,46 @@ def download_ingredients(platform: str, version: str) -> Path | None:
     ]
 
     # Also check without version suffix
-    alt_ingredients = [
+    alt_helpers = [
         f"flavor-go-builder-{platform}",
         f"flavor-go-launcher-{platform}",
         f"flavor-rs-builder-{platform}",
         f"flavor-rs-launcher-{platform}",
     ]
 
-    # Check for generic ingredients (no platform suffix)
-    generic_ingredients = [
+    # Check for generic helpers (no platform suffix)
+    generic_helpers = [
         "flavor-go-builder",
         "flavor-go-launcher",
         "flavor-rs-builder",
         "flavor-rs-launcher",
     ]
 
-    ingredients_found = False
-    for ingredient_set in [required_ingredients, alt_ingredients, generic_ingredients]:
+    helpers_found = False
+    for helper_set in [required_helpers, alt_helpers, generic_helpers]:
         if all(
-            (ingredients_dir / h).exists() or (ingredients_dir / f"{h}.exe").exists() for h in ingredient_set
+            (helpers_dir / h).exists() or (helpers_dir / f"{h}.exe").exists() for h in helper_set
         ):
-            ingredients_found = True
+            helpers_found = True
             break
 
-    if not ingredients_found:
-        print(f"⚠️  Platform-specific ingredients not found for {platform}")
-        print(f"  Looking in: {ingredients_dir}")
+    if not helpers_found:
+        print(f"⚠️  Platform-specific helpers not found for {platform}")
+        print(f"  Looking in: {helpers_dir}")
 
-        # List available ingredients
-        if ingredients_dir.exists():
-            print("  Available ingredients:")
-            for f in sorted(ingredients_dir.iterdir()):
+        # List available helpers
+        if helpers_dir.exists():
+            print("  Available helpers:")
+            for f in sorted(helpers_dir.iterdir()):
                 if f.is_file():
                     print(f"    - {f.name}")
 
-    return ingredients_dir
+    return helpers_dir
 
 
 def build_platform_wheel(platform: str, output_dir: Path) -> Path | None:
     """
-    Build a platform-specific wheel with embedded ingredients.
+    Build a platform-specific wheel with embedded helpers.
 
     Args:
         platform: Target platform
@@ -146,28 +146,28 @@ def build_platform_wheel(platform: str, output_dir: Path) -> Path | None:
     version = get_version()
     root = get_project_root()
 
-    # Get ingredients directory
-    ingredients_dir = download_ingredients(platform, version)
-    if not ingredients_dir:
+    # Get helpers directory
+    helpers_dir = download_helpers(platform, version)
+    if not helpers_dir:
         return None
 
     # Clean previous artifacts
     clean_build_artifacts()
 
-    # Embed ingredients
-    print("📦 Embedding ingredients...")
+    # Embed helpers
+    print("📦 Embedding helpers...")
     embed_result = run_command(
         [
             sys.executable,
-            str(root / "tools" / "embed_ingredients.py"),
+            str(root / "tools" / "embed_helpers.py"),
             platform,
-            str(ingredients_dir),
+            str(helpers_dir),
             version,
         ]
     )
 
     if embed_result.returncode != 0:
-        print(f"❌ Failed to embed ingredients: {embed_result.stderr}")
+        print(f"❌ Failed to embed helpers: {embed_result.stderr}")
         return None
 
     # Build the wheel
@@ -245,15 +245,15 @@ if __name__ == "__main__":
         if setup_py.exists():
             setup_py.unlink()
 
-        # Clean embedded ingredients
-        ingredients_pkg = root / "src" / "flavor" / "ingredients" / "bin"
-        if ingredients_pkg.exists():
-            shutil.rmtree(ingredients_pkg)
+        # Clean embedded helpers
+        helpers_pkg = root / "src" / "flavor" / "helpers" / "bin"
+        if helpers_pkg.exists():
+            shutil.rmtree(helpers_pkg)
 
 
 def build_universal_wheel(output_dir: Path) -> Path | None:
-    """Build a universal wheel without embedded ingredients."""
-    print("\n🌍 Building universal wheel (no embedded ingredients)")
+    """Build a universal wheel without embedded helpers."""
+    print("\n🌍 Building universal wheel (no embedded helpers)")
 
     root = get_project_root()
     clean_build_artifacts()
@@ -305,12 +305,12 @@ def build_all_wheels(output_dir: Path) -> list[Path]:
 def main():
     """Main entry point."""
     parser = argparse.ArgumentParser(
-        description="Build platform-specific Flavor wheels with embedded ingredients"
+        description="Build platform-specific Flavor wheels with embedded helpers"
     )
     parser.add_argument(
         "--platform",
         choices=ALL_PLATFORMS + ["universal"],
-        help="Target platform (or 'universal' for no ingredients)",
+        help="Target platform (or 'universal' for no helpers)",
     )
     parser.add_argument("--all", action="store_true", help="Build wheels for all platforms")
     parser.add_argument(

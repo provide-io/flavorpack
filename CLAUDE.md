@@ -18,10 +18,10 @@ All Linux binaries are built as static executables:
 
 ### Environment Setup
 ```bash
-# Build Go and Rust ingredients (required for packaging)
-make build-ingredients
+# Build Go and Rust helpers (required for packaging)
+make build-helpers
 # or
-./ingredients/build.sh
+./helpers/build.sh
 ```
 
 ### Testing
@@ -100,7 +100,7 @@ The project has a polyglot architecture with three main layers:
    - `psp/format_2025/launcher.py` - Launcher management
    - `psp/format_2025/crypto.py` - Ed25519 signing/verification
 
-2. **Native Ingredients** (`src/`)
+2. **Native Helpers** (`src/`)
    - `flavor-go/` - Go builder and launcher implementations
    - `flavor-rust/` - Rust builder and launcher implementations
    - Built binaries are placed in `dist/bin/` and embedded during packaging
@@ -142,8 +142,8 @@ The package format uses a protobuf-based operation chain system:
 
 ## Key Patterns
 
-### Ingredient Selection
-The system automatically selects appropriate builder/launcher combinations based on platform and availability. See `src/flavor/packaging/orchestrator_ingredients.py` for the selection logic.
+### Helper Selection
+The system automatically selects appropriate builder/launcher combinations based on platform and availability. See `src/flavor/packaging/orchestrator_helpers.py` for the selection logic.
 
 ### Slot System
 Packages use numbered slots for different components:

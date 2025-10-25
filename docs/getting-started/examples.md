@@ -486,7 +486,7 @@ Process CSV files with pandas:
         - name: Install FlavorPack
           run: |
             pip install flavorpack
-            flavor ingredients download
+            flavor helpers download
         
         - name: Build Package
           run: |
@@ -512,7 +512,7 @@ Process CSV files with pandas:
     
     # Install FlavorPack
     RUN pip install flavorpack
-    RUN flavor ingredients download
+    RUN flavor helpers download
     
     # Copy application
     WORKDIR /app

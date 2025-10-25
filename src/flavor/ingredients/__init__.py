@@ -1,15 +1,15 @@
-# flavor/ingredients/__init__.py
+# flavor/helpers/__init__.py
 #
 # SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-from flavor.ingredients.manager import IngredientInfo, IngredientManager
+from flavor.helpers.manager import HelperInfo, HelperManager
 
-__all__ = ["IngredientInfo", "IngredientManager"]
+__all__ = ["HelperInfo", "HelperManager"]
 
-# Try to import embedded ingredients if available
+# Try to import embedded helpers if available
 try:
-    import flavor.ingredients.bin as _bin_module  # type: ignore[import-untyped]
+    import flavor.helpers.bin as _bin_module  # type: ignore[import-untyped]
 
     # Re-export available functions
     __all__.extend(
@@ -28,6 +28,6 @@ try:
         }
     )
 except ImportError:
-    # No embedded ingredients - this is fine for development or universal wheels
+    # No embedded helpers - this is fine for development or universal wheels
     pass
 # 🌶️📦📦🪄

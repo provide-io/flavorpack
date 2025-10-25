@@ -1,4 +1,4 @@
-name: 01 🥘 Ingredient Prep
+name: 01 🥘 Helper Prep
 
 on:
   workflow_dispatch:
@@ -36,8 +36,8 @@ jobs:
         run: |
           # Hash the src directory to detect changes
           HELPERS_HASH=$(find src -type f -name "*.go" -o -name "*.rs" -o -name "Cargo.toml" -o -name "go.mod" | xargs sha256sum | sha256sum | cut -d' ' -f1 | head -c 16)
-          echo "key_base=ingredients-$HELPERS_HASH" >> $GITHUB_OUTPUT
-          echo "🔑 Cache key base: ingredients-$HELPERS_HASH"
+          echo "key_base=helpers-$HELPERS_HASH" >> $GITHUB_OUTPUT
+          echo "🔑 Cache key base: helpers-$HELPERS_HASH"
       
       - name: 📋 Setup build matrix
         id: matrix
@@ -77,7 +77,7 @@ jobs:
       - name: 📥 Checkout
         uses: actions/checkout@v4
       
-      - name: 💾 Cache ingredients
+      - name: 💾 Cache helpers
         id: cache
         uses: actions/cache@v4
         with:
@@ -122,9 +122,9 @@ jobs:
           ARCH=$(echo $PLATFORM | cut -d_ -f2)
           VERSION="${{ needs.setup.outputs.version }}"
 
-          echo "🔨 Building ingredients for $PLATFORM (version $VERSION)"
+          echo "🔨 Building helpers for $PLATFORM (version $VERSION)"
 
-      - name: 🐹 Build Go ingredients
+      - name: 🐹 Build Go helpers
         if: steps.cache.outputs.cache-hit != 'true'
         shell: bash
         working-directory: src/flavor-go
@@ -139,7 +139,7 @@ jobs:
           export GOOS=$OS
           export GOARCH=$ARCH
 
-          echo "🐹 Building Go ingredients..."
+          echo "🐹 Building Go helpers..."
 
           # Builder (with -buildvcs=false to avoid git issues in CI)
           go build -buildvcs=false -ldflags "-X main.Version=$VERSION" \
@@ -168,7 +168,7 @@ jobs:
           rustc --version
           cargo --version
 
-      - name: 🦀 Build Rust ingredients
+      - name: 🦀 Build Rust helpers
         if: steps.cache.outputs.cache-hit != 'true'
         shell: bash
         working-directory: src/flavor-rs
@@ -180,7 +180,7 @@ jobs:
           # Set version via environment variable for build.rs
           export FLAVOR_VERSION="$VERSION"
 
-          echo "🦀 Building Rust ingredients..."
+          echo "🦀 Building Rust helpers..."
 
           # Build with specified target (musl for Linux, native for macOS)
           cargo build --release --target ${{ matrix.rust_target }}
@@ -205,10 +205,10 @@ jobs:
           mkdir -p artifacts
           cd dist/bin
           # Only package binaries for the CURRENT version and platform
-          zip -r ../../artifacts/flavor-ingredients-${{ needs.setup.outputs.version }}-${{ matrix.platform }}.zip \
+          zip -r ../../artifacts/flavor-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}.zip \
             *-${{ needs.setup.outputs.version }}-${{ matrix.platform }} || true
           cd ../..
-          echo "📦 Packaged ingredients:"
+          echo "📦 Packaged helpers:"
           ls -la artifacts/
       
       - name: 🧪 Test binaries
@@ -234,7 +234,7 @@ jobs:
       - name: 📤 Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: flavor-ingredients-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
+          name: flavor-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
           path: artifacts/*.zip
       
       - name: 📤 Upload test results
@@ -271,7 +271,7 @@ jobs:
           mkdir -p final
           
           # Combine all platform zips
-          for platform_dir in all-artifacts/flavor-ingredients-*; do
+          for platform_dir in all-artifacts/flavor-helpers-*; do
             if [ -d "$platform_dir" ]; then
               cp $platform_dir/*.zip final/ || true
             fi
@@ -279,11 +279,11 @@ jobs:
           
           # Create combined archive
           cd final
-          mkdir -p all-ingredients
+          mkdir -p all-helpers
           for zip in *.zip; do
-            [ -f "$zip" ] && unzip -o "$zip" -d all-ingredients/
+            [ -f "$zip" ] && unzip -o "$zip" -d all-helpers/
           done
-          zip -r flavor-ingredients-${{ needs.setup.outputs.version }}-all.zip all-ingredients/
+          zip -r flavor-helpers-${{ needs.setup.outputs.version }}-all.zip all-helpers/
           cd ..
           
           echo "📦 Combined artifacts:"
@@ -307,7 +307,7 @@ jobs:
       
       - name: 📊 Generate summary
         run: |
-          echo "## 🔨 Ingredient Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "## 🔨 Helper Build Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Version:** ${{ needs.setup.outputs.version }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -321,7 +321,7 @@ jobs:
       - name: 📤 Upload combined artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: flavor-ingredients-${{ needs.setup.outputs.version }}-all
+          name: flavor-helpers-${{ needs.setup.outputs.version }}-all
           path: |
             final/*.zip
             final/*.json
