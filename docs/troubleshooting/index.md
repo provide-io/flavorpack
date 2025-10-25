@@ -2,6 +2,11 @@
 
 Comprehensive guide to diagnosing and resolving common FlavorPack issues.
 
+!!! warning "Alpha Software - Some Features Not Yet Implemented"
+    FlavorPack is in **alpha** status. This troubleshooting guide includes solutions for both implemented and planned features. Features marked with 📋 **PLANNED** are not yet available.
+
+    If you encounter issues with features that don't work, check the [Roadmap](../guide/roadmap.md) to see implementation status.
+
 ## Overview
 
 This guide helps you troubleshoot issues with building, running, and distributing FlavorPack packages. Each section provides symptoms, causes, and step-by-step solutions.
@@ -146,11 +151,11 @@ strip = true
 
 **Solutions**:
 ```bash
-# Increase timeout
-flavor pack pyproject.toml --timeout 600
+# 📋 PLANNED: Timeout option not yet implemented
+# flavor pack pyproject.toml --timeout 600
 
-# Skip dependency resolution
-flavor pack pyproject.toml --no-deps
+# For now, interrupt and retry
+# Ctrl+C, then run again
 
 # Clear build cache
 rm -rf ~/.cache/flavor/build
@@ -162,16 +167,18 @@ rm -rf ~/.cache/flavor/build
 
 **Solution**:
 ```bash
-# Download helpers
-flavor helpers download
-
 # Build helpers locally
-cd helpers
-./build.sh
+make build-helpers
 
-# Specify launcher explicitly
-flavor pack pyproject.toml --launcher-bin /path/to/launcher
+# Verify helpers exist
+ls -la dist/bin/flavor-*-launcher-*
+
+# Specify launcher explicitly if needed
+flavor pack pyproject.toml --launcher-bin dist/bin/flavor-rs-launcher-linux_amd64
 ```
+
+!!! info "📋 Planned Feature"
+    Automatic helper download (`flavor helpers download`) is planned for a future release. Currently, you must build helpers locally with `make build-helpers`.
 
 ### Runtime Errors
 
@@ -455,19 +462,25 @@ flavor verify myapp.psp --deep
 ### Environment Variables
 
 ```bash
-# Debug variables
+# Debug variables (✅ IMPLEMENTED)
 export FLAVOR_LOG_LEVEL=debug
-export FLAVOR_KEEP_TEMP=1
-export FLAVOR_NO_CLEANUP=1
+export FOUNDATION_LOG_LEVEL=debug  # For Python components
 
-# Performance tuning
-export FLAVOR_PARALLEL_EXTRACTION=1
-export FLAVOR_CACHE_SIZE=10GB
+# Cache configuration (✅ IMPLEMENTED)
+export FLAVOR_CACHE=/path/to/cache
 
-# Security
+# Security (✅ IMPLEMENTED)
 export FLAVOR_VALIDATION=none  # Skip verification (DANGER!)
-export FLAVOR_VERIFY_SIGNATURES=1
+
+# 📋 PLANNED: These environment variables are not yet implemented
+# export FLAVOR_KEEP_TEMP=1
+# export FLAVOR_NO_CLEANUP=1
+# export FLAVOR_PARALLEL_EXTRACTION=1
+# export FLAVOR_CACHE_SIZE=10GB
+# export FLAVOR_VERIFY_SIGNATURES=1
 ```
+
+See the [Environment Variables Guide](../guide/usage/environment.md) for a complete reference.
 
 ## Performance Optimization
 
@@ -475,44 +488,43 @@ export FLAVOR_VERIFY_SIGNATURES=1
 
 **Solutions**:
 ```bash
-# Use parallel builds
-flavor pack pyproject.toml --parallel
+# 📋 PLANNED: These optimization flags are not yet implemented
+# flavor pack pyproject.toml --parallel
+# flavor pack pyproject.toml --no-tests --no-docs
 
-# Skip unnecessary steps
-flavor pack pyproject.toml --no-tests --no-docs
-
-# Use build cache
-export FLAVOR_BUILD_CACHE=~/.cache/flavor/build
+# Current: Optimize by excluding unnecessary files
+[tool.flavor.build]
+exclude = ["tests/", "docs/", ".git/"]
 ```
 
 ### Slow Extraction
 
 **Solutions**:
 ```toml
-# Use appropriate operations
-[[tool.flavor.slots]]
-operations = "tar"  # Faster than tar.gz for large files
+# 📋 PLANNED: Manual operation and lifecycle configuration not yet implemented
+# FlavorPack currently auto-selects optimal compression
 
-# Enable parallel extraction
-[tool.flavor.features]
-parallel_extraction = true
+# [[tool.flavor.slots]]
+# operations = "tar"  # Will be available in future release
+# lifecycle = "lazy"  # Will be available in future release
 
-# Use lazy loading
-[[tool.flavor.slots]]
-lifecycle = "lazy"
+# [tool.flavor.features]
+# parallel_extraction = true  # Will be available in future release
 ```
 
 ### Memory Usage
 
 **Solutions**:
 ```toml
-# Limit memory usage
-[tool.flavor.execution]
-max_memory = "512MB"
+# 📋 PLANNED: Memory and execution configuration not yet implemented
 
-# Use streaming for large files
-[tool.flavor.features]
-streaming_extraction = true
+# [tool.flavor.execution]
+# max_memory = "512MB"  # Will be available in future release
+
+# [tool.flavor.features]
+# streaming_extraction = true  # Will be available in future release
+
+# Current: No memory limits configurable
 ```
 
 ## Error Messages Reference
@@ -520,7 +532,7 @@ streaming_extraction = true
 | Error | Meaning | Solution |
 |-------|---------|----------|
 | `PSPF format not recognized` | Invalid package file | Rebuild package |
-| `Launcher not found` | Missing launcher binary | Run `flavor helpers download` |
+| `Launcher not found` | Missing launcher binary | Run `make build-helpers` |
 | `Slot checksum mismatch` | Corrupted slot data | Rebuild package |
 | `Unsupported platform` | Platform mismatch | Build for correct platform |
 | `Python version mismatch` | Wrong Python version | Use specified Python version |
@@ -533,7 +545,7 @@ streaming_extraction = true
 ### Self-Service Resources
 
 1. **Documentation**: Read the [User Guide](../guide/index.md)
-2. **Examples**: Check [example projects](https://github.com/provide-io/flavorpack-examples)
+2. **Examples**: Check the [Examples Section](../getting-started/examples.md)
 3. **FAQ**: See [Frequently Asked Questions](faq.md)
 4. **API Reference**: Consult [API Documentation](../api/index.md)
 
@@ -569,5 +581,5 @@ env | grep FLAVOR
 - [Common Errors](errors.md) - Detailed error explanations
 - [Platform-Specific Issues](platforms/index.md) - OS-specific guides
 - [FAQ](faq.md) - Frequently asked questions
-- [Security Issues](security.md) - Security-related problems
+- [Security Model](../guide/concepts/security.md) - Security features and best practices
 - [Performance Tuning](../guide/advanced/performance.md) - Optimization guide

@@ -2,9 +2,109 @@
 
 Complete reference for `pyproject.toml` configuration options in FlavorPack packages.
 
+!!! warning "Alpha Release - Limited Configuration Support"
+    **Many configuration options shown in this guide are planned but not yet implemented.**
+
+    FlavorPack is in alpha and currently supports a **minimal subset** of the documented configuration.
+    See the ["Currently Supported Configuration"](#currently-supported-configuration) section below for what actually works today.
+
+    Features marked with 📋 are planned for future releases. See the [Roadmap](../roadmap.md) for implementation timelines.
+
 ## Overview
 
 FlavorPack uses `pyproject.toml` as its manifest format, following Python packaging standards while adding custom configuration through the `[tool.flavor]` section. This guide covers all available options for configuring your package build.
+
+## Currently Supported Configuration
+
+### Minimal Working Example
+
+This is what **actually works today** in FlavorPack alpha:
+
+```toml
+[project]
+name = "myapp"                    # ✅ Required
+version = "1.0.0"                 # ✅ Required
+dependencies = [                  # ✅ Automatically included
+    "requests>=2.28",
+    "click>=8.0"
+]
+
+[tool.flavor]
+entry_point = "myapp:main"        # ✅ Required (module:function format)
+```
+
+### Supported Fields Reference
+
+#### `[project]` Section ✅
+
+| Field | Status | Description |
+|-------|--------|-------------|
+| `name` | ✅ **Required** | Package name |
+| `version` | ✅ **Required** | Package version |
+| `dependencies` | ✅ Supported | Runtime dependencies (automatically included) |
+| `scripts` | ✅ Supported | CLI entry points (extracted automatically) |
+
+All other `[project]` fields (description, readme, license, etc.) are preserved but not used by FlavorPack.
+
+#### `[tool.flavor]` Section ✅
+
+| Field | Status | Description |
+|-------|--------|-------------|
+| `entry_point` | ✅ **Required** | Main entry point (`module:function` format) |
+| `package_name` | ✅ Optional | Override package name |
+
+#### `[tool.flavor.metadata]` Section ✅
+
+| Field | Status | Description |
+|-------|--------|-------------|
+| `package_name` | ✅ Optional | Override package name in metadata |
+
+#### `[tool.flavor.build]` Section ✅
+
+| Field | Status | Description |
+|-------|--------|-------------|
+| `dependencies` | ✅ Supported | Build-time dependencies |
+
+#### `[tool.flavor.execution.runtime.env]` Section ✅
+
+Runtime environment variable control:
+
+```toml
+[tool.flavor.execution.runtime.env]
+# Remove specific environment variables
+unset = ["DEBUG", "TESTING"]
+
+# Pass through environment variables from host
+pass = ["HOME", "USER", "PATH", "TERM"]
+
+# Set new environment variables
+set = { APP_ENV = "production", LOG_LEVEL = "info" }
+
+# Map/rename environment variables
+map = { HOST_VAR = "APP_VAR" }
+```
+
+| Field | Status | Description |
+|-------|--------|-------------|
+| `unset` | ✅ Supported | List of variables to remove |
+| `pass` | ✅ Supported | List of variables to pass through |
+| `set` | ✅ Supported | Dict of variables to set |
+| `map` | ✅ Supported | Dict mapping old names to new names |
+
+### CLI-Only Options
+
+Some features are available via CLI flags but not manifest configuration:
+
+| Feature | CLI Flag | Description |
+|---------|----------|-------------|
+| Package signing | `--private-key`, `--public-key` | Ed25519 signing |
+| Key seed | `--key-seed` | Deterministic key generation |
+| Launcher selection | `--launcher-bin` | Custom launcher binary |
+| Builder selection | `--builder-bin` | Custom builder binary |
+| Strip binaries | `--strip` | Remove debug symbols |
+| Verification | `--verify` / `--no-verify` | Post-build verification |
+
+---
 
 ## Manifest Structure
 
@@ -106,7 +206,11 @@ description = "Custom package description"
 
 ### Execution Configuration
 
+!!! warning "📋 Planned Feature - Not Yet Implemented"
+    These execution configuration options are **not yet supported**. See [Roadmap](../roadmap.md#manifest-configuration-features) for planned implementation.
+
 ```toml
+# 📋 PLANNED - Not yet implemented
 [tool.flavor.execution]
 # Working directory (relative to extraction root)
 working_directory = "app"
@@ -148,11 +252,18 @@ map = { HOST_HOME = "APP_HOME", HOST_CONFIG = "APP_CONFIG" }
 ```toml
 [tool.flavor.build]
 # Additional build dependencies
-dependencies = [
+dependencies = [                  # ✅ Supported
     "wheel>=0.38",
     "setuptools>=65.0",
 ]
+```
 
+!!! warning "📋 Planned Features - Not Yet Implemented"
+    The following build configuration options are **not yet supported**. See [Roadmap](../roadmap.md#manifest-configuration-features) for planned implementation.
+
+```toml
+# 📋 PLANNED - Not yet implemented
+[tool.flavor.build]
 # Exclude patterns (glob)
 exclude = [
     "**/__pycache__",
@@ -180,13 +291,22 @@ deterministic = true
 seed = "my-build-seed"
 ```
 
+**Note**: The `--strip` CLI flag does work for stripping launcher binaries. Manifest-based strip configuration is planned.
+
 ### Metadata Override
 
 ```toml
 [tool.flavor.metadata]
 # Override package name
-package_name = "myapp-custom"
+package_name = "myapp-custom"     # ✅ Supported
+```
 
+!!! warning "📋 Planned Features - Not Yet Implemented"
+    Additional metadata customization options are **not yet supported**. See [Roadmap](../roadmap.md#manifest-configuration-features) for planned implementation.
+
+```toml
+# 📋 PLANNED - Not yet implemented
+[tool.flavor.metadata]
 # Build information
 builder = "CI/CD Pipeline"
 build_host = "github-actions"
@@ -200,9 +320,18 @@ git_commit = "${GIT_COMMIT}"
 
 ## Slot Configuration
 
+!!! warning "📋 Planned Feature - Not Yet Implemented"
+    **Slot configuration via `pyproject.toml` is not yet supported.**
+
+    Slots are currently created automatically by FlavorPack based on your Python application structure.
+    Manual slot configuration is planned for a future release. See [Roadmap](../roadmap.md#slot-configuration) for details.
+
+    This entire section documents the **planned slot configuration format** that will be available in future releases.
+
 ### Basic Slot Definition
 
 ```toml
+# 📋 PLANNED - Not yet implemented
 [[tool.flavor.slots]]
 id = "config"                    # Unique slot identifier
 source = "config/"                # Source directory/file
@@ -234,8 +363,16 @@ extract_to = "app"
 # Variables: {workenv}, {cache}, {tmp}, {home}
 
 # Operation chain for slot data transformation
-# Specify operations as string format (converted to uint64 packed operations internally)
-# Common operation chains:
+#
+# IMPORTANT: The operations field IS implemented in the PSPF/2025 binary format
+# (64-bit packed uint64 supporting up to 8 operations). However, manifest-based
+# configuration of operations is not yet available.
+#
+# Current behavior: FlavorPack automatically applies tar.gz to all slots.
+# Future: You'll be able to specify operations via manifest configuration.
+#
+# 📋 PLANNED: Manifest-based operation specification
+# When implemented, you'll specify operations as string format:
 #   - "tar.gz" or "tgz": TAR archive with GZIP compression (default for directories)
 #   - "tar.bz2": TAR archive with BZIP2 compression (better compression)
 #   - "tar.xz": TAR archive with XZ compression (best compression, slower)
@@ -243,9 +380,9 @@ extract_to = "app"
 #   - "gzip" or "gz": GZIP compression only (for single files)
 #   - "raw": No compression (fastest, but larger packages)
 #   - Custom: "tar|gzip" or "tar|bzip2" (pipe-separated operations)
-# Operations are applied in sequence and reversed during extraction
-# Note: String values are converted to packed uint64 format per PSPF/2025 spec
-# See FEP-0001 for full operation chain specification
+#
+# Operations will be applied in sequence and reversed during extraction.
+# See FEP-0001 for full operation chain specification and encoding details.
 
 # Platform-specific slot
 platform = "linux_amd64"
@@ -333,9 +470,21 @@ optional = true
 
 ## Security Configuration
 
+!!! warning "📋 Planned Feature - Not Yet Implemented"
+    **Security configuration via `pyproject.toml` is not yet supported.**
+
+    Package signing is currently available via CLI flags only:
+
+    - `--private-key PATH` - Sign with Ed25519 private key
+    - `--public-key PATH` - Include public key in package
+    - `--key-seed TEXT` - Deterministic key generation
+
+    Manifest-based security configuration is planned for a future release. See [Roadmap](../roadmap.md#security-features) for details.
+
 ### Package Signing
 
 ```toml
+# 📋 PLANNED - Not yet implemented
 [tool.flavor.security]
 # Signature algorithm
 algorithm = "ed25519"
@@ -370,9 +519,15 @@ strict_slot_validation = true
 
 ## Advanced Features
 
+!!! warning "📋 Planned Features - Not Yet Implemented"
+    **Advanced features are not yet supported.**
+
+    These features are planned for future releases to enable platform-specific builds, custom build steps, and experimental optimizations. See [Roadmap](../roadmap.md#advanced-features) for details.
+
 ### Conditional Configuration
 
 ```toml
+# 📋 PLANNED - Not yet implemented
 [tool.flavor.conditions]
 # Platform-specific settings
 [tool.flavor.conditions.linux]
@@ -388,6 +543,7 @@ entry_point = "myapp.windows:main"
 ### Build Hooks
 
 ```toml
+# 📋 PLANNED - Not yet implemented
 [tool.flavor.hooks]
 # Pre-build commands
 pre_build = [
@@ -415,6 +571,7 @@ post_extract = [
 ### Feature Flags
 
 ```toml
+# 📋 PLANNED - Not yet implemented
 [tool.flavor.features]
 # Enable experimental features
 experimental_compression = true
@@ -445,10 +602,19 @@ export FLAVOR_BUILD_DETERMINISTIC=1
 export FLAVOR_RUNTIME_ENV_PASSTHROUGH="HOME,USER"
 export FLAVOR_RUNTIME_ENV_SET="APP_ENV=production"
 
-# Security
-export FLAVOR_KEY_SEED="secret-seed"
-export FLAVOR_PRIVATE_KEY_PATH="/secure/flavor-private.key"
+# Security - Deterministic key generation only
+export FLAVOR_KEY_SEED="secret-seed"  # For reproducible builds
 ```
+
+!!! note "Signing Key Configuration"
+    **Private and public keys must be passed via CLI options**, not environment variables:
+
+    ```bash
+    flavor pack --private-key keys/flavor-private.key \
+                --public-key keys/flavor-public.key
+    ```
+
+    The `FLAVOR_KEY_SEED` environment variable is only for deterministic key generation during the build, not for loading existing keys. See the [Signing Guide](signing.md) for details.
 
 ## Validation
 
@@ -534,7 +700,11 @@ RATE_LIMIT = 1000
 
 ## Examples
 
-### Minimal Manifest
+These examples show what actually works today in FlavorPack alpha.
+
+### Minimal Manifest (✅ Works Today)
+
+The absolute minimum configuration needed to create a package:
 
 ```toml
 [project]
@@ -545,7 +715,29 @@ version = "1.0.0"
 entry_point = "hello:main"
 ```
 
-### Web Application
+### Simple CLI Tool (✅ Works Today)
+
+A complete working example with dependencies:
+
+```toml
+[project]
+name = "mytool"
+version = "1.0.0"
+dependencies = [
+    "click>=8.0",
+    "rich>=12.0",
+]
+
+[project.scripts]
+mytool = "mytool.cli:main"
+
+[tool.flavor]
+entry_point = "mytool.cli:main"
+```
+
+### Web Application with Environment Variables (✅ Partial Support)
+
+This example shows the environment variable configuration that works today:
 
 ```toml
 [project]
@@ -560,9 +752,29 @@ dependencies = [
 [tool.flavor]
 entry_point = "webapp:create_app"
 
-[tool.flavor.execution.runtime_env.set_vars]
-FLASK_ENV = "production"
-DATABASE_URL = "${DATABASE_URL}"
+# ✅ This works - environment variable configuration
+[tool.flavor.execution.runtime.env]
+pass = ["DATABASE_URL"]  # Pass through from host
+set = { FLASK_ENV = "production", PORT = "8000" }
+```
+
+Note: Slot configuration shown in other examples is **not yet implemented**.
+
+### Future Examples (📋 Planned)
+
+The following examples use features that are planned but not yet implemented:
+
+#### Web App with Custom Slots (📋 Planned)
+
+```toml
+# 📋 PLANNED - Slot configuration not yet supported
+[project]
+name = "webapp"
+version = "2.0.0"
+dependencies = ["flask>=2.0"]
+
+[tool.flavor]
+entry_point = "webapp:create_app"
 
 [[tool.flavor.slots]]
 id = "templates"
@@ -575,12 +787,12 @@ id = "static"
 source = "static/"
 purpose = "static-resources"
 lifecycle = "cached"
-# Automatic tar.gz compression
 ```
 
-### CLI Tool with Plugins
+#### CLI Tool with Lazy-Loaded Plugins (📋 Planned)
 
 ```toml
+# 📋 PLANNED - Slot configuration not yet supported
 [project]
 name = "cli-tool"
 version = "3.0.0"
@@ -588,10 +800,6 @@ dependencies = ["click>=8.0"]
 
 [project.scripts]
 mytool = "mytool.cli:main"
-
-[project.entry-points."mytool.plugins"]
-json = "mytool.plugins:JSONPlugin"
-yaml = "mytool.plugins:YAMLPlugin"
 
 [tool.flavor]
 entry_point = "mytool.cli:main"
