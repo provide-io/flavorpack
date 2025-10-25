@@ -9,7 +9,7 @@ import tempfile
 import click
 from provide.foundation.process import run
 
-from flavor.ingredients import IngredientManager as HelperManager
+from flavor.helpers import HelperManager 
 from flavor.package import build_package_from_manifest
 
 
@@ -39,10 +39,10 @@ def launcher_test_command(launcher, verbose, key_seed, exec_mode) -> None:
     else:
         # Default to Rust launcher
         try:
-            launcher_path = helper_manager.get_ingredient("flavor-rs-launcher")
+            launcher_path = helper_manager.get_helper("flavor-rs-launcher")
             launcher_name = "flavor-rs-launcher"
         except FileNotFoundError:
-            click.secho("❌ Rust launcher not found. Run 'flavor ingredients build'.", fg="red")
+            click.secho("❌ Rust launcher not found. Run 'flavor helpers build'.", fg="red")
             sys.exit(1)
 
     click.secho(f"🚀 Testing launcher: {launcher_name}", fg="cyan", bold=True)

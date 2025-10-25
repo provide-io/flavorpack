@@ -1,8 +1,8 @@
-# tests/packaging/test_orchestrator_ingredients_core.py
+# tests/packaging/test_orchestrator_helpers_core.py
 #
 # SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
-"""Tests for orchestrator_ingredients core functions."""
+"""Tests for orchestrator_helpers core functions."""
 
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from flavor.exceptions import BuildError
-from flavor.packaging.orchestrator_ingredients import (
+from flavor.packaging.orchestrator_helpers import (
     create_python_slot_tarballs,
     create_slot_tarballs,
     get_cli_executable_name,
@@ -69,7 +69,7 @@ class TestGetCliExecutableName:
 class TestCreateSlotTarballs:
     """Test create_slot_tarballs function."""
 
-    @patch("flavor.packaging.orchestrator_ingredients.is_windows")
+    @patch("flavor.packaging.orchestrator_helpers.is_windows")
     def test_create_slot_tarballs_unix(self, mock_is_windows: Mock, tmp_path: Path) -> None:
         """Test creating slot tarballs on Unix."""
         mock_is_windows.return_value = False
@@ -105,7 +105,7 @@ class TestCreateSlotTarballs:
         assert slots["wheels"].exists()
         assert slots["wheels"].name == "wheels.tar"
 
-    @patch("flavor.packaging.orchestrator_ingredients.is_windows")
+    @patch("flavor.packaging.orchestrator_helpers.is_windows")
     def test_create_slot_tarballs_windows(self, mock_is_windows: Mock, tmp_path: Path) -> None:
         """Test creating slot tarballs on Windows."""
         mock_is_windows.return_value = True
@@ -134,7 +134,7 @@ class TestCreateSlotTarballs:
         assert slots["uv"] == uv_binary
         assert slots["uv"].name == "uv.exe"
 
-    @patch("flavor.packaging.orchestrator_ingredients.is_windows")
+    @patch("flavor.packaging.orchestrator_helpers.is_windows")
     def test_create_slot_tarballs_missing_python(self, mock_is_windows: Mock, tmp_path: Path) -> None:
         """Test creating slot tarballs with missing Python tarball."""
         mock_is_windows.return_value = False
@@ -157,7 +157,7 @@ class TestCreateSlotTarballs:
         with pytest.raises(BuildError, match="Python runtime tarball not found"):
             create_slot_tarballs(tmp_path, artifacts)
 
-    @patch("flavor.packaging.orchestrator_ingredients.is_windows")
+    @patch("flavor.packaging.orchestrator_helpers.is_windows")
     def test_create_slot_tarballs_with_multiple_wheels(self, mock_is_windows: Mock, tmp_path: Path) -> None:
         """Test creating slot tarballs with multiple wheels."""
         mock_is_windows.return_value = False
@@ -201,7 +201,7 @@ class TestCreateSlotTarballs:
 class TestWriteManifestFile:
     """Test write_manifest_file function."""
 
-    @patch("flavor.packaging.orchestrator_ingredients.write_json")
+    @patch("flavor.packaging.orchestrator_helpers.write_json")
     def test_write_manifest_file(self, mock_write_json: Mock, tmp_path: Path) -> None:
         """Test writing manifest file."""
         manifest = {
@@ -223,7 +223,7 @@ class TestWriteManifestFile:
 class TestCreatePythonSlotTarballs:
     """Test create_python_slot_tarballs function."""
 
-    @patch("flavor.packaging.orchestrator_ingredients.is_windows")
+    @patch("flavor.packaging.orchestrator_helpers.is_windows")
     def test_create_python_slot_tarballs_unix(self, mock_is_windows: Mock, tmp_path: Path) -> None:
         """Test creating Python slot tarballs on Unix."""
         mock_is_windows.return_value = False
@@ -255,7 +255,7 @@ class TestCreatePythonSlotTarballs:
         assert wheels_tarball.exists()
         assert wheels_tarball.name == "wheels.tar"
 
-    @patch("flavor.packaging.orchestrator_ingredients.is_windows")
+    @patch("flavor.packaging.orchestrator_helpers.is_windows")
     def test_create_python_slot_tarballs_windows(self, mock_is_windows: Mock, tmp_path: Path) -> None:
         """Test creating Python slot tarballs on Windows."""
         mock_is_windows.return_value = True
@@ -282,7 +282,7 @@ class TestCreatePythonSlotTarballs:
 
         assert uv_path.name == "uv.exe"
 
-    @patch("flavor.packaging.orchestrator_ingredients.is_windows")
+    @patch("flavor.packaging.orchestrator_helpers.is_windows")
     def test_create_python_slot_tarballs_missing_python(self, mock_is_windows: Mock, tmp_path: Path) -> None:
         """Test creating Python slot tarballs with missing Python."""
         mock_is_windows.return_value = False
@@ -305,7 +305,7 @@ class TestCreatePythonSlotTarballs:
         with pytest.raises(BuildError, match="Python runtime tarball not found"):
             create_python_slot_tarballs(tmp_path, artifacts)
 
-    @patch("flavor.packaging.orchestrator_ingredients.is_windows")
+    @patch("flavor.packaging.orchestrator_helpers.is_windows")
     def test_create_python_slot_tarballs_with_wheels(self, mock_is_windows: Mock, tmp_path: Path) -> None:
         """Test creating Python slot tarballs with actual wheels."""
         mock_is_windows.return_value = False

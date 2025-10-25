@@ -314,7 +314,7 @@ packages = build_package_from_manifest(
 
 ### Can I customize the launcher?
 
-You can build custom launchers from the Go or Rust source in the `ingredients/` directory.
+You can build custom launchers from the Go or Rust source in the `helpers/` directory.
 
 ### Can I embed FlavorPack in CI/CD?
 

@@ -17,11 +17,11 @@ flavor --version
 # Check Python version
 python --version
 
-# Check available ingredients
-flavor ingredients list
+# Check available helpers
+flavor helpers list
 
 # Verify installation
-flavor ingredients test
+flavor helpers test
 
 # Check cache status
 flavor workenv info
@@ -161,11 +161,11 @@ rm -rf ~/.cache/flavor/build
 
 **Solution**:
 ```bash
-# Download ingredients
-flavor ingredients download
+# Download helpers
+flavor helpers download
 
-# Build ingredients locally
-cd ingredients
+# Build helpers locally
+cd helpers
 ./build.sh
 
 # Specify launcher explicitly
@@ -519,7 +519,7 @@ streaming_extraction = true
 | Error | Meaning | Solution |
 |-------|---------|----------|
 | `PSPF format not recognized` | Invalid package file | Rebuild package |
-| `Launcher not found` | Missing launcher binary | Run `flavor ingredients download` |
+| `Launcher not found` | Missing launcher binary | Run `flavor helpers download` |
 | `Slot checksum mismatch` | Corrupted slot data | Rebuild package |
 | `Unsupported platform` | Platform mismatch | Build for correct platform |
 | `Python version mismatch` | Wrong Python version | Use specified Python version |

@@ -8,7 +8,7 @@
 4. [Multi-Language Components](#multi-language-components)
 5. [Build Pipeline](#build-pipeline)
 6. [Security Model](#security-model)
-7. [Ingredient System](#ingredient-system)
+7. [Helper System](#helper-system)
 8. [Testing Architecture](#testing-architecture)
 
 ## Overview
@@ -34,8 +34,8 @@ The system orchestrates Python, Go, and Rust components to create secure, portab
 └────────────────┬────────────────────────┬───────────────────┘
                  │                        │
         ┌────────▼────────┐      ┌───────▼────────┐
-        │   Go Ingredients    │      │  Rust Ingredients  │
-        │ (ingredients/flavor-go)    │ (ingredients/flavor-rs)
+        │   Go Helpers    │      │  Rust Helpers  │
+        │ (helpers/flavor-go)    │ (helpers/flavor-rs)
         │ • Builder       │      │ • Builder      │
         │ • Launcher      │      │ • Launcher     │
         └─────────────────┘      └────────────────┘
@@ -106,7 +106,7 @@ Per `flavor-rs/src/psp/format_2025/constants.rs`:
 Key modules:
 - `packaging/orchestrator.py` - Main build coordinator
 - `packaging/python_packager.py` - Python-specific packaging
-- `packaging/orchestrator_ingredients.py` - Ingredient utilities
+- `packaging/orchestrator_helpers.py` - Helper utilities
 - `psp/format_2025/builder.py` - PSPF package building logic
 - `psp/format_2025/reader.py` - PSPF package reading/extraction
 
@@ -117,7 +117,7 @@ Key modules:
 - Coordinate with native builders
 - Handle key generation and signing
 
-### Go Ingredients (`ingredients/flavor-go/`)
+### Go Helpers (`helpers/flavor-go/`)
 
 **flavor-go-builder** - Creates PSPF packages
 - Reads JSON manifests
@@ -131,7 +131,7 @@ Key modules:
 - Manages workenv lifecycle
 - Executes applications
 
-### Rust Ingredients (`ingredients/flavor-rs/`)
+### Rust Helpers (`helpers/flavor-rs/`)
 
 **flavor-rs-builder** - Alternative builder implementation
 - Memory-safe package creation
@@ -204,53 +204,53 @@ Every PSPF package includes:
 - Use deterministic builds for audit trails
 - Never commit keys or secrets
 
-## Ingredient System
+## Helper System
 
-### Ingredient Discovery
+### Helper Discovery
 
-The `IngredientManager` class finds ingredients in order:
+The `HelperManager` class finds helpers in order:
 
 1. **Bundled with Package** - For PyPI distribution
    ```
-   src/flavor/ingredients/{platform}/flavor-{go,rs}-{builder,launcher}
+   src/flavor/helpers/{platform}/flavor-{go,rs}-{builder,launcher}
    ```
 
 2. **Local Development** - Built from source
    ```
-   ingredients/bin/flavor-{go,rs}-{builder,launcher}
+   helpers/bin/flavor-{go,rs}-{builder,launcher}
    ```
 
 3. **System Cache** - Downloaded or installed
    ```
-   ~/.cache/flavor/ingredients/bin/flavor-{go,rs}-{builder,launcher}
+   ~/.cache/flavor/helpers/bin/flavor-{go,rs}-{builder,launcher}
    ```
 
-### Building Ingredients
+### Building Helpers
 
 ```bash
-# Build all ingredients for current platform
-./ingredients/build.sh
+# Build all helpers for current platform
+./helpers/build.sh
 
 # Or use make directly
-cd ingredients/flavor-go
+cd helpers/flavor-go
 make build BIN_DIR=../bin
 
-cd ingredients/flavor-rs
+cd helpers/flavor-rs
 cargo build --release
 cp target/release/flavor-rs-* ../bin/
 ```
 
-### Ingredient Commands
+### Helper Commands
 
 ```bash
-# List available ingredients
-flavor ingredients list
+# List available helpers
+flavor helpers list
 
-# Build ingredients from source
-flavor ingredients build --lang all
+# Build helpers from source
+flavor helpers build --lang all
 
-# Test ingredient functionality
-flavor ingredients test
+# Test helper functionality
+flavor helpers test
 ```
 
 ## Testing Architecture
@@ -416,7 +416,7 @@ The cache validation process uses checksums to ensure integrity:
 3. **Polyglot Format**: Single file works as both executable and package
 4. **Built-in Security**: No external dependencies for verification
 5. **Deterministic Builds**: Reproducible with seed keys
-6. **Ingredient Independence**: Ingredients are generic, data-driven executors
+6. **Helper Independence**: Helpers are generic, data-driven executors
 
 ## Future Enhancements
 

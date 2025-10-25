@@ -1,12 +1,12 @@
-# flavor/commands/ingredients.py
+# flavor/commands/helpers.py
 #
 # SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
 #
-# flavor/commands/ingredients.py
+# flavor/commands/helpers.py
 #
-"""Ingredient management commands for the flavor CLI."""
+"""Helper management commands for the flavor CLI."""
 
 from __future__ import annotations
 
@@ -18,42 +18,42 @@ from provide.foundation.process import run
 
 from flavor.console import echo, echo_error, get_command_logger
 
-# Get structured logger for ingredient commands
-log = get_command_logger("ingredients")
+# Get structured logger for helper commands
+log = get_command_logger("helpers")
 
 
-@click.group("ingredients")
-def ingredient_group() -> None:
-    """Manage Flavor ingredient binaries (launchers and builders)."""
+@click.group("helpers")
+def helper_group() -> None:
+    """Manage Flavor helper binaries (launchers and builders)."""
     pass
 
 
-@ingredient_group.command("list")
+@helper_group.command("list")
 @click.option(
     "--verbose",
     "-v",
     is_flag=True,
     help="Show detailed information",
 )
-def ingredient_list(verbose: bool) -> None:  # noqa: C901
-    """List available ingredient binaries."""
-    from flavor.ingredients.manager import IngredientManager
+def helper_list(verbose: bool) -> None:  # noqa: C901
+    """List available helper binaries."""
+    from flavor.helpers.manager import HelperManager
 
-    manager = IngredientManager()
-    ingredients = manager.list_ingredients()
+    manager = HelperManager()
+    helpers = manager.list_helpers()
 
-    if not ingredients["launchers"] and not ingredients["builders"]:
-        echo("No ingredients found. Build them with: flavor ingredients build")
+    if not helpers["launchers"] and not helpers["builders"]:
+        echo("No helpers found. Build them with: flavor helpers build")
         return
 
-    echo("🔧 Available Flavor Ingredients")
+    echo("🔧 Available Flavor Helpers")
     echo("=" * 60)
 
-    # Ingredient function to get version
-    def get_version(ingredient_path: Path) -> str | None:
+    # Helper function to get version
+    def get_version(helper_path: Path) -> str | None:
         try:
             result = run(
-                [str(ingredient_path), "--version"],
+                [str(helper_path), "--version"],
                 capture_output=True,
                 check=False,
                 timeout=2,
@@ -67,9 +67,9 @@ def ingredient_list(verbose: bool) -> None:  # noqa: C901
             pass
         return None
 
-    if ingredients["launchers"]:
+    if helpers["launchers"]:
         echo("\n📦 Launchers:")
-        launchers = sorted(ingredients["launchers"], key=lambda h: h.name)
+        launchers = sorted(helpers["launchers"], key=lambda h: h.name)
         for i, launcher in enumerate(launchers):
             if i > 0:
                 echo("")  # Add newline between entries
@@ -82,9 +82,9 @@ def ingredient_list(verbose: bool) -> None:  # noqa: C901
             if verbose and launcher.built_from:
                 echo(f"    Source: {launcher.built_from}")
 
-    if ingredients["builders"]:
+    if helpers["builders"]:
         echo("\n🔨 Builders:")
-        builders = sorted(ingredients["builders"], key=lambda h: h.name)
+        builders = sorted(helpers["builders"], key=lambda h: h.name)
         for i, builder in enumerate(builders):
             if i > 0:
                 echo("")  # Add newline between entries
@@ -98,12 +98,12 @@ def ingredient_list(verbose: bool) -> None:  # noqa: C901
                 echo(f"    Source: {builder.built_from}")
 
 
-@ingredient_group.command("build")
+@helper_group.command("build")
 @click.option(
     "--lang",
     type=click.Choice(["go", "rust", "all"], case_sensitive=False),
     default="all",
-    help="Language to build ingredients for (default: all)",
+    help="Language to build helpers for (default: all)",
 )
 @click.option(
     "--force",
@@ -111,36 +111,36 @@ def ingredient_list(verbose: bool) -> None:  # noqa: C901
     is_flag=True,
     help="Force rebuild even if binaries exist",
 )
-def ingredient_build(lang: str, force: bool) -> None:
-    """Build ingredient binaries from source."""
-    from flavor.ingredients.manager import IngredientManager
+def helper_build(lang: str, force: bool) -> None:
+    """Build helper binaries from source."""
+    from flavor.helpers.manager import HelperManager
 
-    manager = IngredientManager()
+    manager = HelperManager()
 
     language = None if lang == "all" else lang
 
-    echo(f"🔨 Building {lang} ingredients...")
+    echo(f"🔨 Building {lang} helpers...")
 
-    built = manager.build_ingredients(language=language, force=force)
+    built = manager.build_helpers(language=language, force=force)
 
     if built:
-        echo(f"✅ Built {len(built)} ingredient(s):")
+        echo(f"✅ Built {len(built)} helper(s):")
         for path in built:
             size_mb = path.stat().st_size / (1024 * 1024)
             echo(f"  • {path.name} ({size_mb:.1f} MB)")
     else:
-        echo("⚠️  No ingredients were built")
+        echo("⚠️  No helpers were built")
         echo("Make sure you have the required compilers installed:")
         echo("  • Go: go version")
         echo("  • Rust: cargo --version")
 
 
-@ingredient_group.command("clean")
+@helper_group.command("clean")
 @click.option(
     "--lang",
     type=click.Choice(["go", "rust", "all"], case_sensitive=False),
     default="all",
-    help="Language to clean ingredients for (default: all)",
+    help="Language to clean helpers for (default: all)",
 )
 @click.option(
     "--yes",
@@ -148,42 +148,42 @@ def ingredient_build(lang: str, force: bool) -> None:
     is_flag=True,
     help="Skip confirmation prompt",
 )
-def ingredient_clean(lang: str, yes: bool) -> None:
-    """Remove built ingredient binaries."""
-    from flavor.ingredients.manager import IngredientManager
+def helper_clean(lang: str, yes: bool) -> None:
+    """Remove built helper binaries."""
+    from flavor.helpers.manager import HelperManager
 
-    manager = IngredientManager()
+    manager = HelperManager()
 
-    if not yes and not click.confirm(f"Remove {lang} ingredient binaries?"):
+    if not yes and not click.confirm(f"Remove {lang} helper binaries?"):
         echo("Aborted.")
         return
 
     language = None if lang == "all" else lang
 
-    removed = manager.clean_ingredients(language=language)
+    removed = manager.clean_helpers(language=language)
 
     if removed:
-        echo(f"✅ Removed {len(removed)} ingredient(s):")
+        echo(f"✅ Removed {len(removed)} helper(s):")
         for path in removed:
             echo(f"  • {path.name}")
     else:
-        echo("No ingredients to remove")
+        echo("No helpers to remove")
 
 
-@ingredient_group.command("info")
+@helper_group.command("info")
 @click.argument("name")
-def ingredient_info(name: str) -> None:
-    """Show detailed information about a specific ingredient."""
-    from flavor.ingredients.manager import IngredientManager
+def helper_info(name: str) -> None:
+    """Show detailed information about a specific helper."""
+    from flavor.helpers.manager import HelperManager
 
-    manager = IngredientManager()
-    info = manager.get_ingredient_info(name)
+    manager = HelperManager()
+    info = manager.get_helper_info(name)
 
     if not info:
-        echo_error(f"❌ Ingredient '{name}' not found")
+        echo_error(f"❌ Helper '{name}' not found")
         return
 
-    echo(f"🔧 Ingredient Information: {info.name}")
+    echo(f"🔧 Helper Information: {info.name}")
     echo("=" * 60)
     echo(f"Type: {info.type}")
     echo(f"Language: {info.language}")
@@ -213,24 +213,24 @@ def ingredient_info(name: str) -> None:
         echo("Status: ❌ File not found")
 
 
-@ingredient_group.command("test")
+@helper_group.command("test")
 @click.option(
     "--lang",
     type=click.Choice(["go", "rust", "all"], case_sensitive=False),
     default="all",
-    help="Language to test ingredients for (default: all)",
+    help="Language to test helpers for (default: all)",
 )
-def ingredient_test(lang: str) -> None:
-    """Test ingredient binaries."""
-    from flavor.ingredients.manager import IngredientManager
+def helper_test(lang: str) -> None:
+    """Test helper binaries."""
+    from flavor.helpers.manager import HelperManager
 
-    manager = IngredientManager()
+    manager = HelperManager()
 
     language = None if lang == "all" else lang
 
-    echo(f"🧪 Testing {lang} ingredients...")
+    echo(f"🧪 Testing {lang} helpers...")
 
-    results = manager.test_ingredients(language=language)
+    results = manager.test_helpers(language=language)
 
     # Show results
     if results["passed"]:

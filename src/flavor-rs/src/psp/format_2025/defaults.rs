@@ -1,4 +1,4 @@
-// ingredients/flavor-rs/src/psp/format_2025/defaults.rs
+// helpers/flavor-rs/src/psp/format_2025/defaults.rs
 // Centralized default values matching Python defaults.py
 
 // =================================

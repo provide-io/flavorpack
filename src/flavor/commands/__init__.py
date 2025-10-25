@@ -10,7 +10,7 @@
 
 from __future__ import annotations
 
-from flavor.commands.ingredients import ingredient_group
+from flavor.commands.helpers import helper_group
 from flavor.commands.inspect import inspect_command
 from flavor.commands.keygen import keygen_command
 from flavor.commands.package import pack_command
@@ -20,7 +20,7 @@ from flavor.commands.workenv import workenv_group
 
 __all__ = [
     "clean_command",
-    "ingredient_group",
+    "helper_group",
     "inspect_command",
     "keygen_command",
     "pack_command",

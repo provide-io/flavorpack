@@ -40,8 +40,8 @@ mutation-clean: ## Clean mutation testing artifacts
 	@rm -rf .mutmut-cache html/
 	@echo "🧹 Mutation testing artifacts cleaned"
 
-.PHONY: build-ingredients
-build-ingredients: ## Build all ingredients (Go and Rust)
+.PHONY: build-helpers
+build-helpers: ## Build all helpers (Go and Rust)
 	./build.sh
 
 # PSPF Validation with Pretaster
@@ -85,7 +85,7 @@ wheel: ## Build platform-specific wheel (usage: make wheel PLATFORM=darwin_arm64
 	@python3 tools/build_wheel.py --platform $(PLATFORM)
 
 .PHONY: wheel-universal
-wheel-universal: ## Build universal wheel (no embedded ingredients)
+wheel-universal: ## Build universal wheel (no embedded helpers)
 	@python3 tools/build_wheel.py --platform universal
 
 .PHONY: release-all
@@ -104,8 +104,8 @@ release-validate-full: ## Full validation of all wheels (includes installation t
 .PHONY: release-test
 release-test: ## Test release process locally
 	@echo "🧪 Testing release process..."
-	@# Build ingredients first
-	@$(MAKE) build-ingredients
+	@# Build helpers first
+	@$(MAKE) build-helpers
 	@# Build a test wheel for current platform
 	@PLATFORM=$$(python3 -c "import platform; arch = platform.machine().lower(); arch = 'amd64' if arch == 'x86_64' else 'arm64' if arch in ['arm64', 'aarch64'] else arch; os = 'darwin' if platform.system() == 'Darwin' else 'linux' if platform.system() == 'Linux' else 'windows'; print(f'{os}_{arch}')") && \
 		echo "Testing with platform: $$PLATFORM" && \

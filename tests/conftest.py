@@ -20,7 +20,7 @@ def pytest_configure(config):
     """Register custom markers."""
     config.addinivalue_line(
         "markers",
-        "requires_ingredients: mark test as requiring real launcher binaries (auto-skipped if not available)",
+        "requires_helpers: mark test as requiring real launcher binaries (auto-skipped if not available)",
     )
     config.addinivalue_line(
         "markers", "integration: mark test as integration test (may require real binaries)"
@@ -28,12 +28,12 @@ def pytest_configure(config):
 
 
 def pytest_collection_modifyitems(config, items):
-    """Auto-skip tests marked requires_ingredients if binaries not found."""
+    """Auto-skip tests marked requires_helpers if binaries not found."""
     # Check if launcher binaries are available
     binary_paths = [
         Path("dist/bin/flavor-rs-launcher-darwin_arm64"),
         Path("dist/bin/flavor-rs-launcher"),
-        Path("ingredients/bin/flavor-rs-launcher"),
+        Path("helpers/bin/flavor-rs-launcher"),
         Path("helpers/bin/flavor-rs-launcher"),
         Path.cwd() / "dist" / "bin" / "flavor-rs-launcher-darwin_arm64",
         Path.cwd() / "dist" / "bin" / "flavor-rs-launcher",
@@ -47,29 +47,29 @@ def pytest_collection_modifyitems(config, items):
     binaries_available = any(p.exists() for p in binary_paths)
 
     if not binaries_available:
-        skip_ingredients = pytest.mark.skip(
+        skip_helpers = pytest.mark.skip(
             reason=(
                 "Launcher binaries not found. "
-                "Run 'make build-ingredients' or set FLAVOR_LAUNCHER_BIN environment variable. "
+                "Run 'make build-helpers' or set FLAVOR_LAUNCHER_BIN environment variable. "
                 f"Searched: {', '.join(str(p) for p in binary_paths[:3])}..."
             )
         )
         skipped_count = 0
         for item in items:
-            # Skip tests marked with requires_ingredients
-            if "requires_ingredients" in item.keywords:
-                item.add_marker(skip_ingredients)
+            # Skip tests marked with requires_helpers
+            if "requires_helpers" in item.keywords:
+                item.add_marker(skip_helpers)
                 skipped_count += 1
             # Also skip integration tests (they typically need binaries)
-            elif "integration" in item.keywords and "requires_ingredients" not in item.keywords:
-                item.add_marker(skip_ingredients)
+            elif "integration" in item.keywords and "requires_helpers" not in item.keywords:
+                item.add_marker(skip_helpers)
                 skipped_count += 1
 
         if skipped_count > 0:
             print(
                 f"\n⚠️  Skipping {skipped_count} integration tests (launcher binaries not found)"
             )
-            print("   Run 'make build-ingredients' to enable integration tests")
+            print("   Run 'make build-helpers' to enable integration tests")
 
 
 @pytest.fixture(scope="session")

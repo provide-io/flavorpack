@@ -1,1 +1,1 @@
-# Trigger ingredient pipeline
+# Trigger helper pipeline

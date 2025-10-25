@@ -1,4 +1,4 @@
-# flavor/packaging/orchestrator_ingredients.py
+# flavor/packaging/orchestrator_helpers.py
 #
 # SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
@@ -212,29 +212,29 @@ def find_builder_executable(builder_bin: str | None) -> Path:
         logger.info(f"Using builder from FLAVOR_BUILDER_BIN: {path}")
         return path
 
-    from flavor.ingredients.manager import IngredientManager
+    from flavor.helpers.manager import HelperManager
 
-    manager = IngredientManager()
+    manager = HelperManager()
     try:
-        return manager.get_ingredient("flavor-rs-builder")
+        return manager.get_helper("flavor-rs-builder")
     except FileNotFoundError:
         logger.warning("flavor-rs-builder not found, falling back to Go builder.")
         try:
-            return manager.get_ingredient("flavor-go-builder")
+            return manager.get_helper("flavor-go-builder")
         except FileNotFoundError as e:
             raise BuildError(
                 "❌ No builder binaries found!\n"
                 "\n"
                 "🔧 To fix this issue, run one of:\n"
-                "   • cd ingredients && ./build.sh     (build both Go and Rust builders)\n"
-                "   • make build-ingredients           (if using make)\n"
-                "   • flavor ingredients build         (if flavor CLI is available)\n"
+                "   • cd helpers && ./build.sh     (build both Go and Rust builders)\n"
+                "   • make build-helpers           (if using make)\n"
+                "   • flavor helpers build         (if flavor CLI is available)\n"
                 "\n"
                 "💡 Or specify a custom builder with:\n"
                 "   • --builder-bin /path/to/builder   (command line)\n"
                 "   • FLAVOR_BUILDER_BIN=/path/to/builder (environment variable)\n"
                 "\n"
-                f"🔍 Searched locations: {manager.ingredients_bin}, {manager.installed_ingredients_bin}"
+                f"🔍 Searched locations: {manager.helpers_bin}, {manager.installed_helpers_bin}"
             ) from e
 
 
@@ -253,29 +253,29 @@ def find_launcher_executable(launcher_bin: str | None) -> Path:
             raise BuildError(f"Launcher binary from FLAVOR_LAUNCHER_BIN not found: {env_bin}")
         return path
 
-    from flavor.ingredients.manager import IngredientManager
+    from flavor.helpers.manager import HelperManager
 
-    manager = IngredientManager()
+    manager = HelperManager()
     try:
-        return manager.get_ingredient("flavor-rs-launcher")
+        return manager.get_helper("flavor-rs-launcher")
     except FileNotFoundError:
         logger.warning("flavor-rs-launcher not found, falling back to Go launcher.")
         try:
-            return manager.get_ingredient("flavor-go-launcher")
+            return manager.get_helper("flavor-go-launcher")
         except FileNotFoundError as e:
             raise BuildError(
                 "❌ No launcher binaries found!\n"
                 "\n"
                 "🔧 To fix this issue, run one of:\n"
-                "   • cd ingredients && ./build.sh     (build both Go and Rust launchers)\n"
-                "   • make build-ingredients           (if using make)\n"
-                "   • flavor ingredients build         (if flavor CLI is available)\n"
+                "   • cd helpers && ./build.sh     (build both Go and Rust launchers)\n"
+                "   • make build-helpers           (if using make)\n"
+                "   • flavor helpers build         (if flavor CLI is available)\n"
                 "\n"
                 "💡 Or specify a custom launcher with:\n"
                 "   • --launcher-bin /path/to/launcher (command line)\n"
                 "   • FLAVOR_LAUNCHER_BIN=/path/to/launcher (environment variable)\n"
                 "\n"
-                f"🔍 Searched locations: {manager.ingredients_bin}, {manager.installed_ingredients_bin}"
+                f"🔍 Searched locations: {manager.helpers_bin}, {manager.installed_helpers_bin}"
             ) from e
 
 

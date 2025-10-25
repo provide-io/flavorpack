@@ -46,7 +46,7 @@ for platform in "${EXPECTED_WHEEL_PLATFORMS[@]}"; do
                 ((ERRORS++))
             fi
             
-            # Check size (should be > 1MB for platform wheels with ingredients)
+            # Check size (should be > 1MB for platform wheels with helpers)
             size=$(du -k "$wheel" | cut -f1)
             if [ "$size" -gt 1024 ]; then
                 echo "     ✓ Size: ${size}KB"

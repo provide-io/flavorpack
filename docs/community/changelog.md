@@ -38,7 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.3.0] - 2024-08-30
 
 ### Added
-- Go and Rust ingredient implementations
+- Go and Rust helper implementations
 - Cross-language testing with pretaster
 - Platform matrix builds for multiple architectures
 - Artifact management in CI/CD

@@ -9,8 +9,8 @@ Before you begin, ensure you have:
 | Component | Minimum Version | Recommended | Notes |
 |-----------|----------------|-------------|-------|
 | Python | 3.11 | 3.12+ | Type hints, modern features |
-| Go | 1.21 | 1.22+ | For building Go ingredients |
-| Rust | 1.75 | 1.80+ | For building Rust ingredients |
+| Go | 1.21 | 1.22+ | For building Go helpers |
+| Rust | 1.75 | 1.80+ | For building Rust helpers |
 | UV | 0.1.18 | Latest | Package management |
 | Git | 2.25 | Latest | Version control |
 | Make | 3.81 | 4.0+ | Build automation |
@@ -35,8 +35,8 @@ Choose the installation method that works best for your environment:
     # Set up Python environment
     uv sync
     
-    # Build native ingredients (Go/Rust launchers)
-    ./ingredients/build.sh
+    # Build native helpers (Go/Rust launchers)
+    ./helpers/build.sh
     
     # Verify installation
     flavor --version
@@ -48,8 +48,8 @@ Choose the installation method that works best for your environment:
     # Install from PyPI
     pip install flavorpack
     
-    # Download pre-built ingredients
-    flavor ingredients download
+    # Download pre-built helpers
+    flavor helpers download
     
     # Verify installation
     flavor --version
@@ -75,8 +75,8 @@ After installation, verify everything is working:
 # Check FlavorPack version
 flavor --version
 
-# List available ingredients (launchers/builders)
-flavor ingredients list
+# List available helpers (launchers/builders)
+flavor helpers list
 
 # Run tests (optional)
 make test
@@ -98,7 +98,7 @@ Now that you have FlavorPack installed:
     export PATH="$HOME/.cargo/bin:$PATH"
     ```
 
-??? question "Build ingredients fails with Go/Rust errors"
+??? question "Build helpers fails with Go/Rust errors"
     Ensure you have the correct versions installed:
     ```bash
     go version   # Should be 1.21+

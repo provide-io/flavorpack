@@ -30,7 +30,7 @@ reports/
 .vscode/
 
 # Local Build Artifacts
-# Compiled ingredient binaries should not be version controlled.
+# Compiled helper binaries should not be version controlled.
 # They are built from source via `./build.sh`.
 dist/
 *.pspf

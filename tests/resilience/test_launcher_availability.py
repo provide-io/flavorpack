@@ -154,12 +154,12 @@ class TestLauncherReproducibility:
     @patch("flavor.packaging.orchestrator.run")
     @patch("flavor.psp.format_2025.builder.build_package")
     @patch("flavor.packaging.python.packager.PythonPackager.prepare_artifacts")
-    @patch("flavor.packaging.orchestrator_ingredients.create_python_slot_tarballs")
+    @patch("flavor.packaging.orchestrator_helpers.create_python_slot_tarballs")
     @patch("builtins.open")
-    @patch("flavor.packaging.orchestrator.IngredientManager")
+    @patch("flavor.packaging.orchestrator.HelperManager")
     def test_reproducible_builds_with_same_launcher(
         self,
-        mock_ingredient_manager,
+        mock_helper_manager,
         mock_open,
         mock_create_slot_tarballs,
         mock_prepare_artifacts,
@@ -196,7 +196,7 @@ class TestLauncherReproducibility:
             elif "test-launcher" in str_path:
                 mock_stat.st_size = 108  # Size of our fake launcher
                 mock_stat.st_mode = stat_module.S_IFREG | 0o755
-            elif "ingredients" in str_path or str_path.endswith("/"):
+            elif "helpers" in str_path or str_path.endswith("/"):
                 mock_stat.st_size = 0
                 mock_stat.st_mode = stat_module.S_IFDIR | 0o755
             else:

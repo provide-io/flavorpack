@@ -7,7 +7,7 @@ import tempfile
 
 import click
 
-from flavor.ingredients import IngredientManager as HelperManager
+from flavor.helpers import HelperManager 
 from flavor.package import build_package_from_manifest
 
 

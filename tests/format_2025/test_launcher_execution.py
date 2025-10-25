@@ -269,7 +269,7 @@ class TestWorkEnvironment:
 
 @pytest.mark.taster
 @pytest.mark.integration
-@pytest.mark.requires_ingredients
+@pytest.mark.requires_helpers
 class TestProcessExecution:
     """Test actual process execution."""
 

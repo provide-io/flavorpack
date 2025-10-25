@@ -15,7 +15,7 @@ echo ""
 PRETASTER_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$PRETASTER_DIR"
 
-# Get ingredients directory (where helpers are built)
+# Get helpers directory (where helpers are built)
 HELPERS_DIR="$(cd "$PRETASTER_DIR/../.." && pwd)/dist"
 
 # Setup
