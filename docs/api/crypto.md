@@ -2,6 +2,22 @@
 
 The FlavorPack Cryptography API provides Ed25519 signature generation and verification for package integrity.
 
+!!! warning "Documentation Under Revision"
+    **This API documentation page is currently being updated to match the actual implementation.**
+
+    The code examples on this page reference a simplified API (`flavor.psp.format_2025.crypto`) that doesn't exist. The actual implementation uses:
+
+    - **Key Management**: `flavor.psp.format_2025.keys` module
+    - **Signing**: `provide.foundation.crypto.Ed25519Signer`
+    - **Verification**: `provide.foundation.crypto.Ed25519Verifier`
+
+    For current usage examples, see:
+    - Source: `src/flavor/psp/format_2025/keys.py`
+    - Source: `src/flavor/psp/format_2025/writer.py` (signing)
+    - Source: `src/flavor/psp/security.py` (verification)
+
+    **Recommended**: Use the high-level [Packaging API](packaging.md) which handles all cryptographic operations automatically via CLI options.
+
 !!! note "Low-Level API"
     This is a low-level API for advanced use cases. Most users should use the [Packaging API](packaging.md) which handles signing automatically.
 

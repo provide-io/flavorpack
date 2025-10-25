@@ -147,25 +147,20 @@ builder.set_metadata({
 
 ### Signing Packages
 
+!!! note "Signing via CLI"
+    Package signing is typically handled via CLI options (`--private-key`, `--public-key`) rather than programmatically. The Builder API automatically integrates with the signing system when keys are provided.
+
+    For manual signing workflows, see `src/flavor/psp/format_2025/writer.py` which uses `provide.foundation.crypto.Ed25519Signer`.
+
 ```python
-from flavor.psp.format_2025.crypto import generate_keypair, sign_package
+# Signing is typically handled via the Packaging API or CLI:
+from flavor import build_package_from_manifest
 
-# Generate or load keys
-private_key, public_key = generate_keypair()
-
-# Build package
-builder.build(output_path)
-
-# Sign the package
-with open(output_path, "rb") as f:
-    package_data = f.read()
-
-signature = sign_package(package_data, private_key)
-builder.set_signature(signature)
-builder.set_public_key(public_key)
-
-# Write signed package
-builder.build(output_path)
+packages = build_package_from_manifest(
+    manifest_path="pyproject.toml",
+    private_key_path=Path("keys/flavor-private.key"),
+    public_key_path=Path("keys/flavor-public.key")
+)
 ```
 
 ### Platform-Specific Builds

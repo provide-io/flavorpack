@@ -53,7 +53,7 @@
 
     Detailed guides, API reference, cookbook examples, and troubleshooting help.
 
-    [:octicons-arrow-right-24: User Guide](guide/)
+    [:octicons-arrow-right-24: User Guide](guide/index.md)
 
 </div>
 
@@ -85,7 +85,7 @@ flavor verify myapp.psp
 
 ## Architecture Overview
 
-FlavorPack is part of the [Provide Foundry](foundry/) ecosystem, designed to work seamlessly with other provide.io tools:
+FlavorPack is part of the [Provide Foundry](foundry/index.md) ecosystem, designed to work seamlessly with other provide.io tools:
 
 ```mermaid
 graph TB
@@ -168,7 +168,7 @@ For the complete binary layout diagram and technical specification, see:
 
 ## Part of the Provide Foundry
 
-FlavorPack is part of the **[Provide Foundry](foundry/)** - a comprehensive collection of Python tools for building Terraform providers, packaging applications, and managing development workflows.
+FlavorPack is part of the **[Provide Foundry](foundry/index.md)** - a comprehensive collection of Python tools for building Terraform providers, packaging applications, and managing development workflows.
 
 ### Related Tools
 
@@ -195,8 +195,8 @@ Join the community for questions, ideas, and collaboration.
 
 Comprehensive guides, tutorials, and API documentation.
 
-[Explore Docs :octicons-arrow-right-24:](getting-started/){ .md-button }
+[Explore Docs :octicons-arrow-right-24:](getting-started/index.md){ .md-button }
 
 ---
 
-**Ready to package your Python applications?** Check out our [Quick Start guide](getting-started/quickstart.md) or dive into the [core concepts](guide/concepts/).
+**Ready to package your Python applications?** Check out our [Quick Start guide](getting-started/quickstart.md) or dive into the [core concepts](guide/concepts/index.md).

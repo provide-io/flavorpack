@@ -107,26 +107,21 @@ for slot in reader.read_slots():
 
 ### Verifying Package Integrity
 
+!!! note "Verification via CLI"
+    Package verification is typically handled via the `flavor verify` CLI command or the high-level `verify_package()` function. The Reader API provides access to signature data, but verification logic is in `flavor.psp.security`.
+
+    For manual verification workflows, see `src/flavor/psp/security.py` which uses `provide.foundation.crypto.Ed25519Verifier`.
+
 ```python
-from flavor.psp.format_2025.crypto import verify_signature
+# Verification is typically handled via the high-level API:
+from flavor import verify_package
+from pathlib import Path
 
-# Read package and verify signature
-reader = PSPFReader(package_path)
-
-# Get signature from index
-signature = reader.read_signature()
-public_key = reader.read_public_key()
-
-# Read package data (excluding signature)
-package_data = reader.read_package_data_for_verification()
-
-# Verify
-is_valid = verify_signature(package_data, signature, public_key)
-
-if is_valid:
-    print("✅ Package signature valid")
+result = verify_package(Path("myapp.psp"))
+if result["valid"]:
+    print("✅ Package verification passed")
 else:
-    print("❌ Package signature invalid!")
+    print("❌ Package verification failed")
 ```
 
 ### Selective Extraction Based on Purpose
