@@ -31,7 +31,49 @@ def build_package_from_manifest(
     public_key_path: Path | None = None,
     key_seed: str | None = None,
 ) -> list[Path]:
-    """Builds a package from a manifest file (pyproject.toml or JSON)."""
+    """Build a PSPF package from a manifest file.
+
+    This is the main entry point for building FlavorPack packages programmatically.
+    It reads a pyproject.toml or JSON manifest, resolves dependencies, creates a
+    Python virtual environment, and assembles everything into a single .psp executable.
+
+    Args:
+        manifest_path: Path to pyproject.toml or manifest.json file
+        output_path: Custom output path (default: dist/{package_name}.psp)
+        launcher_bin: Path to specific launcher binary (auto-selected if None)
+        builder_bin: Path to specific builder binary (auto-selected if None)
+        strip_binaries: Strip debug symbols from launcher to reduce size
+        show_progress: Display progress bars during build process
+        private_key_path: Path to Ed25519 private key in PEM format for signing
+        public_key_path: Path to Ed25519 public key in PEM format for signing
+        key_seed: Deterministic seed for reproducible key generation (CI/CD)
+
+    Returns:
+        List containing the Path to the created .psp package file
+
+    Raises:
+        ValueError: If required manifest fields are missing
+        BuildError: If package build fails
+
+    Example:
+        ```python
+        from pathlib import Path
+        from flavor import build_package_from_manifest
+
+        # Basic usage
+        packages = build_package_from_manifest(
+            manifest_path=Path("pyproject.toml")
+        )
+        print(f"Created: {packages[0]}")
+
+        # With signing
+        packages = build_package_from_manifest(
+            manifest_path=Path("pyproject.toml"),
+            private_key_path=Path("keys/private.key"),
+            public_key_path=Path("keys/public.key"),
+        )
+        ```
+    """
     manifest_type = "json" if manifest_path.suffix == ".json" else "toml"
 
     if manifest_type == "json":
@@ -66,21 +108,96 @@ def build_package_from_manifest(
 
 
 def verify_package(package_path: Path) -> dict[str, Any]:
-    """Verifies a Flavor package."""
+    """Verify the integrity and signature of a PSPF package.
+
+    Validates the package structure, checksums, and cryptographic signatures
+    to ensure the package hasn't been tampered with.
+
+    Args:
+        package_path: Path to the .psp package file to verify
+
+    Returns:
+        Dictionary containing verification results with keys:
+            - 'valid' (bool): Overall verification status
+            - 'signature_valid' (bool): Signature verification result
+            - 'checksums_valid' (bool): Checksum verification result
+            - 'format_valid' (bool): Format validation result
+            - 'errors' (list): List of any errors encountered
+
+    Raises:
+        VerificationError: If verification fails critically
+
+    Example:
+        ```python
+        from pathlib import Path
+        from flavor import verify_package
+
+        result = verify_package(Path("myapp.psp"))
+        if result['valid']:
+            print("✅ Package verified successfully")
+        else:
+            print(f"❌ Verification failed: {result['errors']}")
+        ```
+    """
     from .verification import FlavorVerifier
 
     return FlavorVerifier.verify_package(package_path)
 
 
 def clean_cache() -> None:
-    """Removes cached Go binaries."""
+    """Remove all cached FlavorPack work environments and build artifacts.
+
+    Deletes the ~/.cache/flavor/ directory and all its contents, including:
+    - Extracted package work environments
+    - Cached helper binaries
+    - Build artifacts
+
+    This is useful for:
+    - Freeing up disk space
+    - Resolving cache corruption issues
+    - Testing fresh package extractions
+
+    Example:
+        ```python
+        from flavor import clean_cache
+
+        clean_cache()
+        print("Cache cleared successfully")
+        ```
+    """
     cache_dir = Path.home() / ".cache" / "flavor"
     if cache_dir.exists():
         safe_rmtree(cache_dir)
 
 
 def generate_keys(output_dir: Path) -> tuple[Path, Path]:
-    """Generate a new key pair for package signing. Alias for generate_key_pair."""
+    """Generate a new Ed25519 key pair for package signing.
+
+    Creates a cryptographically secure key pair suitable for signing PSPF packages.
+    Keys are saved in PEM format with restricted permissions (0600 for private key).
+
+    Args:
+        output_dir: Directory where keys will be saved
+            - Private key: output_dir/flavor-private.key
+            - Public key: output_dir/flavor-public.key
+
+    Returns:
+        Tuple of (private_key_path, public_key_path)
+
+    Example:
+        ```python
+        from pathlib import Path
+        from flavor import generate_keys
+
+        private_key, public_key = generate_keys(Path("keys"))
+        print(f"Private key: {private_key}")
+        print(f"Public key: {public_key}")
+        ```
+
+    Note:
+        This is an alias for `flavor.packaging.keys.generate_key_pair()`.
+        For command-line usage, see `flavor keygen --help`.
+    """
     return generate_key_pair(output_dir)
 
 

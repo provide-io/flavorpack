@@ -95,10 +95,16 @@ jobs:
         run: curl -LsSf https://astral.sh/uv/install.sh | sh
 
       - name: Install FlavorPack
-        run: uv pip install flavorpack
+        run: |
+          # Note: FlavorPack is not yet on PyPI - install from source
+          git clone https://github.com/provide-io/flavorpack.git
+          cd flavorpack
+          uv sync
 
       - name: Build Helpers
-        run: make build-helpers
+        run: |
+          cd flavorpack
+          make build-helpers
 
       - name: Package Application
         run: |
@@ -142,11 +148,15 @@ build:helpers:
   stage: build
   image: python:3.11
   script:
-    - pip install flavorpack
+    # Note: FlavorPack is not yet on PyPI - install from source
+    - git clone https://github.com/provide-io/flavorpack.git
+    - cd flavorpack
+    - pip install uv
+    - uv sync
     - make build-helpers
   artifacts:
     paths:
-      - dist/bin/
+      - flavorpack/dist/bin/
     expire_in: 1 hour
 
 package:linux:
@@ -155,8 +165,8 @@ package:linux:
   dependencies:
     - build:helpers
   script:
-    - pip install flavorpack
-    - flavor pack --manifest pyproject.toml --output ${PACKAGE_NAME}-linux_amd64.psp
+    - cd flavorpack
+    - uv run flavor pack --manifest ../pyproject.toml --output ../${PACKAGE_NAME}-linux_amd64.psp
   artifacts:
     paths:
       - ${PACKAGE_NAME}-linux_amd64.psp
@@ -185,18 +195,26 @@ jobs:
 
       - run:
           name: Install FlavorPack
-          command: pip install flavorpack
+          command: |
+            # Note: FlavorPack is not yet on PyPI - install from source
+            git clone https://github.com/provide-io/flavorpack.git
+            cd flavorpack
+            pip install uv
+            uv sync
 
       - run:
           name: Build Helpers
-          command: make build-helpers
+          command: |
+            cd flavorpack
+            make build-helpers
 
       - run:
           name: Package Application
           command: |
-            flavor pack \
-              --manifest pyproject.toml \
-              --output myapp.psp
+            cd flavorpack
+            uv run flavor pack \
+              --manifest ../pyproject.toml \
+              --output ../myapp.psp
 
       - store_artifacts:
           path: myapp.psp

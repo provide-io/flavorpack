@@ -1,22 +1,43 @@
 # Cryptography API
 
-The FlavorPack Cryptography API provides Ed25519 signature generation and verification for package integrity.
+!!! danger "DOCUMENTATION OUTDATED - DO NOT USE CODE EXAMPLES"
+    **This API documentation page is currently outdated and ALL code examples are incorrect.**
 
-!!! warning "Documentation Under Revision"
-    **This API documentation page is currently being updated to match the actual implementation.**
+    ## The Problem
+    The code examples on this page reference a simplified API (`flavor.psp.format_2025.crypto`) that **does not exist** in the codebase.
 
-    The code examples on this page reference a simplified API (`flavor.psp.format_2025.crypto`) that doesn't exist. The actual implementation uses:
+    ## What Actually Exists
+    The actual implementation uses:
 
     - **Key Management**: `flavor.psp.format_2025.keys` module
     - **Signing**: `provide.foundation.crypto.Ed25519Signer`
     - **Verification**: `provide.foundation.crypto.Ed25519Verifier`
 
-    For current usage examples, see:
+    ## What You Should Do
+
+    **For most users**: Use the high-level [Packaging API](packaging.md) which handles all cryptographic operations automatically via CLI options:
+
+    ```bash
+    # Generate keys
+    flavor keygen --out-dir keys/
+
+    # Sign package during build
+    flavor pack --private-key keys/flavor-private.key --public-key keys/flavor-public.key
+
+    # Verify package
+    flavor verify myapp.psp
+    ```
+
+    **For developers**: See the actual implementation source code:
     - Source: `src/flavor/psp/format_2025/keys.py`
     - Source: `src/flavor/psp/format_2025/writer.py` (signing)
     - Source: `src/flavor/psp/security.py` (verification)
 
-    **Recommended**: Use the high-level [Packaging API](packaging.md) which handles all cryptographic operations automatically via CLI options.
+    This page will be rewritten to match the actual implementation in a future update.
+
+---
+
+The FlavorPack Cryptography API provides Ed25519 signature generation and verification for package integrity.
 
 !!! note "Low-Level API"
     This is a low-level API for advanced use cases. Most users should use the [Packaging API](packaging.md) which handles signing automatically.

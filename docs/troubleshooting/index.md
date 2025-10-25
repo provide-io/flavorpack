@@ -170,15 +170,27 @@ rm -rf ~/.cache/flavor/build
 # Build helpers locally
 make build-helpers
 
-# Verify helpers exist
-ls -la dist/bin/flavor-*-launcher-*
+# Or use the flavor helpers command
+flavor helpers build
 
-# Specify launcher explicitly if needed
-flavor pack pyproject.toml --launcher-bin dist/bin/flavor-rs-launcher-linux_amd64
+# Verify helpers exist
+flavor helpers list
+
+# Check helper information
+flavor helpers info flavor-rs-launcher-darwin_arm64
+
+# Test helpers
+flavor helpers test
 ```
 
-!!! info "📋 Planned Feature"
-    Automatic helper download (`flavor helpers download`) is planned for a future release. Currently, you must build helpers locally with `make build-helpers`.
+!!! info "Available Helper Commands"
+    FlavorPack provides these helper management commands:
+
+    - `flavor helpers list` - List available helper binaries
+    - `flavor helpers build` - Build helpers from source
+    - `flavor helpers clean` - Remove built helpers
+    - `flavor helpers info <name>` - Show helper details
+    - `flavor helpers test` - Test helper functionality
 
 ### Runtime Errors
 

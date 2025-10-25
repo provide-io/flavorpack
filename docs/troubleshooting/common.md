@@ -139,7 +139,7 @@ flavor pack --manifest pyproject.toml
 
 **Solutions**:
 ```bash
-# Clean Flavor Pack cache
+# Clean FlavorPack cache
 flavor clean --all --yes
 
 # Check cache size
@@ -292,7 +292,7 @@ dist/bin/flavor-go-builder-* --manifest test.json --output test.psp
 ### Environment Debugging
 
 ```bash
-# Check all Flavor Pack environment variables
+# Check all FlavorPack environment variables
 env | grep FLAVOR
 
 # Test with clean environment

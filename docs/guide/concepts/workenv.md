@@ -34,13 +34,18 @@ When a PSPF package executes, it creates a "work environment" - a temporary dire
 
 ### Platform-Specific Locations
 
-FlavorPack automatically selects appropriate cache directories:
+FlavorPack follows the XDG Base Directory specification for cache directories:
 
-| Platform | Default Location | Environment Variable |
-|----------|-----------------|---------------------|
-| macOS | `/var/folders/.../pspf/workenv` | `FLAVOR_CACHE` |
-| Linux | `/tmp/pspf/workenv` | `FLAVOR_CACHE` |
-| Windows | `%TEMP%\pspf\workenv` | `FLAVOR_CACHE` |
+| Platform | Default Location | Environment Variable Override |
+|----------|-----------------|------------------------------|
+| macOS | `~/.cache/flavor/workenv` | `FLAVOR_CACHE` or `XDG_CACHE_HOME` |
+| Linux | `~/.cache/flavor/workenv` | `FLAVOR_CACHE` or `XDG_CACHE_HOME` |
+| Windows | `%USERPROFILE%\.cache\flavor\workenv` | `FLAVOR_CACHE` |
+
+**Priority order:**
+1. `FLAVOR_CACHE` environment variable (if set)
+2. `XDG_CACHE_HOME/flavor/workenv` (if `XDG_CACHE_HOME` is set)
+3. `~/.cache/flavor/workenv` (default)
 
 ## Lifecycle Management
 

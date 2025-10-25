@@ -275,21 +275,28 @@ FLAVOR_LOG_LEVEL=debug          # Verbose security logging
 
 ### Configuration File
 
-```toml
-# ~/.flavor/config.toml
-[security]
-verify_signatures = true
-require_https = true
-allowed_key_fingerprints = [
-    "abc123...",
-    "def456..."
-]
+!!! info "📋 Planned Feature - Not Yet Implemented"
+    Configuration file support is planned for a future release. Currently, all configuration is done via environment variables and CLI flags.
 
-[audit]
-log_file = "/var/log/flavor-audit.log"
-log_verification = true
-log_extraction = true
-```
+    **Planned configuration file format:**
+
+    ```toml
+    # ~/.flavor/config.toml (not yet supported)
+    [security]
+    verify_signatures = true
+    require_https = true
+    allowed_key_fingerprints = [
+        "abc123...",
+        "def456..."
+    ]
+
+    [audit]
+    log_file = "/var/log/flavor-audit.log"
+    log_verification = true
+    log_extraction = true
+    ```
+
+    **Current alternative**: Use environment variables (see below)
 
 ## Audit Logging
 

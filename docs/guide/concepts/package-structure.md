@@ -26,7 +26,7 @@ A PSPF package is a self-contained executable file that combines:
 │   (metadata, crypto)    │
 ├─────────────────────────┤
 │     Slot Table          │ Variable
-│  (32 bytes × slots)     │
+│  (64 bytes × slots)     │
 ├─────────────────────────┤
 │   Metadata (gzip)       │ Variable
 ├─────────────────────────┤
