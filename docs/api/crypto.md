@@ -588,17 +588,16 @@ if signature:
 
 ## API Reference
 
-The complete cryptography module reference with all functions, classes, and constants:
+!!! warning "Auto-Generated API Documentation Disabled"
+    The auto-generated API reference has been temporarily disabled while the documentation is updated to match the actual implementation.
 
-::: flavor.psp.format_2025.crypto
-    options:
-      show_root_heading: false
-      show_source: true
-      members: true
-      show_if_no_docstring: false
-      heading_level: 3
-      filters:
-        - "!^_"
+    For now, refer to the source code:
+
+    - **Key Management**: `src/flavor/psp/format_2025/keys.py`
+    - **Signing**: `src/flavor/psp/format_2025/writer.py`
+    - **Verification**: `src/flavor/psp/security.py`
+
+    Or use the high-level API documented in [Packaging API](packaging.md).
 
 ## See Also
 
