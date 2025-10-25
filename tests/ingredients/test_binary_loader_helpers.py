@@ -161,8 +161,9 @@ class TestHelperMethods:
             mock_bin_dir.mkdir()
 
             mock_path_instance = Mock()
-            mock_path_instance.parent = tmp_path
-            mock_path_instance.parent.__truediv__ = lambda self, x: mock_bin_dir if x == "bin" else Mock()
+            mock_parent = Mock()
+            mock_parent.__truediv__ = lambda self, x: mock_bin_dir if x == "bin" else Mock()
+            mock_path_instance.parent = mock_parent
             mock_path_class.return_value = mock_path_instance
 
             loader = BinaryLoader(mock_manager)
@@ -203,7 +204,8 @@ class TestHelperMethods:
         mock_manager = Mock()
         loader = BinaryLoader(mock_manager)
 
-        with patch("flavor.ingredients.binary_loader.__version__", "1.2.3", create=True):
+        # Mock the __version__ in flavor module
+        with patch("flavor.__version__", "1.2.3"):
             result = loader._get_package_version_name("test")
             assert result == "test-1.2.3-linux_x86_64"
 
@@ -214,9 +216,18 @@ class TestHelperMethods:
         mock_manager = Mock()
         loader = BinaryLoader(mock_manager)
 
-        # Simulate ImportError
-        result = loader._get_package_version_name("test")
-        assert result is None
+        # Simulate missing version by making the import fail
+        # We need to mock the entire flavor module to not have __version__
+        import flavor
+        original_version = getattr(flavor, "__version__", None)
+        try:
+            if hasattr(flavor, "__version__"):
+                delattr(flavor, "__version__")
+            result = loader._get_package_version_name("test")
+            assert result is None
+        finally:
+            if original_version is not None:
+                flavor.__version__ = original_version
 
     @patch("flavor.ingredients.binary_loader.get_platform_string")
     def test_remove_duplicates(self, mock_get_platform: Mock) -> None:
@@ -247,8 +258,9 @@ class TestHelperMethods:
 
         with patch("flavor.ingredients.binary_loader.Path") as mock_path_class:
             mock_path_instance = Mock()
-            mock_path_instance.parent = tmp_path / "embedded"
-            mock_path_instance.parent.__truediv__ = lambda self, x: embedded_bin if x == "bin" else Mock()
+            mock_parent = Mock()
+            mock_parent.__truediv__ = lambda self, x: embedded_bin if x == "bin" else Mock()
+            mock_path_instance.parent = mock_parent
             mock_path_class.return_value = mock_path_instance
 
             result = loader._search_ingredient_locations("test-ingredient")
@@ -270,12 +282,41 @@ class TestHelperMethods:
         loader = BinaryLoader(mock_manager)
 
         with patch("flavor.ingredients.binary_loader.Path") as mock_path_class:
-            # Mock embedded location to not exist
+            # Need to mock two paths that don't exist:
+            # 1. parent / "bin" / name (3 levels)
+            # 2. parent / "ingredients" / platform / name (4 levels)
+
+            # Mock for final file checks - all return False for exists()
+            mock_final_file = Mock()
+            mock_final_file.exists.return_value = False
+
+            # Mock for platform level (supports / name)
+            mock_platform_dir = Mock()
+            mock_platform_dir.exists.return_value = False
+            mock_platform_dir.__truediv__ = lambda self, x: mock_final_file
+
+            # Mock for intermediate directories (supports / platform or / name)
+            mock_bin_dir = Mock()
+            mock_bin_dir.exists.return_value = False
+            mock_bin_dir.__truediv__ = lambda self, x: mock_final_file
+
+            mock_ingredients_dir = Mock()
+            mock_ingredients_dir.exists.return_value = False
+            mock_ingredients_dir.__truediv__ = lambda self, x: mock_platform_dir
+
+            # Mock parent supports / "bin" and / "ingredients"
+            def mock_parent_truediv(self, x):
+                if x == "bin":
+                    return mock_bin_dir
+                elif x == "ingredients":
+                    return mock_ingredients_dir
+                return Mock()
+
+            mock_parent = Mock()
+            mock_parent.__truediv__ = mock_parent_truediv
+
             mock_path_instance = Mock()
-            mock_path_instance.parent = tmp_path / "nonexistent"
-            mock_embedded = Mock()
-            mock_embedded.exists.return_value = False
-            mock_path_instance.parent.__truediv__ = lambda self, x: mock_embedded
+            mock_path_instance.parent = mock_parent
             mock_path_class.return_value = mock_path_instance
 
             result = loader._search_ingredient_locations("test-ingredient")
@@ -291,10 +332,41 @@ class TestHelperMethods:
         loader = BinaryLoader(mock_manager)
 
         with patch("flavor.ingredients.binary_loader.Path") as mock_path_class:
+            # Need to mock two paths that don't exist:
+            # 1. parent / "bin" / name (3 levels)
+            # 2. parent / "ingredients" / platform / name (4 levels)
+
+            # Mock for final file checks - all return False for exists()
+            mock_final_file = Mock()
+            mock_final_file.exists.return_value = False
+
+            # Mock for platform level (supports / name)
+            mock_platform_dir = Mock()
+            mock_platform_dir.exists.return_value = False
+            mock_platform_dir.__truediv__ = lambda self, x: mock_final_file
+
+            # Mock for intermediate directories (supports / platform or / name)
+            mock_bin_dir = Mock()
+            mock_bin_dir.exists.return_value = False
+            mock_bin_dir.__truediv__ = lambda self, x: mock_final_file
+
+            mock_ingredients_dir = Mock()
+            mock_ingredients_dir.exists.return_value = False
+            mock_ingredients_dir.__truediv__ = lambda self, x: mock_platform_dir
+
+            # Mock parent supports / "bin" and / "ingredients"
+            def mock_parent_truediv(self, x):
+                if x == "bin":
+                    return mock_bin_dir
+                elif x == "ingredients":
+                    return mock_ingredients_dir
+                return Mock()
+
+            mock_parent = Mock()
+            mock_parent.__truediv__ = mock_parent_truediv
+
             mock_path_instance = Mock()
-            mock_embedded = Mock()
-            mock_embedded.exists.return_value = False
-            mock_path_instance.parent.__truediv__ = lambda self, x: mock_embedded
+            mock_path_instance.parent = mock_parent
             mock_path_class.return_value = mock_path_instance
 
             result = loader._search_ingredient_locations("nonexistent")

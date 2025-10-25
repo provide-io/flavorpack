@@ -1,7 +1,7 @@
 //! Command execution utilities
 
-use super::placeholders::substitute_placeholders;
 use super::super::metadata::PackageInfo;
+use super::placeholders::substitute_placeholders;
 use crate::exceptions::{FlavorError, Result};
 use glob::glob;
 use log::{debug, info, warn};
@@ -152,8 +152,9 @@ pub fn execute_setup_commands(
                         .unwrap_or("700");
 
                     // Parse octal mode (e.g., "700" -> 0o700)
-                    let mode =
-                        u32::from_str_radix(mode_str, 8).unwrap_or(crate::psp::format_2025::defaults::DEFAULT_EXECUTABLE_PERMS as u32);
+                    let mode = u32::from_str_radix(mode_str, 8).unwrap_or(
+                        crate::psp::format_2025::defaults::DEFAULT_EXECUTABLE_PERMS as u32,
+                    );
 
                     let file_pattern = substitute_placeholders(file_pattern, workenv_dir, package);
 

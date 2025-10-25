@@ -52,11 +52,11 @@ pub fn extract_slot(reader: &mut Reader, slot_index: usize, dest_dir: &Path) -> 
     }
 
     let descriptor = &descriptors[slot_index];
-    
+
     // Use operations instead of codec
     use crate::psp::format_2025::operations::unpack_operations;
     let operations = unpack_operations(descriptor.operations);
-    
+
     // Copy values to avoid unaligned access
     let desc_offset = descriptor.offset;
     let desc_size = descriptor.size;
@@ -73,10 +73,10 @@ pub fn extract_slot(reader: &mut Reader, slot_index: usize, dest_dir: &Path) -> 
     );
 
     // Process data based on operations
-    use crate::psp::format_2025::constants::{OP_TAR, OP_GZIP};
-    
+    use crate::psp::format_2025::constants::{OP_GZIP, OP_TAR};
+
     let mut processed_data = slot_data;
-    
+
     // Apply operations in reverse order (since they're applied forward during packing)
     for &op in operations.iter().rev() {
         processed_data = match op {
@@ -101,16 +101,14 @@ pub fn extract_slot(reader: &mut Reader, slot_index: usize, dest_dir: &Path) -> 
                 processed_data
             }
             unknown_op => {
-                error!(
-                    "❌ FATAL: Unknown operation {unknown_op} for slot {slot_index}"
-                );
+                error!("❌ FATAL: Unknown operation {unknown_op} for slot {slot_index}");
                 return Err(FlavorError::Generic(format!(
                     "Unknown operation {unknown_op} for slot {slot_index}"
                 )));
             }
         };
     }
-    
+
     let decompressed_data = processed_data;
 
     trace!(
@@ -123,18 +121,24 @@ pub fn extract_slot(reader: &mut Reader, slot_index: usize, dest_dir: &Path) -> 
     let metadata = reader.read_metadata()?;
 
     // Get slot info from metadata
-    let (slot_id, mut slot_target, slot_operations, slot_purpose) = if slot_index < metadata.slots.len() {
-        let slot_info = &metadata.slots[slot_index];
-        (
-            slot_info.id.clone(),
-            slot_info.target.clone(),
-            slot_info.operations.clone(),
-            slot_info.purpose.clone(),
-        )
-    } else {
-        (format!("slot_{slot_index}"), format!("slot_{slot_index}"), String::new(), String::new())
-    };
-    
+    let (slot_id, mut slot_target, slot_operations, slot_purpose) =
+        if slot_index < metadata.slots.len() {
+            let slot_info = &metadata.slots[slot_index];
+            (
+                slot_info.id.clone(),
+                slot_info.target.clone(),
+                slot_info.operations.clone(),
+                slot_info.purpose.clone(),
+            )
+        } else {
+            (
+                format!("slot_{slot_index}"),
+                format!("slot_{slot_index}"),
+                String::new(),
+                String::new(),
+            )
+        };
+
     // Substitute {workenv} placeholder in target path
     // Since we're already extracting to dest_dir (which IS the workenv),
     // we need to remove the {workenv}/ prefix from the target
@@ -151,9 +155,7 @@ pub fn extract_slot(reader: &mut Reader, slot_index: usize, dest_dir: &Path) -> 
     if operations.contains(&OP_TAR) {
         // Has TAR operation - extract as tarball
         if !is_tarball(&decompressed_data) {
-            error!(
-                "❌ FATAL: Slot {slot_index} has TAR operation but data is not a tarball!"
-            );
+            error!("❌ FATAL: Slot {slot_index} has TAR operation but data is not a tarball!");
             return Err(FlavorError::Generic(format!(
                 "Operation mismatch: slot {slot_index} has TAR operation but is not a tar archive"
             )));
@@ -163,12 +165,7 @@ pub fn extract_slot(reader: &mut Reader, slot_index: usize, dest_dir: &Path) -> 
     } else {
         // No TAR operation - treat as single file
         let target_path = dest_dir.join(&slot_target);
-        extract_single_file(
-            &decompressed_data,
-            &target_path,
-            &descriptors,
-            slot_index,
-        )?;
+        extract_single_file(&decompressed_data, &target_path, &descriptors, slot_index)?;
     }
 
     Ok(())
@@ -202,7 +199,6 @@ fn extract_single_file(
     Ok(())
 }
 
-
 /// Create a parent directory with secure permissions
 fn create_parent_directory(parent: &Path) -> Result<()> {
     debug!("📁 Creating parent directory for single file: {parent:?}");
@@ -215,8 +211,10 @@ fn create_parent_directory(parent: &Path) -> Result<()> {
         use std::os::unix::fs::PermissionsExt;
         // Only set permissions if we just created the directory
         if parent.exists() {
-            match fs::set_permissions(parent, fs::Permissions::from_mode(u32::from(DEFAULT_DIR_PERMS)))
-            {
+            match fs::set_permissions(
+                parent,
+                fs::Permissions::from_mode(u32::from(DEFAULT_DIR_PERMS)),
+            ) {
                 Ok(()) => debug!("✅ Set permissions on parent directory"),
                 Err(e) => debug!("⚠️ Could not set permissions on parent directory: {e}"),
             }

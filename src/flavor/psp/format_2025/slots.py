@@ -52,22 +52,11 @@ def validate_operations_string(instance: Any, attribute: Any, value: str) -> Non
 
 
 def normalize_purpose(value: str) -> str:
-    """Normalize purpose field to spec-compliant values for internal use."""
-    purpose_map = {
-        "data": "data",
-        "code": "code",
-        "config": "config",
-        "media": "media",
-        # Legacy mappings
-        "payload": "data",
-        "runtime": "code",
-        "tool": "config",
-        "library": "code",
-        "asset": "media",
-        "binary": "code",
-        "installer": "config",
-    }
-    return purpose_map.get(value, "data")  # Default to data
+    """Validate purpose field is spec-compliant."""
+    valid_purposes = {"data", "code", "config", "media"}
+    if value not in valid_purposes:
+        raise ValueError(f"Invalid purpose '{value}'. Must be one of: {valid_purposes}")
+    return value
 
 
 @define
@@ -236,11 +225,12 @@ class SlotMetadata:
         """Convert metadata to descriptor."""
         from flavor.psp.format_2025.operations import string_to_operations
 
-        # Map string values to integers
+        # Map string values to integers (spec-compliant values only)
         purpose_map = {
-            "payload": PURPOSE_DATA,
-            "runtime": PURPOSE_CODE,
-            "tool": PURPOSE_CONFIG,
+            "data": PURPOSE_DATA,
+            "code": PURPOSE_CODE,
+            "config": PURPOSE_CONFIG,
+            "media": PURPOSE_MEDIA,
         }
         lifecycle_map = {
             # Timing-based
@@ -262,13 +252,17 @@ class SlotMetadata:
         # Convert hex checksum to integer
         checksum_int = int(self.checksum, 16) if isinstance(self.checksum, str) else self.checksum
 
+        # Validate and get purpose
+        normalized_purpose = normalize_purpose(self.purpose)
+        purpose_value = purpose_map[normalized_purpose]  # Will raise KeyError if invalid
+
         return SlotDescriptor(
             id=self.index,
             name=self.id,
             size=self.size,
-            checksum=checksum_int & 0xFFFFFFFF,  # Truncate to 32-bit
+            checksum=checksum_int & 0xFFFFFFFFFFFFFFFF,  # Keep as 64-bit for SHA-256
             operations=string_to_operations(self.operations),
-            purpose=purpose_map.get(normalize_purpose(self.purpose), PURPOSE_DATA),
+            purpose=purpose_value,
             lifecycle=lifecycle_map.get(self.lifecycle, LIFECYCLE_RUNTIME),
             path=None,
         )
@@ -276,8 +270,8 @@ class SlotMetadata:
     def get_purpose_value(self) -> int:
         """Get the numeric purpose value for binary encoding."""
         normalized = normalize_purpose(self.purpose)
-        purpose_map = {"payload": 0, "runtime": 1, "tool": 2}
-        return purpose_map.get(normalized, 0)
+        purpose_map = {"data": 0, "code": 1, "config": 2, "media": 3}
+        return purpose_map[normalized]  # Will raise KeyError if invalid
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
@@ -365,8 +359,10 @@ class SlotView:
         return self._decompressed
 
     def compute_checksum(self, data: bytes) -> int:
-        """Compute Adler-32 checksum of data."""
-        return zlib.adler32(data) & 0xFFFFFFFF
+        """Compute SHA-256 checksum of data (first 8 bytes as uint64)."""
+        import hashlib
+        hash_bytes = hashlib.sha256(data).digest()[:8]
+        return int.from_bytes(hash_bytes, byteorder="little")
 
     def stream(self, chunk_size: int = 8192) -> Any:
         """Stream slot data in chunks."""

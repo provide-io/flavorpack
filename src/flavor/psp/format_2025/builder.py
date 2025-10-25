@@ -199,15 +199,18 @@ def prepare_slots(slots: list[SlotMetadata], options: BuildOptions) -> list[Prep
             "🔍 Computing checksums for slot",
             slot_id=slot.id,
             checksum_data_size=len(data_to_checksum),
-            checksum_type="adler32+sha256",
+            checksum_type="sha256",
         )
         checksum_str = calculate_checksum(data_to_checksum, "sha256")
-        checksum_adler32 = zlib.adler32(data_to_checksum) & 0xFFFFFFFF
+        # Compute SHA-256 truncated to 8 bytes for binary descriptor
+        import hashlib
+        hash_bytes = hashlib.sha256(data_to_checksum).digest()[:8]
+        checksum_uint64 = int.from_bytes(hash_bytes, byteorder="little")
 
         logger.debug(
             "🔍 Slot checksum calculation complete",
             slot_id=slot.id,
-            adler32=f"{checksum_adler32:08x}",
+            checksum_uint64=f"{checksum_uint64:016x}",
             sha256_prefix=checksum_str[:16],
             data_size=len(data_to_checksum),
             processed_data=processed_data is not data,
@@ -222,7 +225,7 @@ def prepare_slots(slots: list[SlotMetadata], options: BuildOptions) -> list[Prep
                 data=data,
                 compressed_data=processed_data if processed_data != data else None,
                 operations=packed_ops,  # Operations packed as integer
-                checksum=checksum_adler32,  # Binary descriptor uses checksum of final data
+                checksum=checksum_uint64,  # Binary descriptor uses SHA-256 (first 8 bytes)
             )
         )
 

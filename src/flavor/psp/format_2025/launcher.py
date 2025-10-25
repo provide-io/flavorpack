@@ -189,12 +189,14 @@ class PSPFLauncher(PSPFReader):
 
         # Verify checksum if requested (checksum is of the data AS STORED IN THE FILE)
         if verify_checksum:
-            # NOTE: Use adler32 to match Go/Rust implementations
+            # NOTE: Use SHA-256 (first 8 bytes) to match Go/Rust implementations
             # Checksum is of the slot data as it exists in the file (compressed or not)
-            actual_checksum = zlib.adler32(slot_data) & 0xFFFFFFFF
+            import hashlib
+            hash_bytes = hashlib.sha256(slot_data).digest()[:8]
+            actual_checksum = int.from_bytes(hash_bytes, byteorder="little")
             if actual_checksum != slot_entry["checksum"]:
                 logger.error(
-                    f"❌ Checksum mismatch for slot {slot_index}: expected {slot_entry['checksum']}, got {actual_checksum}"
+                    f"❌ Checksum mismatch for slot {slot_index}: expected {slot_entry['checksum']:016x}, got {actual_checksum:016x}"
                 )
                 raise ValueError(f"Checksum mismatch for slot {slot_index}")
             logger.debug(f"✅ Checksum verified for slot {slot_index}")

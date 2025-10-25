@@ -21,7 +21,6 @@
     // All warnings must be fixed
     warnings,
 )]
-
 #![warn(
     // Documentation
     missing_docs,
@@ -52,7 +51,6 @@
     clippy::explicit_iter_loop,
     clippy::explicit_into_iter_loop,
 )]
-
 #![allow(
     // Temporarily allowed but should be fixed
     clippy::too_many_arguments,  // Some functions need refactoring
@@ -70,13 +68,13 @@ pub mod version;
 use std::sync::atomic::AtomicU32;
 
 // Re-export main API functions
-pub use api::{build_package, launch_package, verify_package, BuildOptions, LaunchOptions};
+pub use api::{BuildOptions, LaunchOptions, build_package, launch_package, verify_package};
 pub use exceptions::FlavorError;
 pub use utils::get_platform_string;
 
 // Re-export format-specific types for advanced usage
-pub use psp::format_2025;
 pub use psp::PackageFormat;
+pub use psp::format_2025;
 
 // Global state for signal handling (used by binary)
 pub static CHILD_PID: AtomicU32 = AtomicU32::new(0);

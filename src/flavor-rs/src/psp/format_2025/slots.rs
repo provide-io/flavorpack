@@ -1,8 +1,9 @@
 // helpers/flavor-rs/src/psp/format_2025/slots.rs
 // PSPF 2025 Slot Management - Enhanced 64-byte descriptors
 
-use super::constants::{SLOT_DESCRIPTOR_SIZE, PurposeData, LifecycleCache};
+use super::constants::{LifecycleCache, PurposeData, SLOT_DESCRIPTOR_SIZE};
 use super::defaults::{CACHE_NORMAL, DEFAULT_FILE_PERMS, DEFAULT_PAGE_SIZE};
+use log::trace;
 use std::path::PathBuf;
 
 /// Slot descriptor - 64 bytes total
@@ -10,13 +11,13 @@ use std::path::PathBuf;
 #[derive(Clone, Copy, Debug)]
 pub struct SlotDescriptor {
     // Core fields (56 bytes total - 7x uint64)
-    pub id: u64,           // Unique slot ID
-    pub name_hash: u64,    // xxHash64 of slot name  
-    pub offset: u64,       // Byte offset in file
-    pub size: u64,         // Size as stored (compressed)
-    pub original_size: u64,// Uncompressed size
-    pub operations: u64,   // Packed operation chain (up to 8 ops)
-    pub checksum: u64,     // SHA256 checksum (first 8 bytes)
+    pub id: u64,            // Unique slot ID
+    pub name_hash: u64,     // xxHash64 of slot name
+    pub offset: u64,        // Byte offset in file
+    pub size: u64,          // Size as stored (compressed)
+    pub original_size: u64, // Uncompressed size
+    pub operations: u64,    // Packed operation chain (up to 8 ops)
+    pub checksum: u64,      // SHA256 checksum (first 8 bytes)
 
     // Metadata fields (8 bytes total - 8x uint8)
     pub purpose: u8,          // 0=data, 1=code, 2=config, 3=media
@@ -74,7 +75,7 @@ impl SlotDescriptor {
     /// Pack descriptor to bytes
     pub fn pack(&self) -> [u8; SLOT_DESCRIPTOR_SIZE] {
         let mut bytes = [0u8; SLOT_DESCRIPTOR_SIZE];
-        
+
         // Pack 7x uint64 fields (56 bytes)
         bytes[0..8].copy_from_slice(&self.id.to_le_bytes());
         bytes[8..16].copy_from_slice(&self.name_hash.to_le_bytes());
@@ -82,8 +83,12 @@ impl SlotDescriptor {
         bytes[24..32].copy_from_slice(&self.size.to_le_bytes());
         bytes[32..40].copy_from_slice(&self.original_size.to_le_bytes());
         bytes[40..48].copy_from_slice(&self.operations.to_le_bytes());
-        bytes[48..56].copy_from_slice(&self.checksum.to_le_bytes());
-        
+
+        let checksum_val = self.checksum;  // Copy to avoid packed alignment issues
+        let checksum_bytes = checksum_val.to_le_bytes();
+        trace!("🦀 Packing checksum: value={:016x}, bytes={:02x?}", checksum_val, checksum_bytes);
+        bytes[48..56].copy_from_slice(&checksum_bytes);
+
         // Pack 8x uint8 fields (8 bytes)
         bytes[56] = self.purpose;
         bytes[57] = self.lifecycle;
@@ -104,7 +109,7 @@ impl SlotDescriptor {
         }
 
         use std::convert::TryInto;
-        
+
         // Unpack 7x uint64 fields (56 bytes)
         let id = u64::from_le_bytes(data[0..8].try_into().ok()?);
         let name_hash = u64::from_le_bytes(data[8..16].try_into().ok()?);
@@ -113,7 +118,7 @@ impl SlotDescriptor {
         let original_size = u64::from_le_bytes(data[32..40].try_into().ok()?);
         let operations = u64::from_le_bytes(data[40..48].try_into().ok()?);
         let checksum = u64::from_le_bytes(data[48..56].try_into().ok()?);
-        
+
         // Unpack 8x uint8 fields (8 bytes)
         let purpose = data[56];
         let lifecycle = data[57];

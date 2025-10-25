@@ -1,3 +1,0 @@
-# `flavor.utils`
-
-::: flavor.utils

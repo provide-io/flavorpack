@@ -206,7 +206,7 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 
 		// Save package checksum for future cache validation
 		if err := savePackageChecksum(paths, index.IndexChecksum, logger); err != nil {
-			logger.Debug("⚠️ Failed to save package checksum", "error", err)
+			logger.Warn("⚠️ Failed to save package checksum", "error", err)
 		}
 	} else {
 		logger.Info("✅ Work environment is valid, skipping persistent slot extraction")

@@ -137,6 +137,7 @@ addopts = [
     "--strict-markers",
     "--color=yes",
     "--ignore=tests/taster/tests",
+    "--ignore=tests/pretaster/scripts",
 ]
 norecursedirs = [".git", "build", "dist", "*.egg-info", ".venv", "htmlcov", ".hypothesis", "__pycache__", "*/generated/*"]
 filterwarnings = [
@@ -144,6 +145,7 @@ filterwarnings = [
     "ignore::PendingDeprecationWarning",
     "ignore::pytest.PytestUnraisableExceptionWarning",
     "ignore:Exception ignored in.*BaseSubprocessTransport:pytest.PytestUnraisableExceptionWarning",
+    "ignore:Module already imported so cannot be rewritten:pytest.PytestAssertRewriteWarning",
 ]
 markers = [
     "unit: Fast, isolated unit tests",

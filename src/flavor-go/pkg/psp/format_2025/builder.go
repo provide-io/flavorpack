@@ -80,7 +80,7 @@ func BuildWithLogLevel(manifestPath, outputPath, launcherBin, privateKeyPath, pu
 	})
 
 	// Log startup messages
-	logger.Info("🐹🐹🐹 Hello from Flavor's PSPF Builder 🐹🐹🐹")
+	logger.Info("🐹🐹🐹 Hello from Flavor's Go Builder 🐹🐹🐹")
 	logger.Debug("Log level", "level", actualLevel, "source", logSource)
 	logger.Info("PSPF Go Builder starting...")
 
@@ -339,6 +339,13 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 
 	// Now write the actual slot data and update descriptors with correct offsets
 	for i, compressed := range slotDataToWrite {
+		// Skip empty data (self-referential slots)
+		if len(compressed) == 0 {
+			logger.Debug("⏭️  Skipping slot (self-referential, no data)", "index", i)
+			slotDescriptors[i].Offset = 0 // No offset for self-ref slots
+			continue
+		}
+
 		// Align position
 		currentPos, _ := out.Seek(0, 1)
 		alignedPos := AlignOffset(currentPos, SlotAlignment)
@@ -392,9 +399,9 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 	out.Read(compressedData)
 	out.Seek(savedPos, 0)
 
-	metadataChecksum := adler32.Checksum(compressedData)
-	// Store as 4 bytes in the 32-byte field
-	binary.LittleEndian.PutUint32(index.MetadataChecksum[:4], metadataChecksum)
+	// Compute full SHA-256 checksum (32 bytes)
+	metadataHash := sha256.Sum256(compressedData)
+	copy(index.MetadataChecksum[:], metadataHash[:])
 
 	// Update package size before writing MagicTrailer
 	// (add 8200 for the trailer that will be written)

@@ -54,8 +54,9 @@ class TestGetIngredient:
             # Mock Path(__file__).parent to return our tmp_path
             mock_path_class.__file__ = str(tmp_path / "binary_loader.py")
             mock_path_instance = Mock()
-            mock_path_instance.parent = tmp_path
-            mock_path_instance.parent.__truediv__ = lambda self, x: embedded_bin if x == "bin" else Mock()
+            mock_parent = Mock()
+            mock_parent.__truediv__ = lambda self, x: embedded_bin if x == "bin" else Mock()
+            mock_path_instance.parent = mock_parent
             mock_path_class.return_value = mock_path_instance
 
             loader = BinaryLoader(mock_manager)
@@ -172,7 +173,6 @@ class TestBuildGoIngredients:
         mock_go_src = Mock()
         mock_go_src.exists.return_value = True
         mock_manager.go_src_dir = mock_go_src
-        mock_manager.ingredients_bin = tmp_path / "bin"
 
         # Create existing binaries
         bin_dir = tmp_path / "bin"
@@ -182,8 +182,10 @@ class TestBuildGoIngredients:
         launcher.write_text("existing")
         builder.write_text("existing")
 
-        # Mock Path operations for the binary paths
-        mock_manager.ingredients_bin.__truediv__ = lambda self, x: bin_dir / x
+        # Mock Path operations for the binary paths - create Mock with __truediv__
+        mock_bin = Mock()
+        mock_bin.__truediv__ = lambda self, x: bin_dir / x
+        mock_manager.ingredients_bin = mock_bin
 
         loader = BinaryLoader(mock_manager)
         result = loader._build_go_ingredients(force=False)
@@ -204,7 +206,6 @@ class TestBuildGoIngredients:
         mock_go_src = Mock()
         mock_go_src.exists.return_value = True
         mock_manager.go_src_dir = mock_go_src
-        mock_manager.ingredients_bin = tmp_path / "bin"
 
         bin_dir = tmp_path / "bin"
         bin_dir.mkdir()
@@ -212,15 +213,17 @@ class TestBuildGoIngredients:
         # Mock successful build
         mock_run.return_value = Mock(returncode=0)
 
-        # Setup Path mocking
-        def mock_truediv(name: str) -> Path:
+        # Setup Path mocking - create Mock with __truediv__
+        def mock_truediv(self, name: str) -> Path:
             p = bin_dir / name
             # Create the file when accessed
             if not p.exists():
                 p.write_text("binary")
             return p
 
-        mock_manager.ingredients_bin.__truediv__ = mock_truediv
+        mock_bin = Mock()
+        mock_bin.__truediv__ = mock_truediv
+        mock_manager.ingredients_bin = mock_bin
 
         loader = BinaryLoader(mock_manager)
         result = loader._build_go_ingredients(force=True)
@@ -240,7 +243,6 @@ class TestBuildGoIngredients:
         mock_go_src = Mock()
         mock_go_src.exists.return_value = True
         mock_manager.go_src_dir = mock_go_src
-        mock_manager.ingredients_bin = tmp_path / "bin"
 
         bin_dir = tmp_path / "bin"
         bin_dir.mkdir()
@@ -248,7 +250,10 @@ class TestBuildGoIngredients:
         # Mock failed build
         mock_run.return_value = Mock(returncode=1, stderr="build error")
 
-        mock_manager.ingredients_bin.__truediv__ = lambda name: bin_dir / name
+        # Create Mock with __truediv__
+        mock_bin = Mock()
+        mock_bin.__truediv__ = lambda self, name: bin_dir / name
+        mock_manager.ingredients_bin = mock_bin
 
         loader = BinaryLoader(mock_manager)
         result = loader._build_go_ingredients(force=True)
@@ -296,7 +301,6 @@ class TestBuildRustIngredients:
         mock_rust_src = tmp_path / "rust_src"
         mock_rust_src.mkdir()
         mock_manager.rust_src_dir = mock_rust_src
-        mock_manager.ingredients_bin = tmp_path / "bin"
 
         bin_dir = tmp_path / "bin"
         bin_dir.mkdir()
@@ -310,13 +314,16 @@ class TestBuildRustIngredients:
         # Mock successful build
         mock_run.return_value = Mock(returncode=0)
 
-        def mock_truediv(name: str) -> Path:
+        # Create Mock with __truediv__
+        def mock_truediv(self, name: str) -> Path:
             p = bin_dir / name
             if not p.exists():
                 p.write_text("binary")
             return p
 
-        mock_manager.ingredients_bin.__truediv__ = mock_truediv
+        mock_bin = Mock()
+        mock_bin.__truediv__ = mock_truediv
+        mock_manager.ingredients_bin = mock_bin
 
         loader = BinaryLoader(mock_manager)
         result = loader._build_rust_ingredients(force=True)

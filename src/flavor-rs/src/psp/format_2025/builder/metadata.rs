@@ -1,9 +1,12 @@
 //! Metadata creation and compression
 
-use super::super::checksums::{calculate_checksum, ChecksumAlgorithm};
+use super::super::checksums::{ChecksumAlgorithm, calculate_checksum};
 use super::super::index::Index;
 use super::super::manifest::BuildManifest;
-use super::super::metadata::{Metadata, PackageInfo, ExecutionInfo, VerificationInfo, IntegritySealInfo, BuildInfo, PlatformInfo, LauncherInfo, CompatibilityInfo, CacheValidationInfo, RuntimeInfo, WorkenvInfo};
+use super::super::metadata::{
+    BuildInfo, CacheValidationInfo, CompatibilityInfo, ExecutionInfo, IntegritySealInfo,
+    LauncherInfo, Metadata, PackageInfo, PlatformInfo, RuntimeInfo, VerificationInfo, WorkenvInfo,
+};
 use crate::api::BuildOptions;
 use crate::exceptions::{FlavorError, Result};
 use ed25519_dalek::{Signature, Signer};
@@ -50,8 +53,10 @@ pub(super) fn create_metadata(
     let (build_timestamp, build_host) = get_build_info();
 
     // Calculate launcher checksum
-    let launcher_checksum = calculate_checksum(launcher_data, ChecksumAlgorithm::Sha256)
-        .map_err(|e| FlavorError::Generic(format!("Failed to calculate launcher checksum: {}", e)))?;
+    let launcher_checksum =
+        calculate_checksum(launcher_data, ChecksumAlgorithm::Sha256).map_err(|e| {
+            FlavorError::Generic(format!("Failed to calculate launcher checksum: {}", e))
+        })?;
 
     Ok(Metadata {
         format: "PSPF/2025".to_string(),
@@ -87,14 +92,20 @@ pub(super) fn create_metadata(
             },
         }),
         launcher: Some(LauncherInfo {
-            tool: options.launcher_bin.as_ref()
+            tool: options
+                .launcher_bin
+                .as_ref()
                 .and_then(|p| p.file_name())
                 .and_then(|n| n.to_str())
                 .map(|s| s.to_string())
-                .or_else(|| std::env::var("FLAVOR_LAUNCHER_BIN").ok()
-                    .and_then(|s| PathBuf::from(s).file_name()
-                        .and_then(|n| n.to_str())
-                        .map(|s| s.to_string())))
+                .or_else(|| {
+                    std::env::var("FLAVOR_LAUNCHER_BIN").ok().and_then(|s| {
+                        PathBuf::from(s)
+                            .file_name()
+                            .and_then(|n| n.to_str())
+                            .map(|s| s.to_string())
+                    })
+                })
                 .unwrap_or_else(|| "unknown".to_string()),
             tool_version: env!("CARGO_PKG_VERSION").to_string(),
             size: launcher_size as i64,
@@ -139,18 +150,19 @@ pub(super) fn compress_and_sign_metadata(
     // Compress with gzip
     let mut compressed = Vec::new();
     {
-        use flate2::write::GzEncoder;
         use flate2::Compression;
+        use flate2::write::GzEncoder;
 
         let mut encoder = GzEncoder::new(&mut compressed, Compression::default());
         encoder.write_all(&metadata_json)?;
         encoder.finish()?;
     }
 
-    // Calculate checksum
-    let metadata_checksum = adler::adler32_slice(&compressed);
-    let mut checksum_bytes = [0u8; 32];
-    checksum_bytes[0..4].copy_from_slice(&metadata_checksum.to_le_bytes());
+    // Calculate checksum (SHA-256 - full 32 bytes)
+    use sha2::{Digest, Sha256};
+    let mut hasher = Sha256::new();
+    hasher.update(&compressed);
+    let checksum_bytes: [u8; 32] = hasher.finalize().into();
     index.metadata_checksum = checksum_bytes;
 
     Ok(compressed)

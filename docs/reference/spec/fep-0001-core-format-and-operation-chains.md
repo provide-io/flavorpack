@@ -211,7 +211,7 @@ The index block is exactly 8192 bytes containing package metadata, file offsets,
 struct IndexBlock {
     // === Core Identification (8 bytes) ===
     uint32_t format_version;        // MUST be 0x20250001 for v0
-    uint32_t index_checksum;        // Adler-32 of this block (with this field set to 0)
+    uint32_t index_checksum;        // Adler-32 of index block (with this field set to 0)
     
     // === File Structure (48 bytes) ===
     uint64_t package_size;          // Total package file size in bytes
@@ -227,7 +227,7 @@ struct IndexBlock {
     
     // === Security (576 bytes) ===
     uint8_t public_key[32];         // Ed25519 public key
-    uint8_t metadata_checksum[32];  // SHA-256 of uncompressed metadata
+    uint8_t metadata_checksum[32];  // SHA-256 of compressed metadata (full 32 bytes)
     uint8_t integrity_signature[512]; // Ed25519 signature (first 64 bytes used)
     
     // === Performance Hints (64 bytes) ===
@@ -300,47 +300,41 @@ Each slot in the package is described by a 64-byte descriptor with the following
 
 ```c
 struct SlotDescriptor {
-    // === Identity (16 bytes) ===
-    uint64_t id;            // Unique slot identifier (8 bytes)
-    uint64_t name_hash;     // xxHash64 of slot name (8 bytes)
-    
-    // === Location (20 bytes) ===
-    uint64_t offset;        // File offset to slot data (8 bytes)
-    uint64_t size;          // Size of stored data (8 bytes)
-    uint32_t checksum;      // Adler-32 of stored data (4 bytes)
-    
-    // === Properties (8 bytes) ===
-    uint64_t operations;    // Packed operation chain (8 bytes)
-    
-    // === Classification (4 bytes) ===
-    uint8_t purpose;        // Purpose type (1 byte)
-    uint8_t lifecycle;      // Lifecycle management (1 byte)
-    uint16_t permissions;   // Unix-style permissions (2 bytes)
-    
-    // === Platform & Flags (4 bytes) ===
-    uint16_t platform;      // Platform hint (2 bytes)
-    uint16_t flags;         // Slot-specific flags (2 bytes)
-    
-    // === Reserved (12 bytes) ===
-    uint32_t reserved1;     // Reserved for future use (4 bytes)
-    uint32_t reserved2;     // Reserved for future use (4 bytes)
-    uint32_t reserved3;     // Reserved for future use (4 bytes)
+    // === Core Fields (56 bytes - 7 × uint64) ===
+    uint64_t id;            // Unique slot identifier
+    uint64_t name_hash;     // SHA-256 of slot name (first 8 bytes, little-endian)
+    uint64_t offset;        // File offset to slot data
+    uint64_t size;          // Size of stored data (compressed)
+    uint64_t original_size; // Uncompressed size
+    uint64_t operations;    // Packed operation chain (up to 8 ops)
+    uint64_t checksum;      // SHA-256 of stored data (first 8 bytes, little-endian)
+
+    // === Metadata Fields (8 bytes - 8 × uint8) ===
+    uint8_t purpose;         // Purpose type (0=data, 1=code, 2=config, 3=media)
+    uint8_t lifecycle;       // Lifecycle management hint
+    uint8_t priority;        // Cache priority hint (0-255)
+    uint8_t platform;        // Platform requirements
+    uint8_t reserved1;       // Reserved for future use
+    uint8_t reserved2;       // Reserved for future use
+    uint8_t permissions;     // Unix-style permissions (low byte)
+    uint8_t permissions_high; // Unix-style permissions (high byte)
 };
 ```
 
 **Field Descriptions**:
 - `id`: 64-bit unique identifier for the slot
-- `name_hash`: Hash of the human-readable slot name for fast lookup
+- `name_hash`: SHA-256 hash of slot name (first 8 bytes, little-endian) for fast lookup
 - `offset`: Byte offset from the beginning of the package file to the slot data
-- `size`: Size of the slot data as stored (may be compressed)
-- `checksum`: Adler-32 checksum of the stored data for integrity verification
+- `size`: Size of the slot data as stored (after compression)
+- `original_size`: Original uncompressed size of the slot data
 - `operations`: Packed operation chain (up to 8 operations, each 8 bits)
+- `checksum`: SHA-256 hash of stored data (first 8 bytes, little-endian)
 - `purpose`: Classification of slot contents (0=data, 1=code, 2=config, 3=media)
 - `lifecycle`: When the slot should be extracted/loaded
-- `permissions`: Unix-style file permissions
+- `priority`: Cache priority hint (0-255, higher = keep in memory longer)
 - `platform`: Platform hint for optimization (0=any, 1=linux, 2=darwin, 3=windows)
-- `flags`: Slot-specific flags for runtime behavior
-- `reserved1-3`: Reserved for future expansion
+- `permissions` + `permissions_high`: Unix-style file permissions (16-bit value)
+- `reserved1-2`: Reserved for future expansion
 
 Total size: **64 bytes exactly**
 

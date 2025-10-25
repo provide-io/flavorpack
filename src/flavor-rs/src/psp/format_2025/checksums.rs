@@ -60,10 +60,13 @@ pub fn parse_checksum(checksum_str: &str) -> Result<(ChecksumAlgorithm, String),
 
 /// Calculate checksum with prefix using streaming I/O
 /// This replaces the old memory-based version for efficiency
-pub fn calculate_checksum<R: Read>(mut reader: R, algorithm: ChecksumAlgorithm) -> std::io::Result<String> {
+pub fn calculate_checksum<R: Read>(
+    mut reader: R,
+    algorithm: ChecksumAlgorithm,
+) -> std::io::Result<String> {
     const BUFFER_SIZE: usize = 8 * 1024 * 1024; // 8MB buffer
     let mut buffer = vec![0u8; BUFFER_SIZE];
-    
+
     match algorithm {
         ChecksumAlgorithm::Sha256 => {
             let mut hasher = Sha256::new();
@@ -109,7 +112,10 @@ pub fn calculate_checksum<R: Read>(mut reader: R, algorithm: ChecksumAlgorithm) 
 }
 
 /// Calculate checksum from byte slice - convenience function for small data like metadata
-pub fn calculate_checksum_bytes(data: &[u8], algorithm: ChecksumAlgorithm) -> Result<String, std::io::Error> {
+pub fn calculate_checksum_bytes(
+    data: &[u8],
+    algorithm: ChecksumAlgorithm,
+) -> Result<String, std::io::Error> {
     match algorithm {
         ChecksumAlgorithm::Sha256 => {
             let mut hasher = Sha256::new();
