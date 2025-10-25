@@ -200,14 +200,18 @@ flavor keygen --out-dir keys/
 
 ### 3. Environment Variables
 
-Optional environment variables for customization:
+FlavorPack uses environment variables for configuration, caching, and logging. For complete documentation, see the [Environment Variables Guide](../guide/usage/environment.md).
+
+Common variables:
 
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `FLAVOR_CACHE` | Cache directory for work environments | `~/.cache/flavor/workenv` |
-| `FOUNDATION_LOG_LEVEL` | Logging level (trace, debug, info, warning, error) | `info` |
-| `FOUNDATION_LOG_FILE` | Log file path for persistent logging | None |
-| `FLAVOR_VALIDATION` | Validation level: strict, standard, relaxed, minimal, none | `standard` |
+| `FOUNDATION_LOG_LEVEL` | Logging level for Python components | `info` |
+| `FLAVOR_LOG_LEVEL` | Logging level for Go/Rust components | `warn` |
+| `FLAVOR_VALIDATION` | Validation level (strict, standard, relaxed, minimal, none) | `standard` |
+
+See the [complete environment variable reference](../guide/usage/environment.md) for all available variables and detailed examples.
 
 !!! note "Signing Keys"
     Signing keys are passed via CLI options (`--private-key` and `--public-key`), not environment variables. See the [Signing Guide](../guide/packaging/signing.md) for details.

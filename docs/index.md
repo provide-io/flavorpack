@@ -140,30 +140,18 @@ graph TB
 
 ## PSPF Format
 
-The Progressive Secure Package Format is a polyglot file that works as both an OS executable and a structured package:
+The Progressive Secure Package Format is a polyglot file that works as both an OS executable and a structured package. Each `.psp` file is structured with a native launcher at the start, followed by package metadata and compressed data slots, ending with a cryptographically signed index block.
 
-```
-┌─────────────────────────────┐ ← Offset 0
-│     Native Launcher         │   Platform-specific executable
-│     (Variable Size)         │   Contains extraction logic
-├─────────────────────────────┤ ← launcher_size
-│       Metadata Block        │   Compressed JSON metadata
-│     (Variable Size)         │   Package info, slot definitions
-├─────────────────────────────┤
-│      Slot Table             │   Array of 64-byte descriptors
-│   (slot_count × 64 bytes)   │   One per slot
-├─────────────────────────────┤
-│       Slot Data             │   Actual slot contents
-│     (Variable Size)         │   May be compressed/encrypted
-├─────────────────────────────┤ ← EOF - 8200
-│ 📦 (Start Magic, 4 bytes)   │   UTF-8 emoji: 0xF0 0x9F 0x93 0xA6
-├─────────────────────────────┤
-│      Index Block            │   Package metadata and pointers
-│      (8192 bytes)           │   Checksum, signatures, offsets
-├─────────────────────────────┤ ← EOF - 4
-│ 🪄 (End Magic, 4 bytes)     │   UTF-8 emoji: 0xF0 0x9F 0xAA 0x84
-└─────────────────────────────┘ ← EOF
-```
+**Key Components**:
+- **Native Launcher**: Platform-specific executable (Go or Rust)
+- **Metadata Block**: Compressed JSON manifest with package information
+- **Slot Table**: Array of 64-byte descriptors (one per slot)
+- **Slot Data**: Compressed application code, runtime, and dependencies
+- **Index Block**: 8KB structure containing offsets, checksums, and Ed25519 signatures
+- **Magic Markers**: 📦 and 🪄 emoji bytes for format identification
+
+For the complete binary layout diagram and technical specification, see:
+→ [PSPF Format Specification (FEP-0001)](reference/spec/fep-0001-core-format-and-operation-chains.md#32-package-structure-overview)
 
 ## Use Cases
 
