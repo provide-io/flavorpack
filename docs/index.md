@@ -85,7 +85,7 @@ flavor verify myapp.psp
 
 ## Architecture Overview
 
-FlavorPack is part of the [Provide Foundry](foundry/index.md) ecosystem, designed to work seamlessly with other provide.io tools:
+FlavorPack is a cross-language packaging system designed to work seamlessly with other provide.io tools:
 
 ```mermaid
 graph TB
@@ -165,17 +165,6 @@ For the complete binary layout diagram and technical specification, see:
 ## Platform Support
 
 --8<-- "includes/platform-support.md"
-
-## Part of the Provide Foundry
-
-FlavorPack is part of the **[Provide Foundry](foundry/index.md)** - a comprehensive collection of Python tools for building Terraform providers, packaging applications, and managing development workflows.
-
-### Related Tools
-
-- **[pyvider](https://foundry.provide.io/pyvider/)** - Build Terraform providers in Python
-- **[wrknv](https://foundry.provide.io/wrknv/)** - Manage development environments
-- **[provide-foundation](https://foundry.provide.io/foundation/)** - Core telemetry and logging
-- **[provide-testkit](https://foundry.provide.io/testkit/)** - Testing utilities
 
 ## Community
 

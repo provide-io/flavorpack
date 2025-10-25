@@ -99,6 +99,7 @@ Connect with the FlavorPack community.
 - [API Reference](../api/index.md) - Technical API documentation
 - [User Guide](../guide/index.md) - Comprehensive user guide
 - [PSPF Specification](../reference/spec/pspf-2025.md) - PSPF/2025 format specification
+- [Glossary](../reference/glossary.md) - Definitions of key terms and concepts
 
 ## Getting Help
 

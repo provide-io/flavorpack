@@ -149,7 +149,7 @@ Detailed guides with examples and explanations:
 - **[Packaging API](packaging.md)** - High-level packaging orchestration, manifest processing, and build workflows
 - **[Builder API](builder.md)** - PSPF package building, slot assembly, and format generation
 - **[Reader API](reader.md)** - Package inspection, slot extraction, and metadata reading
-- **[Cryptography API](crypto.md)** - Ed25519 signing, verification, and key management ⚠️ *Currently outdated - see warning banner*
+- **[Cryptography API](crypto.md)** - Ed25519 signing, verification, and key management
 
 ### 🤖 Auto-Generated Reference
 
