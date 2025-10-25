@@ -31,10 +31,9 @@ def check_mmap_support() -> bool | None:
             f.flush()
 
             # Try to mmap it
-            with open(f.name, "r+b") as test_file:
-                with mmap.mmap(test_file.fileno(), 0) as m:
-                    # Read a byte to ensure it works
-                    _ = m[0]
+            with open(f.name, "r+b") as test_file, mmap.mmap(test_file.fileno(), 0) as m:
+                # Read a byte to ensure it works
+                _ = m[0]
 
             # Cleanup
             Path(f.name).unlink()

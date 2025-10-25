@@ -370,5 +370,3 @@ class TestHelperBuild:
         assert "Make sure you have the required compilers installed" in result.output
         assert "go version" in result.output
         assert "cargo --version" in result.output
-
-

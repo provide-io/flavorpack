@@ -128,9 +128,7 @@ def _clean_helper_binaries(dry_run: bool, yes: bool) -> int:
         _show_helpers_dry_run(helpers_list, size_mb)
         return 0
 
-    if not yes and not click.confirm(
-        f"Remove {len(helpers_list)} helper binaries ({size_mb:.1f} MB)?"
-    ):
+    if not yes and not click.confirm(f"Remove {len(helpers_list)} helper binaries ({size_mb:.1f} MB)?"):
         echo("Aborted.")
         return 0
 

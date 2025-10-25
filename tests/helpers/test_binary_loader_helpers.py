@@ -20,9 +20,7 @@ class TestTestHelpers:
 
     @patch("flavor.helpers.binary_loader.run")
     @patch("flavor.helpers.binary_loader.get_platform_string")
-    def test_test_helpers_all_passed(
-        self, mock_get_platform: Mock, mock_run: Mock, tmp_path: Path
-    ) -> None:
+    def test_test_helpers_all_passed(self, mock_get_platform: Mock, mock_run: Mock, tmp_path: Path) -> None:
         """Test testing helpers when all pass."""
         mock_get_platform.return_value = "linux_x86_64"
         mock_manager = Mock()
@@ -55,9 +53,7 @@ class TestTestHelpers:
 
     @patch("flavor.helpers.binary_loader.run")
     @patch("flavor.helpers.binary_loader.get_platform_string")
-    def test_test_helpers_some_failed(
-        self, mock_get_platform: Mock, mock_run: Mock, tmp_path: Path
-    ) -> None:
+    def test_test_helpers_some_failed(self, mock_get_platform: Mock, mock_run: Mock, tmp_path: Path) -> None:
         """Test testing helpers when some fail."""
         mock_get_platform.return_value = "linux_x86_64"
         mock_manager = Mock()
@@ -219,6 +215,7 @@ class TestHelperMethods:
         # Simulate missing version by making the import fail
         # We need to mock the entire flavor module to not have __version__
         import flavor
+
         original_version = getattr(flavor, "__version__", None)
         try:
             if hasattr(flavor, "__version__"):

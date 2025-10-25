@@ -47,6 +47,7 @@ class TestListHelpers:
 
         assert helpers == {"launchers": [], "builders": []}
 
+
 class TestGetHelperInfo:
     """Test getting helper information."""
 
@@ -102,10 +103,12 @@ class TestGetHelperInfo:
             language="go",
             size=1024,
         )
-        manager.list_helpers = Mock(return_value={
-            "launchers": [mock_helper],
-            "builders": [],
-        })
+        manager.list_helpers = Mock(
+            return_value={
+                "launchers": [mock_helper],
+                "builders": [],
+            }
+        )
 
         info = manager.get_helper_info("launcher")
         assert info is not None
@@ -120,10 +123,12 @@ class TestGetHelperInfo:
         manager.helpers_bin = Mock(spec=Path)
         manager.helpers_bin.__truediv__ = Mock(return_value=mock_path)
 
-        manager.list_helpers = Mock(return_value={
-            "launchers": [],
-            "builders": [],
-        })
+        manager.list_helpers = Mock(
+            return_value={
+                "launchers": [],
+                "builders": [],
+            }
+        )
 
         info = manager.get_helper_info("nonexistent")
         assert info is None

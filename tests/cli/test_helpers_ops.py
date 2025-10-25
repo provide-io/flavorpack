@@ -14,6 +14,8 @@ from click.testing import CliRunner
 
 from flavor.cli import main as cli_main
 from flavor.helpers.manager import HelperInfo
+
+
 class TestHelperClean:
     """Test suite for 'flavor helpers clean' command."""
 

@@ -3,29 +3,22 @@
 from __future__ import annotations
 
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
-from provide.foundation.archive import ArchiveLimits, ArchiveOperation
+from provide.foundation.archive import ArchiveLimits
 from provide.foundation.archive.base import ArchiveError
 import pytest
 
 from flavor.psp.format_2025.constants import (
-    OP_BZIP2,
     OP_GZIP,
-    OP_NONE,
     OP_TAR,
-    OP_XZ,
-    OP_ZSTD,
 )
 from flavor.psp.format_2025.handlers import (
     apply_operations,
     create_tar_archive,
     extract_archive,
-    map_operations,
-    reverse_operations,
 )
 from flavor.psp.format_2025.operations import pack_operations
-
 
 
 @pytest.mark.unit
@@ -295,5 +288,3 @@ class TestExtractArchive:
             pytest.raises(ArchiveError, match="Extraction failed"),
         ):
             extract_archive(data, dest_dir, packed_ops)
-
-

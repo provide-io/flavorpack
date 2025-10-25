@@ -87,7 +87,7 @@ def build_wheels(platforms: list[str] | None = None) -> list[Path]:
     if platforms:
         wheels = []
         for platform in platforms:
-            result = run(build_cmd + ["--platform", platform], cwd=get_project_root())
+            result = run([*build_cmd, "--platform", platform], cwd=get_project_root())
             if result.returncode == 0:
                 # Find the built wheel
                 dist_dir = get_project_root() / "dist"
@@ -95,7 +95,7 @@ def build_wheels(platforms: list[str] | None = None) -> list[Path]:
                 wheels.extend(platform_wheels)
         return wheels
     else:
-        result = run(build_cmd + ["--all"], cwd=get_project_root())
+        result = run([*build_cmd, "--all"], cwd=get_project_root())
 
         if result.returncode != 0:
             print("❌ Wheel build failed")
@@ -154,7 +154,6 @@ def create_git_tag(version: str, push: bool = False) -> bool:
 
 def upload_to_pypi(wheels: list[Path], test: bool = False) -> bool:
     """Upload wheels to PyPI."""
-    repo = "testpypi" if test else "pypi"
     print(f"\n📤 Uploading to {'Test' if test else ''}PyPI...")
 
     # Check if twine is installed
@@ -213,7 +212,7 @@ See [CHANGELOG.md](CHANGELOG.md) for detailed changes.
     return notes
 
 
-def main():
+def main() -> int:
     """Main entry point."""
     parser = argparse.ArgumentParser(description="Orchestrate Flavor release process")
     parser.add_argument("--version", help="Version to release (default: from pyproject.toml)")
@@ -266,16 +265,14 @@ def main():
                 return 1
 
     # Run tests
-    if not args.skip_tests:
-        if not run_tests():
-            print("\n❌ Release aborted due to test failures")
-            return 1
+    if not args.skip_tests and not run_tests():
+        print("\n❌ Release aborted due to test failures")
+        return 1
 
     # Build helpers
-    if not args.skip_helpers:
-        if not build_helpers():
-            print("\n❌ Release aborted due to helper build failure")
-            return 1
+    if not args.skip_helpers and not build_helpers():
+        print("\n❌ Release aborted due to helper build failure")
+        return 1
 
     # Build wheels
     wheels = build_wheels(args.platforms)
@@ -288,10 +285,9 @@ def main():
         print(f"  - {wheel.name}")
 
     # Validate wheels
-    if not args.skip_validation:
-        if not validate_wheels(wheels):
-            print("\n❌ Release aborted due to validation failure")
-            return 1
+    if not args.skip_validation and not validate_wheels(wheels):
+        print("\n❌ Release aborted due to validation failure")
+        return 1
 
     # Create release notes
     notes = create_release_notes(version, wheels)
@@ -305,15 +301,13 @@ def main():
         return 0
 
     # Create git tag
-    if args.tag or args.push_tag:
-        if not create_git_tag(version, args.push_tag):
-            print("\n⚠️  Failed to create/push git tag")
+    if (args.tag or args.push_tag) and not create_git_tag(version, args.push_tag):
+        print("\n⚠️  Failed to create/push git tag")
 
     # Upload to PyPI
-    if not args.no_upload:
-        if not upload_to_pypi(wheels, args.test_pypi):
-            print("\n❌ Release failed during upload")
-            return 1
+    if not args.no_upload and not upload_to_pypi(wheels, args.test_pypi):
+        print("\n❌ Release failed during upload")
+        return 1
 
     print(f"""
 ╔══════════════════════════════════════╗

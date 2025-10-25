@@ -170,9 +170,7 @@ class TestLockManager:
         assert len(manager.held_locks) == 0
 
     @patch("flavor.locking.FileLock")
-    def test_multiple_lock_managers_independent(
-        self, mock_filelock_class: Mock, tmp_path: Path
-    ) -> None:
+    def test_multiple_lock_managers_independent(self, mock_filelock_class: Mock, tmp_path: Path) -> None:
         """Test that multiple LockManager instances are independent."""
         mock_lock = Mock()
         mock_lock.acquire.return_value = True

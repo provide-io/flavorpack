@@ -108,11 +108,10 @@ def handle_command(cmd, *args):
                 for pkg in test_packages:
                     found = False
                     for wheel in wheels:
-                        if pkg in wheel.name.lower():
-                            if "manylinux" in wheel.name:
-                                print(f"  ✅ {pkg}: {wheel.name[:50]}...")
-                                found = True
-                                break
+                        if pkg in wheel.name.lower() and "manylinux" in wheel.name:
+                            print(f"  ✅ {pkg}: {wheel.name[:50]}...")
+                            found = True
+                            break
                     if not found:
                         print(f"  ❌ {pkg}: Not found")
                         return 1
