@@ -2,6 +2,9 @@
 
 Welcome to FlavorPack! This guide will help you get up and running with creating your first Progressive Secure Package.
 
+!!! note "Package Name vs Tool Name"
+    **FlavorPack** (or `flavorpack`) is the Python package name used for installation. The actual command-line tool and API is called **`flavor`**. Install with `pip install flavorpack`, use with `flavor pack`.
+
 ## Prerequisites
 
 Before you begin, ensure you have:
@@ -9,9 +12,9 @@ Before you begin, ensure you have:
 | Component | Minimum Version | Recommended | Notes |
 |-----------|----------------|-------------|-------|
 | Python | 3.11 | 3.12+ | Type hints, modern features |
-| Go | 1.21 | 1.22+ | For building Go helpers |
-| Rust | 1.75 | 1.80+ | For building Rust helpers |
-| UV | 0.1.18 | Latest | Package management |
+| Go | 1.23 | Latest | For building Go helpers |
+| Rust | 1.85 | Latest | For building Rust helpers (edition 2024) |
+| UV | 0.8.13 | Latest | Package management |
 | Git | 2.25 | Latest | Version control |
 | Make | 3.81 | 4.0+ | Build automation |
 
@@ -55,18 +58,6 @@ Choose the installation method that works best for your environment:
     flavor --version
     ```
 
-=== "Docker"
-
-    ```bash
-    # Pull the official image
-    docker pull ghcr.io/provide-io/flavorpack:latest
-    
-    # Run with your project mounted
-    docker run -v $(pwd):/workspace ghcr.io/provide-io/flavorpack \
-      flavor pack --manifest /workspace/pyproject.toml \
-      --output /workspace/myapp.psp
-    ```
-
 ## Verify Installation
 
 After installation, verify everything is working:
@@ -101,8 +92,8 @@ Now that you have FlavorPack installed:
 ??? question "Build helpers fails with Go/Rust errors"
     Ensure you have the correct versions installed:
     ```bash
-    go version   # Should be 1.21+
-    rustc --version  # Should be 1.75+
+    go version   # Should be 1.23+
+    rustc --version  # Should be 1.85+
     ```
 
 ??? question "Permission denied when running packaged app"

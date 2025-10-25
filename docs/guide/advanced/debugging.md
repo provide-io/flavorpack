@@ -16,19 +16,19 @@ FlavorPack uses hierarchical logging with multiple levels:
 
 ```bash
 # Trace - Every operation logged
-FLAVOR_LOG_LEVEL=trace flavor pack
+FOUNDATION_LOG_LEVEL=trace flavor pack
 
 # Debug - Detailed diagnostic info
-FLAVOR_LOG_LEVEL=debug flavor pack
+FOUNDATION_LOG_LEVEL=debug flavor pack
 
 # Info - Normal operations (default)
-FLAVOR_LOG_LEVEL=info flavor pack
+FOUNDATION_LOG_LEVEL=info flavor pack
 
-# Warn - Warnings only
-FLAVOR_LOG_LEVEL=warn flavor pack
+# Warning - Warnings only
+FOUNDATION_LOG_LEVEL=warning flavor pack
 
 # Error - Errors only
-FLAVOR_LOG_LEVEL=error flavor pack
+FOUNDATION_LOG_LEVEL=error flavor pack
 ```
 
 ### Component-Specific Logging
@@ -124,7 +124,7 @@ ls -lh runtime.tar.gz
 
 ```bash
 # See which helpers are selected
-FLAVOR_LOG_LEVEL=debug flavor pack 2>&1 | grep -i "helper"
+FOUNDATION_LOG_LEVEL=debug flavor pack 2>&1 | grep -i "helper"
 
 # Output example:
 # 🔍 Selected launcher: flavor-rs-launcher-linux_amd64

@@ -130,7 +130,7 @@ grep -E "(took|duration)" build-profile.log
 
 ```bash
 # Verify cache is being used
-FOUNDATION_LOG_LEVEL=debug ./myapp.psp 2>&1 | grep cache
+FLAVOR_LOG_LEVEL=debug ./myapp.psp 2>&1 | grep cache
 
 # Pre-populate cache
 ./myapp.psp --version  # First run creates cache
@@ -278,7 +278,7 @@ time $PACKAGE --version
 
 ```bash
 # Enable profiling
-FLAVOR_LOG_LEVEL=trace flavor pack 2>&1 | ts > profile.log
+FOUNDATION_LOG_LEVEL=trace flavor pack 2>&1 | ts > profile.log
 
 # Find bottlenecks
 grep "took" profile.log | sort -k2 -h

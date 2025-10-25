@@ -1,7 +1,7 @@
 # Installation
 
 !!! warning "Alpha Release - Source Installation Only"
-    FlavorPack v0.0.1023 is in early alpha. PyPI packages and pre-built binaries are not yet available. **Install from source only.**
+    FlavorPack is in early alpha. PyPI packages and pre-built binaries are not yet available. Check current version with `flavor --version`. **Install from source only.**
 
 FlavorPack can be installed from source. Future releases will support additional installation methods.
 
@@ -12,10 +12,13 @@ FlavorPack can be installed from source. Future releases will support additional
 | Component | Version | Required For |
 |-----------|---------|--------------|
 | Python | 3.11+ | Running FlavorPack |
-| Go | 1.21+ | Building Go helpers |
-| Rust | 1.75+ | Building Rust helpers |
+| Go | 1.23+ | Building Go helpers |
+| Rust | 1.85+ | Building Rust helpers (edition 2024) |
 | Git | 2.25+ | Cloning repository |
 | Make | 3.81+ | Build automation |
+
+!!! info "UV Version Requirement"
+    FlavorPack requires **UV 0.8.13 or later** for full functionality. Earlier versions may have compatibility issues with modern package management features.
 
 ### Supported Platforms
 
@@ -87,18 +90,7 @@ Best for developers who want the latest features and ability to build custom hel
 
     For now, please use source installation (Method 1 above).
 
-### Method 3: Using Docker
-
-!!! info "Planned for Future Release"
-    Official Docker images are planned for a future release.
-
-    **When available**, you'll be able to use:
-    ```bash
-    docker pull ghcr.io/provide-io/flavorpack:latest
-    docker run -it ghcr.io/provide-io/flavorpack:latest flavor --help
-    ```
-
-### Method 4: Development Container
+### Method 3: Development Container
 
 For VS Code users with the Remote-Containers extension.
 
@@ -108,8 +100,8 @@ For VS Code users with the Remote-Containers extension.
 
 The devcontainer includes:
 - Python 3.11+
-- Go 1.21+
-- Rust 1.75+
+- Go 1.23+
+- Rust 1.85+
 - All required build tools
 - Pre-configured environment
 
@@ -200,11 +192,10 @@ For production use, generate signing keys:
 
 ```bash
 # Generate new key pair
-flavor keygen --output keys/
+flavor keygen --out-dir keys/
 
-# Configure FlavorPack to use keys
-export FLAVOR_PRIVATE_KEY=keys/flavor-private.key
-export FLAVOR_PUBLIC_KEY=keys/flavor-public.key
+# Keys are used via CLI options, not environment variables
+# See the Signing Guide for details
 ```
 
 ### 3. Environment Variables
@@ -214,11 +205,12 @@ Optional environment variables for customization:
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `FLAVOR_CACHE` | Cache directory for work environments | `~/.cache/flavor/workenv` |
-| `FOUNDATION_LOG_LEVEL` | Logging level (debug, info, warn, error) | `info` |
+| `FOUNDATION_LOG_LEVEL` | Logging level (trace, debug, info, warning, error) | `info` |
 | `FOUNDATION_LOG_FILE` | Log file path for persistent logging | None |
-| `FLAVOR_PRIVATE_KEY` | Path to private signing key | None |
-| `FLAVOR_PUBLIC_KEY` | Path to public verification key | None |
 | `FLAVOR_VALIDATION` | Validation level: strict, standard, relaxed, minimal, none | `standard` |
+
+!!! note "Signing Keys"
+    Signing keys are passed via CLI options (`--private-key` and `--public-key`), not environment variables. See the [Signing Guide](../guide/packaging/signing.md) for details.
 
 ## Platform-Specific Notes
 

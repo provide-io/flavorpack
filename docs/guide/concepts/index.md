@@ -239,5 +239,5 @@ Now that you understand the core concepts:
 
 - [Getting Started](../../getting-started/index.md)
 - [API Reference](../../api/index.md)
-- [Package Format Specification](../../spec/pspf-2025.md)
+- [Package Format Specification](../../reference/spec/fep-0001-core-format-and-operation-chains.md)
 - [Troubleshooting](../../troubleshooting/index.md)

@@ -276,7 +276,7 @@ flavor keygen [OPTIONS]
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `--out-dir PATH` | path | `keys` | Directory to save the key pair |
+| `--out-dir DIRECTORY` | path | `keys` | Directory to save the key pair |
 
 #### Examples
 
@@ -292,8 +292,8 @@ flavor keygen --out-dir ~/.flavor/keys
 
 # Generated files
 keys/
-├── flavor-private.key  # Ed25519 private key
-└── flavor-public.key   # Ed25519 public key
+├── flavor-private.key  # Ed25519 private key (PEM format)
+└── flavor-public.key   # Ed25519 public key (PEM format)
 ```
 
 !!! warning "Key Security"
@@ -339,7 +339,7 @@ flavor workenv list
 
 ##### workenv info
 
-Show cache statistics and location.
+Show work environment cache information and statistics.
 
 ```bash
 flavor workenv info
@@ -352,7 +352,9 @@ flavor workenv info
 ========================================
 Cache directory: /REDACTED_ABS_PATH
 Total size: 77.3 MB
-Number of packages: 2
+Number of cached packages: 2
+Oldest cache: 2025-10-20 10:15:30
+Newest cache: 2025-10-24 15:45:30
 ```
 
 ##### workenv clean
@@ -463,7 +465,150 @@ Manage FlavorPack helper binaries (launchers and builders).
 flavor helpers COMMAND [OPTIONS]
 ```
 
-Subcommands for managing native Go and Rust helper binaries. See `flavor helpers --help` for details.
+#### Subcommands
+
+##### helpers list
+
+List all available helper binaries.
+
+```bash
+flavor helpers list
+```
+
+**Example Output:**
+
+```
+📦 Available Helper Binaries
+========================================
+
+Builders:
+  ✅ flavor-go-builder-darwin_arm64 (3.8 MB)
+  ✅ flavor-rs-builder-darwin_arm64 (1.0 MB)
+
+Launchers:
+  ✅ flavor-go-launcher-darwin_arm64 (3.4 MB)
+  ✅ flavor-rs-launcher-darwin_arm64 (1.0 MB)
+
+Location: /REDACTED_ABS_PATH
+```
+
+##### helpers info
+
+Show detailed information about a specific helper binary.
+
+```bash
+flavor helpers info [OPTIONS] HELPER_NAME
+```
+
+**Arguments:**
+
+- **HELPER_NAME**: Name of the helper (e.g., `flavor-rs-launcher-darwin_arm64`)
+
+**Example:**
+
+```bash
+flavor helpers info flavor-rs-launcher-darwin_arm64
+
+# Output:
+Helper: flavor-rs-launcher-darwin_arm64
+Type: Launcher
+Language: Rust
+Platform: darwin_arm64
+Size: 1.0 MB
+Path: /path/to/dist/bin/flavor-rs-launcher-darwin_arm64
+Executable: Yes
+```
+
+##### helpers build
+
+Build helper binaries from source.
+
+```bash
+flavor helpers build [OPTIONS]
+```
+
+**Options:**
+
+| Option | Description |
+|--------|-------------|
+| `--lang LANGUAGE` | Build helpers for specific language (go, rust, or all) |
+| `--platform PLATFORM` | Target platform (e.g., linux_amd64, darwin_arm64) |
+| `--force` | Rebuild even if helpers already exist |
+
+**Examples:**
+
+```bash
+# Build all helpers for current platform
+flavor helpers build
+
+# Build only Rust helpers
+flavor helpers build --lang rust
+
+# Build only Go helpers
+flavor helpers build --lang go
+
+# Build for specific platform
+flavor helpers build --platform linux_amd64
+
+# Force rebuild
+flavor helpers build --force
+```
+
+##### helpers clean
+
+Remove built helper binaries.
+
+```bash
+flavor helpers clean [OPTIONS]
+```
+
+**Options:**
+
+| Option | Description |
+|--------|-------------|
+| `--all` | Remove all helpers (default: current platform only) |
+| `--yes, -y` | Skip confirmation prompt |
+
+**Examples:**
+
+```bash
+# Clean current platform helpers (with confirmation)
+flavor helpers clean
+
+# Clean all helpers
+flavor helpers clean --all
+
+# Clean without confirmation
+flavor helpers clean -y
+```
+
+##### helpers test
+
+Test helper binaries functionality.
+
+```bash
+flavor helpers test [OPTIONS]
+```
+
+**Options:**
+
+| Option | Description |
+|--------|-------------|
+| `--helper HELPER_NAME` | Test specific helper |
+| `--verbose` | Show detailed test output |
+
+**Examples:**
+
+```bash
+# Test all helpers
+flavor helpers test
+
+# Test specific helper
+flavor helpers test --helper flavor-rs-launcher-darwin_arm64
+
+# Verbose output
+flavor helpers test --verbose
+```
 
 ---
 

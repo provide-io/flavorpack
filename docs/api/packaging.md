@@ -55,7 +55,6 @@ def build_package_from_manifest(
 
 - `ValueError` - Invalid manifest or configuration
 - `BuildError` - Build process failed
-- `PackagingError` - Packaging operation failed
 
 #### Example
 
@@ -114,12 +113,12 @@ def verify_package(package_path: Path) -> dict[str, Any]:
 ```python
 {
     "format": str,              # "PSPF/2025"
-    "package": str,             # Package filename
-    "size": int,                # Package size in bytes
+    "version": str,             # Format version (e.g., "0x2025000c")
+    "launcher_size": int,       # Launcher size in bytes
     "signature_valid": bool,    # Signature verification result
-    "checksum_valid": bool,     # Index checksum result
-    "metadata": dict,           # Package metadata
-    "index": dict,              # Index block data
+    "slot_count": int,          # Number of slots
+    "package": dict,            # Package metadata dict
+    "build": dict,              # Build metadata dict
     "slots": list,              # Slot descriptors
 }
 ```
@@ -136,20 +135,20 @@ result = verify_package(Path("myapp.psp"))
 if result["signature_valid"]:
     print("✅ Package verified successfully")
     print(f"Format: {result['format']}")
-    print(f"Size: {result['size'] / 1024 / 1024:.1f} MB")
+    print(f"Version: {result['version']}")
 else:
     print("❌ Package verification failed")
     print("DO NOT run this package!")
 
-# Check specific fields
-if result["checksum_valid"]:
-    print("Index checksum valid")
-
-# Access metadata
-metadata = result["metadata"]
-pkg_name = metadata.get("package", {}).get("name")
-version = metadata.get("package", {}).get("version")
+# Access package metadata
+pkg_info = result["package"]
+pkg_name = pkg_info.get("name")
+version = pkg_info.get("version")
 print(f"Package: {pkg_name} v{version}")
+
+# Access build metadata
+build_info = result["build"]
+print(f"Built with: {build_info.get('builder_version')}")
 ```
 
 ---
@@ -158,9 +157,12 @@ print(f"Package: {pkg_name} v{version}")
 
 Generate Ed25519 key pair for package signing.
 
+> **Note**: This function is currently not exported in the public API. Use the `flavor keygen` CLI command instead, or import from `flavor.packaging.keys.generate_key_pair` if needed programmatically.
+
 ```python
 from pathlib import Path
-from flavor.package import generate_keys
+# Not yet in public API - use CLI: flavor keygen --out-dir keys/
+# from flavor.package import generate_keys
 
 def generate_keys(output_dir: Path) -> tuple[Path, Path]:
     """Generate Ed25519 key pair."""
@@ -180,17 +182,15 @@ def generate_keys(output_dir: Path) -> tuple[Path, Path]:
 #### Example
 
 ```python
+# Use CLI command to generate keys
+# $ flavor keygen --out-dir keys/
+
 from pathlib import Path
-from flavor.package import generate_keys
-
-# Generate keys
-private_key, public_key = generate_keys(Path("keys"))
-
-print(f"Private key: {private_key}")  # keys/flavor-private.key
-print(f"Public key: {public_key}")    # keys/flavor-public.key
+from flavor.package import build_package_from_manifest
 
 # Use keys for signing
-from flavor.package import build_package_from_manifest
+private_key = Path("keys/flavor-private.key")
+public_key = Path("keys/flavor-public.key")
 
 packages = build_package_from_manifest(
     manifest_path=Path("pyproject.toml"),
@@ -298,7 +298,6 @@ orchestrator.build_package()
 
 from pathlib import Path
 from flavor.package import (
-    generate_keys,
     build_package_from_manifest,
     verify_package,
 )
@@ -306,15 +305,14 @@ from flavor.package import (
 def build_and_verify():
     """Build and verify a package."""
 
-    # 1. Generate keys (first time only)
+    # 1. Set up keys (generate with CLI first time: flavor keygen --out-dir keys/)
     keys_dir = Path("keys")
-    if not keys_dir.exists():
-        print("Generating signing keys...")
-        private_key, public_key = generate_keys(keys_dir)
-        print(f"✅ Keys generated: {private_key}, {public_key}")
-    else:
-        private_key = keys_dir / "flavor-private.key"
-        public_key = keys_dir / "flavor-public.key"
+    private_key = keys_dir / "flavor-private.key"
+    public_key = keys_dir / "flavor-public.key"
+
+    if not private_key.exists():
+        print("❌ Keys not found. Run: flavor keygen --out-dir keys/")
+        return False
 
     # 2. Build package
     print("Building package...")
@@ -337,11 +335,10 @@ def build_and_verify():
     if result["signature_valid"]:
         print("✅ Package verification successful")
         print(f"   Format: {result['format']}")
-        print(f"   Size: {result['size'] / 1024 / 1024:.1f} MB")
+        print(f"   Version: {result['version']}")
 
-        # Print metadata
-        metadata = result["metadata"]
-        pkg_info = metadata.get("package", {})
+        # Print package metadata
+        pkg_info = result["package"]
         print(f"   Name: {pkg_info.get('name')}")
         print(f"   Version: {pkg_info.get('version')}")
 
@@ -462,7 +459,7 @@ if __name__ == "__main__":
 ### Common Exceptions
 
 ```python
-from flavor.exceptions import BuildError, PackagingError
+from flavor.exceptions import BuildError
 
 try:
     packages = build_package_from_manifest(
@@ -474,9 +471,6 @@ except ValueError as e:
 except BuildError as e:
     # Build process failed
     print(f"Build failed: {e}")
-except PackagingError as e:
-    # Packaging operation failed
-    print(f"Packaging error: {e}")
 except FileNotFoundError as e:
     # Missing files
     print(f"File not found: {e}")

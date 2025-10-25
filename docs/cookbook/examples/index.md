@@ -2,6 +2,22 @@
 
 Practical examples demonstrating how to use FlavorPack for various packaging scenarios.
 
+!!! warning "Examples Need Verification"
+    These cookbook examples demonstrate FlavorPack's intended usage patterns. However, some advanced configuration options shown here (such as `[tool.flavor.slots]` arrays, `[tool.flavor.targets]`, and `[tool.flavor.environment]` tables) may not yet be fully implemented.
+
+    **Verified to work**:
+    - Basic `pyproject.toml` with `[tool.flavor]` and `entry_point`
+    - `[project.scripts]` definitions
+    - Simple packaging with `flavor pack`
+
+    **Needs verification** (may not be implemented):
+    - `[tool.flavor.slots.*]` configuration
+    - `[tool.flavor.environment]` table
+    - `[tool.flavor.targets]` multi-platform builds
+    - `--compress`, `--jobs` CLI flags
+
+    Before relying on any example, test it with your FlavorPack installation. If a configuration option doesn't work, check the current [manifest documentation](../../guide/packaging/manifest.md) for supported options.
+
 ## Quick Examples
 
 ### Minimal Package
@@ -459,7 +475,7 @@ PIP_INDEX_URL=file:///path/to/pip-cache flavor pack
 
 ## Next Steps
 
-- Review the [API Reference](../../api/python/index.md) for detailed function documentation
-- Check the [CLI Reference](../../api/python/cli.md) for all command options
-- Read the [Package Format Specification](../../spec/pspf-2025.md) for technical details
+- Review the [API Reference](../../api/index.md) for detailed function documentation
+- Check the [CLI Reference](../../api/cli.md) for all command options
+- Read the [Package Format Specification](../../reference/spec/fep-0001-core-format-and-operation-chains.md) for technical details
 - See [Troubleshooting Guide](../../troubleshooting/common.md) for common issues
