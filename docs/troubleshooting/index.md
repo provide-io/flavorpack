@@ -377,14 +377,14 @@ sudo semodule -i myapp.pp
 
 **Solutions**:
 ```bash
-# Verify with correct key
-flavor verify myapp.psp --public-key public.pem
+# Verify package integrity
+flavor verify myapp.psp
 
-# Check package integrity
+# Check package integrity with checksum
 sha256sum myapp.psp
 
-# Rebuild package
-flavor pack pyproject.toml --private-key private.pem
+# Rebuild package with signing
+flavor pack pyproject.toml --private-key keys/flavor-private.key --public-key keys/flavor-public.key
 ```
 
 #### Key Generation Issues
@@ -394,13 +394,13 @@ flavor pack pyproject.toml --private-key private.pem
 **Solutions**:
 ```bash
 # Generate new key pair
-flavor keygen --output private.pem
+flavor keygen --out-dir keys/
 
 # Use deterministic key (for CI/CD)
 flavor pack pyproject.toml --key-seed "secret-seed"
 
 # Check key permissions
-chmod 600 private.pem
+chmod 600 keys/flavor-private.key
 ```
 
 ### Cache and Work Environment
@@ -461,14 +461,14 @@ FLAVOR_LOG_LEVEL=debug ./myapp.psp 2>&1 | tee run.log
 # View package metadata
 flavor inspect myapp.psp
 
-# Extract specific slot
-flavor extract myapp.psp --slot app-code
+# Extract specific slot (slot index 1 in this example)
+flavor extract myapp.psp 1 app-code.tar.gz
 
-# Extract all slots
-flavor extract-all myapp.psp --output extracted/
+# Extract all slots to a directory
+flavor extract-all myapp.psp extracted/
 
 # Verify package integrity
-flavor verify myapp.psp --deep
+flavor verify myapp.psp
 ```
 
 ### Environment Variables
