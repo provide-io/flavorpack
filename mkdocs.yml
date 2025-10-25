@@ -346,12 +346,13 @@ nav:
       - community/index.md
       - Getting Support: community/support.md
       - Discussions: community/discussions.md
+      - Contributing: community/contributing.md
       - Blog: community/blog.md
       - Changelog: community/changelog.md
       - License: community/license.md
 
 validation:
-  omitted_files: warn
+  omitted_files: info  # Some files (like includes/) are intentionally not in nav
   absolute_links: warn
   unrecognized_links: warn
 

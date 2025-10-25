@@ -604,6 +604,6 @@ if signature:
 - **[Packaging API](packaging.md)** - High-level packaging with automatic signing
 - **[Builder API](builder.md)** - Package creation with signing
 - **[Signing Guide](../guide/packaging/signing.md)** - Package signing workflow
-- **[Security Model](../../guide/concepts/security.md)** - FlavorPack security architecture
+- **[Security Model](../guide/concepts/security.md)** - FlavorPack security architecture
 - **[Keygen Command](../guide/usage/cli.md#keygen)** - CLI key generation
 - **[PSPF Security Specification](../reference/spec/fep-0001-core-format-and-operation-chains.md#7-security-model)** - Security model details

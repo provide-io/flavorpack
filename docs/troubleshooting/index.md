@@ -581,5 +581,5 @@ env | grep FLAVOR
 - [Common Errors](errors.md) - Detailed error explanations
 - [Platform-Specific Issues](platforms/index.md) - OS-specific guides
 - [FAQ](faq.md) - Frequently asked questions
-- [Security Model](../../guide/concepts/security.md) - Security features and best practices
+- [Security Model](../guide/concepts/security.md) - Security features and best practices
 - [Performance Tuning](../guide/advanced/performance.md) - Optimization guide

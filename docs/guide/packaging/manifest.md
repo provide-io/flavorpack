@@ -817,5 +817,5 @@ optional = true
 - [Creating Packages](index.md) - Package creation overview
 - [Python Packaging](python.md) - Python-specific features
 - [Package Signing](signing.md) - Security configuration
-- [Slots](../../reference/spec/pspf-2025.md#slots) - Slot system specification
+- [Slots](../../reference/spec/pspf-2025.md) - Slot system specification
 - [API Reference](../../api/index.md) - Python API
