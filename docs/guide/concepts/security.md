@@ -157,16 +157,29 @@ Every component has SHA-256 checksums:
 
 ### Verification Levels
 
-> **Note**: Currently, the `verify` command performs standard verification only. The following verification modes are planned features for a future release.
+#### ✅ Currently Available
 
 ```bash
 # Standard verification (index + metadata + signatures)
 flavor verify package.psp
+```
 
-# Future planned modes:
-# flavor verify package.psp --quick     # Quick (index only)
-# flavor verify package.psp --deep      # Deep (all slots)
-# flavor verify package.psp --paranoid  # Paranoid (extract and verify)
+The verify command performs comprehensive validation:
+- Validates PSPF format structure
+- Verifies index block integrity
+- Checks metadata consistency
+- Validates Ed25519 signature
+- Reports any integrity issues
+
+#### 📋 Planned Verification Modes
+
+Additional verification levels are planned for future releases:
+
+```bash
+# Coming in future versions
+flavor verify package.psp --quick     # Quick (index only)
+flavor verify package.psp --deep      # Deep (all slots)
+flavor verify package.psp --paranoid  # Paranoid (extract and verify)
 ```
 
 ## Execution Security
@@ -244,16 +257,18 @@ verification: authenticity
 use_case: enterprise_deployment
 ```
 
-### Certificate-Based (Future)
+### 📋 Certificate-Based (Planned Feature)
 
-PKI integration planned:
+PKI integration is planned for future releases to support public distribution:
 
 ```yaml
-# X.509 certificate chains
+# X.509 certificate chains (not yet implemented)
 trust_model: pki
 verification: chain_of_trust
 use_case: public_distribution
 ```
+
+This will enable integration with existing PKI infrastructure and code signing certificates for broader distribution scenarios.
 
 ## Security Configuration
 
@@ -278,25 +293,41 @@ FLAVOR_LOG_LEVEL=debug          # Verbose security logging
 !!! info "📋 Planned Feature - Not Yet Implemented"
     Configuration file support is planned for a future release. Currently, all configuration is done via environment variables and CLI flags.
 
-    **Planned configuration file format:**
+#### Current Configuration Methods
 
-    ```toml
-    # ~/.flavor/config.toml (not yet supported)
-    [security]
-    verify_signatures = true
-    require_https = true
-    allowed_key_fingerprints = [
-        "abc123...",
-        "def456..."
-    ]
+Use environment variables for configuration:
 
-    [audit]
-    log_file = "/var/log/flavor-audit.log"
-    log_verification = true
-    log_extraction = true
-    ```
+```bash
+# Security settings
+export FLAVOR_VALIDATION=none          # Skip verification (TESTING ONLY)
 
-    **Current alternative**: Use environment variables (see below)
+# Logging
+export FLAVOR_LOG_LEVEL=debug
+export FOUNDATION_LOG_LEVEL=debug
+
+# Cache location
+export FLAVOR_CACHE=/custom/cache
+```
+
+#### Planned Configuration File Format
+
+Future releases will support a configuration file:
+
+```toml
+# ~/.flavor/config.toml (not yet supported - planned feature)
+[security]
+verify_signatures = true
+require_https = true
+allowed_key_fingerprints = [
+    "abc123...",
+    "def456..."
+]
+
+[audit]
+log_file = "/var/log/flavor-audit.log"
+log_verification = true
+log_extraction = true
+```
 
 ## Audit Logging
 
