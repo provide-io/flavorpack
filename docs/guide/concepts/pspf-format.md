@@ -22,6 +22,36 @@ flavor inspect myapp.psp
 
 ## Format Structure
 
+### Binary Layout
+
+```mermaid
+graph TD
+    subgraph "PSPF Package File"
+        A["Launcher Binary<br/>~2-5 MB<br/>Platform-specific executable"]
+        B["Index Block<br/>8192 bytes fixed<br/>Package metadata & offsets"]
+        C["Gzipped Metadata<br/>~1-10 KB<br/>JSON configuration"]
+        D["Slot 0<br/>~35-45 MB<br/>Python runtime tar.gz"]
+        E["Slot 1<br/>Variable size<br/>Application code tar.gz"]
+        F["Slot 2...N<br/>Optional<br/>Additional resources"]
+        G["Magic Footer<br/>8 bytes<br/>📦🪄"]
+    end
+
+    A ==> B
+    B ==> C
+    C ==> D
+    D ==> E
+    E ==> F
+    F ==> G
+
+    style A fill:#e1f5ff
+    style B fill:#fff4e6
+    style C fill:#e8f5e9
+    style D fill:#fce4ec
+    style E fill:#f3e5f5
+    style F fill:#e0f2f1
+    style G fill:#fff9c4
+```
+
 ### Visual Overview
 
 ```

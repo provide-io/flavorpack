@@ -64,30 +64,37 @@ Flavor Pack's high-performance builders and launchers are written in Go and Rust
 ### Build All Helpers
 
 ```bash
-# Build Go and Rust helpers for current platform
-./helpers/build.sh
+# Build Go and Rust helpers for current platform (recommended)
+make build-helpers
+
+# Or use the build script directly
+./build.sh
 ```
 
 ### Manual Build
 
 ```bash
 # Build Go helpers
-cd helpers/flavor-go
-go build -o ../bin/flavor-go-builder cmd/flavor-go-builder/main.go
-go build -o ../bin/flavor-go-launcher cmd/flavor-go-launcher/main.go
+cd src/flavor-go
+go build -o ../../dist/bin/flavor-go-builder-$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m) \
+  -ldflags="-s -w" ./cmd/flavor-go-builder
+go build -o ../../dist/bin/flavor-go-launcher-$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m) \
+  -ldflags="-s -w" ./cmd/flavor-go-launcher
 
 # Build Rust helpers
-cd helpers/flavor-rs
+cd src/flavor-rs
 cargo build --release
-cp target/release/flavor-rs-builder ../bin/
-cp target/release/flavor-rs-launcher ../bin/
+cp target/release/flavor-rs-builder \
+  ../../dist/bin/flavor-rs-builder-$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m)
+cp target/release/flavor-rs-launcher \
+  ../../dist/bin/flavor-rs-launcher-$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m)
 ```
 
-Helper binaries are installed to:
-- `helpers/bin/flavor-go-builder` - Go builder
-- `helpers/bin/flavor-go-launcher` - Go launcher  
-- `helpers/bin/flavor-rs-builder` - Rust builder
-- `helpers/bin/flavor-rs-launcher` - Rust launcher
+Helper binaries are installed to `dist/bin/` with platform suffixes:
+- `dist/bin/flavor-go-builder-{platform}` - Go builder
+- `dist/bin/flavor-go-launcher-{platform}` - Go launcher
+- `dist/bin/flavor-rs-builder-{platform}` - Rust builder
+- `dist/bin/flavor-rs-launcher-{platform}` - Rust launcher
 
 ## Development Workflow
 
@@ -96,10 +103,10 @@ Helper binaries are installed to:
 1. **Start your day**:
    ```bash
    uv sync
-   ./helpers/build.sh  # If helpers changed
+   make build-helpers  # If helpers changed
    ```
 
-2. **Make changes**: Edit code in `src/`, `helpers/`, or `tests/`
+2. **Make changes**: Edit code in `src/` or `tests/`
 
 3. **Run tests**:
    ```bash
@@ -117,7 +124,7 @@ Helper binaries are installed to:
    ```bash
    # Build a test package
    workenv/flavor_*/bin/flavor pack \
-     --manifest helpers/taster/pyproject.toml \
+     --manifest tests/taster/pyproject.toml \
      --output /tmp/test.psp \
      --key-seed test123
    
@@ -254,7 +261,7 @@ workenv/flavor_*/bin/flavor pack \
 # Use specific launcher
 workenv/flavor_*/bin/flavor pack \
   --manifest pyproject.toml \
-  --launcher-bin helpers/bin/flavor-go-launcher \
+  --launcher-bin dist/bin/flavor-go-launcher-* \
   --output myapp.psp
 
 # Deterministic build with seed
@@ -300,7 +307,7 @@ workenv/flavor_*/bin/flavor helpers clean --yes
 **Helper not found**:
 ```bash
 # Rebuild helpers
-./helpers/build.sh
+make build-helpers
 
 # Check helper paths
 workenv/flavor_*/bin/flavor helpers list
@@ -319,8 +326,8 @@ uv sync
 workenv/flavor_*/bin/pytest -xvs --tb=short
 
 # Check helper versions
-helpers/bin/flavor-go-launcher --version
-helpers/bin/flavor-rs-launcher --version
+dist/bin/flavor-go-launcher-* --version
+dist/bin/flavor-rs-launcher-* --version
 ```
 
 **Package verification fails**:

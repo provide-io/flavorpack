@@ -20,8 +20,8 @@ All Linux binaries are built as static executables:
 ```bash
 # Build Go and Rust helpers (required for packaging)
 make build-helpers
-# or
-./helpers/build.sh
+# or directly
+./build.sh
 ```
 
 ### Testing

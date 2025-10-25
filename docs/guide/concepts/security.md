@@ -4,13 +4,44 @@ FlavorPack implements multiple layers of security to ensure package integrity, a
 
 ## Overview
 
-The FlavorPack security model provides comprehensive protection through:
+The FlavorPack security model provides comprehensive protection through multiple layers:
+
+```mermaid
+graph TD
+    A[Package Build] --> B[Sign with Ed25519]
+    B --> C[Package Distribution]
+    C --> D[User Downloads]
+
+    D --> E{Verify Signature}
+    E -->|Invalid| F[❌ Reject Package]
+    E -->|Valid| G{Verify Checksums}
+
+    G -->|Invalid| F
+    G -->|Valid| H{Verify Format}
+
+    H -->|Invalid| F
+    H -->|Valid| I[✅ Extract to Cache]
+
+    I --> J{Validate Extraction}
+    J -->|Failed| F
+    J -->|Success| K[🚀 Execute Package]
+
+    style B fill:#e8f5e9
+    style E fill:#fff3e0
+    style G fill:#fff3e0
+    style H fill:#fff3e0
+    style F fill:#ffebee
+    style K fill:#e3f2fd
+```
+
+### Security Layers
 
 1. **Cryptographic Signatures**: Ed25519 digital signatures for authenticity
 2. **Integrity Verification**: SHA-256 checksums for all components
-3. **Isolation**: Sandboxed execution environments
-4. **Access Control**: Permission-based slot extraction
-5. **Audit Trail**: Comprehensive logging and verification
+3. **Format Validation**: PSPF structure verification
+4. **Isolation**: Sandboxed execution environments
+5. **Access Control**: Permission-based slot extraction
+6. **Audit Trail**: Comprehensive logging and verification
 
 ## Threat Model
 
