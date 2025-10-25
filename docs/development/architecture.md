@@ -113,13 +113,18 @@ The 8KB index block contains:
 - Package signature (64 bytes)
 - Slot count and checksums
 
-### Slot Encoding Types
+### Slot Operation Chains
 
-Per `flavor-rs/src/psp/format_2025/constants.rs`:
-- `ENCODING_RAW: 0` - Raw uncompressed data
-- `ENCODING_TAR: 1` - Uncompressed tar archive  
-- `ENCODING_GZIP: 2` - Gzipped single file
-- `ENCODING_TGZ: 3` - Tar archive, then gzipped (tar.gz)
+PSPF/2025 uses **operation chains** to specify transformations applied to slot data. See [FEP-0001 Operation Chain System](../reference/spec/fep-0001-core-format-and-operation-chains.md#5-operation-chain-system) for complete specification.
+
+**Common Operation Chains:**
+- `[]` (empty) - Raw uncompressed data
+- `[OP_TAR]` (0x01) - Uncompressed TAR archive
+- `[OP_GZIP]` (0x10) - GZIP compressed single file
+- `[OP_TAR, OP_GZIP]` (0x1001) - TAR archive + GZIP compression (tar.gz)
+- `[OP_TAR, OP_ZSTD]` (0x1B01) - TAR archive + Zstandard compression (tar.zst)
+
+Each slot descriptor contains a 64-bit `operations` field encoding up to 8 operations applied in sequence.
 
 ## Multi-Language Components
 

@@ -356,7 +356,7 @@ flavor pack pyproject.toml --key-seed "my-secret-seed"
 Enable verbose output:
 
 ```bash
-FLAVOR_LOG_LEVEL=debug flavor pack pyproject.toml
+FOUNDATION_LOG_LEVEL=debug flavor pack pyproject.toml
 ```
 
 ### Cache Issues
@@ -426,5 +426,5 @@ lifecycle = "lazy"
 - [Python Packaging](python.md) - Python-specific features
 - [Package Signing](signing.md) - Security and signatures
 - [Platform Support](platforms.md) - Cross-platform packaging
-- [API Reference](../../api/python/index.md) - Python API
+- [API Reference](../../api/index.md) - Python API
 - [Troubleshooting](../../troubleshooting/index.md) - Common issues

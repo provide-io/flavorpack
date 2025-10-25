@@ -85,6 +85,43 @@ export FLAVOR_OUTPUT_FILE=build.log
 flavor pack --manifest pyproject.toml
 ```
 
+### FLAVOR_BUILDER_BIN
+
+**Default:** Auto-selected
+**Purpose:** Override builder binary location
+
+```bash
+# Use specific builder
+export FLAVOR_BUILDER_BIN=/path/to/flavor-rs-builder-linux_amd64
+flavor pack --manifest pyproject.toml
+```
+
+### FLAVOR_LAUNCHER_BIN
+
+**Default:** Auto-selected
+**Purpose:** Override launcher binary location
+
+```bash
+# Use specific launcher
+export FLAVOR_LAUNCHER_BIN=/path/to/flavor-go-launcher-darwin_arm64
+flavor pack --manifest pyproject.toml
+```
+
+### FLAVOR_VALIDATION
+
+**Default:** `standard`
+**Values:** `strict`, `standard`, `relaxed`, `minimal`, `none`
+**Purpose:** Control validation strictness during build and runtime
+
+```bash
+# Strict validation
+export FLAVOR_VALIDATION=strict
+flavor pack --manifest pyproject.toml
+
+# Disable validation (not recommended)
+export FLAVOR_VALIDATION=none
+```
+
 ---
 
 ## Packaged Application Variables
@@ -121,20 +158,26 @@ FLAVOR_CACHE=./.cache/flavor ./myapp.psp
 FLAVOR_CACHE="" ./myapp.psp
 ```
 
-### FLAVOR_CACHE_VALIDATION
+### FLAVOR_LAUNCHER_LOG_LEVEL
 
-**Default:** `true`
-**Values:** `true`, `false`
-**Purpose:** Enable/disable cache integrity validation
+**Default:** Inherits from `FLAVOR_LOG_LEVEL`
+**Values:** `trace`, `debug`, `info`, `warn`, `error`
+**Purpose:** Override log level specifically for the launcher binary
 
 ```bash
-# Disable validation (not recommended for production)
-FLAVOR_CACHE_VALIDATION=false ./myapp.psp
+# Debug launcher behavior while keeping app logs minimal
+FLAVOR_LAUNCHER_LOG_LEVEL=debug FLAVOR_LOG_LEVEL=error ./myapp.psp
 ```
 
-!!! warning "Security"
-    Disabling cache validation can allow tampered packages to execute.
-    Only disable in trusted environments.
+### FLAVOR_LOG_PATH
+
+**Default:** None (log to stderr)
+**Purpose:** Write launcher logs to a file
+
+```bash
+# Log launcher output to file
+FLAVOR_LOG_PATH=/tmp/launcher.log ./myapp.psp
+```
 
 ### FLAVOR_LAUNCHER_CLI
 
@@ -270,6 +313,39 @@ os_version = os.environ.get('FLAVOR_OS_VERSION')  # '5.15.0', '14.2', etc.
 ```python
 import os
 cpu_type = os.environ.get('FLAVOR_CPU_TYPE')  # 'x86_64', 'aarch64', etc.
+```
+
+### FLAVOR_WORKENV
+
+**Set by:** FlavorPack launcher
+**Values:** Absolute path to work environment directory
+**Purpose:** Current package's work environment path
+
+```python
+import os
+workenv = os.environ['FLAVOR_WORKENV']  # '/REDACTED_ABS_PATH'
+```
+
+### FLAVOR_PACKAGE
+
+**Set by:** FlavorPack launcher
+**Values:** Package name string
+**Purpose:** Name of the current package
+
+```python
+import os
+pkg_name = os.environ['FLAVOR_PACKAGE']  # 'myapp'
+```
+
+### FLAVOR_VERSION
+
+**Set by:** FlavorPack launcher
+**Values:** Package version string
+**Purpose:** Version of the current package
+
+```python
+import os
+pkg_version = os.environ['FLAVOR_VERSION']  # '1.0.0'
 ```
 
 ---
@@ -514,9 +590,13 @@ export FOUNDATION_LOG_LEVEL=warning
 | `FLAVOR_WORKENV_BASE` | Build | CWD | Workenv base directory |
 | `FLAVOR_OUTPUT_FORMAT` | Build | `text` | Output format (text/json) |
 | `FLAVOR_OUTPUT_FILE` | Build | `STDOUT` | Output destination |
+| `FLAVOR_BUILDER_BIN` | Build | Auto | Override builder binary |
+| `FLAVOR_LAUNCHER_BIN` | Build | Auto | Override launcher binary |
+| `FLAVOR_VALIDATION` | Build/Runtime | `standard` | Validation strictness |
 | `FLAVOR_LOG_LEVEL` | Runtime | `info` | Package log level |
+| `FLAVOR_LAUNCHER_LOG_LEVEL` | Runtime | Inherits | Launcher-specific log level |
+| `FLAVOR_LOG_PATH` | Runtime | - | Launcher log file path |
 | `FLAVOR_CACHE` | Runtime | `~/.cache/flavor/workenv` | Cache directory |
-| `FLAVOR_CACHE_VALIDATION` | Runtime | `true` | Enable cache validation |
 | `FLAVOR_LAUNCHER_CLI` | Runtime | `false` | Launcher CLI mode |
 | `FOUNDATION_LOG_LEVEL` | Tools | `info` | Tool log level |
 | `FOUNDATION_LOG_FILE` | Tools | - | Log file path |
@@ -527,6 +607,9 @@ export FOUNDATION_LOG_LEVEL=warning
 | `FLAVOR_PLATFORM` | Runtime | Auto | Platform string |
 | `FLAVOR_OS_VERSION` | Runtime | Auto | OS version |
 | `FLAVOR_CPU_TYPE` | Runtime | Auto | CPU type |
+| `FLAVOR_WORKENV` | Runtime | Auto | Workenv path |
+| `FLAVOR_PACKAGE` | Runtime | Auto | Package name |
+| `FLAVOR_VERSION` | Runtime | Auto | Package version |
 
 ---
 

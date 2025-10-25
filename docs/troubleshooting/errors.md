@@ -616,7 +616,7 @@ If you encounter an error not listed here:
 
 1. **Enable debug logging**:
    ```bash
-   FLAVOR_LOG_LEVEL=debug flavor pack pyproject.toml
+   FOUNDATION_LOG_LEVEL=debug flavor pack pyproject.toml
    ```
 
 2. **Check the full error**:
