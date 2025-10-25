@@ -229,15 +229,20 @@ flavor verify package.psp
 
 #### Verification with External Key
 
-> **Planned Feature**: External key verification is planned for a future release. Currently, verification uses the public key embedded in the package.
+!!! info "📋 Planned Feature"
+    External key verification is planned for a future release. Currently, verification uses the public key embedded in the package.
 
+**Current verification:**
 ```bash
-# Current: Verify with embedded public key
+# Verify with embedded public key
 flavor verify package.psp
+```
 
-# Future planned:
-# flavor verify package.psp --public-key trusted.pub
-# flavor verify package.psp --trusted-keys keys/trusted/
+**Planned verification (future release):**
+```bash
+# Verify against external trusted key (not yet implemented)
+flavor verify package.psp --public-key trusted.pub
+flavor verify package.psp --trusted-keys keys/trusted/
 ```
 
 ### Programmatic Verification

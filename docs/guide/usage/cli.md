@@ -130,6 +130,16 @@ flavor verify myapp.psp
 ✅ Checksum: Valid
 ```
 
+!!! info "📋 Planned Features"
+    Additional verification options are planned for future releases:
+
+    - `--quick`: Fast verification (index and signature only)
+    - `--deep`: Deep verification (all slot checksums)
+    - `--paranoid`: Full extraction and validation
+    - `--public-key PATH`: Verify against external trusted key
+
+    Currently, `flavor verify` performs comprehensive verification of format, index, metadata, and signature.
+
 ---
 
 ### inspect
