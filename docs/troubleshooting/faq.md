@@ -346,7 +346,7 @@ Yes, FlavorPack works well in CI/CD. During alpha, use source installation:
     cd flavorpack
     uv sync
     make build-helpers
-    flavor pack ../myproject/pyproject.toml --key-seed "${{ secrets.FLAVOR_SEED }}"
+    flavor pack --manifest ../myproject/pyproject.toml --key-seed "${{ secrets.FLAVOR_SEED }}"
 ```
 {% endraw %}
 

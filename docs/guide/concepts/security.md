@@ -387,7 +387,7 @@ logger.info("security.extraction",
 
 2. **Use deterministic builds**
    ```bash
-   FLAVOR_DETERMINISTIC=1 flavor pack manifest.toml
+   FLAVOR_DETERMINISTIC=1 flavor pack --manifest manifest.toml
    ```
 
 3. **Verify after building**

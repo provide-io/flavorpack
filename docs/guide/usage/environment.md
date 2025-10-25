@@ -30,6 +30,11 @@ Complete reference for all environment variables used by FlavorPack and its comp
 | `FLAVOR_ORIGINAL_COMMAND` | Full package path | Auto-set | Launcher → App | Runtime |
 | `FLAVOR_PACKAGE` | Package name | Auto-set | Launcher → App | Runtime |
 | `FLAVOR_VERSION` | Package version | Auto-set | Launcher → App | Runtime |
+| `FLAVOR_OS` | Operating system (darwin/linux/windows) | Auto-set | Launcher → App | Runtime |
+| `FLAVOR_ARCH` | Architecture (amd64/arm64/etc) | Auto-set | Launcher → App | Runtime |
+| `FLAVOR_PLATFORM` | Combined OS_arch string | Auto-set | Launcher → App | Runtime |
+| `FLAVOR_OS_VERSION` | OS version if available | Auto-set | Launcher → App | Runtime |
+| `FLAVOR_CPU_TYPE` | CPU type/family if available | Auto-set | Launcher → App | Runtime |
 | **Foundation (Logging Framework)** |||||
 | `FOUNDATION_LOG_LEVEL` | Python logging verbosity | `info` | Python | Logging |
 | `FOUNDATION_LOG_FILE` | Write Python logs to file | stderr | Python | Logging |
@@ -500,6 +505,108 @@ import os
 name = os.environ.get('FLAVOR_PACKAGE', 'unknown')
 version = os.environ.get('FLAVOR_VERSION', '0.0.0')
 print(f"{name} v{version}")
+```
+
+---
+
+### FLAVOR_OS
+
+**Purpose**: Operating system name.
+
+**Set By**: Launcher (automatic)
+
+**Available To**: Packaged applications
+
+**Values**: `darwin`, `linux`, `windows`
+
+**Example (inside packaged app)**:
+```python
+import os
+
+os_name = os.environ.get('FLAVOR_OS')
+if os_name == 'darwin':
+    print("Running on macOS")
+elif os_name == 'linux':
+    print("Running on Linux")
+```
+
+---
+
+### FLAVOR_ARCH
+
+**Purpose**: CPU architecture.
+
+**Set By**: Launcher (automatic)
+
+**Available To**: Packaged applications
+
+**Values**: `amd64`, `arm64`, `x86`, `i386`
+
+**Example (inside packaged app)**:
+```python
+import os
+
+arch = os.environ.get('FLAVOR_ARCH')
+print(f"CPU Architecture: {arch}")
+```
+
+---
+
+### FLAVOR_PLATFORM
+
+**Purpose**: Combined OS and architecture string.
+
+**Set By**: Launcher (automatic)
+
+**Available To**: Packaged applications
+
+**Format**: `{OS}_{ARCH}` (e.g., `darwin_arm64`, `linux_amd64`)
+
+**Example (inside packaged app)**:
+```python
+import os
+
+platform = os.environ.get('FLAVOR_PLATFORM')
+print(f"Platform: {platform}")
+# Output: "Platform: darwin_arm64"
+```
+
+---
+
+### FLAVOR_OS_VERSION
+
+**Purpose**: Operating system version (if available).
+
+**Set By**: Launcher (automatic)
+
+**Available To**: Packaged applications
+
+**Example (inside packaged app)**:
+```python
+import os
+
+os_version = os.environ.get('FLAVOR_OS_VERSION')
+if os_version:
+    print(f"OS Version: {os_version}")
+```
+
+---
+
+### FLAVOR_CPU_TYPE
+
+**Purpose**: CPU type/family (if available).
+
+**Set By**: Launcher (automatic)
+
+**Available To**: Packaged applications
+
+**Example (inside packaged app)**:
+```python
+import os
+
+cpu_type = os.environ.get('FLAVOR_CPU_TYPE')
+if cpu_type:
+    print(f"CPU Type: {cpu_type}")
 ```
 
 ---

@@ -20,7 +20,7 @@ This guide lists all error messages you might encounter while using FlavorPack, 
 ls pyproject.toml
 
 # Use correct path
-flavor pack ./path/to/pyproject.toml
+flavor pack --manifest ./path/to/pyproject.toml
 ```
 
 #### "Invalid manifest format"
