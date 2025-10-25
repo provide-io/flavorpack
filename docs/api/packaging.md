@@ -73,8 +73,8 @@ print(f"Built: {packages[0]}")  # dist/myapp.psp
 packages = build_package_from_manifest(
     manifest_path=Path("pyproject.toml"),
     output_path=Path("release/myapp.psp"),
-    private_key_path=Path("keys/private.pem"),
-    public_key_path=Path("keys/public.pem"),
+    private_key_path=Path("keys/flavor-private.key"),
+    public_key_path=Path("keys/flavor-public.key"),
     strip_binaries=True,
 )
 
@@ -186,8 +186,8 @@ from flavor.package import generate_keys
 # Generate keys
 private_key, public_key = generate_keys(Path("keys"))
 
-print(f"Private key: {private_key}")  # keys/private.pem
-print(f"Public key: {public_key}")    # keys/public.pem
+print(f"Private key: {private_key}")  # keys/flavor-private.key
+print(f"Public key: {public_key}")    # keys/flavor-public.key
 
 # Use keys for signing
 from flavor.package import build_package_from_manifest
@@ -268,8 +268,8 @@ from flavor.packaging.orchestrator import PackagingOrchestrator
 
 # Create orchestrator
 orchestrator = PackagingOrchestrator(
-    package_integrity_key_path="keys/private.pem",
-    public_key_path="keys/public.pem",
+    package_integrity_key_path="keys/flavor-private.key",
+    public_key_path="keys/flavor-public.key",
     output_flavor_path="dist/myapp.psp",
     build_config={
         "include": ["src/**/*.py"],
@@ -313,8 +313,8 @@ def build_and_verify():
         private_key, public_key = generate_keys(keys_dir)
         print(f"✅ Keys generated: {private_key}, {public_key}")
     else:
-        private_key = keys_dir / "private.pem"
-        public_key = keys_dir / "public.pem"
+        private_key = keys_dir / "flavor-private.key"
+        public_key = keys_dir / "flavor-public.key"
 
     # 2. Build package
     print("Building package...")
@@ -502,7 +502,7 @@ def validate_build_environment():
     # Check for keys if signing
     keys_dir = Path("keys")
     if keys_dir.exists():
-        private_key = keys_dir / "private.pem"
+        private_key = keys_dir / "flavor-private.key"
         if not private_key.exists():
             raise ValueError("Private key not found")
 

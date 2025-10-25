@@ -12,7 +12,6 @@ Complete working examples for different application types:
 - [Web Applications](../cookbook/examples/web-app.md) - Web servers and APIs
 - [Data Pipelines](../cookbook/examples/data-pipeline.md) - Data processing workflows
 - [Microservices](../cookbook/examples/microservices.md) - Service architectures
-- [Machine Learning](../cookbook/examples/ml-models.md) - ML model deployment
 
 ### [Recipes](../cookbook/recipes/index.md)
 Step-by-step guides for specific tasks:

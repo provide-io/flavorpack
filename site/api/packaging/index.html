@@ -48,9 +48,9 @@
       
     
     
-      <link rel="stylesheet" href="../../../provide-foundry/shared-theme/stylesheets/provide-theme.css">
+      <link rel="stylesheet" href="../../.shared-theme/stylesheets/provide-theme.css">
     
-      <link rel="stylesheet" href="../../../provide-foundry/shared-theme/stylesheets/termynal.css">
+      <link rel="stylesheet" href="../../.shared-theme/stylesheets/termynal.css">
     
       <link rel="stylesheet" href="../../stylesheets/extra.css">
     
@@ -3125,8 +3125,8 @@
 </span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11"></a><span class="n">packages</span> <span class="o">=</span> <span class="n">build_package_from_manifest</span><span class="p">(</span>
 </span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12"></a>    <span class="n">manifest_path</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="s2">&quot;pyproject.toml&quot;</span><span class="p">),</span>
 </span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13"></a>    <span class="n">output_path</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="s2">&quot;release/myapp.psp&quot;</span><span class="p">),</span>
-</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14"></a>    <span class="n">private_key_path</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="s2">&quot;keys/private.pem&quot;</span><span class="p">),</span>
-</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15"></a>    <span class="n">public_key_path</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="s2">&quot;keys/public.pem&quot;</span><span class="p">),</span>
+</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14"></a>    <span class="n">private_key_path</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="s2">&quot;keys/flavor-private.key&quot;</span><span class="p">),</span>
+</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15"></a>    <span class="n">public_key_path</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="s2">&quot;keys/flavor-public.key&quot;</span><span class="p">),</span>
 </span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16"></a>    <span class="n">strip_binaries</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
 </span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17"></a><span class="p">)</span>
 </span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18"></a>
@@ -3295,8 +3295,8 @@
 </span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4"></a><span class="c1"># Generate keys</span>
 </span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5"></a><span class="n">private_key</span><span class="p">,</span> <span class="n">public_key</span> <span class="o">=</span> <span class="n">generate_keys</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="s2">&quot;keys&quot;</span><span class="p">))</span>
 </span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6"></a>
-</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Private key: </span><span class="si">{</span><span class="n">private_key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>  <span class="c1"># keys/private.pem</span>
-</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Public key: </span><span class="si">{</span><span class="n">public_key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>    <span class="c1"># keys/public.pem</span>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Private key: </span><span class="si">{</span><span class="n">private_key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>  <span class="c1"># keys/flavor-private.key</span>
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Public key: </span><span class="si">{</span><span class="n">public_key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>    <span class="c1"># keys/flavor-public.key</span>
 </span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9"></a>
 </span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10"></a><span class="c1"># Use keys for signing</span>
 </span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11"></a><span class="kn">from</span><span class="w"> </span><span class="nn">flavor.package</span><span class="w"> </span><span class="kn">import</span> <span class="n">build_package_from_manifest</span>
@@ -3416,8 +3416,8 @@
 </span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3"></a>
 </span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4"></a><span class="c1"># Create orchestrator</span>
 </span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5"></a><span class="n">orchestrator</span> <span class="o">=</span> <span class="n">PackagingOrchestrator</span><span class="p">(</span>
-</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6"></a>    <span class="n">package_integrity_key_path</span><span class="o">=</span><span class="s2">&quot;keys/private.pem&quot;</span><span class="p">,</span>
-</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7"></a>    <span class="n">public_key_path</span><span class="o">=</span><span class="s2">&quot;keys/public.pem&quot;</span><span class="p">,</span>
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6"></a>    <span class="n">package_integrity_key_path</span><span class="o">=</span><span class="s2">&quot;keys/flavor-private.key&quot;</span><span class="p">,</span>
+</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7"></a>    <span class="n">public_key_path</span><span class="o">=</span><span class="s2">&quot;keys/flavor-public.key&quot;</span><span class="p">,</span>
 </span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8"></a>    <span class="n">output_flavor_path</span><span class="o">=</span><span class="s2">&quot;dist/myapp.psp&quot;</span><span class="p">,</span>
 </span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9"></a>    <span class="n">build_config</span><span class="o">=</span><span class="p">{</span>
 </span><span id="__span-10-10"><a id="__codelineno-10-10" name="__codelineno-10-10"></a>        <span class="s2">&quot;include&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;src/**/*.py&quot;</span><span class="p">],</span>
@@ -3515,8 +3515,8 @@
 </span><span id="__span-11-18"><a id="__codelineno-11-18" name="__codelineno-11-18"></a>        <span class="n">private_key</span><span class="p">,</span> <span class="n">public_key</span> <span class="o">=</span> <span class="n">generate_keys</span><span class="p">(</span><span class="n">keys_dir</span><span class="p">)</span>
 </span><span id="__span-11-19"><a id="__codelineno-11-19" name="__codelineno-11-19"></a>        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;✅ Keys generated: </span><span class="si">{</span><span class="n">private_key</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">public_key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </span><span id="__span-11-20"><a id="__codelineno-11-20" name="__codelineno-11-20"></a>    <span class="k">else</span><span class="p">:</span>
-</span><span id="__span-11-21"><a id="__codelineno-11-21" name="__codelineno-11-21"></a>        <span class="n">private_key</span> <span class="o">=</span> <span class="n">keys_dir</span> <span class="o">/</span> <span class="s2">&quot;private.pem&quot;</span>
-</span><span id="__span-11-22"><a id="__codelineno-11-22" name="__codelineno-11-22"></a>        <span class="n">public_key</span> <span class="o">=</span> <span class="n">keys_dir</span> <span class="o">/</span> <span class="s2">&quot;public.pem&quot;</span>
+</span><span id="__span-11-21"><a id="__codelineno-11-21" name="__codelineno-11-21"></a>        <span class="n">private_key</span> <span class="o">=</span> <span class="n">keys_dir</span> <span class="o">/</span> <span class="s2">&quot;flavor-private.key&quot;</span>
+</span><span id="__span-11-22"><a id="__codelineno-11-22" name="__codelineno-11-22"></a>        <span class="n">public_key</span> <span class="o">=</span> <span class="n">keys_dir</span> <span class="o">/</span> <span class="s2">&quot;flavor-public.key&quot;</span>
 </span><span id="__span-11-23"><a id="__codelineno-11-23" name="__codelineno-11-23"></a>
 </span><span id="__span-11-24"><a id="__codelineno-11-24" name="__codelineno-11-24"></a>    <span class="c1"># 2. Build package</span>
 </span><span id="__span-11-25"><a id="__codelineno-11-25" name="__codelineno-11-25"></a>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Building package...&quot;</span><span class="p">)</span>
@@ -3820,7 +3820,7 @@
 </span><span id="__span-15-15"><a id="__codelineno-15-15" name="__codelineno-15-15"></a>    <span class="c1"># Check for keys if signing</span>
 </span><span id="__span-15-16"><a id="__codelineno-15-16" name="__codelineno-15-16"></a>    <span class="n">keys_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;keys&quot;</span><span class="p">)</span>
 </span><span id="__span-15-17"><a id="__codelineno-15-17" name="__codelineno-15-17"></a>    <span class="k">if</span> <span class="n">keys_dir</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-</span><span id="__span-15-18"><a id="__codelineno-15-18" name="__codelineno-15-18"></a>        <span class="n">private_key</span> <span class="o">=</span> <span class="n">keys_dir</span> <span class="o">/</span> <span class="s2">&quot;private.pem&quot;</span>
+</span><span id="__span-15-18"><a id="__codelineno-15-18" name="__codelineno-15-18"></a>        <span class="n">private_key</span> <span class="o">=</span> <span class="n">keys_dir</span> <span class="o">/</span> <span class="s2">&quot;flavor-private.key&quot;</span>
 </span><span id="__span-15-19"><a id="__codelineno-15-19" name="__codelineno-15-19"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">private_key</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
 </span><span id="__span-15-20"><a id="__codelineno-15-20" name="__codelineno-15-20"></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Private key not found&quot;</span><span class="p">)</span>
 </span><span id="__span-15-21"><a id="__codelineno-15-21" name="__codelineno-15-21"></a>
@@ -4056,11 +4056,11 @@
       
         <script src="https://unpkg.com/mermaid@10/dist/mermaid.min.js"></script>
       
-        <script src="../../../provide-foundry/shared-theme/javascripts/mermaid-init.js"></script>
+        <script src="../../.shared-theme/javascripts/mermaid-init.js"></script>
       
-        <script src="../../../provide-foundry/shared-theme/javascripts/termynal.js"></script>
+        <script src="../../.shared-theme/javascripts/termynal.js"></script>
       
-        <script src="../../../provide-foundry/shared-theme/javascripts/custom.js"></script>
+        <script src="../../.shared-theme/javascripts/custom.js"></script>
       
     
   </body>

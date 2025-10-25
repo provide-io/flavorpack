@@ -108,9 +108,9 @@ def _display_single_slot(slot: dict[str, Any]) -> None:
     # Basic slot info
     slot_line = f"  [{slot['index']}] {slot['id']}: {size_str}"
 
-    # Add encoding if not raw
-    if slot.get("codec") and slot["codec"] != "raw":
-        slot_line += f" [{slot['codec']}]"
+    # Add operations if not raw
+    if slot.get("operations") and slot["operations"] != "raw":
+        slot_line += f" [{slot['operations']}]"
 
     echo(slot_line)
 

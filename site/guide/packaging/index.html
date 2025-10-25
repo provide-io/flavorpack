@@ -52,9 +52,9 @@
       
     
     
-      <link rel="stylesheet" href="../../../provide-foundry/shared-theme/stylesheets/provide-theme.css">
+      <link rel="stylesheet" href="../../.shared-theme/stylesheets/provide-theme.css">
     
-      <link rel="stylesheet" href="../../../provide-foundry/shared-theme/stylesheets/termynal.css">
+      <link rel="stylesheet" href="../../.shared-theme/stylesheets/termynal.css">
     
       <link rel="stylesheet" href="../../stylesheets/extra.css">
     
@@ -3166,7 +3166,7 @@
 </span><span id="__span-6-28"><a id="__codelineno-6-28" name="__codelineno-6-28"></a><span class="n">source</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;static/&quot;</span>
 </span><span id="__span-6-29"><a id="__codelineno-6-29" name="__codelineno-6-29"></a><span class="n">purpose</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;static-resources&quot;</span>
 </span><span id="__span-6-30"><a id="__codelineno-6-30" name="__codelineno-6-30"></a><span class="n">lifecycle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;cached&quot;</span>
-</span><span id="__span-6-31"><a id="__codelineno-6-31" name="__codelineno-6-31"></a><span class="n">codec</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;tgz&quot;</span>
+</span><span id="__span-6-31"><a id="__codelineno-6-31" name="__codelineno-6-31"></a><span class="c1"># Automatic tar.gz compression</span>
 </span></code></pre></div></td></tr></table></div>
 <h3 id="step-4-build-package">Step 4: Build Package<a class="headerlink" href="#step-4-build-package" title="Permanent link">&para;</a></h3>
 <p>Build with default settings:</p>
@@ -3184,7 +3184,7 @@
 <span class="normal"><a href="#__codelineno-8-9"> 9</a></span>
 <span class="normal"><a href="#__codelineno-8-10">10</a></span>
 <span class="normal"><a href="#__codelineno-8-11">11</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1"></a><span class="c1"># Sign package with key</span>
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2"></a>flavor<span class="w"> </span>pack<span class="w"> </span>pyproject.toml<span class="w"> </span>--private-key<span class="w"> </span>private.pem
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2"></a>flavor<span class="w"> </span>pack<span class="w"> </span>pyproject.toml<span class="w"> </span>--private-key<span class="w"> </span>keys/flavor-private.key<span class="w"> </span>--public-key<span class="w"> </span>keys/flavor-public.key
 </span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3"></a>
 </span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4"></a><span class="c1"># Use deterministic seed (for CI/CD)</span>
 </span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5"></a>flavor<span class="w"> </span>pack<span class="w"> </span>pyproject.toml<span class="w"> </span>--key-seed<span class="w"> </span><span class="s2">&quot;secret-seed&quot;</span>
@@ -3295,7 +3295,7 @@
 <span class="normal"><a href="#__codelineno-11-4">4</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1"></a><span class="k">[[tool.flavor.slots]]</span>
 </span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2"></a><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;large-data&quot;</span>
 </span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3"></a><span class="n">source</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;data/&quot;</span>
-</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4"></a><span class="n">codec</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;tgz&quot;</span><span class="w">  </span><span class="c1"># Options: raw, tar, gzip, tgz</span>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4"></a><span class="c1"># Automatic tar.gz compression  # Options: raw, tar, gzip, tgz</span>
 </span></code></pre></div></td></tr></table></div>
 <h3 id="platform-specific-builds">Platform-Specific Builds<a class="headerlink" href="#platform-specific-builds" title="Permanent link">&para;</a></h3>
 <p>Build for specific platforms:</p>
@@ -3736,11 +3736,11 @@
       
         <script src="https://unpkg.com/mermaid@10/dist/mermaid.min.js"></script>
       
-        <script src="../../../provide-foundry/shared-theme/javascripts/mermaid-init.js"></script>
+        <script src="../../.shared-theme/javascripts/mermaid-init.js"></script>
       
-        <script src="../../../provide-foundry/shared-theme/javascripts/termynal.js"></script>
+        <script src="../../.shared-theme/javascripts/termynal.js"></script>
       
-        <script src="../../../provide-foundry/shared-theme/javascripts/custom.js"></script>
+        <script src="../../.shared-theme/javascripts/custom.js"></script>
       
     
   </body>

@@ -18,6 +18,7 @@ from provide.foundation.formatting import format_size
 from provide.foundation.serialization import json_dumps
 
 from flavor.console import echo, echo_error, get_command_logger
+from flavor.psp.format_2025.operations import operations_to_string
 from flavor.psp.format_2025.reader import PSPFReader
 
 # Get structured logger for this command
@@ -93,7 +94,7 @@ def _output_json_format(
                 if i < len(slots_metadata)
                 else "unknown",
                 "size": slot.size,
-                "codec": slots_metadata[i].get("codec", "raw") if i < len(slots_metadata) else "raw",
+                "operations": operations_to_string(slot.operations),
             }
             for i, slot in enumerate(slot_descriptors)
         ],
@@ -162,11 +163,12 @@ def _output_slot_details(slot_descriptors: list[Any], slots_metadata: list[dict[
             slot_meta = slots_metadata[i]
             slot_name = slot_meta.get("id", f"slot_{i}")
             slot_purpose = slot_meta.get("purpose", "")
-            slot_codec = slot_meta.get("codec", "raw")
         else:
             slot_name = f"slot_{i}"
             slot_purpose = ""
-            slot_codec = "raw"
+
+        # Get operations from slot descriptor
+        slot_operations = operations_to_string(slot.operations)
 
         # Format slot info
         slot_size = format_size(slot.size)
@@ -175,8 +177,8 @@ def _output_slot_details(slot_descriptors: list[Any], slots_metadata: list[dict[
         # Add purpose if available
         if slot_purpose:
             slot_info += f" - {slot_purpose}"
-        if slot_codec != "raw":
-            slot_info += f" [{slot_codec}]"
+        if slot_operations != "raw":
+            slot_info += f" [{slot_operations}]"
 
         echo(f"{prefix} {slot_info}")
 

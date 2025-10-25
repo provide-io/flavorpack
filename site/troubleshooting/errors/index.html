@@ -52,9 +52,9 @@
       
     
     
-      <link rel="stylesheet" href="../../../provide-foundry/shared-theme/stylesheets/provide-theme.css">
+      <link rel="stylesheet" href="../../.shared-theme/stylesheets/provide-theme.css">
     
-      <link rel="stylesheet" href="../../../provide-foundry/shared-theme/stylesheets/termynal.css">
+      <link rel="stylesheet" href="../../.shared-theme/stylesheets/termynal.css">
     
       <link rel="stylesheet" href="../../stylesheets/extra.css">
     
@@ -3518,7 +3518,7 @@
 <p><strong>Solution</strong>:
 <div class="language-toml highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">TOML</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-11-1">1</a></span>
 <span class="normal"><a href="#__codelineno-11-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1"></a><span class="k">[[tool.flavor.slots]]</span>
-</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2"></a><span class="n">codec</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;tgz&quot;</span><span class="w">  </span><span class="c1"># Valid: raw, tar, gzip, tgz</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2"></a><span class="c1"># Operations are handled automatically based on source type</span>
 </span></code></pre></div></td></tr></table></div></p>
 <h4 id="invalid-lifecycle-lifecycle">"Invalid lifecycle: {lifecycle}"<a class="headerlink" href="#invalid-lifecycle-lifecycle" title="Permanent link">&para;</a></h4>
 <p><strong>Cause</strong>: Unknown slot lifecycle.</p>
@@ -3541,16 +3541,14 @@
 <span class="normal"><a href="#__codelineno-13-5">5</a></span>
 <span class="normal"><a href="#__codelineno-13-6">6</a></span>
 <span class="normal"><a href="#__codelineno-13-7">7</a></span>
-<span class="normal"><a href="#__codelineno-13-8">8</a></span>
-<span class="normal"><a href="#__codelineno-13-9">9</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1"></a><span class="c1"># Check source files exist</span>
+<span class="normal"><a href="#__codelineno-13-8">8</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1"></a><span class="c1"># Check source files exist</span>
 </span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2"></a>ls<span class="w"> </span>-la<span class="w"> </span>data/
 </span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3"></a>
-</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4"></a><span class="c1"># Try different codec</span>
-</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5"></a><span class="o">[[</span>tool.flavor.slots<span class="o">]]</span>
-</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6"></a><span class="nv">codec</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;tar&quot;</span><span class="w">  </span><span class="c1"># Instead of tgz</span>
-</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7"></a>
-</span><span id="__span-13-8"><a id="__codelineno-13-8" name="__codelineno-13-8"></a><span class="c1"># Check permissions</span>
-</span><span id="__span-13-9"><a id="__codelineno-13-9" name="__codelineno-13-9"></a>chmod<span class="w"> </span>-R<span class="w"> </span>r+X<span class="w"> </span>data/
+</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4"></a><span class="c1"># Operations are applied automatically</span>
+</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5"></a><span class="c1"># FlavorPack chooses optimal compression based on content</span>
+</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6"></a>
+</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7"></a><span class="c1"># Check permissions</span>
+</span><span id="__span-13-8"><a id="__codelineno-13-8" name="__codelineno-13-8"></a>chmod<span class="w"> </span>-R<span class="w"> </span>r+X<span class="w"> </span>data/
 </span></code></pre></div></td></tr></table></div></p>
 <h4 id="slot-size-exceeds-limit-size">"Slot size exceeds limit: {size}"<a class="headerlink" href="#slot-size-exceeds-limit-size" title="Permanent link">&para;</a></h4>
 <p><strong>Cause</strong>: Individual slot is too large.</p>
@@ -4251,11 +4249,11 @@
       
         <script src="https://unpkg.com/mermaid@10/dist/mermaid.min.js"></script>
       
-        <script src="../../../provide-foundry/shared-theme/javascripts/mermaid-init.js"></script>
+        <script src="../../.shared-theme/javascripts/mermaid-init.js"></script>
       
-        <script src="../../../provide-foundry/shared-theme/javascripts/termynal.js"></script>
+        <script src="../../.shared-theme/javascripts/termynal.js"></script>
       
-        <script src="../../../provide-foundry/shared-theme/javascripts/custom.js"></script>
+        <script src="../../.shared-theme/javascripts/custom.js"></script>
       
     
   </body>

@@ -52,9 +52,9 @@
       
     
     
-      <link rel="stylesheet" href="../../../provide-foundry/shared-theme/stylesheets/provide-theme.css">
+      <link rel="stylesheet" href="../../.shared-theme/stylesheets/provide-theme.css">
     
-      <link rel="stylesheet" href="../../../provide-foundry/shared-theme/stylesheets/termynal.css">
+      <link rel="stylesheet" href="../../.shared-theme/stylesheets/termynal.css">
     
       <link rel="stylesheet" href="../../stylesheets/extra.css">
     
@@ -2998,6 +2998,13 @@
 <p>Comprehensive testing strategy for FlavorPack development.</p>
 <h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
 <p>FlavorPack uses a multi-layered testing approach to ensure reliability across Python, Go, and Rust components. Our test suite includes unit tests, integration tests, cross-language compatibility tests, and end-to-end packaging tests.</p>
+<h2 id="testing-frameworks">Testing Frameworks<a class="headerlink" href="#testing-frameworks" title="Permanent link">&para;</a></h2>
+<p>FlavorPack uses two complementary testing frameworks:</p>
+<ul>
+<li><strong><a href="taster-vs-pretaster/#taster-comprehensive-python-testing-framework">TASTER</a></strong> - Comprehensive Python-based testing suite with property-based testing, format validation, and deep integration tests</li>
+<li><strong><a href="taster-vs-pretaster/#pretaster-fast-cross-language-validation">PRETASTER</a></strong> - Fast shell-based cross-language validation for builder/launcher compatibility</li>
+</ul>
+<p>📖 <strong><a href="taster-vs-pretaster/">TASTER vs PRETASTER Comparison Guide</a></strong> - Detailed comparison and usage recommendations</p>
 <h2 id="test-structure">Test Structure<a class="headerlink" href="#test-structure" title="Permanent link">&para;</a></h2>
 <div class="language-text highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Text Only</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1"> 1</a></span>
 <span class="normal"><a href="#__codelineno-0-2"> 2</a></span>
@@ -3009,7 +3016,9 @@
 <span class="normal"><a href="#__codelineno-0-8"> 8</a></span>
 <span class="normal"><a href="#__codelineno-0-9"> 9</a></span>
 <span class="normal"><a href="#__codelineno-0-10">10</a></span>
-<span class="normal"><a href="#__codelineno-0-11">11</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a>tests/
+<span class="normal"><a href="#__codelineno-0-11">11</a></span>
+<span class="normal"><a href="#__codelineno-0-12">12</a></span>
+<span class="normal"><a href="#__codelineno-0-13">13</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a>tests/
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a>├── api/                    # API tests
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a>├── cli/                    # CLI command tests
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4"></a>├── integration/            # Integration tests
@@ -3019,7 +3028,9 @@
 </span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8"></a>├── utils/                  # Utility function tests
 </span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9"></a>├── validation/             # Validation and mock tests
 </span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10"></a>├── mmap/                   # Memory mapping tests
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11"></a>└── conftest.py            # Pytest configuration
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11"></a>├── taster/                 # TASTER comprehensive test suite
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12"></a>├── pretaster/              # PRETASTER cross-language validation
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13"></a>└── conftest.py            # Pytest configuration
 </span></code></pre></div></td></tr></table></div>
 <h2 id="running-tests">Running Tests<a class="headerlink" href="#running-tests" title="Permanent link">&para;</a></h2>
 <h3 id="quick-start">Quick Start<a class="headerlink" href="#quick-start" title="Permanent link">&para;</a></h3>
@@ -3825,11 +3836,11 @@
       
         <script src="https://unpkg.com/mermaid@10/dist/mermaid.min.js"></script>
       
-        <script src="../../../provide-foundry/shared-theme/javascripts/mermaid-init.js"></script>
+        <script src="../../.shared-theme/javascripts/mermaid-init.js"></script>
       
-        <script src="../../../provide-foundry/shared-theme/javascripts/termynal.js"></script>
+        <script src="../../.shared-theme/javascripts/termynal.js"></script>
       
-        <script src="../../../provide-foundry/shared-theme/javascripts/custom.js"></script>
+        <script src="../../.shared-theme/javascripts/custom.js"></script>
       
     
   </body>

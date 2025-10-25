@@ -104,13 +104,26 @@ class IndexBlock:
 Directory of content slots:
 
 ```python
-# Each slot descriptor (32 bytes)
+# Each slot descriptor (64 bytes)
 class SlotDescriptor:
-    offset: uint64    # File offset to slot data
-    size: uint64      # Size in bytes
-    encoding: uint32  # Compression type
-    checksum: uint32  # CRC32 checksum
-    reserved: bytes[8] # Future use
+    # Core fields (56 bytes - 7 × uint64)
+    id: uint64           # Unique slot identifier
+    name_hash: uint64    # SHA-256 of slot name (first 8 bytes)
+    offset: uint64       # Byte offset in package
+    size: uint64         # Size as stored (after operations)
+    original_size: uint64 # Size before operations
+    operations: uint64   # Packed operation chain (up to 8 ops)
+    checksum: uint64     # SHA-256 (first 8 bytes)
+
+    # Metadata fields (8 bytes - 8 × uint8)
+    purpose: uint8       # 0=data, 1=code, 2=config, 3=media
+    lifecycle: uint8     # When to extract/use
+    priority: uint8      # Cache priority (0-255)
+    platform: uint8      # Platform requirements
+    reserved1: uint8     # Reserved
+    reserved2: uint8     # Reserved
+    permissions: uint8   # Unix permissions (low byte)
+    permissions_high: uint8 # Unix permissions (high byte)
 ```
 
 ### 4. Metadata
@@ -135,7 +148,7 @@ Compressed JSON containing:
       "purpose": "python-environment",
       "lifecycle": "persistent",
       "extract_to": "venv",
-      "codec": "tgz",
+      "operations": "tar.gz",
       "size": 25000000,
       "checksum": "sha256:abc123..."
     },
@@ -144,7 +157,7 @@ Compressed JSON containing:
       "purpose": "application-code",
       "lifecycle": "persistent",
       "extract_to": "app",
-      "codec": "tar",
+      "operations": "tar",
       "size": 20000000
     }
   ],
@@ -248,7 +261,7 @@ id = "static"
 source = "static/"
 purpose = "static-resources"
 lifecycle = "cached"
-codec = "tgz"
+operations = "tar.gz"
 ```
 
 ### Build Process
@@ -306,8 +319,8 @@ def extract_package(metadata, work_dir):
 
 ### Size Optimization
 
-1. **Compression**: Use appropriate codecs
-   - `tgz` for text-heavy content
+1. **Compression**: Use appropriate operations
+   - `tar.gz` for text-heavy content
    - `tar` for already-compressed data
    - `raw` for small files
 

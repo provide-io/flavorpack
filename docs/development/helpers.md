@@ -31,7 +31,6 @@ Builders create PSPF packages from manifests:
 |---------|----------|------|----------|
 | `flavor-go-builder` | Go | ~5.1 MB | Default, full-featured |
 | `flavor-rs-builder` | Rust | ~4.8 MB | Fast, experimental |
-| `flavor-py-builder` | Python | ~1.2 MB | Fallback, pure Python |
 
 ## Directory Structure
 
@@ -288,6 +287,7 @@ make validate-pspf-combo
 
 The helper build is automated in CI:
 
+{% raw %}
 ```yaml
 # .github/workflows/01-helper-prep.yml
 name: Build Helpers
@@ -306,33 +306,34 @@ jobs:
           - platform: darwin_arm64
             os: macos-latest
             rust_target: aarch64-apple-darwin
-    
+
     runs-on: ${{ matrix.os }}
-    
+
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Setup Go
         uses: actions/setup-go@v4
         with:
           go-version: '1.21'
-      
+
       - name: Setup Rust
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
           target: ${{ matrix.rust_target }}
-      
+
       - name: Build helpers
         run: |
           make build-helpers
-      
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
         with:
           name: helpers-${{ matrix.platform }}
           path: dist/bin/
 ```
+{% endraw %}
 
 ## Development Workflow
 
@@ -351,17 +352,27 @@ Example: Adding compression support to launcher
 1. **Modify launcher code**:
 ```rust
 // src/flavor-rs/src/launcher/extract.rs
-fn extract_slot_compressed(data: &[u8], codec: Codec) -> Result<Vec<u8>> {
-    match codec {
-        Codec::Gzip => decompress_gzip(data),
-        Codec::Zstd => decompress_zstd(data),
-        // New codec
-        Codec::Brotli => decompress_brotli(data),
+use flavor::psp::format_2025::operations::unpack_operations;
+
+fn extract_slot(data: &[u8], operations: u64) -> Result<Vec<u8>> {
+    let ops = unpack_operations(operations);
+
+    let mut result = data.to_vec();
+    for op in ops.iter().rev() {
+        result = match op {
+            OP_GZIP => decompress_gzip(&result)?,
+            OP_ZSTD => decompress_zstd(&result)?,
+            OP_TAR => extract_tar(&result)?,
+            // Add new operation
+            OP_BROTLI => decompress_brotli(&result)?,
+            _ => return Err(Error::UnsupportedOperation(*op)),
+        };
     }
+    Ok(result)
 }
 ```
 
-2. **Update builder** to support new codec
+2. **Update builder** to support new operation
 3. **Add tests**
 4. **Update version**
 5. **Rebuild and test**

@@ -52,9 +52,9 @@
       
     
     
-      <link rel="stylesheet" href="../../../../provide-foundry/shared-theme/stylesheets/provide-theme.css">
+      <link rel="stylesheet" href="../../../.shared-theme/stylesheets/provide-theme.css">
     
-      <link rel="stylesheet" href="../../../../provide-foundry/shared-theme/stylesheets/termynal.css">
+      <link rel="stylesheet" href="../../../.shared-theme/stylesheets/termynal.css">
     
       <link rel="stylesheet" href="../../../stylesheets/extra.css">
     
@@ -3488,7 +3488,9 @@
 <span class="normal"><a href="#__codelineno-2-10">10</a></span>
 <span class="normal"><a href="#__codelineno-2-11">11</a></span>
 <span class="normal"><a href="#__codelineno-2-12">12</a></span>
-<span class="normal"><a href="#__codelineno-2-13">13</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">extract_slot</span><span class="p">(</span><span class="n">slot</span><span class="p">,</span> <span class="n">work_dir</span><span class="p">):</span>
+<span class="normal"><a href="#__codelineno-2-13">13</a></span>
+<span class="normal"><a href="#__codelineno-2-14">14</a></span>
+<span class="normal"><a href="#__codelineno-2-15">15</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">extract_slot</span><span class="p">(</span><span class="n">slot</span><span class="p">,</span> <span class="n">work_dir</span><span class="p">):</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Extract slot to work environment.&quot;&quot;&quot;</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3"></a>    <span class="n">target</span> <span class="o">=</span> <span class="n">work_dir</span> <span class="o">/</span> <span class="n">slot</span><span class="p">[</span><span class="s2">&quot;extract_to&quot;</span><span class="p">]</span>
 </span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4"></a>
@@ -3499,8 +3501,10 @@
 </span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9"></a>    <span class="k">elif</span> <span class="n">slot</span><span class="p">[</span><span class="s2">&quot;lifecycle&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;volatile&quot;</span><span class="p">:</span>
 </span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10"></a>        <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">ignore_errors</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11"></a>
-</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12"></a>    <span class="c1"># Extract content</span>
-</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13"></a>    <span class="n">extract_with_codec</span><span class="p">(</span><span class="n">slot_data</span><span class="p">,</span> <span class="n">slot</span><span class="p">[</span><span class="s2">&quot;codec&quot;</span><span class="p">],</span> <span class="n">target</span><span class="p">)</span>
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12"></a>    <span class="c1"># Extract content using operations chain</span>
+</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13"></a>    <span class="kn">from</span><span class="w"> </span><span class="nn">flavor.psp.format_2025.operations</span><span class="w"> </span><span class="kn">import</span> <span class="n">unpack_operations</span>
+</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14"></a>    <span class="n">operations</span> <span class="o">=</span> <span class="n">unpack_operations</span><span class="p">(</span><span class="n">slot_descriptor</span><span class="o">.</span><span class="n">operations</span><span class="p">)</span>
+</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15"></a>    <span class="n">extract_with_operations</span><span class="p">(</span><span class="n">slot_data</span><span class="p">,</span> <span class="n">operations</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
 </span></code></pre></div></td></tr></table></div>
 <h3 id="caching">Caching<a class="headerlink" href="#caching" title="Permanent link">&para;</a></h3>
 <p>Extracted content is cached for reuse:</p>
@@ -4146,11 +4150,11 @@
       
         <script src="https://unpkg.com/mermaid@10/dist/mermaid.min.js"></script>
       
-        <script src="../../../../provide-foundry/shared-theme/javascripts/mermaid-init.js"></script>
+        <script src="../../../.shared-theme/javascripts/mermaid-init.js"></script>
       
-        <script src="../../../../provide-foundry/shared-theme/javascripts/termynal.js"></script>
+        <script src="../../../.shared-theme/javascripts/termynal.js"></script>
       
-        <script src="../../../../provide-foundry/shared-theme/javascripts/custom.js"></script>
+        <script src="../../../.shared-theme/javascripts/custom.js"></script>
       
     
   </body>

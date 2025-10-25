@@ -52,9 +52,9 @@
       
     
     
-      <link rel="stylesheet" href="../../../provide-foundry/shared-theme/stylesheets/provide-theme.css">
+      <link rel="stylesheet" href="../../.shared-theme/stylesheets/provide-theme.css">
     
-      <link rel="stylesheet" href="../../../provide-foundry/shared-theme/stylesheets/termynal.css">
+      <link rel="stylesheet" href="../../.shared-theme/stylesheets/termynal.css">
     
       <link rel="stylesheet" href="../../stylesheets/extra.css">
     
@@ -94,7 +94,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#macro-rendering-error" class="md-skip">
+        <a href="#frequently-asked-questions" class="md-skip">
           Skip to content
         </a>
       
@@ -2421,6 +2421,19 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    FAQ
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
@@ -2432,6 +2445,595 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#general-questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      General Questions
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="General Questions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-is-flavorpack" class="md-nav__link">
+    <span class="md-ellipsis">
+      What is FlavorPack?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-does-flavorpack-differ-from-pyinstaller-or-cx_freeze" class="md-nav__link">
+    <span class="md-ellipsis">
+      How does FlavorPack differ from PyInstaller or cx_Freeze?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-platforms-does-flavorpack-support" class="md-nav__link">
+    <span class="md-ellipsis">
+      What platforms does FlavorPack support?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-python-versions-are-supported" class="md-nav__link">
+    <span class="md-ellipsis">
+      What Python versions are supported?
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#installation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Installation
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Installation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#how-do-i-install-flavorpack" class="md-nav__link">
+    <span class="md-ellipsis">
+      How do I install FlavorPack?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#do-i-need-to-install-anything-else" class="md-nav__link">
+    <span class="md-ellipsis">
+      Do I need to install anything else?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#can-i-use-flavorpack-in-a-virtual-environment" class="md-nav__link">
+    <span class="md-ellipsis">
+      Can I use FlavorPack in a virtual environment?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-do-i-update-flavorpack" class="md-nav__link">
+    <span class="md-ellipsis">
+      How do I update FlavorPack?
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#building-packages" class="md-nav__link">
+    <span class="md-ellipsis">
+      Building Packages
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Building Packages">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#whats-the-minimum-configuration-needed" class="md-nav__link">
+    <span class="md-ellipsis">
+      What's the minimum configuration needed?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#can-i-include-non-python-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      Can I include non-Python files?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-do-i-exclude-files-from-the-package" class="md-nav__link">
+    <span class="md-ellipsis">
+      How do I exclude files from the package?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#can-i-build-packages-for-other-platforms" class="md-nav__link">
+    <span class="md-ellipsis">
+      Can I build packages for other platforms?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-do-i-reduce-package-size" class="md-nav__link">
+    <span class="md-ellipsis">
+      How do I reduce package size?
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#running-packages" class="md-nav__link">
+    <span class="md-ellipsis">
+      Running Packages
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Running Packages">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#how-do-i-run-a-flavorpack-package" class="md-nav__link">
+    <span class="md-ellipsis">
+      How do I run a FlavorPack package?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#can-i-pass-command-line-arguments" class="md-nav__link">
+    <span class="md-ellipsis">
+      Can I pass command-line arguments?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#where-are-packages-extracted" class="md-nav__link">
+    <span class="md-ellipsis">
+      Where are packages extracted?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-do-i-clean-up-extracted-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      How do I clean up extracted files?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#can-i-run-packages-without-extraction" class="md-nav__link">
+    <span class="md-ellipsis">
+      Can I run packages without extraction?
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#security" class="md-nav__link">
+    <span class="md-ellipsis">
+      Security
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Security">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#how-does-package-signing-work" class="md-nav__link">
+    <span class="md-ellipsis">
+      How does package signing work?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#are-packages-encrypted" class="md-nav__link">
+    <span class="md-ellipsis">
+      Are packages encrypted?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#can-i-disable-signature-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      Can I disable signature verification?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-secure-are-flavorpack-packages" class="md-nav__link">
+    <span class="md-ellipsis">
+      How secure are FlavorPack packages?
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dependencies" class="md-nav__link">
+    <span class="md-ellipsis">
+      Dependencies
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Dependencies">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#how-are-dependencies-handled" class="md-nav__link">
+    <span class="md-ellipsis">
+      How are dependencies handled?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#can-i-use-packages-with-c-extensions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Can I use packages with C extensions?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-if-a-dependency-isnt-on-pypi" class="md-nav__link">
+    <span class="md-ellipsis">
+      What if a dependency isn't on PyPI?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#can-i-update-dependencies-after-building" class="md-nav__link">
+    <span class="md-ellipsis">
+      Can I update dependencies after building?
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      Troubleshooting
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Troubleshooting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#why-is-my-package-so-large" class="md-nav__link">
+    <span class="md-ellipsis">
+      Why is my package so large?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why-wont-my-package-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      Why won't my package run?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-do-i-debug-package-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      How do I debug package issues?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why-do-i-get-module-not-found-errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      Why do I get "Module not found" errors?
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#advanced-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      Advanced Usage
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Advanced Usage">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#can-i-create-multiple-entry-points" class="md-nav__link">
+    <span class="md-ellipsis">
+      Can I create multiple entry points?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#can-i-use-flavorpack-programmatically" class="md-nav__link">
+    <span class="md-ellipsis">
+      Can I use FlavorPack programmatically?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#can-i-customize-the-launcher" class="md-nav__link">
+    <span class="md-ellipsis">
+      Can I customize the launcher?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#can-i-embed-flavorpack-in-cicd" class="md-nav__link">
+    <span class="md-ellipsis">
+      Can I embed FlavorPack in CI/CD?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#can-i-distribute-packages-through-pypi" class="md-nav__link">
+    <span class="md-ellipsis">
+      Can I distribute packages through PyPI?
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#performance" class="md-nav__link">
+    <span class="md-ellipsis">
+      Performance
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Performance">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#how-fast-is-package-extraction" class="md-nav__link">
+    <span class="md-ellipsis">
+      How fast is package extraction?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#can-i-improve-build-performance" class="md-nav__link">
+    <span class="md-ellipsis">
+      Can I improve build performance?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-much-disk-space-do-packages-use" class="md-nav__link">
+    <span class="md-ellipsis">
+      How much disk space do packages use?
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#licensing" class="md-nav__link">
+    <span class="md-ellipsis">
+      Licensing
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Licensing">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-license-is-flavorpack-under" class="md-nav__link">
+    <span class="md-ellipsis">
+      What license is FlavorPack under?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#can-i-use-flavorpack-for-commercial-applications" class="md-nav__link">
+    <span class="md-ellipsis">
+      Can I use FlavorPack for commercial applications?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#do-i-need-to-include-attribution" class="md-nav__link">
+    <span class="md-ellipsis">
+      Do I need to include attribution?
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#getting-help" class="md-nav__link">
+    <span class="md-ellipsis">
+      Getting Help
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Getting Help">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#where-can-i-report-bugs" class="md-nav__link">
+    <span class="md-ellipsis">
+      Where can I report bugs?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#where-can-i-ask-questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Where can I ask questions?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#is-there-commercial-support" class="md-nav__link">
+    <span class="md-ellipsis">
+      Is there commercial support?
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Related Documentation
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -3004,35 +3606,399 @@
   
 
 
-<h1 id="macro-rendering-error"><em>Macro Rendering Error</em><a class="headerlink" href="#macro-rendering-error" title="Permanent link">&para;</a></h1>
-<p><em>File</em>: <code>troubleshooting/faq.md</code></p>
-<p><em>UndefinedError</em>: 'secrets' is undefined</p>
-<div class="language-text highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Text Only</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1"> 1</a></span>
-<span class="normal"><a href="#__codelineno-0-2"> 2</a></span>
-<span class="normal"><a href="#__codelineno-0-3"> 3</a></span>
-<span class="normal"><a href="#__codelineno-0-4"> 4</a></span>
-<span class="normal"><a href="#__codelineno-0-5"> 5</a></span>
-<span class="normal"><a href="#__codelineno-0-6"> 6</a></span>
-<span class="normal"><a href="#__codelineno-0-7"> 7</a></span>
-<span class="normal"><a href="#__codelineno-0-8"> 8</a></span>
-<span class="normal"><a href="#__codelineno-0-9"> 9</a></span>
-<span class="normal"><a href="#__codelineno-0-10">10</a></span>
-<span class="normal"><a href="#__codelineno-0-11">11</a></span>
-<span class="normal"><a href="#__codelineno-0-12">12</a></span>
-<span class="normal"><a href="#__codelineno-0-13">13</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a>Traceback (most recent call last):
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a>  File &quot;/REDACTED_ABS_PATH&quot;, line 699, in render
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a>    return md_template.render(**page_variables)
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4"></a>           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5"></a>  File &quot;/REDACTED_ABS_PATH&quot;, line 1295, in render
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6"></a>    self.environment.handle_exception()
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7"></a>  File &quot;/REDACTED_ABS_PATH&quot;, line 942, in handle_exception
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8"></a>    raise rewrite_traceback_stack(source=source)
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9"></a>  File &quot;&lt;template&gt;&quot;, line 328, in top-level template code
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10"></a>  File &quot;/REDACTED_ABS_PATH&quot;, line 490, in getattr
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11"></a>    return getattr(obj, attribute)
-</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12"></a>           ^^^^^^^^^^^^^^^^^^^^^^^
-</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13"></a>jinja2.exceptions.UndefinedError: &#39;secrets&#39; is undefined
+<h1 id="frequently-asked-questions">Frequently Asked Questions<a class="headerlink" href="#frequently-asked-questions" title="Permanent link">&para;</a></h1>
+<p>Common questions and answers about FlavorPack.</p>
+<h2 id="general-questions">General Questions<a class="headerlink" href="#general-questions" title="Permanent link">&para;</a></h2>
+<h3 id="what-is-flavorpack">What is FlavorPack?<a class="headerlink" href="#what-is-flavorpack" title="Permanent link">&para;</a></h3>
+<p>FlavorPack is a Python packaging system that creates self-contained, single-file executables from Python applications. It bundles your code, dependencies, and resources into a Progressive Secure Package Format (PSPF) file that runs anywhere without installation.</p>
+<h3 id="how-does-flavorpack-differ-from-pyinstaller-or-cx_freeze">How does FlavorPack differ from PyInstaller or cx_Freeze?<a class="headerlink" href="#how-does-flavorpack-differ-from-pyinstaller-or-cx_freeze" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>FlavorPack</th>
+<th>PyInstaller</th>
+<th>cx_Freeze</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Output format</td>
+<td>Single <code>.psp</code> file</td>
+<td>Single exe or folder</td>
+<td>Folder with exe</td>
+</tr>
+<tr>
+<td>Cross-platform build</td>
+<td>Yes</td>
+<td>Limited</td>
+<td>Limited</td>
+</tr>
+<tr>
+<td>Package signing</td>
+<td>Built-in Ed25519</td>
+<td>External tools</td>
+<td>External tools</td>
+</tr>
+<tr>
+<td>Compression</td>
+<td>Multiple codecs</td>
+<td>ZIP only</td>
+<td>ZIP only</td>
+</tr>
+<tr>
+<td>Lazy loading</td>
+<td>Yes</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td>Work environments</td>
+<td>Managed cache</td>
+<td>Temp extraction</td>
+<td>In-place</td>
+</tr>
+<tr>
+<td>Update mechanism</td>
+<td>Slot-based</td>
+<td>Full rebuild</td>
+<td>Full rebuild</td>
+</tr>
+</tbody>
+</table>
+<h3 id="what-platforms-does-flavorpack-support">What platforms does FlavorPack support?<a class="headerlink" href="#what-platforms-does-flavorpack-support" title="Permanent link">&para;</a></h3>
+<p>FlavorPack supports:
+- <strong>Linux</strong>: x86_64 (amd64), ARM64
+- <strong>macOS</strong>: Intel (x86_64), Apple Silicon (ARM64)
+- <strong>Windows</strong>: x86_64 (64-bit)</p>
+<h3 id="what-python-versions-are-supported">What Python versions are supported?<a class="headerlink" href="#what-python-versions-are-supported" title="Permanent link">&para;</a></h3>
+<p>FlavorPack supports Python 3.9 and later, with best support for Python 3.11+.</p>
+<h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h2>
+<h3 id="how-do-i-install-flavorpack">How do I install FlavorPack?<a class="headerlink" href="#how-do-i-install-flavorpack" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a>pip<span class="w"> </span>install<span class="w"> </span>flavor
 </span></code></pre></div></td></tr></table></div>
+<h3 id="do-i-need-to-install-anything-else">Do I need to install anything else?<a class="headerlink" href="#do-i-need-to-install-anything-else" title="Permanent link">&para;</a></h3>
+<p>No, FlavorPack includes all necessary components. The launcher binaries are downloaded automatically on first use.</p>
+<h3 id="can-i-use-flavorpack-in-a-virtual-environment">Can I use FlavorPack in a virtual environment?<a class="headerlink" href="#can-i-use-flavorpack-in-a-virtual-environment" title="Permanent link">&para;</a></h3>
+<p>Yes, FlavorPack works perfectly in virtual environments:</p>
+<div class="language-bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-1-1">1</a></span>
+<span class="normal"><a href="#__codelineno-1-2">2</a></span>
+<span class="normal"><a href="#__codelineno-1-3">3</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1"></a>python<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>venv
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2"></a><span class="nb">source</span><span class="w"> </span>venv/bin/activate<span class="w">  </span><span class="c1"># On Windows: venv\Scripts\activate</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3"></a>pip<span class="w"> </span>install<span class="w"> </span>flavor
+</span></code></pre></div></td></tr></table></div>
+<h3 id="how-do-i-update-flavorpack">How do I update FlavorPack?<a class="headerlink" href="#how-do-i-update-flavorpack" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-2-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1"></a>pip<span class="w"> </span>install<span class="w"> </span>--upgrade<span class="w"> </span>flavor
+</span></code></pre></div></td></tr></table></div>
+<h2 id="building-packages">Building Packages<a class="headerlink" href="#building-packages" title="Permanent link">&para;</a></h2>
+<h3 id="whats-the-minimum-configuration-needed">What's the minimum configuration needed?<a class="headerlink" href="#whats-the-minimum-configuration-needed" title="Permanent link">&para;</a></h3>
+<p>A minimal <code>pyproject.toml</code>:</p>
+<div class="language-toml highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">TOML</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-3-1">1</a></span>
+<span class="normal"><a href="#__codelineno-3-2">2</a></span>
+<span class="normal"><a href="#__codelineno-3-3">3</a></span>
+<span class="normal"><a href="#__codelineno-3-4">4</a></span>
+<span class="normal"><a href="#__codelineno-3-5">5</a></span>
+<span class="normal"><a href="#__codelineno-3-6">6</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1"></a><span class="k">[project]</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2"></a><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;myapp&quot;</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3"></a><span class="n">version</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;1.0.0&quot;</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4"></a>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5"></a><span class="k">[tool.flavor]</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6"></a><span class="n">entry_point</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;myapp:main&quot;</span>
+</span></code></pre></div></td></tr></table></div>
+<h3 id="can-i-include-non-python-files">Can I include non-Python files?<a class="headerlink" href="#can-i-include-non-python-files" title="Permanent link">&para;</a></h3>
+<p>Yes, use slots to include any type of file:</p>
+<div class="language-toml highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">TOML</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-4-1">1</a></span>
+<span class="normal"><a href="#__codelineno-4-2">2</a></span>
+<span class="normal"><a href="#__codelineno-4-3">3</a></span>
+<span class="normal"><a href="#__codelineno-4-4">4</a></span>
+<span class="normal"><a href="#__codelineno-4-5">5</a></span>
+<span class="normal"><a href="#__codelineno-4-6">6</a></span>
+<span class="normal"><a href="#__codelineno-4-7">7</a></span>
+<span class="normal"><a href="#__codelineno-4-8">8</a></span>
+<span class="normal"><a href="#__codelineno-4-9">9</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1"></a><span class="k">[[tool.flavor.slots]]</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2"></a><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;data&quot;</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3"></a><span class="n">source</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;data/&quot;</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4"></a><span class="n">purpose</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;data-files&quot;</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5"></a>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6"></a><span class="k">[[tool.flavor.slots]]</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7"></a><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;config&quot;</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8"></a><span class="n">source</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;config.yaml&quot;</span>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9"></a><span class="n">purpose</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;configuration&quot;</span>
+</span></code></pre></div></td></tr></table></div>
+<h3 id="how-do-i-exclude-files-from-the-package">How do I exclude files from the package?<a class="headerlink" href="#how-do-i-exclude-files-from-the-package" title="Permanent link">&para;</a></h3>
+<div class="language-toml highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">TOML</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-5-1">1</a></span>
+<span class="normal"><a href="#__codelineno-5-2">2</a></span>
+<span class="normal"><a href="#__codelineno-5-3">3</a></span>
+<span class="normal"><a href="#__codelineno-5-4">4</a></span>
+<span class="normal"><a href="#__codelineno-5-5">5</a></span>
+<span class="normal"><a href="#__codelineno-5-6">6</a></span>
+<span class="normal"><a href="#__codelineno-5-7">7</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1"></a><span class="k">[tool.flavor.build]</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2"></a><span class="n">exclude</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3"></a><span class="w">    </span><span class="s2">&quot;**/__pycache__&quot;</span><span class="p">,</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4"></a><span class="w">    </span><span class="s2">&quot;**/test_*.py&quot;</span><span class="p">,</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5"></a><span class="w">    </span><span class="s2">&quot;docs/&quot;</span><span class="p">,</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6"></a><span class="w">    </span><span class="s2">&quot;.git/&quot;</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7"></a><span class="p">]</span>
+</span></code></pre></div></td></tr></table></div>
+<h3 id="can-i-build-packages-for-other-platforms">Can I build packages for other platforms?<a class="headerlink" href="#can-i-build-packages-for-other-platforms" title="Permanent link">&para;</a></h3>
+<p>Yes, FlavorPack supports cross-platform builds:</p>
+<div class="language-bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-6-1">1</a></span>
+<span class="normal"><a href="#__codelineno-6-2">2</a></span>
+<span class="normal"><a href="#__codelineno-6-3">3</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1"></a><span class="c1"># Build for specific platform</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2"></a>flavor<span class="w"> </span>pack<span class="w"> </span>pyproject.toml<span class="w"> </span>--platform<span class="w"> </span>linux_amd64
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3"></a>flavor<span class="w"> </span>pack<span class="w"> </span>pyproject.toml<span class="w"> </span>--platform<span class="w"> </span>darwin_arm64
+</span></code></pre></div></td></tr></table></div>
+<h3 id="how-do-i-reduce-package-size">How do I reduce package size?<a class="headerlink" href="#how-do-i-reduce-package-size" title="Permanent link">&para;</a></h3>
+<ol>
+<li>
+<p>Enable compression:
+   <div class="language-toml highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">TOML</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-7-1">1</a></span>
+<span class="normal"><a href="#__codelineno-7-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1"></a><span class="k">[[tool.flavor.slots]]</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2"></a><span class="c1"># Compression is automatic - tar.gz for directories</span>
+</span></code></pre></div></td></tr></table></div></p>
+</li>
+<li>
+<p>Exclude unnecessary files:
+   <div class="language-toml highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">TOML</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-8-1">1</a></span>
+<span class="normal"><a href="#__codelineno-8-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1"></a><span class="k">[tool.flavor.build]</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2"></a><span class="n">exclude</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;tests/&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;docs/&quot;</span><span class="p">]</span>
+</span></code></pre></div></td></tr></table></div></p>
+</li>
+<li>
+<p>Strip binaries:
+   <div class="language-bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-9-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1"></a>flavor<span class="w"> </span>pack<span class="w"> </span>pyproject.toml<span class="w"> </span>--strip
+</span></code></pre></div></td></tr></table></div></p>
+</li>
+</ol>
+<h2 id="running-packages">Running Packages<a class="headerlink" href="#running-packages" title="Permanent link">&para;</a></h2>
+<h3 id="how-do-i-run-a-flavorpack-package">How do I run a FlavorPack package?<a class="headerlink" href="#how-do-i-run-a-flavorpack-package" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-10-1">1</a></span>
+<span class="normal"><a href="#__codelineno-10-2">2</a></span>
+<span class="normal"><a href="#__codelineno-10-3">3</a></span>
+<span class="normal"><a href="#__codelineno-10-4">4</a></span>
+<span class="normal"><a href="#__codelineno-10-5">5</a></span>
+<span class="normal"><a href="#__codelineno-10-6">6</a></span>
+<span class="normal"><a href="#__codelineno-10-7">7</a></span>
+<span class="normal"><a href="#__codelineno-10-8">8</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1"></a><span class="c1"># Linux/macOS</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2"></a>./myapp.psp
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3"></a>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4"></a><span class="c1"># Windows</span>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5"></a>myapp.psp.exe
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6"></a>
+</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7"></a><span class="c1"># Or with Python</span>
+</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8"></a>python<span class="w"> </span>myapp.psp
+</span></code></pre></div></td></tr></table></div>
+<h3 id="can-i-pass-command-line-arguments">Can I pass command-line arguments?<a class="headerlink" href="#can-i-pass-command-line-arguments" title="Permanent link">&para;</a></h3>
+<p>Yes, arguments are passed through to your application:</p>
+<div class="language-bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-11-1">1</a></span>
+<span class="normal"><a href="#__codelineno-11-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1"></a>./myapp.psp<span class="w"> </span>--help
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2"></a>./myapp.psp<span class="w"> </span>--config<span class="w"> </span>production.yaml
+</span></code></pre></div></td></tr></table></div>
+<h3 id="where-are-packages-extracted">Where are packages extracted?<a class="headerlink" href="#where-are-packages-extracted" title="Permanent link">&para;</a></h3>
+<p>Packages are extracted to a cache directory:
+- <strong>Linux</strong>: <code>/tmp/pspf/workenv/</code>
+- <strong>macOS</strong>: <code>/REDACTED_TMP</code>
+- <strong>Windows</strong>: <code>%TEMP%\pspf\workenv\</code></p>
+<p>You can override with <code>FLAVOR_CACHE</code> environment variable.</p>
+<h3 id="how-do-i-clean-up-extracted-files">How do I clean up extracted files?<a class="headerlink" href="#how-do-i-clean-up-extracted-files" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-12-1">1</a></span>
+<span class="normal"><a href="#__codelineno-12-2">2</a></span>
+<span class="normal"><a href="#__codelineno-12-3">3</a></span>
+<span class="normal"><a href="#__codelineno-12-4">4</a></span>
+<span class="normal"><a href="#__codelineno-12-5">5</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1"></a><span class="c1"># Clean packages older than 7 days</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2"></a>flavor<span class="w"> </span>workenv<span class="w"> </span>clean<span class="w"> </span>--older-than<span class="w"> </span><span class="m">7</span>
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3"></a>
+</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4"></a><span class="c1"># Clean all cached packages</span>
+</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5"></a>flavor<span class="w"> </span>workenv<span class="w"> </span>clean<span class="w"> </span>--yes
+</span></code></pre></div></td></tr></table></div>
+<h3 id="can-i-run-packages-without-extraction">Can I run packages without extraction?<a class="headerlink" href="#can-i-run-packages-without-extraction" title="Permanent link">&para;</a></h3>
+<p>Not currently. FlavorPack always extracts to a work environment, but caching makes subsequent runs very fast.</p>
+<h2 id="security">Security<a class="headerlink" href="#security" title="Permanent link">&para;</a></h2>
+<h3 id="how-does-package-signing-work">How does package signing work?<a class="headerlink" href="#how-does-package-signing-work" title="Permanent link">&para;</a></h3>
+<p>FlavorPack uses Ed25519 digital signatures:</p>
+<div class="language-bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-13-1">1</a></span>
+<span class="normal"><a href="#__codelineno-13-2">2</a></span>
+<span class="normal"><a href="#__codelineno-13-3">3</a></span>
+<span class="normal"><a href="#__codelineno-13-4">4</a></span>
+<span class="normal"><a href="#__codelineno-13-5">5</a></span>
+<span class="normal"><a href="#__codelineno-13-6">6</a></span>
+<span class="normal"><a href="#__codelineno-13-7">7</a></span>
+<span class="normal"><a href="#__codelineno-13-8">8</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1"></a><span class="c1"># Generate keys</span>
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2"></a>flavor<span class="w"> </span>keygen<span class="w"> </span>--output<span class="w"> </span>private.pem
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3"></a>
+</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4"></a><span class="c1"># Sign package</span>
+</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5"></a>flavor<span class="w"> </span>pack<span class="w"> </span>pyproject.toml<span class="w"> </span>--private-key<span class="w"> </span>private.pem
+</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6"></a>
+</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7"></a><span class="c1"># Verify signature</span>
+</span><span id="__span-13-8"><a id="__codelineno-13-8" name="__codelineno-13-8"></a>flavor<span class="w"> </span>verify<span class="w"> </span>myapp.psp
+</span></code></pre></div></td></tr></table></div>
+<h3 id="are-packages-encrypted">Are packages encrypted?<a class="headerlink" href="#are-packages-encrypted" title="Permanent link">&para;</a></h3>
+<p>No, packages are signed but not encrypted. For sensitive data, encrypt files before packaging or use environment variables for secrets.</p>
+<h3 id="can-i-disable-signature-verification">Can I disable signature verification?<a class="headerlink" href="#can-i-disable-signature-verification" title="Permanent link">&para;</a></h3>
+<p>Yes, but it's not recommended:</p>
+<div class="language-bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-14-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1"></a><span class="nv">FLAVOR_VALIDATION</span><span class="o">=</span>none<span class="w"> </span>./myapp.psp
+</span></code></pre></div></td></tr></table></div>
+<h3 id="how-secure-are-flavorpack-packages">How secure are FlavorPack packages?<a class="headerlink" href="#how-secure-are-flavorpack-packages" title="Permanent link">&para;</a></h3>
+<p>FlavorPack provides:
+- Ed25519 digital signatures
+- SHA-256 checksums for all components
+- Isolated work environments
+- No dynamic code execution
+- Path traversal prevention</p>
+<h2 id="dependencies">Dependencies<a class="headerlink" href="#dependencies" title="Permanent link">&para;</a></h2>
+<h3 id="how-are-dependencies-handled">How are dependencies handled?<a class="headerlink" href="#how-are-dependencies-handled" title="Permanent link">&para;</a></h3>
+<p>Dependencies specified in <code>pyproject.toml</code> are installed into a virtual environment during build and included in the package.</p>
+<h3 id="can-i-use-packages-with-c-extensions">Can I use packages with C extensions?<a class="headerlink" href="#can-i-use-packages-with-c-extensions" title="Permanent link">&para;</a></h3>
+<p>Yes, FlavorPack supports packages with compiled extensions. Platform-specific wheels are automatically included.</p>
+<h3 id="what-if-a-dependency-isnt-on-pypi">What if a dependency isn't on PyPI?<a class="headerlink" href="#what-if-a-dependency-isnt-on-pypi" title="Permanent link">&para;</a></h3>
+<p>You can install from Git or local paths:</p>
+<div class="language-toml highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">TOML</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-15-1">1</a></span>
+<span class="normal"><a href="#__codelineno-15-2">2</a></span>
+<span class="normal"><a href="#__codelineno-15-3">3</a></span>
+<span class="normal"><a href="#__codelineno-15-4">4</a></span>
+<span class="normal"><a href="#__codelineno-15-5">5</a></span>
+<span class="normal"><a href="#__codelineno-15-6">6</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1"></a><span class="k">[project]</span>
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2"></a><span class="n">dependencies</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3"></a><span class="w">    </span><span class="s2">&quot;requests&gt;=2.0&quot;</span><span class="p">,</span>
+</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4"></a><span class="w">    </span><span class="s2">&quot;mypackage @ git+https://github.com/user/repo.git&quot;</span><span class="p">,</span>
+</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5"></a><span class="w">    </span><span class="s2">&quot;localpackage @ file:///path/to/package&quot;</span>
+</span><span id="__span-15-6"><a id="__codelineno-15-6" name="__codelineno-15-6"></a><span class="p">]</span>
+</span></code></pre></div></td></tr></table></div>
+<h3 id="can-i-update-dependencies-after-building">Can I update dependencies after building?<a class="headerlink" href="#can-i-update-dependencies-after-building" title="Permanent link">&para;</a></h3>
+<p>No, packages are immutable. To update dependencies, rebuild the package.</p>
+<h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h2>
+<h3 id="why-is-my-package-so-large">Why is my package so large?<a class="headerlink" href="#why-is-my-package-so-large" title="Permanent link">&para;</a></h3>
+<p>Common causes:
+- Large dependencies (numpy, tensorflow, etc.)
+- Uncompressed slots
+- Including unnecessary files
+- Debug symbols not stripped</p>
+<h3 id="why-wont-my-package-run">Why won't my package run?<a class="headerlink" href="#why-wont-my-package-run" title="Permanent link">&para;</a></h3>
+<p>Check:
+1. Execute permissions: <code>chmod +x myapp.psp</code>
+2. Platform compatibility: Built for correct OS/architecture
+3. Python version: Matches build environment
+4. Package integrity: <code>flavor verify myapp.psp</code></p>
+<h3 id="how-do-i-debug-package-issues">How do I debug package issues?<a class="headerlink" href="#how-do-i-debug-package-issues" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-16-1">1</a></span>
+<span class="normal"><a href="#__codelineno-16-2">2</a></span>
+<span class="normal"><a href="#__codelineno-16-3">3</a></span>
+<span class="normal"><a href="#__codelineno-16-4">4</a></span>
+<span class="normal"><a href="#__codelineno-16-5">5</a></span>
+<span class="normal"><a href="#__codelineno-16-6">6</a></span>
+<span class="normal"><a href="#__codelineno-16-7">7</a></span>
+<span class="normal"><a href="#__codelineno-16-8">8</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1"></a><span class="c1"># Enable debug logging</span>
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2"></a><span class="nv">FLAVOR_LOG_LEVEL</span><span class="o">=</span>debug<span class="w"> </span>./myapp.psp
+</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3"></a>
+</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4"></a><span class="c1"># Extract and inspect</span>
+</span><span id="__span-16-5"><a id="__codelineno-16-5" name="__codelineno-16-5"></a>flavor<span class="w"> </span>extract-all<span class="w"> </span>myapp.psp<span class="w"> </span>--output<span class="w"> </span>debug/
+</span><span id="__span-16-6"><a id="__codelineno-16-6" name="__codelineno-16-6"></a>
+</span><span id="__span-16-7"><a id="__codelineno-16-7" name="__codelineno-16-7"></a><span class="c1"># Verify package</span>
+</span><span id="__span-16-8"><a id="__codelineno-16-8" name="__codelineno-16-8"></a>flavor<span class="w"> </span>verify<span class="w"> </span>myapp.psp<span class="w"> </span>--deep
+</span></code></pre></div></td></tr></table></div>
+<h3 id="why-do-i-get-module-not-found-errors">Why do I get "Module not found" errors?<a class="headerlink" href="#why-do-i-get-module-not-found-errors" title="Permanent link">&para;</a></h3>
+<p>Ensure all dependencies are listed in <code>pyproject.toml</code>:</p>
+<div class="language-toml highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">TOML</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-17-1">1</a></span>
+<span class="normal"><a href="#__codelineno-17-2">2</a></span>
+<span class="normal"><a href="#__codelineno-17-3">3</a></span>
+<span class="normal"><a href="#__codelineno-17-4">4</a></span>
+<span class="normal"><a href="#__codelineno-17-5">5</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1"></a><span class="k">[project]</span>
+</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2"></a><span class="n">dependencies</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3"></a><span class="w">    </span><span class="s2">&quot;all-your-deps&quot;</span><span class="p">,</span>
+</span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4"></a><span class="w">    </span><span class="s2">&quot;including-transitive&quot;</span>
+</span><span id="__span-17-5"><a id="__codelineno-17-5" name="__codelineno-17-5"></a><span class="p">]</span>
+</span></code></pre></div></td></tr></table></div>
+<h2 id="advanced-usage">Advanced Usage<a class="headerlink" href="#advanced-usage" title="Permanent link">&para;</a></h2>
+<h3 id="can-i-create-multiple-entry-points">Can I create multiple entry points?<a class="headerlink" href="#can-i-create-multiple-entry-points" title="Permanent link">&para;</a></h3>
+<p>Yes, define multiple scripts:</p>
+<div class="language-toml highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">TOML</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-18-1">1</a></span>
+<span class="normal"><a href="#__codelineno-18-2">2</a></span>
+<span class="normal"><a href="#__codelineno-18-3">3</a></span>
+<span class="normal"><a href="#__codelineno-18-4">4</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1"></a><span class="k">[project.scripts]</span>
+</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2"></a><span class="n">myapp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;myapp.cli:main&quot;</span>
+</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3"></a><span class="n">myapp-admin</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;myapp.admin:main&quot;</span>
+</span><span id="__span-18-4"><a id="__codelineno-18-4" name="__codelineno-18-4"></a><span class="n">myapp-worker</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;myapp.worker:main&quot;</span>
+</span></code></pre></div></td></tr></table></div>
+<h3 id="can-i-use-flavorpack-programmatically">Can I use FlavorPack programmatically?<a class="headerlink" href="#can-i-use-flavorpack-programmatically" title="Permanent link">&para;</a></h3>
+<p>Yes, FlavorPack provides a Python API:</p>
+<div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-19-1">1</a></span>
+<span class="normal"><a href="#__codelineno-19-2">2</a></span>
+<span class="normal"><a href="#__codelineno-19-3">3</a></span>
+<span class="normal"><a href="#__codelineno-19-4">4</a></span>
+<span class="normal"><a href="#__codelineno-19-5">5</a></span>
+<span class="normal"><a href="#__codelineno-19-6">6</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">flavor.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">build_package_from_manifest</span>
+</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2"></a>
+</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3"></a><span class="n">packages</span> <span class="o">=</span> <span class="n">build_package_from_manifest</span><span class="p">(</span>
+</span><span id="__span-19-4"><a id="__codelineno-19-4" name="__codelineno-19-4"></a>    <span class="n">manifest_path</span><span class="o">=</span><span class="s2">&quot;pyproject.toml&quot;</span><span class="p">,</span>
+</span><span id="__span-19-5"><a id="__codelineno-19-5" name="__codelineno-19-5"></a>    <span class="n">output_path</span><span class="o">=</span><span class="s2">&quot;dist/&quot;</span>
+</span><span id="__span-19-6"><a id="__codelineno-19-6" name="__codelineno-19-6"></a><span class="p">)</span>
+</span></code></pre></div></td></tr></table></div>
+<h3 id="can-i-customize-the-launcher">Can I customize the launcher?<a class="headerlink" href="#can-i-customize-the-launcher" title="Permanent link">&para;</a></h3>
+<p>You can build custom launchers from the Go or Rust source in the <code>helpers/</code> directory.</p>
+<h3 id="can-i-embed-flavorpack-in-cicd">Can I embed FlavorPack in CI/CD?<a class="headerlink" href="#can-i-embed-flavorpack-in-cicd" title="Permanent link">&para;</a></h3>
+<p>Yes, FlavorPack works well in CI/CD:</p>
+<div class="language-yaml highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">YAML</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-20-1">1</a></span>
+<span class="normal"><a href="#__codelineno-20-2">2</a></span>
+<span class="normal"><a href="#__codelineno-20-3">3</a></span>
+<span class="normal"><a href="#__codelineno-20-4">4</a></span>
+<span class="normal"><a href="#__codelineno-20-5">5</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1"></a><span class="c1"># GitHub Actions example</span>
+</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2"></a><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Build package</span>
+</span><span id="__span-20-3"><a id="__codelineno-20-3" name="__codelineno-20-3"></a><span class="w">  </span><span class="nt">run</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+</span><span id="__span-20-4"><a id="__codelineno-20-4" name="__codelineno-20-4"></a><span class="w">    </span><span class="no">pip install flavor</span>
+</span><span id="__span-20-5"><a id="__codelineno-20-5" name="__codelineno-20-5"></a><span class="w">    </span><span class="no">flavor pack pyproject.toml --key-seed &quot;${{ secrets.FLAVOR_SEED }}&quot;</span>
+</span></code></pre></div></td></tr></table></div>
+<h3 id="can-i-distribute-packages-through-pypi">Can I distribute packages through PyPI?<a class="headerlink" href="#can-i-distribute-packages-through-pypi" title="Permanent link">&para;</a></h3>
+<p>No, PSPF packages are standalone executables, not Python packages. Distribute them through:
+- Direct download
+- GitHub releases
+- Package managers (apt, brew, chocolatey)
+- Container images</p>
+<h2 id="performance">Performance<a class="headerlink" href="#performance" title="Permanent link">&para;</a></h2>
+<h3 id="how-fast-is-package-extraction">How fast is package extraction?<a class="headerlink" href="#how-fast-is-package-extraction" title="Permanent link">&para;</a></h3>
+<p>First run: 1-5 seconds depending on size
+Subsequent runs: &lt;100ms (cached)</p>
+<h3 id="can-i-improve-build-performance">Can I improve build performance?<a class="headerlink" href="#can-i-improve-build-performance" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-21-1">1</a></span>
+<span class="normal"><a href="#__codelineno-21-2">2</a></span>
+<span class="normal"><a href="#__codelineno-21-3">3</a></span>
+<span class="normal"><a href="#__codelineno-21-4">4</a></span>
+<span class="normal"><a href="#__codelineno-21-5">5</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1"></a><span class="c1"># Use parallel builds</span>
+</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2"></a>flavor<span class="w"> </span>pack<span class="w"> </span>pyproject.toml<span class="w"> </span>--parallel
+</span><span id="__span-21-3"><a id="__codelineno-21-3" name="__codelineno-21-3"></a>
+</span><span id="__span-21-4"><a id="__codelineno-21-4" name="__codelineno-21-4"></a><span class="c1"># Use build cache</span>
+</span><span id="__span-21-5"><a id="__codelineno-21-5" name="__codelineno-21-5"></a><span class="nb">export</span><span class="w"> </span><span class="nv">FLAVOR_BUILD_CACHE</span><span class="o">=</span>~/.cache/flavor/build
+</span></code></pre></div></td></tr></table></div>
+<h3 id="how-much-disk-space-do-packages-use">How much disk space do packages use?<a class="headerlink" href="#how-much-disk-space-do-packages-use" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Package file: 20-100MB typical</li>
+<li>Extracted cache: 2-3x package size</li>
+<li>Build cache: ~500MB</li>
+</ul>
+<h2 id="licensing">Licensing<a class="headerlink" href="#licensing" title="Permanent link">&para;</a></h2>
+<h3 id="what-license-is-flavorpack-under">What license is FlavorPack under?<a class="headerlink" href="#what-license-is-flavorpack-under" title="Permanent link">&para;</a></h3>
+<p>FlavorPack is licensed under the Apache License 2.0.</p>
+<h3 id="can-i-use-flavorpack-for-commercial-applications">Can I use FlavorPack for commercial applications?<a class="headerlink" href="#can-i-use-flavorpack-for-commercial-applications" title="Permanent link">&para;</a></h3>
+<p>Yes, FlavorPack can be used for commercial applications without restrictions.</p>
+<h3 id="do-i-need-to-include-attribution">Do I need to include attribution?<a class="headerlink" href="#do-i-need-to-include-attribution" title="Permanent link">&para;</a></h3>
+<p>No attribution is required in your distributed packages, though it's appreciated.</p>
+<h2 id="getting-help">Getting Help<a class="headerlink" href="#getting-help" title="Permanent link">&para;</a></h2>
+<h3 id="where-can-i-report-bugs">Where can I report bugs?<a class="headerlink" href="#where-can-i-report-bugs" title="Permanent link">&para;</a></h3>
+<p>Report bugs on <a href="https://github.com/provide-io/flavorpack/issues">GitHub Issues</a>.</p>
+<h3 id="where-can-i-ask-questions">Where can I ask questions?<a class="headerlink" href="#where-can-i-ask-questions" title="Permanent link">&para;</a></h3>
+<ul>
+<li>GitHub Discussions</li>
+<li>Stack Overflow (tag: <code>flavorpack</code>)</li>
+<li>Discord community</li>
+</ul>
+<h3 id="is-there-commercial-support">Is there commercial support?<a class="headerlink" href="#is-there-commercial-support" title="Permanent link">&para;</a></h3>
+<p>Contact <a href="&#109;&#97;&#105;&#108;&#116;&#111;&#58;&#115;&#117;&#112;&#112;&#111;&#114;&#116;&#64;&#112;&#114;&#111;&#118;&#105;&#100;&#101;&#46;&#105;&#111;">&#115;&#117;&#112;&#112;&#111;&#114;&#116;&#64;&#112;&#114;&#111;&#118;&#105;&#100;&#101;&#46;&#105;&#111;</a> for commercial support options.</p>
+<h2 id="related-documentation">Related Documentation<a class="headerlink" href="#related-documentation" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../../getting-started/">Getting Started</a> - Quick start guide</li>
+<li><a href="../../guide/">User Guide</a> - Comprehensive documentation</li>
+<li><a href="../">Troubleshooting</a> - Problem solving guide</li>
+<li><a href="../../api/">API Reference</a> - Programming interface</li>
+</ul>
 
 
 
@@ -3257,11 +4223,11 @@
       
         <script src="https://unpkg.com/mermaid@10/dist/mermaid.min.js"></script>
       
-        <script src="../../../provide-foundry/shared-theme/javascripts/mermaid-init.js"></script>
+        <script src="../../.shared-theme/javascripts/mermaid-init.js"></script>
       
-        <script src="../../../provide-foundry/shared-theme/javascripts/termynal.js"></script>
+        <script src="../../.shared-theme/javascripts/termynal.js"></script>
       
-        <script src="../../../provide-foundry/shared-theme/javascripts/custom.js"></script>
+        <script src="../../.shared-theme/javascripts/custom.js"></script>
       
     
   </body>

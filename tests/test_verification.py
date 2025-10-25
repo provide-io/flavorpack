@@ -40,7 +40,7 @@ class TestFlavorVerifier:
                     {
                         "id": "runtime",
                         "size": 5000,
-                        "codec": "tar+gzip",
+                        "operations": "tar+gzip",
                         "purpose": "runtime",
                         "lifecycle": "persistent",
                         "target": "/opt/runtime",
@@ -51,7 +51,7 @@ class TestFlavorVerifier:
                     {
                         "id": "app",
                         "size": 3000,
-                        "codec": "tar+gzip",
+                        "operations": "tar+gzip",
                         "purpose": "application",
                         "lifecycle": "ephemeral",
                         "target": "/opt/app",
@@ -82,7 +82,7 @@ class TestFlavorVerifier:
             assert slot_0["index"] == 0
             assert slot_0["id"] == "runtime"
             assert slot_0["size"] == 5000
-            assert slot_0["codec"] == "tar+gzip"
+            assert slot_0["operations"] == "tar+gzip"
             assert slot_0["purpose"] == "runtime"
             assert slot_0["lifecycle"] == "persistent"
             assert slot_0["target"] == "/opt/runtime"
@@ -230,7 +230,7 @@ class TestFlavorVerifier:
             assert "index" in slot
             assert "id" in slot
             assert "size" in slot
-            assert "codec" in slot
+            assert "operations" in slot
             # Empty optional fields should be filtered out
             assert "purpose" not in slot
             assert "lifecycle" not in slot
@@ -272,7 +272,7 @@ class TestFlavorVerifier:
             assert slot["index"] == 0
             assert slot["id"] == "slot_0"  # Default when missing
             assert slot["size"] == 500
-            assert slot["codec"] == "raw"  # Default when missing
+            assert slot["operations"] == "raw"  # Default when missing
 
     def test_verify_package_multiple_slots(self, tmp_path: Path) -> None:
         """Test verification with multiple slots."""

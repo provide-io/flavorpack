@@ -186,7 +186,7 @@ flavor pack pyproject.toml --platform linux_amd64
 **Solution**:
 ```toml
 [[tool.flavor.slots]]
-codec = "tgz"  # Valid: raw, tar, gzip, tgz
+# Operations are handled automatically based on source type
 ```
 
 #### "Invalid lifecycle: {lifecycle}"
@@ -213,9 +213,8 @@ lifecycle = "persistent"
 # Check source files exist
 ls -la data/
 
-# Try different codec
-[[tool.flavor.slots]]
-codec = "tar"  # Instead of tgz
+# Operations are applied automatically
+# FlavorPack chooses optimal compression based on content
 
 # Check permissions
 chmod -R r+X data/

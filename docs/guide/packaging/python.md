@@ -449,19 +449,20 @@ lifecycle = "cached"
 ### Runtime Environment
 
 ```toml
-[tool.flavor.runtime]
-# Set environment variables
-env = {
-    "PYTHONPATH": "$FLAVOR_WORKENV/lib",
-    "MY_APP_CONFIG": "$FLAVOR_WORKENV/config",
-    "DEBUG": "0"
+[tool.flavor.execution.runtime]
+[tool.flavor.execution.runtime.env]
+# Clear all host environment variables, then selectively pass through
+unset = ["*"]
+
+# Pass through essential host variables
+pass = ["HOME", "USER", "TERM", "PATH"]
+
+# Set application-specific environment variables
+set = {
+    PYTHONPATH = "$FLAVOR_WORKENV/lib",
+    MY_APP_CONFIG = "$FLAVOR_WORKENV/config",
+    DEBUG = "0"
 }
-
-# Inherit from host
-inherit_env = ["HOME", "USER", "TERM"]
-
-# Block specific variables
-block_env = ["PYTHONHOME", "PYTHONPATH"]
 ```
 
 ### Configuration via Environment
@@ -797,7 +798,7 @@ entry_point = "ml_model.predict:main"
 id = "models"
 source = "models/"
 lifecycle = "lazy"
-codec = "tgz"
+# Automatic tar.gz compression
 ```
 
 ### Web API Package

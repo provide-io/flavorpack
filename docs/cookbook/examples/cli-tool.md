@@ -176,7 +176,7 @@ id = 2
 path = "./config"
 extract_to = "config"
 lifecycle = "cached"
-operations = "tar+gzip"
+operations = "tar.gz"  # or "tar|gzip" for pipe-separated format
 ```
 
 ## Tips & Best Practices

@@ -48,9 +48,9 @@
       
     
     
-      <link rel="stylesheet" href="../../../../provide-foundry/shared-theme/stylesheets/provide-theme.css">
+      <link rel="stylesheet" href="../../../.shared-theme/stylesheets/provide-theme.css">
     
-      <link rel="stylesheet" href="../../../../provide-foundry/shared-theme/stylesheets/termynal.css">
+      <link rel="stylesheet" href="../../../.shared-theme/stylesheets/termynal.css">
     
       <link rel="stylesheet" href="../../../stylesheets/extra.css">
     
@@ -2982,51 +2982,42 @@
 - <strong>Portability</strong>: Cross-platform compatibility
 - <strong>Modularity</strong>: Slot-based architecture for different content types</p>
 <h2 id="specification-documents">Specification Documents<a class="headerlink" href="#specification-documents" title="Permanent link">&para;</a></h2>
-<h3 id="core-format">Core Format<a class="headerlink" href="#core-format" title="Permanent link">&para;</a></h3>
+<h3 id="core-format-specifications">Core Format Specifications<a class="headerlink" href="#core-format-specifications" title="Permanent link">&para;</a></h3>
 <ul>
-<li><a href="../pspf_2025/OPERATIONS_IMPLEMENTATION_GUIDE.md">Operations Implementation Guide</a></li>
-<li><a href="../pspf_2025/README.md">PSPF 2025 README</a></li>
-</ul>
-<h3 id="technical-details">Technical Details<a class="headerlink" href="#technical-details" title="Permanent link">&para;</a></h3>
-<ul>
-<li><a href="../pspf_2025/proto/pspf_2025.proto">Protocol Buffer Schema</a></li>
-<li><a href="../pspf_2025/operation_mapping.json">Operation Mapping</a></li>
-<li><a href="../pspf_2025/operation_names.json">Operation Names</a></li>
+<li><a href="../SLOT_DESCRIPTOR_SPECIFICATION/">Slot Descriptor Binary Format</a> - 64-byte binary structure for slot metadata</li>
 </ul>
 <h3 id="format-enhancement-proposals-feps">Format Enhancement Proposals (FEPs)<a class="headerlink" href="#format-enhancement-proposals-feps" title="Permanent link">&para;</a></h3>
 <ul>
-<li><a href="../pspf_2025/more-docs/fep-0001-core-format-and-operation-chains.md">FEP-0001: Core Format and Operation Chains</a></li>
-<li><a href="../pspf_2025/more-docs/fep-0002-json-metadata-format.md">FEP-0002: JSON Metadata Format</a></li>
-<li><a href="../pspf_2025/more-docs/fep-0003-operation-registry.md">FEP-0003: Operation Registry</a></li>
-<li><a href="../pspf_2025/more-docs/fep-0004-supply-chain-jit.md">FEP-0004: Supply Chain JIT</a></li>
-<li><a href="../pspf_2025/more-docs/fep-0005-runtime-jit-loading.md">FEP-0005: Runtime JIT Loading</a></li>
-<li><a href="../pspf_2025/more-docs/fep-0006-staged-payload-architecture.md">FEP-0006: Staged Payload Architecture</a></li>
+<li><a href="../fep-0001-core-format-and-operation-chains/">FEP-0001: Core Format and Operation Chains</a></li>
+<li><a href="../fep-0002-json-metadata-format/">FEP-0002: JSON Metadata Format</a></li>
+<li><a href="../fep-0003-operation-registry/">FEP-0003: Operation Registry</a></li>
 </ul>
-<h3 id="additional-documentation">Additional Documentation<a class="headerlink" href="#additional-documentation" title="Permanent link">&para;</a></h3>
+<h3 id="future-enhancement-proposals">Future Enhancement Proposals<a class="headerlink" href="#future-enhancement-proposals" title="Permanent link">&para;</a></h3>
 <ul>
-<li><a href="../pspf_2025/more-docs/pspf-2025-more-info.md">PSPF 2025 More Information</a></li>
-<li><a href="../pspf_2025/more-docs/payload-structure.md">Payload Structure</a></li>
-<li><a href="../pspf_2025/more-docs/supply-chain-jit.md">Supply Chain JIT</a></li>
+<li><a href="../future/fep-0004-supply-chain-jit/">FEP-0004: Supply Chain JIT</a></li>
+<li><a href="../future/fep-0005-runtime-jit-loading/">FEP-0005: Runtime JIT Loading</a></li>
+<li><a href="../future/fep-0006-staged-payload-architecture/">FEP-0006: Staged Payload Architecture</a></li>
 </ul>
 <h2 id="api-reference">API Reference<a class="headerlink" href="#api-reference" title="Permanent link">&para;</a></h2>
 <p>For Python implementation details, see:
-- <a href="../api/reference/index.md">FlavorPack API Reference</a>
-- <a href="../api/reference/flavor/psp/format_2025/index.md">PSP Format 2025 API</a>
-- <a href="../api/reference/flavor/psp/format_2025/builder.md">Package Building</a>
-- <a href="../api/reference/flavor/psp/format_2025/reader.md">Package Reading</a></p>
+- <a href="../../../api/">API Documentation</a>
+- <a href="../../../api/packaging/">Packaging API</a>
+- <a href="../../../api/builder/">Builder API</a>
+- <a href="../../../api/reader/">Reader API</a>
+- <a href="../../../api/crypto/">Crypto API</a></p>
 <h2 id="concepts">Concepts<a class="headerlink" href="#concepts" title="Permanent link">&para;</a></h2>
 <ul>
-<li><a href="../guide/concepts/pspf-format.md">PSPF Format Concepts</a></li>
-<li><a href="../guide/concepts/package-structure.md">Package Structure</a></li>
-<li><a href="../guide/concepts/security.md">Security Model</a></li>
-<li><a href="../guide/concepts/workenv.md">Work Environments</a></li>
+<li><a href="../../../guide/concepts/pspf-format/">PSPF Format Concepts</a></li>
+<li><a href="../../../guide/concepts/package-structure/">Package Structure</a></li>
+<li><a href="../../../guide/concepts/security/">Security Model</a></li>
+<li><a href="../../../guide/concepts/workenv/">Work Environments</a></li>
 </ul>
 <h2 id="implementation">Implementation<a class="headerlink" href="#implementation" title="Permanent link">&para;</a></h2>
 <ul>
-<li><a href="../guide/packaging/index.md">Packaging Guide</a></li>
-<li><a href="../guide/packaging/python.md">Python Applications</a></li>
-<li><a href="../guide/packaging/signing.md">Package Signing</a></li>
-<li><a href="../guide/packaging/manifest.md">Manifest Format</a></li>
+<li><a href="../../../guide/packaging/">Packaging Guide</a></li>
+<li><a href="../../../guide/packaging/python/">Python Applications</a></li>
+<li><a href="../../../guide/packaging/signing/">Package Signing</a></li>
+<li><a href="../../../guide/packaging/manifest/">Manifest Format</a></li>
 </ul>
 
 
@@ -3214,11 +3205,11 @@
       
         <script src="https://unpkg.com/mermaid@10/dist/mermaid.min.js"></script>
       
-        <script src="../../../../provide-foundry/shared-theme/javascripts/mermaid-init.js"></script>
+        <script src="../../../.shared-theme/javascripts/mermaid-init.js"></script>
       
-        <script src="../../../../provide-foundry/shared-theme/javascripts/termynal.js"></script>
+        <script src="../../../.shared-theme/javascripts/termynal.js"></script>
       
-        <script src="../../../../provide-foundry/shared-theme/javascripts/custom.js"></script>
+        <script src="../../../.shared-theme/javascripts/custom.js"></script>
       
     
   </body>
