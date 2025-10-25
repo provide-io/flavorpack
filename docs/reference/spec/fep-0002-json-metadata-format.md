@@ -716,7 +716,7 @@ LOWER = %x61-7A  ; a-z
           },
           "checksum": {
             "type": "string",
-            "pattern": "^[a-f0-9]{8}$"
+            "pattern": "^[a-f0-9]{16}$"
           },
           "permissions": {
             "type": "string",
