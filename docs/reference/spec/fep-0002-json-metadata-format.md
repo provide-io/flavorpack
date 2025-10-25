@@ -380,11 +380,11 @@ Original size before operations applied. If omitted, assumed equal to `size`.
 
 #### 4.3.8 checksum (REQUIRED)
 
-**Type**: string  
-**Pattern**: `^[a-f0-9]{8}$`  
-**Example**: "deadbeef"  
+**Type**: string
+**Pattern**: `^[a-f0-9]{16}$`
+**Example**: "deadbeef01234567"
 
-Adler-32 checksum of stored slot data as 8-character hex string.
+SHA-256 hash of stored slot data (first 8 bytes) as 16-character hex string.
 
 #### 4.3.9 permissions (OPTIONAL)
 
