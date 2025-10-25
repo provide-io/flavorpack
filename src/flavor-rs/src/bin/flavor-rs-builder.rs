@@ -1,7 +1,7 @@
 //! Flavor Rust builder binary
 
 use clap::Parser;
-use flavor::{build_package, BuildOptions, exit_codes::*};
+use flavor::{BuildOptions, build_package, exit_codes::*};
 use std::{env, panic, path::PathBuf, process};
 
 const VERSION: &str = flavor::version::VERSION;
@@ -48,10 +48,10 @@ fn main() {
         eprintln!("PANIC: {}", panic_info);
         process::exit(EXIT_PANIC);
     }));
-    
+
     // Wrap main logic in catch_unwind for extra safety
     let result = panic::catch_unwind(run);
-    
+
     match result {
         Ok(exit_code) => process::exit(exit_code),
         Err(_) => {
@@ -93,7 +93,13 @@ fn run() -> i32 {
             match e.to_string() {
                 s if s.contains("manifest") || s.contains("config") => EXIT_CONFIG_ERROR,
                 s if s.contains("PSPF") || s.contains("format") => EXIT_PSPF_ERROR,
-                s if s.contains("I/O") || s.contains("file") || s.contains("read") || s.contains("write") => EXIT_IO_ERROR,
+                s if s.contains("I/O")
+                    || s.contains("file")
+                    || s.contains("read")
+                    || s.contains("write") =>
+                {
+                    EXIT_IO_ERROR
+                }
                 s if s.contains("signature") || s.contains("key") => EXIT_SIGNATURE_ERROR,
                 s if s.contains("dependency") || s.contains("missing") => EXIT_DEPENDENCY_ERROR,
                 _ => EXIT_BUILD_ERROR,

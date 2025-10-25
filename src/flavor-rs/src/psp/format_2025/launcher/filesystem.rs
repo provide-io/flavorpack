@@ -50,17 +50,16 @@ pub(super) fn fix_shebangs(bin_dir: &Path, old_prefix: &Path, new_prefix: &Path)
                     let old_prefix_bytes = old_prefix_str.as_bytes();
 
                     // Check if the shebang contains the old prefix
-                    if first_line.windows(old_prefix_bytes.len())
+                    if first_line
+                        .windows(old_prefix_bytes.len())
                         .any(|window| window == old_prefix_bytes)
                     {
                         // Replace old prefix with new prefix in first line
                         let mut new_content = Vec::new();
                         let first_line_str = String::from_utf8_lossy(first_line);
                         let new_prefix_str = new_prefix.to_string_lossy();
-                        let new_first_line = first_line_str.replace(
-                            old_prefix_str.as_ref(),
-                            new_prefix_str.as_ref()
-                        );
+                        let new_first_line = first_line_str
+                            .replace(old_prefix_str.as_ref(), new_prefix_str.as_ref());
                         new_content.extend_from_slice(new_first_line.as_bytes());
                         new_content.extend_from_slice(&content[newline_pos..]);
 
@@ -68,7 +67,10 @@ pub(super) fn fix_shebangs(bin_dir: &Path, old_prefix: &Path, new_prefix: &Path)
                         let mut file = fs::File::create(&path)?;
                         file.write_all(&new_content)?;
 
-                        debug!("Fixed shebang in {:?}", path.file_name().unwrap_or_default());
+                        debug!(
+                            "Fixed shebang in {:?}",
+                            path.file_name().unwrap_or_default()
+                        );
                     }
                 }
             }

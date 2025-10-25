@@ -105,8 +105,22 @@ func savePackageChecksum(paths *WorkenvPaths, checksum uint32, logger hclog.Logg
 	checksumPath := paths.ChecksumFile()
 	checksumStr := fmt.Sprintf("%08x", checksum)
 
-	if err := os.WriteFile(checksumPath, []byte(checksumStr), 0644); err != nil {
-		logger.Debug("⚠️ Failed to save package checksum", "error", err)
+	// Open file with explicit sync to ensure write is flushed before exec
+	file, err := os.OpenFile(checksumPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	if err != nil {
+		logger.Debug("⚠️ Failed to open checksum file", "error", err)
+		return err
+	}
+	defer file.Close()
+
+	if _, err := file.WriteString(checksumStr); err != nil {
+		logger.Debug("⚠️ Failed to write package checksum", "error", err)
+		return err
+	}
+
+	// Explicitly sync to disk before syscall.Exec replaces process
+	if err := file.Sync(); err != nil {
+		logger.Debug("⚠️ Failed to sync checksum file", "error", err)
 		return err
 	}
 

@@ -28,6 +28,7 @@ type SlotMetadata struct {
 	Lifecycle   string `json:"lifecycle"`
 	Resolution  string `json:"resolution,omitempty"`  // When to resolve: build|runtime|lazy
 	Permissions string `json:"permissions,omitempty"` // Unix permissions (e.g., "0755")
+	SelfRef     *bool  `json:"self_ref,omitempty"`    // Self-referential slot (references launcher itself)
 }
 
 // SlotDescriptor is the 64-byte enhanced slot descriptor format

@@ -4,9 +4,9 @@ import (
 	"archive/tar"
 	"bytes"
 	"compress/gzip"
+	"crypto/sha256"
 	"encoding/binary"
 	"fmt"
-	"hash/adler32"
 	"io"
 	"os"
 	"path/filepath"
@@ -55,18 +55,27 @@ func (r *Reader) ReadSlot(slotIndex int) ([]byte, error) {
 		return nil, err
 	}
 
-	// Verify checksum of compressed data (entry.Checksum is uint64 but only uses lower 32 bits)
-	if uint64(adler32.Checksum(slotData)) != entry.Checksum {
-		return nil, ErrChecksumMismatch
-	}
-
-	// Decompress based on operations chain
-	operations := UnpackOperations(entry.Operations)
+	// Verify checksum of compressed data (SHA-256 first 8 bytes)
+	hash := sha256.Sum256(slotData)
+	actualChecksum := binary.LittleEndian.Uint64(hash[:8])
 
 	logger := r.logger
 	if logger == nil {
 		logger = hclog.L()
 	}
+	logger.Debug("🐹 Go launcher verifying slot checksum",
+		"slot_id", entry.ID,
+		"data_length", len(slotData),
+		"first_16_bytes", fmt.Sprintf("%02x", slotData[:16]),
+		"computed_checksum", fmt.Sprintf("%016x", actualChecksum),
+		"expected_checksum", fmt.Sprintf("%016x", entry.Checksum))
+
+	if actualChecksum != entry.Checksum {
+		return nil, ErrChecksumMismatch
+	}
+
+	// Decompress based on operations chain
+	operations := UnpackOperations(entry.Operations)
 	logger.Trace("🔍 Slot operations", "operations", fmt.Sprintf("%#x", entry.Operations), "unpacked", operations)
 
 	// Apply operations in reverse order (unwrap the layers)

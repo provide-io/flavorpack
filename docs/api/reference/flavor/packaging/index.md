@@ -1,3 +1,0 @@
-# `flavor.packaging`
-
-::: flavor.packaging

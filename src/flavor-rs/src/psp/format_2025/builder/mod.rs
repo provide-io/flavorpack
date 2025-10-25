@@ -1,14 +1,17 @@
 //! PSPF/2025 package builder
 
-mod slot_processor;
-mod metadata;
 mod finalization;
+mod metadata;
+mod slot_processor;
 
+use finalization::{
+    finalize_package, reserve_descriptor_space, stream_slot_data, write_descriptor_table,
+    write_metadata_bytes,
+};
+use metadata::{compress_and_sign_metadata, create_metadata};
 use slot_processor::SlotProcessor;
-use metadata::{create_metadata, compress_and_sign_metadata};
-use finalization::{write_metadata_bytes, reserve_descriptor_space, stream_slot_data, write_descriptor_table, finalize_package};
 
-use super::constants::{HEADER_SIZE};
+use super::constants::HEADER_SIZE;
 use super::defaults::{CAPABILITY_MMAP, CAPABILITY_SIGNED};
 use super::index::Index;
 use super::keys::load_or_generate_keys;
@@ -24,6 +27,8 @@ use std::time::Instant;
 /// Build a PSPF/2025 package
 pub fn build(manifest_path: &Path, output_path: &Path, options: BuildOptions) -> Result<()> {
     let _start_time = Instant::now();
+    info!("🦀🦀🦀 Hello from Flavor's Rust Builder 🦀🦀🦀");
+    info!("PSPF Rust Builder starting...");
     info!("🔨 Building PSPF/2025 package from: {manifest_path:?}");
     trace!("🔍 Build options: {:?}", options);
 
@@ -58,11 +63,8 @@ pub fn build(manifest_path: &Path, output_path: &Path, options: BuildOptions) ->
     write_metadata_bytes(&mut out, &compressed_metadata, &mut index)?;
 
     // Phase 5: Reserve space for descriptor table
-    let descriptor_table_offset = reserve_descriptor_space(
-        &mut out,
-        &slot_processor.slot_descriptors,
-        &mut index
-    )?;
+    let descriptor_table_offset =
+        reserve_descriptor_space(&mut out, &slot_processor.slot_descriptors, &mut index)?;
 
     // Phase 6: Write slot data and update descriptors
     let mut slot_descriptors = slot_processor.slot_descriptors;
@@ -72,7 +74,14 @@ pub fn build(manifest_path: &Path, output_path: &Path, options: BuildOptions) ->
     let end_pos = write_descriptor_table(&mut out, &slot_descriptors, descriptor_table_offset)?;
 
     // Phase 8: Finalize package with MagicTrailer
-    finalize_package(&mut out, &mut index, end_pos, output_path, &manifest, &options)?;
+    finalize_package(
+        &mut out,
+        &mut index,
+        end_pos,
+        output_path,
+        &manifest,
+        &options,
+    )?;
 
     Ok(())
 }

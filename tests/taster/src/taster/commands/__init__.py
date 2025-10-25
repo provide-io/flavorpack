@@ -1,7 +1,6 @@
 """Taster command modules"""
 
 from .argv import argv_command
-from .crosslang import crosslang_command
 from .echo import echo_command
 from .env import env_command
 from .features import features_command
@@ -14,7 +13,6 @@ from .verify import verify_command
 
 __all__ = [
     "argv_command",
-    "crosslang_command",
     "echo_command",
     "env_command",
     "features_command",

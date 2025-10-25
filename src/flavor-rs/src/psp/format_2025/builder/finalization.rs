@@ -1,10 +1,13 @@
 //! Package finalization and index writing
 
-use super::super::constants::{MAGIC_TRAILER_SIZE, MAGIC_WAND_EMOJI_BYTES, PACKAGE_EMOJI_BYTES, SLOT_ALIGNMENT, SLOT_DESCRIPTOR_SIZE};
+use super::super::constants::{
+    MAGIC_TRAILER_SIZE, MAGIC_WAND_EMOJI_BYTES, PACKAGE_EMOJI_BYTES, SLOT_ALIGNMENT,
+    SLOT_DESCRIPTOR_SIZE,
+};
 use super::super::defaults::DEFAULT_DIR_PERMS;
 use super::super::index::Index;
 use super::super::manifest::BuildManifest;
-use super::super::slots::{align_offset, SlotDescriptor};
+use super::super::slots::{SlotDescriptor, align_offset};
 use crate::api::BuildOptions;
 use crate::exceptions::Result;
 use log::{debug, info, trace};
@@ -13,7 +16,11 @@ use std::io::{self, Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};
 
 /// Write metadata to output file
-pub(super) fn write_metadata_bytes(out: &mut File, compressed: &[u8], index: &mut Index) -> Result<()> {
+pub(super) fn write_metadata_bytes(
+    out: &mut File,
+    compressed: &[u8],
+    index: &mut Index,
+) -> Result<()> {
     let metadata_pos = out.stream_position()?;
     debug!("📝 Writing metadata at position {:#x}", metadata_pos);
 
@@ -90,6 +97,13 @@ pub(super) fn stream_slot_data(
     trace!("📦 Streaming slot data to output");
 
     for (i, (descriptor, slot_path)) in descriptors.iter_mut().zip(slot_paths).enumerate() {
+        // Skip empty paths (self-referential slots)
+        if slot_path.as_os_str().is_empty() {
+            debug!("⏭️  Skipping slot {} (self-referential, no data)", i);
+            descriptor.offset = 0; // No offset for self-ref slots
+            continue;
+        }
+
         // Align position
         let current = out.stream_position()?;
         let aligned = align_offset(current, SLOT_ALIGNMENT);
@@ -107,9 +121,7 @@ pub(super) fn stream_slot_data(
 
         debug!(
             "📍 Wrote slot {}: offset={:#x}, size={} bytes",
-            i,
-            slot_offset,
-            bytes_copied
+            i, slot_offset, bytes_copied
         );
     }
 
@@ -172,8 +184,14 @@ pub(super) fn finalize_package(
 
     // Log success message
     log::info!("✅ Successfully built PSPF bundle: {output_path:?}");
-    log::info!("  Package: {} v{}", manifest.package.name, manifest.package.version);
-    let launcher_display = options.launcher_bin.as_ref()
+    log::info!(
+        "  Package: {} v{}",
+        manifest.package.name,
+        manifest.package.version
+    );
+    let launcher_display = options
+        .launcher_bin
+        .as_ref()
         .map(|p| p.display().to_string())
         .or_else(|| std::env::var("FLAVOR_LAUNCHER_BIN").ok())
         .unwrap_or_else(|| "unknown".to_string());

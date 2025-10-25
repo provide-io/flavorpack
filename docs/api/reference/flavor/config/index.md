@@ -1,3 +1,0 @@
-# `flavor.config`
-
-::: flavor.config

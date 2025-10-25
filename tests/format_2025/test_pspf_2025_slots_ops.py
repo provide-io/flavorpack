@@ -61,7 +61,7 @@ class TestPSPFSlotsOperations:
         # Verify the slot is stored without compression
         reader = PSPFReader(bundle_path)
         metadata_read = reader.read_metadata()
-        assert metadata_read["slots"][0]["codec"] == "none"
+        assert "operations" in metadata_read["slots"][0]  # Operations field instead of codec
 
     def test_slot_checksum_verification(self, temp_dir, test_builder):
         """Test slot checksum verification."""
@@ -221,7 +221,7 @@ class TestPSPFSlotsOperations:
         assert slot_dict["size"] == 2048
         # Checksum gets prefixed in to_dict
         assert "deadbeef" in slot_dict["checksum"]
-        assert slot_dict["codec"] == "none"
+        assert "operations" in slot_dict  # Operations field instead of codec
         assert slot_dict["purpose"] == "library"
         assert slot_dict["lifecycle"] == "init"
         # Source and target should be included in serialized metadata

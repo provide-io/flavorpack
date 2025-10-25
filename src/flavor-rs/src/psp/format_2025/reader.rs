@@ -5,10 +5,13 @@ use log::{debug, error, trace};
 use std::path::Path;
 use std::time::Instant;
 
-use super::backends::{create_backend, Backend, MMapBackend};
-use super::constants::{MAGIC_TRAILER_SIZE, PACKAGE_EMOJI_BYTES, MAGIC_WAND_EMOJI_BYTES, HEADER_SIZE, SLOT_DESCRIPTOR_SIZE};
-use super::defaults::ACCESS_AUTO;
+use super::backends::{Backend, MMapBackend, create_backend};
+use super::constants::{
+    HEADER_SIZE, MAGIC_TRAILER_SIZE, MAGIC_WAND_EMOJI_BYTES, PACKAGE_EMOJI_BYTES,
+    SLOT_DESCRIPTOR_SIZE,
+};
 use super::debug::debug_dump;
+use super::defaults::ACCESS_AUTO;
 use super::extraction::extract_slot;
 use super::index::Index;
 use super::metadata::Metadata;
@@ -183,19 +186,18 @@ impl Reader {
                 }
             }
 
-            // Verify metadata checksum (first 4 bytes of the 32-byte array)
-            let checksum = adler::adler32_slice(&metadata_data);
-            let expected_checksum =
-                u32::from_le_bytes(index.metadata_checksum[0..4].try_into()
-                    .map_err(|_| FlavorError::Generic("Invalid metadata checksum bytes".into()))?);
-            if checksum != expected_checksum {
+            // Verify metadata checksum (full SHA-256, 32 bytes)
+            use sha2::{Digest, Sha256};
+            let actual_hash = Sha256::digest(&metadata_data);
+            let actual_checksum: [u8; 32] = actual_hash.into();
+            if actual_checksum != index.metadata_checksum {
                 debug!(
-                    "❌ Metadata checksum mismatch: expected {:#x}, got {:#x}",
-                    expected_checksum, checksum
+                    "❌ Metadata checksum mismatch: expected {:02x?}, got {:02x?}",
+                    &index.metadata_checksum[..8], &actual_checksum[..8]
                 );
                 return Err(FlavorError::Generic("Metadata checksum mismatch".into()));
             }
-            trace!("✅ Metadata checksum verified: {:#x}", checksum);
+            trace!("✅ Metadata checksum verified (SHA-256)");
 
             // Parse metadata - always gzip compressed for now
             let metadata: Metadata = if true {
@@ -262,10 +264,9 @@ impl Reader {
         let file_size = self.path.metadata()?.len();
 
         // Read MagicTrailer (last 8200 bytes)
-        let trailer = self.backend.read_at(
-            file_size - MAGIC_TRAILER_SIZE as u64,
-            MAGIC_TRAILER_SIZE
-        )?;
+        let trailer = self
+            .backend
+            .read_at(file_size - MAGIC_TRAILER_SIZE as u64, MAGIC_TRAILER_SIZE)?;
 
         // Verify emoji bookends
         if &trailer[..4] != PACKAGE_EMOJI_BYTES {
@@ -273,17 +274,20 @@ impl Reader {
                 "Invalid MagicTrailer: missing 📦 at start".into(),
             ));
         }
-        if &trailer[MAGIC_TRAILER_SIZE-4..] != MAGIC_WAND_EMOJI_BYTES {
+        if &trailer[MAGIC_TRAILER_SIZE - 4..] != MAGIC_WAND_EMOJI_BYTES {
             return Err(FlavorError::Generic(
                 "Invalid MagicTrailer: missing 🪄 at end".into(),
             ));
         }
 
         // Extract index from between emojis
-        let index_data = trailer[4..4+HEADER_SIZE].to_vec();
+        let index_data = trailer[4..4 + HEADER_SIZE].to_vec();
 
         trace!("Found index in MagicTrailer");
-        debug!("Trailer size: {}, file size: {} bytes", MAGIC_TRAILER_SIZE, file_size);
+        debug!(
+            "Trailer size: {}, file size: {} bytes",
+            MAGIC_TRAILER_SIZE, file_size
+        );
 
         Ok(index_data)
     }
@@ -295,7 +299,9 @@ impl Reader {
             self.read_index()?;
         }
 
-        let index = self.index.as_ref()
+        let index = self
+            .index
+            .as_ref()
             .ok_or_else(|| FlavorError::Generic("Index not loaded".into()))?;
         let desc_count = index.slot_count;
         let desc_offset = index.slot_table_offset;
@@ -338,10 +344,7 @@ impl Reader {
                 let desc_checksum = descriptor.checksum;
                 trace!(
                     "📋 Descriptor {}: offset={:#x}, size={}, checksum={:#x}",
-                    i,
-                    desc_offset,
-                    desc_size,
-                    desc_checksum
+                    i, desc_offset, desc_size, desc_checksum
                 );
                 descriptors.push(descriptor);
             } else {
@@ -358,8 +361,7 @@ impl Reader {
         let desc_size = descriptor.size;
         trace!(
             "🔍 Reading slot from descriptor: offset={:#x}, size={}",
-            desc_offset,
-            desc_size
+            desc_offset, desc_size
         );
         let data = self.backend.read_slot(descriptor)?;
 
