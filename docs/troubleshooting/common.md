@@ -205,7 +205,7 @@ rm -rf workenv/
 uv sync
 
 # Verify installation
-workenv/flavor_*/bin/python -c "import flavor; print(flavor.__version__)"
+uv run python -c "import flavor; print(flavor.__version__)"
 ```
 
 #### Test Failures

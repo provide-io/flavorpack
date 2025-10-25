@@ -77,7 +77,7 @@ flavor pack --launcher-bin /path/to/launcher
 **Solution**:
 ```bash
 # Check Python version
-python --version  # Should be 3.9+
+python --version  # Should be 3.11+
 
 # Install venv module
 apt-get install python3-venv  # Debian/Ubuntu
