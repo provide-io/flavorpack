@@ -284,6 +284,6 @@ flavor pack --force
 ## Next Steps
 
 - **[Web Applications](web-app.md)** - Package Flask/FastAPI apps
-- **[Data Pipelines](data-pipeline.md)** - Package data processing tools
+- **[Examples Index](index.md)** - More cookbook examples
 - **[Docker Integration](../recipes/docker.md)** - Use in containers
 - **[CI/CD](../recipes/ci-cd.md)** - Automate packaging in CI pipelines
