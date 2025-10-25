@@ -3,7 +3,7 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![Go 1.21+](https://img.shields.io/badge/go-1.21+-00ADD8.svg)](https://golang.org/dl/)
 [![Rust 1.75+](https://img.shields.io/badge/rust-1.75+-orange.svg)](https://www.rust-lang.org/)
-[![CI Pipeline](https://img.shields.io/badge/CI-passing-brightgreen.svg)](https://github.com/provide-io/flavor/actions)
+[![CI Pipeline](https://img.shields.io/badge/CI-passing-brightgreen.svg)](https://github.com/provide-io/flavorpack/actions)
 
 Flavor Pack (`flavorpack`) is a cross-language packaging system that creates self-contained, portable executables using the **Progressive Secure Package Format (PSPF) 2025 Edition**. It enables you to ship Python applications as single binaries that "just work" - no installation, no dependencies, no configuration required.
 
@@ -28,8 +28,8 @@ Flavor Pack (`flavorpack`) is a cross-language packaging system that creates sel
 
 ```bash
 # Clone the repository
-git clone https://github.com/provide-io/flavor.git
-cd flavor
+git clone https://github.com/provide-io/flavorpack.git
+cd flavorpack
 
 # Set up environment and install dependencies
 uv sync

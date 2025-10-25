@@ -29,8 +29,8 @@ The project uses `uv` for Python package management and `workenv` for coordinati
 
 ```bash
 # Clone the repository
-git clone https://github.com/provide-io/flavor.git
-cd flavor
+git clone https://github.com/provide-io/flavorpack.git
+cd flavorpack
 
 # Set up the development environment
 uv sync
