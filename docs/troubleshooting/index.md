@@ -39,7 +39,7 @@ flavor workenv info
 export FOUNDATION_LOG_LEVEL=debug
 
 # Run with debug output
-FOUNDATION_LOG_LEVEL=debug flavor pack pyproject.toml
+FOUNDATION_LOG_LEVEL=debug flavor pack --manifest pyproject.toml
 
 # Debug package execution
 FLAVOR_LOG_LEVEL=debug ./myapp.psp
@@ -153,7 +153,7 @@ strip = true
 ```bash
 # Interrupt and retry (Ctrl+C)
 # Enable debug logging to see where it hangs
-FOUNDATION_LOG_LEVEL=debug flavor pack pyproject.toml
+FOUNDATION_LOG_LEVEL=debug flavor pack --manifest pyproject.toml
 
 # Clear build cache if stuck
 rm -rf ~/.cache/flavor/build
@@ -384,7 +384,7 @@ flavor verify myapp.psp
 sha256sum myapp.psp
 
 # Rebuild package with signing
-flavor pack pyproject.toml --private-key keys/flavor-private.key --public-key keys/flavor-public.key
+flavor pack --manifest pyproject.toml --private-key keys/flavor-private.key --public-key keys/flavor-public.key
 ```
 
 #### Key Generation Issues
@@ -397,7 +397,7 @@ flavor pack pyproject.toml --private-key keys/flavor-private.key --public-key ke
 flavor keygen --out-dir keys/
 
 # Use deterministic key (for CI/CD)
-flavor pack pyproject.toml --key-seed "secret-seed"
+flavor pack --manifest pyproject.toml --key-seed "secret-seed"
 
 # Check key permissions
 chmod 600 keys/flavor-private.key
@@ -446,10 +446,10 @@ export FLAVOR_NO_CACHE=1
 
 ```bash
 # Maximum verbosity
-FOUNDATION_LOG_LEVEL=trace flavor pack pyproject.toml
+FOUNDATION_LOG_LEVEL=trace flavor pack --manifest pyproject.toml
 
 # Log to file
-FLAVOR_LOG_FILE=build.log flavor pack pyproject.toml
+FLAVOR_LOG_FILE=build.log flavor pack --manifest pyproject.toml
 
 # Debug execution
 FLAVOR_LOG_LEVEL=debug ./myapp.psp 2>&1 | tee run.log
@@ -535,9 +535,9 @@ The following performance optimizations are planned for future releases:
 
 ```bash
 # Not yet implemented - coming in future versions
-flavor pack pyproject.toml --parallel        # Parallel packaging
-flavor pack pyproject.toml --no-tests        # Skip test files
-flavor pack pyproject.toml --no-docs         # Skip documentation
+flavor pack --manifest pyproject.toml --parallel        # Parallel packaging
+flavor pack --manifest pyproject.toml --no-tests        # Skip test files
+flavor pack --manifest pyproject.toml --no-docs         # Skip documentation
 ```
 
 #### Extraction Optimizations (Planned)
@@ -609,7 +609,7 @@ uname -a
 flavor inspect problematic.psp
 
 # Error logs
-FOUNDATION_LOG_LEVEL=debug flavor pack pyproject.toml 2>&1 | tee error.log
+FOUNDATION_LOG_LEVEL=debug flavor pack --manifest pyproject.toml 2>&1 | tee error.log
 
 # Environment
 env | grep FLAVOR

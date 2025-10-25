@@ -493,13 +493,13 @@ no_dev_deps = true
 
 ```bash
 # Build with compression
-flavor pack pyproject.toml --compress
+flavor pack --manifest pyproject.toml --compress
 
 # Strip debug symbols
-flavor pack pyproject.toml --strip
+flavor pack --manifest pyproject.toml --strip
 
 # Exclude unnecessary files
-flavor pack pyproject.toml \
+flavor pack --manifest pyproject.toml \
   --exclude "**/__pycache__" \
   --exclude "**/*.pyc" \
   --exclude "**/.git"
@@ -788,7 +788,7 @@ flavor inspect package.psp --show-deps
 pip check
 
 # Force reinstall
-flavor pack pyproject.toml --force-reinstall
+flavor pack --manifest pyproject.toml --force-reinstall
 ```
 
 ### Performance Issues

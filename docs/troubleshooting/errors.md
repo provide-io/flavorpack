@@ -101,7 +101,7 @@ dependencies = [
 ]
 
 # 📋 PLANNED: --no-deps option not yet implemented
-# flavor pack pyproject.toml --no-deps
+# flavor pack --manifest pyproject.toml --no-deps
 
 # Current workaround: Fix dependency conflicts in pyproject.toml
 ```
@@ -117,7 +117,7 @@ flavor clean
 rm -rf build/ dist/
 
 # Or use different build directory
-flavor pack pyproject.toml --build-dir /tmp/build
+flavor pack --manifest pyproject.toml --build-dir /tmp/build
 ```
 
 #### "Insufficient disk space"
@@ -176,7 +176,7 @@ lifecycle = "persistent"  # Valid lifecycle
 **Solution**:
 ```bash
 # Use valid platform
-flavor pack pyproject.toml --platform linux_amd64
+flavor pack --manifest pyproject.toml --platform linux_amd64
 # Valid: linux_amd64, linux_arm64, darwin_amd64, darwin_arm64, windows_amd64
 ```
 
@@ -260,8 +260,8 @@ exclude = [
 ]
 
 # 📋 PLANNED: Compression and strip options not yet implemented
-# flavor pack pyproject.toml --compress
-# flavor pack pyproject.toml --strip
+# flavor pack --manifest pyproject.toml --compress
+# flavor pack --manifest pyproject.toml --strip
 
 # Current: Optimize by excluding files in pyproject.toml
 ```
@@ -280,7 +280,7 @@ openssl pkey -in private.pem -check
 flavor keygen --output new-key.pem
 
 # Use deterministic seed
-flavor pack pyproject.toml --key-seed "secret"
+flavor pack --manifest pyproject.toml --key-seed "secret"
 ```
 
 ## Crypto Errors
@@ -314,10 +314,10 @@ flavor keygen --output private.pem
 ls -la private.pem
 
 # Use absolute path
-flavor pack pyproject.toml --private-key $(pwd)/private.pem
+flavor pack --manifest pyproject.toml --private-key $(pwd)/private.pem
 
 # Or use seed
-flavor pack pyproject.toml --key-seed "secret"
+flavor pack --manifest pyproject.toml --key-seed "secret"
 ```
 
 #### "Key generation failed"
@@ -347,7 +347,7 @@ openssl pkey -in private.pem -text | grep ED25519
 
 # Try with new key
 flavor keygen --output new.pem
-flavor pack pyproject.toml --private-key new.pem
+flavor pack --manifest pyproject.toml --private-key new.pem
 ```
 
 ## Verification Errors
@@ -367,7 +367,7 @@ file package.psp
 xxd -l 16 package.psp | grep "PSPF"
 
 # Rebuild package
-flavor pack pyproject.toml
+flavor pack --manifest pyproject.toml
 ```
 
 #### "Signature verification failed"
@@ -393,7 +393,7 @@ FLAVOR_VALIDATION=none ./package.psp
 **Solution**:
 ```bash
 # Rebuild package
-flavor pack pyproject.toml
+flavor pack --manifest pyproject.toml
 
 # Verify download if transferred
 curl -O https://example.com/package.psp
@@ -413,7 +413,7 @@ wget https://example.com/package.psp
 echo "expected_checksum package.psp" | sha256sum -c
 
 # Rebuild from source
-flavor pack pyproject.toml
+flavor pack --manifest pyproject.toml
 ```
 
 ## Runtime Errors
@@ -444,7 +444,7 @@ FLAVOR_CACHE=/tmp/cache ./package.psp
 **Solution**:
 ```bash
 # 📋 PLANNED: Python version selection not yet implemented
-# flavor pack pyproject.toml --python-version 3.11
+# flavor pack --manifest pyproject.toml --python-version 3.11
 
 # Current: Package uses build environment's Python version
 # Rebuild the package from a Python 3.11+ environment
@@ -469,7 +469,7 @@ dependencies = [
 ]
 
 # Rebuild package
-flavor pack pyproject.toml
+flavor pack --manifest pyproject.toml
 ```
 
 ### "Permission denied"
@@ -625,12 +625,12 @@ If you encounter an error not listed here:
 
 1. **Enable debug logging**:
    ```bash
-   FOUNDATION_LOG_LEVEL=debug flavor pack pyproject.toml
+   FOUNDATION_LOG_LEVEL=debug flavor pack --manifest pyproject.toml
    ```
 
 2. **Check the full error**:
    ```bash
-   flavor pack pyproject.toml 2>&1 | tee error.log
+   flavor pack --manifest pyproject.toml 2>&1 | tee error.log
    ```
 
 3. **Search existing issues**:
