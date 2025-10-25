@@ -52,6 +52,8 @@
       
     
     
+      <link rel="stylesheet" href="../../../assets/_mkdocstrings.css">
+    
       <link rel="stylesheet" href="../../../.shared-theme/stylesheets/provide-theme.css">
     
       <link rel="stylesheet" href="../../../.shared-theme/stylesheets/termynal.css">
@@ -3396,7 +3398,7 @@
 </span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5"></a>flavor<span class="w"> </span>pack<span class="w"> </span>--output<span class="w"> </span>myapp.psp
 </span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6"></a>
 </span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7"></a><span class="c1"># Package with signing</span>
-</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8"></a>flavor<span class="w"> </span>pack<span class="w"> </span>--private-key<span class="w"> </span>keys/private.pem<span class="w"> </span>--public-key<span class="w"> </span>keys/public.pem
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8"></a>flavor<span class="w"> </span>pack<span class="w"> </span>--private-key<span class="w"> </span>keys/flavor-private.key<span class="w"> </span>--public-key<span class="w"> </span>keys/flavor-public.key
 </span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9"></a>
 </span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10"></a><span class="c1"># Package with stripped binaries for smaller size</span>
 </span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11"></a>flavor<span class="w"> </span>pack<span class="w"> </span>--strip
@@ -3691,8 +3693,8 @@
 </span><span id="__span-13-9"><a id="__codelineno-13-9" name="__codelineno-13-9"></a>
 </span><span id="__span-13-10"><a id="__codelineno-13-10" name="__codelineno-13-10"></a><span class="c1"># Generated files</span>
 </span><span id="__span-13-11"><a id="__codelineno-13-11" name="__codelineno-13-11"></a>keys/
-</span><span id="__span-13-12"><a id="__codelineno-13-12" name="__codelineno-13-12"></a>├──<span class="w"> </span>private.pem<span class="w">  </span><span class="c1"># Ed25519 private key</span>
-</span><span id="__span-13-13"><a id="__codelineno-13-13" name="__codelineno-13-13"></a>└──<span class="w"> </span>public.pem<span class="w">   </span><span class="c1"># Ed25519 public key</span>
+</span><span id="__span-13-12"><a id="__codelineno-13-12" name="__codelineno-13-12"></a>├──<span class="w"> </span>flavor-private.key<span class="w">  </span><span class="c1"># Ed25519 private key</span>
+</span><span id="__span-13-13"><a id="__codelineno-13-13" name="__codelineno-13-13"></a>└──<span class="w"> </span>flavor-public.key<span class="w">   </span><span class="c1"># Ed25519 public key</span>
 </span></code></pre></div></td></tr></table></div>
 <div class="admonition warning">
 <p class="admonition-title">Key Security</p>
@@ -3942,8 +3944,8 @@ Use environment variables or secure key management systems in CI/CD.</p>
 </span><span id="__span-27-5"><a id="__codelineno-27-5" name="__codelineno-27-5"></a>flavor<span class="w"> </span>pack<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-27-6"><a id="__codelineno-27-6" name="__codelineno-27-6"></a><span class="w">  </span>--manifest<span class="w"> </span>pyproject.toml<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-27-7"><a id="__codelineno-27-7" name="__codelineno-27-7"></a><span class="w">  </span>--output<span class="w"> </span>myapp.psp<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-27-8"><a id="__codelineno-27-8" name="__codelineno-27-8"></a><span class="w">  </span>--private-key<span class="w"> </span>~/.flavor/keys/private.pem<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-27-9"><a id="__codelineno-27-9" name="__codelineno-27-9"></a><span class="w">  </span>--public-key<span class="w"> </span>~/.flavor/keys/public.pem
+</span><span id="__span-27-8"><a id="__codelineno-27-8" name="__codelineno-27-8"></a><span class="w">  </span>--private-key<span class="w"> </span>~/.flavor/keys/flavor-private.key<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-27-9"><a id="__codelineno-27-9" name="__codelineno-27-9"></a><span class="w">  </span>--public-key<span class="w"> </span>~/.flavor/keys/flavor-public.key
 </span><span id="__span-27-10"><a id="__codelineno-27-10" name="__codelineno-27-10"></a>
 </span><span id="__span-27-11"><a id="__codelineno-27-11" name="__codelineno-27-11"></a><span class="c1"># Verify the built package</span>
 </span><span id="__span-27-12"><a id="__codelineno-27-12" name="__codelineno-27-12"></a>flavor<span class="w"> </span>verify<span class="w"> </span>myapp.psp
@@ -4029,7 +4031,7 @@ Use environment variables or secure key management systems in CI/CD.</p>
 <li><a href="../inspection/">Inspecting Packages</a> - Deep package inspection</li>
 <li><a href="../cache/">Cache Management</a> - Work environment cache details</li>
 <li><a href="../environment/">Environment Variables</a> - All environment variables</li>
-<li><a href="../packaging/">Packaging Guide</a> - Creating packages</li>
+<li><a href="../../packaging/">Packaging Guide</a> - Creating packages</li>
 </ul>
 <hr />
 <p><strong>Need help?</strong> Run <code>flavor --help</code> or <code>flavor COMMAND --help</code> for command-specific documentation.</p>

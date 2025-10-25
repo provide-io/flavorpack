@@ -4,6 +4,9 @@
 [![Go 1.21+](https://img.shields.io/badge/go-1.21+-00ADD8.svg)](https://golang.org/dl/)
 [![Rust 1.75+](https://img.shields.io/badge/rust-1.75+-orange.svg)](https://www.rust-lang.org/)
 [![CI Pipeline](https://img.shields.io/badge/CI-passing-brightgreen.svg)](https://github.com/provide-io/flavorpack/actions)
+[![Version](https://img.shields.io/badge/version-0.0.1023--alpha-orange.svg)](https://github.com/provide-io/flavorpack/releases)
+
+> **⚠️ Alpha Software**: FlavorPack is in early development (v0.0.1023). APIs, file formats, and commands may change without notice. Not recommended for production use. Install from source only.
 
 Flavor Pack (`flavorpack`) is a cross-language packaging system that creates self-contained, portable executables using the **Progressive Secure Package Format (PSPF) 2025 Edition**. It enables you to ship Python applications as single binaries that "just work" - no installation, no dependencies, no configuration required.
 
@@ -24,7 +27,9 @@ Flavor Pack (`flavorpack`) is a cross-language packaging system that creates sel
 - UV package manager (`curl -LsSf https://astral.sh/uv/install.sh | sh`)
 - Go 1.21+ and Rust 1.75+ (for building helpers)
 
-### Installation
+### Installation (Source Only)
+
+> **Note**: FlavorPack is not yet available on PyPI. Source installation is currently the only option.
 
 ```bash
 # Clone the repository
@@ -34,7 +39,7 @@ cd flavorpack
 # Set up environment and install dependencies
 uv sync
 
-# Build the Go and Rust helpers
+# Build the Go and Rust helpers (required)
 make build-helpers
 # or directly: ./build.sh
 ```

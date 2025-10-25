@@ -66,7 +66,7 @@ flavor pack --manifest pyproject.toml
 flavor pack --output myapp.psp
 
 # Package with signing
-flavor pack --private-key keys/private.pem --public-key keys/public.pem
+flavor pack --private-key keys/flavor-private.key --public-key keys/flavor-public.key
 
 # Package with stripped binaries for smaller size
 flavor pack --strip
@@ -292,8 +292,8 @@ flavor keygen --out-dir ~/.flavor/keys
 
 # Generated files
 keys/
-├── private.pem  # Ed25519 private key
-└── public.pem   # Ed25519 public key
+├── flavor-private.key  # Ed25519 private key
+└── flavor-public.key   # Ed25519 public key
 ```
 
 !!! warning "Key Security"
@@ -501,8 +501,8 @@ flavor keygen --out-dir ~/.flavor/keys
 flavor pack \
   --manifest pyproject.toml \
   --output myapp.psp \
-  --private-key ~/.flavor/keys/private.pem \
-  --public-key ~/.flavor/keys/public.pem
+  --private-key ~/.flavor/keys/flavor-private.key \
+  --public-key ~/.flavor/keys/flavor-public.key
 
 # Verify the built package
 flavor verify myapp.psp
@@ -569,7 +569,7 @@ flavor workenv inspect pspf-a3f7b9c2d1e4f5a6
 - [Inspecting Packages](inspection.md) - Deep package inspection
 - [Cache Management](cache.md) - Work environment cache details
 - [Environment Variables](environment.md) - All environment variables
-- [Packaging Guide](../packaging/) - Creating packages
+- [Packaging Guide](../packaging/index.md) - Creating packages
 
 ---
 

@@ -15,20 +15,7 @@ FlavorPack packages can be optimized across three dimensions:
 
 ### Exclude Unnecessary Files
 
-Create `.flavorignore` to exclude files:
-
-```
-# .flavorignore
-tests/
-docs/
-*.pyc
-__pycache__/
-.git/
-.pytest_cache/
-*.egg-info/
-.coverage
-htmlcov/
-```
+Optimize your project structure to include only necessary files in the package by organizing your source code carefully and using proper `.gitignore` patterns.
 
 ### Minimal Dependencies
 
@@ -56,25 +43,36 @@ flavor pack --strip
 
 ### Compression Strategies
 
-```bash
-# Maximum compression (slower build)
-flavor pack --compress 9
+Configure compression in your manifest:
 
-# Default compression (balanced)
-flavor pack --compress 6
+```toml
+# Maximum compression (slower build, smaller package)
+[[tool.flavor.slots.entries]]
+name = "python-runtime"
+source = "venv/"
+operations = ["tar", "xz"]  # Maximum compression
 
-# Fast compression (faster build)
-flavor pack --compress 1
+# Balanced compression (default)
+[[tool.flavor.slots.entries]]
+name = "app-code"
+source = "src/"
+operations = ["tar", "zstd"]  # Fast and efficient
+
+# Fast compression (faster build, larger package)
+[[tool.flavor.slots.entries]]
+name = "data"
+source = "data/"
+operations = ["tar", "gzip"]  # Quick compression
 ```
 
 ### Size Comparison
 
 | Technique | Size Reduction | Build Time Impact |
 |-----------|----------------|-------------------|
-| `.flavorignore` | 10-30% | None |
-| `--strip` | 5-10% | None |
 | Minimal deps | 20-50% | Faster |
-| Max compression | 5-15% | Slower |
+| `--strip` | 5-10% | None |
+| xz compression | 10-20% | Slower |
+| zstd compression | 5-10% | Minimal |
 
 ---
 
@@ -108,7 +106,7 @@ FlavorPack automatically parallelizes:
 Monitor with:
 
 ```bash
-FLAVOR_LOG_LEVEL=debug flavor pack 2>&1 | grep -i "parallel"
+FOUNDATION_LOG_LEVEL=debug flavor pack 2>&1 | grep -i "parallel"
 ```
 
 ### Build Time Optimization
@@ -118,7 +116,7 @@ FLAVOR_LOG_LEVEL=debug flavor pack 2>&1 | grep -i "parallel"
 time flavor pack
 
 # Profile build
-FLAVOR_LOG_LEVEL=trace flavor pack 2>&1 | ts > build-profile.log
+FOUNDATION_LOG_LEVEL=trace flavor pack 2>&1 | ts > build-profile.log
 
 # Analyze bottlenecks
 grep -E "(took|duration)" build-profile.log
@@ -132,7 +130,7 @@ grep -E "(took|duration)" build-profile.log
 
 ```bash
 # Verify cache is being used
-FLAVOR_LOG_LEVEL=debug ./myapp.psp 2>&1 | grep cache
+FOUNDATION_LOG_LEVEL=debug ./myapp.psp 2>&1 | grep cache
 
 # Pre-populate cache
 ./myapp.psp --version  # First run creates cache

@@ -4,13 +4,45 @@ Configure FlavorPack's build, runtime, and execution behavior with environment v
 
 ## Overview
 
-FlavorPack uses environment variables to control various aspects of package creation, execution, and caching. Variables are categorized into:
+FlavorPack uses different environment variables depending on the context:
 
+- **FlavorPack CLI** (`flavor pack`, `flavor verify`, etc.): Uses `FOUNDATION_*` variables
+- **Packaged Applications** (`.psp` files): Uses `FLAVOR_*` variables
 - **Build-time**: Configure package creation
 - **Runtime**: Control package execution
 - **Cache**: Manage work environment cache
-- **Logging**: Control diagnostic output
-- **Platform**: Automatically set by FlavorPack (read-only)
+
+---
+
+## FlavorPack CLI Variables
+
+Variables for controlling the `flavor` command-line tool.
+
+### FOUNDATION_LOG_LEVEL
+
+**Default:** `info`
+**Values:** `trace`, `debug`, `info`, `warning`, `error`
+**Purpose:** Control logging verbosity for FlavorPack CLI commands
+
+```bash
+# Debug package building
+FOUNDATION_LOG_LEVEL=debug flavor pack
+
+# Trace-level logging
+FOUNDATION_LOG_LEVEL=trace flavor verify myapp.psp
+```
+
+### FOUNDATION_LOG_FILE
+
+**Default:** None
+**Purpose:** Write FlavorPack CLI logs to a file
+
+```bash
+# Log to file
+FOUNDATION_LOG_FILE=flavor-build.log flavor pack
+```
+
+---
 
 ---
 
@@ -55,15 +87,15 @@ flavor pack --manifest pyproject.toml
 
 ---
 
-## Runtime Variables
+## Packaged Application Variables
 
-Variables that affect package execution.
+Variables that affect execution of packaged `.psp` applications.
 
 ### FLAVOR_LOG_LEVEL
 
 **Default:** `info`
 **Values:** `trace`, `debug`, `info`, `warn`, `error`
-**Purpose:** Set logging verbosity for package execution
+**Purpose:** Set logging verbosity for packaged application execution
 
 ```bash
 # Debug package execution
@@ -134,11 +166,6 @@ export XDG_CACHE_HOME=/custom/cache
 # FlavorPack cache will be: /custom/cache/flavor/workenv
 ./myapp.psp
 ```
-
-### FLAVOR_WORKENV
-
-**Deprecated:** Use `FLAVOR_CACHE` instead
-**Purpose:** Legacy cache directory override
 
 ---
 
@@ -524,6 +551,21 @@ export FOUNDATION_LOG_LEVEL=warning
     - Never commit `.env` files with secrets
     - Use manifest `unset` for sensitive variables
     - Use `pass` to explicitly allow variables
+
+---
+
+## Deprecated Variables
+
+!!! danger "Do Not Use"
+    These variables are deprecated and should not be used in new code. They are documented here only for reference when maintaining legacy configurations.
+
+### FLAVOR_WORKENV
+
+**Status:** Deprecated
+**Replacement:** Use `FLAVOR_CACHE` instead
+**Purpose:** Legacy cache directory override (no longer supported)
+
+This variable has been replaced by `FLAVOR_CACHE`. Using `FLAVOR_WORKENV` may result in undefined behavior.
 
 ---
 

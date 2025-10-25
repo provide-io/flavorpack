@@ -23,10 +23,8 @@ cd flavorpack
 # Install UV if you haven't already
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# Create virtual environment and install
-uv venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-uv pip install -e .
+# Set up environment and install dependencies
+uv sync
 ```
 
 ### 2. Build Native Components

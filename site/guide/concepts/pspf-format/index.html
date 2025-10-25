@@ -52,6 +52,8 @@
       
     
     
+      <link rel="stylesheet" href="../../../assets/_mkdocstrings.css">
+    
       <link rel="stylesheet" href="../../../.shared-theme/stylesheets/provide-theme.css">
     
       <link rel="stylesheet" href="../../../.shared-theme/stylesheets/termynal.css">
@@ -3486,13 +3488,43 @@
 <li><strong>Manages</strong> the work environment cache</li>
 <li><strong>Executes</strong> the packaged application</li>
 </ul>
+<h4 id="launcher-flow">Launcher Flow<a class="headerlink" href="#launcher-flow" title="Permanent link">&para;</a></h4>
+<pre class="mermaid"><code>sequenceDiagram
+    participant User
+    participant Launcher as Launcher Binary
+    participant Index as Index Block
+    participant Cache as Work Environment Cache
+    participant App as Application
+
+    User-&gt;&gt;Launcher: Execute ./myapp.psp
+    Launcher-&gt;&gt;Launcher: Read own binary location
+    Launcher-&gt;&gt;Index: Seek to Index Block
+    Index--&gt;&gt;Launcher: Return metadata &amp; offsets
+
+    Launcher-&gt;&gt;Cache: Check cache (SHA-256 ID)
+
+    alt Cache exists &amp; valid
+        Cache--&gt;&gt;Launcher: Cache valid
+        Launcher-&gt;&gt;Launcher: Use cached workenv
+    else Cache invalid or missing
+        Cache--&gt;&gt;Launcher: Cache invalid
+        Launcher-&gt;&gt;Launcher: Extract all slots
+        Launcher-&gt;&gt;Cache: Create new workenv
+        Cache--&gt;&gt;Launcher: Workenv ready
+    end
+
+    Launcher-&gt;&gt;Launcher: Set FLAVOR_* env vars
+    Launcher-&gt;&gt;App: Execute application command
+    App-&gt;&gt;App: Run application logic
+    App--&gt;&gt;Launcher: Exit with code
+    Launcher--&gt;&gt;User: Return exit code</code></pre>
 <div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">Go Launcher</label><label for="__tabbed_1_2">Rust Launcher</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
 <div class="language-go highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Go</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-2-1">1</a></span>
 <span class="normal"><a href="#__codelineno-2-2">2</a></span>
 <span class="normal"><a href="#__codelineno-2-3">3</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1"></a><span class="c1">// Lightweight and fast</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2"></a><span class="c1">// ~2 MB binary size</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2"></a><span class="c1">// ~3-4 MB binary size</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3"></a><span class="c1">// Cross-platform support</span>
 </span></code></pre></div></td></tr></table></div>
 </div>
@@ -3500,7 +3532,7 @@
 <div class="language-rust highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Rust</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-3-1">1</a></span>
 <span class="normal"><a href="#__codelineno-3-2">2</a></span>
 <span class="normal"><a href="#__codelineno-3-3">3</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1"></a><span class="c1">// Memory-safe and efficient</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2"></a><span class="c1">// ~3 MB binary size</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2"></a><span class="c1">// ~1 MB binary size</span>
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3"></a><span class="c1">// Optimal performance</span>
 </span></code></pre></div></td></tr></table></div>
 </div>
@@ -3671,9 +3703,41 @@
 - <strong>Encoding</strong>: raw, tar, gzip, tar.gz
 - <strong>Lifecycle</strong>: persistent, ephemeral, cached
 - <strong>Permissions</strong>: read, write, execute flags</p>
+<h4 id="slot-descriptor-binary-layout-64-bytes">Slot Descriptor Binary Layout (64 bytes)<a class="headerlink" href="#slot-descriptor-binary-layout-64-bytes" title="Permanent link">&para;</a></h4>
+<pre class="mermaid"><code>graph LR
+    subgraph "Slot Descriptor - 64 bytes"
+        direction TB
+        A["offset&lt;br/&gt;8 bytes&lt;br/&gt;uint64&lt;br/&gt;bytes 0-7"] --&gt; B["size&lt;br/&gt;8 bytes&lt;br/&gt;uint64&lt;br/&gt;bytes 8-15"]
+        B --&gt; C["original_size&lt;br/&gt;8 bytes&lt;br/&gt;uint64&lt;br/&gt;bytes 16-23"]
+        C --&gt; D["data_checksum&lt;br/&gt;32 bytes&lt;br/&gt;SHA-256&lt;br/&gt;bytes 24-55"]
+        D --&gt; E["operations&lt;br/&gt;8 bytes&lt;br/&gt;uint64&lt;br/&gt;bytes 56-63"]
+    end
+
+    style A fill:#e3f2fd
+    style B fill:#fff3e0
+    style C fill:#f3e5f5
+    style D fill:#e8f5e9
+    style E fill:#fce4ec</code></pre>
+<p><strong>Operations Field Encoding</strong> (64-bit packed, up to 8 operations of 8 bits each):</p>
+<div class="language-text highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Text Only</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-6-1">1</a></span>
+<span class="normal"><a href="#__codelineno-6-2">2</a></span>
+<span class="normal"><a href="#__codelineno-6-3">3</a></span>
+<span class="normal"><a href="#__codelineno-6-4">4</a></span>
+<span class="normal"><a href="#__codelineno-6-5">5</a></span>
+<span class="normal"><a href="#__codelineno-6-6">6</a></span>
+<span class="normal"><a href="#__codelineno-6-7">7</a></span>
+<span class="normal"><a href="#__codelineno-6-8">8</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1"></a>Bit Layout:
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2"></a>┌──────────┬──────────┬──────────┬──────────┬──────────┬──────────┬──────────┬──────────┐
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3"></a>│  Op 7    │  Op 6    │  Op 5    │  Op 4    │  Op 3    │  Op 2    │  Op 1    │  Op 0    │
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4"></a>│  (00)    │  (00)    │  (00)    │  (00)    │  (00)    │  (00)    │  (10)    │  (01)    │
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5"></a>└──────────┴──────────┴──────────┴──────────┴──────────┴──────────┴──────────┴──────────┘
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6"></a>bits 63-56   55-48      47-40      39-32      31-24      23-16      15-8       7-0
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7"></a>
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8"></a>Example: tar.gz = 0x0000000000001001 (Op 0 = 0x01 (tar), Op 1 = 0x10 (gzip))
+</span></code></pre></div></td></tr></table></div>
 <h3 id="5-magic-footer">5. Magic Footer<a class="headerlink" href="#5-magic-footer" title="Permanent link">&para;</a></h3>
 <p>The emoji magic footer serves multiple purposes:</p>
-<div class="language-text highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Text Only</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-6-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1"></a>📦🪄 = [F0 9F 93 A6 F0 9F AA 84]
+<div class="language-text highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Text Only</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-7-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1"></a>📦🪄 = [F0 9F 93 A6 F0 9F AA 84]
 </span></code></pre></div></td></tr></table></div>
 <ul>
 <li><strong>Format identification</strong>: Quickly identify PSPF files</li>
@@ -3707,21 +3771,21 @@
     App--&gt;&gt;User: Application output</code></pre>
 <h3 id="cache-management">Cache Management<a class="headerlink" href="#cache-management" title="Permanent link">&para;</a></h3>
 <p>FlavorPack uses intelligent caching:</p>
-<div class="language-bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-7-1">1</a></span>
-<span class="normal"><a href="#__codelineno-7-2">2</a></span>
-<span class="normal"><a href="#__codelineno-7-3">3</a></span>
-<span class="normal"><a href="#__codelineno-7-4">4</a></span>
-<span class="normal"><a href="#__codelineno-7-5">5</a></span>
-<span class="normal"><a href="#__codelineno-7-6">6</a></span>
-<span class="normal"><a href="#__codelineno-7-7">7</a></span>
-<span class="normal"><a href="#__codelineno-7-8">8</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1"></a><span class="c1"># Cache structure</span>
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2"></a>~/.cache/flavor/workenv/
-</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3"></a>├──<span class="w"> </span>myapp_1.0.0/
-</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4"></a>│<span class="w">   </span>├──<span class="w"> </span>.flavor.lock<span class="w">      </span><span class="c1"># Lock file</span>
-</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5"></a>│<span class="w">   </span>├──<span class="w"> </span>.flavor.checksum<span class="w">  </span><span class="c1"># Integrity verification</span>
-</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6"></a>│<span class="w">   </span>├──<span class="w"> </span>python/<span class="w">           </span><span class="c1"># Python runtime</span>
-</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7"></a>│<span class="w">   </span>├──<span class="w"> </span>lib/<span class="w">              </span><span class="c1"># Dependencies</span>
-</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8"></a>│<span class="w">   </span>└──<span class="w"> </span>app/<span class="w">              </span><span class="c1"># Application code</span>
+<div class="language-bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-8-1">1</a></span>
+<span class="normal"><a href="#__codelineno-8-2">2</a></span>
+<span class="normal"><a href="#__codelineno-8-3">3</a></span>
+<span class="normal"><a href="#__codelineno-8-4">4</a></span>
+<span class="normal"><a href="#__codelineno-8-5">5</a></span>
+<span class="normal"><a href="#__codelineno-8-6">6</a></span>
+<span class="normal"><a href="#__codelineno-8-7">7</a></span>
+<span class="normal"><a href="#__codelineno-8-8">8</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1"></a><span class="c1"># Cache structure</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2"></a>~/.cache/flavor/workenv/
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3"></a>├──<span class="w"> </span>myapp_1.0.0/
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4"></a>│<span class="w">   </span>├──<span class="w"> </span>.flavor.lock<span class="w">      </span><span class="c1"># Lock file</span>
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5"></a>│<span class="w">   </span>├──<span class="w"> </span>.flavor.checksum<span class="w">  </span><span class="c1"># Integrity verification</span>
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6"></a>│<span class="w">   </span>├──<span class="w"> </span>python/<span class="w">           </span><span class="c1"># Python runtime</span>
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7"></a>│<span class="w">   </span>├──<span class="w"> </span>lib/<span class="w">              </span><span class="c1"># Dependencies</span>
+</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8"></a>│<span class="w">   </span>└──<span class="w"> </span>app/<span class="w">              </span><span class="c1"># Application code</span>
 </span></code></pre></div></td></tr></table></div>
 <p>Benefits:
 - <strong>Fast startup</strong>: No extraction after first run
@@ -3731,33 +3795,33 @@
 <h2 id="security-features">Security Features<a class="headerlink" href="#security-features" title="Permanent link">&para;</a></h2>
 <h3 id="ed25519-signatures">Ed25519 Signatures<a class="headerlink" href="#ed25519-signatures" title="Permanent link">&para;</a></h3>
 <p>Every package is cryptographically signed:</p>
-<div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-8-1"> 1</a></span>
-<span class="normal"><a href="#__codelineno-8-2"> 2</a></span>
-<span class="normal"><a href="#__codelineno-8-3"> 3</a></span>
-<span class="normal"><a href="#__codelineno-8-4"> 4</a></span>
-<span class="normal"><a href="#__codelineno-8-5"> 5</a></span>
-<span class="normal"><a href="#__codelineno-8-6"> 6</a></span>
-<span class="normal"><a href="#__codelineno-8-7"> 7</a></span>
-<span class="normal"><a href="#__codelineno-8-8"> 8</a></span>
-<span class="normal"><a href="#__codelineno-8-9"> 9</a></span>
-<span class="normal"><a href="#__codelineno-8-10">10</a></span>
-<span class="normal"><a href="#__codelineno-8-11">11</a></span>
-<span class="normal"><a href="#__codelineno-8-12">12</a></span>
-<span class="normal"><a href="#__codelineno-8-13">13</a></span>
-<span class="normal"><a href="#__codelineno-8-14">14</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1"></a><span class="c1"># Signature verification process</span>
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2"></a><span class="k">def</span><span class="w"> </span><span class="nf">verify_package</span><span class="p">(</span><span class="n">package_path</span><span class="p">,</span> <span class="n">public_key</span><span class="p">):</span>
-</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3"></a>    <span class="c1"># 1. Read entire package except signature</span>
-</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4"></a>    <span class="n">package_data</span> <span class="o">=</span> <span class="n">read_package_without_signature</span><span class="p">()</span>
-</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5"></a>
-</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6"></a>    <span class="c1"># 2. Extract signature from index</span>
-</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7"></a>    <span class="n">signature</span> <span class="o">=</span> <span class="n">extract_signature_from_index</span><span class="p">()</span>
-</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8"></a>
-</span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9"></a>    <span class="c1"># 3. Verify with Ed25519</span>
-</span><span id="__span-8-10"><a id="__codelineno-8-10" name="__codelineno-8-10"></a>    <span class="k">return</span> <span class="n">ed25519_verify</span><span class="p">(</span>
-</span><span id="__span-8-11"><a id="__codelineno-8-11" name="__codelineno-8-11"></a>        <span class="n">message</span><span class="o">=</span><span class="n">package_data</span><span class="p">,</span>
-</span><span id="__span-8-12"><a id="__codelineno-8-12" name="__codelineno-8-12"></a>        <span class="n">signature</span><span class="o">=</span><span class="n">signature</span><span class="p">,</span>
-</span><span id="__span-8-13"><a id="__codelineno-8-13" name="__codelineno-8-13"></a>        <span class="n">public_key</span><span class="o">=</span><span class="n">public_key</span>
-</span><span id="__span-8-14"><a id="__codelineno-8-14" name="__codelineno-8-14"></a>    <span class="p">)</span>
+<div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-9-1"> 1</a></span>
+<span class="normal"><a href="#__codelineno-9-2"> 2</a></span>
+<span class="normal"><a href="#__codelineno-9-3"> 3</a></span>
+<span class="normal"><a href="#__codelineno-9-4"> 4</a></span>
+<span class="normal"><a href="#__codelineno-9-5"> 5</a></span>
+<span class="normal"><a href="#__codelineno-9-6"> 6</a></span>
+<span class="normal"><a href="#__codelineno-9-7"> 7</a></span>
+<span class="normal"><a href="#__codelineno-9-8"> 8</a></span>
+<span class="normal"><a href="#__codelineno-9-9"> 9</a></span>
+<span class="normal"><a href="#__codelineno-9-10">10</a></span>
+<span class="normal"><a href="#__codelineno-9-11">11</a></span>
+<span class="normal"><a href="#__codelineno-9-12">12</a></span>
+<span class="normal"><a href="#__codelineno-9-13">13</a></span>
+<span class="normal"><a href="#__codelineno-9-14">14</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1"></a><span class="c1"># Signature verification process</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2"></a><span class="k">def</span><span class="w"> </span><span class="nf">verify_package</span><span class="p">(</span><span class="n">package_path</span><span class="p">,</span> <span class="n">public_key</span><span class="p">):</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3"></a>    <span class="c1"># 1. Read entire package except signature</span>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4"></a>    <span class="n">package_data</span> <span class="o">=</span> <span class="n">read_package_without_signature</span><span class="p">()</span>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5"></a>
+</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6"></a>    <span class="c1"># 2. Extract signature from index</span>
+</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7"></a>    <span class="n">signature</span> <span class="o">=</span> <span class="n">extract_signature_from_index</span><span class="p">()</span>
+</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8"></a>
+</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9"></a>    <span class="c1"># 3. Verify with Ed25519</span>
+</span><span id="__span-9-10"><a id="__codelineno-9-10" name="__codelineno-9-10"></a>    <span class="k">return</span> <span class="n">ed25519_verify</span><span class="p">(</span>
+</span><span id="__span-9-11"><a id="__codelineno-9-11" name="__codelineno-9-11"></a>        <span class="n">message</span><span class="o">=</span><span class="n">package_data</span><span class="p">,</span>
+</span><span id="__span-9-12"><a id="__codelineno-9-12" name="__codelineno-9-12"></a>        <span class="n">signature</span><span class="o">=</span><span class="n">signature</span><span class="p">,</span>
+</span><span id="__span-9-13"><a id="__codelineno-9-13" name="__codelineno-9-13"></a>        <span class="n">public_key</span><span class="o">=</span><span class="n">public_key</span>
+</span><span id="__span-9-14"><a id="__codelineno-9-14" name="__codelineno-9-14"></a>    <span class="p">)</span>
 </span></code></pre></div></td></tr></table></div>
 <h3 id="checksum-verification">Checksum Verification<a class="headerlink" href="#checksum-verification" title="Permanent link">&para;</a></h3>
 <p>Multiple layers of integrity checking:</p>
@@ -3769,35 +3833,35 @@
 <h2 id="advanced-features">Advanced Features<a class="headerlink" href="#advanced-features" title="Permanent link">&para;</a></h2>
 <h3 id="progressive-extraction">Progressive Extraction<a class="headerlink" href="#progressive-extraction" title="Permanent link">&para;</a></h3>
 <p>Only extract what's needed:</p>
-<div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-9-1">1</a></span>
-<span class="normal"><a href="#__codelineno-9-2">2</a></span>
-<span class="normal"><a href="#__codelineno-9-3">3</a></span>
-<span class="normal"><a href="#__codelineno-9-4">4</a></span>
-<span class="normal"><a href="#__codelineno-9-5">5</a></span>
-<span class="normal"><a href="#__codelineno-9-6">6</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1"></a><span class="c1"># Lazy loading example</span>
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">ProgressiveLoader</span><span class="p">:</span>
-</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">load_slot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
-</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_extracted</span><span class="p">(</span><span class="n">index</span><span class="p">):</span>
-</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5"></a>            <span class="bp">self</span><span class="o">.</span><span class="n">extract_slot</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
-</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot_path</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
-</span></code></pre></div></td></tr></table></div>
-<h3 id="metadata-extensions">Metadata Extensions<a class="headerlink" href="#metadata-extensions" title="Permanent link">&para;</a></h3>
-<p>Custom metadata fields:</p>
-<div class="language-json highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">JSON</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-10-1">1</a></span>
+<div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-10-1">1</a></span>
 <span class="normal"><a href="#__codelineno-10-2">2</a></span>
 <span class="normal"><a href="#__codelineno-10-3">3</a></span>
 <span class="normal"><a href="#__codelineno-10-4">4</a></span>
 <span class="normal"><a href="#__codelineno-10-5">5</a></span>
-<span class="normal"><a href="#__codelineno-10-6">6</a></span>
-<span class="normal"><a href="#__codelineno-10-7">7</a></span>
-<span class="normal"><a href="#__codelineno-10-8">8</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1"></a><span class="p">{</span>
-</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2"></a><span class="w">  </span><span class="nt">&quot;x-custom&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3"></a><span class="w">    </span><span class="nt">&quot;license&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;MIT&quot;</span><span class="p">,</span>
-</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4"></a><span class="w">    </span><span class="nt">&quot;author&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Your Name&quot;</span><span class="p">,</span>
-</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5"></a><span class="w">    </span><span class="nt">&quot;telemetry&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
-</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6"></a><span class="w">    </span><span class="nt">&quot;update_url&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;https://example.com/updates&quot;</span>
-</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7"></a><span class="w">  </span><span class="p">}</span>
-</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8"></a><span class="p">}</span>
+<span class="normal"><a href="#__codelineno-10-6">6</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1"></a><span class="c1"># Lazy loading example</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">ProgressiveLoader</span><span class="p">:</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">load_slot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_extracted</span><span class="p">(</span><span class="n">index</span><span class="p">):</span>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5"></a>            <span class="bp">self</span><span class="o">.</span><span class="n">extract_slot</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot_path</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+</span></code></pre></div></td></tr></table></div>
+<h3 id="metadata-extensions">Metadata Extensions<a class="headerlink" href="#metadata-extensions" title="Permanent link">&para;</a></h3>
+<p>Custom metadata fields:</p>
+<div class="language-json highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">JSON</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-11-1">1</a></span>
+<span class="normal"><a href="#__codelineno-11-2">2</a></span>
+<span class="normal"><a href="#__codelineno-11-3">3</a></span>
+<span class="normal"><a href="#__codelineno-11-4">4</a></span>
+<span class="normal"><a href="#__codelineno-11-5">5</a></span>
+<span class="normal"><a href="#__codelineno-11-6">6</a></span>
+<span class="normal"><a href="#__codelineno-11-7">7</a></span>
+<span class="normal"><a href="#__codelineno-11-8">8</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1"></a><span class="p">{</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2"></a><span class="w">  </span><span class="nt">&quot;x-custom&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3"></a><span class="w">    </span><span class="nt">&quot;license&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;MIT&quot;</span><span class="p">,</span>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4"></a><span class="w">    </span><span class="nt">&quot;author&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Your Name&quot;</span><span class="p">,</span>
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5"></a><span class="w">    </span><span class="nt">&quot;telemetry&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6"></a><span class="w">    </span><span class="nt">&quot;update_url&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;https://example.com/updates&quot;</span>
+</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7"></a><span class="w">  </span><span class="p">}</span>
+</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8"></a><span class="p">}</span>
 </span></code></pre></div></td></tr></table></div>
 <h3 id="platform-specific-optimizations">Platform-Specific Optimizations<a class="headerlink" href="#platform-specific-optimizations" title="Permanent link">&para;</a></h3>
 <div class="tabbed-set tabbed-alternate" data-tabs="2:3"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio" /><input id="__tabbed_2_2" name="__tabbed_2" type="radio" /><input id="__tabbed_2_3" name="__tabbed_2" type="radio" /><div class="tabbed-labels"><label for="__tabbed_2_1">Linux</label><label for="__tabbed_2_2">macOS</label><label for="__tabbed_2_3">Windows</label></div>
@@ -3906,22 +3970,22 @@
 <ol>
 <li>
 <p><strong>Exclude unnecessary files</strong>
-   <div class="language-bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-11-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1"></a>flavor<span class="w"> </span>pack<span class="w"> </span>--exclude<span class="w"> </span><span class="s2">&quot;__pycache__&quot;</span><span class="w"> </span>--exclude<span class="w"> </span><span class="s2">&quot;*.pyc&quot;</span>
+   <div class="language-bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-12-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1"></a>flavor<span class="w"> </span>pack<span class="w"> </span>--exclude<span class="w"> </span><span class="s2">&quot;__pycache__&quot;</span><span class="w"> </span>--exclude<span class="w"> </span><span class="s2">&quot;*.pyc&quot;</span>
 </span></code></pre></div></td></tr></table></div></p>
 </li>
 <li>
 <p><strong>Use slot compression</strong>
-   <div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-12-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1"></a><span class="n">slot_encoding</span> <span class="o">=</span> <span class="s2">&quot;tar.gz&quot;</span>  <span class="c1"># Better than &quot;tar&quot;</span>
+   <div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-13-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1"></a><span class="n">slot_encoding</span> <span class="o">=</span> <span class="s2">&quot;tar.gz&quot;</span>  <span class="c1"># Better than &quot;tar&quot;</span>
 </span></code></pre></div></td></tr></table></div></p>
 </li>
 <li>
 <p><strong>Strip debug symbols</strong>
-   <div class="language-bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-13-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1"></a>flavor<span class="w"> </span>pack<span class="w"> </span>--strip-debug
+   <div class="language-bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-14-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1"></a>flavor<span class="w"> </span>pack<span class="w"> </span>--strip-debug
 </span></code></pre></div></td></tr></table></div></p>
 </li>
 <li>
 <p><strong>Optimize Python bytecode</strong>
-   <div class="language-bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-14-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1"></a>flavor<span class="w"> </span>pack<span class="w"> </span>--optimize<span class="w"> </span><span class="m">2</span><span class="w">  </span><span class="c1"># -OO flag</span>
+   <div class="language-bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-15-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1"></a>flavor<span class="w"> </span>pack<span class="w"> </span>--optimize<span class="w"> </span><span class="m">2</span><span class="w">  </span><span class="c1"># -OO flag</span>
 </span></code></pre></div></td></tr></table></div></p>
 </li>
 </ol>
@@ -3965,19 +4029,19 @@
 </table>
 <h3 id="binary-alignment">Binary Alignment<a class="headerlink" href="#binary-alignment" title="Permanent link">&para;</a></h3>
 <p>All components are 8-byte aligned:</p>
-<div class="language-text highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Text Only</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-15-1">1</a></span>
-<span class="normal"><a href="#__codelineno-15-2">2</a></span>
-<span class="normal"><a href="#__codelineno-15-3">3</a></span>
-<span class="normal"><a href="#__codelineno-15-4">4</a></span>
-<span class="normal"><a href="#__codelineno-15-5">5</a></span>
-<span class="normal"><a href="#__codelineno-15-6">6</a></span>
-<span class="normal"><a href="#__codelineno-15-7">7</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1"></a>Offset    | Component
-</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2"></a>----------|------------------
-</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3"></a>0x0000    | Launcher start
-</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4"></a>0xXXXX    | Index start (aligned)
-</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5"></a>0xXXXX    | Metadata start (aligned)
-</span><span id="__span-15-6"><a id="__codelineno-15-6" name="__codelineno-15-6"></a>0xXXXX    | Slot 0 start (aligned)
-</span><span id="__span-15-7"><a id="__codelineno-15-7" name="__codelineno-15-7"></a>...       | ...
+<div class="language-text highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Text Only</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-16-1">1</a></span>
+<span class="normal"><a href="#__codelineno-16-2">2</a></span>
+<span class="normal"><a href="#__codelineno-16-3">3</a></span>
+<span class="normal"><a href="#__codelineno-16-4">4</a></span>
+<span class="normal"><a href="#__codelineno-16-5">5</a></span>
+<span class="normal"><a href="#__codelineno-16-6">6</a></span>
+<span class="normal"><a href="#__codelineno-16-7">7</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1"></a>Offset    | Component
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2"></a>----------|------------------
+</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3"></a>0x0000    | Launcher start
+</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4"></a>0xXXXX    | Index start (aligned)
+</span><span id="__span-16-5"><a id="__codelineno-16-5" name="__codelineno-16-5"></a>0xXXXX    | Metadata start (aligned)
+</span><span id="__span-16-6"><a id="__codelineno-16-6" name="__codelineno-16-6"></a>0xXXXX    | Slot 0 start (aligned)
+</span><span id="__span-16-7"><a id="__codelineno-16-7" name="__codelineno-16-7"></a>...       | ...
 </span></code></pre></div></td></tr></table></div>
 <h2 id="further-reading">Further Reading<a class="headerlink" href="#further-reading" title="Permanent link">&para;</a></h2>
 <ul>

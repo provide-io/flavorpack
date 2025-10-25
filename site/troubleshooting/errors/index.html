@@ -52,6 +52,8 @@
       
     
     
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
       <link rel="stylesheet" href="../../.shared-theme/stylesheets/provide-theme.css">
     
       <link rel="stylesheet" href="../../.shared-theme/stylesheets/termynal.css">
@@ -3383,16 +3385,14 @@
 <span class="normal"><a href="#__codelineno-3-5">5</a></span>
 <span class="normal"><a href="#__codelineno-3-6">6</a></span>
 <span class="normal"><a href="#__codelineno-3-7">7</a></span>
-<span class="normal"><a href="#__codelineno-3-8">8</a></span>
-<span class="normal"><a href="#__codelineno-3-9">9</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1"></a><span class="c1"># Download pre-built helpers</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2"></a>flavor<span class="w"> </span>helpers<span class="w"> </span>download
+<span class="normal"><a href="#__codelineno-3-8">8</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1"></a><span class="c1"># Build helpers locally</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2"></a>make<span class="w"> </span>build-helpers
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3"></a>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4"></a><span class="c1"># Or build locally</span>
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5"></a><span class="nb">cd</span><span class="w"> </span>helpers
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6"></a>./build.sh
-</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7"></a>
-</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8"></a><span class="c1"># Or specify custom launcher</span>
-</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9"></a>flavor<span class="w"> </span>pack<span class="w"> </span>pyproject.toml<span class="w"> </span>--launcher-bin<span class="w"> </span>/path/to/launcher
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4"></a><span class="c1"># Or use the build script</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5"></a>./build.sh
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6"></a>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7"></a><span class="c1"># Or specify custom launcher</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8"></a>flavor<span class="w"> </span>pack<span class="w"> </span>--launcher-bin<span class="w"> </span>/path/to/launcher
 </span></code></pre></div></td></tr></table></div></p>
 <h4 id="failed-to-create-virtual-environment">"Failed to create virtual environment"<a class="headerlink" href="#failed-to-create-virtual-environment" title="Permanent link">&para;</a></h4>
 <p><strong>Cause</strong>: Python venv creation failed.</p>
@@ -3412,8 +3412,8 @@
 </span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5"></a>apt-get<span class="w"> </span>install<span class="w"> </span>python3-venv<span class="w">  </span><span class="c1"># Debian/Ubuntu</span>
 </span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6"></a>yum<span class="w"> </span>install<span class="w"> </span>python3-venv<span class="w">       </span><span class="c1"># RHEL/CentOS</span>
 </span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7"></a>
-</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8"></a><span class="c1"># Use system Python</span>
-</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9"></a>flavor<span class="w"> </span>pack<span class="w"> </span>pyproject.toml<span class="w"> </span>--python<span class="w"> </span><span class="k">$(</span>which<span class="w"> </span>python3<span class="k">)</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8"></a><span class="c1"># Ensure correct Python is in PATH</span>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9"></a>which<span class="w"> </span>python3
 </span></code></pre></div></td></tr></table></div></p>
 <h4 id="dependency-resolution-failed-package">"Dependency resolution failed: {package}"<a class="headerlink" href="#dependency-resolution-failed-package" title="Permanent link">&para;</a></h4>
 <p><strong>Cause</strong>: Conflicting or unavailable dependencies.</p>

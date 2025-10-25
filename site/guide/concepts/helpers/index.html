@@ -48,6 +48,8 @@
       
     
     
+      <link rel="stylesheet" href="../../../assets/_mkdocstrings.css">
+    
       <link rel="stylesheet" href="../../../.shared-theme/stylesheets/provide-theme.css">
     
       <link rel="stylesheet" href="../../../.shared-theme/stylesheets/termynal.css">
@@ -2998,13 +3000,13 @@
 <tr>
 <td><code>flavor-go-builder</code></td>
 <td>Go</td>
-<td>~5 MB</td>
+<td>~3-4 MB</td>
 <td>Fast</td>
 </tr>
 <tr>
 <td><code>flavor-rs-builder</code></td>
 <td>Rust</td>
-<td>~3 MB</td>
+<td>~1 MB</td>
 <td>Fastest</td>
 </tr>
 </tbody>
@@ -3024,17 +3026,22 @@
 <tr>
 <td><code>flavor-go-launcher</code></td>
 <td>Go</td>
-<td>~3 MB</td>
+<td>~3-4 MB</td>
 <td>Low</td>
 </tr>
 <tr>
 <td><code>flavor-rs-launcher</code></td>
 <td>Rust</td>
-<td>~2 MB</td>
+<td>~1 MB</td>
 <td>Lowest</td>
 </tr>
 </tbody>
 </table>
+<div class="admonition note">
+<p class="admonition-title">Platform Variations</p>
+<p>Binary sizes vary by platform and build configuration. Sizes shown are for darwin_arm64.
+Linux static binaries may be larger. Use <code>ls -lh dist/bin/</code> to see actual sizes for your platform.</p>
+</div>
 <h2 id="platform-support">Platform Support<a class="headerlink" href="#platform-support" title="Permanent link">&para;</a></h2>
 <p>Helpers are built for multiple platforms:</p>
 <div class="language-text highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Text Only</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1">1</a></span>

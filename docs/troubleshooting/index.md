@@ -31,13 +31,13 @@ flavor workenv info
 
 ```bash
 # Enable verbose logging
-export FLAVOR_LOG_LEVEL=debug
+export FOUNDATION_LOG_LEVEL=debug
 
 # Run with debug output
-FLAVOR_LOG_LEVEL=debug flavor pack pyproject.toml
+FOUNDATION_LOG_LEVEL=debug flavor pack pyproject.toml
 
 # Debug package execution
-FLAVOR_LOG_LEVEL=debug ./myapp.psp
+FOUNDATION_LOG_LEVEL=debug ./myapp.psp
 ```
 
 ## Common Issues
@@ -50,14 +50,15 @@ FLAVOR_LOG_LEVEL=debug ./myapp.psp
 
 **Solution**:
 ```bash
-# Ensure FlavorPack is installed
-pip install flavor
+# Ensure FlavorPack is installed from source
+cd flavorpack
+uv pip install -e .
 
 # Check PATH
 which flavor
 
 # If using virtual environment
-source venv/bin/activate
+source .venv/bin/activate
 ```
 
 #### Permission Denied
@@ -66,11 +67,11 @@ source venv/bin/activate
 
 **Solution**:
 ```bash
-# Fix permissions
-chmod +x $(which flavor)
+# Activate the virtual environment
+source .venv/bin/activate
 
-# Or reinstall with user flag
-pip install --user flavor
+# Fix permissions if needed
+chmod +x $(which flavor)
 ```
 
 #### Missing Dependencies
@@ -80,10 +81,10 @@ pip install --user flavor
 **Solution**:
 ```bash
 # Install build dependencies
-pip install --upgrade pip setuptools wheel
+uv pip install --upgrade pip setuptools wheel
 
-# Install with all dependencies
-pip install flavor[all]
+# Sync all dependencies
+uv sync
 ```
 
 ### Build Errors

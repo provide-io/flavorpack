@@ -52,6 +52,8 @@
       
     
     
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
       <link rel="stylesheet" href="../../.shared-theme/stylesheets/provide-theme.css">
     
       <link rel="stylesheet" href="../../.shared-theme/stylesheets/termynal.css">
@@ -640,9 +642,9 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#method-2-using-pip-coming-soon" class="md-nav__link">
+  <a href="#method-2-using-pip" class="md-nav__link">
     <span class="md-ellipsis">
-      Method 2: Using pip (Coming Soon)
+      Method 2: Using pip
     </span>
   </a>
   
@@ -3277,7 +3279,11 @@
 
 
 <h1 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h1>
-<p>FlavorPack can be installed in multiple ways depending on your needs. Choose the method that best suits your environment.</p>
+<div class="admonition warning">
+<p class="admonition-title">Alpha Release - Source Installation Only</p>
+<p>FlavorPack v0.0.1023 is in early alpha. PyPI packages and pre-built binaries are not yet available. <strong>Install from source only.</strong></p>
+</div>
+<p>FlavorPack can be installed from source. Future releases will support additional installation methods.</p>
 <h2 id="system-requirements">System Requirements<a class="headerlink" href="#system-requirements" title="Permanent link">&para;</a></h2>
 <h3 id="minimum-requirements">Minimum Requirements<a class="headerlink" href="#minimum-requirements" title="Permanent link">&para;</a></h3>
 <table>
@@ -3459,60 +3465,27 @@
 </div>
 </div>
 </div>
-<h3 id="method-2-using-pip-coming-soon">Method 2: Using pip (Coming Soon)<a class="headerlink" href="#method-2-using-pip-coming-soon" title="Permanent link">&para;</a></h3>
-<p>For users who want a simple installation without building from source.</p>
+<h3 id="method-2-using-pip">Method 2: Using pip<a class="headerlink" href="#method-2-using-pip" title="Permanent link">&para;</a></h3>
+<div class="admonition info">
+<p class="admonition-title">Planned for v0.1.0</p>
+<p>PyPI installation is planned for the v0.1.0 release. Currently unavailable.</p>
+<p><strong>When available</strong>, installation will be:
 <div class="language-bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-2-1">1</a></span>
-<span class="normal"><a href="#__codelineno-2-2">2</a></span>
-<span class="normal"><a href="#__codelineno-2-3">3</a></span>
-<span class="normal"><a href="#__codelineno-2-4">4</a></span>
-<span class="normal"><a href="#__codelineno-2-5">5</a></span>
-<span class="normal"><a href="#__codelineno-2-6">6</a></span>
-<span class="normal"><a href="#__codelineno-2-7">7</a></span>
-<span class="normal"><a href="#__codelineno-2-8">8</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1"></a><span class="c1"># Install from PyPI</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2"></a>pip<span class="w"> </span>install<span class="w"> </span>flavorpack
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3"></a>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4"></a><span class="c1"># Download pre-built helpers</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5"></a>flavor<span class="w"> </span>helpers<span class="w"> </span>download
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6"></a>
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7"></a><span class="c1"># Verify installation</span>
-</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8"></a>flavor<span class="w"> </span>--version
-</span></code></pre></div></td></tr></table></div>
-<div class="admonition warning">
-<p class="admonition-title">Limited Availability</p>
-<p>PyPI packages are not yet available. This option will be available in a future release.</p>
+<span class="normal"><a href="#__codelineno-2-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1"></a>pip<span class="w"> </span>install<span class="w"> </span>flavorpack
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2"></a>make<span class="w"> </span>build-helpers
+</span></code></pre></div></td></tr></table></div></p>
+<p>For now, please use source installation (Method 1 above).</p>
 </div>
 <h3 id="method-3-using-docker">Method 3: Using Docker<a class="headerlink" href="#method-3-using-docker" title="Permanent link">&para;</a></h3>
-<p>For users who prefer containerized environments or CI/CD pipelines.</p>
-<div class="language-bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-3-1"> 1</a></span>
-<span class="normal"><a href="#__codelineno-3-2"> 2</a></span>
-<span class="normal"><a href="#__codelineno-3-3"> 3</a></span>
-<span class="normal"><a href="#__codelineno-3-4"> 4</a></span>
-<span class="normal"><a href="#__codelineno-3-5"> 5</a></span>
-<span class="normal"><a href="#__codelineno-3-6"> 6</a></span>
-<span class="normal"><a href="#__codelineno-3-7"> 7</a></span>
-<span class="normal"><a href="#__codelineno-3-8"> 8</a></span>
-<span class="normal"><a href="#__codelineno-3-9"> 9</a></span>
-<span class="normal"><a href="#__codelineno-3-10">10</a></span>
-<span class="normal"><a href="#__codelineno-3-11">11</a></span>
-<span class="normal"><a href="#__codelineno-3-12">12</a></span>
-<span class="normal"><a href="#__codelineno-3-13">13</a></span>
-<span class="normal"><a href="#__codelineno-3-14">14</a></span>
-<span class="normal"><a href="#__codelineno-3-15">15</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1"></a><span class="c1"># Pull the official image</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2"></a>docker<span class="w"> </span>pull<span class="w"> </span>ghcr.io/provide-io/flavorpack:latest
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3"></a>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4"></a><span class="c1"># Run interactively</span>
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5"></a>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>--rm<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6"></a><span class="w">  </span>-v<span class="w"> </span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span>:/workspace<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7"></a><span class="w">  </span>ghcr.io/provide-io/flavorpack:latest<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8"></a><span class="w">  </span>bash
-</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9"></a>
-</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10"></a><span class="c1"># Or run a command directly</span>
-</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11"></a>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12"></a><span class="w">  </span>-v<span class="w"> </span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span>:/workspace<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13"></a><span class="w">  </span>ghcr.io/provide-io/flavorpack:latest<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14"></a><span class="w">  </span>flavor<span class="w"> </span>pack<span class="w"> </span>--manifest<span class="w"> </span>/workspace/pyproject.toml<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-3-15"><a id="__codelineno-3-15" name="__codelineno-3-15"></a><span class="w">  </span>--output<span class="w"> </span>/workspace/myapp.psp
-</span></code></pre></div></td></tr></table></div>
+<div class="admonition info">
+<p class="admonition-title">Planned for v0.1.0</p>
+<p>Official Docker images are planned for v0.1.0 release.</p>
+<p><strong>When available</strong>, you'll be able to use:
+<div class="language-bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-3-1">1</a></span>
+<span class="normal"><a href="#__codelineno-3-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1"></a>docker<span class="w"> </span>pull<span class="w"> </span>ghcr.io/provide-io/flavorpack:latest
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2"></a>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>ghcr.io/provide-io/flavorpack:latest<span class="w"> </span>flavor<span class="w"> </span>--help
+</span></code></pre></div></td></tr></table></div></p>
+</div>
 <h3 id="method-4-development-container">Method 4: Development Container<a class="headerlink" href="#method-4-development-container" title="Permanent link">&para;</a></h3>
 <p>For VS Code users with the Remote-Containers extension.</p>
 <ol>
@@ -3583,7 +3556,7 @@
 <span class="normal"><a href="#__codelineno-6-8"> 8</a></span>
 <span class="normal"><a href="#__codelineno-6-9"> 9</a></span>
 <span class="normal"><a href="#__codelineno-6-10">10</a></span>
-<span class="normal"><a href="#__codelineno-6-11">11</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1"></a><span class="nb">cd</span><span class="w"> </span>src/flavor-rs
+<span class="normal"><a href="#__codelineno-6-11">11</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1"></a><span class="nb">cd</span><span class="w"> </span>src/flavor-rust
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2"></a>
 </span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3"></a><span class="c1"># Build launcher</span>
 </span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4"></a>cargo<span class="w"> </span>build<span class="w"> </span>--release<span class="w"> </span>--bin<span class="w"> </span>flavor-rs-launcher
@@ -3665,9 +3638,14 @@
 <td><code>~/.cache/flavor</code></td>
 </tr>
 <tr>
-<td><code>FLAVOR_LOG_LEVEL</code></td>
+<td><code>FOUNDATION_LOG_LEVEL</code></td>
 <td>Logging level (debug, info, warn, error)</td>
 <td><code>info</code></td>
+</tr>
+<tr>
+<td><code>FOUNDATION_LOG_FILE</code></td>
+<td>Log file path for persistent logging</td>
+<td>None</td>
 </tr>
 <tr>
 <td><code>FLAVOR_PRIVATE_KEY</code></td>

@@ -52,6 +52,8 @@
       
     
     
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
       <link rel="stylesheet" href="../../.shared-theme/stylesheets/provide-theme.css">
     
       <link rel="stylesheet" href="../../.shared-theme/stylesheets/termynal.css">
@@ -2730,6 +2732,24 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#build-flow-diagram" class="md-nav__link">
+    <span class="md-ellipsis">
+      Build Flow Diagram
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#build-steps-detail" class="md-nav__link">
+    <span class="md-ellipsis">
+      Build Steps Detail
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#step-1-manifest-processing" class="md-nav__link">
     <span class="md-ellipsis">
       Step 1: Manifest Processing
@@ -2811,6 +2831,30 @@
   <a href="#security-best-practices" class="md-nav__link">
     <span class="md-ellipsis">
       Security Best Practices
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#runtime-execution-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      Runtime Execution Flow
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Runtime Execution Flow">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#package-execution-diagram" class="md-nav__link">
+    <span class="md-ellipsis">
+      Package Execution Diagram
     </span>
   </a>
   
@@ -3626,6 +3670,61 @@
 - Minimal runtime overhead
 - Signal handling and process management</p>
 <h2 id="build-pipeline">Build Pipeline<a class="headerlink" href="#build-pipeline" title="Permanent link">&para;</a></h2>
+<h3 id="build-flow-diagram">Build Flow Diagram<a class="headerlink" href="#build-flow-diagram" title="Permanent link">&para;</a></h3>
+<pre class="mermaid"><code>flowchart TD
+    Start([flavor pack]) --&gt; ReadManifest[Read pyproject.toml]
+    ReadManifest --&gt; ValidateManifest{Validate&lt;br/&gt;Manifest}
+    ValidateManifest --&gt;|Invalid| Error1[Error: Invalid Manifest]
+    ValidateManifest --&gt;|Valid| CreateVenv[Create Virtual Environment]
+
+    CreateVenv --&gt; InstallDeps[Install Dependencies]
+    InstallDeps --&gt; CreateSlots[Create Slot Archives]
+
+    subgraph "Slot Creation"
+        CreateSlots --&gt; Slot0[Slot 0: Python Runtime&lt;br/&gt;tar + gzip]
+        CreateSlots --&gt; Slot1[Slot 1: Application Code&lt;br/&gt;tar + gzip]
+        CreateSlots --&gt; SlotN[Slot N: Resources&lt;br/&gt;tar + gzip]
+    end
+
+    Slot0 --&gt; SelectHelper{Select&lt;br/&gt;Helper}
+    Slot1 --&gt; SelectHelper
+    SlotN --&gt; SelectHelper
+
+    SelectHelper --&gt;|Available| GoBuilder[flavor-go-builder]
+    SelectHelper --&gt;|Available| RsBuilder[flavor-rs-builder]
+    SelectHelper --&gt;|None| Error2[Error: No Builder Found]
+
+    GoBuilder --&gt; BuildManifest[Generate Builder Manifest JSON]
+    RsBuilder --&gt; BuildManifest
+
+    BuildManifest --&gt; InvokeBuilder[Invoke Native Builder]
+    InvokeBuilder --&gt; AssemblePkg[Assemble PSPF Package]
+
+    AssemblePkg --&gt; SignPkg{Sign&lt;br/&gt;Package?}
+    SignPkg --&gt;|Yes| GenKeys[Generate/Load Ed25519 Keys]
+    SignPkg --&gt;|No| WriteOutput
+
+    GenKeys --&gt; Sign[Sign Package]
+    Sign --&gt; EmbedSig[Embed Signature in Index]
+    EmbedSig --&gt; WriteOutput[Write Output File]
+
+    WriteOutput --&gt; Verify{Verify&lt;br/&gt;Package?}
+    Verify --&gt;|Yes| RunVerify[Run flavor verify]
+    Verify --&gt;|No| Done
+    RunVerify --&gt; CheckSig{Signature&lt;br/&gt;Valid?}
+    CheckSig --&gt;|Yes| Done([✅ Package Built])
+    CheckSig --&gt;|No| Error3[Error: Verification Failed]
+
+    Error1 --&gt; Failed([❌ Build Failed])
+    Error2 --&gt; Failed
+    Error3 --&gt; Failed
+
+    style Start fill:#e1f5ff
+    style Done fill:#c8e6c9
+    style Failed fill:#ffcdd2
+    style GoBuilder fill:#fff9c4
+    style RsBuilder fill:#ffe0b2</code></pre>
+<h3 id="build-steps-detail">Build Steps Detail<a class="headerlink" href="#build-steps-detail" title="Permanent link">&para;</a></h3>
 <h3 id="step-1-manifest-processing">Step 1: Manifest Processing<a class="headerlink" href="#step-1-manifest-processing" title="Permanent link">&para;</a></h3>
 <div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-1-1">1</a></span>
 <span class="normal"><a href="#__codelineno-1-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1"></a><span class="n">manifest</span> <span class="o">=</span> <span class="n">read_manifest</span><span class="p">(</span><span class="s2">&quot;pyproject.toml&quot;</span><span class="p">)</span>
@@ -3685,6 +3784,60 @@
 <li>Use deterministic builds for audit trails</li>
 <li>Never commit keys or secrets</li>
 </ul>
+<h2 id="runtime-execution-flow">Runtime Execution Flow<a class="headerlink" href="#runtime-execution-flow" title="Permanent link">&para;</a></h2>
+<h3 id="package-execution-diagram">Package Execution Diagram<a class="headerlink" href="#package-execution-diagram" title="Permanent link">&para;</a></h3>
+<pre class="mermaid"><code>flowchart TD
+    Start([./myapp.psp]) --&gt; LauncherStart[Launcher Starts]
+    LauncherStart --&gt; ReadTrailer[Read Magic Trailer 📦🪄]
+    ReadTrailer --&gt; ValidTrailer{Trailer&lt;br/&gt;Valid?}
+    ValidTrailer --&gt;|No| Error1[Error: Invalid Package]
+    ValidTrailer --&gt;|Yes| ReadIndex[Read Index Block]
+
+    ReadIndex --&gt; ParseIndex[Parse Index Metadata]
+    ParseIndex --&gt; CalcID[Calculate Package ID&lt;br/&gt;SHA-256 checksum]
+    CalcID --&gt; CheckCache{Cache&lt;br/&gt;Exists?}
+
+    CheckCache --&gt;|Yes| ValidateCache[Validate Cache Checksum]
+    CheckCache --&gt;|No| ExtractPkg
+
+    ValidateCache --&gt; CacheValid{Cache&lt;br/&gt;Valid?}
+    CacheValid --&gt;|Yes| UseCached[Use Cached Workenv]
+    CacheValid --&gt;|No| RemoveCache[Remove Invalid Cache]
+    RemoveCache --&gt; ExtractPkg
+
+    ExtractPkg[Extract Package] --&gt; CreateWorkenv[Create Work Environment]
+    CreateWorkenv --&gt; ExtractSlots[Extract All Slots]
+
+    subgraph "Slot Extraction"
+        ExtractSlots --&gt; ExtractSlot0[Extract Slot 0&lt;br/&gt;Python Runtime]
+        ExtractSlots --&gt; ExtractSlot1[Extract Slot 1&lt;br/&gt;Application Code]
+        ExtractSlots --&gt; ExtractSlotN[Extract Slot N&lt;br/&gt;Resources]
+    end
+
+    ExtractSlot0 --&gt; MarkComplete[Mark Extraction Complete]
+    ExtractSlot1 --&gt; MarkComplete
+    ExtractSlotN --&gt; MarkComplete
+
+    MarkComplete --&gt; UseCached
+    UseCached --&gt; SetupEnv[Setup Environment Variables]
+
+    SetupEnv --&gt; LoadMeta[Load Package Metadata]
+    LoadMeta --&gt; ParseCmd[Parse Execution Command]
+    ParseCmd --&gt; SetVars[Set FLAVOR_* Variables]
+
+    SetVars --&gt; ExecApp[Execute Application]
+    ExecApp --&gt; AppRuns[Application Running]
+    AppRuns --&gt; AppExit{App&lt;br/&gt;Exit}
+    AppExit --&gt; Cleanup[Cleanup Resources]
+    Cleanup --&gt; Done([Exit with App Exit Code])
+
+    Error1 --&gt; Failed([❌ Failed])
+
+    style Start fill:#e1f5ff
+    style Done fill:#c8e6c9
+    style Failed fill:#ffcdd2
+    style UseCached fill:#fff9c4
+    style ExtractPkg fill:#ffe0b2</code></pre>
 <h2 id="helper-system">Helper System<a class="headerlink" href="#helper-system" title="Permanent link">&para;</a></h2>
 <h3 id="helper-discovery">Helper Discovery<a class="headerlink" href="#helper-discovery" title="Permanent link">&para;</a></h3>
 <p>The <code>HelperManager</code> class finds helpers in order:</p>

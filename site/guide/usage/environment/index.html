@@ -52,6 +52,8 @@
       
     
     
+      <link rel="stylesheet" href="../../../assets/_mkdocstrings.css">
+    
       <link rel="stylesheet" href="../../../.shared-theme/stylesheets/provide-theme.css">
     
       <link rel="stylesheet" href="../../../.shared-theme/stylesheets/termynal.css">
@@ -1524,6 +1526,39 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#flavorpack-cli-variables" class="md-nav__link">
+    <span class="md-ellipsis">
+      FlavorPack CLI Variables
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="FlavorPack CLI Variables">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#foundation_log_level" class="md-nav__link">
+    <span class="md-ellipsis">
+      FOUNDATION_LOG_LEVEL
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#foundation_log_file" class="md-nav__link">
+    <span class="md-ellipsis">
+      FOUNDATION_LOG_FILE
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#build-time-variables" class="md-nav__link">
     <span class="md-ellipsis">
       Build-Time Variables
@@ -1566,13 +1601,13 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#runtime-variables" class="md-nav__link">
+  <a href="#packaged-application-variables" class="md-nav__link">
     <span class="md-ellipsis">
-      Runtime Variables
+      Packaged Application Variables
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Runtime Variables">
+    <nav class="md-nav" aria-label="Packaged Application Variables">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1660,7 +1695,7 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#foundation_log_level" class="md-nav__link">
+  <a href="#foundation_log_level_1" class="md-nav__link">
     <span class="md-ellipsis">
       FOUNDATION_LOG_LEVEL
     </span>
@@ -1669,7 +1704,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#foundation_log_file" class="md-nav__link">
+  <a href="#foundation_log_file_1" class="md-nav__link">
     <span class="md-ellipsis">
       FOUNDATION_LOG_FILE
     </span>
@@ -3516,89 +3551,114 @@
 <h1 id="environment-variables">Environment Variables<a class="headerlink" href="#environment-variables" title="Permanent link">&para;</a></h1>
 <p>Configure FlavorPack's build, runtime, and execution behavior with environment variables.</p>
 <h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
-<p>FlavorPack uses environment variables to control various aspects of package creation, execution, and caching. Variables are categorized into:</p>
+<p>FlavorPack uses different environment variables depending on the context:</p>
 <ul>
+<li><strong>FlavorPack CLI</strong> (<code>flavor pack</code>, <code>flavor verify</code>, etc.): Uses <code>FOUNDATION_*</code> variables</li>
+<li><strong>Packaged Applications</strong> (<code>.psp</code> files): Uses <code>FLAVOR_*</code> variables</li>
 <li><strong>Build-time</strong>: Configure package creation</li>
 <li><strong>Runtime</strong>: Control package execution</li>
 <li><strong>Cache</strong>: Manage work environment cache</li>
-<li><strong>Logging</strong>: Control diagnostic output</li>
-<li><strong>Platform</strong>: Automatically set by FlavorPack (read-only)</li>
 </ul>
+<hr />
+<h2 id="flavorpack-cli-variables">FlavorPack CLI Variables<a class="headerlink" href="#flavorpack-cli-variables" title="Permanent link">&para;</a></h2>
+<p>Variables for controlling the <code>flavor</code> command-line tool.</p>
+<h3 id="foundation_log_level">FOUNDATION_LOG_LEVEL<a class="headerlink" href="#foundation_log_level" title="Permanent link">&para;</a></h3>
+<p><strong>Default:</strong> <code>info</code>
+<strong>Values:</strong> <code>trace</code>, <code>debug</code>, <code>info</code>, <code>warning</code>, <code>error</code>
+<strong>Purpose:</strong> Control logging verbosity for FlavorPack CLI commands</p>
+<div class="language-bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1">1</a></span>
+<span class="normal"><a href="#__codelineno-0-2">2</a></span>
+<span class="normal"><a href="#__codelineno-0-3">3</a></span>
+<span class="normal"><a href="#__codelineno-0-4">4</a></span>
+<span class="normal"><a href="#__codelineno-0-5">5</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><span class="c1"># Debug package building</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><span class="nv">FOUNDATION_LOG_LEVEL</span><span class="o">=</span>debug<span class="w"> </span>flavor<span class="w"> </span>pack
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4"></a><span class="c1"># Trace-level logging</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5"></a><span class="nv">FOUNDATION_LOG_LEVEL</span><span class="o">=</span>trace<span class="w"> </span>flavor<span class="w"> </span>verify<span class="w"> </span>myapp.psp
+</span></code></pre></div></td></tr></table></div>
+<h3 id="foundation_log_file">FOUNDATION_LOG_FILE<a class="headerlink" href="#foundation_log_file" title="Permanent link">&para;</a></h3>
+<p><strong>Default:</strong> None
+<strong>Purpose:</strong> Write FlavorPack CLI logs to a file</p>
+<div class="language-bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-1-1">1</a></span>
+<span class="normal"><a href="#__codelineno-1-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1"></a><span class="c1"># Log to file</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2"></a><span class="nv">FOUNDATION_LOG_FILE</span><span class="o">=</span>flavor-build.log<span class="w"> </span>flavor<span class="w"> </span>pack
+</span></code></pre></div></td></tr></table></div>
+<hr />
 <hr />
 <h2 id="build-time-variables">Build-Time Variables<a class="headerlink" href="#build-time-variables" title="Permanent link">&para;</a></h2>
 <p>Variables that affect package creation with <code>flavor pack</code>.</p>
 <h3 id="flavor_workenv_base">FLAVOR_WORKENV_BASE<a class="headerlink" href="#flavor_workenv_base" title="Permanent link">&para;</a></h3>
 <p><strong>Default:</strong> Current working directory
 <strong>Purpose:</strong> Base directory for resolving <code>{workenv}</code> placeholders in manifests</p>
-<div class="language-bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1">1</a></span>
-<span class="normal"><a href="#__codelineno-0-2">2</a></span>
-<span class="normal"><a href="#__codelineno-0-3">3</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><span class="c1"># Use custom workenv base</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">FLAVOR_WORKENV_BASE</span><span class="o">=</span>/opt/myproject
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a>flavor<span class="w"> </span>pack<span class="w"> </span>--manifest<span class="w"> </span>pyproject.toml
+<div class="language-bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-2-1">1</a></span>
+<span class="normal"><a href="#__codelineno-2-2">2</a></span>
+<span class="normal"><a href="#__codelineno-2-3">3</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1"></a><span class="c1"># Use custom workenv base</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">FLAVOR_WORKENV_BASE</span><span class="o">=</span>/opt/myproject
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3"></a>flavor<span class="w"> </span>pack<span class="w"> </span>--manifest<span class="w"> </span>pyproject.toml
 </span></code></pre></div></td></tr></table></div>
 <h3 id="flavor_output_format">FLAVOR_OUTPUT_FORMAT<a class="headerlink" href="#flavor_output_format" title="Permanent link">&para;</a></h3>
 <p><strong>Default:</strong> <code>text</code>
 <strong>Values:</strong> <code>text</code>, <code>json</code>
 <strong>Purpose:</strong> Output format for build logs</p>
-<div class="language-bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-1-1">1</a></span>
-<span class="normal"><a href="#__codelineno-1-2">2</a></span>
-<span class="normal"><a href="#__codelineno-1-3">3</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1"></a><span class="c1"># JSON output for CI/CD parsing</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">FLAVOR_OUTPUT_FORMAT</span><span class="o">=</span>json
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3"></a>flavor<span class="w"> </span>pack<span class="w"> </span>--manifest<span class="w"> </span>pyproject.toml
+<div class="language-bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-3-1">1</a></span>
+<span class="normal"><a href="#__codelineno-3-2">2</a></span>
+<span class="normal"><a href="#__codelineno-3-3">3</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1"></a><span class="c1"># JSON output for CI/CD parsing</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">FLAVOR_OUTPUT_FORMAT</span><span class="o">=</span>json
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3"></a>flavor<span class="w"> </span>pack<span class="w"> </span>--manifest<span class="w"> </span>pyproject.toml
 </span></code></pre></div></td></tr></table></div>
 <h3 id="flavor_output_file">FLAVOR_OUTPUT_FILE<a class="headerlink" href="#flavor_output_file" title="Permanent link">&para;</a></h3>
 <p><strong>Default:</strong> <code>STDOUT</code>
 <strong>Values:</strong> File path, <code>STDOUT</code>, <code>STDERR</code>
 <strong>Purpose:</strong> Where to write build output</p>
-<div class="language-bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-2-1">1</a></span>
-<span class="normal"><a href="#__codelineno-2-2">2</a></span>
-<span class="normal"><a href="#__codelineno-2-3">3</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1"></a><span class="c1"># Write output to file</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">FLAVOR_OUTPUT_FILE</span><span class="o">=</span>build.log
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3"></a>flavor<span class="w"> </span>pack<span class="w"> </span>--manifest<span class="w"> </span>pyproject.toml
+<div class="language-bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-4-1">1</a></span>
+<span class="normal"><a href="#__codelineno-4-2">2</a></span>
+<span class="normal"><a href="#__codelineno-4-3">3</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1"></a><span class="c1"># Write output to file</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">FLAVOR_OUTPUT_FILE</span><span class="o">=</span>build.log
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3"></a>flavor<span class="w"> </span>pack<span class="w"> </span>--manifest<span class="w"> </span>pyproject.toml
 </span></code></pre></div></td></tr></table></div>
 <hr />
-<h2 id="runtime-variables">Runtime Variables<a class="headerlink" href="#runtime-variables" title="Permanent link">&para;</a></h2>
-<p>Variables that affect package execution.</p>
+<h2 id="packaged-application-variables">Packaged Application Variables<a class="headerlink" href="#packaged-application-variables" title="Permanent link">&para;</a></h2>
+<p>Variables that affect execution of packaged <code>.psp</code> applications.</p>
 <h3 id="flavor_log_level">FLAVOR_LOG_LEVEL<a class="headerlink" href="#flavor_log_level" title="Permanent link">&para;</a></h3>
 <p><strong>Default:</strong> <code>info</code>
 <strong>Values:</strong> <code>trace</code>, <code>debug</code>, <code>info</code>, <code>warn</code>, <code>error</code>
-<strong>Purpose:</strong> Set logging verbosity for package execution</p>
-<div class="language-bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-3-1">1</a></span>
-<span class="normal"><a href="#__codelineno-3-2">2</a></span>
-<span class="normal"><a href="#__codelineno-3-3">3</a></span>
-<span class="normal"><a href="#__codelineno-3-4">4</a></span>
-<span class="normal"><a href="#__codelineno-3-5">5</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1"></a><span class="c1"># Debug package execution</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2"></a><span class="nv">FLAVOR_LOG_LEVEL</span><span class="o">=</span>debug<span class="w"> </span>./myapp.psp
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3"></a>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4"></a><span class="c1"># Minimal logging</span>
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5"></a><span class="nv">FLAVOR_LOG_LEVEL</span><span class="o">=</span>error<span class="w"> </span>./myapp.psp
+<strong>Purpose:</strong> Set logging verbosity for packaged application execution</p>
+<div class="language-bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-5-1">1</a></span>
+<span class="normal"><a href="#__codelineno-5-2">2</a></span>
+<span class="normal"><a href="#__codelineno-5-3">3</a></span>
+<span class="normal"><a href="#__codelineno-5-4">4</a></span>
+<span class="normal"><a href="#__codelineno-5-5">5</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1"></a><span class="c1"># Debug package execution</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2"></a><span class="nv">FLAVOR_LOG_LEVEL</span><span class="o">=</span>debug<span class="w"> </span>./myapp.psp
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3"></a>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4"></a><span class="c1"># Minimal logging</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5"></a><span class="nv">FLAVOR_LOG_LEVEL</span><span class="o">=</span>error<span class="w"> </span>./myapp.psp
 </span></code></pre></div></td></tr></table></div>
 <h3 id="flavor_cache">FLAVOR_CACHE<a class="headerlink" href="#flavor_cache" title="Permanent link">&para;</a></h3>
 <p><strong>Default:</strong> <code>~/.cache/flavor/workenv</code>
 <strong>Purpose:</strong> Override cache directory location</p>
-<div class="language-bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-4-1">1</a></span>
-<span class="normal"><a href="#__codelineno-4-2">2</a></span>
-<span class="normal"><a href="#__codelineno-4-3">3</a></span>
-<span class="normal"><a href="#__codelineno-4-4">4</a></span>
-<span class="normal"><a href="#__codelineno-4-5">5</a></span>
-<span class="normal"><a href="#__codelineno-4-6">6</a></span>
-<span class="normal"><a href="#__codelineno-4-7">7</a></span>
-<span class="normal"><a href="#__codelineno-4-8">8</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1"></a><span class="c1"># Use temporary cache</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2"></a><span class="nv">FLAVOR_CACHE</span><span class="o">=</span>/tmp/flavor-cache<span class="w"> </span>./myapp.psp
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3"></a>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4"></a><span class="c1"># Use project-local cache</span>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5"></a><span class="nv">FLAVOR_CACHE</span><span class="o">=</span>./.cache/flavor<span class="w"> </span>./myapp.psp
-</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6"></a>
-</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7"></a><span class="c1"># Disable cache (extract to temp dir each run)</span>
-</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8"></a><span class="nv">FLAVOR_CACHE</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="w"> </span>./myapp.psp
+<div class="language-bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-6-1">1</a></span>
+<span class="normal"><a href="#__codelineno-6-2">2</a></span>
+<span class="normal"><a href="#__codelineno-6-3">3</a></span>
+<span class="normal"><a href="#__codelineno-6-4">4</a></span>
+<span class="normal"><a href="#__codelineno-6-5">5</a></span>
+<span class="normal"><a href="#__codelineno-6-6">6</a></span>
+<span class="normal"><a href="#__codelineno-6-7">7</a></span>
+<span class="normal"><a href="#__codelineno-6-8">8</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1"></a><span class="c1"># Use temporary cache</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2"></a><span class="nv">FLAVOR_CACHE</span><span class="o">=</span>/tmp/flavor-cache<span class="w"> </span>./myapp.psp
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3"></a>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4"></a><span class="c1"># Use project-local cache</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5"></a><span class="nv">FLAVOR_CACHE</span><span class="o">=</span>./.cache/flavor<span class="w"> </span>./myapp.psp
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6"></a>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7"></a><span class="c1"># Disable cache (extract to temp dir each run)</span>
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8"></a><span class="nv">FLAVOR_CACHE</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="w"> </span>./myapp.psp
 </span></code></pre></div></td></tr></table></div>
 <h3 id="flavor_cache_validation">FLAVOR_CACHE_VALIDATION<a class="headerlink" href="#flavor_cache_validation" title="Permanent link">&para;</a></h3>
 <p><strong>Default:</strong> <code>true</code>
 <strong>Values:</strong> <code>true</code>, <code>false</code>
 <strong>Purpose:</strong> Enable/disable cache integrity validation</p>
-<div class="language-bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-5-1">1</a></span>
-<span class="normal"><a href="#__codelineno-5-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1"></a><span class="c1"># Disable validation (not recommended for production)</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2"></a><span class="nv">FLAVOR_CACHE_VALIDATION</span><span class="o">=</span><span class="nb">false</span><span class="w"> </span>./myapp.psp
+<div class="language-bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-7-1">1</a></span>
+<span class="normal"><a href="#__codelineno-7-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1"></a><span class="c1"># Disable validation (not recommended for production)</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2"></a><span class="nv">FLAVOR_CACHE_VALIDATION</span><span class="o">=</span><span class="nb">false</span><span class="w"> </span>./myapp.psp
 </span></code></pre></div></td></tr></table></div>
 <div class="admonition warning">
 <p class="admonition-title">Security</p>
@@ -3609,13 +3669,13 @@ Only disable in trusted environments.</p>
 <p><strong>Default:</strong> <code>false</code>
 <strong>Values:</strong> <code>true</code>, <code>false</code>
 <strong>Purpose:</strong> Enable launcher CLI mode (for debugging)</p>
-<div class="language-bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-6-1">1</a></span>
-<span class="normal"><a href="#__codelineno-6-2">2</a></span>
-<span class="normal"><a href="#__codelineno-6-3">3</a></span>
-<span class="normal"><a href="#__codelineno-6-4">4</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1"></a><span class="c1"># Inspect package with launcher CLI</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2"></a><span class="nv">FLAVOR_LAUNCHER_CLI</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>./myapp.psp<span class="w"> </span>inspect
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3"></a><span class="nv">FLAVOR_LAUNCHER_CLI</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>./myapp.psp<span class="w"> </span>verify
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4"></a><span class="nv">FLAVOR_LAUNCHER_CLI</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>./myapp.psp<span class="w"> </span>extract
+<div class="language-bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-8-1">1</a></span>
+<span class="normal"><a href="#__codelineno-8-2">2</a></span>
+<span class="normal"><a href="#__codelineno-8-3">3</a></span>
+<span class="normal"><a href="#__codelineno-8-4">4</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1"></a><span class="c1"># Inspect package with launcher CLI</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2"></a><span class="nv">FLAVOR_LAUNCHER_CLI</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>./myapp.psp<span class="w"> </span>inspect
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3"></a><span class="nv">FLAVOR_LAUNCHER_CLI</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>./myapp.psp<span class="w"> </span>verify
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4"></a><span class="nv">FLAVOR_LAUNCHER_CLI</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>./myapp.psp<span class="w"> </span>extract
 </span></code></pre></div></td></tr></table></div>
 <hr />
 <h2 id="cache-variables">Cache Variables<a class="headerlink" href="#cache-variables" title="Permanent link">&para;</a></h2>
@@ -3623,13 +3683,13 @@ Only disable in trusted environments.</p>
 <h3 id="xdg_cache_home">XDG_CACHE_HOME<a class="headerlink" href="#xdg_cache_home" title="Permanent link">&para;</a></h3>
 <p><strong>Default:</strong> <code>~/.cache</code>
 <strong>Purpose:</strong> XDG Base Directory specification for cache location</p>
-<div class="language-bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-7-1">1</a></span>
-<span class="normal"><a href="#__codelineno-7-2">2</a></span>
-<span class="normal"><a href="#__codelineno-7-3">3</a></span>
-<span class="normal"><a href="#__codelineno-7-4">4</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1"></a><span class="c1"># Use XDG-compliant cache location</span>
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">XDG_CACHE_HOME</span><span class="o">=</span>/custom/cache
-</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3"></a><span class="c1"># FlavorPack cache will be: /custom/cache/flavor/workenv</span>
-</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4"></a>./myapp.psp
+<div class="language-bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-9-1">1</a></span>
+<span class="normal"><a href="#__codelineno-9-2">2</a></span>
+<span class="normal"><a href="#__codelineno-9-3">3</a></span>
+<span class="normal"><a href="#__codelineno-9-4">4</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1"></a><span class="c1"># Use XDG-compliant cache location</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">XDG_CACHE_HOME</span><span class="o">=</span>/custom/cache
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3"></a><span class="c1"># FlavorPack cache will be: /custom/cache/flavor/workenv</span>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4"></a>./myapp.psp
 </span></code></pre></div></td></tr></table></div>
 <h3 id="flavor_workenv">FLAVOR_WORKENV<a class="headerlink" href="#flavor_workenv" title="Permanent link">&para;</a></h3>
 <p><strong>Deprecated:</strong> Use <code>FLAVOR_CACHE</code> instead
@@ -3637,40 +3697,40 @@ Only disable in trusted environments.</p>
 <hr />
 <h2 id="logging-variables">Logging Variables<a class="headerlink" href="#logging-variables" title="Permanent link">&para;</a></h2>
 <p>Variables for diagnostic logging (Foundation framework).</p>
-<h3 id="foundation_log_level">FOUNDATION_LOG_LEVEL<a class="headerlink" href="#foundation_log_level" title="Permanent link">&para;</a></h3>
+<h3 id="foundation_log_level_1">FOUNDATION_LOG_LEVEL<a class="headerlink" href="#foundation_log_level_1" title="Permanent link">&para;</a></h3>
 <p><strong>Default:</strong> <code>info</code>
 <strong>Values:</strong> <code>trace</code>, <code>debug</code>, <code>info</code>, <code>warning</code>, <code>error</code>
 <strong>Purpose:</strong> Set log level for FlavorPack tools (flavor pack, inspect, etc.)</p>
-<div class="language-bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-8-1">1</a></span>
-<span class="normal"><a href="#__codelineno-8-2">2</a></span>
-<span class="normal"><a href="#__codelineno-8-3">3</a></span>
-<span class="normal"><a href="#__codelineno-8-4">4</a></span>
-<span class="normal"><a href="#__codelineno-8-5">5</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1"></a><span class="c1"># Debug build process</span>
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2"></a><span class="nv">FOUNDATION_LOG_LEVEL</span><span class="o">=</span>debug<span class="w"> </span>flavor<span class="w"> </span>pack<span class="w"> </span>--manifest<span class="w"> </span>pyproject.toml
-</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3"></a>
-</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4"></a><span class="c1"># Trace all operations</span>
-</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5"></a><span class="nv">FOUNDATION_LOG_LEVEL</span><span class="o">=</span>trace<span class="w"> </span>flavor<span class="w"> </span>inspect<span class="w"> </span>myapp.psp
+<div class="language-bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-10-1">1</a></span>
+<span class="normal"><a href="#__codelineno-10-2">2</a></span>
+<span class="normal"><a href="#__codelineno-10-3">3</a></span>
+<span class="normal"><a href="#__codelineno-10-4">4</a></span>
+<span class="normal"><a href="#__codelineno-10-5">5</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1"></a><span class="c1"># Debug build process</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2"></a><span class="nv">FOUNDATION_LOG_LEVEL</span><span class="o">=</span>debug<span class="w"> </span>flavor<span class="w"> </span>pack<span class="w"> </span>--manifest<span class="w"> </span>pyproject.toml
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3"></a>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4"></a><span class="c1"># Trace all operations</span>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5"></a><span class="nv">FOUNDATION_LOG_LEVEL</span><span class="o">=</span>trace<span class="w"> </span>flavor<span class="w"> </span>inspect<span class="w"> </span>myapp.psp
 </span></code></pre></div></td></tr></table></div>
-<h3 id="foundation_log_file">FOUNDATION_LOG_FILE<a class="headerlink" href="#foundation_log_file" title="Permanent link">&para;</a></h3>
+<h3 id="foundation_log_file_1">FOUNDATION_LOG_FILE<a class="headerlink" href="#foundation_log_file_1" title="Permanent link">&para;</a></h3>
 <p><strong>Default:</strong> None (log to console)
 <strong>Purpose:</strong> Write logs to file instead of console</p>
-<div class="language-bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-9-1">1</a></span>
-<span class="normal"><a href="#__codelineno-9-2">2</a></span>
-<span class="normal"><a href="#__codelineno-9-3">3</a></span>
-<span class="normal"><a href="#__codelineno-9-4">4</a></span>
-<span class="normal"><a href="#__codelineno-9-5">5</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1"></a><span class="c1"># Log build to file</span>
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2"></a><span class="nv">FOUNDATION_LOG_FILE</span><span class="o">=</span>build.log<span class="w"> </span>flavor<span class="w"> </span>pack<span class="w"> </span>--manifest<span class="w"> </span>pyproject.toml
-</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3"></a>
-</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4"></a><span class="c1"># Logs written to build.log</span>
-</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5"></a>cat<span class="w"> </span>build.log
+<div class="language-bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-11-1">1</a></span>
+<span class="normal"><a href="#__codelineno-11-2">2</a></span>
+<span class="normal"><a href="#__codelineno-11-3">3</a></span>
+<span class="normal"><a href="#__codelineno-11-4">4</a></span>
+<span class="normal"><a href="#__codelineno-11-5">5</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1"></a><span class="c1"># Log build to file</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2"></a><span class="nv">FOUNDATION_LOG_FILE</span><span class="o">=</span>build.log<span class="w"> </span>flavor<span class="w"> </span>pack<span class="w"> </span>--manifest<span class="w"> </span>pyproject.toml
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3"></a>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4"></a><span class="c1"># Logs written to build.log</span>
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5"></a>cat<span class="w"> </span>build.log
 </span></code></pre></div></td></tr></table></div>
 <h3 id="foundation_setup_log_level">FOUNDATION_SETUP_LOG_LEVEL<a class="headerlink" href="#foundation_setup_log_level" title="Permanent link">&para;</a></h3>
 <p><strong>Default:</strong> <code>warning</code>
 <strong>Values:</strong> <code>trace</code>, <code>debug</code>, <code>info</code>, <code>warning</code>, <code>error</code>
 <strong>Purpose:</strong> Control Foundation initialization logs</p>
-<div class="language-bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-10-1">1</a></span>
-<span class="normal"><a href="#__codelineno-10-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1"></a><span class="c1"># Hide foundation setup logs</span>
-</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2"></a><span class="nv">FOUNDATION_SETUP_LOG_LEVEL</span><span class="o">=</span>error<span class="w"> </span>flavor<span class="w"> </span>pack
+<div class="language-bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-12-1">1</a></span>
+<span class="normal"><a href="#__codelineno-12-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1"></a><span class="c1"># Hide foundation setup logs</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2"></a><span class="nv">FOUNDATION_SETUP_LOG_LEVEL</span><span class="o">=</span>error<span class="w"> </span>flavor<span class="w"> </span>pack
 </span></code></pre></div></td></tr></table></div>
 <hr />
 <h2 id="platform-variables-read-only">Platform Variables (Read-Only)<a class="headerlink" href="#platform-variables-read-only" title="Permanent link">&para;</a></h2>
@@ -3679,59 +3739,59 @@ Only disable in trusted environments.</p>
 <p><strong>Set by:</strong> FlavorPack launcher
 <strong>Values:</strong> <code>linux</code>, <code>darwin</code>, <code>windows</code>
 <strong>Purpose:</strong> Operating system identifier</p>
-<div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-11-1">1</a></span>
-<span class="normal"><a href="#__codelineno-11-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
-</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2"></a><span class="n">os_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;FLAVOR_OS&#39;</span><span class="p">]</span>  <span class="c1"># &#39;linux&#39;, &#39;darwin&#39;, or &#39;windows&#39;</span>
+<div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-13-1">1</a></span>
+<span class="normal"><a href="#__codelineno-13-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2"></a><span class="n">os_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;FLAVOR_OS&#39;</span><span class="p">]</span>  <span class="c1"># &#39;linux&#39;, &#39;darwin&#39;, or &#39;windows&#39;</span>
 </span></code></pre></div></td></tr></table></div>
 <h3 id="flavor_arch">FLAVOR_ARCH<a class="headerlink" href="#flavor_arch" title="Permanent link">&para;</a></h3>
 <p><strong>Set by:</strong> FlavorPack launcher
 <strong>Values:</strong> <code>amd64</code>, <code>arm64</code>, <code>x86</code>, <code>i386</code>
 <strong>Purpose:</strong> CPU architecture identifier</p>
-<div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-12-1">1</a></span>
-<span class="normal"><a href="#__codelineno-12-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
-</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2"></a><span class="n">arch</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;FLAVOR_ARCH&#39;</span><span class="p">]</span>  <span class="c1"># &#39;amd64&#39;, &#39;arm64&#39;, etc.</span>
+<div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-14-1">1</a></span>
+<span class="normal"><a href="#__codelineno-14-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2"></a><span class="n">arch</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;FLAVOR_ARCH&#39;</span><span class="p">]</span>  <span class="c1"># &#39;amd64&#39;, &#39;arm64&#39;, etc.</span>
 </span></code></pre></div></td></tr></table></div>
 <h3 id="flavor_platform">FLAVOR_PLATFORM<a class="headerlink" href="#flavor_platform" title="Permanent link">&para;</a></h3>
 <p><strong>Set by:</strong> FlavorPack launcher
 <strong>Values:</strong> <code>{os}_{arch}</code> (e.g., <code>linux_amd64</code>, <code>darwin_arm64</code>)
 <strong>Purpose:</strong> Combined platform identifier</p>
-<div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-13-1">1</a></span>
-<span class="normal"><a href="#__codelineno-13-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
-</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2"></a><span class="n">platform</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;FLAVOR_PLATFORM&#39;</span><span class="p">]</span>  <span class="c1"># &#39;linux_amd64&#39;, &#39;darwin_arm64&#39;, etc.</span>
+<div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-15-1">1</a></span>
+<span class="normal"><a href="#__codelineno-15-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2"></a><span class="n">platform</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;FLAVOR_PLATFORM&#39;</span><span class="p">]</span>  <span class="c1"># &#39;linux_amd64&#39;, &#39;darwin_arm64&#39;, etc.</span>
 </span></code></pre></div></td></tr></table></div>
 <h3 id="flavor_os_version">FLAVOR_OS_VERSION<a class="headerlink" href="#flavor_os_version" title="Permanent link">&para;</a></h3>
 <p><strong>Set by:</strong> FlavorPack launcher
 <strong>Values:</strong> OS-specific version string
 <strong>Purpose:</strong> Operating system version</p>
-<div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-14-1">1</a></span>
-<span class="normal"><a href="#__codelineno-14-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
-</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2"></a><span class="n">os_version</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;FLAVOR_OS_VERSION&#39;</span><span class="p">)</span>  <span class="c1"># &#39;5.15.0&#39;, &#39;14.2&#39;, etc.</span>
+<div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-16-1">1</a></span>
+<span class="normal"><a href="#__codelineno-16-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2"></a><span class="n">os_version</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;FLAVOR_OS_VERSION&#39;</span><span class="p">)</span>  <span class="c1"># &#39;5.15.0&#39;, &#39;14.2&#39;, etc.</span>
 </span></code></pre></div></td></tr></table></div>
 <h3 id="flavor_cpu_type">FLAVOR_CPU_TYPE<a class="headerlink" href="#flavor_cpu_type" title="Permanent link">&para;</a></h3>
 <p><strong>Set by:</strong> FlavorPack launcher
 <strong>Values:</strong> CPU family/type
 <strong>Purpose:</strong> CPU type identifier</p>
-<div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-15-1">1</a></span>
-<span class="normal"><a href="#__codelineno-15-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
-</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2"></a><span class="n">cpu_type</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;FLAVOR_CPU_TYPE&#39;</span><span class="p">)</span>  <span class="c1"># &#39;x86_64&#39;, &#39;aarch64&#39;, etc.</span>
+<div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-17-1">1</a></span>
+<span class="normal"><a href="#__codelineno-17-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2"></a><span class="n">cpu_type</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;FLAVOR_CPU_TYPE&#39;</span><span class="p">)</span>  <span class="c1"># &#39;x86_64&#39;, &#39;aarch64&#39;, etc.</span>
 </span></code></pre></div></td></tr></table></div>
 <hr />
 <h2 id="application-specific-variables">Application-Specific Variables<a class="headerlink" href="#application-specific-variables" title="Permanent link">&para;</a></h2>
 <p>Variables your packaged application can use.</p>
 <h3 id="custom-application-variables">Custom Application Variables<a class="headerlink" href="#custom-application-variables" title="Permanent link">&para;</a></h3>
 <p>Set custom variables in your package manifest:</p>
-<div class="language-toml highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">TOML</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-16-1">1</a></span>
-<span class="normal"><a href="#__codelineno-16-2">2</a></span>
-<span class="normal"><a href="#__codelineno-16-3">3</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1"></a><span class="c1"># pyproject.toml</span>
-</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2"></a><span class="k">[tool.flavor.environment]</span>
-</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3"></a><span class="n">set</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">APP_ENV</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;production&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">DEBUG</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;false&quot;</span><span class="w"> </span><span class="p">}</span>
+<div class="language-toml highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">TOML</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-18-1">1</a></span>
+<span class="normal"><a href="#__codelineno-18-2">2</a></span>
+<span class="normal"><a href="#__codelineno-18-3">3</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1"></a><span class="c1"># pyproject.toml</span>
+</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2"></a><span class="k">[tool.flavor.environment]</span>
+</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3"></a><span class="n">set</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">APP_ENV</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;production&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">DEBUG</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;false&quot;</span><span class="w"> </span><span class="p">}</span>
 </span></code></pre></div></td></tr></table></div>
 <p>These are set during package execution:</p>
-<div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-17-1">1</a></span>
-<span class="normal"><a href="#__codelineno-17-2">2</a></span>
-<span class="normal"><a href="#__codelineno-17-3">3</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
-</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2"></a><span class="n">app_env</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;APP_ENV&#39;</span><span class="p">]</span>  <span class="c1"># &#39;production&#39;</span>
-</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3"></a><span class="n">debug</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;DEBUG&#39;</span><span class="p">]</span>  <span class="c1"># &#39;false&#39;</span>
+<div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-19-1">1</a></span>
+<span class="normal"><a href="#__codelineno-19-2">2</a></span>
+<span class="normal"><a href="#__codelineno-19-3">3</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2"></a><span class="n">app_env</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;APP_ENV&#39;</span><span class="p">]</span>  <span class="c1"># &#39;production&#39;</span>
+</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3"></a><span class="n">debug</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;DEBUG&#39;</span><span class="p">]</span>  <span class="c1"># &#39;false&#39;</span>
 </span></code></pre></div></td></tr></table></div>
 <hr />
 <h2 id="environment-layers">Environment Layers<a class="headerlink" href="#environment-layers" title="Permanent link">&para;</a></h2>
@@ -3748,41 +3808,41 @@ Only disable in trusted environments.</p>
     E2[FLAVOR_OS, FLAVOR_ARCH, etc.] -.-&gt; E</code></pre>
 <h3 id="layer-1-runtime-security">Layer 1: Runtime Security<a class="headerlink" href="#layer-1-runtime-security" title="Permanent link">&para;</a></h3>
 <p>Manifest-defined environment operations:</p>
-<div class="language-toml highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">TOML</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-18-1"> 1</a></span>
-<span class="normal"><a href="#__codelineno-18-2"> 2</a></span>
-<span class="normal"><a href="#__codelineno-18-3"> 3</a></span>
-<span class="normal"><a href="#__codelineno-18-4"> 4</a></span>
-<span class="normal"><a href="#__codelineno-18-5"> 5</a></span>
-<span class="normal"><a href="#__codelineno-18-6"> 6</a></span>
-<span class="normal"><a href="#__codelineno-18-7"> 7</a></span>
-<span class="normal"><a href="#__codelineno-18-8"> 8</a></span>
-<span class="normal"><a href="#__codelineno-18-9"> 9</a></span>
-<span class="normal"><a href="#__codelineno-18-10">10</a></span>
-<span class="normal"><a href="#__codelineno-18-11">11</a></span>
-<span class="normal"><a href="#__codelineno-18-12">12</a></span>
-<span class="normal"><a href="#__codelineno-18-13">13</a></span>
-<span class="normal"><a href="#__codelineno-18-14">14</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1"></a><span class="k">[tool.flavor.environment]</span>
-</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2"></a><span class="c1"># Preserve specific variables</span>
-</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3"></a><span class="n">pass</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;PATH&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;HOME&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;USER&quot;</span><span class="p">]</span>
-</span><span id="__span-18-4"><a id="__codelineno-18-4" name="__codelineno-18-4"></a>
-</span><span id="__span-18-5"><a id="__codelineno-18-5" name="__codelineno-18-5"></a><span class="c1"># Remove sensitive variables</span>
-</span><span id="__span-18-6"><a id="__codelineno-18-6" name="__codelineno-18-6"></a><span class="n">unset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;AWS_*&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;SECRET_*&quot;</span><span class="p">]</span>
-</span><span id="__span-18-7"><a id="__codelineno-18-7" name="__codelineno-18-7"></a>
-</span><span id="__span-18-8"><a id="__codelineno-18-8" name="__codelineno-18-8"></a><span class="c1"># Rename variables</span>
-</span><span id="__span-18-9"><a id="__codelineno-18-9" name="__codelineno-18-9"></a><span class="k">[tool.flavor.environment.map]</span>
-</span><span id="__span-18-10"><a id="__codelineno-18-10" name="__codelineno-18-10"></a><span class="n">OLD_VAR</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;NEW_VAR&quot;</span>
-</span><span id="__span-18-11"><a id="__codelineno-18-11" name="__codelineno-18-11"></a>
-</span><span id="__span-18-12"><a id="__codelineno-18-12" name="__codelineno-18-12"></a><span class="c1"># Set new variables</span>
-</span><span id="__span-18-13"><a id="__codelineno-18-13" name="__codelineno-18-13"></a><span class="k">[tool.flavor.environment.set]</span>
-</span><span id="__span-18-14"><a id="__codelineno-18-14" name="__codelineno-18-14"></a><span class="n">APP_MODE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;production&quot;</span>
+<div class="language-toml highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">TOML</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-20-1"> 1</a></span>
+<span class="normal"><a href="#__codelineno-20-2"> 2</a></span>
+<span class="normal"><a href="#__codelineno-20-3"> 3</a></span>
+<span class="normal"><a href="#__codelineno-20-4"> 4</a></span>
+<span class="normal"><a href="#__codelineno-20-5"> 5</a></span>
+<span class="normal"><a href="#__codelineno-20-6"> 6</a></span>
+<span class="normal"><a href="#__codelineno-20-7"> 7</a></span>
+<span class="normal"><a href="#__codelineno-20-8"> 8</a></span>
+<span class="normal"><a href="#__codelineno-20-9"> 9</a></span>
+<span class="normal"><a href="#__codelineno-20-10">10</a></span>
+<span class="normal"><a href="#__codelineno-20-11">11</a></span>
+<span class="normal"><a href="#__codelineno-20-12">12</a></span>
+<span class="normal"><a href="#__codelineno-20-13">13</a></span>
+<span class="normal"><a href="#__codelineno-20-14">14</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1"></a><span class="k">[tool.flavor.environment]</span>
+</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2"></a><span class="c1"># Preserve specific variables</span>
+</span><span id="__span-20-3"><a id="__codelineno-20-3" name="__codelineno-20-3"></a><span class="n">pass</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;PATH&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;HOME&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;USER&quot;</span><span class="p">]</span>
+</span><span id="__span-20-4"><a id="__codelineno-20-4" name="__codelineno-20-4"></a>
+</span><span id="__span-20-5"><a id="__codelineno-20-5" name="__codelineno-20-5"></a><span class="c1"># Remove sensitive variables</span>
+</span><span id="__span-20-6"><a id="__codelineno-20-6" name="__codelineno-20-6"></a><span class="n">unset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;AWS_*&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;SECRET_*&quot;</span><span class="p">]</span>
+</span><span id="__span-20-7"><a id="__codelineno-20-7" name="__codelineno-20-7"></a>
+</span><span id="__span-20-8"><a id="__codelineno-20-8" name="__codelineno-20-8"></a><span class="c1"># Rename variables</span>
+</span><span id="__span-20-9"><a id="__codelineno-20-9" name="__codelineno-20-9"></a><span class="k">[tool.flavor.environment.map]</span>
+</span><span id="__span-20-10"><a id="__codelineno-20-10" name="__codelineno-20-10"></a><span class="n">OLD_VAR</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;NEW_VAR&quot;</span>
+</span><span id="__span-20-11"><a id="__codelineno-20-11" name="__codelineno-20-11"></a>
+</span><span id="__span-20-12"><a id="__codelineno-20-12" name="__codelineno-20-12"></a><span class="c1"># Set new variables</span>
+</span><span id="__span-20-13"><a id="__codelineno-20-13" name="__codelineno-20-13"></a><span class="k">[tool.flavor.environment.set]</span>
+</span><span id="__span-20-14"><a id="__codelineno-20-14" name="__codelineno-20-14"></a><span class="n">APP_MODE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;production&quot;</span>
 </span></code></pre></div></td></tr></table></div>
 <h3 id="layer-2-workenv">Layer 2: Workenv<a class="headerlink" href="#layer-2-workenv" title="Permanent link">&para;</a></h3>
 <p>Work environment paths:</p>
-<div class="language-bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-19-1">1</a></span>
-<span class="normal"><a href="#__codelineno-19-2">2</a></span>
-<span class="normal"><a href="#__codelineno-19-3">3</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1"></a><span class="nv">PATH</span><span class="o">=</span>/cache/workenv/bin:<span class="nv">$PATH</span>
-</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2"></a><span class="nv">LD_LIBRARY_PATH</span><span class="o">=</span>/cache/workenv/lib
-</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3"></a><span class="nv">PYTHONPATH</span><span class="o">=</span>/cache/workenv/lib/python3.11/site-packages
+<div class="language-bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-21-1">1</a></span>
+<span class="normal"><a href="#__codelineno-21-2">2</a></span>
+<span class="normal"><a href="#__codelineno-21-3">3</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1"></a><span class="nv">PATH</span><span class="o">=</span>/cache/workenv/bin:<span class="nv">$PATH</span>
+</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2"></a><span class="nv">LD_LIBRARY_PATH</span><span class="o">=</span>/cache/workenv/lib
+</span><span id="__span-21-3"><a id="__codelineno-21-3" name="__codelineno-21-3"></a><span class="nv">PYTHONPATH</span><span class="o">=</span>/cache/workenv/lib/python3.11/site-packages
 </span></code></pre></div></td></tr></table></div>
 <h3 id="layer-3-execution">Layer 3: Execution<a class="headerlink" href="#layer-3-execution" title="Permanent link">&para;</a></h3>
 <p>Application-specific settings from manifest.</p>
@@ -3801,159 +3861,159 @@ Only disable in trusted environments.</p>
 <hr />
 <h2 id="common-patterns">Common Patterns<a class="headerlink" href="#common-patterns" title="Permanent link">&para;</a></h2>
 <h3 id="development-with-debug-logging">Development with Debug Logging<a class="headerlink" href="#development-with-debug-logging" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-20-1">1</a></span>
-<span class="normal"><a href="#__codelineno-20-2">2</a></span>
-<span class="normal"><a href="#__codelineno-20-3">3</a></span>
-<span class="normal"><a href="#__codelineno-20-4">4</a></span>
-<span class="normal"><a href="#__codelineno-20-5">5</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">FOUNDATION_LOG_LEVEL</span><span class="o">=</span>debug
-</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">FLAVOR_LOG_LEVEL</span><span class="o">=</span>debug
-</span><span id="__span-20-3"><a id="__codelineno-20-3" name="__codelineno-20-3"></a>
-</span><span id="__span-20-4"><a id="__codelineno-20-4" name="__codelineno-20-4"></a>flavor<span class="w"> </span>pack<span class="w"> </span>--manifest<span class="w"> </span>pyproject.toml
-</span><span id="__span-20-5"><a id="__codelineno-20-5" name="__codelineno-20-5"></a>./myapp.psp
-</span></code></pre></div></td></tr></table></div>
-<h3 id="cicd-pipeline">CI/CD Pipeline<a class="headerlink" href="#cicd-pipeline" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-21-1">1</a></span>
-<span class="normal"><a href="#__codelineno-21-2">2</a></span>
-<span class="normal"><a href="#__codelineno-21-3">3</a></span>
-<span class="normal"><a href="#__codelineno-21-4">4</a></span>
-<span class="normal"><a href="#__codelineno-21-5">5</a></span>
-<span class="normal"><a href="#__codelineno-21-6">6</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1"></a><span class="c1"># Clean environment, JSON output</span>
-</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">FLAVOR_CACHE</span><span class="o">=</span>/tmp/flavor-cache-<span class="nv">$CI_JOB_ID</span>
-</span><span id="__span-21-3"><a id="__codelineno-21-3" name="__codelineno-21-3"></a><span class="nb">export</span><span class="w"> </span><span class="nv">FLAVOR_OUTPUT_FORMAT</span><span class="o">=</span>json
-</span><span id="__span-21-4"><a id="__codelineno-21-4" name="__codelineno-21-4"></a><span class="nb">export</span><span class="w"> </span><span class="nv">FOUNDATION_LOG_LEVEL</span><span class="o">=</span>warning
-</span><span id="__span-21-5"><a id="__codelineno-21-5" name="__codelineno-21-5"></a>
-</span><span id="__span-21-6"><a id="__codelineno-21-6" name="__codelineno-21-6"></a>flavor<span class="w"> </span>pack<span class="w"> </span>--manifest<span class="w"> </span>pyproject.toml<span class="w"> </span>--output<span class="w"> </span>dist/myapp.psp
-</span></code></pre></div></td></tr></table></div>
-<h3 id="production-deployment">Production Deployment<a class="headerlink" href="#production-deployment" title="Permanent link">&para;</a></h3>
 <div class="language-bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-22-1">1</a></span>
 <span class="normal"><a href="#__codelineno-22-2">2</a></span>
 <span class="normal"><a href="#__codelineno-22-3">3</a></span>
 <span class="normal"><a href="#__codelineno-22-4">4</a></span>
-<span class="normal"><a href="#__codelineno-22-5">5</a></span>
-<span class="normal"><a href="#__codelineno-22-6">6</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1"></a><span class="c1"># Minimal logging, persistent cache</span>
-</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">FLAVOR_LOG_LEVEL</span><span class="o">=</span>error
-</span><span id="__span-22-3"><a id="__codelineno-22-3" name="__codelineno-22-3"></a><span class="nb">export</span><span class="w"> </span><span class="nv">FOUNDATION_LOG_LEVEL</span><span class="o">=</span>error
-</span><span id="__span-22-4"><a id="__codelineno-22-4" name="__codelineno-22-4"></a><span class="nb">export</span><span class="w"> </span><span class="nv">FLAVOR_CACHE</span><span class="o">=</span>/opt/flavor-cache
-</span><span id="__span-22-5"><a id="__codelineno-22-5" name="__codelineno-22-5"></a>
-</span><span id="__span-22-6"><a id="__codelineno-22-6" name="__codelineno-22-6"></a>./myapp.psp
+<span class="normal"><a href="#__codelineno-22-5">5</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">FOUNDATION_LOG_LEVEL</span><span class="o">=</span>debug
+</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">FLAVOR_LOG_LEVEL</span><span class="o">=</span>debug
+</span><span id="__span-22-3"><a id="__codelineno-22-3" name="__codelineno-22-3"></a>
+</span><span id="__span-22-4"><a id="__codelineno-22-4" name="__codelineno-22-4"></a>flavor<span class="w"> </span>pack<span class="w"> </span>--manifest<span class="w"> </span>pyproject.toml
+</span><span id="__span-22-5"><a id="__codelineno-22-5" name="__codelineno-22-5"></a>./myapp.psp
 </span></code></pre></div></td></tr></table></div>
-<h3 id="testing-with-temporary-cache">Testing with Temporary Cache<a class="headerlink" href="#testing-with-temporary-cache" title="Permanent link">&para;</a></h3>
+<h3 id="cicd-pipeline">CI/CD Pipeline<a class="headerlink" href="#cicd-pipeline" title="Permanent link">&para;</a></h3>
 <div class="language-bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-23-1">1</a></span>
 <span class="normal"><a href="#__codelineno-23-2">2</a></span>
 <span class="normal"><a href="#__codelineno-23-3">3</a></span>
 <span class="normal"><a href="#__codelineno-23-4">4</a></span>
-<span class="normal"><a href="#__codelineno-23-5">5</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1"></a><span class="c1"># Isolated cache per test run</span>
-</span><span id="__span-23-2"><a id="__codelineno-23-2" name="__codelineno-23-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">FLAVOR_CACHE</span><span class="o">=</span>/tmp/test-cache-<span class="nv">$$</span>
-</span><span id="__span-23-3"><a id="__codelineno-23-3" name="__codelineno-23-3"></a>
-</span><span id="__span-23-4"><a id="__codelineno-23-4" name="__codelineno-23-4"></a>./myapp.psp<span class="w"> </span>--test
-</span><span id="__span-23-5"><a id="__codelineno-23-5" name="__codelineno-23-5"></a>rm<span class="w"> </span>-rf<span class="w"> </span>/tmp/test-cache-<span class="nv">$$</span>
+<span class="normal"><a href="#__codelineno-23-5">5</a></span>
+<span class="normal"><a href="#__codelineno-23-6">6</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1"></a><span class="c1"># Clean environment, JSON output</span>
+</span><span id="__span-23-2"><a id="__codelineno-23-2" name="__codelineno-23-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">FLAVOR_CACHE</span><span class="o">=</span>/tmp/flavor-cache-<span class="nv">$CI_JOB_ID</span>
+</span><span id="__span-23-3"><a id="__codelineno-23-3" name="__codelineno-23-3"></a><span class="nb">export</span><span class="w"> </span><span class="nv">FLAVOR_OUTPUT_FORMAT</span><span class="o">=</span>json
+</span><span id="__span-23-4"><a id="__codelineno-23-4" name="__codelineno-23-4"></a><span class="nb">export</span><span class="w"> </span><span class="nv">FOUNDATION_LOG_LEVEL</span><span class="o">=</span>warning
+</span><span id="__span-23-5"><a id="__codelineno-23-5" name="__codelineno-23-5"></a>
+</span><span id="__span-23-6"><a id="__codelineno-23-6" name="__codelineno-23-6"></a>flavor<span class="w"> </span>pack<span class="w"> </span>--manifest<span class="w"> </span>pyproject.toml<span class="w"> </span>--output<span class="w"> </span>dist/myapp.psp
+</span></code></pre></div></td></tr></table></div>
+<h3 id="production-deployment">Production Deployment<a class="headerlink" href="#production-deployment" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-24-1">1</a></span>
+<span class="normal"><a href="#__codelineno-24-2">2</a></span>
+<span class="normal"><a href="#__codelineno-24-3">3</a></span>
+<span class="normal"><a href="#__codelineno-24-4">4</a></span>
+<span class="normal"><a href="#__codelineno-24-5">5</a></span>
+<span class="normal"><a href="#__codelineno-24-6">6</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1"></a><span class="c1"># Minimal logging, persistent cache</span>
+</span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">FLAVOR_LOG_LEVEL</span><span class="o">=</span>error
+</span><span id="__span-24-3"><a id="__codelineno-24-3" name="__codelineno-24-3"></a><span class="nb">export</span><span class="w"> </span><span class="nv">FOUNDATION_LOG_LEVEL</span><span class="o">=</span>error
+</span><span id="__span-24-4"><a id="__codelineno-24-4" name="__codelineno-24-4"></a><span class="nb">export</span><span class="w"> </span><span class="nv">FLAVOR_CACHE</span><span class="o">=</span>/opt/flavor-cache
+</span><span id="__span-24-5"><a id="__codelineno-24-5" name="__codelineno-24-5"></a>
+</span><span id="__span-24-6"><a id="__codelineno-24-6" name="__codelineno-24-6"></a>./myapp.psp
+</span></code></pre></div></td></tr></table></div>
+<h3 id="testing-with-temporary-cache">Testing with Temporary Cache<a class="headerlink" href="#testing-with-temporary-cache" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-25-1">1</a></span>
+<span class="normal"><a href="#__codelineno-25-2">2</a></span>
+<span class="normal"><a href="#__codelineno-25-3">3</a></span>
+<span class="normal"><a href="#__codelineno-25-4">4</a></span>
+<span class="normal"><a href="#__codelineno-25-5">5</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1"></a><span class="c1"># Isolated cache per test run</span>
+</span><span id="__span-25-2"><a id="__codelineno-25-2" name="__codelineno-25-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">FLAVOR_CACHE</span><span class="o">=</span>/tmp/test-cache-<span class="nv">$$</span>
+</span><span id="__span-25-3"><a id="__codelineno-25-3" name="__codelineno-25-3"></a>
+</span><span id="__span-25-4"><a id="__codelineno-25-4" name="__codelineno-25-4"></a>./myapp.psp<span class="w"> </span>--test
+</span><span id="__span-25-5"><a id="__codelineno-25-5" name="__codelineno-25-5"></a>rm<span class="w"> </span>-rf<span class="w"> </span>/tmp/test-cache-<span class="nv">$$</span>
 </span></code></pre></div></td></tr></table></div>
 <h3 id="cross-platform-detection">Cross-Platform Detection<a class="headerlink" href="#cross-platform-detection" title="Permanent link">&para;</a></h3>
-<div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-24-1"> 1</a></span>
-<span class="normal"><a href="#__codelineno-24-2"> 2</a></span>
-<span class="normal"><a href="#__codelineno-24-3"> 3</a></span>
-<span class="normal"><a href="#__codelineno-24-4"> 4</a></span>
-<span class="normal"><a href="#__codelineno-24-5"> 5</a></span>
-<span class="normal"><a href="#__codelineno-24-6"> 6</a></span>
-<span class="normal"><a href="#__codelineno-24-7"> 7</a></span>
-<span class="normal"><a href="#__codelineno-24-8"> 8</a></span>
-<span class="normal"><a href="#__codelineno-24-9"> 9</a></span>
-<span class="normal"><a href="#__codelineno-24-10">10</a></span>
-<span class="normal"><a href="#__codelineno-24-11">11</a></span>
-<span class="normal"><a href="#__codelineno-24-12">12</a></span>
-<span class="normal"><a href="#__codelineno-24-13">13</a></span>
-<span class="normal"><a href="#__codelineno-24-14">14</a></span>
-<span class="normal"><a href="#__codelineno-24-15">15</a></span>
-<span class="normal"><a href="#__codelineno-24-16">16</a></span>
-<span class="normal"><a href="#__codelineno-24-17">17</a></span>
-<span class="normal"><a href="#__codelineno-24-18">18</a></span>
-<span class="normal"><a href="#__codelineno-24-19">19</a></span>
-<span class="normal"><a href="#__codelineno-24-20">20</a></span>
-<span class="normal"><a href="#__codelineno-24-21">21</a></span>
-<span class="normal"><a href="#__codelineno-24-22">22</a></span>
-<span class="normal"><a href="#__codelineno-24-23">23</a></span>
-<span class="normal"><a href="#__codelineno-24-24">24</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1"></a><span class="ch">#!/usr/bin/env python3</span>
-</span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2"></a><span class="sd">&quot;&quot;&quot;Detect platform in packaged application.&quot;&quot;&quot;</span>
-</span><span id="__span-24-3"><a id="__codelineno-24-3" name="__codelineno-24-3"></a>
-</span><span id="__span-24-4"><a id="__codelineno-24-4" name="__codelineno-24-4"></a><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
-</span><span id="__span-24-5"><a id="__codelineno-24-5" name="__codelineno-24-5"></a><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
-</span><span id="__span-24-6"><a id="__codelineno-24-6" name="__codelineno-24-6"></a>
-</span><span id="__span-24-7"><a id="__codelineno-24-7" name="__codelineno-24-7"></a><span class="k">def</span><span class="w"> </span><span class="nf">detect_platform</span><span class="p">():</span>
-</span><span id="__span-24-8"><a id="__codelineno-24-8" name="__codelineno-24-8"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Detect platform using FlavorPack variables.&quot;&quot;&quot;</span>
-</span><span id="__span-24-9"><a id="__codelineno-24-9" name="__codelineno-24-9"></a>    <span class="n">flavor_os</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;FLAVOR_OS&#39;</span><span class="p">)</span>
-</span><span id="__span-24-10"><a id="__codelineno-24-10" name="__codelineno-24-10"></a>    <span class="n">flavor_arch</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;FLAVOR_ARCH&#39;</span><span class="p">)</span>
-</span><span id="__span-24-11"><a id="__codelineno-24-11" name="__codelineno-24-11"></a>    <span class="n">flavor_platform</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;FLAVOR_PLATFORM&#39;</span><span class="p">)</span>
-</span><span id="__span-24-12"><a id="__codelineno-24-12" name="__codelineno-24-12"></a>
-</span><span id="__span-24-13"><a id="__codelineno-24-13" name="__codelineno-24-13"></a>    <span class="k">if</span> <span class="n">flavor_platform</span><span class="p">:</span>
-</span><span id="__span-24-14"><a id="__codelineno-24-14" name="__codelineno-24-14"></a>        <span class="c1"># Running in FlavorPack package</span>
-</span><span id="__span-24-15"><a id="__codelineno-24-15" name="__codelineno-24-15"></a>        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Platform: </span><span class="si">{</span><span class="n">flavor_platform</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="__span-24-16"><a id="__codelineno-24-16" name="__codelineno-24-16"></a>        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;OS: </span><span class="si">{</span><span class="n">flavor_os</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="__span-24-17"><a id="__codelineno-24-17" name="__codelineno-24-17"></a>        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Arch: </span><span class="si">{</span><span class="n">flavor_arch</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="__span-24-18"><a id="__codelineno-24-18" name="__codelineno-24-18"></a>    <span class="k">else</span><span class="p">:</span>
-</span><span id="__span-24-19"><a id="__codelineno-24-19" name="__codelineno-24-19"></a>        <span class="c1"># Running outside package (development)</span>
-</span><span id="__span-24-20"><a id="__codelineno-24-20" name="__codelineno-24-20"></a>        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Platform: </span><span class="si">{</span><span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="__span-24-21"><a id="__codelineno-24-21" name="__codelineno-24-21"></a>        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Not packaged (using system Python)&quot;</span><span class="p">)</span>
-</span><span id="__span-24-22"><a id="__codelineno-24-22" name="__codelineno-24-22"></a>
-</span><span id="__span-24-23"><a id="__codelineno-24-23" name="__codelineno-24-23"></a><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
-</span><span id="__span-24-24"><a id="__codelineno-24-24" name="__codelineno-24-24"></a>    <span class="n">detect_platform</span><span class="p">()</span>
+<div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-26-1"> 1</a></span>
+<span class="normal"><a href="#__codelineno-26-2"> 2</a></span>
+<span class="normal"><a href="#__codelineno-26-3"> 3</a></span>
+<span class="normal"><a href="#__codelineno-26-4"> 4</a></span>
+<span class="normal"><a href="#__codelineno-26-5"> 5</a></span>
+<span class="normal"><a href="#__codelineno-26-6"> 6</a></span>
+<span class="normal"><a href="#__codelineno-26-7"> 7</a></span>
+<span class="normal"><a href="#__codelineno-26-8"> 8</a></span>
+<span class="normal"><a href="#__codelineno-26-9"> 9</a></span>
+<span class="normal"><a href="#__codelineno-26-10">10</a></span>
+<span class="normal"><a href="#__codelineno-26-11">11</a></span>
+<span class="normal"><a href="#__codelineno-26-12">12</a></span>
+<span class="normal"><a href="#__codelineno-26-13">13</a></span>
+<span class="normal"><a href="#__codelineno-26-14">14</a></span>
+<span class="normal"><a href="#__codelineno-26-15">15</a></span>
+<span class="normal"><a href="#__codelineno-26-16">16</a></span>
+<span class="normal"><a href="#__codelineno-26-17">17</a></span>
+<span class="normal"><a href="#__codelineno-26-18">18</a></span>
+<span class="normal"><a href="#__codelineno-26-19">19</a></span>
+<span class="normal"><a href="#__codelineno-26-20">20</a></span>
+<span class="normal"><a href="#__codelineno-26-21">21</a></span>
+<span class="normal"><a href="#__codelineno-26-22">22</a></span>
+<span class="normal"><a href="#__codelineno-26-23">23</a></span>
+<span class="normal"><a href="#__codelineno-26-24">24</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1"></a><span class="ch">#!/usr/bin/env python3</span>
+</span><span id="__span-26-2"><a id="__codelineno-26-2" name="__codelineno-26-2"></a><span class="sd">&quot;&quot;&quot;Detect platform in packaged application.&quot;&quot;&quot;</span>
+</span><span id="__span-26-3"><a id="__codelineno-26-3" name="__codelineno-26-3"></a>
+</span><span id="__span-26-4"><a id="__codelineno-26-4" name="__codelineno-26-4"></a><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+</span><span id="__span-26-5"><a id="__codelineno-26-5" name="__codelineno-26-5"></a><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+</span><span id="__span-26-6"><a id="__codelineno-26-6" name="__codelineno-26-6"></a>
+</span><span id="__span-26-7"><a id="__codelineno-26-7" name="__codelineno-26-7"></a><span class="k">def</span><span class="w"> </span><span class="nf">detect_platform</span><span class="p">():</span>
+</span><span id="__span-26-8"><a id="__codelineno-26-8" name="__codelineno-26-8"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Detect platform using FlavorPack variables.&quot;&quot;&quot;</span>
+</span><span id="__span-26-9"><a id="__codelineno-26-9" name="__codelineno-26-9"></a>    <span class="n">flavor_os</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;FLAVOR_OS&#39;</span><span class="p">)</span>
+</span><span id="__span-26-10"><a id="__codelineno-26-10" name="__codelineno-26-10"></a>    <span class="n">flavor_arch</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;FLAVOR_ARCH&#39;</span><span class="p">)</span>
+</span><span id="__span-26-11"><a id="__codelineno-26-11" name="__codelineno-26-11"></a>    <span class="n">flavor_platform</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;FLAVOR_PLATFORM&#39;</span><span class="p">)</span>
+</span><span id="__span-26-12"><a id="__codelineno-26-12" name="__codelineno-26-12"></a>
+</span><span id="__span-26-13"><a id="__codelineno-26-13" name="__codelineno-26-13"></a>    <span class="k">if</span> <span class="n">flavor_platform</span><span class="p">:</span>
+</span><span id="__span-26-14"><a id="__codelineno-26-14" name="__codelineno-26-14"></a>        <span class="c1"># Running in FlavorPack package</span>
+</span><span id="__span-26-15"><a id="__codelineno-26-15" name="__codelineno-26-15"></a>        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Platform: </span><span class="si">{</span><span class="n">flavor_platform</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-26-16"><a id="__codelineno-26-16" name="__codelineno-26-16"></a>        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;OS: </span><span class="si">{</span><span class="n">flavor_os</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-26-17"><a id="__codelineno-26-17" name="__codelineno-26-17"></a>        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Arch: </span><span class="si">{</span><span class="n">flavor_arch</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-26-18"><a id="__codelineno-26-18" name="__codelineno-26-18"></a>    <span class="k">else</span><span class="p">:</span>
+</span><span id="__span-26-19"><a id="__codelineno-26-19" name="__codelineno-26-19"></a>        <span class="c1"># Running outside package (development)</span>
+</span><span id="__span-26-20"><a id="__codelineno-26-20" name="__codelineno-26-20"></a>        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Platform: </span><span class="si">{</span><span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-26-21"><a id="__codelineno-26-21" name="__codelineno-26-21"></a>        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Not packaged (using system Python)&quot;</span><span class="p">)</span>
+</span><span id="__span-26-22"><a id="__codelineno-26-22" name="__codelineno-26-22"></a>
+</span><span id="__span-26-23"><a id="__codelineno-26-23" name="__codelineno-26-23"></a><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+</span><span id="__span-26-24"><a id="__codelineno-26-24" name="__codelineno-26-24"></a>    <span class="n">detect_platform</span><span class="p">()</span>
 </span></code></pre></div></td></tr></table></div>
 <hr />
 <h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h2>
 <h3 id="variable-not-set-errors">"Variable not set" errors<a class="headerlink" href="#variable-not-set-errors" title="Permanent link">&para;</a></h3>
 <p><strong>Problem:</strong> Required variable missing</p>
 <p><strong>Solution:</strong></p>
-<div class="language-bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-25-1">1</a></span>
-<span class="normal"><a href="#__codelineno-25-2">2</a></span>
-<span class="normal"><a href="#__codelineno-25-3">3</a></span>
-<span class="normal"><a href="#__codelineno-25-4">4</a></span>
-<span class="normal"><a href="#__codelineno-25-5">5</a></span>
-<span class="normal"><a href="#__codelineno-25-6">6</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1"></a><span class="c1"># Check current variables</span>
-</span><span id="__span-25-2"><a id="__codelineno-25-2" name="__codelineno-25-2"></a>env<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>FLAVOR_
-</span><span id="__span-25-3"><a id="__codelineno-25-3" name="__codelineno-25-3"></a>
-</span><span id="__span-25-4"><a id="__codelineno-25-4" name="__codelineno-25-4"></a><span class="c1"># Set missing variable</span>
-</span><span id="__span-25-5"><a id="__codelineno-25-5" name="__codelineno-25-5"></a><span class="nb">export</span><span class="w"> </span><span class="nv">FLAVOR_LOG_LEVEL</span><span class="o">=</span>debug
-</span><span id="__span-25-6"><a id="__codelineno-25-6" name="__codelineno-25-6"></a>./myapp.psp
-</span></code></pre></div></td></tr></table></div>
-<h3 id="cache-directory-permission-errors">Cache directory permission errors<a class="headerlink" href="#cache-directory-permission-errors" title="Permanent link">&para;</a></h3>
-<p><strong>Problem:</strong> Cannot write to cache directory</p>
-<p><strong>Solution:</strong></p>
-<div class="language-bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-26-1">1</a></span>
-<span class="normal"><a href="#__codelineno-26-2">2</a></span>
-<span class="normal"><a href="#__codelineno-26-3">3</a></span>
-<span class="normal"><a href="#__codelineno-26-4">4</a></span>
-<span class="normal"><a href="#__codelineno-26-5">5</a></span>
-<span class="normal"><a href="#__codelineno-26-6">6</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1"></a><span class="c1"># Use writable cache location</span>
-</span><span id="__span-26-2"><a id="__codelineno-26-2" name="__codelineno-26-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">FLAVOR_CACHE</span><span class="o">=</span>/tmp/flavor-cache
-</span><span id="__span-26-3"><a id="__codelineno-26-3" name="__codelineno-26-3"></a>./myapp.psp
-</span><span id="__span-26-4"><a id="__codelineno-26-4" name="__codelineno-26-4"></a>
-</span><span id="__span-26-5"><a id="__codelineno-26-5" name="__codelineno-26-5"></a><span class="c1"># Or fix permissions</span>
-</span><span id="__span-26-6"><a id="__codelineno-26-6" name="__codelineno-26-6"></a>chmod<span class="w"> </span><span class="m">755</span><span class="w"> </span>~/.cache/flavor/workenv
-</span></code></pre></div></td></tr></table></div>
-<h3 id="platform-variables-not-available">Platform variables not available<a class="headerlink" href="#platform-variables-not-available" title="Permanent link">&para;</a></h3>
-<p><strong>Problem:</strong> FLAVOR_OS, FLAVOR_ARCH not set</p>
-<p><strong>Solution:</strong></p>
 <div class="language-bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-27-1">1</a></span>
 <span class="normal"><a href="#__codelineno-27-2">2</a></span>
 <span class="normal"><a href="#__codelineno-27-3">3</a></span>
 <span class="normal"><a href="#__codelineno-27-4">4</a></span>
 <span class="normal"><a href="#__codelineno-27-5">5</a></span>
-<span class="normal"><a href="#__codelineno-27-6">6</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1"></a><span class="c1"># These are only set during package execution</span>
-</span><span id="__span-27-2"><a id="__codelineno-27-2" name="__codelineno-27-2"></a>./myapp.psp<span class="w">  </span><span class="c1"># Variables will be set</span>
+<span class="normal"><a href="#__codelineno-27-6">6</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1"></a><span class="c1"># Check current variables</span>
+</span><span id="__span-27-2"><a id="__codelineno-27-2" name="__codelineno-27-2"></a>env<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>FLAVOR_
 </span><span id="__span-27-3"><a id="__codelineno-27-3" name="__codelineno-27-3"></a>
-</span><span id="__span-27-4"><a id="__codelineno-27-4" name="__codelineno-27-4"></a><span class="c1"># Not available during:</span>
-</span><span id="__span-27-5"><a id="__codelineno-27-5" name="__codelineno-27-5"></a>python<span class="w"> </span>myapp.py<span class="w">  </span><span class="c1"># Running outside package</span>
-</span><span id="__span-27-6"><a id="__codelineno-27-6" name="__codelineno-27-6"></a>flavor<span class="w"> </span>pack<span class="w">  </span><span class="c1"># Build time (not execution)</span>
+</span><span id="__span-27-4"><a id="__codelineno-27-4" name="__codelineno-27-4"></a><span class="c1"># Set missing variable</span>
+</span><span id="__span-27-5"><a id="__codelineno-27-5" name="__codelineno-27-5"></a><span class="nb">export</span><span class="w"> </span><span class="nv">FLAVOR_LOG_LEVEL</span><span class="o">=</span>debug
+</span><span id="__span-27-6"><a id="__codelineno-27-6" name="__codelineno-27-6"></a>./myapp.psp
 </span></code></pre></div></td></tr></table></div>
-<h3 id="logging-too-verbose">Logging too verbose<a class="headerlink" href="#logging-too-verbose" title="Permanent link">&para;</a></h3>
-<p><strong>Problem:</strong> Too much log output</p>
+<h3 id="cache-directory-permission-errors">Cache directory permission errors<a class="headerlink" href="#cache-directory-permission-errors" title="Permanent link">&para;</a></h3>
+<p><strong>Problem:</strong> Cannot write to cache directory</p>
 <p><strong>Solution:</strong></p>
 <div class="language-bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-28-1">1</a></span>
 <span class="normal"><a href="#__codelineno-28-2">2</a></span>
 <span class="normal"><a href="#__codelineno-28-3">3</a></span>
-<span class="normal"><a href="#__codelineno-28-4">4</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1"></a><span class="c1"># Reduce logging</span>
-</span><span id="__span-28-2"><a id="__codelineno-28-2" name="__codelineno-28-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">FLAVOR_LOG_LEVEL</span><span class="o">=</span>error
-</span><span id="__span-28-3"><a id="__codelineno-28-3" name="__codelineno-28-3"></a><span class="nb">export</span><span class="w"> </span><span class="nv">FOUNDATION_LOG_LEVEL</span><span class="o">=</span>warning
-</span><span id="__span-28-4"><a id="__codelineno-28-4" name="__codelineno-28-4"></a>./myapp.psp
+<span class="normal"><a href="#__codelineno-28-4">4</a></span>
+<span class="normal"><a href="#__codelineno-28-5">5</a></span>
+<span class="normal"><a href="#__codelineno-28-6">6</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1"></a><span class="c1"># Use writable cache location</span>
+</span><span id="__span-28-2"><a id="__codelineno-28-2" name="__codelineno-28-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">FLAVOR_CACHE</span><span class="o">=</span>/tmp/flavor-cache
+</span><span id="__span-28-3"><a id="__codelineno-28-3" name="__codelineno-28-3"></a>./myapp.psp
+</span><span id="__span-28-4"><a id="__codelineno-28-4" name="__codelineno-28-4"></a>
+</span><span id="__span-28-5"><a id="__codelineno-28-5" name="__codelineno-28-5"></a><span class="c1"># Or fix permissions</span>
+</span><span id="__span-28-6"><a id="__codelineno-28-6" name="__codelineno-28-6"></a>chmod<span class="w"> </span><span class="m">755</span><span class="w"> </span>~/.cache/flavor/workenv
+</span></code></pre></div></td></tr></table></div>
+<h3 id="platform-variables-not-available">Platform variables not available<a class="headerlink" href="#platform-variables-not-available" title="Permanent link">&para;</a></h3>
+<p><strong>Problem:</strong> FLAVOR_OS, FLAVOR_ARCH not set</p>
+<p><strong>Solution:</strong></p>
+<div class="language-bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-29-1">1</a></span>
+<span class="normal"><a href="#__codelineno-29-2">2</a></span>
+<span class="normal"><a href="#__codelineno-29-3">3</a></span>
+<span class="normal"><a href="#__codelineno-29-4">4</a></span>
+<span class="normal"><a href="#__codelineno-29-5">5</a></span>
+<span class="normal"><a href="#__codelineno-29-6">6</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1"></a><span class="c1"># These are only set during package execution</span>
+</span><span id="__span-29-2"><a id="__codelineno-29-2" name="__codelineno-29-2"></a>./myapp.psp<span class="w">  </span><span class="c1"># Variables will be set</span>
+</span><span id="__span-29-3"><a id="__codelineno-29-3" name="__codelineno-29-3"></a>
+</span><span id="__span-29-4"><a id="__codelineno-29-4" name="__codelineno-29-4"></a><span class="c1"># Not available during:</span>
+</span><span id="__span-29-5"><a id="__codelineno-29-5" name="__codelineno-29-5"></a>python<span class="w"> </span>myapp.py<span class="w">  </span><span class="c1"># Running outside package</span>
+</span><span id="__span-29-6"><a id="__codelineno-29-6" name="__codelineno-29-6"></a>flavor<span class="w"> </span>pack<span class="w">  </span><span class="c1"># Build time (not execution)</span>
+</span></code></pre></div></td></tr></table></div>
+<h3 id="logging-too-verbose">Logging too verbose<a class="headerlink" href="#logging-too-verbose" title="Permanent link">&para;</a></h3>
+<p><strong>Problem:</strong> Too much log output</p>
+<p><strong>Solution:</strong></p>
+<div class="language-bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-30-1">1</a></span>
+<span class="normal"><a href="#__codelineno-30-2">2</a></span>
+<span class="normal"><a href="#__codelineno-30-3">3</a></span>
+<span class="normal"><a href="#__codelineno-30-4">4</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-30-1"><a id="__codelineno-30-1" name="__codelineno-30-1"></a><span class="c1"># Reduce logging</span>
+</span><span id="__span-30-2"><a id="__codelineno-30-2" name="__codelineno-30-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">FLAVOR_LOG_LEVEL</span><span class="o">=</span>error
+</span><span id="__span-30-3"><a id="__codelineno-30-3" name="__codelineno-30-3"></a><span class="nb">export</span><span class="w"> </span><span class="nv">FOUNDATION_LOG_LEVEL</span><span class="o">=</span>warning
+</span><span id="__span-30-4"><a id="__codelineno-30-4" name="__codelineno-30-4"></a>./myapp.psp
 </span></code></pre></div></td></tr></table></div>
 <hr />
 <h2 id="variable-reference-table">Variable Reference Table<a class="headerlink" href="#variable-reference-table" title="Permanent link">&para;</a></h2>

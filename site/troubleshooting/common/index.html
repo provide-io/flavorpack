@@ -52,6 +52,8 @@
       
     
     
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
       <link rel="stylesheet" href="../../.shared-theme/stylesheets/provide-theme.css">
     
       <link rel="stylesheet" href="../../.shared-theme/stylesheets/termynal.css">
@@ -3387,8 +3389,8 @@
     G --&gt;|Extraction Failed| K[Check cache &amp; disk space]
 
     D --&gt; L[Run: make build-helpers]
-    E --&gt; M[Run: flavor pack --verbose]
-    F --&gt; N[Add .flavorignore]
+    E --&gt; M[Run: FOUNDATION_LOG_LEVEL=debug flavor pack]
+    F --&gt; N[Optimize slot configuration]
     H --&gt; O[Run: chmod +x package.psp]
     I --&gt; P[Run: flavor verify package.psp]
     J --&gt; Q[Update pyproject.toml]
@@ -3430,10 +3432,10 @@
 <h4 id="large-package-size">Large Package Size<a class="headerlink" href="#large-package-size" title="Permanent link">&para;</a></h4>
 <p><strong>Problem</strong>: Package is larger than expected</p>
 <p><strong>Solutions</strong>:
-- Add <code>.flavorignore</code> file with exclusion patterns
-- Mark temporary files as volatile slots
-- Exclude development dependencies
-- Use compression: <code>--compress 9</code></p>
+- Exclude development dependencies from your manifest
+- Configure compression in manifest (use <code>xz</code> or <code>zstd</code> operations)
+- Use <code>--strip</code> to remove debug symbols from launcher
+- Optimize slot configuration to include only necessary files</p>
 <h3 id="package-execution-issues">Package Execution Issues<a class="headerlink" href="#package-execution-issues" title="Permanent link">&para;</a></h3>
 <h4 id="package-wont-run">Package Won't Run<a class="headerlink" href="#package-wont-run" title="Permanent link">&para;</a></h4>
 <p><strong>Error</strong>: <code>./myapp.psp: Permission denied</code></p>
@@ -3483,13 +3485,20 @@
 <h3 id="extraction-issues">Extraction Issues<a class="headerlink" href="#extraction-issues" title="Permanent link">&para;</a></h3>
 <h4 id="uv-binary-not-found">UV Binary Not Found<a class="headerlink" href="#uv-binary-not-found" title="Permanent link">&para;</a></h4>
 <p><strong>Error</strong>: <code>Launch failed: No such file or directory</code></p>
-<p><strong>Problem</strong>: UV binary extracted to wrong path (<code>bin/uv/uv</code> instead of <code>bin/uv</code>)</p>
-<p><strong>Temporary Workaround</strong>:
+<p><strong>Problem</strong>: UV binary extracted to wrong path</p>
+<p><strong>Solutions</strong>:
 <div class="language-bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-4-1">1</a></span>
-<span class="normal"><a href="#__codelineno-4-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1"></a><span class="c1"># Use Python builder instead of Go/Rust</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2"></a>flavor<span class="w"> </span>pack<span class="w"> </span>--builder<span class="w"> </span>python
+<span class="normal"><a href="#__codelineno-4-2">2</a></span>
+<span class="normal"><a href="#__codelineno-4-3">3</a></span>
+<span class="normal"><a href="#__codelineno-4-4">4</a></span>
+<span class="normal"><a href="#__codelineno-4-5">5</a></span>
+<span class="normal"><a href="#__codelineno-4-6">6</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1"></a><span class="c1"># Rebuild helpers to get latest fixes</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2"></a>make<span class="w"> </span>build-helpers
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3"></a>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4"></a><span class="c1"># Clean cache and rebuild package</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5"></a>flavor<span class="w"> </span>workenv<span class="w"> </span>clean<span class="w"> </span>-y
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6"></a>flavor<span class="w"> </span>pack<span class="w"> </span>--manifest<span class="w"> </span>pyproject.toml
 </span></code></pre></div></td></tr></table></div></p>
-<p><strong>Permanent Fix</strong>: Update to latest helpers when fix is released</p>
 <h4 id="cache-directory-full">Cache Directory Full<a class="headerlink" href="#cache-directory-full" title="Permanent link">&para;</a></h4>
 <p><strong>Error</strong>: <code>No space left on device</code></p>
 <p><strong>Solutions</strong>:
@@ -3742,7 +3751,7 @@
 4. Helper versions: <code>flavor helpers list</code>
 5. Error message and stack trace
 6. Minimal reproduction steps</p>
-<p>Report at: <a href="https://github.com/provide-io/flavor/issues">https://github.com/provide-io/flavor/issues</a></p>
+<p>Report at: <a href="https://github.com/provide-io/flavorpack/issues">https://github.com/provide-io/flavorpack/issues</a></p>
 <hr />
 <h2 id="advanced-troubleshooting">Advanced Troubleshooting<a class="headerlink" href="#advanced-troubleshooting" title="Permanent link">&para;</a></h2>
 <h3 id="package-wont-extract">Package Won't Extract<a class="headerlink" href="#package-wont-extract" title="Permanent link">&para;</a></h3>

@@ -48,6 +48,8 @@
       
     
     
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
       <link rel="stylesheet" href="../../.shared-theme/stylesheets/provide-theme.css">
     
       <link rel="stylesheet" href="../../.shared-theme/stylesheets/termynal.css">
@@ -2974,821 +2976,351 @@
 
 
 <h1 id="builder-api">Builder API<a class="headerlink" href="#builder-api" title="Permanent link">&para;</a></h1>
-<p>Low-level PSPF package building API.</p>
-<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
-<p>The Builder API provides fine-grained control over PSPF package creation. Use this API when you need more control than the high-level <a href="../packaging/">Packaging API</a> provides.</p>
-<hr />
-<h2 id="core-functions">Core Functions<a class="headerlink" href="#core-functions" title="Permanent link">&para;</a></h2>
-<h3 id="build_package">build_package<a class="headerlink" href="#build_package" title="Permanent link">&para;</a></h3>
-<p>Build a PSPF package from a complete specification.</p>
-<div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1">1</a></span>
-<span class="normal"><a href="#__codelineno-0-2">2</a></span>
-<span class="normal"><a href="#__codelineno-0-3">3</a></span>
-<span class="normal"><a href="#__codelineno-0-4">4</a></span>
-<span class="normal"><a href="#__codelineno-0-5">5</a></span>
-<span class="normal"><a href="#__codelineno-0-6">6</a></span>
-<span class="normal"><a href="#__codelineno-0-7">7</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">flavor.psp.format_2025.builder</span><span class="w"> </span><span class="kn">import</span> <span class="n">build_package</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">flavor.psp.format_2025.spec</span><span class="w"> </span><span class="kn">import</span> <span class="n">BuildSpec</span><span class="p">,</span> <span class="n">BuildOptions</span><span class="p">,</span> <span class="n">BuildResult</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4"></a>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5"></a><span class="k">def</span><span class="w"> </span><span class="nf">build_package</span><span class="p">(</span><span class="n">spec</span><span class="p">:</span> <span class="n">BuildSpec</span><span class="p">,</span> <span class="n">output_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BuildResult</span><span class="p">:</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Build a PSPF package from specification.&quot;&quot;&quot;</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7"></a>    <span class="o">...</span>
-</span></code></pre></div></td></tr></table></div>
-<h4 id="parameters">Parameters<a class="headerlink" href="#parameters" title="Permanent link">&para;</a></h4>
-<table>
-<thead>
-<tr>
-<th>Parameter</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>spec</code></td>
-<td><code>BuildSpec</code></td>
-<td>Complete build specification</td>
-</tr>
-<tr>
-<td><code>output_path</code></td>
-<td><code>Path</code></td>
-<td>Where to write the package</td>
-</tr>
-</tbody>
-</table>
-<h4 id="returns">Returns<a class="headerlink" href="#returns" title="Permanent link">&para;</a></h4>
-<p><code>BuildResult</code> with fields:
-- <code>success: bool</code> - Build succeeded
-- <code>package_path: Path | None</code> - Path to built package
-- <code>duration_seconds: float</code> - Build duration
-- <code>package_size_bytes: int</code> - Package size
-- <code>errors: list[str]</code> - Error messages (if any)
-- <code>warnings: list[str]</code> - Warning messages
-- <code>metadata: dict</code> - Build metadata</p>
-<h4 id="example">Example<a class="headerlink" href="#example" title="Permanent link">&para;</a></h4>
-<div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-1-1"> 1</a></span>
-<span class="normal"><a href="#__codelineno-1-2"> 2</a></span>
-<span class="normal"><a href="#__codelineno-1-3"> 3</a></span>
-<span class="normal"><a href="#__codelineno-1-4"> 4</a></span>
-<span class="normal"><a href="#__codelineno-1-5"> 5</a></span>
-<span class="normal"><a href="#__codelineno-1-6"> 6</a></span>
-<span class="normal"><a href="#__codelineno-1-7"> 7</a></span>
-<span class="normal"><a href="#__codelineno-1-8"> 8</a></span>
-<span class="normal"><a href="#__codelineno-1-9"> 9</a></span>
-<span class="normal"><a href="#__codelineno-1-10">10</a></span>
-<span class="normal"><a href="#__codelineno-1-11">11</a></span>
-<span class="normal"><a href="#__codelineno-1-12">12</a></span>
-<span class="normal"><a href="#__codelineno-1-13">13</a></span>
-<span class="normal"><a href="#__codelineno-1-14">14</a></span>
-<span class="normal"><a href="#__codelineno-1-15">15</a></span>
-<span class="normal"><a href="#__codelineno-1-16">16</a></span>
-<span class="normal"><a href="#__codelineno-1-17">17</a></span>
-<span class="normal"><a href="#__codelineno-1-18">18</a></span>
-<span class="normal"><a href="#__codelineno-1-19">19</a></span>
-<span class="normal"><a href="#__codelineno-1-20">20</a></span>
-<span class="normal"><a href="#__codelineno-1-21">21</a></span>
-<span class="normal"><a href="#__codelineno-1-22">22</a></span>
-<span class="normal"><a href="#__codelineno-1-23">23</a></span>
-<span class="normal"><a href="#__codelineno-1-24">24</a></span>
-<span class="normal"><a href="#__codelineno-1-25">25</a></span>
-<span class="normal"><a href="#__codelineno-1-26">26</a></span>
-<span class="normal"><a href="#__codelineno-1-27">27</a></span>
-<span class="normal"><a href="#__codelineno-1-28">28</a></span>
-<span class="normal"><a href="#__codelineno-1-29">29</a></span>
-<span class="normal"><a href="#__codelineno-1-30">30</a></span>
-<span class="normal"><a href="#__codelineno-1-31">31</a></span>
-<span class="normal"><a href="#__codelineno-1-32">32</a></span>
-<span class="normal"><a href="#__codelineno-1-33">33</a></span>
-<span class="normal"><a href="#__codelineno-1-34">34</a></span>
-<span class="normal"><a href="#__codelineno-1-35">35</a></span>
-<span class="normal"><a href="#__codelineno-1-36">36</a></span>
-<span class="normal"><a href="#__codelineno-1-37">37</a></span>
-<span class="normal"><a href="#__codelineno-1-38">38</a></span>
-<span class="normal"><a href="#__codelineno-1-39">39</a></span>
-<span class="normal"><a href="#__codelineno-1-40">40</a></span>
-<span class="normal"><a href="#__codelineno-1-41">41</a></span>
-<span class="normal"><a href="#__codelineno-1-42">42</a></span>
-<span class="normal"><a href="#__codelineno-1-43">43</a></span>
-<span class="normal"><a href="#__codelineno-1-44">44</a></span>
-<span class="normal"><a href="#__codelineno-1-45">45</a></span>
-<span class="normal"><a href="#__codelineno-1-46">46</a></span>
-<span class="normal"><a href="#__codelineno-1-47">47</a></span>
-<span class="normal"><a href="#__codelineno-1-48">48</a></span>
-<span class="normal"><a href="#__codelineno-1-49">49</a></span>
-<span class="normal"><a href="#__codelineno-1-50">50</a></span>
-<span class="normal"><a href="#__codelineno-1-51">51</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">flavor.psp.format_2025.builder</span><span class="w"> </span><span class="kn">import</span> <span class="n">build_package</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">flavor.psp.format_2025.spec</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4"></a>    <span class="n">BuildSpec</span><span class="p">,</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5"></a>    <span class="n">BuildOptions</span><span class="p">,</span>
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6"></a>    <span class="n">SlotMetadata</span><span class="p">,</span>
-</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7"></a>    <span class="n">KeyConfig</span><span class="p">,</span>
-</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8"></a><span class="p">)</span>
-</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9"></a>
-</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10"></a><span class="c1"># Create build specification</span>
-</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11"></a><span class="n">spec</span> <span class="o">=</span> <span class="n">BuildSpec</span><span class="p">(</span>
-</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12"></a>    <span class="n">launcher_path</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="s2">&quot;launcher-linux_amd64&quot;</span><span class="p">),</span>
-</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13"></a>    <span class="n">slots</span><span class="o">=</span><span class="p">[</span>
-</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14"></a>        <span class="n">SlotMetadata</span><span class="p">(</span>
-</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15"></a>            <span class="nb">id</span><span class="o">=</span><span class="s2">&quot;python-runtime&quot;</span><span class="p">,</span>
-</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16"></a>            <span class="n">source_path</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="s2">&quot;runtime.tar.gz&quot;</span><span class="p">),</span>
-</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17"></a>            <span class="n">purpose</span><span class="o">=</span><span class="s2">&quot;Python 3.11 runtime&quot;</span><span class="p">,</span>
-</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18"></a>            <span class="n">operations</span><span class="o">=</span><span class="s2">&quot;tar+gzip&quot;</span><span class="p">,</span>
-</span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19"></a>        <span class="p">),</span>
-</span><span id="__span-1-20"><a id="__codelineno-1-20" name="__codelineno-1-20"></a>        <span class="n">SlotMetadata</span><span class="p">(</span>
-</span><span id="__span-1-21"><a id="__codelineno-1-21" name="__codelineno-1-21"></a>            <span class="nb">id</span><span class="o">=</span><span class="s2">&quot;app-code&quot;</span><span class="p">,</span>
-</span><span id="__span-1-22"><a id="__codelineno-1-22" name="__codelineno-1-22"></a>            <span class="n">source_path</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="s2">&quot;app.tar.gz&quot;</span><span class="p">),</span>
-</span><span id="__span-1-23"><a id="__codelineno-1-23" name="__codelineno-1-23"></a>            <span class="n">purpose</span><span class="o">=</span><span class="s2">&quot;Application code&quot;</span><span class="p">,</span>
-</span><span id="__span-1-24"><a id="__codelineno-1-24" name="__codelineno-1-24"></a>            <span class="n">operations</span><span class="o">=</span><span class="s2">&quot;tar+gzip&quot;</span><span class="p">,</span>
-</span><span id="__span-1-25"><a id="__codelineno-1-25" name="__codelineno-1-25"></a>        <span class="p">),</span>
-</span><span id="__span-1-26"><a id="__codelineno-1-26" name="__codelineno-1-26"></a>    <span class="p">],</span>
-</span><span id="__span-1-27"><a id="__codelineno-1-27" name="__codelineno-1-27"></a>    <span class="n">metadata</span><span class="o">=</span><span class="p">{</span>
-</span><span id="__span-1-28"><a id="__codelineno-1-28" name="__codelineno-1-28"></a>        <span class="s2">&quot;package&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;myapp&quot;</span><span class="p">,</span> <span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="s2">&quot;1.0.0&quot;</span><span class="p">},</span>
-</span><span id="__span-1-29"><a id="__codelineno-1-29" name="__codelineno-1-29"></a>        <span class="s2">&quot;build&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;timestamp&quot;</span><span class="p">:</span> <span class="s2">&quot;2025-10-24T15:30:00Z&quot;</span><span class="p">},</span>
-</span><span id="__span-1-30"><a id="__codelineno-1-30" name="__codelineno-1-30"></a>    <span class="p">},</span>
-</span><span id="__span-1-31"><a id="__codelineno-1-31" name="__codelineno-1-31"></a>    <span class="n">keys</span><span class="o">=</span><span class="n">KeyConfig</span><span class="p">(</span>
-</span><span id="__span-1-32"><a id="__codelineno-1-32" name="__codelineno-1-32"></a>        <span class="n">private_key_path</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="s2">&quot;keys/private.pem&quot;</span><span class="p">),</span>
-</span><span id="__span-1-33"><a id="__codelineno-1-33" name="__codelineno-1-33"></a>        <span class="n">public_key_path</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="s2">&quot;keys/public.pem&quot;</span><span class="p">),</span>
-</span><span id="__span-1-34"><a id="__codelineno-1-34" name="__codelineno-1-34"></a>    <span class="p">),</span>
-</span><span id="__span-1-35"><a id="__codelineno-1-35" name="__codelineno-1-35"></a>    <span class="n">options</span><span class="o">=</span><span class="n">BuildOptions</span><span class="p">(</span>
-</span><span id="__span-1-36"><a id="__codelineno-1-36" name="__codelineno-1-36"></a>        <span class="n">compression</span><span class="o">=</span><span class="s2">&quot;gzip&quot;</span><span class="p">,</span>
-</span><span id="__span-1-37"><a id="__codelineno-1-37" name="__codelineno-1-37"></a>        <span class="n">strip_launcher</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-</span><span id="__span-1-38"><a id="__codelineno-1-38" name="__codelineno-1-38"></a>    <span class="p">),</span>
-</span><span id="__span-1-39"><a id="__codelineno-1-39" name="__codelineno-1-39"></a><span class="p">)</span>
-</span><span id="__span-1-40"><a id="__codelineno-1-40" name="__codelineno-1-40"></a>
-</span><span id="__span-1-41"><a id="__codelineno-1-41" name="__codelineno-1-41"></a><span class="c1"># Build package</span>
-</span><span id="__span-1-42"><a id="__codelineno-1-42" name="__codelineno-1-42"></a><span class="n">result</span> <span class="o">=</span> <span class="n">build_package</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;dist/myapp.psp&quot;</span><span class="p">))</span>
-</span><span id="__span-1-43"><a id="__codelineno-1-43" name="__codelineno-1-43"></a>
-</span><span id="__span-1-44"><a id="__codelineno-1-44" name="__codelineno-1-44"></a><span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="p">:</span>
-</span><span id="__span-1-45"><a id="__codelineno-1-45" name="__codelineno-1-45"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;✅ Built: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">package_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="__span-1-46"><a id="__codelineno-1-46" name="__codelineno-1-46"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Size: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">package_size_bytes</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">1024</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">1024</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> MB&quot;</span><span class="p">)</span>
-</span><span id="__span-1-47"><a id="__codelineno-1-47" name="__codelineno-1-47"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Duration: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">duration_seconds</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">s&quot;</span><span class="p">)</span>
-</span><span id="__span-1-48"><a id="__codelineno-1-48" name="__codelineno-1-48"></a><span class="k">else</span><span class="p">:</span>
-</span><span id="__span-1-49"><a id="__codelineno-1-49" name="__codelineno-1-49"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;❌ Build failed:&quot;</span><span class="p">)</span>
-</span><span id="__span-1-50"><a id="__codelineno-1-50" name="__codelineno-1-50"></a>    <span class="k">for</span> <span class="n">error</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">errors</span><span class="p">:</span>
-</span><span id="__span-1-51"><a id="__codelineno-1-51" name="__codelineno-1-51"></a>        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  - </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span></code></pre></div></td></tr></table></div>
-<hr />
-<h3 id="prepare_slots">prepare_slots<a class="headerlink" href="#prepare_slots" title="Permanent link">&para;</a></h3>
-<p>Prepare slots for packaging (compression, checksums).</p>
-<div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-2-1">1</a></span>
-<span class="normal"><a href="#__codelineno-2-2">2</a></span>
-<span class="normal"><a href="#__codelineno-2-3">3</a></span>
-<span class="normal"><a href="#__codelineno-2-4">4</a></span>
-<span class="normal"><a href="#__codelineno-2-5">5</a></span>
-<span class="normal"><a href="#__codelineno-2-6">6</a></span>
-<span class="normal"><a href="#__codelineno-2-7">7</a></span>
-<span class="normal"><a href="#__codelineno-2-8">8</a></span>
-<span class="normal"><a href="#__codelineno-2-9">9</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">flavor.psp.format_2025.builder</span><span class="w"> </span><span class="kn">import</span> <span class="n">prepare_slots</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">flavor.psp.format_2025.spec</span><span class="w"> </span><span class="kn">import</span> <span class="n">SlotMetadata</span><span class="p">,</span> <span class="n">BuildOptions</span><span class="p">,</span> <span class="n">PreparedSlot</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3"></a>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4"></a><span class="k">def</span><span class="w"> </span><span class="nf">prepare_slots</span><span class="p">(</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5"></a>    <span class="n">slots</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">SlotMetadata</span><span class="p">],</span>
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6"></a>    <span class="n">options</span><span class="p">:</span> <span class="n">BuildOptions</span>
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">PreparedSlot</span><span class="p">]:</span>
-</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Prepare slots for packaging.&quot;&quot;&quot;</span>
-</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9"></a>    <span class="o">...</span>
-</span></code></pre></div></td></tr></table></div>
-<h4 id="example_1">Example<a class="headerlink" href="#example_1" title="Permanent link">&para;</a></h4>
-<div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-3-1"> 1</a></span>
-<span class="normal"><a href="#__codelineno-3-2"> 2</a></span>
-<span class="normal"><a href="#__codelineno-3-3"> 3</a></span>
-<span class="normal"><a href="#__codelineno-3-4"> 4</a></span>
-<span class="normal"><a href="#__codelineno-3-5"> 5</a></span>
-<span class="normal"><a href="#__codelineno-3-6"> 6</a></span>
-<span class="normal"><a href="#__codelineno-3-7"> 7</a></span>
-<span class="normal"><a href="#__codelineno-3-8"> 8</a></span>
-<span class="normal"><a href="#__codelineno-3-9"> 9</a></span>
-<span class="normal"><a href="#__codelineno-3-10">10</a></span>
-<span class="normal"><a href="#__codelineno-3-11">11</a></span>
-<span class="normal"><a href="#__codelineno-3-12">12</a></span>
-<span class="normal"><a href="#__codelineno-3-13">13</a></span>
-<span class="normal"><a href="#__codelineno-3-14">14</a></span>
-<span class="normal"><a href="#__codelineno-3-15">15</a></span>
-<span class="normal"><a href="#__codelineno-3-16">16</a></span>
-<span class="normal"><a href="#__codelineno-3-17">17</a></span>
-<span class="normal"><a href="#__codelineno-3-18">18</a></span>
-<span class="normal"><a href="#__codelineno-3-19">19</a></span>
-<span class="normal"><a href="#__codelineno-3-20">20</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">flavor.psp.format_2025.builder</span><span class="w"> </span><span class="kn">import</span> <span class="n">prepare_slots</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">flavor.psp.format_2025.spec</span><span class="w"> </span><span class="kn">import</span> <span class="n">SlotMetadata</span><span class="p">,</span> <span class="n">BuildOptions</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3"></a>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4"></a><span class="n">slots</span> <span class="o">=</span> <span class="p">[</span>
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5"></a>    <span class="n">SlotMetadata</span><span class="p">(</span>
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6"></a>        <span class="nb">id</span><span class="o">=</span><span class="s2">&quot;runtime&quot;</span><span class="p">,</span>
-</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7"></a>        <span class="n">source_path</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="s2">&quot;runtime.tar.gz&quot;</span><span class="p">),</span>
-</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8"></a>        <span class="n">purpose</span><span class="o">=</span><span class="s2">&quot;Python runtime&quot;</span><span class="p">,</span>
-</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9"></a>        <span class="n">operations</span><span class="o">=</span><span class="s2">&quot;tar+gzip&quot;</span><span class="p">,</span>
-</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10"></a>    <span class="p">),</span>
-</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11"></a><span class="p">]</span>
-</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12"></a>
-</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13"></a><span class="n">options</span> <span class="o">=</span> <span class="n">BuildOptions</span><span class="p">(</span><span class="n">compression</span><span class="o">=</span><span class="s2">&quot;gzip&quot;</span><span class="p">)</span>
-</span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14"></a>
-</span><span id="__span-3-15"><a id="__codelineno-3-15" name="__codelineno-3-15"></a><span class="n">prepared</span> <span class="o">=</span> <span class="n">prepare_slots</span><span class="p">(</span><span class="n">slots</span><span class="p">,</span> <span class="n">options</span><span class="p">)</span>
-</span><span id="__span-3-16"><a id="__codelineno-3-16" name="__codelineno-3-16"></a>
-</span><span id="__span-3-17"><a id="__codelineno-3-17" name="__codelineno-3-17"></a><span class="k">for</span> <span class="n">slot</span> <span class="ow">in</span> <span class="n">prepared</span><span class="p">:</span>
-</span><span id="__span-3-18"><a id="__codelineno-3-18" name="__codelineno-3-18"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Slot: </span><span class="si">{</span><span class="n">slot</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="__span-3-19"><a id="__codelineno-3-19" name="__codelineno-3-19"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Size: </span><span class="si">{</span><span class="n">slot</span><span class="o">.</span><span class="n">size</span><span class="si">}</span><span class="s2"> bytes&quot;</span><span class="p">)</span>
-</span><span id="__span-3-20"><a id="__codelineno-3-20" name="__codelineno-3-20"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Checksum: </span><span class="si">{</span><span class="n">slot</span><span class="o">.</span><span class="n">checksum</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span></code></pre></div></td></tr></table></div>
-<hr />
-<h2 id="data-structures">Data Structures<a class="headerlink" href="#data-structures" title="Permanent link">&para;</a></h2>
-<h3 id="buildspec">BuildSpec<a class="headerlink" href="#buildspec" title="Permanent link">&para;</a></h3>
-<p>Complete specification for building a package.</p>
-<div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-4-1"> 1</a></span>
-<span class="normal"><a href="#__codelineno-4-2"> 2</a></span>
-<span class="normal"><a href="#__codelineno-4-3"> 3</a></span>
-<span class="normal"><a href="#__codelineno-4-4"> 4</a></span>
-<span class="normal"><a href="#__codelineno-4-5"> 5</a></span>
-<span class="normal"><a href="#__codelineno-4-6"> 6</a></span>
-<span class="normal"><a href="#__codelineno-4-7"> 7</a></span>
-<span class="normal"><a href="#__codelineno-4-8"> 8</a></span>
-<span class="normal"><a href="#__codelineno-4-9"> 9</a></span>
-<span class="normal"><a href="#__codelineno-4-10">10</a></span>
-<span class="normal"><a href="#__codelineno-4-11">11</a></span>
-<span class="normal"><a href="#__codelineno-4-12">12</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3"></a>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4"></a><span class="nd">@dataclass</span>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5"></a><span class="k">class</span><span class="w"> </span><span class="nc">BuildSpec</span><span class="p">:</span>
-</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Complete build specification.&quot;&quot;&quot;</span>
-</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7"></a>
-</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8"></a>    <span class="n">launcher_path</span><span class="p">:</span> <span class="n">Path</span>              <span class="c1"># Launcher binary</span>
-</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9"></a>    <span class="n">slots</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">SlotMetadata</span><span class="p">]</span>        <span class="c1"># Slot configurations</span>
-</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10"></a>    <span class="n">metadata</span><span class="p">:</span> <span class="nb">dict</span>                   <span class="c1"># Package metadata</span>
-</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11"></a>    <span class="n">keys</span><span class="p">:</span> <span class="n">KeyConfig</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>    <span class="c1"># Signing keys</span>
-</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12"></a>    <span class="n">options</span><span class="p">:</span> <span class="n">BuildOptions</span> <span class="o">=</span> <span class="kc">None</span>     <span class="c1"># Build options</span>
-</span></code></pre></div></td></tr></table></div>
-<h4 id="example_2">Example<a class="headerlink" href="#example_2" title="Permanent link">&para;</a></h4>
-<div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-5-1"> 1</a></span>
-<span class="normal"><a href="#__codelineno-5-2"> 2</a></span>
-<span class="normal"><a href="#__codelineno-5-3"> 3</a></span>
-<span class="normal"><a href="#__codelineno-5-4"> 4</a></span>
-<span class="normal"><a href="#__codelineno-5-5"> 5</a></span>
-<span class="normal"><a href="#__codelineno-5-6"> 6</a></span>
-<span class="normal"><a href="#__codelineno-5-7"> 7</a></span>
-<span class="normal"><a href="#__codelineno-5-8"> 8</a></span>
-<span class="normal"><a href="#__codelineno-5-9"> 9</a></span>
-<span class="normal"><a href="#__codelineno-5-10">10</a></span>
-<span class="normal"><a href="#__codelineno-5-11">11</a></span>
-<span class="normal"><a href="#__codelineno-5-12">12</a></span>
-<span class="normal"><a href="#__codelineno-5-13">13</a></span>
-<span class="normal"><a href="#__codelineno-5-14">14</a></span>
-<span class="normal"><a href="#__codelineno-5-15">15</a></span>
-<span class="normal"><a href="#__codelineno-5-16">16</a></span>
-<span class="normal"><a href="#__codelineno-5-17">17</a></span>
-<span class="normal"><a href="#__codelineno-5-18">18</a></span>
-<span class="normal"><a href="#__codelineno-5-19">19</a></span>
-<span class="normal"><a href="#__codelineno-5-20">20</a></span>
-<span class="normal"><a href="#__codelineno-5-21">21</a></span>
-<span class="normal"><a href="#__codelineno-5-22">22</a></span>
-<span class="normal"><a href="#__codelineno-5-23">23</a></span>
-<span class="normal"><a href="#__codelineno-5-24">24</a></span>
-<span class="normal"><a href="#__codelineno-5-25">25</a></span>
-<span class="normal"><a href="#__codelineno-5-26">26</a></span>
-<span class="normal"><a href="#__codelineno-5-27">27</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">flavor.psp.format_2025.spec</span><span class="w"> </span><span class="kn">import</span> <span class="n">BuildSpec</span><span class="p">,</span> <span class="n">SlotMetadata</span><span class="p">,</span> <span class="n">KeyConfig</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2"></a>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3"></a><span class="n">spec</span> <span class="o">=</span> <span class="n">BuildSpec</span><span class="p">(</span>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4"></a>    <span class="n">launcher_path</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="s2">&quot;flavor-rs-launcher-linux_amd64&quot;</span><span class="p">),</span>
-</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5"></a>    <span class="n">slots</span><span class="o">=</span><span class="p">[</span>
-</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6"></a>        <span class="n">SlotMetadata</span><span class="p">(</span>
-</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7"></a>            <span class="nb">id</span><span class="o">=</span><span class="s2">&quot;python-runtime&quot;</span><span class="p">,</span>
-</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8"></a>            <span class="n">source_path</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="s2">&quot;runtime.tar.gz&quot;</span><span class="p">),</span>
-</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9"></a>            <span class="n">purpose</span><span class="o">=</span><span class="s2">&quot;Python 3.11 runtime&quot;</span><span class="p">,</span>
-</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10"></a>            <span class="n">operations</span><span class="o">=</span><span class="s2">&quot;tar+gzip&quot;</span><span class="p">,</span>
-</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11"></a>        <span class="p">),</span>
-</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12"></a>    <span class="p">],</span>
-</span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13"></a>    <span class="n">metadata</span><span class="o">=</span><span class="p">{</span>
-</span><span id="__span-5-14"><a id="__codelineno-5-14" name="__codelineno-5-14"></a>        <span class="s2">&quot;package&quot;</span><span class="p">:</span> <span class="p">{</span>
-</span><span id="__span-5-15"><a id="__codelineno-5-15" name="__codelineno-5-15"></a>            <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;myapp&quot;</span><span class="p">,</span>
-</span><span id="__span-5-16"><a id="__codelineno-5-16" name="__codelineno-5-16"></a>            <span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="s2">&quot;1.0.0&quot;</span><span class="p">,</span>
-</span><span id="__span-5-17"><a id="__codelineno-5-17" name="__codelineno-5-17"></a>        <span class="p">},</span>
-</span><span id="__span-5-18"><a id="__codelineno-5-18" name="__codelineno-5-18"></a>        <span class="s2">&quot;build&quot;</span><span class="p">:</span> <span class="p">{</span>
-</span><span id="__span-5-19"><a id="__codelineno-5-19" name="__codelineno-5-19"></a>            <span class="s2">&quot;builder_type&quot;</span><span class="p">:</span> <span class="s2">&quot;flavor-rs-builder&quot;</span><span class="p">,</span>
-</span><span id="__span-5-20"><a id="__codelineno-5-20" name="__codelineno-5-20"></a>            <span class="s2">&quot;timestamp&quot;</span><span class="p">:</span> <span class="s2">&quot;2025-10-24T15:30:00Z&quot;</span><span class="p">,</span>
-</span><span id="__span-5-21"><a id="__codelineno-5-21" name="__codelineno-5-21"></a>        <span class="p">},</span>
-</span><span id="__span-5-22"><a id="__codelineno-5-22" name="__codelineno-5-22"></a>    <span class="p">},</span>
-</span><span id="__span-5-23"><a id="__codelineno-5-23" name="__codelineno-5-23"></a>    <span class="n">keys</span><span class="o">=</span><span class="n">KeyConfig</span><span class="p">(</span>
-</span><span id="__span-5-24"><a id="__codelineno-5-24" name="__codelineno-5-24"></a>        <span class="n">private_key_path</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="s2">&quot;keys/private.pem&quot;</span><span class="p">),</span>
-</span><span id="__span-5-25"><a id="__codelineno-5-25" name="__codelineno-5-25"></a>        <span class="n">public_key_path</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="s2">&quot;keys/public.pem&quot;</span><span class="p">),</span>
-</span><span id="__span-5-26"><a id="__codelineno-5-26" name="__codelineno-5-26"></a>    <span class="p">),</span>
-</span><span id="__span-5-27"><a id="__codelineno-5-27" name="__codelineno-5-27"></a><span class="p">)</span>
-</span></code></pre></div></td></tr></table></div>
-<h3 id="slotmetadata">SlotMetadata<a class="headerlink" href="#slotmetadata" title="Permanent link">&para;</a></h3>
-<p>Metadata for a single data slot.</p>
-<div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-6-1"> 1</a></span>
-<span class="normal"><a href="#__codelineno-6-2"> 2</a></span>
-<span class="normal"><a href="#__codelineno-6-3"> 3</a></span>
-<span class="normal"><a href="#__codelineno-6-4"> 4</a></span>
-<span class="normal"><a href="#__codelineno-6-5"> 5</a></span>
-<span class="normal"><a href="#__codelineno-6-6"> 6</a></span>
-<span class="normal"><a href="#__codelineno-6-7"> 7</a></span>
-<span class="normal"><a href="#__codelineno-6-8"> 8</a></span>
-<span class="normal"><a href="#__codelineno-6-9"> 9</a></span>
-<span class="normal"><a href="#__codelineno-6-10">10</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1"></a><span class="nd">@dataclass</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">SlotMetadata</span><span class="p">:</span>
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Metadata for a package slot.&quot;&quot;&quot;</span>
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4"></a>
-</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5"></a>    <span class="nb">id</span><span class="p">:</span> <span class="nb">str</span>                          <span class="c1"># Slot identifier</span>
-</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6"></a>    <span class="n">source_path</span><span class="p">:</span> <span class="n">Path</span>                <span class="c1"># Source data file</span>
-</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7"></a>    <span class="n">purpose</span><span class="p">:</span> <span class="nb">str</span>                     <span class="c1"># Human-readable purpose</span>
-</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8"></a>    <span class="n">operations</span><span class="p">:</span> <span class="nb">str</span>                  <span class="c1"># Operation chain (e.g., &quot;tar+gzip&quot;)</span>
-</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9"></a>    <span class="n">offset</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>                  <span class="c1"># Offset in package (set by builder)</span>
-</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10"></a>    <span class="n">size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>                    <span class="c1"># Size in bytes (set by builder)</span>
-</span></code></pre></div></td></tr></table></div>
-<h3 id="buildoptions">BuildOptions<a class="headerlink" href="#buildoptions" title="Permanent link">&para;</a></h3>
-<p>Build configuration options.</p>
-<div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-7-1"> 1</a></span>
-<span class="normal"><a href="#__codelineno-7-2"> 2</a></span>
-<span class="normal"><a href="#__codelineno-7-3"> 3</a></span>
-<span class="normal"><a href="#__codelineno-7-4"> 4</a></span>
-<span class="normal"><a href="#__codelineno-7-5"> 5</a></span>
-<span class="normal"><a href="#__codelineno-7-6"> 6</a></span>
-<span class="normal"><a href="#__codelineno-7-7"> 7</a></span>
-<span class="normal"><a href="#__codelineno-7-8"> 8</a></span>
-<span class="normal"><a href="#__codelineno-7-9"> 9</a></span>
-<span class="normal"><a href="#__codelineno-7-10">10</a></span>
-<span class="normal"><a href="#__codelineno-7-11">11</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1"></a><span class="nd">@dataclass</span>
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">BuildOptions</span><span class="p">:</span>
-</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Build configuration options.&quot;&quot;&quot;</span>
-</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4"></a>
-</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5"></a>    <span class="n">compression</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;gzip&quot;</span>        <span class="c1"># Compression algorithm</span>
-</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6"></a>    <span class="n">strip_launcher</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>     <span class="c1"># Strip launcher binary</span>
-</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7"></a>    <span class="n">validate</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>            <span class="c1"># Validate after build</span>
-</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8"></a>    <span class="n">mode</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">ACCESS_AUTO</span>          <span class="c1"># Access mode</span>
-</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9"></a>    <span class="n">cache_policy</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">CACHE_NORMAL</span> <span class="c1"># Cache policy</span>
-</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10"></a>    <span class="n">min_memory</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span> <span class="o">*</span> <span class="mi">1024</span> <span class="o">*</span> <span class="mi">1024</span>   <span class="c1"># Min memory (4 MB)</span>
-</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11"></a>    <span class="n">max_memory</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1024</span> <span class="o">*</span> <span class="mi">1024</span> <span class="o">*</span> <span class="mi">1024</span>  <span class="c1"># Max memory (1 GB)</span>
-</span></code></pre></div></td></tr></table></div>
-<h3 id="keyconfig">KeyConfig<a class="headerlink" href="#keyconfig" title="Permanent link">&para;</a></h3>
-<p>Signing key configuration.</p>
-<div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-8-1">1</a></span>
-<span class="normal"><a href="#__codelineno-8-2">2</a></span>
-<span class="normal"><a href="#__codelineno-8-3">3</a></span>
-<span class="normal"><a href="#__codelineno-8-4">4</a></span>
-<span class="normal"><a href="#__codelineno-8-5">5</a></span>
-<span class="normal"><a href="#__codelineno-8-6">6</a></span>
-<span class="normal"><a href="#__codelineno-8-7">7</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1"></a><span class="nd">@dataclass</span>
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">KeyConfig</span><span class="p">:</span>
-</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Signing key configuration.&quot;&quot;&quot;</span>
-</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4"></a>
-</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5"></a>    <span class="n">private_key_path</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># Ed25519 private key</span>
-</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6"></a>    <span class="n">public_key_path</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>   <span class="c1"># Ed25519 public key</span>
-</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7"></a>    <span class="n">key_seed</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>           <span class="c1"># Deterministic seed</span>
-</span></code></pre></div></td></tr></table></div>
-<hr />
-<h2 id="complete-example">Complete Example<a class="headerlink" href="#complete-example" title="Permanent link">&para;</a></h2>
-<h3 id="build-package-with-custom-slots">Build Package with Custom Slots<a class="headerlink" href="#build-package-with-custom-slots" title="Permanent link">&para;</a></h3>
-<div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-9-1">  1</a></span>
-<span class="normal"><a href="#__codelineno-9-2">  2</a></span>
-<span class="normal"><a href="#__codelineno-9-3">  3</a></span>
-<span class="normal"><a href="#__codelineno-9-4">  4</a></span>
-<span class="normal"><a href="#__codelineno-9-5">  5</a></span>
-<span class="normal"><a href="#__codelineno-9-6">  6</a></span>
-<span class="normal"><a href="#__codelineno-9-7">  7</a></span>
-<span class="normal"><a href="#__codelineno-9-8">  8</a></span>
-<span class="normal"><a href="#__codelineno-9-9">  9</a></span>
-<span class="normal"><a href="#__codelineno-9-10"> 10</a></span>
-<span class="normal"><a href="#__codelineno-9-11"> 11</a></span>
-<span class="normal"><a href="#__codelineno-9-12"> 12</a></span>
-<span class="normal"><a href="#__codelineno-9-13"> 13</a></span>
-<span class="normal"><a href="#__codelineno-9-14"> 14</a></span>
-<span class="normal"><a href="#__codelineno-9-15"> 15</a></span>
-<span class="normal"><a href="#__codelineno-9-16"> 16</a></span>
-<span class="normal"><a href="#__codelineno-9-17"> 17</a></span>
-<span class="normal"><a href="#__codelineno-9-18"> 18</a></span>
-<span class="normal"><a href="#__codelineno-9-19"> 19</a></span>
-<span class="normal"><a href="#__codelineno-9-20"> 20</a></span>
-<span class="normal"><a href="#__codelineno-9-21"> 21</a></span>
-<span class="normal"><a href="#__codelineno-9-22"> 22</a></span>
-<span class="normal"><a href="#__codelineno-9-23"> 23</a></span>
-<span class="normal"><a href="#__codelineno-9-24"> 24</a></span>
-<span class="normal"><a href="#__codelineno-9-25"> 25</a></span>
-<span class="normal"><a href="#__codelineno-9-26"> 26</a></span>
-<span class="normal"><a href="#__codelineno-9-27"> 27</a></span>
-<span class="normal"><a href="#__codelineno-9-28"> 28</a></span>
-<span class="normal"><a href="#__codelineno-9-29"> 29</a></span>
-<span class="normal"><a href="#__codelineno-9-30"> 30</a></span>
-<span class="normal"><a href="#__codelineno-9-31"> 31</a></span>
-<span class="normal"><a href="#__codelineno-9-32"> 32</a></span>
-<span class="normal"><a href="#__codelineno-9-33"> 33</a></span>
-<span class="normal"><a href="#__codelineno-9-34"> 34</a></span>
-<span class="normal"><a href="#__codelineno-9-35"> 35</a></span>
-<span class="normal"><a href="#__codelineno-9-36"> 36</a></span>
-<span class="normal"><a href="#__codelineno-9-37"> 37</a></span>
-<span class="normal"><a href="#__codelineno-9-38"> 38</a></span>
-<span class="normal"><a href="#__codelineno-9-39"> 39</a></span>
-<span class="normal"><a href="#__codelineno-9-40"> 40</a></span>
-<span class="normal"><a href="#__codelineno-9-41"> 41</a></span>
-<span class="normal"><a href="#__codelineno-9-42"> 42</a></span>
-<span class="normal"><a href="#__codelineno-9-43"> 43</a></span>
-<span class="normal"><a href="#__codelineno-9-44"> 44</a></span>
-<span class="normal"><a href="#__codelineno-9-45"> 45</a></span>
-<span class="normal"><a href="#__codelineno-9-46"> 46</a></span>
-<span class="normal"><a href="#__codelineno-9-47"> 47</a></span>
-<span class="normal"><a href="#__codelineno-9-48"> 48</a></span>
-<span class="normal"><a href="#__codelineno-9-49"> 49</a></span>
-<span class="normal"><a href="#__codelineno-9-50"> 50</a></span>
-<span class="normal"><a href="#__codelineno-9-51"> 51</a></span>
-<span class="normal"><a href="#__codelineno-9-52"> 52</a></span>
-<span class="normal"><a href="#__codelineno-9-53"> 53</a></span>
-<span class="normal"><a href="#__codelineno-9-54"> 54</a></span>
-<span class="normal"><a href="#__codelineno-9-55"> 55</a></span>
-<span class="normal"><a href="#__codelineno-9-56"> 56</a></span>
-<span class="normal"><a href="#__codelineno-9-57"> 57</a></span>
-<span class="normal"><a href="#__codelineno-9-58"> 58</a></span>
-<span class="normal"><a href="#__codelineno-9-59"> 59</a></span>
-<span class="normal"><a href="#__codelineno-9-60"> 60</a></span>
-<span class="normal"><a href="#__codelineno-9-61"> 61</a></span>
-<span class="normal"><a href="#__codelineno-9-62"> 62</a></span>
-<span class="normal"><a href="#__codelineno-9-63"> 63</a></span>
-<span class="normal"><a href="#__codelineno-9-64"> 64</a></span>
-<span class="normal"><a href="#__codelineno-9-65"> 65</a></span>
-<span class="normal"><a href="#__codelineno-9-66"> 66</a></span>
-<span class="normal"><a href="#__codelineno-9-67"> 67</a></span>
-<span class="normal"><a href="#__codelineno-9-68"> 68</a></span>
-<span class="normal"><a href="#__codelineno-9-69"> 69</a></span>
-<span class="normal"><a href="#__codelineno-9-70"> 70</a></span>
-<span class="normal"><a href="#__codelineno-9-71"> 71</a></span>
-<span class="normal"><a href="#__codelineno-9-72"> 72</a></span>
-<span class="normal"><a href="#__codelineno-9-73"> 73</a></span>
-<span class="normal"><a href="#__codelineno-9-74"> 74</a></span>
-<span class="normal"><a href="#__codelineno-9-75"> 75</a></span>
-<span class="normal"><a href="#__codelineno-9-76"> 76</a></span>
-<span class="normal"><a href="#__codelineno-9-77"> 77</a></span>
-<span class="normal"><a href="#__codelineno-9-78"> 78</a></span>
-<span class="normal"><a href="#__codelineno-9-79"> 79</a></span>
-<span class="normal"><a href="#__codelineno-9-80"> 80</a></span>
-<span class="normal"><a href="#__codelineno-9-81"> 81</a></span>
-<span class="normal"><a href="#__codelineno-9-82"> 82</a></span>
-<span class="normal"><a href="#__codelineno-9-83"> 83</a></span>
-<span class="normal"><a href="#__codelineno-9-84"> 84</a></span>
-<span class="normal"><a href="#__codelineno-9-85"> 85</a></span>
-<span class="normal"><a href="#__codelineno-9-86"> 86</a></span>
-<span class="normal"><a href="#__codelineno-9-87"> 87</a></span>
-<span class="normal"><a href="#__codelineno-9-88"> 88</a></span>
-<span class="normal"><a href="#__codelineno-9-89"> 89</a></span>
-<span class="normal"><a href="#__codelineno-9-90"> 90</a></span>
-<span class="normal"><a href="#__codelineno-9-91"> 91</a></span>
-<span class="normal"><a href="#__codelineno-9-92"> 92</a></span>
-<span class="normal"><a href="#__codelineno-9-93"> 93</a></span>
-<span class="normal"><a href="#__codelineno-9-94"> 94</a></span>
-<span class="normal"><a href="#__codelineno-9-95"> 95</a></span>
-<span class="normal"><a href="#__codelineno-9-96"> 96</a></span>
-<span class="normal"><a href="#__codelineno-9-97"> 97</a></span>
-<span class="normal"><a href="#__codelineno-9-98"> 98</a></span>
-<span class="normal"><a href="#__codelineno-9-99"> 99</a></span>
-<span class="normal"><a href="#__codelineno-9-100">100</a></span>
-<span class="normal"><a href="#__codelineno-9-101">101</a></span>
-<span class="normal"><a href="#__codelineno-9-102">102</a></span>
-<span class="normal"><a href="#__codelineno-9-103">103</a></span>
-<span class="normal"><a href="#__codelineno-9-104">104</a></span>
-<span class="normal"><a href="#__codelineno-9-105">105</a></span>
-<span class="normal"><a href="#__codelineno-9-106">106</a></span>
-<span class="normal"><a href="#__codelineno-9-107">107</a></span>
-<span class="normal"><a href="#__codelineno-9-108">108</a></span>
-<span class="normal"><a href="#__codelineno-9-109">109</a></span>
-<span class="normal"><a href="#__codelineno-9-110">110</a></span>
-<span class="normal"><a href="#__codelineno-9-111">111</a></span>
-<span class="normal"><a href="#__codelineno-9-112">112</a></span>
-<span class="normal"><a href="#__codelineno-9-113">113</a></span>
-<span class="normal"><a href="#__codelineno-9-114">114</a></span>
-<span class="normal"><a href="#__codelineno-9-115">115</a></span>
-<span class="normal"><a href="#__codelineno-9-116">116</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1"></a><span class="ch">#!/usr/bin/env python3</span>
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2"></a><span class="sd">&quot;&quot;&quot;Build a PSPF package with custom slot configuration.&quot;&quot;&quot;</span>
-</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3"></a>
-</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
-</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5"></a><span class="kn">import</span><span class="w"> </span><span class="nn">tarfile</span>
-</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6"></a><span class="kn">import</span><span class="w"> </span><span class="nn">gzip</span>
-</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7"></a><span class="kn">from</span><span class="w"> </span><span class="nn">flavor.psp.format_2025.builder</span><span class="w"> </span><span class="kn">import</span> <span class="n">build_package</span>
-</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8"></a><span class="kn">from</span><span class="w"> </span><span class="nn">flavor.psp.format_2025.spec</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9"></a>    <span class="n">BuildSpec</span><span class="p">,</span>
-</span><span id="__span-9-10"><a id="__codelineno-9-10" name="__codelineno-9-10"></a>    <span class="n">BuildOptions</span><span class="p">,</span>
-</span><span id="__span-9-11"><a id="__codelineno-9-11" name="__codelineno-9-11"></a>    <span class="n">SlotMetadata</span><span class="p">,</span>
-</span><span id="__span-9-12"><a id="__codelineno-9-12" name="__codelineno-9-12"></a>    <span class="n">KeyConfig</span><span class="p">,</span>
-</span><span id="__span-9-13"><a id="__codelineno-9-13" name="__codelineno-9-13"></a><span class="p">)</span>
-</span><span id="__span-9-14"><a id="__codelineno-9-14" name="__codelineno-9-14"></a>
-</span><span id="__span-9-15"><a id="__codelineno-9-15" name="__codelineno-9-15"></a><span class="k">def</span><span class="w"> </span><span class="nf">create_slot_tarball</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">files</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
-</span><span id="__span-9-16"><a id="__codelineno-9-16" name="__codelineno-9-16"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a tar.gz slot from files.&quot;&quot;&quot;</span>
-</span><span id="__span-9-17"><a id="__codelineno-9-17" name="__codelineno-9-17"></a>    <span class="n">output</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">.tar.gz&quot;</span><span class="p">)</span>
-</span><span id="__span-9-18"><a id="__codelineno-9-18" name="__codelineno-9-18"></a>
-</span><span id="__span-9-19"><a id="__codelineno-9-19" name="__codelineno-9-19"></a>    <span class="k">with</span> <span class="n">tarfile</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="s2">&quot;w:gz&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">tar</span><span class="p">:</span>
-</span><span id="__span-9-20"><a id="__codelineno-9-20" name="__codelineno-9-20"></a>        <span class="k">for</span> <span class="n">filename</span><span class="p">,</span> <span class="n">content</span> <span class="ow">in</span> <span class="n">files</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-</span><span id="__span-9-21"><a id="__codelineno-9-21" name="__codelineno-9-21"></a>            <span class="c1"># Write file to tar</span>
-</span><span id="__span-9-22"><a id="__codelineno-9-22" name="__codelineno-9-22"></a>            <span class="kn">from</span><span class="w"> </span><span class="nn">io</span><span class="w"> </span><span class="kn">import</span> <span class="n">BytesIO</span>
-</span><span id="__span-9-23"><a id="__codelineno-9-23" name="__codelineno-9-23"></a>            <span class="kn">import</span><span class="w"> </span><span class="nn">tarfile</span>
-</span><span id="__span-9-24"><a id="__codelineno-9-24" name="__codelineno-9-24"></a>
-</span><span id="__span-9-25"><a id="__codelineno-9-25" name="__codelineno-9-25"></a>            <span class="n">info</span> <span class="o">=</span> <span class="n">tarfile</span><span class="o">.</span><span class="n">TarInfo</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">filename</span><span class="p">)</span>
-</span><span id="__span-9-26"><a id="__codelineno-9-26" name="__codelineno-9-26"></a>            <span class="n">info</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">content</span><span class="p">)</span>
-</span><span id="__span-9-27"><a id="__codelineno-9-27" name="__codelineno-9-27"></a>            <span class="n">tar</span><span class="o">.</span><span class="n">addfile</span><span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="n">BytesIO</span><span class="p">(</span><span class="n">content</span><span class="p">))</span>
-</span><span id="__span-9-28"><a id="__codelineno-9-28" name="__codelineno-9-28"></a>
-</span><span id="__span-9-29"><a id="__codelineno-9-29" name="__codelineno-9-29"></a>    <span class="k">return</span> <span class="n">output</span>
-</span><span id="__span-9-30"><a id="__codelineno-9-30" name="__codelineno-9-30"></a>
-</span><span id="__span-9-31"><a id="__codelineno-9-31" name="__codelineno-9-31"></a><span class="k">def</span><span class="w"> </span><span class="nf">build_custom_package</span><span class="p">():</span>
-</span><span id="__span-9-32"><a id="__codelineno-9-32" name="__codelineno-9-32"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Build package with custom slots.&quot;&quot;&quot;</span>
-</span><span id="__span-9-33"><a id="__codelineno-9-33" name="__codelineno-9-33"></a>
-</span><span id="__span-9-34"><a id="__codelineno-9-34" name="__codelineno-9-34"></a>    <span class="c1"># Create runtime slot</span>
-</span><span id="__span-9-35"><a id="__codelineno-9-35" name="__codelineno-9-35"></a>    <span class="n">runtime_files</span> <span class="o">=</span> <span class="p">{</span>
-</span><span id="__span-9-36"><a id="__codelineno-9-36" name="__codelineno-9-36"></a>        <span class="s2">&quot;bin/python&quot;</span><span class="p">:</span> <span class="sa">b</span><span class="s2">&quot;#!/usr/bin/python3...&quot;</span><span class="p">,</span>
-</span><span id="__span-9-37"><a id="__codelineno-9-37" name="__codelineno-9-37"></a>        <span class="s2">&quot;lib/libpython.so&quot;</span><span class="p">:</span> <span class="sa">b</span><span class="s2">&quot;...&quot;</span><span class="p">,</span>
-</span><span id="__span-9-38"><a id="__codelineno-9-38" name="__codelineno-9-38"></a>    <span class="p">}</span>
-</span><span id="__span-9-39"><a id="__codelineno-9-39" name="__codelineno-9-39"></a>    <span class="n">runtime_slot</span> <span class="o">=</span> <span class="n">create_slot_tarball</span><span class="p">(</span><span class="s2">&quot;runtime&quot;</span><span class="p">,</span> <span class="n">runtime_files</span><span class="p">)</span>
-</span><span id="__span-9-40"><a id="__codelineno-9-40" name="__codelineno-9-40"></a>
-</span><span id="__span-9-41"><a id="__codelineno-9-41" name="__codelineno-9-41"></a>    <span class="c1"># Create app slot</span>
-</span><span id="__span-9-42"><a id="__codelineno-9-42" name="__codelineno-9-42"></a>    <span class="n">app_files</span> <span class="o">=</span> <span class="p">{</span>
-</span><span id="__span-9-43"><a id="__codelineno-9-43" name="__codelineno-9-43"></a>        <span class="s2">&quot;app.py&quot;</span><span class="p">:</span> <span class="sa">b</span><span class="s1">&#39;print(&quot;Hello from FlavorPack!&quot;)&#39;</span><span class="p">,</span>
-</span><span id="__span-9-44"><a id="__codelineno-9-44" name="__codelineno-9-44"></a>        <span class="s2">&quot;config.json&quot;</span><span class="p">:</span> <span class="sa">b</span><span class="s1">&#39;{&quot;env&quot;: &quot;production&quot;}&#39;</span><span class="p">,</span>
-</span><span id="__span-9-45"><a id="__codelineno-9-45" name="__codelineno-9-45"></a>    <span class="p">}</span>
-</span><span id="__span-9-46"><a id="__codelineno-9-46" name="__codelineno-9-46"></a>    <span class="n">app_slot</span> <span class="o">=</span> <span class="n">create_slot_tarball</span><span class="p">(</span><span class="s2">&quot;app&quot;</span><span class="p">,</span> <span class="n">app_files</span><span class="p">)</span>
-</span><span id="__span-9-47"><a id="__codelineno-9-47" name="__codelineno-9-47"></a>
-</span><span id="__span-9-48"><a id="__codelineno-9-48" name="__codelineno-9-48"></a>    <span class="c1"># Build specification</span>
-</span><span id="__span-9-49"><a id="__codelineno-9-49" name="__codelineno-9-49"></a>    <span class="n">spec</span> <span class="o">=</span> <span class="n">BuildSpec</span><span class="p">(</span>
-</span><span id="__span-9-50"><a id="__codelineno-9-50" name="__codelineno-9-50"></a>        <span class="n">launcher_path</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="s2">&quot;helpers/flavor-rs-launcher-linux_amd64&quot;</span><span class="p">),</span>
-</span><span id="__span-9-51"><a id="__codelineno-9-51" name="__codelineno-9-51"></a>        <span class="n">slots</span><span class="o">=</span><span class="p">[</span>
-</span><span id="__span-9-52"><a id="__codelineno-9-52" name="__codelineno-9-52"></a>            <span class="n">SlotMetadata</span><span class="p">(</span>
-</span><span id="__span-9-53"><a id="__codelineno-9-53" name="__codelineno-9-53"></a>                <span class="nb">id</span><span class="o">=</span><span class="s2">&quot;python-runtime&quot;</span><span class="p">,</span>
-</span><span id="__span-9-54"><a id="__codelineno-9-54" name="__codelineno-9-54"></a>                <span class="n">source_path</span><span class="o">=</span><span class="n">runtime_slot</span><span class="p">,</span>
-</span><span id="__span-9-55"><a id="__codelineno-9-55" name="__codelineno-9-55"></a>                <span class="n">purpose</span><span class="o">=</span><span class="s2">&quot;Python 3.11 runtime&quot;</span><span class="p">,</span>
-</span><span id="__span-9-56"><a id="__codelineno-9-56" name="__codelineno-9-56"></a>                <span class="n">operations</span><span class="o">=</span><span class="s2">&quot;tar+gzip&quot;</span><span class="p">,</span>
-</span><span id="__span-9-57"><a id="__codelineno-9-57" name="__codelineno-9-57"></a>            <span class="p">),</span>
-</span><span id="__span-9-58"><a id="__codelineno-9-58" name="__codelineno-9-58"></a>            <span class="n">SlotMetadata</span><span class="p">(</span>
-</span><span id="__span-9-59"><a id="__codelineno-9-59" name="__codelineno-9-59"></a>                <span class="nb">id</span><span class="o">=</span><span class="s2">&quot;app-code&quot;</span><span class="p">,</span>
-</span><span id="__span-9-60"><a id="__codelineno-9-60" name="__codelineno-9-60"></a>                <span class="n">source_path</span><span class="o">=</span><span class="n">app_slot</span><span class="p">,</span>
-</span><span id="__span-9-61"><a id="__codelineno-9-61" name="__codelineno-9-61"></a>                <span class="n">purpose</span><span class="o">=</span><span class="s2">&quot;Application code and configuration&quot;</span><span class="p">,</span>
-</span><span id="__span-9-62"><a id="__codelineno-9-62" name="__codelineno-9-62"></a>                <span class="n">operations</span><span class="o">=</span><span class="s2">&quot;tar+gzip&quot;</span><span class="p">,</span>
-</span><span id="__span-9-63"><a id="__codelineno-9-63" name="__codelineno-9-63"></a>            <span class="p">),</span>
-</span><span id="__span-9-64"><a id="__codelineno-9-64" name="__codelineno-9-64"></a>        <span class="p">],</span>
-</span><span id="__span-9-65"><a id="__codelineno-9-65" name="__codelineno-9-65"></a>        <span class="n">metadata</span><span class="o">=</span><span class="p">{</span>
-</span><span id="__span-9-66"><a id="__codelineno-9-66" name="__codelineno-9-66"></a>            <span class="s2">&quot;package&quot;</span><span class="p">:</span> <span class="p">{</span>
-</span><span id="__span-9-67"><a id="__codelineno-9-67" name="__codelineno-9-67"></a>                <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;custom-app&quot;</span><span class="p">,</span>
-</span><span id="__span-9-68"><a id="__codelineno-9-68" name="__codelineno-9-68"></a>                <span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="s2">&quot;1.0.0&quot;</span><span class="p">,</span>
-</span><span id="__span-9-69"><a id="__codelineno-9-69" name="__codelineno-9-69"></a>                <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Custom FlavorPack package&quot;</span><span class="p">,</span>
-</span><span id="__span-9-70"><a id="__codelineno-9-70" name="__codelineno-9-70"></a>            <span class="p">},</span>
-</span><span id="__span-9-71"><a id="__codelineno-9-71" name="__codelineno-9-71"></a>            <span class="s2">&quot;build&quot;</span><span class="p">:</span> <span class="p">{</span>
-</span><span id="__span-9-72"><a id="__codelineno-9-72" name="__codelineno-9-72"></a>                <span class="s2">&quot;builder_type&quot;</span><span class="p">:</span> <span class="s2">&quot;custom-builder&quot;</span><span class="p">,</span>
-</span><span id="__span-9-73"><a id="__codelineno-9-73" name="__codelineno-9-73"></a>                <span class="s2">&quot;timestamp&quot;</span><span class="p">:</span> <span class="s2">&quot;2025-10-24T15:30:00Z&quot;</span><span class="p">,</span>
-</span><span id="__span-9-74"><a id="__codelineno-9-74" name="__codelineno-9-74"></a>            <span class="p">},</span>
-</span><span id="__span-9-75"><a id="__codelineno-9-75" name="__codelineno-9-75"></a>            <span class="s2">&quot;execution&quot;</span><span class="p">:</span> <span class="p">{</span>
-</span><span id="__span-9-76"><a id="__codelineno-9-76" name="__codelineno-9-76"></a>                <span class="s2">&quot;command&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;python&quot;</span><span class="p">,</span> <span class="s2">&quot;app.py&quot;</span><span class="p">],</span>
-</span><span id="__span-9-77"><a id="__codelineno-9-77" name="__codelineno-9-77"></a>                <span class="s2">&quot;environment&quot;</span><span class="p">:</span> <span class="p">{</span>
-</span><span id="__span-9-78"><a id="__codelineno-9-78" name="__codelineno-9-78"></a>                    <span class="s2">&quot;set&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;CUSTOM_VAR&quot;</span><span class="p">:</span> <span class="s2">&quot;value&quot;</span><span class="p">},</span>
-</span><span id="__span-9-79"><a id="__codelineno-9-79" name="__codelineno-9-79"></a>                <span class="p">},</span>
-</span><span id="__span-9-80"><a id="__codelineno-9-80" name="__codelineno-9-80"></a>            <span class="p">},</span>
-</span><span id="__span-9-81"><a id="__codelineno-9-81" name="__codelineno-9-81"></a>        <span class="p">},</span>
-</span><span id="__span-9-82"><a id="__codelineno-9-82" name="__codelineno-9-82"></a>        <span class="n">keys</span><span class="o">=</span><span class="n">KeyConfig</span><span class="p">(</span>
-</span><span id="__span-9-83"><a id="__codelineno-9-83" name="__codelineno-9-83"></a>            <span class="n">private_key_path</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="s2">&quot;keys/private.pem&quot;</span><span class="p">),</span>
-</span><span id="__span-9-84"><a id="__codelineno-9-84" name="__codelineno-9-84"></a>            <span class="n">public_key_path</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="s2">&quot;keys/public.pem&quot;</span><span class="p">),</span>
-</span><span id="__span-9-85"><a id="__codelineno-9-85" name="__codelineno-9-85"></a>        <span class="p">),</span>
-</span><span id="__span-9-86"><a id="__codelineno-9-86" name="__codelineno-9-86"></a>        <span class="n">options</span><span class="o">=</span><span class="n">BuildOptions</span><span class="p">(</span>
-</span><span id="__span-9-87"><a id="__codelineno-9-87" name="__codelineno-9-87"></a>            <span class="n">compression</span><span class="o">=</span><span class="s2">&quot;gzip&quot;</span><span class="p">,</span>
-</span><span id="__span-9-88"><a id="__codelineno-9-88" name="__codelineno-9-88"></a>            <span class="n">strip_launcher</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-</span><span id="__span-9-89"><a id="__codelineno-9-89" name="__codelineno-9-89"></a>            <span class="n">validate</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-</span><span id="__span-9-90"><a id="__codelineno-9-90" name="__codelineno-9-90"></a>        <span class="p">),</span>
-</span><span id="__span-9-91"><a id="__codelineno-9-91" name="__codelineno-9-91"></a>    <span class="p">)</span>
-</span><span id="__span-9-92"><a id="__codelineno-9-92" name="__codelineno-9-92"></a>
-</span><span id="__span-9-93"><a id="__codelineno-9-93" name="__codelineno-9-93"></a>    <span class="c1"># Build package</span>
-</span><span id="__span-9-94"><a id="__codelineno-9-94" name="__codelineno-9-94"></a>    <span class="n">result</span> <span class="o">=</span> <span class="n">build_package</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;dist/custom-app.psp&quot;</span><span class="p">))</span>
-</span><span id="__span-9-95"><a id="__codelineno-9-95" name="__codelineno-9-95"></a>
-</span><span id="__span-9-96"><a id="__codelineno-9-96" name="__codelineno-9-96"></a>    <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="p">:</span>
-</span><span id="__span-9-97"><a id="__codelineno-9-97" name="__codelineno-9-97"></a>        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;✅ Package built successfully&quot;</span><span class="p">)</span>
-</span><span id="__span-9-98"><a id="__codelineno-9-98" name="__codelineno-9-98"></a>        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;   Path: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">package_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="__span-9-99"><a id="__codelineno-9-99" name="__codelineno-9-99"></a>        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;   Size: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">package_size_bytes</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">1024</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">1024</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> MB&quot;</span><span class="p">)</span>
-</span><span id="__span-9-100"><a id="__codelineno-9-100" name="__codelineno-9-100"></a>        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;   Duration: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">duration_seconds</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">s&quot;</span><span class="p">)</span>
-</span><span id="__span-9-101"><a id="__codelineno-9-101" name="__codelineno-9-101"></a>        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;   Slots: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;slot_count&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="__span-9-102"><a id="__codelineno-9-102" name="__codelineno-9-102"></a>    <span class="k">else</span><span class="p">:</span>
-</span><span id="__span-9-103"><a id="__codelineno-9-103" name="__codelineno-9-103"></a>        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;❌ Build failed:&quot;</span><span class="p">)</span>
-</span><span id="__span-9-104"><a id="__codelineno-9-104" name="__codelineno-9-104"></a>        <span class="k">for</span> <span class="n">error</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">errors</span><span class="p">:</span>
-</span><span id="__span-9-105"><a id="__codelineno-9-105" name="__codelineno-9-105"></a>            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;   - </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="__span-9-106"><a id="__codelineno-9-106" name="__codelineno-9-106"></a>
-</span><span id="__span-9-107"><a id="__codelineno-9-107" name="__codelineno-9-107"></a>    <span class="c1"># Cleanup temporary files</span>
-</span><span id="__span-9-108"><a id="__codelineno-9-108" name="__codelineno-9-108"></a>    <span class="n">runtime_slot</span><span class="o">.</span><span class="n">unlink</span><span class="p">()</span>
-</span><span id="__span-9-109"><a id="__codelineno-9-109" name="__codelineno-9-109"></a>    <span class="n">app_slot</span><span class="o">.</span><span class="n">unlink</span><span class="p">()</span>
-</span><span id="__span-9-110"><a id="__codelineno-9-110" name="__codelineno-9-110"></a>
-</span><span id="__span-9-111"><a id="__codelineno-9-111" name="__codelineno-9-111"></a>    <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">success</span>
-</span><span id="__span-9-112"><a id="__codelineno-9-112" name="__codelineno-9-112"></a>
-</span><span id="__span-9-113"><a id="__codelineno-9-113" name="__codelineno-9-113"></a><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
-</span><span id="__span-9-114"><a id="__codelineno-9-114" name="__codelineno-9-114"></a>    <span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
-</span><span id="__span-9-115"><a id="__codelineno-9-115" name="__codelineno-9-115"></a>    <span class="n">success</span> <span class="o">=</span> <span class="n">build_custom_package</span><span class="p">()</span>
-</span><span id="__span-9-116"><a id="__codelineno-9-116" name="__codelineno-9-116"></a>    <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span> <span class="k">if</span> <span class="n">success</span> <span class="k">else</span> <span class="mi">1</span><span class="p">)</span>
-</span></code></pre></div></td></tr></table></div>
-<hr />
-<h2 id="operation-chains">Operation Chains<a class="headerlink" href="#operation-chains" title="Permanent link">&para;</a></h2>
-<h3 id="supported-operations">Supported Operations<a class="headerlink" href="#supported-operations" title="Permanent link">&para;</a></h3>
-<p>Operation chains specify how slot data is processed:</p>
-<table>
-<thead>
-<tr>
-<th>Operation</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>tar</code></td>
-<td>Tarball archive</td>
-</tr>
-<tr>
-<td><code>gzip</code></td>
-<td>Gzip compression</td>
-</tr>
-<tr>
-<td><code>tar+gzip</code></td>
-<td>Tar + gzip (most common)</td>
-</tr>
-<tr>
-<td><code>raw</code></td>
-<td>No processing</td>
-</tr>
-</tbody>
-</table>
-<h3 id="custom-operation-chains">Custom Operation Chains<a class="headerlink" href="#custom-operation-chains" title="Permanent link">&para;</a></h3>
-<div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-10-1"> 1</a></span>
-<span class="normal"><a href="#__codelineno-10-2"> 2</a></span>
-<span class="normal"><a href="#__codelineno-10-3"> 3</a></span>
-<span class="normal"><a href="#__codelineno-10-4"> 4</a></span>
-<span class="normal"><a href="#__codelineno-10-5"> 5</a></span>
-<span class="normal"><a href="#__codelineno-10-6"> 6</a></span>
-<span class="normal"><a href="#__codelineno-10-7"> 7</a></span>
-<span class="normal"><a href="#__codelineno-10-8"> 8</a></span>
-<span class="normal"><a href="#__codelineno-10-9"> 9</a></span>
-<span class="normal"><a href="#__codelineno-10-10">10</a></span>
-<span class="normal"><a href="#__codelineno-10-11">11</a></span>
-<span class="normal"><a href="#__codelineno-10-12">12</a></span>
-<span class="normal"><a href="#__codelineno-10-13">13</a></span>
-<span class="normal"><a href="#__codelineno-10-14">14</a></span>
-<span class="normal"><a href="#__codelineno-10-15">15</a></span>
-<span class="normal"><a href="#__codelineno-10-16">16</a></span>
-<span class="normal"><a href="#__codelineno-10-17">17</a></span>
-<span class="normal"><a href="#__codelineno-10-18">18</a></span>
-<span class="normal"><a href="#__codelineno-10-19">19</a></span>
-<span class="normal"><a href="#__codelineno-10-20">20</a></span>
-<span class="normal"><a href="#__codelineno-10-21">21</a></span>
-<span class="normal"><a href="#__codelineno-10-22">22</a></span>
-<span class="normal"><a href="#__codelineno-10-23">23</a></span>
-<span class="normal"><a href="#__codelineno-10-24">24</a></span>
-<span class="normal"><a href="#__codelineno-10-25">25</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">flavor.psp.format_2025.spec</span><span class="w"> </span><span class="kn">import</span> <span class="n">SlotMetadata</span>
-</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2"></a>
-</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3"></a><span class="c1"># Raw data (no compression)</span>
-</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4"></a><span class="n">slot</span> <span class="o">=</span> <span class="n">SlotMetadata</span><span class="p">(</span>
-</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5"></a>    <span class="nb">id</span><span class="o">=</span><span class="s2">&quot;config&quot;</span><span class="p">,</span>
-</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6"></a>    <span class="n">source_path</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="s2">&quot;config.json&quot;</span><span class="p">),</span>
-</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7"></a>    <span class="n">purpose</span><span class="o">=</span><span class="s2">&quot;Configuration&quot;</span><span class="p">,</span>
-</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8"></a>    <span class="n">operations</span><span class="o">=</span><span class="s2">&quot;raw&quot;</span><span class="p">,</span>
-</span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9"></a><span class="p">)</span>
-</span><span id="__span-10-10"><a id="__codelineno-10-10" name="__codelineno-10-10"></a>
-</span><span id="__span-10-11"><a id="__codelineno-10-11" name="__codelineno-10-11"></a><span class="c1"># Tar only (no compression)</span>
-</span><span id="__span-10-12"><a id="__codelineno-10-12" name="__codelineno-10-12"></a><span class="n">slot</span> <span class="o">=</span> <span class="n">SlotMetadata</span><span class="p">(</span>
-</span><span id="__span-10-13"><a id="__codelineno-10-13" name="__codelineno-10-13"></a>    <span class="nb">id</span><span class="o">=</span><span class="s2">&quot;files&quot;</span><span class="p">,</span>
-</span><span id="__span-10-14"><a id="__codelineno-10-14" name="__codelineno-10-14"></a>    <span class="n">source_path</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="s2">&quot;files.tar&quot;</span><span class="p">),</span>
-</span><span id="__span-10-15"><a id="__codelineno-10-15" name="__codelineno-10-15"></a>    <span class="n">purpose</span><span class="o">=</span><span class="s2">&quot;File archive&quot;</span><span class="p">,</span>
-</span><span id="__span-10-16"><a id="__codelineno-10-16" name="__codelineno-10-16"></a>    <span class="n">operations</span><span class="o">=</span><span class="s2">&quot;tar&quot;</span><span class="p">,</span>
-</span><span id="__span-10-17"><a id="__codelineno-10-17" name="__codelineno-10-17"></a><span class="p">)</span>
-</span><span id="__span-10-18"><a id="__codelineno-10-18" name="__codelineno-10-18"></a>
-</span><span id="__span-10-19"><a id="__codelineno-10-19" name="__codelineno-10-19"></a><span class="c1"># Tar + gzip (standard)</span>
-</span><span id="__span-10-20"><a id="__codelineno-10-20" name="__codelineno-10-20"></a><span class="n">slot</span> <span class="o">=</span> <span class="n">SlotMetadata</span><span class="p">(</span>
-</span><span id="__span-10-21"><a id="__codelineno-10-21" name="__codelineno-10-21"></a>    <span class="nb">id</span><span class="o">=</span><span class="s2">&quot;runtime&quot;</span><span class="p">,</span>
-</span><span id="__span-10-22"><a id="__codelineno-10-22" name="__codelineno-10-22"></a>    <span class="n">source_path</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="s2">&quot;runtime.tar.gz&quot;</span><span class="p">),</span>
-</span><span id="__span-10-23"><a id="__codelineno-10-23" name="__codelineno-10-23"></a>    <span class="n">purpose</span><span class="o">=</span><span class="s2">&quot;Python runtime&quot;</span><span class="p">,</span>
-</span><span id="__span-10-24"><a id="__codelineno-10-24" name="__codelineno-10-24"></a>    <span class="n">operations</span><span class="o">=</span><span class="s2">&quot;tar+gzip&quot;</span><span class="p">,</span>
-</span><span id="__span-10-25"><a id="__codelineno-10-25" name="__codelineno-10-25"></a><span class="p">)</span>
-</span></code></pre></div></td></tr></table></div>
-<hr />
-<h2 id="error-handling">Error Handling<a class="headerlink" href="#error-handling" title="Permanent link">&para;</a></h2>
-<h3 id="validation-errors">Validation Errors<a class="headerlink" href="#validation-errors" title="Permanent link">&para;</a></h3>
-<div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-11-1"> 1</a></span>
-<span class="normal"><a href="#__codelineno-11-2"> 2</a></span>
-<span class="normal"><a href="#__codelineno-11-3"> 3</a></span>
-<span class="normal"><a href="#__codelineno-11-4"> 4</a></span>
-<span class="normal"><a href="#__codelineno-11-5"> 5</a></span>
-<span class="normal"><a href="#__codelineno-11-6"> 6</a></span>
-<span class="normal"><a href="#__codelineno-11-7"> 7</a></span>
-<span class="normal"><a href="#__codelineno-11-8"> 8</a></span>
-<span class="normal"><a href="#__codelineno-11-9"> 9</a></span>
-<span class="normal"><a href="#__codelineno-11-10">10</a></span>
-<span class="normal"><a href="#__codelineno-11-11">11</a></span>
-<span class="normal"><a href="#__codelineno-11-12">12</a></span>
-<span class="normal"><a href="#__codelineno-11-13">13</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">flavor.psp.format_2025.builder</span><span class="w"> </span><span class="kn">import</span> <span class="n">build_package</span>
-</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2"></a>
-</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3"></a><span class="n">result</span> <span class="o">=</span> <span class="n">build_package</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">output_path</span><span class="p">)</span>
-</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4"></a>
-</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5"></a><span class="k">if</span> <span class="ow">not</span> <span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="p">:</span>
-</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6"></a>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Build failed with errors:&quot;</span><span class="p">)</span>
-</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7"></a>    <span class="k">for</span> <span class="n">error</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">errors</span><span class="p">:</span>
-</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8"></a>        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  ❌ </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9"></a>
-</span><span id="__span-11-10"><a id="__codelineno-11-10" name="__codelineno-11-10"></a>    <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">warnings</span><span class="p">:</span>
-</span><span id="__span-11-11"><a id="__codelineno-11-11" name="__codelineno-11-11"></a>        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Warnings:&quot;</span><span class="p">)</span>
-</span><span id="__span-11-12"><a id="__codelineno-11-12" name="__codelineno-11-12"></a>        <span class="k">for</span> <span class="n">warning</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">warnings</span><span class="p">:</span>
-</span><span id="__span-11-13"><a id="__codelineno-11-13" name="__codelineno-11-13"></a>            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  ⚠️ </span><span class="si">{</span><span class="n">warning</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span></code></pre></div></td></tr></table></div>
-<h3 id="common-issues">Common Issues<a class="headerlink" href="#common-issues" title="Permanent link">&para;</a></h3>
-<div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-12-1"> 1</a></span>
-<span class="normal"><a href="#__codelineno-12-2"> 2</a></span>
-<span class="normal"><a href="#__codelineno-12-3"> 3</a></span>
-<span class="normal"><a href="#__codelineno-12-4"> 4</a></span>
-<span class="normal"><a href="#__codelineno-12-5"> 5</a></span>
-<span class="normal"><a href="#__codelineno-12-6"> 6</a></span>
-<span class="normal"><a href="#__codelineno-12-7"> 7</a></span>
-<span class="normal"><a href="#__codelineno-12-8"> 8</a></span>
-<span class="normal"><a href="#__codelineno-12-9"> 9</a></span>
-<span class="normal"><a href="#__codelineno-12-10">10</a></span>
-<span class="normal"><a href="#__codelineno-12-11">11</a></span>
-<span class="normal"><a href="#__codelineno-12-12">12</a></span>
-<span class="normal"><a href="#__codelineno-12-13">13</a></span>
-<span class="normal"><a href="#__codelineno-12-14">14</a></span>
-<span class="normal"><a href="#__codelineno-12-15">15</a></span>
-<span class="normal"><a href="#__codelineno-12-16">16</a></span>
-<span class="normal"><a href="#__codelineno-12-17">17</a></span>
-<span class="normal"><a href="#__codelineno-12-18">18</a></span>
-<span class="normal"><a href="#__codelineno-12-19">19</a></span>
-<span class="normal"><a href="#__codelineno-12-20">20</a></span>
-<span class="normal"><a href="#__codelineno-12-21">21</a></span>
-<span class="normal"><a href="#__codelineno-12-22">22</a></span>
-<span class="normal"><a href="#__codelineno-12-23">23</a></span>
-<span class="normal"><a href="#__codelineno-12-24">24</a></span>
-<span class="normal"><a href="#__codelineno-12-25">25</a></span>
-<span class="normal"><a href="#__codelineno-12-26">26</a></span>
-<span class="normal"><a href="#__codelineno-12-27">27</a></span>
-<span class="normal"><a href="#__codelineno-12-28">28</a></span>
-<span class="normal"><a href="#__codelineno-12-29">29</a></span>
-<span class="normal"><a href="#__codelineno-12-30">30</a></span>
-<span class="normal"><a href="#__codelineno-12-31">31</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">validate_spec</span><span class="p">(</span><span class="n">spec</span><span class="p">:</span> <span class="n">BuildSpec</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Validate build specification before building.&quot;&quot;&quot;</span>
-</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3"></a>    <span class="n">errors</span> <span class="o">=</span> <span class="p">[]</span>
-</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4"></a>
-</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5"></a>    <span class="c1"># Check launcher exists</span>
-</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">spec</span><span class="o">.</span><span class="n">launcher_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-</span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7"></a>        <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Launcher not found: </span><span class="si">{</span><span class="n">spec</span><span class="o">.</span><span class="n">launcher_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="__span-12-8"><a id="__codelineno-12-8" name="__codelineno-12-8"></a>
-</span><span id="__span-12-9"><a id="__codelineno-12-9" name="__codelineno-12-9"></a>    <span class="c1"># Check slots</span>
-</span><span id="__span-12-10"><a id="__codelineno-12-10" name="__codelineno-12-10"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">spec</span><span class="o">.</span><span class="n">slots</span><span class="p">:</span>
-</span><span id="__span-12-11"><a id="__codelineno-12-11" name="__codelineno-12-11"></a>        <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;No slots defined&quot;</span><span class="p">)</span>
-</span><span id="__span-12-12"><a id="__codelineno-12-12" name="__codelineno-12-12"></a>
-</span><span id="__span-12-13"><a id="__codelineno-12-13" name="__codelineno-12-13"></a>    <span class="k">for</span> <span class="n">slot</span> <span class="ow">in</span> <span class="n">spec</span><span class="o">.</span><span class="n">slots</span><span class="p">:</span>
-</span><span id="__span-12-14"><a id="__codelineno-12-14" name="__codelineno-12-14"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">slot</span><span class="o">.</span><span class="n">source_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-</span><span id="__span-12-15"><a id="__codelineno-12-15" name="__codelineno-12-15"></a>            <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Slot source not found: </span><span class="si">{</span><span class="n">slot</span><span class="o">.</span><span class="n">source_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="__span-12-16"><a id="__codelineno-12-16" name="__codelineno-12-16"></a>
-</span><span id="__span-12-17"><a id="__codelineno-12-17" name="__codelineno-12-17"></a>    <span class="c1"># Check keys</span>
-</span><span id="__span-12-18"><a id="__codelineno-12-18" name="__codelineno-12-18"></a>    <span class="k">if</span> <span class="n">spec</span><span class="o">.</span><span class="n">keys</span><span class="p">:</span>
-</span><span id="__span-12-19"><a id="__codelineno-12-19" name="__codelineno-12-19"></a>        <span class="k">if</span> <span class="n">spec</span><span class="o">.</span><span class="n">keys</span><span class="o">.</span><span class="n">private_key_path</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">spec</span><span class="o">.</span><span class="n">keys</span><span class="o">.</span><span class="n">private_key_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-</span><span id="__span-12-20"><a id="__codelineno-12-20" name="__codelineno-12-20"></a>            <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Private key not found: </span><span class="si">{</span><span class="n">spec</span><span class="o">.</span><span class="n">keys</span><span class="o">.</span><span class="n">private_key_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="__span-12-21"><a id="__codelineno-12-21" name="__codelineno-12-21"></a>
-</span><span id="__span-12-22"><a id="__codelineno-12-22" name="__codelineno-12-22"></a>    <span class="k">return</span> <span class="n">errors</span>
-</span><span id="__span-12-23"><a id="__codelineno-12-23" name="__codelineno-12-23"></a>
-</span><span id="__span-12-24"><a id="__codelineno-12-24" name="__codelineno-12-24"></a><span class="c1"># Use in build script</span>
-</span><span id="__span-12-25"><a id="__codelineno-12-25" name="__codelineno-12-25"></a><span class="n">errors</span> <span class="o">=</span> <span class="n">validate_spec</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
-</span><span id="__span-12-26"><a id="__codelineno-12-26" name="__codelineno-12-26"></a><span class="k">if</span> <span class="n">errors</span><span class="p">:</span>
-</span><span id="__span-12-27"><a id="__codelineno-12-27" name="__codelineno-12-27"></a>    <span class="k">for</span> <span class="n">error</span> <span class="ow">in</span> <span class="n">errors</span><span class="p">:</span>
-</span><span id="__span-12-28"><a id="__codelineno-12-28" name="__codelineno-12-28"></a>        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;❌ </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="__span-12-29"><a id="__codelineno-12-29" name="__codelineno-12-29"></a>    <span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-</span><span id="__span-12-30"><a id="__codelineno-12-30" name="__codelineno-12-30"></a>
-</span><span id="__span-12-31"><a id="__codelineno-12-31" name="__codelineno-12-31"></a><span class="n">result</span> <span class="o">=</span> <span class="n">build_package</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">output_path</span><span class="p">)</span>
-</span></code></pre></div></td></tr></table></div>
-<hr />
-<h2 id="best-practices">Best Practices<a class="headerlink" href="#best-practices" title="Permanent link">&para;</a></h2>
-<div class="admonition tip">
-<p class="admonition-title">Slot Organization</p>
-<ul>
-<li>Keep runtime and application code in separate slots</li>
-<li>Use descriptive slot IDs and purposes</li>
-<li>Apply appropriate operations for each slot type</li>
-</ul>
+<p>The FlavorPack Builder API provides tools for creating PSPF packages programmatically.</p>
+<h2 id="pspfbuilder">PSPFBuilder<a class="headerlink" href="#pspfbuilder" title="Permanent link">&para;</a></h2>
+
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="flavor.psp.format_2025.pspf_builder.PSPFBuilder" class="doc doc-heading">
+            <span class="doc doc-object-name doc-class-name">flavor.psp.format_2025.pspf_builder.PSPFBuilder</span>
+
+
+<a href="#flavor.psp.format_2025.pspf_builder.PSPFBuilder" class="headerlink" title="Permanent link">&para;</a></h2>
+<div class="language-python doc-signature highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">PSPFBuilder</span><span class="p">(</span><span class="n">spec</span><span class="p">:</span> <span class="n">BuildSpec</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents first">
+
+
+        <p>Immutable fluent builder interface for PSPF packages.</p>
+<p>Provides a chainable API for constructing build specifications.</p>
+
+        <p>Initialize with optional starting specification.</p>
+
+
+
+
+
+
+
+
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+<h3 id="flavor.psp.format_2025.pspf_builder.PSPFBuilder-functions">Functions<a href="#flavor.psp.format_2025.pspf_builder.PSPFBuilder-functions" class="headerlink" title="Permanent link">&para;</a></h3>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="flavor.psp.format_2025.pspf_builder.PSPFBuilder.add_slot" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">add_slot</span>
+
+
+<a href="#flavor.psp.format_2025.pspf_builder.PSPFBuilder.add_slot" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="language-python doc-signature highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">add_slot</span><span class="p">(</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="nb">id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">data</span><span class="p">:</span> <span class="nb">bytes</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">purpose</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;data&quot;</span><span class="p">,</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">lifecycle</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;runtime&quot;</span><span class="p">,</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="n">operations</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;gzip&quot;</span><span class="p">,</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="n">target</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="n">permissions</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PSPFBuilder</span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Add a slot to the package.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>id</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Slot identifier</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>data</code>
+            </td>
+            <td>
+                  <code><span title="bytes">bytes</span> | <span title="str">str</span> | <span title="pathlib.Path">Path</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Slot data (bytes, string, or path to file/directory)</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>purpose</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Slot purpose (data, code, config, media)</p>
+              </div>
+            </td>
+            <td>
+                  <code>&#39;data&#39;</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>lifecycle</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Slot lifecycle (runtime, cached, temporary)</p>
+              </div>
+            </td>
+            <td>
+                  <code>&#39;runtime&#39;</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>operations</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Operation chain (e.g., "tar.gz", "TAR|GZIP")</p>
+              </div>
+            </td>
+            <td>
+                  <code>&#39;gzip&#39;</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>target</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span> | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Target location relative to workenv (default: None)</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>permissions</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span> | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Unix permissions as octal string (e.g., "0755")</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
 </div>
-<div class="admonition tip">
-<p class="admonition-title">Performance</p>
-<ul>
-<li>Use <code>strip_launcher=True</code> for production</li>
-<li>Choose appropriate compression level</li>
-<li>Pre-compress large data before packaging</li>
-</ul>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="flavor.psp.format_2025.pspf_builder.PSPFBuilder.build" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">build</span>
+
+
+<a href="#flavor.psp.format_2025.pspf_builder.PSPFBuilder.build" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="language-python doc-signature highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">build</span><span class="p">(</span><span class="n">output_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BuildResult</span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Build the package.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>output_path</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span> | <span title="pathlib.Path">Path</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Path where package should be written</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="flavor.psp.format_2025.spec.BuildResult">BuildResult</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>BuildResult with success status and any errors</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
 </div>
-<div class="admonition tip">
-<p class="admonition-title">Validation</p>
-<ul>
-<li>Always validate specs before building</li>
-<li>Check file existence and permissions</li>
-<li>Verify keys are accessible</li>
-</ul>
-</div>
-<div class="admonition tip">
-<p class="admonition-title">Error Handling</p>
-<ul>
-<li>Check <code>BuildResult.success</code> before using package</li>
-<li>Log all errors and warnings</li>
-<li>Clean up temporary files on failure</li>
-</ul>
-</div>
-<hr />
+
+
+
+  </div>
+
+    </div>
+
+</div><h2 id="usage-example">Usage Example<a class="headerlink" href="#usage-example" title="Permanent link">&para;</a></h2>
+<div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1"> 1</a></span>
+<span class="normal"><a href="#__codelineno-0-2"> 2</a></span>
+<span class="normal"><a href="#__codelineno-0-3"> 3</a></span>
+<span class="normal"><a href="#__codelineno-0-4"> 4</a></span>
+<span class="normal"><a href="#__codelineno-0-5"> 5</a></span>
+<span class="normal"><a href="#__codelineno-0-6"> 6</a></span>
+<span class="normal"><a href="#__codelineno-0-7"> 7</a></span>
+<span class="normal"><a href="#__codelineno-0-8"> 8</a></span>
+<span class="normal"><a href="#__codelineno-0-9"> 9</a></span>
+<span class="normal"><a href="#__codelineno-0-10">10</a></span>
+<span class="normal"><a href="#__codelineno-0-11">11</a></span>
+<span class="normal"><a href="#__codelineno-0-12">12</a></span>
+<span class="normal"><a href="#__codelineno-0-13">13</a></span>
+<span class="normal"><a href="#__codelineno-0-14">14</a></span>
+<span class="normal"><a href="#__codelineno-0-15">15</a></span>
+<span class="normal"><a href="#__codelineno-0-16">16</a></span>
+<span class="normal"><a href="#__codelineno-0-17">17</a></span>
+<span class="normal"><a href="#__codelineno-0-18">18</a></span>
+<span class="normal"><a href="#__codelineno-0-19">19</a></span>
+<span class="normal"><a href="#__codelineno-0-20">20</a></span>
+<span class="normal"><a href="#__codelineno-0-21">21</a></span>
+<span class="normal"><a href="#__codelineno-0-22">22</a></span>
+<span class="normal"><a href="#__codelineno-0-23">23</a></span>
+<span class="normal"><a href="#__codelineno-0-24">24</a></span>
+<span class="normal"><a href="#__codelineno-0-25">25</a></span>
+<span class="normal"><a href="#__codelineno-0-26">26</a></span>
+<span class="normal"><a href="#__codelineno-0-27">27</a></span>
+<span class="normal"><a href="#__codelineno-0-28">28</a></span>
+<span class="normal"><a href="#__codelineno-0-29">29</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">flavor.psp.format_2025.pspf_builder</span><span class="w"> </span><span class="kn">import</span> <span class="n">PSPFBuilder</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4"></a><span class="c1"># Create a new package builder</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5"></a><span class="n">builder</span> <span class="o">=</span> <span class="n">PSPFBuilder</span><span class="p">()</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6"></a>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7"></a><span class="c1"># Add launcher binary</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8"></a><span class="n">launcher_data</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;dist/bin/flavor-rs-launcher&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read_bytes</span><span class="p">()</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9"></a><span class="n">builder</span><span class="o">.</span><span class="n">add_launcher</span><span class="p">(</span><span class="n">launcher_data</span><span class="p">)</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10"></a>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11"></a><span class="c1"># Add metadata</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12"></a><span class="n">metadata</span> <span class="o">=</span> <span class="p">{</span>
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13"></a>    <span class="s2">&quot;package&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;myapp&quot;</span><span class="p">,</span> <span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="s2">&quot;1.0.0&quot;</span><span class="p">},</span>
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14"></a>    <span class="s2">&quot;execution&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;command&quot;</span><span class="p">:</span> <span class="s2">&quot;python </span><span class="si">{workenv}</span><span class="s2">/bin/myapp&quot;</span><span class="p">}</span>
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15"></a><span class="p">}</span>
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16"></a><span class="n">builder</span><span class="o">.</span><span class="n">add_metadata</span><span class="p">(</span><span class="n">metadata</span><span class="p">)</span>
+</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17"></a>
+</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18"></a><span class="c1"># Add a slot</span>
+</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19"></a><span class="n">slot_data</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;app.tar.gz&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read_bytes</span><span class="p">()</span>
+</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20"></a><span class="n">builder</span><span class="o">.</span><span class="n">add_slot</span><span class="p">(</span>
+</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21"></a>    <span class="n">slot_id</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+</span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22"></a>    <span class="n">data</span><span class="o">=</span><span class="n">slot_data</span><span class="p">,</span>
+</span><span id="__span-0-23"><a id="__codelineno-0-23" name="__codelineno-0-23"></a>    <span class="n">operations</span><span class="o">=</span><span class="mh">0x1001</span><span class="p">,</span>  <span class="c1"># tar + gzip</span>
+</span><span id="__span-0-24"><a id="__codelineno-0-24" name="__codelineno-0-24"></a>    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;app-code&quot;</span>
+</span><span id="__span-0-25"><a id="__codelineno-0-25" name="__codelineno-0-25"></a><span class="p">)</span>
+</span><span id="__span-0-26"><a id="__codelineno-0-26" name="__codelineno-0-26"></a>
+</span><span id="__span-0-27"><a id="__codelineno-0-27" name="__codelineno-0-27"></a><span class="c1"># Build and write package</span>
+</span><span id="__span-0-28"><a id="__codelineno-0-28" name="__codelineno-0-28"></a><span class="n">package_data</span> <span class="o">=</span> <span class="n">builder</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+</span><span id="__span-0-29"><a id="__codelineno-0-29" name="__codelineno-0-29"></a><span class="n">Path</span><span class="p">(</span><span class="s2">&quot;myapp.psp&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">write_bytes</span><span class="p">(</span><span class="n">package_data</span><span class="p">)</span>
+</span></code></pre></div></td></tr></table></div>
 <h2 id="see-also">See Also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
 <ul>
-<li><a href="../packaging/">Packaging API</a> - High-level packaging functions</li>
-<li><a href="../reader/">Reader API</a> - Package reading</li>
-<li><a href="../crypto/">Crypto API</a> - Cryptographic operations</li>
-<li><a href="../../guide/concepts/pspf-format/">PSPF Format</a> - Format specification</li>
+<li><a href="../reader/">Reader API</a> - Reading and extracting packages</li>
+<li><a href="../crypto/">Crypto API</a> - Signature generation and verification</li>
+<li><a href="../../guide/packaging/">Packaging Guide</a> - High-level packaging workflow</li>
 </ul>
-<hr />
-<p><strong>For complete API reference, see the source code:</strong>
-<code>src/flavor/psp/format_2025/builder.py</code></p>
 
 
 
