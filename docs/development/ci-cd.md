@@ -6,13 +6,39 @@ The FlavorPack CI/CD system consists of multiple independent GitHub Actions work
 
 ## Workflow Architecture
 
+```mermaid
+graph LR
+    A[01-helper-prep] --> B[Helper Artifacts]
+    B --> C[02-pretaster]
+    B --> D[03-flavor]
+    B --> E[04-taster]
+
+    C --> F[Cross-Language Tests]
+    D --> G[Python API Tests]
+    E --> H[Integration Tests]
+
+    F --> I{All Pass?}
+    G --> I
+    H --> I
+
+    I -->|Yes| J[✅ Ready for Release]
+    I -->|No| K[❌ Fix Issues]
+
+    style A fill:#e3f2fd
+    style C fill:#fff3e0
+    style D fill:#fff3e0
+    style E fill:#fff3e0
+    style J fill:#e8f5e9
+    style K fill:#ffebee
+```
+
 ### Design Principles
 
 1. **Manual Triggering**: All workflows use `workflow_dispatch` for manual control
 2. **Script Delegation**: Complex logic lives in `.github/scripts/`, not in workflow YAML
 3. **Artifact Sharing**: Workflows share build artifacts rather than calling each other
-4. **Platform Coverage**: Multi-platform support (Linux, macOS, Windows*) 
-   
+4. **Platform Coverage**: Multi-platform support (Linux, macOS, Windows*)
+
    *Windows temporarily disabled due to UTF-8 encoding issues
 
 ## Main Workflows

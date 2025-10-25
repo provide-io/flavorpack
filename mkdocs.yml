@@ -18,29 +18,29 @@ theme:
   language: en
   logo: assets/images/logo.svg
   favicon: assets/images/logo.svg
-  
+
   palette:
     # Light mode
     - media: "(prefers-color-scheme: light)"
       scheme: default
-      primary: black
-      accent: deep purple
+      primary: indigo
+      accent: indigo
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
-    
+
     # Dark mode
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
       primary: indigo
-      accent: deep purple
+      accent: indigo
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
-  
+
   font:
-    text: Poppins
-    code: Fira Code
+    text: Roboto
+    code: Roboto Mono
   
   features:
     # Navigation
@@ -88,18 +88,21 @@ plugins:
         - en
   
   - autorefs
-  
+
+  - macros:
+      include_dir: ../provide-foundry/shared-theme/data
+
   # mkdocstrings disabled due to hang with flavorpack's complex import structure
   # API documentation will be generated manually to avoid import loops
-  
+
   # gen-files disabled - gen_ref_pages.py causes hangs by importing flavorpack modules
   # - gen-files:
   #     scripts:
   #       - docs/gen_ref_pages.py
-  
+
   - literate-nav:
       nav_file: SUMMARY.md
-  
+
   - section-index
   
 
@@ -163,7 +166,7 @@ extra:
   version:
     provider: mike
     default: latest
-  
+
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/provide-io/flavorpack
@@ -171,10 +174,15 @@ extra:
       link: https://pypi.org/project/flavorpack/
     - icon: fontawesome/solid/globe
       link: https://provide.io
-  
+
   analytics:
     provider: google
     property: G-XXXXXXXXXX
+
+  # Announcement bar
+  announcement:
+    text: "📦 FlavorPack documentation has been modernized with Foundry integration guides, comprehensive cookbook examples, and professional theming!"
+    link: /foundry/
     
   consent:
     title: Cookie consent
@@ -185,15 +193,19 @@ extra:
       make our documentation better.
 
 extra_css:
-  - stylesheets/extra.css
+  - ../provide-foundry/shared-theme/stylesheets/provide-theme.css
+  - ../provide-foundry/shared-theme/stylesheets/termynal.css
+  - stylesheets/extra.css  # Project-specific overrides
 
 extra_javascript:
   - https://unpkg.com/mermaid@10/dist/mermaid.min.js
-  - javascripts/mermaid-init.js
+  - ../provide-foundry/shared-theme/javascripts/mermaid-init.js
+  - ../provide-foundry/shared-theme/javascripts/termynal.js
+  - ../provide-foundry/shared-theme/javascripts/custom.js
 
 nav:
   - Home: index.md
-  
+
   # SECTION 1: Getting Started (for new users)
   - Getting Started:
     - Overview: getting-started/index.md
@@ -201,18 +213,25 @@ nav:
     - Quick Start: getting-started/quickstart.md
     - First Package: getting-started/first-package.md
     - Examples: getting-started/examples.md
+
+  # Foundry Ecosystem Context
+  - Provide Foundry:
+    - foundry/index.md
+    - FlavorPack's Role: foundry/architecture.md
+    - Design Principles: foundry/principles.md
+    - Roadmap: foundry/roadmap.md
   
   # SECTION 2: User Guide (concepts and how-to)
   - User Guide:
     - Overview: guide/index.md
-    
+
     - Core Concepts:
       - guide/concepts/index.md
       - PSPF Format: guide/concepts/pspf-format.md
       - Package Structure: guide/concepts/package-structure.md
       - Work Environments: guide/concepts/workenv.md
       - Security Model: guide/concepts/security.md
-    
+
     - Building Packages:
       - guide/packaging/index.md
       - Python Applications: guide/packaging/python.md
@@ -220,6 +239,10 @@ nav:
       - Configuration: guide/packaging/configuration.md
       - Signing Packages: guide/packaging/signing.md
       - Platform Support: guide/packaging/platforms.md
+
+    - Foundry Integration:
+      - wrknv: guide/integration/wrknv.md
+      - pyvider: guide/integration/pyvider.md
     
     - Using Packages:
       - guide/usage/index.md
@@ -248,17 +271,11 @@ nav:
       - cookbook/examples/index.md
       - CLI Tools: cookbook/examples/cli-tool.md
       - Web Applications: cookbook/examples/web-app.md
-      - Data Pipelines: cookbook/examples/data-pipeline.md
-      - Microservices: cookbook/examples/microservices.md
-      - Machine Learning: cookbook/examples/ml-models.md
-    
+
     - Recipes:
       - cookbook/recipes/index.md
       - Docker Integration: cookbook/recipes/docker.md
       - CI/CD Pipelines: cookbook/recipes/ci-cd.md
-      - Multi-Platform Builds: cookbook/recipes/multi-platform.md
-      - Cloud Deployment: cookbook/recipes/cloud.md
-      - Testing Strategies: cookbook/recipes/testing.md
   
   # SECTION 5: Reference (specs, troubleshooting, development)
   - Reference:

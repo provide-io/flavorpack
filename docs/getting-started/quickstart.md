@@ -37,9 +37,10 @@ FlavorPack uses native Go and Rust components for optimal performance:
 # Build all helpers (launchers and builders)
 make build-helpers
 
-# Or build individually
-cd helpers
+# Or use the build script directly
 ./build.sh
+
+# Built binaries will be in dist/bin/ with platform suffixes
 ```
 
 !!! tip "Pre-built binaries"
