@@ -2,6 +2,15 @@
 
 Complete guide to packaging Python applications with FlavorPack, including dependencies, virtual environments, and Python-specific optimizations.
 
+!!! tip "Prerequisites"
+    Before packaging Python apps, ensure you have:
+
+    - [FlavorPack installed](../../getting-started/installation.md) from source
+    - [Helpers built](../usage/cli.md#helpers-build) (`make build-helpers`)
+    - A Python project with valid `pyproject.toml`
+
+    See [System Requirements](../../reference/requirements.md) for detailed version information.
+
 !!! warning "Alpha Release - Many Features Not Yet Implemented"
     **This guide shows both working features and planned future features.**
 

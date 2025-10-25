@@ -62,3 +62,6 @@ html/
 
 # Synced theme files (source: provide-foundry/shared-theme/)
 docs/.shared-theme/
+
+# MkDocs generated site
+site/

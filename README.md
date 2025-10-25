@@ -27,7 +27,7 @@
 
 - Python 3.11 or higher
 - UV package manager (`curl -LsSf https://astral.sh/uv/install.sh | sh`)
-- Go 1.23+ and Rust 1.85+ (for building helpers)
+- Go 1.23+ and Rust 1.85+ (for building helpers - see `src/flavor-go/go.mod` and `src/flavor-rs/Cargo.toml`)
 
 ### Installation (Source Only)
 
