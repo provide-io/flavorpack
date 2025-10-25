@@ -400,7 +400,7 @@ FLAVOR_LOG_LEVEL=debug ./package.psp
 
 ## Related Documentation
 
-- [Binary Layout](../../spec/binary-layout.md) - Technical format details
-- [Slots](../../spec/slots.md) - Slot system specification
-- [Metadata](../../spec/metadata.md) - Metadata structure
+- [Binary Layout](../../reference/spec/pspf-2025.md#binary-layout) - Technical format details
+- [Slots](../../reference/spec/pspf-2025.md#slots) - Slot system specification
+- [Metadata](../../reference/spec/pspf-2025.md#metadata) - Metadata structure
 - [Building Packages](../../guide/packaging/index.md) - Build guide

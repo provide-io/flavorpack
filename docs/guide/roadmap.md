@@ -713,5 +713,5 @@ Feature requests and discussions are welcome in the [GitHub Discussions](https:/
 
 - [Current Documentation](../guide/index.md) - What's available now
 - [PSPF Specification](../reference/spec/fep-0001-core-format-and-operation-chains.md) - Format details
-- [Future Enhancement Proposals](../reference/spec/future/) - Detailed FEPs
+- [Future Enhancement Proposals](../reference/spec/future/index.md) - Detailed FEPs
 - [Changelog](../community/changelog.md) - What's been implemented

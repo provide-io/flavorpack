@@ -29,9 +29,9 @@ For bug reports and feature requests.
 
 Search the documentation first.
 
-- **[User Guide](../guide/)** - How to use FlavorPack
-- **[Cookbook](../cookbook/)** - Practical examples
-- **[Troubleshooting](../troubleshooting/)** - Common issues
+- **[User Guide](../guide/index.md)** - How to use FlavorPack
+- **[Cookbook](../cookbook/index.md)** - Practical examples
+- **[Troubleshooting](../troubleshooting/index.md)** - Common issues
 - **[FAQ](../troubleshooting/faq.md)** - Frequently asked questions
 
 ## Before Asking

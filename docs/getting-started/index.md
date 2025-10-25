@@ -63,9 +63,9 @@ Just want to package a Python app quickly?
 Want to understand how everything works?
 
 1. [Installation](installation.md) - Set up your environment
-2. [Core Concepts](../guide/concepts/) - Understand PSPF format and architecture
+2. [Core Concepts](../guide/concepts/index.md) - Understand PSPF format and architecture
 3. [First Package](first-package.md) - Build a complete package with best practices
-4. [API Reference](../api/) - Programmatic package creation
+4. [API Reference](../api/index.md) - Programmatic package creation
 
 ### For DevOps Engineers
 
@@ -158,7 +158,7 @@ Need to integrate FlavorPack into CI/CD?
 
     Understand the PSPF format, slots, operation chains, and security model.
 
-    [:octicons-arrow-right-24: Learn Concepts](../guide/concepts/)
+    [:octicons-arrow-right-24: Learn Concepts](../guide/concepts/index.md)
 
 -   :material-code-braces:{ .lg .middle } **Examples**
 

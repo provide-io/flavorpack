@@ -368,5 +368,5 @@ flavor.register_launcher(
 ## Learn More
 
 - **[Design Principles](principles.md)** - Foundry-wide design philosophy
-- **[Development Guide](../development/)** - Contribute to FlavorPack
+- **[Development Guide](../development/index.md)** - Contribute to FlavorPack
 - **[Provide Foundry](https://foundry.provide.io)** - Complete ecosystem documentation

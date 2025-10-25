@@ -551,7 +551,7 @@ chmod -R 555 ~/.cache/flavor/workenv/
 - [Environment Variables](environment.md) - All environment variables
 - [Work Environments](../concepts/workenv.md) - Cache concepts
 - [CLI Reference](cli.md) - Cache commands
-- [Troubleshooting](../../troubleshooting/) - Common issues
+- [Troubleshooting](../../troubleshooting/index.md) - Common issues
 
 ---
 

@@ -1,0 +1,111 @@
+# People involved in the provide.io ecosystem
+# Team members, maintainers, and key contributors
+
+# Core Team
+core_team:
+  - name: Tim Perkins
+    role: Lead Developer & Architect
+    github: timperkins
+    email: code@tim.life
+    avatar: https://github.com/timperkins.png
+    bio: Lead architect and primary developer of the provide.io ecosystem
+    focus_areas:
+      - Foundation telemetry
+      - PyVider framework
+      - Developer tooling
+      - Documentation
+
+  - name: provide.io Engineering
+    role: Core Engineering Team
+    github: provide-io
+    email: engineering@provide.io
+    avatar: https://github.com/provide-io.png
+    bio: Core engineering team maintaining the provide.io ecosystem
+    focus_areas:
+      - Infrastructure
+      - Release management
+      - Community support
+      - Ecosystem coordination
+
+# Project Maintainers
+maintainers:
+  foundation_layer:
+    - project: provide-foundation
+      maintainer: Tim Perkins
+      description: Foundation telemetry and logging infrastructure
+
+    - project: provide-testkit
+      maintainer: Tim Perkins
+      description: Testing utilities and fixtures
+
+  framework_layer:
+    - project: pyvider
+      maintainer: Tim Perkins
+      description: Terraform provider framework
+
+    - project: pyvider-cty
+      maintainer: Tim Perkins
+      description: CTY type system for Python
+
+    - project: pyvider-hcl
+      maintainer: Tim Perkins
+      description: HCL parsing and manipulation
+
+    - project: pyvider-rpcplugin
+      maintainer: Tim Perkins
+      description: RPC plugin framework
+
+  tools_layer:
+    - project: flavorpack
+      maintainer: Tim Perkins
+      description: PSPF/2025 packaging system
+
+    - project: wrknv
+      maintainer: Tim Perkins
+      description: Work environment management
+
+    - project: plating
+      maintainer: Tim Perkins
+      description: Documentation generation
+
+    - project: tofusoup
+      maintainer: Tim Perkins
+      description: Conformance testing framework
+
+    - project: supsrc
+      maintainer: Tim Perkins
+      description: Git workflow automation
+
+# Community Contributors
+# Add community contributors here as they emerge
+community_contributors: []
+
+# Acknowledgments
+acknowledgments:
+  - category: Inspiration
+    credits:
+      - name: FastAPI
+        reason: Documentation style and Termynal.js
+        url: https://fastapi.tiangolo.com/
+
+      - name: Ines Montani
+        reason: Original Termynal.js implementation
+        url: https://github.com/ines/termynal
+
+      - name: Material for MkDocs
+        reason: Excellent documentation framework
+        url: https://squidfunk.github.io/mkdocs-material/
+
+  - category: Technologies
+    credits:
+      - name: structlog
+        reason: Structured logging foundation
+        url: https://www.structlog.org/
+
+      - name: HashiCorp
+        reason: Terraform and plugin protocol
+        url: https://www.hashicorp.com/
+
+      - name: Astral
+        reason: uv package manager
+        url: https://astral.sh/

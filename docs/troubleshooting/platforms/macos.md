@@ -233,7 +233,7 @@ sudo dtruss ./myapp.psp 2>&1 | head -100
 ## Getting Help
 
 - Check [Common Issues](../common.md) for cross-platform problems
-- Review [Security Troubleshooting](../security.md) for signing issues
+- Review [Security Troubleshooting](../../guide/concepts/security.md) for signing issues
 - Visit [Community Support](../../community/support.md) for additional help
 
 ## Related Documentation
