@@ -275,18 +275,16 @@ This will enable integration with existing PKI infrastructure and code signing c
 ### Environment Variables
 
 ```bash
-# Signature verification
-FLAVOR_VERIFY_SIGNATURES=1      # Enable verification (default)
-FLAVOR_VALIDATION=none          # Skip verification (DANGER!)
-
-# Key management
-FLAVOR_KEY_PATH=/secure/keys    # Key directory
-FLAVOR_KEY_SEED=secret          # Deterministic seed
+# Validation level (testing only)
+FLAVOR_VALIDATION=none          # Skip verification (DANGER! Never use in production)
 
 # Logging
-FLAVOR_AUDIT_LOG=/var/log/flavor.log  # Security audit log
 FLAVOR_LOG_LEVEL=debug          # Verbose security logging
+FOUNDATION_LOG_LEVEL=debug      # Python component logging
 ```
+
+!!! warning "Security Configuration"
+    For signature verification configuration, use CLI flags (`--private-key`, `--public-key`, `--key-seed`) rather than environment variables. See the [Environment Variables Guide](../../guide/usage/environment.md) for the complete list of available variables.
 
 ### Configuration File
 
@@ -394,7 +392,7 @@ logger.info("security.extraction",
 
 3. **Verify after building**
    ```bash
-   flavor verify package.psp --deep
+   flavor verify package.psp
    ```
 
 4. **Document security requirements**
@@ -408,7 +406,8 @@ logger.info("security.extraction",
 
 1. **Always verify packages**
    ```bash
-   flavor verify package.psp before running
+   # Verify before running
+   flavor verify package.psp
    ```
 
 2. **Check key fingerprints**
