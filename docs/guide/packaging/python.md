@@ -931,9 +931,27 @@ persistent = true
 port = 8000
 ```
 
-## Related Documentation
+## Related Pages
 
-- [Package Configuration](configuration.md) - Full configuration reference
-- [Manifest Reference](manifest.md) - pyproject.toml specification
-- [Building Packages](index.md) - General packaging guide
-- [Troubleshooting](../../troubleshooting/index.md) - Common issues and solutions
+**Configuration**:
+
+- 📋 [Package Configuration](configuration.md) - Full configuration reference
+- 📝 [Manifest Reference](manifest.md) - pyproject.toml specification
+- 🔒 [Package Signing](signing.md) - Add cryptographic signatures
+- 🌍 [Platform Support](platforms.md) - Multi-platform packaging
+
+**Workflow**:
+
+- 🏗️ [Building Packages](index.md) - General packaging guide
+- 📦 [CLI Reference](../usage/cli.md#pack) - `flavor pack` command details
+- ✅ [Verification](../usage/cli.md#verify) - Verify package integrity
+
+**Examples**:
+
+- 💻 [CLI Tool Example](../../cookbook/examples/cli-tool.md) - Package a CLI application
+- 🌐 [Web App Example](../../cookbook/examples/web-app.md) - Package a Flask/FastAPI app
+
+**Help**:
+
+- 🐛 [Troubleshooting](../../troubleshooting/common.md) - Common issues and solutions
+- 📝 [FAQ](../../troubleshooting/faq.md) - Frequently asked questions

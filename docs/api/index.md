@@ -165,10 +165,24 @@ flavor/
 
 ---
 
-## Quick Links
+## Related Pages
 
-- [User Guide](../guide/index.md) - Learn how to use FlavorPack
-- [Cookbook](../cookbook/index.md) - Practical examples and recipes
-- [CLI Reference](../guide/usage/cli.md) - Command-line interface documentation
+**API Documentation**:
+
+- 📦 [Packaging API](packaging.md) - High-level packaging orchestration
+- 🔨 [Builder API](builder.md) - PSPF package building
+- 📖 [Reader API](reader.md) - Package inspection and extraction
+- 🔐 [Cryptography API](crypto.md) - Ed25519 signing and verification
+
+**User Documentation**:
+
+- 📚 [User Guide](../guide/index.md) - Learn how to use FlavorPack
+- 🍳 [Cookbook](../cookbook/index.md) - Practical examples and recipes
+- 📋 [CLI Reference](../guide/usage/cli.md) - Command-line interface documentation
+
+**Development**:
+
+- 🏗️ [Architecture](../development/architecture.md) - System architecture
+- 🛠️ [Contributing](../development/contributing.md) - Development guide
 
 **For source code:** [GitHub Repository](https://github.com/provide-io/flavorpack)

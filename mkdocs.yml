@@ -298,6 +298,7 @@ nav:
   # SECTION 5: Reference (specs, troubleshooting, development)
   - Reference:
     - Overview: resources/index.md
+    - System Requirements: reference/requirements.md
 
     - Specification:
       - PSPF 2025: reference/spec/pspf-2025.md
