@@ -266,34 +266,137 @@ operations = "tar.gz"
 
 ### Build Process
 
-1. **Parse Manifest**: Read pyproject.toml
-2. **Create Virtual Environment**: Install dependencies
-3. **Prepare Slots**: Compress and organize content
-4. **Generate Metadata**: Create JSON manifest
-5. **Sign Package**: Generate Ed25519 signature
-6. **Assemble Binary**: Combine all components
-7. **Add Magic Trailer**: Finalize package
+The packaging process transforms your Python application into a self-contained executable:
+
+```mermaid
+flowchart TD
+    Start([flavor pack]) --> ParseManifest[1. Parse pyproject.toml]
+    ParseManifest --> SelectHelpers{2. Select Helpers}
+
+    SelectHelpers --> LauncherChoice[Choose Launcher]
+    SelectHelpers --> BuilderChoice[Choose Builder]
+
+    LauncherChoice --> BuildEnv[3. Build Python Environment]
+    BuilderChoice --> BuildEnv
+
+    BuildEnv --> InstallDeps[Install dependencies with UV]
+    InstallDeps --> PrepareSlots[4. Prepare Content Slots]
+
+    PrepareSlots --> Slot0[Slot 0: Python venv]
+    PrepareSlots --> Slot1[Slot 1: App code]
+    PrepareSlots --> SlotN[Slot N: Resources]
+
+    Slot0 --> CompressSlots[5. Compress & Hash]
+    Slot1 --> CompressSlots
+    SlotN --> CompressSlots
+
+    CompressSlots --> GenMetadata[6. Generate JSON Metadata]
+    GenMetadata --> SignPkg{7. Sign Package?}
+
+    SignPkg -->|With Keys| GenKeys[Use provided keys]
+    SignPkg -->|Auto| AutoKeys[Generate ephemeral keys]
+
+    GenKeys --> CreateSig[Create Ed25519 signature]
+    AutoKeys --> CreateSig
+
+    CreateSig --> Assemble[8. Assemble Binary]
+    Assemble --> AddLauncher[Prepend launcher binary]
+    AddLauncher --> AddIndex[Add index block]
+    AddIndex --> AddMetadata[Add compressed metadata]
+    AddMetadata --> AddSlots[Append slot data]
+    AddSlots --> AddTrailer[9. Add magic trailer 📦🪄]
+
+    AddTrailer --> Verify{Verify?}
+    Verify -->|Yes| RunVerify[flavor verify]
+    Verify -->|No| Done
+    RunVerify --> Done([✅ Package complete])
+
+    style Start fill:#e1f5fe
+    style Done fill:#c8e6c9
+    style BuildEnv fill:#fff9c4
+    style SignPkg fill:#f3e5f5
+    style Assemble fill:#ffe0b2
+```
+
+**Step Details:**
+
+1. **Parse Manifest**: Read and validate `pyproject.toml` configuration
+2. **Select Helpers**: Choose appropriate launcher/builder for target platform
+3. **Build Environment**: Create isolated Python virtual environment with UV
+4. **Prepare Slots**: Organize content into numbered slots (0=runtime, 1=app, 2+=resources)
+5. **Compress & Hash**: Apply operations (tar.gz, etc.) and compute SHA-256 checksums
+6. **Generate Metadata**: Create JSON manifest with package info and slot descriptors
+7. **Sign Package**: Generate Ed25519 signature for integrity verification
+8. **Assemble Binary**: Combine launcher + index + metadata + slots into single file
+9. **Add Trailer**: Append magic bytes (`📦🪄`) and CRC32 for format identification
 
 ## Execution Flow
 
 ### Package Startup
 
+When a user runs a `.psp` package, the launcher orchestrates extraction and execution:
+
 ```mermaid
-graph TD
-    A[User runs package.psp] --> B[Launcher starts]
-    B --> C[Read index block]
-    C --> D[Verify signature]
-    D --> E[Read metadata]
-    E --> F[Check cache]
-    F --> G{Cached?}
-    G -->|Yes| H[Use cached env]
-    G -->|No| I[Extract slots]
-    I --> J[Create work env]
-    J --> H
-    H --> K[Execute Python]
-    K --> L[Application runs]
-    L --> M[Cleanup temp files]
+flowchart TD
+    Start([User: ./myapp.psp]) --> OSExec[OS loads executable]
+    OSExec --> LauncherInit[Launcher initializes]
+
+    LauncherInit --> FindIndex[Seek to EOF - 16 bytes]
+    FindIndex --> ReadMagic{Magic bytes<br/>📦🪄 present?}
+
+    ReadMagic -->|No| Error1[❌ Invalid package]
+    ReadMagic -->|Yes| ReadIndexBlock[Read 8KB index block]
+
+    ReadIndexBlock --> VerifySig{Verify Ed25519<br/>signature?}
+    VerifySig -->|Invalid| Error2[❌ Signature failed]
+    VerifySig -->|Valid| ReadMeta[Decompress metadata JSON]
+
+    ReadMeta --> CalcCacheID[Calculate package ID<br/>SHA-256 of metadata]
+    CalcCacheID --> CheckCache{Work environment<br/>exists in cache?}
+
+    CheckCache -->|Yes| ValidateCache{Cache<br/>valid?}
+    CheckCache -->|No| CreateWorkDir[Create cache directory]
+
+    ValidateCache -->|Invalid| CreateWorkDir
+    ValidateCache -->|Valid| SetEnv[Set FLAVOR_WORKENV]
+
+    CreateWorkDir --> ExtractSlots[Extract slots by lifecycle]
+    ExtractSlots --> ExtractPersistent[Extract persistent slots]
+    ExtractPersistent --> ExtractCached[Extract cached slots]
+    ExtractCached --> RegisterLazy[Register lazy slots]
+    RegisterLazy --> SetEnv
+
+    SetEnv --> FindPython[Locate Python in slot 0]
+    FindPython --> ExecApp[Execute entry point]
+
+    ExecApp --> AppRuns[Application running]
+    AppRuns --> AppExit{App<br/>exits}
+
+    AppExit --> CleanVolatile[Clean volatile slots]
+    CleanVolatile --> Done([✅ Complete])
+
+    Error1 --> Failed([❌ Failed])
+    Error2 --> Failed
+
+    style Start fill:#e1f5fe
+    style Done fill:#c8e6c9
+    style Failed fill:#ffcdd2
+    style VerifySig fill:#fff3e0
+    style CheckCache fill:#e8eaf6
+    style AppRuns fill:#f3e5f5
 ```
+
+**Startup Phases:**
+
+1. **Validation** (0.1s): Verify magic bytes, index block, and Ed25519 signature
+2. **Cache Check** (0.01s): Calculate package ID and check if work environment exists
+3. **Extraction** (2-5s first run, 0s cached): Extract slots to `~/.cache/flavor/workenv/`
+4. **Execution** (<0.1s): Set environment variables and launch Python interpreter
+
+**Performance:**
+- **First run**: 2-5 seconds (extraction time)
+- **Subsequent runs**: <1 second (cached workenv)
+- **Cache hit**: Near-instant startup
 
 ### Extraction Strategy
 
