@@ -18,19 +18,29 @@ FlavorPack uses "helpers" - specialized binaries written in Go and Rust - to han
 
 Launchers are the executable headers of PSPF packages:
 
-| Launcher | Language | Size | Features |
-|----------|----------|------|----------|
-| `flavor-rs-launcher` | Rust | ~2.3 MB | Fast, memory-safe, default |
-| `flavor-go-launcher` | Go | ~2.5 MB | Cross-platform, mature |
+| Launcher | Language | Typical Size | Features |
+|----------|----------|--------------|----------|
+| `flavor-rs-launcher` | Rust | ~1 MB | Fast, memory-safe, default |
+| `flavor-go-launcher` | Go | ~3-4 MB | Cross-platform, mature |
 
 ### Builders
 
 Builders create PSPF packages from manifests:
 
-| Builder | Language | Size | Features |
-|---------|----------|------|----------|
-| `flavor-go-builder` | Go | ~5.1 MB | Default, full-featured |
-| `flavor-rs-builder` | Rust | ~4.8 MB | Fast, experimental |
+| Builder | Language | Typical Size | Features |
+|---------|----------|--------------|----------|
+| `flavor-go-builder` | Go | ~3-4 MB | Default, full-featured |
+| `flavor-rs-builder` | Rust | ~1 MB | Fast, compact |
+
+!!! info "Binary Size Variations"
+    Sizes shown are typical for macOS ARM64 builds. Actual sizes vary by:
+
+    - **Platform**: Linux static builds (musl) may be larger
+    - **Architecture**: x86_64 vs ARM64 differences
+    - **Build mode**: Debug vs release, stripped vs unstripped
+    - **Compression**: UPX compression can reduce size further
+
+    Check your platform: `ls -lh dist/bin/flavor-*-$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m)`
 
 ## Directory Structure
 

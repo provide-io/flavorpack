@@ -47,7 +47,7 @@ pretaster/
 Pretaster includes a comprehensive Makefile for easy management:
 
 ```bash
-cd helpers/pretaster
+cd tests/pretaster
 
 # Show all available commands
 make help
@@ -85,13 +85,13 @@ make debug
 
 #### Run All Core Tests
 ```bash
-cd helpers/pretaster
+cd tests/pretaster
 ./tests/test-pretaster.sh
 ```
 
 #### Test All Builder/Launcher Combinations
 ```bash
-cd helpers/pretaster
+cd tests/pretaster
 ./tests/combination-tests.sh
 ```
 
@@ -103,7 +103,7 @@ This script automatically logs all test output to timestamped files in the `logs
 
 #### Test Direct PSP Execution
 ```bash
-cd helpers/pretaster
+cd tests/pretaster
 ./tests/direct-execution-tests.sh
 ```
 
@@ -151,23 +151,23 @@ cd helpers/pretaster
 
 ```bash
 # Echo test (Go builder + Rust launcher)
-../bin/flavor-go-builder \
+../../dist/bin/flavor-go-builder \
   --manifest configs/test-echo.json \
-  --launcher-bin ../bin/flavor-rs-launcher \
+  --launcher-bin ../../dist/bin/flavor-rs-launcher \
   --output echo-test.psp \
   --key-seed test123
 
 # Shell test (Rust builder + Go launcher)
-../bin/flavor-rs-builder \
+../../dist/bin/flavor-rs-builder \
   --manifest configs/test-shell.json \
-  --launcher-bin ../bin/flavor-go-launcher \
+  --launcher-bin ../../dist/bin/flavor-go-launcher \
   --output shell-test.psp \
   --key-seed test123
 
 # Pretaster (any combination)
-../bin/flavor-rs-builder \
+../../dist/bin/flavor-rs-builder \
   --manifest configs/test-taster-lite.json \
-  --launcher-bin ../bin/flavor-go-launcher \
+  --launcher-bin ../../dist/bin/flavor-go-launcher \
   --output pretaster.psp \
   --key-seed test123
 ```
@@ -302,6 +302,6 @@ All builders now use the nested PSPF/2025 format exclusively:
 ## Development Notes
 
 - Built .psp files are not committed (see .gitignore)
-- Test scripts assume helpers are built in ../bin/
+- Test scripts assume helpers are built in ../../dist/bin/
 - All tests use `--key-seed test123` for reproducible builds
 - Workenv locations vary by launcher (check FLAVOR_WORKENV)

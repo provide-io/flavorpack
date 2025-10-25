@@ -2,6 +2,62 @@
 
 Automate FlavorPack packaging in your CI/CD pipelines.
 
+## Pipeline Overview
+
+```mermaid
+flowchart TD
+    Start([Git Push/Tag]) --> Trigger{Trigger<br/>Type}
+    Trigger -->|Push to main| BuildDev[Development Build]
+    Trigger -->|Tag release| BuildProd[Production Build]
+
+    subgraph "Build Stage"
+        BuildDev --> Checkout[Checkout Code]
+        BuildProd --> Checkout
+        Checkout --> SetupEnv[Setup Build Environment]
+        SetupEnv --> InstallUV[Install UV Package Manager]
+        InstallUV --> SyncDeps[Sync Dependencies]
+        SyncDeps --> BuildHelpers[Build Go/Rust Helpers]
+    end
+
+    subgraph "Package Stage"
+        BuildHelpers --> LoadKeys{Signing<br/>Keys?}
+        LoadKeys -->|Exists| SignedBuild[Build Signed Package]
+        LoadKeys -->|None| UnsignedBuild[Build Unsigned Package]
+
+        SignedBuild --> VerifyPkg[Verify Package Integrity]
+        UnsignedBuild --> VerifyPkg
+    end
+
+    subgraph "Test Stage"
+        VerifyPkg --> TestBasic[Test: Basic Execution]
+        TestBasic --> TestEnv[Test: Environment]
+        TestEnv --> TestCache[Test: Cache Management]
+        TestCache --> TestCrossPlat[Test: Cross-Platform]
+    end
+
+    subgraph "Release Stage"
+        TestCrossPlat --> AllPass{All Tests<br/>Pass?}
+        AllPass -->|No| Failed[❌ Build Failed]
+        AllPass -->|Yes| UploadArtifact[Upload Artifacts]
+
+        UploadArtifact --> IsProd{Production<br/>Release?}
+        IsProd -->|No| StoreDev[Store in Dev Artifacts]
+        IsProd -->|Yes| CreateRelease[Create GitHub Release]
+
+        CreateRelease --> TagRelease[Tag Release Assets]
+        TagRelease --> NotifyTeam[Notify Team]
+    end
+
+    StoreDev --> Done([✅ Complete])
+    NotifyTeam --> Done
+
+    style Start fill:#e1f5ff
+    style Done fill:#c8e6c9
+    style Failed fill:#ffcdd2
+    style SignedBuild fill:#fff9c4
+    style CreateRelease fill:#e1bee7
+```
+
 ## GitHub Actions
 
 {% raw %}
@@ -214,9 +270,10 @@ strategy:
 
 - name: Package with Version
   run: |
+    VERSION=$(cat VERSION)
     flavor pack \
       --manifest pyproject.toml \
-      --output myapp-v${{ steps.version.outputs.VERSION }}.psp
+      --output myapp-v${VERSION}.psp
 ```
 
 ### 5. **Security Scanning**

@@ -1,6 +1,9 @@
 # Installation
 
-FlavorPack can be installed in multiple ways depending on your needs. Choose the method that best suits your environment.
+!!! warning "Alpha Release - Source Installation Only"
+    FlavorPack v0.0.1023 is in early alpha. PyPI packages and pre-built binaries are not yet available. **Install from source only.**
+
+FlavorPack can be installed from source. Future releases will support additional installation methods.
 
 ## System Requirements
 
@@ -36,17 +39,13 @@ Best for developers who want the latest features and ability to build custom hel
     ```bash
     # Install UV package manager
     curl -LsSf https://astral.sh/uv/install.sh | sh
-    
+
     # Clone the repository
     git clone https://github.com/provide-io/flavorpack.git
     cd flavorpack
-    
-    # Create and activate virtual environment
-    uv venv
-    source .venv/bin/activate
-    
-    # Install FlavorPack
-    uv pip install -e .
+
+    # Set up environment and install dependencies
+    uv sync
 
     # Build native helpers (Go and Rust binaries)
     make build-helpers
@@ -60,64 +59,44 @@ Best for developers who want the latest features and ability to build custom hel
     ```powershell
     # Install UV package manager
     powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
-    
+
     # Clone the repository
     git clone https://github.com/provide-io/flavorpack.git
     cd flavorpack
-    
-    # Create and activate virtual environment
-    uv venv
-    .venv\Scripts\activate
-    
-    # Install FlavorPack
-    uv pip install -e .
-    
+
+    # Set up environment and install dependencies
+    uv sync
+
     # Build native helpers (requires WSL or Docker)
     # See Windows-specific instructions below
-    
+
     # Verify installation
     flavor --version
     ```
 
-### Method 2: Using pip (Coming Soon)
+### Method 2: Using pip
 
-For users who want a simple installation without building from source.
+!!! info "Planned for Future Release"
+    PyPI installation is planned for a future release. Currently unavailable.
 
-```bash
-# Install from PyPI
-pip install flavorpack
+    **When available**, installation will be:
+    ```bash
+    pip install flavorpack
+    make build-helpers
+    ```
 
-# Download pre-built helpers
-flavor helpers download
-
-# Verify installation
-flavor --version
-```
-
-!!! warning "Limited Availability"
-    PyPI packages are not yet available. This option will be available in a future release.
+    For now, please use source installation (Method 1 above).
 
 ### Method 3: Using Docker
 
-For users who prefer containerized environments or CI/CD pipelines.
+!!! info "Planned for Future Release"
+    Official Docker images are planned for a future release.
 
-```bash
-# Pull the official image
-docker pull ghcr.io/provide-io/flavorpack:latest
-
-# Run interactively
-docker run -it --rm \
-  -v $(pwd):/workspace \
-  ghcr.io/provide-io/flavorpack:latest \
-  bash
-
-# Or run a command directly
-docker run --rm \
-  -v $(pwd):/workspace \
-  ghcr.io/provide-io/flavorpack:latest \
-  flavor pack --manifest /workspace/pyproject.toml \
-  --output /workspace/myapp.psp
-```
+    **When available**, you'll be able to use:
+    ```bash
+    docker pull ghcr.io/provide-io/flavorpack:latest
+    docker run -it ghcr.io/provide-io/flavorpack:latest flavor --help
+    ```
 
 ### Method 4: Development Container
 
@@ -172,7 +151,7 @@ ls dist/bin/
 === "Rust Components"
 
     ```bash
-    cd src/flavor-rs
+    cd src/flavor-rust
 
     # Build launcher
     cargo build --release --bin flavor-rs-launcher
@@ -234,8 +213,9 @@ Optional environment variables for customization:
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `FLAVOR_CACHE_DIR` | Cache directory for work environments | `~/.cache/flavor` |
-| `FLAVOR_LOG_LEVEL` | Logging level (debug, info, warn, error) | `info` |
+| `FLAVOR_CACHE` | Cache directory for work environments | `~/.cache/flavor/workenv` |
+| `FOUNDATION_LOG_LEVEL` | Logging level (debug, info, warn, error) | `info` |
+| `FOUNDATION_LOG_FILE` | Log file path for persistent logging | None |
 | `FLAVOR_PRIVATE_KEY` | Path to private signing key | None |
 | `FLAVOR_PUBLIC_KEY` | Path to public verification key | None |
 | `FLAVOR_VALIDATION` | Validation level: strict, standard, relaxed, minimal, none | `standard` |

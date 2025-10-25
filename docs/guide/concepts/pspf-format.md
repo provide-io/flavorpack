@@ -109,17 +109,51 @@ The launcher is a platform-specific executable that:
 - **Manages** the work environment cache
 - **Executes** the packaged application
 
+#### Launcher Flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Launcher as Launcher Binary
+    participant Index as Index Block
+    participant Cache as Work Environment Cache
+    participant App as Application
+
+    User->>Launcher: Execute ./myapp.psp
+    Launcher->>Launcher: Read own binary location
+    Launcher->>Index: Seek to Index Block
+    Index-->>Launcher: Return metadata & offsets
+
+    Launcher->>Cache: Check cache (SHA-256 ID)
+
+    alt Cache exists & valid
+        Cache-->>Launcher: Cache valid
+        Launcher->>Launcher: Use cached workenv
+    else Cache invalid or missing
+        Cache-->>Launcher: Cache invalid
+        Launcher->>Launcher: Extract all slots
+        Launcher->>Cache: Create new workenv
+        Cache-->>Launcher: Workenv ready
+    end
+
+    Launcher->>Launcher: Set FLAVOR_* env vars
+    Launcher->>App: Execute application command
+    App->>App: Run application logic
+    App-->>Launcher: Exit with code
+    Launcher-->>User: Return exit code
+```
+
 === "Go Launcher"
     ```go
     // Lightweight and fast
-    // ~2 MB binary size
+    // ~3-4 MB binary size
     // Cross-platform support
     ```
 
 === "Rust Launcher"
     ```rust
     // Memory-safe and efficient
-    // ~3 MB binary size
+    // ~1 MB binary size
     // Optimal performance
     ```
 
@@ -212,6 +246,38 @@ Each slot has:
 - **Encoding**: raw, tar, gzip, tar.gz
 - **Lifecycle**: persistent, ephemeral, cached
 - **Permissions**: read, write, execute flags
+
+#### Slot Descriptor Binary Layout (64 bytes)
+
+```mermaid
+graph LR
+    subgraph "Slot Descriptor - 64 bytes"
+        direction TB
+        A["offset<br/>8 bytes<br/>uint64<br/>bytes 0-7"] --> B["size<br/>8 bytes<br/>uint64<br/>bytes 8-15"]
+        B --> C["original_size<br/>8 bytes<br/>uint64<br/>bytes 16-23"]
+        C --> D["data_checksum<br/>32 bytes<br/>SHA-256<br/>bytes 24-55"]
+        D --> E["operations<br/>8 bytes<br/>uint64<br/>bytes 56-63"]
+    end
+
+    style A fill:#e3f2fd
+    style B fill:#fff3e0
+    style C fill:#f3e5f5
+    style D fill:#e8f5e9
+    style E fill:#fce4ec
+```
+
+**Operations Field Encoding** (64-bit packed, up to 8 operations of 8 bits each):
+
+```
+Bit Layout:
+┌──────────┬──────────┬──────────┬──────────┬──────────┬──────────┬──────────┬──────────┐
+│  Op 7    │  Op 6    │  Op 5    │  Op 4    │  Op 3    │  Op 2    │  Op 1    │  Op 0    │
+│  (00)    │  (00)    │  (00)    │  (00)    │  (00)    │  (00)    │  (10)    │  (01)    │
+└──────────┴──────────┴──────────┴──────────┴──────────┴──────────┴──────────┴──────────┘
+bits 63-56   55-48      47-40      39-32      31-24      23-16      15-8       7-0
+
+Example: tar.gz = 0x0000000000001001 (Op 0 = 0x01 (tar), Op 1 = 0x10 (gzip))
+```
 
 ### 5. Magic Footer
 

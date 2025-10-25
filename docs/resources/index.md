@@ -93,9 +93,11 @@ Connect with the FlavorPack community.
 
 ### External Links
 - [GitHub Repository](https://github.com/provide-io/flavorpack)
-- [PyPI Package](https://pypi.org/project/flavorpack/)
 - [Issue Tracker](https://github.com/provide-io/flavorpack/issues)
 - [Discussions](https://github.com/provide-io/flavorpack/discussions)
+
+!!! note "PyPI Package"
+    FlavorPack is not yet available on PyPI. Install from source following the [installation guide](../getting-started/installation.md).
 
 ### Documentation Formats
 - [API Reference](../api/index.md) - Technical API documentation

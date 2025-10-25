@@ -485,8 +485,10 @@ Process CSV files with pandas:
         
         - name: Install FlavorPack
           run: |
-            pip install flavorpack
-            flavor helpers download
+            git clone https://github.com/provide-io/flavorpack.git
+            cd flavorpack
+            uv sync
+            make build-helpers
         
 {% raw %}
         - name: Build Package
@@ -511,15 +513,17 @@ Process CSV files with pandas:
     ```dockerfile
     # Build stage
     FROM python:3.11 AS builder
-    
-    # Install FlavorPack
-    RUN pip install flavorpack
-    RUN flavor helpers download
-    
+
+    # Install FlavorPack from source
+    RUN git clone https://github.com/provide-io/flavorpack.git /flavorpack
+    WORKDIR /flavorpack
+    RUN pip install uv && uv sync && make build-helpers
+    ENV PATH="/flavorpack/.venv/bin:$PATH"
+
     # Copy application
     WORKDIR /app
     COPY . .
-    
+
     # Build package
     RUN flavor pack --manifest pyproject.toml --output app.psp
     
@@ -570,33 +574,4 @@ Explore our cookbook for more detailed examples:
 
 - 📚 [CLI Tools](../cookbook/examples/cli-tool.md) - Command-line applications
 - 🌐 [Web Apps](../cookbook/examples/web-app.md) - Flask, FastAPI, Django
-- 🔧 [Microservices](../cookbook/examples/microservices.md) - Containerized services
-- 📊 [Data Pipelines](../cookbook/examples/data-pipeline.md) - ETL and data processing
 
-## Example Repository
-
-Clone our examples repository for ready-to-run code:
-
-```bash
-git clone https://github.com/provide-io/flavorpack-examples
-cd flavorpack-examples
-
-# Try different examples
-cd weather-cli && flavor pack --manifest pyproject.toml --output weather.psp
-cd task-api && flavor pack --manifest pyproject.toml --output api.psp
-```
-
-## Contributing Examples
-
-Have a cool FlavorPack use case? We'd love to include it!
-
-1. Fork the [examples repository](https://github.com/provide-io/flavorpack-examples)
-2. Add your example with documentation
-3. Submit a pull request
-
-Guidelines:
-- Include complete, runnable code
-- Add clear documentation
-- Provide pyproject.toml configuration
-- Include usage instructions
-- Add tests if applicable

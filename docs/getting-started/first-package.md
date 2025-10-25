@@ -95,7 +95,7 @@ def main():
     
     weather_data = get_weather(city)
     print(format_weather(weather_data, city))
-    print("\n✨ Packaged with FlavorPack - https://flavorpack.io")
+    print("\n✨ Packaged with FlavorPack - https://foundry.provide.io/flavorpack/")
 
 
 if __name__ == "__main__":
@@ -190,7 +190,7 @@ A simple command-line weather tool packaged with FlavorPack.
 - 📦 Self-contained executable
 - 🔒 No API keys required
 
-Built with FlavorPack - https://flavorpack.io
+Built with FlavorPack - https://foundry.provide.io/flavorpack/
 ```
 
 ## Step 3: Build the Package
@@ -271,7 +271,7 @@ chmod +x weather-cli.psp
 # 🌡️  Feels like: 14°C (57°F)
 # ==================================================
 #
-# ✨ Packaged with FlavorPack - https://flavorpack.io
+# ✨ Packaged with FlavorPack - https://foundry.provide.io/flavorpack/
 ```
 
 Try more examples:

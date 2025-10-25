@@ -45,12 +45,12 @@ Choose the installation method that works best for your environment:
 === "Via pip (Coming Soon)"
 
     ```bash
-    # Install from PyPI
+    # Install from PyPI (when available in v0.1.0)
     pip install flavorpack
-    
-    # Download pre-built helpers
-    flavor helpers download
-    
+
+    # Build helpers
+    make build-helpers
+
     # Verify installation
     flavor --version
     ```
