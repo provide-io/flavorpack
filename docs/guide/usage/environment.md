@@ -2,6 +2,43 @@
 
 Complete reference for all environment variables used by FlavorPack and its components.
 
+## Quick Reference
+
+| Variable | Purpose | Default | Component | Category |
+|----------|---------|---------|-----------|----------|
+| **Core Configuration** |||||
+| `FLAVOR_CACHE` | Override cache directory | `~/.cache/flavor/workenv` | All | Config |
+| `FLAVOR_VALIDATION` | Validation strictness level | `standard` | Launchers | Security |
+| `FLAVOR_LOG_LEVEL` | Go/Rust logging verbosity | `warn` | Go/Rust | Logging |
+| `FLAVOR_LOG_PATH` | Write logs to file | stderr | Rust | Logging |
+| `FLAVOR_WORKENV` | Work environment path | Auto-generated | All | Runtime |
+| **Build-Time** |||||
+| `FLAVOR_BUILDER_BIN` | Specify builder binary | Auto-detected | Orchestrator | Build |
+| `FLAVOR_LAUNCHER_BIN` | Specify launcher binary | Auto-detected | Orchestrator | Build |
+| `FLAVOR_WORKENV_BASE` | Base for `{workenv}` resolution | `.` (cwd) | Builder | Build |
+| `FLAVOR_WORKENV_CACHE` | Disable workenv caching | Enabled | Launcher | Build |
+| `FLAVOR_OUTPUT_FORMAT` | CLI output format | `text` | CLI | Output |
+| `FLAVOR_OUTPUT_FILE` | Redirect CLI output | `STDOUT` | CLI | Output |
+| **Launcher-Specific** |||||
+| `FLAVOR_LAUNCHER_CLI` | Enable standalone CLI mode | Disabled | Rust launcher | Config |
+| `FLAVOR_LAUNCHER_LOG_LEVEL` | Launcher-specific log level | Inherits `FLAVOR_LOG_LEVEL` | Rust launcher | Logging |
+| `FLAVOR_EXEC_MODE` | Execution mode (exec/spawn) | `exec` | Rust launcher | Runtime |
+| `FLAVOR_JSON_LOG` | JSON-formatted logs | Disabled | Go helpers | Logging |
+| **Runtime (Set by Launcher)** |||||
+| `FLAVOR_WORKENV` | Extraction directory path | Auto-set | Launcher → App | Runtime |
+| `FLAVOR_COMMAND_NAME` | Binary basename | Auto-set | Launcher → App | Runtime |
+| `FLAVOR_ORIGINAL_COMMAND` | Full package path | Auto-set | Launcher → App | Runtime |
+| `FLAVOR_PACKAGE` | Package name | Auto-set | Launcher → App | Runtime |
+| `FLAVOR_VERSION` | Package version | Auto-set | Launcher → App | Runtime |
+| **Foundation (Logging Framework)** |||||
+| `FOUNDATION_LOG_LEVEL` | Python logging verbosity | `info` | Python | Logging |
+| `FOUNDATION_LOG_FILE` | Write Python logs to file | stderr | Python | Logging |
+| `FOUNDATION_SETUP_LOG_LEVEL` | Initialization log level | From `FOUNDATION_LOG_LEVEL` | Python | Logging |
+| **Debug/Development** |||||
+| `FLAVOR_DEBUG_METADATA` | Verbose metadata debugging | Disabled | Rust | Debug |
+
+---
+
 ## Overview
 
 FlavorPack uses environment variables for configuration, debugging, and runtime communication. Variables are organized into different categories based on their purpose and when they're used.
