@@ -20,8 +20,8 @@ var (
 	ErrLockAcquisition      = errors.New("failed to acquire lock")
 )
 
-// Utility functions (copyFile, copyDirAll, fixShebangs, cleanupLifecycleSlots) moved to execution_utils.go
-// Cache functions (checkDiskSpace, validatePackageChecksum, savePackageChecksum, saveIndexMetadata, checkWorkenvValidity) moved to execution_cache.go
+// Utility functions: see execution_utils.go
+// Cache functions: see execution_cache.go
 
 func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclog.Logger) (*exec.Cmd, error) {
 	reader, err := NewReaderWithLogger(exePath, logger)

@@ -12,18 +12,18 @@ FlavorPack uses Ed25519 digital signatures to ensure packages haven't been tampe
 
 ```bash
 # Generate a new Ed25519 key pair
-flavor keygen --output private.pem
+flavor keygen --out-dir keys
 
 # This creates:
-# - private.pem (private key - keep secret!)
-# - private.pem.pub (public key - distribute freely)
+# - keys/flavor-private.key (private key - keep secret!)
+# - keys/flavor-public.key (public key - distribute freely)
 ```
 
 ### Sign Package
 
 ```bash
 # Sign during build
-flavor pack pyproject.toml --private-key private.pem
+flavor pack pyproject.toml --private-key keys/flavor-private.key --public-key keys/flavor-public.key
 
 # Package is now signed and can be verified
 ```
@@ -35,7 +35,7 @@ flavor pack pyproject.toml --private-key private.pem
 flavor verify myapp-1.0.0.psp
 
 # Verify with specific public key
-flavor verify myapp-1.0.0.psp --public-key private.pem.pub
+flavor verify myapp-1.0.0.psp --public-key keys/flavor-public.key
 ```
 
 ## Key Management
@@ -47,42 +47,25 @@ flavor verify myapp-1.0.0.psp --public-key private.pem.pub
 Generate cryptographically secure random keys:
 
 ```bash
-# Generate with default settings
+# Generate with default settings (creates keys/ directory)
 flavor keygen
 
-# Specify output file
-flavor keygen --output mykey.pem
-
-# Generate with metadata
-flavor keygen --output prod.pem --comment "Production signing key"
+# Specify custom output directory
+flavor keygen --out-dir ~/.flavor/keys
 ```
 
-#### 2. Deterministic Keys (For CI/CD)
+#### 2. Using Existing Keys
 
-Generate reproducible keys from a seed:
+Use existing Ed25519 key files:
 
 ```bash
-# Use seed for deterministic generation
-flavor keygen --seed "my-secret-seed" --output ci.pem
-
-# Or use environment variable
-export FLAVOR_KEY_SEED="my-secret-seed"
-flavor pack pyproject.toml
+# Keys must be in PEM format
+flavor pack pyproject.toml \
+  --private-key /path/to/flavor-private.key \
+  --public-key /path/to/flavor-public.key
 ```
 
-⚠️ **Warning**: Deterministic keys are only as secure as their seed. Use strong, unique seeds and keep them secret.
-
-#### 3. Existing Keys
-
-Import existing Ed25519 keys:
-
-```bash
-# Convert from OpenSSH format
-ssh-keygen -f ~/.ssh/id_ed25519 -e -m PEM > private.pem
-
-# Use existing PEM key
-flavor pack pyproject.toml --private-key existing.pem
-```
+**Note**: Keys must be Ed25519 format in PEM encoding. The private key file should be 32 bytes (raw seed) or PEM-encoded Ed25519 private key.
 
 ### Key Storage Best Practices
 
@@ -92,35 +75,30 @@ flavor pack pyproject.toml --private-key existing.pem
 # Store in home directory
 mkdir -p ~/.flavor/keys
 chmod 700 ~/.flavor/keys
-flavor keygen --output ~/.flavor/keys/dev.pem
-chmod 600 ~/.flavor/keys/dev.pem
+flavor keygen --out-dir ~/.flavor/keys
+chmod 600 ~/.flavor/keys/flavor-private.key
 ```
 
 #### Production
 
-1. **Hardware Security Module (HSM)**
+1. **Encrypted Storage**
    ```bash
-   # Use PKCS#11 interface
-   flavor pack pyproject.toml --hsm-slot 0 --hsm-pin $PIN
+   # Encrypt private key for storage
+   openssl enc -aes-256-cbc -salt -in keys/flavor-private.key -out keys/flavor-private.key.enc
+
+   # Decrypt when needed (in CI/CD or deployment)
+   openssl enc -d -aes-256-cbc -in keys/flavor-private.key.enc -out keys/flavor-private.key
+   chmod 600 keys/flavor-private.key
    ```
 
-2. **Key Management Service (KMS)**
-   ```bash
-   # AWS KMS example
-   flavor pack pyproject.toml --kms-key-id "arn:aws:kms:..."
-   ```
-
-3. **Encrypted Storage**
-   ```bash
-   # Encrypt private key
-   openssl enc -aes-256-cbc -salt -in private.pem -out private.pem.enc
-   
-   # Decrypt when needed
-   openssl enc -d -aes-256-cbc -in private.pem.enc -out private.pem
-   ```
+2. **Secret Management**
+   - Store private key in secret manager (AWS Secrets Manager, HashiCorp Vault, etc.)
+   - Retrieve at build time via environment variables or secret injection
+   - Never commit private keys to version control
 
 #### CI/CD
 
+{% raw %}
 ```yaml
 # GitHub Actions with secrets
 - name: Sign package
@@ -128,7 +106,10 @@ chmod 600 ~/.flavor/keys/dev.pem
     FLAVOR_KEY_SEED: ${{ secrets.SIGNING_SEED }}
   run: |
     flavor pack pyproject.toml --key-seed "$FLAVOR_KEY_SEED"
+```
+{% endraw %}
 
+```yaml
 # GitLab CI with protected variables
 sign:
   script:
@@ -261,14 +242,14 @@ flavor verify package.psp --trusted-keys keys/trusted/
 ### Programmatic Verification
 
 ```python
-from flavor.verification import FlavorVerifier
+from pathlib import Path
+from flavor.package import verify_package
 
 # Verify package
-verifier = FlavorVerifier()
-result = verifier.verify_package("package.psp")
+result = verify_package(Path("package.psp"))
 
 if result["signature_valid"]:
-    print(f"✅ Package signed by {result['key_fingerprint']}")
+    print("✅ Package signature verified")
 else:
     print("❌ Invalid signature!")
 ```

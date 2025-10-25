@@ -354,6 +354,7 @@ if not result["signature_valid"]:
 
 ### GitHub Actions Example
 
+{% raw %}
 ```yaml
 name: Build and Sign Package
 
@@ -397,6 +398,7 @@ jobs:
           name: signed-package
           path: dist/myapp.psp
 ```
+{% endraw %}
 
 ---
 

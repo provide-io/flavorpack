@@ -4,6 +4,7 @@ Automate FlavorPack packaging in your CI/CD pipelines.
 
 ## GitHub Actions
 
+{% raw %}
 ```yaml
 # .github/workflows/package.yml
 name: Build Package
@@ -66,6 +67,7 @@ jobs:
           asset_name: myapp-${{ matrix.platform }}.psp
           asset_content_type: application/octet-stream
 ```
+{% endraw %}
 
 ## GitLab CI
 
@@ -165,6 +167,7 @@ workflows:
 
 ### 1. **Cache Dependencies**
 
+{% raw %}
 ```yaml
 # GitHub Actions
 - name: Cache UV
@@ -179,6 +182,7 @@ workflows:
     path: dist/bin
     key: ${{ runner.os }}-helpers-${{ hashFiles('src/flavor-go/**', 'src/flavor-rs/**') }}
 ```
+{% endraw %}
 
 ### 2. **Verify Packages**
 

@@ -67,12 +67,13 @@ The Progressive Secure Package Format is a polyglot file format that works as bo
 
 ## 📚 Documentation
 
-- **[User Guide](docs/USER-GUIDE.md)** - Getting started and creating packages
-- **[Development Guide](docs/DEVELOPMENT.md)** - Setting up development environment
-- **[Architecture](docs/ARCHITECTURE.md)** - Technical details and design
-- **[API Reference](docs/API-REFERENCE.md)** - Command and format specifications
-- **[Troubleshooting](docs/TROUBLESHOOTING.md)** - Common issues and solutions
-- **[Full Documentation Index](docs/DOCUMENTATION.md)** - Complete documentation structure
+- **[Quick Start](docs/getting-started/quickstart.md)** - Get started in 5 minutes
+- **[User Guide](docs/guide/)** - Comprehensive guide to using FlavorPack
+- **[PSPF Format Specification](docs/reference/spec/fep-0001-core-format-and-operation-chains.md)** - Binary format details
+- **[API Reference](docs/api/)** - Python API documentation
+- **[Development Guide](docs/development/)** - Contributing and development setup
+- **[Troubleshooting](docs/troubleshooting/)** - Common issues and solutions
+- **[Full Documentation](docs/index.md)** - Complete documentation portal
 
 ## 🏗️ Architecture
 

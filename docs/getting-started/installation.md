@@ -299,8 +299,7 @@ If you encounter issues:
 
 1. Check the [Troubleshooting Guide](../troubleshooting/common.md)
 2. Search [existing issues](https://github.com/provide-io/flavorpack/issues)
-3. Join our [Discord community](https://discord.gg/flavorpack)
-4. Open a [new issue](https://github.com/provide-io/flavorpack/issues/new)
+3. Open a [new issue](https://github.com/provide-io/flavorpack/issues/new)
 
 ## Next Steps
 

@@ -211,6 +211,5 @@ func execBundleReplace(exePath string, args []string, userCwd string, logger hcl
 	return errors.New("syscall.Exec returned unexpectedly")
 }
 
-// Note: Signal handling and cleanup functions removed - not compatible with syscall.Exec
-// When using exec, the process is replaced entirely so there's no parent process
-// to handle signals or perform cleanup. The new process handles its own signals.
+// Note: Signal handling and cleanup are not compatible with syscall.Exec.
+// When using exec, the process is replaced entirely - the new process handles its own signals.
