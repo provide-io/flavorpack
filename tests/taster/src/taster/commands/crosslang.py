@@ -11,7 +11,7 @@ import click
 from provide.foundation import logger
 from provide.foundation.process import run as run_command
 
-from flavor.helpers.manager import HelperManager 
+from flavor.helpers.manager import HelperManager
 
 
 class CrossLangTester:
@@ -354,9 +354,7 @@ entry_point = "crosslang_test:main"
                     {
                         "launcher": launcher_info.name,
                         "success": identical,
-                        "note": "Compared data after launcher"
-                        if identical
-                        else "Packages differ",
+                        "note": "Compared data after launcher" if identical else "Packages differ",
                     }
                 )
 
@@ -406,9 +404,7 @@ entry_point = "crosslang_test:main"
                     "error",
                 )
                 # Show all available helpers for debugging
-                all_helpers = self.helper_manager.list_helpers(
-                    platform_filter=False
-                )
+                all_helpers = self.helper_manager.list_helpers(platform_filter=False)
                 all_launchers = all_helpers.get("launchers", [])
                 if all_launchers:
                     self.log(
@@ -419,9 +415,7 @@ entry_point = "crosslang_test:main"
                         self.log(f"     - {launcher.name}", "warning")
                 return 1
 
-            self.log(
-                f"\n📦 Found {len(available_launchers)} platform-compatible launchers to test:"
-            )
+            self.log(f"\n📦 Found {len(available_launchers)} platform-compatible launchers to test:")
             for launcher in available_launchers:
                 self.log(f"  • {launcher.name} ({launcher.language})")
 
@@ -474,25 +468,19 @@ entry_point = "crosslang_test:main"
                 if self.test_reproducible_build(launcher_info):
                     self.log(f"  ✅ {launcher_info.name} is reproducible", "success")
                 else:
-                    self.log(
-                        f"  ⚠️ {launcher_info.name} not fully reproducible", "warning"
-                    )
+                    self.log(f"  ⚠️ {launcher_info.name} not fully reproducible", "warning")
 
             # Calculate summary
             build_success = sum(1 for t in self.results["build_tests"] if t["success"])
             build_total = len(self.results["build_tests"])
 
-            verify_success = sum(
-                1 for t in self.results["verify_tests"] if t["success"]
-            )
+            verify_success = sum(1 for t in self.results["verify_tests"] if t["success"])
             verify_total = len(self.results["verify_tests"])
 
             cli_success = sum(1 for t in self.results["cli_tests"] if t["success"])
             cli_total = len(self.results["cli_tests"])
 
-            repro_success = sum(
-                1 for t in self.results["reproducible_tests"] if t["success"]
-            )
+            repro_success = sum(1 for t in self.results["reproducible_tests"] if t["success"])
             repro_total = len(self.results["reproducible_tests"])
 
             self.results["summary"] = {
@@ -500,9 +488,7 @@ entry_point = "crosslang_test:main"
                 "verifications": f"{verify_success}/{verify_total}",
                 "cli_tests": f"{cli_success}/{cli_total}",
                 "reproducible": f"{repro_success}/{repro_total}",
-                "overall_success": (
-                    build_success > 0 and verify_success > 0 and cli_success > 0
-                ),
+                "overall_success": (build_success > 0 and verify_success > 0 and cli_success > 0),
             }
 
             # Output results

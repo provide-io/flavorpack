@@ -13,7 +13,6 @@ import contextlib
 from contextlib import contextmanager
 import gzip
 from pathlib import Path
-import struct
 from typing import Any, Self
 import zlib
 
@@ -215,6 +214,7 @@ class PSPFReader:
 
         # Verify metadata checksum (full SHA-256 - 32 bytes)
         import hashlib
+
         actual_checksum = hashlib.sha256(metadata_data).digest()
         expected_checksum = index.metadata_checksum if index.metadata_checksum else b"\x00" * 32
         if expected_checksum != b"\x00" * 32 and actual_checksum != expected_checksum:
@@ -291,6 +291,7 @@ class PSPFReader:
 
         # Verify checksum (SHA-256 first 8 bytes)
         import hashlib
+
         hash_bytes = hashlib.sha256(slot_data).digest()[:8]
         actual_checksum = int.from_bytes(hash_bytes, byteorder="little")
 

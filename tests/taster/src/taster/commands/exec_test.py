@@ -7,7 +7,7 @@ import tempfile
 import click
 from provide.foundation.process import run
 
-from flavor.helpers import HelperManager 
+from flavor.helpers import HelperManager
 from flavor.package import build_package_from_manifest
 
 

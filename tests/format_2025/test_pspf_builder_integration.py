@@ -7,17 +7,14 @@ Written BEFORE implementation to drive the design.
 from pathlib import Path
 import tempfile
 
-import attrs
 import pytest
 
 from flavor.psp.format_2025.builder import build_package
-from flavor.psp.format_2025.keys import resolve_keys
 from flavor.psp.format_2025.pspf_builder import PSPFBuilder
 from flavor.psp.format_2025.slots import SlotMetadata
 
 # Import the new API
-from flavor.psp.format_2025.spec import BuildOptions, BuildResult, BuildSpec, KeyConfig
-from flavor.psp.format_2025.validation import validate_spec
+from flavor.psp.format_2025.spec import BuildResult, BuildSpec, KeyConfig
 
 # =============================================================================
 # Test Fixtures
@@ -53,7 +50,6 @@ def sample_slot(temp_dir):
 @pytest.fixture
 def minimal_spec(sample_slot):
     """Create minimal valid BuildSpec."""
-    from flavor.psp.format_2025.spec import KeyConfig
 
     return BuildSpec(
         metadata={"package": {"name": "test", "version": "1.0"}},

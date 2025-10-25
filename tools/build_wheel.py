@@ -54,7 +54,7 @@ def get_version() -> str:
     return "0.3.0"  # Default fallback
 
 
-def clean_build_artifacts():
+def clean_build_artifacts() -> None:
     """Clean any existing build artifacts."""
     root = get_project_root()
     dirs_to_clean = [
@@ -110,9 +110,7 @@ def download_helpers(platform: str, version: str) -> Path | None:
 
     helpers_found = False
     for helper_set in [required_helpers, alt_helpers, generic_helpers]:
-        if all(
-            (helpers_dir / h).exists() or (helpers_dir / f"{h}.exe").exists() for h in helper_set
-        ):
+        if all((helpers_dir / h).exists() or (helpers_dir / f"{h}.exe").exists() for h in helper_set):
             helpers_found = True
             break
 
@@ -184,7 +182,7 @@ from setuptools.dist import Distribution
 class BinaryDistribution(Distribution):
     def has_ext_modules(self):
         return True
-    
+
     def is_pure(self):
         return False
 
@@ -224,7 +222,7 @@ if __name__ == "__main__":
         # Always rename to support Python 3.11-3.14
         match = re.match(r"([\w_]+)-([\d.]+)-(.*)\.whl", wheel_name)
         if match:
-            pkg_name, pkg_version, tags = match.groups()
+            pkg_name, pkg_version, _tags = match.groups()
 
             # Build new tags for Python 3.11-3.14 support
             # Use py311 for Python 3.11+ compatibility
@@ -302,14 +300,12 @@ def build_all_wheels(output_dir: Path) -> list[Path]:
     return wheels
 
 
-def main():
+def main() -> None:
     """Main entry point."""
-    parser = argparse.ArgumentParser(
-        description="Build platform-specific Flavor wheels with embedded helpers"
-    )
+    parser = argparse.ArgumentParser(description="Build platform-specific Flavor wheels with embedded helpers")
     parser.add_argument(
         "--platform",
-        choices=ALL_PLATFORMS + ["universal"],
+        choices=[*ALL_PLATFORMS, "universal"],
         help="Target platform (or 'universal' for no helpers)",
     )
     parser.add_argument("--all", action="store_true", help="Build wheels for all platforms")

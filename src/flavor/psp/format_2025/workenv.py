@@ -152,7 +152,9 @@ class WorkEnvManager:
                     # 'temp' lifecycle: mark for cleanup after session
                     logger.debug(f"🕐 Slot {slot_idx} marked as 'temp' - will be cleaned after session")
 
-    def _run_setup_commands(self, setup_commands: list[Any], workenv_dir: Path, metadata: dict[str, Any]) -> None:
+    def _run_setup_commands(
+        self, setup_commands: list[Any], workenv_dir: Path, metadata: dict[str, Any]
+    ) -> None:
         """Run setup commands for work environment.
 
         Args:
@@ -180,7 +182,9 @@ class WorkEnvManager:
             else:
                 logger.warning("⚠️ String setup commands not supported")
 
-    def _run_write_file_command(self, cmd: dict[str, Any], workenv_dir: Path, metadata: dict[str, Any]) -> None:
+    def _run_write_file_command(
+        self, cmd: dict[str, Any], workenv_dir: Path, metadata: dict[str, Any]
+    ) -> None:
         """Handle file writing command.
 
         Args:
