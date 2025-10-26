@@ -102,7 +102,7 @@ pip install dist/flavorpack-*.whl
 # Test basic operations
 flavor --version
 flavor helpers list
-flavor pack pyproject.toml --output test.psp
+flavor pack --manifest pyproject.toml --output test.psp
 flavor verify test.psp
 ```
 

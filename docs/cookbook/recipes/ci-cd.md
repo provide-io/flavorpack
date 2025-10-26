@@ -499,6 +499,7 @@ jobs:
 
 ### Customization
 
+{% raw %}
 ```yaml
 # Add Windows support
 - os: windows-latest
@@ -523,6 +524,7 @@ jobs:
     scp dist/myapp.psp deploy@server:/opt/myapp/
     ssh deploy@server 'systemctl restart myapp'
 ```
+{% endraw %}
 
 ## See Also
 

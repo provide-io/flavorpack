@@ -30,6 +30,11 @@ Complete reference for all environment variables used by FlavorPack and its comp
 | `FLAVOR_ORIGINAL_COMMAND` | Full package path | Auto-set | Launcher → App | Runtime |
 | `FLAVOR_PACKAGE` | Package name | Auto-set | Launcher → App | Runtime |
 | `FLAVOR_VERSION` | Package version | Auto-set | Launcher → App | Runtime |
+| `FLAVOR_OS` | Operating system (darwin/linux/windows) | Auto-set | Launcher → App | Runtime |
+| `FLAVOR_ARCH` | Architecture (amd64/arm64/etc) | Auto-set | Launcher → App | Runtime |
+| `FLAVOR_PLATFORM` | Combined OS_arch string | Auto-set | Launcher → App | Runtime |
+| `FLAVOR_OS_VERSION` | OS version if available | Auto-set | Launcher → App | Runtime |
+| `FLAVOR_CPU_TYPE` | CPU type/family if available | Auto-set | Launcher → App | Runtime |
 | **Foundation (Logging Framework)** |||||
 | `FOUNDATION_LOG_LEVEL` | Python logging verbosity | `info` | Python | Logging |
 | `FOUNDATION_LOG_FILE` | Write Python logs to file | stderr | Python | Logging |
@@ -71,7 +76,7 @@ These variables control FlavorPack's core behavior across all components.
 ```bash
 # Use custom cache location
 export FLAVOR_CACHE=/var/cache/myapp/flavor
-flavor pack pyproject.toml
+flavor pack --manifest pyproject.toml
 
 # Or for a single run
 FLAVOR_CACHE=/tmp/flavor-cache ./myapp.psp
@@ -129,13 +134,13 @@ FLAVOR_VALIDATION=none ./debug-package.psp
 **Example**:
 ```bash
 # Verbose debug output
-FLAVOR_LOG_LEVEL=debug flavor pack pyproject.toml
+FLAVOR_LOG_LEVEL=debug flavor pack --manifest pyproject.toml
 
 # Trace everything (very verbose)
-FLAVOR_LOG_LEVEL=trace flavor pack pyproject.toml
+FLAVOR_LOG_LEVEL=trace flavor pack --manifest pyproject.toml
 
 # Quiet mode - errors only
-FLAVOR_LOG_LEVEL=error flavor pack pyproject.toml
+FLAVOR_LOG_LEVEL=error flavor pack --manifest pyproject.toml
 
 # Debug launcher execution
 FLAVOR_LOG_LEVEL=debug ./myapp.psp
@@ -159,7 +164,7 @@ FLAVOR_LOG_LEVEL=debug ./myapp.psp
 **Example**:
 ```bash
 # Log to file
-FLAVOR_LOG_PATH=/var/log/flavor/build.log flavor pack pyproject.toml
+FLAVOR_LOG_PATH=/var/log/flavor/build.log flavor pack --manifest pyproject.toml
 
 # Launcher logs
 FLAVOR_LOG_PATH=/tmp/launch.log ./myapp.psp
@@ -207,7 +212,7 @@ These variables control the packaging/build process.
 ```bash
 # Force use of Rust builder
 export FLAVOR_BUILDER_BIN=/path/to/flavor-rs-builder-linux_amd64
-flavor pack pyproject.toml
+flavor pack --manifest pyproject.toml
 
 # Override selection priority
 FLAVOR_BUILDER_BIN=dist/bin/flavor-go-builder-darwin_arm64 flavor pack
@@ -232,7 +237,7 @@ FLAVOR_BUILDER_BIN=dist/bin/flavor-go-builder-darwin_arm64 flavor pack
 ```bash
 # Force use of Go launcher
 export FLAVOR_LAUNCHER_BIN=/path/to/flavor-go-launcher-linux_amd64
-flavor pack pyproject.toml
+flavor pack --manifest pyproject.toml
 
 # Cross-platform build
 FLAVOR_LAUNCHER_BIN=dist/bin/flavor-rs-launcher-linux_amd64 \
@@ -257,7 +262,7 @@ FLAVOR_LAUNCHER_BIN=dist/bin/flavor-rs-launcher-linux_amd64 \
 **Example**:
 ```bash
 # Build with custom workenv base
-FLAVOR_WORKENV_BASE=/opt/app flavor pack pyproject.toml
+FLAVOR_WORKENV_BASE=/opt/app flavor pack --manifest pyproject.toml
 
 # Resolve {workenv}/config to /opt/app/config
 ```
@@ -504,6 +509,108 @@ print(f"{name} v{version}")
 
 ---
 
+### FLAVOR_OS
+
+**Purpose**: Operating system name.
+
+**Set By**: Launcher (automatic)
+
+**Available To**: Packaged applications
+
+**Values**: `darwin`, `linux`, `windows`
+
+**Example (inside packaged app)**:
+```python
+import os
+
+os_name = os.environ.get('FLAVOR_OS')
+if os_name == 'darwin':
+    print("Running on macOS")
+elif os_name == 'linux':
+    print("Running on Linux")
+```
+
+---
+
+### FLAVOR_ARCH
+
+**Purpose**: CPU architecture.
+
+**Set By**: Launcher (automatic)
+
+**Available To**: Packaged applications
+
+**Values**: `amd64`, `arm64`, `x86`, `i386`
+
+**Example (inside packaged app)**:
+```python
+import os
+
+arch = os.environ.get('FLAVOR_ARCH')
+print(f"CPU Architecture: {arch}")
+```
+
+---
+
+### FLAVOR_PLATFORM
+
+**Purpose**: Combined OS and architecture string.
+
+**Set By**: Launcher (automatic)
+
+**Available To**: Packaged applications
+
+**Format**: `{OS}_{ARCH}` (e.g., `darwin_arm64`, `linux_amd64`)
+
+**Example (inside packaged app)**:
+```python
+import os
+
+platform = os.environ.get('FLAVOR_PLATFORM')
+print(f"Platform: {platform}")
+# Output: "Platform: darwin_arm64"
+```
+
+---
+
+### FLAVOR_OS_VERSION
+
+**Purpose**: Operating system version (if available).
+
+**Set By**: Launcher (automatic)
+
+**Available To**: Packaged applications
+
+**Example (inside packaged app)**:
+```python
+import os
+
+os_version = os.environ.get('FLAVOR_OS_VERSION')
+if os_version:
+    print(f"OS Version: {os_version}")
+```
+
+---
+
+### FLAVOR_CPU_TYPE
+
+**Purpose**: CPU type/family (if available).
+
+**Set By**: Launcher (automatic)
+
+**Available To**: Packaged applications
+
+**Example (inside packaged app)**:
+```python
+import os
+
+cpu_type = os.environ.get('FLAVOR_CPU_TYPE')
+if cpu_type:
+    print(f"CPU Type: {cpu_type}")
+```
+
+---
+
 ## Foundation (Logging Framework) Variables
 
 FlavorPack uses [provide-foundation](https://github.com/provide-io/provide-foundation) for structured logging. These variables control Foundation's behavior.
@@ -521,10 +628,10 @@ FlavorPack uses [provide-foundation](https://github.com/provide-io/provide-found
 **Example**:
 ```bash
 # Debug Python components
-FOUNDATION_LOG_LEVEL=debug flavor pack pyproject.toml
+FOUNDATION_LOG_LEVEL=debug flavor pack --manifest pyproject.toml
 
 # Quiet mode
-FOUNDATION_LOG_LEVEL=error flavor pack pyproject.toml
+FOUNDATION_LOG_LEVEL=error flavor pack --manifest pyproject.toml
 ```
 
 **Relationship to `FLAVOR_LOG_LEVEL`**:
@@ -532,7 +639,7 @@ FOUNDATION_LOG_LEVEL=error flavor pack pyproject.toml
 - `FLAVOR_LOG_LEVEL`: Controls Go/Rust component logging
 - Set both for comprehensive debugging:
   ```bash
-  FOUNDATION_LOG_LEVEL=debug FLAVOR_LOG_LEVEL=debug flavor pack pyproject.toml
+  FOUNDATION_LOG_LEVEL=debug FLAVOR_LOG_LEVEL=debug flavor pack --manifest pyproject.toml
   ```
 
 ---
@@ -548,7 +655,7 @@ FOUNDATION_LOG_LEVEL=error flavor pack pyproject.toml
 **Example**:
 ```bash
 # Log to file
-FOUNDATION_LOG_FILE=/var/log/flavor/build.log flavor pack pyproject.toml
+FOUNDATION_LOG_FILE=/var/log/flavor/build.log flavor pack --manifest pyproject.toml
 ```
 
 ---
@@ -586,7 +693,7 @@ These variables are primarily for development and debugging.
 **Example**:
 ```bash
 # Debug metadata operations
-FLAVOR_DEBUG_METADATA=1 flavor pack pyproject.toml
+FLAVOR_DEBUG_METADATA=1 flavor pack --manifest pyproject.toml
 ```
 
 ---
@@ -631,7 +738,7 @@ When multiple configuration methods exist, this is the priority order:
 FOUNDATION_LOG_LEVEL=trace \
 FLAVOR_LOG_LEVEL=trace \
 FLAVOR_DEBUG_METADATA=1 \
-  flavor pack pyproject.toml
+  flavor pack --manifest pyproject.toml
 ```
 
 ### Debugging Package Execution
@@ -650,7 +757,7 @@ FLAVOR_LAUNCHER_LOG_LEVEL=debug \
 FOUNDATION_LOG_LEVEL=info \
 FLAVOR_JSON_LOG=1 \
 FLAVOR_OUTPUT_FORMAT=json \
-  flavor pack pyproject.toml
+  flavor pack --manifest pyproject.toml
 ```
 
 ### Custom Cache Location
@@ -658,7 +765,7 @@ FLAVOR_OUTPUT_FORMAT=json \
 ```bash
 # Use project-local cache
 export FLAVOR_CACHE=./.flavor-cache
-flavor pack pyproject.toml
+flavor pack --manifest pyproject.toml
 ./myapp.psp
 ```
 

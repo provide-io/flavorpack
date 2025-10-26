@@ -191,22 +191,9 @@ extra:
     - icon: fontawesome/solid/globe
       link: https://provide.io
 
-  analytics:
-    provider: google
-    property: G-XXXXXXXXXX
-
   # Announcement bar
   announcement:
-    text: "📦 FlavorPack documentation has been modernized with Foundry integration guides, comprehensive cookbook examples, and professional theming!"
-    link: /foundry/
-    
-  consent:
-    title: Cookie consent
-    description: >-
-      We use cookies to recognize your repeated visits and preferences, as well
-      as to measure the effectiveness of our documentation and whether users
-      find what they're searching for. With your consent, you're helping us to
-      make our documentation better.
+    text: "📦 FlavorPack documentation has been modernized with comprehensive cookbook examples and professional theming!"
 
 extra_css:
   - .shared-theme/stylesheets/provide-theme.css
@@ -230,13 +217,6 @@ nav:
     - First Package: getting-started/first-package.md
     - Examples: getting-started/examples.md
 
-  # Foundry Ecosystem Context
-  - Provide Foundry:
-    - foundry/index.md
-    - FlavorPack's Role: foundry/architecture.md
-    - Design Principles: foundry/principles.md
-    - Roadmap: foundry/roadmap.md
-  
   # SECTION 2: User Guide (concepts and how-to)
   - User Guide:
     - Overview: guide/index.md
@@ -258,10 +238,6 @@ nav:
       - Signing Packages: guide/packaging/signing.md
       - Platform Support: guide/packaging/platforms.md
 
-    - Foundry Integration:
-      - wrknv: guide/integration/wrknv.md
-      - pyvider: guide/integration/pyvider.md
-    
     - Using Packages:
       - guide/usage/index.md
       - Running Packages: guide/usage/running.md
@@ -306,6 +282,7 @@ nav:
   - Reference:
     - Overview: resources/index.md
     - System Requirements: reference/requirements.md
+    - Glossary: reference/glossary.md
 
     - Specification:
       - PSPF 2025: reference/spec/pspf-2025.md

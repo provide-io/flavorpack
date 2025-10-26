@@ -251,6 +251,7 @@ keys/flavor-private.key
 
 ### CI/CD Pipeline
 
+{% raw %}
 ```yaml
 # .github/workflows/build.yml
 name: Build Package
@@ -275,6 +276,7 @@ jobs:
       - name: Verify package
         run: flavor verify myapp.psp
 ```
+{% endraw %}
 
 ### Key Rotation
 

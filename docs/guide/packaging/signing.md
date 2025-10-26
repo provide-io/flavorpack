@@ -23,7 +23,7 @@ flavor keygen --out-dir keys
 
 ```bash
 # Sign during build
-flavor pack pyproject.toml --private-key keys/flavor-private.key --public-key keys/flavor-public.key
+flavor pack --manifest pyproject.toml --private-key keys/flavor-private.key --public-key keys/flavor-public.key
 
 # Package is now signed and can be verified
 ```
@@ -60,7 +60,7 @@ Use existing Ed25519 key files:
 
 ```bash
 # Keys must be in PEM format
-flavor pack pyproject.toml \
+flavor pack --manifest pyproject.toml \
   --private-key /path/to/flavor-private.key \
   --public-key /path/to/flavor-public.key
 ```
@@ -105,7 +105,7 @@ chmod 600 ~/.flavor/keys/flavor-private.key
   env:
     FLAVOR_KEY_SEED: ${{ secrets.SIGNING_SEED }}
   run: |
-    flavor pack pyproject.toml --key-seed "$FLAVOR_KEY_SEED"
+    flavor pack --manifest pyproject.toml --key-seed "$FLAVOR_KEY_SEED"
 ```
 {% endraw %}
 
@@ -113,7 +113,7 @@ chmod 600 ~/.flavor/keys/flavor-private.key
 # GitLab CI with protected variables
 sign:
   script:
-    - flavor pack pyproject.toml --key-seed "$CI_SIGNING_SEED"
+    - flavor pack --manifest pyproject.toml --key-seed "$CI_SIGNING_SEED"
   only:
     - tags
 ```
@@ -152,12 +152,12 @@ All signing happens during package build with `flavor pack`:
 
 ```bash
 # Basic signing with key files
-flavor pack pyproject.toml \
+flavor pack --manifest pyproject.toml \
   --private-key keys/flavor-private.key \
   --public-key keys/flavor-public.key
 
 # With deterministic seed (for reproducible builds)
-flavor pack pyproject.toml --key-seed "secret-seed"
+flavor pack --manifest pyproject.toml --key-seed "secret-seed"
 
 # Signing is automatic - no separate sign command needed
 ```
@@ -328,7 +328,7 @@ flavor verify package.psp
     **Planned workflow:**
     ```bash
     # Sign with multiple keys (not yet implemented)
-    flavor pack pyproject.toml --private-key key1.pem
+    flavor pack --manifest pyproject.toml --private-key key1.pem
     flavor cosign package.psp --private-key key2.pem
     flavor cosign package.psp --private-key key3.pem
 
@@ -579,7 +579,7 @@ The following features are planned for future releases:
     **Planned workflow:**
     ```bash
     # YubiKey signing (not yet implemented)
-    flavor pack pyproject.toml --pkcs11-module /usr/lib/opensc-pkcs11.so
+    flavor pack --manifest pyproject.toml --pkcs11-module /usr/lib/opensc-pkcs11.so
     ```
 
 ### Notarization (Platform-Specific)
@@ -589,7 +589,7 @@ The following features are planned for future releases:
 
     ```bash
     # Build package
-    flavor pack pyproject.toml --output myapp.psp
+    flavor pack --manifest pyproject.toml --output myapp.psp
 
     # Sign with codesign (macOS only)
     codesign --sign "Developer ID" myapp.psp

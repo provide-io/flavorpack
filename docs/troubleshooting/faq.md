@@ -138,7 +138,7 @@ entry_point = "myapp:main"
 
 3. Strip binaries:
    ```bash
-   flavor pack pyproject.toml --strip
+   flavor pack --manifest pyproject.toml --strip
    ```
 
 ## Running Packages
@@ -203,7 +203,7 @@ FlavorPack uses Ed25519 digital signatures:
 flavor keygen --out-dir keys/
 
 # Sign package
-flavor pack pyproject.toml --private-key keys/flavor-private.key
+flavor pack --manifest pyproject.toml --private-key keys/flavor-private.key
 
 # Verify signature
 flavor verify myapp.psp
@@ -346,7 +346,7 @@ Yes, FlavorPack works well in CI/CD. During alpha, use source installation:
     cd flavorpack
     uv sync
     make build-helpers
-    flavor pack ../myproject/pyproject.toml --key-seed "${{ secrets.FLAVOR_SEED }}"
+    flavor pack --manifest ../myproject/pyproject.toml --key-seed "${{ secrets.FLAVOR_SEED }}"
 ```
 {% endraw %}
 
