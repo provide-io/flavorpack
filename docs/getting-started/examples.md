@@ -485,15 +485,18 @@ Process CSV files with pandas:
         
         - name: Install FlavorPack
           run: |
-            pip install flavorpack
-            flavor ingredients download
+            git clone https://github.com/provide-io/flavorpack.git
+            cd flavorpack
+            uv sync
+            make build-helpers
         
+{% raw %}
         - name: Build Package
           run: |
             flavor pack \
               --manifest pyproject.toml \
               --output ${{ github.event.repository.name }}.psp
-        
+
         - name: Upload Release Asset
           uses: actions/upload-release-asset@v1
           with:
@@ -501,6 +504,7 @@ Process CSV files with pandas:
             asset_path: ./${{ github.event.repository.name }}.psp
             asset_name: ${{ github.event.repository.name }}-${{ github.event.release.tag_name }}.psp
             asset_content_type: application/octet-stream
+{% endraw %}
     ```
 
 ### Docker Multi-Stage Build
@@ -509,15 +513,17 @@ Process CSV files with pandas:
     ```dockerfile
     # Build stage
     FROM python:3.11 AS builder
-    
-    # Install FlavorPack
-    RUN pip install flavorpack
-    RUN flavor ingredients download
-    
+
+    # Install FlavorPack from source
+    RUN git clone https://github.com/provide-io/flavorpack.git /flavorpack
+    WORKDIR /flavorpack
+    RUN pip install uv && uv sync && make build-helpers
+    ENV PATH="/flavorpack/.venv/bin:$PATH"
+
     # Copy application
     WORKDIR /app
     COPY . .
-    
+
     # Build package
     RUN flavor pack --manifest pyproject.toml --output app.psp
     
@@ -568,34 +574,4 @@ Explore our cookbook for more detailed examples:
 
 - 📚 [CLI Tools](../cookbook/examples/cli-tool.md) - Command-line applications
 - 🌐 [Web Apps](../cookbook/examples/web-app.md) - Flask, FastAPI, Django
-- 🤖 [ML Models](../cookbook/examples/ml-models.md) - Deploy machine learning models
-- 🔧 [Microservices](../cookbook/examples/microservices.md) - Containerized services
-- 📊 [Data Pipelines](../cookbook/examples/data-pipeline.md) - ETL and data processing
 
-## Example Repository
-
-Clone our examples repository for ready-to-run code:
-
-```bash
-git clone https://github.com/provide-io/flavorpack-examples
-cd flavorpack-examples
-
-# Try different examples
-cd weather-cli && flavor pack --manifest pyproject.toml --output weather.psp
-cd task-api && flavor pack --manifest pyproject.toml --output api.psp
-```
-
-## Contributing Examples
-
-Have a cool FlavorPack use case? We'd love to include it!
-
-1. Fork the [examples repository](https://github.com/provide-io/flavorpack-examples)
-2. Add your example with documentation
-3. Submit a pull request
-
-Guidelines:
-- Include complete, runnable code
-- Add clear documentation
-- Provide pyproject.toml configuration
-- Include usage instructions
-- Add tests if applicable

@@ -12,7 +12,6 @@ Complete working examples for different application types:
 - [Web Applications](../cookbook/examples/web-app.md) - Web servers and APIs
 - [Data Pipelines](../cookbook/examples/data-pipeline.md) - Data processing workflows
 - [Microservices](../cookbook/examples/microservices.md) - Service architectures
-- [Machine Learning](../cookbook/examples/ml-models.md) - ML model deployment
 
 ### [Recipes](../cookbook/recipes/index.md)
 Step-by-step guides for specific tasks:
@@ -43,7 +42,7 @@ Resources for contributors and developers.
 ### Getting Involved
 - [Contributing](../development/contributing.md) - How to contribute to FlavorPack
 - [Architecture](../development/architecture.md) - System design and components
-- [Building Ingredients](../development/ingredients.md) - Native component development
+- [Building Helpers](../development/helpers.md) - Native component development
 
 ### Testing
 - [Testing Guide](../development/testing/index.md) - Testing strategy
@@ -94,9 +93,11 @@ Connect with the FlavorPack community.
 
 ### External Links
 - [GitHub Repository](https://github.com/provide-io/flavorpack)
-- [PyPI Package](https://pypi.org/project/flavorpack/)
 - [Issue Tracker](https://github.com/provide-io/flavorpack/issues)
 - [Discussions](https://github.com/provide-io/flavorpack/discussions)
+
+!!! note "PyPI Package"
+    FlavorPack is not yet available on PyPI. Install from source following the [installation guide](../getting-started/installation.md).
 
 ### Documentation Formats
 - [API Reference](../api/index.md) - Technical API documentation

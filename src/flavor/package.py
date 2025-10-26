@@ -171,7 +171,9 @@ def _get_version_from_toml(project_config: dict[str, Any], manifest_path: Path, 
         return "0.0.0"
 
 
-def _get_entry_point_from_toml(flavor_config: dict[str, Any], project_name: str, cli_scripts: dict[str, Any]) -> str:
+def _get_entry_point_from_toml(
+    flavor_config: dict[str, Any], project_name: str, cli_scripts: dict[str, Any]
+) -> str:
     """Extract entry point from TOML config."""
     entry_point = flavor_config.get("entry_point")
     if entry_point:

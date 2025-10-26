@@ -15,58 +15,58 @@ TEST_SUITE="${3:-all}"
 PRETASTER_PSP="${4:-}"
 
 echo "🧪 Running pretaster tests for $PLATFORM"
-echo "📦 Ingredient version: $VERSION"
+echo "📦 Helper version: $VERSION"
 echo "🎯 Test suite: $TEST_SUITE"
 
-# Extract or copy platform-specific ingredients (skip if using pre-built PRETASTER_PSP)
+# Extract or copy platform-specific helpers (skip if using pre-built PRETASTER_PSP)
 if [ -z "$PRETASTER_PSP" ]; then
-    echo "📥 Setting up ingredients for $PLATFORM..."
-    mkdir -p ingredients/bin
+    echo "📥 Setting up helpers for $PLATFORM..."
+    mkdir -p helpers/bin
 
-    # Check if ingredients are already extracted (actions/download-artifact extracts them)
-    if [ -d "ingredients-dist" ] && [ "$(ls -A ingredients-dist 2>/dev/null)" ]; then
+    # Check if helpers are already extracted (actions/download-artifact extracts them)
+    if [ -d "helpers-dist" ] && [ "$(ls -A helpers-dist 2>/dev/null)" ]; then
         # Check if they're individual files (already extracted)
-        if [ -f "ingredients-dist/flavor-go-builder-$VERSION-$PLATFORM" ] || \
-           [ -f "ingredients-dist/flavor-rs-builder-$VERSION-$PLATFORM" ]; then
-            echo "📂 Ingredients already extracted, copying..."
-            cp -f ingredients-dist/* ingredients/bin/ 2>/dev/null || true
+        if [ -f "helpers-dist/flavor-go-builder-$VERSION-$PLATFORM" ] || \
+           [ -f "helpers-dist/flavor-rs-builder-$VERSION-$PLATFORM" ]; then
+            echo "📂 Helpers already extracted, copying..."
+            cp -f helpers-dist/* helpers/bin/ 2>/dev/null || true
         # Or if they're zipped
-        elif [ -f "ingredients-dist/flavor-ingredients-$VERSION-$PLATFORM.zip" ]; then
-            echo "📦 Extracting zipped ingredients..."
-            unzip -o "ingredients-dist/flavor-ingredients-$VERSION-$PLATFORM.zip" -d ingredients/bin/
-        elif [ -f "ingredients-dist/flavor-ingredients-$VERSION-all.zip" ]; then
-            echo "📦 Extracting all-platform ingredients..."
-            unzip -o "ingredients-dist/flavor-ingredients-$VERSION-all.zip" -d ingredients/bin/
+        elif [ -f "helpers-dist/flavor-helpers-$VERSION-$PLATFORM.zip" ]; then
+            echo "📦 Extracting zipped helpers..."
+            unzip -o "helpers-dist/flavor-helpers-$VERSION-$PLATFORM.zip" -d helpers/bin/
+        elif [ -f "helpers-dist/flavor-helpers-$VERSION-all.zip" ]; then
+            echo "📦 Extracting all-platform helpers..."
+            unzip -o "helpers-dist/flavor-helpers-$VERSION-all.zip" -d helpers/bin/
         else
-            echo "⚠️ No ingredients found in ingredients-dist/, will rely on existing ingredients/bin/"
+            echo "⚠️ No helpers found in helpers-dist/, will rely on existing helpers/bin/"
         fi
     else
-        echo "⚠️ No ingredients-dist/ directory, will rely on existing ingredients/bin/"
+        echo "⚠️ No helpers-dist/ directory, will rely on existing helpers/bin/"
     fi
 else
-    echo "📦 Using pre-built PRETASTER_PSP, skipping repo-root ingredient setup"
-    echo "   Ingredients will be set up in pretaster context"
+    echo "📦 Using pre-built PRETASTER_PSP, skipping repo-root helper setup"
+    echo "   Helpers will be set up in pretaster context"
 fi
 
-# Make ingredients executable
-chmod +x ingredients/bin/* 2>/dev/null || true
+# Make helpers executable
+chmod +x helpers/bin/* 2>/dev/null || true
 
-# List available ingredients
-if [ -d "ingredients/bin" ]; then
-    echo "📦 Available ingredients:"
-    ls -la ingredients/bin/
+# List available helpers
+if [ -d "helpers/bin" ]; then
+    echo "📦 Available helpers:"
+    ls -la helpers/bin/
 
-    # Create symlinks for pretaster to find the ingredients
-    for file in ingredients/bin/flavor-*-$VERSION-$PLATFORM; do
+    # Create symlinks for pretaster to find the helpers
+    for file in helpers/bin/flavor-*-$VERSION-$PLATFORM; do
         if [ -f "$file" ]; then
             # Create symlink without version and platform suffix
             base_name=$(basename "$file" | sed "s/-$VERSION-$PLATFORM//")
-            ln -sf "$(basename "$file")" "ingredients/bin/$base_name"
-            echo "Created symlink: ingredients/bin/$base_name -> $(basename "$file")"
+            ln -sf "$(basename "$file")" "helpers/bin/$base_name"
+            echo "Created symlink: helpers/bin/$base_name -> $(basename "$file")"
         fi
     done
 else
-    echo "⚠️ ingredients/bin/ directory not available at repo root, will be set up in pretaster context"
+    echo "⚠️ helpers/bin/ directory not available at repo root, will be set up in pretaster context"
 fi
 
 # Change to pretaster directory
@@ -107,14 +107,14 @@ echo "🔍 Debug: File exists = $([ -f "$PRETASTER_PSP" ] && echo "yes" || echo 
 
 if [ -n "$PRETASTER_PSP" ]; then
     
-    # Setup ingredients directory if they exist in CI download location
-    if [ -d "../../ingredients-dist" ]; then
-        echo "📥 Found downloaded ingredients, copying to expected location..."
+    # Setup helpers directory if they exist in CI download location
+    if [ -d "../../helpers-dist" ]; then
+        echo "📥 Found downloaded helpers, copying to expected location..."
         mkdir -p ../bin
-        cp -f ../../ingredients-dist/* ../bin/ 2>/dev/null || true
+        cp -f ../../helpers-dist/* ../bin/ 2>/dev/null || true
         # Make them executable
         chmod +x ../bin/* 2>/dev/null || true
-        echo "✅ Ingredients copied to ../bin/"
+        echo "✅ Helpers copied to ../bin/"
     fi
     
     # Configure to use Go builder + Rust launcher for test packages
@@ -149,7 +149,7 @@ else
     # Original Makefile-based execution
     case "$TEST_SUITE" in
       all)
-        # Run all tests (ingredients already available)
+        # Run all tests (helpers already available)
         make all
         EXIT_CODE=$?
         ;;

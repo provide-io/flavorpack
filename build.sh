@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# build.sh - Compiles Go and Rust ingredient binaries into ingredients/bin/
+# build.sh - Compiles Go and Rust helper binaries into helpers/bin/
 # Builds both normal (dynamically linked) and musl (statically linked) versions for Linux
 #
 set -eo pipefail
@@ -43,18 +43,18 @@ log_success "All build tools found."
 log_info "Platform detected: $PLATFORM"
 
 # --- Main Build ---
-log_info "Starting build for Go and Rust ingredients..."
+log_info "Starting build for Go and Rust helpers..."
 mkdir -p "$BIN_DIR"
 
-# --- Build Go Ingredients ---
-log_info "Building Go ingredients for $PLATFORM..."
+# --- Build Go Helpers ---
+log_info "Building Go helpers for $PLATFORM..."
 make -C "$GO_DIR" build BIN_DIR="$BIN_DIR"
-log_success "Go ingredients built successfully."
+log_success "Go helpers built successfully."
 
-# --- Build Rust Ingredients ---
-log_info "Building Rust ingredients for $PLATFORM..."
+# --- Build Rust Helpers ---
+log_info "Building Rust helpers for $PLATFORM..."
 make -C "$RUST_DIR" build BIN_DIR="$BIN_DIR"
-log_success "Rust ingredients built successfully."
+log_success "Rust helpers built successfully."
 
 # Linux note: Rust build automatically uses musl for static binaries
 if [ "$OS" = "linux" ]; then

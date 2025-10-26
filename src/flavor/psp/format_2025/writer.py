@@ -12,7 +12,6 @@ Handles the low-level binary writing and file operations for PSPF packages.
 import gzip
 from pathlib import Path
 from typing import Any, BinaryIO
-import zlib
 
 from provide.foundation import logger
 from provide.foundation.crypto import Ed25519Signer, format_checksum as calculate_checksum
@@ -148,6 +147,7 @@ def _write_metadata(f: BinaryIO, metadata_compressed: bytes, index: PSPFIndex) -
     index.metadata_size = len(metadata_compressed)
     # Compute full SHA-256 checksum (32 bytes)
     import hashlib
+
     index.metadata_checksum = hashlib.sha256(metadata_compressed).digest()
 
 
@@ -176,6 +176,7 @@ def _write_slots(f: BinaryIO, slots: list[PreparedSlot], spec: BuildSpec, index:
 
         # Verify checksum integrity at write time (SHA-256 first 8 bytes)
         import hashlib
+
         hash_bytes = hashlib.sha256(data_to_write).digest()[:8]
         actual_checksum_of_written_data = int.from_bytes(hash_bytes, byteorder="little")
         logger.trace(

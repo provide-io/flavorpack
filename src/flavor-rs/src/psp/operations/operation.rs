@@ -1,4 +1,4 @@
-// ingredients/flavor-rs/src/psp/operations/operation.rs
+// helpers/flavor-rs/src/psp/operations/operation.rs
 // Base operation trait and types
 
 use std::io::{Read, Write};

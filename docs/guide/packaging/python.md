@@ -2,6 +2,23 @@
 
 Complete guide to packaging Python applications with FlavorPack, including dependencies, virtual environments, and Python-specific optimizations.
 
+!!! warning "Feature Status - Alpha Release"
+    This guide documents both **currently implemented** and **planned future** features. Many advanced configuration options shown below are not yet available.
+
+    **Currently Working**:
+    - Basic dependency packaging from `pyproject.toml`
+    - Standard entry points and scripts
+    - Simple package structure
+
+    **Planned Features** (see [Roadmap](../roadmap.md)):
+    - Advanced TOML configuration options
+    - Python version selection
+    - Build environment customization
+    - Runtime optimizations
+    - Platform-specific builds
+
+    Features marked with 🔶 are **planned** but not yet implemented.
+
 ## Overview
 
 FlavorPack provides first-class support for Python applications, handling everything from simple scripts to complex applications with numerous dependencies. This guide covers Python-specific features and best practices for creating efficient, reliable packages.
@@ -13,28 +30,19 @@ FlavorPack provides first-class support for Python applications, handling everyt
 | Python Version | Support Level | Notes |
 |---------------|--------------|-------|
 | 3.12+ | Full | Recommended for new projects |
-| 3.11 | Full | Default in most examples |
-| 3.10 | Full | Good compatibility |
-| 3.9 | Limited | Minimum supported version |
-| 3.8 | None | End of life October 2024 |
+| 3.11 | Full | Minimum required version |
+| 3.10 and older | None | Not supported |
 
 ### Specifying Python Version
 
+!!! note "🔶 Planned Feature"
+    Python version selection via manifest is not yet implemented. See [Roadmap](../roadmap.md#python-version-selection).
+    Currently, packages use the Python version from your build environment.
+
 ```toml
-[tool.flavor.runtime]
-python_version = "3.11"  # Exact version
-# or
-python_version = ">=3.10,<3.13"  # Version range
-```
-
-### Using System Python
-
-```bash
-# Use specific Python interpreter
-flavor pack pyproject.toml --python /usr/bin/python3.11
-
-# Use current Python
-flavor pack pyproject.toml --python $(which python3)
+# 🔶 PLANNED - Not yet implemented
+[tool.flavor.python]
+version = "3.11"  # Exact version to use
 ```
 
 ## Dependency Management
@@ -70,18 +78,7 @@ api = [
 ]
 ```
 
-Build with optional dependencies:
-
-```bash
-# Include specific extras
-flavor pack pyproject.toml --extras api
-
-# Include multiple extras
-flavor pack pyproject.toml --extras "api,docs"
-
-# Include all extras
-flavor pack pyproject.toml --all-extras
-```
+FlavorPack automatically includes all dependencies from your `pyproject.toml` file when building packages.
 
 ### Platform-Specific Dependencies
 
@@ -116,9 +113,13 @@ dependencies = [
 
 ### Build Environment
 
+!!! note "🔶 Mostly Planned"
+    Basic venv creation works, but advanced configuration options are not yet implemented. See [Roadmap](../roadmap.md#build-environment-configuration).
+
 FlavorPack creates an isolated virtual environment during build:
 
 ```toml
+# 🔶 PLANNED - Advanced configuration not yet available
 [tool.flavor.build]
 # Custom venv location
 venv_path = ".flavor-venv"
@@ -350,9 +351,13 @@ dependencies = [
 
 ## Optimization Techniques
 
+!!! note "🔶 Planned Features"
+    Runtime optimization configuration is not yet implemented. See [Roadmap](../roadmap.md#runtime-optimization).
+
 ### Code Optimization
 
 ```toml
+# 🔶 PLANNED - Not yet implemented
 [tool.flavor.runtime]
 # Python optimization level
 optimization_level = 2  # -OO flag
@@ -449,19 +454,20 @@ lifecycle = "cached"
 ### Runtime Environment
 
 ```toml
-[tool.flavor.runtime]
-# Set environment variables
-env = {
-    "PYTHONPATH": "$FLAVOR_WORKENV/lib",
-    "MY_APP_CONFIG": "$FLAVOR_WORKENV/config",
-    "DEBUG": "0"
+[tool.flavor.execution.runtime]
+[tool.flavor.execution.runtime.env]
+# Clear all host environment variables, then selectively pass through
+unset = ["*"]
+
+# Pass through essential host variables
+pass = ["HOME", "USER", "TERM", "PATH"]
+
+# Set application-specific environment variables
+set = {
+    PYTHONPATH = "$FLAVOR_WORKENV/lib",
+    MY_APP_CONFIG = "$FLAVOR_WORKENV/config",
+    DEBUG = "0"
 }
-
-# Inherit from host
-inherit_env = ["HOME", "USER", "TERM"]
-
-# Block specific variables
-block_env = ["PYTHONHOME", "PYTHONPATH"]
 ```
 
 ### Configuration via Environment
@@ -797,7 +803,7 @@ entry_point = "ml_model.predict:main"
 id = "models"
 source = "models/"
 lifecycle = "lazy"
-codec = "tgz"
+# Automatic tar.gz compression
 ```
 
 ### Web API Package

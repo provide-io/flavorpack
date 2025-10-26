@@ -29,7 +29,7 @@ FlavorPack supports:
 
 ### What Python versions are supported?
 
-FlavorPack supports Python 3.9 and later, with best support for Python 3.11+.
+FlavorPack requires Python 3.11 or later.
 
 ## Installation
 
@@ -117,7 +117,7 @@ flavor pack pyproject.toml --platform darwin_arm64
 1. Enable compression:
    ```toml
    [[tool.flavor.slots]]
-   codec = "tgz"
+   # Compression is automatic - tar.gz for directories
    ```
 
 2. Exclude unnecessary files:
@@ -186,10 +186,10 @@ FlavorPack uses Ed25519 digital signatures:
 
 ```bash
 # Generate keys
-flavor keygen --output private.pem
+flavor keygen --out-dir keys/
 
 # Sign package
-flavor pack pyproject.toml --private-key private.pem
+flavor pack pyproject.toml --private-key keys/flavor-private.key
 
 # Verify signature
 flavor verify myapp.psp
@@ -268,10 +268,10 @@ Check:
 FLAVOR_LOG_LEVEL=debug ./myapp.psp
 
 # Extract and inspect
-flavor extract-all myapp.psp --output debug/
+flavor extract-all myapp.psp --output-dir debug/
 
 # Verify package
-flavor verify myapp.psp --deep
+flavor verify myapp.psp
 ```
 
 ### Why do I get "Module not found" errors?
@@ -314,12 +314,13 @@ packages = build_package_from_manifest(
 
 ### Can I customize the launcher?
 
-You can build custom launchers from the Go or Rust source in the `ingredients/` directory.
+You can build custom launchers from the Go or Rust source in the `helpers/` directory.
 
 ### Can I embed FlavorPack in CI/CD?
 
 Yes, FlavorPack works well in CI/CD:
 
+{% raw %}
 ```yaml
 # GitHub Actions example
 - name: Build package
@@ -327,6 +328,7 @@ Yes, FlavorPack works well in CI/CD:
     pip install flavor
     flavor pack pyproject.toml --key-seed "${{ secrets.FLAVOR_SEED }}"
 ```
+{% endraw %}
 
 ### Can I distribute packages through PyPI?
 

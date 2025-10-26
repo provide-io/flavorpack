@@ -22,6 +22,36 @@ flavor inspect myapp.psp
 
 ## Format Structure
 
+### Binary Layout
+
+```mermaid
+graph TD
+    subgraph "PSPF Package File"
+        A["Launcher Binary<br/>~2-5 MB<br/>Platform-specific executable"]
+        B["Index Block<br/>8192 bytes fixed<br/>Package metadata & offsets"]
+        C["Gzipped Metadata<br/>~1-10 KB<br/>JSON configuration"]
+        D["Slot 0<br/>~35-45 MB<br/>Python runtime tar.gz"]
+        E["Slot 1<br/>Variable size<br/>Application code tar.gz"]
+        F["Slot 2...N<br/>Optional<br/>Additional resources"]
+        G["Magic Footer<br/>8 bytes<br/>📦🪄"]
+    end
+
+    A ==> B
+    B ==> C
+    C ==> D
+    D ==> E
+    E ==> F
+    F ==> G
+
+    style A fill:#e1f5ff
+    style B fill:#fff4e6
+    style C fill:#e8f5e9
+    style D fill:#fce4ec
+    style E fill:#f3e5f5
+    style F fill:#e0f2f1
+    style G fill:#fff9c4
+```
+
 ### Visual Overview
 
 ```
@@ -79,17 +109,51 @@ The launcher is a platform-specific executable that:
 - **Manages** the work environment cache
 - **Executes** the packaged application
 
+#### Launcher Flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Launcher as Launcher Binary
+    participant Index as Index Block
+    participant Cache as Work Environment Cache
+    participant App as Application
+
+    User->>Launcher: Execute ./myapp.psp
+    Launcher->>Launcher: Read own binary location
+    Launcher->>Index: Seek to Index Block
+    Index-->>Launcher: Return metadata & offsets
+
+    Launcher->>Cache: Check cache (SHA-256 ID)
+
+    alt Cache exists & valid
+        Cache-->>Launcher: Cache valid
+        Launcher->>Launcher: Use cached workenv
+    else Cache invalid or missing
+        Cache-->>Launcher: Cache invalid
+        Launcher->>Launcher: Extract all slots
+        Launcher->>Cache: Create new workenv
+        Cache-->>Launcher: Workenv ready
+    end
+
+    Launcher->>Launcher: Set FLAVOR_* env vars
+    Launcher->>App: Execute application command
+    App->>App: Run application logic
+    App-->>Launcher: Exit with code
+    Launcher-->>User: Return exit code
+```
+
 === "Go Launcher"
     ```go
     // Lightweight and fast
-    // ~2 MB binary size
+    // ~3-4 MB binary size
     // Cross-platform support
     ```
 
 === "Rust Launcher"
     ```rust
     // Memory-safe and efficient
-    // ~3 MB binary size
+    // ~1 MB binary size
     // Optimal performance
     ```
 
@@ -182,6 +246,42 @@ Each slot has:
 - **Encoding**: raw, tar, gzip, tar.gz
 - **Lifecycle**: persistent, ephemeral, cached
 - **Permissions**: read, write, execute flags
+
+#### Slot Descriptor Binary Layout (64 bytes)
+
+!!! info "Complete Specification"
+    The slot descriptor is a precisely defined 64-byte binary structure. For the complete specification including all fields, byte offsets, cross-language implementations, and detailed field descriptions, see [**Slot Descriptor Specification**](../../reference/spec/SLOT_DESCRIPTOR_SPECIFICATION.md).
+
+**Quick Reference - Field Layout:**
+
+| Offset | Size | Field | Description |
+|--------|------|-------|-------------|
+| 0x00 | 8 bytes | `id` | Unique slot identifier |
+| 0x08 | 8 bytes | `name_hash` | SHA-256 of slot name (first 8 bytes, little-endian) |
+| 0x10 | 8 bytes | `offset` | Byte offset in package file |
+| 0x18 | 8 bytes | `size` | Compressed/stored size |
+| 0x20 | 8 bytes | `original_size` | Uncompressed size |
+| 0x28 | 8 bytes | `operations` | Packed operation chain |
+| 0x30 | 8 bytes | `checksum` | SHA-256 of slot data (first 8 bytes, little-endian) |
+| 0x38 | 1 byte | `purpose` | Purpose classification (code, data, config, media) |
+| 0x39 | 1 byte | `lifecycle` | Lifecycle hint (init, startup, runtime, etc.) |
+| 0x3A | 1 byte | `priority` | Cache priority (0-255) |
+| 0x3B | 1 byte | `platform` | Platform requirements (any, linux, macos, windows) |
+| 0x3C-0x3D | 2 bytes | `reserved` | Reserved for future use |
+| 0x3E-0x3F | 2 bytes | `permissions` | Unix-style permissions (16-bit) |
+
+**Operations Field Encoding** (64-bit packed, up to 8 operations of 8 bits each):
+
+```
+Bit Layout:
+┌──────────┬──────────┬──────────┬──────────┬──────────┬──────────┬──────────┬──────────┐
+│  Op 7    │  Op 6    │  Op 5    │  Op 4    │  Op 3    │  Op 2    │  Op 1    │  Op 0    │
+│  (00)    │  (00)    │  (00)    │  (00)    │  (00)    │  (00)    │  (10)    │  (01)    │
+└──────────┴──────────┴──────────┴──────────┴──────────┴──────────┴──────────┴──────────┘
+bits 63-56   55-48      47-40      39-32      31-24      23-16      15-8       7-0
+
+Example: tar.gz = 0x0000000000001001 (Op 0 = 0x01 (tar), Op 1 = 0x10 (gzip))
+```
 
 ### 5. Magic Footer
 
@@ -406,8 +506,9 @@ Offset    | Component
 
 ## Further Reading
 
-- 📚 [PSPF Specification](../../spec/pspf-2025.md) - Complete format specification
-- 🔧 [Builder Implementation](../../api/python/psp/builder.md) - How packages are created
-- 🔍 [Reader Implementation](../../api/python/psp/reader.md) - How packages are read
+- 📚 [FEP-0001: Core Format Specification](../../reference/spec/fep-0001-core-format-and-operation-chains.md) - Complete PSPF/2025 binary format specification
+- 📋 [Slot Descriptor Specification](../../reference/spec/SLOT_DESCRIPTOR_SPECIFICATION.md) - Detailed slot descriptor format
+- 🔧 [Builder API](../../api/builder.md) - How packages are created programmatically
+- 🔍 [Reader API](../../api/reader.md) - How packages are read and extracted
 - 🔒 [Security Model](security.md) - In-depth security analysis
-- 📦 [FEP-0001](../../spec/feps/fep-0001.md) - Core specification proposal
+- 📦 [Package Structure](package-structure.md) - High-level package organization

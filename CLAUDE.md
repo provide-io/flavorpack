@@ -18,10 +18,10 @@ All Linux binaries are built as static executables:
 
 ### Environment Setup
 ```bash
-# Build Go and Rust ingredients (required for packaging)
-make build-ingredients
-# or
-./ingredients/build.sh
+# Build Go and Rust helpers (required for packaging)
+make build-helpers
+# or directly
+./build.sh
 ```
 
 ### Testing
@@ -100,50 +100,20 @@ The project has a polyglot architecture with three main layers:
    - `psp/format_2025/launcher.py` - Launcher management
    - `psp/format_2025/crypto.py` - Ed25519 signing/verification
 
-2. **Native Ingredients** (`src/`)
+2. **Native Helpers** (`src/`)
    - `flavor-go/` - Go builder and launcher implementations
    - `flavor-rust/` - Rust builder and launcher implementations
    - Built binaries are placed in `dist/bin/` and embedded during packaging
 
 3. **PSPF Package Structure**
-   - Native launcher binary (platform-specific)
-   - 8192-byte index block (metadata, offsets, signature)
-   - Gzipped JSON metadata
-   - Slot table and data slots (tar.gz archives)
-   - 8-byte emoji magic footer (📦🪄)
-
-4. **Schema Architecture**
-   - Protocol Buffers define operation chains and metadata
-   - No legacy codec support - operations-only system
-   - SlotDescriptor uses 64-bit operations field
-   - All operations defined in protobuf enums
-
-## Operation Chain Schema (PSPF/2025)
-
-The package format uses a protobuf-based operation chain system:
-
-### Operation System
-- **255 operations** defined in `spec/pspf_2025/proto/modules/operations.proto`
-- Operations packed into 64-bit integers (up to 8 operations per chain)
-- Categories: BUNDLE (0x01-0x0F), COMPRESS (0x10-0x2F), ENCRYPT (0x30-0x3F), etc.
-- Example chain: TAR → GZIP → AES256 = 0x310110
-
-### SlotDescriptor Schema Changes
-- **REMOVED**: `codec` field (legacy 8-bit encoding)
-- **ADDED**: `operations` field (64-bit operation chain)
-- Binary format: 64 bytes exactly
-- Pack format: `<QQQQQQQIBBBBBBH` (6Q + I + 6B + H)
-- No backward compatibility - operations field is primary
-
-### Archive Integration
-- `provide.foundation.archive` provides actual archive implementations
-- Flavorpack maps operations to foundation tools via handlers
-- Clean separation: foundation has tools, flavorpack has protocol
+   - See `docs/reference/spec/` for complete binary format specification
+   - SlotDescriptor: 64-byte binary format (see `docs/reference/spec/SLOT_DESCRIPTOR_SPECIFICATION.md`)
+   - Operations: 64-bit packed operation chains (see `docs/reference/spec/fep-0001-core-format-and-operation-chains.md`)
 
 ## Key Patterns
 
-### Ingredient Selection
-The system automatically selects appropriate builder/launcher combinations based on platform and availability. See `src/flavor/packaging/orchestrator_ingredients.py` for the selection logic.
+### Helper Selection
+The system automatically selects appropriate builder/launcher combinations based on platform and availability. See `src/flavor/packaging/orchestrator_helpers.py` for the selection logic.
 
 ### Slot System
 Packages use numbered slots for different components:
@@ -210,10 +180,10 @@ uv run pytest -m security
 - Rust code must compile with `--warnings-as-errors` (strict mode)
 
 ### SCHEMA IS OPERATIONS-ONLY
-- **NO legacy codec fields** - operations field is the only encoding mechanism
-- **64-bit operation chains** - up to 8 operations packed into single integer
-- **Protobuf is source of truth** - all operations defined in .proto files
-- **No codec backward compatibility** - SlotDescriptor uses operations exclusively
+- **Operations field** - 64-bit uint64, the only encoding mechanism
+- **Operation chains** - Up to 8 operations packed into single integer
+- **Protobuf** - All operations defined in .proto files
+- **SlotDescriptor format** - See `docs/reference/spec/SLOT_DESCRIPTOR_SPECIFICATION.md` for exact binary layout
 
 ### Testing Requirements
 - **ALL tests MUST use pretaster or taster** - NEVER create standalone test files

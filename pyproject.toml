@@ -63,13 +63,13 @@ version = {file = "VERSION"}
 
 [tool.setuptools.package-data]
 flavor = [
-    "ingredients/bin/**/*",  # Platform-specific ingredient binaries
+    "helpers/bin/**/*",  # Platform-specific helper binaries
 ]
 
 [tool.setuptools.packages.find]
 where = ["src"]
 include = ["flavor*"]
-exclude = ["flavor.ingredients.bin*"]
+exclude = ["flavor.helpers.bin*"]
 namespaces = false
 
 [tool.ruff]
@@ -110,7 +110,7 @@ exclude = [
 ]
 
 [[tool.mypy.overrides]]
-module = ["structlog.*", "google.*", "grpc.*", "pytest.*", "jq.*", "psutil.*", "hcl2", "mutmut.*"]
+module = ["structlog.*", "google.*", "grpc.*", "pytest.*", "jq.*", "psutil.*", "hcl2", "mutmut.*", "opentelemetry.*"]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
@@ -157,7 +157,7 @@ markers = [
     "packaging: Package building and verification tests",
     "cross_language: Tests involving Go/Rust/Python interaction",
     "stress: Stress and hypothesis-based property tests",
-    "requires_ingredients: Tests that need Go/Rust ingredients built",
+    "requires_helpers: Tests that need Go/Rust helpers built",
 ]
 
 [tool.mutmut]

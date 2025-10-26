@@ -8,8 +8,8 @@ SHELL := /bin/bash
 .DEFAULT_GOAL := help
 
 # Paths
-INGREDIENTS_DIR := ../../dist
-BIN_DIR := $(INGREDIENTS_DIR)/bin
+HELPERS_DIR := ../../dist
+BIN_DIR := $(HELPERS_DIR)/bin
 DIST_DIR := dist
 LOGS_DIR := logs
 TESTS_DIR := tests
@@ -346,7 +346,7 @@ info: ## Show current configuration
 	@echo -e "$(CYAN)=======================$(NC)"
 	@echo ""
 	@echo -e "$(YELLOW)Paths:$(NC)"
-	@echo "  Ingredients: $(INGREDIENTS_DIR)"
+	@echo "  Helpers: $(HELPERS_DIR)"
 	@echo "  Binaries:   $(BIN_DIR)"
 	@echo "  Dist:       $(DIST_DIR)"
 	@echo "  Logs:       $(LOGS_DIR)"

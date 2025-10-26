@@ -44,7 +44,7 @@ jobs:
     outputs:
       version: ${{ steps.version.outputs.version }}
       version_tag: ${{ steps.version.outputs.version_tag }}
-      ingredient_run_id: ${{ steps.ingredient.outputs.run_id }}
+      helper_run_id: ${{ steps.helper.outputs.run_id }}
       flavor_run_id: ${{ steps.flavor.outputs.run_id }}
     steps:
       - name: 📥 Checkout
@@ -207,7 +207,7 @@ jobs:
           
           ### Install from PyPI
           ```bash
-          # Install platform-specific wheel with embedded ingredients
+          # Install platform-specific wheel with embedded helpers
           pip install flavorpack==${{ needs.prepare.outputs.version }}
           
           # Or download and run the self-contained PSP
@@ -219,7 +219,7 @@ jobs:
           ## 📦 Release Assets
           
           ### Python Wheels
-          Platform-specific wheels with embedded Go and Rust ingredients:
+          Platform-specific wheels with embedded Go and Rust helpers:
           - `flavorpack-${{ needs.prepare.outputs.version }}-py3-none-manylinux2014_x86_64.whl` - Linux x86_64
           - `flavorpack-${{ needs.prepare.outputs.version }}-py3-none-manylinux2014_aarch64.whl` - Linux ARM64
           - `flavorpack-${{ needs.prepare.outputs.version }}-py3-none-macosx_10_9_x86_64.whl` - macOS Intel
@@ -445,7 +445,7 @@ jobs:
           - **Mode**: ${{ github.event.inputs.dry_run == 'true' && 'Dry Run' || 'Production' }}
           
           ## 🔨 Build Sources
-          - **Ingredients**: Run #${{ needs.prepare.outputs.ingredient_run_id }}
+          - **Helpers**: Run #${{ needs.prepare.outputs.helper_run_id }}
           - **Flavor Pipeline**: Run #${{ needs.prepare.outputs.flavor_run_id }}
           
           ## 📦 Asset Collection

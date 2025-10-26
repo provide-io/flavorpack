@@ -1,6 +1,9 @@
 # Installation
 
-FlavorPack can be installed in multiple ways depending on your needs. Choose the method that best suits your environment.
+!!! warning "Alpha Release - Source Installation Only"
+    FlavorPack is in early alpha. PyPI packages and pre-built binaries are not yet available. Check current version with `flavor --version`. **Install from source only.**
+
+FlavorPack can be installed from source. Future releases will support additional installation methods.
 
 ## System Requirements
 
@@ -9,10 +12,13 @@ FlavorPack can be installed in multiple ways depending on your needs. Choose the
 | Component | Version | Required For |
 |-----------|---------|--------------|
 | Python | 3.11+ | Running FlavorPack |
-| Go | 1.21+ | Building Go ingredients |
-| Rust | 1.75+ | Building Rust ingredients |
+| Go | 1.23+ | Building Go helpers |
+| Rust | 1.85+ | Building Rust helpers (edition 2024) |
 | Git | 2.25+ | Cloning repository |
 | Make | 3.81+ | Build automation |
+
+!!! info "UV Version Requirement"
+    FlavorPack requires **UV 0.8.13 or later** for full functionality. Earlier versions may have compatibility issues with modern package management features.
 
 ### Supported Platforms
 
@@ -29,28 +35,24 @@ FlavorPack can be installed in multiple ways depending on your needs. Choose the
 
 ### Method 1: From Source (Recommended)
 
-Best for developers who want the latest features and ability to build custom ingredients.
+Best for developers who want the latest features and ability to build custom helpers.
 
 === "Linux/macOS"
 
     ```bash
     # Install UV package manager
     curl -LsSf https://astral.sh/uv/install.sh | sh
-    
+
     # Clone the repository
     git clone https://github.com/provide-io/flavorpack.git
     cd flavorpack
-    
-    # Create and activate virtual environment
-    uv venv
-    source .venv/bin/activate
-    
-    # Install FlavorPack
-    uv pip install -e .
-    
-    # Build native ingredients
-    make build-ingredients
-    
+
+    # Set up environment and install dependencies
+    uv sync
+
+    # Build native helpers (Go and Rust binaries)
+    make build-helpers
+
     # Verify installation
     flavor --version
     ```
@@ -60,66 +62,35 @@ Best for developers who want the latest features and ability to build custom ing
     ```powershell
     # Install UV package manager
     powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
-    
+
     # Clone the repository
     git clone https://github.com/provide-io/flavorpack.git
     cd flavorpack
-    
-    # Create and activate virtual environment
-    uv venv
-    .venv\Scripts\activate
-    
-    # Install FlavorPack
-    uv pip install -e .
-    
-    # Build native ingredients (requires WSL or Docker)
+
+    # Set up environment and install dependencies
+    uv sync
+
+    # Build native helpers (requires WSL or Docker)
     # See Windows-specific instructions below
-    
+
     # Verify installation
     flavor --version
     ```
 
-### Method 2: Using pip (Coming Soon)
+### Method 2: Using pip
 
-For users who want a simple installation without building from source.
+!!! info "Planned for Future Release"
+    PyPI installation is planned for a future release. Currently unavailable.
 
-```bash
-# Install from PyPI
-pip install flavorpack
+    **When available**, installation will be:
+    ```bash
+    pip install flavorpack
+    make build-helpers
+    ```
 
-# Download pre-built ingredients
-flavor ingredients download
+    For now, please use source installation (Method 1 above).
 
-# Verify installation
-flavor --version
-```
-
-!!! warning "Limited Availability"
-    PyPI packages are not yet available. This option will be available in a future release.
-
-### Method 3: Using Docker
-
-For users who prefer containerized environments or CI/CD pipelines.
-
-```bash
-# Pull the official image
-docker pull ghcr.io/provide-io/flavorpack:latest
-
-# Run interactively
-docker run -it --rm \
-  -v $(pwd):/workspace \
-  ghcr.io/provide-io/flavorpack:latest \
-  bash
-
-# Or run a command directly
-docker run --rm \
-  -v $(pwd):/workspace \
-  ghcr.io/provide-io/flavorpack:latest \
-  flavor pack --manifest /workspace/pyproject.toml \
-  --output /workspace/myapp.psp
-```
-
-### Method 4: Development Container
+### Method 3: Development Container
 
 For VS Code users with the Remote-Containers extension.
 
@@ -129,24 +100,26 @@ For VS Code users with the Remote-Containers extension.
 
 The devcontainer includes:
 - Python 3.11+
-- Go 1.21+
-- Rust 1.75+
+- Go 1.23+
+- Rust 1.85+
 - All required build tools
 - Pre-configured environment
 
-## Building Native Ingredients
+## Building Native Helpers
 
 FlavorPack requires native launchers and builders written in Go and Rust. These must be built for your platform.
 
 ### Automatic Build
 
 ```bash
-# Build all ingredients for current platform
-make build-ingredients
+# Build all helpers for current platform
+make build-helpers
 
-# Or use the build script
-cd ingredients
+# Or use the build script directly
 ./build.sh
+
+# Built binaries will be in dist/bin/ with platform suffixes
+ls dist/bin/
 ```
 
 ### Manual Build
@@ -154,36 +127,38 @@ cd ingredients
 === "Go Components"
 
     ```bash
-    cd ingredients/flavor-go
-    
+    cd src/flavor-go
+
     # Build launcher
-    go build -o ../bin/flavor-go-launcher-$(uname -s)_$(uname -m) \
+    go build -o ../../dist/bin/flavor-go-launcher-$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m) \
+      -ldflags="-s -w" \
       ./cmd/flavor-go-launcher
-    
+
     # Build builder
-    go build -o ../bin/flavor-go-builder-$(uname -s)_$(uname -m) \
+    go build -o ../../dist/bin/flavor-go-builder-$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m) \
+      -ldflags="-s -w" \
       ./cmd/flavor-go-builder
     ```
 
 === "Rust Components"
 
     ```bash
-    cd ingredients/flavor-rs
-    
+    cd src/flavor-rust
+
     # Build launcher
     cargo build --release --bin flavor-rs-launcher
     cp target/release/flavor-rs-launcher \
-      ../bin/flavor-rs-launcher-$(uname -s)_$(uname -m)
-    
+      ../../dist/bin/flavor-rs-launcher-$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m)
+
     # Build builder
     cargo build --release --bin flavor-rs-builder
     cp target/release/flavor-rs-builder \
-      ../bin/flavor-rs-builder-$(uname -s)_$(uname -m)
+      ../../dist/bin/flavor-rs-builder-$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m)
     ```
 
 ### Cross-Platform Builds
 
-For building ingredients for different platforms:
+For building helpers for different platforms:
 
 ```bash
 # Linux static binaries (using Docker)
@@ -204,8 +179,8 @@ make build-windows
 # Check FlavorPack version
 flavor --version
 
-# List available ingredients
-flavor ingredients list
+# List available helpers
+flavor helpers list
 
 # Run tests
 make test
@@ -217,24 +192,29 @@ For production use, generate signing keys:
 
 ```bash
 # Generate new key pair
-flavor keygen --output keys/
+flavor keygen --out-dir keys/
 
-# Configure FlavorPack to use keys
-export FLAVOR_PRIVATE_KEY=keys/flavor-private.key
-export FLAVOR_PUBLIC_KEY=keys/flavor-public.key
+# Keys are used via CLI options, not environment variables
+# See the Signing Guide for details
 ```
 
 ### 3. Environment Variables
 
-Optional environment variables for customization:
+FlavorPack uses environment variables for configuration, caching, and logging. For complete documentation, see the [Environment Variables Guide](../guide/usage/environment.md).
+
+Common variables:
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `FLAVOR_CACHE_DIR` | Cache directory for work environments | `~/.cache/flavor` |
-| `FLAVOR_LOG_LEVEL` | Logging level (debug, info, warn, error) | `info` |
-| `FLAVOR_PRIVATE_KEY` | Path to private signing key | None |
-| `FLAVOR_PUBLIC_KEY` | Path to public verification key | None |
-| `FLAVOR_VALIDATION` | Validation level: strict, standard, relaxed, minimal, none | `standard` |
+| `FLAVOR_CACHE` | Cache directory for work environments | `~/.cache/flavor/workenv` |
+| `FOUNDATION_LOG_LEVEL` | Logging level for Python components | `info` |
+| `FLAVOR_LOG_LEVEL` | Logging level for Go/Rust components | `warn` |
+| `FLAVOR_VALIDATION` | Validation level (strict, standard, relaxed, minimal, none) | `standard` |
+
+See the [complete environment variable reference](../guide/usage/environment.md) for all available variables and detailed examples.
+
+!!! note "Signing Keys"
+    Signing keys are passed via CLI options (`--private-key` and `--public-key`), not environment variables. See the [Signing Guide](../guide/packaging/signing.md) for details.
 
 ## Platform-Specific Notes
 
@@ -252,7 +232,7 @@ Optional environment variables for customization:
 
 ### Windows
 
-- **WSL Recommended**: For building ingredients, WSL2 is recommended
+- **WSL Recommended**: For building helpers, WSL2 is recommended
 - **Antivirus**: Some antivirus software may flag self-extracting executables
 - **Path Length**: Be aware of Windows path length limitations
 
@@ -279,7 +259,7 @@ Optional environment variables for customization:
     .venv\Scripts\activate     # Windows
     ```
 
-??? error "Ingredients build fails"
+??? error "Helpers build fails"
     Check that you have all build dependencies:
     ```bash
     # Linux
@@ -295,8 +275,7 @@ If you encounter issues:
 
 1. Check the [Troubleshooting Guide](../troubleshooting/common.md)
 2. Search [existing issues](https://github.com/provide-io/flavorpack/issues)
-3. Join our [Discord community](https://discord.gg/flavorpack)
-4. Open a [new issue](https://github.com/provide-io/flavorpack/issues/new)
+3. Open a [new issue](https://github.com/provide-io/flavorpack/issues/new)
 
 ## Next Steps
 

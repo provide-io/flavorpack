@@ -1,4 +1,4 @@
-// ingredients/flavor-rs/src/psp/operations/chain.rs
+// helpers/flavor-rs/src/psp/operations/chain.rs
 // Operation chain packing/unpacking
 
 use std::collections::HashMap;

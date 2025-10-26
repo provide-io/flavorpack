@@ -77,8 +77,10 @@ def extract_slot(slot, work_dir):
     elif slot["lifecycle"] == "volatile":
         shutil.rmtree(target, ignore_errors=True)
     
-    # Extract content
-    extract_with_codec(slot_data, slot["codec"], target)
+    # Extract content using operations chain
+    from flavor.psp.format_2025.operations import unpack_operations
+    operations = unpack_operations(slot_descriptor.operations)
+    extract_with_operations(slot_data, operations, target)
 ```
 
 ### Caching
@@ -384,5 +386,5 @@ with ThreadPoolExecutor(max_workers=4) as executor:
 
 - [Slots](../../spec/slots.md) - Slot system specification
 - [Package Structure](package-structure.md) - Package organization
-- [CLI Reference](../../api/python/cli.md) - Command-line interface
+- [CLI Reference](../../api/cli.md) - Command-line interface
 - [Troubleshooting](../../troubleshooting/index.md) - Common issues

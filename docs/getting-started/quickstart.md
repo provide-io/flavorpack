@@ -23,10 +23,8 @@ cd flavorpack
 # Install UV if you haven't already
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# Create virtual environment and install
-uv venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-uv pip install -e .
+# Set up environment and install dependencies
+uv sync
 ```
 
 ### 2. Build Native Components
@@ -34,12 +32,13 @@ uv pip install -e .
 FlavorPack uses native Go and Rust components for optimal performance:
 
 ```bash
-# Build all ingredients (launchers and builders)
-make build-ingredients
+# Build all helpers (launchers and builders)
+make build-helpers
 
-# Or build individually
-cd ingredients
+# Or use the build script directly
 ./build.sh
+
+# Built binaries will be in dist/bin/ with platform suffixes
 ```
 
 !!! tip "Pre-built binaries"
@@ -188,7 +187,6 @@ Now that you've created your first package:
 ### Try Examples
 - 💻 [CLI Tool Example](../cookbook/examples/cli-tool.md) - Package a CLI application
 - 🌐 [Web App Example](../cookbook/examples/web-app.md) - Package a Flask/FastAPI app
-- 🤖 [ML Model Example](../cookbook/examples/ml-models.md) - Deploy ML models
 
 ### Get Help
 - 🐛 [Troubleshooting](../troubleshooting/common.md) - Common issues and solutions

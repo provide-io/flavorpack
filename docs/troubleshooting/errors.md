@@ -60,15 +60,14 @@ def main():
 
 **Solution**:
 ```bash
-# Download pre-built ingredients
-flavor ingredients download
+# Build helpers locally
+make build-helpers
 
-# Or build locally
-cd ingredients
+# Or use the build script
 ./build.sh
 
 # Or specify custom launcher
-flavor pack pyproject.toml --launcher-bin /path/to/launcher
+flavor pack --launcher-bin /path/to/launcher
 ```
 
 #### "Failed to create virtual environment"
@@ -84,8 +83,8 @@ python --version  # Should be 3.9+
 apt-get install python3-venv  # Debian/Ubuntu
 yum install python3-venv       # RHEL/CentOS
 
-# Use system Python
-flavor pack pyproject.toml --python $(which python3)
+# Ensure correct Python is in PATH
+which python3
 ```
 
 #### "Dependency resolution failed: {package}"
@@ -186,7 +185,7 @@ flavor pack pyproject.toml --platform linux_amd64
 **Solution**:
 ```toml
 [[tool.flavor.slots]]
-codec = "tgz"  # Valid: raw, tar, gzip, tgz
+# Operations are handled automatically based on source type
 ```
 
 #### "Invalid lifecycle: {lifecycle}"
@@ -213,9 +212,8 @@ lifecycle = "persistent"
 # Check source files exist
 ls -la data/
 
-# Try different codec
-[[tool.flavor.slots]]
-codec = "tar"  # Instead of tgz
+# Operations are applied automatically
+# FlavorPack chooses optimal compression based on content
 
 # Check permissions
 chmod -R r+X data/
@@ -618,7 +616,7 @@ If you encounter an error not listed here:
 
 1. **Enable debug logging**:
    ```bash
-   FLAVOR_LOG_LEVEL=debug flavor pack pyproject.toml
+   FOUNDATION_LOG_LEVEL=debug flavor pack pyproject.toml
    ```
 
 2. **Check the full error**:

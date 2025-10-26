@@ -376,4 +376,4 @@ Write-Host "`n=== Test Execution ===" -ForegroundColor Cyan
 
 - [Installation Guide](../../getting-started/installation.md)
 - [Platform Support](../../guide/packaging/platforms.md)
-- [Building Ingredients](../../development/ingredients.md)
+- [Building Helpers](../../development/helpers.md)

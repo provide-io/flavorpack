@@ -1,3 +1,0 @@
-# `flavor.commands`
-
-::: flavor.commands

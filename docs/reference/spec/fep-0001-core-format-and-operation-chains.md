@@ -233,8 +233,8 @@ struct IndexBlock {
     // === Performance Hints (64 bytes) ===
     uint8_t  access_mode;           // Access pattern hint (0=auto, 1=sequential, 2=random)
     uint8_t  cache_strategy;        // Cache behavior hint (0=normal, 1=aggressive, 2=minimal)
-    uint8_t  reserved_hint1;        // Reserved for future use (was codec_type)
-    uint8_t  reserved_hint2;        // Reserved for future use (was encryption_type)  
+    uint8_t  reserved_hint1;        // Reserved for future use
+    uint8_t  reserved_hint2;        // Reserved for future use  
     uint32_t page_size;             // Preferred memory page size (typically 4096)
     uint64_t max_memory;            // Maximum memory usage hint in bytes
     uint64_t min_memory;            // Minimum memory required in bytes
@@ -329,7 +329,7 @@ struct SlotDescriptor {
 - `original_size`: Original uncompressed size of the slot data
 - `operations`: Packed operation chain (up to 8 operations, each 8 bits)
 - `checksum`: SHA-256 hash of stored data (first 8 bytes, little-endian)
-- `purpose`: Classification of slot contents (0=data, 1=code, 2=config, 3=media)
+- `purpose`: Classification of slot contents (0=code, 1=data, 2=config, 3=media)
 - `lifecycle`: When the slot should be extracted/loaded
 - `priority`: Cache priority hint (0-255, higher = keep in memory longer)
 - `platform`: Platform hint for optimization (0=any, 1=linux, 2=darwin, 3=windows)
@@ -339,6 +339,8 @@ struct SlotDescriptor {
 Total size: **64 bytes exactly**
 
 ## 5. Operation Chain System
+
+> **Implementation Note**: In the current v0 implementation, operation codes are defined directly in language-specific constants files (`constants.py`, `constants.go`, `constants.rs`) rather than generated from Protocol Buffer definitions. The protobuf-based operation registry described in FEP-0003 is planned for future versions to provide cross-language schema validation.
 
 ### 5.1 Operation Categories
 
@@ -493,7 +495,7 @@ function extractSlot(packageData, slotDescriptor):
     slotData = packageData[slotDescriptor.offset:slotDescriptor.offset+slotDescriptor.size]
     
     // 2. Verify stored data checksum
-    computedChecksum = adler32(slotData) & 0xFFFFFFFF
+    computedChecksum = sha256(slotData)[0:8]  // First 8 bytes as uint64
     if computedChecksum != slotDescriptor.checksum:
         return ERROR_CORRUPTED_SLOT
     
@@ -570,9 +572,10 @@ PSPF/2025 uses modern cryptographic algorithms for integrity and authenticity:
 - Signature: 64 bytes (stored in first 64 bytes of 512-byte field)
 - Provides non-repudiation and tamper detection
 
-**Hash Functions**: 
-- SHA-256 for metadata integrity (32 bytes)
-- Adler-32 for fast slot checksums (4 bytes)
+**Hash Functions**:
+- SHA-256 for metadata integrity (32 bytes full hash)
+- SHA-256 for slot data integrity (first 8 bytes)
+- Adler-32 for index block checksums (4 bytes, fast validation)
 
 **Random Number Generation**: Implementations MUST use cryptographically secure random number generators for key generation.
 
@@ -615,7 +618,7 @@ PSPF/2025 implements a explicit trust model:
 | Threat                 | Mitigation                           |
 |------------------------|--------------------------------------|
 | Package tampering      | Ed25519 signatures                   |
-| Content corruption     | Per-slot Adler-32 checksums        |
+| Content corruption     | Per-slot SHA-256 checksums (8 bytes)|
 | Rollback attacks       | Build timestamps                     |
 | Directory traversal    | Path validation during extraction    |
 | Resource exhaustion    | Size limits and memory bounds       |
@@ -801,7 +804,7 @@ This document establishes the PSPF Operation Code Registry managed by IANA. The 
 **Fragment identifier considerations**: Not applicable
 **Additional information**:
 - **Magic number**: 0xF0 0x9F 0x93 0xA6 (📦 emoji)
-- **File extension**: .pspf
+- **File extension**: .psp
 - **Person/organization**: [Contact Information]
 
 ### 11.3 Port Number Registration

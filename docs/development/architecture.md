@@ -8,7 +8,7 @@
 4. [Multi-Language Components](#multi-language-components)
 5. [Build Pipeline](#build-pipeline)
 6. [Security Model](#security-model)
-7. [Ingredient System](#ingredient-system)
+7. [Helper System](#helper-system)
 8. [Testing Architecture](#testing-architecture)
 
 ## Overview
@@ -24,30 +24,54 @@ The system orchestrates Python, Go, and Rust components to create secure, portab
 
 ### High-Level Architecture
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                     Python Orchestrator                      │
-│                    (src/flavor/packaging/)                   │
-│  • High-level packaging logic                                │
-│  • Manifest processing                                       │
-│  • Dependency resolution                                     │
-└────────────────┬────────────────────────┬───────────────────┘
-                 │                        │
-        ┌────────▼────────┐      ┌───────▼────────┐
-        │   Go Ingredients    │      │  Rust Ingredients  │
-        │ (ingredients/flavor-go)    │ (ingredients/flavor-rs)
-        │ • Builder       │      │ • Builder      │
-        │ • Launcher      │      │ • Launcher     │
-        └─────────────────┘      └────────────────┘
-                 │                        │
-        ┌────────▼────────────────────────▼────────┐
-        │          PSPF Package (.psp file)        │
-        │  • Launcher binary (platform-specific)   │
-        │  • Index block (8192 bytes)              │
-        │  • Metadata (gzipped JSON)               │
-        │  • Payload slots (tar.gz archives)       │
-        │  • Magic footer (🪄)                     │
-        └───────────────────────────────────────────┘
+```mermaid
+graph TB
+    subgraph "Python Layer"
+        CLI[CLI Commands<br/>flavor pack/verify/inspect]
+        Orch[Packaging Orchestrator<br/>Manifest Processing]
+        PyPkg[Python Packager<br/>Dependency Resolution]
+    end
+
+    subgraph "Native Helpers"
+        GoBuilder[Go Builder<br/>flavor-go-builder]
+        GoLauncher[Go Launcher<br/>flavor-go-launcher]
+        RsBuilder[Rust Builder<br/>flavor-rs-builder]
+        RsLauncher[Rust Launcher<br/>flavor-rs-launcher]
+    end
+
+    subgraph "PSPF Package"
+        Launcher[Launcher Binary<br/>Platform-specific]
+        Index[Index Block<br/>8192 bytes]
+        Meta[Metadata<br/>gzipped JSON]
+        Slots[Payload Slots<br/>tar.gz archives]
+        Magic[Magic Footer<br/>📦🪄]
+    end
+
+    subgraph "Runtime"
+        Cache[Work Environment<br/>~/.cache/flavor]
+        Extract[Slot Extraction]
+        Exec[Application Execution]
+    end
+
+    CLI --> Orch
+    Orch --> PyPkg
+    PyPkg --> GoBuilder
+    PyPkg --> RsBuilder
+
+    GoBuilder --> Launcher
+    RsBuilder --> Launcher
+
+    Launcher --> Index
+    Index --> Meta
+    Meta --> Slots
+    Slots --> Magic
+
+    Launcher -.runs.-> Extract
+    Extract --> Cache
+    Cache --> Exec
+
+    GoLauncher -.embedded.-> Launcher
+    RsLauncher -.embedded.-> Launcher
 ```
 
 ### Design Principles
@@ -89,13 +113,18 @@ The 8KB index block contains:
 - Package signature (64 bytes)
 - Slot count and checksums
 
-### Slot Encoding Types
+### Slot Operation Chains
 
-Per `flavor-rs/src/psp/format_2025/constants.rs`:
-- `ENCODING_RAW: 0` - Raw uncompressed data
-- `ENCODING_TAR: 1` - Uncompressed tar archive  
-- `ENCODING_GZIP: 2` - Gzipped single file
-- `ENCODING_TGZ: 3` - Tar archive, then gzipped (tar.gz)
+PSPF/2025 uses **operation chains** to specify transformations applied to slot data. See [FEP-0001 Operation Chain System](../reference/spec/fep-0001-core-format-and-operation-chains.md#5-operation-chain-system) for complete specification.
+
+**Common Operation Chains:**
+- `[]` (empty) - Raw uncompressed data
+- `[OP_TAR]` (0x01) - Uncompressed TAR archive
+- `[OP_GZIP]` (0x10) - GZIP compressed single file
+- `[OP_TAR, OP_GZIP]` (0x1001) - TAR archive + GZIP compression (tar.gz)
+- `[OP_TAR, OP_ZSTD]` (0x1B01) - TAR archive + Zstandard compression (tar.zst)
+
+Each slot descriptor contains a 64-bit `operations` field encoding up to 8 operations applied in sequence.
 
 ## Multi-Language Components
 
@@ -106,7 +135,7 @@ Per `flavor-rs/src/psp/format_2025/constants.rs`:
 Key modules:
 - `packaging/orchestrator.py` - Main build coordinator
 - `packaging/python_packager.py` - Python-specific packaging
-- `packaging/orchestrator_ingredients.py` - Ingredient utilities
+- `packaging/orchestrator_helpers.py` - Helper utilities
 - `psp/format_2025/builder.py` - PSPF package building logic
 - `psp/format_2025/reader.py` - PSPF package reading/extraction
 
@@ -117,7 +146,7 @@ Key modules:
 - Coordinate with native builders
 - Handle key generation and signing
 
-### Go Ingredients (`ingredients/flavor-go/`)
+### Go Helpers (`src/flavor-go/`)
 
 **flavor-go-builder** - Creates PSPF packages
 - Reads JSON manifests
@@ -131,7 +160,7 @@ Key modules:
 - Manages workenv lifecycle
 - Executes applications
 
-### Rust Ingredients (`ingredients/flavor-rs/`)
+### Rust Helpers (`src/flavor-rs/`)
 
 **flavor-rs-builder** - Alternative builder implementation
 - Memory-safe package creation
@@ -144,6 +173,66 @@ Key modules:
 - Signal handling and process management
 
 ## Build Pipeline
+
+### Build Flow Diagram
+
+```mermaid
+flowchart TD
+    Start([flavor pack]) --> ReadManifest[Read pyproject.toml]
+    ReadManifest --> ValidateManifest{Validate<br/>Manifest}
+    ValidateManifest -->|Invalid| Error1[Error: Invalid Manifest]
+    ValidateManifest -->|Valid| CreateVenv[Create Virtual Environment]
+
+    CreateVenv --> InstallDeps[Install Dependencies]
+    InstallDeps --> CreateSlots[Create Slot Archives]
+
+    subgraph "Slot Creation"
+        CreateSlots --> Slot0[Slot 0: Python Runtime<br/>tar + gzip]
+        CreateSlots --> Slot1[Slot 1: Application Code<br/>tar + gzip]
+        CreateSlots --> SlotN[Slot N: Resources<br/>tar + gzip]
+    end
+
+    Slot0 --> SelectHelper{Select<br/>Helper}
+    Slot1 --> SelectHelper
+    SlotN --> SelectHelper
+
+    SelectHelper -->|Available| GoBuilder[flavor-go-builder]
+    SelectHelper -->|Available| RsBuilder[flavor-rs-builder]
+    SelectHelper -->|None| Error2[Error: No Builder Found]
+
+    GoBuilder --> BuildManifest[Generate Builder Manifest JSON]
+    RsBuilder --> BuildManifest
+
+    BuildManifest --> InvokeBuilder[Invoke Native Builder]
+    InvokeBuilder --> AssemblePkg[Assemble PSPF Package]
+
+    AssemblePkg --> SignPkg{Sign<br/>Package?}
+    SignPkg -->|Yes| GenKeys[Generate/Load Ed25519 Keys]
+    SignPkg -->|No| WriteOutput
+
+    GenKeys --> Sign[Sign Package]
+    Sign --> EmbedSig[Embed Signature in Index]
+    EmbedSig --> WriteOutput[Write Output File]
+
+    WriteOutput --> Verify{Verify<br/>Package?}
+    Verify -->|Yes| RunVerify[Run flavor verify]
+    Verify -->|No| Done
+    RunVerify --> CheckSig{Signature<br/>Valid?}
+    CheckSig -->|Yes| Done([✅ Package Built])
+    CheckSig -->|No| Error3[Error: Verification Failed]
+
+    Error1 --> Failed([❌ Build Failed])
+    Error2 --> Failed
+    Error3 --> Failed
+
+    style Start fill:#e1f5ff
+    style Done fill:#c8e6c9
+    style Failed fill:#ffcdd2
+    style GoBuilder fill:#fff9c4
+    style RsBuilder fill:#ffe0b2
+```
+
+### Build Steps Detail
 
 ### Step 1: Manifest Processing
 ```python
@@ -204,53 +293,110 @@ Every PSPF package includes:
 - Use deterministic builds for audit trails
 - Never commit keys or secrets
 
-## Ingredient System
+## Runtime Execution Flow
 
-### Ingredient Discovery
+### Package Execution Diagram
 
-The `IngredientManager` class finds ingredients in order:
+```mermaid
+flowchart TD
+    Start([./myapp.psp]) --> LauncherStart[Launcher Starts]
+    LauncherStart --> ReadTrailer[Read Magic Trailer 📦🪄]
+    ReadTrailer --> ValidTrailer{Trailer<br/>Valid?}
+    ValidTrailer -->|No| Error1[Error: Invalid Package]
+    ValidTrailer -->|Yes| ReadIndex[Read Index Block]
+
+    ReadIndex --> ParseIndex[Parse Index Metadata]
+    ParseIndex --> CalcID[Calculate Package ID<br/>SHA-256 checksum]
+    CalcID --> CheckCache{Cache<br/>Exists?}
+
+    CheckCache -->|Yes| ValidateCache[Validate Cache Checksum]
+    CheckCache -->|No| ExtractPkg
+
+    ValidateCache --> CacheValid{Cache<br/>Valid?}
+    CacheValid -->|Yes| UseCached[Use Cached Workenv]
+    CacheValid -->|No| RemoveCache[Remove Invalid Cache]
+    RemoveCache --> ExtractPkg
+
+    ExtractPkg[Extract Package] --> CreateWorkenv[Create Work Environment]
+    CreateWorkenv --> ExtractSlots[Extract All Slots]
+
+    subgraph "Slot Extraction"
+        ExtractSlots --> ExtractSlot0[Extract Slot 0<br/>Python Runtime]
+        ExtractSlots --> ExtractSlot1[Extract Slot 1<br/>Application Code]
+        ExtractSlots --> ExtractSlotN[Extract Slot N<br/>Resources]
+    end
+
+    ExtractSlot0 --> MarkComplete[Mark Extraction Complete]
+    ExtractSlot1 --> MarkComplete
+    ExtractSlotN --> MarkComplete
+
+    MarkComplete --> UseCached
+    UseCached --> SetupEnv[Setup Environment Variables]
+
+    SetupEnv --> LoadMeta[Load Package Metadata]
+    LoadMeta --> ParseCmd[Parse Execution Command]
+    ParseCmd --> SetVars[Set FLAVOR_* Variables]
+
+    SetVars --> ExecApp[Execute Application]
+    ExecApp --> AppRuns[Application Running]
+    AppRuns --> AppExit{App<br/>Exit}
+    AppExit --> Cleanup[Cleanup Resources]
+    Cleanup --> Done([Exit with App Exit Code])
+
+    Error1 --> Failed([❌ Failed])
+
+    style Start fill:#e1f5ff
+    style Done fill:#c8e6c9
+    style Failed fill:#ffcdd2
+    style UseCached fill:#fff9c4
+    style ExtractPkg fill:#ffe0b2
+```
+
+## Helper System
+
+### Helper Discovery
+
+The `HelperManager` class finds helpers in order:
 
 1. **Bundled with Package** - For PyPI distribution
    ```
-   src/flavor/ingredients/{platform}/flavor-{go,rs}-{builder,launcher}
+   src/flavor/helpers/flavor-{go,rs}-{builder,launcher}-{platform}
    ```
 
 2. **Local Development** - Built from source
    ```
-   ingredients/bin/flavor-{go,rs}-{builder,launcher}
+   dist/bin/flavor-{go,rs}-{builder,launcher}-{platform}
    ```
 
 3. **System Cache** - Downloaded or installed
    ```
-   ~/.cache/flavor/ingredients/bin/flavor-{go,rs}-{builder,launcher}
+   ~/.cache/flavor/helpers/flavor-{go,rs}-{builder,launcher}-{platform}
    ```
 
-### Building Ingredients
+### Building Helpers
 
 ```bash
-# Build all ingredients for current platform
-./ingredients/build.sh
+# Build all helpers for current platform
+make build-helpers
 
-# Or use make directly
-cd ingredients/flavor-go
-make build BIN_DIR=../bin
+# Or use the build script directly
+./build.sh
 
-cd ingredients/flavor-rs
-cargo build --release
-cp target/release/flavor-rs-* ../bin/
+# Helpers will be placed in dist/bin/ with platform suffix
+# e.g., dist/bin/flavor-rs-launcher-darwin_arm64
 ```
 
-### Ingredient Commands
+### Helper Commands
 
 ```bash
-# List available ingredients
-flavor ingredients list
+# List available helpers
+flavor helpers list
 
-# Build ingredients from source
-flavor ingredients build --lang all
+# Build helpers from source
+flavor helpers build --lang all
 
-# Test ingredient functionality
-flavor ingredients test
+# Test helper functionality
+flavor helpers test
 ```
 
 ## Testing Architecture
@@ -265,7 +411,7 @@ flavor ingredients test
 
 ### Taster Test Suite
 
-The `helpers/taster/` package provides comprehensive testing:
+The `tests/taster/` package provides comprehensive testing:
 - `exit` - Test exit codes and error handling
 - `file` - Test file I/O and workenv persistence
 - `signals` - Test signal handling
@@ -278,15 +424,18 @@ The `helpers/taster/` package provides comprehensive testing:
 
 ```bash
 # Run all tests
-workenv/flavor_darwin_arm64/bin/pytest
+make test
 
 # Run specific categories
-workenv/flavor_darwin_arm64/bin/pytest -m unit
-workenv/flavor_darwin_arm64/bin/pytest -m integration
-workenv/flavor_darwin_arm64/bin/pytest -m taster
+pytest -m unit
+pytest -m integration
+pytest -m taster
 
 # Run with coverage
-workenv/flavor_darwin_arm64/bin/pytest --cov=flavor
+make test-cov
+
+# Run cross-language compatibility tests
+make validate-pspf
 ```
 
 ## Critical Implementation Notes
@@ -416,7 +565,7 @@ The cache validation process uses checksums to ensure integrity:
 3. **Polyglot Format**: Single file works as both executable and package
 4. **Built-in Security**: No external dependencies for verification
 5. **Deterministic Builds**: Reproducible with seed keys
-6. **Ingredient Independence**: Ingredients are generic, data-driven executors
+6. **Helper Independence**: Helpers are generic, data-driven executors
 
 ## Future Enhancements
 

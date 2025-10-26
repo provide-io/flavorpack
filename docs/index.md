@@ -1,114 +1,168 @@
-# FlavorPack Documentation
+# Welcome to FlavorPack
 
-<div align="center">
-  <h2>Progressive Secure Package Format (PSPF/2025)</h2>
-  <p>Cross-language packaging system for self-contained, portable executables</p>
+!!! warning "Alpha Software - Development Version"
+    FlavorPack is currently in early alpha. APIs, file formats, and commands may change without notice. Not recommended for production use. Check current version with `flavor --version`. **Source installation only** at this time.
+
+**FlavorPack** is a cross-language packaging system that creates self-contained, portable executables using the **Progressive Secure Package Format (PSPF/2025)**. Ship Python applications as single binaries that "just work" - no installation, no dependencies, no configuration required.
+
+<div class="grid cards" markdown>
+
+-   :fontawesome-solid-rocket:{ .lg .middle } **Get Started Quickly**
+
+    ---
+
+    Package your first application in under 5 minutes with our comprehensive quickstart guide.
+
+    [:octicons-arrow-right-24: Quick Start](getting-started/quickstart.md)
+
+-   :fontawesome-solid-cube:{ .lg .middle } **Single-File Distribution**
+
+    ---
+
+    Package entire applications into one executable that runs anywhere without dependencies.
+
+    [:octicons-arrow-right-24: Package Structure](guide/concepts/package-structure.md)
+
+-   :fontawesome-solid-shield:{ .lg .middle } **Secure by Default**
+
+    ---
+
+    Ed25519 signature verification ensures package integrity and authenticity.
+
+    [:octicons-arrow-right-24: Security Model](guide/concepts/security.md)
+
+-   :fontawesome-solid-bolt:{ .lg .middle } **Progressive Extraction**
+
+    ---
+
+    Smart caching extracts only what's needed, when it's needed, for optimal performance.
+
+    [:octicons-arrow-right-24: Work Environments](guide/concepts/workenv.md)
+
+-   :fontawesome-solid-language:{ .lg .middle } **Cross-Language Support**
+
+    ---
+
+    Python orchestrator with native Go and Rust launchers for maximum efficiency.
+
+    [:octicons-arrow-right-24: Architecture](development/architecture.md)
+
+-   :fontawesome-solid-book:{ .lg .middle } **Comprehensive Docs**
+
+    ---
+
+    Detailed guides, API reference, cookbook examples, and troubleshooting help.
+
+    [:octicons-arrow-right-24: User Guide](guide/)
+
 </div>
-
----
 
 ## What is FlavorPack?
 
-FlavorPack is a modern packaging system that transforms Python applications into single, self-contained executables that "just work" on any system. No installation, no dependencies, no configuration required.
+FlavorPack transforms Python applications into self-contained executables using the Progressive Secure Package Format (PSPF/2025). Each package contains everything needed to run - the application code, Python runtime, dependencies, and a native launcher - all in a single `.psp` file.
 
-<div class="feature-cards">
-  <div class="feature-card">
-    <h3>📦 Single File Distribution</h3>
-    <p>Package entire applications into one portable executable file that runs anywhere.</p>
-  </div>
-  
-  <div class="feature-card">
-    <h3>🔒 Secure by Default</h3>
-    <p>Ed25519 signature verification ensures package integrity and authenticity.</p>
-  </div>
-  
-  <div class="feature-card">
-    <h3>🚀 Progressive Extraction</h3>
-    <p>Smart caching extracts only what's needed, when it's needed, for optimal performance.</p>
-  </div>
-  
-  <div class="feature-card">
-    <h3>🌍 Cross-Language Support</h3>
-    <p>Python orchestrator with native Go and Rust launchers for maximum efficiency.</p>
-  </div>
-</div>
+### Key Features
 
-## Quick Start
+- **📦 Single-File Distribution**: Package entire applications into one executable file
+- **🔒 Cryptographic Security**: Ed25519 signatures ensure package integrity
+- **⚡ Smart Caching**: Persistent work environment with intelligent validation
+- **🌍 Cross-Platform**: Works on Linux, macOS, and Windows
+- **🎯 Zero Dependencies**: End users need nothing pre-installed
+- **🔧 Native Performance**: Go and Rust launchers for fast execution
 
-Get started with FlavorPack in under 5 minutes:
+## Quick Example
 
-=== "Installation"
+```bash
+# Package a Python application
+flavor pack --manifest pyproject.toml --output myapp.psp
 
-    ```bash
-    # Install UV package manager
-    curl -LsSf https://astral.sh/uv/install.sh | sh
-    
-    # Clone the repository
-    git clone https://github.com/provide-io/flavorpack.git
-    cd flavorpack
-    
-    # Set up environment
-    uv sync
-    
-    # Build native ingredients
-    ./ingredients/build.sh
-    ```
+# Run the packaged application (no Python installation required!)
+./myapp.psp
 
-=== "Create Package"
+# Verify package integrity
+flavor verify myapp.psp
+```
 
-    ```bash
-    # Package your Python application
-    flavor pack --manifest pyproject.toml --output myapp.psp
-    
-    # Run the packaged application
-    ./myapp.psp
-    
-    # Verify package integrity
-    flavor verify myapp.psp
-    ```
+## Architecture Overview
 
-=== "Python API"
+FlavorPack is part of the [Provide Foundry](foundry/) ecosystem, designed to work seamlessly with other provide.io tools:
 
-    ```python
-    from flavor.api import create_package, verify_package
-    
-    # Create a package programmatically
-    package_path = create_package(
-        manifest="pyproject.toml",
-        output="myapp.psp",
-        key_seed="my-secret-seed"
-    )
-    
-    # Verify package integrity
-    is_valid = verify_package("myapp.psp")
-    print(f"Package valid: {is_valid}")
-    ```
+```mermaid
+graph TB
+    subgraph "FlavorPack Components"
+        direction TB
+        PY[Python Orchestrator<br/>📦 Build Coordinator]
+        GO[Go Helper<br/>🐹 Builder & Launcher]
+        RS[Rust Helper<br/>🦀 Builder & Launcher]
+    end
 
-## Key Features
+    subgraph "PSPF Package (.psp)"
+        direction TB
+        L[Native Launcher<br/>Platform-specific binary]
+        I[Index Block<br/>8KB metadata + signature]
+        M[Metadata<br/>Gzipped JSON manifest]
+        S[Slots<br/>Tar.gz archives]
+        F[Magic Footer<br/>📦🪄]
+    end
 
-### Progressive Secure Package Format (PSPF)
+    subgraph "Applications"
+        APP1[CLI Tools]
+        APP2[Web Services]
+        APP3[Data Pipelines]
+        APP4[Terraform Providers]
+    end
 
-The PSPF 2025 format provides a robust, secure, and efficient packaging solution:
+    APP1 --> PY
+    APP2 --> PY
+    APP3 --> PY
+    APP4 --> PY
 
-<div class="pspf-structure">
-  <div class="pspf-layer pspf-layer-launcher">
-    <strong>Native Launcher</strong> - Platform-specific Go/Rust executable
-  </div>
-  <div class="pspf-layer pspf-layer-index">
-    <strong>Index Block</strong> - 8192-byte metadata and signature block
-  </div>
-  <div class="pspf-layer pspf-layer-metadata">
-    <strong>Metadata</strong> - Gzipped JSON configuration
-  </div>
-  <div class="pspf-layer pspf-layer-slots">
-    <strong>Slots</strong> - Numbered content archives (tar.gz)
-  </div>
-  <div class="pspf-layer pspf-layer-magic">
-    📦🪄
-  </div>
-</div>
+    PY --> GO
+    PY --> RS
+    GO --> L
+    RS --> L
 
-### Platform Support
+    L --> I
+    I --> M
+    M --> S
+    S --> F
+
+    classDef orchestrator fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    classDef helpers fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    classDef pspf fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
+    classDef apps fill:#fff3e0,stroke:#e65100,stroke-width:2px
+
+    class PY orchestrator
+    class GO,RS helpers
+    class L,I,M,S,F pspf
+    class APP1,APP2,APP3,APP4 apps
+```
+
+## PSPF Format
+
+The Progressive Secure Package Format is a polyglot file that works as both an OS executable and a structured package. Each `.psp` file is structured with a native launcher at the start, followed by package metadata and compressed data slots, ending with a cryptographically signed index block.
+
+**Key Components**:
+- **Native Launcher**: Platform-specific executable (Go or Rust)
+- **Metadata Block**: Compressed JSON manifest with package information
+- **Slot Table**: Array of 64-byte descriptors (one per slot)
+- **Slot Data**: Compressed application code, runtime, and dependencies
+- **Index Block**: 8KB structure containing offsets, checksums, and Ed25519 signatures
+- **Magic Markers**: 📦 and 🪄 emoji bytes for format identification
+
+For the complete binary layout diagram and technical specification, see:
+→ [PSPF Format Specification (FEP-0001)](reference/spec/fep-0001-core-format-and-operation-chains.md#32-package-structure-overview)
+
+## Use Cases
+
+!!! example "Perfect for..."
+    - **CLI Tools**: Distribute command-line applications without requiring Python installation
+    - **Data Science**: Package ML models with their entire environment
+    - **DevOps**: Deploy self-contained tools that work everywhere
+    - **Enterprise**: Secure, signed packages with verification built-in
+    - **Terraform**: Package custom providers as single executables
+
+## Platform Support
 
 | Platform | Architecture | Status | Binary Type | Notes |
 |----------|-------------|---------|------------|-------|
@@ -117,70 +171,38 @@ The PSPF 2025 format provides a robust, secure, and efficient packaging solution
 | macOS | x86_64 | ✅ Full | Dynamic | Intel Macs |
 | macOS | arm64 | ✅ Full | Dynamic | Apple Silicon |
 | Windows | x86_64 | 🚧 Beta | Dynamic | Windows 10+ |
-| FreeBSD | x86_64 | 📋 Planned | - | Community request |
 
-### Requirements
+## Part of the Provide Foundry
 
-| Component | Minimum Version | Recommended | Notes |
-|-----------|----------------|-------------|-------|
-| Python | 3.11 | 3.12+ | Type hints, modern features |
-| Go | 1.21 | 1.22+ | For building Go ingredients |
-| Rust | 1.75 | 1.80+ | For building Rust ingredients |
-| UV | 0.1.18 | Latest | Package management |
-| Git | 2.25 | Latest | Version control |
-| Make | 3.81 | 4.0+ | Build automation |
+FlavorPack is part of the **[Provide Foundry](foundry/)** - a comprehensive collection of Python tools for building Terraform providers, packaging applications, and managing development workflows.
 
-## Documentation Overview
+### Related Tools
 
-<div class="feature-cards">
-  <div class="feature-card">
-    <h3>📚 User Guide</h3>
-    <p>Learn core concepts, create packages, and deploy applications.</p>
-    <a href="guide/">Explore Guide →</a>
-  </div>
-  
-  <div class="feature-card">
-    <h3>🔧 API Reference</h3>
-    <p>Comprehensive API documentation with examples and type hints.</p>
-    <a href="api/">View API →</a>
-  </div>
-  
-  <div class="feature-card">
-    <h3>📖 PSPF Specification</h3>
-    <p>Technical specification of the Progressive Secure Package Format.</p>
-    <a href="spec/">Read Spec →</a>
-  </div>
-  
-  <div class="feature-card">
-    <h3>🍳 Cookbook</h3>
-    <p>Practical recipes and real-world examples.</p>
-    <a href="cookbook/">Browse Recipes →</a>
-  </div>
-</div>
-
-## Why FlavorPack?
-
-!!! tip "Perfect for"
-    - **CLI Tools**: Distribute command-line applications without requiring Python installation
-    - **Data Science**: Package ML models with their entire environment
-    - **DevOps**: Deploy self-contained tools that work everywhere
-    - **Enterprise**: Secure, signed packages with verification built-in
+- **[pyvider](https://foundry.provide.io/pyvider/)** - Build Terraform providers in Python
+- **[wrknv](https://foundry.provide.io/wrknv/)** - Manage development environments
+- **[provide-foundation](https://foundry.provide.io/foundation/)** - Core telemetry and logging
+- **[provide-testkit](https://foundry.provide.io/testkit/)** - Testing utilities
 
 ## Community
 
-FlavorPack is part of the [provide.io](https://provide.io) ecosystem, committed to building tools that empower developers and organizations.
+### :material-github: GitHub
 
-- **GitHub**: [provide-io/flavorpack](https://github.com/provide-io/flavorpack)
-- **Issues**: [Report bugs or request features](https://github.com/provide-io/flavorpack/issues)
-- **Discussions**: [Join the conversation](https://github.com/provide-io/flavorpack/discussions)
+All development happens on GitHub with issues, discussions, and pull requests welcome.
 
-## License
+[View on GitHub :octicons-arrow-right-24:](https://github.com/provide-io/flavorpack){ .md-button .md-button--primary }
 
-FlavorPack is licensed under the Apache License 2.0. See the [License](community/license.md) page for details.
+### :material-chat: Support
+
+Join the community for questions, ideas, and collaboration.
+
+[Get Support :octicons-arrow-right-24:](community/support.md){ .md-button }
+
+### :material-book-open: Documentation
+
+Comprehensive guides, tutorials, and API documentation.
+
+[Explore Docs :octicons-arrow-right-24:](getting-started/){ .md-button }
 
 ---
 
-<div align="center">
-  <p><strong>Ready to package your Python applications?</strong></p>
-  <a href="getting-started/" class="md-button md-button--primary">Get Started →</a>
-</div>
+**Ready to package your Python applications?** Check out our [Quick Start guide](getting-started/quickstart.md) or dive into the [core concepts](guide/concepts/).

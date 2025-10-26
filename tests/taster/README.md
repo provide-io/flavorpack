@@ -31,14 +31,14 @@ From the main flavorpack directory:
 # Set up the environment
 source env.sh
 
-# Build ingredients (Go/Rust launchers) - required first time
-make build-ingredients
+# Build helpers (Go/Rust launchers) - required first time
+make build-helpers
 
 # Build the taster package
 FLAVOR_VALIDATION=none flavor pack --manifest helpers/taster/pyproject.toml \
   --output helpers/taster/dist/taster.psp \
   --key-seed test123 \
-  --launcher-bin ingredients/bin/flavor-rs-launcher-darwin_arm64
+  --launcher-bin dist/bin/flavor-rs-launcher-darwin_arm64
 ```
 
 ### Quick Installation
