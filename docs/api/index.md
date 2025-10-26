@@ -2,6 +2,9 @@
 
 Python API reference documentation for FlavorPack.
 
+!!! note "Package Name vs Tool Name"
+    **FlavorPack** (or `flavorpack`) is the Python package name. The command-line tool and API is called **`flavor`**. Import with `from flavor import ...`.
+
 ## Overview
 
 FlavorPack provides a function-based API for building and verifying PSPF packages. The API is designed for integration into build systems, CI/CD pipelines, and custom tooling.
@@ -43,21 +46,48 @@ packages = build_package_from_manifest(
     show_progress=True,
     private_key_path=Path("keys/flavor-private.key"),
     public_key_path=Path("keys/flavor-public.key"),
+    key_seed="my-deterministic-seed",
 )
 ```
 
-**Parameters:**
-- `manifest_path` (Path): Path to pyproject.toml or JSON manifest
-- `output_path` (Path | None): Custom output path (default: `dist/{package_name}.psp`)
-- `launcher_bin` (Path | None): Path to specific launcher binary
-- `builder_bin` (Path | None): Path to specific builder binary
-- `strip_binaries` (bool): Strip debug symbols from launcher (default: False)
-- `show_progress` (bool): Show progress during build (default: False)
-- `private_key_path` (Path | None): Ed25519 private key for signing
-- `public_key_path` (Path | None): Ed25519 public key for signing
-- `key_seed` (str | None): Deterministic key seed for reproducible builds
+**Function Signature:**
+```python
+def build_package_from_manifest(
+    manifest_path: Path,
+    output_path: Path | None = None,
+    launcher_bin: Path | None = None,
+    builder_bin: Path | None = None,
+    strip_binaries: bool = False,
+    show_progress: bool = False,
+    private_key_path: Path | None = None,
+    public_key_path: Path | None = None,
+    key_seed: str | None = None,
+) -> list[Path]:
+    ...
+```
 
-**Returns:** `list[Path]` - List of created package paths
+**Parameters:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `manifest_path` | `Path` | *Required* | Path to `pyproject.toml` or JSON manifest file |
+| `output_path` | `Path \| None` | `None` | Custom output path (default: `dist/{package_name}.psp`) |
+| `launcher_bin` | `Path \| None` | `None` | Path to specific launcher binary (auto-selected if not provided) |
+| `builder_bin` | `Path \| None` | `None` | Path to specific builder binary (auto-selected if not provided) |
+| `strip_binaries` | `bool` | `False` | Strip debug symbols from launcher to reduce size |
+| `show_progress` | `bool` | `False` | Show progress bars during build |
+| `private_key_path` | `Path \| None` | `None` | Path to Ed25519 private key (PEM format) for signing |
+| `public_key_path` | `Path \| None` | `None` | Path to Ed25519 public key (PEM format) for signing |
+| `key_seed` | `str \| None` | `None` | Deterministic seed for key generation (reproducible builds) |
+
+**Returns:**
+
+`list[Path]` - List containing the path to the created package file
+
+**Raises:**
+
+- `ValueError` - If required manifest fields are missing
+- `BuildError` - If package build fails
 
 ### Verifying Packages
 
@@ -135,10 +165,24 @@ flavor/
 
 ---
 
-## Quick Links
+## Related Pages
 
-- [User Guide](../guide/index.md) - Learn how to use FlavorPack
-- [Cookbook](../cookbook/index.md) - Practical examples and recipes
-- [CLI Reference](../guide/usage/cli.md) - Command-line interface documentation
+**API Documentation**:
+
+- 📦 [Packaging API](packaging.md) - High-level packaging orchestration
+- 🔨 [Builder API](builder.md) - PSPF package building
+- 📖 [Reader API](reader.md) - Package inspection and extraction
+- 🔐 [Cryptography API](crypto.md) - Ed25519 signing and verification
+
+**User Documentation**:
+
+- 📚 [User Guide](../guide/index.md) - Learn how to use FlavorPack
+- 🍳 [Cookbook](../cookbook/index.md) - Practical examples and recipes
+- 📋 [CLI Reference](../guide/usage/cli.md) - Command-line interface documentation
+
+**Development**:
+
+- 🏗️ [Architecture](../development/architecture.md) - System architecture
+- 🛠️ [Contributing](../development/contributing.md) - Development guide
 
 **For source code:** [GitHub Repository](https://github.com/provide-io/flavorpack)

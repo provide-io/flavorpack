@@ -77,7 +77,7 @@ flavor pack --launcher-bin /path/to/launcher
 **Solution**:
 ```bash
 # Check Python version
-python --version  # Should be 3.9+
+python --version  # Should be 3.11+
 
 # Install venv module
 apt-get install python3-venv  # Debian/Ubuntu
@@ -100,8 +100,10 @@ dependencies = [
     "flask>=2.0",
 ]
 
-# Or skip dependency resolution
-flavor pack pyproject.toml --no-deps
+# 📋 PLANNED: --no-deps option not yet implemented
+# flavor pack pyproject.toml --no-deps
+
+# Current workaround: Fix dependency conflicts in pyproject.toml
 ```
 
 #### "Build directory not empty: {path}"
@@ -225,17 +227,21 @@ chmod -R r+X data/
 
 **Solution**:
 ```bash
-# Split large slots
-[[tool.flavor.slots]]
-id = "data-part1"
-source = "data/part1/"
+# 📋 PLANNED: Manual slot configuration not yet implemented
+# Slots are currently created automatically
 
-[[tool.flavor.slots]]
-id = "data-part2"
-source = "data/part2/"
+# [[tool.flavor.slots]]
+# id = "data-part1"
+# source = "data/part1/"
 
-# Or use lazy loading
-lifecycle = "lazy"
+# [[tool.flavor.slots]]
+# id = "data-part2"
+# source = "data/part2/"
+
+# [[tool.flavor.slots]]
+# lifecycle = "lazy"  # Not yet implemented
+
+# Current: No size limits enforced
 ```
 
 #### "Package size exceeds limit: {size}"
@@ -253,11 +259,11 @@ exclude = [
     ".git/"
 ]
 
-# Use compression
-flavor pack pyproject.toml --compress
+# 📋 PLANNED: Compression and strip options not yet implemented
+# flavor pack pyproject.toml --compress
+# flavor pack pyproject.toml --strip
 
-# Strip binaries
-flavor pack pyproject.toml --strip
+# Current: Optimize by excluding files in pyproject.toml
 ```
 
 #### "Failed to sign package"
@@ -437,14 +443,17 @@ FLAVOR_CACHE=/tmp/cache ./package.psp
 
 **Solution**:
 ```bash
-# Rebuild with explicit Python version
-flavor pack pyproject.toml --python-version 3.11
+# 📋 PLANNED: Python version selection not yet implemented
+# flavor pack pyproject.toml --python-version 3.11
+
+# Current: Package uses build environment's Python version
+# Rebuild the package from a Python 3.11+ environment
 
 # Verify package contents
 flavor inspect package.psp
 
-# Extract and check
-flavor extract package.psp --slot python-runtime
+# 📋 PLANNED: Slot extraction not yet implemented
+# flavor extract package.psp --slot python-runtime
 ```
 
 ### "Module not found: {module}"

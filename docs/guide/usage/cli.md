@@ -2,6 +2,14 @@
 
 Complete command-line interface documentation for FlavorPack.
 
+!!! tip "Prerequisites"
+    Before using the CLI, ensure you have:
+
+    - [FlavorPack installed](../../getting-started/installation.md)
+    - [Helpers built](../../../development/contributing.md#building-helpers) for package creation
+
+    See [System Requirements](../../reference/requirements.md) for detailed information.
+
 ## Overview
 
 The `flavor` command-line tool provides a comprehensive interface for creating, inspecting, verifying, and managing PSPF packages.
@@ -713,6 +721,28 @@ flavor workenv inspect pspf-a3f7b9c2d1e4f5a6
 - [Cache Management](cache.md) - Work environment cache details
 - [Environment Variables](environment.md) - All environment variables
 - [Packaging Guide](../packaging/index.md) - Creating packages
+
+---
+
+## Related Pages
+
+**Usage Guides**:
+
+- 🚀 [Running Packages](running.md) - Execute packaged applications
+- 🔍 [Inspecting Packages](inspection.md) - Deep package inspection
+- 💾 [Cache Management](cache.md) - Work environment cache details
+- 🌍 [Environment Variables](environment.md) - All environment variables
+
+**Configuration**:
+
+- 📝 [Manifest Configuration](../packaging/manifest.md) - Configure pyproject.toml
+- 🐍 [Python Packaging](../packaging/python.md) - Python-specific features
+- 🔒 [Package Signing](../packaging/signing.md) - Cryptographic signatures
+
+**Development**:
+
+- 🛠️ [Contributing Guide](../../development/contributing.md) - Development setup
+- 🧪 [Testing](../../development/testing/index.md) - Testing framework
 
 ---
 

@@ -2,47 +2,151 @@
 
 Complete guide to packaging Python applications with FlavorPack, including dependencies, virtual environments, and Python-specific optimizations.
 
-!!! warning "Feature Status - Alpha Release"
-    This guide documents both **currently implemented** and **planned future** features. Many advanced configuration options shown below are not yet available.
+!!! tip "Prerequisites"
+    Before packaging Python apps, ensure you have:
 
-    **Currently Working**:
+    - [FlavorPack installed](../../getting-started/installation.md) from source
+    - [Helpers built](../usage/cli.md#helpers-build) (`make build-helpers`)
+    - A Python project with valid `pyproject.toml`
+
+    See [System Requirements](../../reference/requirements.md) for detailed version information.
+
+!!! warning "Alpha Release - Many Features Not Yet Implemented"
+    **This guide shows both working features and planned future features.**
+
+    FlavorPack's Python packaging is in alpha. Basic packaging works today, but many advanced features documented here are **planned for future releases**.
+
+    **✅ What Works Today**:
+
     - Basic dependency packaging from `pyproject.toml`
-    - Standard entry points and scripts
+    - Standard entry points and scripts (`[project.scripts]`)
+    - Automatic dependency resolution via UV
     - Simple package structure
 
-    **Planned Features** (see [Roadmap](../roadmap.md)):
-    - Advanced TOML configuration options
+    **📋 Planned for Future Releases** (see [Roadmap](../roadmap.md)):
+
     - Python version selection
     - Build environment customization
     - Runtime optimizations
     - Platform-specific builds
+    - Advanced dependency configuration
 
-    Features marked with 🔶 are **planned** but not yet implemented.
+    Features marked with 📋 are **not yet implemented**.
 
 ## Overview
 
-FlavorPack provides first-class support for Python applications, handling everything from simple scripts to complex applications with numerous dependencies. This guide covers Python-specific features and best practices for creating efficient, reliable packages.
+FlavorPack provides first-class support for Python applications. This guide covers what works today and what's planned for future releases.
 
-## Python Version Support
+## What Works Today
 
-### Supported Versions
+### Basic Python Packaging ✅
 
-| Python Version | Support Level | Notes |
-|---------------|--------------|-------|
-| 3.12+ | Full | Recommended for new projects |
-| 3.11 | Full | Minimum required version |
-| 3.10 and older | None | Not supported |
-
-### Specifying Python Version
-
-!!! note "🔶 Planned Feature"
-    Python version selection via manifest is not yet implemented. See [Roadmap](../roadmap.md#python-version-selection).
-    Currently, packages use the Python version from your build environment.
+FlavorPack can package any Python application with a valid `pyproject.toml`:
 
 ```toml
-# 🔶 PLANNED - Not yet implemented
+[project]
+name = "myapp"
+version = "1.0.0"
+dependencies = [
+    "requests>=2.28.0",
+    "click>=8.0",
+    "pydantic>=2.0"
+]
+
+[project.scripts]
+myapp = "myapp.cli:main"
+
+[tool.flavor]
+entry_point = "myapp.cli:main"
+```
+
+This configuration will:
+
+- ✅ Install all dependencies from `[project.dependencies]`
+- ✅ Create the entry point specified in `[tool.flavor].entry_point`
+- ✅ Extract CLI scripts from `[project.scripts]`
+- ✅ Bundle everything into a self-contained `.psp` package
+
+### Supported Python Versions ✅
+
+FlavorPack itself requires **Python 3.11 or higher** to run the packaging tools.
+
+**Build Environment Python**:
+
+Packaged applications currently use whatever Python version is available in your build environment. This Python runtime gets embedded into the package.
+
+| Your Build Environment | Packaged Python Version |
+|------------------------|------------------------|
+| Python 3.12 | ✅ Package includes Python 3.12 |
+| Python 3.11 | ✅ Package includes Python 3.11 |
+| Python 3.10 or older | ❌ FlavorPack won't run |
+
+!!! info "Current Limitation"
+    **Python version selection is not yet implemented.** You cannot specify a different Python version than what's in your build environment.
+
+    For example, if you build on Python 3.12, your package will use Python 3.12 - you cannot target Python 3.11.
+
+    **Planned**: Future releases will support specifying target Python versions via manifest configuration (see [Roadmap](../roadmap.md#python-version-selection-)).
+
+### Dependency Management ✅
+
+FlavorPack automatically handles dependencies defined in `pyproject.toml`:
+
+```toml
+[project]
+dependencies = [
+    "requests>=2.28.0",      # Version constraints work
+    "click>=8.0,<9.0",       # Range constraints work
+    "pydantic==2.1.0",       # Exact versions work
+]
+```
+
+**Platform-Specific Dependencies** ✅:
+
+```toml
+[project]
+dependencies = [
+    "pywin32>=300; sys_platform == 'win32'",
+    "pyobjc>=9.0; sys_platform == 'darwin'",
+]
+```
+
+### Entry Points ✅
+
+FlavorPack supports standard Python entry points:
+
+```toml
+[project.scripts]
+myapp = "myapp.cli:main"
+admin = "myapp.admin:cli"
+
+[tool.flavor]
+entry_point = "myapp.cli:main"  # Main entry point for the package
+```
+
+The `[tool.flavor].entry_point` is required and specifies which function runs when you execute the `.psp` file.
+
+---
+
+## Planned Python Features
+
+The following features are documented but **not yet implemented**. See [Roadmap](../roadmap.md) for implementation timelines.
+
+### Python Version Selection 📋
+
+!!! warning "📋 Planned Feature - Not Yet Implemented"
+    Python version selection via manifest is not yet implemented.
+
+    **Current Behavior**: Packages use the Python version from your build environment.
+
+    **Planned**: Select specific Python versions for packaging.
+
+```toml
+# 📋 PLANNED - Not yet implemented
 [tool.flavor.python]
-version = "3.11"  # Exact version to use
+version = "3.11"  # Exact version to package
+min_version = "3.11"  # Minimum version
+max_version = "3.13"  # Maximum version
 ```
 
 ## Dependency Management
@@ -827,9 +931,27 @@ persistent = true
 port = 8000
 ```
 
-## Related Documentation
+## Related Pages
 
-- [Package Configuration](configuration.md) - Full configuration reference
-- [Manifest Reference](manifest.md) - pyproject.toml specification
-- [Building Packages](index.md) - General packaging guide
-- [Troubleshooting](../../troubleshooting/index.md) - Common issues and solutions
+**Configuration**:
+
+- 📋 [Package Configuration](configuration.md) - Full configuration reference
+- 📝 [Manifest Reference](manifest.md) - pyproject.toml specification
+- 🔒 [Package Signing](signing.md) - Add cryptographic signatures
+- 🌍 [Platform Support](platforms.md) - Multi-platform packaging
+
+**Workflow**:
+
+- 🏗️ [Building Packages](index.md) - General packaging guide
+- 📦 [CLI Reference](../usage/cli.md#pack) - `flavor pack` command details
+- ✅ [Verification](../usage/cli.md#verify) - Verify package integrity
+
+**Examples**:
+
+- 💻 [CLI Tool Example](../../cookbook/examples/cli-tool.md) - Package a CLI application
+- 🌐 [Web App Example](../../cookbook/examples/web-app.md) - Package a Flask/FastAPI app
+
+**Help**:
+
+- 🐛 [Troubleshooting](../../troubleshooting/common.md) - Common issues and solutions
+- 📝 [FAQ](../../troubleshooting/faq.md) - Frequently asked questions
