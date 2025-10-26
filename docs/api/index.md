@@ -138,16 +138,29 @@ except VerificationError as e:
     print(f"Verification failed: {e}")
 ```
 
-## Detailed API Documentation
+## Documentation Types
 
-Explore detailed documentation for each FlavorPack module:
+FlavorPack provides two types of API documentation:
 
-### Core Modules
+### 📖 Manual API Guides (Recommended)
+
+Detailed guides with examples and explanations:
 
 - **[Packaging API](packaging.md)** - High-level packaging orchestration, manifest processing, and build workflows
 - **[Builder API](builder.md)** - PSPF package building, slot assembly, and format generation
 - **[Reader API](reader.md)** - Package inspection, slot extraction, and metadata reading
-- **[Cryptography API](crypto.md)** - Ed25519 signing, verification, and key management
+- **[Cryptography API](crypto.md)** - Ed25519 signing, verification, and key management ⚠️ *Currently outdated - see warning banner*
+
+### 🤖 Auto-Generated Reference
+
+Source code documentation auto-generated with mkdocstrings:
+
+- **[Auto-Generated API Reference](reference.md)** - Complete API reference extracted from source code docstrings
+
+!!! tip "Which Should I Use?"
+    - **New users**: Start with the manual guides above for examples and context
+    - **API developers**: Use the auto-generated reference for exact signatures and source code
+    - **Everyone**: The manual guides are more complete but may lag behind code changes
 
 ### Module Organization
 

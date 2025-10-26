@@ -157,16 +157,29 @@ Every component has SHA-256 checksums:
 
 ### Verification Levels
 
-> **Note**: Currently, the `verify` command performs standard verification only. The following verification modes are planned features for a future release.
+#### ✅ Currently Available
 
 ```bash
 # Standard verification (index + metadata + signatures)
 flavor verify package.psp
+```
 
-# Future planned modes:
-# flavor verify package.psp --quick     # Quick (index only)
-# flavor verify package.psp --deep      # Deep (all slots)
-# flavor verify package.psp --paranoid  # Paranoid (extract and verify)
+The verify command performs comprehensive validation:
+- Validates PSPF format structure
+- Verifies index block integrity
+- Checks metadata consistency
+- Validates Ed25519 signature
+- Reports any integrity issues
+
+#### 📋 Planned Verification Modes
+
+Additional verification levels are planned for future releases:
+
+```bash
+# Coming in future versions
+flavor verify package.psp --quick     # Quick (index only)
+flavor verify package.psp --deep      # Deep (all slots)
+flavor verify package.psp --paranoid  # Paranoid (extract and verify)
 ```
 
 ## Execution Security
@@ -244,39 +257,62 @@ verification: authenticity
 use_case: enterprise_deployment
 ```
 
-### Certificate-Based (Future)
+### 📋 Certificate-Based (Planned Feature)
 
-PKI integration planned:
+PKI integration is planned for future releases to support public distribution:
 
 ```yaml
-# X.509 certificate chains
+# X.509 certificate chains (not yet implemented)
 trust_model: pki
 verification: chain_of_trust
 use_case: public_distribution
 ```
+
+This will enable integration with existing PKI infrastructure and code signing certificates for broader distribution scenarios.
 
 ## Security Configuration
 
 ### Environment Variables
 
 ```bash
-# Signature verification
-FLAVOR_VERIFY_SIGNATURES=1      # Enable verification (default)
-FLAVOR_VALIDATION=none          # Skip verification (DANGER!)
-
-# Key management
-FLAVOR_KEY_PATH=/secure/keys    # Key directory
-FLAVOR_KEY_SEED=secret          # Deterministic seed
+# Validation level (testing only)
+FLAVOR_VALIDATION=none          # Skip verification (DANGER! Never use in production)
 
 # Logging
-FLAVOR_AUDIT_LOG=/var/log/flavor.log  # Security audit log
 FLAVOR_LOG_LEVEL=debug          # Verbose security logging
+FOUNDATION_LOG_LEVEL=debug      # Python component logging
 ```
+
+!!! warning "Security Configuration"
+    For signature verification configuration, use CLI flags (`--private-key`, `--public-key`, `--key-seed`) rather than environment variables. See the [Environment Variables Guide](../../guide/usage/environment.md) for the complete list of available variables.
 
 ### Configuration File
 
+!!! info "📋 Planned Feature - Not Yet Implemented"
+    Configuration file support is planned for a future release. Currently, all configuration is done via environment variables and CLI flags.
+
+#### Current Configuration Methods
+
+Use environment variables for configuration:
+
+```bash
+# Security settings
+export FLAVOR_VALIDATION=none          # Skip verification (TESTING ONLY)
+
+# Logging
+export FLAVOR_LOG_LEVEL=debug
+export FOUNDATION_LOG_LEVEL=debug
+
+# Cache location
+export FLAVOR_CACHE=/custom/cache
+```
+
+#### Planned Configuration File Format
+
+Future releases will support a configuration file:
+
 ```toml
-# ~/.flavor/config.toml
+# ~/.flavor/config.toml (not yet supported - planned feature)
 [security]
 verify_signatures = true
 require_https = true
@@ -356,7 +392,7 @@ logger.info("security.extraction",
 
 3. **Verify after building**
    ```bash
-   flavor verify package.psp --deep
+   flavor verify package.psp
    ```
 
 4. **Document security requirements**
@@ -370,7 +406,8 @@ logger.info("security.extraction",
 
 1. **Always verify packages**
    ```bash
-   flavor verify package.psp before running
+   # Verify before running
+   flavor verify package.psp
    ```
 
 2. **Check key fingerprints**

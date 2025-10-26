@@ -130,6 +130,16 @@ flavor verify myapp.psp
 ✅ Checksum: Valid
 ```
 
+!!! info "📋 Planned Features"
+    Additional verification options are planned for future releases:
+
+    - `--quick`: Fast verification (index and signature only)
+    - `--deep`: Deep verification (all slot checksums)
+    - `--paranoid`: Full extraction and validation
+    - `--public-key PATH`: Verify against external trusted key
+
+    Currently, `flavor verify` performs comprehensive verification of format, index, metadata, and signature.
+
 ---
 
 ### inspect
@@ -620,13 +630,74 @@ flavor helpers test --lang go
 
 ### clean
 
-Clean build artifacts and temporary files.
+Clean work environment cache and/or helper binaries to free disk space.
 
 ```bash
 flavor clean [OPTIONS]
 ```
 
-Remove build artifacts, temporary files, and intermediate build outputs.
+#### Options
+
+| Option | Description |
+|--------|-------------|
+| `--all` | Clean both work environment cache and helper binaries |
+| `--helpers` | Clean only helper binaries (not work environment) |
+| `--dry-run` | Show what would be removed without actually removing |
+| `--yes, -y` | Skip confirmation prompt |
+
+#### Behavior
+
+**Default** (no options): Cleans work environment cache only
+- Removes all cached package extractions from `~/.cache/flavor/workenv/`
+- Preserves helper binaries in `dist/bin/`
+
+**With `--helpers`**: Cleans only helper binaries
+- Removes helper binaries from `~/.cache/flavor/bin/`
+- Preserves work environment cache
+
+**With `--all`**: Cleans everything
+- Removes both work environment cache and helper binaries
+- Frees maximum disk space
+
+#### Examples
+
+```bash
+# Clean work environment cache (default)
+flavor clean
+
+# Preview what would be removed
+flavor clean --dry-run
+
+# Clean everything without confirmation
+flavor clean --all --yes
+
+# Clean only helper binaries
+flavor clean --helpers
+
+# Clean with dry run to see impact
+flavor clean --all --dry-run
+```
+
+#### Sample Output
+
+```
+Would remove 3 cached packages (127.4 MB):
+  - myapp-abc123 (45.2 MB)
+  - webapp-def456 (52.1 MB)
+  - cli-tool-ghi789 (30.1 MB)
+
+Would remove 4 helper binaries (18.2 MB):
+  - flavor-rs-launcher-darwin_arm64 (1.0 MB)
+  - flavor-rs-builder-darwin_arm64 (1.1 MB)
+  - flavor-go-launcher-darwin_arm64 (8.0 MB)
+  - flavor-go-builder-darwin_arm64 (8.1 MB)
+```
+
+!!! tip "When to Clean"
+    - **Before releases**: Free space and test fresh extraction
+    - **After updates**: Clear old cached versions
+    - **Disk space low**: Reclaim space from cached packages
+    - **Helper issues**: Remove and rebuild helpers with `flavor helpers build`
 
 ---
 
