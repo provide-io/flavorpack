@@ -52,22 +52,19 @@ Best for developers who want the latest features and ability to build custom hel
 
 === "Windows"
 
+    !!! warning "Windows Not Currently Supported"
+        Windows support is currently **disabled** due to UTF-8 encoding issues in the native helpers. Windows support is planned for a future release.
+
+        For now, Windows users can use WSL2 (Windows Subsystem for Linux) and follow the Linux installation instructions.
+
     ```powershell
-    # Install UV package manager
-    powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+    # Windows installation is not currently supported
+    # Please use WSL2 and follow Linux instructions instead
 
-    # Clone the repository
-    git clone https://github.com/provide-io/flavorpack.git
-    cd flavorpack
+    # Install WSL2
+    wsl --install
 
-    # Set up environment and install dependencies
-    uv sync
-
-    # Build native helpers (requires WSL or Docker)
-    # See Windows-specific instructions below
-
-    # Verify installation
-    flavor --version
+    # Then follow Linux installation steps in WSL
     ```
 
 ### Method 2: Using pip
@@ -225,9 +222,13 @@ See the [complete environment variable reference](../guide/usage/environment.md)
 
 ### Windows
 
-- **WSL Recommended**: For building helpers, WSL2 is recommended
-- **Antivirus**: Some antivirus software may flag self-extracting executables
-- **Path Length**: Be aware of Windows path length limitations
+!!! warning "Windows Not Currently Supported"
+    Native Windows support is currently disabled. Please use WSL2 (Windows Subsystem for Linux) and follow the Linux instructions above.
+
+**When using WSL2**:
+- Install WSL2 with `wsl --install`
+- Use the Linux installation method
+- All FlavorPack features will work in WSL2
 
 ## Troubleshooting Installation
 

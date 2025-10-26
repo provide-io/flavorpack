@@ -171,8 +171,8 @@ flavor inspect hello.psp
 ### Extract Package Contents
 
 ```bash
-# Extract for inspection (not needed for running)
-flavor extract hello.psp --output extracted/
+# Extract all slots for inspection (not needed for running)
+flavor extract-all hello.psp extracted/
 
 # Lists all extracted files
 ls extracted/

@@ -74,6 +74,53 @@ The orchestrator selects helpers in this order:
 3. **Go helpers** for current platform (fallback)
 4. **Error** if no compatible helper found
 
+```mermaid
+flowchart TD
+    Start([flavor pack]) --> CheckFlags{CLI flags<br/>specified?}
+
+    CheckFlags -->|--launcher-bin| UseLauncher[Use specified launcher]
+    CheckFlags -->|--builder-bin| UseBuilder[Use specified builder]
+    CheckFlags -->|None| DetectPlatform[Detect current platform]
+
+    DetectPlatform --> GetPlatform[uname -sm]
+    GetPlatform --> CheckRust{Rust helper<br/>for platform?}
+
+    CheckRust -->|Yes| CheckRustFile[Check dist/bin/flavor-rs-*]
+    CheckRust -->|No| CheckGo{Go helper<br/>for platform?}
+
+    CheckRustFile -->|Exists| UseRust[✅ Use Rust helper]
+    CheckRustFile -->|Missing| CheckGo
+
+    CheckGo -->|Yes| CheckGoFile[Check dist/bin/flavor-go-*]
+    CheckGo -->|No| Error[❌ No compatible helper]
+
+    CheckGoFile -->|Exists| UseGo[⚠️ Use Go helper]
+    CheckGoFile -->|Missing| Error
+
+    UseLauncher --> Build[Build package]
+    UseBuilder --> Build
+    UseRust --> Build
+    UseGo --> Build
+
+    Build --> Done([Package created])
+    Error --> Failed([Build failed])
+
+    style Start fill:#e1f5fe
+    style Done fill:#c8e6c9
+    style Failed fill:#ffcdd2
+    style UseRust fill:#c8e6c9
+    style UseGo fill:#fff9c4
+    style Error fill:#ffcdd2
+```
+
+**Selection Examples:**
+
+| Platform | Available Helpers | Selected | Why |
+|----------|------------------|----------|-----|
+| macOS ARM64 | Rust + Go | Rust | Smaller size (1 MB vs 3-4 MB) |
+| Linux x64 | Go only | Go | Only available option |
+| Custom | Both | User choice | CLI flag overrides |
+
 ### Manual Selection
 
 ```bash

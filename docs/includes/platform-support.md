@@ -4,4 +4,7 @@
 | Linux | aarch64 | ✅ Full | Static (musl) | ARM64 servers |
 | macOS | x86_64 | ✅ Full | Dynamic | Intel Macs |
 | macOS | arm64 | ✅ Full | Dynamic | Apple Silicon |
-| Windows | x86_64 | 🚧 Beta | Dynamic | Windows 10+ |
+| Windows | x86_64 | ⚠️ Disabled | Dynamic | Currently disabled due to UTF-8 issues |
+
+!!! warning "Windows Support Status"
+    Windows support is currently **disabled** in FlavorPack due to UTF-8 encoding issues in the native helpers. Windows support is planned for a future release once these issues are resolved.

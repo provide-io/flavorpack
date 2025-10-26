@@ -1,254 +1,296 @@
 # Cryptography API
 
-The FlavorPack Cryptography API provides Ed25519 signature generation and verification for package integrity.
+Ed25519 key generation and management for PSPF package signing.
 
-!!! warning "Documentation Under Revision"
-    **This API documentation page is currently being updated to match the actual implementation.**
-
-    The code examples on this page reference a simplified API (`flavor.psp.format_2025.crypto`) that doesn't exist. The actual implementation uses:
-
-    - **Key Management**: `flavor.psp.format_2025.keys` module
-    - **Signing**: `provide.foundation.crypto.Ed25519Signer`
-    - **Verification**: `provide.foundation.crypto.Ed25519Verifier`
-
-    For current usage examples, see:
-    - Source: `src/flavor/psp/format_2025/keys.py`
-    - Source: `src/flavor/psp/format_2025/writer.py` (signing)
-    - Source: `src/flavor/psp/security.py` (verification)
-
-    **Recommended**: Use the high-level [Packaging API](packaging.md) which handles all cryptographic operations automatically via CLI options.
-
-!!! note "Low-Level API"
-    This is a low-level API for advanced use cases. Most users should use the [Packaging API](packaging.md) which handles signing automatically.
-
-    The Crypto API gives you direct access to Ed25519 key generation, package signing, and signature verification for custom security workflows.
+!!! note "High-Level API Recommended"
+    Most users should use the CLI tools or [Packaging API](packaging.md) which handle cryptography automatically. This page documents the low-level key management API for advanced use cases.
 
 ## Overview
 
-The Crypto API implements cryptographic operations for PSPF packages using **Ed25519** signatures. Ed25519 provides:
+FlavorPack uses **Ed25519** digital signatures to ensure package integrity. Every PSPF package can be cryptographically signed, with the signature and public key embedded in the package index block.
 
-- **Fast signature generation and verification**
-- **Small signatures** (64 bytes)
-- **Strong security** (128-bit security level)
-- **Deterministic signatures** (same input always produces same signature)
-- **No side-channel vulnerabilities**
+**Ed25519 Benefits**:
+- **Fast**: Quick signature generation and verification
+- **Small**: 32-byte keys, 64-byte signatures
+- **Secure**: 128-bit security level
+- **Deterministic**: Same input always produces same signature
+- **Simple**: No parameters to misconfigure
 
-## When to Use the Crypto API
+## Quick Start
 
-**Use the Crypto API when you need**:
+### CLI Tool (Recommended)
 
-- Custom key management workflows
-- Integration with Hardware Security Modules (HSMs)
-- Batch signing operations
-- Signature verification in custom tools
-- Deterministic key generation for reproducible builds
-- Key rotation workflows
+```bash
+# Generate a new key pair
+flavor keygen --out-dir keys/
 
-**Use the CLI tools instead when**:
+# Keys are saved as PEM files:
+# - keys/flavor-private.key (Ed25519 private key)
+# - keys/flavor-public.key (Ed25519 public key)
 
-- Generating standard key pairs (`flavor keygen`)
-- Signing during package build (`flavor pack --private-key`)
-- Verifying packages (`flavor verify`)
+# Sign package during build
+flavor pack \
+  --manifest pyproject.toml \
+  --private-key keys/flavor-private.key \
+  --public-key keys/flavor-public.key
 
-## Basic Usage
+# Deterministic keys for CI/CD
+flavor pack \
+  --manifest pyproject.toml \
+  --key-seed "$SECRET_SEED"
 
-### Generating Key Pairs
+# Verify signed package
+flavor verify myapp.psp
+```
+
+### Python API
 
 ```python
 from pathlib import Path
-from flavor.psp.format_2025.crypto import generate_keypair, save_keypair
+from flavor.packaging.keys import generate_key_pair
 
-# Generate a new Ed25519 key pair
-private_key, public_key = generate_keypair()
-
-# Save keys to PEM format files
+# Generate and save key pair
 keys_dir = Path("keys")
+private_key_path, public_key_path = generate_key_pair(keys_dir)
+
+print(f"✅ Private key: {private_key_path}")
+print(f"✅ Public key: {public_key_path}")
+```
+
+## Key Generation
+
+### Programmatic Key Generation
+
+```python
+from pathlib import Path
+from flavor.packaging.keys import generate_key_pair
+
+# Generate Ed25519 key pair and save to PEM files
+keys_dir = Path("my-keys")
 keys_dir.mkdir(exist_ok=True)
 
-save_keypair(
-    private_key=private_key,
-    public_key=public_key,
-    private_key_path=keys_dir / "flavor-private.key",
-    public_key_path=keys_dir / "flavor-public.key"
-)
+private_key_path, public_key_path = generate_key_pair(keys_dir)
+# Creates:
+# - my-keys/flavor-private.key (PEM format)
+# - my-keys/flavor-public.key (PEM format)
+```
 
-print("✅ Key pair generated and saved")
+**Function Signature**:
+```python
+def generate_key_pair(keys_dir: Path) -> tuple[Path, Path]:
+    """Generate Ed25519 key pair and save to PEM files.
+
+    Returns:
+        tuple[Path, Path]: (private_key_path, public_key_path)
+    """
 ```
 
 ### Deterministic Key Generation
 
-```python
-from flavor.psp.format_2025.crypto import generate_keypair_from_seed
+For reproducible builds in CI/CD environments:
 
-# Generate keys from a seed for reproducible builds
-seed = "my-secret-seed-for-ci-cd"
-private_key, public_key = generate_keypair_from_seed(seed)
+```python
+from flavor.psp.format_2025.keys import generate_deterministic_keys
+
+# Generate keys from a seed string
+seed = "my-secret-seed-for-ci"
+private_key_bytes, public_key_bytes = generate_deterministic_keys(seed)
+
+# Keys are raw 32-byte values
+assert len(private_key_bytes) == 32
+assert len(public_key_bytes) == 32
 
 # Same seed always produces same keys
-private_key2, public_key2 = generate_keypair_from_seed(seed)
-assert private_key == private_key2
-assert public_key == public_key2
-
-print("✅ Deterministic keys generated")
+pk2, pubk2 = generate_deterministic_keys(seed)
+assert private_key_bytes == pk2
+assert public_key_bytes == pubk2
 ```
 
-### Signing Packages
+!!! warning "Seed Security"
+    The seed value should be treated as a secret. Anyone with the seed can generate the private key and sign packages. Store seeds securely in CI/CD secret management systems.
+
+## Loading Keys
+
+### Load from PEM Files
 
 ```python
-from flavor.psp.format_2025.crypto import sign_package, load_private_key
+from pathlib import Path
+from flavor.packaging.keys import load_private_key_raw, load_public_key_raw
 
-# Load private key
-private_key = load_private_key(Path("keys/flavor-private.key"))
+# Load keys from PEM files (returns raw 32-byte keys)
+private_key = load_private_key_raw(Path("keys/flavor-private.key"))
+public_key = load_public_key_raw(Path("keys/flavor-public.key"))
 
-# Read package data (excluding signature)
-package_path = Path("myapp.psp")
-with open(package_path, "rb") as f:
-    package_data = f.read()
-
-# Sign the package
-signature = sign_package(package_data, private_key)
-
-print(f"✅ Signature: {signature.hex()[:32]}...")
-print(f"   Length: {len(signature)} bytes")
+# Keys are raw bytes
+assert len(private_key) == 32
+assert len(public_key) == 32
 ```
 
-### Verifying Signatures
+### Load from Directory
 
 ```python
-from flavor.psp.format_2025.crypto import verify_signature, load_public_key
+from pathlib import Path
+from flavor.psp.format_2025.keys import load_keys_from_path
 
-# Load public key
-public_key = load_public_key(Path("keys/flavor-public.key"))
-
-# Read package and signature
-with open(package_path, "rb") as f:
-    package_data = f.read()
-
-# Assume signature is embedded in package
-# (In practice, extract from index block)
-signature = extract_signature_from_package(package_data)
-
-# Verify signature
-is_valid = verify_signature(package_data, signature, public_key)
-
-if is_valid:
-    print("✅ Signature valid - package is authentic")
-else:
-    print("❌ Signature invalid - package may be tampered!")
+# Load both keys from a directory
+keys_dir = Path("keys")
+private_key, public_key = load_keys_from_path(keys_dir)
+# Expects keys/flavor-private.key and keys/flavor-public.key
 ```
 
-## Advanced Usage
+## Key Resolution
 
-### Custom Key Storage
+The packaging system resolves keys with the following priority:
 
 ```python
-from cryptography.hazmat.primitives import serialization
-from flavor.psp.format_2025.crypto import generate_keypair
+from pathlib import Path
+from flavor.psp.format_2025.keys import resolve_keys, create_key_config
 
-# Generate keys
-private_key, public_key = generate_keypair()
+# Priority 1: Explicit keys (highest priority)
+config = create_key_config(
+    private_key=my_private_key_bytes,
+    public_key=my_public_key_bytes
+)
+private_key, public_key = resolve_keys(config)
 
-# Custom serialization (e.g., for HSM integration)
-private_bytes = private_key.private_bytes(
-    encoding=serialization.Encoding.Raw,
-    format=serialization.PrivateFormat.Raw,
-    encryption_algorithm=serialization.NoEncryption()
+# Priority 2: Deterministic from seed
+config = create_key_config(seed="my-seed")
+private_key, public_key = resolve_keys(config)
+
+# Priority 3: Load from filesystem
+config = create_key_config(key_path=Path("keys"))
+private_key, public_key = resolve_keys(config)
+
+# Priority 4: Generate ephemeral (default)
+config = create_key_config()  # No parameters
+private_key, public_key = resolve_keys(config)
+```
+
+## Signing Packages
+
+Package signing is handled automatically by the build system. The sign/verify operations use the `provide.foundation.crypto` module internally.
+
+### Automatic Signing During Build
+
+```python
+from pathlib import Path
+from flavor import build_package_from_manifest
+
+# Sign with explicit keys
+packages = build_package_from_manifest(
+    manifest_path=Path("pyproject.toml"),
+    private_key_path=Path("keys/flavor-private.key"),
+    public_key_path=Path("keys/flavor-public.key"),
 )
 
-public_bytes = public_key.public_bytes(
-    encoding=serialization.Encoding.Raw,
-    format=serialization.PublicFormat.Raw
+# Sign with deterministic seed (CI/CD)
+packages = build_package_from_manifest(
+    manifest_path=Path("pyproject.toml"),
+    key_seed="my-secret-seed",
 )
-
-# Store in custom backend (database, HSM, etc.)
-store_in_hsm(private_bytes, key_id="flavorpack-signing-key")
-print("✅ Keys stored in HSM")
 ```
 
-### Batch Signing
+### Verification
 
-```python
-from concurrent.futures import ThreadPoolExecutor
-from flavor.psp.format_2025.crypto import sign_package, load_private_key
-
-def sign_package_file(package_path, private_key):
-    """Sign a single package file."""
-    with open(package_path, "rb") as f:
-        data = f.read()
-
-    signature = sign_package(data, private_key)
-
-    # Write signature to separate file or embed in package
-    sig_path = package_path.with_suffix(".psp.sig")
-    sig_path.write_bytes(signature)
-
-    return package_path, signature
-
-# Load signing key once
-private_key = load_private_key(Path("keys/flavor-private.key"))
-
-# Sign multiple packages in parallel
-packages = list(Path("dist").glob("*.psp"))
-
-with ThreadPoolExecutor(max_workers=4) as executor:
-    results = list(executor.map(
-        lambda p: sign_package_file(p, private_key),
-        packages
-    ))
-
-print(f"✅ Signed {len(results)} packages")
+```bash
+# Verify package signature (automatic)
+flavor verify myapp.psp
 ```
 
-### Signature Verification with Timing
+Verification happens automatically when a package is executed. The launcher:
+1. Reads the index block to get the public key and signature
+2. Calculates the package checksum
+3. Verifies the signature using the embedded public key
+4. Fails if verification fails (unless `FLAVOR_VALIDATION=none`)
+
+## Key Storage Best Practices
+
+### File Permissions
+
+Keys are automatically saved with restrictive permissions:
 
 ```python
-import time
-from flavor.psp.format_2025.crypto import verify_signature, load_public_key
+from pathlib import Path
+from flavor.packaging.keys import generate_key_pair
 
-def verify_with_timing(package_path, public_key):
-    """Verify signature and measure time."""
-    with open(package_path, "rb") as f:
-        package_data = f.read()
+keys_dir = Path("keys")
+private_key_path, public_key_path = generate_key_pair(keys_dir)
 
-    signature = extract_signature_from_package(package_data)
+# Private key is saved with 0o600 permissions (owner read/write only)
+# Directory is created with 0o700 permissions (owner only)
+```
 
-    start = time.perf_counter()
-    is_valid = verify_signature(package_data, signature, public_key)
-    elapsed = time.perf_counter() - start
+### Secure Storage Locations
 
-    return {
-        "path": package_path,
-        "valid": is_valid,
-        "verification_time_ms": elapsed * 1000,
-        "size_mb": len(package_data) / 1024 / 1024
-    }
+```bash
+# Development (local)
+keys/
+├── flavor-private.key  # Never commit to git!
+└── flavor-public.key
 
-# Verify and benchmark
-public_key = load_public_key(Path("keys/flavor-public.key"))
-result = verify_with_timing(Path("myapp.psp"), public_key)
+# Production (CI/CD)
+# Store seed in secrets manager:
+# - GitHub Secrets: FLAVOR_KEY_SEED
+# - GitLab CI/CD Variables: FLAVOR_KEY_SEED
+# - AWS Secrets Manager
+# - HashiCorp Vault
+```
 
-print(f"Package: {result['path']}")
-print(f"Valid: {result['valid']}")
-print(f"Size: {result['size_mb']:.2f} MB")
-print(f"Verification: {result['verification_time_ms']:.2f} ms")
+### .gitignore
+
+Always exclude private keys from version control:
+
+```gitignore
+# FlavorPack keys
+keys/flavor-private.key
+*.key
+!*-public.key  # Allow public keys
+```
+
+## Common Workflows
+
+### CI/CD Pipeline
+
+```yaml
+# .github/workflows/build.yml
+name: Build Package
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build and sign package
+        env:
+          FLAVOR_KEY_SEED: ${{ secrets.FLAVOR_KEY_SEED }}
+        run: |
+          flavor pack \
+            --manifest pyproject.toml \
+            --key-seed "$FLAVOR_KEY_SEED" \
+            --output myapp.psp
+
+      - name: Verify package
+        run: flavor verify myapp.psp
 ```
 
 ### Key Rotation
 
 ```python
+from pathlib import Path
 from datetime import datetime
-from flavor.psp.format_2025.crypto import generate_keypair, save_keypair
+from flavor.packaging.keys import generate_key_pair
 
-def rotate_keys(keys_dir, reason="scheduled_rotation"):
-    """Rotate signing keys with backup."""
-    keys_dir = Path(keys_dir)
+def rotate_keys(keys_dir: Path) -> tuple[Path, Path]:
+    """Rotate keys with backup."""
 
     # Backup old keys
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     backup_dir = keys_dir / f"backup_{timestamp}"
     backup_dir.mkdir(parents=True, exist_ok=True)
 
-    # Backup existing keys
     old_private = keys_dir / "flavor-private.key"
     old_public = keys_dir / "flavor-public.key"
 
@@ -256,354 +298,225 @@ def rotate_keys(keys_dir, reason="scheduled_rotation"):
         old_private.rename(backup_dir / "flavor-private.key")
         old_public.rename(backup_dir / "flavor-public.key")
 
-        # Save rotation metadata
-        (backup_dir / "rotation.txt").write_text(
-            f"Rotated: {timestamp}\nReason: {reason}\n"
-        )
+        with open(backup_dir / "rotation.txt", "w") as f:
+            f.write(f"Rotated: {timestamp}\nReason: scheduled_rotation\n")
 
     # Generate new keys
-    private_key, public_key = generate_keypair()
-    save_keypair(
-        private_key=private_key,
-        public_key=public_key,
-        private_key_path=old_private,
-        public_key_path=old_public
-    )
-
-    print(f"✅ Keys rotated - backup in {backup_dir}")
-    return private_key, public_key
+    return generate_key_pair(keys_dir)
 
 # Rotate keys
-new_private, new_public = rotate_keys(Path("keys"), reason="annual_rotation")
+new_private, new_public = rotate_keys(Path("keys"))
+print(f"✅ Keys rotated. Old keys backed up.")
 ```
 
-## Common Patterns
-
-### CI/CD Signing Workflow
+### Multi-Environment Keys
 
 ```python
+from pathlib import Path
+from flavor import build_package_from_manifest
+
+# Development environment
+dev_packages = build_package_from_manifest(
+    manifest_path=Path("pyproject.toml"),
+    key_seed="dev-seed-123",  # Fixed seed for dev
+    output_path=Path("dist/myapp-dev.psp"),
+)
+
+# Staging environment
+staging_packages = build_package_from_manifest(
+    manifest_path=Path("pyproject.toml"),
+    private_key_path=Path("keys/staging/flavor-private.key"),
+    public_key_path=Path("keys/staging/flavor-public.key"),
+    output_path=Path("dist/myapp-staging.psp"),
+)
+
+# Production environment
 import os
-import sys
-from pathlib import Path
-from flavor.psp.format_2025.crypto import (
-    generate_keypair_from_seed,
-    sign_package,
-    save_public_key
+prod_seed = os.environ["PROD_KEY_SEED"]  # From secrets manager
+prod_packages = build_package_from_manifest(
+    manifest_path=Path("pyproject.toml"),
+    key_seed=prod_seed,
+    output_path=Path("dist/myapp-prod.psp"),
 )
-
-def ci_sign_package(package_path):
-    """Sign package in CI environment using secret seed."""
-    # Get seed from environment (stored in CI secrets)
-    seed = os.environ.get("SIGNING_KEY_SEED")
-    if not seed:
-        print("❌ SIGNING_KEY_SEED not set", file=sys.stderr)
-        return False
-
-    # Generate deterministic keys
-    private_key, public_key = generate_keypair_from_seed(seed)
-
-    # Read package
-    with open(package_path, "rb") as f:
-        package_data = f.read()
-
-    # Sign package
-    signature = sign_package(package_data, private_key)
-
-    # Embed signature in package
-    # (Implementation depends on package format)
-    embed_signature_in_package(package_path, signature)
-
-    # Save public key for distribution
-    save_public_key(public_key, Path("dist/public-key.pem"))
-
-    print(f"✅ Package signed: {package_path}")
-    return True
-
-# Usage in CI
-if __name__ == "__main__":
-    package = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("dist/app.psp")
-    success = ci_sign_package(package)
-    sys.exit(0 if success else 1)
-```
-
-### Multi-Signature Verification
-
-```python
-from flavor.psp.format_2025.crypto import verify_signature, load_public_key
-
-def verify_multi_signature(package_path, trusted_keys_dir):
-    """Verify package is signed by at least one trusted key."""
-    # Load all trusted public keys
-    trusted_keys = []
-    for key_file in Path(trusted_keys_dir).glob("*.pem"):
-        trusted_keys.append(load_public_key(key_file))
-
-    if not trusted_keys:
-        print("❌ No trusted keys found")
-        return False
-
-    # Read package
-    with open(package_path, "rb") as f:
-        package_data = f.read()
-
-    signature = extract_signature_from_package(package_data)
-
-    # Try each trusted key
-    for i, public_key in enumerate(trusted_keys):
-        if verify_signature(package_data, signature, public_key):
-            print(f"✅ Valid signature from trusted key {i+1}")
-            return True
-
-    print("❌ No valid signature from trusted keys")
-    return False
-
-# Verify with multiple trusted keys
-is_trusted = verify_multi_signature(
-    Path("myapp.psp"),
-    Path("trusted-keys")
-)
-```
-
-### Signature Chain of Trust
-
-```python
-from dataclasses import dataclass
-from typing import List
-from datetime import datetime
-
-@dataclass
-class SignatureChain:
-    """Chain of signatures for auditing."""
-    package_name: str
-    signatures: List[dict]
-
-def build_signature_chain(package_path, key_history):
-    """Build chain of trust with historical signatures."""
-    chain = SignatureChain(
-        package_name=package_path.name,
-        signatures=[]
-    )
-
-    with open(package_path, "rb") as f:
-        package_data = f.read()
-
-    # Verify against each historical key
-    for entry in key_history:
-        public_key = load_public_key(entry["key_path"])
-        signature = extract_signature_for_key(package_data, entry["key_id"])
-
-        is_valid = verify_signature(package_data, signature, public_key)
-
-        chain.signatures.append({
-            "key_id": entry["key_id"],
-            "valid_from": entry["valid_from"],
-            "valid_until": entry.get("valid_until"),
-            "is_valid": is_valid,
-            "verified_at": datetime.now().isoformat()
-        })
-
-    return chain
-
-# Build and verify chain
-key_history = [
-    {"key_id": "key-2024", "key_path": "keys/2024.pem", "valid_from": "2024-01-01"},
-    {"key_id": "key-2025", "key_path": "keys/2025.pem", "valid_from": "2025-01-01"},
-]
-chain = build_signature_chain(Path("myapp.psp"), key_history)
-
-for sig in chain.signatures:
-    status = "✅" if sig["is_valid"] else "❌"
-    print(f"{status} {sig['key_id']}: {sig['verified_at']}")
-```
-
-### Offline Signing
-
-```python
-from flavor.psp.format_2025.crypto import sign_package, load_private_key
-import json
-
-def prepare_for_offline_signing(package_path):
-    """Prepare package hash for offline signing."""
-    with open(package_path, "rb") as f:
-        package_data = f.read()
-
-    # Calculate hash for signing
-    from hashlib import sha256
-    package_hash = sha256(package_data).hexdigest()
-
-    # Create signing request
-    request = {
-        "package_path": str(package_path),
-        "package_hash": package_hash,
-        "size": len(package_data),
-    }
-
-    request_file = package_path.with_suffix(".signing-request.json")
-    request_file.write_text(json.dumps(request, indent=2))
-
-    print(f"✅ Signing request saved: {request_file}")
-    return request_file
-
-def apply_offline_signature(package_path, signature_file):
-    """Apply signature from offline signing."""
-    # Read signature
-    signature = Path(signature_file).read_bytes()
-
-    # Embed in package
-    embed_signature_in_package(package_path, signature)
-
-    print(f"✅ Signature applied to {package_path}")
-
-# Offline workflow
-# 1. On online machine
-request = prepare_for_offline_signing(Path("sensitive-app.psp"))
-
-# 2. Transfer request to offline signing machine
-# 3. On offline machine: sign and return signature
-# 4. Back on online machine
-apply_offline_signature(Path("sensitive-app.psp"), Path("signature.bin"))
-```
-
-## Security Best Practices
-
-### Secure Key Storage
-
-```python
-import stat
-from pathlib import Path
-
-def save_key_securely(key_data, key_path):
-    """Save key with restricted permissions."""
-    key_path = Path(key_path)
-
-    # Write key
-    key_path.write_bytes(key_data)
-
-    # Set restrictive permissions (owner read/write only)
-    key_path.chmod(stat.S_IRUSR | stat.S_IWUSR)  # 0o600
-
-    print(f"✅ Key saved with restricted permissions: {key_path}")
-    print(f"   Permissions: {oct(key_path.stat().st_mode)[-3:]}")
-
-# Usage
-from flavor.psp.format_2025.crypto import generate_keypair
-private_key, public_key = generate_keypair()
-
-from cryptography.hazmat.primitives import serialization
-private_pem = private_key.private_bytes(
-    encoding=serialization.Encoding.PEM,
-    format=serialization.PrivateFormat.PKCS8,
-    encryption_algorithm=serialization.NoEncryption()
-)
-
-save_key_securely(private_pem, Path("keys/flavor-private.key"))
-```
-
-### Key Validation
-
-```python
-from flavor.psp.format_2025.crypto import load_private_key, load_public_key
-
-def validate_keypair(private_key_path, public_key_path):
-    """Validate that private and public keys match."""
-    try:
-        private_key = load_private_key(private_key_path)
-        public_key = load_public_key(public_key_path)
-
-        # Generate test signature
-        test_data = b"test message"
-        signature = sign_package(test_data, private_key)
-
-        # Verify with public key
-        is_valid = verify_signature(test_data, signature, public_key)
-
-        if is_valid:
-            print("✅ Key pair is valid and matches")
-            return True
-        else:
-            print("❌ Key pair does not match")
-            return False
-
-    except Exception as e:
-        print(f"❌ Key validation failed: {e}")
-        return False
-
-# Validate keys
-validate_keypair(
-    Path("keys/flavor-private.key"),
-    Path("keys/flavor-public.key")
-)
-```
-
-## Error Handling
-
-```python
-from flavor.psp.format_2025.crypto import (
-    CryptoError,
-    InvalidSignatureError,
-    KeyError,
-    load_private_key,
-    sign_package
-)
-
-def safe_sign_package(package_path, key_path):
-    """Safely sign package with comprehensive error handling."""
-    try:
-        # Load key
-        private_key = load_private_key(key_path)
-
-        # Read package
-        with open(package_path, "rb") as f:
-            data = f.read()
-
-        # Sign
-        signature = sign_package(data, private_key)
-        return signature
-
-    except FileNotFoundError as e:
-        print(f"❌ File not found: {e}")
-        return None
-
-    except KeyError as e:
-        print(f"❌ Invalid or corrupted key: {e}")
-        return None
-
-    except CryptoError as e:
-        print(f"❌ Cryptographic operation failed: {e}")
-        return None
-
-    except Exception as e:
-        print(f"❌ Unexpected error: {e}")
-        return None
-
-# Safe signing
-signature = safe_sign_package(
-    Path("myapp.psp"),
-    Path("keys/flavor-private.key")
-)
-
-if signature:
-    print("✅ Package signed successfully")
 ```
 
 ## API Reference
 
-!!! warning "Auto-Generated API Documentation Disabled"
-    The auto-generated API reference has been temporarily disabled while the documentation is updated to match the actual implementation.
+### Key Generation Functions
 
-    For now, refer to the source code:
+#### `generate_key_pair(keys_dir: Path) -> tuple[Path, Path]`
 
-    - **Key Management**: `src/flavor/psp/format_2025/keys.py`
-    - **Signing**: `src/flavor/psp/format_2025/writer.py`
-    - **Verification**: `src/flavor/psp/security.py`
+Generate Ed25519 key pair and save to PEM files.
 
-    Or use the high-level API documented in [Packaging API](packaging.md).
+- **Module**: `flavor.packaging.keys`
+- **Args**: `keys_dir` - Directory to save keys
+- **Returns**: `(private_key_path, public_key_path)`
+- **Creates**:
+  - `keys_dir/flavor-private.key` (PEM format, 0o600 permissions)
+  - `keys_dir/flavor-public.key` (PEM format)
 
-## See Also
+#### `generate_deterministic_keys(seed: str) -> tuple[bytes, bytes]`
 
-- **[Packaging API](packaging.md)** - High-level packaging with automatic signing
-- **[Builder API](builder.md)** - Package creation with signing
-- **[Signing Guide](../guide/packaging/signing.md)** - Package signing workflow
+Generate deterministic Ed25519 keys from a seed string.
+
+- **Module**: `flavor.psp.format_2025.keys`
+- **Args**: `seed` - Seed string for deterministic generation
+- **Returns**: `(private_key_bytes, public_key_bytes)` - Raw 32-byte keys
+
+#### `generate_ephemeral_keys() -> tuple[bytes, bytes]`
+
+Generate new ephemeral Ed25519 keys.
+
+- **Module**: `flavor.psp.format_2025.keys`
+- **Returns**: `(private_key_bytes, public_key_bytes)` - Raw 32-byte keys
+
+### Key Loading Functions
+
+#### `load_private_key_raw(key_path: Path) -> bytes`
+
+Load private key from PEM file and return raw 32-byte seed.
+
+- **Module**: `flavor.packaging.keys`
+- **Args**: `key_path` - Path to PEM-encoded private key
+- **Returns**: Raw 32-byte private key seed
+- **Raises**: `ValueError` if key is not Ed25519
+
+#### `load_public_key_raw(key_path: Path) -> bytes`
+
+Load public key from PEM file and return raw 32-byte key.
+
+- **Module**: `flavor.packaging.keys`
+- **Args**: `key_path` - Path to PEM-encoded public key
+- **Returns**: Raw 32-byte public key
+- **Raises**: `ValueError` if key is not Ed25519
+
+#### `load_keys_from_path(key_path: Path) -> tuple[bytes, bytes]`
+
+Load Ed25519 keys from filesystem directory.
+
+- **Module**: `flavor.psp.format_2025.keys`
+- **Args**: `key_path` - Directory containing key files
+- **Returns**: `(private_key, public_key)` as raw bytes
+- **Expects**:
+  - `key_path/flavor-private.key` (raw 32-byte format)
+  - `key_path/flavor-public.key` (raw 32-byte format)
+
+### Key Persistence Functions
+
+#### `save_keys_to_path(private_key: bytes, public_key: bytes, key_path: Path) -> None`
+
+Save Ed25519 keys to filesystem directory.
+
+- **Module**: `flavor.psp.format_2025.keys`
+- **Args**:
+  - `private_key` - 32-byte private key
+  - `public_key` - 32-byte public key
+  - `key_path` - Directory to save keys in
+- **Creates**:
+  - `key_path/flavor-private.key` (raw 32-byte, 0o600 permissions)
+  - `key_path/flavor-public.key` (raw 32-byte)
+
+### Key Resolution Functions
+
+#### `create_key_config(...) -> KeyConfig`
+
+Create a validated key configuration.
+
+- **Module**: `flavor.psp.format_2025.keys`
+- **Args** (all optional, mutually exclusive):
+  - `seed: str | None` - Seed for deterministic generation
+  - `private_key: bytes | None` - Explicit private key bytes
+  - `public_key: bytes | None` - Explicit public key bytes
+  - `key_path: Path | None` - Path to load keys from
+- **Returns**: `KeyConfig` instance
+- **Raises**: `ValueError` if configuration is invalid
+
+#### `resolve_keys(config: KeyConfig) -> tuple[bytes, bytes]`
+
+Resolve keys based on configuration priority.
+
+- **Module**: `flavor.psp.format_2025.keys`
+- **Args**: `config` - Key configuration
+- **Returns**: `(private_key, public_key)` as raw bytes
+- **Priority Order**:
+  1. Explicit keys (if both provided)
+  2. Deterministic from seed
+  3. Load from filesystem path
+  4. Generate ephemeral (default)
+
+## Security Considerations
+
+### Key Format
+
+- **PEM Files**: Used for persistent storage (CLI-generated keys)
+- **Raw Bytes**: Used internally (32 bytes private, 32 bytes public)
+- **Ed25519 Only**: Other key types (RSA, ECDSA) are rejected with helpful error messages
+
+### Key Validation
+
+```python
+from pathlib import Path
+from flavor.packaging.keys import load_private_key_raw
+
+try:
+    private_key = load_private_key_raw(Path("keys/flavor-private.key"))
+except ValueError as e:
+    # Helpful error if wrong key type
+    print(e)
+    # "Incompatible key type: Found RSA key, but Ed25519 is required."
+```
+
+### Seed Security
+
+Deterministic seeds should be treated as secrets:
+
+```python
+import os
+
+# ✅ GOOD: Load from environment
+seed = os.environ.get("FLAVOR_KEY_SEED")
+
+# ❌ BAD: Hardcode in source
+seed = "my-hardcoded-seed"  # Don't do this!
+
+# ✅ GOOD: Use secrets manager
+from my_secrets import get_secret
+seed = get_secret("flavor-key-seed")
+```
+
+## Troubleshooting
+
+### Wrong Key Type
+
+```python
+# Error: "Found RSA key, but Ed25519 is required"
+# Solution: Generate new Ed25519 keys
+from pathlib import Path
+from flavor.packaging.keys import generate_key_pair
+
+# Delete old keys
+Path("keys/flavor-private.key").unlink(missing_ok=True)
+Path("keys/flavor-public.key").unlink(missing_ok=True)
+
+# Generate new Ed25519 keys
+generate_key_pair(Path("keys"))
+```
+
+### Invalid Key Size
+
+```python
+# Error: "Invalid private key size: expected 32 bytes, got 64"
+# This happens when using PEM format where raw format expected
+# Solution: Use the appropriate loader
+
+from flavor.packaging.keys import load_private_key_raw  # For PEM files
+from flavor.psp.format_2025.keys import load_keys_from_path  # For raw files
+```
+
+## Related Documentation
+
+- **[Packaging API](packaging.md)** - High-level package building with automatic signing
 - **[Security Model](../guide/concepts/security.md)** - FlavorPack security architecture
-- **[Keygen Command](../guide/usage/cli.md#keygen)** - CLI key generation
-- **[PSPF Security Specification](../reference/spec/fep-0001-core-format-and-operation-chains.md#7-security-model)** - Security model details
+- **[Signing Guide](../guide/packaging/signing.md)** - Package signing workflow
+- **[CLI Reference](../guide/usage/cli.md#keygen)** - CLI key generation
+- **[PSPF Security Specification](../reference/spec/fep-0001-core-format-and-operation-chains.md#7-security-model)** - Format security details
