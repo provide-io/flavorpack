@@ -335,7 +335,7 @@ pytest tests/taster/tests/ -v --cov
 
 ## Further Reading
 
-- [TASTER README](../../tests/taster/README.md) - Complete TASTER documentation
-- [PRETASTER README](../../tests/pretaster/README.md) - Complete PRETASTER documentation
+- [TASTER README - Complete TASTER documentation
+- [PRETASTER README - Complete PRETASTER documentation
 - [Testing Guide](./index.md) - General testing strategy
 - [Cross-Language Testing](./cross-language.md) - Cross-language test details

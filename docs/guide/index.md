@@ -54,10 +54,10 @@ Integrate FlavorPack with other Provide Foundry tools.
 
 Looking for something specific?
 
-- **First time?** → Start with [Getting Started](../getting-started/)
-- **Need examples?** → Check out the [Cookbook](../cookbook/)
-- **Having issues?** → See [Troubleshooting](../troubleshooting/)
-- **Contributing?** → Read [Development Guide](../development/)
+- **First time?** → Start with [Getting Started](../getting-started/index.md)
+- **Need examples?** → Check out the [Cookbook](../cookbook/index.md)
+- **Having issues?** → See [Troubleshooting](../troubleshooting/index.md)
+- **Contributing?** → Read [Development Guide](../development/index.md)
 
 ## Documentation Structure
 
@@ -102,11 +102,11 @@ graph TB
 
 If you can't find what you're looking for:
 
-- 📖 Check the [Cookbook](../cookbook/) for practical examples
+- 📖 Check the [Cookbook](../cookbook/index.md) for practical examples
 - 🔍 Search the documentation (Ctrl+K or Cmd+K)
 - 💬 Ask in [Community Support](../community/support.md)
 - 🐛 Report issues on [GitHub](https://github.com/provide-io/flavorpack/issues)
 
 ---
 
-**Ready to start?** Jump to [Core Concepts](concepts/) or try the [Quick Start](../getting-started/quickstart.md).
+**Ready to start?** Jump to [Core Concepts](concepts/index.md) or try the [Quick Start](../getting-started/quickstart.md).

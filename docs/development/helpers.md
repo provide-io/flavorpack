@@ -506,4 +506,4 @@ perf report
 - [Architecture](architecture.md) - System design
 - [CI/CD Pipeline](ci-cd.md) - Automated builds
 - [Testing Guide](testing/index.md) - Test strategies
-- [Package Format](../spec/pspf-2025.md) - PSPF specification
+- [Package Format](../reference/spec/pspf-2025.md) - PSPF specification

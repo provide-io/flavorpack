@@ -479,7 +479,7 @@ optional = true
     - `--public-key PATH` - Include public key in package
     - `--key-seed TEXT` - Deterministic key generation
 
-    Manifest-based security configuration is planned for a future release. See [Roadmap](../roadmap.md#security-features) for details.
+    Manifest-based security configuration is planned for a future release. See [Roadmap](../roadmap.md) for details.
 
 ### Package Signing
 
@@ -817,5 +817,5 @@ optional = true
 - [Creating Packages](index.md) - Package creation overview
 - [Python Packaging](python.md) - Python-specific features
 - [Package Signing](signing.md) - Security configuration
-- [Slots](../../spec/slots.md) - Slot system specification
+- [Slots](../../reference/spec/pspf-2025.md) - Slot system specification
 - [API Reference](../../api/index.md) - Python API

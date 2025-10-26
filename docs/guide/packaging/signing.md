@@ -587,7 +587,7 @@ The following features are planned for future releases:
 
 ## Related Documentation
 
-- [Cryptographic Specification](../../spec/crypto.md) - Technical details
-- [Security Model](../../guide/concepts/security.md) - Security architecture
-- [Package Verification](../../api/index.md#verify_package) - API reference
+- [Cryptographic Specification](../../reference/spec/pspf-2025.md) - Technical details
+- [Security Model](../concepts/security.md) - Security architecture
+- [Package Verification](../../api/index.md) - API reference
 - [Troubleshooting](../../troubleshooting/index.md#signature-and-security) - Common issues

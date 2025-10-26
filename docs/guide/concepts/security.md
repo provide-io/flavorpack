@@ -447,7 +447,7 @@ Working towards:
 
 ## Related Documentation
 
-- [Cryptographic Specification](../../spec/crypto.md) - Technical crypto details
+- [Cryptographic Specification](../../reference/spec/pspf-2025.md) - Technical crypto details
 - [Package Format](../../reference/spec/fep-0001-core-format-and-operation-chains.md) - Binary security features
-- [CLI Reference](../../api/cli.md#verify) - Verification commands
-- [Troubleshooting](../../troubleshooting/security.md) - Security issues
+- [CLI Reference](../../guide/usage/cli.md#verify) - Verification commands
+- [Troubleshooting](../concepts/security.md) - Security issues

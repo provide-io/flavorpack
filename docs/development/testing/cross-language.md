@@ -39,4 +39,4 @@ make test BUILDER=go LAUNCHER=rust
 
 ---
 
-**See also:** [Testing Guide](index.md) | [Pretaster README](../../../tests/pretaster/README.md)
+**See also:** [Testing Guide](index.md) | [Pretaster README
