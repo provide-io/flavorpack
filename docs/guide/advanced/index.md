@@ -97,9 +97,9 @@ Troubleshoot complex issues.
 
 Before diving into advanced topics, you should:
 
-1. ✅ Understand [Core Concepts](../concepts/)
-2. ✅ Be comfortable with [Building Packages](../packaging/)
-3. ✅ Have experience [Using Packages](../usage/)
+1. ✅ Understand [Core Concepts](../concepts/index.md)
+2. ✅ Be comfortable with [Building Packages](../packaging/index.md)
+3. ✅ Have experience [Using Packages](../usage/index.md)
 4. ✅ Know Go or Rust (for helper development)
 
 ## Next Steps
@@ -113,4 +113,4 @@ Choose your path:
 
 ---
 
-**Need help?** Join the discussion on [GitHub](https://github.com/provide-io/flavorpack/discussions) or check [Troubleshooting](../../troubleshooting/).
+**Need help?** Join the discussion on [GitHub](https://github.com/provide-io/flavorpack/discussions) or check [Troubleshooting](../../troubleshooting/index.md).

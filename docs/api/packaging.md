@@ -536,7 +536,7 @@ packages = build_package_from_manifest(Path("pyproject.toml"))
 - [Reader API](reader.md) - Package reading and extraction
 - [Crypto API](crypto.md) - Cryptographic operations
 - [CLI Reference](../guide/usage/cli.md) - Command-line tools
-- [Packaging Guide](../guide/packaging/) - User guide
+- [Packaging Guide](../guide/packaging/index.md) - User guide
 
 ---
 

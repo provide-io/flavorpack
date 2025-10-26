@@ -48,13 +48,13 @@ Read articles and updates.
 ## Resources
 
 ### Documentation
-- **[Getting Started](../getting-started/)** - Start here
-- **[User Guide](../guide/)** - Complete guide
-- **[Cookbook](../cookbook/)** - Examples
-- **[Development](../development/)** - Contribute
+- **[Getting Started](../getting-started/index.md)** - Start here
+- **[User Guide](../guide/index.md)** - Complete guide
+- **[Cookbook](../cookbook/index.md)** - Examples
+- **[Development](../development/index.md)** - Contribute
 
 ### Foundry Ecosystem
-- **[Provide Foundry](../foundry/)** - Ecosystem overview
+- **[Provide Foundry](../foundry/index.md)** - Ecosystem overview
 - **[pyvider](https://foundry.provide.io/pyvider/)** - Terraform providers
 - **[wrknv](https://foundry.provide.io/wrknv/)** - Environment management
 - **[provide-foundation](https://foundry.provide.io/foundation/)** - Core infrastructure

@@ -302,6 +302,7 @@ strategy:
 
 ### Upload to Artifactory
 
+{% raw %}
 ```yaml
 - name: Upload to Artifactory
   run: |
@@ -309,6 +310,7 @@ strategy:
       -T myapp.psp \
       "https://artifactory.company.com/artifactory/packages/myapp.psp"
 ```
+{% endraw %}
 
 ## See Also
 

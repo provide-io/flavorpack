@@ -86,7 +86,7 @@ Packaged applications currently use whatever Python version is available in your
 
     For example, if you build on Python 3.12, your package will use Python 3.12 - you cannot target Python 3.11.
 
-    **Planned**: Future releases will support specifying target Python versions via manifest configuration (see [Roadmap](../roadmap.md#python-version-selection-)).
+    **Planned**: Future releases will support specifying target Python versions via manifest configuration (see [Roadmap](../roadmap.md)).
 
 ### Dependency Management ✅
 

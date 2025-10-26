@@ -279,7 +279,12 @@ nav:
       - Debugging: guide/advanced/debugging.md
   
   # SECTION 3: API Reference (technical documentation)
-  - API Reference: api/index.md
+  - API Reference:
+    - api/index.md
+    - Packaging API: api/packaging.md
+    - Builder API: api/builder.md
+    - Reader API: api/reader.md
+    - Crypto API: api/crypto.md
   
   # SECTION 4: Cookbook (practical examples)
   - Cookbook:
@@ -294,6 +299,7 @@ nav:
       - cookbook/recipes/index.md
       - Docker Integration: cookbook/recipes/docker.md
       - CI/CD Pipelines: cookbook/recipes/ci-cd.md
+      - Multi-Platform Builds: cookbook/recipes/multi-platform.md
   
   # SECTION 5: Reference (specs, troubleshooting, development)
   - Reference:
@@ -302,12 +308,21 @@ nav:
 
     - Specification:
       - PSPF 2025: reference/spec/pspf-2025.md
+      - Slot Descriptor Spec: reference/spec/SLOT_DESCRIPTOR_SPECIFICATION.md
+      - FEP-0001 Core Format: reference/spec/fep-0001-core-format-and-operation-chains.md
+      - FEP-0002 JSON Metadata: reference/spec/fep-0002-json-metadata-format.md
+      - FEP-0003 Operation Registry: reference/spec/fep-0003-operation-registry.md
+      - Future Enhancements:
+        - FEP-0004 Supply Chain JIT: reference/spec/future/fep-0004-supply-chain-jit.md
+        - FEP-0005 Runtime JIT: reference/spec/future/fep-0005-runtime-jit-loading.md
+        - FEP-0006 Staged Payload: reference/spec/future/fep-0006-staged-payload-architecture.md
 
     - Troubleshooting:
       - troubleshooting/index.md
       - Common Issues: troubleshooting/common.md
       - Error Messages: troubleshooting/errors.md
       - Platform-Specific:
+        - troubleshooting/platforms/index.md
         - macOS Issues: troubleshooting/platforms/macos.md
         - Linux Issues: troubleshooting/platforms/linux.md
         - Windows Issues: troubleshooting/platforms/windows.md
@@ -321,6 +336,7 @@ nav:
       - Testing:
         - development/testing/index.md
         - Unit Tests: development/testing/unit.md
+        - Taster vs Pretaster: development/testing/taster-vs-pretaster.md
         - Integration Tests: development/testing/integration.md
         - Cross-Language Tests: development/testing/cross-language.md
       - CI/CD: development/ci-cd.md
@@ -330,12 +346,13 @@ nav:
       - community/index.md
       - Getting Support: community/support.md
       - Discussions: community/discussions.md
+      - Contributing: community/contributing.md
       - Blog: community/blog.md
       - Changelog: community/changelog.md
       - License: community/license.md
 
 validation:
-  omitted_files: warn
+  omitted_files: info  # Some files (like includes/) are intentionally not in nav
   absolute_links: warn
   unrecognized_links: warn
 

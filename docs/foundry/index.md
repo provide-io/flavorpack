@@ -153,9 +153,9 @@ Full Python 3.11+ type annotations with runtime validation.
 - **[Design Principles](principles.md)** - Shared design philosophy
 
 ### FlavorPack Specifics
-- **[Getting Started](../getting-started/)** - Start packaging applications
-- **[Core Concepts](../guide/concepts/)** - Understand PSPF format
-- **[Development Guide](../development/)** - Contribute to FlavorPack
+- **[Getting Started](../getting-started/index.md)** - Start packaging applications
+- **[Core Concepts](../guide/concepts/index.md)** - Understand PSPF format
+- **[Development Guide](../development/index.md)** - Contribute to FlavorPack
 
 ### Other Foundry Tools
 - **[pyvider](https://foundry.provide.io/pyvider/)** - Build Terraform providers
