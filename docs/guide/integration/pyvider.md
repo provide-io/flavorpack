@@ -3,7 +3,7 @@
 Package Terraform providers built with Pyvider into self-contained executables.
 
 !!! info "Optional Integration"
-    **FlavorPack works standalone** without Pyvider. This integration is optional and part of the [Provide Foundry](../../foundry/index.md) ecosystem.
+    **FlavorPack works standalone** without Pyvider. This integration is optional.
 
     Use FlavorPack with Pyvider when you want to package Terraform providers written in Python into self-contained executables.
 

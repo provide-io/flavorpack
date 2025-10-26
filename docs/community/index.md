@@ -53,12 +53,6 @@ Read articles and updates.
 - **[Cookbook](../cookbook/index.md)** - Examples
 - **[Development](../development/index.md)** - Contribute
 
-### Foundry Ecosystem
-- **[Provide Foundry](../foundry/index.md)** - Ecosystem overview
-- **[pyvider](https://foundry.provide.io/pyvider/)** - Terraform providers
-- **[wrknv](https://foundry.provide.io/wrknv/)** - Environment management
-- **[provide-foundation](https://foundry.provide.io/foundation/)** - Core infrastructure
-
 ## Contributing
 
 We welcome contributions of all kinds:
