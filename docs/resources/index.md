@@ -10,16 +10,12 @@ Practical examples and recipes for common use cases.
 Complete working examples for different application types:
 - [CLI Tools](../cookbook/examples/cli-tool.md) - Command-line applications
 - [Web Applications](../cookbook/examples/web-app.md) - Web servers and APIs
-- [Data Pipelines](../cookbook/examples/data-pipeline.md) - Data processing workflows
-- [Microservices](../cookbook/examples/microservices.md) - Service architectures
 
 ### [Recipes](../cookbook/recipes/index.md)
 Step-by-step guides for specific tasks:
 - [Docker Integration](../cookbook/recipes/docker.md) - Container workflows
 - [CI/CD Pipelines](../cookbook/recipes/ci-cd.md) - Automated builds
 - [Multi-Platform Builds](../cookbook/recipes/multi-platform.md) - Cross-platform packages
-- [Cloud Deployment](../cookbook/recipes/cloud.md) - Cloud platform integration
-- [Testing Strategies](../cookbook/recipes/testing.md) - Testing approaches
 
 ## 🔧 Troubleshooting
 
@@ -68,7 +64,7 @@ Connect with the FlavorPack community.
 
 **I want to...**
 - Build my first package → [First Package](../getting-started/first-package.md)
-- Deploy to production → [Cloud Deployment](../cookbook/recipes/cloud.md)
+- Deploy to production → [Docker Integration](../cookbook/recipes/docker.md)
 - Debug an issue → [Debugging Guide](../guide/advanced/debugging.md)
 - Optimize performance → [Performance Guide](../guide/advanced/performance.md)
 - Contribute code → [Contributing](../development/contributing.md)
@@ -79,7 +75,7 @@ Connect with the FlavorPack community.
 - Python → [Python Applications](../guide/packaging/python.md)
 - Docker → [Docker Integration](../cookbook/recipes/docker.md)
 - CI/CD → [CI/CD Pipelines](../cookbook/recipes/ci-cd.md)
-- Cloud Platforms → [Cloud Deployment](../cookbook/recipes/cloud.md)
+- Multi-Platform → [Multi-Platform Builds](../cookbook/recipes/multi-platform.md)
 
 ### By Problem Type
 
@@ -102,7 +98,7 @@ Connect with the FlavorPack community.
 ### Documentation Formats
 - [API Reference](../api/index.md) - Technical API documentation
 - [User Guide](../guide/index.md) - Comprehensive user guide
-- [Specification](../spec/index.md) - PSPF format specification
+- [PSPF Specification](../reference/spec/pspf-2025.md) - PSPF/2025 format specification
 
 ## Getting Help
 

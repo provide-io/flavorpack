@@ -7,7 +7,7 @@
 #
 """
 This package contains the core logic for building and verifying the
-Pyvider Secure Package Format (Flavor).
+Progressive Secure Package Format (PSPF/2025).
 """
 
 from __future__ import annotations

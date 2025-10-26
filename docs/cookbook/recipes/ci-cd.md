@@ -289,6 +289,7 @@ strategy:
 
 ### Upload to S3
 
+{% raw %}
 ```yaml
 - name: Upload to S3
   run: |
@@ -297,6 +298,7 @@ strategy:
     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 ```
+{% endraw %}
 
 ### Upload to Artifactory
 

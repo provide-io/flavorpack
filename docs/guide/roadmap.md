@@ -1,17 +1,126 @@
 # FlavorPack Roadmap
 
-This document outlines planned features and enhancements for FlavorPack. These capabilities are not yet implemented but are under consideration or active development.
+This roadmap shows the current implementation status and planned features for FlavorPack. Use this to understand what works today versus what's coming in future releases.
 
-!!! info "Roadmap Status"
-    Features listed here represent the planned evolution of FlavorPack. Implementation timelines and priorities may change based on community feedback and development resources.
+!!! info "Version Status"
+    FlavorPack is currently in **alpha** stage. APIs, file formats, and commands may change without notice.
+
+## Legend
+
+- ✅ **Implemented** - Works today, documented and tested
+- 🚧 **In Progress** - Partially implemented or under active development
+- 📋 **Planned** - Designed but not yet implemented
+- 💡 **Proposed** - Under consideration for future releases
 
 ---
 
-## Planned Python Packaging Features
+## What Works Today (Alpha)
 
-### Advanced Manifest Configuration
+### Core Functionality ✅
 
-Many of the advanced `pyproject.toml` configuration options documented in guides are planned for future releases:
+**Package Creation**:
+
+- ✅ Build PSPF/2025 packages from Python applications
+- ✅ Embed native Go/Rust launchers
+- ✅ Multiple builder/launcher combinations (Go + Rust)
+- ✅ Cross-platform package building
+
+**Package Execution**:
+
+- ✅ Self-extracting executables
+- ✅ Work environment caching with checksum validation
+- ✅ Progressive extraction (extract once, cache forever)
+- ✅ Ed25519 signature verification
+
+**CLI Commands**:
+
+- ✅ `flavor pack` - Create packages
+- ✅ `flavor verify` - Verify integrity and signatures
+- ✅ `flavor inspect` - Quick package inspection
+- ✅ `flavor extract` - Extract single slot
+- ✅ `flavor extract-all` - Extract all slots
+- ✅ `flavor keygen` - Generate Ed25519 key pairs
+- ✅ `flavor workenv` - Cache management (list, info, clean, remove, inspect)
+- ✅ `flavor helpers` - Helper binary management (list, info, build, clean, test)
+- ✅ `flavor clean` - Clean caches and artifacts
+
+### Manifest Configuration ✅
+
+**Currently Supported Fields**:
+
+```toml
+[project]
+name = "myapp"                    # ✅ Required
+version = "1.0.0"                 # ✅ Required
+dependencies = [...]              # ✅ Parsed and included
+
+[tool.flavor]
+entry_point = "myapp:main"        # ✅ Required (module:function format)
+package_name = "custom-name"      # ✅ Optional override
+
+[tool.flavor.metadata]
+package_name = "override"         # ✅ Optional
+
+[tool.flavor.build]
+dependencies = [...]              # ✅ Build-time dependencies
+
+[tool.flavor.execution.runtime.env]
+unset = ["VAR1", "VAR2"]         # ✅ Remove variables
+pass = ["HOME", "PATH"]          # ✅ Pass through from host
+set = { KEY = "value" }          # ✅ Set variables
+map = { OLD = "NEW" }            # ✅ Rename variables
+```
+
+### Platform Support ✅
+
+--8<-- "includes/platform-support.md"
+
+### Python Packaging ✅
+
+- ✅ Standard `pyproject.toml` manifest parsing
+- ✅ Dependency resolution via UV
+- ✅ Entry point detection and configuration
+- ✅ CLI script extraction from `[project.scripts]`
+
+### Security & Integrity ✅
+
+- ✅ Ed25519 signature generation and verification
+- ✅ SHA-256 checksums for all slots
+- ✅ Package integrity validation
+- ✅ Key generation via `flavor keygen`
+- ✅ Signing via CLI options (`--private-key`, `--public-key`)
+
+### Format Specification ✅
+
+- ✅ PSPF/2025 format implemented
+- ✅ 64-byte SlotDescriptor binary format
+- ✅ 8KB index block with metadata
+- ✅ Operation chains (packed uint64 format)
+- ✅ Magic markers for format identification
+- ✅ Cross-language format compatibility (Python/Go/Rust)
+
+---
+
+## Planned Features
+
+The following features are documented in guides but are **not yet implemented**. They represent the planned evolution of FlavorPack.
+
+### Manifest Configuration Features 📋
+
+#### Slot Configuration
+
+```toml
+[[tool.flavor.slots]]
+id = "config"
+source = "config/"
+purpose = "configuration"
+lifecycle = "persistent"
+extract_to = "{workenv}/config"
+permissions = "0644"
+```
+
+**Status**: 📋 Planned
+**Use Case**: Enable custom slot purposes, lifecycles, platform-specific slots, and lazy-loaded content
 
 #### Python Version Selection
 

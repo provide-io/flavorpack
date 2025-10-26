@@ -159,6 +159,7 @@ markdown_extensions:
   - pymdownx.smartsymbols
   - pymdownx.snippets:
       check_paths: true
+      base_path: docs
   - pymdownx.superfences:
       custom_fences:
         - name: mermaid
@@ -239,6 +240,7 @@ nav:
   # SECTION 2: User Guide (concepts and how-to)
   - User Guide:
     - Overview: guide/index.md
+    - Roadmap: guide/roadmap.md
 
     - Core Concepts:
       - guide/concepts/index.md
@@ -246,6 +248,7 @@ nav:
       - Package Structure: guide/concepts/package-structure.md
       - Work Environments: guide/concepts/workenv.md
       - Security Model: guide/concepts/security.md
+      - Helper Binaries: guide/concepts/helpers.md
 
     - Building Packages:
       - guide/packaging/index.md
@@ -295,15 +298,15 @@ nav:
   # SECTION 5: Reference (specs, troubleshooting, development)
   - Reference:
     - Overview: resources/index.md
+    - System Requirements: reference/requirements.md
 
     - Specification:
-      - PSPF 2025: spec/pspf-2025.md
-    
+      - PSPF 2025: reference/spec/pspf-2025.md
+
     - Troubleshooting:
       - troubleshooting/index.md
       - Common Issues: troubleshooting/common.md
       - Error Messages: troubleshooting/errors.md
-      - Security Issues: troubleshooting/security.md
       - Platform-Specific:
         - macOS Issues: troubleshooting/platforms/macos.md
         - Linux Issues: troubleshooting/platforms/linux.md
