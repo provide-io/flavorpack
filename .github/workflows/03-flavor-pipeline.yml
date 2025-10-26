@@ -3,8 +3,8 @@ name: 03 🌶️ Flavor Pipeline
 on:
   workflow_dispatch:
     inputs:
-      ingredient_run_id:
-        description: 'Ingredient Prep run ID (leave empty for latest)'
+      helper_run_id:
+        description: 'Helper Prep run ID (leave empty for latest)'
         type: string
         required: false
       test_filter:
@@ -13,48 +13,48 @@ on:
         required: false
   
   workflow_run:
-    workflows: ["01 🥘 Ingredient Prep"]
+    workflows: ["01 🥘 Helper Prep"]
     types: [completed]
     branches: [main, develop]
 
 jobs:
-  # Setup and download ingredient artifacts
+  # Setup and download helper artifacts
   setup:
-    name: 🔧 Setup & Get Ingredients
+    name: 🔧 Setup & Get Helpers
     runs-on: ubuntu-latest
     outputs:
-      ingredient_version: ${{ steps.ingredients.outputs.version }}
-      ingredient_run_id: ${{ steps.ingredients.outputs.run_id }}
+      helper_version: ${{ steps.helpers.outputs.version }}
+      helper_run_id: ${{ steps.helpers.outputs.run_id }}
       test_matrix: ${{ steps.matrix.outputs.matrix }}
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
       
-      - name: 🔍 Determine ingredient version
-        id: ingredients
+      - name: 🔍 Determine helper version
+        id: helpers
         run: |
           # Source the script to get RUN_ID and VERSION
-          source .github/scripts/get-ingredient-run.sh "${{ inputs.ingredient_run_id }}"
+          source .github/scripts/get-helper-run.sh "${{ inputs.helper_run_id }}"
           
           echo "run_id=$RUN_ID" >> $GITHUB_OUTPUT
           echo "version=$VERSION" >> $GITHUB_OUTPUT
         env:
           GH_TOKEN: ${{ github.token }}
       
-      - name: 📥 Download ingredient artifacts
+      - name: 📥 Download helper artifacts
         uses: dawidd6/action-download-artifact@v6
         with:
-          workflow: 01-ingredient-prep.yml
-          run_id: ${{ steps.ingredients.outputs.run_id }}
-          name: flavor-ingredients-${{ steps.ingredients.outputs.version }}-all
-          path: ./ingredients-dist
+          workflow: 01-helper-prep.yml
+          run_id: ${{ steps.helpers.outputs.run_id }}
+          name: flavor-helpers-${{ steps.helpers.outputs.version }}-all
+          path: ./helpers-dist
       
       - name: 📤 Upload helpers for test jobs
         uses: actions/upload-artifact@v4
         with:
-          name: test-ingredients-${{ github.run_id }}
+          name: test-helpers-${{ github.run_id }}
           path: |
-            ingredients-dist/*.zip
+            helpers-dist/*.zip
       
       - name: 🧪 Define test matrix
         id: matrix
@@ -90,18 +90,18 @@ jobs:
       - name: 📥 Checkout
         uses: actions/checkout@v4
       
-      - name: 📥 Download ingredients
+      - name: 📥 Download helpers
         uses: actions/download-artifact@v4
         with:
-          name: test-ingredients-${{ github.run_id }}
-          path: ./ingredients-dist
+          name: test-helpers-${{ github.run_id }}
+          path: ./helpers-dist
       
-      - name: 🔧 Extract ingredients
+      - name: 🔧 Extract helpers
         run: |
-          .github/scripts/download-ingredients.sh ingredients-dist "${{ needs.setup.outputs.ingredient_version }}" "linux_amd64 linux_arm64 darwin_amd64 darwin_arm64"
+          .github/scripts/download-helpers.sh helpers-dist "${{ needs.setup.outputs.helper_version }}" "linux_amd64 linux_arm64 darwin_amd64 darwin_arm64"
           
-          # List available ingredients
-          ls -la ingredients/bin/
+          # List available helpers
+          ls -la helpers/bin/
       
       - name: 🐍 Setup Python
         uses: actions/setup-python@v5
@@ -173,7 +173,7 @@ jobs:
           retention-days: 30
           if-no-files-found: warn
 
-  # Build platform-specific Python wheels with ingredients
+  # Build platform-specific Python wheels with helpers
   build-wheels:
     name: 🎡 Build Wheel ${{ matrix.platform }}
     needs: [setup]  # Run in parallel with tests, not after
@@ -208,42 +208,42 @@ jobs:
         with:
           python-version: '3.11'
       
-      - name: 📥 Download platform-specific ingredients
+      - name: 📥 Download platform-specific helpers
         uses: dawidd6/action-download-artifact@v6
         with:
-          workflow: 01-ingredient-prep.yml
-          run_id: ${{ needs.setup.outputs.ingredient_run_id }}
-          name: flavor-ingredients-${{ needs.setup.outputs.ingredient_version }}-${{ matrix.platform }}
-          path: ./ingredients-dist
+          workflow: 01-helper-prep.yml
+          run_id: ${{ needs.setup.outputs.helper_run_id }}
+          name: flavor-helpers-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}
+          path: ./helpers-dist
       
-      - name: 🔧 Extract and organize ingredients
+      - name: 🔧 Extract and organize helpers
         shell: bash
         run: |
-          # Create the ingredients directory structure
-          mkdir -p src/flavor/ingredients/bin
+          # Create the helpers directory structure
+          mkdir -p src/flavor/helpers/bin
           
-          # Extract platform-specific ingredients
-          .github/scripts/download-ingredients.sh ingredients-dist "${{ needs.setup.outputs.ingredient_version }}" "${{ matrix.platform }}"
+          # Extract platform-specific helpers
+          .github/scripts/download-helpers.sh helpers-dist "${{ needs.setup.outputs.helper_version }}" "${{ matrix.platform }}"
           
-          # Copy ONLY the versioned platform-specific ingredients to the package location
-          echo "Copying ONLY versioned ${{ matrix.platform }} ingredients to src/flavor/ingredients/bin..."
+          # Copy ONLY the versioned platform-specific helpers to the package location
+          echo "Copying ONLY versioned ${{ matrix.platform }} helpers to src/flavor/helpers/bin..."
           
           # Copy only versioned files for the CURRENT version that end with the platform name
           # e.g., flavor-go-launcher-0.3.0-linux_arm64 but NOT flavor-go-launcher-0.2.9-linux_arm64
-          VERSION="${{ needs.setup.outputs.ingredient_version }}"
-          for binary in ingredients/bin/*-${VERSION}-${{ matrix.platform }}; do
+          VERSION="${{ needs.setup.outputs.helper_version }}"
+          for binary in helpers/bin/*-${VERSION}-${{ matrix.platform }}; do
             if [ -f "$binary" ]; then
-              cp -v "$binary" src/flavor/ingredients/bin/
+              cp -v "$binary" src/flavor/helpers/bin/
             fi
           done
           
           # Make sure they're executable
-          chmod +x src/flavor/ingredients/bin/* || true
+          chmod +x src/flavor/helpers/bin/* || true
           
           # Verify we only have platform-specific binaries and no duplicates
           echo ""
-          echo "Verifying ingredients for ${{ matrix.platform }}:"
-          for file in src/flavor/ingredients/bin/*; do
+          echo "Verifying helpers for ${{ matrix.platform }}:"
+          for file in src/flavor/helpers/bin/*; do
             if [ -f "$file" ]; then
               base=$(basename "$file")
               # Check if the file ends with the correct platform suffix
@@ -258,9 +258,9 @@ jobs:
           
           # Final count and list
           echo ""
-          count=$(ls -1 src/flavor/ingredients/bin/ | wc -l)
-          echo "Final ingredients for ${{ matrix.platform }} in wheel: $count files (should be 4: 2 launchers + 2 builders)"
-          ls -la src/flavor/ingredients/bin/
+          count=$(ls -1 src/flavor/helpers/bin/ | wc -l)
+          echo "Final helpers for ${{ matrix.platform }} in wheel: $count files (should be 4: 2 launchers + 2 builders)"
+          ls -la src/flavor/helpers/bin/
       
       - name: 📦 Install build tools
         shell: bash
@@ -282,17 +282,17 @@ jobs:
           # Check that wheel contains the flavor package
           python -m zipfile -l dist/*.whl | grep -q "^flavor/" && echo "✅ Flavor package found in wheel" || echo "❌ Flavor package not found"
           
-          # Check that wheel contains platform-specific ingredients
-          python -m zipfile -l dist/*.whl | grep -q "flavor/ingredients/bin/" && echo "✅ Ingredients found in wheel" || echo "❌ Ingredients not found"
+          # Check that wheel contains platform-specific helpers
+          python -m zipfile -l dist/*.whl | grep -q "flavor/helpers/bin/" && echo "✅ Helpers found in wheel" || echo "❌ Helpers not found"
           
-          # List the ingredients in the wheel
+          # List the helpers in the wheel
           echo ""
-          echo "Platform-specific ingredients in wheel:"
-          python -m zipfile -l dist/*.whl | grep "flavor/ingredients/bin/" | grep -v "/$" || echo "No ingredients found"
+          echo "Platform-specific helpers in wheel:"
+          python -m zipfile -l dist/*.whl | grep "flavor/helpers/bin/" | grep -v "/$" || echo "No helpers found"
           
-          # Verify we only have this platform's ingredients
-          ingredient_count=$(python -m zipfile -l dist/*.whl | grep "flavor/ingredients/bin/flavor-" | wc -l)
-          echo "Ingredient binaries count: $ingredient_count (should be 2-4 for builders/launchers)"
+          # Verify we only have this platform's helpers
+          helper_count=$(python -m zipfile -l dist/*.whl | grep "flavor/helpers/bin/flavor-" | wc -l)
+          echo "Helper binaries count: $helper_count (should be 2-4 for builders/launchers)"
           
           # Check that wheel contains metadata
           python -m zipfile -l dist/*.whl | grep -q "\.dist-info/METADATA" && echo "✅ Metadata found in wheel" || echo "❌ Metadata not found"
@@ -300,7 +300,7 @@ jobs:
       - name: 📤 Upload platform wheel
         uses: actions/upload-artifact@v4
         with:
-          name: flavor-wheel-${{ needs.setup.outputs.ingredient_version }}-${{ matrix.platform }}
+          name: flavor-wheel-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}
           path: dist/*.whl
           retention-days: 30
 
@@ -343,21 +343,21 @@ jobs:
       - name: 📥 Download platform wheel
         uses: actions/download-artifact@v4
         with:
-          name: flavor-wheel-${{ needs.setup.outputs.ingredient_version }}-${{ matrix.platform }}
+          name: flavor-wheel-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}
           path: ./wheel-dist
       
-      - name: 📥 Download ingredient artifacts
+      - name: 📥 Download helper artifacts
         uses: dawidd6/action-download-artifact@v6
         with:
-          workflow: 01-ingredient-prep.yml
-          name: flavor-ingredients-${{ needs.setup.outputs.ingredient_version }}-${{ matrix.platform }}
-          path: ./ingredients-dist
+          workflow: 01-helper-prep.yml
+          name: flavor-helpers-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}
+          path: ./helpers-dist
       
-      - name: 🔧 Extract ingredients
+      - name: 🔧 Extract helpers
         shell: bash
         run: |
-          .github/scripts/download-ingredients.sh ingredients-dist "${{ needs.setup.outputs.ingredient_version }}" "${{ matrix.platform }}"
-          ls -la ingredients/bin/
+          .github/scripts/download-helpers.sh helpers-dist "${{ needs.setup.outputs.helper_version }}" "${{ matrix.platform }}"
+          ls -la helpers/bin/
       
       - name: 📦 Install Flavor from wheel
         shell: bash
@@ -391,14 +391,14 @@ jobs:
           export PATH="$HOME/.local/bin:$PATH"
           
           # Find the appropriate launcher
-          LAUNCHER="ingredients/bin/flavor-rs-launcher-${{ needs.setup.outputs.ingredient_version }}-${{ matrix.platform }}"
+          LAUNCHER="helpers/bin/flavor-rs-launcher-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}"
           if [ ! -f "$LAUNCHER" ]; then
-            LAUNCHER="ingredients/bin/flavor-rs-launcher-${{ matrix.platform }}"
+            LAUNCHER="helpers/bin/flavor-rs-launcher-${{ matrix.platform }}"
           fi
           
           if [ ! -f "$LAUNCHER" ]; then
             echo "❌ Launcher not found"
-            ls -la ingredients/bin/
+            ls -la helpers/bin/
             exit 1
           fi
           
@@ -408,14 +408,14 @@ jobs:
           # Use script to build Flavor PSP
           .github/scripts/build-flavor-self.sh \
             "${{ matrix.platform }}" \
-            "${{ needs.setup.outputs.ingredient_version }}" \
+            "${{ needs.setup.outputs.helper_version }}" \
             "$WHEEL" \
             "$LAUNCHER"
       
       - name: 📤 Upload Flavor package
         uses: actions/upload-artifact@v4
         with:
-          name: flavor-${{ needs.setup.outputs.ingredient_version }}-${{ matrix.platform }}
+          name: flavor-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}
           path: |
             artifacts/flavor-*.psp
             artifacts/flavor-*.exe
@@ -453,7 +453,7 @@ jobs:
       - name: 📥 Download Flavor package
         uses: actions/download-artifact@v4
         with:
-          name: flavor-${{ needs.setup.outputs.ingredient_version }}-${{ matrix.platform }}
+          name: flavor-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}
           path: ./
       
       - name: 🧪 Test Flavor PSP self-contained
@@ -490,7 +490,7 @@ jobs:
         if: needs.build-wheels.result == 'success'
         uses: actions/download-artifact@v4
         with:
-          name: flavor-wheels-${{ needs.setup.outputs.ingredient_version }}
+          name: flavor-wheels-${{ needs.setup.outputs.helper_version }}
           path: wheel-artifacts
         continue-on-error: true
       
@@ -498,7 +498,7 @@ jobs:
         if: needs.build-flavor.result == 'success'
         uses: actions/download-artifact@v4
         with:
-          pattern: flavor-${{ needs.setup.outputs.ingredient_version }}-*
+          pattern: flavor-${{ needs.setup.outputs.helper_version }}-*
           path: flavor-artifacts
           merge-multiple: true
       
@@ -506,7 +506,7 @@ jobs:
         run: |
           echo "## 🌶️ Flavor Pipeline Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Helper Version:** ${{ needs.setup.outputs.ingredient_version }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Helper Version:** ${{ needs.setup.outputs.helper_version }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
           echo "### Test Results" >> $GITHUB_STEP_SUMMARY

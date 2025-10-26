@@ -19,8 +19,8 @@ from provide.foundation.platform import get_platform_string, is_windows
 from provide.foundation.process import run
 
 from flavor.exceptions import BuildError
-from flavor.ingredients.manager import IngredientManager
-from flavor.packaging.orchestrator_ingredients import (
+from flavor.helpers.manager import HelperManager
+from flavor.packaging.orchestrator_helpers import (
     create_builder_manifest,
     create_python_builder_metadata,
     create_python_slot_tarballs,
@@ -69,8 +69,8 @@ class PackagingOrchestrator:
         self.key_seed = key_seed
         self.manifest_type = manifest_type
 
-        # Use IngredientManager for finding helpers
-        self.helper_manager = IngredientManager()
+        # Use HelperManager for finding helpers
+        self.helper_manager = HelperManager()
         self.platform = get_platform_string()
 
     @log_only_error_context(
@@ -271,7 +271,7 @@ class PackagingOrchestrator:
     def _build_with_external_builder(self) -> None:
         """Build package using an external builder binary (Go/Rust)."""
         logger.info("Building package with external builder...")
-        from flavor.packaging.orchestrator_ingredients import create_slot_tarballs
+        from flavor.packaging.orchestrator_helpers import create_slot_tarballs
 
         # If we have a JSON manifest, we can use it directly with external builders
         if self.manifest_type == "json":

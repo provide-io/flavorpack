@@ -17,11 +17,11 @@ flavor --version
 # Check Python version
 python --version
 
-# Check available ingredients
-flavor ingredients list
+# Check available helpers
+flavor helpers list
 
 # Verify installation
-flavor ingredients test
+flavor helpers test
 
 # Check cache status
 flavor workenv info
@@ -31,10 +31,10 @@ flavor workenv info
 
 ```bash
 # Enable verbose logging
-export FLAVOR_LOG_LEVEL=debug
+export FOUNDATION_LOG_LEVEL=debug
 
 # Run with debug output
-FLAVOR_LOG_LEVEL=debug flavor pack pyproject.toml
+FOUNDATION_LOG_LEVEL=debug flavor pack pyproject.toml
 
 # Debug package execution
 FLAVOR_LOG_LEVEL=debug ./myapp.psp
@@ -50,14 +50,15 @@ FLAVOR_LOG_LEVEL=debug ./myapp.psp
 
 **Solution**:
 ```bash
-# Ensure FlavorPack is installed
-pip install flavor
+# Ensure FlavorPack is installed from source
+cd flavorpack
+uv pip install -e .
 
 # Check PATH
 which flavor
 
 # If using virtual environment
-source venv/bin/activate
+source .venv/bin/activate
 ```
 
 #### Permission Denied
@@ -66,11 +67,11 @@ source venv/bin/activate
 
 **Solution**:
 ```bash
-# Fix permissions
-chmod +x $(which flavor)
+# Activate the virtual environment
+source .venv/bin/activate
 
-# Or reinstall with user flag
-pip install --user flavor
+# Fix permissions if needed
+chmod +x $(which flavor)
 ```
 
 #### Missing Dependencies
@@ -80,10 +81,10 @@ pip install --user flavor
 **Solution**:
 ```bash
 # Install build dependencies
-pip install --upgrade pip setuptools wheel
+uv pip install --upgrade pip setuptools wheel
 
-# Install with all dependencies
-pip install flavor[all]
+# Sync all dependencies
+uv sync
 ```
 
 ### Build Errors
@@ -123,7 +124,7 @@ entry_point = "myapp:main"  # module:function
 ```toml
 # Enable compression
 [[tool.flavor.slots]]
-codec = "tgz"  # Compress with gzip
+operations = "tar.gz"  # Compress with gzip
 
 # Exclude unnecessary files
 [tool.flavor.build]
@@ -161,11 +162,11 @@ rm -rf ~/.cache/flavor/build
 
 **Solution**:
 ```bash
-# Download ingredients
-flavor ingredients download
+# Download helpers
+flavor helpers download
 
-# Build ingredients locally
-cd ingredients
+# Build helpers locally
+cd helpers
 ./build.sh
 
 # Specify launcher explicitly
@@ -426,7 +427,7 @@ export FLAVOR_NO_CACHE=1
 
 ```bash
 # Maximum verbosity
-FLAVOR_LOG_LEVEL=trace flavor pack pyproject.toml
+FOUNDATION_LOG_LEVEL=trace flavor pack pyproject.toml
 
 # Log to file
 FLAVOR_LOG_FILE=build.log flavor pack pyproject.toml
@@ -488,9 +489,9 @@ export FLAVOR_BUILD_CACHE=~/.cache/flavor/build
 
 **Solutions**:
 ```toml
-# Use appropriate compression
+# Use appropriate operations
 [[tool.flavor.slots]]
-codec = "tar"  # Faster than tgz for large files
+operations = "tar"  # Faster than tar.gz for large files
 
 # Enable parallel extraction
 [tool.flavor.features]
@@ -519,7 +520,7 @@ streaming_extraction = true
 | Error | Meaning | Solution |
 |-------|---------|----------|
 | `PSPF format not recognized` | Invalid package file | Rebuild package |
-| `Launcher not found` | Missing launcher binary | Run `flavor ingredients download` |
+| `Launcher not found` | Missing launcher binary | Run `flavor helpers download` |
 | `Slot checksum mismatch` | Corrupted slot data | Rebuild package |
 | `Unsupported platform` | Platform mismatch | Build for correct platform |
 | `Python version mismatch` | Wrong Python version | Use specified Python version |
@@ -557,7 +558,7 @@ uname -a
 flavor inspect problematic.psp
 
 # Error logs
-FLAVOR_LOG_LEVEL=debug flavor pack pyproject.toml 2>&1 | tee error.log
+FOUNDATION_LOG_LEVEL=debug flavor pack pyproject.toml 2>&1 | tee error.log
 
 # Environment
 env | grep FLAVOR

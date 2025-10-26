@@ -14,7 +14,6 @@ from __future__ import annotations
 from collections.abc import Iterator
 from pathlib import Path
 from typing import TYPE_CHECKING
-import zlib
 
 from provide.foundation import logger
 from provide.foundation.file import atomic_write
@@ -100,6 +99,7 @@ class SlotExtractor:
 
                 # Calculate checksum (use SHA-256 first 8 bytes to match binary format on raw data)
                 import hashlib
+
                 hash_bytes = hashlib.sha256(raw_slot_data).digest()[:8]
                 actual_checksum = int.from_bytes(hash_bytes, byteorder="little")
 
@@ -198,6 +198,7 @@ class SlotExtractor:
             # Verify checksum (use SHA-256 first 8 bytes to match binary format on raw compressed data)
             # This must match what was checksummed during building (compressed data)
             import hashlib
+
             hash_bytes = hashlib.sha256(raw_slot_data).digest()[:8]
             actual_checksum = int.from_bytes(hash_bytes, byteorder="little")
 

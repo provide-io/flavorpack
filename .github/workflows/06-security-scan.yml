@@ -161,8 +161,8 @@ jobs:
           echo "### Bandit Security Scan" >> $GITHUB_STEP_SUMMARY
           
           # Run Bandit with different severity levels
-          bandit -r src/ ingredients/ -f json -o bandit.json 2>&1 | tee bandit.log || true
-          bandit -r src/ ingredients/ -ll -i 2>&1 | tee bandit-summary.log || true
+          bandit -r src/ helpers/ -f json -o bandit.json 2>&1 | tee bandit.log || true
+          bandit -r src/ helpers/ -ll -i 2>&1 | tee bandit-summary.log || true
           
           if [ -f bandit.json ]; then
             HIGH_ISSUES=$(jq '[.results[] | select(.issue_severity == "HIGH")] | length' bandit.json)
@@ -244,7 +244,7 @@ jobs:
           semgrep --config=auto \
                   --json \
                   --output=semgrep.json \
-                  src/ ingredients/ 2>&1 | tee semgrep.log || true
+                  src/ helpers/ 2>&1 | tee semgrep.log || true
           
           if [ -f semgrep.json ]; then
             FINDINGS=$(jq '.results | length' semgrep.json)
@@ -263,7 +263,7 @@ jobs:
           source security-env/bin/activate
           echo "### Suspicious Code Patterns" >> $GITHUB_STEP_SUMMARY
           
-          dodgy src/ ingredients/ 2>&1 | tee dodgy.log || true
+          dodgy src/ helpers/ 2>&1 | tee dodgy.log || true
           
           if grep -q "warnings" dodgy.log; then
             echo "⚠️ Dodgy found suspicious patterns:" >> $GITHUB_STEP_SUMMARY
@@ -281,10 +281,10 @@ jobs:
           source security-env/bin/activate
           
           # Convert Bandit to SARIF
-          bandit -r src/ ingredients/ -f sarif -o bandit.sarif || true
+          bandit -r src/ helpers/ -f sarif -o bandit.sarif || true
           
           # Semgrep SARIF output
-          semgrep --config=auto --sarif --output=semgrep.sarif src/ ingredients/ || true
+          semgrep --config=auto --sarif --output=semgrep.sarif src/ helpers/ || true
       
       - name: 📤 Upload SARIF Results
         if: inputs.enable_sarif == true

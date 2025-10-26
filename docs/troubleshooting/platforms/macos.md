@@ -240,4 +240,4 @@ sudo dtruss ./myapp.psp 2>&1 | head -100
 
 - [Installation Guide](../../getting-started/installation.md)
 - [Platform Support](../../guide/packaging/platforms.md)
-- [Building Ingredients](../../development/ingredients.md)
+- [Building Helpers](../../development/helpers.md)

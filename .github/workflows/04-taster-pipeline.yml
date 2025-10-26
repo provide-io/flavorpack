@@ -25,7 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.version.outputs.version }}
-      ingredient_version: ${{ steps.version.outputs.version }}
+      helper_version: ${{ steps.version.outputs.version }}
       test_matrix: ${{ steps.matrix.outputs.matrix }}
       flavor_run_id: ${{ steps.flavor.outputs.run_id }}
     steps:
@@ -67,12 +67,12 @@ jobs:
           find flavor-artifacts -type f \( -name "*.psp" -o -name "*.exe" \) -exec mv {} flavor-psp/ \;
           ls -la flavor-psp/
       
-      - name: 📥 Download ingredient artifacts
+      - name: 📥 Download helper artifacts
         uses: dawidd6/action-download-artifact@v6
         with:
-          workflow: 01-ingredient-prep.yml
-          name: flavor-ingredients-${{ steps.version.outputs.version }}-all
-          path: ./ingredients-dist
+          workflow: 01-helper-prep.yml
+          name: flavor-helpers-${{ steps.version.outputs.version }}-all
+          path: ./helpers-dist
 
       - name: 📤 Upload Flavor PSP for test jobs
         uses: actions/upload-artifact@v4
@@ -120,17 +120,17 @@ jobs:
           name: flavor-psp-${{ github.run_id }}
           path: ./flavor-psp
       
-      - name: 📥 Download ingredients
+      - name: 📥 Download helpers
         uses: dawidd6/action-download-artifact@v6
         with:
-          workflow: 01-ingredient-prep.yml
-          name: flavor-ingredients-${{ needs.setup.outputs.version }}-all
-          path: ./ingredients-dist
+          workflow: 01-helper-prep.yml
+          name: flavor-helpers-${{ needs.setup.outputs.version }}-all
+          path: ./helpers-dist
       
-      - name: 🔧 Extract ingredients
+      - name: 🔧 Extract helpers
         shell: bash
         run: |
-          .github/scripts/download-ingredients.sh ingredients-dist "${{ needs.setup.outputs.version }}" "${{ matrix.platform }}"
+          .github/scripts/download-helpers.sh helpers-dist "${{ needs.setup.outputs.version }}" "${{ matrix.platform }}"
 
       - name: 🔨 Build Taster using Flavor PSP
         id: build
@@ -146,14 +146,14 @@ jobs:
           fi
           
           # Find the launcher for this platform
-          LAUNCHER="ingredients/bin/flavor-rs-launcher-${{ needs.setup.outputs.version }}-${{ matrix.platform }}"
+          LAUNCHER="helpers/bin/flavor-rs-launcher-${{ needs.setup.outputs.version }}-${{ matrix.platform }}"
           if [ ! -f "$LAUNCHER" ]; then
-            LAUNCHER="ingredients/bin/flavor-rs-launcher-${{ matrix.platform }}"
+            LAUNCHER="helpers/bin/flavor-rs-launcher-${{ matrix.platform }}"
           fi
           
           if [ ! -f "$LAUNCHER" ]; then
             echo "❌ Launcher not found"
-            ls -la ingredients/bin/
+            ls -la helpers/bin/
             exit 1
           fi
           
@@ -211,7 +211,7 @@ jobs:
             "status": "${{ job.status }}",
             "taster_path": "${{ steps.build.outputs.taster_path }}",
             "timestamp": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
-            "ingredient_version": "${{ needs.setup.outputs.ingredient_version }}"
+            "helper_version": "${{ needs.setup.outputs.helper_version }}"
           }
           EOF
 
@@ -245,16 +245,16 @@ jobs:
           pattern: taster-results-*
           path: all-results
 
-      - name: 📥 Download ingredients
+      - name: 📥 Download helpers
         uses: dawidd6/action-download-artifact@v6
         with:
-          workflow: 01-ingredient-prep.yml
-          name: flavor-ingredients-${{ needs.setup.outputs.version }}-all
-          path: ./ingredients-dist
+          workflow: 01-helper-prep.yml
+          name: flavor-helpers-${{ needs.setup.outputs.version }}-all
+          path: ./helpers-dist
 
-      - name: 🔧 Extract all ingredients
+      - name: 🔧 Extract all helpers
         run: |
-          .github/scripts/download-ingredients.sh ingredients-dist "${{ needs.setup.outputs.ingredient_version }}"
+          .github/scripts/download-helpers.sh helpers-dist "${{ needs.setup.outputs.helper_version }}"
 
       - name: 🐍 Setup Python
         uses: actions/setup-python@v5
@@ -270,13 +270,13 @@ jobs:
           source workenv/bin/activate
           cd tests/taster
           
-          echo "=== Flavor pack with explicit launcher from ingredients ==="
-          # Use the launcher from ingredients that was downloaded
-          LAUNCHER="../../ingredients/bin/flavor-rs-launcher-linux_amd64"
+          echo "=== Flavor pack with explicit launcher from helpers ==="
+          # Use the launcher from helpers that was downloaded
+          LAUNCHER="../../helpers/bin/flavor-rs-launcher-linux_amd64"
           
           if [ ! -f "$LAUNCHER" ]; then
             echo "❌ Launcher not found at $LAUNCHER"
-            ls -la ../../ingredients/bin/
+            ls -la ../../helpers/bin/
             exit 1
           fi
           
@@ -345,13 +345,13 @@ jobs:
           FLAVOR_LOCATION=$(python -c "import flavor; import os; print(os.path.dirname(flavor.__file__))")
           echo "Flavor installed at: $FLAVOR_LOCATION"
           
-          if [ -d "$FLAVOR_LOCATION/ingredients/bin" ]; then
+          if [ -d "$FLAVOR_LOCATION/helpers/bin" ]; then
             echo "✅ Launchers found in wheel:"
-            ls -la "$FLAVOR_LOCATION/ingredients/bin/"
+            ls -la "$FLAVOR_LOCATION/helpers/bin/"
             echo "LAUNCHER_SOURCE=wheel" >> $GITHUB_ENV
           else
-            echo "⚠️ No launchers in wheel, will use ingredients"
-            echo "LAUNCHER_SOURCE=ingredients" >> $GITHUB_ENV
+            echo "⚠️ No launchers in wheel, will use helpers"
+            echo "LAUNCHER_SOURCE=helpers" >> $GITHUB_ENV
           fi
 
       - name: 🧪 Test 3b - Build with Rust launcher
@@ -362,9 +362,9 @@ jobs:
           echo "=== Testing with Rust launcher ==="
           if [ "$LAUNCHER_SOURCE" = "wheel" ]; then
             FLAVOR_LOCATION=$(python -c "import flavor; import os; print(os.path.dirname(flavor.__file__))")
-            RUST_LAUNCHER="$FLAVOR_LOCATION/ingredients/bin/flavor-rs-launcher-linux_amd64"
+            RUST_LAUNCHER="$FLAVOR_LOCATION/helpers/bin/flavor-rs-launcher-linux_amd64"
           else
-            RUST_LAUNCHER="../../ingredients/bin/flavor-rs-launcher-linux_amd64"
+            RUST_LAUNCHER="../../helpers/bin/flavor-rs-launcher-linux_amd64"
           fi
           
           if [ -f "$RUST_LAUNCHER" ]; then
@@ -389,9 +389,9 @@ jobs:
           echo "=== Testing with Go launcher ==="
           if [ "$LAUNCHER_SOURCE" = "wheel" ]; then
             FLAVOR_LOCATION=$(python -c "import flavor; import os; print(os.path.dirname(flavor.__file__))")
-            GO_LAUNCHER="$FLAVOR_LOCATION/ingredients/bin/flavor-go-launcher-linux_amd64"
+            GO_LAUNCHER="$FLAVOR_LOCATION/helpers/bin/flavor-go-launcher-linux_amd64"
           else
-            GO_LAUNCHER="../../ingredients/bin/flavor-go-launcher-linux_amd64"
+            GO_LAUNCHER="../../helpers/bin/flavor-go-launcher-linux_amd64"
           fi
           
           if [ -f "$GO_LAUNCHER" ]; then
@@ -456,7 +456,7 @@ jobs:
           echo "=== Testing Taster self-packaging capability ==="
           
           # Find launcher
-          LAUNCHER="../../ingredients/bin/flavor-rs-launcher-linux_amd64"
+          LAUNCHER="../../helpers/bin/flavor-rs-launcher-linux_amd64"
           if [ ! -f "$LAUNCHER" ]; then
             echo "❌ Launcher not found for self-packaging test"
             exit 1
@@ -487,7 +487,7 @@ jobs:
         run: |
           echo "## 🍰 Taster Pipeline Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Helper Version:** ${{ needs.setup.outputs.ingredient_version }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Helper Version:** ${{ needs.setup.outputs.helper_version }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
           echo "### Platform Test Results" >> $GITHUB_STEP_SUMMARY

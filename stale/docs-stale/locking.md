@@ -1,3 +1,0 @@
-# `flavor.locking`
-
-::: flavor.locking

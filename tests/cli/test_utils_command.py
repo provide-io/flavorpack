@@ -14,12 +14,12 @@ from click.testing import CliRunner
 from flavor.cli import main as cli_main
 
 
-def setup_ingredient_dir_mock(mock_path_class: Mock, ingredient_dir: Mock) -> None:
+def setup_helper_dir_mock(mock_path_class: Mock, helper_dir: Mock) -> None:
     """Helper to setup Path.home() / ".cache" / "flavor" / "bin" mock chain."""
     mock_path_class.home.return_value = MagicMock()
     mock_path_class.home.return_value.__truediv__.return_value = MagicMock()
     mock_path_class.home.return_value.__truediv__.return_value.__truediv__.return_value = MagicMock()
-    mock_path_class.home.return_value.__truediv__.return_value.__truediv__.return_value.__truediv__.return_value = ingredient_dir
+    mock_path_class.home.return_value.__truediv__.return_value.__truediv__.return_value.__truediv__.return_value = helper_dir
 
 
 class TestCleanCommand:
@@ -120,20 +120,20 @@ class TestCleanCommand:
     @patch("flavor.commands.utils.safe_rmtree")
     @patch("flavor.commands.utils.Path")
     @patch("flavor.cache.CacheManager")
-    def test_clean_ingredients_flag(
+    def test_clean_helpers_flag(
         self, mock_cache_class: Mock, mock_path_class: Mock, mock_rmtree: Mock
     ) -> None:
-        """Test clean --ingredients flag."""
-        # Setup cache mock (should not be called for ingredients-only)
+        """Test clean --helpers flag."""
+        # Setup cache mock (should not be called for helpers-only)
         mock_cache = Mock()
         mock_cache.list_cached.return_value = []
         mock_cache_class.return_value = mock_cache
 
-        # Setup Path mock for ingredient directory
-        mock_ingredient_dir = Mock()
-        mock_ingredient_dir.exists.return_value = True
+        # Setup Path mock for helper directory
+        mock_helper_dir = Mock()
+        mock_helper_dir.exists.return_value = True
 
-        # Mock ingredient files
+        # Mock helper files
         mock_file1 = Mock()
         mock_file1.name = "flavor-go-launcher"
         mock_file1.suffix = ""
@@ -144,41 +144,41 @@ class TestCleanCommand:
         mock_file2.suffix = ""
         mock_file2.stat.return_value.st_size = 4_000_000
 
-        mock_ingredient_dir.glob.return_value = [mock_file1, mock_file2]
+        mock_helper_dir.glob.return_value = [mock_file1, mock_file2]
 
-        setup_ingredient_dir_mock(mock_path_class, mock_ingredient_dir)
+        setup_helper_dir_mock(mock_path_class, mock_helper_dir)
 
         runner = CliRunner()
-        result = runner.invoke(cli_main, ["clean", "--ingredients", "--yes"])
+        result = runner.invoke(cli_main, ["clean", "--helpers", "--yes"])
 
         assert result.exit_code == 0
-        assert "Removed 2 ingredient binaries" in result.output
-        mock_rmtree.assert_called_once_with(mock_ingredient_dir)
+        assert "Removed 2 helper binaries" in result.output
+        mock_rmtree.assert_called_once_with(mock_helper_dir)
 
     @patch("flavor.commands.utils.Path")
     @patch("flavor.cache.CacheManager")
-    def test_clean_ingredients_not_exist(self, mock_cache_class: Mock, mock_path_class: Mock) -> None:
-        """Test clean --ingredients when ingredient dir doesn't exist."""
+    def test_clean_helpers_not_exist(self, mock_cache_class: Mock, mock_path_class: Mock) -> None:
+        """Test clean --helpers when helper dir doesn't exist."""
         mock_cache = Mock()
         mock_cache.list_cached.return_value = []
         mock_cache_class.return_value = mock_cache
 
-        mock_ingredient_dir = Mock()
-        mock_ingredient_dir.exists.return_value = False
+        mock_helper_dir = Mock()
+        mock_helper_dir.exists.return_value = False
 
-        setup_ingredient_dir_mock(mock_path_class, mock_ingredient_dir)
+        setup_helper_dir_mock(mock_path_class, mock_helper_dir)
 
         runner = CliRunner()
-        result = runner.invoke(cli_main, ["clean", "--ingredients", "--yes"])
+        result = runner.invoke(cli_main, ["clean", "--helpers", "--yes"])
 
         assert result.exit_code == 0
-        # Should complete without error even though no ingredients exist
+        # Should complete without error even though no helpers exist
 
     @patch("flavor.commands.utils.safe_rmtree")
     @patch("flavor.commands.utils.Path")
     @patch("flavor.cache.CacheManager")
     def test_clean_all_flag(self, mock_cache_class: Mock, mock_path_class: Mock, mock_rmtree: Mock) -> None:
-        """Test clean --all cleans both workenv and ingredients."""
+        """Test clean --all cleans both workenv and helpers."""
         # Setup cache mock
         mock_cache = Mock()
         mock_cache.list_cached.return_value = [{"id": "pkg1", "name": "package-1", "size": 2_000_000}]
@@ -186,55 +186,55 @@ class TestCleanCommand:
         mock_cache.clean.return_value = ["pkg1"]
         mock_cache_class.return_value = mock_cache
 
-        # Setup ingredients mock
-        mock_ingredient_dir = Mock()
-        mock_ingredient_dir.exists.return_value = True
+        # Setup helpers mock
+        mock_helper_dir = Mock()
+        mock_helper_dir.exists.return_value = True
 
         mock_file = Mock()
         mock_file.name = "flavor-go-launcher"
         mock_file.suffix = ""
         mock_file.stat.return_value.st_size = 3_000_000
 
-        mock_ingredient_dir.glob.return_value = [mock_file]
+        mock_helper_dir.glob.return_value = [mock_file]
 
-        setup_ingredient_dir_mock(mock_path_class, mock_ingredient_dir)
+        setup_helper_dir_mock(mock_path_class, mock_helper_dir)
 
         runner = CliRunner()
         result = runner.invoke(cli_main, ["clean", "--all", "--yes"])
 
         assert result.exit_code == 0
         assert "Removed 1 cached packages" in result.output
-        assert "Removed 1 ingredient binaries" in result.output
+        assert "Removed 1 helper binaries" in result.output
         assert "Total freed: 4.8 MB" in result.output
         mock_cache.clean.assert_called_once()
         mock_rmtree.assert_called_once()
 
     @patch("flavor.commands.utils.Path")
     @patch("flavor.cache.CacheManager")
-    def test_clean_dry_run_ingredients(self, mock_cache_class: Mock, mock_path_class: Mock) -> None:
-        """Test clean --ingredients --dry-run."""
+    def test_clean_dry_run_helpers(self, mock_cache_class: Mock, mock_path_class: Mock) -> None:
+        """Test clean --helpers --dry-run."""
         mock_cache = Mock()
         mock_cache.list_cached.return_value = []
         mock_cache_class.return_value = mock_cache
 
-        mock_ingredient_dir = Mock()
-        mock_ingredient_dir.exists.return_value = True
+        mock_helper_dir = Mock()
+        mock_helper_dir.exists.return_value = True
 
         mock_file = Mock()
         mock_file.name = "flavor-rs-builder"
         mock_file.suffix = ""
         mock_file.stat.return_value.st_size = 5_000_000
 
-        mock_ingredient_dir.glob.return_value = [mock_file]
+        mock_helper_dir.glob.return_value = [mock_file]
 
-        setup_ingredient_dir_mock(mock_path_class, mock_ingredient_dir)
+        setup_helper_dir_mock(mock_path_class, mock_helper_dir)
 
         runner = CliRunner()
-        result = runner.invoke(cli_main, ["clean", "--ingredients", "--dry-run"])
+        result = runner.invoke(cli_main, ["clean", "--helpers", "--dry-run"])
 
         assert result.exit_code == 0
         assert "DRY RUN" in result.output
-        assert "Would remove 1 ingredient binaries" in result.output
+        assert "Would remove 1 helper binaries" in result.output
         assert "flavor-rs-builder (4.8 MB)" in result.output
 
     @patch("flavor.commands.utils.Path")
@@ -246,17 +246,17 @@ class TestCleanCommand:
         mock_cache.get_cache_size.return_value = 1_000_000
         mock_cache_class.return_value = mock_cache
 
-        mock_ingredient_dir = Mock()
-        mock_ingredient_dir.exists.return_value = True
+        mock_helper_dir = Mock()
+        mock_helper_dir.exists.return_value = True
 
         mock_file = Mock()
         mock_file.name = "flavor-go-launcher"
         mock_file.suffix = ""
         mock_file.stat.return_value.st_size = 2_000_000
 
-        mock_ingredient_dir.glob.return_value = [mock_file]
+        mock_helper_dir.glob.return_value = [mock_file]
 
-        setup_ingredient_dir_mock(mock_path_class, mock_ingredient_dir)
+        setup_helper_dir_mock(mock_path_class, mock_helper_dir)
 
         runner = CliRunner()
         result = runner.invoke(cli_main, ["clean", "--all", "--dry-run"])
@@ -264,54 +264,54 @@ class TestCleanCommand:
         assert result.exit_code == 0
         assert "DRY RUN" in result.output
         assert "Would remove 1 cached packages" in result.output
-        assert "Would remove 1 ingredient binaries" in result.output
+        assert "Would remove 1 helper binaries" in result.output
 
     @patch("flavor.commands.utils.Path")
     @patch("flavor.cache.CacheManager")
-    def test_clean_ingredients_empty_directory(self, mock_cache_class: Mock, mock_path_class: Mock) -> None:
-        """Test clean --ingredients when directory exists but is empty."""
+    def test_clean_helpers_empty_directory(self, mock_cache_class: Mock, mock_path_class: Mock) -> None:
+        """Test clean --helpers when directory exists but is empty."""
         mock_cache = Mock()
         mock_cache.list_cached.return_value = []
         mock_cache_class.return_value = mock_cache
 
-        mock_ingredient_dir = Mock()
-        mock_ingredient_dir.exists.return_value = True
-        mock_ingredient_dir.glob.return_value = []
+        mock_helper_dir = Mock()
+        mock_helper_dir.exists.return_value = True
+        mock_helper_dir.glob.return_value = []
 
-        setup_ingredient_dir_mock(mock_path_class, mock_ingredient_dir)
+        setup_helper_dir_mock(mock_path_class, mock_helper_dir)
 
         runner = CliRunner()
-        result = runner.invoke(cli_main, ["clean", "--ingredients", "--yes"])
+        result = runner.invoke(cli_main, ["clean", "--helpers", "--yes"])
 
         assert result.exit_code == 0
 
     @patch("flavor.commands.utils.Path")
     @patch("flavor.cache.CacheManager")
     @patch("click.confirm")
-    def test_clean_ingredients_user_aborts(
+    def test_clean_helpers_user_aborts(
         self, mock_confirm: Mock, mock_cache_class: Mock, mock_path_class: Mock
     ) -> None:
-        """Test clean --ingredients when user aborts confirmation."""
+        """Test clean --helpers when user aborts confirmation."""
         mock_cache = Mock()
         mock_cache.list_cached.return_value = []
         mock_cache_class.return_value = mock_cache
 
-        mock_ingredient_dir = Mock()
-        mock_ingredient_dir.exists.return_value = True
+        mock_helper_dir = Mock()
+        mock_helper_dir.exists.return_value = True
 
         mock_file = Mock()
         mock_file.name = "flavor-go-launcher"
         mock_file.suffix = ""
         mock_file.stat.return_value.st_size = 3_000_000
 
-        mock_ingredient_dir.glob.return_value = [mock_file]
+        mock_helper_dir.glob.return_value = [mock_file]
 
-        setup_ingredient_dir_mock(mock_path_class, mock_ingredient_dir)
+        setup_helper_dir_mock(mock_path_class, mock_helper_dir)
 
         mock_confirm.return_value = False
 
         runner = CliRunner()
-        result = runner.invoke(cli_main, ["clean", "--ingredients"])
+        result = runner.invoke(cli_main, ["clean", "--helpers"])
 
         assert result.exit_code == 0
         assert "Aborted." in result.output
@@ -319,13 +319,13 @@ class TestCleanCommand:
     @patch("flavor.commands.utils.Path")
     @patch("flavor.cache.CacheManager")
     def test_clean_excludes_d_files(self, mock_cache_class: Mock, mock_path_class: Mock) -> None:
-        """Test that .d files are excluded from ingredient list."""
+        """Test that .d files are excluded from helper list."""
         mock_cache = Mock()
         mock_cache.list_cached.return_value = []
         mock_cache_class.return_value = mock_cache
 
-        mock_ingredient_dir = Mock()
-        mock_ingredient_dir.exists.return_value = True
+        mock_helper_dir = Mock()
+        mock_helper_dir.exists.return_value = True
 
         # Mock both regular file and .d file
         mock_file = Mock()
@@ -337,16 +337,16 @@ class TestCleanCommand:
         mock_d_file.name = "flavor-go-launcher.d"
         mock_d_file.suffix = ".d"
 
-        mock_ingredient_dir.glob.return_value = [mock_file, mock_d_file]
+        mock_helper_dir.glob.return_value = [mock_file, mock_d_file]
 
-        setup_ingredient_dir_mock(mock_path_class, mock_ingredient_dir)
+        setup_helper_dir_mock(mock_path_class, mock_helper_dir)
 
         runner = CliRunner()
-        result = runner.invoke(cli_main, ["clean", "--ingredients", "--dry-run"])
+        result = runner.invoke(cli_main, ["clean", "--helpers", "--dry-run"])
 
         assert result.exit_code == 0
         # Should only show 1 file (excluding .d file)
-        assert "Would remove 1 ingredient binaries" in result.output
+        assert "Would remove 1 helper binaries" in result.output
         assert "flavor-go-launcher.d" not in result.output
 
     @patch("flavor.cache.CacheManager")

@@ -7,7 +7,7 @@
 set -e
 
 PLATFORM="$1"
-BIN_DIR="${2:-ingredients/bin}"
+BIN_DIR="${2:-helpers/bin}"
 OUTPUT_DIR="${3:-test-results}"
 
 if [ -z "$PLATFORM" ]; then

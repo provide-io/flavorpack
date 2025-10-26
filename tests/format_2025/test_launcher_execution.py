@@ -3,7 +3,6 @@ Test suite for production-ready PSPFLauncher implementation.
 Using TDD approach to drive the implementation.
 """
 
-import gzip
 import hashlib
 from pathlib import Path
 import tarfile
@@ -269,7 +268,7 @@ class TestWorkEnvironment:
 
 @pytest.mark.taster
 @pytest.mark.integration
-@pytest.mark.requires_ingredients
+@pytest.mark.requires_helpers
 class TestProcessExecution:
     """Test actual process execution."""
 

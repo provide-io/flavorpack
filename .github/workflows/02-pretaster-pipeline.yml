@@ -3,8 +3,8 @@ name: 02 🔬 Pretaster Validation
 on:
   workflow_dispatch:
     inputs:
-      ingredient_run_id:
-        description: 'Ingredient Prep run ID (leave empty for latest)'
+      helper_run_id:
+        description: 'Helper Prep run ID (leave empty for latest)'
         type: string
         required: false
       test_suite:
@@ -14,7 +14,7 @@ on:
         default: 'all'
   
   workflow_run:
-    workflows: ["01 🥘 Ingredient Prep"]
+    workflows: ["01 🥘 Helper Prep"]
     types: [completed]
     branches: [main, develop]
 
@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.version.outputs.version }}
-      ingredient_run_id: ${{ steps.ingredients.outputs.run_id }}
+      helper_run_id: ${{ steps.helpers.outputs.run_id }}
       test_matrix: ${{ steps.matrix.outputs.matrix }}
     steps:
       - name: 📥 Checkout
@@ -36,14 +36,14 @@ jobs:
           VERSION=$(cat VERSION)
           echo "version=$VERSION" >> $GITHUB_OUTPUT
       
-      - name: 🔍 Get Ingredient prep run
-        id: ingredients
+      - name: 🔍 Get Helper prep run
+        id: helpers
         run: |
-          # Get Ingredient prep run ID
-          if [ -n "${{ inputs.ingredient_run_id }}" ]; then
-            RUN_ID="${{ inputs.ingredient_run_id }}"
+          # Get Helper prep run ID
+          if [ -n "${{ inputs.helper_run_id }}" ]; then
+            RUN_ID="${{ inputs.helper_run_id }}"
           else
-            RUN_ID=$(gh run list --workflow 01-ingredient-prep.yml --status success --limit 1 --json databaseId -q '.[0].databaseId')
+            RUN_ID=$(gh run list --workflow 01-helper-prep.yml --status success --limit 1 --json databaseId -q '.[0].databaseId')
           fi
           echo "run_id=$RUN_ID" >> $GITHUB_OUTPUT
         env:
@@ -77,24 +77,24 @@ jobs:
         with:
           go-version: '1.21'
       
-      - name: 📥 Download ingredients for platform
+      - name: 📥 Download helpers for platform
         uses: dawidd6/action-download-artifact@v6
         with:
-          workflow: 01-ingredient-prep.yml
-          run_id: ${{ needs.setup.outputs.ingredient_run_id }}
-          name: flavor-ingredients-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
-          path: ./ingredients-dist
+          workflow: 01-helper-prep.yml
+          run_id: ${{ needs.setup.outputs.helper_run_id }}
+          name: flavor-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
+          path: ./helpers-dist
       
-      - name: 🔧 Setup ingredients
+      - name: 🔧 Setup helpers
         run: |
-          # Extract ingredients and set up directory structure
-          .github/scripts/download-ingredients.sh ingredients-dist \
+          # Extract helpers and set up directory structure
+          .github/scripts/download-helpers.sh helpers-dist \
             "${{ needs.setup.outputs.version }}" \
             "${{ matrix.platform }}"
           
-          # Ingredients are already in ingredients/bin/ from the script
-          chmod +x ingredients/bin/*
-          ls -la ingredients/bin/
+          # Helpers are already in helpers/bin/ from the script
+          chmod +x helpers/bin/*
+          ls -la helpers/bin/
       
       - name: 🔨 Build Pretaster packages
         working-directory: tests/pretaster
@@ -109,15 +109,15 @@ jobs:
           echo "📦 Building Pretaster test packages..."
           
           # Build with different builder/launcher combinations
-          ../../ingredients/bin/flavor-go-builder-${{ matrix.platform }} \
+          ../../helpers/bin/flavor-go-builder-${{ matrix.platform }} \
             --manifest configs/test-echo.json \
-            --launcher-bin ../../ingredients/bin/flavor-rs-launcher-${{ matrix.platform }} \
+            --launcher-bin ../../helpers/bin/flavor-rs-launcher-${{ matrix.platform }} \
             --output dist/pretaster-echo.psp \
             --key-seed pretaster-test
           
-          ../../ingredients/bin/flavor-rs-builder-${{ matrix.platform }} \
+          ../../helpers/bin/flavor-rs-builder-${{ matrix.platform }} \
             --manifest configs/test-shell.json \
-            --launcher-bin ../../ingredients/bin/flavor-go-launcher-${{ matrix.platform }} \
+            --launcher-bin ../../helpers/bin/flavor-go-launcher-${{ matrix.platform }} \
             --output dist/pretaster-shell.psp \
             --key-seed pretaster-test
           
@@ -147,12 +147,12 @@ jobs:
           name: pretaster-psp-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
           path: ./build
       
-      - name: 📥 Download ingredients for platform
+      - name: 📥 Download helpers for platform
         uses: dawidd6/action-download-artifact@v6
         with:
-          workflow: 01-ingredient-prep.yml
-          name: flavor-ingredients-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
-          path: ./ingredients-dist
+          workflow: 01-helper-prep.yml
+          name: flavor-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
+          path: ./helpers-dist
       
       - name: 🔍 Verify Cross-Language Package
         shell: bash
@@ -224,22 +224,22 @@ jobs:
         with:
           go-version: '1.21'
       
-      - name: 📥 Download ingredients for platform
+      - name: 📥 Download helpers for platform
         uses: dawidd6/action-download-artifact@v6
         with:
-          workflow: 01-ingredient-prep.yml
-          name: flavor-ingredients-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
-          path: ./ingredients-dist
+          workflow: 01-helper-prep.yml
+          name: flavor-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
+          path: ./helpers-dist
       
       - name: 🔧 Build pretaster PSP
         shell: bash
         run: |
-          # The dawidd6 action downloads the artifact contents (zip files) to ingredients-dist/
-          echo "Contents of ingredients-dist:"
-          ls -la ingredients-dist/ || true
+          # The dawidd6 action downloads the artifact contents (zip files) to helpers-dist/
+          echo "Contents of helpers-dist:"
+          ls -la helpers-dist/ || true
           
-          # Extract the ingredient binaries
-          .github/scripts/download-ingredients.sh ingredients-dist \
+          # Extract the helper binaries
+          .github/scripts/download-helpers.sh helpers-dist \
             "${{ needs.setup.outputs.version }}" \
             "${{ matrix.platform }}"
           

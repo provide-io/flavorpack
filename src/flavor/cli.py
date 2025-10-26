@@ -19,7 +19,7 @@ from provide.foundation.utils import get_version
 
 # Import all commands at module level
 from flavor.commands.extract import extract_all_command, extract_command
-from flavor.commands.ingredients import ingredient_group
+from flavor.commands.helpers import helper_group
 from flavor.commands.inspect import inspect_command
 from flavor.commands.keygen import keygen_command
 from flavor.commands.package import pack_command
@@ -84,7 +84,7 @@ cli.add_command(clean_command, name="clean")
 
 # Register command groups
 cli.add_command(workenv_group, name="workenv")
-cli.add_command(ingredient_group, name="ingredients")
+cli.add_command(helper_group, name="helpers")
 
 main = cli
 

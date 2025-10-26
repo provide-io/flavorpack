@@ -50,6 +50,32 @@ myapp-1.0.0.psp.exe
 
 ## Packaging Workflow
 
+```mermaid
+sequenceDiagram
+    participant User
+    participant CLI as flavor CLI
+    participant Orch as Orchestrator
+    participant PyPkg as Python Packager
+    participant Builder as Native Builder
+    participant Package as PSPF Package
+
+    User->>CLI: flavor pack pyproject.toml
+    CLI->>Orch: Parse manifest
+    Orch->>PyPkg: Build Python package
+    PyPkg->>PyPkg: Install dependencies
+    PyPkg->>PyPkg: Create runtime tar.gz
+    PyPkg->>PyPkg: Create app tar.gz
+    PyPkg->>Orch: Return slot tarballs
+    Orch->>Builder: Invoke builder binary
+    Builder->>Builder: Load launcher
+    Builder->>Builder: Create index block
+    Builder->>Builder: Assemble package
+    Builder->>Builder: Sign with Ed25519
+    Builder->>Package: Write .psp file
+    Package->>CLI: Package complete
+    CLI->>User: ✅ myapp.psp
+```
+
 ### Step 1: Project Structure
 
 Organize your project with a clear structure:
@@ -117,7 +143,7 @@ id = "static"
 source = "static/"
 purpose = "static-resources"
 lifecycle = "cached"
-codec = "tgz"
+# Automatic tar.gz compression
 ```
 
 ### Step 4: Build Package
@@ -132,7 +158,7 @@ Build with options:
 
 ```bash
 # Sign package with key
-flavor pack pyproject.toml --private-key private.pem
+flavor pack pyproject.toml --private-key keys/flavor-private.key --public-key keys/flavor-public.key
 
 # Use deterministic seed (for CI/CD)
 flavor pack pyproject.toml --key-seed "secret-seed"
@@ -216,7 +242,7 @@ Control slot compression:
 [[tool.flavor.slots]]
 id = "large-data"
 source = "data/"
-codec = "tgz"  # Options: raw, tar, gzip, tgz
+# Automatic tar.gz compression  # Options: raw, tar, gzip, tgz
 ```
 
 ### Platform-Specific Builds
@@ -330,7 +356,7 @@ flavor pack pyproject.toml --key-seed "my-secret-seed"
 Enable verbose output:
 
 ```bash
-FLAVOR_LOG_LEVEL=debug flavor pack pyproject.toml
+FOUNDATION_LOG_LEVEL=debug flavor pack pyproject.toml
 ```
 
 ### Cache Issues
@@ -400,5 +426,5 @@ lifecycle = "lazy"
 - [Python Packaging](python.md) - Python-specific features
 - [Package Signing](signing.md) - Security and signatures
 - [Platform Support](platforms.md) - Cross-platform packaging
-- [API Reference](../../api/python/index.md) - Python API
+- [API Reference](../../api/index.md) - Python API
 - [Troubleshooting](../../troubleshooting/index.md) - Common issues

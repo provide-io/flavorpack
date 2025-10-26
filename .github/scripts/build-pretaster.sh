@@ -32,7 +32,7 @@ echo "   Version: $VERSION"
 echo "   Build Type: $BUILD_TYPE"
 echo "   Output: $OUTPUT_DIR"
 
-# Ingredient functions
+# Helper functions
 verify_file() {
     if [ ! -f "$1" ]; then
         echo "❌ Required file not found: $1"
@@ -115,11 +115,11 @@ mkdir -p dist logs
 
 # Main build logic based on type
 case "$BUILD_TYPE" in
-    simple|with-ingredients)
+    simple|with-helpers)
         echo "📦 Building simple pretaster with test scripts..."
         
-        # Find ingredients
-        HELPERS_DIR="../../ingredients/bin"
+        # Find helpers
+        HELPERS_DIR="../../helpers/bin"
         GO_BUILDER="${HELPERS_DIR}/flavor-go-builder-${VERSION}-${PLATFORM}${EXE_EXT}"
         RS_LAUNCHER="${HELPERS_DIR}/flavor-rs-launcher-${VERSION}-${PLATFORM}${EXE_EXT}"
         
@@ -189,8 +189,8 @@ EOF
         fi
         verify_file "$TASTER_PSP"
         
-        # Find ingredients
-        HELPERS_DIR="../../ingredients/bin"
+        # Find helpers
+        HELPERS_DIR="../../helpers/bin"
         GO_BUILDER="${HELPERS_DIR}/flavor-go-builder-${VERSION}-${PLATFORM}${EXE_EXT}"
         RS_LAUNCHER="${HELPERS_DIR}/flavor-rs-launcher-${VERSION}-${PLATFORM}${EXE_EXT}"
         
@@ -245,7 +245,7 @@ EOF
         verify_file "$FLAVOR_PSP"
         
         # Find launcher
-        RS_LAUNCHER="../../ingredients/bin/flavor-rs-launcher-${VERSION}-${PLATFORM}${EXE_EXT}"
+        RS_LAUNCHER="../../helpers/bin/flavor-rs-launcher-${VERSION}-${PLATFORM}${EXE_EXT}"
         verify_file "$RS_LAUNCHER"
         
         # Setup workenv

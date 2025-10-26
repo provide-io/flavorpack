@@ -16,7 +16,6 @@ import io
 from pathlib import Path
 import tarfile
 from typing import Any
-import zlib
 
 from provide.foundation import logger
 from provide.foundation.file import atomic_write
@@ -192,6 +191,7 @@ class PSPFLauncher(PSPFReader):
             # NOTE: Use SHA-256 (first 8 bytes) to match Go/Rust implementations
             # Checksum is of the slot data as it exists in the file (compressed or not)
             import hashlib
+
             hash_bytes = hashlib.sha256(slot_data).digest()[:8]
             actual_checksum = int.from_bytes(hash_bytes, byteorder="little")
             if actual_checksum != slot_entry["checksum"]:

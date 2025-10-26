@@ -47,7 +47,7 @@ pretaster/
 Pretaster includes a comprehensive Makefile for easy management:
 
 ```bash
-cd helpers/pretaster
+cd tests/pretaster
 
 # Show all available commands
 make help
@@ -55,7 +55,7 @@ make help
 # Build everything and run all tests
 make all
 
-# Build ingredients only
+# Build helpers only
 make build
 
 # Build all test packages
@@ -85,13 +85,13 @@ make debug
 
 #### Run All Core Tests
 ```bash
-cd helpers/pretaster
+cd tests/pretaster
 ./tests/test-pretaster.sh
 ```
 
 #### Test All Builder/Launcher Combinations
 ```bash
-cd helpers/pretaster
+cd tests/pretaster
 ./tests/combination-tests.sh
 ```
 
@@ -103,7 +103,7 @@ This script automatically logs all test output to timestamped files in the `logs
 
 #### Test Direct PSP Execution
 ```bash
-cd helpers/pretaster
+cd tests/pretaster
 ./tests/direct-execution-tests.sh
 ```
 
@@ -151,23 +151,23 @@ cd helpers/pretaster
 
 ```bash
 # Echo test (Go builder + Rust launcher)
-../bin/flavor-go-builder \
+../../dist/bin/flavor-go-builder \
   --manifest configs/test-echo.json \
-  --launcher-bin ../bin/flavor-rs-launcher \
+  --launcher-bin ../../dist/bin/flavor-rs-launcher \
   --output echo-test.psp \
   --key-seed test123
 
 # Shell test (Rust builder + Go launcher)
-../bin/flavor-rs-builder \
+../../dist/bin/flavor-rs-builder \
   --manifest configs/test-shell.json \
-  --launcher-bin ../bin/flavor-go-launcher \
+  --launcher-bin ../../dist/bin/flavor-go-launcher \
   --output shell-test.psp \
   --key-seed test123
 
 # Pretaster (any combination)
-../bin/flavor-rs-builder \
+../../dist/bin/flavor-rs-builder \
   --manifest configs/test-taster-lite.json \
-  --launcher-bin ../bin/flavor-go-launcher \
+  --launcher-bin ../../dist/bin/flavor-go-launcher \
   --output pretaster.psp \
   --key-seed test123
 ```
@@ -197,8 +197,8 @@ The test suite validates the log level priority chain:
 4. Default: `info`
 
 ### Language-Specific Log Prefixes
-- **Rust ingredients**: All log lines prefixed with 🦀
-- **Go ingredients**: All log lines prefixed with 🐹
+- **Rust helpers**: All log lines prefixed with 🦀
+- **Go helpers**: All log lines prefixed with 🐹
 
 ### Exit Code Propagation
 - Exit codes are properly propagated through all launchers
@@ -257,13 +257,13 @@ When executed, pretaster.psp:
 Pretaster is used extensively in the CI pipeline to validate cross-language compatibility:
 
 ### Pretaster Pipeline (`.github/workflows/pretaster-pipeline.yml`)
-- Downloads ingredient artifacts from ingredient pipeline
-- Builds pretaster PSP package using ingredients
+- Downloads helper artifacts from helper pipeline
+- Builds pretaster PSP package using helpers
 - Executes pretaster to validate PSP functionality
 - Tests all builder/launcher combinations
 
 ### Key Behaviors
-- **FLAVOR_WORKENV Detection**: When running as PSP, pretaster detects `FLAVOR_WORKENV` and skips ingredient rebuilding
+- **FLAVOR_WORKENV Detection**: When running as PSP, pretaster detects `FLAVOR_WORKENV` and skips helper rebuilding
 - **Honest Validation**: Test output clearly states what's validated vs what would require full testing
 - **No Fake Success**: Scripts report actual validation status, not pretend success
 
@@ -302,6 +302,6 @@ All builders now use the nested PSPF/2025 format exclusively:
 ## Development Notes
 
 - Built .psp files are not committed (see .gitignore)
-- Test scripts assume ingredients are built in ../bin/
+- Test scripts assume helpers are built in ../../dist/bin/
 - All tests use `--key-seed test123` for reproducible builds
 - Workenv locations vary by launcher (check FLAVOR_WORKENV)

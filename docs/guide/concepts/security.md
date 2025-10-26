@@ -4,13 +4,44 @@ FlavorPack implements multiple layers of security to ensure package integrity, a
 
 ## Overview
 
-The FlavorPack security model provides comprehensive protection through:
+The FlavorPack security model provides comprehensive protection through multiple layers:
+
+```mermaid
+graph TD
+    A[Package Build] --> B[Sign with Ed25519]
+    B --> C[Package Distribution]
+    C --> D[User Downloads]
+
+    D --> E{Verify Signature}
+    E -->|Invalid| F[❌ Reject Package]
+    E -->|Valid| G{Verify Checksums}
+
+    G -->|Invalid| F
+    G -->|Valid| H{Verify Format}
+
+    H -->|Invalid| F
+    H -->|Valid| I[✅ Extract to Cache]
+
+    I --> J{Validate Extraction}
+    J -->|Failed| F
+    J -->|Success| K[🚀 Execute Package]
+
+    style B fill:#e8f5e9
+    style E fill:#fff3e0
+    style G fill:#fff3e0
+    style H fill:#fff3e0
+    style F fill:#ffebee
+    style K fill:#e3f2fd
+```
+
+### Security Layers
 
 1. **Cryptographic Signatures**: Ed25519 digital signatures for authenticity
 2. **Integrity Verification**: SHA-256 checksums for all components
-3. **Isolation**: Sandboxed execution environments
-4. **Access Control**: Permission-based slot extraction
-5. **Audit Trail**: Comprehensive logging and verification
+3. **Format Validation**: PSPF structure verification
+4. **Isolation**: Sandboxed execution environments
+5. **Access Control**: Permission-based slot extraction
+6. **Audit Trail**: Comprehensive logging and verification
 
 ## Threat Model
 
@@ -67,7 +98,7 @@ except InvalidSignature:
 
 1. **Random Keys** (Recommended for production)
    ```bash
-   flavor keygen --output private.pem
+   flavor keygen --out-dir keys/
    ```
 
 2. **Deterministic Keys** (For CI/CD)
@@ -126,18 +157,16 @@ Every component has SHA-256 checksums:
 
 ### Verification Levels
 
-```bash
-# Quick verification (index only)
-flavor verify package.psp --quick
+> **Note**: Currently, the `verify` command performs standard verification only. The following verification modes are planned features for a future release.
 
-# Standard verification (index + metadata)
+```bash
+# Standard verification (index + metadata + signatures)
 flavor verify package.psp
 
-# Deep verification (all slots)
-flavor verify package.psp --deep
-
-# Paranoid mode (extract and verify)
-flavor verify package.psp --paranoid
+# Future planned modes:
+# flavor verify package.psp --quick     # Quick (index only)
+# flavor verify package.psp --deep      # Deep (all slots)
+# flavor verify package.psp --paranoid  # Paranoid (extract and verify)
 ```
 
 ## Execution Security
@@ -419,6 +448,6 @@ Working towards:
 ## Related Documentation
 
 - [Cryptographic Specification](../../spec/crypto.md) - Technical crypto details
-- [Package Format](../../spec/pspf-2025.md) - Binary security features
-- [CLI Reference](../../api/python/cli.md#verify) - Verification commands
+- [Package Format](../../reference/spec/fep-0001-core-format-and-operation-chains.md) - Binary security features
+- [CLI Reference](../../api/cli.md#verify) - Verification commands
 - [Troubleshooting](../../troubleshooting/security.md) - Security issues

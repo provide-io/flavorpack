@@ -26,12 +26,12 @@ log = get_command_logger("clean")
 @click.option(
     "--all",
     is_flag=True,
-    help="Clean both work environment and ingredients",
+    help="Clean both work environment and helpers",
 )
 @click.option(
-    "--ingredients",
+    "--helpers",
     is_flag=True,
-    help="Clean only ingredient binaries",
+    help="Clean only helper binaries",
 )
 @click.option(
     "--dry-run",
@@ -44,19 +44,19 @@ log = get_command_logger("clean")
     is_flag=True,
     help="Skip confirmation prompt",
 )
-def clean_command(all: bool, ingredients: bool, dry_run: bool, yes: bool) -> None:
-    """Clean work environment cache (default) or ingredients."""
+def clean_command(all: bool, helpers: bool, dry_run: bool, yes: bool) -> None:
+    """Clean work environment cache (default) or helpers."""
     log.debug(
         "Clean command started",
         all=all,
-        ingredients=ingredients,
+        helpers=helpers,
         dry_run=dry_run,
         yes=yes,
     )
 
     # Determine what to clean
-    clean_workenv = not ingredients or all
-    clean_ingredients = ingredients or all
+    clean_workenv = not helpers or all
+    clean_helpers = helpers or all
 
     if dry_run:
         echo("🔍 DRY RUN - Nothing will be removed\n")
@@ -66,8 +66,8 @@ def clean_command(all: bool, ingredients: bool, dry_run: bool, yes: bool) -> Non
     if clean_workenv:
         total_freed += _clean_workenv_cache(dry_run, yes)
 
-    if clean_ingredients:
-        total_freed += _clean_ingredient_binaries(dry_run, yes)
+    if clean_helpers:
+        total_freed += _clean_helper_binaries(dry_run, yes)
 
     _show_total_freed(dry_run, total_freed)
 
@@ -111,51 +111,49 @@ def _show_workenv_dry_run(cached: list[dict[str, Any]], size_mb: float) -> None:
         echo(f"  - {name} ({pkg_size_mb:.1f} MB)")
 
 
-def _clean_ingredient_binaries(dry_run: bool, yes: bool) -> int:
-    """Clean ingredient binaries and return bytes freed."""
-    ingredient_dir = Path.home() / ".cache" / "flavor" / "bin"
-    if not ingredient_dir.exists():
+def _clean_helper_binaries(dry_run: bool, yes: bool) -> int:
+    """Clean helper binaries and return bytes freed."""
+    helper_dir = Path.home() / ".cache" / "flavor" / "bin"
+    if not helper_dir.exists():
         return 0
 
-    ingredients_list = _get_ingredient_files(ingredient_dir)
-    if not ingredients_list:
+    helpers_list = _get_helper_files(helper_dir)
+    if not helpers_list:
         return 0
 
-    total_size = sum(h.stat().st_size for h in ingredients_list)
+    total_size = sum(h.stat().st_size for h in helpers_list)
     size_mb = total_size / (1024 * 1024)
 
     if dry_run:
-        _show_ingredients_dry_run(ingredients_list, size_mb)
+        _show_helpers_dry_run(helpers_list, size_mb)
         return 0
 
-    if not yes and not click.confirm(
-        f"Remove {len(ingredients_list)} ingredient binaries ({size_mb:.1f} MB)?"
-    ):
+    if not yes and not click.confirm(f"Remove {len(helpers_list)} helper binaries ({size_mb:.1f} MB)?"):
         echo("Aborted.")
         return 0
 
-    safe_rmtree(ingredient_dir)
+    safe_rmtree(helper_dir)
     log.info(
-        "Removed ingredient binaries",
-        count=len(ingredients_list),
+        "Removed helper binaries",
+        count=len(helpers_list),
         size_bytes=total_size,
     )
-    echo(f"✅ Removed {len(ingredients_list)} ingredient binaries")
+    echo(f"✅ Removed {len(helpers_list)} helper binaries")
     return total_size
 
 
-def _get_ingredient_files(ingredient_dir: Path) -> list[Path]:
-    """Get list of ingredient files, excluding .d files."""
-    ingredients_list = list(ingredient_dir.glob("flavor-*"))
-    return [h for h in ingredients_list if h.suffix != ".d"]
+def _get_helper_files(helper_dir: Path) -> list[Path]:
+    """Get list of helper files, excluding .d files."""
+    helpers_list = list(helper_dir.glob("flavor-*"))
+    return [h for h in helpers_list if h.suffix != ".d"]
 
 
-def _show_ingredients_dry_run(ingredients_list: list[Path], size_mb: float) -> None:
-    """Show what ingredient binaries would be removed."""
-    echo(f"\nWould remove {len(ingredients_list)} ingredient binaries ({size_mb:.1f} MB):")
-    for ingredient in ingredients_list:
-        h_size_mb = ingredient.stat().st_size / (1024 * 1024)
-        echo(f"  - {ingredient.name} ({h_size_mb:.1f} MB)")
+def _show_helpers_dry_run(helpers_list: list[Path], size_mb: float) -> None:
+    """Show what helper binaries would be removed."""
+    echo(f"\nWould remove {len(helpers_list)} helper binaries ({size_mb:.1f} MB):")
+    for helper in helpers_list:
+        h_size_mb = helper.stat().st_size / (1024 * 1024)
+        echo(f"  - {helper.name} ({h_size_mb:.1f} MB)")
 
 
 def _show_total_freed(dry_run: bool, total_freed: int) -> None:

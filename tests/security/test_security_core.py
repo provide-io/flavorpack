@@ -10,8 +10,6 @@ from __future__ import annotations
 from pathlib import Path
 from unittest.mock import Mock, patch
 
-import pytest
-
 from flavor.config.defaults import (
     VALIDATION_MINIMAL,
     VALIDATION_NONE,

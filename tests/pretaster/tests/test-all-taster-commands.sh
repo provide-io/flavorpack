@@ -13,7 +13,7 @@ echo ""
 
 # Get directories
 PRETASTER_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-HELPERS_DIR="$(cd "$PRETASTER_DIR/../../ingredients" && pwd)"
+HELPERS_DIR="$(cd "$PRETASTER_DIR/../../helpers" && pwd)"
 TASTER_DIR="$(cd "$PRETASTER_DIR/../taster" && pwd)"
 
 # Build taster if needed
