@@ -151,7 +151,8 @@ class TestPyPaPipManager:
             python_exe, dest_dir, packages=packages, binary_only=True
         )
 
-        # CRITICAL: Must include manylinux_2_17_aarch64 platform tag for ARM64 Linux
+        # CRITICAL: Must include manylinux2014_aarch64 platform tag for ARM64 Linux
+        # Note: This matches published wheels (manylinux2014 == manylinux_2_17, both glibc 2.17+)
         expected = [
             "/usr/bin/python3",
             "-m",
@@ -164,7 +165,7 @@ class TestPyPaPipManager:
             "--python-version",
             "3.11",
             "--platform",
-            "manylinux_2_17_aarch64",
+            "manylinux2014_aarch64",
             "scipy",
         ]
         assert cmd == expected
@@ -396,9 +397,10 @@ class TestPyPaPipManagerCriticalFeatures:
         mock_os.return_value = "linux"
 
         # Test both supported architectures
+        # Note: Both use manylinux2014 format for compatibility with published wheels
         for arch, expected_tag in [
             ("amd64", "manylinux2014_x86_64"),
-            ("arm64", "manylinux_2_17_aarch64"),
+            ("arm64", "manylinux2014_aarch64"),
         ]:
             mock_arch.return_value = arch
 
