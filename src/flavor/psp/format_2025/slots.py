@@ -32,6 +32,7 @@ from flavor.config.defaults import (
     PURPOSE_CODE,
     PURPOSE_CONFIG,
     PURPOSE_DATA,
+    PURPOSE_MEDIA,
 )
 
 
