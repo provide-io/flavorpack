@@ -118,4 +118,4 @@ flavor cache verify
 
 - **[Running Packages](running.md)** - Execution guide
 - **[CLI Reference](cli.md)** - Complete CLI docs
-- **[Troubleshooting](../../troubleshooting/)** - Fix issues
+- **[Troubleshooting](../../troubleshooting/index.md)** - Fix issues

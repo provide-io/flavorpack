@@ -50,7 +50,7 @@ This specification does NOT define:
 
 ### 1.3 Requirements Language
 
-The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in BCP 14 [RFC2119] [RFC8174] when, and only when, they appear in all capitals, as shown here.
+The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in BCP 14 [RFC2119](https://www.rfc-editor.org/rfc/rfc2119.html) [RFC8174](https://www.rfc-editor.org/rfc/rfc8174.html) when, and only when, they appear in all capitals, as shown here.
 
 ### 1.4 Related Documents
 
@@ -380,11 +380,11 @@ Original size before operations applied. If omitted, assumed equal to `size`.
 
 #### 4.3.8 checksum (REQUIRED)
 
-**Type**: string  
-**Pattern**: `^[a-f0-9]{8}$`  
-**Example**: "deadbeef"  
+**Type**: string
+**Pattern**: `^[a-f0-9]{16}$`
+**Example**: "deadbeef01234567"
 
-Adler-32 checksum of stored slot data as 8-character hex string.
+SHA-256 hash of stored slot data (first 8 bytes) as 16-character hex string.
 
 #### 4.3.9 permissions (OPTIONAL)
 
@@ -716,7 +716,7 @@ LOWER = %x61-7A  ; a-z
           },
           "checksum": {
             "type": "string",
-            "pattern": "^[a-f0-9]{8}$"
+            "pattern": "^[a-f0-9]{16}$"
           },
           "permissions": {
             "type": "string",
@@ -1196,9 +1196,9 @@ Expected Error: `ERROR_PATH_TRAVERSAL (1300)`
 
 ### 14.1 Normative References
 
-[RFC2119] Bradner, S., "Key words for use in RFCs to Indicate Requirement Levels", BCP 14, RFC 2119, March 1997.
+[RFC2119](https://www.rfc-editor.org/rfc/rfc2119.html) Bradner, S., "Key words for use in RFCs to Indicate Requirement Levels", BCP 14, RFC 2119, March 1997.
 
-[RFC8174] Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words", BCP 14, RFC 8174, May 2017.
+[RFC8174](https://www.rfc-editor.org/rfc/rfc8174.html) Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words", BCP 14, RFC 8174, May 2017.
 
 [RFC7159] Bray, T., Ed., "The JavaScript Object Notation (JSON) Data Interchange Format", RFC 7159, March 2014.
 

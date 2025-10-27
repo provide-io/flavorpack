@@ -80,7 +80,7 @@ Learn about:
 
 ### By Use Case
 
-- **Development** → [Testing Guide](../development/testing/)
+- **Development** → [Testing Guide](../development/testing/index.md)
 - **Production** → [Docker Recipe](recipes/docker.md)
 - **Distribution** → [CI/CD Recipe](recipes/ci-cd.md)
 
@@ -129,7 +129,7 @@ Related examples and topics
 
 ## Need Help?
 
-- 📖 Check the [User Guide](../guide/)
+- 📖 Check the [User Guide](../guide/index.md)
 - 🔍 Search the documentation
 - 💬 Ask in [Community Support](../community/support.md)
 - 🐛 Report issues on [GitHub](https://github.com/provide-io/flavorpack/issues)

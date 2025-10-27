@@ -30,4 +30,4 @@ This page is under development. In the meantime, see:
 
 ---
 
-**Need help now?** See [Getting Started](../../getting-started/) or [Architecture](../../development/architecture.md).
+**Need help now?** See [Getting Started](../../getting-started/index.md) or [Architecture](../../development/architecture.md).

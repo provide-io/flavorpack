@@ -159,6 +159,7 @@ markdown_extensions:
   - pymdownx.smartsymbols
   - pymdownx.snippets:
       check_paths: true
+      base_path: docs
   - pymdownx.superfences:
       custom_fences:
         - name: mermaid
@@ -190,22 +191,9 @@ extra:
     - icon: fontawesome/solid/globe
       link: https://provide.io
 
-  analytics:
-    provider: google
-    property: G-XXXXXXXXXX
-
   # Announcement bar
   announcement:
-    text: "📦 FlavorPack documentation has been modernized with Foundry integration guides, comprehensive cookbook examples, and professional theming!"
-    link: /foundry/
-    
-  consent:
-    title: Cookie consent
-    description: >-
-      We use cookies to recognize your repeated visits and preferences, as well
-      as to measure the effectiveness of our documentation and whether users
-      find what they're searching for. With your consent, you're helping us to
-      make our documentation better.
+    text: "📦 FlavorPack documentation has been modernized with comprehensive cookbook examples and professional theming!"
 
 extra_css:
   - .shared-theme/stylesheets/provide-theme.css
@@ -229,16 +217,10 @@ nav:
     - First Package: getting-started/first-package.md
     - Examples: getting-started/examples.md
 
-  # Foundry Ecosystem Context
-  - Provide Foundry:
-    - foundry/index.md
-    - FlavorPack's Role: foundry/architecture.md
-    - Design Principles: foundry/principles.md
-    - Roadmap: foundry/roadmap.md
-  
   # SECTION 2: User Guide (concepts and how-to)
   - User Guide:
     - Overview: guide/index.md
+    - Roadmap: guide/roadmap.md
 
     - Core Concepts:
       - guide/concepts/index.md
@@ -246,6 +228,7 @@ nav:
       - Package Structure: guide/concepts/package-structure.md
       - Work Environments: guide/concepts/workenv.md
       - Security Model: guide/concepts/security.md
+      - Helper Binaries: guide/concepts/helpers.md
 
     - Building Packages:
       - guide/packaging/index.md
@@ -255,10 +238,6 @@ nav:
       - Signing Packages: guide/packaging/signing.md
       - Platform Support: guide/packaging/platforms.md
 
-    - Foundry Integration:
-      - wrknv: guide/integration/wrknv.md
-      - pyvider: guide/integration/pyvider.md
-    
     - Using Packages:
       - guide/usage/index.md
       - Running Packages: guide/usage/running.md
@@ -276,7 +255,13 @@ nav:
       - Debugging: guide/advanced/debugging.md
   
   # SECTION 3: API Reference (technical documentation)
-  - API Reference: api/index.md
+  - API Reference:
+    - api/index.md
+    - Auto-Generated Reference: api/reference.md
+    - Packaging API: api/packaging.md
+    - Builder API: api/builder.md
+    - Reader API: api/reader.md
+    - Crypto API: api/crypto.md
   
   # SECTION 4: Cookbook (practical examples)
   - Cookbook:
@@ -291,20 +276,31 @@ nav:
       - cookbook/recipes/index.md
       - Docker Integration: cookbook/recipes/docker.md
       - CI/CD Pipelines: cookbook/recipes/ci-cd.md
+      - Multi-Platform Builds: cookbook/recipes/multi-platform.md
   
   # SECTION 5: Reference (specs, troubleshooting, development)
   - Reference:
     - Overview: resources/index.md
+    - System Requirements: reference/requirements.md
+    - Glossary: reference/glossary.md
 
     - Specification:
-      - PSPF 2025: spec/pspf-2025.md
-    
+      - PSPF 2025: reference/spec/pspf-2025.md
+      - Slot Descriptor Spec: reference/spec/SLOT_DESCRIPTOR_SPECIFICATION.md
+      - FEP-0001 Core Format: reference/spec/fep-0001-core-format-and-operation-chains.md
+      - FEP-0002 JSON Metadata: reference/spec/fep-0002-json-metadata-format.md
+      - FEP-0003 Operation Registry: reference/spec/fep-0003-operation-registry.md
+      - Future Enhancements:
+        - FEP-0004 Supply Chain JIT: reference/spec/future/fep-0004-supply-chain-jit.md
+        - FEP-0005 Runtime JIT: reference/spec/future/fep-0005-runtime-jit-loading.md
+        - FEP-0006 Staged Payload: reference/spec/future/fep-0006-staged-payload-architecture.md
+
     - Troubleshooting:
       - troubleshooting/index.md
       - Common Issues: troubleshooting/common.md
       - Error Messages: troubleshooting/errors.md
-      - Security Issues: troubleshooting/security.md
       - Platform-Specific:
+        - troubleshooting/platforms/index.md
         - macOS Issues: troubleshooting/platforms/macos.md
         - Linux Issues: troubleshooting/platforms/linux.md
         - Windows Issues: troubleshooting/platforms/windows.md
@@ -318,6 +314,7 @@ nav:
       - Testing:
         - development/testing/index.md
         - Unit Tests: development/testing/unit.md
+        - Taster vs Pretaster: development/testing/taster-vs-pretaster.md
         - Integration Tests: development/testing/integration.md
         - Cross-Language Tests: development/testing/cross-language.md
       - CI/CD: development/ci-cd.md
@@ -327,12 +324,13 @@ nav:
       - community/index.md
       - Getting Support: community/support.md
       - Discussions: community/discussions.md
+      - Contributing: community/contributing.md
       - Blog: community/blog.md
       - Changelog: community/changelog.md
       - License: community/license.md
 
 validation:
-  omitted_files: warn
+  omitted_files: info  # Some files (like includes/) are intentionally not in nav
   absolute_links: warn
   unrecognized_links: warn
 

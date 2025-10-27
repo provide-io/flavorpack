@@ -43,21 +43,14 @@ Deep dive into advanced features and customization.
 - **[Performance Tuning](advanced/performance.md)** - Optimize package size and speed
 - **[Debugging](advanced/debugging.md)** - Troubleshoot issues
 
-### :material-link: **Foundry Integration**
-
-Integrate FlavorPack with other Provide Foundry tools.
-
-- **[wrknv Integration](integration/wrknv.md)** - Environment management
-- **[pyvider Integration](integration/pyvider.md)** - Terraform provider packaging
-
 ## Quick Navigation
 
 Looking for something specific?
 
-- **First time?** → Start with [Getting Started](../getting-started/)
-- **Need examples?** → Check out the [Cookbook](../cookbook/)
-- **Having issues?** → See [Troubleshooting](../troubleshooting/)
-- **Contributing?** → Read [Development Guide](../development/)
+- **First time?** → Start with [Getting Started](../getting-started/index.md)
+- **Need examples?** → Check out the [Cookbook](../cookbook/index.md)
+- **Having issues?** → See [Troubleshooting](../troubleshooting/index.md)
+- **Contributing?** → Read [Development Guide](../development/index.md)
 
 ## Documentation Structure
 
@@ -69,7 +62,6 @@ graph TB
     START --> BUILD[Building Packages<br/>Create .psp files]
     START --> USE[Using Packages<br/>Run & manage]
     START --> ADV[Advanced Topics<br/>Deep dive]
-    START --> INT[Foundry Integration<br/>Tool integration]
 
     CONCEPTS --> PSPF[PSPF Format]
     CONCEPTS --> STRUCT[Package Structure]
@@ -88,25 +80,23 @@ graph TB
     ADV --> PERF[Performance]
     ADV --> DEBUG[Debugging]
 
-    INT --> WRKNV[wrknv]
-    INT --> PYV[pyvider]
-
     classDef section fill:#e1f5fe,stroke:#01579b
     classDef topic fill:#f3e5f5,stroke:#4a148c
 
     class START section
-    class CONCEPTS,BUILD,USE,ADV,INT topic
+    class CONCEPTS,BUILD,USE,ADV topic
 ```
 
 ## Getting Help
 
 If you can't find what you're looking for:
 
-- 📖 Check the [Cookbook](../cookbook/) for practical examples
+- 📖 Check the [Cookbook](../cookbook/index.md) for practical examples
+- 📚 Review the [Glossary](../reference/glossary.md) for term definitions
 - 🔍 Search the documentation (Ctrl+K or Cmd+K)
 - 💬 Ask in [Community Support](../community/support.md)
 - 🐛 Report issues on [GitHub](https://github.com/provide-io/flavorpack/issues)
 
 ---
 
-**Ready to start?** Jump to [Core Concepts](concepts/) or try the [Quick Start](../getting-started/quickstart.md).
+**Ready to start?** Jump to [Core Concepts](concepts/index.md) or try the [Quick Start](../getting-started/quickstart.md).

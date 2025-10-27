@@ -11,6 +11,9 @@ Before you begin, ensure you have:
 - **UV package manager** ([Install](https://docs.astral.sh/uv/))
 - **Git** for cloning the repository
 
+!!! info "Need More Details?"
+    See the complete [System Requirements](../reference/requirements.md) for detailed version information and platform support.
+
 ## Installation
 
 ### 1. Clone and Setup
@@ -168,8 +171,8 @@ flavor inspect hello.psp
 ### Extract Package Contents
 
 ```bash
-# Extract for inspection (not needed for running)
-flavor extract hello.psp --output extracted/
+# Extract all slots for inspection (not needed for running)
+flavor extract-all hello.psp extracted/
 
 # Lists all extracted files
 ls extracted/
@@ -205,6 +208,29 @@ Now that you've created your first package:
     - **Missing dependencies** - Ensure all imports are in requirements
     - **File permissions** - Remember to make packages executable
     - **Path issues** - Use absolute imports in your Python code
+
+---
+
+## Related Pages
+
+**Continue Learning**:
+
+- 📖 [Core Concepts](../guide/concepts/pspf-format.md) - Understand the PSPF format
+- 🎯 [Package Configuration](../guide/packaging/configuration.md) - Advanced packaging options
+- 🔧 [Python Packaging Guide](../guide/packaging/python.md) - Python-specific features
+- 🔒 [Package Signing](../guide/packaging/signing.md) - Add cryptographic signatures
+- 📋 [CLI Reference](../guide/usage/cli.md) - Complete command documentation
+
+**Examples**:
+
+- 💻 [CLI Tool Example](../cookbook/examples/cli-tool.md) - Package a CLI application
+- 🌐 [Web App Example](../cookbook/examples/web-app.md) - Package a Flask/FastAPI app
+
+**Need Help?**:
+
+- 🐛 [Troubleshooting](../troubleshooting/common.md) - Common issues and solutions
+- 💬 [Community](../community/support.md) - Get help from the community
+- 📝 [FAQ](../troubleshooting/faq.md) - Frequently asked questions
 
 ---
 

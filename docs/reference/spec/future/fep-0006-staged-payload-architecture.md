@@ -1313,7 +1313,7 @@ This document requests IANA registration of:
 
 ### 16.1. Normative References
 
-- [RFC2119] Key words for use in RFCs
+- [RFC2119](https://www.rfc-editor.org/rfc/rfc2119.html) Key words for use in RFCs
 - [FEP-0001] PSPF Core Format Specification
 - [FEP-0004] Supply Chain JIT Compilation
 - [FEP-0005] Runtime JIT Loading

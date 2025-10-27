@@ -1,6 +1,6 @@
 # Development Guide
 
-This guide provides comprehensive instructions for setting up the development environment, building Flavor Pack, running tests, and contributing to the project.
+This guide provides comprehensive instructions for setting up the development environment, building FlavorPack, running tests, and contributing to the project.
 
 ## Table of Contents
 
@@ -17,13 +17,13 @@ This guide provides comprehensive instructions for setting up the development en
 
 - **Python 3.11 or higher**
 - **UV package manager**: `curl -LsSf https://astral.sh/uv/install.sh | sh`
-- **Go 1.21+**: For building Go helpers
-- **Rust 1.75+**: For building Rust helpers
+- **Go 1.23+**: For building Go helpers (see `src/flavor-go/go.mod`)
+- **Rust 1.85+**: For building Rust helpers (see `src/flavor-rs/Cargo.toml`)
 - **Git**: For version control
 
 ## Environment Setup
 
-The project uses `uv` for Python package management and `workenv` for coordinating sibling dependencies.
+The project uses `uv` for Python package management.
 
 ### Initial Setup
 
@@ -36,30 +36,18 @@ cd flavorpack
 uv sync
 ```
 
-The `env.sh` script automatically:
-1. Checks for compatible Python version (>=3.11)
-2. Installs `uv` if not present
-3. Creates platform-specific virtual environment in `workenv/flavor_{OS}_{ARCH}`
-4. Installs Flavor Pack in editable mode
-5. Installs all sibling dependencies (pyvider-*, tofusoup, wrkenv)
-6. Configures PYTHONPATH correctly
+This command will:
+1. Create a virtual environment (`.venv/` by default)
+2. Install FlavorPack in editable mode
+3. Install all dependencies including `provide-foundation[all]`
+4. Set up the development environment
 
-### Sibling Dependencies
-
-The project depends on several packages in the parent directory:
-- `pyvider-telemetry`: Telemetry and logging
-- `pyvider-components`: Shared components
-- `pyvider-rpcplugin`: RPC plugin support
-- `pyvider-cty`: CTY type system
-- `pyvider-hcl`: HCL configuration
-- `tofusoup`: OpenTofu integration
-- `wrkenv`: Development environment management
-
-These are automatically installed when running `uv sync`.
+!!! tip "Virtual Environment Location"
+    The virtual environment is created in `.venv/` by default. You can use `uv run` to execute commands in this environment, or activate it manually with `source .venv/bin/activate`.
 
 ## Building Helpers
 
-Flavor Pack's high-performance builders and launchers are written in Go and Rust. Build them after initial setup and whenever you modify helper source code.
+FlavorPack's high-performance builders and launchers are written in Go and Rust. Build them after initial setup and whenever you modify helper source code.
 
 ### Build All Helpers
 
@@ -110,24 +98,24 @@ Helper binaries are installed to `dist/bin/` with platform suffixes:
 
 3. **Run tests**:
    ```bash
-   workenv/flavor_*/bin/pytest tests/ -xvs
+   uv run pytest tests/ -xvs
    ```
 
 4. **Check code quality**:
    ```bash
-   workenv/flavor_*/bin/ruff format src/
-   workenv/flavor_*/bin/ruff check src/
-   workenv/flavor_*/bin/mypy src/flavor
+   uv run ruff format src/
+   uv run ruff check src/
+   uv run mypy src/flavor
    ```
 
 5. **Test your changes**:
    ```bash
    # Build a test package
-   workenv/flavor_*/bin/flavor pack \
+   uv run flavor pack \
      --manifest tests/taster/pyproject.toml \
      --output /tmp/test.psp \
      --key-seed test123
-   
+
    # Run it
    /tmp/test.psp --help
    ```
@@ -150,35 +138,35 @@ Tests are organized with pytest markers:
 
 ```bash
 # Run all tests
-workenv/flavor_*/bin/pytest
+uv run pytest
 
 # Run specific test categories
-workenv/flavor_*/bin/pytest -m unit        # Fast unit tests
-workenv/flavor_*/bin/pytest -m integration # Integration tests
-workenv/flavor_*/bin/pytest -m security    # Security tests
-workenv/flavor_*/bin/pytest -m taster      # Taster tests
+uv run pytest -m unit        # Fast unit tests
+uv run pytest -m integration # Integration tests
+uv run pytest -m security    # Security tests
+uv run pytest -m taster      # Taster tests
 
 # Run with coverage
-workenv/flavor_*/bin/pytest --cov=flavor --cov-report=term-missing
+uv run pytest --cov=flavor --cov-report=term-missing
 
 # Run specific test file
-workenv/flavor_*/bin/pytest tests/test_pspf_2025_core.py -xvs
+uv run pytest tests/test_pspf_2025_core.py -xvs
 
 # Run tests in parallel
-workenv/flavor_*/bin/pytest -n auto
+uv run pytest -n auto
 ```
 
 ### Testing with Taster
 
-Taster is the comprehensive test package for Flavor Pack functionality:
+Taster is the comprehensive test package for FlavorPack functionality:
 
 ```bash
 # Build Taster
-cd helpers/taster
-../../workenv/flavor_*/bin/flavor pack \
+cd tests/taster
+uv run flavor pack \
   --manifest pyproject.toml \
   --output taster.psp \
-  --launcher-bin ../bin/flavor-rs-launcher \
+  --launcher-bin ../../dist/bin/flavor-rs-launcher-* \
   --key-seed test123
 
 # Test Taster commands
@@ -204,43 +192,43 @@ Test all builder/launcher combinations:
 
 ```bash
 # Format Python code
-workenv/flavor_*/bin/ruff format src/ tests/
+uv run ruff format src/ tests/
 
 # Check formatting without changes
-workenv/flavor_*/bin/ruff format --check src/
+uv run ruff format --check src/
 ```
 
 ### Linting
 
 ```bash
 # Run linter with auto-fixes
-workenv/flavor_*/bin/ruff check src/ --fix
+uv run ruff check src/ --fix
 
 # Check without fixes
-workenv/flavor_*/bin/ruff check src/
+uv run ruff check src/
 
 # Check specific error codes
-workenv/flavor_*/bin/ruff check src/ --select E,F
+uv run ruff check src/ --select E,F
 ```
 
 ### Type Checking
 
 ```bash
 # Run mypy type checker
-workenv/flavor_*/bin/mypy src/flavor
+uv run mypy src/flavor
 
 # Ignore missing imports
-workenv/flavor_*/bin/mypy src/flavor --ignore-missing-imports
+uv run mypy src/flavor --ignore-missing-imports
 ```
 
 ### Security Analysis
 
 ```bash
 # Run bandit security scanner
-workenv/flavor_*/bin/bandit -r src/flavor
+uv run bandit -r src/flavor
 
 # High severity only
-workenv/flavor_*/bin/bandit -r src/flavor --severity-level high
+uv run bandit -r src/flavor --severity-level high
 ```
 
 ## Common Tasks
@@ -249,23 +237,23 @@ workenv/flavor_*/bin/bandit -r src/flavor --severity-level high
 
 ```bash
 # Build with Python manifest
-workenv/flavor_*/bin/flavor pack \
+uv run flavor pack \
   --manifest pyproject.toml \
   --output myapp.psp
 
 # Build with JSON manifest
-workenv/flavor_*/bin/flavor pack \
+uv run flavor pack \
   --manifest manifest.json \
   --output myapp.psp
 
 # Use specific launcher
-workenv/flavor_*/bin/flavor pack \
+uv run flavor pack \
   --manifest pyproject.toml \
   --launcher-bin dist/bin/flavor-go-launcher-* \
   --output myapp.psp
 
 # Deterministic build with seed
-workenv/flavor_*/bin/flavor pack \
+uv run flavor pack \
   --manifest pyproject.toml \
   --output myapp.psp \
   --key-seed my-seed-123
@@ -275,29 +263,29 @@ workenv/flavor_*/bin/flavor pack \
 
 ```bash
 # Verify package integrity
-workenv/flavor_*/bin/flavor verify myapp.psp
+uv run flavor verify myapp.psp
 
 # Inspect package contents
-workenv/flavor_*/bin/flavor inspect myapp.psp
+uv run flavor inspect myapp.psp
 
 # Clean cache
-workenv/flavor_*/bin/flavor clean --all
+uv run flavor clean --all
 ```
 
 ### Helper Management
 
 ```bash
 # List available helpers
-workenv/flavor_*/bin/flavor helpers list
+uv run flavor helpers list
 
 # Build helpers from Python
-workenv/flavor_*/bin/flavor helpers build --lang all
+uv run flavor helpers build --lang all
 
 # Test helpers
-workenv/flavor_*/bin/flavor helpers test
+uv run flavor helpers test
 
 # Clean helper cache
-workenv/flavor_*/bin/flavor helpers clean --yes
+uv run flavor helpers clean --yes
 ```
 
 ## Troubleshooting
@@ -310,20 +298,20 @@ workenv/flavor_*/bin/flavor helpers clean --yes
 make build-helpers
 
 # Check helper paths
-workenv/flavor_*/bin/flavor helpers list
+uv run flavor helpers list
 ```
 
 **Import errors**:
 ```bash
 # Reinstall environment
-rm -rf workenv/
+rm -rf .venv/
 uv sync
 ```
 
 **Test failures**:
 ```bash
 # Run with verbose output
-workenv/flavor_*/bin/pytest -xvs --tb=short
+uv run pytest -xvs --tb=short
 
 # Check helper versions
 dist/bin/flavor-go-launcher-* --version
@@ -333,13 +321,13 @@ dist/bin/flavor-rs-launcher-* --version
 **Package verification fails**:
 ```bash
 # Build with deterministic keys
-workenv/flavor_*/bin/flavor pack \
+uv run flavor pack \
   --manifest pyproject.toml \
   --output test.psp \
   --key-seed test123
 
 # Enable debug logging
-FLAVOR_LOG_LEVEL=debug ./test.psp --help
+FOUNDATION_LOG_LEVEL=debug ./test.psp --help
 ```
 
 ### Debug Environment Variables
@@ -386,7 +374,7 @@ Follow conventional commits:
 
 - **ALWAYS use pip3** for wheel operations (never pip or uv pip for wheels)
 - **NEVER add environment-specific logic in helpers** - they must be generic
-- **Test with Taster first** - if Taster doesn't work, Flavor Pack is broken
+- **Test with Taster first** - if Taster doesn't work, FlavorPack is broken
 - **Use deterministic builds** for testing (`--key-seed`)
 
 ## Resources

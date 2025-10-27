@@ -503,7 +503,7 @@ When debugging issues:
 
 - [Troubleshooting Guide](../../troubleshooting/common.md) - Common issues
 - [Performance Optimization](performance.md) - Performance debugging
-- [Testing Guide](../../development/testing/) - Testing techniques
+- [Testing Guide](../../development/testing/index.md) - Testing techniques
 - [Environment Variables](../usage/environment.md) - Logging configuration
 
 ---

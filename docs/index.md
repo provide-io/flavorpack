@@ -53,7 +53,7 @@
 
     Detailed guides, API reference, cookbook examples, and troubleshooting help.
 
-    [:octicons-arrow-right-24: User Guide](guide/)
+    [:octicons-arrow-right-24: User Guide](guide/index.md)
 
 </div>
 
@@ -85,7 +85,7 @@ flavor verify myapp.psp
 
 ## Architecture Overview
 
-FlavorPack is part of the [Provide Foundry](foundry/) ecosystem, designed to work seamlessly with other provide.io tools:
+FlavorPack is a cross-language packaging system designed to work seamlessly with other provide.io tools:
 
 ```mermaid
 graph TB
@@ -164,24 +164,7 @@ For the complete binary layout diagram and technical specification, see:
 
 ## Platform Support
 
-| Platform | Architecture | Status | Binary Type | Notes |
-|----------|-------------|---------|------------|-------|
-| Linux | x86_64 | ✅ Full | Static (musl) | CentOS 7+, Ubuntu, Alpine |
-| Linux | aarch64 | ✅ Full | Static (musl) | ARM64 servers |
-| macOS | x86_64 | ✅ Full | Dynamic | Intel Macs |
-| macOS | arm64 | ✅ Full | Dynamic | Apple Silicon |
-| Windows | x86_64 | 🚧 Beta | Dynamic | Windows 10+ |
-
-## Part of the Provide Foundry
-
-FlavorPack is part of the **[Provide Foundry](foundry/)** - a comprehensive collection of Python tools for building Terraform providers, packaging applications, and managing development workflows.
-
-### Related Tools
-
-- **[pyvider](https://foundry.provide.io/pyvider/)** - Build Terraform providers in Python
-- **[wrknv](https://foundry.provide.io/wrknv/)** - Manage development environments
-- **[provide-foundation](https://foundry.provide.io/foundation/)** - Core telemetry and logging
-- **[provide-testkit](https://foundry.provide.io/testkit/)** - Testing utilities
+--8<-- "includes/platform-support.md"
 
 ## Community
 
@@ -201,8 +184,8 @@ Join the community for questions, ideas, and collaboration.
 
 Comprehensive guides, tutorials, and API documentation.
 
-[Explore Docs :octicons-arrow-right-24:](getting-started/){ .md-button }
+[Explore Docs :octicons-arrow-right-24:](getting-started/index.md){ .md-button }
 
 ---
 
-**Ready to package your Python applications?** Check out our [Quick Start guide](getting-started/quickstart.md) or dive into the [core concepts](guide/concepts/).
+**Ready to package your Python applications?** Check out our [Quick Start guide](getting-started/quickstart.md) or dive into the [core concepts](guide/concepts/index.md).

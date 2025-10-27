@@ -35,7 +35,7 @@ python_version = "3.11"
 ### 3. Build the Package
 
 ```bash
-flavor pack pyproject.toml
+flavor pack --manifest pyproject.toml
 ```
 
 This creates `myapp-1.0.0.psp` - a single executable file containing your entire application.
@@ -59,7 +59,7 @@ sequenceDiagram
     participant Builder as Native Builder
     participant Package as PSPF Package
 
-    User->>CLI: flavor pack pyproject.toml
+    User->>CLI: flavor pack --manifest pyproject.toml
     CLI->>Orch: Parse manifest
     Orch->>PyPkg: Build Python package
     PyPkg->>PyPkg: Install dependencies
@@ -151,23 +151,23 @@ lifecycle = "cached"
 Build with default settings:
 
 ```bash
-flavor pack pyproject.toml
+flavor pack --manifest pyproject.toml
 ```
 
 Build with options:
 
 ```bash
 # Sign package with key
-flavor pack pyproject.toml --private-key keys/flavor-private.key --public-key keys/flavor-public.key
+flavor pack --manifest pyproject.toml --private-key keys/flavor-private.key --public-key keys/flavor-public.key
 
 # Use deterministic seed (for CI/CD)
-flavor pack pyproject.toml --key-seed "secret-seed"
+flavor pack --manifest pyproject.toml --key-seed "secret-seed"
 
 # Strip debug symbols for smaller size
-flavor pack pyproject.toml --strip
+flavor pack --manifest pyproject.toml --strip
 
 # Specify output location
-flavor pack pyproject.toml --output dist/
+flavor pack --manifest pyproject.toml --output dist/
 ```
 
 ### Step 5: Verify Package
@@ -225,13 +225,13 @@ Choose between Go and Rust launchers:
 
 ```bash
 # Use Rust launcher (default)
-flavor pack pyproject.toml --launcher rust
+flavor pack --manifest pyproject.toml --launcher rust
 
 # Use Go launcher
-flavor pack pyproject.toml --launcher go
+flavor pack --manifest pyproject.toml --launcher go
 
 # Use specific launcher binary
-flavor pack pyproject.toml --launcher-bin /path/to/launcher
+flavor pack --manifest pyproject.toml --launcher-bin /path/to/launcher
 ```
 
 ### Compression
@@ -251,12 +251,12 @@ Build for specific platforms:
 
 ```bash
 # Build for current platform (default)
-flavor pack pyproject.toml
+flavor pack --manifest pyproject.toml
 
 # Build for specific platform
-flavor pack pyproject.toml --platform linux_amd64
-flavor pack pyproject.toml --platform darwin_arm64
-flavor pack pyproject.toml --platform windows_amd64
+flavor pack --manifest pyproject.toml --platform linux_amd64
+flavor pack --manifest pyproject.toml --platform darwin_arm64
+flavor pack --manifest pyproject.toml --platform windows_amd64
 ```
 
 ## Advanced Features
@@ -302,10 +302,10 @@ Ensure reproducible builds:
 ```bash
 # Set seed for deterministic builds
 export FLAVOR_SEED="my-secret-seed"
-flavor pack pyproject.toml
+flavor pack --manifest pyproject.toml
 
 # Or use command line
-flavor pack pyproject.toml --key-seed "my-secret-seed"
+flavor pack --manifest pyproject.toml --key-seed "my-secret-seed"
 ```
 
 ## Best Practices
@@ -356,7 +356,7 @@ flavor pack pyproject.toml --key-seed "my-secret-seed"
 Enable verbose output:
 
 ```bash
-FOUNDATION_LOG_LEVEL=debug flavor pack pyproject.toml
+FOUNDATION_LOG_LEVEL=debug flavor pack --manifest pyproject.toml
 ```
 
 ### Cache Issues
