@@ -2,6 +2,11 @@
 
 FlavorPack integrates seamlessly with `wrknv` for environment management and packaging.
 
+!!! info "Optional Integration"
+    **FlavorPack works standalone** without wrknv and has its own built-in workenv (work environment) management for package caching and execution.
+
+    This integration is optional. Use wrknv when you want advanced development environment management alongside FlavorPack's packaging capabilities.
+
 ## Overview
 
 [wrknv](https://foundry.provide.io/wrknv/) manages development environments, and FlavorPack packages them into distributable executables.

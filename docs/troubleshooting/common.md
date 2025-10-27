@@ -99,7 +99,7 @@ uname -sm  # Check your platform
 flavor pack --key-seed test123
 
 # Check package integrity
-flavor verify myapp.psp --strict
+flavor verify myapp.psp
 
 # For testing only (NEVER in production)
 FLAVOR_VALIDATION=none ./myapp.psp
@@ -139,7 +139,7 @@ flavor pack --manifest pyproject.toml
 
 **Solutions**:
 ```bash
-# Clean Flavor Pack cache
+# Clean FlavorPack cache
 flavor clean --all --yes
 
 # Check cache size
@@ -205,7 +205,7 @@ rm -rf workenv/
 uv sync
 
 # Verify installation
-workenv/flavor_*/bin/python -c "import flavor; print(flavor.__version__)"
+uv run python -c "import flavor; print(flavor.__version__)"
 ```
 
 #### Test Failures
@@ -231,14 +231,14 @@ pytest tests/test_specific.py -xvs --tb=short
 **Solutions**:
 ```bash
 # Check Go version
-go version  # Should be 1.21+
+go version  # Should be 1.23+
 
 # Check Rust version
-rustc --version  # Should be 1.75+
+rustc --version  # Should be 1.85+ (edition 2024 support)
 
 # Clean and rebuild
-cd helpers/flavor-go && go clean && cd ../..
-cd helpers/flavor-rs && cargo clean && cd ../..
+cd src/flavor-go && go clean && cd ../..
+cd src/flavor-rust && cargo clean && cd ../..
 make build-helpers
 ```
 
@@ -262,10 +262,10 @@ FLAVOR_BUILDER_LOG_LEVEL=trace flavor pack
 
 ```bash
 # View package structure
-flavor inspect myapp.psp --show-slots
+flavor inspect myapp.psp
 
-# Export metadata
-flavor inspect myapp.psp --format json > metadata.json
+# Export metadata as JSON
+flavor inspect myapp.psp --json > metadata.json
 
 # Check with hexdump
 hexdump -C myapp.psp | head -n 50  # View header
@@ -292,7 +292,7 @@ dist/bin/flavor-go-builder-* --manifest test.json --output test.psp
 ### Environment Debugging
 
 ```bash
-# Check all Flavor Pack environment variables
+# Check all FlavorPack environment variables
 env | grep FLAVOR
 
 # Test with clean environment
@@ -386,17 +386,14 @@ flavor inspect myapp.psp --json | jq '.slots'
 mkdir -p /tmp/test-extract
 flavor extract-all myapp.psp /tmp/test-extract
 
-# 5. Check for corrupted slots
-cd /tmp/test-extract
-for slot in slot_*.tar.gz; do
-    echo "Testing $slot..."
-    tar -tzf "$slot" > /dev/null 2>&1 && echo "✅ OK" || echo "❌ CORRUPTED"
-done
+# 5. Verify extraction completed
+ls -la /tmp/test-extract/
+# Check if all expected directories exist
 ```
 
 **Solutions:**
 - Remove corrupted cache: `flavor workenv clean -y`
-- Rebuild package with verification: `flavor pack --verify`
+- Rebuild package: `flavor pack --manifest pyproject.toml && flavor verify myapp.psp`
 - Check available disk space: `df -h ~/.cache/flavor`
 - Verify slot checksums in package
 
@@ -418,7 +415,8 @@ FLAVOR_LAUNCHER_CLI=1 ./myapp.psp shell
 
 # 2. Check what's actually in the package
 flavor extract-all myapp.psp extracted/
-tar -tzf extracted/slot_1.tar.gz | grep -E "\.py$"
+# Inspect extracted slot contents (slots are numbered 0, 1, 2, etc.)
+ls -la extracted/
 
 # 3. Verify dependencies
 cat extracted/metadata.json | jq '.package.dependencies'
@@ -488,15 +486,15 @@ flavor verify myapp.psp 2>&1 | grep -A 5 "Signature"
 ```bash
 # Rebuild with same keys
 flavor pack \
-  --private-key keys/private.pem \
-  --public-key keys/public.pem \
+  --private-key keys/flavor-private.key \
+  --public-key keys/flavor-public.key \
   --output myapp.psp
 
 # Or use deterministic seed
 flavor pack --key-seed "my-stable-seed-123"
 
 # For testing only (DANGEROUS - never in production)
-FLAVOR_SKIP_VERIFICATION=1 ./myapp.psp
+FLAVOR_VALIDATION=none ./myapp.psp
 ```
 
 ### Cross-Platform Issues

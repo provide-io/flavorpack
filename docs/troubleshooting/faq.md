@@ -2,6 +2,9 @@
 
 Common questions and answers about FlavorPack.
 
+!!! note "Package Name vs Tool Name"
+    **FlavorPack** (or `flavorpack`) is the Python package name. The command-line tool and API is called **`flavor`**. Install with `uv sync` (alpha), use with `flavor pack`.
+
 ## General Questions
 
 ### What is FlavorPack?
@@ -35,28 +38,58 @@ FlavorPack requires Python 3.11 or later.
 
 ### How do I install FlavorPack?
 
+!!! warning "Alpha Status - Source Installation Only"
+    FlavorPack is currently in alpha. Installation from PyPI is **not yet available**.
+
 ```bash
-pip install flavor
+# Clone the repository
+git clone https://github.com/provide-io/flavorpack.git
+cd flavorpack
+
+# Install UV package manager
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Set up environment and install dependencies
+uv sync
+
+# Build native helpers (required)
+make build-helpers
+
+# Verify installation
+flavor --version
 ```
+
+See the [Installation Guide](../getting-started/installation.md) for complete instructions.
 
 ### Do I need to install anything else?
 
-No, FlavorPack includes all necessary components. The launcher binaries are downloaded automatically on first use.
+Yes, during alpha you need to build the launcher binaries locally. This requires:
+- Go 1.23+
+- Rust 1.85+
+- Make
+
+Run `make build-helpers` to build the Go and Rust launcher/builder binaries.
 
 ### Can I use FlavorPack in a virtual environment?
 
-Yes, FlavorPack works perfectly in virtual environments:
+Yes, FlavorPack works perfectly in virtual environments. During alpha, use source installation:
 
 ```bash
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install flavor
+cd flavorpack
+uv sync
 ```
 
 ### How do I update FlavorPack?
 
+During alpha, update from source:
+
 ```bash
-pip install --upgrade flavor
+cd flavorpack
+git pull origin develop
+uv sync
+make build-helpers  # Rebuild if helpers changed
 ```
 
 ## Building Packages
@@ -76,41 +109,18 @@ entry_point = "myapp:main"
 
 ### Can I include non-Python files?
 
-Yes, use slots to include any type of file:
-
-```toml
-[[tool.flavor.slots]]
-id = "data"
-source = "data/"
-purpose = "data-files"
-
-[[tool.flavor.slots]]
-id = "config"
-source = "config.yaml"
-purpose = "configuration"
-```
+!!! info "📋 Planned Feature"
+    Manual slot configuration is planned for a future release. Currently, FlavorPack automatically packages your Python application and its dependencies.
 
 ### How do I exclude files from the package?
 
-```toml
-[tool.flavor.build]
-exclude = [
-    "**/__pycache__",
-    "**/test_*.py",
-    "docs/",
-    ".git/"
-]
-```
+!!! info "📋 Planned Feature"
+    Manifest-based exclude patterns are planned for a future release. See the [Roadmap](../guide/roadmap.md) for details.
 
 ### Can I build packages for other platforms?
 
-Yes, FlavorPack supports cross-platform builds:
-
-```bash
-# Build for specific platform
-flavor pack pyproject.toml --platform linux_amd64
-flavor pack pyproject.toml --platform darwin_arm64
-```
+!!! info "📋 Planned Feature"
+    Platform-specific builds via CLI are planned. Currently, packages are built for the host platform. See the [Roadmap](../guide/roadmap.md) for details.
 
 ### How do I reduce package size?
 
@@ -128,7 +138,7 @@ flavor pack pyproject.toml --platform darwin_arm64
 
 3. Strip binaries:
    ```bash
-   flavor pack pyproject.toml --strip
+   flavor pack --manifest pyproject.toml --strip
    ```
 
 ## Running Packages
@@ -158,11 +168,15 @@ Yes, arguments are passed through to your application:
 ### Where are packages extracted?
 
 Packages are extracted to a cache directory:
-- **Linux**: `/tmp/pspf/workenv/`
-- **macOS**: `/REDACTED_TMP`
-- **Windows**: `%TEMP%\pspf\workenv\`
+- **Linux/macOS**: `~/.cache/flavor/workenv/`
+- **Windows**: `%LOCALAPPDATA%\flavor\workenv\`
 
-You can override with `FLAVOR_CACHE` environment variable.
+You can override with `FLAVOR_CACHE` environment variable:
+
+```bash
+export FLAVOR_CACHE=/custom/path/to/cache
+./myapp.psp
+```
 
 ### How do I clean up extracted files?
 
@@ -189,7 +203,7 @@ FlavorPack uses Ed25519 digital signatures:
 flavor keygen --out-dir keys/
 
 # Sign package
-flavor pack pyproject.toml --private-key keys/flavor-private.key
+flavor pack --manifest pyproject.toml --private-key keys/flavor-private.key
 
 # Verify signature
 flavor verify myapp.psp
@@ -304,7 +318,7 @@ myapp-worker = "myapp.worker:main"
 Yes, FlavorPack provides a Python API:
 
 ```python
-from flavor.api import build_package_from_manifest
+from flavor import build_package_from_manifest
 
 packages = build_package_from_manifest(
     manifest_path="pyproject.toml",
@@ -312,21 +326,27 @@ packages = build_package_from_manifest(
 )
 ```
 
+See the [API Reference](../api/index.md) for complete documentation.
+
 ### Can I customize the launcher?
 
 You can build custom launchers from the Go or Rust source in the `helpers/` directory.
 
 ### Can I embed FlavorPack in CI/CD?
 
-Yes, FlavorPack works well in CI/CD:
+Yes, FlavorPack works well in CI/CD. During alpha, use source installation:
 
 {% raw %}
 ```yaml
 # GitHub Actions example
 - name: Build package
   run: |
-    pip install flavor
-    flavor pack pyproject.toml --key-seed "${{ secrets.FLAVOR_SEED }}"
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+    git clone https://github.com/provide-io/flavorpack.git
+    cd flavorpack
+    uv sync
+    make build-helpers
+    flavor pack --manifest ../myproject/pyproject.toml --key-seed "${{ secrets.FLAVOR_SEED }}"
 ```
 {% endraw %}
 
@@ -347,13 +367,10 @@ Subsequent runs: <100ms (cached)
 
 ### Can I improve build performance?
 
-```bash
-# Use parallel builds
-flavor pack pyproject.toml --parallel
+!!! info "📋 Planned Features"
+    Build optimization features like `--parallel` and build caching are planned for future releases.
 
-# Use build cache
-export FLAVOR_BUILD_CACHE=~/.cache/flavor/build
-```
+    Currently, build performance is primarily determined by dependency resolution and UV's package installation speed.
 
 ### How much disk space do packages use?
 

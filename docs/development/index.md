@@ -60,7 +60,7 @@ Develop and build native helpers.
 
 Write and run tests.
 
-**[Testing Guide →](testing/)**
+**[Testing Guide →](testing/index.md)**
 
 - Unit tests
 - Integration tests
@@ -175,7 +175,7 @@ cargo test
 1. **First contribution?** → Start with [Contributing Guide](contributing.md)
 2. **Want to understand the code?** → Read [Architecture](architecture.md)
 3. **Building helpers?** → See [Building Helpers](helpers.md)
-4. **Writing tests?** → Check [Testing Guide](testing/)
+4. **Writing tests?** → Check [Testing Guide](testing/index.md)
 
 ---
 

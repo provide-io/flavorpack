@@ -1,4 +1,4 @@
-# 🌶️📦 Flavor Pack: Your Yummy Progressive Secure Polyglot Packaging Toolchain
+# FlavorPack: Progressive Secure Polyglot Packaging Toolchain
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![Go 1.23+](https://img.shields.io/badge/go-1.23+-00ADD8.svg)](https://golang.org/dl/)
@@ -27,7 +27,7 @@
 
 - Python 3.11 or higher
 - UV package manager (`curl -LsSf https://astral.sh/uv/install.sh | sh`)
-- Go 1.23+ and Rust 1.85+ (for building helpers)
+- Go 1.23+ and Rust 1.85+ (for building helpers - see `src/flavor-go/go.mod` and `src/flavor-rs/Cargo.toml`)
 
 ### Installation (Source Only)
 
@@ -77,7 +77,7 @@ See the [PSPF Format Specification](docs/reference/spec/fep-0001-core-format-and
 
 ## 🏗️ Architecture
 
-Flavor Pack consists of three main components:
+FlavorPack consists of three main components:
 
 1. **Python Orchestrator** (`src/flavor/`)
    - Manages the build process and dependency resolution
@@ -121,7 +121,7 @@ make validate-pspf
 
 ## 🙏 Acknowledgments
 
-Flavor Pack is built on the shoulders of giants:
+FlavorPack is built on the shoulders of giants:
 - [UV](https://github.com/astral-sh/uv) for fast Python package management
 - The Python, Go, and Rust communities for excellent tooling
 

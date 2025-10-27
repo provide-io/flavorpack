@@ -20,7 +20,7 @@ This guide lists all error messages you might encounter while using FlavorPack, 
 ls pyproject.toml
 
 # Use correct path
-flavor pack ./path/to/pyproject.toml
+flavor pack --manifest ./path/to/pyproject.toml
 ```
 
 #### "Invalid manifest format"
@@ -77,7 +77,7 @@ flavor pack --launcher-bin /path/to/launcher
 **Solution**:
 ```bash
 # Check Python version
-python --version  # Should be 3.9+
+python --version  # Should be 3.11+
 
 # Install venv module
 apt-get install python3-venv  # Debian/Ubuntu
@@ -100,8 +100,10 @@ dependencies = [
     "flask>=2.0",
 ]
 
-# Or skip dependency resolution
-flavor pack pyproject.toml --no-deps
+# 📋 PLANNED: --no-deps option not yet implemented
+# flavor pack --manifest pyproject.toml --no-deps
+
+# Current workaround: Fix dependency conflicts in pyproject.toml
 ```
 
 #### "Build directory not empty: {path}"
@@ -115,7 +117,7 @@ flavor clean
 rm -rf build/ dist/
 
 # Or use different build directory
-flavor pack pyproject.toml --build-dir /tmp/build
+flavor pack --manifest pyproject.toml --build-dir /tmp/build
 ```
 
 #### "Insufficient disk space"
@@ -174,7 +176,7 @@ lifecycle = "persistent"  # Valid lifecycle
 **Solution**:
 ```bash
 # Use valid platform
-flavor pack pyproject.toml --platform linux_amd64
+flavor pack --manifest pyproject.toml --platform linux_amd64
 # Valid: linux_amd64, linux_arm64, darwin_amd64, darwin_arm64, windows_amd64
 ```
 
@@ -225,17 +227,21 @@ chmod -R r+X data/
 
 **Solution**:
 ```bash
-# Split large slots
-[[tool.flavor.slots]]
-id = "data-part1"
-source = "data/part1/"
+# 📋 PLANNED: Manual slot configuration not yet implemented
+# Slots are currently created automatically
 
-[[tool.flavor.slots]]
-id = "data-part2"
-source = "data/part2/"
+# [[tool.flavor.slots]]
+# id = "data-part1"
+# source = "data/part1/"
 
-# Or use lazy loading
-lifecycle = "lazy"
+# [[tool.flavor.slots]]
+# id = "data-part2"
+# source = "data/part2/"
+
+# [[tool.flavor.slots]]
+# lifecycle = "lazy"  # Not yet implemented
+
+# Current: No size limits enforced
 ```
 
 #### "Package size exceeds limit: {size}"
@@ -253,11 +259,11 @@ exclude = [
     ".git/"
 ]
 
-# Use compression
-flavor pack pyproject.toml --compress
+# 📋 PLANNED: Compression and strip options not yet implemented
+# flavor pack --manifest pyproject.toml --compress
+# flavor pack --manifest pyproject.toml --strip
 
-# Strip binaries
-flavor pack pyproject.toml --strip
+# Current: Optimize by excluding files in pyproject.toml
 ```
 
 #### "Failed to sign package"
@@ -274,7 +280,7 @@ openssl pkey -in private.pem -check
 flavor keygen --output new-key.pem
 
 # Use deterministic seed
-flavor pack pyproject.toml --key-seed "secret"
+flavor pack --manifest pyproject.toml --key-seed "secret"
 ```
 
 ## Crypto Errors
@@ -308,10 +314,10 @@ flavor keygen --output private.pem
 ls -la private.pem
 
 # Use absolute path
-flavor pack pyproject.toml --private-key $(pwd)/private.pem
+flavor pack --manifest pyproject.toml --private-key $(pwd)/private.pem
 
 # Or use seed
-flavor pack pyproject.toml --key-seed "secret"
+flavor pack --manifest pyproject.toml --key-seed "secret"
 ```
 
 #### "Key generation failed"
@@ -341,7 +347,7 @@ openssl pkey -in private.pem -text | grep ED25519
 
 # Try with new key
 flavor keygen --output new.pem
-flavor pack pyproject.toml --private-key new.pem
+flavor pack --manifest pyproject.toml --private-key new.pem
 ```
 
 ## Verification Errors
@@ -361,7 +367,7 @@ file package.psp
 xxd -l 16 package.psp | grep "PSPF"
 
 # Rebuild package
-flavor pack pyproject.toml
+flavor pack --manifest pyproject.toml
 ```
 
 #### "Signature verification failed"
@@ -387,7 +393,7 @@ FLAVOR_VALIDATION=none ./package.psp
 **Solution**:
 ```bash
 # Rebuild package
-flavor pack pyproject.toml
+flavor pack --manifest pyproject.toml
 
 # Verify download if transferred
 curl -O https://example.com/package.psp
@@ -407,7 +413,7 @@ wget https://example.com/package.psp
 echo "expected_checksum package.psp" | sha256sum -c
 
 # Rebuild from source
-flavor pack pyproject.toml
+flavor pack --manifest pyproject.toml
 ```
 
 ## Runtime Errors
@@ -437,14 +443,17 @@ FLAVOR_CACHE=/tmp/cache ./package.psp
 
 **Solution**:
 ```bash
-# Rebuild with explicit Python version
-flavor pack pyproject.toml --python-version 3.11
+# 📋 PLANNED: Python version selection not yet implemented
+# flavor pack --manifest pyproject.toml --python-version 3.11
+
+# Current: Package uses build environment's Python version
+# Rebuild the package from a Python 3.11+ environment
 
 # Verify package contents
 flavor inspect package.psp
 
-# Extract and check
-flavor extract package.psp --slot python-runtime
+# 📋 PLANNED: Slot extraction not yet implemented
+# flavor extract package.psp --slot python-runtime
 ```
 
 ### "Module not found: {module}"
@@ -460,7 +469,7 @@ dependencies = [
 ]
 
 # Rebuild package
-flavor pack pyproject.toml
+flavor pack --manifest pyproject.toml
 ```
 
 ### "Permission denied"
@@ -616,12 +625,12 @@ If you encounter an error not listed here:
 
 1. **Enable debug logging**:
    ```bash
-   FOUNDATION_LOG_LEVEL=debug flavor pack pyproject.toml
+   FOUNDATION_LOG_LEVEL=debug flavor pack --manifest pyproject.toml
    ```
 
 2. **Check the full error**:
    ```bash
-   flavor pack pyproject.toml 2>&1 | tee error.log
+   flavor pack --manifest pyproject.toml 2>&1 | tee error.log
    ```
 
 3. **Search existing issues**:

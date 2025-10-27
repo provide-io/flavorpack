@@ -34,13 +34,18 @@ When a PSPF package executes, it creates a "work environment" - a temporary dire
 
 ### Platform-Specific Locations
 
-FlavorPack automatically selects appropriate cache directories:
+FlavorPack follows the XDG Base Directory specification for cache directories:
 
-| Platform | Default Location | Environment Variable |
-|----------|-----------------|---------------------|
-| macOS | `/REDACTED_TMP` | `FLAVOR_CACHE` |
-| Linux | `/tmp/pspf/workenv` | `FLAVOR_CACHE` |
-| Windows | `%TEMP%\pspf\workenv` | `FLAVOR_CACHE` |
+| Platform | Default Location | Environment Variable Override |
+|----------|-----------------|------------------------------|
+| macOS | `~/.cache/flavor/workenv` | `FLAVOR_CACHE` or `XDG_CACHE_HOME` |
+| Linux | `~/.cache/flavor/workenv` | `FLAVOR_CACHE` or `XDG_CACHE_HOME` |
+| Windows | `%USERPROFILE%\.cache\flavor\workenv` | `FLAVOR_CACHE` |
+
+**Priority order:**
+1. `FLAVOR_CACHE` environment variable (if set)
+2. `XDG_CACHE_HOME/flavor/workenv` (if `XDG_CACHE_HOME` is set)
+3. `~/.cache/flavor/workenv` (default)
 
 ## Lifecycle Management
 
@@ -384,7 +389,7 @@ with ThreadPoolExecutor(max_workers=4) as executor:
 
 ## Related Documentation
 
-- [Slots](../../spec/slots.md) - Slot system specification
+- [Slots](../../reference/spec/pspf-2025.md) - Slot system specification
 - [Package Structure](package-structure.md) - Package organization
-- [CLI Reference](../../api/cli.md) - Command-line interface
+- [CLI Reference](../../guide/usage/cli.md) - Command-line interface
 - [Troubleshooting](../../troubleshooting/index.md) - Common issues

@@ -369,7 +369,7 @@ Write-Host "`n=== Test Execution ===" -ForegroundColor Cyan
 ## Getting Help
 
 - Check [Common Issues](../common.md) for cross-platform problems
-- Review [Security Troubleshooting](../security.md) for permission issues
+- Review [Security Troubleshooting](../../guide/concepts/security.md) for permission issues
 - Visit [Community Support](../../community/support.md) for additional help
 
 ## Related Documentation

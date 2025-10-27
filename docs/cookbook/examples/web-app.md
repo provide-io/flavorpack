@@ -107,14 +107,14 @@ id = 2
 path = "./templates"
 extract_to = "templates"
 lifecycle = "cached"
-operations = "tar+gzip"
+operations = "tar.gz"
 
 [[tool.flavor.slots]]
 id = 3
 path = "./static"
 extract_to = "static"
 lifecycle = "cached"
-operations = "tar+gzip"
+operations = "tar.gz"
 ```
 
 ## Production Deployment

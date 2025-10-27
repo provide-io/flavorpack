@@ -257,10 +257,18 @@ flavor pack
 # Check what's included
 flavor inspect githelper.psp
 
-# Exclude unnecessary files
-echo "__pycache__" >> .flavorignore
-echo "*.pyc" >> .flavorignore
-echo "tests/" >> .flavorignore
+# Exclude unnecessary files in pyproject.toml
+```
+
+```toml
+[tool.flavor.build]
+exclude = [
+    "**/__pycache__",
+    "**/*.pyc",
+    "tests/",
+    "docs/",
+    ".git/",
+]
 ```
 
 ### Command Not Found
@@ -274,16 +282,16 @@ command = "{workenv}/bin/gh"  # Must match [project.scripts]
 ### Missing Dependencies
 
 ```bash
-# List all dependencies
-flavor inspect githelper.psp | grep dependencies
+# Inspect package to see what's included
+flavor inspect githelper.psp
 
 # Rebuild if dependencies changed
-flavor pack --force
+flavor pack --manifest pyproject.toml
 ```
 
 ## Next Steps
 
 - **[Web Applications](web-app.md)** - Package Flask/FastAPI apps
-- **[Data Pipelines](data-pipeline.md)** - Package data processing tools
+- **[Examples Index](index.md)** - More cookbook examples
 - **[Docker Integration](../recipes/docker.md)** - Use in containers
 - **[CI/CD](../recipes/ci-cd.md)** - Automate packaging in CI pipelines

@@ -23,7 +23,7 @@ flavor keygen --out-dir keys
 
 ```bash
 # Sign during build
-flavor pack pyproject.toml --private-key keys/flavor-private.key --public-key keys/flavor-public.key
+flavor pack --manifest pyproject.toml --private-key keys/flavor-private.key --public-key keys/flavor-public.key
 
 # Package is now signed and can be verified
 ```
@@ -33,10 +33,10 @@ flavor pack pyproject.toml --private-key keys/flavor-private.key --public-key ke
 ```bash
 # Verify signature (uses embedded public key)
 flavor verify myapp-1.0.0.psp
-
-# Verify with specific public key
-flavor verify myapp-1.0.0.psp --public-key keys/flavor-public.key
 ```
+
+!!! info "Public Key Verification"
+    The `verify` command automatically uses the public key embedded in the package. External key verification is planned for a future release.
 
 ## Key Management
 
@@ -60,7 +60,7 @@ Use existing Ed25519 key files:
 
 ```bash
 # Keys must be in PEM format
-flavor pack pyproject.toml \
+flavor pack --manifest pyproject.toml \
   --private-key /path/to/flavor-private.key \
   --public-key /path/to/flavor-public.key
 ```
@@ -105,7 +105,7 @@ chmod 600 ~/.flavor/keys/flavor-private.key
   env:
     FLAVOR_KEY_SEED: ${{ secrets.SIGNING_SEED }}
   run: |
-    flavor pack pyproject.toml --key-seed "$FLAVOR_KEY_SEED"
+    flavor pack --manifest pyproject.toml --key-seed "$FLAVOR_KEY_SEED"
 ```
 {% endraw %}
 
@@ -113,7 +113,7 @@ chmod 600 ~/.flavor/keys/flavor-private.key
 # GitLab CI with protected variables
 sign:
   script:
-    - flavor pack pyproject.toml --key-seed "$CI_SIGNING_SEED"
+    - flavor pack --manifest pyproject.toml --key-seed "$CI_SIGNING_SEED"
   only:
     - tags
 ```
@@ -152,12 +152,12 @@ All signing happens during package build with `flavor pack`:
 
 ```bash
 # Basic signing with key files
-flavor pack pyproject.toml \
+flavor pack --manifest pyproject.toml \
   --private-key keys/flavor-private.key \
   --public-key keys/flavor-public.key
 
 # With deterministic seed (for reproducible builds)
-flavor pack pyproject.toml --key-seed "secret-seed"
+flavor pack --manifest pyproject.toml --key-seed "secret-seed"
 
 # Signing is automatic - no separate sign command needed
 ```
@@ -229,15 +229,20 @@ flavor verify package.psp
 
 #### Verification with External Key
 
-> **Planned Feature**: External key verification is planned for a future release. Currently, verification uses the public key embedded in the package.
+!!! info "📋 Planned Feature"
+    External key verification is planned for a future release. Currently, verification uses the public key embedded in the package.
 
+**Current verification:**
 ```bash
-# Current: Verify with embedded public key
+# Verify with embedded public key
 flavor verify package.psp
+```
 
-# Future planned:
-# flavor verify package.psp --public-key trusted.pub
-# flavor verify package.psp --trusted-keys keys/trusted/
+**Planned verification (future release):**
+```bash
+# Verify against external trusted key (not yet implemented)
+flavor verify package.psp --public-key trusted.pub
+flavor verify package.psp --trusted-keys keys/trusted/
 ```
 
 ### Programmatic Verification
@@ -279,15 +284,19 @@ flavor verify package.psp
 
 ### 2. Pre-Shared Keys
 
+!!! info "📋 Planned Feature"
+    Pre-shared key verification with external key management is planned for a future release.
+
 Distribute public keys separately:
 
 ```toml
+# Planned configuration format
 [tool.flavor.security]
 trust_model = "pre-shared"
 require_known_key = true
 ```
 
-**Distribution Methods**:
+**Planned Distribution Methods**:
 ```bash
 # Via secure channel
 scp public.pem user@server:/etc/flavor/trusted-keys/
@@ -299,10 +308,16 @@ ansible-playbook deploy-keys.yml
 apt-get install myapp-signing-keys
 ```
 
-**Verification**:
+**Current Verification**:
 ```bash
-# Must match known key
-flavor verify package.psp --trusted-keys /etc/flavor/trusted-keys/
+# Currently: Verify with embedded public key
+flavor verify package.psp
+```
+
+**Planned Verification**:
+```bash
+# Future: Verify against trusted keys
+# flavor verify package.psp --trusted-keys /etc/flavor/trusted-keys/
 ```
 
 ### 3. Web of Trust (Future)
@@ -313,7 +328,7 @@ flavor verify package.psp --trusted-keys /etc/flavor/trusted-keys/
     **Planned workflow:**
     ```bash
     # Sign with multiple keys (not yet implemented)
-    flavor pack pyproject.toml --private-key key1.pem
+    flavor pack --manifest pyproject.toml --private-key key1.pem
     flavor cosign package.psp --private-key key2.pem
     flavor cosign package.psp --private-key key3.pem
 
@@ -485,13 +500,13 @@ chmod 600 private.pem
 #### "Invalid signature"
 
 ```bash
-# Verify with correct key
-flavor verify package.psp --public-key correct-key.pub
+# Verify package
+flavor verify package.psp
 
-# Check package integrity
+# Check package integrity with checksum
 sha256sum package.psp
 
-# If corrupted, rebuild the package
+# If corrupted, rebuild the package with correct keys
 flavor pack --manifest pyproject.toml \
   --private-key keys/flavor-private.key \
   --public-key keys/flavor-public.key
@@ -564,7 +579,7 @@ The following features are planned for future releases:
     **Planned workflow:**
     ```bash
     # YubiKey signing (not yet implemented)
-    flavor pack pyproject.toml --pkcs11-module /usr/lib/opensc-pkcs11.so
+    flavor pack --manifest pyproject.toml --pkcs11-module /usr/lib/opensc-pkcs11.so
     ```
 
 ### Notarization (Platform-Specific)
@@ -574,7 +589,7 @@ The following features are planned for future releases:
 
     ```bash
     # Build package
-    flavor pack pyproject.toml --output myapp.psp
+    flavor pack --manifest pyproject.toml --output myapp.psp
 
     # Sign with codesign (macOS only)
     codesign --sign "Developer ID" myapp.psp
@@ -587,7 +602,7 @@ The following features are planned for future releases:
 
 ## Related Documentation
 
-- [Cryptographic Specification](../../spec/crypto.md) - Technical details
-- [Security Model](../../guide/concepts/security.md) - Security architecture
-- [Package Verification](../../api/index.md#verify_package) - API reference
+- [Cryptographic Specification](../../reference/spec/pspf-2025.md) - Technical details
+- [Security Model](../concepts/security.md) - Security architecture
+- [Package Verification](../../api/index.md) - API reference
 - [Troubleshooting](../../troubleshooting/index.md#signature-and-security) - Common issues

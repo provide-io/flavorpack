@@ -2,6 +2,11 @@
 
 Comprehensive guide to diagnosing and resolving common FlavorPack issues.
 
+!!! warning "Alpha Software - Some Features Not Yet Implemented"
+    FlavorPack is in **alpha** status. This troubleshooting guide includes solutions for both implemented and planned features. Features marked with 📋 **PLANNED** are not yet available.
+
+    If you encounter issues with features that don't work, check the [Roadmap](../guide/roadmap.md) to see implementation status.
+
 ## Overview
 
 This guide helps you troubleshoot issues with building, running, and distributing FlavorPack packages. Each section provides symptoms, causes, and step-by-step solutions.
@@ -34,7 +39,7 @@ flavor workenv info
 export FOUNDATION_LOG_LEVEL=debug
 
 # Run with debug output
-FOUNDATION_LOG_LEVEL=debug flavor pack pyproject.toml
+FOUNDATION_LOG_LEVEL=debug flavor pack --manifest pyproject.toml
 
 # Debug package execution
 FLAVOR_LOG_LEVEL=debug ./myapp.psp
@@ -146,14 +151,14 @@ strip = true
 
 **Solutions**:
 ```bash
-# Increase timeout
-flavor pack pyproject.toml --timeout 600
+# Interrupt and retry (Ctrl+C)
+# Enable debug logging to see where it hangs
+FOUNDATION_LOG_LEVEL=debug flavor pack --manifest pyproject.toml
 
-# Skip dependency resolution
-flavor pack pyproject.toml --no-deps
-
-# Clear build cache
+# Clear build cache if stuck
 rm -rf ~/.cache/flavor/build
+
+# Note: Timeout option is planned for a future release
 ```
 
 #### Missing Launcher
@@ -162,16 +167,30 @@ rm -rf ~/.cache/flavor/build
 
 **Solution**:
 ```bash
-# Download helpers
-flavor helpers download
-
 # Build helpers locally
-cd helpers
-./build.sh
+make build-helpers
 
-# Specify launcher explicitly
-flavor pack pyproject.toml --launcher-bin /path/to/launcher
+# Or use the flavor helpers command
+flavor helpers build
+
+# Verify helpers exist
+flavor helpers list
+
+# Check helper information
+flavor helpers info flavor-rs-launcher-darwin_arm64
+
+# Test helpers
+flavor helpers test
 ```
+
+!!! info "Available Helper Commands"
+    FlavorPack provides these helper management commands:
+
+    - `flavor helpers list` - List available helper binaries
+    - `flavor helpers build` - Build helpers from source
+    - `flavor helpers clean` - Remove built helpers
+    - `flavor helpers info <name>` - Show helper details
+    - `flavor helpers test` - Test helper functionality
 
 ### Runtime Errors
 
@@ -358,14 +377,14 @@ sudo semodule -i myapp.pp
 
 **Solutions**:
 ```bash
-# Verify with correct key
-flavor verify myapp.psp --public-key public.pem
+# Verify package integrity
+flavor verify myapp.psp
 
-# Check package integrity
+# Check package integrity with checksum
 sha256sum myapp.psp
 
-# Rebuild package
-flavor pack pyproject.toml --private-key private.pem
+# Rebuild package with signing
+flavor pack --manifest pyproject.toml --private-key keys/flavor-private.key --public-key keys/flavor-public.key
 ```
 
 #### Key Generation Issues
@@ -375,13 +394,13 @@ flavor pack pyproject.toml --private-key private.pem
 **Solutions**:
 ```bash
 # Generate new key pair
-flavor keygen --output private.pem
+flavor keygen --out-dir keys/
 
 # Use deterministic key (for CI/CD)
-flavor pack pyproject.toml --key-seed "secret-seed"
+flavor pack --manifest pyproject.toml --key-seed "secret-seed"
 
 # Check key permissions
-chmod 600 private.pem
+chmod 600 keys/flavor-private.key
 ```
 
 ### Cache and Work Environment
@@ -427,10 +446,10 @@ export FLAVOR_NO_CACHE=1
 
 ```bash
 # Maximum verbosity
-FOUNDATION_LOG_LEVEL=trace flavor pack pyproject.toml
+FOUNDATION_LOG_LEVEL=trace flavor pack --manifest pyproject.toml
 
 # Log to file
-FLAVOR_LOG_FILE=build.log flavor pack pyproject.toml
+FLAVOR_LOG_FILE=build.log flavor pack --manifest pyproject.toml
 
 # Debug execution
 FLAVOR_LOG_LEVEL=debug ./myapp.psp 2>&1 | tee run.log
@@ -442,85 +461,117 @@ FLAVOR_LOG_LEVEL=debug ./myapp.psp 2>&1 | tee run.log
 # View package metadata
 flavor inspect myapp.psp
 
-# Extract specific slot
-flavor extract myapp.psp --slot app-code
+# Extract specific slot (slot index 1 in this example)
+flavor extract myapp.psp 1 app-code.tar.gz
 
-# Extract all slots
-flavor extract-all myapp.psp --output extracted/
+# Extract all slots to a directory
+flavor extract-all myapp.psp extracted/
 
 # Verify package integrity
-flavor verify myapp.psp --deep
+flavor verify myapp.psp
 ```
 
 ### Environment Variables
 
+#### ✅ Currently Available
+
+These environment variables are implemented and available for use:
+
 ```bash
-# Debug variables
-export FLAVOR_LOG_LEVEL=debug
-export FLAVOR_KEEP_TEMP=1
-export FLAVOR_NO_CLEANUP=1
+# Debug and logging
+export FLAVOR_LOG_LEVEL=debug           # Set launcher log level (trace, debug, info, warn, error)
+export FOUNDATION_LOG_LEVEL=debug       # Set Python component log level
 
-# Performance tuning
-export FLAVOR_PARALLEL_EXTRACTION=1
-export FLAVOR_CACHE_SIZE=10GB
+# Cache configuration
+export FLAVOR_CACHE=/path/to/cache      # Override default cache location
+export XDG_CACHE_HOME=/path/to/cache    # Alternative cache location
 
-# Security
-export FLAVOR_VALIDATION=none  # Skip verification (DANGER!)
-export FLAVOR_VERIFY_SIGNATURES=1
+# Security (testing only)
+export FLAVOR_VALIDATION=none           # Skip verification (DANGER! Never use in production)
 ```
+
+#### 📋 Planned Features
+
+These environment variables are planned for future releases:
+
+```bash
+# Not yet implemented - coming in future versions
+export FLAVOR_KEEP_TEMP=1               # Keep temporary files for debugging
+export FLAVOR_NO_CLEANUP=1              # Disable automatic cleanup
+export FLAVOR_PARALLEL_EXTRACTION=1     # Enable parallel slot extraction
+export FLAVOR_CACHE_SIZE=10GB           # Set cache size limit
+export FLAVOR_VERIFY_SIGNATURES=1       # Enforce signature verification
+```
+
+See the [Environment Variables Guide](../guide/usage/environment.md) for a complete reference.
 
 ## Performance Optimization
 
-### Slow Build Times
+### ✅ Currently Available Optimizations
 
-**Solutions**:
+#### Reduce Build Size
+
+```toml
+# Exclude unnecessary files from package
+[tool.flavor.build]
+exclude = ["tests/", "docs/", ".git/", "**/__pycache__"]
+```
+
+#### Manage Cache
+
 ```bash
-# Use parallel builds
-flavor pack pyproject.toml --parallel
+# Clean old packages to free space
+flavor workenv clean --older-than 7
 
-# Skip unnecessary steps
-flavor pack pyproject.toml --no-tests --no-docs
-
-# Use build cache
-export FLAVOR_BUILD_CACHE=~/.cache/flavor/build
+# Use custom cache location if default is slow
+export FLAVOR_CACHE=/fast/disk/cache
 ```
 
-### Slow Extraction
+### 📋 Planned Performance Features
 
-**Solutions**:
+The following performance optimizations are planned for future releases:
+
+#### Build Optimizations (Planned)
+
+```bash
+# Not yet implemented - coming in future versions
+flavor pack --manifest pyproject.toml --parallel        # Parallel packaging
+flavor pack --manifest pyproject.toml --no-tests        # Skip test files
+flavor pack --manifest pyproject.toml --no-docs         # Skip documentation
+```
+
+#### Extraction Optimizations (Planned)
+
 ```toml
-# Use appropriate operations
-[[tool.flavor.slots]]
-operations = "tar"  # Faster than tar.gz for large files
+# Not yet implemented - will be available in future release
 
-# Enable parallel extraction
+[[tool.flavor.slots]]
+operations = "tar"      # Manual operation control
+lifecycle = "lazy"      # Lazy loading for optional content
+
 [tool.flavor.features]
-parallel_extraction = true
-
-# Use lazy loading
-[[tool.flavor.slots]]
-lifecycle = "lazy"
+parallel_extraction = true     # Concurrent slot extraction
+streaming_extraction = true    # Stream instead of full extraction
 ```
 
-### Memory Usage
+#### Memory Management (Planned)
 
-**Solutions**:
 ```toml
-# Limit memory usage
+# Not yet implemented - will be available in future release
+
 [tool.flavor.execution]
-max_memory = "512MB"
-
-# Use streaming for large files
-[tool.flavor.features]
-streaming_extraction = true
+max_memory = "512MB"    # Set memory limits
+min_memory = "128MB"    # Minimum required memory
 ```
 
 ## Error Messages Reference
 
+### Common Error Messages
+
 | Error | Meaning | Solution |
 |-------|---------|----------|
 | `PSPF format not recognized` | Invalid package file | Rebuild package |
-| `Launcher not found` | Missing launcher binary | Run `flavor helpers download` |
+| `Launcher not found` | Missing launcher binary | Run `make build-helpers` |
 | `Slot checksum mismatch` | Corrupted slot data | Rebuild package |
 | `Unsupported platform` | Platform mismatch | Build for correct platform |
 | `Python version mismatch` | Wrong Python version | Use specified Python version |
@@ -533,7 +584,7 @@ streaming_extraction = true
 ### Self-Service Resources
 
 1. **Documentation**: Read the [User Guide](../guide/index.md)
-2. **Examples**: Check [example projects](https://github.com/provide-io/flavorpack-examples)
+2. **Examples**: Check the [Examples Section](../getting-started/examples.md)
 3. **FAQ**: See [Frequently Asked Questions](faq.md)
 4. **API Reference**: Consult [API Documentation](../api/index.md)
 
@@ -558,7 +609,7 @@ uname -a
 flavor inspect problematic.psp
 
 # Error logs
-FOUNDATION_LOG_LEVEL=debug flavor pack pyproject.toml 2>&1 | tee error.log
+FOUNDATION_LOG_LEVEL=debug flavor pack --manifest pyproject.toml 2>&1 | tee error.log
 
 # Environment
 env | grep FLAVOR
@@ -569,5 +620,6 @@ env | grep FLAVOR
 - [Common Errors](errors.md) - Detailed error explanations
 - [Platform-Specific Issues](platforms/index.md) - OS-specific guides
 - [FAQ](faq.md) - Frequently asked questions
-- [Security Issues](security.md) - Security-related problems
+- [Glossary](../reference/glossary.md) - Technical term definitions
+- [Security Model](../guide/concepts/security.md) - Security features and best practices
 - [Performance Tuning](../guide/advanced/performance.md) - Optimization guide
