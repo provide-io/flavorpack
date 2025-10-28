@@ -6,12 +6,6 @@
 
 Provides extraction, streaming, and verification operations for PSPF slots."""
 
-"""
-PSPF Slot Extraction - Handles slot data extraction and streaming.
-
-Provides extraction, streaming, and verification operations for PSPF slots.
-"""
-
 from __future__ import annotations
 
 from collections.abc import Iterator

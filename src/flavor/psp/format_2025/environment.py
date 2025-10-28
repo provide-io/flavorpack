@@ -6,12 +6,6 @@
 
 Handles platform-specific environment variables and layered environment processing."""
 
-"""
-Environment variable management for PSPF/2025 packages.
-
-Handles platform-specific environment variables and layered environment processing.
-"""
-
 from __future__ import annotations
 
 from collections.abc import Callable
