@@ -207,3 +207,5 @@
 ./tests/unit/test_operations_comprehensive.py
 ./tests/unit/test_operation_chains.py
 ./tests/json_comparison.py
+./chunker/conform.py
+./chunker/orchestrator.py

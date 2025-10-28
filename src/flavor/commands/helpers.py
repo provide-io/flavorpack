@@ -2,6 +2,7 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
 """Helper management commands for the flavor CLI."""
 
 from __future__ import annotations
@@ -254,7 +255,5 @@ def helper_test(lang: str) -> None:
         echo("\n✅ All tests passed")
     else:
         echo("\n⚠️  No tests were run")
-
-
 
 # 🌶️📦🔚

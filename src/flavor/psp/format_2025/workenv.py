@@ -2,6 +2,9 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
+from __future__ import annotations
+
 """PSPF Work Environment Management
 
 Handles work environment setup, caching, lifecycle management, and setup commands."""
@@ -11,8 +14,6 @@ PSPF Work Environment Management
 
 Handles work environment setup, caching, lifecycle management, and setup commands.
 """
-
-from __future__ import annotations
 
 from pathlib import Path
 import shlex
@@ -325,7 +326,6 @@ class WorkEnvManager:
                 logger.debug(f"🔄 Substituted {placeholder} -> {slot_path}")
 
         return command
-
 
 
 # 🌶️📦🔚

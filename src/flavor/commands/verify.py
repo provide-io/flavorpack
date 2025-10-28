@@ -2,6 +2,7 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
 """Verify command for the flavor CLI."""
 
 from __future__ import annotations
@@ -134,7 +135,5 @@ def _display_signature_status(result: dict[str, Any]) -> None:
         log.error("Signature verification failed")
         echo_error("\n❌ Signature verification failed")
         raise click.Abort()
-
-
 
 # 🌶️📦🔚

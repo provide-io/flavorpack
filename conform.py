@@ -1,92 +1,142 @@
+#!/usr/bin/env python3
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+"""
+A script to enforce header and footer conformance on Python source files.
+"""
 
 import ast
+from pathlib import Path
 import sys
 
-# 🌶️📦🔚
+# --- Protocol Specification ---
 
-def conform_file(filepath):
+HEADER_SHEBANG = "#!/usr/bin/env python3"
+HEADER_LIBRARY = "# "
+SPDX_BLOCK = [
+    "# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.",
+    "# SPDX-License-Identifier: Apache-2.0",
+    "#",
+]
+DOCSTRING_PLACEHOLDER = '"""TODO: Add module docstring."""'
+FOOTER_COMMENT = "# 🌶️📦🔚"
+OLD_FOOTER_PATTERNS = ["# 🌶️📦", "# 🐍🏗️🔚"]
+
+# --- Implementation Logic ---
+
+def get_module_docstring(source_code: str) -> str | None:
+    """Safely extracts the module-level docstring from source code."""
+    try:
+        tree = ast.parse(source_code)
+        return ast.get_docstring(tree)
+    except (SyntaxError, IndexError):
+        # If the file has syntax errors, we can't parse it.
+        # Return None and the script will have to guess.
+        return None
+
+def conform_file(filepath: Path) -> None:
     """
-    Conforms a Python file to the specified header and footer protocol.
+    Applies the header/footer protocol to a single Python file.
     """
     try:
-        with open(filepath, encoding='utf-8') as f:
-            content = f.read()
+        original_content = filepath.read_text(encoding='utf-8')
+        lines = original_content.splitlines()
     except FileNotFoundError:
         print(f"Error: File not found at {filepath}", file=sys.stderr)
         return
-
-    # Determine if it's an executable
-    is_executable = content.startswith('#!/usr/bin/env python3')
-
-    # Extract module docstring
-    original_docstring = ""
-    try:
-        tree = ast.parse(content)
-        if tree.body and isinstance(tree.body[0], ast.Expr) and isinstance(tree.body[0].value, ast.Str):
-            original_docstring = ast.get_docstring(tree)
-    except SyntaxError:
-        # Ignore syntax errors for now, will be caught by ruff/mypy
-        pass
-
-    # Construct the new header
-    header_lines = []
-    if is_executable:
-        header_lines.append('#!/usr/bin/env python3')
-    else:
-        header_lines.append('# ')
-
-    header_lines.extend([
-        '# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.',
-        '# SPDX-License-Identifier: Apache-2.0',
-        '#',
-    ])
-
-    if original_docstring:
-        header_lines.append(f'"""{original_docstring}"""')
-    else:
-        header_lines.append('"""TODO: Add module docstring."""')
-
-    new_header = '\n'.join(header_lines)
-
-    # Strip existing header and footer
-    lines = content.split('\n')
-
-    # Find the start of the code
-    start_of_code = 0
-    for i, line in enumerate(lines):
-        if line.strip() and not line.strip().startswith('#') and not line.strip().startswith('"""'):
-            start_of_code = i
-            break
-
-    # If the file is only comments/docstrings, we might not find a code start.
-    # In that case, we will just append the new header.
-    if start_of_code > 0:
-        # Check if there is a docstring on the line before the code starts
-        if '"""' in lines[start_of_code -1]:
-            body_content = '\n'.join(lines[start_of_code -1:])
-        else:
-            body_content = '\n'.join(lines[start_of_code:])
-    elif original_docstring:
-         body_content = ""
-    else:
-        body_content = '\n'.join(lines)
+    except UnicodeDecodeError:
+        print(f"Error: Could not decode file {filepath} as UTF-8.", file=sys.stderr)
+        return
 
 
-    # Remove old footers and trailing whitespace
+    # 1. Analyze existing content
+    is_executable = lines and lines[0].startswith("#!")
+    existing_docstring = get_module_docstring(original_content)
+
+    # 2. Strip old header, docstring, footers, and whitespace
+    start_of_code_index = 0
+    if lines:
+        # Find where the actual code begins, skipping shebang, comments, and the module docstring
+        in_docstring = False
+        docstring_quotes = ''
+        for i, line in enumerate(lines):
+            stripped_line = line.strip()
+            if stripped_line.startswith(('"""', "'''")):
+                # This logic is imperfect but a decent heuristic for finding the end of the docstring
+                if in_docstring or stripped_line.count('"""') > 1 or stripped_line.count("'''") > 1:
+                    start_of_code_index = i + 1
+                    in_docstring = False
+                    break
+                else:
+                    in_docstring = True
+                    docstring_quotes = '"""' if '"""' in stripped_line else "'''"
+            elif in_docstring and docstring_quotes in stripped_line:
+                start_of_code_index = i + 1
+                in_docstring = False
+                break
+            elif not stripped_line or stripped_line.startswith("#"):
+                start_of_code_index = i + 1
+            else:
+                 # It's the first real line of code
+                 start_of_code_index = i
+                 break
+
+    # If we couldn't find code, reset to 0 to be safe
+    if start_of_code_index >= len(lines):
+         start_of_code_index = 0
+
+
+    # Heuristic to find the start of the "real" code after potential headers
+    # This is tricky; we'll assume the first non-comment, non-docstring line is it.
+    body_lines = lines[start_of_code_index:]
+    body_content = "\n".join(body_lines).strip()
+
+    # Remove any old footers from the body
+    for pattern in OLD_FOOTER_PATTERNS:
+        body_content = "\n".join(
+            line for line in body_content.splitlines() if pattern not in line
+        )
     body_content = body_content.strip()
-    body_lines = body_content.split('\n')
-    body_lines = [line for line in body_lines if '# 🌶️📦' not in line]
-    body_content = '\n'.join(body_lines)
 
-    # Construct the final content
-    final_content = f"{new_header}\n\n{body_content}\n\n# 🌶️📦🔚\n"
 
-    with open(filepath, 'w', encoding='utf-8') as f:
-        f.write(final_content)
+    # 3. Construct the new file content
+    final_header = []
+    final_header.append(HEADER_SHEBANG if is_executable else HEADER_LIBRARY)
+    final_header.extend(SPDX_BLOCK)
+    final_header.append("")  # Blank line before docstring
+
+    docstring_to_use = f'"""{existing_docstring}"""' if existing_docstring else DOCSTRING_PLACEHOLDER
+
+    # Final assembly
+    new_content_parts = []
+    new_content_parts.extend(final_header)
+    new_content_parts.append(docstring_to_use)
+    if body_content: # only add a blank line if there's code
+        new_content_parts.append("")
+        new_content_parts.append(body_content)
+
+    final_content = "\n".join(new_content_parts).strip()
+
+    # 4. Append the new footer
+    final_content += f"\n\n{FOOTER_COMMENT}\n"
+
+    # 5. Write the conformed content back to the file
+    filepath.write_text(final_content, encoding='utf-8')
+    # print(f"Conformed: {filepath}")
+
+def main() -> None:
+    """Main entry point."""
+    if len(sys.argv) < 2:
+        print("Usage: python conform.py <file1.py> <file2.py> ...", file=sys.stderr)
+        sys.exit(1)
+
+    for file_path_str in sys.argv[1:]:
+        file_path = Path(file_path_str)
+        if not file_path.is_file() or not file_path.name.endswith(".py"):
+            print(f"Skipping non-Python file: {file_path}", file=sys.stderr)
+            continue
+        conform_file(file_path)
 
 if __name__ == "__main__":
-    if len(sys.argv) > 1:
-        for filepath in sys.argv[1:]:
-            conform_file(filepath)
-    else:
-        print("Usage: python conform.py <file1.py> <file2.py> ...", file=sys.stderr)
+    main()
