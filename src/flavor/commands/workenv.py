@@ -1,10 +1,6 @@
-# flavor/commands/workenv.py
 #
-# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
-
-#
-# flavor/commands/workenv.py
 #
 """Work environment management commands for the flavor CLI."""
 
@@ -233,4 +229,5 @@ def workenv_inspect(package_id: str, output_json: bool) -> None:  # noqa: C901
         echo("")
 
 
-# 🌶️📦🖥️🪄
+
+# 🌶️📦🔚

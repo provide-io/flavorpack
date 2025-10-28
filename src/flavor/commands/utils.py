@@ -1,10 +1,6 @@
-# flavor/commands/utils.py
 #
-# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
-
-#
-# flavor/commands/utils.py
 #
 """Utility commands for the flavor CLI."""
 
@@ -164,4 +160,5 @@ def _show_total_freed(dry_run: bool, total_freed: int) -> None:
         echo(f"\n💾 Total freed: {freed_mb:.1f} MB")
 
 
-# 🌶️📦🖥️🪄
+
+# 🌶️📦🔚
