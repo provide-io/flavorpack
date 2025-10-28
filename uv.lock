@@ -654,7 +654,7 @@ docs = [
 [package.metadata]
 requires-dist = [
     { name = "pip", specifier = ">=25.2" },
-    { name = "provide-foundation", extras = ["all"], specifier = ">=0.0.0.dev0" },
+    { name = "provide-foundation", extras = ["all"] },
     { name = "uv", specifier = ">=0.8.13" },
 ]
 
