@@ -1,7 +1,9 @@
-# flavor/psp/format_2025/operations.py
 #
-# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
+#
+"""PSPF/2025 v0 Operation Chain System
+Implements packed operation chains for slot transformations using v0 required operations only."""
 
 """
 PSPF/2025 v0 Operation Chain System
@@ -233,4 +235,5 @@ def string_to_operations(op_string: str) -> int:
     raise ValueError(f"Unknown v0 operation string: {op_string}")
 
 
-# 🌶️📦📄🪄
+
+# 🌶️📦🔚
