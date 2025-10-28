@@ -2,6 +2,7 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
 """PSPF Operation Handlers - Bridge between PSPF operations and Foundation archive tools.
 
 This module maps PSPF/2025 operation chains to provide.foundation.archive implementations,
