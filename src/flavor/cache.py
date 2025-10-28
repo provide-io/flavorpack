@@ -246,4 +246,5 @@ class CacheManager:
                     total += filepath.stat().st_size
         return total
 
+
 # 🌶️📦🔚

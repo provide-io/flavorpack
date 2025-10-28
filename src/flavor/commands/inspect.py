@@ -179,5 +179,4 @@ def _output_slot_details(slot_descriptors: list[Any], slots_metadata: list[dict[
         echo(f"{prefix} {slot_info}")
 
 
-
 # 🌶️📦🔚

@@ -222,5 +222,4 @@ def extract_all_command(package_file: str, output_dir: str, force: bool) -> None
         raise click.Abort() from e
 
 
-
 # 🌶️📦🔚

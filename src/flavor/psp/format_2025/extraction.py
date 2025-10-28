@@ -235,5 +235,4 @@ class SlotExtractor:
         return handlers.reverse_operations(data, packed_ops)
 
 
-
 # 🌶️📦🔚

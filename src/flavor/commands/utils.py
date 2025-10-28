@@ -160,5 +160,4 @@ def _show_total_freed(dry_run: bool, total_freed: int) -> None:
         echo(f"\n💾 Total freed: {freed_mb:.1f} MB")
 
 
-
 # 🌶️📦🔚

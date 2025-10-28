@@ -39,5 +39,4 @@ def xor_decode(data: bytes, key: bytes = XOR_KEY) -> bytes:
     return xor_encode(data, key)  # XOR is its own inverse
 
 
-
 # 🌶️📦🔚

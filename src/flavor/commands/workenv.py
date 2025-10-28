@@ -229,5 +229,4 @@ def workenv_inspect(package_id: str, output_json: bool) -> None:  # noqa: C901
         echo("")
 
 
-
 # 🌶️📦🔚

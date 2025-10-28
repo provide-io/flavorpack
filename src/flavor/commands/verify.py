@@ -136,5 +136,4 @@ def _display_signature_status(result: dict[str, Any]) -> None:
         raise click.Abort()
 
 
-
 # 🌶️📦🔚

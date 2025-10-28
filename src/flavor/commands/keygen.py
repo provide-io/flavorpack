@@ -39,5 +39,4 @@ def keygen_command(out_dir: str) -> None:
         raise click.Abort() from e
 
 
-
 # 🌶️📦🔚

@@ -268,5 +268,4 @@ def apply_environment_layers(
     return result
 
 
-
 # 🌶️📦🔚
