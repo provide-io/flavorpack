@@ -2,7 +2,6 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
-
 """Inspect command for the flavor CLI - quick package overview."""
 
 from __future__ import annotations
@@ -178,5 +177,7 @@ def _output_slot_details(slot_descriptors: list[Any], slots_metadata: list[dict[
             slot_info += f" [{slot_operations}]"
 
         echo(f"{prefix} {slot_info}")
+
+
 
 # 🌶️📦🔚

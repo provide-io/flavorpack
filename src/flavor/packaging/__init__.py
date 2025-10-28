@@ -1,12 +1,8 @@
-# flavor/packaging/__init__.py
 #
-# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
-
-# flavor/packaging/__init__.py
 #
-"""
-This package contains the core logic for packaging and
+"""This package contains the core logic for packaging and
 verification of Progressive Secure Provider Format (Flavor) packages.
 """
 
@@ -19,4 +15,9 @@ __all__ = [
     "generate_key_pair",
 ]
 # 🗂️ 🖱️ 🔨
-# 🌶️📦📦🪄
+
+
+
+
+
+# 🌶️📦🔚

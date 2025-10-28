@@ -2,7 +2,6 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
-
 """Package command for the flavor CLI."""
 
 from __future__ import annotations
@@ -232,5 +231,7 @@ def _show_final_results(built_artifacts: list[Path], quiet: bool) -> None:
     else:
         log.warning("No targets were specified or built")
         echo("⚠️ No targets were specified or built.")
+
+
 
 # 🌶️📦🔚

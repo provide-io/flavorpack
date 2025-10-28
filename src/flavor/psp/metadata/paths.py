@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
-"""
-Path validation and normalization for PSPF metadata.
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+"""Path validation and normalization for PSPF metadata.
 
 Ensures all paths in metadata use the {workenv} placeholder for portability.
 This makes it clear to developers that paths are relative to the work environment.
@@ -366,4 +368,9 @@ def create_workenv_directories(
             os.umask(old_umask)
 
 
-# 🌶️📦➡️🪄
+
+
+
+
+
+# 🌶️📦🔚

@@ -2,7 +2,6 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
-
 """Utility commands for the flavor CLI."""
 
 from __future__ import annotations
@@ -159,5 +158,7 @@ def _show_total_freed(dry_run: bool, total_freed: int) -> None:
         freed_mb = total_freed / (1024 * 1024)
         log.info("Total space freed", size_mb=freed_mb, size_bytes=total_freed)
         echo(f"\n💾 Total freed: {freed_mb:.1f} MB")
+
+
 
 # 🌶️📦🔚
