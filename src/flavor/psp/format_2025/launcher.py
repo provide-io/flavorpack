@@ -1,8 +1,7 @@
-# flavor/psp/format_2025/launcher.py
 #
-# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
-
+#
 """PSPF 2025 Bundle Launcher
 
 Handles bundle execution, slot extraction, and work environment setup.
@@ -347,4 +346,5 @@ class PSPFLauncher(PSPFReader):
         return dict(result)  # type: ignore[arg-type]
 
 
-# 🌶️📦📄🪄
+
+# 🌶️📦🔚
