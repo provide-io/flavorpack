@@ -1,18 +1,14 @@
-# flavor/packaging/python/dist_manager.py
 #
-# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
-
-# flavor/packaging/python/dist_manager.py
 #
+from __future__ import annotations
+
 """Python distribution management for FlavorPack packaging.
 
 This module provides Python distribution handling including virtual environment
 setup, package installation, and distribution preparation for PSPF packaging.
 """
-
-from __future__ import annotations
-
 import contextlib
 import os
 from pathlib import Path
@@ -423,4 +419,4 @@ class PythonDistManager:
             return False
 
 
-# 🌶️📦📋🪄
+# 🌶️📦🔚

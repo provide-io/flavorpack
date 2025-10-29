@@ -3,9 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 from __future__ import annotations
-from __future__ import annotations
-from __future__ import annotations
-from __future__ import annotations
+
 """PSPF/2025 Format Constants
 
 All constants defined here match the authoritative specification.

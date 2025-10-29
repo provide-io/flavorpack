@@ -1,16 +1,13 @@
-# flavor/__init__.py
 #
-# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
-
-# flavor/__init__.py
 #
+from __future__ import annotations
+
 """
 This package contains the core logic for building and verifying the
 Progressive Secure Package Format (PSPF/2025).
 """
-
-from __future__ import annotations
 
 # Set Foundation's setup log level before any imports
 # This MUST happen first to control Foundation's initialization logs
@@ -41,5 +38,4 @@ __all__ = [
     "clean_cache",
     "verify_package",
 ]
-# 🌐 📈 🔥
-# 🌶️📦📦🪄
+# 🌶️📦🔚

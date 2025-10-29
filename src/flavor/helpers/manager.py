@@ -1,15 +1,10 @@
-# flavor/helpers/manager.py
 #
-# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
-
 #
-# flavor/helpers.py
-#
-"""Helper management system for Flavor launchers and builders."""
-
 from __future__ import annotations
 
+"""Helper management system for Flavor launchers and builders."""
 import contextlib
 from dataclasses import dataclass
 import hashlib
@@ -253,4 +248,4 @@ class HelperManager:
         return self._binary_loader.get_helper(name)
 
 
-# 🌶️📦📋🪄
+# 🌶️📦🔚

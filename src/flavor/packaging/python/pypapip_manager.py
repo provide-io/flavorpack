@@ -3,9 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 from __future__ import annotations
-from __future__ import annotations
-from __future__ import annotations
-from __future__ import annotations
+
 """This module handles all pip-specific operations with proper platform support
 and manylinux2014 compatibility for maximum Linux distribution coverage.
 """

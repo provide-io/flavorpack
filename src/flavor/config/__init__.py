@@ -1,15 +1,14 @@
-# flavor/config/__init__.py
 #
-# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
+#
+from __future__ import annotations
 
 """FlavorPack Configuration System.
 
 This module provides a Foundation-based configuration system for FlavorPack,
 replacing manual environment variable handling with typed, validated configuration.
 """
-
-from __future__ import annotations
 
 from flavor.config.config import (
     BuildConfig,
@@ -45,4 +44,4 @@ __all__ = [
     "set_flavor_config",
 ]
 
-# 🌶️📦📦🪄
+# 🌶️📦🔚
