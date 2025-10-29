@@ -1,14 +1,22 @@
 [build-system]
-requires = ["setuptools>=45", "wheel"]
+requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "taster"
-version = "1.0.0"
+dynamic = ["version"]
 description = "Test package for flavor functionality"
 readme = "README.md"
+requires-python = ">=3.11"
+license = "Apache-2.0"
+authors = [
+    { name = "Tim Perkins", email = "code@tim.life" },
+]
+maintainers = [
+    { name = "provide.io", email = "code@provide.io" },
+]
 dependencies = [
-    "provide-foundation[all]>=0.0.0.dev0",
+    "provide-foundation[all]",
 ]
 
 [project.scripts]
@@ -17,6 +25,12 @@ taster = "taster.cli:main"
 [tool.setuptools.packages.find]
 where = ["src"]
 include = ["taster*"]
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.dynamic]
+version = { file = "VERSION" }
 
 [tool.flavor]
 name = "taster"
@@ -49,5 +63,9 @@ map = { "OLD_VAR" = "NEW_VAR" }
 
 [dependency-groups]
 dev = [
+    "provide-testkit[standard,build]",
     "hypothesis>=6.138.14",
+]
+docs = [
+    "provide-testkit[docs]",
 ]
