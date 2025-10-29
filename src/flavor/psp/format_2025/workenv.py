@@ -1,7 +1,10 @@
-# flavor/psp/format_2025/workenv.py
 #
-# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
+#
+"""PSPF Work Environment Management
+
+Handles work environment setup, caching, lifecycle management, and setup commands."""
 
 """
 PSPF Work Environment Management
@@ -324,4 +327,5 @@ class WorkEnvManager:
         return command
 
 
-# 🌶️📦📄🪄
+
+# 🌶️📦🔚

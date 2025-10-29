@@ -1,10 +1,6 @@
-# flavor/commands/keygen.py
 #
-# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
-
-#
-# flavor/commands/keygen.py
 #
 """Key generation command for the flavor CLI."""
 
@@ -43,4 +39,5 @@ def keygen_command(out_dir: str) -> None:
         raise click.Abort() from e
 
 
-# 🌶️📦🖥️🪄
+
+# 🌶️📦🔚

@@ -1,10 +1,6 @@
-# flavor/commands/package.py
 #
-# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
-
-#
-# flavor/commands/package.py
 #
 """Package command for the flavor CLI."""
 
@@ -237,4 +233,5 @@ def _show_final_results(built_artifacts: list[Path], quiet: bool) -> None:
         echo("⚠️ No targets were specified or built.")
 
 
-# 🌶️📦🖥️🪄
+
+# 🌶️📦🔚

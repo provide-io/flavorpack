@@ -1,10 +1,6 @@
-# flavor/commands/extract.py
 #
-# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
-
-#
-# flavor/commands/extract.py
 #
 """Extract command for the flavor CLI - extract slots from packages."""
 
@@ -226,4 +222,5 @@ def extract_all_command(package_file: str, output_dir: str, force: bool) -> None
         raise click.Abort() from e
 
 
-# 🌶️📦🖥️🪄
+
+# 🌶️📦🔚
