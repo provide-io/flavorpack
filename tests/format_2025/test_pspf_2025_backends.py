@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
-# tests/test_pspf_2025_backends.py
-# Tests for PSPF backend implementations
+#
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
+"""Tests for PSPF backend implementations"""
 
 from pathlib import Path
 import tempfile
@@ -128,4 +132,4 @@ class TestBackends:
         assert isinstance(file_backend, FileBackend)
 
 
-# 🧪💾🗺️🪄
+# 🌶️📦🔚
