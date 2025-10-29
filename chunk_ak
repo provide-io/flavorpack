@@ -1,9 +1,0 @@
-./tests/config/test_foundation_config.py
-./tests/security/test_security_core.py
-./tests/security/test_package_integrity.py
-./tests/security/__init__.py
-./tests/security/test_package_security.py
-./tests/unit/test_pspf_constants.py
-./tests/unit/test_operations_comprehensive.py
-./tests/unit/test_operation_chains.py
-./tests/json_comparison.py

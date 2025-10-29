@@ -1,3 +1,8 @@
+#
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
 """Verify PSPF package integrity"""
 
 import json
@@ -166,3 +171,5 @@ def verify_command(package_path, output_json, output_file) -> None:
 
             if "read_error" in basic_info:
                 click.echo(f"  ❌ Could not read file: {basic_info['read_error']}")
+
+# 🌶️📦🔚
