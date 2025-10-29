@@ -10,8 +10,6 @@ This module defines the core data structures used throughout the PSPF builder
 system, emphasizing immutability and functional programming patterns.
 """
 
-from __future__ import annotations
-
 from pathlib import Path
 from typing import Any
 
