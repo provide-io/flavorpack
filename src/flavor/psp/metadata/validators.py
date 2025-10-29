@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
-"""
-Metadata validation functions for PSP packages.
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+"""Metadata validation functions for PSP packages.
 
 This module contains validation logic for package metadata structures.
 """
@@ -121,4 +123,9 @@ def _parse_octal_umask(umask: str) -> int:
         return int(umask, 8)
 
 
-# 🌶️📦📄🪄
+
+
+
+
+
+# 🌶️📦🔚

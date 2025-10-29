@@ -1,12 +1,10 @@
-# flavor/psp/format_2025/index.py
 #
-# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
-
-# src/flavor/psp/format_2025/index.py
-# PSPF 2025 Index Block Implementation - Enhanced 512-byte Header
-
+#
 from __future__ import annotations
+
+"""TODO: Add module docstring."""
 
 import struct
 import zlib
@@ -283,4 +281,9 @@ class PSPFIndex:
         )
 
 
-# 🌶️📦📄🪄
+
+
+
+
+
+# 🌶️📦🔚

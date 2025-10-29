@@ -1,10 +1,8 @@
-# flavor/psp/format_2025/builder.py
 #
-# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
-
-"""
-PSPF Builder - Functional package builder with immutable patterns.
+#
+"""PSPF Builder - Functional package builder with immutable patterns.
 
 This module provides both pure functions and a fluent builder interface
 for creating PSPF packages.
@@ -340,4 +338,9 @@ def _apply_operations(data: bytes, packed_ops: int, options: BuildOptions) -> by
 
 
 # PSPFBuilder class and mapping functions moved to separate modules
-# 🌶️📦📄🪄
+
+
+
+
+
+# 🌶️📦🔚

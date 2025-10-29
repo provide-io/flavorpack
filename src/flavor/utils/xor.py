@@ -2,7 +2,6 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
-
 """TODO: Add module docstring."""
 
 from __future__ import annotations
@@ -38,5 +37,6 @@ def xor_decode(data: bytes, key: bytes = XOR_KEY) -> bytes:
         XOR decoded bytes
     """
     return xor_encode(data, key)  # XOR is its own inverse
+
 
 # 🌶️📦🔚
