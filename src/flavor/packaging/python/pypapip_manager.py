@@ -8,8 +8,6 @@ from __future__ import annotations
 and manylinux2014 compatibility for maximum Linux distribution coverage.
 """
 
-from __future__ import annotations
-
 from pathlib import Path
 
 from provide.foundation import retry
