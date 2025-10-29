@@ -1,6 +1,8 @@
 #
-# tests/packaging/python/test_pip_manager.py
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
 #
+
 """Tests for PyPaPipManager critical functionality."""
 
 from pathlib import Path
@@ -465,3 +467,5 @@ class TestPyPaPipManagerCriticalFeatures:
         )
         assert "--only-binary" in cmd2
         assert ":all:" in cmd2
+
+# 🌶️📦🔚

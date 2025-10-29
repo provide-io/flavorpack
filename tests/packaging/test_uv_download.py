@@ -1,3 +1,8 @@
+#
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
 """Test UV download functionality for manylinux2014 compatibility."""
 
 from pathlib import Path
@@ -275,3 +280,5 @@ class TestUVDownload:
                 # Should not raise error on macOS when falling back to host UV
                 artifacts = packager.prepare_artifacts(work_path)
                 assert "uv_binary" in artifacts
+
+# 🌶️📦🔚
