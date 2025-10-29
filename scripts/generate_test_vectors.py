@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+#
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
 """Generate test vectors for Go/Rust implementations of PSPF/2025 operation chains.
 
 This script creates known-good binary data from the Python implementation
@@ -364,3 +368,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+# 🌶️📦🔚

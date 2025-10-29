@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
-# tests/test_mmap_performance.py
-# Performance benchmarks and large file tests for mmap
-
+#
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+"""Performance benchmarks and large file tests for mmap."""
 from contextlib import contextmanager
 from pathlib import Path
 import random
@@ -139,4 +141,4 @@ class TestMMapResourceManagement:
             path.unlink(missing_ok=True)
 
 
-# 🚀📊💾🪄
+# 🌶️📦🔚
