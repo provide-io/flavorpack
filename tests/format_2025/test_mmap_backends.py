@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
-# tests/format_2025/test_mmap_backends.py
-# Tests for memory-mapped I/O backends in taster
+#
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
+"""Tests for memory-mapped I/O backends in taster"""
 
 from pathlib import Path
 import tempfile
@@ -259,4 +263,4 @@ class TestTasterMMapBackends:
         assert backend.mmap is None
 
 
-# 🧪🗺️💾🪄
+# 🌶️📦🔚

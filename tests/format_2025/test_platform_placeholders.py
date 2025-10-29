@@ -1,3 +1,8 @@
+#
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
 """Test placeholder substitution for platform variables."""
 
 from pathlib import Path
@@ -144,3 +149,5 @@ class TestPlatformPlaceholders:
         result = substitute_placeholders("{workenv}/cache\\{platform}", workenv_path)
         assert "cache" in result
         assert "_" in result  # platform should have underscore
+
+# 🌶️📦🔚
