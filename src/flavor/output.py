@@ -1,12 +1,10 @@
-# flavor/output.py
 #
-# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
-
-"""Output formatting and redirection for Flavor tools."""
-
+#
 from __future__ import annotations
 
+"""Output formatting and redirection for Flavor tools."""
 from enum import Enum
 from pathlib import Path
 import sys
@@ -158,4 +156,4 @@ def get_output_handler(
     return OutputHandler(format=output_format, file=output_file)
 
 
-# 🌶️📦📄🪄
+# 🌶️📦🔚

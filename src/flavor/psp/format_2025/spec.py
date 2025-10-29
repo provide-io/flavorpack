@@ -3,9 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 from __future__ import annotations
-from __future__ import annotations
-from __future__ import annotations
-from __future__ import annotations
+
 """PSPF Build Specification - Immutable data structures for package building.
 
 This module defines the core data structures used throughout the PSPF builder

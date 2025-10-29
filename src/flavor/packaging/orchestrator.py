@@ -1,11 +1,8 @@
-# flavor/packaging/orchestrator.py
 #
-# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
-
-# flavor/packaging/orchestrator.py
 #
-"Core logic for building Flavor packages by orchestrating the Go packager CLI."
+"""Core logic for building Flavor packages by orchestrating the Go packager CLI."""
 
 import os
 from pathlib import Path
@@ -388,4 +385,4 @@ class PackagingOrchestrator:
             logger.info(f"✅ Package built successfully: {final_size:.1f} MB")
 
 
-# 🌶️📦📄🪄
+# 🌶️📦🔚
