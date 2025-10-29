@@ -2,6 +2,7 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
 """Extract command for the flavor CLI - extract slots from packages."""
 
 from __future__ import annotations
@@ -220,7 +221,5 @@ def extract_all_command(package_file: str, output_dir: str, force: bool) -> None
         log.error("Error extracting", error=str(e), package=package_file)
         echo_error(f"❌ Error extracting: {e}")
         raise click.Abort() from e
-
-
 
 # 🌶️📦🔚
