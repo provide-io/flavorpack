@@ -422,4 +422,6 @@ class UVManager(BaseToolManager):
             except Exception as e:
                 logger.error(f"Failed to download UV binary: {e}")
                 return None
+
+
 # 🌶️📦🔚

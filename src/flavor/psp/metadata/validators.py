@@ -123,9 +123,4 @@ def _parse_octal_umask(umask: str) -> int:
         return int(umask, 8)
 
 
-
-
-
-
-
 # 🌶️📦🔚
