@@ -1,7 +1,10 @@
-# flavor/psp/format_2025/environment.py
 #
-# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
+#
+"""Environment variable management for PSPF/2025 packages.
+
+Handles platform-specific environment variables and layered environment processing."""
 
 """
 Environment variable management for PSPF/2025 packages.
@@ -271,4 +274,5 @@ def apply_environment_layers(
     return result
 
 
-# 🌶️📦📄🪄
+
+# 🌶️📦🔚

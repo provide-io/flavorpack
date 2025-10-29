@@ -1,10 +1,6 @@
-# flavor/commands/helpers.py
 #
-# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
-
-#
-# flavor/commands/helpers.py
 #
 """Helper management commands for the flavor CLI."""
 
@@ -260,4 +256,5 @@ def helper_test(lang: str) -> None:
         echo("\n⚠️  No tests were run")
 
 
-# 🌶️📦🖥️🪄
+
+# 🌶️📦🔚

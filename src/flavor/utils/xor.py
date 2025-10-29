@@ -1,9 +1,9 @@
-# flavor/utils/xor.py
 #
-# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
+#
+"""TODO: Add module docstring."""
 
-# XOR key - digits of π (memorable, non-obvious)
 from __future__ import annotations
 
 XOR_KEY = bytes([3, 1, 4, 1, 5, 9, 2, 6])  # First 8 digits of π
@@ -39,4 +39,5 @@ def xor_decode(data: bytes, key: bytes = XOR_KEY) -> bytes:
     return xor_encode(data, key)  # XOR is its own inverse
 
 
-# 🌶️📦📄🪄
+
+# 🌶️📦🔚

@@ -1,7 +1,10 @@
-# flavor/psp/format_2025/extraction.py
 #
-# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
+#
+"""PSPF Slot Extraction - Handles slot data extraction and streaming.
+
+Provides extraction, streaming, and verification operations for PSPF slots."""
 
 """
 PSPF Slot Extraction - Handles slot data extraction and streaming.
@@ -238,4 +241,5 @@ class SlotExtractor:
         return handlers.reverse_operations(data, packed_ops)
 
 
-# 🌶️📦📄🪄
+
+# 🌶️📦🔚
