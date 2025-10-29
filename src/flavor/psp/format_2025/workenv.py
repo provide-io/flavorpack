@@ -9,12 +9,6 @@ from __future__ import annotations
 
 Handles work environment setup, caching, lifecycle management, and setup commands."""
 
-"""
-PSPF Work Environment Management
-
-Handles work environment setup, caching, lifecycle management, and setup commands.
-"""
-
 from pathlib import Path
 import shlex
 from typing import TYPE_CHECKING, Any

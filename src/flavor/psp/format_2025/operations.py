@@ -8,11 +8,6 @@ from __future__ import annotations
 """PSPF/2025 v0 Operation Chain System
 Implements packed operation chains for slot transformations using v0 required operations only."""
 
-"""
-PSPF/2025 v0 Operation Chain System
-Implements packed operation chains for slot transformations using v0 required operations only.
-"""
-
 from flavor.psp.format_2025.constants import (
     OP_BZIP2,
     OP_GZIP,
