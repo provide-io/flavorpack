@@ -1,3 +1,8 @@
+#
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
 """Test platform-specific environment variables."""
 
 from __future__ import annotations
@@ -394,3 +399,5 @@ class TestRuntimeEnvProcessing:
 
         # Environment should be unchanged
         assert env == {"FOO": "bar"}
+
+# 🌶️📦🔚
