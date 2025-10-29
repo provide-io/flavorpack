@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
-# tests/test_pspf_2025_enhanced.py
-# Tests for enhanced PSPF/2025 format with memory-mapped support
+#
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
+"""Tests for enhanced PSPF/2025 format with memory-mapped support"""
 
 import struct
 
@@ -8,6 +12,7 @@ import pytest
 
 from flavor.config.defaults import (
     ACCESS_AUTO,
+    ACCESS_FILE,
     ACCESS_MMAP,
     CACHE_NORMAL,
     CAPABILITY_MMAP,
@@ -120,7 +125,6 @@ class TestPlatformSpecific:
         """Access modes should be defined."""
         from flavor.config.defaults import (
             ACCESS_AUTO,
-            ACCESS_FILE,
             ACCESS_STREAM,
         )
 
@@ -197,4 +201,4 @@ class TestEnhancedSlots:
         assert view._decompressed is None
 
 
-# 🧪📦🔬🪄
+# 🌶️📦🔚
