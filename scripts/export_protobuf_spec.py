@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+#
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
 """Export protobuf definitions to JSON/YAML specifications.
 
 This script reads the compiled protobuf definitions and exports them
@@ -311,3 +315,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+# 🌶️📦🔚

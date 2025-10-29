@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
-# tests/test_mmap_edge_cases.py
-# Comprehensive edge case testing for memory-mapped I/O
-
+#
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+"""Test mmap edge cases and corner scenarios."""
 import hashlib
 import os
 from pathlib import Path
@@ -494,4 +496,4 @@ def test_error_handling(error_type) -> None:
             path.unlink(missing_ok=True)
 
 
-# 🗺️🔍✅🪄
+# 🌶️📦🔚
