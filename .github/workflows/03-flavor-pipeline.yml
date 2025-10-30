@@ -435,13 +435,36 @@ jobs:
           
           # Find the wheel
           WHEEL=$(find wheel-dist -name "flavorpack-*.whl" | head -1)
-          
-          # Use script to build Flavor PSP
-          .github/scripts/build-flavor-self.sh \
-            "${{ matrix.platform }}" \
-            "${{ needs.setup.outputs.helper_version }}" \
-            "$WHEEL" \
-            "$LAUNCHER"
+
+          if [ -z "$WHEEL" ]; then
+            echo "❌ Wheel not found"
+            ls -la wheel-dist/
+            exit 1
+          fi
+
+          echo "=== Building Flavor PSP using itself ==="
+          echo "Platform: ${{ matrix.platform }}"
+          echo "Version: ${{ needs.setup.outputs.helper_version }}"
+          echo "Wheel: $WHEEL"
+          echo "Launcher: $LAUNCHER"
+
+          # Create artifacts directory
+          mkdir -p artifacts
+
+          # Build Flavor PSP using the installed wheel version
+          flavor pack \
+            --manifest pyproject.toml \
+            --output "artifacts/flavor-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}.psp" \
+            --launcher-bin "$LAUNCHER" \
+            --key-seed "flavor-${{ needs.setup.outputs.helper_version }}"
+
+          # Test that it works
+          echo "Testing self-packaged Flavor..."
+          chmod +x artifacts/flavor-*.psp 2>/dev/null || true
+          ./artifacts/flavor-*.psp --version
+          ./artifacts/flavor-*.psp --help
+
+          echo "✅ Successfully built and tested Flavor PSP"
       
       - name: 📤 Upload Flavor package
         uses: actions/upload-artifact@v4
