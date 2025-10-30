@@ -1,15 +1,10 @@
-# flavor/cli.py
 #
-# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
-
 #
-# flavor/cli.py
-#
-"The `flavor` command-line interface."
-
 from __future__ import annotations
 
+"The `flavor` command-line interface."
 import os
 import sys
 
@@ -90,4 +85,4 @@ main = cli
 
 if __name__ == "__main__":
     cli()
-# 🌶️📦🖥️🪄
+# 🌶️📦🔚

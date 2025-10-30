@@ -1,7 +1,8 @@
-# flavor/config/config.py
 #
-# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
+#
+from __future__ import annotations
 
 """Structured configuration models for the `[tool.flavor]` section of `pyproject.toml`.
 
@@ -10,9 +11,6 @@ represent the configuration for building a Flavor package. This approach provide
 type safety, default values, and clearer code compared to using unstructured
 dictionaries.
 """
-
-from __future__ import annotations
-
 from pathlib import Path
 from typing import Any
 
@@ -227,4 +225,4 @@ class FlavorConfig(BaseConfig):
         )
 
 
-# 🌶️📦📄🪄
+# 🌶️📦🔚
