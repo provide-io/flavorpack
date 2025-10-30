@@ -93,7 +93,7 @@ def _clean_workenv_cache(dry_run: bool, yes: bool) -> int:
     removed = manager.clean()
     if removed:
         log.info("Removed cached packages", count=len(removed), size_bytes=size)
-        echo(f"✅ Removed {len(removed)} cached package(s)")
+        echo(f"✅ Removed {len(removed)} cached packages")
         return size
 
     return 0

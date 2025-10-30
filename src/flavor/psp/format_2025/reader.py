@@ -26,14 +26,14 @@ from flavor.config.defaults import (
     DEFAULT_MAGIC_TRAILER_SIZE,
     DEFAULT_SLOT_DESCRIPTOR_SIZE,
 )
-from flavor.psp.format_2025.constants import (
-    TRAILER_END_MAGIC,
-    TRAILER_START_MAGIC,
-)
 from flavor.psp.format_2025.backends import (
     Backend,
     StreamBackend,
     create_backend,
+)
+from flavor.psp.format_2025.constants import (
+    TRAILER_END_MAGIC,
+    TRAILER_START_MAGIC,
 )
 from flavor.psp.format_2025.index import PSPFIndex
 from flavor.psp.format_2025.slots import SlotDescriptor, SlotView
@@ -483,5 +483,6 @@ def verify_bundle(bundle_path: Path) -> bool:
             pass  # Signature optional
 
         return True
+
 
 # 🌶️📦🔚

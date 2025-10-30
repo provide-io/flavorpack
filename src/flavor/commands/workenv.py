@@ -1,4 +1,4 @@
-# 
+#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -227,5 +227,6 @@ def workenv_inspect(package_id: str, output_json: bool) -> None:  # noqa: C901
                 echo(f"  Builder: {pkg.get('builder')}")
 
         echo("")
+
 
 # 🌶️📦🔚

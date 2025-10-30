@@ -1,4 +1,4 @@
-# 
+#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -156,5 +156,6 @@ def get_output_handler(
     output_file = get_str(file_env)
 
     return OutputHandler(format=output_format, file=output_file)
+
 
 # 🌶️📦🔚

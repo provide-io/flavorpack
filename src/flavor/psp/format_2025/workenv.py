@@ -53,7 +53,6 @@ class WorkEnvManager:
         workenv_dir = workenv_base / f"{package_name}_{package_version}"
         ensure_dir(workenv_dir)
 
-
         # Check cache validity
         cache_valid = self._check_cache_validity(metadata, workenv_dir, package_version)
 
@@ -205,7 +204,6 @@ class WorkEnvManager:
         ensure_parent_dir(file_path)
         atomic_write_text(file_path, content)
 
-
     def _run_execute_command(self, cmd: dict[str, Any], workenv_dir: Path, metadata: dict[str, Any]) -> None:
         """Handle command execution.
 
@@ -234,7 +232,6 @@ class WorkEnvManager:
             logger.error(f"❌ Command failed: {command}")
             logger.error(f"❌ Error details: {e!s}")
             raise RuntimeError(f"Setup command failed: {command}. Error: {e!s}") from e
-
 
     def _run_enumerate_execute_command(self, cmd: dict[str, Any], workenv_dir: Path) -> None:
         """Handle file enumeration and execution command.
@@ -270,7 +267,6 @@ class WorkEnvManager:
                 logger.error(f"❌ Command failed for {file_path}: {command}")
                 logger.error(f"❌ Error: {e}")
                 # Continue with other files instead of failing
-
 
     def _substitute_placeholders(self, text: str, workenv_dir: Path, metadata: dict[str, Any]) -> str:
         """Substitute common placeholders in text.
@@ -310,5 +306,6 @@ class WorkEnvManager:
                 logger.debug(f"🔄 Substituted {placeholder} -> {slot_path}")
 
         return command
+
 
 # 🌶️📦🔚

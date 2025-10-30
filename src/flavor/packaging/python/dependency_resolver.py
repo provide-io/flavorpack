@@ -347,4 +347,5 @@ class DependencyResolver:
                 ) from fallback_error
             return None  # For non-Linux, we can fall back to host UV
 
+
 # 🌶️📦🔚
