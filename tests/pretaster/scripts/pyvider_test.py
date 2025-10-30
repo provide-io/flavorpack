@@ -1,4 +1,9 @@
 #!/usr/bin/env python3
+#
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
 """Test script to verify cryptography and other binary dependencies are installed correctly."""
 
 import sys
@@ -48,3 +53,5 @@ def test_imports() -> int:
 
 if __name__ == "__main__":
     sys.exit(test_imports())
+
+# 🌶️📦🔚

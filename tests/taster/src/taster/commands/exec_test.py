@@ -1,4 +1,9 @@
 #!/usr/bin/env python3
+#
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
 """Test direct execution vs script execution to diagnose permission issues."""
 
 from pathlib import Path
@@ -230,3 +235,5 @@ setup_commands = [
 
 if __name__ == "__main__":
     exec_test_command()
+
+# 🌶️📦🔚
