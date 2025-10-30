@@ -95,6 +95,8 @@ def build_package(spec: BuildSpec, output_path: Path) -> BuildResult:
     try:
         prepared_slots = prepare_slots(spec.slots, spec.options)
     except Exception as e:
+        logger.error(f"Failed to prepare slots: {e}")
+        raise
 
     # Write package
     logger.trace(
