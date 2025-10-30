@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
+#
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
 """Orchestrate the Flavor release process."""
-
 import argparse
 from datetime import datetime
 from pathlib import Path
@@ -329,3 +332,4 @@ Next steps:
 
 if __name__ == "__main__":
     sys.exit(main())
+# 🌶️📦🔚

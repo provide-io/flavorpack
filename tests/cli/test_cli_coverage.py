@@ -1,7 +1,10 @@
+#
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
 """
 Additional tests for `cli.py` to improve test coverage, focusing on failure paths.
 """
-
 from pathlib import Path
 from unittest.mock import patch
 
@@ -55,4 +58,4 @@ def test_cli_verify_fails(tmp_path: Path) -> None:
         mock_verify.assert_called_once()
 
 
-# 📦🍜🧪🪄
+# 🌶️📦🔚
