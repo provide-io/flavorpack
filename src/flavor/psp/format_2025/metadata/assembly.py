@@ -1,7 +1,10 @@
-#
+# 
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
+"""TODO: Add module docstring."""
+
 from __future__ import annotations
 
 """Metadata assembly for PSPF packages."""
@@ -84,7 +87,6 @@ def load_launcher_binary(launcher_type: str) -> bytes:
     raise FileNotFoundError(
         f"❌ Could not find {launcher_base} binary!\n"
         "\n"
-        "🔧 To fix this issue, run one of:\n"
         "   • cd helpers && ./build.sh     (build both Go and Rust launchers)\n"
         "   • make build-helpers           (if using make)\n"
         "   • flavor helpers build         (if flavor CLI is available)\n"
@@ -271,6 +273,5 @@ def assemble_metadata(spec: BuildSpec, slots: list[Any], launcher_info: dict[str
 
     # Validate all paths use {workenv}
     return validate_metadata_dict(metadata)
-
 
 # 🌶️📦🔚

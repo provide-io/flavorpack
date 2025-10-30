@@ -1,8 +1,10 @@
-#
+# 
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
 """Test for running the builder as a module."""
+
 import runpy
 import sys
 from unittest.mock import patch
@@ -30,6 +32,5 @@ def test_main_module_entrypoint() -> None:
     # The mock is not called because --version exits before the command body runs.
     # This is the correct behavior.
     mock_cli.assert_not_called()
-
 
 # 🌶️📦🔚

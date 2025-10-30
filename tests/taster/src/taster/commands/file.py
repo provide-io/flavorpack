@@ -1,3 +1,8 @@
+# 
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
 """File operations for testing."""
 
 import os
@@ -9,7 +14,6 @@ import click
 
 @click.group("file")
 def file_command() -> None:
-    """📄 File operations for testing"""
     pass
 
 
@@ -21,7 +25,6 @@ def write_file(path, content) -> None:
     file_path = Path(path)
     file_path.parent.mkdir(parents=True, exist_ok=True)
     file_path.write_text(content)
-    print(f"✅ Wrote {len(content)} bytes to {path}")
 
 
 @file_command.command("read")
@@ -41,7 +44,6 @@ def read_file(path) -> None:
 def check_exists(path) -> None:
     """Check if file/directory exists"""
     exists = Path(path).exists()
-    print(f"{'✅' if exists else '❌'} {path}: {'exists' if exists else 'not found'}")
     sys.exit(0 if exists else 1)
 
 
@@ -54,7 +56,6 @@ def test_workenv() -> None:
     if test_file.exists():
         content = test_file.read_text()
         counter = int(content.strip()) + 1
-        print(f"✅ Found existing file, incrementing counter: {counter}")
     else:
         counter = 1
         print("📝 Creating new persistence file")
@@ -62,3 +63,5 @@ def test_workenv() -> None:
     test_file.write_text(str(counter))
     print(f"💾 Workenv: {workenv}")
     print(f"📊 Run count: {counter}")
+
+# 🌶️📦🔚

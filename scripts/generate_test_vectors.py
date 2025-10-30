@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
-#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
 """Generate test vectors for Go/Rust implementations of PSPF/2025 operation chains.
 
 This script creates known-good binary data from the Python implementation
-to ensure cross-language compatibility.
-"""
+to ensure cross-language compatibility."""
 
 import json
 import logging
@@ -43,7 +42,6 @@ def log_info(msg: str):
 
 
 def log_success(msg: str):
-    logger.info(f"✅ [SUCCESS] {msg}")
 
 
 def log_warning(msg: str):
@@ -163,7 +161,6 @@ def generate_slot_descriptors():
     )
     log_success("Test case 4 created: complex_chain")
 
-    log_info(f"📦 Generated {len(test_cases)} slot descriptor test cases")
     return test_cases
 
 
@@ -237,7 +234,6 @@ def save_test_vectors(test_cases):
     log_success(f"Wrote {len(binary_data)} bytes to Rust descriptors.bin")
 
     # Save JSON metadata
-    log_info("📄 Writing JSON metadata files")
     with open(go_testdata / "test_vectors.json", "w") as f:
         json.dump(json_data, f, indent=2)
     log_success(f"Wrote test vectors JSON for Go ({len(json_data)} entries)")
@@ -247,14 +243,12 @@ def save_test_vectors(test_cases):
     log_success(f"Wrote test vectors JSON for Rust ({len(json_data)} entries)")
 
     # Generate Go test constants
-    log_info("🔧 Generating Go test constants")
     go_constants = generate_go_constants(json_data)
     with open(go_testdata / "vectors_test.go", "w") as f:
         f.write(go_constants)
     log_success("Generated Go test constants file")
 
     log_success(f"✨ Successfully saved {len(test_cases)} test vectors")
-    log_info("📁 Files saved to:")
     log_info(f"   • Go: {go_testdata}")
     log_info(f"   • Rust: {rust_testdata}")
 
@@ -303,7 +297,6 @@ var TestVectors = []struct {
 def generate_operation_tests():
     """Generate operation packing/unpacking test cases."""
 
-    log_info("🔬 Generating operation packing/unpacking test cases")
 
     test_cases = [
         ([], 0x0, "empty/raw"),
@@ -368,4 +361,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 # 🌶️📦🔚

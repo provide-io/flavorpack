@@ -1,3 +1,8 @@
+# 
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
 """Display package and system information"""
 
 import os
@@ -16,7 +21,6 @@ def info_command() -> None:
     click.secho("=" * 60, fg="cyan")
 
     # Package information
-    click.secho("\n📦 Package Information:", fg="green")
     click.echo("  Name: taster")
     click.echo("  Version: 1.0.0")
     click.echo("  Purpose: Test package for flavor functionality")
@@ -29,7 +33,6 @@ def info_command() -> None:
     click.echo(f"  Python: {platform.python_version()}")
 
     # Process information
-    click.secho("\n🔧 Process Information:", fg="blue")
     click.echo(f"  PID: {os.getpid()}")
     click.echo(f"  Working Directory: {Path.cwd()}")
     click.echo(f"  Executable: {sys.executable}")
@@ -55,7 +58,6 @@ def info_command() -> None:
         click.echo("  Flavor Module: Not available (running standalone)")
 
     # Environment summary
-    click.secho("\n🌍 Environment Summary:", fg="cyan")
     env_count = len(os.environ)
     flavor_vars = [k for k in os.environ if k.startswith("FLAVOR_")]
     taster_vars = [k for k in os.environ if k.startswith("TASTER_")]
@@ -63,3 +65,5 @@ def info_command() -> None:
     click.echo(f"  Total Variables: {env_count}")
     click.echo(f"  Flavor Variables: {len(flavor_vars)}")
     click.echo(f"  Taster Variables: {len(taster_vars)}")
+
+# 🌶️📦🔚

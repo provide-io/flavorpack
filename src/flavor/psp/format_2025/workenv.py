@@ -1,7 +1,16 @@
-#
+# 
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
+"""TODO: Add module docstring."""
+
+# 
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
+"""TODO: Add module docstring."""
 
 from __future__ import annotations
 
@@ -42,7 +51,6 @@ class WorkEnvManager:
         Returns:
             Path: Path to the work environment directory
         """
-        logger.debug(f"🔧 Setting up work environment for {bundle_path}")
 
         # NOTE: This matches Go's work environment setup logic
         metadata = self.reader.read_metadata()
@@ -54,7 +62,6 @@ class WorkEnvManager:
         workenv_dir = workenv_base / f"{package_name}_{package_version}"
         ensure_dir(workenv_dir)
 
-        logger.info(f"📁 Work environment: {workenv_dir}")
 
         # Check cache validity
         cache_valid = self._check_cache_validity(metadata, workenv_dir, package_version)
@@ -77,7 +84,6 @@ class WorkEnvManager:
             # Handle lifecycle-based cleanup
             self._cleanup_lifecycle_slots(workenv_dir, metadata, extracted_slots)
         else:
-            logger.info("✅ Using cached work environment")
 
         return workenv_dir
 
@@ -109,7 +115,6 @@ class WorkEnvManager:
                 actual_content = check_path.read_text().strip()
                 if actual_content == expected_content.replace("{version}", package_version):
                     cache_valid = True
-                    logger.debug("✅ Cache is valid")
                 else:
                     logger.debug(
                         f"❌ Cache content mismatch: expected '{expected_content}', got '{actual_content}'"
@@ -160,11 +165,9 @@ class WorkEnvManager:
             workenv_dir: Work environment directory
             metadata: Package metadata for substitutions
         """
-        logger.info(f"🔧 Running {len(setup_commands)} setup commands")
 
         # NOTE: Setup command execution matches Go's implementation
         for i, cmd in enumerate(setup_commands):
-            logger.debug(f"🔧 Processing setup command {i}")
 
             if isinstance(cmd, dict):
                 cmd_type = cmd.get("type", "execute")
@@ -202,7 +205,6 @@ class WorkEnvManager:
         # Handle different path scenarios
         if file_path.exists() and file_path.is_dir():
             # Path exists and is a directory - can't write to it directly
-            logger.debug(f"📁 Path is a directory, creating file inside: {file_path}")
             # Write to a file with the same base name inside the directory
             file_path = file_path / ".extracted"
 
@@ -210,7 +212,6 @@ class WorkEnvManager:
         ensure_parent_dir(file_path)
         atomic_write_text(file_path, content)
 
-        logger.debug(f"✅ Wrote file: {file_path}")
 
     def _run_execute_command(self, cmd: dict[str, Any], workenv_dir: Path, metadata: dict[str, Any]) -> None:
         """Handle command execution.
@@ -227,7 +228,6 @@ class WorkEnvManager:
 
         # Parse command safely to avoid shell injection
         args = shlex.split(command)
-        logger.debug(f"🔧 Executing command args: {args}")
 
         # Use the shared run utility
         try:
@@ -237,13 +237,11 @@ class WorkEnvManager:
                 capture_output=True,
                 check=True,
             )
-            logger.debug("✅ Command succeeded")
         except Exception as e:
             logger.error(f"❌ Command failed: {command}")
             logger.error(f"❌ Error details: {e!s}")
             raise RuntimeError(f"Setup command failed: {command}. Error: {e!s}") from e
 
-        logger.debug("✅ Command succeeded")
 
     def _run_enumerate_execute_command(self, cmd: dict[str, Any], workenv_dir: Path) -> None:
         """Handle file enumeration and execution command.
@@ -280,7 +278,6 @@ class WorkEnvManager:
                 logger.error(f"❌ Error: {e}")
                 # Continue with other files instead of failing
 
-        logger.debug(f"✅ Processed {len(matches)} files")
 
     def _substitute_placeholders(self, text: str, workenv_dir: Path, metadata: dict[str, Any]) -> str:
         """Substitute common placeholders in text.
@@ -320,6 +317,5 @@ class WorkEnvManager:
                 logger.debug(f"🔄 Substituted {placeholder} -> {slot_path}")
 
         return command
-
 
 # 🌶️📦🔚

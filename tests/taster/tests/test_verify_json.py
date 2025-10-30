@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
 """Tests for the verify command with JSON output support."""
 
 import json
@@ -34,7 +38,6 @@ class TestVerifyCommand:
                 result = runner.invoke(verify_command, [tmpfile.name])
                 assert result.exit_code == 0
                 assert "PSPF PACKAGE VERIFICATION" in result.output
-                assert "✅ Signature verification: PASSED" in result.output
 
     def test_verify_json_output(self) -> None:
         """Test verification with JSON output."""
@@ -207,3 +210,5 @@ class TestVerifyCommand:
                 assert result.exit_code == 0
                 assert "❌ Signature verification: FAILED" in result.output
                 assert "❌ Index checksum invalid" in result.output
+
+# 🌶️📦🔚

@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
+"""TODO: Add module docstring."""
+
 from __future__ import annotations
 
 """
@@ -171,6 +173,5 @@ class PSPFBuilder:
             from flavor.psp.format_2025.spec import BuildResult
 
             return BuildResult(success=False, errors=[str(e)])
-
 
 # 🌶️📦🔚

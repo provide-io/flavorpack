@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
 """Test launcher execution with a minimal Python package."""
 
 import json
@@ -58,9 +62,6 @@ def launcher_test_command(launcher, verbose, key_seed, exec_mode) -> None:
         (src_dir / "__init__.py").write_text("")
         (src_dir / "__main__.py").write_text("""
 import sys
-print("✅ Launcher test successful!")
-print(f"🐍 Python {sys.version.split()[0]} running")
-print(f"📦 Package executed via {sys.argv[0]}")
 sys.exit(0)
 """)
 
@@ -76,7 +77,6 @@ entry_point = "test_app.__main__:main"
 """)
 
         # Build package
-        click.secho("\n📦 Building test package...", fg="yellow")
         try:
             artifacts = build_package_from_manifest(
                 manifest_path=manifest,
@@ -90,7 +90,6 @@ entry_point = "test_app.__main__:main"
                 sys.exit(1)
 
             package_path = artifacts[0]
-            click.secho(f"✅ Package built: {package_path}", fg="green")
 
             # Make executable
             package_path.chmod(0o755)
@@ -127,7 +126,6 @@ entry_point = "test_app.__main__:main"
 
             # Check success
             if result.returncode == 0 and "Launcher test successful" in result.stdout:
-                click.secho("\n✅ LAUNCHER TEST PASSED!", fg="green", bold=True)
 
                 # Additional verification
                 if verbose:
@@ -177,3 +175,5 @@ entry_point = "test_app.__main__:main"
 
 if __name__ == "__main__":
     launcher_test_command()
+
+# 🌶️📦🔚

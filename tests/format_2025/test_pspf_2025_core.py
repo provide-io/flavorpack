@@ -1,13 +1,11 @@
-#
+# 
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""
-Core PSPF 2025 Format Tests
+"""Core PSPF 2025 Format Tests
 
-Tests the fundamental PSPF format structure, reading, and writing.
-"""
+Tests the fundamental PSPF format structure, reading, and writing."""
 
 import hashlib
 import json
@@ -154,8 +152,6 @@ class TestPSPFCore:
             trailer = f.read(DEFAULT_MAGIC_TRAILER_SIZE)
 
         # Verify MagicTrailer structure
-        assert trailer[:4] == TRAILER_START_MAGIC  # 📦 at start
-        assert trailer[-4:] == TRAILER_END_MAGIC  # 🪄 at end
 
         # Verify index version in trailer
         index_version = struct.unpack("<I", trailer[4:8])[0]

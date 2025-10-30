@@ -2,6 +2,9 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
+"""TODO: Add module docstring."""
+
 from __future__ import annotations
 
 """PSPF Build Specification - Immutable data structures for package building.
@@ -233,6 +236,5 @@ class PreparedSlot:
     def get_size(self) -> int:
         """Get the size of data to write."""
         return len(self.get_data_to_write())
-
 
 # 🌶️📦🔚

@@ -1,13 +1,11 @@
-#
+# 
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""
-PSPF 2025 Slot Management Tests
+"""PSPF 2025 Slot Management Tests
 
-Tests slot lifecycle, compression, and management functionality.
-"""
+Tests slot lifecycle, compression, and management functionality."""
 
 import hashlib
 import os

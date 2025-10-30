@@ -1,7 +1,10 @@
-#
+# 
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
+"""TODO: Add module docstring."""
+
 from __future__ import annotations
 
 """FlavorPack Configuration Manager.
@@ -118,6 +121,5 @@ def set_flavor_config(config: FlavorConfig | None) -> None:
 def reset_flavor_config() -> None:
     """Reset the global configuration to force reload from environment."""
     _config_manager.reset_config()
-
 
 # 🌶️📦🔚

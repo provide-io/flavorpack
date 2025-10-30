@@ -1,7 +1,10 @@
-#
+# 
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
+"""TODO: Add module docstring."""
+
 from __future__ import annotations
 
 """
@@ -20,8 +23,6 @@ DEFAULT_MAGIC_TRAILER_SIZE = 8200  # Index block with markers
 DEFAULT_SLOT_ALIGNMENT = 8  # Minimum alignment
 
 # Magic bytes for format markers
-TRAILER_START_MAGIC = bytes([0xF0, 0x9F, 0x93, 0xA6])  # 📦
-TRAILER_END_MAGIC = bytes([0xF0, 0x9F, 0xAA, 0x84])  # 🪄
 
 # =================================
 # Platform-specific defaults
@@ -198,4 +199,5 @@ VALIDATION_LEVELS = {
     VALIDATION_MINIMAL: 3,
     VALIDATION_NONE: 4,
 }
+
 # 🌶️📦🔚

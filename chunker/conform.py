@@ -1,4 +1,4 @@
-#
+# 
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -17,7 +17,6 @@ SPDX_BLOCK = """# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All
 # SPDX-License-Identifier: Apache-2.0
 #"""
 PLACEHOLDER_DOCSTRING = '"""TODO: Add module docstring."""'
-FOOTER = "# 🐍🏗️🔚"
 
 # Exclude files that are not part of the source code, are vendored, or are this script itself.
 EXCLUDE_FILES = [
@@ -117,7 +116,6 @@ def conform_file(filepath) -> None:
     new_header = "\n".join(header_parts)
 
     # Strip old footers and trailing whitespace from body
-    body = re.sub(r"# 🐍🏗️.*", "", body).strip()
 
     # Construct the final content
     final_content = f"{new_header}\n\n{body}\n\n{FOOTER}\n"
@@ -142,4 +140,4 @@ def main() -> None:
 if __name__ == "__main__":
     main()
 
-# 🐍🏗️🔚
+# 🌶️📦🔚

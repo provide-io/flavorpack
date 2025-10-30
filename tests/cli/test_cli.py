@@ -1,8 +1,10 @@
-#
+# 
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
 """TODO: Add module docstring."""
+
 from pathlib import Path
 from unittest.mock import patch
 
@@ -78,6 +80,5 @@ def test_cli_keygen(tmp_path: Path) -> None:
         assert result.exit_code == 0, f"Keygen command failed: {result.output}"
         assert f"Package integrity key pair generated in '{keys_dir}'" in result.output
         mock_keygen.assert_called_once_with(keys_dir)
-
 
 # 🌶️📦🔚

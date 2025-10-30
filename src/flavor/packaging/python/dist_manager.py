@@ -1,7 +1,10 @@
-#
+# 
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
+"""TODO: Add module docstring."""
+
 from __future__ import annotations
 
 """Python distribution management for FlavorPack packaging.
@@ -76,7 +79,6 @@ class PythonDistManager:
         Returns:
             Path to the Python executable in the created venv
         """
-        logger.info(f"🐍📦 Creating Python environment: {venv_path}")
 
         if python_exe is None:
             python_exe = Path(sys.executable)
@@ -106,7 +108,6 @@ class PythonDistManager:
                         # If symlink fails, copy the file
                         safe_copy(python_exe, venv_python, preserve_mode=True, overwrite=True)
 
-                logger.info("✅ Successfully created venv with UV")
                 return venv_python
             except Exception as e:
                 logger.warning(f"UV venv creation failed, falling back to venv: {e}")
@@ -122,7 +123,6 @@ class PythonDistManager:
         run(venv_cmd, check=True, capture_output=True)
 
         venv_python = self._get_venv_python_path(venv_path)
-        logger.info("✅ Successfully created Python environment")
         return venv_python
 
     def _get_venv_python_path(self, venv_path: Path) -> Path:
@@ -158,7 +158,6 @@ class PythonDistManager:
             logger.debug("No wheels to install")
             return
 
-        logger.info(f"📦📥 Installing {len(wheel_files)} wheels to environment")
 
         # Build install command
         wheel_paths = [str(wheel) for wheel in wheel_files]
@@ -173,7 +172,6 @@ class PythonDistManager:
         logger.debug("💻 Installing wheels", command=" ".join(install_cmd))
         run(install_cmd, check=True, capture_output=True)
 
-        logger.info("✅ Successfully installed wheels to environment")
 
     def prepare_site_packages(self, venv_python: Path, optimization_level: int = 1) -> Path:
         """
@@ -186,7 +184,6 @@ class PythonDistManager:
         Returns:
             Path to the prepared site-packages directory
         """
-        logger.info("🔧📂 Preparing site-packages for packaging")
 
         venv_path = venv_python.parent.parent
         if os.name == "nt":
@@ -203,7 +200,6 @@ class PythonDistManager:
         # Clean up unnecessary files
         self._cleanup_site_packages(site_packages)
 
-        logger.info("✅ Site-packages prepared for packaging")
         return site_packages
 
     def _compile_python_files(self, venv_python: Path, site_packages: Path, optimization_level: int) -> None:
@@ -294,7 +290,6 @@ class PythonDistManager:
         Returns:
             Dictionary with distribution information and paths
         """
-        logger.info(f"🏗️🐍 Creating standalone distribution: {project_dir.name}")
 
         if python_exe is None:
             python_exe = Path(sys.executable)
@@ -349,7 +344,6 @@ class PythonDistManager:
             "distribution_size": self._get_directory_size(dist_site_packages),
         }
 
-        logger.info("✅ Standalone distribution created successfully")
         logger.info(
             f"📊 Distribution size: {cast(int, dist_info['distribution_size']) / (1024 * 1024):.1f} MB"
         )
@@ -383,7 +377,6 @@ class PythonDistManager:
         Returns:
             True if distribution is valid, False otherwise
         """
-        logger.info("🔍✅ Validating distribution")
 
         try:
             # Check site-packages exists and has content
@@ -411,12 +404,10 @@ class PythonDistManager:
             if size_mb > 500:  # 500MB threshold
                 logger.warning(f"Distribution is quite large: {size_mb:.1f} MB")
 
-            logger.info("✅ Distribution validation passed")
             return True
 
         except Exception as e:
             logger.error(f"Distribution validation failed: {e}")
             return False
-
 
 # 🌶️📦🔚

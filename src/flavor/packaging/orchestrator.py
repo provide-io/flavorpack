@@ -1,7 +1,8 @@
-#
+# 
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
 """Core logic for building Flavor packages by orchestrating the Go packager CLI."""
 
 import os
@@ -91,10 +92,8 @@ class PackagingOrchestrator:
         logger.trace("🔍📤📋 Launcher version output", output=result.stdout.strip())
 
         if "flavor-rs-launcher" in output or "rust" in output:
-            logger.debug("🦀🔍✅ Detected Rust launcher")
             return "rust"
         if "flavor-go-launcher" in output or "go version" in output:
-            logger.debug("🐹🔍✅ Detected Go launcher")
             return "go"
 
         logger.warning(
@@ -109,9 +108,7 @@ class PackagingOrchestrator:
         log_success=True,
     )
     def build_package(self) -> None:
-        logger.info("🎯🏗️🚀 Orchestrator starting build process")
         logger.debug(
-            "📦🔍📋 Package details",
             name=self.package_name,
             version=self.version,
             output=self.output_flavor_path,
@@ -120,7 +117,6 @@ class PackagingOrchestrator:
             manifest_type=self.manifest_type,
         )
         logger.trace(
-            "🔧🔍📋 Build configuration",
             launcher_bin=self.launcher_bin,
             builder_bin=self.builder_bin,
             strip_binaries=self.strip_binaries,
@@ -143,20 +139,17 @@ class PackagingOrchestrator:
                 expected=self.platform,
                 found=launcher_path.name,
             )
-        logger.info(f"✅ Launcher found and executable: {launcher_path}")
 
         # Store for later use
         self._launcher_path = launcher_path
 
         if self.builder_bin or os.environ.get("FLAVOR_BUILDER_BIN"):
-            logger.info("🔨🌍🚀 Using external builder binary")
             logger.debug(
                 "🔨📍📋 Builder path",
                 builder=self.builder_bin or os.environ.get("FLAVOR_BUILDER_BIN"),
             )
             self._build_with_external_builder()
         else:
-            logger.info("🐍🏗️🚀 Using internal Python builder (default)")
             self._build_with_python_builder()
 
     @log_only_error_context(
@@ -165,9 +158,7 @@ class PackagingOrchestrator:
     )
     def _build_with_python_builder(self) -> None:
         """Build package using the internal Python PSPF builder."""
-        logger.info("🐍🔨🚀 Building package with internal Python builder")
         logger.debug(
-            "🐍🔍📋 Python builder configuration",
             python_version=self.python_version,
             manifest_dir=str(self.manifest_dir),
             entry_point=self.entry_point,
@@ -183,19 +174,16 @@ class PackagingOrchestrator:
         )
 
         with temp_dir(prefix="flavor_build_") as build_temp_dir:
-            pout("📦 Preparing Python runtime artifacts...")
             artifacts = python_packager.prepare_artifacts(build_temp_dir)
 
             pout("📝 Creating slot tarballs...")
             uv_tarball, python_tarball, wheels_tarball = create_python_slot_tarballs(build_temp_dir, artifacts)
-            pout("✅ Slot tarballs created (3 slots prepared)")
 
             launcher_path = self._launcher_path
             launcher_type = self._detect_launcher_type(launcher_path)
             logger.info(f"Detected launcher type: {launcher_type}")
 
             is_windows()
-            pout("🔧 Configuring PSPF package metadata...")
             metadata = create_python_builder_metadata(self.package_name, self.version, self.build_config)
             metadata = validate_metadata_dict(metadata)
 
@@ -257,7 +245,6 @@ class PackagingOrchestrator:
 
             # Always show completion message, detailed info only with progress flag
             final_size = Path(self.output_flavor_path).stat().st_size / (1024 * 1024)
-            pout(f"✅ Package built successfully: {final_size:.1f} MB", color="green")
             if self.show_progress and result.metadata and "duration_seconds" in result.metadata:
                 logger.info(f"⏱️  Build time: {result.metadata['duration_seconds']:.2f}s")
 
@@ -327,7 +314,6 @@ class PackagingOrchestrator:
 
             # Always show completion message
             final_size = Path(self.output_flavor_path).stat().st_size / (1024 * 1024)
-            logger.info(f"✅ Package built successfully: {final_size:.1f} MB")
 
     def _build_with_json_manifest(self) -> None:
         """Build package using a JSON manifest directly with external builders."""
@@ -382,7 +368,5 @@ class PackagingOrchestrator:
 
             # Always show completion message
             final_size = Path(self.output_flavor_path).stat().st_size / (1024 * 1024)
-            logger.info(f"✅ Package built successfully: {final_size:.1f} MB")
-
 
 # 🌶️📦🔚

@@ -1,7 +1,17 @@
-#
+# 
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
+"""TODO: Add module docstring."""
+
+# 
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
+"""TODO: Add module docstring."""
+
 from __future__ import annotations
 
 """TODO: Add module docstring."""
@@ -148,7 +158,6 @@ class PSPFReader:
 
         # Read index from MagicTrailer
         index_data = self.read_magic_trailer()
-        logger.debug("📦 Parsing index from MagicTrailer", size=DEFAULT_HEADER_SIZE)
 
         # Convert to bytes if memoryview
         if isinstance(index_data, memoryview):
@@ -295,7 +304,6 @@ class PSPFReader:
 
         # DEBUG: Log checksum details for troubleshooting
         logger.debug(
-            f"🔍📖 Slot {slot_index} read checksum debug: expected={descriptor.checksum:016x}, actual={actual_checksum:016x}, size={len(slot_data)}"
         )
 
         if actual_checksum != descriptor.checksum:
@@ -472,11 +480,9 @@ def verify_bundle(bundle_path: Path) -> bool:
         # Check signature if present
         try:
             if reader.verify_signature():
-                logger.debug("✅ Signature valid")
         except Exception:
             pass  # Signature optional
 
         return True
-
 
 # 🌶️📦🔚

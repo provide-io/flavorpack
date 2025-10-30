@@ -1,7 +1,8 @@
-#
+# 
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
 """Utility commands for the flavor CLI."""
 
 from __future__ import annotations
@@ -92,7 +93,6 @@ def _clean_workenv_cache(dry_run: bool, yes: bool) -> int:
     removed = manager.clean()
     if removed:
         log.info("Removed cached packages", count=len(removed), size_bytes=size)
-        echo(f"✅ Removed {len(removed)} cached packages")
         return size
 
     return 0
@@ -134,7 +134,6 @@ def _clean_helper_binaries(dry_run: bool, yes: bool) -> int:
         count=len(helpers_list),
         size_bytes=total_size,
     )
-    echo(f"✅ Removed {len(helpers_list)} helper binaries")
     return total_size
 
 
@@ -158,6 +157,5 @@ def _show_total_freed(dry_run: bool, total_freed: int) -> None:
         freed_mb = total_freed / (1024 * 1024)
         log.info("Total space freed", size_mb=freed_mb, size_bytes=total_freed)
         echo(f"\n💾 Total freed: {freed_mb:.1f} MB")
-
 
 # 🌶️📦🔚

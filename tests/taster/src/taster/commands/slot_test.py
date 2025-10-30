@@ -1,4 +1,15 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
+"""TODO: Add module docstring."""
+
+#!/usr/bin/env python3
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
 """Test slot substitution patterns in commands."""
 
 import json
@@ -112,7 +123,6 @@ target = "config.json"
 
                 # Check if slot patterns are properly handled
                 if result.success:
-                    status = "✅ Passed"
                     error = None
                 else:
                     status = "❌ Failed"
@@ -142,7 +152,6 @@ target = "config.json"
             "results": results,
             "summary": {
                 "total": len(results),
-                "passed": len([r for r in results if "✅" in r["status"]]),
                 "failed": len([r for r in results if "❌" in r["status"]]),
             },
         }
@@ -153,15 +162,12 @@ target = "config.json"
         click.secho("─" * 40, fg="cyan")
 
         for result in results:
-            status_color = "green" if "✅" in result["status"] else "red"
             click.secho(f"  {result['status']} {result['description']}", fg=status_color)
 
-        passed = len([r for r in results if "✅" in r["status"]])
         total = len(results)
 
         click.secho("\n" + "─" * 40, fg="cyan")
         if passed == total:
-            click.secho(f"✅ All {total} tests passed!", fg="green", bold=True)
         else:
             click.secho(f"⚠️ {passed}/{total} tests passed", fg="yellow", bold=True)
 
@@ -173,3 +179,5 @@ target = "config.json"
                 click.echo(f"  Status: {result['status']}")
                 if result.get("error"):
                     click.echo(f"  Error: {result['error']}")
+
+# 🌶️📦🔚

@@ -1,7 +1,9 @@
-#
+# 
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
+"""TODO: Add module docstring."""
 
 from __future__ import annotations
 
@@ -228,6 +230,5 @@ def string_to_operations(op_string: str) -> int:
         return pack_operations(single_ops[op_string])
 
     raise ValueError(f"Unknown v0 operation string: {op_string}")
-
 
 # 🌶️📦🔚

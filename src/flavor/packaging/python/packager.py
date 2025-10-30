@@ -1,7 +1,10 @@
-#
+# 
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
+"""TODO: Add module docstring."""
+
 from __future__ import annotations
 
 """TODO: Add module docstring."""
@@ -93,7 +96,6 @@ class PythonPackager:
         )
 
         logger.info(
-            "🐍 Python packager initialized",
             package=package_name,
             entry_point=entry_point,
             python_version=python_version,
@@ -117,7 +119,6 @@ class PythonPackager:
             - uv_binary: UV binary (if available)
             - python_tgz: Python distribution
         """
-        logger.info("📦 Preparing Python package artifacts")
         return self.slot_builder.prepare_artifacts(work_dir)
 
     def get_python_binary_info(self) -> dict[str, Any]:
@@ -178,7 +179,6 @@ class PythonPackager:
                     f"Invalid entry point format: {self.entry_point}. Expected format: 'module:function'"
                 )
 
-            logger.info("✅ Manifest validation passed")
             return True
 
         except Exception as e:
@@ -234,7 +234,6 @@ class PythonPackager:
         Returns:
             Path to Python executable in the environment
         """
-        logger.info("🏗️ Creating build environment")
 
         venv_dir = build_dir / "venv"
 
@@ -324,6 +323,5 @@ class PythonPackager:
             f"python={self.python_version}, "
             f"platform={'windows' if self.is_windows else 'unix'})"
         )
-
 
 # 🌶️📦🔚

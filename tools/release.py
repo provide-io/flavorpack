@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
 """Orchestrate the Flavor release process."""
+
 import argparse
 from datetime import datetime
 from pathlib import Path
@@ -47,7 +48,6 @@ def check_branch() -> str:
 
 def run_tests() -> bool:
     """Run test suite."""
-    print("\n🧪 Running tests...")
     result = run(
         [sys.executable, "-m", "pytest", "tests/", "-q", "--tb=short"],
         cwd=get_project_root(),
@@ -57,7 +57,6 @@ def run_tests() -> bool:
         print("❌ Tests failed")
         return False
 
-    print("✅ Tests passed")
     return True
 
 
@@ -77,13 +76,11 @@ def build_helpers() -> bool:
         print("❌ Helper build failed")
         return False
 
-    print("✅ Helpers built successfully")
     return True
 
 
 def build_wheels(platforms: list[str] | None = None) -> list[Path]:
     """Build release wheels."""
-    print("\n📦 Building wheels...")
 
     build_cmd = [sys.executable, "tools/build_wheel.py"]
 
@@ -122,7 +119,6 @@ def validate_wheels(wheels: list[Path]) -> bool:
             print(f"❌ Validation failed for {wheel.name}")
             return False
 
-    print("✅ All wheels validated successfully")
     return True
 
 
@@ -143,14 +139,12 @@ def create_git_tag(version: str, push: bool = False) -> bool:
         print(f"❌ Failed to create tag {tag}")
         return False
 
-    print(f"✅ Created tag {tag}")
 
     if push:
         result = run(["git", "push", "origin", tag])
         if result.returncode != 0:
             print(f"❌ Failed to push tag {tag}")
             return False
-        print(f"✅ Pushed tag {tag}")
 
     return True
 
@@ -176,7 +170,6 @@ def upload_to_pypi(wheels: list[Path], test: bool = False) -> bool:
         print(f"❌ Upload to {'Test' if test else ''}PyPI failed")
         return False
 
-    print(f"✅ Successfully uploaded to {'Test' if test else ''}PyPI")
     return True
 
 
@@ -186,7 +179,6 @@ def create_release_notes(version: str, wheels: list[Path]) -> str:
 
 Released: {datetime.now().strftime("%Y-%m-%d")}
 
-## 📦 Wheels
 
 """
 
@@ -201,7 +193,6 @@ Released: {datetime.now().strftime("%Y-%m-%d")}
 pip install flavor
 ```
 
-## 🔧 Platform Support
 
 - macOS (ARM64, x86_64)
 - Linux (ARM64, x86_64)
@@ -283,7 +274,6 @@ def main() -> int:
         print("\n❌ No wheels were built")
         return 1
 
-    print(f"\n✅ Built {len(wheels)} wheel(s):")
     for wheel in wheels:
         print(f"  - {wheel.name}")
 
@@ -332,4 +322,5 @@ Next steps:
 
 if __name__ == "__main__":
     sys.exit(main())
+
 # 🌶️📦🔚

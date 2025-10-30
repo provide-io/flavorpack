@@ -1,7 +1,17 @@
-#
+# 
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
+"""TODO: Add module docstring."""
+
+# 
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
+"""TODO: Add module docstring."""
+
 from __future__ import annotations
 
 """PSPF 2025 Bundle Executor
@@ -151,7 +161,6 @@ class BundleExecutor:
                 value = value.replace("{package_name}", self.package_name)
                 value = value.replace("{version}", self.package_version)
                 env[key] = value
-                logger.trace(f"🌍 Set {key}={value}")
 
         return env
 
@@ -176,7 +185,6 @@ class BundleExecutor:
         env = self.prepare_environment()
 
         logger.info(f"🏃 Executing: {command}")
-        logger.debug(f"📁 Working directory: {self.workenv_dir}")
 
         try:
             # Parse command into arguments (safely handles quotes and spaces)
@@ -193,7 +201,6 @@ class BundleExecutor:
 
             # Log result
             if result.returncode == 0:
-                logger.info("✅ Execution completed successfully (exit code: 0)")
             else:
                 logger.warning(f"⚠️ Execution completed with exit code: {result.returncode}")
                 if result.stderr:
@@ -227,6 +234,5 @@ class BundleExecutor:
                 "error": str(e),
                 "returncode": 1,  # Add returncode for consistency
             }
-
 
 # 🌶️📦🔚

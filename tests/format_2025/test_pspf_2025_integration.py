@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -239,6 +238,5 @@ class TestPSPFIntegration:
 
             # Data section offset should be page-aligned
             assert slot_offset % DEFAULT_PAGE_SIZE == 0, f"Slot offset {slot_offset} is not page-aligned"
-
 
 # 🌶️📦🔚

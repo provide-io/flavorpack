@@ -1,8 +1,10 @@
-#
+# 
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
 """Test launcher availability and resilience."""
+
 import io
 import os
 from pathlib import Path
@@ -314,4 +316,5 @@ class TestLauncherReproducibility:
 
         # The specs passed to the pure builder function should be identical
         assert spec1 == spec2
+
 # 🌶️📦🔚

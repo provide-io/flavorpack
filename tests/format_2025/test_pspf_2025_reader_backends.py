@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -91,10 +90,7 @@ class TestReaderBackends:
             data_copy[4:8] = b"\x00\x00\x00\x00"
             index.index_checksum = zlib.adler32(bytes(data_copy))
 
-            # Write MagicTrailer (📦 + index + 🪄)
-            f.write("📦".encode())  # 4 bytes
             f.write(index.pack())  # 8192 bytes
-            f.write("🪄".encode())  # 4 bytes
 
             path = Path(f.name)
 
@@ -255,6 +251,5 @@ class TestReaderBackends:
             # Content property handles decompression (none in this case)
             content = view.content
             assert content == b"TEST DATA 1" * 9 + b"T"
-
 
 # 🌶️📦🔚

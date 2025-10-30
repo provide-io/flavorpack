@@ -1,7 +1,10 @@
-#
+# 
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
+"""TODO: Add module docstring."""
+
 from __future__ import annotations
 
 """Centralized console output utilities for Flavor CLI.
@@ -72,6 +75,5 @@ def get_command_logger(command_name: str) -> Any:
         log.error("Packaging failed", error=str(e))
     """
     return get_logger(f"flavor.commands.{command_name}")
-
 
 # 🌶️📦🔚
