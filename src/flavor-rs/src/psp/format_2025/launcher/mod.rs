@@ -12,7 +12,6 @@ use workenv::{check_disk_space, get_workenv_paths, setup_workenv_directories};
 
 use crate::api::LaunchOptions;
 use crate::exceptions::{FlavorError, Result};
-use crate::psp::format_2025::defaults::DEFAULT_DIR_PERMS;
 use crate::utils::get_cache_dir;
 use log::{debug, error, info, trace, warn};
 use std::env;
@@ -168,6 +167,7 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
     // Set secure permissions on workenv directory
     #[cfg(unix)]
     {
+        use crate::psp::format_2025::defaults::DEFAULT_DIR_PERMS;
         use std::os::unix::fs::PermissionsExt;
         let permissions = fs::Permissions::from_mode(DEFAULT_DIR_PERMS as u32);
         fs::set_permissions(&workenv_path, permissions)?;
@@ -239,6 +239,7 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
             // Set secure permissions on temp extraction directory
             #[cfg(unix)]
             {
+                use crate::psp::format_2025::defaults::DEFAULT_DIR_PERMS;
                 use std::os::unix::fs::PermissionsExt;
                 let permissions = fs::Permissions::from_mode(DEFAULT_DIR_PERMS as u32);
                 fs::set_permissions(&temp_extract_dir, permissions)?;
@@ -279,6 +280,7 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
             // Set secure permissions on metadata directory and its parent
             #[cfg(unix)]
             {
+                use crate::psp::format_2025::defaults::DEFAULT_DIR_PERMS;
                 use std::os::unix::fs::PermissionsExt;
                 let permissions = fs::Permissions::from_mode(DEFAULT_DIR_PERMS as u32);
                 // Set permissions on both the metadata parent directory and package subdirectory
