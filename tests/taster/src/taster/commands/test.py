@@ -1,3 +1,8 @@
+#
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
 """Test management commands for Flavor"""
 
 from pathlib import Path
@@ -164,3 +169,5 @@ def clean() -> None:
         click.echo("✅ Cleaned Flavor cache")
 
     click.echo("✅ Cleaned test artifacts")
+
+# 🌶️📦🔚
