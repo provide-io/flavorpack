@@ -217,22 +217,31 @@ jobs:
           echo "✅ Build complete for $PLATFORM"
           ls -la dist/bin/*-$PLATFORM*
       
-      - name: 📦 Package artifacts
+      - name: 📦 Package artifacts (Unix)
+        if: runner.os != 'Windows'
         shell: bash
         run: |
           mkdir -p artifacts
           cd dist/bin
-          # Only package binaries for the CURRENT version and platform (including .exe for Windows)
-          if [[ "${{ matrix.platform }}" == "windows_"* ]]; then
-            zip -r ../../artifacts/flavor-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}.zip \
-              *-${{ needs.setup.outputs.version }}-${{ matrix.platform }}.exe || true
-          else
-            zip -r ../../artifacts/flavor-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}.zip \
-              *-${{ needs.setup.outputs.version }}-${{ matrix.platform }} || true
-          fi
+          zip -r ../../artifacts/flavor-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}.zip \
+            *-${{ needs.setup.outputs.version }}-${{ matrix.platform }} || true
           cd ../..
           echo "📦 Packaged helpers:"
           ls -la artifacts/
+
+      - name: 📦 Package artifacts (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path artifacts | Out-Null
+          $files = Get-ChildItem -Path "dist\bin" -Filter "*-${{ needs.setup.outputs.version }}-${{ matrix.platform }}.exe"
+          if ($files.Count -gt 0) {
+            Compress-Archive -Path $files.FullName -DestinationPath "artifacts\flavor-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}.zip" -Force
+            Write-Host "📦 Packaged helpers:"
+            Get-ChildItem artifacts
+          } else {
+            Write-Host "⚠️ No files found to package"
+          }
       
       - name: 🧪 Test binaries
         shell: bash
