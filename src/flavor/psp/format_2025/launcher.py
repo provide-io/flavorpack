@@ -2,12 +2,12 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+from __future__ import annotations
+
 """PSPF 2025 Bundle Launcher
 
 Handles bundle execution, slot extraction, and work environment setup.
 """
-
-from __future__ import annotations
 
 from collections.abc import Generator
 from contextlib import contextmanager

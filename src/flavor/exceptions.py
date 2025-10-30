@@ -1,15 +1,12 @@
-# flavor/exceptions.py
 #
-# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
+#
+from __future__ import annotations
 
 """
 Custom exceptions for the flavor pack.
-
-
 """
-
-from __future__ import annotations
 
 from provide.foundation.errors import FoundationError
 
@@ -48,3 +45,4 @@ class VerificationError(FlavorException):
     """Raised for errors during package verification."""
 
     pass
+# 🌶️📦🔚
