@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	"syscall"
 
 	"github.com/hashicorp/go-hclog"
 )
@@ -19,14 +18,12 @@ func checkDiskSpace(paths *WorkenvPaths, metadata *Metadata, logger hclog.Logger
 	}
 
 	// Get available disk space
-	var stat syscall.Statfs_t
 	workenvPath := paths.Workenv()
-	if err := syscall.Statfs(workenvPath, &stat); err != nil {
+	available, err := getAvailableDiskSpace(workenvPath)
+	if err != nil {
 		logger.Warn("⚠️ Could not check disk space", "error", err)
 		return nil // Don't fail if we can't check
 	}
-
-	available := int64(stat.Bavail) * int64(stat.Bsize)
 
 	// Convert to human-readable sizes
 	neededGB := float64(totalSizeNeeded) / (1024 * 1024 * 1024)
