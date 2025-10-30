@@ -20,6 +20,8 @@ from flavor.config.defaults import (
     DEFAULT_MAX_MEMORY,
     DEFAULT_MIN_MEMORY,
     PSPF_VERSION,
+)
+from flavor.psp.format_2025.constants import (
     TRAILER_END_MAGIC,
     TRAILER_START_MAGIC,
 )
