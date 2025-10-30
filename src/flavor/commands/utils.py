@@ -93,6 +93,7 @@ def _clean_workenv_cache(dry_run: bool, yes: bool) -> int:
     removed = manager.clean()
     if removed:
         log.info("Removed cached packages", count=len(removed), size_bytes=size)
+        echo(f"✅ Removed {len(removed)} cached package(s)")
         return size
 
     return 0
@@ -134,6 +135,7 @@ def _clean_helper_binaries(dry_run: bool, yes: bool) -> int:
         count=len(helpers_list),
         size_bytes=total_size,
     )
+    echo(f"✅ Removed {len(helpers_list)} helper binaries")
     return total_size
 
 

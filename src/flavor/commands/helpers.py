@@ -196,7 +196,7 @@ def helper_info(name: str) -> None:
     if info.built_from:
         echo(f"Source: {info.built_from}")
         if info.built_from.exists():
-            pass
+            echo("  ✅ Source directory exists")
         else:
             echo("  ⚠️  Source directory not found")
 
@@ -252,7 +252,7 @@ def helper_test(lang: str) -> None:
         echo_error("\n❌ Some tests failed")
         raise click.Abort()
     elif results["passed"]:
-        pass
+        echo("\n✅ All tests passed")
     else:
         echo("\n⚠️  No tests were run")
 
