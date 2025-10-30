@@ -86,6 +86,7 @@ def env_command() -> None:
         if old in os.environ:
             click.echo(f"  ⚠️ {old} still exists (should be mapped to {new})")
         if new in os.environ:
+            pass
 
     # Test whitelist mode (unset = ["*"] with pass list)
     click.secho("\n🔒 Whitelist Mode Test:", fg="magenta")

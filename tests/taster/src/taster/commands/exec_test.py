@@ -149,6 +149,7 @@ entry_point = "script_test.__main__:main"
                 )
 
                 if result.returncode == 0 and "Script execution successful" in result.stdout:
+                    pass
                 else:
                     click.secho(f"      ❌ {mode} mode: FAILED", fg="red")
                     if verbose:

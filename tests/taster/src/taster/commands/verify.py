@@ -102,6 +102,7 @@ def verify_command(package_path, output_json, output_file) -> None:
 
                 # Signature verification
                 if result.get("signature_valid"):
+                    pass
                 else:
                     click.secho("\n❌ Signature verification: FAILED", fg="red")
 

@@ -106,6 +106,7 @@ def test_mmap_operations():
 
     # Test 1: Can we use mmap?
     if check_mmap_support():
+        pass
     else:
         results.append("❌ mmap is not supported")
         return results

@@ -1,11 +1,11 @@
-# 
+#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 
 """TODO: Add module docstring."""
 
-# 
+#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -249,6 +249,7 @@ def _print_workenv_info(name: str, info: dict) -> None:
     click.echo(f"🗂️  Metadata Type: {info.get('metadata_type', 'none')}")
 
     if info.get("extraction_complete"):
+        pass
     else:
         click.echo("⚠️  Extraction: Incomplete or not started")
 
@@ -282,5 +283,6 @@ def _print_workenv_info(name: str, info: dict) -> None:
                 click.echo(f"  ... and {len(slots) - 5} more")
 
     click.echo()
+
 
 # 🌶️📦🔚

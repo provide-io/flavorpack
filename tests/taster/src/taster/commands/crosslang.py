@@ -467,6 +467,7 @@ entry_point = "crosslang_test:main"
                 self.log(f"  Testing {pkg.name}:")
                 for cmd in test_commands:
                     if self.test_cli_command(pkg, cmd):
+                        pass
                     else:
                         self.log(f"    ⚠️ {cmd}", "warning")
 
