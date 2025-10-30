@@ -11,7 +11,7 @@ from pathlib import Path
 
 import click
 
-from flavor.console import echo_error, get_command_logger
+from flavor.console import echo, echo_error, get_command_logger
 from flavor.exceptions import BuildError
 from flavor.packaging.keys import generate_key_pair
 
@@ -33,6 +33,7 @@ def keygen_command(out_dir: str) -> None:
     try:
         generate_key_pair(Path(out_dir))
         log.info("Key pair generated successfully", out_dir=out_dir)
+        echo(f"✅ Package integrity key pair generated in '{out_dir}'.")
     except BuildError as e:
         log.error("Keygen failed", error=str(e), out_dir=out_dir)
         echo_error(f"❌ Keygen failed: {e}")
