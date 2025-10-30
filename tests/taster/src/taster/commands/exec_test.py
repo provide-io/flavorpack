@@ -25,7 +25,6 @@ from flavor.package import build_package_from_manifest
 @click.command("exec-test")
 @click.option("--verbose", "-v", is_flag=True, help="Verbose output")
 def exec_test_command(verbose) -> None:
-
     click.secho("=" * 60, fg="cyan")
 
     helper_manager = HelperManager()
@@ -219,6 +218,7 @@ setup_commands = [
             )
 
             if result.returncode == 0 and "Direct shell execution successful" in result.stdout:
+                pass
             else:
                 click.secho("  ❌ Direct workenv execution: FAILED", fg="red")
                 if verbose:

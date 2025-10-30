@@ -137,7 +137,6 @@ def test_mmap_operations():
     try:
         from flavor.psp.format_2025.backends import MMapBackend
 
-
         # Try to create one
         MMapBackend()
     except ImportError:
@@ -184,6 +183,7 @@ def mmap_command() -> None:
     # Conclusion
     click.echo("\n📊 Summary:")
     if any("memory-mapped" in str(i).lower() for i in indicators):
+        pass
     elif bundle_path := (sys.argv[0] if sys.argv[0].endswith(".psp") else None):
         if Path(bundle_path).exists():
             click.echo("  ⚠️ Bundle exists but mmap usage unclear")
