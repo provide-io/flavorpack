@@ -129,6 +129,7 @@ class PythonEnvironmentBuilder:
     def _log_uv_environment(self) -> None:
         """Log UV environment variables that might affect behavior."""
         logger.trace(
+            "🔍 UV environment variables",
             UV_CACHE_DIR=os.environ.get("UV_CACHE_DIR", "not set"),
             UV_PYTHON_INSTALL_DIR=os.environ.get("UV_PYTHON_INSTALL_DIR", "not set"),
             UV_SYSTEM_PYTHON=os.environ.get("UV_SYSTEM_PYTHON", "not set"),
