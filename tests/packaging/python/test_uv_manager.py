@@ -399,4 +399,5 @@ class TestUVManagerCriticalFeatures:
         self.uv_manager.use_system_uv = not original_value
         assert self.uv_manager.use_system_uv != original_value
 
+
 # 🌶️📦🔚

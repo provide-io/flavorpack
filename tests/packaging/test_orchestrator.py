@@ -244,4 +244,5 @@ def test_launcher_type_detection(mock_run, orchestrator: PackagingOrchestrator) 
     mock_run.return_value.stdout = "some other launcher"
     assert orchestrator._detect_launcher_type(Path("unknown-launcher")) == "rust"
 
+
 # 🌶️📦🔚

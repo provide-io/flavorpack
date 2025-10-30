@@ -468,4 +468,5 @@ class TestPyPaPipManagerCriticalFeatures:
         assert "--only-binary" in cmd2
         assert ":all:" in cmd2
 
+
 # 🌶️📦🔚

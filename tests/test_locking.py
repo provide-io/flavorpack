@@ -217,4 +217,5 @@ class TestDefaultLockManager:
         expected_dir = Path.home() / ".cache" / "flavor" / "locks"
         assert default_lock_manager.lock_dir == expected_dir
 
+
 # 🌶️📦🔚

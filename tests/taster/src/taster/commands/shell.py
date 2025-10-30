@@ -52,4 +52,5 @@ def shell_command() -> None:
     # Start interactive shell
     code.interact(local=namespace, banner="")
 
+
 # 🌶️📦🔚

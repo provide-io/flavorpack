@@ -17,4 +17,5 @@ def echo_command(args) -> None:
     else:
         click.echo("(no arguments provided)")
 
+
 # 🌶️📦🔚

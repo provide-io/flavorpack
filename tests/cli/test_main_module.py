@@ -33,4 +33,5 @@ def test_main_module_entrypoint() -> None:
     # This is the correct behavior.
     mock_cli.assert_not_called()
 
+
 # 🌶️📦🔚

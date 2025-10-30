@@ -82,7 +82,6 @@ def process_runtime_env(env_map: dict[str, str], runtime_env: dict[str, Any]) ->
     _verify_pass_requirements(pass_patterns, env_map)
 
 
-
 def _create_preserve_checker(pass_patterns: list[str]) -> Callable[[str], bool]:
     """Create a function to check if a variable should be preserved."""
 
@@ -265,5 +264,6 @@ def apply_environment_layers(
     set_platform_environment(result)
 
     return result
+
 
 # 🌶️📦🔚

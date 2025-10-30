@@ -436,4 +436,5 @@ class TestWheelBuilderCriticalFeatures:
         assert not hasattr(self.wheel_builder.pypapip, "_get_uv_venv_cmd")
         assert not hasattr(self.wheel_builder.uv, "_get_pypapip_download_cmd")
 
+
 # 🌶️📦🔚

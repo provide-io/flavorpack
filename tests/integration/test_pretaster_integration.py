@@ -187,4 +187,5 @@ class TestPretasterIntegration:
         # Should show package metadata
         assert result.returncode == 0 or "not found" in result.stderr  # flavor may not be in PATH
 
+
 # 🌶️📦🔚

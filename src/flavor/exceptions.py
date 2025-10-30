@@ -49,4 +49,5 @@ class VerificationError(FlavorException):
 
     pass
 
+
 # 🌶️📦🔚

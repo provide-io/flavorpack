@@ -179,4 +179,5 @@ def load_public_key_raw(key_path: Path) -> bytes:
             f"  flavor keygen --output keys/"
         )
 
+
 # 🌶️📦🔚

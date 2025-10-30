@@ -57,4 +57,5 @@ def test_cli_verify_fails(tmp_path: Path) -> None:
         assert "Verification failed: Mocked verification failure" in result.output
         mock_verify.assert_called_once()
 
+
 # 🌶️📦🔚

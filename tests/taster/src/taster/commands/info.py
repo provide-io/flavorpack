@@ -66,4 +66,5 @@ def info_command() -> None:
     click.echo(f"  Flavor Variables: {len(flavor_vars)}")
     click.echo(f"  Taster Variables: {len(taster_vars)}")
 
+
 # 🌶️📦🔚

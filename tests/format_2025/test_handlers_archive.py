@@ -294,4 +294,5 @@ class TestExtractArchive:
         ):
             extract_archive(data, dest_dir, packed_ops)
 
+
 # 🌶️📦🔚

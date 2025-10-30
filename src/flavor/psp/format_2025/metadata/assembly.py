@@ -274,4 +274,5 @@ def assemble_metadata(spec: BuildSpec, slots: list[Any], launcher_info: dict[str
     # Validate all paths use {workenv}
     return validate_metadata_dict(metadata)
 
+
 # 🌶️📦🔚

@@ -109,4 +109,5 @@ def metadata_command() -> None:
     if click.get_current_context().params.get("verbose"):
         click.echo(json.dumps(metadata, indent=2))
 
+
 # 🌶️📦🔚

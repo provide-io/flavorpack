@@ -272,4 +272,5 @@ class TestPSPFSlotsOperations:
         # Just verify it's reasonably large
         assert bundle_path.stat().st_size > 1000  # At least 1KB
 
+
 # 🌶️📦🔚

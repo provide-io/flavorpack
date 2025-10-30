@@ -162,7 +162,6 @@ def combine_test_results(input_dir: Path, output_file: Path) -> None:
         test_files = list(input_dir.glob(f"**/{pattern}"))
 
         if test_files:
-
             # Merge results from all test files for this platform
             platform_data = {}
             for test_file in test_files:

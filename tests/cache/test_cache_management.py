@@ -201,4 +201,5 @@ class TestCacheCLICommands:
         assert "Extraction: Complete" in result.output
         assert "Name: app1" in result.output
 
+
 # 🌶️📦🔚

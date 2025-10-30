@@ -292,4 +292,5 @@ def verify_package_integrity(bundle_path: Path) -> IntegrityResult:
     """
     return _verifier.verify_integrity(bundle_path)
 
+
 # 🌶️📦🔚

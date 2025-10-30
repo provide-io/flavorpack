@@ -487,4 +487,5 @@ class TestPythonDistManagerCriticalFeatures:
                 assert result is True  # Still valid but should warn
                 mock_logger.warning.assert_called()
 
+
 # 🌶️📦🔚

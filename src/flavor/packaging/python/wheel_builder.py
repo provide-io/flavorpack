@@ -270,7 +270,6 @@ class WheelBuilder:
             logger.error(error_msg)
             raise RuntimeError(error_msg)
 
-
         return wheel_files
 
     def build_and_resolve_project(
@@ -298,9 +297,7 @@ class WheelBuilder:
         Returns:
             Dictionary with build information and file paths
         """
-        logger.info(
-            "(PROJECT from LOCAL SOURCE, dependencies from PyPI)"
-        )
+        logger.info("(PROJECT from LOCAL SOURCE, dependencies from PyPI)")
 
         # Create build directories
         wheel_dir = build_dir / "wheels"
@@ -323,8 +320,7 @@ class WheelBuilder:
                     pyproject_data = tomllib.load(f)
                 project_dependencies = pyproject_data.get("project", {}).get("dependencies", [])
                 if project_dependencies:
-                    logger.info(
-                    )
+                    logger.info()
                     logger.debug("Project dependencies", deps=project_dependencies)
             except Exception as e:
                 logger.warning(f"Could not extract dependencies from pyproject.toml: {e}")
@@ -363,9 +359,8 @@ class WheelBuilder:
             "total_wheels": len(dependency_wheels) + 1,  # +1 for project wheel
         }
 
-        logger.info(
-            "(project from local source + dependencies from PyPI)"
-        )
+        logger.info("(project from local source + dependencies from PyPI)")
         return build_info
+
 
 # 🌶️📦🔚

@@ -104,4 +104,5 @@ class TestOperationChains:
         tar_xz = pack_operations([OP_TAR, OP_XZ])
         assert unpack_operations(tar_xz) == [OP_TAR, OP_XZ]
 
+
 # 🌶️📦🔚

@@ -19,4 +19,5 @@ def exit_command(code, message) -> None:
         print(message, file=sys.stderr if code != 0 else sys.stdout)
     sys.exit(code)
 
+
 # 🌶️📦🔚

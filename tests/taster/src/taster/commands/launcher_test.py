@@ -126,7 +126,6 @@ entry_point = "test_app.__main__:main"
 
             # Check success
             if result.returncode == 0 and "Launcher test successful" in result.stdout:
-
                 # Additional verification
                 if verbose:
                     click.secho("\n🔍 Package details:", fg="cyan")

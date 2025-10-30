@@ -385,4 +385,5 @@ class TestVerifyPackageIntegrity:
         mock_verifier.verify_integrity.assert_called_once_with(bundle_path)
         assert result["valid"] is True
 
+
 # 🌶️📦🔚

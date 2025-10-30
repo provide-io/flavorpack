@@ -320,4 +320,5 @@ class TestFormatComparison:
         packed_max = pack_operations(max_ops)
         assert packed_truncated == packed_max  # Same result, extra ops ignored
 
+
 # 🌶️📦🔚

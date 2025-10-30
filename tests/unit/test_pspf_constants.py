@@ -76,4 +76,5 @@ class TestPSPFConstants:
         for op in compression_ops:
             assert 0x10 <= op <= 0x2F
 
+
 # 🌶️📦🔚

@@ -359,4 +359,5 @@ class TestPSPFCore:
         metadata = reader.read_metadata()
         assert metadata["package"]["name"] == "empty"
 
+
 # 🌶️📦🔚

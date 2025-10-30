@@ -251,4 +251,5 @@ class TestPSPFSlots:
         metadata_read = reader.read_metadata()
         assert "operations" in metadata_read["slots"][0]  # Operations field instead of codec
 
+
 # 🌶️📦🔚

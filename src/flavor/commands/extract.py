@@ -219,4 +219,5 @@ def extract_all_command(package_file: str, output_dir: str, force: bool) -> None
         echo_error(f"❌ Error extracting: {e}")
         raise click.Abort() from e
 
+
 # 🌶️📦🔚

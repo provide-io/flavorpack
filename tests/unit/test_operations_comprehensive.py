@@ -238,4 +238,5 @@ class TestOperationPacking:
         unpacked = unpack_operations(packed)
         assert unpacked == operations, "Operation order not preserved in unpacking"
 
+
 # 🌶️📦🔚

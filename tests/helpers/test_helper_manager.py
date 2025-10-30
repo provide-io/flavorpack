@@ -400,4 +400,5 @@ class TestHelperInfo:
         assert info.version is None
         assert info.built_from is None
 
+
 # 🌶️📦🔚

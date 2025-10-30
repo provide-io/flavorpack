@@ -263,4 +263,5 @@ class TestGetHelperInfoHelper:
         info = manager._get_helper_info(mock_path)
         assert info is None
 
+
 # 🌶️📦🔚

@@ -227,4 +227,5 @@ class FlavorConfig(BaseConfig):
             system=system,
         )
 
+
 # 🌶️📦🔚

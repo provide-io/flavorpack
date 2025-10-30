@@ -242,4 +242,5 @@ class TestGetPythonBinaryInfo:
             assert info["is_system"] is True
             assert info["manager"] == "system"
 
+
 # 🌶️📦🔚

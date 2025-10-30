@@ -380,4 +380,5 @@ class TestReverseOperations:
 
         assert decompressed == data
 
+
 # 🌶️📦🔚

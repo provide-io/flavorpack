@@ -276,7 +276,6 @@ class UVManager(BaseToolManager):
         logger.debug("💻 Creating UV venv", command=" ".join(venv_cmd))
         run(venv_cmd, check=True, capture_output=True)
 
-
     def install_packages_fast(
         self,
         venv_python: Path,
@@ -302,7 +301,6 @@ class UVManager(BaseToolManager):
         logger.debug("💻 Installing packages with UV", command=" ".join(install_cmd))
         run(install_cmd, check=True, capture_output=True)
 
-
     def compile_requirements(
         self, input_file: Path, output_file: Path, python_version: str | None = None
     ) -> None:
@@ -319,7 +317,6 @@ class UVManager(BaseToolManager):
 
         logger.debug("💻 Compiling requirements with UV", command=" ".join(compile_cmd))
         run(compile_cmd, check=True, capture_output=True)
-
 
     @retry(
         ConnectionError,
@@ -417,5 +414,6 @@ class UVManager(BaseToolManager):
             except Exception as e:
                 logger.error(f"Failed to download UV binary: {e}")
                 return None
+
 
 # 🌶️📦🔚

@@ -399,4 +399,5 @@ class TestHelperTest:
         assert "builder-rust: Exit code 1" in result.output
         assert "Some tests failed" in result.output
 
+
 # 🌶️📦🔚

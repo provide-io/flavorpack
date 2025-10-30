@@ -176,4 +176,5 @@ def signals_command(test_mode, timeout, sleep, exit_code) -> None:
         click.echo("    • Basic signal handling")
         click.echo("    • May not forward all signals properly")
 
+
 # 🌶️📦🔚

@@ -254,4 +254,5 @@ class TestMetadataAssembly:
         assert "runtime_env" in features
         assert "setup_commands" in features
 
+
 # 🌶️📦🔚

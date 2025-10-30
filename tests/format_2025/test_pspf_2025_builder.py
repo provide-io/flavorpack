@@ -495,4 +495,5 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
         for i, slot_meta in enumerate(metadata["slots"]):
             assert slot_meta["slot"] == i
 
+
 # 🌶️📦🔚

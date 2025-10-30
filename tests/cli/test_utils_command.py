@@ -411,4 +411,5 @@ class TestCleanCommand:
         # Should not show "Removed" message or total freed
         assert "Total freed" not in result.output
 
+
 # 🌶️📦🔚

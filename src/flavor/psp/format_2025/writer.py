@@ -324,4 +324,5 @@ def _map_lifecycle(lifecycle: str) -> int:
     }
     return mapping.get(lifecycle.lower(), LIFECYCLE_RUNTIME)
 
+
 # 🌶️📦🔚

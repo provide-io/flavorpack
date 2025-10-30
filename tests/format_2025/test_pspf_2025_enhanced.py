@@ -196,4 +196,5 @@ class TestEnhancedSlots:
         assert view._data is None
         assert view._decompressed is None
 
+
 # 🌶️📦🔚

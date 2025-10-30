@@ -363,4 +363,5 @@ class TestFlavorVerifier:
             with pytest.raises(ValueError, match="Invalid metadata JSON"):
                 FlavorVerifier.verify_package(package_path)
 
+
 # 🌶️📦🔚

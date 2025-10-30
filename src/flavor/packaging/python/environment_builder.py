@@ -77,7 +77,6 @@ class PythonEnvironmentBuilder:
         )
 
         with tempfile.TemporaryDirectory() as uv_install_dir:
-
             python_install_dir = self._install_python_with_uv(uv_install_dir)
 
             if not python_install_dir:
@@ -208,7 +207,6 @@ class PythonEnvironmentBuilder:
         if not python_bin.exists():
             return None
 
-
         # Verify it's a real binary, not a symlink to system Python
         if python_bin.is_symlink():
             target = python_bin.resolve()
@@ -327,5 +325,6 @@ class PythonEnvironmentBuilder:
             f"📦 Created tarball: {python_tgz.name} "
             f"(size: {tarball_size:,} bytes, compression: {compression_ratio:.1f}%)"
         )
+
 
 # 🌶️📦🔚
