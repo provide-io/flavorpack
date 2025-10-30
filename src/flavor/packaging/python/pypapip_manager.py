@@ -211,6 +211,7 @@ class PyPaPipManager:
             logger.error(error_msg)
             raise RuntimeError(error_msg)
         else:
+            pass
 
     @retry(
         ConnectionError,
