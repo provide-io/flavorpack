@@ -201,6 +201,7 @@ class BundleExecutor:
 
             # Log result
             if result.returncode == 0:
+                pass
             else:
                 logger.warning(f"⚠️ Execution completed with exit code: {result.returncode}")
                 if result.stderr:

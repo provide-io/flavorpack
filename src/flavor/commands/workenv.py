@@ -55,7 +55,9 @@ def workenv_list() -> None:
         version = pkg.get("version", "")
 
         if version:
+            pass
         else:
+            pass
 
         echo(f"   ID: {pkg['id']}")
         echo(f"   Size: {size_mb:.1f} MB")
@@ -117,6 +119,7 @@ def workenv_clean(older_than: int | None, yes: bool) -> None:
     removed = manager.clean(max_age_days=older_than)
 
     if removed:
+        pass
     else:
         echo("No packages to clean")
 
@@ -147,6 +150,7 @@ def workenv_remove(package_id: str, yes: bool) -> None:
                 return
 
     if manager.remove(package_id):
+        pass
     else:
         echo_error(f"❌ Package '{package_id}' not found")
 
@@ -182,6 +186,7 @@ def workenv_inspect(package_id: str, output_json: bool) -> None:  # noqa: C901
         echo(f"🗂️  Metadata Type: {info.get('metadata_type', 'none')}")
 
         if info.get("extraction_complete"):
+            pass
         else:
             echo("⚠️  Extraction: Incomplete")
 

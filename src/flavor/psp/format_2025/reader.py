@@ -480,6 +480,7 @@ def verify_bundle(bundle_path: Path) -> bool:
         # Check signature if present
         try:
             if reader.verify_signature():
+                pass
         except Exception:
             pass  # Signature optional
 

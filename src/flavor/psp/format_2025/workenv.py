@@ -84,6 +84,7 @@ class WorkEnvManager:
             # Handle lifecycle-based cleanup
             self._cleanup_lifecycle_slots(workenv_dir, metadata, extracted_slots)
         else:
+            pass
 
         return workenv_dir
 
@@ -168,6 +169,7 @@ class WorkEnvManager:
 
         # NOTE: Setup command execution matches Go's implementation
         for i, cmd in enumerate(setup_commands):
+            pass
 
             if isinstance(cmd, dict):
                 cmd_type = cmd.get("type", "execute")

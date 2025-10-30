@@ -243,6 +243,7 @@ def validate_build_options(spec: BuildSpec) -> list[str]:
 
     # Check page alignment consistency
     if options.page_aligned and not options.enable_mmap:
+        errors.append("⚠️ Page-aligned option should be used with memory mapping enabled")
 
     return errors
 
