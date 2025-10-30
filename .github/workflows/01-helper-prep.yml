@@ -87,7 +87,12 @@ jobs:
             artifacts/*.zip
           key: ${{ needs.setup.outputs.cache_key_base }}-${{ matrix.platform }}-${{ needs.setup.outputs.version }}
           # No restore-keys - only use exact version match to prevent old binary accumulation
-      
+
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
       - name: 🐹 Setup Go
         if: steps.cache.outputs.cache-hit != 'true'
         uses: actions/setup-go@v5
