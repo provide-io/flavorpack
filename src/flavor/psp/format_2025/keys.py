@@ -1,4 +1,12 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+"""PSPF Key Management - Functions for handling cryptographic keys.
+
+Provides pure functions for key resolution, generation, and persistence.
+Supports multiple key sources with clear priority ordering."""
+
 """
 PSPF Key Management - Functions for handling cryptographic keys.
 
@@ -227,4 +235,4 @@ def create_key_config(
     return KeyConfig(private_key=private_key, public_key=public_key, key_seed=seed, key_path=key_path)
 
 
-# 🌶️📦📄🪄
+# 🌶️📦🔚

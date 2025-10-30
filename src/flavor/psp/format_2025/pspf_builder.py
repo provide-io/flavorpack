@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
+from __future__ import annotations
+
 """
 PSPF Fluent Builder - Immutable builder pattern for PSPF packages.
 
 Provides a chainable API for constructing build specifications.
 """
-
-from __future__ import annotations
 
 from pathlib import Path
 import tempfile
@@ -169,4 +173,4 @@ class PSPFBuilder:
             return BuildResult(success=False, errors=[str(e)])
 
 
-# 🌶️📦📄🪄
+# 🌶️📦🔚
