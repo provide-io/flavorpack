@@ -1,4 +1,9 @@
 #!/usr/bin/env python3
+#
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
 """Test module import consistency after api.py → package.py refactoring."""
 
 import pytest
@@ -75,3 +80,5 @@ def test_all_exports_accessible() -> None:
 
 if __name__ == "__main__":
     pytest.main([__file__])
+
+# 🌶️📦🔚
