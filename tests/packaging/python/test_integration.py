@@ -1,6 +1,8 @@
 #
-# tests/packaging/python/test_integration.py
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
 #
+
 """Integration tests for Python packaging managers working together."""
 
 from pathlib import Path
@@ -350,3 +352,5 @@ setup(name='test-project', version='1.0.0', py_modules=['main'])
                         source_path=project_dir,
                         wheel_dir=temp_path / "wheels",
                     )
+
+# 🌶️📦🔚

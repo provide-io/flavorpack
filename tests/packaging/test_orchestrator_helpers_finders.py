@@ -1,7 +1,8 @@
-# tests/packaging/test_orchestrator_helpers_finders.py
 #
-# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
+#
+
 """Tests for orchestrator_helpers finder functions."""
 
 from __future__ import annotations
@@ -218,3 +219,5 @@ class TestFindLauncherExecutable:
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
+
+# 🌶️📦🔚
