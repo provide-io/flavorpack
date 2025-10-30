@@ -297,6 +297,11 @@ class PSPFReader:
 
         # DEBUG: Log checksum details for troubleshooting
         logger.debug(
+            "🔍 Verifying slot checksum",
+            slot_index=slot_index,
+            expected=f"{descriptor.checksum:016x}",
+            actual=f"{actual_checksum:016x}",
+            data_size=len(slot_data),
         )
 
         if actual_checksum != descriptor.checksum:

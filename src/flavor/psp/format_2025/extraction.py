@@ -198,7 +198,13 @@ class SlotExtractor:
             actual_checksum = int.from_bytes(hash_bytes, byteorder="little")
 
             # DEBUG: Log checksum details for troubleshooting
-            logger.debug()
+            logger.debug(
+                "🔍 Verifying slot checksum",
+                slot_index=slot_index,
+                expected=f"{descriptor.checksum:016x}",
+                actual=f"{actual_checksum:016x}",
+                data_size=len(raw_slot_data),
+            )
 
             if actual_checksum != descriptor.checksum:
                 logger.error(f"Slot {slot_index} checksum verification failed")
