@@ -1,10 +1,8 @@
-# flavor/psp/format_2025/reader.py
 #
-# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
-
-# src/flavor/psp/format_2025/reader.py
-# PSPF 2025 Bundle Reader - Uses backend system for flexible access
+#
+"""TODO: Add module docstring."""
 
 from __future__ import annotations
 
@@ -481,4 +479,4 @@ def verify_bundle(bundle_path: Path) -> bool:
         return True
 
 
-# 🌶️📦📄🪄
+# 🌶️📦🔚

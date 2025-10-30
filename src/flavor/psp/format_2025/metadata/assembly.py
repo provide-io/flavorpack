@@ -1,8 +1,7 @@
-# flavor/psp/format_2025/metadata/assembly.py
 #
-# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
-
+#
 """Metadata assembly for PSPF packages."""
 
 from __future__ import annotations
@@ -274,4 +273,4 @@ def assemble_metadata(spec: BuildSpec, slots: list[Any], launcher_info: dict[str
     return validate_metadata_dict(metadata)
 
 
-# 🌶️📦📄🪄
+# 🌶️📦🔚

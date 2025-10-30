@@ -1,5 +1,12 @@
-"""
-PSPF/2025 Format Constants
+#
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+from __future__ import annotations
+from __future__ import annotations
+from __future__ import annotations
+from __future__ import annotations
+"""PSPF/2025 Format Constants
 
 All constants defined here match the authoritative specification.
 These are the canonical values for the PSPF/2025 v0 format.
@@ -220,3 +227,9 @@ PSPF_FILE_EXTENSION = ".psp"
 PSPF_MIME_TYPE = "application/vnd.pspf"
 
 # Debug constants removed - use FLAVOR_VALIDATION environment variable instead
+
+
+
+
+
+# 🌶️📦🔚

@@ -1,9 +1,10 @@
 #
-# flavor/packaging/python/environment_builder.py
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
 #
-"""Environment builder for Python packages."""
-
 from __future__ import annotations
+
+"""TODO: Add module docstring."""
 
 from collections.abc import Callable
 import os
@@ -345,3 +346,9 @@ class PythonEnvironmentBuilder:
         logger.info(
             f"✅ Python tarball created: {tarball_size:,} bytes (compression: {compression_ratio:.1f}%)"
         )
+
+
+
+
+
+# 🌶️📦🔚

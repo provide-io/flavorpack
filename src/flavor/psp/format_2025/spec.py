@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
-"""
-PSPF Build Specification - Immutable data structures for package building.
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+from __future__ import annotations
+from __future__ import annotations
+from __future__ import annotations
+from __future__ import annotations
+"""PSPF Build Specification - Immutable data structures for package building.
 
 This module defines the core data structures used throughout the PSPF builder
 system, emphasizing immutability and functional programming patterns.
@@ -233,4 +239,9 @@ class PreparedSlot:
         return len(self.get_data_to_write())
 
 
-# 🌶️📦📄🪄
+
+
+
+
+
+# 🌶️📦🔚
