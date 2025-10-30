@@ -1,20 +1,11 @@
-# 
+#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""TODO: Add module docstring."""
-
-# 
-# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
-#
-
-"""TODO: Add module docstring."""
+"""Python environment builder for packaging operations."""
 
 from __future__ import annotations
-
-"""TODO: Add module docstring."""
 
 from collections.abc import Callable
 import os
@@ -320,7 +311,9 @@ class PythonEnvironmentBuilder:
                 stats["files_added"] += 1
                 stats["bytes_added"] += tarinfo.size
                 if stats["files_added"] <= 10 or stats["files_added"] % 100 == 0:
+                    logger.trace(f"  📄 Adding file: {tarinfo.name} ({tarinfo.size:,} bytes)")
             elif tarinfo.isdir():
+                logger.trace(f"  📁 Adding directory: {tarinfo.name}")
 
             return deterministic_filter(tarinfo)
 
@@ -331,6 +324,8 @@ class PythonEnvironmentBuilder:
         tarball_size = python_tgz.stat().st_size
         compression_ratio = (1 - tarball_size / bytes_added) * 100 if bytes_added > 0 else 0
         logger.info(
+            f"📦 Created tarball: {python_tgz.name} "
+            f"(size: {tarball_size:,} bytes, compression: {compression_ratio:.1f}%)"
         )
 
 # 🌶️📦🔚

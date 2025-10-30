@@ -271,7 +271,7 @@ def generate_platform_metadata(platform_name: str, version: str, cache_hit: bool
     print(f"   Output: {output_file}")
 
 
-def main():
+def main() -> None:
     """Main entry point."""
     if len(sys.argv) < 2:
         print(__doc__)

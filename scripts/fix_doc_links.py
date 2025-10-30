@@ -78,7 +78,7 @@ def fix_relative_links(file_path: Path) -> bool:
     return False
 
 
-def main():
+def main() -> None:
     """Fix all documentation links."""
     docs_dir = Path("docs")
     fixed_count = 0
