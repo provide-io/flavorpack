@@ -254,7 +254,6 @@ class PyPaPipManager:
             error_msg = f"Failed to download required packages: {result.stderr}"
             logger.error(error_msg)
             raise RuntimeError(error_msg)
-        else:
 
     def build_wheel_from_source(
         self, python_exe: Path, source_path: Path, wheel_dir: Path, no_deps: bool = True
