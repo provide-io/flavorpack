@@ -34,6 +34,8 @@ from flavor.config.defaults import (
     DEFAULT_PAGE_SIZE,
     DEFAULT_SLOT_ALIGNMENT,
     DEFAULT_SLOT_DESCRIPTOR_SIZE,
+)
+from flavor.psp.format_2025.constants import (
     TRAILER_END_MAGIC,
     TRAILER_START_MAGIC,
 )
