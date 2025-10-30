@@ -95,6 +95,7 @@ def detect_bundle_mmap():
 
     # Check 4: Backend detection via environment
     if os.environ.get("FLAVOR_BACKEND") == "mmap":
+        pass
 
     return indicators
 

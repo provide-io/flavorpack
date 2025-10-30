@@ -43,6 +43,7 @@ def verify_command(package_path, output_json, output_file) -> None:
     package_file = Path(package_path)
 
     if not output_json:
+        pass
 
     # Result object for JSON output
     result_obj = {

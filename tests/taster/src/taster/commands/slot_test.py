@@ -168,6 +168,7 @@ target = "config.json"
 
         click.secho("\n" + "─" * 40, fg="cyan")
         if passed == total:
+            pass
         else:
             click.secho(f"⚠️ {passed}/{total} tests passed", fg="yellow", bold=True)
 
@@ -179,5 +180,6 @@ target = "config.json"
                 click.echo(f"  Status: {result['status']}")
                 if result.get("error"):
                     click.echo(f"  Error: {result['error']}")
+
 
 # 🌶️📦🔚

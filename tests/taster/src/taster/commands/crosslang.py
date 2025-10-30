@@ -448,6 +448,7 @@ entry_point = "crosslang_test:main"
             self.log("\n🔍 Testing Python verification of all packages...")
             for pkg, launcher_info in built_packages:
                 if self.verify_with_python(pkg):
+                    pass
                 else:
                     self.log(f"  ❌ {pkg.name}", "error")
 
@@ -455,6 +456,7 @@ entry_point = "crosslang_test:main"
             self.log("\n🔍 Testing launcher CLI verification...")
             for pkg, launcher_info in built_packages:
                 if self.verify_with_launcher_cli(pkg, launcher_info.language):
+                    pass
                 else:
                     self.log(f"  ❌ {pkg.name} (CLI)", "error")
 

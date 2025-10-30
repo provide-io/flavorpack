@@ -73,6 +73,7 @@ def env_command() -> None:
     for var, expected in expected_vars.items():
         actual = os.environ.get(var)
         if actual == expected:
+            pass
         else:
             click.echo(f"  ❌ {var} = {actual} (expected: {expected})")
 

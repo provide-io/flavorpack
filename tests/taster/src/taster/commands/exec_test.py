@@ -84,6 +84,7 @@ command = "{workenv}/bin/python3.11 -m binary_test"
             )
 
             if result.returncode == 0 and "Binary execution successful" in result.stdout:
+                pass
             else:
                 click.secho("  ❌ Binary execution: FAILED", fg="red")
                 if verbose:

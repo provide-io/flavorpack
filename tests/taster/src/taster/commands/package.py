@@ -1,11 +1,11 @@
-# 
+#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 
 """TODO: Add module docstring."""
 
-# 
+#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -62,6 +62,7 @@ def build(manifest, output, launcher_bin, strip, key_seed) -> None:
         )
 
         for path in paths:
+            pass
 
     except Exception as e:
         click.echo(f"❌ Build failed: {e}", err=True)
@@ -179,7 +180,6 @@ def test_json(builder_bin, launcher_bin) -> None:
                 click.echo("❌ Package build failed - no output", err=True)
                 sys.exit(1)
 
-
             # Make it executable and test it
             output_path.chmod(0o755)
             result = subprocess.run([str(output_path)], capture_output=True, text=True)
@@ -199,5 +199,6 @@ def test_json(builder_bin, launcher_bin) -> None:
         except Exception as e:
             click.echo(f"❌ JSON manifest test failed: {e}", err=True)
             sys.exit(1)
+
 
 # 🌶️📦🔚

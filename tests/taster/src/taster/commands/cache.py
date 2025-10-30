@@ -76,6 +76,7 @@ def clean(all, flavor, verbose) -> None:
                     click.echo(f"Error cleaning var cache: {e}", err=True)
 
     if cleaned:
+        pass
     else:
         click.echo("No caches to clean")
 

@@ -1,11 +1,11 @@
-# 
+#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 
 """TODO: Add module docstring."""
 
-# 
+#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -217,5 +217,7 @@ def features_command(output_json) -> None:
             click.echo("  - Cannot set argv[0] on Unix systems")
             click.echo("  - Limited signal handling capabilities")
         elif launcher_type == "rust" and percentage == 100:
+            pass
+
 
 # 🌶️📦🔚
