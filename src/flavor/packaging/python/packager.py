@@ -3,11 +3,9 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""TODO: Add module docstring."""
+"""Python packager that owns all Python-specific packaging logic."""
 
 from __future__ import annotations
-
-"""TODO: Add module docstring."""
 
 from pathlib import Path
 import sys

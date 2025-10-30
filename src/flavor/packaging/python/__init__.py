@@ -3,11 +3,9 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""TODO: Add module docstring."""
+"""Module for flavorpack."""
 
 from __future__ import annotations
-
-"""TODO: Add module docstring."""
 
 from flavor.packaging.python.pypapip_manager import PyPaPipManager
 

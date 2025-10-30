@@ -3,11 +3,9 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""TODO: Add module docstring."""
+"""Key management for FlavorPack package signing."""
 
 from __future__ import annotations
-
-"""TODO: Add module docstring."""
 
 from pathlib import Path
 

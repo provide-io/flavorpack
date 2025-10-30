@@ -1,22 +1,13 @@
-# 
+#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
-
-"""TODO: Add module docstring."""
-
-# 
-# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
-#
-
-"""TODO: Add module docstring."""
-
-from __future__ import annotations
 
 """PSPF Work Environment Management
 
 Handles work environment setup, caching, lifecycle management, and setup commands."""
+
+from __future__ import annotations
 
 from pathlib import Path
 import shlex

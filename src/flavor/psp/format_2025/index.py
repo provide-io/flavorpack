@@ -3,11 +3,9 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""TODO: Add module docstring."""
+"""PSPF Index Block Structure - 8192 bytes total."""
 
 from __future__ import annotations
-
-"""TODO: Add module docstring."""
 
 import struct
 import zlib
