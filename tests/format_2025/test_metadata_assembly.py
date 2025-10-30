@@ -1,4 +1,9 @@
 #!/usr/bin/env python3
+#
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
 """Tests for metadata assembly functionality."""
 
 import datetime
@@ -249,3 +254,5 @@ class TestMetadataAssembly:
         assert "workenv_dirs" in features
         assert "runtime_env" in features
         assert "setup_commands" in features
+
+# 🌶️📦🔚

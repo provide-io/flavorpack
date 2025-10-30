@@ -1,7 +1,8 @@
-# tests/format_2025/test_keys_resolution.py
 #
-# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
+#
+
 """Tests for psp/format_2025/keys.py key resolution functions."""
 
 from __future__ import annotations
@@ -409,3 +410,5 @@ class TestCreateKeyConfig:
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
+
+# 🌶️📦🔚
