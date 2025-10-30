@@ -105,6 +105,7 @@ class MMapBackend(Backend):
 
         elapsed = time.perf_counter() - start_time
         logger.debug(
+            "🚀 Preloading complete",
             elapsed_ms=elapsed * 1000,
             pages=file_size // DEFAULT_PAGE_SIZE,
         )
@@ -225,6 +226,7 @@ class FileBackend(Backend):
         self.path = path
         file_size = path.stat().st_size
         logger.debug(
+            "📖 Opening buffered file backend",
             path=str(path),
             size_bytes=file_size,
             buffer_size=64 * 1024,
