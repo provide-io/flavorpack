@@ -76,12 +76,13 @@ jobs:
           path: ./helpers-dist
       
       - name: 🔧 Setup helpers
+        shell: bash
         run: |
           # Extract helpers and set up directory structure
           .github/scripts/download-helpers.sh helpers-dist \
             "${{ needs.setup.outputs.version }}" \
             "${{ matrix.platform }}"
-          
+
           # Helpers are already in helpers/bin/ from the script
           chmod +x helpers/bin/*
           ls -la helpers/bin/
