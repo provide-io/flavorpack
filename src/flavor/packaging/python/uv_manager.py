@@ -1,4 +1,4 @@
-# 
+#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -350,7 +350,6 @@ class UVManager(BaseToolManager):
         import sys
         import tempfile
         import zipfile
-
 
         # Import PyPaPipManager here to avoid circular dependency
         from flavor.packaging.python.pypapip_manager import PyPaPipManager

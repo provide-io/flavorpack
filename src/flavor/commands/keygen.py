@@ -1,4 +1,4 @@
-# 
+#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -11,7 +11,7 @@ from pathlib import Path
 
 import click
 
-from flavor.console import echo, echo_error, get_command_logger
+from flavor.console import echo_error, get_command_logger
 from flavor.exceptions import BuildError
 from flavor.packaging.keys import generate_key_pair
 
