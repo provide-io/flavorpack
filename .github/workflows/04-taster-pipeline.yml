@@ -165,26 +165,12 @@ jobs:
             exit 1
           fi
 
-          echo "=== Building Taster using Flavor PSP ==="
-          echo "Flavor PSP: $FLAVOR_PSP"
-          echo "Launcher: $LAUNCHER"
-          echo "Platform: ${{ matrix.platform }}"
-          echo "Version: ${{ needs.setup.outputs.version }}"
-
-          # Make Flavor PSP executable
-          chmod +x "$FLAVOR_PSP" 2>/dev/null || true
-
-          # Create taster output directory
-          mkdir -p tests/taster
-
-          # Build Taster using the Flavor PSP
-          "$FLAVOR_PSP" pack \
-            --manifest tests/taster/pyproject.toml \
-            --output "tests/taster/taster-${{ needs.setup.outputs.version }}-${{ matrix.platform }}.psp" \
-            --launcher-bin "$LAUNCHER" \
-            --key-seed "taster-${{ needs.setup.outputs.version }}"
-
-          echo "✅ Successfully built Taster PSP"
+          # Use script to build Taster
+          .github/scripts/build-taster-with-psp.sh \
+            "$FLAVOR_PSP" \
+            "$LAUNCHER" \
+            "${{ matrix.platform }}" \
+            "${{ needs.setup.outputs.version }}"
 
           # Export path for subsequent steps
           echo "taster_path=$PWD/tests/taster/taster-${{ needs.setup.outputs.version }}-${{ matrix.platform }}.psp" >> $GITHUB_OUTPUT
