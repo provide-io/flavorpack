@@ -48,9 +48,9 @@ def workenv_list() -> None:
         version = pkg.get("version", "")
 
         if version:
-            pass
+            echo(f"\n📦 {name} v{version}")
         else:
-            pass
+            echo(f"\n📦 {name}")
 
         echo(f"   ID: {pkg['id']}")
         echo(f"   Size: {size_mb:.1f} MB")
@@ -112,7 +112,7 @@ def workenv_clean(older_than: int | None, yes: bool) -> None:
     removed = manager.clean(max_age_days=older_than)
 
     if removed:
-        pass
+        echo(f"✅ Removed {len(removed)} cached package(s)")
     else:
         echo("No packages to clean")
 
@@ -173,13 +173,15 @@ def workenv_inspect(package_id: str, output_json: bool) -> None:  # noqa: C901
     else:
         # Human-readable output
         echo("=" * 60)
+        echo(f"📦 Package: {package_id}")
         echo("-" * 60)
 
         # Basic info
+        echo(f"📁 Location: {info['content_dir']}")
         echo(f"🗂️  Metadata Type: {info.get('metadata_type', 'none')}")
 
         if info.get("extraction_complete"):
-            pass
+            echo("✅ Extraction: Complete")
         else:
             echo("⚠️  Extraction: Incomplete")
 
