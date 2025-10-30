@@ -130,7 +130,9 @@ class PythonEnvironmentBuilder:
 
         result = run(cmd, check=True, capture_output=True)
         if result.stdout:
+            logger.trace(f"UV install stdout: {result.stdout.strip()}")
         if result.stderr:
+            logger.trace(f"UV install stderr: {result.stderr.strip()}")
 
         return self._find_python_installation(uv_install_dir, uv_cmd)
 
