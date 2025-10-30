@@ -58,9 +58,4 @@ class ExtractorProtocol(Protocol):
         ...
 
 
-
-
-
-
-
 # 🌶️📦🔚

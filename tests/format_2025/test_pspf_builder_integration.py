@@ -1,4 +1,8 @@
-#!/usr/bin/env python3
+#
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
 """
 Test-Driven Development tests for the new PSPF builder API.
 Written BEFORE implementation to drive the design.
@@ -320,3 +324,5 @@ class TestPerformance:
 if __name__ == "__main__":
     # Run tests to show RED phase
     pytest.main([__file__, "-v", "--tb=short"])
+
+# 🌶️📦🔚

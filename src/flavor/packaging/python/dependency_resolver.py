@@ -345,7 +345,4 @@ class DependencyResolver:
             return None  # For non-Linux, we can fall back to host UV
 
 
-
-
-
 # 🌶️📦🔚
