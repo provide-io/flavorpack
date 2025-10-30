@@ -1,3 +1,8 @@
+#
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
 """
 PSPF 2025 Execution Tests
 
@@ -302,3 +307,5 @@ def _select_platform_slots(launcher, platform: str) -> list:
 PSPFLauncher._substitute_slots = _substitute_slots
 PSPFLauncher._substitute_env_slots = _substitute_env_slots
 PSPFLauncher._select_platform_slots = _select_platform_slots
+
+# 🌶️📦🔚

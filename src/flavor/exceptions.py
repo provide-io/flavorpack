@@ -45,4 +45,6 @@ class VerificationError(FlavorException):
     """Raised for errors during package verification."""
 
     pass
+
+
 # 🌶️📦🔚

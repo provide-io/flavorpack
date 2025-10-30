@@ -1,3 +1,8 @@
+#
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
 """
 PSPF 2025 Security Tests
 
@@ -385,3 +390,5 @@ class TestPSPFSecurity:
 
         assert index1.format_version == index2.format_version
         assert index1.launcher_size == index2.launcher_size
+
+# 🌶️📦🔚

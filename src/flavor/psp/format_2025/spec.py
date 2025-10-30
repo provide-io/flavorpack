@@ -235,9 +235,4 @@ class PreparedSlot:
         return len(self.get_data_to_write())
 
 
-
-
-
-
-
 # 🌶️📦🔚
