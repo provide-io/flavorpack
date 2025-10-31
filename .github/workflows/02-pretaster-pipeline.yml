@@ -66,17 +66,7 @@ jobs:
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
-      
-      - name: 🦀 Setup Rust
-        uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          toolchain: stable
-      
-      - name: 🐹 Setup Go  
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.21'
-      
+
       - name: 📥 Download helpers for platform
         uses: dawidd6/action-download-artifact@v6
         with:
@@ -86,12 +76,13 @@ jobs:
           path: ./helpers-dist
       
       - name: 🔧 Setup helpers
+        shell: bash
         run: |
           # Extract helpers and set up directory structure
           .github/scripts/download-helpers.sh helpers-dist \
             "${{ needs.setup.outputs.version }}" \
             "${{ matrix.platform }}"
-          
+
           # Helpers are already in helpers/bin/ from the script
           chmod +x helpers/bin/*
           ls -la helpers/bin/
@@ -220,17 +211,7 @@ jobs:
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
-      
-      - name: 🦀 Setup Rust
-        uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          toolchain: stable
-      
-      - name: 🐹 Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.21'
-      
+
       - name: 📥 Download helpers for platform
         uses: dawidd6/action-download-artifact@v6
         with:

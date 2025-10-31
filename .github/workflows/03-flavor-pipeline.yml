@@ -199,6 +199,9 @@ jobs:
           - platform: windows_amd64
             runner: windows-2025
             python_platform: win_amd64
+          - platform: windows_arm64
+            runner: windows-11-arm
+            python_platform: win_arm64
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
@@ -349,7 +352,10 @@ jobs:
           - platform: windows_amd64
             runner: windows-2025
             python_platform: win_amd64
-    
+          - platform: windows_arm64
+            runner: windows-11-arm
+            python_platform: win_arm64
+
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
@@ -460,7 +466,9 @@ jobs:
           # Windows re-enabled
           - platform: windows_amd64
             runner: windows-2025
-    
+          - platform: windows_arm64
+            runner: windows-11-arm
+
     steps:
       - name: 📥 Checkout scripts
         uses: actions/checkout@v4
