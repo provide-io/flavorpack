@@ -1,12 +1,10 @@
-# tests/cli/test_utils_command.py
 #
-# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
-
-"""Comprehensive tests for flavor.commands.utils module."""
-
+#
 from __future__ import annotations
 
+"""Comprehensive tests for flavor.commands.utils module."""
 from unittest.mock import MagicMock, Mock, patch
 
 from click.testing import CliRunner
@@ -409,6 +407,4 @@ class TestCleanCommand:
         assert result.exit_code == 0
         # Should not show "Removed" message or total freed
         assert "Total freed" not in result.output
-
-
-# 🌶️📦🧪🪄
+# 🌶️📦🔚

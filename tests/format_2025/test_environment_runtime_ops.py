@@ -1,3 +1,8 @@
+#
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
 """Test runtime environment operations (unset, map, set, pass verification, layers)."""
 
 from __future__ import annotations
@@ -477,3 +482,5 @@ class TestEnvironmentLayers:
         assert "FLAVOR_OS" in result
         assert "FLAVOR_ARCH" in result
         assert "FLAVOR_PLATFORM" in result
+
+# 🌶️📦🔚

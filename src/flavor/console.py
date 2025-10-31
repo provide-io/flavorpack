@@ -1,19 +1,15 @@
-# flavor/console.py
 #
-# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
+#
+from __future__ import annotations
 
-#
-# flavor/console.py
-#
 """Centralized console output utilities for Flavor CLI.
 
 This module provides Unicode-safe console output functions that wrap
 Foundation's console utilities. Foundation handles emoji display automatically
 through its DAS (Duration/Action/Status) event system.
 """
-
-from __future__ import annotations
 
 from typing import Any
 
@@ -78,4 +74,4 @@ def get_command_logger(command_name: str) -> Any:
     return get_logger(f"flavor.commands.{command_name}")
 
 
-# 🌶️📦📄🪄
+# 🌶️📦🔚

@@ -1,3 +1,8 @@
+#
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
 """Test workenv directory creation with permissions and umask."""
 
 import os
@@ -240,3 +245,5 @@ class TestWorkenvDirectories:
             for dir_info in invalid_directories:
                 with pytest.raises(ValueError):
                     create_workenv_directories([dir_info], workenv)
+
+# 🌶️📦🔚

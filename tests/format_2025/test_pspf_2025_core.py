@@ -1,3 +1,8 @@
+#
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
 """
 Core PSPF 2025 Format Tests
 
@@ -357,3 +362,5 @@ class TestPSPFCore:
 
         metadata = reader.read_metadata()
         assert metadata["package"]["name"] == "empty"
+
+# 🌶️📦🔚

@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
-# tests/test_pspf_2025_integration.py
-# Integration test for building and reading PSPF bundles with new format
+#
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
+"""Integration test for building and reading PSPF bundles with new format"""
 
 from pathlib import Path
 import tempfile
@@ -237,4 +241,4 @@ class TestPSPFIntegration:
             assert slot_offset % DEFAULT_PAGE_SIZE == 0, f"Slot offset {slot_offset} is not page-aligned"
 
 
-# 🧪📦🗺️🪄
+# 🌶️📦🔚

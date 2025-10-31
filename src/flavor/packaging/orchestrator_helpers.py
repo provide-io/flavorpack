@@ -1,7 +1,8 @@
-# flavor/packaging/orchestrator_helpers.py
 #
-# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
+#
+"""TODO: Add module docstring."""
 
 import os
 from pathlib import Path
@@ -383,4 +384,4 @@ def create_python_slot_tarballs(temp_dir: Path, artifacts: dict[str, Path]) -> t
     return uv_path, python_tarball, wheels_tarball
 
 
-# 🌶️📦📄🪄
+# 🌶️📦🔚

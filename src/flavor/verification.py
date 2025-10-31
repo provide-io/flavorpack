@@ -1,13 +1,10 @@
-# flavor/verification.py
 #
-# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
-
-# flavor/verification.py
 #
-"""Package verification for PSPF/2025 bundles."""
-
 from __future__ import annotations
+
+"""Package verification for PSPF/2025 bundles."""
 
 from pathlib import Path
 from typing import Any
@@ -76,5 +73,4 @@ class FlavorVerifier:
         }
 
 
-# 🔍 📦 ✅
-# 🌶️📦📄🪄
+# 🌶️📦🔚

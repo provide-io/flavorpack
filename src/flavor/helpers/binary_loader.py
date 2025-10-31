@@ -1,16 +1,14 @@
-# flavor/helpers/binary_loader.py
 #
-# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
+#
+from __future__ import annotations
 
 """
 Binary loading and building for helpers.
 
 Handles the complex logic of finding, building, and testing helper binaries.
 """
-
-from __future__ import annotations
-
 import contextlib
 import os
 from pathlib import Path
@@ -364,3 +362,6 @@ class BinaryLoader:
         if not os.access(path, os.X_OK):
             with contextlib.suppress(OSError, PermissionError):
                 path.chmod(DEFAULT_EXECUTABLE_PERMS)
+
+
+# 🌶️📦🔚

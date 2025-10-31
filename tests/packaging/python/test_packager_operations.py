@@ -1,6 +1,8 @@
 #
-# tests/packaging/python/test_packager.py
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
 #
+
 """Tests for PythonPackager - Python-specific packaging orchestration."""
 
 from __future__ import annotations
@@ -299,4 +301,4 @@ class TestRepr:
             assert "platform=windows" in repr_str
 
 
-# 🌶️🧪📦
+# 🌶️📦🔚
