@@ -1,13 +1,11 @@
-#
+# 
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""
-PSPF 2025 Builder Tests
+"""PSPF 2025 Builder Tests
 
-Tests bundle building, manifest handling, and build options.
-"""
+Tests bundle building, manifest handling, and build options."""
 
 import hashlib
 import os

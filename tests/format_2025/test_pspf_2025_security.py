@@ -1,13 +1,11 @@
-#
+# 
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""
-PSPF 2025 Security Tests
+"""PSPF 2025 Security Tests
 
-Tests ephemeral keys, integrity sealing, and tamper detection.
-"""
+Tests ephemeral keys, integrity sealing, and tamper detection."""
 
 import json
 import os
@@ -250,10 +248,8 @@ class TestPSPFSecurity:
         file_size = bundle_path.stat().st_size
 
         # Tamper with a field in the MagicTrailer index (package_size at offset 8 in index)
-        # MagicTrailer is at end: file_size - 8200 + 4 (skip 📦) + 8 (skip version+checksum) = offset to package_size
         with open(bundle_path, "r+b") as f:
             magic_trailer_start = file_size - 8200
-            index_start = magic_trailer_start + 4  # Skip 📦 emoji
             package_size_offset = index_start + 8  # Skip format_version (4) and index_checksum (4)
             f.seek(package_size_offset)
             f.write(struct.pack("<Q", 0xDEADBEEF))  # Write invalid package size

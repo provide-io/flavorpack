@@ -1,7 +1,10 @@
-#
+# 
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
+"""TODO: Add module docstring."""
+
 from __future__ import annotations
 
 """UV tool manager for FlavorPack packaging.
@@ -264,7 +267,6 @@ class UVManager(BaseToolManager):
             venv_path: Path where venv should be created
             python_version: Specific Python version constraint
         """
-        logger.info(f"🐍📦 Creating venv with UV: {venv_path}")
 
         # Use current Python for UV execution
         python_exe = Path("/usr/bin/python3")  # This will be replaced by actual discovery
@@ -274,7 +276,6 @@ class UVManager(BaseToolManager):
         logger.debug("💻 Creating UV venv", command=" ".join(venv_cmd))
         run(venv_cmd, check=True, capture_output=True)
 
-        logger.info("✅ Successfully created UV venv")
 
     def install_packages_fast(
         self,
@@ -301,7 +302,6 @@ class UVManager(BaseToolManager):
         logger.debug("💻 Installing packages with UV", command=" ".join(install_cmd))
         run(install_cmd, check=True, capture_output=True)
 
-        logger.info("✅ Successfully installed packages with UV")
 
     def compile_requirements(
         self, input_file: Path, output_file: Path, python_version: str | None = None
@@ -314,14 +314,12 @@ class UVManager(BaseToolManager):
             output_file: Output requirements.txt file
             python_version: Target Python version
         """
-        logger.info(f"📝🔧 Compiling requirements: {input_file} -> {output_file}")
 
         compile_cmd = self._get_uv_pip_compile_cmd(input_file, output_file, python_version)
 
         logger.debug("💻 Compiling requirements with UV", command=" ".join(compile_cmd))
         run(compile_cmd, check=True, capture_output=True)
 
-        logger.info("✅ Successfully compiled requirements with UV")
 
     @retry(
         ConnectionError,
@@ -353,7 +351,6 @@ class UVManager(BaseToolManager):
         import tempfile
         import zipfile
 
-        logger.info("📦 Downloading UV binary for packaging")
 
         # Import PyPaPipManager here to avoid circular dependency
         from flavor.packaging.python.pypapip_manager import PyPaPipManager
@@ -413,7 +410,6 @@ class UVManager(BaseToolManager):
                             # Make executable
                             uv_path.chmod(0o755)
 
-                            logger.info("✅ Successfully downloaded UV binary")
                             return uv_path
 
                 logger.error("UV binary not found in wheel")
@@ -422,6 +418,5 @@ class UVManager(BaseToolManager):
             except Exception as e:
                 logger.error(f"Failed to download UV binary: {e}")
                 return None
-
 
 # 🌶️📦🔚

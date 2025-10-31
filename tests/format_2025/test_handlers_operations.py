@@ -1,3 +1,8 @@
+# 
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
 """Test psp/format_2025/handlers.py - Operation handlers and archive tools bridge."""
 
 from __future__ import annotations
@@ -374,3 +379,5 @@ class TestReverseOperations:
         decompressed = reverse_operations(compressed, packed_ops)
 
         assert decompressed == data
+
+# 🌶️📦🔚

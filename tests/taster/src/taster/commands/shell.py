@@ -1,3 +1,8 @@
+# 
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
 """Start interactive Python shell"""
 
 import code
@@ -27,7 +32,6 @@ def shell_command() -> None:
         import flavor
 
         namespace["flavor"] = flavor
-        click.echo("✅ Flavor module available as 'flavor'")
     except ImportError:
         click.echo("⚠️ Flavor module not available")
 
@@ -47,3 +51,5 @@ def shell_command() -> None:
 
     # Start interactive shell
     code.interact(local=namespace, banner="")
+
+# 🌶️📦🔚

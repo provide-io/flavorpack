@@ -1,11 +1,11 @@
-#
+# 
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
 """PSPF 2025 Format Implementation
 
-Progressive Secure Package Format (2025 Edition)
-"""
+Progressive Secure Package Format (2025 Edition)"""
 
 from provide.foundation.crypto import (
     Ed25519Signer,

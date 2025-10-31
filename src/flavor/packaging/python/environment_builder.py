@@ -1,7 +1,17 @@
-#
+# 
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
+"""TODO: Add module docstring."""
+
+# 
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
+"""TODO: Add module docstring."""
+
 from __future__ import annotations
 
 """TODO: Add module docstring."""
@@ -69,8 +79,6 @@ class PythonEnvironmentBuilder:
 
     def create_python_placeholder(self, python_tgz: Path) -> None:
         """Download and package Python distribution using UV."""
-        logger.info("📦📥🚀 Starting Python download and packaging", version=self.python_version)
-        logger.debug("📁🎯📋 Target output", path=str(python_tgz))
         logger.debug(
             "💻🔍📋 Platform info",
             system=get_os_name(),
@@ -78,7 +86,6 @@ class PythonEnvironmentBuilder:
         )
 
         with tempfile.TemporaryDirectory() as uv_install_dir:
-            logger.debug("📁🏗️✅ Created temporary UV install directory", path=uv_install_dir)
 
             python_install_dir = self._install_python_with_uv(uv_install_dir)
 
@@ -123,16 +130,13 @@ class PythonEnvironmentBuilder:
 
         result = run(cmd, check=True, capture_output=True)
         if result.stdout:
-            logger.debug("🐍📤✅ UV install output", output=result.stdout.strip())
         if result.stderr:
-            logger.debug("🐍📤⚠️ UV install stderr", stderr=result.stderr.strip())
 
         return self._find_python_installation(uv_install_dir, uv_cmd)
 
     def _log_uv_environment(self) -> None:
         """Log UV environment variables that might affect behavior."""
         logger.trace(
-            "🌍🔍📋 UV environment variables",
             UV_CACHE_DIR=os.environ.get("UV_CACHE_DIR", "not set"),
             UV_PYTHON_INSTALL_DIR=os.environ.get("UV_PYTHON_INSTALL_DIR", "not set"),
             UV_SYSTEM_PYTHON=os.environ.get("UV_SYSTEM_PYTHON", "not set"),
@@ -141,7 +145,6 @@ class PythonEnvironmentBuilder:
     def _find_python_installation(self, uv_install_dir: str, uv_cmd: str) -> Path | None:
         """Find the Python installation directory after UV install."""
         install_path = Path(uv_install_dir)
-        logger.debug("🔍📁📋 Searching for Python in install directory", path=str(install_path))
 
         # Find the cpython directory
         cpython_dirs = list(install_path.glob("cpython-*"))
@@ -150,7 +153,6 @@ class PythonEnvironmentBuilder:
             return None
 
         python_install_dir = cpython_dirs[0]
-        logger.info("🐍📁✅ Found Python installation", path=str(python_install_dir))
 
         python_bin = self._find_python_binary(python_install_dir, uv_install_dir, uv_cmd)
         if not python_bin:
@@ -176,10 +178,8 @@ class PythonEnvironmentBuilder:
                     break
 
         if python_bin and python_bin.exists():
-            logger.info("🐍🔍✅ Found Python binary", path=str(python_bin))
             return python_bin
         else:
-            logger.warning("🐍🔍⚠️ Python binary not found in expected location")
             return self._fallback_find_python(uv_cmd, uv_install_dir)
 
     def _fallback_find_python(self, uv_cmd: str, uv_install_dir: str) -> Path | None:
@@ -206,20 +206,15 @@ class PythonEnvironmentBuilder:
         result = run(find_cmd, check=True, capture_output=True, env=env)
         if result.stdout:
             python_path = result.stdout.strip()
-            logger.info("🐍🔍✅ UV found Python", path=python_path)
             return Path(python_path)
         return None
 
     def _validate_python_installation(self, python_bin: Path) -> Path | None:
         """Validate and analyze the Python installation."""
-        logger.debug("🔍📦📋 Verifying Python binary exists", path=str(python_bin))
 
         if not python_bin.exists():
-            logger.error("🐍🔍❌ Python binary NOT found at expected path", path=str(python_bin))
             return None
 
-        logger.debug("🐍🔍✅ Python binary confirmed", path=str(python_bin))
-        logger.debug("📊📦📋 Python binary size", size=python_bin.stat().st_size)
 
         # Verify it's a real binary, not a symlink to system Python
         if python_bin.is_symlink():
@@ -230,14 +225,12 @@ class PythonEnvironmentBuilder:
 
         # Go up from bin/python{version} to the installation root
         python_install_dir = python_bin.parent.parent
-        logger.info("📁🐍✅ Python installation directory", path=str(python_install_dir))
 
         self._log_installation_contents(python_install_dir)
         return python_install_dir
 
     def _log_installation_contents(self, python_install_dir: Path) -> None:
         """Log detailed contents of Python installation."""
-        logger.debug("📁🔍📋 Python installation directory contents")
         total_size = 0
         file_count = 0
         dir_count = 0
@@ -250,7 +243,6 @@ class PythonEnvironmentBuilder:
                 dir_size = sum(f.stat().st_size for f in item.rglob("*") if f.is_file())
                 total_size += dir_size
                 logger.debug(
-                    "📁📋✅ Directory",
                     name=item.name,
                     item_count=item_count,
                     size=dir_size,
@@ -265,10 +257,8 @@ class PythonEnvironmentBuilder:
                 file_count += 1
                 file_size = item.stat().st_size
                 total_size += file_size
-                logger.debug("📄📋✅ File", name=item.name, size=file_size)
 
         logger.info(
-            "📊📁✅ Total installation size",
             directories=dir_count,
             files=file_count,
             total_bytes=total_size,
@@ -290,15 +280,12 @@ class PythonEnvironmentBuilder:
 
     def _create_python_tarball(self, python_install_dir: Path, python_tgz: Path) -> None:
         """Create the Python tarball from installation directory."""
-        logger.info(f"✅ Found Python installation at: {python_install_dir}")
-        logger.debug(f"📦 Creating Python tarball: {python_tgz}")
 
         # Use mutable container for tracking stats
         stats = {"files_added": 0, "bytes_added": 0}
 
         with tarfile.open(python_tgz, "w:gz", compresslevel=9) as tar:
             filter_func = self._create_tarball_filter(stats)
-            logger.debug("🏗️ Adding Python installation to tarball...")
             tar.add(python_install_dir, arcname=".", filter=filter_func)
             logger.info(
                 f"📊 Added {stats['files_added']} files ({stats['bytes_added']:,} bytes) to Python tarball"
@@ -331,9 +318,7 @@ class PythonEnvironmentBuilder:
                 stats["files_added"] += 1
                 stats["bytes_added"] += tarinfo.size
                 if stats["files_added"] <= 10 or stats["files_added"] % 100 == 0:
-                    logger.trace(f"  📄 Adding: {tarinfo.name} ({tarinfo.size:,} bytes)")
             elif tarinfo.isdir():
-                logger.trace(f"  📁 Adding: {tarinfo.name}/")
 
             return deterministic_filter(tarinfo)
 
@@ -344,8 +329,6 @@ class PythonEnvironmentBuilder:
         tarball_size = python_tgz.stat().st_size
         compression_ratio = (1 - tarball_size / bytes_added) * 100 if bytes_added > 0 else 0
         logger.info(
-            f"✅ Python tarball created: {tarball_size:,} bytes (compression: {compression_ratio:.1f}%)"
         )
-
 
 # 🌶️📦🔚

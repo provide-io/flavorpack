@@ -1,7 +1,17 @@
-#
+# 
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
+"""TODO: Add module docstring."""
+
+# 
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
+"""TODO: Add module docstring."""
+
 from __future__ import annotations
 
 """TODO: Add module docstring."""
@@ -116,13 +126,11 @@ class PythonSlotBuilder:
                         "This is required for broad Linux compatibility (glibc 2.17+)."
                     )
 
-                logger.info(f"✅ Successfully downloaded UV to {payload_uv}")
                 # Also copy to work dir for compatibility
                 work_uv = work_dir / "uv"
                 self._copy_executable(payload_uv, work_uv)
                 artifacts["uv_binary"] = work_uv
                 uv_obtained = True
-                logger.info(f"✅ UV binary ready at {work_uv}")
             except Exception as e:
                 # Re-raise with more context
                 error_msg = f"Critical error downloading UV for Linux: {e}"
@@ -140,7 +148,6 @@ class PythonSlotBuilder:
                 # UV goes in {workenv}/bin/uv (or uv.exe on Windows)
                 payload_uv = bin_dir / self.uv_exe
                 self._copy_executable(uv_host_path, payload_uv)
-                logger.info("📦➡️✅ Copied UV binary to payload", path=str(payload_uv))
 
                 # Also copy to work dir for Go/Rust packager compatibility
                 work_uv = work_dir / self.uv_exe
@@ -148,7 +155,6 @@ class PythonSlotBuilder:
                 artifacts["uv_binary"] = work_uv
                 logger.debug(f"UV binary copied to work dir: {work_uv}")
             else:
-                logger.warning("📦⚠️❌ UV not found on host system, package will require UV at runtime")
                 # We still need to provide UV somehow - this is a critical error for Python packages
                 raise FileNotFoundError(
                     "UV binary not found on host system. Cannot build Python package without UV."
@@ -170,7 +176,6 @@ class PythonSlotBuilder:
 
         # Log the compressed size
         payload_size = payload_tgz.stat().st_size / (1024 * 1024)
-        logger.info("📦🗜️✅ Payload compressed", size_mb=payload_size)
 
         # Create metadata archive (separate for selective extraction)
         metadata_content = work_dir / "metadata_content"
@@ -212,7 +217,6 @@ class PythonSlotBuilder:
         dep_path = dep_path.resolve()
 
         logger.debug(
-            "📦🔍📋 Examining dependency",
             name=dep_path.name,
             path=str(dep_path),
             depth=depth,
@@ -221,7 +225,6 @@ class PythonSlotBuilder:
         # Check if we've already processed this dependency
         if dep_path in seen:
             logger.debug(
-                "📦⏭️✅ Already processed dependency, skipping",
                 name=dep_path.name,
                 depth=depth,
             )
@@ -237,7 +240,6 @@ class PythonSlotBuilder:
         if pyproject_path.exists():
             try:
                 logger.debug(
-                    "📖🔍📋 Reading pyproject.toml",
                     path=str(pyproject_path),
                     depth=depth,
                 )
@@ -250,13 +252,11 @@ class PythonSlotBuilder:
 
                 if sub_deps:
                     logger.info(
-                        "🔗🔍✅ Found sub-dependencies",
                         count=len(sub_deps),
                         parent=dep_path.name,
                         depth=depth,
                     )
                     for sub_dep in sub_deps:
-                        logger.debug("📦➤📋 Sub-dependency", name=sub_dep, depth=depth)
 
                 # Recursively process each sub-dependency
                 for sub_dep in sub_deps:
@@ -272,35 +272,29 @@ class PythonSlotBuilder:
                         all_deps.extend(transitive)
                     else:
                         logger.warning(
-                            "📦🔍⚠️ Sub-dependency not found",
                             path=str(sub_dep_path),
                             depth=depth,
                         )
 
             except Exception as e:
                 logger.warning(
-                    "📖🔍❌ Failed to read dependencies",
                     path=str(pyproject_path),
                     error=str(e),
                     depth=depth,
                 )
         else:
-            logger.debug("📄🔍⚠️ No pyproject.toml found", path=str(pyproject_path), depth=depth)
 
         # Add this dependency after its dependencies (post-order)
         if dep_path not in all_deps:
             all_deps.append(dep_path)
             logger.info(
-                "📦+✅ Added to dependency list",
                 name=dep_path.name,
                 depth=depth,
             )
 
         if depth == 0:
-            logger.info("🎯📊✅ Total transitive dependencies found", count=len(all_deps))
             for i, dep in enumerate(all_deps, 1):
                 logger.info(
-                    "📦📋✅ Transitive dependency",
                     index=i,
                     name=dep.name,
                     path=str(dep),
@@ -320,7 +314,6 @@ class PythonSlotBuilder:
         # Process local dependencies from [tool.flavor.build].dependencies
         local_deps = self.build_config.get("dependencies", [])
         if local_deps:
-            logger.info(f"📦🔗 Processing {len(local_deps)} local dependencies")
             for dep in local_deps:
                 dep_path = self.manifest_dir / dep
                 if dep_path.exists() and dep_path.is_dir():
@@ -332,7 +325,6 @@ class PythonSlotBuilder:
                         source_path=dep_path,
                         wheel_dir=wheels_dir,
                     )
-                    logger.info(f"✅ Built local dependency wheel: {dep_wheel.name}")
                 else:
                     logger.warning(f"⚠️ Local dependency not found: {dep_path}")
 
@@ -346,7 +338,6 @@ class PythonSlotBuilder:
         )
 
         logger.info(
-            "✅ Wheel building completed",
             total_wheels=build_result["total_wheels"],
             project_wheel=build_result["project_wheel"].name,
         )
@@ -387,6 +378,5 @@ class PythonSlotBuilder:
 
         logger.debug("No requirements file found")
         return None
-
 
 # 🌶️📦🔚

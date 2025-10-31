@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
 """Pipe data processing - stdin/stderr handling with various transformations"""
 
 import base64
@@ -12,7 +16,6 @@ import click
 
 @click.group("pipe")
 def pipe_command() -> None:
-    """🔧 Process piped input/output"""
     pass
 
 
@@ -180,7 +183,6 @@ def validate_input(schema, strict) -> None:
             parsed = json.loads(data.decode("utf-8"))
             # Output pretty-printed valid JSON
             print(json.dumps(parsed, indent=2))
-            click.echo("✅ Valid JSON", err=True)
         except (json.JSONDecodeError, UnicodeDecodeError) as e:
             click.echo(f"❌ Invalid JSON: {e}", err=True)
             sys.exit(1)
@@ -192,8 +194,6 @@ def validate_input(schema, strict) -> None:
             sys.exit(1)
 
         # Check magic wand at end
-        if data[-4:] == "🪄".encode():
-            click.echo("✅ Valid PSPF magic", err=True)
         else:
             click.echo("❌ Invalid PSPF magic", err=True)
             if not strict:
@@ -211,7 +211,6 @@ def validate_input(schema, strict) -> None:
                 click.echo(f"❌ Missing required fields: {missing}", err=True)
                 sys.exit(1)
 
-            click.echo("✅ Valid manifest structure", err=True)
 
         except Exception as e:
             click.echo(f"❌ Invalid manifest: {e}", err=True)
@@ -255,3 +254,5 @@ def corrupt_data(probability, corruption_type) -> None:
 
     sys.stdout.buffer.write(bytes(data))
     sys.stdout.flush()
+
+# 🌶️📦🔚

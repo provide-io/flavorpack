@@ -1,7 +1,15 @@
-#
+# 
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
+"""TODO: Add module docstring."""
+
+# 
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
 """Work environment management commands for the flavor CLI."""
 
 from __future__ import annotations
@@ -47,9 +55,7 @@ def workenv_list() -> None:
         version = pkg.get("version", "")
 
         if version:
-            echo(f"\n📦 {name} v{version}")
         else:
-            echo(f"\n📦 {name}")
 
         echo(f"   ID: {pkg['id']}")
         echo(f"   Size: {size_mb:.1f} MB")
@@ -111,7 +117,6 @@ def workenv_clean(older_than: int | None, yes: bool) -> None:
     removed = manager.clean(max_age_days=older_than)
 
     if removed:
-        echo(f"""✅ Removed {len(removed)} cached package(s)""")
     else:
         echo("No packages to clean")
 
@@ -142,7 +147,6 @@ def workenv_remove(package_id: str, yes: bool) -> None:
                 return
 
     if manager.remove(package_id):
-        echo(f"✅ Removed package '{package_id}'")
     else:
         echo_error(f"❌ Package '{package_id}' not found")
 
@@ -172,15 +176,12 @@ def workenv_inspect(package_id: str, output_json: bool) -> None:  # noqa: C901
     else:
         # Human-readable output
         echo("=" * 60)
-        echo(f"📦 Package: {package_id}")
         echo("-" * 60)
 
         # Basic info
-        echo(f"📁 Location: {info['content_dir']}")
         echo(f"🗂️  Metadata Type: {info.get('metadata_type', 'none')}")
 
         if info.get("extraction_complete"):
-            echo("✅ Extraction: Complete")
         else:
             echo("⚠️  Extraction: Incomplete")
 
@@ -220,13 +221,11 @@ def workenv_inspect(package_id: str, output_json: bool) -> None:  # noqa: C901
         # Package metadata
         if info.get("package_info"):
             pkg = info["package_info"]
-            echo("\n📦 Package Info:")
             echo(f"  Name: {pkg.get('name', 'unknown')}")
             echo(f"  Version: {pkg.get('version', 'unknown')}")
             if pkg.get("builder"):
                 echo(f"  Builder: {pkg.get('builder')}")
 
         echo("")
-
 
 # 🌶️📦🔚

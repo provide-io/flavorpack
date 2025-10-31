@@ -1,7 +1,8 @@
-#
+# 
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
 """Key generation command for the flavor CLI."""
 
 from __future__ import annotations
@@ -32,11 +33,9 @@ def keygen_command(out_dir: str) -> None:
     try:
         generate_key_pair(Path(out_dir))
         log.info("Key pair generated successfully", out_dir=out_dir)
-        echo(f"✅ Package integrity key pair generated in '{out_dir}'.")
     except BuildError as e:
         log.error("Keygen failed", error=str(e), out_dir=out_dir)
         echo_error(f"❌ Keygen failed: {e}")
         raise click.Abort() from e
-
 
 # 🌶️📦🔚

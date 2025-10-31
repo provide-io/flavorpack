@@ -1,3 +1,15 @@
+# 
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
+"""TODO: Add module docstring."""
+
+# 
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
 """Cache management commands for taster."""
 
 import json
@@ -64,7 +76,6 @@ def clean(all, flavor, verbose) -> None:
                     click.echo(f"Error cleaning var cache: {e}", err=True)
 
     if cleaned:
-        click.echo(f"✅ Cleaned caches: {', '.join(cleaned)}")
     else:
         click.echo("No caches to clean")
 
@@ -232,14 +243,11 @@ def _inspect_workenv(name: str, cache_dir: Path, results: dict) -> None:
 def _print_workenv_info(name: str, info: dict) -> None:
     """Print workenv information in human-readable format."""
     click.echo("=" * 60)
-    click.echo(f"📦 Workenv: {name}")
     click.echo("-" * 60)
-    click.echo(f"📁 Location: {info['workenv_path']}")
     click.echo(f"💾 Size: {info['size_mb']} MB")
     click.echo(f"🗂️  Metadata Type: {info.get('metadata_type', 'none')}")
 
     if info.get("extraction_complete"):
-        click.echo("✅ Extraction: Complete")
     else:
         click.echo("⚠️  Extraction: Incomplete or not started")
 
@@ -258,7 +266,6 @@ def _print_workenv_info(name: str, info: dict) -> None:
     # Display package metadata if available
     if info.get("package_metadata"):
         pkg = info["package_metadata"].get("package", {})
-        click.echo("\n📦 Package Info:")
         click.echo(f"  Name: {pkg.get('name', 'unknown')}")
         click.echo(f"  Version: {pkg.get('version', 'unknown')}")
 
@@ -274,3 +281,5 @@ def _print_workenv_info(name: str, info: dict) -> None:
                 click.echo(f"  ... and {len(slots) - 5} more")
 
     click.echo()
+
+# 🌶️📦🔚

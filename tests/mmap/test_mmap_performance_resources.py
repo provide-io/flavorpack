@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
 """Performance benchmarks and large file tests for mmap."""
+
 from contextlib import contextmanager
 from pathlib import Path
 import random
@@ -139,6 +140,5 @@ class TestMMapResourceManagement:
 
         finally:
             path.unlink(missing_ok=True)
-
 
 # 🌶️📦🔚

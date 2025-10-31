@@ -1,3 +1,15 @@
+# 
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
+"""TODO: Add module docstring."""
+
+# 
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
 """Test argv[0] and command information"""
 
 import os
@@ -23,7 +35,6 @@ def argv_command() -> None:
             click.echo(f"  argv[{i}]: {arg}")
 
     # Check environment variables
-    click.secho("\n🔧 Environment Variables:", fg="yellow")
     env_vars = {
         "FLAVOR_COMMAND_NAME": "Command name override",
         "FLAVOR_ORIGINAL_COMMAND": "Original command path",
@@ -38,13 +49,11 @@ def argv_command() -> None:
             click.echo(f"  {var}: <not set> ({desc})")
 
     # Test argv[0] behavior
-    click.secho("\n🧪 argv[0] Test Results:", fg="magenta")
 
     Path(sys.argv[0]).name
     expected_names = ["taster.psp", "taster", "test.psp", "dist/taster.psp"]
 
     if any(expected in sys.argv[0] for expected in expected_names):
-        click.secho(f"  ✅ argv[0] shows flavor binary name: {sys.argv[0]}", fg="green")
     else:
         click.secho(f"  ⚠️ argv[0] might not be set correctly: {sys.argv[0]}", fg="yellow")
 
@@ -68,7 +77,8 @@ def argv_command() -> None:
     click.echo(f"  Working Directory: {Path.cwd()}")
 
     # Python interpreter info
-    click.secho("\n🐍 Python Information:", fg="yellow")
     click.echo(f"  Executable: {sys.executable}")
     click.echo(f"  Version: {sys.version.split()[0]}")
     click.echo(f"  Platform: {sys.platform}")
+
+# 🌶️📦🔚

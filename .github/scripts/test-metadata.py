@@ -1,17 +1,15 @@
 #!/usr/bin/env python3
-#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
-"""
-Unified test metadata collection and reporting tool.
+
+"""Unified test metadata collection and reporting tool.
 Consolidates test metadata collection, results combining, and platform metadata generation.
 
 Usage:
     test-metadata.py collect [output_dir]  - Collect test metadata
     test-metadata.py combine <input_dir> [output_file]  - Combine test results
-    test-metadata.py platform <platform> <version> [cache_hit]  - Generate platform metadata
-"""
+    test-metadata.py platform <platform> <version> [cache_hit]  - Generate platform metadata"""
 
 from datetime import UTC, datetime
 import json
@@ -132,9 +130,7 @@ def collect_test_metadata(output_dir: Path) -> None:
     }
     (output_dir / "environment.json").write_text(json.dumps(env_vars, indent=2))
 
-    print(f"✅ Test metadata collected in {output_dir}/")
     for file in sorted(output_dir.iterdir()):
-        print(f"  📄 {file.name}")
 
 
 def combine_test_results(input_dir: Path, output_file: Path) -> None:
@@ -168,7 +164,6 @@ def combine_test_results(input_dir: Path, output_file: Path) -> None:
         test_files = list(input_dir.glob(f"**/{pattern}"))
 
         if test_files:
-            print(f"  ✅ Found {len(test_files)} test file(s) for {platform_name}")
 
             # Merge results from all test files for this platform
             platform_data = {}
@@ -214,7 +209,6 @@ def combine_test_results(input_dir: Path, output_file: Path) -> None:
     print(f"  Passed: {s['passed']}")
     print(f"  Failed: {s['failed']}")
     print(f"  Skipped: {s['skipped']}")
-    print(f"\n✅ Results saved to {output_file}")
 
 
 def generate_platform_metadata(platform_name: str, version: str, cache_hit: bool = False) -> None:
@@ -316,4 +310,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 # 🌶️📦🔚

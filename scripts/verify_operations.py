@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
-#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
 """Verify operation implementations across Python and Go.
 
 This script checks that operation packing/unpacking produces
-consistent results between Python and Go implementations.
-"""
+consistent results between Python and Go implementations."""
 
 import json
 from pathlib import Path
@@ -27,7 +26,6 @@ from flavor.psp.format_2025.operations import (
 
 def run_go_tests():
     """Run Go operation tests and check results."""
-    print("🔧 Running Go operation tests...")
 
     go_dir = Path("src/flavor-go/pkg/psp/format_2025")
     if not go_dir.exists():
@@ -48,7 +46,6 @@ def run_go_tests():
 
     # Check for PASS in output
     if "PASS" in result.stdout:
-        print("✅ Go operation tests passed")
         return True
     else:
         print(f"❌ Go tests did not pass:\n{result.stdout}")
@@ -57,7 +54,6 @@ def run_go_tests():
 
 def verify_python_operations():
     """Verify Python operation packing/unpacking."""
-    print("🐍 Verifying Python operations...")
 
     test_cases = [
         ([], 0x0, "empty/raw"),
@@ -79,7 +75,6 @@ def verify_python_operations():
             )
             all_passed = False
         else:
-            print(f"✅ Python pack OK: {description} → 0x{packed:016x}")
 
         # Test unpacking
         unpacked = unpack_operations(expected_packed)
@@ -87,7 +82,6 @@ def verify_python_operations():
             print(f"❌ Python unpack failed for {description}: got {unpacked}, want {ops}")
             all_passed = False
         else:
-            print(f"✅ Python unpack OK: 0x{expected_packed:016x} → {unpacked}")
 
     return all_passed
 
@@ -118,7 +112,6 @@ def compare_test_vectors():
             print(f"❌ Mismatch for {v['description']}: Python={packed}, Expected={expected}")
             all_correct = False
         else:
-            print(f"✅ {v['description']}: 0x{packed:016x}")
 
     return all_correct
 
@@ -158,7 +151,6 @@ def check_operation_constants():
             print(f"❌ Wrong value for {name}: got 0x{actual_value:02X}, want 0x{expected_value:02X}")
             all_correct = False
         else:
-            print(f"✅ {name} = 0x{actual_value:02X}")
 
     return all_correct
 
@@ -194,7 +186,6 @@ def main():
     print("📊 Verification Summary:")
     for name, result in results:
         if result is True:
-            print(f"  ✅ {name}: PASSED")
         elif result is False:
             print(f"  ❌ {name}: FAILED")
         else:
@@ -211,4 +202,5 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
+
 # 🌶️📦🔚

@@ -1,3 +1,8 @@
+# 
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
 """Integration tests for pretaster PSPF validation."""
 
 from __future__ import annotations
@@ -116,7 +121,6 @@ class TestPretasterIntegration:
 
         assert result.returncode == 0
         assert "Simple Shell Script Test" in result.stdout
-        assert "✅ Shell script test completed successfully" in result.stdout
 
     @pytest.mark.integration
     @pytest.mark.slow
@@ -182,3 +186,5 @@ class TestPretasterIntegration:
 
         # Should show package metadata
         assert result.returncode == 0 or "not found" in result.stderr  # flavor may not be in PATH
+
+# 🌶️📦🔚

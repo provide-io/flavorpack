@@ -1,12 +1,10 @@
-#
+# 
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""
-Test suite for production-ready PSPFLauncher implementation.
-Using TDD approach to drive the implementation.
-"""
+"""Test suite for production-ready PSPFLauncher implementation.
+Using TDD approach to drive the implementation."""
 
 import hashlib
 from pathlib import Path

@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
 """Cross-language verification tests for PSPF operations field compatibility."""
 
 from pathlib import Path
@@ -165,3 +169,5 @@ class TestCrossLanguageOperations:
         for invalid_op in invalid_operations:
             with pytest.raises(ValueError, match="Unknown operation|Invalid operations"):
                 string_to_operations(invalid_op)
+
+# 🌶️📦🔚

@@ -1,7 +1,7 @@
-# tests/test_verification.py
-#
-# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# 
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
+#
 
 """Comprehensive tests for flavor.verification module."""
 
@@ -362,3 +362,5 @@ class TestFlavorVerifier:
 
             with pytest.raises(ValueError, match="Invalid metadata JSON"):
                 FlavorVerifier.verify_package(package_path)
+
+# 🌶️📦🔚

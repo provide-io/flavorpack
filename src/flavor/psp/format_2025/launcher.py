@@ -1,7 +1,10 @@
-#
+# 
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
+"""TODO: Add module docstring."""
+
 from __future__ import annotations
 
 """PSPF 2025 Bundle Launcher
@@ -133,7 +136,6 @@ class PSPFLauncher(PSPFReader):
         Returns:
             dict: Mapping of slot index to extracted path
         """
-        logger.debug(f"📦 Extracting all slots to {workenv_dir}")
 
         # NOTE: This parallels Go's ExtractAllSlots logic
         slot_table = self.read_slot_table()
@@ -147,7 +149,6 @@ class PSPFLauncher(PSPFReader):
                 slot_path = self.extract_slot(slot_idx, workenv_dir)
                 extracted_paths[slot_idx] = slot_path
 
-            logger.info(f"✅ Extracted all {len(extracted_paths)} slots")
             return extracted_paths
         except Exception as e:
             logger.error(f"❌ Extraction interrupted or failed: {e}. Cleaning up partial extraction.")
@@ -165,7 +166,6 @@ class PSPFLauncher(PSPFReader):
         Returns:
             Path: Path to the extracted slot content
         """
-        logger.debug(f"📦 Extracting slot {slot_index} to {workenv_dir}")
 
         # NOTE: This logic is unique to Python launcher - Go/Rust have their own implementations
         slot_table = self.read_slot_table()
@@ -183,7 +183,6 @@ class PSPFLauncher(PSPFReader):
         with Path(self.bundle_path).open("rb") as f:
             f.seek(slot_entry["offset"])
             slot_data = f.read(slot_entry["size"])
-            logger.debug(f"📖 Read {len(slot_data)} bytes from slot {slot_index}")
 
         # Verify checksum if requested (checksum is of the data AS STORED IN THE FILE)
         if verify_checksum:
@@ -198,24 +197,19 @@ class PSPFLauncher(PSPFReader):
                     f"❌ Checksum mismatch for slot {slot_index}: expected {slot_entry['checksum']:016x}, got {actual_checksum:016x}"
                 )
                 raise ValueError(f"Checksum mismatch for slot {slot_index}")
-            logger.debug(f"✅ Checksum verified for slot {slot_index}")
 
         # NOTE: Decoding logic must match Go/Rust implementations
         # Decode if needed
         if slot_entry["operations"] == 0:  # raw/none
-            logger.debug(f"📄 Slot {slot_index} is unencoded (raw)")
             data = slot_data
         elif slot_entry["operations"] == 0x01:  # tar
-            logger.debug(f"📦 Slot {slot_index} is a tar archive")
             data = slot_data  # Tar archives are extracted later
         elif slot_entry["operations"] == 0x10:  # gzip
             logger.debug(f"🗜️ Decompressing slot {slot_index} with gzip")
             import gzip
 
             data = gzip.decompress(slot_data)
-            logger.debug(f"✅ Decompressed to {len(data)} bytes")
         elif slot_entry["operations"] == 0x1001:  # tar.gz
-            logger.debug(f"📦🗜️ Slot {slot_index} is a tar.gz archive")
             data = slot_data  # Will be decompressed and extracted later
         else:
             logger.error(f"❌ Unsupported operations: {slot_entry['operations']}")
@@ -247,7 +241,6 @@ class PSPFLauncher(PSPFReader):
                 with tarfile.open(fileobj=io.BytesIO(data), mode="r:*") as tar:
                     # Use the filter parameter to avoid Python 3.14 deprecation warning
                     tar.extractall(path=workenv_dir, filter="data")
-                logger.debug(f"✅ Extracted tarball contents to {workenv_dir}")
 
                 # Return the base directory
                 return workenv_dir
@@ -260,7 +253,6 @@ class PSPFLauncher(PSPFReader):
             try:
                 ensure_parent_dir(output_path)
                 atomic_write(output_path, data)
-                logger.debug(f"✅ Wrote {len(data)} bytes to {output_path}")
                 return output_path
             except (OSError, PermissionError) as e:
                 logger.error(f"❌ Disk error writing slot {slot_index} to {output_path}: {e}")
@@ -298,7 +290,6 @@ class PSPFLauncher(PSPFReader):
                 raise ValueError("Bundle has no execution configuration")
 
             # Setup work environment (extracts slots and runs setup commands)
-            logger.debug("📁 Setting up work environment")
             workenv_dir = self.setup_workenv()
 
             # Use the executor for actual process execution
@@ -344,6 +335,5 @@ class PSPFLauncher(PSPFReader):
         result: IntegrityResult = verify_package_integrity(self.bundle_path)
         # IntegrityResult is a TypedDict with bool values, which is compatible with dict[str, bool]
         return dict(result)  # type: ignore[arg-type]
-
 
 # 🌶️📦🔚

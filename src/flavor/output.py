@@ -1,7 +1,17 @@
-#
+# 
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
+"""TODO: Add module docstring."""
+
+# 
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
+"""TODO: Add module docstring."""
+
 from __future__ import annotations
 
 """Output formatting and redirection for Flavor tools."""
@@ -119,7 +129,6 @@ class OutputHandler:
         if self.format == OutputFormat.JSON:
             self.write({"success": message, **kwargs})
         else:
-            self.write(f"✅ {message}")
 
     def info(self, message: str, **kwargs: Any) -> None:
         """Write an info message."""
@@ -154,6 +163,5 @@ def get_output_handler(
     output_file = get_str(file_env)
 
     return OutputHandler(format=output_format, file=output_file)
-
 
 # 🌶️📦🔚

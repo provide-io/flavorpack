@@ -1,7 +1,8 @@
-#
+# 
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
 """TODO: Add module docstring."""
 
 from __future__ import annotations
@@ -380,6 +381,5 @@ class SlotView:
     def __getitem__(self, key: Any) -> Any:
         """Support slicing and indexing for sequence-like behavior."""
         return self.content[key]
-
 
 # 🌶️📦🔚

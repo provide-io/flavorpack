@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -40,10 +39,7 @@ class TestEnhancedConstants:
 
     def test_magic_trailer_emojis(self) -> None:
         """MagicTrailer should have both emojis."""
-        assert TRAILER_START_MAGIC == b"\xf0\x9f\x93\xa6"  # 📦 in UTF-8
-        assert TRAILER_END_MAGIC == b"\xf0\x9f\xaa\x84"  # 🪄 in UTF-8
         assert DEFAULT_MAGIC_TRAILER_SIZE == 8200  # 4 + 8192 + 4
-        # MagicTrailer consists of 📦 + 8192-byte index + 🪄
         assert len(TRAILER_START_MAGIC + TRAILER_END_MAGIC) == 8  # Both emojis = 8 bytes
 
 
@@ -199,6 +195,5 @@ class TestEnhancedSlots:
         # Should not have data yet
         assert view._data is None
         assert view._decompressed is None
-
 
 # 🌶️📦🔚

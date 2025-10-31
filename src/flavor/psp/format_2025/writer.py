@@ -1,7 +1,8 @@
-#
+# 
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
 """PSPF Package Writer - Binary serialization for PSPF packages.
 
 Handles the low-level binary writing and file operations for PSPF packages."""
@@ -113,7 +114,6 @@ def write_package(
 
     # Set executable permissions
     set_file_permissions(output_path, DEFAULT_EXECUTABLE_PERMS)
-    logger.trace("🔧📝📋 Set output file as executable", path=str(output_path))
 
     return actual_size
 
@@ -208,7 +208,6 @@ def _write_slots(f: BinaryIO, slots: list[PreparedSlot], spec: BuildSpec, index:
         # DEBUG: Log alignment decision for diagnostics
         alignment_value = DEFAULT_PAGE_SIZE if spec.options.page_aligned else DEFAULT_SLOT_ALIGNMENT
         logger.debug(
-            "🔧 Slot alignment decision",
             slot_index=i,
             slot_id=slot.metadata.id,
             page_aligned=spec.options.page_aligned,
@@ -324,6 +323,5 @@ def _map_lifecycle(lifecycle: str) -> int:
         "temporary": LIFECYCLE_TEMPORARY,
     }
     return mapping.get(lifecycle.lower(), LIFECYCLE_RUNTIME)
-
 
 # 🌶️📦🔚
