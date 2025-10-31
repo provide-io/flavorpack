@@ -330,9 +330,9 @@ def create_python_builder_metadata(
             },
             {
                 "type": "chmod",
-                "path": "{workenv}/bin/*",
+                "path": f"{{workenv}}/{bin_dir}/*",
                 "mode": "700",
-                "description": "Make all scripts in bin/ executable",
+                "description": f"Make all scripts in {bin_dir}/ executable",
             },
             {
                 "type": "write_file",
