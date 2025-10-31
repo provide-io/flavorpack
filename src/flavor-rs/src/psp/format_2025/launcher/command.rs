@@ -9,6 +9,74 @@ use std::collections::HashMap;
 use std::env;
 use std::path::Path;
 
+/// Resolve executable path using PATH environment variable
+///
+/// Handles absolute Unix paths (e.g., /usr/bin/python3) by extracting the basename.
+/// On Windows, this handles .exe extension resolution automatically.
+/// Falls back to the basename if resolution fails.
+pub fn resolve_executable(executable: &str) -> String {
+    // If it's an absolute Unix path (starts with /), extract just the basename
+    // This handles cases like "/usr/bin/python3" -> "python3"
+    let exec_name = if executable.starts_with('/') {
+        executable.rsplit('/').next().unwrap_or(executable)
+    } else {
+        executable
+    };
+
+    // Try to resolve the executable (or basename) via PATH
+    if let Ok(path) = which::which(exec_name) {
+        let resolved = path.to_string_lossy().to_string();
+        debug!("🔍 Resolved executable '{}' to '{}'", executable, resolved);
+        resolved
+    } else {
+        // On Windows, try with .exe extension
+        #[cfg(windows)]
+        {
+            let exe_variant = format!("{}.exe", exec_name);
+            if let Ok(path) = which::which(&exe_variant) {
+                let resolved = path.to_string_lossy().to_string();
+                debug!(
+                    "🔍 Resolved executable '{}' to '{}' (with .exe)",
+                    executable, resolved
+                );
+                return resolved;
+            }
+
+            // Windows-specific fallbacks for common Unix commands
+            let fallback_result = match exec_name {
+                "python3" | "python3.exe" => {
+                    // Try python.exe as fallback
+                    which::which("python.exe")
+                        .or_else(|_| which::which("python"))
+                        .ok()
+                }
+                "sh" | "sh.exe" => {
+                    // Try bash.exe as fallback
+                    which::which("bash.exe")
+                        .or_else(|_| which::which("bash"))
+                        .ok()
+                }
+                _ => None,
+            };
+
+            if let Some(path) = fallback_result {
+                let resolved = path.to_string_lossy().to_string();
+                debug!(
+                    "🔍 Resolved executable '{}' to '{}' (Windows fallback)",
+                    executable, resolved
+                );
+                return resolved;
+            }
+        }
+
+        debug!(
+            "⚠️  Could not resolve executable '{}' in PATH, using basename: '{}'",
+            executable, exec_name
+        );
+        exec_name.to_string()
+    }
+}
+
 /// Prepare the command to execute
 pub(super) fn prepare_command(
     metadata: &Metadata,
@@ -29,6 +97,7 @@ pub(super) fn prepare_command(
     }
 
     let executable = command_parts.remove(0);
+    let executable = resolve_executable(&executable);
 
     // Combine command args with user args
     let mut all_args = command_parts;

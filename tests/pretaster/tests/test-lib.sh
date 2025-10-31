@@ -121,32 +121,49 @@ print_test_summary() {
 # Ensure helpers are built
 ensure_helpers_built() {
     local helpers_dir="$1"
-    
+
     if [ -z "$helpers_dir" ]; then
         echo "Error: helpers_dir not provided to ensure_helpers_built"
         return 1
     fi
-    
+
     # Detect platform
     local os=$(uname -s | tr '[:upper:]' '[:lower:]')
     local arch=$(uname -m)
+
+    # Normalize Windows OS names (MINGW64_NT, MSYS_NT, etc.) to 'windows'
+    if [[ "$os" == mingw* ]] || [[ "$os" == msys* ]] || [[ "$os" == cygwin* ]]; then
+        os="windows"
+        # On Windows ARM64, uname -m returns x86_64 (emulation layer)
+        # Check uname -s for ARM64 indicator in the OS name
+        if [[ "$(uname -s)" == *"-ARM64"* ]] || [[ "$(uname -s)" == *"-arm64"* ]]; then
+            arch="arm64"
+        fi
+    fi
+
     [ "$arch" = "x86_64" ] && arch="amd64"
     [ "$arch" = "aarch64" ] && arch="arm64"
     local platform="${os}_${arch}"
-    
-    if [ ! -f "$helpers_dir/bin/flavor-rs-builder-$platform" ] || \
-       [ ! -f "$helpers_dir/bin/flavor-go-builder-$platform" ] || \
-       [ ! -f "$helpers_dir/bin/flavor-rs-launcher-$platform" ] || \
-       [ ! -f "$helpers_dir/bin/flavor-go-launcher-$platform" ]; then
-        
+
+    # Determine executable extension for Windows
+    local ext=""
+    if [[ "$os" == "windows" ]]; then
+        ext=".exe"
+    fi
+
+    if [ ! -f "$helpers_dir/bin/flavor-rs-builder-$platform$ext" ] || \
+       [ ! -f "$helpers_dir/bin/flavor-go-builder-$platform$ext" ] || \
+       [ ! -f "$helpers_dir/bin/flavor-rs-launcher-$platform$ext" ] || \
+       [ ! -f "$helpers_dir/bin/flavor-go-launcher-$platform$ext" ]; then
+
         # Check if we're in CI and helpers are pre-built
         if [ -n "$CI" ] || [ -n "$GITHUB_ACTIONS" ]; then
             print_color "$YELLOW" "⚠️ Helpers not found at $helpers_dir/bin/"
             print_color "$YELLOW" "In CI, helpers should be pre-downloaded. Checking..."
             ls -la "$helpers_dir/bin/" 2>/dev/null || echo "bin/ directory doesn't exist"
-            
+
             # Don't try to build in CI - that requires Go/Rust
-            if [ ! -f "$helpers_dir/bin/flavor-rs-builder-$platform" ]; then
+            if [ ! -f "$helpers_dir/bin/flavor-rs-builder-$platform$ext" ]; then
                 print_color "$RED" "❌ Missing required helpers in CI environment"
                 print_color "$RED" "   Expected helpers in: $helpers_dir/bin/"
                 return 1

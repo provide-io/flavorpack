@@ -405,16 +405,10 @@ jobs:
           which flavor
           flavor --version
       
-      - name: 🔨 Build Flavor PSP using itself
+      - name: 🔧 Prepare Flavor build
+        id: prepare
         shell: bash
-        env:
-          PYTHONIOENCODING: utf-8
-          PYTHONUTF8: 1
-          FLAVOR_LOG_LEVEL: trace
         run: |
-          # Add uv tools to PATH
-          export PATH="$HOME/.local/bin:$PATH"
-
           # Determine binary extension for Windows
           EXT=""
           if [[ "${{ matrix.platform }}" == "windows_"* ]]; then
@@ -432,16 +426,25 @@ jobs:
             ls -la helpers/bin/
             exit 1
           fi
-          
+
           # Find the wheel
           WHEEL=$(find wheel-dist -name "flavorpack-*.whl" | head -1)
 
-          # Use script to build Flavor PSP
-          .github/scripts/build-flavor-self.sh \
-            "${{ matrix.platform }}" \
-            "${{ needs.setup.outputs.helper_version }}" \
-            "$WHEEL" \
-            "$LAUNCHER"
+          if [ -z "$WHEEL" ]; then
+            echo "❌ Wheel not found"
+            ls -la wheel-dist/
+            exit 1
+          fi
+
+          echo "launcher=$LAUNCHER" >> $GITHUB_OUTPUT
+          echo "wheel=$WHEEL" >> $GITHUB_OUTPUT
+
+      - name: 🔨 Build Flavor PSP using itself (with retry)
+        uses: Wandalen/wretry.action@v3.5.0
+        with:
+          attempt_limit: 5
+          attempt_delay: 15000  # 15 seconds between retries
+          command: bash -c 'export PATH="$HOME/.local/bin:$PATH" && export PIP_RETRIES=10 && export PIP_TIMEOUT=120 && export PYTHONIOENCODING=utf-8 && export PYTHONUTF8=1 && export FLAVOR_LOG_LEVEL=trace && .github/scripts/build-flavor-self.sh "${{ matrix.platform }}" "${{ needs.setup.outputs.helper_version }}" "${{ steps.prepare.outputs.wheel }}" "${{ steps.prepare.outputs.launcher }}"'
       
       - name: 📤 Upload Flavor package
         uses: actions/upload-artifact@v4

@@ -43,11 +43,14 @@ verify_file() {
 create_test_runner() {
     cat > test-runner.sh << 'RUNNER_EOF'
 #!/bin/bash
-# Pretaster test runner
+# Pretaster test runner - lightweight wrapper for marking test completion
 set -e
 
 CMD="${1:-info}"
 shift || true
+
+# Get workenv directory
+WORKENV="${FLAVOR_WORKENV:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}"
 
 case "$CMD" in
     info)
@@ -57,48 +60,19 @@ case "$CMD" in
         ;;
     test)
         FLAG="${1:---all}"
-        echo "🧪 Running pretaster tests with flag: $FLAG"
-        
-        case "$FLAG" in
-            --all|--combo)
-                echo "🧪 Testing builder/launcher combinations..."
-                echo "  ✅ Rust+Rust: PASSED"
-                echo "  ✅ Rust+Go: PASSED"
-                echo "  ✅ Go+Rust: PASSED"
-                echo "  ✅ Go+Go: PASSED"
-                echo "✅ All tests completed successfully!"
-                ;;
-            --core)
-                echo "🧪 Running core functionality tests..."
-                echo "  ✅ Package extraction: PASSED"
-                echo "  ✅ Environment setup: PASSED"
-                echo "  ✅ Command execution: PASSED"
-                echo "✅ Core tests passed!"
-                ;;
-            --direct)
-                echo "🎯 Testing direct PSP execution..."
-                echo "  ✅ Direct execution: PASSED"
-                echo "  ✅ Argument passing: PASSED"
-                echo "  ✅ Exit code handling: PASSED"
-                echo "✅ Direct tests passed!"
-                ;;
-            *)
-                echo "Unknown flag: $FLAG"
-                exit 1
-                ;;
-        esac
+
+        echo "🧪 Pretaster test command received: $FLAG"
+        echo "📝 Note: Actual tests should be run via run-pretaster-tests.sh which"
+        echo "   provides helpers and manages the test environment."
+        echo ""
+        echo "✅ Pretaster PSP is ready for testing"
         ;;
     package)
-        # Only available when taster is bundled
-        if [ -f "{workenv}/taster/taster.psp" ]; then
-            exec "{workenv}/taster/taster.psp" package "$@"
-        else
-            echo "❌ Package command requires bundled taster"
-            exit 1
-        fi
+        echo "❌ Package command not available in this build"
+        exit 1
         ;;
     *)
-        echo "Usage: $0 {info|test|package} [options]"
+        echo "Usage: $0 {info|test} [options]"
         exit 1
         ;;
 esac
@@ -117,42 +91,46 @@ mkdir -p dist logs
 case "$BUILD_TYPE" in
     simple|with-helpers)
         echo "📦 Building simple pretaster with test scripts..."
-        
+
         # Find helpers
         HELPERS_DIR="../../helpers/bin"
         GO_BUILDER="${HELPERS_DIR}/flavor-go-builder-${VERSION}-${PLATFORM}${EXE_EXT}"
         RS_LAUNCHER="${HELPERS_DIR}/flavor-rs-launcher-${VERSION}-${PLATFORM}${EXE_EXT}"
-        
+
         verify_file "$GO_BUILDER"
         verify_file "$RS_LAUNCHER"
-        
+
         # Create test package in temp directory
         TEMP_DIR="$(mktemp -d)"
         cd "$TEMP_DIR"
-        
+
         create_test_runner
-        
-        # Create test scripts
-        mkdir -p scripts
-        echo '#!/usr/bin/env python3
-import sys
-print(" ".join(sys.argv[1:]) if len(sys.argv) > 1 else "Echo test ready")' > scripts/echo_test.py
-        
-        chmod +x scripts/*
-        
-        # Package test files
-        tar czf test-package.tar.gz test-runner.sh scripts/
-        
+
+        # Copy the REAL test scripts from tests directory
+        mkdir -p tests configs
+        cp -r ../tests/*.sh tests/ || echo "⚠️ No test scripts found"
+        cp -r ../configs/*.json configs/ || echo "⚠️ No config files found"
+
+        # Create dummy scripts directory for tests that need it
+        mkdir -p scripts slots
+        echo '#!/bin/bash
+echo "Test script placeholder"' > scripts/echo_test.sh
+        chmod +x scripts/*.sh
+
+        # Package test files with the real test scripts
+        tar czf test-package.tar.gz test-runner.sh tests/ configs/ scripts/ slots/
+
         # Go back to pretaster directory
         cd - > /dev/null
         cp "$TEMP_DIR/test-package.tar.gz" .
-        
+
         # Create manifest
         cat > pretaster-manifest.json << EOF
 {
   "package": {
     "name": "pretaster",
-    "version": "${VERSION}"
+    "version": "${VERSION}",
+    "description": "Pretaster test suite with real test scripts"
   },
   "execution": {
     "command": "bash {workenv}/test-runner.sh"
@@ -167,14 +145,14 @@ print(" ".join(sys.argv[1:]) if len(sys.argv) > 1 else "Echo test ready")' > scr
   ]
 }
 EOF
-        
+
         # Build PSP
         "$GO_BUILDER" \
             --manifest pretaster-manifest.json \
             --launcher-bin "$RS_LAUNCHER" \
             --output "../../$OUTPUT_DIR/pretaster-${VERSION}-${PLATFORM}${PSP_EXT}" \
             --key-seed "pretaster-${VERSION}"
-        
+
         # Cleanup
         rm -rf "$TEMP_DIR"
         ;;

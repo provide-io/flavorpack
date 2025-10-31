@@ -1,6 +1,6 @@
 //! PSPF/2025 package launcher
 
-mod command;
+pub mod command;
 mod extraction;
 mod filesystem;
 mod workenv;
