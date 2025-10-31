@@ -140,32 +140,38 @@ jobs:
         run: |
           # Find the appropriate Flavor PSP for this platform
           FLAVOR_PSP=$(find flavor-psp -name "flavor-*-${{ matrix.platform }}.psp" | head -1)
-          
+
           if [ -z "$FLAVOR_PSP" ]; then
             echo "❌ Flavor PSP not found for ${{ matrix.platform }}"
             ls -la flavor-psp/
             exit 1
           fi
-          
-          # Find the launcher for this platform
-          LAUNCHER="helpers/bin/flavor-rs-launcher-${{ needs.setup.outputs.version }}-${{ matrix.platform }}"
-          if [ ! -f "$LAUNCHER" ]; then
-            LAUNCHER="helpers/bin/flavor-rs-launcher-${{ matrix.platform }}"
+
+          # Determine binary extension for Windows
+          EXT=""
+          if [[ "${{ matrix.platform }}" == "windows_"* ]]; then
+            EXT=".exe"
           fi
-          
+
+          # Find the launcher for this platform
+          LAUNCHER="helpers/bin/flavor-rs-launcher-${{ needs.setup.outputs.version }}-${{ matrix.platform }}${EXT}"
+          if [ ! -f "$LAUNCHER" ]; then
+            LAUNCHER="helpers/bin/flavor-rs-launcher-${{ matrix.platform }}${EXT}"
+          fi
+
           if [ ! -f "$LAUNCHER" ]; then
             echo "❌ Launcher not found"
             ls -la helpers/bin/
             exit 1
           fi
-          
+
           # Use script to build Taster
           .github/scripts/build-taster-with-psp.sh \
             "$FLAVOR_PSP" \
             "$LAUNCHER" \
             "${{ matrix.platform }}" \
             "${{ needs.setup.outputs.version }}"
-          
+
           # Export path for subsequent steps
           echo "taster_path=$PWD/tests/taster/taster-${{ needs.setup.outputs.version }}-${{ matrix.platform }}.psp" >> $GITHUB_OUTPUT
 

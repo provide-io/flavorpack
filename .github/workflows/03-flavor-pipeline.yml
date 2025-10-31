@@ -414,13 +414,19 @@ jobs:
         run: |
           # Add uv tools to PATH
           export PATH="$HOME/.local/bin:$PATH"
-          
-          # Find the appropriate launcher
-          LAUNCHER="helpers/bin/flavor-rs-launcher-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}"
-          if [ ! -f "$LAUNCHER" ]; then
-            LAUNCHER="helpers/bin/flavor-rs-launcher-${{ matrix.platform }}"
+
+          # Determine binary extension for Windows
+          EXT=""
+          if [[ "${{ matrix.platform }}" == "windows_"* ]]; then
+            EXT=".exe"
           fi
-          
+
+          # Find the appropriate launcher
+          LAUNCHER="helpers/bin/flavor-rs-launcher-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}${EXT}"
+          if [ ! -f "$LAUNCHER" ]; then
+            LAUNCHER="helpers/bin/flavor-rs-launcher-${{ matrix.platform }}${EXT}"
+          fi
+
           if [ ! -f "$LAUNCHER" ]; then
             echo "❌ Launcher not found"
             ls -la helpers/bin/
@@ -429,7 +435,7 @@ jobs:
           
           # Find the wheel
           WHEEL=$(find wheel-dist -name "flavorpack-*.whl" | head -1)
-          
+
           # Use script to build Flavor PSP
           .github/scripts/build-flavor-self.sh \
             "${{ matrix.platform }}" \

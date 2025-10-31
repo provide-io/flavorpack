@@ -168,10 +168,11 @@ jobs:
           fi
       
       - name: 🧪 Run cross-language tests
+        shell: bash
         run: |
           # Set the path to the pretaster PSP (downloaded to ./build)
           PRETASTER_PSP="$(pwd)/build/pretaster-${{ needs.setup.outputs.version }}-${{ matrix.platform }}.psp"
-          
+
           # Verify the PSP exists
           if [ ! -f "$PRETASTER_PSP" ]; then
             echo "❌ Pretaster PSP not found at: $PRETASTER_PSP"
@@ -179,9 +180,9 @@ jobs:
             ls -la build/ || echo "Build directory not found"
             exit 1
           fi
-          
+
           chmod +x "$PRETASTER_PSP" 2>/dev/null || true
-          
+
           # Run tests with the absolute path to the PSP
           # Use "all" as default if test_suite input is not provided (e.g., workflow_run triggers)
           TEST_SUITE="${{ inputs.test_suite }}"
