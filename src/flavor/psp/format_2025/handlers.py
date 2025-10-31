@@ -147,6 +147,7 @@ def apply_operations(
         # Unpack and map operations
         pspf_ops = unpack_operations(packed_ops)
         logger.debug(
+            "🗜️ Applying PSPF operation chain",
             operations=[f"0x{op:02x}" for op in pspf_ops],
             data_size=len(data),
             compression_level=compression_level,
@@ -166,6 +167,7 @@ def apply_operations(
             result = _apply_single_operation(result, op, compression_level)
 
         logger.debug(
+            "✅ Operations applied successfully",
             input_size=len(data),
             output_size=len(result),
             compression_ratio=f"{len(result) / len(data):.2f}" if len(data) > 0 else "N/A",
@@ -247,6 +249,7 @@ def reverse_operations(data: bytes, packed_ops: int) -> bytes:  # noqa: C901
                 logger.warning(f"⚠️ Unsupported operation for reversal: {op}")
 
         logger.debug(
+            "✅ Operations reversed successfully",
             input_size=len(data),
             output_size=len(result),
             expansion_ratio=f"{len(result) / len(data):.2f}" if len(data) > 0 else "N/A",
@@ -286,6 +289,7 @@ def create_tar_archive(source: Path, deterministic: bool = True) -> bytes:
         raise FileNotFoundError(f"Source path does not exist: {source}")
 
     logger.debug(
+        "📦 Creating TAR archive",
         source=str(source),
         deterministic=deterministic,
         is_dir=source.is_dir(),
@@ -364,6 +368,7 @@ def extract_archive(
                 tar_impl.extract(temp_path, dest, limits=limits)
 
             logger.debug(
+                "✅ TAR extraction complete",
                 dest=str(dest),
                 file_count=len(list(dest.rglob("*"))),
             )

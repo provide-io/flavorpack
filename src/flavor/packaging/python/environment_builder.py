@@ -129,6 +129,7 @@ class PythonEnvironmentBuilder:
     def _log_uv_environment(self) -> None:
         """Log UV environment variables that might affect behavior."""
         logger.trace(
+            "🔍 UV environment variables",
             UV_CACHE_DIR=os.environ.get("UV_CACHE_DIR", "not set"),
             UV_PYTHON_INSTALL_DIR=os.environ.get("UV_PYTHON_INSTALL_DIR", "not set"),
             UV_SYSTEM_PYTHON=os.environ.get("UV_SYSTEM_PYTHON", "not set"),
@@ -234,6 +235,7 @@ class PythonEnvironmentBuilder:
                 dir_size = sum(f.stat().st_size for f in item.rglob("*") if f.is_file())
                 total_size += dir_size
                 logger.debug(
+                    "📁 Directory contents",
                     name=item.name,
                     item_count=item_count,
                     size=dir_size,
@@ -250,6 +252,7 @@ class PythonEnvironmentBuilder:
                 total_size += file_size
 
         logger.info(
+            "📊 Python installation stats",
             directories=dir_count,
             files=file_count,
             total_bytes=total_size,

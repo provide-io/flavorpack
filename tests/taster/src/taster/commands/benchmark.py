@@ -390,5 +390,7 @@ def leak_detector(command, threshold) -> None:
             elif slope > 0.01:
                 click.echo("⚠️ POSSIBLE MEMORY LEAK", err=True)
             else:
+                pass
+
 
 # 🌶️📦🔚

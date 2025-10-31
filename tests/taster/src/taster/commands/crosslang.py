@@ -448,6 +448,7 @@ entry_point = "crosslang_test:main"
             self.log("\n🔍 Testing Python verification of all packages...")
             for pkg, launcher_info in built_packages:
                 if self.verify_with_python(pkg):
+                    pass
                 else:
                     self.log(f"  ❌ {pkg.name}", "error")
 
@@ -455,6 +456,7 @@ entry_point = "crosslang_test:main"
             self.log("\n🔍 Testing launcher CLI verification...")
             for pkg, launcher_info in built_packages:
                 if self.verify_with_launcher_cli(pkg, launcher_info.language):
+                    pass
                 else:
                     self.log(f"  ❌ {pkg.name} (CLI)", "error")
 
@@ -465,6 +467,7 @@ entry_point = "crosslang_test:main"
                 self.log(f"  Testing {pkg.name}:")
                 for cmd in test_commands:
                     if self.test_cli_command(pkg, cmd):
+                        pass
                     else:
                         self.log(f"    ⚠️ {cmd}", "warning")
 
@@ -472,6 +475,7 @@ entry_point = "crosslang_test:main"
             self.log("\n🔄 Testing reproducible builds...")
             for launcher_info in available_launchers:
                 if self.test_reproducible_build(launcher_info):
+                    pass
                 else:
                     self.log(f"  ⚠️ {launcher_info.name} not fully reproducible", "warning")
 
@@ -509,6 +513,7 @@ entry_point = "crosslang_test:main"
                 self.log(f"Reproducible: {self.results['summary']['reproducible']}")
 
                 if self.results["summary"]["overall_success"]:
+                    pass
                 else:
                     self.log("\n❌ Cross-language compatibility: FAILED", "error")
 
@@ -528,7 +533,6 @@ entry_point = "crosslang_test:main"
 @click.option("--json", "json_output", is_flag=True, help="Output results as JSON")
 @click.option("--output-file", "-o", type=click.Path(), help="Write output to file")
 def crosslang_command(verbose, json_output, output_file) -> None:
-
     tester = CrossLangTester(verbose=verbose, json_output=json_output)
     exit_code = tester.run_all_tests()
 
@@ -538,5 +542,6 @@ def crosslang_command(verbose, json_output, output_file) -> None:
             json.dump(tester.results, f, indent=2)
 
     sys.exit(exit_code)
+
 
 # 🌶️📦🔚

@@ -1,11 +1,11 @@
-# 
+#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 
 """TODO: Add module docstring."""
 
-# 
+#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -54,6 +54,7 @@ def argv_command() -> None:
     expected_names = ["taster.psp", "taster", "test.psp", "dist/taster.psp"]
 
     if any(expected in sys.argv[0] for expected in expected_names):
+        pass
     else:
         click.secho(f"  ⚠️ argv[0] might not be set correctly: {sys.argv[0]}", fg="yellow")
 
@@ -80,5 +81,6 @@ def argv_command() -> None:
     click.echo(f"  Executable: {sys.executable}")
     click.echo(f"  Version: {sys.version.split()[0]}")
     click.echo(f"  Platform: {sys.platform}")
+
 
 # 🌶️📦🔚

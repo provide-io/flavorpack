@@ -320,7 +320,10 @@ class WheelBuilder:
                     pyproject_data = tomllib.load(f)
                 project_dependencies = pyproject_data.get("project", {}).get("dependencies", [])
                 if project_dependencies:
-                    logger.info()
+                    logger.info(
+                        "📦 Found project dependencies in pyproject.toml",
+                        count=len(project_dependencies),
+                    )
                     logger.debug("Project dependencies", deps=project_dependencies)
             except Exception as e:
                 logger.warning(f"Could not extract dependencies from pyproject.toml: {e}")

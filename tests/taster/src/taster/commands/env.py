@@ -1,11 +1,11 @@
-# 
+#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 
 """TODO: Add module docstring."""
 
-# 
+#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -73,6 +73,7 @@ def env_command() -> None:
     for var, expected in expected_vars.items():
         actual = os.environ.get(var)
         if actual == expected:
+            pass
         else:
             click.echo(f"  ❌ {var} = {actual} (expected: {expected})")
 
@@ -85,6 +86,7 @@ def env_command() -> None:
         if old in os.environ:
             click.echo(f"  ⚠️ {old} still exists (should be mapped to {new})")
         if new in os.environ:
+            pass
 
     # Test whitelist mode (unset = ["*"] with pass list)
     click.secho("\n🔒 Whitelist Mode Test:", fg="magenta")
@@ -124,6 +126,7 @@ def env_command() -> None:
         if len(unexpected) > 5:
             click.echo(f"    ... and {len(unexpected) - 5} more")
     else:
+        pass
 
     # Show environment source
     click.secho("\n" + "=" * 60, fg="cyan")
@@ -136,5 +139,6 @@ def env_command() -> None:
         click.echo(f"  Command Name: {os.environ['FLAVOR_COMMAND_NAME']}")
     if "FLAVOR_ORIGINAL_COMMAND" in os.environ:
         click.echo(f"  Original Command: {os.environ['FLAVOR_ORIGINAL_COMMAND']}")
+
 
 # 🌶️📦🔚

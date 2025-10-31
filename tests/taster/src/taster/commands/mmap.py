@@ -95,6 +95,7 @@ def detect_bundle_mmap():
 
     # Check 4: Backend detection via environment
     if os.environ.get("FLAVOR_BACKEND") == "mmap":
+        pass
 
     return indicators
 
@@ -105,6 +106,7 @@ def test_mmap_operations():
 
     # Test 1: Can we use mmap?
     if check_mmap_support():
+        pass
     else:
         results.append("❌ mmap is not supported")
         return results
@@ -134,7 +136,6 @@ def test_mmap_operations():
     # Test 3: Check if we're using the Python mmap backend
     try:
         from flavor.psp.format_2025.backends import MMapBackend
-
 
         # Try to create one
         MMapBackend()
@@ -182,6 +183,7 @@ def mmap_command() -> None:
     # Conclusion
     click.echo("\n📊 Summary:")
     if any("memory-mapped" in str(i).lower() for i in indicators):
+        pass
     elif bundle_path := (sys.argv[0] if sys.argv[0].endswith(".psp") else None):
         if Path(bundle_path).exists():
             click.echo("  ⚠️ Bundle exists but mmap usage unclear")

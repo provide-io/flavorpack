@@ -249,7 +249,7 @@ class TestPSPFSecurity:
 
         # Tamper with a field in the MagicTrailer index (package_size at offset 8 in index)
         with open(bundle_path, "r+b") as f:
-            file_size - 8200
+            index_start = file_size - 8200 + 4  # Start of index after TRAILER_START_MAGIC
             package_size_offset = index_start + 8  # Skip format_version (4) and index_checksum (4)
             f.seek(package_size_offset)
             f.write(struct.pack("<Q", 0xDEADBEEF))  # Write invalid package size

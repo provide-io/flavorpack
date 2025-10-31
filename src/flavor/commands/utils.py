@@ -11,9 +11,10 @@ from pathlib import Path
 from typing import Any
 
 import click
+from provide.foundation.console import pout
 from provide.foundation.file.directory import safe_rmtree
 
-from flavor.console import echo, get_command_logger
+from flavor.console import get_command_logger
 
 # Get structured logger for this command
 log = get_command_logger("clean")
@@ -56,7 +57,7 @@ def clean_command(all: bool, helpers: bool, dry_run: bool, yes: bool) -> None:
     clean_helpers = helpers or all
 
     if dry_run:
-        echo("🔍 DRY RUN - Nothing will be removed\n")
+        pout("🔍 DRY RUN - Nothing will be removed\n")
 
     total_freed = 0
 
@@ -87,12 +88,13 @@ def _clean_workenv_cache(dry_run: bool, yes: bool) -> int:
         return 0
 
     if not yes and not click.confirm(f"Remove {len(cached)} cached packages ({size_mb:.1f} MB)?"):
-        echo("Aborted.")
+        pout("Aborted.")
         return 0
 
     removed = manager.clean()
     if removed:
         log.info("Removed cached packages", count=len(removed), size_bytes=size)
+        pout(f"✅ Removed {len(removed)} cached packages")
         return size
 
     return 0
@@ -100,11 +102,11 @@ def _clean_workenv_cache(dry_run: bool, yes: bool) -> int:
 
 def _show_workenv_dry_run(cached: list[dict[str, Any]], size_mb: float) -> None:
     """Show what would be removed from workenv cache."""
-    echo(f"Would remove {len(cached)} cached packages ({size_mb:.1f} MB):")
+    pout(f"Would remove {len(cached)} cached packages ({size_mb:.1f} MB):")
     for pkg in cached:
         pkg_size_mb = pkg["size"] / (1024 * 1024)
         name = pkg.get("name", pkg["id"])
-        echo(f"  - {name} ({pkg_size_mb:.1f} MB)")
+        pout(f"  - {name} ({pkg_size_mb:.1f} MB)")
 
 
 def _clean_helper_binaries(dry_run: bool, yes: bool) -> int:
@@ -125,7 +127,7 @@ def _clean_helper_binaries(dry_run: bool, yes: bool) -> int:
         return 0
 
     if not yes and not click.confirm(f"Remove {len(helpers_list)} helper binaries ({size_mb:.1f} MB)?"):
-        echo("Aborted.")
+        pout("Aborted.")
         return 0
 
     safe_rmtree(helper_dir)
@@ -134,6 +136,7 @@ def _clean_helper_binaries(dry_run: bool, yes: bool) -> int:
         count=len(helpers_list),
         size_bytes=total_size,
     )
+    pout(f"✅ Removed {len(helpers_list)} helper binaries")
     return total_size
 
 
@@ -145,10 +148,10 @@ def _get_helper_files(helper_dir: Path) -> list[Path]:
 
 def _show_helpers_dry_run(helpers_list: list[Path], size_mb: float) -> None:
     """Show what helper binaries would be removed."""
-    echo(f"\nWould remove {len(helpers_list)} helper binaries ({size_mb:.1f} MB):")
+    pout(f"\nWould remove {len(helpers_list)} helper binaries ({size_mb:.1f} MB):")
     for helper in helpers_list:
         h_size_mb = helper.stat().st_size / (1024 * 1024)
-        echo(f"  - {helper.name} ({h_size_mb:.1f} MB)")
+        pout(f"  - {helper.name} ({h_size_mb:.1f} MB)")
 
 
 def _show_total_freed(dry_run: bool, total_freed: int) -> None:
@@ -156,7 +159,7 @@ def _show_total_freed(dry_run: bool, total_freed: int) -> None:
     if not dry_run and total_freed > 0:
         freed_mb = total_freed / (1024 * 1024)
         log.info("Total space freed", size_mb=freed_mb, size_bytes=total_freed)
-        echo(f"\n💾 Total freed: {freed_mb:.1f} MB")
+        pout(f"\n💾 Total freed: {freed_mb:.1f} MB")
 
 
 # 🌶️📦🔚

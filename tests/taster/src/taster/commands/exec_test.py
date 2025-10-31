@@ -25,7 +25,6 @@ from flavor.package import build_package_from_manifest
 @click.command("exec-test")
 @click.option("--verbose", "-v", is_flag=True, help="Verbose output")
 def exec_test_command(verbose) -> None:
-
     click.secho("=" * 60, fg="cyan")
 
     helper_manager = HelperManager()
@@ -84,6 +83,7 @@ command = "{workenv}/bin/python3.11 -m binary_test"
             )
 
             if result.returncode == 0 and "Binary execution successful" in result.stdout:
+                pass
             else:
                 click.secho("  ❌ Binary execution: FAILED", fg="red")
                 if verbose:
@@ -148,6 +148,7 @@ entry_point = "script_test.__main__:main"
                 )
 
                 if result.returncode == 0 and "Script execution successful" in result.stdout:
+                    pass
                 else:
                     click.secho(f"      ❌ {mode} mode: FAILED", fg="red")
                     if verbose:
@@ -217,6 +218,7 @@ setup_commands = [
             )
 
             if result.returncode == 0 and "Direct shell execution successful" in result.stdout:
+                pass
             else:
                 click.secho("  ❌ Direct workenv execution: FAILED", fg="red")
                 if verbose:

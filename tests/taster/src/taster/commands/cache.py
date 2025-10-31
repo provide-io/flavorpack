@@ -1,11 +1,11 @@
-# 
+#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 
 """TODO: Add module docstring."""
 
-# 
+#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -76,6 +76,7 @@ def clean(all, flavor, verbose) -> None:
                     click.echo(f"Error cleaning var cache: {e}", err=True)
 
     if cleaned:
+        pass
     else:
         click.echo("No caches to clean")
 
@@ -248,6 +249,7 @@ def _print_workenv_info(name: str, info: dict) -> None:
     click.echo(f"🗂️  Metadata Type: {info.get('metadata_type', 'none')}")
 
     if info.get("extraction_complete"):
+        pass
     else:
         click.echo("⚠️  Extraction: Incomplete or not started")
 
@@ -281,5 +283,6 @@ def _print_workenv_info(name: str, info: dict) -> None:
                 click.echo(f"  ... and {len(slots) - 5} more")
 
     click.echo()
+
 
 # 🌶️📦🔚

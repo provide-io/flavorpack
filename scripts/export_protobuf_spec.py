@@ -28,6 +28,7 @@ def log_info(msg: str):
 
 
 def log_success(msg: str):
+    pass
 
 
 def log_debug(msg: str):

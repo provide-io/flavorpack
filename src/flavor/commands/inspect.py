@@ -11,10 +11,11 @@ from pathlib import Path
 from typing import Any
 
 import click
+from provide.foundation.console import perr, pout
 from provide.foundation.formatting import format_size
 from provide.foundation.serialization import json_dumps
 
-from flavor.console import echo, echo_error, get_command_logger
+from flavor.console import get_command_logger
 from flavor.psp.format_2025.operations import operations_to_string
 from flavor.psp.format_2025.reader import PSPFReader
 
@@ -59,11 +60,11 @@ def inspect_command(package_file: str, output_json: bool) -> None:
 
     except FileNotFoundError as e:
         log.error("Package not found", package=package_file)
-        echo_error(f"❌ Package not found: {package_file}")
+        perr(f"❌ Package not found: {package_file}")
         raise click.Abort() from e
     except Exception as e:
         log.error("Error inspecting package", package=package_file, error=str(e))
-        echo_error(f"❌ Error inspecting package: {e}")
+        perr(f"❌ Error inspecting package: {e}")
         raise click.Abort() from e
 
 
@@ -96,7 +97,7 @@ def _output_json_format(
             for i, slot in enumerate(slot_descriptors)
         ],
     }
-    echo(json_dumps(output, indent=2))
+    pout(json_dumps(output, indent=2))
 
 
 def _output_human_format(
@@ -112,27 +113,27 @@ def _output_human_format(
     launcher_size = index.launcher_size
 
     # Package header
-    echo(f"\nPackage: {package_path.name} ({format_size(file_size)})")
-    echo(f"├── Format: PSPF/0x{index.format_version:08x}")
-    echo(
+    pout(f"\nPackage: {package_path.name} ({format_size(file_size)})")
+    pout(f"├── Format: PSPF/0x{index.format_version:08x}")
+    pout(
         f"├── Launcher: {metadata.get('build', {}).get('launcher_type', 'Unknown')} ({format_size(launcher_size)})"
     )
 
     # Build info
     build_time = _format_build_time(metadata.get("build", {}).get("timestamp", "Unknown"))
     builder_version = metadata.get("build", {}).get("builder_version", "Unknown")
-    echo(f"├── Built: {build_time} with {builder_version}")
+    pout(f"├── Built: {build_time} with {builder_version}")
 
     # Package info
     pkg_name = metadata.get("package", {}).get("name", "Unknown")
     pkg_version = metadata.get("package", {}).get("version", "Unknown")
     if pkg_name != "Unknown":
-        echo(f"├── Package: {pkg_name} v{pkg_version}")
+        pout(f"├── Package: {pkg_name} v{pkg_version}")
 
     # Slots
-    echo(f"└── Slots: {len(slot_descriptors)}")
+    pout(f"└── Slots: {len(slot_descriptors)}")
     _output_slot_details(slot_descriptors, slots_metadata)
-    echo("")  # Empty line at end
+    pout("")  # Empty line at end
 
 
 def _format_build_time(build_time: str) -> str:
@@ -177,7 +178,7 @@ def _output_slot_details(slot_descriptors: list[Any], slots_metadata: list[dict[
         if slot_operations != "raw":
             slot_info += f" [{slot_operations}]"
 
-        echo(f"{prefix} {slot_info}")
+        pout(f"{prefix} {slot_info}")
 
 
 # 🌶️📦🔚

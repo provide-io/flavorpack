@@ -210,6 +210,7 @@ def _write_slots(f: BinaryIO, slots: list[PreparedSlot], spec: BuildSpec, index:
         # DEBUG: Log alignment decision for diagnostics
         alignment_value = DEFAULT_PAGE_SIZE if spec.options.page_aligned else DEFAULT_SLOT_ALIGNMENT
         logger.debug(
+            "📝 Writing slot data",
             slot_index=i,
             slot_id=slot.metadata.id,
             page_aligned=spec.options.page_aligned,
