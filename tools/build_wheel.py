@@ -29,6 +29,7 @@ PLATFORM_TAGS = {
     "darwin_amd64": "macosx_10_9_x86_64",
     "linux_amd64": "manylinux_2_17_x86_64.manylinux2014_x86_64",
     "linux_arm64": "manylinux_2_17_aarch64.manylinux2014_aarch64",
+    "windows_amd64": "win_amd64",
 }
 
 # All supported platforms

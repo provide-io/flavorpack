@@ -1,6 +1,6 @@
 //! Work environment management
 
-use super::super::defaults::{DEFAULT_DIR_PERMS, DEFAULT_DISK_SPACE_MULTIPLIER};
+use super::super::defaults::DEFAULT_DISK_SPACE_MULTIPLIER;
 use super::super::metadata::{Metadata, WorkenvInfo};
 use super::super::paths::WorkenvPaths;
 use crate::exceptions::{FlavorError, Result};
@@ -91,6 +91,7 @@ pub(super) fn setup_workenv_directories(
             // Set permissions on Unix systems
             #[cfg(unix)]
             {
+                use super::super::defaults::DEFAULT_DIR_PERMS;
                 use std::os::unix::fs::PermissionsExt;
 
                 // Use specified mode or default to 0700 (user-only access)

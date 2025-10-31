@@ -130,8 +130,6 @@ def collect_test_metadata(output_dir: Path) -> None:
     }
     (output_dir / "environment.json").write_text(json.dumps(env_vars, indent=2))
 
-    for file in sorted(output_dir.iterdir()):
-
 
 def combine_test_results(input_dir: Path, output_file: Path) -> None:
     """Combine test results from multiple platforms."""
