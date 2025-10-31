@@ -94,6 +94,7 @@ class PythonPackager:
         )
 
         logger.info(
+            "🐍 Building Python package",
             package=package_name,
             entry_point=entry_point,
             python_version=python_version,

@@ -1,4 +1,4 @@
-# 
+#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -93,6 +93,7 @@ def build_package(spec: BuildSpec, output_path: Path) -> BuildResult:
 
     # Write package
     logger.trace(
+        "🔧 PSPF package configuration",
         slot_count=len(prepared_slots),
         has_signature=bool(private_key),
     )
@@ -108,6 +109,7 @@ def build_package(spec: BuildSpec, output_path: Path) -> BuildResult:
     # Success!
     duration = time.time() - start_time
     logger.info(
+        "✅ Package built successfully",
         duration_seconds=duration,
         size_mb=package_size / 1024 / 1024,
         path=str(output_path),
@@ -154,6 +156,7 @@ def prepare_slots(slots: list[SlotMetadata], options: BuildOptions) -> list[Prep
         # Debug: Log what operations we're creating
         unpacked_ops = unpack_operations(packed_ops)
         logger.debug(
+            "🔄 Processing slot operations",
             slot_id=slot.id,
             operations_string=slot.operations,
             packed_operations=f"{packed_ops:#018x}",

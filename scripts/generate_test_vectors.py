@@ -42,6 +42,7 @@ def log_info(msg: str):
 
 
 def log_success(msg: str):
+    pass
 
 
 def log_warning(msg: str):
@@ -296,7 +297,6 @@ var TestVectors = []struct {
 
 def generate_operation_tests():
     """Generate operation packing/unpacking test cases."""
-
 
     test_cases = [
         ([], 0x0, "empty/raw"),

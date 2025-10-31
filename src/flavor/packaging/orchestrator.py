@@ -109,6 +109,7 @@ class PackagingOrchestrator:
     )
     def build_package(self) -> None:
         logger.debug(
+            "📦 Starting package build",
             name=self.package_name,
             version=self.version,
             output=self.output_flavor_path,
@@ -117,6 +118,7 @@ class PackagingOrchestrator:
             manifest_type=self.manifest_type,
         )
         logger.trace(
+            "🔧 Build configuration details",
             launcher_bin=self.launcher_bin,
             builder_bin=self.builder_bin,
             strip_binaries=self.strip_binaries,
@@ -159,6 +161,7 @@ class PackagingOrchestrator:
     def _build_with_python_builder(self) -> None:
         """Build package using the internal Python PSPF builder."""
         logger.debug(
+            "🐍 Building with Python PSPF builder",
             python_version=self.python_version,
             manifest_dir=str(self.manifest_dir),
             entry_point=self.entry_point,

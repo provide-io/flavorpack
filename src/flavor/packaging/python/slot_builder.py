@@ -208,6 +208,7 @@ class PythonSlotBuilder:
         dep_path = dep_path.resolve()
 
         logger.debug(
+            "🔍 Checking dependency",
             name=dep_path.name,
             path=str(dep_path),
             depth=depth,
@@ -216,6 +217,7 @@ class PythonSlotBuilder:
         # Check if we've already processed this dependency
         if dep_path in seen:
             logger.debug(
+                "⏭️ Dependency already processed",
                 name=dep_path.name,
                 depth=depth,
             )
@@ -231,6 +233,7 @@ class PythonSlotBuilder:
         if pyproject_path.exists():
             try:
                 logger.debug(
+                    "📋 Reading pyproject.toml",
                     path=str(pyproject_path),
                     depth=depth,
                 )
@@ -243,6 +246,7 @@ class PythonSlotBuilder:
 
                 if sub_deps:
                     logger.info(
+                        "🔗 Found sub-dependencies",
                         count=len(sub_deps),
                         parent=dep_path.name,
                         depth=depth,
@@ -262,12 +266,14 @@ class PythonSlotBuilder:
                         all_deps.extend(transitive)
                     else:
                         logger.warning(
+                            "⚠️ Sub-dependency not found",
                             path=str(sub_dep_path),
                             depth=depth,
                         )
 
             except Exception as e:
                 logger.warning(
+                    "⚠️ Error reading pyproject.toml",
                     path=str(pyproject_path),
                     error=str(e),
                     depth=depth,
@@ -279,6 +285,7 @@ class PythonSlotBuilder:
         if dep_path not in all_deps:
             all_deps.append(dep_path)
             logger.info(
+                "✅ Added dependency to build order",
                 name=dep_path.name,
                 depth=depth,
             )
@@ -286,6 +293,7 @@ class PythonSlotBuilder:
         if depth == 0:
             for i, dep in enumerate(all_deps, 1):
                 logger.info(
+                    "📋 Dependency build order",
                     index=i,
                     name=dep.name,
                     path=str(dep),
@@ -329,6 +337,7 @@ class PythonSlotBuilder:
         )
 
         logger.info(
+            "✅ Wheels built successfully",
             total_wheels=build_result["total_wheels"],
             project_wheel=build_result["project_wheel"].name,
         )
@@ -369,5 +378,6 @@ class PythonSlotBuilder:
 
         logger.debug("No requirements file found")
         return None
+
 
 # 🌶️📦🔚

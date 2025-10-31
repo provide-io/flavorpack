@@ -26,14 +26,14 @@ from flavor.config.defaults import (
     DEFAULT_MAGIC_TRAILER_SIZE,
     DEFAULT_SLOT_DESCRIPTOR_SIZE,
 )
-from flavor.psp.format_2025.constants import (
-    TRAILER_END_MAGIC,
-    TRAILER_START_MAGIC,
-)
 from flavor.psp.format_2025.backends import (
     Backend,
     StreamBackend,
     create_backend,
+)
+from flavor.psp.format_2025.constants import (
+    TRAILER_END_MAGIC,
+    TRAILER_START_MAGIC,
 )
 from flavor.psp.format_2025.index import PSPFIndex
 from flavor.psp.format_2025.slots import SlotDescriptor, SlotView
@@ -297,6 +297,11 @@ class PSPFReader:
 
         # DEBUG: Log checksum details for troubleshooting
         logger.debug(
+            "🔍 Verifying slot checksum",
+            slot_index=slot_index,
+            expected=f"{descriptor.checksum:016x}",
+            actual=f"{actual_checksum:016x}",
+            data_size=len(slot_data),
         )
 
         if actual_checksum != descriptor.checksum:
@@ -478,5 +483,6 @@ def verify_bundle(bundle_path: Path) -> bool:
             pass  # Signature optional
 
         return True
+
 
 # 🌶️📦🔚

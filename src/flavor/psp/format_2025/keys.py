@@ -162,7 +162,12 @@ def load_keys_from_path(key_path: Path) -> tuple[bytes, bytes]:
     if len(public_key) != 32:
         raise ValueError(f"🔑 Invalid public key size: expected 32 bytes, got {len(public_key)}")
 
-    logger.debug()
+    logger.debug(
+        "🔑 Keys loaded successfully",
+        private_key_size=len(private_key),
+        public_key_size=len(public_key),
+        path=str(key_path),
+    )
 
     return private_key, public_key
 

@@ -69,6 +69,7 @@ def handle_command(cmd, *args):
             print(f"  ❌ Init slot still exists (should be removed): {init_path}")
             return 1
         else:
+            pass
 
         return 0
     elif cmd == "manylinux-test":
