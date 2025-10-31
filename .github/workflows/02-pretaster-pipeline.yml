@@ -156,8 +156,15 @@ jobs:
         shell: bash
         run: |
           echo "📦 Checking for pretaster PSP..."
-          PRETASTER_PSP="build/pretaster-${{ needs.setup.outputs.version }}-${{ matrix.platform }}.psp"
-          
+
+          # Determine PSP extension for Windows
+          PSP_EXT=".psp"
+          if [[ "${{ matrix.platform }}" == "windows_"* ]]; then
+            PSP_EXT=".exe"
+          fi
+
+          PRETASTER_PSP="build/pretaster-${{ needs.setup.outputs.version }}-${{ matrix.platform }}${PSP_EXT}"
+
           if [ -f "$PRETASTER_PSP" ]; then
             echo "✅ Pretaster package found: $PRETASTER_PSP"
             ls -lh "$PRETASTER_PSP"
@@ -166,12 +173,18 @@ jobs:
             echo "Contents of build directory:"
             ls -la build/ || echo "Build directory not found"
           fi
-      
+
       - name: 🧪 Run cross-language tests
         shell: bash
         run: |
+          # Determine PSP extension for Windows
+          PSP_EXT=".psp"
+          if [[ "${{ matrix.platform }}" == "windows_"* ]]; then
+            PSP_EXT=".exe"
+          fi
+
           # Set the path to the pretaster PSP (downloaded to ./build)
-          PRETASTER_PSP="$(pwd)/build/pretaster-${{ needs.setup.outputs.version }}-${{ matrix.platform }}.psp"
+          PRETASTER_PSP="$(pwd)/build/pretaster-${{ needs.setup.outputs.version }}-${{ matrix.platform }}${PSP_EXT}"
 
           # Verify the PSP exists
           if [ ! -f "$PRETASTER_PSP" ]; then
