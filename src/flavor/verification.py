@@ -75,4 +75,5 @@ class FlavorVerifier:
             "slots": slots_info,
         }
 
+
 # 🌶️📦🔚

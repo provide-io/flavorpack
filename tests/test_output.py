@@ -1,4 +1,4 @@
-# 
+#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -263,7 +263,6 @@ class TestOutputHandler:
         with patch.object(handler, "_get_output_stream", return_value=output), handler:
             handler.success("Operation completed")
 
-
     def test_success_json_format(self) -> None:
         """Test success() method with JSON format."""
         handler = OutputHandler(format=OutputFormat.JSON)
@@ -449,5 +448,6 @@ class TestGetOutputHandler:
             handler = get_output_handler()
 
         assert handler._output_file is None
+
 
 # 🌶️📦🔚

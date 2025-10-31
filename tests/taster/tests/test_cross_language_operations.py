@@ -170,4 +170,5 @@ class TestCrossLanguageOperations:
             with pytest.raises(ValueError, match="Unknown operation|Invalid operations"):
                 string_to_operations(invalid_op)
 
+
 # 🌶️📦🔚

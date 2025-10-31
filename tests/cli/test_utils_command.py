@@ -1,4 +1,4 @@
-# 
+#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -410,5 +410,6 @@ class TestCleanCommand:
         assert result.exit_code == 0
         # Should not show "Removed" message or total freed
         assert "Total freed" not in result.output
+
 
 # 🌶️📦🔚

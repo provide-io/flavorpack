@@ -1,4 +1,4 @@
-# 
+#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -65,5 +65,6 @@ def info_command() -> None:
     click.echo(f"  Total Variables: {env_count}")
     click.echo(f"  Flavor Variables: {len(flavor_vars)}")
     click.echo(f"  Taster Variables: {len(taster_vars)}")
+
 
 # 🌶️📦🔚

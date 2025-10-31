@@ -38,4 +38,5 @@ def keygen_command(out_dir: str) -> None:
         echo_error(f"❌ Keygen failed: {e}")
         raise click.Abort() from e
 
+
 # 🌶️📦🔚

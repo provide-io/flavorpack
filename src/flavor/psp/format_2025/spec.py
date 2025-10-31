@@ -237,4 +237,5 @@ class PreparedSlot:
         """Get the size of data to write."""
         return len(self.get_data_to_write())
 
+
 # 🌶️📦🔚

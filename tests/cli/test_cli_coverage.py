@@ -1,4 +1,4 @@
-# 
+#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -56,5 +56,6 @@ def test_cli_verify_fails(tmp_path: Path) -> None:
         assert result.exit_code != 0
         assert "Verification failed: Mocked verification failure" in result.output
         mock_verify.assert_called_once()
+
 
 # 🌶️📦🔚

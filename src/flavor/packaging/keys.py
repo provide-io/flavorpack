@@ -3,11 +3,9 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""TODO: Add module docstring."""
+"""Key management for FlavorPack package signing."""
 
 from __future__ import annotations
-
-"""TODO: Add module docstring."""
 
 from pathlib import Path
 
@@ -178,5 +176,6 @@ def load_public_key_raw(key_path: Path) -> bytes:
             f"To generate new Ed25519 keys, delete the existing keys and run:\n"
             f"  flavor keygen --output keys/"
         )
+
 
 # 🌶️📦🔚

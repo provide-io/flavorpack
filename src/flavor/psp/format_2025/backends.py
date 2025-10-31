@@ -233,7 +233,7 @@ class FileBackend(Backend):
         # Use buffered I/O for better performance
         self.file = path.open("rb", buffering=64 * 1024)
 
-        elapsed = time.perf_counter() - start_time
+        time.perf_counter() - start_time
 
     def close(self) -> None:
         """Close the file."""
@@ -466,5 +466,6 @@ def create_backend(mode: int = ACCESS_AUTO, path: Path | None = None) -> Backend
     else:
         # Default to hybrid for unknown modes
         return HybridBackend()
+
 
 # 🌶️📦🔚

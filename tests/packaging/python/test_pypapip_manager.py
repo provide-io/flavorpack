@@ -1,4 +1,4 @@
-# 
+#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -467,5 +467,6 @@ class TestPyPaPipManagerCriticalFeatures:
         )
         assert "--only-binary" in cmd2
         assert ":all:" in cmd2
+
 
 # 🌶️📦🔚

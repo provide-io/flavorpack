@@ -1,4 +1,4 @@
-# 
+#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -435,5 +435,6 @@ class TestWheelBuilderCriticalFeatures:
         # Verify no cross-contamination of methods
         assert not hasattr(self.wheel_builder.pypapip, "_get_uv_venv_cmd")
         assert not hasattr(self.wheel_builder.uv, "_get_pypapip_download_cmd")
+
 
 # 🌶️📦🔚

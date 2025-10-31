@@ -158,7 +158,6 @@ class PythonDistManager:
             logger.debug("No wheels to install")
             return
 
-
         # Build install command
         wheel_paths = [str(wheel) for wheel in wheel_files]
         install_cmd = self.pypapip._get_pypapip_install_cmd(venv_python, wheel_paths)
@@ -171,7 +170,6 @@ class PythonDistManager:
 
         logger.debug("💻 Installing wheels", command=" ".join(install_cmd))
         run(install_cmd, check=True, capture_output=True)
-
 
     def prepare_site_packages(self, venv_python: Path, optimization_level: int = 1) -> Path:
         """
@@ -409,5 +407,6 @@ class PythonDistManager:
         except Exception as e:
             logger.error(f"Distribution validation failed: {e}")
             return False
+
 
 # 🌶️📦🔚

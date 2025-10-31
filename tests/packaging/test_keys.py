@@ -1,4 +1,4 @@
-# 
+#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -370,5 +370,6 @@ class TestKeyPairIntegration:
         # Should be identical
         assert private1 == private2
         assert public1 == public2
+
 
 # 🌶️📦🔚

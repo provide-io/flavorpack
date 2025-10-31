@@ -1,4 +1,4 @@
-# 
+#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -18,5 +18,6 @@ def exit_command(code, message) -> None:
     if message:
         print(message, file=sys.stderr if code != 0 else sys.stdout)
     sys.exit(code)
+
 
 # 🌶️📦🔚

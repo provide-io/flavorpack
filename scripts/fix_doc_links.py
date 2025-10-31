@@ -78,7 +78,7 @@ def fix_relative_links(file_path: Path) -> bool:
     return False
 
 
-def main():
+def main() -> None:
     """Fix all documentation links."""
     docs_dir = Path("docs")
     fixed_count = 0
@@ -88,7 +88,6 @@ def main():
         if fix_relative_links(md_file):
             print(f"Fixed: {md_file.relative_to(docs_dir)}")
             fixed_count += 1
-
 
 
 if __name__ == "__main__":

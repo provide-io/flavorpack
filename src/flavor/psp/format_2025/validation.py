@@ -47,6 +47,7 @@ def validate_spec(spec: BuildSpec) -> list[str]:
 
     # Validate that we have at least something to package
     if not spec.slots and not spec.metadata.get("allow_empty", False):
+        errors.append("📦 Package must have at least one slot unless allow_empty is set")
 
     return errors
 
@@ -143,7 +144,9 @@ def validate_slots(slots: list[SlotMetadata]) -> list[str]:  # noqa: C901
         if slot.source:
             source_path = Path(slot.source)
             if not source_path.exists():
+                errors.append(f"🔍 Slot {slot.id}: Source path does not exist: {slot.source}")
             elif not source_path.is_file() and not source_path.is_dir():
+                errors.append(f"🔍 Slot {slot.id}: Source path is not a file or directory: {slot.source}")
 
         # Check purpose validity
         valid_purposes = [
@@ -240,6 +243,7 @@ def validate_build_options(spec: BuildSpec) -> list[str]:
 
     # Check page alignment consistency
     if options.page_aligned and not options.enable_mmap:
+        errors.append("⚠️ Page-aligned option should be used with memory mapping enabled")
 
     return errors
 

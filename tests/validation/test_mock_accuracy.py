@@ -138,4 +138,5 @@ class TestMockContract:
         """Mock should have identifying marker for debugging."""
         assert b"FAKE_LAUNCHER_FOR_TEST" in MOCK_LAUNCHER_DATA
 
+
 # 🌶️📦🔚

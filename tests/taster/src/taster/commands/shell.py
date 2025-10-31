@@ -1,4 +1,4 @@
-# 
+#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -51,5 +51,6 @@ def shell_command() -> None:
 
     # Start interactive shell
     code.interact(local=namespace, banner="")
+
 
 # 🌶️📦🔚

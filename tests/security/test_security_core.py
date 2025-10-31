@@ -1,4 +1,4 @@
-# 
+#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -384,5 +384,6 @@ class TestVerifyPackageIntegrity:
 
         mock_verifier.verify_integrity.assert_called_once_with(bundle_path)
         assert result["valid"] is True
+
 
 # 🌶️📦🔚

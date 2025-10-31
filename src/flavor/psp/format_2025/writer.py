@@ -34,6 +34,8 @@ from flavor.config.defaults import (
     DEFAULT_PAGE_SIZE,
     DEFAULT_SLOT_ALIGNMENT,
     DEFAULT_SLOT_DESCRIPTOR_SIZE,
+)
+from flavor.psp.format_2025.constants import (
     TRAILER_END_MAGIC,
     TRAILER_START_MAGIC,
 )
@@ -323,5 +325,6 @@ def _map_lifecycle(lifecycle: str) -> int:
         "temporary": LIFECYCLE_TEMPORARY,
     }
     return mapping.get(lifecycle.lower(), LIFECYCLE_RUNTIME)
+
 
 # 🌶️📦🔚

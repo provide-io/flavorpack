@@ -231,4 +231,5 @@ def string_to_operations(op_string: str) -> int:
 
     raise ValueError(f"Unknown v0 operation string: {op_string}")
 
+
 # 🌶️📦🔚

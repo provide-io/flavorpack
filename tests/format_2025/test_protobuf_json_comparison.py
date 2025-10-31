@@ -1,4 +1,4 @@
-# 
+#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -319,5 +319,6 @@ class TestFormatComparison:
         packed_truncated = pack_operations(too_many_ops)
         packed_max = pack_operations(max_ops)
         assert packed_truncated == packed_max  # Same result, extra ops ignored
+
 
 # 🌶️📦🔚

@@ -211,4 +211,5 @@ class TestVerifyCommand:
                 assert "❌ Signature verification: FAILED" in result.output
                 assert "❌ Index checksum invalid" in result.output
 
+
 # 🌶️📦🔚

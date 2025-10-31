@@ -1,22 +1,13 @@
-# 
+#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
-
-"""TODO: Add module docstring."""
-
-# 
-# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
-#
-
-"""TODO: Add module docstring."""
-
-from __future__ import annotations
 
 """This module handles all pip-specific operations with proper platform support
 and manylinux2014 compatibility for maximum Linux distribution coverage.
 """
+
+from __future__ import annotations
 
 from pathlib import Path
 
@@ -211,6 +202,7 @@ class PyPaPipManager:
             logger.error(error_msg)
             raise RuntimeError(error_msg)
         else:
+            logger.info("✅ Successfully downloaded all wheels")
 
     @retry(
         ConnectionError,
@@ -253,7 +245,6 @@ class PyPaPipManager:
             error_msg = f"Failed to download required packages: {result.stderr}"
             logger.error(error_msg)
             raise RuntimeError(error_msg)
-        else:
 
     def build_wheel_from_source(
         self, python_exe: Path, source_path: Path, wheel_dir: Path, no_deps: bool = True
@@ -267,6 +258,7 @@ class PyPaPipManager:
             wheel_dir: Directory to place built wheel
             no_deps: Whether to build without dependencies
         """
+        logger.info(f"🔨📦 Building wheel from source: {source_path.name}")
 
         wheel_cmd = self._get_pypapip_wheel_cmd(
             python_exe=python_exe,
@@ -282,6 +274,7 @@ class PyPaPipManager:
             # Look for the wheel filename in output
             for line in result.stdout.strip().split("\n"):
                 if ".whl" in line:
+                    logger.info("📦🏗️✅ Built wheel", wheel=line.strip())
                     break
 
     def install_packages(self, python_exe: Path, packages: list[str]) -> None:
@@ -296,10 +289,14 @@ class PyPaPipManager:
             logger.debug("No packages to install")
             return
 
+        logger.info(f"📦📥 Installing {len(packages)} packages")
 
         install_cmd = self._get_pypapip_install_cmd(python_exe, packages)
 
         logger.debug("💻 Installing packages", command=" ".join(install_cmd))
         run(install_cmd, check=True, capture_output=True)
+
+        logger.info("✅ Successfully installed packages")
+
 
 # 🌶️📦🔚
