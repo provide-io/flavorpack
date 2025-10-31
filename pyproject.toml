@@ -30,7 +30,7 @@ classifiers = [
 dependencies = [
     "provide-foundation[all]",
     "pip>=25.2",
-    "uv>=0.8.13",
+    "uv>=0.9.6",
 ]
 keywords = ["packaging", "pspf", "flavor", "executable", "bundle"]
 
@@ -51,7 +51,7 @@ docs = [
 flavor = "flavor.cli:main"
 
 [build-system]
-requires = ["uv>=0.1.18", "setuptools>=68.0.0", "wheel"]
+requires = ["setuptools>=68.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
