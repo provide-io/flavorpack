@@ -1,7 +1,8 @@
-# tests/packaging/test_orchestrator_helpers_core.py
 #
-# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
+#
+
 """Tests for orchestrator_helpers core functions."""
 
 from __future__ import annotations
@@ -343,3 +344,5 @@ class TestCreatePythonSlotTarballs:
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
+
+# 🌶️📦🔚

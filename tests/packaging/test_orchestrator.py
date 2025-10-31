@@ -1,3 +1,8 @@
+#
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
 """Unit tests for the PackagingOrchestrator."""
 
 from pathlib import Path
@@ -238,3 +243,5 @@ def test_launcher_type_detection(mock_run, orchestrator: PackagingOrchestrator) 
 
     mock_run.return_value.stdout = "some other launcher"
     assert orchestrator._detect_launcher_type(Path("unknown-launcher")) == "rust"
+
+# 🌶️📦🔚

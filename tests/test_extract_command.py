@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
+#
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
 """Tests for the extract commands."""
-
 import json
 import tarfile
 
@@ -133,3 +136,4 @@ class TestExtractCommand:
             members = tar.getnames()
             # Should contain wheel files
             assert any(name.endswith(".whl") for name in members)
+# 🌶️📦🔚

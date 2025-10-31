@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
-# tests/test_pspf_2025_reader_backends.py
-# Tests for PSPF reader with backend support
+#
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
+"""Tests for PSPF reader with backend support"""
 
 import hashlib
 from pathlib import Path
@@ -253,4 +257,4 @@ class TestReaderBackends:
             assert content == b"TEST DATA 1" * 9 + b"T"
 
 
-# 🧪📖🗺️🪄
+# 🌶️📦🔚

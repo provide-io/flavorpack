@@ -1,15 +1,13 @@
-# flavor/config/defaults.py
 #
-# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
+#
+from __future__ import annotations
 
 """
 Centralized default values for Flavorpack configuration.
 All defaults are defined here instead of inline in field definitions.
 """
-
-from __future__ import annotations
-
 import sys
 
 # =================================
@@ -200,3 +198,4 @@ VALIDATION_LEVELS = {
     VALIDATION_MINIMAL: 3,
     VALIDATION_NONE: 4,
 }
+# 🌶️📦🔚

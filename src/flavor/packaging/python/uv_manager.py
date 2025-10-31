@@ -1,10 +1,9 @@
-# flavor/packaging/python/uv_manager.py
 #
-# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
-
-# flavor/packaging/python/uv_manager.py
 #
+from __future__ import annotations
+
 """UV tool manager for FlavorPack packaging.
 
 This module provides UV (uv) command management with Foundation integration
@@ -13,8 +12,6 @@ for Python package management operations that benefit from uv's performance.
 IMPORTANT: UV commands are used for specific operations where performance
 is critical. For complex dependency resolution, use PyPaPipManager instead.
 """
-
-from __future__ import annotations
 
 import asyncio
 from pathlib import Path
@@ -427,4 +424,4 @@ class UVManager(BaseToolManager):
                 return None
 
 
-# 🌶️📦📋🪄
+# 🌶️📦🔚

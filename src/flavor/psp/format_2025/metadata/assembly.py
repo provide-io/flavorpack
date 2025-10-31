@@ -2,9 +2,9 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
-"""Metadata assembly for PSPF packages."""
-
 from __future__ import annotations
+
+"""Metadata assembly for PSPF packages."""
 
 import datetime
 from pathlib import Path
