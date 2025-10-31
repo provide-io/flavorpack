@@ -139,7 +139,6 @@ def create_git_tag(version: str, push: bool = False) -> bool:
         print(f"❌ Failed to create tag {tag}")
         return False
 
-
     if push:
         result = run(["git", "push", "origin", tag])
         if result.returncode != 0:

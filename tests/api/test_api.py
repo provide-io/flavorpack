@@ -1,4 +1,4 @@
-# 
+#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -77,5 +77,6 @@ my-test-package = "my_app.main:cli"
 
     with pytest.raises(ValueError, match="Project version must be defined"):
         build_package_from_manifest(pyproject_path)
+
 
 # 🌶️📦🔚

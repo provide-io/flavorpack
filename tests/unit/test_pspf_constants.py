@@ -1,4 +1,4 @@
-# 
+#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -75,5 +75,6 @@ class TestPSPFConstants:
         compression_ops = [OP_GZIP, OP_BZIP2, OP_XZ, OP_ZSTD]
         for op in compression_ops:
             assert 0x10 <= op <= 0x2F
+
 
 # 🌶️📦🔚

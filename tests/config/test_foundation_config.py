@@ -1,4 +1,4 @@
-# 
+#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -427,5 +427,6 @@ class TestExecutionConfig:
         config = ExecutionConfig(runtime_env=runtime_env)
         assert config.runtime_env.unset == ["DEBUG"]
         assert config.runtime_env.passthrough == ["PATH"]
+
 
 # 🌶️📦🔚

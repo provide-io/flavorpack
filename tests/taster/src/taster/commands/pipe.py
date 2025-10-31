@@ -211,7 +211,6 @@ def validate_input(schema, strict) -> None:
                 click.echo(f"❌ Missing required fields: {missing}", err=True)
                 sys.exit(1)
 
-
         except Exception as e:
             click.echo(f"❌ Invalid manifest: {e}", err=True)
             sys.exit(1)
@@ -254,5 +253,6 @@ def corrupt_data(probability, corruption_type) -> None:
 
     sys.stdout.buffer.write(bytes(data))
     sys.stdout.flush()
+
 
 # 🌶️📦🔚

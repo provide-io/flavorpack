@@ -1,4 +1,4 @@
-# 
+#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -299,5 +299,6 @@ class TestRepr:
             assert "package=win-package" in repr_str
             assert "python=3.11" in repr_str
             assert "platform=windows" in repr_str
+
 
 # 🌶️📦🔚

@@ -231,11 +231,20 @@ jobs:
           # Copy only versioned files for the CURRENT version that end with the platform name
           # e.g., flavor-go-launcher-0.3.0-linux_arm64 but NOT flavor-go-launcher-0.2.9-linux_arm64
           VERSION="${{ needs.setup.outputs.helper_version }}"
-          for binary in helpers/bin/*-${VERSION}-${{ matrix.platform }}; do
-            if [ -f "$binary" ]; then
-              cp -v "$binary" src/flavor/helpers/bin/
-            fi
-          done
+          # Windows binaries have .exe extension
+          if [[ "${{ matrix.platform }}" == "windows_"* ]]; then
+            for binary in helpers/bin/*-${VERSION}-${{ matrix.platform }}.exe; do
+              if [ -f "$binary" ]; then
+                cp -v "$binary" src/flavor/helpers/bin/
+              fi
+            done
+          else
+            for binary in helpers/bin/*-${VERSION}-${{ matrix.platform }}; do
+              if [ -f "$binary" ]; then
+                cp -v "$binary" src/flavor/helpers/bin/
+              fi
+            done
+          fi
           
           # Make sure they're executable
           chmod +x src/flavor/helpers/bin/* || true
@@ -247,11 +256,21 @@ jobs:
             if [ -f "$file" ]; then
               base=$(basename "$file")
               # Check if the file ends with the correct platform suffix
-              if [[ "$base" == *"-${{ matrix.platform }}" ]]; then
-                echo "✅ $base (correct platform)"
+              # Windows files end with .exe extension
+              if [[ "${{ matrix.platform }}" == "windows_"* ]]; then
+                if [[ "$base" == *"-${{ matrix.platform }}.exe" ]]; then
+                  echo "✅ $base (correct platform)"
+                else
+                  echo "❌ $base (WRONG platform - removing)"
+                  rm "$file"
+                fi
               else
-                echo "❌ $base (WRONG platform - removing)"
-                rm "$file"
+                if [[ "$base" == *"-${{ matrix.platform }}" ]]; then
+                  echo "✅ $base (correct platform)"
+                else
+                  echo "❌ $base (WRONG platform - removing)"
+                  rm "$file"
+                fi
               fi
             fi
           done

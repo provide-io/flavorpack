@@ -1,11 +1,4 @@
-# 
-# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
 #
-
-"""TODO: Add module docstring."""
-
-# 
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -198,12 +191,14 @@ def helper_info(name: str) -> None:
     if info.built_from:
         echo(f"Source: {info.built_from}")
         if info.built_from.exists():
+            pass
         else:
             echo("  ⚠️  Source directory not found")
 
     # Check if executable
     if info.path.exists():
         if os.access(info.path, os.X_OK):
+            pass
         else:
             echo("Status: ❌ Not executable")
     else:
@@ -250,6 +245,7 @@ def helper_test(lang: str) -> None:
         echo_error("\n❌ Some tests failed")
         raise click.Abort()
     elif results["passed"]:
+        pass
     else:
         echo("\n⚠️  No tests were run")
 

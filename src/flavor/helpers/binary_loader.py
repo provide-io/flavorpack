@@ -364,4 +364,5 @@ class BinaryLoader:
             with contextlib.suppress(OSError, PermissionError):
                 path.chmod(DEFAULT_EXECUTABLE_PERMS)
 
+
 # 🌶️📦🔚

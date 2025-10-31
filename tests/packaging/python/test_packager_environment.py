@@ -1,4 +1,4 @@
-# 
+#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -241,5 +241,6 @@ class TestGetPythonBinaryInfo:
             assert info["path"] == sys.executable
             assert info["is_system"] is True
             assert info["manager"] == "system"
+
 
 # 🌶️📦🔚

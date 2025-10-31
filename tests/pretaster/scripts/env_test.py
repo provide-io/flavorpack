@@ -5,6 +5,5 @@
 
 """TODO: Add module docstring."""
 
-import os
 
 # 🌶️📦🔚

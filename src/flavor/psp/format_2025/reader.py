@@ -1,20 +1,11 @@
-# 
+#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""TODO: Add module docstring."""
-
-# 
-# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
-#
-
-"""TODO: Add module docstring."""
+"""PSPF 2025 Format Reader."""
 
 from __future__ import annotations
-
-"""TODO: Add module docstring."""
 
 from collections.abc import Generator
 import contextlib
@@ -34,6 +25,8 @@ from flavor.config.defaults import (
     DEFAULT_HEADER_SIZE,
     DEFAULT_MAGIC_TRAILER_SIZE,
     DEFAULT_SLOT_DESCRIPTOR_SIZE,
+)
+from flavor.psp.format_2025.constants import (
     TRAILER_END_MAGIC,
     TRAILER_START_MAGIC,
 )
@@ -480,6 +473,7 @@ def verify_bundle(bundle_path: Path) -> bool:
         # Check signature if present
         try:
             if reader.verify_signature():
+                pass
         except Exception:
             pass  # Signature optional
 

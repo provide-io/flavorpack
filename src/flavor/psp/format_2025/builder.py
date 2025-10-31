@@ -3,13 +3,6 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""TODO: Add module docstring."""
-
-# 
-# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
-#
-
 """PSPF Builder - Functional package builder with immutable patterns.
 
 This module provides both pure functions and a fluent builder interface
@@ -95,6 +88,8 @@ def build_package(spec: BuildSpec, output_path: Path) -> BuildResult:
     try:
         prepared_slots = prepare_slots(spec.slots, spec.options)
     except Exception as e:
+        logger.error(f"Failed to prepare slots: {e}")
+        raise
 
     # Write package
     logger.trace(

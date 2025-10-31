@@ -382,4 +382,5 @@ class SlotView:
         """Support slicing and indexing for sequence-like behavior."""
         return self.content[key]
 
+
 # 🌶️📦🔚

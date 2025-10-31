@@ -1,4 +1,4 @@
-# 
+#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -249,7 +249,7 @@ class TestPSPFSecurity:
 
         # Tamper with a field in the MagicTrailer index (package_size at offset 8 in index)
         with open(bundle_path, "r+b") as f:
-            magic_trailer_start = file_size - 8200
+            file_size - 8200
             package_size_offset = index_start + 8  # Skip format_version (4) and index_checksum (4)
             f.seek(package_size_offset)
             f.write(struct.pack("<Q", 0xDEADBEEF))  # Write invalid package size
@@ -386,5 +386,6 @@ class TestPSPFSecurity:
 
         assert index1.format_version == index2.format_version
         assert index1.launcher_size == index2.launcher_size
+
 
 # 🌶️📦🔚

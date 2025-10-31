@@ -1,4 +1,4 @@
-# 
+#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -271,5 +271,6 @@ class TestPSPFSlotsOperations:
         # Bundle size may be smaller than slot due to index/metadata overhead and alignment
         # Just verify it's reasonably large
         assert bundle_path.stat().st_size > 1000  # At least 1KB
+
 
 # 🌶️📦🔚

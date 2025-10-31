@@ -21,6 +21,8 @@ PSPF_VERSION = 0x20250001  # PSPF/2025 v1 format identifier
 FORMAT_VERSION_STRING = "2025.0.0"  # String version for JSON metadata
 
 # Magic bytes for package trailer
+TRAILER_START_MAGIC = bytes([0xF0, 0x9F, 0x93, 0xA6])  # 📦 emoji
+TRAILER_END_MAGIC = bytes([0xF0, 0x9F, 0xAA, 0x84])  # 🪄 emoji
 
 # =================================
 # Binary Structure Sizes

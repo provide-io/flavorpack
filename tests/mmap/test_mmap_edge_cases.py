@@ -496,4 +496,5 @@ def test_error_handling(error_type) -> None:
         finally:
             path.unlink(missing_ok=True)
 
+
 # 🌶️📦🔚

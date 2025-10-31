@@ -1,4 +1,4 @@
-# 
+#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -175,5 +175,6 @@ class TestOperationChains:
         # Convert to dict for JSON
         data = meta.to_dict()
         assert data["operations"] == "tar.gz"
+
 
 # 🌶️📦🔚

@@ -1,22 +1,13 @@
-# 
+#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
-
-"""TODO: Add module docstring."""
-
-# 
-# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
-#
-
-"""TODO: Add module docstring."""
-
-from __future__ import annotations
 
 """PSPF Work Environment Management
 
 Handles work environment setup, caching, lifecycle management, and setup commands."""
+
+from __future__ import annotations
 
 from pathlib import Path
 import shlex
@@ -84,6 +75,7 @@ class WorkEnvManager:
             # Handle lifecycle-based cleanup
             self._cleanup_lifecycle_slots(workenv_dir, metadata, extracted_slots)
         else:
+            pass
 
         return workenv_dir
 
@@ -168,6 +160,7 @@ class WorkEnvManager:
 
         # NOTE: Setup command execution matches Go's implementation
         for i, cmd in enumerate(setup_commands):
+            pass
 
             if isinstance(cmd, dict):
                 cmd_type = cmd.get("type", "execute")

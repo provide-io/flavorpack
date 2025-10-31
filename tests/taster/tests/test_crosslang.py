@@ -285,4 +285,5 @@ class TestCrossLangCommand:
             result = runner.invoke(crosslang_command, [])
             assert result.exit_code == 1
 
+
 # 🌶️📦🔚

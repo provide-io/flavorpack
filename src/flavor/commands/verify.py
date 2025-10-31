@@ -135,4 +135,5 @@ def _display_signature_status(result: dict[str, Any]) -> None:
         echo_error("\n❌ Signature verification failed")
         raise click.Abort()
 
+
 # 🌶️📦🔚

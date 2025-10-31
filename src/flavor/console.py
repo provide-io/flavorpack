@@ -76,4 +76,5 @@ def get_command_logger(command_name: str) -> Any:
     """
     return get_logger(f"flavor.commands.{command_name}")
 
+
 # 🌶️📦🔚

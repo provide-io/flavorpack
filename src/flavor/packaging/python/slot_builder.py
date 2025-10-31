@@ -1,20 +1,11 @@
-# 
+#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""TODO: Add module docstring."""
-
-# 
-# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
-#
-
-"""TODO: Add module docstring."""
+"""Python slot builder for packaging operations."""
 
 from __future__ import annotations
-
-"""TODO: Add module docstring."""
 
 from pathlib import Path
 import tarfile
@@ -256,7 +247,6 @@ class PythonSlotBuilder:
                         parent=dep_path.name,
                         depth=depth,
                     )
-                    for sub_dep in sub_deps:
 
                 # Recursively process each sub-dependency
                 for sub_dep in sub_deps:
@@ -283,6 +273,7 @@ class PythonSlotBuilder:
                     depth=depth,
                 )
         else:
+            logger.trace(f"No pyproject.toml found in {dep_path}")
 
         # Add this dependency after its dependencies (post-order)
         if dep_path not in all_deps:

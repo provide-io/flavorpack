@@ -1,4 +1,4 @@
-# 
+#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -316,5 +316,6 @@ class TestLauncherReproducibility:
 
         # The specs passed to the pure builder function should be identical
         assert spec1 == spec2
+
 
 # 🌶️📦🔚

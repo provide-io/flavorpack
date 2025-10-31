@@ -1,4 +1,4 @@
-# 
+#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -314,5 +314,6 @@ class TestPlatformDetection:
         arch_name = get_arch_name()
         # Should return the lowercase version even if unknown
         assert arch_name == "unknown_arch"
+
 
 # 🌶️📦🔚

@@ -122,4 +122,5 @@ def _parse_octal_umask(umask: str) -> int:
     else:
         return int(umask, 8)
 
+
 # 🌶️📦🔚

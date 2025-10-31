@@ -1,4 +1,4 @@
-# 
+#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -398,5 +398,6 @@ class TestHelperTest:
         assert result.exit_code == 1
         assert "builder-rust: Exit code 1" in result.output
         assert "Some tests failed" in result.output
+
 
 # 🌶️📦🔚

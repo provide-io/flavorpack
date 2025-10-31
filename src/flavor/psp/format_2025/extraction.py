@@ -109,7 +109,6 @@ class SlotExtractor:
                     )
                     return False
 
-
             return True
 
         except Exception as e:
@@ -199,8 +198,7 @@ class SlotExtractor:
             actual_checksum = int.from_bytes(hash_bytes, byteorder="little")
 
             # DEBUG: Log checksum details for troubleshooting
-            logger.debug(
-            )
+            logger.debug()
 
             if actual_checksum != descriptor.checksum:
                 logger.error(f"Slot {slot_index} checksum verification failed")
@@ -230,5 +228,6 @@ class SlotExtractor:
             Decompressed/unprocessed data
         """
         return handlers.reverse_operations(data, packed_ops)
+
 
 # 🌶️📦🔚

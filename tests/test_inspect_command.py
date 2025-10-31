@@ -95,4 +95,5 @@ class TestInspectCommand:
         assert "config" in slot_ids
         assert "wheels" in slot_ids
 
+
 # 🌶️📦🔚

@@ -1,20 +1,11 @@
-# 
+#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""TODO: Add module docstring."""
-
-# 
-# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
-#
-
-"""TODO: Add module docstring."""
+"""Python environment builder for packaging operations."""
 
 from __future__ import annotations
-
-"""TODO: Add module docstring."""
 
 from collections.abc import Callable
 import os
@@ -86,7 +77,6 @@ class PythonEnvironmentBuilder:
         )
 
         with tempfile.TemporaryDirectory() as uv_install_dir:
-
             python_install_dir = self._install_python_with_uv(uv_install_dir)
 
             if not python_install_dir:
@@ -130,7 +120,9 @@ class PythonEnvironmentBuilder:
 
         result = run(cmd, check=True, capture_output=True)
         if result.stdout:
+            logger.trace(f"UV install stdout: {result.stdout.strip()}")
         if result.stderr:
+            logger.trace(f"UV install stderr: {result.stderr.strip()}")
 
         return self._find_python_installation(uv_install_dir, uv_cmd)
 
@@ -214,7 +206,6 @@ class PythonEnvironmentBuilder:
 
         if not python_bin.exists():
             return None
-
 
         # Verify it's a real binary, not a symlink to system Python
         if python_bin.is_symlink():
@@ -318,7 +309,9 @@ class PythonEnvironmentBuilder:
                 stats["files_added"] += 1
                 stats["bytes_added"] += tarinfo.size
                 if stats["files_added"] <= 10 or stats["files_added"] % 100 == 0:
+                    logger.trace(f"  📄 Adding file: {tarinfo.name} ({tarinfo.size:,} bytes)")
             elif tarinfo.isdir():
+                logger.trace(f"  📁 Adding directory: {tarinfo.name}")
 
             return deterministic_filter(tarinfo)
 
@@ -329,6 +322,9 @@ class PythonEnvironmentBuilder:
         tarball_size = python_tgz.stat().st_size
         compression_ratio = (1 - tarball_size / bytes_added) * 100 if bytes_added > 0 else 0
         logger.info(
+            f"📦 Created tarball: {python_tgz.name} "
+            f"(size: {tarball_size:,} bytes, compression: {compression_ratio:.1f}%)"
         )
+
 
 # 🌶️📦🔚

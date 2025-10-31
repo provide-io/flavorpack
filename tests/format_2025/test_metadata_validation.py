@@ -1,4 +1,4 @@
-# 
+#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -247,5 +247,6 @@ class TestMetadataValidation:
         metadata_no_workenv = {"format": "PSPF/2025"}
 
         assert validate_metadata(metadata_no_workenv) is True
+
 
 # 🌶️📦🔚

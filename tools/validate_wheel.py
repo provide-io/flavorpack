@@ -282,6 +282,7 @@ def validate_wheel(wheel_path: Path, full: bool = False) -> bool:
     # Summary
     print("\n" + "=" * 60)
     if all_valid:
+        print(f"✅ All validations passed for {wheel_path.name}")
     else:
         print(f"❌ Validation failed for {wheel_path.name}")
 

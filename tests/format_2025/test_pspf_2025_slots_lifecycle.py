@@ -1,4 +1,4 @@
-# 
+#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -250,5 +250,6 @@ class TestPSPFSlots:
         reader = PSPFReader(bundle_path)
         metadata_read = reader.read_metadata()
         assert "operations" in metadata_read["slots"][0]  # Operations field instead of codec
+
 
 # 🌶️📦🔚

@@ -336,4 +336,5 @@ class PSPFLauncher(PSPFReader):
         # IntegrityResult is a TypedDict with bool values, which is compatible with dict[str, bool]
         return dict(result)  # type: ignore[arg-type]
 
+
 # 🌶️📦🔚

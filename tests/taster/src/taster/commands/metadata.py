@@ -1,4 +1,4 @@
-# 
+#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -108,5 +108,6 @@ def metadata_command() -> None:
     # Show raw JSON if verbose
     if click.get_current_context().params.get("verbose"):
         click.echo(json.dumps(metadata, indent=2))
+
 
 # 🌶️📦🔚

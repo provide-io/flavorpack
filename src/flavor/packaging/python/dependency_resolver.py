@@ -280,6 +280,7 @@ class DependencyResolver:
         """Validate that UV wheel is manylinux2014 compatible."""
         if "manylinux" in uv_wheel.name:
             if "manylinux2014" in uv_wheel.name or "manylinux_2_17" in uv_wheel.name:
+                logger.debug(f"✅ UV wheel is manylinux2014 compatible: {uv_wheel.name}")
             else:
                 logger.warning(f"⚠️ UV wheel is not manylinux2014: {uv_wheel.name}")
 

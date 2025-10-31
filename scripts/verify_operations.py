@@ -75,6 +75,7 @@ def verify_python_operations():
             )
             all_passed = False
         else:
+            pass
 
         # Test unpacking
         unpacked = unpack_operations(expected_packed)
@@ -82,6 +83,7 @@ def verify_python_operations():
             print(f"❌ Python unpack failed for {description}: got {unpacked}, want {ops}")
             all_passed = False
         else:
+            pass
 
     return all_passed
 
@@ -112,6 +114,7 @@ def compare_test_vectors():
             print(f"❌ Mismatch for {v['description']}: Python={packed}, Expected={expected}")
             all_correct = False
         else:
+            pass
 
     return all_correct
 
@@ -151,6 +154,7 @@ def check_operation_constants():
             print(f"❌ Wrong value for {name}: got 0x{actual_value:02X}, want 0x{expected_value:02X}")
             all_correct = False
         else:
+            pass
 
     return all_correct
 
@@ -186,6 +190,7 @@ def main():
     print("📊 Verification Summary:")
     for name, result in results:
         if result is True:
+            pass
         elif result is False:
             print(f"  ❌ {name}: FAILED")
         else:

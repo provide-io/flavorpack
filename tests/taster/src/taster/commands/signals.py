@@ -1,4 +1,4 @@
-# 
+#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -175,5 +175,6 @@ def signals_command(test_mode, timeout, sleep, exit_code) -> None:
         click.secho("  ⚠️ Go launcher: Limited signal support", fg="yellow")
         click.echo("    • Basic signal handling")
         click.echo("    • May not forward all signals properly")
+
 
 # 🌶️📦🔚

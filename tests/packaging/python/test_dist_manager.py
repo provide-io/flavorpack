@@ -1,4 +1,4 @@
-# 
+#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -486,5 +486,6 @@ class TestPythonDistManagerCriticalFeatures:
                 result = self.dist_manager.validate_distribution(dist_info)
                 assert result is True  # Still valid but should warn
                 mock_logger.warning.assert_called()
+
 
 # 🌶️📦🔚

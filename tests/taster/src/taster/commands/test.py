@@ -1,4 +1,4 @@
-# 
+#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -87,7 +87,7 @@ def test_suite(ctx) -> None:
     click.echo(f"\nTests Passed: {passed}/{total} ({percentage:.1f}%)")
 
     # List results
-    for name, success in results:
+    for name, _success in results:
         click.echo(f"  {symbol} {name}")
 
     # Overall result
@@ -161,5 +161,6 @@ def clean() -> None:
     flavor_api = _get_flavor_api()
     if flavor_api:
         flavor_api.clean_cache()
+
 
 # 🌶️📦🔚

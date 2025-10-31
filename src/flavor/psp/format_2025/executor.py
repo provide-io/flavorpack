@@ -1,22 +1,13 @@
-# 
+#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
-
-"""TODO: Add module docstring."""
-
-# 
-# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
-#
-
-"""TODO: Add module docstring."""
-
-from __future__ import annotations
 
 """PSPF 2025 Bundle Executor
 Handles process execution with environment setup and variable substitution.
 """
+
+from __future__ import annotations
 
 import os
 from pathlib import Path
@@ -201,6 +192,7 @@ class BundleExecutor:
 
             # Log result
             if result.returncode == 0:
+                pass
             else:
                 logger.warning(f"⚠️ Execution completed with exit code: {result.returncode}")
                 if result.stderr:
