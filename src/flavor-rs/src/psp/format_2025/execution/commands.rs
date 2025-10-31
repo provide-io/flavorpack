@@ -1,5 +1,6 @@
 //! Command execution utilities
 
+use super::super::launcher::command::resolve_executable;
 use super::super::metadata::PackageInfo;
 use super::placeholders::substitute_placeholders;
 use crate::exceptions::{FlavorError, Result};
@@ -252,7 +253,8 @@ pub fn run_command(
 ) -> Result<()> {
     debug!("🏃 Running: {cmd} {args:?} in {user_cwd:?}");
 
-    let mut command = Command::new(cmd);
+    let resolved_cmd = resolve_executable(cmd);
+    let mut command = Command::new(&resolved_cmd);
     command.args(args);
     command.current_dir(user_cwd);
 
@@ -317,7 +319,8 @@ pub fn execute_main_command(
         return Ok(0);
     }
 
-    let mut cmd = Command::new(parts[0]);
+    let resolved_cmd = resolve_executable(parts[0]);
+    let mut cmd = Command::new(&resolved_cmd);
 
     // Add command arguments
     if parts.len() > 1 {

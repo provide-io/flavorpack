@@ -67,39 +67,62 @@ echo ""
 # Detect platform
 OS=$(uname -s | tr '[:upper:]' '[:lower:]')
 ARCH=$(uname -m)
+
+# Normalize Windows OS names (MINGW64_NT, MSYS_NT, etc.) to 'windows'
+if [[ "$OS" == mingw* ]] || [[ "$OS" == msys* ]] || [[ "$OS" == cygwin* ]]; then
+    OS="windows"
+    # On Windows ARM64, uname -m returns x86_64 (emulation layer)
+    # Check uname -s for ARM64 indicator in the OS name
+    if [[ "$(uname -s)" == *"-ARM64"* ]] || [[ "$(uname -s)" == *"-arm64"* ]]; then
+        ARCH="arm64"
+    fi
+fi
+
 [ "$ARCH" = "x86_64" ] && ARCH="amd64"
 [ "$ARCH" = "aarch64" ] && ARCH="arm64"
 PLATFORM="${OS}_${ARCH}"
 
-# Test 1: Simple echo test (Go builder + Go launcher) - Using Go launcher due to Rust launcher issues
-echo "1️⃣ Building echo test package (Go builder + Go launcher)..."
-$HELPERS_DIR/bin/flavor-go-builder-$PLATFORM \
+# Determine executable extension for Windows
+EXT=""
+if [[ "$OS" == "windows" ]]; then
+    EXT=".exe"
+fi
+
+# Test 1: Simple echo test (Go builder + Rust launcher)
+echo "1️⃣ Building echo test package (Go builder + Rust launcher)..."
+$HELPERS_DIR/bin/flavor-go-builder-$PLATFORM$EXT \
     --manifest configs/test-echo.json \
-    --launcher-bin $HELPERS_DIR/bin/flavor-go-launcher-$PLATFORM \
+    --launcher-bin $HELPERS_DIR/bin/flavor-rs-launcher-$PLATFORM$EXT \
     --output dist/echo-test.psp \
     --key-seed test123
 
-# Test 2: Shell script test (Rust builder + Go launcher)
-echo "2️⃣ Building shell test package (Rust builder + Go launcher)..."
-$HELPERS_DIR/bin/flavor-rs-builder-$PLATFORM \
+# Test 2: Shell script test (Rust builder + Rust launcher)
+echo "2️⃣ Building shell test package (Rust builder + Rust launcher)..."
+$HELPERS_DIR/bin/flavor-rs-builder-$PLATFORM$EXT \
     --manifest configs/test-shell.json \
-    --launcher-bin $HELPERS_DIR/bin/flavor-go-launcher-$PLATFORM \
+    --launcher-bin $HELPERS_DIR/bin/flavor-rs-launcher-$PLATFORM$EXT \
     --output dist/shell-test.psp \
     --key-seed test123
 
-# Test 3: Environment variable test (Go builder + Go launcher) - Using Go launcher due to Rust launcher issues  
-echo "3️⃣ Building environment test package (Go builder + Go launcher)..."
-$HELPERS_DIR/bin/flavor-go-builder-$PLATFORM \
+# Test 3: Environment variable test (Go builder + Rust launcher)
+echo "3️⃣ Building environment test package (Go builder + Rust launcher)..."
+$HELPERS_DIR/bin/flavor-go-builder-$PLATFORM$EXT \
     --manifest configs/test-env.json \
-    --launcher-bin $HELPERS_DIR/bin/flavor-go-launcher-$PLATFORM \
+    --launcher-bin $HELPERS_DIR/bin/flavor-rs-launcher-$PLATFORM$EXT \
     --output dist/env-test.psp \
     --key-seed test123
 
-# Test 4: Multi-slot orchestration test (Rust builder + Go launcher)
-echo "4️⃣ Building orchestration test package (Rust builder + Go launcher)..."
-$HELPERS_DIR/bin/flavor-rs-builder-$PLATFORM \
+# Test 4: Multi-slot orchestration test (Rust builder + Rust launcher)
+# Create platform-agnostic symlink for the manifest to reference
+# The manifest expects flavor-go-builder-darwin_arm64, so we'll create that symlink
+# pointing to our actual platform's binary (skip if we're already darwin_arm64)
+echo "4️⃣ Building orchestration test package (Rust builder + Rust launcher)..."
+if [[ "$PLATFORM" != "darwin_arm64" ]]; then
+    ln -sf "$HELPERS_DIR/bin/flavor-go-builder-$PLATFORM$EXT" "$HELPERS_DIR/bin/flavor-go-builder-darwin_arm64"
+fi
+$HELPERS_DIR/bin/flavor-rs-builder-$PLATFORM$EXT \
     --manifest configs/test-orchestrate.json \
-    --launcher-bin $HELPERS_DIR/bin/flavor-go-launcher-$PLATFORM \
+    --launcher-bin $HELPERS_DIR/bin/flavor-rs-launcher-$PLATFORM$EXT \
     --output dist/orchestrate-test.psp \
     --key-seed test123
 
@@ -127,19 +150,19 @@ run_test() {
 }
 
 # Run echo test
-run_test "1️⃣ Running echo test (Go launcher)..." \
+run_test "1️⃣ Running echo test (Rust launcher)..." \
     "FLAVOR_LOG_LEVEL=debug ./dist/echo-test.psp 'Test message from pretaster'"
 
-# Run shell test  
-run_test "2️⃣ Running shell test (Go launcher)..." \
+# Run shell test
+run_test "2️⃣ Running shell test (Rust launcher)..." \
     "FLAVOR_LOG_LEVEL=debug ./dist/shell-test.psp"
 
 # Run env test
-run_test "3️⃣ Running environment test (Go launcher)..." \
+run_test "3️⃣ Running environment test (Rust launcher)..." \
     "FLAVOR_LOG_LEVEL=info ./dist/env-test.psp"
 
 # Run orchestration test
-run_test "4️⃣ Running orchestration test (Go launcher)..." \
+run_test "4️⃣ Running orchestration test (Rust launcher)..." \
     "FLAVOR_LOG_LEVEL=info ./dist/orchestrate-test.psp"
 
 echo "✅ Test suite completed!"

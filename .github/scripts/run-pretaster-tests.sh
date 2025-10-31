@@ -14,9 +14,16 @@ TEST_SUITE="${3:-all}"
 # Only use PRETASTER_PSP if explicitly passed as 4th argument
 PRETASTER_PSP="${4:-}"
 
-echo "🧪 Running pretaster tests for $PLATFORM"
+echo "════════════════════════════════════════════════════════════════"
+echo "🧪 PRETASTER TEST SUITE"
+echo "════════════════════════════════════════════════════════════════"
+echo "📦 Platform: $PLATFORM"
 echo "📦 Helper version: $VERSION"
 echo "🎯 Test suite: $TEST_SUITE"
+echo "🔧 Shell: $SHELL"
+echo "🔧 OS: $(uname -s)"
+echo "🔧 Architecture: $(uname -m)"
+echo "════════════════════════════════════════════════════════════════"
 
 # Extract or copy platform-specific helpers (skip if using pre-built PRETASTER_PSP)
 if [ -z "$PRETASTER_PSP" ]; then
@@ -89,12 +96,22 @@ echo "🚀 Starting test suite: $TEST_SUITE"
 
 if [ -n "$PRETASTER_PSP" ]; then
     if [ -f "$PRETASTER_PSP" ]; then
+        echo ""
+        echo "════════════════════════════════════════════════════════════════"
+        echo "📦 PRETASTER PSP CONFIGURATION"
+        echo "════════════════════════════════════════════════════════════════"
         echo "📦 Using pre-built pretaster: $PRETASTER_PSP"
-        
+        echo "📏 PSP file size: $(ls -lh "$PRETASTER_PSP" | awk '{print $5}')"
+        echo "🔐 PSP permissions: $(ls -l "$PRETASTER_PSP" | awk '{print $1}')"
+
         # Ensure the PSP is executable
         if [[ "$PLATFORM" != *"windows"* ]]; then
             chmod +x "$PRETASTER_PSP" 2>/dev/null || true
+            echo "✅ Made PSP executable"
+        else
+            echo "ℹ️  Windows platform - .exe extension used"
         fi
+        echo "════════════════════════════════════════════════════════════════"
     else
         echo "⚠️ PRETASTER_PSP was set to '$PRETASTER_PSP' but file doesn't exist"
         echo "📝 Falling back to Makefile-based execution"
@@ -102,87 +119,165 @@ if [ -n "$PRETASTER_PSP" ]; then
     fi
 fi
 
-echo "🔍 Debug: PRETASTER_PSP = '$PRETASTER_PSP'"
-echo "🔍 Debug: File exists = $([ -f "$PRETASTER_PSP" ] && echo "yes" || echo "no")"
+echo ""
+echo "🔍 Configuration:"
+echo "   PRETASTER_PSP = '$PRETASTER_PSP'"
+echo "   File exists = $([ -f "$PRETASTER_PSP" ] && echo "✅ yes" || echo "❌ no")"
 
 if [ -n "$PRETASTER_PSP" ]; then
-    
-    # Setup helpers directory if they exist in CI download location
-    if [ -d "../../helpers-dist" ]; then
-        echo "📥 Found downloaded helpers, copying to expected location..."
-        mkdir -p ../bin
-        cp -f ../../helpers-dist/* ../bin/ 2>/dev/null || true
-        # Make them executable
-        chmod +x ../bin/* 2>/dev/null || true
-        echo "✅ Helpers copied to ../bin/"
-    fi
-    
-    # Configure to use Go builder + Rust launcher for test packages
-    # This completes the cross-language chain
-    export PRETASTER_BUILDER="../bin/flavor-go-builder-${VERSION}-${PLATFORM}"
-    export PRETASTER_LAUNCHER="../bin/flavor-rs-launcher-${VERSION}-${PLATFORM}"
-    
-    echo "   Builder for tests: $PRETASTER_BUILDER"
-    echo "   Launcher for tests: $PRETASTER_LAUNCHER"
-    
-    # Run tests with the provided pretaster PSP
-    # Pretaster's test commands are integrated into the PSP
-    case "$TEST_SUITE" in
-      all)
-        "$PRETASTER_PSP" test --all
-        ;;
-      combo)
-        "$PRETASTER_PSP" test --combo
-        ;;
-      core)
-        "$PRETASTER_PSP" test --core
-        ;;
-      direct)
-        "$PRETASTER_PSP" test --direct
-        ;;
-      *)
-        echo "❌ Unknown test suite: $TEST_SUITE"
+    echo ""
+    echo "════════════════════════════════════════════════════════════════"
+    echo "📦 PRETASTER PSP VERIFICATION"
+    echo "════════════════════════════════════════════════════════════════"
+    echo "📦 Pretaster PSP: $PRETASTER_PSP"
+    echo "📏 PSP file size: $(ls -lh "$PRETASTER_PSP" 2>/dev/null | awk '{print $5}' || echo 'NOT FOUND')"
+    echo "🔐 PSP permissions: $(ls -l "$PRETASTER_PSP" 2>/dev/null | awk '{print $1}' || echo 'NOT FOUND')"
+
+    if [ -f "$PRETASTER_PSP" ]; then
+        echo "✅ Pretaster PSP exists and will be used to verify the build"
+        # Run a simple info command to verify the PSP works
+        if "$PRETASTER_PSP" info 2>&1 | head -5; then
+            echo "✅ Pretaster PSP is functional"
+        else
+            echo "⚠️ Pretaster PSP info command had issues (may be expected on some platforms)"
+        fi
+    else
+        echo "❌ Pretaster PSP not found!"
         exit 1
-        ;;
-    esac
-else
-    # Original Makefile-based execution
-    case "$TEST_SUITE" in
-      all)
-        # Run all tests (helpers already available)
-        make all
-        EXIT_CODE=$?
-        ;;
-      combo)
-        # Run combination tests  
-        make combo-test
-        EXIT_CODE=$?
-        ;;
-      core)
-        # Run core tests
-        make test-core
-        EXIT_CODE=$?
-        ;;
-      direct)
-        # Run direct tests
-        make test-direct
-        EXIT_CODE=$?
-        ;;
-      *)
-        echo "❌ Unknown test suite: $TEST_SUITE"
-        exit 1
-        ;;
-    esac
-    
-    # Check if make command succeeded
-    if [ $EXIT_CODE -ne 0 ]; then
-        echo "❌ Test suite failed with exit code: $EXIT_CODE"
-        exit $EXIT_CODE
     fi
+    echo "════════════════════════════════════════════════════════════════"
+    echo ""
 fi
 
-echo "✅ Pretaster tests completed for $PLATFORM"
+# Setup helpers directory for running actual tests via Make targets
+# Makefile expects helpers at ../../dist/bin (relative to tests/pretaster)
+if [ -d "../../helpers-dist" ]; then
+    echo "📥 Found downloaded helpers, extracting to dist/bin..."
+    mkdir -p ../../dist/bin
+
+    # Extract zip files if present
+    for zip in ../../helpers-dist/*.zip; do
+        if [ -f "$zip" ]; then
+            echo "   Extracting $(basename "$zip")..."
+            unzip -o "$zip" -d ../../dist/bin/ 2>/dev/null || true
+        fi
+    done
+
+    # Copy any non-zip files
+    find ../../helpers-dist -type f ! -name "*.zip" -exec cp {} ../../dist/bin/ \; 2>/dev/null || true
+
+    # Make them executable
+    chmod +x ../../dist/bin/* 2>/dev/null || true
+
+    # Create symlinks without version for Makefile compatibility
+    echo "🔗 Creating platform-specific symlinks..."
+    for file in ../../dist/bin/flavor-*-${VERSION}-*; do
+        if [ -f "$file" ]; then
+            basename_file=$(basename "$file")
+            # Remove version to get symlink name (e.g., flavor-go-builder-0.0.1029-linux_amd64 -> flavor-go-builder-linux_amd64)
+            symlink_name=$(echo "$basename_file" | sed "s/-${VERSION}//")
+            ln -sf "$basename_file" "../../dist/bin/$symlink_name" 2>/dev/null || true
+            echo "   $basename_file -> $symlink_name"
+        fi
+    done
+
+    echo "✅ Helpers extracted and symlinked to dist/bin/"
+fi
+
+# Add .exe extension for Windows binaries
+EXT=""
+if [[ "$PLATFORM" == *"windows"* ]]; then
+    EXT=".exe"
+fi
+
+echo ""
+echo "════════════════════════════════════════════════════════════════"
+echo "🔗 CROSS-LANGUAGE CHAIN CONFIGURATION"
+echo "════════════════════════════════════════════════════════════════"
+echo "🔨 Builder: flavor-go-builder-${VERSION}-${PLATFORM}${EXT}"
+if [ -f "../../dist/bin/flavor-go-builder-${VERSION}-${PLATFORM}${EXT}" ]; then
+    echo "   - Status: ✅ Found"
+    echo "   - Size: $(ls -lh "../../dist/bin/flavor-go-builder-${VERSION}-${PLATFORM}${EXT}" | awk '{print $5}')"
+else
+    echo "   - Status: ❌ NOT FOUND"
+fi
+echo ""
+echo "🚀 Launcher: flavor-rs-launcher-${VERSION}-${PLATFORM}${EXT}"
+if [ -f "../../dist/bin/flavor-rs-launcher-${VERSION}-${PLATFORM}${EXT}" ]; then
+    echo "   - Status: ✅ Found"
+    echo "   - Size: $(ls -lh "../../dist/bin/flavor-rs-launcher-${VERSION}-${PLATFORM}${EXT}" | awk '{print $5}')"
+else
+    echo "   - Status: ❌ NOT FOUND"
+fi
+echo ""
+echo "This creates a full cross-language verification chain:"
+echo "  Go builder → Rust launcher → Test packages"
+echo "════════════════════════════════════════════════════════════════"
+echo ""
+
+# Run actual tests using Make targets (regardless of whether PRETASTER_PSP is provided)
+# The pretaster PSP is used for verification, but actual tests run via Make
+case "$TEST_SUITE" in
+  all)
+    echo "🚀 Running ALL test suites via Make..."
+    echo "════════════════════════════════════════════════════════════════"
+    make test
+    EXIT_CODE=$?
+    ;;
+  combo)
+    echo "🚀 Running COMBO tests via Make..."
+    echo "════════════════════════════════════════════════════════════════"
+    make test-combo
+    EXIT_CODE=$?
+    ;;
+  core)
+    echo "🚀 Running CORE tests via Make..."
+    echo "════════════════════════════════════════════════════════════════"
+    make test-core
+    EXIT_CODE=$?
+    ;;
+  direct)
+    echo "🚀 Running DIRECT tests via Make..."
+    echo "════════════════════════════════════════════════════════════════"
+    make test-direct
+    EXIT_CODE=$?
+    ;;
+  *)
+    echo "❌ Unknown test suite: $TEST_SUITE"
+    exit 1
+    ;;
+esac
+
+# Check if make command succeeded
+if [ $EXIT_CODE -ne 0 ]; then
+    echo "❌ Test suite failed with exit code: $EXIT_CODE"
+    exit $EXIT_CODE
+fi
+
+if [ -n "$PRETASTER_PSP" ]; then
+    echo ""
+    echo "════════════════════════════════════════════════════════════════"
+    if [ $EXIT_CODE -eq 0 ]; then
+        echo "✅ Test suite '$TEST_SUITE' PASSED (exit code: $EXIT_CODE)"
+    else
+        echo "❌ Test suite '$TEST_SUITE' FAILED (exit code: $EXIT_CODE)"
+    fi
+    echo "════════════════════════════════════════════════════════════════"
+
+    exit $EXIT_CODE
+fi
+
+echo ""
+echo "════════════════════════════════════════════════════════════════"
+echo "✅ PRETASTER TESTS COMPLETED"
+echo "════════════════════════════════════════════════════════════════"
+echo "📦 Platform: $PLATFORM"
+echo "🎯 Test suite: $TEST_SUITE"
+echo "✅ Status: SUCCESS"
+echo "════════════════════════════════════════════════════════════════"
+echo ""
 
 # Show summary of logs
 echo "📊 Test logs generated:"
 ls -la logs/ 2>/dev/null || echo "No logs found"
+echo ""

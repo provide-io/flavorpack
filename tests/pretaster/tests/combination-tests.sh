@@ -132,16 +132,33 @@ test_combination() {
 # Detect platform
 OS=$(uname -s | tr '[:upper:]' '[:lower:]')
 ARCH=$(uname -m)
+
+# Normalize Windows OS names (MINGW64_NT, MSYS_NT, etc.) to 'windows'
+if [[ "$OS" == mingw* ]] || [[ "$OS" == msys* ]] || [[ "$OS" == cygwin* ]]; then
+    OS="windows"
+    # On Windows ARM64, uname -m returns x86_64 (emulation layer)
+    # Check uname -s for ARM64 indicator in the OS name
+    if [[ "$(uname -s)" == *"-ARM64"* ]] || [[ "$(uname -s)" == *"-arm64"* ]]; then
+        ARCH="arm64"
+    fi
+fi
+
 [ "$ARCH" = "x86_64" ] && ARCH="amd64"
 [ "$ARCH" = "aarch64" ] && ARCH="arm64"
 PLATFORM="${OS}_${ARCH}"
 
+# Determine executable extension for Windows
+EXT=""
+if [[ "$OS" == "windows" ]]; then
+    EXT=".exe"
+fi
+
 # Test all combinations
 combinations=(
-    "rs:rs:$HELPERS_DIR/bin/flavor-rs-builder-$PLATFORM:$HELPERS_DIR/bin/flavor-rs-launcher-$PLATFORM:🦀🦀"
-    "rs:go:$HELPERS_DIR/bin/flavor-rs-builder-$PLATFORM:$HELPERS_DIR/bin/flavor-go-launcher-$PLATFORM:🦀🐹"
-    "go:rs:$HELPERS_DIR/bin/flavor-go-builder-$PLATFORM:$HELPERS_DIR/bin/flavor-rs-launcher-$PLATFORM:🐹🦀"
-    "go:go:$HELPERS_DIR/bin/flavor-go-builder-$PLATFORM:$HELPERS_DIR/bin/flavor-go-launcher-$PLATFORM:🐹🐹"
+    "rs:rs:$HELPERS_DIR/bin/flavor-rs-builder-$PLATFORM$EXT:$HELPERS_DIR/bin/flavor-rs-launcher-$PLATFORM$EXT:🦀🦀"
+    "rs:go:$HELPERS_DIR/bin/flavor-rs-builder-$PLATFORM$EXT:$HELPERS_DIR/bin/flavor-go-launcher-$PLATFORM$EXT:🦀🐹"
+    "go:rs:$HELPERS_DIR/bin/flavor-go-builder-$PLATFORM$EXT:$HELPERS_DIR/bin/flavor-rs-launcher-$PLATFORM$EXT:🐹🦀"
+    "go:go:$HELPERS_DIR/bin/flavor-go-builder-$PLATFORM$EXT:$HELPERS_DIR/bin/flavor-go-launcher-$PLATFORM$EXT:🐹🐹"
 )
 
 for combo in "${combinations[@]}"; do
