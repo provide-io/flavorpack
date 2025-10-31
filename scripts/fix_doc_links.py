@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
 """Fix relative links in FlavorPack documentation."""
 
 from pathlib import Path
@@ -89,9 +89,9 @@ def main():
             print(f"Fixed: {md_file.relative_to(docs_dir)}")
             fixed_count += 1
 
-    print(f"\n✅ Fixed {fixed_count} files")
 
 
 if __name__ == "__main__":
     main()
+
 # 🌶️📦🔚

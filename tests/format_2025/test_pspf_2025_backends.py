@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -130,6 +129,5 @@ class TestBackends:
 
         file_backend = create_backend(ACCESS_FILE)
         assert isinstance(file_backend, FileBackend)
-
 
 # 🌶️📦🔚

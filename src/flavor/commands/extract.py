@@ -1,7 +1,8 @@
-#
+# 
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
 """Extract command for the flavor CLI - extract slots from packages."""
 
 from __future__ import annotations
@@ -108,7 +109,6 @@ def extract_command(package_file: str, slot_index: int, output_path: str, force:
                 size=len(data),
                 output=str(output),
             )
-            echo(f"✅ Extracted {format_size(len(data))} to {output}")
 
     except FileNotFoundError as e:
         log.error("Package not found", package=package_file)
@@ -192,7 +192,6 @@ def extract_all_command(package_file: str, output_dir: str, force: bool) -> None
 
                 # Extract slot data
                 log.debug("Extracting slot", slot_index=i, slot_name=slot_name)
-                echo(f"📦 Extracting slot {i}: {slot_name} ({format_size(slot.size)})")
                 data = reader.read_slot(i)
 
                 # Write to file (atomic for safety)
@@ -210,7 +209,6 @@ def extract_all_command(package_file: str, output_dir: str, force: bool) -> None
                 slot_count=len(slot_descriptors),
                 output_dir=str(output),
             )
-            echo(f"✅ Extracted all slots to {output}")
 
     except FileNotFoundError as e:
         log.error("Package not found", package=package_file)
@@ -220,6 +218,5 @@ def extract_all_command(package_file: str, output_dir: str, force: bool) -> None
         log.error("Error extracting", error=str(e), package=package_file)
         echo_error(f"❌ Error extracting: {e}")
         raise click.Abort() from e
-
 
 # 🌶️📦🔚

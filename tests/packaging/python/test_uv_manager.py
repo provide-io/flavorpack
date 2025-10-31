@@ -1,6 +1,8 @@
+# 
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
 #
-# tests/packaging/python/test_uv_manager.py
-#
+
 """Tests for UVManager UV tool management functionality."""
 
 from pathlib import Path
@@ -396,3 +398,5 @@ class TestUVManagerCriticalFeatures:
         original_value = self.uv_manager.use_system_uv
         self.uv_manager.use_system_uv = not original_value
         assert self.uv_manager.use_system_uv != original_value
+
+# 🌶️📦🔚

@@ -1,7 +1,10 @@
-#
+# 
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
+"""TODO: Add module docstring."""
+
 from __future__ import annotations
 
 """Helper management system for Flavor launchers and builders."""
@@ -246,6 +249,5 @@ class HelperManager:
     def get_helper(self, name: str) -> Path:
         """Get path to a helper binary."""
         return self._binary_loader.get_helper(name)
-
 
 # 🌶️📦🔚

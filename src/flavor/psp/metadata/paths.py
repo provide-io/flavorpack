@@ -2,11 +2,11 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
 """Path validation and normalization for PSPF metadata.
 
 Ensures all paths in metadata use the {workenv} placeholder for portability.
-This makes it clear to developers that paths are relative to the work environment.
-"""
+This makes it clear to developers that paths are relative to the work environment."""
 
 import os
 from pathlib import Path
@@ -366,6 +366,5 @@ def create_workenv_directories(
         # Restore original umask
         if old_umask is not None:
             os.umask(old_umask)
-
 
 # 🌶️📦🔚

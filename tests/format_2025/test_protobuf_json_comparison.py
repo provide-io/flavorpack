@@ -1,12 +1,10 @@
-#
+# 
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""
-Test suite for PSPF/2025 protobuf and JSON format comparison
-Validates the new packed operation chain format vs old string-based format
-"""
+"""Test suite for PSPF/2025 protobuf and JSON format comparison
+Validates the new packed operation chain format vs old string-based format"""
 
 import json
 from pathlib import Path

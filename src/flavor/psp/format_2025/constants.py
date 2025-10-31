@@ -1,7 +1,10 @@
-#
+# 
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
+"""TODO: Add module docstring."""
+
 from __future__ import annotations
 
 """PSPF/2025 Format Constants
@@ -18,8 +21,6 @@ PSPF_VERSION = 0x20250001  # PSPF/2025 v1 format identifier
 FORMAT_VERSION_STRING = "2025.0.0"  # String version for JSON metadata
 
 # Magic bytes for package trailer
-TRAILER_START_MAGIC = bytes([0xF0, 0x9F, 0x93, 0xA6])  # 📦 emoji
-TRAILER_END_MAGIC = bytes([0xF0, 0x9F, 0xAA, 0x84])  # 🪄 emoji
 
 # =================================
 # Binary Structure Sizes
@@ -224,6 +225,5 @@ PSPF_FILE_EXTENSION = ".psp"
 PSPF_MIME_TYPE = "application/vnd.pspf"
 
 # Debug constants removed - use FLAVOR_VALIDATION environment variable instead
-
 
 # 🌶️📦🔚

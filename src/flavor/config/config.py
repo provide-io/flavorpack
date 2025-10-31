@@ -1,7 +1,10 @@
-#
+# 
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
+"""TODO: Add module docstring."""
+
 from __future__ import annotations
 
 """Structured configuration models for the `[tool.flavor]` section of `pyproject.toml`.
@@ -223,6 +226,5 @@ class FlavorConfig(BaseConfig):
             execution=execution,
             system=system,
         )
-
 
 # 🌶️📦🔚

@@ -2,6 +2,7 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
 """Cache management for Flavor packages."""
 
 import contextlib
@@ -245,6 +246,5 @@ class CacheManager:
                 with contextlib.suppress(OSError):
                     total += filepath.stat().st_size
         return total
-
 
 # 🌶️📦🔚

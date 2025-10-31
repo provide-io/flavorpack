@@ -1,3 +1,15 @@
+# 
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
+"""TODO: Add module docstring."""
+
+# 
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
 """Environment variable testing command"""
 
 import os
@@ -7,11 +19,9 @@ import click
 
 @click.command("env")
 def env_command() -> None:
-    """🌍 Test environment variable processing"""
     env_vars = dict(os.environ)
 
     click.secho("=" * 60, fg="cyan")
-    click.secho("🌍 ENVIRONMENT VARIABLE TEST", fg="cyan", bold=True)
     click.secho("=" * 60, fg="cyan")
     click.secho(f"📊 Total variables: {len(env_vars)}", fg="yellow")
 
@@ -41,7 +51,6 @@ def env_command() -> None:
     # Display categories
     for category, vars in categories.items():
         if vars:
-            click.secho(f"\n📁 {category} ({len(vars)} variables):", fg="blue", bold=True)
             for var in sorted(vars)[:5]:
                 value = env_vars.get(var, "")
                 if len(value) > 50:
@@ -52,7 +61,6 @@ def env_command() -> None:
 
     # Test expected values from runtime.env
     click.secho("\n" + "=" * 60, fg="cyan")
-    click.secho("🔬 RUNTIME.ENV VERIFICATION", fg="cyan", bold=True)
     click.secho("=" * 60, fg="cyan")
 
     # Check for expected variables set by runtime.env
@@ -65,7 +73,6 @@ def env_command() -> None:
     for var, expected in expected_vars.items():
         actual = os.environ.get(var)
         if actual == expected:
-            click.echo(f"  ✅ {var} = {actual}")
         else:
             click.echo(f"  ❌ {var} = {actual} (expected: {expected})")
 
@@ -78,7 +85,6 @@ def env_command() -> None:
         if old in os.environ:
             click.echo(f"  ⚠️ {old} still exists (should be mapped to {new})")
         if new in os.environ:
-            click.echo(f"  ✅ {new} = {os.environ[new]} (mapped from {old})")
 
     # Test whitelist mode (unset = ["*"] with pass list)
     click.secho("\n🔒 Whitelist Mode Test:", fg="magenta")
@@ -118,7 +124,6 @@ def env_command() -> None:
         if len(unexpected) > 5:
             click.echo(f"    ... and {len(unexpected) - 5} more")
     else:
-        click.secho("  ✅ No unexpected variables found", fg="green")
 
     # Show environment source
     click.secho("\n" + "=" * 60, fg="cyan")
@@ -131,3 +136,5 @@ def env_command() -> None:
         click.echo(f"  Command Name: {os.environ['FLAVOR_COMMAND_NAME']}")
     if "FLAVOR_ORIGINAL_COMMAND" in os.environ:
         click.echo(f"  Original Command: {os.environ['FLAVOR_ORIGINAL_COMMAND']}")
+
+# 🌶️📦🔚

@@ -1,4 +1,4 @@
-#
+# 
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -26,7 +26,6 @@ def _get_flavor_api():
 
 @click.group("test")
 def test_command() -> None:
-    """🧪 Test management for Flavor"""
     pass
 
 
@@ -40,7 +39,6 @@ def test_suite(ctx) -> None:
     from .info import info_command
 
     click.secho("=" * 60, fg="cyan", bold=True)
-    click.secho("🧪 RUNNING TASTER TEST SUITE", fg="cyan", bold=True)
     click.secho("=" * 60, fg="cyan", bold=True)
 
     # List of commands to run
@@ -64,7 +62,6 @@ def test_suite(ctx) -> None:
 
         # Check result
         if result.exit_code == 0:
-            click.secho(f"✅ {name}: PASSED", fg="green")
             results.append((name, True))
         else:
             click.secho(f"❌ {name}: FAILED", fg="red")
@@ -91,12 +88,10 @@ def test_suite(ctx) -> None:
 
     # List results
     for name, success in results:
-        symbol = "✅" if success else "❌"
         click.echo(f"  {symbol} {name}")
 
     # Overall result
     if passed == total:
-        click.secho("\n✅ ALL TESTS PASSED!", fg="green", bold=True)
         ctx.exit(0)
     else:
         click.secho(f"\n❌ {total - passed} TEST(S) FAILED", fg="red", bold=True)
@@ -166,8 +161,5 @@ def clean() -> None:
     flavor_api = _get_flavor_api()
     if flavor_api:
         flavor_api.clean_cache()
-        click.echo("✅ Cleaned Flavor cache")
-
-    click.echo("✅ Cleaned test artifacts")
 
 # 🌶️📦🔚

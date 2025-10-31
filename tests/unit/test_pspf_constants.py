@@ -1,3 +1,8 @@
+# 
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
 """Test PSPF format constants and basic operations."""
 
 from __future__ import annotations
@@ -22,8 +27,6 @@ class TestPSPFConstants:
 
     def test_magic_trailer_format(self) -> None:
         """Test that magic trailer has correct format."""
-        assert TRAILER_START_MAGIC == b"\xf0\x9f\x93\xa6"  # 📦
-        assert TRAILER_END_MAGIC == b"\xf0\x9f\xaa\x84"  # 🪄
         assert len(TRAILER_START_MAGIC) == 4
         assert len(TRAILER_END_MAGIC) == 4
 
@@ -72,3 +75,5 @@ class TestPSPFConstants:
         compression_ops = [OP_GZIP, OP_BZIP2, OP_XZ, OP_ZSTD]
         for op in compression_ops:
             assert 0x10 <= op <= 0x2F
+
+# 🌶️📦🔚

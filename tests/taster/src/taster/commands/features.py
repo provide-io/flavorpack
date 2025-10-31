@@ -1,3 +1,15 @@
+# 
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
+"""TODO: Add module docstring."""
+
+# 
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
 """Compare Go vs Rust launcher/builder feature parity"""
 
 import json
@@ -180,7 +192,6 @@ def features_command(output_json) -> None:
         # Display results
         for result in results:
             if result["supported"]:
-                symbol = "✅"
                 color = "green"
             else:
                 symbol = "❌"
@@ -206,4 +217,5 @@ def features_command(output_json) -> None:
             click.echo("  - Cannot set argv[0] on Unix systems")
             click.echo("  - Limited signal handling capabilities")
         elif launcher_type == "rust" and percentage == 100:
-            click.secho("\n✅ Full feature parity achieved!", fg="green")
+
+# 🌶️📦🔚

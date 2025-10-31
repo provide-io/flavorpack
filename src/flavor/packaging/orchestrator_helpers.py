@@ -1,7 +1,8 @@
-#
+# 
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
 """TODO: Add module docstring."""
 
 import os
@@ -224,7 +225,6 @@ def find_builder_executable(builder_bin: str | None) -> Path:
             raise BuildError(
                 "❌ No builder binaries found!\n"
                 "\n"
-                "🔧 To fix this issue, run one of:\n"
                 "   • cd helpers && ./build.sh     (build both Go and Rust builders)\n"
                 "   • make build-helpers           (if using make)\n"
                 "   • flavor helpers build         (if flavor CLI is available)\n"
@@ -265,7 +265,6 @@ def find_launcher_executable(launcher_bin: str | None) -> Path:
             raise BuildError(
                 "❌ No launcher binaries found!\n"
                 "\n"
-                "🔧 To fix this issue, run one of:\n"
                 "   • cd helpers && ./build.sh     (build both Go and Rust launchers)\n"
                 "   • make build-helpers           (if using make)\n"
                 "   • flavor helpers build         (if flavor CLI is available)\n"
@@ -382,6 +381,5 @@ def create_python_slot_tarballs(temp_dir: Path, artifacts: dict[str, Path]) -> t
             tar.add(wheel, arcname=f"wheels/{wheel.name}")
 
     return uv_path, python_tarball, wheels_tarball
-
 
 # 🌶️📦🔚

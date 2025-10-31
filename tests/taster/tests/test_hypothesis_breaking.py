@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
 """Hypothesis-based tests designed to break PSPF handling"""
 
 from pathlib import Path
@@ -382,3 +386,5 @@ class TestHypothesisPipeIntegration:
 
 
 # Run with: pytest tests/stress/test_hypothesis_breaking.py -v --hypothesis-show-statistics
+
+# 🌶️📦🔚

@@ -1,7 +1,10 @@
-#
+# 
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
+"""TODO: Add module docstring."""
+
 from __future__ import annotations
 
 """Wheel building and dependency resolution for FlavorPack packaging.
@@ -72,7 +75,6 @@ class WheelBuilder:
         Returns:
             Path to the built wheel file
         """
-        logger.info(f"🔨📦 Building wheel from source: {source_path.name}")
 
         # Use PyPA pip for wheel building (more reliable than UV for complex builds)
         wheel_cmd = self.pypapip._get_pypapip_wheel_cmd(
@@ -104,10 +106,8 @@ class WheelBuilder:
             # Look for wheel filename in output
             for line in result.stdout.strip().split("\n"):
                 if ".whl" in line:
-                    logger.info("📦🏗️✅ Built wheel", wheel=line.strip())
                     break
 
-        logger.info(f"✅ Successfully built wheel: {built_wheel.name}")
         return built_wheel
 
     def _find_built_wheel(self, wheel_dir: Path, package_name: str) -> Path:
@@ -183,7 +183,6 @@ class WheelBuilder:
                 # Try UV pip-compile for speed
                 logger.debug("Attempting UV pip-compile for fast resolution")
                 self.uv.compile_requirements(requirements_file, locked_requirements, self.python_version)
-                logger.info("✅ Successfully resolved dependencies with UV")
                 return locked_requirements
             except Exception as e:
                 logger.warning(f"UV resolution failed, falling back to pip-tools: {e}")
@@ -192,7 +191,6 @@ class WheelBuilder:
         logger.debug("Using pip-tools for dependency resolution")
         self._resolve_with_pip_tools(python_exe, requirements_file, locked_requirements)
 
-        logger.info("✅ Successfully resolved dependencies with pip-tools")
         return locked_requirements
 
     def _resolve_with_pip_tools(self, python_exe: Path, input_file: Path, output_file: Path) -> None:
@@ -272,7 +270,6 @@ class WheelBuilder:
             logger.error(error_msg)
             raise RuntimeError(error_msg)
 
-        logger.info(f"✅ Downloaded {len(wheel_files)} wheel files")
 
         return wheel_files
 
@@ -302,7 +299,6 @@ class WheelBuilder:
             Dictionary with build information and file paths
         """
         logger.info(
-            f"🏗️📦 Building and resolving project: {project_dir.name} "
             "(PROJECT from LOCAL SOURCE, dependencies from PyPI)"
         )
 
@@ -328,7 +324,6 @@ class WheelBuilder:
                 project_dependencies = pyproject_data.get("project", {}).get("dependencies", [])
                 if project_dependencies:
                     logger.info(
-                        f"📦📝 Found {len(project_dependencies)} project dependencies in {project_dir.name}"
                     )
                     logger.debug("Project dependencies", deps=project_dependencies)
             except Exception as e:
@@ -369,10 +364,8 @@ class WheelBuilder:
         }
 
         logger.info(
-            f"✅ Completed project build with {build_info['total_wheels']} wheels "
             "(project from local source + dependencies from PyPI)"
         )
         return build_info
-
 
 # 🌶️📦🔚

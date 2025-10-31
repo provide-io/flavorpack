@@ -1,7 +1,8 @@
-#
+# 
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
 """TODO: Add module docstring."""
 
 from __future__ import annotations
@@ -101,11 +102,9 @@ class MMapBackend(Backend):
         if hasattr(mmap, "MADV_SEQUENTIAL"):
             # Hint for sequential access on Unix
             self.mmap.madvise(mmap.MADV_SEQUENTIAL)
-            logger.debug("🔧 Applied MADV_SEQUENTIAL hint")
 
         elapsed = time.perf_counter() - start_time
         logger.debug(
-            "✅ MMap opened",
             elapsed_ms=elapsed * 1000,
             pages=file_size // DEFAULT_PAGE_SIZE,
         )
@@ -126,7 +125,6 @@ class MMapBackend(Backend):
                 # BufferError expected if external code holds memoryview references
                 # The mmap will be cleaned up by Python's GC when all references are released
                 self.mmap.close()
-                logger.debug("✅ MMap closed successfully")
             self.mmap = None
         if self.file:
             self.file.close()
@@ -193,13 +191,11 @@ class MMapBackend(Backend):
         if hasattr(os, "posix_fadvise") and hasattr(os, "POSIX_FADV_WILLNEED") and self.file:
             # Linux: hint that we'll need this data soon
             os.posix_fadvise(self.file.fileno(), offset, size, os.POSIX_FADV_WILLNEED)  # type: ignore[attr-defined]
-            logger.debug("✅ posix_fadvise called")
         elif sys.platform == "win32" and self.mmap:
             # Windows: touch pages to load them
             # This is less efficient but works
             view = memoryview(self.mmap)[offset : offset + 1]
             _ = view[0]  # Touch first byte to trigger page load
-            logger.debug("✅ Windows page touch performed")
         else:
             logger.debug("⚠️ Prefetch not available on this platform")
 
@@ -229,7 +225,6 @@ class FileBackend(Backend):
         self.path = path
         file_size = path.stat().st_size
         logger.debug(
-            "📁 Opening file backend",
             path=str(path),
             size_bytes=file_size,
             buffer_size=64 * 1024,
@@ -239,7 +234,6 @@ class FileBackend(Backend):
         self.file = path.open("rb", buffering=64 * 1024)
 
         elapsed = time.perf_counter() - start_time
-        logger.debug("✅ File backend opened", elapsed_ms=elapsed * 1000)
 
     def close(self) -> None:
         """Close the file."""
@@ -253,7 +247,6 @@ class FileBackend(Backend):
             self.file.close()
             self.file = None
         self._cache.clear()
-        logger.debug("✅ File backend closed")
 
     def read_at(self, offset: int, size: int) -> bytes:
         """Read data at specific offset."""
@@ -473,6 +466,5 @@ def create_backend(mode: int = ACCESS_AUTO, path: Path | None = None) -> Backend
     else:
         # Default to hybrid for unknown modes
         return HybridBackend()
-
 
 # 🌶️📦🔚

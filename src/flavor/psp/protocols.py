@@ -1,12 +1,12 @@
-#
+# 
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
 """PSP Protocol Definitions - Type-safe interfaces for PSP operations.
 
 Defines protocols for common PSP operations that can be implemented by different
-format versions (PSPF/2025, future formats, etc.).
-"""
+format versions (PSPF/2025, future formats, etc.)."""
 
 from pathlib import Path
 from typing import Protocol, TypedDict
@@ -56,6 +56,5 @@ class ExtractorProtocol(Protocol):
             Path to the extracted content
         """
         ...
-
 
 # 🌶️📦🔚

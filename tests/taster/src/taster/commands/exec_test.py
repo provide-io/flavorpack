@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
 #
+
+"""TODO: Add module docstring."""
+
+#!/usr/bin/env python3
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -19,9 +25,7 @@ from flavor.package import build_package_from_manifest
 @click.command("exec-test")
 @click.option("--verbose", "-v", is_flag=True, help="Verbose output")
 def exec_test_command(verbose) -> None:
-    """🔬 Test direct binary execution vs script execution."""
 
-    click.secho("🔬 EXECUTION TEST", fg="cyan", bold=True)
     click.secho("=" * 60, fg="cyan")
 
     helper_manager = HelperManager()
@@ -38,7 +42,6 @@ def exec_test_command(verbose) -> None:
         (src_dir / "__init__.py").write_text("")
         (src_dir / "__main__.py").write_text("""
 import sys
-print("✅ Binary execution successful!")
 sys.exit(0)
 """)
 
@@ -81,7 +84,6 @@ command = "{workenv}/bin/python3.11 -m binary_test"
             )
 
             if result.returncode == 0 and "Binary execution successful" in result.stdout:
-                click.secho("  ✅ Binary execution: PASSED", fg="green")
             else:
                 click.secho("  ❌ Binary execution: FAILED", fg="red")
                 if verbose:
@@ -103,7 +105,6 @@ command = "{workenv}/bin/python3.11 -m binary_test"
         (src_dir / "__init__.py").write_text("")
         (src_dir / "__main__.py").write_text("""
 import sys
-print("✅ Script execution successful!")
 sys.exit(0)
 """)
 
@@ -147,7 +148,6 @@ entry_point = "script_test.__main__:main"
                 )
 
                 if result.returncode == 0 and "Script execution successful" in result.stdout:
-                    click.secho(f"      ✅ {mode} mode: PASSED", fg="green")
                 else:
                     click.secho(f"      ❌ {mode} mode: FAILED", fg="red")
                     if verbose:
@@ -169,7 +169,6 @@ entry_point = "script_test.__main__:main"
         (src_dir / "__init__.py").write_text("")
         (src_dir / "__main__.py").write_text("""
 import sys
-print("✅ Direct execution successful!")
 sys.exit(0)
 """)
 
@@ -187,7 +186,6 @@ entry_point = "direct_test.__main__:main"
 command = "{workenv}/test.sh"
 setup_commands = [
     "echo '#!/bin/sh' > {workenv}/test.sh",
-    "echo 'echo \"✅ Direct shell execution successful!\"' >> {workenv}/test.sh",
     "chmod +x {workenv}/test.sh"
 ]
 """)
@@ -219,7 +217,6 @@ setup_commands = [
             )
 
             if result.returncode == 0 and "Direct shell execution successful" in result.stdout:
-                click.secho("  ✅ Direct workenv execution: PASSED", fg="green")
             else:
                 click.secho("  ❌ Direct workenv execution: FAILED", fg="red")
                 if verbose:
@@ -230,7 +227,6 @@ setup_commands = [
             click.secho(f"  ❌ Direct workenv execution: ERROR - {e}", fg="red")
 
     click.secho("\n" + "=" * 60, fg="cyan")
-    click.secho("🔬 EXECUTION TEST COMPLETE", fg="cyan", bold=True)
 
 
 if __name__ == "__main__":

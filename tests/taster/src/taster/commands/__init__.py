@@ -1,3 +1,8 @@
+# 
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
 """Taster command modules"""
 
 from .argv import argv_command
@@ -23,3 +28,5 @@ __all__ = [
     "test_command",
     "verify_command",
 ]
+
+# 🌶️📦🔚

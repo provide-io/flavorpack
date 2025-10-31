@@ -1,7 +1,10 @@
-#
+# 
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
+"""TODO: Add module docstring."""
+
 from __future__ import annotations
 
 """
@@ -123,7 +126,6 @@ class BinaryLoader:
             )
 
             if result.returncode == 0:
-                logger.info(f"✅ Built {component}: {binary_path}")
                 built_binaries.append(binary_path)
                 # Make executable
                 binary_path.chmod(DEFAULT_EXECUTABLE_PERMS)
@@ -174,7 +176,6 @@ class BinaryLoader:
                 # Copy from target/release to bin
                 source_path = self.manager.rust_src_dir / "target" / "release" / f"flavor-rs-{component}"
                 if source_path.exists():
-                    logger.info(f"✅ Built and copying {component}: {source_path} → {binary_path}")
                     safe_copy(source_path, binary_path, preserve_mode=True, overwrite=True)
                     built_binaries.append(binary_path)
                     # Make executable
@@ -362,6 +363,5 @@ class BinaryLoader:
         if not os.access(path, os.X_OK):
             with contextlib.suppress(OSError, PermissionError):
                 path.chmod(DEFAULT_EXECUTABLE_PERMS)
-
 
 # 🌶️📦🔚
