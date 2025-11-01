@@ -129,6 +129,74 @@ func updateSectionOffsets(data []byte, paddingSize int, logger hclog.Logger) err
 	return nil
 }
 
+// updateDataDirectories updates data directory file offsets after DOS stub expansion.
+// The Certificate Table (data directory entry #4) is special: it uses absolute
+// file offsets instead of RVAs. When the DOS stub expands, this offset must
+// be updated. Other data directories use RVAs (relative to image base) and
+// don't need updating.
+//
+// Args:
+//   - data: PE executable data (modified in-place)
+//   - paddingSize: Number of bytes added to DOS stub
+//   - logger: Logger instance
+//
+// Returns error if operation fails
+func updateDataDirectories(data []byte, paddingSize int, logger hclog.Logger) error {
+	// Get PE header location
+	peOffset := int(binary.LittleEndian.Uint32(data[0x3C:0x40]))
+	coffOffset := peOffset + 4
+
+	// Read magic number to identify PE32 vs PE32+
+	magic := binary.LittleEndian.Uint16(data[coffOffset+20 : coffOffset+22])
+	isPE32Plus := magic == 0x20B
+
+	// Data directory offset in optional header
+	// PE32: starts at optional header + 96
+	// PE32+: starts at optional header + 112
+	var dataDirOffset int
+	if isPE32Plus {
+		dataDirOffset = coffOffset + 20 + 112
+	} else {
+		dataDirOffset = coffOffset + 20 + 96
+	}
+
+	// Certificate Table is the 5th entry (index 4) in data directory array
+	// Each entry is 8 bytes (4 bytes RVA/offset + 4 bytes size)
+	certEntryOffset := dataDirOffset + (4 * 8)
+
+	if certEntryOffset+8 > len(data) {
+		logger.Trace("Certificate table entry beyond file bounds, skipping update",
+			"entry_offset", fmt.Sprintf("0x%x", certEntryOffset),
+			"file_size", len(data))
+		return nil
+	}
+
+	// Read certificate table entry
+	certFileOffset := binary.LittleEndian.Uint32(data[certEntryOffset : certEntryOffset+4])
+	certSize := binary.LittleEndian.Uint32(data[certEntryOffset+4 : certEntryOffset+8])
+
+	logger.Trace("Checked certificate table",
+		"offset", fmt.Sprintf("0x%x", certFileOffset),
+		"size", certSize)
+
+	// Update certificate table offset if it exists and is after the DOS stub
+	if certFileOffset >= 0x80 {
+		newCertOffset := certFileOffset + uint32(paddingSize)
+		binary.LittleEndian.PutUint32(data[certEntryOffset:certEntryOffset+4], newCertOffset)
+		logger.Debug("Updated certificate table offset",
+			"old_offset", fmt.Sprintf("0x%x", certFileOffset),
+			"new_offset", fmt.Sprintf("0x%x", newCertOffset))
+	}
+
+	// Zero out PE checksum (not validated for executable files, only for drivers/DLLs)
+	// CheckSum field is at optional header + 64
+	checksumOffset := coffOffset + 20 + 64
+	binary.LittleEndian.PutUint32(data[checksumOffset:checksumOffset+4], 0)
+	logger.Trace("Zeroed PE checksum (not required for executables)")
+
+	return nil
+}
+
 // expandDOSStub expands the DOS stub of a PE executable to match Rust/MSVC binary size.
 // This fixes Windows PE loader rejection of Go binaries when PSPF data is appended.
 // The DOS stub is expanded from 128 bytes (0x80) to 240 bytes (0xF0) to match Rust binaries.
@@ -182,6 +250,11 @@ func expandDOSStub(data []byte, logger hclog.Logger) ([]byte, error) {
 	// table entries still point to old offsets. We must update them.
 	if err := updateSectionOffsets(newData, paddingSize, logger); err != nil {
 		return nil, fmt.Errorf("failed to update section offsets: %w", err)
+	}
+
+	// Update data directories (Certificate Table uses absolute file offsets)
+	if err := updateDataDirectories(newData, paddingSize, logger); err != nil {
+		return nil, fmt.Errorf("failed to update data directories: %w", err)
 	}
 
 	// Verify the modification

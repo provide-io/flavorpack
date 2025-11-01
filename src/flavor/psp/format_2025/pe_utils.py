@@ -164,6 +164,76 @@ def _update_section_offsets(data: bytearray, padding_size: int) -> None:
     logger.debug(f"Updated {updated_count}/{num_sections} section offset(s)")
 
 
+def _update_data_directories(data: bytearray, padding_size: int) -> None:
+    """
+    Update data directory file offsets after DOS stub expansion.
+
+    The Certificate Table (data directory entry #4) is special: it uses absolute
+    file offsets instead of RVAs. When the DOS stub expands, this offset must
+    be updated. Other data directories use RVAs (relative to image base) and
+    don't need updating.
+
+    Args:
+        data: PE executable data (modified in-place)
+        padding_size: Number of bytes added to DOS stub
+    """
+    # Get PE header location
+    pe_offset = struct.unpack("<I", data[0x3C:0x40])[0]
+
+    # COFF header starts after PE signature
+    coff_offset = pe_offset + 4
+
+    # Read optional header size to determine PE32 vs PE32+
+    struct.unpack("<H", data[coff_offset + 16 : coff_offset + 18])[0]
+
+    # Read magic number to identify PE32 vs PE32+
+    magic = struct.unpack("<H", data[coff_offset + 20 : coff_offset + 22])[0]
+    is_pe32_plus = magic == 0x20B
+
+    # Data directory offset in optional header
+    # PE32: starts at optional header + 96
+    # PE32+: starts at optional header + 112
+    data_dir_offset = coff_offset + 20 + 112 if is_pe32_plus else coff_offset + 20 + 96
+
+    # Certificate Table is the 5th entry (index 4) in data directory array
+    # Each entry is 8 bytes (4 bytes RVA/offset + 4 bytes size)
+    cert_entry_offset = data_dir_offset + (4 * 8)
+
+    if cert_entry_offset + 8 > len(data):
+        logger.trace(
+            "Certificate table entry beyond file bounds, skipping update",
+            entry_offset=f"0x{cert_entry_offset:x}",
+            file_size=len(data),
+        )
+        return
+
+    # Read certificate table entry
+    cert_file_offset = struct.unpack("<I", data[cert_entry_offset : cert_entry_offset + 4])[0]
+    cert_size = struct.unpack("<I", data[cert_entry_offset + 4 : cert_entry_offset + 8])[0]
+
+    logger.trace(
+        "Checked certificate table",
+        offset=f"0x{cert_file_offset:x}",
+        size=cert_size,
+    )
+
+    # Update certificate table offset if it exists (non-zero) and is after the DOS stub
+    if cert_file_offset > 0 and cert_file_offset >= 0x80:
+        new_cert_offset = cert_file_offset + padding_size
+        struct.pack_into("<I", data, cert_entry_offset, new_cert_offset)
+        logger.debug(
+            "Updated certificate table offset",
+            old_offset=f"0x{cert_file_offset:x}",
+            new_offset=f"0x{new_cert_offset:x}",
+        )
+
+    # Zero out PE checksum (not validated for executable files, only for drivers/DLLs)
+    # CheckSum field is at optional header + 64
+    checksum_offset = coff_offset + 20 + 64
+    struct.pack_into("<I", data, checksum_offset, 0)
+    logger.trace("Zeroed PE checksum (not required for executables)")
+
+
 def expand_dos_stub(data: bytes) -> bytes:
     """
     Expand the DOS stub of a PE executable to match Rust/MSVC binary size.
@@ -230,6 +300,9 @@ def expand_dos_stub(data: bytes) -> bytes:
     # When we shift the file content forward, section data moves but the section
     # table entries still point to old offsets. We must update them.
     _update_section_offsets(new_data, padding_size)
+
+    # Update data directories (Certificate Table uses absolute file offsets)
+    _update_data_directories(new_data, padding_size)
 
     # Verify the modification
     new_pe_offset = get_pe_header_offset(bytes(new_data))
