@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"runtime"
 	"runtime/debug"
 	"time"
 
@@ -10,6 +11,15 @@ import (
 )
 
 const version = "0.3.0"
+
+// Windows crash debugging - write diagnostics before anything else
+func init() {
+	// On Windows, write startup diagnostic immediately
+	if runtime.GOOS == "windows" {
+		// Write to stderr immediately (will be captured in logs)
+		fmt.Fprintf(os.Stderr, "[GO-LAUNCHER-DEBUG] init() called, GOOS=%s GOARCH=%s\n", runtime.GOOS, runtime.GOARCH)
+	}
+}
 
 func getBuilderTimestamp() string {
 	// Try to get vcs.time from build info
@@ -32,19 +42,36 @@ func getBuilderTimestamp() string {
 }
 
 func main() {
+	// Windows debugging - log entry to main()
+	if runtime.GOOS == "windows" {
+		fmt.Fprintf(os.Stderr, "[GO-LAUNCHER-DEBUG] main() started\n")
+	}
+
 	// Set up panic recovery to return specific exit code
 	defer func() {
 		if r := recover(); r != nil {
-			fmt.Fprintf(os.Stderr, "PANIC: %v\n", r)
+			fmt.Fprintf(os.Stderr, "[GO-LAUNCHER-ERROR] PANIC: %v\n", r)
 			debug.PrintStack()
 			os.Exit(format_2025.ExitPanic)
 		}
 	}()
 
+	if runtime.GOOS == "windows" {
+		fmt.Fprintf(os.Stderr, "[GO-LAUNCHER-DEBUG] Getting executable path...\n")
+	}
+
 	exePath, err := os.Executable()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to get executable path: %v\n", err)
+		fmt.Fprintf(os.Stderr, "[GO-LAUNCHER-ERROR] Failed to get executable path: %v\n", err)
 		os.Exit(format_2025.ExitIOError)
+	}
+
+	if runtime.GOOS == "windows" {
+		fmt.Fprintf(os.Stderr, "[GO-LAUNCHER-DEBUG] Executable path: %s\n", exePath)
+		fmt.Fprintf(os.Stderr, "[GO-LAUNCHER-DEBUG] Args count: %d\n", len(os.Args))
+		if len(os.Args) > 0 {
+			fmt.Fprintf(os.Stderr, "[GO-LAUNCHER-DEBUG] Args[0]: %s\n", os.Args[0])
+		}
 	}
 
 	// Check for --version flag before launching
@@ -69,7 +96,15 @@ func main() {
 
 	// Launch with error handling
 	// Note: LaunchWithLogLevel calls os.Exit directly on error
+	if runtime.GOOS == "windows" {
+		fmt.Fprintf(os.Stderr, "[GO-LAUNCHER-DEBUG] Calling LaunchWithLogLevel(exePath=%s, args=%v, logLevel=%s)\n", exePath, args, logLevel)
+	}
 	format_2025.LaunchWithLogLevel(exePath, args, logLevel, logSource)
+
+	// If we reach here, launch didn't call os.Exit (shouldn't happen)
+	if runtime.GOOS == "windows" {
+		fmt.Fprintf(os.Stderr, "[GO-LAUNCHER-DEBUG] LaunchWithLogLevel returned (unexpected)\n")
+	}
 }
 
 // Test 3: Trigger rebuild Mon Aug 18 15:45:13 PDT 2025
