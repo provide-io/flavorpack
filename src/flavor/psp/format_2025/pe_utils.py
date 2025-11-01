@@ -234,6 +234,169 @@ def _update_data_directories(data: bytearray, padding_size: int) -> None:
     logger.trace("Zeroed PE checksum (not required for executables)")
 
 
+def _rva_to_file_offset(data: bytes, rva: int) -> int | None:
+    """
+    Map a Relative Virtual Address (RVA) to a file offset.
+
+    Walks the section table to find which section contains the RVA and
+    calculates the corresponding file offset.
+
+    Args:
+        data: PE executable data
+        rva: Relative Virtual Address to map
+
+    Returns:
+        File offset if mapping succeeded, None otherwise
+    """
+    # Get PE header location
+    pe_offset: int = struct.unpack("<I", data[0x3C:0x40])[0]
+    coff_offset = pe_offset + 4
+
+    # Read number of sections
+    num_sections: int = struct.unpack("<H", data[coff_offset + 2 : coff_offset + 4])[0]
+
+    # Read optional header size
+    opt_hdr_size: int = struct.unpack("<H", data[coff_offset + 16 : coff_offset + 18])[0]
+
+    # Section table offset
+    section_table_offset = coff_offset + 20 + opt_hdr_size
+
+    # Walk section table to find which section contains this RVA
+    for i in range(num_sections):
+        section_offset = section_table_offset + (i * 40)
+
+        # Read section header fields
+        # VirtualAddress is at offset 12 in section header
+        # VirtualSize is at offset 8 in section header
+        # PointerToRawData is at offset 20 in section header
+
+        virtual_addr: int = struct.unpack("<I", data[section_offset + 12 : section_offset + 16])[0]
+        virtual_size: int = struct.unpack("<I", data[section_offset + 8 : section_offset + 12])[0]
+        pointer_to_raw_data: int = struct.unpack("<I", data[section_offset + 20 : section_offset + 24])[0]
+
+        # Check if RVA falls within this section
+        if rva >= virtual_addr and rva < virtual_addr + virtual_size:
+            offset_within_section = rva - virtual_addr
+            file_offset: int = pointer_to_raw_data + offset_within_section
+            logger.trace(
+                "Mapped RVA to file offset",
+                rva=f"0x{rva:x}",
+                section=i,
+                section_va=f"0x{virtual_addr:x}",
+                file_offset=f"0x{file_offset:x}",
+            )
+            return file_offset
+
+    logger.trace("RVA not found in any section", rva=f"0x{rva:x}")
+    return None
+
+
+def _update_debug_directory(data: bytearray, padding_size: int) -> None:
+    """
+    Update debug directory entries' PointerToRawData values after DOS stub expansion.
+
+    The Debug Directory (data directory entry #6) contains an array of IMAGE_DEBUG_DIRECTORY
+    structures. Each structure has both AddressOfRawData (RVA) and PointerToRawData (absolute
+    file offset). The PointerToRawData field MUST be updated when the DOS stub expands.
+
+    Args:
+        data: PE executable data (modified in-place)
+        padding_size: Number of bytes added to DOS stub
+    """
+    # Get PE header location
+    pe_offset = struct.unpack("<I", data[0x3C:0x40])[0]
+    coff_offset = pe_offset + 4
+
+    # Read magic number to identify PE32 vs PE32+
+    magic = struct.unpack("<H", data[coff_offset + 20 : coff_offset + 22])[0]
+    is_pe32_plus = magic == 0x20B
+
+    # Data directory offset in optional header
+    data_dir_offset = coff_offset + 20 + 112 if is_pe32_plus else coff_offset + 20 + 96
+
+    # Debug Directory is the 7th entry (index 6) in data directory array
+    debug_dir_entry_offset = data_dir_offset + (6 * 8)
+
+    if debug_dir_entry_offset + 8 > len(data):
+        logger.trace(
+            "Debug directory entry beyond file bounds, skipping",
+            entry_offset=f"0x{debug_dir_entry_offset:x}",
+        )
+        return
+
+    # Read debug directory entry (RVA and size)
+    debug_dir_rva = struct.unpack("<I", data[debug_dir_entry_offset : debug_dir_entry_offset + 4])[0]
+    debug_dir_size = struct.unpack("<I", data[debug_dir_entry_offset + 4 : debug_dir_entry_offset + 8])[0]
+
+    # If no debug directory, skip
+    if debug_dir_rva == 0 or debug_dir_size == 0:
+        logger.trace("No debug directory present (RVA or size is 0)")
+        return
+
+    # Map debug directory RVA to file offset
+    debug_dir_file_offset = _rva_to_file_offset(bytes(data), debug_dir_rva)
+    if debug_dir_file_offset is None:
+        logger.trace(
+            "Unable to map debug directory RVA to file offset, skipping",
+            debug_dir_rva=f"0x{debug_dir_rva:x}",
+        )
+        return
+
+    logger.debug(
+        "Found debug directory",
+        rva=f"0x{debug_dir_rva:x}",
+        file_offset=f"0x{debug_dir_file_offset:x}",
+        size=debug_dir_size,
+    )
+
+    # Calculate number of debug directory entries (each is 28 bytes)
+    num_debug_entries = debug_dir_size // 28
+    logger.debug(f"Debug directory entry count: {num_debug_entries}")
+
+    # Update each debug directory entry's PointerToRawData field
+    # IMAGE_DEBUG_DIRECTORY structure:
+    #   offset 0: Characteristics (4 bytes)
+    #   offset 4: TimeDateStamp (4 bytes)
+    #   offset 8: MajorVersion (2 bytes)
+    #   offset 10: MinorVersion (2 bytes)
+    #   offset 12: Type (4 bytes)
+    #   offset 16: SizeOfData (4 bytes)
+    #   offset 20: AddressOfRawData (4 bytes, RVA)
+    #   offset 24: PointerToRawData (4 bytes, FILE OFFSET) ← THIS NEEDS UPDATE
+
+    updated_count = 0
+    for i in range(num_debug_entries):
+        entry_offset = debug_dir_file_offset + (i * 28)
+
+        # PointerToRawData is at offset 24 within the debug directory entry
+        ptr_raw_data_offset = entry_offset + 24
+
+        if ptr_raw_data_offset + 4 > len(data):
+            logger.trace(
+                f"Debug entry {i} PointerToRawData beyond file bounds",
+                offset=f"0x{ptr_raw_data_offset:x}",
+            )
+            continue
+
+        # Read current PointerToRawData
+        current_ptr = struct.unpack("<I", data[ptr_raw_data_offset : ptr_raw_data_offset + 4])[0]
+
+        # Update if non-zero and >= 0x80 (after DOS stub start)
+        if current_ptr > 0 and current_ptr >= 0x80:
+            new_ptr = current_ptr + padding_size
+            struct.pack_into("<I", data, ptr_raw_data_offset, new_ptr)
+
+            logger.trace(
+                f"Updated debug entry {i} PointerToRawData",
+                old_offset=f"0x{current_ptr:x}",
+                new_offset=f"0x{new_ptr:x}",
+            )
+            updated_count += 1
+
+    if updated_count > 0:
+        logger.debug(f"Updated {updated_count}/{num_debug_entries} debug directory entries")
+
+
 def expand_dos_stub(data: bytes) -> bytes:
     """
     Expand the DOS stub of a PE executable to match Rust/MSVC binary size.
@@ -303,6 +466,9 @@ def expand_dos_stub(data: bytes) -> bytes:
 
     # Update data directories (Certificate Table uses absolute file offsets)
     _update_data_directories(new_data, padding_size)
+
+    # Update debug directory entries (PointerToRawData fields use absolute file offsets)
+    _update_debug_directory(new_data, padding_size)
 
     # Verify the modification
     new_pe_offset = get_pe_header_offset(bytes(new_data))

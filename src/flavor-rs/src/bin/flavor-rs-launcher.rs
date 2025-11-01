@@ -91,7 +91,9 @@ fn run() -> i32 {
                         println!("  --help             Show this help message");
                         println!();
                         println!("CLI Mode:");
-                        println!("  Set FLAVOR_LAUNCHER_CLI=1 to enable CLI mode for package inspection");
+                        println!(
+                            "  Set FLAVOR_LAUNCHER_CLI=1 to enable CLI mode for package inspection"
+                        );
                         println!("  Commands: info, verify, metadata, extract, run, help");
                         println!();
                         println!("  Example: FLAVOR_LAUNCHER_CLI=1 ./mypackage.psp info");
