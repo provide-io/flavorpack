@@ -84,9 +84,12 @@ impl SlotDescriptor {
         bytes[32..40].copy_from_slice(&self.original_size.to_le_bytes());
         bytes[40..48].copy_from_slice(&self.operations.to_le_bytes());
 
-        let checksum_val = self.checksum;  // Copy to avoid packed alignment issues
+        let checksum_val = self.checksum; // Copy to avoid packed alignment issues
         let checksum_bytes = checksum_val.to_le_bytes();
-        trace!("🦀 Packing checksum: value={:016x}, bytes={:02x?}", checksum_val, checksum_bytes);
+        trace!(
+            "🦀 Packing checksum: value={:016x}, bytes={:02x?}",
+            checksum_val, checksum_bytes
+        );
         bytes[48..56].copy_from_slice(&checksum_bytes);
 
         // Pack 8x uint8 fields (8 bytes)

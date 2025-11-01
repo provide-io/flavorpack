@@ -124,6 +124,60 @@ print_test_summary() {
     fi
 }
 
+# Check PE header for Windows compatibility issues
+# This diagnostic helps catch Go launcher DOS stub issues early
+check_pe_header() {
+    local psp_file="$1"
+
+    if [ ! -f "$psp_file" ]; then
+        print_color "$RED" "⚠️  File not found: $psp_file"
+        return 1
+    fi
+
+    # Check if this is a Windows PE executable (starts with "MZ")
+    local mz_header=$(xxd -l 2 -p "$psp_file" 2>/dev/null | tr -d '\n')
+    if [ "$mz_header" != "4d5a" ]; then
+        print_color "$CYAN" "ℹ️  Not a PE executable (Unix binary)"
+        return 0
+    fi
+
+    # Read PE header offset from position 0x3C (little-endian)
+    local pe_offset_raw=$(xxd -s 0x3c -l 4 -p "$psp_file" 2>/dev/null | tr -d '\n')
+
+    # Convert little-endian to decimal: 80000000 -> 0x80 (128)
+    # Extract bytes in reverse order for little-endian
+    local b1="${pe_offset_raw:6:2}"
+    local b2="${pe_offset_raw:4:2}"
+    local b3="${pe_offset_raw:2:2}"
+    local b4="${pe_offset_raw:0:2}"
+    local pe_offset_hex="${b1}${b2}${b3}${b4}"
+    local pe_offset=$((16#$pe_offset_hex))
+
+    # Verify PE signature at that offset
+    local pe_sig=$(xxd -s $pe_offset -l 4 -p "$psp_file" 2>/dev/null | tr -d '\n')
+    if [ "$pe_sig" != "50450000" ]; then
+        print_color "$RED" "⚠️  Invalid PE signature at offset 0x$pe_offset_hex"
+        return 1
+    fi
+
+    print_color "$CYAN" "📍 PE header offset: 0x$pe_offset_hex ($pe_offset bytes)"
+
+    # Check for Go launcher minimal DOS stub issue (0x80 = 128 bytes)
+    if [ $pe_offset -eq 128 ]; then
+        print_color "$YELLOW" "⚠️  WARNING: Minimal DOS stub detected (0x80 bytes)"
+        print_color "$YELLOW" "   This may indicate a Go binary that could fail on Windows"
+        print_color "$YELLOW" "   when PSPF data is appended. Expected DOS stub >= 0xE8 (232 bytes)"
+        return 2  # Return special code for warning (not a failure)
+    elif [ $pe_offset -lt 232 ]; then
+        print_color "$YELLOW" "⚠️  Small DOS stub: 0x$pe_offset_hex ($pe_offset bytes)"
+        print_color "$YELLOW" "   Recommended: >= 0xE8 (232 bytes) for Windows compatibility"
+        return 2
+    else
+        print_color "$GREEN" "✅ Adequate DOS stub size: 0x$pe_offset_hex ($pe_offset bytes)"
+        return 0
+    fi
+}
+
 # Ensure helpers are built
 ensure_helpers_built() {
     local helpers_dir="$1"

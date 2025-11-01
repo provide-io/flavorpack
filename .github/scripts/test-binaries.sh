@@ -53,41 +53,101 @@ test_binary() {
     local binary="$1"
     local mode="$2"
     local binary_name=$(basename "$binary")
-    
+
     local result='{"name": "'$binary_name'", "passed": false}'
-    
+    local checks_passed=true
+    local test_details=""
+
+    # Size sanity check (5MB - 50MB)
+    local size=$(stat -f%z "$binary" 2>/dev/null || stat -c%s "$binary" 2>/dev/null || echo "0")
+    if [ "$size" -lt 5000000 ]; then
+        echo "    ⚠️  Binary too small: $size bytes (expected >5MB)"
+        test_details="${test_details}, \"size_warning\": \"too_small\""
+        checks_passed=false
+    elif [ "$size" -gt 50000000 ]; then
+        echo "    ⚠️  Binary too large: $size bytes (expected <50MB)"
+        test_details="${test_details}, \"size_warning\": \"too_large\""
+        checks_passed=false
+    fi
+    test_details="${test_details}, \"size_bytes\": $size"
+
     case "$mode" in
         native)
-            # Try to execute the binary
+            # Test 1: Execute --version
             if output=$("$binary" --version 2>&1); then
                 # Clean output for JSON
                 output=$(echo "$output" | head -1 | sed 's/["\]//g' | tr '\n' ' ')
-                result='{"name": "'$binary_name'", "passed": true, "test_type": "native", "version": "'$output'"}'
+                test_details="${test_details}, \"version\": \"$output\""
             else
-                result='{"name": "'$binary_name'", "passed": false, "test_type": "native", "error": "Execution failed"}'
+                echo "    ❌ Version check failed"
+                test_details="${test_details}, \"version_error\": \"Execution failed\""
+                checks_passed=false
+            fi
+
+            # Test 2: Execute --help
+            if "$binary" --help >/dev/null 2>&1; then
+                echo "    ✅ Help text accessible"
+                test_details="${test_details}, \"help_check\": \"passed\""
+            else
+                echo "    ⚠️  Help text not accessible"
+                test_details="${test_details}, \"help_check\": \"failed\""
+            fi
+
+            # Test 3: Launcher CLI mode test (for launcher binaries only)
+            if [[ "$binary_name" == *"launcher"* ]]; then
+                # Test that launcher responds to --flavor-cli flag
+                if "$binary" --flavor-cli --version >/dev/null 2>&1; then
+                    echo "    ✅ Launcher CLI mode working"
+                    test_details="${test_details}, \"cli_mode\": \"passed\""
+                else
+                    echo "    ⚠️  Launcher CLI mode not working"
+                    test_details="${test_details}, \"cli_mode\": \"failed\""
+                fi
+            fi
+
+            if [ "$checks_passed" = true ]; then
+                result='{"name": "'$binary_name'", "passed": true, "test_type": "native"'$test_details'}'
+            else
+                result='{"name": "'$binary_name'", "passed": false, "test_type": "native"'$test_details'}'
             fi
             ;;
-            
+
         format-only|*)
             # Check binary format
             if command -v file >/dev/null 2>&1; then
                 file_info=$(file "$binary" 2>&1)
                 if echo "$file_info" | grep -qE "executable|ELF|Mach-O|PE32"; then
-                    result='{"name": "'$binary_name'", "passed": true, "test_type": "format", "info": "Valid binary format"}'
+                    test_details="${test_details}, \"format\": \"valid\""
+
+                    # For Windows binaries, also capture PE format details
+                    if [[ "$PLATFORM" == "windows_"* ]] && echo "$file_info" | grep -q "PE32"; then
+                        echo "    ✅ Valid PE32 executable"
+                        test_details="${test_details}, \"pe_format\": \"PE32\""
+                    fi
                 else
-                    result='{"name": "'$binary_name'", "passed": false, "test_type": "format", "error": "Invalid format"}'
+                    echo "    ❌ Invalid binary format"
+                    test_details="${test_details}, \"error\": \"Invalid format\""
+                    checks_passed=false
                 fi
             else
                 # Fallback: check if executable
                 if [ -x "$binary" ]; then
-                    result='{"name": "'$binary_name'", "passed": true, "test_type": "format", "info": "Executable"}'
+                    test_details="${test_details}, \"format\": \"executable\""
                 else
-                    result='{"name": "'$binary_name'", "passed": false, "test_type": "format", "error": "Not executable"}'
+                    echo "    ❌ Not executable"
+                    test_details="${test_details}, \"error\": \"Not executable\""
+                    checks_passed=false
                 fi
+            fi
+
+            if [ "$checks_passed" = true ]; then
+                result='{"name": "'$binary_name'", "passed": true, "test_type": "format"'$test_details'}'
+            else
+                result='{"name": "'$binary_name'", "passed": false, "test_type": "format"'$test_details'}'
             fi
             ;;
     esac
-    
+
     echo "$result"
 }
 

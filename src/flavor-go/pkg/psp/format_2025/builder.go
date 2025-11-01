@@ -139,6 +139,14 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 	}
 	logger.Debug("✅ Launcher loaded", "size", len(launcherData))
 
+	// Process launcher for Windows PE compatibility if needed
+	launcherData, err = ProcessLauncherForPSPF(launcherData, logger)
+	if err != nil {
+		logger.Error("❌ Failed to process launcher for PSPF", "error", err)
+		os.Exit(1)
+	}
+	logger.Debug("✅ Launcher processed for PSPF", "size", len(launcherData))
+
 	// 📁 Create output directory if it doesn't exist
 	outputDir := filepath.Dir(outputPath)
 	logger.Debug("📁 Ensuring output directory exists", "dir", outputDir)

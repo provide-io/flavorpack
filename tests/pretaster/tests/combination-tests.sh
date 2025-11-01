@@ -72,7 +72,34 @@ test_combination() {
         echo "$emoji   ❌ Build failed with exit code $exit_code!" | tee -a "$log_file"
         return 1
     fi
-    
+
+    # Validate PE header on Windows before testing
+    if [[ "$OS" == "windows" ]]; then
+        echo "$emoji" | tee -a "$log_file"
+        echo "$emoji   🔍 Validating PE header..." | tee -a "$log_file"
+        if command -v xxd >/dev/null 2>&1; then
+            # Check for MZ signature (PE magic number: 0x4D 0x5A)
+            magic=$(xxd -l 2 -p "$output" 2>/dev/null | tr -d '\n')
+            if [[ "$magic" == "4d5a" ]]; then
+                echo "$emoji   ✅ Valid MZ signature (PE executable)" | tee -a "$log_file"
+                # Show PE offset (at 0x3C) - stored as little-endian DWORD
+                pe_offset_raw=$(xxd -s 0x3c -l 4 -p "$output" 2>/dev/null | tr -d '\n')
+                # Convert little-endian to big-endian for display: f0000000 -> 000000f0
+                pe_offset=$(echo "$pe_offset_raw" | sed 's/\(..\)\(..\)\(..\)\(..\)/\4\3\2\1/')
+                echo "$emoji   📍 PE header offset: 0x$pe_offset (raw bytes: $pe_offset_raw)" | tee -a "$log_file"
+            else
+                echo "$emoji   ⚠️  WARNING: Invalid PE header (expected 4d5a, got $magic)" | tee -a "$log_file"
+            fi
+        else
+            echo "$emoji   ⚠️  xxd not available for PE validation" | tee -a "$log_file"
+        fi
+        # Show file info
+        if command -v file >/dev/null 2>&1; then
+            file_info=$(file "$output" 2>/dev/null)
+            echo "$emoji   📄 File type: $file_info" | tee -a "$log_file"
+        fi
+    fi
+
     # Run test commands
     local commands=(
         "info:Testing 'info' command"
@@ -112,7 +139,44 @@ test_combination() {
         if [ $test_exit_code -eq 0 ]; then
             echo "$emoji   ✅ $cmd test passed" | tee -a "$log_file"
         else
-            echo "$emoji   ❌ $cmd test failed" | tee -a "$log_file"
+            echo "$emoji   ❌ $cmd test failed (exit code: $test_exit_code)" | tee -a "$log_file"
+
+            # Provide Windows-specific diagnostics for exit code 2
+            if [ $test_exit_code -eq 2 ] && [[ "$OS" == "windows" ]]; then
+                echo "$emoji" | tee -a "$log_file"
+                echo "$emoji   🔍 DIAGNOSTIC: Exit code 2 on Windows indicates:" | tee -a "$log_file"
+                echo "$emoji      • Windows PE loader rejected the binary" | tee -a "$log_file"
+                echo "$emoji      • This occurs BEFORE the launcher code executes" | tee -a "$log_file"
+                echo "$emoji      • Common causes:" | tee -a "$log_file"
+                echo "$emoji        - Invalid PE header structure" | tee -a "$log_file"
+                echo "$emoji        - Architecture mismatch (ARM64 vs AMD64)" | tee -a "$log_file"
+                echo "$emoji        - Missing DLL dependencies" | tee -a "$log_file"
+                echo "$emoji        - Corrupted executable when embedded" | tee -a "$log_file"
+                echo "$emoji" | tee -a "$log_file"
+
+                # Collect diagnostic artifacts
+                if command -v xxd >/dev/null 2>&1; then
+                    mkdir -p failure-diagnostics/
+                    local diag_base="failure-diagnostics/$(basename "$output" .psp)-$cmd"
+
+                    echo "$emoji   📦 Collecting diagnostic artifacts..." | tee -a "$log_file"
+
+                    # Copy the failed PSP file
+                    cp "$output" "${diag_base}.psp" 2>/dev/null
+
+                    # Hex dump of first 1KB (PE header region)
+                    echo "$emoji      • Hex dump: ${diag_base}.hex" | tee -a "$log_file"
+                    xxd "$output" 2>/dev/null | head -64 > "${diag_base}.hex"
+
+                    # File type info
+                    if command -v file >/dev/null 2>&1; then
+                        echo "$emoji      • File info: ${diag_base}.file.txt" | tee -a "$log_file"
+                        file "$output" > "${diag_base}.file.txt" 2>&1
+                    fi
+
+                    echo "$emoji   ✅ Diagnostics saved to: failure-diagnostics/" | tee -a "$log_file"
+                fi
+            fi
         fi
 
         echo "$emoji" | tee -a "$log_file"

@@ -19,6 +19,7 @@ pub mod metadata;
 pub mod operations;
 pub mod packaging;
 pub mod paths;
+pub mod pe_utils;
 pub mod reader;
 pub mod runtime;
 pub mod slots;

@@ -1,0 +1,320 @@
+//
+// SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
+//
+
+//! Windows PE Executable Utilities
+//!
+//! Provides utilities for manipulating Windows PE (Portable Executable) files
+//! to ensure compatibility with PSPF format when data is appended after the executable.
+
+use anyhow::{Context, Result};
+use log::{debug, info, trace, warn};
+
+/// Target DOS stub size to match Rust MSVC binaries (240 bytes / 0xF0)
+const TARGET_DOS_STUB_SIZE: usize = 0xF0;
+
+/// Check if data starts with a valid Windows PE executable header.
+///
+/// # Arguments
+/// * `data` - Binary data to check
+///
+/// # Returns
+/// `true` if data starts with "MZ" signature (PE executable)
+pub fn is_pe_executable(data: &[u8]) -> bool {
+    data.len() >= 2 && data[0] == b'M' && data[1] == b'Z'
+}
+
+/// Read the PE header offset from the DOS header.
+///
+/// The offset is stored at position 0x3C (e_lfanew field) as a 4-byte
+/// little-endian integer.
+///
+/// # Arguments
+/// * `data` - PE executable data
+///
+/// # Returns
+/// PE header offset, or None if invalid
+pub fn get_pe_header_offset(data: &[u8]) -> Option<usize> {
+    if data.len() < 0x40 {
+        return None;
+    }
+
+    // Read e_lfanew field at offset 0x3C (little-endian u32)
+    let pe_offset = u32::from_le_bytes([data[0x3C], data[0x3D], data[0x3E], data[0x3F]]) as usize;
+
+    // Validate PE signature at that offset
+    if data.len() < pe_offset + 4 {
+        return None;
+    }
+
+    let pe_signature = &data[pe_offset..pe_offset + 4];
+    if pe_signature != b"PE\x00\x00" {
+        warn!(
+            "Invalid PE signature at offset 0x{:x}: expected 'PE\\x00\\x00', got {:?}",
+            pe_offset,
+            String::from_utf8_lossy(pe_signature)
+        );
+        return None;
+    }
+
+    Some(pe_offset)
+}
+
+/// Check if a PE executable needs DOS stub expansion.
+///
+/// Go binaries use minimal DOS stub (128 bytes / 0x80) which is incompatible
+/// with Windows PE loader when PSPF data is appended. This function detects
+/// such binaries.
+///
+/// # Arguments
+/// * `data` - PE executable data
+///
+/// # Returns
+/// `true` if DOS stub needs expansion (Go binary with 0x80 stub)
+pub fn needs_dos_stub_expansion(data: &[u8]) -> bool {
+    if !is_pe_executable(data) {
+        return false;
+    }
+
+    let pe_offset = match get_pe_header_offset(data) {
+        Some(offset) => offset,
+        None => return false,
+    };
+
+    // Check if this is a Go binary with minimal DOS stub (0x80 = 128 bytes)
+    // Rust/MSVC binaries typically use 0xE8-0xF0 (232-240 bytes)
+    if pe_offset == 0x80 {
+        debug!(
+            "Detected Go binary with minimal DOS stub: pe_offset=0x{:x} ({} bytes)",
+            pe_offset, pe_offset
+        );
+        return true;
+    }
+
+    trace!(
+        "PE binary has adequate DOS stub size: pe_offset=0x{:x} ({} bytes)",
+        pe_offset, pe_offset
+    );
+    false
+}
+
+/// Update section PointerToRawData values after DOS stub expansion.
+///
+/// When expanding the DOS stub, all content after the DOS stub shifts forward
+/// by padding_size bytes. This includes all section data. The section table
+/// contains PointerToRawData fields (absolute file offsets) that must be
+/// updated to point to the new section locations.
+///
+/// # Arguments
+/// * `data` - PE executable data (modified in-place)
+/// * `padding_size` - Number of bytes added to DOS stub
+///
+/// # Returns
+/// Result indicating success or failure
+fn update_section_offsets(data: &mut [u8], padding_size: usize) -> Result<()> {
+    // Get PE header location
+    let pe_offset = u32::from_le_bytes([data[0x3C], data[0x3D], data[0x3E], data[0x3F]]) as usize;
+    let coff_offset = pe_offset + 4;
+
+    // Read number of sections
+    let num_sections = u16::from_le_bytes([data[coff_offset + 2], data[coff_offset + 3]]) as usize;
+
+    // Read optional header size
+    let opt_hdr_size =
+        u16::from_le_bytes([data[coff_offset + 16], data[coff_offset + 17]]) as usize;
+
+    // Section table offset
+    let section_table_offset = coff_offset + 20 + opt_hdr_size;
+
+    debug!(
+        "Updating {} section offset(s), padding_size=0x{:x}",
+        num_sections, padding_size
+    );
+
+    // Update each section's PointerToRawData
+    let mut updated = 0;
+    for i in 0..num_sections {
+        let section_offset = section_table_offset + (i * 40);
+        let ptr_offset = section_offset + 20;
+
+        // Read current PointerToRawData
+        let current_ptr = u32::from_le_bytes([
+            data[ptr_offset],
+            data[ptr_offset + 1],
+            data[ptr_offset + 2],
+            data[ptr_offset + 3],
+        ]);
+
+        // Update if non-zero
+        if current_ptr > 0 {
+            let new_ptr = current_ptr + padding_size as u32;
+            let new_bytes = new_ptr.to_le_bytes();
+            data[ptr_offset..ptr_offset + 4].copy_from_slice(&new_bytes);
+
+            trace!(
+                "Updated section {} offset: 0x{:x} -> 0x{:x}",
+                i, current_ptr, new_ptr
+            );
+            updated += 1;
+        }
+    }
+
+    debug!("Updated {}/{} section offset(s)", updated, num_sections);
+    Ok(())
+}
+
+/// Expand the DOS stub of a PE executable to match Rust/MSVC binary size.
+///
+/// This fixes Windows PE loader rejection of Go binaries when PSPF data
+/// is appended. The DOS stub is expanded from 128 bytes (0x80) to 240 bytes
+/// (0xF0) to match Rust binaries.
+///
+/// Process:
+/// 1. Extract MZ header and DOS stub (first 64 bytes + stub code)
+/// 2. Extract PE header and remainder
+/// 3. Insert padding to expand stub to target size
+/// 4. Update e_lfanew pointer to new PE offset
+///
+/// # Arguments
+/// * `data` - Original PE executable data
+///
+/// # Returns
+/// Modified PE executable with expanded DOS stub
+///
+/// # Errors
+/// Returns error if data is not a valid PE executable
+pub fn expand_dos_stub(data: Vec<u8>) -> Result<Vec<u8>> {
+    if !is_pe_executable(&data) {
+        anyhow::bail!("Data is not a Windows PE executable");
+    }
+
+    let current_pe_offset = get_pe_header_offset(&data).context("Invalid PE header offset")?;
+
+    if current_pe_offset >= TARGET_DOS_STUB_SIZE {
+        debug!(
+            "DOS stub already adequate size: current=0x{:x}, target=0x{:x}",
+            current_pe_offset, TARGET_DOS_STUB_SIZE
+        );
+        return Ok(data);
+    }
+
+    // Calculate padding needed
+    let padding_size = TARGET_DOS_STUB_SIZE - current_pe_offset;
+
+    info!(
+        "Expanding DOS stub for Windows compatibility: current_pe_offset=0x{:x}, target_pe_offset=0x{:x}, padding_bytes={}",
+        current_pe_offset, TARGET_DOS_STUB_SIZE, padding_size
+    );
+
+    // Build new executable:
+    // 1. MZ header + DOS stub (up to current PE offset)
+    // 2. Padding (zeros to expand stub)
+    // 3. PE header and remainder
+    let mut new_data = Vec::with_capacity(data.len() + padding_size);
+    new_data.extend_from_slice(&data[..current_pe_offset]);
+    new_data.extend(vec![0u8; padding_size]);
+    new_data.extend_from_slice(&data[current_pe_offset..]);
+
+    // Update e_lfanew pointer at offset 0x3C to point to new PE header location
+    let target_bytes = (TARGET_DOS_STUB_SIZE as u32).to_le_bytes();
+    new_data[0x3C..0x40].copy_from_slice(&target_bytes);
+
+    // CRITICAL: Update all section PointerToRawData values
+    // When we shift the file content forward, section data moves but the section
+    // table entries still point to old offsets. We must update them.
+    update_section_offsets(&mut new_data, padding_size)?;
+
+    // Verify the modification
+    let new_pe_offset =
+        get_pe_header_offset(&new_data).context("Failed to read PE offset after modification")?;
+
+    if new_pe_offset != TARGET_DOS_STUB_SIZE {
+        anyhow::bail!(
+            "Failed to update PE offset: expected 0x{:x}, got 0x{:x}",
+            TARGET_DOS_STUB_SIZE,
+            new_pe_offset
+        );
+    }
+
+    debug!(
+        "DOS stub expansion complete: original_size={}, new_size={}, bytes_added={}, new_pe_offset=0x{:x}",
+        data.len(),
+        new_data.len(),
+        padding_size,
+        new_pe_offset
+    );
+
+    Ok(new_data)
+}
+
+/// Process launcher binary for PSPF embedding compatibility.
+///
+/// This is the main entry point for PE manipulation. It detects Go binaries
+/// with minimal DOS stubs and expands them to match Rust binaries for
+/// Windows compatibility.
+///
+/// # Arguments
+/// * `launcher_data` - Original launcher binary
+///
+/// # Returns
+/// Processed launcher binary (expanded if needed, unchanged otherwise)
+pub fn process_launcher_for_pspf(launcher_data: Vec<u8>) -> Result<Vec<u8>> {
+    if !is_pe_executable(&launcher_data) {
+        // Not a Windows PE executable, return unchanged (Unix binary)
+        trace!("Launcher is not a PE executable, no processing needed");
+        return Ok(launcher_data);
+    }
+
+    if !needs_dos_stub_expansion(&launcher_data) {
+        // PE executable with adequate DOS stub (Rust/MSVC binary)
+        trace!("PE launcher has adequate DOS stub, no processing needed");
+        return Ok(launcher_data);
+    }
+
+    // Go binary with minimal DOS stub - needs expansion
+    info!("Processing Go launcher for Windows PSPF compatibility");
+    expand_dos_stub(launcher_data)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_is_pe_executable() {
+        let pe_data = b"MZ\x90\x00";
+        assert!(is_pe_executable(pe_data));
+
+        let elf_data = b"\x7fELF";
+        assert!(!is_pe_executable(elf_data));
+
+        let short_data = b"M";
+        assert!(!is_pe_executable(short_data));
+    }
+
+    #[test]
+    fn test_needs_dos_stub_expansion() {
+        // Create minimal PE with DOS stub at 0x80
+        let mut go_binary = vec![0u8; 256];
+        go_binary[0] = b'M';
+        go_binary[1] = b'Z';
+        // Set e_lfanew to 0x80
+        go_binary[0x3C..0x40].copy_from_slice(&0x80u32.to_le_bytes());
+        // Add PE signature at 0x80
+        go_binary[0x80..0x84].copy_from_slice(b"PE\x00\x00");
+
+        assert!(needs_dos_stub_expansion(&go_binary));
+
+        // Create PE with adequate DOS stub at 0xF0
+        let mut rust_binary = vec![0u8; 512];
+        rust_binary[0] = b'M';
+        rust_binary[1] = b'Z';
+        // Set e_lfanew to 0xF0
+        rust_binary[0x3C..0x40].copy_from_slice(&0xF0u32.to_le_bytes());
+        // Add PE signature at 0xF0
+        rust_binary[0xF0..0xF4].copy_from_slice(b"PE\x00\x00");
+
+        assert!(!needs_dos_stub_expansion(&rust_binary));
+    }
+}
