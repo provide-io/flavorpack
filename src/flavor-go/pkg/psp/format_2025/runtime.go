@@ -3,6 +3,7 @@ package format_2025
 import (
 	"fmt"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/hashicorp/go-hclog"
@@ -14,6 +15,39 @@ func processRuntimeEnv(env []string, runtimeEnv map[string]interface{}, logger h
 		parts := strings.SplitN(e, "=", 2)
 		if len(parts) == 2 {
 			envMap[parts[0]] = parts[1]
+		}
+	}
+
+	// On Windows, automatically add critical system variables to pass list
+	// These are required for Python and other programs to initialize properly
+	if runtime.GOOS == "windows" {
+		windowsCriticalVars := []string{"SYSTEMROOT", "WINDIR", "TEMP", "TMP", "PATHEXT", "COMSPEC"}
+
+		if passList, ok := runtimeEnv["pass"].([]interface{}); ok {
+			// Create a set of existing pass patterns for deduplication
+			existingPatterns := make(map[string]bool)
+			for _, pattern := range passList {
+				if patternStr, ok := pattern.(string); ok {
+					existingPatterns[patternStr] = true
+				}
+			}
+
+			// Add missing critical vars
+			for _, criticalVar := range windowsCriticalVars {
+				if !existingPatterns[criticalVar] {
+					logger.Debug("💻 Auto-adding Windows critical variable", "var", criticalVar)
+					passList = append(passList, criticalVar)
+				}
+			}
+			runtimeEnv["pass"] = passList
+		} else {
+			// No pass list exists, create one with critical vars
+			logger.Debug("💻 Creating pass list with Windows critical variables")
+			passListInterface := make([]interface{}, len(windowsCriticalVars))
+			for i, v := range windowsCriticalVars {
+				passListInterface[i] = v
+			}
+			runtimeEnv["pass"] = passListInterface
 		}
 	}
 

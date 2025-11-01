@@ -246,7 +246,9 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 				cmdType, _ := cmd["type"].(string)
 				command, _ := cmd["command"].(string)
 
-				command = strings.ReplaceAll(command, "{workenv}", workenvDir)
+				// Normalize workenv path for cross-platform compatibility
+				normalizedWorkenv := filepath.ToSlash(workenvDir)
+				command = strings.ReplaceAll(command, "{workenv}", normalizedWorkenv)
 				command = strings.ReplaceAll(command, "{package_name}", metadata.Package.Name)
 				command = strings.ReplaceAll(command, "{version}", metadata.Package.Version)
 
@@ -255,7 +257,9 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 						path, _ := enumerate["path"].(string)
 						pattern, _ := enumerate["pattern"].(string)
 
-						path = strings.ReplaceAll(path, "{workenv}", workenvDir)
+						// Normalize workenv path for cross-platform compatibility
+						normalizedWorkenv := filepath.ToSlash(workenvDir)
+						path = strings.ReplaceAll(path, "{workenv}", normalizedWorkenv)
 
 						matches, err := filepath.Glob(filepath.Join(path, pattern))
 						if err != nil {
@@ -274,11 +278,13 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 					path, _ := cmd["path"].(string)
 					content, _ := cmd["content"].(string)
 
-					path = strings.ReplaceAll(path, "{workenv}", workenvDir)
+					// Normalize workenv path for cross-platform compatibility
+					normalizedWorkenv := filepath.ToSlash(workenvDir)
+					path = strings.ReplaceAll(path, "{workenv}", normalizedWorkenv)
 					path = strings.ReplaceAll(path, "{package_name}", metadata.Package.Name)
 					path = strings.ReplaceAll(path, "{version}", metadata.Package.Version)
 
-					content = strings.ReplaceAll(content, "{workenv}", workenvDir)
+					content = strings.ReplaceAll(content, "{workenv}", normalizedWorkenv)
 					content = strings.ReplaceAll(content, "{package_name}", metadata.Package.Name)
 					content = strings.ReplaceAll(content, "{version}", metadata.Package.Version)
 
@@ -303,14 +309,18 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 
 			if cmdToRun != "" {
 				if len(cmdArgs) == 0 {
-					cmdToRun = strings.ReplaceAll(cmdToRun, "{workenv}", workenvDir)
+					// Normalize workenv path for cross-platform compatibility
+					normalizedWorkenv := filepath.ToSlash(workenvDir)
+					cmdToRun = strings.ReplaceAll(cmdToRun, "{workenv}", normalizedWorkenv)
 					cmdToRun = strings.ReplaceAll(cmdToRun, "{package_name}", metadata.Package.Name)
 					cmdToRun = strings.ReplaceAll(cmdToRun, "{version}", metadata.Package.Version)
 				}
 
 				var setupExec *exec.Cmd
 				if len(cmdArgs) > 0 {
-					setupExec = exec.Command(cmdToRun, cmdArgs...)
+					// Resolve executable for cross-platform compatibility
+					resolvedCmd := resolveExecutable(cmdToRun, logger)
+					setupExec = exec.Command(resolvedCmd, cmdArgs...)
 				} else {
 					// Use shell-aware parser to handle quoted arguments
 					parts, err := shellparse.Split(cmdToRun)
@@ -321,7 +331,9 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 					if len(parts) == 0 {
 						continue
 					}
-					setupExec = exec.Command(parts[0], parts[1:]...)
+					// Resolve executable for cross-platform compatibility
+					resolvedExec := resolveExecutable(parts[0], logger)
+					setupExec = exec.Command(resolvedExec, parts[1:]...)
 				}
 
 				setupExec.Dir = userCwd
@@ -357,9 +369,14 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 	command := metadata.Execution.Command
 	for idx, path := range slotPaths {
 		placeholder := fmt.Sprintf("{slot:%d}", idx)
-		command = strings.ReplaceAll(command, placeholder, path)
+		// Normalize paths to forward slashes for shell parsing compatibility
+		normalizedPath := filepath.ToSlash(path)
+		command = strings.ReplaceAll(command, placeholder, normalizedPath)
 	}
-	command = strings.ReplaceAll(command, "{workenv}", workenvDir)
+	// Normalize workenv path to forward slashes for cross-platform compatibility
+	// Windows accepts both forward and backslashes, but shell parsers expect forward slashes
+	normalizedWorkenv := filepath.ToSlash(workenvDir)
+	command = strings.ReplaceAll(command, "{workenv}", normalizedWorkenv)
 	command = strings.ReplaceAll(command, "{package_name}", metadata.Package.Name)
 	command = strings.ReplaceAll(command, "{version}", metadata.Package.Version)
 
@@ -389,7 +406,9 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 		cmdArgs = append(cmdArgs, args...)
 	}
 
-	cmd := exec.Command(parts[0], cmdArgs...)
+	// Resolve executable for cross-platform compatibility
+	resolvedExec := resolveExecutable(parts[0], logger)
+	cmd := exec.Command(resolvedExec, cmdArgs...)
 
 	originalCmd := os.Args[0]
 	binaryName := filepath.Base(originalCmd)
