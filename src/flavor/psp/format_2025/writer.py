@@ -45,6 +45,7 @@ from flavor.psp.format_2025.metadata.assembly import (
     extract_launcher_version,
     load_launcher_binary,
 )
+from flavor.psp.format_2025.pe_utils import process_launcher_for_pspf
 from flavor.psp.format_2025.slots import SlotDescriptor
 from flavor.psp.format_2025.spec import BuildSpec, PreparedSlot
 
@@ -76,8 +77,12 @@ def write_package(
 
     # Load launcher
     launcher_data = _load_launcher(spec)
+
+    # Process launcher for Windows PE compatibility if needed
+    launcher_data = process_launcher_for_pspf(launcher_data)
+
     launcher_size = len(launcher_data)
-    logger.trace("🚀📏📋 Launcher loaded", size=launcher_size)
+    logger.trace("🚀📏📋 Launcher loaded and processed", size=launcher_size)
 
     # Create launcher info for metadata
     launcher_info = _create_launcher_info(launcher_data)

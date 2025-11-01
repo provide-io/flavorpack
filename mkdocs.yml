@@ -1,3 +1,7 @@
+# Inherit shared configuration from provide-foundry
+INHERIT: ../provide-foundry/base-mkdocs.yml
+
+# Project-Specific Configuration
 site_name: FlavorPack Documentation
 site_description: Progressive Secure Package Format (PSPF/2025) - Cross-language packaging system for self-contained executables
 site_author: provide.io
@@ -5,179 +9,37 @@ site_url: https://foundry.provide.io/flavorpack/
 repo_url: https://github.com/provide-io/flavorpack
 repo_name: provide-io/flavorpack
 edit_uri: edit/main/docs/
+copyright: Copyright &copy; 2024-2025 provide.io
 
 # Development server configuration
 dev_addr: '127.0.0.1:8007'
-copyright: Copyright &copy; 2024-2025 provide.io
 
 # Standalone mode settings
 docs_dir: docs
 
+# Project-specific theme overrides
 theme:
-  name: material
-  language: en
   logo: assets/images/logo.svg
   favicon: assets/images/logo.svg
 
-  palette:
-    # Light mode
-    - media: "(prefers-color-scheme: light)"
-      scheme: default
-      primary: indigo
-      accent: indigo
-      toggle:
-        icon: material/brightness-7
-        name: Switch to dark mode
-
-    # Dark mode
-    - media: "(prefers-color-scheme: dark)"
-      scheme: slate
-      primary: indigo
-      accent: indigo
-      toggle:
-        icon: material/brightness-4
-        name: Switch to light mode
-
-  font:
-    text: Roboto
-    code: Roboto Mono
-  
-  features:
-    # Navigation
-    - navigation.instant
-    - navigation.instant.prefetch
-    - navigation.instant.progress
-    - navigation.tracking
-    - navigation.tabs
-    - navigation.tabs.sticky
-    - navigation.sections
-    - navigation.expand
-    - navigation.path
-    - navigation.indexes
-    - navigation.top
-    - navigation.footer
-    
-    # Table of contents
-    - toc.follow
-    - toc.integrate
-    
-    # Search
-    - search.suggest
-    - search.highlight
-    - search.share
-    
-    # Content
-    - content.code.copy
-    - content.code.select
-    - content.code.annotate
-    - content.tabs.link
-    - content.tooltips
-    - content.action.edit
-    - content.action.view
-    
-    # Header
-    - header.autohide
-    
-    # Announce
-    - announce.dismiss
-
+# Project-specific plugins (in addition to base plugins)
 plugins:
-  - search:
-      separator: '[\s\u200b\-_,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
-      lang:
-        - en
-  
-  - autorefs
-
-  - macros:
-      include_dir: docs/.shared-theme/data
-
-  - mkdocstrings:
-      enabled: true
-      default_handler: python
-      handlers:
-        python:
-          options:
-            show_source: true
-            show_root_heading: true
-            show_root_toc_entry: true
-            show_category_heading: true
-            heading_level: 2
-            members_order: source
-            docstring_style: google
-            docstring_section_style: table
-            merge_init_into_class: true
-            show_signature_annotations: true
-            separate_signature: true
-
-  # gen-files disabled - not needed for manual API pages
-  # - gen-files:
-  #     scripts:
-  #       - docs/gen_ref_pages.py
-
+  - gen-files:
+      scripts:
+        - ../provide-foundry/scripts/gen_ref_pages.py
   - literate-nav:
       nav_file: SUMMARY.md
-
   - section-index
-  
 
+# Project-specific markdown extensions
 markdown_extensions:
-  # Python Markdown
-  - abbr
-  - admonition
-  - attr_list
-  - def_list
-  - footnotes
-  - md_in_html
-  - toc:
-      permalink: true
-      toc_depth: 3
-  - tables
-  - meta
-  
-  # Python Markdown Extensions
-  - pymdownx.arithmatex:
-      generic: true
-  - pymdownx.betterem:
-      smart_enable: all
-  - pymdownx.caret
-  - pymdownx.mark
-  - pymdownx.tilde
-  - pymdownx.details
-  - pymdownx.emoji:
-      emoji_index: !!python/name:material.extensions.emoji.twemoji
-      emoji_generator: !!python/name:material.extensions.emoji.to_svg
-  - pymdownx.highlight:
-      anchor_linenums: true
-      line_spans: __span
-      pygments_lang_class: true
-      use_pygments: true
-      auto_title: true
-      linenums: true
-  - pymdownx.inlinehilite
-  - pymdownx.keys
-  - pymdownx.smartsymbols
-  - pymdownx.snippets:
-      check_paths: true
-      base_path: docs
-  - pymdownx.superfences:
-      custom_fences:
-        - name: mermaid
-          class: mermaid
-          format: !!python/name:pymdownx.superfences.fence_code_format
-  - pymdownx.tabbed:
-      alternate_style: true
-      combine_header_slug: true
-  - pymdownx.tasklist:
-      custom_checkbox: true
-  - pymdownx.critic:
-      mode: view
   - pymdownx.magiclink:
       normalize_issue_symbols: true
       repo_url_shorthand: true
       user: provide-io
       repo: flavorpack
 
+# Project-specific extra configuration
 extra:
   version:
     provider: mike
@@ -194,17 +56,6 @@ extra:
   # Announcement bar
   announcement:
     text: "📦 FlavorPack documentation has been modernized with comprehensive cookbook examples and professional theming!"
-
-extra_css:
-  - .shared-theme/stylesheets/provide-theme.css
-  - .shared-theme/stylesheets/termynal.css
-  - stylesheets/extra.css  # Project-specific overrides
-
-extra_javascript:
-  - https://unpkg.com/mermaid@10/dist/mermaid.min.js
-  - .shared-theme/javascripts/mermaid-init.js
-  - .shared-theme/javascripts/termynal.js
-  - .shared-theme/javascripts/custom.js
 
 nav:
   - Home: index.md

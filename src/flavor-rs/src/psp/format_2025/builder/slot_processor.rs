@@ -219,8 +219,8 @@ impl SlotProcessor {
         // Calculate SHA-256 checksum
         let checksum_timer = Instant::now();
         let mut reader = BufReader::with_capacity(8 * 1024 * 1024, slot_file);
-        let sha256_checksum_str =
-            calculate_checksum(&mut reader, ChecksumAlgorithm::Sha256).map_err(|e| {
+        let sha256_checksum_str = calculate_checksum(&mut reader, ChecksumAlgorithm::Sha256)
+            .map_err(|e| {
                 FlavorError::Generic(format!(
                     "Failed to calculate SHA256 for slot {}: {}",
                     index, e
@@ -232,7 +232,10 @@ impl SlotProcessor {
             .strip_prefix("sha256:")
             .and_then(|hex_str| hex::decode(hex_str).ok())
             .ok_or_else(|| {
-                FlavorError::Generic(format!("Invalid SHA256 checksum format: {}", sha256_checksum_str))
+                FlavorError::Generic(format!(
+                    "Invalid SHA256 checksum format: {}",
+                    sha256_checksum_str
+                ))
             })?;
 
         // Take first 8 bytes of SHA-256 and convert to little-endian u64
@@ -244,7 +247,10 @@ impl SlotProcessor {
 
         trace!("☑️ Checksums calculated in {:?}", checksum_timer.elapsed());
         info!("Slot {}: SHA256 checksum: {}", index, sha256_checksum_str);
-        debug!("Slot {}: SHA256 u64 (first 8 bytes): {:016x}", index, sha256_u64);
+        debug!(
+            "Slot {}: SHA256 u64 (first 8 bytes): {:016x}",
+            index, sha256_u64
+        );
 
         Ok((file_size, sha256_checksum_str, sha256_u64))
     }
