@@ -196,3 +196,4 @@ uv run pytest -m security
 - "import annotations" is okay so I can use the unquoted types.
 - After writing each Python file, run the code quality tools - ruff check --fix --unsafe-fixes, ty check, mypy, ruff format, then run each of the tools again. this way CQ is performed during the dev process.%
 - no print ever for debug. use the debug logger.
+- When you want the CI pipeline to work, you must manually start the Helper Prep action.

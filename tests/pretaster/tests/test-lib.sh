@@ -76,8 +76,14 @@ test_taster_command() {
     local command="$2"
     shift 2
     local args="$@"
-    
-    FLAVOR_LOG_LEVEL=error "$psp_file" "$command" $args
+
+    # Use debug logging on Windows to troubleshoot issues
+    local log_level="error"
+    if [[ "$(uname -s)" == MINGW* ]] || [[ "$(uname -s)" == MSYS* ]] || [[ "$(uname -s)" == CYGWIN* ]]; then
+        log_level="debug"
+    fi
+
+    FLAVOR_LOG_LEVEL=$log_level "$psp_file" "$command" $args
 }
 
 # Test with expected exit code
