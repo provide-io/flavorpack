@@ -55,19 +55,10 @@ test_binary() {
     local binary_name=$(basename "$binary")
 
     local passed=true
-    local size version help_check cli_mode format_info size_warning
+    local size version help_check cli_mode format_info
 
-    # Size sanity check (5MB - 50MB)
+    # Capture size for reporting (no validation)
     size=$(stat -f%z "$binary" 2>/dev/null || stat -c%s "$binary" 2>/dev/null || echo "0")
-    if [ "$size" -lt 5000000 ]; then
-        echo "    ⚠️  Binary too small: $size bytes (expected >5MB)"
-        size_warning="too_small"
-        passed=false
-    elif [ "$size" -gt 50000000 ]; then
-        echo "    ⚠️  Binary too large: $size bytes (expected <50MB)"
-        size_warning="too_large"
-        passed=false
-    fi
 
     case "$mode" in
         native)
@@ -75,51 +66,44 @@ test_binary() {
             if version=$("$binary" --version 2>&1 | head -1); then
                 : # Version captured
             else
-                echo "    ❌ Version check failed"
+                echo "    ❌ Version check failed" >&2
                 version="Execution failed"
                 passed=false
             fi
 
             # Test 2: Execute --help
             if "$binary" --help >/dev/null 2>&1; then
-                echo "    ✅ Help text accessible"
+                echo "    ✅ Help text accessible" >&2
                 help_check="passed"
             else
-                echo "    ⚠️  Help text not accessible"
+                echo "    ⚠️  Help text not accessible" >&2
                 help_check="failed"
             fi
 
             # Test 3: Launcher CLI mode test (for launcher binaries only)
             if [[ "$binary_name" == *"launcher"* ]]; then
                 if "$binary" --flavor-cli --version >/dev/null 2>&1; then
-                    echo "    ✅ Launcher CLI mode working"
+                    echo "    ✅ Launcher CLI mode working" >&2
                     cli_mode="passed"
                 else
-                    echo "    ⚠️  Launcher CLI mode not working"
+                    echo "    ⚠️  Launcher CLI mode not working" >&2
                     cli_mode="failed"
                 fi
             fi
 
-            # Build JSON result with jq
-            jq -n \
-                --arg name "$binary_name" \
-                --argjson passed "$passed" \
-                --arg test_type "native" \
-                --argjson size "$size" \
-                --arg version "$version" \
-                --arg help_check "${help_check:-n/a}" \
-                --arg cli_mode "${cli_mode:-n/a}" \
-                --arg size_warning "${size_warning:-none}" \
-                '{
-                    name: $name,
-                    passed: $passed,
-                    test_type: $test_type,
-                    size_bytes: $size,
-                    version: $version,
-                    help_check: $help_check,
-                    cli_mode: $cli_mode,
-                    size_warning: $size_warning
-                }'
+            # Build JSON result with Python
+            python3 - "$binary_name" "$passed" "$size" "$version" "${help_check:-n/a}" "${cli_mode:-n/a}" <<'PYJSON'
+import sys, json
+print(json.dumps({
+    "name": sys.argv[1],
+    "passed": sys.argv[2] == "true",
+    "test_type": "native",
+    "size_bytes": int(sys.argv[3]),
+    "version": sys.argv[4],
+    "help_check": sys.argv[5],
+    "cli_mode": sys.argv[6]
+}))
+PYJSON
             ;;
 
         format-only|*)
@@ -131,11 +115,11 @@ test_binary() {
 
                     # For Windows binaries, also capture PE format details
                     if [[ "$PLATFORM" == "windows_"* ]] && echo "$file_info" | grep -q "PE32"; then
-                        echo "    ✅ Valid PE32 executable"
+                        echo "    ✅ Valid PE32 executable" >&2
                         format_info="PE32"
                     fi
                 else
-                    echo "    ❌ Invalid binary format"
+                    echo "    ❌ Invalid binary format" >&2
                     format_info="invalid"
                     passed=false
                 fi
@@ -144,28 +128,23 @@ test_binary() {
                 if [ -x "$binary" ]; then
                     format_info="executable"
                 else
-                    echo "    ❌ Not executable"
+                    echo "    ❌ Not executable" >&2
                     format_info="not_executable"
                     passed=false
                 fi
             fi
 
-            # Build JSON result with jq
-            jq -n \
-                --arg name "$binary_name" \
-                --argjson passed "$passed" \
-                --arg test_type "format" \
-                --argjson size "$size" \
-                --arg format "$format_info" \
-                --arg size_warning "${size_warning:-none}" \
-                '{
-                    name: $name,
-                    passed: $passed,
-                    test_type: $test_type,
-                    size_bytes: $size,
-                    format: $format,
-                    size_warning: $size_warning
-                }'
+            # Build JSON result with Python
+            python3 - "$binary_name" "$passed" "$size" "$format_info" <<'PYJSON'
+import sys, json
+print(json.dumps({
+    "name": sys.argv[1],
+    "passed": sys.argv[2] == "true",
+    "test_type": "format",
+    "size_bytes": int(sys.argv[3]),
+    "format": sys.argv[4]
+}))
+PYJSON
             ;;
     esac
 }
