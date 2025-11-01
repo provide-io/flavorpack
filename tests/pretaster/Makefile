@@ -18,6 +18,31 @@ CONFIGS_DIR := configs
 # Platform detection
 OS := $(shell uname -s | tr '[:upper:]' '[:lower:]')
 ARCH := $(shell uname -m)
+
+# Normalize Windows OS names (MINGW64_NT, MSYS_NT, CYGWIN_NT -> windows)
+ifneq ($(findstring mingw,$(OS)),)
+    OS := windows
+endif
+ifneq ($(findstring msys,$(OS)),)
+    OS := windows
+endif
+ifneq ($(findstring cygwin,$(OS)),)
+    OS := windows
+endif
+
+# On Windows ARM64, uname -m returns x86_64 (emulation layer)
+# Check uname -s for ARM64 indicator
+ifeq ($(OS),windows)
+    UNAME_S := $(shell uname -s)
+    ifneq ($(findstring ARM64,$(UNAME_S)),)
+        ARCH := arm64
+    endif
+    ifneq ($(findstring arm64,$(UNAME_S)),)
+        ARCH := arm64
+    endif
+endif
+
+# Normalize architecture names
 ifeq ($(ARCH),x86_64)
     ARCH := amd64
 endif
@@ -26,11 +51,18 @@ ifeq ($(ARCH),aarch64)
 endif
 PLATFORM := $(OS)_$(ARCH)
 
-# Builders and Launchers with platform suffix
-RS_BUILDER := $(BIN_DIR)/flavor-rs-builder-$(PLATFORM)
-GO_BUILDER := $(BIN_DIR)/flavor-go-builder-$(PLATFORM)
-RS_LAUNCHER := $(BIN_DIR)/flavor-rs-launcher-$(PLATFORM)
-GO_LAUNCHER := $(BIN_DIR)/flavor-go-launcher-$(PLATFORM)
+# Windows executable extension
+ifeq ($(OS),windows)
+    EXE := .exe
+else
+    EXE :=
+endif
+
+# Builders and Launchers with platform suffix and extension
+RS_BUILDER := $(BIN_DIR)/flavor-rs-builder-$(PLATFORM)$(EXE)
+GO_BUILDER := $(BIN_DIR)/flavor-go-builder-$(PLATFORM)$(EXE)
+RS_LAUNCHER := $(BIN_DIR)/flavor-rs-launcher-$(PLATFORM)$(EXE)
+GO_LAUNCHER := $(BIN_DIR)/flavor-go-launcher-$(PLATFORM)$(EXE)
 
 # Test packages
 ECHO_PSP := $(DIST_DIR)/echo-test.psp
@@ -105,9 +137,11 @@ help: ## Show this help message
 build: build-helpers ## Build all helpers (Go and Rust)
 
 .PHONY: build-helpers
-build-helpers: ## Build Go and Rust helpers (skipped when in PSP)
+build-helpers: ## Build Go and Rust helpers (skipped when in PSP or CI)
 ifdef FLAVOR_WORKENV
 	$(call print,"📦 Running in PSP - skipping helper build",$(YELLOW))
+else ifdef CI
+	$(call print,"📦 Running in CI - helpers should be pre-downloaded",$(YELLOW))
 else
 	$(call print,"🔨 Building helpers...",$(BLUE))
 	@cd ../.. && ./build.sh

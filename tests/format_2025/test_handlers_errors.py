@@ -154,4 +154,5 @@ class TestErrorPaths:
             # Should return data unchanged (operation skipped with warning)
             assert result == data
 
+
 # 🌶️📦🔚

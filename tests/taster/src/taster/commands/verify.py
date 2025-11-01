@@ -3,6 +3,13 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
+"""TODO: Add module docstring."""
+
+#
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
 """Verify PSPF package integrity"""
 
 import json
@@ -36,7 +43,7 @@ def verify_command(package_path, output_json, output_file) -> None:
     package_file = Path(package_path)
 
     if not output_json:
-        click.echo(f"\n📦 Package: {package_file}")
+        pass
 
     # Result object for JSON output
     result_obj = {
@@ -65,7 +72,6 @@ def verify_command(package_path, output_json, output_file) -> None:
         from flavor.verification import FlavorVerifier
 
         if not output_json:
-            click.echo("✅ Flavor verification module available")
             click.echo("\n🔐 Verifying package integrity...")
 
         try:
@@ -96,7 +102,7 @@ def verify_command(package_path, output_json, output_file) -> None:
 
                 # Signature verification
                 if result.get("signature_valid"):
-                    click.secho("\n✅ Signature verification: PASSED", fg="green")
+                    pass
                 else:
                     click.secho("\n❌ Signature verification: FAILED", fg="red")
 
@@ -106,13 +112,13 @@ def verify_command(package_path, output_json, output_file) -> None:
                 # Check index checksum
                 if "index_checksum_valid" in result:
                     if result["index_checksum_valid"]:
-                        click.echo("  ✅ Index checksum valid")
+                        pass
                     else:
                         click.echo("  ❌ Index checksum invalid")
 
                 # Check metadata
                 if "metadata" in result:
-                    click.echo("  ✅ Metadata present")
+                    pass
                 else:
                     click.echo("  ⚠️ Metadata not found")
 
@@ -165,11 +171,12 @@ def verify_command(package_path, output_json, output_file) -> None:
             click.echo(f"  Executable: {'Yes' if basic_info['executable'] else 'No'}")
 
             if basic_info["magic_found"]:
-                click.echo("  ✅ PSPF2025 magic found")
+                pass
             else:
                 click.echo("  ⚠️ PSPF2025 magic not found in first MB")
 
             if "read_error" in basic_info:
                 click.echo(f"  ❌ Could not read file: {basic_info['read_error']}")
+
 
 # 🌶️📦🔚

@@ -1,3 +1,8 @@
+#
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
 """Test signal handling (SIGTERM/SIGINT)"""
 
 import os
@@ -31,7 +36,6 @@ class SignalTester:
         for sig in [signal.SIGTERM, signal.SIGINT, signal.SIGHUP]:
             try:
                 self.original_handlers[sig] = signal.signal(sig, self.signal_handler)
-                click.echo(f"  ✅ Installed handler for {signal.Signals(sig).name}")
             except Exception as e:
                 click.echo(f"  ⚠️ Could not install handler for {signal.Signals(sig).name}: {e}")
 
@@ -54,7 +58,6 @@ def signals_command(test_mode, timeout, sleep, exit_code) -> None:
         click.echo(f"💤 Sleeping for {sleep} seconds...")
         try:
             time.sleep(sleep)
-            click.echo("✅ Sleep completed")
             sys.exit(exit_code)
         except KeyboardInterrupt:
             click.echo("\n⚠️ Sleep interrupted by signal", file=sys.stderr)
@@ -80,7 +83,6 @@ def signals_command(test_mode, timeout, sleep, exit_code) -> None:
 
     if test_mode:
         # Automated test mode
-        click.secho("\n🧪 Running Automated Signal Test", fg="green")
         click.echo(f"  Timeout: {timeout} seconds")
 
         # Install handlers
@@ -111,7 +113,6 @@ def signals_command(test_mode, timeout, sleep, exit_code) -> None:
         # Report results
         click.secho("\n📋 Test Results:", fg="cyan")
         if tester.signals_received:
-            click.secho(f"  ✅ Received {len(tester.signals_received)} signals", fg="green")
             for sig_name, sig_time in tester.signals_received:
                 click.echo(f"    • {sig_name} at {sig_time:.2f}")
         else:
@@ -167,7 +168,6 @@ def signals_command(test_mode, timeout, sleep, exit_code) -> None:
     )
 
     if launcher_name == "rust":
-        click.secho("  ✅ Rust launcher: Full signal forwarding support", fg="green")
         click.echo("    • Forwards SIGTERM/SIGINT to child process")
         click.echo("    • Graceful shutdown with 10-second timeout")
         click.echo("    • Process cleanup on exit")
@@ -175,3 +175,6 @@ def signals_command(test_mode, timeout, sleep, exit_code) -> None:
         click.secho("  ⚠️ Go launcher: Limited signal support", fg="yellow")
         click.echo("    • Basic signal handling")
         click.echo("    • May not forward all signals properly")
+
+
+# 🌶️📦🔚

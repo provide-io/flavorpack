@@ -3,11 +3,9 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""
-PSPF 2025 Execution Tests
+"""PSPF 2025 Execution Tests
 
-Tests bundle execution, command substitution, and process management.
-"""
+Tests bundle execution, command substitution, and process management."""
 
 from pathlib import Path
 import tempfile

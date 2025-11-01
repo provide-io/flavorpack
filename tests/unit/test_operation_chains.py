@@ -1,3 +1,8 @@
+#
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
 """Test operation chain packing and unpacking."""
 
 from __future__ import annotations
@@ -98,3 +103,6 @@ class TestOperationChains:
         # TAR + XZ (highly compressed archive)
         tar_xz = pack_operations([OP_TAR, OP_XZ])
         assert unpack_operations(tar_xz) == [OP_TAR, OP_XZ]
+
+
+# 🌶️📦🔚

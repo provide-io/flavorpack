@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -11,7 +10,6 @@ import sys
 
 def test_imports() -> int:
     """Test that critical binary packages can be imported."""
-    print("🧪 Testing package imports...")
 
     packages_to_test = [
         ("cryptography", "cryptography.hazmat.primitives.ciphers"),
@@ -24,7 +22,6 @@ def test_imports() -> int:
     for package_name, import_name in packages_to_test:
         try:
             __import__(import_name)
-            print(f"  ✅ {package_name}: imported successfully")
             # For cryptography, verify it's working
             if package_name == "cryptography":
                 from cryptography.fernet import Fernet
@@ -45,9 +42,6 @@ def test_imports() -> int:
         print(f"\n❌ Failed to import: {', '.join(failed)}")
         return 1
     else:
-        print("\n✅ All packages imported and working correctly!")
-        print("✅ Binary wheels were downloaded and installed successfully")
-        print("✅ manylinux2014 platform tags are working")
         return 0
 
 

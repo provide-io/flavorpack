@@ -44,7 +44,7 @@ jobs:
         run: |
           # Define all platforms as a single-line JSON
           # Note: Linux platforms use musl for static linking to ensure compatibility with older glibc versions
-          ALL_PLATFORMS='[{"platform":"linux_amd64","os":"ubuntu-latest","rust_target":"x86_64-unknown-linux-musl","use_musl":true},{"platform":"linux_arm64","os":"ubuntu-24.04-arm","rust_target":"aarch64-unknown-linux-musl","use_musl":true},{"platform":"darwin_amd64","os":"macos-13","rust_target":"x86_64-apple-darwin","use_musl":false},{"platform":"darwin_arm64","os":"macos-15","rust_target":"aarch64-apple-darwin","use_musl":false}]'
+          ALL_PLATFORMS='[{"platform":"linux_amd64","os":"ubuntu-latest","rust_target":"x86_64-unknown-linux-musl","use_musl":true},{"platform":"linux_arm64","os":"ubuntu-24.04-arm","rust_target":"aarch64-unknown-linux-musl","use_musl":true},{"platform":"darwin_amd64","os":"macos-13","rust_target":"x86_64-apple-darwin","use_musl":false},{"platform":"darwin_arm64","os":"macos-15","rust_target":"aarch64-apple-darwin","use_musl":false},{"platform":"windows_amd64","os":"windows-2022","rust_target":"x86_64-pc-windows-msvc","use_musl":false},{"platform":"windows_arm64","os":"windows-11-arm","rust_target":"aarch64-pc-windows-msvc","use_musl":false}]'
           
           # Check if specific platforms requested
           PLATFORMS="${{ inputs.platforms }}"
@@ -83,10 +83,16 @@ jobs:
         with:
           path: |
             dist/bin/*-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
+            dist/bin/*-${{ needs.setup.outputs.version }}-${{ matrix.platform }}.exe
             artifacts/*.zip
           key: ${{ needs.setup.outputs.cache_key_base }}-${{ matrix.platform }}-${{ needs.setup.outputs.version }}
           # No restore-keys - only use exact version match to prevent old binary accumulation
-      
+
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
       - name: 🐹 Setup Go
         if: steps.cache.outputs.cache-hit != 'true'
         uses: actions/setup-go@v5
@@ -139,16 +145,22 @@ jobs:
           export GOOS=$OS
           export GOARCH=$ARCH
 
+          # Add .exe extension for Windows
+          EXE_EXT=""
+          if [ "$OS" = "windows" ]; then
+            EXE_EXT=".exe"
+          fi
+
           echo "🐹 Building Go helpers..."
 
           # Builder (with -buildvcs=false to avoid git issues in CI)
           go build -buildvcs=false -ldflags "-X main.Version=$VERSION" \
-            -o ../../dist/bin/flavor-go-builder-$VERSION-$PLATFORM \
+            -o ../../dist/bin/flavor-go-builder-$VERSION-$PLATFORM$EXE_EXT \
             cmd/flavor-go-builder/main.go
 
           # Launcher (with -buildvcs=false to avoid git issues in CI)
           go build -buildvcs=false -ldflags "-X main.Version=$VERSION" \
-            -o ../../dist/bin/flavor-go-launcher-$VERSION-$PLATFORM \
+            -o ../../dist/bin/flavor-go-launcher-$VERSION-$PLATFORM$EXE_EXT \
             cmd/flavor-go-launcher/main.go
 
       - name: 🔍 Debug Rust environment
@@ -180,12 +192,18 @@ jobs:
           # Set version via environment variable for build.rs
           export FLAVOR_VERSION="$VERSION"
 
+          # Add .exe extension for Windows
+          EXE_EXT=""
+          if [[ "$PLATFORM" == "windows_"* ]]; then
+            EXE_EXT=".exe"
+          fi
+
           echo "🦀 Building Rust helpers..."
 
-          # Build with specified target (musl for Linux, native for macOS)
+          # Build with specified target (musl for Linux, native for macOS/Windows)
           cargo build --release --target ${{ matrix.rust_target }}
-          cp target/${{ matrix.rust_target }}/release/flavor-rs-builder ../../dist/bin/flavor-rs-builder-$VERSION-$PLATFORM
-          cp target/${{ matrix.rust_target }}/release/flavor-rs-launcher ../../dist/bin/flavor-rs-launcher-$VERSION-$PLATFORM
+          cp target/${{ matrix.rust_target }}/release/flavor-rs-builder$EXE_EXT ../../dist/bin/flavor-rs-builder-$VERSION-$PLATFORM$EXE_EXT
+          cp target/${{ matrix.rust_target }}/release/flavor-rs-launcher$EXE_EXT ../../dist/bin/flavor-rs-launcher-$VERSION-$PLATFORM$EXE_EXT
 
       - name: ✅ Finalize build
         if: steps.cache.outputs.cache-hit != 'true'
@@ -199,17 +217,31 @@ jobs:
           echo "✅ Build complete for $PLATFORM"
           ls -la dist/bin/*-$PLATFORM*
       
-      - name: 📦 Package artifacts
+      - name: 📦 Package artifacts (Unix)
+        if: runner.os != 'Windows'
         shell: bash
         run: |
           mkdir -p artifacts
           cd dist/bin
-          # Only package binaries for the CURRENT version and platform
           zip -r ../../artifacts/flavor-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}.zip \
             *-${{ needs.setup.outputs.version }}-${{ matrix.platform }} || true
           cd ../..
           echo "📦 Packaged helpers:"
           ls -la artifacts/
+
+      - name: 📦 Package artifacts (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path artifacts | Out-Null
+          $files = Get-ChildItem -Path "dist\bin" -Filter "*-${{ needs.setup.outputs.version }}-${{ matrix.platform }}.exe"
+          if ($files.Count -gt 0) {
+            Compress-Archive -Path $files.FullName -DestinationPath "artifacts\flavor-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}.zip" -Force
+            Write-Host "📦 Packaged helpers:"
+            Get-ChildItem artifacts
+          } else {
+            Write-Host "⚠️ No files found to package"
+          }
       
       - name: 🧪 Test binaries
         shell: bash

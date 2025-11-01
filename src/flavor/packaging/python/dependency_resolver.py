@@ -2,10 +2,17 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
+"""TODO: Add module docstring."""
+
+#!/usr/bin/env python3
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
 """Python Dependency Resolution
 
-Handles downloading, extracting, and managing Python dependencies and tools.
-"""
+Handles downloading, extracting, and managing Python dependencies and tools."""
 
 from pathlib import Path
 import shutil
@@ -116,7 +123,6 @@ class DependencyResolver:
         Retries:
             Up to 3 attempts with exponential backoff for network errors
         """
-        logger.info("📦 Downloading manylinux2014-compatible UV wheel")
         logger.debug(f"Platform: {get_os_name()}, Architecture: {get_arch_name()}")
 
         # First ensure pip is available
@@ -134,7 +140,6 @@ class DependencyResolver:
             # Extract UV binary from wheel
             uv_path = self._extract_uv_from_wheel(uv_wheel, dest_dir)
             if uv_path:
-                logger.info("✅ Successfully downloaded manylinux2014 UV binary")
                 return uv_path
 
             logger.error("UV binary not found in wheel")
@@ -172,7 +177,6 @@ class DependencyResolver:
             ensurepip_cmd = [str(python_exe), "-m", "ensurepip", "--default-pip"]
             logger.debug("Installing pip using ensurepip")
             run(ensurepip_cmd, check=True, capture_output=True)
-            logger.info("✅ pip installed successfully")
             return True
         except Exception:
             # If ensurepip fails, try using UV to install pip
@@ -182,7 +186,6 @@ class DependencyResolver:
                 uv_pip_cmd = [uv_cmd, "pip", "install", "pip"]
                 try:
                     run(uv_pip_cmd, check=True, capture_output=True)
-                    logger.info("✅ pip installed via UV")
                     return True
                 except Exception as e:
                     logger.error(f"Failed to install pip via UV: {e}")
@@ -277,7 +280,7 @@ class DependencyResolver:
         """Validate that UV wheel is manylinux2014 compatible."""
         if "manylinux" in uv_wheel.name:
             if "manylinux2014" in uv_wheel.name or "manylinux_2_17" in uv_wheel.name:
-                logger.info(f"✅ Confirmed manylinux2014 wheel: {uv_wheel.name}")
+                logger.debug(f"✅ UV wheel is manylinux2014 compatible: {uv_wheel.name}")
             else:
                 logger.warning(f"⚠️ UV wheel is not manylinux2014: {uv_wheel.name}")
 

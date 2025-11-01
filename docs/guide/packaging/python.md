@@ -130,24 +130,15 @@ The `[tool.flavor].entry_point` is required and specifies which function runs wh
 
 ## Planned Python Features
 
-The following features are documented but **not yet implemented**. See [Roadmap](../roadmap.md) for implementation timelines.
+The following features are planned but **not yet implemented**. See the [FlavorPack Roadmap](../../roadmap.md) for detailed status, target versions, and implementation timelines.
 
 ### Python Version Selection 📋
 
-!!! warning "📋 Planned Feature - Not Yet Implemented"
-    Python version selection via manifest is not yet implemented.
+!!! note "Planned Feature"
+    Automatic Python version selection is planned for **v0.3.0 (Q1 2026)**.
+    See [Roadmap - Python Version Management](../../roadmap.md#python-version-selection) for full details.
 
-    **Current Behavior**: Packages use the Python version from your build environment.
-
-    **Planned**: Select specific Python versions for packaging.
-
-```toml
-# 📋 PLANNED - Not yet implemented
-[tool.flavor.python]
-version = "3.11"  # Exact version to package
-min_version = "3.11"  # Minimum version
-max_version = "3.13"  # Maximum version
-```
+**Current Workaround:** Packages use the Python version from your build environment. If you build on Python 3.12, your package will use Python 3.12.
 
 ## Dependency Management
 
@@ -217,58 +208,14 @@ dependencies = [
 
 ### Build Environment
 
-!!! note "🔶 Mostly Planned"
-    Basic venv creation works, but advanced configuration options are not yet implemented. See [Roadmap](../roadmap.md#build-environment-configuration).
+!!! note "Planned Feature"
+    FlavorPack creates a basic isolated virtual environment during build. Advanced configuration options (custom venv path, build-time environment variables, pre-install commands) are **planned for v0.3.0 (Q1 2026)**.
 
-FlavorPack creates an isolated virtual environment during build:
+    See [Roadmap - Build Environment Configuration](../../roadmap.md#build-environment-configuration) for full details.
 
-```toml
-# 🔶 PLANNED - Advanced configuration not yet available
-[tool.flavor.build]
-# Custom venv location
-venv_path = ".flavor-venv"
+**Current Behavior:** FlavorPack automatically creates a virtual environment and installs dependencies using UV.
 
-# Use system site packages
-system_site_packages = false
-
-# Environment variables for build
-env = {
-    "NUMPY_SETUP_DEBUG": "1",
-    "PIP_NO_CACHE_DIR": "1"
-}
-```
-
-### Dependency Resolution
-
-```toml
-[tool.flavor.build]
-# Use pip instead of uv
-use_pip = true
-
-# Custom index URL
-index_url = "https://pypi.company.com/simple"
-
-# Extra index URLs
-extra_index_urls = [
-    "https://pypi.org/simple"
-]
-
-# Trusted hosts
-trusted_hosts = [
-    "pypi.company.com"
-]
-```
-
-### Pre-install Commands
-
-```toml
-[tool.flavor.build]
-# Commands to run before installing dependencies
-pre_install_commands = [
-    "pip install --upgrade pip setuptools wheel",
-    "pip install numpy==1.24.0"  # Install specific version first
-]
-```
+**Current Workaround:** Use standard Python packaging tools (pip, setuptools) in your project's development environment before packaging.
 
 ## Entry Points
 
@@ -455,64 +402,17 @@ dependencies = [
 
 ## Optimization Techniques
 
-!!! note "🔶 Planned Features"
-    Runtime optimization configuration is not yet implemented. See [Roadmap](../roadmap.md#runtime-optimization).
+!!! note "Planned Feature"
+    Runtime optimization configuration (code optimization levels, bytecode compilation, dependency optimization, lazy loading) is **planned for v0.4.0 (Q2 2026)**.
 
-### Code Optimization
+    See [Roadmap - Runtime Optimization](../../roadmap.md#runtime-optimization) and [Roadmap - Advanced Slot Configuration](../../roadmap.md#advanced-slot-configuration) for full details.
 
-```toml
-# 🔶 PLANNED - Not yet implemented
-[tool.flavor.runtime]
-# Python optimization level
-optimization_level = 2  # -OO flag
+**Current Behavior:** FlavorPack packages all dependencies and Python code as-is, with basic compression.
 
-# Compile .py to .pyc
-compile_bytecode = true
-
-# Strip docstrings
-strip_docstrings = true
-```
-
-### Dependency Optimization
-
-```toml
-[tool.flavor.build]
-# Exclude test/docs from dependencies
-exclude_from_deps = [
-    "*/tests/*",
-    "*/test/*",
-    "*/docs/*",
-    "*/examples/*"
-]
-
-# Only include runtime dependencies
-no_dev_deps = true
-```
-
-### Size Optimization
-
-```bash
-# Build with compression
-flavor pack --manifest pyproject.toml --compress
-
-# Strip debug symbols
-flavor pack --manifest pyproject.toml --strip
-
-# Exclude unnecessary files
-flavor pack --manifest pyproject.toml \
-  --exclude "**/__pycache__" \
-  --exclude "**/*.pyc" \
-  --exclude "**/.git"
-```
-
-### Lazy Loading
-
-```toml
-[[tool.flavor.slots]]
-id = "heavy-models"
-source = "models/"
-lifecycle = "lazy"  # Load only when accessed
-```
+**Current Workaround:**
+- Pre-compile bytecode in your project before packaging
+- Use `.flavor-ignore` or similar to exclude unnecessary files
+- Minimize dependencies in your `pyproject.toml`
 
 ## Testing and Quality
 

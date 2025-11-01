@@ -1,13 +1,10 @@
 #!/usr/bin/env python3
-#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""
-Test-Driven Development tests for the new PSPF builder API.
-Written BEFORE implementation to drive the design.
-"""
+"""Test-Driven Development tests for the new PSPF builder API.
+Written BEFORE implementation to drive the design."""
 
 from pathlib import Path
 import tempfile

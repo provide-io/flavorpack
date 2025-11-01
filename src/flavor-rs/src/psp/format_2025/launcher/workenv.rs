@@ -1,9 +1,9 @@
 //! Work environment management
 
-use super::super::defaults::{DEFAULT_DIR_PERMS, DEFAULT_DISK_SPACE_MULTIPLIER};
+use super::super::defaults::DEFAULT_DISK_SPACE_MULTIPLIER;
 use super::super::metadata::{Metadata, WorkenvInfo};
 use super::super::paths::WorkenvPaths;
-use crate::exceptions::{FlavorError, Result};
+use crate::exceptions::Result;
 use crate::utils::get_cache_dir;
 use log::{debug, warn};
 use std::fs;
@@ -16,7 +16,7 @@ pub(super) fn get_workenv_paths(package_path: &Path) -> WorkenvPaths {
 }
 
 /// Check if there's enough disk space for extraction
-pub(super) fn check_disk_space(paths: &WorkenvPaths, metadata: &Metadata) -> Result<()> {
+pub(super) fn check_disk_space(_paths: &WorkenvPaths, metadata: &Metadata) -> Result<()> {
     // Calculate total size needed (compressed size * DISK_SPACE_MULTIPLIER for safety)
     let _total_size_needed: u64 = metadata
         .slots
@@ -27,8 +27,10 @@ pub(super) fn check_disk_space(paths: &WorkenvPaths, metadata: &Metadata) -> Res
     // Get available disk space
     #[cfg(unix)]
     {
+        use crate::exceptions::FlavorError;
+
         // Safe disk space check using fs2 crate alternative or simplified check
-        let workenv_path = paths.workenv();
+        let workenv_path = _paths.workenv();
 
         // Try to create a small test file to check if we can write
         // This is a simpler but less precise check than statvfs
@@ -91,6 +93,7 @@ pub(super) fn setup_workenv_directories(
             // Set permissions on Unix systems
             #[cfg(unix)]
             {
+                use super::super::defaults::DEFAULT_DIR_PERMS;
                 use std::os::unix::fs::PermissionsExt;
 
                 // Use specified mode or default to 0700 (user-only access)

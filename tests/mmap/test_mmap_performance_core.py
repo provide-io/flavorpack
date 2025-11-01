@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
 """Performance benchmarks and large file tests for mmap."""
+
 from contextlib import contextmanager
 import os
 from pathlib import Path
@@ -43,7 +44,6 @@ class TestMMapPerformance:
         """Test mmap with 100MB file."""
         size = 100 * 1024 * 1024  # 100MB
 
-        print(f"\n📦 Creating {size / 1024 / 1024:.0f}MB test file...")
         with tempfile.NamedTemporaryFile(delete=False) as f:
             # Write in 1MB chunks to avoid memory issues
             chunk_size = 1024 * 1024
@@ -395,4 +395,6 @@ class TestMMapPerformance:
 
         finally:
             path.unlink(missing_ok=True)
+
+
 # 🌶️📦🔚

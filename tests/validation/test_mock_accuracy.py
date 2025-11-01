@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
-"""
-Mock Validation Tests
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
+"""Mock Validation Tests
 
 These tests ensure that our mock launchers accurately represent real launcher behavior.
-They should be run as integration tests with real helpers available.
-"""
+They should be run as integration tests with real helpers available."""
 
 import pytest
 
@@ -135,3 +137,6 @@ class TestMockContract:
     def test_mock_has_identifier(self) -> None:
         """Mock should have identifying marker for debugging."""
         assert b"FAKE_LAUNCHER_FOR_TEST" in MOCK_LAUNCHER_DATA
+
+
+# 🌶️📦🔚

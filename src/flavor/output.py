@@ -2,9 +2,11 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
-from __future__ import annotations
 
 """Output formatting and redirection for Flavor tools."""
+
+from __future__ import annotations
+
 from enum import Enum
 from pathlib import Path
 import sys
@@ -119,7 +121,7 @@ class OutputHandler:
         if self.format == OutputFormat.JSON:
             self.write({"success": message, **kwargs})
         else:
-            self.write(f"✅ {message}")
+            pass
 
     def info(self, message: str, **kwargs: Any) -> None:
         """Write an info message."""

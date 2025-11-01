@@ -3,11 +3,9 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""
-PSPF 2025 Slot Management Tests
+"""PSPF 2025 Slot Management Tests
 
-Tests slot lifecycle, compression, and management functionality.
-"""
+Tests slot lifecycle, compression, and management functionality."""
 
 import hashlib
 import os
@@ -273,5 +271,6 @@ class TestPSPFSlotsOperations:
         # Bundle size may be smaller than slot due to index/metadata overhead and alignment
         # Just verify it's reasonably large
         assert bundle_path.stat().st_size > 1000  # At least 1KB
+
 
 # 🌶️📦🔚

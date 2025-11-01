@@ -2,11 +2,11 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
 """PSPF Builder - Functional package builder with immutable patterns.
 
 This module provides both pure functions and a fluent builder interface
-for creating PSPF packages.
-"""
+for creating PSPF packages."""
 
 import os
 from pathlib import Path
@@ -62,7 +62,6 @@ def build_package(spec: BuildSpec, output_path: Path) -> BuildResult:
     start_time = time.time()
 
     # Validate specification
-    logger.info("🔍🏗️🚀 Validating build specification")
     logger.debug(
         "📋🔍📋 Build spec details",
         slot_count=len(spec.slots),
@@ -75,7 +74,6 @@ def build_package(spec: BuildSpec, output_path: Path) -> BuildResult:
         for error in errors:
             logger.error("  ❌📋📋 Validation error", error=error)
         return BuildResult(success=False, errors=errors)
-    logger.debug("✅🔍📋 Validation passed")
 
     # Resolve keys
     logger.info("🔑🔍🚀 Resolving signing keys")
@@ -86,19 +84,16 @@ def build_package(spec: BuildSpec, output_path: Path) -> BuildResult:
         return BuildResult(success=False, errors=[f"🔑 Key resolution failed: {e}"])
 
     # Prepare slots
-    logger.info("📦🏗️🚀 Preparing slots", slot_count=len(spec.slots))
     logger.debug("🎰🔍📋 Slot details", slots=[s.id for s in spec.slots])
     try:
         prepared_slots = prepare_slots(spec.slots, spec.options)
-        logger.debug("🎰✅📋 Slots prepared", prepared_count=len(prepared_slots))
     except Exception as e:
-        logger.error("📦🏗️❌ Slot preparation failed", error=str(e))
-        return BuildResult(success=False, errors=[f"📦 Slot preparation failed: {e}"])
+        logger.error(f"Failed to prepare slots: {e}")
+        raise
 
     # Write package
-    logger.info("✍️🏗️🚀 Writing package", output=str(output_path))
     logger.trace(
-        "📦🔍📋 Package assembly details",
+        "🔧 PSPF package configuration",
         slot_count=len(prepared_slots),
         has_signature=bool(private_key),
     )
@@ -108,15 +103,13 @@ def build_package(spec: BuildSpec, output_path: Path) -> BuildResult:
 
         # Write package using writer module
         package_size = write_package(spec, output_path, prepared_slots, index, private_key, public_key)
-        logger.debug("✍️✅📋 Package written", size_bytes=package_size)
     except Exception as e:
-        logger.error("✍️🏗️❌ Package writing failed", error=str(e))
         return BuildResult(success=False, errors=[f"❌ Package writing failed: {e}"])
 
     # Success!
     duration = time.time() - start_time
     logger.info(
-        "✅🏗️🎉 Package built successfully",
+        "✅ Package built successfully",
         duration_seconds=duration,
         size_mb=package_size / 1024 / 1024,
         path=str(output_path),
@@ -163,7 +156,7 @@ def prepare_slots(slots: list[SlotMetadata], options: BuildOptions) -> list[Prep
         # Debug: Log what operations we're creating
         unpacked_ops = unpack_operations(packed_ops)
         logger.debug(
-            "🔧 Operations conversion for slot",
+            "🔄 Processing slot operations",
             slot_id=slot.id,
             operations_string=slot.operations,
             packed_operations=f"{packed_ops:#018x}",
@@ -338,6 +331,5 @@ def _apply_operations(data: bytes, packed_ops: int, options: BuildOptions) -> by
 
 
 # PSPFBuilder class and mapping functions moved to separate modules
-
 
 # 🌶️📦🔚

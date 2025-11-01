@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
 """Tests for the crosslang command."""
 
 import json
@@ -280,3 +284,6 @@ class TestCrossLangCommand:
 
             result = runner.invoke(crosslang_command, [])
             assert result.exit_code == 1
+
+
+# 🌶️📦🔚

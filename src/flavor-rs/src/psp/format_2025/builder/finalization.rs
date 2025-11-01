@@ -4,14 +4,13 @@ use super::super::constants::{
     MAGIC_TRAILER_SIZE, MAGIC_WAND_EMOJI_BYTES, PACKAGE_EMOJI_BYTES, SLOT_ALIGNMENT,
     SLOT_DESCRIPTOR_SIZE,
 };
-use super::super::defaults::DEFAULT_DIR_PERMS;
 use super::super::index::Index;
 use super::super::manifest::BuildManifest;
 use super::super::slots::{SlotDescriptor, align_offset};
 use crate::api::BuildOptions;
 use crate::exceptions::Result;
 use log::{debug, info, trace};
-use std::fs::{self, File};
+use std::fs::File;
 use std::io::{self, Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};
 
@@ -176,6 +175,8 @@ pub(super) fn finalize_package(
     // Make the output file executable
     #[cfg(unix)]
     {
+        use super::super::defaults::DEFAULT_DIR_PERMS;
+        use std::fs;
         use std::os::unix::fs::PermissionsExt;
         let mut perms = fs::metadata(output_path)?.permissions();
         perms.set_mode(DEFAULT_DIR_PERMS as u32);

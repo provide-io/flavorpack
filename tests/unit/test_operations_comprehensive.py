@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
-"""
-Comprehensive tests for operation chain packing/unpacking.
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
+"""Comprehensive tests for operation chain packing/unpacking.
 
 Tests all v0 required operations and their combinations to ensure
-binary compatibility across Python, Go, and Rust implementations.
-"""
+binary compatibility across Python, Go, and Rust implementations."""
 
 from __future__ import annotations
 
@@ -235,3 +237,6 @@ class TestOperationPacking:
         # Verify unpacking preserves order
         unpacked = unpack_operations(packed)
         assert unpacked == operations, "Operation order not preserved in unpacking"
+
+
+# 🌶️📦🔚

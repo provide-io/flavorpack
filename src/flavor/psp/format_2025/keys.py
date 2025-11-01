@@ -2,6 +2,7 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
 """PSPF Key Management - Functions for handling cryptographic keys.
 
 Provides pure functions for key resolution, generation, and persistence.
@@ -58,7 +59,6 @@ def resolve_keys(config: KeyConfig) -> tuple[bytes, bytes]:
 
     # Priority 3: Load from path
     if config.has_path():
-        logger.info(f"📁 Loading keys from {config.key_path}")
         # Type assertion: we know key_path is not None due to has_path() check
         assert config.key_path is not None
         return load_keys_from_path(config.key_path)
@@ -163,7 +163,10 @@ def load_keys_from_path(key_path: Path) -> tuple[bytes, bytes]:
         raise ValueError(f"🔑 Invalid public key size: expected 32 bytes, got {len(public_key)}")
 
     logger.debug(
-        f"📁 Loaded keys from {key_path} (public key hash: {hashlib.sha256(public_key).hexdigest()[:8]})"
+        "🔑 Keys loaded successfully",
+        private_key_size=len(private_key),
+        public_key_size=len(public_key),
+        path=str(key_path),
     )
 
     return private_key, public_key

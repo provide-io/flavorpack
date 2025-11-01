@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
 """Build platform-specific wheels with embedded helpers."""
+
 import argparse
 from pathlib import Path
 import shutil
@@ -28,6 +29,7 @@ PLATFORM_TAGS = {
     "darwin_amd64": "macosx_10_9_x86_64",
     "linux_amd64": "manylinux_2_17_x86_64.manylinux2014_x86_64",
     "linux_arm64": "manylinux_2_17_aarch64.manylinux2014_aarch64",
+    "windows_amd64": "win_amd64",
 }
 
 # All supported platforms
@@ -156,7 +158,6 @@ def build_platform_wheel(platform: str, output_dir: Path) -> Path | None:
     clean_build_artifacts()
 
     # Embed helpers
-    print("📦 Embedding helpers...")
     embed_result = run_command(
         [
             sys.executable,
@@ -238,7 +239,6 @@ if __name__ == "__main__":
             wheel_file = new_wheel
             print(f"  ✓ Renamed for Python 3.11+ support: {new_name}")
 
-        print(f"✅ Built wheel: {wheel_file.name}")
         return wheel_file
 
     finally:
@@ -254,7 +254,6 @@ if __name__ == "__main__":
 
 def build_universal_wheel(output_dir: Path) -> Path | None:
     """Build a universal wheel without embedded helpers."""
-    print("\n🌍 Building universal wheel (no embedded helpers)")
 
     root = get_project_root()
     clean_build_artifacts()
@@ -279,7 +278,6 @@ def build_universal_wheel(output_dir: Path) -> Path | None:
     # Find the built wheel
     wheels = list(output_dir.glob("*.whl"))
     if wheels:
-        print(f"✅ Built universal wheel: {wheels[0].name}")
         return wheels[0]
 
     return None
@@ -333,10 +331,8 @@ def main() -> None:
         wheels = build_all_wheels(args.output_dir)
 
         print("\n" + "=" * 60)
-        print("📦 Build Summary")
         print("=" * 60)
         if wheels:
-            print(f"✅ Successfully built {len(wheels)} wheel(s):")
             for wheel in wheels:
                 size = wheel.stat().st_size / (1024 * 1024)
                 print(f"  - {wheel.name} ({size:.1f} MB)")
@@ -357,4 +353,5 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
 # 🌶️📦🔚

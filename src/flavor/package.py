@@ -2,6 +2,7 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
 """Public API for the Flavor build tool."""
 
 from __future__ import annotations
@@ -131,7 +132,6 @@ def verify_package(package_path: Path) -> dict[str, Any]:
 
         result = verify_package(Path("myapp.psp"))
         if result['valid']:
-            print("✅ Package verified successfully")
         else:
             print(f"❌ Verification failed: {result['errors']}")
         ```

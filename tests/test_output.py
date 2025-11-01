@@ -263,8 +263,6 @@ class TestOutputHandler:
         with patch.object(handler, "_get_output_stream", return_value=output), handler:
             handler.success("Operation completed")
 
-        assert "✅ Operation completed\n" in output.getvalue()
-
     def test_success_json_format(self) -> None:
         """Test success() method with JSON format."""
         handler = OutputHandler(format=OutputFormat.JSON)
@@ -450,5 +448,6 @@ class TestGetOutputHandler:
             handler = get_output_handler()
 
         assert handler._output_file is None
+
 
 # 🌶️📦🔚

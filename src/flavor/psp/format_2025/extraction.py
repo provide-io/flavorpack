@@ -2,6 +2,7 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
 """PSPF Slot Extraction - Handles slot data extraction and streaming.
 
 Provides extraction, streaming, and verification operations for PSPF slots."""
@@ -108,9 +109,6 @@ class SlotExtractor:
                     )
                     return False
 
-                logger.debug(f"✅ Slot {i} checksum verified")
-
-            logger.debug("✅ All slot checksums verified")
             return True
 
         except Exception as e:
@@ -201,7 +199,11 @@ class SlotExtractor:
 
             # DEBUG: Log checksum details for troubleshooting
             logger.debug(
-                f"🔍🧪 Slot {slot_index} extraction verify: expected={descriptor.checksum:016x}, actual={actual_checksum:016x}, size={len(raw_slot_data)}"
+                "🔍 Verifying slot checksum",
+                slot_index=slot_index,
+                expected=f"{descriptor.checksum:016x}",
+                actual=f"{actual_checksum:016x}",
+                data_size=len(raw_slot_data),
             )
 
             if actual_checksum != descriptor.checksum:
@@ -215,7 +217,6 @@ class SlotExtractor:
                 )
                 return False
 
-            logger.debug(f"✅ Slot {slot_index} integrity verified")
             return True
 
         except Exception as e:

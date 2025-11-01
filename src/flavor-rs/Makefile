@@ -204,3 +204,19 @@ build-musl-all:
 	fi
 	@chmod +x $(BIN_DIR)/flavor-rs-* 2>/dev/null || true
 	@echo "✅ Built all available musl targets"
+
+# Build Windows binaries (cross-compilation)
+build-windows:
+	@echo "🔨 Building Windows Rust helpers..."
+	@mkdir -p $(BIN_DIR)
+	@# Build x86_64 Windows (MSVC)
+	@echo "📦 Building x86_64-pc-windows-msvc..."
+	@if rustup target list --installed | grep -q "x86_64-pc-windows-msvc"; then \
+		cargo build $(CARGO_FLAGS) --target x86_64-pc-windows-msvc && \
+		cp target/x86_64-pc-windows-msvc/release/flavor-rs-launcher.exe $(BIN_DIR)/flavor-rs-launcher-windows_amd64.exe && \
+		cp target/x86_64-pc-windows-msvc/release/flavor-rs-builder.exe $(BIN_DIR)/flavor-rs-builder-windows_amd64.exe && \
+		echo "✅ Windows helpers built: flavor-rs-*-windows_amd64.exe"; \
+	else \
+		echo "⚠️  x86_64-pc-windows-msvc target not installed"; \
+		echo "   Run: rustup target add x86_64-pc-windows-msvc"; \
+	fi

@@ -3,11 +3,9 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""
-PSPF 2025 Builder Tests
+"""PSPF 2025 Builder Tests
 
-Tests bundle building, manifest handling, and build options.
-"""
+Tests bundle building, manifest handling, and build options."""
 
 import hashlib
 import os
@@ -496,5 +494,6 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
         # Verify sequential indices (now uses "slot" key in metadata)
         for i, slot_meta in enumerate(metadata["slots"]):
             assert slot_meta["slot"] == i
+
 
 # 🌶️📦🔚

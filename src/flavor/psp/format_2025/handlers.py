@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
+"""TODO: Add module docstring."""
+
 from __future__ import annotations
 
 """PSPF Operation Handlers - Bridge between PSPF operations and Foundation archive tools.
@@ -136,7 +138,6 @@ def apply_operations(
         ArchiveError: If operation execution fails
     """
     if packed_ops == 0:
-        logger.trace("📦 No operations, returning raw data")
         return data
 
     if not (1 <= compression_level <= 9):
@@ -146,7 +147,7 @@ def apply_operations(
         # Unpack and map operations
         pspf_ops = unpack_operations(packed_ops)
         logger.debug(
-            "🔧 Applying PSPF operation chain",
+            "🗜️ Applying PSPF operation chain",
             operations=[f"0x{op:02x}" for op in pspf_ops],
             data_size=len(data),
             compression_level=compression_level,
@@ -156,7 +157,6 @@ def apply_operations(
 
         # Skip TAR if present (handled during slot loading)
         if FoundationOp.TAR in foundation_ops:
-            logger.trace("📦 TAR operation detected - data should already be tar format")
             foundation_ops = [op for op in foundation_ops if op != FoundationOp.TAR]
             if not foundation_ops:
                 return data
@@ -167,7 +167,7 @@ def apply_operations(
             result = _apply_single_operation(result, op, compression_level)
 
         logger.debug(
-            "✅ Operation chain applied",
+            "✅ Operations applied successfully",
             input_size=len(data),
             output_size=len(result),
             compression_ratio=f"{len(result) / len(data):.2f}" if len(data) > 0 else "N/A",
@@ -202,7 +202,6 @@ def reverse_operations(data: bytes, packed_ops: int) -> bytes:  # noqa: C901
         ArchiveError: If operation reversal fails
     """
     if packed_ops == 0:
-        logger.trace("📦 No operations to reverse")
         return data
 
     try:
@@ -222,7 +221,6 @@ def reverse_operations(data: bytes, packed_ops: int) -> bytes:  # noqa: C901
         for op in reversed(foundation_ops):
             if op == FoundationOp.TAR:
                 # TAR extraction is handled separately by extract_archive()
-                logger.trace("📦 TAR operation (will be extracted separately)")
                 continue
             elif op == FoundationOp.GZIP:
                 gzip_compressor = GzipCompressor(level=6)  # level doesn't matter for decompression
@@ -251,7 +249,7 @@ def reverse_operations(data: bytes, packed_ops: int) -> bytes:  # noqa: C901
                 logger.warning(f"⚠️ Unsupported operation for reversal: {op}")
 
         logger.debug(
-            "✅ Reverse operations complete",
+            "✅ Operations reversed successfully",
             input_size=len(data),
             output_size=len(result),
             expansion_ratio=f"{len(result) / len(data):.2f}" if len(data) > 0 else "N/A",
@@ -306,7 +304,6 @@ def create_tar_archive(source: Path, deterministic: bool = True) -> bytes:
             tar_impl.create(source, temp_path)
             result = temp_path.read_bytes()
 
-        logger.debug("✅ TAR archive created", size=len(result))
         return result
 
     except ArchiveError:
@@ -363,7 +360,6 @@ def extract_archive(
 
         if needs_tar_extract:
             # Extract TAR using Foundation with security limits
-            logger.debug("📦 Extracting TAR archive with security limits")
             tar_impl = TarArchive()
 
             # Write decompressed data to temp file, then extract with limits
@@ -372,19 +368,17 @@ def extract_archive(
                 tar_impl.extract(temp_path, dest, limits=limits)
 
             logger.debug(
-                "✅ TAR extracted",
+                "✅ TAR extraction complete",
                 dest=str(dest),
                 file_count=len(list(dest.rglob("*"))),
             )
             return dest
 
         # Not an archive, just write the data
-        logger.debug("📄 Writing raw data (no TAR operation)")
         output_file = dest / "data"
         dest.mkdir(parents=True, exist_ok=True)
         output_file.write_bytes(decompressed)
 
-        logger.debug("✅ Data written", path=str(output_file), size=len(decompressed))
         return output_file
 
     except ArchiveError as e:

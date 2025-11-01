@@ -2,6 +2,9 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
+"""TODO: Add module docstring."""
+
 from __future__ import annotations
 
 """Comprehensive tests for flavor.commands.helpers module."""
@@ -150,7 +153,6 @@ class TestHelperInfo:
         assert "Checksum: abc123" in result.output
         assert f"Source: {source_path}" in result.output
         assert "Source directory exists" in result.output
-        assert "Status: ✅ Executable" in result.output
 
     @patch("flavor.helpers.manager.HelperManager")
     def test_info_helper_not_found(self, mock_manager_class: Mock) -> None:

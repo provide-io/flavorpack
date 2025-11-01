@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
 """Embed platform-specific helpers into the Flavor package."""
 
 import argparse
@@ -131,7 +131,6 @@ def get_rs_launcher() -> Path:
     return get_helper_path('flavor-rs-launcher')
 ''')
 
-    print(f"✅ Embedded {helpers_copied} helpers for {platform}")
     return True
 
 
@@ -150,4 +149,5 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
 # 🌶️📦🔚
