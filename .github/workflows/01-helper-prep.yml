@@ -144,6 +144,8 @@ jobs:
           # Map to Go env vars
           export GOOS=$OS
           export GOARCH=$ARCH
+          # Disable CGO for static binaries (especially important for Windows)
+          export CGO_ENABLED=0
 
           # Add .exe extension for Windows
           EXE_EXT=""
@@ -152,6 +154,7 @@ jobs:
           fi
 
           echo "🐹 Building Go helpers..."
+          echo "  GOOS=$GOOS GOARCH=$GOARCH CGO_ENABLED=$CGO_ENABLED"
 
           # Builder (with -buildvcs=false to avoid git issues in CI)
           go build -buildvcs=false -ldflags "-X main.Version=$VERSION" \
