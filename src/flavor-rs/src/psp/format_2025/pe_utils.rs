@@ -164,6 +164,90 @@ fn update_section_offsets(data: &mut [u8], padding_size: usize) -> Result<()> {
     Ok(())
 }
 
+/// Update data directory file offsets after DOS stub expansion.
+///
+/// The Certificate Table (data directory entry #4) is special: it uses absolute
+/// file offsets instead of RVAs. When the DOS stub expands, this offset must
+/// be updated. Other data directories use RVAs (relative to image base) and
+/// don't need updating.
+///
+/// # Arguments
+/// * `data` - PE executable data (modified in-place)
+/// * `padding_size` - Number of bytes added to DOS stub
+///
+/// # Returns
+/// Result indicating success or failure
+fn update_data_directories(data: &mut [u8], padding_size: usize) -> Result<()> {
+    // Get PE header location
+    let pe_offset = u32::from_le_bytes([data[0x3C], data[0x3D], data[0x3E], data[0x3F]]) as usize;
+    let coff_offset = pe_offset + 4;
+
+    // Read magic number to identify PE32 vs PE32+
+    let magic = u16::from_le_bytes([data[coff_offset + 20], data[coff_offset + 21]]);
+    let is_pe32_plus = magic == 0x20B;
+
+    // Data directory offset in optional header
+    // PE32: starts at optional header + 96
+    // PE32+: starts at optional header + 112
+    let data_dir_offset = if is_pe32_plus {
+        coff_offset + 20 + 112
+    } else {
+        coff_offset + 20 + 96
+    };
+
+    // Certificate Table is the 5th entry (index 4) in data directory array
+    // Each entry is 8 bytes (4 bytes RVA/offset + 4 bytes size)
+    let cert_entry_offset = data_dir_offset + (4 * 8);
+
+    if cert_entry_offset + 8 > data.len() {
+        trace!(
+            "Certificate table entry beyond file bounds, skipping update: offset=0x{:x}, file_size={}",
+            cert_entry_offset,
+            data.len()
+        );
+        return Ok(());
+    }
+
+    // Read certificate table entry
+    let cert_file_offset = u32::from_le_bytes([
+        data[cert_entry_offset],
+        data[cert_entry_offset + 1],
+        data[cert_entry_offset + 2],
+        data[cert_entry_offset + 3],
+    ]);
+    let cert_size = u32::from_le_bytes([
+        data[cert_entry_offset + 4],
+        data[cert_entry_offset + 5],
+        data[cert_entry_offset + 6],
+        data[cert_entry_offset + 7],
+    ]);
+
+    trace!(
+        "Checked certificate table: offset=0x{:x}, size={}",
+        cert_file_offset,
+        cert_size
+    );
+
+    // Update certificate table offset if it exists and is after the DOS stub
+    if cert_file_offset >= 0x80 {
+        let new_cert_offset = cert_file_offset + padding_size as u32;
+        let new_bytes = new_cert_offset.to_le_bytes();
+        data[cert_entry_offset..cert_entry_offset + 4].copy_from_slice(&new_bytes);
+        debug!(
+            "Updated certificate table offset: 0x{:x} -> 0x{:x}",
+            cert_file_offset, new_cert_offset
+        );
+    }
+
+    // Zero out PE checksum (not validated for executable files, only for drivers/DLLs)
+    // CheckSum field is at optional header + 64
+    let checksum_offset = coff_offset + 20 + 64;
+    data[checksum_offset..checksum_offset + 4].copy_from_slice(&0u32.to_le_bytes());
+    trace!("Zeroed PE checksum (not required for executables)");
+
+    Ok(())
+}
+
 /// Expand the DOS stub of a PE executable to match Rust/MSVC binary size.
 ///
 /// This fixes Windows PE loader rejection of Go binaries when PSPF data
@@ -224,6 +308,9 @@ pub fn expand_dos_stub(data: Vec<u8>) -> Result<Vec<u8>> {
     // When we shift the file content forward, section data moves but the section
     // table entries still point to old offsets. We must update them.
     update_section_offsets(&mut new_data, padding_size)?;
+
+    // Update data directories (Certificate Table uses absolute file offsets)
+    update_data_directories(&mut new_data, padding_size)?;
 
     // Verify the modification
     let new_pe_offset =
