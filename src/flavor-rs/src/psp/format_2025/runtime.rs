@@ -39,8 +39,33 @@ mod runtime_impl {
         debug!("🔧 Processing runtime environment configuration");
 
         // Build pattern processor for pass/preserve operations
-        let pass_patterns = runtime_env.pass.as_deref().unwrap_or(&[]);
-        let pattern_processor = PatternProcessor::new(pass_patterns);
+        // On Windows, automatically add critical system variables
+        // These are required for Python and other programs to initialize properly
+        #[cfg(target_os = "windows")]
+        let pass_patterns = {
+            let mut patterns = runtime_env.pass.clone().unwrap_or_default();
+            let windows_critical_vars = vec![
+                "SYSTEMROOT".to_string(),
+                "WINDIR".to_string(),
+                "TEMP".to_string(),
+                "TMP".to_string(),
+                "PATHEXT".to_string(),
+                "COMSPEC".to_string(),
+            ];
+
+            for var in windows_critical_vars {
+                if !patterns.contains(&var) {
+                    debug!("💻 Auto-adding Windows critical variable: {}", var);
+                    patterns.push(var);
+                }
+            }
+            patterns
+        };
+
+        #[cfg(not(target_os = "windows"))]
+        let pass_patterns = runtime_env.pass.clone().unwrap_or_default();
+
+        let pattern_processor = PatternProcessor::new(&pass_patterns);
 
         // Process unset operations first (highest priority)
         if let Some(unset_patterns) = &runtime_env.unset {

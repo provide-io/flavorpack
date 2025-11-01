@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"runtime"
 	"strings"
 	"syscall"
 	"time"
@@ -167,6 +168,12 @@ func execBundle(exePath string, args []string, userCwd string, logger hclog.Logg
 	// Check execution mode
 	execMode := os.Getenv("FLAVOR_EXEC_MODE")
 	useSpawn := strings.ToLower(execMode) == "spawn"
+
+	// Force spawn mode on Windows (exec mode not supported)
+	if runtime.GOOS == "windows" && !useSpawn {
+		logger.Info("💻 Windows detected - using spawn mode (exec mode not supported on Windows)")
+		useSpawn = true
+	}
 
 	if useSpawn {
 		logger.Debug("👶 Using spawn mode (child process)")

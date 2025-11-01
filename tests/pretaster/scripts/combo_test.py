@@ -3,17 +3,19 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""TODO: Add module docstring."""
-
-#!/usr/bin/env python3
-# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
-#
-
 """Simple test script for builder/launcher combinations."""
 
+import io
 import os
+from pathlib import Path
+import subprocess
 import sys
+import tempfile
+
+# Fix UTF-8 encoding on Windows (avoid cp1252 encoding errors with emojis)
+if sys.platform == "win32":
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
 
 
 def handle_command(cmd, *args):
@@ -40,7 +42,8 @@ def handle_command(cmd, *args):
     elif cmd == "file":
         # Simple file test
         if args and args[0] == "workenv-test":
-            test_file = "/tmp/workenv-test.txt"
+            # Use cross-platform temp directory
+            test_file = os.path.join(tempfile.gettempdir(), "workenv-test.txt")
             with open(test_file, "w") as f:
                 f.write("Test content")
             return 0
@@ -75,10 +78,6 @@ def handle_command(cmd, *args):
     elif cmd == "manylinux-test":
         # Test that manylinux2014 platform tags are working
         print("=" * 60)
-
-        from pathlib import Path
-        import subprocess
-        import tempfile
 
         # Test packages that require binary wheels
         test_packages = ["cryptography", "cffi"]
