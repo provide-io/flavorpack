@@ -135,9 +135,27 @@ func LaunchWithLogLevel(exePath string, args []string, cliLogLevel, cliLogSource
 			}
 			// If we reach here, exec failed
 			os.Exit(ExitExecutionError)
+		case "help", "--help":
+			fmt.Println("PSPF Package Launcher - CLI Mode")
+			fmt.Println()
+			fmt.Println("Available commands:")
+			fmt.Println("  info              Show package information (default)")
+			fmt.Println("  verify            Verify package integrity")
+			fmt.Println("  metadata          Show raw package metadata")
+			fmt.Println("  extract INDEX DIR Extract slot to directory")
+			fmt.Println("  run [args...]     Execute package with arguments")
+			fmt.Println("  help              Show this help message")
+			fmt.Println()
+			fmt.Println("Usage:")
+			fmt.Println("  FLAVOR_LAUNCHER_CLI=1 ./package.psp <command>")
+			fmt.Println()
+			fmt.Println("Examples:")
+			fmt.Println("  FLAVOR_LAUNCHER_CLI=1 ./package.psp info")
+			fmt.Println("  FLAVOR_LAUNCHER_CLI=1 ./package.psp verify")
+			fmt.Println("  FLAVOR_LAUNCHER_CLI=1 ./package.psp extract 0 /tmp/output")
 		default:
 			fmt.Fprintf(os.Stderr, "Error: Unknown command '%s'\n", args[0])
-			fmt.Fprintf(os.Stderr, "Available commands: info, verify, metadata, extract, run\n")
+			fmt.Fprintf(os.Stderr, "Available commands: info, verify, metadata, extract, run, help\n")
 			os.Exit(ExitInvalidArgs)
 		}
 		return
