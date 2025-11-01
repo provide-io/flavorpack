@@ -54,101 +54,120 @@ test_binary() {
     local mode="$2"
     local binary_name=$(basename "$binary")
 
-    local result='{"name": "'$binary_name'", "passed": false}'
-    local checks_passed=true
-    local test_details=""
+    local passed=true
+    local size version help_check cli_mode format_info size_warning
 
     # Size sanity check (5MB - 50MB)
-    local size=$(stat -f%z "$binary" 2>/dev/null || stat -c%s "$binary" 2>/dev/null || echo "0")
+    size=$(stat -f%z "$binary" 2>/dev/null || stat -c%s "$binary" 2>/dev/null || echo "0")
     if [ "$size" -lt 5000000 ]; then
         echo "    ⚠️  Binary too small: $size bytes (expected >5MB)"
-        test_details="${test_details}, \"size_warning\": \"too_small\""
-        checks_passed=false
+        size_warning="too_small"
+        passed=false
     elif [ "$size" -gt 50000000 ]; then
         echo "    ⚠️  Binary too large: $size bytes (expected <50MB)"
-        test_details="${test_details}, \"size_warning\": \"too_large\""
-        checks_passed=false
+        size_warning="too_large"
+        passed=false
     fi
-    test_details="${test_details}, \"size_bytes\": $size"
 
     case "$mode" in
         native)
             # Test 1: Execute --version
-            if output=$("$binary" --version 2>&1); then
-                # Clean output for JSON
-                output=$(echo "$output" | head -1 | sed 's/["\]//g' | tr '\n' ' ')
-                test_details="${test_details}, \"version\": \"$output\""
+            if version=$("$binary" --version 2>&1 | head -1); then
+                : # Version captured
             else
                 echo "    ❌ Version check failed"
-                test_details="${test_details}, \"version_error\": \"Execution failed\""
-                checks_passed=false
+                version="Execution failed"
+                passed=false
             fi
 
             # Test 2: Execute --help
             if "$binary" --help >/dev/null 2>&1; then
                 echo "    ✅ Help text accessible"
-                test_details="${test_details}, \"help_check\": \"passed\""
+                help_check="passed"
             else
                 echo "    ⚠️  Help text not accessible"
-                test_details="${test_details}, \"help_check\": \"failed\""
+                help_check="failed"
             fi
 
             # Test 3: Launcher CLI mode test (for launcher binaries only)
             if [[ "$binary_name" == *"launcher"* ]]; then
-                # Test that launcher responds to --flavor-cli flag
                 if "$binary" --flavor-cli --version >/dev/null 2>&1; then
                     echo "    ✅ Launcher CLI mode working"
-                    test_details="${test_details}, \"cli_mode\": \"passed\""
+                    cli_mode="passed"
                 else
                     echo "    ⚠️  Launcher CLI mode not working"
-                    test_details="${test_details}, \"cli_mode\": \"failed\""
+                    cli_mode="failed"
                 fi
             fi
 
-            if [ "$checks_passed" = true ]; then
-                result='{"name": "'$binary_name'", "passed": true, "test_type": "native"'$test_details'}'
-            else
-                result='{"name": "'$binary_name'", "passed": false, "test_type": "native"'$test_details'}'
-            fi
+            # Build JSON result with jq
+            jq -n \
+                --arg name "$binary_name" \
+                --argjson passed "$passed" \
+                --arg test_type "native" \
+                --argjson size "$size" \
+                --arg version "$version" \
+                --arg help_check "${help_check:-n/a}" \
+                --arg cli_mode "${cli_mode:-n/a}" \
+                --arg size_warning "${size_warning:-none}" \
+                '{
+                    name: $name,
+                    passed: $passed,
+                    test_type: $test_type,
+                    size_bytes: $size,
+                    version: $version,
+                    help_check: $help_check,
+                    cli_mode: $cli_mode,
+                    size_warning: $size_warning
+                }'
             ;;
 
         format-only|*)
             # Check binary format
             if command -v file >/dev/null 2>&1; then
-                file_info=$(file "$binary" 2>&1)
+                local file_info=$(file "$binary" 2>&1)
                 if echo "$file_info" | grep -qE "executable|ELF|Mach-O|PE32"; then
-                    test_details="${test_details}, \"format\": \"valid\""
+                    format_info="valid"
 
                     # For Windows binaries, also capture PE format details
                     if [[ "$PLATFORM" == "windows_"* ]] && echo "$file_info" | grep -q "PE32"; then
                         echo "    ✅ Valid PE32 executable"
-                        test_details="${test_details}, \"pe_format\": \"PE32\""
+                        format_info="PE32"
                     fi
                 else
                     echo "    ❌ Invalid binary format"
-                    test_details="${test_details}, \"error\": \"Invalid format\""
-                    checks_passed=false
+                    format_info="invalid"
+                    passed=false
                 fi
             else
                 # Fallback: check if executable
                 if [ -x "$binary" ]; then
-                    test_details="${test_details}, \"format\": \"executable\""
+                    format_info="executable"
                 else
                     echo "    ❌ Not executable"
-                    test_details="${test_details}, \"error\": \"Not executable\""
-                    checks_passed=false
+                    format_info="not_executable"
+                    passed=false
                 fi
             fi
 
-            if [ "$checks_passed" = true ]; then
-                result='{"name": "'$binary_name'", "passed": true, "test_type": "format"'$test_details'}'
-            else
-                result='{"name": "'$binary_name'", "passed": false, "test_type": "format"'$test_details'}'
-            fi
+            # Build JSON result with jq
+            jq -n \
+                --arg name "$binary_name" \
+                --argjson passed "$passed" \
+                --arg test_type "format" \
+                --argjson size "$size" \
+                --arg format "$format_info" \
+                --arg size_warning "${size_warning:-none}" \
+                '{
+                    name: $name,
+                    passed: $passed,
+                    test_type: $test_type,
+                    size_bytes: $size,
+                    format: $format,
+                    size_warning: $size_warning
+                }'
             ;;
     esac
-
-    echo "$result"
 }
 
 # Main testing logic
