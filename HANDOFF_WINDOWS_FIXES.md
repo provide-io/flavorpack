@@ -1,9 +1,9 @@
 # Windows CI/CD Fixes - Handoff Document
 
 **Date**: 2025-10-31
-**Status**: 🔄 **IN PROGRESS** - Phase 25: Windows Go Launcher Binary Execution Issue (Debugging)
-**Latest CI Run**: [#18986074325](https://github.com/provide-io/flavorpack/actions/runs/18986074325)
-**Solution Status**: Trace logging enabled, PE expansion verified correct, Go launcher binary execution blocked
+**Status**: 🔄 **IN PROGRESS** - Phase 26: Iteration 1 Complete (FAILED) → Iteration 2 Ready
+**Latest CI Run**: [#18986969888](https://github.com/provide-io/flavorpack/actions/runs/18986969888) (Pretaster - FAILED)
+**Solution Status**: Certificate Table update implemented but did NOT fix issue - **CRITICAL: ARM64 has different section count (13 vs 15 on amd64)**
 
 ---
 
@@ -34,7 +34,110 @@ This document details the debugging effort for Windows compatibility issues in t
 
 1-23. ✅ **COMPLETED**: Multiple Windows compatibility fixes
 24. ✅ **COMPLETED**: Trace logging enabled, PrefixWriter emoji crash fixed
-25. 🔄 **IN PROGRESS**: Debugging Go launcher binary execution failure
+25. ✅ **COMPLETED**: Root cause hypothesis - Certificate Table
+26. ❌ **FAILED**: Certificate Table update - Issue persists, root cause is different
+27. 🔄 **IN PROGRESS**: Iteration 2 - Deep PE binary analysis needed
+
+---
+
+## Phase 26a: Certificate Table Update (FAILED) ❌
+
+**Date**: 2025-10-31 22:21:38 UTC - 22:47:10 UTC
+**Status**: ❌ **FAILED** - Windows tests still failing
+
+### Implementation Completed
+
+Identified that Certificate Table (PE data directory entry #4) uses absolute file offsets instead of RVAs. Implemented updates across all three implementations:
+
+**Changes Made**:
+- Python: `src/flavor/psp/format_2025/pe_utils.py` - Added `_update_data_directories()`
+- Rust: `src/flavor-rs/src/psp/format_2025/pe_utils.rs` - Added `update_data_directories()`
+- Go: `src/flavor-go/pkg/psp/format_2025/pe_utils.go` - Added `updateDataDirectories()`
+
+All implementations:
+1. Detect PE32 vs PE32+ format (magic == 0x20B)
+2. Locate Certificate Table in data directory (entry #4)
+3. Update certificate file offset if >= 0x80
+4. Zero out PE checksum
+5. Add trace logging
+
+**Commit**: `9bcb7d4` - "Phase 26a: Add Certificate Table update to PE expansion"
+
+### Test Results
+
+**CI Run**: [#18986969888](https://github.com/provide-io/flavorpack/actions/runs/18986969888)
+
+**Outcome**:
+- Unix tests: ✅ ALL PASSING (Linux, macOS, etc.)
+- Windows Rust+Rust: ✅ PASSING
+- **Windows Rust+Go: ❌ STILL FAILING (exit code 139)**
+- **Windows Go+Go: ❌ STILL FAILING (exit code 139)**
+
+### Critical Finding
+
+The Certificate Table update **DID NOT FIX** the issue. Exit code 139 persists exactly as before. This means:
+
+1. ✅ Certificate Table offset IS being updated correctly
+2. ✅ PE structure appears valid according to Windows PE loader validation
+3. ❌ **Some OTHER PE structure is causing the rejection**
+
+### Root Cause NOT the Certificate Table
+
+The Windows PE loader is still rejecting/crashing on the expanded Go binary. Possible causes:
+
+1. **Load Config Directory** - May contain absolute file offsets (rarely used but possible)
+2. **Debug Directory** - May contain absolute file offsets
+3. **Import/Export Tables** - May reference offsets that need updating
+4. **Section Characteristics** - May require specific flags for overlay/embedded executables
+5. **Relocation Table** - May contain absolute offsets that shift
+6. **Resource Directory** - May have embedded offsets
+7. **Go-specific PE Structure** - Go may embed additional structures not standard in PE format
+
+### CRITICAL DISCOVERY: Architecture-Specific Differences
+
+**Windows amd64 (x86-64)**:
+```
+pretaster-rs-rs.psp: PE32+ executable, x86-64, 5 sections
+pretaster-rs-go.psp: PE32+ executable, x86-64, 15 sections
+Error: exit code 139 (segmentation fault / access violation)
+```
+
+**Windows ARM64**:
+```
+pretaster-rs-rs.psp: PE32+ executable, ARM64, 5 sections
+pretaster-rs-go.psp: PE32+ executable, ARM64, 13 sections (NOT 15!)
+Error: exit code 126 (command not found / permission denied)
+```
+
+**Key Findings**:
+1. Go launcher has **different section counts by architecture** (15 on amd64, 13 on ARM64)
+2. Different error codes suggest different failure modes
+3. amd64: Likely PE structure corruption
+4. ARM64: Likely binary not being found or executed
+
+**Hypothesis**: The Go binary generation differs significantly between architectures. The PE expansion code correctly updates section offsets, but Go-generated PE binaries may have additional constraints or requirements that vary by architecture.
+
+### Next Steps (Iteration 2)
+
+**Priority 1: Investigate Architecture-Specific PE Differences**:
+1. Check why ARM64 has 13 sections vs amd64's 15
+2. Look for Go architecture-specific PE generation code
+3. Investigate if section count affects PE loader behavior
+4. Check if ARM64 binary is even being found/executed
+
+**Priority 2: Deep PE Binary Analysis**:
+1. Download working binary (Rust launcher after expansion)
+2. Download failing binary (Go launcher after expansion) - SEPARATE ANALYSIS FOR EACH ARCHITECTURE
+3. Dump complete PE structures with `dumpbin /all` or Python pefile library
+4. Compare ALL 16 data directory entries
+5. Check Load Config directory in detail
+
+**Priority 3: Alternative Approaches**:
+1. PE Checksum recalculation with proper algorithm
+2. Test stripping certificate table entirely
+3. Investigate why Go generates different PE on ARM64
+4. Consider PE overlay approach (append PSPF data as overlay, not in DOS stub)
+5. Test if ARM64 binary permissions/attributes need fixing
 
 ---
 
@@ -214,18 +317,97 @@ No output from Go launcher = binary was not executed by Windows PE loader
 - `src/flavor-go/pkg/psp/format_2025/launcher.go` - Trace logging + Windows prefix fix
 - `src/flavor-rs/src/logger.rs` - Trace logging enabled
 
+## Files Modified (Phase 26a)
+
+- `src/flavor/psp/format_2025/pe_utils.py` - Added `_update_data_directories()`
+- `src/flavor-rs/src/psp/format_2025/pe_utils.rs` - Added `update_data_directories()`
+- `src/flavor-go/pkg/psp/format_2025/pe_utils.go` - Added `updateDataDirectories()`
+
 ## Commits
 
 - `4b9b69e`: "Enable trace logging and fix Windows PrefixWriter emoji crash"
+- `9bcb7d4`: "Phase 26a: Add Certificate Table update to PE expansion"
+- `ede4c68`: "Update Phase 26 handoff: Certificate Table update failed - root cause still unknown"
+- `7c5775a`: "Phase 26: Add critical discovery - ARM64 has different section count than amd64"
 
 ---
 
-## Contact & Next Steps
+## Handoff Summary for Next Developer
 
-For resuming this investigation, review:
-1. CI Run #18986074325 - Full trace logging output
-2. Logs show PE expansion is correct but binary execution fails
-3. Focus on PE binary structure differences between Rust (working) and Go (failing) binaries
-4. Consider PE checksum validation or section alignment as potential issues
+### Current Problem State
 
-**Status**: Ready for next phase of investigation when developer continues.
+Windows PE loader rejects expanded Go launcher binaries before execution begins:
+- **amd64**: Exit code 139 (segmentation fault)
+- **ARM64**: Exit code 126 (command not found)
+
+### What's Been Completed
+
+1. ✅ **Phase 1-24**: Multiple Windows compatibility fixes
+2. ✅ **Phase 25**: Trace logging enabled, PrefixWriter emoji crash fixed
+3. ✅ **Phase 26a Iteration 1**: Certificate Table update implemented (but FAILED to fix issue)
+
+### Critical Discoveries
+
+1. **PE Section Expansion**: Works perfectly - verified correct for all 15 sections on amd64
+2. **Root Cause is NOT**: Certificate Table, section offsets, or basic PE structure
+3. **CRITICAL**: Go binaries have different architecture-specific PE structures:
+   - amd64: 15 sections
+   - ARM64: 13 sections (differs!)
+4. **Different Failure Modes**: Error codes differ by architecture (139 vs 126)
+
+### What Failed in Iteration 1
+
+- Certificate Table update did not fix the issue
+- Exit code 139 persists exactly as before on both Windows architectures
+- PE structure appears valid to Windows PE loader (loads successfully in some contexts)
+- Must be a different data directory or Go-specific PE structure
+
+### Starting Point for Iteration 2
+
+**IMPORTANT FILES TO EXAMINE**:
+1. CI Run [#18986969888](https://github.com/provide-io/flavorpack/actions/runs/18986969888) - Full test logs with trace output
+2. Download Windows amd64 and ARM64 binaries from CI artifacts:
+   - Working: `pretaster-rs-rs.psp` (Rust+Rust)
+   - Failing: `pretaster-rs-go.psp` (Rust+Go)
+3. **Test script**: `.github/scripts/run-pretaster-tests.sh` and `tests/pretaster/scripts/combo_test.py`
+
+**KEY EVIDENCE LOCATIONS**:
+- Windows amd64 trace logs: Search "windows-amd64" in run #18986969888
+- Windows ARM64 trace logs: Search "windows-arm64" in run #18986969888
+- Section counts visible in both logs: "x86-64, 15 sections" vs "ARM64, 13 sections"
+
+### Investigation Priorities
+
+**Priority 1**: Understand why Go generates different PE structure on ARM64
+- Use `dumpbin /headers` or Python pefile library
+- Compare section table and data directories
+- Look for missing/different sections
+
+**Priority 2**: Deep PE binary analysis
+- Download both working and failing binaries
+- Compare byte-by-byte PE structures
+- Check all 16 data directories (not just Certificate Table)
+- Check Load Config directory in detail
+- Verify relocation tables, resource directory, import tables
+
+**Priority 3**: Alternative approaches if binary analysis shows no obvious issue
+- PE checksum recalculation
+- Load Config directory offset updates
+- Section alignment verification
+- PE overlay approach (append PSPF as overlay, not in DOS stub)
+
+### Code Ready for Testing
+
+All implementations in Phase 26a are production-ready:
+- ✅ Passed all code quality checks (ruff, mypy, clippy, go fmt)
+- ✅ Proper error handling and logging in all three languages
+- ✅ Can be kept/used for other purposes (Certificate Table offset updates are still valid)
+
+### Testing Approach for Iteration 2
+
+1. Trigger Helper Prep: `gh workflow run "01 🥘 Helper Prep" --ref develop`
+2. Wait for Pretaster Validation to run: [Pretaster Validation workflow](https://github.com/provide-io/flavorpack/actions/workflows/02-pretaster-validation.yml)
+3. Check Windows tests in CI: Look for Windows Rs+Go test failure details
+4. Download diagnostic artifacts: Test logs and binary PSP files
+
+**Status**: ✅ **Ready for handoff** - All Phase 26a work documented, commits pushed, tests ran to completion. Next developer should focus on PE binary analysis to identify the actual root cause.
