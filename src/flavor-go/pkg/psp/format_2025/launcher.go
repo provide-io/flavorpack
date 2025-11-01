@@ -33,7 +33,7 @@ func LaunchWithLogLevel(exePath string, args []string, cliLogLevel, cliLogSource
 		logLevel = envLevel
 		logSource = "FLAVOR_LOG_LEVEL"
 	} else {
-		logLevel = "warn" // Default to warn for production safety
+		logLevel = "trace" // Default to trace for comprehensive diagnostics
 		logSource = "default"
 	}
 
@@ -60,9 +60,13 @@ func LaunchWithLogLevel(exePath string, args []string, cliLogLevel, cliLogSource
 		}
 	}
 
-	// Add 🐹 prefix to non-JSON output
+	// Add prefix to non-JSON output (ASCII on Windows, emoji on Unix)
 	if !jsonFormat {
-		output = logging.NewPrefixWriter("🐹 ", output)
+		prefix := "[GO] "
+		if runtime.GOOS != "windows" {
+			prefix = "🐹 "
+		}
+		output = logging.NewPrefixWriter(prefix, output)
 	}
 
 	loggerOpts := &hclog.LoggerOptions{
