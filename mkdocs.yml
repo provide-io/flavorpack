@@ -218,6 +218,11 @@ nav:
     - First Package: getting-started/first-package.md
     - Examples: getting-started/examples.md
 
+  # SECTION 1.5: Tutorials (hands-on learning)
+  - Tutorials:
+    - Overview: tutorials/index.md
+    - HTTPie Wrapper: tutorials/httpie-wrapper.md
+
   # SECTION 2: User Guide (concepts and how-to)
   - User Guide:
     - Overview: guide/index.md
