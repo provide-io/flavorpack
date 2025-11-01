@@ -22,6 +22,11 @@ echo "   Binary directory: $BIN_DIR"
 RUNNER_ARCH=$(uname -m)
 RUNNER_OS=$(uname -s | tr '[:upper:]' '[:lower:]')
 
+# Normalize Windows OS names (MINGW64_NT, MSYS_NT, etc.) to 'windows'
+if [[ "$RUNNER_OS" == mingw* ]] || [[ "$RUNNER_OS" == msys* ]] || [[ "$RUNNER_OS" == cygwin* ]]; then
+    RUNNER_OS="windows"
+fi
+
 # Map architecture names
 case "$RUNNER_ARCH" in
     x86_64) RUNNER_ARCH="amd64" ;;
@@ -64,7 +69,7 @@ test_binary() {
         native)
             # Test 1: Execute --version
             if version=$("$binary" --version 2>&1 | head -1); then
-                : # Version captured
+                echo "    📋 Version: $version" >&2
             else
                 echo "    ❌ Version check failed" >&2
                 version="Execution failed"
@@ -72,7 +77,9 @@ test_binary() {
             fi
 
             # Test 2: Execute --help
-            if "$binary" --help >/dev/null 2>&1; then
+            if help_output=$("$binary" --help 2>&1); then
+                echo "    📄 Help output:" >&2
+                echo "$help_output" | head -20 | sed 's/^/      /' >&2
                 echo "    ✅ Help text accessible" >&2
                 help_check="passed"
             else
@@ -82,7 +89,9 @@ test_binary() {
 
             # Test 3: Launcher CLI mode test (for launcher binaries only)
             if [[ "$binary_name" == *"launcher"* ]]; then
-                if "$binary" --flavor-cli --version >/dev/null 2>&1; then
+                if cli_help=$(FLAVOR_LAUNCHER_CLI=1 "$binary" help 2>&1); then
+                    echo "    📄 CLI help output:" >&2
+                    echo "$cli_help" | sed 's/^/      /' >&2
                     echo "    ✅ Launcher CLI mode working" >&2
                     cli_mode="passed"
                 else
