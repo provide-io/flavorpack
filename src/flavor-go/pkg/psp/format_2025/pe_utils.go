@@ -197,6 +197,171 @@ func updateDataDirectories(data []byte, paddingSize int, logger hclog.Logger) er
 	return nil
 }
 
+// rvaToFileOffset maps a Relative Virtual Address (RVA) to a file offset
+// by walking the section table. Returns (fileOffset, found).
+func rvaToFileOffset(data []byte, rva uint32, logger hclog.Logger) (uint32, bool) {
+	// Get PE header location
+	peOffset := int(binary.LittleEndian.Uint32(data[0x3C:0x40]))
+	coffOffset := peOffset + 4
+
+	// Read number of sections
+	numSections := int(binary.LittleEndian.Uint16(data[coffOffset+2 : coffOffset+4]))
+
+	// Read optional header size
+	optHdrSize := int(binary.LittleEndian.Uint16(data[coffOffset+16 : coffOffset+18]))
+
+	// Section table offset
+	sectionTableOffset := coffOffset + 20 + optHdrSize
+
+	// Walk section table to find which section contains this RVA
+	for i := 0; i < numSections; i++ {
+		sectionOffset := sectionTableOffset + (i * 40)
+
+		// Read section header fields
+		// VirtualAddress is at offset 12 in section header
+		// VirtualSize is at offset 8 in section header
+		// PointerToRawData is at offset 20 in section header
+		// SizeOfRawData is at offset 16 in section header
+
+		virtualAddr := binary.LittleEndian.Uint32(data[sectionOffset+12 : sectionOffset+16])
+		virtualSize := binary.LittleEndian.Uint32(data[sectionOffset+8 : sectionOffset+12])
+		pointerToRawData := binary.LittleEndian.Uint32(data[sectionOffset+20 : sectionOffset+24])
+
+		// Check if RVA falls within this section
+		if rva >= virtualAddr && rva < virtualAddr+virtualSize {
+			// Calculate offset within section and convert to file offset
+			offsetWithinSection := rva - virtualAddr
+			fileOffset := pointerToRawData + offsetWithinSection
+			logger.Trace("Mapped RVA to file offset",
+				"rva", fmt.Sprintf("0x%x", rva),
+				"section", i,
+				"section_va", fmt.Sprintf("0x%x", virtualAddr),
+				"file_offset", fmt.Sprintf("0x%x", fileOffset))
+			return fileOffset, true
+		}
+	}
+
+	logger.Trace("RVA not found in any section",
+		"rva", fmt.Sprintf("0x%x", rva))
+	return 0, false
+}
+
+// updateDebugDirectory updates PointerToRawData values in debug directory entries.
+// The Debug Directory (data directory entry #6) contains an array of IMAGE_DEBUG_DIRECTORY
+// structures. Each structure has both AddressOfRawData (RVA, doesn't need updating) and
+// PointerToRawData (absolute file offset, MUST be updated when DOS stub expands).
+//
+// Args:
+//   - data: PE executable data (modified in-place)
+//   - paddingSize: Number of bytes added to DOS stub
+//   - logger: Logger instance
+//
+// Returns error if operation fails
+func updateDebugDirectory(data []byte, paddingSize int, logger hclog.Logger) error {
+	// Get PE header location
+	peOffset := int(binary.LittleEndian.Uint32(data[0x3C:0x40]))
+	coffOffset := peOffset + 4
+
+	// Read magic number to identify PE32 vs PE32+
+	magic := binary.LittleEndian.Uint16(data[coffOffset+20 : coffOffset+22])
+	isPE32Plus := magic == 0x20B
+
+	// Data directory offset in optional header
+	var dataDirOffset int
+	if isPE32Plus {
+		dataDirOffset = coffOffset + 20 + 112
+	} else {
+		dataDirOffset = coffOffset + 20 + 96
+	}
+
+	// Debug Directory is the 7th entry (index 6) in data directory array
+	// Each entry is 8 bytes (4 bytes RVA + 4 bytes size)
+	debugDirEntryOffset := dataDirOffset + (6 * 8)
+
+	if debugDirEntryOffset+8 > len(data) {
+		logger.Trace("Debug directory entry beyond file bounds, skipping",
+			"entry_offset", fmt.Sprintf("0x%x", debugDirEntryOffset))
+		return nil
+	}
+
+	// Read debug directory entry (RVA and size)
+	debugDirRVA := binary.LittleEndian.Uint32(data[debugDirEntryOffset : debugDirEntryOffset+4])
+	debugDirSize := binary.LittleEndian.Uint32(data[debugDirEntryOffset+4 : debugDirEntryOffset+8])
+
+	// If no debug directory, skip
+	if debugDirRVA == 0 || debugDirSize == 0 {
+		logger.Trace("No debug directory present (RVA or size is 0)")
+		return nil
+	}
+
+	// Map debug directory RVA to file offset
+	debugDirFileOffset, found := rvaToFileOffset(data, debugDirRVA, logger)
+	if !found {
+		logger.Trace("Unable to map debug directory RVA to file offset, skipping debug directory update",
+			"debug_dir_rva", fmt.Sprintf("0x%x", debugDirRVA))
+		return nil
+	}
+
+	logger.Debug("Found debug directory",
+		"rva", fmt.Sprintf("0x%x", debugDirRVA),
+		"file_offset", fmt.Sprintf("0x%x", debugDirFileOffset),
+		"size", debugDirSize)
+
+	// Calculate number of debug directory entries
+	// Each IMAGE_DEBUG_DIRECTORY is 28 bytes
+	numDebugEntries := int(debugDirSize) / 28
+	logger.Debug("Debug directory entry count", "count", numDebugEntries)
+
+	// Update each debug directory entry's PointerToRawData field
+	// IMAGE_DEBUG_DIRECTORY structure:
+	//   offset 0: Characteristics (4 bytes)
+	//   offset 4: TimeDateStamp (4 bytes)
+	//   offset 8: MajorVersion (2 bytes)
+	//   offset 10: MinorVersion (2 bytes)
+	//   offset 12: Type (4 bytes)
+	//   offset 16: SizeOfData (4 bytes)
+	//   offset 20: AddressOfRawData (4 bytes, RVA)
+	//   offset 24: PointerToRawData (4 bytes, FILE OFFSET) ← THIS NEEDS UPDATE
+
+	updated := 0
+	for i := 0; i < numDebugEntries; i++ {
+		entryOffset := int(debugDirFileOffset) + (i * 28)
+
+		// PointerToRawData is at offset 24 within the debug directory entry
+		ptrRawDataOffset := entryOffset + 24
+
+		if ptrRawDataOffset+4 > len(data) {
+			logger.Trace("Debug entry PointerToRawData beyond file bounds",
+				"entry", i,
+				"offset", fmt.Sprintf("0x%x", ptrRawDataOffset))
+			continue
+		}
+
+		// Read current PointerToRawData
+		currentPtr := binary.LittleEndian.Uint32(data[ptrRawDataOffset : ptrRawDataOffset+4])
+
+		// Update if non-zero and >= 0x80 (after DOS stub start)
+		if currentPtr > 0 && currentPtr >= 0x80 {
+			newPtr := currentPtr + uint32(paddingSize)
+			binary.LittleEndian.PutUint32(data[ptrRawDataOffset:ptrRawDataOffset+4], newPtr)
+
+			logger.Trace("Updated debug entry PointerToRawData",
+				"entry", i,
+				"old_offset", fmt.Sprintf("0x%x", currentPtr),
+				"new_offset", fmt.Sprintf("0x%x", newPtr))
+			updated++
+		}
+	}
+
+	if updated > 0 {
+		logger.Debug("Updated debug directory entries",
+			"updated_count", updated,
+			"total_entries", numDebugEntries)
+	}
+
+	return nil
+}
+
 // expandDOSStub expands the DOS stub of a PE executable to match Rust/MSVC binary size.
 // This fixes Windows PE loader rejection of Go binaries when PSPF data is appended.
 // The DOS stub is expanded from 128 bytes (0x80) to 240 bytes (0xF0) to match Rust binaries.
@@ -255,6 +420,11 @@ func expandDOSStub(data []byte, logger hclog.Logger) ([]byte, error) {
 	// Update data directories (Certificate Table uses absolute file offsets)
 	if err := updateDataDirectories(newData, paddingSize, logger); err != nil {
 		return nil, fmt.Errorf("failed to update data directories: %w", err)
+	}
+
+	// Update debug directory entries (PointerToRawData fields use absolute file offsets)
+	if err := updateDebugDirectory(newData, paddingSize, logger); err != nil {
+		return nil, fmt.Errorf("failed to update debug directory: %w", err)
 	}
 
 	// Verify the modification

@@ -224,8 +224,7 @@ fn update_data_directories(data: &mut [u8], padding_size: usize) -> Result<()> {
 
     trace!(
         "Checked certificate table: offset=0x{:x}, size={}",
-        cert_file_offset,
-        cert_size
+        cert_file_offset, cert_size
     );
 
     // Update certificate table offset if it exists and is after the DOS stub
@@ -244,6 +243,211 @@ fn update_data_directories(data: &mut [u8], padding_size: usize) -> Result<()> {
     let checksum_offset = coff_offset + 20 + 64;
     data[checksum_offset..checksum_offset + 4].copy_from_slice(&0u32.to_le_bytes());
     trace!("Zeroed PE checksum (not required for executables)");
+
+    Ok(())
+}
+
+/// Map a Relative Virtual Address (RVA) to a file offset by walking the section table.
+///
+/// # Arguments
+/// * `data` - PE executable data
+/// * `rva` - Relative Virtual Address to map
+///
+/// # Returns
+/// File offset if mapping succeeded, None otherwise
+fn rva_to_file_offset(data: &[u8], rva: u32) -> Option<u32> {
+    // Get PE header location
+    let pe_offset = u32::from_le_bytes([data[0x3C], data[0x3D], data[0x3E], data[0x3F]]) as usize;
+    let coff_offset = pe_offset + 4;
+
+    // Read number of sections
+    let num_sections = u16::from_le_bytes([data[coff_offset + 2], data[coff_offset + 3]]) as usize;
+
+    // Read optional header size
+    let opt_hdr_size =
+        u16::from_le_bytes([data[coff_offset + 16], data[coff_offset + 17]]) as usize;
+
+    // Section table offset
+    let section_table_offset = coff_offset + 20 + opt_hdr_size;
+
+    // Walk section table to find which section contains this RVA
+    for i in 0..num_sections {
+        let section_offset = section_table_offset + (i * 40);
+
+        // Read section header fields
+        // VirtualAddress is at offset 12 in section header
+        // VirtualSize is at offset 8 in section header
+        // PointerToRawData is at offset 20 in section header
+
+        let virtual_addr = u32::from_le_bytes([
+            data[section_offset + 12],
+            data[section_offset + 13],
+            data[section_offset + 14],
+            data[section_offset + 15],
+        ]);
+        let virtual_size = u32::from_le_bytes([
+            data[section_offset + 8],
+            data[section_offset + 9],
+            data[section_offset + 10],
+            data[section_offset + 11],
+        ]);
+        let pointer_to_raw_data = u32::from_le_bytes([
+            data[section_offset + 20],
+            data[section_offset + 21],
+            data[section_offset + 22],
+            data[section_offset + 23],
+        ]);
+
+        // Check if RVA falls within this section
+        if rva >= virtual_addr && rva < virtual_addr + virtual_size {
+            let offset_within_section = rva - virtual_addr;
+            let file_offset = pointer_to_raw_data + offset_within_section;
+            trace!(
+                "Mapped RVA 0x{:x} to file offset 0x{:x} (section {}, VA=0x{:x})",
+                rva, file_offset, i, virtual_addr
+            );
+            return Some(file_offset);
+        }
+    }
+
+    trace!("RVA 0x{:x} not found in any section", rva);
+    None
+}
+
+/// Update debug directory entries' PointerToRawData values after DOS stub expansion.
+///
+/// The Debug Directory (data directory entry #6) contains an array of IMAGE_DEBUG_DIRECTORY
+/// structures. Each structure has both AddressOfRawData (RVA) and PointerToRawData (absolute
+/// file offset). The PointerToRawData field MUST be updated when the DOS stub expands.
+///
+/// # Arguments
+/// * `data` - PE executable data (modified in-place)
+/// * `padding_size` - Number of bytes added to DOS stub
+///
+/// # Returns
+/// Result indicating success or failure
+fn update_debug_directory(data: &mut [u8], padding_size: usize) -> Result<()> {
+    // Get PE header location
+    let pe_offset = u32::from_le_bytes([data[0x3C], data[0x3D], data[0x3E], data[0x3F]]) as usize;
+    let coff_offset = pe_offset + 4;
+
+    // Read magic number to identify PE32 vs PE32+
+    let magic = u16::from_le_bytes([data[coff_offset + 20], data[coff_offset + 21]]);
+    let is_pe32_plus = magic == 0x20B;
+
+    // Data directory offset in optional header
+    let data_dir_offset = if is_pe32_plus {
+        coff_offset + 20 + 112
+    } else {
+        coff_offset + 20 + 96
+    };
+
+    // Debug Directory is the 7th entry (index 6) in data directory array
+    let debug_dir_entry_offset = data_dir_offset + (6 * 8);
+
+    if debug_dir_entry_offset + 8 > data.len() {
+        trace!(
+            "Debug directory entry beyond file bounds, skipping: offset=0x{:x}",
+            debug_dir_entry_offset
+        );
+        return Ok(());
+    }
+
+    // Read debug directory entry (RVA and size)
+    let debug_dir_rva = u32::from_le_bytes([
+        data[debug_dir_entry_offset],
+        data[debug_dir_entry_offset + 1],
+        data[debug_dir_entry_offset + 2],
+        data[debug_dir_entry_offset + 3],
+    ]);
+    let debug_dir_size = u32::from_le_bytes([
+        data[debug_dir_entry_offset + 4],
+        data[debug_dir_entry_offset + 5],
+        data[debug_dir_entry_offset + 6],
+        data[debug_dir_entry_offset + 7],
+    ]);
+
+    // If no debug directory, skip
+    if debug_dir_rva == 0 || debug_dir_size == 0 {
+        trace!("No debug directory present (RVA or size is 0)");
+        return Ok(());
+    }
+
+    // Map debug directory RVA to file offset
+    let debug_dir_file_offset = match rva_to_file_offset(data, debug_dir_rva) {
+        Some(offset) => offset,
+        None => {
+            trace!(
+                "Unable to map debug directory RVA 0x{:x} to file offset, skipping",
+                debug_dir_rva
+            );
+            return Ok(());
+        }
+    };
+
+    debug!(
+        "Found debug directory: RVA=0x{:x}, file_offset=0x{:x}, size={}",
+        debug_dir_rva, debug_dir_file_offset, debug_dir_size
+    );
+
+    // Calculate number of debug directory entries (each is 28 bytes)
+    let num_debug_entries = (debug_dir_size as usize) / 28;
+    debug!("Debug directory entry count: {}", num_debug_entries);
+
+    // Update each debug directory entry's PointerToRawData field
+    // IMAGE_DEBUG_DIRECTORY structure:
+    //   offset 0: Characteristics (4 bytes)
+    //   offset 4: TimeDateStamp (4 bytes)
+    //   offset 8: MajorVersion (2 bytes)
+    //   offset 10: MinorVersion (2 bytes)
+    //   offset 12: Type (4 bytes)
+    //   offset 16: SizeOfData (4 bytes)
+    //   offset 20: AddressOfRawData (4 bytes, RVA)
+    //   offset 24: PointerToRawData (4 bytes, FILE OFFSET) ← THIS NEEDS UPDATE
+
+    let mut updated = 0;
+    for i in 0..num_debug_entries {
+        let entry_offset = (debug_dir_file_offset as usize) + (i * 28);
+
+        // PointerToRawData is at offset 24 within the debug directory entry
+        let ptr_raw_data_offset = entry_offset + 24;
+
+        if ptr_raw_data_offset + 4 > data.len() {
+            trace!(
+                "Debug entry {} PointerToRawData beyond file bounds, offset=0x{:x}",
+                i, ptr_raw_data_offset
+            );
+            continue;
+        }
+
+        // Read current PointerToRawData
+        let current_ptr = u32::from_le_bytes([
+            data[ptr_raw_data_offset],
+            data[ptr_raw_data_offset + 1],
+            data[ptr_raw_data_offset + 2],
+            data[ptr_raw_data_offset + 3],
+        ]);
+
+        // Update if non-zero and >= 0x80 (after DOS stub start)
+        if current_ptr > 0 && current_ptr >= 0x80 {
+            let new_ptr = current_ptr + padding_size as u32;
+            data[ptr_raw_data_offset..ptr_raw_data_offset + 4]
+                .copy_from_slice(&new_ptr.to_le_bytes());
+
+            trace!(
+                "Updated debug entry {} PointerToRawData: 0x{:x} -> 0x{:x}",
+                i, current_ptr, new_ptr
+            );
+            updated += 1;
+        }
+    }
+
+    if updated > 0 {
+        debug!(
+            "Updated {}/{} debug directory entries",
+            updated, num_debug_entries
+        );
+    }
 
     Ok(())
 }
@@ -311,6 +515,9 @@ pub fn expand_dos_stub(data: Vec<u8>) -> Result<Vec<u8>> {
 
     // Update data directories (Certificate Table uses absolute file offsets)
     update_data_directories(&mut new_data, padding_size)?;
+
+    // Update debug directory entries (PointerToRawData fields use absolute file offsets)
+    update_debug_directory(&mut new_data, padding_size)?;
 
     // Verify the modification
     let new_pe_offset =
