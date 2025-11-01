@@ -1429,7 +1429,76 @@ Upon detailed review of test logs from Run #18959580628, discovered that **all W
 
 ---
 
-**Windows compatibility effort is NOW TRULY COMPLETE and VERIFIED**. 🎉🎉🎉
+## Phase 17: Additional Windows Test Fixes (2025-10-31) 🔄 IN PROGRESS
+
+### Issues Discovered During Testing
+
+After deploying Phases 1-16, additional testing revealed:
+
+#### ✅ FIXED: DNS Resolution in Wheel Builds
+**File**: `.github/scripts/build-platform-wheel.sh`
+**Problem**: `pip` failed with `[Errno 11001] getaddrinfo failed` when building wheels from source on Windows
+**Solution**:
+```bash
+# Pre-install build dependencies
+python -m pip install --upgrade pip setuptools>=68.0.0 wheel
+
+# Build without isolation
+python -m build --wheel --no-isolation --outdir dist/
+```
+**Commit**: `53e35d7`
+**Status**: ✅ Fixed, awaiting CI verification
+
+#### ✅ FIXED: Test Validation False Failures
+**File**: `tests/pretaster/tests/combination-tests.sh`
+**Problem**: Exit codes checked AFTER piping through `sed | tee`, causing false test failures
+**Solution**: Capture exit code BEFORE piping
+```bash
+# Capture test output and exit code BEFORE piping
+test_output=$(test_taster_command "$output" $cmd $args 2>&1)
+test_exit_code=$?
+
+# Now pipe the captured output
+echo "$test_output" | sed "..." | tee -a "$log_file"
+
+# Check the actual test exit code
+if [ $test_exit_code -eq 0 ]; then
+    echo "✅ test passed"
+```
+**Commit**: `93d50e4`
+**Status**: ✅ Fixed and VERIFIED (Rust+Rust passed all 7 tests!)
+
+#### ✅ FIXED: Makefile Exit Code Bug
+**File**: `tests/pretaster/Makefile` (line 273)
+**Problem**: Used `$?` (Make variable) instead of `$$?` (shell variable), showing "exit code build-helpers"
+**Solution**: Changed to `$$?`
+**Commit**: `9da9d36`
+**Status**: ✅ Fixed, now shows actual exit codes
+
+#### ❌ ACTIVE: Go Launcher Exit Code 104 on Windows
+**Problem**: PSP files with embedded Go launcher fail immediately with exit code 104
+**Evidence**:
+- Rust Builder + Rust Launcher: ✅ All 7 tests pass
+- Rust Builder + Go Launcher: ❌ Fails instantly with exit code 104
+- No output before failure - PSP doesn't even start
+- Affects Windows AMD64 and ARM64
+
+**Current Status**:
+- Added debug logging to troubleshoot (commit `53f6e96`)
+- Helper rebuild in progress to generate debug output
+- Investigating why Go launcher PSPs fail when Rust launcher PSPs succeed
+
+**Observations**:
+- Phase 11-15 fixes ARE in the code and were included in helpers
+- Issue appeared after testing the combined fixes
+- According to HANDOFF Phase 16, this WAS working previously (all tests passed)
+- Something changed between then and now
+
+**Next Steps**:
+1. Review debug logs from next test run
+2. Compare working Rust+Rust vs failing Rust+Go execution
+3. Check if helper download/extraction is correct
+4. Verify Go launcher binary compatibility on Windows
 
 ---
 
