@@ -90,23 +90,31 @@ test_combination() {
     local test_num=1
     for cmd_spec in "${commands[@]}"; do
         IFS=':' read -r cmd desc args <<< "$cmd_spec"
-        
+
         echo "$emoji   ${test_num}️⃣ $desc:" | tee -a "$log_file"
         echo "$emoji   ─────────────────────────" | tee -a "$log_file"
-        
+
+        # Capture test output and exit code BEFORE piping to avoid PIPESTATUS issues on Windows
+        local test_output
+        local test_exit_code
+        test_output=$(test_taster_command "$output" $cmd $args 2>&1)
+        test_exit_code=$?
+
+        # Now pipe the captured output through formatting
         if [ "$cmd" = "env" ]; then
             # For env, show only first 10 lines
-            test_taster_command "$output" $cmd $args 2>&1 | head -10 | sed "s/^/$emoji     /" | tee -a "$log_file"
+            echo "$test_output" | head -10 | sed "s/^/$emoji     /" | tee -a "$log_file"
         else
-            test_taster_command "$output" $cmd $args 2>&1 | sed "s/^/$emoji     /" | tee -a "$log_file"
+            echo "$test_output" | sed "s/^/$emoji     /" | tee -a "$log_file"
         fi
-        
-        if [ ${PIPESTATUS[0]} -eq 0 ]; then
+
+        # Check the actual test exit code, not the pipeline exit code
+        if [ $test_exit_code -eq 0 ]; then
             echo "$emoji   ✅ $cmd test passed" | tee -a "$log_file"
         else
             echo "$emoji   ❌ $cmd test failed" | tee -a "$log_file"
         fi
-        
+
         echo "$emoji" | tee -a "$log_file"
         test_num=$((test_num + 1))
     done
