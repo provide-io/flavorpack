@@ -2,10 +2,10 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
 """Metadata validation functions for PSP packages.
 
-This module contains validation logic for package metadata structures.
-"""
+This module contains validation logic for package metadata structures."""
 
 from typing import Any
 

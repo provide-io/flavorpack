@@ -2,9 +2,10 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
-from __future__ import annotations
 
-"""TODO: Add module docstring."""
+"""PSPF Index Block Structure - 8192 bytes total."""
+
+from __future__ import annotations
 
 import struct
 import zlib

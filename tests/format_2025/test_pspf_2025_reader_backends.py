@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -21,6 +20,7 @@ from flavor.config.defaults import (
     DEFAULT_SLOT_DESCRIPTOR_SIZE,
 )
 from flavor.psp.format_2025.backends import FileBackend, MMapBackend, StreamBackend
+from flavor.psp.format_2025.constants import TRAILER_END_MAGIC, TRAILER_START_MAGIC
 from flavor.psp.format_2025.index import PSPFIndex
 from flavor.psp.format_2025.reader import PSPFReader, read_bundle, verify_bundle
 from flavor.psp.format_2025.slots import SlotDescriptor
@@ -91,10 +91,10 @@ class TestReaderBackends:
             data_copy[4:8] = b"\x00\x00\x00\x00"
             index.index_checksum = zlib.adler32(bytes(data_copy))
 
-            # Write MagicTrailer (📦 + index + 🪄)
-            f.write("📦".encode())  # 4 bytes
+            # Write MagicTrailer with bookends
+            f.write(TRAILER_START_MAGIC)  # 4 bytes
             f.write(index.pack())  # 8192 bytes
-            f.write("🪄".encode())  # 4 bytes
+            f.write(TRAILER_END_MAGIC)  # 4 bytes
 
             path = Path(f.name)
 

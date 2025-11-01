@@ -1,6 +1,16 @@
 #!/usr/bin/env python3
-# helpers/taster/taster/commands/mmap.py
-# Test and verify memory-mapped I/O usage
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
+"""TODO: Add module docstring."""
+
+#!/usr/bin/env python3
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
+"""TODO: Add module docstring."""
 
 import mmap
 import os
@@ -85,7 +95,7 @@ def detect_bundle_mmap():
 
     # Check 4: Backend detection via environment
     if os.environ.get("FLAVOR_BACKEND") == "mmap":
-        indicators.append("✅ FLAVOR_BACKEND=mmap is set")
+        pass
 
     return indicators
 
@@ -96,7 +106,7 @@ def test_mmap_operations():
 
     # Test 1: Can we use mmap?
     if check_mmap_support():
-        results.append("✅ mmap is supported on this system")
+        pass
     else:
         results.append("❌ mmap is not supported")
         return results
@@ -118,7 +128,6 @@ def test_mmap_operations():
                     _ = m[0]
                     _ = m[size // 2]
                     _ = m[-1]
-                    results.append(f"✅ Successfully mapped {size / 1024 / 1024:.0f}MB file")
 
             Path(f.name).unlink()
     except Exception as e:
@@ -128,11 +137,8 @@ def test_mmap_operations():
     try:
         from flavor.psp.format_2025.backends import MMapBackend
 
-        results.append("✅ MMapBackend is available")
-
         # Try to create one
         MMapBackend()
-        results.append("✅ MMapBackend instance created")
     except ImportError:
         results.append("⚠️ MMapBackend not available (flavor not installed?)")
     except Exception as e:
@@ -148,7 +154,6 @@ def mmap_command() -> None:
     click.echo("=" * 50)
 
     # System support
-    click.echo("\n📦 System Support:")
     for result in test_mmap_operations():
         click.echo(f"  {result}")
 
@@ -178,7 +183,7 @@ def mmap_command() -> None:
     # Conclusion
     click.echo("\n📊 Summary:")
     if any("memory-mapped" in str(i).lower() for i in indicators):
-        click.echo("  ✅ Bundle appears to be using memory-mapped I/O")
+        pass
     elif bundle_path := (sys.argv[0] if sys.argv[0].endswith(".psp") else None):
         if Path(bundle_path).exists():
             click.echo("  ⚠️ Bundle exists but mmap usage unclear")
@@ -191,4 +196,4 @@ def mmap_command() -> None:
 if __name__ == "__main__":
     mmap_command()
 
-# 🗺️💾🔍🪄
+# 🌶️📦🔚

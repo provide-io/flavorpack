@@ -208,6 +208,7 @@ extra_javascript:
 
 nav:
   - Home: index.md
+  - Roadmap: roadmap.md
 
   # SECTION 1: Getting Started (for new users)
   - Getting Started:
@@ -220,7 +221,6 @@ nav:
   # SECTION 2: User Guide (concepts and how-to)
   - User Guide:
     - Overview: guide/index.md
-    - Roadmap: guide/roadmap.md
 
     - Core Concepts:
       - guide/concepts/index.md

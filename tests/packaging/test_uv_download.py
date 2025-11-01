@@ -281,4 +281,5 @@ class TestUVDownload:
                 artifacts = packager.prepare_artifacts(work_path)
                 assert "uv_binary" in artifacts
 
+
 # 🌶️📦🔚

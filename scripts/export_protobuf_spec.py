@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
-#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
 """Export protobuf definitions to JSON/YAML specifications.
 
 This script reads the compiled protobuf definitions and exports them
-to JSON and YAML formats for language-agnostic reference.
-"""
+to JSON and YAML formats for language-agnostic reference."""
 
 import json
 import logging
@@ -29,7 +28,7 @@ def log_info(msg: str):
 
 
 def log_success(msg: str):
-    logger.info(f"✅ [SUCCESS] {msg}")
+    pass
 
 
 def log_debug(msg: str):
@@ -102,7 +101,6 @@ def categorize_operations(operations):
 
 def build_operation_spec():
     """Build the complete operation specification from protobuf."""
-    log_info("🔧 Building operation specification from protobuf")
 
     # Get the Operation enum descriptor
     operation_enum = operations_pb2.Operation.DESCRIPTOR
@@ -300,7 +298,6 @@ def main():
     # Print summary
     log_info("=" * 60)
     log_success("✨ Protobuf specification export complete!")
-    log_info("📁 Generated files:")
     log_info(f"   • {json_path}")
     log_info(f"   • {yaml_path}")
     log_info("   • spec/pspf_2025/operation_names.json")
@@ -315,4 +312,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 # 🌶️📦🔚

@@ -3,10 +3,8 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""
-Test suite for the new PSPF/2025 operation chain system.
-Validates that packed operations work correctly with the existing system.
-"""
+"""Test suite for the new PSPF/2025 operation chain system.
+Validates that packed operations work correctly with the existing system."""
 
 from pathlib import Path
 import tempfile
@@ -177,5 +175,6 @@ class TestOperationChains:
         # Convert to dict for JSON
         data = meta.to_dict()
         assert data["operations"] == "tar.gz"
+
 
 # 🌶️📦🔚

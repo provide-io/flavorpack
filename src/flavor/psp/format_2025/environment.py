@@ -2,6 +2,7 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
 """Environment variable management for PSPF/2025 packages.
 
 Handles platform-specific environment variables and layered environment processing."""
@@ -71,7 +72,6 @@ def process_runtime_env(env_map: dict[str, str], runtime_env: dict[str, Any]) ->
         environment for the packaged application. It ensures consistent
         environment handling across different platforms and launchers.
     """
-    plog.debug("🔧 Processing runtime environment configuration")
 
     pass_patterns = runtime_env.get("pass", [])
     should_preserve = _create_preserve_checker(pass_patterns)
@@ -80,8 +80,6 @@ def process_runtime_env(env_map: dict[str, str], runtime_env: dict[str, Any]) ->
     _process_map_operations(env_map, runtime_env, should_preserve)
     _process_set_operations(env_map, runtime_env)
     _verify_pass_requirements(pass_patterns, env_map)
-
-    plog.debug("✅ Runtime environment processing complete")
 
 
 def _create_preserve_checker(pass_patterns: list[str]) -> Callable[[str], bool]:

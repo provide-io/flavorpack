@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
 """Validate Flavor wheels for correctness and completeness."""
 
 import argparse
@@ -184,11 +184,9 @@ try:
 
     # Test basic import
     import flavor
-    pout(f"✅ Flavor version: {flavor.__version__ if hasattr(flavor, '__version__') else 'unknown'}")
 
     # Test CLI import
     from flavor.cli import main
-    pout("✅ CLI import successful")
 
     # Test helpers manager if available
     try:
@@ -197,7 +195,6 @@ try:
         helpers = manager.list_helpers()
         total_helpers = len(helpers.get('launchers', [])) + len(helpers.get('builders', []))
         if total_helpers > 0:
-            pout(f"✅ Found {total_helpers} helpers")
         else:
             pout("ℹ️ No embedded helpers (universal wheel)")
     except Exception as e:
@@ -207,7 +204,6 @@ try:
     try:
         from flavor.config import get_flavor_config
         config = get_flavor_config()
-        pout("✅ Config system working")
     except Exception as e:
         perr(f"⚠️ Config test: {e}")
 
@@ -269,7 +265,6 @@ def validate_wheel(wheel_path: Path, full: bool = False) -> bool:
 
     # Validate helpers
     if metadata["has_helpers"]:
-        print("\n🔧 Validating helpers:")
         success, messages = validate_helpers(wheel_path)
         for msg in messages:
             print(msg)
@@ -278,7 +273,6 @@ def validate_wheel(wheel_path: Path, full: bool = False) -> bool:
 
     # Full validation
     if full:
-        print("\n📦 Testing installation:")
         success, messages = validate_installation(wheel_path)
         for msg in messages:
             print(msg)
@@ -288,7 +282,7 @@ def validate_wheel(wheel_path: Path, full: bool = False) -> bool:
     # Summary
     print("\n" + "=" * 60)
     if all_valid:
-        print(f"✅ Validation passed for {wheel_path.name}")
+        print(f"✅ All validations passed for {wheel_path.name}")
     else:
         print(f"❌ Validation failed for {wheel_path.name}")
 
@@ -344,4 +338,5 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
 # 🌶️📦🔚

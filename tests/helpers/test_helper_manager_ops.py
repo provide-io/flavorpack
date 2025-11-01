@@ -1,3 +1,8 @@
+#
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
 """Test helpers/manager.py - List and get operations."""
 
 from __future__ import annotations
@@ -257,3 +262,6 @@ class TestGetHelperInfoHelper:
 
         info = manager._get_helper_info(mock_path)
         assert info is None
+
+
+# 🌶️📦🔚

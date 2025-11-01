@@ -1,3 +1,15 @@
+#
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
+"""TODO: Add module docstring."""
+
+#
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
 """Package management commands using Flavor API"""
 
 from pathlib import Path
@@ -22,7 +34,6 @@ def _get_flavor_api():
 
 @click.group("package")
 def package_command() -> None:
-    """📦 Package management using Flavor"""
     pass
 
 
@@ -51,7 +62,7 @@ def build(manifest, output, launcher_bin, strip, key_seed) -> None:
         )
 
         for path in paths:
-            click.echo(f"✅ Built: {path}")
+            pass
 
     except Exception as e:
         click.echo(f"❌ Build failed: {e}", err=True)
@@ -66,7 +77,6 @@ def verify(package) -> None:
 
     try:
         result = flavor_api.verify_package(package)
-        click.echo(f"✅ Package verified: {package}")
 
         if isinstance(result, dict):
             for key, value in result.items():
@@ -92,7 +102,6 @@ def generate_keys(output) -> None:
 
     try:
         priv_key, pub_key = flavor_api.generate_keys(output_dir)
-        click.echo("✅ Generated keys:")
         click.echo(f"  Private: {priv_key}")
         click.echo(f"  Public: {pub_key}")
 
@@ -108,7 +117,6 @@ def clean_cache() -> None:
 
     try:
         flavor_api.clean_cache()
-        click.echo("✅ Cleaned Flavor cache")
 
     except Exception as e:
         click.echo(f"❌ Cache cleaning failed: {e}", err=True)
@@ -155,7 +163,6 @@ def test_json(builder_bin, launcher_bin) -> None:
         output_path = tmpdir / "test.psp"
 
         try:
-            click.echo("🧪 Testing JSON manifest support...")
             click.echo(f"  Builder: {builder_bin or 'default'}")
             click.echo(f"  Launcher: {launcher_bin or 'default'}")
 
@@ -173,14 +180,11 @@ def test_json(builder_bin, launcher_bin) -> None:
                 click.echo("❌ Package build failed - no output", err=True)
                 sys.exit(1)
 
-            click.echo(f"✅ Built package: {output_path}")
-
             # Make it executable and test it
             output_path.chmod(0o755)
             result = subprocess.run([str(output_path)], capture_output=True, text=True)
 
             if result.returncode == 0:
-                click.echo("✅ Package executed successfully")
                 if result.stdout:
                     click.echo(f"  Output: {result.stdout.strip()}")
             else:
@@ -195,3 +199,6 @@ def test_json(builder_bin, launcher_bin) -> None:
         except Exception as e:
             click.echo(f"❌ JSON manifest test failed: {e}", err=True)
             sys.exit(1)
+
+
+# 🌶️📦🔚

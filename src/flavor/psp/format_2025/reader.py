@@ -2,9 +2,10 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
-from __future__ import annotations
 
-"""TODO: Add module docstring."""
+"""PSPF 2025 Format Reader."""
+
+from __future__ import annotations
 
 from collections.abc import Generator
 import contextlib
@@ -24,13 +25,15 @@ from flavor.config.defaults import (
     DEFAULT_HEADER_SIZE,
     DEFAULT_MAGIC_TRAILER_SIZE,
     DEFAULT_SLOT_DESCRIPTOR_SIZE,
-    TRAILER_END_MAGIC,
-    TRAILER_START_MAGIC,
 )
 from flavor.psp.format_2025.backends import (
     Backend,
     StreamBackend,
     create_backend,
+)
+from flavor.psp.format_2025.constants import (
+    TRAILER_END_MAGIC,
+    TRAILER_START_MAGIC,
 )
 from flavor.psp.format_2025.index import PSPFIndex
 from flavor.psp.format_2025.slots import SlotDescriptor, SlotView
@@ -148,7 +151,6 @@ class PSPFReader:
 
         # Read index from MagicTrailer
         index_data = self.read_magic_trailer()
-        logger.debug("📦 Parsing index from MagicTrailer", size=DEFAULT_HEADER_SIZE)
 
         # Convert to bytes if memoryview
         if isinstance(index_data, memoryview):
@@ -295,7 +297,11 @@ class PSPFReader:
 
         # DEBUG: Log checksum details for troubleshooting
         logger.debug(
-            f"🔍📖 Slot {slot_index} read checksum debug: expected={descriptor.checksum:016x}, actual={actual_checksum:016x}, size={len(slot_data)}"
+            "🔍 Verifying slot checksum",
+            slot_index=slot_index,
+            expected=f"{descriptor.checksum:016x}",
+            actual=f"{actual_checksum:016x}",
+            data_size=len(slot_data),
         )
 
         if actual_checksum != descriptor.checksum:
@@ -472,7 +478,7 @@ def verify_bundle(bundle_path: Path) -> bool:
         # Check signature if present
         try:
             if reader.verify_signature():
-                logger.debug("✅ Signature valid")
+                pass
         except Exception:
             pass  # Signature optional
 

@@ -1,8 +1,11 @@
-"""
-Security tests for PSPF package handling.
+#
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
 
-These tests ensure packages cannot be tampered with or exploited.
-"""
+"""Security tests for PSPF package handling.
+
+These tests ensure packages cannot be tampered with or exploited."""
 
 from pathlib import Path
 import tempfile
@@ -305,3 +308,6 @@ class TestCryptographicSecurity:
 
         # All keys should be unique
         assert len(seeds) == 100, "Random seed generation is not secure"
+
+
+# 🌶️📦🔚

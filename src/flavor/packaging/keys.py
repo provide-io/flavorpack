@@ -2,9 +2,10 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
-from __future__ import annotations
 
-"""TODO: Add module docstring."""
+"""Key management for FlavorPack package signing."""
+
+from __future__ import annotations
 
 from pathlib import Path
 

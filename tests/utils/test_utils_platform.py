@@ -315,4 +315,5 @@ class TestPlatformDetection:
         # Should return the lowercase version even if unknown
         assert arch_name == "unknown_arch"
 
+
 # 🌶️📦🔚

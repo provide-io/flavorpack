@@ -2,7 +2,9 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
 """Test for running the builder as a module."""
+
 import runpy
 import sys
 from unittest.mock import patch

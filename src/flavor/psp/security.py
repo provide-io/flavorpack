@@ -2,11 +2,11 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
 """PSP Security - Integrity verification and cryptographic operations.
 
 This module provides security-related functionality for PSP packages,
-including integrity verification, signature validation, and tamper detection.
-"""
+including integrity verification, signature validation, and tamper detection."""
 
 from enum import IntEnum
 from pathlib import Path

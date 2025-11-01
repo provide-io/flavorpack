@@ -2,6 +2,7 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
 """Package command for the flavor CLI."""
 
 from __future__ import annotations
@@ -9,8 +10,9 @@ from __future__ import annotations
 from pathlib import Path
 
 import click
+from provide.foundation.console import perr, pout
 
-from flavor.console import echo, echo_error, get_command_logger
+from flavor.console import get_command_logger
 from flavor.exceptions import BuildError, PackagingError
 from flavor.package import build_package_from_manifest, verify_package
 
@@ -117,13 +119,13 @@ def pack_command(
     )
 
     if not quiet:
-        echo("🚀 Packaging application...")
+        pout("🚀 Packaging application...")
 
     _setup_workenv_base(workenv_base)
 
     try:
         if not quiet:
-            echo("📦 Building package artifacts...")
+            pass
 
         built_artifacts = _build_package_artifacts(
             pyproject_toml_path,
@@ -139,7 +141,7 @@ def pack_command(
         )
 
         if not quiet:
-            echo("🔍 Processing and verifying artifacts...")
+            pout("🔍 Processing and verifying artifacts...")
 
         _process_built_artifacts(built_artifacts, verify, strip, quiet)
         _show_final_results(built_artifacts, quiet)
@@ -148,7 +150,7 @@ def pack_command(
 
     except (BuildError, PackagingError, click.UsageError) as e:
         log.error("Packaging failed", error=str(e), manifest=pyproject_toml_path)
-        echo_error(f"❌ Packaging Failed:\n{e}")
+        perr(f"❌ Packaging Failed:\n{e}")
         raise click.Abort() from e
 
 
@@ -191,10 +193,10 @@ def _process_built_artifacts(built_artifacts: list[Path], verify: bool, strip: b
     for artifact in built_artifacts:
         log.debug("Processing artifact", artifact=str(artifact), verify=verify, strip=strip)
         if not quiet:
-            echo(f"✅ Successfully built artifact at {artifact}")
+            pass
 
         if strip and not quiet:
-            echo("  📉 Binary optimized (debug symbols stripped)")
+            pout("  📉 Binary optimized (debug symbols stripped)")
 
         if verify:
             _verify_artifact(artifact, quiet)
@@ -204,21 +206,21 @@ def _verify_artifact(artifact: Path, quiet: bool) -> None:
     """Verify a single artifact and handle the results."""
     log.debug("Verifying artifact", artifact=str(artifact))
     if not quiet:
-        echo(f"🔍 Verifying {artifact}...")
+        pout(f"🔍 Verifying {artifact}...")
 
     try:
         result = verify_package(artifact)
         if result["signature_valid"]:
             log.info("Package verified successfully", artifact=str(artifact))
             if not quiet:
-                echo("  ✅ Package verified successfully")
+                pass
         else:
             log.error("Package verification failed", artifact=str(artifact))
-            echo_error("  ❌ Package verification failed")
+            perr("  ❌ Package verification failed")
             raise BuildError(f"Verification failed for {artifact}")
     except Exception as e:
         log.error("Verification error", artifact=str(artifact), error=str(e))
-        echo_error(f"  ❌ Verification error: {e}")
+        perr(f"  ❌ Verification error: {e}")
         raise BuildError(f"Verification failed for {artifact}: {e}") from e
 
 
@@ -227,10 +229,10 @@ def _show_final_results(built_artifacts: list[Path], quiet: bool) -> None:
     if built_artifacts:
         log.info("All targets built successfully", artifact_count=len(built_artifacts))
         if not quiet:
-            echo("✅ All targets built successfully.")
+            pass
     else:
         log.warning("No targets were specified or built")
-        echo("⚠️ No targets were specified or built.")
+        pout("⚠️ No targets were specified or built.")
 
 
 # 🌶️📦🔚

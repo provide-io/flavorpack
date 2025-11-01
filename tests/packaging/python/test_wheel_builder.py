@@ -1,6 +1,8 @@
 #
-# tests/packaging/python/test_wheel_builder.py
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
 #
+
 """Tests for WheelBuilder dependency resolution functionality."""
 
 from pathlib import Path
@@ -433,3 +435,6 @@ class TestWheelBuilderCriticalFeatures:
         # Verify no cross-contamination of methods
         assert not hasattr(self.wheel_builder.pypapip, "_get_uv_venv_cmd")
         assert not hasattr(self.wheel_builder.uv, "_get_pypapip_download_cmd")
+
+
+# 🌶️📦🔚

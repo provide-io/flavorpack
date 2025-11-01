@@ -2,6 +2,7 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+
 """TODO: Add module docstring."""
 
 import os
@@ -224,7 +225,6 @@ def find_builder_executable(builder_bin: str | None) -> Path:
             raise BuildError(
                 "❌ No builder binaries found!\n"
                 "\n"
-                "🔧 To fix this issue, run one of:\n"
                 "   • cd helpers && ./build.sh     (build both Go and Rust builders)\n"
                 "   • make build-helpers           (if using make)\n"
                 "   • flavor helpers build         (if flavor CLI is available)\n"
@@ -265,7 +265,6 @@ def find_launcher_executable(launcher_bin: str | None) -> Path:
             raise BuildError(
                 "❌ No launcher binaries found!\n"
                 "\n"
-                "🔧 To fix this issue, run one of:\n"
                 "   • cd helpers && ./build.sh     (build both Go and Rust launchers)\n"
                 "   • make build-helpers           (if using make)\n"
                 "   • flavor helpers build         (if flavor CLI is available)\n"
@@ -331,9 +330,9 @@ def create_python_builder_metadata(
             },
             {
                 "type": "chmod",
-                "path": "{workenv}/bin/*",
+                "path": f"{{workenv}}/{bin_dir}/*",
                 "mode": "700",
-                "description": "Make all scripts in bin/ executable",
+                "description": f"Make all scripts in {bin_dir}/ executable",
             },
             {
                 "type": "write_file",

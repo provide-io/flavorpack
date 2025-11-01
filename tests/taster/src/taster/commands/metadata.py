@@ -1,3 +1,8 @@
+#
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
 """Display package metadata including build info"""
 
 import json
@@ -35,7 +40,6 @@ def metadata_command() -> None:
             try:
                 with open(path) as f:
                     metadata = json.load(f)
-                click.echo(f"📄 Loaded metadata from: {path}")
                 break
             except Exception as e:
                 click.secho(f"⚠️ Failed to load {path}: {e}", fg="yellow")
@@ -69,7 +73,6 @@ def metadata_command() -> None:
 
     # Display metadata sections
     if "package" in metadata:
-        click.secho("\n📦 Package:", fg="green")
         pkg = metadata["package"]
         click.echo(f"  Name: {pkg.get('name', 'unknown')}")
         click.echo(f"  Version: {pkg.get('version', 'unknown')}")
@@ -84,12 +87,10 @@ def metadata_command() -> None:
         click.echo(f"  Host: {build.get('host', 'unknown')}")
 
     if "slots" in metadata:
-        click.secho("\n📁 Slots:", fg="blue")
         for slot in metadata["slots"]:
             click.echo(f"  [{slot['index']}] {slot['name']} ({slot.get('purpose', 'unknown')})")
 
     if "execution" in metadata:
-        click.secho("\n⚙️ Execution:", fg="magenta")
         exec_info = metadata["execution"]
         click.echo(f"  Command: {exec_info.get('command', 'unknown')}")
         click.echo(f"  Primary Slot: {exec_info.get('primary_slot', 0)}")
@@ -106,5 +107,7 @@ def metadata_command() -> None:
 
     # Show raw JSON if verbose
     if click.get_current_context().params.get("verbose"):
-        click.secho("\n📄 Raw Metadata (JSON):", fg="white", dim=True)
         click.echo(json.dumps(metadata, indent=2))
+
+
+# 🌶️📦🔚

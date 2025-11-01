@@ -1,4 +1,15 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
+"""TODO: Add module docstring."""
+
+#!/usr/bin/env python3
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
 """Cross-language compatibility testing command for PSPF packages."""
 
 import json
@@ -415,7 +426,6 @@ entry_point = "crosslang_test:main"
                         self.log(f"     - {launcher.name}", "warning")
                 return 1
 
-            self.log(f"\n📦 Found {len(available_launchers)} platform-compatible launchers to test:")
             for launcher in available_launchers:
                 self.log(f"  • {launcher.name} ({launcher.language})")
 
@@ -427,7 +437,6 @@ entry_point = "crosslang_test:main"
                 pkg = self.build_with_launcher(launcher_info)
                 if pkg:
                     built_packages.append((pkg, launcher_info))
-                    self.log(f"    ✅ Success: {pkg.name}", "success")
                 else:
                     self.log("    ❌ Failed", "error")
                     # Show error details from build_tests
@@ -439,7 +448,7 @@ entry_point = "crosslang_test:main"
             self.log("\n🔍 Testing Python verification of all packages...")
             for pkg, launcher_info in built_packages:
                 if self.verify_with_python(pkg):
-                    self.log(f"  ✅ {pkg.name}", "success")
+                    pass
                 else:
                     self.log(f"  ❌ {pkg.name}", "error")
 
@@ -447,7 +456,7 @@ entry_point = "crosslang_test:main"
             self.log("\n🔍 Testing launcher CLI verification...")
             for pkg, launcher_info in built_packages:
                 if self.verify_with_launcher_cli(pkg, launcher_info.language):
-                    self.log(f"  ✅ {pkg.name} (CLI)", "success")
+                    pass
                 else:
                     self.log(f"  ❌ {pkg.name} (CLI)", "error")
 
@@ -458,7 +467,7 @@ entry_point = "crosslang_test:main"
                 self.log(f"  Testing {pkg.name}:")
                 for cmd in test_commands:
                     if self.test_cli_command(pkg, cmd):
-                        self.log(f"    ✅ {cmd}", "success")
+                        pass
                     else:
                         self.log(f"    ⚠️ {cmd}", "warning")
 
@@ -466,7 +475,7 @@ entry_point = "crosslang_test:main"
             self.log("\n🔄 Testing reproducible builds...")
             for launcher_info in available_launchers:
                 if self.test_reproducible_build(launcher_info):
-                    self.log(f"  ✅ {launcher_info.name} is reproducible", "success")
+                    pass
                 else:
                     self.log(f"  ⚠️ {launcher_info.name} not fully reproducible", "warning")
 
@@ -504,7 +513,7 @@ entry_point = "crosslang_test:main"
                 self.log(f"Reproducible: {self.results['summary']['reproducible']}")
 
                 if self.results["summary"]["overall_success"]:
-                    self.log("\n✅ Cross-language compatibility: PASSED", "success")
+                    pass
                 else:
                     self.log("\n❌ Cross-language compatibility: FAILED", "error")
 
@@ -524,8 +533,6 @@ entry_point = "crosslang_test:main"
 @click.option("--json", "json_output", is_flag=True, help="Output results as JSON")
 @click.option("--output-file", "-o", type=click.Path(), help="Write output to file")
 def crosslang_command(verbose, json_output, output_file) -> None:
-    """🌍 Test cross-language compatibility between Python, Go, and Rust."""
-
     tester = CrossLangTester(verbose=verbose, json_output=json_output)
     exit_code = tester.run_all_tests()
 
@@ -535,3 +542,6 @@ def crosslang_command(verbose, json_output, output_file) -> None:
             json.dump(tester.results, f, indent=2)
 
     sys.exit(exit_code)
+
+
+# 🌶️📦🔚
