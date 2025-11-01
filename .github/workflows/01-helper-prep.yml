@@ -144,8 +144,11 @@ jobs:
           # Map to Go env vars
           export GOOS=$OS
           export GOARCH=$ARCH
-          # Disable CGO for static binaries (especially important for Windows)
-          export CGO_ENABLED=0
+          # Disable CGO for static binaries on Unix (Linux/macOS)
+          # Windows requires dynamic linking for PSP format compatibility
+          if [ "$OS" != "windows" ]; then
+            export CGO_ENABLED=0
+          fi
 
           # Add .exe extension for Windows
           EXE_EXT=""
