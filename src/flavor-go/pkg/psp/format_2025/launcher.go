@@ -1,5 +1,7 @@
 package format_2025
 
+// Cache invalidation: Force rebuild to include Windows spawn mode fix (2025-10-31)
+
 import (
 	"errors"
 	"fmt"
