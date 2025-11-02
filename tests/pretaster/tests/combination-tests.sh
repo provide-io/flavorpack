@@ -75,6 +75,37 @@ test_combination() {
         return 1
     fi
 
+    # Immediate .exe validation for Windows
+    if [[ "$OS" == "windows" ]]; then
+        echo "$emoji" | tee -a "$log_file"
+        echo "$emoji   🔍 Immediate .exe validation..." | tee -a "$log_file"
+
+        # Test if Windows can load and execute the binary
+        if "$output" --help > /dev/null 2>&1; then
+            echo "$emoji   ✅ Windows loaded .exe successfully" | tee -a "$log_file"
+        else
+            local load_exit=$?
+            echo "$emoji   ❌ Windows PE loader rejected .exe (exit code: $load_exit)" | tee -a "$log_file"
+            echo "$emoji      This indicates PE header issue BEFORE launcher runs" | tee -a "$log_file"
+
+            # Collect immediate diagnostics
+            if command -v xxd >/dev/null 2>&1; then
+                local diag_base="failure-diagnostics/$(basename "$output" .psp)-load-fail"
+                mkdir -p failure-diagnostics/
+
+                echo "$emoji   📦 Collecting diagnostics..." | tee -a "$log_file"
+                cp "$output" "${diag_base}.exe" 2>/dev/null
+                xxd "$output" | head -64 > "${diag_base}.hex" 2>/dev/null
+
+                # Check PE offset
+                local pe_offset=$(xxd -s 0x3c -l 4 -p "$output" 2>/dev/null)
+                echo "$emoji      PE offset: 0x$pe_offset" | tee -a "$log_file"
+            fi
+
+            return 1
+        fi
+    fi
+
     # Validate PE header on Windows before testing
     if [[ "$OS" == "windows" ]]; then
         echo "$emoji" | tee -a "$log_file"

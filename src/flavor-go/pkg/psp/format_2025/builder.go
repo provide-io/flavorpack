@@ -529,22 +529,40 @@ func convertToResourceEmbedding(filePath string, launcherSize int64, logger hclo
 	pspfData := data[launcherSize:]
 	logger.Debug("Extracted PSPF data", "size", len(pspfData))
 
-	// Truncate file to just the launcher
-	if err := os.Truncate(filePath, launcherSize); err != nil {
-		return fmt.Errorf("failed to truncate file: %w", err)
-	}
-	logger.Debug("Truncated file to launcher size", "size", launcherSize)
+	// Create unique temp file (NEVER modify original until success)
+	// This avoids Windows file locking issues with in-place modification
+	pid := os.Getpid()
+	timestamp := time.Now().Unix()
+	tempPath := fmt.Sprintf("%s.tmp.%d.%d", filePath, pid, timestamp)
+	logger.Debug("Creating temporary file for resource embedding", "temp_path", tempPath)
 
-	// Force garbage collection to release file handles (Windows-specific)
-	// Windows may keep file handle open after os.Truncate()
-	runtime.GC()
-	time.Sleep(10 * time.Millisecond) // Brief pause for OS to release handles
-	logger.Debug("Forced GC and sleep to ensure file handles released after truncate")
-
-	// Embed PSPF as resource
-	if err := EmbedPSPFAsResource(filePath, pspfData, logger); err != nil {
-		return fmt.Errorf("failed to embed as resource: %w", err)
+	// Write launcher to temp file
+	if err := os.WriteFile(tempPath, data[:launcherSize], os.FileMode(ExecutablePerms)); err != nil {
+		return fmt.Errorf("failed to write temp file: %w", err)
 	}
+
+	// Ensure temp file cleanup on error
+	var embedErr error
+	defer func() {
+		if embedErr != nil {
+			os.Remove(tempPath)
+			logger.Debug("Cleaned up temp file after error", "temp_path", tempPath)
+		}
+	}()
+
+	// Embed PSPF as resource in temp file
+	embedErr = EmbedPSPFAsResource(tempPath, pspfData, logger)
+	if embedErr != nil {
+		return fmt.Errorf("failed to embed as resource: %w", embedErr)
+	}
+
+	// Atomically replace original with temp file
+	embedErr = atomicReplace(tempPath, filePath, logger)
+	if embedErr != nil {
+		return fmt.Errorf("failed to replace original file: %w", embedErr)
+	}
+
+	embedErr = nil // Success, don't delete temp file (it's now the original)
 
 	// Verify the resource was embedded
 	newSize, err := getFileSize(filePath)
