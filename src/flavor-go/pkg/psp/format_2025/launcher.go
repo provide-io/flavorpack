@@ -211,35 +211,48 @@ func execBundle(exePath string, args []string, userCwd string, logger hclog.Logg
 // execBundleReplace prepares and executes a bundle using syscall.Exec (process replacement)
 func execBundleReplace(exePath string, args []string, userCwd string, logger hclog.Logger) error {
 	// Prepare the command (do all extraction and setup)
+	logger.Debug("Preparing command for exec mode", "exe", exePath, "args", args, "cwd", userCwd)
 	var cmd *exec.Cmd
 	cmd, err := runBundleWithCwd(exePath, args, userCwd, logger)
 	if err != nil {
+		logger.Error("Failed to prepare command for exec", "error", err)
 		return err
 	}
 
 	// Convert exec.Cmd to syscall.Exec arguments
 	binary := cmd.Path
+	logger.Trace("Binary path extracted from command", "path", binary)
+
 	argv := cmd.Args
 	if argv == nil || len(argv) == 0 {
+		logger.Debug("Command args are nil/empty, using binary as sole argument")
 		argv = []string{binary}
 	}
+	logger.Trace("Command arguments prepared", "argv", argv)
 
 	// Convert environment to []string format
 	envv := cmd.Env
 	if envv == nil {
+		logger.Debug("Command environment is nil, using os.Environ()")
 		envv = os.Environ()
 	}
+	logger.Trace("Environment prepared", "env_count", len(envv))
 
 	logger.Debug("🔄 Replacing process via exec", "binary", binary, "args", argv[1:])
+	logger.Trace("About to call syscall.Exec - process will be replaced")
 
 	// This replaces the current process and never returns on success
 	err = syscall.Exec(binary, argv, envv)
+
+	// If we reach here, syscall.Exec failed
+	logger.Error("🚨 syscall.Exec failed", "error", err, "binary", binary, "argv", argv)
 	if err != nil {
 		return fmt.Errorf("syscall.Exec failed: %w", err)
 	}
 
-	// This should never be reached
-	return errors.New("syscall.Exec returned unexpectedly")
+	// This should never be reached (even on error, we return above)
+	logger.Error("🚨 CRITICAL: syscall.Exec returned with nil error - this should be impossible")
+	return errors.New("syscall.Exec returned unexpectedly with no error")
 }
 
 // Note: Signal handling and cleanup are not compatible with syscall.Exec.

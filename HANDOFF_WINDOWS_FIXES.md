@@ -618,3 +618,211 @@ All implementations in Phase 26a are production-ready:
 4. Download diagnostic artifacts: Test logs and binary PSP files
 
 **Status**: ✅ **Ready for handoff** - All Phase 26a work documented, commits pushed, tests ran to completion. Next developer should focus on PE binary analysis to identify the actual root cause.
+
+---
+
+## Phase 31: Infrastructure Fixes - Go Builder and Launcher Runtime Issues
+
+**Date**: 2025-11-01
+**Status**: 🔄 **IN PROGRESS** - Fix #5: Exit Code Propagation (Implementation in progress)
+**Key Discovery**: The Windows issues were NOT about PE structure but about **infrastructure bugs** in the Go builder and launcher
+
+### Major Paradigm Shift
+
+After 27 phases focused on PE binary structure, we discovered the real issues were **fundamental infrastructure bugs**:
+
+1. ✅ **Go Builder couldn't complete builds on Windows** - File locking prevented PE resource embedding
+2. ✅ **Go Launcher mangled Windows paths** - Backslashes treated as escape characters
+3. 🔄 **Go Launcher couldn't propagate exit codes** - Unix-specific code failing on Windows
+
+---
+
+## Fix #1: PE Resource Embedding File Locking ✅ COMPLETE
+
+**Problem**: Windows Go builder failed during PE resource embedding with error:
+```
+failed to remove original EXE: The process cannot access the file 
+because it is being used by another process.
+```
+
+**Root Cause**: `defer` statements in Go execute when function returns, but Windows requires ALL file handles closed BEFORE file deletion. The code used:
+```go
+defer inputFile.Close()
+defer outputFile.Close()
+// ... later ...
+os.Remove(exePath)  // FAILS - handles still open!
+```
+
+**Solution** (`src/flavor-go/pkg/psp/format_2025/pe_resources.go`):
+1. Removed all `defer` statements for file handles
+2. Added explicit `Close()` calls in correct order (output first, then input)
+3. Added `runtime.GC()` + 10ms sleep to force garbage collection
+4. Added proper error handling and cleanup on all error paths
+
+**Files Modified**:
+- `src/flavor-go/pkg/psp/format_2025/pe_resources.go` (lines 48-137)
+
+**Result**: ✅ Go builder now successfully completes Windows builds (Rs+Go, Go+Go)
+
+**Test Evidence**: Helper Prep runs show Windows builds completing successfully
+
+---
+
+## Fix #2: Windows Path Handling ✅ COMPLETE
+
+**Problem**: Go launcher constructed malformed Windows paths like:
+```
+C:Usersrunneradmin.cacheflavorworkenv  (missing backslashes!)
+```
+Should be:
+```
+C:\Users\runneradmin\.cache\flavor\workenv
+```
+
+**Root Cause**: The `shellparse.Split()` function treats backslashes as escape characters (POSIX shell behavior), so `C:\Users` became `C:Users` because `\U` was treated as escaped `U`.
+
+**Solution** (`src/flavor-go/pkg/psp/format_2025/execution.go`):
+
+Convert all Windows paths to forward slashes BEFORE passing to shell parser. Windows accepts both `/` and `\`, so this is safe:
+
+```go
+// Convert to forward slashes for command string substitution on Windows
+// This prevents backslashes from being treated as escape characters
+workenvDirForCmd := filepath.ToSlash(workenvDir)
+```
+
+Applied to all command string substitutions:
+- Line 180: Created `workenvDirForCmd` variable
+- Lines 314, 346, 371: Updated setup command substitutions  
+- Line 432: Updated execution command substitution
+- Line 430: Added filepath.ToSlash() for slot paths
+
+**Files Modified**:
+- `src/flavor-go/pkg/psp/format_2025/execution.go` (lines 178-432)
+
+**Result**: ✅ Command arguments now use forward slashes, preventing path corruption
+
+**Test Evidence**: Logs show correct paths like `C:/REDACTED_ABS_PATH`
+
+---
+
+## Fix #3: Exit Code Propagation 🔄 IN PROGRESS
+
+**Problem**: Go launcher failed ALL Windows runtime tests with exit code 104, even when child process succeeded.
+
+**Root Cause Discovery**:
+
+The `spawnBundle()` function used Unix-specific `syscall.WaitStatus`:
+```go
+if status, ok := exitErr.Sys().(syscall.WaitStatus); ok {
+    os.Exit(status.ExitStatus())  // Works on Unix
+}
+```
+
+On Windows:
+1. `syscall.WaitStatus` doesn't exist
+2. Type assertion fails → falls through to error return
+3. Caller (`execBundle`) unconditionally exits with code 104
+
+**Evidence from test logs**:
+- Exit code 42 test: **PASSED** (non-zero exit codes work!)
+- Exit code 0 test: **FAILED** with exit code 104 (success path broken!)
+
+**Solution** (`src/flavor-go/pkg/psp/format_2025/launcher_cli.go`):
+
+Replaced Unix-specific code with cross-platform `exitErr.ExitCode()`:
+
+```go
+if err := cmd.Wait(); err != nil {
+    if exitErr, ok := err.(*exec.ExitError); ok {
+        // Cross-platform method (works on Windows + Unix)
+        logger.Info("⏹️ Process exited", "code", exitErr.ExitCode())
+        os.Exit(exitErr.ExitCode())
+    }
+    return fmt.Errorf("process failed: %w", err)
+}
+
+// Child process exited successfully with code 0
+logger.Info("⏹️ Process exited", "code", 0)
+os.Exit(0)
+```
+
+Also removed unused `syscall` import (line 10).
+
+**Files Modified**:
+- `src/flavor-go/pkg/psp/format_2025/launcher_cli.go` (lines 3-10, 329-341)
+
+**Status**: 🔄 Code implemented, awaiting build and test validation
+
+---
+
+## Testing Status
+
+### Completed Validation
+
+**Fix #1** (File Locking):
+- ✅ Helper Prep #18999132567: Windows builds completing
+- ✅ Pretaster #18999233888: All builds successful (Rs+Go, Go+Go)
+
+**Fix #2** (Path Handling):
+- ✅ Logs show forward-slash paths: `C:/Users/...` 
+- ✅ No more path corruption errors
+
+**Fix #3** (Exit Code):
+- 🔄 Build #18999773563: **Cancelled** (awaiting rebuild)
+- 🔄 Testing in progress
+
+### Expected Outcome (Fix #3 Complete)
+
+When all fixes are validated:
+- Rs+Rs: ✅ PASS (already working)
+- Rs+Go: ✅ PASS (currently failing with exit 104)
+- Go+Rs: ✅ PASS (already working)
+- Go+Go: ✅ PASS (currently failing)
+
+**Target**: 100% pass rate across all 4 Windows builder/launcher combinations
+
+---
+
+## Critical Insight
+
+**The Real Problem Was Infrastructure, Not PE Structure**:
+
+We spent Phases 1-27 focused on PE binary structure (DOS stub expansion, section offsets, Certificate Tables, Debug Directories) when the actual blockers were:
+
+1. **Build-time**: File locking preventing Windows builds from completing
+2. **Runtime**: Path handling and exit code bugs in the Go launcher
+
+**Lessons Learned**:
+- Always verify builds complete before debugging runtime behavior
+- Test all builder/launcher combinations systematically
+- Infrastructure bugs can masquerade as binary format issues
+- Cross-platform code must use platform-agnostic APIs (`ExitCode()` vs `WaitStatus`)
+
+---
+
+## Files Modified (Phase 31)
+
+**PE Resource Embedding** (Fix #1):
+- `src/flavor-go/pkg/psp/format_2025/pe_resources.go`
+
+**Path Handling** (Fix #2):
+- `src/flavor-go/pkg/psp/format_2025/execution.go`
+
+**Exit Code Propagation** (Fix #3):
+- `src/flavor-go/pkg/psp/format_2025/launcher_cli.go`
+
+---
+
+## Next Steps
+
+1. ✅ Fix #1 Complete: File locking resolved
+2. ✅ Fix #2 Complete: Path handling resolved  
+3. 🔄 Fix #3 Testing: Validate exit code propagation fix
+4. ⏳ Full validation: Wait for Pretaster results with all fixes
+
+**CI Pipeline**: 
+- Trigger: `gh workflow run "01 🥘 Helper Prep" --ref develop`
+- Validation: Automatic Pretaster Validation runs after Helper Prep completes
+- Monitor: https://github.com/provide-io/flavorpack/actions
+
