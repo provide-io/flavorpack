@@ -22,6 +22,11 @@ echo "   Binary directory: $BIN_DIR"
 RUNNER_ARCH=$(uname -m)
 RUNNER_OS=$(uname -s | tr '[:upper:]' '[:lower:]')
 
+# Normalize Windows OS names (MINGW64_NT, MSYS_NT, etc.) to 'windows'
+if [[ "$RUNNER_OS" == mingw* ]] || [[ "$RUNNER_OS" == msys* ]] || [[ "$RUNNER_OS" == cygwin* ]]; then
+    RUNNER_OS="windows"
+fi
+
 # Map architecture names
 case "$RUNNER_ARCH" in
     x86_64) RUNNER_ARCH="amd64" ;;
@@ -53,42 +58,104 @@ test_binary() {
     local binary="$1"
     local mode="$2"
     local binary_name=$(basename "$binary")
-    
-    local result='{"name": "'$binary_name'", "passed": false}'
-    
+
+    local passed=true
+    local size version help_check cli_mode format_info
+
+    # Capture size for reporting (no validation)
+    size=$(stat -f%z "$binary" 2>/dev/null || stat -c%s "$binary" 2>/dev/null || echo "0")
+
     case "$mode" in
         native)
-            # Try to execute the binary
-            if output=$("$binary" --version 2>&1); then
-                # Clean output for JSON
-                output=$(echo "$output" | head -1 | sed 's/["\]//g' | tr '\n' ' ')
-                result='{"name": "'$binary_name'", "passed": true, "test_type": "native", "version": "'$output'"}'
+            # Test 1: Execute --version
+            if version=$("$binary" --version 2>&1 | head -1); then
+                echo "    📋 Version: $version" >&2
             else
-                result='{"name": "'$binary_name'", "passed": false, "test_type": "native", "error": "Execution failed"}'
+                echo "    ❌ Version check failed" >&2
+                version="Execution failed"
+                passed=false
             fi
+
+            # Test 2: Execute --help
+            if help_output=$("$binary" --help 2>&1); then
+                echo "    📄 Help output:" >&2
+                echo "$help_output" | head -20 | sed 's/^/      /' >&2
+                echo "    ✅ Help text accessible" >&2
+                help_check="passed"
+            else
+                echo "    ⚠️  Help text not accessible" >&2
+                help_check="failed"
+            fi
+
+            # Test 3: Launcher CLI mode test (for launcher binaries only)
+            if [[ "$binary_name" == *"launcher"* ]]; then
+                if cli_help=$(FLAVOR_LAUNCHER_CLI=1 "$binary" help 2>&1); then
+                    echo "    📄 CLI help output:" >&2
+                    echo "$cli_help" | sed 's/^/      /' >&2
+                    echo "    ✅ Launcher CLI mode working" >&2
+                    cli_mode="passed"
+                else
+                    echo "    ⚠️  Launcher CLI mode not working" >&2
+                    cli_mode="failed"
+                fi
+            fi
+
+            # Build JSON result with Python
+            python3 - "$binary_name" "$passed" "$size" "$version" "${help_check:-n/a}" "${cli_mode:-n/a}" <<'PYJSON'
+import sys, json
+print(json.dumps({
+    "name": sys.argv[1],
+    "passed": sys.argv[2] == "true",
+    "test_type": "native",
+    "size_bytes": int(sys.argv[3]),
+    "version": sys.argv[4],
+    "help_check": sys.argv[5],
+    "cli_mode": sys.argv[6]
+}))
+PYJSON
             ;;
-            
+
         format-only|*)
             # Check binary format
             if command -v file >/dev/null 2>&1; then
-                file_info=$(file "$binary" 2>&1)
+                local file_info=$(file "$binary" 2>&1)
                 if echo "$file_info" | grep -qE "executable|ELF|Mach-O|PE32"; then
-                    result='{"name": "'$binary_name'", "passed": true, "test_type": "format", "info": "Valid binary format"}'
+                    format_info="valid"
+
+                    # For Windows binaries, also capture PE format details
+                    if [[ "$PLATFORM" == "windows_"* ]] && echo "$file_info" | grep -q "PE32"; then
+                        echo "    ✅ Valid PE32 executable" >&2
+                        format_info="PE32"
+                    fi
                 else
-                    result='{"name": "'$binary_name'", "passed": false, "test_type": "format", "error": "Invalid format"}'
+                    echo "    ❌ Invalid binary format" >&2
+                    format_info="invalid"
+                    passed=false
                 fi
             else
                 # Fallback: check if executable
                 if [ -x "$binary" ]; then
-                    result='{"name": "'$binary_name'", "passed": true, "test_type": "format", "info": "Executable"}'
+                    format_info="executable"
                 else
-                    result='{"name": "'$binary_name'", "passed": false, "test_type": "format", "error": "Not executable"}'
+                    echo "    ❌ Not executable" >&2
+                    format_info="not_executable"
+                    passed=false
                 fi
             fi
+
+            # Build JSON result with Python
+            python3 - "$binary_name" "$passed" "$size" "$format_info" <<'PYJSON'
+import sys, json
+print(json.dumps({
+    "name": sys.argv[1],
+    "passed": sys.argv[2] == "true",
+    "test_type": "format",
+    "size_bytes": int(sys.argv[3]),
+    "format": sys.argv[4]
+}))
+PYJSON
             ;;
     esac
-    
-    echo "$result"
 }
 
 # Main testing logic

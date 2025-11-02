@@ -174,6 +174,7 @@ icacls .\myapp.psp /inheritance:r
 **Symptom**: Network connections blocked
 
 **Solution**:
+{% raw %}
 ```powershell
 # Allow through firewall
 New-NetFirewallRule -DisplayName "FlavorPack" `
@@ -186,6 +187,7 @@ Get-NetFirewallRule | Where-Object {$_.DisplayName -like "*flavor*"}
 # Disable firewall temporarily (not recommended)
 Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled False
 ```
+{% endraw %}
 
 #### Proxy Configuration
 
@@ -321,6 +323,7 @@ Get-Counter "\Process(myapp)\IO Data Bytes/sec"
 
 ### Event Logs
 
+{% raw %}
 ```powershell
 # Check application events
 Get-EventLog -LogName Application -Newest 50 | Where-Object {$_.Message -like "*flavor*"}
@@ -332,9 +335,11 @@ Get-EventLog -LogName System -EntryType Error -Newest 20
 New-EventLog -LogName "FlavorPack" -Source "MyApp"
 Write-EventLog -LogName "FlavorPack" -Source "MyApp" -EventId 1 -Message "Application started"
 ```
+{% endraw %}
 
 ## Troubleshooting Script
 
+{% raw %}
 ```powershell
 # diagnose-flavor.ps1 - Diagnostic script for FlavorPack on Windows
 
@@ -365,6 +370,7 @@ netsh winhttp show proxy
 Write-Host "`n=== Test Execution ===" -ForegroundColor Cyan
 & .\myapp.psp --version
 ```
+{% endraw %}
 
 ## Getting Help
 

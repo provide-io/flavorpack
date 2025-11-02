@@ -310,7 +310,9 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 
 				var setupExec *exec.Cmd
 				if len(cmdArgs) > 0 {
-					setupExec = exec.Command(cmdToRun, cmdArgs...)
+					// Resolve executable for cross-platform compatibility
+					resolvedCmd := resolveExecutable(cmdToRun, logger)
+					setupExec = exec.Command(resolvedCmd, cmdArgs...)
 				} else {
 					// Use shell-aware parser to handle quoted arguments
 					parts, err := shellparse.Split(cmdToRun)
@@ -321,7 +323,9 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 					if len(parts) == 0 {
 						continue
 					}
-					setupExec = exec.Command(parts[0], parts[1:]...)
+					// Resolve executable for cross-platform compatibility
+					resolvedExec := resolveExecutable(parts[0], logger)
+					setupExec = exec.Command(resolvedExec, parts[1:]...)
 				}
 
 				setupExec.Dir = userCwd
@@ -389,7 +393,9 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 		cmdArgs = append(cmdArgs, args...)
 	}
 
-	cmd := exec.Command(parts[0], cmdArgs...)
+	// Resolve executable for cross-platform compatibility
+	resolvedExec := resolveExecutable(parts[0], logger)
+	cmd := exec.Command(resolvedExec, cmdArgs...)
 
 	originalCmd := os.Args[0]
 	binaryName := filepath.Base(originalCmd)

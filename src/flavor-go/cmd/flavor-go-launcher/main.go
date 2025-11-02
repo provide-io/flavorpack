@@ -11,6 +11,8 @@ import (
 
 const version = "0.3.0"
 
+// Phase 19 cache invalidation: Force rebuild with CGO enabled for Windows (2025-10-31)
+
 func getBuilderTimestamp() string {
 	// Try to get vcs.time from build info
 	if info, ok := debug.ReadBuildInfo(); ok {
@@ -51,6 +53,28 @@ func main() {
 	if len(os.Args) > 1 && os.Args[1] == "--version" {
 		fmt.Printf("flavor-go-launcher %s\n", version)
 		fmt.Printf("Built: %s\n", getBuilderTimestamp())
+		os.Exit(0)
+	}
+
+	// Check for --help flag before launching
+	if len(os.Args) > 1 && os.Args[1] == "--help" {
+		fmt.Println("flavor-go-launcher - PSPF package launcher")
+		fmt.Println()
+		fmt.Println("Usage:")
+		fmt.Println("  flavor-go-launcher [options]")
+		fmt.Println("  flavor-go-launcher --version")
+		fmt.Println("  flavor-go-launcher --help")
+		fmt.Println()
+		fmt.Println("Options:")
+		fmt.Println("  --version          Show version information")
+		fmt.Println("  --help             Show this help message")
+		fmt.Println("  --log-level LEVEL  Set log level (debug, info, warn, error)")
+		fmt.Println()
+		fmt.Println("CLI Mode:")
+		fmt.Println("  Set FLAVOR_LAUNCHER_CLI=1 to enable CLI mode for package inspection")
+		fmt.Println("  Commands: info, verify, metadata, extract, run, help")
+		fmt.Println()
+		fmt.Println("  Example: FLAVOR_LAUNCHER_CLI=1 ./mypackage.psp info")
 		os.Exit(0)
 	}
 

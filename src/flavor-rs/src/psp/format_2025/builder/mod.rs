@@ -100,9 +100,13 @@ fn read_manifest(manifest_path: &Path) -> Result<BuildManifest> {
 fn write_launcher(out: &mut File, options: &BuildOptions) -> Result<(u64, Vec<u8>)> {
     let launcher_timer = Instant::now();
     let launcher_data = get_launcher(options)?;
+
+    // Process launcher for Windows PE compatibility if needed
+    let launcher_data = super::pe_utils::process_launcher_for_pspf(launcher_data)?;
+
     let launcher_size = launcher_data.len() as u64;
     debug!(
-        "🚀 Loaded launcher: {} bytes in {:?}",
+        "🚀 Loaded and processed launcher: {} bytes in {:?}",
         launcher_size,
         launcher_timer.elapsed()
     );
