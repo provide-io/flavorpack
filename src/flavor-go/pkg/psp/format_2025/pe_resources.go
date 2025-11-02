@@ -126,10 +126,46 @@ func EmbedPSPFAsResource(exePath string, pspfData []byte, logger hclog.Logger) e
 
 	logger.Debug("Files closed, handles released, replacing original EXE")
 
-	// Replace original with updated file (now safe - all handles released)
-	if err := os.Remove(exePath); err != nil {
-		os.Remove(exePath + ".tmp")
-		return fmt.Errorf("failed to remove original EXE: %w", err)
+	// Replace original with updated file with retry logic for Windows file unlocking
+	// Windows may still hold file locks after close+GC, so we retry with exponential backoff
+	var removeErr error
+	maxAttempts := 8
+	delay := 50 * time.Millisecond
+	maxDelay := 500 * time.Millisecond
+
+	for attempt := 1; attempt <= maxAttempts; attempt++ {
+		removeErr = os.Remove(exePath)
+		if removeErr == nil {
+			// Success! File removed
+			if attempt > 1 {
+				logger.Debug("Successfully removed original EXE after retry", "attempt", attempt)
+			}
+			break
+		}
+
+		// Check if this is our last attempt
+		if attempt == maxAttempts {
+			logger.Error("Failed to remove original EXE after retries",
+				"attempts", maxAttempts,
+				"error", removeErr)
+			os.Remove(exePath + ".tmp")
+			return fmt.Errorf("failed to remove original EXE after %d attempts (Windows file lock): %w", maxAttempts, removeErr)
+		}
+
+		// Log the retry
+		logger.Debug("Retrying file removal (Windows file lock)",
+			"attempt", attempt,
+			"next_delay_ms", delay.Milliseconds(),
+			"error", removeErr)
+
+		// Wait before retrying
+		time.Sleep(delay)
+
+		// Exponential backoff with cap
+		delay *= 2
+		if delay > maxDelay {
+			delay = maxDelay
+		}
 	}
 
 	if err := os.Rename(exePath+".tmp", exePath); err != nil {

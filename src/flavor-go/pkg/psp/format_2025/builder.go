@@ -535,6 +535,12 @@ func convertToResourceEmbedding(filePath string, launcherSize int64, logger hclo
 	}
 	logger.Debug("Truncated file to launcher size", "size", launcherSize)
 
+	// Force garbage collection to release file handles (Windows-specific)
+	// Windows may keep file handle open after os.Truncate()
+	runtime.GC()
+	time.Sleep(10 * time.Millisecond) // Brief pause for OS to release handles
+	logger.Debug("Forced GC and sleep to ensure file handles released after truncate")
+
 	// Embed PSPF as resource
 	if err := EmbedPSPFAsResource(filePath, pspfData, logger); err != nil {
 		return fmt.Errorf("failed to embed as resource: %w", err)
