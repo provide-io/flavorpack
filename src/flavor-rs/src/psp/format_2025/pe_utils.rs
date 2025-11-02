@@ -662,7 +662,13 @@ pub fn process_launcher_for_pspf(launcher_data: Vec<u8>) -> Result<Vec<u8>> {
         "go" => {
             // Go launcher: Use PE overlay approach (zero modifications)
             // PSPF data will be appended after all PE sections
-            info!("Using PE overlay approach for Go launcher (no PE modifications)");
+            // NOTE: PE resource embedding is disabled for Rust builder due to
+            // UpdateResourceW API corruption issues. Go builder uses winres library
+            // which properly reconstructs the PE file.
+            info!("Using PE overlay approach for Go launcher (appended data)");
+            debug!(
+                "Note: PE resource embedding disabled in Rust builder - Go builder recommended for Windows+Go"
+            );
             Ok(launcher_data)
         }
         "rust" => {
