@@ -6,6 +6,8 @@ package format_2025
 import (
 	"fmt"
 	"os"
+	"runtime"
+	"time"
 	"unsafe"
 
 	"github.com/hashicorp/go-hclog"
@@ -49,7 +51,7 @@ func EmbedPSPFAsResource(exePath string, pspfData []byte, logger hclog.Logger) e
 	if err != nil {
 		return fmt.Errorf("failed to open EXE for reading: %w", err)
 	}
-	defer inputFile.Close()
+	// Note: Explicit close below, no defer needed
 
 	// Load existing resources from the EXE
 	rs, err := winres.LoadFromEXE(inputFile)
@@ -61,8 +63,10 @@ func EmbedPSPFAsResource(exePath string, pspfData []byte, logger hclog.Logger) e
 		logger.Debug("Loaded existing resources from EXE")
 	}
 
-	// Close input file as we're done reading
-	inputFile.Close()
+	// Close input file as we're done reading (explicit close, no defer)
+	if err := inputFile.Close(); err != nil {
+		return fmt.Errorf("failed to close input file: %w", err)
+	}
 
 	// Add PSPF data as a custom resource (RT_RCDATA)
 	logger.Debug("Setting PSPF resource data",
@@ -82,35 +86,52 @@ func EmbedPSPFAsResource(exePath string, pspfData []byte, logger hclog.Logger) e
 	}
 
 	// Open the EXE for reading and writing resources
+	// CRITICAL: No defer - must close explicitly before os.Remove() due to Windows file locking
 	inputFile2, err := os.Open(exePath)
 	if err != nil {
 		return fmt.Errorf("failed to open EXE for reading (2nd pass): %w", err)
 	}
-	defer inputFile2.Close()
 
 	outputFile, err := os.Create(exePath + ".tmp")
 	if err != nil {
+		inputFile2.Close()
 		return fmt.Errorf("failed to create temporary output file: %w", err)
 	}
-	defer func() {
-		outputFile.Close()
-		os.Remove(exePath + ".tmp") // Clean up temp file
-	}()
 
 	// Write resources to temporary file
 	logger.Debug("Writing resources to temporary file")
 	if err := rs.WriteToEXE(outputFile, inputFile2); err != nil {
+		outputFile.Close()
+		inputFile2.Close()
+		os.Remove(exePath + ".tmp")
 		return fmt.Errorf("failed to write resources to EXE: %w", err)
 	}
 
-	// Close files before renaming
-	outputFile.Close()
-	inputFile2.Close()
+	// Close files explicitly (MUST happen before os.Remove on Windows)
+	if err := outputFile.Close(); err != nil {
+		inputFile2.Close()
+		os.Remove(exePath + ".tmp")
+		return fmt.Errorf("failed to close output file: %w", err)
+	}
 
-	// Replace original with updated file
+	if err := inputFile2.Close(); err != nil {
+		os.Remove(exePath + ".tmp")
+		return fmt.Errorf("failed to close input file: %w", err)
+	}
+
+	// Force garbage collection to release file handles (Windows-specific)
+	// Windows requires ALL handles to be closed before file deletion
+	runtime.GC()
+	time.Sleep(10 * time.Millisecond) // Brief pause for OS to release handles
+
+	logger.Debug("Files closed, handles released, replacing original EXE")
+
+	// Replace original with updated file (now safe - all handles released)
 	if err := os.Remove(exePath); err != nil {
+		os.Remove(exePath + ".tmp")
 		return fmt.Errorf("failed to remove original EXE: %w", err)
 	}
+
 	if err := os.Rename(exePath+".tmp", exePath); err != nil {
 		return fmt.Errorf("failed to rename temporary file: %w", err)
 	}
