@@ -397,6 +397,44 @@ def _update_debug_directory(data: bytearray, padding_size: int) -> None:
         logger.debug(f"Updated {updated_count}/{num_debug_entries} debug directory entries")
 
 
+def _update_size_of_headers(data: bytearray, padding_size: int) -> None:
+    """
+    Update SizeOfHeaders field in the Optional Header after DOS stub expansion.
+
+    The SizeOfHeaders field specifies the combined size of the DOS stub, PE headers,
+    and section table, rounded to the file alignment. When the DOS stub expands,
+    this field must be updated to match the new total header size.
+
+    Windows PE loader validates that sections start at or after SizeOfHeaders.
+    A mismatch causes loader rejection, especially on ARM64 (exit code 126).
+
+    Args:
+        data: PE executable data (modified in-place)
+        padding_size: Number of bytes added to DOS stub
+    """
+    # Get PE header location
+    pe_offset = struct.unpack("<I", data[0x3C:0x40])[0]
+    coff_offset = pe_offset + 4
+
+    # SizeOfHeaders is at optional header + 60 bytes
+    # Optional header starts at COFF header + 20
+    size_of_headers_offset = coff_offset + 20 + 60
+
+    # Read current SizeOfHeaders value
+    current_size = struct.unpack("<I", data[size_of_headers_offset : size_of_headers_offset + 4])[0]
+
+    # Update to reflect expanded DOS stub
+    new_size = current_size + padding_size
+    struct.pack_into("<I", data, size_of_headers_offset, new_size)
+
+    logger.debug(
+        "Updated SizeOfHeaders field",
+        old_size=f"0x{current_size:x}",
+        new_size=f"0x{new_size:x}",
+        padding=padding_size,
+    )
+
+
 def expand_dos_stub(data: bytes) -> bytes:
     """
     Expand the DOS stub of a PE executable to match Rust/MSVC binary size.
@@ -463,6 +501,9 @@ def expand_dos_stub(data: bytes) -> bytes:
     # When we shift the file content forward, section data moves but the section
     # table entries still point to old offsets. We must update them.
     _update_section_offsets(new_data, padding_size)
+
+    # Update SizeOfHeaders to reflect expanded DOS stub size
+    _update_size_of_headers(new_data, padding_size)
 
     # Update data directories (Certificate Table uses absolute file offsets)
     _update_data_directories(new_data, padding_size)

@@ -452,6 +452,61 @@ fn update_debug_directory(data: &mut [u8], padding_size: usize) -> Result<()> {
     Ok(())
 }
 
+/// Update SizeOfHeaders field in the Optional Header after DOS stub expansion.
+///
+/// The SizeOfHeaders field specifies the combined size of the DOS stub, PE headers,
+/// and section table, rounded to the file alignment. When the DOS stub expands,
+/// this field must be updated to match the new total header size.
+///
+/// Windows PE loader validates that sections start at or after SizeOfHeaders.
+/// A mismatch causes loader rejection, especially on ARM64 (exit code 126).
+///
+/// # Arguments
+/// * `data` - PE executable data (modified in-place)
+/// * `padding_size` - Number of bytes added to DOS stub
+///
+/// # Returns
+/// Success or error
+///
+/// # Errors
+/// Returns error if PE structure is invalid
+fn update_size_of_headers(data: &mut [u8], padding_size: usize) -> Result<()> {
+    // Get PE header location
+    let pe_offset = u32::from_le_bytes([data[0x3C], data[0x3D], data[0x3E], data[0x3F]]) as usize;
+    let coff_offset = pe_offset + 4;
+
+    // SizeOfHeaders is at optional header + 60 bytes
+    // Optional header starts at COFF header + 20
+    let size_of_headers_offset = coff_offset + 20 + 60;
+
+    if size_of_headers_offset + 4 > data.len() {
+        anyhow::bail!(
+            "SizeOfHeaders offset 0x{:x} beyond file bounds",
+            size_of_headers_offset
+        );
+    }
+
+    // Read current SizeOfHeaders value
+    let current_size = u32::from_le_bytes([
+        data[size_of_headers_offset],
+        data[size_of_headers_offset + 1],
+        data[size_of_headers_offset + 2],
+        data[size_of_headers_offset + 3],
+    ]);
+
+    // Update to reflect expanded DOS stub
+    let new_size = current_size + padding_size as u32;
+    data[size_of_headers_offset..size_of_headers_offset + 4]
+        .copy_from_slice(&new_size.to_le_bytes());
+
+    debug!(
+        "Updated SizeOfHeaders field: old_size=0x{:x}, new_size=0x{:x}, padding={}",
+        current_size, new_size, padding_size
+    );
+
+    Ok(())
+}
+
 /// Expand the DOS stub of a PE executable to match Rust/MSVC binary size.
 ///
 /// This fixes Windows PE loader rejection of Go binaries when PSPF data
@@ -512,6 +567,9 @@ pub fn expand_dos_stub(data: Vec<u8>) -> Result<Vec<u8>> {
     // When we shift the file content forward, section data moves but the section
     // table entries still point to old offsets. We must update them.
     update_section_offsets(&mut new_data, padding_size)?;
+
+    // Update SizeOfHeaders to reflect expanded DOS stub size
+    update_size_of_headers(&mut new_data, padding_size)?;
 
     // Update data directories (Certificate Table uses absolute file offsets)
     update_data_directories(&mut new_data, padding_size)?;
