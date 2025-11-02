@@ -28,7 +28,7 @@ classifiers = [
     "Topic :: System :: Archiving :: Packaging",
 ]
 dependencies = [
-    "provide-foundation[all]>=0.0.1100",
+    "provide-foundation[all]",
     "pip>=25.2",
     "uv>=0.9.6",
     "setuptools>=68.0.0",  # Required for building wheels at runtime
@@ -40,11 +40,11 @@ Homepage = "https://github.com/provide-io/flavor"
 
 [dependency-groups]
 dev = [
-    "provide-testkit[all]>=0.0.1100",
+    "provide-testkit[all]",
     "mutmut>=3.0.0",
 ]
 docs = [
-    "provide-testkit[docs]>=0.0.1100",
+    "provide-testkit[docs]",
     "mkdocs-mermaid2-plugin>=1.1.0",
 ]
 
