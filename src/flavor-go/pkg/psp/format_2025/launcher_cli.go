@@ -7,7 +7,6 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
-	"syscall"
 
 	"github.com/hashicorp/go-hclog"
 )
@@ -329,13 +328,25 @@ func spawnBundle(exePath string, args []string, userCwd string, logger hclog.Log
 
 	if err := cmd.Wait(); err != nil {
 		if exitErr, ok := err.(*exec.ExitError); ok {
-			// Return the exit code
-			if status, ok := exitErr.Sys().(syscall.WaitStatus); ok {
-				os.Exit(status.ExitStatus())
-			}
+			// Child process exited with non-zero code
+			exitCode := exitErr.ExitCode()
+			logger.Info("⏹️ Process exited with error", "code", exitCode)
+			logger.Debug("Calling os.Exit to propagate child exit code", "code", exitCode)
+			os.Exit(exitCode)
+			// Should never reach here - os.Exit terminates the process
+			logger.Error("🚨 CRITICAL: os.Exit returned unexpectedly", "code", exitCode)
 		}
+		// Type assertion failed - this is unexpected
+		logger.Error("Failed to extract exit code from exec.ExitError", "error", err)
 		return fmt.Errorf("process failed: %w", err)
 	}
 
-	return nil
+	// Child process exited successfully with code 0
+	logger.Info("⏹️ Process exited successfully", "code", 0)
+	logger.Debug("Calling os.Exit(0) to terminate launcher with success")
+	os.Exit(0)
+
+	// This should never be reached (os.Exit terminates the process)
+	logger.Error("🚨 CRITICAL: os.Exit(0) returned unexpectedly - this should be impossible")
+	return fmt.Errorf("unreachable code executed: os.Exit(0) returned")
 }
