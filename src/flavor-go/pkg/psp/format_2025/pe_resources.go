@@ -6,8 +6,6 @@ package format_2025
 import (
 	"fmt"
 	"os"
-	"runtime"
-	"time"
 	"unsafe"
 
 	"github.com/hashicorp/go-hclog"
@@ -119,57 +117,13 @@ func EmbedPSPFAsResource(exePath string, pspfData []byte, logger hclog.Logger) e
 		return fmt.Errorf("failed to close input file: %w", err)
 	}
 
-	// Force garbage collection to release file handles (Windows-specific)
-	// Windows requires ALL handles to be closed before file deletion
-	runtime.GC()
-	time.Sleep(10 * time.Millisecond) // Brief pause for OS to release handles
+	logger.Debug("Files closed, attempting atomic file replacement")
 
-	logger.Debug("Files closed, handles released, replacing original EXE")
-
-	// Replace original with updated file with retry logic for Windows file unlocking
-	// Windows may still hold file locks after close+GC, so we retry with exponential backoff
-	var removeErr error
-	maxAttempts := 8
-	delay := 50 * time.Millisecond
-	maxDelay := 500 * time.Millisecond
-
-	for attempt := 1; attempt <= maxAttempts; attempt++ {
-		removeErr = os.Remove(exePath)
-		if removeErr == nil {
-			// Success! File removed
-			if attempt > 1 {
-				logger.Debug("Successfully removed original EXE after retry", "attempt", attempt)
-			}
-			break
-		}
-
-		// Check if this is our last attempt
-		if attempt == maxAttempts {
-			logger.Error("Failed to remove original EXE after retries",
-				"attempts", maxAttempts,
-				"error", removeErr)
-			os.Remove(exePath + ".tmp")
-			return fmt.Errorf("failed to remove original EXE after %d attempts (Windows file lock): %w", maxAttempts, removeErr)
-		}
-
-		// Log the retry
-		logger.Debug("Retrying file removal (Windows file lock)",
-			"attempt", attempt,
-			"next_delay_ms", delay.Milliseconds(),
-			"error", removeErr)
-
-		// Wait before retrying
-		time.Sleep(delay)
-
-		// Exponential backoff with cap
-		delay *= 2
-		if delay > maxDelay {
-			delay = maxDelay
-		}
-	}
-
-	if err := os.Rename(exePath+".tmp", exePath); err != nil {
-		return fmt.Errorf("failed to rename temporary file: %w", err)
+	// Use atomicReplace to safely replace the original file
+	// This handles Windows file locking with retry logic
+	if err := atomicReplace(exePath+".tmp", exePath, logger); err != nil {
+		os.Remove(exePath + ".tmp")
+		return fmt.Errorf("failed to replace EXE atomically: %w", err)
 	}
 
 	logger.Info("✅ Successfully embedded PSPF as PE resource",
