@@ -362,6 +362,42 @@ func updateDebugDirectory(data []byte, paddingSize int, logger hclog.Logger) err
 	return nil
 }
 
+// updateSizeOfHeaders updates the SizeOfHeaders field in the Optional Header after DOS stub expansion.
+//
+// The SizeOfHeaders field specifies the combined size of the DOS stub, PE headers,
+// and section table, rounded to the file alignment. When the DOS stub expands,
+// this field must be updated to match the new total header size.
+//
+// Windows PE loader validates that sections start at or after SizeOfHeaders.
+// A mismatch causes loader rejection, especially on ARM64 (exit code 126).
+func updateSizeOfHeaders(data []byte, paddingSize int, logger hclog.Logger) error {
+	// Get PE header location
+	peOffset := binary.LittleEndian.Uint32(data[0x3C:0x40])
+	coffOffset := int(peOffset) + 4
+
+	// SizeOfHeaders is at optional header + 60 bytes
+	// Optional header starts at COFF header + 20
+	sizeOfHeadersOffset := coffOffset + 20 + 60
+
+	if sizeOfHeadersOffset+4 > len(data) {
+		return fmt.Errorf("SizeOfHeaders offset 0x%x beyond file bounds", sizeOfHeadersOffset)
+	}
+
+	// Read current SizeOfHeaders value
+	currentSize := binary.LittleEndian.Uint32(data[sizeOfHeadersOffset : sizeOfHeadersOffset+4])
+
+	// Update to reflect expanded DOS stub
+	newSize := currentSize + uint32(paddingSize)
+	binary.LittleEndian.PutUint32(data[sizeOfHeadersOffset:sizeOfHeadersOffset+4], newSize)
+
+	logger.Debug("Updated SizeOfHeaders field",
+		"old_size", fmt.Sprintf("0x%x", currentSize),
+		"new_size", fmt.Sprintf("0x%x", newSize),
+		"padding", paddingSize)
+
+	return nil
+}
+
 // expandDOSStub expands the DOS stub of a PE executable to match Rust/MSVC binary size.
 // This fixes Windows PE loader rejection of Go binaries when PSPF data is appended.
 // The DOS stub is expanded from 128 bytes (0x80) to 240 bytes (0xF0) to match Rust binaries.
@@ -415,6 +451,11 @@ func expandDOSStub(data []byte, logger hclog.Logger) ([]byte, error) {
 	// table entries still point to old offsets. We must update them.
 	if err := updateSectionOffsets(newData, paddingSize, logger); err != nil {
 		return nil, fmt.Errorf("failed to update section offsets: %w", err)
+	}
+
+	// Update SizeOfHeaders to reflect expanded DOS stub size
+	if err := updateSizeOfHeaders(newData, paddingSize, logger); err != nil {
+		return nil, fmt.Errorf("failed to update SizeOfHeaders: %w", err)
 	}
 
 	// Update data directories (Certificate Table uses absolute file offsets)
