@@ -54,9 +54,9 @@ fn run() -> i32 {
         }
     };
 
-    // Special case: Handle --version when run as standalone binary (for CI/testing)
+    // Special case: Handle --version and --help when run as standalone binary (for CI/testing)
     // This must be checked before attempting to read as a package
-    if args.len() == 2 && args[1] == "--version" {
+    if args.len() == 2 && (args[1] == "--version" || args[1] == "--help") {
         // Check if we're running as a standalone launcher (not a package)
         // Simply check for the package emoji magic at the start of the file
         use std::fs::File;
@@ -70,12 +70,35 @@ fn run() -> i32 {
                     // This is a PSPF package, continue normal processing
                 } else {
                     // Not a package - we're running as a standalone launcher
-                    // Show version info and exit
-                    println!("flavor-rs-launcher {}", env!("CARGO_PKG_VERSION"));
-                    if let Ok(timestamp) = env::var("BUILD_TIMESTAMP") {
-                        println!("Built: {}", timestamp);
+                    if args[1] == "--version" {
+                        // Show version info and exit
+                        println!("flavor-rs-launcher {}", env!("CARGO_PKG_VERSION"));
+                        if let Ok(timestamp) = env::var("BUILD_TIMESTAMP") {
+                            println!("Built: {}", timestamp);
+                        }
+                        return 0;
+                    } else if args[1] == "--help" {
+                        // Show help and exit
+                        println!("flavor-rs-launcher - PSPF package launcher");
+                        println!();
+                        println!("Usage:");
+                        println!("  flavor-rs-launcher [options]");
+                        println!("  flavor-rs-launcher --version");
+                        println!("  flavor-rs-launcher --help");
+                        println!();
+                        println!("Options:");
+                        println!("  --version          Show version information");
+                        println!("  --help             Show this help message");
+                        println!();
+                        println!("CLI Mode:");
+                        println!(
+                            "  Set FLAVOR_LAUNCHER_CLI=1 to enable CLI mode for package inspection"
+                        );
+                        println!("  Commands: info, verify, metadata, extract, run, help");
+                        println!();
+                        println!("  Example: FLAVOR_LAUNCHER_CLI=1 ./mypackage.psp info");
+                        return 0;
                     }
-                    return 0;
                 }
             }
         }
@@ -133,9 +156,29 @@ fn run() -> i32 {
                     }
                 }
             }
+            "help" | "--help" => {
+                println!("PSPF Package Launcher - CLI Mode");
+                println!();
+                println!("Available commands:");
+                println!("  info              Show package information (default)");
+                println!("  verify            Verify package integrity");
+                println!("  metadata          Show raw package metadata");
+                println!("  extract INDEX DIR Extract slot to directory");
+                println!("  run [args...]     Execute package with arguments");
+                println!("  help              Show this help message");
+                println!();
+                println!("Usage:");
+                println!("  FLAVOR_LAUNCHER_CLI=1 ./package.psp <command>");
+                println!();
+                println!("Examples:");
+                println!("  FLAVOR_LAUNCHER_CLI=1 ./package.psp info");
+                println!("  FLAVOR_LAUNCHER_CLI=1 ./package.psp verify");
+                println!("  FLAVOR_LAUNCHER_CLI=1 ./package.psp extract 0 /tmp/output");
+                0
+            }
             _ => {
                 eprintln!("Error: Unknown command '{}'", command);
-                eprintln!("Available commands: info, verify, metadata, extract, run");
+                eprintln!("Available commands: info, verify, metadata, extract, run, help");
                 EXIT_INVALID_ARGS
             }
         };

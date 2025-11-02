@@ -1,6 +1,9 @@
 # Flavor Makefile
 # Root-level build and test orchestration
 
+# Include shared documentation targets from provide-foundry
+include ../provide-foundry/Makefile.docs.inc
+
 .PHONY: help
 help: ## Show this help message
 	@echo "Flavor Build System"

@@ -193,7 +193,8 @@ impl Reader {
             if actual_checksum != index.metadata_checksum {
                 debug!(
                     "❌ Metadata checksum mismatch: expected {:02x?}, got {:02x?}",
-                    &index.metadata_checksum[..8], &actual_checksum[..8]
+                    &index.metadata_checksum[..8],
+                    &actual_checksum[..8]
                 );
                 return Err(FlavorError::Generic("Metadata checksum mismatch".into()));
             }

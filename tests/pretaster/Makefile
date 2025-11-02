@@ -270,7 +270,7 @@ test-combo: combo-test ## Alias for combo-test
 combo-test: build-helpers ## Test all builder/launcher combinations
 	@mkdir -p $(LOGS_DIR)
 	$(call print,"🎯 Testing all builder/launcher combinations...",$(PURPLE))
-	@$(TESTS_DIR)/combination-tests.sh || (echo "❌ Combination tests failed with exit code $?"; exit 1)
+	@$(TESTS_DIR)/combination-tests.sh || (echo "❌ Combination tests failed with exit code $$?"; exit 1)
 	$(call print,"✅ Combination tests completed",$(GREEN))
 	$(call print,"📁 Logs saved in $(LOGS_DIR)/",$(CYAN))
 
