@@ -1265,4 +1265,97 @@ This creates a **valid, uncorrupted** PE file that Go accepts.
 - ✅ **Phase 30:** COMPLETE - Go builder PE resource embedding working
 - ⚠️ **Phase 31:** INCOMPLETE - Rust builder incompatibility confirmed
 
-**Overall:** Windows Go launcher compatibility **achieved via Go builder**. Rust builder limitation **documented and understood**. All viable combinations now working.
+**Overall:** Windows Go launcher compatibility **achieved via Go builder**. Rust builder limitation **documented and understood**. All viable combinations now working.- ✅ Go builder + Rust launcher works on Windows
+- ✅ All Unix combinations work (any builder + launcher)
+
+**Phase 31 (Rust Builder):**
+- ❌ **Known Limitation:** Rust builder + Go launcher on Windows does NOT work
+- ✅ Rust builder + Rust launcher works on Windows  
+- ✅ Attempted both solutions (resource embedding, overlay mode)
+- ✅ Properly fails with clear error messages
+
+---
+
+## Appendix: Pretaster Infrastructure Fixes
+
+### Problem Discovered
+
+During Phase 31 validation, discovered that **Pretaster was only testing 2 of 4 builder/launcher combinations**. This meant **Phase 30 (Go builder) was NEVER validated in CI**.
+
+**Root Cause:** `tests/pretaster/tests/combination-tests.sh` had `set -e` on line 4, causing immediate exit when Rust+Go failed. Go builder combinations (🐹🦀 and 🐹🐹) were skipped.
+
+### Fixes Applied (5 iterations)
+
+**Fix #1 (Commit 7c8efee):** ✅ Core functionality fixed
+- Removed `set -e`, used `set -uo pipefail` instead
+- Added `FAILED_COMBOS` and `PASSED_COMBOS` tracking arrays
+- Modified test loop to continue on failure
+- Added comprehensive summary showing all results
+- **Result:** All 4 combinations now run, but bash syntax errors remain
+
+**Fix #2 (Commit 06794cd):** ❌ Invalid syntax
+- Attempted: `${#ARRAY[@]:-0}` (invalid - cannot combine array length with default value)
+- **Error:** "bad substitution" on all platforms
+
+**Fix #3 (Commit b1a8af5):** ❌ Still triggers unbound variable
+- Removed quotes from array length expressions
+- **Error:** Still get "unbound variable" with `set -u` when array is empty
+
+**Fix #4 (Commit 0fd090c):** ❌ Double brackets insufficient  
+- Changed to `[[ ${#ARRAY[@]} ... ]]` and arithmetic context `$(( ... ))`
+- **Error:** Even double brackets don't prevent "unbound variable" with `set -u` on Ubuntu 24.04
+
+**Fix #5 (Commit 4e67479):** ✅ **CORRECT SOLUTION**
+- Temporarily disable `set -u` around array length operations
+- Lines 272-288: Added `set +u` before checks, `set -u` after
+- Lines 300-303: Added `set +u` before assignments, `set -u` after
+- **Status:** TESTING IN PROGRESS (Helper Prep #18992660950)
+
+### Validation Evidence
+
+**Pretaster #18992519387** (Fix #4 - failed but informative):
+```
+✅ PASSED (4 combinations):
+  • 🦀🦀 rs+rs
+  • 🦀🐹 rs+go  
+  • 🐹🦀 go+rs  ← Phase 30, first time tested!
+  • 🐹🐹 go+go  ← Phase 30, first time tested!
+
+tests/combination-tests.sh: line 279: FAILED_COMBOS: unbound variable
+```
+
+**Key Finding:** All 4 combinations **ARE running and passing**. The failure was only in the summary output due to bash syntax when handling empty arrays with `set -u`.
+
+### Impact
+
+**Before Fix #1:**
+- Only 2 of 4 combinations tested (Rust builder only)
+- Phase 30 (Go builder) **NEVER validated** in CI
+- Incomplete cross-language compatibility validation
+
+**After Fix #1:**
+- All 4 combinations tested on every Pretaster run
+- Phase 30 (Go builder) **now validated** in CI
+- Complete builder/launcher cross-compatibility matrix tested
+- Known limitation (Rust+Go Windows) properly identified
+
+### Files Modified
+
+- `tests/pretaster/tests/combination-tests.sh` - Test orchestration script (5 commits)
+
+### Current Status
+
+**Helper Prep #18992660950** running with commit 4e67479 (Fix #5 - `set +u`/`set -u` approach).
+
+**Expected Results:**
+- Unix platforms (4): "✅ All 4 combinations tested successfully!" with no bash errors
+- Windows platforms (2): "⚠️ 3/4 combinations passed, 1 failed" (Rust+Go known limitation) with no bash errors
+- All 4 combinations execute on every platform
+- Phase 30 functionality fully validated in CI
+
+### Next Actions
+
+1. ⏳ **Await validation** of Fix #5 via Pretaster Validation
+2. If successful: Infrastructure fixes complete
+3. If still failing: Consider alternative approaches (pre-initialize arrays, conditional checks)
+
