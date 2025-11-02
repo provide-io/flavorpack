@@ -268,7 +268,9 @@ echo "Platform: $PLATFORM"
 echo ""
 
 # Show results
-if [ "${#PASSED_COMBOS[@]}" -gt 0 ]; then
+# Temporarily disable set -u to safely check empty arrays
+set +u
+if [[ ${#PASSED_COMBOS[@]} -gt 0 ]]; then
     echo "✅ PASSED (${#PASSED_COMBOS[@]} combinations):"
     for combo in "${PASSED_COMBOS[@]}"; do
         echo "  • $combo"
@@ -276,13 +278,14 @@ if [ "${#PASSED_COMBOS[@]}" -gt 0 ]; then
     echo ""
 fi
 
-if [ "${#FAILED_COMBOS[@]}" -gt 0 ]; then
+if [[ ${#FAILED_COMBOS[@]} -gt 0 ]]; then
     echo "❌ FAILED (${#FAILED_COMBOS[@]} combinations):"
     for combo in "${FAILED_COMBOS[@]}"; do
         echo "  • $combo"
     done
     echo ""
 fi
+set -u
 
 echo "📁 Log files saved in: $LOGS_DIR"
 for combo in "${combinations[@]}"; do
@@ -293,8 +296,11 @@ echo ""
 
 # Final status
 total_tests=${#combinations[@]}
-passed_tests=${#PASSED_COMBOS[@]}
-failed_tests=${#FAILED_COMBOS[@]}
+# Temporarily disable set -u to safely access array lengths
+set +u
+passed_tests=$(( ${#PASSED_COMBOS[@]} ))
+failed_tests=$(( ${#FAILED_COMBOS[@]} ))
+set -u
 
 if [ $failed_tests -eq 0 ]; then
     echo "✅ All $total_tests combinations tested successfully!"
