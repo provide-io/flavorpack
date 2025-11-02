@@ -236,13 +236,15 @@ fn convert_to_resource_embedding(file_path: &Path, launcher_size: u64) -> Result
     debug!("   PSPF data size: {} bytes", file_size - launcher_size);
 
     // Extract PSPF data (everything after launcher)
-    let pspf_data = &file_data[launcher_size as usize..];
+    // Copy to a new Vec to ensure it's not tied to the original file data
+    let pspf_data: Vec<u8> = file_data[launcher_size as usize..].to_vec();
 
     if pspf_data.is_empty() {
         return Err(FlavorError::Generic(
             "No PSPF data found after launcher".to_string(),
         ));
     }
+    debug!("   Copied PSPF data to separate buffer");
 
     debug!("✂️  Truncating file to launcher size");
 
@@ -253,7 +255,22 @@ fn convert_to_resource_embedding(file_path: &Path, launcher_size: u64) -> Result
 
         let file = OpenOptions::new().write(true).open(file_path)?;
         file.set_len(launcher_size)?;
+
+        // Explicitly sync file metadata and data to disk
+        // This ensures the truncation is committed before resource embedding
+        file.sync_all()?;
+        debug!("   Synced truncation to disk");
     }
+
+    // Verify the truncation was successful
+    let truncated_size = fs::metadata(file_path)?.len();
+    if truncated_size != launcher_size {
+        return Err(FlavorError::Generic(format!(
+            "File truncation failed: expected {} bytes, got {} bytes",
+            launcher_size, truncated_size
+        )));
+    }
+    debug!("   Verified truncated size: {} bytes", truncated_size);
 
     debug!(
         "📦 Embedding {} bytes of PSPF data as PE resource",
@@ -261,7 +278,7 @@ fn convert_to_resource_embedding(file_path: &Path, launcher_size: u64) -> Result
     );
 
     // Embed PSPF data as resource
-    embed_pspf_as_resource(file_path, pspf_data)?;
+    embed_pspf_as_resource(file_path, &pspf_data)?;
 
     let final_size = fs::metadata(file_path)?.len();
     debug!("✅ Conversion complete: final size {} bytes", final_size);
