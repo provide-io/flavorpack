@@ -463,4 +463,103 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 		os.Exit(1)
 	}
 	logger.Debug("🔧 Set executable permissions on output file")
+
+	// 🪟 Windows + Go Launcher: Convert append to resource embedding
+	// For Windows Go launchers, we need to embed PSPF as a PE resource instead of appending
+	// This is because Windows rejects modified Go binaries (with appended data)
+	if shouldUseResourceEmbedding(launcherData, logger) {
+		logger.Info("🪟 Converting to PE resource embedding (Windows Go launcher)")
+
+		if err := convertToResourceEmbedding(outputPath, launcherSize, logger); err != nil {
+			logger.Error("❌ Failed to convert to resource embedding", "error", err)
+			os.Exit(1)
+		}
+
+		logger.Info("✅ Successfully embedded PSPF as PE resource")
+	}
+}
+
+// shouldUseResourceEmbedding determines if we should use PE resource embedding
+// instead of appending PSPF data to the file.
+//
+// Resource embedding is required for Windows Go launchers because Windows
+// rejects Go binaries with appended data.
+func shouldUseResourceEmbedding(launcherData []byte, logger hclog.Logger) bool {
+	// Only on Windows
+	if runtime.GOOS != "windows" {
+		logger.Debug("Not Windows, using append mode")
+		return false
+	}
+
+	// Check launcher type
+	launcherType := GetLauncherType(launcherData, logger)
+	logger.Debug("Launcher type detected", "type", launcherType, "os", runtime.GOOS)
+
+	// Use resource embedding for Go launchers on Windows
+	if launcherType == "go" {
+		logger.Info("Windows Go launcher detected, will use PE resource embedding")
+		return true
+	}
+
+	logger.Debug("Not a Go launcher, using append mode", "type", launcherType)
+	return false
+}
+
+// convertToResourceEmbedding converts an appended-PSPF file to resource-embedded PSPF.
+//
+// This reads the PSPF data that was appended after the launcher, removes it from the file,
+// and embeds it as a PE resource instead.
+func convertToResourceEmbedding(filePath string, launcherSize int64, logger hclog.Logger) error {
+	logger.Debug("Converting append-mode to resource-embedding", "file", filePath, "launcher_size", launcherSize)
+
+	// Read the entire file
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		return fmt.Errorf("failed to read file: %w", err)
+	}
+
+	totalSize := int64(len(data))
+	logger.Debug("File sizes", "total", totalSize, "launcher", launcherSize, "pspf", totalSize-launcherSize)
+
+	// Extract PSPF data (everything after launcher)
+	if totalSize <= launcherSize {
+		return fmt.Errorf("file is too small: total=%d, launcher=%d", totalSize, launcherSize)
+	}
+
+	pspfData := data[launcherSize:]
+	logger.Debug("Extracted PSPF data", "size", len(pspfData))
+
+	// Truncate file to just the launcher
+	if err := os.Truncate(filePath, launcherSize); err != nil {
+		return fmt.Errorf("failed to truncate file: %w", err)
+	}
+	logger.Debug("Truncated file to launcher size", "size", launcherSize)
+
+	// Embed PSPF as resource
+	if err := EmbedPSPFAsResource(filePath, pspfData, logger); err != nil {
+		return fmt.Errorf("failed to embed as resource: %w", err)
+	}
+
+	// Verify the resource was embedded
+	newSize, err := getFileSize(filePath)
+	if err != nil {
+		logger.Warn("Could not verify new file size", "error", err)
+	} else {
+		logger.Info("Resource embedding complete",
+			"original_size", totalSize,
+			"new_size", newSize,
+			"launcher_size", launcherSize,
+			"pspf_embedded", len(pspfData))
+	}
+
+	return nil
+}
+
+// getFileSize returns the size of a file
+func getFileSize(path string) (int64, error) {
+	info, err := os.Stat(path)
+	if err != nil {
+		return 0, err
+	}
+	return info.Size(), nil
 }

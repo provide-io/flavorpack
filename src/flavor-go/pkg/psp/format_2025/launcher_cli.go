@@ -14,7 +14,17 @@ import (
 
 // showBundleInfo displays bundle information in human-readable format
 func showBundleInfo(exePath string, logger hclog.Logger) {
-	reader, err := NewReaderWithLogger(exePath, logger)
+	// Prepare bundle path (may extract from PE resources on Windows)
+	bundlePath, cleanup, err := prepareBundlePath(exePath, logger)
+	if err != nil {
+		logger.Error("❌ Failed to prepare bundle path", "error", err)
+		os.Exit(1)
+	}
+	if cleanup != nil {
+		defer cleanup()
+	}
+
+	reader, err := NewReaderWithLogger(bundlePath, logger)
 	if err != nil {
 		logger.Error("❌ Failed to create reader", "error", err)
 		os.Exit(1)
@@ -92,7 +102,17 @@ func extractSlot(exePath, slotStr, outputDir string, logger hclog.Logger) {
 		os.Exit(1)
 	}
 
-	reader, err := NewReaderWithLogger(exePath, logger)
+	// Prepare bundle path (may extract from PE resources on Windows)
+	bundlePath, cleanup, err := prepareBundlePath(exePath, logger)
+	if err != nil {
+		logger.Error("❌ Failed to prepare bundle path", "error", err)
+		os.Exit(1)
+	}
+	if cleanup != nil {
+		defer cleanup()
+	}
+
+	reader, err := NewReaderWithLogger(bundlePath, logger)
 	if err != nil {
 		logger.Error("❌ Failed to create reader", "error", err)
 		os.Exit(1)
@@ -172,7 +192,17 @@ func detectLauncherType(exePath string) string {
 
 // showMetadata outputs the raw JSON metadata
 func showMetadata(exePath string, logger hclog.Logger) {
-	reader, err := NewReaderWithLogger(exePath, logger)
+	// Prepare bundle path (may extract from PE resources on Windows)
+	bundlePath, cleanup, err := prepareBundlePath(exePath, logger)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: Failed to prepare bundle path: %v\n", err)
+		os.Exit(1)
+	}
+	if cleanup != nil {
+		defer cleanup()
+	}
+
+	reader, err := NewReaderWithLogger(bundlePath, logger)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: Failed to create reader: %v\n", err)
 		os.Exit(1)
@@ -200,7 +230,17 @@ func showMetadata(exePath string, logger hclog.Logger) {
 
 // verifyBundle performs integrity verification on the bundle
 func verifyBundle(exePath string, logger hclog.Logger) {
-	reader, err := NewReaderWithLogger(exePath, logger)
+	// Prepare bundle path (may extract from PE resources on Windows)
+	bundlePath, cleanup, err := prepareBundlePath(exePath, logger)
+	if err != nil {
+		logger.Error("❌ Failed to prepare bundle path", "error", err)
+		os.Exit(1)
+	}
+	if cleanup != nil {
+		defer cleanup()
+	}
+
+	reader, err := NewReaderWithLogger(bundlePath, logger)
 	if err != nil {
 		logger.Error("❌ Failed to create reader", "error", err)
 		os.Exit(1)

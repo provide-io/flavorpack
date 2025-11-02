@@ -374,15 +374,14 @@ fn update_debug_directory(data: &mut [u8], padding_size: usize) -> Result<()> {
     }
 
     // Map debug directory RVA to file offset
-    let debug_dir_file_offset = match rva_to_file_offset(data, debug_dir_rva) {
-        Some(offset) => offset,
-        None => {
-            trace!(
-                "Unable to map debug directory RVA 0x{:x} to file offset, skipping",
-                debug_dir_rva
-            );
-            return Ok(());
-        }
+    let debug_dir_file_offset = if let Some(offset) = rva_to_file_offset(data, debug_dir_rva) {
+        offset
+    } else {
+        trace!(
+            "Unable to map debug directory RVA 0x{:x} to file offset, skipping",
+            debug_dir_rva
+        );
+        return Ok(());
     };
 
     debug!(
@@ -428,8 +427,8 @@ fn update_debug_directory(data: &mut [u8], padding_size: usize) -> Result<()> {
             data[ptr_raw_data_offset + 3],
         ]);
 
-        // Update if non-zero and >= 0x80 (after DOS stub start)
-        if current_ptr > 0 && current_ptr >= 0x80 {
+        // Update if >= 0x80 (after DOS stub start)
+        if current_ptr >= 0x80 {
             let new_ptr = current_ptr + padding_size as u32;
             data[ptr_raw_data_offset..ptr_raw_data_offset + 4]
                 .copy_from_slice(&new_ptr.to_le_bytes());
@@ -600,17 +599,56 @@ pub fn expand_dos_stub(data: Vec<u8>) -> Result<Vec<u8>> {
     Ok(new_data)
 }
 
+/// Detect launcher type from PE characteristics.
+///
+/// Go and Rust compilers produce PE files with different characteristics:
+/// - Go: Minimal DOS stub (PE offset 0x80 / 128 bytes)
+/// - Rust: Larger DOS stub (PE offset 0xE8 / 232 bytes or more)
+///
+/// # Arguments
+/// * `launcher_data` - Launcher binary data
+///
+/// # Returns
+/// "go", "rust", or "unknown"
+pub fn get_launcher_type(launcher_data: &[u8]) -> &'static str {
+    if !is_pe_executable(launcher_data) {
+        return "unknown";
+    }
+
+    let pe_offset = match get_pe_header_offset(launcher_data) {
+        Some(offset) => offset,
+        None => return "unknown",
+    };
+
+    // Go binaries have PE offset 0x80, Rust has 0xE8 or larger
+    if pe_offset == 0x80 {
+        debug!("Detected Go launcher, pe_offset=0x{:x}", pe_offset);
+        "go"
+    } else if pe_offset >= 0xE8 {
+        debug!("Detected Rust launcher, pe_offset=0x{:x}", pe_offset);
+        "rust"
+    } else {
+        debug!("Unknown launcher type, pe_offset=0x{:x}", pe_offset);
+        "unknown"
+    }
+}
+
 /// Process launcher binary for PSPF embedding compatibility.
 ///
-/// This is the main entry point for PE manipulation. It detects Go binaries
-/// with minimal DOS stubs and expands them to match Rust binaries for
-/// Windows compatibility.
+/// This is the main entry point for PE manipulation. It uses a hybrid approach:
+/// - Go launchers: Use PE overlay (no modifications, PSPF appended after sections)
+/// - Rust launchers: Use DOS stub expansion (PSPF at fixed 0xF0 offset)
+///
+/// Phase 29: Go binaries are fundamentally incompatible with DOS stub expansion
+/// due to their PE structure (15 sections, unusual section names, missing data
+/// directories). The PE overlay approach is the industry standard and preserves
+/// 100% PE structure integrity.
 ///
 /// # Arguments
 /// * `launcher_data` - Original launcher binary
 ///
 /// # Returns
-/// Processed launcher binary (expanded if needed, unchanged otherwise)
+/// Processed launcher binary (expanded if Rust, unchanged if Go/Unix)
 pub fn process_launcher_for_pspf(launcher_data: Vec<u8>) -> Result<Vec<u8>> {
     if !is_pe_executable(&launcher_data) {
         // Not a Windows PE executable, return unchanged (Unix binary)
@@ -618,15 +656,31 @@ pub fn process_launcher_for_pspf(launcher_data: Vec<u8>) -> Result<Vec<u8>> {
         return Ok(launcher_data);
     }
 
-    if !needs_dos_stub_expansion(&launcher_data) {
-        // PE executable with adequate DOS stub (Rust/MSVC binary)
-        trace!("PE launcher has adequate DOS stub, no processing needed");
-        return Ok(launcher_data);
-    }
+    let launcher_type = get_launcher_type(&launcher_data);
 
-    // Go binary with minimal DOS stub - needs expansion
-    info!("Processing Go launcher for Windows PSPF compatibility");
-    expand_dos_stub(launcher_data)
+    match launcher_type {
+        "go" => {
+            // Go launcher: Use PE overlay approach (zero modifications)
+            // PSPF data will be appended after all PE sections
+            info!("Using PE overlay approach for Go launcher (no PE modifications)");
+            Ok(launcher_data)
+        }
+        "rust" => {
+            // Rust launcher: Use DOS stub expansion (PSPF at fixed 0xF0 offset)
+            if needs_dos_stub_expansion(&launcher_data) {
+                info!("Expanding DOS stub for Rust launcher (PSPF at 0xF0)");
+                expand_dos_stub(launcher_data)
+            } else {
+                trace!("Rust launcher already has adequate DOS stub");
+                Ok(launcher_data)
+            }
+        }
+        _ => {
+            // Unknown launcher type: Safe default is no modification (PE overlay)
+            info!("Unknown launcher type, using PE overlay approach");
+            Ok(launcher_data)
+        }
+    }
 }
 
 #[cfg(test)]
