@@ -1303,6 +1303,79 @@ project_wheel = self.build_wheel_from_source(python_exe, project_dir, wheel_dir,
 
 ---
 
+## Critical Launcher Regression Fix (All Platforms)
+
+**Date**: 2025-11-01
+**Severity**: CRITICAL - Broke all packaged applications
+**Commit**: 25026de
+
+### Problem Discovered
+
+After Phase 39 implementation, user reported that packaged applications no longer receive command-line arguments:
+
+```bash
+./flavor-0.0.1029-darwin_arm64.psp --help
+# Showed LAUNCHER help instead of the wrapped application's help ❌
+```
+
+**Impact**: ALL packaged applications broken - arguments intercepted by launcher instead of passed to wrapped app.
+
+### Root Cause
+
+Both Go and Rust launchers had code that intercepted `--help` and `--version` flags **without checking** for `FLAVOR_LAUNCHER_CLI=1`.
+
+**Broken Code Pattern**:
+```rust
+// Lines 57-105 in flavor-rs-launcher.rs (REMOVED)
+if args.len() == 2 && (args[1] == "--version" || args[1] == "--help") {
+    // Check for package emoji magic at file start
+    if magic == [0xF0, 0x9F, 0x93, 0xA6] {  // 📦 emoji
+        // Continue processing
+    } else {
+        // Show launcher help and exit ❌
+    }
+}
+```
+
+**Why It Failed**:
+1. Magic byte check looked for 📦 emoji at **start of file**
+2. PSPF packages are executables (Mach-O/PE/ELF) with PSPF data **embedded inside**
+3. File starts with Mach-O header (`0xFEEDFACF`), not emoji
+4. Check **always failed** → treated all packages as standalone launchers
+5. Intercepted `--help`/`--version` instead of passing to wrapped app
+
+### Solution Implemented
+
+**Removed broken interception code entirely**:
+- **Rust**: Removed lines 57-105 in `src/flavor-rs/src/bin/flavor-rs-launcher.rs`
+- **Go**: Removed lines 52-96 in `src/flavor-go/cmd/flavor-go-launcher/main.go`
+
+**Why This Works**:
+1. ✅ Arguments always passed through to wrapped application (Click/Cobra handle --help)
+2. ✅ CLI mode still works via `FLAVOR_LAUNCHER_CLI=1` (checked later in code)
+3. ✅ Simpler, cleaner code with one clear path
+4. ✅ Follows CLAUDE.md requirement: "no launchers will ever intercept command line arguments unless the flavor cli option is enabled"
+
+**Files Modified**:
+- `src/flavor-rs/src/bin/flavor-rs-launcher.rs` (removed 49 lines)
+- `src/flavor-go/cmd/flavor-go-launcher/main.go` (removed 45 lines)
+
+### Testing
+
+**Without FLAVOR_LAUNCHER_CLI=1**:
+```bash
+./app.psp --help
+# ✅ Shows wrapped application help (Click/Cobra handles it)
+```
+
+**With FLAVOR_LAUNCHER_CLI=1**:
+```bash
+FLAVOR_LAUNCHER_CLI=1 ./app.psp help
+# ✅ Shows launcher CLI help
+```
+
+---
+
 ## Current Windows Infrastructure Fix Summary
 
 ### Completed Phases
