@@ -126,6 +126,7 @@ mod tests {
     fn test_non_windows_stub() {
         #[cfg(not(target_os = "windows"))]
         {
+            use std::path::Path;
             let result = embed_pspf_as_resource(Path::new("test.exe"), b"data");
             assert!(result.is_err());
         }

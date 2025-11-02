@@ -186,30 +186,17 @@ fn get_launcher(options: &BuildOptions) -> Result<Vec<u8>> {
 
 /// Determines if PE resource embedding should be used.
 ///
-/// Returns true if:
-/// - Current platform is Windows
-/// - Launcher is a Go binary (PE offset 0x80)
-fn should_use_resource_embedding(launcher_data: &[u8]) -> Result<bool> {
-    // Only on Windows
-    #[cfg(not(target_os = "windows"))]
-    {
-        let _ = launcher_data; // Suppress unused warning
-        Ok(false)
-    }
-
-    #[cfg(target_os = "windows")]
-    {
-        use super::pe_utils::get_launcher_type;
-
-        let launcher_type = get_launcher_type(launcher_data);
-        let is_go = launcher_type == "go";
-
-        if is_go {
-            debug!("🔍 Detected Go launcher, will use PE resource embedding");
-        }
-
-        Ok(is_go)
-    }
+/// TEMPORARILY DISABLED: The Windows UpdateResourceW API corrupts Go binaries
+/// even though it reports success. The Go builder uses a PE reconstruction library
+/// (winres) which works correctly, but there's no Rust equivalent for runtime PE
+/// modification. Until we implement proper PE reconstruction in Rust, we fall back
+/// to overlay mode (appended data) for all launchers.
+///
+/// See: Phase 31 analysis - UpdateResourceW corrupts Go launcher entry point
+/// TODO: Implement PE reconstruction using a library similar to Go's winres
+fn should_use_resource_embedding(_launcher_data: &[u8]) -> Result<bool> {
+    // Disabled until we have proper PE reconstruction
+    Ok(false)
 }
 
 /// Converts a PSP file from append mode to PE resource embedding.
