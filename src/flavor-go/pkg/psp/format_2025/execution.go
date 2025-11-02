@@ -23,8 +23,69 @@ var (
 // Utility functions: see execution_utils.go
 // Cache functions: see execution_cache.go
 
+// prepareBundlePath prepares the bundle path for reading.
+// On Windows with PSPF embedded as a PE resource, it extracts the PSPF data
+// to a temporary file and returns the path + cleanup function.
+// Otherwise, it returns the original exePath with no cleanup.
+func prepareBundlePath(exePath string, logger hclog.Logger) (string, func(), error) {
+	// Check if PSPF is embedded as a PE resource
+	if HasPSPFResource(exePath, logger) {
+		logger.Info("🪟 Detected PSPF embedded as PE resource, extracting to temp file")
+
+		// Read PSPF data from resource
+		pspfData, err := ReadPSPFFromResource(exePath, logger)
+		if err != nil {
+			return "", nil, fmt.Errorf("failed to read PSPF from resource: %w", err)
+		}
+
+		// Create temporary file for PSPF data
+		tmpFile, err := os.CreateTemp("", "pspf-*.psp")
+		if err != nil {
+			return "", nil, fmt.Errorf("failed to create temp file: %w", err)
+		}
+		tmpPath := tmpFile.Name()
+
+		// Write PSPF data to temp file
+		if _, err := tmpFile.Write(pspfData); err != nil {
+			tmpFile.Close()
+			os.Remove(tmpPath)
+			return "", nil, fmt.Errorf("failed to write PSPF to temp file: %w", err)
+		}
+
+		if err := tmpFile.Close(); err != nil {
+			os.Remove(tmpPath)
+			return "", nil, fmt.Errorf("failed to close temp file: %w", err)
+		}
+
+		logger.Debug("📝 Extracted PSPF to temp file", "path", tmpPath, "size", len(pspfData))
+
+		// Return temp path with cleanup function
+		cleanup := func() {
+			logger.Debug("🧹 Cleaning up temp PSPF file", "path", tmpPath)
+			if err := os.Remove(tmpPath); err != nil {
+				logger.Debug("Failed to remove temp file", "path", tmpPath, "error", err)
+			}
+		}
+		return tmpPath, cleanup, nil
+	}
+
+	// No resource embedding - read from EOF (traditional approach)
+	logger.Debug("📖 Reading PSPF from EOF (appended to executable)")
+	return exePath, nil, nil
+}
+
 func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclog.Logger) (*exec.Cmd, error) {
-	reader, err := NewReaderWithLogger(exePath, logger)
+	// Check if PSPF is embedded as a PE resource (Windows + Go launcher)
+	bundlePath, cleanup, err := prepareBundlePath(exePath, logger)
+	if err != nil {
+		logger.Error("❌ Failed to prepare bundle path", "error", err)
+		return nil, fmt.Errorf("failed to prepare bundle path: %w", err)
+	}
+	if cleanup != nil {
+		defer cleanup()
+	}
+
+	reader, err := NewReaderWithLogger(bundlePath, logger)
 	if err != nil {
 		logger.Error("❌ Failed to create reader", "error", err)
 		return nil, fmt.Errorf("failed to create reader: %w", err)

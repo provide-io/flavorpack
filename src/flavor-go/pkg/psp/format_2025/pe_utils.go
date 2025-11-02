@@ -487,11 +487,48 @@ func expandDOSStub(data []byte, logger hclog.Logger) ([]byte, error) {
 	return newData, nil
 }
 
-// ProcessLauncherForPSPF processes launcher binary for PSPF embedding compatibility.
-// This is the main entry point for PE manipulation. It detects Go binaries
-// with minimal DOS stubs and expands them to match Rust binaries for Windows compatibility.
+// GetLauncherType detects launcher type from PE characteristics.
 //
-// Returns the processed launcher binary (expanded if needed, unchanged otherwise)
+// Go and Rust compilers produce PE files with different characteristics:
+// - Go: Minimal DOS stub (PE offset 0x80 / 128 bytes)
+// - Rust: Larger DOS stub (PE offset 0xE8 / 232 bytes or more)
+//
+// Returns "go", "rust", or "unknown"
+func GetLauncherType(launcherData []byte, logger hclog.Logger) string {
+	if !isPEExecutable(launcherData) {
+		return "unknown"
+	}
+
+	peOffset, err := getPEHeaderOffset(launcherData)
+	if err != nil {
+		return "unknown"
+	}
+
+	// Go binaries have PE offset 0x80, Rust has 0xE8 or larger
+	if peOffset == 0x80 {
+		logger.Debug("Detected Go launcher", "pe_offset", fmt.Sprintf("0x%x", peOffset))
+		return "go"
+	} else if peOffset >= 0xE8 {
+		logger.Debug("Detected Rust launcher", "pe_offset", fmt.Sprintf("0x%x", peOffset))
+		return "rust"
+	} else {
+		logger.Debug("Unknown launcher type", "pe_offset", fmt.Sprintf("0x%x", peOffset))
+		return "unknown"
+	}
+}
+
+// ProcessLauncherForPSPF processes launcher binary for PSPF embedding compatibility.
+//
+// This is the main entry point for PE manipulation. It uses a hybrid approach:
+// - Go launchers: Use PE overlay (no modifications, PSPF appended after sections)
+// - Rust launchers: Use DOS stub expansion (PSPF at fixed 0xF0 offset)
+//
+// Phase 29: Go binaries are fundamentally incompatible with DOS stub expansion
+// due to their PE structure (15 sections, unusual section names, missing data
+// directories). The PE overlay approach is the industry standard and preserves
+// 100% PE structure integrity.
+//
+// Returns the processed launcher binary (expanded if Rust, unchanged if Go/Unix)
 func ProcessLauncherForPSPF(launcherData []byte, logger hclog.Logger) ([]byte, error) {
 	if !isPEExecutable(launcherData) {
 		// Not a Windows PE executable, return unchanged (Unix binary)
@@ -499,15 +536,29 @@ func ProcessLauncherForPSPF(launcherData []byte, logger hclog.Logger) ([]byte, e
 		return launcherData, nil
 	}
 
-	if !needsDOSStubExpansion(launcherData, logger) {
-		// PE executable with adequate DOS stub (Rust/MSVC binary)
-		logger.Trace("PE launcher has adequate DOS stub, no processing needed")
+	launcherType := GetLauncherType(launcherData, logger)
+
+	switch launcherType {
+	case "go":
+		// Go launcher: Use PE overlay approach (zero modifications)
+		// PSPF data will be appended after all PE sections
+		logger.Info("Using PE overlay approach for Go launcher (no PE modifications)")
+		return launcherData, nil
+
+	case "rust":
+		// Rust launcher: Use DOS stub expansion (PSPF at fixed 0xF0 offset)
+		if needsDOSStubExpansion(launcherData, logger) {
+			logger.Info("Expanding DOS stub for Rust launcher (PSPF at 0xF0)")
+			return expandDOSStub(launcherData, logger)
+		}
+		logger.Trace("Rust launcher already has adequate DOS stub")
+		return launcherData, nil
+
+	default:
+		// Unknown launcher type: Safe default is no modification (PE overlay)
+		logger.Info("Unknown launcher type, using PE overlay approach")
 		return launcherData, nil
 	}
-
-	// Go binary with minimal DOS stub - needs expansion
-	logger.Info("Processing Go launcher for Windows PSPF compatibility")
-	return expandDOSStub(launcherData, logger)
 }
 
 // bytesEqual is a helper function to compare two byte slices
