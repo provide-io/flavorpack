@@ -49,51 +49,10 @@ func main() {
 		os.Exit(format_2025.ExitIOError)
 	}
 
-	// Check for --version flag before launching
-	if len(os.Args) > 1 && os.Args[1] == "--version" {
-		fmt.Printf("flavor-go-launcher %s\n", version)
-		fmt.Printf("Built: %s\n", getBuilderTimestamp())
-		os.Exit(0)
-	}
-
-	// Check for --help flag before launching
-	if len(os.Args) > 1 && os.Args[1] == "--help" {
-		fmt.Println("flavor-go-launcher - PSPF package launcher")
-		fmt.Println()
-		fmt.Println("Usage:")
-		fmt.Println("  flavor-go-launcher [options]")
-		fmt.Println("  flavor-go-launcher --version")
-		fmt.Println("  flavor-go-launcher --help")
-		fmt.Println()
-		fmt.Println("Options:")
-		fmt.Println("  --version          Show version information")
-		fmt.Println("  --help             Show this help message")
-		fmt.Println("  --log-level LEVEL  Set log level (debug, info, warn, error)")
-		fmt.Println()
-		fmt.Println("CLI Mode:")
-		fmt.Println("  Set FLAVOR_LAUNCHER_CLI=1 to enable CLI mode for package inspection")
-		fmt.Println("  Commands: info, verify, metadata, extract, run, help")
-		fmt.Println()
-		fmt.Println("  Example: FLAVOR_LAUNCHER_CLI=1 ./mypackage.psp info")
-		os.Exit(0)
-	}
-
-	// Check for --log-level flag
-	var logLevel string
-	var logSource string
-	var args []string
-
-	if len(os.Args) > 2 && os.Args[1] == "--log-level" {
-		logLevel = os.Args[2]
-		logSource = "CLI --log-level"
-		args = os.Args[3:] // Skip --log-level and its value
-	} else {
-		args = os.Args[1:]
-	}
-
 	// Launch with error handling
 	// Note: LaunchWithLogLevel calls os.Exit directly on error
-	format_2025.LaunchWithLogLevel(exePath, args, logLevel, logSource)
+	// All arguments are passed through - launcher only intercepts args when FLAVOR_LAUNCHER_CLI=1
+	format_2025.LaunchWithLogLevel(exePath, os.Args[1:], "", "")
 }
 
 // Test 3: Trigger rebuild Mon Aug 18 15:45:13 PDT 2025

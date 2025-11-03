@@ -83,6 +83,14 @@ pub fn build(manifest_path: &Path, output_path: &Path, options: BuildOptions) ->
         &options,
     )?;
 
+    // Phase 9: Convert to PE resource embedding if needed (Windows + Go launcher)
+    drop(out); // Close the file before resource embedding
+    if should_use_resource_embedding(&launcher_data)? {
+        info!("🪟 Converting to PE resource embedding (Windows Go launcher)");
+        convert_to_resource_embedding(output_path, launcher_size)?;
+        info!("✅ Successfully embedded PSPF as PE resource");
+    }
+
     Ok(())
 }
 
@@ -174,4 +182,93 @@ fn get_launcher(options: &BuildOptions) -> Result<Vec<u8>> {
             e
         ))
     })
+}
+
+/// Determines if PE resource embedding should be used.
+///
+/// TEMPORARILY DISABLED: The Windows UpdateResourceW API corrupts Go binaries
+/// even though it reports success. The Go builder uses a PE reconstruction library
+/// (winres) which works correctly, but there's no Rust equivalent for runtime PE
+/// modification. Until we implement proper PE reconstruction in Rust, we fall back
+/// to overlay mode (appended data) for all launchers.
+///
+/// See: Phase 31 analysis - UpdateResourceW corrupts Go launcher entry point
+/// TODO: Implement PE reconstruction using a library similar to Go's winres
+fn should_use_resource_embedding(_launcher_data: &[u8]) -> Result<bool> {
+    // Disabled until we have proper PE reconstruction
+    Ok(false)
+}
+
+/// Converts a PSP file from append mode to PE resource embedding.
+///
+/// This function:
+/// 1. Reads the entire PSP file
+/// 2. Extracts the PSPF data (everything after the launcher)
+/// 3. Truncates the file to just the launcher
+/// 4. Embeds the PSPF data as a PE resource
+///
+/// This is necessary for Go launchers on Windows, as they reject appended data.
+fn convert_to_resource_embedding(file_path: &Path, launcher_size: u64) -> Result<()> {
+    use super::pe_resources::embed_pspf_as_resource;
+
+    debug!("📖 Reading PSP file to extract PSPF data");
+    debug!("   File: {}", file_path.display());
+    debug!("   Launcher size: {} bytes", launcher_size);
+
+    // Read the entire file
+    let file_data = fs::read(file_path)?;
+    let file_size = file_data.len() as u64;
+
+    debug!("   Total file size: {} bytes", file_size);
+    debug!("   PSPF data size: {} bytes", file_size - launcher_size);
+
+    // Extract PSPF data (everything after launcher)
+    // Copy to a new Vec to ensure it's not tied to the original file data
+    let pspf_data: Vec<u8> = file_data[launcher_size as usize..].to_vec();
+
+    if pspf_data.is_empty() {
+        return Err(FlavorError::Generic(
+            "No PSPF data found after launcher".to_string(),
+        ));
+    }
+    debug!("   Copied PSPF data to separate buffer");
+
+    debug!("✂️  Truncating file to launcher size");
+
+    // Truncate file to launcher size (in-place modification)
+    // This is safer than fs::write() as it preserves file attributes
+    {
+        use std::fs::OpenOptions;
+
+        let file = OpenOptions::new().write(true).open(file_path)?;
+        file.set_len(launcher_size)?;
+
+        // Explicitly sync file metadata and data to disk
+        // This ensures the truncation is committed before resource embedding
+        file.sync_all()?;
+        debug!("   Synced truncation to disk");
+    }
+
+    // Verify the truncation was successful
+    let truncated_size = fs::metadata(file_path)?.len();
+    if truncated_size != launcher_size {
+        return Err(FlavorError::Generic(format!(
+            "File truncation failed: expected {} bytes, got {} bytes",
+            launcher_size, truncated_size
+        )));
+    }
+    debug!("   Verified truncated size: {} bytes", truncated_size);
+
+    debug!(
+        "📦 Embedding {} bytes of PSPF data as PE resource",
+        pspf_data.len()
+    );
+
+    // Embed PSPF data as resource
+    embed_pspf_as_resource(file_path, &pspf_data)?;
+
+    let final_size = fs::metadata(file_path)?.len();
+    debug!("✅ Conversion complete: final size {} bytes", final_size);
+
+    Ok(())
 }

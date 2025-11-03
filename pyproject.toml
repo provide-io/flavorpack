@@ -31,6 +31,7 @@ dependencies = [
     "provide-foundation[all]",
     "pip>=25.2",
     "uv>=0.9.6",
+    "setuptools>=68.0.0",  # Required for building wheels at runtime
 ]
 keywords = ["packaging", "pspf", "flavor", "executable", "bundle"]
 

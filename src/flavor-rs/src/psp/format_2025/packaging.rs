@@ -25,7 +25,11 @@ use super::constants::{HEADER_SIZE, OP_GZIP, OP_TAR};
 /// Compute SHA-256 checksum truncated to first 8 bytes (as u64 little-endian)
 fn compute_slot_checksum(data: &[u8]) -> u64 {
     let hash = Sha256::digest(data);
-    u64::from_le_bytes(hash[..8].try_into().unwrap())
+    // SHA-256 always produces 32 bytes, extract first 8 as array
+    let bytes: [u8; 8] = [
+        hash[0], hash[1], hash[2], hash[3], hash[4], hash[5], hash[6], hash[7],
+    ];
+    u64::from_le_bytes(bytes)
 }
 use super::index::Index;
 use super::metadata::{Metadata, SlotMetadata};

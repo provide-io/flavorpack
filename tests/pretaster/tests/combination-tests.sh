@@ -1,7 +1,9 @@
 #!/bin/bash
 # Test all builder/launcher combinations with pretaster
 
-set -e
+# NOTE: DO NOT use 'set -e' here - we want to test ALL combinations
+# even if one fails, then report the failures at the end
+set -uo pipefail
 
 # Load test library
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -71,6 +73,37 @@ test_combination() {
         local exit_code=$?
         echo "$emoji   ❌ Build failed with exit code $exit_code!" | tee -a "$log_file"
         return 1
+    fi
+
+    # Immediate .exe validation for Windows
+    if [[ "$OS" == "windows" ]]; then
+        echo "$emoji" | tee -a "$log_file"
+        echo "$emoji   🔍 Immediate .exe validation..." | tee -a "$log_file"
+
+        # Test if Windows can load and execute the binary
+        if "$output" --help > /dev/null 2>&1; then
+            echo "$emoji   ✅ Windows loaded .exe successfully" | tee -a "$log_file"
+        else
+            local load_exit=$?
+            echo "$emoji   ❌ Windows PE loader rejected .exe (exit code: $load_exit)" | tee -a "$log_file"
+            echo "$emoji      This indicates PE header issue BEFORE launcher runs" | tee -a "$log_file"
+
+            # Collect immediate diagnostics
+            if command -v xxd >/dev/null 2>&1; then
+                local diag_base="failure-diagnostics/$(basename "$output" .psp)-load-fail"
+                mkdir -p failure-diagnostics/
+
+                echo "$emoji   📦 Collecting diagnostics..." | tee -a "$log_file"
+                cp "$output" "${diag_base}.exe" 2>/dev/null
+                xxd "$output" | head -64 > "${diag_base}.hex" 2>/dev/null
+
+                # Check PE offset
+                local pe_offset=$(xxd -s 0x3c -l 4 -p "$output" 2>/dev/null)
+                echo "$emoji      PE offset: 0x$pe_offset" | tee -a "$log_file"
+            fi
+
+            return 1
+        fi
     fi
 
     # Validate PE header on Windows before testing
@@ -233,11 +266,15 @@ combinations=(
     "go:go:$HELPERS_DIR/bin/flavor-go-builder-$PLATFORM$EXT:$HELPERS_DIR/bin/flavor-go-launcher-$PLATFORM$EXT:🐹🐹"
 )
 
+# Track test results
+declare -a FAILED_COMBOS
+declare -a PASSED_COMBOS
+
 for combo in "${combinations[@]}"; do
     IFS=':' read -r builder launcher builder_bin launcher_bin emoji <<< "$combo"
-    
+
     print_separator
-    
+
     case "$builder-$launcher" in
         rs-rs) echo "1️⃣ 🦀🦀 Rust Builder + Rust Launcher" ;;
         rs-go) echo "2️⃣ 🦀🐹 Rust Builder + Go Launcher" ;;
@@ -245,26 +282,65 @@ for combo in "${combinations[@]}"; do
         go-go) echo "4️⃣ 🐹🐹 Go Builder + Go Launcher" ;;
     esac
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    
-    test_combination "$builder" "$launcher" "$builder_bin" "$launcher_bin" "$emoji"
+
+    # Run test and track result (don't exit on failure)
+    if test_combination "$builder" "$launcher" "$builder_bin" "$launcher_bin" "$emoji"; then
+        PASSED_COMBOS+=("$emoji $builder+$launcher")
+    else
+        FAILED_COMBOS+=("$emoji $builder+$launcher")
+    fi
 done
 
 print_separator
 
 echo "📊 Test Results Summary"
 echo ""
-echo "Builder/Launcher Compatibility:"
-echo "  • 🦀🦀 Rust + Rust: ✅ Working"
-echo "  • 🦀🐹 Rust + Go:   ✅ Working"
-echo "  • 🐹🦀 Go + Rust:   ✅ Working"
-echo "  • 🐹🐹 Go + Go:     ✅ Working"
+echo "Platform: $PLATFORM"
 echo ""
+
+# Show results
+# Temporarily disable set -u to safely check empty arrays
+set +u
+if [[ ${#PASSED_COMBOS[@]} -gt 0 ]]; then
+    echo "✅ PASSED (${#PASSED_COMBOS[@]} combinations):"
+    for combo in "${PASSED_COMBOS[@]}"; do
+        echo "  • $combo"
+    done
+    echo ""
+fi
+
+if [[ ${#FAILED_COMBOS[@]} -gt 0 ]]; then
+    echo "❌ FAILED (${#FAILED_COMBOS[@]} combinations):"
+    for combo in "${FAILED_COMBOS[@]}"; do
+        echo "  • $combo"
+    done
+    echo ""
+fi
+set -u
+
 echo "📁 Log files saved in: $LOGS_DIR"
 for combo in "${combinations[@]}"; do
     IFS=':' read -r builder launcher _ _ _ <<< "$combo"
     echo "  • pretaster-b_${builder}-l_${launcher}.${TIMESTAMP}.log"
 done
 echo ""
-echo "✅ All combinations tested and logged!"
 
-print_test_summary
+# Final status
+total_tests=${#combinations[@]}
+# Temporarily disable set -u to safely access array lengths
+set +u
+passed_tests=$(( ${#PASSED_COMBOS[@]} ))
+failed_tests=$(( ${#FAILED_COMBOS[@]} ))
+set -u
+
+if [ $failed_tests -eq 0 ]; then
+    echo "✅ All $total_tests combinations tested successfully!"
+    print_test_summary
+    exit 0
+else
+    echo "⚠️  $passed_tests/$total_tests combinations passed, $failed_tests failed"
+    echo ""
+    echo "Review the logs above for details on failures."
+    print_test_summary
+    exit 1
+fi

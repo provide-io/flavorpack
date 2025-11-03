@@ -54,56 +54,6 @@ fn run() -> i32 {
         }
     };
 
-    // Special case: Handle --version and --help when run as standalone binary (for CI/testing)
-    // This must be checked before attempting to read as a package
-    if args.len() == 2 && (args[1] == "--version" || args[1] == "--help") {
-        // Check if we're running as a standalone launcher (not a package)
-        // Simply check for the package emoji magic at the start of the file
-        use std::fs::File;
-        use std::io::Read;
-
-        if let Ok(mut file) = File::open(&exe_path) {
-            let mut magic = [0u8; 4];
-            if file.read_exact(&mut magic).is_ok() {
-                // Check for package emoji (📦 in UTF-8)
-                if magic == [0xF0, 0x9F, 0x93, 0xA6] {
-                    // This is a PSPF package, continue normal processing
-                } else {
-                    // Not a package - we're running as a standalone launcher
-                    if args[1] == "--version" {
-                        // Show version info and exit
-                        println!("flavor-rs-launcher {}", env!("CARGO_PKG_VERSION"));
-                        if let Ok(timestamp) = env::var("BUILD_TIMESTAMP") {
-                            println!("Built: {}", timestamp);
-                        }
-                        return 0;
-                    } else if args[1] == "--help" {
-                        // Show help and exit
-                        println!("flavor-rs-launcher - PSPF package launcher");
-                        println!();
-                        println!("Usage:");
-                        println!("  flavor-rs-launcher [options]");
-                        println!("  flavor-rs-launcher --version");
-                        println!("  flavor-rs-launcher --help");
-                        println!();
-                        println!("Options:");
-                        println!("  --version          Show version information");
-                        println!("  --help             Show this help message");
-                        println!();
-                        println!("CLI Mode:");
-                        println!(
-                            "  Set FLAVOR_LAUNCHER_CLI=1 to enable CLI mode for package inspection"
-                        );
-                        println!("  Commands: info, verify, metadata, extract, run, help");
-                        println!();
-                        println!("  Example: FLAVOR_LAUNCHER_CLI=1 ./mypackage.psp info");
-                        return 0;
-                    }
-                }
-            }
-        }
-    }
-
     // Determine if running in CLI mode ONLY from the environment variable.
     let cli_mode =
         env::var("FLAVOR_LAUNCHER_CLI").is_ok_and(|v| v == "1" || v.to_lowercase() == "true");

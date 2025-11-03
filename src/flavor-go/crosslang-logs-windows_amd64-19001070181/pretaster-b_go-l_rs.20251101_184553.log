@@ -1,0 +1,571 @@
+🐹🦀 📦 Building with Go Builder + Rs Launcher
+🐹🦀 ────────────────────────────────────────────────────────────────────────────────
+🐹🦀 📝 Logging to: logs/pretaster-b_go-l_rs.20251101_184553.log
+{
+  "name": "pretaster-combination",
+  "version": "1.0.0",
+  "description": "Simple test for builder/launcher combinations",
+  "command": "/usr/bin/python3 {workenv}/scripts/combo_test.py",
+  "environment": {},
+  "package": {
+    "name": "pretaster-combination",
+    "version": "1.0.0",
+    "description": "Simple test for builder/launcher combinations"
+  },
+  "format": "PSPF/2025",
+  "slots": [
+    {
+      "slot": 0,
+      "purpose": "payload",
+      "lifecycle": "cached",
+      "operations": "raw",
+      "id": "combo-test-py",
+      "source": "scripts/combo_test.py",
+      "target": "scripts/combo_test.py",
+      "permissions": "0755"
+    }
+  ],
+  "execution": {
+    "command": "/usr/bin/python3 {workenv}/scripts/combo_test.py",
+    "args": [],
+    "env": {},
+    "primary_slot": 0
+  }
+}🐹 2025-11-01T18:46:01Z [INFO]  flavor-go-builder: 🐹🐹🐹 Hello from Flavor's Go Builder 🐹🐹🐹
+🐹 2025-11-01T18:46:01Z [DEBUG] flavor-go-builder: Log level: level=trace source="CLI --log-level"
+🐹 2025-11-01T18:46:01Z [INFO]  flavor-go-builder: PSPF Go Builder starting...
+🐹 2025-11-01T18:46:01Z [INFO]  flavor-go-builder: 🚀 Loading launcher: path=D:/a/flavorpack/flavorpack/dist/bin/flavor-rs-launcher-windows_amd64.exe
+🐹 2025-11-01T18:46:01Z [INFO]  flavor-go-builder: 🔍 Launcher version:
+🐹   version=
+🐹   | 🦀 [2025-11-01T18:46:01Z DEBUG flavor_rs_launcher] 🚀 Launcher process started
+🐹   | 🦀 [2025-11-01T18:46:01Z TRACE flavor_rs_launcher] 📝 Launcher initializing
+🐹   | 🦀 [2025-11-01T18:46:01Z TRACE flavor_rs_launcher] 📋 Arguments: ["D:/a/flavorpack/flavorpack/dist/bin/flavor-rs-launcher-windows_amd64.exe", "--version"]
+🐹   | 🦀 [2025-11-01T18:46:01Z DEBUG flavor_rs_launcher] 📍 Executable path: "D:\\a\\flavorpack\\flavorpack\\dist\\bin\\flavor-rs-launcher-windows_amd64.exe"
+🐹   | flavor-rs-launcher 0.3.0
+🐹   
+🐹 2025-11-01T18:46:01Z [DEBUG] flavor-go-builder: 🔍 Launcher path: path=D:/a/flavorpack/flavorpack/dist/bin/flavor-rs-launcher-windows_amd64.exe
+🐹 2025-11-01T18:46:01Z [DEBUG] flavor-go-builder: ✅ Launcher loaded: size=1153536
+🐹 2025-11-01T18:46:01Z [DEBUG] flavor-go-builder: Detected Rust launcher: pe_offset=0xe8
+🐹 2025-11-01T18:46:01Z [TRACE] flavor-go-builder: PE binary has adequate DOS stub size: pe_offset=0xe8 dos_stub_size=232
+🐹 2025-11-01T18:46:01Z [TRACE] flavor-go-builder: Rust launcher already has adequate DOS stub
+🐹 2025-11-01T18:46:01Z [DEBUG] flavor-go-builder: ✅ Launcher processed for PSPF: size=1153536
+🐹 2025-11-01T18:46:01Z [DEBUG] flavor-go-builder: 📁 Ensuring output directory exists: dir=dist
+🐹 2025-11-01T18:46:01Z [DEBUG] flavor-go-builder: 💾 Creating output file: path=dist/pretaster-go-rs.psp
+🐹 2025-11-01T18:46:01Z [DEBUG] flavor-go-builder: ✍️ Writing launcher to output: size=1153536
+🐹 2025-11-01T18:46:01Z [DEBUG] flavor-go-builder: 📦 Creating PSPF index
+🐹 2025-11-01T18:46:01Z [DEBUG] flavor-go-builder: 📈 Index details: format=PSPF2025 version=0x20250001 launcher_size=1153536
+🐹 2025-11-01T18:46:01Z [DEBUG] flavor-go-builder: 🔐 Generating deterministic key pair from seed
+🐹 2025-11-01T18:46:01Z [INFO]  flavor-go-builder: 🔑 Using seed-based key generation: seed_hash=ecd71870d1963316
+🐹 2025-11-01T18:46:01Z [INFO]  flavor-go-builder: 📦 Processing slot metadata: count=1
+🐹 2025-11-01T18:46:01Z [DEBUG] flavor-go-builder: 🔍 Slot processing details: alignment=8 descriptor_size=64
+🐹 2025-11-01T18:46:01Z [DEBUG] flavor-go-builder: 📂 Processing slot: index=0 id=combo-test-py source=scripts/combo_test.py target=scripts/combo_test.py
+🐹 2025-11-01T18:46:01Z [DEBUG] flavor-go-builder: 📊 Slot size: original=4791 operations=raw
+🐹 2025-11-01T18:46:01Z [DEBUG] flavor-go-builder: ✅ Slot processed: index=0 id=combo-test-py compressed_size=4791 original_size=4791
+🐹 2025-11-01T18:46:01Z [DEBUG] flavor-go-builder: 📜 Writing metadata (gzipped JSON): position=1153536
+🐹 2025-11-01T18:46:01Z [DEBUG] flavor-go-builder: ✅ Metadata written: size=579
+🐹 2025-11-01T18:46:01Z [DEBUG] flavor-go-builder: ✍️ Writing slot: id=0 offset=1154184 size=4791
+🐹 2025-11-01T18:46:01Z [DEBUG] flavor-go-builder: 🔐 Index checksum calculated: checksum=0xee8341ee
+🐹 2025-11-01T18:46:01Z [DEBUG] flavor-go-builder: 🪄 Writing MagicTrailer
+🐹 2025-11-01T18:46:01Z [INFO]  flavor-go-builder: ✅ Successfully built PSPF bundle: output=dist/pretaster-go-rs.psp package=pretaster-combination version=1.0.0 launcher="" slots=1 size="1.11 MB"
+🐹 2025-11-01T18:46:01Z [DEBUG] flavor-go-builder: 📦 Package details: checksum=0xee8341ee metadata_size=579 slot_table_size=64
+🐹 2025-11-01T18:46:01Z [DEBUG] flavor-go-builder: 🔧 Set executable permissions on output file
+🐹 2025-11-01T18:46:01Z [DEBUG] flavor-go-builder: Detected Rust launcher: pe_offset=0xe8
+🐹 2025-11-01T18:46:01Z [DEBUG] flavor-go-builder: Launcher type detected: type=rust os=windows
+🐹 2025-11-01T18:46:01Z [DEBUG] flavor-go-builder: Not a Go launcher, using append mode: type=rust
+🐹🦀   ✅ Build successful: dist/pretaster-go-rs.psp
+🐹🦀
+🐹🦀   🔍 Immediate .exe validation...
+🐹🦀   ✅ Windows loaded .exe successfully
+🐹🦀
+🐹🦀   🔍 Validating PE header...
+🐹🦀   ✅ Valid MZ signature (PE executable)
+🐹🦀   📍 PE header offset: 0x000000e8 (raw bytes: e8000000)
+🐹🦀   📄 File type: dist/pretaster-go-rs.psp: PE32+ executable for MS Windows 6.00 (console), x86-64, 5 sections
+🐹🦀
+🐹🦀   Testing commands:
+🐹🦀
+🐹🦀   1️⃣ Testing 'info' command:
+🐹🦀   ─────────────────────────
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor_rs_launcher] 🚀 Launcher process started
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor_rs_launcher] 📍 Executable path: "D:\\a\\flavorpack\\flavorpack\\tests\\pretaster\\dist\\pretaster-go-rs.psp"
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor_rs_launcher] 🚀 Attempting to launch package: "D:\\a\\flavorpack\\flavorpack\\tests\\pretaster\\dist\\pretaster-go-rs.psp"
+🐹🦀     🦀 [2025-11-01T18:46:01Z INFO flavor::psp::format_2025::launcher] 🦀🦀🦀 Hello from Flavor's Rust Launcher 🦀🦀🦀
+🐹🦀     🦀 [2025-11-01T18:46:01Z INFO flavor::psp::format_2025::launcher] PSPF Rust Launcher starting...
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::launcher] 📖 Reading PSPF bundle
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::backends] 📁 File backend opened D:\a\flavorpack\flavorpack\tests\pretaster\dist\pretaster-go-rs.psp (1167175 bytes) in 18.2µs
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::reader] Trailer size: 8200, file size: 1167175 bytes
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::index] Raw bytes at offset 24-32 (metadata_offset): [00, 9a, 11, 00, 00, 00, 00, 00]
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::index] Raw bytes at offset 32-40 (metadata_size): [43, 02, 00, 00, 00, 00, 00, 00]
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::index] Parsed metadata_offset: 0x0000000000119a00 (1153536)
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::index] Parsed metadata_size: 579 bytes
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::reader] Parsed index values:
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::reader]   package_size: 1167175
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::reader]   launcher_size: 1153536
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::reader]   metadata_offset: 0x0000000000119a00 (1153536)
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::reader]   metadata_size: 579 bytes
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::reader]   slot_table_offset: 0x0000000000119c48
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::reader]   slot_count: 1
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::index] Checksum bytes in index: ee 41 83 ee
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::index] First 72 bytes of index (with checksum zeroed):
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::index]   0000: 01 00 25 20 00 00 00 00 47 cf 11 00 00 00 00 00 
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::index]   0010: 00 9a 11 00 00 00 00 00 00 9a 11 00 00 00 00 00 
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::index]   0020: 43 02 00 00 00 00 00 00 48 9c 11 00 00 00 00 00 
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::index]   0030: 40 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::index]   0040: d2 73 67 ba 3d 43 64 63 
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::index] Checksum verification - Expected: 4001579502 (0xee8341ee), Calculated: 4001579502 (0xee8341ee)
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::reader] Index loaded in 171.5µs
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::launcher] 🔍 Verifying package integrity (level: Standard)
+🐹🦀     🦀 [2025-11-01T18:46:01Z INFO flavor::psp::format_2025::verifier] Verifying PSPF/2025 package: "D:\\a\\flavorpack\\flavorpack\\tests\\pretaster\\dist\\pretaster-go-rs.psp"
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::backends] 📁 File backend opened D:\a\flavorpack\flavorpack\tests\pretaster\dist\pretaster-go-rs.psp (1167175 bytes) in 11.4µs
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::reader] Trailer size: 8200, file size: 1167175 bytes
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::index] Raw bytes at offset 24-32 (metadata_offset): [00, 9a, 11, 00, 00, 00, 00, 00]
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::index] Raw bytes at offset 32-40 (metadata_size): [43, 02, 00, 00, 00, 00, 00, 00]
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::index] Parsed metadata_offset: 0x0000000000119a00 (1153536)
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::index] Parsed metadata_size: 579 bytes
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::reader] Parsed index values:
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::reader]   package_size: 1167175
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::reader]   launcher_size: 1153536
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::reader]   metadata_offset: 0x0000000000119a00 (1153536)
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::reader]   metadata_size: 579 bytes
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::reader]   slot_table_offset: 0x0000000000119c48
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::reader]   slot_count: 1
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::index] Checksum bytes in index: ee 41 83 ee
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::index] First 72 bytes of index (with checksum zeroed):
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::index]   0000: 01 00 25 20 00 00 00 00 47 cf 11 00 00 00 00 00 
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::index]   0010: 00 9a 11 00 00 00 00 00 00 9a 11 00 00 00 00 00 
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::index]   0020: 43 02 00 00 00 00 00 00 48 9c 11 00 00 00 00 00 
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::index]   0030: 40 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::index]   0040: d2 73 67 ba 3d 43 64 63 
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::index] Checksum verification - Expected: 4001579502 (0xee8341ee), Calculated: 4001579502 (0xee8341ee)
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::reader] Index loaded in 120.7µs
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::reader] 📖 Reading metadata from offset 0x119a00, size 579 bytes
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::reader] ✅ Successfully parsed metadata for pretaster-combination v1.0.0
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::verifier] Index checksum: ✅ VALID
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::verifier] Metadata checksum: ✅ VALID
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::verifier] Package size: ✅ VALID
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::verifier] ✅ Signature verification successful
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::verifier] Integrity seal: ✅ VALID
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::verifier] Trailing magic: ✅ VALID
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::verifier] 🔍 Verification results: index_checksum=true, metadata_checksum=true, size=true, integrity_seal=true, trailing_magic=true
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::launcher] ✅ Package integrity verified
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::reader] 📖 Reading metadata from offset 0x119a00, size 579 bytes
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::reader] ✅ Successfully parsed metadata for pretaster-combination v1.0.0
+🐹🦀     🦀 [2025-11-01T18:46:01Z INFO flavor::psp::format_2025::launcher] 📦 Package: pretaster-combination v1.0.0
+🐹🦀     🦀 [2025-11-01T18:46:01Z INFO flavor::psp::format_2025::launcher] 🕐 Package built: 2025-11-01T18:46:01Z with flavor-go v1.0.0
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::launcher] 🎯 Primary slot: 0
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::launcher] 🔧 Command: /usr/bin/python3 {workenv}/scripts/combo_test.py
+🐹🦀     🦀 [2025-11-01T18:46:01Z INFO flavor::psp::format_2025::launcher] 📁 Work environment: "C:\\Users\\runneradmin\\.cache/flavor\\workenv\\pretaster-go-rs"
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::launcher] 🔍 Checking cache validity
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::execution::validation] 🔍 No extraction completion marker found
+🐹🦀     🦀 [2025-11-01T18:46:01Z INFO flavor::psp::format_2025::launcher] ❌ Cache invalid, will extract
+🐹🦀     🦀 [2025-11-01T18:46:01Z WARN flavor::psp::format_2025::launcher::workenv] ⚠️ Disk space check not implemented for this platform
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::locking] 🔒 Acquired extraction lock (PID: 1672)
+🐹🦀     🦀 [2025-11-01T18:46:01Z INFO flavor::psp::format_2025::launcher] 📁 Created temporary extraction directory: "C:\\Users\\runneradmin\\.cache/flavor\\workenv\\.pretaster-go-rs.pspf\\tmp\\1672"
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::launcher::extraction] 📖 Reading metadata for slot extraction
+🐹🦀     🦀 [2025-11-01T18:46:01Z INFO flavor::psp::format_2025::launcher::extraction] 📤 Extracting 1 slots...
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::launcher::extraction] 📦 Extracting slot 0: combo-test-py (4791 bytes)
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::launcher::extraction]   Source: scripts/combo_test.py
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::launcher::extraction]   Target: scripts/combo_test.py
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::launcher::extraction]   Lifecycle: cached
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::launcher::extraction]   Permissions: Some("0755")
+🐹🦀     [1/1] Extracting combo-test-py...
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::reader] 📊 Reading 1 slot descriptors from offset 0x119c48
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::operations] ✅ Operations unpacked: count=0 operations=[]
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::extraction] 🎯 Slot 0 operations: 'raw', purpose: 'payload', id: 'combo-test-py'
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::extraction] 📝 Writing single gzipped file directly to "C:\\Users\\runneradmin\\.cache/flavor\\workenv\\.pretaster-go-rs.pspf\\tmp\\1672\\scripts/combo_test.py"
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::extraction] 📁 Creating parent directory for single file: "C:\\Users\\runneradmin\\.cache/flavor\\workenv\\.pretaster-go-rs.pspf\\tmp\\1672\\scripts"
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::extraction] ✅ Created parent directory: "C:\\Users\\runneradmin\\.cache/flavor\\workenv\\.pretaster-go-rs.pspf\\tmp\\1672\\scripts"
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::extraction] 📝 Writing 4791 bytes to file: "C:\\Users\\runneradmin\\.cache/flavor\\workenv\\.pretaster-go-rs.pspf\\tmp\\1672\\scripts/combo_test.py"
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::extraction] ✅ Successfully wrote file: "C:\\Users\\runneradmin\\.cache/flavor\\workenv\\.pretaster-go-rs.pspf\\tmp\\1672\\scripts/combo_test.py"
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::launcher::extraction] ✅ Extracted to: "C:\\Users\\runneradmin\\.cache/flavor\\workenv\\.pretaster-go-rs.pspf\\tmp\\1672\\scripts/combo_test.py"
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::launcher] 📝 Wrote metadata to "C:\\Users\\runneradmin\\.cache/flavor\\workenv\\.pretaster-go-rs.pspf\\package\\psp.json"
+🐹🦀     🦀 [2025-11-01T18:46:01Z INFO flavor::psp::format_2025::launcher] 🔄 Moving extracted content to final location...
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::launcher] Moving "C:\\Users\\runneradmin\\.cache/flavor\\workenv\\.pretaster-go-rs.pspf\\tmp\\1672\\scripts" to "C:\\Users\\runneradmin\\.cache/flavor\\workenv\\pretaster-go-rs\\scripts"
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::execution::validation] 💾 Saved index metadata to "C:\\Users\\runneradmin\\.cache/flavor\\workenv\\.pretaster-go-rs.pspf\\instance\\index.json"
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::locking] ✅ Marked extraction as complete
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::execution::validation] 💾 Saved package checksum: ee8341ee
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::locking] 🔓 Released extraction lock
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::launcher::command] 🎯 Final command: /usr/bin/python3 C:\Users\runneradmin\.cache/flavor\workenv\pretaster-go-rs/scripts/combo_test.py
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::launcher::command] 🔍 Resolved executable '/usr/bin/python3' to 'C:\hostedtoolcache\windows\Python\3.9.13\x64\python3.exe'
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::launcher::command] 🗂️ Setting FLAVOR_CACHE to HOST cache: C:\Users\runneradmin/.cache/flavor/workenv
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::launcher] 🔄 Using exec mode - process will be replaced
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::launcher] 📝 exec() not available on this platform, using spawn mode
+🐹🦀     🦀 [2025-11-01T18:46:01Z DEBUG flavor::psp::format_2025::launcher] 👶 Using spawn mode - child process
+🐹🦀     🦀 [2025-11-01T18:46:01Z INFO flavor::psp::format_2025::launcher] 🚀 Spawning: C:\hostedtoolcache\windows\Python\3.9.13\x64\python3.exe
+🐹🦀       Package: pretaster-combination
+🐹🦀       Version: 1.0.0
+🐹🦀       Python: C:\hostedtoolcache\windows\Python\3.9.13\x64\python3.exe
+🐹🦀       Workenv: C:\Users\runneradmin\.cache/flavor\workenv\pretaster-go-rs
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor_rs_launcher] ✅ Package launched successfully, exit code: 0
+🐹🦀   ✅ info test passed
+🐹🦀
+🐹🦀   2️⃣ Testing 'env' command:
+🐹🦀   ─────────────────────────
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor_rs_launcher] 🚀 Launcher process started
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor_rs_launcher] 📍 Executable path: "D:\\a\\flavorpack\\flavorpack\\tests\\pretaster\\dist\\pretaster-go-rs.psp"
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor_rs_launcher] 🚀 Attempting to launch package: "D:\\a\\flavorpack\\flavorpack\\tests\\pretaster\\dist\\pretaster-go-rs.psp"
+🐹🦀     🦀 [2025-11-01T18:46:02Z INFO flavor::psp::format_2025::launcher] 🦀🦀🦀 Hello from Flavor's Rust Launcher 🦀🦀🦀
+🐹🦀     🦀 [2025-11-01T18:46:02Z INFO flavor::psp::format_2025::launcher] PSPF Rust Launcher starting...
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::launcher] 📖 Reading PSPF bundle
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::backends] 📁 File backend opened D:\a\flavorpack\flavorpack\tests\pretaster\dist\pretaster-go-rs.psp (1167175 bytes) in 15.5µs
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::reader] Trailer size: 8200, file size: 1167175 bytes
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::index] Raw bytes at offset 24-32 (metadata_offset): [00, 9a, 11, 00, 00, 00, 00, 00]
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::index] Raw bytes at offset 32-40 (metadata_size): [43, 02, 00, 00, 00, 00, 00, 00]
+🐹🦀   ✅ env test passed
+🐹🦀
+🐹🦀   3️⃣ Testing 'argv' with arguments:
+🐹🦀   ─────────────────────────
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor_rs_launcher] 🚀 Launcher process started
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor_rs_launcher] 📍 Executable path: "D:\\a\\flavorpack\\flavorpack\\tests\\pretaster\\dist\\pretaster-go-rs.psp"
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor_rs_launcher] 🚀 Attempting to launch package: "D:\\a\\flavorpack\\flavorpack\\tests\\pretaster\\dist\\pretaster-go-rs.psp"
+🐹🦀     🦀 [2025-11-01T18:46:02Z INFO flavor::psp::format_2025::launcher] 🦀🦀🦀 Hello from Flavor's Rust Launcher 🦀🦀🦀
+🐹🦀     🦀 [2025-11-01T18:46:02Z INFO flavor::psp::format_2025::launcher] PSPF Rust Launcher starting...
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::launcher] 📖 Reading PSPF bundle
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::backends] 📁 File backend opened D:\a\flavorpack\flavorpack\tests\pretaster\dist\pretaster-go-rs.psp (1167175 bytes) in 18.7µs
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::reader] Trailer size: 8200, file size: 1167175 bytes
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::index] Raw bytes at offset 24-32 (metadata_offset): [00, 9a, 11, 00, 00, 00, 00, 00]
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::index] Raw bytes at offset 32-40 (metadata_size): [43, 02, 00, 00, 00, 00, 00, 00]
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::index] Parsed metadata_offset: 0x0000000000119a00 (1153536)
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::index] Parsed metadata_size: 579 bytes
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::reader] Parsed index values:
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::reader]   package_size: 1167175
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::reader]   launcher_size: 1153536
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::reader]   metadata_offset: 0x0000000000119a00 (1153536)
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::reader]   metadata_size: 579 bytes
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::reader]   slot_table_offset: 0x0000000000119c48
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::reader]   slot_count: 1
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::index] Checksum bytes in index: ee 41 83 ee
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::index] First 72 bytes of index (with checksum zeroed):
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::index]   0000: 01 00 25 20 00 00 00 00 47 cf 11 00 00 00 00 00 
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::index]   0010: 00 9a 11 00 00 00 00 00 00 9a 11 00 00 00 00 00 
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::index]   0020: 43 02 00 00 00 00 00 00 48 9c 11 00 00 00 00 00 
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::index]   0030: 40 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::index]   0040: d2 73 67 ba 3d 43 64 63 
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::index] Checksum verification - Expected: 4001579502 (0xee8341ee), Calculated: 4001579502 (0xee8341ee)
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::reader] Index loaded in 179.2µs
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::launcher] 🔍 Verifying package integrity (level: Standard)
+🐹🦀     🦀 [2025-11-01T18:46:02Z INFO flavor::psp::format_2025::verifier] Verifying PSPF/2025 package: "D:\\a\\flavorpack\\flavorpack\\tests\\pretaster\\dist\\pretaster-go-rs.psp"
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::backends] 📁 File backend opened D:\a\flavorpack\flavorpack\tests\pretaster\dist\pretaster-go-rs.psp (1167175 bytes) in 11.7µs
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::reader] Trailer size: 8200, file size: 1167175 bytes
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::index] Raw bytes at offset 24-32 (metadata_offset): [00, 9a, 11, 00, 00, 00, 00, 00]
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::index] Raw bytes at offset 32-40 (metadata_size): [43, 02, 00, 00, 00, 00, 00, 00]
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::index] Parsed metadata_offset: 0x0000000000119a00 (1153536)
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::index] Parsed metadata_size: 579 bytes
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::reader] Parsed index values:
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::reader]   package_size: 1167175
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::reader]   launcher_size: 1153536
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::reader]   metadata_offset: 0x0000000000119a00 (1153536)
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::reader]   metadata_size: 579 bytes
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::reader]   slot_table_offset: 0x0000000000119c48
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::reader]   slot_count: 1
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::index] Checksum bytes in index: ee 41 83 ee
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::index] First 72 bytes of index (with checksum zeroed):
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::index]   0000: 01 00 25 20 00 00 00 00 47 cf 11 00 00 00 00 00 
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::index]   0010: 00 9a 11 00 00 00 00 00 00 9a 11 00 00 00 00 00 
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::index]   0020: 43 02 00 00 00 00 00 00 48 9c 11 00 00 00 00 00 
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::index]   0030: 40 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::index]   0040: d2 73 67 ba 3d 43 64 63 
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::index] Checksum verification - Expected: 4001579502 (0xee8341ee), Calculated: 4001579502 (0xee8341ee)
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::reader] Index loaded in 120.4µs
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::reader] 📖 Reading metadata from offset 0x119a00, size 579 bytes
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::reader] ✅ Successfully parsed metadata for pretaster-combination v1.0.0
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::verifier] Index checksum: ✅ VALID
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::verifier] Metadata checksum: ✅ VALID
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::verifier] Package size: ✅ VALID
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::verifier] ✅ Signature verification successful
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::verifier] Integrity seal: ✅ VALID
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::verifier] Trailing magic: ✅ VALID
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::verifier] 🔍 Verification results: index_checksum=true, metadata_checksum=true, size=true, integrity_seal=true, trailing_magic=true
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::launcher] ✅ Package integrity verified
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::reader] 📖 Reading metadata from offset 0x119a00, size 579 bytes
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::reader] ✅ Successfully parsed metadata for pretaster-combination v1.0.0
+🐹🦀     🦀 [2025-11-01T18:46:02Z INFO flavor::psp::format_2025::launcher] 📦 Package: pretaster-combination v1.0.0
+🐹🦀     🦀 [2025-11-01T18:46:02Z INFO flavor::psp::format_2025::launcher] 🕐 Package built: 2025-11-01T18:46:01Z with flavor-go v1.0.0
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::launcher] 🎯 Primary slot: 0
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::launcher] 🔧 Command: /usr/bin/python3 {workenv}/scripts/combo_test.py
+🐹🦀     🦀 [2025-11-01T18:46:02Z INFO flavor::psp::format_2025::launcher] 📁 Work environment: "C:\\Users\\runneradmin\\.cache/flavor\\workenv\\pretaster-go-rs"
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::launcher] 🔍 Checking cache validity
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::execution::validation] ✅ Package checksum matches cached version: ee8341ee
+🐹🦀     🦀 [2025-11-01T18:46:02Z INFO flavor::psp::format_2025::launcher] ✅ Cache is valid, skipping extraction
+🐹🦀     🦀 [2025-11-01T18:46:02Z INFO flavor::psp::format_2025::launcher] ✅ Work environment is valid, skipping extraction and setup
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::launcher::command] 🎯 Final command: /usr/bin/python3 C:\Users\runneradmin\.cache/flavor\workenv\pretaster-go-rs/scripts/combo_test.py
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::launcher::command] 🔍 Resolved executable '/usr/bin/python3' to 'C:\hostedtoolcache\windows\Python\3.9.13\x64\python3.exe'
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::launcher::command] 🗂️ Setting FLAVOR_CACHE to HOST cache: C:\Users\runneradmin/.cache/flavor/workenv
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::launcher] 🔄 Using exec mode - process will be replaced
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::launcher] 📝 exec() not available on this platform, using spawn mode
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::launcher] 👶 Using spawn mode - child process
+🐹🦀     🦀 [2025-11-01T18:46:02Z INFO flavor::psp::format_2025::launcher] 🚀 Spawning: C:\hostedtoolcache\windows\Python\3.9.13\x64\python3.exe
+🐹🦀     📝 Arguments received:
+🐹🦀       [0]: arg1
+🐹🦀       [1]: arg2
+🐹🦀       [2]: 'arg
+🐹🦀       [3]: with
+🐹🦀       [4]: spaces'
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor_rs_launcher] ✅ Package launched successfully, exit code: 0
+🐹🦀   ✅ argv test passed
+🐹🦀
+🐹🦀   4️⃣ Testing 'echo' command:
+🐹🦀   ─────────────────────────
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor_rs_launcher] 🚀 Launcher process started
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor_rs_launcher] 📍 Executable path: "D:\\a\\flavorpack\\flavorpack\\tests\\pretaster\\dist\\pretaster-go-rs.psp"
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor_rs_launcher] 🚀 Attempting to launch package: "D:\\a\\flavorpack\\flavorpack\\tests\\pretaster\\dist\\pretaster-go-rs.psp"
+🐹🦀     🦀 [2025-11-01T18:46:02Z INFO flavor::psp::format_2025::launcher] 🦀🦀🦀 Hello from Flavor's Rust Launcher 🦀🦀🦀
+🐹🦀     🦀 [2025-11-01T18:46:02Z INFO flavor::psp::format_2025::launcher] PSPF Rust Launcher starting...
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::launcher] 📖 Reading PSPF bundle
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::backends] 📁 File backend opened D:\a\flavorpack\flavorpack\tests\pretaster\dist\pretaster-go-rs.psp (1167175 bytes) in 16.2µs
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::reader] Trailer size: 8200, file size: 1167175 bytes
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::index] Raw bytes at offset 24-32 (metadata_offset): [00, 9a, 11, 00, 00, 00, 00, 00]
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::index] Raw bytes at offset 32-40 (metadata_size): [43, 02, 00, 00, 00, 00, 00, 00]
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::index] Parsed metadata_offset: 0x0000000000119a00 (1153536)
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::index] Parsed metadata_size: 579 bytes
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::reader] Parsed index values:
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::reader]   package_size: 1167175
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::reader]   launcher_size: 1153536
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::reader]   metadata_offset: 0x0000000000119a00 (1153536)
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::reader]   metadata_size: 579 bytes
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::reader]   slot_table_offset: 0x0000000000119c48
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::reader]   slot_count: 1
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::index] Checksum bytes in index: ee 41 83 ee
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::index] First 72 bytes of index (with checksum zeroed):
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::index]   0000: 01 00 25 20 00 00 00 00 47 cf 11 00 00 00 00 00 
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::index]   0010: 00 9a 11 00 00 00 00 00 00 9a 11 00 00 00 00 00 
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::index]   0020: 43 02 00 00 00 00 00 00 48 9c 11 00 00 00 00 00 
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::index]   0030: 40 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::index]   0040: d2 73 67 ba 3d 43 64 63 
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::index] Checksum verification - Expected: 4001579502 (0xee8341ee), Calculated: 4001579502 (0xee8341ee)
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::reader] Index loaded in 159.4µs
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::launcher] 🔍 Verifying package integrity (level: Standard)
+🐹🦀     🦀 [2025-11-01T18:46:02Z INFO flavor::psp::format_2025::verifier] Verifying PSPF/2025 package: "D:\\a\\flavorpack\\flavorpack\\tests\\pretaster\\dist\\pretaster-go-rs.psp"
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::backends] 📁 File backend opened D:\a\flavorpack\flavorpack\tests\pretaster\dist\pretaster-go-rs.psp (1167175 bytes) in 11.7µs
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::reader] Trailer size: 8200, file size: 1167175 bytes
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::index] Raw bytes at offset 24-32 (metadata_offset): [00, 9a, 11, 00, 00, 00, 00, 00]
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::index] Raw bytes at offset 32-40 (metadata_size): [43, 02, 00, 00, 00, 00, 00, 00]
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::index] Parsed metadata_offset: 0x0000000000119a00 (1153536)
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::index] Parsed metadata_size: 579 bytes
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::reader] Parsed index values:
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::reader]   package_size: 1167175
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::reader]   launcher_size: 1153536
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::reader]   metadata_offset: 0x0000000000119a00 (1153536)
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::reader]   metadata_size: 579 bytes
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::reader]   slot_table_offset: 0x0000000000119c48
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::reader]   slot_count: 1
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::index] Checksum bytes in index: ee 41 83 ee
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::index] First 72 bytes of index (with checksum zeroed):
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::index]   0000: 01 00 25 20 00 00 00 00 47 cf 11 00 00 00 00 00 
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::index]   0010: 00 9a 11 00 00 00 00 00 00 9a 11 00 00 00 00 00 
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::index]   0020: 43 02 00 00 00 00 00 00 48 9c 11 00 00 00 00 00 
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::index]   0030: 40 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::index]   0040: d2 73 67 ba 3d 43 64 63 
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::index] Checksum verification - Expected: 4001579502 (0xee8341ee), Calculated: 4001579502 (0xee8341ee)
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::reader] Index loaded in 123.7µs
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::reader] 📖 Reading metadata from offset 0x119a00, size 579 bytes
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::reader] ✅ Successfully parsed metadata for pretaster-combination v1.0.0
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::verifier] Index checksum: ✅ VALID
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::verifier] Metadata checksum: ✅ VALID
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::verifier] Package size: ✅ VALID
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::verifier] ✅ Signature verification successful
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::verifier] Integrity seal: ✅ VALID
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::verifier] Trailing magic: ✅ VALID
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::verifier] 🔍 Verification results: index_checksum=true, metadata_checksum=true, size=true, integrity_seal=true, trailing_magic=true
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::launcher] ✅ Package integrity verified
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::reader] 📖 Reading metadata from offset 0x119a00, size 579 bytes
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::reader] ✅ Successfully parsed metadata for pretaster-combination v1.0.0
+🐹🦀     🦀 [2025-11-01T18:46:02Z INFO flavor::psp::format_2025::launcher] 📦 Package: pretaster-combination v1.0.0
+🐹🦀     🦀 [2025-11-01T18:46:02Z INFO flavor::psp::format_2025::launcher] 🕐 Package built: 2025-11-01T18:46:01Z with flavor-go v1.0.0
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::launcher] 🎯 Primary slot: 0
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::launcher] 🔧 Command: /usr/bin/python3 {workenv}/scripts/combo_test.py
+🐹🦀     🦀 [2025-11-01T18:46:02Z INFO flavor::psp::format_2025::launcher] 📁 Work environment: "C:\\Users\\runneradmin\\.cache/flavor\\workenv\\pretaster-go-rs"
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::launcher] 🔍 Checking cache validity
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::execution::validation] ✅ Package checksum matches cached version: ee8341ee
+🐹🦀     🦀 [2025-11-01T18:46:02Z INFO flavor::psp::format_2025::launcher] ✅ Cache is valid, skipping extraction
+🐹🦀     🦀 [2025-11-01T18:46:02Z INFO flavor::psp::format_2025::launcher] ✅ Work environment is valid, skipping extraction and setup
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::launcher::command] 🎯 Final command: /usr/bin/python3 C:\Users\runneradmin\.cache/flavor\workenv\pretaster-go-rs/scripts/combo_test.py
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::launcher::command] 🔍 Resolved executable '/usr/bin/python3' to 'C:\hostedtoolcache\windows\Python\3.9.13\x64\python3.exe'
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::launcher::command] 🗂️ Setting FLAVOR_CACHE to HOST cache: C:\Users\runneradmin/.cache/flavor/workenv
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::launcher] 🔄 Using exec mode - process will be replaced
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::launcher] 📝 exec() not available on this platform, using spawn mode
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor::psp::format_2025::launcher] 👶 Using spawn mode - child process
+🐹🦀     🦀 [2025-11-01T18:46:02Z INFO flavor::psp::format_2025::launcher] 🚀 Spawning: C:\hostedtoolcache\windows\Python\3.9.13\x64\python3.exe
+🐹🦀     Hello from Go builder and Rs launcher!
+🐹🦀     🦀 [2025-11-01T18:46:02Z DEBUG flavor_rs_launcher] ✅ Package launched successfully, exit code: 0
+🐹🦀   ✅ echo test passed
+🐹🦀
+🐹🦀   5️⃣ Testing 'file' command:
+🐹🦀   ─────────────────────────
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor_rs_launcher] 🚀 Launcher process started
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor_rs_launcher] 📍 Executable path: "D:\\a\\flavorpack\\flavorpack\\tests\\pretaster\\dist\\pretaster-go-rs.psp"
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor_rs_launcher] 🚀 Attempting to launch package: "D:\\a\\flavorpack\\flavorpack\\tests\\pretaster\\dist\\pretaster-go-rs.psp"
+🐹🦀     🦀 [2025-11-01T18:46:03Z INFO flavor::psp::format_2025::launcher] 🦀🦀🦀 Hello from Flavor's Rust Launcher 🦀🦀🦀
+🐹🦀     🦀 [2025-11-01T18:46:03Z INFO flavor::psp::format_2025::launcher] PSPF Rust Launcher starting...
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::launcher] 📖 Reading PSPF bundle
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::backends] 📁 File backend opened D:\a\flavorpack\flavorpack\tests\pretaster\dist\pretaster-go-rs.psp (1167175 bytes) in 15.7µs
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::reader] Trailer size: 8200, file size: 1167175 bytes
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::index] Raw bytes at offset 24-32 (metadata_offset): [00, 9a, 11, 00, 00, 00, 00, 00]
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::index] Raw bytes at offset 32-40 (metadata_size): [43, 02, 00, 00, 00, 00, 00, 00]
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::index] Parsed metadata_offset: 0x0000000000119a00 (1153536)
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::index] Parsed metadata_size: 579 bytes
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::reader] Parsed index values:
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::reader]   package_size: 1167175
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::reader]   launcher_size: 1153536
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::reader]   metadata_offset: 0x0000000000119a00 (1153536)
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::reader]   metadata_size: 579 bytes
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::reader]   slot_table_offset: 0x0000000000119c48
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::reader]   slot_count: 1
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::index] Checksum bytes in index: ee 41 83 ee
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::index] First 72 bytes of index (with checksum zeroed):
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::index]   0000: 01 00 25 20 00 00 00 00 47 cf 11 00 00 00 00 00 
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::index]   0010: 00 9a 11 00 00 00 00 00 00 9a 11 00 00 00 00 00 
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::index]   0020: 43 02 00 00 00 00 00 00 48 9c 11 00 00 00 00 00 
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::index]   0030: 40 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::index]   0040: d2 73 67 ba 3d 43 64 63 
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::index] Checksum verification - Expected: 4001579502 (0xee8341ee), Calculated: 4001579502 (0xee8341ee)
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::reader] Index loaded in 152.7µs
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::launcher] 🔍 Verifying package integrity (level: Standard)
+🐹🦀     🦀 [2025-11-01T18:46:03Z INFO flavor::psp::format_2025::verifier] Verifying PSPF/2025 package: "D:\\a\\flavorpack\\flavorpack\\tests\\pretaster\\dist\\pretaster-go-rs.psp"
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::backends] 📁 File backend opened D:\a\flavorpack\flavorpack\tests\pretaster\dist\pretaster-go-rs.psp (1167175 bytes) in 11.8µs
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::reader] Trailer size: 8200, file size: 1167175 bytes
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::index] Raw bytes at offset 24-32 (metadata_offset): [00, 9a, 11, 00, 00, 00, 00, 00]
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::index] Raw bytes at offset 32-40 (metadata_size): [43, 02, 00, 00, 00, 00, 00, 00]
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::index] Parsed metadata_offset: 0x0000000000119a00 (1153536)
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::index] Parsed metadata_size: 579 bytes
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::reader] Parsed index values:
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::reader]   package_size: 1167175
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::reader]   launcher_size: 1153536
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::reader]   metadata_offset: 0x0000000000119a00 (1153536)
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::reader]   metadata_size: 579 bytes
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::reader]   slot_table_offset: 0x0000000000119c48
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::reader]   slot_count: 1
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::index] Checksum bytes in index: ee 41 83 ee
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::index] First 72 bytes of index (with checksum zeroed):
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::index]   0000: 01 00 25 20 00 00 00 00 47 cf 11 00 00 00 00 00 
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::index]   0010: 00 9a 11 00 00 00 00 00 00 9a 11 00 00 00 00 00 
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::index]   0020: 43 02 00 00 00 00 00 00 48 9c 11 00 00 00 00 00 
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::index]   0030: 40 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::index]   0040: d2 73 67 ba 3d 43 64 63 
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::index] Checksum verification - Expected: 4001579502 (0xee8341ee), Calculated: 4001579502 (0xee8341ee)
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::reader] Index loaded in 133.1µs
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::reader] 📖 Reading metadata from offset 0x119a00, size 579 bytes
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::reader] ✅ Successfully parsed metadata for pretaster-combination v1.0.0
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::verifier] Index checksum: ✅ VALID
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::verifier] Metadata checksum: ✅ VALID
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::verifier] Package size: ✅ VALID
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::verifier] ✅ Signature verification successful
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::verifier] Integrity seal: ✅ VALID
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::verifier] Trailing magic: ✅ VALID
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::verifier] 🔍 Verification results: index_checksum=true, metadata_checksum=true, size=true, integrity_seal=true, trailing_magic=true
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::launcher] ✅ Package integrity verified
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::reader] 📖 Reading metadata from offset 0x119a00, size 579 bytes
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::reader] ✅ Successfully parsed metadata for pretaster-combination v1.0.0
+🐹🦀     🦀 [2025-11-01T18:46:03Z INFO flavor::psp::format_2025::launcher] 📦 Package: pretaster-combination v1.0.0
+🐹🦀     🦀 [2025-11-01T18:46:03Z INFO flavor::psp::format_2025::launcher] 🕐 Package built: 2025-11-01T18:46:01Z with flavor-go v1.0.0
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::launcher] 🎯 Primary slot: 0
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::launcher] 🔧 Command: /usr/bin/python3 {workenv}/scripts/combo_test.py
+🐹🦀     🦀 [2025-11-01T18:46:03Z INFO flavor::psp::format_2025::launcher] 📁 Work environment: "C:\\Users\\runneradmin\\.cache/flavor\\workenv\\pretaster-go-rs"
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::launcher] 🔍 Checking cache validity
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::execution::validation] ✅ Package checksum matches cached version: ee8341ee
+🐹🦀     🦀 [2025-11-01T18:46:03Z INFO flavor::psp::format_2025::launcher] ✅ Cache is valid, skipping extraction
+🐹🦀     🦀 [2025-11-01T18:46:03Z INFO flavor::psp::format_2025::launcher] ✅ Work environment is valid, skipping extraction and setup
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::launcher::command] 🎯 Final command: /usr/bin/python3 C:\Users\runneradmin\.cache/flavor\workenv\pretaster-go-rs/scripts/combo_test.py
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::launcher::command] 🔍 Resolved executable '/usr/bin/python3' to 'C:\hostedtoolcache\windows\Python\3.9.13\x64\python3.exe'
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::launcher::command] 🗂️ Setting FLAVOR_CACHE to HOST cache: C:\Users\runneradmin/.cache/flavor/workenv
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::launcher] 🔄 Using exec mode - process will be replaced
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::launcher] 📝 exec() not available on this platform, using spawn mode
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::launcher] 👶 Using spawn mode - child process
+🐹🦀     🦀 [2025-11-01T18:46:03Z INFO flavor::psp::format_2025::launcher] 🚀 Spawning: C:\hostedtoolcache\windows\Python\3.9.13\x64\python3.exe
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor_rs_launcher] ✅ Package launched successfully, exit code: 0
+🐹🦀   ✅ file test passed
+🐹🦀
+🐹🦀   6️⃣ Testing 'exit' with code 0:
+🐹🦀   ─────────────────────────
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor_rs_launcher] 🚀 Launcher process started
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor_rs_launcher] 📍 Executable path: "D:\\a\\flavorpack\\flavorpack\\tests\\pretaster\\dist\\pretaster-go-rs.psp"
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor_rs_launcher] 🚀 Attempting to launch package: "D:\\a\\flavorpack\\flavorpack\\tests\\pretaster\\dist\\pretaster-go-rs.psp"
+🐹🦀     🦀 [2025-11-01T18:46:03Z INFO flavor::psp::format_2025::launcher] 🦀🦀🦀 Hello from Flavor's Rust Launcher 🦀🦀🦀
+🐹🦀     🦀 [2025-11-01T18:46:03Z INFO flavor::psp::format_2025::launcher] PSPF Rust Launcher starting...
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::launcher] 📖 Reading PSPF bundle
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::backends] 📁 File backend opened D:\a\flavorpack\flavorpack\tests\pretaster\dist\pretaster-go-rs.psp (1167175 bytes) in 15µs
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::reader] Trailer size: 8200, file size: 1167175 bytes
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::index] Raw bytes at offset 24-32 (metadata_offset): [00, 9a, 11, 00, 00, 00, 00, 00]
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::index] Raw bytes at offset 32-40 (metadata_size): [43, 02, 00, 00, 00, 00, 00, 00]
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::index] Parsed metadata_offset: 0x0000000000119a00 (1153536)
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::index] Parsed metadata_size: 579 bytes
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::reader] Parsed index values:
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::reader]   package_size: 1167175
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::reader]   launcher_size: 1153536
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::reader]   metadata_offset: 0x0000000000119a00 (1153536)
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::reader]   metadata_size: 579 bytes
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::reader]   slot_table_offset: 0x0000000000119c48
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::reader]   slot_count: 1
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::index] Checksum bytes in index: ee 41 83 ee
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::index] First 72 bytes of index (with checksum zeroed):
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::index]   0000: 01 00 25 20 00 00 00 00 47 cf 11 00 00 00 00 00 
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::index]   0010: 00 9a 11 00 00 00 00 00 00 9a 11 00 00 00 00 00 
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::index]   0020: 43 02 00 00 00 00 00 00 48 9c 11 00 00 00 00 00 
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::index]   0030: 40 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::index]   0040: d2 73 67 ba 3d 43 64 63 
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::index] Checksum verification - Expected: 4001579502 (0xee8341ee), Calculated: 4001579502 (0xee8341ee)
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::reader] Index loaded in 187.6µs
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::launcher] 🔍 Verifying package integrity (level: Standard)
+🐹🦀     🦀 [2025-11-01T18:46:03Z INFO flavor::psp::format_2025::verifier] Verifying PSPF/2025 package: "D:\\a\\flavorpack\\flavorpack\\tests\\pretaster\\dist\\pretaster-go-rs.psp"
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::backends] 📁 File backend opened D:\a\flavorpack\flavorpack\tests\pretaster\dist\pretaster-go-rs.psp (1167175 bytes) in 16.4µs
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::reader] Trailer size: 8200, file size: 1167175 bytes
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::index] Raw bytes at offset 24-32 (metadata_offset): [00, 9a, 11, 00, 00, 00, 00, 00]
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::index] Raw bytes at offset 32-40 (metadata_size): [43, 02, 00, 00, 00, 00, 00, 00]
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::index] Parsed metadata_offset: 0x0000000000119a00 (1153536)
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::index] Parsed metadata_size: 579 bytes
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::reader] Parsed index values:
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::reader]   package_size: 1167175
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::reader]   launcher_size: 1153536
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::reader]   metadata_offset: 0x0000000000119a00 (1153536)
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::reader]   metadata_size: 579 bytes
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::reader]   slot_table_offset: 0x0000000000119c48
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::reader]   slot_count: 1
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::index] Checksum bytes in index: ee 41 83 ee
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::index] First 72 bytes of index (with checksum zeroed):
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::index]   0000: 01 00 25 20 00 00 00 00 47 cf 11 00 00 00 00 00 
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::index]   0010: 00 9a 11 00 00 00 00 00 00 9a 11 00 00 00 00 00 
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::index]   0020: 43 02 00 00 00 00 00 00 48 9c 11 00 00 00 00 00 
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::index]   0030: 40 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::index]   0040: d2 73 67 ba 3d 43 64 63 
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::index] Checksum verification - Expected: 4001579502 (0xee8341ee), Calculated: 4001579502 (0xee8341ee)
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::reader] Index loaded in 152.6µs
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::reader] 📖 Reading metadata from offset 0x119a00, size 579 bytes
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::reader] ✅ Successfully parsed metadata for pretaster-combination v1.0.0
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::verifier] Index checksum: ✅ VALID
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::verifier] Metadata checksum: ✅ VALID
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::verifier] Package size: ✅ VALID
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::verifier] ✅ Signature verification successful
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::verifier] Integrity seal: ✅ VALID
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::verifier] Trailing magic: ✅ VALID
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::verifier] 🔍 Verification results: index_checksum=true, metadata_checksum=true, size=true, integrity_seal=true, trailing_magic=true
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::launcher] ✅ Package integrity verified
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::reader] 📖 Reading metadata from offset 0x119a00, size 579 bytes
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::reader] ✅ Successfully parsed metadata for pretaster-combination v1.0.0
+🐹🦀     🦀 [2025-11-01T18:46:03Z INFO flavor::psp::format_2025::launcher] 📦 Package: pretaster-combination v1.0.0
+🐹🦀     🦀 [2025-11-01T18:46:03Z INFO flavor::psp::format_2025::launcher] 🕐 Package built: 2025-11-01T18:46:01Z with flavor-go v1.0.0
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::launcher] 🎯 Primary slot: 0
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::launcher] 🔧 Command: /usr/bin/python3 {workenv}/scripts/combo_test.py
+🐹🦀     🦀 [2025-11-01T18:46:03Z INFO flavor::psp::format_2025::launcher] 📁 Work environment: "C:\\Users\\runneradmin\\.cache/flavor\\workenv\\pretaster-go-rs"
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::launcher] 🔍 Checking cache validity
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::execution::validation] ✅ Package checksum matches cached version: ee8341ee
+🐹🦀     🦀 [2025-11-01T18:46:03Z INFO flavor::psp::format_2025::launcher] ✅ Cache is valid, skipping extraction
+🐹🦀     🦀 [2025-11-01T18:46:03Z INFO flavor::psp::format_2025::launcher] ✅ Work environment is valid, skipping extraction and setup
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::launcher::command] 🎯 Final command: /usr/bin/python3 C:\Users\runneradmin\.cache/flavor\workenv\pretaster-go-rs/scripts/combo_test.py
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::launcher::command] 🔍 Resolved executable '/usr/bin/python3' to 'C:\hostedtoolcache\windows\Python\3.9.13\x64\python3.exe'
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::launcher::command] 🗂️ Setting FLAVOR_CACHE to HOST cache: C:\Users\runneradmin/.cache/flavor/workenv
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::launcher] 🔄 Using exec mode - process will be replaced
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::launcher] 📝 exec() not available on this platform, using spawn mode
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor::psp::format_2025::launcher] 👶 Using spawn mode - child process
+🐹🦀     🦀 [2025-11-01T18:46:03Z INFO flavor::psp::format_2025::launcher] 🚀 Spawning: C:\hostedtoolcache\windows\Python\3.9.13\x64\python3.exe
+🐹🦀     🚪 Exiting with code 0
+🐹🦀     🦀 [2025-11-01T18:46:03Z DEBUG flavor_rs_launcher] ✅ Package launched successfully, exit code: 0
+🐹🦀   ✅ exit test passed
+🐹🦀
+🐹🦀   7️⃣ Testing 'exit' command with code 42:
+🐹🦀   ─────────────────────────────────────
+🐹🦀     🚪 Exiting with code 42
+🐹🦀     [0;32m✅ Got expected exit code: 42[0m
+🐹🦀   ✅ exit 42 test passed
+🐹🦀
+🐹🦀 ✨ Completed testing Go + Rs combination
+🐹🦀 📄 Full log saved to: logs/pretaster-b_go-l_rs.20251101_184553.log
