@@ -306,8 +306,9 @@ class WheelBuilder:
         ensure_dir(deps_dir)
 
         # Build main project wheel FROM LOCAL SOURCE (never from PyPI)
+        # Phase 39: Use no isolation to avoid DNS/network issues in CI (setuptools is now a runtime dep)
         logger.info("🔨 Building PROJECT wheel from LOCAL SOURCE")
-        project_wheel = self.build_wheel_from_source(python_exe, project_dir, wheel_dir)
+        project_wheel = self.build_wheel_from_source(python_exe, project_dir, wheel_dir, use_isolation=False)
 
         # Extract project dependencies from pyproject.toml
         project_dependencies = []

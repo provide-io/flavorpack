@@ -24,23 +24,23 @@
 #![warn(
     // Documentation
     missing_docs,
-    
+
     // Error handling best practices
     clippy::unwrap_used,
     clippy::expect_used,
     clippy::panic,
     clippy::unimplemented,
     clippy::todo,
-    
+
     // Performance
     clippy::inefficient_to_string,
     clippy::large_enum_variant,
-    
+
     // Code clarity and maintainability
     clippy::cognitive_complexity,
     clippy::too_many_arguments,
     clippy::type_complexity,
-    
+
     // Best practices
     clippy::clone_on_ref_ptr,
     clippy::wildcard_imports,

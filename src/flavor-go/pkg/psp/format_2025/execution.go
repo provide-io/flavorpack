@@ -23,8 +23,98 @@ var (
 // Utility functions: see execution_utils.go
 // Cache functions: see execution_cache.go
 
+// prepareBundlePath prepares the bundle path for reading.
+// On Windows with PSPF embedded as a PE resource, it extracts the PSPF data
+// to a temporary file and returns the path + cleanup function.
+// Otherwise, it returns the original exePath with no cleanup.
+func prepareBundlePath(exePath string, logger hclog.Logger) (string, func(), error) {
+	logger.Debug("Checking bundle path preparation method", "exe", exePath)
+
+	// Check if PSPF is embedded as a PE resource
+	logger.Trace("Checking for PE resource embedding")
+	if HasPSPFResource(exePath, logger) {
+		logger.Info("🪟 Detected PSPF embedded as PE resource, extracting to temp file")
+		logger.Debug("Starting PE resource extraction workflow")
+
+		// Read PSPF data from resource
+		logger.Trace("Reading PSPF data from PE resource")
+		pspfData, err := ReadPSPFFromResource(exePath, logger)
+		if err != nil {
+			logger.Error("Failed to read PSPF from PE resource", "error", err)
+			return "", nil, fmt.Errorf("failed to read PSPF from resource: %w", err)
+		}
+		logger.Debug("Successfully read PSPF from PE resource", "size", len(pspfData))
+
+		// Create temporary file for PSPF data
+		logger.Trace("Creating temporary file for extracted PSPF data")
+		tmpFile, err := os.CreateTemp("", "pspf-*.psp")
+		if err != nil {
+			logger.Error("Failed to create temp file for PSPF extraction", "error", err)
+			return "", nil, fmt.Errorf("failed to create temp file: %w", err)
+		}
+		tmpPath := tmpFile.Name()
+		logger.Debug("Created temp file", "path", tmpPath)
+
+		// Write PSPF data to temp file
+		logger.Trace("Writing PSPF data to temp file", "size", len(pspfData))
+		bytesWritten, err := tmpFile.Write(pspfData)
+		if err != nil {
+			logger.Error("Failed to write PSPF data to temp file", "error", err, "path", tmpPath)
+			tmpFile.Close()
+			logger.Trace("Cleaning up temp file after write failure", "path", tmpPath)
+			os.Remove(tmpPath)
+			return "", nil, fmt.Errorf("failed to write PSPF to temp file: %w", err)
+		}
+		logger.Debug("Wrote PSPF data to temp file", "bytes", bytesWritten, "expected", len(pspfData))
+
+		if bytesWritten != len(pspfData) {
+			logger.Error("Incomplete write to temp file", "written", bytesWritten, "expected", len(pspfData))
+			tmpFile.Close()
+			os.Remove(tmpPath)
+			return "", nil, fmt.Errorf("incomplete write: wrote %d bytes, expected %d", bytesWritten, len(pspfData))
+		}
+
+		logger.Trace("Closing temp file")
+		if err := tmpFile.Close(); err != nil {
+			logger.Error("Failed to close temp file", "error", err, "path", tmpPath)
+			logger.Trace("Cleaning up temp file after close failure", "path", tmpPath)
+			os.Remove(tmpPath)
+			return "", nil, fmt.Errorf("failed to close temp file: %w", err)
+		}
+		logger.Debug("Temp file closed successfully", "path", tmpPath)
+
+		logger.Debug("📝 Extracted PSPF to temp file", "path", tmpPath, "size", len(pspfData))
+
+		// Return temp path with cleanup function
+		cleanup := func() {
+			logger.Debug("🧹 Cleaning up temp PSPF file", "path", tmpPath)
+			if err := os.Remove(tmpPath); err != nil {
+				logger.Debug("Failed to remove temp file (may have been already removed)", "path", tmpPath, "error", err)
+			} else {
+				logger.Trace("Successfully removed temp file", "path", tmpPath)
+			}
+		}
+		return tmpPath, cleanup, nil
+	}
+
+	// No resource embedding - read from EOF (traditional approach)
+	logger.Debug("📖 No PE resource detected, reading PSPF from EOF (appended to executable)")
+	logger.Trace("Using direct executable path as bundle path", "path", exePath)
+	return exePath, nil, nil
+}
+
 func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclog.Logger) (*exec.Cmd, error) {
-	reader, err := NewReaderWithLogger(exePath, logger)
+	// Check if PSPF is embedded as a PE resource (Windows + Go launcher)
+	bundlePath, cleanup, err := prepareBundlePath(exePath, logger)
+	if err != nil {
+		logger.Error("❌ Failed to prepare bundle path", "error", err)
+		return nil, fmt.Errorf("failed to prepare bundle path: %w", err)
+	}
+	if cleanup != nil {
+		defer cleanup()
+	}
+
+	reader, err := NewReaderWithLogger(bundlePath, logger)
 	if err != nil {
 		logger.Error("❌ Failed to create reader", "error", err)
 		return nil, fmt.Errorf("failed to create reader: %w", err)
@@ -113,6 +203,10 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 	}
 
 	workenvDir := paths.Workenv()
+
+	// Convert to forward slashes for command string substitution on Windows
+	// This prevents backslashes from being treated as escape characters by the shell parser
+	workenvDirForCmd := filepath.ToSlash(workenvDir)
 	if err := os.MkdirAll(workenvDir, os.FileMode(DirPerms)); err != nil {
 		logger.Error("❌ Failed to create work environment directory", "error", err)
 		return nil, fmt.Errorf("failed to create work environment directory: %w", err)
@@ -246,7 +340,7 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 				cmdType, _ := cmd["type"].(string)
 				command, _ := cmd["command"].(string)
 
-				command = strings.ReplaceAll(command, "{workenv}", workenvDir)
+				command = strings.ReplaceAll(command, "{workenv}", workenvDirForCmd)
 				command = strings.ReplaceAll(command, "{package_name}", metadata.Package.Name)
 				command = strings.ReplaceAll(command, "{version}", metadata.Package.Version)
 
@@ -278,7 +372,7 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 					path = strings.ReplaceAll(path, "{package_name}", metadata.Package.Name)
 					path = strings.ReplaceAll(path, "{version}", metadata.Package.Version)
 
-					content = strings.ReplaceAll(content, "{workenv}", workenvDir)
+					content = strings.ReplaceAll(content, "{workenv}", workenvDirForCmd)
 					content = strings.ReplaceAll(content, "{package_name}", metadata.Package.Name)
 					content = strings.ReplaceAll(content, "{version}", metadata.Package.Version)
 
@@ -303,7 +397,7 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 
 			if cmdToRun != "" {
 				if len(cmdArgs) == 0 {
-					cmdToRun = strings.ReplaceAll(cmdToRun, "{workenv}", workenvDir)
+					cmdToRun = strings.ReplaceAll(cmdToRun, "{workenv}", workenvDirForCmd)
 					cmdToRun = strings.ReplaceAll(cmdToRun, "{package_name}", metadata.Package.Name)
 					cmdToRun = strings.ReplaceAll(cmdToRun, "{version}", metadata.Package.Version)
 				}
@@ -361,9 +455,10 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 	command := metadata.Execution.Command
 	for idx, path := range slotPaths {
 		placeholder := fmt.Sprintf("{slot:%d}", idx)
-		command = strings.ReplaceAll(command, placeholder, path)
+		// Convert slot paths to forward slashes for command string on Windows
+		command = strings.ReplaceAll(command, placeholder, filepath.ToSlash(path))
 	}
-	command = strings.ReplaceAll(command, "{workenv}", workenvDir)
+	command = strings.ReplaceAll(command, "{workenv}", workenvDirForCmd)
 	command = strings.ReplaceAll(command, "{package_name}", metadata.Package.Name)
 	command = strings.ReplaceAll(command, "{version}", metadata.Package.Version)
 

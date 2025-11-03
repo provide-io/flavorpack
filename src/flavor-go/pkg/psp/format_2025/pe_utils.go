@@ -362,6 +362,42 @@ func updateDebugDirectory(data []byte, paddingSize int, logger hclog.Logger) err
 	return nil
 }
 
+// updateSizeOfHeaders updates the SizeOfHeaders field in the Optional Header after DOS stub expansion.
+//
+// The SizeOfHeaders field specifies the combined size of the DOS stub, PE headers,
+// and section table, rounded to the file alignment. When the DOS stub expands,
+// this field must be updated to match the new total header size.
+//
+// Windows PE loader validates that sections start at or after SizeOfHeaders.
+// A mismatch causes loader rejection, especially on ARM64 (exit code 126).
+func updateSizeOfHeaders(data []byte, paddingSize int, logger hclog.Logger) error {
+	// Get PE header location
+	peOffset := binary.LittleEndian.Uint32(data[0x3C:0x40])
+	coffOffset := int(peOffset) + 4
+
+	// SizeOfHeaders is at optional header + 60 bytes
+	// Optional header starts at COFF header + 20
+	sizeOfHeadersOffset := coffOffset + 20 + 60
+
+	if sizeOfHeadersOffset+4 > len(data) {
+		return fmt.Errorf("SizeOfHeaders offset 0x%x beyond file bounds", sizeOfHeadersOffset)
+	}
+
+	// Read current SizeOfHeaders value
+	currentSize := binary.LittleEndian.Uint32(data[sizeOfHeadersOffset : sizeOfHeadersOffset+4])
+
+	// Update to reflect expanded DOS stub
+	newSize := currentSize + uint32(paddingSize)
+	binary.LittleEndian.PutUint32(data[sizeOfHeadersOffset:sizeOfHeadersOffset+4], newSize)
+
+	logger.Debug("Updated SizeOfHeaders field",
+		"old_size", fmt.Sprintf("0x%x", currentSize),
+		"new_size", fmt.Sprintf("0x%x", newSize),
+		"padding", paddingSize)
+
+	return nil
+}
+
 // expandDOSStub expands the DOS stub of a PE executable to match Rust/MSVC binary size.
 // This fixes Windows PE loader rejection of Go binaries when PSPF data is appended.
 // The DOS stub is expanded from 128 bytes (0x80) to 240 bytes (0xF0) to match Rust binaries.
@@ -417,6 +453,11 @@ func expandDOSStub(data []byte, logger hclog.Logger) ([]byte, error) {
 		return nil, fmt.Errorf("failed to update section offsets: %w", err)
 	}
 
+	// Update SizeOfHeaders to reflect expanded DOS stub size
+	if err := updateSizeOfHeaders(newData, paddingSize, logger); err != nil {
+		return nil, fmt.Errorf("failed to update SizeOfHeaders: %w", err)
+	}
+
 	// Update data directories (Certificate Table uses absolute file offsets)
 	if err := updateDataDirectories(newData, paddingSize, logger); err != nil {
 		return nil, fmt.Errorf("failed to update data directories: %w", err)
@@ -446,11 +487,48 @@ func expandDOSStub(data []byte, logger hclog.Logger) ([]byte, error) {
 	return newData, nil
 }
 
-// ProcessLauncherForPSPF processes launcher binary for PSPF embedding compatibility.
-// This is the main entry point for PE manipulation. It detects Go binaries
-// with minimal DOS stubs and expands them to match Rust binaries for Windows compatibility.
+// GetLauncherType detects launcher type from PE characteristics.
 //
-// Returns the processed launcher binary (expanded if needed, unchanged otherwise)
+// Go and Rust compilers produce PE files with different characteristics:
+// - Go: Minimal DOS stub (PE offset 0x80 / 128 bytes)
+// - Rust: Larger DOS stub (PE offset 0xE8 / 232 bytes or more)
+//
+// Returns "go", "rust", or "unknown"
+func GetLauncherType(launcherData []byte, logger hclog.Logger) string {
+	if !isPEExecutable(launcherData) {
+		return "unknown"
+	}
+
+	peOffset, err := getPEHeaderOffset(launcherData)
+	if err != nil {
+		return "unknown"
+	}
+
+	// Go binaries have PE offset 0x80, Rust has 0xE8 or larger
+	if peOffset == 0x80 {
+		logger.Debug("Detected Go launcher", "pe_offset", fmt.Sprintf("0x%x", peOffset))
+		return "go"
+	} else if peOffset >= 0xE8 {
+		logger.Debug("Detected Rust launcher", "pe_offset", fmt.Sprintf("0x%x", peOffset))
+		return "rust"
+	} else {
+		logger.Debug("Unknown launcher type", "pe_offset", fmt.Sprintf("0x%x", peOffset))
+		return "unknown"
+	}
+}
+
+// ProcessLauncherForPSPF processes launcher binary for PSPF embedding compatibility.
+//
+// This is the main entry point for PE manipulation. It uses a hybrid approach:
+// - Go launchers: Use PE overlay (no modifications, PSPF appended after sections)
+// - Rust launchers: Use DOS stub expansion (PSPF at fixed 0xF0 offset)
+//
+// Phase 29: Go binaries are fundamentally incompatible with DOS stub expansion
+// due to their PE structure (15 sections, unusual section names, missing data
+// directories). The PE overlay approach is the industry standard and preserves
+// 100% PE structure integrity.
+//
+// Returns the processed launcher binary (expanded if Rust, unchanged if Go/Unix)
 func ProcessLauncherForPSPF(launcherData []byte, logger hclog.Logger) ([]byte, error) {
 	if !isPEExecutable(launcherData) {
 		// Not a Windows PE executable, return unchanged (Unix binary)
@@ -458,15 +536,29 @@ func ProcessLauncherForPSPF(launcherData []byte, logger hclog.Logger) ([]byte, e
 		return launcherData, nil
 	}
 
-	if !needsDOSStubExpansion(launcherData, logger) {
-		// PE executable with adequate DOS stub (Rust/MSVC binary)
-		logger.Trace("PE launcher has adequate DOS stub, no processing needed")
+	launcherType := GetLauncherType(launcherData, logger)
+
+	switch launcherType {
+	case "go":
+		// Go launcher: Use PE overlay approach (zero modifications)
+		// PSPF data will be appended after all PE sections
+		logger.Info("Using PE overlay approach for Go launcher (no PE modifications)")
+		return launcherData, nil
+
+	case "rust":
+		// Rust launcher: Use DOS stub expansion (PSPF at fixed 0xF0 offset)
+		if needsDOSStubExpansion(launcherData, logger) {
+			logger.Info("Expanding DOS stub for Rust launcher (PSPF at 0xF0)")
+			return expandDOSStub(launcherData, logger)
+		}
+		logger.Trace("Rust launcher already has adequate DOS stub")
+		return launcherData, nil
+
+	default:
+		// Unknown launcher type: Safe default is no modification (PE overlay)
+		logger.Info("Unknown launcher type, using PE overlay approach")
 		return launcherData, nil
 	}
-
-	// Go binary with minimal DOS stub - needs expansion
-	logger.Info("Processing Go launcher for Windows PSPF compatibility")
-	return expandDOSStub(launcherData, logger)
 }
 
 // bytesEqual is a helper function to compare two byte slices
