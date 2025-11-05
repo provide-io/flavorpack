@@ -110,14 +110,15 @@ nav:
       - Performance Tuning: guide/advanced/performance.md
       - Debugging: guide/advanced/debugging.md
   
-  # SECTION 3: API Reference (technical documentation)
-  - API Reference:
+  # SECTION 3: API Guide (conceptual documentation)
+  - API Guide:
     - api/index.md
-    - Auto-Generated Reference: api/reference.md
     - Packaging API: api/packaging.md
     - Builder API: api/builder.md
     - Reader API: api/reader.md
     - Crypto API: api/crypto.md
+
+  - Full API Reference: reference/
   
   # SECTION 4: Cookbook (practical examples)
   - Cookbook:
