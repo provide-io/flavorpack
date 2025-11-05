@@ -66,3 +66,6 @@ docs/.shared-theme/
 # MkDocs generated site
 site/
 bf-*.txt
+
+# Extracted provide.io tooling artifacts
+.provide/
