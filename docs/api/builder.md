@@ -294,19 +294,3 @@ def build_with_cache(builder, slots_data, cache_dir):
 ## API Reference
 
 The complete PSPFBuilder class reference with all methods, parameters, and return types:
-
-::: flavor.psp.format_2025.pspf_builder.PSPFBuilder
-    options:
-      show_root_heading: true
-      show_source: true
-      members: true
-      show_if_no_docstring: false
-      heading_level: 3
-
-## See Also
-
-- **[Packaging API](packaging.md)** - High-level packaging functions
-- **[Reader API](reader.md)** - Reading and extracting packages
-- **[Crypto API](crypto.md)** - Signature generation and verification
-- **[PSPF Format Specification](../reference/spec/fep-0001-core-format-and-operation-chains.md)** - Binary format details
-- **[Packaging Guide](../guide/packaging/index.md)** - User guide for package creation
