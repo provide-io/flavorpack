@@ -1,10 +1,7 @@
 # Flavor Makefile
 # Root-level build and test orchestration
 
-# Include shared documentation targets from provide-foundry
-include ../provide-foundry/Makefile.docs.inc
-
-.PHONY: help
+.PHONY: help docs-setup docs-build docs-serve docs-clean
 help: ## Show this help message
 	@echo "Flavor Build System"
 	@echo "=================="
@@ -142,3 +139,15 @@ release-upload-test: ## Upload wheels to TestPyPI for testing
 	fi
 	@echo "📤 Uploading to TestPyPI..."
 	@twine upload --repository testpypi dist/*.whl
+# Documentation targets
+docs-setup:
+	@python -c "from provide.foundry.config import extract_base_mkdocs; from pathlib import Path; extract_base_mkdocs(Path('.'))"
+
+docs-build: docs-setup
+	@mkdocs build
+
+docs-serve: docs-setup
+	@mkdocs serve
+
+docs-clean:
+	@rm -rf site .provide
