@@ -9,9 +9,10 @@ Usage:
     python analyze_pe_binaries.py <working_binary> <failing_binary> <output_file>
 """
 
-import sys
 import json
 from pathlib import Path
+import sys
+
 
 def analyze_pe_binary(filepath):
     """Analyze a PE binary and extract structure information."""
@@ -20,6 +21,7 @@ def analyze_pe_binary(filepath):
     except ImportError:
         print("ERROR: pefile library not installed. Installing...")
         import subprocess
+
         subprocess.check_call([sys.executable, "-m", "pip", "install", "pefile", "-q"])
         import pefile
 
@@ -37,13 +39,13 @@ def analyze_pe_binary(filepath):
         "characteristics": {
             "executable": bool(pe.FILE_HEADER.Characteristics & 0x0002),
             "32bit": not bool(pe.OPTIONAL_HEADER.Magic & 0x0001),  # 0x10b = PE32, 0x20b = PE32+
-        }
+        },
     }
 
     # Analyze sections
     for section in pe.sections:
         section_info = {
-            "name": section.Name.decode('utf-8', errors='ignore').rstrip('\0'),
+            "name": section.Name.decode("utf-8", errors="ignore").rstrip("\0"),
             "virtual_address": f"0x{section.VirtualAddress:x}",
             "virtual_size": f"0x{section.Misc_VirtualSize:x}",
             "pointer_to_raw_data": f"0x{section.PointerToRawData:x}",
@@ -68,10 +70,10 @@ def analyze_pe_binary(filepath):
         "IAT",
         "Delay Import Descriptor",
         "COM+ Runtime Header",
-        "Reserved"
+        "Reserved",
     ]
 
-    if hasattr(pe, 'OPTIONAL_HEADER') and hasattr(pe.OPTIONAL_HEADER, 'DATA_DIRECTORY'):
+    if hasattr(pe, "OPTIONAL_HEADER") and hasattr(pe.OPTIONAL_HEADER, "DATA_DIRECTORY"):
         for i, entry in enumerate(pe.OPTIONAL_HEADER.DATA_DIRECTORY):
             dir_info = {
                 "index": i,
@@ -110,6 +112,7 @@ def analyze_pe_binary(filepath):
 
     return analysis
 
+
 def compare_analyses(working, failing):
     """Compare two PE analyses to find differences."""
     comparison = {
@@ -120,43 +123,52 @@ def compare_analyses(working, failing):
 
     # Compare PE offset
     if working["pe_offset"] != failing["pe_offset"]:
-        comparison["differences"].append({
-            "type": "pe_offset",
-            "working": f"0x{working['pe_offset']:x}",
-            "failing": f"0x{failing['pe_offset']:x}",
-        })
+        comparison["differences"].append(
+            {
+                "type": "pe_offset",
+                "working": f"0x{working['pe_offset']:x}",
+                "failing": f"0x{failing['pe_offset']:x}",
+            }
+        )
 
     # Compare sections
     if working["num_sections"] != failing["num_sections"]:
-        comparison["differences"].append({
-            "type": "section_count",
-            "working": working["num_sections"],
-            "failing": failing["num_sections"],
-        })
+        comparison["differences"].append(
+            {
+                "type": "section_count",
+                "working": working["num_sections"],
+                "failing": failing["num_sections"],
+            }
+        )
 
     # Compare section offsets
     for i, (w_sec, f_sec) in enumerate(zip(working["sections"], failing["sections"])):
         if w_sec["pointer_to_raw_data"] != f_sec["pointer_to_raw_data"]:
-            comparison["differences"].append({
-                "type": "section_offset",
-                "section": i,
-                "section_name": w_sec["name"],
-                "working": w_sec["pointer_to_raw_data"],
-                "failing": f_sec["pointer_to_raw_data"],
-            })
+            comparison["differences"].append(
+                {
+                    "type": "section_offset",
+                    "section": i,
+                    "section_name": w_sec["name"],
+                    "working": w_sec["pointer_to_raw_data"],
+                    "failing": f_sec["pointer_to_raw_data"],
+                }
+            )
 
     # Compare data directories
     for i, (w_dir, f_dir) in enumerate(zip(working["data_directories"], failing["data_directories"])):
         if w_dir["virtual_address"] != f_dir["virtual_address"] or w_dir["size"] != f_dir["size"]:
-            comparison["differences"].append({
-                "type": "data_directory",
-                "index": i,
-                "name": w_dir["name"],
-                "working": {"va": w_dir["virtual_address"], "size": w_dir["size"]},
-                "failing": {"va": f_dir["virtual_address"], "size": f_dir["size"]},
-            })
+            comparison["differences"].append(
+                {
+                    "type": "data_directory",
+                    "index": i,
+                    "name": w_dir["name"],
+                    "working": {"va": w_dir["virtual_address"], "size": w_dir["size"]},
+                    "failing": {"va": f_dir["virtual_address"], "size": f_dir["size"]},
+                }
+            )
 
     return comparison
+
 
 def main():
     if len(sys.argv) < 4:
@@ -173,7 +185,7 @@ def main():
     print(f"Analyzing failing binary: {failing_path}")
     failing = analyze_pe_binary(failing_path)
 
-    print(f"Comparing binaries...")
+    print("Comparing binaries...")
     comparison = compare_analyses(working, failing)
 
     # Generate text report
@@ -188,12 +200,17 @@ def main():
         f"Machine Type: {working['machine']}",
         "",
         "### Sections:",
-        *[f"  {i}: {s['name']:8} VA=0x{s['virtual_address'].replace('0x', ''):>8} PointerToRaw=0x{s['pointer_to_raw_data'].replace('0x', ''):>8}"
-          for i, s in enumerate(working["sections"])],
+        *[
+            f"  {i}: {s['name']:8} VA=0x{s['virtual_address'].replace('0x', ''):>8} PointerToRaw=0x{s['pointer_to_raw_data'].replace('0x', ''):>8}"
+            for i, s in enumerate(working["sections"])
+        ],
         "",
         "### Data Directories (with data):",
-        *[f"  [{d['index']:2}] {d['name']:25} VA=0x{d['virtual_address'].replace('0x', ''):>8} Size={d['size']}"
-          for d in working["data_directories"] if d["has_data"]],
+        *[
+            f"  [{d['index']:2}] {d['name']:25} VA=0x{d['virtual_address'].replace('0x', ''):>8} Size={d['size']}"
+            for d in working["data_directories"]
+            if d["has_data"]
+        ],
         "",
         "",
         "## Failing Binary (Rust+Go)",
@@ -204,12 +221,17 @@ def main():
         f"Machine Type: {failing['machine']}",
         "",
         "### Sections:",
-        *[f"  {i}: {s['name']:8} VA=0x{s['virtual_address'].replace('0x', ''):>8} PointerToRaw=0x{s['pointer_to_raw_data'].replace('0x', ''):>8}"
-          for i, s in enumerate(failing["sections"])],
+        *[
+            f"  {i}: {s['name']:8} VA=0x{s['virtual_address'].replace('0x', ''):>8} PointerToRaw=0x{s['pointer_to_raw_data'].replace('0x', ''):>8}"
+            for i, s in enumerate(failing["sections"])
+        ],
         "",
         "### Data Directories (with data):",
-        *[f"  [{d['index']:2}] {d['name']:25} VA=0x{d['virtual_address'].replace('0x', ''):>8} Size={d['size']}"
-          for d in failing["data_directories"] if d["has_data"]],
+        *[
+            f"  [{d['index']:2}] {d['name']:25} VA=0x{d['virtual_address'].replace('0x', ''):>8} Size={d['size']}"
+            for d in failing["data_directories"]
+            if d["has_data"]
+        ],
         "",
         "",
         "## Comparison",
@@ -227,10 +249,11 @@ def main():
     with open(output_path, "w") as f:
         json.dump(comparison, f, indent=2)
 
-    print(f"\nAnalysis complete!")
+    print("\nAnalysis complete!")
     print(f"Text report: {output_path.replace('.json', '.txt')}")
     print(f"JSON report: {output_path}")
     print(f"\n{report_text}")
+
 
 if __name__ == "__main__":
     main()
