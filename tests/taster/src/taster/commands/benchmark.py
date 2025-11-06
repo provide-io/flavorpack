@@ -20,6 +20,7 @@ import tempfile
 import time
 
 import click
+from provide.foundation.console import perr, pout
 import psutil
 
 
@@ -62,7 +63,7 @@ def memory_profile(command, interval, json_output) -> None:
                 memory_samples.append(sample)
 
                 if not json_output:
-                    click.echo(
+                    pout(
                         f"[{sample['time']:.1f}s] RSS: {sample['rss'] / 1024 / 1024:.1f}MB, CPU: {sample['cpu']:.1f}%",
                         err=True,
                     )
@@ -103,12 +104,12 @@ def memory_profile(command, interval, json_output) -> None:
     if json_output:
         print(json.dumps(result, indent=2))
     else:
-        click.echo(f"\n{'=' * 60}", err=True)
-        click.echo(f"Duration: {result['duration']:.2f}s", err=True)
-        click.echo(f"Peak RSS: {result['peak_rss_mb']:.1f}MB", err=True)
-        click.echo(f"Avg RSS: {result['avg_rss_mb']:.1f}MB", err=True)
-        click.echo(f"Peak CPU: {result['peak_cpu_percent']:.1f}%", err=True)
-        click.echo(f"Exit code: {result['exit_code']}", err=True)
+        perr(f"\n{'=' * 60}")
+        perr(f"Duration: {result['duration']:.2f}s")
+        perr(f"Peak RSS: {result['peak_rss_mb']:.1f}MB")
+        perr(f"Avg RSS: {result['avg_rss_mb']:.1f}MB")
+        perr(f"Peak CPU: {result['peak_cpu_percent']:.1f}%")
+        perr(f"Exit code: {result['exit_code']}")
 
 
 @benchmark_command.command("speed")
@@ -130,7 +131,7 @@ def speed_test(iterations, warmup) -> None:
         sys.path.insert(0, str(Path(__file__).parents[4] / "src"))
         from flavor.psp.format_2025 import PSPFBuilder, PSPFReader
 
-        click.echo(f"Running {warmup} warmup iterations...")
+        pout(f"Running {warmup} warmup iterations...")
 
         # Warmup
         for _ in range(warmup):
@@ -146,7 +147,7 @@ def speed_test(iterations, warmup) -> None:
             )
             bundle_path.unlink()
 
-        click.echo(f"Running {iterations} benchmark iterations...")
+        pout(f"Running {iterations} benchmark iterations...")
 
         # Benchmark build
         for i in range(iterations):
@@ -180,14 +181,14 @@ def speed_test(iterations, warmup) -> None:
             extract_time = time.perf_counter() - start
             results["extract"].append(extract_time)
 
-            click.echo(
+            pout(
                 f"  Iteration {i + 1}: Build={build_time * 1000:.1f}ms, Verify={verify_time * 1000:.1f}ms, Extract={extract_time * 1000:.1f}ms"
             )
 
     # Calculate statistics
-    click.echo(f"\n{'=' * 60}")
-    click.echo("BENCHMARK RESULTS")
-    click.echo(f"{'=' * 60}")
+    pout(f"\n{'=' * 60}")
+    pout("BENCHMARK RESULTS")
+    pout(f"{'=' * 60}")
 
     for op, times in results.items():
         if times:
@@ -195,10 +196,10 @@ def speed_test(iterations, warmup) -> None:
             min_time = min(times) * 1000
             max_time = max(times) * 1000
 
-            click.echo(f"\n{op.upper()}:")
-            click.echo(f"  Avg: {avg:.2f}ms")
-            click.echo(f"  Min: {min_time:.2f}ms")
-            click.echo(f"  Max: {max_time:.2f}ms")
+            pout(f"\n{op.upper()}:")
+            pout(f"  Avg: {avg:.2f}ms")
+            pout(f"  Min: {min_time:.2f}ms")
+            pout(f"  Max: {max_time:.2f}ms")
 
 
 @benchmark_command.command("concurrent")
@@ -267,13 +268,13 @@ def concurrent_test(workers, duration, operation) -> None:
 
                 except Exception as e:
                     errors += 1
-                    click.echo(f"Worker {worker_id} error: {e}", err=True)
+                    perr(f"Worker {worker_id} error: {e}")
 
         results.put((worker_id, ops_count, errors))
 
     # Start workers
     threads = []
-    click.echo(f"Starting {workers} workers for {duration} seconds...")
+    pout(f"Starting {workers} workers for {duration} seconds...")
 
     for i in range(workers):
         t = threading.Thread(target=worker, args=(i,))
@@ -300,18 +301,18 @@ def concurrent_test(workers, duration, operation) -> None:
         worker_results.append((worker_id, ops, errors))
 
     # Display results
-    click.echo(f"\n{'=' * 60}")
-    click.echo("CONCURRENT TEST RESULTS")
-    click.echo(f"{'=' * 60}")
-    click.echo(f"Total operations: {total_ops}")
-    click.echo(f"Operations/second: {total_ops / duration:.1f}")
-    click.echo(f"Total errors: {total_errors}")
-    click.echo(f"Error rate: {total_errors / total_ops * 100:.2f}%" if total_ops > 0 else "N/A")
+    pout(f"\n{'=' * 60}")
+    pout("CONCURRENT TEST RESULTS")
+    pout(f"{'=' * 60}")
+    pout(f"Total operations: {total_ops}")
+    pout(f"Operations/second: {total_ops / duration:.1f}")
+    pout(f"Total errors: {total_errors}")
+    pout(f"Error rate: {total_errors / total_ops * 100:.2f}%" if total_ops > 0 else "N/A")
 
     if worker_results:
-        click.echo("\nPer-worker statistics:")
+        pout("\nPer-worker statistics:")
         for worker_id, ops, errors in sorted(worker_results):
-            click.echo(f"  Worker {worker_id}: {ops} ops, {errors} errors")
+            pout(f"  Worker {worker_id}: {ops} ops, {errors} errors")
 
 
 @benchmark_command.command("leak")
@@ -329,8 +330,8 @@ def leak_detector(command, threshold) -> None:
         samples = []
         leak_detected = False
 
-        click.echo("Monitoring for memory leaks...", err=True)
-        click.echo("Press Ctrl+C to stop", err=True)
+        perr("Monitoring for memory leaks...")
+        perr("Press Ctrl+C to stop")
 
         while proc.poll() is None:
             try:
@@ -345,14 +346,14 @@ def leak_detector(command, threshold) -> None:
 
                 # Check for leak
                 if growth > threshold and not leak_detected:
-                    click.echo(
+                    pout(
                         f"\n⚠️ POTENTIAL LEAK DETECTED: Memory grew by {growth:.1f}MB",
                         err=True,
                     )
                     leak_detected = True
 
                 # Show progress
-                click.echo(f"\rRSS: {current_rss:.1f}MB (Δ{growth:+.1f}MB)", nl=False, err=True)
+                pout(f"\rRSS: {current_rss:.1f}MB (Δ{growth:+.1f}MB)", nl=False, err=True)
 
                 time.sleep(1)
 
@@ -380,15 +381,15 @@ def leak_detector(command, threshold) -> None:
         if denominator > 0:
             slope = numerator / denominator
 
-            click.echo(f"\n\n{'=' * 60}", err=True)
-            click.echo("LEAK ANALYSIS", err=True)
-            click.echo(f"{'=' * 60}", err=True)
-            click.echo(f"Memory trend: {slope:.3f} MB/sample", err=True)
+            perr(f"\n\n{'=' * 60}")
+            perr("LEAK ANALYSIS")
+            perr(f"{'=' * 60}")
+            perr(f"Memory trend: {slope:.3f} MB/sample")
 
             if slope > 0.1:  # Growing more than 0.1 MB per second
-                click.echo("❌ LIKELY MEMORY LEAK", err=True)
+                perr("❌ LIKELY MEMORY LEAK")
             elif slope > 0.01:
-                click.echo("⚠️ POSSIBLE MEMORY LEAK", err=True)
+                perr("⚠️ POSSIBLE MEMORY LEAK")
             else:
                 pass
 

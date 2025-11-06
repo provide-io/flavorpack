@@ -12,6 +12,7 @@ from pathlib import Path
 import sys
 
 import click
+from provide.foundation.console import perr
 
 
 @click.group("pipe")
@@ -34,7 +35,7 @@ def process_stdin(format, output, file, transform, buffer_size) -> None:
 
     # Read from stdin
     if sys.stdin.isatty():
-        click.echo("No input detected. Pipe data to this command.", err=True)
+        perr("No input detected. Pipe data to this command.")
         sys.exit(1)
 
     # Read in chunks for large inputs
@@ -53,19 +54,19 @@ def process_stdin(format, output, file, transform, buffer_size) -> None:
             data = json.loads(data.decode("utf-8"))
             data = json.dumps(data).encode("utf-8")  # Re-encode for processing
         except (json.JSONDecodeError, UnicodeDecodeError) as e:
-            click.echo(f"Invalid JSON input: {e}", err=True)
+            perr(f"Invalid JSON input: {e}")
             sys.exit(1)
     elif format == "base64":
         try:
             data = base64.b64decode(data)
         except Exception as e:
-            click.echo(f"Invalid base64 input: {e}", err=True)
+            perr(f"Invalid base64 input: {e}")
             sys.exit(1)
     elif format == "hex":
         try:
             data = bytes.fromhex(data.decode("utf-8").strip())
         except Exception as e:
-            click.echo(f"Invalid hex input: {e}", err=True)
+            perr(f"Invalid hex input: {e}")
             sys.exit(1)
 
     # Apply transformation
@@ -87,10 +88,10 @@ def process_stdin(format, output, file, transform, buffer_size) -> None:
         sys.stderr.flush()
     elif output == "file":
         if not file:
-            click.echo("File path required for file output", err=True)
+            perr("File path required for file output")
             sys.exit(1)
         Path(file).write_bytes(data)
-        click.echo(f"Wrote {len(data)} bytes to {file}", err=True)
+        perr(f"Wrote {len(data)} bytes to {file}")
 
 
 @pipe_command.command("stress")
@@ -139,7 +140,7 @@ def fuzz_input(seed, mutations) -> None:
     # Read input
     data = sys.stdin.buffer.read()
     if not data:
-        click.echo("No input to fuzz", err=True)
+        perr("No input to fuzz")
         sys.exit(1)
 
     data = bytearray(data)
@@ -184,20 +185,20 @@ def validate_input(schema, strict) -> None:
             # Output pretty-printed valid JSON
             print(json.dumps(parsed, indent=2))
         except (json.JSONDecodeError, UnicodeDecodeError) as e:
-            click.echo(f"❌ Invalid JSON: {e}", err=True)
+            perr(f"❌ Invalid JSON: {e}")
             sys.exit(1)
 
     elif schema == "pspf":
         # Check for PSPF magic bytes
         if len(data) < 4:
-            click.echo("❌ File too small to be PSPF", err=True)
+            perr("❌ File too small to be PSPF")
             sys.exit(1)
 
         # Check magic wand at end
         else:
-            click.echo("❌ Invalid PSPF magic", err=True)
+            perr("❌ Invalid PSPF magic")
             if not strict:
-                click.echo("  (Use --strict to fail on validation errors)", err=True)
+                perr("  (Use --strict to fail on validation errors)")
             else:
                 sys.exit(1)
 
@@ -208,11 +209,11 @@ def validate_input(schema, strict) -> None:
             missing = [k for k in required if k not in manifest]
 
             if missing:
-                click.echo(f"❌ Missing required fields: {missing}", err=True)
+                perr(f"❌ Missing required fields: {missing}")
                 sys.exit(1)
 
         except Exception as e:
-            click.echo(f"❌ Invalid manifest: {e}", err=True)
+            perr(f"❌ Invalid manifest: {e}")
             sys.exit(1)
 
 

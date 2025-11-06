@@ -17,6 +17,7 @@ from pathlib import Path
 import tempfile
 
 import click
+from provide.foundation.console import perr, pout
 
 from flavor.helpers import HelperManager
 from flavor.package import build_package_from_manifest
@@ -29,8 +30,8 @@ def slot_test_command(verbose, json_output) -> None:
     """🎰 Test {slot:N} substitution patterns."""
 
     if not json_output:
-        click.secho("🎰 SLOT SUBSTITUTION TEST", fg="cyan", bold=True)
-        click.secho("=" * 60, fg="cyan")
+        pout("🎰 SLOT SUBSTITUTION TEST", color="cyan", bold=True)
+        pout("=" * 60, color="cyan")
 
     helper_manager = HelperManager()
 
@@ -66,9 +67,9 @@ def slot_test_command(verbose, json_output) -> None:
 
     for test_case in test_cases:
         if not json_output:
-            click.secho(f"\n📌 Testing: {test_case['description']}", fg="yellow")
-            click.secho(f"   Pattern: {test_case['pattern']}", fg="white")
-            click.secho(f"   Command: {test_case['command']}", fg="white")
+            pout(f"\n📌 Testing: {test_case['description']}", color="yellow")
+            pout(f"   Pattern: {test_case['pattern']}", color="white")
+            pout(f"   Command: {test_case['command']}", color="white")
 
         # Create a test package with the slot pattern
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -143,7 +144,7 @@ target = "config.json"
         results.append(result)
 
         if not json_output and verbose and error:
-            click.secho(f"   Error: {error}", fg="red")
+            pout(f"   Error: {error}", color="red")
 
     # Output results
     if json_output:
@@ -155,31 +156,31 @@ target = "config.json"
                 "failed": len([r for r in results if "❌" in r["status"]]),
             },
         }
-        click.echo(json.dumps(output, indent=2))
+        pout(json.dumps(output, indent=2))
     else:
         # Summary
-        click.secho("\n📊 Results Summary:", fg="cyan", bold=True)
-        click.secho("─" * 40, fg="cyan")
+        pout("\n📊 Results Summary:", color="cyan", bold=True)
+        pout("─" * 40, color="cyan")
 
         for result in results:
-            click.secho(f"  {result['status']} {result['description']}", fg=status_color)
+            pout(f"  {result['status']} {result['description']}", color=status_color)
 
         total = len(results)
 
-        click.secho("\n" + "─" * 40, fg="cyan")
+        pout("\n" + "─" * 40, color="cyan")
         if passed == total:
             pass
         else:
-            click.secho(f"⚠️ {passed}/{total} tests passed", fg="yellow", bold=True)
+            pout(f"⚠️ {passed}/{total} tests passed", color="yellow", bold=True)
 
         if verbose:
-            click.secho("\nDetailed Results:", fg="cyan")
+            pout("\nDetailed Results:", color="cyan")
             for result in results:
-                click.echo(f"\n{result['name']}:")
-                click.echo(f"  Pattern: {result['pattern']}")
-                click.echo(f"  Status: {result['status']}")
+                pout(f"\n{result['name']}:")
+                pout(f"  Pattern: {result['pattern']}")
+                pout(f"  Status: {result['status']}")
                 if result.get("error"):
-                    click.echo(f"  Error: {result['error']}")
+                    pout(f"  Error: {result['error']}")
 
 
 # 🌶️📦🔚

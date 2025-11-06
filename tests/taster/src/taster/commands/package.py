@@ -16,6 +16,7 @@ from pathlib import Path
 import sys
 
 import click
+from provide.foundation.console import perr, pout
 
 
 def _get_flavor_api():
@@ -25,7 +26,7 @@ def _get_flavor_api():
 
         return flavor_api
     except ImportError:
-        click.echo(
+        pout(
             "Error: Flavor API not available. Ensure flavor package is installed.",
             err=True,
         )
@@ -65,7 +66,7 @@ def build(manifest, output, launcher_bin, strip, key_seed) -> None:
             pass
 
     except Exception as e:
-        click.echo(f"❌ Build failed: {e}", err=True)
+        perr(f"❌ Build failed: {e}")
         sys.exit(1)
 
 
@@ -80,10 +81,10 @@ def verify(package) -> None:
 
         if isinstance(result, dict):
             for key, value in result.items():
-                click.echo(f"  {key}: {value}")
+                pout(f"  {key}: {value}")
 
     except Exception as e:
-        click.echo(f"❌ Verification failed: {e}", err=True)
+        perr(f"❌ Verification failed: {e}")
         sys.exit(1)
 
 
@@ -102,11 +103,11 @@ def generate_keys(output) -> None:
 
     try:
         priv_key, pub_key = flavor_api.generate_keys(output_dir)
-        click.echo(f"  Private: {priv_key}")
-        click.echo(f"  Public: {pub_key}")
+        pout(f"  Private: {priv_key}")
+        pout(f"  Public: {pub_key}")
 
     except Exception as e:
-        click.echo(f"❌ Key generation failed: {e}", err=True)
+        perr(f"❌ Key generation failed: {e}")
         sys.exit(1)
 
 
@@ -119,7 +120,7 @@ def clean_cache() -> None:
         flavor_api.clean_cache()
 
     except Exception as e:
-        click.echo(f"❌ Cache cleaning failed: {e}", err=True)
+        perr(f"❌ Cache cleaning failed: {e}")
         sys.exit(1)
 
 
@@ -163,8 +164,8 @@ def test_json(builder_bin, launcher_bin) -> None:
         output_path = tmpdir / "test.psp"
 
         try:
-            click.echo(f"  Builder: {builder_bin or 'default'}")
-            click.echo(f"  Launcher: {launcher_bin or 'default'}")
+            pout(f"  Builder: {builder_bin or 'default'}")
+            pout(f"  Launcher: {launcher_bin or 'default'}")
 
             # Build the package
             paths = flavor_api.build_package_from_manifest(
@@ -177,7 +178,7 @@ def test_json(builder_bin, launcher_bin) -> None:
             )
 
             if not paths or not output_path.exists():
-                click.echo("❌ Package build failed - no output", err=True)
+                perr("❌ Package build failed - no output")
                 sys.exit(1)
 
             # Make it executable and test it
@@ -186,18 +187,18 @@ def test_json(builder_bin, launcher_bin) -> None:
 
             if result.returncode == 0:
                 if result.stdout:
-                    click.echo(f"  Output: {result.stdout.strip()}")
+                    pout(f"  Output: {result.stdout.strip()}")
             else:
-                click.echo(
+                pout(
                     f"❌ Package execution failed with code {result.returncode}",
                     err=True,
                 )
                 if result.stderr:
-                    click.echo(f"  Error: {result.stderr}", err=True)
+                    perr(f"  Error: {result.stderr}")
                 sys.exit(1)
 
         except Exception as e:
-            click.echo(f"❌ JSON manifest test failed: {e}", err=True)
+            perr(f"❌ JSON manifest test failed: {e}")
             sys.exit(1)
 
 
