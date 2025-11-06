@@ -164,9 +164,9 @@ class TestDOSStubExpansion:
         padding_size = 0xF0 - 0x80
         for i, (orig, exp) in enumerate(zip(original_offsets, expanded_offsets)):
             expected = orig + padding_size
-            assert (
-                exp == expected
-            ), f"Section {i}: expected offset 0x{expected:x}, got 0x{exp:x} (original was 0x{orig:x})"
+            assert exp == expected, (
+                f"Section {i}: expected offset 0x{expected:x}, got 0x{exp:x} (original was 0x{orig:x})"
+            )
 
     def test_expand_dos_stub_increases_file_size(self):
         """Test that expanded file is larger by padding size."""
@@ -214,9 +214,7 @@ class TestSectionOffsetCorrection:
 
         # Verify marker data is at the NEW section offset
         read_marker = expanded[first_section_offset : first_section_offset + len(marker)]
-        assert (
-            read_marker == marker
-        ), f"Section data not found at offset 0x{first_section_offset:x}"
+        assert read_marker == marker, f"Section data not found at offset 0x{first_section_offset:x}"
 
     def test_all_sections_shifted_consistently(self):
         """Test that all sections are shifted by the same amount."""
