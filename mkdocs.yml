@@ -1,8 +1,8 @@
 # Inherit shared configuration from provide-foundry
-INHERIT: ../provide-foundry/base-mkdocs.yml
+INHERIT: .provide/foundry/base-mkdocs.yml
 
 # Project-Specific Configuration
-site_name: FlavorPack Documentation
+site_name: flavorpack
 site_description: Progressive Secure Package Format (PSPF/2025) - Cross-language packaging system for self-contained executables
 site_author: provide.io
 site_url: https://foundry.provide.io/flavorpack/
@@ -26,7 +26,7 @@ theme:
 plugins:
   - gen-files:
       scripts:
-        - ../provide-foundry/scripts/gen_ref_pages.py
+        - .provide/foundry/gen_ref_pages.py
   - literate-nav:
       nav_file: SUMMARY.md
   - section-index
@@ -110,14 +110,15 @@ nav:
       - Performance Tuning: guide/advanced/performance.md
       - Debugging: guide/advanced/debugging.md
   
-  # SECTION 3: API Reference (technical documentation)
-  - API Reference:
+  # SECTION 3: API Guide (conceptual documentation)
+  - API Guide:
     - api/index.md
-    - Auto-Generated Reference: api/reference.md
     - Packaging API: api/packaging.md
     - Builder API: api/builder.md
     - Reader API: api/reader.md
     - Crypto API: api/crypto.md
+
+  - Full API Reference: reference/
   
   # SECTION 4: Cookbook (practical examples)
   - Cookbook:

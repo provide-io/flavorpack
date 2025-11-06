@@ -155,7 +155,7 @@ Detailed guides with examples and explanations:
 
 Source code documentation auto-generated with mkdocstrings:
 
-- **[Auto-Generated API Reference](reference.md)** - Complete API reference extracted from source code docstrings
+- **[Auto-Generated API Reference](../reference/)** - Complete API reference extracted from source code docstrings
 
 !!! tip "Which Should I Use?"
     - **New users**: Start with the manual guides above for examples and context

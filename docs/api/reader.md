@@ -464,20 +464,3 @@ if metadata:
 ## API Reference
 
 The complete PSPFReader class reference with all methods, parameters, and return types:
-
-::: flavor.psp.format_2025.reader.PSPFReader
-    options:
-      show_root_heading: true
-      show_source: true
-      members: true
-      show_if_no_docstring: false
-      heading_level: 3
-
-## See Also
-
-- **[Builder API](builder.md)** - Creating packages
-- **[Packaging API](packaging.md)** - High-level packaging functions
-- **[Crypto API](crypto.md)** - Signature verification
-- **[Inspection Guide](../guide/usage/inspection.md)** - CLI inspection tools
-- **[Package Structure](../guide/concepts/package-structure.md)** - PSPF format details
-- **[PSPF Format Specification](../reference/spec/fep-0001-core-format-and-operation-chains.md)** - Binary format specification
