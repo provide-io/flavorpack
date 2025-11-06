@@ -18,6 +18,7 @@ from pathlib import Path
 import shutil
 
 import click
+from provide.foundation.console import perr, pout
 
 
 @click.group()
@@ -43,42 +44,42 @@ def clean(all, flavor, verbose) -> None:
         flavor_cache = Path.home() / "Library" / "Caches" / "flavor"
         if flavor_cache.exists():
             if verbose:
-                click.echo(f"Cleaning flavor cache: {flavor_cache}")
+                pout(f"Cleaning flavor cache: {flavor_cache}")
             try:
                 shutil.rmtree(flavor_cache)
                 flavor_cache.mkdir(parents=True, exist_ok=True)
                 cleaned.append("flavor")
             except Exception as e:
-                click.echo(f"Error cleaning flavor cache: {e}", err=True)
+                perr(f"Error cleaning flavor cache: {e}")
 
     # Also check for /tmp/pspf cache
     tmp_cache = Path("/tmp/pspf")
     if tmp_cache.exists():
         if verbose:
-            click.echo(f"Cleaning tmp cache: {tmp_cache}")
+            pout(f"Cleaning tmp cache: {tmp_cache}")
         try:
             shutil.rmtree(tmp_cache)
             cleaned.append("tmp")
         except Exception as e:
-            click.echo(f"Error cleaning tmp cache: {e}", err=True)
+            perr(f"Error cleaning tmp cache: {e}")
 
     # Check for /var/folders caches
     var_cache = Path("/var/folders")
     if var_cache.exists():
         for cache_dir in var_cache.glob("**/pspf"):
             if verbose:
-                click.echo(f"Cleaning var cache: {cache_dir}")
+                pout(f"Cleaning var cache: {cache_dir}")
             try:
                 shutil.rmtree(cache_dir)
                 cleaned.append(f"var ({cache_dir.parent.name})")
             except Exception as e:
                 if verbose:
-                    click.echo(f"Error cleaning var cache: {e}", err=True)
+                    perr(f"Error cleaning var cache: {e}")
 
     if cleaned:
         pass
     else:
-        click.echo("No caches to clean")
+        pout("No caches to clean")
 
 
 @cache.command()
@@ -96,19 +97,19 @@ def info(verbose) -> None:
                 if verbose:
                     item_size = sum(f.stat().st_size for f in item.rglob("*") if f.is_file())
                     total_size += item_size
-                    click.echo(f"  {item.name}: {item_size / 1024 / 1024:.2f} MB")
+                    pout(f"  {item.name}: {item_size / 1024 / 1024:.2f} MB")
                 else:
                     total_size += sum(f.stat().st_size for f in item.rglob("*") if f.is_file())
 
-        click.echo(f"Flavor cache: {cache_count} entries, {total_size / 1024 / 1024:.2f} MB total")
+        pout(f"Flavor cache: {cache_count} entries, {total_size / 1024 / 1024:.2f} MB total")
     else:
-        click.echo("Flavor cache: empty")
+        pout("Flavor cache: empty")
 
     # Tmp cache
     tmp_cache = Path("/tmp/pspf")
     if tmp_cache.exists():
         size = sum(f.stat().st_size for f in tmp_cache.rglob("*") if f.is_file())
-        click.echo(f"Tmp cache: {size / 1024 / 1024:.2f} MB")
+        pout(f"Tmp cache: {size / 1024 / 1024:.2f} MB")
 
 
 @cache.command()
@@ -156,13 +157,13 @@ def inspect(workenv, output_json, all) -> None:
 
     if not results:
         if workenv:
-            click.echo(f"❌ Workenv '{workenv}' not found in any cache location")
+            pout(f"❌ Workenv '{workenv}' not found in any cache location")
         else:
-            click.echo("❌ No cached workenvs found")
+            pout("❌ No cached workenvs found")
         return
 
     if output_json:
-        click.echo(json.dumps(results, indent=2, default=str))
+        pout(json.dumps(results, indent=2, default=str))
     else:
         for name, info in results.items():
             _print_workenv_info(name, info)
@@ -243,46 +244,46 @@ def _inspect_workenv(name: str, cache_dir: Path, results: dict) -> None:
 
 def _print_workenv_info(name: str, info: dict) -> None:
     """Print workenv information in human-readable format."""
-    click.echo("=" * 60)
-    click.echo("-" * 60)
-    click.echo(f"💾 Size: {info['size_mb']} MB")
-    click.echo(f"🗂️  Metadata Type: {info.get('metadata_type', 'none')}")
+    pout("=" * 60)
+    pout("-" * 60)
+    pout(f"💾 Size: {info['size_mb']} MB")
+    pout(f"🗂️  Metadata Type: {info.get('metadata_type', 'none')}")
 
     if info.get("extraction_complete"):
         pass
     else:
-        click.echo("⚠️  Extraction: Incomplete or not started")
+        pout("⚠️  Extraction: Incomplete or not started")
 
     # Display index metadata if available
     if info.get("index_metadata"):
         idx = info["index_metadata"]
-        click.echo("\n📋 Index Metadata:")
-        click.echo(f"  Format Version: 0x{idx.get('format_version', 0):08x}")
-        click.echo(f"  Package Size: {idx.get('package_size', 0):,} bytes")
-        click.echo(f"  Launcher Size: {idx.get('launcher_size', 0):,} bytes")
-        click.echo(f"  Slot Count: {idx.get('slot_count', 0)}")
-        click.echo(f"  Index Checksum: {idx.get('index_checksum', 'N/A')}")
+        pout("\n📋 Index Metadata:")
+        pout(f"  Format Version: 0x{idx.get('format_version', 0):08x}")
+        pout(f"  Package Size: {idx.get('package_size', 0):,} bytes")
+        pout(f"  Launcher Size: {idx.get('launcher_size', 0):,} bytes")
+        pout(f"  Slot Count: {idx.get('slot_count', 0)}")
+        pout(f"  Index Checksum: {idx.get('index_checksum', 'N/A')}")
         if idx.get("build_timestamp"):
-            click.echo(f"  Build Timestamp: {idx.get('build_timestamp')}")
+            pout(f"  Build Timestamp: {idx.get('build_timestamp')}")
 
     # Display package metadata if available
     if info.get("package_metadata"):
         pkg = info["package_metadata"].get("package", {})
-        click.echo(f"  Name: {pkg.get('name', 'unknown')}")
-        click.echo(f"  Version: {pkg.get('version', 'unknown')}")
+        pout(f"  Name: {pkg.get('name', 'unknown')}")
+        pout(f"  Version: {pkg.get('version', 'unknown')}")
 
         # Show slots info if available
         if "slots" in info["package_metadata"]:
             slots = info["package_metadata"]["slots"]
-            click.echo(f"\n📂 Slots ({len(slots)}):")
+            pout(f"\n📂 Slots ({len(slots)}):")
             for slot in slots[:5]:  # Show first 5 slots
-                click.echo(
+                pout(
                     f"  [{slot['index']}] {slot['name']}: {slot.get('size', 0):,} bytes ({slot.get('lifecycle', 'unknown')})"
                 )
             if len(slots) > 5:
-                click.echo(f"  ... and {len(slots) - 5} more")
+                pout(f"  ... and {len(slots) - 5} more")
 
-    click.echo()
+    pout("")
 
 
 # 🌶️📦🔚

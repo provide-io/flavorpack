@@ -19,6 +19,7 @@ import signal
 import sys
 
 import click
+from provide.foundation.console import pout
 
 
 def get_launcher_type() -> str:
@@ -178,16 +179,16 @@ def features_command(output_json) -> None:
                 "percentage": percentage,
             },
         }
-        click.echo(json.dumps(output, indent=2))
+        pout(json.dumps(output, indent=2))
     else:
         # Human-readable output
-        click.secho("=" * 60, fg="cyan")
-        click.secho(
+        pout("=" * 60, color="cyan")
+        pout(
             f"🔍 FEATURE PARITY TEST ({launcher_type.upper()} LAUNCHER)",
-            fg="cyan",
+            color="cyan",
             bold=True,
         )
-        click.secho("=" * 60, fg="cyan")
+        pout("=" * 60, color="cyan")
 
         # Display results
         for result in results:
@@ -197,25 +198,25 @@ def features_command(output_json) -> None:
                 symbol = "❌"
                 color = "red"
 
-            click.secho(f"{symbol} {result['feature']}", fg=color)
+            pout(f"{symbol} {result['feature']}", color=color)
             if result["error"]:
-                click.echo(f"   Error: {result['error']}")
+                pout(f"   Error: {result['error']}")
 
         # Summary
-        click.secho("\n" + "=" * 60, fg="cyan")
-        click.secho("📊 SUMMARY", fg="cyan", bold=True)
-        click.secho("=" * 60, fg="cyan")
+        pout("\n" + "=" * 60, color="cyan")
+        pout("📊 SUMMARY", color="cyan", bold=True)
+        pout("=" * 60, color="cyan")
 
-        click.echo(f"Launcher Type: {launcher_type.upper()}")
-        click.echo(f"Features Supported: {supported}/{total} ({percentage:.1f}%)")
+        pout(f"Launcher Type: {launcher_type.upper()}")
+        pout(f"Features Supported: {supported}/{total} ({percentage:.1f}%)")
 
         if launcher_type == "go" and percentage < 100:
-            click.secho(
+            pout(
                 "\n⚠️ Note: Go launcher has limitations due to language constraints",
-                fg="yellow",
+                color="yellow",
             )
-            click.echo("  - Cannot set argv[0] on Unix systems")
-            click.echo("  - Limited signal handling capabilities")
+            pout("  - Cannot set argv[0] on Unix systems")
+            pout("  - Limited signal handling capabilities")
         elif launcher_type == "rust" and percentage == 100:
             pass
 
