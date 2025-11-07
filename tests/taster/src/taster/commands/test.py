@@ -10,8 +10,8 @@ import subprocess
 import sys
 
 import click
-from provide.foundation.console import perr, pout
 from click.testing import CliRunner
+from provide.foundation.console import perr, pout
 
 
 def _get_flavor_api():

@@ -17,7 +17,7 @@ from pathlib import Path
 import tempfile
 
 import click
-from provide.foundation.console import perr, pout
+from provide.foundation.console import pout
 
 from flavor.helpers import HelperManager
 from flavor.package import build_package_from_manifest

@@ -11,7 +11,7 @@ import sys
 import tempfile
 
 import click
-from provide.foundation.console import perr, pout
+from provide.foundation.console import pout
 from provide.foundation.process import run
 
 from flavor.helpers import HelperManager
