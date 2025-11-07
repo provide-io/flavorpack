@@ -11,6 +11,7 @@ import sys
 import tempfile
 
 import click
+from provide.foundation.console import perr, pout
 from provide.foundation.process import run
 
 from flavor.helpers import HelperManager
@@ -38,7 +39,7 @@ def launcher_test_command(launcher, verbose, key_seed, exec_mode) -> None:
             launcher_path = helper_manager.get_helper(launcher)
             launcher_name = launcher
         except FileNotFoundError:
-            click.secho(f"❌ Launcher '{launcher}' not found", fg="red")
+            pout(f"❌ Launcher '{launcher}' not found", color="red")
             sys.exit(1)
     else:
         # Default to Rust launcher
@@ -46,11 +47,11 @@ def launcher_test_command(launcher, verbose, key_seed, exec_mode) -> None:
             launcher_path = helper_manager.get_helper("flavor-rs-launcher")
             launcher_name = "flavor-rs-launcher"
         except FileNotFoundError:
-            click.secho("❌ Rust launcher not found. Run 'flavor helpers build'.", fg="red")
+            pout("❌ Rust launcher not found. Run 'flavor helpers build'.", color="red")
             sys.exit(1)
 
-    click.secho(f"🚀 Testing launcher: {launcher_name}", fg="cyan", bold=True)
-    click.secho(f"   Path: {launcher_path}", fg="cyan")
+    pout(f"🚀 Testing launcher: {launcher_name}", color="cyan", bold=True)
+    pout(f"   Path: {launcher_path}", color="cyan")
 
     with tempfile.TemporaryDirectory() as temp_dir:
         temp_dir = Path(temp_dir)
@@ -86,7 +87,7 @@ entry_point = "test_app.__main__:main"
             )
 
             if not artifacts:
-                click.secho("❌ Build failed: no artifacts produced", fg="red")
+                pout("❌ Build failed: no artifacts produced", color="red")
                 sys.exit(1)
 
             package_path = artifacts[0]
@@ -95,7 +96,7 @@ entry_point = "test_app.__main__:main"
             package_path.chmod(0o755)
 
             # Execute package
-            click.secho("\n🏃 Executing package...", fg="yellow")
+            pout("\n🏃 Executing package...", color="yellow")
 
             # Set environment for debugging
             env = {}
@@ -113,22 +114,22 @@ entry_point = "test_app.__main__:main"
             )
 
             # Display results
-            click.secho("\n📊 Execution Results:", fg="cyan", bold=True)
-            click.secho(f"Exit code: {result.returncode}")
+            pout("\n📊 Execution Results:", color="cyan", bold=True)
+            pout(f"Exit code: {result.returncode}")
 
             if result.stdout:
-                click.secho("\n📝 STDOUT:", fg="green")
-                click.echo(result.stdout)
+                pout("\n📝 STDOUT:", color="green")
+                pout(result.stdout)
 
             if result.stderr:
-                click.secho("\n⚠️ STDERR:", fg="yellow")
-                click.echo(result.stderr)
+                pout("\n⚠️ STDERR:", color="yellow")
+                pout(result.stderr)
 
             # Check success
             if result.returncode == 0 and "Launcher test successful" in result.stdout:
                 # Additional verification
                 if verbose:
-                    click.secho("\n🔍 Package details:", fg="cyan")
+                    pout("\n🔍 Package details:", color="cyan")
                     info_result = run(
                         [str(package_path), "info"],
                         capture_output=True,
@@ -136,18 +137,16 @@ entry_point = "test_app.__main__:main"
                         env={"FLAVOR_LAUNCHER_CLI": "true"},
                     )
                     if info_result.returncode == 0:
-                        click.echo(info_result.stdout)
+                        pout(info_result.stdout)
             else:
-                click.secho("\n❌ LAUNCHER TEST FAILED!", fg="red", bold=True)
+                pout("\n❌ LAUNCHER TEST FAILED!", color="red", bold=True)
 
                 # Debug info
                 if verbose:
-                    click.secho("\n🐛 Debug Information:", fg="yellow")
-                    click.echo(f"Package exists: {package_path.exists()}")
-                    click.echo(
-                        f"Package size: {package_path.stat().st_size if package_path.exists() else 'N/A'}"
-                    )
-                    click.echo(
+                    pout("\n🐛 Debug Information:", color="yellow")
+                    pout(f"Package exists: {package_path.exists()}")
+                    pout(f"Package size: {package_path.stat().st_size if package_path.exists() else 'N/A'}")
+                    pout(
                         f"Package permissions: {oct(package_path.stat().st_mode) if package_path.exists() else 'N/A'}"
                     )
 
@@ -157,18 +156,18 @@ entry_point = "test_app.__main__:main"
 
                         with PSPFReader(package_path) as reader:
                             metadata = reader.read_metadata()
-                            click.echo(f"Package metadata: {json.dumps(metadata, indent=2)[:500]}")
+                            pout(f"Package metadata: {json.dumps(metadata, indent=2)[:500]}")
                     except Exception as e:
-                        click.echo(f"Could not read metadata: {e}")
+                        pout(f"Could not read metadata: {e}")
 
                 sys.exit(1)
 
         except Exception as e:
-            click.secho(f"\n❌ Error: {e}", fg="red")
+            pout(f"\n❌ Error: {e}", color="red")
             if verbose:
                 import traceback
 
-                click.echo(traceback.format_exc())
+                pout(traceback.format_exc())
             sys.exit(1)
 
 

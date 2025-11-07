@@ -15,15 +15,16 @@
 import os
 
 import click
+from provide.foundation.console import perr, pout
 
 
 @click.command("env")
 def env_command() -> None:
     env_vars = dict(os.environ)
 
-    click.secho("=" * 60, fg="cyan")
-    click.secho("=" * 60, fg="cyan")
-    click.secho(f"📊 Total variables: {len(env_vars)}", fg="yellow")
+    pout("=" * 60, color="cyan")
+    pout("=" * 60, color="cyan")
+    pout(f"📊 Total variables: {len(env_vars)}", fg="yellow")
 
     # Categorize variables
     categories = {
@@ -55,13 +56,13 @@ def env_command() -> None:
                 value = env_vars.get(var, "")
                 if len(value) > 50:
                     value = value[:47] + "..."
-                click.echo(f"  {var} = {value}")
+                pout(f"  {var} = {value}")
             if len(vars) > 5:
-                click.secho(f"  ... and {len(vars) - 5} more", dim=True)
+                pout(f"  ... and {len(vars) - 5} more", dim=True)
 
     # Test expected values from runtime.env
-    click.secho("\n" + "=" * 60, fg="cyan")
-    click.secho("=" * 60, fg="cyan")
+    pout("\n" + "=" * 60, color="cyan")
+    pout("=" * 60, color="cyan")
 
     # Check for expected variables set by runtime.env
     expected_vars = {
@@ -69,27 +70,27 @@ def env_command() -> None:
         "TASTER_VERSION": "1.0.0",
     }
 
-    click.secho("\n📋 Expected Variables (from runtime.env.set):", fg="green")
+    pout("\n📋 Expected Variables (from runtime.env.set):", fg="green")
     for var, expected in expected_vars.items():
         actual = os.environ.get(var)
         if actual == expected:
             pass
         else:
-            click.echo(f"  ❌ {var} = {actual} (expected: {expected})")
+            pout(f"  ❌ {var} = {actual} (expected: {expected})")
 
     # Check mapped variables
-    click.secho("\n🔄 Mapped Variables (from runtime.env.map):", fg="yellow")
+    pout("\n🔄 Mapped Variables (from runtime.env.map):", fg="yellow")
     mappings = {
         "OLD_VAR": "NEW_VAR",
     }
     for old, new in mappings.items():
         if old in os.environ:
-            click.echo(f"  ⚠️ {old} still exists (should be mapped to {new})")
+            pout(f"  ⚠️ {old} still exists (should be mapped to {new})")
         if new in os.environ:
             pass
 
     # Test whitelist mode (unset = ["*"] with pass list)
-    click.secho("\n🔒 Whitelist Mode Test:", fg="magenta")
+    pout("\n🔒 Whitelist Mode Test:", color="magenta")
     allowed_patterns = [
         "PATH",
         "HOME",
@@ -101,7 +102,7 @@ def env_command() -> None:
         "TASTER_*",
         "KEEP_*",
     ]
-    click.echo(f"  Allowed patterns: {', '.join(allowed_patterns)}")
+    pout(f"  Allowed patterns: {', '.join(allowed_patterns)}")
 
     # Check for unexpected variables (ones that should have been removed)
     unexpected = []
@@ -120,25 +121,25 @@ def env_command() -> None:
             unexpected.append(key)
 
     if unexpected:
-        click.secho(f"\n  ⚠️ Found {len(unexpected)} unexpected variables:", fg="red")
+        pout(f"\n  ⚠️ Found {len(unexpected)} unexpected variables:", fg="red")
         for var in unexpected[:5]:
-            click.echo(f"    - {var}")
+            pout(f"    - {var}")
         if len(unexpected) > 5:
-            click.echo(f"    ... and {len(unexpected) - 5} more")
+            pout(f"    ... and {len(unexpected) - 5} more")
     else:
         pass
 
     # Show environment source
-    click.secho("\n" + "=" * 60, fg="cyan")
-    click.secho("📍 ENVIRONMENT SOURCE", fg="cyan", bold=True)
-    click.secho("=" * 60, fg="cyan")
+    pout("\n" + "=" * 60, color="cyan")
+    pout("📍 ENVIRONMENT SOURCE", color="cyan", bold=True)
+    pout("=" * 60, color="cyan")
 
     if "FLAVOR_WORKENV" in os.environ:
-        click.echo(f"  Work Environment: {os.environ['FLAVOR_WORKENV']}")
+        pout(f"  Work Environment: {os.environ['FLAVOR_WORKENV']}")
     if "FLAVOR_COMMAND_NAME" in os.environ:
-        click.echo(f"  Command Name: {os.environ['FLAVOR_COMMAND_NAME']}")
+        pout(f"  Command Name: {os.environ['FLAVOR_COMMAND_NAME']}")
     if "FLAVOR_ORIGINAL_COMMAND" in os.environ:
-        click.echo(f"  Original Command: {os.environ['FLAVOR_ORIGINAL_COMMAND']}")
+        pout(f"  Original Command: {os.environ['FLAVOR_ORIGINAL_COMMAND']}")
 
 
 # 🌶️📦🔚
