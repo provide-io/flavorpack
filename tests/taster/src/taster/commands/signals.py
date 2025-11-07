@@ -12,6 +12,7 @@ import threading
 import time
 
 import click
+from provide.foundation.console import perr, pout
 
 
 class SignalTester:
@@ -23,10 +24,10 @@ class SignalTester:
         """Handle signals and record them"""
         signal_name = signal.Signals(signum).name
         self.signals_received.append((signal_name, time.time()))
-        click.echo(f"\n📨 Received {signal_name}")
+        pout(f"\n📨 Received {signal_name}")
 
         if signum == signal.SIGINT:
-            click.echo("  Gracefully shutting down...")
+            pout("  Gracefully shutting down...")
             # Simulate cleanup
             time.sleep(0.5)
             sys.exit(0)
@@ -37,7 +38,7 @@ class SignalTester:
             try:
                 self.original_handlers[sig] = signal.signal(sig, self.signal_handler)
             except Exception as e:
-                click.echo(f"  ⚠️ Could not install handler for {signal.Signals(sig).name}: {e}")
+                pout(f"  ⚠️ Could not install handler for {signal.Signals(sig).name}: {e}")
 
     def restore_handlers(self) -> None:
         """Restore original handlers"""
@@ -55,47 +56,47 @@ def signals_command(test_mode, timeout, sleep, exit_code) -> None:
 
     # Simple sleep mode
     if sleep is not None:
-        click.echo(f"💤 Sleeping for {sleep} seconds...")
+        pout(f"💤 Sleeping for {sleep} seconds...")
         try:
             time.sleep(sleep)
             sys.exit(exit_code)
         except KeyboardInterrupt:
-            click.echo("\n⚠️ Sleep interrupted by signal", file=sys.stderr)
+            pout("\n⚠️ Sleep interrupted by signal", file=sys.stderr)
             sys.exit(130)  # Standard exit code for SIGINT
 
-    click.secho("=" * 60, fg="cyan")
-    click.secho("🛑 SIGNAL HANDLING TEST", fg="cyan", bold=True)
-    click.secho("=" * 60, fg="cyan")
+    pout("=" * 60, color="cyan")
+    pout("🛑 SIGNAL HANDLING TEST", color="cyan", bold=True)
+    pout("=" * 60, color="cyan")
 
     tester = SignalTester()
 
     # Check current signal handlers
-    click.secho("\n📊 Current Signal Handlers:", fg="yellow")
+    pout("\n📊 Current Signal Handlers:", color="yellow")
     for sig in [signal.SIGTERM, signal.SIGINT, signal.SIGHUP]:
         try:
             handler = signal.getsignal(sig)
             handler_name = (
                 "DEFAULT" if handler == signal.SIG_DFL else "IGNORE" if handler == signal.SIG_IGN else "CUSTOM"
             )
-            click.echo(f"  {signal.Signals(sig).name}: {handler_name}")
+            pout(f"  {signal.Signals(sig).name}: {handler_name}")
         except (ValueError, AttributeError):
             pass
 
     if test_mode:
         # Automated test mode
-        click.echo(f"  Timeout: {timeout} seconds")
+        pout(f"  Timeout: {timeout} seconds")
 
         # Install handlers
-        click.secho("\n📝 Installing Signal Handlers:", fg="blue")
+        pout("\n📝 Installing Signal Handlers:", color="blue")
         tester.install_handlers()
 
         # Send signal to self after delay
         def send_signal_delayed() -> None:
             time.sleep(2)
-            click.echo("\n🚀 Sending SIGTERM to self...")
+            pout("\n🚀 Sending SIGTERM to self...")
             os.kill(os.getpid(), signal.SIGTERM)
             time.sleep(1)
-            click.echo("🚀 Sending SIGINT to self...")
+            pout("🚀 Sending SIGINT to self...")
             os.kill(os.getpid(), signal.SIGINT)
 
         thread = threading.Thread(target=send_signal_delayed)
@@ -103,7 +104,7 @@ def signals_command(test_mode, timeout, sleep, exit_code) -> None:
         thread.start()
 
         # Wait for signals
-        click.echo("\n⏳ Waiting for signals...")
+        pout("\n⏳ Waiting for signals...")
         start_time = time.time()
         while time.time() - start_time < timeout:
             time.sleep(0.1)
@@ -111,29 +112,29 @@ def signals_command(test_mode, timeout, sleep, exit_code) -> None:
                 break
 
         # Report results
-        click.secho("\n📋 Test Results:", fg="cyan")
+        pout("\n📋 Test Results:", color="cyan")
         if tester.signals_received:
             for sig_name, sig_time in tester.signals_received:
-                click.echo(f"    • {sig_name} at {sig_time:.2f}")
+                pout(f"    • {sig_name} at {sig_time:.2f}")
         else:
-            click.secho("  ❌ No signals received", fg="red")
+            pout("  ❌ No signals received", color="red")
 
         # Restore handlers
         tester.restore_handlers()
 
     else:
         # Interactive mode
-        click.secho("\n📝 Interactive Signal Test", fg="green")
-        click.echo("Installing signal handlers...")
+        pout("\n📝 Interactive Signal Test", color="green")
+        pout("Installing signal handlers...")
 
         tester.install_handlers()
 
-        click.secho("\n📌 Instructions:", fg="yellow")
-        click.echo("  1. Press Ctrl+C to send SIGINT")
-        click.echo("  2. From another terminal: kill -TERM <pid>")
-        click.echo("  3. From another terminal: kill -HUP <pid>")
-        click.echo(f"\n  PID: {os.getpid()}")
-        click.echo(f"  Press Ctrl+C or wait {timeout} seconds to exit\n")
+        pout("\n📌 Instructions:", color="yellow")
+        pout("  1. Press Ctrl+C to send SIGINT")
+        pout("  2. From another terminal: kill -TERM <pid>")
+        pout("  3. From another terminal: kill -HUP <pid>")
+        pout(f"\n  PID: {os.getpid()}")
+        pout(f"  Press Ctrl+C or wait {timeout} seconds to exit\n")
 
         # Wait for signals
         try:
@@ -143,23 +144,23 @@ def signals_command(test_mode, timeout, sleep, exit_code) -> None:
                 sys.stdout.write(f"\r⏳ Waiting for signals... {remaining:.1f}s remaining")
                 sys.stdout.flush()
                 time.sleep(0.1)
-            click.echo("\n\n⏰ Timeout reached")
+            pout("\n\n⏰ Timeout reached")
         except KeyboardInterrupt:
             pass
 
         # Show results
-        click.secho("\n\n📋 Signals Received:", fg="cyan")
+        pout("\n\n📋 Signals Received:", color="cyan")
         if tester.signals_received:
             for sig_name, sig_time in tester.signals_received:
-                click.echo(f"  • {sig_name}")
+                pout(f"  • {sig_name}")
         else:
-            click.echo("  None")
+            pout("  None")
 
         # Restore handlers
         tester.restore_handlers()
 
     # Test launcher capabilities
-    click.secho("\n🚀 Launcher Signal Capabilities:", fg="magenta")
+    pout("\n🚀 Launcher Signal Capabilities:", color="magenta")
 
     launcher_name = (
         "rust"
@@ -168,13 +169,13 @@ def signals_command(test_mode, timeout, sleep, exit_code) -> None:
     )
 
     if launcher_name == "rust":
-        click.echo("    • Forwards SIGTERM/SIGINT to child process")
-        click.echo("    • Graceful shutdown with 10-second timeout")
-        click.echo("    • Process cleanup on exit")
+        pout("    • Forwards SIGTERM/SIGINT to child process")
+        pout("    • Graceful shutdown with 10-second timeout")
+        pout("    • Process cleanup on exit")
     else:
-        click.secho("  ⚠️ Go launcher: Limited signal support", fg="yellow")
-        click.echo("    • Basic signal handling")
-        click.echo("    • May not forward all signals properly")
+        pout("  ⚠️ Go launcher: Limited signal support", color="yellow")
+        pout("    • Basic signal handling")
+        pout("    • May not forward all signals properly")
 
 
 # 🌶️📦🔚

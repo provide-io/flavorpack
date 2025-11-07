@@ -16,6 +16,7 @@ from pathlib import Path
 import tempfile
 
 import click
+from provide.foundation.console import perr, pout
 from provide.foundation.process import run
 
 from flavor.helpers import HelperManager
@@ -25,12 +26,12 @@ from flavor.package import build_package_from_manifest
 @click.command("exec-test")
 @click.option("--verbose", "-v", is_flag=True, help="Verbose output")
 def exec_test_command(verbose) -> None:
-    click.secho("=" * 60, fg="cyan")
+    pout("=" * 60, color="cyan")
 
     helper_manager = HelperManager()
 
     # Test 1: Direct binary execution
-    click.secho("\n📌 Test 1: Direct binary execution", fg="yellow")
+    pout("\n📌 Test 1: Direct binary execution", color="yellow")
     with tempfile.TemporaryDirectory() as temp_dir:
         temp_dir = Path(temp_dir)
 
@@ -85,16 +86,16 @@ command = "{workenv}/bin/python3.11 -m binary_test"
             if result.returncode == 0 and "Binary execution successful" in result.stdout:
                 pass
             else:
-                click.secho("  ❌ Binary execution: FAILED", fg="red")
+                pout("  ❌ Binary execution: FAILED", color="red")
                 if verbose:
-                    click.echo(f"    Exit code: {result.returncode}")
+                    pout(f"    Exit code: {result.returncode}")
                     if result.stderr:
-                        click.echo(f"    Error: {result.stderr[:200]}")
+                        pout(f"    Error: {result.stderr[:200]}")
         except Exception as e:
-            click.secho(f"  ❌ Binary execution: ERROR - {e}", fg="red")
+            pout(f"  ❌ Binary execution: ERROR - {e}", color="red")
 
     # Test 2: Script execution (with shebang)
-    click.secho("\n📌 Test 2: Script execution (with shebang)", fg="yellow")
+    pout("\n📌 Test 2: Script execution (with shebang)", fg="yellow")
     with tempfile.TemporaryDirectory() as temp_dir:
         temp_dir = Path(temp_dir)
 
@@ -134,7 +135,7 @@ entry_point = "script_test.__main__:main"
 
             # Execute with both modes
             for mode in ["spawn", "exec"]:
-                click.echo(f"    Testing {mode} mode...")
+                pout(f"    Testing {mode} mode...")
                 env = {"FLAVOR_EXEC_MODE": mode}
                 if verbose:
                     env["FLAVOR_LOG_LEVEL"] = "debug"
@@ -150,16 +151,16 @@ entry_point = "script_test.__main__:main"
                 if result.returncode == 0 and "Script execution successful" in result.stdout:
                     pass
                 else:
-                    click.secho(f"      ❌ {mode} mode: FAILED", fg="red")
+                    pout(f"      ❌ {mode} mode: FAILED", color="red")
                     if verbose:
-                        click.echo(f"        Exit code: {result.returncode}")
+                        pout(f"        Exit code: {result.returncode}")
                         if result.stderr:
-                            click.echo(f"        Error: {result.stderr[:200]}")
+                            pout(f"        Error: {result.stderr[:200]}")
         except Exception as e:
-            click.secho(f"  ❌ Script execution: ERROR - {e}", fg="red")
+            pout(f"  ❌ Script execution: ERROR - {e}", color="red")
 
     # Test 3: Direct workenv access
-    click.secho("\n📌 Test 3: Direct workenv command execution", fg="yellow")
+    pout("\n📌 Test 3: Direct workenv command execution", color="yellow")
     with tempfile.TemporaryDirectory() as temp_dir:
         temp_dir = Path(temp_dir)
 
@@ -220,15 +221,15 @@ setup_commands = [
             if result.returncode == 0 and "Direct shell execution successful" in result.stdout:
                 pass
             else:
-                click.secho("  ❌ Direct workenv execution: FAILED", fg="red")
+                pout("  ❌ Direct workenv execution: FAILED", color="red")
                 if verbose:
-                    click.echo(f"    Exit code: {result.returncode}")
+                    pout(f"    Exit code: {result.returncode}")
                     if result.stderr:
-                        click.echo(f"    Error: {result.stderr[:200]}")
+                        pout(f"    Error: {result.stderr[:200]}")
         except Exception as e:
-            click.secho(f"  ❌ Direct workenv execution: ERROR - {e}", fg="red")
+            pout(f"  ❌ Direct workenv execution: ERROR - {e}", color="red")
 
-    click.secho("\n" + "=" * 60, fg="cyan")
+    pout("\n" + "=" * 60, color="cyan")
 
 
 if __name__ == "__main__":

@@ -10,14 +10,15 @@ import os
 import sys
 
 import click
+from provide.foundation.console import pout
 
 
 @click.command("shell")
 def shell_command() -> None:
     """🐚 Start interactive Python shell"""
-    click.secho("=" * 60, fg="cyan")
-    click.secho("🐚 INTERACTIVE PYTHON SHELL", fg="cyan", bold=True)
-    click.secho("=" * 60, fg="cyan")
+    pout("=" * 60, color="cyan")
+    pout("🐚 INTERACTIVE PYTHON SHELL", color="cyan", bold=True)
+    pout("=" * 60, color="cyan")
 
     # Prepare namespace
     namespace = {
@@ -33,21 +34,21 @@ def shell_command() -> None:
 
         namespace["flavor"] = flavor
     except ImportError:
-        click.echo("⚠️ Flavor module not available")
+        pout("⚠️ Flavor module not available")
 
     # Display available objects
-    click.secho("\nAvailable objects:", fg="green")
+    pout("\nAvailable objects:", color="green")
     for name in sorted(namespace.keys()):
         if not name.startswith("_"):
-            click.echo(f"  • {name}")
+            pout(f"  • {name}")
 
-    click.secho("\nEnvironment:", fg="yellow")
-    click.echo(f"  • Python: {sys.version.split()[0]}")
-    click.echo(f"  • Platform: {sys.platform}")
+    pout("\nEnvironment:", color="yellow")
+    pout(f"  • Python: {sys.version.split()[0]}")
+    pout(f"  • Platform: {sys.platform}")
     if "FLAVOR_WORKENV" in os.environ:
-        click.echo(f"  • Workenv: {os.environ['FLAVOR_WORKENV']}")
+        pout(f"  • Workenv: {os.environ['FLAVOR_WORKENV']}")
 
-    click.echo("\nType 'exit()' or Ctrl-D to exit the shell.\n")
+    pout("\nType 'exit()' or Ctrl-D to exit the shell.\n")
 
     # Start interactive shell
     code.interact(local=namespace, banner="")

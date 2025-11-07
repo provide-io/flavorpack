@@ -106,10 +106,10 @@ source ~/.zshrc
 # Use specific Python version
 python3.11 -m flavor pack --manifest pyproject.toml
 
-# Or set up pyenv
-brew install pyenv
-pyenv install 3.11.0
-pyenv local 3.11.0
+# Or set up Python version with uv
+brew install uv
+uv python install 3.11
+uv python pin 3.11
 ```
 
 ### Homebrew-Related Issues

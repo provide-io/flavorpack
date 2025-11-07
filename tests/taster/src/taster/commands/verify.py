@@ -18,6 +18,7 @@ from pathlib import Path
 import sys
 
 import click
+from provide.foundation.console import perr, pout
 
 
 @click.command("verify")
@@ -28,9 +29,9 @@ def verify_command(package_path, output_json, output_file) -> None:
     """🔍 Verify PSPF package integrity"""
 
     if not output_json:
-        click.secho("=" * 60, fg="cyan")
-        click.secho("🔍 PSPF PACKAGE VERIFICATION", fg="cyan", bold=True)
-        click.secho("=" * 60, fg="cyan")
+        pout("=" * 60, color="cyan")
+        pout("🔍 PSPF PACKAGE VERIFICATION", color="cyan", bold=True)
+        pout("=" * 60, color="cyan")
 
     # Determine package path
     if not package_path:
@@ -63,7 +64,7 @@ def verify_command(package_path, output_json, output_file) -> None:
             else:
                 print(output)
         else:
-            click.secho(f"❌ Package file not found: {package_file}", fg="red")
+            pout(f"❌ Package file not found: {package_file}", color="red")
         return
 
     # Check if flavor module is available
@@ -72,7 +73,7 @@ def verify_command(package_path, output_json, output_file) -> None:
         from flavor.verification import FlavorVerifier
 
         if not output_json:
-            click.echo("\n🔐 Verifying package integrity...")
+            pout("\n🔐 Verifying package integrity...")
 
         try:
             result = FlavorVerifier.verify_package(package_file)
@@ -88,39 +89,39 @@ def verify_command(package_path, output_json, output_file) -> None:
                     print(output)
             else:
                 # Human-readable output
-                click.secho("\n📋 Verification Results:", fg="green")
-                click.echo(f"  Format: {result.get('format', 'unknown')}")
-                click.echo(f"  Version: {result.get('version', 'unknown')}")
-                click.echo(f"  Launcher Size: {result.get('launcher_size', 0) / 1024:.1f} KB")
+                pout("\n📋 Verification Results:", color="green")
+                pout(f"  Format: {result.get('format', 'unknown')}")
+                pout(f"  Version: {result.get('version', 'unknown')}")
+                pout(f"  Launcher Size: {result.get('launcher_size', 0) / 1024:.1f} KB")
 
                 if "package" in result:
                     pkg = result["package"]
-                    click.echo(f"  Package: {pkg.get('name', 'unknown')} v{pkg.get('version', 'unknown')}")
+                    pout(f"  Package: {pkg.get('name', 'unknown')} v{pkg.get('version', 'unknown')}")
 
                 if "slots" in result:
-                    click.echo(f"  Slots: {len(result['slots'])}")
+                    pout(f"  Slots: {len(result['slots'])}")
 
                 # Signature verification
                 if result.get("signature_valid"):
                     pass
                 else:
-                    click.secho("\n❌ Signature verification: FAILED", fg="red")
+                    pout("\n❌ Signature verification: FAILED", color="red")
 
                 # Additional checks
-                click.secho("\n🔍 Additional Checks:", fg="yellow")
+                pout("\n🔍 Additional Checks:", color="yellow")
 
                 # Check index checksum
                 if "index_checksum_valid" in result:
                     if result["index_checksum_valid"]:
                         pass
                     else:
-                        click.echo("  ❌ Index checksum invalid")
+                        pout("  ❌ Index checksum invalid")
 
                 # Check metadata
                 if "metadata" in result:
                     pass
                 else:
-                    click.echo("  ⚠️ Metadata not found")
+                    pout("  ⚠️ Metadata not found")
 
         except Exception as e:
             result_obj["error"] = str(e)
@@ -132,7 +133,7 @@ def verify_command(package_path, output_json, output_file) -> None:
                 else:
                     print(output)
             else:
-                click.secho(f"❌ Verification failed: {e}", fg="red")
+                pout(f"❌ Verification failed: {e}", color="red")
 
     except ImportError:
         # Basic checks without flavor module
@@ -163,20 +164,20 @@ def verify_command(package_path, output_json, output_file) -> None:
             else:
                 print(output)
         else:
-            click.secho("⚠️ Flavor verification module not available", fg="yellow")
-            click.echo("  Running basic checks only...")
-            click.echo("\n📊 Basic Information:")
-            click.echo(f"  File Size: {basic_info['file_size_mb']:.2f} MB")
-            click.echo(f"  Readable: {'Yes' if basic_info['readable'] else 'No'}")
-            click.echo(f"  Executable: {'Yes' if basic_info['executable'] else 'No'}")
+            pout("⚠️ Flavor verification module not available", color="yellow")
+            pout("  Running basic checks only...")
+            pout("\n📊 Basic Information:")
+            pout(f"  File Size: {basic_info['file_size_mb']:.2f} MB")
+            pout(f"  Readable: {'Yes' if basic_info['readable'] else 'No'}")
+            pout(f"  Executable: {'Yes' if basic_info['executable'] else 'No'}")
 
             if basic_info["magic_found"]:
                 pass
             else:
-                click.echo("  ⚠️ PSPF2025 magic not found in first MB")
+                pout("  ⚠️ PSPF2025 magic not found in first MB")
 
             if "read_error" in basic_info:
-                click.echo(f"  ❌ Could not read file: {basic_info['read_error']}")
+                pout(f"  ❌ Could not read file: {basic_info['read_error']}")
 
 
 # 🌶️📦🔚

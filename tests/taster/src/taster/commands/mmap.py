@@ -20,6 +20,7 @@ import sys
 import tracemalloc
 
 import click
+from provide.foundation.console import pout
 
 # Try to import psutil for more detailed memory info
 try:
@@ -150,47 +151,47 @@ def test_mmap_operations():
 @click.command("mmap")
 def mmap_command() -> None:
     """Test and verify memory-mapped I/O usage."""
-    click.echo("🗺️ Memory-Mapped I/O Detection")
-    click.echo("=" * 50)
+    pout("🗺️ Memory-Mapped I/O Detection")
+    pout("=" * 50)
 
     # System support
     for result in test_mmap_operations():
-        click.echo(f"  {result}")
+        pout(f"  {result}")
 
     # Bundle detection
-    click.echo("\n🔍 Bundle Analysis:")
+    pout("\n🔍 Bundle Analysis:")
     indicators = detect_bundle_mmap()
     if indicators:
         for indicator in indicators:
-            click.echo(f"  {indicator}")
+            pout(f"  {indicator}")
     else:
-        click.echo("  ⚠️ No mmap indicators detected")
+        pout("  ⚠️ No mmap indicators detected")
 
     # Memory info
     if HAS_PSUTIL:
-        click.echo("\n💾 Memory Usage:")
+        pout("\n💾 Memory Usage:")
         process = psutil.Process()
         mem_info = process.memory_info()
-        click.echo(f"  • RSS: {mem_info.rss / 1024 / 1024:.2f} MB")
-        click.echo(f"  • VMS: {mem_info.vms / 1024 / 1024:.2f} MB")
+        pout(f"  • RSS: {mem_info.rss / 1024 / 1024:.2f} MB")
+        pout(f"  • VMS: {mem_info.vms / 1024 / 1024:.2f} MB")
 
         try:
             mem_percent = process.memory_percent()
-            click.echo(f"  • Percent: {mem_percent:.2f}%")
+            pout(f"  • Percent: {mem_percent:.2f}%")
         except (AttributeError, psutil.Error):
             pass
 
     # Conclusion
-    click.echo("\n📊 Summary:")
+    pout("\n📊 Summary:")
     if any("memory-mapped" in str(i).lower() for i in indicators):
         pass
     elif bundle_path := (sys.argv[0] if sys.argv[0].endswith(".psp") else None):
         if Path(bundle_path).exists():
-            click.echo("  ⚠️ Bundle exists but mmap usage unclear")
+            pout("  ⚠️ Bundle exists but mmap usage unclear")
         else:
-            click.echo("  ❓ Not running from a bundle")
+            pout("  ❓ Not running from a bundle")
     else:
-        click.echo("  ❓ Cannot determine mmap status")
+        pout("  ❓ Cannot determine mmap status")
 
 
 if __name__ == "__main__":

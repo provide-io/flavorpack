@@ -20,6 +20,7 @@ import tempfile
 
 import click
 from provide.foundation import logger
+from provide.foundation.console import perr, pout
 from provide.foundation.process import run as run_command
 
 from flavor.helpers.manager import HelperManager
@@ -126,13 +127,13 @@ class CrossLangTester:
         """Log a message."""
         if not self.json_output:
             if level == "error":
-                click.secho(message, fg="red")
+                perr(message, color="red")
             elif level == "success":
-                click.secho(message, fg="green")
+                pout(message, color="green")
             elif level == "warning":
-                click.secho(message, fg="yellow")
+                pout(message, color="yellow")
             else:
-                click.echo(message)
+                pout(message)
 
     def build_with_launcher(self, launcher_info, key_seed="test123"):
         """Build package using Python builder with specified launcher."""
