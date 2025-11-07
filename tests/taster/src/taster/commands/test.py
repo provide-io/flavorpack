@@ -8,13 +8,14 @@
 from pathlib import Path
 import subprocess
 import sys
+from typing import Any
 
 import click
 from click.testing import CliRunner
 from provide.foundation.console import perr, pout
 
 
-def _get_flavor_api():
+def _get_flavor_api() -> Any | None:
     """Get the Flavor API."""
     try:
         sys.path.insert(0, str(Path(__file__).parents[4] / "src"))
@@ -32,7 +33,7 @@ def test_command() -> None:
 
 @test_command.command("suite")
 @click.pass_context
-def test_suite(ctx) -> None:
+def test_suite(ctx: click.Context) -> None:
     """Run taster's built-in test suite"""
     from .argv import argv_command
     from .env import env_command
@@ -88,7 +89,8 @@ def test_suite(ctx) -> None:
     pout(f"\nTests Passed: {passed}/{total} ({percentage:.1f}%)")
 
     # List results
-    for name, _success in results:
+    for name, success in results:
+        symbol = "✅" if success else "❌"
         pout(f"  {symbol} {name}")
 
     # Overall result
@@ -102,7 +104,7 @@ def test_suite(ctx) -> None:
 @test_command.command("flavor")
 @click.option("--coverage", is_flag=True, help="Run with coverage")
 @click.option("--verbose", "-v", is_flag=True, help="Verbose output")
-def test_flavor(coverage, verbose) -> None:
+def test_flavor(coverage: bool, verbose: bool) -> None:
     """Run Flavor's test suite"""
     flavor_root = Path(__file__).parents[4]
     pytest_cmd = flavor_root / "workenv" / "flavor_darwin_arm64" / "bin" / "pytest"
