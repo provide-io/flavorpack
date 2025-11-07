@@ -77,7 +77,7 @@ class TestPSPFBuilder:
         assert builder is not None
         assert isinstance(builder, PSPFBuilder)
 
-    def test_builder_fluent_interface(self, temp_dir) -> None:
+    def test_builder_fluent_interface(self, temp_dir: Path) -> None:
         """Should support fluent/chainable interface."""
         if not PSPFBuilder:
             pytest.skip("PSPFBuilder not implemented yet")
@@ -96,7 +96,7 @@ class TestPSPFBuilder:
         assert result.success
         assert output.exists()
 
-    def test_builder_incremental(self, temp_dir) -> None:
+    def test_builder_incremental(self, temp_dir: Path) -> None:
         """Should support incremental building."""
         if not PSPFBuilder:
             pytest.skip("PSPFBuilder not implemented yet")
@@ -138,7 +138,7 @@ class TestPSPFBuilder:
         assert builder2._spec.metadata == {"name": "test"}
         assert len(builder3._spec.slots) == 1
 
-    def test_builder_with_path_slots(self, temp_dir) -> None:
+    def test_builder_with_path_slots(self, temp_dir: Path) -> None:
         """Should support adding slots from file paths."""
         if not PSPFBuilder:
             pytest.skip("PSPFBuilder not implemented yet")
