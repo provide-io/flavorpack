@@ -8,6 +8,7 @@
 import os
 from pathlib import Path
 import tempfile
+from typing import Any
 from unittest.mock import Mock, patch
 
 from flavor.packaging.python.dist_manager import PythonDistManager
@@ -33,7 +34,7 @@ class TestPythonDistManager:
         assert manager_no_uv.uv is None
 
     @patch("flavor.packaging.python.dist_manager.run")
-    def test_create_python_environment_with_uv(self, mock_run) -> None:
+    def test_create_python_environment_with_uv(self, mock_run: Mock) -> None:
         """Test Python environment creation using UV."""
         mock_result = Mock()
         mock_result.returncode = 0
@@ -61,7 +62,7 @@ class TestPythonDistManager:
                 assert result.exists()
 
     @patch("flavor.packaging.python.dist_manager.run")
-    def test_create_python_environment_fallback_to_venv(self, mock_run) -> None:
+    def test_create_python_environment_fallback_to_venv(self, mock_run: Mock) -> None:
         """Test fallback to standard venv when UV fails."""
         mock_result = Mock()
         mock_result.returncode = 0
@@ -76,7 +77,7 @@ class TestPythonDistManager:
                 mock_uv_create.side_effect = Exception("UV failed")
 
                 # Mock the venv structure
-                def mock_venv_creation(*args, **kwargs):
+                def mock_venv_creation(*args: Any, **kwargs: Any) -> Any:
                     venv_path.mkdir(parents=True)
                     venv_python = venv_path / "bin" / "python"
                     venv_python.parent.mkdir(parents=True)
@@ -121,7 +122,7 @@ class TestPythonDistManager:
                 assert result == expected
 
     @patch("flavor.packaging.python.dist_manager.run")
-    def test_install_wheels_to_environment(self, mock_run) -> None:
+    def test_install_wheels_to_environment(self, mock_run: Mock) -> None:
         """Test installing wheels to Python environment."""
         mock_result = Mock()
         mock_result.returncode = 0
@@ -165,7 +166,7 @@ class TestPythonDistManager:
             mock_run.assert_not_called()
 
     @patch("flavor.packaging.python.dist_manager.run")
-    def test_prepare_site_packages(self, mock_run) -> None:
+    def test_prepare_site_packages(self, mock_run: Mock) -> None:
         """Test site-packages preparation."""
         mock_result = Mock()
         mock_result.returncode = 0
@@ -327,7 +328,7 @@ class TestPythonDistManager:
     @patch.object(PythonDistManager, "prepare_site_packages")
     @patch("shutil.copytree")
     def test_create_standalone_distribution(
-        self, mock_copytree, mock_prepare, mock_install, mock_create_env
+        self, mock_copytree: Mock, mock_prepare: Mock, mock_install: Mock, mock_create_env: Mock
     ) -> None:
         """Test complete standalone distribution creation."""
         with tempfile.TemporaryDirectory() as temp_dir:

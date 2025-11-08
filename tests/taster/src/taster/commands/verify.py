@@ -18,7 +18,7 @@ from pathlib import Path
 import sys
 
 import click
-from provide.foundation.console import perr, pout
+from provide.foundation.console import pout
 
 
 @click.command("verify")
