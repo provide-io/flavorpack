@@ -12,7 +12,7 @@ import threading
 import time
 
 import click
-from provide.foundation.console import perr, pout
+from provide.foundation.console import pout
 
 
 class SignalTester:

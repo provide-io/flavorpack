@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Bulk migrate click.echo/secho to pout/perr for remaining files."""
 
-import re
 from pathlib import Path
+import re
 
 files_to_migrate = [
     "/REDACTED_ABS_PATH",
@@ -27,46 +27,48 @@ def migrate_file(file_path: Path) -> tuple[int, int]:
     changes = 0
 
     # Add imports if not present
-    if 'from provide.foundation.console import' not in content:
+    if "from provide.foundation.console import" not in content:
         # Find where to add import (after click import)
-        if 'import click' in content:
-            content = content.replace('import click\n', 'import click\nfrom provide.foundation.console import perr, pout\n')
+        if "import click" in content:
+            content = content.replace(
+                "import click\n", "import click\nfrom provide.foundation.console import perr, pout\n"
+            )
             changes += 1
 
     # Replace click.echo(..., err=True) → perr(...)
-    pattern = r'click\.echo\(([^,)]+),\s*err=True\)'
+    pattern = r"click\.echo\(([^,)]+),\s*err=True\)"
     matches = re.findall(pattern, content)
-    content = re.sub(pattern, r'perr(\1)', content)
+    content = re.sub(pattern, r"perr(\1)", content)
     changes += len(matches)
 
     # Replace click.echo(...) → pout(...)
-    pattern = r'click\.echo\(([^)]+)\)'
+    pattern = r"click\.echo\(([^)]+)\)"
     matches = re.findall(pattern, content)
-    content = re.sub(pattern, r'pout(\1)', content)
+    content = re.sub(pattern, r"pout(\1)", content)
     changes += len(matches)
 
     # Replace click.secho with err=True
-    pattern = r'click\.secho\(([^,)]+),\s*fg=([^,)]+),?\s*err=True'
+    pattern = r"click\.secho\(([^,)]+),\s*fg=([^,)]+),?\s*err=True"
     matches = re.findall(pattern, content)
-    content = re.sub(pattern, r'perr(\1, color=\2', content)
+    content = re.sub(pattern, r"perr(\1, color=\2", content)
     changes += len(matches)
 
     # Replace click.secho(..., fg=..., bold=True) → pout(..., color=..., bold=True)
-    pattern = r'click\.secho\(([^,)]+),\s*fg=([^,)]+),\s*bold=True\)'
+    pattern = r"click\.secho\(([^,)]+),\s*fg=([^,)]+),\s*bold=True\)"
     matches = re.findall(pattern, content)
-    content = re.sub(pattern, r'pout(\1, color=\2, bold=True)', content)
+    content = re.sub(pattern, r"pout(\1, color=\2, bold=True)", content)
     changes += len(matches)
 
     # Replace click.secho(..., fg=...) → pout(..., color=...)
-    pattern = r'click\.secho\(([^,)]+),\s*fg=([^,)]+)\)'
+    pattern = r"click\.secho\(([^,)]+),\s*fg=([^,)]+)\)"
     matches = re.findall(pattern, content)
-    content = re.sub(pattern, r'pout(\1, color=\2)', content)
+    content = re.sub(pattern, r"pout(\1, color=\2)", content)
     changes += len(matches)
 
     # Replace simple click.secho(...) → pout(...)
-    pattern = r'click\.secho\(([^)]+)\)'
+    pattern = r"click\.secho\(([^)]+)\)"
     matches = re.findall(pattern, content)
-    content = re.sub(pattern, r'pout(\1)', content)
+    content = re.sub(pattern, r"pout(\1)", content)
     changes += len(matches)
 
     if content != original:
@@ -93,11 +95,11 @@ def main():
         total_changes += changes
         total_errors += errors
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"Total replacements: {total_changes}")
     print(f"Total errors: {total_errors}")
-    print('='*60)
+    print("=" * 60)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

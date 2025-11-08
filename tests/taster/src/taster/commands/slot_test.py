@@ -3,13 +3,6 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""TODO: Add module docstring."""
-
-#!/usr/bin/env python3
-# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
-#
-
 """Test slot substitution patterns in commands."""
 
 import json
@@ -17,7 +10,7 @@ from pathlib import Path
 import tempfile
 
 import click
-from provide.foundation.console import perr, pout
+from provide.foundation.console import pout
 
 from flavor.helpers import HelperManager
 from flavor.package import build_package_from_manifest
@@ -26,7 +19,7 @@ from flavor.package import build_package_from_manifest
 @click.command("slot-test")
 @click.option("--verbose", "-v", is_flag=True, help="Verbose output")
 @click.option("--json-output", is_flag=True, help="Output results as JSON")
-def slot_test_command(verbose, json_output) -> None:
+def slot_test_command(verbose: bool, json_output: bool) -> None:
     """🎰 Test {slot:N} substitution patterns."""
 
     if not json_output:
@@ -163,9 +156,11 @@ target = "config.json"
         pout("─" * 40, color="cyan")
 
         for result in results:
+            status_color = "green" if "✅" in result["status"] else "red"
             pout(f"  {result['status']} {result['description']}", color=status_color)
 
         total = len(results)
+        passed = len([r for r in results if "✅" in r["status"]])
 
         pout("\n" + "─" * 40, color="cyan")
         if passed == total:
