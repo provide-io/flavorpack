@@ -1,19 +1,15 @@
 #!/usr/bin/env python3
-# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
-#
-
-"""Path validation and normalization for PSPF metadata.
+"""
+Path validation and normalization for PSPF metadata.
 
 Ensures all paths in metadata use the {workenv} placeholder for portability.
-This makes it clear to developers that paths are relative to the work environment."""
+This makes it clear to developers that paths are relative to the work environment.
+"""
 
 import os
 from pathlib import Path
+import platform
 from typing import Any
-
-from provide.foundation.file.directory import ensure_dir
-from provide.foundation.platform import get_arch_name, get_os_name
 
 
 def validate_metadata_path(path: str) -> str:
@@ -45,9 +41,16 @@ def validate_metadata_path(path: str) -> str:
         # This is a placeholder like "{version}" or "{package_name}"
         return path
 
-    # Absolute paths should be kept as-is (new design: "/" means absolute path)
+    # Remove any leading slashes (absolute paths are not allowed)
     if path.startswith("/"):
-        return path
+        # Try to extract the relative part if it looks like a common pattern
+        if "/workenv/" in path:
+            # Extract everything after /workenv/
+            idx = path.index("/workenv/") + len("/workenv/")
+            path = path[idx:]
+        else:
+            # Just remove the leading slash
+            path = path.lstrip("/")
 
     # If path doesn't start with {workenv}, add it
     if not path.startswith("{workenv}"):
@@ -94,8 +97,8 @@ def validate_metadata_dict(metadata: dict[str, Any]) -> dict[str, Any]:
         "command",
         "check_file",
         "path",
+        "extract_to",
         "source",
-        "target",
         "destination",
         "executable",
         "script",
@@ -104,7 +107,7 @@ def validate_metadata_dict(metadata: dict[str, Any]) -> dict[str, Any]:
     # Keys that contain path patterns or templates
     PATTERN_KEYS = {"pattern", "enumerate"}
 
-    result: dict[str, Any] = {}
+    result = {}
 
     for key, value in metadata.items():
         if key == "workenv" and isinstance(value, dict):
@@ -223,6 +226,28 @@ def make_relative_to_workenv(absolute_path: str, workenv_dir: str) -> str:
     return validate_metadata_path(absolute_path)
 
 
+def get_normalized_os() -> str:
+    """Get normalized OS name."""
+    os_name = platform.system().lower()
+    # Normalize macOS name
+    if os_name == "darwin":
+        return "darwin"
+    return os_name
+
+
+def get_normalized_arch() -> str:
+    """Get normalized architecture name."""
+    arch = platform.machine().lower()
+    # Normalize common architectures
+    if arch in ["x86_64", "amd64"]:
+        return "amd64"
+    elif arch in ["aarch64", "arm64"]:
+        return "arm64"
+    elif arch in ["i686", "i586", "i486"]:
+        return "x86"
+    return arch
+
+
 def substitute_placeholders(path: str, workenv_path: Path) -> str:
     """
     Substitute placeholders in a path string.
@@ -244,8 +269,8 @@ def substitute_placeholders(path: str, workenv_path: Path) -> str:
         return path
 
     # Get platform values
-    os_name = get_os_name()
-    arch_name = get_arch_name()
+    os_name = get_normalized_os()
+    arch_name = get_normalized_arch()
     platform_str = f"{os_name}_{arch_name}"
 
     # Substitute placeholders
@@ -278,7 +303,9 @@ def validate_workenv_paths(directories: list[dict[str, str]]) -> bool:
     for dir_info in directories:
         path = dir_info.get("path", "")
         if not path.startswith("{workenv}"):
-            raise ValueError(f"Workenv directory path must start with {{workenv}}: {path}")
+            raise ValueError(
+                f"Workenv directory path must start with {{workenv}}: {path}"
+            )
     return True
 
 
@@ -304,7 +331,7 @@ def parse_mode(mode_str: str) -> int:
 
     # Try to parse as octal
     try:
-        mode = int(mode_str, 8)
+        mode = int(mode_str, 8) if mode_str.startswith("0") else int(mode_str, 8)
 
         # Validate range
         if mode < 0 or mode > 0o777:
@@ -351,7 +378,7 @@ def create_workenv_directories(
             dir_path = Path(full_path)
 
             # Create directory
-            ensure_dir(dir_path)
+            dir_path.mkdir(parents=True, exist_ok=True)
 
             # Set permissions if specified
             if mode_str:
@@ -360,12 +387,12 @@ def create_workenv_directories(
             elif not dir_path.exists():
                 # Apply default permissions for new directories
                 # Default is 0777 & ~umask
-                default_mode = 0o777 & ~parse_mode(umask) if umask else 0o700  # Default to owner-only
+                if umask:
+                    default_mode = 0o777 & ~parse_mode(umask)
+                else:
+                    default_mode = 0o700  # Default to owner-only
                 dir_path.chmod(default_mode)
     finally:
         # Restore original umask
         if old_umask is not None:
             os.umask(old_umask)
-
-
-# 🌶️📦🔚

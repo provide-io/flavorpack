@@ -1,31 +1,25 @@
-#
-# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
-#
-
-"""TODO: Add module docstring."""
-
-from __future__ import annotations
+#!/usr/bin/env python3
+# src/flavor/psp/format_2025/backends.py
+# Backend implementations for PSPF bundle access - mmap, file, and stream
 
 from abc import ABC, abstractmethod
-from collections.abc import Generator
 from contextlib import suppress
 import mmap
 import os
 from pathlib import Path
 import sys
 import time
-from typing import Any, BinaryIO, Self
+from typing import BinaryIO
 
-from provide.foundation import logger
+from pyvider.telemetry import logger
 
-from flavor.config.defaults import (
+from flavor.psp.format_2025.constants import (
     ACCESS_AUTO,
     ACCESS_FILE,
     ACCESS_MMAP,
     ACCESS_STREAM,
     DEFAULT_CHUNK_SIZE,
-    DEFAULT_PAGE_SIZE,
+    PAGE_SIZE,
 )
 from flavor.psp.format_2025.slots import SlotDescriptor
 
@@ -55,7 +49,7 @@ class Backend(ABC):
 
     def stream_slot(
         self, descriptor: SlotDescriptor, chunk_size: int = DEFAULT_CHUNK_SIZE
-    ) -> Generator[bytes | memoryview, None, None]:
+    ):
         """Stream slot data in chunks."""
         offset = descriptor.offset
         remaining = descriptor.size
@@ -75,7 +69,7 @@ class MMapBackend(Backend):
         self.file: BinaryIO | None = None
         self.mmap: mmap.mmap | None = None
         self.path: Path | None = None
-        self._views: list[memoryview] = []  # Track memory views for cleanup
+        self._views = []  # Track memory views for cleanup
 
     def open(self, path: Path) -> None:
         """Open file and create memory mapping."""
@@ -102,12 +96,11 @@ class MMapBackend(Backend):
         if hasattr(mmap, "MADV_SEQUENTIAL"):
             # Hint for sequential access on Unix
             self.mmap.madvise(mmap.MADV_SEQUENTIAL)
+            logger.debug("🔧 Applied MADV_SEQUENTIAL hint")
 
         elapsed = time.perf_counter() - start_time
         logger.debug(
-            "🚀 Preloading complete",
-            elapsed_ms=elapsed * 1000,
-            pages=file_size // DEFAULT_PAGE_SIZE,
+            "✅ MMap opened", elapsed_ms=elapsed * 1000, pages=file_size // PAGE_SIZE
         )
 
     def close(self) -> None:
@@ -122,10 +115,13 @@ class MMapBackend(Backend):
         self._views.clear()
 
         if self.mmap:
-            with suppress(BufferError):
-                # BufferError expected if external code holds memoryview references
-                # The mmap will be cleaned up by Python's GC when all references are released
+            try:
                 self.mmap.close()
+                logger.debug("✅ MMap closed successfully")
+            except BufferError as e:
+                # If views still exist, just clear our reference
+                logger.warning("⚠️ BufferError on mmap close", error=str(e))
+                pass
             self.mmap = None
         if self.file:
             self.file.close()
@@ -183,32 +179,26 @@ class MMapBackend(Backend):
     def prefetch(self, offset: int, size: int) -> None:
         """Hint to OS to prefetch pages."""
         logger.debug(
-            "📥 Prefetching pages",
-            offset=offset,
-            size=size,
-            pages=size // DEFAULT_PAGE_SIZE,
+            "📥 Prefetching pages", offset=offset, size=size, pages=size // PAGE_SIZE
         )
 
-        if hasattr(os, "posix_fadvise") and hasattr(os, "POSIX_FADV_WILLNEED") and self.file:
+        if hasattr(os, "posix_fadvise") and self.file:
             # Linux: hint that we'll need this data soon
-            os.posix_fadvise(self.file.fileno(), offset, size, os.POSIX_FADV_WILLNEED)  # type: ignore[attr-defined]
+            os.posix_fadvise(self.file.fileno(), offset, size, os.POSIX_FADV_WILLNEED)
+            logger.debug("✅ posix_fadvise called")
         elif sys.platform == "win32" and self.mmap:
             # Windows: touch pages to load them
             # This is less efficient but works
             view = memoryview(self.mmap)[offset : offset + 1]
             _ = view[0]  # Touch first byte to trigger page load
+            logger.debug("✅ Windows page touch performed")
         else:
             logger.debug("⚠️ Prefetch not available on this platform")
 
-    def __enter__(self) -> Self:
+    def __enter__(self):
         return self
 
-    def __exit__(
-        self,
-        exc_type: type[BaseException] | None,
-        exc_val: BaseException | None,
-        exc_tb: Any,
-    ) -> None:
+    def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
 
 
@@ -218,7 +208,7 @@ class FileBackend(Backend):
     def __init__(self) -> None:
         self.file: BinaryIO | None = None
         self.path: Path | None = None
-        self._cache: dict[tuple[int, int], bytes] = {}  # Simple cache for frequently accessed regions
+        self._cache = {}  # Simple cache for frequently accessed regions
 
     def open(self, path: Path) -> None:
         """Open file with buffered I/O."""
@@ -226,7 +216,7 @@ class FileBackend(Backend):
         self.path = path
         file_size = path.stat().st_size
         logger.debug(
-            "📖 Opening buffered file backend",
+            "📁 Opening file backend",
             path=str(path),
             size_bytes=file_size,
             buffer_size=64 * 1024,
@@ -235,7 +225,8 @@ class FileBackend(Backend):
         # Use buffered I/O for better performance
         self.file = path.open("rb", buffering=64 * 1024)
 
-        time.perf_counter() - start_time
+        elapsed = time.perf_counter() - start_time
+        logger.debug("✅ File backend opened", elapsed_ms=elapsed * 1000)
 
     def close(self) -> None:
         """Close the file."""
@@ -249,6 +240,7 @@ class FileBackend(Backend):
             self.file.close()
             self.file = None
         self._cache.clear()
+        logger.debug("✅ File backend closed")
 
     def read_at(self, offset: int, size: int) -> bytes:
         """Read data at specific offset."""
@@ -278,7 +270,9 @@ class FileBackend(Backend):
                 for _ in range(20):
                     self._cache.pop(next(iter(self._cache)))
                     evicted += 1
-                logger.debug("🗑️ Cache eviction", evicted=evicted, remaining=len(self._cache))
+                logger.debug(
+                    "🗑️ Cache eviction", evicted=evicted, remaining=len(self._cache)
+                )
 
         elapsed = time.perf_counter() - start_time
         logger.debug(
@@ -295,15 +289,10 @@ class FileBackend(Backend):
         """Read slot data."""
         return self.read_at(descriptor.offset, descriptor.size)
 
-    def __enter__(self) -> Self:
+    def __enter__(self):
         return self
 
-    def __exit__(
-        self,
-        exc_type: type[BaseException] | None,
-        exc_val: BaseException | None,
-        exc_tb: Any,
-    ) -> None:
+    def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
 
 
@@ -342,22 +331,15 @@ class StreamBackend(Backend):
         # For streaming, we don't read the whole slot at once
         return self.read_at(descriptor.offset, min(descriptor.size, self.chunk_size))
 
-    def stream_slot(
-        self, descriptor: SlotDescriptor, chunk_size: int | None = None
-    ) -> Generator[bytes | memoryview, None, None]:
+    def stream_slot(self, descriptor: SlotDescriptor, chunk_size: int | None = None):
         """Stream slot data in chunks."""
         chunk_size = chunk_size or self.chunk_size
         return super().stream_slot(descriptor, chunk_size)
 
-    def __enter__(self) -> Self:
+    def __enter__(self):
         return self
 
-    def __exit__(
-        self,
-        exc_type: type[BaseException] | None,
-        exc_val: BaseException | None,
-        exc_tb: Any,
-    ) -> None:
+    def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
 
 
@@ -369,7 +351,7 @@ class HybridBackend(Backend):
         self.file: BinaryIO | None = None
         self.header_mmap: mmap.mmap | None = None
         self.path: Path | None = None
-        self._views: list[memoryview] = []  # Track memory views
+        self._views = []  # Track memory views
 
     def open(self, path: Path) -> None:
         """Open with partial memory mapping."""
@@ -381,7 +363,9 @@ class HybridBackend(Backend):
 
         # Memory-map just the header region
         map_size = min(self.header_size, file_size)
-        self.header_mmap = mmap.mmap(self.file.fileno(), map_size, access=mmap.ACCESS_READ)
+        self.header_mmap = mmap.mmap(
+            self.file.fileno(), map_size, access=mmap.ACCESS_READ
+        )
 
     def close(self) -> None:
         """Close mappings and file."""
@@ -403,7 +387,7 @@ class HybridBackend(Backend):
             raise RuntimeError("Backend not opened")
 
         # Use mmap for header region
-        if self.header_mmap and offset + size <= len(self.header_mmap):
+        if offset + size <= len(self.header_mmap):
             view = memoryview(self.header_mmap)[offset : offset + size]
             self._views.append(view)  # Track for cleanup
             return view
@@ -416,15 +400,10 @@ class HybridBackend(Backend):
         """Read slot using appropriate method."""
         return self.read_at(descriptor.offset, descriptor.size)
 
-    def __enter__(self) -> Self:
+    def __enter__(self):
         return self
 
-    def __exit__(
-        self,
-        exc_type: type[BaseException] | None,
-        exc_val: BaseException | None,
-        exc_tb: Any,
-    ) -> None:
+    def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
 
 
@@ -453,7 +432,9 @@ def create_backend(mode: int = ACCESS_AUTO, path: Path | None = None) -> Backend
                 )
             else:
                 mode = ACCESS_FILE
-                logger.debug("🤖 Auto-selected file backend", file_size_kb=file_size / 1024)
+                logger.debug(
+                    "🤖 Auto-selected file backend", file_size_kb=file_size / 1024
+                )
         else:
             mode = ACCESS_FILE
             logger.debug("🤖 Default to file backend", path_exists=False)
@@ -470,4 +451,4 @@ def create_backend(mode: int = ACCESS_AUTO, path: Path | None = None) -> Backend
         return HybridBackend()
 
 
-# 🌶️📦🔚
+# 📦💾🗺️🪄
