@@ -1,0 +1,4953 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Progressive Secure Package Format (PSPF/2025) - Cross-language packaging system for self-contained executables">
+      
+      
+        <meta name="author" content="provide.io">
+      
+      
+        <link rel="canonical" href="https://foundry.provide.io/flavorpack/roadmap/">
+      
+      
+        <link rel="prev" href="..">
+      
+      
+        <link rel="next" href="../getting-started/">
+      
+      
+      <link rel="icon" href="../assets/images/logo.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.23">
+    
+    
+      
+        <title>Roadmap - flavorpack</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.84d31ad4.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../.provide/foundry/theme/css/provide-theme.css">
+    
+      <link rel="stylesheet" href="../.provide/foundry/theme/css/termynal.css">
+    
+      <link rel="stylesheet" href="../css/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#flavorpack-roadmap" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="flavorpack" class="md-header__button md-logo" aria-label="flavorpack" data-md-component="logo">
+      
+  <img src="../assets/images/logo.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            flavorpack
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Roadmap
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/provide-io/flavorpack" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    provide-io/flavorpack
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="./" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Roadmap
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../getting-started/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Getting Started
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../tutorials/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Tutorials
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../guide/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  User Guide
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../api/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  API Guide
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../cookbook/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Cookbook
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../resources/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="flavorpack" class="md-nav__button md-logo" aria-label="flavorpack" data-md-component="logo">
+      
+  <img src="../assets/images/logo.svg" alt="logo">
+
+    </a>
+    flavorpack
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/provide-io/flavorpack" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    provide-io/flavorpack
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Home
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Roadmap
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    Roadmap
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#legend" class="md-nav__link">
+    <span class="md-ellipsis">
+      Legend
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-works-today-alpha" class="md-nav__link">
+    <span class="md-ellipsis">
+      What Works Today (Alpha)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="What Works Today (Alpha)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#core-functionality" class="md-nav__link">
+    <span class="md-ellipsis">
+      Core Functionality ✅
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#manifest-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Manifest Configuration ✅
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#platform-support" class="md-nav__link">
+    <span class="md-ellipsis">
+      Platform Support ✅
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#python-packaging" class="md-nav__link">
+    <span class="md-ellipsis">
+      Python Packaging ✅
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#security-integrity" class="md-nav__link">
+    <span class="md-ellipsis">
+      Security &amp; Integrity ✅
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#format-specification" class="md-nav__link">
+    <span class="md-ellipsis">
+      Format Specification ✅
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#planned-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      Planned Features
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Planned Features">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#manifest-configuration-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      Manifest Configuration Features 📋
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Manifest Configuration Features 📋">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#slot-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Slot Configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#python-version-selection" class="md-nav__link">
+    <span class="md-ellipsis">
+      Python Version Selection
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#build-environment-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Build Environment Configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dependency-resolution-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      Dependency Resolution Options
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#runtime-optimization" class="md-nav__link">
+    <span class="md-ellipsis">
+      Runtime Optimization
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Runtime Optimization">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#code-optimization-settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      Code Optimization Settings
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dependency-optimization" class="md-nav__link">
+    <span class="md-ellipsis">
+      Dependency Optimization
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#advanced-slot-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Advanced Slot Configuration
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Advanced Slot Configuration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#lifecycle-based-loading" class="md-nav__link">
+    <span class="md-ellipsis">
+      Lifecycle-Based Loading
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#platform-specific-slots" class="md-nav__link">
+    <span class="md-ellipsis">
+      Platform-Specific Slots
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#platform-specific-builds" class="md-nav__link">
+    <span class="md-ellipsis">
+      Platform-Specific Builds
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Platform-Specific Builds">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#platform-build-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Platform Build Configuration
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#environment-and-runtime-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      Environment and Runtime Features
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Environment and Runtime Features">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#persistent-service-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      Persistent Service Mode
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#advanced-environment-control" class="md-nav__link">
+    <span class="md-ellipsis">
+      Advanced Environment Control
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#format-enhancements" class="md-nav__link">
+    <span class="md-ellipsis">
+      Format Enhancements
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Format Enhancements">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#binary-format-improvements" class="md-nav__link">
+    <span class="md-ellipsis">
+      Binary Format Improvements
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Binary Format Improvements">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#compression-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      Compression Options
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#encryption-support" class="md-nav__link">
+    <span class="md-ellipsis">
+      Encryption Support
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#multi-platform-packages" class="md-nav__link">
+    <span class="md-ellipsis">
+      Multi-Platform Packages
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Multi-Platform Packages">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#universal-binaries" class="md-nav__link">
+    <span class="md-ellipsis">
+      Universal Binaries
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cli-and-tooling-enhancements" class="md-nav__link">
+    <span class="md-ellipsis">
+      CLI and Tooling Enhancements
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="CLI and Tooling Enhancements">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#package-management-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      Package Management Commands
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Package Management Commands">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#helpers-build-platform" class="md-nav__link">
+    <span class="md-ellipsis">
+      helpers build --platform
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#helpers-test" class="md-nav__link">
+    <span class="md-ellipsis">
+      helpers test
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#advanced-inspection" class="md-nav__link">
+    <span class="md-ellipsis">
+      Advanced Inspection
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Advanced Inspection">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dependency-visualization" class="md-nav__link">
+    <span class="md-ellipsis">
+      Dependency Visualization
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#slot-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      Slot Analysis
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#integration-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      Integration Features
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Integration Features">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#build-system-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Build System Integration
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Build System Integration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#setuppy-support" class="md-nav__link">
+    <span class="md-ellipsis">
+      Setup.py Support
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#poetry-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Poetry Integration
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cicd-templates" class="md-nav__link">
+    <span class="md-ellipsis">
+      CI/CD Templates
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#testing-and-quality" class="md-nav__link">
+    <span class="md-ellipsis">
+      Testing and Quality
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Testing and Quality">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#test-inclusion" class="md-nav__link">
+    <span class="md-ellipsis">
+      Test Inclusion
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#package-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Package Validation
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#documentation-improvements" class="md-nav__link">
+    <span class="md-ellipsis">
+      Documentation Improvements
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Documentation Improvements">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#api-documentation-generation" class="md-nav__link">
+    <span class="md-ellipsis">
+      API Documentation Generation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#interactive-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      Interactive Examples
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#advanced-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      Advanced Features
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Advanced Features">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#supply-chain-security" class="md-nav__link">
+    <span class="md-ellipsis">
+      Supply Chain Security
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#runtime-jit-loading" class="md-nav__link">
+    <span class="md-ellipsis">
+      Runtime JIT Loading
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#staged-payload-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      Staged Payload Architecture
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#community-and-ecosystem" class="md-nav__link">
+    <span class="md-ellipsis">
+      Community and Ecosystem
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Community and Ecosystem">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#package-registry" class="md-nav__link">
+    <span class="md-ellipsis">
+      Package Registry
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#plugin-system" class="md-nav__link">
+    <span class="md-ellipsis">
+      Plugin System
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#migration-to-v10" class="md-nav__link">
+    <span class="md-ellipsis">
+      Migration to v1.0
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Migration to v1.0">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#critical-for-v10" class="md-nav__link">
+    <span class="md-ellipsis">
+      Critical for v1.0
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nice-to-have-for-v10" class="md-nav__link">
+    <span class="md-ellipsis">
+      Nice to Have for v1.0
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#feature-status-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      Feature Status Summary
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#version-history" class="md-nav__link">
+    <span class="md-ellipsis">
+      Version History
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Version History">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#v020-current-alpha" class="md-nav__link">
+    <span class="md-ellipsis">
+      v0.2.0 (Current - Alpha)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#v010-initial-release" class="md-nav__link">
+    <span class="md-ellipsis">
+      v0.1.0 (Initial Release)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#planned-releases" class="md-nav__link">
+    <span class="md-ellipsis">
+      Planned Releases
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#contributing-to-roadmap" class="md-nav__link">
+    <span class="md-ellipsis">
+      Contributing to Roadmap
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#feature-request-process" class="md-nav__link">
+    <span class="md-ellipsis">
+      Feature Request Process
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#see-also" class="md-nav__link">
+    <span class="md-ellipsis">
+      See Also
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../getting-started/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    Getting Started
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            Getting Started
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Installation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Quick Start
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/first-package/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    First Package
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Examples
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../tutorials/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    Tutorials
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4" id="__nav_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Tutorials
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/httpie-wrapper/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    HTTPie Wrapper
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../guide/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    User Guide
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            User Guide
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../guide/concepts/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    Core Concepts
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5_2" id="__nav_5_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_2">
+            <span class="md-nav__icon md-icon"></span>
+            Core Concepts
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/concepts/pspf-format/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    PSPF Format
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/concepts/package-structure/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Package Structure
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/concepts/workenv/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Work Environments
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/concepts/security/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Security Model
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/concepts/helpers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Helper Binaries
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../guide/packaging/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    Building Packages
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5_3" id="__nav_5_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_3">
+            <span class="md-nav__icon md-icon"></span>
+            Building Packages
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/packaging/python/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Python Applications
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/packaging/manifest/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Manifest Files
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/packaging/configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Configuration
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/packaging/signing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Signing Packages
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/packaging/platforms/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Platform Support
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../guide/usage/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    Using Packages
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5_4" id="__nav_5_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_4">
+            <span class="md-nav__icon md-icon"></span>
+            Using Packages
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/usage/running/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Running Packages
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/usage/cli/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    CLI Reference
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/usage/inspection/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Inspecting Packages
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/usage/cache/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Cache Management
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/usage/environment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Environment Variables
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../guide/advanced/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    Advanced Topics
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5_5" id="__nav_5_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_5">
+            <span class="md-nav__icon md-icon"></span>
+            Advanced Topics
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/advanced/cross-language/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Cross-Language Support
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/advanced/launchers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Custom Launchers
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/advanced/builders/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Custom Builders
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/advanced/performance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Performance Tuning
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/advanced/debugging/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Debugging
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../api/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    API Guide
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6" id="__nav_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            API Guide
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/packaging/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Packaging API
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/builder/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Builder API
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/reader/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Reader API
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/crypto/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Crypto API
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../cookbook/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    Cookbook
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_7" id="__nav_7_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            Cookbook
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../cookbook/examples/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    Examples
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_7_2" id="__nav_7_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_2">
+            <span class="md-nav__icon md-icon"></span>
+            Examples
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cookbook/examples/cli-tool/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    CLI Tools
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cookbook/examples/web-app/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Web Applications
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../cookbook/recipes/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    Recipes
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_7_3" id="__nav_7_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_3">
+            <span class="md-nav__icon md-icon"></span>
+            Recipes
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cookbook/recipes/docker/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Docker Integration
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cookbook/recipes/ci-cd/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    CI/CD Pipelines
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cookbook/recipes/multi-platform/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Multi-Platform Builds
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../resources/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    Reference
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_8" id="__nav_8_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            Reference
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/requirements/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    System Requirements
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Glossary
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_8_4" id="__nav_8_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Specification
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8_4">
+            <span class="md-nav__icon md-icon"></span>
+            Specification
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/spec/pspf-2025/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    PSPF 2025
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/spec/SLOT_DESCRIPTOR_SPECIFICATION/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Slot Descriptor Spec
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/spec/fep-0001-core-format-and-operation-chains/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    FEP-0001 Core Format
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/spec/fep-0002-json-metadata-format/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    FEP-0002 JSON Metadata
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/spec/fep-0003-operation-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    FEP-0003 Operation Registry
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8_4_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_8_4_6" id="__nav_8_4_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Future Enhancements
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_8_4_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8_4_6">
+            <span class="md-nav__icon md-icon"></span>
+            Future Enhancements
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/spec/future/fep-0004-supply-chain-jit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    FEP-0004 Supply Chain JIT
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/spec/future/fep-0005-runtime-jit-loading/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    FEP-0005 Runtime JIT
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/spec/future/fep-0006-staged-payload-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    FEP-0006 Staged Payload
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../troubleshooting/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    Troubleshooting
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_8_5" id="__nav_8_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8_5">
+            <span class="md-nav__icon md-icon"></span>
+            Troubleshooting
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../troubleshooting/common/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Common Issues
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../troubleshooting/errors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Error Messages
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8_5_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../troubleshooting/platforms/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    Platform-Specific
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_8_5_3" id="__nav_8_5_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_8_5_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8_5_3">
+            <span class="md-nav__icon md-icon"></span>
+            Platform-Specific
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../troubleshooting/platforms/macos/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    macOS Issues
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../troubleshooting/platforms/linux/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Linux Issues
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../troubleshooting/platforms/windows/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Windows Issues
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../troubleshooting/faq/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    FAQ
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../development/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    Development
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_8_6" id="__nav_8_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8_6">
+            <span class="md-nav__icon md-icon"></span>
+            Development
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Contributing
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Architecture
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/helpers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Building Helpers
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8_6_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../development/testing/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    Testing
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_8_6_4" id="__nav_8_6_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_8_6_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8_6_4">
+            <span class="md-nav__icon md-icon"></span>
+            Testing
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/testing/unit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Unit Tests
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/testing/taster-vs-pretaster/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Taster vs Pretaster
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/testing/integration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Integration Tests
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/testing/cross-language/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Cross-Language Tests
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/ci-cd/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    CI/CD
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/release/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Release Process
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8_7" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../community/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    Community
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_8_7" id="__nav_8_7_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8_7">
+            <span class="md-nav__icon md-icon"></span>
+            Community
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../community/support/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Getting Support
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../community/discussions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Discussions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../community/contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Contributing
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../community/blog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Blog
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../community/changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Changelog
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../community/license/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    License
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/provide-io/flavorpack/edit/main/docs/roadmap.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+    
+      
+    
+    <a href="https://github.com/provide-io/flavorpack/raw/main/docs/roadmap.md" title="View source of this page" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
+    </a>
+  
+
+
+<h1 id="flavorpack-roadmap">FlavorPack Roadmap</h1>
+<p>This roadmap shows the current implementation status and planned features for FlavorPack. Use this to understand what works today versus what's coming in future releases.</p>
+<p>!!! info "Version Status"
+    FlavorPack is currently in <strong>alpha</strong> stage. APIs, file formats, and commands may change without notice.</p>
+<h2 id="legend">Legend</h2>
+<ul>
+<li>✅ <strong>Implemented</strong> - Works today, documented and tested</li>
+<li>🚧 <strong>In Progress</strong> - Partially implemented or under active development</li>
+<li>📋 <strong>Planned</strong> - Designed but not yet implemented</li>
+<li>💡 <strong>Proposed</strong> - Under consideration for future releases</li>
+</ul>
+<hr />
+<h2 id="what-works-today-alpha">What Works Today (Alpha)</h2>
+<h3 id="core-functionality">Core Functionality ✅</h3>
+<p><strong>Package Creation</strong>:</p>
+<ul>
+<li>✅ Build PSPF/2025 packages from Python applications</li>
+<li>✅ Embed native Go/Rust launchers</li>
+<li>✅ Multiple builder/launcher combinations (Go + Rust)</li>
+<li>✅ Cross-platform package building</li>
+</ul>
+<p><strong>Package Execution</strong>:</p>
+<ul>
+<li>✅ Self-extracting executables</li>
+<li>✅ Work environment caching with checksum validation</li>
+<li>✅ Progressive extraction (extract once, cache forever)</li>
+<li>✅ Ed25519 signature verification</li>
+</ul>
+<p><strong>CLI Commands</strong>:</p>
+<ul>
+<li>✅ <code>flavor pack</code> - Create packages</li>
+<li>✅ <code>flavor verify</code> - Verify integrity and signatures</li>
+<li>✅ <code>flavor inspect</code> - Quick package inspection</li>
+<li>✅ <code>flavor extract</code> - Extract single slot</li>
+<li>✅ <code>flavor extract-all</code> - Extract all slots</li>
+<li>✅ <code>flavor keygen</code> - Generate Ed25519 key pairs</li>
+<li>✅ <code>flavor workenv</code> - Cache management (list, info, clean, remove, inspect)</li>
+<li>✅ <code>flavor helpers</code> - Helper binary management (list, info, build, clean, test)</li>
+<li>✅ <code>flavor clean</code> - Clean caches and artifacts</li>
+</ul>
+<h3 id="manifest-configuration">Manifest Configuration ✅</h3>
+<p><strong>Currently Supported Fields</strong>:</p>
+<pre><code class="language-toml">[project]
+name = &quot;myapp&quot;                    # ✅ Required
+version = &quot;1.0.0&quot;                 # ✅ Required
+dependencies = [...]              # ✅ Parsed and included
+
+[tool.flavor]
+entry_point = &quot;myapp:main&quot;        # ✅ Required (module:function format)
+package_name = &quot;custom-name&quot;      # ✅ Optional override
+
+[tool.flavor.metadata]
+package_name = &quot;override&quot;         # ✅ Optional
+
+[tool.flavor.build]
+dependencies = [...]              # ✅ Build-time dependencies
+
+[tool.flavor.execution.runtime.env]
+unset = [&quot;VAR1&quot;, &quot;VAR2&quot;]         # ✅ Remove variables
+pass = [&quot;HOME&quot;, &quot;PATH&quot;]          # ✅ Pass through from host
+set = { KEY = &quot;value&quot; }          # ✅ Set variables
+map = { OLD = &quot;NEW&quot; }            # ✅ Rename variables
+</code></pre>
+<h3 id="platform-support">Platform Support ✅</h3>
+<p>--8&lt;-- "includes/platform-support.md"</p>
+<h3 id="python-packaging">Python Packaging ✅</h3>
+<ul>
+<li>✅ Standard <code>pyproject.toml</code> manifest parsing</li>
+<li>✅ Dependency resolution via UV</li>
+<li>✅ Entry point detection and configuration</li>
+<li>✅ CLI script extraction from <code>[project.scripts]</code></li>
+</ul>
+<h3 id="security-integrity">Security &amp; Integrity ✅</h3>
+<ul>
+<li>✅ Ed25519 signature generation and verification</li>
+<li>✅ SHA-256 checksums for all slots</li>
+<li>✅ Package integrity validation</li>
+<li>✅ Key generation via <code>flavor keygen</code></li>
+<li>✅ Signing via CLI options (<code>--private-key</code>, <code>--public-key</code>)</li>
+</ul>
+<h3 id="format-specification">Format Specification ✅</h3>
+<ul>
+<li>✅ PSPF/2025 format implemented</li>
+<li>✅ 64-byte SlotDescriptor binary format</li>
+<li>✅ 8KB index block with metadata</li>
+<li>✅ Operation chains (packed uint64 format)</li>
+<li>✅ Magic markers for format identification</li>
+<li>✅ Cross-language format compatibility (Python/Go/Rust)</li>
+</ul>
+<hr />
+<h2 id="planned-features">Planned Features</h2>
+<p>The following features are documented in guides but are <strong>not yet implemented</strong>. They represent the planned evolution of FlavorPack.</p>
+<h3 id="manifest-configuration-features">Manifest Configuration Features 📋</h3>
+<h4 id="slot-configuration">Slot Configuration</h4>
+<pre><code class="language-toml">[[tool.flavor.slots]]
+id = &quot;config&quot;
+source = &quot;config/&quot;
+purpose = &quot;configuration&quot;
+lifecycle = &quot;persistent&quot;
+extract_to = &quot;{workenv}/config&quot;
+permissions = &quot;0644&quot;
+</code></pre>
+<p><strong>Status</strong>: 📋 Planned
+<strong>Use Case</strong>: Enable custom slot purposes, lifecycles, platform-specific slots, and lazy-loaded content</p>
+<h4 id="python-version-selection">Python Version Selection</h4>
+<pre><code class="language-toml">[tool.flavor.python]
+version = &quot;3.11&quot;  # Exact version to use
+min_version = &quot;3.11&quot;  # Minimum acceptable
+max_version = &quot;3.13&quot;  # Maximum acceptable
+</code></pre>
+<p><strong>Status</strong>: 📋 Planned
+<strong>Priority</strong>: High
+<strong>Target Version</strong>: v0.3.0
+<strong>Target Date</strong>: Q1 2026
+<strong>Complexity</strong>: Medium</p>
+<p><strong>Planned Capabilities</strong>:
+- Detect Python version from <code>pyproject.toml</code>
+- Support <code>requires-python</code> specification
+- Automatic Python installation if missing
+- Multiple Python version support in single package</p>
+<p><strong>Current Workaround</strong>: Package uses the Python version from your build environment</p>
+<h4 id="build-environment-configuration">Build Environment Configuration</h4>
+<pre><code class="language-toml">[tool.flavor.build]
+# Custom venv location
+venv_path = &quot;.flavor-venv&quot;
+
+# Use system site packages
+system_site_packages = false
+
+# Environment variables for build
+env = {
+    &quot;NUMPY_SETUP_DEBUG&quot;: &quot;1&quot;,
+    &quot;PIP_NO_CACHE_DIR&quot;: &quot;1&quot;
+}
+
+# Pre-install commands
+pre_install_commands = [
+    &quot;pip install --upgrade pip setuptools wheel&quot;,
+    &quot;pip install numpy==1.24.0&quot;
+]
+
+# Pre-build validation
+pre_build_commands = [
+    &quot;pytest tests/ -v&quot;,
+    &quot;mypy src/ --strict&quot;
+]
+</code></pre>
+<p><strong>Status</strong>: 📋 Planned
+<strong>Priority</strong>: High
+<strong>Complexity</strong>: Medium</p>
+<h4 id="dependency-resolution-options">Dependency Resolution Options</h4>
+<pre><code class="language-toml">[tool.flavor.build]
+# Use pip instead of uv
+use_pip = true
+
+# Custom index URL
+index_url = &quot;https://pypi.company.com/simple&quot;
+
+# Extra index URLs
+extra_index_urls = [
+    &quot;https://pypi.org/simple&quot;
+]
+
+# Trusted hosts
+trusted_hosts = [
+    &quot;pypi.company.com&quot;
+]
+</code></pre>
+<p><strong>Status</strong>: 📋 Planned
+<strong>Priority</strong>: Medium
+<strong>Complexity</strong>: Low-Medium</p>
+<hr />
+<h3 id="runtime-optimization">Runtime Optimization</h3>
+<h4 id="code-optimization-settings">Code Optimization Settings</h4>
+<pre><code class="language-toml">[tool.flavor.runtime]
+# Python optimization level
+optimization_level = 2  # -OO flag
+
+# Compile .py to .pyc
+compile_bytecode = true
+
+# Strip docstrings
+strip_docstrings = true
+</code></pre>
+<p><strong>Status</strong>: 📋 Planned
+<strong>Priority</strong>: Low
+<strong>Complexity</strong>: Low</p>
+<h4 id="dependency-optimization">Dependency Optimization</h4>
+<pre><code class="language-toml">[tool.flavor.build]
+# Exclude test/docs from dependencies
+exclude_from_deps = [
+    &quot;*/tests/*&quot;,
+    &quot;*/test/*&quot;,
+    &quot;*/docs/*&quot;
+]
+
+# Only runtime dependencies
+no_dev_deps = true
+
+# Requirements lockfile
+requirements_file = &quot;requirements.lock&quot;
+</code></pre>
+<p><strong>Status</strong>: 📋 Planned
+<strong>Priority</strong>: Medium
+<strong>Complexity</strong>: Medium</p>
+<hr />
+<h3 id="advanced-slot-configuration">Advanced Slot Configuration</h3>
+<h4 id="lifecycle-based-loading">Lifecycle-Based Loading</h4>
+<pre><code class="language-toml">[[tool.flavor.slots]]
+id = &quot;heavy-models&quot;
+source = &quot;models/&quot;
+lifecycle = &quot;lazy&quot;  # Load only when accessed
+
+[[tool.flavor.slots]]
+id = &quot;tests&quot;
+source = &quot;tests/&quot;
+lifecycle = &quot;volatile&quot;  # Don't persist between runs
+
+[[tool.flavor.slots]]
+id = &quot;config&quot;
+source = &quot;config/&quot;
+lifecycle = &quot;persistent&quot;  # Keep across runs
+</code></pre>
+<p><strong>Status</strong>: 📋 Planned
+<strong>Priority</strong>: Medium
+<strong>Complexity</strong>: High</p>
+<h4 id="platform-specific-slots">Platform-Specific Slots</h4>
+<pre><code class="language-toml">[[tool.flavor.slots]]
+id = &quot;native-libs&quot;
+source = &quot;libs/linux/&quot;
+target = &quot;lib/&quot;
+platform = &quot;linux&quot;
+
+[[tool.flavor.slots]]
+id = &quot;native-libs-mac&quot;
+source = &quot;libs/darwin/&quot;
+target = &quot;lib/&quot;
+platform = &quot;darwin&quot;
+</code></pre>
+<p><strong>Status</strong>: 📋 Planned
+<strong>Priority</strong>: Medium
+<strong>Complexity</strong>: Medium</p>
+<hr />
+<h3 id="platform-specific-builds">Platform-Specific Builds</h3>
+<h4 id="platform-build-configuration">Platform Build Configuration</h4>
+<pre><code class="language-toml">[tool.flavor.build.platform.linux_amd64]
+env = {
+    &quot;CFLAGS&quot;: &quot;-O3 -march=x86-64&quot;,
+    &quot;LDFLAGS&quot;: &quot;-Wl,-rpath,$ORIGIN&quot;
+}
+
+[tool.flavor.build.platform.darwin_arm64]
+env = {
+    &quot;ARCHFLAGS&quot;: &quot;-arch arm64&quot;,
+    &quot;MACOSX_DEPLOYMENT_TARGET&quot;: &quot;11.0&quot;
+}
+</code></pre>
+<p><strong>Status</strong>: 📋 Planned
+<strong>Priority</strong>: Low
+<strong>Complexity</strong>: Medium</p>
+<hr />
+<h3 id="environment-and-runtime-features">Environment and Runtime Features</h3>
+<h4 id="persistent-service-mode">Persistent Service Mode</h4>
+<pre><code class="language-toml">[tool.flavor.runtime]
+# Keep server running
+persistent = true
+
+# Port configuration
+port = 8000
+</code></pre>
+<p><strong>Status</strong>: 📋 Planned
+<strong>Priority</strong>: Medium
+<strong>Complexity</strong>: High</p>
+<h4 id="advanced-environment-control">Advanced Environment Control</h4>
+<pre><code class="language-toml">[tool.flavor.execution.runtime.env]
+# Clear all host environment
+unset = [&quot;*&quot;]
+
+# Pass through specific variables
+pass = [&quot;HOME&quot;, &quot;USER&quot;, &quot;TERM&quot;]
+
+# Set application variables
+set = {
+    PYTHONPATH = &quot;$FLAVOR_WORKENV/lib&quot;,
+    DEBUG = &quot;0&quot;
+}
+
+# Map/rename variables
+[tool.flavor.execution.runtime.env.map]
+OLD_VAR = &quot;NEW_VAR&quot;
+</code></pre>
+<p><strong>Status</strong>: 🟢 Partially Implemented
+<strong>Priority</strong>: High
+<strong>Complexity</strong>: Medium
+<strong>Note</strong>: Basic environment control exists, advanced features planned</p>
+<hr />
+<h2 id="format-enhancements">Format Enhancements</h2>
+<h3 id="binary-format-improvements">Binary Format Improvements</h3>
+<h4 id="compression-options">Compression Options</h4>
+<pre><code class="language-toml">[[tool.flavor.slots]]
+id = &quot;data&quot;
+source = &quot;data/&quot;
+compression = &quot;zstd&quot;  # Specific compression
+compression_level = 19  # Maximum compression
+</code></pre>
+<p><strong>Status</strong>: 🟡 Basic Implementation
+<strong>Priority</strong>: Low
+<strong>Complexity</strong>: Low
+<strong>Note</strong>: Compression exists but not configurable</p>
+<h4 id="encryption-support">Encryption Support</h4>
+<pre><code class="language-toml">[[tool.flavor.slots]]
+id = &quot;secrets&quot;
+source = &quot;secrets/&quot;
+encryption = &quot;aes256&quot;
+key_source = &quot;env:ENCRYPTION_KEY&quot;
+</code></pre>
+<p><strong>Status</strong>: 🔴 Not Started
+<strong>Priority</strong>: Medium
+<strong>Complexity</strong>: High
+<strong>Note</strong>: See FEP-0001 for encryption operation codes</p>
+<hr />
+<h3 id="multi-platform-packages">Multi-Platform Packages</h3>
+<h4 id="universal-binaries">Universal Binaries</h4>
+<p>Create packages that work across multiple platforms in a single file:</p>
+<pre><code class="language-toml">[tool.flavor]
+platforms = [&quot;linux_amd64&quot;, &quot;darwin_arm64&quot;, &quot;windows_amd64&quot;]
+
+[[tool.flavor.launchers]]
+platform = &quot;linux_amd64&quot;
+binary = &quot;dist/bin/launcher-linux&quot;
+
+[[tool.flavor.launchers]]
+platform = &quot;darwin_arm64&quot;
+binary = &quot;dist/bin/launcher-darwin&quot;
+</code></pre>
+<p><strong>Status</strong>: 🔴 Not Started
+<strong>Priority</strong>: Low
+<strong>Complexity</strong>: Very High
+<strong>Blockers</strong>: Format specification changes required</p>
+<hr />
+<h2 id="cli-and-tooling-enhancements">CLI and Tooling Enhancements</h2>
+<h3 id="package-management-commands">Package Management Commands</h3>
+<h4 id="helpers-build-platform">helpers build --platform</h4>
+<p>Build helpers for specific platforms from CLI:</p>
+<pre><code class="language-bash">flavor helpers build --platform linux_amd64
+flavor helpers build --platform darwin_arm64 --lang rust
+</code></pre>
+<p><strong>Status</strong>: 🔴 Not Started
+<strong>Priority</strong>: Low
+<strong>Complexity</strong>: Medium
+<strong>Note</strong>: Currently documented but not implemented</p>
+<h4 id="helpers-test">helpers test</h4>
+<p>Comprehensive helper testing:</p>
+<pre><code class="language-bash">flavor helpers test
+flavor helpers test --helper flavor-rs-launcher-darwin_arm64
+flavor helpers test --verbose
+</code></pre>
+<p><strong>Status</strong>: 🟡 Basic Implementation
+<strong>Priority</strong>: Low
+<strong>Complexity</strong>: Low
+<strong>Note</strong>: Command exists but may not be fully functional</p>
+<h3 id="advanced-inspection">Advanced Inspection</h3>
+<h4 id="dependency-visualization">Dependency Visualization</h4>
+<pre><code class="language-bash">flavor inspect myapp.psp --show-deps
+flavor inspect myapp.psp --dependency-tree
+</code></pre>
+<p><strong>Status</strong>: 🔴 Not Started
+<strong>Priority</strong>: Low
+<strong>Complexity</strong>: Medium</p>
+<h4 id="slot-analysis">Slot Analysis</h4>
+<pre><code class="language-bash">flavor inspect myapp.psp --slot-details
+flavor inspect myapp.psp --compression-stats
+</code></pre>
+<p><strong>Status</strong>: 🔴 Not Started
+<strong>Priority</strong>: Low
+<strong>Complexity</strong>: Low</p>
+<hr />
+<h2 id="integration-features">Integration Features</h2>
+<h3 id="build-system-integration">Build System Integration</h3>
+<h4 id="setuppy-support">Setup.py Support</h4>
+<p>Support for legacy <code>setup.py</code> in addition to <code>pyproject.toml</code>:</p>
+<pre><code class="language-bash">flavor pack --manifest setup.py
+</code></pre>
+<p><strong>Status</strong>: 🔴 Not Started
+<strong>Priority</strong>: Very Low
+<strong>Complexity</strong>: Medium
+<strong>Note</strong>: Modern projects should use pyproject.toml</p>
+<h4 id="poetry-integration">Poetry Integration</h4>
+<p>Native support for Poetry configurations:</p>
+<pre><code class="language-bash">flavor pack --manifest poetry.lock
+</code></pre>
+<p><strong>Status</strong>: 🔴 Not Started
+<strong>Priority</strong>: Low
+<strong>Complexity</strong>: Medium</p>
+<h3 id="cicd-templates">CI/CD Templates</h3>
+<p>Pre-built CI/CD configurations:</p>
+<ul>
+<li>GitHub Actions workflow templates</li>
+<li>GitLab CI/CD templates</li>
+<li>Jenkins pipeline examples</li>
+</ul>
+<p><strong>Status</strong>: 🔴 Not Started
+<strong>Priority</strong>: Medium
+<strong>Complexity</strong>: Low
+<strong>Note</strong>: Documentation task, not implementation</p>
+<hr />
+<h2 id="testing-and-quality">Testing and Quality</h2>
+<h3 id="test-inclusion">Test Inclusion</h3>
+<pre><code class="language-toml">[tool.flavor.build]
+# Include tests in package
+include_tests = true
+
+[[tool.flavor.slots]]
+id = &quot;tests&quot;
+source = &quot;tests/&quot;
+purpose = &quot;tests&quot;
+lifecycle = &quot;volatile&quot;
+</code></pre>
+<p><strong>Status</strong>: 🔴 Not Started
+<strong>Priority</strong>: Low
+<strong>Complexity</strong>: Low</p>
+<h3 id="package-validation">Package Validation</h3>
+<pre><code class="language-bash"># Validate package before distribution
+flavor pack --validate-before-sign
+
+# Run smoke tests on packaged app
+flavor pack --test-command &quot;pytest tests/smoke/&quot;
+</code></pre>
+<p><strong>Status</strong>: 🔴 Not Started
+<strong>Priority</strong>: Medium
+<strong>Complexity</strong>: Medium</p>
+<hr />
+<h2 id="documentation-improvements">Documentation Improvements</h2>
+<h3 id="api-documentation-generation">API Documentation Generation</h3>
+<p>Auto-generate API docs from code:</p>
+<ul>
+<li>Complete <code>docs/api/packaging.md</code></li>
+<li>Complete <code>docs/api/builder.md</code></li>
+<li>Complete <code>docs/api/reader.md</code></li>
+<li>Complete <code>docs/api/crypto.md</code></li>
+</ul>
+<p><strong>Status</strong>: 🟡 In Progress
+<strong>Priority</strong>: High
+<strong>Complexity</strong>: Low
+<strong>Note</strong>: Stub pages exist, need full content</p>
+<h3 id="interactive-examples">Interactive Examples</h3>
+<p>Live, runnable examples in documentation:</p>
+<pre><code class="language-bash"># Try FlavorPack online
+flavor demo hello-world
+flavor demo web-app
+flavor demo cli-tool
+</code></pre>
+<p><strong>Status</strong>: 🔴 Not Started
+<strong>Priority</strong>: Low
+<strong>Complexity</strong>: Medium</p>
+<hr />
+<h2 id="advanced-features">Advanced Features</h2>
+<h3 id="supply-chain-security">Supply Chain Security</h3>
+<p>See <a href="../reference/spec/future/fep-0004-supply-chain-jit/">FEP-0004: Supply Chain JIT</a>:</p>
+<ul>
+<li>Reproducible builds with attestation</li>
+<li>SBOM (Software Bill of Materials) generation</li>
+<li>Provenance tracking</li>
+<li>Signature chains</li>
+</ul>
+<p><strong>Status</strong>: 🔴 Not Started
+<strong>Priority</strong>: Medium
+<strong>Complexity</strong>: Very High</p>
+<h3 id="runtime-jit-loading">Runtime JIT Loading</h3>
+<p>See <a href="../reference/spec/future/fep-0005-runtime-jit-loading/">FEP-0005: Runtime JIT Loading</a>:</p>
+<ul>
+<li>Lazy loading of dependencies</li>
+<li>On-demand extraction</li>
+<li>Streaming execution</li>
+</ul>
+<p><strong>Status</strong>: 🔴 Not Started
+<strong>Priority</strong>: Low
+<strong>Complexity</strong>: Very High</p>
+<h3 id="staged-payload-architecture">Staged Payload Architecture</h3>
+<p>See <a href="../reference/spec/future/fep-0006-staged-payload-architecture/">FEP-0006: Staged Payload Architecture</a>:</p>
+<ul>
+<li>Multi-stage package execution</li>
+<li>Progressive enhancement</li>
+<li>Delta updates</li>
+</ul>
+<p><strong>Status</strong>: 🔴 Not Started
+<strong>Priority</strong>: Low
+<strong>Complexity</strong>: Very High</p>
+<hr />
+<h2 id="community-and-ecosystem">Community and Ecosystem</h2>
+<h3 id="package-registry">Package Registry</h3>
+<p>Public registry for sharing PSPF packages:</p>
+<pre><code class="language-bash">flavor publish myapp.psp
+flavor install popular-package
+</code></pre>
+<p><strong>Status</strong>: 🔴 Not Started
+<strong>Priority</strong>: Low
+<strong>Complexity</strong>: Very High
+<strong>Blockers</strong>: Requires infrastructure</p>
+<h3 id="plugin-system">Plugin System</h3>
+<p>Extend FlavorPack with plugins:</p>
+<pre><code class="language-bash">flavor plugin install compression-extras
+flavor plugin install cloud-deploy
+</code></pre>
+<p><strong>Status</strong>: 🔴 Not Started
+<strong>Priority</strong>: Low
+<strong>Complexity</strong>: High</p>
+<hr />
+<h2 id="migration-to-v10">Migration to v1.0</h2>
+<p>Features required before declaring v1.0 stable:</p>
+<h3 id="critical-for-v10">Critical for v1.0</h3>
+<ul>
+<li>✅ Core PSPF/2025 format implementation</li>
+<li>✅ Ed25519 signature verification</li>
+<li>✅ Cross-language (Python/Go/Rust) compatibility</li>
+<li>✅ Basic Python packaging</li>
+<li>📋 Complete API documentation</li>
+<li>📋 Comprehensive test coverage</li>
+<li>📋 Production-ready error handling</li>
+<li>📋 Performance optimization</li>
+<li>📋 Windows support (currently beta)</li>
+</ul>
+<h3 id="nice-to-have-for-v10">Nice to Have for v1.0</h3>
+<ul>
+<li>Environment variable consolidation</li>
+<li>Advanced build configuration</li>
+<li>Dependency optimization</li>
+<li>Platform-specific builds</li>
+<li>CI/CD integration templates</li>
+</ul>
+<hr />
+<h2 id="feature-status-summary">Feature Status Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Status</th>
+<th>Priority</th>
+<th>Target Version</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Python Version Detection</td>
+<td>📋 Planned</td>
+<td>High</td>
+<td>v0.3.0 (Q1 2026)</td>
+</tr>
+<tr>
+<td>Build Environment Config</td>
+<td>📋 Planned</td>
+<td>High</td>
+<td>v0.3.0</td>
+</tr>
+<tr>
+<td>Dependency Optimization</td>
+<td>📋 Planned</td>
+<td>High</td>
+<td>v0.3.0</td>
+</tr>
+<tr>
+<td>Runtime Optimization</td>
+<td>📋 Planned</td>
+<td>Medium</td>
+<td>v0.4.0</td>
+</tr>
+<tr>
+<td>Advanced Slot Config</td>
+<td>📋 Planned</td>
+<td>Medium</td>
+<td>v0.4.0</td>
+</tr>
+<tr>
+<td>Platform-Specific Builds</td>
+<td>📋 Planned</td>
+<td>Low</td>
+<td>v0.4.0</td>
+</tr>
+<tr>
+<td>Persistent Service Mode</td>
+<td>📋 Planned</td>
+<td>Medium</td>
+<td>v0.4.0</td>
+</tr>
+<tr>
+<td>Compression Options</td>
+<td>🟡 In Progress</td>
+<td>Low</td>
+<td>v0.3.0</td>
+</tr>
+<tr>
+<td>Encryption Support</td>
+<td>🔴 Not Started</td>
+<td>Medium</td>
+<td>v0.5.0</td>
+</tr>
+<tr>
+<td>Multi-Platform Packages</td>
+<td>🔴 Not Started</td>
+<td>Low</td>
+<td>v0.6.0</td>
+</tr>
+<tr>
+<td>Windows Full Support</td>
+<td>🚧 In Progress</td>
+<td>High</td>
+<td>v0.3.0</td>
+</tr>
+<tr>
+<td>Complete API Docs</td>
+<td>🟡 In Progress</td>
+<td>High</td>
+<td>v0.3.0</td>
+</tr>
+<tr>
+<td>Supply Chain Security</td>
+<td>🔴 Not Started</td>
+<td>Medium</td>
+<td>v1.0.0</td>
+</tr>
+<tr>
+<td>Plugin System</td>
+<td>🔴 Not Started</td>
+<td>Low</td>
+<td>v0.5.0</td>
+</tr>
+<tr>
+<td>Package Registry</td>
+<td>🔴 Not Started</td>
+<td>Low</td>
+<td>Future</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="version-history">Version History</h2>
+<h3 id="v020-current-alpha">v0.2.0 (Current - Alpha)</h3>
+<ul>
+<li>✅ Core PSPF/2025 format implementation</li>
+<li>✅ Basic Python packaging with UV</li>
+<li>✅ Cross-platform helpers (macOS, Linux)</li>
+<li>✅ CLI tooling (pack, verify, inspect, extract, keygen, workenv, helpers)</li>
+<li>✅ Ed25519 signature support</li>
+<li>✅ Work environment caching</li>
+<li>✅ Comprehensive documentation</li>
+</ul>
+<h3 id="v010-initial-release">v0.1.0 (Initial Release)</h3>
+<ul>
+<li>Proof of concept</li>
+<li>Basic PSPF format</li>
+<li>Single platform support</li>
+</ul>
+<h3 id="planned-releases">Planned Releases</h3>
+<p><strong>v0.3.0</strong> (Q1 2026) - Python Management &amp; Windows
+- Python version detection and selection
+- Build environment configuration
+- Dependency optimization
+- Complete Windows support
+- Complete API documentation</p>
+<p><strong>v0.4.0</strong> (Q2 2026) - Advanced Features
+- Runtime optimization
+- Advanced slot configuration
+- Platform-specific builds
+- Persistent service mode
+- Plugin system foundation</p>
+<p><strong>v0.5.0</strong> (Q3 2026) - Security &amp; Integration
+- Encryption support
+- Enhanced CI/CD templates
+- Plugin marketplace
+- Poetry/PDM integration</p>
+<p><strong>v1.0.0</strong> (Q4 2026) - Stable Release
+- Production-ready stability
+- Complete test coverage
+- Supply chain security
+- Performance optimizations
+- Long-term support commitment</p>
+<hr />
+<h2 id="contributing-to-roadmap">Contributing to Roadmap</h2>
+<p>Want to help implement roadmap features?</p>
+<ol>
+<li><strong>Pick a Feature:</strong> Choose from "Planned" features above</li>
+<li><strong>Discuss Approach:</strong> Open GitHub Discussion</li>
+<li><strong>Create FEP:</strong> Submit FlavorPack Enhancement Proposal if needed</li>
+<li><strong>Submit PR:</strong> Implement with tests and docs</li>
+</ol>
+<p>See our <a href="../development/contributing/">Contributing Guide</a> for detailed instructions.</p>
+<hr />
+<h2 id="feature-request-process">Feature Request Process</h2>
+<p>Have an idea for FlavorPack? Here's how to suggest features:</p>
+<ol>
+<li><strong>Check Existing Roadmap:</strong> Review this document first</li>
+<li><strong>Search Issues:</strong> Check if already proposed on <a href="https://github.com/provide-io/flavorpack/issues">GitHub Issues</a></li>
+<li><strong>Submit FEP:</strong> Create FlavorPack Enhancement Proposal for major features</li>
+<li><strong>Community Discussion:</strong> Discuss in <a href="https://github.com/provide-io/flavorpack/discussions">GitHub Discussions</a></li>
+</ol>
+<hr />
+<h2 id="see-also">See Also</h2>
+<ul>
+<li><a href="../guide/">Current Documentation</a> - What's available now</li>
+<li><a href="../reference/spec/fep-0001-core-format-and-operation-chains/">PSPF Specification</a> - Format details</li>
+<li><a href="../reference/spec/pspf-2025/">Future Enhancement Proposals</a> - Detailed FEPs</li>
+<li><a href="../community/changelog/">Changelog</a> - What's been implemented</li>
+</ul>
+<hr />
+<p><strong>Last Updated:</strong> October 30, 2025
+<strong>Next Review:</strong> December 2025</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href=".." class="md-footer__link md-footer__link--prev" aria-label="Previous: Home">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Home
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../getting-started/" class="md-footer__link md-footer__link--next" aria-label="Next: Overview">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Overview
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2024-2025 provide.io
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/provide-io/flavorpack" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://pypi.org/project/flavorpack/" target="_blank" rel="noopener" title="pypi.org" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.8 200.5c-7.7-30.9-22.3-54.2-53.4-54.2h-40.1v47.4c0 36.8-31.2 67.8-66.8 67.8H172.7c-29.2 0-53.4 25-53.4 54.3v101.8c0 29 25.2 46 53.4 54.3 33.8 9.9 66.3 11.7 106.8 0 26.9-7.8 53.4-23.5 53.4-54.3v-40.7H226.2v-13.6h160.2c31.1 0 42.6-21.7 53.4-54.2 11.2-33.5 10.7-65.7 0-108.6M286.2 444.7a20.4 20.4 0 1 1 0-40.7 20.4 20.4 0 1 1 0 40.7M167.8 248.1h106.8c29.7 0 53.4-24.5 53.4-54.3V91.9c0-29-24.4-50.7-53.4-55.6-35.8-5.9-74.7-5.6-106.8.1-45.2 8-53.4 24.7-53.4 55.6v40.7h106.9v13.6h-147c-31.1 0-58.3 18.7-66.8 54.2-9.8 40.7-10.2 66.1 0 108.6 7.6 31.6 25.7 54.2 56.8 54.2H101v-48.8c0-35.3 30.5-66.4 66.8-66.4m-6.6-183.4a20.4 20.4 0 1 1 0 40.8 20.4 20.4 0 1 1 0-40.8"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://provide.io" target="_blank" rel="noopener" title="provide.io" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M351.9 280H161c2.9 64.5 17.2 123.9 37.5 167.4 11.4 24.5 23.7 41.8 35.1 52.4 11.2 10.5 18.9 12.2 22.9 12.2s11.7-1.7 22.9-12.2c11.4-10.6 23.7-28 35.1-52.4 20.3-43.5 34.6-102.9 37.5-167.4zm-191-48h190.9c-2.8-64.5-17.1-123.9-37.4-167.4-11.4-24.4-23.7-41.8-35.1-52.4C268.1 1.7 260.4 0 256.4 0s-11.7 1.7-22.9 12.2c-11.4 10.6-23.7 28-35.1 52.4-20.3 43.5-34.6 102.9-37.5 167.4m-48 0c3.5-85.6 25.6-165.1 57.9-217.3C78.7 47.3 10.9 131.2 1.5 232zM1.5 280c9.4 100.8 77.2 184.7 169.3 217.3-32.3-52.2-54.4-131.7-57.9-217.3zm398.4 0c-3.5 85.6-25.6 165.1-57.9 217.3 92.1-32.7 159.9-116.5 169.3-217.3zm111.4-48C501.9 131.2 434.1 47.3 342 14.7c32.3 52.2 54.4 131.7 57.9 217.3z"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+      <div class="md-progress" data-md-component="progress" role="progressbar"></div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "..", "features": ["navigation.instant", "navigation.instant.prefetch", "navigation.instant.progress", "navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.path", "navigation.indexes", "navigation.top", "navigation.footer", "toc.follow", "toc.integrate", "search.suggest", "search.highlight", "search.share", "content.code.copy", "content.code.select", "content.code.annotate", "content.tabs.link", "content.tooltips", "content.action.edit", "content.action.view", "header.autohide", "announce.dismiss"], "search": "../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"default": "latest", "provider": "mike"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.f55a23d4.min.js"></script>
+      
+        <script src="https://unpkg.com/mermaid@10/dist/mermaid.min.js"></script>
+      
+        <script src="../.provide/foundry/theme/js/mermaid-init.js"></script>
+      
+        <script src="../.provide/foundry/theme/js/termynal.js"></script>
+      
+        <script src="../.provide/foundry/theme/js/custom.js"></script>
+      
+    
+  </body>
+</html>

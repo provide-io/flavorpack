@@ -1,0 +1,22 @@
+{
+  "action": "workflow_dispatch",
+  "inputs": {
+    "force_rebuild": "false"
+  },
+  "ref": "refs/heads/feature/stabilizing-and-pruning",
+  "repository": {
+    "name": "flavor",
+    "owner": {
+      "login": "provide-io"
+    },
+    "full_name": "provide-io/flavor",
+    "private": false,
+    "html_url": "https://github.com/provide-io/flavor",
+    "default_branch": "main"
+  },
+  "sender": {
+    "login": "act-user",
+    "type": "User"
+  },
+  "workflow": ".github/workflows/helpers-build.yml"
+}
