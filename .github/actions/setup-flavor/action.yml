@@ -1,0 +1,78 @@
+name: 'Setup Flavor Environment'
+description: 'Set up Python, uv, and Flavor dependencies'
+
+inputs:
+  python-version:
+    description: 'Python version to use'
+    required: false
+    default: '3.11'
+  uv-version:
+    description: 'uv version to use'
+    required: false
+    default: '0.7.8'
+  install-dev:
+    description: 'Install development dependencies'
+    required: false
+    default: 'true'
+  cache:
+    description: 'Enable caching'
+    required: false
+    default: 'true'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: 🐍 Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+        cache: 'pip'
+        cache-dependency-path: |
+          pyproject.toml
+          requirements*.txt
+    
+    - name: ⚡ Install uv
+      uses: astral-sh/setup-uv@v4
+      with:
+        version: ${{ inputs.uv-version }}
+    
+    - name: 🔧 Create Virtual Environment
+      shell: bash
+      run: |
+        # Detect OS and architecture
+        OS=$(uname -s | tr '[:upper:]' '[:lower:]')
+        ARCH=$(uname -m)
+        
+        # Create workenv directory
+        WORKENV="workenv/flavor_${OS}_${ARCH}"
+        echo "FLAVOR_WORKENV=${WORKENV}" >> $GITHUB_ENV
+        echo "VIRTUAL_ENV=${GITHUB_WORKSPACE}/${WORKENV}" >> $GITHUB_ENV
+        echo "${GITHUB_WORKSPACE}/${WORKENV}/bin" >> $GITHUB_PATH
+        
+        # Create virtual environment
+        uv venv ${WORKENV}
+    
+    - name: 📦 Install Dependencies
+      shell: bash
+      run: |
+        source ${FLAVOR_WORKENV}/bin/activate
+        
+        if [ "${{ inputs.install-dev }}" = "true" ]; then
+          uv pip install -e .[dev]
+          uv pip install pytest-cov pytest-xdist pyyaml
+        else
+          uv pip install -e .
+        fi
+    
+    - name: 💾 Cache Dependencies
+      if: inputs.cache == 'true'
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cache/uv
+          ~/.cache/pip
+          workenv/
+        key: ${{ runner.os }}-flavor-${{ inputs.python-version }}-${{ hashFiles('pyproject.toml') }}
+        restore-keys: |
+          ${{ runner.os }}-flavor-${{ inputs.python-version }}-
+          ${{ runner.os }}-flavor-

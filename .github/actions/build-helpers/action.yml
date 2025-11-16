@@ -1,0 +1,159 @@
+name: 'Build Flavor Helpers'
+description: 'Build Go and Rust helper binaries'
+
+inputs:
+  language:
+    description: 'Language to build (go, rust, or all)'
+    required: false
+    default: 'all'
+  go-version:
+    description: 'Go version to use'
+    required: false
+    default: '1.21'
+  rust-version:
+    description: 'Rust version to use'
+    required: false
+    default: 'stable'
+  upload:
+    description: 'Upload artifacts'
+    required: false
+    default: 'true'
+  strip:
+    description: 'Strip debug symbols'
+    required: false
+    default: 'true'
+
+outputs:
+  go-launcher:
+    description: 'Path to Go launcher'
+    value: ${{ steps.paths.outputs.go-launcher }}
+  go-builder:
+    description: 'Path to Go builder'
+    value: ${{ steps.paths.outputs.go-builder }}
+  rust-launcher:
+    description: 'Path to Rust launcher'
+    value: ${{ steps.paths.outputs.rust-launcher }}
+  rust-builder:
+    description: 'Path to Rust builder'
+    value: ${{ steps.paths.outputs.rust-builder }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: 🔍 Detect Platform
+      id: platform
+      shell: bash
+      run: |
+        OS=$(uname -s | tr '[:upper:]' '[:lower:]')
+        ARCH=$(uname -m)
+        
+        # Normalize architecture names
+        case ${ARCH} in
+          x86_64) ARCH="amd64" ;;
+          aarch64) ARCH="arm64" ;;
+        esac
+        
+        PLATFORM="${OS}-${ARCH}"
+        echo "platform=${PLATFORM}" >> $GITHUB_OUTPUT
+        echo "os=${OS}" >> $GITHUB_OUTPUT
+        echo "arch=${ARCH}" >> $GITHUB_OUTPUT
+        echo "📦 Platform: ${PLATFORM}"
+    
+    - name: 🐹 Setup Go
+      if: contains(inputs.language, 'go') || inputs.language == 'all'
+      uses: actions/setup-go@v5
+      with:
+        go-version: ${{ inputs.go-version }}
+        cache: true
+        cache-dependency-path: helpers/flavor-go/go.sum
+    
+    - name: 🦀 Setup Rust
+      if: contains(inputs.language, 'rust') || inputs.language == 'all'
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        toolchain: ${{ inputs.rust-version }}
+    
+    - name: 💾 Cache Rust
+      if: contains(inputs.language, 'rust') || inputs.language == 'all'
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          helpers/flavor-rust/target
+        key: ${{ runner.os }}-rust-${{ hashFiles('helpers/flavor-rust/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-rust-
+    
+    - name: 🔨 Build Go Helpers
+      if: contains(inputs.language, 'go') || inputs.language == 'all'
+      shell: bash
+      run: |
+        cd helpers/flavor-go
+        
+        # Build launcher
+        echo "🔨 Building Go launcher..."
+        go build -ldflags="-s -w" -o ../bin/flavor-go-launcher cmd/flavor-go-launcher/main.go
+        
+        # Build builder
+        echo "🔨 Building Go builder..."
+        go build -ldflags="-s -w" -o ../bin/flavor-go-builder cmd/flavor-go-builder/main.go
+        
+        # Strip if requested
+        if [ "${{ inputs.strip }}" = "true" ] && command -v strip &> /dev/null; then
+          echo "✂️ Stripping Go binaries..."
+          strip ../bin/flavor-go-launcher || true
+          strip ../bin/flavor-go-builder || true
+        fi
+        
+        # Rename with platform suffix
+        mv ../bin/flavor-go-launcher ../bin/flavor-go-launcher-${{ steps.platform.outputs.platform }}
+        mv ../bin/flavor-go-builder ../bin/flavor-go-builder-${{ steps.platform.outputs.platform }}
+        
+        echo "✅ Go helpers built successfully"
+    
+    - name: 🔨 Build Rust Helpers
+      if: contains(inputs.language, 'rust') || inputs.language == 'all'
+      shell: bash
+      run: |
+        cd helpers/flavor-rust
+        
+        # Build in release mode
+        echo "🔨 Building Rust helpers..."
+        cargo build --release
+        
+        # Copy to bin directory
+        cp target/release/flavor-rs-launcher ../bin/flavor-rs-launcher
+        cp target/release/flavor-rs-builder ../bin/flavor-rs-builder
+        
+        # Strip if requested
+        if [ "${{ inputs.strip }}" = "true" ] && command -v strip &> /dev/null; then
+          echo "✂️ Stripping Rust binaries..."
+          strip ../bin/flavor-rs-launcher || true
+          strip ../bin/flavor-rs-builder || true
+        fi
+        
+        # Rename with platform suffix
+        mv ../bin/flavor-rs-launcher ../bin/flavor-rs-launcher-${{ steps.platform.outputs.platform }}
+        mv ../bin/flavor-rs-builder ../bin/flavor-rs-builder-${{ steps.platform.outputs.platform }}
+        
+        echo "✅ Rust helpers built successfully"
+    
+    - name: 🔍 Set Output Paths
+      id: paths
+      shell: bash
+      run: |
+        PLATFORM="${{ steps.platform.outputs.platform }}"
+        echo "go-launcher=helpers/bin/flavor-go-launcher-${PLATFORM}" >> $GITHUB_OUTPUT
+        echo "go-builder=helpers/bin/flavor-go-builder-${PLATFORM}" >> $GITHUB_OUTPUT
+        echo "rust-launcher=helpers/bin/flavor-rs-launcher-${PLATFORM}" >> $GITHUB_OUTPUT
+        echo "rust-builder=helpers/bin/flavor-rs-builder-${PLATFORM}" >> $GITHUB_OUTPUT
+    
+    - name: 📦 Upload Artifacts
+      if: inputs.upload == 'true'
+      uses: actions/upload-artifact@v4
+      with:
+        name: helpers-${{ inputs.language }}-${{ steps.platform.outputs.platform }}
+        path: |
+          helpers/bin/*-${{ steps.platform.outputs.platform }}
+        retention-days: 30

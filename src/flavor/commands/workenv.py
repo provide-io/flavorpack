@@ -1,23 +1,12 @@
+#!/usr/bin/env python3
 #
-# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
+# flavor/commands/workenv.py
 #
-
 """Work environment management commands for the flavor CLI."""
-
-from __future__ import annotations
 
 import datetime
 
 import click
-from provide.foundation.console import perr, pout
-from provide.foundation.file.formats import read_json
-from provide.foundation.serialization import json_dumps
-
-from flavor.console import get_command_logger
-
-# Get structured logger for workenv commands
-log = get_command_logger("workenv")
 
 
 @click.group("workenv")
@@ -35,34 +24,27 @@ def workenv_list() -> None:
     cached = manager.list_cached()
 
     if not cached:
-        pout("No cached packages found.")
+        click.echo("No cached packages found.")
         return
 
-    pout("🗂️  Cached Packages:")
-    pout("=" * 60)
+    click.echo("🗂️  Cached Packages:")
+    click.echo("=" * 60)
 
     for pkg in cached:
-        # Type check: size should be int or float from cache manager
-        pkg_size = pkg["size"]
-        size_mb = pkg_size / (1024 * 1024) if isinstance(pkg_size, (int, float)) else 0.0
+        size_mb = pkg["size"] / (1024 * 1024)
         name = pkg.get("name", pkg["id"])
         version = pkg.get("version", "")
 
         if version:
-            pout(f"\n📦 {name} v{version}")
+            click.echo(f"\n📦 {name} v{version}")
         else:
-            pout(f"\n📦 {name}")
+            click.echo(f"\n📦 {name}")
 
-        pout(f"   ID: {pkg['id']}")
-        pout(f"   Size: {size_mb:.1f} MB")
+        click.echo(f"   ID: {pkg['id']}")
+        click.echo(f"   Size: {size_mb:.1f} MB")
 
-        # Type check: modified should be a float timestamp
-        modified_ts = pkg.get("modified", 0)
-        if isinstance(modified_ts, (int, float)):
-            modified = datetime.datetime.fromtimestamp(modified_ts)
-        else:
-            modified = datetime.datetime.now()
-        pout(f"   Modified: {modified.strftime('%Y-%m-%d %H:%M:%S')}")
+        modified = datetime.datetime.fromtimestamp(pkg["modified"])
+        click.echo(f"   Modified: {modified.strftime('%Y-%m-%d %H:%M:%S')}")
 
 
 @workenv_group.command("info")
@@ -74,11 +56,11 @@ def workenv_info() -> None:
     cached = manager.list_cached()
     total_size = manager.get_cache_size()
 
-    pout("📊 Cache Information")
-    pout("=" * 40)
-    pout(f"Cache directory: {get_cache_dir()}")
-    pout(f"Total size: {total_size / (1024 * 1024):.1f} MB")
-    pout(f"Number of packages: {len(cached)}")
+    click.echo("📊 Cache Information")
+    click.echo("=" * 40)
+    click.echo(f"Cache directory: {get_cache_dir()}")
+    click.echo(f"Total size: {total_size / (1024 * 1024):.1f} MB")
+    click.echo(f"Number of packages: {len(cached)}")
 
 
 @workenv_group.command("clean")
@@ -106,16 +88,21 @@ def workenv_clean(older_than: int | None, yes: bool) -> None:
             prompt = "Remove all cached packages?"
 
         if not click.confirm(prompt):
-            pout("Aborted.")
+            click.echo("Aborted.")
             return
+
+    # Clean incomplete extractions first
+    incomplete = manager.clean_incomplete()
+    if incomplete:
+        click.echo(f"Removed {len(incomplete)} incomplete extractions")
 
     # Clean old packages
     removed = manager.clean(max_age_days=older_than)
 
     if removed:
-        pout(f"✅ Removed {len(removed)} cached package(s)")
+        click.secho(f"✅ Cleaned {len(removed)} packages from cache", fg="green")
     else:
-        pout("No packages to clean")
+        click.echo("No packages to clean")
 
 
 @workenv_group.command("remove")
@@ -133,101 +120,15 @@ def workenv_remove(package_id: str, yes: bool) -> None:
     manager = CacheManager()
 
     if not yes:
-        info = manager.inspect_workenv(package_id)
-        if info and info.get("exists"):
-            from pathlib import Path
-
-            size_mb = manager._get_dir_size(Path(info["content_dir"])) / (1024 * 1024)
-            name = info.get("package_info", {}).get("name", package_id)
-            if not click.confirm(f"""Remove {name} ({size_mb:.1f} MB)?"""):
-                pout("Aborted.")
+        info = manager.get_info(package_id)
+        if info:
+            size_mb = info["size"] / (1024 * 1024)
+            name = info.get("name", package_id)
+            if not click.confirm(f"Remove {name} ({size_mb:.1f} MB)?"):
+                click.echo("Aborted.")
                 return
 
     if manager.remove(package_id):
-        pass
+        click.secho(f"✅ Removed package '{package_id}'", fg="green")
     else:
-        perr(f"❌ Package '{package_id}' not found")
-
-
-@workenv_group.command("inspect")
-@click.argument("package_id")
-@click.option(
-    "--json",
-    "output_json",
-    is_flag=True,
-    help="Output as JSON format",
-)
-def workenv_inspect(package_id: str, output_json: bool) -> None:  # noqa: C901
-    """Inspect detailed metadata for a cached package extraction."""
-    from flavor.cache import CacheManager
-
-    manager = CacheManager()
-    info = manager.inspect_workenv(package_id)
-
-    if not info.get("exists"):
-        perr(f"❌ Package '{package_id}' not found")
-        return
-
-    if output_json:
-        # Output as JSON
-        pout(json_dumps(info, indent=2, default=str))
-    else:
-        # Human-readable output
-        pout("=" * 60)
-        pout(f"📦 Package: {package_id}")
-        pout("-" * 60)
-
-        # Basic info
-        pout(f"📁 Location: {info['content_dir']}")
-        pout(f"🗂️  Metadata Type: {info.get('metadata_type', 'none')}")
-
-        if info.get("extraction_complete"):
-            pout("✅ Extraction: Complete")
-        else:
-            pout("⚠️  Extraction: Incomplete")
-
-        if info.get("checksum"):
-            pout(f"🔐 Checksum: {info['checksum']}")
-
-        # Index metadata from index.json
-        if info.get("metadata_dir"):
-            from pathlib import Path
-
-            index_file = Path(info["metadata_dir"]) / "instance" / "index.json"
-            if index_file.exists():
-                try:
-                    index_data = read_json(index_file)
-
-                    pout("\n📋 Index Metadata:")
-                    pout(f"  Format Version: 0x{index_data.get('format_version', 0):08x}")
-                    pout(f"  Package Size: {index_data.get('package_size', 0):,} bytes")
-                    pout(f"  Launcher Size: {index_data.get('launcher_size', 0):,} bytes")
-                    pout(f"  Slot Count: {index_data.get('slot_count', 0)}")
-                    pout(f"  Index Checksum: {index_data.get('index_checksum', 'N/A')}")
-
-                    if index_data.get("build_timestamp"):
-                        timestamp = index_data["build_timestamp"]
-                        if timestamp > 0:
-                            dt = datetime.datetime.fromtimestamp(timestamp)
-                            pout(f"  Build Time: {dt.strftime('%Y-%m-%d %H:%M:%S')}")
-
-                    # Capabilities and requirements
-                    if index_data.get("capabilities"):
-                        pout(f"  Capabilities: 0x{index_data['capabilities']:016x}")
-                    if index_data.get("requirements"):
-                        pout(f"  Requirements: 0x{index_data['requirements']:016x}")
-                except Exception as e:
-                    pout(f"  ⚠️  Error reading index.json: {e}")
-
-        # Package metadata
-        if info.get("package_info"):
-            pkg = info["package_info"]
-            pout(f"  Name: {pkg.get('name', 'unknown')}")
-            pout(f"  Version: {pkg.get('version', 'unknown')}")
-            if pkg.get("builder"):
-                pout(f"  Builder: {pkg.get('builder')}")
-
-        pout("")
-
-
-# 🌶️📦🔚
+        click.secho(f"❌ Package '{package_id}' not found", fg="red")

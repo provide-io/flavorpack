@@ -1,18 +1,14 @@
+#!/usr/bin/env python3
 #
-# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
+# flavor/output.py
 #
-
 """Output formatting and redirection for Flavor tools."""
 
-from __future__ import annotations
-
 from enum import Enum
+import json
 from pathlib import Path
 import sys
 from typing import Any, TextIO
-
-from provide.foundation.serialization import json_dumps
 
 
 class OutputFormat(Enum):
@@ -42,7 +38,7 @@ class OutputHandler:
         self._file_handle: TextIO | None = None
         self._output_buffer: list[dict[str, Any]] = []
 
-    def __enter__(self) -> OutputHandler:
+    def __enter__(self) -> "OutputHandler":
         """Context manager entry."""
         if self._output_file and self._output_file not in ("STDOUT", "STDERR"):
             self._file_handle = Path(self._output_file).open("w")
@@ -68,7 +64,7 @@ class OutputHandler:
         """Flush buffered JSON output."""
         if self._output_buffer:
             stream = self._get_output_stream()
-            stream.write(json_dumps(self._output_buffer, indent=2))
+            json.dump(self._output_buffer, stream, indent=2)
             stream.write("\n")
             stream.flush()
             self._output_buffer.clear()
@@ -121,7 +117,7 @@ class OutputHandler:
         if self.format == OutputFormat.JSON:
             self.write({"success": message, **kwargs})
         else:
-            pass
+            self.write(f"✅ {message}")
 
     def info(self, message: str, **kwargs: Any) -> None:
         """Write an info message."""
@@ -145,17 +141,14 @@ def get_output_handler(
     Returns:
         Configured OutputHandler
     """
-    from provide.foundation.utils.environment import get_str
+    import os
 
     format_env = format_env or "FLAVOR_OUTPUT_FORMAT"
     file_env = file_env or "FLAVOR_OUTPUT_FILE"
 
-    format_str = get_str(format_env, default="text").lower()
+    format_str = os.environ.get(format_env, "text").lower()
     output_format = OutputFormat.JSON if format_str == "json" else OutputFormat.TEXT
 
-    output_file = get_str(file_env)
+    output_file = os.environ.get(file_env)
 
     return OutputHandler(format=output_format, file=output_file)
-
-
-# 🌶️📦🔚

@@ -1,23 +1,14 @@
+#!/usr/bin/env python3
 #
-# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
+# flavor/commands/helpers.py
 #
-
 """Helper management commands for the flavor CLI."""
 
-from __future__ import annotations
-
 import os
-from pathlib import Path
 
 import click
-from provide.foundation.console import perr, pout
-from provide.foundation.process import run
 
-from flavor.console import get_command_logger
-
-# Get structured logger for helper commands
-log = get_command_logger("helpers")
+from flavor.utils.subprocess import run_command
 
 
 @click.group("helpers")
@@ -33,28 +24,29 @@ def helper_group() -> None:
     is_flag=True,
     help="Show detailed information",
 )
-def helper_list(verbose: bool) -> None:  # noqa: C901
+def helper_list(verbose: bool) -> None:
     """List available helper binaries."""
-    from flavor.helpers.manager import HelperManager
+    from flavor.helpers import HelperManager
 
     manager = HelperManager()
     helpers = manager.list_helpers()
 
     if not helpers["launchers"] and not helpers["builders"]:
-        pout("No helpers found. Build them with: flavor helpers build")
+        click.echo("No helpers found. Build them with: flavor helpers build")
         return
 
-    pout("🔧 Available Flavor Helpers")
-    pout("=" * 60)
+    click.echo("🔧 Available Flavor Helpers")
+    click.echo("=" * 60)
 
     # Helper function to get version
-    def get_version(helper_path: Path) -> str | None:
+    def get_version(helper_path):
         try:
-            result = run(
+            result = run_command(
                 [str(helper_path), "--version"],
                 capture_output=True,
                 check=False,
                 timeout=2,
+                log_command=False,
             )
             if result.returncode == 0:
                 # Parse version from output (first line usually)
@@ -66,34 +58,32 @@ def helper_list(verbose: bool) -> None:  # noqa: C901
         return None
 
     if helpers["launchers"]:
-        pout("\n📦 Launchers:")
-        launchers = sorted(helpers["launchers"], key=lambda h: h.name)
-        for i, launcher in enumerate(launchers):
-            if i > 0:
-                pout("")  # Add newline between entries
+        click.echo("\n📦 Launchers:")
+        for launcher in sorted(helpers["launchers"], key=lambda h: h.name):
             size_mb = launcher.size / (1024 * 1024)
             version = get_version(launcher.path) or launcher.version or "unknown"
-            pout(f"  • {launcher.name} ({launcher.language}, {size_mb:.1f} MB) - {version}")
-            pout(f"    Path: {launcher.path}")
-            if launcher.checksum:
-                pout(f"    SHA256: {launcher.checksum}")
-            if verbose and launcher.built_from:
-                pout(f"    Source: {launcher.built_from}")
+            click.echo(
+                f"  • {launcher.name} ({launcher.language}, {size_mb:.1f} MB) - {version}"
+            )
+            if verbose:
+                if launcher.checksum:
+                    click.echo(f"    Checksum: {launcher.checksum}")
+                if launcher.built_from:
+                    click.echo(f"    Source: {launcher.built_from}")
 
     if helpers["builders"]:
-        pout("\n🔨 Builders:")
-        builders = sorted(helpers["builders"], key=lambda h: h.name)
-        for i, builder in enumerate(builders):
-            if i > 0:
-                pout("")  # Add newline between entries
+        click.echo("\n🔨 Builders:")
+        for builder in sorted(helpers["builders"], key=lambda h: h.name):
             size_mb = builder.size / (1024 * 1024)
             version = get_version(builder.path) or builder.version or "unknown"
-            pout(f"  • {builder.name} ({builder.language}, {size_mb:.1f} MB) - {version}")
-            pout(f"    Path: {builder.path}")
-            if builder.checksum:
-                pout(f"    SHA256: {builder.checksum}")
-            if verbose and builder.built_from:
-                pout(f"    Source: {builder.built_from}")
+            click.echo(
+                f"  • {builder.name} ({builder.language}, {size_mb:.1f} MB) - {version}"
+            )
+            if verbose:
+                if builder.checksum:
+                    click.echo(f"    Checksum: {builder.checksum}")
+                if builder.built_from:
+                    click.echo(f"    Source: {builder.built_from}")
 
 
 @helper_group.command("build")
@@ -111,26 +101,26 @@ def helper_list(verbose: bool) -> None:  # noqa: C901
 )
 def helper_build(lang: str, force: bool) -> None:
     """Build helper binaries from source."""
-    from flavor.helpers.manager import HelperManager
+    from flavor.helpers import HelperManager
 
     manager = HelperManager()
 
     language = None if lang == "all" else lang
 
-    pout(f"🔨 Building {lang} helpers...")
+    click.echo(f"🔨 Building {lang} helpers...")
 
     built = manager.build_helpers(language=language, force=force)
 
     if built:
-        pout(f"✅ Built {len(built)} helper(s):")
+        click.secho(f"✅ Built {len(built)} helper(s):", fg="green")
         for path in built:
             size_mb = path.stat().st_size / (1024 * 1024)
-            pout(f"  • {path.name} ({size_mb:.1f} MB)")
+            click.echo(f"  • {path.name} ({size_mb:.1f} MB)")
     else:
-        pout("⚠️  No helpers were built")
-        pout("Make sure you have the required compilers installed:")
-        pout("  • Go: go version")
-        pout("  • Rust: cargo --version")
+        click.secho("⚠️  No helpers were built", fg="yellow")
+        click.echo("Make sure you have the required compilers installed:")
+        click.echo("  • Go: go version")
+        click.echo("  • Rust: cargo --version")
 
 
 @helper_group.command("clean")
@@ -148,12 +138,12 @@ def helper_build(lang: str, force: bool) -> None:
 )
 def helper_clean(lang: str, yes: bool) -> None:
     """Remove built helper binaries."""
-    from flavor.helpers.manager import HelperManager
+    from flavor.helpers import HelperManager
 
     manager = HelperManager()
 
     if not yes and not click.confirm(f"Remove {lang} helper binaries?"):
-        pout("Aborted.")
+        click.echo("Aborted.")
         return
 
     language = None if lang == "all" else lang
@@ -161,54 +151,54 @@ def helper_clean(lang: str, yes: bool) -> None:
     removed = manager.clean_helpers(language=language)
 
     if removed:
-        pout(f"✅ Removed {len(removed)} helper(s):")
+        click.secho(f"✅ Removed {len(removed)} helper(s):", fg="green")
         for path in removed:
-            pout(f"  • {path.name}")
+            click.echo(f"  • {path.name}")
     else:
-        pout("No helpers to remove")
+        click.echo("No helpers to remove")
 
 
 @helper_group.command("info")
 @click.argument("name")
 def helper_info(name: str) -> None:
     """Show detailed information about a specific helper."""
-    from flavor.helpers.manager import HelperManager
+    from flavor.helpers import HelperManager
 
     manager = HelperManager()
     info = manager.get_helper_info(name)
 
     if not info:
-        perr(f"❌ Helper '{name}' not found")
+        click.secho(f"❌ Helper '{name}' not found", fg="red")
         return
 
-    pout(f"🔧 Helper Information: {info.name}")
-    pout("=" * 60)
-    pout(f"Type: {info.type}")
-    pout(f"Language: {info.language}")
-    pout(f"Path: {info.path}")
-    pout(f"Size: {info.size / (1024 * 1024):.1f} MB")
+    click.echo(f"🔧 Helper Information: {info.name}")
+    click.echo("=" * 60)
+    click.echo(f"Type: {info.type}")
+    click.echo(f"Language: {info.language}")
+    click.echo(f"Path: {info.path}")
+    click.echo(f"Size: {info.size / (1024 * 1024):.1f} MB")
 
     if info.version:
-        pout(f"Version: {info.version}")
+        click.echo(f"Version: {info.version}")
 
     if info.checksum:
-        pout(f"Checksum: {info.checksum}")
+        click.echo(f"Checksum: {info.checksum}")
 
     if info.built_from:
-        pout(f"Source: {info.built_from}")
+        click.echo(f"Source: {info.built_from}")
         if info.built_from.exists():
-            pout("  ✅ Source directory exists")
+            click.echo("  ✅ Source directory exists")
         else:
-            pout("  ⚠️  Source directory not found")
+            click.echo("  ⚠️  Source directory not found")
 
     # Check if executable
     if info.path.exists():
         if os.access(info.path, os.X_OK):
-            pass
+            click.echo("Status: ✅ Executable")
         else:
-            pout("Status: ❌ Not executable")
+            click.echo("Status: ❌ Not executable")
     else:
-        pout("Status: ❌ File not found")
+        click.echo("Status: ❌ File not found")
 
 
 @helper_group.command("test")
@@ -220,42 +210,39 @@ def helper_info(name: str) -> None:
 )
 def helper_test(lang: str) -> None:
     """Test helper binaries."""
-    from flavor.helpers.manager import HelperManager
+    from flavor.helpers import HelperManager
 
     manager = HelperManager()
 
     language = None if lang == "all" else lang
 
-    pout(f"🧪 Testing {lang} helpers...")
+    click.echo(f"🧪 Testing {lang} helpers...")
 
     results = manager.test_helpers(language=language)
 
     # Show results
     if results["passed"]:
-        pout(f"✅ Passed: {len(results['passed'])}")
+        click.secho(f"✅ Passed: {len(results['passed'])}", fg="green")
         for name in results["passed"]:
-            pout(f"  • {name}")
+            click.echo(f"  • {name}")
 
     if results["failed"]:
-        perr(f"❌ Failed: {len(results['failed'])}")
+        click.secho(f"❌ Failed: {len(results['failed'])}", fg="red")
         for failure in results["failed"]:
-            pout(f"  • {failure['name']}: {failure['error']}")
+            click.echo(f"  • {failure['name']}: {failure['error']}")
             if failure.get("stderr"):
-                pout(f"    {failure['stderr']}")
+                click.echo(f"    {failure['stderr']}")
 
     if results["skipped"]:
-        pout(f"⏭️  Skipped: {len(results['skipped'])}")
+        click.echo(f"⏭️  Skipped: {len(results['skipped'])}")
         for name in results["skipped"]:
-            pout(f"  • {name}")
+            click.echo(f"  • {name}")
 
     # Overall status
     if results["failed"]:
-        perr("\n❌ Some tests failed")
+        click.secho("\n❌ Some tests failed", fg="red")
         raise click.Abort()
     elif results["passed"]:
-        pout("\n✅ All tests passed")
+        click.secho("\n✅ All tests passed", fg="green")
     else:
-        pout("\n⚠️  No tests were run")
-
-
-# 🌶️📦🔚
+        click.echo("\n⚠️  No tests were run")
