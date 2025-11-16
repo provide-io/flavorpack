@@ -1,0 +1,305 @@
+name: 🔨 Platform Helpers
+
+on:
+  workflow_dispatch:
+    inputs:
+      force_rebuild:
+        description: 'Force rebuild even if cached'
+        type: boolean
+        default: false
+  workflow_call:
+    inputs:
+      platforms:
+        description: 'Specific platform to build (e.g., linux_amd64)'
+        type: string
+        default: 'all'
+      artifact-prefix:
+        description: 'Prefix for artifact naming (usually a hash)'
+        type: string
+        default: ''
+    outputs:
+      artifact-name:
+        description: 'Name of combined artifact'
+        value: ${{ inputs.artifact-prefix || 'all-helpers' }}-${{ inputs.platforms != 'all' && inputs.platforms || github.sha }}
+
+jobs:
+  # Check cache before building
+  check-cache:
+    name: Check Cache
+    runs-on: ubuntu-latest
+    outputs:
+      cache-hit: ${{ steps.cache.outputs.cache-hit }}
+      cache-key: ${{ steps.cache-key.outputs.key }}
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 🔑 Generate cache key
+        id: cache-key
+        run: |
+          # Generate hash from all helper source files
+          HASH=$(find helpers -type f \( -name "*.go" -o -name "*.rs" -o -name "*.toml" -o -name "*.mod" -o -name "*.sum" -o -name "Makefile" \) -exec sha256sum {} \; | sort | sha256sum | cut -d' ' -f1)
+          echo "key=platform-helpers-$HASH" >> $GITHUB_OUTPUT
+          echo "📦 Cache key: platform-helpers-$HASH"
+      
+      - name: 💾 Check cache
+        id: cache
+        if: ${{ github.event.inputs.force_rebuild != 'true' }}
+        uses: actions/cache@v4
+        with:
+          path: cached-helpers
+          key: ${{ steps.cache-key.outputs.key }}
+          lookup-only: true
+      
+      - name: 📊 Cache status
+        run: |
+          if [ "${{ steps.cache.outputs.cache-hit }}" == "true" ]; then
+            echo "✅ Cache hit! Helpers will be restored from cache."
+          else
+            echo "🔨 Cache miss. Helpers will be built fresh."
+          fi
+
+  # Build helpers for each platform (Go + Rust in same job)
+  # Determine build matrix based on platforms input
+  setup-matrix:
+    name: Setup Build Matrix
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+    steps:
+      - name: Create build matrix
+        id: matrix
+        run: |
+          if [ "${{ inputs.platforms }}" == "all" ] || [ -z "${{ inputs.platforms }}" ]; then
+            # Build all platforms
+            echo 'matrix={"include":[{"os":"ubuntu-24.04","platform":"linux_amd64","rust_target":"x86_64-unknown-linux-gnu","goos":"linux","goarch":"amd64"},{"os":"ubuntu-24.04","platform":"linux_arm64","rust_target":"aarch64-unknown-linux-gnu","goos":"linux","goarch":"arm64","setup_cross":true},{"os":"macos-15","platform":"darwin_amd64","rust_target":"x86_64-apple-darwin","goos":"darwin","goarch":"amd64"},{"os":"macos-15","platform":"darwin_arm64","rust_target":"aarch64-apple-darwin","goos":"darwin","goarch":"arm64"},{"os":"windows-2025","platform":"windows_amd64","rust_target":"x86_64-pc-windows-msvc","goos":"windows","goarch":"amd64"}]}' >> $GITHUB_OUTPUT
+          else
+            # Build specific platform
+            case "${{ inputs.platforms }}" in
+              linux_amd64)
+                echo 'matrix={"include":[{"os":"ubuntu-24.04","platform":"linux_amd64","rust_target":"x86_64-unknown-linux-gnu","goos":"linux","goarch":"amd64"}]}' >> $GITHUB_OUTPUT
+                ;;
+              linux_arm64)
+                echo 'matrix={"include":[{"os":"ubuntu-24.04","platform":"linux_arm64","rust_target":"aarch64-unknown-linux-gnu","goos":"linux","goarch":"arm64","setup_cross":true}]}' >> $GITHUB_OUTPUT
+                ;;
+              darwin_amd64)
+                echo 'matrix={"include":[{"os":"macos-15","platform":"darwin_amd64","rust_target":"x86_64-apple-darwin","goos":"darwin","goarch":"amd64"}]}' >> $GITHUB_OUTPUT
+                ;;
+              darwin_arm64)
+                echo 'matrix={"include":[{"os":"macos-15","platform":"darwin_arm64","rust_target":"aarch64-apple-darwin","goos":"darwin","goarch":"arm64"}]}' >> $GITHUB_OUTPUT
+                ;;
+              windows_amd64)
+                echo 'matrix={"include":[{"os":"windows-2025","platform":"windows_amd64","rust_target":"x86_64-pc-windows-msvc","goos":"windows","goarch":"amd64"}]}' >> $GITHUB_OUTPUT
+                ;;
+              *)
+                echo "Unknown platform: ${{ inputs.platforms }}"
+                exit 1
+                ;;
+            esac
+          fi
+
+  build-platform:
+    name: Build ${{ matrix.platform }}
+    needs: [check-cache, setup-matrix]
+    if: needs.check-cache.outputs.cache-hit != 'true' || github.event.inputs.force_rebuild == 'true'
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.setup-matrix.outputs.matrix) }}
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      # Setup both toolchains
+      - name: 🐹 Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+          cache-dependency-path: helpers/flavor-go/go.sum
+      
+      - name: 🦀 Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.rust_target }}
+      
+      # Setup cross-compilation if needed
+      - name: 🔧 Setup cross-compilation
+        if: matrix.setup_cross
+        run: |
+          chmod +x .github/scripts/setup-cross-compile.sh
+          .github/scripts/setup-cross-compile.sh ${{ matrix.platform }}
+      
+      # Run linting/security checks in parallel with builds
+      - name: 🔍 Run Go checks (background)
+        shell: bash
+        run: |
+          (
+            cd helpers/flavor-go
+            echo "🔍 Running Go fmt check..."
+            if [ "$(gofmt -l . | wc -l)" -gt 0 ]; then
+              echo "❌ Go code is not formatted"
+              gofmt -l .
+              exit 1
+            fi
+            echo "✅ Go code is properly formatted"
+            
+            echo "🔍 Running go vet..."
+            go vet ./...
+            echo "✅ Go vet passed"
+          ) &
+          echo $! > /tmp/go-checks.pid
+      
+      - name: 🔍 Run Rust checks (background)
+        shell: bash
+        run: |
+          (
+            cd helpers/flavor-rs
+            echo "🔍 Running cargo fmt check..."
+            cargo fmt -- --check || echo "⚠️ Rust code formatting issues (non-blocking)"
+            
+            echo "🔍 Running cargo clippy..."
+            cargo clippy --all-targets -- -D warnings || echo "⚠️ Clippy warnings (non-blocking)"
+          ) &
+          echo $! > /tmp/rust-checks.pid
+      
+      # Build both Go and Rust helpers in parallel
+      - name: 🔨 Build All Helpers
+        shell: bash
+        run: |
+          chmod +x .github/scripts/build-platform-helpers.sh
+          .github/scripts/build-platform-helpers.sh \
+            "${{ matrix.platform }}" \
+            "${{ matrix.goos }}" \
+            "${{ matrix.goarch }}" \
+            "${{ matrix.rust_target }}" \
+            "${{ matrix.ext }}"
+      
+      # Make binaries executable (important for Unix platforms)
+      - name: 🔐 Set executable permissions
+        if: matrix.goos != 'windows'
+        run: |
+          chmod +x helpers/bin/*-${{ matrix.platform }}
+      
+      # Test that binaries actually work
+      - name: 🧪 Test binaries
+        shell: pwsh
+        run: |
+          # Use PowerShell for cross-platform testing
+          if ("${{ matrix.setup_cross }}" -eq "true") {
+            & ./.github/scripts/test-binaries.ps1 -Platform "${{ matrix.platform }}" -CrossCompiled
+          } else {
+            & ./.github/scripts/test-binaries.ps1 -Platform "${{ matrix.platform }}"
+          }
+      
+      # Upload platform-specific artifact
+      - name: 📤 Upload Platform Helpers
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.artifact-prefix || 'helpers' }}-${{ matrix.platform }}
+          path: helpers/bin/*-${{ matrix.platform }}*
+          retention-days: 7
+
+  # Restore from cache if available
+  restore-cached:
+    name: Restore Cached Helpers
+    needs: check-cache
+    if: needs.check-cache.outputs.cache-hit == 'true' && github.event.inputs.force_rebuild != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 💾 Restore cache
+        uses: actions/cache@v4
+        with:
+          path: cached-helpers
+          key: ${{ needs.check-cache.outputs.cache-key }}
+      
+      - name: 📤 Upload from cache
+        uses: actions/upload-artifact@v4
+        with:
+          name: all-helpers-${{ github.sha }}
+          path: cached-helpers/**/*
+          retention-days: 7
+
+  # Combine all platform artifacts into single artifact (only for 'all' platforms)
+  combine-helpers:
+    name: 📦 Combine All Platforms
+    needs: [build-platform, check-cache]
+    if: |
+      always() && 
+      (inputs.platforms == 'all' || inputs.platforms == '') &&
+      (needs.build-platform.result == 'success' || needs.build-platform.result == 'skipped')
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Download all platform helpers
+        if: needs.build-platform.result == 'success'
+        uses: actions/download-artifact@v4
+        with:
+          pattern: ${{ inputs.artifact-prefix || 'helpers' }}-*
+          path: all-helpers
+      
+      - name: 🗂️ Organize helpers
+        if: needs.build-platform.result == 'success'
+        run: |
+          echo "📦 Organizing helper binaries..."
+          
+          # Create organized structure
+          mkdir -p organized-helpers/bin
+          
+          # Move all helpers to bin directory
+          find all-helpers -type f -name "flavor-*" -exec cp {} organized-helpers/bin/ \;
+          
+          # List final structure
+          echo "📋 Final helper structure:"
+          ls -la organized-helpers/bin/
+          
+          # Count by type
+          echo ""
+          echo "📊 Helper summary:"
+          echo "  Go launchers: $(ls organized-helpers/bin/flavor-go-launcher-* 2>/dev/null | wc -l)"
+          echo "  Go builders: $(ls organized-helpers/bin/flavor-go-builder-* 2>/dev/null | wc -l)"
+          echo "  Rust launchers: $(ls organized-helpers/bin/flavor-rs-launcher-* 2>/dev/null | wc -l)"
+          echo "  Rust builders: $(ls organized-helpers/bin/flavor-rs-builder-* 2>/dev/null | wc -l)"
+      
+      - name: 📤 Upload combined artifact
+        if: needs.build-platform.result == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.artifact-prefix || 'all-helpers-' }}${{ inputs.artifact-prefix && '' || github.sha }}
+          path: organized-helpers/**/*
+          retention-days: 7
+      
+      - name: 💾 Cache for future runs
+        if: needs.build-platform.result == 'success'
+        uses: actions/cache@v4
+        with:
+          path: organized-helpers
+          key: ${{ needs.check-cache.outputs.cache-key }}
+
+  # Summary job
+  build-summary:
+    name: 📊 Build Summary
+    needs: [build-platform, combine-helpers, restore-cached]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📊 Summary
+        run: |
+          echo "## 🔨 Platform Helpers Build Summary"
+          echo ""
+          
+          if [ "${{ needs.restore-cached.result }}" == "success" ]; then
+            echo "✅ **Helpers restored from cache**"
+          elif [ "${{ needs.build-platform.result }}" == "success" ]; then
+            echo "✅ **All platform helpers built successfully**"
+          elif [ "${{ needs.build-platform.result }}" == "skipped" ]; then
+            echo "⏭️ **Build skipped (using cache)**"
+          else
+            echo "❌ **Build failed**"
+            exit 1
+          fi
+          
+          echo ""
+          echo "### Job Results:"
+          echo "- Check Cache: ${{ needs.check-cache.result }}"
+          echo "- Build Platform: ${{ needs.build-platform.result }}"
+          echo "- Restore Cached: ${{ needs.restore-cached.result }}"
+          echo "- Combine Helpers: ${{ needs.combine-helpers.result }}"

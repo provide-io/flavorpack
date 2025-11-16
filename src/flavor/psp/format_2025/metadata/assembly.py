@@ -1,12 +1,4 @@
-#
-# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
-#
-
-"""TODO: Add module docstring."""
-
-from __future__ import annotations
-
+#!/usr/bin/env python3
 """Metadata assembly for PSPF packages."""
 
 import datetime
@@ -14,20 +6,16 @@ from pathlib import Path
 import socket
 from typing import Any
 
-from provide.foundation.crypto import format_checksum as calculate_checksum
-from provide.foundation.platform import get_arch_name, get_os_name, get_platform_string
-from provide.foundation.utils import get_version
-
+from flavor.psp.format_2025.checksums import calculate_checksum
 from flavor.psp.format_2025.spec import BuildSpec
 from flavor.psp.metadata.paths import validate_metadata_dict
-
-# Default version for launcher when extraction fails
-DEFAULT_LAUNCHER_VERSION = "unknown"
+from flavor.utils import get_arch_name, get_os_name, get_platform_string
 
 
 def get_flavor_version() -> str:
-    """Get the version of flavor-python from VERSION file or package metadata."""
-    return get_version("flavorpack", caller_file=__file__)
+    """Get the version of flavor-python."""
+    # TODO: Get from package version
+    return "1.0.0"
 
 
 def load_launcher_binary(launcher_type: str) -> bytes:
@@ -53,19 +41,16 @@ def load_launcher_binary(launcher_type: str) -> bytes:
     ]
 
     # Get XDG_CACHE_HOME with fallback to ~/.cache
-    xdg_cache = os.environ.get("XDG_CACHE_HOME", str(Path("~/.cache").expanduser()))
+    xdg_cache = os.environ.get("XDG_CACHE_HOME", os.path.expanduser("~/.cache"))
 
     # Search paths - prioritize helpers/bin first, then XDG cache location
     base_search_paths = [
-        Path.cwd() / "dist" / "bin",  # Built binaries (make build-helpers)
         Path.cwd() / "helpers" / "bin",
         Path.cwd().parent / "helpers" / "bin",
         Path.cwd().parent.parent / "helpers" / "bin",  # For tests
         Path(xdg_cache) / "flavor" / "helpers" / "bin",  # XDG cache location
         Path.home() / ".cache" / "flavor" / "helpers" / "bin",  # Fallback cache
         Path.cwd() / "workenv" / "flavors" / platform_str,
-        Path.cwd() / "helpers" / "bin",  # Development helpers
-        Path.cwd() / "src" / "flavor" / "helpers" / "bin",  # Installed helpers
         Path.cwd(),
     ]
 
@@ -74,9 +59,7 @@ def load_launcher_binary(launcher_type: str) -> bytes:
         for launcher_name in launcher_names:
             path = base_path / launcher_name
             if path.exists():
-                data = path.read_bytes()
-                assert isinstance(data, bytes)
-                return data
+                return path.read_bytes()
 
     # Build helpful error message showing all searched paths
     searched_paths = []
@@ -85,54 +68,17 @@ def load_launcher_binary(launcher_type: str) -> bytes:
             searched_paths.append(str(base_path / launcher_name))
 
     raise FileNotFoundError(
-        f"❌ Could not find {launcher_base} binary!\n"
-        "\n"
-        "   • cd helpers && ./build.sh     (build both Go and Rust launchers)\n"
-        "   • make build-helpers           (if using make)\n"
-        "   • flavor helpers build         (if flavor CLI is available)\n"
-        "\n"
-        "💡 Or specify a custom launcher with:\n"
-        "   • --launcher-bin /path/to/launcher (command line)\n"
-        "   • FLAVOR_LAUNCHER_BIN=/path/to/launcher (environment variable)\n"
-        "\n"
-        f"🔍 Searched {len(searched_paths)} locations including:\n"
-        f"   • {searched_paths[0] if searched_paths else 'No paths'}\n"
-        f"   • {searched_paths[1] if len(searched_paths) > 1 else '...'}\n"
-        f"   • {searched_paths[2] if len(searched_paths) > 2 else '...'}\n"
-        f"   • ... and {len(searched_paths) - 3} more"
-        if len(searched_paths) > 3
-        else ""
+        f"Could not find {launcher_base} binary. "
+        f"Build it first with 'flavor helpers build'. "
+        f"Searched paths: {', '.join(searched_paths[:3])}..."
     )
 
 
 def extract_launcher_version(launcher_data: bytes) -> str:
-    """Extract version from launcher binary.
-
-    Looks for common version string patterns in the binary.
-    """
-    import re
-
-    # Try to find version strings in the binary
-    # Look for patterns like "flavor-go-launcher 0.3.0" or "flavor-rs-launcher/1.0.0"
-    patterns = [
-        rb"flavor-[\w-]+launcher[\s/]+([\d.]+)",  # flavor-go-launcher 0.3.0
-        rb"version[:\s]+([\d.]+)",  # version: 1.0.0
-        rb"v([\d.]+)",  # v1.0.0
-    ]
-
-    # Search in first 100KB of binary to avoid scanning entire file
-    search_data = launcher_data[:102400] if len(launcher_data) > 102400 else launcher_data
-
-    for pattern in patterns:
-        match = re.search(pattern, search_data, re.IGNORECASE)
-        if match:
-            version = match.group(1).decode("utf-8", errors="ignore")
-            # Validate it looks like a version
-            if re.match(r"^\d+\.\d+(\.\d+)?", version):
-                return version
-
-    # Fallback to unknown version
-    return DEFAULT_LAUNCHER_VERSION
+    """Extract version from launcher binary."""
+    # TODO: Implement actual version extraction from binary
+    # Could look for version strings or embedded metadata
+    return "1.0.0"
 
 
 def get_launcher_capabilities(launcher_type: str) -> list[str]:
@@ -172,28 +118,17 @@ def get_launcher_info(launcher_type: str) -> dict[str, Any]:
 
 def create_build_metadata(deterministic: bool = False) -> dict[str, Any]:
     """Create build section metadata."""
-    platform_info: dict[str, Any] = {
-        "os": get_os_name(),
-        "arch": get_arch_name(),
-    }
-
-    build_meta: dict[str, Any] = {
+    return {
         "tool": "flavor-python",
         "tool_version": get_flavor_version(),
+        "timestamp": datetime.datetime.now(datetime.UTC).isoformat(),
         "deterministic": deterministic,
-        "platform": platform_info,
+        "platform": {
+            "os": get_os_name(),
+            "arch": get_arch_name(),
+            "host": socket.gethostname(),
+        },
     }
-
-    # Only add non-deterministic fields if not in deterministic mode
-    if not deterministic:
-        build_meta["timestamp"] = datetime.datetime.now(datetime.UTC).isoformat()
-        platform_info["host"] = socket.gethostname()
-    else:
-        # Use fixed timestamp for deterministic builds
-        build_meta["timestamp"] = "2025-01-01T00:00:00+00:00"
-        platform_info["host"] = "deterministic-build"
-
-    return build_meta
 
 
 def create_launcher_metadata(launcher_info: dict[str, Any]) -> dict[str, Any]:
@@ -209,16 +144,24 @@ def create_launcher_metadata(launcher_info: dict[str, Any]) -> dict[str, Any]:
 
 def create_verification_metadata(spec: BuildSpec) -> dict[str, Any]:
     """Create verification section metadata."""
-    # Always require verification - use FLAVOR_VALIDATION environment variable to control behavior
+    # Check if insecure mode is enabled
+    insecure = getattr(spec.options, "insecure_mode", False)
+
+    # Start with base verification metadata
     verification = {
         "integrity_seal": {"required": True, "algorithm": "ed25519"},
         "signed": True,
-        "require_verification": True,
+        "require_verification": not insecure,
     }
 
     # If trust_signatures was provided in spec metadata, include it
-    if "verification" in spec.metadata and "trust_signatures" in spec.metadata["verification"]:
-        verification["trust_signatures"] = spec.metadata["verification"]["trust_signatures"]
+    if (
+        "verification" in spec.metadata
+        and "trust_signatures" in spec.metadata["verification"]
+    ):
+        verification["trust_signatures"] = spec.metadata["verification"][
+            "trust_signatures"
+        ]
 
     return verification
 
@@ -248,7 +191,9 @@ def detect_features_used(spec: BuildSpec) -> list[str]:
     return features
 
 
-def assemble_metadata(spec: BuildSpec, slots: list[Any], launcher_info: dict[str, Any]) -> dict[str, Any]:
+def assemble_metadata(
+    spec: BuildSpec, slots: list[Any], launcher_info: dict[str, Any]
+) -> dict[str, Any]:
     """Assemble complete metadata structure."""
     # Core metadata
     metadata = {
@@ -271,8 +216,15 @@ def assemble_metadata(spec: BuildSpec, slots: list[Any], launcher_info: dict[str
         if section in spec.metadata:
             metadata[section] = spec.metadata[section]
 
+    # Handle backward compatibility for tests (if old format exists)
+    if "builder" in spec.metadata:
+        metadata["builder"] = spec.metadata["builder"]
+
+    if "launcher" in spec.metadata and isinstance(spec.metadata["launcher"], dict):
+        # Merge old launcher metadata (for tests)
+        for key, value in spec.metadata["launcher"].items():
+            if key not in metadata["launcher"]:
+                metadata["launcher"][key] = value
+
     # Validate all paths use {workenv}
     return validate_metadata_dict(metadata)
-
-
-# 🌶️📦🔚

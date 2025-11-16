@@ -1,0 +1,9 @@
+# Include Go source code
+recursive-include src/flavor/go *.go *.mod *.sum
+
+# Include Rust source code  
+recursive-include src/flavor/rust *.rs *.toml *.lock
+
+# Include any other necessary files
+include README.md
+include pyproject.toml

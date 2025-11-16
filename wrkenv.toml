@@ -1,0 +1,8 @@
+[workenv.env]
+siblings = [
+    # Pattern for all pyvider packages
+    { pattern = "pyvider-*", with_deps = true },
+    # Other special packages
+    { name = "tofusoup", with_deps = true },
+    { name = "wrkenv", with_deps = true }
+]

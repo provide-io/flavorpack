@@ -1,16 +1,10 @@
-# FlavorPack: Progressive Secure Polyglot Packaging Toolchain
+# Flavor - Progressive Secure Package Format (PSPF)
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-[![Go 1.23+](https://img.shields.io/badge/go-1.23+-00ADD8.svg)](https://golang.org/dl/)
-[![Rust 1.85+](https://img.shields.io/badge/rust-1.85+-orange.svg)](https://www.rust-lang.org/)
-[![CI Pipeline](https://img.shields.io/badge/CI-passing-brightgreen.svg)](https://github.com/provide-io/flavorpack/actions)
-[![Version](https://img.shields.io/badge/version-alpha-orange.svg)](https://github.com/provide-io/flavorpack/releases)
+[![Go 1.21+](https://img.shields.io/badge/go-1.21+-00ADD8.svg)](https://golang.org/dl/)
+[![Rust 1.75+](https://img.shields.io/badge/rust-1.75+-orange.svg)](https://www.rust-lang.org/)
 
-> **⚠️ Alpha Software**: FlavorPack is in early development. APIs, file formats, and commands may change without notice. Not recommended for production use. Check current version with `flavor --version`. Install from source only.
-
-**FlavorPack** is a cross-language packaging system that creates self-contained, portable executables using the **Progressive Secure Package Format (PSPF) 2025 Edition**. It enables you to ship Python applications as single binaries that "just work" - no installation, no dependencies, no configuration required.
-
-> **Note**: The package name is `flavorpack`, but the command-line tool is `flavor`.
+Flavor is a cross-language packaging system that creates self-contained, portable executables using the **Progressive Secure Package Format (PSPF) 2025 Edition**. It enables you to ship Python applications as single binaries that "just work" - no installation, no dependencies, no configuration required.
 
 ## 🎯 Key Features
 
@@ -27,30 +21,27 @@
 
 - Python 3.11 or higher
 - UV package manager (`curl -LsSf https://astral.sh/uv/install.sh | sh`)
-- Go 1.23+ and Rust 1.85+ (for building helpers - see `src/flavor-go/go.mod` and `src/flavor-rs/Cargo.toml`)
+- Go 1.21+ and Rust 1.75+ (for building helpers)
 
-### Installation (Source Only)
-
-> **Note**: FlavorPack is not yet available on PyPI. Source installation is currently the only option.
+### Installation
 
 ```bash
 # Clone the repository
-git clone https://github.com/provide-io/flavorpack.git
-cd flavorpack
+git clone https://github.com/provide-io/flavor.git
+cd flavor
 
 # Set up environment and install dependencies
-uv sync
+source env.sh
 
-# Build the Go and Rust helpers (required)
-make build-helpers
-# or directly: ./build.sh
+# Build the Go and Rust helpers
+./helpers/build.sh
 ```
 
 ### Creating Your First Package
 
 ```bash
 # Package a Python application
-flavor pack --manifest pyproject.toml --output myapp.psp
+flavor package --manifest pyproject.toml --output myapp.psp
 
 # Run the packaged application
 ./myapp.psp
@@ -61,33 +52,31 @@ flavor verify myapp.psp
 
 ## 📦 PSPF Format
 
-The Progressive Secure Package Format is a polyglot file format that works as both an OS executable and a structured package. Each `.psp` file contains a native launcher, package metadata, and compressed data slots.
+The Progressive Secure Package Format is a polyglot file format that works as both an OS executable and a structured package:
 
-See the [PSPF Format Specification](docs/reference/spec/fep-0001-core-format-and-operation-chains.md#32-package-structure-overview) for the complete binary layout diagram and technical details.
+```
+[Native Launcher] → Go or Rust executable
+[8192-byte Index] → Format metadata and offsets
+[Metadata] → Gzipped JSON manifest
+[Slot Table] → Slot descriptors
+[Slots 0..N] → Application code, runtime, dependencies
+[📦🪄] → 8-byte emoji magic footer
+```
 
 ## 📚 Documentation
 
-- **[Quick Start](docs/getting-started/quickstart.md)** - Get started in 5 minutes
-- **[User Guide](docs/guide/)** - Comprehensive guide to using FlavorPack
-- **[PSPF Format Specification](docs/reference/spec/fep-0001-core-format-and-operation-chains.md)** - Binary format details
-- **[API Reference](docs/api/)** - Python API documentation
-- **[Development Guide](docs/development/)** - Contributing and development setup
-- **[Troubleshooting](docs/troubleshooting/)** - Common issues and solutions
-- **[Full Documentation](docs/index.md)** - Complete documentation portal
+- **[Format Specification](docs/SPECIFICATION.md)** - Complete PSPF/2025 specification
+- **[Development Guide](DEVELOPMENT.md)** - Setup and contribution instructions
+- **[Design Rationale](docs/RATIONALE.md)** - Why PSPF exists and design decisions
+- **[API Documentation](docs/README.md)** - Full documentation index
 
 ## 🏗️ Architecture
 
-FlavorPack consists of three main components:
+Flavor consists of three main components:
 
-1. **Python Orchestrator** (`src/flavor/`)
-   - Manages the build process and dependency resolution
-   - Creates manifests and handles Python packaging
-   - Provides CLI interface for package operations
-
-2. **Native Helpers** (`src/flavor-go/`, `src/flavor-rs/`)
-   - **Launchers**: Extract and execute packages at runtime, perform Ed25519 signature verification, manage workenv caching
-   - **Builders**: Assemble PSPF packages from manifests, implement the PSPF/2025 binary format, handle slot packing and metadata encoding
-   - Built binaries are placed in `dist/bin/` for distribution
+1. **Python Orchestrator** - Manages the build process, creates manifests, handles dependencies
+2. **Native Launchers** (Go/Rust) - Extract and execute packages with security verification
+3. **Native Builders** (Go/Rust) - Assemble PSPF packages from manifests and slots
 
 ## 🔒 Security
 
@@ -102,29 +91,30 @@ Every PSPF package includes cryptographic integrity verification:
 
 ```bash
 # Run the test suite
-make test
+workenv/flavor_*/bin/pytest tests/
 
 # Run with coverage
-make test-cov
+workenv/flavor_*/bin/pytest --cov=src/flavor --cov-report=term-missing
 
 # Test cross-language compatibility
-make validate-pspf
-
-# Run specific test categories
-pytest -m unit        # Fast unit tests
-pytest -m integration # Integration tests
-pytest -m security    # Security tests
-
-# Test cross-language compatibility with Pretaster
-make validate-pspf
+./test-all-combinations.sh
 ```
+
+## 🤝 Contributing
+
+We welcome contributions! Please see our [Development Guide](DEVELOPMENT.md) for setup instructions and coding standards.
+
+## 📄 License
+
+MIT License - see LICENSE file for details.
 
 ## 🙏 Acknowledgments
 
-FlavorPack is built on the shoulders of giants:
+Flavor is built on the shoulders of giants:
 - [UV](https://github.com/astral-sh/uv) for fast Python package management
+- [PyOxidizer](https://github.com/indygreg/PyOxidizer) for inspiration
 - The Python, Go, and Rust communities for excellent tooling
 
 ---
 
-**Built with ❤️ by the provide.io team**
+**Built with ❤️ by the Provide team**

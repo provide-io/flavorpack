@@ -1,0 +1,386 @@
+name: 📦 Release Pipeline
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., v1.0.0)'
+        required: true
+        type: string
+      prerelease:
+        description: 'Mark as pre-release'
+        required: false
+        default: false
+        type: boolean
+      dry_run:
+        description: 'Dry run (no actual release)'
+        required: false
+        default: false
+        type: boolean
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+
+jobs:
+  # ==================================================================================
+  # 🔍 Validate Release
+  # ==================================================================================
+  validate:
+    name: 🔍 Validate Release
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      release_notes: ${{ steps.notes.outputs.notes }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: 📝 Determine Version
+        id: version
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            VERSION=${GITHUB_REF#refs/tags/}
+          else
+            VERSION="${{ github.event.inputs.version }}"
+          fi
+          
+          # Validate version format
+          if ! echo "$VERSION" | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9]+)?$'; then
+            echo "::error::Invalid version format: $VERSION"
+            exit 1
+          fi
+          
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "📦 Version: $VERSION"
+      
+      - name: 📝 Generate Release Notes
+        id: notes
+        shell: bash
+        run: |
+          # Generate changelog since last tag
+          LAST_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          
+          if [ -z "$LAST_TAG" ]; then
+            echo "First release!" > notes.md
+          else
+            echo "## Changes since $LAST_TAG" > notes.md
+            echo "" >> notes.md
+            git log --pretty=format:"- %s (%h)" $LAST_TAG..HEAD >> notes.md
+          fi
+          
+          # Add artifact information
+          echo "" >> notes.md
+          echo "## 📦 Artifacts" >> notes.md
+          echo "" >> notes.md
+          echo "This release includes:" >> notes.md
+          echo "- 🐍 Python wheel (`flavor-${{ steps.version.outputs.version }}.whl`)" >> notes.md
+          echo "- 🐹 Go helpers (launcher & builder)" >> notes.md
+          echo "- 🦀 Rust helpers (launcher & builder)" >> notes.md
+          echo "- 📦 Platform-specific packages for Linux, macOS (Intel & ARM), and Windows" >> notes.md
+          
+          # Save notes
+          echo "notes<<EOF" >> $GITHUB_OUTPUT
+          cat notes.md >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+  # ==================================================================================
+  # 🔨 Build Matrix
+  # ==================================================================================
+  build-matrix:
+    name: 🔨 Build (${{ matrix.os }}-${{ matrix.arch }})
+    needs: validate
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Linux
+          - os: ubuntu-latest
+            arch: amd64
+            platform: linux-amd64
+            runner: ubuntu-latest
+          
+          # macOS Intel
+          - os: macos-13
+            arch: amd64
+            platform: darwin-amd64
+            runner: macos-13
+          
+          # macOS ARM
+          - os: macos-15
+            arch: arm64
+            platform: darwin-arm64
+            runner: macos-15
+          
+          # Windows
+          - os: windows-latest
+            arch: amd64
+            platform: windows-amd64
+            runner: windows-latest
+    
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      
+      # Setup languages
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: 🐹 Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 'stable'
+          cache: true
+          cache-dependency-path: helpers/flavor-go/go.sum
+      
+      - name: 🦀 Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+      
+      - name: ⚡ Install uv
+        uses: astral-sh/setup-uv@v4
+      
+      # Build Go helpers
+      - name: 🐹 Build Go Helpers
+        shell: bash
+        run: |
+          cd helpers/flavor-go
+          
+          # Build with version info
+          VERSION="${{ needs.validate.outputs.version }}"
+          LDFLAGS="-s -w -X main.Version=$VERSION -X main.BuildTime=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          
+          go build -ldflags="$LDFLAGS" -o ../bin/flavor-go-launcher-${{ matrix.platform }} cmd/flavor-go-launcher/main.go
+          go build -ldflags="$LDFLAGS" -o ../bin/flavor-go-builder-${{ matrix.platform }} cmd/flavor-go-builder/main.go
+      
+      # Build Rust helpers
+      - name: 🦀 Build Rust Helpers
+        shell: bash
+        run: |
+          cd helpers/flavor-rs
+          
+          # Set version in Cargo.toml
+          VERSION="${{ needs.validate.outputs.version }}"
+          sed -i.bak "s/version = \".*\"/version = \"${VERSION#v}\"/" Cargo.toml || true
+          
+          # Build release binaries
+          cargo build --release
+          
+          # Copy to bin directory
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            cp target/release/flavor-rs-launcher.exe ../bin/flavor-rs-launcher-${{ matrix.platform }}.exe
+            cp target/release/flavor-rs-builder.exe ../bin/flavor-rs-builder-${{ matrix.platform }}.exe
+          else
+            cp target/release/flavor-rs-launcher ../bin/flavor-rs-launcher-${{ matrix.platform }}
+            cp target/release/flavor-rs-builder ../bin/flavor-rs-builder-${{ matrix.platform }}
+          fi
+      
+      # Build Python wheel (once)
+      - name: 🐍 Build Python Wheel
+        if: matrix.os == 'ubuntu-latest'
+        shell: bash
+        run: |
+          uv venv
+          uv pip install build
+          
+          # Update version in pyproject.toml
+          VERSION="${{ needs.validate.outputs.version }}"
+          sed -i "s/version = \".*\"/version = \"${VERSION#v}\"/" pyproject.toml
+          
+          # Build wheel
+          python -m build --wheel
+      
+      # Package everything
+      - name: 📦 Create Release Package
+        shell: bash
+        run: |
+          VERSION="${{ needs.validate.outputs.version }}"
+          PACKAGE_NAME="flavor-${VERSION}-${{ matrix.platform }}"
+          
+          # Create package directory
+          mkdir -p dist/$PACKAGE_NAME
+          
+          # Copy helpers
+          cp -r helpers/bin/*-${{ matrix.platform }}* dist/$PACKAGE_NAME/ 2>/dev/null || true
+          
+          # Copy Python wheel if built
+          if [ -f dist/*.whl ]; then
+            cp dist/*.whl dist/$PACKAGE_NAME/
+          fi
+          
+          # Add README and LICENSE
+          cp README.md LICENSE dist/$PACKAGE_NAME/ 2>/dev/null || true
+          
+          # Create archive
+          cd dist
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            7z a -tzip "${PACKAGE_NAME}.zip" "$PACKAGE_NAME"
+          else
+            tar czf "${PACKAGE_NAME}.tar.gz" "$PACKAGE_NAME"
+          fi
+          
+          # Create checksums
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            certutil -hashfile "${PACKAGE_NAME}.zip" SHA256 > "${PACKAGE_NAME}.zip.sha256"
+          else
+            shasum -a 256 "${PACKAGE_NAME}.tar.gz" > "${PACKAGE_NAME}.tar.gz.sha256"
+          fi
+      
+      # Upload artifacts
+      - name: 📤 Upload Package
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.platform }}
+          path: |
+            dist/flavor-*-${{ matrix.platform }}.*
+          retention-days: 30
+      
+      # Upload wheel separately (only from Linux)
+      - name: 📤 Upload Wheel
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-wheel
+          path: dist/*.whl
+          retention-days: 30
+
+  # ==================================================================================
+  # 📝 Create GitHub Release
+  # ==================================================================================
+  release:
+    name: 📝 Create Release
+    needs: [validate, build-matrix]
+    if: github.event.inputs.dry_run != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: 📥 Download All Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+      
+      - name: 🗂️ Organize Artifacts
+        shell: bash
+        run: |
+          mkdir -p release
+          
+          # Move all packages to release directory
+          find artifacts -name "*.tar.gz" -o -name "*.zip" -o -name "*.sha256" -o -name "*.whl" | while read file; do
+            mv "$file" release/
+          done
+          
+          # Create master checksum file
+          cd release
+          shasum -a 256 *.tar.gz *.zip *.whl 2>/dev/null > checksums.txt || true
+          
+          ls -la
+      
+      - name: 📝 Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.validate.outputs.version }}
+          name: Flavor ${{ needs.validate.outputs.version }}
+          body: ${{ needs.validate.outputs.release_notes }}
+          draft: false
+          prerelease: ${{ github.event.inputs.prerelease == 'true' }}
+          files: |
+            release/*
+          generate_release_notes: true
+
+  # ==================================================================================
+  # 🐍 Publish to PyPI
+  # ==================================================================================
+  pypi:
+    name: 🐍 Publish to PyPI
+    needs: [validate, build-matrix, release]
+    if: github.event.inputs.dry_run != 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/flavor
+    steps:
+      - name: 📥 Download Wheel
+        uses: actions/download-artifact@v4
+        with:
+          name: python-wheel
+          path: dist/
+      
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: 📦 Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          skip-existing: true
+          verbose: true
+
+  # ==================================================================================
+  # 📋 Release Summary
+  # ==================================================================================
+  summary:
+    name: 📋 Release Summary
+    needs: [validate, build-matrix, release, pypi]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📊 Generate Summary
+        shell: bash
+        run: |
+          echo "# 📦 Release Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 📌 Version: ${{ needs.validate.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Build status
+          echo "## 🔨 Build Status" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ needs.build-matrix.result }}" = "success" ]; then
+            echo "✅ All platform builds completed successfully" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Some builds failed" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Release status
+          echo "## 📝 Release Status" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ needs.release.result }}" = "success" ]; then
+            echo "✅ GitHub Release created" >> $GITHUB_STEP_SUMMARY
+            echo "🔗 [View Release](https://github.com/${{ github.repository }}/releases/tag/${{ needs.validate.outputs.version }})" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.release.result }}" = "skipped" ]; then
+            echo "⏭️ Release skipped (dry run)" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Release creation failed" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # PyPI status
+          echo "## 🐍 PyPI Status" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ needs.pypi.result }}" = "success" ]; then
+            echo "✅ Published to PyPI" >> $GITHUB_STEP_SUMMARY
+            echo "🔗 [View on PyPI](https://pypi.org/project/flavor/)" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.pypi.result }}" = "skipped" ]; then
+            echo "⏭️ PyPI publish skipped" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ PyPI publish failed" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Artifacts
+          echo "## 📦 Release Artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Platform | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Linux AMD64 | ✅ |" >> $GITHUB_STEP_SUMMARY
+          echo "| macOS Intel | ✅ |" >> $GITHUB_STEP_SUMMARY
+          echo "| macOS ARM | ✅ |" >> $GITHUB_STEP_SUMMARY
+          echo "| Windows AMD64 | ✅ |" >> $GITHUB_STEP_SUMMARY
+          echo "| Python Wheel | ✅ |" >> $GITHUB_STEP_SUMMARY
