@@ -1,0 +1,487 @@
+name: 🚀 Release Pipeline
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., 0.3.1)'
+        required: true
+        type: string
+      prerelease:
+        description: 'Mark as pre-release'
+        required: false
+        default: false
+        type: boolean
+      dry_run:
+        description: 'Dry run (no actual release)'
+        required: false
+        default: false
+        type: boolean
+      publish_testpypi:
+        description: '☑️ Publish to TestPyPI'
+        required: false
+        default: false
+        type: boolean
+      publish_pypi:
+        description: '☑️ Publish to PyPI'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+  actions: read
+
+jobs:
+  # ==================================================================================
+  # 🔍 Validate and Prepare
+  # ==================================================================================
+  prepare:
+    name: 🔍 Prepare Release
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      version_tag: ${{ steps.version.outputs.version_tag }}
+      helper_run_id: ${{ steps.helper.outputs.run_id }}
+      flavor_run_id: ${{ steps.flavor.outputs.run_id }}
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: 📝 Validate Version
+        id: version
+        run: .github/scripts/validate-release-version.sh "${{ github.event.inputs.version }}"
+      
+      - name: 🔍 Find Latest Successful Runs
+        id: find_runs
+        run: .github/scripts/get-release-runs.sh
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+  # ==================================================================================
+  # 🎡 Collect Platform Wheels
+  # ==================================================================================
+  collect-wheels:
+    name: 🎡 Collect Platform Wheels
+    needs: prepare
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout for scripts
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            .github/scripts
+          sparse-checkout-cone-mode: false
+      
+      - name: 📥 Download wheel artifacts from Flavor Pipeline
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          workflow: 03-flavor-pipeline.yml
+          run_id: ${{ needs.prepare.outputs.flavor_run_id }}
+          name_is_regexp: true
+          name: ^flavor-wheel-
+          path: ./wheels
+          workflow_conclusion: ""  # Allow any conclusion since wheels may succeed even if PSP fails
+      
+      - name: 🔧 Organize and rename wheels
+        run: |
+          .github/scripts/organize-release-wheels.sh \
+            wheels \
+            release-wheels \
+            "${{ needs.prepare.outputs.version }}"
+      
+      - name: 📤 Upload collected wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-wheels
+          path: release-wheels/*.whl
+          retention-days: 30
+
+  # ==================================================================================
+  # 📦 Collect PSP Packages
+  # ==================================================================================
+  collect-packages:
+    name: 📦 Collect PSP Packages
+    needs: prepare
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout for scripts
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            .github/scripts
+          sparse-checkout-cone-mode: false
+      
+      - name: 📥 Download Flavor PSP artifacts
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          workflow: 03-flavor-pipeline.yml
+          run_id: ${{ needs.prepare.outputs.flavor_run_id }}
+          name_is_regexp: true
+          name: ^flavor-${{ needs.prepare.outputs.version }}-
+          path: ./flavor-psp
+          workflow_conclusion: ""  # Allow any conclusion since we may have partial success
+        continue-on-error: true
+      
+      - name: 📥 Download Taster artifacts
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          workflow: 04-taster-pipeline.yml
+          name_is_regexp: true
+          name: ^taster-
+          path: ./taster-psp
+        continue-on-error: true
+      
+      - name: 🔧 Organize PSP packages
+        run: |
+          .github/scripts/organize-release-packages.sh \
+            release-psp \
+            "${{ needs.prepare.outputs.version }}" \
+            flavor-psp \
+            taster-psp
+      
+      - name: 📤 Upload collected packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-psp
+          path: release-psp/*.psp
+          retention-days: 30
+
+  # ==================================================================================
+  # 📊 Generate Release Assets
+  # ==================================================================================
+  generate-assets:
+    name: 📊 Generate Release Assets
+    needs: [prepare, collect-wheels, collect-packages]
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 📥 Download wheels
+        uses: actions/download-artifact@v4
+        with:
+          name: release-wheels
+          path: ./release
+      
+      - name: 📥 Download PSP packages
+        uses: actions/download-artifact@v4
+        with:
+          name: release-psp
+          path: ./release
+      
+      - name: 🔧 Generate checksums
+        run: |
+          cd release
+          
+          # Generate SHA256 checksums
+          echo "# SHA256 Checksums" > checksums.txt
+          echo "" >> checksums.txt
+          
+          if ls *.whl >/dev/null 2>&1; then
+            echo "## Python Wheels" >> checksums.txt
+            sha256sum *.whl >> checksums.txt
+            echo "" >> checksums.txt
+          fi
+          
+          if ls *.psp >/dev/null 2>&1; then
+            echo "## PSP Packages" >> checksums.txt
+            sha256sum *.psp >> checksums.txt
+          fi
+          
+          echo "📊 Generated checksums:"
+          cat checksums.txt
+      
+      - name: 📝 Generate Release Notes
+        run: |
+          VERSION="${{ needs.prepare.outputs.version }}"
+          
+          cat > release/release-notes.md << 'EOF'
+          # Flavor Pack ${{ needs.prepare.outputs.version }}
+          
+          ## 🎯 Quick Install
+          
+          ### Install from PyPI
+          ```bash
+          # Install platform-specific wheel with embedded helpers
+          pip install flavorpack==${{ needs.prepare.outputs.version }}
+          
+          # Or download and run the self-contained PSP
+          curl -LO https://github.com/${{ github.repository }}/releases/download/v${{ needs.prepare.outputs.version }}/flavor-${{ needs.prepare.outputs.version }}-linux_amd64.psp
+          chmod +x flavor-*.psp
+          ./flavor-*.psp --help
+          ```
+          
+          ## 📦 Release Assets
+          
+          ### Python Wheels
+          Platform-specific wheels with embedded Go and Rust helpers:
+          - `flavorpack-${{ needs.prepare.outputs.version }}-py3-none-manylinux2014_x86_64.whl` - Linux x86_64
+          - `flavorpack-${{ needs.prepare.outputs.version }}-py3-none-manylinux2014_aarch64.whl` - Linux ARM64
+          - `flavorpack-${{ needs.prepare.outputs.version }}-py3-none-macosx_10_9_x86_64.whl` - macOS Intel
+          - `flavorpack-${{ needs.prepare.outputs.version }}-py3-none-macosx_11_0_arm64.whl` - macOS Apple Silicon
+          - `flavorpack-${{ needs.prepare.outputs.version }}-py3-none-win_amd64.whl` - Windows x86_64
+          
+          ### Self-Contained PSP Packages
+          Ready-to-run executables (no Python required):
+          - `flavor-${{ needs.prepare.outputs.version }}-linux_amd64.psp` - Linux x86_64
+          - `flavor-${{ needs.prepare.outputs.version }}-linux_arm64.psp` - Linux ARM64
+          - `flavor-${{ needs.prepare.outputs.version }}-darwin_amd64.psp` - macOS Intel
+          - `flavor-${{ needs.prepare.outputs.version }}-darwin_arm64.psp` - macOS Apple Silicon
+          - `flavor-${{ needs.prepare.outputs.version }}-windows_amd64.psp` - Windows x86_64
+          
+          ### Test Packages
+          - `taster-${{ needs.prepare.outputs.version }}-*.psp` - Comprehensive test suite
+          
+          ## 🔧 What's New
+          
+          See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/docs/CHANGELOG.md) for detailed changes.
+          
+          ## 🔒 Verification
+          
+          All packages are signed with Ed25519. Verify checksums:
+          ```bash
+          curl -LO https://github.com/${{ github.repository }}/releases/download/v${{ needs.prepare.outputs.version }}/checksums.txt
+          sha256sum -c checksums.txt
+          ```
+          
+          ## 📚 Documentation
+          
+          - [User Guide](https://github.com/${{ github.repository }}/blob/main/docs/USER-GUIDE.md)
+          - [API Reference](https://github.com/${{ github.repository }}/blob/main/docs/API-REFERENCE.md)
+          - [Troubleshooting](https://github.com/${{ github.repository }}/blob/main/docs/TROUBLESHOOTING.md)
+          EOF
+      
+      - name: 📤 Upload release assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-assets
+          path: release/
+          retention-days: 30
+
+  # ==================================================================================
+  # 🏷️ Create GitHub Release
+  # ==================================================================================
+  create-release:
+    name: 🏷️ Create GitHub Release
+    needs: [prepare, generate-assets]
+    if: github.event.inputs.dry_run != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 📥 Download all release artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+      
+      - name: 🗂️ Extract and organize release files
+        run: |
+          mkdir -p release
+          
+          # Extract wheels from release-wheels artifact
+          if [ -d "artifacts/release-wheels" ]; then
+            echo "📦 Extracting wheels..."
+            cp artifacts/release-wheels/*.whl release/ 2>/dev/null || true
+          fi
+          
+          # Extract PSP packages from release-psp artifact
+          if [ -d "artifacts/release-psp" ]; then
+            echo "📦 Extracting PSP packages..."
+            cp artifacts/release-psp/*.psp release/ 2>/dev/null || true
+          fi
+          
+          # Extract other assets from release-assets artifact
+          if [ -d "artifacts/release-assets" ]; then
+            echo "📦 Extracting release assets..."
+            cp artifacts/release-assets/*.txt release/ 2>/dev/null || true
+            cp artifacts/release-assets/*.md release/ 2>/dev/null || true
+            # Also copy any wheels/psp that might be in release-assets
+            cp artifacts/release-assets/*.whl release/ 2>/dev/null || true
+            cp artifacts/release-assets/*.psp release/ 2>/dev/null || true
+          fi
+          
+          echo "📋 Final release files:"
+          ls -la release/
+          echo ""
+          echo "📊 File count by type:"
+          echo "  Wheels: $(ls -1 release/*.whl 2>/dev/null | wc -l)"
+          echo "  PSP packages: $(ls -1 release/*.psp 2>/dev/null | wc -l)"
+          echo "  Other: $(ls -1 release/*.txt release/*.md 2>/dev/null | wc -l)"
+      
+      - name: 🏷️ Create Git Tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Update VERSION file
+          echo "${{ needs.prepare.outputs.version }}" > VERSION
+          git add VERSION
+          git commit -m "🚀 Release v${{ needs.prepare.outputs.version }}"
+          
+          # Create and push tag
+          git tag -a "${{ needs.prepare.outputs.version_tag }}" \
+            -m "Release ${{ needs.prepare.outputs.version }}"
+          git push origin "${{ needs.prepare.outputs.version_tag }}"
+      
+      - name: 🚀 Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.prepare.outputs.version_tag }}
+          name: Flavor Pack ${{ needs.prepare.outputs.version }}
+          body_path: release/release-notes.md
+          draft: false
+          prerelease: ${{ github.event.inputs.prerelease == 'true' }}
+          files: |
+            release/*.whl
+            release/*.psp
+            release/checksums.txt
+          generate_release_notes: false
+
+  # ==================================================================================
+  # 🧪 Publish to TestPyPI (optional)
+  # ==================================================================================
+  publish-testpypi:
+    name: 🧪 Publish to TestPyPI
+    needs: [prepare, generate-assets]
+    if: github.event.inputs.dry_run != 'true' && github.event.inputs.publish_testpypi == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/project/flavorpack
+    permissions:
+      id-token: write
+    steps:
+      - name: 📥 Download wheels
+        uses: actions/download-artifact@v4
+        with:
+          name: release-wheels
+          path: ./dist
+      
+      - name: 🔍 Verify wheels
+        run: |
+          echo "📦 Wheels to publish to TestPyPI:"
+          ls -la dist/*.whl
+          
+          # Verify wheel names match PyPI expectations
+          for wheel in dist/*.whl; do
+            basename=$(basename "$wheel")
+            if [[ ! "$basename" =~ ^flavorpack-.*\.whl$ ]]; then
+              echo "::error::Invalid wheel name for PyPI: $basename"
+              exit 1
+            fi
+          done
+      
+      - name: 🧪 Publish to TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+          skip-existing: true
+          verbose: true
+
+  # ==================================================================================
+  # 🐍 Publish to PyPI
+  # ==================================================================================
+  publish-pypi:
+    name: 🐍 Publish to PyPI
+    needs: [prepare, create-release]
+    if: github.event.inputs.dry_run != 'true' && github.event.inputs.publish_pypi == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/flavorpack
+    permissions:
+      id-token: write
+    steps:
+      - name: 📥 Download wheels
+        uses: actions/download-artifact@v4
+        with:
+          name: release-wheels
+          path: ./dist
+      
+      - name: 🔍 Verify wheels
+        run: |
+          echo "📦 Wheels to publish:"
+          ls -la dist/*.whl
+          
+          # Verify wheel names match PyPI expectations
+          for wheel in dist/*.whl; do
+            basename=$(basename "$wheel")
+            if [[ ! "$basename" =~ ^flavorpack-.*\.whl$ ]]; then
+              echo "::error::Invalid wheel name for PyPI: $basename"
+              exit 1
+            fi
+          done
+      
+      - name: 🚀 Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
+          skip-existing: true
+          verbose: true
+
+  # ==================================================================================
+  # 📊 Release Summary
+  # ==================================================================================
+  summary:
+    name: 📊 Release Summary
+    needs: [prepare, collect-wheels, collect-packages, create-release, publish-pypi, publish-testpypi]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📊 Generate Summary
+        run: |
+          cat >> $GITHUB_STEP_SUMMARY << 'EOF'
+          # 🚀 Release Summary for Flavor Pack ${{ needs.prepare.outputs.version }}
+          
+          ## 📌 Release Information
+          - **Version**: ${{ needs.prepare.outputs.version }}
+          - **Tag**: ${{ needs.prepare.outputs.version_tag }}
+          - **Type**: ${{ github.event.inputs.prerelease == 'true' && 'Pre-release' || 'Stable Release' }}
+          - **Mode**: ${{ github.event.inputs.dry_run == 'true' && 'Dry Run' || 'Production' }}
+          
+          ## 🔨 Build Sources
+          - **Helpers**: Run #${{ needs.prepare.outputs.helper_run_id }}
+          - **Flavor Pipeline**: Run #${{ needs.prepare.outputs.flavor_run_id }}
+          
+          ## 📦 Asset Collection
+          | Asset Type | Status |
+          |------------|--------|
+          | Platform Wheels | ${{ needs.collect-wheels.result == 'success' && '✅ Collected' || '❌ Failed' }} |
+          | PSP Packages | ${{ needs.collect-packages.result == 'success' && '✅ Collected' || '❌ Failed' }} |
+          | Release Assets | ${{ needs.generate-assets.result == 'success' && '✅ Generated' || '❌ Failed' }} |
+          
+          ## 🚀 Publishing Status
+          | Target | Status | Link |
+          |--------|--------|------|
+          | GitHub Release | ${{ needs.create-release.result == 'success' && '✅ Published' || needs.create-release.result == 'skipped' && '⏭️ Skipped (Dry Run)' || '❌ Failed' }} | ${{ needs.create-release.result == 'success' && format('[View Release](https://github.com/{0}/releases/tag/{1})', github.repository, needs.prepare.outputs.version_tag) || 'N/A' }} |
+          | TestPyPI | ${{ needs.publish-testpypi.result == 'success' && '✅ Published' || needs.publish-testpypi.result == 'skipped' && '⏭️ Skipped' || '❌ Failed' }} | ${{ needs.publish-testpypi.result == 'success' && format('[View on TestPyPI](https://test.pypi.org/project/flavorpack/{0}/)', needs.prepare.outputs.version) || 'N/A' }} |
+          | PyPI | ${{ needs.publish-pypi.result == 'success' && '✅ Published' || needs.publish-pypi.result == 'skipped' && '⏭️ Skipped' || '❌ Failed' }} | ${{ needs.publish-pypi.result == 'success' && format('[View on PyPI](https://pypi.org/project/flavorpack/{0}/)', needs.prepare.outputs.version) || 'N/A' }} |
+          
+          ## 📋 Next Steps
+          EOF
+          
+          if [ "${{ needs.create-release.result }}" = "success" ]; then
+            cat >> $GITHUB_STEP_SUMMARY << 'EOF'
+          1. Verify the release at https://github.com/${{ github.repository }}/releases/tag/${{ needs.prepare.outputs.version_tag }}
+          2. Test installation: `pip install flavorpack==${{ needs.prepare.outputs.version }}`
+          3. Update documentation if needed
+          4. Announce the release
+          EOF
+          elif [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+            cat >> $GITHUB_STEP_SUMMARY << 'EOF'
+          This was a dry run. To create the actual release:
+          1. Review the collected assets
+          2. Run the workflow again with dry_run = false
+          EOF
+          else
+            cat >> $GITHUB_STEP_SUMMARY << 'EOF'
+          ⚠️ The release process encountered issues. Please check the logs and retry if necessary.
+          EOF
+          fi

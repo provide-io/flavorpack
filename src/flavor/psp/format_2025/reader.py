@@ -1,39 +1,40 @@
-#!/usr/bin/env python3
-# src/flavor/psp/format_2025/reader.py
-# PSPF 2025 Bundle Reader - Uses backend system for flexible access
+#
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
 
+"""PSPF 2025 Format Reader."""
+
+from __future__ import annotations
+
+from collections.abc import Generator
+import contextlib
 from contextlib import contextmanager
 import gzip
-import io
-import json
 from pathlib import Path
-import struct
-import tarfile
-from typing import Any
+from typing import Any, Self
 import zlib
 
-from cryptography.exceptions import InvalidSignature
-from pyvider.telemetry import logger
+from provide.foundation import logger
+from provide.foundation.crypto import Ed25519Verifier
+from provide.foundation.serialization import json_loads
 
+from flavor.config.defaults import (
+    ACCESS_AUTO,
+    ACCESS_MMAP,
+    DEFAULT_HEADER_SIZE,
+    DEFAULT_MAGIC_TRAILER_SIZE,
+    DEFAULT_SLOT_DESCRIPTOR_SIZE,
+)
 from flavor.psp.format_2025.backends import (
     Backend,
     StreamBackend,
     create_backend,
 )
 from flavor.psp.format_2025.constants import (
-    ACCESS_AUTO,
-    ACCESS_MMAP,
-    EMOJI_MAGIC_SIZE,
-    ENCODING_GZIP,
-    ENCODING_TAR,
-    ENCODING_TGZ,
-    HEADER_SIZE,
-    PSPF_MAGIC,
-    PSPF_VERSION,
-    SLOT_DESCRIPTOR_SIZE,
-    TRAILING_MAGIC,
+    TRAILER_END_MAGIC,
+    TRAILER_START_MAGIC,
 )
-from flavor.psp.format_2025.crypto import verify_signature
 from flavor.psp.format_2025.index import PSPFIndex
 from flavor.psp.format_2025.slots import SlotDescriptor, SlotView
 
@@ -48,9 +49,7 @@ class PSPFReader:
             bundle_path: Path to PSPF bundle
             mode: Backend mode (ACCESS_AUTO, ACCESS_MMAP, ACCESS_FILE, etc.)
         """
-        self.bundle_path = (
-            Path(bundle_path) if isinstance(bundle_path, str) else bundle_path
-        )
+        self.bundle_path = Path(bundle_path) if isinstance(bundle_path, str) else bundle_path
         self._backend: Backend | None = None
         self._index: PSPFIndex | None = None
         self._metadata: dict[str, Any] | None = None
@@ -58,12 +57,17 @@ class PSPFReader:
         self._slot_descriptors: list[SlotDescriptor] | None = None
         self.mode = mode
 
-    def __enter__(self):
+        # Slot extractor for extraction operations
+        from flavor.psp.format_2025.extraction import SlotExtractor
+
+        self._extractor = SlotExtractor(self)
+
+    def __enter__(self) -> Self:
         """Context manager entry."""
         self.open()
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         """Context manager exit."""
         self.close()
 
@@ -80,100 +84,62 @@ class PSPFReader:
             self._backend = None
 
     @contextmanager
-    def extraction_lock(self, extract_dir: Path, timeout: float = 30.0):
+    def extraction_lock(self, extract_dir: Path, timeout: float = 30.0) -> Generator[Path, None, None]:
         """Acquire an extraction lock for a given directory."""
-        from flavor.resilience import default_lock_manager
+        from flavor.locking import default_lock_manager
 
         lock_file = extract_dir / ".extraction.lock"
         with default_lock_manager.lock(lock_file.name, timeout=timeout) as lock:
             yield lock
 
-    def verify_magic(self) -> bool:
-        """Verify trailing package and wand emoji magic."""
+    def verify_magic_trailer(self) -> bool:
+        """Verify MagicTrailer emoji bookends at end of file."""
         if not self._backend:
             self.open()
 
-        # Check trailing magic at end of file
+        assert self._backend is not None
+        # Read MagicTrailer at end of file
         file_size = self.bundle_path.stat().st_size
-        magic_data = self._backend.read_at(
-            file_size - EMOJI_MAGIC_SIZE, EMOJI_MAGIC_SIZE
-        )
+        trailer = self._backend.read_at(file_size - DEFAULT_MAGIC_TRAILER_SIZE, DEFAULT_MAGIC_TRAILER_SIZE)
 
         # Convert to bytes if memoryview
-        if isinstance(magic_data, memoryview):
-            magic_data = bytes(magic_data)
+        if isinstance(trailer, memoryview):
+            trailer = bytes(trailer)
 
-        try:
-            # Check if it matches the expected emoji magic
-            return magic_data.decode("utf-8") == TRAILING_MAGIC
-        except (UnicodeDecodeError, AttributeError):
-            return False
+        # Verify magic bytes at start and end
+        return trailer[:4] == TRAILER_START_MAGIC and trailer[-4:] == TRAILER_END_MAGIC
 
-    def detect_launcher_size(self) -> int:
-        """Detect launcher size by finding index block."""
-        if self._launcher_size is not None:
-            return self._launcher_size
-
+    def read_magic_trailer(self) -> bytes:
+        """Read MagicTrailer and extract index data."""
         if not self._backend:
             self.open()
 
+        assert self._backend is not None
         file_size = self.bundle_path.stat().st_size
 
-        # Search for PSPF magic in smaller chunks to avoid missing it
-        # Most launchers are 1-3MB, so 10MB limit should be more than enough
-        chunk_size = 64 * 1024  # 64KB chunks - smaller to avoid boundary issues
-        search_limit = min(file_size, 10 * 1024 * 1024)
-        
-        for offset in range(0, search_limit, chunk_size):
-            # Read chunk (64KB should be fast enough)
-            read_size = min(chunk_size, file_size - offset)
-            data = self._backend.read_at(offset, read_size)
+        # Read MagicTrailer (last 8200 bytes)
+        trailer = self._backend.read_at(file_size - DEFAULT_MAGIC_TRAILER_SIZE, DEFAULT_MAGIC_TRAILER_SIZE)
 
-            # Convert memoryview to bytes if needed
-            search_data = bytes(data) if isinstance(data, memoryview) else data
+        # Convert to bytes if memoryview
+        if isinstance(trailer, memoryview):
+            trailer = bytes(trailer)
 
-            # Look for PSPF magic (8 bytes: "PSPF2025")
-            pos = search_data.find(PSPF_MAGIC[:8])
-            if pos >= 0:
-                # Validate this is actually the index, not a false positive
-                potential_offset = offset + pos
+        # Verify magic bytes
+        if trailer[:4] != TRAILER_START_MAGIC:
+            raise ValueError("Invalid MagicTrailer: missing start marker")
+        if trailer[-4:] != TRAILER_END_MAGIC:
+            raise ValueError("Invalid MagicTrailer: missing end marker")
 
-                # Try to read and validate the version field (next 4 bytes after magic)
-                try:
-                    if potential_offset + 12 <= file_size:
-                        version_data = self._backend.read_at(potential_offset + 8, 4)
-                        version = struct.unpack("<I", version_data)[0]
+        # Extract index from between magic markers
+        index_data = trailer[4 : 4 + DEFAULT_HEADER_SIZE]
 
-                        # Check if version looks reasonable (PSPF version 0x20250001)
-                        if version == PSPF_VERSION:
-                            self._launcher_size = potential_offset
-                            logger.debug(
-                                "🔍 Found and validated PSPF magic at offset",
-                                offset=self._launcher_size,
-                                version=hex(version),
-                            )
-                            return self._launcher_size
-                        else:
-                            logger.debug(
-                                "⚠️ Found PSPF-like bytes but invalid version",
-                                offset=potential_offset,
-                                version=hex(version),
-                            )
-                except Exception as e:
-                    logger.debug(
-                        "⚠️ Error validating potential PSPF magic",
-                        offset=potential_offset,
-                        error=str(e),
-                    )
-
-        # Log warning if not found
-        logger.warning(
-            "⚠️ Could not find PSPF magic in package, defaulting to offset 0",
+        logger.debug(
+            "🔍 Found index in MagicTrailer",
+            trailer_size=DEFAULT_MAGIC_TRAILER_SIZE,
             file_size=file_size,
-            searched_bytes=search_limit,
         )
-        self._launcher_size = 0
-        return 0
+
+        return index_data
 
     def read_index(self) -> PSPFIndex:
         """Read and verify index block."""
@@ -183,20 +149,15 @@ class PSPFReader:
         if not self._backend:
             self.open()
 
-        launcher_size = self.detect_launcher_size()
-        logger.debug(
-            "📦 Reading index from offset", offset=launcher_size, size=HEADER_SIZE
-        )
-
-        # Read index using backend
-        index_data = self._backend.read_at(launcher_size, HEADER_SIZE)
+        # Read index from MagicTrailer
+        index_data = self.read_magic_trailer()
 
         # Convert to bytes if memoryview
         if isinstance(index_data, memoryview):
             index_data = bytes(index_data)
 
         self._index = PSPFIndex.unpack(index_data)
-        
+
         # Debug log the parsed index values
         logger.debug(
             "📊 Parsed index values",
@@ -212,10 +173,10 @@ class PSPFReader:
         expected_checksum = self._index.index_checksum
         if expected_checksum != 0:  # Only verify if checksum is set
             data_for_check = bytearray(index_data)
-            data_for_check[12:16] = (
-                b"\x00\x00\x00\x00"  # Zero out checksum field at correct offset
+            data_for_check[4:8] = (
+                b"\x00\x00\x00\x00"  # Zero out checksum field at offset 4 (after format_version)
             )
-            actual_checksum = zlib.adler32(data_for_check)
+            actual_checksum = zlib.adler32(data_for_check) & 0xFFFFFFFF
 
             if expected_checksum != actual_checksum:
                 # In test environments, launcher binaries may differ between platforms
@@ -233,7 +194,7 @@ class PSPFReader:
 
         return self._index
 
-    def read_metadata(self) -> dict:
+    def read_metadata(self) -> dict[str, Any]:
         """Read and parse metadata."""
         if self._metadata:
             return self._metadata
@@ -241,48 +202,33 @@ class PSPFReader:
         if not self._backend:
             self.open()
 
+        assert self._backend is not None
         index = self.read_index()
 
         # Read metadata using backend
-        metadata_data = self._backend.read_at(
-            index.metadata_offset, index.metadata_size
-        )
+        metadata_data = self._backend.read_at(index.metadata_offset, index.metadata_size)
 
         # Convert to bytes if memoryview
         if isinstance(metadata_data, memoryview):
             metadata_data = bytes(metadata_data)
 
-        # Verify metadata checksum (Adler32 stored in first 4 bytes of 32-byte field)
-        actual_checksum = zlib.adler32(metadata_data)
-        # Extract the Adler32 from the first 4 bytes of the checksum field
-        expected_checksum = (
-            struct.unpack("<I", index.metadata_checksum[:4])[0]
-            if index.metadata_checksum
-            else 0
-        )
-        if expected_checksum != 0 and actual_checksum != expected_checksum:
+        # Verify metadata checksum (full SHA-256 - 32 bytes)
+        import hashlib
+
+        actual_checksum = hashlib.sha256(metadata_data).digest()
+        expected_checksum = index.metadata_checksum if index.metadata_checksum else b"\x00" * 32
+        if expected_checksum != b"\x00" * 32 and actual_checksum != expected_checksum:
             raise ValueError(
-                f"Metadata checksum mismatch: expected {expected_checksum}, got {actual_checksum}"
+                f"Metadata checksum mismatch: expected {expected_checksum.hex()[:16]}..., got {actual_checksum.hex()[:16]}..."
             )
 
         # Parse metadata (always gzipped JSON in current implementation)
         # Decompress first
-        try:
+        with contextlib.suppress(gzip.BadGzipFile):
             metadata_data = gzip.decompress(metadata_data)
-        except gzip.BadGzipFile:
-            # Not compressed, use as-is
-            pass
 
         # Parse JSON
-        self._metadata = json.loads(metadata_data.decode("utf-8"))
-
-        # Remove the old conditional that was checking metadata_format
-        if False:  # Keep structure for now
-            # Legacy tar.gz format
-            with tarfile.open(fileobj=io.BytesIO(metadata_data), mode="r:gz") as tar:
-                psp_member = tar.getmember("psp.json")
-                psp_data = tar.extractfile(psp_member).read()
-                self._metadata = json.loads(psp_data)
+        self._metadata = json_loads(metadata_data.decode("utf-8"))
 
         return self._metadata
 
@@ -294,13 +240,14 @@ class PSPFReader:
         if not self._backend:
             self.open()
 
+        assert self._backend is not None
         index = self.read_index()
         descriptors = []
 
         # Read all slot descriptors
         for i in range(index.slot_count):
-            offset = index.slot_table_offset + (i * SLOT_DESCRIPTOR_SIZE)
-            data = self._backend.read_at(offset, SLOT_DESCRIPTOR_SIZE)
+            offset = index.slot_table_offset + (i * DEFAULT_SLOT_DESCRIPTOR_SIZE)
+            data = self._backend.read_at(offset, DEFAULT_SLOT_DESCRIPTOR_SIZE)
 
             # Convert to bytes if memoryview
             if isinstance(data, memoryview):
@@ -327,12 +274,11 @@ class PSPFReader:
         if not self._backend:
             self.open()
 
+        assert self._backend is not None
         descriptors = self.read_slot_descriptors()
 
         if slot_index < 0 or slot_index >= len(descriptors):
-            raise ValueError(
-                f"Invalid slot index: {slot_index} (have {len(descriptors)} slots)"
-            )
+            raise ValueError(f"Invalid slot index: {slot_index} (have {len(descriptors)} slots)")
 
         descriptor = descriptors[slot_index]
 
@@ -343,95 +289,64 @@ class PSPFReader:
         if isinstance(slot_data, memoryview):
             slot_data = bytes(slot_data)
 
-        # Verify checksum
-        actual_checksum = zlib.adler32(slot_data)
+        # Verify checksum (SHA-256 first 8 bytes)
+        import hashlib
+
+        hash_bytes = hashlib.sha256(slot_data).digest()[:8]
+        actual_checksum = int.from_bytes(hash_bytes, byteorder="little")
+
+        # DEBUG: Log checksum details for troubleshooting
+        logger.debug(
+            "🔍 Verifying slot checksum",
+            slot_index=slot_index,
+            expected=f"{descriptor.checksum:016x}",
+            actual=f"{actual_checksum:016x}",
+            data_size=len(slot_data),
+        )
+
         if actual_checksum != descriptor.checksum:
+            logger.error(
+                f"❌ Slot {slot_index} checksum mismatch: expected {descriptor.checksum:016x}, got {actual_checksum:016x}, size={len(slot_data)}"
+            )
             raise ValueError(
-                f"Slot {slot_index} checksum mismatch: expected {descriptor.checksum}, got {actual_checksum}"
+                f"Slot {slot_index} checksum mismatch: expected {descriptor.checksum:016x}, got {actual_checksum:016x}"
             )
 
-        # Decompress if needed based on encoding
-        if descriptor.encoding == ENCODING_GZIP:
+        # Decompress if needed based on operations
+        from flavor.psp.format_2025.operations import OP_GZIP, OP_TAR, unpack_operations
+
+        ops = unpack_operations(descriptor.operations)
+
+        if ops == [OP_GZIP]:
             return gzip.decompress(slot_data)
-        elif descriptor.encoding == ENCODING_TGZ:
+        elif ops == [OP_TAR, OP_GZIP]:
             # For tar.gz, decompress gzip layer (tar extraction happens later)
             return gzip.decompress(slot_data)
-        elif descriptor.encoding == ENCODING_TAR:
+        elif ops == [OP_TAR]:
             # Uncompressed tar, no decompression needed
             return slot_data
         else:
             return slot_data
 
     def get_slot_view(self, slot_index: int) -> SlotView:
-        """Get a lazy view of a slot.
+        """Get a lazy view of a slot."""
+        return self._extractor.get_slot_view(slot_index)
 
-        Args:
-            slot_index: Index of the slot
-
-        Returns:
-            SlotView: Lazy view that loads data on demand
-        """
-        if not self._backend:
-            self.open()
-
-        descriptors = self.read_slot_descriptors()
-
-        if slot_index < 0 or slot_index >= len(descriptors):
-            raise ValueError(f"Invalid slot index: {slot_index}")
-
-        return SlotView(descriptors[slot_index], self._backend)
-
-    def stream_slot(self, slot_index: int, chunk_size: int = 8192):
-        """Stream a slot in chunks.
-
-        Args:
-            slot_index: Index of the slot to stream
-            chunk_size: Size of chunks to yield
-
-        Yields:
-            bytes: Chunks of slot data
-        """
-        view = self.get_slot_view(slot_index)
-        yield from view.stream(chunk_size)
+    def stream_slot(self, slot_index: int, chunk_size: int = 8192) -> Any:
+        """Stream a slot in chunks."""
+        return self._extractor.stream_slot(slot_index, chunk_size)
 
     def verify_all_checksums(self) -> bool:
-        """Verify all slot checksums.
+        """Verify all slot checksums."""
+        return self._extractor.verify_all_checksums()
 
-        Returns:
-            bool: True if all checksums are valid, False otherwise
-        """
-        if not self._backend:
-            self.open()
+    def extract_slot(self, slot_index: int, dest_dir: Path) -> Path:
+        """Extract a slot to a directory."""
+        return self._extractor.extract_slot(slot_index, dest_dir)
 
-        try:
-            descriptors = self.read_slot_descriptors()
-
-            if not descriptors:
-                logger.debug("✅ No slots to verify")
-                return True
-
-            for i, descriptor in enumerate(descriptors):
-                # Read slot data
-                slot_data = self._backend.read_slot(descriptor)
-
-                # Convert to bytes if memoryview
-                if isinstance(slot_data, memoryview):
-                    slot_data = bytes(slot_data)
-
-                # Verify checksum
-                actual_checksum = zlib.adler32(slot_data)
-                if actual_checksum != descriptor.checksum:
-                    logger.error(
-                        f"❌ Slot {i} checksum mismatch: expected {descriptor.checksum}, got {actual_checksum}"
-                    )
-                    return False
-
-            logger.debug(f"✅ All {len(descriptors)} slot checksums verified")
-            return True
-
-        except Exception as e:
-            logger.error(f"❌ Error verifying checksums: {e}")
-            return False
+    def verify_slot_integrity(self, slot_index: int) -> bool:
+        """Verify integrity of a specific slot."""
+        return self._extractor.verify_slot_integrity(slot_index)
 
     def verify_signature(self) -> bool:
         """Verify bundle signature.
@@ -444,15 +359,14 @@ class PSPFReader:
         if not self._backend:
             self.open()
 
+        assert self._backend is not None
         index = self.read_index()
 
         # Get the signature from the index block
         signature = index.integrity_signature[:64]  # First 64 bytes, rest is padding
 
         # Get the metadata to verify (uncompressed JSON)
-        metadata_compressed = self._backend.read_at(
-            index.metadata_offset, index.metadata_size
-        )
+        metadata_compressed = self._backend.read_at(index.metadata_offset, index.metadata_size)
 
         # Convert to bytes if memoryview
         if isinstance(metadata_compressed, memoryview):
@@ -463,13 +377,10 @@ class PSPFReader:
 
         metadata_json = gzip.decompress(metadata_compressed)
 
-        try:
-            verify_signature(metadata_json, signature, index.public_key)
-            return True
-        except InvalidSignature:
-            return False
+        verifier = Ed25519Verifier(index.public_key)
+        return verifier.verify(metadata_json, signature)  # type: ignore[no-any-return]
 
-    def verify_integrity(self) -> dict:
+    def verify_integrity(self) -> dict[str, Any]:
         """Verify complete package integrity.
 
         Returns:
@@ -477,7 +388,7 @@ class PSPFReader:
         """
         try:
             # Verify individual components
-            magic_valid = self.verify_magic()
+            magic_valid = self.verify_magic_trailer()
             checksums_valid = self.verify_all_checksums()
             signature_valid = self.verify_signature()
             valid = magic_valid and checksums_valid and signature_valid
@@ -501,51 +412,11 @@ class PSPFReader:
                 "error": str(e),
             }
 
-    def extract_slot(self, slot_index: int, dest_dir: Path) -> Path:
-        """Extract a slot to a directory.
-
-        Args:
-            slot_index: Index of slot to extract
-            dest_dir: Destination directory
-
-        Returns:
-            Path: Path to extracted content
-        """
-        metadata = self.read_metadata()
-        slot_data = self.read_slot(slot_index)
-
-        if slot_index < len(metadata.get("slots", [])):
-            slot_info = metadata["slots"][slot_index]
-            slot_name = slot_info.get("name", f"slot_{slot_index}")
-        else:
-            slot_name = f"slot_{slot_index}"
-
-        # Check if it's a tarball
-        if self._is_tarball(slot_data):
-            logger.debug(f"📦 Slot {slot_index} is a tarball, extracting...")
-            with tarfile.open(fileobj=io.BytesIO(slot_data), mode="r") as tar:
-                # Use the filter parameter to avoid Python 3.14 deprecation warning
-                tar.extractall(dest_dir, filter="data")
-            return dest_dir
-        else:
-            # Single file
-            output_path = dest_dir / slot_name
-            dest_dir.mkdir(parents=True, exist_ok=True)
-            output_path.write_bytes(slot_data)
-            logger.debug(f"📝 Wrote single file to {output_path}")
-            return output_path
-
-    def _is_tarball(self, data: bytes) -> bool:
-        """Check if data looks like a tarball."""
-        if len(data) > 512:
-            # Check for tar magic at offset 257
-            return data[257:262] == b"ustar"
-        return False
-
     def get_backend(self) -> Backend:
         """Get the backend for advanced operations."""
         if not self._backend:
             self.open()
+        assert self._backend is not None
         return self._backend
 
     def use_mmap(self) -> None:
@@ -589,7 +460,7 @@ def verify_bundle(bundle_path: Path) -> bool:
     """
     with PSPFReader(bundle_path, ACCESS_MMAP) as reader:
         # Check magic
-        if not reader.verify_magic():
+        if not reader.verify_magic_trailer():
             logger.error("❌ Invalid magic ending")
             return False
 
@@ -607,11 +478,11 @@ def verify_bundle(bundle_path: Path) -> bool:
         # Check signature if present
         try:
             if reader.verify_signature():
-                logger.debug("✅ Signature valid")
+                pass
         except Exception:
             pass  # Signature optional
 
         return True
 
 
-# 📦📖🗺️🪄
+# 🌶️📦🔚

@@ -1,10 +1,20 @@
-#!/usr/bin/env python3
+#
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
+"""TODO: Add module docstring."""
+
+from __future__ import annotations
+
 """
-Custom exceptions for the flavor package.
+Custom exceptions for the flavor pack.
 """
 
+from provide.foundation.errors import FoundationError
 
-class FlavorException(Exception):
+
+class FlavorException(FoundationError):
     """Base exception for all flavor-related errors."""
 
     pass
@@ -38,3 +48,6 @@ class VerificationError(FlavorException):
     """Raised for errors during package verification."""
 
     pass
+
+
+# 🌶️📦🔚

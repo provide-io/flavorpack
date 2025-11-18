@@ -1,17 +1,29 @@
-#!/usr/bin/env python3
 #
-# flavor/packaging/keys.py
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
 #
-"""Key generation for PSPF packages using Ed25519."""
+
+"""Key management for FlavorPack package signing."""
+
+from __future__ import annotations
 
 from pathlib import Path
 
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ed25519
+from provide.foundation.file import atomic_write
+from provide.foundation.file.directory import ensure_dir
+
+from flavor.config.defaults import DEFAULT_FILE_PERMS
 
 
 def generate_key_pair(keys_dir: Path) -> tuple[Path, Path]:
-    """Generates a new Ed25519 key pair and saves them to the specified directory.
+    """Generates a new Ed25519 key pair and saves them to PEM files.
+
+    This function is used for CLI operations where keys need to be persisted
+    to files for later use. For internal package building where keys are
+    used immediately and discarded, use flavor.psp.format_2025.crypto.generate_key_pair()
+    which returns raw bytes instead.
 
     Ed25519 is used for all PSPF packages as specified in the PSPF/2025 format.
     This provides:
@@ -25,6 +37,9 @@ def generate_key_pair(keys_dir: Path) -> tuple[Path, Path]:
 
     Returns:
         tuple: (private_key_path, public_key_path)
+
+    See Also:
+        flavor.psp.format_2025.crypto.generate_key_pair: For in-memory key generation
     """
     # Generate Ed25519 key pair
     private_key = ed25519.Ed25519PrivateKey.generate()
@@ -45,15 +60,15 @@ def generate_key_pair(keys_dir: Path) -> tuple[Path, Path]:
     private_key_path = keys_dir / "flavor-private.key"
     public_key_path = keys_dir / "flavor-public.key"
 
-    keys_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
+    ensure_dir(keys_dir, mode=0o700)
 
-    # Write private key with restricted permissions
-    private_key_path.write_bytes(private_pem)
-    private_key_path.chmod(0o600)
+    # Write private key with restricted permissions (atomic for safety)
+    atomic_write(private_key_path, private_pem)
+    private_key_path.chmod(DEFAULT_FILE_PERMS)
 
-    # Write public key
-    public_key_path.write_bytes(public_pem)
-    public_key_path.chmod(0o644)  # Public key can be readable
+    # Write public key (atomic for safety)
+    atomic_write(public_key_path, public_pem)
+    public_key_path.chmod(DEFAULT_FILE_PERMS)  # Use same security level
 
     return private_key_path, public_key_path
 
@@ -73,9 +88,7 @@ def load_private_key_raw(key_path: Path) -> bytes:
 
     pem_data = key_path.read_bytes()
     try:
-        private_key = serialization.load_pem_private_key(
-            pem_data, password=None, backend=default_backend()
-        )
+        private_key = serialization.load_pem_private_key(pem_data, password=None, backend=default_backend())
     except Exception as e:
         raise ValueError(
             f"Failed to load private key from {key_path}: {e}\n"
@@ -163,3 +176,6 @@ def load_public_key_raw(key_path: Path) -> bytes:
             f"To generate new Ed25519 keys, delete the existing keys and run:\n"
             f"  flavor keygen --output keys/"
         )
+
+
+# 🌶️📦🔚
