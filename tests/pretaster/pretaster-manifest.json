@@ -1,0 +1,24 @@
+{
+  "package": {
+    "name": "pretaster",
+    "version": "0.3.0",
+    "description": "PSPF validation test suite"
+  },
+  "execution": {
+    "command": "bash {workenv}/test-runner.sh",
+    "environment": {
+      "PATH": "{workenv}/bin:${PATH}",
+      "PRETASTER_VERSION": "0.3.0"
+    }
+  },
+  "slots": [
+    {
+      "id": "test-package",
+      "source": "test-package.tar.gz",
+      "purpose": "runtime",
+      "lifecycle": "cached",
+      "encoding": "tar.gz",
+      "target": "{workenv}"
+    }
+  ]
+}

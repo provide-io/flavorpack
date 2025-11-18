@@ -1,0 +1,758 @@
+name: 07 📦 Dependency Audit
+
+on:
+  workflow_dispatch:
+    inputs:
+      check_updates:
+        description: 'Check for dependency updates'
+        type: boolean
+        default: true
+      auto_pr:
+        description: 'Create PR for updates (if any)'
+        type: boolean
+        default: false
+  
+  schedule:
+    # Run weekly on Mondays at 4 AM UTC
+    - cron: '0 4 * * 1'
+  
+  push:
+    paths:
+      - 'requirements*.txt'
+      - 'pyproject.toml'
+      - 'poetry.lock'
+      - 'Pipfile*'
+      - 'go.mod'
+      - 'go.sum'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'yarn.lock'
+      - 'pnpm-lock.yaml'
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  # Python Dependency Audit
+  python-deps:
+    name: 🐍 Python Dependencies
+    runs-on: ubuntu-latest
+    outputs:
+      has_updates: ${{ steps.check.outputs.has_updates }}
+      update_count: ${{ steps.check.outputs.update_count }}
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: 📦 Install Audit Tools
+        run: |
+          python -m venv audit-env
+          source audit-env/bin/activate
+          pip install --upgrade pip
+          pip install \
+            pip-audit \
+            safety \
+            pip-licenses \
+            pipdeptree \
+            pip-check \
+            outdated \
+            pipgrip \
+            johnnydep \
+            pip-autoremove
+          
+          # Install project dependencies
+          pip install -e ".[dev,test]"
+      
+      - name: 🔍 Dependency Tree Analysis
+        run: |
+          source audit-env/bin/activate
+          echo "## 🐍 Python Dependency Analysis" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          echo "### Dependency Tree" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          pipdeptree --warn silence | head -100 >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          
+          # Check for circular dependencies
+          echo "### Circular Dependencies Check" >> $GITHUB_STEP_SUMMARY
+          if pipdeptree --warn fail 2>&1 | grep -q "circular"; then
+            echo "⚠️ Circular dependencies detected!" >> $GITHUB_STEP_SUMMARY
+            pipdeptree --warn fail 2>&1 | grep -A 5 "circular" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ No circular dependencies" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # Generate full dependency tree
+          pipdeptree --json > python-dependency-tree.json
+      
+      - name: 🔒 Vulnerability Scanning
+        id: vuln-scan
+        continue-on-error: true
+        run: |
+          source audit-env/bin/activate
+          echo "### Vulnerability Scan" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # pip-audit scan
+          echo "#### pip-audit Results" >> $GITHUB_STEP_SUMMARY
+          pip-audit --format json --output pip-audit-deps.json 2>&1 | tee pip-audit-deps.log || true
+          
+          if [ -f pip-audit-deps.json ]; then
+            VULN_COUNT=$(jq '.vulnerabilities | length' pip-audit-deps.json)
+            if [ "$VULN_COUNT" -gt 0 ]; then
+              echo "🚨 **$VULN_COUNT vulnerabilities found**" >> $GITHUB_STEP_SUMMARY
+              echo '```json' >> $GITHUB_STEP_SUMMARY
+              jq '.vulnerabilities[0:5]' pip-audit-deps.json >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
+            else
+              echo "✅ No vulnerabilities found by pip-audit" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+          
+          # Safety scan
+          echo "#### Safety Results" >> $GITHUB_STEP_SUMMARY
+          pip freeze > requirements-audit.txt
+          safety check --json --output safety-deps.json 2>&1 | tee safety-deps.log || true
+          
+          if [ -f safety-deps.json ]; then
+            SAFETY_VULN=$(jq '.vulnerabilities | length' safety-deps.json 2>/dev/null || echo 0)
+            if [ "$SAFETY_VULN" -gt 0 ]; then
+              echo "⚠️ **$SAFETY_VULN vulnerabilities found by Safety**" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "✅ No vulnerabilities found by Safety" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+      
+      - name: 📋 License Analysis
+        continue-on-error: true
+        run: |
+          source audit-env/bin/activate
+          echo "### License Analysis" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Generate license report
+          pip-licenses --format=json --output-file=python-licenses.json
+          pip-licenses --format=markdown --output-file=python-licenses.md
+          
+          # Analyze licenses
+          echo "#### License Summary" >> $GITHUB_STEP_SUMMARY
+          pip-licenses --summary --output-file=license-summary.txt
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat license-summary.txt | head -20 >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          
+          # Check for problematic licenses
+          COPYLEFT=$(pip-licenses --format=json | jq '[.[] | select(.License | test("GPL|AGPL|LGPL"))] | length')
+          UNKNOWN=$(pip-licenses --format=json | jq '[.[] | select(.License == "UNKNOWN")] | length')
+          
+          echo "| License Type | Count | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------------|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Copyleft (GPL/AGPL/LGPL) | $COPYLEFT | $([ $COPYLEFT -eq 0 ] && echo '✅' || echo '⚠️') |" >> $GITHUB_STEP_SUMMARY
+          echo "| Unknown | $UNKNOWN | $([ $UNKNOWN -eq 0 ] && echo '✅' || echo '⚠️') |" >> $GITHUB_STEP_SUMMARY
+      
+      - name: 🔄 Check for Updates
+        id: check
+        if: inputs.check_updates == true
+        continue-on-error: true
+        run: |
+          source audit-env/bin/activate
+          echo "### Dependency Updates" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Check outdated packages
+          pip list --outdated --format=json > outdated-python.json
+          
+          UPDATE_COUNT=$(jq length outdated-python.json)
+          echo "has_updates=$([ $UPDATE_COUNT -gt 0 ] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
+          echo "update_count=$UPDATE_COUNT" >> $GITHUB_OUTPUT
+          
+          if [ "$UPDATE_COUNT" -gt 0 ]; then
+            echo "📦 **$UPDATE_COUNT packages have updates available**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "| Package | Current | Latest | Type |" >> $GITHUB_STEP_SUMMARY
+            echo "|---------|---------|--------|------|" >> $GITHUB_STEP_SUMMARY
+            
+            jq -r '.[] | "| \(.name) | \(.version) | \(.latest_version) | \(.latest_filetype) |"' outdated-python.json | head -20 >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ All packages are up to date" >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: 🧹 Identify Unused Dependencies
+        continue-on-error: true
+        run: |
+          source audit-env/bin/activate
+          echo "### Unused Dependencies Analysis" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # This is a basic check - more sophisticated tools would be needed for accurate detection
+          echo "⚠️ Manual review recommended for unused dependencies" >> $GITHUB_STEP_SUMMARY
+          echo "Consider using tools like `vulture` or `pycln` for dead code detection" >> $GITHUB_STEP_SUMMARY
+      
+      - name: 📊 Generate Dependency Report
+        if: always()
+        run: |
+          source audit-env/bin/activate
+          
+          # Create comprehensive report
+          cat > python-deps-report.json << EOF
+          {
+            "timestamp": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
+            "total_dependencies": $(pip list --format=json | jq length),
+            "direct_dependencies": $(grep -c "^[^#]" requirements-audit.txt 2>/dev/null || echo 0),
+            "vulnerabilities": {
+              "pip_audit": $([ -f pip-audit-deps.json ] && jq '.vulnerabilities | length' pip-audit-deps.json || echo 0),
+              "safety": $([ -f safety-deps.json ] && jq '.vulnerabilities | length' safety-deps.json 2>/dev/null || echo 0)
+            },
+            "updates_available": $([ -f outdated-python.json ] && jq length outdated-python.json || echo 0),
+            "licenses": {
+              "copyleft": $COPYLEFT,
+              "unknown": $UNKNOWN
+            }
+          }
+          EOF
+      
+      - name: 📤 Upload Python Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-dependency-reports
+          path: |
+            *.json
+            *.md
+            *.txt
+            *.log
+
+  # Go Dependency Audit
+  go-deps:
+    name: 🐹 Go Dependencies
+    runs-on: ubuntu-latest
+    outputs:
+      has_updates: ${{ steps.check.outputs.has_updates }}
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 🐹 Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+      
+      - name: 🔍 Dependency Analysis
+        run: |
+          echo "## 🐹 Go Dependency Analysis" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          cd src/flavor-go
+          
+          # List dependencies
+          echo "### Direct Dependencies" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          go list -m all | head -30 >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          
+          # Module graph
+          go mod graph > go-mod-graph.txt
+          
+          # Download dependencies for scanning
+          go mod download
+      
+      - name: 🔒 Vulnerability Scanning
+        continue-on-error: true
+        run: |
+          echo "### Go Vulnerability Scan" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          cd src/flavor-go
+          
+          # Install vulnerability scanner
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          
+          # Run vulnerability check
+          govulncheck -json ./... > govulncheck-deps.json 2>&1 || true
+          govulncheck ./... 2>&1 | tee govulncheck-deps.log || true
+          
+          if grep -q "vulnerability" govulncheck-deps.log; then
+            echo "🚨 Vulnerabilities detected:" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            cat govulncheck-deps.log >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ No vulnerabilities detected" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # Nancy vulnerability check
+          go install github.com/sonatype-nexus-community/nancy@latest
+          go list -json -deps ./... | nancy sleuth 2>&1 | tee nancy-deps.log || true
+          
+          if grep -q "vulnerable" nancy-deps.log; then
+            echo "### Nancy Vulnerability Report" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            grep -A 5 "vulnerable" nancy-deps.log >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: 📋 License Check
+        continue-on-error: true
+        run: |
+          echo "### Go License Analysis" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          cd src/flavor-go
+          
+          # Install go-licenses
+          go install github.com/google/go-licenses@latest
+          
+          # Check licenses
+          go-licenses report ./... --ignore github.com/livingstaccato 2>&1 | tee go-licenses.txt || true
+          
+          echo "#### License Report" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          head -50 go-licenses.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          
+          # Check for problematic licenses
+          if grep -E "GPL|AGPL|LGPL" go-licenses.txt; then
+            echo "⚠️ Copyleft licenses detected" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if grep -E "UNKNOWN|ERROR" go-licenses.txt; then
+            echo "⚠️ Unknown or problematic licenses detected" >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: 🔄 Check for Updates
+        id: check
+        if: inputs.check_updates == true
+        continue-on-error: true
+        run: |
+          echo "### Go Module Updates" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          cd src/flavor-go
+          
+          # Check for updates
+          go list -u -m all > go-updates.txt 2>&1
+          
+          # Count updates available
+          UPDATE_COUNT=$(grep -c "\[" go-updates.txt || echo 0)
+          
+          echo "has_updates=$([ $UPDATE_COUNT -gt 0 ] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
+          
+          if [ "$UPDATE_COUNT" -gt 0 ]; then
+            echo "📦 **$UPDATE_COUNT module updates available**" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            grep "\[" go-updates.txt | head -20 >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ All modules are up to date" >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: 🧹 Check Module Tidiness
+        continue-on-error: true
+        run: |
+          echo "### Module Tidiness" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          cd src/flavor-go
+          
+          # Check if go.mod is tidy
+          if go mod tidy -v 2>&1 | tee go-mod-tidy.log | grep -q "unused"; then
+            echo "⚠️ Unused dependencies found:" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            cat go-mod-tidy.log >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ go.mod is tidy" >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: 📤 Upload Go Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: go-dependency-reports
+          path: |
+            src/flavor-go/*.json
+            src/flavor-go/*.txt
+            src/flavor-go/*.log
+
+  # Rust Dependency Audit
+  rust-deps:
+    name: 🦀 Rust Dependencies
+    runs-on: ubuntu-latest
+    outputs:
+      has_updates: ${{ steps.check.outputs.has_updates }}
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 🦀 Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+      
+      - name: 📦 Install Cargo Tools
+        run: |
+          cargo install cargo-audit
+          cargo install cargo-outdated
+          cargo install cargo-tree
+          cargo install cargo-license
+          cargo install cargo-deny
+          cargo install cargo-machete
+          cargo install cargo-udeps
+      
+      - name: 🔍 Dependency Tree
+        run: |
+          echo "## 🦀 Rust Dependency Analysis" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          cd src/flavor-rs
+          
+          echo "### Dependency Tree" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cargo tree --depth 2 | head -50 >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          
+          # Generate full tree
+          cargo tree --all-features > cargo-tree-full.txt
+          
+          # Check for duplicate dependencies
+          echo "### Duplicate Dependencies" >> $GITHUB_STEP_SUMMARY
+          cargo tree --duplicates > cargo-duplicates.txt 2>&1
+          if [ -s cargo-duplicates.txt ]; then
+            echo "⚠️ Duplicate dependencies found:" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            cat cargo-duplicates.txt >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ No duplicate dependencies" >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: 🔒 Security Audit
+        continue-on-error: true
+        run: |
+          echo "### Rust Security Audit" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          cd src/flavor-rs
+          
+          # Run cargo audit
+          cargo audit --json > cargo-audit-deps.json 2>&1 || true
+          cargo audit 2>&1 | tee cargo-audit-deps.log || true
+          
+          if grep -q "vulnerabilities found" cargo-audit-deps.log; then
+            echo "🚨 Vulnerabilities found:" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            cat cargo-audit-deps.log >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ No known vulnerabilities" >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: 📋 License Analysis
+        continue-on-error: true
+        run: |
+          echo "### Rust License Analysis" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          cd src/flavor-rs
+          
+          # Generate license report
+          cargo license --json > cargo-licenses.json 2>&1 || true
+          cargo license 2>&1 | tee cargo-licenses.txt || true
+          
+          echo "#### License Summary" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cargo license | head -30 >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          
+          # Check for problematic licenses
+          if cargo license | grep -E "GPL|AGPL|LGPL"; then
+            echo "⚠️ Copyleft licenses detected" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if cargo license | grep -i "unknown"; then
+            echo "⚠️ Unknown licenses detected" >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: 🔄 Check for Updates
+        id: check
+        if: inputs.check_updates == true
+        continue-on-error: true
+        run: |
+          echo "### Rust Crate Updates" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          cd src/flavor-rs
+          
+          # Check outdated crates
+          cargo outdated --format json > cargo-outdated.json 2>&1 || true
+          cargo outdated 2>&1 | tee cargo-outdated.log || true
+          
+          # Count outdated
+          if [ -f cargo-outdated.json ]; then
+            UPDATE_COUNT=$(jq '.dependencies | length' cargo-outdated.json 2>/dev/null || echo 0)
+          else
+            UPDATE_COUNT=0
+          fi
+          
+          echo "has_updates=$([ $UPDATE_COUNT -gt 0 ] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
+          
+          if [ "$UPDATE_COUNT" -gt 0 ]; then
+            echo "📦 **$UPDATE_COUNT crate updates available**" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            head -30 cargo-outdated.log >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ All crates are up to date" >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: 🧹 Check for Unused Dependencies
+        continue-on-error: true
+        run: |
+          echo "### Unused Dependencies" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          cd src/flavor-rs
+          
+          # Check for unused dependencies
+          cargo machete 2>&1 | tee cargo-machete.log || true
+          
+          if grep -q "unused" cargo-machete.log; then
+            echo "⚠️ Unused dependencies found:" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            cat cargo-machete.log >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ No unused dependencies" >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: 📤 Upload Rust Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rust-dependency-reports
+          path: |
+            src/flavor-rs/*.json
+            src/flavor-rs/*.txt
+            src/flavor-rs/*.log
+
+  # Dependency Report and Update PR
+  dependency-report:
+    name: 📊 Dependency Report
+    needs: [python-deps, go-deps, rust-deps]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 📥 Download all reports
+        uses: actions/download-artifact@v4
+        with:
+          path: dependency-reports
+      
+      - name: 📊 Generate Consolidated Report
+        run: |
+          echo "# 📦 Dependency Audit Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Run ID:** ${{ github.run_id }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Repository:** ${{ github.repository }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Timestamp:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          echo "## 📋 Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          echo "| Language | Dependencies | Vulnerabilities | Updates | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|--------------|-----------------|---------|--------|" >> $GITHUB_STEP_SUMMARY
+          
+          # Python summary
+          if [ -d "dependency-reports/python-dependency-reports" ]; then
+            if [ -f "dependency-reports/python-dependency-reports/python-deps-report.json" ]; then
+              TOTAL=$(jq -r '.total_dependencies' dependency-reports/python-dependency-reports/python-deps-report.json)
+              VULNS=$(jq -r '.vulnerabilities.pip_audit + .vulnerabilities.safety' dependency-reports/python-dependency-reports/python-deps-report.json)
+              UPDATES=$(jq -r '.updates_available' dependency-reports/python-dependency-reports/python-deps-report.json)
+              
+              STATUS="✅"
+              [ "$VULNS" -gt 0 ] && STATUS="🚨"
+              [ "$VULNS" -eq 0 ] && [ "$UPDATES" -gt 5 ] && STATUS="⚠️"
+              
+              echo "| 🐍 Python | $TOTAL | $VULNS | $UPDATES | $STATUS |" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+          
+          # Go summary
+          GO_STATUS="✅"
+          if [ -d "dependency-reports/go-dependency-reports" ]; then
+            if [ -f "dependency-reports/go-dependency-reports/govulncheck-deps.log" ]; then
+              if grep -q "vulnerability" dependency-reports/go-dependency-reports/govulncheck-deps.log; then
+                GO_STATUS="🚨"
+              fi
+            fi
+            echo "| 🐹 Go | - | - | - | $GO_STATUS |" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # Rust summary
+          RUST_STATUS="✅"
+          if [ -d "dependency-reports/rust-dependency-reports" ]; then
+            if [ -f "dependency-reports/rust-dependency-reports/cargo-audit-deps.log" ]; then
+              if grep -q "vulnerabilities found" dependency-reports/rust-dependency-reports/cargo-audit-deps.log; then
+                RUST_STATUS="🚨"
+              fi
+            fi
+            echo "| 🦀 Rust | - | - | - | $RUST_STATUS |" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 🔒 Security Findings" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Count total vulnerabilities
+          TOTAL_VULNS=0
+          
+          if [ -f "dependency-reports/python-dependency-reports/python-deps-report.json" ]; then
+            PY_VULNS=$(jq -r '.vulnerabilities.pip_audit + .vulnerabilities.safety' dependency-reports/python-dependency-reports/python-deps-report.json)
+            TOTAL_VULNS=$((TOTAL_VULNS + PY_VULNS))
+            
+            if [ "$PY_VULNS" -gt 0 ]; then
+              echo "### 🐍 Python Vulnerabilities ($PY_VULNS)" >> $GITHUB_STEP_SUMMARY
+              if [ -f "dependency-reports/python-dependency-reports/pip-audit-deps.json" ]; then
+                echo '```json' >> $GITHUB_STEP_SUMMARY
+                jq '.vulnerabilities[0:3]' dependency-reports/python-dependency-reports/pip-audit-deps.json >> $GITHUB_STEP_SUMMARY
+                echo '```' >> $GITHUB_STEP_SUMMARY
+              fi
+            fi
+          fi
+          
+          if [ "$TOTAL_VULNS" -eq 0 ]; then
+            echo "✅ **No vulnerabilities found in dependencies**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "🚨 **Total vulnerabilities: $TOTAL_VULNS**" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 📋 License Compliance" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Check for copyleft licenses
+          COPYLEFT_FOUND=false
+          
+          if [ -f "dependency-reports/python-dependency-reports/python-deps-report.json" ]; then
+            PY_COPYLEFT=$(jq -r '.licenses.copyleft' dependency-reports/python-dependency-reports/python-deps-report.json)
+            if [ "$PY_COPYLEFT" -gt 0 ]; then
+              echo "⚠️ Python: $PY_COPYLEFT copyleft licenses detected" >> $GITHUB_STEP_SUMMARY
+              COPYLEFT_FOUND=true
+            fi
+          fi
+          
+          if [ "$COPYLEFT_FOUND" = false ]; then
+            echo "✅ No copyleft licenses detected" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 🔄 Update Opportunities" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          TOTAL_UPDATES=0
+          
+          if [ "${{ needs.python-deps.outputs.has_updates }}" = "true" ]; then
+            UPDATES="${{ needs.python-deps.outputs.update_count }}"
+            TOTAL_UPDATES=$((TOTAL_UPDATES + UPDATES))
+            echo "- 🐍 Python: $UPDATES packages can be updated" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ "${{ needs.go-deps.outputs.has_updates }}" = "true" ]; then
+            echo "- 🐹 Go: Module updates available" >> $GITHUB_STEP_SUMMARY
+            TOTAL_UPDATES=$((TOTAL_UPDATES + 1))
+          fi
+          
+          if [ "${{ needs.rust-deps.outputs.has_updates }}" = "true" ]; then
+            echo "- 🦀 Rust: Crate updates available" >> $GITHUB_STEP_SUMMARY
+            TOTAL_UPDATES=$((TOTAL_UPDATES + 1))
+          fi
+          
+          if [ "$TOTAL_UPDATES" -eq 0 ]; then
+            echo "✅ All dependencies are up to date" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 📝 Recommendations" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "$TOTAL_VULNS" -gt 0 ]; then
+            echo "1. 🚨 **Critical:** Fix $TOTAL_VULNS security vulnerabilities immediately" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ "$TOTAL_UPDATES" -gt 10 ]; then
+            echo "2. 📦 Consider updating dependencies (TOTAL available)" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "3. 📋 Review license compliance for production use" >> $GITHUB_STEP_SUMMARY
+          echo "4. 🔍 Audit and remove unused dependencies" >> $GITHUB_STEP_SUMMARY
+          echo "5. 📅 Schedule regular dependency updates" >> $GITHUB_STEP_SUMMARY
+          
+          # Create JSON summary
+          cat > dependency-summary.json << EOF
+          {
+            "timestamp": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
+            "repository": "${{ github.repository }}",
+            "run_id": "${{ github.run_id }}",
+            "summary": {
+              "total_vulnerabilities": $TOTAL_VULNS,
+              "updates_available": $TOTAL_UPDATES,
+              "copyleft_licenses": $COPYLEFT_FOUND
+            },
+            "languages": {
+              "python": {
+                "has_report": $([ -d "dependency-reports/python-dependency-reports" ] && echo "true" || echo "false")
+              },
+              "go": {
+                "has_report": $([ -d "dependency-reports/go-dependency-reports" ] && echo "true" || echo "false")
+              },
+              "rust": {
+                "has_report": $([ -d "dependency-reports/rust-dependency-reports" ] && echo "true" || echo "false")
+              }
+            }
+          }
+          EOF
+      
+      - name: 🔄 Create Update PR
+        if: inputs.auto_pr == true && (needs.python-deps.outputs.has_updates == 'true' || needs.go-deps.outputs.has_updates == 'true' || needs.rust-deps.outputs.has_updates == 'true')
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: Update dependencies"
+          title: "🔄 Dependency Updates Available"
+          body: |
+            ## 📦 Dependency Updates
+            
+            This PR contains available dependency updates identified by the dependency audit workflow.
+            
+            ### Updates Available:
+            - Python: ${{ needs.python-deps.outputs.has_updates == 'true' && needs.python-deps.outputs.update_count || '0' }} packages
+            - Go: ${{ needs.go-deps.outputs.has_updates == 'true' && 'Yes' || 'No' }}
+            - Rust: ${{ needs.rust-deps.outputs.has_updates == 'true' && 'Yes' || 'No' }}
+            
+            ### Action Required:
+            1. Review the changes
+            2. Run tests locally
+            3. Check for breaking changes
+            4. Merge if all checks pass
+            
+            ---
+            *Generated by Dependency Audit Workflow - Run #${{ github.run_id }}*
+          branch: deps/update-${{ github.run_id }}
+          delete-branch: true
+      
+      - name: 📤 Upload Summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-summary
+          path: dependency-summary.json

@@ -1,0 +1,36 @@
+{
+  "name": "pretaster-shell",
+  "version": "1.0.0",
+  "description": "Simple shell script test for PSPF",
+  "package": {
+    "name": "pretaster-shell",
+    "version": "1.0.0",
+    "description": "Simple shell script test for PSPF"
+  },
+  "format": "PSPF/2025",
+  "slots": [
+    {
+      "slot": 0,
+      "id": "shell-test-script",
+      "source": "scripts/simple_test.sh",
+      "target": "scripts/simple_test.sh",
+      "purpose": "payload",
+      "lifecycle": "cached",
+      "operations": "raw",
+      "permissions": "0755",
+      "resolution": "build"
+    }
+  ],
+  "command": "/bin/bash {workenv}/scripts/simple_test.sh",
+  "environment": {
+    "TEST_MODE": "pretaster"
+  },
+  "execution": {
+    "command": "/bin/bash {workenv}/scripts/simple_test.sh",
+    "args": [],
+    "env": {
+      "TEST_MODE": "pretaster"
+    },
+    "primary_slot": 0
+  }
+}

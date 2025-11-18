@@ -1,0 +1,812 @@
+name: 06 🔒 Security Scanning
+
+on:
+  workflow_dispatch:
+    inputs:
+      scan_depth:
+        description: 'Scan depth (shallow/deep/paranoid)'
+        type: choice
+        options:
+          - shallow
+          - deep
+          - paranoid
+        default: deep
+      enable_sarif:
+        description: 'Enable SARIF reporting for GitHub Security tab'
+        type: boolean
+        default: true
+  
+  push:
+    branches: [main, develop]
+    paths:
+      - '**.py'
+      - '**.go'
+      - '**.rs'
+      - '**.yml'
+      - '**.yaml'
+      - '**.toml'
+      - '**.json'
+      - 'requirements*.txt'
+      - 'Pipfile*'
+      - 'poetry.lock'
+      - 'go.mod'
+      - 'go.sum'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+  
+  schedule:
+    # Run security scan daily at 3 AM UTC
+    - cron: '0 3 * * *'
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+jobs:
+  # Secret Scanning
+  secret-scan:
+    name: 🔑 Secret Scanning
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for better secret detection
+      
+      - name: 🔍 TruffleHog Secret Scan
+        id: trufflehog
+        continue-on-error: true
+        run: |
+          echo "## 🔑 Secret Scanning" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Install TruffleHog
+          pip install truffleHog3
+          
+          echo "### TruffleHog Scan" >> $GITHUB_STEP_SUMMARY
+          
+          # Run TruffleHog scan
+          trufflehog3 --no-history --format json --output trufflehog.json . 2>&1 | tee trufflehog.log || true
+          
+          if [ -s trufflehog.json ]; then
+            SECRET_COUNT=$(jq length trufflehog.json)
+            echo "🚨 **Found $SECRET_COUNT potential secrets!**" >> $GITHUB_STEP_SUMMARY
+            echo '```json' >> $GITHUB_STEP_SUMMARY
+            jq '.[0:5]' trufflehog.json >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ No secrets detected by TruffleHog" >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: 🔐 Gitleaks Secret Detection
+        uses: gitleaks/gitleaks-action@v2
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: 🗝️ detect-secrets Scan
+        continue-on-error: true
+        run: |
+          echo "### detect-secrets Scan" >> $GITHUB_STEP_SUMMARY
+          
+          pip install detect-secrets
+          
+          # Create baseline
+          detect-secrets scan --baseline .secrets.baseline . 2>&1 | tee detect-secrets.log || true
+          
+          # Audit baseline
+          if [ -f .secrets.baseline ]; then
+            SECRET_COUNT=$(jq '.results | map(. | length) | add' .secrets.baseline)
+            if [ "$SECRET_COUNT" -gt 0 ]; then
+              echo "⚠️ Found $SECRET_COUNT potential secrets" >> $GITHUB_STEP_SUMMARY
+              echo '```json' >> $GITHUB_STEP_SUMMARY
+              jq '.results | to_entries | .[0:3]' .secrets.baseline >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
+            else
+              echo "✅ No secrets detected by detect-secrets" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+      
+      - name: 📤 Upload Secret Scan Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: secret-scan-results
+          path: |
+            trufflehog.json
+            trufflehog.log
+            .secrets.baseline
+            detect-secrets.log
+
+  # Python Security
+  python-security:
+    name: 🐍 Python Security
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: 📦 Install Security Tools
+        run: |
+          python -m venv security-env
+          source security-env/bin/activate
+          pip install --upgrade pip
+          pip install \
+            bandit[toml] \
+            safety \
+            pip-audit \
+            semgrep \
+            dlint \
+            pyt \
+            dodgy \
+            vulture
+          
+          # Install project for dependency scanning
+          pip install -e ".[dev,test]"
+      
+      - name: 🔒 Bandit Security Scan
+        id: bandit
+        continue-on-error: true
+        run: |
+          source security-env/bin/activate
+          echo "## 🐍 Python Security Analysis" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          echo "### Bandit Security Scan" >> $GITHUB_STEP_SUMMARY
+          
+          # Run Bandit with different severity levels
+          bandit -r src/ helpers/ -f json -o bandit.json 2>&1 | tee bandit.log || true
+          bandit -r src/ helpers/ -ll -i 2>&1 | tee bandit-summary.log || true
+          
+          if [ -f bandit.json ]; then
+            HIGH_ISSUES=$(jq '[.results[] | select(.issue_severity == "HIGH")] | length' bandit.json)
+            MEDIUM_ISSUES=$(jq '[.results[] | select(.issue_severity == "MEDIUM")] | length' bandit.json)
+            LOW_ISSUES=$(jq '[.results[] | select(.issue_severity == "LOW")] | length' bandit.json)
+            
+            echo "| Severity | Count | Status |" >> $GITHUB_STEP_SUMMARY
+            echo "|----------|-------|--------|" >> $GITHUB_STEP_SUMMARY
+            echo "| HIGH | $HIGH_ISSUES | $([ $HIGH_ISSUES -eq 0 ] && echo '✅' || echo '🚨') |" >> $GITHUB_STEP_SUMMARY
+            echo "| MEDIUM | $MEDIUM_ISSUES | $([ $MEDIUM_ISSUES -eq 0 ] && echo '✅' || echo '⚠️') |" >> $GITHUB_STEP_SUMMARY
+            echo "| LOW | $LOW_ISSUES | $([ $LOW_ISSUES -lt 10 ] && echo '✅' || echo 'ℹ️') |" >> $GITHUB_STEP_SUMMARY
+            
+            if [ $HIGH_ISSUES -gt 0 ]; then
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "**High Severity Issues:**" >> $GITHUB_STEP_SUMMARY
+              echo '```json' >> $GITHUB_STEP_SUMMARY
+              jq '[.results[] | select(.issue_severity == "HIGH")] | .[0:5]' bandit.json >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+      
+      - name: 🛡️ Safety Dependency Check
+        id: safety
+        continue-on-error: true
+        run: |
+          source security-env/bin/activate
+          echo "### Safety Dependency Scan" >> $GITHUB_STEP_SUMMARY
+          
+          # Generate requirements file
+          pip freeze > requirements-scan.txt
+          
+          # Run safety check
+          safety check --json --output safety.json 2>&1 | tee safety.log || true
+          safety check 2>&1 | tee safety-summary.log || true
+          
+          if [ -f safety.json ]; then
+            VULN_COUNT=$(jq '.vulnerabilities | length' safety.json 2>/dev/null || echo 0)
+            if [ "$VULN_COUNT" -gt 0 ]; then
+              echo "🚨 **Found $VULN_COUNT vulnerable dependencies**" >> $GITHUB_STEP_SUMMARY
+              echo '```json' >> $GITHUB_STEP_SUMMARY
+              jq '.vulnerabilities[0:5]' safety.json >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
+            else
+              echo "✅ No known vulnerabilities in dependencies" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+      
+      - name: 🔍 pip-audit Vulnerability Scan
+        id: pip-audit
+        continue-on-error: true
+        run: |
+          source security-env/bin/activate
+          echo "### pip-audit Vulnerability Scan" >> $GITHUB_STEP_SUMMARY
+          
+          # Run pip-audit
+          pip-audit --format json --output pip-audit.json 2>&1 | tee pip-audit.log || true
+          pip-audit 2>&1 | tee pip-audit-summary.log || true
+          
+          if [ -f pip-audit.json ]; then
+            VULN_COUNT=$(jq '.vulnerabilities | length' pip-audit.json 2>/dev/null || echo 0)
+            if [ "$VULN_COUNT" -gt 0 ]; then
+              echo "⚠️ Found $VULN_COUNT vulnerabilities via pip-audit" >> $GITHUB_STEP_SUMMARY
+              echo '```json' >> $GITHUB_STEP_SUMMARY
+              jq '.vulnerabilities[0:5]' pip-audit.json >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
+            else
+              echo "✅ pip-audit found no vulnerabilities" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+      
+      - name: 🔬 Semgrep SAST Analysis
+        id: semgrep
+        continue-on-error: true
+        run: |
+          source security-env/bin/activate
+          echo "### Semgrep Static Analysis" >> $GITHUB_STEP_SUMMARY
+          
+          # Run Semgrep with various rulesets
+          semgrep --config=auto \
+                  --json \
+                  --output=semgrep.json \
+                  src/ helpers/ 2>&1 | tee semgrep.log || true
+          
+          if [ -f semgrep.json ]; then
+            FINDINGS=$(jq '.results | length' semgrep.json)
+            echo "Found $FINDINGS security findings via Semgrep" >> $GITHUB_STEP_SUMMARY
+            
+            if [ "$FINDINGS" -gt 0 ]; then
+              echo '```json' >> $GITHUB_STEP_SUMMARY
+              jq '.results[0:5] | map({path: .path, message: .extra.message, severity: .extra.severity})' semgrep.json >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+      
+      - name: 🐛 Dodgy Suspicious Code Detection
+        continue-on-error: true
+        run: |
+          source security-env/bin/activate
+          echo "### Suspicious Code Patterns" >> $GITHUB_STEP_SUMMARY
+          
+          dodgy src/ helpers/ 2>&1 | tee dodgy.log || true
+          
+          if grep -q "warnings" dodgy.log; then
+            echo "⚠️ Dodgy found suspicious patterns:" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            cat dodgy.log >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ No suspicious code patterns detected" >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: 📊 Generate SARIF Report
+        if: inputs.enable_sarif == true
+        continue-on-error: true
+        run: |
+          source security-env/bin/activate
+          
+          # Convert Bandit to SARIF
+          bandit -r src/ helpers/ -f sarif -o bandit.sarif || true
+          
+          # Semgrep SARIF output
+          semgrep --config=auto --sarif --output=semgrep.sarif src/ helpers/ || true
+      
+      - name: 📤 Upload SARIF Results
+        if: inputs.enable_sarif == true
+        uses: github/codeql-action/upload-sarif@v3
+        continue-on-error: true
+        with:
+          sarif_file: |
+            bandit.sarif
+            semgrep.sarif
+      
+      - name: 📤 Upload Python Security Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-security-results
+          path: |
+            *.json
+            *.log
+            *.sarif
+
+  # Go Security
+  go-security:
+    name: 🐹 Go Security
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 🐹 Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+      
+      - name: 🔒 Gosec Security Scan
+        continue-on-error: true
+        run: |
+          echo "## 🐹 Go Security Analysis" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Install gosec
+          go install github.com/securego/gosec/v2/cmd/gosec@latest
+          
+          echo "### Gosec Security Scan" >> $GITHUB_STEP_SUMMARY
+          
+          cd src/flavor-go
+          
+          # Run gosec
+          gosec -fmt json -out gosec.json ./... 2>&1 | tee gosec.log || true
+          gosec ./... 2>&1 | tee gosec-summary.log || true
+          
+          if [ -f gosec.json ]; then
+            ISSUE_COUNT=$(jq '.Issues | length' gosec.json)
+            HIGH_COUNT=$(jq '[.Issues[] | select(.severity == "HIGH")] | length' gosec.json)
+            MEDIUM_COUNT=$(jq '[.Issues[] | select(.severity == "MEDIUM")] | length' gosec.json)
+            
+            echo "| Severity | Count |" >> $GITHUB_STEP_SUMMARY
+            echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
+            echo "| HIGH | $HIGH_COUNT |" >> $GITHUB_STEP_SUMMARY
+            echo "| MEDIUM | $MEDIUM_COUNT |" >> $GITHUB_STEP_SUMMARY
+            echo "| Total | $ISSUE_COUNT |" >> $GITHUB_STEP_SUMMARY
+            
+            if [ "$HIGH_COUNT" -gt 0 ]; then
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "**High Severity Issues:**" >> $GITHUB_STEP_SUMMARY
+              echo '```json' >> $GITHUB_STEP_SUMMARY
+              jq '[.Issues[] | select(.severity == "HIGH")] | .[0:3]' gosec.json >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+      
+      - name: 🔍 Nancy Dependency Scan
+        continue-on-error: true
+        run: |
+          echo "### Nancy Dependency Scan" >> $GITHUB_STEP_SUMMARY
+          
+          # Install nancy
+          go install github.com/sonatype-nexus-community/nancy@latest
+          
+          cd src/flavor-go
+          
+          # Run nancy
+          go list -json -deps ./... | nancy sleuth 2>&1 | tee nancy.log || true
+          
+          if grep -q "vulnerable" nancy.log; then
+            echo "⚠️ Nancy found vulnerable dependencies:" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            grep -A 5 "vulnerable" nancy.log >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ No vulnerable dependencies found" >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: 🛡️ Govulncheck Vulnerability Detection
+        continue-on-error: true
+        run: |
+          echo "### Govulncheck Scan" >> $GITHUB_STEP_SUMMARY
+          
+          # Install govulncheck
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          
+          cd src/flavor-go
+          
+          # Run govulncheck
+          govulncheck -json ./... > govulncheck.json 2>&1 || true
+          govulncheck ./... 2>&1 | tee govulncheck.log || true
+          
+          if grep -q "vulnerability" govulncheck.log; then
+            echo "🚨 Vulnerabilities detected:" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            cat govulncheck.log >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ No vulnerabilities detected" >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: 📤 Upload Go Security Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: go-security-results
+          path: |
+            src/flavor-go/*.json
+            src/flavor-go/*.log
+
+  # Rust Security
+  rust-security:
+    name: 🦀 Rust Security
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 🦀 Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+      
+      - name: 🔒 Cargo Audit
+        continue-on-error: true
+        run: |
+          echo "## 🦀 Rust Security Analysis" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          cargo install cargo-audit
+          
+          echo "### Cargo Audit" >> $GITHUB_STEP_SUMMARY
+          
+          cd src/flavor-rs
+          
+          # Run cargo audit
+          cargo audit --json > cargo-audit.json 2>&1 || true
+          cargo audit 2>&1 | tee cargo-audit.log || true
+          
+          if grep -q "vulnerabilities found" cargo-audit.log; then
+            echo "🚨 Vulnerabilities found:" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            cat cargo-audit.log >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ No known vulnerabilities" >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: 🛡️ Cargo Deny Check
+        continue-on-error: true
+        run: |
+          echo "### Cargo Deny Security Check" >> $GITHUB_STEP_SUMMARY
+          
+          cargo install cargo-deny
+          
+          cd src/flavor-rs
+          
+          # Create default deny.toml if not exists
+          if [ ! -f deny.toml ]; then
+            cat > deny.toml << 'EOF'
+          [bans]
+          multiple-versions = "warn"
+          wildcards = "allow"
+          
+          [licenses]
+          unlicensed = "deny"
+          copyleft = "warn"
+          
+          [sources]
+          unknown-registry = "warn"
+          unknown-git = "warn"
+          
+          [advisories]
+          vulnerability = "deny"
+          unmaintained = "warn"
+          unsound = "warn"
+          yanked = "warn"
+          EOF
+          fi
+          
+          # Run cargo deny
+          cargo deny check 2>&1 | tee cargo-deny.log || true
+          
+          if grep -q "error\[" cargo-deny.log; then
+            echo "❌ Cargo deny found issues:" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            grep "error\[" cargo-deny.log >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ Cargo deny checks passed" >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: 🔬 Cargo Geiger (Unsafe Code Usage)
+        continue-on-error: true
+        run: |
+          echo "### Unsafe Code Analysis" >> $GITHUB_STEP_SUMMARY
+
+          # Install cargo-geiger
+          cargo install cargo-geiger
+
+          cd src/flavor-rs
+
+          # Run cargo geiger
+          cargo geiger --output-format Json > cargo-geiger.json 2>&1 || true
+          cargo geiger 2>&1 | tee cargo-geiger.log || true
+
+          echo "**Unsafe code usage:**" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          tail -20 cargo-geiger.log >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+      
+      - name: 📤 Upload Rust Security Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rust-security-results
+          path: |
+            src/flavor-rs/*.json
+            src/flavor-rs/*.log
+            src/flavor-rs/deny.toml
+
+  # Container Security Scan
+  container-security:
+    name: 🐳 Container Security
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 🔍 Dockerfile Security Scan
+        continue-on-error: true
+        run: |
+          echo "## 🐳 Container Security" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Find all Dockerfiles
+          DOCKERFILES=$(find . -name "Dockerfile*" -type f)
+          
+          if [ -z "$DOCKERFILES" ]; then
+            echo "ℹ️ No Dockerfiles found" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### Dockerfile Security Analysis" >> $GITHUB_STEP_SUMMARY
+            
+            # Install hadolint
+            wget -q https://github.com/hadolint/hadolint/releases/latest/download/hadolint-Linux-x86_64 -O hadolint
+            chmod +x hadolint
+            
+            for dockerfile in $DOCKERFILES; do
+              echo "**Scanning: $dockerfile**" >> $GITHUB_STEP_SUMMARY
+              ./hadolint --format json "$dockerfile" > hadolint-$(basename $dockerfile).json 2>&1 || true
+              ./hadolint "$dockerfile" 2>&1 | tee hadolint-$(basename $dockerfile).log || true
+              
+              if [ -s hadolint-$(basename $dockerfile).log ]; then
+                echo '```' >> $GITHUB_STEP_SUMMARY
+                head -10 hadolint-$(basename $dockerfile).log >> $GITHUB_STEP_SUMMARY
+                echo '```' >> $GITHUB_STEP_SUMMARY
+              else
+                echo "✅ No issues found" >> $GITHUB_STEP_SUMMARY
+              fi
+            done
+          fi
+      
+      - name: 🔒 Trivy Security Scan
+        uses: aquasecurity/trivy-action@master
+        continue-on-error: true
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+      
+      - name: 📤 Upload Container Security Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: container-security-results
+          path: |
+            hadolint*.json
+            hadolint*.log
+            trivy-results.sarif
+
+  # Infrastructure as Code Security
+  iac-security:
+    name: 🏗️ IaC Security
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 🔍 Checkov IaC Scan
+        id: checkov
+        uses: bridgecrewio/checkov-action@master
+        continue-on-error: true
+        with:
+          directory: .
+          quiet: false
+          soft_fail: true
+          framework: all
+          output_format: json
+          output_file_path: checkov-report.json
+      
+      - name: 📊 Parse Checkov Results
+        if: always()
+        continue-on-error: true
+        run: |
+          echo "## 🏗️ Infrastructure as Code Security" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ -f checkov-report.json ]; then
+            echo "### Checkov Scan Results" >> $GITHUB_STEP_SUMMARY
+            
+            PASSED=$(jq '.summary.passed' checkov-report.json)
+            FAILED=$(jq '.summary.failed' checkov-report.json)
+            SKIPPED=$(jq '.summary.skipped' checkov-report.json)
+            
+            echo "| Status | Count |" >> $GITHUB_STEP_SUMMARY
+            echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+            echo "| ✅ Passed | $PASSED |" >> $GITHUB_STEP_SUMMARY
+            echo "| ❌ Failed | $FAILED |" >> $GITHUB_STEP_SUMMARY
+            echo "| ⏭️ Skipped | $SKIPPED |" >> $GITHUB_STEP_SUMMARY
+            
+            if [ "$FAILED" -gt 0 ]; then
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "**Failed Checks:**" >> $GITHUB_STEP_SUMMARY
+              echo '```json' >> $GITHUB_STEP_SUMMARY
+              jq '.results.failed_checks[0:5]' checkov-report.json >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+      
+      - name: 🔍 YAML Security Lint
+        continue-on-error: true
+        run: |
+          echo "### YAML Security Analysis" >> $GITHUB_STEP_SUMMARY
+          
+          pip install yamllint
+          
+          # Lint all YAML files
+          yamllint -f parsable . > yamllint.log 2>&1 || true
+          
+          if [ -s yamllint.log ]; then
+            LINE_COUNT=$(wc -l < yamllint.log)
+            echo "⚠️ Found $LINE_COUNT YAML issues" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            head -20 yamllint.log >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ YAML files are properly formatted" >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: 📤 Upload IaC Security Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: iac-security-results
+          path: |
+            checkov-report.json
+            yamllint.log
+
+  # Security Report Aggregation
+  security-report:
+    name: 📊 Security Report
+    needs: [secret-scan, python-security, go-security, rust-security, container-security, iac-security]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Download all security reports
+        uses: actions/download-artifact@v4
+        with:
+          path: security-reports
+      
+      - name: 📊 Generate Consolidated Security Report
+        run: |
+          echo "# 🔒 Security Scan Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Run ID:** ${{ github.run_id }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Repository:** ${{ github.repository }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Timestamp:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          echo "## 📋 Scan Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          echo "| Component | Status | Critical Issues |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|--------|-----------------|" >> $GITHUB_STEP_SUMMARY
+          
+          # Check each scan result
+          CRITICAL_COUNT=0
+          HIGH_COUNT=0
+          MEDIUM_COUNT=0
+          LOW_COUNT=0
+          
+          # Secret scanning
+          if [ -d "security-reports/secret-scan-results" ]; then
+            if [ -f "security-reports/secret-scan-results/trufflehog.json" ]; then
+              SECRET_COUNT=$(jq length security-reports/secret-scan-results/trufflehog.json 2>/dev/null || echo 0)
+              if [ "$SECRET_COUNT" -gt 0 ]; then
+                echo "| 🔑 Secrets | 🚨 CRITICAL | $SECRET_COUNT secrets found |" >> $GITHUB_STEP_SUMMARY
+                CRITICAL_COUNT=$((CRITICAL_COUNT + SECRET_COUNT))
+              else
+                echo "| 🔑 Secrets | ✅ | No secrets found |" >> $GITHUB_STEP_SUMMARY
+              fi
+            fi
+          fi
+          
+          # Python security
+          if [ -d "security-reports/python-security-results" ]; then
+            if [ -f "security-reports/python-security-results/bandit.json" ]; then
+              PY_HIGH=$(jq '[.results[] | select(.issue_severity == "HIGH")] | length' security-reports/python-security-results/bandit.json 2>/dev/null || echo 0)
+              PY_MEDIUM=$(jq '[.results[] | select(.issue_severity == "MEDIUM")] | length' security-reports/python-security-results/bandit.json 2>/dev/null || echo 0)
+              
+              if [ "$PY_HIGH" -gt 0 ]; then
+                echo "| 🐍 Python | ⚠️ HIGH | $PY_HIGH high, $PY_MEDIUM medium |" >> $GITHUB_STEP_SUMMARY
+                HIGH_COUNT=$((HIGH_COUNT + PY_HIGH))
+              elif [ "$PY_MEDIUM" -gt 0 ]; then
+                echo "| 🐍 Python | ⚠️ MEDIUM | $PY_MEDIUM medium issues |" >> $GITHUB_STEP_SUMMARY
+              else
+                echo "| 🐍 Python | ✅ | Secure |" >> $GITHUB_STEP_SUMMARY
+              fi
+              
+              MEDIUM_COUNT=$((MEDIUM_COUNT + PY_MEDIUM))
+            fi
+          fi
+          
+          # Go security
+          if [ -d "security-reports/go-security-results" ]; then
+            echo "| 🐹 Go | ✅ | Scanned |" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # Rust security
+          if [ -d "security-reports/rust-security-results" ]; then
+            echo "| 🦀 Rust | ✅ | Scanned |" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # Container security
+          if [ -d "security-reports/container-security-results" ]; then
+            echo "| 🐳 Container | ✅ | Scanned |" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # IaC security
+          if [ -d "security-reports/iac-security-results" ]; then
+            if [ -f "security-reports/iac-security-results/checkov-report.json" ]; then
+              IAC_FAILED=$(jq '.summary.failed' security-reports/iac-security-results/checkov-report.json 2>/dev/null || echo 0)
+              if [ "$IAC_FAILED" -gt 0 ]; then
+                echo "| 🏗️ IaC | ⚠️ | $IAC_FAILED policy violations |" >> $GITHUB_STEP_SUMMARY
+                MEDIUM_COUNT=$((MEDIUM_COUNT + IAC_FAILED))
+              else
+                echo "| 🏗️ IaC | ✅ | Compliant |" >> $GITHUB_STEP_SUMMARY
+              fi
+            fi
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 🎯 Risk Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          echo "| Severity | Count | Action Required |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|-------|-----------------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 🚨 CRITICAL | $CRITICAL_COUNT | Immediate fix required |" >> $GITHUB_STEP_SUMMARY
+          echo "| ⚠️ HIGH | $HIGH_COUNT | Fix before release |" >> $GITHUB_STEP_SUMMARY
+          echo "| ⚠️ MEDIUM | $MEDIUM_COUNT | Plan to fix |" >> $GITHUB_STEP_SUMMARY
+          echo "| ℹ️ LOW | $LOW_COUNT | Review |" >> $GITHUB_STEP_SUMMARY
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 📝 Recommendations" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "$CRITICAL_COUNT" -gt 0 ]; then
+            echo "1. 🚨 **CRITICAL:** Secrets detected! Review and rotate immediately" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ "$HIGH_COUNT" -gt 0 ]; then
+            echo "2. ⚠️ **HIGH:** Security vulnerabilities found. Fix before next release" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "3. 📦 Update dependencies to latest secure versions" >> $GITHUB_STEP_SUMMARY
+          echo "4. 🔍 Review security findings in detailed reports" >> $GITHUB_STEP_SUMMARY
+          echo "5. 🛡️ Consider enabling branch protection rules" >> $GITHUB_STEP_SUMMARY
+          echo "6. 📚 Provide security training to development team" >> $GITHUB_STEP_SUMMARY
+          
+          # Create consolidated JSON report
+          cat > security-summary.json << EOF
+          {
+            "timestamp": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
+            "repository": "${{ github.repository }}",
+            "branch": "${{ github.ref_name }}",
+            "commit": "${{ github.sha }}",
+            "run_id": "${{ github.run_id }}",
+            "summary": {
+              "critical": $CRITICAL_COUNT,
+              "high": $HIGH_COUNT,
+              "medium": $MEDIUM_COUNT,
+              "low": $LOW_COUNT,
+              "total": $((CRITICAL_COUNT + HIGH_COUNT + MEDIUM_COUNT + LOW_COUNT))
+            },
+            "scan_status": {
+              "secret_scan": "$([ -d 'security-reports/secret-scan-results' ] && echo 'completed' || echo 'skipped')",
+              "python_security": "$([ -d 'security-reports/python-security-results' ] && echo 'completed' || echo 'skipped')",
+              "go_security": "$([ -d 'security-reports/go-security-results' ] && echo 'completed' || echo 'skipped')",
+              "rust_security": "$([ -d 'security-reports/rust-security-results' ] && echo 'completed' || echo 'skipped')",
+              "container_security": "$([ -d 'security-reports/container-security-results' ] && echo 'completed' || echo 'skipped')",
+              "iac_security": "$([ -d 'security-reports/iac-security-results' ] && echo 'completed' || echo 'skipped')"
+            }
+          }
+          EOF
+      
+      - name: 📤 Upload Consolidated Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-summary
+          path: security-summary.json

@@ -1,0 +1,44 @@
+{
+  "manifest": "pretaster-manifest.json",
+  "package": {
+    "name": "test-volatile",
+    "version": "1.0.0"
+  },
+  "execution": {
+    "primary_slot": 0,
+    "command": "/usr/bin/python3 {workenv}/scripts/combo_test.py volatile-test"
+  },
+  "slots": [
+    {
+      "id": "combo-test-py",
+      "source": "scripts/combo_test.py",
+      "target": "scripts/combo_test.py",
+      "operations": "none",
+      "purpose": "executable",
+      "lifecycle": "runtime",
+      "permissions": "0755"
+    },
+    {
+      "id": "volatile-data",
+      "source": "src/volatile-test.txt",
+      "target": "volatile-data",
+      "operations": "none",
+      "purpose": "data",
+      "lifecycle": "volatile"
+    },
+    {
+      "id": "init-setup",
+      "source": "src/init-test.txt", 
+      "target": "init-setup",
+      "operations": "none",
+      "purpose": "data",
+      "lifecycle": "init"
+    }
+  ],
+  "setup_commands": [
+    {
+      "type": "shell",
+      "command": "echo 'Setup running, init slot should exist:' && ls -la {workenv}/init-setup 2>/dev/null || echo 'Init slot not found'"
+    }
+  ]
+}

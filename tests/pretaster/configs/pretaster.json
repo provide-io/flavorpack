@@ -1,0 +1,75 @@
+{
+  "name": "pretaster",
+  "version": "1.0.0",
+  "description": "Pretaster comprehensive test suite",
+  "command": "/bin/bash {workenv}/bin/pretaster",
+  "environment": {
+    "PRETASTER_MODE": "main"
+  },
+  "package": {
+    "name": "pretaster",
+    "version": "1.0.0",
+    "description": "Pretaster comprehensive test suite"
+  },
+  "format": "PSPF/2025",
+  "slots": [
+    {
+      "slot": 0,
+      "purpose": "payload",
+      "lifecycle": "cached",
+      "operations": "raw",
+      "id": "pretaster",
+      "source": "{workenv}/scripts/pretaster",
+      "target": "bin/pretaster",
+      "permissions": "0755"
+    },
+    {
+      "slot": 1,
+      "purpose": "payload",
+      "lifecycle": "cached",
+      "operations": "raw",
+      "id": "test-with-taster-sh",
+      "source": "{workenv}/scripts/test-with-taster.sh",
+      "target": "scripts/test-with-taster.sh",
+      "permissions": "0755"
+    },
+    {
+      "slot": 2,
+      "purpose": "tool",
+      "lifecycle": "cached",
+      "operations": "raw",
+      "id": "taster-psp",
+      "source": "{workenv}/scripts/taster.psp",
+      "target": "bin/taster.psp",
+      "permissions": "0755"
+    }
+  ],
+  "runtime": {
+    "env": {
+      "unset": [
+        "*"
+      ],
+      "pass": [
+        "PATH",
+        "HOME",
+        "USER",
+        "LANG",
+        "LC_*",
+        "TERM",
+        "SHELL",
+        "FLAVOR_*"
+      ],
+      "set": {
+        "PRETASTER_VERSION": "1.0.0"
+      }
+    }
+  },
+  "execution": {
+    "command": "/bin/bash {workenv}/bin/pretaster",
+    "args": [],
+    "env": {
+      "PRETASTER_MODE": "main"
+    },
+    "primary_slot": 0
+  }
+}

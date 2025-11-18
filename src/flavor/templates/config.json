@@ -1,0 +1,47 @@
+{
+  "//": "This is the default pristine environment configuration for a Pyvider provider.",
+  "log_level": "INFO",
+  "env": {
+    "//": "Mode can be 'passthrough' (allow all env vars) or 'restricted' (use an allowlist).",
+    "mode": "restricted",
+    "allowed": [
+      "HOME",
+      "USER",
+      "LOGNAME",
+      "PATH",
+      "TMPDIR",
+      "LANG",
+      "LC_ALL",
+      "TF_LOG",
+      "TF_LOG_PATH",
+      "TF_LOG_PROVIDER",
+      "AWS_PROFILE",
+      "AWS_REGION",
+      "AWS_ACCESS_KEY_ID",
+      "AWS_SECRET_ACCESS_KEY",
+      "AWS_SESSION_TOKEN",
+      "GOOGLE_CREDENTIALS",
+      "GOOGLE_PROJECT",
+      "AZURE_TENANT_ID",
+      "AZURE_CLIENT_ID",
+      "AZURE_CLIENT_SECRET"
+    ],
+    "set": {
+      "//": "These variables will be force-set in the Python environment.",
+      "PYTHONUNBUFFERED": "1"
+    }
+  },
+  "policy": {
+    "//": "Defines runtime security policies enforced by the Go launcher.",
+    "network": {
+      "allow": true,
+      "//": "If allow is false, only these hosts would be connectable.",
+      "allowed_hosts": []
+    },
+    "filesystem": {
+      "//": "Defines additional paths the provider is allowed to read/write.",
+      "allow_read": [],
+      "allow_write": []
+    }
+  }
+}

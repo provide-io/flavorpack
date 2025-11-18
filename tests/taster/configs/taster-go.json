@@ -1,0 +1,31 @@
+{
+  "name": "taster",
+  "version": "1.0.0",
+  "description": "Taster test tool",
+  "command": "/usr/bin/python3 -m taster",
+  "environment": {},
+  "package": {
+    "name": "taster",
+    "version": "1.0.0",
+    "description": "Taster test tool"
+  },
+  "format": "PSPF/2025",
+  "slots": [
+    {
+      "slot": 0,
+      "purpose": "payload",
+      "lifecycle": "cached",
+      "operations": "tgz",
+      "id": "taster-py",
+      "source": "{workenv}",
+      "target": ".",
+      "permissions": "0755"
+    }
+  ],
+  "execution": {
+    "command": "/usr/bin/python3 -m taster",
+    "args": [],
+    "env": {},
+    "primary_slot": 0
+  }
+}

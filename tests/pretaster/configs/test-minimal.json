@@ -1,0 +1,28 @@
+{
+  "name": "minimal-test",
+  "version": "1.0.0",
+  "description": "Minimal test",
+  "command": "/bin/bash {workenv}/minimal_test.sh",
+  "package": {
+    "name": "minimal-test",
+    "version": "1.0.0"
+  },
+  "format": "PSPF/2025",
+  "slots": [
+    {
+      "slot": 0,
+      "id": "minimal-test-script",
+      "source": "{workenv}/scripts/minimal_test.sh",
+      "target": "minimal_test.sh",
+      "purpose": "payload",
+      "lifecycle": "cached",
+      "operations": "none",
+      "permissions": "0755"
+    }
+  ],
+  "execution": {
+    "command": "/bin/bash {workenv}/minimal_test.sh",
+    "args": [],
+    "primary_slot": 0
+  }
+}

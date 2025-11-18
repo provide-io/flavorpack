@@ -1,0 +1,406 @@
+{
+  "OP_7Z": {
+    "hex": "0x0A",
+    "value": 10
+  },
+  "OP_ADLER32": {
+    "hex": "0x7D",
+    "value": 125
+  },
+  "OP_AES128_CBC": {
+    "hex": "0x32",
+    "value": 50
+  },
+  "OP_AES128_CTR": {
+    "hex": "0x34",
+    "value": 52
+  },
+  "OP_AES128_GCM": {
+    "hex": "0x30",
+    "value": 48
+  },
+  "OP_AES256_CBC": {
+    "hex": "0x33",
+    "value": 51
+  },
+  "OP_AES256_CTR": {
+    "hex": "0x35",
+    "value": 53
+  },
+  "OP_AES256_GCM": {
+    "hex": "0x31",
+    "value": 49
+  },
+  "OP_AGE": {
+    "hex": "0x42",
+    "value": 66
+  },
+  "OP_AR": {
+    "hex": "0x06",
+    "value": 6
+  },
+  "OP_AR_BSD": {
+    "hex": "0x07",
+    "value": 7
+  },
+  "OP_ASCII85": {
+    "hex": "0x55",
+    "value": 85
+  },
+  "OP_BASE16": {
+    "hex": "0x53",
+    "value": 83
+  },
+  "OP_BASE32": {
+    "hex": "0x52",
+    "value": 82
+  },
+  "OP_BASE64": {
+    "hex": "0x50",
+    "value": 80
+  },
+  "OP_BASE64_URL": {
+    "hex": "0x51",
+    "value": 81
+  },
+  "OP_BLAKE2B": {
+    "hex": "0x74",
+    "value": 116
+  },
+  "OP_BLAKE2S": {
+    "hex": "0x75",
+    "value": 117
+  },
+  "OP_BLAKE3": {
+    "hex": "0x76",
+    "value": 118
+  },
+  "OP_BROTLI": {
+    "hex": "0x21",
+    "value": 33
+  },
+  "OP_BROTLI_TEXT": {
+    "hex": "0x22",
+    "value": 34
+  },
+  "OP_BUNDLE_RESERVED_E": {
+    "hex": "0x0E",
+    "value": 14
+  },
+  "OP_BUNDLE_RESERVED_F": {
+    "hex": "0x0F",
+    "value": 15
+  },
+  "OP_BZIP2": {
+    "hex": "0x13",
+    "value": 19
+  },
+  "OP_BZIP2_BEST": {
+    "hex": "0x15",
+    "value": 21
+  },
+  "OP_BZIP2_FAST": {
+    "hex": "0x14",
+    "value": 20
+  },
+  "OP_CHACHA20_POLY1305": {
+    "hex": "0x36",
+    "value": 54
+  },
+  "OP_CPIO": {
+    "hex": "0x04",
+    "value": 4
+  },
+  "OP_CPIO_NEWC": {
+    "hex": "0x05",
+    "value": 5
+  },
+  "OP_CRC32": {
+    "hex": "0x7E",
+    "value": 126
+  },
+  "OP_CRC64": {
+    "hex": "0x7F",
+    "value": 127
+  },
+  "OP_DEDUPE": {
+    "hex": "0xB2",
+    "value": 178
+  },
+  "OP_DEFLATE": {
+    "hex": "0x23",
+    "value": 35
+  },
+  "OP_DEFLATE64": {
+    "hex": "0x24",
+    "value": 36
+  },
+  "OP_DELTA": {
+    "hex": "0xB3",
+    "value": 179
+  },
+  "OP_ECDSA_P256": {
+    "hex": "0x93",
+    "value": 147
+  },
+  "OP_ECDSA_P384": {
+    "hex": "0x94",
+    "value": 148
+  },
+  "OP_ECDSA_P521": {
+    "hex": "0x95",
+    "value": 149
+  },
+  "OP_ED25519": {
+    "hex": "0x3C",
+    "value": 60
+  },
+  "OP_ED25519_SIGN": {
+    "hex": "0x90",
+    "value": 144
+  },
+  "OP_EDDSA": {
+    "hex": "0x96",
+    "value": 150
+  },
+  "OP_GZIP": {
+    "hex": "0x10",
+    "value": 16
+  },
+  "OP_GZIP_BEST": {
+    "hex": "0x12",
+    "value": 18
+  },
+  "OP_GZIP_FAST": {
+    "hex": "0x11",
+    "value": 17
+  },
+  "OP_HEX": {
+    "hex": "0x54",
+    "value": 84
+  },
+  "OP_HIGHWAYHASH": {
+    "hex": "0x7C",
+    "value": 124
+  },
+  "OP_HMAC_SHA256": {
+    "hex": "0x97",
+    "value": 151
+  },
+  "OP_HMAC_SHA512": {
+    "hex": "0x98",
+    "value": 152
+  },
+  "OP_LZ4": {
+    "hex": "0x1E",
+    "value": 30
+  },
+  "OP_LZ4_HC": {
+    "hex": "0x1F",
+    "value": 31
+  },
+  "OP_LZMA": {
+    "hex": "0x19",
+    "value": 25
+  },
+  "OP_LZMA2": {
+    "hex": "0x1A",
+    "value": 26
+  },
+  "OP_MD5": {
+    "hex": "0x77",
+    "value": 119
+  },
+  "OP_MERGE": {
+    "hex": "0xB1",
+    "value": 177
+  },
+  "OP_NACL_BOX": {
+    "hex": "0x40",
+    "value": 64
+  },
+  "OP_NACL_SECRETBOX": {
+    "hex": "0x41",
+    "value": 65
+  },
+  "OP_NONE": {
+    "hex": "0x00",
+    "value": 0
+  },
+  "OP_PATCH": {
+    "hex": "0xB4",
+    "value": 180
+  },
+  "OP_PAX": {
+    "hex": "0x0C",
+    "value": 12
+  },
+  "OP_PERCENT": {
+    "hex": "0x5A",
+    "value": 90
+  },
+  "OP_PGP": {
+    "hex": "0x43",
+    "value": 67
+  },
+  "OP_PPM": {
+    "hex": "0x25",
+    "value": 37
+  },
+  "OP_PPMD": {
+    "hex": "0x26",
+    "value": 38
+  },
+  "OP_PUNYCODE": {
+    "hex": "0x59",
+    "value": 89
+  },
+  "OP_QUOTED_PRINTABLE": {
+    "hex": "0x58",
+    "value": 88
+  },
+  "OP_RAR": {
+    "hex": "0x0B",
+    "value": 11
+  },
+  "OP_RSA_2048": {
+    "hex": "0x3A",
+    "value": 58
+  },
+  "OP_RSA_4096": {
+    "hex": "0x3B",
+    "value": 59
+  },
+  "OP_RSA_PKCS1": {
+    "hex": "0x92",
+    "value": 146
+  },
+  "OP_RSA_PSS": {
+    "hex": "0x91",
+    "value": 145
+  },
+  "OP_SALSA20": {
+    "hex": "0x38",
+    "value": 56
+  },
+  "OP_SECP256K1": {
+    "hex": "0x3E",
+    "value": 62
+  },
+  "OP_SECP256R1": {
+    "hex": "0x3F",
+    "value": 63
+  },
+  "OP_SHA1": {
+    "hex": "0x78",
+    "value": 120
+  },
+  "OP_SHA256": {
+    "hex": "0x70",
+    "value": 112
+  },
+  "OP_SHA3_256": {
+    "hex": "0x72",
+    "value": 114
+  },
+  "OP_SHA3_512": {
+    "hex": "0x73",
+    "value": 115
+  },
+  "OP_SHA512": {
+    "hex": "0x71",
+    "value": 113
+  },
+  "OP_SIPHASH": {
+    "hex": "0x7B",
+    "value": 123
+  },
+  "OP_SNAPPY": {
+    "hex": "0x20",
+    "value": 32
+  },
+  "OP_SPLIT": {
+    "hex": "0xB0",
+    "value": 176
+  },
+  "OP_TAR": {
+    "hex": "0x01",
+    "value": 1
+  },
+  "OP_TAR_SORTED": {
+    "hex": "0x02",
+    "value": 2
+  },
+  "OP_TAR_STREAM": {
+    "hex": "0x03",
+    "value": 3
+  },
+  "OP_TERMINAL": {
+    "hex": "0xFF",
+    "value": 255
+  },
+  "OP_USTAR": {
+    "hex": "0x0D",
+    "value": 13
+  },
+  "OP_UUENCODE": {
+    "hex": "0x56",
+    "value": 86
+  },
+  "OP_X25519": {
+    "hex": "0x3D",
+    "value": 61
+  },
+  "OP_XCHACHA20_POLY1305": {
+    "hex": "0x37",
+    "value": 55
+  },
+  "OP_XSALSA20_POLY1305": {
+    "hex": "0x39",
+    "value": 57
+  },
+  "OP_XXENCODE": {
+    "hex": "0x57",
+    "value": 87
+  },
+  "OP_XXHASH": {
+    "hex": "0x79",
+    "value": 121
+  },
+  "OP_XXHASH3": {
+    "hex": "0x7A",
+    "value": 122
+  },
+  "OP_XZ": {
+    "hex": "0x16",
+    "value": 22
+  },
+  "OP_XZ_BEST": {
+    "hex": "0x18",
+    "value": 24
+  },
+  "OP_XZ_FAST": {
+    "hex": "0x17",
+    "value": 23
+  },
+  "OP_ZIP_STORE": {
+    "hex": "0x08",
+    "value": 8
+  },
+  "OP_ZIP_STREAM": {
+    "hex": "0x09",
+    "value": 9
+  },
+  "OP_ZSTD": {
+    "hex": "0x1B",
+    "value": 27
+  },
+  "OP_ZSTD_BEST": {
+    "hex": "0x1D",
+    "value": 29
+  },
+  "OP_ZSTD_FAST": {
+    "hex": "0x1C",
+    "value": 28
+  }
+}

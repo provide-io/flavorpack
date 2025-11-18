@@ -1,0 +1,2 @@
+This is init data used only during setup.
+It should be removed after setup commands complete.

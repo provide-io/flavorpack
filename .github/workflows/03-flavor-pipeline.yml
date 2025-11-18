@@ -1,0 +1,652 @@
+name: 03 🌶️ Flavor Pipeline
+
+on:
+  workflow_dispatch:
+    inputs:
+      helper_run_id:
+        description: 'Helper Prep run ID (leave empty for latest)'
+        type: string
+        required: false
+      test_filter:
+        description: 'Test filter (e.g., -k test_name or -m marker)'
+        type: string
+        required: false
+  
+  workflow_run:
+    workflows: ["01 🥘 Helper Prep"]
+    types: [completed]
+    branches: [main, develop]
+
+jobs:
+  # Setup and download helper artifacts
+  setup:
+    name: 🔧 Setup & Get Helpers
+    runs-on: ubuntu-latest
+    outputs:
+      helper_version: ${{ steps.helpers.outputs.version }}
+      helper_run_id: ${{ steps.helpers.outputs.run_id }}
+      test_matrix: ${{ steps.matrix.outputs.matrix }}
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 🔍 Determine helper version
+        id: helpers
+        run: |
+          # Source the script to get RUN_ID and VERSION
+          source .github/scripts/get-helper-run.sh "${{ inputs.helper_run_id }}"
+          
+          echo "run_id=$RUN_ID" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+        env:
+          GH_TOKEN: ${{ github.token }}
+      
+      - name: 📥 Download helper artifacts
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          workflow: 01-helper-prep.yml
+          run_id: ${{ steps.helpers.outputs.run_id }}
+          name: flavor-helpers-${{ steps.helpers.outputs.version }}-all
+          path: ./helpers-dist
+      
+      - name: 📤 Upload helpers for test jobs
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-helpers-${{ github.run_id }}
+          path: |
+            helpers-dist/*.zip
+      
+      - name: 🧪 Define test matrix
+        id: matrix
+        run: |
+          # Define test categories
+          cat > matrix.json << 'EOF'
+          {
+            "include": [
+              {"name": "unit", "runner": "ubuntu-latest", "marker": "unit", "timeout": 10},
+              {"name": "integration", "runner": "ubuntu-latest", "marker": "integration", "timeout": 20},
+              {"name": "security", "runner": "ubuntu-latest", "marker": "security", "timeout": 15},
+              {"name": "format-2025", "runner": "ubuntu-latest", "path": "tests/format_2025", "timeout": 30},
+              {"name": "packaging", "runner": "ubuntu-latest", "path": "tests/packaging", "timeout": 25},
+              {"name": "cross-language", "runner": "ubuntu-latest", "marker": "cross_language", "timeout": 30}
+            ]
+          }
+          EOF
+          
+          MATRIX=$(cat matrix.json | jq -c .)
+          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+          echo "Test matrix: $MATRIX"
+
+  # Run tests in parallel
+  test:
+    name: 🧪 Test ${{ matrix.name }}
+    needs: setup
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: ${{ matrix.timeout }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.setup.outputs.test_matrix) }}
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 📥 Download helpers
+        uses: actions/download-artifact@v4
+        with:
+          name: test-helpers-${{ github.run_id }}
+          path: ./helpers-dist
+      
+      - name: 🔧 Extract helpers
+        run: |
+          .github/scripts/download-helpers.sh helpers-dist "${{ needs.setup.outputs.helper_version }}" "linux_amd64 linux_arm64 darwin_amd64 darwin_arm64"
+          
+          # List available helpers
+          ls -la helpers/bin/
+      
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 📦 Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+
+      - name: 📦 Install dependencies
+        run: |
+          # Create virtual environment
+          uv venv workenv
+          source workenv/bin/activate
+
+          # Install project with dev dependency group
+          # PEP 735 dependency groups work with uv pip install when using --group flag
+          uv pip install --group dev -e .
+
+          # Install sibling packages if needed
+          if [ -f "../pyvider-telemetry/pyproject.toml" ]; then
+            uv pip install -e "../pyvider-telemetry"
+          fi
+
+      - name: 🧪 Run tests
+        run: |
+          source workenv/bin/activate
+          .github/scripts/run-tests.sh "${{ matrix.marker }}" "${{ matrix.path }}" "${{ inputs.test_filter }}"
+      
+      - name: 📊 Collect Test Metadata
+        if: always()
+        run: |
+          python3 .github/scripts/test-metadata.py collect test-metadata
+        continue-on-error: true
+      
+      - name: 📊 Test Summary
+        if: always()
+        uses: test-summary/action@v2
+        with:
+          paths: |
+            pytest-results.xml
+        continue-on-error: true
+      
+      - name: 📊 Upload coverage
+        if: always()
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage.xml
+          flags: ${{ matrix.name }}
+          name: flavor-coverage-${{ matrix.name }}
+        continue-on-error: true
+      
+      - name: 📤 Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ matrix.name }}-${{ github.run_id }}
+          path: |
+            pytest-results.xml
+            test-report.json
+            .coverage
+            coverage.xml
+            coverage.json
+            htmlcov/
+            test-outputs/
+            test-metadata/
+          retention-days: 30
+          if-no-files-found: warn
+
+  # Build platform-specific Python wheels with helpers
+  build-wheels:
+    name: 🎡 Build Wheel ${{ matrix.platform }}
+    needs: [setup]  # Run in parallel with tests, not after
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux_amd64
+            runner: ubuntu-latest
+            python_platform: manylinux2014_x86_64
+          - platform: linux_arm64
+            runner: ubuntu-24.04-arm
+            python_platform: manylinux2014_aarch64
+          - platform: darwin_amd64
+            runner: macos-13
+            python_platform: macosx_10_9_x86_64
+          - platform: darwin_arm64
+            runner: macos-15
+            python_platform: macosx_11_0_arm64
+          # Windows re-enabled
+          - platform: windows_amd64
+            runner: windows-2025
+            python_platform: win_amd64
+          # Temporarily disabled windows_arm64 until support is complete
+          # - platform: windows_arm64
+          #   runner: windows-11-arm
+          #   python_platform: win_arm64
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: 📥 Download platform-specific helpers
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          workflow: 01-helper-prep.yml
+          run_id: ${{ needs.setup.outputs.helper_run_id }}
+          name: flavor-helpers-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}
+          path: ./helpers-dist
+      
+      - name: 🔧 Extract and organize helpers
+        shell: bash
+        run: |
+          # Create the helpers directory structure
+          mkdir -p src/flavor/helpers/bin
+          
+          # Extract platform-specific helpers
+          .github/scripts/download-helpers.sh helpers-dist "${{ needs.setup.outputs.helper_version }}" "${{ matrix.platform }}"
+          
+          # Copy ONLY the versioned platform-specific helpers to the package location
+          echo "Copying ONLY versioned ${{ matrix.platform }} helpers to src/flavor/helpers/bin..."
+          
+          # Copy only versioned files for the CURRENT version that end with the platform name
+          # e.g., flavor-go-launcher-0.3.0-linux_arm64 but NOT flavor-go-launcher-0.2.9-linux_arm64
+          VERSION="${{ needs.setup.outputs.helper_version }}"
+          # Windows binaries have .exe extension
+          if [[ "${{ matrix.platform }}" == "windows_"* ]]; then
+            for binary in helpers/bin/*-${VERSION}-${{ matrix.platform }}.exe; do
+              if [ -f "$binary" ]; then
+                cp -v "$binary" src/flavor/helpers/bin/
+              fi
+            done
+          else
+            for binary in helpers/bin/*-${VERSION}-${{ matrix.platform }}; do
+              if [ -f "$binary" ]; then
+                cp -v "$binary" src/flavor/helpers/bin/
+              fi
+            done
+          fi
+          
+          # Make sure they're executable
+          chmod +x src/flavor/helpers/bin/* || true
+          
+          # Verify we only have platform-specific binaries and no duplicates
+          echo ""
+          echo "Verifying helpers for ${{ matrix.platform }}:"
+          for file in src/flavor/helpers/bin/*; do
+            if [ -f "$file" ]; then
+              base=$(basename "$file")
+              # Check if the file ends with the correct platform suffix
+              # Windows files end with .exe extension
+              if [[ "${{ matrix.platform }}" == "windows_"* ]]; then
+                if [[ "$base" == *"-${{ matrix.platform }}.exe" ]]; then
+                  echo "✅ $base (correct platform)"
+                else
+                  echo "❌ $base (WRONG platform - removing)"
+                  rm "$file"
+                fi
+              else
+                if [[ "$base" == *"-${{ matrix.platform }}" ]]; then
+                  echo "✅ $base (correct platform)"
+                else
+                  echo "❌ $base (WRONG platform - removing)"
+                  rm "$file"
+                fi
+              fi
+            fi
+          done
+          
+          # Final count and list
+          echo ""
+          count=$(ls -1 src/flavor/helpers/bin/ | wc -l)
+          echo "Final helpers for ${{ matrix.platform }} in wheel: $count files (should be 4: 2 launchers + 2 builders)"
+          ls -la src/flavor/helpers/bin/
+      
+      - name: 📦 Install build tools
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+          # CRITICAL: Use pip3 for wheel operations per CLAUDE.md
+          pip3 install build wheel setuptools
+      
+      - name: 🎡 Build platform wheel
+        shell: bash
+        run: .github/scripts/build-platform-wheel.sh "${{ matrix.python_platform }}"
+      
+      - name: 🔍 Validate wheel structure
+        shell: bash
+        run: |
+          # Basic validation that the wheel has the expected structure
+          echo "Validating wheel structure..."
+          
+          # Check that wheel contains the flavor package
+          python -m zipfile -l dist/*.whl | grep -q "^flavor/" && echo "✅ Flavor package found in wheel" || echo "❌ Flavor package not found"
+          
+          # Check that wheel contains platform-specific helpers
+          python -m zipfile -l dist/*.whl | grep -q "flavor/helpers/bin/" && echo "✅ Helpers found in wheel" || echo "❌ Helpers not found"
+          
+          # List the helpers in the wheel
+          echo ""
+          echo "Platform-specific helpers in wheel:"
+          python -m zipfile -l dist/*.whl | grep "flavor/helpers/bin/" | grep -v "/$" || echo "No helpers found"
+          
+          # Verify we only have this platform's helpers
+          helper_count=$(python -m zipfile -l dist/*.whl | grep "flavor/helpers/bin/flavor-" | wc -l)
+          echo "Helper binaries count: $helper_count (should be 2-4 for builders/launchers)"
+          
+          # Check that wheel contains metadata
+          python -m zipfile -l dist/*.whl | grep -q "\.dist-info/METADATA" && echo "✅ Metadata found in wheel" || echo "❌ Metadata not found"
+      
+      - name: 📤 Upload platform wheel
+        uses: actions/upload-artifact@v4
+        with:
+          name: flavor-wheel-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}
+          path: dist/*.whl
+          retention-days: 30
+
+  # Build Flavor PSP packages using the wheel
+  build-flavor:
+    name: 📦 Build Flavor ${{ matrix.platform }}
+    needs: [setup, test, build-wheels]  # Still waits for both to complete
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux_amd64
+            runner: ubuntu-latest
+            python_platform: manylinux2014_x86_64
+          - platform: linux_arm64
+            runner: ubuntu-24.04-arm
+            python_platform: manylinux2014_aarch64
+          - platform: darwin_amd64
+            runner: macos-13  # Intel Mac
+            python_platform: macosx_10_9_x86_64
+          - platform: darwin_arm64
+            runner: macos-15  # M1 Mac
+            python_platform: macosx_11_0_arm64
+          # Windows re-enabled
+          - platform: windows_amd64
+            runner: windows-2025
+            python_platform: win_amd64
+          # Temporarily disabled windows_arm64 until support is complete
+          # - platform: windows_arm64
+          #   runner: windows-11-arm
+          #   python_platform: win_arm64
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 🐍 Setup uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      
+      - name: 📥 Download platform wheel
+        uses: actions/download-artifact@v4
+        with:
+          name: flavor-wheel-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}
+          path: ./wheel-dist
+      
+      - name: 📥 Download helper artifacts
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          workflow: 01-helper-prep.yml
+          name: flavor-helpers-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}
+          path: ./helpers-dist
+      
+      - name: 🔧 Extract helpers
+        shell: bash
+        run: |
+          .github/scripts/download-helpers.sh helpers-dist "${{ needs.setup.outputs.helper_version }}" "${{ matrix.platform }}"
+          ls -la helpers/bin/
+      
+      - name: 📦 Install Flavor from wheel
+        shell: bash
+        run: |
+          # Find and install the flavor wheel
+          WHEEL=$(find wheel-dist -name "flavorpack-*.whl" | head -1)
+          
+          if [ -z "$WHEEL" ]; then
+            echo "❌ Flavor wheel not found for ${{ matrix.platform }}"
+            exit 1
+          fi
+
+          echo "Installing Flavor from wheel: $WHEEL"
+          uv tool install "$WHEEL"
+          
+          # Add uv tools to PATH
+          export PATH="$HOME/.local/bin:$PATH"
+          
+          # Verify flavor is installed
+          which flavor
+          flavor --version
+      
+      - name: 🔧 Prepare Flavor build
+        id: prepare
+        shell: bash
+        run: |
+          # Determine binary extension for Windows
+          EXT=""
+          if [[ "${{ matrix.platform }}" == "windows_"* ]]; then
+            EXT=".exe"
+          fi
+
+          # Find the appropriate launcher
+          LAUNCHER="helpers/bin/flavor-rs-launcher-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}${EXT}"
+          if [ ! -f "$LAUNCHER" ]; then
+            LAUNCHER="helpers/bin/flavor-rs-launcher-${{ matrix.platform }}${EXT}"
+          fi
+
+          if [ ! -f "$LAUNCHER" ]; then
+            echo "❌ Launcher not found"
+            ls -la helpers/bin/
+            exit 1
+          fi
+
+          # Find the wheel
+          WHEEL=$(find wheel-dist -name "flavorpack-*.whl" | head -1)
+
+          if [ -z "$WHEEL" ]; then
+            echo "❌ Wheel not found"
+            ls -la wheel-dist/
+            exit 1
+          fi
+
+          echo "launcher=$LAUNCHER" >> $GITHUB_OUTPUT
+          echo "wheel=$WHEEL" >> $GITHUB_OUTPUT
+
+      - name: 🔨 Build Flavor PSP using itself (with retry)
+        uses: Wandalen/wretry.action@v3.5.0
+        with:
+          attempt_limit: 5
+          attempt_delay: 15000  # 15 seconds between retries
+          command: bash -c 'export PATH="$HOME/.local/bin:$PATH" && export PIP_RETRIES=10 && export PIP_TIMEOUT=120 && export PYTHONIOENCODING=utf-8 && export PYTHONUTF8=1 && export FLAVOR_LOG_LEVEL=trace && .github/scripts/build-flavor-self.sh "${{ matrix.platform }}" "${{ needs.setup.outputs.helper_version }}" "${{ steps.prepare.outputs.wheel }}" "${{ steps.prepare.outputs.launcher }}"'
+      
+      - name: 📤 Upload Flavor package
+        uses: actions/upload-artifact@v4
+        with:
+          name: flavor-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}
+          path: |
+            artifacts/flavor-*.psp
+            artifacts/flavor-*.exe
+  
+  # Test Flavor PSP packages are self-contained
+  test-flavor-psp:
+    name: 🧪 Test Flavor PSP ${{ matrix.platform }}
+    needs: [setup, build-flavor]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux_amd64
+            runner: ubuntu-latest
+          - platform: linux_arm64
+            runner: ubuntu-24.04-arm
+          - platform: darwin_amd64
+            runner: macos-13
+          - platform: darwin_arm64
+            runner: macos-15
+          # Windows re-enabled
+          - platform: windows_amd64
+            runner: windows-2025
+          # Temporarily disabled windows_arm64 until support is complete
+          # - platform: windows_arm64
+          #   runner: windows-11-arm
+
+    steps:
+      - name: 📥 Checkout scripts
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            .github/scripts
+          sparse-checkout-cone-mode: false
+      
+      - name: 📥 Download Flavor package
+        uses: actions/download-artifact@v4
+        with:
+          name: flavor-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}
+          path: ./
+      
+      - name: 🧪 Test Flavor PSP self-contained
+        shell: bash
+        env:
+          FLAVOR_LOG_LEVEL: trace
+        run: |
+          .github/scripts/test-flavor-self-contained.sh "${{ matrix.platform }}"
+      
+      - name: 📤 Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: flavor-psp-test-${{ matrix.platform }}-${{ github.run_id }}
+          path: test-result.txt
+
+  # Summary and validation
+  validate:
+    name: ✅ Validate & Summary
+    needs: [setup, test, build-wheels, build-flavor, test-flavor-psp]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 📥 Download test results
+        uses: actions/download-artifact@v4
+        with:
+          pattern: test-results-*
+          path: test-results
+      
+      - name: 📥 Download wheels
+        if: needs.build-wheels.result == 'success'
+        uses: actions/download-artifact@v4
+        with:
+          name: flavor-wheels-${{ needs.setup.outputs.helper_version }}
+          path: wheel-artifacts
+        continue-on-error: true
+      
+      - name: 📥 Download Flavor packages
+        if: needs.build-flavor.result == 'success'
+        uses: actions/download-artifact@v4
+        with:
+          pattern: flavor-${{ needs.setup.outputs.helper_version }}-*
+          path: flavor-artifacts
+          merge-multiple: true
+      
+      - name: 📊 Generate summary
+        run: |
+          echo "## 🌶️ Flavor Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Helper Version:** ${{ needs.setup.outputs.helper_version }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          echo "### Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Parse test results
+          for result_dir in test-results/test-results-*; do
+            if [ -d "$result_dir" ]; then
+              TEST_NAME=$(basename "$result_dir" | sed 's/test-results-//' | sed "s/-${{ github.run_id }}//")
+              echo "- **$TEST_NAME**: " >> $GITHUB_STEP_SUMMARY
+              
+              if [ -f "$result_dir/pytest-results.xml" ]; then
+                # Parse pytest XML for pass/fail counts
+                echo "✅ Completed" >> $GITHUB_STEP_SUMMARY
+              else
+                echo "⚠️ No results" >> $GITHUB_STEP_SUMMARY
+              fi
+            fi
+          done
+          
+          # Show wheel artifacts if they were built
+          if [ -d "wheel-artifacts" ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### 🎡 Python Wheels" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            
+            for wheel in wheel-artifacts/*.whl; do
+              if [ -f "$wheel" ]; then
+                SIZE=$(du -h "$wheel" | cut -f1)
+                echo "- \`$(basename "$wheel")\` ($SIZE)" >> $GITHUB_STEP_SUMMARY
+              fi
+            done
+          fi
+          
+          # Only show Flavor packages section if they were built
+          if [ -d "flavor-artifacts" ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### 📦 Flavor & Taster Packages" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            
+            # List Flavor packages
+            echo "#### Flavor PSP Packages:" >> $GITHUB_STEP_SUMMARY
+            for pkg in flavor-artifacts/flavor-*.psp flavor-artifacts/flavor-*.exe; do
+              if [ -f "$pkg" ]; then
+                SIZE=$(du -h "$pkg" | cut -f1)
+                echo "- \`$(basename "$pkg")\` ($SIZE)" >> $GITHUB_STEP_SUMMARY
+              fi
+            done
+            
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "#### Taster Test Packages:" >> $GITHUB_STEP_SUMMARY
+            for pkg in flavor-artifacts/taster-*.psp flavor-artifacts/taster-*.exe; do
+              if [ -f "$pkg" ]; then
+                SIZE=$(du -h "$pkg" | cut -f1)
+                echo "- \`$(basename "$pkg")\` ($SIZE)" >> $GITHUB_STEP_SUMMARY
+              fi
+            done
+          fi
+          
+          # Add PSP test results
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🧪 Flavor PSP Self-Contained Tests" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ needs.test-flavor-psp.result }}" == "success" ]; then
+            echo "✅ All Flavor PSP packages verified successfully (self-contained, no external dependencies)" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.test-flavor-psp.result }}" == "skipped" ]; then
+            echo "⏭️ PSP tests were skipped" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Some PSP self-contained tests failed" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "- [View test results](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})" >> $GITHUB_STEP_SUMMARY
+          echo "- [Download Flavor packages](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}#artifacts)" >> $GITHUB_STEP_SUMMARY
+      
+      - name: 🎯 Check status
+        run: |
+          # Check if any test job failed
+          if [ "${{ needs.test.result }}" != "success" ]; then
+            echo "❌ Some tests failed"
+            exit 1
+          fi
+          
+          # Check if wheel build failed
+          if [ "${{ needs.build-wheels.result }}" != "success" ]; then
+            echo "❌ Python wheel build failed"
+            exit 1
+          fi
+          
+          # Check if Flavor build failed
+          if [ "${{ needs.build-flavor.result }}" != "success" ]; then
+            echo "❌ Flavor build failed"
+            exit 1
+          fi
+          
+          # Check if PSP tests failed
+          if [ "${{ needs.test-flavor-psp.result }}" != "success" ]; then
+            echo "❌ Flavor PSP self-contained tests failed"
+            exit 1
+          fi
+          
+          echo "✅ All tests, wheels, and builds passed"

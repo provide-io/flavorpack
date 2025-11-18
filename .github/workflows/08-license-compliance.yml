@@ -1,0 +1,776 @@
+name: 08 ⚖️ License Compliance
+
+on:
+  workflow_dispatch:
+    inputs:
+      strict_mode:
+        description: 'Enable strict license checking'
+        type: boolean
+        default: false
+      allowed_licenses:
+        description: 'Comma-separated list of allowed licenses (e.g., MIT,Apache-2.0,BSD-3-Clause)'
+        type: string
+        default: 'MIT,Apache-2.0,BSD-3-Clause,BSD-2-Clause,ISC,Python-2.0,PSF,ZPL'
+      generate_sbom:
+        description: 'Generate Software Bill of Materials (SBOM)'
+        type: boolean
+        default: true
+  
+  pull_request:
+    paths:
+      - 'requirements*.txt'
+      - 'pyproject.toml'
+      - 'poetry.lock'
+      - 'Pipfile*'
+      - 'go.mod'
+      - 'go.sum'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - 'package.json'
+      - 'LICENSE*'
+      - 'NOTICE*'
+  
+  schedule:
+    # Run monthly on the 1st at 5 AM UTC
+    - cron: '0 5 1 * *'
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  # Project License Analysis
+  project-license:
+    name: 📜 Project License
+    runs-on: ubuntu-latest
+    outputs:
+      project_license: ${{ steps.detect.outputs.license }}
+      has_license: ${{ steps.detect.outputs.has_license }}
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 🔍 Detect Project License
+        id: detect
+        run: |
+          echo "## 📜 Project License Analysis" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Check for license files
+          LICENSE_FILES=$(find . -maxdepth 2 -iname "LICENSE*" -o -iname "LICENCE*" -o -iname "COPYING*" | head -10)
+          
+          if [ -n "$LICENSE_FILES" ]; then
+            echo "has_license=true" >> $GITHUB_OUTPUT
+            echo "### License Files Found:" >> $GITHUB_STEP_SUMMARY
+            
+            for file in $LICENSE_FILES; do
+              echo "- \`$file\`" >> $GITHUB_STEP_SUMMARY
+              
+              # Try to detect license type
+              if grep -qi "MIT License" "$file"; then
+                LICENSE_TYPE="MIT"
+              elif grep -qi "Apache License" "$file"; then
+                LICENSE_TYPE="Apache-2.0"
+              elif grep -qi "BSD" "$file"; then
+                LICENSE_TYPE="BSD"
+              elif grep -qi "GNU GENERAL PUBLIC LICENSE" "$file"; then
+                if grep -qi "Version 3" "$file"; then
+                  LICENSE_TYPE="GPL-3.0"
+                elif grep -qi "Version 2" "$file"; then
+                  LICENSE_TYPE="GPL-2.0"
+                else
+                  LICENSE_TYPE="GPL"
+                fi
+              elif grep -qi "Mozilla Public License" "$file"; then
+                LICENSE_TYPE="MPL-2.0"
+              else
+                LICENSE_TYPE="Unknown"
+              fi
+              
+              echo "  Type: **$LICENSE_TYPE**" >> $GITHUB_STEP_SUMMARY
+              echo "project_license=$LICENSE_TYPE" >> $GITHUB_OUTPUT
+            done
+          else
+            echo "has_license=false" >> $GITHUB_OUTPUT
+            echo "project_license=NONE" >> $GITHUB_OUTPUT
+            echo "⚠️ **No license file found in project root**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Consider adding a LICENSE file to clarify usage terms." >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # Check for NOTICE file
+          if [ -f "NOTICE" ] || [ -f "NOTICE.txt" ] || [ -f "NOTICE.md" ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "✅ NOTICE file found" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # Check for license headers in source files
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### License Headers in Source Files" >> $GITHUB_STEP_SUMMARY
+          
+          # Check Python files
+          PY_WITH_LICENSE=$(find src helpers -name "*.py" -type f -exec grep -l "Copyright\|License" {} \; 2>/dev/null | wc -l)
+          PY_TOTAL=$(find src helpers -name "*.py" -type f 2>/dev/null | wc -l)
+          
+          echo "- Python files with license headers: $PY_WITH_LICENSE / $PY_TOTAL" >> $GITHUB_STEP_SUMMARY
+          
+          # Check Go files
+          if [ -d "src/flavor-go" ]; then
+            GO_WITH_LICENSE=$(find src/flavor-go -name "*.go" -type f -exec grep -l "Copyright\|License" {} \; 2>/dev/null | wc -l)
+            GO_TOTAL=$(find src/flavor-go -name "*.go" -type f 2>/dev/null | wc -l)
+            echo "- Go files with license headers: $GO_WITH_LICENSE / $GO_TOTAL" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # Check Rust files
+          if [ -d "src/flavor-rs" ]; then
+            RS_WITH_LICENSE=$(find src/flavor-rs -name "*.rs" -type f -exec grep -l "Copyright\|License" {} \; 2>/dev/null | wc -l)
+            RS_TOTAL=$(find src/flavor-rs -name "*.rs" -type f 2>/dev/null | wc -l)
+            echo "- Rust files with license headers: $RS_WITH_LICENSE / $RS_TOTAL" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  # Python License Compliance
+  python-license:
+    name: 🐍 Python Licenses
+    runs-on: ubuntu-latest
+    outputs:
+      compliant: ${{ steps.check.outputs.compliant }}
+      violations: ${{ steps.check.outputs.violations }}
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: 📦 Install License Tools
+        run: |
+          python -m venv license-env
+          source license-env/bin/activate
+          pip install --upgrade pip
+          pip install \
+            pip-licenses \
+            licensecheck \
+            license-expression \
+            pip-audit \
+            pipdeptree
+          
+          # Install project to analyze dependencies
+          pip install -e ".[dev,test]"
+      
+      - name: 📋 Generate License Report
+        run: |
+          source license-env/bin/activate
+          echo "## 🐍 Python License Compliance" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Generate license reports in multiple formats
+          pip-licenses --format=json --output-file=python-licenses.json
+          pip-licenses --format=csv --output-file=python-licenses.csv
+          pip-licenses --format=markdown --output-file=python-licenses.md
+          pip-licenses --format=plain --output-file=python-licenses.txt
+          
+          # Generate summary
+          pip-licenses --summary --output-file=python-license-summary.txt
+          
+          echo "### License Summary" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat python-license-summary.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+      
+      - name: 🔍 Check License Compliance
+        id: check
+        run: |
+          source license-env/bin/activate
+          echo "### Compliance Check" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Parse allowed licenses
+          IFS=',' read -ra ALLOWED <<< "${{ inputs.allowed_licenses }}"
+          
+          # Check each dependency
+          VIOLATIONS=0
+          COMPLIANT_COUNT=0
+          UNKNOWN_COUNT=0
+          
+          echo "#### Allowed Licenses:" >> $GITHUB_STEP_SUMMARY
+          for license in "${ALLOWED[@]}"; do
+            echo "- $license" >> $GITHUB_STEP_SUMMARY
+          done
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Analyze licenses
+          python << 'EOF' > license-analysis.txt
+          import json
+          import sys
+          
+          allowed = "${{ inputs.allowed_licenses }}".split(',')
+          allowed = [l.strip().lower() for l in allowed]
+          
+          with open('python-licenses.json') as f:
+              licenses = json.load(f)
+          
+          violations = []
+          compliant = []
+          unknown = []
+          
+          for pkg in licenses:
+              name = pkg.get('Name', 'Unknown')
+              license = pkg.get('License', 'UNKNOWN')
+              
+              # Normalize license name
+              license_lower = license.lower().replace(' ', '-')
+              
+              # Check if compliant
+              is_compliant = False
+              for allowed_license in allowed:
+                  if allowed_license in license_lower or license_lower in allowed_license:
+                      is_compliant = True
+                      break
+              
+              if license == 'UNKNOWN':
+                  unknown.append(f"{name}: {license}")
+              elif is_compliant:
+                  compliant.append(f"{name}: {license}")
+              else:
+                  violations.append(f"{name}: {license}")
+          
+          print(f"Compliant: {len(compliant)}")
+          print(f"Violations: {len(violations)}")
+          print(f"Unknown: {len(unknown)}")
+          
+          if violations:
+              print("\nLicense Violations:")
+              for v in violations[:20]:
+                  print(f"  ❌ {v}")
+          
+          if unknown:
+              print("\nUnknown Licenses:")
+              for u in unknown[:10]:
+                  print(f"  ⚠️ {u}")
+          
+          sys.exit(0 if len(violations) == 0 else 1)
+          EOF
+          
+          if [ $? -eq 0 ]; then
+            echo "compliant=true" >> $GITHUB_OUTPUT
+            echo "violations=0" >> $GITHUB_OUTPUT
+            echo "✅ **All Python dependencies are license compliant**" >> $GITHUB_STEP_SUMMARY
+          else
+            VIOLATION_COUNT=$(grep -c "❌" license-analysis.txt || echo 0)
+            echo "compliant=false" >> $GITHUB_OUTPUT
+            echo "violations=$VIOLATION_COUNT" >> $GITHUB_OUTPUT
+            
+            if [ "${{ inputs.strict_mode }}" = "true" ]; then
+              echo "❌ **License compliance check failed (strict mode)**" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "⚠️ **License compliance issues detected**" >> $GITHUB_STEP_SUMMARY
+            fi
+            
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            cat license-analysis.txt >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: 📊 License Statistics
+        run: |
+          source license-env/bin/activate
+          echo "### License Distribution" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          python << 'EOF'
+          import json
+          from collections import Counter
+          
+          with open('python-licenses.json') as f:
+              licenses = json.load(f)
+          
+          license_counts = Counter(pkg.get('License', 'UNKNOWN') for pkg in licenses)
+          
+          print("| License | Count | Percentage |")
+          print("|---------|-------|------------|")
+          
+          total = sum(license_counts.values())
+          for license, count in license_counts.most_common(15):
+              percentage = (count / total) * 100
+              print(f"| {license[:30]} | {count} | {percentage:.1f}% |")
+          EOF
+          >> $GITHUB_STEP_SUMMARY
+      
+      - name: 📤 Upload Python License Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-license-reports
+          path: |
+            python-licenses.*
+            python-license-summary.txt
+            license-analysis.txt
+
+  # Go License Compliance
+  go-license:
+    name: 🐹 Go Licenses
+    runs-on: ubuntu-latest
+    outputs:
+      compliant: ${{ steps.check.outputs.compliant }}
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 🐹 Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+      
+      - name: 📦 Install go-licenses
+        run: |
+          go install github.com/google/go-licenses@latest
+      
+      - name: 📋 Generate License Report
+        run: |
+          echo "## 🐹 Go License Compliance" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          cd src/flavor-go
+          
+          # Generate license report
+          go-licenses report ./... --ignore github.com/livingstaccato 2>&1 | tee go-licenses.txt || true
+          
+          # Save as CSV
+          go-licenses csv ./... --ignore github.com/livingstaccato 2>&1 > go-licenses.csv || true
+          
+          echo "### Go Module Licenses" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          head -50 go-licenses.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+      
+      - name: 🔍 Check Compliance
+        id: check
+        run: |
+          echo "### Go License Compliance Check" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          cd src/flavor-go
+          
+          # Check for problematic licenses
+          VIOLATIONS=0
+          
+          # Check for GPL/AGPL/LGPL
+          if grep -E "GPL|AGPL|LGPL" go-licenses.txt; then
+            echo "⚠️ Copyleft licenses detected:" >> $GITHUB_STEP_SUMMARY
+            grep -E "GPL|AGPL|LGPL" go-licenses.txt >> $GITHUB_STEP_SUMMARY
+            VIOLATIONS=$((VIOLATIONS + 1))
+          fi
+          
+          # Check for unknown licenses
+          if grep -E "UNKNOWN|ERROR" go-licenses.txt; then
+            echo "⚠️ Unknown or problematic licenses:" >> $GITHUB_STEP_SUMMARY
+            grep -E "UNKNOWN|ERROR" go-licenses.txt >> $GITHUB_STEP_SUMMARY
+            VIOLATIONS=$((VIOLATIONS + 1))
+          fi
+          
+          if [ "$VIOLATIONS" -eq 0 ]; then
+            echo "compliant=true" >> $GITHUB_OUTPUT
+            echo "✅ All Go dependencies are license compliant" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "compliant=false" >> $GITHUB_OUTPUT
+            if [ "${{ inputs.strict_mode }}" = "true" ]; then
+              echo "❌ Go license compliance failed (strict mode)" >> $GITHUB_STEP_SUMMARY
+              exit 1
+            else
+              echo "⚠️ Go license compliance issues detected" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+      
+      - name: 📤 Upload Go License Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: go-license-reports
+          path: |
+            src/flavor-go/go-licenses.*
+
+  # Rust License Compliance
+  rust-license:
+    name: 🦀 Rust Licenses
+    runs-on: ubuntu-latest
+    outputs:
+      compliant: ${{ steps.check.outputs.compliant }}
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 🦀 Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+      
+      - name: 📦 Install cargo-license
+        run: |
+          cargo install cargo-license
+          cargo install cargo-deny
+      
+      - name: 📋 Generate License Report
+        run: |
+          echo "## 🦀 Rust License Compliance" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          cd src/flavor-rs
+          
+          # Generate license report
+          cargo license --json > rust-licenses.json 2>&1 || true
+          cargo license > rust-licenses.txt 2>&1 || true
+          
+          echo "### Rust Crate Licenses" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          head -50 rust-licenses.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+      
+      - name: 🔍 Check Compliance with cargo-deny
+        id: check
+        run: |
+          echo "### Rust License Compliance Check" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          cd src/flavor-rs
+          
+          # Create cargo-deny config for license checking
+          cat > deny.toml << 'EOF'
+          [licenses]
+          unlicensed = "deny"
+          allow = [
+              "MIT",
+              "Apache-2.0",
+              "Apache-2.0 WITH LLVM-exception",
+              "BSD-2-Clause",
+              "BSD-3-Clause",
+              "ISC",
+              "Unicode-DFS-2016",
+              "CC0-1.0",
+          ]
+          copyleft = "warn"
+          deny = [
+              "GPL-2.0",
+              "GPL-3.0",
+              "AGPL-3.0",
+              "LGPL-2.0",
+              "LGPL-2.1",
+              "LGPL-3.0",
+          ]
+          
+          [[licenses.exceptions]]
+          allow = ["Unicode-DFS-2016"]
+          name = "unicode-ident"
+          
+          [bans]
+          multiple-versions = "warn"
+          wildcards = "allow"
+          
+          [sources]
+          unknown-registry = "warn"
+          unknown-git = "warn"
+          EOF
+          
+          # Run cargo-deny check
+          if cargo deny check licenses 2>&1 | tee cargo-deny-licenses.log; then
+            echo "compliant=true" >> $GITHUB_OUTPUT
+            echo "✅ All Rust dependencies are license compliant" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "compliant=false" >> $GITHUB_OUTPUT
+            
+            if [ "${{ inputs.strict_mode }}" = "true" ]; then
+              echo "❌ Rust license compliance failed (strict mode)" >> $GITHUB_STEP_SUMMARY
+              exit 1
+            else
+              echo "⚠️ Rust license compliance issues detected:" >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
+              grep -E "error\[|warning\[" cargo-deny-licenses.log | head -20 >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+      
+      - name: 📤 Upload Rust License Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rust-license-reports
+          path: |
+            src/flavor-rs/rust-licenses.*
+            src/flavor-rs/cargo-deny-licenses.log
+            src/flavor-rs/deny.toml
+
+  # SBOM Generation
+  sbom-generation:
+    name: 📜 SBOM Generation
+    runs-on: ubuntu-latest
+    if: inputs.generate_sbom == true
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 🛠️ Install SBOM Tools
+        run: |
+          # Install syft for SBOM generation
+          curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
+          
+          # Install cyclonedx tools
+          pip install cyclonedx-bom
+          npm install -g @cyclonedx/cli
+      
+      - name: 📋 Generate SBOM
+        run: |
+          echo "## 📜 Software Bill of Materials (SBOM)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Generate SBOM with Syft in multiple formats
+          echo "### Generating SBOM with Syft" >> $GITHUB_STEP_SUMMARY
+          
+          syft . -o json > sbom-syft.json
+          syft . -o spdx-json > sbom-spdx.json
+          syft . -o cyclonedx-json > sbom-cyclonedx.json
+          syft . -o table > sbom-table.txt
+          
+          echo "✅ SBOM generated in multiple formats:" >> $GITHUB_STEP_SUMMARY
+          echo "- SPDX JSON" >> $GITHUB_STEP_SUMMARY
+          echo "- CycloneDX JSON" >> $GITHUB_STEP_SUMMARY
+          echo "- Syft JSON" >> $GITHUB_STEP_SUMMARY
+          echo "- Table format" >> $GITHUB_STEP_SUMMARY
+          
+          # Generate Python-specific SBOM
+          if [ -f "requirements.txt" ] || [ -f "pyproject.toml" ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### Python SBOM (CycloneDX)" >> $GITHUB_STEP_SUMMARY
+            
+            if [ -f "requirements.txt" ]; then
+              cyclonedx-py -r requirements.txt -o sbom-python.json --format json || true
+            elif [ -f "pyproject.toml" ]; then
+              cyclonedx-py -p pyproject.toml -o sbom-python.json --format json || true
+            fi
+            
+            if [ -f "sbom-python.json" ]; then
+              echo "✅ Python-specific SBOM generated" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+          
+          # Summary statistics
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### SBOM Statistics" >> $GITHUB_STEP_SUMMARY
+          
+          if [ -f "sbom-syft.json" ]; then
+            PACKAGE_COUNT=$(jq '.artifacts | length' sbom-syft.json)
+            echo "- Total packages detected: $PACKAGE_COUNT" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Package Summary" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          head -50 sbom-table.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+      
+      - name: 🔍 Validate SBOM
+        continue-on-error: true
+        run: |
+          echo "### SBOM Validation" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Validate SPDX format
+          if [ -f "sbom-spdx.json" ]; then
+            python -m json.tool sbom-spdx.json > /dev/null 2>&1
+            if [ $? -eq 0 ]; then
+              echo "✅ SPDX SBOM is valid JSON" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "❌ SPDX SBOM validation failed" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+          
+          # Validate CycloneDX format
+          if [ -f "sbom-cyclonedx.json" ]; then
+            cyclonedx validate --input-file sbom-cyclonedx.json --input-format json 2>&1 | tee cyclonedx-validation.log || true
+            if grep -q "valid" cyclonedx-validation.log; then
+              echo "✅ CycloneDX SBOM is valid" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "⚠️ CycloneDX SBOM validation warnings" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+      
+      - name: 📤 Upload SBOM
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-reports
+          path: |
+            sbom-*.json
+            sbom-*.txt
+            cyclonedx-validation.log
+
+  # Compliance Report
+  compliance-report:
+    name: 📊 Compliance Report
+    needs: [project-license, python-license, go-license, rust-license, sbom-generation]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Download all reports
+        uses: actions/download-artifact@v4
+        with:
+          path: license-reports
+      
+      - name: 📊 Generate Final Compliance Report
+        run: |
+          echo "# ⚖️ License Compliance Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Run ID:** ${{ github.run_id }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Repository:** ${{ github.repository }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Timestamp:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          echo "## 📋 Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          echo "| Component | Status | Details |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|--------|---------|" >> $GITHUB_STEP_SUMMARY
+          
+          # Project license
+          PROJECT_LICENSE="${{ needs.project-license.outputs.project_license }}"
+          HAS_LICENSE="${{ needs.project-license.outputs.has_license }}"
+          
+          if [ "$HAS_LICENSE" = "true" ]; then
+            echo "| 📜 Project License | ✅ | $PROJECT_LICENSE |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| 📜 Project License | ⚠️ | No license file |" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # Python compliance
+          PYTHON_COMPLIANT="${{ needs.python-license.outputs.compliant }}"
+          PYTHON_VIOLATIONS="${{ needs.python-license.outputs.violations }}"
+          
+          if [ "$PYTHON_COMPLIANT" = "true" ]; then
+            echo "| 🐍 Python | ✅ | Compliant |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| 🐍 Python | ⚠️ | $PYTHON_VIOLATIONS violations |" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # Go compliance
+          GO_COMPLIANT="${{ needs.go-license.outputs.compliant }}"
+          
+          if [ "$GO_COMPLIANT" = "true" ]; then
+            echo "| 🐹 Go | ✅ | Compliant |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| 🐹 Go | ⚠️ | Issues detected |" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # Rust compliance
+          RUST_COMPLIANT="${{ needs.rust-license.outputs.compliant }}"
+          
+          if [ "$RUST_COMPLIANT" = "true" ]; then
+            echo "| 🦀 Rust | ✅ | Compliant |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| 🦀 Rust | ⚠️ | Issues detected |" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # SBOM
+          if [ -d "license-reports/sbom-reports" ]; then
+            echo "| 📜 SBOM | ✅ | Generated |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| 📜 SBOM | ⏭️ | Not generated |" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 🎯 Compliance Status" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Overall compliance
+          OVERALL_COMPLIANT=true
+          
+          if [ "$HAS_LICENSE" != "true" ]; then
+            echo "⚠️ **Missing project license file**" >> $GITHUB_STEP_SUMMARY
+            OVERALL_COMPLIANT=false
+          fi
+          
+          if [ "$PYTHON_COMPLIANT" != "true" ] || [ "$GO_COMPLIANT" != "true" ] || [ "$RUST_COMPLIANT" != "true" ]; then
+            echo "⚠️ **License compliance issues detected in dependencies**" >> $GITHUB_STEP_SUMMARY
+            OVERALL_COMPLIANT=false
+          fi
+          
+          if [ "$OVERALL_COMPLIANT" = "true" ]; then
+            echo "✅ **Project is license compliant**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **License compliance issues require attention**" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 📝 Recommendations" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "$HAS_LICENSE" != "true" ]; then
+            echo "1. 📜 Add a LICENSE file to the project root" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "2. 📋 Review all dependency licenses for compatibility" >> $GITHUB_STEP_SUMMARY
+          echo "3. ⚖️ Ensure license compatibility with project goals" >> $GITHUB_STEP_SUMMARY
+          echo "4. 📝 Consider adding license headers to source files" >> $GITHUB_STEP_SUMMARY
+          echo "5. 📦 Keep SBOM updated for supply chain transparency" >> $GITHUB_STEP_SUMMARY
+          echo "6. 🔄 Regularly audit new dependencies for license compliance" >> $GITHUB_STEP_SUMMARY
+          
+          # Create compliance summary JSON
+          cat > compliance-summary.json << EOF
+          {
+            "timestamp": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
+            "repository": "${{ github.repository }}",
+            "run_id": "${{ github.run_id }}",
+            "project_license": "$PROJECT_LICENSE",
+            "has_license_file": $HAS_LICENSE,
+            "compliance": {
+              "python": $PYTHON_COMPLIANT,
+              "go": $GO_COMPLIANT,
+              "rust": $RUST_COMPLIANT,
+              "overall": $OVERALL_COMPLIANT
+            },
+            "violations": {
+              "python": ${PYTHON_VIOLATIONS:-0}
+            },
+            "sbom_generated": $([ -d "license-reports/sbom-reports" ] && echo "true" || echo "false")
+          }
+          EOF
+          
+          # Fail if strict mode and not compliant
+          if [ "${{ inputs.strict_mode }}" = "true" ] && [ "$OVERALL_COMPLIANT" != "true" ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "❌ **Failing due to strict mode enforcement**" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+      
+      - name: 📤 Upload Compliance Summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: compliance-summary
+          path: compliance-summary.json
+      
+      - name: 💬 Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const summary = JSON.parse(fs.readFileSync('compliance-summary.json', 'utf8'));
+            
+            const comment = `## ⚖️ License Compliance Check
+            
+            **Project License:** ${summary.project_license}
+            **Overall Compliance:** ${summary.compliance.overall ? '✅ Compliant' : '❌ Issues Detected'}
+            
+            | Language | Status |
+            |----------|--------|
+            | 🐍 Python | ${summary.compliance.python ? '✅' : '⚠️'} |
+            | 🐹 Go | ${summary.compliance.go ? '✅' : '⚠️'} |
+            | 🦀 Rust | ${summary.compliance.rust ? '✅' : '⚠️'} |
+            
+            ${summary.violations.python > 0 ? `⚠️ Python has ${summary.violations.python} license violations` : ''}
+            
+            [View Full Report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });

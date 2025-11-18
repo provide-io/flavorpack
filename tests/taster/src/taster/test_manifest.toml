@@ -1,0 +1,12 @@
+[project]
+name = "crosslang-test"
+version = "1.0.0"
+description = "Test package for cross-language compatibility"
+
+[project.scripts]
+crosslang-test = "taster.cli:main"
+
+[tool.flavor]
+name = "crosslang-test"
+version = "1.0.0"
+entry_point = "taster.cli:main"

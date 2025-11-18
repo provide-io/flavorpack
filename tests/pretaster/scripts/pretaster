@@ -1,0 +1,45 @@
+#!/bin/bash
+# Pretaster - Main entry point with package command support
+
+set -e
+
+# Get the workenv directory
+WORKENV="${FLAVOR_WORKENV:-$(dirname "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")")}"
+
+# Debug: Show environment if FLAVOR_LOG_LEVEL is debug
+if [ "$FLAVOR_LOG_LEVEL" = "debug" ]; then
+    echo "[DEBUG] Pretaster workenv: $WORKENV"
+    echo "[DEBUG] Checking for bundled taster at: $WORKENV/taster.psp"
+fi
+
+# Check if first argument is "package"
+if [ "$1" = "package" ]; then
+    # Use the bundled taster.psp for package commands
+    BUNDLED_TASTER="${BUNDLED_TASTER:-$WORKENV/taster.psp}"
+    
+    if [ ! -f "$BUNDLED_TASTER" ]; then
+        echo "❌ Error: taster.psp not found at $BUNDLED_TASTER"
+        echo "   This pretaster was not built with taster bundled."
+        echo "   Use pretaster-with-taster.json manifest to include taster."
+        echo ""
+        echo "   Contents of $WORKENV:"
+        ls -la "$WORKENV/" 2>/dev/null || echo "     Directory not found"
+        exit 1
+    fi
+    
+    # Make it executable if needed
+    chmod +x "$BUNDLED_TASTER" 2>/dev/null || true
+    
+    # Pass all arguments to taster's package command
+    exec "$BUNDLED_TASTER" "$@"
+else
+    # For non-package commands, use test-with-taster.sh for test functionality
+    if [ -f "$WORKENV/scripts/test-with-taster.sh" ]; then
+        exec /bin/bash "$WORKENV/scripts/test-with-taster.sh" "$@"
+    else
+        # Fallback to simple echo test if test-with-taster.sh not available
+        echo "Pretaster Test Suite v1.0.0"
+        echo "Arguments: $@"
+        exit 0
+    fi
+fi

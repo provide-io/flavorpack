@@ -1,0 +1,165 @@
+{
+  "version": "2025.1.0",
+  "description": "PSPF/2025 Operation Chain Specification",
+  "max_operations_per_chain": 8,
+  "packing_format": "64-bit little-endian, 8 operations × 8 bits each",
+  
+  "operations": {
+    "0x00": {
+      "name": "OP_NONE",
+      "category": "none",
+      "description": "No operation"
+    },
+    
+    "bundle": {
+      "0x01": {"name": "OP_TAR", "description": "TAR archive"},
+      "0x02": {"name": "OP_TAR_SORTED", "description": "Sorted TAR archive"},
+      "0x03": {"name": "OP_TAR_STREAM", "description": "Streaming TAR archive"},
+      "0x04": {"name": "OP_CPIO", "description": "CPIO archive"},
+      "0x05": {"name": "OP_CPIO_NEWC", "description": "CPIO newc format"},
+      "0x06": {"name": "OP_AR", "description": "AR archive"},
+      "0x07": {"name": "OP_AR_BSD", "description": "BSD AR archive"},
+      "0x08": {"name": "OP_ZIP_STORE", "description": "ZIP archive (store)"},
+      "0x09": {"name": "OP_ZIP_STREAM", "description": "ZIP archive (stream)"},
+      "0x0A": {"name": "OP_7Z", "description": "7-Zip archive"},
+      "0x0B": {"name": "OP_RAR", "description": "RAR archive"},
+      "0x0C": {"name": "OP_PAX", "description": "PAX archive"},
+      "0x0D": {"name": "OP_USTAR", "description": "USTAR archive"},
+      "0x0E": {"name": "OP_BUNDLE_RESERVED_E", "description": "Reserved"},
+      "0x0F": {"name": "OP_BUNDLE_RESERVED_F", "description": "Reserved"}
+    },
+    
+    "compression": {
+      "0x10": {"name": "OP_GZIP", "description": "Gzip compression"},
+      "0x11": {"name": "OP_GZIP_FAST", "description": "Gzip fast compression"},
+      "0x12": {"name": "OP_GZIP_BEST", "description": "Gzip best compression"},
+      "0x13": {"name": "OP_BZIP2", "description": "Bzip2 compression"},
+      "0x14": {"name": "OP_BZIP2_FAST", "description": "Bzip2 fast compression"},
+      "0x15": {"name": "OP_BZIP2_BEST", "description": "Bzip2 best compression"},
+      "0x16": {"name": "OP_XZ", "description": "XZ compression"},
+      "0x17": {"name": "OP_XZ_FAST", "description": "XZ fast compression"},
+      "0x18": {"name": "OP_XZ_BEST", "description": "XZ best compression"},
+      "0x19": {"name": "OP_LZMA", "description": "LZMA compression"},
+      "0x1A": {"name": "OP_LZMA2", "description": "LZMA2 compression"},
+      "0x1B": {"name": "OP_ZSTD", "description": "Zstandard compression"},
+      "0x1C": {"name": "OP_ZSTD_FAST", "description": "Zstandard fast compression"},
+      "0x1D": {"name": "OP_ZSTD_BEST", "description": "Zstandard best compression"},
+      "0x1E": {"name": "OP_LZ4", "description": "LZ4 compression"},
+      "0x1F": {"name": "OP_LZ4_HC", "description": "LZ4 high compression"},
+      "0x20": {"name": "OP_SNAPPY", "description": "Snappy compression"},
+      "0x21": {"name": "OP_BROTLI", "description": "Brotli compression"},
+      "0x22": {"name": "OP_BROTLI_TEXT", "description": "Brotli text compression"},
+      "0x23": {"name": "OP_DEFLATE", "description": "Deflate compression"},
+      "0x24": {"name": "OP_DEFLATE64", "description": "Deflate64 compression"},
+      "0x25": {"name": "OP_PPM", "description": "PPM compression"},
+      "0x26": {"name": "OP_PPMD", "description": "PPMd compression"}
+    },
+    
+    "encryption": {
+      "0x30": {"name": "OP_AES128_GCM", "description": "AES-128 GCM encryption"},
+      "0x31": {"name": "OP_AES256_GCM", "description": "AES-256 GCM encryption"},
+      "0x32": {"name": "OP_AES128_CBC", "description": "AES-128 CBC encryption"},
+      "0x33": {"name": "OP_AES256_CBC", "description": "AES-256 CBC encryption"},
+      "0x34": {"name": "OP_AES128_CTR", "description": "AES-128 CTR encryption"},
+      "0x35": {"name": "OP_AES256_CTR", "description": "AES-256 CTR encryption"},
+      "0x36": {"name": "OP_CHACHA20_POLY1305", "description": "ChaCha20-Poly1305"},
+      "0x37": {"name": "OP_XCHACHA20_POLY1305", "description": "XChaCha20-Poly1305"},
+      "0x38": {"name": "OP_SALSA20", "description": "Salsa20 encryption"},
+      "0x39": {"name": "OP_XSALSA20_POLY1305", "description": "XSalsa20-Poly1305"},
+      "0x3A": {"name": "OP_RSA_2048", "description": "RSA 2048-bit encryption"},
+      "0x3B": {"name": "OP_RSA_4096", "description": "RSA 4096-bit encryption"},
+      "0x3C": {"name": "OP_ED25519", "description": "Ed25519 encryption"},
+      "0x3D": {"name": "OP_X25519", "description": "X25519 key exchange"},
+      "0x3E": {"name": "OP_SECP256K1", "description": "SECP256K1 encryption"},
+      "0x3F": {"name": "OP_SECP256R1", "description": "SECP256R1 encryption"},
+      "0x40": {"name": "OP_NACL_BOX", "description": "NaCl box encryption"},
+      "0x41": {"name": "OP_NACL_SECRETBOX", "description": "NaCl secretbox"},
+      "0x42": {"name": "OP_AGE", "description": "Age encryption"},
+      "0x43": {"name": "OP_PGP", "description": "PGP encryption"}
+    },
+    
+    "encoding": {
+      "0x50": {"name": "OP_BASE64", "description": "Base64 encoding"},
+      "0x51": {"name": "OP_BASE64_URL", "description": "Base64 URL encoding"},
+      "0x52": {"name": "OP_BASE32", "description": "Base32 encoding"},
+      "0x53": {"name": "OP_BASE16", "description": "Base16 encoding"},
+      "0x54": {"name": "OP_HEX", "description": "Hex encoding"},
+      "0x55": {"name": "OP_ASCII85", "description": "ASCII85 encoding"},
+      "0x56": {"name": "OP_UUENCODE", "description": "UUencoding"},
+      "0x57": {"name": "OP_XXENCODE", "description": "XXencoding"},
+      "0x58": {"name": "OP_QUOTED_PRINTABLE", "description": "Quoted-printable"},
+      "0x59": {"name": "OP_PUNYCODE", "description": "Punycode encoding"},
+      "0x5A": {"name": "OP_PERCENT", "description": "Percent encoding"}
+    },
+    
+    "hash": {
+      "0x70": {"name": "OP_SHA256", "description": "SHA-256 hash"},
+      "0x71": {"name": "OP_SHA512", "description": "SHA-512 hash"},
+      "0x72": {"name": "OP_SHA3_256", "description": "SHA3-256 hash"},
+      "0x73": {"name": "OP_SHA3_512", "description": "SHA3-512 hash"},
+      "0x74": {"name": "OP_BLAKE2B", "description": "BLAKE2b hash"},
+      "0x75": {"name": "OP_BLAKE2S", "description": "BLAKE2s hash"},
+      "0x76": {"name": "OP_BLAKE3", "description": "BLAKE3 hash"},
+      "0x77": {"name": "OP_MD5", "description": "MD5 hash"},
+      "0x78": {"name": "OP_SHA1", "description": "SHA-1 hash"},
+      "0x79": {"name": "OP_XXHASH", "description": "xxHash"},
+      "0x7A": {"name": "OP_XXHASH3", "description": "xxHash3"},
+      "0x7B": {"name": "OP_SIPHASH", "description": "SipHash"},
+      "0x7C": {"name": "OP_HIGHWAYHASH", "description": "HighwayHash"},
+      "0x7D": {"name": "OP_ADLER32", "description": "Adler-32 checksum"},
+      "0x7E": {"name": "OP_CRC32", "description": "CRC32 checksum"},
+      "0x7F": {"name": "OP_CRC64", "description": "CRC64 checksum"}
+    },
+    
+    "signature": {
+      "0x90": {"name": "OP_ED25519_SIGN", "description": "Ed25519 signature"},
+      "0x91": {"name": "OP_RSA_PSS", "description": "RSA-PSS signature"},
+      "0x92": {"name": "OP_RSA_PKCS1", "description": "RSA PKCS#1 signature"},
+      "0x93": {"name": "OP_ECDSA_P256", "description": "ECDSA P-256 signature"},
+      "0x94": {"name": "OP_ECDSA_P384", "description": "ECDSA P-384 signature"},
+      "0x95": {"name": "OP_ECDSA_P521", "description": "ECDSA P-521 signature"},
+      "0x96": {"name": "OP_EDDSA", "description": "EdDSA signature"},
+      "0x97": {"name": "OP_HMAC_SHA256", "description": "HMAC-SHA256"},
+      "0x98": {"name": "OP_HMAC_SHA512", "description": "HMAC-SHA512"}
+    },
+    
+    "transform": {
+      "0xB0": {"name": "OP_SPLIT", "description": "Split operation"},
+      "0xB1": {"name": "OP_MERGE", "description": "Merge operation"},
+      "0xB2": {"name": "OP_DEDUPE", "description": "Deduplication"},
+      "0xB3": {"name": "OP_DELTA", "description": "Delta encoding"},
+      "0xB4": {"name": "OP_PATCH", "description": "Patch application"}
+    },
+    
+    "terminal": {
+      "0xFF": {"name": "OP_TERMINAL", "description": "Chain terminator"}
+    }
+  },
+  
+  "common_chains": [
+    {
+      "name": "tar.gz",
+      "operations": ["OP_TAR", "OP_GZIP"],
+      "packed": "0x1001",
+      "description": "TAR archive compressed with gzip"
+    },
+    {
+      "name": "tar.bz2",
+      "operations": ["OP_TAR", "OP_BZIP2"],
+      "packed": "0x1301",
+      "description": "TAR archive compressed with bzip2"
+    },
+    {
+      "name": "tar.zst",
+      "operations": ["OP_TAR", "OP_ZSTD"],
+      "packed": "0x1b01",
+      "description": "TAR archive compressed with zstandard"
+    },
+    {
+      "name": "encrypted_tar.gz",
+      "operations": ["OP_TAR", "OP_GZIP", "OP_AES256_GCM"],
+      "packed": "0x311001",
+      "description": "Encrypted compressed TAR archive"
+    }
+  ]
+}

@@ -1,0 +1,68 @@
+# Environment
+.env
+.venv
+venv/
+env/
+# Project workenv directory (but not Rust source directories)
+/workenv/
+# Allow Rust workenv source modules
+!src/*/src/workenv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution
+build/
+*.egg-info/
+*.egg
+.eggs/
+
+# Test artifacts
+.pytest_cache/
+.coverage
+htmlcov/
+reports/
+
+# IDE
+.idea/
+.vscode/
+
+# Local Build Artifacts
+# Compiled helper binaries should not be version controlled.
+# They are built from source via `./build.sh`.
+dist/
+*.pspf
+*.psp
+target/
+*code.sh
+
+# Test manifests (generated during testing)
+flavor-manifest.json
+tests/pretaster/pretaster-build-manifest.json
+tests/pretaster/test-runner.sh
+*bfile*
+.hypothesis
+*.whl
+# Build artifacts and binaries (but not Rust src/bin/ source directories)
+/bin/
+dist/bin/
+**/target/**/bin/
+# Allow Rust source directories
+!src/*/src/bin/
+core
+*.local.json
+archive_*
+
+# Mutation testing artifacts
+mutants/
+.mutmut-cache
+html/
+
+# Synced theme files (source: provide-foundry/shared-theme/)
+docs/.shared-theme/
+
+# MkDocs generated site
+site/
+bf-*.txt

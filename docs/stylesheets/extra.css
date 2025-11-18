@@ -1,0 +1,524 @@
+/* Custom CSS for provide.foundation Documentation */
+
+/* Import Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap');
+
+/* Color Variables */
+:root {
+  --pf-primary: #6366f1;  /* Indigo */
+  --pf-accent: #8b5cf6;   /* Purple */
+  --pf-success: #10b981;  /* Green */
+  --pf-warning: #f59e0b;  /* Amber */
+  --pf-error: #ef4444;    /* Red */
+  --pf-info: #3b82f6;     /* Blue */
+}
+
+[data-md-color-scheme="slate"] {
+  --pf-primary: #818cf8;
+  --pf-accent: #a78bfa;
+  --pf-success: #34d399;
+  --pf-warning: #fbbf24;
+  --pf-error: #f87171;
+  --pf-info: #60a5fa;
+}
+
+/* Typography Enhancements */
+.md-typeset {
+  font-size: 0.9rem;
+  line-height: 1.7;
+}
+
+/* Headings using Chakra Petch */
+.md-typeset h1, .md-typeset .h1,
+.md-typeset h2, .md-typeset .h2,
+.md-typeset h3, .md-typeset .h3,
+.md-typeset h4, .md-typeset .h4,
+.md-typeset h5, .md-typeset .h5,
+.md-typeset h6, .md-typeset .h6 {
+  font-family: 'Chakra Petch', sans-serif;
+  font-weight: bold;
+}
+
+.md-typeset h1 {
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--pf-primary);
+}
+
+.md-typeset h2 {
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  border-bottom: 2px solid var(--md-default-fg-color--lightest);
+  padding-bottom: 0.5rem;
+  margin-top: 2rem;
+}
+
+.md-typeset h3 {
+  font-weight: 600;
+  color: var(--pf-accent);
+}
+
+/* Code Blocks Enhancement */
+.md-typeset pre > code {
+  font-size: 0.85rem;
+  border-radius: 8px;
+  padding: 1rem 1.2rem;
+}
+
+.md-typeset code {
+  font-size: 0.85rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  background-color: var(--md-code-bg-color);
+  font-weight: 500;
+}
+
+/* Enhanced Admonitions */
+.md-typeset .admonition {
+  border-radius: 8px;
+  border-left-width: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.md-typeset .admonition.note {
+  border-left-color: var(--pf-info);
+}
+
+.md-typeset .admonition.tip {
+  border-left-color: var(--pf-success);
+}
+
+.md-typeset .admonition.warning {
+  border-left-color: var(--pf-warning);
+}
+
+.md-typeset .admonition.danger {
+  border-left-color: var(--pf-error);
+}
+
+/* Top Navigation Tabs Enhancement */
+.md-tabs__link,
+.md-tabs__link:hover,
+.md-tabs__link:focus {
+  font-family: 'Chakra Petch', sans-serif !important;
+  font-weight: 600 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: all 0.3s ease;
+  border-radius: 4px 4px 0 0;
+}
+
+/* Active tab highlighting with subtle underline */
+.md-tabs__item--active .md-tabs__link {
+  color: var(--pf-primary) !important;
+  background-color: rgba(99, 102, 241, 0.08);
+  border-bottom: 3px solid var(--pf-primary);
+}
+
+/* Hover state for tabs */
+.md-tabs__link:hover {
+  background-color: rgba(99, 102, 241, 0.05);
+  color: var(--pf-primary);
+}
+
+/* Breadcrumb enhancement */
+.md-path,
+.md-path__item,
+.md-path__link {
+  font-family: 'Chakra Petch', sans-serif !important;
+  font-weight: 500 !important;
+}
+
+/* Navigation Enhancement - Clear Visual Hierarchy */
+
+/* Top level navigation items - main sections */
+.md-nav--primary > .md-nav__list > .md-nav__item {
+  margin: 0.3rem 0;
+}
+
+/* ALL top-level items (with or without children) - consistent styling with Chakra Petch */
+.md-nav--primary > .md-nav__list > .md-nav__item > .md-nav__link,
+.md-nav--primary > .md-nav__list > .md-nav__item > .md-nav__link:hover,
+.md-nav--primary > .md-nav__list > .md-nav__item > .md-nav__link:focus {
+  font-family: 'Chakra Petch', sans-serif !important;
+  font-weight: 700 !important;
+  font-size: 0.9rem !important;
+  color: var(--md-default-fg-color);
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  padding: 0.6rem 0 0.4rem 0;
+  border-bottom: 1px solid var(--md-default-fg-color--lightest);
+  margin-bottom: 0.4rem;
+}
+
+/* Child items under ANY top-level item - all indented consistently */
+.md-nav--primary .md-nav__item .md-nav__link {
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 400;
+  padding: 0.3rem 0 0.3rem 1rem;
+  margin: 0.1rem 0;
+  color: var(--md-default-fg-color--light);
+  text-transform: none;
+  letter-spacing: 0;
+  border-bottom: none;
+  background-color: transparent;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+/* Section headers within nav (if they have children) - slightly different styling */
+.md-nav--primary .md-nav__item .md-nav__item--nested > .md-nav__link {
+  font-weight: 600;
+  padding-left: 0.5rem;
+  font-size: 0.88rem;
+  color: var(--md-default-fg-color);
+}
+
+/* Nested articles under sub-headings - further indented */
+.md-nav--primary .md-nav__item .md-nav__item .md-nav__item:not(.md-nav__item--nested) > .md-nav__link {
+  padding-left: 1.5rem;
+  background-color: transparent;
+  transition: all 0.3s ease;
+}
+
+/* Deep nested articles */
+.md-nav--primary .md-nav__item .md-nav__item .md-nav__item .md-nav__item:not(.md-nav__item--nested) > .md-nav__link {
+  padding-left: 2rem;
+  background-color: transparent;
+  transition: all 0.3s ease;
+}
+
+/* Hover states for articles - smooth transitions with opacity-based backgrounds */
+.md-nav--primary .md-nav__item .md-nav__item:not(.md-nav__item--nested) > .md-nav__link:hover,
+.md-nav--primary > .md-nav__list > .md-nav__item:not(.md-nav__item--nested) > .md-nav__link:hover {
+  color: var(--pf-primary);
+  background-color: rgba(99, 102, 241, 0.1);
+  padding-left: 1.2rem;
+}
+
+.md-nav--primary .md-nav__item .md-nav__item .md-nav__item:not(.md-nav__item--nested) > .md-nav__link:hover {
+  background-color: rgba(99, 102, 241, 0.08);
+  padding-left: 1.7rem;
+}
+
+.md-nav--primary .md-nav__item .md-nav__item .md-nav__item .md-nav__item:not(.md-nav__item--nested) > .md-nav__link:hover {
+  background-color: rgba(99, 102, 241, 0.06);
+  padding-left: 2.2rem;
+}
+
+/* Current page highlight */
+.md-nav__item--active > .md-nav__link {
+  background-color: rgba(99, 102, 241, 0.15);
+  border-radius: 4px;
+  color: var(--pf-primary);
+  font-weight: 500;
+  position: relative;
+  padding-left: 0.8rem;
+}
+
+.md-nav__item--active > .md-nav__link::before {
+  content: "";
+  position: absolute;
+  left: -3px;
+  top: 2px;
+  bottom: 2px;
+  width: 3px;
+  background-color: var(--pf-primary);
+  border-radius: 0 2px 2px 0;
+}
+
+/* Tabs Styling */
+.md-typeset .tabbed-set {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.md-typeset .tabbed-labels {
+  background-color: var(--md-code-bg-color);
+  padding: 0.5rem 0.5rem 0;
+}
+
+.md-typeset .tabbed-labels label {
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  border-radius: 8px 8px 0 0;
+  transition: all 0.2s ease;
+}
+
+.md-typeset .tabbed-labels label:hover {
+  background-color: var(--md-accent-bg-color);
+}
+
+/* Tables Enhancement */
+.md-typeset table {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.md-typeset table th {
+  background-color: var(--pf-primary);
+  color: white;
+  font-family: 'Chakra Petch', sans-serif;
+  font-weight: bold;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+}
+
+[data-md-color-scheme="slate"] .md-typeset table th {
+  background-color: var(--pf-accent);
+}
+
+/* Emoji Emphasis for provide.foundation */
+.emoji-log {
+  font-size: 1.2em;
+  margin-right: 0.3em;
+  vertical-align: middle;
+}
+
+/* API Reference Cards */
+.api-card {
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
+  transition: all 0.2s ease;
+}
+
+.api-card:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+/* Performance Metrics Display */
+.perf-metric {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  background: linear-gradient(135deg, var(--pf-primary), var(--pf-accent));
+  color: white;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+/* Custom Homepage Hero */
+.md-typeset .hero {
+  background: linear-gradient(135deg, var(--pf-primary), var(--pf-accent));
+  color: white;
+  padding: 3rem 2rem;
+  border-radius: 12px;
+  text-align: center;
+  margin: 2rem 0;
+}
+
+.md-typeset .hero h1 {
+  color: white;
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.md-typeset .hero p {
+  font-size: 1.2rem;
+  opacity: 0.95;
+}
+
+/* Feature Grid */
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+
+.feature-card {
+  padding: 1.5rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  border-color: var(--pf-primary);
+}
+
+.feature-card h3 {
+  margin-top: 0;
+  color: var(--pf-primary);
+}
+
+/* Logo Enhancement */
+.md-logo img {
+  width: 2rem;
+  height: 2rem;
+}
+
+.md-nav__title .md-logo img {
+  width: 1.8rem;
+  height: 1.8rem;
+}
+
+/* Copy Button Enhancement */
+.md-clipboard {
+  color: var(--md-default-fg-color--light);
+  transition: color 0.2s ease;
+}
+
+.md-clipboard:hover {
+  color: var(--pf-primary);
+}
+
+.md-clipboard::after {
+  content: "Copy";
+  margin-left: 0.5rem;
+  font-size: 0.8rem;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.md-clipboard:hover::after {
+  opacity: 1;
+}
+
+/* Search Enhancement */
+.md-search__form {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.md-search__input {
+  font-size: 0.9rem;
+}
+
+/* Footer Enhancement */
+.md-footer {
+  background: linear-gradient(135deg, var(--pf-primary), var(--pf-accent));
+  transition: none;
+  margin-top: auto;
+}
+
+.md-footer-meta {
+  background: transparent;
+}
+
+/* Prevent footer animation/twitching */
+.md-footer__inner {
+  transition: none;
+}
+
+.md-footer__link {
+  transition: background-color 0.2s ease;
+}
+
+/* Fix footer navigation font sizes */
+.md-footer__title {
+  font-size: 0.8rem;
+}
+
+.md-footer__direction {
+  font-size: 0.7rem;
+}
+
+/* Prevent footer from pushing content */
+.md-main__inner {
+  margin-bottom: 0;
+}
+
+.md-content {
+  padding-bottom: 1rem;
+}
+
+/* Version Selector */
+.md-version__current {
+  font-weight: 600;
+  color: var(--pf-primary);
+}
+
+/* Logo Enhancement */
+.md-logo img {
+  width: 2rem;
+  height: 2rem;
+}
+
+.md-nav__title .md-logo img {
+  width: 1.8rem;
+  height: 1.8rem;
+}
+
+/* Mobile Responsive Adjustments */
+@media screen and (max-width: 768px) {
+  .feature-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .md-typeset .hero h1 {
+    font-size: 1.8rem;
+  }
+  
+  .md-typeset .hero p {
+    font-size: 1rem;
+  }
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.md-typeset h1,
+.md-typeset h2,
+.md-typeset h3 {
+  animation: fadeIn 0.5s ease;
+}
+
+/* Mermaid Diagram Styling */
+.mermaid {
+  text-align: center;
+  margin: 2rem 0;
+}
+
+/* Custom Badges */
+.badge {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.badge-new {
+  background-color: var(--pf-success);
+  color: white;
+}
+
+.badge-beta {
+  background-color: var(--pf-warning);
+  color: white;
+}
+
+.badge-deprecated {
+  background-color: var(--pf-error);
+  color: white;
+}
+
+/* Print Styles */
+@media print {
+  .md-header,
+  .md-footer,
+  .md-sidebar,
+  .md-tabs {
+    display: none;
+  }
+  
+  .md-content {
+    margin: 0;
+    padding: 0;
+  }
+}

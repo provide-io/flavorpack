@@ -1,0 +1,219 @@
+#
+# flavor/pyproject.toml
+#
+
+[project]
+name = "flavorpack"
+description = "Flavor Pack packaging system implementing Progressive Secure Package Format (PSPF/2025)"
+dynamic = ["version"]
+requires-python = ">=3.11"
+readme = "README.md"
+license = "Apache-2.0"
+authors = [
+    { name = "Tim Perkins", email = "code@tim.life" },
+]
+maintainers = [
+    { name = "provide.io", email = "code@provide.io" },
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Software Development :: Build Tools",
+    "Topic :: Security :: Cryptography",
+    "Topic :: System :: Archiving :: Packaging",
+]
+dependencies = [
+    "provide-foundation[all]",
+    "pip>=25.2",
+    "uv>=0.9.6",
+    "setuptools>=68.0.0",  # Required for building wheels at runtime
+]
+keywords = ["packaging", "pspf", "flavor", "executable", "bundle"]
+
+[project.urls]
+Homepage = "https://github.com/provide-io/flavor"
+
+[dependency-groups]
+dev = [
+    "provide-testkit[all]",
+]
+docs = [
+    "provide-testkit[docs]",
+    "mkdocs-mermaid2-plugin>=1.1.0",
+]
+
+[project.scripts]
+flavor = "flavor.cli:main"
+
+[build-system]
+requires = ["setuptools>=68.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+include-package-data = true
+package-dir = {"" = "src"}
+
+[tool.setuptools.dynamic]
+version = {file = "VERSION"}
+
+[tool.setuptools.package-data]
+flavor = [
+    "helpers/bin/**/*",  # Platform-specific helper binaries
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["flavor*"]
+exclude = ["flavor.helpers.bin*"]
+namespaces = false
+
+[tool.ruff]
+line-length = 111
+indent-width = 4
+target-version = "py311"
+exclude = ["**/*pb2*.py", "**/generated/**"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "ANN", "B", "C90", "SIM", "PTH", "RUF"]
+ignore = ["ANN401", "B008", "E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["flavor", "tests"]
+force-sort-within-sections = true
+combine-as-imports = true
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[tool.mypy]
+python_version = "3.11"
+mypy_path = "src"
+strict = true
+pretty = true
+show_error_codes = true
+show_column_numbers = true
+warn_unused_ignores = true
+warn_unused_configs = true
+disallow_untyped_decorators = false
+exclude = [
+    ".*generated.*",
+    ".*_pb2\\.py$",
+    ".*_pb2\\.pyi$"
+]
+
+[[tool.mypy.overrides]]
+module = ["structlog.*", "google.*", "grpc.*", "pytest.*", "jq.*", "psutil.*", "hcl2", "mutmut.*", "opentelemetry.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["flavor.psp.format_2025.generated.*", "flavor.*.generated.*"]
+ignore_errors = true
+
+[tool.pylint.main]
+disable = ["C0330", "C0326"]
+
+[tool.pytest.ini_options]
+log_cli = true
+log_cli_level = "DEBUG"
+minversion = "6.0"
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
+pythonpath = ["src", "."]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "-v",
+    "--tb=short",
+    "--strict-markers",
+    "--color=yes",
+    "--ignore=tests/taster/tests",
+    "--ignore=tests/pretaster/scripts",
+]
+norecursedirs = [".git", "build", "dist", "*.egg-info", ".venv", "htmlcov", ".hypothesis", "__pycache__", "*/generated/*"]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+    "ignore::pytest.PytestUnraisableExceptionWarning",
+    "ignore:Exception ignored in.*BaseSubprocessTransport:pytest.PytestUnraisableExceptionWarning",
+    "ignore:Module already imported so cannot be rewritten:pytest.PytestAssertRewriteWarning",
+]
+markers = [
+    "unit: Fast, isolated unit tests",
+    "integration: Integration tests requiring multiple components",
+    "slow: Slow running tests (>5s)",
+    "security: Security-specific tests",
+    "mmap: Memory-mapped file tests",
+    "taster: Taster-specific tests",
+    "packaging: Package building and verification tests",
+    "cross_language: Tests involving Go/Rust/Python interaction",
+    "stress: Stress and hypothesis-based property tests",
+    "requires_helpers: Tests that need Go/Rust helpers built",
+]
+
+[tool.mutmut]
+paths_to_mutate = ["src/flavor"]
+tests_dir = "tests"
+runner = "pytest"
+exclude = ["*/generated/*", "*_pb2.py", "*_pb2.pyi", "*/tests/*", "*/test_*"]
+dict_synonyms = ["dict", "OrderedDict", "defaultdict"]
+use_patch_file = true
+
+[tool.coverage.run]
+branch = true
+source_pkgs = ["flavor"]
+parallel = false
+omit = [
+    "*/protocols/tfprotov6/protobuf/*",
+    "*/protocols/tfprotov6/handlers/validate_resource_config.py",
+    "*/generated/*",
+    "**/*_pb2.py",
+    "**/*_pb2.pyi",
+    "*/tests/*",
+    "*/test_*",
+    "*/_version.py"
+]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+precision = 2
+fail_under = 60  # Baseline: 61.74% → 63% (Phase 2 complete) as of 2025-10-21
+exclude_also = [
+    "pragma: no cover",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "def __repr__",
+    "def __str__",
+]
+
+
+[tool.flavor]
+package_name = "flavor"
+entry_point = "flavor.cli:main"
+
+[tool.flavor.execution]
+# Pass all environment variables through, especially cache-related ones
+# This ensures the packaged flavor can access the workenv cache
+[tool.flavor.execution.runtime.env]
+# Unset all variables except those matching pass patterns
+unset = ["*"]
+# Pass through all environment variables (except those explicitly unset)
+pass = ["*"]
+
+[tool.flavor.build]
+dependencies = []
+
+[tool.flavor.signing]
+private_key_path = "keys/flavor-private.key"
+public_key_path = "keys/flavor-public.key"

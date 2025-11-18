@@ -1,0 +1,2 @@
+This is volatile data that should be extracted fresh every time.
+It should NOT persist in the cache between runs.
