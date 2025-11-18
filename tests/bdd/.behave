@@ -1,9 +1,0 @@
-[behave]
-# Run BDD tests by delegating to pytest
-default_format = pretty
-show_skipped = false
-show_timings = true
-
-[behave.userdata]
-# Use pytest as the test runner
-test_runner = pytest

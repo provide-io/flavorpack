@@ -1,3 +1,10 @@
+#
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
+"""TODO: Add module docstring."""
+
 import os
 import socket
 import sys
@@ -25,9 +32,7 @@ def main() -> NoReturn:
         log_print(f"Error: Invalid handshake port value: {port_str}")
         sys.exit(1)
 
-    log_print(
-        f"Attempting to connect to Go launcher handshake server on 127.0.0.1:{port}"
-    )
+    log_print(f"Attempting to connect to Go launcher handshake server on 127.0.0.1:{port}")
 
     client_socket = None  # Initialize client_socket to None
     try:
@@ -40,20 +45,14 @@ def main() -> NoReturn:
                 conn_success = True
                 break
             except ConnectionRefusedError:
-                log_print(
-                    f"Connection refused (attempt {i + 1}/{conn_attempts}), retrying in 1s..."
-                )
+                log_print(f"Connection refused (attempt {i + 1}/{conn_attempts}), retrying in 1s...")
                 time.sleep(1)
             except TimeoutError:
-                log_print(
-                    f"Connection timed out (attempt {i + 1}/{conn_attempts}), retrying in 1s..."
-                )
+                log_print(f"Connection timed out (attempt {i + 1}/{conn_attempts}), retrying in 1s...")
                 time.sleep(1)
 
         if not conn_success:
-            log_print(
-                f"Error: Could not connect to handshake server after {conn_attempts} attempts."
-            )
+            log_print(f"Error: Could not connect to handshake server after {conn_attempts} attempts.")
             sys.exit(1)
 
         log_print(f"Connected. Sending secret (len: {len(secret)}).")
@@ -65,9 +64,7 @@ def main() -> NoReturn:
         log_print(f"Received response: {response!r}")
 
         if response == b"\x01":
-            log_print(
-                "Handshake successful (all-clear received). Client will now proceed (simulated)."
-            )
+            log_print("Handshake successful (all-clear received). Client will now proceed (simulated).")
             # In a real app, this is where the main application logic would start
             print(
                 "HANDSHAKE_CLIENT_STDOUT: All clear, proceeding with dummy task.",
@@ -78,9 +75,7 @@ def main() -> NoReturn:
             log_print("Handshake failed (terminate signal received). Client exiting.")
             sys.exit(1)
         else:
-            log_print(
-                f"Handshake failed (unexpected response: {response!r}). Client exiting."
-            )
+            log_print(f"Handshake failed (unexpected response: {response!r}). Client exiting.")
             sys.exit(1)
 
     except Exception as e:
@@ -98,5 +93,4 @@ if __name__ == "__main__":
     # time.sleep(0.1)
     main()
 
-
-# 📦🍜🖥️🪄
+# 🌶️📦🔚

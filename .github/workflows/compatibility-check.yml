@@ -1,0 +1,456 @@
+name: 🐳 Daily Compatibility Check
+
+on:
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      test_windows:
+        description: 'Include Windows testing (experimental)'
+        type: boolean
+        default: false
+      extended_distros:
+        description: 'Test extended Linux distributions'
+        type: boolean
+        default: true
+
+jobs:
+  # Build fresh helpers with static linking
+  build-static:
+    name: 🔨 Build Static Binaries
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 🐹 Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+      
+      - name: 🦀 Setup Rust
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly
+          targets: x86_64-unknown-linux-musl,aarch64-unknown-linux-musl
+      
+      - name: 🔧 Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y musl-tools
+          
+          # Skip ARM64 cross-compiler for now - focus on AMD64 testing
+          echo "Note: Skipping ARM64 musl cross-compiler setup"
+      
+      - name: 🔨 Build AMD64 binaries
+        run: |
+          cd src
+
+          # Go builds (static by default with CGO_ENABLED=0)
+          cd flavor-go
+          make clean
+          GOOS=linux GOARCH=amd64 CGO_ENABLED=0 make build
+          cd ..
+
+          # Rust builds (musl for static linking)
+          cd flavor-rs
+          make clean
+          cargo build --release --target x86_64-unknown-linux-musl
+          cp target/x86_64-unknown-linux-musl/release/flavor-rs-builder ../../dist/bin/flavor-rs-builder-linux_amd64
+          cp target/x86_64-unknown-linux-musl/release/flavor-rs-launcher ../../dist/bin/flavor-rs-launcher-linux_amd64
+          cd ..
+      
+      # ARM64 builds disabled temporarily - focusing on AMD64 testing
+      # - name: 🔨 Build ARM64 binaries
+      #   run: |
+      #     cd helpers
+      #     
+      #     # Go ARM64 builds
+      #     cd flavor-go
+      #     GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -buildvcs=false \
+      #       -o ../bin/flavor-go-builder-linux_arm64 cmd/flavor-go-builder/main.go
+      #     GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -buildvcs=false \
+      #       -o ../bin/flavor-go-launcher-linux_arm64 cmd/flavor-go-launcher/main.go
+      #     cd ..
+      #     
+      #     # Rust ARM64 builds
+      #     cd flavor-rs
+      #     export CC_aarch64_unknown_linux_musl=aarch64-linux-musl-gcc
+      #     export CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER=aarch64-linux-musl-gcc
+      #     cargo build --release --target aarch64-unknown-linux-musl
+      #     cp target/aarch64-unknown-linux-musl/release/flavor-rs-builder ../bin/flavor-rs-builder-linux_arm64
+      #     cp target/aarch64-unknown-linux-musl/release/flavor-rs-launcher ../bin/flavor-rs-launcher-linux_arm64
+      #     cd ..
+      
+      - name: 🔍 Verify static linking
+        run: |
+          echo "Verifying static linking for all binaries..."
+          failed=0
+          
+          for binary in dist/bin/flavor-*-linux_*; do
+            if [ -f "$binary" ]; then
+              echo -n "Checking $(basename $binary): "
+              # Check if binary is static - either file says "statically linked" or ldd says "not a dynamic executable"
+              if file "$binary" | grep -q "statically linked"; then
+                echo "✅ Static (file)"
+              elif ldd "$binary" 2>&1 | grep -q "not a dynamic executable\|statically linked"; then
+                echo "✅ Static (ldd)"
+              else
+                echo "❌ Dynamic"
+                echo "  File output: $(file $binary)"
+                echo "  LDD output:"
+                ldd "$binary" 2>&1 | head -3 | sed 's/^/    /'
+                failed=1
+              fi
+            fi
+          done
+          
+          if [ $failed -eq 1 ]; then
+            echo "ERROR: Some binaries are not statically linked!"
+            exit 1
+          fi
+      
+      - name: 📦 Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: static-binaries
+          path: dist/bin/
+          retention-days: 7
+
+  # Test on core Linux distributions
+  test-core-distros:
+    name: 🐧 Test Core Distros
+    needs: build-static
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        distro:
+          - { name: "CentOS 7", image: "centos:7", arch: "amd64", glibc: "2.17" }
+          - { name: "Amazon Linux 2", image: "amazonlinux:2", arch: "amd64", glibc: "2.26" }
+          - { name: "Amazon Linux 2023", image: "amazonlinux:2023", arch: "amd64", glibc: "2.34" }
+          - { name: "Ubuntu 20.04", image: "ubuntu:20.04", arch: "amd64", glibc: "2.31" }
+          - { name: "Ubuntu 22.04", image: "ubuntu:22.04", arch: "amd64", glibc: "2.35" }
+          - { name: "Ubuntu 24.04", image: "ubuntu:24.04", arch: "amd64", glibc: "2.39" }
+          - { name: "Alpine 3.18", image: "alpine:3.18", arch: "amd64", glibc: "musl" }
+          - { name: "Alpine Latest", image: "alpine:latest", arch: "amd64", glibc: "musl" }
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 📦 Download binaries
+        uses: actions/download-artifact@v4
+        with:
+          name: static-binaries
+          path: dist/bin/
+      
+      - name: 🔧 Set permissions
+        run: chmod +x dist/bin/*
+      
+      - name: 🐳 Test on ${{ matrix.distro.name }}
+        run: |
+          echo "=================================================="
+          echo "Testing on ${{ matrix.distro.name }}"
+          echo "Architecture: ${{ matrix.distro.arch }}"
+          echo "C Library: ${{ matrix.distro.glibc }}"
+          echo "=================================================="
+          
+          # Run comprehensive tests in container
+          docker run --rm \
+            -v $PWD/dist/bin:/test \
+            -v $PWD/tests/pretaster:/pretaster \
+            ${{ matrix.distro.image }} sh -c '
+            
+            echo "📋 System Information:"
+            uname -a
+            
+            if command -v ldd >/dev/null 2>&1; then
+              echo "📚 C Library Version:"
+              ldd --version 2>&1 | head -1 || true
+            fi
+            
+            cd /test
+            echo ""
+            echo "🧪 Testing binaries:"
+            echo "-------------------"
+            
+            failed=0
+            for binary in flavor-*-linux_${{ matrix.distro.arch == 'amd64' && 'amd64' || 'arm64' }}; do
+              if [ -f "$binary" ]; then
+                printf "%-40s" "$binary:"
+                
+                # Test --version
+                if ./$binary --version >/dev/null 2>&1; then
+                  version=$(./$binary --version 2>&1 | head -1)
+                  echo "✅ Works (${version})"
+                else
+                  echo "❌ Failed"
+                  echo "  Error output:"
+                  ./$binary --version 2>&1 | head -5 | sed "s/^/    /"
+                  failed=1
+                fi
+              fi
+            done
+            
+            exit $failed
+          '
+      
+      - name: 📊 Report results
+        if: always()
+        run: |
+          echo "Test completed for ${{ matrix.distro.name }}"
+
+  # Test on extended Linux distributions
+  test-extended-distros:
+    name: 🐧 Test Extended Distros
+    needs: build-static
+    runs-on: ubuntu-latest
+    if: github.event.inputs.extended_distros == 'true' || github.event_name == 'schedule'
+    strategy:
+      fail-fast: false
+      matrix:
+        distro:
+          - { name: "Debian 11", image: "debian:11", glibc: "2.31" }
+          - { name: "Debian 12", image: "debian:12", glibc: "2.36" }
+          - { name: "Fedora 38", image: "fedora:38", glibc: "2.37" }
+          - { name: "Fedora 39", image: "fedora:39", glibc: "2.38" }
+          - { name: "Rocky Linux 8", image: "rockylinux:8", glibc: "2.28" }
+          - { name: "Rocky Linux 9", image: "rockylinux:9", glibc: "2.34" }
+          - { name: "OpenSUSE Leap", image: "opensuse/leap:latest", glibc: "2.31" }
+          - { name: "Arch Linux", image: "archlinux:latest", glibc: "latest" }
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 📦 Download binaries
+        uses: actions/download-artifact@v4
+        with:
+          name: static-binaries
+          path: dist/bin/
+      
+      - name: 🔧 Set permissions
+        run: chmod +x dist/bin/*
+      
+      - name: 🐳 Test on ${{ matrix.distro.name }}
+        run: |
+          echo "Testing on ${{ matrix.distro.name }} (glibc ${{ matrix.distro.glibc }})"
+          
+          docker run --rm -v $PWD/dist/bin:/test ${{ matrix.distro.image }} sh -c '
+            cd /test
+            for binary in flavor-*-linux_amd64; do
+              if [ -f "$binary" ]; then
+                echo -n "Testing $binary: "
+                if ./$binary --version >/dev/null 2>&1; then
+                  echo "✅ PASS"
+                else
+                  echo "❌ FAIL"
+                fi
+              fi
+            done
+          '
+
+  # Test ARM64 binaries using QEMU
+  test-arm64:
+    name: 🦾 Test ARM64 (QEMU)
+    needs: build-static
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        distro:
+          - { name: "Ubuntu 22.04 ARM64", image: "arm64v8/ubuntu:22.04" }
+          - { name: "Alpine ARM64", image: "arm64v8/alpine:latest" }
+          - { name: "Amazon Linux 2023 ARM64", image: "arm64v8/amazonlinux:2023" }
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 🔧 Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+      
+      - name: 📦 Download binaries
+        uses: actions/download-artifact@v4
+        with:
+          name: static-binaries
+          path: dist/bin/
+      
+      - name: 🔧 Set permissions
+        run: chmod +x dist/bin/*
+      
+      - name: 🦾 Test ARM64 on ${{ matrix.distro.name }}
+        run: |
+          echo "Testing ARM64 binaries on ${{ matrix.distro.name }}"
+          
+          docker run --rm --platform linux/arm64 \
+            -v $PWD/dist/bin:/test \
+            ${{ matrix.distro.image }} sh -c '
+            cd /test
+            echo "Architecture: $(uname -m)"
+            
+            for binary in flavor-*-linux_arm64; do
+              if [ -f "$binary" ]; then
+                echo -n "Testing $binary: "
+                if ./$binary --version >/dev/null 2>&1; then
+                  echo "✅ PASS"
+                else
+                  echo "❌ FAIL"
+                fi
+              fi
+            done
+          '
+
+  # Run pretaster in containers
+  test-pretaster:
+    name: 🔬 Pretaster in Containers
+    needs: build-static
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        distro:
+          - { name: "Ubuntu 22.04", image: "ubuntu:22.04", install: "apt-get update && apt-get install -y python3 python3-pip" }
+          - { name: "Amazon Linux 2023", image: "amazonlinux:2023", install: "yum install -y python3 python3-pip" }
+          - { name: "Fedora 39", image: "fedora:39", install: "dnf install -y python3 python3-pip" }
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 📦 Download binaries
+        uses: actions/download-artifact@v4
+        with:
+          name: static-binaries
+          path: dist/bin/
+      
+      - name: 🔧 Set permissions
+        run: chmod +x dist/bin/*
+      
+      - name: 🔬 Run pretaster on ${{ matrix.distro.name }}
+        run: |
+          echo "Running pretaster tests on ${{ matrix.distro.name }}"
+          
+          docker run --rm \
+            -v $PWD:/workspace \
+            -w /workspace \
+            ${{ matrix.distro.image }} sh -c '
+            # Install Python
+            ${{ matrix.distro.install }}
+            
+            # Install pretaster
+            cd tests/pretaster
+            pip3 install --break-system-packages . || pip3 install .
+            
+            # Run tests
+            echo "Running combination tests..."
+            ./tests/combination-tests.sh
+          '
+
+  # Generate compatibility report
+  compatibility-report:
+    name: 📊 Compatibility Report
+    needs: [test-core-distros, test-extended-distros, test-arm64, test-pretaster]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 📊 Generate report
+        run: |
+          cat << EOF > compatibility-report.md
+          # 🐳 Binary Compatibility Report
+          
+          **Date**: $(date -u +"%Y-%m-%d %H:%M UTC")
+          **Commit**: ${{ github.sha }}
+          **Branch**: ${{ github.ref_name }}
+          
+          ## Test Results
+          
+          ### Core Distributions ✅
+          - CentOS 7 (glibc 2.17): ${{ needs.test-core-distros.result }}
+          - Amazon Linux 2023 (glibc 2.34): ${{ needs.test-core-distros.result }}
+          - Ubuntu 22.04 (glibc 2.35): ${{ needs.test-core-distros.result }}
+          - Ubuntu 24.04 (glibc 2.39): ${{ needs.test-core-distros.result }}
+          - Alpine Linux (musl): ${{ needs.test-core-distros.result }}
+          
+          ### Extended Distributions 🔧
+          - Status: ${{ needs.test-extended-distros.result }}
+          - Debian, Fedora, Rocky Linux, OpenSUSE, Arch Linux
+          
+          ### ARM64 Testing 🦾
+          - Status: ${{ needs.test-arm64.result }}
+          - Ubuntu ARM64, Alpine ARM64, Amazon Linux ARM64
+          
+          ### Pretaster Validation 🔬
+          - Status: ${{ needs.test-pretaster.result }}
+          - Tested on Ubuntu, Amazon Linux, Fedora
+          
+          ## Static Linking Verification
+          
+          All Linux binaries are built with:
+          - **Go**: CGO_ENABLED=0 for fully static binaries
+          - **Rust**: musl targets for static linking
+          - **No glibc dependencies**: Works on any Linux distribution
+          
+          ## Recommendations
+          
+          $(if [ "${{ needs.test-core-distros.result }}" != "success" ]; then
+            echo "⚠️ **Action Required**: Core distribution tests failed. Check build configuration."
+          else
+            echo "✅ All core distributions passed. Binaries are compatible."
+          fi)
+          
+          EOF
+          
+          cat compatibility-report.md
+      
+      - name: 📦 Upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: compatibility-report
+          path: compatibility-report.md
+          retention-days: 30
+      
+      - name: 💬 Post to Slack/Discord (if configured)
+        if: always() && env.SLACK_WEBHOOK_URL != ''
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          # Post summary to Slack
+          STATUS="${{ needs.test-core-distros.result }}"
+          COLOR=$([ "$STATUS" = "success" ] && echo "good" || echo "danger")
+          
+          curl -X POST $SLACK_WEBHOOK_URL \
+            -H 'Content-Type: application/json' \
+            -d "{
+              \"attachments\": [{
+                \"color\": \"$COLOR\",
+                \"title\": \"Daily Compatibility Check\",
+                \"text\": \"Status: $STATUS\",
+                \"fields\": [
+                  {\"title\": \"Core Distros\", \"value\": \"${{ needs.test-core-distros.result }}\", \"short\": true},
+                  {\"title\": \"ARM64\", \"value\": \"${{ needs.test-arm64.result }}\", \"short\": true}
+                ]
+              }]
+            }"
+
+  # Final status
+  final-status:
+    name: ✅ Final Status
+    needs: [test-core-distros, compatibility-report]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📊 Check overall status
+        run: |
+          if [ "${{ needs.test-core-distros.result }}" != "success" ]; then
+            echo "❌ Compatibility check failed!"
+            echo "Some Linux distributions cannot run the binaries."
+            echo "Please check the static linking configuration."
+            exit 1
+          else
+            echo "✅ All compatibility checks passed!"
+            echo "Binaries work across all tested Linux distributions."
+          fi

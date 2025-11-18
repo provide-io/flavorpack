@@ -1,0 +1,77 @@
+{
+  "name": "pretaster",
+  "version": "1.0.0",
+  "description": "Pretaster with embedded Taster for package building",
+  "command": "/bin/bash {workenv}/pretaster",
+  "environment": {
+    "PRETASTER_MODE": "builder"
+  },
+  "package": {
+    "name": "pretaster",
+    "version": "1.0.0",
+    "description": "Pretaster test suite with package building capability"
+  },
+  "format": "PSPF/2025",
+  "slots": [
+    {
+      "slot": 0,
+      "purpose": "payload",
+      "lifecycle": "cached",
+      "operations": "raw",
+      "id": "pretaster",
+      "source": "{workenv}/scripts/pretaster",
+      "target": "pretaster",
+      "permissions": "0755"
+    },
+    {
+      "slot": 1,
+      "purpose": "payload",
+      "lifecycle": "cached",
+      "operations": "raw",
+      "id": "test-with-taster-sh",
+      "source": "{workenv}/scripts/test-with-taster.sh",
+      "target": "test-with-taster.sh",
+      "permissions": "0755"
+    },
+    {
+      "slot": 2,
+      "purpose": "payload",
+      "lifecycle": "cached",
+      "operations": "raw",
+      "id": "taster-psp",
+      "source": "{workenv}/taster/taster.psp",
+      "target": "taster.psp"
+    }
+  ],
+  "runtime": {
+    "env": {
+      "unset": [
+        "*"
+      ],
+      "pass": [
+        "PATH",
+        "HOME",
+        "USER",
+        "LANG",
+        "LC_*",
+        "TERM",
+        "SHELL",
+        "FLAVOR_*",
+        "FLAVOR_LOG_LEVEL"
+      ],
+      "set": {
+        "PRETASTER_VERSION": "1.0.0",
+        "BUNDLED_TASTER": "{workenv}/taster.psp"
+      }
+    }
+  },
+  "execution": {
+    "command": "/bin/bash {workenv}/pretaster",
+    "args": [],
+    "env": {
+      "PRETASTER_MODE": "builder",
+      "BUNDLED_TASTER": "{workenv}/bin/taster.psp"
+    },
+    "primary_slot": 0
+  }
+}

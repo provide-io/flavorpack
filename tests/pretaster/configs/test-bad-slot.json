@@ -1,0 +1,20 @@
+{
+  "name": "pretaster-bad-slot",
+  "version": "1.0.0",
+  "description": "Test with incorrect slot number",
+  "command": "/bin/bash {workenv}/scripts/taster_lite.sh",
+  "environment": {},
+  "format": "PSPF/2025",
+  "slots": [
+    {
+      "slot": 1,
+      "purpose": "payload",
+      "lifecycle": "cached",
+      "operations": "raw",
+      "id": "taster-lite-sh",
+      "source": "scripts/taster_lite.sh",
+      "target": "scripts/taster_lite.sh",
+      "permissions": "0755"
+    }
+  ]
+}

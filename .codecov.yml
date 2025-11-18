@@ -1,0 +1,41 @@
+# Codecov configuration for flavorpack
+# https://docs.codecov.com/docs/codecov-yaml
+
+coverage:
+  status:
+    project:
+      default:
+        target: 80%
+        threshold: 1%
+    patch:
+      default:
+        target: 80%
+        threshold: 1%
+
+  precision: 2
+  round: down
+  range: "70...100"
+
+ignore:
+  - "tests/"
+  - "**/*_pb2.py"
+  - "**/*_pb2.pyi"
+  - "**/generated/*"
+  - "**/__pycache__/"
+
+comment:
+  layout: "reach, diff, flags, files"
+  behavior: default
+  require_changes: false
+
+flags:
+  unit:
+    paths:
+      - src/flavor/
+  integration:
+    paths:
+      - src/flavor/
+  security:
+    paths:
+      - src/flavor/psp/
+      - src/flavor/crypto/

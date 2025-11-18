@@ -1,6 +1,13 @@
 #!/usr/bin/env python3
-"""
-PSPF Build Specification - Immutable data structures for package building.
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
+"""TODO: Add module docstring."""
+
+from __future__ import annotations
+
+"""PSPF Build Specification - Immutable data structures for package building.
 
 This module defines the core data structures used throughout the PSPF builder
 system, emphasizing immutability and functional programming patterns.
@@ -61,9 +68,7 @@ class BuildOptions:
     strip_binaries: bool = field(default=False)
 
     # Compression settings
-    compression: str = field(
-        default="gzip", validator=validators.in_(["none", "gzip", "zstd", "brotli"])
-    )
+    compression: str = field(default="gzip", validator=validators.in_(["none", "gzip", "zstd", "brotli"]))
     compression_level: int = field(default=6, validator=validators.instance_of(int))
 
     # Launcher selection
@@ -73,11 +78,9 @@ class BuildOptions:
     reproducible: bool = field(default=False)
     verbose: bool = field(default=False)
 
-    def with_compression(
-        self, compression: str, level: int | None = None
-    ) -> "BuildOptions":
+    def with_compression(self, compression: str, level: int | None = None) -> BuildOptions:
         """Return new BuildOptions with updated compression settings."""
-        updates = {"compression": compression}
+        updates: dict[str, Any] = {"compression": compression}
         if level is not None:
             updates["compression_level"] = level
         return attrs.evolve(self, **updates)
@@ -103,7 +106,7 @@ class BuildSpec:
     # Build options
     options: BuildOptions = field(factory=BuildOptions)
 
-    def with_metadata(self, **kwargs) -> "BuildSpec":
+    def with_metadata(self, **kwargs: Any) -> BuildSpec:
         """
         Return new BuildSpec with updated metadata.
 
@@ -112,7 +115,7 @@ class BuildSpec:
         new_metadata = {**self.metadata, **kwargs}
         return attrs.evolve(self, metadata=new_metadata)
 
-    def with_slot(self, slot: SlotMetadata) -> "BuildSpec":
+    def with_slot(self, slot: SlotMetadata) -> BuildSpec:
         """
         Return new BuildSpec with additional slot.
 
@@ -121,7 +124,7 @@ class BuildSpec:
         new_slots = [*self.slots, slot]
         return attrs.evolve(self, slots=new_slots)
 
-    def with_slots(self, *slots: SlotMetadata) -> "BuildSpec":
+    def with_slots(self, *slots: SlotMetadata) -> BuildSpec:
         """
         Return new BuildSpec with multiple additional slots.
 
@@ -130,7 +133,7 @@ class BuildSpec:
         new_slots = [*self.slots, *slots]
         return attrs.evolve(self, slots=new_slots)
 
-    def replace_slots(self, slots: list[SlotMetadata]) -> "BuildSpec":
+    def replace_slots(self, slots: list[SlotMetadata]) -> BuildSpec:
         """
         Return new BuildSpec with replaced slot list.
 
@@ -138,11 +141,11 @@ class BuildSpec:
         """
         return attrs.evolve(self, slots=slots)
 
-    def with_keys(self, keys: KeyConfig) -> "BuildSpec":
+    def with_keys(self, keys: KeyConfig) -> BuildSpec:
         """Return new BuildSpec with updated key configuration."""
         return attrs.evolve(self, keys=keys)
 
-    def with_options(self, options: BuildOptions) -> "BuildSpec":
+    def with_options(self, options: BuildOptions) -> BuildSpec:
         """Return new BuildSpec with updated build options."""
         return attrs.evolve(self, options=options)
 
@@ -187,17 +190,17 @@ class BuildResult:
         """Check if there are any warnings."""
         return len(self.warnings) > 0
 
-    def add_error(self, error: str) -> "BuildResult":
+    def add_error(self, error: str) -> BuildResult:
         """Return new BuildResult with additional error."""
         new_errors = [*self.errors, error]
         return attrs.evolve(self, errors=new_errors, success=False)
 
-    def add_warning(self, warning: str) -> "BuildResult":
+    def add_warning(self, warning: str) -> BuildResult:
         """Return new BuildResult with additional warning."""
         new_warnings = [*self.warnings, warning]
         return attrs.evolve(self, warnings=new_warnings)
 
-    def with_metadata(self, **kwargs) -> "BuildResult":
+    def with_metadata(self, **kwargs: Any) -> BuildResult:
         """Return new BuildResult with updated metadata."""
         new_metadata = {**self.metadata, **kwargs}
         return attrs.evolve(self, metadata=new_metadata)
@@ -214,21 +217,15 @@ class PreparedSlot:
     metadata: SlotMetadata = field(validator=validators.instance_of(SlotMetadata))
     data: bytes = field(validator=validators.instance_of(bytes))
     compressed_data: bytes | None = field(default=None)
-    encoding_type: int = field(
-        default=0
-    )  # Renamed from compression_type for consistency
+    operations: int = field(default=0)  # Operations chain packed as integer
     checksum: int = field(default=0)
     offset: int | None = field(default=None)
 
-    def with_encoding(
-        self, compressed_data: bytes, encoding_type: int
-    ) -> "PreparedSlot":
-        """Return new PreparedSlot with encoding applied."""
-        return attrs.evolve(
-            self, compressed_data=compressed_data, encoding_type=encoding_type
-        )
+    def with_codec(self, compressed_data: bytes, operations: int) -> PreparedSlot:
+        """Return new PreparedSlot with operations applied."""
+        return attrs.evolve(self, compressed_data=compressed_data, operations=operations)
 
-    def with_offset(self, offset: int) -> "PreparedSlot":
+    def with_offset(self, offset: int) -> PreparedSlot:
         """Return new PreparedSlot with offset set."""
         return attrs.evolve(self, offset=offset)
 
@@ -239,3 +236,6 @@ class PreparedSlot:
     def get_size(self) -> int:
         """Get the size of data to write."""
         return len(self.get_data_to_write())
+
+
+# 🌶️📦🔚

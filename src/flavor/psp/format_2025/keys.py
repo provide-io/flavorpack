@@ -1,4 +1,13 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
+"""PSPF Key Management - Functions for handling cryptographic keys.
+
+Provides pure functions for key resolution, generation, and persistence.
+Supports multiple key sources with clear priority ordering."""
+
 """
 PSPF Key Management - Functions for handling cryptographic keys.
 
@@ -9,9 +18,12 @@ Supports multiple key sources with clear priority ordering.
 import hashlib
 from pathlib import Path
 
-from pyvider.telemetry import logger
+from provide.foundation import logger
+from provide.foundation.crypto import generate_ed25519_keypair
+from provide.foundation.file import atomic_write
+from provide.foundation.file.directory import ensure_dir
 
-from flavor.psp.format_2025.crypto import generate_key_pair
+from flavor.config.defaults import DEFAULT_FILE_PERMS
 from flavor.psp.format_2025.spec import KeyConfig
 
 
@@ -34,16 +46,21 @@ def resolve_keys(config: KeyConfig) -> tuple[bytes, bytes]:
     # Priority 1: Explicit keys
     if config.has_explicit_keys():
         logger.info("🔑 Using explicitly provided keys")
+        # Type assertion: we know both are not None due to has_explicit_keys() check
+        assert config.private_key is not None and config.public_key is not None
         return config.private_key, config.public_key
 
     # Priority 2: Deterministic from seed
     if config.has_seed():
         logger.info("🌱 Generating deterministic keys from seed")
+        # Type assertion: we know key_seed is not None due to has_seed() check
+        assert config.key_seed is not None
         return generate_deterministic_keys(config.key_seed)
 
     # Priority 3: Load from path
     if config.has_path():
-        logger.info(f"📁 Loading keys from {config.key_path}")
+        # Type assertion: we know key_path is not None due to has_path() check
+        assert config.key_path is not None
         return load_keys_from_path(config.key_path)
 
     # Priority 4: Generate ephemeral
@@ -101,7 +118,7 @@ def generate_ephemeral_keys() -> tuple[bytes, bytes]:
     Returns:
         Tuple of (private_key, public_key) as bytes
     """
-    private_key, public_key = generate_key_pair()
+    private_key, public_key = generate_ed25519_keypair()
 
     logger.debug(
         f"✨ Generated ephemeral keys (public key hash: {hashlib.sha256(public_key).hexdigest()[:8]})"
@@ -141,16 +158,15 @@ def load_keys_from_path(key_path: Path) -> tuple[bytes, bytes]:
 
     # Validate key sizes
     if len(private_key) != 32:
-        raise ValueError(
-            f"🔑 Invalid private key size: expected 32 bytes, got {len(private_key)}"
-        )
+        raise ValueError(f"🔑 Invalid private key size: expected 32 bytes, got {len(private_key)}")
     if len(public_key) != 32:
-        raise ValueError(
-            f"🔑 Invalid public key size: expected 32 bytes, got {len(public_key)}"
-        )
+        raise ValueError(f"🔑 Invalid public key size: expected 32 bytes, got {len(public_key)}")
 
     logger.debug(
-        f"📁 Loaded keys from {key_path} (public key hash: {hashlib.sha256(public_key).hexdigest()[:8]})"
+        "🔑 Keys loaded successfully",
+        private_key_size=len(private_key),
+        public_key_size=len(public_key),
+        path=str(key_path),
     )
 
     return private_key, public_key
@@ -170,19 +186,17 @@ def save_keys_to_path(private_key: bytes, public_key: bytes, key_path: Path) -> 
         key_path: Directory to save keys in
     """
     # Ensure directory exists
-    key_path.mkdir(parents=True, exist_ok=True)
+    ensure_dir(key_path)
 
     private_key_path = key_path / "flavor-private.key"
     public_key_path = key_path / "flavor-public.key"
 
-    # Save keys
-    private_key_path.write_bytes(private_key)
-    public_key_path.write_bytes(public_key)
+    # Save keys atomically for safety
+    atomic_write(private_key_path, private_key)
+    atomic_write(public_key_path, public_key)
 
     # Set restrictive permissions on private key
-    import os
-
-    os.chmod(private_key_path, 0o600)
+    private_key_path.chmod(DEFAULT_FILE_PERMS)
 
     logger.info(f"💾 Saved keys to {key_path}")
     logger.debug(f"   Public key hash: {hashlib.sha256(public_key).hexdigest()[:8]}")
@@ -219,10 +233,9 @@ def create_key_config(
     sources = sum([private_key is not None, seed is not None, key_path is not None])
 
     if sources > 1:
-        raise ValueError(
-            "🔑 Only one key source can be specified (explicit, seed, or path)"
-        )
+        raise ValueError("🔑 Only one key source can be specified (explicit, seed, or path)")
 
-    return KeyConfig(
-        private_key=private_key, public_key=public_key, key_seed=seed, key_path=key_path
-    )
+    return KeyConfig(private_key=private_key, public_key=public_key, key_seed=seed, key_path=key_path)
+
+
+# 🌶️📦🔚
