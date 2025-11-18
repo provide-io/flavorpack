@@ -1,0 +1,120 @@
+🐹🦀 📦 Building with Go Builder + Rs Launcher
+🐹🦀 ────────────────────────────────────────────────────────────────────────────────
+🐹🦀 📝 Logging to: logs/pretaster-b_go-l_rs.20251101_083344.log
+{
+  "name": "pretaster-combination",
+  "version": "1.0.0",
+  "description": "Simple test for builder/launcher combinations",
+  "command": "/usr/bin/python3 {workenv}/scripts/combo_test.py",
+  "environment": {},
+  "package": {
+    "name": "pretaster-combination",
+    "version": "1.0.0",
+    "description": "Simple test for builder/launcher combinations"
+  },
+  "format": "PSPF/2025",
+  "slots": [
+    {
+      "slot": 0,
+      "purpose": "payload",
+      "lifecycle": "cached",
+      "operations": "raw",
+      "id": "combo-test-py",
+      "source": "scripts/combo_test.py",
+      "target": "scripts/combo_test.py",
+      "permissions": "0755"
+    }
+  ],
+  "execution": {
+    "command": "/usr/bin/python3 {workenv}/scripts/combo_test.py",
+    "args": [],
+    "env": {},
+    "primary_slot": 0
+  }
+}🐹 2025-11-01T15:33:47Z [INFO]  flavor-go-builder: 🐹🐹🐹 Hello from Flavor's Go Builder 🐹🐹🐹
+🐹 2025-11-01T15:33:47Z [DEBUG] flavor-go-builder: Log level: level=trace source="CLI --log-level"
+🐹 2025-11-01T15:33:47Z [INFO]  flavor-go-builder: PSPF Go Builder starting...
+🐹 2025-11-01T15:33:47Z [INFO]  flavor-go-builder: 🚀 Loading launcher: path=/Users/tim/code/gh/provide-io/flavorpack/dist/bin/flavor-rs-launcher-darwin_arm64
+🐹 2025-11-01T15:33:47Z [INFO]  flavor-go-builder: 🔍 Launcher version: version="flavor-rs-launcher 0.3.0"
+🐹 2025-11-01T15:33:47Z [DEBUG] flavor-go-builder: 🔍 Launcher path: path=/Users/tim/code/gh/provide-io/flavorpack/dist/bin/flavor-rs-launcher-darwin_arm64
+🐹 2025-11-01T15:33:47Z [DEBUG] flavor-go-builder: ✅ Launcher loaded: size=1052080
+🐹 2025-11-01T15:33:47Z [DEBUG] flavor-go-builder: 📁 Ensuring output directory exists: dir=dist
+🐹 2025-11-01T15:33:47Z [DEBUG] flavor-go-builder: 💾 Creating output file: path=dist/pretaster-go-rs.psp
+🐹 2025-11-01T15:33:47Z [DEBUG] flavor-go-builder: ✍️ Writing launcher to output: size=1052080
+🐹 2025-11-01T15:33:47Z [DEBUG] flavor-go-builder: 📦 Creating PSPF index
+🐹 2025-11-01T15:33:47Z [DEBUG] flavor-go-builder: 📈 Index details: format=PSPF2025 version=0x20250001 launcher_size=1052080
+🐹 2025-11-01T15:33:47Z [DEBUG] flavor-go-builder: 🔐 Generating deterministic key pair from seed
+🐹 2025-11-01T15:33:47Z [INFO]  flavor-go-builder: 🔑 Using seed-based key generation: seed_hash=ecd71870d1963316
+🐹 2025-11-01T15:33:47Z [INFO]  flavor-go-builder: 📦 Processing slot metadata: count=1
+🐹 2025-11-01T15:33:47Z [DEBUG] flavor-go-builder: 🔍 Slot processing details: alignment=8 descriptor_size=64
+🐹 2025-11-01T15:33:47Z [DEBUG] flavor-go-builder: 📂 Processing slot: index=0 id=combo-test-py source=scripts/combo_test.py target=scripts/combo_test.py
+🐹 2025-11-01T15:33:47Z [DEBUG] flavor-go-builder: 📊 Slot size: original=4650 operations=raw
+🐹 2025-11-01T15:33:47Z [DEBUG] flavor-go-builder: ✅ Slot processed: index=0 id=combo-test-py compressed_size=4650 original_size=4650
+🐹 2025-11-01T15:33:47Z [DEBUG] flavor-go-builder: 📜 Writing metadata (gzipped JSON): position=1052080
+🐹 2025-11-01T15:33:47Z [DEBUG] flavor-go-builder: ✅ Metadata written: size=577
+🐹 2025-11-01T15:33:47Z [DEBUG] flavor-go-builder: ✍️ Writing slot: id=0 offset=1052728 size=4650
+🐹 2025-11-01T15:33:47Z [DEBUG] flavor-go-builder: 🔐 Index checksum calculated: checksum=0x684c4088
+🐹 2025-11-01T15:33:47Z [DEBUG] flavor-go-builder: 🪄 Writing MagicTrailer
+🐹 2025-11-01T15:33:47Z [INFO]  flavor-go-builder: ✅ Successfully built PSPF bundle: output=dist/pretaster-go-rs.psp package=pretaster-combination version=1.0.0 launcher="" slots=1 size="1.02 MB"
+🐹 2025-11-01T15:33:47Z [DEBUG] flavor-go-builder: 📦 Package details: checksum=0x684c4088 metadata_size=577 slot_table_size=64
+🐹 2025-11-01T15:33:47Z [DEBUG] flavor-go-builder: 🔧 Set executable permissions on output file
+🐹🦀   ✅ Build successful: dist/pretaster-go-rs.psp
+🐹🦀
+🐹🦀   Testing commands:
+🐹🦀
+🐹🦀   1️⃣ Testing 'info' command:
+🐹🦀   ─────────────────────────
+🐹🦀     [1/1] Extracting combo-test-py...
+🐹🦀       Package: pretaster-combination
+🐹🦀       Version: 1.0.0
+🐹🦀       Python: /Applications/Xcode.app/Contents/Developer/usr/bin/python3
+🐹🦀       Workenv: /Users/tim/.cache/flavor/workenv/pretaster-go-rs
+🐹🦀   ✅ info test passed
+🐹🦀
+🐹🦀   2️⃣ Testing 'env' command:
+🐹🦀   ─────────────────────────
+🐹🦀       CLAUDECODE=1
+🐹🦀       CLAUDE_CODE_ENTRYPOINT=cli
+🐹🦀       COMMAND_MODE=unix2003
+🐹🦀       COREPACK_ENABLE_AUTO_PIN=0
+🐹🦀       CPATH=/usr/local/include
+🐹🦀       DISPLAY=/private/tmp/com.apple.launchd.E2mYbMb2qD/org.xqua
+🐹🦀       FLAVOR_CACHE=/Users/tim/.cache/flavor/workenv
+🐹🦀       FLAVOR_COMMAND_NAME=pretaster-go-rs.psp
+🐹🦀       FLAVOR_LOG_LEVEL=error
+🐹🦀       FLAVOR_ORIGINAL_COMMAND=/Users/tim/code/gh/provide-io/flavorpack/tests/pre
+🐹🦀   ✅ env test passed
+🐹🦀
+🐹🦀   3️⃣ Testing 'argv' with arguments:
+🐹🦀   ─────────────────────────
+🐹🦀     📝 Arguments received:
+🐹🦀       [0]: arg1
+🐹🦀       [1]: arg2
+🐹🦀       [2]: 'arg
+🐹🦀       [3]: with
+🐹🦀       [4]: spaces'
+🐹🦀   ✅ argv test passed
+🐹🦀
+🐹🦀   4️⃣ Testing 'echo' command:
+🐹🦀   ─────────────────────────
+🐹🦀     Hello from Go builder and Rs launcher!
+🐹🦀   ✅ echo test passed
+🐹🦀
+🐹🦀   5️⃣ Testing 'file' command:
+🐹🦀   ─────────────────────────
+🐹🦀     
+🐹🦀   ✅ file test passed
+🐹🦀
+🐹🦀   6️⃣ Testing 'exit' with code 0:
+🐹🦀   ─────────────────────────
+🐹🦀     🚪 Exiting with code 0
+🐹🦀   ✅ exit test passed
+🐹🦀
+🐹🦀   7️⃣ Testing 'exit' command with code 42:
+🐹🦀   ─────────────────────────────────────
+🐹🦀     🚪 Exiting with code 42
+🐹🦀     [0;32m✅ Got expected exit code: 42[0m
+🐹🦀   ✅ exit 42 test passed
+🐹🦀
+🐹🦀 ✨ Completed testing Go + Rs combination
+🐹🦀 📄 Full log saved to: logs/pretaster-b_go-l_rs.20251101_083344.log

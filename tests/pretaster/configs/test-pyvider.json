@@ -1,0 +1,28 @@
+{
+  "manifest": "pretaster-manifest.json",
+  "package": {
+    "name": "test-pyvider",
+    "version": "1.0.0"
+  },
+  "execution": {
+    "primary_slot": 0,
+    "command": "/usr/bin/python3 {workenv}/scripts/pyvider_test.py"
+  },
+  "slots": [
+    {
+      "id": "pyvider-test",
+      "source": "scripts/pyvider_test.py",
+      "target": "scripts/pyvider_test.py",
+      "operations": "none",
+      "purpose": "executable",
+      "lifecycle": "runtime",
+      "permissions": "0755"
+    }
+  ],
+  "dependencies": [
+    "cryptography",
+    "grpcio",
+    "requests",
+    "urllib3"
+  ]
+}

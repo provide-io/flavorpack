@@ -1,0 +1,198 @@
+# Inherit shared configuration from provide-foundry
+INHERIT: .provide/foundry/base-mkdocs.yml
+
+# Project-Specific Configuration
+site_name: flavorpack
+site_description: Progressive Secure Package Format (PSPF/2025) - Cross-language packaging system for self-contained executables
+site_author: provide.io
+site_url: https://foundry.provide.io/flavorpack/
+repo_url: https://github.com/provide-io/flavorpack
+repo_name: provide-io/flavorpack
+edit_uri: edit/main/docs/
+copyright: ©2024-2025 provide.io llc<br/>🛠️ with 💚 and 🦝 on 🌎
+
+# Development server configuration
+dev_addr: '127.0.0.1:11007'
+
+# Standalone mode settings
+docs_dir: docs
+
+# Project-specific theme overrides
+theme:
+  logo: assets/images/logo.svg
+  favicon: assets/images/logo.svg
+
+# Project-specific plugins (in addition to base plugins)
+plugins:
+  - gen-files:
+      scripts:
+        - .provide/foundry/gen_ref_pages.py
+  - literate-nav:
+      nav_file: SUMMARY.md
+  - section-index
+
+# Project-specific markdown extensions
+markdown_extensions:
+  - pymdownx.magiclink:
+      normalize_issue_symbols: true
+      repo_url_shorthand: true
+      user: provide-io
+      repo: flavorpack
+
+# Project-specific extra configuration
+extra:
+  version:
+    provider: mike
+    default: latest
+
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/provide-io/flavorpack
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/flavorpack/
+    - icon: fontawesome/solid/globe
+      link: https://provide.io
+
+  # Announcement bar
+  announcement:
+    text: "📦 FlavorPack documentation has been modernized with comprehensive cookbook examples and professional theming!"
+
+nav:
+  - Home: index.md
+  - Roadmap: roadmap.md
+
+  # SECTION 1: Getting Started (for new users)
+  - Getting Started:
+    - Overview: getting-started/index.md
+    - Installation: getting-started/installation.md
+    - Quick Start: getting-started/quickstart.md
+    - First Package: getting-started/first-package.md
+    - Examples: getting-started/examples.md
+
+  # SECTION 1.5: Tutorials (hands-on learning)
+  - Tutorials:
+    - Overview: tutorials/index.md
+    - HTTPie Wrapper: tutorials/httpie-wrapper.md
+
+  # SECTION 2: User Guide (concepts and how-to)
+  - User Guide:
+    - Overview: guide/index.md
+
+    - Core Concepts:
+      - guide/concepts/index.md
+      - PSPF Format: guide/concepts/pspf-format.md
+      - Package Structure: guide/concepts/package-structure.md
+      - Work Environments: guide/concepts/workenv.md
+      - Security Model: guide/concepts/security.md
+      - Helper Binaries: guide/concepts/helpers.md
+
+    - Building Packages:
+      - guide/packaging/index.md
+      - Python Applications: guide/packaging/python.md
+      - Manifest Files: guide/packaging/manifest.md
+      - Configuration: guide/packaging/configuration.md
+      - Signing Packages: guide/packaging/signing.md
+      - Platform Support: guide/packaging/platforms.md
+
+    - Using Packages:
+      - guide/usage/index.md
+      - Running Packages: guide/usage/running.md
+      - CLI Reference: guide/usage/cli.md
+      - Inspecting Packages: guide/usage/inspection.md
+      - Cache Management: guide/usage/cache.md
+      - Environment Variables: guide/usage/environment.md
+    
+    - Advanced Topics:
+      - guide/advanced/index.md
+      - Cross-Language Support: guide/advanced/cross-language.md
+      - Custom Launchers: guide/advanced/launchers.md
+      - Custom Builders: guide/advanced/builders.md
+      - Performance Tuning: guide/advanced/performance.md
+      - Debugging: guide/advanced/debugging.md
+  
+  # SECTION 3: API Guide (conceptual documentation)
+  - API Guide:
+    - api/index.md
+    - Packaging API: api/packaging.md
+    - Builder API: api/builder.md
+    - Reader API: api/reader.md
+    - Crypto API: api/crypto.md
+
+  - Full API Reference: reference/
+  
+  # SECTION 4: Cookbook (practical examples)
+  - Cookbook:
+    - Overview: cookbook/index.md
+    
+    - Examples:
+      - cookbook/examples/index.md
+      - CLI Tools: cookbook/examples/cli-tool.md
+      - Web Applications: cookbook/examples/web-app.md
+
+    - Recipes:
+      - cookbook/recipes/index.md
+      - Docker Integration: cookbook/recipes/docker.md
+      - CI/CD Pipelines: cookbook/recipes/ci-cd.md
+      - Multi-Platform Builds: cookbook/recipes/multi-platform.md
+  
+  # SECTION 5: Reference (specs, troubleshooting, development)
+  - Reference:
+    - Overview: resources/index.md
+    - System Requirements: reference/requirements.md
+    - Glossary: reference/glossary.md
+
+    - Specification:
+      - PSPF 2025: reference/spec/pspf-2025.md
+      - Slot Descriptor Spec: reference/spec/SLOT_DESCRIPTOR_SPECIFICATION.md
+      - FEP-0001 Core Format: reference/spec/fep-0001-core-format-and-operation-chains.md
+      - FEP-0002 JSON Metadata: reference/spec/fep-0002-json-metadata-format.md
+      - FEP-0003 Operation Registry: reference/spec/fep-0003-operation-registry.md
+      - Future Enhancements:
+        - FEP-0004 Supply Chain JIT: reference/spec/future/fep-0004-supply-chain-jit.md
+        - FEP-0005 Runtime JIT: reference/spec/future/fep-0005-runtime-jit-loading.md
+        - FEP-0006 Staged Payload: reference/spec/future/fep-0006-staged-payload-architecture.md
+
+    - Troubleshooting:
+      - troubleshooting/index.md
+      - Common Issues: troubleshooting/common.md
+      - Error Messages: troubleshooting/errors.md
+      - Platform-Specific:
+        - troubleshooting/platforms/index.md
+        - macOS Issues: troubleshooting/platforms/macos.md
+        - Linux Issues: troubleshooting/platforms/linux.md
+        - Windows Issues: troubleshooting/platforms/windows.md
+      - FAQ: troubleshooting/faq.md
+    
+    - Development:
+      - development/index.md
+      - Contributing: development/contributing.md
+      - Architecture: development/architecture.md
+      - Building Helpers: development/helpers.md
+      - Testing:
+        - development/testing/index.md
+        - Unit Tests: development/testing/unit.md
+        - Taster vs Pretaster: development/testing/taster-vs-pretaster.md
+        - Integration Tests: development/testing/integration.md
+        - Cross-Language Tests: development/testing/cross-language.md
+      - CI/CD: development/ci-cd.md
+      - Release Process: development/release.md
+    
+    - Community:
+      - community/index.md
+      - Getting Support: community/support.md
+      - Discussions: community/discussions.md
+      - Contributing: community/contributing.md
+      - Blog: community/blog.md
+      - Changelog: community/changelog.md
+      - License: community/license.md
+
+validation:
+  omitted_files: info  # Some files (like includes/) are intentionally not in nav
+  absolute_links: warn
+  unrecognized_links: warn
+
+# watch disabled to prevent infinite rebuild loops
+# watch:
+#   - src/flavor
+#   - docs
+#   - mkdocs.yml
