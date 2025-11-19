@@ -3,7 +3,9 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""Taster CLI - Minimal entry point that loads commands from modules"""
+"""Taster CLI - Minimal entry point that loads commands from modules."""
+
+from __future__ import annotations
 
 import os
 from pathlib import Path
@@ -55,7 +57,7 @@ from taster.commands.pipe import pipe_command
 from taster.commands.slot_test import slot_test_command
 
 
-def get_program_name():
+def get_program_name() -> str:
     """Get the program name from environment or sys.argv"""
     if "FLAVOR_COMMAND_NAME" in os.environ:
         return os.environ["FLAVOR_COMMAND_NAME"]
@@ -74,7 +76,7 @@ prog_name = get_program_name()
 )
 @click.version_option("1.0.0", prog_name=prog_name)
 @click.pass_context
-def cli(ctx) -> None:
+def cli(ctx: click.Context) -> None:
     """🍯 Taster - Test package for flavor functionality"""
     # Override the program name in the context
     ctx.info_name = prog_name

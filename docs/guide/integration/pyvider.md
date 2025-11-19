@@ -32,11 +32,13 @@ graph LR
 
 ```python
 # src/terraform_provider_example/__init__.py
-from pyvider import provider, resource, data_source
+from pyvider.providers import register_provider, BaseProvider
+from pyvider.resources import register_resource, BaseResource
+from pyvider.data_sources import register_data_source
 from pyvider.schema import Attribute
 
-@provider
-class ExampleProvider:
+@register_provider("example")
+class ExampleProvider(BaseProvider):
     """Example Terraform provider"""
 
     api_key: str = Attribute(
@@ -45,8 +47,8 @@ class ExampleProvider:
         sensitive=True
     )
 
-@resource
-class Server:
+@register_resource("server")
+class Server(BaseResource):
     """Manage server resources"""
 
     name: str = Attribute(
@@ -302,6 +304,6 @@ dependencies = [
 ## See Also
 
 - **[Pyvider Documentation](https://foundry.provide.io/pyvider/)**
-- **[wrknv Integration](wrknv.md)**
-- **[CI/CD Integration](../../cookbook/recipes/ci-cd.md)**
-- **[Multi-Platform Builds](../../cookbook/recipes/multi-platform.md)**
+- **[wrknv Integration](wrknv/)**
+- **[CI/CD Integration](../../cookbook/recipes/ci-cd/)**
+- **[Multi-Platform Builds](../../cookbook/recipes/multi-platform/)**

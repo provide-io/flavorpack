@@ -3,8 +3,11 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""Integration test for building and reading PSPF bundles with new format"""
+"""Integration test for building and reading PSPF bundles with new format."""
 
+from __future__ import annotations
+
+from collections.abc import Iterator
 from pathlib import Path
 import tempfile
 
@@ -13,6 +16,7 @@ import pytest
 from flavor.config.defaults import (
     ACCESS_MMAP,
 )
+from flavor.psp.format_2025.pspf_builder import PSPFBuilder
 from flavor.psp.format_2025.reader import PSPFReader
 from flavor.psp.format_2025.slots import SlotMetadata
 
@@ -21,7 +25,7 @@ class TestPSPFIntegration:
     """Integration tests for PSPF/2025 format."""
 
     @pytest.fixture
-    def test_data_dir(self, test_builder):
+    def test_data_dir(self, test_builder: PSPFBuilder) -> Iterator[Path]:
         """Create test data directory."""
         with tempfile.TemporaryDirectory() as tmpdir:
             data_dir = Path(tmpdir)
@@ -33,7 +37,7 @@ class TestPSPFIntegration:
 
             yield data_dir
 
-    def test_build_and_read_bundle(self, test_data_dir, test_builder) -> None:
+    def test_build_and_read_bundle(self, test_data_dir: Path, test_builder: PSPFBuilder) -> None:
         """Test building and reading a bundle."""
         output_file = test_data_dir / "test.psp"
 
@@ -158,7 +162,7 @@ class TestPSPFIntegration:
 
         reader.close()
 
-    def test_backend_switching(self, test_data_dir, test_builder) -> None:
+    def test_backend_switching(self, test_data_dir: Path, test_builder: PSPFBuilder) -> None:
         """Test switching between backends."""
         output_file = test_data_dir / "test.psp"
 
@@ -191,7 +195,7 @@ class TestPSPFIntegration:
 
         reader.close()
 
-    def test_page_aligned_slots(self, test_data_dir, test_builder) -> None:
+    def test_page_aligned_slots(self, test_data_dir: Path, test_builder: PSPFBuilder) -> None:
         """Test page-aligned slot optimization."""
         output_file = test_data_dir / "aligned.psp"
 

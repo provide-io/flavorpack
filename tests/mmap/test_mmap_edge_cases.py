@@ -36,7 +36,7 @@ class TestMMapEdgeCases:
 
         try:
             backend = MMapBackend()
-            with pytest.raises(Exception):  # Can't mmap empty file
+            with pytest.raises(ValueError):  # Can't mmap empty file
                 backend.open(path)
         finally:
             path.unlink(missing_ok=True)
@@ -56,7 +56,7 @@ class TestMMapEdgeCases:
             assert bytes(data) == b"X"
 
             # Reading beyond should fail
-            with pytest.raises(Exception):
+            with pytest.raises(ValueError):
                 backend.read_at(0, 2)
 
             backend.close()
@@ -80,7 +80,7 @@ class TestMMapEdgeCases:
             assert bytes(data) == b"A" * DEFAULT_PAGE_SIZE
 
             # Try to read one byte past
-            with pytest.raises(Exception):
+            with pytest.raises(ValueError):
                 backend.read_at(0, DEFAULT_PAGE_SIZE + 1)
 
             backend.close()
@@ -170,11 +170,11 @@ class TestMMapEdgeCases:
             assert bytes(initial) == b"INITIAL"
 
             # Append to file (this won't be visible to existing mmap)
-            with open(path, "ab") as f2:
+            with path.open("ab") as f2:
                 f2.write(b"APPENDED")
 
             # Original mmap still sees old size
-            with pytest.raises(Exception):
+            with pytest.raises(ValueError):
                 backend.read_at(700, 8)  # Can't read new data
 
             backend.close()
@@ -205,7 +205,7 @@ class TestMMapEdgeCases:
 
             errors = []
 
-            def reader_thread(thread_id, iterations=100) -> None:
+            def reader_thread(thread_id: int, iterations: int = 100) -> None:
                 """Read random chunks and verify."""
                 import random
 
@@ -218,7 +218,7 @@ class TestMMapEdgeCases:
                         expected_start = str(chunk_idx).encode()
                         if not bytes(data).startswith(expected_start):
                             errors.append(f"Thread {thread_id}: Wrong data at chunk {chunk_idx}")
-                    except Exception as e:
+                    except (OSError, ValueError) as e:
                         errors.append(f"Thread {thread_id}: {e}")
                     time.sleep(0.0001)  # Small delay
 
@@ -289,7 +289,7 @@ class TestMMapEdgeCases:
 
         try:
             # Make file read-only
-            os.chmod(path, 0o444)
+            path.chmod(0o444)
 
             backend = MMapBackend()
             backend.open(path)
@@ -300,8 +300,7 @@ class TestMMapEdgeCases:
 
             backend.close()
         finally:
-            # Restore permissions for cleanup
-            os.chmod(path, 0o644)
+            path.chmod(0o644)
             path.unlink(missing_ok=True)
 
     def test_backend_reuse_after_close(self) -> None:
@@ -346,7 +345,7 @@ class TestMMapEdgeCases:
         (10 * 1024 * 1024, 64 * 1024, ACCESS_AUTO),  # 10MB file, 64KB chunks, auto
     ],
 )
-def test_parameterized_read_patterns(file_size, chunk_size, backend_type) -> None:
+def test_parameterized_read_patterns(file_size: int, chunk_size: int, backend_type: str) -> None:
     """Parameterized test for various file sizes and access patterns."""
     with tempfile.NamedTemporaryFile(delete=False) as f:
         # Create file with predictable pattern
@@ -411,11 +410,11 @@ def test_parameterized_read_patterns(file_size, chunk_size, backend_type) -> Non
         "invalid_size",
     ],
 )
-def test_error_handling(error_type) -> None:
+def test_error_handling(error_type: str) -> None:
     """Test error handling for various failure scenarios."""
     if error_type == "file_not_found":
         backend = MMapBackend()
-        with pytest.raises(Exception):
+        with pytest.raises(OSError):
             backend.open(Path("/nonexistent/file.dat"))
 
     elif error_type == "permission_denied":
@@ -428,12 +427,12 @@ def test_error_handling(error_type) -> None:
 
         try:
             # Remove all permissions
-            os.chmod(path, 0o000)
+            path.chmod(0o000)
             backend = MMapBackend()
-            with pytest.raises(Exception):
+            with pytest.raises(OSError):
                 backend.open(path)
         finally:
-            os.chmod(path, 0o644)
+            path.chmod(0o644)
             path.unlink(missing_ok=True)
 
     elif error_type == "file_corrupted":
@@ -464,11 +463,11 @@ def test_error_handling(error_type) -> None:
             backend.open(path)
 
             # Negative offset should fail
-            with pytest.raises(Exception):
+            with pytest.raises(ValueError):
                 backend.read_at(-1, 10)
 
             # Offset beyond file should fail
-            with pytest.raises(Exception):
+            with pytest.raises(ValueError):
                 backend.read_at(200, 10)
 
             backend.close()
@@ -485,11 +484,11 @@ def test_error_handling(error_type) -> None:
             backend.open(path)
 
             # Size exceeding file should fail
-            with pytest.raises(Exception):
+            with pytest.raises(ValueError):
                 backend.read_at(0, 200)
 
             # Size that would exceed file from offset should fail
-            with pytest.raises(Exception):
+            with pytest.raises(ValueError):
                 backend.read_at(90, 20)
 
             backend.close()

@@ -6,17 +6,19 @@
 """Build platform-specific wheels with embedded helpers."""
 
 import argparse
+from collections.abc import Sequence
 from pathlib import Path
 import shutil
 import subprocess
 import sys
+from typing import Any
 
 # We'll import run_command directly without going through flavor.__init__
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 
 # Import just the subprocess utility to avoid circular imports
-def run_command(cmd, **kwargs):
+def run_command(cmd: Sequence[str] | str, **kwargs: Any) -> subprocess.CompletedProcess[str]:
     """Run a command and return the result."""
     # Use subprocess directly to avoid import issues during build
     result = subprocess.run(cmd, capture_output=True, text=True, **kwargs)
@@ -52,7 +54,7 @@ def get_version() -> str:
 
     # Fall back to pyproject.toml
     pyproject_path = root / "pyproject.toml"
-    with open(pyproject_path) as f:
+    with pyproject_path.open(encoding="utf-8") as f:
         for line in f:
             if line.startswith("version = "):
                 return line.split('"')[1]

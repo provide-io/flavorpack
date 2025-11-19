@@ -389,7 +389,7 @@ with ThreadPoolExecutor(max_workers=4) as executor:
 
 ## Related Documentation
 
-- [Slots](../../reference/spec/pspf-2025.md) - Slot system specification
-- [Package Structure](package-structure.md) - Package organization
-- [CLI Reference](../../guide/usage/cli.md) - Command-line interface
-- [Troubleshooting](../../troubleshooting/index.md) - Common issues
+- [Slots](../../reference/spec/pspf-2025/) - Slot system specification
+- [Package Structure](package-structure/) - Package organization
+- [CLI Reference](../../guide/usage/cli/) - Command-line interface
+- [Troubleshooting](../../troubleshooting/index/) - Common issues

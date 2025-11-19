@@ -21,48 +21,48 @@ class TestVerifyCommand:
         """Test basic verification without JSON."""
         runner = click.testing.CliRunner()
 
-        with tempfile.NamedTemporaryFile(suffix=".psp") as tmpfile:
-            # Mock FlavorVerifier
-            with patch("flavor.verification.FlavorVerifier") as mock_verifier:
-                mock_verifier.verify_package.return_value = {
-                    "format": "PSPF2025",
-                    "version": "1.0.0",
-                    "launcher_size": 1024000,
-                    "signature_valid": True,
-                    "index_checksum_valid": True,
-                    "metadata": {"name": "test"},
-                    "package": {"name": "test-pkg", "version": "1.0.0"},
-                    "slots": [{}],
-                }
+        with (
+            tempfile.NamedTemporaryFile(suffix=".psp") as tmpfile,
+            patch("flavor.verification.FlavorVerifier") as mock_verifier,
+        ):
+            mock_verifier.verify_package.return_value = {
+                "format": "PSPF2025",
+                "version": "1.0.0",
+                "launcher_size": 1024000,
+                "signature_valid": True,
+                "index_checksum_valid": True,
+                "metadata": {"name": "test"},
+                "package": {"name": "test-pkg", "version": "1.0.0"},
+                "slots": [{}],
+            }
 
-                result = runner.invoke(verify_command, [tmpfile.name])
-                assert result.exit_code == 0
-                assert "PSPF PACKAGE VERIFICATION" in result.output
+            result = runner.invoke(verify_command, [tmpfile.name])
+            assert result.exit_code == 0
+            assert "PSPF PACKAGE VERIFICATION" in result.output
 
     def test_verify_json_output(self) -> None:
         """Test verification with JSON output."""
         runner = click.testing.CliRunner()
 
-        with tempfile.NamedTemporaryFile(suffix=".psp") as tmpfile:
-            # Mock FlavorVerifier
+        with (
+            tempfile.NamedTemporaryFile(suffix=".psp") as tmpfile,
+            patch("flavor.verification.FlavorVerifier") as mock_verifier,
+        ):
             verification_result = {
                 "format": "PSPF2025",
                 "version": "1.0.0",
                 "launcher_size": 1024000,
                 "signature_valid": True,
             }
+            mock_verifier.verify_package.return_value = verification_result
 
-            with patch("flavor.verification.FlavorVerifier") as mock_verifier:
-                mock_verifier.verify_package.return_value = verification_result
+            result = runner.invoke(verify_command, [tmpfile.name, "--json"])
+            assert result.exit_code == 0
 
-                result = runner.invoke(verify_command, [tmpfile.name, "--json"])
-                assert result.exit_code == 0
-
-                # Parse JSON output
-                output_data = json.loads(result.output)
-                assert output_data["package"] == tmpfile.name
-                assert output_data["exists"] is True
-                assert output_data["verification"] == verification_result
+            output_data = json.loads(result.output)
+            assert output_data["package"] == tmpfile.name
+            assert output_data["exists"] is True
+            assert output_data["verification"] == verification_result
 
     def test_verify_json_output_to_file(self) -> None:
         """Test verification with JSON output to file."""
@@ -85,7 +85,7 @@ class TestVerifyCommand:
                     assert result.exit_code == 0
 
                     # Check file contents
-                    with open(output_path) as f:
+                    with Path(output_path).open(encoding="utf-8") as f:
                         output_data = json.load(f)
                     assert output_data["verification"] == verification_result
             finally:
@@ -115,30 +115,32 @@ class TestVerifyCommand:
         """Test verification when an error occurs."""
         runner = click.testing.CliRunner()
 
-        with tempfile.NamedTemporaryFile(suffix=".psp") as tmpfile:
-            # Mock FlavorVerifier to raise an exception
-            with patch("flavor.verification.FlavorVerifier") as mock_verifier:
-                mock_verifier.verify_package.side_effect = Exception("Verification error")
+        with (
+            tempfile.NamedTemporaryFile(suffix=".psp") as tmpfile,
+            patch("flavor.verification.FlavorVerifier") as mock_verifier,
+        ):
+            mock_verifier.verify_package.side_effect = Exception("Verification error")
 
-                result = runner.invoke(verify_command, [tmpfile.name])
-                assert result.exit_code == 0
-                assert "Verification failed" in result.output
+            result = runner.invoke(verify_command, [tmpfile.name])
+            assert result.exit_code == 0
+            assert "Verification failed" in result.output
 
     def test_verify_with_error_json(self) -> None:
         """Test verification error with JSON output."""
         runner = click.testing.CliRunner()
 
-        with tempfile.NamedTemporaryFile(suffix=".psp") as tmpfile:
-            # Mock FlavorVerifier to raise an exception
-            with patch("flavor.verification.FlavorVerifier") as mock_verifier:
-                mock_verifier.verify_package.side_effect = Exception("Verification error")
+        with (
+            tempfile.NamedTemporaryFile(suffix=".psp") as tmpfile,
+            patch("flavor.verification.FlavorVerifier") as mock_verifier,
+        ):
+            mock_verifier.verify_package.side_effect = Exception("Verification error")
 
-                result = runner.invoke(verify_command, [tmpfile.name, "--json"])
-                assert result.exit_code == 0
+            result = runner.invoke(verify_command, [tmpfile.name, "--json"])
+            assert result.exit_code == 0
 
-                output_data = json.loads(result.output)
-                assert "error" in output_data
-                assert "Verification error" in output_data["error"]
+            output_data = json.loads(result.output)
+            assert "error" in output_data
+            assert "Verification error" in output_data["error"]
 
     def test_verify_fallback_basic_checks(self) -> None:
         """Test fallback to basic checks when flavor module not available."""
@@ -181,35 +183,38 @@ class TestVerifyCommand:
         """Test that verify uses current executable when no path provided."""
         runner = click.testing.CliRunner()
 
-        with tempfile.NamedTemporaryFile(suffix=".psp") as tmpfile:
-            # Mock sys.argv[0]
-            with patch("sys.argv", [tmpfile.name]):
-                with patch("flavor.verification.FlavorVerifier") as mock_verifier:
-                    mock_verifier.verify_package.return_value = {
-                        "format": "PSPF2025",
-                        "signature_valid": True,
-                    }
+        with (
+            tempfile.NamedTemporaryFile(suffix=".psp") as tmpfile,
+            patch("sys.argv", [tmpfile.name]),
+            patch("flavor.verification.FlavorVerifier") as mock_verifier,
+        ):
+            mock_verifier.verify_package.return_value = {
+                "format": "PSPF2025",
+                "signature_valid": True,
+            }
 
-                    result = runner.invoke(verify_command, [])
-                    assert result.exit_code == 0
-                    mock_verifier.verify_package.assert_called_once()
+            result = runner.invoke(verify_command, [])
+            assert result.exit_code == 0
+            mock_verifier.verify_package.assert_called_once()
 
     def test_verify_signature_failed(self) -> None:
         """Test output when signature verification fails."""
         runner = click.testing.CliRunner()
 
-        with tempfile.NamedTemporaryFile(suffix=".psp") as tmpfile:
-            with patch("flavor.verification.FlavorVerifier") as mock_verifier:
-                mock_verifier.verify_package.return_value = {
-                    "format": "PSPF2025",
-                    "signature_valid": False,
-                    "index_checksum_valid": False,
-                }
+        with (
+            tempfile.NamedTemporaryFile(suffix=".psp") as tmpfile,
+            patch("flavor.verification.FlavorVerifier") as mock_verifier,
+        ):
+            mock_verifier.verify_package.return_value = {
+                "format": "PSPF2025",
+                "signature_valid": False,
+                "index_checksum_valid": False,
+            }
 
-                result = runner.invoke(verify_command, [tmpfile.name])
-                assert result.exit_code == 0
-                assert "❌ Signature verification: FAILED" in result.output
-                assert "❌ Index checksum invalid" in result.output
+            result = runner.invoke(verify_command, [tmpfile.name])
+            assert result.exit_code == 0
+            assert "❌ Signature verification: FAILED" in result.output
+            assert "❌ Index checksum invalid" in result.output
 
 
 # 🌶️📦🔚

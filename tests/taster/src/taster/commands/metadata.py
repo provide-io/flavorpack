@@ -3,111 +3,150 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""Display package metadata including build info"""
+"""Display package metadata including build info."""
 
+from __future__ import annotations
+
+from collections.abc import Mapping
 import json
 import os
 from pathlib import Path
+from typing import Any
 
 import click
+from provide.foundation.console import pout
 
 
 @click.command("metadata")
-def metadata_command() -> None:
-    """📋 Display package metadata including build info"""
-    click.secho("=" * 60, fg="cyan")
-    click.secho("📋 PACKAGE METADATA", fg="cyan", bold=True)
-    click.secho("=" * 60, fg="cyan")
+@click.option("--verbose", "-v", is_flag=True, help="Show raw JSON metadata")
+def metadata_command(verbose: bool) -> None:
+    """Display package metadata including build info."""
+    pout("=" * 60, color="cyan")
+    pout("📋 PACKAGE METADATA", color="cyan", bold=True)
+    pout("=" * 60, color="cyan")
 
-    # Try to load metadata from workenv
+    workenv_path = _resolve_workenv()
+    metadata = _load_metadata(workenv_path)
+
+    _print_package_info(metadata)
+    _print_build_info(metadata)
+    _print_slot_info(metadata)
+    _print_execution_info(metadata)
+    _print_verification_info(metadata)
+
+    if verbose:
+        pout("\nRAW METADATA:", color="magenta")
+        pout(json.dumps(metadata, indent=2))
+
+
+def _resolve_workenv() -> Path:
+    """Return the path to the active workenv or raise if missing."""
     workenv = os.environ.get("FLAVOR_WORKENV")
     if not workenv:
-        click.secho("❌ FLAVOR_WORKENV not set - not running in flavor pack", fg="red")
-        return
+        raise click.ClickException("FLAVOR_WORKENV not set - not running in a flavor pack.")
+    return Path(workenv)
 
-    workenv_path = Path(workenv)
 
-    # Look for psp.json in various locations
-    possible_paths = [
+def _load_metadata(workenv_path: Path) -> dict[str, Any]:
+    """Load metadata JSON from known locations, falling back to mock data."""
+    search_paths = [
         workenv_path / "metadata" / "psp.json",
         workenv_path / "psp.json",
         workenv_path / ".psp" / "psp.json",
     ]
 
-    metadata = None
-    for path in possible_paths:
-        if path.exists():
-            try:
-                with open(path) as f:
-                    metadata = json.load(f)
-                break
-            except Exception as e:
-                click.secho(f"⚠️ Failed to load {path}: {e}", fg="yellow")
+    for path in search_paths:
+        if not path.exists():
+            continue
+        try:
+            with path.open(encoding="utf-8") as handle:
+                return json.load(handle)
+        except Exception as exc:
+            pout(f"⚠️ Failed to load {path}: {exc}", color="yellow")
 
-    if not metadata:
-        # Create mock metadata for testing
-        metadata = {
-            "format": "PSPF/2025",
-            "package": {
-                "name": "taster",
-                "version": "1.0.0",
-                "description": "Test package for flavor functionality",
-            },
-            "build": {
-                "builder": "flavor/python-builder",
-                "timestamp": "2025-01-01T00:00:00Z",
-                "host": "test-host",
-            },
-            "execution": {
-                "primary_slot": 0,
-                "command": "python -m taster.cli",
-                "environment": {},
-            },
-            "slots": [
-                {"index": 0, "name": "payload", "purpose": "payload"},
-                {"index": 1, "name": "runtime", "purpose": "runtime"},
-                {"index": 2, "name": "tools", "purpose": "tool"},
-            ],
-        }
-        click.secho("⚠️ Using mock metadata for demonstration", fg="yellow")
+    pout("⚠️ Using mock metadata for demonstration", color="yellow")
+    return {
+        "format": "PSPF/2025",
+        "package": {
+            "name": "taster",
+            "version": "1.0.0",
+            "description": "Test package for flavor functionality",
+        },
+        "build": {
+            "builder": "flavor/python-builder",
+            "timestamp": "2025-01-01T00:00:00Z",
+            "host": "test-host",
+        },
+        "execution": {
+            "primary_slot": 0,
+            "command": "python -m taster.cli",
+            "environment": {},
+        },
+        "slots": [
+            {"index": 0, "name": "payload", "purpose": "payload"},
+            {"index": 1, "name": "runtime", "purpose": "runtime"},
+            {"index": 2, "name": "tools", "purpose": "tool"},
+        ],
+    }
 
-    # Display metadata sections
-    if "package" in metadata:
-        pkg = metadata["package"]
-        click.echo(f"  Name: {pkg.get('name', 'unknown')}")
-        click.echo(f"  Version: {pkg.get('version', 'unknown')}")
-        if "description" in pkg:
-            click.echo(f"  Description: {pkg['description']}")
 
-    if "build" in metadata:
-        click.secho("\n🔨 Build Information:", fg="yellow")
-        build = metadata["build"]
-        click.echo(f"  Builder: {build.get('builder', 'unknown')}")
-        click.echo(f"  Timestamp: {build.get('timestamp', 'unknown')}")
-        click.echo(f"  Host: {build.get('host', 'unknown')}")
+def _print_package_info(metadata: Mapping[str, Any]) -> None:
+    """Print high-level package information."""
+    package = metadata.get("package")
+    if not package:
+        return
+    pout(f"  Name: {package.get('name', 'unknown')}")
+    pout(f"  Version: {package.get('version', 'unknown')}")
+    description = package.get("description")
+    if description:
+        pout(f"  Description: {description}")
 
-    if "slots" in metadata:
-        for slot in metadata["slots"]:
-            click.echo(f"  [{slot['index']}] {slot['name']} ({slot.get('purpose', 'unknown')})")
 
-    if "execution" in metadata:
-        exec_info = metadata["execution"]
-        click.echo(f"  Command: {exec_info.get('command', 'unknown')}")
-        click.echo(f"  Primary Slot: {exec_info.get('primary_slot', 0)}")
-        if exec_info.get("environment"):
-            click.echo(f"  Environment: {len(exec_info['environment'])} variables")
+def _print_build_info(metadata: Mapping[str, Any]) -> None:
+    """Print build-specific information."""
+    build = metadata.get("build")
+    if not build:
+        return
+    pout("\n🔨 Build Information:", color="yellow")
+    pout(f"  Builder: {build.get('builder', 'unknown')}")
+    pout(f"  Timestamp: {build.get('timestamp', 'unknown')}")
+    pout(f"  Host: {build.get('host', 'unknown')}")
 
-    if "verification" in metadata:
-        click.secho("\n🔐 Verification:", fg="cyan")
-        verify = metadata["verification"]
-        if "integrity_seal" in verify:
-            seal = verify["integrity_seal"]
-            click.echo(f"  Algorithm: {seal.get('algorithm', 'unknown')}")
-            click.echo(f"  Required: {seal.get('required', False)}")
 
-    # Show raw JSON if verbose
-    if click.get_current_context().params.get("verbose"):
-        click.echo(json.dumps(metadata, indent=2))
+def _print_slot_info(metadata: Mapping[str, Any]) -> None:
+    """Print slot details."""
+    slots = metadata.get("slots")
+    if not slots:
+        return
+    pout("\n📦 Slots:", color="yellow")
+    for slot in slots:
+        index = slot.get("index", "?")
+        name = slot.get("name", "unknown")
+        purpose = slot.get("purpose", "unknown")
+        pout(f"  [{index}] {name} ({purpose})")
+
+
+def _print_execution_info(metadata: Mapping[str, Any]) -> None:
+    """Print execution metadata."""
+    execution = metadata.get("execution")
+    if not execution:
+        return
+    pout("\n🚀 Execution:", color="magenta")
+    pout(f"  Command: {execution.get('command', 'unknown')}")
+    pout(f"  Primary Slot: {execution.get('primary_slot', 0)}")
+    env = execution.get("environment") or {}
+    pout(f"  Environment: {len(env)} variables")
+
+
+def _print_verification_info(metadata: Mapping[str, Any]) -> None:
+    """Print verification metadata if available."""
+    verification = metadata.get("verification")
+    if not verification:
+        return
+    pout("\n🔐 Verification:", color="cyan")
+    seal = verification.get("integrity_seal", {})
+    pout(f"  Algorithm: {seal.get('algorithm', 'unknown')}")
+    pout(f"  Required: {seal.get('required', False)}")
 
 
 # 🌶️📦🔚

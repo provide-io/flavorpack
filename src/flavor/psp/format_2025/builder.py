@@ -21,11 +21,13 @@ from flavor.config.defaults import (
     CAPABILITY_MMAP,
     CAPABILITY_PAGE_ALIGNED,
     CAPABILITY_SIGNED,
-    DEFAULT_MAX_MEMORY,
-    DEFAULT_MIN_MEMORY,
 )
 from flavor.exceptions import BuildError
 from flavor.psp.format_2025 import handlers
+from flavor.psp.format_2025.constants import (
+    DEFAULT_MAX_MEMORY,
+    DEFAULT_MIN_MEMORY,
+)
 from flavor.psp.format_2025.index import PSPFIndex
 from flavor.psp.format_2025.keys import resolve_keys
 from flavor.psp.format_2025.slots import (

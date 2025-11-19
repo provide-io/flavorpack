@@ -6,16 +6,17 @@
 """Echo command for testing arguments"""
 
 import click
+from provide.foundation.console import pout
 
 
 @click.command("echo")
 @click.argument("args", nargs=-1)
-def echo_command(args) -> None:
+def echo_command(args: tuple[str, ...]) -> None:
     """📢 Echo arguments for testing"""
     if args:
-        click.echo(" ".join(args))
+        pout(" ".join(args))
     else:
-        click.echo("(no arguments provided)")
+        pout("(no arguments provided)")
 
 
 # 🌶️📦🔚

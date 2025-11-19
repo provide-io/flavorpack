@@ -3,9 +3,11 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""Test suite for production-ready PSPFLauncher implementation.
-Using TDD approach to drive the implementation."""
+"""Test suite for production-ready PSPFLauncher implementation."""
 
+from __future__ import annotations
+
+from collections.abc import Iterator
 import hashlib
 from pathlib import Path
 import tarfile
@@ -27,7 +29,7 @@ class TestSlotTableReading:
     """Test slot table reading functionality."""
 
     @pytest.fixture
-    def test_bundle_with_slots(self):
+    def test_bundle_with_slots(self) -> Iterator[Path]:
         """Create a test bundle with multiple slots."""
         with tempfile.TemporaryDirectory() as tmpdir:
             tmpdir = Path(tmpdir)
@@ -88,7 +90,7 @@ class TestSlotTableReading:
 
             yield bundle_path
 
-    def test_read_slot_table_structure(self, test_bundle_with_slots) -> None:
+    def test_read_slot_table_structure(self, test_bundle_with_slots: Path) -> None:
         """Test that we can read the slot table structure correctly."""
         launcher = PSPFLauncher(test_bundle_with_slots)
 
@@ -124,7 +126,7 @@ class TestSlotTableReading:
         assert slot1["offset"] > slot0["offset"]
         assert slot1["size"] > 0
 
-    def test_slot_table_alignment(self, test_bundle_with_slots) -> None:
+    def test_slot_table_alignment(self, test_bundle_with_slots: Path) -> None:
         """Test that slots are properly aligned to DEFAULT_SLOT_ALIGNMENT boundaries."""
         launcher = PSPFLauncher(test_bundle_with_slots)
         slot_table = launcher.read_slot_table()
@@ -133,7 +135,7 @@ class TestSlotTableReading:
             # Each slot should start at an 8-byte aligned offset
             assert slot["offset"] % DEFAULT_SLOT_ALIGNMENT == 0
 
-    def test_slot_table_binary_format(self, test_bundle_with_slots) -> None:
+    def test_slot_table_binary_format(self, test_bundle_with_slots: Path) -> None:
         """Test that slot table entries are exactly 64 bytes each."""
         launcher = PSPFLauncher(test_bundle_with_slots)
         index = launcher.read_index()
@@ -153,7 +155,7 @@ class TestWorkEnvironment:
     """Test work environment setup and management."""
 
     @pytest.fixture
-    def bundle_with_setup_commands(self):
+    def bundle_with_setup_commands(self) -> Iterator[Path]:
         """Create a bundle with setup commands."""
         with tempfile.TemporaryDirectory() as tmpdir:
             tmpdir = Path(tmpdir)
@@ -217,7 +219,7 @@ class TestWorkEnvironment:
 
             yield bundle_path
 
-    def test_setup_workenv_creates_structure(self, bundle_with_setup_commands) -> None:
+    def test_setup_workenv_creates_structure(self, bundle_with_setup_commands: Path) -> None:
         """Test that setup_workenv creates the correct directory structure."""
         launcher = PSPFLauncher(bundle_with_setup_commands)
 
@@ -231,7 +233,7 @@ class TestWorkEnvironment:
         expected_name = f"{metadata['package']['name']}_{metadata['package']['version']}"
         assert expected_name in str(workenv_dir)
 
-    def test_cache_validation(self, bundle_with_setup_commands) -> None:
+    def test_cache_validation(self, bundle_with_setup_commands: Path) -> None:
         """Test that cache validation works correctly."""
         launcher = PSPFLauncher(bundle_with_setup_commands)
 
@@ -250,7 +252,7 @@ class TestWorkEnvironment:
         # Should return the same directory
         assert workenv_dir == workenv_dir2
 
-    def test_setup_commands_execution(self, bundle_with_setup_commands) -> None:
+    def test_setup_commands_execution(self, bundle_with_setup_commands: Path) -> None:
         """Test that setup commands are executed correctly."""
         launcher = PSPFLauncher(bundle_with_setup_commands)
 
@@ -276,7 +278,7 @@ class TestProcessExecution:
     """Test actual process execution."""
 
     @pytest.fixture
-    def executable_bundle(self):
+    def executable_bundle(self) -> Iterator[Path]:
         """Create a bundle that can be executed."""
         with tempfile.TemporaryDirectory() as tmpdir:
             tmpdir = Path(tmpdir)
@@ -327,7 +329,7 @@ sys.exit(0)
 
             yield bundle_path
 
-    def test_slot_substitution_in_command(self, executable_bundle) -> None:
+    def test_slot_substitution_in_command(self, executable_bundle: Path) -> None:
         """Test that {slot:N} references are substituted correctly."""
         launcher = PSPFLauncher(executable_bundle)
 
@@ -344,7 +346,7 @@ sys.exit(0)
         assert "{slot:0}" not in substituted
         assert "main.py" in substituted
 
-    def test_environment_variables(self, executable_bundle) -> None:
+    def test_environment_variables(self, executable_bundle: Path) -> None:
         """Test that environment variables are set correctly."""
         launcher = PSPFLauncher(executable_bundle)
 

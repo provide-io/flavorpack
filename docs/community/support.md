@@ -29,10 +29,10 @@ For bug reports and feature requests.
 
 Search the documentation first.
 
-- **[User Guide](../guide/index.md)** - How to use FlavorPack
-- **[Cookbook](../cookbook/index.md)** - Practical examples
-- **[Troubleshooting](../troubleshooting/index.md)** - Common issues
-- **[FAQ](../troubleshooting/faq.md)** - Frequently asked questions
+- **[User Guide](../guide/index/)** - How to use FlavorPack
+- **[Cookbook](../cookbook/index/)** - Practical examples
+- **[Troubleshooting](../troubleshooting/index/)** - Common issues
+- **[FAQ](../troubleshooting/faq/)** - Frequently asked questions
 
 ## Before Asking
 

@@ -8,12 +8,14 @@
 from pathlib import Path
 import subprocess
 import sys
+from typing import Any
 
 import click
 from click.testing import CliRunner
+from provide.foundation.console import perr, pout
 
 
-def _get_flavor_api():
+def _get_flavor_api() -> Any | None:
     """Get the Flavor API."""
     try:
         sys.path.insert(0, str(Path(__file__).parents[4] / "src"))
@@ -31,15 +33,15 @@ def test_command() -> None:
 
 @test_command.command("suite")
 @click.pass_context
-def test_suite(ctx) -> None:
+def test_suite(ctx: click.Context) -> None:
     """Run taster's built-in test suite"""
     from .argv import argv_command
     from .env import env_command
     from .features import features_command
     from .info import info_command
 
-    click.secho("=" * 60, fg="cyan", bold=True)
-    click.secho("=" * 60, fg="cyan", bold=True)
+    pout("=" * 60, color="cyan", bold=True)
+    pout("=" * 60, color="cyan", bold=True)
 
     # List of commands to run
     commands = [
@@ -53,9 +55,9 @@ def test_suite(ctx) -> None:
     runner = CliRunner()
 
     for name, command in commands:
-        click.secho(f"\n{'=' * 60}", fg="blue")
-        click.secho(f"Running: {name}", fg="blue", bold=True)
-        click.secho("=" * 60, fg="blue")
+        pout(f"\n{'=' * 60}", color="blue")
+        pout(f"Running: {name}", color="blue", bold=True)
+        pout("=" * 60, color="blue")
 
         # Run the command
         result = runner.invoke(command)
@@ -64,50 +66,51 @@ def test_suite(ctx) -> None:
         if result.exit_code == 0:
             results.append((name, True))
         else:
-            click.secho(f"❌ {name}: FAILED", fg="red")
+            pout(f"❌ {name}: FAILED", color="red")
             results.append((name, False))
             if result.exception:
-                click.echo(f"  Error: {result.exception}")
+                pout(f"  Error: {result.exception}")
 
         # Show output
         if result.output:
             for line in result.output.split("\n")[:10]:  # First 10 lines
                 if line.strip():
-                    click.echo(f"  {line}")
+                    pout(f"  {line}")
 
     # Summary
-    click.secho(f"\n{'=' * 60}", fg="cyan", bold=True)
-    click.secho("📊 TEST SUMMARY", fg="cyan", bold=True)
-    click.secho("=" * 60, fg="cyan", bold=True)
+    pout(f"\n{'=' * 60}", color="cyan", bold=True)
+    pout("📊 TEST SUMMARY", color="cyan", bold=True)
+    pout("=" * 60, color="cyan", bold=True)
 
     passed = sum(1 for _, success in results if success)
     total = len(results)
     percentage = (passed / total * 100) if total > 0 else 0
 
-    click.echo(f"\nTests Passed: {passed}/{total} ({percentage:.1f}%)")
+    pout(f"\nTests Passed: {passed}/{total} ({percentage:.1f}%)")
 
     # List results
-    for name, _success in results:
-        click.echo(f"  {symbol} {name}")
+    for name, success in results:
+        symbol = "✅" if success else "❌"
+        pout(f"  {symbol} {name}")
 
     # Overall result
     if passed == total:
         ctx.exit(0)
     else:
-        click.secho(f"\n❌ {total - passed} TEST(S) FAILED", fg="red", bold=True)
+        pout(f"\n❌ {total - passed} TEST(S) FAILED", fg="red", bold=True)
         ctx.exit(1)
 
 
 @test_command.command("flavor")
 @click.option("--coverage", is_flag=True, help="Run with coverage")
 @click.option("--verbose", "-v", is_flag=True, help="Verbose output")
-def test_flavor(coverage, verbose) -> None:
+def test_flavor(coverage: bool, verbose: bool) -> None:
     """Run Flavor's test suite"""
     flavor_root = Path(__file__).parents[4]
     pytest_cmd = flavor_root / "workenv" / "flavor_darwin_arm64" / "bin" / "pytest"
 
     if not pytest_cmd.exists():
-        click.echo("Error: pytest not found in workenv", err=True)
+        perr("Error: pytest not found in workenv")
         sys.exit(1)
 
     args = [str(pytest_cmd), "tests/", "tests/taster/tests"]
@@ -118,7 +121,7 @@ def test_flavor(coverage, verbose) -> None:
     if not verbose:
         args.append("-q")
 
-    click.echo(f"Running: {' '.join(args)}")
+    pout(f"Running: {' '.join(args)}")
     result = subprocess.run(args, cwd=flavor_root)
     sys.exit(result.returncode)
 

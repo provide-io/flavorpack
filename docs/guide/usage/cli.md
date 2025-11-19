@@ -5,10 +5,10 @@ Complete command-line interface documentation for FlavorPack.
 !!! tip "Prerequisites"
     Before using the CLI, ensure you have:
 
-    - [FlavorPack installed](../../getting-started/installation.md)
-    - [Helpers built](../../development/contributing.md#building-helpers) for package creation
+    - [FlavorPack installed](../../getting-started/installation/)
+    - [Helpers built](../../development/contributing/#building-helpers) for package creation
 
-    See [System Requirements](../../reference/requirements.md) for detailed information.
+    See [System Requirements](../../reference/requirements/) for detailed information.
 
 ## Overview
 
@@ -27,14 +27,14 @@ flavor [OPTIONS] COMMAND [ARGS]...
 
 ### Environment Variables
 
-FlavorPack uses numerous environment variables for configuration and debugging. For a complete reference, see the [Environment Variables Guide](environment.md).
+FlavorPack uses numerous environment variables for configuration and debugging. For a complete reference, see the [Environment Variables Guide](environment/).
 
 Key variables:
 - **FOUNDATION_LOG_LEVEL**: Set log level for Python components (`trace`, `debug`, `info`, `warning`, `error`)
 - **FLAVOR_LOG_LEVEL**: Set log level for Go/Rust components
 - **FOUNDATION_LOG_FILE**: Write logs to file
 
-See [Environment Variables](environment.md) for the complete list and detailed examples.
+See [Environment Variables](environment/) for the complete list and detailed examples.
 
 ---
 
@@ -787,11 +787,11 @@ flavor workenv inspect pspf-a3f7b9c2d1e4f5a6
 
 ## See Also
 
-- [Running Packages](running.md) - Execute packaged applications
-- [Inspecting Packages](inspection.md) - Deep package inspection
-- [Cache Management](cache.md) - Work environment cache details
-- [Environment Variables](environment.md) - All environment variables
-- [Packaging Guide](../packaging/index.md) - Creating packages
+- [Running Packages](running/) - Execute packaged applications
+- [Inspecting Packages](inspection/) - Deep package inspection
+- [Cache Management](cache/) - Work environment cache details
+- [Environment Variables](environment/) - All environment variables
+- [Packaging Guide](../packaging/index/) - Creating packages
 
 ---
 
@@ -799,21 +799,21 @@ flavor workenv inspect pspf-a3f7b9c2d1e4f5a6
 
 **Usage Guides**:
 
-- 🚀 [Running Packages](running.md) - Execute packaged applications
-- 🔍 [Inspecting Packages](inspection.md) - Deep package inspection
-- 💾 [Cache Management](cache.md) - Work environment cache details
-- 🌍 [Environment Variables](environment.md) - All environment variables
+- 🚀 [Running Packages](running/) - Execute packaged applications
+- 🔍 [Inspecting Packages](inspection/) - Deep package inspection
+- 💾 [Cache Management](cache/) - Work environment cache details
+- 🌍 [Environment Variables](environment/) - All environment variables
 
 **Configuration**:
 
-- 📝 [Manifest Configuration](../packaging/manifest.md) - Configure pyproject.toml
-- 🐍 [Python Packaging](../packaging/python.md) - Python-specific features
-- 🔒 [Package Signing](../packaging/signing.md) - Cryptographic signatures
+- 📝 [Manifest Configuration](../packaging/manifest/) - Configure pyproject.toml
+- 🐍 [Python Packaging](../packaging/python/) - Python-specific features
+- 🔒 [Package Signing](../packaging/signing/) - Cryptographic signatures
 
 **Development**:
 
-- 🛠️ [Contributing Guide](../../development/contributing.md) - Development setup
-- 🧪 [Testing](../../development/testing/index.md) - Testing framework
+- 🛠️ [Contributing Guide](../../development/contributing/) - Development setup
+- 🧪 [Testing](../../development/testing/index/) - Testing framework
 
 ---
 

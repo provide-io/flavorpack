@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""TODO: Add module docstring."""
+"""Test handshake client used by Pretaster integration scenarios."""
 
 import os
 import socket
@@ -16,7 +16,7 @@ def log_print(message: str) -> None:
     print(f"HANDSHAKE_CLIENT: {message}", file=sys.stderr)
 
 
-def main() -> NoReturn:
+def main() -> NoReturn:  # noqa: C901 - test script intentionally performs many sequential steps
     log_print("Python handshake client starting...")
 
     port_str = os.environ.get("PSP_HANDSHAKE_PORT")

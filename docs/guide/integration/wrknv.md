@@ -209,5 +209,5 @@ python_version = "3.11"  # FlavorPack uses same version
 ## See Also
 
 - **[wrknv Documentation](https://foundry.provide.io/wrknv/)**
-- **[pyvider Integration](pyvider.md)**
-- **[Manifest Configuration](../../guide/packaging/manifest.md)**
+- **[pyvider Integration](pyvider/)**
+- **[Manifest Configuration](../../guide/packaging/manifest/)**

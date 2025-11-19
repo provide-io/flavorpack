@@ -164,14 +164,16 @@ class TestHelperMethods:
 
             loader = BinaryLoader(mock_manager)
 
-            with patch.object(loader, "_find_versioned_helpers", return_value=["v1.0.0"]):
-                with patch.object(loader, "_get_package_version_name", return_value="v0.1.0"):
-                    result = loader._generate_helper_names("test-helper")
+            with (
+                patch.object(loader, "_find_versioned_helpers", return_value=["v1.0.0"]),
+                patch.object(loader, "_get_package_version_name", return_value="v0.1.0"),
+            ):
+                result = loader._generate_helper_names("test-helper")
 
-                    assert "v1.0.0" in result
-                    assert "v0.1.0" in result
-                    assert "test-helper-linux_x86_64" in result
-                    assert "test-helper" in result
+                assert "v1.0.0" in result
+                assert "v0.1.0" in result
+                assert "test-helper-linux_x86_64" in result
+                assert "test-helper" in result
 
     @patch("flavor.helpers.binary_loader.get_platform_string")
     def test_find_versioned_helpers(self, mock_get_platform: Mock, tmp_path: Path) -> None:
@@ -302,10 +304,10 @@ class TestHelperMethods:
             mock_helpers_dir.__truediv__ = lambda self, x: mock_platform_dir
 
             # Mock parent supports / "bin" and / "helpers"
-            def mock_parent_truediv(self, x):
-                if x == "bin":
+            def mock_parent_truediv(_path_obj: Path, path_component: str) -> Path | Mock:
+                if path_component == "bin":
                     return mock_bin_dir
-                elif x == "helpers":
+                if path_component == "helpers":
                     return mock_helpers_dir
                 return Mock()
 
@@ -352,10 +354,10 @@ class TestHelperMethods:
             mock_helpers_dir.__truediv__ = lambda self, x: mock_platform_dir
 
             # Mock parent supports / "bin" and / "helpers"
-            def mock_parent_truediv(self, x):
-                if x == "bin":
+            def mock_parent_truediv(_path_obj: Path, path_component: str) -> Path | Mock:
+                if path_component == "bin":
                     return mock_bin_dir
-                elif x == "helpers":
+                if path_component == "helpers":
                     return mock_helpers_dir
                 return Mock()
 

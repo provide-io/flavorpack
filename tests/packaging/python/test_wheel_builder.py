@@ -32,7 +32,7 @@ class TestWheelBuilder:
         assert builder_312.python_version == "3.12"
 
     @patch("flavor.packaging.python.wheel_builder.run")
-    def test_build_wheel_from_source_basic(self, mock_run) -> None:
+    def test_build_wheel_from_source_basic(self, mock_run: Mock) -> None:
         """Test basic wheel building from source."""
         mock_result = Mock()
         mock_result.returncode = 0
@@ -70,7 +70,7 @@ class TestWheelBuilder:
             assert kwargs["check"] is True
 
     @patch("flavor.packaging.python.wheel_builder.run")
-    def test_build_wheel_with_options(self, mock_run) -> None:
+    def test_build_wheel_with_options(self, mock_run: Mock) -> None:
         """Test wheel building with custom build options."""
         mock_result = Mock()
         mock_result.returncode = 0
@@ -183,7 +183,7 @@ class TestWheelBuilder:
                 assert result.name == "requirements.txt"
 
     @patch("flavor.packaging.python.wheel_builder.run")
-    def test_resolve_dependencies_fallback_to_pip_tools(self, mock_run) -> None:
+    def test_resolve_dependencies_fallback_to_pip_tools(self, mock_run: Mock) -> None:
         """Test fallback to pip-tools when UV fails."""
         with tempfile.TemporaryDirectory() as temp_dir:
             output_dir = Path(temp_dir)
@@ -258,7 +258,7 @@ class TestWheelBuilder:
             assert any(wheel.name == "click-8.0.0-py3-none-any.whl" for wheel in result)
 
     @patch("flavor.packaging.python.wheel_builder.run")
-    def test_build_and_resolve_project_complete(self, mock_run) -> None:
+    def test_build_and_resolve_project_complete(self, mock_run: Mock) -> None:
         """Test complete project building and resolution."""
         mock_result = Mock()
         mock_result.returncode = 0
@@ -352,7 +352,7 @@ class TestWheelBuilderCriticalFeatures:
 
             python_exe = Path("/usr/bin/python3")
 
-            def mock_download_side_effect(python_exe, requirements_file, wheel_dir) -> None:
+            def mock_download_side_effect(python_exe: Path, requirements_file: Path, wheel_dir: Path) -> None:
                 # Create fake wheel files to simulate successful download
                 fake_wheel = wheel_dir / "requests-2.28.0-py3-none-any.whl"
                 fake_wheel.write_bytes(b"fake wheel content")

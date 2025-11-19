@@ -7,7 +7,7 @@ Automate FlavorPack packaging in your CI/CD pipelines.
 ```mermaid
 flowchart TD
     Start([Git Push/Tag]) --> Trigger{Trigger<br/>Type}
-    Trigger -->|Push to develop| BuildDev[Development Build]
+    Trigger -->|Push to main| BuildDev[Development Build]
     Trigger -->|Tag release| BuildProd[Production Build]
 
     subgraph "Build Stage"
@@ -67,7 +67,7 @@ name: Build Package
 
 on:
   push:
-    branches: [develop]
+    branches: [main]
   release:
     types: [created]
 
@@ -174,7 +174,7 @@ package:linux:
 deploy:production:
   stage: deploy
   only:
-    - develop
+    - main
   script:
     - scp ${PACKAGE_NAME}-linux_amd64.psp deploy@server:/opt/myapp/
     - ssh deploy@server 'systemctl restart myapp'
@@ -234,7 +234,7 @@ workflows:
             - build-and-package
           filters:
             branches:
-              only: develop
+              only: main
 ```
 
 ## Best Practices
@@ -341,10 +341,10 @@ name: Build and Release FlavorPack Package
 
 on:
   push:
-    branches: [develop]
+    branches: [main]
     tags: ['v*']
   pull_request:
-    branches: [develop]
+    branches: [main]
 
 env:
   PACKAGE_NAME: myapp
@@ -528,5 +528,5 @@ jobs:
 
 ## See Also
 
-- **[Docker Integration](docker.md)**
-- **[Multi-Platform Builds](multi-platform.md)**
+- **[Docker Integration](docker/)**
+- **[Multi-Platform Builds](multi-platform/)**

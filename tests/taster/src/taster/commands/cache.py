@@ -3,120 +3,81 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""TODO: Add module docstring."""
-
-#
-# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
-#
-
 """Cache management commands for taster."""
 
+from __future__ import annotations
+
+from collections.abc import Iterator, Mapping
 import json
 import os
 from pathlib import Path
 import shutil
+from typing import Any
 
 import click
+from provide.foundation.console import perr, pout
 
 
 @click.group()
 def cache() -> None:
     """Cache management commands."""
-    pass
 
 
 @cache.command()
-@click.option("--all", is_flag=True, help="Clean all cache directories")
-@click.option("--flavor", is_flag=True, help="Clean flavor cache")
+@click.option("--all", "all_caches", is_flag=True, help="Clean all cache directories")
+@click.option("--flavor", "flavor_only", is_flag=True, help="Clean flavor cache")
 @click.option("--verbose", is_flag=True, help="Show verbose output")
-def clean(all, flavor, verbose) -> None:
+def clean(all_caches: bool, flavor_only: bool, verbose: bool) -> None:
     """Clean cache directories."""
-    cleaned = []
 
-    # Default to cleaning flavor cache if nothing specified
-    if not all and not flavor:
-        flavor = True
+    cleaned: list[str] = []
+    clean_flavor = flavor_only or not all_caches
 
-    if all or flavor:
-        # Clean flavor cache
+    if all_caches or clean_flavor:
         flavor_cache = Path.home() / "Library" / "Caches" / "flavor"
-        if flavor_cache.exists():
-            if verbose:
-                click.echo(f"Cleaning flavor cache: {flavor_cache}")
-            try:
-                shutil.rmtree(flavor_cache)
-                flavor_cache.mkdir(parents=True, exist_ok=True)
-                cleaned.append("flavor")
-            except Exception as e:
-                click.echo(f"Error cleaning flavor cache: {e}", err=True)
+        _clean_directory(flavor_cache, "flavor", cleaned, verbose, recreate=True)
 
-    # Also check for /tmp/pspf cache
-    tmp_cache = Path("/tmp/pspf")
-    if tmp_cache.exists():
-        if verbose:
-            click.echo(f"Cleaning tmp cache: {tmp_cache}")
-        try:
-            shutil.rmtree(tmp_cache)
-            cleaned.append("tmp")
-        except Exception as e:
-            click.echo(f"Error cleaning tmp cache: {e}", err=True)
+    _clean_directory(Path("/tmp/pspf"), "tmp", cleaned, verbose)
 
-    # Check for /var/folders caches
-    var_cache = Path("/var/folders")
-    if var_cache.exists():
-        for cache_dir in var_cache.glob("**/pspf"):
-            if verbose:
-                click.echo(f"Cleaning var cache: {cache_dir}")
-            try:
-                shutil.rmtree(cache_dir)
-                cleaned.append(f"var ({cache_dir.parent.name})")
-            except Exception as e:
-                if verbose:
-                    click.echo(f"Error cleaning var cache: {e}", err=True)
+    for cache_dir in _iter_var_caches():
+        _clean_directory(cache_dir, f"var ({cache_dir.parent.name})", cleaned, verbose)
 
-    if cleaned:
-        pass
-    else:
-        click.echo("No caches to clean")
+    if not cleaned:
+        pout("No caches to clean")
 
 
 @cache.command()
 @click.option("--verbose", is_flag=True, help="Show detailed information")
-def info(verbose) -> None:
+def info(verbose: bool) -> None:
     """Show cache information."""
-    # Flavor cache
+
     flavor_cache = Path.home() / "Library" / "Caches" / "flavor"
     if flavor_cache.exists():
+        cache_dirs = [item for item in flavor_cache.iterdir() if item.is_dir()]
         total_size = 0
-        cache_count = 0
-        for item in flavor_cache.iterdir():
-            if item.is_dir():
-                cache_count += 1
-                if verbose:
-                    item_size = sum(f.stat().st_size for f in item.rglob("*") if f.is_file())
-                    total_size += item_size
-                    click.echo(f"  {item.name}: {item_size / 1024 / 1024:.2f} MB")
-                else:
-                    total_size += sum(f.stat().st_size for f in item.rglob("*") if f.is_file())
+        for item in cache_dirs:
+            item_size = _safe_dir_size(item)
+            total_size += item_size
+            if verbose:
+                pout(f"  {item.name}: {item_size / 1024 / 1024:.2f} MB")
 
-        click.echo(f"Flavor cache: {cache_count} entries, {total_size / 1024 / 1024:.2f} MB total")
+        pout(f"Flavor cache: {len(cache_dirs)} entries, {total_size / 1024 / 1024:.2f} MB total")
     else:
-        click.echo("Flavor cache: empty")
+        pout("Flavor cache: empty")
 
-    # Tmp cache
     tmp_cache = Path("/tmp/pspf")
     if tmp_cache.exists():
-        size = sum(f.stat().st_size for f in tmp_cache.rglob("*") if f.is_file())
-        click.echo(f"Tmp cache: {size / 1024 / 1024:.2f} MB")
+        size = _safe_dir_size(tmp_cache)
+        pout(f"Tmp cache: {size / 1024 / 1024:.2f} MB")
 
 
 @cache.command()
 @click.argument("workenv", required=False)
 @click.option("--json", "output_json", is_flag=True, help="Output as JSON")
-@click.option("--all", is_flag=True, help="Inspect all cached workenvs")
-def inspect(workenv, output_json, all) -> None:
+@click.option("--all", "inspect_all", is_flag=True, help="Inspect all cached workenvs")
+def inspect(workenv: str | None, output_json: bool, inspect_all: bool) -> None:
     """Inspect cached workenv metadata including index.json."""
+
     # Check multiple possible cache locations
     cache_locations = [
         Path.home() / "Library" / "Caches" / "flavor" / "workenv",  # macOS
@@ -130,45 +91,65 @@ def inspect(workenv, output_json, all) -> None:
         Path("/tmp/pspf/workenv"),  # Linux temp
     ]
 
-    results = {}
+    results: dict[str, dict[str, Any]] = {}
 
+    should_stop = False
     for cache_base in cache_locations:
-        # Handle glob patterns
-        if "*" in str(cache_base):
-            cache_dirs = list(Path("/").glob(str(cache_base).lstrip("/")))
-        else:
-            cache_dirs = [cache_base] if cache_base.exists() else []
-
-        for cache_dir in cache_dirs:
-            if not cache_dir.exists():
-                continue
-
-            if all:
-                # Inspect all workenvs
-                for entry in cache_dir.iterdir():
-                    if entry.is_dir() and not entry.name.startswith("."):
-                        _inspect_workenv(entry.name, cache_dir, results)
-            elif workenv:
-                # Inspect specific workenv
-                _inspect_workenv(workenv, cache_dir, results)
-                if results:
-                    break  # Found it, stop searching
+        for cache_dir in _expand_cache_base(cache_base):
+            should_stop = _inspect_cache_dir(cache_dir, workenv, inspect_all, results)
+            if should_stop:
+                break
+        if should_stop:
+            break
 
     if not results:
         if workenv:
-            click.echo(f"❌ Workenv '{workenv}' not found in any cache location")
+            pout(f"❌ Workenv '{workenv}' not found in any cache location")
         else:
-            click.echo("❌ No cached workenvs found")
+            pout("❌ No cached workenvs found")
         return
 
     if output_json:
-        click.echo(json.dumps(results, indent=2, default=str))
+        pout(json.dumps(results, indent=2, default=str))
     else:
         for name, info in results.items():
             _print_workenv_info(name, info)
 
 
-def _inspect_workenv(name: str, cache_dir: Path, results: dict) -> None:
+def _expand_cache_base(cache_base: Path) -> list[Path]:
+    """Return all concrete cache directories for a base path (with glob support)."""
+    cache_pattern = str(cache_base)
+    if "*" in cache_pattern:
+        return list(Path("/").glob(cache_pattern.lstrip("/")))
+    if cache_base.exists():
+        return [cache_base]
+    return []
+
+
+def _inspect_cache_dir(
+    cache_dir: Path,
+    workenv: str | None,
+    inspect_all: bool,
+    results: dict[str, dict[str, Any]],
+) -> bool:
+    """Inspect cache_dir. Returns True if the search can stop early."""
+    if not cache_dir.exists():
+        return False
+
+    if inspect_all:
+        for entry in cache_dir.iterdir():
+            if entry.is_dir() and not entry.name.startswith("."):
+                _inspect_workenv(entry.name, cache_dir, results)
+        return False
+
+    if workenv:
+        _inspect_workenv(workenv, cache_dir, results)
+        return bool(results)
+
+    return False
+
+
+def _inspect_workenv(name: str, cache_dir: Path, results: dict[str, dict[str, Any]]) -> None:
     """Inspect a single workenv and add to results."""
     workenv_dir = cache_dir / name
     if not workenv_dir.exists():
@@ -186,11 +167,8 @@ def _inspect_workenv(name: str, cache_dir: Path, results: dict) -> None:
     }
 
     # Calculate size
-    try:
-        total_size = sum(f.stat().st_size for f in workenv_dir.rglob("*") if f.is_file())
-        info["size_mb"] = round(total_size / 1024 / 1024, 2)
-    except:
-        pass
+    total_size = _safe_dir_size(workenv_dir)
+    info["size_mb"] = round(total_size / 1024 / 1024, 2)
 
     # Check for metadata directories
     instance_metadata_dir = cache_dir / f".{name}.pspf"
@@ -204,10 +182,10 @@ def _inspect_workenv(name: str, cache_dir: Path, results: dict) -> None:
         index_file = instance_metadata_dir / "instance" / "index.json"
         if index_file.exists():
             try:
-                with open(index_file) as f:
-                    info["index_metadata"] = json.load(f)
-            except:
-                pass
+                with index_file.open(encoding="utf-8") as file:
+                    info["index_metadata"] = json.load(file)
+            except (OSError, json.JSONDecodeError):
+                info["index_metadata"] = None
 
         # Check extraction complete
         complete_markers = [
@@ -220,10 +198,10 @@ def _inspect_workenv(name: str, cache_dir: Path, results: dict) -> None:
         psp_file = instance_metadata_dir / "package" / "psp.json"
         if psp_file.exists():
             try:
-                with open(psp_file) as f:
-                    info["package_metadata"] = json.load(f)
-            except:
-                pass
+                with psp_file.open(encoding="utf-8") as file:
+                    info["package_metadata"] = json.load(file)
+            except (OSError, json.JSONDecodeError):
+                info["package_metadata"] = None
 
     elif package_metadata_dir.exists():
         info["metadata_type"] = "package"
@@ -233,56 +211,99 @@ def _inspect_workenv(name: str, cache_dir: Path, results: dict) -> None:
         psp_file = package_metadata_dir / "psp.json"
         if psp_file.exists():
             try:
-                with open(psp_file) as f:
-                    info["package_metadata"] = json.load(f)
-            except:
-                pass
+                with psp_file.open(encoding="utf-8") as file:
+                    info["package_metadata"] = json.load(file)
+            except (OSError, json.JSONDecodeError):
+                info["package_metadata"] = None
 
     results[name] = info
 
 
-def _print_workenv_info(name: str, info: dict) -> None:
+def _print_workenv_info(name: str, info: Mapping[str, Any]) -> None:
     """Print workenv information in human-readable format."""
-    click.echo("=" * 60)
-    click.echo("-" * 60)
-    click.echo(f"💾 Size: {info['size_mb']} MB")
-    click.echo(f"🗂️  Metadata Type: {info.get('metadata_type', 'none')}")
+    pout("=" * 60)
+    pout("-" * 60)
+    pout(f"💾 Size: {info['size_mb']} MB")
+    pout(f"🗂️  Metadata Type: {info.get('metadata_type', 'none')}")
 
     if info.get("extraction_complete"):
         pass
     else:
-        click.echo("⚠️  Extraction: Incomplete or not started")
+        pout("⚠️  Extraction: Incomplete or not started")
 
     # Display index metadata if available
     if info.get("index_metadata"):
         idx = info["index_metadata"]
-        click.echo("\n📋 Index Metadata:")
-        click.echo(f"  Format Version: 0x{idx.get('format_version', 0):08x}")
-        click.echo(f"  Package Size: {idx.get('package_size', 0):,} bytes")
-        click.echo(f"  Launcher Size: {idx.get('launcher_size', 0):,} bytes")
-        click.echo(f"  Slot Count: {idx.get('slot_count', 0)}")
-        click.echo(f"  Index Checksum: {idx.get('index_checksum', 'N/A')}")
+        pout("\n📋 Index Metadata:")
+        pout(f"  Format Version: 0x{idx.get('format_version', 0):08x}")
+        pout(f"  Package Size: {idx.get('package_size', 0):,} bytes")
+        pout(f"  Launcher Size: {idx.get('launcher_size', 0):,} bytes")
+        pout(f"  Slot Count: {idx.get('slot_count', 0)}")
+        pout(f"  Index Checksum: {idx.get('index_checksum', 'N/A')}")
         if idx.get("build_timestamp"):
-            click.echo(f"  Build Timestamp: {idx.get('build_timestamp')}")
+            pout(f"  Build Timestamp: {idx.get('build_timestamp')}")
 
     # Display package metadata if available
     if info.get("package_metadata"):
         pkg = info["package_metadata"].get("package", {})
-        click.echo(f"  Name: {pkg.get('name', 'unknown')}")
-        click.echo(f"  Version: {pkg.get('version', 'unknown')}")
+        pout(f"  Name: {pkg.get('name', 'unknown')}")
+        pout(f"  Version: {pkg.get('version', 'unknown')}")
 
         # Show slots info if available
         if "slots" in info["package_metadata"]:
             slots = info["package_metadata"]["slots"]
-            click.echo(f"\n📂 Slots ({len(slots)}):")
+            pout(f"\n📂 Slots ({len(slots)}):")
             for slot in slots[:5]:  # Show first 5 slots
-                click.echo(
+                pout(
                     f"  [{slot['index']}] {slot['name']}: {slot.get('size', 0):,} bytes ({slot.get('lifecycle', 'unknown')})"
                 )
             if len(slots) > 5:
-                click.echo(f"  ... and {len(slots) - 5} more")
+                pout(f"  ... and {len(slots) - 5} more")
 
-    click.echo()
+    pout("")
+
+
+def _clean_directory(
+    path: Path, label: str, cleaned: list[str], verbose: bool, *, recreate: bool = False
+) -> None:
+    """Remove a cache directory, optionally recreating it afterwards."""
+    if not path.exists():
+        return
+
+    if verbose:
+        pout(f"Cleaning {label} cache: {path}")
+
+    try:
+        shutil.rmtree(path)
+        if recreate:
+            path.mkdir(parents=True, exist_ok=True)
+        cleaned.append(label)
+    except OSError as exc:
+        perr(f"Error cleaning {label} cache: {exc}")
+
+
+def _iter_var_caches() -> Iterator[Path]:
+    """Yield cache directories discovered under /var/folders."""
+    var_root = Path("/var/folders")
+    if not var_root.exists():
+        return
+    yield from var_root.glob("**/pspf")
+
+
+def _safe_dir_size(path: Path) -> int:
+    """Return directory size in bytes, ignoring I/O errors."""
+    total = 0
+    try:
+        for entry in path.rglob("*"):
+            if not entry.is_file():
+                continue
+            try:
+                total += entry.stat().st_size
+            except OSError:
+                continue
+    except OSError:
+        return total
+    return total
 
 
 # 🌶️📦🔚

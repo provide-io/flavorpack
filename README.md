@@ -1,10 +1,10 @@
 # FlavorPack: Progressive Secure Polyglot Packaging Toolchain
 
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-[![Go 1.23+](https://img.shields.io/badge/go-1.23+-00ADD8.svg)](https://golang.org/dl/)
-[![Rust 1.85+](https://img.shields.io/badge/rust-1.85+-orange.svg)](https://www.rust-lang.org/)
-[![CI Pipeline](https://img.shields.io/badge/CI-passing-brightgreen.svg)](https://github.com/provide-io/flavorpack/actions)
-[![Version](https://img.shields.io/badge/version-alpha-orange.svg)](https://github.com/provide-io/flavorpack/releases)
+[![uv](https://img.shields.io/badge/uv-package_manager-FF6B35.svg)](https://github.com/astral-sh/uv)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+[![CI](https://github.com/provide-io/flavorpack/actions/workflows/ci.yml/badge.svg)](https://github.com/provide-io/flavorpack/actions)
 
 > **⚠️ Alpha Software**: FlavorPack is in early development. APIs, file formats, and commands may change without notice. Not recommended for production use. Check current version with `flavor --version`. Install from source only.
 

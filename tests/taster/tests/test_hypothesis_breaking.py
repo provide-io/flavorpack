@@ -8,6 +8,7 @@
 from pathlib import Path
 import subprocess
 import tempfile
+from typing import Any
 
 from hypothesis import assume, given, settings, strategies as st
 from hypothesis.stateful import RuleBasedStateMachine, initialize, invariant, rule
@@ -77,7 +78,7 @@ class TestBreakingInputs:
 
     @given(filename=BreakingInputStrategies.evil_filenames)
     @settings(max_examples=50)
-    def test_evil_filenames(self, filename) -> None:
+    def test_evil_filenames(self, filename: str) -> None:
         """Test handling of malicious filenames"""
         with tempfile.TemporaryDirectory() as tmpdir:
             tmpdir = Path(tmpdir)
@@ -118,7 +119,7 @@ class TestBreakingInputs:
 
     @given(size=BreakingInputStrategies.extreme_sizes)
     @settings(max_examples=50)
-    def test_extreme_sizes(self, size) -> None:
+    def test_extreme_sizes(self, size: int) -> None:
         """Test handling of extreme file sizes"""
         with tempfile.TemporaryDirectory() as tmpdir:
             tmpdir = Path(tmpdir)
@@ -163,7 +164,7 @@ class TestBreakingInputs:
 
     @given(json_data=BreakingInputStrategies.malformed_json)
     @settings(max_examples=50)
-    def test_malformed_json_metadata(self, json_data) -> None:
+    def test_malformed_json_metadata(self, json_data: str) -> None:
         """Test handling of malformed JSON in metadata"""
         with tempfile.TemporaryDirectory() as tmpdir:
             tmpdir = Path(tmpdir)
@@ -176,7 +177,7 @@ class TestBreakingInputs:
             import json
 
             try:
-                with open(json_file) as f:
+                with json_file.open(encoding="utf-8") as f:
                     json.load(f)
                 # If it parsed successfully, check if it's one of the edge cases
                 # that Python's JSON parser might accept
@@ -195,7 +196,7 @@ class TestBreakingInputs:
 
     @given(binary_data=BreakingInputStrategies.binary_chaos)
     @settings(max_examples=50)
-    def test_binary_chaos(self, binary_data) -> None:
+    def test_binary_chaos(self, binary_data: bytes) -> None:
         """Test handling of chaotic binary data"""
         with tempfile.TemporaryDirectory() as tmpdir:
             tmpdir = Path(tmpdir)
@@ -234,7 +235,7 @@ class PSPFStateMachine(RuleBasedStateMachine):
         size=st.integers(min_value=0, max_value=1024 * 1024),
         operations=st.sampled_from(["RAW", "GZIP"]),
     )
-    def add_slot(self, name, size, operations) -> None:
+    def add_slot(self, name: str, size: int, operations: str) -> None:
         """Add a slot to the pending list"""
         slot = SlotMetadata(
             index=len(self.slots),
@@ -303,7 +304,7 @@ class TestHypothesisPipeIntegration:
 
     @given(data=st.binary(min_size=0, max_size=10 * 1024))
     @settings(max_examples=20, deadline=1000)  # Increased deadline for launcher startup
-    def test_pipe_stdin_stdout(self, data) -> None:
+    def test_pipe_stdin_stdout(self, data: bytes) -> None:
         """Test piping arbitrary binary data through taster"""
         # Skip if taster not available
         taster_path = Path(__file__).parents[1] / "dist" / "taster.psp"
@@ -325,7 +326,7 @@ class TestHypothesisPipeIntegration:
         corruption_prob=st.floats(min_value=0.0, max_value=0.5),
     )
     @settings(max_examples=10, deadline=1000)  # Increased deadline for launcher startup
-    def test_pipe_corruption(self, data, corruption_prob) -> None:
+    def test_pipe_corruption(self, data: bytes, corruption_prob: float) -> None:
         """Test corruption command"""
         taster_path = Path(__file__).parents[1] / "dist" / "taster.psp"
         if not taster_path.exists():
@@ -360,7 +361,7 @@ class TestHypothesisPipeIntegration:
         )
     )
     @settings(max_examples=20, deadline=1000)  # Increased deadline for launcher startup
-    def test_pipe_json_validation(self, json_obj) -> None:
+    def test_pipe_json_validation(self, json_obj: dict[str, Any]) -> None:
         """Test JSON validation through pipe"""
         taster_path = Path(__file__).parents[1] / "dist" / "taster.psp"
         if not taster_path.exists():

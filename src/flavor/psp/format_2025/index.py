@@ -17,6 +17,8 @@ from flavor.config.defaults import (
     CACHE_NORMAL,
     CAPABILITY_MMAP,
     CAPABILITY_SIGNED,
+)
+from flavor.psp.format_2025.constants import (
     DEFAULT_CHUNK_SIZE,
     DEFAULT_HEADER_SIZE,
     DEFAULT_MAX_MEMORY,

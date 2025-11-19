@@ -3,48 +3,53 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""Test suite for PSPF/2025 protobuf and JSON format comparison
-Validates the new packed operation chain format vs old string-based format"""
+"""Test suite for PSPF/2025 protobuf and JSON format comparison."""
+
+from __future__ import annotations
 
 import json
-from pathlib import Path
-import sys
-
-# Add generated proto modules to path
-gen_path = Path(__file__).parent.parent.parent / "src/flavor/psp/format_2025/generated"
-sys.path.insert(0, str(gen_path))
 
 from google.protobuf import json_format
-from modules import crypto_pb2, index_pb2, metadata_pb2, operations_pb2, slots_pb2
-import pspf_2025_pb2
+
+from flavor.psp.format_2025.generated import pspf_2025_pb2
+from flavor.psp.format_2025.generated.modules import (
+    crypto_pb2,
+    index_pb2,
+    metadata_pb2,
+    operations_pb2,
+    slots_pb2,
+)
+
+
+def _pack_ops(ops: list[int]) -> int:
+    """Pack up to eight operations into a 64-bit int."""
+    packed = 0
+    for i, op in enumerate(ops[:8]):
+        packed |= (op & 0xFF) << (i * 8)
+    return packed
+
+
+def _unpack_ops(packed: int) -> list[int]:
+    """Unpack packed operations back into a list."""
+    ops: list[int] = []
+    for i in range(8):
+        op = (packed >> (i * 8)) & 0xFF
+        if op in (0, 0xFF):
+            break
+        ops.append(op)
+    return ops
 
 
 class TestProtobufFormat:
     """Test the new protobuf-based PSPF/2025 format"""
 
     def test_operation_packing(self) -> None:
-        """Test packing operations into 64-bit integers"""
-
-        def pack_operations(ops):
-            packed = 0
-            for i, op in enumerate(ops[:8]):
-                packed |= (op & 0xFF) << (i * 8)
-            return packed
-
-        def unpack_operations(packed):
-            ops = []
-            for i in range(8):
-                op = (packed >> (i * 8)) & 0xFF
-                if op == 0 or op == 0xFF:
-                    break
-                ops.append(op)
-            return ops
-
+        """Test packing operations into 64-bit integers."""
         # Test TAR + GZIP
         ops1 = [operations_pb2.OP_TAR, operations_pb2.OP_GZIP]
-        packed1 = pack_operations(ops1)
+        packed1 = _pack_ops(ops1)
         assert packed1 == 0x1001  # 0x01 | (0x10 << 8)
-        assert unpack_operations(packed1) == ops1
+        assert _unpack_ops(packed1) == ops1
 
         # Test TAR + GZIP + AES256
         ops2 = [
@@ -52,9 +57,9 @@ class TestProtobufFormat:
             operations_pb2.OP_GZIP,
             operations_pb2.OP_AES256_GCM,
         ]
-        packed2 = pack_operations(ops2)
+        packed2 = _pack_ops(ops2)
         assert packed2 == 0x311001  # 0x01 | (0x10 << 8) | (0x31 << 16)
-        assert unpack_operations(packed2) == ops2
+        assert _unpack_ops(packed2) == ops2
 
         # Test max 8 operations
         ops3 = [
@@ -67,21 +72,14 @@ class TestProtobufFormat:
             operations_pb2.OP_MERGE,
             operations_pb2.OP_TERMINAL,
         ]
-        packed3 = pack_operations(ops3)
-        unpacked3 = unpack_operations(packed3)
+        packed3 = _pack_ops(ops3)
+        unpacked3 = _unpack_ops(packed3)
         assert unpacked3[:7] == ops3[:7]  # Terminal stops unpacking
 
     def test_slot_entry_creation(self) -> None:
-        """Test creating slot entries with packed operations"""
-
-        def pack_operations(ops):
-            packed = 0
-            for i, op in enumerate(ops[:8]):
-                packed |= (op & 0xFF) << (i * 8)
-            return packed
-
+        """Test creating slot entries with packed operations."""
         # Create a slot entry
-        ops = pack_operations([operations_pb2.OP_TAR, operations_pb2.OP_ZSTD])
+        ops = _pack_ops([operations_pb2.OP_TAR, operations_pb2.OP_ZSTD])
         slot = slots_pb2.SlotEntry(
             id=0,
             name_hash=0x123456789ABCDEF0,
@@ -163,12 +161,6 @@ class TestProtobufFormat:
     def test_full_package_creation(self) -> None:
         """Test creating a complete PSPF package with all components"""
 
-        def pack_operations(ops):
-            packed = 0
-            for i, op in enumerate(ops[:8]):
-                packed |= (op & 0xFF) << (i * 8)
-            return packed
-
         # Create package
         package = pspf_2025_pb2.PSPFPackage()
 
@@ -185,12 +177,12 @@ class TestProtobufFormat:
         # Add slots
         slot1 = slots_pb2.SlotEntry(
             id=0,
-            operations=pack_operations([operations_pb2.OP_TAR, operations_pb2.OP_GZIP]),
+            operations=_pack_ops([operations_pb2.OP_TAR, operations_pb2.OP_GZIP]),
             purpose=slots_pb2.PURPOSE_CODE,
         )
         slot2 = slots_pb2.SlotEntry(
             id=1,
-            operations=pack_operations([operations_pb2.OP_TAR, operations_pb2.OP_BZIP2]),
+            operations=_pack_ops([operations_pb2.OP_TAR, operations_pb2.OP_BZIP2]),
             purpose=slots_pb2.PURPOSE_DATA,
         )
         package.slots.extend([slot1, slot2])
@@ -252,21 +244,14 @@ class TestFormatComparison:
         assert "operations" not in old_format["slots"][0]
 
     def test_new_format_advantages(self) -> None:
-        """Test advantages of new format"""
-
-        def pack_operations(ops):
-            packed = 0
-            for i, op in enumerate(ops[:8]):
-                packed |= (op & 0xFF) << (i * 8)
-            return packed
-
+        """Test advantages of new format."""
         # Old format: string parsing required
         old_codec = "tar.gz.encrypted"
         old_parts = old_codec.split(".")
         assert len(old_parts) == 3  # Requires string manipulation
 
         # New format: direct bitwise operations
-        new_ops = pack_operations(
+        new_ops = _pack_ops(
             [
                 operations_pb2.OP_TAR,
                 operations_pb2.OP_GZIP,
@@ -290,14 +275,7 @@ class TestFormatComparison:
         # - Type-safe enums
 
     def test_operation_chain_limits(self) -> None:
-        """Test operation chain packing limits"""
-
-        def pack_operations(ops):
-            packed = 0
-            for i, op in enumerate(ops[:8]):  # Max 8 operations
-                packed |= (op & 0xFF) << (i * 8)
-            return packed
-
+        """Test operation chain packing limits."""
         # Test maximum chain length (8 operations)
         max_ops = [
             operations_pb2.OP_TAR,
@@ -310,14 +288,14 @@ class TestFormatComparison:
             operations_pb2.OP_MERGE,
         ]
 
-        packed = pack_operations(max_ops)
+        packed = _pack_ops(max_ops)
         assert packed != 0
         assert packed < 2**64  # Fits in 64 bits
 
         # Test with more than 8 operations (should truncate)
         too_many_ops = [*max_ops, operations_pb2.OP_DEDUPE, operations_pb2.OP_DELTA]
-        packed_truncated = pack_operations(too_many_ops)
-        packed_max = pack_operations(max_ops)
+        packed_truncated = _pack_ops(too_many_ops)
+        packed_max = _pack_ops(max_ops)
         assert packed_truncated == packed_max  # Same result, extra ops ignored
 
 

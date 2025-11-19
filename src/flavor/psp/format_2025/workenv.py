@@ -9,6 +9,7 @@ Handles work environment setup, caching, lifecycle management, and setup command
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 import shlex
 from typing import TYPE_CHECKING, Any
@@ -20,6 +21,8 @@ from provide.foundation import logger
 from provide.foundation.file import atomic_write_text
 from provide.foundation.file.directory import ensure_dir, ensure_parent_dir, safe_rmtree
 from provide.foundation.process import run
+
+from flavor.psp.format_2025.environment import apply_environment_layers
 
 
 class WorkEnvManager:
@@ -146,6 +149,36 @@ class WorkEnvManager:
                     # 'temp' lifecycle: mark for cleanup after session
                     logger.debug(f"🕐 Slot {slot_idx} marked as 'temp' - will be cleaned after session")
 
+    def _prepare_setup_environment(self, workenv_dir: Path, runtime_env: dict[str, Any]) -> dict[str, str]:
+        """Prepare isolated environment for setup command execution.
+
+        Applies environment isolation to prevent host venv interference with PSPF setup.
+
+        Args:
+            workenv_dir: Work environment directory
+            runtime_env: Runtime environment configuration from metadata
+
+        Returns:
+            Filtered environment dictionary for setup commands
+        """
+        # Start with current environment
+        base_env = dict(os.environ)
+
+        # Prepare workenv-specific environment variables
+        workenv_env = {
+            "PATH": f"{workenv_dir}/bin:{base_env.get('PATH', '')}",
+        }
+
+        # Apply environment layers with isolation
+        isolated_env = apply_environment_layers(
+            base_env=base_env,
+            runtime_env=runtime_env,
+            workenv_env=workenv_env,
+        )
+
+        logger.debug(f"🧹 Prepared isolated environment for setup commands ({len(isolated_env)} vars)")
+        return isolated_env
+
     def _run_setup_commands(
         self, setup_commands: list[Any], workenv_dir: Path, metadata: dict[str, Any]
     ) -> None:
@@ -158,7 +191,11 @@ class WorkEnvManager:
         """
 
         # NOTE: Setup command execution matches Go's implementation
-        for i, cmd in enumerate(setup_commands):
+        # Extract runtime environment config from metadata and prepare isolated environment
+        runtime_env = metadata.get("runtime", {}).get("env", {})
+        setup_env = self._prepare_setup_environment(workenv_dir, runtime_env)
+
+        for _i, cmd in enumerate(setup_commands):
             pass
 
             if isinstance(cmd, dict):
@@ -167,9 +204,9 @@ class WorkEnvManager:
                 if cmd_type == "write_file":
                     self._run_write_file_command(cmd, workenv_dir, metadata)
                 elif cmd_type == "execute":
-                    self._run_execute_command(cmd, workenv_dir, metadata)
+                    self._run_execute_command(cmd, workenv_dir, metadata, setup_env)
                 elif cmd_type == "enumerate_and_execute":
-                    self._run_enumerate_execute_command(cmd, workenv_dir)
+                    self._run_enumerate_execute_command(cmd, workenv_dir, setup_env)
                 else:
                     logger.warning(f"⚠️ Unknown setup command type: {cmd_type}")
             else:
@@ -204,13 +241,16 @@ class WorkEnvManager:
         ensure_parent_dir(file_path)
         atomic_write_text(file_path, content)
 
-    def _run_execute_command(self, cmd: dict[str, Any], workenv_dir: Path, metadata: dict[str, Any]) -> None:
+    def _run_execute_command(
+        self, cmd: dict[str, Any], workenv_dir: Path, metadata: dict[str, Any], env: dict[str, str]
+    ) -> None:
         """Handle command execution.
 
         Args:
             cmd: Command dictionary
             workenv_dir: Work environment directory
             metadata: Package metadata
+            env: Isolated environment dictionary
         """
         command = cmd.get("command", "")
 
@@ -220,25 +260,29 @@ class WorkEnvManager:
         # Parse command safely to avoid shell injection
         args = shlex.split(command)
 
-        # Use the shared run utility
+        # Use the shared run utility with isolated environment
         try:
             run(
                 args,
                 cwd=workenv_dir,
                 capture_output=True,
                 check=True,
+                env=env,
             )
         except Exception as e:
             logger.error(f"❌ Command failed: {command}")
             logger.error(f"❌ Error details: {e!s}")
             raise RuntimeError(f"Setup command failed: {command}. Error: {e!s}") from e
 
-    def _run_enumerate_execute_command(self, cmd: dict[str, Any], workenv_dir: Path) -> None:
+    def _run_enumerate_execute_command(
+        self, cmd: dict[str, Any], workenv_dir: Path, env: dict[str, str]
+    ) -> None:
         """Handle file enumeration and execution command.
 
         Args:
             cmd: Command dictionary
             workenv_dir: Work environment directory
+            env: Isolated environment dictionary
         """
         pattern = cmd.get("pattern", "*")
         command_template = cmd.get("command", "")
@@ -253,7 +297,7 @@ class WorkEnvManager:
             command = command_template.replace("{file}", str(file_path))
             command = command.replace("{workenv}", str(workenv_dir))
 
-            # Parse and execute command using shared utility
+            # Parse and execute command using shared utility with isolated environment
             args = shlex.split(command)
 
             try:
@@ -262,6 +306,7 @@ class WorkEnvManager:
                     cwd=workenv_dir,
                     capture_output=True,
                     check=True,
+                    env=env,
                 )
             except Exception as e:
                 logger.error(f"❌ Command failed for {file_path}: {command}")

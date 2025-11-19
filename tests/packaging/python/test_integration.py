@@ -56,7 +56,7 @@ class TestPythonPackagingIntegration:
 
     @patch("flavor.packaging.python.wheel_builder.run")
     @patch("flavor.packaging.python.dist_manager.run")
-    def test_wheel_builder_dist_manager_integration(self, mock_dist_run, mock_wheel_run) -> None:
+    def test_wheel_builder_dist_manager_integration(self, mock_dist_run: Mock, mock_wheel_run: Mock) -> None:
         """Test WheelBuilder and PythonDistManager working together."""
         # Mock successful command execution
         mock_result = Mock()
@@ -82,36 +82,38 @@ version = "1.0.0"
             build_dir.mkdir()
 
             # Mock the managers' dependencies
-            with patch.object(self.wheel_builder, "pypapip") as mock_pypapip:
-                with patch.object(self.wheel_builder, "uv"):
-                    with patch.object(self.dist_manager, "pypapip"):
-                        # Mock wheel building
-                        mock_pypapip._get_pypapip_wheel_cmd.return_value = [
-                            "python",
-                            "-m",
-                            "pip",
-                            "wheel",
-                            str(project_dir),
-                        ]
+            with (
+                patch.object(self.wheel_builder, "pypapip") as mock_pypapip,
+                patch.object(self.wheel_builder, "uv"),
+                patch.object(self.dist_manager, "pypapip"),
+            ):
+                # Mock wheel building
+                mock_pypapip._get_pypapip_wheel_cmd.return_value = [
+                    "python",
+                    "-m",
+                    "pip",
+                    "wheel",
+                    str(project_dir),
+                ]
 
-                        # Mock wheel files
-                        wheel_dir = build_dir / "wheels"
-                        wheel_dir.mkdir(parents=True)
-                        test_wheel = wheel_dir / "test_project-1.0.0-py3-none-any.whl"
-                        test_wheel.touch()
+                # Mock wheel files
+                wheel_dir = build_dir / "wheels"
+                wheel_dir.mkdir(parents=True)
+                test_wheel = wheel_dir / "test_project-1.0.0-py3-none-any.whl"
+                test_wheel.touch()
 
-                        # Test wheel building
-                        result = self.wheel_builder.build_wheel_from_source(
-                            python_exe=Path(sys.executable),
-                            source_path=project_dir,
-                            wheel_dir=wheel_dir,
-                        )
+                # Test wheel building
+                result = self.wheel_builder.build_wheel_from_source(
+                    python_exe=Path(sys.executable),
+                    source_path=project_dir,
+                    wheel_dir=wheel_dir,
+                )
 
-                        assert result.exists()
-                        assert result.name.endswith(".whl")
+                assert result.exists()
+                assert result.name.endswith(".whl")
 
     @patch("shutil.which")
-    def test_uv_manager_system_detection(self, mock_which) -> None:
+    def test_uv_manager_system_detection(self, mock_which: Mock) -> None:
         """Test UVManager system UV detection."""
         # Test when UV is found
         mock_which.return_value = "/usr/local/bin/uv"
@@ -160,23 +162,25 @@ version = "1.0.0"
 
     def test_pypapip_manylinux_compatibility(self) -> None:
         """Test PyPaPipManager manylinux compatibility."""
-        with patch("flavor.packaging.python.pypapip_manager.get_os_name") as mock_os:
-            with patch("flavor.packaging.python.pypapip_manager.get_arch_name") as mock_arch:
-                mock_os.return_value = "linux"
-                mock_arch.return_value = "amd64"
+        with (
+            patch("flavor.packaging.python.pypapip_manager.get_os_name") as mock_os,
+            patch("flavor.packaging.python.pypapip_manager.get_arch_name") as mock_arch,
+        ):
+            mock_os.return_value = "linux"
+            mock_arch.return_value = "amd64"
 
-                python_exe = Path("/usr/bin/python")
-                dest_dir = Path("/tmp/wheels")
-                packages = ["numpy"]
+            python_exe = Path("/usr/bin/python")
+            dest_dir = Path("/tmp/wheels")
+            packages = ["numpy"]
 
-                cmd = self.pypapip._get_pypapip_download_cmd(
-                    python_exe, dest_dir, packages=packages, binary_only=True
-                )
+            cmd = self.pypapip._get_pypapip_download_cmd(
+                python_exe, dest_dir, packages=packages, binary_only=True
+            )
 
-                # Should include manylinux2014_x86_64 for Linux compatibility
-                assert "manylinux2014_x86_64" in cmd
-                assert "--python-version" in cmd
-                assert "3.11" in cmd
+            # Should include manylinux2014_x86_64 for Linux compatibility
+            assert "manylinux2014_x86_64" in cmd
+            assert "--python-version" in cmd
+            assert "3.11" in cmd
 
     def test_manager_error_isolation(self) -> None:
         """Test that errors in one manager don't affect others."""
@@ -193,7 +197,7 @@ version = "1.0.0"
             assert cmd == expected
 
     @patch("flavor.packaging.python.dist_manager.run")
-    def test_dist_manager_wheel_installation(self, mock_run) -> None:
+    def test_dist_manager_wheel_installation(self, mock_run: Mock) -> None:
         """Test PythonDistManager wheel installation integration."""
         mock_result = Mock()
         mock_result.returncode = 0
@@ -270,66 +274,68 @@ setup(name='test-project', version='1.0.0', py_modules=['main'])
             (project_dir / "main.py").write_text("def main(): print('Hello, World!')")
 
             # Mock all the complex operations
-            with patch.object(wheel_builder, "build_and_resolve_project") as mock_build:
-                with patch.object(dist_manager, "create_standalone_distribution") as mock_dist:
-                    # Mock successful wheel building
-                    wheel_dir = temp_path / "wheels"
-                    wheel_dir.mkdir()
-                    test_wheel = wheel_dir / "test_project-1.0.0-py3-none-any.whl"
-                    test_wheel.touch()
+            with (
+                patch.object(wheel_builder, "build_and_resolve_project") as mock_build,
+                patch.object(dist_manager, "create_standalone_distribution") as mock_dist,
+            ):
+                # Mock successful wheel building
+                wheel_dir = temp_path / "wheels"
+                wheel_dir.mkdir()
+                test_wheel = wheel_dir / "test_project-1.0.0-py3-none-any.whl"
+                test_wheel.touch()
 
-                    mock_build.return_value = {
-                        "project_wheel": test_wheel,
-                        "dependency_wheels": [],
-                        "wheel_dir": wheel_dir,
-                        "total_wheels": 1,
-                    }
+                mock_build.return_value = {
+                    "project_wheel": test_wheel,
+                    "dependency_wheels": [],
+                    "wheel_dir": wheel_dir,
+                    "total_wheels": 1,
+                }
 
-                    # Mock successful distribution creation
-                    site_packages = temp_path / "site-packages"
-                    site_packages.mkdir()
-                    (site_packages / "test_module.py").write_text("# Test module")
+                # Mock successful distribution creation
+                site_packages = temp_path / "site-packages"
+                site_packages.mkdir()
+                (site_packages / "test_module.py").write_text("# Test module")
 
-                    mock_dist.return_value = {
-                        "project_name": "test-project",
-                        "site_packages": site_packages,
-                        "distribution_size": 1024,
-                        "total_wheels": 1,
-                    }
+                mock_dist.return_value = {
+                    "project_name": "test-project",
+                    "site_packages": site_packages,
+                    "distribution_size": 1024,
+                    "total_wheels": 1,
+                }
 
-                    # Test the workflow
-                    # 1. Build wheels
-                    build_result = wheel_builder.build_and_resolve_project(
-                        python_exe=Path(sys.executable),
-                        project_dir=project_dir,
-                        build_dir=temp_path / "build",
-                    )
+                # Test the workflow
+                # 1. Build wheels
+                build_result = wheel_builder.build_and_resolve_project(
+                    python_exe=Path(sys.executable),
+                    project_dir=project_dir,
+                    build_dir=temp_path / "build",
+                )
 
-                    assert build_result["total_wheels"] == 1
-                    assert build_result["project_wheel"].exists()
+                assert build_result["total_wheels"] == 1
+                assert build_result["project_wheel"].exists()
 
-                    # 2. Create distribution
-                    dist_result = dist_manager.create_standalone_distribution(
-                        project_dir=project_dir, output_dir=temp_path / "output"
-                    )
+                # 2. Create distribution
+                dist_result = dist_manager.create_standalone_distribution(
+                    project_dir=project_dir, output_dir=temp_path / "output"
+                )
 
-                    assert dist_result["project_name"] == "test-project"
-                    assert dist_result["site_packages"].exists()
+                assert dist_result["project_name"] == "test-project"
+                assert dist_result["site_packages"].exists()
 
-                    # 3. Create archive using foundation tools
-                    archive_path = temp_path / "final.tar.gz"
-                    tar_path = temp_path / "final.tar"
-                    tar_archive.create(dist_result["site_packages"], tar_path)
+                # 3. Create archive using foundation tools
+                archive_path = temp_path / "final.tar.gz"
+                tar_path = temp_path / "final.tar"
+                tar_archive.create(dist_result["site_packages"], tar_path)
 
-                    # Compress deterministically
-                    tar_bytes = tar_path.read_bytes()
-                    gz_bytes = gzip_compressor.compress_bytes(tar_bytes)
-                    archive_path.write_bytes(gz_bytes)
+                # Compress deterministically
+                tar_bytes = tar_path.read_bytes()
+                gz_bytes = gzip_compressor.compress_bytes(tar_bytes)
+                archive_path.write_bytes(gz_bytes)
 
-                    assert archive_path.exists()
+                assert archive_path.exists()
 
-                    # 4. Basic validation - archive exists and has content
-                    assert archive_path.stat().st_size > 0
+                # 4. Basic validation - archive exists and has content
+                assert archive_path.stat().st_size > 0
 
     def test_error_handling_across_managers(self) -> None:
         """Test error handling when managers interact."""
@@ -344,9 +350,9 @@ setup(name='test-project', version='1.0.0', py_modules=['main'])
 
             # Should handle errors gracefully
             with patch.object(wheel_builder, "pypapip") as mock_pypapip:
-                mock_pypapip._get_pypapip_wheel_cmd.side_effect = Exception("Build failed")
+                mock_pypapip._get_pypapip_wheel_cmd.side_effect = RuntimeError("Build failed")
 
-                with pytest.raises(Exception):
+                with pytest.raises(RuntimeError, match="Build failed"):
                     wheel_builder.build_wheel_from_source(
                         python_exe=Path(sys.executable),
                         source_path=project_dir,

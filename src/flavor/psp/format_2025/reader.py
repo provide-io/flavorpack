@@ -22,9 +22,6 @@ from provide.foundation.serialization import json_loads
 from flavor.config.defaults import (
     ACCESS_AUTO,
     ACCESS_MMAP,
-    DEFAULT_HEADER_SIZE,
-    DEFAULT_MAGIC_TRAILER_SIZE,
-    DEFAULT_SLOT_DESCRIPTOR_SIZE,
 )
 from flavor.psp.format_2025.backends import (
     Backend,
@@ -32,6 +29,9 @@ from flavor.psp.format_2025.backends import (
     create_backend,
 )
 from flavor.psp.format_2025.constants import (
+    DEFAULT_HEADER_SIZE,
+    DEFAULT_MAGIC_TRAILER_SIZE,
+    DEFAULT_SLOT_DESCRIPTOR_SIZE,
     TRAILER_END_MAGIC,
     TRAILER_START_MAGIC,
 )

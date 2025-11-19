@@ -16,6 +16,7 @@ from provide.foundation.platform import is_windows
 from provide.foundation.serialization import json_dumps
 
 from flavor.exceptions import BuildError
+from flavor.packaging.defaults import DEFAULT_ENV_ISOLATION_UNSET
 
 
 def get_cli_executable_name(package_name: str, build_config: dict[str, Any], windows: bool) -> str:
@@ -166,13 +167,20 @@ def create_builder_manifest(
         },
     }
 
+    # Default environment isolation for Python/UV to prevent host venv interference
     execution_config = build_config.get("execution", {})
     runtime_env_config = execution_config.get("runtime", {}).get("env", {})
-    if runtime_env_config:
+
+    # Check for explicit opt-out via isolated flag
+    isolated = runtime_env_config.get("isolated", True)  # Default to True (safe by default)
+
+    if isolated is False:
+        logger.debug("🔓 Environment isolation disabled via isolated=false flag")
+        # User has explicitly opted out of isolation - don't add runtime section
+        # unless they provided other env config
         manifest_runtime_env = {
             key: value
             for key, value in {
-                "unset": runtime_env_config.get("unset", []),
                 "pass": runtime_env_config.get("pass", []),
                 "set": runtime_env_config.get("set", {}),
                 "map": runtime_env_config.get("map", {}),
@@ -180,8 +188,38 @@ def create_builder_manifest(
             if value
         }
         if manifest_runtime_env:
+            logger.debug(f"Adding user-specified runtime config (no isolation): {manifest_runtime_env}")
             manifest["runtime"] = {"env": manifest_runtime_env}
-            logger.info(f"Adding runtime configuration: {manifest['runtime']}")
+    else:
+        # Apply default isolation (safe by default)
+        logger.debug("🔒 Applying default environment isolation for Python/UV")
+
+        # Merge user unset vars with defaults (defaults first, then user vars, preserve order)
+        user_unset = runtime_env_config.get("unset", [])
+        # Remove duplicates while preserving order: defaults first, then new user vars
+        seen = set(DEFAULT_ENV_ISOLATION_UNSET)
+        merged_unset = DEFAULT_ENV_ISOLATION_UNSET + [var for var in user_unset if var not in seen]
+
+        if user_unset:
+            logger.debug(f"Merging user unset vars {user_unset} with defaults")
+            logger.debug(f"Final merged unset list: {merged_unset}")
+
+        manifest_runtime_env = {
+            key: value
+            for key, value in {
+                "unset": merged_unset,
+                "pass": runtime_env_config.get("pass", []),
+                "set": runtime_env_config.get("set", {}),
+                "map": runtime_env_config.get("map", {}),
+            }.items()
+            if value
+        }
+
+        if manifest_runtime_env:
+            manifest["runtime"] = {"env": manifest_runtime_env}
+            logger.info(
+                f"✅ Runtime environment configured with isolation: unset={merged_unset[:3]}... ({len(merged_unset)} vars)"
+            )
 
     return manifest
 
@@ -342,13 +380,20 @@ def create_python_builder_metadata(
         ],
     }
 
+    # Default environment isolation for Python/UV to prevent host venv interference
     execution_config = build_config.get("execution", {})
     runtime_env_config = execution_config.get("runtime", {}).get("env", {})
-    if runtime_env_config:
+
+    # Check for explicit opt-out via isolated flag
+    isolated = runtime_env_config.get("isolated", True)  # Default to True (safe by default)
+
+    if isolated is False:
+        logger.debug("🔓 Environment isolation disabled via isolated=false flag")
+        # User has explicitly opted out of isolation - don't add runtime section
+        # unless they provided other env config
         manifest_runtime_env = {
             key: value
             for key, value in {
-                "unset": runtime_env_config.get("unset", []),
                 "pass": runtime_env_config.get("pass", []),
                 "set": runtime_env_config.get("set", {}),
                 "map": runtime_env_config.get("map", {}),
@@ -356,8 +401,38 @@ def create_python_builder_metadata(
             if value
         }
         if manifest_runtime_env:
+            logger.debug(f"Adding user-specified runtime config (no isolation): {manifest_runtime_env}")
             metadata["runtime"] = {"env": manifest_runtime_env}
-            logger.info(f"Adding runtime configuration: {metadata['runtime']}")
+    else:
+        # Apply default isolation (safe by default)
+        logger.debug("🔒 Applying default environment isolation for Python/UV")
+
+        # Merge user unset vars with defaults (defaults first, then user vars, preserve order)
+        user_unset = runtime_env_config.get("unset", [])
+        # Remove duplicates while preserving order: defaults first, then new user vars
+        seen = set(DEFAULT_ENV_ISOLATION_UNSET)
+        merged_unset = DEFAULT_ENV_ISOLATION_UNSET + [var for var in user_unset if var not in seen]
+
+        if user_unset:
+            logger.debug(f"Merging user unset vars {user_unset} with defaults")
+            logger.debug(f"Final merged unset list: {merged_unset}")
+
+        manifest_runtime_env = {
+            key: value
+            for key, value in {
+                "unset": merged_unset,
+                "pass": runtime_env_config.get("pass", []),
+                "set": runtime_env_config.get("set", {}),
+                "map": runtime_env_config.get("map", {}),
+            }.items()
+            if value
+        }
+
+        if manifest_runtime_env:
+            metadata["runtime"] = {"env": manifest_runtime_env}
+            logger.info(
+                f"✅ Runtime environment configured with isolation: unset={merged_unset[:3]}... ({len(merged_unset)} vars)"
+            )
 
     return metadata
 

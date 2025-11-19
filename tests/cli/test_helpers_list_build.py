@@ -3,11 +3,10 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""TODO: Add module docstring."""
+"""Comprehensive tests for flavor.commands.helpers list/build paths."""
 
 from __future__ import annotations
 
-"""Comprehensive tests for flavor.commands.helpers module."""
 from pathlib import Path
 from unittest.mock import Mock, patch
 

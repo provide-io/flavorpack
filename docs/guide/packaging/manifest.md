@@ -8,7 +8,7 @@ Complete reference for `pyproject.toml` configuration options in FlavorPack pack
     FlavorPack is in alpha and currently supports a **minimal subset** of the documented configuration.
     See the ["Currently Supported Configuration"](#currently-supported-configuration) section below for what actually works today.
 
-    Features marked with 📋 are planned for future releases. See the [Roadmap](../roadmap.md) for implementation timelines.
+    Features marked with 📋 are planned for future releases. See the [Roadmap](../roadmap/) for implementation timelines.
 
 ## Overview
 
@@ -207,7 +207,7 @@ description = "Custom package description"
 ### Execution Configuration
 
 !!! warning "📋 Planned Feature - Not Yet Implemented"
-    These execution configuration options are **not yet supported**. See [Roadmap](../roadmap.md#manifest-configuration-features) for planned implementation.
+    These execution configuration options are **not yet supported**. See [Roadmap](../roadmap/#manifest-configuration-features) for planned implementation.
 
 ```toml
 # 📋 PLANNED - Not yet implemented
@@ -259,7 +259,7 @@ dependencies = [                  # ✅ Supported
 ```
 
 !!! warning "📋 Planned Features - Not Yet Implemented"
-    The following build configuration options are **not yet supported**. See [Roadmap](../roadmap.md#manifest-configuration-features) for planned implementation.
+    The following build configuration options are **not yet supported**. See [Roadmap](../roadmap/#manifest-configuration-features) for planned implementation.
 
 ```toml
 # 📋 PLANNED - Not yet implemented
@@ -302,7 +302,7 @@ package_name = "myapp-custom"     # ✅ Supported
 ```
 
 !!! warning "📋 Planned Features - Not Yet Implemented"
-    Additional metadata customization options are **not yet supported**. See [Roadmap](../roadmap.md#manifest-configuration-features) for planned implementation.
+    Additional metadata customization options are **not yet supported**. See [Roadmap](../roadmap/#manifest-configuration-features) for planned implementation.
 
 ```toml
 # 📋 PLANNED - Not yet implemented
@@ -324,7 +324,7 @@ git_commit = "${GIT_COMMIT}"
     **Slot configuration via `pyproject.toml` is not yet supported.**
 
     Slots are currently created automatically by FlavorPack based on your Python application structure.
-    Manual slot configuration is planned for a future release. See [Roadmap](../roadmap.md#slot-configuration) for details.
+    Manual slot configuration is planned for a future release. See [Roadmap](../roadmap/#slot-configuration) for details.
 
     This entire section documents the **planned slot configuration format** that will be available in future releases.
 
@@ -479,7 +479,7 @@ optional = true
     - `--public-key PATH` - Include public key in package
     - `--key-seed TEXT` - Deterministic key generation
 
-    Manifest-based security configuration is planned for a future release. See [Roadmap](../roadmap.md) for details.
+    Manifest-based security configuration is planned for a future release. See [Roadmap](../roadmap/) for details.
 
 ### Package Signing
 
@@ -522,7 +522,7 @@ strict_slot_validation = true
 !!! warning "📋 Planned Features - Not Yet Implemented"
     **Advanced features are not yet supported.**
 
-    These features are planned for future releases to enable platform-specific builds, custom build steps, and experimental optimizations. See [Roadmap](../roadmap.md#advanced-features) for details.
+    These features are planned for future releases to enable platform-specific builds, custom build steps, and experimental optimizations. See [Roadmap](../roadmap/#advanced-features) for details.
 
 ### Conditional Configuration
 
@@ -614,7 +614,7 @@ export FLAVOR_KEY_SEED="secret-seed"  # For reproducible builds
                 --public-key keys/flavor-public.key
     ```
 
-    The `FLAVOR_KEY_SEED` environment variable is only for deterministic key generation during the build, not for loading existing keys. See the [Signing Guide](signing.md) for details.
+    The `FLAVOR_KEY_SEED` environment variable is only for deterministic key generation during the build, not for loading existing keys. See the [Signing Guide](signing/) for details.
 
 ## Validation
 
@@ -814,8 +814,8 @@ optional = true
 
 ## Related Documentation
 
-- [Creating Packages](index.md) - Package creation overview
-- [Python Packaging](python.md) - Python-specific features
-- [Package Signing](signing.md) - Security configuration
-- [Slots](../../reference/spec/pspf-2025.md) - Slot system specification
-- [API Reference](../../api/index.md) - Python API
+- [Creating Packages](index/) - Package creation overview
+- [Python Packaging](python/) - Python-specific features
+- [Package Signing](signing/) - Security configuration
+- [Slots](../../reference/spec/pspf-2025/) - Slot system specification
+- [API Reference](../../api/index/) - Python API

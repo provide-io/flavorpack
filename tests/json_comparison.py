@@ -18,6 +18,7 @@ from generated.modules import (
     crypto_pb2,
     index_pb2,
     metadata_pb2,
+    operations_pb2,
     slots_pb2,
 )
 from google.protobuf import json_format
@@ -31,7 +32,7 @@ from flavor.psp.format_2025.constants import (
 from flavor.psp.format_2025.operations import pack_operations
 
 
-def create_old_format_json():
+def create_old_format_json() -> dict:
     """Create JSON in the old format with string-based operations"""
     return {
         "format_version": "2024.1",
@@ -91,7 +92,7 @@ def create_old_format_json():
 # Remove local pack_operations - using the official one from operations.py
 
 
-def create_new_format_protobuf():
+def create_new_format_protobuf() -> pspf_2025_pb2.PSPFPackage:
     """Create new format using protobuf messages with packed operations"""
 
     # Create package metadata

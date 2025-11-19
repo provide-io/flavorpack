@@ -3,7 +3,7 @@
 The FlavorPack Builder API provides tools for creating PSPF packages programmatically.
 
 !!! note "Low-Level API"
-    This is a low-level API for advanced use cases. Most users should use the [Packaging API](packaging.md) instead.
+    This is a low-level API for advanced use cases. Most users should use the [Packaging API](packaging/) instead.
 
     The Builder API gives you fine-grained control over the PSPF package creation process, including slot management, operation chains, and binary format assembly.
 
@@ -294,19 +294,3 @@ def build_with_cache(builder, slots_data, cache_dir):
 ## API Reference
 
 The complete PSPFBuilder class reference with all methods, parameters, and return types:
-
-::: flavor.psp.format_2025.pspf_builder.PSPFBuilder
-    options:
-      show_root_heading: true
-      show_source: true
-      members: true
-      show_if_no_docstring: false
-      heading_level: 3
-
-## See Also
-
-- **[Packaging API](packaging.md)** - High-level packaging functions
-- **[Reader API](reader.md)** - Reading and extracting packages
-- **[Crypto API](crypto.md)** - Signature generation and verification
-- **[PSPF Format Specification](../reference/spec/fep-0001-core-format-and-operation-chains.md)** - Binary format details
-- **[Packaging Guide](../guide/packaging/index.md)** - User guide for package creation
