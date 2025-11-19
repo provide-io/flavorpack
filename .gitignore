@@ -25,9 +25,16 @@ build/
 htmlcov/
 reports/
 
+# Backup and log files
+*.bak
+*.log
+logs/
+crosslang-logs-*/
+
 # IDE
 .idea/
 .vscode/
+.DS_Store
 
 # Local Build Artifacts
 # Compiled helper binaries should not be version controlled.
@@ -66,3 +73,23 @@ docs/.shared-theme/
 # MkDocs generated site
 site/
 bf-*.txt
+
+# Extracted provide.io tooling artifacts
+.provide/
+
+# Cryptographic keys and certificates (sensitive)
+*.key
+*.pem
+*.crt
+*.p12
+*.pfx
+keys/
+test-keys/
+
+# Terraform state (sensitive)
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+.mypy_cache/
+.ruff_cache/
