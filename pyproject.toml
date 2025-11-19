@@ -41,7 +41,6 @@ Homepage = "https://github.com/provide-io/flavor"
 [dependency-groups]
 dev = [
     "provide-testkit[all]",
-    "mutmut>=3.0.0",
 ]
 docs = [
     "provide-testkit[docs]",

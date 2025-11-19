@@ -676,11 +676,11 @@ flavor pack --platform $(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m)
 
 ## See Also
 
-- [Manifest Reference](manifest.md) - Complete manifest format
-- [Python Packaging](python.md) - Python-specific options
-- [Signing Guide](signing.md) - Package signing
-- [Environment Variables](../usage/environment.md) - All variables
-- [CLI Reference](../usage/cli.md) - Command-line options
+- [Manifest Reference](manifest/) - Complete manifest format
+- [Python Packaging](python/) - Python-specific options
+- [Signing Guide](signing/) - Package signing
+- [Environment Variables](../usage/environment/) - All variables
+- [CLI Reference](../usage/cli/) - Command-line options
 
 ---
 

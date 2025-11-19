@@ -3,15 +3,13 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""TODO: Add module docstring."""
-
-from __future__ import annotations
-
-"""
-Binary loading and building for helpers.
+"""Binary loading and building for helpers.
 
 Handles the complex logic of finding, building, and testing helper binaries.
 """
+
+from __future__ import annotations
+
 import contextlib
 import os
 from pathlib import Path

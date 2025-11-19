@@ -361,7 +361,7 @@ Currently disabled due to UTF-8 encoding issues with emoji characters in test sc
 
 ## Related Documentation
 
-- [Contributing Guide](contributing.md)
-- [Testing Guide](testing/index.md)
-- [Architecture](architecture.md)
-- [Release Process](release.md)
+- [Contributing Guide](contributing/)
+- [Testing Guide](testing/index/)
+- [Architecture](architecture/)
+- [Release Process](release/)

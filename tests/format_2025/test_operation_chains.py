@@ -3,8 +3,9 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""Test suite for the new PSPF/2025 operation chain system.
-Validates that packed operations work correctly with the existing system."""
+"""Test suite for the new PSPF/2025 operation chain system."""
+
+from __future__ import annotations
 
 from pathlib import Path
 import tempfile
@@ -19,6 +20,7 @@ from flavor.psp.format_2025.operations import (
     string_to_operations,
     unpack_operations,
 )
+from flavor.psp.format_2025.pspf_builder import PSPFBuilder
 from flavor.psp.format_2025.reader import PSPFReader
 from flavor.psp.format_2025.slots import SlotDescriptor, SlotMetadata
 
@@ -101,7 +103,7 @@ class TestOperationChains:
         assert unpacked.id == slot1.id
         assert unpacked.operations == slot1.operations
 
-    def test_builder_with_operations(self, test_builder) -> None:
+    def test_builder_with_operations(self, test_builder: PSPFBuilder) -> None:
         """Test that PSPFBuilder works with operation chains."""
         with tempfile.TemporaryDirectory() as tmpdir:
             tmpdir = Path(tmpdir)

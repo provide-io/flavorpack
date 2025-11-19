@@ -179,6 +179,6 @@ sha256sum *.psp > checksums.txt
 
 ## See Also
 
-- [Packaging Guide](../../guide/packaging/index.md)
-- [Platform Support](../../guide/packaging/platforms.md)
-- [CI/CD Integration](ci-cd.md)
+- [Packaging Guide](../../guide/packaging/index/)
+- [Platform Support](../../guide/packaging/platforms/)
+- [CI/CD Integration](ci-cd/)

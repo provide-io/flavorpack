@@ -3,14 +3,9 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""TODO: Add module docstring."""
+"""PSPF 2025 bundle launcher that handles execution, extraction, and workenv setup."""
 
 from __future__ import annotations
-
-"""PSPF 2025 Bundle Launcher
-
-Handles bundle execution, slot extraction, and work environment setup.
-"""
 
 from collections.abc import Generator
 from contextlib import contextmanager
@@ -23,10 +18,8 @@ from provide.foundation import logger
 from provide.foundation.file import atomic_write
 from provide.foundation.file.directory import ensure_dir, ensure_parent_dir, safe_rmtree
 
-from flavor.config.defaults import (
-    DEFAULT_DISK_SPACE_MULTIPLIER,
-    DEFAULT_SLOT_DESCRIPTOR_SIZE,
-)
+from flavor.config.defaults import DEFAULT_DISK_SPACE_MULTIPLIER
+from flavor.psp.format_2025.constants import DEFAULT_SLOT_DESCRIPTOR_SIZE
 from flavor.psp.format_2025.reader import PSPFReader
 from flavor.psp.format_2025.workenv import WorkEnvManager
 

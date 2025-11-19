@@ -291,7 +291,7 @@ flavor pack --manifest pyproject.toml
 
 ## Next Steps
 
-- **[Web Applications](web-app.md)** - Package Flask/FastAPI apps
-- **[Examples Index](index.md)** - More cookbook examples
-- **[Docker Integration](../recipes/docker.md)** - Use in containers
-- **[CI/CD](../recipes/ci-cd.md)** - Automate packaging in CI pipelines
+- **[Web Applications](web-app/)** - Package Flask/FastAPI apps
+- **[Examples Index](index/)** - More cookbook examples
+- **[Docker Integration](../recipes/docker/)** - Use in containers
+- **[CI/CD](../recipes/ci-cd/)** - Automate packaging in CI pipelines

@@ -3,17 +3,13 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""TODO: Add module docstring."""
+"""Structured configuration models for the `[tool.flavor]` section of `pyproject.toml`.
+
+Uses `attrs` to provide typed, immutable classes with sensible defaults.
+"""
 
 from __future__ import annotations
 
-"""Structured configuration models for the `[tool.flavor]` section of `pyproject.toml`.
-
-This module uses the `attrs` library to define typed, immutable classes that
-represent the configuration for building a Flavor package. This approach provides
-type safety, default values, and clearer code compared to using unstructured
-dictionaries.
-"""
 from pathlib import Path
 from typing import Any
 

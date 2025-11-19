@@ -5,7 +5,9 @@
 
 """Tests for the high-level flavor API."""
 
-from unittest.mock import patch
+from collections.abc import Callable
+from pathlib import Path
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -13,10 +15,10 @@ from flavor import build_package_from_manifest
 
 
 @pytest.fixture
-def pyproject_factory(tmp_path):
+def pyproject_factory(tmp_path: Path) -> Callable[[str], Path]:
     """Factory to create pyproject.toml files for testing."""
 
-    def _create_pyproject(content: str):
+    def _create_pyproject(content: str) -> Path:
         pyproject_path = tmp_path / "pyproject.toml"
         pyproject_path.write_text(content)
         (tmp_path / "keys").mkdir()
@@ -26,7 +28,9 @@ def pyproject_factory(tmp_path):
 
 
 @patch("flavor.packaging.orchestrator.PackagingOrchestrator.build_package")
-def test_build_package_from_manifest_success(mock_build, pyproject_factory) -> None:
+def test_build_package_from_manifest_success(
+    mock_build: Mock, pyproject_factory: Callable[[str], Path]
+) -> None:
     """Verify build_package_from_manifest succeeds with a valid config."""
     pyproject_content = """
 [project]
@@ -46,7 +50,7 @@ name = "my-flavor-name"
     mock_build.assert_called_once()
 
 
-def test_build_package_from_manifest_missing_config(pyproject_factory) -> None:
+def test_build_package_from_manifest_missing_config(pyproject_factory: Callable[[str], Path]) -> None:
     """Verify build_package_from_manifest fails if essential config is missing."""
     # This pyproject.toml is missing the entry_point (via [project.scripts])
     pyproject_content = """
@@ -63,7 +67,7 @@ version = "1.2.3"
         build_package_from_manifest(pyproject_path)
 
 
-def test_build_package_from_manifest_missing_version(pyproject_factory) -> None:
+def test_build_package_from_manifest_missing_version(pyproject_factory: Callable[[str], Path]) -> None:
     """Verify build_package_from_manifest fails if version is missing."""
     pyproject_content = """
 [project]

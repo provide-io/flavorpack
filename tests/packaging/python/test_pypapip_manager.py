@@ -78,7 +78,7 @@ class TestPyPaPipManager:
         assert cmd == expected
 
     @patch("flavor.packaging.python.pypapip_manager.get_os_name")
-    def test_get_pypapip_download_cmd_non_linux(self, mock_os_name) -> None:
+    def test_get_pypapip_download_cmd_non_linux(self, mock_os_name: Mock) -> None:
         """Test PyPA pip download command on non-Linux systems."""
         mock_os_name.return_value = "darwin"
 
@@ -107,7 +107,7 @@ class TestPyPaPipManager:
 
     @patch("flavor.packaging.python.pypapip_manager.get_arch_name")
     @patch("flavor.packaging.python.pypapip_manager.get_os_name")
-    def test_get_pypapip_download_cmd_linux_amd64(self, mock_os_name, mock_arch_name) -> None:
+    def test_get_pypapip_download_cmd_linux_amd64(self, mock_os_name: Mock, mock_arch_name: Mock) -> None:
         """Test CRITICAL manylinux2014 handling for Linux amd64."""
         mock_os_name.return_value = "linux"
         mock_arch_name.return_value = "amd64"
@@ -140,7 +140,7 @@ class TestPyPaPipManager:
 
     @patch("flavor.packaging.python.pypapip_manager.get_arch_name")
     @patch("flavor.packaging.python.pypapip_manager.get_os_name")
-    def test_get_pypapip_download_cmd_linux_arm64(self, mock_os_name, mock_arch_name) -> None:
+    def test_get_pypapip_download_cmd_linux_arm64(self, mock_os_name: Mock, mock_arch_name: Mock) -> None:
         """Test CRITICAL manylinux2014 handling for Linux ARM64."""
         mock_os_name.return_value = "linux"
         mock_arch_name.return_value = "arm64"
@@ -263,7 +263,7 @@ class TestPyPaPipManager:
             assert "--python-version" in cmd_312 and "3.12" in cmd_312
 
     @patch("flavor.packaging.python.pypapip_manager.run")
-    def test_download_wheels_from_requirements(self, mock_run) -> None:
+    def test_download_wheels_from_requirements(self, mock_run: Mock) -> None:
         """Test downloading wheels from requirements file."""
         mock_result = Mock()
         mock_result.returncode = 0
@@ -297,7 +297,7 @@ class TestPyPaPipManager:
             requirements_file.unlink()
 
     @patch("flavor.packaging.python.pypapip_manager.run")
-    def test_build_wheel_from_source(self, mock_run) -> None:
+    def test_build_wheel_from_source(self, mock_run: Mock) -> None:
         """Test building wheel from source directory."""
         mock_result = Mock()
         mock_result.returncode = 0
@@ -326,7 +326,7 @@ class TestPyPaPipManager:
         assert kwargs["check"] is True
 
     @patch("flavor.packaging.python.pypapip_manager.run")
-    def test_install_packages(self, mock_run) -> None:
+    def test_install_packages(self, mock_run: Mock) -> None:
         """Test installing packages."""
         mock_result = Mock()
         mock_result.returncode = 0
@@ -394,7 +394,7 @@ class TestPyPaPipManagerCriticalFeatures:
 
     @patch("flavor.packaging.python.pypapip_manager.get_os_name")
     @patch("flavor.packaging.python.pypapip_manager.get_arch_name")
-    def test_linux_platforms_always_get_manylinux_tags(self, mock_arch, mock_os) -> None:
+    def test_linux_platforms_always_get_manylinux_tags(self, mock_arch: Mock, mock_os: Mock) -> None:
         """CRITICAL: Linux builds must always get manylinux2014 tags."""
         mock_os.return_value = "linux"
 

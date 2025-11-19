@@ -3,13 +3,15 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""Core PSPF 2025 Format Tests
+"""Core PSPF 2025 format tests covering structure, reading, and writing."""
 
-Tests the fundamental PSPF format structure, reading, and writing."""
+from __future__ import annotations
 
 import hashlib
 import json
+from pathlib import Path
 import struct
+from typing import Any
 
 from provide.foundation.file import align_offset
 import pytest
@@ -36,14 +38,14 @@ class TestPSPFCore:
     """Test core PSPF format functionality."""
 
     @pytest.fixture
-    def simple_payload(self, temp_dir):
+    def simple_payload(self, temp_dir: Path) -> Path:
         """Create a simple test payload."""
         payload_path = temp_dir / "hello.sh"
         payload_path.write_text("#!/bin/sh\necho 'Hello PSPF!'")
         return payload_path
 
     @pytest.fixture
-    def simple_metadata(self):
+    def simple_metadata(self) -> dict[str, Any]:
         """Create simple metadata."""
         return {
             "format": "PSPF/2025",
@@ -52,13 +54,13 @@ class TestPSPFCore:
             "verification": {"integrity_seal": {"required": True, "algorithm": "ed25519"}},
         }
 
-    def test_pspf_specification_implemented(self, test_builder) -> None:
+    def test_pspf_specification_implemented(self) -> None:
         """Test that PSPF 2025 specification is implemented."""
         assert PSPFBuilder is not None
         assert PSPFReader is not None
         assert PSPFIndex is not None
 
-    def test_ephemeral_keys_available(self, test_builder) -> None:
+    def test_ephemeral_keys_available(self) -> None:
         """Test ephemeral key generation."""
         private_key, public_key = generate_ed25519_keypair()
         assert private_key is not None
@@ -67,7 +69,13 @@ class TestPSPFCore:
         assert len(public_key) == 32
         assert private_key != public_key
 
-    def test_build_minimal_bundle(self, temp_dir, simple_payload, simple_metadata, test_builder) -> None:
+    def test_build_minimal_bundle(
+        self,
+        temp_dir: Path,
+        simple_payload: Path,
+        simple_metadata: dict[str, Any],
+        test_builder: PSPFBuilder,
+    ) -> None:
         """Test building a minimal PSPF bundle."""
         # Create slot
         slot = SlotMetadata(
@@ -103,7 +111,13 @@ class TestPSPFCore:
         assert bundle_path.exists()
         assert bundle_path.stat().st_size > 0
 
-    def test_emoji_magic_format(self, temp_dir, simple_payload, simple_metadata, test_builder) -> None:
+    def test_emoji_magic_format(
+        self,
+        temp_dir: Path,
+        simple_payload: Path,
+        simple_metadata: dict[str, Any],
+        test_builder: PSPFBuilder,
+    ) -> None:
         """Test emoji magic is just the magic wand."""
         # Build bundle
         bundle_path = temp_dir / "test.psp"
@@ -112,14 +126,19 @@ class TestPSPFCore:
         assert result.success, f"Build failed: {result.errors}"
 
         # Check emoji magic
-        with open(bundle_path, "rb") as f:
-            f.seek(-4, 2)
-            magic = f.read(4)
+        with bundle_path.open("rb") as bundle_file:
+            bundle_file.seek(-4, 2)
+            magic = bundle_file.read(4)
 
         magic.decode("utf-8")
         assert magic == TRAILER_END_MAGIC
 
-    def test_magic_wand_footer(self, temp_dir, simple_metadata, test_builder) -> None:
+    def test_magic_wand_footer(
+        self,
+        temp_dir: Path,
+        simple_metadata: dict[str, Any],
+        test_builder: PSPFBuilder,
+    ) -> None:
         """Test magic wand emoji footer."""
         # Test with default launcher
         bundle_path = temp_dir / "test_default.psp"
@@ -128,14 +147,19 @@ class TestPSPFCore:
         assert result.success, f"Build failed: {result.errors}"
 
         # Check emoji is always magic wand
-        with open(bundle_path, "rb") as f:
-            f.seek(-4, 2)
-            magic = f.read(4)
+        with bundle_path.open("rb") as bundle_file:
+            bundle_file.seek(-4, 2)
+            magic = bundle_file.read(4)
 
         magic.decode("utf-8")
         assert magic == TRAILER_END_MAGIC
 
-    def test_index_block_location(self, temp_dir, simple_metadata, test_builder) -> None:
+    def test_index_block_location(
+        self,
+        temp_dir: Path,
+        simple_metadata: dict[str, Any],
+        test_builder: PSPFBuilder,
+    ) -> None:
         """Test index block is at launcher_size offset."""
         bundle_path = temp_dir / "test.psp"
         # Use test_builder from fixture
@@ -146,10 +170,10 @@ class TestPSPFCore:
         PSPFReader(bundle_path)
 
         # Check MagicTrailer at end of file
-        with open(bundle_path, "rb") as f:
+        with bundle_path.open("rb") as bundle_file:
             # Seek to start of MagicTrailer
-            f.seek(-DEFAULT_MAGIC_TRAILER_SIZE, 2)
-            trailer = f.read(DEFAULT_MAGIC_TRAILER_SIZE)
+            bundle_file.seek(-DEFAULT_MAGIC_TRAILER_SIZE, 2)
+            trailer = bundle_file.read(DEFAULT_MAGIC_TRAILER_SIZE)
 
         # Verify MagicTrailer structure
 
@@ -157,7 +181,7 @@ class TestPSPFCore:
         index_version = struct.unpack("<I", trailer[4:8])[0]
         assert index_version == PSPF_VERSION
 
-    def test_index_block_size(self, test_builder) -> None:
+    def test_index_block_size(self) -> None:
         """Test index block is exactly 256 bytes."""
         # FORMAT is now an attrs field, so we need to access it from an instance
         index = PSPFIndex()
@@ -167,7 +191,12 @@ class TestPSPFCore:
         packed = index.pack()
         assert len(packed) == DEFAULT_HEADER_SIZE
 
-    def test_index_checksum(self, temp_dir, simple_metadata, test_builder) -> None:
+    def test_index_checksum(
+        self,
+        temp_dir: Path,
+        simple_metadata: dict[str, Any],
+        test_builder: PSPFBuilder,
+    ) -> None:
         """Test index block checksum validation."""
         bundle_path = temp_dir / "test.psp"
         result = test_builder.metadata(**simple_metadata, allow_empty=True).build(bundle_path)
@@ -178,7 +207,12 @@ class TestPSPFCore:
         index = reader.read_index()  # Should not raise
         assert index.format_version == PSPF_VERSION
 
-    def test_metadata_archive_structure(self, temp_dir, simple_metadata, test_builder) -> None:
+    def test_metadata_archive_structure(
+        self,
+        temp_dir: Path,
+        simple_metadata: dict[str, Any],
+        test_builder: PSPFBuilder,
+    ) -> None:
         """Test metadata is gzipped JSON."""
         bundle_path = temp_dir / "test.psp"
         # Use test_builder from fixture
@@ -190,9 +224,9 @@ class TestPSPFCore:
         index = reader.read_index()
 
         # Extract metadata archive
-        with open(bundle_path, "rb") as f:
-            f.seek(index.metadata_offset)
-            archive_data = f.read(index.metadata_size)
+        with bundle_path.open("rb") as bundle_file:
+            bundle_file.seek(index.metadata_offset)
+            archive_data = bundle_file.read(index.metadata_size)
 
         # Verify it's gzipped JSON
         import gzip
@@ -205,7 +239,12 @@ class TestPSPFCore:
             assert "format" in metadata
             assert metadata["format"] == "PSPF/2025"
 
-    def test_metadata_placement(self, temp_dir, simple_metadata, test_builder) -> None:
+    def test_metadata_placement(
+        self,
+        temp_dir: Path,
+        simple_metadata: dict[str, Any],
+        test_builder: PSPFBuilder,
+    ) -> None:
         """Test that metadata immediately follows launcher per PSPF spec."""
         bundle_path = temp_dir / "test.psp"
         result = test_builder.metadata(**simple_metadata, allow_empty=True).build(bundle_path)
@@ -222,7 +261,12 @@ class TestPSPFCore:
             f"Gap of {index.metadata_offset - index.launcher_size} bytes violates PSPF spec."
         )
 
-    def test_metadata_psp_json_required(self, temp_dir, simple_metadata, test_builder) -> None:
+    def test_metadata_psp_json_required(
+        self,
+        temp_dir: Path,
+        simple_metadata: dict[str, Any],
+        test_builder: PSPFBuilder,
+    ) -> None:
         """Test psp.json is required in metadata."""
         bundle_path = temp_dir / "test.psp"
         # Use test_builder from fixture
@@ -238,7 +282,12 @@ class TestPSPFCore:
         assert "package" in metadata
         assert "verification" in metadata
 
-    def test_slot_alignment(self, temp_dir, simple_metadata, test_builder) -> None:
+    def test_slot_alignment(
+        self,
+        temp_dir: Path,
+        simple_metadata: dict[str, Any],
+        test_builder: PSPFBuilder,
+    ) -> None:
         """Test slots are aligned to 8-byte boundaries."""
         # Create multiple slots
         slots = []
@@ -280,18 +329,18 @@ class TestPSPFCore:
         reader = PSPFReader(bundle_path)
         index = reader.read_index()
 
-        with open(bundle_path, "rb") as f:
-            f.seek(index.slot_table_offset)
+        with bundle_path.open("rb") as bundle_file:
+            bundle_file.seek(index.slot_table_offset)
             for i in range(index.slot_count):
                 # Read the full 64-byte descriptor
-                entry_data = f.read(DEFAULT_SLOT_DESCRIPTOR_SIZE)
+                entry_data = bundle_file.read(DEFAULT_SLOT_DESCRIPTOR_SIZE)
                 # Offset is at bytes 16-24 in the 64-byte descriptor
                 offset = struct.unpack("<Q", entry_data[16:24])[0]
 
                 # Verify alignment
                 assert offset % DEFAULT_SLOT_ALIGNMENT == 0, f"Slot {i} not aligned (offset={offset})"
 
-    def test_align_offset_function(self, test_builder) -> None:
+    def test_align_offset_function(self) -> None:
         """Test offset alignment function with PSPF slot alignment (8 bytes)."""
         # Test various offsets with DEFAULT_SLOT_ALIGNMENT (8)
         assert align_offset(0, DEFAULT_SLOT_ALIGNMENT) == 0
@@ -302,7 +351,12 @@ class TestPSPFCore:
         assert align_offset(100, DEFAULT_SLOT_ALIGNMENT) == 104
         assert align_offset(104, DEFAULT_SLOT_ALIGNMENT) == 104
 
-    def test_reader_verify_magic(self, temp_dir, simple_metadata, test_builder) -> None:
+    def test_reader_verify_magic(
+        self,
+        temp_dir: Path,
+        simple_metadata: dict[str, Any],
+        test_builder: PSPFBuilder,
+    ) -> None:
         """Test magic verification."""
         bundle_path = temp_dir / "test.psp"
         # Use test_builder from fixture
@@ -313,14 +367,19 @@ class TestPSPFCore:
         assert reader.verify_magic_trailer()
 
         # Test corrupted magic
-        with open(bundle_path, "r+b") as f:
-            f.seek(-4, 2)
-            f.write(b"BAD!")
+        with bundle_path.open("r+b") as bundle_file:
+            bundle_file.seek(-4, 2)
+            bundle_file.write(b"BAD!")
 
         reader2 = PSPFReader(bundle_path)
         assert not reader2.verify_magic_trailer()
 
-    def test_launcher_size_detection(self, temp_dir, simple_metadata, test_builder) -> None:
+    def test_launcher_size_detection(
+        self,
+        temp_dir: Path,
+        simple_metadata: dict[str, Any],
+        test_builder: PSPFBuilder,
+    ) -> None:
         """Test launcher size detection."""
         bundle_path = temp_dir / "test.psp"
         # Use test_builder from fixture
@@ -330,14 +389,14 @@ class TestPSPFCore:
         PSPFReader(bundle_path)
 
         # Verify MagicTrailer at end of file
-        with open(bundle_path, "rb") as f:
-            f.seek(-DEFAULT_MAGIC_TRAILER_SIZE, 2)
-            trailer = f.read(DEFAULT_MAGIC_TRAILER_SIZE)
+        with bundle_path.open("rb") as bundle_file:
+            bundle_file.seek(-DEFAULT_MAGIC_TRAILER_SIZE, 2)
+            trailer = bundle_file.read(DEFAULT_MAGIC_TRAILER_SIZE)
 
         assert trailer[:4] == TRAILER_START_MAGIC
         assert trailer[-4:] == TRAILER_END_MAGIC
 
-    def test_empty_bundle(self, temp_dir, test_builder) -> None:
+    def test_empty_bundle(self, temp_dir: Path, test_builder: PSPFBuilder) -> None:
         """Test building bundle with no slots."""
         bundle_path = temp_dir / "empty.psp"
         # Use test_builder from fixture

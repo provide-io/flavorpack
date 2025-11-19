@@ -3,9 +3,11 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""Test-Driven Development tests for the new PSPF builder API.
-Written BEFORE implementation to drive the design."""
+"""Test-driven development tests for the new PSPF builder API."""
 
+from __future__ import annotations
+
+from collections.abc import Iterator
 from pathlib import Path
 import tempfile
 
@@ -24,14 +26,14 @@ from flavor.psp.format_2025.spec import BuildResult, BuildSpec, KeyConfig
 
 
 @pytest.fixture
-def temp_dir():
+def temp_dir() -> Iterator[Path]:
     """Temporary directory for test files."""
     with tempfile.TemporaryDirectory() as tmpdir:
         yield Path(tmpdir)
 
 
 @pytest.fixture
-def sample_slot(temp_dir):
+def sample_slot(temp_dir: Path) -> SlotMetadata:
     """Create a sample slot for testing."""
     test_file = temp_dir / "test.txt"
     test_file.write_text("Hello, World!")
@@ -50,7 +52,7 @@ def sample_slot(temp_dir):
 
 
 @pytest.fixture
-def minimal_spec(sample_slot):
+def minimal_spec(sample_slot: SlotMetadata) -> BuildSpec:
     """Create minimal valid BuildSpec."""
 
     return BuildSpec(
@@ -77,7 +79,7 @@ class TestPSPFBuilder:
         assert builder is not None
         assert isinstance(builder, PSPFBuilder)
 
-    def test_builder_fluent_interface(self, temp_dir) -> None:
+    def test_builder_fluent_interface(self, temp_dir: Path) -> None:
         """Should support fluent/chainable interface."""
         if not PSPFBuilder:
             pytest.skip("PSPFBuilder not implemented yet")
@@ -96,7 +98,7 @@ class TestPSPFBuilder:
         assert result.success
         assert output.exists()
 
-    def test_builder_incremental(self, temp_dir) -> None:
+    def test_builder_incremental(self, temp_dir: Path) -> None:
         """Should support incremental building."""
         if not PSPFBuilder:
             pytest.skip("PSPFBuilder not implemented yet")
@@ -138,7 +140,7 @@ class TestPSPFBuilder:
         assert builder2._spec.metadata == {"name": "test"}
         assert len(builder3._spec.slots) == 1
 
-    def test_builder_with_path_slots(self, temp_dir) -> None:
+    def test_builder_with_path_slots(self, temp_dir: Path) -> None:
         """Should support adding slots from file paths."""
         if not PSPFBuilder:
             pytest.skip("PSPFBuilder not implemented yet")
@@ -172,7 +174,7 @@ class TestPSPFBuilder:
 class TestIntegration:
     """End-to-end integration tests."""
 
-    def test_full_build_pipeline(self, temp_dir) -> None:
+    def test_full_build_pipeline(self, temp_dir: Path) -> None:
         """Test complete build pipeline."""
         if not all([BuildSpec, build_package, PSPFBuilder]):
             pytest.skip("Not all components implemented yet")
@@ -225,7 +227,7 @@ class TestIntegration:
         assert any(s.get("name", s.get("id")) == "main" for s in slots_metadata)
         assert any(s.get("name", s.get("id")) == "config" for s in slots_metadata)
 
-    def test_error_handling(self, temp_dir) -> None:
+    def test_error_handling(self, temp_dir: Path) -> None:
         """Test comprehensive error handling."""
         if not all([PSPFBuilder, BuildResult]):
             pytest.skip("Not all components implemented yet")
@@ -268,7 +270,7 @@ class TestPerformance:
     """Test performance characteristics."""
 
     @pytest.mark.slow
-    def test_large_package_build(self, temp_dir) -> None:
+    def test_large_package_build(self, temp_dir: Path) -> None:
         """Should handle large packages efficiently."""
         if not PSPFBuilder:
             pytest.skip("PSPFBuilder not implemented yet")
@@ -296,7 +298,7 @@ class TestPerformance:
         assert elapsed < 5.0  # Should complete in reasonable time
 
     @pytest.mark.slow
-    def test_many_slots_build(self, temp_dir) -> None:
+    def test_many_slots_build(self, temp_dir: Path) -> None:
         """Should handle many slots efficiently."""
         if not PSPFBuilder:
             pytest.skip("PSPFBuilder not implemented yet")

@@ -17,7 +17,7 @@ All development happens on GitHub.
 
 Get help from the community.
 
-**[Community Support →](support.md)**
+**[Community Support →](support/)**
 
 - Ask questions
 - Share solutions
@@ -27,7 +27,7 @@ Get help from the community.
 
 Join conversations about FlavorPack.
 
-**[GitHub Discussions →](discussions.md)**
+**[GitHub Discussions →](discussions/)**
 
 - Feature requests
 - Use cases
@@ -38,7 +38,7 @@ Join conversations about FlavorPack.
 
 Read articles and updates.
 
-**[Blog →](blog.md)**
+**[Blog →](blog/)**
 
 - Release announcements
 - Technical deep dives
@@ -48,10 +48,10 @@ Read articles and updates.
 ## Resources
 
 ### Documentation
-- **[Getting Started](../getting-started/index.md)** - Start here
-- **[User Guide](../guide/index.md)** - Complete guide
-- **[Cookbook](../cookbook/index.md)** - Examples
-- **[Development](../development/index.md)** - Contribute
+- **[Getting Started](../getting-started/index/)** - Start here
+- **[User Guide](../guide/index/)** - Complete guide
+- **[Cookbook](../cookbook/index/)** - Examples
+- **[Development](../development/index/)** - Contribute
 
 ## Contributing
 
@@ -75,19 +75,19 @@ We welcome contributions of all kinds:
 - Write blog posts
 - Share use cases
 
-**[See Contributing Guide →](../development/contributing.md)**
+**[See Contributing Guide →](../development/contributing/)**
 
 ## License
 
 FlavorPack is licensed under **Apache-2.0**.
 
-**[View License →](license.md)**
+**[View License →](license/)**
 
 ## Code of Conduct
 
 We are committed to providing a welcoming and inclusive environment.
 
-See **[Contributing Guide](../development/contributing.md)** for our community guidelines.
+See **[Contributing Guide](../development/contributing/)** for our community guidelines.
 
 ---
 

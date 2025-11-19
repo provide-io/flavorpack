@@ -3,9 +3,11 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""Test-Driven Development tests for the new PSPF builder API.
-Written BEFORE implementation to drive the design."""
+"""Test-driven development tests for the new PSPF builder API."""
 
+from __future__ import annotations
+
+from collections.abc import Iterator
 from pathlib import Path
 import tempfile
 
@@ -26,14 +28,14 @@ from flavor.psp.format_2025.validation import validate_spec
 
 
 @pytest.fixture
-def temp_dir():
+def temp_dir() -> Iterator[Path]:
     """Temporary directory for test files."""
     with tempfile.TemporaryDirectory() as tmpdir:
         yield Path(tmpdir)
 
 
 @pytest.fixture
-def sample_slot(temp_dir):
+def sample_slot(temp_dir: Path) -> SlotMetadata:
     """Create a sample slot for testing."""
     test_file = temp_dir / "test.txt"
     test_file.write_text("Hello, World!")
@@ -52,7 +54,7 @@ def sample_slot(temp_dir):
 
 
 @pytest.fixture
-def minimal_spec(sample_slot):
+def minimal_spec(sample_slot: SlotMetadata) -> BuildSpec:
     """Create minimal valid BuildSpec."""
     from flavor.psp.format_2025.spec import KeyConfig
 
@@ -195,7 +197,11 @@ class TestBuildOptions:
 class TestBuildPackageFunction:
     """Test the pure build_package function."""
 
-    def test_build_package_is_pure_function(self, temp_dir, minimal_spec) -> None:
+    def test_build_package_is_pure_function(
+        self,
+        temp_dir: Path,
+        minimal_spec: BuildSpec,
+    ) -> None:
         """build_package should be a pure function with no side effects."""
         if not build_package:
             pytest.skip("build_package not implemented yet")
@@ -214,7 +220,7 @@ class TestBuildPackageFunction:
         if result1.success:
             assert output1.stat().st_size == output2.stat().st_size
 
-    def test_build_package_validates_spec(self, temp_dir) -> None:
+    def test_build_package_validates_spec(self, temp_dir: Path) -> None:
         """build_package should validate the spec before building."""
         if not build_package or not BuildSpec:
             pytest.skip("build_package/BuildSpec not implemented yet")
@@ -227,7 +233,11 @@ class TestBuildPackageFunction:
         assert len(result.errors) > 0
         assert "name" in str(result.errors).lower()
 
-    def test_build_package_creates_output(self, temp_dir, minimal_spec) -> None:
+    def test_build_package_creates_output(
+        self,
+        temp_dir: Path,
+        minimal_spec: BuildSpec,
+    ) -> None:
         """build_package should create the output file."""
         if not build_package:
             pytest.skip("build_package not implemented yet")
@@ -272,7 +282,7 @@ class TestValidateSpec:
                 lifecycle="runtime",
             )
 
-    def test_validate_valid_spec(self, minimal_spec) -> None:
+    def test_validate_valid_spec(self, minimal_spec: BuildSpec) -> None:
         """Should accept valid spec."""
         if not validate_spec:
             pytest.skip("validate_spec not implemented yet")

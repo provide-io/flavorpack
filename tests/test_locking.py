@@ -75,9 +75,8 @@ class TestLockManager:
         mock_lock.acquire.return_value = False
         mock_filelock_class.return_value = mock_lock
 
-        with pytest.raises(LockError, match="Timeout acquiring lock: test_lock"):
-            with manager.lock("test_lock"):
-                pass
+        with pytest.raises(LockError, match="Timeout acquiring lock: test_lock"), manager.lock("test_lock"):
+            pass
 
     @patch("flavor.locking.FileLock")
     def test_lock_exception_with_timeout_keyword(self, mock_filelock_class: Mock, tmp_path: Path) -> None:
@@ -88,9 +87,8 @@ class TestLockManager:
         mock_lock.acquire.side_effect = Exception("Connection timeout occurred")
         mock_filelock_class.return_value = mock_lock
 
-        with pytest.raises(LockError, match="Timeout acquiring lock: test_lock"):
-            with manager.lock("test_lock"):
-                pass
+        with pytest.raises(LockError, match="Timeout acquiring lock: test_lock"), manager.lock("test_lock"):
+            pass
 
     @patch("flavor.locking.FileLock")
     def test_lock_exception_without_timeout_propagates(

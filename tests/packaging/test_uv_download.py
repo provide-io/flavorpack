@@ -5,8 +5,11 @@
 
 """Test UV download functionality for manylinux2014 compatibility."""
 
+from __future__ import annotations
+
 from pathlib import Path
 import tempfile
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -186,10 +189,10 @@ class TestUVDownload:
                     return_value=None,
                 ),
                 patch.object(packager.slot_builder, "_build_wheels"),
+                pytest.raises(FileNotFoundError, match="manylinux2014"),
             ):
                 # Should raise error on Linux when UV download fails
-                with pytest.raises(FileNotFoundError, match="manylinux2014"):
-                    packager.prepare_artifacts(work_path)
+                packager.prepare_artifacts(work_path)
 
     def test_download_uv_wheel_direct_fallback(self) -> None:
         """Test that _download_uv_wheel falls back to direct download when pip fails."""
@@ -204,7 +207,7 @@ class TestUVDownload:
             temp_path = Path(temp_dir)
 
             # Mock run to fail on pip download but succeed on pip check
-            def mock_run_side_effect(*args, **kwargs):
+            def mock_run_side_effect(*args: Any, **kwargs: Any) -> MagicMock:
                 cmd = args[0]
                 # Allow pip --version check to succeed
                 if "--version" in cmd:
@@ -213,8 +216,8 @@ class TestUVDownload:
                     result.stderr = ""
                     return result
                 # But fail on actual download
-                elif "download" in cmd:
-                    raise Exception("pip download failed")
+                if "download" in cmd:
+                    raise RuntimeError("pip download failed")
                 # Default
                 return MagicMock()
 

@@ -5,7 +5,7 @@ Comprehensive guide to diagnosing and resolving common FlavorPack issues.
 !!! warning "Alpha Software - Some Features Not Yet Implemented"
     FlavorPack is in **alpha** status. This troubleshooting guide includes solutions for both implemented and planned features. Features marked with 📋 **PLANNED** are not yet available.
 
-    If you encounter issues with features that don't work, check the [Roadmap](../guide/roadmap.md) to see implementation status.
+    If you encounter issues with features that don't work, check the [Roadmap](../guide/roadmap/) to see implementation status.
 
 ## Overview
 
@@ -503,7 +503,7 @@ export FLAVOR_CACHE_SIZE=10GB           # Set cache size limit
 export FLAVOR_VERIFY_SIGNATURES=1       # Enforce signature verification
 ```
 
-See the [Environment Variables Guide](../guide/usage/environment.md) for a complete reference.
+See the [Environment Variables Guide](../guide/usage/environment/) for a complete reference.
 
 ## Performance Optimization
 
@@ -583,10 +583,10 @@ min_memory = "128MB"    # Minimum required memory
 
 ### Self-Service Resources
 
-1. **Documentation**: Read the [User Guide](../guide/index.md)
-2. **Examples**: Check the [Examples Section](../getting-started/examples.md)
-3. **FAQ**: See [Frequently Asked Questions](faq.md)
-4. **API Reference**: Consult [API Documentation](../api/index.md)
+1. **Documentation**: Read the [User Guide](../guide/index/)
+2. **Examples**: Check the [Examples Section](../getting-started/examples/)
+3. **FAQ**: See [Frequently Asked Questions](faq/)
+4. **API Reference**: Consult [API Documentation](../api/index/)
 
 ### Community Support
 
@@ -617,9 +617,9 @@ env | grep FLAVOR
 
 ## Related Documentation
 
-- [Common Errors](errors.md) - Detailed error explanations
-- [Platform-Specific Issues](platforms/index.md) - OS-specific guides
-- [FAQ](faq.md) - Frequently asked questions
-- [Glossary](../reference/glossary.md) - Technical term definitions
-- [Security Model](../guide/concepts/security.md) - Security features and best practices
-- [Performance Tuning](../guide/advanced/performance.md) - Optimization guide
+- [Common Errors](errors/) - Detailed error explanations
+- [Platform-Specific Issues](platforms/index/) - OS-specific guides
+- [FAQ](faq/) - Frequently asked questions
+- [Glossary](../reference/glossary/) - Technical term definitions
+- [Security Model](../guide/concepts/security/) - Security features and best practices
+- [Performance Tuning](../guide/advanced/performance/) - Optimization guide

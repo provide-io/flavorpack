@@ -3,8 +3,11 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""Tests for memory-mapped I/O backends in taster"""
+"""Tests for memory-mapped I/O backends in taster."""
 
+from __future__ import annotations
+
+from collections.abc import Iterator
 from pathlib import Path
 import tempfile
 
@@ -25,7 +28,7 @@ class TestTasterMMapBackends:
     """Test mmap backends for taster use cases."""
 
     @pytest.fixture
-    def large_test_file(self):
+    def large_test_file(self) -> Iterator[Path]:
         """Create a large test file for mmap testing."""
         with tempfile.NamedTemporaryFile(delete=False, suffix=".dat") as f:
             # Write 10MB of data
@@ -48,7 +51,7 @@ class TestTasterMMapBackends:
         yield path
         path.unlink(missing_ok=True)
 
-    def test_mmap_zero_copy_views(self, large_test_file) -> None:
+    def test_mmap_zero_copy_views(self, large_test_file: Path) -> None:
         """Test that mmap provides true zero-copy views."""
         backend = MMapBackend()
         backend.open(large_test_file)
@@ -70,7 +73,7 @@ class TestTasterMMapBackends:
 
         backend.close()
 
-    def test_mmap_large_file_performance(self, large_test_file) -> None:
+    def test_mmap_large_file_performance(self, large_test_file: Path) -> None:
         """Test mmap performance with large files."""
         import time
 
@@ -104,7 +107,7 @@ class TestTasterMMapBackends:
         # (though this might not always show in small tests)
         print(f"MMap time: {mmap_time:.6f}s, File time: {file_time:.6f}s")
 
-    def test_mmap_prefetch_hints(self, large_test_file) -> None:
+    def test_mmap_prefetch_hints(self, large_test_file: Path) -> None:
         """Test prefetch hints for optimizing access patterns."""
         backend = MMapBackend()
         backend.open(large_test_file)
@@ -118,7 +121,7 @@ class TestTasterMMapBackends:
 
         backend.close()
 
-    def test_hybrid_backend_threshold(self, large_test_file) -> None:
+    def test_hybrid_backend_threshold(self, large_test_file: Path) -> None:
         """Test hybrid backend uses mmap for header, file I/O for data."""
         backend = HybridBackend(header_size=1024 * 1024)  # 1MB header
         backend.open(large_test_file)
@@ -133,7 +136,7 @@ class TestTasterMMapBackends:
 
         backend.close()
 
-    def test_streaming_backend_memory_efficiency(self, large_test_file) -> None:
+    def test_streaming_backend_memory_efficiency(self, large_test_file: Path) -> None:
         """Test streaming backend for memory-constrained scenarios."""
         backend = StreamBackend(chunk_size=8192)
         backend.open(large_test_file)
@@ -161,7 +164,7 @@ class TestTasterMMapBackends:
 
         backend.close()
 
-    def test_concurrent_mmap_access(self, large_test_file) -> None:
+    def test_concurrent_mmap_access(self, large_test_file: Path) -> None:
         """Test multiple concurrent mmap backends."""
         # Multiple processes can mmap the same file
         backend1 = MMapBackend()
@@ -179,7 +182,7 @@ class TestTasterMMapBackends:
         backend1.close()
         backend2.close()
 
-    def test_mmap_with_slots(self, large_test_file) -> None:
+    def test_mmap_with_slots(self, large_test_file: Path) -> None:
         """Test mmap backend with slot descriptors."""
         backend = MMapBackend()
         backend.open(large_test_file)
@@ -205,7 +208,7 @@ class TestTasterMMapBackends:
 
         backend.close()
 
-    def test_auto_backend_selection(self, large_test_file) -> None:
+    def test_auto_backend_selection(self, large_test_file: Path) -> None:
         """Test automatic backend selection based on file size."""
         # Large file should select mmap
         backend = create_backend(ACCESS_AUTO, large_test_file)
@@ -221,7 +224,7 @@ class TestTasterMMapBackends:
         finally:
             small_file.unlink(missing_ok=True)
 
-    def test_page_aligned_access(self, large_test_file) -> None:
+    def test_page_aligned_access(self, large_test_file: Path) -> None:
         """Test page-aligned access for optimal performance."""
         from flavor.config.defaults import DEFAULT_PAGE_SIZE
 
@@ -237,7 +240,7 @@ class TestTasterMMapBackends:
 
         backend.close()
 
-    def test_memory_view_lifecycle(self, large_test_file) -> None:
+    def test_memory_view_lifecycle(self, large_test_file: Path) -> None:
         """Test that memory views are properly managed."""
         backend = MMapBackend()
         backend.open(large_test_file)

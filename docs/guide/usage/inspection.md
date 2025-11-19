@@ -549,11 +549,11 @@ tar -tzf slot.tar.gz  # Check if valid tar.gz
 
 ## See Also
 
-- [CLI Reference](cli.md) - All inspection commands
-- [Running Packages](running.md) - Package execution
-- [Cache Management](cache.md) - Work environment cache
-- [Verification Guide](../concepts/security.md) - Security model
-- [Package Structure](../concepts/package-structure.md) - PSPF format details
+- [CLI Reference](cli/) - All inspection commands
+- [Running Packages](running/) - Package execution
+- [Cache Management](cache/) - Work environment cache
+- [Verification Guide](../concepts/security/) - Security model
+- [Package Structure](../concepts/package-structure/) - PSPF format details
 
 ---
 

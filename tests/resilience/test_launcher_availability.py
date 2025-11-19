@@ -5,9 +5,11 @@
 
 """Test launcher availability and resilience."""
 
+from collections.abc import Callable
 import io
 import os
 from pathlib import Path
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -49,10 +51,10 @@ setup(
 
 
 @pytest.fixture
-def orchestrator_factory(tmp_path):
+def orchestrator_factory(tmp_path: Path) -> Callable[..., PackagingOrchestrator]:
     """Factory to create a PackagingOrchestrator instance for tests."""
 
-    def _factory(**kwargs):
+    def _factory(**kwargs: Any) -> PackagingOrchestrator:
         defaults = {
             "package_integrity_key_path": None,
             "public_key_path": None,
@@ -74,7 +76,12 @@ class TestLauncherAvailability:
     """Test launcher availability and error handling with focused unit tests."""
 
     @patch("flavor.packaging.orchestrator.find_launcher_executable")
-    def test_missing_launcher_error(self, mock_find_launcher, orchestrator_factory, manifest_file) -> None:
+    def test_missing_launcher_error(
+        self,
+        mock_find_launcher: MagicMock,
+        orchestrator_factory: Callable[..., PackagingOrchestrator],
+        manifest_file: Path,
+    ) -> None:
         """Test BuildError is raised when launcher binary does not exist."""
         mock_find_launcher.return_value.exists.return_value = False
         orchestrator = orchestrator_factory(launcher_bin="/fake/launcher")
@@ -85,11 +92,11 @@ class TestLauncherAvailability:
     @patch("os.access", return_value=False)
     def test_launcher_not_executable(
         self,
-        mock_os_access,
-        mock_find_launcher,
-        orchestrator_factory,
-        tmp_path,
-        manifest_file,
+        mock_os_access: MagicMock,
+        mock_find_launcher: MagicMock,
+        orchestrator_factory: Callable[..., PackagingOrchestrator],
+        tmp_path: Path,
+        manifest_file: Path,
     ) -> None:
         """Test BuildError is raised when launcher binary is not executable."""
         launcher_path = tmp_path / "unexecutable-launcher"
@@ -103,9 +110,9 @@ class TestLauncherAvailability:
     @patch("flavor.packaging.orchestrator.run")
     def test_corrupted_launcher_detection(
         self,
-        mock_run,
-        orchestrator_factory,
-        tmp_path,
+        mock_run: MagicMock,
+        orchestrator_factory: Callable[..., PackagingOrchestrator],
+        tmp_path: Path,
     ) -> None:
         """Test BuildError is raised if launcher is corrupted and cannot be executed."""
         # Create a fake launcher file
@@ -129,13 +136,13 @@ class TestLauncherAvailability:
     @patch("flavor.packaging.orchestrator.PackagingOrchestrator._build_with_python_builder")
     def test_wrong_platform_launcher_warning(
         self,
-        mock_build,
-        mock_logger,
-        mock_access,
-        mock_exists,
-        mock_find,
-        orchestrator_factory,
-        manifest_file,
+        mock_build: MagicMock,
+        mock_logger: MagicMock,
+        mock_access: MagicMock,
+        mock_exists: MagicMock,
+        mock_find: MagicMock,
+        orchestrator_factory: Callable[..., PackagingOrchestrator],
+        manifest_file: Path,
     ) -> None:
         """Test that a warning is logged for a platform mismatch."""
         mock_find.return_value = Path("launcher-windows-amd64")
@@ -164,104 +171,108 @@ class TestLauncherReproducibility:
     @patch("flavor.packaging.orchestrator.HelperManager")
     def test_reproducible_builds_with_same_launcher(
         self,
-        mock_helper_manager,
-        mock_open,
-        mock_create_slot_tarballs,
-        mock_prepare_artifacts,
-        mock_build,
-        mock_run,
-        mock_access,
-        mock_exists,
-        mock_find,
-        mock_mkdtemp,
-        mock_copy2,
-        mock_gzip_open,
-        mock_tarfile_open,
-        mock_os_stat,
-        orchestrator_factory,
-        tmp_path,
-        manifest_file,
+        mock_helper_manager: MagicMock,
+        mock_open: MagicMock,
+        mock_create_slot_tarballs: MagicMock,
+        mock_prepare_artifacts: MagicMock,
+        mock_build: MagicMock,
+        mock_run: MagicMock,
+        mock_access: MagicMock,
+        mock_exists: MagicMock,
+        mock_find: MagicMock,
+        mock_mkdtemp: MagicMock,
+        mock_copy2: MagicMock,
+        mock_gzip_open: MagicMock,
+        mock_tarfile_open: MagicMock,
+        mock_os_stat: MagicMock,
+        orchestrator_factory: Callable[..., PackagingOrchestrator],
+        tmp_path: Path,
+        manifest_file: Path,
     ) -> None:
         """Test that builds with the same launcher are reproducible."""
-        # Mock os.stat to return proper size for the mock paths
-        import stat as stat_module
+        self._setup_mocks_for_reproducible_builds(
+            mock_helper_manager,
+            mock_open,
+            mock_create_slot_tarballs,
+            mock_prepare_artifacts,
+            mock_build,
+            mock_run,
+            mock_access,
+            mock_exists,
+            mock_find,
+            mock_mkdtemp,
+            mock_copy2,
+            mock_gzip_open,
+            mock_tarfile_open,
+            mock_os_stat,
+            tmp_path,
+        )
 
-        def stat_side_effect(path, *args, **kwargs):
-            mock_stat = MagicMock()
-            str_path = str(path)
-            if "uv.gz" in str_path:
-                mock_stat.st_size = 100
-                mock_stat.st_mode = stat_module.S_IFREG | 0o644
-            elif "python.tar.gz" in str_path:
-                mock_stat.st_size = 200
-                mock_stat.st_mode = stat_module.S_IFREG | 0o644
-            elif "wheels.tar.gz" in str_path:
-                mock_stat.st_size = 300
-                mock_stat.st_mode = stat_module.S_IFREG | 0o644
-            elif "test-launcher" in str_path:
-                mock_stat.st_size = 108  # Size of our fake launcher
-                mock_stat.st_mode = stat_module.S_IFREG | 0o755
-            elif "helpers" in str_path or str_path.endswith("/"):
-                mock_stat.st_size = 0
-                mock_stat.st_mode = stat_module.S_IFDIR | 0o755
-            else:
-                mock_stat.st_size = 0
-                mock_stat.st_mode = stat_module.S_IFREG | 0o644
-            return mock_stat
+        orchestrator1 = orchestrator_factory(key_seed="test-seed", output_flavor_path=tmp_path / "test1.psp")
+        orchestrator1.build_package()
 
-        mock_os_stat.side_effect = stat_side_effect
+        orchestrator2 = orchestrator_factory(key_seed="test-seed", output_flavor_path=tmp_path / "test2.psp")
+        orchestrator2.build_package()
 
-        # Mock shutil.copy2 to return the destination path
-        def copy2_side_effect(src, dst):
-            return dst
+        assert mock_build.call_count == 2
+        spec1 = mock_build.call_args_list[0][0][0]
+        spec2 = mock_build.call_args_list[1][0][0]
 
-        mock_copy2.side_effect = copy2_side_effect
+        # The specs passed to the pure builder function should be identical
+        assert spec1 == spec2
 
-        # Mock gzip.open to return a mock file
+    def _setup_mocks_for_reproducible_builds(
+        self,
+        mock_helper_manager: MagicMock,
+        mock_open: MagicMock,
+        mock_create_slot_tarballs: MagicMock,
+        mock_prepare_artifacts: MagicMock,
+        mock_build: MagicMock,
+        mock_run: MagicMock,
+        mock_access: MagicMock,
+        mock_exists: MagicMock,
+        mock_find: MagicMock,
+        mock_mkdtemp: MagicMock,
+        mock_copy2: MagicMock,
+        mock_gzip_open: MagicMock,
+        mock_tarfile_open: MagicMock,
+        mock_os_stat: MagicMock,
+        tmp_path: Path,
+    ) -> None:
+        mock_os_stat.side_effect = self._get_stat_side_effect()
+
+        mock_copy2.side_effect = self._get_copy2_side_effect()
+
         mock_gzip_file = MagicMock()
         mock_gzip_file.write.return_value = None
         mock_gzip_file.__enter__.return_value = mock_gzip_file
         mock_gzip_file.__exit__.return_value = None
         mock_gzip_open.return_value = mock_gzip_file
 
-        # Mock tarfile.open to return a mock tarfile
         mock_tar = MagicMock()
         mock_tar.add.return_value = None
         mock_tar.__enter__.return_value = mock_tar
         mock_tar.__exit__.return_value = None
         mock_tarfile_open.return_value = mock_tar
 
-        # Configure mock_open to return BytesIO for specific paths
-        original_path_open = Path.open  # Store original Path.open
+        original_path_open = Path.open
 
-        def mock_open_side_effect(file, mode="r", *args, **kwargs):
-            if file.resolve() == mock_prepare_artifacts.return_value["uv_binary"].resolve():
-                return io.BytesIO(b"mock uv content")
-            elif file.resolve() == mock_prepare_artifacts.return_value["python_tgz"].resolve():
-                return io.BytesIO(b"mock python tgz content")
-            elif file.resolve() == mock_prepare_artifacts.return_value["wheels_tgz"].resolve():
-                return io.BytesIO(b"mock wheels tgz content")
-            else:
-                # Call the original Path.open for other files (e.g., manifest_file)
-                return original_path_open(file, mode, *args, **kwargs)
+        mock_open.side_effect = self._get_mock_open_side_effect(mock_prepare_artifacts, original_path_open)
 
-        mock_open.side_effect = mock_open_side_effect
-
-        # Mock prepare_artifacts to return deterministic paths
         mock_uv_path = MagicMock(spec=Path)
         mock_uv_path.open.return_value.__enter__.return_value = io.BytesIO(b"mock uv content")
         mock_uv_path.resolve.return_value = Path("/mock/payload_dir/bin/uv")
-        mock_uv_path.stat.return_value.st_size = 15  # Length of "mock uv content"
+        mock_uv_path.stat.return_value.st_size = 15
         mock_uv_path.exists.return_value = True
         mock_python_tgz_path = MagicMock(spec=Path)
         mock_python_tgz_path.open.return_value.__enter__.return_value = io.BytesIO(b"mock python tgz content")
         mock_python_tgz_path.resolve.return_value = Path("/mock/python.tgz")
-        mock_python_tgz_path.stat.return_value.st_size = 23  # Length of "mock python tgz content"
+        mock_python_tgz_path.stat.return_value.st_size = 23
         mock_python_tgz_path.exists.return_value = True
         mock_wheels_tgz_path = MagicMock(spec=Path)
         mock_wheels_tgz_path.open.return_value.__enter__.return_value = io.BytesIO(b"mock wheels tgz content")
         mock_wheels_tgz_path.resolve.return_value = Path("/mock/wheels.tgz")
-        mock_wheels_tgz_path.stat.return_value.st_size = 23  # Length of "mock wheels tgz content"
+        mock_wheels_tgz_path.stat.return_value.st_size = 23
         mock_wheels_tgz_path.exists.return_value = True
 
         mock_prepare_artifacts.return_value = {
@@ -271,7 +282,6 @@ class TestLauncherReproducibility:
             "payload_dir": Path("/mock/payload_dir"),
         }
 
-        # Mock create_python_slot_tarballs to return deterministic paths with proper mocks
         mock_uv_gz = MagicMock(spec=Path)
         mock_uv_gz.__str__.return_value = "/tmp/flavor_build_deterministic/uv.gz"
         mock_uv_gz.stat.return_value.st_size = 100
@@ -304,18 +314,58 @@ class TestLauncherReproducibility:
         launcher_path.chmod(0o755)
         mock_find.return_value = launcher_path
 
-        orchestrator1 = orchestrator_factory(key_seed="test-seed", output_flavor_path=tmp_path / "test1.psp")
-        orchestrator1.build_package()
+    def _get_stat_side_effect(self) -> Callable[..., MagicMock]:
+        import stat as stat_module
 
-        orchestrator2 = orchestrator_factory(key_seed="test-seed", output_flavor_path=tmp_path / "test2.psp")
-        orchestrator2.build_package()
+        def stat_side_effect(path: Path, *args: Any, **kwargs: Any) -> MagicMock:
+            mock_stat = MagicMock()
+            str_path = str(path)
+            if "uv.gz" in str_path:
+                mock_stat.st_size = 100
+                mock_stat.st_mode = stat_module.S_IFREG | 0o644
+            elif "python.tar.gz" in str_path:
+                mock_stat.st_size = 200
+                mock_stat.st_mode = stat_module.S_IFREG | 0o644
+            elif "wheels.tar.gz" in str_path:
+                mock_stat.st_size = 300
+                mock_stat.st_mode = stat_module.S_IFREG | 0o644
+            elif "test-launcher" in str_path:
+                mock_stat.st_size = 108  # Size of our fake launcher
+                mock_stat.st_mode = stat_module.S_IFREG | 0o755
+            elif "helpers" in str_path or str_path.endswith("/"):
+                mock_stat.st_size = 0
+                mock_stat.st_mode = stat_module.S_IFDIR | 0o755
+            else:
+                mock_stat.st_size = 0
+                mock_stat.st_mode = stat_module.S_IFREG | 0o644
+            return mock_stat
 
-        assert mock_build.call_count == 2
-        spec1 = mock_build.call_args_list[0][0][0]
-        spec2 = mock_build.call_args_list[1][0][0]
+        return stat_side_effect
 
-        # The specs passed to the pure builder function should be identical
-        assert spec1 == spec2
+    def _get_copy2_side_effect(self) -> Callable[[Path, Path], Path]:
+        def copy2_side_effect(src: Path, dst: Path) -> Path:
+            return dst
+
+        return copy2_side_effect
+
+    def _get_mock_open_side_effect(
+        self, mock_prepare_artifacts: MagicMock, original_path_open: Callable[..., Any]
+    ) -> Callable[..., Any]:
+        import io
+        from pathlib import Path
+
+        def mock_open_side_effect(file: Path, mode: str = "r", *args: Any, **kwargs: Any) -> Any:
+            if file.resolve() == mock_prepare_artifacts.return_value["uv_binary"].resolve():
+                return io.BytesIO(b"mock uv content")
+            elif file.resolve() == mock_prepare_artifacts.return_value["python_tgz"].resolve():
+                return io.BytesIO(b"mock python tgz content")
+            elif file.resolve() == mock_prepare_artifacts.return_value["wheels_tgz"].resolve():
+                return io.BytesIO(b"mock wheels tgz content")
+            else:
+                # Call the original Path.open for other files (e.g., manifest_file)
+                return original_path_open(file, mode, *args, **kwargs)
+
+        return mock_open_side_effect
 
 
 # 🌶️📦🔚

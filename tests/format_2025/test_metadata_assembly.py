@@ -5,7 +5,10 @@
 
 """Tests for metadata assembly functionality."""
 
+from __future__ import annotations
+
 import datetime
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -56,11 +59,11 @@ class TestLauncherMetadata:
     """Test launcher metadata creation."""
 
     @pytest.fixture
-    def mock_launcher_binary(self):
+    def mock_launcher_binary(self) -> bytes:
         """Mock launcher binary data."""
         return b"FAKE_LAUNCHER_BINARY" * 1000  # Fake binary data
 
-    def test_get_launcher_info(self, mock_launcher_binary) -> None:
+    def test_get_launcher_info(self, mock_launcher_binary: bytes) -> None:
         """Test launcher info extraction."""
         with patch("flavor.psp.format_2025.metadata.assembly.load_launcher_binary") as mock_load:
             mock_load.return_value = mock_launcher_binary
@@ -76,7 +79,7 @@ class TestLauncherMetadata:
             assert "capabilities" in info
             assert isinstance(info["capabilities"], list)
 
-    def test_launcher_info_go(self, mock_launcher_binary) -> None:
+    def test_launcher_info_go(self, mock_launcher_binary: bytes) -> None:
         """Test Go launcher info."""
         with patch("flavor.psp.format_2025.metadata.assembly.load_launcher_binary") as mock_load:
             mock_load.return_value = mock_launcher_binary
@@ -84,7 +87,7 @@ class TestLauncherMetadata:
             info = get_launcher_info("go")
             assert info["tool"] == "flavor-go-launcher"
 
-    def test_launcher_info_python_uses_rust(self, mock_launcher_binary) -> None:
+    def test_launcher_info_python_uses_rust(self, mock_launcher_binary: bytes) -> None:
         """Test Python launcher uses Rust launcher."""
         with patch("flavor.psp.format_2025.metadata.assembly.load_launcher_binary") as mock_load:
             mock_load.return_value = mock_launcher_binary
@@ -92,7 +95,7 @@ class TestLauncherMetadata:
             info = get_launcher_info("python")
             assert info["tool"] == "flavor-rs-launcher"
 
-    def test_launcher_checksum_consistency(self, mock_launcher_binary) -> None:
+    def test_launcher_checksum_consistency(self, mock_launcher_binary: bytes) -> None:
         """Test launcher checksum is consistent."""
         with patch("flavor.psp.format_2025.metadata.assembly.load_launcher_binary") as mock_load:
             mock_load.return_value = mock_launcher_binary
@@ -101,7 +104,7 @@ class TestLauncherMetadata:
             info2 = get_launcher_info("rust")
             assert info1["checksum"] == info2["checksum"]
 
-    def test_create_launcher_metadata(self, mock_launcher_binary) -> None:
+    def test_create_launcher_metadata(self, mock_launcher_binary: bytes) -> None:
         """Test launcher metadata structure creation."""
         launcher_info = {
             "data": mock_launcher_binary,
@@ -156,7 +159,7 @@ class TestMetadataAssembly:
     """Test complete metadata assembly."""
 
     @pytest.fixture
-    def basic_spec(self):
+    def basic_spec(self) -> BuildSpec:
         """Create basic build spec."""
         return BuildSpec().with_metadata(
             package={"name": "test-app", "version": "1.0.0"},
@@ -164,7 +167,7 @@ class TestMetadataAssembly:
         )
 
     @pytest.fixture
-    def mock_launcher_info(self):
+    def mock_launcher_info(self) -> dict[str, Any]:
         """Mock launcher info."""
         return {
             "data": b"FAKE_LAUNCHER",
@@ -174,7 +177,9 @@ class TestMetadataAssembly:
             "capabilities": ["mmap"],
         }
 
-    def test_assemble_complete_metadata(self, basic_spec, mock_launcher_info) -> None:
+    def test_assemble_complete_metadata(
+        self, basic_spec: BuildSpec, mock_launcher_info: dict[str, Any]
+    ) -> None:
         """Test complete metadata assembly."""
         slots = []  # Empty slots for now
 
@@ -207,7 +212,9 @@ class TestMetadataAssembly:
         assert "compatibility" in metadata
         assert metadata["compatibility"]["min_format_version"] == "1.0.0"
 
-    def test_assemble_metadata_with_optional_sections(self, basic_spec, mock_launcher_info) -> None:
+    def test_assemble_metadata_with_optional_sections(
+        self, basic_spec: BuildSpec, mock_launcher_info: dict[str, Any]
+    ) -> None:
         """Test metadata assembly with optional sections."""
         spec = basic_spec.with_metadata(
             cache_validation={"check_file": "{workenv}/marker"},
@@ -223,7 +230,9 @@ class TestMetadataAssembly:
         assert "runtime" in metadata
         assert "workenv" in metadata
 
-    def test_assemble_metadata_with_slots(self, basic_spec, mock_launcher_info) -> None:
+    def test_assemble_metadata_with_slots(
+        self, basic_spec: BuildSpec, mock_launcher_info: dict[str, Any]
+    ) -> None:
         """Test metadata assembly includes slot information."""
         # Create mock slots
         mock_slot = MagicMock()
@@ -239,7 +248,9 @@ class TestMetadataAssembly:
         assert len(metadata["slots"]) == 1
         assert metadata["slots"][0]["name"] == "payload"
 
-    def test_metadata_features_tracking(self, basic_spec, mock_launcher_info) -> None:
+    def test_metadata_features_tracking(
+        self, basic_spec: BuildSpec, mock_launcher_info: dict[str, Any]
+    ) -> None:
         """Test that metadata tracks features used."""
         spec = basic_spec.with_metadata(
             workenv={"directories": [{"path": "tmp"}]},

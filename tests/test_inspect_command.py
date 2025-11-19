@@ -6,6 +6,7 @@
 """Tests for the inspect command."""
 
 import json
+from pathlib import Path
 
 import click.testing
 
@@ -15,7 +16,7 @@ from flavor.cli import cli
 class TestInspectCommand:
     """Test the inspect command."""
 
-    def test_inspect_basic(self, mock_test_package) -> None:
+    def test_inspect_basic(self, mock_test_package: Path) -> None:
         """Test basic inspect command output."""
         runner = click.testing.CliRunner()
         result = runner.invoke(cli, ["inspect", str(mock_test_package)])
@@ -26,7 +27,7 @@ class TestInspectCommand:
         assert "Launcher:" in result.output
         assert "Slots:" in result.output
 
-    def test_inspect_json(self, mock_test_package) -> None:
+    def test_inspect_json(self, mock_test_package: Path) -> None:
         """Test JSON output of inspect command."""
         runner = click.testing.CliRunner()
         result = runner.invoke(cli, ["inspect", "--json", str(mock_test_package)])
@@ -62,7 +63,7 @@ class TestInspectCommand:
         # Click validates file existence, so we get a different error message
         assert "does not exist" in result.output.lower()
 
-    def test_inspect_slot_metadata(self, mock_test_package) -> None:
+    def test_inspect_slot_metadata(self, mock_test_package: Path) -> None:
         """Test that slot metadata is properly displayed."""
         runner = click.testing.CliRunner()
         result = runner.invoke(cli, ["inspect", "--json", str(mock_test_package)])

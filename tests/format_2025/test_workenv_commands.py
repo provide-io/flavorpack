@@ -155,16 +155,18 @@ class TestRunExecuteCommand:
 
         workenv_dir = tmp_path / "workenv"
         metadata = {"package": {"name": "testpkg", "version": "1.0.0"}}
+        env = {"PATH": "/bin"}  # Test environment
 
         cmd = {"command": "echo test"}
 
-        manager._run_execute_command(cmd, workenv_dir, metadata)
+        manager._run_execute_command(cmd, workenv_dir, metadata, env)
 
         mock_run.assert_called_once_with(
             ["echo", "test"],
             cwd=workenv_dir,
             capture_output=True,
             check=True,
+            env=env,
         )
 
     @patch("flavor.psp.format_2025.workenv.run")
@@ -175,13 +177,14 @@ class TestRunExecuteCommand:
 
         workenv_dir = tmp_path / "workenv"
         metadata = {"package": {"name": "testpkg", "version": "1.0.0"}}
+        env = {"PATH": "/bin"}  # Test environment
 
         cmd = {"command": "false"}
 
         mock_run.side_effect = Exception("Command failed")
 
         with pytest.raises(RuntimeError, match="Setup command failed"):
-            manager._run_execute_command(cmd, workenv_dir, metadata)
+            manager._run_execute_command(cmd, workenv_dir, metadata, env)
 
     @patch("flavor.psp.format_2025.workenv.run")
     def test_execute_command_with_substitutions(self, mock_run: Mock, tmp_path: Path) -> None:
@@ -191,10 +194,11 @@ class TestRunExecuteCommand:
 
         workenv_dir = tmp_path / "workenv"
         metadata = {"package": {"name": "testpkg", "version": "1.0.0"}}
+        env = {"PATH": "/bin"}  # Test environment
 
         cmd = {"command": "echo {workenv} {version}"}
 
-        manager._run_execute_command(cmd, workenv_dir, metadata)
+        manager._run_execute_command(cmd, workenv_dir, metadata, env)
 
         mock_run.assert_called_once()
         assert mock_run.call_args[0][0][1] == str(workenv_dir)
@@ -218,10 +222,11 @@ class TestRunEnumerateExecuteCommand:
         file2 = workenv_dir / "test2.sh"
         file1.write_text("#!/bin/bash")
         file2.write_text("#!/bin/bash")
+        env = {"PATH": "/bin"}  # Test environment
 
         cmd = {"pattern": "*.sh", "command": "chmod +x {file}"}
 
-        manager._run_enumerate_execute_command(cmd, workenv_dir)
+        manager._run_enumerate_execute_command(cmd, workenv_dir, env)
 
         # Should execute for both files
         assert mock_run.call_count == 2
@@ -234,10 +239,11 @@ class TestRunEnumerateExecuteCommand:
 
         workenv_dir = tmp_path / "workenv"
         workenv_dir.mkdir()
+        env = {"PATH": "/bin"}  # Test environment
 
         cmd = {"pattern": "*.nonexistent", "command": "echo {file}"}
 
-        manager._run_enumerate_execute_command(cmd, workenv_dir)
+        manager._run_enumerate_execute_command(cmd, workenv_dir, env)
 
         # Should not execute any commands
         mock_run.assert_not_called()
@@ -253,13 +259,14 @@ class TestRunEnumerateExecuteCommand:
 
         file1 = workenv_dir / "test.sh"
         file1.write_text("#!/bin/bash")
+        env = {"PATH": "/bin"}  # Test environment
 
         cmd = {"pattern": "*.sh", "command": "false"}
 
         mock_run.side_effect = Exception("Command failed")
 
         # Should continue despite error (doesn't raise)
-        manager._run_enumerate_execute_command(cmd, workenv_dir)
+        manager._run_enumerate_execute_command(cmd, workenv_dir, env)
 
         mock_run.assert_called_once()
 
