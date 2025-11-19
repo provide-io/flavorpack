@@ -1,0 +1,141 @@
+🦀🐹 📦 Building with Rs Builder + Go Launcher
+🦀🐹 ────────────────────────────────────────────────────────────────────────────────
+🦀🐹 📝 Logging to: logs/pretaster-b_rs-l_go.20251030_153452.log
+{
+  "name": "pretaster-combination",
+  "version": "1.0.0",
+  "description": "Simple test for builder/launcher combinations",
+  "command": "/usr/bin/python3 {workenv}/scripts/combo_test.py",
+  "environment": {},
+  "package": {
+    "name": "pretaster-combination",
+    "version": "1.0.0",
+    "description": "Simple test for builder/launcher combinations"
+  },
+  "format": "PSPF/2025",
+  "slots": [
+    {
+      "slot": 0,
+      "purpose": "payload",
+      "lifecycle": "cached",
+      "operations": "raw",
+      "id": "combo-test-py",
+      "source": "scripts/combo_test.py",
+      "target": "scripts/combo_test.py",
+      "permissions": "0755"
+    }
+  ],
+  "execution": {
+    "command": "/usr/bin/python3 {workenv}/scripts/combo_test.py",
+    "args": [],
+    "env": {},
+    "primary_slot": 0
+  }
+}🦀 [2025-10-30T15:34:53Z INFO flavor::psp::format_2025::builder] 🦀🦀🦀 Hello from Flavor's Rust Builder 🦀🦀🦀
+🦀 [2025-10-30T15:34:53Z INFO flavor::psp::format_2025::builder] PSPF Rust Builder starting...
+🦀 [2025-10-30T15:34:53Z INFO flavor::psp::format_2025::builder] 🔨 Building PSPF/2025 package from: "configs/test-combination.json"
+🦀 [2025-10-30T15:34:53Z TRACE flavor::psp::format_2025::builder] 🔍 Build options: BuildOptions { launcher_bin: Some("/REDACTED_ABS_PATH"), skip_verification: false, private_key_path: None, public_key_path: None, key_seed: Some("test123"), workenv_base: None }
+🦀 [2025-10-30T15:34:53Z TRACE flavor::psp::format_2025::builder] ✅ Manifest parsed in 18.834µs
+🦀 [2025-10-30T15:34:53Z TRACE flavor::psp::format_2025::builder] 📄 Created output file: "dist/pretaster-rs-go.psp"
+🦀 [2025-10-30T15:34:53Z INFO flavor::psp::format_2025::builder] 🚀 Loading launcher: /REDACTED_ABS_PATH
+🦀 [2025-10-30T15:34:53Z INFO flavor::psp::format_2025::builder] 🔍 Launcher version: flavor-go-launcher 0.3.0
+Built: 2025-10-30T22:34:52Z
+🦀 [2025-10-30T15:34:53Z DEBUG flavor::psp::format_2025::builder] 🚀 Loaded launcher: 3580354 bytes in 5.836541ms
+🦀 [2025-10-30T15:34:53Z TRACE flavor::psp::format_2025::builder] ✍️ Wrote launcher in 272.834µs
+🦀 [2025-10-30T15:34:53Z INFO flavor::psp::format_2025::keys] 🔑 Using seed-based key generation
+🦀 [2025-10-30T15:34:53Z INFO flavor::psp::format_2025::keys] 🔑 Using seed-based key generation: seed_hash=6db8da2e476f5655
+🦀 [2025-10-30T15:34:53Z TRACE flavor::psp::format_2025::builder] 📦 Creating PSPF/2025 index structure
+🦀 [2025-10-30T15:34:53Z DEBUG flavor::psp::format_2025::builder] 📍 Data section starts at 0x36c1c2 (after launcher 0x36a1c2 + index 512)
+🦀 [2025-10-30T15:34:53Z DEBUG flavor::psp::format_2025::builder::slot_processor] 🎰 Processing 1 slots
+🦀 [2025-10-30T15:34:53Z TRACE flavor::psp::format_2025::builder::slot_processor] 📖 Processing slot 0: scripts/combo_test.py
+🦀 [2025-10-30T15:34:53Z INFO flavor::psp::format_2025::builder::slot_processor] 📍 Slot path has no {workenv}: scripts/combo_test.py
+🦀 [2025-10-30T15:34:53Z INFO flavor::psp::format_2025::builder::slot_processor] Attempting to open slot file at: "scripts/combo_test.py"
+🦀 [2025-10-30T15:34:53Z TRACE flavor::psp::format_2025::builder::slot_processor] 📊 Slot 0 size: 4484 bytes
+🦀 [2025-10-30T15:34:53Z TRACE flavor::psp::format_2025::builder::slot_processor] ☑️ Checksums calculated in 337.167µs
+🦀 [2025-10-30T15:34:53Z INFO flavor::psp::format_2025::builder::slot_processor] Slot 0: SHA256 checksum: sha256:090d0b40f976e3061c161285f8b2d374b67142142efed776935618721317e853
+🦀 [2025-10-30T15:34:53Z DEBUG flavor::psp::format_2025::builder::slot_processor] Slot 0: SHA256 u64 (first 8 bytes): 06e376f9400b0d09
+🦀 [2025-10-30T15:34:53Z TRACE flavor::psp::format_2025::operations] 📦 Packing operations: count=0 operations=[]
+🦀 [2025-10-30T15:34:53Z DEBUG flavor::psp::format_2025::operations] ✅ Operations packed: result=0
+🦀 [2025-10-30T15:34:53Z DEBUG flavor::psp::format_2025::builder::slot_processor] 📍 Slot 0: combo-test-py size 4484 bytes, checksum 06e376f9400b0d09
+🦀 [2025-10-30T15:34:53Z DEBUG flavor::psp::format_2025::builder::slot_processor] ✅ Processed 1 slots in 430µs
+🦀 [2025-10-30T15:34:53Z TRACE flavor::psp::format_2025::builder::metadata] 📝 Creating and signing metadata
+🦀 [2025-10-30T15:34:53Z DEBUG flavor::psp::format_2025::builder::finalization] 📝 Writing metadata at position 0x36c1c2
+🦀 [2025-10-30T15:34:53Z DEBUG flavor::psp::format_2025::builder::finalization] 📝 Wrote metadata: start=0x36c1c2, size=693, end=0x36c477
+🦀 [2025-10-30T15:34:53Z DEBUG flavor::psp::format_2025::builder::finalization] 📍 Current position after metadata: 0x36c477
+🦀 [2025-10-30T15:34:53Z DEBUG flavor::psp::format_2025::builder::finalization] 📍 Aligned descriptor table offset: 0x36c478 (aligned from 0x36c477)
+🦀 [2025-10-30T15:34:53Z INFO flavor::psp::format_2025::builder::finalization] 🔍 Setting descriptor_offset to 0x36c478 for 1 descriptors
+🦀 [2025-10-30T15:34:53Z DEBUG flavor::psp::format_2025::builder::finalization] 📊 Reserved 64 bytes for 1 descriptors at offset 0x36c478
+🦀 [2025-10-30T15:34:53Z TRACE flavor::psp::format_2025::builder::finalization] 📦 Streaming slot data to output
+🦀 [2025-10-30T15:34:53Z DEBUG flavor::psp::format_2025::builder::finalization] 📍 Wrote slot 0: offset=0x36c4b8, size=4484 bytes
+🦀 [2025-10-30T15:34:53Z TRACE flavor::psp::format_2025::slots] 🦀 Packing checksum: value=06e376f9400b0d09, bytes=[09, 0d, 0b, 40, f9, 76, e3, 06]
+🦀 [2025-10-30T15:34:53Z TRACE flavor::psp::format_2025::builder::finalization] ✍️ Wrote 64-byte descriptor for slot 0
+🦀 [2025-10-30T15:34:53Z DEBUG flavor::psp::format_2025::builder::finalization] 📋 Wrote 1 descriptors at offset 0x36c478
+🦀 [2025-10-30T15:34:53Z TRACE flavor::psp::format_2025::builder::finalization] 🎬 Finalizing package with MagicTrailer
+🦀 [2025-10-30T15:34:53Z INFO flavor::psp::format_2025::builder::finalization] ✅ Successfully built PSPF bundle: "dist/pretaster-rs-go.psp"
+🦀 [2025-10-30T15:34:53Z INFO flavor::psp::format_2025::builder::finalization]   Package: pretaster-combination v1.0.0
+🦀 [2025-10-30T15:34:53Z INFO flavor::psp::format_2025::builder::finalization]   Launcher: /REDACTED_ABS_PATH
+🦀 [2025-10-30T15:34:53Z INFO flavor::psp::format_2025::builder::finalization]   Slots: 1
+🦀 [2025-10-30T15:34:53Z INFO flavor::psp::format_2025::builder::finalization]   Size: 3601988 bytes
+🦀🐹   ✅ Build successful: dist/pretaster-rs-go.psp
+🦀🐹
+🦀🐹   Testing commands:
+🦀🐹
+🦀🐹   1️⃣ Testing 'info' command:
+🦀🐹   ─────────────────────────
+🦀🐹     [1/1] Extracting combo-test-py...
+🦀🐹     2025-10-30T15:34:53.203-0700 [TRACE] pspf2025.slots: 📂 Unpacking slot descriptor
+🦀🐹     2025-10-30T15:34:53.203-0700 [DEBUG] pspf2025.slots: ✅ Unpacked slot descriptor: id=0 operations=0x0000000000000000
+🦀🐹     2025-10-30T15:34:53.203-0700 [TRACE] pspf2025.operations: 📂 Unpacking operations: packed=0
+🦀🐹     2025-10-30T15:34:53.203-0700 [DEBUG] pspf2025.operations: ✅ Operations unpacked: count=0 operations=[]
+🦀🐹       Package: pretaster-combination
+🦀🐹       Version: 1.0.0
+🦀🐹       Python: /Applications/Xcode.app/Contents/Developer/usr/bin/python3
+🦀🐹       Workenv: /REDACTED_ABS_PATH
+🦀🐹   ✅ info test passed
+🦀🐹
+🦀🐹   2️⃣ Testing 'env' command:
+🦀🐹   ─────────────────────────
+🦀🐹       CLAUDECODE=1
+🦀🐹       CLAUDE_CODE_ENTRYPOINT=cli
+🦀🐹       COMMAND_MODE=unix2003
+🦀🐹       COREPACK_ENABLE_AUTO_PIN=0
+🦀🐹       CPATH=/usr/local/include
+🦀🐹       DISPLAY=/private/tmp/com.apple.launchd.KDFYLKZyTx/org.xqua
+🦀🐹       FLAVOR_CACHE=/REDACTED_ABS_PATH
+🦀🐹       FLAVOR_COMMAND_NAME=pretaster-rs-go.psp
+🦀🐹       FLAVOR_LOG_LEVEL=error
+🦀🐹       FLAVOR_ORIGINAL_COMMAND=dist/pretaster-rs-go.psp
+🦀🐹   ✅ env test passed
+🦀🐹
+🦀🐹   3️⃣ Testing 'argv' with arguments:
+🦀🐹   ─────────────────────────
+🦀🐹     📝 Arguments received:
+🦀🐹       [0]: arg1
+🦀🐹       [1]: arg2
+🦀🐹       [2]: 'arg
+🦀🐹       [3]: with
+🦀🐹       [4]: spaces'
+🦀🐹   ✅ argv test passed
+🦀🐹
+🦀🐹   4️⃣ Testing 'echo' command:
+🦀🐹   ─────────────────────────
+🦀🐹     Hello from Rs builder and Go launcher!
+🦀🐹   ✅ echo test passed
+🦀🐹
+🦀🐹   5️⃣ Testing 'file' command:
+🦀🐹   ─────────────────────────
+🦀🐹   ✅ file test passed
+🦀🐹
+🦀🐹   6️⃣ Testing 'exit' with code 0:
+🦀🐹   ─────────────────────────
+🦀🐹     🚪 Exiting with code 0
+🦀🐹   ✅ exit test passed
+🦀🐹
+🦀🐹   7️⃣ Testing 'exit' command with code 42:
+🦀🐹   ─────────────────────────────────────
+🦀🐹     🚪 Exiting with code 42
+🦀🐹     [0;32m✅ Got expected exit code: 42[0m
+🦀🐹   ✅ exit 42 test passed
+🦀🐹
+🦀🐹 ✨ Completed testing Rs + Go combination
+🦀🐹 📄 Full log saved to: logs/pretaster-b_rs-l_go.20251030_153452.log

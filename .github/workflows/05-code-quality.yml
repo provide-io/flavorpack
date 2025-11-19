@@ -1,0 +1,660 @@
+name: 05 🎨 Code Quality
+
+on:
+  workflow_dispatch:
+    inputs:
+      verbose:
+        description: 'Enable verbose output'
+        type: boolean
+        required: false
+        default: false
+      skip_cache:
+        description: 'Skip cache restoration'
+        type: boolean
+        required: false
+        default: false
+  
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - '**.py'
+      - '**.go'
+      - '**.rs'
+      - 'pyproject.toml'
+      - 'go.mod'
+      - 'Cargo.toml'
+      - '.github/workflows/05-code-quality.yml'
+  
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+
+concurrency:
+  group: quality-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Python Code Quality
+  python-quality:
+    name: 🐍 Python Quality
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for better analysis
+      
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      - name: 📦 Install Quality Tools
+        run: |
+          python -m venv quality-env
+          source quality-env/bin/activate
+          pip install --upgrade pip
+          pip install \
+            ruff \
+            mypy \
+            bandit[toml] \
+            pylint \
+            black \
+            isort \
+            flake8 \
+            flake8-docstrings \
+            flake8-bugbear \
+            flake8-comprehensions \
+            flake8-simplify \
+            pydocstyle \
+            pycodestyle \
+            mccabe \
+            radon \
+            xenon \
+            vulture \
+            safety \
+            pip-audit
+          
+          # Install project dependencies for better type checking
+          pip install -e ".[dev,test]"
+      
+      - name: 🎨 Code Formatting Check
+        id: formatting
+        continue-on-error: true
+        run: |
+          source quality-env/bin/activate
+          echo "## 🎨 Code Formatting" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Black formatting
+          echo "### Black Formatting" >> $GITHUB_STEP_SUMMARY
+          if black --check --diff src/ src/ tests/ 2>&1 | tee black.log; then
+            echo "✅ Black formatting passed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Black formatting issues found" >> $GITHUB_STEP_SUMMARY
+            echo '```diff' >> $GITHUB_STEP_SUMMARY
+            cat black.log >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # isort import sorting
+          echo "### Import Sorting" >> $GITHUB_STEP_SUMMARY
+          if isort --check-only --diff src/ src/ tests/ 2>&1 | tee isort.log; then
+            echo "✅ Import sorting passed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Import sorting issues found" >> $GITHUB_STEP_SUMMARY
+            echo '```diff' >> $GITHUB_STEP_SUMMARY
+            cat isort.log >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: 🔍 Linting Analysis
+        id: linting
+        continue-on-error: true
+        run: |
+          source quality-env/bin/activate
+          echo "## 🔍 Linting Analysis" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Ruff - Fast Python linter
+          echo "### Ruff Analysis" >> $GITHUB_STEP_SUMMARY
+          ruff check src/ src/ tests/ --statistics --output-format=json > ruff.json || true
+          ruff check src/ src/ tests/ --statistics 2>&1 | tee ruff.log || true
+          
+          if [ -s ruff.log ]; then
+            echo "⚠️ Ruff found issues:" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            cat ruff.log >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ Ruff analysis passed" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # Pylint - Comprehensive linter
+          echo "### Pylint Analysis" >> $GITHUB_STEP_SUMMARY
+          pylint src/ --output-format=json > pylint.json 2>/dev/null || true
+          pylint src/ --score=y 2>&1 | tail -20 | tee pylint.log || true
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat pylint.log >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          
+          # Flake8 with plugins
+          echo "### Flake8 Analysis" >> $GITHUB_STEP_SUMMARY
+          flake8 src/ src/ tests/ \
+            --count \
+            --statistics \
+            --max-line-length=100 \
+            --max-complexity=10 \
+            --format='%(path)s:%(row)d:%(col)d: %(code)s %(text)s' \
+            2>&1 | tee flake8.log || true
+          
+          if [ -s flake8.log ]; then
+            ISSUE_COUNT=$(grep -c ":" flake8.log || echo "0")
+            echo "⚠️ Flake8 found $ISSUE_COUNT issues" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            head -50 flake8.log >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ Flake8 analysis passed" >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: 🔒 Type Checking
+        id: type-checking
+        continue-on-error: true
+        run: |
+          source quality-env/bin/activate
+          echo "## 🔒 Type Checking" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # MyPy type checking
+          echo "### MyPy Type Analysis" >> $GITHUB_STEP_SUMMARY
+          mypy src/ \
+            --ignore-missing-imports \
+            --no-error-summary \
+            --show-error-codes \
+            --show-column-numbers \
+            --pretty \
+            --html-report mypy-report \
+            --txt-report mypy-txt \
+            2>&1 | tee mypy.log || true
+          
+          if grep -q "error:" mypy.log; then
+            ERROR_COUNT=$(grep -c "error:" mypy.log)
+            echo "❌ MyPy found $ERROR_COUNT type errors" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            grep "error:" mypy.log | head -30 >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ MyPy type checking passed" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # Generate type coverage report
+          echo "### Type Coverage" >> $GITHUB_STEP_SUMMARY
+          if [ -f mypy-txt/index.txt ]; then
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            tail -10 mypy-txt/index.txt >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: 📊 Complexity Analysis
+        id: complexity
+        continue-on-error: true
+        run: |
+          source quality-env/bin/activate
+          echo "## 📊 Code Complexity" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Radon - Cyclomatic Complexity
+          echo "### Cyclomatic Complexity (Radon)" >> $GITHUB_STEP_SUMMARY
+          radon cc src/ -s -j > radon-cc.json || true
+          radon cc src/ -s --total-average 2>&1 | tee radon.log || true
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          tail -20 radon.log >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          
+          # Radon - Maintainability Index
+          echo "### Maintainability Index" >> $GITHUB_STEP_SUMMARY
+          radon mi src/ -s 2>&1 | tee radon-mi.log || true
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          grep -E "^[A-F]" radon-mi.log | head -20 >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          
+          # Xenon - Complexity monitoring
+          echo "### Complexity Violations (Xenon)" >> $GITHUB_STEP_SUMMARY
+          if xenon src/ --max-absolute B --max-modules B --max-average A 2>&1 | tee xenon.log; then
+            echo "✅ Complexity within acceptable limits" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ High complexity detected:" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            cat xenon.log >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # McCabe complexity
+          echo "### McCabe Complexity" >> $GITHUB_STEP_SUMMARY
+          python -m mccabe --min 10 src/**/*.py 2>&1 | tee mccabe.log || true
+          if [ -s mccabe.log ]; then
+            echo "⚠️ Functions with complexity > 10:" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            cat mccabe.log >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ All functions have acceptable complexity" >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: 📝 Documentation Quality
+        id: documentation
+        continue-on-error: true
+        run: |
+          source quality-env/bin/activate
+          echo "## 📝 Documentation Quality" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Pydocstyle - Docstring conventions
+          echo "### Docstring Conventions" >> $GITHUB_STEP_SUMMARY
+          pydocstyle src/ --count 2>&1 | tee pydocstyle.log || true
+          
+          if grep -q "violations" pydocstyle.log; then
+            VIOLATIONS=$(grep "violations" pydocstyle.log)
+            echo "⚠️ $VIOLATIONS" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            head -30 pydocstyle.log >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ Documentation conventions followed" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # Check for missing docstrings
+          echo "### Missing Docstrings" >> $GITHUB_STEP_SUMMARY
+          python -c "
+          import ast
+          import os
+          from pathlib import Path
+          
+          missing = []
+          for py_file in Path('src').rglob('*.py'):
+              with open(py_file) as f:
+                  try:
+                      tree = ast.parse(f.read())
+                      for node in ast.walk(tree):
+                          if isinstance(node, (ast.FunctionDef, ast.ClassDef)):
+                              if not ast.get_docstring(node):
+                                  missing.append(f'{py_file}:{node.lineno} - {node.name}')
+                  except: pass
+          
+          if missing:
+              print(f'Found {len(missing)} functions/classes without docstrings')
+              for m in missing[:20]:
+                  print(f'  - {m}')
+          else:
+              print('All functions and classes have docstrings')
+          " | tee docstring-check.log
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat docstring-check.log >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+      
+      - name: 🧹 Dead Code Detection
+        id: dead-code
+        continue-on-error: true
+        run: |
+          source quality-env/bin/activate
+          echo "## 🧹 Dead Code Detection" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Vulture - Find dead code
+          echo "### Unused Code (Vulture)" >> $GITHUB_STEP_SUMMARY
+          vulture src/ src/ --min-confidence 80 2>&1 | tee vulture.log || true
+          
+          DEAD_CODE_COUNT=$(wc -l < vulture.log)
+          if [ "$DEAD_CODE_COUNT" -gt 0 ]; then
+            echo "⚠️ Found $DEAD_CODE_COUNT potential dead code items" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            head -50 vulture.log >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ No dead code detected" >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: 📈 Generate Quality Metrics
+        if: always()
+        run: |
+          source quality-env/bin/activate
+          echo "## 📈 Quality Metrics Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Count total issues
+          TOTAL_ISSUES=0
+          
+          # Formatting issues - ensure single line values
+          BLACK_ISSUES=$(grep -c "would reformat" black.log 2>/dev/null || echo 0)
+          BLACK_ISSUES=${BLACK_ISSUES//[^0-9]/}
+          [ -z "$BLACK_ISSUES" ] && BLACK_ISSUES=0
+          
+          ISORT_ISSUES=$(grep -c "ERROR" isort.log 2>/dev/null || echo 0)
+          ISORT_ISSUES=${ISORT_ISSUES//[^0-9]/}
+          [ -z "$ISORT_ISSUES" ] && ISORT_ISSUES=0
+          
+          # Linting issues - ensure single line values
+          RUFF_ISSUES=$(grep -c ":" ruff.log 2>/dev/null || echo 0)
+          RUFF_ISSUES=${RUFF_ISSUES//[^0-9]/}
+          [ -z "$RUFF_ISSUES" ] && RUFF_ISSUES=0
+          
+          FLAKE8_ISSUES=$(grep -c ":" flake8.log 2>/dev/null || echo 0)
+          FLAKE8_ISSUES=${FLAKE8_ISSUES//[^0-9]/}
+          [ -z "$FLAKE8_ISSUES" ] && FLAKE8_ISSUES=0
+          
+          # Type issues - ensure single line values
+          MYPY_ISSUES=$(grep -c "error:" mypy.log 2>/dev/null || echo 0)
+          MYPY_ISSUES=${MYPY_ISSUES//[^0-9]/}
+          [ -z "$MYPY_ISSUES" ] && MYPY_ISSUES=0
+          
+          # Documentation issues - ensure single line values
+          DOC_ISSUES=$(grep -c ":" pydocstyle.log 2>/dev/null || echo 0)
+          DOC_ISSUES=${DOC_ISSUES//[^0-9]/}
+          [ -z "$DOC_ISSUES" ] && DOC_ISSUES=0
+          
+          # Dead code - ensure single line values
+          DEAD_CODE=$(wc -l < vulture.log 2>/dev/null || echo 0)
+          DEAD_CODE=${DEAD_CODE//[^0-9]/}
+          [ -z "$DEAD_CODE" ] && DEAD_CODE=0
+          
+          TOTAL_ISSUES=$((BLACK_ISSUES + ISORT_ISSUES + RUFF_ISSUES + FLAKE8_ISSUES + MYPY_ISSUES + DOC_ISSUES + DEAD_CODE))
+          
+          echo "| Category | Issues | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|--------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Formatting (Black) | $BLACK_ISSUES | $([ $BLACK_ISSUES -eq 0 ] && echo '✅' || echo '⚠️') |" >> $GITHUB_STEP_SUMMARY
+          echo "| Import Sorting | $ISORT_ISSUES | $([ $ISORT_ISSUES -eq 0 ] && echo '✅' || echo '⚠️') |" >> $GITHUB_STEP_SUMMARY
+          echo "| Ruff Linting | $RUFF_ISSUES | $([ $RUFF_ISSUES -eq 0 ] && echo '✅' || echo '⚠️') |" >> $GITHUB_STEP_SUMMARY
+          echo "| Flake8 Linting | $FLAKE8_ISSUES | $([ $FLAKE8_ISSUES -lt 10 ] && echo '✅' || echo '⚠️') |" >> $GITHUB_STEP_SUMMARY
+          echo "| Type Checking | $MYPY_ISSUES | $([ $MYPY_ISSUES -eq 0 ] && echo '✅' || echo '⚠️') |" >> $GITHUB_STEP_SUMMARY
+          echo "| Documentation | $DOC_ISSUES | $([ $DOC_ISSUES -lt 50 ] && echo '✅' || echo '⚠️') |" >> $GITHUB_STEP_SUMMARY
+          echo "| Dead Code | $DEAD_CODE | $([ $DEAD_CODE -lt 20 ] && echo '✅' || echo '⚠️') |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Total** | **$TOTAL_ISSUES** | $([ $TOTAL_ISSUES -lt 100 ] && echo '✅' || echo '❌') |" >> $GITHUB_STEP_SUMMARY
+          
+          # Create JSON report
+          cat > quality-report.json << EOF
+          {
+            "timestamp": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
+            "repository": "${{ github.repository }}",
+            "commit": "${{ github.sha }}",
+            "metrics": {
+              "formatting": {
+                "black": $BLACK_ISSUES,
+                "isort": $ISORT_ISSUES
+              },
+              "linting": {
+                "ruff": $RUFF_ISSUES,
+                "flake8": $FLAKE8_ISSUES
+              },
+              "type_checking": {
+                "mypy": $MYPY_ISSUES
+              },
+              "documentation": {
+                "pydocstyle": $DOC_ISSUES
+              },
+              "dead_code": {
+                "vulture": $DEAD_CODE
+              },
+              "total_issues": $TOTAL_ISSUES
+            }
+          }
+          EOF
+      
+      - name: 📤 Upload Quality Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-quality-reports
+          path: |
+            *.log
+            *.json
+            mypy-report/
+            mypy-txt/
+            quality-report.json
+
+  # Go Code Quality
+  go-quality:
+    name: 🐹 Go Quality
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 🐹 Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+          cache: true
+          cache-dependency-path: |
+            src/flavor-go/go.sum
+      
+      - name: 📦 Install Go Quality Tools
+        run: |
+          go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+          go install golang.org/x/tools/cmd/goimports@latest
+          go install honnef.co/go/tools/cmd/staticcheck@latest
+          go install github.com/securego/gosec/v2/cmd/gosec@latest
+          go install github.com/go-critic/go-critic/cmd/gocritic@latest
+          go install github.com/jgautheron/goconst/cmd/goconst@latest
+          go install github.com/kisielk/errcheck@latest
+          go install github.com/mdempsky/unconvert@latest
+          go install github.com/gordonklaus/ineffassign@latest
+          go install github.com/fzipp/gocyclo/cmd/gocyclo@latest
+          go install github.com/client9/misspell/cmd/misspell@latest
+      
+      - name: 🔍 Go Linting
+        continue-on-error: true
+        run: |
+          cd src/flavor-go
+          echo "## 🐹 Go Code Quality" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # golangci-lint
+          echo "### GolangCI-Lint Analysis" >> $GITHUB_STEP_SUMMARY
+          if golangci-lint run --out-format=json > golangci.json 2>&1; then
+            echo "✅ GolangCI-Lint passed" >> $GITHUB_STEP_SUMMARY
+          else
+            golangci-lint run 2>&1 | tee golangci.log || true
+            echo "⚠️ GolangCI-Lint found issues:" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            head -50 golangci.log >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # Static check
+          echo "### Static Analysis" >> $GITHUB_STEP_SUMMARY
+          if staticcheck ./... 2>&1 | tee staticcheck.log; then
+            echo "✅ Staticcheck passed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ Staticcheck found issues:" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            cat staticcheck.log >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # Go vet
+          echo "### Go Vet" >> $GITHUB_STEP_SUMMARY
+          if go vet ./... 2>&1 | tee govet.log; then
+            echo "✅ Go vet passed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ Go vet found issues:" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            cat govet.log >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # Cyclomatic complexity
+          echo "### Cyclomatic Complexity" >> $GITHUB_STEP_SUMMARY
+          gocyclo -over 10 . 2>&1 | tee gocyclo.log || true
+          if [ -s gocyclo.log ]; then
+            echo "⚠️ High complexity functions:" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            cat gocyclo.log >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ All functions have acceptable complexity" >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: 📤 Upload Go Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: go-quality-reports
+          path: |
+            src/flavor-go/*.log
+            src/flavor-go/*.json
+
+  # Rust Code Quality
+  rust-quality:
+    name: 🦀 Rust Quality
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 🔧 Setup Rust Toolchain with Cache
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+          components: rustfmt, clippy
+          cache: true
+
+      - name: 📦 Cache Rust Quality Tools
+        uses: actions/cache@v4
+        id: cache-rust-tools
+        with:
+          path: |
+            ~/.cargo/bin/cargo-audit
+            ~/.cargo/bin/cargo-outdated
+            ~/.cargo/bin/cargo-machete
+            ~/.cargo/bin/cargo-deny
+            ~/.cargo/bin/cargo-geiger
+          key: rust-tools-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}-v1
+          restore-keys: |
+            rust-tools-${{ runner.os }}-v1
+
+      - name: 📦 Install Rust Quality Tools
+        if: steps.cache-rust-tools.outputs.cache-hit != 'true'
+        run: |
+          # Use cargo-binstall for faster installation when possible
+          cargo install cargo-binstall --quiet || true
+
+          # Try binstall first, fallback to cargo install
+          cargo binstall --no-confirm cargo-audit || cargo install cargo-audit --quiet
+          cargo binstall --no-confirm cargo-outdated || cargo install cargo-outdated --quiet
+          cargo binstall --no-confirm cargo-machete || cargo install cargo-machete --quiet
+          cargo binstall --no-confirm cargo-deny || cargo install cargo-deny --quiet
+          cargo binstall --no-confirm cargo-geiger || cargo install cargo-geiger --quiet
+      
+      - name: 🔍 Rust Linting
+        continue-on-error: true
+        run: |
+          cd src/flavor-rs
+          echo "## 🦀 Rust Code Quality" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Clippy
+          echo "### Clippy Analysis" >> $GITHUB_STEP_SUMMARY
+          if cargo clippy -- -D warnings 2>&1 | tee clippy.log; then
+            echo "✅ Clippy passed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ Clippy found issues:" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            cat clippy.log >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # Rustfmt
+          echo "### Format Check" >> $GITHUB_STEP_SUMMARY
+          if cargo fmt -- --check 2>&1 | tee rustfmt.log; then
+            echo "✅ Formatting correct" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ Formatting issues found" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            cat rustfmt.log >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # Unused dependencies
+          echo "### Unused Dependencies" >> $GITHUB_STEP_SUMMARY
+          if cargo machete 2>&1 | tee machete.log; then
+            echo "✅ No unused dependencies" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ Unused dependencies found:" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            cat machete.log >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: 📤 Upload Rust Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rust-quality-reports
+          path: |
+            src/flavor-rs/*.log
+
+  # Aggregate Quality Report
+  quality-report:
+    name: 📊 Quality Report
+    needs: [python-quality, go-quality, rust-quality]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Download all reports
+        uses: actions/download-artifact@v4
+        with:
+          path: quality-reports
+      
+      - name: 📊 Generate Final Report
+        run: |
+          echo "# 🎨 Code Quality Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Run:** ${{ github.run_id }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Time:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          echo "## Language Reports" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Check each language status
+          echo "| Language | Status | Details |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|--------|---------|" >> $GITHUB_STEP_SUMMARY
+          
+          if [ -d "quality-reports/python-quality-reports" ]; then
+            if [ -f "quality-reports/python-quality-reports/quality-report.json" ]; then
+              TOTAL=$(jq -r '.metrics.total_issues' quality-reports/python-quality-reports/quality-report.json)
+              echo "| 🐍 Python | $([ $TOTAL -lt 100 ] && echo '✅' || echo '⚠️') | $TOTAL issues |" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "| 🐍 Python | ❌ | Report generation failed |" >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "| 🐍 Python | ⏭️ | Skipped |" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ -d "quality-reports/go-quality-reports" ]; then
+            echo "| 🐹 Go | ✅ | Analysis complete |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| 🐹 Go | ⏭️ | Skipped |" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ -d "quality-reports/rust-quality-reports" ]; then
+            echo "| 🦀 Rust | ✅ | Analysis complete |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| 🦀 Rust | ⏭️ | Skipped |" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "1. Review the detailed reports in each job" >> $GITHUB_STEP_SUMMARY
+          echo "2. Fix critical issues first (type errors, security issues)" >> $GITHUB_STEP_SUMMARY
+          echo "3. Address formatting and style issues" >> $GITHUB_STEP_SUMMARY
+          echo "4. Consider refactoring high-complexity code" >> $GITHUB_STEP_SUMMARY
+          echo "5. Add missing documentation" >> $GITHUB_STEP_SUMMARY

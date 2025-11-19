@@ -1,0 +1,19 @@
+{
+    "package": {
+        "name": "test-exit-255",
+        "version": "1.0.0"
+    },
+    "execution": {
+        "command": "python3 {workenv}/scripts/exit_test.py",
+        "primary_slot": 0
+    },
+    "slots": [
+        {
+            "id": "exit-test-script",
+            "source": "scripts/exit_test.py",
+            "target": "scripts/exit_test.py",
+            "purpose": "payload",
+            "lifecycle": "cached"
+        }
+    ]
+}

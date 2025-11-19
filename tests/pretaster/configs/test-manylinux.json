@@ -1,0 +1,22 @@
+{
+  "manifest": "pretaster-manifest.json",
+  "package": {
+    "name": "test-manylinux",
+    "version": "1.0.0"
+  },
+  "execution": {
+    "primary_slot": 0,
+    "command": "/usr/bin/python3 {workenv}/scripts/combo_test.py manylinux-test"
+  },
+  "slots": [
+    {
+      "id": "manylinux-test",
+      "source": "scripts/combo_test.py",
+      "target": "scripts/combo_test.py",
+      "operations": "none",
+      "purpose": "executable",
+      "lifecycle": "runtime",
+      "permissions": "0755"
+    }
+  ]
+}
