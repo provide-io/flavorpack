@@ -1,32 +1,50 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
 """Cache management for Flavor packages."""
 
 import contextlib
-import json
 import os
 from pathlib import Path
-import shutil
 import time
+from typing import Any, cast
+
+from provide.foundation.file.directory import ensure_dir, safe_rmtree
+from provide.foundation.file.formats import read_json
+from provide.foundation.utils.environment import get_str
+
+from flavor.console import get_command_logger
+
+log = get_command_logger("cache")
 
 
 def get_cache_dir() -> Path:
-    """Get the cache directory for Flavor packages."""
-    cache_dir = os.environ.get("FLAVOR_CACHE")
+    """Get the cache directory for Flavor packages.
+
+    Uses XDG Base Directory specification:
+    - FLAVOR_CACHE environment variable if set
+    - XDG_CACHE_HOME if set
+    - ~/.cache/flavor/workenv by default
+    """
+    # Check FLAVOR_CACHE override first
+    cache_dir = get_str("FLAVOR_CACHE")
     if cache_dir:
+        log.trace(f"🗂️ Using FLAVOR_CACHE: {cache_dir}")
         return Path(cache_dir)
 
-    # Default cache locations
-    if os.name == "posix":
-        if "darwin" in os.uname().sysname.lower():
-            # macOS
-            base = Path(os.environ.get("TMPDIR", "/var/folders"))
-            return base / "pspf" / "workenv"
-        else:
-            # Linux
-            return Path("/tmp") / "pspf" / "workenv"
-    else:
-        # Windows
-        return Path(os.environ.get("TEMP", "/tmp")) / "pspf" / "workenv"
+    # Use XDG_CACHE_HOME if set (respects XDG Base Directory standard)
+    xdg_cache = get_str("XDG_CACHE_HOME")
+    if xdg_cache:
+        result = Path(xdg_cache) / "flavor" / "workenv"
+        log.trace(f"🗂️ Using XDG_CACHE_HOME: {result}")
+        return result
+
+    # Default to ~/.cache/flavor/workenv
+    default = Path.home() / ".cache" / "flavor" / "workenv"
+    log.trace(f"🗂️ Using default cache: {default}")
+    return default
 
 
 class CacheManager:
@@ -39,51 +57,55 @@ class CacheManager:
             cache_dir: Override cache directory (defaults to system cache)
         """
         self.cache_dir = cache_dir or get_cache_dir()
-        if not self.cache_dir.exists():
-            self.cache_dir.mkdir(parents=True, exist_ok=True)
+        ensure_dir(self.cache_dir)
 
-    def list_cached(self) -> list[dict]:
+    def list_cached(self) -> list[dict[str, str | int | float | None]]:
         """List all cached packages.
 
         Returns:
             List of cached package information
         """
-        cached = []
+        cached: list[dict[str, str | int | float | None]] = []
 
         for entry in self.cache_dir.iterdir():
-            if not entry.is_dir():
+            if not entry.is_dir() or entry.name.startswith("."):
                 continue
 
-            # Skip incomplete extractions
-            if (entry / ".extraction.incomplete").exists():
+            instance_metadata_dir = self.cache_dir / f".{entry.name}.pspf"
+            if not instance_metadata_dir.is_dir():
                 continue
 
-            # Only include completed extractions
-            if not (entry / ".extraction.complete").exists():
+            # Check for the modern completion marker
+            completion_marker = instance_metadata_dir / "instance" / "extract" / "complete"
+            if not completion_marker.exists():
                 continue
 
-            info = {
+            info: dict[str, str | int | float | None] = {
                 "id": entry.name,
                 "path": str(entry),
                 "size": self._get_dir_size(entry),
                 "modified": entry.stat().st_mtime,
+                "metadata_type": "instance",
             }
 
-            # Try to read metadata
-            metadata_file = entry / "metadata.json"
+            # Read metadata from the standard location
+            metadata_file = instance_metadata_dir / "package" / "psp.json"
             if metadata_file.exists():
                 try:
-                    with metadata_file.open() as f:
-                        metadata = json.load(f)
-                        info["name"] = metadata.get("name", "unknown")
-                        info["version"] = metadata.get("version", "unknown")
-                except (json.JSONDecodeError, KeyError):
+                    metadata = read_json(metadata_file)
+                    pkg = metadata.get("package", metadata)
+                    info["name"] = pkg.get("name", "unknown")
+                    info["version"] = pkg.get("version", "unknown")
+                except (OSError, KeyError):
                     info["name"] = "unknown"
                     info["version"] = "unknown"
+            else:
+                info["name"] = "unknown"
+                info["version"] = "unknown"
 
             cached.append(info)
 
-        return sorted(cached, key=lambda x: x["modified"], reverse=True)
+        return sorted(cached, key=lambda x: cast(float, x["modified"]), reverse=True)
 
     def get_cache_size(self) -> int:
         """Get total size of cache in bytes.
@@ -128,34 +150,67 @@ class CacheManager:
             if should_remove:
                 # Remove the directory
                 try:
-                    shutil.rmtree(entry)
+                    safe_rmtree(entry)
                     removed.append(entry.name)
                 except OSError:
                     pass
 
         return removed
 
-    def clean_incomplete(self) -> list[str]:
-        """Clean incomplete extractions.
+    def inspect_workenv(self, workenv_name: str) -> dict[str, Any]:
+        """Inspect a specific workenv.
+
+        Args:
+            workenv_name: Name of the workenv to inspect
 
         Returns:
-            List of removed package IDs
+            Detailed inspection information
         """
-        removed = []
+        workenv_dir = self.cache_dir / workenv_name
+        instance_metadata_dir = self.cache_dir / f".{workenv_name}.pspf"
 
-        for entry in self.cache_dir.iterdir():
-            if not entry.is_dir():
-                continue
+        info = {
+            "name": workenv_name,
+            "content_dir": str(workenv_dir),
+            "exists": workenv_dir.exists(),
+            "metadata_type": None,
+            "metadata_dir": None,
+            "checksum": None,
+            "extraction_complete": False,
+            "package_info": {},
+        }
 
-            # Remove incomplete extractions
-            if (entry / ".extraction.incomplete").exists():
-                try:
-                    shutil.rmtree(entry)
-                    removed.append(entry.name)
-                except OSError:
-                    pass
+        if not workenv_dir.exists() or not instance_metadata_dir.is_dir():
+            return info
 
-        return removed
+        info["metadata_type"] = "instance"
+        info["metadata_dir"] = str(instance_metadata_dir)
+
+        # Read checksum from the standard location
+        checksum_file = instance_metadata_dir / "instance" / "package.checksum"
+        if checksum_file.exists():
+            with contextlib.suppress(IOError):
+                info["checksum"] = checksum_file.read_text().strip()
+
+        # Check for the modern completion marker
+        completion_marker = instance_metadata_dir / "instance" / "extract" / "complete"
+        info["extraction_complete"] = completion_marker.exists()
+
+        # Read package metadata from the standard location
+        metadata_file = instance_metadata_dir / "package" / "psp.json"
+        if metadata_file.exists():
+            try:
+                metadata = read_json(metadata_file)
+                pkg = metadata.get("package", metadata)
+                info["package_info"] = {
+                    "name": pkg.get("name"),
+                    "version": pkg.get("version"),
+                    "builder": metadata.get("build", {}).get("builder"),
+                }
+            except OSError:
+                pass
+
+        return info
 
     def remove(self, package_id: str) -> bool:
         """Remove a specific cached package.
@@ -169,46 +224,11 @@ class CacheManager:
         package_dir = self.cache_dir / package_id
         if package_dir.exists() and package_dir.is_dir():
             try:
-                shutil.rmtree(package_dir)
+                safe_rmtree(package_dir)
                 return True
             except OSError:
                 return False
         return False
-
-    def get_info(self, package_id: str) -> dict | None:
-        """Get information about a cached package.
-
-        Args:
-            package_id: ID of the package
-
-        Returns:
-            Package information or None if not found
-        """
-        package_dir = self.cache_dir / package_id
-        if not package_dir.exists():
-            return None
-
-        info = {
-            "id": package_id,
-            "path": str(package_dir),
-            "size": self._get_dir_size(package_dir),
-            "modified": package_dir.stat().st_mtime,
-            "complete": (package_dir / ".extraction.complete").exists(),
-        }
-
-        # Try to read metadata
-        metadata_file = package_dir / "metadata.json"
-        if metadata_file.exists():
-            try:
-                with metadata_file.open() as f:
-                    metadata = json.load(f)
-                    info["name"] = metadata.get("name", "unknown")
-                    info["version"] = metadata.get("version", "unknown")
-                    info["slots"] = metadata.get("slots", [])
-            except (json.JSONDecodeError, KeyError):
-                pass
-
-        return info
 
     def _get_dir_size(self, path: Path) -> int:
         """Get total size of a directory.
@@ -226,3 +246,6 @@ class CacheManager:
                 with contextlib.suppress(OSError):
                     total += filepath.stat().st_size
         return total
+
+
+# 🌶️📦🔚

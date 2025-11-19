@@ -1,4 +1,20 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
+"""TODO: Add module docstring."""
+
+#!/usr/bin/env python3
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
+"""PSPF Build Validation - Pure functions for validating build specifications.
+
+All validation functions are pure and return lists of error messages.
+Empty list means validation passed."""
+
 """
 PSPF Build Validation - Pure functions for validating build specifications.
 
@@ -6,6 +22,7 @@ All validation functions are pure and return lists of error messages.
 Empty list means validation passed.
 """
 
+from pathlib import Path
 from typing import Any
 
 from flavor.psp.format_2025.slots import SlotMetadata
@@ -30,12 +47,12 @@ def validate_spec(spec: BuildSpec) -> list[str]:
 
     # Validate that we have at least something to package
     if not spec.slots and not spec.metadata.get("allow_empty", False):
-        errors.append("📦 No slots provided and empty packages not explicitly allowed")
+        errors.append("📦 Package must have at least one slot unless allow_empty is set")
 
     return errors
 
 
-def validate_metadata(metadata: dict[str, Any]) -> list[str]:
+def validate_metadata(metadata: dict[str, Any]) -> list[str]:  # noqa: C901
     """
     Validate package metadata.
 
@@ -65,9 +82,8 @@ def validate_metadata(metadata: dict[str, Any]) -> list[str]:
     version = None
     if "version" in metadata:
         version = metadata["version"]
-    elif "package" in metadata and isinstance(metadata["package"], dict):
-        if "version" in metadata["package"]:
-            version = metadata["package"]["version"]
+    elif "package" in metadata and isinstance(metadata["package"], dict) and "version" in metadata["package"]:
+        version = metadata["package"]["version"]
 
     if version and not str(version).strip():
         errors.append("🏷️ Package version cannot be empty if provided")
@@ -81,18 +97,18 @@ def validate_metadata(metadata: dict[str, Any]) -> list[str]:
     return errors
 
 
-def validate_slots(slots: list[SlotMetadata]) -> list[str]:
+def validate_slots(slots: list[SlotMetadata]) -> list[str]:  # noqa: C901
     """
     Validate slot configurations.
 
     Checks for:
     - Unique indices
     - Valid paths
-    - Valid encoding
+    - Valid codec
     - Valid sizes
     - Valid names
     """
-    errors = []
+    errors: list[str] = []
 
     if not slots:
         return errors  # Empty slots is valid
@@ -103,47 +119,34 @@ def validate_slots(slots: list[SlotMetadata]) -> list[str]:
     for _i, slot in enumerate(slots):
         # Check index uniqueness
         if slot.index in seen_indices:
-            errors.append(
-                f"🔢 Duplicate slot index {slot.index} for slot '{slot.name}'"
-            )
+            errors.append(f"🔢 Duplicate slot index {slot.index} for slot '{slot.id}'")
         seen_indices.add(slot.index)
 
         # Check name validity
-        if not slot.name or not slot.name.strip():
+        if not slot.id or not slot.id.strip():
             errors.append(f"📝 Slot at index {slot.index} has empty name")
-        elif slot.name in seen_names:
-            errors.append(f"📝 Duplicate slot name '{slot.name}'")
-        seen_names.add(slot.name)
+        elif slot.id in seen_names:
+            errors.append(f"📝 Duplicate slot name '{slot.id}'")
+        seen_names.add(slot.id)
 
         # Check size validity
         if slot.size < 0:
-            errors.append(f"📏 Slot '{slot.name}' has negative size: {slot.size}")
+            errors.append(f"📏 Slot '{slot.id}' has negative size: {slot.size}")
 
-        # Check encoding validity
-        valid_encodings = [
-            "none",
-            "raw",
-            "gzip",
-            "tar",
-            "tgz",
-            "tar.gz",
-            "zstd",
-            "brotli",
-        ]
-        if slot.encoding not in valid_encodings:
+        # Check operations validity
+        # Operations field is a string like "tar.gz" or "TAR|GZIP"
+        if not isinstance(slot.operations, str):
             errors.append(
-                f"🗜️ Slot '{slot.name}' has invalid encoding '{slot.encoding}'. "
-                f"Valid options: {', '.join(valid_encodings)}"
+                f"🗜️ Slot '{slot.id}' has invalid operations type: expected string, got {type(slot.operations).__name__}"
             )
 
-        # Check path existence if provided
-        if slot.path:
-            if not slot.path.exists():
-                errors.append(f"📁 Slot '{slot.name}' path does not exist: {slot.path}")
-            elif not slot.path.is_file() and not slot.path.is_dir():
-                errors.append(
-                    f"📁 Slot '{slot.name}' path is neither file nor directory: {slot.path}"
-                )
+        # Check source path existence if provided
+        if slot.source:
+            source_path = Path(slot.source)
+            if not source_path.exists():
+                errors.append(f"🔍 Slot {slot.id}: Source path does not exist: {slot.source}")
+            elif not source_path.is_file() and not source_path.is_dir():
+                errors.append(f"🔍 Slot {slot.id}: Source path is not a file or directory: {slot.source}")
 
         # Check purpose validity
         valid_purposes = [
@@ -161,7 +164,7 @@ def validate_slots(slots: list[SlotMetadata]) -> list[str]:
         ]
         if slot.purpose not in valid_purposes:
             errors.append(
-                f"🎯 Slot '{slot.name}' has invalid purpose '{slot.purpose}'. "
+                f"🎯 Slot '{slot.id}' has invalid purpose '{slot.purpose}'. "
                 f"Valid options: {', '.join(valid_purposes)}"
             )
 
@@ -180,22 +183,17 @@ def validate_slots(slots: list[SlotMetadata]) -> list[str]:
             "platform",
             "persistent",
             "volatile",
-            "install",  # Legacy names
-            "permanent",
-            "cached",
             "temporary",  # New names
         ]
         if slot.lifecycle not in valid_lifecycles:
             errors.append(
-                f"♻️ Slot '{slot.name}' has invalid lifecycle '{slot.lifecycle}'. "
+                f"♻️ Slot '{slot.id}' has invalid lifecycle '{slot.lifecycle}'. "
                 f"Valid options: {', '.join(valid_lifecycles)}"
             )
 
         # Check checksum format if provided
-        if slot.checksum:
-            # Checksum should be hex string or similar
-            if not isinstance(slot.checksum, str):
-                errors.append(f"🔐 Slot '{slot.name}' checksum must be a string")
+        if slot.checksum and not isinstance(slot.checksum, str):
+            errors.append(f"🔐 Slot '{slot.id}' checksum must be a string")
 
     return errors
 
@@ -212,19 +210,13 @@ def validate_key_config(spec: BuildSpec) -> list[str]:
     # If explicit keys provided, both must be present
     if key_config.private_key or key_config.public_key:
         if not (key_config.private_key and key_config.public_key):
-            errors.append(
-                "🔑 When providing explicit keys, both private and public keys are required"
-            )
+            errors.append("🔑 When providing explicit keys, both private and public keys are required")
 
         # Check key sizes (Ed25519 keys)
         if key_config.private_key and len(key_config.private_key) != 32:
-            errors.append(
-                f"🔑 Private key must be 32 bytes for Ed25519, got {len(key_config.private_key)}"
-            )
+            errors.append(f"🔑 Private key must be 32 bytes for Ed25519, got {len(key_config.private_key)}")
         if key_config.public_key and len(key_config.public_key) != 32:
-            errors.append(
-                f"🔑 Public key must be 32 bytes for Ed25519, got {len(key_config.public_key)}"
-            )
+            errors.append(f"🔑 Public key must be 32 bytes for Ed25519, got {len(key_config.public_key)}")
 
     # If key path provided, check it exists
     if key_config.key_path:
@@ -247,13 +239,11 @@ def validate_build_options(spec: BuildSpec) -> list[str]:
 
     # Check compression level
     if options.compression_level < 0 or options.compression_level > 9:
-        errors.append(
-            f"🗜️ Compression level must be 0-9, got {options.compression_level}"
-        )
+        errors.append(f"🗜️ Compression level must be 0-9, got {options.compression_level}")
 
     # Check page alignment consistency
     if options.page_aligned and not options.enable_mmap:
-        errors.append("📄 Page alignment requires mmap to be enabled")
+        errors.append("⚠️ Page-aligned option should be used with memory mapping enabled")
 
     return errors
 
@@ -272,3 +262,6 @@ def validate_complete(spec: BuildSpec) -> list[str]:
     errors.extend(validate_build_options(spec))
 
     return errors
+
+
+# 🌶️📦🔚

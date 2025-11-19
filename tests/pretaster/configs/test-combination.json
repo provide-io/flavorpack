@@ -1,0 +1,31 @@
+{
+  "name": "pretaster-combination",
+  "version": "1.0.0",
+  "description": "Simple test for builder/launcher combinations",
+  "command": "/usr/bin/python3 {workenv}/scripts/combo_test.py",
+  "environment": {},
+  "package": {
+    "name": "pretaster-combination",
+    "version": "1.0.0",
+    "description": "Simple test for builder/launcher combinations"
+  },
+  "format": "PSPF/2025",
+  "slots": [
+    {
+      "slot": 0,
+      "purpose": "payload",
+      "lifecycle": "cached",
+      "operations": "raw",
+      "id": "combo-test-py",
+      "source": "scripts/combo_test.py",
+      "target": "scripts/combo_test.py",
+      "permissions": "0755"
+    }
+  ],
+  "execution": {
+    "command": "/usr/bin/python3 {workenv}/scripts/combo_test.py",
+    "args": [],
+    "env": {},
+    "primary_slot": 0
+  }
+}

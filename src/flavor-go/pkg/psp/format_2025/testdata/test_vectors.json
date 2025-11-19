@@ -1,0 +1,95 @@
+[
+  {
+    "name": "raw_data",
+    "description": "Raw data with no operations",
+    "offset": 0,
+    "hex": "0100000000000000491c9e8a8746b75900000000000000006400000000000000640000000000000000000000000000007856341200000000000800000001a400",
+    "fields": {
+      "id": 1,
+      "name_hash": 6464713338073783369,
+      "offset": 0,
+      "size": 100,
+      "original_size": 100,
+      "operations": 0,
+      "operations_hex": "0x0000000000000000",
+      "checksum": 305419896,
+      "purpose": 0,
+      "lifecycle": 0,
+      "permissions": 420
+    },
+    "expected_operations": [],
+    "expected_operations_packed": 0
+  },
+  {
+    "name": "gzip_only",
+    "description": "Single GZIP operation",
+    "offset": 64,
+    "hex": "02000000000000005a3e755a889e349400040000000000000002000000000000e803000000000000100000000000000001efcdab00000000000801020001a400",
+    "fields": {
+      "id": 2,
+      "name_hash": 10679334924872662618,
+      "offset": 1024,
+      "size": 512,
+      "original_size": 1000,
+      "operations": 16,
+      "operations_hex": "0x0000000000000010",
+      "checksum": 2882400001,
+      "purpose": 1,
+      "lifecycle": 2,
+      "permissions": 420
+    },
+    "expected_operations": [
+      16
+    ],
+    "expected_operations_packed": 16
+  },
+  {
+    "name": "tar_gzip",
+    "description": "TAR followed by GZIP (tar.gz)",
+    "offset": 128,
+    "hex": "2a00000000000000d772471210e0028b0020000000000000001000000000000000400000000000000110000000000000efbeadde00000000000800010001a400",
+    "fields": {
+      "id": 42,
+      "name_hash": 10016814880856175319,
+      "offset": 8192,
+      "size": 4096,
+      "original_size": 16384,
+      "operations": 4097,
+      "operations_hex": "0x0000000000001001",
+      "checksum": 3735928559,
+      "purpose": 0,
+      "lifecycle": 1,
+      "permissions": 420
+    },
+    "expected_operations": [
+      1,
+      16
+    ],
+    "expected_operations_packed": 4097
+  },
+  {
+    "name": "complex_chain",
+    "description": "TAR -> ZSTD -> AES256_GCM",
+    "offset": 192,
+    "hex": "e703000000000000a557273c9213ca8f000001000000000000800000000000000000020000000000011b310000000000bebafeca00000000000802000001ed00",
+    "fields": {
+      "id": 999,
+      "name_hash": 10361115411514611621,
+      "offset": 65536,
+      "size": 32768,
+      "original_size": 131072,
+      "operations": 3218177,
+      "operations_hex": "0x0000000000311b01",
+      "checksum": 3405691582,
+      "purpose": 2,
+      "lifecycle": 0,
+      "permissions": 493
+    },
+    "expected_operations": [
+      1,
+      27,
+      49
+    ],
+    "expected_operations_packed": 3218177
+  }
+]

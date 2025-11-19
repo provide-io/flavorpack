@@ -1,22 +1,28 @@
-"""
-PSPF 2025 Bundle Executor
+#
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
+"""PSPF 2025 Bundle Executor
 Handles process execution with environment setup and variable substitution.
 """
 
+from __future__ import annotations
+
 import os
 from pathlib import Path
+import re
 import shlex
 from typing import Any
 
-from pyvider.telemetry import logger
-
-from flavor.utils.subprocess import run_command
+from provide.foundation import logger
+from provide.foundation.process import run
 
 
 class BundleExecutor:
     """Executes PSPF bundles with proper environment and substitution."""
 
-    def __init__(self, metadata: dict, workenv_dir: Path) -> None:
+    def __init__(self, metadata: dict[str, Any], workenv_dir: Path) -> None:
         """Initialize executor with metadata and work environment.
 
         Args:
@@ -44,6 +50,10 @@ class BundleExecutor:
         # Primary slot substitution
         command = self._substitute_primary(base_command)
         logger.debug(f"🔍 after primary substitution: {command}")
+
+        # Slot substitution - {slot:N} references
+        command = self._substitute_slots(command)
+        logger.debug(f"🔍 after slot substitution: {command}")
 
         # Basic substitutions - only {workenv}, {package_name}, and {version} as per spec
         command = command.replace("{workenv}", str(self.workenv_dir))
@@ -74,7 +84,11 @@ class BundleExecutor:
         slots = self.metadata.get("slots", [])
 
         if primary_slot < len(slots):
-            slot_name = slots[primary_slot]["name"]
+            # Use "target" field for actual file path, fallback to "id" or "name"
+            slot_name = slots[primary_slot].get(
+                "target",
+                slots[primary_slot].get("id", slots[primary_slot].get("name", f"slot_{primary_slot}")),
+            )
             # For tarballs, use {workenv} placeholder
             if slot_name.endswith(".tar.gz") or slot_name.endswith(".tgz"):
                 primary_path = "{workenv}"
@@ -87,6 +101,36 @@ class BundleExecutor:
             logger.warning(f"⚠️ Primary slot {primary_slot} not found")
 
         return command
+
+    def _substitute_slots(self, command: str) -> str:
+        """Substitute {slot:N} references in command.
+
+        Args:
+            command: Command with potential {slot:N} references
+
+        Returns:
+            str: Command with slot references substituted
+        """
+
+        def replace_slot(match: re.Match[str]) -> str:
+            slot_idx = int(match.group(1))
+            slots = self.metadata.get("slots", [])
+
+            if slot_idx < len(slots):
+                # Use "target" field for actual file path, fallback to "id" or "name"
+                slot_name = slots[slot_idx].get(
+                    "target",
+                    slots[slot_idx].get("id", slots[slot_idx].get("name", f"slot_{slot_idx}")),
+                )
+                # Build the path to the extracted slot
+                slot_path = self.workenv_dir / slot_name
+                return str(slot_path)
+            else:
+                logger.warning(f"⚠️ Slot {slot_idx} not found")
+                return match.group(0)  # Keep original if not found
+
+        # Replace all {slot:N} patterns
+        return re.sub(r"\{slot:(\d+)\}", replace_slot, command)
 
     def prepare_environment(self) -> dict[str, str]:
         """Prepare environment variables for execution.
@@ -108,7 +152,6 @@ class BundleExecutor:
                 value = value.replace("{package_name}", self.package_name)
                 value = value.replace("{version}", self.package_version)
                 env[key] = value
-                logger.trace(f"🌍 Set {key}={value}")
 
         return env
 
@@ -133,49 +176,39 @@ class BundleExecutor:
         env = self.prepare_environment()
 
         logger.info(f"🏃 Executing: {command}")
-        logger.debug(f"📁 Working directory: {self.workenv_dir}")
 
         try:
             # Parse command into arguments (safely handles quotes and spaces)
-            args = shlex.split(command)
+            command_args = shlex.split(command)
 
             # Execute the command using shared utility (no shell=True for security)
-            result = run_command(
-                args,
+            result = run(
+                command_args,
                 cwd=self.workenv_dir,
                 env=env,
                 capture_output=True,
                 check=False,  # We want to handle the exit code ourselves
-                log_command=False,  # Already logged above
             )
 
             # Log result
             if result.returncode == 0:
-                logger.info("✅ Execution completed successfully (exit code: 0)")
+                pass
             else:
-                logger.warning(
-                    f"⚠️ Execution completed with exit code: {result.returncode}"
-                )
+                logger.warning(f"⚠️ Execution completed with exit code: {result.returncode}")
                 if result.stderr:
-                    logger.debug(
-                        f"📝 stderr: {result.stderr[:500]}"
-                    )  # Log first 500 chars
+                    logger.debug(f"📝 stderr: {result.stderr[:500]}")  # Log first 500 chars
 
-            crashed = (
-                result.returncode < 0
-            )  # Negative return codes often indicate a crash due to a signal
+            crashed = result.returncode < 0  # Negative return codes often indicate a crash due to a signal
             return {
                 "exit_code": result.returncode,
                 "stdout": result.stdout,
                 "stderr": result.stderr,
                 "executed": True,
                 "command": command,
-                "args": args or [],
+                "args": args or [],  # Return the original user args, not the parsed command
                 "pid": os.getpid(),  # Current process PID since we don't have access to subprocess PID
                 "working_directory": str(self.workenv_dir),
-                "error": None
-                if result.returncode == 0
-                else f"Process exited with code {result.returncode}",
+                "error": None if result.returncode == 0 else f"Process exited with code {result.returncode}",
                 "crashed": crashed,
             }
 
@@ -187,9 +220,12 @@ class BundleExecutor:
                 "stderr": str(e),
                 "executed": False,
                 "command": command,
-                "args": args or [],
+                "args": args or [],  # Return the original user args
                 "pid": None,
                 "working_directory": str(self.workenv_dir),
                 "error": str(e),
                 "returncode": 1,  # Add returncode for consistency
             }
+
+
+# 🌶️📦🔚
