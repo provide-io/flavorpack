@@ -11,6 +11,7 @@ Usage:
     test-metadata.py combine <input_dir> [output_file]  - Combine test results
     test-metadata.py platform <platform> <version> [cache_hit]  - Generate platform metadata"""
 
+from collections.abc import Iterable
 from datetime import UTC, datetime
 import json
 import os
@@ -76,7 +77,7 @@ def collect_test_metadata(output_dir: Path) -> None:
     # Test summary from pytest report
     test_report = Path("test-report.json")
     if test_report.exists():
-        with open(test_report) as f:
+        with test_report.open(encoding="utf-8") as f:
             data = json.load(f)
 
         summary = {
@@ -102,7 +103,7 @@ def collect_test_metadata(output_dir: Path) -> None:
     # Coverage summary
     coverage_report = Path("coverage.json")
     if coverage_report.exists():
-        with open(coverage_report) as f:
+        with coverage_report.open(encoding="utf-8") as f:
             data = json.load(f)
 
         totals = data.get("totals", {})
@@ -131,6 +132,55 @@ def collect_test_metadata(output_dir: Path) -> None:
     (output_dir / "environment.json").write_text(json.dumps(env_vars, indent=2))
 
 
+def _load_json_file(path: Path) -> dict[str, Any] | None:
+    """Safely load a JSON file, returning None on error."""
+    try:
+        with path.open(encoding="utf-8") as f:
+            return json.load(f)
+    except Exception as exc:
+        print(f"    ⚠️ Error reading {path}: {exc}")
+        return None
+
+
+def _merge_summary(source: dict[str, Any], destination: dict[str, Any]) -> None:
+    """Merge summary counters from source into destination in-place."""
+    if "summary" not in source:
+        return
+
+    dest_summary = destination.setdefault("summary", {})
+    for key in ["total", "passed", "failed", "skipped"]:
+        dest_summary[key] = dest_summary.get(key, 0) + source["summary"].get(key, 0)
+
+
+def _collect_platform_results(test_files: Iterable[Path]) -> dict[str, Any]:
+    """Aggregate multiple JSON reports for the same platform."""
+    aggregated: dict[str, Any] = {}
+    for test_file in test_files:
+        data = _load_json_file(test_file)
+        if not data:
+            continue
+        if not aggregated:
+            aggregated = data
+            continue
+        _merge_summary(data, aggregated)
+    return aggregated
+
+
+def _update_combined_summary(summary: dict[str, int], platform_data: dict[str, Any]) -> None:
+    """Update the combined summary totals with per-platform data."""
+    summary["platforms_tested"] += 1
+    if "summary" not in platform_data:
+        return
+    key_map = {
+        "total_tests": "total",
+        "passed": "passed",
+        "failed": "failed",
+        "skipped": "skipped",
+    }
+    for combined_key, platform_key in key_map.items():
+        summary[combined_key] += platform_data["summary"].get(platform_key, 0)
+
+
 def combine_test_results(input_dir: Path, output_file: Path) -> None:
     """Combine test results from multiple platforms."""
     print(f"📋 Combining test results from {input_dir}")
@@ -157,42 +207,17 @@ def combine_test_results(input_dir: Path, output_file: Path) -> None:
     ]
 
     for platform_name in platforms:
-        # Find test result files for this platform
         pattern = f"*{platform_name}*test*.json"
         test_files = list(input_dir.glob(f"**/{pattern}"))
 
-        if test_files:
-            # Merge results from all test files for this platform
-            platform_data = {}
-            for test_file in test_files:
-                try:
-                    with open(test_file) as f:
-                        data = json.load(f)
-                        # Merge data
-                        if not platform_data:
-                            platform_data = data
-                        else:
-                            # Merge test counts
-                            if "summary" in data:
-                                if "summary" not in platform_data:
-                                    platform_data["summary"] = {}
-                                for key in ["total", "passed", "failed", "skipped"]:
-                                    platform_data["summary"][key] = platform_data["summary"].get(
-                                        key, 0
-                                    ) + data["summary"].get(key, 0)
-                except Exception as e:
-                    print(f"    ⚠️ Error reading {test_file}: {e}")
-
-            if platform_data:
-                combined["platforms"][platform_name] = platform_data
-                combined["summary"]["platforms_tested"] += 1
-
-                # Update totals
-                if "summary" in platform_data:
-                    for key in ["total_tests", "passed", "failed", "skipped"]:
-                        combined["summary"][key] += platform_data["summary"].get(key.replace("_tests", ""), 0)
-        else:
+        if not test_files:
             print(f"  ⚠️ No test results for {platform_name}")
+            continue
+
+        platform_data = _collect_platform_results(test_files)
+        if platform_data:
+            combined["platforms"][platform_name] = platform_data
+            _update_combined_summary(combined["summary"], platform_data)
 
     # Write combined results
     output_file.parent.mkdir(parents=True, exist_ok=True)
