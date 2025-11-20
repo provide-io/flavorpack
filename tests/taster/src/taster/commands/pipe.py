@@ -1,96 +1,55 @@
-#!/usr/bin/env python3
+#
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""Pipe data processing - stdin/stderr handling with various transformations"""
+"""Pipe data processing utilities for stdin/stderr transformations."""
+
+from __future__ import annotations
 
 import base64
+from collections.abc import Callable
 import hashlib
 import json
+import os
 from pathlib import Path
+import random
 import sys
 
 import click
+from provide.foundation.console import perr
 
 
 @click.group("pipe")
 def pipe_command() -> None:
-    pass
+    """Namespace for data-piping helpers."""
 
 
 @pipe_command.command("stdin")
-@click.option("--format", type=click.Choice(["raw", "json", "base64", "hex"]), default="raw")
-@click.option("--output", type=click.Choice(["stdout", "stderr", "file"]), default="stdout")
-@click.option("--file", type=click.Path(path_type=Path), help="Output file path")
+@click.option("--format", "input_format", type=click.Choice(["raw", "json", "base64", "hex"]), default="raw")
+@click.option("--output", "destination", type=click.Choice(["stdout", "stderr", "file"]), default="stdout")
+@click.option("--file", "file_path", type=click.Path(path_type=Path), help="Output file path")
 @click.option(
     "--transform",
     type=click.Choice(["upper", "lower", "reverse", "hash", "none"]),
     default="none",
 )
 @click.option("--buffer-size", type=int, default=8192, help="Buffer size for reading")
-def process_stdin(format, output, file, transform, buffer_size) -> None:
-    """Process data from stdin with various transformations"""
-
-    # Read from stdin
+def process_stdin(
+    input_format: str,
+    destination: str,
+    file_path: Path | None,
+    transform: str,
+    buffer_size: int,
+) -> None:
+    """Process data from stdin with optional decoding and transformations."""
     if sys.stdin.isatty():
-        click.echo("No input detected. Pipe data to this command.", err=True)
-        sys.exit(1)
+        raise click.ClickException("No input detected. Pipe data to this command.")
 
-    # Read in chunks for large inputs
-    chunks = []
-    while True:
-        chunk = sys.stdin.buffer.read(buffer_size)
-        if not chunk:
-            break
-        chunks.append(chunk)
-
-    data = b"".join(chunks)
-
-    # Parse input based on format
-    if format == "json":
-        try:
-            data = json.loads(data.decode("utf-8"))
-            data = json.dumps(data).encode("utf-8")  # Re-encode for processing
-        except (json.JSONDecodeError, UnicodeDecodeError) as e:
-            click.echo(f"Invalid JSON input: {e}", err=True)
-            sys.exit(1)
-    elif format == "base64":
-        try:
-            data = base64.b64decode(data)
-        except Exception as e:
-            click.echo(f"Invalid base64 input: {e}", err=True)
-            sys.exit(1)
-    elif format == "hex":
-        try:
-            data = bytes.fromhex(data.decode("utf-8").strip())
-        except Exception as e:
-            click.echo(f"Invalid hex input: {e}", err=True)
-            sys.exit(1)
-
-    # Apply transformation
-    if transform == "upper":
-        data = data.upper()
-    elif transform == "lower":
-        data = data.lower()
-    elif transform == "reverse":
-        data = data[::-1]
-    elif transform == "hash":
-        data = hashlib.sha256(data).hexdigest().encode("utf-8")
-
-    # Output the result
-    if output == "stdout":
-        sys.stdout.buffer.write(data)
-        sys.stdout.flush()
-    elif output == "stderr":
-        sys.stderr.buffer.write(data)
-        sys.stderr.flush()
-    elif output == "file":
-        if not file:
-            click.echo("File path required for file output", err=True)
-            sys.exit(1)
-        Path(file).write_bytes(data)
-        click.echo(f"Wrote {len(data)} bytes to {file}", err=True)
+    data = _read_stdin(buffer_size)
+    decoded = _decode_input(data, input_format)
+    transformed = _apply_transform(decoded, transform)
+    _emit_output(transformed, destination, file_path)
 
 
 @pipe_command.command("stress")
@@ -101,119 +60,48 @@ def process_stdin(format, output, file, transform, buffer_size) -> None:
     default="random",
 )
 @click.option("--chunk-size", type=int, default=8192, help="Chunk size for output")
-def stress_test(size, pattern, chunk_size) -> None:
-    """Generate stress test data to stdout"""
-    import os
-
+def stress_test(size: int, pattern: str, chunk_size: int) -> None:
+    """Generate stress test data to stdout."""
     remaining = size
     while remaining > 0:
         chunk_len = min(chunk_size, remaining)
-
-        if pattern == "random":
-            chunk = os.urandom(chunk_len)
-        elif pattern == "zeros":
-            chunk = b"\x00" * chunk_len
-        elif pattern == "ones":
-            chunk = b"\xff" * chunk_len
-        elif pattern == "pattern":
-            # Repeating pattern
-            base = b"STRESS_TEST_PATTERN_"
-            chunk = (base * (chunk_len // len(base) + 1))[:chunk_len]
-
+        chunk = _generate_pattern(pattern, chunk_len)
         sys.stdout.buffer.write(chunk)
         remaining -= chunk_len
-
     sys.stdout.flush()
 
 
 @pipe_command.command("fuzz")
 @click.option("--seed", type=int, help="Random seed for reproducibility")
 @click.option("--mutations", type=int, default=100, help="Number of mutations")
-def fuzz_input(seed, mutations) -> None:
-    """Fuzz test input data with random mutations"""
-    import random
-
-    if seed:
+def fuzz_input(seed: int | None, mutations: int) -> None:
+    """Fuzz test input data with random mutations."""
+    if seed is not None:
         random.seed(seed)
 
-    # Read input
-    data = sys.stdin.buffer.read()
-    if not data:
-        click.echo("No input to fuzz", err=True)
-        sys.exit(1)
+    payload = bytearray(sys.stdin.buffer.read())
+    if not payload:
+        raise click.ClickException("No input to fuzz.")
 
-    data = bytearray(data)
-
-    # Apply random mutations
     for _ in range(mutations):
-        mutation_type = random.choice(["flip", "insert", "delete", "replace"])
+        _mutate_payload(payload)
 
-        if len(data) == 0:
-            continue
-
-        pos = random.randint(0, len(data) - 1)
-
-        if mutation_type == "flip":
-            # Flip random bit
-            data[pos] ^= 1 << random.randint(0, 7)
-        elif mutation_type == "insert" and len(data) < 1024 * 1024:  # Limit growth
-            # Insert random byte
-            data.insert(pos, random.randint(0, 255))
-        elif mutation_type == "delete" and len(data) > 1:
-            # Delete byte
-            del data[pos]
-        elif mutation_type == "replace":
-            # Replace with random byte
-            data[pos] = random.randint(0, 255)
-
-    sys.stdout.buffer.write(bytes(data))
+    sys.stdout.buffer.write(payload)
     sys.stdout.flush()
 
 
 @pipe_command.command("validate")
 @click.option("--schema", type=click.Choice(["json", "pspf", "manifest"]), default="json")
 @click.option("--strict", is_flag=True, help="Strict validation mode")
-def validate_input(schema, strict) -> None:
-    """Validate piped input against schemas"""
-
+def validate_input(schema: str, strict: bool) -> None:
+    """Validate piped input against schemas."""
     data = sys.stdin.buffer.read()
-
     if schema == "json":
-        try:
-            parsed = json.loads(data.decode("utf-8"))
-            # Output pretty-printed valid JSON
-            print(json.dumps(parsed, indent=2))
-        except (json.JSONDecodeError, UnicodeDecodeError) as e:
-            click.echo(f"❌ Invalid JSON: {e}", err=True)
-            sys.exit(1)
-
+        _validate_json(data)
     elif schema == "pspf":
-        # Check for PSPF magic bytes
-        if len(data) < 4:
-            click.echo("❌ File too small to be PSPF", err=True)
-            sys.exit(1)
-
-        # Check magic wand at end
-        else:
-            click.echo("❌ Invalid PSPF magic", err=True)
-            if not strict:
-                click.echo("  (Use --strict to fail on validation errors)", err=True)
-            else:
-                sys.exit(1)
-
-    elif schema == "manifest":
-        try:
-            manifest = json.loads(data.decode("utf-8"))
-            required = ["name", "version", "slots"]
-            missing = [k for k in required if k not in manifest]
-
-            if missing:
-                click.echo(f"❌ Missing required fields: {missing}", err=True)
-                sys.exit(1)
-
-        except Exception as e:
-            click.echo(f"❌ Invalid manifest: {e}", err=True)
-            sys.exit(1)
+        _validate_pspf(data, strict)
+    else:
+        _validate_manifest(data)
 
 
 @pipe_command.command("corrupt")
@@ -224,35 +112,165 @@ def validate_input(schema, strict) -> None:
     type=click.Choice(["bit", "byte", "chunk"]),
     default="bit",
 )
-def corrupt_data(probability, corruption_type) -> None:
-    """Randomly corrupt piped data for testing"""
-    import random
-
-    data = bytearray(sys.stdin.buffer.read())
-
-    if corruption_type == "bit":
-        # Flip random bits
-        for i in range(len(data)):
-            for bit in range(8):
-                if random.random() < probability:
-                    data[i] ^= 1 << bit
-
-    elif corruption_type == "byte":
-        # Corrupt entire bytes
-        for i in range(len(data)):
-            if random.random() < probability:
-                data[i] = random.randint(0, 255)
-
-    elif corruption_type == "chunk":
-        # Corrupt chunks of data
-        chunk_size = max(1, len(data) // 100)
-        for i in range(0, len(data), chunk_size):
-            if random.random() < probability:
-                for j in range(min(chunk_size, len(data) - i)):
-                    data[i + j] = random.randint(0, 255)
-
-    sys.stdout.buffer.write(bytes(data))
+def corrupt_data(probability: float, corruption_type: str) -> None:
+    """Randomly corrupt piped data for testing."""
+    payload = bytearray(sys.stdin.buffer.read())
+    CORRUPTORS[corruption_type](payload, probability)
+    sys.stdout.buffer.write(payload)
     sys.stdout.flush()
+
+
+def _read_stdin(buffer_size: int) -> bytes:
+    """Read stdin in chunks."""
+    chunks: list[bytes] = []
+    while True:
+        chunk = sys.stdin.buffer.read(buffer_size)
+        if not chunk:
+            break
+        chunks.append(chunk)
+    return b"".join(chunks)
+
+
+def _decode_input(data: bytes, fmt: str) -> bytes:
+    """Decode input according to user preference."""
+    if fmt == "json":
+        try:
+            parsed = json.loads(data.decode("utf-8"))
+            return json.dumps(parsed).encode("utf-8")
+        except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+            raise click.ClickException(f"Invalid JSON input: {exc}") from exc
+    if fmt == "base64":
+        try:
+            return base64.b64decode(data)
+        except Exception as exc:
+            raise click.ClickException(f"Invalid base64 input: {exc}") from exc
+    if fmt == "hex":
+        try:
+            return bytes.fromhex(data.decode("utf-8").strip())
+        except Exception as exc:
+            raise click.ClickException(f"Invalid hex input: {exc}") from exc
+    return data
+
+
+def _apply_transform(data: bytes, transform: str) -> bytes:
+    """Apply simple transformations to the byte stream."""
+    match transform:
+        case "upper":
+            return data.upper()
+        case "lower":
+            return data.lower()
+        case "reverse":
+            return data[::-1]
+        case "hash":
+            return hashlib.sha256(data).hexdigest().encode("utf-8")
+        case _:
+            return data
+
+
+def _emit_output(data: bytes, destination: str, file_path: Path | None) -> None:
+    """Write transformed data to the requested destination."""
+    if destination == "stdout":
+        sys.stdout.buffer.write(data)
+        sys.stdout.flush()
+        return
+    if destination == "stderr":
+        sys.stderr.buffer.write(data)
+        sys.stderr.flush()
+        return
+    if not file_path:
+        raise click.ClickException("File path required for file output.")
+    file_path.write_bytes(data)
+    perr(f"Wrote {len(data)} bytes to {file_path}")
+
+
+def _generate_pattern(pattern: str, length: int) -> bytes:
+    """Generate bytes for the stress command."""
+    if pattern == "random":
+        return os.urandom(length)
+    if pattern == "zeros":
+        return b"\x00" * length
+    if pattern == "ones":
+        return b"\xff" * length
+    base = b"STRESS_TEST_PATTERN_"
+    return (base * (length // len(base) + 1))[:length]
+
+
+def _mutate_payload(payload: bytearray) -> None:
+    """Apply a random mutation to the payload."""
+    if not payload:
+        return
+    mutation = random.choice(["flip", "insert", "delete", "replace"])
+    pos = random.randint(0, len(payload) - 1)
+
+    if mutation == "flip":
+        payload[pos] ^= 1 << random.randint(0, 7)
+    elif mutation == "insert" and len(payload) < 1024 * 1024:
+        payload.insert(pos, random.randint(0, 255))
+    elif mutation == "delete" and len(payload) > 1:
+        del payload[pos]
+    else:
+        payload[pos] = random.randint(0, 255)
+
+
+def _validate_json(data: bytes) -> None:
+    """Validate JSON input."""
+    try:
+        parsed = json.loads(data.decode("utf-8"))
+        print(json.dumps(parsed, indent=2))
+    except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+        raise click.ClickException(f"Invalid JSON: {exc}") from exc
+
+
+def _validate_pspf(data: bytes, strict: bool) -> None:
+    """Validate basic PSPF structure."""
+    if len(data) < 4:
+        raise click.ClickException("File too small to be PSPF.")
+    if b"PSPF" not in data[:16]:
+        perr("❌ Invalid PSPF magic")
+        if strict:
+            raise click.ClickException("Strict mode enabled; failing validation.")
+
+
+def _validate_manifest(data: bytes) -> None:
+    """Validate manifest JSON structure."""
+    try:
+        manifest = json.loads(data.decode("utf-8"))
+    except Exception as exc:
+        raise click.ClickException(f"Invalid manifest: {exc}") from exc
+
+    required = {"name", "version", "slots"}
+    missing = required - manifest.keys()
+    if missing:
+        raise click.ClickException(f"Missing required fields: {sorted(missing)}")
+
+
+def _corrupt_bit(payload: bytearray, probability: float) -> None:
+    for i in range(len(payload)):
+        for bit in range(8):
+            if random.random() < probability:
+                payload[i] ^= 1 << bit
+
+
+def _corrupt_byte(payload: bytearray, probability: float) -> None:
+    for i in range(len(payload)):
+        if random.random() < probability:
+            payload[i] = random.randint(0, 255)
+
+
+def _corrupt_chunk(payload: bytearray, probability: float) -> None:
+    chunk_size = max(1, len(payload) // 100 or 1)
+    for start in range(0, len(payload), chunk_size):
+        if random.random() < probability:
+            end = min(start + chunk_size, len(payload))
+            for idx in range(start, end):
+                payload[idx] = random.randint(0, 255)
+
+
+CORRUPTORS: dict[str, Callable[[bytearray, float], None]] = {
+    "bit": _corrupt_bit,
+    "byte": _corrupt_byte,
+    "chunk": _corrupt_chunk,
+}
 
 
 # 🌶️📦🔚

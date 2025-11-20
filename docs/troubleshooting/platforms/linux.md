@@ -742,7 +742,7 @@ strace -c ./package.psp --version 2>&1 | tail -20
 
 ## Related Documentation
 
-- [Platform Overview](index.md) - Cross-platform guide
-- [macOS Guide](macos.md) - macOS-specific information
-- [Windows Guide](windows.md) - Windows-specific information
-- [Troubleshooting](../index.md) - General troubleshooting
+- [Platform Overview](index/) - Cross-platform guide
+- [macOS Guide](macos/) - macOS-specific information
+- [Windows Guide](windows/) - Windows-specific information
+- [Troubleshooting](../index/) - General troubleshooting

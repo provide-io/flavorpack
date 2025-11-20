@@ -3,11 +3,13 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""PSPF 2025 Execution Tests
+"""PSPF 2025 execution tests covering command substitution and processes."""
 
-Tests bundle execution, command substitution, and process management."""
+from __future__ import annotations
 
+from collections.abc import Iterator
 from pathlib import Path
+import re
 import tempfile
 
 import pytest
@@ -19,7 +21,7 @@ class TestPSPFExecution:
     """Test PSPF bundle execution."""
 
     @pytest.fixture
-    def temp_dir(self):
+    def temp_dir(self) -> Iterator[Path]:
         """Create temporary directory for tests."""
         temp_path = Path(tempfile.mkdtemp())
         yield temp_path
@@ -29,7 +31,7 @@ class TestPSPFExecution:
         shutil.rmtree(temp_path)
 
     @pytest.fixture
-    def executable_bundle(self, temp_dir):
+    def executable_bundle(self, temp_dir: Path) -> Path:
         """Create an executable bundle."""
         # Create Python script
         script_path = temp_dir / "app.py"
@@ -61,7 +63,7 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
 
         return bundle_path
 
-    def test_slot_substitution_single(self, temp_dir) -> None:
+    def test_slot_substitution_single(self, temp_dir: Path) -> None:
         """Test single slot substitution in command."""
         launcher = PSPFLauncher()
         launcher.cache_dir = temp_dir
@@ -76,7 +78,7 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
         expected = f"{slot0_path}/bin/python -m myapp"
         assert substituted == expected
 
-    def test_slot_substitution_multiple(self, temp_dir) -> None:
+    def test_slot_substitution_multiple(self, temp_dir: Path) -> None:
         """Test multiple slot substitution."""
         launcher = PSPFLauncher()
         launcher.cache_dir = temp_dir
@@ -96,7 +98,7 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
         expected = f"{slot0_path}/bin/python -m {slot1_path}/app --config {slot2_path}/config.json"
         assert substituted == expected
 
-    def test_environment_substitution(self, temp_dir) -> None:
+    def test_environment_substitution(self, temp_dir: Path) -> None:
         """Test environment variable slot substitution."""
         launcher = PSPFLauncher()
         launcher.cache_dir = temp_dir
@@ -125,7 +127,7 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
     # The taster tool already provides comprehensive argument passing tests
     # through its argv_command functionality
 
-    def test_platform_specific_slot_selection(self, temp_dir) -> None:
+    def test_platform_specific_slot_selection(self, temp_dir: Path) -> None:
         """Test platform-specific slot selection."""
         # Create bundle with platform-specific slots
         slots = []
@@ -175,7 +177,7 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
         assert len(selected) == 1
         assert selected[0].id == "binary-darwin-arm64"
 
-    def test_working_directory_setup(self, temp_dir, executable_bundle) -> None:
+    def test_working_directory_setup(self, temp_dir: Path, executable_bundle: Path) -> None:
         """Test working directory is set correctly."""
         launcher = PSPFLauncher(executable_bundle)
 
@@ -199,7 +201,7 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
     # The pretaster tool validates exit codes across all builder/launcher combinations
     # in its combination-tests.sh script
 
-    def test_resource_limits(self, temp_dir) -> None:
+    def test_resource_limits(self, temp_dir: Path) -> None:
         """Test resource limit application."""
         metadata = {
             "format": "PSPF/2025",
@@ -234,7 +236,7 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
     # The taster tool provides comprehensive signal handling tests through
     # its signals_command functionality
 
-    def test_execution_error_handling(self, temp_dir) -> None:
+    def test_execution_error_handling(self, temp_dir: Path) -> None:
         """Test handling of execution errors."""
         # Create bundle with invalid command
         metadata = {
@@ -256,11 +258,10 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
         )  # Either fails to execute or returns error code
 
 
-def _substitute_slots(launcher, command: str, slot_paths: dict) -> str:
+def _substitute_slots(launcher: PSPFLauncher, command: str, slot_paths: dict[int, Path]) -> str:
     """Substitute slot references in command."""
-    import re
 
-    def replace_slot(match):
+    def replace_slot(match: re.Match[str]) -> str:
         slot_idx = int(match.group(1))
         if slot_idx not in slot_paths:
             raise ValueError(f"Referenced slot {slot_idx} not found")
@@ -269,7 +270,9 @@ def _substitute_slots(launcher, command: str, slot_paths: dict) -> str:
     return re.sub(r"\{slot:(\d+)\}", replace_slot, command)
 
 
-def _substitute_env_slots(launcher, env_vars: dict, slot_paths: dict) -> dict:
+def _substitute_env_slots(
+    launcher: PSPFLauncher, env_vars: dict[str, str], slot_paths: dict[int, Path]
+) -> dict[str, str]:
     """Substitute slot references in environment variables."""
     result = {}
     for key, value in env_vars.items():
@@ -280,7 +283,7 @@ def _substitute_env_slots(launcher, env_vars: dict, slot_paths: dict) -> dict:
     return result
 
 
-def _select_platform_slots(launcher, platform: str) -> list:
+def _select_platform_slots(launcher: PSPFLauncher, platform: str) -> list[SlotMetadata]:
     """Select slots matching the current platform."""
     # Mock implementation - return a fake slot for the requested platform
     if platform == "darwin-arm64":

@@ -26,4 +26,4 @@ pytest -m e2e
 
 ---
 
-**See also:** [Testing Guide](index.md) | [Cross-Language Tests](cross-language.md)
+**See also:** [Testing Guide](index/) | [Cross-Language Tests](cross-language/)

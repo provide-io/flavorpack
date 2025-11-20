@@ -3,38 +3,34 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""TODO: Add module docstring."""
+"""Package management commands using the Flavor API."""
 
-#
-# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
-#
+from __future__ import annotations
 
-"""Package management commands using Flavor API"""
-
+import json
 from pathlib import Path
-import sys
+import subprocess
+import tempfile
+from typing import Any
 
 import click
+from provide.foundation.console import perr, pout
 
 
-def _get_flavor_api():
-    """Get the Flavor API."""
+def _get_flavor_api() -> Any:
+    """Import the Flavor API, exiting with a helpful message if unavailable."""
     try:
         import flavor.api as flavor_api
-
-        return flavor_api
-    except ImportError:
-        click.echo(
-            "Error: Flavor API not available. Ensure flavor package is installed.",
-            err=True,
-        )
-        sys.exit(1)
+    except ImportError as exc:  # pragma: no cover - defensive check
+        raise click.ClickException(
+            "Flavor API not available. Install the flavor package before running packaging commands."
+        ) from exc
+    return flavor_api
 
 
 @click.group("package")
 def package_command() -> None:
-    pass
+    """Grouping for package management commands."""
 
 
 @package_command.command("build")
@@ -45,12 +41,17 @@ def package_command() -> None:
     type=click.Path(exists=True, path_type=Path),
     help="Path to launcher binary",
 )
-@click.option("--strip", is_flag=True, help="Strip binaries")
+@click.option("--strip", is_flag=True, help="Strip binaries before packaging")
 @click.option("--key-seed", help="Seed for deterministic key generation")
-def build(manifest, output, launcher_bin, strip, key_seed) -> None:
-    """Build a PSPF package from manifest"""
+def build(
+    manifest: Path,
+    output: Path | None,
+    launcher_bin: Path | None,
+    strip: bool,
+    key_seed: str | None,
+) -> None:
+    """Build a PSPF package from a manifest file."""
     flavor_api = _get_flavor_api()
-
     try:
         paths = flavor_api.build_package_from_manifest(
             manifest_path=manifest,
@@ -60,31 +61,27 @@ def build(manifest, output, launcher_bin, strip, key_seed) -> None:
             key_seed=key_seed,
             show_progress=True,
         )
-
-        for path in paths:
-            pass
-
-    except Exception as e:
-        click.echo(f"❌ Build failed: {e}", err=True)
-        sys.exit(1)
+        for built_path in paths or []:
+            pout(f"  ✅ Wrote {built_path}")
+    except Exception as exc:
+        raise click.ClickException(f"Build failed: {exc}") from exc
 
 
 @package_command.command("verify")
 @click.argument("package", type=click.Path(exists=True, path_type=Path))
-def verify(package) -> None:
-    """Verify a PSPF package"""
+def verify(package: Path) -> None:
+    """Verify a PSPF package."""
     flavor_api = _get_flavor_api()
-
     try:
         result = flavor_api.verify_package(package)
+    except Exception as exc:
+        raise click.ClickException(f"Verification failed: {exc}") from exc
 
-        if isinstance(result, dict):
-            for key, value in result.items():
-                click.echo(f"  {key}: {value}")
-
-    except Exception as e:
-        click.echo(f"❌ Verification failed: {e}", err=True)
-        sys.exit(1)
+    if isinstance(result, dict):
+        for key, value in result.items():
+            pout(f"  {key}: {value}")
+    else:
+        pout("Verification completed.")
 
 
 @package_command.command("generate-keys")
@@ -95,32 +92,26 @@ def verify(package) -> None:
     default="keys",
     help="Output directory",
 )
-def generate_keys(output) -> None:
-    """Generate signing keys"""
+def generate_keys(output: Path) -> None:
+    """Generate signing keys."""
     flavor_api = _get_flavor_api()
-    output_dir = Path(output)
-
     try:
-        priv_key, pub_key = flavor_api.generate_keys(output_dir)
-        click.echo(f"  Private: {priv_key}")
-        click.echo(f"  Public: {pub_key}")
-
-    except Exception as e:
-        click.echo(f"❌ Key generation failed: {e}", err=True)
-        sys.exit(1)
+        priv_key, pub_key = flavor_api.generate_keys(output)
+        pout(f"  Private: {priv_key}")
+        pout(f"  Public: {pub_key}")
+    except Exception as exc:
+        raise click.ClickException(f"Key generation failed: {exc}") from exc
 
 
 @package_command.command("clean-cache")
 def clean_cache() -> None:
-    """Clean Flavor's build cache"""
+    """Clean Flavor's build cache."""
     flavor_api = _get_flavor_api()
-
     try:
         flavor_api.clean_cache()
-
-    except Exception as e:
-        click.echo(f"❌ Cache cleaning failed: {e}", err=True)
-        sys.exit(1)
+        pout("Cache cleaned.")
+    except Exception as exc:
+        raise click.ClickException(f"Cache cleaning failed: {exc}") from exc
 
 
 @package_command.command("test-json")
@@ -134,19 +125,12 @@ def clean_cache() -> None:
     type=click.Path(exists=True, path_type=Path),
     help="Path to launcher binary",
 )
-def test_json(builder_bin, launcher_bin) -> None:
-    """Test JSON manifest support"""
-    import json
-    import subprocess
-    import tempfile
-
+def test_json(builder_bin: Path | None, launcher_bin: Path | None) -> None:
+    """Exercise JSON manifest support by building and executing a sample package."""
     flavor_api = _get_flavor_api()
-
-    with tempfile.TemporaryDirectory() as tmpdir:
-        tmpdir = Path(tmpdir)
-
-        # Create a simple JSON manifest
-        manifest_path = tmpdir / "test.json"
+    with tempfile.TemporaryDirectory() as temp_dir:
+        workdir = Path(temp_dir)
+        manifest_path = workdir / "test.json"
         manifest = {
             "package": {
                 "name": "json-test",
@@ -158,15 +142,13 @@ def test_json(builder_bin, launcher_bin) -> None:
                 "environment": {"TEST_VAR": "json-manifest"},
             },
         }
-        manifest_path.write_text(json.dumps(manifest, indent=2))
+        manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+        output_path = workdir / "test.psp"
 
-        output_path = tmpdir / "test.psp"
+        pout(f"  Builder: {builder_bin or 'default'}")
+        pout(f"  Launcher: {launcher_bin or 'default'}")
 
         try:
-            click.echo(f"  Builder: {builder_bin or 'default'}")
-            click.echo(f"  Launcher: {launcher_bin or 'default'}")
-
-            # Build the package
             paths = flavor_api.build_package_from_manifest(
                 manifest_path=manifest_path,
                 output_path=output_path,
@@ -175,30 +157,21 @@ def test_json(builder_bin, launcher_bin) -> None:
                 key_seed="test-json",
                 show_progress=False,
             )
+        except Exception as exc:
+            raise click.ClickException(f"JSON manifest build failed: {exc}") from exc
 
-            if not paths or not output_path.exists():
-                click.echo("❌ Package build failed - no output", err=True)
-                sys.exit(1)
+        if not paths or not output_path.exists():
+            raise click.ClickException("Package build failed - no output")
 
-            # Make it executable and test it
-            output_path.chmod(0o755)
-            result = subprocess.run([str(output_path)], capture_output=True, text=True)
+        output_path.chmod(0o755)
+        result = subprocess.run([str(output_path)], capture_output=True, text=True, check=False)
+        if result.returncode != 0:
+            if result.stderr:
+                perr(result.stderr)
+            raise click.ClickException(f"Package execution failed with code {result.returncode}")
 
-            if result.returncode == 0:
-                if result.stdout:
-                    click.echo(f"  Output: {result.stdout.strip()}")
-            else:
-                click.echo(
-                    f"❌ Package execution failed with code {result.returncode}",
-                    err=True,
-                )
-                if result.stderr:
-                    click.echo(f"  Error: {result.stderr}", err=True)
-                sys.exit(1)
-
-        except Exception as e:
-            click.echo(f"❌ JSON manifest test failed: {e}", err=True)
-            sys.exit(1)
+        if result.stdout:
+            pout(f"  Output: {result.stdout.strip()}")
 
 
 # 🌶️📦🔚

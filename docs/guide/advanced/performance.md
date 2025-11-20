@@ -319,7 +319,7 @@ tar -tzf /tmp/analyze/slot_1.tar.gz | xargs ls -lh | sort -k5 -h | tail -20
 
 ## See Also
 
-- [Debugging Guide](debugging.md) - Performance profiling
-- [Cache Management](../usage/cache.md) - Cache optimization
-- [Configuration](../packaging/configuration.md) - Build options
-- [Troubleshooting](../../troubleshooting/common.md) - Common issues
+- [Debugging Guide](debugging/) - Performance profiling
+- [Cache Management](../usage/cache/) - Cache optimization
+- [Configuration](../packaging/configuration/) - Build options
+- [Troubleshooting](../../troubleshooting/common/) - Common issues

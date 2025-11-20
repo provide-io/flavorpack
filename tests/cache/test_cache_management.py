@@ -11,7 +11,7 @@ from pathlib import Path
 import shutil
 import tempfile
 import time
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from click.testing import CliRunner
 
@@ -19,7 +19,9 @@ from flavor.cache import CacheManager
 from flavor.cli import cli
 
 
-def create_modern_cached_package(cache_dir: Path, pkg_name: str, app_name: str, version: str):
+def create_modern_cached_package(
+    cache_dir: Path, pkg_name: str, app_name: str, version: str
+) -> tuple[Path, Path]:
     """Helper function to create a cached package with the modern layout."""
     content_dir = cache_dir / pkg_name
     content_dir.mkdir()
@@ -139,7 +141,7 @@ class TestCacheCLICommands:
             shutil.rmtree(self.temp_dir)
 
     @patch("flavor.cache.get_cache_dir")
-    def test_cache_list_command(self, mock_cache_dir) -> None:
+    def test_cache_list_command(self, mock_cache_dir: Mock) -> None:
         """Test 'flavor workenv list' command."""
         mock_cache_dir.return_value = self.temp_dir
 
@@ -152,7 +154,7 @@ class TestCacheCLICommands:
         assert "1.0.0" in result.output
 
     @patch("flavor.cache.get_cache_dir")
-    def test_cache_clean_command(self, mock_cache_dir) -> None:
+    def test_cache_clean_command(self, mock_cache_dir: Mock) -> None:
         """Test 'flavor workenv clean' command."""
         mock_cache_dir.return_value = self.temp_dir
 
@@ -164,7 +166,7 @@ class TestCacheCLICommands:
         assert "Removed" in result.output and "cached package(s)" in result.output
 
     @patch("flavor.cache.get_cache_dir")
-    def test_cache_clean_with_age(self, mock_cache_dir) -> None:
+    def test_cache_clean_with_age(self, mock_cache_dir: Mock) -> None:
         """Test 'flavor workenv clean --older-than' command."""
         mock_cache_dir.return_value = self.temp_dir
         create_modern_cached_package(self.temp_dir, "old_pkg", "old", "1.0")
@@ -175,7 +177,7 @@ class TestCacheCLICommands:
         assert "Removed" in result.output and "cached package(s)" in result.output
 
     @patch("flavor.cache.get_cache_dir")
-    def test_cache_remove_command(self, mock_cache_dir) -> None:
+    def test_cache_remove_command(self, mock_cache_dir: Mock) -> None:
         """Test 'flavor workenv remove' command."""
         mock_cache_dir.return_value = self.temp_dir
 
@@ -188,7 +190,7 @@ class TestCacheCLICommands:
         assert not pkg_dir.exists()
 
     @patch("flavor.cache.get_cache_dir")
-    def test_cache_inspect_command(self, mock_cache_dir) -> None:
+    def test_cache_inspect_command(self, mock_cache_dir: Mock) -> None:
         """Test 'flavor workenv inspect' command."""
         mock_cache_dir.return_value = self.temp_dir
 

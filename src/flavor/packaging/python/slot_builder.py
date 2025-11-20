@@ -166,7 +166,7 @@ class PythonSlotBuilder:
         artifacts["payload_tgz"] = payload_tgz
 
         # Log the compressed size
-        payload_size = payload_tgz.stat().st_size / (1024 * 1024)
+        payload_tgz.stat().st_size / (1024 * 1024)
 
         # Create metadata archive (separate for selective extraction)
         metadata_content = work_dir / "metadata_content"
@@ -319,7 +319,7 @@ class PythonSlotBuilder:
                     logger.info(f"🔗 Building local dependency (wheel only): {dep_path.name}")
                     # Build just the wheel for the local dependency, not its dependencies
                     # Local dependencies are build-time dependencies, we don't need their runtime deps
-                    dep_wheel = self.wheel_builder.build_wheel_from_source(
+                    self.wheel_builder.build_wheel_from_source(
                         python_exe=python_exe,
                         source_path=dep_path,
                         wheel_dir=wheels_dir,

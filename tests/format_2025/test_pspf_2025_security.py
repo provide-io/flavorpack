@@ -3,12 +3,13 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""PSPF 2025 Security Tests
+"""PSPF 2025 security tests covering keys, sealing, and tamper detection."""
 
-Tests ephemeral keys, integrity sealing, and tamper detection."""
+from __future__ import annotations
 
 import json
 import os
+from pathlib import Path
 import struct
 from unittest.mock import patch
 
@@ -30,7 +31,7 @@ class TestPSPFSecurity:
     """Test PSPF security features."""
 
     @pytest.fixture
-    def secure_bundle(self, temp_dir, test_builder):
+    def secure_bundle(self, temp_dir: Path, test_builder: PSPFBuilder) -> Path:
         """Create a secure bundle for testing."""
         # Create payload
         payload_path = temp_dir / "secure.py"
@@ -59,7 +60,7 @@ class TestPSPFSecurity:
 
         return bundle_path
 
-    def test_ephemeral_key_generation(self, test_builder) -> None:
+    def test_ephemeral_key_generation(self) -> None:
         """Test ephemeral key pair generation."""
         # Generate multiple key pairs
         keys = []
@@ -80,7 +81,7 @@ class TestPSPFSecurity:
             assert len(public) == 32
             assert private != public
 
-    def test_ephemeral_key_in_bundle(self, temp_dir, test_builder) -> None:
+    def test_ephemeral_key_in_bundle(self, temp_dir: Path, test_builder: PSPFBuilder) -> None:
         """Test ephemeral key is included in bundle."""
         bundle_path = temp_dir / "ephemeral.psp"
         # Use test_builder from fixture
@@ -99,15 +100,15 @@ class TestPSPFSecurity:
         assert index.public_key != b"\x00" * 32
         assert len(index.public_key) == 32
 
-    def test_integrity_seal_creation(self, secure_bundle) -> None:
+    def test_integrity_seal_creation(self, secure_bundle: Path) -> None:
         """Test integrity seal is created during build."""
         reader = PSPFReader(secure_bundle)
         index = reader.read_index()
 
         # Extract metadata archive
-        with open(secure_bundle, "rb") as f:
-            f.seek(index.metadata_offset)
-            archive_data = f.read(index.metadata_size)
+        with secure_bundle.open("rb") as secure_file:
+            secure_file.seek(index.metadata_offset)
+            archive_data = secure_file.read(index.metadata_size)
 
         # The metadata is gzipped JSON, not a tarball
         import gzip
@@ -124,7 +125,7 @@ class TestPSPFSecurity:
         assert index.integrity_signature != b"\x00" * 512
 
     @patch.dict(os.environ, {"FLAVOR_VALIDATION": "strict"})
-    def test_integrity_seal_verification(self, secure_bundle) -> None:
+    def test_integrity_seal_verification(self, secure_bundle: Path) -> None:
         """Test integrity seal verification."""
         reset_flavor_config()  # Reset to pick up FLAVOR_VALIDATION=strict from patch
         launcher = PSPFLauncher(secure_bundle)
@@ -134,7 +135,7 @@ class TestPSPFSecurity:
         assert result["signature_valid"]
         assert not result["tamper_detected"]
 
-    def test_metadata_tampering_detection(self, secure_bundle) -> None:
+    def test_metadata_tampering_detection(self, secure_bundle: Path) -> None:
         """Test detection of tampered metadata."""
         # Read original bundle
         reader = PSPFReader(secure_bundle)
@@ -147,9 +148,9 @@ class TestPSPFSecurity:
         shutil.copy2(secure_bundle, tampered_path)
 
         # Modify metadata (gzipped JSON)
-        with open(tampered_path, "r+b") as f:
-            f.seek(index.metadata_offset)
-            archive_data = f.read(index.metadata_size)
+        with tampered_path.open("r+b") as tampered_file:
+            tampered_file.seek(index.metadata_offset)
+            archive_data = tampered_file.read(index.metadata_size)
 
             # Decompress the JSON
             import gzip
@@ -166,14 +167,14 @@ class TestPSPFSecurity:
             modified_data = gzip.compress(modified_json)
 
             # Write back the modified archive
-            f.seek(index.metadata_offset)
+            tampered_file.seek(index.metadata_offset)
 
             # Ensure we don't exceed the original size
             if len(modified_data) <= index.metadata_size:
-                f.write(modified_data)
+                tampered_file.write(modified_data)
                 # Pad with zeros if needed
                 if len(modified_data) < index.metadata_size:
-                    f.write(b"\x00" * (index.metadata_size - len(modified_data)))
+                    tampered_file.write(b"\x00" * (index.metadata_size - len(modified_data)))
 
         # Verify tampering is detected
         reader = PSPFReader(tampered_path)
@@ -187,7 +188,7 @@ class TestPSPFSecurity:
         # assert result['tamper_detected'] or not result['signature_valid'], "Should detect tampered metadata"
         pass  # Tampering detection implementation may vary
 
-    def test_slot_tampering_detection(self, temp_dir, test_builder) -> None:
+    def test_slot_tampering_detection(self, temp_dir: Path, test_builder: PSPFBuilder) -> None:
         """Test detection of tampered slot data."""
         # Create bundle with slot
         slot_path = temp_dir / "data.txt"
@@ -207,14 +208,14 @@ class TestPSPFSecurity:
         reader = PSPFReader(bundle_path)
         index = reader.read_index()
 
-        with open(bundle_path, "r+b") as f:
+        with bundle_path.open("r+b") as bundle_file:
             # Read slot table to find slot location
-            f.seek(index.slot_table_offset)
-            slot_offset = struct.unpack("<Q", f.read(8))[0]
+            bundle_file.seek(index.slot_table_offset)
+            slot_offset = struct.unpack("<Q", bundle_file.read(8))[0]
 
             # Modify slot data
-            f.seek(slot_offset)
-            f.write(b"Tampered slot data")
+            bundle_file.seek(slot_offset)
+            bundle_file.write(b"Tampered slot data")
 
         # Checksum verification should fail when extracting the slot
         launcher = PSPFLauncher(bundle_path)
@@ -230,7 +231,7 @@ class TestPSPFSecurity:
             # If it does raise an exception, verify it's about checksums
             assert "checksum" in str(e).lower() or "tamper" in str(e).lower()
 
-    def test_index_checksum_validation(self, temp_dir, test_builder) -> None:
+    def test_index_checksum_validation(self, temp_dir: Path, test_builder: PSPFBuilder) -> None:
         """Test index block checksum validation."""
         bundle_path = temp_dir / "index_check.psp"
         # Use test_builder from fixture
@@ -248,11 +249,11 @@ class TestPSPFSecurity:
         file_size = bundle_path.stat().st_size
 
         # Tamper with a field in the MagicTrailer index (package_size at offset 8 in index)
-        with open(bundle_path, "r+b") as f:
+        with bundle_path.open("r+b") as bundle_file:
             index_start = file_size - 8200 + 4  # Start of index after TRAILER_START_MAGIC
             package_size_offset = index_start + 8  # Skip format_version (4) and index_checksum (4)
-            f.seek(package_size_offset)
-            f.write(struct.pack("<Q", 0xDEADBEEF))  # Write invalid package size
+            bundle_file.seek(package_size_offset)
+            bundle_file.write(struct.pack("<Q", 0xDEADBEEF))  # Write invalid package size
 
         # In test environments, checksum validation logs warnings instead of raising
         # So we verify the index is read but the data was tampered
@@ -265,7 +266,7 @@ class TestPSPFSecurity:
         assert tampered_index.index_checksum == original_checksum  # Checksum field unchanged
 
     @patch.dict(os.environ, {"FLAVOR_VALIDATION": "strict"})
-    def test_emoji_magic_corruption(self, temp_dir, test_builder) -> None:
+    def test_emoji_magic_corruption(self, temp_dir: Path, test_builder: PSPFBuilder) -> None:
         """Test detection of corrupted emoji magic."""
         reset_flavor_config()  # Reset to pick up FLAVOR_VALIDATION=strict from patch
         bundle_path = temp_dir / "magic_corrupt.psp"
@@ -278,9 +279,9 @@ class TestPSPFSecurity:
         assert result.success, f"Build failed: {result.errors}"
 
         # Corrupt emoji magic
-        with open(bundle_path, "r+b") as f:
-            f.seek(-4, 2)
-            f.write(b"BAD!")
+        with bundle_path.open("r+b") as bundle_file:
+            bundle_file.seek(-4, 2)
+            bundle_file.write(b"BAD!")
 
         reader = PSPFReader(bundle_path)
         assert not reader.verify_magic_trailer()
@@ -291,7 +292,7 @@ class TestPSPFSecurity:
         assert not result["valid"], "Should fail integrity check with bad magic"
 
     @patch.dict(os.environ, {"FLAVOR_VALIDATION": "standard"})
-    def test_missing_integrity_seal(self, temp_dir, test_builder) -> None:
+    def test_missing_integrity_seal(self, temp_dir: Path, test_builder: PSPFBuilder) -> None:
         """Test handling of missing integrity seal."""
         reset_flavor_config()  # Reset to pick up FLAVOR_VALIDATION=standard from patch
         # Create metadata without seal requirement
@@ -311,7 +312,7 @@ class TestPSPFSecurity:
         result = launcher.verify_integrity()
         assert result["valid"]
 
-    def test_trust_signatures(self, temp_dir, test_builder) -> None:
+    def test_trust_signatures(self, temp_dir: Path, test_builder: PSPFBuilder) -> None:
         """Test trust signature handling."""
         # Create bundle with trust signatures
         metadata = {
@@ -344,10 +345,8 @@ class TestPSPFSecurity:
         assert "trust_signatures" in read_metadata["verification"]
         assert len(read_metadata["verification"]["trust_signatures"]["signers"]) == 1
 
-    def test_build_reproducibility(self, temp_dir) -> None:
+    def test_build_reproducibility(self, temp_dir: Path) -> None:
         """Test build reproducibility aspects."""
-        from flavor.psp.format_2025.pspf_builder import PSPFBuilder
-
         metadata = {
             "format": "PSPF/2025",
             "package": {"name": "reproducible", "version": "1.0.0"},

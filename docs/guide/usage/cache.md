@@ -547,11 +547,11 @@ chmod -R 555 ~/.cache/flavor/workenv/
 
 ## See Also
 
-- [Running Packages](running.md) - Package execution
-- [Environment Variables](environment.md) - All environment variables
-- [Work Environments](../concepts/workenv.md) - Cache concepts
-- [CLI Reference](cli.md) - Cache commands
-- [Troubleshooting](../../troubleshooting/index.md) - Common issues
+- [Running Packages](running/) - Package execution
+- [Environment Variables](environment/) - All environment variables
+- [Work Environments](../concepts/workenv/) - Cache concepts
+- [CLI Reference](cli/) - Cache commands
+- [Troubleshooting](../../troubleshooting/index/) - Common issues
 
 ---
 

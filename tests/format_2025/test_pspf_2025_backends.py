@@ -3,8 +3,11 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""Tests for PSPF backend implementations"""
+"""Tests for PSPF backend implementations."""
 
+from __future__ import annotations
+
+from collections.abc import Iterator
 from pathlib import Path
 import tempfile
 
@@ -27,7 +30,7 @@ class TestBackends:
     """Test backend implementations."""
 
     @pytest.fixture
-    def test_file(self):
+    def test_file(self) -> Iterator[Path]:
         """Create a test file with known content."""
         with tempfile.NamedTemporaryFile(delete=False) as f:
             # Write test data
@@ -41,7 +44,7 @@ class TestBackends:
         # Cleanup
         path.unlink(missing_ok=True)
 
-    def test_mmap_backend(self, test_file) -> None:
+    def test_mmap_backend(self, test_file: Path) -> None:
         """Test memory-mapped backend."""
         backend = MMapBackend()
         backend.open(test_file)
@@ -57,7 +60,7 @@ class TestBackends:
 
         backend.close()
 
-    def test_file_backend(self, test_file) -> None:
+    def test_file_backend(self, test_file: Path) -> None:
         """Test file I/O backend."""
         backend = FileBackend()
         backend.open(test_file)
@@ -73,7 +76,7 @@ class TestBackends:
 
         backend.close()
 
-    def test_stream_backend(self, test_file) -> None:
+    def test_stream_backend(self, test_file: Path) -> None:
         """Test streaming backend."""
         backend = StreamBackend(chunk_size=100)
         backend.open(test_file)
@@ -88,7 +91,7 @@ class TestBackends:
 
         backend.close()
 
-    def test_hybrid_backend(self, test_file) -> None:
+    def test_hybrid_backend(self, test_file: Path) -> None:
         """Test hybrid backend."""
         backend = HybridBackend(header_size=600)
         backend.open(test_file)
@@ -105,7 +108,7 @@ class TestBackends:
 
         backend.close()
 
-    def test_backend_context_manager(self, test_file) -> None:
+    def test_backend_context_manager(self, test_file: Path) -> None:
         """Test backend as context manager."""
         with MMapBackend() as backend:
             backend.open(test_file)
@@ -115,7 +118,7 @@ class TestBackends:
         # Backend should be closed
         assert backend.mmap is None
 
-    def test_create_backend_auto(self, test_file) -> None:
+    def test_create_backend_auto(self, test_file: Path) -> None:
         """Test automatic backend selection."""
         # Small file should use FileBackend
         small_file = test_file

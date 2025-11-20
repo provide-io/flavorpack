@@ -3,8 +3,12 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""Tests for enhanced PSPF/2025 format with memory-mapped support"""
+"""Tests for enhanced PSPF/2025 format with memory-mapped support."""
 
+from __future__ import annotations
+
+from collections.abc import Iterator
+from pathlib import Path
 import struct
 
 import pytest
@@ -15,13 +19,13 @@ from flavor.config.defaults import (
     ACCESS_MMAP,
     CACHE_NORMAL,
     CAPABILITY_MMAP,
+)
+from flavor.psp.format_2025.constants import (
     DEFAULT_HEADER_SIZE,
     DEFAULT_MAGIC_TRAILER_SIZE,
     DEFAULT_MAX_MEMORY,
     DEFAULT_MIN_MEMORY,
     PSPF_VERSION,
-)
-from flavor.psp.format_2025.constants import (
     TRAILER_END_MAGIC,
     TRAILER_START_MAGIC,
 )
@@ -135,7 +139,7 @@ class TestCleanup:
     """Ensure tests clean up after themselves."""
 
     @pytest.fixture(autouse=True)
-    def cleanup(self, tmp_path):
+    def cleanup(self, tmp_path: Path) -> Iterator[None]:
         """Clean up any test artifacts."""
         yield
         # Cleanup happens automatically with tmp_path

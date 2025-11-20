@@ -18,6 +18,8 @@ from typing import Any
 from provide.foundation import logger
 from provide.foundation.process import run
 
+from flavor.psp.format_2025.environment import apply_environment_layers
+
 
 class BundleExecutor:
     """Executes PSPF bundles with proper environment and substitution."""
@@ -135,24 +137,46 @@ class BundleExecutor:
     def prepare_environment(self) -> dict[str, str]:
         """Prepare environment variables for execution.
 
+        Applies environment isolation layers:
+        1. Runtime security layer (unset/pass/map/set from metadata)
+        2. Workenv layer (FLAVOR_* variables)
+        3. Execution layer (custom variables from metadata)
+        4. Platform layer (automatic, added by apply_environment_layers)
+
         Returns:
-            dict: Environment variables including FLAVOR_* vars
+            dict: Isolated environment variables for execution
         """
-        env = os.environ.copy()
+        # Start with current environment
+        base_env = dict(os.environ)
 
-        # Standard FLAVOR environment variables
-        env["FLAVOR_WORKENV"] = str(self.workenv_dir)
-        env["FLAVOR_PACKAGE"] = self.package_name
-        env["FLAVOR_VERSION"] = self.package_version
+        # Extract runtime environment config from metadata
+        runtime_env = self.metadata.get("runtime", {}).get("env", {})
 
-        # Custom environment variables from metadata
+        # Prepare workenv-specific environment variables
+        workenv_env = {
+            "FLAVOR_WORKENV": str(self.workenv_dir),
+            "FLAVOR_PACKAGE": self.package_name,
+            "FLAVOR_VERSION": self.package_version,
+        }
+
+        # Prepare execution-specific environment variables from metadata
+        execution_env = {}
         if "env" in self.execution_config:
             for key, value in self.execution_config["env"].items():
                 value = str(value).replace("{workenv}", str(self.workenv_dir))
                 value = value.replace("{package_name}", self.package_name)
                 value = value.replace("{version}", self.package_version)
-                env[key] = value
+                execution_env[key] = value
 
+        # Apply all environment layers with proper isolation
+        env = apply_environment_layers(
+            base_env=base_env,
+            runtime_env=runtime_env,
+            workenv_env=workenv_env,
+            execution_env=execution_env,
+        )
+
+        logger.debug(f"🧹 Prepared isolated execution environment ({len(env)} vars)")
         return env
 
     def execute(self, args: list[str] | None = None) -> dict[str, Any]:

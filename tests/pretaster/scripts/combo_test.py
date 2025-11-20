@@ -5,6 +5,8 @@
 
 """Simple test script for builder/launcher combinations."""
 
+from __future__ import annotations
+
 import io
 import os
 from pathlib import Path
@@ -18,7 +20,7 @@ if sys.platform == "win32":
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
 
 
-def handle_command(cmd, *args):
+def handle_command(cmd: str, *args: str) -> int:  # noqa: C901 - command dispatcher
     """Handle different test commands."""
     if cmd == "info":
         print("  Package: pretaster-combination")
@@ -43,9 +45,8 @@ def handle_command(cmd, *args):
         # Simple file test
         if args and args[0] == "workenv-test":
             # Use cross-platform temp directory
-            test_file = os.path.join(tempfile.gettempdir(), "workenv-test.txt")
-            with open(test_file, "w") as f:
-                f.write("Test content")
+            test_file = Path(tempfile.gettempdir()) / "workenv-test.txt"
+            test_file.write_text("Test content")
             return 0
         print("❌ Unknown file command")
         return 1
@@ -55,20 +56,20 @@ def handle_command(cmd, *args):
         return exit_code
     elif cmd == "volatile-test":
         # Test volatile and init lifecycle slots
-        workenv = os.getenv("FLAVOR_WORKENV", "/tmp")
+        workenv = Path(os.getenv("FLAVOR_WORKENV", "/tmp"))
 
         # Check if volatile slot exists (should always be extracted fresh)
-        volatile_path = os.path.join(workenv, "volatile-data")
-        if os.path.exists(volatile_path):
-            with open(volatile_path) as f:
-                content = f.read()
+        volatile_path = workenv / "volatile-data"
+        if volatile_path.exists():
+            with volatile_path.open() as file_obj:
+                content = file_obj.read()
                 print(f"     Content: {content[:50]}...")
         else:
             print(f"  ❌ Volatile slot NOT found: {volatile_path}")
 
         # Check if init slot exists (should be removed after setup)
-        init_path = os.path.join(workenv, "init-setup")
-        if os.path.exists(init_path):
+        init_path = workenv / "init-setup"
+        if init_path.exists():
             print(f"  ❌ Init slot still exists (should be removed): {init_path}")
             return 1
         else:

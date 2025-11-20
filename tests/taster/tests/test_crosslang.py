@@ -8,9 +8,11 @@
 import json
 from pathlib import Path
 import tempfile
+from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
 import click.testing
+import pytest
 from taster.commands.crosslang import CrossLangTester, crosslang_command
 
 
@@ -34,7 +36,7 @@ class TestCrossLangTester:
         tester.log("Error", level="error")
         tester.log("Success", level="success")
 
-    def test_log_normal_mode(self, capsys) -> None:
+    def test_log_normal_mode(self, capsys: pytest.CaptureFixture[str]) -> None:
         """Test logging in normal mode."""
         tester = CrossLangTester(json_output=False)
         tester.log("Test message")
@@ -42,7 +44,7 @@ class TestCrossLangTester:
         assert "Test message" in captured.out
 
     @patch("taster.commands.crosslang.run_command")
-    def test_build_with_python(self, mock_run_command) -> None:
+    def test_build_with_python(self, mock_run_command: MagicMock) -> None:
         """Test Python builder."""
         mock_run_command.return_value = Mock(returncode=0, stderr="", stdout="Built successfully")
 
@@ -94,7 +96,7 @@ class TestCrossLangTester:
                 assert tester.results["verify_tests"][0]["success"] is True
 
     @patch("subprocess.run")
-    def test_verify_with_launcher_cli(self, mock_run) -> None:
+    def test_verify_with_launcher_cli(self, mock_run: MagicMock) -> None:
         """Test launcher CLI verification."""
         mock_run.return_value = Mock(returncode=0, stderr="", stdout="Verified")
 
@@ -109,7 +111,7 @@ class TestCrossLangTester:
             assert tester.results["verify_tests"][0]["verifier"] == "go_cli"
 
     @patch("subprocess.run")
-    def test_test_cli_command(self, mock_run) -> None:
+    def test_test_cli_command(self, mock_run: MagicMock) -> None:
         """Test CLI command testing."""
         mock_run.return_value = Mock(returncode=0, stderr="", stdout="Help text")
 
@@ -139,7 +141,7 @@ class TestCrossLangTester:
             launcher_info.language = "test"
             launcher_info.path = Path("/fake/launcher")
 
-            def mock_builder(launcher_info, key_seed):
+            def mock_builder(launcher_info: Any, key_seed: str | None) -> Path:
                 """Mock builder that creates a file."""
                 output = taster_dir / f"test-{key_seed}-{len(created_files)}.psp"
                 output.write_bytes(b"FAKE_LAUNCHER" + b"PSPF2025" + b"DATA")
@@ -169,7 +171,7 @@ class TestCrossLangTester:
 
     @patch("subprocess.run")
     @patch("os.chdir")
-    def test_run_all_tests_json_output(self, mock_chdir, mock_run) -> None:
+    def test_run_all_tests_json_output(self, mock_chdir: MagicMock, mock_run: MagicMock) -> None:
         """Test running all tests with JSON output."""
         mock_run.return_value = Mock(returncode=0, stderr="", stdout="OK")
 
@@ -266,7 +268,7 @@ class TestCrossLangCommand:
                 assert result.exit_code == 0
 
                 # Check file was written
-                with open(output_file) as f:
+                with Path(output_file).open(encoding="utf-8") as f:
                     written_data = json.load(f)
                 assert written_data == test_results
         finally:

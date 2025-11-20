@@ -3,20 +3,9 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""TODO: Add module docstring."""
+"""FlavorPack configuration manager for env loading and global access."""
 
 from __future__ import annotations
-
-"""FlavorPack Configuration Manager.
-
-This module provides the configuration management logic for FlavorPack,
-including environment variable loading and global configuration management.
-"""
-
-import os
-from typing import Any
-
-from attrs import fields
 
 from flavor.config.config import (
     FlavorConfig,
@@ -25,25 +14,6 @@ from flavor.config.config import (
     SystemConfig,
     UVConfig,
 )
-
-
-def load_config_from_env(config_class: type) -> dict[str, Any]:
-    """Load configuration values from environment variables.
-
-    Args:
-        config_class: The configuration class to load environment variables for
-
-    Returns:
-        Dict of field names to environment variable values
-    """
-    kwargs = {}
-
-    for field in fields(config_class):
-        env_var = field.metadata.get("env_var")
-        if env_var and env_var in os.environ:
-            kwargs[field.name] = os.environ[env_var]
-
-    return kwargs
 
 
 class FlavorConfigManager:

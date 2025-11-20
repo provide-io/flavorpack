@@ -17,6 +17,8 @@ from provide.foundation.crypto import hash_name
 from flavor.config.defaults import (
     CACHE_NORMAL,
     DEFAULT_FILE_PERMS,
+)
+from flavor.psp.format_2025.constants import (
     DEFAULT_SLOT_DESCRIPTOR_SIZE,
     LIFECYCLE_CACHE,
     LIFECYCLE_CONFIG,

@@ -602,7 +602,7 @@ The following features are planned for future releases:
 
 ## Related Documentation
 
-- [Cryptographic Specification](../../reference/spec/pspf-2025.md) - Technical details
-- [Security Model](../concepts/security.md) - Security architecture
-- [Package Verification](../../api/index.md) - API reference
-- [Troubleshooting](../../troubleshooting/index.md#signature-and-security) - Common issues
+- [Cryptographic Specification](../../reference/spec/pspf-2025/) - Technical details
+- [Security Model](../concepts/security/) - Security architecture
+- [Package Verification](../../api/index/) - API reference
+- [Troubleshooting](../../troubleshooting/index/#signature-and-security) - Common issues

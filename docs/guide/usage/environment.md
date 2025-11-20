@@ -871,7 +871,7 @@ export FLAVOR_LAUNCHER_BIN=/path/to/launcher
 
 ## See Also
 
-- [CLI Reference](cli.md) - Command-line options
-- [Configuration Guide](../packaging/configuration.md) - Package configuration
-- [Debugging Guide](../advanced/debugging.md) - Debugging techniques
-- [Troubleshooting](../../troubleshooting/index.md) - Common issues
+- [CLI Reference](cli/) - Command-line options
+- [Configuration Guide](../packaging/configuration/) - Package configuration
+- [Debugging Guide](../advanced/debugging/) - Debugging techniques
+- [Troubleshooting](../../troubleshooting/index/) - Common issues

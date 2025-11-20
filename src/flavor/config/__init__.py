@@ -3,15 +3,12 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""TODO: Add module docstring."""
+"""FlavorPack configuration system built on the Provide Foundation config stack.
+
+Provides typed, validated configuration models that replace ad-hoc env handling.
+"""
 
 from __future__ import annotations
-
-"""FlavorPack Configuration System.
-
-This module provides a Foundation-based configuration system for FlavorPack,
-replacing manual environment variable handling with typed, validated configuration.
-"""
 
 from flavor.config.config import (
     BuildConfig,
@@ -26,15 +23,16 @@ from flavor.config.config import (
 )
 from flavor.config.manager import (
     get_flavor_config,
-    load_config_from_env,
     reset_flavor_config,
     set_flavor_config,
 )
+from flavor.config.runtime import FlavorRuntimeConfig
 
 __all__ = [
     "BuildConfig",
     "ExecutionConfig",
     "FlavorConfig",
+    "FlavorRuntimeConfig",
     "MetadataConfig",
     "PathsConfig",
     "RuntimeRuntimeConfig",
@@ -42,7 +40,6 @@ __all__ = [
     "SystemConfig",
     "UVConfig",
     "get_flavor_config",
-    "load_config_from_env",
     "reset_flavor_config",
     "set_flavor_config",
 ]

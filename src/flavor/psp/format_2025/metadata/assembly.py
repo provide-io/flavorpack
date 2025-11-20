@@ -3,11 +3,9 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""TODO: Add module docstring."""
+"""Metadata assembly for PSPF packages."""
 
 from __future__ import annotations
-
-"""Metadata assembly for PSPF packages."""
 
 import datetime
 from pathlib import Path

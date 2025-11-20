@@ -3,35 +3,34 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""TODO: Add module docstring."""
-
-#!/usr/bin/env python3
-# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
-#
-
 """Cross-language compatibility testing command for PSPF packages."""
 
+from __future__ import annotations
+
+from collections.abc import Sequence
 import json
 import os
 from pathlib import Path
 import sys
 import tempfile
+import traceback
+from typing import Any
 
 import click
 from provide.foundation import logger
+from provide.foundation.console import perr, pout
 from provide.foundation.process import run as run_command
 
-from flavor.helpers.manager import HelperManager
+from flavor.helpers.manager import HelperInfo, HelperManager
 
 
 class CrossLangTester:
     """Cross-language compatibility tester."""
 
-    def __init__(self, verbose=False, json_output=False) -> None:
+    def __init__(self, verbose: bool = False, json_output: bool = False) -> None:
         self.verbose = verbose
         self.json_output = json_output
-        self.results = {
+        self.results: dict[str, Any] = {
             "build_tests": [],
             "verify_tests": [],
             "launch_tests": [],
@@ -40,18 +39,18 @@ class CrossLangTester:
             "summary": {},
         }
 
-        # Initialize helper manager for finding helpers
         self.helper_manager = HelperManager()
-
         logger.debug(
             "Initializing CrossLangTester",
             cwd=str(Path.cwd()),
             initial_helpers_bin=str(self.helper_manager.helpers_bin),
             initial_helpers_dir=str(self.helper_manager.helpers_dir),
         )
+        self._configure_helper_paths()
+        self.taster_dir: Path = self._discover_taster_directory()
 
-        # When running crosslang tests, we need actual helper binaries
-        # Look for FLAVOR_HELPERS_DIR environment variable first
+    def _configure_helper_paths(self) -> None:
+        """Configure helper binary locations based on environment."""
         helpers_dir = os.environ.get("FLAVOR_HELPERS_DIR")
         if helpers_dir:
             helpers_path = Path(helpers_dir)
@@ -70,8 +69,6 @@ class CrossLangTester:
                 )
         else:
             logger.debug("No FLAVOR_HELPERS_DIR env var, searching directory tree")
-            # Try to find helpers relative to the current working directory
-            # Look up the directory tree for a dist/bin directory
             current = Path.cwd()
             for parent in [current, *current.parents]:
                 dist_bin = parent / "dist" / "bin"
@@ -88,7 +85,6 @@ class CrossLangTester:
             else:
                 logger.warning("No dist/bin directory found in directory tree")
 
-        # Log final state and contents
         logger.debug(
             "Final helper paths",
             helpers_bin=str(self.helper_manager.helpers_bin),
@@ -104,47 +100,43 @@ class CrossLangTester:
                 files=[f.name for f in files],
             )
 
-        # Find taster directory - look for manifest files
+    def _discover_taster_directory(self) -> Path:
+        """Locate the taster workspace that contains pyproject metadata."""
         current = Path.cwd()
-        self.taster_dir = None
 
-        # Check if we're already in taster directory
         if (current / "pyproject.toml").exists() and "taster" in str(current):
-            self.taster_dir = current
-        else:
-            # Search for taster directory
-            for parent in [current, *list(current.parents)]:
-                taster_path = parent / "tests/taster"
-                if taster_path.exists() and (taster_path / "pyproject.toml").exists():
-                    self.taster_dir = taster_path
-                    break
+            return current
 
-        if not self.taster_dir:
-            self.taster_dir = Path.cwd()  # Fallback to current directory
+        for parent in [current, *list(current.parents)]:
+            taster_path = parent / "tests/taster"
+            if taster_path.exists() and (taster_path / "pyproject.toml").exists():
+                return taster_path
 
-    def log(self, message, level="info") -> None:
+        return current
+
+    def log(self, message: str, level: str = "info") -> None:
         """Log a message."""
         if not self.json_output:
             if level == "error":
-                click.secho(message, fg="red")
+                perr(message, color="red")
             elif level == "success":
-                click.secho(message, fg="green")
+                pout(message, color="green")
             elif level == "warning":
-                click.secho(message, fg="yellow")
+                pout(message, color="yellow")
             else:
-                click.echo(message)
+                pout(message)
 
-    def build_with_launcher(self, launcher_info, key_seed="test123"):
+    def build_with_launcher(self, launcher_info: HelperInfo, key_seed: str = "test123") -> Path | None:
         """Build package using Python builder with specified launcher."""
         # Extract language from launcher name (e.g., "flavor-go-launcher" -> "go")
         launcher_lang = launcher_info.language
         output = self.taster_dir / f"test-{launcher_lang}.psp"
 
         # Create a temporary test package
-        temp_dir = tempfile.mkdtemp(prefix="crosslang_test_")
+        temp_dir = Path(tempfile.mkdtemp(prefix="crosslang_test_"))
 
         # Create a simple Python module
-        test_module = Path(temp_dir) / "crosslang_test.py"
+        test_module = temp_dir / "crosslang_test.py"
         test_module.write_text("""#!/usr/bin/env python3
 import sys
 
@@ -157,7 +149,7 @@ if __name__ == "__main__":
 """)
 
         # Create the manifest
-        manifest_path = Path(temp_dir) / "pyproject.toml"
+        manifest_path = temp_dir / "pyproject.toml"
         manifest_path.write_text("""[project]
 name = "crosslang-test"
 version = "1.0.0"
@@ -228,7 +220,7 @@ entry_point = "crosslang_test:main"
 
         return output if success else None
 
-    def verify_with_python(self, package_path):
+    def verify_with_python(self, package_path: Path) -> bool:
         """Verify package with Python."""
         try:
             # Import here to avoid dependency issues
@@ -289,13 +281,11 @@ entry_point = "crosslang_test:main"
             # Log detailed error in verbose mode
             if self.verbose:
                 self.log(f"    Error verifying {package_path.name}: {e}", "error")
-                import traceback
-
                 self.log(f"    Traceback: {traceback.format_exc()}", "error")
 
             return False
 
-    def verify_with_launcher_cli(self, package_path, launcher_name):
+    def verify_with_launcher_cli(self, package_path: Path, launcher_name: str) -> bool:
         """Verify package using launcher CLI."""
         # Make package executable
         package_path.chmod(0o755)
@@ -319,7 +309,7 @@ entry_point = "crosslang_test:main"
 
         return success
 
-    def test_cli_command(self, package_path, command):
+    def test_cli_command(self, package_path: Path, command: str) -> bool:
         """Test a CLI command."""
         cmd = [str(package_path), *command.split()]
         result = run_command(cmd, capture_output=True, check=False)
@@ -339,7 +329,7 @@ entry_point = "crosslang_test:main"
 
         return success
 
-    def test_reproducible_build(self, launcher_info):
+    def test_reproducible_build(self, launcher_info: HelperInfo) -> bool:
         """Test if builds are reproducible."""
         # Build twice with same seed
         pkg1 = self.build_with_launcher(launcher_info, key_seed="repro999")
@@ -389,7 +379,131 @@ entry_point = "crosslang_test:main"
             )
             return False
 
-    def run_all_tests(self) -> int | None:
+    def _resolve_launchers(self) -> list[HelperInfo]:
+        """Resolve launchers compatible with the current platform."""
+        helpers = self.helper_manager.list_helpers(platform_filter=True)
+        available_launchers: list[HelperInfo] = helpers.get("launchers", [])
+
+        current_platform = self.helper_manager.current_platform
+        self.log(f"\n🖥️  Current platform: {current_platform}")
+
+        if not available_launchers:
+            self.log("❌ No platform-compatible launchers found!", "error")
+            self.log(f"   Looking for launchers compatible with: {current_platform}", "error")
+            all_helpers = self.helper_manager.list_helpers(platform_filter=False)
+            all_launchers: list[HelperInfo] = all_helpers.get("launchers", [])
+            if all_launchers:
+                self.log(
+                    f"   Found {len(all_launchers)} total launchers (all platforms):",
+                    "warning",
+                )
+                for launcher in all_launchers[:5]:
+                    self.log(f"     - {launcher.name}", "warning")
+        else:
+            for launcher in available_launchers:
+                self.log(f"  • {launcher.name} ({launcher.language})")
+
+        return available_launchers
+
+    def _build_packages(self, launchers: Sequence[HelperInfo]) -> list[tuple[Path, HelperInfo]]:
+        """Build sample packages for each launcher."""
+        self.log("\n🔨 Building packages with each launcher...")
+        built_packages: list[tuple[Path, HelperInfo]] = []
+
+        for launcher_info in launchers:
+            self.log(f"  Building with {launcher_info.name}...")
+            pkg = self.build_with_launcher(launcher_info)
+            if pkg:
+                built_packages.append((pkg, launcher_info))
+                continue
+
+            self.log("    ❌ Failed", "error")
+            for test in self.results["build_tests"]:
+                if test["launcher"] == launcher_info.name and test.get("error"):
+                    self.log(f"      Error: {test['error'][:200]}", "error")
+
+        return built_packages
+
+    def _verify_with_python_suite(self, packages: Sequence[tuple[Path, HelperInfo]]) -> None:
+        """Verify built packages using Python tooling."""
+        self.log("\n🔍 Testing Python verification of all packages...")
+        for pkg, _ in packages:
+            if not self.verify_with_python(pkg):
+                self.log(f"  ❌ {pkg.name}", "error")
+
+    def _verify_with_launcher_cli_suite(self, packages: Sequence[tuple[Path, HelperInfo]]) -> None:
+        """Verify built packages using launcher CLI binaries."""
+        self.log("\n🔍 Testing launcher CLI verification...")
+        for pkg, launcher_info in packages:
+            if not self.verify_with_launcher_cli(pkg, launcher_info.language):
+                self.log(f"  ❌ {pkg.name} (CLI)", "error")
+
+    def _exercise_cli_commands(self, packages: Sequence[tuple[Path, HelperInfo]]) -> None:
+        """Run a subset of CLI commands to ensure behavior parity."""
+        if not packages:
+            return
+
+        self.log("\n🎮 Testing CLI command consistency...")
+        test_commands = ["--help", "--version", "info", "echo test"]
+        for pkg, _launcher_info in packages[:2]:
+            self.log(f"  Testing {pkg.name}:")
+            for cmd in test_commands:
+                if not self.test_cli_command(pkg, cmd):
+                    self.log(f"    ⚠️ {cmd}", "warning")
+
+    def _check_reproducible_builds(self, launchers: Sequence[HelperInfo]) -> None:
+        """Ensure launchers can create reproducible bundles."""
+        self.log("\n🔄 Testing reproducible builds...")
+        for launcher_info in launchers:
+            if not self.test_reproducible_build(launcher_info):
+                self.log(f"  ⚠️ {launcher_info.name} not fully reproducible", "warning")
+
+    def _cleanup_packages(self, packages: Sequence[tuple[Path, HelperInfo]]) -> None:
+        """Remove temporary package artifacts."""
+        for pkg, _ in packages:
+            if pkg.exists():
+                pkg.unlink()
+
+    def _summarize_and_report(self) -> bool:
+        """Summarize collected results and report them to the user."""
+        build_success = sum(1 for t in self.results["build_tests"] if t["success"])
+        build_total = len(self.results["build_tests"])
+
+        verify_success = sum(1 for t in self.results["verify_tests"] if t["success"])
+        verify_total = len(self.results["verify_tests"])
+
+        cli_success = sum(1 for t in self.results["cli_tests"] if t["success"])
+        cli_total = len(self.results["cli_tests"])
+
+        repro_success = sum(1 for t in self.results["reproducible_tests"] if t["success"])
+        repro_total = len(self.results["reproducible_tests"])
+
+        overall_success = build_success > 0 and verify_success > 0 and cli_success > 0
+        self.results["summary"] = {
+            "builds": f"{build_success}/{build_total}",
+            "verifications": f"{verify_success}/{verify_total}",
+            "cli_tests": f"{cli_success}/{cli_total}",
+            "reproducible": f"{repro_success}/{repro_total}",
+            "overall_success": overall_success,
+        }
+
+        if self.json_output:
+            print(json.dumps(self.results, indent=2))
+        else:
+            self.log("\n" + "=" * 60)
+            self.log("SUMMARY", "warning")
+            self.log("=" * 60)
+            self.log(f"Builds: {self.results['summary']['builds']}")
+            self.log(f"Verifications: {self.results['summary']['verifications']}")
+            self.log(f"CLI Tests: {self.results['summary']['cli_tests']}")
+            self.log(f"Reproducible: {self.results['summary']['reproducible']}")
+
+            if not overall_success:
+                self.log("\n❌ Cross-language compatibility: FAILED", "error")
+
+        return overall_success
+
+    def run_all_tests(self) -> int:
         """Run all cross-language tests."""
         self.log("=" * 60)
         self.log("CROSS-LANGUAGE COMPATIBILITY TESTS", "warning")
@@ -400,130 +514,19 @@ entry_point = "crosslang_test:main"
         os.chdir(self.taster_dir)
 
         try:
-            # Discover all available launchers - filter by platform to avoid cross-platform issues
-            helpers = self.helper_manager.list_helpers(platform_filter=True)
-            available_launchers = helpers.get("launchers", [])
-
-            # Log current platform for debugging
-            current_platform = self.helper_manager.current_platform
-            self.log(f"\n🖥️  Current platform: {current_platform}")
-
+            available_launchers = self._resolve_launchers()
             if not available_launchers:
-                self.log("❌ No platform-compatible launchers found!", "error")
-                self.log(
-                    f"   Looking for launchers compatible with: {current_platform}",
-                    "error",
-                )
-                # Show all available helpers for debugging
-                all_helpers = self.helper_manager.list_helpers(platform_filter=False)
-                all_launchers = all_helpers.get("launchers", [])
-                if all_launchers:
-                    self.log(
-                        f"   Found {len(all_launchers)} total launchers (all platforms):",
-                        "warning",
-                    )
-                    for launcher in all_launchers[:5]:  # Show first 5
-                        self.log(f"     - {launcher.name}", "warning")
                 return 1
 
-            for launcher in available_launchers:
-                self.log(f"  • {launcher.name} ({launcher.language})")
+            built_packages = self._build_packages(available_launchers)
+            self._verify_with_python_suite(built_packages)
+            self._verify_with_launcher_cli_suite(built_packages)
+            self._exercise_cli_commands(built_packages)
+            self._check_reproducible_builds(available_launchers)
+            success = self._summarize_and_report()
+            self._cleanup_packages(built_packages)
 
-            # Test 1: Build with all available launchers
-            self.log("\n🔨 Building packages with each launcher...")
-            built_packages = []
-            for launcher_info in available_launchers:
-                self.log(f"  Building with {launcher_info.name}...")
-                pkg = self.build_with_launcher(launcher_info)
-                if pkg:
-                    built_packages.append((pkg, launcher_info))
-                else:
-                    self.log("    ❌ Failed", "error")
-                    # Show error details from build_tests
-                    for test in self.results["build_tests"]:
-                        if test["launcher"] == launcher_info.name and test.get("error"):
-                            self.log(f"      Error: {test['error'][:200]}", "error")
-
-            # Test 2: Verify all packages with Python
-            self.log("\n🔍 Testing Python verification of all packages...")
-            for pkg, launcher_info in built_packages:
-                if self.verify_with_python(pkg):
-                    pass
-                else:
-                    self.log(f"  ❌ {pkg.name}", "error")
-
-            # Test 3: Verify with launcher CLIs
-            self.log("\n🔍 Testing launcher CLI verification...")
-            for pkg, launcher_info in built_packages:
-                if self.verify_with_launcher_cli(pkg, launcher_info.language):
-                    pass
-                else:
-                    self.log(f"  ❌ {pkg.name} (CLI)", "error")
-
-            # Test 4: Test CLI commands
-            self.log("\n🎮 Testing CLI command consistency...")
-            test_commands = ["--help", "--version", "info", "echo test"]
-            for pkg, launcher_info in built_packages[:2]:  # Test just a couple
-                self.log(f"  Testing {pkg.name}:")
-                for cmd in test_commands:
-                    if self.test_cli_command(pkg, cmd):
-                        pass
-                    else:
-                        self.log(f"    ⚠️ {cmd}", "warning")
-
-            # Test 5: Reproducible builds
-            self.log("\n🔄 Testing reproducible builds...")
-            for launcher_info in available_launchers:
-                if self.test_reproducible_build(launcher_info):
-                    pass
-                else:
-                    self.log(f"  ⚠️ {launcher_info.name} not fully reproducible", "warning")
-
-            # Calculate summary
-            build_success = sum(1 for t in self.results["build_tests"] if t["success"])
-            build_total = len(self.results["build_tests"])
-
-            verify_success = sum(1 for t in self.results["verify_tests"] if t["success"])
-            verify_total = len(self.results["verify_tests"])
-
-            cli_success = sum(1 for t in self.results["cli_tests"] if t["success"])
-            cli_total = len(self.results["cli_tests"])
-
-            repro_success = sum(1 for t in self.results["reproducible_tests"] if t["success"])
-            repro_total = len(self.results["reproducible_tests"])
-
-            self.results["summary"] = {
-                "builds": f"{build_success}/{build_total}",
-                "verifications": f"{verify_success}/{verify_total}",
-                "cli_tests": f"{cli_success}/{cli_total}",
-                "reproducible": f"{repro_success}/{repro_total}",
-                "overall_success": (build_success > 0 and verify_success > 0 and cli_success > 0),
-            }
-
-            # Output results
-            if self.json_output:
-                print(json.dumps(self.results, indent=2))
-            else:
-                self.log("\n" + "=" * 60)
-                self.log("SUMMARY", "warning")
-                self.log("=" * 60)
-                self.log(f"Builds: {self.results['summary']['builds']}")
-                self.log(f"Verifications: {self.results['summary']['verifications']}")
-                self.log(f"CLI Tests: {self.results['summary']['cli_tests']}")
-                self.log(f"Reproducible: {self.results['summary']['reproducible']}")
-
-                if self.results["summary"]["overall_success"]:
-                    pass
-                else:
-                    self.log("\n❌ Cross-language compatibility: FAILED", "error")
-
-            # Clean up test packages
-            for pkg, _ in built_packages:
-                if pkg.exists():
-                    pkg.unlink()
-
-            return 0 if self.results["summary"]["overall_success"] else 1
-
+            return 0 if success else 1
         finally:
             os.chdir(original_cwd)
 
@@ -532,14 +535,14 @@ entry_point = "crosslang_test:main"
 @click.option("--verbose", "-v", is_flag=True, help="Verbose output")
 @click.option("--json", "json_output", is_flag=True, help="Output results as JSON")
 @click.option("--output-file", "-o", type=click.Path(), help="Write output to file")
-def crosslang_command(verbose, json_output, output_file) -> None:
+def crosslang_command(verbose: bool, json_output: bool, output_file: str | None) -> None:
+    """Execute the cross-language compatibility test suite."""
     tester = CrossLangTester(verbose=verbose, json_output=json_output)
     exit_code = tester.run_all_tests()
 
-    # Write to file if requested
     if output_file and json_output:
-        with open(output_file, "w") as f:
-            json.dump(tester.results, f, indent=2)
+        output_path = Path(output_file)
+        output_path.write_text(json.dumps(tester.results, indent=2), encoding="utf-8")
 
     sys.exit(exit_code)
 

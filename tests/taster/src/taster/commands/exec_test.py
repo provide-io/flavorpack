@@ -1,237 +1,225 @@
-#!/usr/bin/env python3
-# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
 #
-
-"""TODO: Add module docstring."""
-
-#!/usr/bin/env python3
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 
 """Test direct execution vs script execution to diagnose permission issues."""
 
+from __future__ import annotations
+
 from pathlib import Path
 import tempfile
+from typing import Any
 
 import click
+from provide.foundation.console import pout
 from provide.foundation.process import run
 
 from flavor.helpers import HelperManager
 from flavor.package import build_package_from_manifest
 
-
-@click.command("exec-test")
-@click.option("--verbose", "-v", is_flag=True, help="Verbose output")
-def exec_test_command(verbose) -> None:
-    click.secho("=" * 60, fg="cyan")
-
-    helper_manager = HelperManager()
-
-    # Test 1: Direct binary execution
-    click.secho("\n📌 Test 1: Direct binary execution", fg="yellow")
-    with tempfile.TemporaryDirectory() as temp_dir:
-        temp_dir = Path(temp_dir)
-
-        # Create a simple binary command (using Python directly)
-        src_dir = temp_dir / "src" / "binary_test"
-        src_dir.mkdir(parents=True)
-
-        (src_dir / "__init__.py").write_text("")
-        (src_dir / "__main__.py").write_text("""
+MODULE_TEMPLATE = """\
 import sys
-sys.exit(0)
-""")
 
-        manifest = temp_dir / "pyproject.toml"
-        manifest.write_text("""
+
+def main() -> None:
+    print("{message}")
+    sys.exit(0)
+
+
+if __name__ == "__main__":
+    main()
+"""
+
+BINARY_MANIFEST = """\
 [project]
 name = "binary-test"
 version = "1.0.0"
 
 [tool.flavor]
 entry_point = "binary_test.__main__:main"
-# Use Python binary directly, not a script
 command = "{workenv}/bin/python3.11 -m binary_test"
-""")
+"""
 
-        try:
-            # Build with Rust launcher
-            rust_launcher = helper_manager.get_helper("flavor-rs-launcher")
-            artifacts = build_package_from_manifest(
-                manifest_path=manifest,
-                launcher_bin=rust_launcher,
-                key_seed="test123",
-                show_progress=verbose,
-            )
-
-            package_path = artifacts[0]
-            package_path.chmod(0o755)
-
-            # Execute
-            env = {"FLAVOR_EXEC_MODE": "exec"}
-            if verbose:
-                env["FLAVOR_LOG_LEVEL"] = "debug"
-
-            result = run(
-                [str(package_path)],
-                capture_output=True,
-                check=False,
-                env=env,
-                timeout=5,
-            )
-
-            if result.returncode == 0 and "Binary execution successful" in result.stdout:
-                pass
-            else:
-                click.secho("  ❌ Binary execution: FAILED", fg="red")
-                if verbose:
-                    click.echo(f"    Exit code: {result.returncode}")
-                    if result.stderr:
-                        click.echo(f"    Error: {result.stderr[:200]}")
-        except Exception as e:
-            click.secho(f"  ❌ Binary execution: ERROR - {e}", fg="red")
-
-    # Test 2: Script execution (with shebang)
-    click.secho("\n📌 Test 2: Script execution (with shebang)", fg="yellow")
-    with tempfile.TemporaryDirectory() as temp_dir:
-        temp_dir = Path(temp_dir)
-
-        # Create a script-based command
-        src_dir = temp_dir / "src" / "script_test"
-        src_dir.mkdir(parents=True)
-
-        (src_dir / "__init__.py").write_text("")
-        (src_dir / "__main__.py").write_text("""
-import sys
-sys.exit(0)
-""")
-
-        manifest = temp_dir / "pyproject.toml"
-        manifest.write_text("""
+SCRIPT_MANIFEST = """\
 [project]
 name = "script-test"
 version = "1.0.0"
 
 [tool.flavor]
 entry_point = "script_test.__main__:main"
-# Default command will use the entry point script
-""")
+"""
 
-        try:
-            # Build with Rust launcher
-            rust_launcher = helper_manager.get_helper("flavor-rs-launcher")
-            artifacts = build_package_from_manifest(
-                manifest_path=manifest,
-                launcher_bin=rust_launcher,
-                key_seed="test123",
-                show_progress=verbose,
-            )
-
-            package_path = artifacts[0]
-            package_path.chmod(0o755)
-
-            # Execute with both modes
-            for mode in ["spawn", "exec"]:
-                click.echo(f"    Testing {mode} mode...")
-                env = {"FLAVOR_EXEC_MODE": mode}
-                if verbose:
-                    env["FLAVOR_LOG_LEVEL"] = "debug"
-
-                result = run(
-                    [str(package_path)],
-                    capture_output=True,
-                    check=False,
-                    env=env,
-                    timeout=5,
-                )
-
-                if result.returncode == 0 and "Script execution successful" in result.stdout:
-                    pass
-                else:
-                    click.secho(f"      ❌ {mode} mode: FAILED", fg="red")
-                    if verbose:
-                        click.echo(f"        Exit code: {result.returncode}")
-                        if result.stderr:
-                            click.echo(f"        Error: {result.stderr[:200]}")
-        except Exception as e:
-            click.secho(f"  ❌ Script execution: ERROR - {e}", fg="red")
-
-    # Test 3: Direct workenv access
-    click.secho("\n📌 Test 3: Direct workenv command execution", fg="yellow")
-    with tempfile.TemporaryDirectory() as temp_dir:
-        temp_dir = Path(temp_dir)
-
-        # Create a test that directly runs from workenv
-        src_dir = temp_dir / "src" / "direct_test"
-        src_dir.mkdir(parents=True)
-
-        (src_dir / "__init__.py").write_text("")
-        (src_dir / "__main__.py").write_text("""
-import sys
-sys.exit(0)
-""")
-
-        # Create custom script in the package
-
-        manifest = temp_dir / "pyproject.toml"
-        manifest.write_text("""
+DIRECT_MANIFEST = """\
 [project]
 name = "direct-test"
 version = "1.0.0"
 
 [tool.flavor]
 entry_point = "direct_test.__main__:main"
-# Use a shell script directly
 command = "{workenv}/test.sh"
 setup_commands = [
     "echo '#!/bin/sh' > {workenv}/test.sh",
     "chmod +x {workenv}/test.sh"
 ]
-""")
+"""
 
-        try:
-            # Build with Rust launcher
-            rust_launcher = helper_manager.get_helper("flavor-rs-launcher")
-            artifacts = build_package_from_manifest(
-                manifest_path=manifest,
-                launcher_bin=rust_launcher,
-                key_seed="test123",
-                show_progress=verbose,
+
+@click.command("exec-test")
+@click.option("--verbose", "-v", is_flag=True, help="Verbose output")
+def exec_test_command(verbose: bool) -> None:
+    """Run a battery of execution-mode experiments."""
+    pout("=" * 60, color="cyan")
+
+    helper_manager = HelperManager()
+    _run_binary_test(helper_manager, verbose)
+    _run_script_test(helper_manager, verbose)
+    _run_direct_workenv_test(helper_manager, verbose)
+
+    pout("\n" + "=" * 60, color="cyan")
+
+
+def _run_binary_test(helper_manager: HelperManager, verbose: bool) -> None:
+    """Validate direct binary execution with exec mode."""
+    pout("\n📌 Test 1: Direct binary execution", color="yellow")
+    try:
+        with tempfile.TemporaryDirectory() as temp_dir_str:
+            temp_dir = Path(temp_dir_str)
+            manifest = _prepare_project(
+                temp_dir,
+                "binary_test",
+                BINARY_MANIFEST,
+                success_message="Binary execution successful",
             )
+            package_path = _build_package(helper_manager, manifest, verbose)
+            env = _build_env(mode="exec", verbose=verbose)
+            result = _execute_package(package_path, env)
 
-            package_path = artifacts[0]
-            package_path.chmod(0o755)
+            if result.returncode == 0 and "Binary execution successful" in result.stdout:
+                pout("  ✅ Binary execution succeeded", fg="green")
+            else:
+                _report_failure("Binary execution", result, verbose)
+    except Exception as exc:
+        pout(f"  ❌ Binary execution: ERROR - {exc}", color="red")
 
-            # Execute
-            env = {"FLAVOR_EXEC_MODE": "exec"}
-            if verbose:
-                env["FLAVOR_LOG_LEVEL"] = "debug"
 
-            result = run(
-                [str(package_path)],
-                capture_output=True,
-                check=False,
-                env=env,
-                timeout=5,
+def _run_script_test(helper_manager: HelperManager, verbose: bool) -> None:
+    """Validate script execution in spawn and exec modes."""
+    pout("\n📌 Test 2: Script execution (with shebang)", fg="yellow")
+    try:
+        with tempfile.TemporaryDirectory() as temp_dir_str:
+            temp_dir = Path(temp_dir_str)
+            manifest = _prepare_project(
+                temp_dir,
+                "script_test",
+                SCRIPT_MANIFEST,
+                success_message="Script execution successful",
             )
+            package_path = _build_package(helper_manager, manifest, verbose)
+
+            for mode in ["spawn", "exec"]:
+                pout(f"    Testing {mode} mode...")
+                env = _build_env(mode=mode, verbose=verbose)
+                result = _execute_package(package_path, env)
+                if result.returncode == 0 and "Script execution successful" in result.stdout:
+                    pout(f"      ✅ {mode} mode succeeded", fg="green")
+                else:
+                    _report_failure(f"{mode} mode", result, verbose)
+    except Exception as exc:
+        pout(f"  ❌ Script execution: ERROR - {exc}", color="red")
+
+
+def _run_direct_workenv_test(helper_manager: HelperManager, verbose: bool) -> None:
+    """Validate executing a workenv-provided shell script."""
+    pout("\n📌 Test 3: Direct workenv command execution", color="yellow")
+    try:
+        with tempfile.TemporaryDirectory() as temp_dir_str:
+            temp_dir = Path(temp_dir_str)
+            manifest = _prepare_project(
+                temp_dir,
+                "direct_test",
+                DIRECT_MANIFEST,
+                success_message="Direct shell execution successful",
+            )
+            package_path = _build_package(helper_manager, manifest, verbose)
+            env = _build_env(mode="exec", verbose=verbose)
+            result = _execute_package(package_path, env)
 
             if result.returncode == 0 and "Direct shell execution successful" in result.stdout:
-                pass
+                pout("  ✅ Direct workenv execution succeeded", fg="green")
             else:
-                click.secho("  ❌ Direct workenv execution: FAILED", fg="red")
-                if verbose:
-                    click.echo(f"    Exit code: {result.returncode}")
-                    if result.stderr:
-                        click.echo(f"    Error: {result.stderr[:200]}")
-        except Exception as e:
-            click.secho(f"  ❌ Direct workenv execution: ERROR - {e}", fg="red")
+                _report_failure("Direct workenv execution", result, verbose)
+    except Exception as exc:
+        pout(f"  ❌ Direct workenv execution: ERROR - {exc}", color="red")
 
-    click.secho("\n" + "=" * 60, fg="cyan")
+
+def _prepare_project(
+    temp_dir: Path,
+    package_name: str,
+    manifest_content: str,
+    *,
+    success_message: str,
+) -> Path:
+    """Write a minimal Python package and corresponding manifest."""
+    src_dir = temp_dir / "src" / package_name
+    src_dir.mkdir(parents=True, exist_ok=True)
+    (src_dir / "__init__.py").write_text("", encoding="utf-8")
+    module_body = MODULE_TEMPLATE.format(message=success_message)
+    (src_dir / "__main__.py").write_text(module_body, encoding="utf-8")
+
+    manifest = temp_dir / "pyproject.toml"
+    manifest.write_text(manifest_content, encoding="utf-8")
+    return manifest
+
+
+def _build_package(helper_manager: HelperManager, manifest: Path, verbose: bool) -> Path:
+    """Build a PSPF package using the Rust launcher."""
+    rust_launcher = helper_manager.get_helper("flavor-rs-launcher")
+    artifacts = build_package_from_manifest(
+        manifest_path=manifest,
+        launcher_bin=rust_launcher,
+        key_seed="test123",
+        show_progress=verbose,
+    )
+
+    package_path = Path(artifacts[0])
+    package_path.chmod(0o755)
+    return package_path
+
+
+def _build_env(mode: str, verbose: bool) -> dict[str, str]:
+    """Create an environment dictionary for launcher execution."""
+    env = {"FLAVOR_EXEC_MODE": mode}
+    if verbose:
+        env["FLAVOR_LOG_LEVEL"] = "debug"
+    return env
+
+
+def _execute_package(package_path: Path, env: dict[str, str]) -> Any:
+    """Run a package and capture the result."""
+    return run(
+        [str(package_path)],
+        capture_output=True,
+        check=False,
+        env=env,
+        timeout=5,
+    )
+
+
+def _report_failure(case: str, result: Any, verbose: bool) -> None:
+    """Emit detailed diagnostics for a failed invocation."""
+    pout(f"  ❌ {case}: FAILED", color="red")
+    if not verbose:
+        return
+
+    pout(f"    Exit code: {result.returncode}")
+    stderr = getattr(result, "stderr", "")
+    if stderr:
+        pout(f"    Error: {stderr[:200]}")
 
 
 if __name__ == "__main__":
     exec_test_command()
+
 
 # 🌶️📦🔚

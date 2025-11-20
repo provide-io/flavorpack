@@ -3,13 +3,9 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""TODO: Add module docstring."""
+"""Custom exceptions for FlavorPack."""
 
 from __future__ import annotations
-
-"""
-Custom exceptions for the flavor pack.
-"""
 
 from provide.foundation.errors import FoundationError
 

@@ -106,10 +106,10 @@ source ~/.zshrc
 # Use specific Python version
 python3.11 -m flavor pack --manifest pyproject.toml
 
-# Or set up pyenv
-brew install pyenv
-pyenv install 3.11.0
-pyenv local 3.11.0
+# Or set up Python version with uv
+brew install uv
+uv python install 3.11
+uv python pin 3.11
 ```
 
 ### Homebrew-Related Issues
@@ -232,12 +232,12 @@ sudo dtruss ./myapp.psp 2>&1 | head -100
 
 ## Getting Help
 
-- Check [Common Issues](../common.md) for cross-platform problems
-- Review [Security Troubleshooting](../../guide/concepts/security.md) for signing issues
-- Visit [Community Support](../../community/support.md) for additional help
+- Check [Common Issues](../common/) for cross-platform problems
+- Review [Security Troubleshooting](../../guide/concepts/security/) for signing issues
+- Visit [Community Support](../../community/support/) for additional help
 
 ## Related Documentation
 
-- [Installation Guide](../../getting-started/installation.md)
-- [Platform Support](../../guide/packaging/platforms.md)
-- [Building Helpers](../../development/helpers.md)
+- [Installation Guide](../../getting-started/installation/)
+- [Platform Support](../../guide/packaging/platforms/)
+- [Building Helpers](../../development/helpers/)

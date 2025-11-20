@@ -6,7 +6,7 @@
 """Test platform detection utilities."""
 
 import platform
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -44,7 +44,7 @@ class TestPlatformDetection:
             assert os_name == "windows"
 
     @patch("provide.foundation.platform.detection.platform.system")
-    def test_get_os_name_normalization(self, mock_system) -> None:
+    def test_get_os_name_normalization(self, mock_system: MagicMock) -> None:
         """Test OS name normalization for various inputs."""
         from provide.foundation.platform.detection import get_os_name as foundation_get_os_name
 
@@ -86,7 +86,7 @@ class TestPlatformDetection:
             assert arch_name == "x86"
 
     @patch("provide.foundation.platform.detection.platform.machine")
-    def test_get_arch_name_normalization(self, mock_machine) -> None:
+    def test_get_arch_name_normalization(self, mock_machine: MagicMock) -> None:
         """Test architecture normalization for various inputs."""
         from provide.foundation.platform.detection import get_arch_name as foundation_get_arch_name
 
@@ -137,7 +137,7 @@ class TestPlatformDetection:
 
     @patch("provide.foundation.platform.detection.platform.system")
     @patch("provide.foundation.platform.detection.platform.machine")
-    def test_get_platform_string_combinations(self, mock_machine, mock_system) -> None:
+    def test_get_platform_string_combinations(self, mock_machine: MagicMock, mock_system: MagicMock) -> None:
         """Test various platform string combinations."""
         from provide.foundation.platform.detection import (
             get_arch_name as foundation_get_arch_name,
@@ -180,7 +180,13 @@ class TestPlatformDetection:
     @patch("provide.foundation.platform.detection.platform.release")
     @patch("provide.foundation.platform.detection.platform.version")
     @patch("provide.foundation.platform.detection.platform.mac_ver")
-    def test_get_os_version_by_system(self, mock_mac_ver, mock_version, mock_release, mock_system) -> None:
+    def test_get_os_version_by_system(
+        self,
+        mock_mac_ver: MagicMock,
+        mock_version: MagicMock,
+        mock_release: MagicMock,
+        mock_system: MagicMock,
+    ) -> None:
         """Test OS version detection for different systems."""
         from provide.foundation.platform.detection import get_os_version as foundation_get_os_version
 
@@ -229,7 +235,7 @@ class TestPlatformDetection:
             # Could be "Apple M1", "Intel Core i7", "AMD Ryzen", etc.
 
     @patch("provide.foundation.platform.detection.platform.processor")
-    def test_get_cpu_type_values(self, mock_processor) -> None:
+    def test_get_cpu_type_values(self, mock_processor: MagicMock) -> None:
         """Test CPU type detection with known values."""
         from provide.foundation.platform.detection import get_cpu_type as foundation_get_cpu_type
 
@@ -290,7 +296,7 @@ class TestPlatformDetection:
 
     @patch("provide.foundation.platform.detection.platform.system")
     @patch("provide.foundation.platform.detection.platform.machine")
-    def test_unknown_platform_handling(self, mock_machine, mock_system) -> None:
+    def test_unknown_platform_handling(self, mock_machine: MagicMock, mock_system: MagicMock) -> None:
         """Test handling of unknown platform values."""
         from provide.foundation.platform.detection import (
             get_arch_name as foundation_get_arch_name,

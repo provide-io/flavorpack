@@ -572,6 +572,6 @@ Process CSV files with pandas:
 
 Explore our cookbook for more detailed examples:
 
-- 📚 [CLI Tools](../cookbook/examples/cli-tool.md) - Command-line applications
-- 🌐 [Web Apps](../cookbook/examples/web-app.md) - Flask, FastAPI, Django
+- 📚 [CLI Tools](../cookbook/examples/cli-tool/) - Command-line applications
+- 🌐 [Web Apps](../cookbook/examples/web-app/) - Flask, FastAPI, Django
 

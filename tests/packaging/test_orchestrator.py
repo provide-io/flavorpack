@@ -6,6 +6,7 @@
 """Unit tests for the PackagingOrchestrator."""
 
 from pathlib import Path
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import attrs
@@ -70,12 +71,12 @@ def setup_payload_dir(tmp_path: Path) -> Path:
 @patch("flavor.packaging.orchestrator.find_launcher_executable")
 @patch("flavor.packaging.orchestrator.PackagingOrchestrator._detect_launcher_type")
 def test_python_builder_flow(
-    mock_detect_launcher,
-    mock_find_launcher,
-    mock_python_packager,
-    mock_pspf_builder,
-    mock_path_exists,
-    mock_os_access,
+    mock_detect_launcher: MagicMock,
+    mock_find_launcher: MagicMock,
+    mock_python_packager: MagicMock,
+    mock_pspf_builder: MagicMock,
+    mock_path_exists: MagicMock,
+    mock_os_access: MagicMock,
     orchestrator: PackagingOrchestrator,
     setup_payload_dir: Path,
     tmp_path: Path,
@@ -100,7 +101,7 @@ def test_python_builder_flow(
     mock_builder_instance.with_keys.return_value = mock_builder_instance
 
     # Set up mock to create the output file as a side effect
-    def create_mock_file(output_path):
+    def create_mock_file(output_path: Path) -> MagicMock:
         """Side effect to create mock output file."""
         output_path.parent.mkdir(parents=True, exist_ok=True)
         output_path.write_bytes(b"mock package content" * 1000)
@@ -124,13 +125,13 @@ def test_python_builder_flow(
 @patch("flavor.packaging.orchestrator.PythonPackager")
 @patch("flavor.packaging.orchestrator.PackagingOrchestrator._detect_launcher_type")
 def test_external_builder_command_construction(
-    mock_detect_launcher,
-    mock_python_packager,
-    mock_run,
-    mock_find_builder,
-    mock_find_launcher,
-    mock_path_exists,
-    mock_os_access,
+    mock_detect_launcher: MagicMock,
+    mock_python_packager: MagicMock,
+    mock_run: MagicMock,
+    mock_find_builder: MagicMock,
+    mock_find_launcher: MagicMock,
+    mock_path_exists: MagicMock,
+    mock_os_access: MagicMock,
     orchestrator: PackagingOrchestrator,
     setup_payload_dir: Path,
     tmp_path: Path,
@@ -150,7 +151,7 @@ def test_external_builder_command_construction(
     orchestrator.builder_bin = "/path/to/flavor-rs-builder"
 
     # Set up mock run to create the output file as a side effect
-    def create_mock_file_external(*args, **kwargs) -> None:
+    def create_mock_file_external(*args: Any, **kwargs: Any) -> None:
         """Side effect to create mock output file for external builder."""
         output_path = Path(orchestrator.output_flavor_path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -181,12 +182,12 @@ def test_external_builder_command_construction(
 @patch("flavor.packaging.orchestrator.run", side_effect=BuildError("Build failed"))
 @patch("flavor.packaging.orchestrator.PythonPackager")
 def test_external_builder_error_handling(
-    mock_python_packager,
-    mock_run,
-    mock_find_builder,
-    mock_find_launcher,
-    mock_path_exists,
-    mock_os_access,
+    mock_python_packager: MagicMock,
+    mock_run: MagicMock,
+    mock_find_builder: MagicMock,
+    mock_find_launcher: MagicMock,
+    mock_path_exists: MagicMock,
+    mock_os_access: MagicMock,
     orchestrator: PackagingOrchestrator,
     setup_payload_dir: Path,
     tmp_path: Path,
@@ -208,7 +209,7 @@ def test_external_builder_error_handling(
 
 
 @patch("flavor.packaging.orchestrator.find_launcher_executable")
-def test_launcher_not_found(mock_find_launcher, orchestrator: PackagingOrchestrator) -> None:
+def test_launcher_not_found(mock_find_launcher: MagicMock, orchestrator: PackagingOrchestrator) -> None:
     """Test that a BuildError is raised if the launcher binary is not found."""
     mock_find_launcher.return_value.exists.return_value = False
     with pytest.raises(BuildError, match="Launcher binary not found"):
@@ -218,8 +219,8 @@ def test_launcher_not_found(mock_find_launcher, orchestrator: PackagingOrchestra
 @patch("flavor.packaging.orchestrator.find_launcher_executable")
 @patch("os.access", return_value=False)
 def test_launcher_not_executable(
-    mock_os_access,
-    mock_find_launcher,
+    mock_os_access: MagicMock,
+    mock_find_launcher: MagicMock,
     orchestrator: PackagingOrchestrator,
     tmp_path: Path,
 ) -> None:
@@ -233,7 +234,7 @@ def test_launcher_not_executable(
 
 
 @patch("flavor.packaging.orchestrator.run")
-def test_launcher_type_detection(mock_run, orchestrator: PackagingOrchestrator) -> None:
+def test_launcher_type_detection(mock_run: MagicMock, orchestrator: PackagingOrchestrator) -> None:
     """Test the launcher type detection logic for Go and Rust."""
     mock_run.return_value.stdout = "flavor-go-launcher version 1.2.3"
     assert orchestrator._detect_launcher_type(Path("go-launcher")) == "go"

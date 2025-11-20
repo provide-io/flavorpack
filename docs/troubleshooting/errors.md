@@ -644,7 +644,7 @@ If you encounter an error not listed here:
 
 ## Related Documentation
 
-- [Troubleshooting Guide](index.md) - General troubleshooting
-- [FAQ](faq.md) - Common questions
-- [Platform Issues](platforms/index.md) - OS-specific problems
-- [API Reference](../api/index.md) - Error classes and handling
+- [Troubleshooting Guide](index/) - General troubleshooting
+- [FAQ](faq/) - Common questions
+- [Platform Issues](platforms/index/) - OS-specific problems
+- [API Reference](../api/index/) - Error classes and handling

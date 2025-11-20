@@ -29,4 +29,4 @@ pytest tests/test_builder.py::test_basic_build
 
 ---
 
-**See also:** [Testing Guide](index.md) | [Integration Tests](integration.md)
+**See also:** [Testing Guide](index/) | [Integration Tests](integration/)

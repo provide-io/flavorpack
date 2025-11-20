@@ -3,15 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""PSPF Package Writer - Binary serialization for PSPF packages.
-
-Handles the low-level binary writing and file operations for PSPF packages."""
-
-"""
-PSPF Package Writer - Binary serialization for PSPF packages.
-
-Handles the low-level binary writing and file operations for PSPF packages.
-"""
+"""PSPF package writer for low-level binary serialization."""
 
 import gzip
 from pathlib import Path
@@ -30,12 +22,12 @@ from provide.foundation.serialization import json_dumps
 
 from flavor.config.defaults import (
     DEFAULT_EXECUTABLE_PERMS,
-    DEFAULT_MAGIC_TRAILER_SIZE,
     DEFAULT_PAGE_SIZE,
-    DEFAULT_SLOT_ALIGNMENT,
-    DEFAULT_SLOT_DESCRIPTOR_SIZE,
 )
 from flavor.psp.format_2025.constants import (
+    DEFAULT_MAGIC_TRAILER_SIZE,
+    DEFAULT_SLOT_ALIGNMENT,
+    DEFAULT_SLOT_DESCRIPTOR_SIZE,
     TRAILER_END_MAGIC,
     TRAILER_START_MAGIC,
 )
@@ -282,7 +274,7 @@ def _write_trailer(f: BinaryIO, index: PSPFIndex) -> None:
 
 def _map_purpose(purpose: str) -> int:
     """Map purpose string to integer constant."""
-    from flavor.config.defaults import (
+    from flavor.psp.format_2025.constants import (
         PURPOSE_CODE,
         PURPOSE_CONFIG,
         PURPOSE_DATA,
@@ -300,7 +292,7 @@ def _map_purpose(purpose: str) -> int:
 
 def _map_lifecycle(lifecycle: str) -> int:
     """Map lifecycle string to integer constant."""
-    from flavor.config.defaults import (
+    from flavor.psp.format_2025.constants import (
         LIFECYCLE_CACHE,
         LIFECYCLE_CONFIG,
         LIFECYCLE_DEV,

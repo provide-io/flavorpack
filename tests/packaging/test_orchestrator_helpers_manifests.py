@@ -50,7 +50,18 @@ class TestCreateBuilderManifest:
         assert "setup_commands" in manifest
         assert "slots" in manifest
         assert "signature" in manifest
-        assert "runtime" not in manifest  # No runtime env config
+        # Should have runtime with default isolation (safe by default)
+        assert "runtime" in manifest
+        assert "env" in manifest["runtime"]
+        assert "unset" in manifest["runtime"]["env"]
+        # Default isolation vars
+        assert manifest["runtime"]["env"]["unset"] == [
+            "PYTHONPATH",
+            "UV_PROJECT_ENVIRONMENT",
+            "PYTHONHOME",
+            "UV_CACHE_DIR",
+            "VIRTUAL_ENV",
+        ]
 
     @patch("flavor.packaging.orchestrator_helpers.is_windows", return_value=False)
     def test_create_builder_manifest_with_cli_scripts(self, mock_is_windows: Path, tmp_path: Path) -> None:
@@ -111,7 +122,16 @@ class TestCreateBuilderManifest:
         assert "runtime" in manifest
         assert "env" in manifest["runtime"]
         assert "unset" in manifest["runtime"]["env"]
-        assert manifest["runtime"]["env"]["unset"] == ["DEBUG", "TEMP_VAR"]
+        # Should merge defaults + user vars (defaults first, no duplicates)
+        assert manifest["runtime"]["env"]["unset"] == [
+            "PYTHONPATH",
+            "UV_PROJECT_ENVIRONMENT",
+            "PYTHONHOME",
+            "UV_CACHE_DIR",
+            "VIRTUAL_ENV",
+            "DEBUG",
+            "TEMP_VAR",
+        ]
 
     @patch("flavor.packaging.orchestrator_helpers.is_windows", return_value=False)
     def test_create_builder_manifest_with_runtime_env_set(self, mock_is_windows: Path, tmp_path: Path) -> None:
@@ -297,7 +317,50 @@ class TestCreateBuilderManifest:
             key_paths=key_paths,
         )
 
-        # Runtime should not be in manifest when all env values are empty
+        # Even with empty user config, should still apply default isolation (safe by default)
+        assert "runtime" in manifest
+        assert "env" in manifest["runtime"]
+        assert "unset" in manifest["runtime"]["env"]
+        # Should have default isolation vars even when user provided empty config
+        assert manifest["runtime"]["env"]["unset"] == [
+            "PYTHONPATH",
+            "UV_PROJECT_ENVIRONMENT",
+            "PYTHONHOME",
+            "UV_CACHE_DIR",
+            "VIRTUAL_ENV",
+        ]
+
+    @patch("flavor.packaging.orchestrator_helpers.is_windows", return_value=False)
+    def test_create_builder_manifest_isolated_false(self, mock_is_windows: Path, tmp_path: Path) -> None:
+        """Test creating builder manifest with isolated=false (opt-out of default isolation)."""
+
+        slots = {
+            "uv": tmp_path / "uv",
+            "python": tmp_path / "python.tgz",
+            "wheels": tmp_path / "wheels.tar",
+        }
+
+        key_paths: dict[str, str | None] = {"private": None, "public": None}
+
+        build_config: dict[str, Any] = {
+            "execution": {
+                "runtime": {
+                    "env": {
+                        "isolated": False,  # Explicitly opt out of default isolation
+                    }
+                }
+            }
+        }
+
+        manifest = create_builder_manifest(
+            package_name="testpkg",
+            version="1.0.0",
+            build_config=build_config,
+            slots=slots,
+            key_paths=key_paths,
+        )
+
+        # When isolated=false, no runtime section should be added (user opted out)
         assert "runtime" not in manifest
 
 
@@ -320,7 +383,17 @@ class TestCreatePythonBuilderMetadata:
         assert "cache_validation" in metadata
         assert "workenv" in metadata
         assert "setup_commands" in metadata
-        assert "runtime" not in metadata
+        # Should have runtime with default isolation (safe by default)
+        assert "runtime" in metadata
+        assert "env" in metadata["runtime"]
+        assert "unset" in metadata["runtime"]["env"]
+        assert metadata["runtime"]["env"]["unset"] == [
+            "PYTHONPATH",
+            "UV_PROJECT_ENVIRONMENT",
+            "PYTHONHOME",
+            "UV_CACHE_DIR",
+            "VIRTUAL_ENV",
+        ]
 
     @patch("flavor.packaging.orchestrator_helpers.is_windows", return_value=False)
     def test_create_python_builder_metadata_with_runtime_env(self, mock_is_windows: Path) -> None:
@@ -347,7 +420,15 @@ class TestCreatePythonBuilderMetadata:
 
         assert "runtime" in metadata
         assert "env" in metadata["runtime"]
-        assert metadata["runtime"]["env"]["unset"] == ["DEBUG"]
+        # Should merge defaults + user vars
+        assert metadata["runtime"]["env"]["unset"] == [
+            "PYTHONPATH",
+            "UV_PROJECT_ENVIRONMENT",
+            "PYTHONHOME",
+            "UV_CACHE_DIR",
+            "VIRTUAL_ENV",
+            "DEBUG",
+        ]
         assert metadata["runtime"]["env"]["pass"] == ["PATH"]
         assert metadata["runtime"]["env"]["set"] == {"FOO": "bar"}
         assert metadata["runtime"]["env"]["map"] == {"OLD": "NEW"}

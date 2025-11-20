@@ -16,7 +16,7 @@ Practical examples demonstrating how to use FlavorPack for various packaging sce
     - `[tool.flavor.targets]` multi-platform builds
     - `--compress`, `--jobs` CLI flags
 
-    Before relying on any example, test it with your FlavorPack installation. If a configuration option doesn't work, check the current [manifest documentation](../../guide/packaging/manifest.md) for supported options.
+    Before relying on any example, test it with your FlavorPack installation. If a configuration option doesn't work, check the current [manifest documentation](../../guide/packaging/manifest/) for supported options.
 
 ## Quick Examples
 
@@ -475,7 +475,7 @@ PIP_INDEX_URL=file:///path/to/pip-cache flavor pack
 
 ## Next Steps
 
-- Review the [API Reference](../../api/index.md) for detailed function documentation
-- Check the [CLI Reference](../../guide/usage/cli.md) for all command options
-- Read the [Package Format Specification](../../reference/spec/fep-0001-core-format-and-operation-chains.md) for technical details
-- See [Troubleshooting Guide](../../troubleshooting/common.md) for common issues
+- Review the [API Reference](../../api/index/) for detailed function documentation
+- Check the [CLI Reference](../../guide/usage/cli/) for all command options
+- Read the [Package Format Specification](../../reference/spec/fep-0001-core-format-and-operation-chains/) for technical details
+- See [Troubleshooting Guide](../../troubleshooting/common/) for common issues

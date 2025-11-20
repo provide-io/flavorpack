@@ -3,12 +3,13 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""PSPF 2025 Slot Management Tests
+"""PSPF 2025 slot management tests covering lifecycle and metadata."""
 
-Tests slot lifecycle, compression, and management functionality."""
+from __future__ import annotations
 
 import hashlib
 import os
+from pathlib import Path
 
 import pytest
 
@@ -16,13 +17,14 @@ from flavor.psp.format_2025 import (
     PSPFReader,
     SlotMetadata,
 )
+from flavor.psp.format_2025.pspf_builder import PSPFBuilder
 
 
 class TestPSPFSlots:
     """Test PSPF slot management."""
 
     @pytest.fixture
-    def test_slots(self, temp_dir, test_builder):
+    def test_slots(self, temp_dir: Path, test_builder: PSPFBuilder) -> list[SlotMetadata]:
         """Create test slots with different properties."""
         slots = []
 
@@ -85,7 +87,7 @@ class TestPSPFSlots:
 
         return slots
 
-    def test_slot_lifecycle_runtime(self, temp_dir, test_builder) -> None:
+    def test_slot_lifecycle_runtime(self, temp_dir: Path, test_builder: PSPFBuilder) -> None:
         """Test runtime slot lifecycle metadata."""
         slot = SlotMetadata(
             index=0,
@@ -105,7 +107,7 @@ class TestPSPFSlots:
         assert slot_dict["id"] == "test-runtime"
         # Runtime slots available during application execution
 
-    def test_slot_lifecycle_init(self, temp_dir, test_builder) -> None:
+    def test_slot_lifecycle_init(self, temp_dir: Path, test_builder: PSPFBuilder) -> None:
         """Test init slot lifecycle metadata."""
         slot = SlotMetadata(
             index=0,
@@ -125,7 +127,7 @@ class TestPSPFSlots:
         assert slot_dict["id"] == "test-init"
         # Init slots removed after initialization
 
-    def test_slot_lifecycle_temp(self, temp_dir, test_builder) -> None:
+    def test_slot_lifecycle_temp(self, temp_dir: Path, test_builder: PSPFBuilder) -> None:
         """Test temp slot lifecycle metadata."""
         slot = SlotMetadata(
             index=0,
@@ -145,7 +147,7 @@ class TestPSPFSlots:
         assert slot_dict["id"] == "test-temp"
         # Temp slots removed after current session
 
-    def test_slot_lifecycle_cache(self, temp_dir, test_builder) -> None:
+    def test_slot_lifecycle_cache(self, temp_dir: Path, test_builder: PSPFBuilder) -> None:
         """Test cache slot lifecycle metadata."""
         slot = SlotMetadata(
             index=0,
@@ -165,7 +167,12 @@ class TestPSPFSlots:
         assert slot_dict["purpose"] == "config"
         # Cache slots kept for performance, can be regenerated
 
-    def test_multiple_slots(self, temp_dir, test_slots, test_builder) -> None:
+    def test_multiple_slots(
+        self,
+        temp_dir: Path,
+        test_slots: list[SlotMetadata],
+        test_builder: PSPFBuilder,
+    ) -> None:
         """Test bundle with multiple slots."""
         metadata = {
             "format": "PSPF/2025",
@@ -207,7 +214,7 @@ class TestPSPFSlots:
             assert slot_meta["lifecycle"] == slot.lifecycle
             assert slot_meta["purpose"] == slot.purpose
 
-    def test_slot_compression_gzip(self, temp_dir, test_builder) -> None:
+    def test_slot_compression_gzip(self, temp_dir: Path, test_builder: PSPFBuilder) -> None:
         """Test gzip compression."""
         # Create highly compressible data
         data = b"REPEAT" * 1000

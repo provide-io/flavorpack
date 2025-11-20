@@ -3,15 +3,13 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""TODO: Add module docstring."""
-
-from __future__ import annotations
-
 """Wheel building and dependency resolution for FlavorPack packaging.
 
 This module provides wheel building with complex dependency resolution logic,
 combining UV performance where appropriate with PyPA pip compatibility.
 """
+
+from __future__ import annotations
 
 from pathlib import Path
 import tempfile

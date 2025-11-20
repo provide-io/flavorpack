@@ -3,10 +3,11 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""Security tests for PSPF package handling.
+"""Security tests for PSPF package handling."""
 
-These tests ensure packages cannot be tampered with or exploited."""
+from __future__ import annotations
 
+from collections.abc import Iterator
 from pathlib import Path
 import tempfile
 
@@ -20,7 +21,7 @@ class TestPackageSecurity:
     """Test package security features."""
 
     @pytest.fixture(autouse=True)
-    def setup(self):
+    def setup(self) -> Iterator[None]:
         """Setup test environment."""
         self.temp_dir = Path(tempfile.mkdtemp())
         yield
@@ -72,14 +73,14 @@ class TestPackageSecurity:
         builder.build(package_path)
 
         # Tamper with the package
-        with open(package_path, "rb") as f:
-            data = f.read()
+        with package_path.open("rb") as pkg_file:
+            data = pkg_file.read()
 
         # Modify a byte in the middle
         tampered_data = data[:1000] + b"X" + data[1001:]
 
-        with open(package_path, "wb") as f:
-            f.write(tampered_data)
+        with package_path.open("wb") as pkg_file:
+            pkg_file.write(tampered_data)
 
         # Try to read tampered package
         reader = PSPFReader(package_path)

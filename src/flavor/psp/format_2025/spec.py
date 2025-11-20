@@ -3,15 +3,13 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""TODO: Add module docstring."""
-
-from __future__ import annotations
-
 """PSPF Build Specification - Immutable data structures for package building.
 
 This module defines the core data structures used throughout the PSPF builder
 system, emphasizing immutability and functional programming patterns.
 """
+
+from __future__ import annotations
 
 from pathlib import Path
 from typing import Any

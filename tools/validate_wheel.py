@@ -196,7 +196,7 @@ try:
         total_helpers = len(helpers.get('launchers', [])) + len(helpers.get('builders', []))
         if total_helpers > 0:
         else:
-            pout("ℹ️ No embedded helpers (universal wheel)")
+            pout("INFO: No embedded helpers (universal wheel)")
     except Exception as e:
         perr(f"⚠️ Helpers test: {e}")
 

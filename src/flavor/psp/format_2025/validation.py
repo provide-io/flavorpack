@@ -3,23 +3,9 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""TODO: Add module docstring."""
-
-#!/usr/bin/env python3
-# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
-#
-
-"""PSPF Build Validation - Pure functions for validating build specifications.
+"""PSPF build validation helpers.
 
 All validation functions are pure and return lists of error messages.
-Empty list means validation passed."""
-
-"""
-PSPF Build Validation - Pure functions for validating build specifications.
-
-All validation functions are pure and return lists of error messages.
-Empty list means validation passed.
 """
 
 from pathlib import Path

@@ -5,6 +5,9 @@
 
 """Performance benchmarks and large file tests for mmap."""
 
+from __future__ import annotations
+
+from collections.abc import Iterator
 from contextlib import contextmanager
 import os
 from pathlib import Path
@@ -25,7 +28,7 @@ from flavor.psp.format_2025.backends import (
 
 
 @contextmanager
-def measure_time(description):
+def measure_time(description: str) -> Iterator[None]:
     """Context manager to measure execution time."""
     start = time.perf_counter()
     yield
@@ -162,7 +165,7 @@ class TestMMapPerformance:
         finally:
             path.unlink(missing_ok=True)
 
-    def test_concurrent_access_performance(self) -> None:
+    def test_concurrent_access_performance(self) -> None:  # noqa: C901 - Intentional stress test
         """Test performance with concurrent access patterns."""
         import queue
         import threading
@@ -178,7 +181,7 @@ class TestMMapPerformance:
         try:
             results = queue.Queue()
 
-            def worker(backend_type, worker_id, iterations=100) -> None:
+            def worker(backend_type: str, worker_id: int, iterations: int = 100) -> None:
                 """Worker thread for concurrent access."""
                 backend = create_backend(backend_type, path)
                 backend.open(path)
@@ -331,7 +334,7 @@ class TestMMapPerformance:
             path.unlink(missing_ok=True)
 
     @pytest.mark.parametrize("access_pattern", ["sequential", "random", "strided"])
-    def test_access_patterns(self, access_pattern) -> None:
+    def test_access_patterns(self, access_pattern: str) -> None:
         """Test different access patterns and their performance."""
         size = 10 * 1024 * 1024  # 10MB
         read_size = 4096  # 4KB reads
