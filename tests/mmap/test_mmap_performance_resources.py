@@ -5,6 +5,9 @@
 
 """Performance benchmarks and large file tests for mmap."""
 
+from __future__ import annotations
+
+from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 import random
@@ -19,7 +22,7 @@ from flavor.psp.format_2025.backends import (
 
 
 @contextmanager
-def measure_time(description):
+def measure_time(description: str) -> Iterator[None]:
     """Context manager to measure execution time."""
     start = time.perf_counter()
     yield

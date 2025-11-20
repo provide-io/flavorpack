@@ -3,17 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""PSPF Key Management - Functions for handling cryptographic keys.
-
-Provides pure functions for key resolution, generation, and persistence.
-Supports multiple key sources with clear priority ordering."""
-
-"""
-PSPF Key Management - Functions for handling cryptographic keys.
-
-Provides pure functions for key resolution, generation, and persistence.
-Supports multiple key sources with clear priority ordering.
-"""
+"""PSPF key management utilities for handling cryptographic keys."""
 
 import hashlib
 from pathlib import Path

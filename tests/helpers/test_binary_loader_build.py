@@ -74,9 +74,11 @@ class TestGetHelper:
 
         loader = BinaryLoader(mock_manager)
         # Mock _search_helper_locations to return None (not found)
-        with patch.object(loader, "_search_helper_locations", return_value=None):
-            with pytest.raises(FileNotFoundError, match="Helper 'test-helper' not found"):
-                loader.get_helper("test-helper")
+        with (
+            patch.object(loader, "_search_helper_locations", return_value=None),
+            pytest.raises(FileNotFoundError, match="Helper 'test-helper' not found"),
+        ):
+            loader.get_helper("test-helper")
 
 
 class TestBuildHelpers:
@@ -96,13 +98,15 @@ class TestBuildHelpers:
         go_binaries = [tmp_path / "go-launcher", tmp_path / "go-builder"]
         rust_binaries = [tmp_path / "rs-launcher", tmp_path / "rs-builder"]
 
-        with patch.object(loader, "_build_go_helpers", return_value=go_binaries):
-            with patch.object(loader, "_build_rust_helpers", return_value=rust_binaries):
-                result = loader.build_helpers(language=None, force=False)
+        with (
+            patch.object(loader, "_build_go_helpers", return_value=go_binaries),
+            patch.object(loader, "_build_rust_helpers", return_value=rust_binaries),
+        ):
+            result = loader.build_helpers(language=None, force=False)
 
-                assert len(result) == 4
-                assert go_binaries[0] in result
-                assert rust_binaries[0] in result
+            assert len(result) == 4
+            assert go_binaries[0] in result
+            assert rust_binaries[0] in result
 
     @patch("flavor.helpers.binary_loader.get_platform_string")
     def test_build_helpers_go_only(self, mock_get_platform: Mock, tmp_path: Path) -> None:
@@ -113,13 +117,15 @@ class TestBuildHelpers:
 
         go_binaries = [tmp_path / "go-launcher"]
 
-        with patch.object(loader, "_build_go_helpers", return_value=go_binaries) as mock_go:
-            with patch.object(loader, "_build_rust_helpers") as mock_rust:
-                result = loader.build_helpers(language="go", force=True)
+        with (
+            patch.object(loader, "_build_go_helpers", return_value=go_binaries) as mock_go,
+            patch.object(loader, "_build_rust_helpers") as mock_rust,
+        ):
+            result = loader.build_helpers(language="go", force=True)
 
-                mock_go.assert_called_once_with(True)
-                mock_rust.assert_not_called()
-                assert result == go_binaries
+            mock_go.assert_called_once_with(True)
+            mock_rust.assert_not_called()
+            assert result == go_binaries
 
     @patch("flavor.helpers.binary_loader.get_platform_string")
     def test_build_helpers_rust_only(self, mock_get_platform: Mock, tmp_path: Path) -> None:
@@ -130,13 +136,15 @@ class TestBuildHelpers:
 
         rust_binaries = [tmp_path / "rs-builder"]
 
-        with patch.object(loader, "_build_go_helpers") as mock_go:
-            with patch.object(loader, "_build_rust_helpers", return_value=rust_binaries) as mock_rust:
-                result = loader.build_helpers(language="rust", force=False)
+        with (
+            patch.object(loader, "_build_go_helpers") as mock_go,
+            patch.object(loader, "_build_rust_helpers", return_value=rust_binaries) as mock_rust,
+        ):
+            result = loader.build_helpers(language="rust", force=False)
 
-                mock_go.assert_not_called()
-                mock_rust.assert_called_once_with(False)
-                assert result == rust_binaries
+            mock_go.assert_not_called()
+            mock_rust.assert_called_once_with(False)
+            assert result == rust_binaries
 
 
 class TestBuildGoHelpers:
@@ -214,7 +222,7 @@ class TestBuildGoHelpers:
         mock_run.return_value = Mock(returncode=0)
 
         # Setup Path mocking - create Mock with __truediv__
-        def mock_truediv(self, name: str) -> Path:
+        def mock_truediv(_path_obj: Path, name: str) -> Path:
             p = bin_dir / name
             # Create the file when accessed
             if not p.exists():
@@ -315,7 +323,7 @@ class TestBuildRustHelpers:
         mock_run.return_value = Mock(returncode=0)
 
         # Create Mock with __truediv__
-        def mock_truediv(self, name: str) -> Path:
+        def mock_truediv(_path_obj: Path, name: str) -> Path:
             p = bin_dir / name
             if not p.exists():
                 p.write_text("binary")

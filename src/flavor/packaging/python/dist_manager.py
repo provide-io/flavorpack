@@ -3,15 +3,14 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""TODO: Add module docstring."""
-
-from __future__ import annotations
-
 """Python distribution management for FlavorPack packaging.
 
 This module provides Python distribution handling including virtual environment
 setup, package installation, and distribution preparation for PSPF packaging.
 """
+
+from __future__ import annotations
+
 import contextlib
 import os
 from pathlib import Path

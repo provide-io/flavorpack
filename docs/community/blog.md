@@ -12,7 +12,7 @@ In the meantime, follow these channels:
 
 - **[GitHub Releases](https://github.com/provide-io/flavorpack/releases)** - Release notes
 - **[GitHub Discussions](https://github.com/provide-io/flavorpack/discussions)** - Announcements
-- **[Changelog](../community/changelog.md)** - Version history
+- **[Changelog](../community/changelog/)** - Version history
 
 ## Topics We'll Cover
 

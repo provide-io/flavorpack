@@ -5,11 +5,11 @@ Complete guide to packaging Python applications with FlavorPack, including depen
 !!! tip "Prerequisites"
     Before packaging Python apps, ensure you have:
 
-    - [FlavorPack installed](../../getting-started/installation.md) from source
-    - [Helpers built](../usage/cli.md#helpers-build) (`make build-helpers`)
+    - [FlavorPack installed](../../getting-started/installation/) from source
+    - [Helpers built](../usage/cli/#helpers-build) (`make build-helpers`)
     - A Python project with valid `pyproject.toml`
 
-    See [System Requirements](../../reference/requirements.md) for detailed version information.
+    See [System Requirements](../../reference/requirements/) for detailed version information.
 
 !!! warning "Alpha Release - Many Features Not Yet Implemented"
     **This guide shows both working features and planned future features.**
@@ -23,7 +23,7 @@ Complete guide to packaging Python applications with FlavorPack, including depen
     - Automatic dependency resolution via UV
     - Simple package structure
 
-    **📋 Planned for Future Releases** (see [Roadmap](../roadmap.md)):
+    **📋 Planned for Future Releases** (see [Roadmap](../roadmap/)):
 
     - Python version selection
     - Build environment customization
@@ -86,7 +86,7 @@ Packaged applications currently use whatever Python version is available in your
 
     For example, if you build on Python 3.12, your package will use Python 3.12 - you cannot target Python 3.11.
 
-    **Planned**: Future releases will support specifying target Python versions via manifest configuration (see [Roadmap](../roadmap.md)).
+    **Planned**: Future releases will support specifying target Python versions via manifest configuration (see [Roadmap](../roadmap/)).
 
 ### Dependency Management ✅
 
@@ -130,13 +130,13 @@ The `[tool.flavor].entry_point` is required and specifies which function runs wh
 
 ## Planned Python Features
 
-The following features are planned but **not yet implemented**. See the [FlavorPack Roadmap](../../roadmap.md) for detailed status, target versions, and implementation timelines.
+The following features are planned but **not yet implemented**. See the [FlavorPack Roadmap](../../roadmap/) for detailed status, target versions, and implementation timelines.
 
 ### Python Version Selection 📋
 
 !!! note "Planned Feature"
     Automatic Python version selection is planned for **v0.3.0 (Q1 2026)**.
-    See [Roadmap - Python Version Management](../../roadmap.md#python-version-selection) for full details.
+    See [Roadmap - Python Version Management](../../roadmap/#python-version-selection) for full details.
 
 **Current Workaround:** Packages use the Python version from your build environment. If you build on Python 3.12, your package will use Python 3.12.
 
@@ -211,7 +211,7 @@ dependencies = [
 !!! note "Planned Feature"
     FlavorPack creates a basic isolated virtual environment during build. Advanced configuration options (custom venv path, build-time environment variables, pre-install commands) are **planned for v0.3.0 (Q1 2026)**.
 
-    See [Roadmap - Build Environment Configuration](../../roadmap.md#build-environment-configuration) for full details.
+    See [Roadmap - Build Environment Configuration](../../roadmap/#build-environment-configuration) for full details.
 
 **Current Behavior:** FlavorPack automatically creates a virtual environment and installs dependencies using UV.
 
@@ -405,7 +405,7 @@ dependencies = [
 !!! note "Planned Feature"
     Runtime optimization configuration (code optimization levels, bytecode compilation, dependency optimization, lazy loading) is **planned for v0.4.0 (Q2 2026)**.
 
-    See [Roadmap - Runtime Optimization](../../roadmap.md#runtime-optimization) and [Roadmap - Advanced Slot Configuration](../../roadmap.md#advanced-slot-configuration) for full details.
+    See [Roadmap - Runtime Optimization](../../roadmap/#runtime-optimization) and [Roadmap - Advanced Slot Configuration](../../roadmap/#advanced-slot-configuration) for full details.
 
 **Current Behavior:** FlavorPack packages all dependencies and Python code as-is, with basic compression.
 
@@ -835,23 +835,23 @@ port = 8000
 
 **Configuration**:
 
-- 📋 [Package Configuration](configuration.md) - Full configuration reference
-- 📝 [Manifest Reference](manifest.md) - pyproject.toml specification
-- 🔒 [Package Signing](signing.md) - Add cryptographic signatures
-- 🌍 [Platform Support](platforms.md) - Multi-platform packaging
+- 📋 [Package Configuration](configuration/) - Full configuration reference
+- 📝 [Manifest Reference](manifest/) - pyproject.toml specification
+- 🔒 [Package Signing](signing/) - Add cryptographic signatures
+- 🌍 [Platform Support](platforms/) - Multi-platform packaging
 
 **Workflow**:
 
-- 🏗️ [Building Packages](index.md) - General packaging guide
-- 📦 [CLI Reference](../usage/cli.md#pack) - `flavor pack` command details
-- ✅ [Verification](../usage/cli.md#verify) - Verify package integrity
+- 🏗️ [Building Packages](index/) - General packaging guide
+- 📦 [CLI Reference](../usage/cli/#pack) - `flavor pack` command details
+- ✅ [Verification](../usage/cli/#verify) - Verify package integrity
 
 **Examples**:
 
-- 💻 [CLI Tool Example](../../cookbook/examples/cli-tool.md) - Package a CLI application
-- 🌐 [Web App Example](../../cookbook/examples/web-app.md) - Package a Flask/FastAPI app
+- 💻 [CLI Tool Example](../../cookbook/examples/cli-tool/) - Package a CLI application
+- 🌐 [Web App Example](../../cookbook/examples/web-app/) - Package a Flask/FastAPI app
 
 **Help**:
 
-- 🐛 [Troubleshooting](../../troubleshooting/common.md) - Common issues and solutions
-- 📝 [FAQ](../../troubleshooting/faq.md) - Frequently asked questions
+- 🐛 [Troubleshooting](../../troubleshooting/common/) - Common issues and solutions
+- 📝 [FAQ](../../troubleshooting/faq/) - Frequently asked questions

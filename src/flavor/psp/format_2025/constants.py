@@ -3,15 +3,12 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""TODO: Add module docstring."""
+"""PSPF/2025 format constants mirroring the authoritative specification.
+
+These definitions are the canonical values for the PSPF/2025 v0 format.
+"""
 
 from __future__ import annotations
-
-"""PSPF/2025 Format Constants
-
-All constants defined here match the authoritative specification.
-These are the canonical values for the PSPF/2025 v0 format.
-"""
 
 # =================================
 # Format Version and Magic
@@ -81,21 +78,21 @@ OPERATION_CHAINS = {
 # =================================
 # Slot Purpose Types
 # =================================
-PURPOSE_CODE = 0  # Executable code
-PURPOSE_DATA = 1  # Application data
+PURPOSE_DATA = 0  # General data files
+PURPOSE_CODE = 1  # Executable code
 PURPOSE_CONFIG = 2  # Configuration files
 PURPOSE_MEDIA = 3  # Media/assets
 
 PURPOSE_NAMES = {
-    PURPOSE_CODE: "code",
     PURPOSE_DATA: "data",
+    PURPOSE_CODE: "code",
     PURPOSE_CONFIG: "config",
     PURPOSE_MEDIA: "media",
 }
 
 PURPOSE_FROM_STRING = {
-    "code": PURPOSE_CODE,
     "data": PURPOSE_DATA,
+    "code": PURPOSE_CODE,
     "config": PURPOSE_CONFIG,
     "media": PURPOSE_MEDIA,
 }
@@ -164,6 +161,12 @@ PLATFORM_NAMES = {
 
 DEFAULT_ALIGNMENT = 8  # 8-byte alignment
 DEFAULT_PAGE_SIZE = 4096  # 4KB pages (Linux/Windows default)
+
+# Aliases for backward compatibility
+DEFAULT_HEADER_SIZE = INDEX_BLOCK_SIZE  # 8192 bytes
+DEFAULT_SLOT_DESCRIPTOR_SIZE = SLOT_DESCRIPTOR_SIZE  # 64 bytes
+DEFAULT_MAGIC_TRAILER_SIZE = MAGIC_TRAILER_SIZE  # 8200 bytes
+DEFAULT_SLOT_ALIGNMENT = DEFAULT_ALIGNMENT  # 8 bytes
 
 DEFAULT_MAX_MEMORY = 128 * 1024 * 1024  # 128MB
 DEFAULT_MIN_MEMORY = 8 * 1024 * 1024  # 8MB

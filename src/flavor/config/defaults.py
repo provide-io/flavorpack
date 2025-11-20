@@ -3,26 +3,14 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""TODO: Add module docstring."""
+"""Centralized default values for FlavorPack configuration."""
 
 from __future__ import annotations
 
-"""
-Centralized default values for Flavorpack configuration.
-All defaults are defined here instead of inline in field definitions.
-"""
 import sys
 
-# =================================
-# PSPF Format defaults
-# =================================
-PSPF_VERSION = 0x20250001  # Format version v1
-DEFAULT_HEADER_SIZE = 8192  # Future-proof 8KB index block
-DEFAULT_SLOT_DESCRIPTOR_SIZE = 64  # Descriptor size
-DEFAULT_MAGIC_TRAILER_SIZE = 8200  # Index block with markers
-DEFAULT_SLOT_ALIGNMENT = 8  # Minimum alignment
-
-# Magic bytes for format markers
+# Note: PSPF format constants have been moved to flavor.psp.format_2025.constants
+# to avoid duplication and maintain single source of truth
 
 # =================================
 # Platform-specific defaults
@@ -47,12 +35,10 @@ DEFAULT_EXECUTABLE_PERMS = 0o700  # Read/write/execute for owner only
 DEFAULT_DIR_PERMS = 0o700  # Read/write/execute for owner only
 
 # =================================
-# Disk and memory defaults
+# Disk defaults
 # =================================
 DEFAULT_DISK_SPACE_MULTIPLIER = 2  # Require 2x compressed size for extraction
-DEFAULT_MAX_MEMORY = 128 * 1024 * 1024  # 128MB
-DEFAULT_MIN_MEMORY = 8 * 1024 * 1024  # 8MB
-DEFAULT_CHUNK_SIZE = 64 * 1024  # 64KB for streaming
+# Note: Memory defaults moved to flavor.psp.format_2025.constants
 
 # =================================
 # Path constants
@@ -78,32 +64,7 @@ CHECKSUM_CRC32 = 1  # More robust than Adler-32
 CHECKSUM_SHA256 = 2  # First 4 bytes of SHA256
 CHECKSUM_XXHASH = 3  # Very fast, good distribution
 
-# =================================
-# Purpose types
-# =================================
-PURPOSE_DATA = 0  # General data files
-PURPOSE_CODE = 1  # Executable code
-PURPOSE_CONFIG = 2  # Configuration files
-PURPOSE_MEDIA = 3  # Media/assets
-
-# =================================
-# Lifecycle types
-# =================================
-# Timing-based
-LIFECYCLE_INIT = 0  # First run only, removed after initialization
-LIFECYCLE_STARTUP = 1  # Extracted/executed at every startup
-LIFECYCLE_RUNTIME = 2  # Available during application execution (default)
-LIFECYCLE_SHUTDOWN = 3  # Executed during cleanup/exit phase
-# Retention-based
-LIFECYCLE_CACHE = 4  # Kept for performance, can be regenerated
-LIFECYCLE_TEMPORARY = 5  # Removed after current session ends
-# Access-based
-LIFECYCLE_LAZY = 6  # Loaded on-demand, not extracted initially
-LIFECYCLE_EAGER = 7  # Loaded immediately on startup
-# Environment-based
-LIFECYCLE_DEV = 8  # Only extracted in development/debug mode
-LIFECYCLE_CONFIG = 9  # User-modifiable configuration files
-LIFECYCLE_PLATFORM = 10  # Platform/OS specific content
+# Note: Purpose and Lifecycle types moved to flavor.psp.format_2025.constants
 
 # =================================
 # Access modes

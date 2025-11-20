@@ -23,7 +23,7 @@ def get_project_root() -> Path:
 def get_current_version() -> str:
     """Get current version from pyproject.toml."""
     pyproject = get_project_root() / "pyproject.toml"
-    with open(pyproject) as f:
+    with pyproject.open(encoding="utf-8") as f:
         for line in f:
             if line.startswith("version = "):
                 return line.split('"')[1]
@@ -205,6 +205,124 @@ See [CHANGELOG.md](CHANGELOG.md) for detailed changes.
     return notes
 
 
+def _print_release_banner(version: str) -> None:
+    print(
+        f"""
+╔══════════════════════════════════════╗
+║     Flavor Release Process v{version:8s} ║
+╚══════════════════════════════════════╝
+"""
+    )
+
+
+def _prompt_continue(message: str) -> bool:
+    response = input(f"{message} Continue? (y/N): ")
+    return response.lower() == "y"
+
+
+def _require_clean_git_state(args: argparse.Namespace) -> bool:
+    if args.dry_run:
+        return True
+
+    branch = check_branch()
+    print(f"📍 Current branch: {branch}")
+
+    if branch not in ["main", "master", "develop"] and not _prompt_continue("⚠️  Not on main branch."):
+        print("Aborted")
+        return False
+
+    if not check_git_status() and not _prompt_continue("⚠️  Working directory not clean."):
+        print("Aborted")
+        return False
+
+    return True
+
+
+def _run_pre_release_checks(args: argparse.Namespace) -> bool:
+    if not args.skip_tests and not run_tests():
+        print("\n❌ Release aborted due to test failures")
+        return False
+
+    if not args.skip_helpers and not build_helpers():
+        print("\n❌ Release aborted due to helper build failure")
+        return False
+
+    return True
+
+
+def _build_release_wheels(args: argparse.Namespace) -> list[Path]:
+    wheels = build_wheels(args.platforms)
+    if not wheels:
+        print("\n❌ No wheels were built")
+        return []
+
+    for wheel in wheels:
+        print(f"  - {wheel.name}")
+
+    return wheels
+
+
+def _maybe_validate_wheels(args: argparse.Namespace, wheels: list[Path]) -> bool:
+    if args.skip_validation:
+        return True
+
+    if not validate_wheels(wheels):
+        print("\n❌ Release aborted due to validation failure")
+        return False
+
+    return True
+
+
+def _write_release_notes(version: str, wheels: list[Path]) -> Path:
+    notes = create_release_notes(version, wheels)
+    notes_file = get_project_root() / "dist" / f"RELEASE-{version}.md"
+    notes_file.write_text(notes)
+    print(f"\n📝 Release notes written to {notes_file}")
+    return notes_file
+
+
+def _maybe_create_git_tag(args: argparse.Namespace, version: str) -> None:
+    if (args.tag or args.push_tag) and not create_git_tag(version, args.push_tag):
+        print("\n⚠️  Failed to create/push git tag")
+
+
+def _maybe_upload_to_pypi(args: argparse.Namespace, wheels: list[Path]) -> bool:
+    if args.no_upload:
+        return True
+
+    if not upload_to_pypi(wheels, args.test_pypi):
+        print("\n❌ Release failed during upload")
+        return False
+
+    return True
+
+
+def _print_release_success(version: str, args: argparse.Namespace) -> None:
+    destination = (
+        "Uploaded to TestPyPI"
+        if args.test_pypi
+        else "Uploaded to PyPI"
+        if not args.no_upload
+        else "Wheels built locally"
+    )
+    print(
+        f"""
+╔══════════════════════════════════════╗
+║         Release Complete! 🎉         ║
+╚══════════════════════════════════════╝
+
+Version {version} has been released!
+
+{destination}
+
+Next steps:
+1. Test installation: pip install {"--index-url https://test.pypi.org/simple/ " if args.test_pypi else ""}flavor=={version}
+2. Create GitHub release with notes from dist/RELEASE-{version}.md
+3. Announce the release
+"""
+    )
+
+
 def main() -> int:
     """Main entry point."""
     parser = argparse.ArgumentParser(description="Orchestrate Flavor release process")
@@ -231,91 +349,35 @@ def main() -> int:
 
     args = parser.parse_args()
 
-    # Get version
     version = args.version or get_current_version()
+    _print_release_banner(version)
 
-    print(f"""
-╔══════════════════════════════════════╗
-║     Flavor Release Process v{version:8s} ║
-╚══════════════════════════════════════╝
-""")
-
-    # Check git status
-    if not args.dry_run:
-        branch = check_branch()
-        print(f"📍 Current branch: {branch}")
-
-        if branch not in ["main", "master", "develop"]:
-            response = input("⚠️  Not on main branch. Continue? (y/N): ")
-            if response.lower() != "y":
-                print("Aborted")
-                return 1
-
-        if not check_git_status():
-            response = input("⚠️  Working directory not clean. Continue? (y/N): ")
-            if response.lower() != "y":
-                print("Aborted")
-                return 1
-
-    # Run tests
-    if not args.skip_tests and not run_tests():
-        print("\n❌ Release aborted due to test failures")
+    if not _require_clean_git_state(args):
         return 1
 
-    # Build helpers
-    if not args.skip_helpers and not build_helpers():
-        print("\n❌ Release aborted due to helper build failure")
+    if not _run_pre_release_checks(args):
         return 1
 
-    # Build wheels
-    wheels = build_wheels(args.platforms)
+    wheels = _build_release_wheels(args)
     if not wheels:
-        print("\n❌ No wheels were built")
         return 1
 
-    for wheel in wheels:
-        print(f"  - {wheel.name}")
-
-    # Validate wheels
-    if not args.skip_validation and not validate_wheels(wheels):
-        print("\n❌ Release aborted due to validation failure")
+    if not _maybe_validate_wheels(args, wheels):
         return 1
 
-    # Create release notes
-    notes = create_release_notes(version, wheels)
-    notes_file = get_project_root() / "dist" / f"RELEASE-{version}.md"
-    notes_file.write_text(notes)
-    print(f"\n📝 Release notes written to {notes_file}")
+    _write_release_notes(version, wheels)
 
     if args.dry_run:
         print("\n🌟 Dry run complete!")
         print("  To perform actual release, run without --dry-run")
         return 0
 
-    # Create git tag
-    if (args.tag or args.push_tag) and not create_git_tag(version, args.push_tag):
-        print("\n⚠️  Failed to create/push git tag")
+    _maybe_create_git_tag(args, version)
 
-    # Upload to PyPI
-    if not args.no_upload and not upload_to_pypi(wheels, args.test_pypi):
-        print("\n❌ Release failed during upload")
+    if not _maybe_upload_to_pypi(args, wheels):
         return 1
 
-    print(f"""
-╔══════════════════════════════════════╗
-║         Release Complete! 🎉         ║
-╚══════════════════════════════════════╝
-
-Version {version} has been released!
-
-{"Uploaded to TestPyPI" if args.test_pypi else "Uploaded to PyPI" if not args.no_upload else "Wheels built locally"}
-
-Next steps:
-1. Test installation: pip install {"--index-url https://test.pypi.org/simple/ " if args.test_pypi else ""}flavor=={version}
-2. Create GitHub release with notes from dist/RELEASE-{version}.md
-3. Announce the release
-""")
-
+    _print_release_success(version, args)
     return 0
 
 

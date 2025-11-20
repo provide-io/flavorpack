@@ -20,7 +20,7 @@ def file_command() -> None:
 @file_command.command("write")
 @click.argument("path")
 @click.argument("content")
-def write_file(path, content) -> None:
+def write_file(path: str, content: str) -> None:
     """Write content to a file"""
     file_path = Path(path)
     file_path.parent.mkdir(parents=True, exist_ok=True)
@@ -29,7 +29,7 @@ def write_file(path, content) -> None:
 
 @file_command.command("read")
 @click.argument("path")
-def read_file(path) -> None:
+def read_file(path: str) -> None:
     """Read and display file content"""
     try:
         content = Path(path).read_text()
@@ -41,7 +41,7 @@ def read_file(path) -> None:
 
 @file_command.command("exists")
 @click.argument("path")
-def check_exists(path) -> None:
+def check_exists(path: str) -> None:
     """Check if file/directory exists"""
     exists = Path(path).exists()
     sys.exit(0 if exists else 1)

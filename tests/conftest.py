@@ -3,12 +3,16 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""TODO: Add module docstring."""
+"""Shared pytest fixtures and helpers for FlavorPack tests."""
 
+from __future__ import annotations
+
+from collections.abc import Iterator
 import os
 from pathlib import Path
 import shutil
 import tempfile
+from typing import TYPE_CHECKING
 
 from cryptography.hazmat.primitives.asymmetric import ed25519
 import provide.testkit  # noqa: F401 - Installs setproctitle blocker early
@@ -17,13 +21,16 @@ import pytest
 
 from flavor.psp.format_2025.pspf_builder import PSPFBuilder
 
+if TYPE_CHECKING:
+    from flavor.psp.format_2025 import SlotMetadata
+
 # Mock launcher data - matches approximate size of real launchers
 # This should be validated against real launchers in integration tests
 MOCK_LAUNCHER_SIZE = 124  # Simplified for unit tests
 MOCK_LAUNCHER_DATA = b"FAKE_LAUNCHER_FOR_TEST" + b"\x00" * (MOCK_LAUNCHER_SIZE - 22)
 
 
-def pytest_configure(config) -> None:
+def pytest_configure(config: pytest.Config) -> None:
     """Register custom markers."""
     config.addinivalue_line(
         "markers",
@@ -34,7 +41,7 @@ def pytest_configure(config) -> None:
     )
 
 
-def pytest_collection_modifyitems(config, items) -> None:
+def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
     """Auto-skip tests marked requires_helpers if binaries not found."""
     # Check if launcher binaries are available
     binary_paths = [
@@ -85,7 +92,7 @@ def key_pair() -> tuple[ed25519.Ed25519PrivateKey, ed25519.Ed25519PublicKey]:
 
 
 @pytest.fixture(autouse=True)
-def reset_foundation_logging():
+def reset_foundation_logging() -> Iterator[None]:
     """Reset foundation logging state before each test to avoid conflicts."""
     reset_foundation_setup_for_testing()
     yield
@@ -94,7 +101,7 @@ def reset_foundation_logging():
 
 
 @pytest.fixture(autouse=True)
-def mock_launcher_loading(request, monkeypatch) -> None:
+def mock_launcher_loading(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch) -> None:
     """Automatically mock launcher loading for non-integration tests.
 
     Tests marked with @pytest.mark.integration will skip this mock
@@ -104,7 +111,7 @@ def mock_launcher_loading(request, monkeypatch) -> None:
     if request.node.get_closest_marker("integration"):
         return  # Let integration tests use real binaries
 
-    def mock_load_launcher(launcher_type):
+    def mock_load_launcher(launcher_type: str) -> bytes:
         return MOCK_LAUNCHER_DATA
 
     # Patch where the function is used, not just where it's defined
@@ -113,7 +120,7 @@ def mock_launcher_loading(request, monkeypatch) -> None:
 
 
 @pytest.fixture
-def temp_dir():
+def temp_dir() -> Iterator[Path]:
     """Create a temporary directory for tests.
 
     This fixture provides a clean temporary directory that is automatically
@@ -126,7 +133,7 @@ def temp_dir():
 
 
 @pytest.fixture
-def test_builder():
+def test_builder() -> PSPFBuilder:
     """Fixture to create a PSPFBuilder in test mode for reproducible tests.
 
     This builder uses mocked launchers (via mock_launcher_loading) and
@@ -137,7 +144,7 @@ def test_builder():
 
 
 @pytest.fixture
-def mock_test_package(temp_dir, test_builder):
+def mock_test_package(temp_dir: Path, test_builder: PSPFBuilder) -> Path:
     """Create a complete test PSPF package with multiple slots for testing.
 
     This fixture creates a test package with:
@@ -230,7 +237,7 @@ def mock_test_package(temp_dir, test_builder):
 
 
 @pytest.fixture
-def test_slots(temp_dir, test_builder):
+def test_slots(temp_dir: Path, test_builder: PSPFBuilder) -> list[SlotMetadata]:
     """Create test slots with different properties for PSPF tests."""
     import hashlib
     import os

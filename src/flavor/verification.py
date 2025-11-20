@@ -3,11 +3,9 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""TODO: Add module docstring."""
+"""Package verification for PSPF/2025 bundles."""
 
 from __future__ import annotations
-
-"""Package verification for PSPF/2025 bundles."""
 
 from pathlib import Path
 from typing import Any

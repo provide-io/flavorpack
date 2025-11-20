@@ -3,14 +3,13 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""TODO: Add module docstring."""
-
-from __future__ import annotations
-
-"""PSPF Operation Handlers - Bridge between PSPF operations and Foundation archive tools.
+"""PSPF operation handlers bridging PSPF ops and Foundation archive tooling.
 
 This module maps PSPF/2025 operation chains to provide.foundation.archive implementations,
-ensuring secure, tested, and consistent archive operations across the ecosystem."""
+ensuring secure, tested, and consistent archive operations across the ecosystem.
+"""
+
+from __future__ import annotations
 
 from pathlib import Path
 

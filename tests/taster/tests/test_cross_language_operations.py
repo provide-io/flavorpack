@@ -167,7 +167,7 @@ class TestCrossLanguageOperations:
         ]
 
         for invalid_op in invalid_operations:
-            with pytest.raises(ValueError, match="Unknown operation|Invalid operations"):
+            with pytest.raises(ValueError, match=r"Unknown operation|Invalid operations"):
                 string_to_operations(invalid_op)
 
 

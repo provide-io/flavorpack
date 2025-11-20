@@ -146,16 +146,16 @@ FlavorPack provides two types of API documentation:
 
 Detailed guides with examples and explanations:
 
-- **[Packaging API](packaging.md)** - High-level packaging orchestration, manifest processing, and build workflows
-- **[Builder API](builder.md)** - PSPF package building, slot assembly, and format generation
-- **[Reader API](reader.md)** - Package inspection, slot extraction, and metadata reading
-- **[Cryptography API](crypto.md)** - Ed25519 signing, verification, and key management
+- **[Packaging API](packaging/)** - High-level packaging orchestration, manifest processing, and build workflows
+- **[Builder API](builder/)** - PSPF package building, slot assembly, and format generation
+- **[Reader API](reader/)** - Package inspection, slot extraction, and metadata reading
+- **[Cryptography API](crypto/)** - Ed25519 signing, verification, and key management
 
 ### 🤖 Auto-Generated Reference
 
 Source code documentation auto-generated with mkdocstrings:
 
-- **[Auto-Generated API Reference](reference.md)** - Complete API reference extracted from source code docstrings
+- **[Auto-Generated API Reference](../reference/)** - Complete API reference extracted from source code docstrings
 
 !!! tip "Which Should I Use?"
     - **New users**: Start with the manual guides above for examples and context
@@ -182,20 +182,20 @@ flavor/
 
 **API Documentation**:
 
-- 📦 [Packaging API](packaging.md) - High-level packaging orchestration
-- 🔨 [Builder API](builder.md) - PSPF package building
-- 📖 [Reader API](reader.md) - Package inspection and extraction
-- 🔐 [Cryptography API](crypto.md) - Ed25519 signing and verification
+- 📦 [Packaging API](packaging/) - High-level packaging orchestration
+- 🔨 [Builder API](builder/) - PSPF package building
+- 📖 [Reader API](reader/) - Package inspection and extraction
+- 🔐 [Cryptography API](crypto/) - Ed25519 signing and verification
 
 **User Documentation**:
 
-- 📚 [User Guide](../guide/index.md) - Learn how to use FlavorPack
-- 🍳 [Cookbook](../cookbook/index.md) - Practical examples and recipes
-- 📋 [CLI Reference](../guide/usage/cli.md) - Command-line interface documentation
+- 📚 [User Guide](../guide/index/) - Learn how to use FlavorPack
+- 🍳 [Cookbook](../cookbook/index/) - Practical examples and recipes
+- 📋 [CLI Reference](../guide/usage/cli/) - Command-line interface documentation
 
 **Development**:
 
-- 🏗️ [Architecture](../development/architecture.md) - System architecture
-- 🛠️ [Contributing](../development/contributing.md) - Development guide
+- 🏗️ [Architecture](../development/architecture/) - System architecture
+- 🛠️ [Contributing](../development/contributing/) - Development guide
 
 **For source code:** [GitHub Repository](https://github.com/provide-io/flavorpack)

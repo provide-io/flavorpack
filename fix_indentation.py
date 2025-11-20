@@ -4,7 +4,7 @@
 from pathlib import Path
 
 
-def fix_empty_blocks(content):
+def fix_empty_blocks(content: str) -> str:
     """Fix empty if/else/for/while/try/except blocks."""
     lines = content.split("\n")
     fixed_lines = []
@@ -44,20 +44,21 @@ def fix_empty_blocks(content):
                 next_stripped = next_line.lstrip()
 
                 # If next line is empty or starts with another control keyword at same or less indentation
-                if not next_stripped or (next_stripped and len(next_line) - len(next_stripped) <= indent):
-                    # Add a pass statement
-                    if (
-                        stripped.startswith("else:")
-                        or stripped.startswith("except")
-                        or stripped.startswith("finally:")
-                        or stripped.startswith("elif ")
-                        or stripped.startswith("if ")
-                        or stripped.startswith("for ")
-                        or stripped.startswith("while ")
-                        or stripped.startswith("try:")
-                        or stripped.startswith("with ")
-                    ):
-                        fixed_lines.append(" " * (indent + 4) + "pass")
+                should_insert_pass = not next_stripped or len(next_line) - len(next_stripped) <= indent
+                if should_insert_pass and stripped.startswith(
+                    (
+                        "else:",
+                        "except",
+                        "finally:",
+                        "elif ",
+                        "if ",
+                        "for ",
+                        "while ",
+                        "try:",
+                        "with ",
+                    )
+                ):
+                    fixed_lines.append(" " * (indent + 4) + "pass")
             i += 1
         else:
             fixed_lines.append(line)
@@ -66,7 +67,7 @@ def fix_empty_blocks(content):
     return "\n".join(fixed_lines)
 
 
-def main():
+def main() -> None:
     # Files with known indentation issues
     problem_files = [
         "src/flavor/commands/helpers.py",
@@ -76,9 +77,6 @@ def main():
         "src/flavor/psp/format_2025/executor.py",
         "src/flavor/psp/format_2025/reader.py",
         "src/flavor/psp/format_2025/workenv.py",
-        "scripts/export_protobuf_spec.py",
-        "scripts/generate_test_vectors.py",
-        "scripts/verify_operations.py",
     ]
 
     for file_path in problem_files:

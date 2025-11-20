@@ -115,7 +115,7 @@ The 8KB index block contains:
 
 ### Slot Operation Chains
 
-PSPF/2025 uses **operation chains** to specify transformations applied to slot data. See [FEP-0001 Operation Chain System](../reference/spec/fep-0001-core-format-and-operation-chains.md#5-operation-chain-system) for complete specification.
+PSPF/2025 uses **operation chains** to specify transformations applied to slot data. See [FEP-0001 Operation Chain System](../reference/spec/fep-0001-core-format-and-operation-chains/#5-operation-chain-system) for complete specification.
 
 **Common Operation Chains:**
 - `[]` (empty) - Raw uncompressed data
@@ -569,8 +569,8 @@ The cache validation process uses checksums to ensure integrity:
 
 ## Future Enhancements
 
-1. **Enhanced Windows Support**: Windows is supported with PE resource embedding for Go launchers. Some builder/launcher combinations have known limitations (see troubleshooting documentation)
-2. **Package Compression**: Additional compression algorithms (zstd, brotli, etc.)
+1. **Windows Support**: Currently disabled due to UTF-8 issues
+2. **Package Compression**: Additional compression algorithms
 3. **Partial Updates**: Update slots without rebuilding entire package
 4. **Network Loading**: Stream slots from remote sources
 5. **Multi-Architecture**: Fat binaries with multiple architectures

@@ -13,15 +13,13 @@ from provide.foundation.crypto import (
     generate_ed25519_keypair,
 )
 
-from flavor.config.defaults import (
+from flavor.psp.format_2025.builder import build_package
+from flavor.psp.format_2025.constants import (
     DEFAULT_HEADER_SIZE,
     DEFAULT_MAGIC_TRAILER_SIZE,
     DEFAULT_SLOT_ALIGNMENT,
     DEFAULT_SLOT_DESCRIPTOR_SIZE,
     PSPF_VERSION,
-)
-from flavor.psp.format_2025.builder import build_package
-from flavor.psp.format_2025.constants import (
     TRAILER_END_MAGIC,
     TRAILER_START_MAGIC,
 )

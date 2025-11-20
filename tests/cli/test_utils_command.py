@@ -3,11 +3,10 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""TODO: Add module docstring."""
+"""Comprehensive tests for the `flavor clean` utility command."""
 
 from __future__ import annotations
 
-"""Comprehensive tests for flavor.commands.utils module."""
 from unittest.mock import MagicMock, Mock, patch
 
 from click.testing import CliRunner

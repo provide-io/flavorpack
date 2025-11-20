@@ -603,7 +603,7 @@ flavor demo cli-tool
 
 ### Supply Chain Security
 
-See [FEP-0004: Supply Chain JIT](reference/spec/future/fep-0004-supply-chain-jit.md):
+See [FEP-0004: Supply Chain JIT](reference/spec/future/fep-0004-supply-chain-jit/):
 
 - Reproducible builds with attestation
 - SBOM (Software Bill of Materials) generation
@@ -616,7 +616,7 @@ See [FEP-0004: Supply Chain JIT](reference/spec/future/fep-0004-supply-chain-jit
 
 ### Runtime JIT Loading
 
-See [FEP-0005: Runtime JIT Loading](reference/spec/future/fep-0005-runtime-jit-loading.md):
+See [FEP-0005: Runtime JIT Loading](reference/spec/future/fep-0005-runtime-jit-loading/):
 
 - Lazy loading of dependencies
 - On-demand extraction
@@ -628,7 +628,7 @@ See [FEP-0005: Runtime JIT Loading](reference/spec/future/fep-0005-runtime-jit-l
 
 ### Staged Payload Architecture
 
-See [FEP-0006: Staged Payload Architecture](reference/spec/future/fep-0006-staged-payload-architecture.md):
+See [FEP-0006: Staged Payload Architecture](reference/spec/future/fep-0006-staged-payload-architecture/):
 
 - Multi-stage package execution
 - Progressive enhancement
@@ -775,7 +775,7 @@ Want to help implement roadmap features?
 3. **Create FEP:** Submit FlavorPack Enhancement Proposal if needed
 4. **Submit PR:** Implement with tests and docs
 
-See our [Contributing Guide](development/contributing.md) for detailed instructions.
+See our [Contributing Guide](development/contributing/) for detailed instructions.
 
 ---
 
@@ -792,10 +792,10 @@ Have an idea for FlavorPack? Here's how to suggest features:
 
 ## See Also
 
-- [Current Documentation](guide/index.md) - What's available now
-- [PSPF Specification](reference/spec/fep-0001-core-format-and-operation-chains.md) - Format details
-- [Future Enhancement Proposals](reference/spec/pspf-2025.md) - Detailed FEPs
-- [Changelog](community/changelog.md) - What's been implemented
+- [Current Documentation](guide/index/) - What's available now
+- [PSPF Specification](reference/spec/fep-0001-core-format-and-operation-chains/) - Format details
+- [Future Enhancement Proposals](reference/spec/pspf-2025/) - Detailed FEPs
+- [Changelog](community/changelog/) - What's been implemented
 
 ---
 

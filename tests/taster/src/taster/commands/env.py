@@ -3,31 +3,37 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""TODO: Add module docstring."""
+"""Environment variable testing command."""
 
-#
-# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
-#
+from __future__ import annotations
 
-"""Environment variable testing command"""
-
+from collections.abc import Mapping
 import os
 
 import click
+from provide.foundation.console import pout
 
 
 @click.command("env")
 def env_command() -> None:
+    """Inspect, categorize, and validate environment variables."""
     env_vars = dict(os.environ)
+    pout("=" * 60, color="cyan")
+    pout("=" * 60, color="cyan")
+    pout(f"📊 Total variables: {len(env_vars)}", fg="yellow")
 
-    click.secho("=" * 60, fg="cyan")
-    click.secho("=" * 60, fg="cyan")
-    click.secho(f"📊 Total variables: {len(env_vars)}", fg="yellow")
+    categories = _categorize_env_vars(env_vars)
+    _display_categories(env_vars, categories)
+    _check_expected_vars(env_vars)
+    _validate_mappings(env_vars)
+    _run_whitelist_check(env_vars)
+    _print_env_source(env_vars)
 
-    # Categorize variables
-    categories = {
-        "System": ["PATH", "HOME", "USER", "TERM", "SHELL", "PWD"],
+
+def _categorize_env_vars(env_vars: Mapping[str, str]) -> dict[str, list[str]]:
+    """Bucket environment variables into high level categories."""
+    categories: dict[str, list[str]] = {
+        "System": [var for var in ["PATH", "HOME", "USER", "TERM", "SHELL", "PWD"] if var in env_vars],
         "Locale": [k for k in env_vars if k.startswith("LANG") or k.startswith("LC_")],
         "Flavor": [k for k in env_vars if k.startswith("FLAVOR_")],
         "Taster": [k for k in env_vars if k.startswith("TASTER_")],
@@ -38,58 +44,59 @@ def env_command() -> None:
         "Other": [],
     }
 
-    # Find uncategorized
-    categorized = set()
-    for cat_vars in categories.values():
-        if isinstance(cat_vars, list):
-            categorized.update(cat_vars)
-
+    categorized = {item for values in categories.values() for item in values}
     for key in env_vars:
         if key not in categorized:
             categories["Other"].append(key)
 
-    # Display categories
-    for category, vars in categories.items():
-        if vars:
-            for var in sorted(vars)[:5]:
-                value = env_vars.get(var, "")
-                if len(value) > 50:
-                    value = value[:47] + "..."
-                click.echo(f"  {var} = {value}")
-            if len(vars) > 5:
-                click.secho(f"  ... and {len(vars) - 5} more", dim=True)
+    return categories
 
-    # Test expected values from runtime.env
-    click.secho("\n" + "=" * 60, fg="cyan")
-    click.secho("=" * 60, fg="cyan")
 
-    # Check for expected variables set by runtime.env
+def _display_categories(env_vars: Mapping[str, str], categories: Mapping[str, list[str]]) -> None:
+    """Print category breakdown with example values."""
+    for _, vars_in_cat in categories.items():
+        if not vars_in_cat:
+            continue
+
+        for var in sorted(vars_in_cat)[:5]:
+            value = env_vars.get(var, "")
+            display_value = value if len(value) <= 50 else f"{value[:47]}..."
+            pout(f"  {var} = {display_value}")
+        if len(vars_in_cat) > 5:
+            pout(f"  ... and {len(vars_in_cat) - 5} more", dim=True)
+
+    pout("\n" + "=" * 60, color="cyan")
+    pout("=" * 60, color="cyan")
+
+
+def _check_expected_vars(env_vars: Mapping[str, str]) -> None:
+    """Validate required runtime.env values."""
     expected_vars = {
         "TASTER_MODE": "test",
         "TASTER_VERSION": "1.0.0",
     }
 
-    click.secho("\n📋 Expected Variables (from runtime.env.set):", fg="green")
+    pout("\n📋 Expected Variables (from runtime.env.set):", fg="green")
     for var, expected in expected_vars.items():
-        actual = os.environ.get(var)
-        if actual == expected:
-            pass
-        else:
-            click.echo(f"  ❌ {var} = {actual} (expected: {expected})")
+        actual = env_vars.get(var)
+        if actual != expected:
+            pout(f"  ❌ {var} = {actual} (expected: {expected})")
 
-    # Check mapped variables
-    click.secho("\n🔄 Mapped Variables (from runtime.env.map):", fg="yellow")
-    mappings = {
-        "OLD_VAR": "NEW_VAR",
-    }
-    for old, new in mappings.items():
-        if old in os.environ:
-            click.echo(f"  ⚠️ {old} still exists (should be mapped to {new})")
-        if new in os.environ:
-            pass
 
-    # Test whitelist mode (unset = ["*"] with pass list)
-    click.secho("\n🔒 Whitelist Mode Test:", fg="magenta")
+def _validate_mappings(env_vars: Mapping[str, str]) -> None:
+    """Ensure legacy variables are correctly remapped."""
+    pout("\n🔄 Mapped Variables (from runtime.env.map):", fg="yellow")
+    mappings = {"OLD_VAR": "NEW_VAR"}
+    for source, target in mappings.items():
+        if source in env_vars:
+            pout(f"  ⚠️ {source} still exists (should be mapped to {target})")
+        if target in env_vars:
+            pout(f"  ✅ {target} present", fg="green")
+
+
+def _run_whitelist_check(env_vars: Mapping[str, str]) -> None:
+    """Simulate whitelist enforcement logic."""
+    pout("\n🔒 Whitelist Mode Test:", color="magenta")
     allowed_patterns = [
         "PATH",
         "HOME",
@@ -101,44 +108,43 @@ def env_command() -> None:
         "TASTER_*",
         "KEEP_*",
     ]
-    click.echo(f"  Allowed patterns: {', '.join(allowed_patterns)}")
+    pout(f"  Allowed patterns: {', '.join(allowed_patterns)}")
 
-    # Check for unexpected variables (ones that should have been removed)
     unexpected = []
     for key in env_vars:
-        # Check if this key matches any allowed pattern
+        if key in {"NEW_VAR", "TASTER_MODE", "TASTER_VERSION"}:
+            continue
+
         allowed = False
         for pattern in allowed_patterns:
-            if pattern.endswith("*"):
-                if key.startswith(pattern[:-1]):
-                    allowed = True
-                    break
-            elif key == pattern:
+            if pattern.endswith("*") and key.startswith(pattern[:-1]):
                 allowed = True
                 break
-        if not allowed and key not in ["NEW_VAR", "TASTER_MODE", "TASTER_VERSION"]:
+            if key == pattern:
+                allowed = True
+                break
+        if not allowed:
             unexpected.append(key)
 
     if unexpected:
-        click.secho(f"\n  ⚠️ Found {len(unexpected)} unexpected variables:", fg="red")
+        pout(f"\n  ⚠️ Found {len(unexpected)} unexpected variables:", fg="red")
         for var in unexpected[:5]:
-            click.echo(f"    - {var}")
+            pout(f"    - {var}")
         if len(unexpected) > 5:
-            click.echo(f"    ... and {len(unexpected) - 5} more")
+            pout(f"    ... and {len(unexpected) - 5} more")
     else:
-        pass
+        pout("  ✅ Environment matches whitelist", fg="green")
 
-    # Show environment source
-    click.secho("\n" + "=" * 60, fg="cyan")
-    click.secho("📍 ENVIRONMENT SOURCE", fg="cyan", bold=True)
-    click.secho("=" * 60, fg="cyan")
 
-    if "FLAVOR_WORKENV" in os.environ:
-        click.echo(f"  Work Environment: {os.environ['FLAVOR_WORKENV']}")
-    if "FLAVOR_COMMAND_NAME" in os.environ:
-        click.echo(f"  Command Name: {os.environ['FLAVOR_COMMAND_NAME']}")
-    if "FLAVOR_ORIGINAL_COMMAND" in os.environ:
-        click.echo(f"  Original Command: {os.environ['FLAVOR_ORIGINAL_COMMAND']}")
+def _print_env_source(env_vars: Mapping[str, str]) -> None:
+    """Display metadata about the environment origin."""
+    pout("\n" + "=" * 60, color="cyan")
+    pout("📍 ENVIRONMENT SOURCE", color="cyan", bold=True)
+    pout("=" * 60, color="cyan")
+
+    for key in ["FLAVOR_WORKENV", "FLAVOR_COMMAND_NAME", "FLAVOR_ORIGINAL_COMMAND"]:
+        if key in env_vars:
+            pout(f"  {key.replace('FLAVOR_', '').replace('_', ' ').title()}: {env_vars[key]}")
 
 
 # 🌶️📦🔚

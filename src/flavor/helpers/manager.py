@@ -3,11 +3,10 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""TODO: Add module docstring."""
+"""Helper management system for Flavor launchers and builders."""
 
 from __future__ import annotations
 
-"""Helper management system for Flavor launchers and builders."""
 import contextlib
 from dataclasses import dataclass
 import hashlib

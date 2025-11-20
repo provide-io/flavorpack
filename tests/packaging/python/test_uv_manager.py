@@ -36,7 +36,7 @@ class TestUVManager:
 
     @patch("platform.machine")
     @patch("platform.system")
-    def test_get_metadata_linux_amd64(self, mock_system, mock_machine) -> None:
+    def test_get_metadata_linux_amd64(self, mock_system: Mock, mock_machine: Mock) -> None:
         """Test metadata generation for Linux amd64."""
         mock_system.return_value = "Linux"
         mock_machine.return_value = "x86_64"
@@ -52,7 +52,7 @@ class TestUVManager:
 
     @patch("platform.machine")
     @patch("platform.system")
-    def test_get_metadata_darwin_arm64(self, mock_system, mock_machine) -> None:
+    def test_get_metadata_darwin_arm64(self, mock_system: Mock, mock_machine: Mock) -> None:
         """Test metadata generation for macOS ARM64."""
         mock_system.return_value = "Darwin"
         mock_machine.return_value = "arm64"
@@ -67,7 +67,7 @@ class TestUVManager:
 
     @patch("platform.machine")
     @patch("platform.system")
-    def test_get_metadata_windows_amd64(self, mock_system, mock_machine) -> None:
+    def test_get_metadata_windows_amd64(self, mock_system: Mock, mock_machine: Mock) -> None:
         """Test metadata generation for Windows amd64."""
         mock_system.return_value = "Windows"
         mock_machine.return_value = "x86_64"
@@ -82,7 +82,7 @@ class TestUVManager:
 
     @patch("platform.machine")
     @patch("platform.system")
-    def test_get_metadata_unsupported_platform(self, mock_system, mock_machine) -> None:
+    def test_get_metadata_unsupported_platform(self, mock_system: Mock, mock_machine: Mock) -> None:
         """Test error handling for unsupported platforms."""
         mock_system.return_value = "FreeBSD"
         mock_machine.return_value = "x86_64"
@@ -92,7 +92,7 @@ class TestUVManager:
 
     @patch("platform.machine")
     @patch("platform.system")
-    def test_get_metadata_unsupported_arch(self, mock_system, mock_machine) -> None:
+    def test_get_metadata_unsupported_arch(self, mock_system: Mock, mock_machine: Mock) -> None:
         """Test error handling for unsupported architectures."""
         mock_system.return_value = "Linux"
         mock_machine.return_value = "riscv64"
@@ -113,7 +113,7 @@ class TestUVManager:
             assert versions[i] >= versions[i + 1]
 
     @patch("shutil.which")
-    def test_find_system_uv_found(self, mock_which) -> None:
+    def test_find_system_uv_found(self, mock_which: Mock) -> None:
         """Test finding system UV when it exists."""
         mock_which.return_value = "/usr/local/bin/uv"
 
@@ -123,7 +123,7 @@ class TestUVManager:
         mock_which.assert_called_once_with("uv")
 
     @patch("shutil.which")
-    def test_find_system_uv_not_found(self, mock_which) -> None:
+    def test_find_system_uv_not_found(self, mock_which: Mock) -> None:
         """Test finding system UV when it doesn't exist."""
         mock_which.return_value = None
 
@@ -251,7 +251,7 @@ class TestUVManager:
             assert cmd == expected
 
     @patch("flavor.packaging.python.uv_manager.run")
-    def test_create_venv(self, mock_run) -> None:
+    def test_create_venv(self, mock_run: Mock) -> None:
         """Test UV venv creation."""
         mock_result = Mock()
         mock_result.returncode = 0
@@ -277,7 +277,7 @@ class TestUVManager:
             assert kwargs["check"] is True
 
     @patch("flavor.packaging.python.uv_manager.run")
-    def test_install_packages_fast(self, mock_run) -> None:
+    def test_install_packages_fast(self, mock_run: Mock) -> None:
         """Test UV fast package installation."""
         mock_result = Mock()
         mock_result.returncode = 0
@@ -306,7 +306,7 @@ class TestUVManager:
             assert kwargs["check"] is True
 
     @patch("flavor.packaging.python.uv_manager.run")
-    def test_compile_requirements(self, mock_run) -> None:
+    def test_compile_requirements(self, mock_run: Mock) -> None:
         """Test UV requirements compilation."""
         mock_result = Mock()
         mock_result.returncode = 0

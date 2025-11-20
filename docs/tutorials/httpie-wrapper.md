@@ -710,9 +710,9 @@ Congratulations! You've successfully:
 
 ### Learn More
 
-- **[FlavorPack API Reference](../api/index.md)** - Complete packaging API
-- **[Cookbook Examples](../cookbook/examples/index.md)** - More packaging patterns
-- **[Advanced Topics](../guide/advanced/index.md)** - Custom builders, performance
+- **[FlavorPack API Reference](../api/index/)** - Complete packaging API
+- **[Cookbook Examples](../cookbook/examples/index/)** - More packaging patterns
+- **[Advanced Topics](../guide/advanced/index/)** - Custom builders, performance
 - **[HTTPie Documentation](https://httpie.io/docs/cli)** - Complete HTTPie reference
 
 ---

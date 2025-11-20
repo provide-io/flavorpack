@@ -24,9 +24,9 @@ from flavor.config.defaults import (
     ACCESS_FILE,
     ACCESS_MMAP,
     ACCESS_STREAM,
-    DEFAULT_CHUNK_SIZE,
     DEFAULT_PAGE_SIZE,
 )
+from flavor.psp.format_2025.constants import DEFAULT_CHUNK_SIZE
 from flavor.psp.format_2025.slots import SlotDescriptor
 
 

@@ -374,12 +374,12 @@ Write-Host "`n=== Test Execution ===" -ForegroundColor Cyan
 
 ## Getting Help
 
-- Check [Common Issues](../common.md) for cross-platform problems
-- Review [Security Troubleshooting](../../guide/concepts/security.md) for permission issues
-- Visit [Community Support](../../community/support.md) for additional help
+- Check [Common Issues](../common/) for cross-platform problems
+- Review [Security Troubleshooting](../../guide/concepts/security/) for permission issues
+- Visit [Community Support](../../community/support/) for additional help
 
 ## Related Documentation
 
-- [Installation Guide](../../getting-started/installation.md)
-- [Platform Support](../../guide/packaging/platforms.md)
-- [Building Helpers](../../development/helpers.md)
+- [Installation Guide](../../getting-started/installation/)
+- [Platform Support](../../guide/packaging/platforms/)
+- [Building Helpers](../../development/helpers/)

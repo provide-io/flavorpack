@@ -3,16 +3,16 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""TODO: Add module docstring."""
+"""FlavorPack command-line interface entrypoint."""
 
 from __future__ import annotations
 
-"The `flavor` command-line interface."
 import os
 import sys
 
+from attrs import evolve
 import click
-from provide.foundation import CLIContext
+from provide.foundation import CLIContext, TelemetryConfig, get_hub
 from provide.foundation.utils import get_version
 
 # Import all commands at module level
@@ -24,6 +24,7 @@ from flavor.commands.package import pack_command
 from flavor.commands.utils import clean_command
 from flavor.commands.verify import verify_command
 from flavor.commands.workenv import workenv_group
+from flavor.config import FlavorRuntimeConfig
 
 # Set up Windows Unicode support early
 if sys.platform == "win32":
@@ -57,18 +58,38 @@ def cli(ctx: click.Context) -> None:
     """PSPF (Progressive Secure Package Format) Build Tool.
 
     Configure logging via environment variables:
-    - FOUNDATION_LOG_LEVEL: Set log level (trace, debug, info, warning, error)
-    - FOUNDATION_LOG_FILE: Write logs to file
-    - FOUNDATION_SETUP_LOG_LEVEL: Control Foundation's initialization logs
+    - FLAVOR_LOG_LEVEL: Set log level for FlavorPack (trace, debug, info, warning, error)
+    - FLAVOR_SETUP_LOG_LEVEL: Control Foundation's initialization logs
+    - PROVIDE_LOG_LEVEL: Fallback log level if FLAVOR_LOG_LEVEL not set
+    - PROVIDE_LOG_FILE: Write logs to file
     """
     ctx.ensure_object(dict)
 
-    # Skip Foundation setup when running under pytest to avoid conflicts
-    if "pytest" not in sys.modules:
-        # Initialize Foundation with CLIContext from environment
-        cli_ctx = CLIContext.from_env()
-        ctx.obj["cli_context"] = cli_ctx
-        ctx.obj["log"] = cli_ctx.logger
+    # Load FlavorPack configuration from environment
+    flavor_config = FlavorRuntimeConfig.from_env()
+
+    # Initialize Foundation with proper configuration
+    cli_ctx = CLIContext.from_env()
+
+    # Get base telemetry config from environment
+    base_telemetry = TelemetryConfig.from_env()
+
+    # Merge with FlavorPack-specific settings
+    telemetry_config = evolve(
+        base_telemetry,
+        service_name="flavorpack",
+        logging=evolve(
+            base_telemetry.logging,
+            default_level=flavor_config.log_level,  # type: ignore[arg-type]
+        ),
+    )
+
+    # Initialize Foundation with merged config
+    hub = get_hub()
+    hub.initialize_foundation(telemetry_config)
+
+    ctx.obj["cli_context"] = cli_ctx
+    ctx.obj["log"] = cli_ctx.logger
 
 
 # Register simple commands

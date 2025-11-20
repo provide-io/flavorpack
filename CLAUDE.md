@@ -191,9 +191,11 @@ uv run pytest -m security
 - **NO simple/quick tests** - use the proper testing framework
 - Cross-language compatibility must be verified through pretaster
 - If pretaster/taster aren't available, note that testing is blocked - don't create alternatives
-- no. you should not be writing your own examples. you should be using fucking pretaster.
+- Do not write custom examples. Always use pretaster for testing.
 - Rather than "no hardcoded defaults" i mean "no inline defaults." defaults may be stored in a common file for the project. either defaults.py or constants.py, and THOSE will ALWAYS be used instead of inline defaults.
 - "import annotations" is okay so I can use the unquoted types.
-- After writing each Python file, run the code quality tools - ruff check --fix --unsafe-fixes, ty check, mypy, ruff format, then run each of the tools again. this way CQ is performed during the dev process.%
+- After writing each Python file, run the code quality tools:
+  - If `we` commands available: `we format`, `we lint`, `we typecheck`
+  - Otherwise: `ruff format`, `ruff check --fix`, `mypy`%
 - no print ever for debug. use the debug logger.
 - When you want the CI pipeline to work, you must manually start the Helper Prep action.

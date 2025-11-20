@@ -3,15 +3,12 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""TODO: Add module docstring."""
-
-from __future__ import annotations
-
-"""
-PSPF Fluent Builder - Immutable builder pattern for PSPF packages.
+"""PSPF Fluent Builder - Immutable builder pattern for PSPF packages.
 
 Provides a chainable API for constructing build specifications.
 """
+
+from __future__ import annotations
 
 from pathlib import Path
 import tempfile

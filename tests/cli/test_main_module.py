@@ -26,7 +26,7 @@ def test_main_module_entrypoint() -> None:
                 sys.argv = original_argv
 
         # Verify that the exit was successful.
-        assert e.type == SystemExit
+        assert e.type is SystemExit
         assert e.value.code == 0
 
     # The mock is not called because --version exits before the command body runs.

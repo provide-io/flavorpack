@@ -284,7 +284,7 @@ FOUNDATION_LOG_LEVEL=debug      # Python component logging
 ```
 
 !!! warning "Security Configuration"
-    For signature verification configuration, use CLI flags (`--private-key`, `--public-key`, `--key-seed`) rather than environment variables. See the [Environment Variables Guide](../../guide/usage/environment.md) for the complete list of available variables.
+    For signature verification configuration, use CLI flags (`--private-key`, `--public-key`, `--key-seed`) rather than environment variables. See the [Environment Variables Guide](../../guide/usage/environment/) for the complete list of available variables.
 
 ### Configuration File
 
@@ -484,7 +484,7 @@ Working towards:
 
 ## Related Documentation
 
-- [Cryptographic Specification](../../reference/spec/pspf-2025.md) - Technical crypto details
-- [Package Format](../../reference/spec/fep-0001-core-format-and-operation-chains.md) - Binary security features
-- [CLI Reference](../../guide/usage/cli.md#verify) - Verification commands
-- [Troubleshooting](../concepts/security.md) - Security issues
+- [Cryptographic Specification](../../reference/spec/pspf-2025/) - Technical crypto details
+- [Package Format](../../reference/spec/fep-0001-core-format-and-operation-chains/) - Binary security features
+- [CLI Reference](../../guide/usage/cli/#verify) - Verification commands
+- [Troubleshooting](../concepts/security/) - Security issues

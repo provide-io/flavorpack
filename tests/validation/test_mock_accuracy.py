@@ -8,6 +8,10 @@
 These tests ensure that our mock launchers accurately represent real launcher behavior.
 They should be run as integration tests with real helpers available."""
 
+from __future__ import annotations
+
+from pathlib import Path
+
 import pytest
 
 from flavor.psp.format_2025 import PSPFBuilder, PSPFReader
@@ -20,7 +24,7 @@ class TestMockAccuracy:
     """Validate that our mocks accurately represent real behavior."""
 
     @pytest.fixture()
-    def use_real_launcher(self, monkeypatch, request) -> None:
+    def use_real_launcher(self, monkeypatch: pytest.MonkeyPatch, request: pytest.FixtureRequest) -> None:
         """Override the global mock to use real launchers for these tests.
 
         Note: Only use this fixture for tests that explicitly need real launchers.
@@ -53,7 +57,7 @@ class TestMockAccuracy:
         # Mock should be properly padded
         assert len(MOCK_LAUNCHER_DATA) == MOCK_LAUNCHER_SIZE
 
-    def test_build_with_mock_vs_real(self, temp_dir) -> None:
+    def test_build_with_mock_vs_real(self, temp_dir: Path) -> None:
         """Compare package structure built with mock vs real launcher.
 
         This test builds two packages - one with mock and one with real launcher,
@@ -66,7 +70,7 @@ class TestMockAccuracy:
         # Build with mock
         mock_output = temp_dir / "mock_package.psp"
 
-        def mock_launcher(launcher_type):
+        def mock_launcher(launcher_type: str) -> bytes:
             return MOCK_LAUNCHER_DATA
 
         with unittest.mock.patch.object(assembly, "load_launcher_binary", mock_launcher):
