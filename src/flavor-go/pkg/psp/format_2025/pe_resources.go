@@ -165,7 +165,7 @@ func ReadPSPFFromResource(exePath string, logger hclog.Logger) ([]byte, error) {
 	resInfo, err := windows.FindResource(
 		handle,
 		windows.StringToUTF16Ptr(PSPF_RESOURCE_NAME),
-		windows.RT_RCDATA,
+		makeIntResource(uint16(PSPF_RESOURCE_TYPE)),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("PSPF resource not found (type=%d, name=%s): %w",
@@ -219,4 +219,9 @@ func HasPSPFResource(exePath string, logger hclog.Logger) bool {
 	// Try to read the resource - if it exists, return true
 	_, err := ReadPSPFFromResource(exePath, logger)
 	return err == nil
+}
+
+// makeIntResource mirrors the Windows MAKEINTRESOURCE macro for resource identifiers.
+func makeIntResource(id uint16) *uint16 {
+	return (*uint16)(unsafe.Pointer(uintptr(id)))
 }
