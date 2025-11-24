@@ -10,31 +10,10 @@ import (
 
 // VerifyMagicTrailer verifies the MagicTrailer emoji bookends
 func (r *Reader) VerifyMagicTrailer() (bool, error) {
-	if err := r.Open(); err != nil {
-		return false, err
-	}
-
-	// Get file size
-	info, err := r.file.Stat()
+	_, err := r.ReadMagicTrailer()
 	if err != nil {
 		return false, err
 	}
-
-	// Read MagicTrailer (last 8200 bytes)
-	trailer := make([]byte, MagicTrailerSize)
-	if _, err := r.file.ReadAt(trailer, info.Size()-MagicTrailerSize); err != nil {
-		return false, err
-	}
-
-	// Verify magic sequence
-	// Check emoji magic (last 8 bytes of trailer = last 8 bytes of file)
-	emojiMagic := trailer[len(trailer)-8:]
-	expectedEmoji := []byte{0xF0, 0x9F, 0x93, 0xA6, 0xF0, 0x9F, 0xAA, 0x84} // 📦🪄
-
-	if !bytes.Equal(emojiMagic, expectedEmoji) {
-		return false, ErrInvalidEmojiMagic
-	}
-
 	return true, nil
 }
 
@@ -60,18 +39,13 @@ func (r *Reader) ReadEmojiMagic(buf []byte) error {
 		return fmt.Errorf("buffer must be 16 bytes")
 	}
 
-	info, err := r.file.Stat()
+	trailer, err := r.ReadMagicTrailer()
 	if err != nil {
 		return err
 	}
 
-	// Seek to emoji magic position (last 16 bytes)
-	if _, err := r.file.Seek(info.Size()-16, io.SeekStart); err != nil {
-		return err
-	}
-
-	_, err = r.file.Read(buf)
-	return err
+	copy(buf, trailer[MagicTrailerSize-16:])
+	return nil
 }
 
 // VerifyIntegritySeal verifies the metadata integrity using Ed25519 signature
@@ -81,13 +55,8 @@ func (r *Reader) VerifyIntegritySeal() (bool, error) {
 		return false, err
 	}
 
-	// Read metadata archive
-	if _, err := r.file.Seek(int64(index.MetadataOffset), io.SeekStart); err != nil {
-		return false, err
-	}
-
-	archiveData := make([]byte, index.MetadataSize)
-	if _, err := r.file.Read(archiveData); err != nil {
+	archiveData, err := r.ReadMetadataArchive()
+	if err != nil {
 		return false, err
 	}
 
