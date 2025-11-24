@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"syscall"
@@ -219,8 +220,43 @@ func execBundleReplace(exePath string, args []string, userCwd string, logger hcl
 		return err
 	}
 
-	// Convert exec.Cmd to syscall.Exec arguments
+	// For exec mode, we need to resolve the executable using the updated PATH from cmd.Env
+	// The original cmd.Path was resolved using the current process's PATH, which doesn't include workenv/bin
+	// We need to re-resolve using the PATH from cmd.Env
 	binary := cmd.Path
+
+	// If binary is not an absolute path, try to resolve it using the PATH from cmd.Env
+	if !filepath.IsAbs(binary) {
+		// Extract PATH from cmd.Env
+		var pathEnv string
+		for _, env := range cmd.Env {
+			if strings.HasPrefix(env, "PATH=") {
+				pathEnv = strings.TrimPrefix(env, "PATH=")
+				break
+			}
+		}
+
+		if pathEnv != "" {
+			// Search for the executable in the PATH from cmd.Env
+			for _, dir := range filepath.SplitList(pathEnv) {
+				candidate := filepath.Join(dir, binary)
+				// On Windows, try with .exe extension
+				if runtime.GOOS == "windows" && !strings.HasSuffix(candidate, ".exe") {
+					if info, err := os.Stat(candidate + ".exe"); err == nil && !info.IsDir() {
+						binary = candidate + ".exe"
+						logger.Debug("✅ Resolved executable in workenv PATH", "path", binary)
+						break
+					}
+				}
+				if info, err := os.Stat(candidate); err == nil && !info.IsDir() {
+					binary = candidate
+					logger.Debug("✅ Resolved executable in workenv PATH", "path", binary)
+					break
+				}
+			}
+		}
+	}
+
 	logger.Trace("Binary path extracted from command", "path", binary)
 
 	argv := cmd.Args
