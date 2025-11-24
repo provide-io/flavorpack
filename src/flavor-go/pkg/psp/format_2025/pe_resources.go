@@ -6,11 +6,9 @@ package format_2025
 import (
 	"fmt"
 	"os"
-	"unsafe"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/tc-hib/winres"
-	"golang.org/x/sys/windows"
 )
 
 const (
@@ -147,70 +145,69 @@ func EmbedPSPFAsResource(exePath string, pspfData []byte, logger hclog.Logger) e
 func ReadPSPFFromResource(exePath string, logger hclog.Logger) ([]byte, error) {
 	logger.Debug("Reading PSPF from PE resources", "exe", exePath)
 
-	// Load the EXE as a data file (read-only, no code execution)
-	handle, err := windows.LoadLibraryEx(
-		exePath,
-		0,
-		windows.LOAD_LIBRARY_AS_DATAFILE,
-	)
+	file, err := os.Open(exePath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to load EXE as data file: %w", err)
+		return nil, fmt.Errorf("failed to open EXE for reading: %w", err)
 	}
-	defer windows.FreeLibrary(handle)
+	defer func() {
+		if cerr := file.Close(); cerr != nil {
+			logger.Debug("Failed to close EXE after reading resources", "error", cerr)
+		}
+	}()
 
-	logger.Debug("Loaded EXE as data file", "handle", handle)
-
-	// Find the PSPF resource
-	// Use MakeIntResource for string resource names
-	resInfo, err := windows.FindResource(
-		handle,
-		windows.StringToUTF16Ptr(PSPF_RESOURCE_NAME),
-		makeIntResource(uint16(PSPF_RESOURCE_TYPE)),
-	)
+	rs, err := winres.LoadFromEXE(file)
 	if err != nil {
-		return nil, fmt.Errorf("PSPF resource not found (type=%d, name=%s): %w",
-			PSPF_RESOURCE_TYPE, PSPF_RESOURCE_NAME, err)
+		return nil, fmt.Errorf("failed to load resource section: %w", err)
 	}
 
-	logger.Debug("Found PSPF resource", "info", resInfo)
-
-	// Load the resource data
-	resData, err := windows.LoadResource(handle, resInfo)
-	if err != nil {
-		return nil, fmt.Errorf("failed to load resource data: %w", err)
+	getResource := func(lang uint16) []byte {
+		if data := rs.Get(winres.ID(PSPF_RESOURCE_TYPE), winres.Name(PSPF_RESOURCE_NAME), lang); data != nil {
+			copyData := make([]byte, len(data))
+			copy(copyData, data)
+			return copyData
+		}
+		return nil
 	}
 
-	// Get resource size
-	size, err := windows.SizeofResource(handle, resInfo)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get resource size: %w", err)
+	if data := getResource(PSPF_RESOURCE_LANG); data != nil {
+		logger.Info("✅ Successfully read PSPF from PE resources",
+			"exe", exePath,
+			"pspf_size", len(data),
+			"lang", fmt.Sprintf("0x%04x", PSPF_RESOURCE_LANG))
+		return data, nil
 	}
-	if size == 0 {
-		return nil, fmt.Errorf("resource has zero size")
+	if data := getResource(winres.LCIDDefault); data != nil {
+		logger.Info("✅ Successfully read PSPF from PE resources (default locale)",
+			"exe", exePath,
+			"pspf_size", len(data))
+		return data, nil
+	}
+	if data := getResource(winres.LCIDNeutral); data != nil {
+		logger.Info("✅ Successfully read PSPF from PE resources (neutral locale)",
+			"exe", exePath,
+			"pspf_size", len(data))
+		return data, nil
 	}
 
-	logger.Debug("Resource loaded", "size", size)
-
-	// Lock the resource and get pointer to data
-	ptr, err := windows.LockResource(resData)
-	if err != nil {
-		return nil, fmt.Errorf("failed to lock resource: %w", err)
+	// Final fallback: walk resources to locate the first PSPF entry regardless of locale.
+	var fallback []byte
+	rs.WalkType(winres.ID(PSPF_RESOURCE_TYPE), func(resID winres.Identifier, langID uint16, data []byte) bool {
+		if name, ok := resID.(winres.Name); ok && string(name) == PSPF_RESOURCE_NAME {
+			fallback = make([]byte, len(data))
+			copy(fallback, data)
+			logger.Info("✅ Read PSPF from PE resources (fallback locale)",
+				"exe", exePath,
+				"pspf_size", len(fallback),
+				"lang", fmt.Sprintf("0x%04x", langID))
+			return false
+		}
+		return true
+	})
+	if fallback != nil {
+		return fallback, nil
 	}
-	if ptr == 0 {
-		return nil, fmt.Errorf("lock resource returned null pointer")
-	}
 
-	// Copy the data (Windows resource data is read-only)
-	// We create a slice backed by the resource memory, then copy it
-	resourceSlice := (*[1 << 30]byte)(unsafe.Pointer(ptr))[:size:size]
-	data := make([]byte, size)
-	copy(data, resourceSlice)
-
-	logger.Info("✅ Successfully read PSPF from PE resources",
-		"exe", exePath,
-		"pspf_size", size)
-
-	return data, nil
+	return nil, fmt.Errorf("PSPF resource not found (type=%d, name=%s)", PSPF_RESOURCE_TYPE, PSPF_RESOURCE_NAME)
 }
 
 // HasPSPFResource checks if a PE executable has the PSPF resource embedded.
@@ -219,9 +216,4 @@ func HasPSPFResource(exePath string, logger hclog.Logger) bool {
 	// Try to read the resource - if it exists, return true
 	_, err := ReadPSPFFromResource(exePath, logger)
 	return err == nil
-}
-
-// makeIntResource mirrors the Windows MAKEINTRESOURCE macro for resource identifiers.
-func makeIntResource(id uint16) *uint16 {
-	return (*uint16)(unsafe.Pointer(uintptr(id)))
 }
