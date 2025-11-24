@@ -9,9 +9,10 @@ Usage:
     python analyze_pe_binaries.py <working_binary> <failing_binary> <output_file>
 """
 
-import sys
 import json
 from pathlib import Path
+import sys
+
 
 def analyze_pe_binary(filepath):
     """Analyze a PE binary and extract structure information."""
@@ -173,7 +174,7 @@ def main():
     print(f"Analyzing failing binary: {failing_path}")
     failing = analyze_pe_binary(failing_path)
 
-    print(f"Comparing binaries...")
+    print("Comparing binaries...")
     comparison = compare_analyses(working, failing)
 
     # Generate text report
@@ -227,7 +228,7 @@ def main():
     with open(output_path, "w") as f:
         json.dump(comparison, f, indent=2)
 
-    print(f"\nAnalysis complete!")
+    print("\nAnalysis complete!")
     print(f"Text report: {output_path.replace('.json', '.txt')}")
     print(f"JSON report: {output_path}")
     print(f"\n{report_text}")
