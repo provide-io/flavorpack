@@ -77,9 +77,9 @@ jobs:
       matrix:
         include:
           - platform: linux_amd64
-            os: ubuntu-latest
+            os: ubuntu-20.04
           - platform: darwin_arm64
-            os: macos-latest
+            os: macos-15
 
     runs-on: ${{ matrix.os }}
 
@@ -273,10 +273,10 @@ workflows:
 strategy:
   matrix:
     include:
-      - { os: ubuntu-latest, platform: linux_amd64 }
-      - { os: macos-latest, platform: darwin_arm64 }
-      - { os: macos-13, platform: darwin_amd64 }
-      - { os: windows-latest, platform: windows_amd64 }
+      - { os: ubuntu-20., platform: linux_amd64 }
+      - { os: macos-15, platform: darwin_arm64 }
+      - { os: macos-15-intel, platform: darwin_amd64 }
+      - { os: windows-2025, platform: windows_amd64 }
 ```
 
 ### 4. **Semantic Versioning**
@@ -361,10 +361,10 @@ jobs:
           - os: ubuntu-latest
             platform: linux_amd64
             artifact_name: myapp-linux-amd64.psp
-          - os: macos-latest
+          - os: macos-15
             platform: darwin_arm64
             artifact_name: myapp-macos-arm64.psp
-          - os: macos-13
+          - os: macos-15-intel
             platform: darwin_amd64
             artifact_name: myapp-macos-amd64.psp
 
