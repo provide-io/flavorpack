@@ -62,11 +62,11 @@ run_test() {
 
     if "${test_cmd[@]}"; then
         echo "✅ PASSED: $test_name"
-        TESTS_PASSED=$((TESTS_PASSED + 1))
+        ((TESTS_PASSED++))
         return 0
     else
         echo "❌ FAILED: $test_name"
-        TESTS_FAILED=$((TESTS_FAILED + 1))
+        ((TESTS_FAILED++))
         FAILED_TESTS+=("$test_name")
         return 1
     fi
@@ -77,28 +77,11 @@ has_command() {
     command -v "$1" >/dev/null 2>&1
 }
 
-# Setup paths
-REPO_ROOT=$(pwd)
-TEST_WORK_DIR="$REPO_ROOT/taster-test-work"
-mkdir -p "$TEST_WORK_DIR"
-
-# Get absolute path to taster binary
-TASTER_ABS=$(cd "$(dirname "$TASTER_BINARY")" && pwd)/$(basename "$TASTER_BINARY")
-
-# Taster manifest location
-TASTER_MANIFEST="$REPO_ROOT/tests/taster/pyproject.toml"
-if [[ ! -f "$TASTER_MANIFEST" ]]; then
-    echo "❌ Taster manifest not found at $TASTER_MANIFEST"
-    exit 1
-fi
-
 echo "🍰 Comprehensive Taster Test Suite"
 echo "═══════════════════════════════════════════"
-echo "Taster: $TASTER_ABS"
+echo "Taster: $TASTER_BINARY"
 echo "Platform: $PLATFORM"
 echo "Launcher Dir: $LAUNCHER_DIR"
-echo "Repo Root: $REPO_ROOT"
-echo "Work Dir: $TEST_WORK_DIR"
 echo ""
 
 # Test 1: Flavor pack with explicit launcher
@@ -113,19 +96,21 @@ test_flavor_pack_with_launcher() {
         return 1
     fi
 
-    # Use absolute paths to avoid directory changes
-    local abs_launcher
-    abs_launcher=$(cd "$(dirname "$launcher")" && pwd)/$(basename "$launcher")
+    # Get working directory for taster
+    local taster_dir
+    taster_dir=$(dirname "$TASTER_BINARY")
+
+    cd "$taster_dir" || return 1
 
     flavor pack \
-        --manifest "$TASTER_MANIFEST" \
-        --output "$TEST_WORK_DIR/taster-bundled.psp" \
-        --launcher-bin "$abs_launcher" \
+        --manifest pyproject.toml \
+        --output taster-bundled.psp \
+        --launcher-bin "$launcher" \
         --key-seed test123
 
-    chmod +x "$TEST_WORK_DIR/taster-bundled.psp"
-    "$TEST_WORK_DIR/taster-bundled.psp" --version
-    "$TEST_WORK_DIR/taster-bundled.psp" info
+    chmod +x taster-bundled.psp
+    ./taster-bundled.psp --version
+    ./taster-bundled.psp info
 
     echo "✅ Pack with launcher test passed"
 }
@@ -134,40 +119,60 @@ run_test "Test 1: Flavor pack with launcher" test_flavor_pack_with_launcher
 
 # Test 2a: Help command
 test_help() {
+    local taster_dir
+    taster_dir=$(dirname "$TASTER_BINARY")
+    cd "$taster_dir" || return 1
+
     echo "=== Testing Taster help command ==="
-    "$TEST_WORK_DIR/taster-bundled.psp" --help
+    ./taster-bundled.psp --help
 }
 
 run_test "Test 2a: Taster help" test_help
 
 # Test 2b: Info command
 test_info() {
+    local taster_dir
+    taster_dir=$(dirname "$TASTER_BINARY")
+    cd "$taster_dir" || return 1
+
     echo "=== Testing Taster info command ==="
-    "$TEST_WORK_DIR/taster-bundled.psp" info
+    ./taster-bundled.psp info
 }
 
 run_test "Test 2b: Taster info" test_info
 
 # Test 2c: Env command
 test_env() {
+    local taster_dir
+    taster_dir=$(dirname "$TASTER_BINARY")
+    cd "$taster_dir" || return 1
+
     echo "=== Testing Taster env command ==="
-    "$TEST_WORK_DIR/taster-bundled.psp" env
+    ./taster-bundled.psp env
 }
 
 run_test "Test 2c: Taster env" test_env
 
 # Test 2d: Cache info
 test_cache_info() {
+    local taster_dir
+    taster_dir=$(dirname "$TASTER_BINARY")
+    cd "$taster_dir" || return 1
+
     echo "=== Testing Taster cache info command ==="
-    "$TEST_WORK_DIR/taster-bundled.psp" cache info
+    ./taster-bundled.psp cache info
 }
 
 run_test "Test 2d: Taster cache info" test_cache_info
 
 # Test 2e: Exit command
 test_exit() {
+    local taster_dir
+    taster_dir=$(dirname "$TASTER_BINARY")
+    cd "$taster_dir" || return 1
+
     echo "=== Testing Taster exit command ==="
-    "$TEST_WORK_DIR/taster-bundled.psp" exit 0 --message "Test success"
+    ./taster-bundled.psp exit 0 --message "Test success"
 }
 
 run_test "Test 2e: Taster exit" test_exit
@@ -193,6 +198,10 @@ run_test "Test 3a: Check launcher location" test_check_launcher_location
 
 # Test 3b: Build with Rust launcher
 test_rust_launcher() {
+    local taster_dir
+    taster_dir=$(dirname "$TASTER_BINARY")
+    cd "$taster_dir" || return 1
+
     echo "=== Testing with Rust launcher ==="
 
     local rust_launcher
@@ -205,17 +214,14 @@ test_rust_launcher() {
     fi
 
     if [[ -f "$rust_launcher" ]]; then
-        local abs_rust_launcher
-        abs_rust_launcher=$(cd "$(dirname "$rust_launcher")" && pwd)/$(basename "$rust_launcher")
-
         flavor pack \
-            --manifest "$TASTER_MANIFEST" \
-            --output "$TEST_WORK_DIR/taster-rust-explicit.psp" \
-            --launcher-bin "$abs_rust_launcher" \
+            --manifest pyproject.toml \
+            --output taster-rust-explicit.psp \
+            --launcher-bin "$rust_launcher" \
             --key-seed test123
 
-        chmod +x "$TEST_WORK_DIR/taster-rust-explicit.psp"
-        "$TEST_WORK_DIR/taster-rust-explicit.psp" --version
+        chmod +x taster-rust-explicit.psp
+        ./taster-rust-explicit.psp --version
         echo "✅ Rust launcher test passed"
     else
         echo "⚠️ Rust launcher not found at $rust_launcher, skipping"
@@ -227,6 +233,10 @@ run_test "Test 3b: Build with Rust launcher" test_rust_launcher
 
 # Test 3c: Build with Go launcher
 test_go_launcher() {
+    local taster_dir
+    taster_dir=$(dirname "$TASTER_BINARY")
+    cd "$taster_dir" || return 1
+
     echo "=== Testing with Go launcher ==="
 
     local go_launcher
@@ -239,17 +249,14 @@ test_go_launcher() {
     fi
 
     if [[ -f "$go_launcher" ]]; then
-        local abs_go_launcher
-        abs_go_launcher=$(cd "$(dirname "$go_launcher")" && pwd)/$(basename "$go_launcher")
-
         flavor pack \
-            --manifest "$TASTER_MANIFEST" \
-            --output "$TEST_WORK_DIR/taster-go-explicit.psp" \
-            --launcher-bin "$abs_go_launcher" \
+            --manifest pyproject.toml \
+            --output taster-go-explicit.psp \
+            --launcher-bin "$go_launcher" \
             --key-seed test123
 
-        chmod +x "$TEST_WORK_DIR/taster-go-explicit.psp"
-        "$TEST_WORK_DIR/taster-go-explicit.psp" --version
+        chmod +x taster-go-explicit.psp
+        ./taster-go-explicit.psp --version
         echo "✅ Go launcher test passed"
     else
         echo "⚠️ Go launcher not found at $go_launcher, skipping"
@@ -261,9 +268,13 @@ run_test "Test 3c: Build with Go launcher" test_go_launcher
 
 # Test 4: Pipe operations
 test_pipe_operations() {
+    local taster_dir
+    taster_dir=$(dirname "$TASTER_BINARY")
+    cd "$taster_dir" || return 1
+
     echo "=== Testing pipe operations ==="
-    if [[ -f "$TEST_WORK_DIR/taster-bundled.psp" ]]; then
-        echo "Hello from pipe" | "$TEST_WORK_DIR/taster-bundled.psp" pipe stdin
+    if [[ -f "taster-bundled.psp" ]]; then
+        echo "Hello from pipe" | ./taster-bundled.psp pipe stdin
         echo "✅ Pipe test passed"
     else
         echo "❌ taster-bundled.psp not found"
@@ -275,9 +286,13 @@ run_test "Test 4: Pipe operations" test_pipe_operations
 
 # Test 5: Signal handling
 test_signal_handling() {
+    local taster_dir
+    taster_dir=$(dirname "$TASTER_BINARY")
+    cd "$taster_dir" || return 1
+
     echo "=== Testing signal handling ==="
     if has_command timeout; then
-        timeout 3 "$TEST_WORK_DIR/taster-bundled.psp" signals --sleep 1 || true
+        timeout 3 ./taster-bundled.psp signals --sleep 1 || true
         echo "✅ Signal test completed"
     else
         echo "⚠️ Skipping signal test (no timeout command)"
@@ -289,9 +304,13 @@ run_test "Test 5: Signal handling" test_signal_handling
 
 # Test 6: Memory-mapped I/O
 test_mmap() {
+    local taster_dir
+    taster_dir=$(dirname "$TASTER_BINARY")
+    cd "$taster_dir" || return 1
+
     echo "=== Testing memory-mapped I/O ==="
-    if "$TEST_WORK_DIR/taster-bundled.psp" --help | grep -q mmap; then
-        "$TEST_WORK_DIR/taster-bundled.psp" mmap
+    if ./taster-bundled.psp --help | grep -q mmap; then
+        ./taster-bundled.psp mmap
         echo "✅ Mmap test passed"
     else
         echo "⚠️ Mmap command not available"
@@ -303,6 +322,10 @@ run_test "Test 6: Memory-mapped I/O" test_mmap
 
 # Test 7: Pretaster build (self-packaging)
 test_pretaster_build() {
+    local taster_dir
+    taster_dir=$(dirname "$TASTER_BINARY")
+    cd "$taster_dir" || return 1
+
     echo "=== Testing Taster self-packaging capability ==="
 
     # Find launcher
@@ -312,16 +335,12 @@ test_pretaster_build() {
         return 1
     fi
 
-    # Get absolute path to launcher
-    local abs_launcher
-    abs_launcher=$(cd "$(dirname "$launcher")" && pwd)/$(basename "$launcher")
-
     # Use script to test self-packaging
     local script_dir
     script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
     "$script_dir/test-taster-self-package.sh" \
-        "$TEST_WORK_DIR/taster-bundled.psp" \
-        "$abs_launcher"
+        ./taster-bundled.psp \
+        "$launcher"
 }
 
 run_test "Test 7: Taster self-packaging" test_pretaster_build

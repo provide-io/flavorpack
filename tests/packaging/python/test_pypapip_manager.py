@@ -205,17 +205,13 @@ class TestPyPaPipManager:
 
     def test_get_pypapip_download_cmd_requirements_file(self) -> None:
         """Test download command with requirements file."""
-        from unittest.mock import patch
-
         python_exe = Path("/usr/bin/python3")
         dest_dir = Path("/tmp/downloads")
         requirements_file = Path("/tmp/requirements.txt")
 
-        # Mock to non-Linux OS to avoid automatic platform tag injection
-        with patch("flavor.packaging.python.pypapip_manager.get_os_name", return_value="darwin"):
-            cmd = self.pip_manager._get_pypapip_download_cmd(
-                python_exe, dest_dir, requirements_file=requirements_file, binary_only=True
-            )
+        cmd = self.pip_manager._get_pypapip_download_cmd(
+            python_exe, dest_dir, requirements_file=requirements_file, binary_only=True
+        )
 
         expected = [
             "/usr/bin/python3",

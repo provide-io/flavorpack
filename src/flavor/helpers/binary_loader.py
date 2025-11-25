@@ -120,7 +120,7 @@ class BinaryLoader:
                     f"./cmd/flavor-go-{component}",
                 ],
                 cwd=self.manager.go_src_dir,
-                capture_output=False,
+                capture_output=True,
             )
 
             if result.returncode == 0:
@@ -167,7 +167,7 @@ class BinaryLoader:
                     f"flavor-rs-{component}",
                 ],
                 cwd=self.manager.rust_src_dir,
-                capture_output=False,
+                capture_output=True,
             )
 
             if result.returncode == 0:
