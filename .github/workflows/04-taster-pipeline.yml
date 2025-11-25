@@ -137,12 +137,12 @@ jobs:
         shell: bash
         run: |
           .github/scripts/prepare-taster-build.sh \
-            "flavor-psp" \
             "${{ matrix.platform }}" \
-            "${{ needs.setup.outputs.version }}"
+            "flavor-psp" \
+            "${{ needs.setup.outputs.version }}" \
+            "taster-build"
 
-          # Export path for subsequent steps
-          echo "taster_path=$PWD/tests/taster/taster-${{ needs.setup.outputs.version }}-${{ matrix.platform }}.psp" >> $GITHUB_OUTPUT
+          # The taster_path is already exported by prepare-taster-build.sh to GITHUB_OUTPUT
 
       - name: 🔍 Verify Built Package
         shell: bash
@@ -197,8 +197,8 @@ jobs:
         with:
           name: taster-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
           path: |
-            tests/taster/taster-${{ needs.setup.outputs.version }}-${{ matrix.platform }}.psp
-            tests/taster/taster-${{ needs.setup.outputs.version }}-${{ matrix.platform }}.exe
+            taster-build/taster-${{ needs.setup.outputs.version }}-${{ matrix.platform }}.psp
+            taster-build/taster-${{ needs.setup.outputs.version }}-${{ matrix.platform }}.exe
 
       - name: 📤 Upload test results
         if: always()
@@ -242,9 +242,65 @@ jobs:
       - name: 📦 Setup environment
         run: .github/scripts/setup-python-workenv.sh
 
+      - name: 🔍 Detect platform
+        id: platform
+        run: |
+          case "$RUNNER_OS" in
+            Linux)
+              case "$RUNNER_ARCH" in
+                X64) echo "platform=linux_amd64" >> $GITHUB_OUTPUT ;;
+                ARM64) echo "platform=linux_arm64" >> $GITHUB_OUTPUT ;;
+              esac
+              ;;
+            macOS)
+              case "$RUNNER_ARCH" in
+                X64) echo "platform=darwin_amd64" >> $GITHUB_OUTPUT ;;
+                ARM64) echo "platform=darwin_arm64" >> $GITHUB_OUTPUT ;;
+              esac
+              ;;
+          esac
+
+      - name: 📥 Download Flavor PSP
+        uses: actions/download-artifact@v4
+        with:
+          name: flavor-psp-${{ github.run_id }}
+          path: flavor-psp
+
+      - name: 🔗 Setup Flavor command
+        run: |
+          PLATFORM="${{ steps.platform.outputs.platform }}"
+          FLAVOR_PSP=$(find flavor-psp -name "flavor-*-${PLATFORM}.psp" -o -name "flavor-*-${PLATFORM}.exe" | head -1)
+          if [ -z "$FLAVOR_PSP" ]; then
+            echo "❌ Flavor PSP not found for platform: $PLATFORM"
+            echo "Available files:"
+            ls -la flavor-psp/
+            exit 1
+          fi
+          FLAVOR_DIR=$(dirname "$FLAVOR_PSP")
+          chmod +x "$FLAVOR_PSP"
+          # Create a wrapper script named 'flavor' that calls the PSP
+          echo '#!/bin/bash' > "$FLAVOR_DIR/flavor"
+          echo "exec \"$PWD/$FLAVOR_PSP\" \"\$@\"" >> "$FLAVOR_DIR/flavor"
+          chmod +x "$FLAVOR_DIR/flavor"
+          # Add to PATH (works on both Linux and Windows)
+          echo "$PWD/$FLAVOR_DIR" >> $GITHUB_PATH
+
+      - name: ✅ Verify Flavor command
+        run: flavor --version
+
+      - name: 📥 Download taster package
+        uses: actions/download-artifact@v4
+        with:
+          pattern: taster-${{ needs.setup.outputs.version }}-linux_amd64
+          path: taster-artifacts
+
       - name: 🧪 Run comprehensive taster tests
         run: |
-          .github/scripts/run-comprehensive-taster-tests.sh
+          TASTER=$(find taster-artifacts -name "taster-*.psp" | head -1)
+          .github/scripts/run-comprehensive-taster-tests.sh \
+            "$TASTER" \
+            "linux_amd64" \
+            "helpers/bin"
 
   # Summary and validation
   validate:
@@ -265,9 +321,8 @@ jobs:
       - name: 📊 Generate summary
         run: |
           .github/scripts/generate-taster-summary.sh \
-            "${{ needs.setup.outputs.helper_version }}" \
-            "${{ github.repository }}" \
-            "${{ github.run_id }}"
+            "test-results" \
+            "${{ needs.setup.outputs.helper_version }}"
 
       - name: 🎯 Check status
         run: |
