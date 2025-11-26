@@ -1,5 +1,8 @@
 # CI/CD Pipeline
 
+!!! info "Internal Infrastructure Documentation"
+    This page documents FlavorPack's own CI/CD infrastructure for contributors. If you're looking to integrate FlavorPack into **your project's** CI/CD, see the **[CI/CD Integration Recipe](../cookbook/recipes/ci-cd.md)**.
+
 ## Overview
 
 The FlavorPack CI/CD system consists of multiple independent GitHub Actions workflows that build, test, and validate the entire system across multiple platforms and language implementations.
