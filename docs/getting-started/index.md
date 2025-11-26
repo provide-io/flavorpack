@@ -88,9 +88,9 @@ Need to integrate FlavorPack into CI/CD?
     See [Installation → System Requirements](installation/#system-requirements) for details.
 
 ??? question "Is FlavorPack production-ready?"
-    FlavorPack is currently in **alpha** status. The core PSPF format and basic packaging features work well, but APIs and file formats may change without notice.
+    FlavorPack is in **pre-release (v0.9)** status. The core runtime and PSPF/2025 format are production-ready on Linux and macOS.
 
-    Not recommended for production use yet. See the [Roadmap](../guide/roadmap/) for planned v1.0 features.
+    **v1.0 blockers**: Windows support (disabled), API documentation (incomplete). See the [Roadmap](../guide/roadmap/) for details.
 
 ??? question "How do I package a Python app with dependencies?"
     The most common workflow:

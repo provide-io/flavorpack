@@ -15,6 +15,7 @@ import tempfile
 
 from provide.foundation import logger, retry
 from provide.foundation.archive import deterministic_filter
+from provide.foundation.errors.process import ProcessError
 from provide.foundation.file import ensure_dir, safe_copy
 from provide.foundation.platform import get_arch_name, get_os_name
 from provide.foundation.process import run
@@ -76,6 +77,18 @@ class PythonEnvironmentBuilder:
             machine=get_arch_name(),
         )
 
+        # First, try to find an existing system Python (avoids network calls)
+        system_python_dir = self._try_find_system_python()
+        if system_python_dir:
+            logger.info(
+                "🐍✅ Using existing system Python",
+                path=str(system_python_dir),
+            )
+            self._create_python_tarball(system_python_dir, python_tgz)
+            return
+
+        # Fall back to installing Python via UV (requires network)
+        logger.info("🐍⬇️ No suitable system Python found, downloading via UV")
         with tempfile.TemporaryDirectory() as uv_install_dir:
             python_install_dir = self._install_python_with_uv(uv_install_dir)
 
@@ -85,12 +98,46 @@ class PythonEnvironmentBuilder:
 
             self._create_python_tarball(python_install_dir, python_tgz)
 
+    def _try_find_system_python(self) -> Path | None:
+        """Try to find an existing system Python without downloading.
+
+        Returns:
+            Path to Python installation directory, or None if not found.
+        """
+        uv_cmd = self.find_uv_command(raise_if_not_found=False)
+        if uv_cmd is None:
+            return None
+
+        try:
+            # Use UV to find an existing Python (doesn't download)
+            find_cmd = [
+                uv_cmd,
+                "python",
+                "find",
+                self.python_version,
+            ]
+            logger.debug("🔍🐍 Searching for existing Python", command=" ".join(find_cmd))
+
+            result = run(find_cmd, check=True, capture_output=True)
+            if result.stdout:
+                python_path = Path(result.stdout.strip())
+                if python_path.exists():
+                    # Validate it's a standalone Python (not just a symlink to system)
+                    return self._validate_python_installation(python_path)
+        except ProcessError as e:
+            logger.debug("🔍🐍 No existing Python found", error=str(e))
+        except Exception as e:
+            logger.debug("🔍🐍 Error searching for Python", error=str(e))
+
+        return None
+
     @retry(
         ConnectionError,
         TimeoutError,
         OSError,
+        ProcessError,  # Catches network errors wrapped by run()
         max_attempts=3,
-        base_delay=1.0,
+        base_delay=2.0,
         backoff=BackoffStrategy.EXPONENTIAL,
         jitter=True,
     )
@@ -215,8 +262,17 @@ class PythonEnvironmentBuilder:
             if str(target).startswith("/usr") or str(target).startswith("/System"):
                 logger.error("🔗🚫❌ Python is a system symlink, not standalone!")
 
-        # Go up from bin/python{version} to the installation root
-        python_install_dir = python_bin.parent.parent
+        # Determine install directory based on platform structure
+        # - Linux/macOS UV: bin/python3.11 -> go up 2 levels
+        # - Windows UV: Scripts/python.exe or python.exe -> varies
+        # - Windows system: python.exe in install root -> go up 1 level
+        parent_name = python_bin.parent.name.lower()
+        if parent_name in ("bin", "scripts"):
+            # Binary is in bin/ or Scripts/ subdirectory
+            python_install_dir = python_bin.parent.parent
+        else:
+            # Binary is directly in install directory (Windows system Python)
+            python_install_dir = python_bin.parent
 
         self._log_installation_contents(python_install_dir)
         return python_install_dir
