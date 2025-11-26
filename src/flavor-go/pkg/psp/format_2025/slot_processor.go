@@ -383,7 +383,7 @@ func (sp *SlotProcessor) loadSlotData(slot *Slot) ([]byte, []byte, uint8, error)
 		} else {
 			sp.logger.Debug("📦 No gzip for plain tar", "size", len(slotData))
 		}
-	case "none", "":
+	case "none", "raw", "":
 		// No compression
 		sp.logger.Debug("📦 No compression", "size", len(slotData))
 	default:

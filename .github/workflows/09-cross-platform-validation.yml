@@ -184,7 +184,7 @@ jobs:
           - build_platform: linux_amd64
             test_platform: darwin_amd64
             test_platform_name: macOS Intel
-            test_runner: macos-13
+            test_runner: macos-15-intel
           - build_platform: linux_amd64
             test_platform: darwin_arm64
             test_platform_name: macOS ARM64
@@ -316,7 +316,7 @@ jobs:
           PSP_FILE="test-packages/cross-platform-test-${{ matrix.build_platform }}.psp"
 
           # Re-verify after extraction (tests checksum validation)
-          if ! flavor verify "$PSP_FILE" --verbose; then
+          if ! flavor verify "$PSP_FILE"; then
             echo "❌ Post-extraction verification failed!" >> $GITHUB_STEP_SUMMARY
             exit 1
           fi

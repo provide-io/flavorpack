@@ -69,9 +69,11 @@ jobs:
           path: ./helpers-dist
       
       - name: 🔧 Setup helpers
+        shell: bash
         run: .github/scripts/download-helpers.sh helpers-dist "${{ needs.setup.outputs.version }}" "${{ matrix.platform }}"
 
       - name: 🔨 Build Pretaster packages
+        shell: bash
         working-directory: tests/pretaster
         run: ../../.github/scripts/build-pretaster-packages.sh "${{ matrix.platform }}" "${{ needs.setup.outputs.version }}" "dist"
       
@@ -107,9 +109,11 @@ jobs:
           path: ./helpers-dist
       
       - name: 🔍 Verify Cross-Language Package
+        shell: bash
         run: .github/scripts/verify-cross-language-package.sh "${{ matrix.platform }}" "${{ needs.setup.outputs.version }}" "build"
 
       - name: 🧪 Run cross-language tests
+        shell: bash
         run: |
           PSP_EXT=".psp"
           if [[ "${{ matrix.platform }}" == "windows_"* ]]; then
@@ -162,6 +166,7 @@ jobs:
           path: ./helpers-dist
       
       - name: 🔧 Build pretaster PSP
+        shell: bash
         run: |
           .github/scripts/download-helpers.sh helpers-dist "${{ needs.setup.outputs.version }}" "${{ matrix.platform }}"
           mkdir -p build

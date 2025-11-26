@@ -93,34 +93,41 @@ jobs:
       
       - name: 🧹 Clean and setup
         if: steps.cache.outputs.cache-hit != 'true'
+        shell: bash
         run: |
           rm -rf dist/bin
           mkdir -p dist/bin
-      
+
       - name: 🐹 Build Go helpers
         if: steps.cache.outputs.cache-hit != 'true'
+        shell: bash
         run: .github/scripts/build-go-helpers.sh "${{ matrix.platform }}" "${{ needs.setup.outputs.version }}" "dist/bin"
 
       - name: 🦀 Build Rust helpers
         if: steps.cache.outputs.cache-hit != 'true'
+        shell: bash
         run: .github/scripts/build-rust-helpers.sh "${{ matrix.platform }}" "${{ matrix.rust_target }}" "${{ needs.setup.outputs.version }}" "dist/bin"
 
       - name: ✅ Finalize build
         if: steps.cache.outputs.cache-hit != 'true'
+        shell: bash
         run: |
           chmod +x dist/bin/* 2>/dev/null || true
           echo "✅ Build complete for ${{ matrix.platform }}"
           ls -la dist/bin/*-${{ matrix.platform }}*
-      
+
       - name: 📦 Package artifacts
+        shell: bash
         run: .github/scripts/package-artifacts.sh "${{ needs.setup.outputs.version }}" "${{ matrix.platform }}"
-      
+
       - name: 🧪 Test binaries
         continue-on-error: true
+        shell: bash
         run: .github/scripts/test-binaries.sh "${{ matrix.platform }}" dist/bin test-results
-      
+
       - name: 📊 Generate metadata
         if: always()
+        shell: bash
         run: |
           export PYTHONUTF8=1
           export PYTHONIOENCODING=utf-8
