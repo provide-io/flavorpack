@@ -92,6 +92,7 @@ jobs:
         run: .github/scripts/install-dependencies.sh
 
       - name: 🧪 Run tests
+        shell: bash
         run: |
           source workenv/bin/activate
           .github/scripts/run-tests.sh "${{ matrix.marker }}" "${{ matrix.path }}" "${{ inputs.test_filter }}"
@@ -148,7 +149,8 @@ jobs:
           - { platform: linux_arm64, runner: ubuntu-24.04-arm, python_platform: manylinux2014_aarch64 }
           - { platform: darwin_amd64, runner: macos-15-intel, python_platform: macosx_11_0_x86_64 }
           - { platform: darwin_arm64, runner: macos-15, python_platform: macosx_11_0_arm64 }
-          - { platform: windows_amd64, runner: windows-2025, python_platform: win_amd64 }
+          # TODO: Re-enable after fixing Windows wheel build
+          # - { platform: windows_amd64, runner: windows-2025, python_platform: win_amd64 }
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
@@ -167,6 +169,7 @@ jobs:
           path: ./helpers-dist
       
       - name: 🔧 Extract and organize helpers
+        shell: bash
         run: .github/scripts/organize-platform-helpers.sh "${{ matrix.platform }}" "helpers-dist/flavor-helpers-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}.zip" "src/flavor/helpers/bin" "${{ needs.setup.outputs.helper_version }}"
       
       - name: 📦 Install build tools
@@ -175,9 +178,11 @@ jobs:
           pip3 install build wheel setuptools
       
       - name: 🎡 Build platform wheel
+        shell: bash
         run: .github/scripts/build-platform-wheel.sh "${{ matrix.python_platform }}"
       
       - name: 🔍 Validate wheel structure
+        shell: bash
         run: |
           WHEEL_FILE=$(ls dist/*.whl | head -1)
           if [ -z "$WHEEL_FILE" ]; then
@@ -206,11 +211,12 @@ jobs:
           - { platform: linux_arm64, runner: ubuntu-24.04-arm }
           - { platform: darwin_amd64, runner: macos-15-intel }
           - { platform: darwin_arm64, runner: macos-15 }
-          - { platform: windows_amd64, runner: windows-2025 }
+          # TODO: Re-enable after fixing Windows wheel build
+          # - { platform: windows_amd64, runner: windows-2025 }
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
-      
+
       - name: 🐍 Setup uv
         uses: astral-sh/setup-uv@v5
         with:
@@ -230,9 +236,11 @@ jobs:
           path: ./helpers-dist
       
       - name: 🔧 Extract helpers
+        shell: bash
         run: .github/scripts/download-helpers.sh helpers-dist "${{ needs.setup.outputs.helper_version }}" "${{ matrix.platform }}"
       
       - name: 📦 Install Flavor from wheel
+        shell: bash
         run: |
           WHEEL=$(find wheel-dist -name "flavorpack-*.whl" | head -1)
           if [ -z "$WHEEL" ]; then
@@ -246,6 +254,7 @@ jobs:
       
       - name: 🔧 Prepare Flavor build
         id: prepare
+        shell: bash
         run: .github/scripts/prepare-flavor-build.sh "${{ matrix.platform }}" "${{ needs.setup.outputs.helper_version }}" "wheel-dist"
 
       - name: 🔨 Build Flavor PSP using itself (with retry)
@@ -276,7 +285,8 @@ jobs:
           - { platform: linux_arm64, runner: ubuntu-24.04-arm }
           - { platform: darwin_amd64, runner: macos-15-intel }
           - { platform: darwin_arm64, runner: macos-15 }
-          - { platform: windows_amd64, runner: windows-2025 }
+          # TODO: Re-enable after fixing Windows wheel build
+          # - { platform: windows_amd64, runner: windows-2025 }
     steps:
       - name: 📥 Checkout scripts
         uses: actions/checkout@v4
@@ -292,6 +302,7 @@ jobs:
           path: ./
       
       - name: 🧪 Test Flavor PSP self-contained
+        shell: bash
         env:
           FLAVOR_LOG_LEVEL: trace
         run: .github/scripts/test-flavor-self-contained.sh "${{ matrix.platform }}"

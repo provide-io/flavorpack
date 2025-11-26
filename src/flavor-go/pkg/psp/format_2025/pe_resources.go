@@ -148,10 +148,11 @@ func ReadPSPFFromResource(exePath string, logger hclog.Logger) ([]byte, error) {
 	logger.Debug("📖 Reading PSPF from PE resources", "exe", exePath)
 
 	// Load the EXE as a data file (read-only, no code execution)
+	// LOAD_LIBRARY_AS_IMAGE_RESOURCE is required for proper resource table access
 	handle, err := windows.LoadLibraryEx(
 		exePath,
 		0,
-		windows.LOAD_LIBRARY_AS_DATAFILE,
+		windows.LOAD_LIBRARY_AS_DATAFILE|windows.LOAD_LIBRARY_AS_IMAGE_RESOURCE,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load EXE as data file: %w", err)
