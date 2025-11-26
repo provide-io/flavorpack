@@ -1,5 +1,8 @@
 # CI/CD Integration
 
+!!! note "This Guide Is For Your Projects"
+    This page shows how to integrate FlavorPack into **your project's** CI/CD pipelines. For information about FlavorPack's own internal CI/CD infrastructure, see the **[Development CI/CD Guide](../../development/ci-cd.md)**.
+
 Automate FlavorPack packaging in your CI/CD pipelines.
 
 ## Pipeline Overview
