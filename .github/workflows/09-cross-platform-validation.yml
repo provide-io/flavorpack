@@ -89,6 +89,9 @@ jobs:
 
       - name: 🔨 Build test PSP package
         shell: bash
+        env:
+          PYTHONUTF8: "1"
+          PYTHONIOENCODING: "utf-8"
         run: |
           # Create a simple test application
           mkdir -p test-app
@@ -267,6 +270,9 @@ jobs:
 
       - name: 🔍 Verify PSP package
         shell: bash
+        env:
+          PYTHONUTF8: "1"
+          PYTHONIOENCODING: "utf-8"
         run: |
           echo "## 🔍 Verifying ${{ matrix.build_platform }} package on ${{ matrix.test_platform_name }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -282,6 +288,9 @@ jobs:
 
       - name: 📋 Inspect PSP package
         shell: bash
+        env:
+          PYTHONUTF8: "1"
+          PYTHONIOENCODING: "utf-8"
         run: |
           echo "### 📋 Inspection" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -311,6 +320,9 @@ jobs:
 
       - name: 📂 Extract all slots
         shell: bash
+        env:
+          PYTHONUTF8: "1"
+          PYTHONIOENCODING: "utf-8"
         run: |
           echo "### 📂 Extraction" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -344,6 +356,9 @@ jobs:
 
       - name: 🔐 Verify slot integrity
         shell: bash
+        env:
+          PYTHONUTF8: "1"
+          PYTHONIOENCODING: "utf-8"
         run: |
           echo "### 🔐 Integrity Check" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
