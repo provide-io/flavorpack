@@ -59,21 +59,8 @@ jobs:
       - name: 🧪 Define test matrix
         id: matrix
         run: |
-          # Define test categories
-          cat > matrix.json << 'EOF'
-          {
-            "include": [
-              {"name": "unit", "runner": "ubuntu-latest", "marker": "unit", "timeout": 10},
-              {"name": "integration", "runner": "ubuntu-latest", "marker": "integration", "timeout": 20},
-              {"name": "security", "runner": "ubuntu-latest", "marker": "security", "timeout": 15},
-              {"name": "format-2025", "runner": "ubuntu-latest", "path": "tests/format_2025", "timeout": 30},
-              {"name": "packaging", "runner": "ubuntu-latest", "path": "tests/packaging", "timeout": 25},
-              {"name": "cross-language", "runner": "ubuntu-latest", "marker": "cross_language", "timeout": 30}
-            ]
-          }
-          EOF
-          
-          MATRIX=$(cat matrix.json | jq -c .)
+          # Use script to create test matrix
+          MATRIX=$(bash .github/scripts/create-test-matrix.sh)
           echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
           echo "Test matrix: $MATRIX"
 
@@ -222,67 +209,11 @@ jobs:
       - name: 🔧 Extract and organize helpers
         shell: bash
         run: |
-          # Create the helpers directory structure
-          mkdir -p src/flavor/helpers/bin
-          
-          # Extract platform-specific helpers
-          .github/scripts/download-helpers.sh helpers-dist "${{ needs.setup.outputs.helper_version }}" "${{ matrix.platform }}"
-          
-          # Copy ONLY the versioned platform-specific helpers to the package location
-          echo "Copying ONLY versioned ${{ matrix.platform }} helpers to src/flavor/helpers/bin..."
-          
-          # Copy only versioned files for the CURRENT version that end with the platform name
-          # e.g., flavor-go-launcher-0.3.0-linux_arm64 but NOT flavor-go-launcher-0.2.9-linux_arm64
-          VERSION="${{ needs.setup.outputs.helper_version }}"
-          # Windows binaries have .exe extension
-          if [[ "${{ matrix.platform }}" == "windows_"* ]]; then
-            for binary in helpers/bin/*-${VERSION}-${{ matrix.platform }}.exe; do
-              if [ -f "$binary" ]; then
-                cp -v "$binary" src/flavor/helpers/bin/
-              fi
-            done
-          else
-            for binary in helpers/bin/*-${VERSION}-${{ matrix.platform }}; do
-              if [ -f "$binary" ]; then
-                cp -v "$binary" src/flavor/helpers/bin/
-              fi
-            done
-          fi
-          
-          # Make sure they're executable
-          chmod +x src/flavor/helpers/bin/* || true
-          
-          # Verify we only have platform-specific binaries and no duplicates
-          echo ""
-          echo "Verifying helpers for ${{ matrix.platform }}:"
-          for file in src/flavor/helpers/bin/*; do
-            if [ -f "$file" ]; then
-              base=$(basename "$file")
-              # Check if the file ends with the correct platform suffix
-              # Windows files end with .exe extension
-              if [[ "${{ matrix.platform }}" == "windows_"* ]]; then
-                if [[ "$base" == *"-${{ matrix.platform }}.exe" ]]; then
-                  echo "✅ $base (correct platform)"
-                else
-                  echo "❌ $base (WRONG platform - removing)"
-                  rm "$file"
-                fi
-              else
-                if [[ "$base" == *"-${{ matrix.platform }}" ]]; then
-                  echo "✅ $base (correct platform)"
-                else
-                  echo "❌ $base (WRONG platform - removing)"
-                  rm "$file"
-                fi
-              fi
-            fi
-          done
-          
-          # Final count and list
-          echo ""
-          count=$(ls -1 src/flavor/helpers/bin/ | wc -l)
-          echo "Final helpers for ${{ matrix.platform }} in wheel: $count files (should be 4: 2 launchers + 2 builders)"
-          ls -la src/flavor/helpers/bin/
+          .github/scripts/organize-platform-helpers.sh \
+            "${{ matrix.platform }}" \
+            "helpers-dist/flavor-helpers-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}.zip" \
+            "src/flavor/helpers/bin" \
+            "${{ needs.setup.outputs.helper_version }}"
       
       - name: 📦 Install build tools
         shell: bash
@@ -298,26 +229,13 @@ jobs:
       - name: 🔍 Validate wheel structure
         shell: bash
         run: |
-          # Basic validation that the wheel has the expected structure
-          echo "Validating wheel structure..."
-          
-          # Check that wheel contains the flavor package
-          python -m zipfile -l dist/*.whl | grep -q "^flavor/" && echo "✅ Flavor package found in wheel" || echo "❌ Flavor package not found"
-          
-          # Check that wheel contains platform-specific helpers
-          python -m zipfile -l dist/*.whl | grep -q "flavor/helpers/bin/" && echo "✅ Helpers found in wheel" || echo "❌ Helpers not found"
-          
-          # List the helpers in the wheel
-          echo ""
-          echo "Platform-specific helpers in wheel:"
-          python -m zipfile -l dist/*.whl | grep "flavor/helpers/bin/" | grep -v "/$" || echo "No helpers found"
-          
-          # Verify we only have this platform's helpers
-          helper_count=$(python -m zipfile -l dist/*.whl | grep "flavor/helpers/bin/flavor-" | wc -l)
-          echo "Helper binaries count: $helper_count (should be 2-4 for builders/launchers)"
-          
-          # Check that wheel contains metadata
-          python -m zipfile -l dist/*.whl | grep -q "\.dist-info/METADATA" && echo "✅ Metadata found in wheel" || echo "❌ Metadata not found"
+          # Find the built wheel and validate it
+          WHEEL_FILE=$(ls dist/*.whl | head -1)
+          if [ -z "$WHEEL_FILE" ]; then
+            echo "❌ No wheel file found in dist/"
+            exit 1
+          fi
+          .github/scripts/validate-wheel-structure.sh "$WHEEL_FILE" "${{ matrix.platform }}"
       
       - name: 📤 Upload platform wheel
         uses: actions/upload-artifact@v4
@@ -540,85 +458,11 @@ jobs:
       
       - name: 📊 Generate summary
         run: |
-          echo "## 🌶️ Flavor Pipeline Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Helper Version:** ${{ needs.setup.outputs.helper_version }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          
-          echo "### Test Results" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          
-          # Parse test results
-          for result_dir in test-results/test-results-*; do
-            if [ -d "$result_dir" ]; then
-              TEST_NAME=$(basename "$result_dir" | sed 's/test-results-//' | sed "s/-${{ github.run_id }}//")
-              echo "- **$TEST_NAME**: " >> $GITHUB_STEP_SUMMARY
-              
-              if [ -f "$result_dir/pytest-results.xml" ]; then
-                # Parse pytest XML for pass/fail counts
-                echo "✅ Completed" >> $GITHUB_STEP_SUMMARY
-              else
-                echo "⚠️ No results" >> $GITHUB_STEP_SUMMARY
-              fi
-            fi
-          done
-          
-          # Show wheel artifacts if they were built
-          if [ -d "wheel-artifacts" ]; then
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "### 🎡 Python Wheels" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            
-            for wheel in wheel-artifacts/*.whl; do
-              if [ -f "$wheel" ]; then
-                SIZE=$(du -h "$wheel" | cut -f1)
-                echo "- \`$(basename "$wheel")\` ($SIZE)" >> $GITHUB_STEP_SUMMARY
-              fi
-            done
-          fi
-          
-          # Only show Flavor packages section if they were built
-          if [ -d "flavor-artifacts" ]; then
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "### 📦 Flavor & Taster Packages" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            
-            # List Flavor packages
-            echo "#### Flavor PSP Packages:" >> $GITHUB_STEP_SUMMARY
-            for pkg in flavor-artifacts/flavor-*.psp flavor-artifacts/flavor-*.exe; do
-              if [ -f "$pkg" ]; then
-                SIZE=$(du -h "$pkg" | cut -f1)
-                echo "- \`$(basename "$pkg")\` ($SIZE)" >> $GITHUB_STEP_SUMMARY
-              fi
-            done
-            
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "#### Taster Test Packages:" >> $GITHUB_STEP_SUMMARY
-            for pkg in flavor-artifacts/taster-*.psp flavor-artifacts/taster-*.exe; do
-              if [ -f "$pkg" ]; then
-                SIZE=$(du -h "$pkg" | cut -f1)
-                echo "- \`$(basename "$pkg")\` ($SIZE)" >> $GITHUB_STEP_SUMMARY
-              fi
-            done
-          fi
-          
-          # Add PSP test results
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 🧪 Flavor PSP Self-Contained Tests" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          
-          if [ "${{ needs.test-flavor-psp.result }}" == "success" ]; then
-            echo "✅ All Flavor PSP packages verified successfully (self-contained, no external dependencies)" >> $GITHUB_STEP_SUMMARY
-          elif [ "${{ needs.test-flavor-psp.result }}" == "skipped" ]; then
-            echo "⏭️ PSP tests were skipped" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "❌ Some PSP self-contained tests failed" >> $GITHUB_STEP_SUMMARY
-          fi
-          
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Artifacts" >> $GITHUB_STEP_SUMMARY
-          echo "- [View test results](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})" >> $GITHUB_STEP_SUMMARY
-          echo "- [Download Flavor packages](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}#artifacts)" >> $GITHUB_STEP_SUMMARY
+          .github/scripts/generate-flavor-summary.sh \
+            "${{ needs.setup.outputs.helper_version }}" \
+            "${{ needs.test-flavor-psp.result }}" \
+            "${{ github.repository }}" \
+            "${{ github.run_id }}"
       
       - name: 🎯 Check status
         run: |
