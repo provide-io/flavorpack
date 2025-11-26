@@ -38,7 +38,7 @@ func TryAcquireLock(paths *WorkenvPaths, logger hclog.Logger) (bool, error) {
 	// Create instance/extract directory if it doesn't exist
 	extractDir := paths.Extract()
 	if err := os.MkdirAll(extractDir, os.FileMode(DirPerms)); err != nil {
-		logger.Debug("Failed to create extract directory", "error", err)
+		logger.Debug("⚠️ Failed to create extract directory", "error", err)
 	}
 
 	lockPath := paths.LockFile()

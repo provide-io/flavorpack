@@ -173,10 +173,13 @@ pub fn read_pspf_from_resource(exe_path: &Path) -> Result<Vec<u8>> {
         debug!("🔍 Found PSPF resource");
 
         // Load the resource
-        let res_data = LoadResource(handle, res_info);
+        let res_data = LoadResource(handle, res_info).map_err(|e| {
+            let _ = FreeLibrary(handle);
+            anyhow::anyhow!("❌ Failed to load resource data: {}", e)
+        })?;
         if res_data.is_invalid() {
             let _ = FreeLibrary(handle);
-            return Err(anyhow::anyhow!("❌ Failed to load resource data"));
+            return Err(anyhow::anyhow!("❌ Resource data handle is invalid"));
         }
 
         // Get resource size

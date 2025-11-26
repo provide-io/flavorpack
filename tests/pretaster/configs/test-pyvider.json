@@ -6,7 +6,7 @@
   },
   "execution": {
     "primary_slot": 0,
-    "command": "/usr/bin/python3 {workenv}/scripts/pyvider_test.py"
+    "command": "python3 {workenv}/scripts/pyvider_test.py"
   },
   "slots": [
     {
