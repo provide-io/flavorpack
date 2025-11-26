@@ -158,7 +158,7 @@ func ReadPSPFFromResource(exePath string, logger hclog.Logger) ([]byte, error) {
 	}
 	defer windows.FreeLibrary(handle)
 
-	logger.Debug("Loaded EXE as data file", "handle", handle)
+	logger.Debug("📂 Loaded EXE as data file", "handle", handle)
 
 	// Find the PSPF resource
 	// Use MakeIntResource for string resource names
@@ -172,7 +172,7 @@ func ReadPSPFFromResource(exePath string, logger hclog.Logger) ([]byte, error) {
 			PSPF_RESOURCE_TYPE, PSPF_RESOURCE_NAME, err)
 	}
 
-	logger.Debug("Found PSPF resource", "info", resInfo)
+	logger.Debug("🔍 Found PSPF resource", "info", resInfo)
 
 	// Load the resource data
 	resData, err := windows.LoadResource(handle, resInfo)
@@ -189,7 +189,7 @@ func ReadPSPFFromResource(exePath string, logger hclog.Logger) ([]byte, error) {
 		return nil, fmt.Errorf("resource has zero size")
 	}
 
-	logger.Debug("Resource loaded", "size", size)
+	logger.Debug("📦 Resource loaded", "size", size)
 
 	// Lock the resource and get pointer to data
 	ptr, err := windows.LockResource(resData)

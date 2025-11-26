@@ -16,11 +16,14 @@ use crate::utils::get_cache_dir;
 use log::{debug, error, info, trace, warn};
 use std::env;
 use std::fs;
+use std::io::Write;
 #[cfg(unix)]
 use std::os::unix::process::CommandExt;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::atomic::{AtomicBool, Ordering};
+
+use super::pe_resources::{has_pspf_resource, read_pspf_from_resource};
 
 use super::execution::{
     check_workenv_validity_full, execute_setup_commands, save_index_metadata, save_package_checksum,
@@ -39,6 +42,62 @@ static EXTRACTING: AtomicBool = AtomicBool::new(false);
 // Type alias for extraction result to reduce complexity
 type SlotPaths = std::collections::HashMap<usize, PathBuf>;
 type ExtractionResult = ((SlotPaths, Vec<PathBuf>), PathBuf);
+
+/// Temporary file wrapper that cleans up on drop
+struct TempPspfFile {
+    path: PathBuf,
+}
+
+impl Drop for TempPspfFile {
+    fn drop(&mut self) {
+        if self.path.exists() {
+            let _ = fs::remove_file(&self.path);
+            debug!("🧹 Cleaned up temp PSPF file: {}", self.path.display());
+        }
+    }
+}
+
+/// Prepares the bundle path for reading.
+///
+/// On Windows, if the package has PSPF embedded as a PE resource,
+/// extracts it to a temp file and returns that path.
+/// Otherwise, returns the original path.
+///
+/// Returns (effective_path, optional_temp_file). The temp file will be
+/// cleaned up when dropped.
+fn prepare_bundle_path(package_path: &Path) -> Result<(PathBuf, Option<TempPspfFile>)> {
+    // Check if PSPF is embedded as PE resource (Windows only)
+    if has_pspf_resource(package_path) {
+        info!("🪟 Detected PSPF embedded as PE resource, extracting to temp file");
+
+        // Read PSPF data from PE resource
+        let pspf_data = read_pspf_from_resource(package_path)
+            .map_err(|e| FlavorError::Generic(format!("❌ Failed to read PE resource: {}", e)))?;
+
+        // Create temp file for PSPF data
+        let temp_dir = std::env::temp_dir();
+        let temp_path = temp_dir.join(format!("pspf-{}.psp", std::process::id()));
+
+        let mut temp_file = fs::File::create(&temp_path)
+            .map_err(|e| FlavorError::Generic(format!("❌ Failed to create temp file: {}", e)))?;
+
+        temp_file
+            .write_all(&pspf_data)
+            .map_err(|e| FlavorError::Generic(format!("❌ Failed to write temp file: {}", e)))?;
+
+        info!(
+            "📦 Extracted {} bytes of PSPF to temp file: {}",
+            pspf_data.len(),
+            temp_path.display()
+        );
+
+        Ok((temp_path.clone(), Some(TempPspfFile { path: temp_path })))
+    } else {
+        // No resource embedding - use original path
+        debug!("📖 No PE resource detected, reading PSPF from file directly");
+        Ok((package_path.to_path_buf(), None))
+    }
+}
 
 /// Launch a PSPF/2025 package
 ///
@@ -65,6 +124,11 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
             trace!("📝 Environment variable: {}={}", key, value);
         }
     }
+
+    // Check if PSPF is embedded as PE resource (Windows only)
+    // If so, extract to temp file and use that path instead
+    let (effective_path, _temp_file) = prepare_bundle_path(package_path)?;
+    let package_path = effective_path.as_path();
 
     // Create reader for the bundle
     let mut reader = Reader::new(package_path)?;
