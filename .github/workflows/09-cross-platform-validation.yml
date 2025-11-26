@@ -115,12 +115,34 @@ jobs:
 
           chmod +x test-app/main.py
 
-          # Find helper binaries
-          BUILDER_BIN=$(ls dist/bin/flavor-*-builder-${{ matrix.platform }}* | head -1)
-          LAUNCHER_BIN=$(ls dist/bin/flavor-*-launcher-${{ matrix.platform }}* | head -1)
+          # Debug: List all files in dist/bin
+          echo "Contents of dist/bin:"
+          ls -la dist/bin/ || echo "dist/bin does not exist"
+
+          # Debug: Show current directory
+          echo "Current directory:"
+          pwd
+
+          # Find helper binaries - prefer Go builders as they support pyproject.toml directly
+          BUILDER_BIN=$(find dist/bin/ -name "flavor-go-builder-*${{ matrix.platform }}*" -type f | head -1)
+          if [ -z "$BUILDER_BIN" ]; then
+            BUILDER_BIN=$(find dist/bin/ -name "flavor-rs-builder-*${{ matrix.platform }}*" -type f | head -1)
+          fi
+
+          LAUNCHER_BIN=$(find dist/bin/ -name "flavor-go-launcher-*${{ matrix.platform }}*" -type f | head -1)
+          if [ -z "$LAUNCHER_BIN" ]; then
+            LAUNCHER_BIN=$(find dist/bin/ -name "flavor-rs-launcher-*${{ matrix.platform }}*" -type f | head -1)
+          fi
 
           echo "Using builder: $BUILDER_BIN"
           echo "Using launcher: $LAUNCHER_BIN"
+
+          # Validate binaries found
+          if [ -z "$BUILDER_BIN" ] || [ -z "$LAUNCHER_BIN" ]; then
+            echo "ERROR: Helper binaries not found!"
+            echo "Looking for pattern: dist/bin/flavor-*-builder-${{ matrix.platform }}*"
+            exit 1
+          fi
 
           # Build PSP package
           flavor pack \
