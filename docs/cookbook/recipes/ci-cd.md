@@ -277,8 +277,8 @@ strategy:
   matrix:
     include:
       - { os: ubuntu-latest, platform: linux_amd64 }
-      - { os: macos-latest, platform: darwin_arm64 }
-      - { os: macos-13, platform: darwin_amd64 }
+      - { os: macos-15, platform: darwin_arm64 }
+      - { os: macos-15-latest, platform: darwin_amd64 }
       - { os: windows-latest, platform: windows_amd64 }
 ```
 

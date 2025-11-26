@@ -63,7 +63,7 @@ graph LR
 [
   {"platform": "linux_amd64", "os": "ubuntu-24.04", "rust_target": "x86_64-unknown-linux-gnu"},
   {"platform": "linux_arm64", "os": "ubuntu-24.04", "rust_target": "aarch64-unknown-linux-gnu"},
-  {"platform": "darwin_amd64", "os": "macos-13", "rust_target": "x86_64-apple-darwin"},
+  {"platform": "darwin_amd64", "os": "macos-15-intel", "rust_target": "x86_64-apple-darwin"},
   {"platform": "darwin_arm64", "os": "macos-15", "rust_target": "aarch64-apple-darwin"}
 ]
 ```
