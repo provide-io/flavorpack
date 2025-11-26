@@ -64,7 +64,14 @@ jobs:
           workflow: 01-helper-prep.yml
           run_id: ${{ steps.helpers.outputs.run_id }}
           name: flavor-helpers-${{ steps.helpers.outputs.version }}-${{ matrix.platform }}
-          path: ./dist
+          path: ./helpers-dist
+
+      - name: 🔧 Extract helpers
+        run: |
+          mkdir -p dist/bin
+          unzip -o helpers-dist/flavor-helpers-${{ steps.helpers.outputs.version }}-${{ matrix.platform }}.zip -d dist/bin/
+          chmod +x dist/bin/*
+          ls -lh dist/bin/
 
       - name: 📦 Install Flavor
         run: |
@@ -112,8 +119,8 @@ jobs:
           flavor pack \
             --manifest test-app/pyproject.toml \
             --output cross-platform-test-${{ matrix.platform }}.psp \
-            --builder dist/bin/flavor-*-builder-${{ matrix.platform }}* \
-            --launcher dist/bin/flavor-*-launcher-${{ matrix.platform }}*
+            --builder-bin dist/bin/flavor-*-builder-${{ matrix.platform }}* \
+            --launcher-bin dist/bin/flavor-*-launcher-${{ matrix.platform }}*
 
           # Generate metadata for validation
           flavor inspect cross-platform-test-${{ matrix.platform }}.psp --json > package-info-${{ matrix.platform }}.json
