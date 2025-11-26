@@ -115,12 +115,19 @@ jobs:
 
           chmod +x test-app/main.py
 
+          # Find helper binaries
+          BUILDER_BIN=$(ls dist/bin/flavor-*-builder-${{ matrix.platform }}* | head -1)
+          LAUNCHER_BIN=$(ls dist/bin/flavor-*-launcher-${{ matrix.platform }}* | head -1)
+
+          echo "Using builder: $BUILDER_BIN"
+          echo "Using launcher: $LAUNCHER_BIN"
+
           # Build PSP package
           flavor pack \
             --manifest test-app/pyproject.toml \
             --output cross-platform-test-${{ matrix.platform }}.psp \
-            --builder-bin dist/bin/flavor-*-builder-${{ matrix.platform }}* \
-            --launcher-bin dist/bin/flavor-*-launcher-${{ matrix.platform }}*
+            --builder-bin "$BUILDER_BIN" \
+            --launcher-bin "$LAUNCHER_BIN"
 
           # Generate metadata for validation
           flavor inspect cross-platform-test-${{ matrix.platform }}.psp --json > package-info-${{ matrix.platform }}.json
