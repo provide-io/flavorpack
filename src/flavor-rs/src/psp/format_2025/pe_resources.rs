@@ -156,7 +156,7 @@ pub fn read_pspf_from_resource(exe_path: &Path) -> Result<Vec<u8>> {
 
         // Find the PSPF resource
         let res_info = FindResourceW(
-            handle,
+            Some(handle),
             PCWSTR(wide_name.as_ptr()),
             PCWSTR(RT_RCDATA as usize as *const u16),
         );
@@ -173,7 +173,7 @@ pub fn read_pspf_from_resource(exe_path: &Path) -> Result<Vec<u8>> {
         debug!("🔍 Found PSPF resource");
 
         // Load the resource
-        let res_data = LoadResource(handle, res_info).map_err(|e| {
+        let res_data = LoadResource(Some(handle), res_info).map_err(|e| {
             let _ = FreeLibrary(handle);
             anyhow::anyhow!("❌ Failed to load resource data: {}", e)
         })?;
@@ -183,7 +183,7 @@ pub fn read_pspf_from_resource(exe_path: &Path) -> Result<Vec<u8>> {
         }
 
         // Get resource size
-        let size = SizeofResource(handle, res_info);
+        let size = SizeofResource(Some(handle), res_info);
         if size == 0 {
             let _ = FreeLibrary(handle);
             return Err(anyhow::anyhow!("❌ Resource has zero size"));
