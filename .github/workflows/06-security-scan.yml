@@ -44,33 +44,8 @@ permissions:
   actions: read
 
 jobs:
-  setup:
-    name: 🔧 Install security tools
-    runs-on: ubuntu-latest
-    outputs:
-      security-env-path: ${{ steps.security-env.outputs.path }}
-    steps:
-      - name: 📥 Checkout
-        uses: actions/checkout@v4
-      - name: 🐍 Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-      - name: 🐹 Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.21'
-      - name: 🦀 Setup Rust
-        uses: dtolnay/rust-toolchain@stable
-      - name: 🔧 Install tools
-        id: security-env
-        run: |
-          .github/scripts/install-security-tools.sh
-          echo "path=$(pwd)/security-env" >> $GITHUB_OUTPUT
-
   scan:
     name: ${{ matrix.scanner.name }}
-    needs: setup
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -88,7 +63,8 @@ jobs:
               detect-secrets.log
           - name: 🐍 Python Security
             run-command: |
-              source ${{ needs.setup.outputs.security-env-path }}/bin/activate
+              .github/scripts/install-security-tools.sh
+              source security-env/bin/activate
               .github/scripts/run-bandit-scan.sh
               .github/scripts/run-safety-scan.sh
               .github/scripts/run-pip-audit-scan.sh
@@ -101,6 +77,7 @@ jobs:
               *.sarif
           - name: 🐹 Go Security
             run-command: |
+              .github/scripts/install-security-tools.sh
               .github/scripts/run-gosec-scan.sh
               .github/scripts/run-govulncheck-scan.sh
               cd src/flavor-go
@@ -111,6 +88,7 @@ jobs:
               src/flavor-go/*.log
           - name: 🦀 Rust Security
             run-command: |
+              .github/scripts/install-security-tools.sh
               .github/scripts/run-cargo-audit-scan.sh
               cd src/flavor-rs
               cargo deny check 2>&1 | tee cargo-deny.log || true
@@ -122,6 +100,7 @@ jobs:
               src/flavor-rs/deny.toml
           - name: 🐳 Container Security
             run-command: |
+              .github/scripts/install-security-tools.sh
               .github/scripts/run-trivy-scan.sh
             upload-name: container-security-results
             upload-path: |
@@ -130,19 +109,42 @@ jobs:
               trivy-results.sarif
           - name: 🏗️ IaC Security
             run-command: |
+              .github/scripts/install-security-tools.sh
               .github/scripts/run-checkov-scan.sh
               yamllint -f parsable . > yamllint.log 2>&1 || true
             upload-name: iac-security-results
             upload-path: |
               checkov-report.json
               yamllint.log
-    
-    uses: ./.github/workflows/reusable-security-scan.yml
-    with:
-      scanner-name: ${{ matrix.scanner.name }}
-      run-command: ${{ matrix.scanner.run-command }}
-      upload-name: ${{ matrix.scanner.upload-name }}
-      upload-path: ${{ matrix.scanner.upload-path }}
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: 🐹 Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+      
+      - name: 🦀 Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: 🛡️ Run ${{ matrix.scanner.name }}
+        continue-on-error: true
+        run: ${{ matrix.scanner.run-command }}
+
+      - name: 📤 Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.scanner.upload-name }}
+          path: ${{ matrix.scanner.upload-path }}
 
   security-report:
     name: 📊 Security Report

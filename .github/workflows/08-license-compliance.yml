@@ -53,81 +53,10 @@ jobs:
       
       - name: 🔍 Detect Project License
         id: detect
-        run: |
-          echo "## 📜 Project License Analysis" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          
-          # Check for license files
-          LICENSE_FILES=$(find . -maxdepth 2 -iname "LICENSE*" -o -iname "LICENCE*" -o -iname "COPYING*" | head -10)
-          
-          if [ -n "$LICENSE_FILES" ]; then
-            echo "has_license=true" >> $GITHUB_OUTPUT
-            echo "### License Files Found:" >> $GITHUB_STEP_SUMMARY
-            
-            for file in $LICENSE_FILES; do
-              echo "- \`$file\`" >> $GITHUB_STEP_SUMMARY
-              
-              # Try to detect license type
-              if grep -qi "MIT License" "$file"; then
-                LICENSE_TYPE="MIT"
-              elif grep -qi "Apache License" "$file"; then
-                LICENSE_TYPE="Apache-2.0"
-              elif grep -qi "BSD" "$file"; then
-                LICENSE_TYPE="BSD"
-              elif grep -qi "GNU GENERAL PUBLIC LICENSE" "$file"; then
-                if grep -qi "Version 3" "$file"; then
-                  LICENSE_TYPE="GPL-3.0"
-                elif grep -qi "Version 2" "$file"; then
-                  LICENSE_TYPE="GPL-2.0"
-                else
-                  LICENSE_TYPE="GPL"
-                fi
-              elif grep -qi "Mozilla Public License" "$file"; then
-                LICENSE_TYPE="MPL-2.0"
-              else
-                LICENSE_TYPE="Unknown"
-              fi
-              
-              echo "  Type: **$LICENSE_TYPE**" >> $GITHUB_STEP_SUMMARY
-              echo "project_license=$LICENSE_TYPE" >> $GITHUB_OUTPUT
-            done
-          else
-            echo "has_license=false" >> $GITHUB_OUTPUT
-            echo "project_license=NONE" >> $GITHUB_OUTPUT
-            echo "⚠️ **No license file found in project root**" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "Consider adding a LICENSE file to clarify usage terms." >> $GITHUB_STEP_SUMMARY
-          fi
-          
-          # Check for NOTICE file
-          if [ -f "NOTICE" ] || [ -f "NOTICE.txt" ] || [ -f "NOTICE.md" ]; then
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "✅ NOTICE file found" >> $GITHUB_STEP_SUMMARY
-          fi
-          
-          # Check for license headers in source files
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### License Headers in Source Files" >> $GITHUB_STEP_SUMMARY
-          
-          # Check Python files
-          PY_WITH_LICENSE=$(find src helpers -name "*.py" -type f -exec grep -l "Copyright\|License" {} \; 2>/dev/null | wc -l)
-          PY_TOTAL=$(find src helpers -name "*.py" -type f 2>/dev/null | wc -l)
-          
-          echo "- Python files with license headers: $PY_WITH_LICENSE / $PY_TOTAL" >> $GITHUB_STEP_SUMMARY
-          
-          # Check Go files
-          if [ -d "src/flavor-go" ]; then
-            GO_WITH_LICENSE=$(find src/flavor-go -name "*.go" -type f -exec grep -l "Copyright\|License" {} \; 2>/dev/null | wc -l)
-            GO_TOTAL=$(find src/flavor-go -name "*.go" -type f 2>/dev/null | wc -l)
-            echo "- Go files with license headers: $GO_WITH_LICENSE / $GO_TOTAL" >> $GITHUB_STEP_SUMMARY
-          fi
-          
-          # Check Rust files
-          if [ -d "src/flavor-rs" ]; then
-            RS_WITH_LICENSE=$(find src/flavor-rs -name "*.rs" -type f -exec grep -l "Copyright\|License" {} \; 2>/dev/null | wc -l)
-            RS_TOTAL=$(find src/flavor-rs -name "*.rs" -type f 2>/dev/null | wc -l)
-            echo "- Rust files with license headers: $RS_WITH_LICENSE / $RS_TOTAL" >> $GITHUB_STEP_SUMMARY
-          fi
+        run: .github/scripts/detect-project-license.sh
+
+      - name: 📋 Analyze License Headers
+        run: .github/scripts/analyze-license-headers.sh
 
   # Python License Compliance
   python-license:
