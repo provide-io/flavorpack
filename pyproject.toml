@@ -156,6 +156,9 @@ markers = [
     "taster: Taster-specific tests",
     "packaging: Package building and verification tests",
     "cross_language: Tests involving Go/Rust/Python interaction",
+    "cross_platform: Tests validating cross-platform PSP extraction/verification",
+    "requires_artifacts: Tests that need pre-built PSP artifacts from different platforms",
+    "ci_only: Tests that only run in CI with downloaded artifacts",
     "stress: Stress and hypothesis-based property tests",
     "requires_helpers: Tests that need Go/Rust helpers built",
 ]
