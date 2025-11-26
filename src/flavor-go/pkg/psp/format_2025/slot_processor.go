@@ -362,24 +362,35 @@ func (sp *SlotProcessor) loadSlotData(slot *Slot) ([]byte, []byte, uint8, error)
 	// Apply operations (compression/archiving)
 	compressed := slotData
 
+	// Check if data is already gzipped (magic bytes: 0x1f 0x8b)
+	isAlreadyGzipped := len(slotData) >= 2 && slotData[0] == 0x1f && slotData[1] == 0x8b
+
 	switch slot.Operations {
 	case "gzip":
-		var compressErr error
-		compressed, compressErr = Compress(slotData, "gzip")
-		if compressErr != nil {
-			return nil, nil, 0, fmt.Errorf("❌ failed to gzip compress slot %s: %w", slot.ID, compressErr)
+		if isAlreadyGzipped {
+			sp.logger.Debug("📦 Source already gzipped, skipping compression", "size", len(slotData))
+		} else {
+			var compressErr error
+			compressed, compressErr = Compress(slotData, "gzip")
+			if compressErr != nil {
+				return nil, nil, 0, fmt.Errorf("❌ failed to gzip compress slot %s: %w", slot.ID, compressErr)
+			}
+			sp.logger.Debug("✅ Compressed slot", "original", len(slotData), "compressed", len(compressed), "codec", "gzip")
 		}
-		sp.logger.Debug("✅ Compressed slot", "original", len(slotData), "compressed", len(compressed), "codec", "gzip")
 	case "tar", "tgz", "tar.gz":
 		// For tar and tar.gz, the data should already be in tar format from the source
 		// We just need to gzip it if it's tgz/tar.gz
 		if slot.Operations == "tgz" || slot.Operations == "tar.gz" {
-			var compressErr error
-			compressed, compressErr = Compress(slotData, "gzip")
-			if compressErr != nil {
-				return nil, nil, 0, fmt.Errorf("❌ failed to gzip compress tar slot %s: %w", slot.ID, compressErr)
+			if isAlreadyGzipped {
+				sp.logger.Debug("📦 Source already gzipped (tar.gz), skipping compression", "size", len(slotData))
+			} else {
+				var compressErr error
+				compressed, compressErr = Compress(slotData, "gzip")
+				if compressErr != nil {
+					return nil, nil, 0, fmt.Errorf("❌ failed to gzip compress tar slot %s: %w", slot.ID, compressErr)
+				}
+				sp.logger.Debug("✅ Compressed tar slot", "original", len(slotData), "compressed", len(compressed), "codec", "gzip")
 			}
-			sp.logger.Debug("✅ Compressed tar slot", "original", len(slotData), "compressed", len(compressed), "codec", "gzip")
 		} else {
 			sp.logger.Debug("📦 No gzip for plain tar", "size", len(slotData))
 		}

@@ -42,6 +42,12 @@ jobs:
           - platform: darwin_arm64
             platform_name: macOS ARM64
             runner: macos-15
+          - platform: windows_amd64
+            platform_name: Windows AMD64
+            runner: windows-2025
+          - platform: windows_arm64
+            platform_name: Windows ARM64
+            runner: windows-2025-arm
 
     steps:
       - name: 📥 Checkout
@@ -54,6 +60,7 @@ jobs:
 
       - name: 🔍 Determine helper version
         id: helpers
+        shell: bash
         run: .github/scripts/determine-helper-version.sh "${{ inputs.helper_run_id }}"
         env:
           GH_TOKEN: ${{ github.token }}
@@ -67,18 +74,21 @@ jobs:
           path: ./helpers-dist
 
       - name: 🔧 Extract helpers
+        shell: bash
         run: |
           mkdir -p dist/bin
           unzip -o helpers-dist/flavor-helpers-${{ steps.helpers.outputs.version }}-${{ matrix.platform }}.zip -d dist/bin/
-          chmod +x dist/bin/*
+          chmod +x dist/bin/* 2>/dev/null || true
           ls -lh dist/bin/
 
       - name: 📦 Install Flavor
+        shell: bash
         run: |
           python -m pip install --upgrade pip
           pip install -e ".[dev,test]"
 
       - name: 🔨 Build test PSP package
+        shell: bash
         run: |
           # Create a simple test application
           mkdir -p test-app
@@ -214,6 +224,26 @@ jobs:
             test_platform_name: Linux ARM64
             test_runner: ubuntu-24.04-arm
 
+          # Windows packages tested on other platforms
+          - build_platform: windows_amd64
+            test_platform: linux_amd64
+            test_platform_name: Linux AMD64
+            test_runner: ubuntu-latest
+          - build_platform: windows_arm64
+            test_platform: linux_amd64
+            test_platform_name: Linux AMD64
+            test_runner: ubuntu-latest
+
+          # Linux packages tested on Windows
+          - build_platform: linux_amd64
+            test_platform: windows_amd64
+            test_platform_name: Windows AMD64
+            test_runner: windows-2025
+          - build_platform: linux_amd64
+            test_platform: windows_arm64
+            test_platform_name: Windows ARM64
+            test_runner: windows-2025-arm
+
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
@@ -224,6 +254,7 @@ jobs:
           python-version: '3.11'
 
       - name: 📦 Install Flavor
+        shell: bash
         run: |
           python -m pip install --upgrade pip
           pip install -e ".[dev,test]"
@@ -235,6 +266,7 @@ jobs:
           path: ./test-packages
 
       - name: 🔍 Verify PSP package
+        shell: bash
         run: |
           echo "## 🔍 Verifying ${{ matrix.build_platform }} package on ${{ matrix.test_platform_name }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -249,6 +281,7 @@ jobs:
           echo "✅ Verification passed" >> $GITHUB_STEP_SUMMARY
 
       - name: 📋 Inspect PSP package
+        shell: bash
         run: |
           echo "### 📋 Inspection" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -277,6 +310,7 @@ jobs:
           fi
 
       - name: 📂 Extract all slots
+        shell: bash
         run: |
           echo "### 📂 Extraction" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -309,6 +343,7 @@ jobs:
           fi
 
       - name: 🔐 Verify slot integrity
+        shell: bash
         run: |
           echo "### 🔐 Integrity Check" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -325,6 +360,7 @@ jobs:
 
       - name: 📊 Generate test report
         if: always()
+        shell: bash
         run: |
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "---" >> $GITHUB_STEP_SUMMARY

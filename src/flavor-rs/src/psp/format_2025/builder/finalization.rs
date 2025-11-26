@@ -140,6 +140,11 @@ pub(super) fn stream_slot_data(
     Ok(())
 }
 
+/// Check if data is already gzipped (magic bytes: 0x1f 0x8b)
+fn is_gzipped(data: &[u8]) -> bool {
+    data.len() >= 2 && data[0] == 0x1f && data[1] == 0x8b
+}
+
 /// Apply operations (compression) to slot data based on the operations field
 fn apply_operations(data: &[u8], operations: u64) -> Result<Vec<u8>> {
     let ops = unpack_operations(operations);
@@ -154,14 +159,20 @@ fn apply_operations(data: &[u8], operations: u64) -> Result<Vec<u8>> {
     for op in ops {
         result = match op {
             OP_GZIP => {
-                trace!("🗜️  Applying GZIP compression");
-                let mut encoder = GzEncoder::new(Vec::new(), Compression::default());
-                encoder.write_all(&result).map_err(|e| {
-                    FlavorError::Generic(format!("❌ GZIP compression failed: {}", e))
-                })?;
-                encoder.finish().map_err(|e| {
-                    FlavorError::Generic(format!("❌ GZIP finalization failed: {}", e))
-                })?
+                // Skip compression if data is already gzipped
+                if is_gzipped(&result) {
+                    trace!("📦 Source already gzipped, skipping compression");
+                    result
+                } else {
+                    trace!("🗜️  Applying GZIP compression");
+                    let mut encoder = GzEncoder::new(Vec::new(), Compression::default());
+                    encoder.write_all(&result).map_err(|e| {
+                        FlavorError::Generic(format!("❌ GZIP compression failed: {}", e))
+                    })?;
+                    encoder.finish().map_err(|e| {
+                        FlavorError::Generic(format!("❌ GZIP finalization failed: {}", e))
+                    })?
+                }
             }
             // TAR data should already be in tar format from source - pass through
             _ => result,
