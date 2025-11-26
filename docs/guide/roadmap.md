@@ -3,7 +3,7 @@
 This roadmap shows the current implementation status and planned features for FlavorPack. Use this to understand what works today versus what's coming in future releases.
 
 !!! info "Version Status"
-    FlavorPack is currently in **alpha** stage. APIs, file formats, and commands may change without notice.
+    FlavorPack is in **pre-release (v0.9)** stage. The core runtime and PSPF/2025 format are production-ready. Remaining blockers: Windows support and API documentation.
 
 ## Legend
 
@@ -14,7 +14,7 @@ This roadmap shows the current implementation status and planned features for Fl
 
 ---
 
-## What Works Today (Alpha)
+## What Works Today (Pre-Release)
 
 ### Core Functionality ✅
 

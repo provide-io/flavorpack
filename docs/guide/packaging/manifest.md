@@ -2,10 +2,10 @@
 
 Complete reference for `pyproject.toml` configuration options in FlavorPack packages.
 
-!!! warning "Alpha Release - Limited Configuration Support"
-    **Many configuration options shown in this guide are planned but not yet implemented.**
+!!! info "Pre-Release - Limited Configuration Support"
+    **Some configuration options shown in this guide are planned but not yet implemented.**
 
-    FlavorPack is in alpha and currently supports a **minimal subset** of the documented configuration.
+    FlavorPack is in pre-release and currently supports a **minimal subset** of the documented configuration.
     See the ["Currently Supported Configuration"](#currently-supported-configuration) section below for what actually works today.
 
     Features marked with 📋 are planned for future releases. See the [Roadmap](../roadmap/) for implementation timelines.
@@ -18,7 +18,7 @@ FlavorPack uses `pyproject.toml` as its manifest format, following Python packag
 
 ### Minimal Working Example
 
-This is what **actually works today** in FlavorPack alpha:
+This is what **actually works today** in FlavorPack:
 
 ```toml
 [project]
@@ -700,7 +700,7 @@ RATE_LIMIT = 1000
 
 ## Examples
 
-These examples show what actually works today in FlavorPack alpha.
+These examples show what actually works today in FlavorPack.
 
 ### Minimal Manifest (✅ Works Today)
 

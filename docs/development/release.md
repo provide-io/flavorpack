@@ -14,7 +14,7 @@ FlavorPack follows [Semantic Versioning 2.0.0](https://semver.org/):
 - **MINOR**: New features, backward compatible
 - **PATCH**: Bug fixes, backward compatible
 
-Current alpha version format: `0.0.XXXX-alpha` where XXXX is the build number.
+Current pre-release version format: `0.2.x` (approaching v1.0).
 
 ## Release Checklist
 
