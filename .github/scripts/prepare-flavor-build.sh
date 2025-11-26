@@ -25,11 +25,11 @@ if [ ! -f "$LAUNCHER" ]; then
 fi
 
 # Find the wheel
-WHEEL=$(find ${WHEEL_DIR} -name "flavorpack-*.whl" | head -1)
+WHEEL=$(find "${WHEEL_DIR}" -name "flavorpack-*.whl" | head -1)
 
 if [ -z "$WHEEL" ]; then
-  echo "❌ Wheel not found"
-  ls -la ${WHEEL_DIR}/
+  echo "❌ Wheel not found in ${WHEEL_DIR}/"
+  ls -la "${WHEEL_DIR}/"
   exit 1
 fi
 

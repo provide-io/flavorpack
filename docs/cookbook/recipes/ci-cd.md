@@ -364,10 +364,10 @@ jobs:
           - os: ubuntu-latest
             platform: linux_amd64
             artifact_name: myapp-linux-amd64.psp
-          - os: macos-latest
+          - os: macos-15
             platform: darwin_arm64
             artifact_name: myapp-macos-arm64.psp
-          - os: macos-13
+          - os: macos-15-intel
             platform: darwin_amd64
             artifact_name: myapp-macos-amd64.psp
 
