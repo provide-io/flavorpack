@@ -65,6 +65,7 @@ class TestMockAccuracy:
         """
         import unittest.mock
 
+        from flavor.psp.format_2025 import writer
         from flavor.psp.format_2025.metadata import assembly
 
         # Build with mock
@@ -73,7 +74,11 @@ class TestMockAccuracy:
         def mock_launcher(launcher_type: str) -> bytes:
             return MOCK_LAUNCHER_DATA
 
-        with unittest.mock.patch.object(assembly, "load_launcher_binary", mock_launcher):
+        # Must patch BOTH locations since writer imports the function directly
+        with (
+            unittest.mock.patch.object(assembly, "load_launcher_binary", mock_launcher),
+            unittest.mock.patch.object(writer, "load_launcher_binary", mock_launcher),
+        ):
             builder1 = PSPFBuilder.create().with_keys(seed="test")
             result1 = builder1.metadata(
                 format="PSPF/2025",
