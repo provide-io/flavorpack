@@ -38,7 +38,7 @@ func (o *Bzip2Operation) Apply(input []byte) ([]byte, error) {
 	}
 
 	if _, err := bw.Write(input); err != nil {
-		bw.Close()
+		_ = bw.Close()
 		return nil, fmt.Errorf("writing bzip2 data: %w", err)
 	}
 
@@ -55,9 +55,9 @@ func (o *Bzip2Operation) ApplyStream(input io.Reader, output io.Writer) error {
 	if err != nil {
 		return fmt.Errorf("creating bzip2 writer: %w", err)
 	}
-	defer bw.Close()
 
 	if _, err := io.Copy(bw, input); err != nil {
+		_ = bw.Close()
 		return fmt.Errorf("compressing stream: %w", err)
 	}
 
@@ -72,7 +72,7 @@ func (o *Bzip2Operation) Reverse(input []byte) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("creating bzip2 reader: %w", err)
 	}
-	defer br.Close()
+	defer func() { _ = br.Close() }()
 
 	data, err := io.ReadAll(br)
 	if err != nil {
@@ -88,7 +88,7 @@ func (o *Bzip2Operation) ReverseStream(input io.Reader, output io.Writer) error 
 	if err != nil {
 		return fmt.Errorf("creating bzip2 reader: %w", err)
 	}
-	defer br.Close()
+	defer func() { _ = br.Close() }()
 
 	if _, err := io.Copy(output, br); err != nil {
 		return fmt.Errorf("decompressing stream: %w", err)

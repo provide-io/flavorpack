@@ -21,7 +21,7 @@ on:
 jobs:
   setup:
     name: 🔧 Setup & Get Flavor PSP
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       version: ${{ steps.version.outputs.version }}
       helper_version: ${{ steps.version.outputs.version }}
@@ -142,7 +142,7 @@ jobs:
   comprehensive-test:
     name: 🔬 Comprehensive Taster Tests
     needs: [setup, test-taster]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
@@ -217,7 +217,7 @@ jobs:
     name: ✅ Validate & Summary
     needs: [setup, test-taster, comprehensive-test]
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4

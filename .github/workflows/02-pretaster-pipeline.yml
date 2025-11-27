@@ -21,7 +21,7 @@ on:
 jobs:
   setup:
     name: 🔧 Setup & Get Helpers
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       version: ${{ steps.version.outputs.version }}
       helper_run_id: ${{ steps.helpers.outputs.run_id }}
@@ -196,7 +196,7 @@ jobs:
     name: ✅ Validate PSPF Compatibility
     needs: [setup, test-pretaster, test-crosslang]
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4

@@ -32,7 +32,7 @@ jobs:
         include:
           - platform: linux_amd64
             platform_name: Linux AMD64
-            runner: ubuntu-latest
+            runner: ubuntu-24.04
           - platform: linux_arm64
             platform_name: Linux ARM64
             runner: ubuntu-24.04-arm
@@ -207,7 +207,7 @@ jobs:
           - build_platform: linux_arm64
             test_platform: linux_amd64
             test_platform_name: Linux AMD64
-            test_runner: ubuntu-latest
+            test_runner: ubuntu-24.04
           - build_platform: linux_arm64
             test_platform: darwin_arm64
             test_platform_name: macOS ARM64
@@ -217,11 +217,11 @@ jobs:
           - build_platform: darwin_amd64
             test_platform: linux_amd64
             test_platform_name: Linux AMD64
-            test_runner: ubuntu-latest
+            test_runner: ubuntu-24.04
           - build_platform: darwin_arm64
             test_platform: linux_amd64
             test_platform_name: Linux AMD64
-            test_runner: ubuntu-latest
+            test_runner: ubuntu-24.04
           - build_platform: darwin_arm64
             test_platform: linux_arm64
             test_platform_name: Linux ARM64
@@ -231,11 +231,11 @@ jobs:
           - build_platform: windows_amd64
             test_platform: linux_amd64
             test_platform_name: Linux AMD64
-            test_runner: ubuntu-latest
+            test_runner: ubuntu-24.04
           - build_platform: windows_arm64
             test_platform: linux_amd64
             test_platform_name: Linux AMD64
-            test_runner: ubuntu-latest
+            test_runner: ubuntu-24.04
 
           # Linux packages tested on Windows
           - build_platform: linux_amd64
@@ -390,7 +390,7 @@ jobs:
     name: 📊 Validation Report
     needs: [build-packages, test-cross-platform]
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: 📊 Generate summary
