@@ -46,7 +46,7 @@ permissions:
 jobs:
   scan:
     name: ${{ matrix.scanner.name }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -150,7 +150,7 @@ jobs:
     name: 📊 Security Report
     needs: [scan]
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: 📥 Download all security reports
         uses: actions/download-artifact@v4

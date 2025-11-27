@@ -2,7 +2,6 @@ package format_2025
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -134,7 +133,7 @@ func (p *WorkenvPaths) ListTempExtractions() ([]string, error) {
 		return []string{}, nil
 	}
 
-	entries, err := ioutil.ReadDir(tmpDir)
+	entries, err := os.ReadDir(tmpDir)
 	if err != nil {
 		return nil, err
 	}

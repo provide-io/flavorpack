@@ -93,7 +93,7 @@ func buildBundle(cmd *cobra.Command, args []string) {
 	}
 	// Set workenv base if provided via flag
 	if workenvBase != "" {
-		os.Setenv("FLAVOR_WORKENV_BASE", workenvBase)
+		_ = os.Setenv("FLAVOR_WORKENV_BASE", workenvBase)
 	}
 	pkg.BuildPackageWithLogLevel(manifestPath, outputPath, launcherBin, privateKeyPath, publicKeyPath, keySeed, logLevel)
 }

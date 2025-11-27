@@ -224,7 +224,7 @@ func execBundleReplace(exePath string, args []string, userCwd string, logger hcl
 	logger.Trace("🔍 Binary path extracted from command", "path", binary)
 
 	argv := cmd.Args
-	if argv == nil || len(argv) == 0 {
+	if len(argv) == 0 {
 		logger.Debug("ℹ️ Command args are nil/empty, using binary as sole argument")
 		argv = []string{binary}
 	}

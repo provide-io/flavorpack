@@ -40,7 +40,7 @@ jobs:
   # Python Dependency Audit
   python-deps:
     name: 🐍 Python Dependencies
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       has_updates: ${{ steps.check.outputs.has_updates }}
       update_count: ${{ steps.check.outputs.update_count }}
@@ -100,7 +100,7 @@ jobs:
   # Go Dependency Audit
   go-deps:
     name: 🐹 Go Dependencies
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       has_updates: ${{ steps.check.outputs.has_updates }}
     steps:
@@ -146,7 +146,7 @@ jobs:
   # Rust Dependency Audit
   rust-deps:
     name: 🦀 Rust Dependencies
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       has_updates: ${{ steps.check.outputs.has_updates }}
     steps:
@@ -202,7 +202,7 @@ jobs:
     name: 📊 Dependency Report
     needs: [python-deps, go-deps, rust-deps]
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4

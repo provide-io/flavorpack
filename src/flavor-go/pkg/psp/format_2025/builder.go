@@ -404,10 +404,10 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 	// Calculate metadata checksum (Adler-32 of compressed data)
 	// Need to seek back and read the compressed data
 	savedPos, _ := out.Seek(0, 1)
-	out.Seek(int64(metadataPos), 0)
+	_, _ = out.Seek(int64(metadataPos), 0)
 	compressedData := make([]byte, metadataSize)
-	out.Read(compressedData)
-	out.Seek(savedPos, 0)
+	_, _ = out.Read(compressedData)
+	_, _ = out.Seek(savedPos, 0)
 
 	// Compute full SHA-256 checksum (32 bytes)
 	metadataHash := sha256.Sum256(compressedData)
