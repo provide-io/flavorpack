@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Platform-specific static binaries for Linux (musl libc)
 - Comprehensive test suite with 299+ tests
 - CI/CD pipeline with 8 GitHub Actions workflows
-- Support for multiple platforms (Linux, macOS, Windows*)
+- Full support for Linux and macOS; Windows disabled pending UTF-8 fix
 
 ### Changed
 - Documentation structure aligned with high-profile Python projects

@@ -1,5 +1,8 @@
 # CI/CD Integration
 
+!!! note "This Guide Is For Your Projects"
+    This page shows how to integrate FlavorPack into **your project's** CI/CD pipelines. For information about FlavorPack's own internal CI/CD infrastructure, see the **[Development CI/CD Guide](../../development/ci-cd.md)**.
+
 Automate FlavorPack packaging in your CI/CD pipelines.
 
 ## Pipeline Overview
@@ -274,8 +277,8 @@ strategy:
   matrix:
     include:
       - { os: ubuntu-latest, platform: linux_amd64 }
-      - { os: macos-latest, platform: darwin_arm64 }
-      - { os: macos-13, platform: darwin_amd64 }
+      - { os: macos-15, platform: darwin_arm64 }
+      - { os: macos-15-latest, platform: darwin_amd64 }
       - { os: windows-latest, platform: windows_amd64 }
 ```
 
@@ -361,10 +364,10 @@ jobs:
           - os: ubuntu-latest
             platform: linux_amd64
             artifact_name: myapp-linux-amd64.psp
-          - os: macos-latest
+          - os: macos-15
             platform: darwin_arm64
             artifact_name: myapp-macos-arm64.psp
-          - os: macos-13
+          - os: macos-15-intel
             platform: darwin_amd64
             artifact_name: myapp-macos-amd64.psp
 

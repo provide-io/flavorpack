@@ -64,11 +64,11 @@ func needsDOSStubExpansion(data []byte, logger hclog.Logger) bool {
 	// Check if this is a Go binary with minimal DOS stub (0x80 = 128 bytes)
 	// Rust/MSVC binaries typically use 0xE8-0xF0 (232-240 bytes)
 	if peOffset == 0x80 {
-		logger.Debug("Detected Go binary with minimal DOS stub", "pe_offset", fmt.Sprintf("0x%x", peOffset), "dos_stub_size", peOffset)
+		logger.Debug("🔍 Detected Go binary with minimal DOS stub", "pe_offset", fmt.Sprintf("0x%x", peOffset), "dos_stub_size", peOffset)
 		return true
 	}
 
-	logger.Trace("PE binary has adequate DOS stub size", "pe_offset", fmt.Sprintf("0x%x", peOffset), "dos_stub_size", peOffset)
+	logger.Trace("✅ PE binary has adequate DOS stub size", "pe_offset", fmt.Sprintf("0x%x", peOffset), "dos_stub_size", peOffset)
 	return false
 }
 
@@ -96,7 +96,7 @@ func updateSectionOffsets(data []byte, paddingSize int, logger hclog.Logger) err
 	// Section table offset
 	sectionTableOffset := coffOffset + 20 + optHdrSize
 
-	logger.Debug("Updating section offsets",
+	logger.Debug("📝 Updating section offsets",
 		"num_sections", numSections,
 		"padding_size", paddingSize)
 
@@ -114,7 +114,7 @@ func updateSectionOffsets(data []byte, paddingSize int, logger hclog.Logger) err
 			newPtr := currentPtr + uint32(paddingSize)
 			binary.LittleEndian.PutUint32(data[ptrOffset:ptrOffset+4], newPtr)
 
-			logger.Trace("Updated section offset",
+			logger.Trace("📝 Updated section offset",
 				"section", i,
 				"old_offset", fmt.Sprintf("0x%x", currentPtr),
 				"new_offset", fmt.Sprintf("0x%x", newPtr))
@@ -122,7 +122,7 @@ func updateSectionOffsets(data []byte, paddingSize int, logger hclog.Logger) err
 		}
 	}
 
-	logger.Debug("Section offsets updated",
+	logger.Debug("✅ Section offsets updated",
 		"updated_count", updated,
 		"total_sections", numSections)
 
@@ -165,7 +165,7 @@ func updateDataDirectories(data []byte, paddingSize int, logger hclog.Logger) er
 	certEntryOffset := dataDirOffset + (4 * 8)
 
 	if certEntryOffset+8 > len(data) {
-		logger.Trace("Certificate table entry beyond file bounds, skipping update",
+		logger.Trace("⏭️ Certificate table entry beyond file bounds, skipping update",
 			"entry_offset", fmt.Sprintf("0x%x", certEntryOffset),
 			"file_size", len(data))
 		return nil
@@ -175,7 +175,7 @@ func updateDataDirectories(data []byte, paddingSize int, logger hclog.Logger) er
 	certFileOffset := binary.LittleEndian.Uint32(data[certEntryOffset : certEntryOffset+4])
 	certSize := binary.LittleEndian.Uint32(data[certEntryOffset+4 : certEntryOffset+8])
 
-	logger.Trace("Checked certificate table",
+	logger.Trace("🔍 Checked certificate table",
 		"offset", fmt.Sprintf("0x%x", certFileOffset),
 		"size", certSize)
 
@@ -183,7 +183,7 @@ func updateDataDirectories(data []byte, paddingSize int, logger hclog.Logger) er
 	if certFileOffset >= 0x80 {
 		newCertOffset := certFileOffset + uint32(paddingSize)
 		binary.LittleEndian.PutUint32(data[certEntryOffset:certEntryOffset+4], newCertOffset)
-		logger.Debug("Updated certificate table offset",
+		logger.Debug("📝 Updated certificate table offset",
 			"old_offset", fmt.Sprintf("0x%x", certFileOffset),
 			"new_offset", fmt.Sprintf("0x%x", newCertOffset))
 	}
@@ -192,7 +192,7 @@ func updateDataDirectories(data []byte, paddingSize int, logger hclog.Logger) er
 	// CheckSum field is at optional header + 64
 	checksumOffset := coffOffset + 20 + 64
 	binary.LittleEndian.PutUint32(data[checksumOffset:checksumOffset+4], 0)
-	logger.Trace("Zeroed PE checksum (not required for executables)")
+	logger.Trace("🔧 Zeroed PE checksum (not required for executables)")
 
 	return nil
 }
@@ -232,7 +232,7 @@ func rvaToFileOffset(data []byte, rva uint32, logger hclog.Logger) (uint32, bool
 			// Calculate offset within section and convert to file offset
 			offsetWithinSection := rva - virtualAddr
 			fileOffset := pointerToRawData + offsetWithinSection
-			logger.Trace("Mapped RVA to file offset",
+			logger.Trace("🔄 Mapped RVA to file offset",
 				"rva", fmt.Sprintf("0x%x", rva),
 				"section", i,
 				"section_va", fmt.Sprintf("0x%x", virtualAddr),
@@ -241,7 +241,7 @@ func rvaToFileOffset(data []byte, rva uint32, logger hclog.Logger) (uint32, bool
 		}
 	}
 
-	logger.Trace("RVA not found in any section",
+	logger.Trace("⚠️ RVA not found in any section",
 		"rva", fmt.Sprintf("0x%x", rva))
 	return 0, false
 }
@@ -279,7 +279,7 @@ func updateDebugDirectory(data []byte, paddingSize int, logger hclog.Logger) err
 	debugDirEntryOffset := dataDirOffset + (6 * 8)
 
 	if debugDirEntryOffset+8 > len(data) {
-		logger.Trace("Debug directory entry beyond file bounds, skipping",
+		logger.Trace("⏭️ Debug directory entry beyond file bounds, skipping",
 			"entry_offset", fmt.Sprintf("0x%x", debugDirEntryOffset))
 		return nil
 	}
@@ -290,19 +290,19 @@ func updateDebugDirectory(data []byte, paddingSize int, logger hclog.Logger) err
 
 	// If no debug directory, skip
 	if debugDirRVA == 0 || debugDirSize == 0 {
-		logger.Trace("No debug directory present (RVA or size is 0)")
+		logger.Trace("ℹ️ No debug directory present (RVA or size is 0)")
 		return nil
 	}
 
 	// Map debug directory RVA to file offset
 	debugDirFileOffset, found := rvaToFileOffset(data, debugDirRVA, logger)
 	if !found {
-		logger.Trace("Unable to map debug directory RVA to file offset, skipping debug directory update",
+		logger.Trace("⏭️ Unable to map debug directory RVA to file offset, skipping debug directory update",
 			"debug_dir_rva", fmt.Sprintf("0x%x", debugDirRVA))
 		return nil
 	}
 
-	logger.Debug("Found debug directory",
+	logger.Debug("🔍 Found debug directory",
 		"rva", fmt.Sprintf("0x%x", debugDirRVA),
 		"file_offset", fmt.Sprintf("0x%x", debugDirFileOffset),
 		"size", debugDirSize)
@@ -310,7 +310,7 @@ func updateDebugDirectory(data []byte, paddingSize int, logger hclog.Logger) err
 	// Calculate number of debug directory entries
 	// Each IMAGE_DEBUG_DIRECTORY is 28 bytes
 	numDebugEntries := int(debugDirSize) / 28
-	logger.Debug("Debug directory entry count", "count", numDebugEntries)
+	logger.Debug("📊 Debug directory entry count", "count", numDebugEntries)
 
 	// Update each debug directory entry's PointerToRawData field
 	// IMAGE_DEBUG_DIRECTORY structure:
@@ -331,7 +331,7 @@ func updateDebugDirectory(data []byte, paddingSize int, logger hclog.Logger) err
 		ptrRawDataOffset := entryOffset + 24
 
 		if ptrRawDataOffset+4 > len(data) {
-			logger.Trace("Debug entry PointerToRawData beyond file bounds",
+			logger.Trace("⏭️ Debug entry PointerToRawData beyond file bounds",
 				"entry", i,
 				"offset", fmt.Sprintf("0x%x", ptrRawDataOffset))
 			continue
@@ -345,7 +345,7 @@ func updateDebugDirectory(data []byte, paddingSize int, logger hclog.Logger) err
 			newPtr := currentPtr + uint32(paddingSize)
 			binary.LittleEndian.PutUint32(data[ptrRawDataOffset:ptrRawDataOffset+4], newPtr)
 
-			logger.Trace("Updated debug entry PointerToRawData",
+			logger.Trace("📝 Updated debug entry PointerToRawData",
 				"entry", i,
 				"old_offset", fmt.Sprintf("0x%x", currentPtr),
 				"new_offset", fmt.Sprintf("0x%x", newPtr))
@@ -354,7 +354,7 @@ func updateDebugDirectory(data []byte, paddingSize int, logger hclog.Logger) err
 	}
 
 	if updated > 0 {
-		logger.Debug("Updated debug directory entries",
+		logger.Debug("✅ Updated debug directory entries",
 			"updated_count", updated,
 			"total_entries", numDebugEntries)
 	}
@@ -390,7 +390,7 @@ func updateSizeOfHeaders(data []byte, paddingSize int, logger hclog.Logger) erro
 	newSize := currentSize + uint32(paddingSize)
 	binary.LittleEndian.PutUint32(data[sizeOfHeadersOffset:sizeOfHeadersOffset+4], newSize)
 
-	logger.Debug("Updated SizeOfHeaders field",
+	logger.Debug("📝 Updated SizeOfHeaders field",
 		"old_size", fmt.Sprintf("0x%x", currentSize),
 		"new_size", fmt.Sprintf("0x%x", newSize),
 		"padding", paddingSize)
@@ -420,7 +420,7 @@ func expandDOSStub(data []byte, logger hclog.Logger) ([]byte, error) {
 	}
 
 	if currentPEOffset >= TargetDOSStubSize {
-		logger.Debug("DOS stub already adequate size",
+		logger.Debug("✅ DOS stub already adequate size",
 			"current", fmt.Sprintf("0x%x", currentPEOffset),
 			"target", fmt.Sprintf("0x%x", TargetDOSStubSize))
 		return data, nil
@@ -429,7 +429,7 @@ func expandDOSStub(data []byte, logger hclog.Logger) ([]byte, error) {
 	// Calculate padding needed
 	paddingSize := TargetDOSStubSize - currentPEOffset
 
-	logger.Info("Expanding DOS stub for Windows compatibility",
+	logger.Info("🪟 Expanding DOS stub for Windows compatibility",
 		"current_pe_offset", fmt.Sprintf("0x%x", currentPEOffset),
 		"target_pe_offset", fmt.Sprintf("0x%x", TargetDOSStubSize),
 		"padding_bytes", paddingSize)
@@ -478,7 +478,7 @@ func expandDOSStub(data []byte, logger hclog.Logger) ([]byte, error) {
 		return nil, fmt.Errorf("failed to update PE offset: expected 0x%x, got 0x%x", TargetDOSStubSize, newPEOffset)
 	}
 
-	logger.Debug("DOS stub expansion complete",
+	logger.Debug("✅ DOS stub expansion complete",
 		"original_size", len(data),
 		"new_size", len(newData),
 		"bytes_added", paddingSize,
@@ -506,13 +506,13 @@ func GetLauncherType(launcherData []byte, logger hclog.Logger) string {
 
 	// Go binaries have PE offset 0x80, Rust has 0xE8 or larger
 	if peOffset == 0x80 {
-		logger.Debug("Detected Go launcher", "pe_offset", fmt.Sprintf("0x%x", peOffset))
+		logger.Debug("🐹 Detected Go launcher", "pe_offset", fmt.Sprintf("0x%x", peOffset))
 		return "go"
 	} else if peOffset >= 0xE8 {
-		logger.Debug("Detected Rust launcher", "pe_offset", fmt.Sprintf("0x%x", peOffset))
+		logger.Debug("🦀 Detected Rust launcher", "pe_offset", fmt.Sprintf("0x%x", peOffset))
 		return "rust"
 	} else {
-		logger.Debug("Unknown launcher type", "pe_offset", fmt.Sprintf("0x%x", peOffset))
+		logger.Debug("❓ Unknown launcher type", "pe_offset", fmt.Sprintf("0x%x", peOffset))
 		return "unknown"
 	}
 }
@@ -532,7 +532,7 @@ func GetLauncherType(launcherData []byte, logger hclog.Logger) string {
 func ProcessLauncherForPSPF(launcherData []byte, logger hclog.Logger) ([]byte, error) {
 	if !isPEExecutable(launcherData) {
 		// Not a Windows PE executable, return unchanged (Unix binary)
-		logger.Trace("Launcher is not a PE executable, no processing needed")
+		logger.Trace("ℹ️ Launcher is not a PE executable, no processing needed")
 		return launcherData, nil
 	}
 
@@ -542,21 +542,21 @@ func ProcessLauncherForPSPF(launcherData []byte, logger hclog.Logger) ([]byte, e
 	case "go":
 		// Go launcher: Use PE overlay approach (zero modifications)
 		// PSPF data will be appended after all PE sections
-		logger.Info("Using PE overlay approach for Go launcher (no PE modifications)")
+		logger.Info("🐹 Using PE overlay approach for Go launcher (no PE modifications)")
 		return launcherData, nil
 
 	case "rust":
 		// Rust launcher: Use DOS stub expansion (PSPF at fixed 0xF0 offset)
 		if needsDOSStubExpansion(launcherData, logger) {
-			logger.Info("Expanding DOS stub for Rust launcher (PSPF at 0xF0)")
+			logger.Info("🦀 Expanding DOS stub for Rust launcher (PSPF at 0xF0)")
 			return expandDOSStub(launcherData, logger)
 		}
-		logger.Trace("Rust launcher already has adequate DOS stub")
+		logger.Trace("✅ Rust launcher already has adequate DOS stub")
 		return launcherData, nil
 
 	default:
 		// Unknown launcher type: Safe default is no modification (PE overlay)
-		logger.Info("Unknown launcher type, using PE overlay approach")
+		logger.Info("❓ Unknown launcher type, using PE overlay approach")
 		return launcherData, nil
 	}
 }

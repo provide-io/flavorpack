@@ -1,17 +1,20 @@
 //! Package finalization and index writing
 
 use super::super::constants::{
-    MAGIC_TRAILER_SIZE, MAGIC_WAND_EMOJI_BYTES, PACKAGE_EMOJI_BYTES, SLOT_ALIGNMENT,
+    MAGIC_TRAILER_SIZE, MAGIC_WAND_EMOJI_BYTES, OP_GZIP, PACKAGE_EMOJI_BYTES, SLOT_ALIGNMENT,
     SLOT_DESCRIPTOR_SIZE,
 };
 use super::super::index::Index;
 use super::super::manifest::BuildManifest;
-use super::super::slots::{SlotDescriptor, align_offset};
+use super::super::operations::unpack_operations;
+use super::super::slots::{align_offset, SlotDescriptor};
 use crate::api::BuildOptions;
-use crate::exceptions::Result;
+use crate::exceptions::{FlavorError, Result};
+use flate2::write::GzEncoder;
+use flate2::Compression;
 use log::{debug, info, trace};
 use std::fs::File;
-use std::io::{self, Seek, SeekFrom, Write};
+use std::io::{Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};
 
 /// Write metadata to output file
@@ -87,7 +90,7 @@ pub(super) fn reserve_descriptor_space(
     Ok(descriptor_table_offset)
 }
 
-/// Stream slot data from files to output
+/// Stream slot data from files to output, applying compression as needed
 pub(super) fn stream_slot_data(
     out: &mut File,
     descriptors: &mut [SlotDescriptor],
@@ -114,17 +117,69 @@ pub(super) fn stream_slot_data(
         let slot_offset = out.stream_position()?;
         descriptor.offset = slot_offset;
 
-        // Stream file directly to output
-        let mut slot_file = File::open(slot_path)?;
-        let bytes_copied = io::copy(&mut slot_file, out)?;
+        // Read slot data
+        let slot_data = std::fs::read(slot_path)?;
+        let original_size = slot_data.len();
+
+        // Apply compression based on operations field
+        let compressed_data = apply_operations(&slot_data, descriptor.operations)?;
+        let compressed_size = compressed_data.len();
+
+        // Write compressed data
+        out.write_all(&compressed_data)?;
+
+        // Update descriptor with actual compressed size
+        descriptor.size = compressed_size as u64;
 
         debug!(
-            "📍 Wrote slot {}: offset={:#x}, size={} bytes",
-            i, slot_offset, bytes_copied
+            "📍 Wrote slot {}: offset={:#x}, compressed={} bytes (original={})",
+            i, slot_offset, compressed_size, original_size
         );
     }
 
     Ok(())
+}
+
+/// Check if data is already gzipped (magic bytes: 0x1f 0x8b)
+fn is_gzipped(data: &[u8]) -> bool {
+    data.len() >= 2 && data[0] == 0x1f && data[1] == 0x8b
+}
+
+/// Apply operations (compression) to slot data based on the operations field
+fn apply_operations(data: &[u8], operations: u64) -> Result<Vec<u8>> {
+    let ops = unpack_operations(operations);
+
+    if ops.is_empty() {
+        // No operations - return data as-is
+        return Ok(data.to_vec());
+    }
+
+    let mut result = data.to_vec();
+
+    for op in ops {
+        result = match op {
+            OP_GZIP => {
+                // Skip compression if data is already gzipped
+                if is_gzipped(&result) {
+                    trace!("📦 Source already gzipped, skipping compression");
+                    result
+                } else {
+                    trace!("🗜️  Applying GZIP compression");
+                    let mut encoder = GzEncoder::new(Vec::new(), Compression::default());
+                    encoder.write_all(&result).map_err(|e| {
+                        FlavorError::Generic(format!("❌ GZIP compression failed: {}", e))
+                    })?;
+                    encoder.finish().map_err(|e| {
+                        FlavorError::Generic(format!("❌ GZIP finalization failed: {}", e))
+                    })?
+                }
+            }
+            // TAR data should already be in tar format from source - pass through
+            _ => result,
+        };
+    }
+
+    Ok(result)
 }
 
 /// Write descriptor table at reserved location

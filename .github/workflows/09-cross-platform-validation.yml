@@ -1,0 +1,420 @@
+name: 09 🌍 Cross-Platform Validation
+
+on:
+  workflow_dispatch:
+    inputs:
+      helper_run_id:
+        description: 'Helper Prep run ID (leave empty for latest)'
+        type: string
+        required: false
+
+  schedule:
+    # Run weekly on Sundays at 3 AM UTC
+    - cron: '0 3 * * 0'
+
+  workflow_run:
+    workflows: ["03 🌶️ Flavor Pipeline"]
+    types: [completed]
+    branches: [main, develop]
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  # Build PSP packages on each platform
+  build-packages:
+    name: 📦 Build PSP on ${{ matrix.platform_name }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux_amd64
+            platform_name: Linux AMD64
+            runner: ubuntu-latest
+          - platform: linux_arm64
+            platform_name: Linux ARM64
+            runner: ubuntu-24.04-arm
+          - platform: darwin_amd64
+            platform_name: macOS Intel
+            runner: macos-15-intel
+          - platform: darwin_arm64
+            platform_name: macOS ARM64
+            runner: macos-15
+          - platform: windows_amd64
+            platform_name: Windows AMD64
+            runner: windows-2025
+          - platform: windows_arm64
+            platform_name: Windows ARM64
+            runner: windows-2025-arm
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 🔍 Determine helper version
+        id: helpers
+        shell: bash
+        run: .github/scripts/determine-helper-version.sh "${{ inputs.helper_run_id }}"
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: 📥 Download helper artifacts
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          workflow: 01-helper-prep.yml
+          run_id: ${{ steps.helpers.outputs.run_id }}
+          name: flavor-helpers-${{ steps.helpers.outputs.version }}-${{ matrix.platform }}
+          path: ./helpers-dist
+
+      - name: 🔧 Extract helpers
+        shell: bash
+        run: |
+          mkdir -p dist/bin
+          unzip -o helpers-dist/flavor-helpers-${{ steps.helpers.outputs.version }}-${{ matrix.platform }}.zip -d dist/bin/
+          chmod +x dist/bin/* 2>/dev/null || true
+          ls -lh dist/bin/
+
+      - name: 📦 Install Flavor
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev,test]"
+
+      - name: 🔨 Build test PSP package
+        shell: bash
+        env:
+          PYTHONUTF8: "1"
+          PYTHONIOENCODING: "utf-8"
+        run: |
+          # Create a simple test application
+          mkdir -p test-app
+          cat > test-app/main.py << 'EOF'
+          #!/usr/bin/env python3
+          import sys
+          import json
+          import platform
+
+          def main():
+              info = {
+                  "message": "Cross-platform test successful",
+                  "python_version": sys.version,
+                  "platform": platform.platform(),
+                  "machine": platform.machine(),
+                  "system": platform.system()
+              }
+              print(json.dumps(info, indent=2))
+              return 0
+
+          if __name__ == "__main__":
+              sys.exit(main())
+          EOF
+
+          cat > test-app/pyproject.toml << 'EOF'
+          [project]
+          name = "cross-platform-test"
+          version = "0.1.0"
+          description = "Cross-platform PSP validation test package"
+
+          [project.scripts]
+          cross-platform-test = "main:main"
+          EOF
+
+          chmod +x test-app/main.py
+
+          # Debug: List all files in dist/bin
+          echo "Contents of dist/bin:"
+          ls -la dist/bin/ || echo "dist/bin does not exist"
+
+          # Debug: Show current directory
+          echo "Current directory:"
+          pwd
+
+          # Find helper binaries - prefer Go builders as they support pyproject.toml directly
+          BUILDER_BIN=$(find dist/bin/ -name "flavor-go-builder-*${{ matrix.platform }}*" -type f | head -1)
+          if [ -z "$BUILDER_BIN" ]; then
+            BUILDER_BIN=$(find dist/bin/ -name "flavor-rs-builder-*${{ matrix.platform }}*" -type f | head -1)
+          fi
+
+          LAUNCHER_BIN=$(find dist/bin/ -name "flavor-go-launcher-*${{ matrix.platform }}*" -type f | head -1)
+          if [ -z "$LAUNCHER_BIN" ]; then
+            LAUNCHER_BIN=$(find dist/bin/ -name "flavor-rs-launcher-*${{ matrix.platform }}*" -type f | head -1)
+          fi
+
+          echo "Using builder: $BUILDER_BIN"
+          echo "Using launcher: $LAUNCHER_BIN"
+
+          # Validate binaries found
+          if [ -z "$BUILDER_BIN" ] || [ -z "$LAUNCHER_BIN" ]; then
+            echo "ERROR: Helper binaries not found!"
+            echo "Looking for pattern: dist/bin/flavor-*-builder-${{ matrix.platform }}*"
+            exit 1
+          fi
+
+          # Build PSP package
+          flavor pack \
+            --manifest test-app/pyproject.toml \
+            --output cross-platform-test-${{ matrix.platform }}.psp \
+            --builder-bin "$BUILDER_BIN" \
+            --launcher-bin "$LAUNCHER_BIN"
+
+          # Generate metadata for validation
+          flavor inspect cross-platform-test-${{ matrix.platform }}.psp --json > package-info-${{ matrix.platform }}.json
+
+          ls -lh cross-platform-test-${{ matrix.platform }}.psp
+
+      - name: 📤 Upload PSP package
+        uses: actions/upload-artifact@v4
+        with:
+          name: psp-built-on-${{ matrix.platform }}
+          path: |
+            cross-platform-test-${{ matrix.platform }}.psp
+            package-info-${{ matrix.platform }}.json
+          retention-days: 7
+
+  # Test extraction on different platforms
+  test-cross-platform:
+    name: 🧪 Extract ${{ matrix.build_platform }} PSP on ${{ matrix.test_platform_name }}
+    needs: build-packages
+    runs-on: ${{ matrix.test_runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # Test matrix: build platform × test platform
+        # Focus on cross-platform scenarios (skip same-platform)
+        include:
+          # Linux AMD64 packages tested on other platforms
+          - build_platform: linux_amd64
+            test_platform: linux_arm64
+            test_platform_name: Linux ARM64
+            test_runner: ubuntu-24.04-arm
+          - build_platform: linux_amd64
+            test_platform: darwin_amd64
+            test_platform_name: macOS Intel
+            test_runner: macos-15-intel
+          - build_platform: linux_amd64
+            test_platform: darwin_arm64
+            test_platform_name: macOS ARM64
+            test_runner: macos-15
+
+          # Linux ARM64 packages tested on other platforms
+          - build_platform: linux_arm64
+            test_platform: linux_amd64
+            test_platform_name: Linux AMD64
+            test_runner: ubuntu-latest
+          - build_platform: linux_arm64
+            test_platform: darwin_arm64
+            test_platform_name: macOS ARM64
+            test_runner: macos-15
+
+          # macOS packages tested on Linux
+          - build_platform: darwin_amd64
+            test_platform: linux_amd64
+            test_platform_name: Linux AMD64
+            test_runner: ubuntu-latest
+          - build_platform: darwin_arm64
+            test_platform: linux_amd64
+            test_platform_name: Linux AMD64
+            test_runner: ubuntu-latest
+          - build_platform: darwin_arm64
+            test_platform: linux_arm64
+            test_platform_name: Linux ARM64
+            test_runner: ubuntu-24.04-arm
+
+          # Windows packages tested on other platforms
+          - build_platform: windows_amd64
+            test_platform: linux_amd64
+            test_platform_name: Linux AMD64
+            test_runner: ubuntu-latest
+          - build_platform: windows_arm64
+            test_platform: linux_amd64
+            test_platform_name: Linux AMD64
+            test_runner: ubuntu-latest
+
+          # Linux packages tested on Windows
+          - build_platform: linux_amd64
+            test_platform: windows_amd64
+            test_platform_name: Windows AMD64
+            test_runner: windows-2025
+          - build_platform: linux_amd64
+            test_platform: windows_arm64
+            test_platform_name: Windows ARM64
+            test_runner: windows-2025-arm
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 📦 Install Flavor
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev,test]"
+
+      - name: 📥 Download PSP built on ${{ matrix.build_platform }}
+        uses: actions/download-artifact@v4
+        with:
+          name: psp-built-on-${{ matrix.build_platform }}
+          path: ./test-packages
+
+      - name: 🔍 Verify PSP package
+        shell: bash
+        env:
+          PYTHONUTF8: "1"
+          PYTHONIOENCODING: "utf-8"
+        run: |
+          echo "## 🔍 Verifying ${{ matrix.build_platform }} package on ${{ matrix.test_platform_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          PSP_FILE="test-packages/cross-platform-test-${{ matrix.build_platform }}.psp"
+
+          if ! flavor verify "$PSP_FILE"; then
+            echo "❌ Verification failed!" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+
+          echo "✅ Verification passed" >> $GITHUB_STEP_SUMMARY
+
+      - name: 📋 Inspect PSP package
+        shell: bash
+        env:
+          PYTHONUTF8: "1"
+          PYTHONIOENCODING: "utf-8"
+        run: |
+          echo "### 📋 Inspection" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          PSP_FILE="test-packages/cross-platform-test-${{ matrix.build_platform }}.psp"
+
+          # Inspect in JSON format
+          flavor inspect "$PSP_FILE" --json > inspect-output.json
+
+          # Extract key information
+          PACKAGE_SIZE=$(stat -f%z "$PSP_FILE" 2>/dev/null || stat -c%s "$PSP_FILE")
+          SLOT_COUNT=$(jq -r '.slots | length' inspect-output.json)
+
+          echo "- Package size: $PACKAGE_SIZE bytes" >> $GITHUB_STEP_SUMMARY
+          echo "- Slot count: $SLOT_COUNT" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Compare with original metadata
+          if [ -f "test-packages/package-info-${{ matrix.build_platform }}.json" ]; then
+            ORIG_SLOT_COUNT=$(jq -r '.slots | length' "test-packages/package-info-${{ matrix.build_platform }}.json")
+            if [ "$SLOT_COUNT" != "$ORIG_SLOT_COUNT" ]; then
+              echo "⚠️ Slot count mismatch: expected $ORIG_SLOT_COUNT, got $SLOT_COUNT" >> $GITHUB_STEP_SUMMARY
+              exit 1
+            fi
+            echo "✅ Slot count matches original: $SLOT_COUNT" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: 📂 Extract all slots
+        shell: bash
+        env:
+          PYTHONUTF8: "1"
+          PYTHONIOENCODING: "utf-8"
+        run: |
+          echo "### 📂 Extraction" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          PSP_FILE="test-packages/cross-platform-test-${{ matrix.build_platform }}.psp"
+
+          # Extract all slots
+          mkdir -p extracted
+          if ! flavor extract-all "$PSP_FILE" extracted/; then
+            echo "❌ Extraction failed!" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+
+          # List extracted content
+          echo "Extracted files:" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          ls -lhR extracted/ >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
+          # Validate extracted metadata
+          if [ -f "extracted/metadata.json" ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "✅ Metadata extracted successfully" >> $GITHUB_STEP_SUMMARY
+
+            # Check for expected fields
+            jq -r '.name, .version' extracted/metadata.json > /dev/null || {
+              echo "❌ Metadata missing expected fields" >> $GITHUB_STEP_SUMMARY
+              exit 1
+            }
+          fi
+
+      - name: 🔐 Verify slot integrity
+        shell: bash
+        env:
+          PYTHONUTF8: "1"
+          PYTHONIOENCODING: "utf-8"
+        run: |
+          echo "### 🔐 Integrity Check" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          PSP_FILE="test-packages/cross-platform-test-${{ matrix.build_platform }}.psp"
+
+          # Re-verify after extraction (tests checksum validation)
+          if ! flavor verify "$PSP_FILE"; then
+            echo "❌ Post-extraction verification failed!" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+
+          echo "✅ All slot checksums valid" >> $GITHUB_STEP_SUMMARY
+
+      - name: 📊 Generate test report
+        if: always()
+        shell: bash
+        run: |
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Test Configuration:**" >> $GITHUB_STEP_SUMMARY
+          echo "- Built on: ${{ matrix.build_platform }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Tested on: ${{ matrix.test_platform }} (${{ matrix.test_platform_name }})" >> $GITHUB_STEP_SUMMARY
+          echo "- Runner: ${{ matrix.test_runner }}" >> $GITHUB_STEP_SUMMARY
+
+  # Summary report
+  validation-report:
+    name: 📊 Validation Report
+    needs: [build-packages, test-cross-platform]
+    if: always()
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📊 Generate summary
+        run: |
+          echo "# 🌍 Cross-Platform Validation Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Run ID:** ${GITHUB_RUN_ID}" >> $GITHUB_STEP_SUMMARY
+          echo "**Timestamp:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          BUILD_RESULT="${{ needs.build-packages.result }}"
+          TEST_RESULT="${{ needs.test-cross-platform.result }}"
+
+          echo "## Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Stage | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 📦 Build Packages | $BUILD_RESULT |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🧪 Cross-Platform Tests | $TEST_RESULT |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "$BUILD_RESULT" = "success" ] && [ "$TEST_RESULT" = "success" ]; then
+            echo "✅ **All cross-platform validation tests passed!**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Cross-platform validation failed. Check job details.**" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi

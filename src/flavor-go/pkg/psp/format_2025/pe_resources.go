@@ -38,7 +38,7 @@ const (
 //
 // Returns error if embedding fails
 func EmbedPSPFAsResource(exePath string, pspfData []byte, logger hclog.Logger) error {
-	logger.Info("Embedding PSPF data as PE resource",
+	logger.Info("📦 Embedding PSPF data as PE resource",
 		"exe", exePath,
 		"pspf_size", len(pspfData),
 		"resource_type", PSPF_RESOURCE_TYPE,
@@ -55,10 +55,10 @@ func EmbedPSPFAsResource(exePath string, pspfData []byte, logger hclog.Logger) e
 	rs, err := winres.LoadFromEXE(inputFile)
 	if err != nil {
 		// If file has no resources, create new ResourceSet
-		logger.Debug("Creating new resource set (no existing resources)")
+		logger.Debug("📝 Creating new resource set (no existing resources)")
 		rs = &winres.ResourceSet{}
 	} else {
-		logger.Debug("Loaded existing resources from EXE")
+		logger.Debug("📂 Loaded existing resources from EXE")
 	}
 
 	// Close input file as we're done reading (explicit close, no defer)
@@ -67,7 +67,7 @@ func EmbedPSPFAsResource(exePath string, pspfData []byte, logger hclog.Logger) e
 	}
 
 	// Add PSPF data as a custom resource (RT_RCDATA)
-	logger.Debug("Setting PSPF resource data",
+	logger.Debug("📝 Setting PSPF resource data",
 		"type", PSPF_RESOURCE_TYPE,
 		"name", PSPF_RESOURCE_NAME,
 		"lang", fmt.Sprintf("0x%04x", PSPF_RESOURCE_LANG),
@@ -97,7 +97,7 @@ func EmbedPSPFAsResource(exePath string, pspfData []byte, logger hclog.Logger) e
 	}
 
 	// Write resources to temporary file
-	logger.Debug("Writing resources to temporary file")
+	logger.Debug("📝 Writing resources to temporary file")
 	if err := rs.WriteToEXE(outputFile, inputFile2); err != nil {
 		outputFile.Close()
 		inputFile2.Close()
@@ -117,7 +117,7 @@ func EmbedPSPFAsResource(exePath string, pspfData []byte, logger hclog.Logger) e
 		return fmt.Errorf("failed to close input file: %w", err)
 	}
 
-	logger.Debug("Files closed, attempting atomic file replacement")
+	logger.Debug("🔄 Files closed, attempting atomic file replacement")
 
 	// Use atomicReplace to safely replace the original file
 	// This handles Windows file locking with retry logic
@@ -145,20 +145,21 @@ func EmbedPSPFAsResource(exePath string, pspfData []byte, logger hclog.Logger) e
 //
 // Returns the PSPF data or an error
 func ReadPSPFFromResource(exePath string, logger hclog.Logger) ([]byte, error) {
-	logger.Debug("Reading PSPF from PE resources", "exe", exePath)
+	logger.Debug("📖 Reading PSPF from PE resources", "exe", exePath)
 
 	// Load the EXE as a data file (read-only, no code execution)
+	// LOAD_LIBRARY_AS_IMAGE_RESOURCE is required for proper resource table access
 	handle, err := windows.LoadLibraryEx(
 		exePath,
 		0,
-		windows.LOAD_LIBRARY_AS_DATAFILE,
+		windows.LOAD_LIBRARY_AS_DATAFILE|windows.LOAD_LIBRARY_AS_IMAGE_RESOURCE,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load EXE as data file: %w", err)
 	}
 	defer windows.FreeLibrary(handle)
 
-	logger.Debug("Loaded EXE as data file", "handle", handle)
+	logger.Debug("📂 Loaded EXE as data file", "handle", handle)
 
 	// Find the PSPF resource
 	// Use MakeIntResource for string resource names
@@ -172,7 +173,7 @@ func ReadPSPFFromResource(exePath string, logger hclog.Logger) ([]byte, error) {
 			PSPF_RESOURCE_TYPE, PSPF_RESOURCE_NAME, err)
 	}
 
-	logger.Debug("Found PSPF resource", "info", resInfo)
+	logger.Debug("🔍 Found PSPF resource", "info", resInfo)
 
 	// Load the resource data
 	resData, err := windows.LoadResource(handle, resInfo)
@@ -189,7 +190,7 @@ func ReadPSPFFromResource(exePath string, logger hclog.Logger) ([]byte, error) {
 		return nil, fmt.Errorf("resource has zero size")
 	}
 
-	logger.Debug("Resource loaded", "size", size)
+	logger.Debug("📦 Resource loaded", "size", size)
 
 	// Lock the resource and get pointer to data
 	ptr, err := windows.LockResource(resData)

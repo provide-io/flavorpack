@@ -1,7 +1,7 @@
 # Installation
 
-!!! warning "Alpha Release - Source Installation Only"
-    FlavorPack is in early alpha. PyPI packages and pre-built binaries are not yet available. Check current version with `flavor --version`. **Install from source only.**
+!!! info "Pre-Release - Source Installation Only"
+    FlavorPack is in pre-release. PyPI packages and pre-built binaries are not yet available. Check current version with `flavor --version`. **Install from source only.**
 
 Get started with FlavorPack, a cross-language packaging system implementing the Progressive Secure Package Format (PSPF/2025) that creates self-contained, portable executables from Python applications.
 

@@ -13,7 +13,7 @@ import (
 // atomicReplace atomically replaces a destination file with a source file.
 // On Unix, os.Rename is already atomic, so this is a simple wrapper.
 func atomicReplace(sourcePath, destPath string, logger hclog.Logger) error {
-	logger.Debug("Performing atomic file replacement",
+	logger.Debug("🔄 Performing atomic file replacement",
 		"source", sourcePath,
 		"dest", destPath)
 

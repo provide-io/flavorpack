@@ -63,17 +63,17 @@ graph TD
 ├─────────────────────────────────────┤ ← Boundary aligned to 8 bytes
 │                                     │
 │         8192-BYTE INDEX             │ ← Fixed-size index block
-│   ┌─────────────────────────────┐  │
-│   │ PSPF Header (32 bytes)      │  │
-│   │ Metadata (256 bytes)        │  │
-│   │ Slot Table (1024 bytes)     │  │
-│   │ Reserved (6816 bytes)       │  │
-│   │ Signature (64 bytes)        │  │
-│   └─────────────────────────────┘  │
+│   ┌─────────────────────────────┐   │
+│   │ PSPF Header (32 bytes)      │   │
+│   │ Metadata (256 bytes)        │   │
+│   │ Slot Table (1024 bytes)     │   │
+│   │ Reserved (6816 bytes)       │   │
+│   │ Signature (64 bytes)        │   │
+│   └─────────────────────────────┘   │
 │                                     │
 ├─────────────────────────────────────┤
 │                                     │
-│      GZIPPED JSON METADATA         │ ← Package configuration
+│      GZIPPED JSON METADATA          │ ← Package configuration
 │                                     │   (Variable size ~1-10 KB)
 ├─────────────────────────────────────┤
 │                                     │
@@ -399,7 +399,7 @@ Custom metadata fields:
 ```json
 {
   "x-custom": {
-    "license": "MIT",
+    "license": "Apache-2.0",
     "author": "Your Name",
     "telemetry": false,
     "update_url": "https://example.com/updates"
@@ -428,15 +428,15 @@ Custom metadata fields:
 
 How PSPF compares to alternatives:
 
-| Feature | PSPF | AppImage | Snap | Docker |
-|---------|------|----------|------|--------|
-| Single file | ✅ | ✅ | ❌ | ❌ |
-| No dependencies | ✅ | ❌ | ❌ | ❌ |
-| Cryptographic signing | ✅ | ✅ | ✅ | ✅ |
-| Cross-platform | ✅ | ❌ | ❌ | ✅ |
-| Direct execution | ✅ | ✅ | ❌ | ❌ |
-| Smart caching | ✅ | ❌ | ✅ | ✅ |
-| Python-optimized | ✅ | ❌ | ❌ | ❌ |
+| Feature               | PSPF | AppImage | Snap | Docker |
+|-----------------------|------|----------|------|--------|
+| Single file           | ✅   | ✅       |  ❌  | ❌ |
+| No dependencies       | ✅   | ❌       |  ❌  | ❌ |
+| Cryptographic signing | ✅   | ✅       |  ✅  | ✅ |
+| Cross-platform        | ✅   | ❌       |  ❌  | ✅ |
+| Direct execution      | ✅   | ✅       |  ❌  | ❌ |
+| Smart caching         | ✅   | ❌       |  ✅  | ✅ |
+| Python-optimized      | ✅   | ❌       |  ❌  | ❌ |
 
 ## Best Practices
 

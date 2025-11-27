@@ -306,4 +306,95 @@ def test_slots(temp_dir: Path, test_builder: PSPFBuilder) -> list[SlotMetadata]:
     return slots
 
 
+# Cross-platform package fixtures for validation
+@pytest.fixture(scope="session")
+def cross_platform_packages_dir() -> Path | None:
+    """Get directory containing cross-platform package artifacts.
+
+    Returns None if not running in CI environment with artifacts.
+    This is used by cross-platform validation tests.
+    """
+    artifacts_path = os.environ.get("CROSS_PLATFORM_PACKAGES_DIR")
+    if not artifacts_path:
+        return None
+
+    path = Path(artifacts_path)
+    return path if path.exists() else None
+
+
+@pytest.fixture(scope="session")
+def linux_amd64_package(cross_platform_packages_dir: Path | None) -> Path | None:
+    """Get PSP package built on Linux AMD64.
+
+    Returns None if package is not available.
+    """
+    if cross_platform_packages_dir is None:
+        return None
+
+    psp_file = cross_platform_packages_dir / "cross-platform-test-linux_amd64.psp"
+    return psp_file if psp_file.exists() else None
+
+
+@pytest.fixture(scope="session")
+def linux_arm64_package(cross_platform_packages_dir: Path | None) -> Path | None:
+    """Get PSP package built on Linux ARM64.
+
+    Returns None if package is not available.
+    """
+    if cross_platform_packages_dir is None:
+        return None
+
+    psp_file = cross_platform_packages_dir / "cross-platform-test-linux_arm64.psp"
+    return psp_file if psp_file.exists() else None
+
+
+@pytest.fixture(scope="session")
+def darwin_amd64_package(cross_platform_packages_dir: Path | None) -> Path | None:
+    """Get PSP package built on macOS Intel.
+
+    Returns None if package is not available.
+    """
+    if cross_platform_packages_dir is None:
+        return None
+
+    psp_file = cross_platform_packages_dir / "cross-platform-test-darwin_amd64.psp"
+    return psp_file if psp_file.exists() else None
+
+
+@pytest.fixture(scope="session")
+def darwin_arm64_package(cross_platform_packages_dir: Path | None) -> Path | None:
+    """Get PSP package built on macOS ARM64.
+
+    Returns None if package is not available.
+    """
+    if cross_platform_packages_dir is None:
+        return None
+
+    psp_file = cross_platform_packages_dir / "cross-platform-test-darwin_arm64.psp"
+    return psp_file if psp_file.exists() else None
+
+
+@pytest.fixture(scope="session")
+def all_cross_platform_packages(
+    cross_platform_packages_dir: Path | None,
+) -> dict[str, Path]:
+    """Get all available cross-platform PSP packages.
+
+    Returns a dictionary mapping platform names to PSP file paths.
+    Only includes platforms that have packages available.
+    """
+    if cross_platform_packages_dir is None:
+        return {}
+
+    packages = {}
+    platforms = ["linux_amd64", "linux_arm64", "darwin_amd64", "darwin_arm64"]
+
+    for platform in platforms:
+        psp_file = cross_platform_packages_dir / f"cross-platform-test-{platform}.psp"
+        if psp_file.exists():
+            packages[platform] = psp_file
+
+    return packages
+
+
 # 🌶️📦🔚

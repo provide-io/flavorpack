@@ -19,7 +19,6 @@ on:
     branches: [main, develop]
 
 jobs:
-  # Setup and download Flavor PSP
   setup:
     name: 🔧 Setup & Get Flavor PSP
     runs-on: ubuntu-latest
@@ -40,14 +39,7 @@ jobs:
 
       - name: 🔍 Get Flavor run
         id: flavor
-        run: |
-          # Get Flavor run ID
-          if [ -n "${{ inputs.flavor_run_id }}" ]; then
-            RUN_ID="${{ inputs.flavor_run_id }}"
-          else
-            RUN_ID=$(gh run list --workflow 03-flavor-pipeline.yml --status success --limit 1 --json databaseId -q '.[0].databaseId')
-          fi
-          echo "run_id=$RUN_ID" >> $GITHUB_OUTPUT
+        run: .github/scripts/get-flavor-run.sh "${{ inputs.flavor_run_id }}"
         env:
           GH_TOKEN: ${{ github.token }}
 
@@ -61,11 +53,7 @@ jobs:
           path: ./flavor-artifacts
       
       - name: 🔧 Organize Flavor artifacts
-        run: |
-          mkdir -p flavor-psp
-          # Move all PSP and EXE files from subdirectories to flavor-psp
-          find flavor-artifacts -type f \( -name "*.psp" -o -name "*.exe" \) -exec mv {} flavor-psp/ \;
-          ls -la flavor-psp/
+        run: .github/scripts/organize-flavor-artifacts.sh
       
       - name: 📥 Download helper artifacts
         uses: dawidd6/action-download-artifact@v6
@@ -84,24 +72,8 @@ jobs:
 
       - name: 🧪 Define test matrix
         id: matrix
-        run: |
-          # Define test platforms and commands
-          cat > matrix.json << 'EOF'
-          {
-            "include": [
-              {"name": "linux-amd64", "runner": "ubuntu-24.04", "platform": "linux_amd64"},
-              {"name": "linux-arm64", "runner": "ubuntu-24.04-arm", "platform": "linux_arm64"},
-              {"name": "darwin-amd64", "runner": "macos-15-intel", "platform": "darwin_amd64"},
-              {"name": "darwin-arm64", "runner": "macos-15", "platform": "darwin_arm64"}
-            ]
-          }
-          EOF
+        run: .github/scripts/define-taster-test-matrix.sh
 
-          MATRIX=$(cat matrix.json | jq -c .)
-          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
-          echo "Test matrix: $MATRIX"
-
-  # Build and test taster on different platforms
   test-taster:
     name: 🧪 Test Taster ${{ matrix.name }}
     needs: setup
@@ -128,69 +100,29 @@ jobs:
           path: ./helpers-dist
       
       - name: 🔧 Extract helpers
-        shell: bash
-        run: |
-          .github/scripts/download-helpers.sh helpers-dist "${{ needs.setup.outputs.version }}" "${{ matrix.platform }}"
+        run: .github/scripts/download-helpers.sh helpers-dist "${{ needs.setup.outputs.version }}" "${{ matrix.platform }}"
 
       - name: 🔨 Build Taster using Flavor PSP
         id: build
-        shell: bash
-        run: |
-          .github/scripts/prepare-taster-build.sh \
-            "${{ matrix.platform }}" \
-            "flavor-psp" \
-            "${{ needs.setup.outputs.version }}" \
-            "taster-build"
-
-          # The taster_path is already exported by prepare-taster-build.sh to GITHUB_OUTPUT
+        run: .github/scripts/prepare-taster-build.sh "${{ matrix.platform }}" "flavor-psp" "${{ needs.setup.outputs.version }}" "taster-build"
 
       - name: 🔍 Verify Built Package
-        shell: bash
-        run: |
-          echo "Verifying taster package by running it..."
-          TASTER="${{ steps.build.outputs.taster_path }}"
-          
-          # Make executable
-          chmod +x "$TASTER"
-          
-          # Test that it can run without dd-based verification
-          "$TASTER" --version || exit 1
-          echo "✅ Taster package is executable and responds to commands"
+        run: .github/scripts/verify-built-package.sh "${{ steps.build.outputs.taster_path }}"
 
       - name: 🧪 Test Taster Commands
-        shell: bash
         timeout-minutes: 5
         run: |
           TASTER="${{ steps.build.outputs.taster_path }}"
           WITH_TIMEOUT="${{ runner.os == 'Linux' && 'true' || 'false' }}"
           .github/scripts/test-taster-basic.sh "$TASTER" "$WITH_TIMEOUT"
-          
-          # Test with user-provided args if any
           if [ -n "${{ inputs.taster_args }}" ]; then
             echo "=== Testing user args: ${{ inputs.taster_args }} ==="
             "$TASTER" ${{ inputs.taster_args }}
           fi
 
-      # Crosslang testing removed - the command interface varies and causes issues
-      # The main tests above are sufficient to verify taster is working
-
       - name: 📊 Collect test results
         if: always()
-        shell: bash
-        run: |
-          mkdir -p test-results
-
-          # Create test report
-          cat > test-results/taster-${{ matrix.platform }}.json << EOF
-          {
-            "platform": "${{ matrix.platform }}",
-            "runner": "${{ matrix.runner }}",
-            "status": "${{ job.status }}",
-            "taster_path": "${{ steps.build.outputs.taster_path }}",
-            "timestamp": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
-            "helper_version": "${{ needs.setup.outputs.helper_version }}"
-          }
-          EOF
+        run: .github/scripts/collect-taster-test-results.sh "${{ matrix.platform }}" "${{ matrix.runner }}" "${{ job.status }}" "${{ steps.build.outputs.taster_path }}" "${{ needs.setup.outputs.helper_version }}"
 
       - name: 📤 Upload taster package
         uses: actions/upload-artifact@v4
@@ -207,7 +139,6 @@ jobs:
           name: taster-results-${{ matrix.platform }}-${{ github.run_id }}
           path: test-results/
 
-  # Comprehensive taster testing
   comprehensive-test:
     name: 🔬 Comprehensive Taster Tests
     needs: [setup, test-taster]
@@ -230,8 +161,7 @@ jobs:
           path: ./helpers-dist
 
       - name: 🔧 Extract all helpers
-        run: |
-          .github/scripts/download-helpers.sh helpers-dist "${{ needs.setup.outputs.helper_version }}"
+        run: .github/scripts/download-helpers.sh helpers-dist "${{ needs.setup.outputs.helper_version }}"
 
       - name: 🐍 Setup Python
         uses: actions/setup-python@v5
@@ -267,23 +197,7 @@ jobs:
           path: flavor-psp
 
       - name: 🔗 Setup Flavor command
-        run: |
-          PLATFORM="${{ steps.platform.outputs.platform }}"
-          FLAVOR_PSP=$(find flavor-psp -name "flavor-*-${PLATFORM}.psp" -o -name "flavor-*-${PLATFORM}.exe" | head -1)
-          if [ -z "$FLAVOR_PSP" ]; then
-            echo "❌ Flavor PSP not found for platform: $PLATFORM"
-            echo "Available files:"
-            ls -la flavor-psp/
-            exit 1
-          fi
-          FLAVOR_DIR=$(dirname "$FLAVOR_PSP")
-          chmod +x "$FLAVOR_PSP"
-          # Create a wrapper script named 'flavor' that calls the PSP
-          echo '#!/bin/bash' > "$FLAVOR_DIR/flavor"
-          echo "exec \"$PWD/$FLAVOR_PSP\" \"\$@\"" >> "$FLAVOR_DIR/flavor"
-          chmod +x "$FLAVOR_DIR/flavor"
-          # Add to PATH (works on both Linux and Windows)
-          echo "$PWD/$FLAVOR_DIR" >> $GITHUB_PATH
+        run: .github/scripts/setup-flavor-command.sh "${{ steps.platform.outputs.platform }}"
 
       - name: ✅ Verify Flavor command
         run: flavor --version
@@ -297,12 +211,8 @@ jobs:
       - name: 🧪 Run comprehensive taster tests
         run: |
           TASTER=$(find taster-artifacts -name "taster-*.psp" | head -1)
-          .github/scripts/run-comprehensive-taster-tests.sh \
-            "$TASTER" \
-            "linux_amd64" \
-            "helpers/bin"
+          .github/scripts/run-comprehensive-taster-tests.sh "$TASTER" "linux_amd64" "helpers/bin"
 
-  # Summary and validation
   validate:
     name: ✅ Validate & Summary
     needs: [setup, test-taster, comprehensive-test]
@@ -319,16 +229,7 @@ jobs:
           path: test-results
 
       - name: 📊 Generate summary
-        run: |
-          .github/scripts/generate-taster-summary.sh \
-            "test-results" \
-            "${{ needs.setup.outputs.helper_version }}"
+        run: .github/scripts/generate-taster-summary.sh "test-results" "${{ needs.setup.outputs.helper_version }}"
 
       - name: 🎯 Check status
-        run: |
-          # Check if any test job failed
-          if [ "${{ needs.test-taster.result }}" != "success" ] || [ "${{ needs.comprehensive-test.result }}" != "success" ]; then
-            echo "❌ Some taster tests failed"
-            exit 1
-          fi
-          echo "✅ All taster tests passed"
+        run: .github/scripts/check-taster-status.sh "${{ needs.test-taster.result }}" "${{ needs.comprehensive-test.result }}"
