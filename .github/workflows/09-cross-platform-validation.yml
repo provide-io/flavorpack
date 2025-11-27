@@ -25,6 +25,10 @@ jobs:
   # Build PSP packages on each platform
   build-packages:
     name: 📦 Build PSP on ${{ matrix.platform_name }}
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'schedule' ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
     runs-on: ${{ matrix.runner }}
     strategy:
       fail-fast: false
@@ -42,12 +46,7 @@ jobs:
           - platform: darwin_arm64
             platform_name: macOS ARM64
             runner: macos-15
-          - platform: windows_amd64
-            platform_name: Windows AMD64
-            runner: windows-2025
-          - platform: windows_arm64
-            platform_name: Windows ARM64
-            runner: windows-11-arm
+          # Windows: wheels built only in flavor pipeline, no PSP packages
 
     steps:
       - name: 📥 Checkout

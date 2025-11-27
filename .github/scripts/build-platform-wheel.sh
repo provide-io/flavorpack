@@ -14,9 +14,9 @@ fi
 
 echo "🎡 Building wheel for platform: $PLATFORM_TAG"
 
-# Pre-install build dependencies to avoid DNS issues on Windows
+# Pre-install build dependencies
 echo "📦 Installing build dependencies..."
-python -m pip install --upgrade pip setuptools>=68.0.0 wheel
+python -m pip install --upgrade pip setuptools>=68.0.0 wheel build
 
 # Build the wheel without isolation (uses pre-installed dependencies)
 python -m build --wheel --no-isolation --outdir dist/
