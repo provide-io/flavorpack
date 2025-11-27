@@ -15,7 +15,7 @@ import (
 // This is used to safely replace the original file with the resource-embedded version.
 // Uses MoveFileEx with retry logic to handle Windows file locking.
 func atomicReplace(sourcePath, destPath string, logger hclog.Logger) error {
-	logger.Debug("Performing atomic file replacement",
+	logger.Debug("🔄 Performing atomic file replacement",
 		"source", sourcePath,
 		"dest", destPath)
 
@@ -41,7 +41,7 @@ func atomicReplace(sourcePath, destPath string, logger hclog.Logger) error {
 		err = windows.MoveFileEx(fromPtr, toPtr, flags)
 		if err == nil {
 			if attempt > 1 {
-				logger.Debug("Successfully replaced file atomically after retry", "attempt", attempt)
+				logger.Debug("✅ Successfully replaced file atomically after retry", "attempt", attempt)
 			}
 			logger.Info("✅ Atomic file replacement successful",
 				"source", sourcePath,
@@ -50,13 +50,13 @@ func atomicReplace(sourcePath, destPath string, logger hclog.Logger) error {
 		}
 
 		if attempt == maxAttempts {
-			logger.Error("Failed to replace file atomically after retries",
+			logger.Error("❌ Failed to replace file atomically after retries",
 				"attempts", maxAttempts,
 				"error", err)
 			return fmt.Errorf("failed after %d attempts (Windows file lock): %w", maxAttempts, err)
 		}
 
-		logger.Debug("Retrying atomic file replacement (Windows file lock)",
+		logger.Debug("🔄 Retrying atomic file replacement (Windows file lock)",
 			"attempt", attempt,
 			"next_delay_ms", delay.Milliseconds(),
 			"error", err)

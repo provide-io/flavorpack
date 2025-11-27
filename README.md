@@ -6,7 +6,7 @@
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![CI](https://github.com/provide-io/flavorpack/actions/workflows/ci.yml/badge.svg)](https://github.com/provide-io/flavorpack/actions)
 
-> **⚠️ Alpha Software**: FlavorPack is in early development. APIs, file formats, and commands may change without notice. Not recommended for production use. Check current version with `flavor --version`. Install from source only.
+> **Pre-Release (v0.9)**: FlavorPack's core runtime and binary format are production-ready. The remaining blockers for v1.0 are: (1) Windows support disabled due to UTF-8 issues, (2) API documentation incomplete. The PSPF/2025 format specification is stable. Source installation only until PyPI release.
 
 **FlavorPack** is a cross-language packaging system that creates self-contained, portable executables using the **Progressive Secure Package Format (PSPF) 2025 Edition**. It enables you to ship Python applications as single binaries that "just work" - no installation, no dependencies, no configuration required.
 

@@ -28,60 +28,60 @@ var (
 // to a temporary file and returns the path + cleanup function.
 // Otherwise, it returns the original exePath with no cleanup.
 func prepareBundlePath(exePath string, logger hclog.Logger) (string, func(), error) {
-	logger.Debug("Checking bundle path preparation method", "exe", exePath)
+	logger.Debug("🔍 Checking bundle path preparation method", "exe", exePath)
 
 	// Check if PSPF is embedded as a PE resource
-	logger.Trace("Checking for PE resource embedding")
+	logger.Trace("🔍 Checking for PE resource embedding")
 	if HasPSPFResource(exePath, logger) {
 		logger.Info("🪟 Detected PSPF embedded as PE resource, extracting to temp file")
-		logger.Debug("Starting PE resource extraction workflow")
+		logger.Debug("📤 Starting PE resource extraction workflow")
 
 		// Read PSPF data from resource
-		logger.Trace("Reading PSPF data from PE resource")
+		logger.Trace("📖 Reading PSPF data from PE resource")
 		pspfData, err := ReadPSPFFromResource(exePath, logger)
 		if err != nil {
-			logger.Error("Failed to read PSPF from PE resource", "error", err)
+			logger.Error("❌ Failed to read PSPF from PE resource", "error", err)
 			return "", nil, fmt.Errorf("failed to read PSPF from resource: %w", err)
 		}
-		logger.Debug("Successfully read PSPF from PE resource", "size", len(pspfData))
+		logger.Debug("✅ Successfully read PSPF from PE resource", "size", len(pspfData))
 
 		// Create temporary file for PSPF data
-		logger.Trace("Creating temporary file for extracted PSPF data")
+		logger.Trace("📝 Creating temporary file for extracted PSPF data")
 		tmpFile, err := os.CreateTemp("", "pspf-*.psp")
 		if err != nil {
-			logger.Error("Failed to create temp file for PSPF extraction", "error", err)
+			logger.Error("❌ Failed to create temp file for PSPF extraction", "error", err)
 			return "", nil, fmt.Errorf("failed to create temp file: %w", err)
 		}
 		tmpPath := tmpFile.Name()
-		logger.Debug("Created temp file", "path", tmpPath)
+		logger.Debug("📝 Created temp file", "path", tmpPath)
 
 		// Write PSPF data to temp file
-		logger.Trace("Writing PSPF data to temp file", "size", len(pspfData))
+		logger.Trace("📝 Writing PSPF data to temp file", "size", len(pspfData))
 		bytesWritten, err := tmpFile.Write(pspfData)
 		if err != nil {
-			logger.Error("Failed to write PSPF data to temp file", "error", err, "path", tmpPath)
+			logger.Error("❌ Failed to write PSPF data to temp file", "error", err, "path", tmpPath)
 			tmpFile.Close()
-			logger.Trace("Cleaning up temp file after write failure", "path", tmpPath)
+			logger.Trace("🧹 Cleaning up temp file after write failure", "path", tmpPath)
 			os.Remove(tmpPath)
 			return "", nil, fmt.Errorf("failed to write PSPF to temp file: %w", err)
 		}
-		logger.Debug("Wrote PSPF data to temp file", "bytes", bytesWritten, "expected", len(pspfData))
+		logger.Debug("✅ Wrote PSPF data to temp file", "bytes", bytesWritten, "expected", len(pspfData))
 
 		if bytesWritten != len(pspfData) {
-			logger.Error("Incomplete write to temp file", "written", bytesWritten, "expected", len(pspfData))
+			logger.Error("❌ Incomplete write to temp file", "written", bytesWritten, "expected", len(pspfData))
 			tmpFile.Close()
 			os.Remove(tmpPath)
 			return "", nil, fmt.Errorf("incomplete write: wrote %d bytes, expected %d", bytesWritten, len(pspfData))
 		}
 
-		logger.Trace("Closing temp file")
+		logger.Trace("📝 Closing temp file")
 		if err := tmpFile.Close(); err != nil {
-			logger.Error("Failed to close temp file", "error", err, "path", tmpPath)
-			logger.Trace("Cleaning up temp file after close failure", "path", tmpPath)
+			logger.Error("❌ Failed to close temp file", "error", err, "path", tmpPath)
+			logger.Trace("🧹 Cleaning up temp file after close failure", "path", tmpPath)
 			os.Remove(tmpPath)
 			return "", nil, fmt.Errorf("failed to close temp file: %w", err)
 		}
-		logger.Debug("Temp file closed successfully", "path", tmpPath)
+		logger.Debug("✅ Temp file closed successfully", "path", tmpPath)
 
 		logger.Debug("📝 Extracted PSPF to temp file", "path", tmpPath, "size", len(pspfData))
 
@@ -89,9 +89,9 @@ func prepareBundlePath(exePath string, logger hclog.Logger) (string, func(), err
 		cleanup := func() {
 			logger.Debug("🧹 Cleaning up temp PSPF file", "path", tmpPath)
 			if err := os.Remove(tmpPath); err != nil {
-				logger.Debug("Failed to remove temp file (may have been already removed)", "path", tmpPath, "error", err)
+				logger.Debug("⚠️ Failed to remove temp file (may have been already removed)", "path", tmpPath, "error", err)
 			} else {
-				logger.Trace("Successfully removed temp file", "path", tmpPath)
+				logger.Trace("✅ Successfully removed temp file", "path", tmpPath)
 			}
 		}
 		return tmpPath, cleanup, nil

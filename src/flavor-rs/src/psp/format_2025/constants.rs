@@ -24,6 +24,12 @@ pub const OP_BZIP2: u8 = 0x13; // BZIP2 compression (REQUIRED)
 pub const OP_XZ: u8 = 0x16; // XZ/LZMA2 compression (REQUIRED)
 pub const OP_ZSTD: u8 = 0x1B; // Zstandard compression (REQUIRED)
 
+// Windows PE Resource constants (for cross-builder compatibility)
+// Used when embedding PSPF data in Windows executables
+pub const PE_RESOURCE_TYPE: u16 = 10; // RT_RCDATA - Raw data resource type
+pub const PE_RESOURCE_LANG: u16 = 0x0409; // en-US language ID
+pub const PE_RESOURCE_NAME: &str = "PSPF"; // Resource name identifier
+
 // Purpose types - part of format spec
 #[allow(non_upper_case_globals)]
 pub const PurposeData: u8 = 0; // General data files

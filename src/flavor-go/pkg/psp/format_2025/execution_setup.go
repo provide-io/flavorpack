@@ -102,7 +102,7 @@ func setupWorkenvDirectories(workenvDir string, metadata *Metadata, logger hclog
 			mode, err := strconv.ParseUint(strings.TrimPrefix(dirSpec.Mode, "0"), 8, 32)
 			if err == nil {
 				if err := os.Chmod(dirPath, os.FileMode(mode)); err != nil {
-					logger.Debug("Failed to set permissions", "path", dirPath, "mode", dirSpec.Mode, "error", err)
+					logger.Debug("⚠️ Failed to set permissions", "path", dirPath, "mode", dirSpec.Mode, "error", err)
 				} else {
 					logger.Debug("🔒 Set permissions", "path", dirPath, "mode", dirSpec.Mode)
 				}

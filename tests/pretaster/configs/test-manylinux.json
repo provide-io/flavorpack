@@ -6,7 +6,7 @@
   },
   "execution": {
     "primary_slot": 0,
-    "command": "/usr/bin/python3 {workenv}/scripts/combo_test.py manylinux-test"
+    "command": "python3 {workenv}/scripts/combo_test.py manylinux-test"
   },
   "slots": [
     {

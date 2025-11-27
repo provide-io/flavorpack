@@ -59,7 +59,7 @@ extra:
 
 nav:
   - Home: index.md
-  - Roadmap: roadmap.md
+  - Roadmap: guide/roadmap.md
 
   # SECTION 1: Getting Started (for new users)
   - Getting Started:
@@ -73,6 +73,11 @@ nav:
   - Tutorials:
     - Overview: tutorials/index.md
     - HTTPie Wrapper: tutorials/httpie-wrapper.md
+
+  # SECTION 1.6: Integrations (ecosystem integrations)
+  - Integrations:
+    - Pyvider (Terraform): guide/integration/pyvider.md
+    - wrknv: guide/integration/wrknv.md
 
   # SECTION 2: User Guide (concepts and how-to)
   - User Guide:
@@ -106,7 +111,6 @@ nav:
       - guide/advanced/index.md
       - Cross-Language Support: guide/advanced/cross-language.md
       - Custom Launchers: guide/advanced/launchers.md
-      - Custom Builders: guide/advanced/builders.md
       - Performance Tuning: guide/advanced/performance.md
       - Debugging: guide/advanced/debugging.md
   
@@ -173,7 +177,6 @@ nav:
         - Unit Tests: development/testing/unit.md
         - Taster vs Pretaster: development/testing/taster-vs-pretaster.md
         - Integration Tests: development/testing/integration.md
-        - Cross-Language Tests: development/testing/cross-language.md
       - CI/CD: development/ci-cd.md
       - Release Process: development/release.md
     
@@ -181,8 +184,6 @@ nav:
       - community/index.md
       - Getting Support: community/support.md
       - Discussions: community/discussions.md
-      - Contributing: community/contributing.md
-      - Blog: community/blog.md
       - Changelog: community/changelog.md
       - License: community/license.md
 

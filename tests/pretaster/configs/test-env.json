@@ -29,10 +29,10 @@
       }
     }
   },
-  "command": "/usr/bin/python3 {workenv}/scripts/env_test.py",
+  "command": "python3 {workenv}/scripts/env_test.py",
   "environment": {},
   "execution": {
-    "command": "/usr/bin/python3 {workenv}/scripts/env_test.py",
+    "command": "python3 {workenv}/scripts/env_test.py",
     "args": [],
     "env": {},
     "primary_slot": 0

@@ -81,8 +81,8 @@ func BuildWithLogLevel(manifestPath, outputPath, launcherBin, privateKeyPath, pu
 
 	// Log startup messages
 	logger.Info("🐹🐹🐹 Hello from Flavor's Go Builder 🐹🐹🐹")
-	logger.Debug("Log level", "level", actualLevel, "source", logSource)
-	logger.Info("PSPF Go Builder starting...")
+	logger.Debug("🔧 Log level", "level", actualLevel, "source", logSource)
+	logger.Info("🚀 PSPF Go Builder starting...")
 
 	// Continue with normal build process
 	doBuild(logger, manifestPath, outputPath, launcherBin, privateKeyPath, publicKeyPath, keySeed)
@@ -163,8 +163,10 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 		os.Exit(1)
 	}
 	defer func() {
-		if err := out.Close(); err != nil {
-			logger.Error("Failed to close output file", "error", err)
+		if out != nil {
+			if err := out.Close(); err != nil {
+				logger.Error("❌ Failed to close output file", "error", err)
+			}
 		}
 	}()
 
@@ -331,7 +333,7 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 	currentPos, _ := out.Seek(0, 1)
 	slotTableOffset := AlignOffset(currentPos, SlotAlignment)
 	if _, err := out.Seek(slotTableOffset, 0); err != nil {
-		logger.Error("Failed to seek to slot table", "error", err)
+		logger.Error("❌ Failed to seek to slot table", "error", err)
 		os.Exit(1)
 	}
 
@@ -341,7 +343,7 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 
 	// Reserve space for slot table (we'll write it after calculating slot offsets)
 	if _, err := out.Seek(slotTableOffset+int64(index.SlotTableSize), 0); err != nil {
-		logger.Error("Failed to seek past slot table", "error", err)
+		logger.Error("❌ Failed to seek past slot table", "error", err)
 		os.Exit(1)
 	}
 
@@ -360,7 +362,7 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 		if alignedPos > currentPos {
 			padding := make([]byte, alignedPos-currentPos)
 			if _, err := out.Write(padding); err != nil {
-				logger.Error("Failed to write padding", "error", err)
+				logger.Error("❌ Failed to write padding", "error", err)
 				os.Exit(1)
 			}
 		}
@@ -378,21 +380,21 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 	// Go back and write the slot table with correct offsets
 	endOfSlots, _ := out.Seek(0, 1)
 	if _, err := out.Seek(slotTableOffset, 0); err != nil {
-		logger.Error("Failed to seek to slot table for writing", "error", err)
+		logger.Error("❌ Failed to seek to slot table for writing", "error", err)
 		os.Exit(1)
 	}
 
 	// Write 64-byte slot descriptors
 	for _, desc := range slotDescriptors {
 		if err := binary.Write(out, binary.LittleEndian, desc); err != nil {
-			logger.Error("Failed to write slot descriptor", "error", err)
+			logger.Error("❌ Failed to write slot descriptor", "error", err)
 			os.Exit(1)
 		}
 	}
 
 	// Return to end of file
 	if _, err := out.Seek(endOfSlots, 0); err != nil {
-		logger.Error("Failed to seek to end", "error", err)
+		logger.Error("❌ Failed to seek to end", "error", err)
 		os.Exit(1)
 	}
 
@@ -464,6 +466,13 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 	}
 	logger.Debug("🔧 Set executable permissions on output file")
 
+	// Close output so subsequent Windows-specific mutations can rename safely
+	if err := out.Close(); err != nil {
+		logger.Error("❌ Failed to close output file before resource embedding", "error", err)
+		os.Exit(1)
+	}
+	out = nil
+
 	// 🪟 Windows + Go Launcher: Convert append to resource embedding
 	// For Windows Go launchers, we need to embed PSPF as a PE resource instead of appending
 	// This is because Windows rejects modified Go binaries (with appended data)
@@ -487,21 +496,21 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 func shouldUseResourceEmbedding(launcherData []byte, logger hclog.Logger) bool {
 	// Only on Windows
 	if runtime.GOOS != "windows" {
-		logger.Debug("Not Windows, using append mode")
+		logger.Debug("ℹ️ Not Windows, using append mode")
 		return false
 	}
 
 	// Check launcher type
 	launcherType := GetLauncherType(launcherData, logger)
-	logger.Debug("Launcher type detected", "type", launcherType, "os", runtime.GOOS)
+	logger.Debug("🔍 Launcher type detected", "type", launcherType, "os", runtime.GOOS)
 
 	// Use resource embedding for Go launchers on Windows
 	if launcherType == "go" {
-		logger.Info("Windows Go launcher detected, will use PE resource embedding")
+		logger.Info("🪟 Windows Go launcher detected, will use PE resource embedding")
 		return true
 	}
 
-	logger.Debug("Not a Go launcher, using append mode", "type", launcherType)
+	logger.Debug("ℹ️ Not a Go launcher, using append mode", "type", launcherType)
 	return false
 }
 
@@ -510,7 +519,7 @@ func shouldUseResourceEmbedding(launcherData []byte, logger hclog.Logger) bool {
 // This reads the PSPF data that was appended after the launcher, removes it from the file,
 // and embeds it as a PE resource instead.
 func convertToResourceEmbedding(filePath string, launcherSize int64, logger hclog.Logger) error {
-	logger.Debug("Converting append-mode to resource-embedding", "file", filePath, "launcher_size", launcherSize)
+	logger.Debug("🔄 Converting append-mode to resource-embedding", "file", filePath, "launcher_size", launcherSize)
 
 	// Read the entire file
 	data, err := os.ReadFile(filePath)
@@ -519,7 +528,7 @@ func convertToResourceEmbedding(filePath string, launcherSize int64, logger hclo
 	}
 
 	totalSize := int64(len(data))
-	logger.Debug("File sizes", "total", totalSize, "launcher", launcherSize, "pspf", totalSize-launcherSize)
+	logger.Debug("📊 File sizes", "total", totalSize, "launcher", launcherSize, "pspf", totalSize-launcherSize)
 
 	// Extract PSPF data (everything after launcher)
 	if totalSize <= launcherSize {
@@ -527,14 +536,14 @@ func convertToResourceEmbedding(filePath string, launcherSize int64, logger hclo
 	}
 
 	pspfData := data[launcherSize:]
-	logger.Debug("Extracted PSPF data", "size", len(pspfData))
+	logger.Debug("📤 Extracted PSPF data", "size", len(pspfData))
 
 	// Create unique temp file (NEVER modify original until success)
 	// This avoids Windows file locking issues with in-place modification
 	pid := os.Getpid()
 	timestamp := time.Now().Unix()
 	tempPath := fmt.Sprintf("%s.tmp.%d.%d", filePath, pid, timestamp)
-	logger.Debug("Creating temporary file for resource embedding", "temp_path", tempPath)
+	logger.Debug("📝 Creating temporary file for resource embedding", "temp_path", tempPath)
 
 	// Write launcher to temp file
 	if err := os.WriteFile(tempPath, data[:launcherSize], os.FileMode(ExecutablePerms)); err != nil {
@@ -546,7 +555,7 @@ func convertToResourceEmbedding(filePath string, launcherSize int64, logger hclo
 	defer func() {
 		if embedErr != nil {
 			os.Remove(tempPath)
-			logger.Debug("Cleaned up temp file after error", "temp_path", tempPath)
+			logger.Debug("🧹 Cleaned up temp file after error", "temp_path", tempPath)
 		}
 	}()
 
@@ -567,9 +576,9 @@ func convertToResourceEmbedding(filePath string, launcherSize int64, logger hclo
 	// Verify the resource was embedded
 	newSize, err := getFileSize(filePath)
 	if err != nil {
-		logger.Warn("Could not verify new file size", "error", err)
+		logger.Warn("⚠️ Could not verify new file size", "error", err)
 	} else {
-		logger.Info("Resource embedding complete",
+		logger.Info("✅ Resource embedding complete",
 			"original_size", totalSize,
 			"new_size", newSize,
 			"launcher_size", launcherSize,

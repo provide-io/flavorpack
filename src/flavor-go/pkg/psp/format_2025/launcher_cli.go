@@ -30,7 +30,7 @@ func showBundleInfo(exePath string, logger hclog.Logger) {
 	}
 	defer func() {
 		if err := reader.Close(); err != nil {
-			logger.Error("Failed to close reader", "error", err)
+			logger.Error("❌ Failed to close reader", "error", err)
 		}
 	}()
 
@@ -97,7 +97,7 @@ func showBundleInfo(exePath string, logger hclog.Logger) {
 func extractSlot(exePath, slotStr, outputDir string, logger hclog.Logger) {
 	slotIndex, err := strconv.Atoi(slotStr)
 	if err != nil {
-		logger.Error("Invalid slot index", "slot", slotStr)
+		logger.Error("❌ Invalid slot index", "slot", slotStr)
 		os.Exit(1)
 	}
 
@@ -118,7 +118,7 @@ func extractSlot(exePath, slotStr, outputDir string, logger hclog.Logger) {
 	}
 	defer func() {
 		if err := reader.Close(); err != nil {
-			logger.Error("Failed to close reader", "error", err)
+			logger.Error("❌ Failed to close reader", "error", err)
 		}
 	}()
 
@@ -129,7 +129,7 @@ func extractSlot(exePath, slotStr, outputDir string, logger hclog.Logger) {
 	}
 
 	if slotIndex < 0 || slotIndex >= len(metadata.Slots) {
-		logger.Error("Slot index out of range")
+		logger.Error("❌ Slot index out of range")
 		os.Exit(1)
 	}
 
@@ -208,7 +208,7 @@ func showMetadata(exePath string, logger hclog.Logger) {
 	}
 	defer func() {
 		if err := reader.Close(); err != nil {
-			logger.Debug("Failed to close reader", "error", err)
+			logger.Debug("⚠️ Failed to close reader", "error", err)
 		}
 	}()
 
@@ -246,7 +246,7 @@ func verifyBundle(exePath string, logger hclog.Logger) {
 	}
 	defer func() {
 		if err := reader.Close(); err != nil {
-			logger.Error("Failed to close reader", "error", err)
+			logger.Error("❌ Failed to close reader", "error", err)
 		}
 	}()
 
@@ -331,19 +331,19 @@ func spawnBundle(exePath string, args []string, userCwd string, logger hclog.Log
 			// Child process exited with non-zero code
 			exitCode := exitErr.ExitCode()
 			logger.Info("⏹️ Process exited with error", "code", exitCode)
-			logger.Debug("Calling os.Exit to propagate child exit code", "code", exitCode)
+			logger.Debug("🔄 Calling os.Exit to propagate child exit code", "code", exitCode)
 			os.Exit(exitCode)
 			// Should never reach here - os.Exit terminates the process
 			logger.Error("🚨 CRITICAL: os.Exit returned unexpectedly", "code", exitCode)
 		}
 		// Type assertion failed - this is unexpected
-		logger.Error("Failed to extract exit code from exec.ExitError", "error", err)
+		logger.Error("❌ Failed to extract exit code from exec.ExitError", "error", err)
 		return fmt.Errorf("process failed: %w", err)
 	}
 
 	// Child process exited successfully with code 0
 	logger.Info("⏹️ Process exited successfully", "code", 0)
-	logger.Debug("Calling os.Exit(0) to terminate launcher with success")
+	logger.Debug("🔄 Calling os.Exit(0) to terminate launcher with success")
 	os.Exit(0)
 
 	// This should never be reached (os.Exit terminates the process)

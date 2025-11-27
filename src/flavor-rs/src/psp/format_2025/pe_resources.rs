@@ -12,6 +12,8 @@ use log::{debug, info};
 use std::path::Path;
 
 #[cfg(target_os = "windows")]
+use windows::Win32::Foundation::FreeLibrary;
+#[cfg(target_os = "windows")]
 use windows::Win32::System::LibraryLoader::*;
 #[cfg(target_os = "windows")]
 use windows::core::PCWSTR;
@@ -109,7 +111,120 @@ pub fn embed_pspf_as_resource(exe_path: &Path, pspf_data: &[u8]) -> Result<()> {
     Ok(())
 }
 
-/// Stub for non-Windows platforms
+/// Checks if a Windows PE executable has the PSPF resource embedded.
+///
+/// Returns true if the resource exists and can be accessed.
+#[cfg(target_os = "windows")]
+pub fn has_pspf_resource(exe_path: &Path) -> bool {
+    read_pspf_from_resource(exe_path).is_ok()
+}
+
+/// Reads PSPF data from a Windows PE executable's resource section.
+///
+/// This function loads the executable as a data file and extracts the
+/// PSPF resource if present.
+#[cfg(target_os = "windows")]
+#[allow(unsafe_code)]
+pub fn read_pspf_from_resource(exe_path: &Path) -> Result<Vec<u8>> {
+    use windows::Win32::Foundation::HMODULE;
+
+    debug!("📂 Reading PSPF from PE resource: {}", exe_path.display());
+
+    // Convert path to wide string
+    let exe_path_str = exe_path
+        .to_str()
+        .ok_or_else(|| anyhow::anyhow!("Invalid path encoding"))?;
+    let wide_path: Vec<u16> = exe_path_str
+        .encode_utf16()
+        .chain(std::iter::once(0))
+        .collect();
+    let wide_name: Vec<u16> = PSPF_RESOURCE_NAME
+        .encode_utf16()
+        .chain(std::iter::once(0))
+        .collect();
+
+    unsafe {
+        // Load the EXE as a data file (doesn't execute code)
+        let handle: HMODULE = LoadLibraryExW(
+            PCWSTR(wide_path.as_ptr()),
+            None,
+            LOAD_LIBRARY_AS_DATAFILE | LOAD_LIBRARY_AS_IMAGE_RESOURCE,
+        )
+        .map_err(|e| anyhow::anyhow!("❌ Failed to load EXE as data file: {}", e))?;
+
+        debug!("📂 Loaded EXE as data file");
+
+        // Find the PSPF resource
+        let res_info = FindResourceW(
+            Some(handle),
+            PCWSTR(wide_name.as_ptr()),
+            PCWSTR(RT_RCDATA as usize as *const u16),
+        );
+
+        if res_info.is_invalid() {
+            let _ = FreeLibrary(handle);
+            return Err(anyhow::anyhow!(
+                "❌ PSPF resource not found (type={}, name={})",
+                RT_RCDATA,
+                PSPF_RESOURCE_NAME
+            ));
+        }
+
+        debug!("🔍 Found PSPF resource");
+
+        // Load the resource
+        let res_data = LoadResource(Some(handle), res_info).map_err(|e| {
+            let _ = FreeLibrary(handle);
+            anyhow::anyhow!("❌ Failed to load resource data: {}", e)
+        })?;
+        if res_data.is_invalid() {
+            let _ = FreeLibrary(handle);
+            return Err(anyhow::anyhow!("❌ Resource data handle is invalid"));
+        }
+
+        // Get resource size
+        let size = SizeofResource(Some(handle), res_info);
+        if size == 0 {
+            let _ = FreeLibrary(handle);
+            return Err(anyhow::anyhow!("❌ Resource has zero size"));
+        }
+
+        debug!("📦 Resource loaded, size={} bytes", size);
+
+        // Lock the resource to get pointer
+        let ptr = LockResource(res_data);
+        if ptr.is_null() {
+            let _ = FreeLibrary(handle);
+            return Err(anyhow::anyhow!("❌ Failed to lock resource"));
+        }
+
+        // Copy the data
+        let data = std::slice::from_raw_parts(ptr as *const u8, size as usize).to_vec();
+
+        // Free the library handle
+        let _ = FreeLibrary(handle);
+
+        info!(
+            "✅ Read {} bytes of PSPF data from PE resource",
+            data.len()
+        );
+        Ok(data)
+    }
+}
+
+/// Stub for non-Windows platforms - has_pspf_resource
+#[cfg(not(target_os = "windows"))]
+pub fn has_pspf_resource(_exe_path: &std::path::Path) -> bool {
+    false
+}
+
+/// Stub for non-Windows platforms - read_pspf_from_resource
+#[cfg(not(target_os = "windows"))]
+pub fn read_pspf_from_resource(_exe_path: &std::path::Path) -> anyhow::Result<Vec<u8>> {
+    anyhow::bail!("PE resource reading is only supported on Windows")
+}
+
+/// Stub for non-Windows platforms - embed_pspf_as_resource
 #[cfg(not(target_os = "windows"))]
 pub fn embed_pspf_as_resource(
     _exe_path: &std::path::Path,
