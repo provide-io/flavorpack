@@ -21,7 +21,7 @@ from provide.foundation.platform import get_arch_name, get_os_name
 from provide.foundation.process import run
 from provide.foundation.resilience.types import BackoffStrategy
 
-from flavor.config.defaults import DEFAULT_EXECUTABLE_PERMS
+from flavor.config.defaults import DEFAULT_EXECUTABLE_PERMS, PYTHON_BLOCKED_PATHS
 from flavor.packaging.python.dependency_resolver import DependencyResolver
 from flavor.packaging.python.pypapip_manager import PyPaPipManager
 from flavor.packaging.python.uv_manager import UVManager
@@ -99,7 +99,11 @@ class PythonEnvironmentBuilder:
             self._create_python_tarball(python_install_dir, python_tgz)
 
     def _try_find_system_python(self) -> Path | None:
-        """Try to find an existing system Python without downloading.
+        """Try to find an existing UV-managed Python without downloading.
+
+        Only returns Python installations that are:
+        1. UV-managed (in UV's install directory)
+        2. Not system/framework Python (which don't package correctly)
 
         Returns:
             Path to Python installation directory, or None if not found.
@@ -109,23 +113,33 @@ class PythonEnvironmentBuilder:
             return None
 
         try:
-            # Use UV to find an existing Python (doesn't download)
+            # Use UV to find an existing managed Python (doesn't download)
+            # --python-preference=only-managed ensures we only get UV-installed Python
             find_cmd = [
                 uv_cmd,
                 "python",
                 "find",
                 self.python_version,
+                "--python-preference",
+                "only-managed",
             ]
-            logger.debug("🔍🐍 Searching for existing Python", command=" ".join(find_cmd))
+            logger.debug("🔍🐍 Searching for UV-managed Python", command=" ".join(find_cmd))
 
             result = run(find_cmd, check=True, capture_output=True)
             if result.stdout:
                 python_path = Path(result.stdout.strip())
                 if python_path.exists():
-                    # Validate it's a standalone Python (not just a symlink to system)
+                    # Reject system/framework Python - they don't package correctly
+                    python_str = str(python_path.resolve())
+                    if any(blocked in python_str for blocked in PYTHON_BLOCKED_PATHS):
+                        logger.debug(
+                            "🔍🐍 Skipping system/framework Python",
+                            path=python_str,
+                        )
+                        return None
                     return self._validate_python_installation(python_path)
         except ProcessError as e:
-            logger.debug("🔍🐍 No existing Python found", error=str(e))
+            logger.debug("🔍🐍 No UV-managed Python found", error=str(e))
         except Exception as e:
             logger.debug("🔍🐍 Error searching for Python", error=str(e))
 
