@@ -47,7 +47,7 @@ jobs:
             runner: windows-2025
           - platform: windows_arm64
             platform_name: Windows ARM64
-            runner: windows-2025-arm
+            runner: windows-11-arm
 
     steps:
       - name: 📥 Checkout
@@ -245,7 +245,7 @@ jobs:
           - build_platform: linux_amd64
             test_platform: windows_arm64
             test_platform_name: Windows ARM64
-            test_runner: windows-2025-arm
+            test_runner: windows-11-arm
 
     steps:
       - name: 📥 Checkout
