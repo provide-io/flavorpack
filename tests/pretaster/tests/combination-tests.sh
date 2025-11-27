@@ -235,7 +235,25 @@ test_combination() {
     else
         echo "$emoji   ❌ exit 42 test failed" | tee -a "$log_file"
     fi
-    
+
+    # Test stdin piping
+    echo "$emoji" | tee -a "$log_file"
+    echo "$emoji   8️⃣ Testing stdin piping:" | tee -a "$log_file"
+    echo "$emoji   ─────────────────────────────────────" | tee -a "$log_file"
+
+    # Test with piped input
+    local stdin_output
+    stdin_output=$(echo "Hello from pipe!" | "$output" stdin 2>&1)
+    local stdin_exit=$?
+
+    echo "$stdin_output" | sed "s/^/$emoji     /" | tee -a "$log_file"
+
+    if [ $stdin_exit -eq 0 ] && echo "$stdin_output" | grep -q "stdin_received:17"; then
+        echo "$emoji   ✅ stdin piping test passed" | tee -a "$log_file"
+    else
+        echo "$emoji   ❌ stdin piping test failed (exit: $stdin_exit)" | tee -a "$log_file"
+    fi
+
     # Clean up
     rm -f "$output"
     
@@ -292,12 +310,6 @@ for combo in "${combinations[@]}"; do
         go-go) echo "4️⃣ 🐹🐹 Go Builder + Go Launcher" ;;
     esac
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-
-    # Skip go+go on Windows until helpers are rebuilt with PE resource fix
-    if [[ "$builder-$launcher" == "go-go" ]] && [[ "$OS" == "windows" ]]; then
-        echo "$emoji ⏭️  Skipping go+go on Windows (pending helper rebuild)"
-        continue
-    fi
 
     # Run test and track result (don't exit on failure)
     if test_combination "$builder" "$launcher" "$builder_bin" "$launcher_bin" "$emoji"; then
