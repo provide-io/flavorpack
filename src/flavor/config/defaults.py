@@ -146,11 +146,12 @@ DEFAULT_LAUNCHER_TIMEOUT = 30.0
 # =================================
 # Paths that indicate system/framework Python installations
 # These don't package correctly as standalone distributions
+# Note: Windows hostedtoolcache Python IS usable (clean standalone install)
+# Only macOS/Linux system Pythons have issues (symlinks, bloated site-packages)
 PYTHON_BLOCKED_PATHS = (
     "/Library/Frameworks/",  # macOS Framework Python
     "/System/",  # macOS system Python
     "/usr/",  # Unix system Python
-    "hostedtoolcache",  # GitHub Actions pre-installed Python
 )
 
 # =================================
