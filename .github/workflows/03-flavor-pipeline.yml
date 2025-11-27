@@ -11,11 +11,6 @@ on:
         description: 'Test filter (e.g., -k test_name or -m marker)'
         type: string
         required: false
-  
-  workflow_run:
-    workflows: ["01 🥘 Helper Prep"]
-    types: [completed]
-    branches: [main, develop]
 
 jobs:
   setup:
@@ -56,28 +51,6 @@ jobs:
           MATRIX=$(bash .github/scripts/create-test-matrix.sh)
           echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
           echo "Test matrix: $MATRIX"
-
-  cache-deps:
-    name: 📦 Cache Build Dependencies
-    runs-on: ubuntu-24.04
-    steps:
-      - name: 📥 Checkout
-        uses: actions/checkout@v4
-
-      - name: 🐍 Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: 📥 Cache build dependencies
-        run: .github/scripts/cache-build-deps.sh wheelhouse
-
-      - name: 📤 Upload cached dependencies
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-deps-wheelhouse
-          path: ./wheelhouse/
-          retention-days: 7
 
   test:
     name: 🧪 Test ${{ matrix.name }}
@@ -160,7 +133,7 @@ jobs:
 
   build-wheels:
     name: 🎡 Build Wheel ${{ matrix.platform }}
-    needs: [setup, cache-deps]
+    needs: [setup]
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 15
     strategy:
@@ -194,17 +167,6 @@ jobs:
         shell: bash
         run: .github/scripts/organize-platform-helpers.sh "${{ matrix.platform }}" "helpers-dist/flavor-helpers-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}.zip" "src/flavor/helpers/bin" "${{ needs.setup.outputs.helper_version }}"
 
-      - name: 📥 Download cached dependencies (Windows)
-        if: startsWith(matrix.platform, 'windows')
-        uses: actions/download-artifact@v4
-        with:
-          name: build-deps-wheelhouse
-          path: ./wheelhouse
-
-      - name: 📦 Install build tools
-        shell: bash
-        run: .github/scripts/install-build-tools.sh "${{ matrix.platform }}" "./wheelhouse"
-
       - name: 🎡 Build platform wheel
         shell: bash
         run: .github/scripts/build-platform-wheel.sh "${{ matrix.python_platform }}"
@@ -228,7 +190,7 @@ jobs:
 
   build-flavor:
     name: 📦 Build Flavor ${{ matrix.platform }}
-    needs: [setup, test, build-wheels, cache-deps]
+    needs: [setup, test, build-wheels]
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 30
     strategy:
@@ -239,30 +201,14 @@ jobs:
           - { platform: linux_arm64, runner: ubuntu-24.04-arm }
           - { platform: darwin_amd64, runner: macos-15-intel }
           - { platform: darwin_arm64, runner: macos-15 }
-          - { platform: windows_amd64, runner: windows-2025 }
-          - { platform: windows_arm64, runner: windows-11-arm }
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
 
-      - name: 🐍 Setup Python (Windows)
-        if: startsWith(matrix.platform, 'windows')
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
       - name: 🐍 Setup uv
-        if: ${{ !startsWith(matrix.platform, 'windows') }}
         uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
-
-      - name: 📥 Download cached dependencies (Windows)
-        if: startsWith(matrix.platform, 'windows')
-        uses: actions/download-artifact@v4
-        with:
-          name: build-deps-wheelhouse
-          path: ./wheelhouse
 
       - name: 📥 Download platform wheel
         uses: actions/download-artifact@v4
@@ -283,7 +229,16 @@ jobs:
 
       - name: 📦 Install Flavor from wheel
         shell: bash
-        run: .github/scripts/install-flavor-from-wheel.sh "${{ matrix.platform }}" "./wheel-dist" "./wheelhouse"
+        run: |
+          WHEEL=$(find wheel-dist -name "flavorpack-*.whl" | head -1)
+          if [ -z "$WHEEL" ]; then
+            echo "❌ Flavor wheel not found for ${{ matrix.platform }}"
+            exit 1
+          fi
+          uv tool install "$WHEEL"
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          which flavor
+          flavor --version
       
       - name: 🔧 Prepare Flavor build
         id: prepare
@@ -318,7 +273,7 @@ jobs:
           - { platform: linux_arm64, runner: ubuntu-24.04-arm }
           - { platform: darwin_amd64, runner: macos-15-intel }
           - { platform: darwin_arm64, runner: macos-15 }
-          # Windows: builds wheels and PSP packages but PSP testing is skipped
+          # Windows: wheels built only, no PSP packages
     steps:
       - name: 📥 Checkout scripts
         uses: actions/checkout@v4

@@ -12,7 +12,7 @@ on:
         type: string
         required: false
         default: '--help'
-  
+
   workflow_run:
     workflows: ["03 🌶️ Flavor Pipeline"]
     types: [completed]
