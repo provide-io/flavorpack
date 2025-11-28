@@ -21,25 +21,6 @@ test-cov: ## Run Python tests with coverage
 test-cov-xml: ## Run Python tests with XML coverage for CI
 	uv run pytest --cov=flavor --cov-report=xml --cov-report=term tests/
 
-# Mutation Testing (using mutmut directly)
-.PHONY: mutation-run
-mutation-run: ## Run mutation testing with mutmut
-	@echo "🧬 Running mutation testing..."
-	@mutmut run
-
-.PHONY: mutation-results
-mutation-results: ## Show mutation testing results
-	@mutmut results
-
-.PHONY: mutation-browse
-mutation-browse: ## Open interactive mutation browser
-	@mutmut browse
-
-.PHONY: mutation-clean
-mutation-clean: ## Clean mutation testing artifacts
-	@rm -rf .mutmut-cache html/
-	@echo "🧹 Mutation testing artifacts cleaned"
-
 .PHONY: build-helpers
 build-helpers: ## Build all helpers (Go and Rust)
 	./build.sh
@@ -119,6 +100,20 @@ release-clean: ## Clean release artifacts
 	@rm -rf dist/bin
 	@find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
 	@echo "✨ Release artifacts cleaned"
+
+.PHONY: release-prep
+release-prep: release-clean clean-cache ## Full release preparation cleanup
+	@echo "🧹 Cleaning test artifacts from source tree..."
+	@find src/flavor-go -type d -name "pretaster-*" -exec rm -rf {} + 2>/dev/null || true
+	@find src/flavor-go -type d -name "crosslang-psp-*" -exec rm -rf {} + 2>/dev/null || true
+	@rm -rf tests/pretaster/dist/ tests/taster/dist/ tests/taster/build/ 2>/dev/null || true
+	@rm -f tests/pretaster/pretaster-build-manifest.json tests/pretaster/test-runner.sh 2>/dev/null || true
+	@echo "🧹 Cleaning Python cache directories..."
+	@find . -type d -name .pytest_cache -exec rm -rf {} + 2>/dev/null || true
+	@find . -type d -name .mypy_cache -exec rm -rf {} + 2>/dev/null || true
+	@find . -type d -name .ruff_cache -exec rm -rf {} + 2>/dev/null || true
+	@find . -type d -name .hypothesis -exec rm -rf {} + 2>/dev/null || true
+	@echo "✨ Release preparation complete!"
 
 .PHONY: release-upload
 release-upload: ## Upload wheels to PyPI (requires authentication)

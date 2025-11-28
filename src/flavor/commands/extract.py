@@ -161,20 +161,18 @@ def extract_all_command(package_file: str, output_dir: str, force: bool) -> None
 
             pout(f"Extracting {len(slot_descriptors)} slots from {package_path.name}")
 
+            from flavor.psp.format_2025.operations import operations_to_string
+
             for i, slot in enumerate(slot_descriptors):
                 # Get slot metadata
                 if i < len(slots_metadata):
                     slot_meta = slots_metadata[i]
                     slot_name = slot_meta.get("id", f"slot_{i}")
-                    # Get operations from slot descriptor
-                    from flavor.psp.format_2025.operations import operations_to_string
-
-                    slot_operations = operations_to_string(slot.operations)
                 else:
                     slot_name = f"slot_{i}"
-                    from flavor.psp.format_2025.operations import operations_to_string
 
-                    slot_operations = operations_to_string(slot.operations)
+                # Get operations from slot descriptor
+                slot_operations = operations_to_string(slot.operations)
 
                 # Determine output filename
                 filename = f"{i:02d}_{slot_name}"

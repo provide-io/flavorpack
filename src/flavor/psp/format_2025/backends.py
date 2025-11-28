@@ -3,7 +3,14 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""TODO: Add module docstring."""
+"""File access backends for PSPF package reading.
+
+Provides multiple backend implementations for efficient package access:
+- MMapBackend: Memory-mapped files for zero-copy reads
+- FileBackend: Traditional buffered I/O with caching
+- StreamBackend: Memory-efficient streaming for large packages
+- HybridBackend: Combines mmap for headers with file I/O for slots
+"""
 
 from __future__ import annotations
 
