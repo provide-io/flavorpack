@@ -63,7 +63,7 @@ func (o *TarOperation) Apply(input []byte) ([]byte, error) {
 // ApplyStream creates a TAR archive from stream
 func (o *TarOperation) ApplyStream(input io.Reader, output io.Writer) error {
 	tw := tar.NewWriter(output)
-	defer tw.Close()
+	defer func() { _ = tw.Close() }()
 
 	// Read all input for single file (simplified)
 	data, err := io.ReadAll(input)

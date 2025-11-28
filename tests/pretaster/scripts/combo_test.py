@@ -54,6 +54,15 @@ def handle_command(cmd: str, *args: str) -> int:  # noqa: C901 - command dispatc
         exit_code = int(args[0]) if args else 0
         print(f"🚪 Exiting with code {exit_code}")
         return exit_code
+    elif cmd == "stdin":
+        # Read from stdin and echo back with length
+        data = sys.stdin.read()
+        print(f"stdin_received:{len(data)}")
+        if data:
+            # Print first 100 chars to show content
+            preview = data[:100].replace("\n", "\\n")
+            print(f"preview:{preview}")
+        return 0
     elif cmd == "volatile-test":
         # Test volatile and init lifecycle slots
         workenv = Path(os.getenv("FLAVOR_WORKENV", "/tmp"))

@@ -108,7 +108,7 @@ func savePackageChecksum(paths *WorkenvPaths, checksum uint32, logger hclog.Logg
 		logger.Debug("⚠️ Failed to open checksum file", "error", err)
 		return err
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	if _, err := file.WriteString(checksumStr); err != nil {
 		logger.Debug("⚠️ Failed to write package checksum", "error", err)

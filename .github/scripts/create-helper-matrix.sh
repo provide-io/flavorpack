@@ -34,7 +34,7 @@ ALL_PLATFORMS=$(cat << EOF | tr -d '\r\n'
 [
   {
     "platform": "linux_amd64",
-    "os": "ubuntu-latest",
+    "os": "ubuntu-24.04",
     "rust_target": "x86_64-unknown-linux-musl",
     "use_musl": true
   },
@@ -62,18 +62,15 @@ ALL_PLATFORMS=$(cat << EOF | tr -d '\r\n'
     "rust_target": "x86_64-pc-windows-msvc",
     "use_musl": false
   },
-
+  {
+    "platform": "windows_arm64",
+    "os": "windows-11-arm",
+    "rust_target": "aarch64-pc-windows-msvc",
+    "use_musl": false
+  }
 ]
 EOF
 )
-#  {
-#    "platform": "windows_arm64",
-#    "os": "windows-2025-arm",
-#    "rust_target": "aarch64-pc-windows-msvc",
-#    "use_musl": false
-#  }
-
-#ALL_PLATFORMS='[{"platform":"linux_amd64","os":"ubuntu-latest","rust_target":"x86_64-unknown-linux-musl","use_musl":true},{"platform":"linux_arm64","os":"ubuntu-24.04-arm","rust_target":"aarch64-unknown-linux-musl","use_musl":true},{"platform":"darwin_amd64","os":"macos-15-intel","rust_target":"x86_64-apple-darwin","use_musl":false},{"platform":"darwin_arm64","os":"macos-15","rust_target":"aarch64-apple-darwin","use_musl":false},{"platform":"windows_amd64","os":"windows-2025","rust_target":"x86_64-pc-windows-msvc","use_musl":false},{"platform":"windows_arm64","os":"windows-2025-arm","rust_target":"aarch64-pc-windows-msvc","use_musl":false}]'
 
 # Check if specific platforms requested
 if [ "$PLATFORMS" = "all" ] || [ -z "$PLATFORMS" ]; then
