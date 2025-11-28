@@ -1,3 +1,8 @@
+//
+// SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
+//
+
 //! Path management for PSPF/2025 workenv structure
 
 use super::defaults::{
