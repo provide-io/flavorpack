@@ -3,7 +3,11 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""TODO: Add module docstring."""
+"""PSP metadata handling modules.
+
+Contains converters, formats, models, validators and other utilities
+for working with PSPF package metadata.
+"""
 
 __all__ = [
     "converters",

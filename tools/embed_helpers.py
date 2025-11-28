@@ -104,7 +104,7 @@ def get_helper_path(helper_name: str) -> Path:
     if helper_path.exists() and not os.access(helper_path, os.X_OK):
         try:
             helper_path.chmod(0o755)
-        except:
+        except (OSError, PermissionError):
             pass
 
     return helper_path

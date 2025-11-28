@@ -139,7 +139,6 @@ Additional tools for development (installed with `uv sync`):
 [dependency-groups]
 dev = [
     "provide-testkit[all]",  # Testing utilities
-    "mutmut>=3.0.0",        # Mutation testing
 ]
 
 docs = [

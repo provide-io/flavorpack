@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""TODO: Add module docstring."""
+"""Environment variable test script for pretaster env isolation tests."""
 
 
 # 🌶️📦🔚

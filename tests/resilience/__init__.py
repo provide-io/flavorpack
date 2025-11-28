@@ -3,6 +3,6 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""TODO: Add module docstring."""
+"""Resilience and edge-case tests for error handling."""
 
 # 🌶️📦🔚

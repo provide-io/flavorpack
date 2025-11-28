@@ -55,11 +55,6 @@ core
 *.local.json
 archive_*
 
-# Mutation testing artifacts
-mutants/
-.mutmut-cache
-html/
-
 # Synced theme files (source: provide-foundry/shared-theme/)
 docs/.shared-theme/
 
