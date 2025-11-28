@@ -1,3 +1,8 @@
+//
+// SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
+//
+
 //! XOR encoding utilities for PSPF magic bytes obfuscation.
 
 /// XOR key - digits of π (memorable, non-obvious)

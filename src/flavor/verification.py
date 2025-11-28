@@ -7,6 +7,8 @@
 
 from __future__ import annotations
 
+__all__ = ["FlavorVerifier"]
+
 from pathlib import Path
 from typing import Any
 

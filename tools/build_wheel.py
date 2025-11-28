@@ -58,7 +58,7 @@ def get_version() -> str:
         for line in f:
             if line.startswith("version = "):
                 return line.split('"')[1]
-    return "0.3.0"  # Default fallback
+    return "0.0.1111"  # Default fallback
 
 
 def clean_build_artifacts() -> None:

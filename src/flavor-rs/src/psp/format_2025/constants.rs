@@ -1,3 +1,8 @@
+//
+// SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
+//
+
 // helpers/flavor-rs/src/psp/format_2025/constants.rs
 // Core format constants that never change
 // For defaults and configuration, see defaults.rs

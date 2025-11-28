@@ -15,6 +15,8 @@ from typing import Any
 from provide.foundation.file.directory import ensure_dir
 from provide.foundation.platform import get_arch_name, get_os_name
 
+from flavor.config.defaults import DEFAULT_MODE_FALLBACK
+
 
 def validate_metadata_path(path: str) -> str:
     """
@@ -296,7 +298,7 @@ def parse_mode(mode_str: str) -> int:
         ValueError: If mode is invalid
     """
     if not mode_str:
-        return 0o755  # Default
+        return DEFAULT_MODE_FALLBACK
 
     # Remove any "0o" prefix
     if mode_str.startswith("0o"):

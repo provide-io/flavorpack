@@ -10,6 +10,12 @@ such as cache directories during package extraction.
 """
 
 from collections.abc import Generator
+
+__all__ = [
+    "LockError",
+    "LockManager",
+    "default_lock_manager",
+]
 from contextlib import contextmanager
 from pathlib import Path
 
