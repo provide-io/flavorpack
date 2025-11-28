@@ -142,6 +142,19 @@ DEFAULT_LAUNCHER_LOG_LEVEL = "INFO"
 DEFAULT_LAUNCHER_TIMEOUT = 30.0
 
 # =================================
+# Python packaging defaults
+# =================================
+# Paths that indicate system/framework Python installations
+# These don't package correctly as standalone distributions
+# Note: Windows hostedtoolcache Python IS usable (clean standalone install)
+# Only macOS/Linux system Pythons have issues (symlinks, bloated site-packages)
+PYTHON_BLOCKED_PATHS = (
+    "/Library/Frameworks/",  # macOS Framework Python
+    "/System/",  # macOS system Python
+    "/usr/",  # Unix system Python
+)
+
+# =================================
 # Validation defaults
 # =================================
 DEFAULT_VALIDATION_LEVEL = "standard"  # Default validation level

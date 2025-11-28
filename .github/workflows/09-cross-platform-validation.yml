@@ -25,6 +25,10 @@ jobs:
   # Build PSP packages on each platform
   build-packages:
     name: 📦 Build PSP on ${{ matrix.platform_name }}
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'schedule' ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
     runs-on: ${{ matrix.runner }}
     strategy:
       fail-fast: false
@@ -32,7 +36,7 @@ jobs:
         include:
           - platform: linux_amd64
             platform_name: Linux AMD64
-            runner: ubuntu-latest
+            runner: ubuntu-24.04
           - platform: linux_arm64
             platform_name: Linux ARM64
             runner: ubuntu-24.04-arm
@@ -42,12 +46,7 @@ jobs:
           - platform: darwin_arm64
             platform_name: macOS ARM64
             runner: macos-15
-          - platform: windows_amd64
-            platform_name: Windows AMD64
-            runner: windows-2025
-          - platform: windows_arm64
-            platform_name: Windows ARM64
-            runner: windows-2025-arm
+          # Windows: wheels built only in flavor pipeline, no PSP packages
 
     steps:
       - name: 📥 Checkout
@@ -207,7 +206,7 @@ jobs:
           - build_platform: linux_arm64
             test_platform: linux_amd64
             test_platform_name: Linux AMD64
-            test_runner: ubuntu-latest
+            test_runner: ubuntu-24.04
           - build_platform: linux_arm64
             test_platform: darwin_arm64
             test_platform_name: macOS ARM64
@@ -217,11 +216,11 @@ jobs:
           - build_platform: darwin_amd64
             test_platform: linux_amd64
             test_platform_name: Linux AMD64
-            test_runner: ubuntu-latest
+            test_runner: ubuntu-24.04
           - build_platform: darwin_arm64
             test_platform: linux_amd64
             test_platform_name: Linux AMD64
-            test_runner: ubuntu-latest
+            test_runner: ubuntu-24.04
           - build_platform: darwin_arm64
             test_platform: linux_arm64
             test_platform_name: Linux ARM64
@@ -231,11 +230,11 @@ jobs:
           - build_platform: windows_amd64
             test_platform: linux_amd64
             test_platform_name: Linux AMD64
-            test_runner: ubuntu-latest
+            test_runner: ubuntu-24.04
           - build_platform: windows_arm64
             test_platform: linux_amd64
             test_platform_name: Linux AMD64
-            test_runner: ubuntu-latest
+            test_runner: ubuntu-24.04
 
           # Linux packages tested on Windows
           - build_platform: linux_amd64
@@ -245,7 +244,7 @@ jobs:
           - build_platform: linux_amd64
             test_platform: windows_arm64
             test_platform_name: Windows ARM64
-            test_runner: windows-2025-arm
+            test_runner: windows-11-arm
 
     steps:
       - name: 📥 Checkout
@@ -390,7 +389,7 @@ jobs:
     name: 📊 Validation Report
     needs: [build-packages, test-cross-platform]
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: 📊 Generate summary

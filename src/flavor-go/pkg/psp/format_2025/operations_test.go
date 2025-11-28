@@ -5,7 +5,7 @@ package format_2025
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/hashicorp/go-hclog"
@@ -218,7 +218,7 @@ func TestPythonTestVectors(t *testing.T) {
 	logger.Info("🐍 Loading Python test vectors")
 
 	// Load test vectors from JSON
-	data, err := ioutil.ReadFile("testdata/operations.json")
+	data, err := os.ReadFile("testdata/operations.json")
 	if err != nil {
 		t.Fatalf("Failed to load test vectors: %v", err)
 	}

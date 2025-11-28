@@ -36,7 +36,7 @@ concurrency:
 jobs:
   python-quality:
     name: 🐍 Python Quality
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
       issues: write
@@ -104,7 +104,7 @@ jobs:
 
   go-quality:
     name: 🐹 Go Quality
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
@@ -135,7 +135,7 @@ jobs:
 
   rust-quality:
     name: 🦀 Rust Quality
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
@@ -181,7 +181,7 @@ jobs:
     name: 📊 Quality Report
     needs: [python-quality, go-quality, rust-quality]
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: 📥 Download all reports
         uses: actions/download-artifact@v4

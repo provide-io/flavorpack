@@ -54,7 +54,7 @@ func TryAcquireLock(paths *WorkenvPaths, logger hclog.Logger) (bool, error) {
 			if oldPid, err := strconv.Atoi(contents); err == nil {
 				if !IsProcessRunning(oldPid) {
 					logger.Info("🧹 Removing stale lock from dead process", "pid", oldPid)
-					os.Remove(lockPath)
+					_ = os.Remove(lockPath)
 				} else {
 					logger.Debug("🔒 Lock held by active process", "pid", oldPid)
 					return false, nil
@@ -62,12 +62,12 @@ func TryAcquireLock(paths *WorkenvPaths, logger hclog.Logger) (bool, error) {
 			} else {
 				// Invalid PID in lock file, remove it
 				logger.Info("🧹 Removing invalid lock file (couldn't parse PID)")
-				os.Remove(lockPath)
+				_ = os.Remove(lockPath)
 			}
 		} else {
 			// Can't read lock file, try to remove it
 			logger.Info("🧹 Removing unreadable lock file")
-			os.Remove(lockPath)
+			_ = os.Remove(lockPath)
 		}
 	}
 
@@ -80,11 +80,11 @@ func TryAcquireLock(paths *WorkenvPaths, logger hclog.Logger) (bool, error) {
 		}
 		return false, err
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	// Write our PID to the lock file
 	if _, err := fmt.Fprintf(file, "%d\n", pid); err != nil {
-		os.Remove(lockPath)
+		_ = os.Remove(lockPath)
 		return false, err
 	}
 
@@ -139,7 +139,7 @@ func MarkExtractionComplete(paths *WorkenvPaths, logger hclog.Logger) error {
 	if err != nil {
 		return err
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	if _, err := fmt.Fprintf(file, "%d\n", os.Getpid()); err != nil {
 		return err
@@ -157,9 +157,9 @@ func IsExtractionComplete(paths *WorkenvPaths) bool {
 // MarkExtractionIncomplete marks cache as incomplete (used during signal handling)
 func MarkExtractionIncomplete(paths *WorkenvPaths, logger hclog.Logger) {
 	extractDir := paths.Extract()
-	os.MkdirAll(extractDir, os.FileMode(DirPerms))
+	_ = os.MkdirAll(extractDir, os.FileMode(DirPerms))
 	// Remove the complete marker if it exists
-	os.Remove(paths.CompleteFile())
+	_ = os.Remove(paths.CompleteFile())
 	logger.Debug("⚠️ Marked extraction as incomplete")
 }
 

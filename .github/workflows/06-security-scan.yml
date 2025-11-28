@@ -15,25 +15,12 @@ on:
         description: 'Enable SARIF reporting for GitHub Security tab'
         type: boolean
         default: true
-  
-  push:
+
+  workflow_run:
+    workflows: ["03 🌶️ Flavor Pipeline"]
+    types: [completed]
     branches: [main, develop]
-    paths:
-      - '**.py'
-      - '**.go'
-      - '**.rs'
-      - '**.yml'
-      - '**.yaml'
-      - '**.toml'
-      - '**.json'
-      - 'requirements*.txt'
-      - 'Pipfile*'
-      - 'poetry.lock'
-      - 'go.mod'
-      - 'go.sum'
-      - 'Cargo.toml'
-      - 'Cargo.lock'
-  
+
   schedule:
     # Run security scan daily at 3 AM UTC
     - cron: '0 3 * * *'
@@ -46,7 +33,11 @@ permissions:
 jobs:
   scan:
     name: ${{ matrix.scanner.name }}
-    runs-on: ubuntu-latest
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'schedule' ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -150,7 +141,7 @@ jobs:
     name: 📊 Security Report
     needs: [scan]
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: 📥 Download all security reports
         uses: actions/download-artifact@v4
