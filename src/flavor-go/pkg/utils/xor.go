@@ -1,8 +1,3 @@
-//
-// SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-//
-
 package utils
 
 // XORKey - digits of π (memorable, non-obvious)
@@ -10,7 +5,7 @@ var XORKey = []byte{3, 1, 4, 1, 5, 9, 2, 6} // First 8 digits of π
 
 // XOREncode encodes data with repeating XOR key
 func XOREncode(data []byte, key []byte) []byte {
-	if len(key) == 0 {
+	if key == nil || len(key) == 0 {
 		key = XORKey
 	}
 	result := make([]byte, len(data))

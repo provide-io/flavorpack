@@ -204,7 +204,7 @@ def helper_info(name: str) -> None:
     # Check if executable
     if info.path.exists():
         if os.access(info.path, os.X_OK):
-            pout("Status: ✓ Executable")
+            pass
         else:
             pout("Status: ❌ Not executable")
     else:

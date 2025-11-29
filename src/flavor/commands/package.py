@@ -124,6 +124,9 @@ def pack_command(
     _setup_workenv_base(workenv_base)
 
     try:
+        if not quiet:
+            pass
+
         built_artifacts = _build_package_artifacts(
             pyproject_toml_path,
             output_path,
@@ -190,7 +193,7 @@ def _process_built_artifacts(built_artifacts: list[Path], verify: bool, strip: b
     for artifact in built_artifacts:
         log.debug("Processing artifact", artifact=str(artifact), verify=verify, strip=strip)
         if not quiet:
-            pout(f"  📦 Processing {artifact.name}...")
+            pass
 
         if strip and not quiet:
             pout("  📉 Binary optimized (debug symbols stripped)")
@@ -210,7 +213,7 @@ def _verify_artifact(artifact: Path, quiet: bool) -> None:
         if result["signature_valid"]:
             log.info("Package verified successfully", artifact=str(artifact))
             if not quiet:
-                pout("  ✓ Package verified successfully")
+                pass
         else:
             log.error("Package verification failed", artifact=str(artifact))
             perr("  ❌ Package verification failed")
@@ -226,9 +229,7 @@ def _show_final_results(built_artifacts: list[Path], quiet: bool) -> None:
     if built_artifacts:
         log.info("All targets built successfully", artifact_count=len(built_artifacts))
         if not quiet:
-            pout(f"✅ Successfully built {len(built_artifacts)} package(s)")
-            for artifact in built_artifacts:
-                pout(f"   → {artifact}")
+            pass
     else:
         log.warning("No targets were specified or built")
         pout("⚠️ No targets were specified or built.")

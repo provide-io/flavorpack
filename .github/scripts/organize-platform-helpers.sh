@@ -66,20 +66,36 @@ for file in "$OUTPUT_DIR"/*; do
         if [[ "$PLATFORM" == "windows_"* ]]; then
             if [[ "$base" == *"-${PLATFORM}.exe" ]]; then
                 echo "   ✅ $base (correct platform)"
+<<<<<<< HEAD
                 CORRECT_COUNT=$((CORRECT_COUNT + 1))
             else
                 echo "   ❌ $base (WRONG platform - removing)"
                 rm "$file"
                 WRONG_COUNT=$((WRONG_COUNT + 1))
+=======
+                ((CORRECT_COUNT++))
+            else
+                echo "   ❌ $base (WRONG platform - removing)"
+                rm "$file"
+                ((WRONG_COUNT++))
+>>>>>>> fixing up building stuff
             fi
         else
             if [[ "$base" == *"-${PLATFORM}" ]]; then
                 echo "   ✅ $base (correct platform)"
+<<<<<<< HEAD
                 CORRECT_COUNT=$((CORRECT_COUNT + 1))
             else
                 echo "   ❌ $base (WRONG platform - removing)"
                 rm "$file"
                 WRONG_COUNT=$((WRONG_COUNT + 1))
+=======
+                ((CORRECT_COUNT++))
+            else
+                echo "   ❌ $base (WRONG platform - removing)"
+                rm "$file"
+                ((WRONG_COUNT++))
+>>>>>>> fixing up building stuff
             fi
         fi
     fi

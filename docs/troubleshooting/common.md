@@ -238,7 +238,7 @@ rustc --version  # Should be 1.85+ (edition 2024 support)
 
 # Clean and rebuild
 cd src/flavor-go && go clean && cd ../..
-cd src/flavor-rs && cargo clean && cd ../..
+cd src/flavor-rust && cargo clean && cd ../..
 make build-helpers
 ```
 

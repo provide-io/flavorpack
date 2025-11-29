@@ -1,8 +1,3 @@
-//
-// SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-//
-
 package compress
 
 import (
@@ -40,7 +35,7 @@ func (o *GzipOperation) Apply(input []byte) ([]byte, error) {
 
 	gw := gzip.NewWriter(&buf)
 	if _, err := gw.Write(input); err != nil {
-		_ = gw.Close()
+		gw.Close()
 		return nil, fmt.Errorf("writing gzip data: %w", err)
 	}
 
@@ -54,9 +49,9 @@ func (o *GzipOperation) Apply(input []byte) ([]byte, error) {
 // ApplyStream compresses a stream using GZIP
 func (o *GzipOperation) ApplyStream(input io.Reader, output io.Writer) error {
 	gw := gzip.NewWriter(output)
+	defer gw.Close()
 
 	if _, err := io.Copy(gw, input); err != nil {
-		_ = gw.Close()
 		return fmt.Errorf("compressing stream: %w", err)
 	}
 
@@ -71,7 +66,7 @@ func (o *GzipOperation) Reverse(input []byte) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("creating gzip reader: %w", err)
 	}
-	defer func() { _ = gr.Close() }()
+	defer gr.Close()
 
 	data, err := io.ReadAll(gr)
 	if err != nil {
@@ -87,7 +82,7 @@ func (o *GzipOperation) ReverseStream(input io.Reader, output io.Writer) error {
 	if err != nil {
 		return fmt.Errorf("creating gzip reader: %w", err)
 	}
-	defer func() { _ = gr.Close() }()
+	defer gr.Close()
 
 	if _, err := io.Copy(output, gr); err != nil {
 		return fmt.Errorf("decompressing stream: %w", err)

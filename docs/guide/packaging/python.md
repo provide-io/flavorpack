@@ -11,10 +11,10 @@ Complete guide to packaging Python applications with FlavorPack, including depen
 
     See [System Requirements](../../reference/requirements/) for detailed version information.
 
-!!! info "Pre-Release - Some Features Not Yet Implemented"
+!!! warning "Alpha Release - Many Features Not Yet Implemented"
     **This guide shows both working features and planned future features.**
 
-    FlavorPack's Python packaging is in pre-release. Basic packaging works today, but some advanced features documented here are **planned for future releases**.
+    FlavorPack's Python packaging is in alpha. Basic packaging works today, but many advanced features documented here are **planned for future releases**.
 
     **✅ What Works Today**:
 

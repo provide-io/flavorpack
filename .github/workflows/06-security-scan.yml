@@ -15,12 +15,25 @@ on:
         description: 'Enable SARIF reporting for GitHub Security tab'
         type: boolean
         default: true
-
-  workflow_run:
-    workflows: ["03 🌶️ Flavor Pipeline"]
-    types: [completed]
+  
+  push:
     branches: [main, develop]
-
+    paths:
+      - '**.py'
+      - '**.go'
+      - '**.rs'
+      - '**.yml'
+      - '**.yaml'
+      - '**.toml'
+      - '**.json'
+      - 'requirements*.txt'
+      - 'Pipfile*'
+      - 'poetry.lock'
+      - 'go.mod'
+      - 'go.sum'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+  
   schedule:
     # Run security scan daily at 3 AM UTC
     - cron: '0 3 * * *'
@@ -31,117 +44,388 @@ permissions:
   actions: read
 
 jobs:
-  scan:
-    name: ${{ matrix.scanner.name }}
-    if: >-
-      github.event_name == 'workflow_dispatch' ||
-      github.event_name == 'schedule' ||
-      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
-    runs-on: ubuntu-24.04
-    strategy:
-      fail-fast: false
-      matrix:
-        scanner:
-          - name: 🔑 Secret Scanning
-            run-command: |
-              .github/scripts/run-trufflehog-scan.sh
-              .github/scripts/run-detect-secrets-scan.sh
-            upload-name: secret-scan-results
-            upload-path: |
-              trufflehog.json
-              trufflehog.log
-              .secrets.baseline
-              detect-secrets.log
-          - name: 🐍 Python Security
-            run-command: |
-              .github/scripts/install-security-tools.sh
-              source security-env/bin/activate
-              .github/scripts/run-bandit-scan.sh
-              .github/scripts/run-safety-scan.sh
-              .github/scripts/run-pip-audit-scan.sh
-              .github/scripts/run-semgrep-scan.sh
-              .github/scripts/run-dodgy-scan.sh
-            upload-name: python-security-results
-            upload-path: |
-              *.json
-              *.log
-              *.sarif
-          - name: 🐹 Go Security
-            run-command: |
-              .github/scripts/install-security-tools.sh
-              .github/scripts/run-gosec-scan.sh
-              .github/scripts/run-govulncheck-scan.sh
-              cd src/flavor-go
-              go list -json -deps ./... | nancy sleuth 2>&1 | tee nancy.log || true
-            upload-name: go-security-results
-            upload-path: |
-              src/flavor-go/*.json
-              src/flavor-go/*.log
-          - name: 🦀 Rust Security
-            run-command: |
-              .github/scripts/install-security-tools.sh
-              .github/scripts/run-cargo-audit-scan.sh
-              cd src/flavor-rs
-              cargo deny check 2>&1 | tee cargo-deny.log || true
-              cargo geiger --output-format Json > cargo-geiger.json 2>&1 || true
-            upload-name: rust-security-results
-            upload-path: |
-              src/flavor-rs/*.json
-              src/flavor-rs/*.log
-              src/flavor-rs/deny.toml
-          - name: 🐳 Container Security
-            run-command: |
-              .github/scripts/install-security-tools.sh
-              .github/scripts/run-trivy-scan.sh
-            upload-name: container-security-results
-            upload-path: |
-              hadolint*.json
-              hadolint*.log
-              trivy-results.sarif
-          - name: 🏗️ IaC Security
-            run-command: |
-              .github/scripts/install-security-tools.sh
-              .github/scripts/run-checkov-scan.sh
-              yamllint -f parsable . > yamllint.log 2>&1 || true
-            upload-name: iac-security-results
-            upload-path: |
-              checkov-report.json
-              yamllint.log
+  # Secret Scanning
+  secret-scan:
+    name: 🔑 Secret Scanning
+    runs-on: ubuntu-latest
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 0  # Full history for better secret detection
+      
+      - name: 🔍 TruffleHog Secret Scan
+        id: trufflehog
+        continue-on-error: true
+        run: |
+          .github/scripts/run-trufflehog-scan.sh
+      
+      - name: 🔐 Gitleaks Secret Detection
+        uses: gitleaks/gitleaks-action@v2
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: 🗝️ detect-secrets Scan
+        continue-on-error: true
+        run: |
+          .github/scripts/run-detect-secrets-scan.sh
+      
+      - name: 📤 Upload Secret Scan Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: secret-scan-results
+          path: |
+            trufflehog.json
+            trufflehog.log
+            .secrets.baseline
+            detect-secrets.log
 
+  # Python Security
+  python-security:
+    name: 🐍 Python Security
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
       - name: 🐍 Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+      
+      - name: 📦 Install Security Tools
+        run: |
+          python -m venv security-env
+          source security-env/bin/activate
+          pip install --upgrade pip
+          pip install \
+            bandit[toml] \
+            safety \
+            pip-audit \
+            semgrep \
+            dlint \
+            pyt \
+            dodgy \
+            vulture
+          
+          # Install project for dependency scanning
+          pip install -e ".[dev,test]"
+      
+      - name: 🔒 Bandit Security Scan
+        id: bandit
+        continue-on-error: true
+        run: |
+          source security-env/bin/activate
+          .github/scripts/run-bandit-scan.sh
+      
+      - name: 🛡️ Safety Dependency Check
+        id: safety
+        continue-on-error: true
+        run: |
+          source security-env/bin/activate
+          .github/scripts/run-safety-scan.sh
+      
+      - name: 🔍 pip-audit Vulnerability Scan
+        id: pip-audit
+        continue-on-error: true
+        run: |
+          source security-env/bin/activate
+          .github/scripts/run-pip-audit-scan.sh
+      
+      - name: 🔬 Semgrep SAST Analysis
+        id: semgrep
+        continue-on-error: true
+        run: |
+          source security-env/bin/activate
+          .github/scripts/run-semgrep-scan.sh
+      
+      - name: 🐛 Dodgy Suspicious Code Detection
+        continue-on-error: true
+        run: |
+          source security-env/bin/activate
+          .github/scripts/run-dodgy-scan.sh
+      
+      - name: 📊 Generate SARIF Report
+        if: inputs.enable_sarif == true
+        continue-on-error: true
+        run: |
+          source security-env/bin/activate
+          
+          # Convert Bandit to SARIF
+          bandit -r src/ helpers/ -f sarif -o bandit.sarif || true
+          
+          # Semgrep SARIF output
+          semgrep --config=auto --sarif --output=semgrep.sarif src/ helpers/ || true
+      
+      - name: 📤 Upload SARIF Results
+        if: inputs.enable_sarif == true
+        uses: github/codeql-action/upload-sarif@v3
+        continue-on-error: true
+        with:
+          sarif_file: |
+            bandit.sarif
+            semgrep.sarif
+      
+      - name: 📤 Upload Python Security Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-security-results
+          path: |
+            *.json
+            *.log
+            *.sarif
+
+  # Go Security
+  go-security:
+    name: 🐹 Go Security
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
       
       - name: 🐹 Setup Go
         uses: actions/setup-go@v5
         with:
           go-version: '1.21'
       
-      - name: 🦀 Setup Rust
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: 🛡️ Run ${{ matrix.scanner.name }}
+      - name: 🔒 Gosec Security Scan
         continue-on-error: true
-        run: ${{ matrix.scanner.run-command }}
-
-      - name: 📤 Upload report
+        run: |
+          .github/scripts/run-gosec-scan.sh
+      
+      - name: 🔍 Nancy Dependency Scan
+        continue-on-error: true
+        run: |
+          echo "### Nancy Dependency Scan" >> $GITHUB_STEP_SUMMARY
+          
+          # Install nancy
+          go install github.com/sonatype-nexus-community/nancy@latest
+          
+          cd src/flavor-go
+          
+          # Run nancy
+          go list -json -deps ./... | nancy sleuth 2>&1 | tee nancy.log || true
+          
+          if grep -q "vulnerable" nancy.log; then
+            echo "⚠️ Nancy found vulnerable dependencies:" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            grep -A 5 "vulnerable" nancy.log >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ No vulnerable dependencies found" >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: 🛡️ Govulncheck Vulnerability Detection
+        continue-on-error: true
+        run: |
+          .github/scripts/run-govulncheck-scan.sh
+      
+      - name: 📤 Upload Go Security Reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.scanner.upload-name }}
-          path: ${{ matrix.scanner.upload-path }}
+          name: go-security-results
+          path: |
+            src/flavor-go/*.json
+            src/flavor-go/*.log
 
+  # Rust Security
+  rust-security:
+    name: 🦀 Rust Security
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 🦀 Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+      
+      - name: 🔒 Cargo Audit
+        continue-on-error: true
+        run: |
+          .github/scripts/run-cargo-audit-scan.sh
+      
+      - name: 🛡️ Cargo Deny Check
+        continue-on-error: true
+        run: |
+          echo "### Cargo Deny Security Check" >> $GITHUB_STEP_SUMMARY
+          
+          cargo install cargo-deny
+          
+          cd src/flavor-rs
+          
+          # Create default deny.toml if not exists
+          if [ ! -f deny.toml ]; then
+            cat > deny.toml << 'EOF'
+          [bans]
+          multiple-versions = "warn"
+          wildcards = "allow"
+          
+          [licenses]
+          unlicensed = "deny"
+          copyleft = "warn"
+          
+          [sources]
+          unknown-registry = "warn"
+          unknown-git = "warn"
+          
+          [advisories]
+          vulnerability = "deny"
+          unmaintained = "warn"
+          unsound = "warn"
+          yanked = "warn"
+          EOF
+          fi
+          
+          # Run cargo deny
+          cargo deny check 2>&1 | tee cargo-deny.log || true
+          
+          if grep -q "error\[" cargo-deny.log; then
+            echo "❌ Cargo deny found issues:" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            grep "error\[" cargo-deny.log >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ Cargo deny checks passed" >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: 🔬 Cargo Geiger (Unsafe Code Usage)
+        continue-on-error: true
+        run: |
+          echo "### Unsafe Code Analysis" >> $GITHUB_STEP_SUMMARY
+
+          # Install cargo-geiger
+          cargo install cargo-geiger
+
+          cd src/flavor-rs
+
+          # Run cargo geiger
+          cargo geiger --output-format Json > cargo-geiger.json 2>&1 || true
+          cargo geiger 2>&1 | tee cargo-geiger.log || true
+
+          echo "**Unsafe code usage:**" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          tail -20 cargo-geiger.log >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+      
+      - name: 📤 Upload Rust Security Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rust-security-results
+          path: |
+            src/flavor-rs/*.json
+            src/flavor-rs/*.log
+            src/flavor-rs/deny.toml
+
+  # Container Security Scan
+  container-security:
+    name: 🐳 Container Security
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 🔍 Dockerfile Security Scan
+        continue-on-error: true
+        run: |
+          echo "## 🐳 Container Security" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Find all Dockerfiles
+          DOCKERFILES=$(find . -name "Dockerfile*" -type f)
+          
+          if [ -z "$DOCKERFILES" ]; then
+            echo "ℹ️ No Dockerfiles found" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### Dockerfile Security Analysis" >> $GITHUB_STEP_SUMMARY
+            
+            # Install hadolint
+            wget -q https://github.com/hadolint/hadolint/releases/latest/download/hadolint-Linux-x86_64 -O hadolint
+            chmod +x hadolint
+            
+            for dockerfile in $DOCKERFILES; do
+              echo "**Scanning: $dockerfile**" >> $GITHUB_STEP_SUMMARY
+              ./hadolint --format json "$dockerfile" > hadolint-$(basename $dockerfile).json 2>&1 || true
+              ./hadolint "$dockerfile" 2>&1 | tee hadolint-$(basename $dockerfile).log || true
+              
+              if [ -s hadolint-$(basename $dockerfile).log ]; then
+                echo '```' >> $GITHUB_STEP_SUMMARY
+                head -10 hadolint-$(basename $dockerfile).log >> $GITHUB_STEP_SUMMARY
+                echo '```' >> $GITHUB_STEP_SUMMARY
+              else
+                echo "✅ No issues found" >> $GITHUB_STEP_SUMMARY
+              fi
+            done
+          fi
+      
+      - name: 🔒 Trivy Security Scan
+        continue-on-error: true
+        run: |
+          .github/scripts/run-trivy-scan.sh
+      
+      - name: 📤 Upload Container Security Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: container-security-results
+          path: |
+            hadolint*.json
+            hadolint*.log
+            trivy-results.sarif
+
+  # Infrastructure as Code Security
+  iac-security:
+    name: 🏗️ IaC Security
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 🔍 Checkov IaC Scan
+        id: checkov
+        continue-on-error: true
+        run: |
+          .github/scripts/run-checkov-scan.sh
+      
+      - name: 🔍 YAML Security Lint
+        continue-on-error: true
+        run: |
+          echo "### YAML Security Analysis" >> $GITHUB_STEP_SUMMARY
+          
+          pip install yamllint
+          
+          # Lint all YAML files
+          yamllint -f parsable . > yamllint.log 2>&1 || true
+          
+          if [ -s yamllint.log ]; then
+            LINE_COUNT=$(wc -l < yamllint.log)
+            echo "⚠️ Found $LINE_COUNT YAML issues" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            head -20 yamllint.log >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ YAML files are properly formatted" >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: 📤 Upload IaC Security Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: iac-security-results
+          path: |
+            checkov-report.json
+            yamllint.log
+
+  # Security Report Aggregation
   security-report:
     name: 📊 Security Report
-    needs: [scan]
+    needs: [secret-scan, python-security, go-security, rust-security, container-security, iac-security]
     if: always()
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     steps:
       - name: 📥 Download all security reports
         uses: actions/download-artifact@v4

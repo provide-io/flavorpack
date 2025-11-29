@@ -1,12 +1,7 @@
 # Welcome to FlavorPack
 
-!!! info "Pre-Release (v0.9)"
-    FlavorPack's **core runtime and PSPF/2025 format are production-ready**. Remaining v1.0 blockers:
-
-    - **Windows**: Disabled due to UTF-8 encoding issues in native helpers
-    - **API Docs**: Reference documentation incomplete
-
-    Linux and macOS are fully supported. Source installation until PyPI release.
+!!! warning "Alpha Software - Development Version"
+    FlavorPack is currently in early alpha. APIs, file formats, and commands may change without notice. Not recommended for production use. Check current version with `flavor --version`. **Source installation only** at this time.
 
 **FlavorPack** is a cross-language packaging system that creates self-contained, portable executables using the **Progressive Secure Package Format (PSPF/2025)**. Ship Python applications as single binaries that work without installation, dependencies, or configuration.
 

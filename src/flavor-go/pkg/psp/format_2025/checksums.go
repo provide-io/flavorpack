@@ -1,8 +1,3 @@
-//
-// SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-//
-
 // Package format_2025 provides checksum utilities supporting multiple algorithms with prefixed format.
 //
 // Format: "algorithm:hexvalue" (e.g., "sha256:c0ffee123...", "adler32:babe1337")

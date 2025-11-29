@@ -1,8 +1,3 @@
-//
-// SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-//
-
 // Package workenv provides validation for work environments
 package workenv
 
@@ -98,7 +93,7 @@ func MarkIncomplete(path string, reason string) error {
 	}
 
 	// Remove complete marker if it exists
-	_ = os.Remove(filepath.Join(path, ".extraction.complete"))
+	os.Remove(filepath.Join(path, ".extraction.complete"))
 
 	return os.WriteFile(markerPath, data, 0644)
 }
@@ -106,13 +101,13 @@ func MarkIncomplete(path string, reason string) error {
 // Clean removes invalid or incomplete workenvs
 func Clean(path string) error {
 	// Remove incomplete marker
-	_ = os.Remove(filepath.Join(path, ".extraction.incomplete"))
+	os.Remove(filepath.Join(path, ".extraction.incomplete"))
 
 	// Remove complete marker
-	_ = os.Remove(filepath.Join(path, ".extraction.complete"))
+	os.Remove(filepath.Join(path, ".extraction.complete"))
 
 	// Remove lock file if present
-	_ = os.Remove(filepath.Join(path, ".extraction.lock"))
+	os.Remove(filepath.Join(path, ".extraction.lock"))
 
 	// Optionally remove the entire directory
 	// return os.RemoveAll(path)

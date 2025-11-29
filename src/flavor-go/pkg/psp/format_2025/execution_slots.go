@@ -1,8 +1,3 @@
-//
-// SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-//
-
 package format_2025
 
 import (
@@ -48,7 +43,7 @@ func extractAndMergeSlotsToWorkenv(
 		slotPath, err := reader.ExtractSlot(i, tempExtractDir)
 		if err != nil {
 			logger.Error("❌ Failed to extract slot, cleaning up", "error", err)
-			_ = os.RemoveAll(tempExtractDir)
+			os.RemoveAll(tempExtractDir)
 			return nil, fmt.Errorf("%w: %v", ErrSlotExtractionFailed, err)
 		}
 		logger.Debug("✅ Extracted slot", "path", slotPath)
@@ -60,19 +55,19 @@ func extractAndMergeSlotsToWorkenv(
 	packageMetadataDir := filepath.Join(paths.Metadata(), "package")
 	if err := os.MkdirAll(packageMetadataDir, os.FileMode(DirPerms)); err != nil {
 		logger.Error("❌ Failed to create package metadata directory", "error", err)
-		_ = os.RemoveAll(tempExtractDir)
+		os.RemoveAll(tempExtractDir)
 		return nil, fmt.Errorf("failed to create package metadata directory: %w", err)
 	}
 	metadataFile := filepath.Join(packageMetadataDir, "psp.json")
 	metadataJSON, err := json.MarshalIndent(metadata, "", "  ")
 	if err != nil {
 		logger.Error("❌ Failed to marshal metadata", "error", err)
-		_ = os.RemoveAll(tempExtractDir)
+		os.RemoveAll(tempExtractDir)
 		return nil, fmt.Errorf("failed to marshal metadata: %w", err)
 	}
 	if err := os.WriteFile(metadataFile, metadataJSON, 0644); err != nil {
 		logger.Error("❌ Failed to write metadata", "error", err)
-		_ = os.RemoveAll(tempExtractDir)
+		os.RemoveAll(tempExtractDir)
 		return nil, fmt.Errorf("failed to write metadata: %w", err)
 	}
 	logger.Debug("📝 Wrote metadata to cache location", "path", metadataFile)
@@ -84,7 +79,7 @@ func extractAndMergeSlotsToWorkenv(
 	entries, err := os.ReadDir(tempExtractDir)
 	if err != nil {
 		logger.Error("❌ Failed to read temp directory", "error", err)
-		_ = os.RemoveAll(tempExtractDir)
+		os.RemoveAll(tempExtractDir)
 		return nil, fmt.Errorf("failed to read temp directory: %w", err)
 	}
 
@@ -95,7 +90,7 @@ func extractAndMergeSlotsToWorkenv(
 		nameJ := entries[j].Name()
 
 		// Extract slot numbers for slot_N_* directories
-		slotI, slotJ := -1, -1
+		var slotI, slotJ int = -1, -1
 		if _, err := fmt.Sscanf(nameI, "slot_%d_", &slotI); err == nil && entries[i].IsDir() {
 			// nameI is a slot directory
 		} else {
@@ -133,7 +128,7 @@ func extractAndMergeSlotsToWorkenv(
 			slotEntries, err := os.ReadDir(source)
 			if err != nil {
 				logger.Error("❌ Failed to read slot 0 directory", "error", err)
-				_ = os.RemoveAll(tempExtractDir)
+				os.RemoveAll(tempExtractDir)
 				return nil, fmt.Errorf("failed to read slot 0 directory: %w", err)
 			}
 
@@ -149,27 +144,27 @@ func extractAndMergeSlotsToWorkenv(
 					// Always use copyDirAll which merges directories
 					if err := copyDirAll(slotSource, slotDest); err != nil {
 						logger.Error("❌ Failed to copy slot 0 directory", "error", err)
-						_ = os.RemoveAll(tempExtractDir)
+						os.RemoveAll(tempExtractDir)
 						return nil, fmt.Errorf("failed to copy slot 0 directory: %w", err)
 					}
-					_ = os.RemoveAll(slotSource)
+					os.RemoveAll(slotSource)
 				} else {
 					// For files, remove destination and move
-					_ = os.Remove(slotDest) // Remove existing file if any
+					os.Remove(slotDest) // Remove existing file if any
 					if err := os.Rename(slotSource, slotDest); err != nil {
 						// If rename fails (e.g., cross-filesystem), fall back to copy
 						logger.Warn("Rename failed, falling back to copy", "error", err)
 						if err := copyFile(slotSource, slotDest); err != nil {
 							logger.Error("❌ Failed to copy slot 0 file", "error", err)
-							_ = os.RemoveAll(tempExtractDir)
+							os.RemoveAll(tempExtractDir)
 							return nil, fmt.Errorf("failed to copy slot 0 file: %w", err)
 						}
-						_ = os.Remove(slotSource)
+						os.Remove(slotSource)
 					}
 				}
 			}
 			// Remove empty slot 0 directory
-			_ = os.RemoveAll(source)
+			os.RemoveAll(source)
 		} else if strings.HasPrefix(fileName, "slot_") && entry.IsDir() {
 			// Handle other slot_N_* directories (where target was {workenv}) - merge to root
 			logger.Debug("🎯 Moving slot contents to workenv root", "slotDir", fileName)
@@ -177,7 +172,7 @@ func extractAndMergeSlotsToWorkenv(
 			slotEntries, err := os.ReadDir(source)
 			if err != nil {
 				logger.Error("❌ Failed to read slot directory", "error", err)
-				_ = os.RemoveAll(tempExtractDir)
+				os.RemoveAll(tempExtractDir)
 				return nil, fmt.Errorf("failed to read slot directory: %w", err)
 			}
 
@@ -193,27 +188,27 @@ func extractAndMergeSlotsToWorkenv(
 					// Always use copyDirAll which merges directories
 					if err := copyDirAll(slotSource, slotDest); err != nil {
 						logger.Error("❌ Failed to copy slot directory", "error", err)
-						_ = os.RemoveAll(tempExtractDir)
+						os.RemoveAll(tempExtractDir)
 						return nil, fmt.Errorf("failed to copy slot directory: %w", err)
 					}
-					_ = os.RemoveAll(slotSource)
+					os.RemoveAll(slotSource)
 				} else {
 					// For files, remove destination and move
-					_ = os.Remove(slotDest) // Remove existing file if any
+					os.Remove(slotDest) // Remove existing file if any
 					if err := os.Rename(slotSource, slotDest); err != nil {
 						// If rename fails (e.g., cross-filesystem), fall back to copy
 						logger.Warn("Rename failed, falling back to copy", "error", err)
 						if err := copyFile(slotSource, slotDest); err != nil {
 							logger.Error("❌ Failed to copy slot file", "error", err)
-							_ = os.RemoveAll(tempExtractDir)
+							os.RemoveAll(tempExtractDir)
 							return nil, fmt.Errorf("failed to copy slot file: %w", err)
 						}
-						_ = os.Remove(slotSource)
+						os.Remove(slotSource)
 					}
 				}
 			}
 			// Remove empty slot directory
-			_ = os.RemoveAll(source)
+			os.RemoveAll(source)
 		} else {
 			// Regular handling for other files/directories
 			dest := filepath.Join(workenvDir, fileName)
@@ -224,10 +219,10 @@ func extractAndMergeSlotsToWorkenv(
 				// For directories, always merge using copyDirAll (handles existing destinations)
 				if err := copyDirAll(source, dest); err != nil {
 					logger.Error("❌ Failed to copy directory", "error", err)
-					_ = os.RemoveAll(tempExtractDir)
+					os.RemoveAll(tempExtractDir)
 					return nil, fmt.Errorf("failed to copy directory: %w", err)
 				}
-				_ = os.RemoveAll(source)
+				os.RemoveAll(source)
 			} else {
 				// For files, try rename first, then copy
 				if err := os.Rename(source, dest); err != nil {
@@ -235,10 +230,10 @@ func extractAndMergeSlotsToWorkenv(
 					logger.Warn("Rename failed, falling back to copy", "error", err)
 					if err := copyFile(source, dest); err != nil {
 						logger.Error("❌ Failed to copy file", "error", err)
-						_ = os.RemoveAll(tempExtractDir)
+						os.RemoveAll(tempExtractDir)
 						return nil, fmt.Errorf("failed to copy file: %w", err)
 					}
-					_ = os.Remove(source)
+					os.Remove(source)
 				}
 			}
 		}

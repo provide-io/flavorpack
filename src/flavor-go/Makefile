@@ -12,24 +12,10 @@ LDFLAGS := -ldflags="-s -w -X main.Version=$(VERSION) -X main.BuildTime=$(BUILD_
 GOOS ?= $(shell go env GOOS)
 GOARCH ?= $(shell go env GOARCH)
 
-# --- Build Configuration ---
-# For Windows, CGO_ENABLED=1 is recommended for maximum reliability. It uses the
-# native Windows DNS resolver, which is more robust in complex network environments
-# (e.g., Active Directory, VPNs) than Go's pure Go resolver. This introduces a
-# dependency on the system's C runtime (MSVCRT.dll), slightly reducing hermeticity
-# in exchange for greater network compatibility.
-#
-# For Linux and macOS, CGO_ENABLED=0 produces fully static, hermetic binaries.
-ifeq ($(GOOS),windows)
-	CGO_FLAG = CGO_ENABLED=1
-else
-	CGO_FLAG = CGO_ENABLED=0
-endif
-
 all: build
 
 build:
-	@echo "🔨 Building Go helpers for $(GOOS)_$(GOARCH) with $(CGO_FLAG)..."
+	@echo "🔨 Building Go helpers for $(GOOS)_$(GOARCH)..."
 	@mkdir -p $(BIN_DIR)
 	@# Add .exe extension for Windows builds
 	@if [ "$(GOOS)" = "windows" ]; then \
@@ -37,9 +23,9 @@ build:
 	else \
 		EXT=""; \
 	fi; \
-	GOOS=$(GOOS) GOARCH=$(GOARCH) $(CGO_FLAG) go build -buildvcs=false $(LDFLAGS) \
+	GOOS=$(GOOS) GOARCH=$(GOARCH) CGO_ENABLED=0 go build -buildvcs=false $(LDFLAGS) \
 		-o $(BIN_DIR)/flavor-go-builder-$(GOOS)_$(GOARCH)$$EXT ./cmd/flavor-go-builder; \
-	GOOS=$(GOOS) GOARCH=$(GOARCH) $(CGO_FLAG) go build -buildvcs=false $(LDFLAGS) \
+	GOOS=$(GOOS) GOARCH=$(GOARCH) CGO_ENABLED=0 go build -buildvcs=false $(LDFLAGS) \
 		-o $(BIN_DIR)/flavor-go-launcher-$(GOOS)_$(GOARCH)$$EXT ./cmd/flavor-go-launcher
 	@chmod +x $(BIN_DIR)/flavor-go-* 2>/dev/null || true
 	@echo "✅ Go helpers built: flavor-go-*-$(GOOS)_$(GOARCH)"

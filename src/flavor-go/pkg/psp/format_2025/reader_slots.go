@@ -1,8 +1,3 @@
-//
-// SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-//
-
 package format_2025
 
 import (
@@ -98,7 +93,7 @@ func (r *Reader) ReadSlot(slotIndex int) ([]byte, error) {
 				return nil, fmt.Errorf("failed to create gzip reader: %w", err)
 			}
 			decompressed, err := io.ReadAll(gz)
-			_ = gz.Close()
+			gz.Close()
 			if err != nil {
 				return nil, fmt.Errorf("failed to decompress gzip data: %w", err)
 			}

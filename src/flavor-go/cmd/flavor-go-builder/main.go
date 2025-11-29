@@ -1,8 +1,3 @@
-//
-// SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-//
-
 package main
 
 import (
@@ -15,7 +10,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const version = "0.0.1111"
+const version = "0.3.0"
 
 var (
 	manifestPath   string
@@ -98,7 +93,7 @@ func buildBundle(cmd *cobra.Command, args []string) {
 	}
 	// Set workenv base if provided via flag
 	if workenvBase != "" {
-		_ = os.Setenv("FLAVOR_WORKENV_BASE", workenvBase)
+		os.Setenv("FLAVOR_WORKENV_BASE", workenvBase)
 	}
 	pkg.BuildPackageWithLogLevel(manifestPath, outputPath, launcherBin, privateKeyPath, publicKeyPath, keySeed, logLevel)
 }

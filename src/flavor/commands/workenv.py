@@ -144,7 +144,7 @@ def workenv_remove(package_id: str, yes: bool) -> None:
                 return
 
     if manager.remove(package_id):
-        pout(f"✓ Removed '{package_id}'")
+        pass
     else:
         perr(f"❌ Package '{package_id}' not found")
 

@@ -1,8 +1,5 @@
 # FlavorPack Architecture
 
-!!! tip "Looking for Implementation Details?"
-    This page provides a conceptual overview of FlavorPack's architecture. For detailed implementation information including code patterns, environment variables, and cache management, see the **[Development Architecture Guide](../development/architecture.md)**.
-
 ## System Overview
 
 FlavorPack is a cross-language packaging system designed to work seamlessly with other provide.io tools. The architecture consists of three main layers: the Python orchestrator, native helpers (Go/Rust), and the PSPF package format.
@@ -237,7 +234,7 @@ Native helpers provide fast, efficient launchers:
 - `pkg/launcher/` - Execution logic
 - Built as static binary (no dependencies)
 
-### Rust Helper (`src/flavor-rs/`)
+### Rust Helper (`src/flavor-rust/`)
 
 **Capabilities:**
 - Ultra-fast execution

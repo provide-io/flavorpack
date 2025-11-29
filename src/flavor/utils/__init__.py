@@ -3,11 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""Utility functions for Flavor packaging.
-
-Re-exports platform detection and XOR encoding utilities used
-throughout the Flavor codebase.
-"""
+"""TODO: Add module docstring."""
 
 from __future__ import annotations
 
