@@ -3,7 +3,11 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""TODO: Add module docstring."""
+"""Helper functions for the packaging orchestrator.
+
+Provides slot tarball creation, manifest generation, and builder/launcher
+executable resolution for PSPF package building.
+"""
 
 import os
 from pathlib import Path

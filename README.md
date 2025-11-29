@@ -4,9 +4,9 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![uv](https://img.shields.io/badge/uv-package_manager-FF6B35.svg)](https://github.com/astral-sh/uv)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
-[![CI](https://github.com/provide-io/flavorpack/actions/workflows/ci.yml/badge.svg)](https://github.com/provide-io/flavorpack/actions)
+[![CI](https://github.com/provide-io/flavorpack/actions/workflows/03-flavor-pipeline.yml/badge.svg)](https://github.com/provide-io/flavorpack/actions)
 
-> **Pre-Release (v0.9)**: FlavorPack's core runtime and binary format are production-ready. The remaining blockers for v1.0 are: (1) Windows support disabled due to UTF-8 issues, (2) API documentation incomplete. The PSPF/2025 format specification is stable. Source installation only until PyPI release.
+> **Pre-Release (v0.9)**: FlavorPack's core runtime and binary format are production-ready. The remaining blockers for v1.0 are: (1) Windows support in progress, (2) API documentation incomplete. The PSPF/2025 format specification is stable. Source installation only until PyPI release.
 
 **FlavorPack** is a cross-language packaging system that creates self-contained, portable executables using the **Progressive Secure Package Format (PSPF) 2025 Edition**. It enables you to ship Python applications as single binaries that "just work" - no installation, no dependencies, no configuration required.
 
@@ -27,7 +27,7 @@
 
 - Python 3.11 or higher
 - UV package manager (`curl -LsSf https://astral.sh/uv/install.sh | sh`)
-- Go 1.23+ and Rust 1.85+ (for building helpers - see `src/flavor-go/go.mod` and `src/flavor-rs/Cargo.toml`)
+- Go 1.24+ and Rust 1.85+ (for building helpers - see `src/flavor-go/go.mod` and `src/flavor-rs/Cargo.toml`)
 
 ### Installation (Source Only)
 

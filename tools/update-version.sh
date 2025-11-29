@@ -7,16 +7,14 @@
 
 set -euo pipefail
 
-if [ $# -ne 1 ]; then
-    echo "Usage: $0 <new-version>"
-    echo "Example: $0 0.4.0"
+# Read version from VERSION file (single source of truth)
+if [ ! -f VERSION ]; then
+    echo "❌ VERSION file not found"
     exit 1
 fi
 
-NEW_VERSION="$1"
-OLD_VERSION=$(cat VERSION 2>/dev/null || echo "0.0.0-dev")
-
-echo "🔄 Updating version from $OLD_VERSION to $NEW_VERSION"
+NEW_VERSION=$(cat VERSION)
+echo "🔄 Syncing all components to version $NEW_VERSION (from VERSION file)"
 
 # Cross-platform sed function
 sed_inplace() {
@@ -27,13 +25,8 @@ sed_inplace() {
     fi
 }
 
-# Update VERSION file
-echo "📝 Updating VERSION file"
-echo "$NEW_VERSION" > VERSION
-
-# Update Python package
-echo "📝 Updating pyproject.toml"
-sed_inplace "s/^version = \".*\"/version = \"$NEW_VERSION\"/" pyproject.toml
+# Note: VERSION file is the source of truth
+# pyproject.toml uses dynamic version from VERSION file
 
 # Update Go components
 echo "📝 Updating Go helpers"
@@ -42,10 +35,10 @@ sed_inplace "s/^const version = \".*\"/const version = \"$NEW_VERSION\"/" src/fl
 
 # Update Rust components
 echo "📝 Updating Rust helpers"
-sed_inplace "s/version = \".*\"/version = \"$NEW_VERSION\"/" src/flavor-rust/Cargo.toml
+sed_inplace "s/^version = \".*\"/version = \"$NEW_VERSION\"/" src/flavor-rs/Cargo.toml
 # Use a more precise pattern for Rust const to avoid multiple replacements
-sed_inplace "s/^const VERSION: &str = \".*\";/const VERSION: \&str = \"$NEW_VERSION\";/" src/flavor-rust/src/bin/flavor-rs-builder.rs
-sed_inplace "s/^const VERSION: &str = \".*\";/const VERSION: \&str = \"$NEW_VERSION\";/" src/flavor-rust/src/bin/flavor-rs-launcher.rs
+sed_inplace "s/^const VERSION: &str = \".*\";/const VERSION: \&str = \"$NEW_VERSION\";/" src/flavor-rs/src/bin/flavor-rs-builder.rs
+sed_inplace "s/^const VERSION: &str = \".*\";/const VERSION: \&str = \"$NEW_VERSION\";/" src/flavor-rs/src/bin/flavor-rs-launcher.rs
 
 # Update pretaster manifest
 echo "📝 Updating pretaster manifest"
@@ -56,18 +49,20 @@ sed_inplace "s/\"PRETASTER_VERSION\": \".*\"/\"PRETASTER_VERSION\": \"$NEW_VERSI
 echo "📝 Updating build_wheel.py"
 sed_inplace "s/return \".*\"  # Default fallback/return \"$NEW_VERSION\"  # Default fallback/" tools/build_wheel.py
 
-echo "✅ Version updated to $NEW_VERSION"
+echo "✅ All components synced to version $NEW_VERSION"
 echo ""
 echo "Files updated:"
-echo "  - VERSION"
-echo "  - pyproject.toml"
-echo "  - helpers/flavor-go/cmd/*/main.go"
-echo "  - helpers/flavor-rs/Cargo.toml"
-echo "  - helpers/flavor-rs/src/bin/*.rs"
+echo "  - src/flavor-go/cmd/*/main.go"
+echo "  - src/flavor-rs/Cargo.toml"
+echo "  - src/flavor-rs/src/bin/*.rs"
 echo "  - tests/pretaster/pretaster-manifest.json"
 echo "  - tools/build_wheel.py"
 echo ""
+echo "Source of truth:"
+echo "  - VERSION (not modified - this is the source)"
+echo "  - pyproject.toml (reads from VERSION dynamically)"
+echo ""
 echo "Don't forget to:"
-echo "  1. Run 'cd helpers/flavor-rs && cargo build' to update Cargo.lock"
+echo "  1. Run 'cd src/flavor-rs && cargo build' to update Cargo.lock"
 echo "  2. Commit these changes"
 echo "  3. Tag the release: git tag v$NEW_VERSION"

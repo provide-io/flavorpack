@@ -1,3 +1,8 @@
+//
+// SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
+//
+
 //! Cryptographic operations for PSPF/2025
 
 use ed25519_dalek::{Signature, Signer, SigningKey, Verifier, VerifyingKey};

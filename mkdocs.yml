@@ -151,10 +151,6 @@ nav:
       - FEP-0001 Core Format: reference/spec/fep-0001-core-format-and-operation-chains.md
       - FEP-0002 JSON Metadata: reference/spec/fep-0002-json-metadata-format.md
       - FEP-0003 Operation Registry: reference/spec/fep-0003-operation-registry.md
-      - Future Enhancements:
-        - FEP-0004 Supply Chain JIT: reference/spec/future/fep-0004-supply-chain-jit.md
-        - FEP-0005 Runtime JIT: reference/spec/future/fep-0005-runtime-jit-loading.md
-        - FEP-0006 Staged Payload: reference/spec/future/fep-0006-staged-payload-architecture.md
 
     - Troubleshooting:
       - troubleshooting/index.md
