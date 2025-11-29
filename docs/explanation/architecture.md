@@ -237,7 +237,7 @@ Native helpers provide fast, efficient launchers:
 - `pkg/launcher/` - Execution logic
 - Built as static binary (no dependencies)
 
-### Rust Helper (`src/flavor-rust/`)
+### Rust Helper (`src/flavor-rs/`)
 
 **Capabilities:**
 - Ultra-fast execution

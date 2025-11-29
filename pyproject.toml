@@ -110,7 +110,7 @@ exclude = [
 ]
 
 [[tool.mypy.overrides]]
-module = ["structlog.*", "google.*", "grpc.*", "pytest.*", "jq.*", "psutil.*", "hcl2", "mutmut.*", "opentelemetry.*"]
+module = ["structlog.*", "google.*", "grpc.*", "pytest.*", "jq.*", "psutil.*", "hcl2", "opentelemetry.*"]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
@@ -162,14 +162,6 @@ markers = [
     "stress: Stress and hypothesis-based property tests",
     "requires_helpers: Tests that need Go/Rust helpers built",
 ]
-
-[tool.mutmut]
-paths_to_mutate = ["src/flavor"]
-tests_dir = "tests"
-runner = "pytest"
-exclude = ["*/generated/*", "*_pb2.py", "*_pb2.pyi", "*/tests/*", "*/test_*"]
-dict_synonyms = ["dict", "OrderedDict", "defaultdict"]
-use_patch_file = true
 
 [tool.coverage.run]
 branch = true

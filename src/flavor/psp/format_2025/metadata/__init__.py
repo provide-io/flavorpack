@@ -3,7 +3,11 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""TODO: Add module docstring."""
+"""PSPF 2025 metadata assembly and creation.
+
+Provides functions for assembling package metadata, creating build info,
+launcher metadata, and verification data for PSPF packages.
+"""
 
 from .assembly import (
     assemble_metadata,

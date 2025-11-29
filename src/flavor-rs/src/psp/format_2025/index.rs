@@ -1,3 +1,8 @@
+//
+// SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
+//
+
 // helpers/flavor-rs/src/psp/format_2025/index.rs
 // PSPF 2025 Index Block - Future-proof 4096-byte Header
 

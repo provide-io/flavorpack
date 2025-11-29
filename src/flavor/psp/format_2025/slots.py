@@ -3,7 +3,11 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""TODO: Add module docstring."""
+"""Slot descriptor handling for PSPF packages.
+
+Defines SlotDescriptor (64-byte binary format), SlotMetadata (JSON metadata),
+and SlotView (lazy data access) for managing package slots.
+"""
 
 from __future__ import annotations
 

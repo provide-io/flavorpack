@@ -259,7 +259,8 @@ jobs:
         shell: bash
         run: |
           python -m pip install --upgrade pip
-          pip install -e ".[dev,test]"
+          # Core package only - no dev/test extras (avoids grpcio build issues on Windows ARM64)
+          pip install -e .
 
       - name: 📥 Download PSP built on ${{ matrix.build_platform }}
         uses: actions/download-artifact@v4

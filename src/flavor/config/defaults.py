@@ -33,6 +33,7 @@ else:
 DEFAULT_FILE_PERMS = 0o600  # Read/write for owner only
 DEFAULT_EXECUTABLE_PERMS = 0o700  # Read/write/execute for owner only
 DEFAULT_DIR_PERMS = 0o700  # Read/write/execute for owner only
+DEFAULT_MODE_FALLBACK = 0o755  # Fallback when parsing empty mode strings
 
 # =================================
 # Disk defaults

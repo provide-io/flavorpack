@@ -236,9 +236,7 @@ cross-platform-test = "main:main"
     @pytest.mark.integration
     @pytest.mark.cross_platform
     @pytest.mark.requires_helpers
-    def test_extract_single_slot_cross_platform(
-        self, test_package: Path | None, tmp_path: Path
-    ) -> None:
+    def test_extract_single_slot_cross_platform(self, test_package: Path | None, tmp_path: Path) -> None:
         """Test that individual slots can be extracted from cross-platform packages."""
         if test_package is None:
             pytest.skip("Helpers not built - run ./build.sh first")
@@ -274,9 +272,7 @@ cross-platform-test = "main:main"
     @pytest.mark.integration
     @pytest.mark.cross_platform
     @pytest.mark.requires_helpers
-    def test_slot_data_integrity_cross_platform(
-        self, test_package: Path | None, tmp_path: Path
-    ) -> None:
+    def test_slot_data_integrity_cross_platform(self, test_package: Path | None, tmp_path: Path) -> None:
         """Test that extracted slot data has consistent checksums.
 
         This is the most critical test - it validates that the actual data
@@ -302,7 +298,7 @@ cross-platform-test = "main:main"
 
         # Compute checksums of all extracted files
         checksums = {}
-        for root, dirs, files in os.walk(extract_dir):
+        for root, _dirs, files in os.walk(extract_dir):
             for file in files:
                 file_path = Path(root) / file
                 relative_path = file_path.relative_to(extract_dir)
@@ -466,7 +462,7 @@ class TestCrossPlatformWithArtifacts:
 
             # Compute checksums
             checksums = {}
-            for root, dirs, files in os.walk(extract_dir):
+            for root, _dirs, files in os.walk(extract_dir):
                 for file in files:
                     file_path = Path(root) / file
                     relative_path = file_path.relative_to(extract_dir)
@@ -494,10 +490,7 @@ class TestCrossPlatformWithArtifacts:
                 if file_path == "metadata.json":
                     continue  # Metadata may have platform-specific info
 
-                assert file_path in platform_checksums, (
-                    f"File {file_path} missing in {platform} extraction"
-                )
+                assert file_path in platform_checksums, f"File {file_path} missing in {platform} extraction"
                 assert platform_checksums[file_path] == checksum, (
-                    f"Checksum mismatch for {file_path} between {reference_platform} "
-                    f"and {platform}"
+                    f"Checksum mismatch for {file_path} between {reference_platform} and {platform}"
                 )

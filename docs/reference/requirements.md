@@ -67,16 +67,16 @@ Only required if you're building or modifying Go/Rust helper binaries:
 
 | Tool | Version | Source File | Verification |
 |------|---------|-------------|--------------|
-| **Go** | 1.23.0+ | `src/flavor-go/go.mod` | `go version` |
+| **Go** | 1.24.0+ | `src/flavor-go/go.mod` | `go version` |
 | **Rust** | 1.85+ | `src/flavor-rs/Cargo.toml` | `rustc --version` |
 
 **Installation**:
 
 ```bash
-# Install Go 1.23+
+# Install Go 1.24+
 # Download from: https://go.dev/dl/
 # Or use your package manager:
-brew install go@1.23     # macOS
+brew install go@1.24     # macOS
 sudo apt install golang-go  # Ubuntu (check version!)
 
 # Install Rust 1.85+
@@ -84,7 +84,7 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 rustup update
 
 # Verify versions
-go version      # Should be 1.23.0 or higher
+go version      # Should be 1.24.0 or higher
 rustc --version # Should be 1.85.0 or higher
 ```
 
@@ -139,7 +139,6 @@ Additional tools for development (installed with `uv sync`):
 [dependency-groups]
 dev = [
     "provide-testkit[all]",  # Testing utilities
-    "mutmut>=3.0.0",        # Mutation testing
 ]
 
 docs = [

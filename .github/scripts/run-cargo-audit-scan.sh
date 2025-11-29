@@ -13,7 +13,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=lib/security-scan-helpers.sh
 source "$SCRIPT_DIR/lib/security-scan-helpers.sh"
 
-CARGO_LOCK="${1:-src/flavor-rust/Cargo.lock}"
+CARGO_LOCK="${1:-src/flavor-rs/Cargo.lock}"
 OUTPUT_DIR="${2:-artifacts/security}"
 
 echo "🦀 Running cargo-audit Security Scan"
