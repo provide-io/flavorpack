@@ -1,8 +1,5 @@
 # FlavorPack Architecture
 
-!!! info "Quick Overview Available"
-    This page is a detailed technical reference for FlavorPack contributors and implementers. For a high-level conceptual overview, see the **[Architecture Explanation](../explanation/architecture.md)**.
-
 ## Table of Contents
 
 1. [Overview](#overview)

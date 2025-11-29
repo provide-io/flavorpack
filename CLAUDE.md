@@ -102,7 +102,7 @@ The project has a polyglot architecture with three main layers:
 
 2. **Native Helpers** (`src/`)
    - `flavor-go/` - Go builder and launcher implementations
-   - `flavor-rs/` - Rust builder and launcher implementations
+   - `flavor-rust/` - Rust builder and launcher implementations
    - Built binaries are placed in `dist/bin/` and embedded during packaging
 
 3. **PSPF Package Structure**
@@ -136,7 +136,7 @@ The `tests/pretaster/` tool validates PSPF packages across all builder/launcher 
 - `src/flavor/psp/format_2025/handlers.py` - Maps operations to implementations
 - `src/flavor/psp/format_2025/slots.py` - SlotDescriptor with operations field
 - `src/flavor-go/pkg/psp/format_2025/constants.go` - Go format constants
-- `src/flavor-rs/src/psp/format_2025/constants.rs` - Rust format constants
+- `src/flavor-rust/src/psp/format_2025/constants.rs` - Rust format constants
 - `tests/pretaster/` - PSPF validation tools
 
 ## Testing Strategy

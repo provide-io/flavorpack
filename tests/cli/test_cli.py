@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""CLI command integration tests."""
+"""TODO: Add module docstring."""
 
 from pathlib import Path
 from unittest.mock import patch

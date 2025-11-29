@@ -1,8 +1,3 @@
-//
-// SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-//
-
 // Package format_2025 implements PSPF/2025 operation chains
 // This file contains tests for operation packing/unpacking
 package format_2025
@@ -10,7 +5,7 @@ package format_2025
 import (
 	"encoding/json"
 	"fmt"
-	"os"
+	"io/ioutil"
 	"testing"
 
 	"github.com/hashicorp/go-hclog"
@@ -223,7 +218,7 @@ func TestPythonTestVectors(t *testing.T) {
 	logger.Info("🐍 Loading Python test vectors")
 
 	// Load test vectors from JSON
-	data, err := os.ReadFile("testdata/operations.json")
+	data, err := ioutil.ReadFile("testdata/operations.json")
 	if err != nil {
 		t.Fatalf("Failed to load test vectors: %v", err)
 	}

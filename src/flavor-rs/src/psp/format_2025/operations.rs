@@ -1,8 +1,3 @@
-//
-// SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-//
-
 // helpers/flavor-rs/src/psp/format_2025/operations.rs
 // PSPF 2025 Operations - Protobuf-based operation chains
 

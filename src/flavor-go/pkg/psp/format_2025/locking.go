@@ -1,8 +1,3 @@
-//
-// SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-//
-
 package format_2025
 
 import (
@@ -43,7 +38,7 @@ func TryAcquireLock(paths *WorkenvPaths, logger hclog.Logger) (bool, error) {
 	// Create instance/extract directory if it doesn't exist
 	extractDir := paths.Extract()
 	if err := os.MkdirAll(extractDir, os.FileMode(DirPerms)); err != nil {
-		logger.Debug("⚠️ Failed to create extract directory", "error", err)
+		logger.Debug("Failed to create extract directory", "error", err)
 	}
 
 	lockPath := paths.LockFile()
@@ -59,7 +54,7 @@ func TryAcquireLock(paths *WorkenvPaths, logger hclog.Logger) (bool, error) {
 			if oldPid, err := strconv.Atoi(contents); err == nil {
 				if !IsProcessRunning(oldPid) {
 					logger.Info("🧹 Removing stale lock from dead process", "pid", oldPid)
-					_ = os.Remove(lockPath)
+					os.Remove(lockPath)
 				} else {
 					logger.Debug("🔒 Lock held by active process", "pid", oldPid)
 					return false, nil
@@ -67,12 +62,12 @@ func TryAcquireLock(paths *WorkenvPaths, logger hclog.Logger) (bool, error) {
 			} else {
 				// Invalid PID in lock file, remove it
 				logger.Info("🧹 Removing invalid lock file (couldn't parse PID)")
-				_ = os.Remove(lockPath)
+				os.Remove(lockPath)
 			}
 		} else {
 			// Can't read lock file, try to remove it
 			logger.Info("🧹 Removing unreadable lock file")
-			_ = os.Remove(lockPath)
+			os.Remove(lockPath)
 		}
 	}
 
@@ -85,11 +80,11 @@ func TryAcquireLock(paths *WorkenvPaths, logger hclog.Logger) (bool, error) {
 		}
 		return false, err
 	}
-	defer func() { _ = file.Close() }()
+	defer file.Close()
 
 	// Write our PID to the lock file
 	if _, err := fmt.Fprintf(file, "%d\n", pid); err != nil {
-		_ = os.Remove(lockPath)
+		os.Remove(lockPath)
 		return false, err
 	}
 
@@ -144,7 +139,7 @@ func MarkExtractionComplete(paths *WorkenvPaths, logger hclog.Logger) error {
 	if err != nil {
 		return err
 	}
-	defer func() { _ = file.Close() }()
+	defer file.Close()
 
 	if _, err := fmt.Fprintf(file, "%d\n", os.Getpid()); err != nil {
 		return err
@@ -162,9 +157,9 @@ func IsExtractionComplete(paths *WorkenvPaths) bool {
 // MarkExtractionIncomplete marks cache as incomplete (used during signal handling)
 func MarkExtractionIncomplete(paths *WorkenvPaths, logger hclog.Logger) {
 	extractDir := paths.Extract()
-	_ = os.MkdirAll(extractDir, os.FileMode(DirPerms))
+	os.MkdirAll(extractDir, os.FileMode(DirPerms))
 	// Remove the complete marker if it exists
-	_ = os.Remove(paths.CompleteFile())
+	os.Remove(paths.CompleteFile())
 	logger.Debug("⚠️ Marked extraction as incomplete")
 }
 

@@ -1,12 +1,8 @@
-//
-// SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-//
-
 package format_2025
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -138,7 +134,7 @@ func (p *WorkenvPaths) ListTempExtractions() ([]string, error) {
 		return []string{}, nil
 	}
 
-	entries, err := os.ReadDir(tmpDir)
+	entries, err := ioutil.ReadDir(tmpDir)
 	if err != nil {
 		return nil, err
 	}

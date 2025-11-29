@@ -3,11 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""XOR encoding utilities for PSPF packages.
-
-Provides simple XOR encoding/decoding using the first 8 digits of π
-as the default key.
-"""
+"""TODO: Add module docstring."""
 
 from __future__ import annotations
 

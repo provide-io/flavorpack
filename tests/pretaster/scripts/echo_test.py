@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""Simple echo script for pretaster argument passing tests."""
+"""TODO: Add module docstring."""
 
 import sys
 
