@@ -3,7 +3,7 @@
 Common questions and answers about FlavorPack.
 
 !!! note "Package Name vs Tool Name"
-    **FlavorPack** (or `flavorpack`) is the Python package name. The command-line tool and API is called **`flavor`**. Install with `uv sync`, use with `flavor pack`.
+    **FlavorPack** (or `flavorpack`) is the Python package name. The command-line tool and API is called **`flavor`**. Install with `uv sync` (alpha), use with `flavor pack`.
 
 ## General Questions
 
@@ -38,8 +38,8 @@ FlavorPack requires Python 3.11 or later.
 
 ### How do I install FlavorPack?
 
-!!! info "Pre-Release - Source Installation Only"
-    FlavorPack is in pre-release. Installation from PyPI is **not yet available**.
+!!! warning "Alpha Status - Source Installation Only"
+    FlavorPack is currently in alpha. Installation from PyPI is **not yet available**.
 
 ```bash
 # Clone the repository
@@ -63,8 +63,8 @@ See the [Installation Guide](../getting-started/installation/) for complete inst
 
 ### Do I need to install anything else?
 
-Yes, during pre-release you need to build the launcher binaries locally. This requires:
-- Go 1.24+
+Yes, during alpha you need to build the launcher binaries locally. This requires:
+- Go 1.23+
 - Rust 1.85+
 - Make
 
@@ -72,7 +72,7 @@ Run `make build-helpers` to build the Go and Rust launcher/builder binaries.
 
 ### Can I use FlavorPack in a virtual environment?
 
-Yes, FlavorPack works perfectly in virtual environments. During pre-release, use source installation:
+Yes, FlavorPack works perfectly in virtual environments. During alpha, use source installation:
 
 ```bash
 python -m venv venv
@@ -83,7 +83,7 @@ uv sync
 
 ### How do I update FlavorPack?
 
-During pre-release, update from source:
+During alpha, update from source:
 
 ```bash
 cd flavorpack
@@ -334,7 +334,7 @@ You can build custom launchers from the Go or Rust source in the `helpers/` dire
 
 ### Can I embed FlavorPack in CI/CD?
 
-Yes, FlavorPack works well in CI/CD. During pre-release, use source installation:
+Yes, FlavorPack works well in CI/CD. During alpha, use source installation:
 
 {% raw %}
 ```yaml

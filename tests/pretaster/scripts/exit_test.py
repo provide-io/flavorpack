@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""Exit code test script for pretaster exit handling validation."""
+"""TODO: Add module docstring."""
 
 import sys
 

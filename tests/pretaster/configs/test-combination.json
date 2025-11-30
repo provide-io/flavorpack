@@ -2,7 +2,7 @@
   "name": "pretaster-combination",
   "version": "1.0.0",
   "description": "Simple test for builder/launcher combinations",
-  "command": "python3 {workenv}/scripts/combo_test.py",
+  "command": "/usr/bin/python3 {workenv}/scripts/combo_test.py",
   "environment": {},
   "package": {
     "name": "pretaster-combination",
@@ -23,7 +23,7 @@
     }
   ],
   "execution": {
-    "command": "python3 {workenv}/scripts/combo_test.py",
+    "command": "/usr/bin/python3 {workenv}/scripts/combo_test.py",
     "args": [],
     "env": {},
     "primary_slot": 0

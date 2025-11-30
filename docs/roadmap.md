@@ -3,7 +3,7 @@
 This roadmap shows the current implementation status and planned features for FlavorPack. Use this to understand what works today versus what's coming in future releases.
 
 !!! info "Version Status"
-    FlavorPack is in **pre-release (v0.9)** stage. The core runtime and PSPF/2025 format are production-ready. Remaining blockers: Windows support and API documentation.
+    FlavorPack is currently in **alpha** stage. APIs, file formats, and commands may change without notice.
 
 ## Legend
 
@@ -14,7 +14,7 @@ This roadmap shows the current implementation status and planned features for Fl
 
 ---
 
-## What Works Today (Pre-Release)
+## What Works Today (Alpha)
 
 ### Core Functionality ✅
 
@@ -721,7 +721,7 @@ Features required before declaring v1.0 stable:
 
 ## Version History
 
-### v0.2.0 (Current - Pre-Release)
+### v0.2.0 (Current - Alpha)
 - ✅ Core PSPF/2025 format implementation
 - ✅ Basic Python packaging with UV
 - ✅ Cross-platform helpers (macOS, Linux)

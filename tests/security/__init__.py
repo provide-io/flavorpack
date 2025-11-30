@@ -3,6 +3,6 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""Security-focused test suite for signature verification and crypto."""
+"""TODO: Add module docstring."""
 
 # 🌶️📦🔚

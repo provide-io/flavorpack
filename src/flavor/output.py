@@ -121,7 +121,7 @@ class OutputHandler:
         if self.format == OutputFormat.JSON:
             self.write({"success": message, **kwargs})
         else:
-            self._get_output_stream().write(f"✓ {message}\n")
+            pass
 
     def info(self, message: str, **kwargs: Any) -> None:
         """Write an info message."""

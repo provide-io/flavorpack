@@ -59,7 +59,7 @@ extra:
 
 nav:
   - Home: index.md
-  - Roadmap: guide/roadmap.md
+  - Roadmap: roadmap.md
 
   # SECTION 1: Getting Started (for new users)
   - Getting Started:
@@ -73,11 +73,6 @@ nav:
   - Tutorials:
     - Overview: tutorials/index.md
     - HTTPie Wrapper: tutorials/httpie-wrapper.md
-
-  # SECTION 1.6: Integrations (ecosystem integrations)
-  - Integrations:
-    - Pyvider (Terraform): guide/integration/pyvider.md
-    - wrknv: guide/integration/wrknv.md
 
   # SECTION 2: User Guide (concepts and how-to)
   - User Guide:
@@ -111,6 +106,7 @@ nav:
       - guide/advanced/index.md
       - Cross-Language Support: guide/advanced/cross-language.md
       - Custom Launchers: guide/advanced/launchers.md
+      - Custom Builders: guide/advanced/builders.md
       - Performance Tuning: guide/advanced/performance.md
       - Debugging: guide/advanced/debugging.md
   
@@ -151,6 +147,10 @@ nav:
       - FEP-0001 Core Format: reference/spec/fep-0001-core-format-and-operation-chains.md
       - FEP-0002 JSON Metadata: reference/spec/fep-0002-json-metadata-format.md
       - FEP-0003 Operation Registry: reference/spec/fep-0003-operation-registry.md
+      - Future Enhancements:
+        - FEP-0004 Supply Chain JIT: reference/spec/future/fep-0004-supply-chain-jit.md
+        - FEP-0005 Runtime JIT: reference/spec/future/fep-0005-runtime-jit-loading.md
+        - FEP-0006 Staged Payload: reference/spec/future/fep-0006-staged-payload-architecture.md
 
     - Troubleshooting:
       - troubleshooting/index.md
@@ -173,6 +173,7 @@ nav:
         - Unit Tests: development/testing/unit.md
         - Taster vs Pretaster: development/testing/taster-vs-pretaster.md
         - Integration Tests: development/testing/integration.md
+        - Cross-Language Tests: development/testing/cross-language.md
       - CI/CD: development/ci-cd.md
       - Release Process: development/release.md
     
@@ -180,6 +181,8 @@ nav:
       - community/index.md
       - Getting Support: community/support.md
       - Discussions: community/discussions.md
+      - Contributing: community/contributing.md
+      - Blog: community/blog.md
       - Changelog: community/changelog.md
       - License: community/license.md
 

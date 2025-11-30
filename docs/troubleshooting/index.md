@@ -2,8 +2,8 @@
 
 Comprehensive guide to diagnosing and resolving common FlavorPack issues.
 
-!!! info "Pre-Release - Some Features Not Yet Implemented"
-    FlavorPack is in **pre-release (v0.9)** status. This troubleshooting guide includes solutions for both implemented and planned features. Features marked with 📋 **PLANNED** are not yet available.
+!!! warning "Alpha Software - Some Features Not Yet Implemented"
+    FlavorPack is in **alpha** status. This troubleshooting guide includes solutions for both implemented and planned features. Features marked with 📋 **PLANNED** are not yet available.
 
     If you encounter issues with features that don't work, check the [Roadmap](../guide/roadmap/) to see implementation status.
 

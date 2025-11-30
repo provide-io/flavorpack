@@ -1,17 +1,13 @@
-//
-// SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-//
-
 //! Cryptographic operations for PSPF/2025
 
 use ed25519_dalek::{Signature, Signer, SigningKey, Verifier, VerifyingKey};
-use rand::RngCore;
+use rand::rngs::OsRng;
 
 /// Generate an ephemeral Ed25519 key pair
 pub fn generate_ephemeral_keypair() -> (SigningKey, VerifyingKey) {
+    use rand::RngCore;
     let mut secret_key = [0u8; 32];
-    rand::rng().fill_bytes(&mut secret_key);
+    OsRng.fill_bytes(&mut secret_key);
     let signing_key = SigningKey::from_bytes(&secret_key);
     let verifying_key = signing_key.verifying_key();
     (signing_key, verifying_key)

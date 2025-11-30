@@ -3,19 +3,9 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""File locking utilities for concurrent operations.
-
-Provides a LockManager for coordinating access to shared resources
-such as cache directories during package extraction.
-"""
+"""TODO: Add module docstring."""
 
 from collections.abc import Generator
-
-__all__ = [
-    "LockError",
-    "LockManager",
-    "default_lock_manager",
-]
 from contextlib import contextmanager
 from pathlib import Path
 

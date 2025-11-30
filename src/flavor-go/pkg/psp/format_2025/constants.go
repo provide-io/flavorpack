@@ -1,8 +1,3 @@
-//
-// SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-//
-
 package format_2025
 
 // Core format constants that never change
@@ -34,12 +29,6 @@ const (
 	PurposePayload = PurposeData   // Deprecated: use PurposeData
 	PurposeRuntime = PurposeCode   // Deprecated: use PurposeCode
 	PurposeTool    = PurposeConfig // Deprecated: use PurposeConfig
-
-	// Windows PE Resource constants (for cross-builder compatibility)
-	// Used when embedding PSPF data in Windows executables
-	PEResourceType = 10     // RT_RCDATA - Raw data resource type
-	PEResourceLang = 0x0409 // en-US language ID
-	PEResourceName = "PSPF" // Resource name identifier
 
 	// Lifecycle types - part of format spec
 	LifecycleInit      = 0  // First run only, removed after initialization

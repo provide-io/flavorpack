@@ -15,7 +15,6 @@ from flavor.exceptions import BuildError, VerificationError
 from flavor.package import (
     build_package_from_manifest,
     clean_cache,
-    generate_keys,
     verify_package,
 )
 
@@ -27,7 +26,6 @@ __all__ = [
     "__version__",
     "build_package_from_manifest",
     "clean_cache",
-    "generate_keys",
     "verify_package",
 ]
 

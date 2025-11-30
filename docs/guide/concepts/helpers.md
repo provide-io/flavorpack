@@ -159,7 +159,7 @@ make build-helpers
 cd src/flavor-go && go build ./...
 
 # Build Rust helpers only
-cd src/flavor-rs && cargo build --release
+cd src/flavor-rust && cargo build --release
 ```
 
 ## Binary Linking Strategy

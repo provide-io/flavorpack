@@ -1,8 +1,3 @@
-//
-// SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-//
-
 // helpers/flavor-rs/src/psp/format_2025/constants.rs
 // Core format constants that never change
 // For defaults and configuration, see defaults.rs
@@ -28,12 +23,6 @@ pub const OP_GZIP: u8 = 0x10; // GZIP compression (REQUIRED)
 pub const OP_BZIP2: u8 = 0x13; // BZIP2 compression (REQUIRED)
 pub const OP_XZ: u8 = 0x16; // XZ/LZMA2 compression (REQUIRED)
 pub const OP_ZSTD: u8 = 0x1B; // Zstandard compression (REQUIRED)
-
-// Windows PE Resource constants (for cross-builder compatibility)
-// Used when embedding PSPF data in Windows executables
-pub const PE_RESOURCE_TYPE: u16 = 10; // RT_RCDATA - Raw data resource type
-pub const PE_RESOURCE_LANG: u16 = 0x0409; // en-US language ID
-pub const PE_RESOURCE_NAME: &str = "PSPF"; // Resource name identifier
 
 // Purpose types - part of format spec
 #[allow(non_upper_case_globals)]

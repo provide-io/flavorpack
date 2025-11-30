@@ -1,8 +1,3 @@
-//
-// SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-//
-
 package format_2025
 
 import (
@@ -104,4 +99,12 @@ func loadKeysFromFiles(privateKeyPath, publicKeyPath string) (ed25519.PrivateKey
 	}
 
 	return privateKey, publicKey, nil
+}
+
+func generateEmojiMagic(launcherType string) []byte {
+	// Package and magic wand emojis (8 bytes total per PSPF/2025 spec)
+	// Using byte representation to avoid having literal emoji in binary
+	// 📦 = 0xF0 0x9F 0x93 0xA6 (UTF-8)
+	// 🪄 = 0xF0 0x9F 0xAA 0x84 (UTF-8)
+	return []byte{0xF0, 0x9F, 0x93, 0xA6, 0xF0, 0x9F, 0xAA, 0x84}
 }

@@ -1,8 +1,3 @@
-//
-// SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-//
-
 //! Build manifest structures for PSPF/2025
 
 use serde::{Deserialize, Serialize};
