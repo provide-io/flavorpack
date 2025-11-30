@@ -1,8 +1,3 @@
-//
-// SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-//
-
 package format_2025
 
 import (
@@ -113,7 +108,7 @@ func savePackageChecksum(paths *WorkenvPaths, checksum uint32, logger hclog.Logg
 		logger.Debug("⚠️ Failed to open checksum file", "error", err)
 		return err
 	}
-	defer func() { _ = file.Close() }()
+	defer file.Close()
 
 	if _, err := file.WriteString(checksumStr); err != nil {
 		logger.Debug("⚠️ Failed to write package checksum", "error", err)

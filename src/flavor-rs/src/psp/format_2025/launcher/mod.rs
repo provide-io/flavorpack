@@ -1,8 +1,3 @@
-//
-// SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-//
-
 //! PSPF/2025 package launcher
 
 pub mod command;
@@ -26,7 +21,6 @@ use std::os::unix::process::CommandExt;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::atomic::{AtomicBool, Ordering};
-
 
 use super::execution::{
     check_workenv_validity_full, execute_setup_commands, save_index_metadata, save_package_checksum,
@@ -72,7 +66,7 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
         }
     }
 
-    // Create reader for the bundle (PSPF data appended at EOF)
+    // Create reader for the bundle
     let mut reader = Reader::new(package_path)?;
 
     // Read index for checksum validation

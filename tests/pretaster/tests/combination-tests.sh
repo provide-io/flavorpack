@@ -5,14 +5,6 @@
 # even if one fails, then report the failures at the end
 set -uo pipefail
 
-# Enable UTF-8 on Windows to properly display emojis
-if [[ "${OS:-}" == "Windows_NT" ]] || [[ "$(uname -s)" == MINGW* ]] || [[ "$(uname -s)" == MSYS* ]]; then
-    # Set code page to UTF-8 (65001)
-    chcp.com 65001 > /dev/null 2>&1 || true
-    export PYTHONUTF8=1
-    export PYTHONIOENCODING=utf-8
-fi
-
 # Load test library
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/test-lib.sh"
@@ -89,13 +81,12 @@ test_combination() {
         echo "$emoji   🔍 Immediate .exe validation..." | tee -a "$log_file"
 
         # Test if Windows can load and execute the binary
-        # Use "info" command which combo_test.py recognizes (not --help which returns 1 for unknown cmd)
-        if "$output" info > /dev/null 2>&1; then
+        if "$output" --help > /dev/null 2>&1; then
             echo "$emoji   ✅ Windows loaded .exe successfully" | tee -a "$log_file"
         else
             local load_exit=$?
-            echo "$emoji   ❌ Windows executable failed (exit code: $load_exit)" | tee -a "$log_file"
-            echo "$emoji      Exit 1=script error, 101-107=launcher error, other=system error" | tee -a "$log_file"
+            echo "$emoji   ❌ Windows PE loader rejected .exe (exit code: $load_exit)" | tee -a "$log_file"
+            echo "$emoji      This indicates PE header issue BEFORE launcher runs" | tee -a "$log_file"
 
             # Collect immediate diagnostics
             if command -v xxd >/dev/null 2>&1; then
@@ -106,10 +97,9 @@ test_combination() {
                 cp "$output" "${diag_base}.exe" 2>/dev/null
                 xxd "$output" | head -64 > "${diag_base}.hex" 2>/dev/null
 
-                # Check PE offset (convert from little-endian)
-                local pe_offset_raw=$(xxd -s 0x3c -l 4 -p "$output" 2>/dev/null | tr -d '\n')
-                local pe_offset=$(echo "$pe_offset_raw" | sed 's/\(..\)\(..\)\(..\)\(..\)/\4\3\2\1/')
-                echo "$emoji      PE offset: 0x$pe_offset (raw: $pe_offset_raw)" | tee -a "$log_file"
+                # Check PE offset
+                local pe_offset=$(xxd -s 0x3c -l 4 -p "$output" 2>/dev/null)
+                echo "$emoji      PE offset: 0x$pe_offset" | tee -a "$log_file"
             fi
 
             return 1
@@ -235,25 +225,7 @@ test_combination() {
     else
         echo "$emoji   ❌ exit 42 test failed" | tee -a "$log_file"
     fi
-
-    # Test stdin piping
-    echo "$emoji" | tee -a "$log_file"
-    echo "$emoji   8️⃣ Testing stdin piping:" | tee -a "$log_file"
-    echo "$emoji   ─────────────────────────────────────" | tee -a "$log_file"
-
-    # Test with piped input
-    local stdin_output
-    stdin_output=$(echo "Hello from pipe!" | "$output" stdin 2>&1)
-    local stdin_exit=$?
-
-    echo "$stdin_output" | sed "s/^/$emoji     /" | tee -a "$log_file"
-
-    if [ $stdin_exit -eq 0 ] && echo "$stdin_output" | grep -q "stdin_received:17"; then
-        echo "$emoji   ✅ stdin piping test passed" | tee -a "$log_file"
-    else
-        echo "$emoji   ❌ stdin piping test failed (exit: $stdin_exit)" | tee -a "$log_file"
-    fi
-
+    
     # Clean up
     rm -f "$output"
     

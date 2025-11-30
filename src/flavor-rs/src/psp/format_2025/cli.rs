@@ -1,8 +1,3 @@
-//
-// SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-//
-
 //! CLI command handlers for PSPF/2025 packages
 
 use crate::psp::format_2025::reader::Reader;

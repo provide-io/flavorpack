@@ -1,8 +1,3 @@
-//
-// SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-//
-
 package format_2025
 
 // Cache invalidation: Force rebuild to include Windows spawn mode fix (2025-10-31)
@@ -67,7 +62,7 @@ func LaunchWithLogLevel(exePath string, args []string, cliLogLevel, cliLogSource
 
 	// Add prefix to non-JSON output (ASCII on Windows, emoji on Unix)
 	if !jsonFormat {
-		prefix := "🐹 "
+		prefix := "[GO] "
 		if runtime.GOOS != "windows" {
 			prefix = "🐹 "
 		}
@@ -90,8 +85,8 @@ func LaunchWithLogLevel(exePath string, args []string, cliLogLevel, cliLogSource
 	// Only log startup messages in CLI mode
 	if isEnvTrue("FLAVOR_LAUNCHER_CLI") {
 		logger.Info("🐹🐹🐹 Hello from Flavor's Go Launcher 🐹🐹🐹")
-		logger.Debug("🔧 Log level", "level", actualLevel, "source", logSource)
-		logger.Info("🚀 PSPF Go Launcher starting...")
+		logger.Debug("Log level", "level", actualLevel, "source", logSource)
+		logger.Info("PSPF Go Launcher starting...")
 	}
 	logger.Debug("📖 Reading PSPF bundle")
 
@@ -216,35 +211,35 @@ func execBundle(exePath string, args []string, userCwd string, logger hclog.Logg
 // execBundleReplace prepares and executes a bundle using syscall.Exec (process replacement)
 func execBundleReplace(exePath string, args []string, userCwd string, logger hclog.Logger) error {
 	// Prepare the command (do all extraction and setup)
-	logger.Debug("🔧 Preparing command for exec mode", "exe", exePath, "args", args, "cwd", userCwd)
+	logger.Debug("Preparing command for exec mode", "exe", exePath, "args", args, "cwd", userCwd)
 	var cmd *exec.Cmd
 	cmd, err := runBundleWithCwd(exePath, args, userCwd, logger)
 	if err != nil {
-		logger.Error("❌ Failed to prepare command for exec", "error", err)
+		logger.Error("Failed to prepare command for exec", "error", err)
 		return err
 	}
 
 	// Convert exec.Cmd to syscall.Exec arguments
 	binary := cmd.Path
-	logger.Trace("🔍 Binary path extracted from command", "path", binary)
+	logger.Trace("Binary path extracted from command", "path", binary)
 
 	argv := cmd.Args
-	if len(argv) == 0 {
-		logger.Debug("ℹ️ Command args are nil/empty, using binary as sole argument")
+	if argv == nil || len(argv) == 0 {
+		logger.Debug("Command args are nil/empty, using binary as sole argument")
 		argv = []string{binary}
 	}
-	logger.Trace("📝 Command arguments prepared", "argv", argv)
+	logger.Trace("Command arguments prepared", "argv", argv)
 
 	// Convert environment to []string format
 	envv := cmd.Env
 	if envv == nil {
-		logger.Debug("ℹ️ Command environment is nil, using os.Environ()")
+		logger.Debug("Command environment is nil, using os.Environ()")
 		envv = os.Environ()
 	}
-	logger.Trace("📝 Environment prepared", "env_count", len(envv))
+	logger.Trace("Environment prepared", "env_count", len(envv))
 
 	logger.Debug("🔄 Replacing process via exec", "binary", binary, "args", argv[1:])
-	logger.Trace("🔄 About to call syscall.Exec - process will be replaced")
+	logger.Trace("About to call syscall.Exec - process will be replaced")
 
 	// This replaces the current process and never returns on success
 	err = syscall.Exec(binary, argv, envv)

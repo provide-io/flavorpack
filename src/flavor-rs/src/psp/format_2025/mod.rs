@@ -1,8 +1,3 @@
-//
-// SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-//
-
 //! PSPF/2025 format implementation
 
 pub mod backends;
@@ -24,6 +19,8 @@ pub mod metadata;
 pub mod operations;
 pub mod packaging;
 pub mod paths;
+pub mod pe_resources;
+pub mod pe_utils;
 pub mod reader;
 pub mod runtime;
 pub mod slots;

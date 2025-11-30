@@ -3,11 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""Helper binary management for Flavor packaging.
-
-Provides access to Go and Rust helper binaries (builders and launchers)
-that are used to create and execute PSPF packages.
-"""
+"""TODO: Add module docstring."""
 
 from flavor.helpers.manager import HelperInfo, HelperManager
 

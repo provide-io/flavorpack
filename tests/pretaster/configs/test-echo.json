@@ -2,7 +2,7 @@
   "name": "pretaster-echo",
   "version": "1.0.0",
   "description": "Simple echo test for PSPF",
-  "command": "python3 {workenv}/scripts/echo_test.py",
+  "command": "/usr/bin/python3 {workenv}/scripts/echo_test.py",
   "environment": {},
   "package": {
     "name": "pretaster-echo",
@@ -24,7 +24,7 @@
     }
   ],
   "execution": {
-    "command": "python3 {workenv}/scripts/echo_test.py",
+    "command": "/usr/bin/python3 {workenv}/scripts/echo_test.py",
     "args": [],
     "env": {},
     "primary_slot": 0

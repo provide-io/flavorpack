@@ -3,6 +3,6 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""Flavor test suite package."""
+"""TODO: Add module docstring."""
 
 # 🌶️📦🔚

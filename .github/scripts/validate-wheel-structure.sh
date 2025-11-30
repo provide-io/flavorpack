@@ -49,8 +49,13 @@ if [ -z "$HELPERS" ]; then
     exit 1
 else
     echo "$HELPERS" | while read -r line; do
+<<<<<<< HEAD
         # Extract just the filename (first field from zipfile output)
         HELPER_NAME=$(echo "$line" | awk '{print $1}' | xargs basename)
+=======
+        # Extract just the filename
+        HELPER_NAME=$(echo "$line" | awk '{print $NF}')
+>>>>>>> fixing up building stuff
         echo "   ✅ $HELPER_NAME"
     done
 fi
@@ -79,7 +84,11 @@ if [ "$PLATFORM" != "unknown" ]; then
 
     WRONG_PLATFORM=0
     python -m zipfile -l "$WHEEL_FILE" | grep "flavor/helpers/bin/flavor-" | grep -v "/$" | while read -r line; do
+<<<<<<< HEAD
         HELPER_NAME=$(echo "$line" | awk '{print $1}' | xargs basename)
+=======
+        HELPER_NAME=$(echo "$line" | awk '{print $NF}')
+>>>>>>> fixing up building stuff
 
         if [[ "$PLATFORM" == "windows_"* ]]; then
             # Windows binaries should end with platform.exe

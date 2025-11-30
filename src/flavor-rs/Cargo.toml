@@ -2,7 +2,7 @@
 
 [package]
 name = "flavor"
-version = "0.0.1111"
+version = "0.3.0"
 edition = "2024"
 authors = ["provide.io <code@provide.io>", "Tim Perkins <code@tim.life>"]
 description = "Progressive Secure Package Format (PSPF) Reference Implementation"
@@ -39,15 +39,15 @@ signal-hook = "0.3"
 libc = "0.2"
 chrono = "0.4"
 clap = { version = "4.5", features = ["derive"] }
-rand = "0.9"
-bincode = "2.0"
-gethostname = "1.0"
+rand = "0.8"
+bincode = "1.3"
+gethostname = "0.5"
 memmap2 = "0.9"
 hex = "0.4"
-which = "8.0"
+which = "6.0"
 
 [target.'cfg(windows)'.dependencies]
-windows = { version = "0.62", features = [
+windows = { version = "0.58", features = [
     "Win32_Foundation",
     "Win32_System_LibraryLoader",
     "Win32_Storage_FileSystem",

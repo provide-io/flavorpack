@@ -71,15 +71,26 @@ for result_dir in "$RESULTS_DIR"/taster-results-*; do
                 RUNNER=$(jq -r '.runner' "$json_file")
                 TIMESTAMP=$(jq -r '.timestamp' "$json_file")
 
+<<<<<<< HEAD
                 TOTAL_PLATFORMS=$((TOTAL_PLATFORMS + 1))
+=======
+                ((TOTAL_PLATFORMS++))
+>>>>>>> fixing up building stuff
 
                 # Convert status to emoji
                 if [[ "$STATUS" == "success" ]]; then
                     STATUS_EMOJI="✅"
+<<<<<<< HEAD
                     SUCCESSFUL_PLATFORMS=$((SUCCESSFUL_PLATFORMS + 1))
                 else
                     STATUS_EMOJI="❌"
                     FAILED_PLATFORMS=$((FAILED_PLATFORMS + 1))
+=======
+                    ((SUCCESSFUL_PLATFORMS++))
+                else
+                    STATUS_EMOJI="❌"
+                    ((FAILED_PLATFORMS++))
+>>>>>>> fixing up building stuff
                 fi
 
                 write_summary "| $PLATFORM | $STATUS_EMOJI $STATUS | $RUNNER | $TIMESTAMP |"
