@@ -38,7 +38,7 @@ def validate_spec(spec: BuildSpec) -> list[str]:
     return errors
 
 
-def validate_metadata(metadata: dict[str, Any]) -> list[str]:  # noqa: C901
+def validate_metadata(metadata: dict[str, Any]) -> list[str]:
     """
     Validate package metadata.
 
@@ -83,7 +83,7 @@ def validate_metadata(metadata: dict[str, Any]) -> list[str]:  # noqa: C901
     return errors
 
 
-def validate_slots(slots: list[SlotMetadata]) -> list[str]:  # noqa: C901
+def validate_slots(slots: list[SlotMetadata]) -> list[str]:
     """
     Validate slot configurations.
 
