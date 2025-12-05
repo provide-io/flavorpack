@@ -62,47 +62,7 @@ class HelperManager:
 
         self._binary_loader = BinaryLoader(self)
 
-    def _scan_helpers_dir(
-        self, bin_dir: Path, platform_filter: bool, existing_names: set[str]
-    ) -> list[HelperInfo]:
-        """Scan a directory for helper binaries.
-
-        Args:
-            bin_dir: Directory to scan
-            platform_filter: Only return platform-compatible helpers
-            existing_names: Set of helper names already found (to avoid duplicates)
-
-        Returns:
-            List of HelperInfo objects found
-        """
-        found: list[HelperInfo] = []
-        if not bin_dir.exists():
-            return found
-
-        for helper_path in bin_dir.iterdir():
-            if not helper_path.is_file():
-                continue
-            if platform_filter and not self._is_platform_compatible(helper_path.name):
-                continue
-
-            info = self._get_helper_info(helper_path)
-            if info and info.name not in existing_names:
-                found.append(info)
-                existing_names.add(info.name)
-
-        return found
-
-    def _categorize_helpers(self, helpers_list: list[HelperInfo]) -> dict[str, list[HelperInfo]]:
-        """Categorize helpers into launchers and builders."""
-        result: dict[str, list[HelperInfo]] = {"launchers": [], "builders": []}
-        for info in helpers_list:
-            if info.type == "launcher":
-                result["launchers"].append(info)
-            elif info.type == "builder":
-                result["builders"].append(info)
-        return result
-
-    def list_helpers(self, platform_filter: bool = False) -> dict[str, list[HelperInfo]]:
+    def list_helpers(self, platform_filter: bool = False) -> dict[str, list[HelperInfo]]:  # noqa: C901
         """List all available helpers.
 
         Args:
@@ -111,17 +71,41 @@ class HelperManager:
         Returns:
             Dict with keys 'launchers' and 'builders', each containing HelperInfo lists
         """
-        existing_names: set[str] = set()
-        all_helpers: list[HelperInfo] = []
+        helpers: dict[str, list[HelperInfo]] = {"launchers": [], "builders": []}
 
         # Search for helpers in bin directory
-        all_helpers.extend(self._scan_helpers_dir(self.helpers_bin, platform_filter, existing_names))
+        if self.helpers_bin.exists():
+            for helper_path in self.helpers_bin.iterdir():
+                if helper_path.is_file():
+                    if platform_filter and not self._is_platform_compatible(helper_path.name):
+                        continue
+
+                    info = self._get_helper_info(helper_path)
+                    if info:
+                        if info.type == "launcher":
+                            helpers["launchers"].append(info)
+                        elif info.type == "builder":
+                            helpers["builders"].append(info)
 
         # Also check embedded helpers from wheel installation
         embedded_bin = Path(__file__).parent / "bin"
-        all_helpers.extend(self._scan_helpers_dir(embedded_bin, platform_filter, existing_names))
+        if embedded_bin.exists():
+            for helper_path in embedded_bin.iterdir():
+                if helper_path.is_file():
+                    if platform_filter and not self._is_platform_compatible(helper_path.name):
+                        continue
 
-        return self._categorize_helpers(all_helpers)
+                    info = self._get_helper_info(helper_path)
+                    if info:
+                        # Check if we already have this helper from dev build
+                        existing_names = [i.name for sublist in helpers.values() for i in sublist]
+                        if info.name not in existing_names:
+                            if info.type == "launcher":
+                                helpers["launchers"].append(info)
+                            elif info.type == "builder":
+                                helpers["builders"].append(info)
+
+        return helpers
 
     def _is_platform_compatible(self, filename: str) -> bool:
         """Check if helper filename is compatible with current platform.
