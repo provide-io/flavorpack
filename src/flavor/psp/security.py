@@ -70,9 +70,8 @@ class PSPFIntegrityVerifier:
 
     def __init__(self) -> None:
         """Initialize the verifier."""
-        pass
 
-    def verify_integrity(self, bundle_path: Path) -> IntegrityResult:  # noqa: C901
+    def verify_integrity(self, bundle_path: Path) -> IntegrityResult:
         """
         Verify the integrity of a PSPF package bundle.
 

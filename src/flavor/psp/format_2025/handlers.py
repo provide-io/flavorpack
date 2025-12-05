@@ -186,7 +186,7 @@ def apply_operations(
         raise ArchiveError(f"Operation application failed: {e}") from e
 
 
-def reverse_operations(data: bytes, packed_ops: int) -> bytes:  # noqa: C901
+def reverse_operations(data: bytes, packed_ops: int) -> bytes:
     """Reverse PSPF operation chain for extraction using Foundation tools.
 
     Args:
