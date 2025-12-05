@@ -184,6 +184,25 @@ class PythonSlotBuilder:
 
         return artifacts
 
+    def _get_flavor_subdeps(self, dep_path: Path, depth: int) -> list[str]:
+        """Extract flavor build dependencies from pyproject.toml."""
+        pyproject_path = dep_path / "pyproject.toml"
+        if not pyproject_path.exists():
+            logger.trace(f"No pyproject.toml found in {dep_path}")
+            return []
+
+        try:
+            logger.debug("📋 Reading pyproject.toml", path=str(pyproject_path), depth=depth)
+            with pyproject_path.open("rb") as f:
+                pyproject = tomllib.load(f)
+            flavor_build = pyproject.get("tool", {}).get("flavor", {}).get("build", {})
+            return flavor_build.get("dependencies", [])
+        except Exception as e:
+            logger.warning(
+                "⚠️ Error reading pyproject.toml", path=str(pyproject_path), error=str(e), depth=depth
+            )
+            return []
+
     def resolve_transitive_dependencies(
         self, dep_path: Path, seen: set[Path] | None = None, depth: int = 0
     ) -> list[Path]:
@@ -202,102 +221,39 @@ class PythonSlotBuilder:
             seen = set()
             logger.info("🔍🔄🚀 Starting transitive dependency resolution")
 
-        "  " * depth
-
-        # Normalize the path to avoid duplicates
         dep_path = dep_path.resolve()
+        logger.debug("🔍 Checking dependency", name=dep_path.name, path=str(dep_path), depth=depth)
 
-        logger.debug(
-            "🔍 Checking dependency",
-            name=dep_path.name,
-            path=str(dep_path),
-            depth=depth,
-        )
-
-        # Check if we've already processed this dependency
         if dep_path in seen:
-            logger.debug(
-                "⏭️ Dependency already processed",
-                name=dep_path.name,
-                depth=depth,
-            )
+            logger.debug("⏭️ Dependency already processed", name=dep_path.name, depth=depth)
             return []
 
         seen.add(dep_path)
+        all_deps: list[Path] = []
 
-        # Result list - dependencies will be added in reverse order (deepest first)
-        all_deps = []
+        # Get sub-dependencies from pyproject.toml
+        sub_deps = self._get_flavor_subdeps(dep_path, depth)
+        if sub_deps:
+            logger.info("🔗 Found sub-dependencies", count=len(sub_deps), parent=dep_path.name, depth=depth)
 
-        # Check if this dependency has a pyproject.toml
-        pyproject_path = dep_path / "pyproject.toml"
-        if pyproject_path.exists():
-            try:
-                logger.debug(
-                    "📋 Reading pyproject.toml",
-                    path=str(pyproject_path),
-                    depth=depth,
-                )
-                with pyproject_path.open("rb") as f:
-                    pyproject = tomllib.load(f)
-
-                # Look for flavor build dependencies
-                flavor_build = pyproject.get("tool", {}).get("flavor", {}).get("build", {})
-                sub_deps = flavor_build.get("dependencies", [])
-
-                if sub_deps:
-                    logger.info(
-                        "🔗 Found sub-dependencies",
-                        count=len(sub_deps),
-                        parent=dep_path.name,
-                        depth=depth,
-                    )
-
-                # Recursively process each sub-dependency
-                for sub_dep in sub_deps:
-                    sub_dep_path = dep_path / sub_dep
-                    if sub_dep_path.exists():
-                        logger.debug(
-                            "🔄🔍📋 Recursing into sub-dependency",
-                            name=sub_dep_path.name,
-                            depth=depth + 1,
-                        )
-                        # Get all transitive dependencies of this sub-dependency
-                        transitive = self.resolve_transitive_dependencies(sub_dep_path, seen, depth + 1)
-                        all_deps.extend(transitive)
-                    else:
-                        logger.warning(
-                            "⚠️ Sub-dependency not found",
-                            path=str(sub_dep_path),
-                            depth=depth,
-                        )
-
-            except Exception as e:
-                logger.warning(
-                    "⚠️ Error reading pyproject.toml",
-                    path=str(pyproject_path),
-                    error=str(e),
-                    depth=depth,
-                )
-        else:
-            logger.trace(f"No pyproject.toml found in {dep_path}")
+        # Recursively process each sub-dependency
+        for sub_dep in sub_deps:
+            sub_dep_path = dep_path / sub_dep
+            if sub_dep_path.exists():
+                logger.debug("🔄🔍📋 Recursing into sub-dependency", name=sub_dep_path.name, depth=depth + 1)
+                transitive = self.resolve_transitive_dependencies(sub_dep_path, seen, depth + 1)
+                all_deps.extend(transitive)
+            else:
+                logger.warning("⚠️ Sub-dependency not found", path=str(sub_dep_path), depth=depth)
 
         # Add this dependency after its dependencies (post-order)
         if dep_path not in all_deps:
             all_deps.append(dep_path)
-            logger.info(
-                "✅ Added dependency to build order",
-                name=dep_path.name,
-                depth=depth,
-            )
+            logger.info("✅ Added dependency to build order", name=dep_path.name, depth=depth)
 
         if depth == 0:
             for i, dep in enumerate(all_deps, 1):
-                logger.info(
-                    "📋 Dependency build order",
-                    index=i,
-                    name=dep.name,
-                    path=str(dep),
-                )
+                logger.info("📋 Dependency build order", index=i, name=dep.name, path=str(dep))
 
         return all_deps
 
