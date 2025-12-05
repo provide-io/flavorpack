@@ -115,12 +115,12 @@ entry_point = "myapp:main"
 ### How do I exclude files from the package?
 
 !!! info "📋 Planned Feature"
-    Manifest-based exclude patterns are planned for a future release. See the [Roadmap](../guide/roadmap/) for details.
+    Manifest-based exclude patterns are planned for a future release. See the [Roadmap](../roadmap/) for details.
 
 ### Can I build packages for other platforms?
 
 !!! info "📋 Planned Feature"
-    Platform-specific builds via CLI are planned. Currently, packages are built for the host platform. See the [Roadmap](../guide/roadmap/) for details.
+    Platform-specific builds via CLI are planned. Currently, packages are built for the host platform. See the [Roadmap](../roadmap/) for details.
 
 ### How do I reduce package size?
 
