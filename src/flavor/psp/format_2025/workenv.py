@@ -196,6 +196,8 @@ class WorkEnvManager:
         setup_env = self._prepare_setup_environment(workenv_dir, runtime_env)
 
         for _i, cmd in enumerate(setup_commands):
+            pass
+
             if isinstance(cmd, dict):
                 cmd_type = cmd.get("type", "execute")
 

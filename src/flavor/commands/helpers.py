@@ -23,48 +23,7 @@ log = get_command_logger("helpers")
 @click.group("helpers")
 def helper_group() -> None:
     """Manage Flavor helper binaries (launchers and builders)."""
-
-
-def _get_helper_version(helper_path: Path) -> str | None:
-    """Get version string from helper binary."""
-    try:
-        result = run(
-            [str(helper_path), "--version"],
-            capture_output=True,
-            check=False,
-            timeout=2,
-        )
-        if result.returncode == 0:
-            lines = result.stdout.strip().split("\n")
-            if lines:
-                return lines[0]
-    except Exception:
-        pass
-    return None
-
-
-def _display_helper_entry(helper: object, verbose: bool) -> None:
-    """Display a single helper entry."""
-    size_mb = helper.size / (1024 * 1024)  # type: ignore[attr-defined]
-    version = _get_helper_version(helper.path) or helper.version or "unknown"  # type: ignore[attr-defined]
-    pout(f"  • {helper.name} ({helper.language}, {size_mb:.1f} MB) - {version}")  # type: ignore[attr-defined]
-    pout(f"    Path: {helper.path}")  # type: ignore[attr-defined]
-    if helper.checksum:  # type: ignore[attr-defined]
-        pout(f"    SHA256: {helper.checksum}")  # type: ignore[attr-defined]
-    if verbose and helper.built_from:  # type: ignore[attr-defined]
-        pout(f"    Source: {helper.built_from}")  # type: ignore[attr-defined]
-
-
-def _display_helper_section(title: str, helpers_list: list, verbose: bool) -> None:
-    """Display a section of helpers (launchers or builders)."""
-    if not helpers_list:
-        return
-    pout(f"\n{title}")
-    sorted_helpers = sorted(helpers_list, key=lambda h: h.name)
-    for i, helper in enumerate(sorted_helpers):
-        if i > 0:
-            pout("")  # Add newline between entries
-        _display_helper_entry(helper, verbose)
+    pass
 
 
 @helper_group.command("list")
@@ -74,7 +33,7 @@ def _display_helper_section(title: str, helpers_list: list, verbose: bool) -> No
     is_flag=True,
     help="Show detailed information",
 )
-def helper_list(verbose: bool) -> None:
+def helper_list(verbose: bool) -> None:  # noqa: C901
     """List available helper binaries."""
     from flavor.helpers.manager import HelperManager
 
@@ -88,8 +47,53 @@ def helper_list(verbose: bool) -> None:
     pout("🔧 Available Flavor Helpers")
     pout("=" * 60)
 
-    _display_helper_section("📦 Launchers:", helpers["launchers"], verbose)
-    _display_helper_section("🔨 Builders:", helpers["builders"], verbose)
+    # Helper function to get version
+    def get_version(helper_path: Path) -> str | None:
+        try:
+            result = run(
+                [str(helper_path), "--version"],
+                capture_output=True,
+                check=False,
+                timeout=2,
+            )
+            if result.returncode == 0:
+                # Parse version from output (first line usually)
+                lines = result.stdout.strip().split("\n")
+                if lines:
+                    return lines[0]
+        except Exception:
+            pass
+        return None
+
+    if helpers["launchers"]:
+        pout("\n📦 Launchers:")
+        launchers = sorted(helpers["launchers"], key=lambda h: h.name)
+        for i, launcher in enumerate(launchers):
+            if i > 0:
+                pout("")  # Add newline between entries
+            size_mb = launcher.size / (1024 * 1024)
+            version = get_version(launcher.path) or launcher.version or "unknown"
+            pout(f"  • {launcher.name} ({launcher.language}, {size_mb:.1f} MB) - {version}")
+            pout(f"    Path: {launcher.path}")
+            if launcher.checksum:
+                pout(f"    SHA256: {launcher.checksum}")
+            if verbose and launcher.built_from:
+                pout(f"    Source: {launcher.built_from}")
+
+    if helpers["builders"]:
+        pout("\n🔨 Builders:")
+        builders = sorted(helpers["builders"], key=lambda h: h.name)
+        for i, builder in enumerate(builders):
+            if i > 0:
+                pout("")  # Add newline between entries
+            size_mb = builder.size / (1024 * 1024)
+            version = get_version(builder.path) or builder.version or "unknown"
+            pout(f"  • {builder.name} ({builder.language}, {size_mb:.1f} MB) - {version}")
+            pout(f"    Path: {builder.path}")
+            if builder.checksum:
+                pout(f"    SHA256: {builder.checksum}")
+            if verbose and builder.built_from:
+                pout(f"    Source: {builder.built_from}")
 
 
 @helper_group.command("build")

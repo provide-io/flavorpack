@@ -1,6 +1,11 @@
 # Troubleshooting
 
-Comprehensive guide to diagnosing and resolving common FlavorPack issues. See the [Roadmap](../roadmap.md) for feature implementation status.
+Comprehensive guide to diagnosing and resolving common FlavorPack issues.
+
+!!! warning "Alpha Software - Some Features Not Yet Implemented"
+    FlavorPack is in **alpha** status. This troubleshooting guide includes solutions for both implemented and planned features. Features marked with 📋 **PLANNED** are not yet available.
+
+    If you encounter issues with features that don't work, check the [Roadmap](../guide/roadmap/) to see implementation status.
 
 ## Overview
 

@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
+"""TODO: Add module docstring."""
 
 import os
 from pathlib import Path
@@ -262,7 +263,7 @@ def find_builder_executable(builder_bin: str | None) -> Path:
             raise BuildError(
                 "❌ No builder binaries found!\n"
                 "\n"
-                "   • cd helpers && ./build.sh     (build both Go and Rust builders)\n"
+                "   • ./build.sh                   (build both Go and Rust builders)\n"
                 "   • make build-helpers           (if using make)\n"
                 "   • flavor helpers build         (if flavor CLI is available)\n"
                 "\n"
@@ -302,7 +303,7 @@ def find_launcher_executable(launcher_bin: str | None) -> Path:
             raise BuildError(
                 "❌ No launcher binaries found!\n"
                 "\n"
-                "   • cd helpers && ./build.sh     (build both Go and Rust launchers)\n"
+                "   • ./build.sh                   (build both Go and Rust launchers)\n"
                 "   • make build-helpers           (if using make)\n"
                 "   • flavor helpers build         (if flavor CLI is available)\n"
                 "\n"

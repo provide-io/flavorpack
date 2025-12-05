@@ -30,9 +30,14 @@ var (
 type Reader struct {
 	bundlePath string
 	file       *os.File
-	index      *PSPFIndex
-	metadata   *Metadata
-	logger     hclog.Logger
+	// resourceData holds PSPF bytes extracted from PE resources when available.
+	// When populated, the bundle no longer has PSPF data appended to the end
+	// of the executable, so all reads must be served from this buffer.
+	resourceData    []byte
+	resourceChecked bool
+	index           *PSPFIndex
+	metadata        *Metadata
+	logger          hclog.Logger
 }
 
 // NewReader creates a new PSPF reader
@@ -49,6 +54,92 @@ func NewReaderWithLogger(bundlePath string, logger hclog.Logger) (*Reader, error
 		bundlePath: bundlePath,
 		logger:     logger,
 	}, nil
+}
+
+// ensureResourceDataLoaded attempts to load PSPF data from PE resources once.
+// When successful, subsequent reads operate on the in-memory buffer instead of
+// expecting PSPF data to be appended to the executable.
+func (r *Reader) ensureResourceDataLoaded() {
+	if r.resourceChecked {
+		return
+	}
+	r.resourceChecked = true
+
+	data, err := ReadPSPFFromResource(r.bundlePath, r.logger)
+	if err != nil || len(data) == 0 {
+		if r.logger != nil {
+			r.logger.Debug("📖 No PE resource detected, reading PSPF from EOF (appended to executable)",
+				"error", err)
+		}
+		return
+	}
+
+	r.resourceData = data
+	if r.logger != nil {
+		r.logger.Info("📖 PSPF payload found in PE resources",
+			"size", len(r.resourceData))
+	}
+}
+
+func (r *Reader) usingResourceData() bool {
+	return len(r.resourceData) > 0
+}
+
+// resourceRelativeOffset converts an absolute file offset into an offset
+// relative to the start of the PSPF resource data.
+func (r *Reader) resourceRelativeOffset(absOffset uint64) (int64, error) {
+	if r.index == nil {
+		return 0, fmt.Errorf("resource offset requested before index is loaded")
+	}
+	rel := int64(absOffset) - int64(r.index.LauncherSize)
+	if rel < 0 {
+		return 0, fmt.Errorf("offset 0x%x lies inside launcher code, unavailable in resource", absOffset)
+	}
+	if rel > int64(len(r.resourceData)) {
+		return 0, fmt.Errorf("offset 0x%x beyond resource bounds", absOffset)
+	}
+	return rel, nil
+}
+
+// readBytesAt reads size bytes starting at offset and returns the slice.
+func (r *Reader) readBytesAt(offset uint64, size uint64) ([]byte, error) {
+	buf := make([]byte, size)
+	if err := r.readIntoBuffer(buf, offset); err != nil {
+		return nil, err
+	}
+	return buf, nil
+}
+
+// readIntoBuffer fills buf with bytes at absolute offset.
+func (r *Reader) readIntoBuffer(buf []byte, offset uint64) error {
+	if len(buf) == 0 {
+		return nil
+	}
+
+	if r.usingResourceData() {
+		rel, err := r.resourceRelativeOffset(offset)
+		if err != nil {
+			return err
+		}
+		if rel+int64(len(buf)) > int64(len(r.resourceData)) {
+			return fmt.Errorf("resource read beyond bounds at 0x%x", offset)
+		}
+		start := int(rel)
+		end := start + len(buf)
+		copy(buf, r.resourceData[start:end])
+		return nil
+	}
+
+	if err := r.Open(); err != nil {
+		return err
+	}
+	if _, err := r.file.Seek(int64(offset), io.SeekStart); err != nil {
+		return err
+	}
+	if _, err := io.ReadFull(r.file, buf); err != nil {
+		return err
+	}
+	return nil
 }
 
 // Open opens the bundle file
@@ -78,6 +169,27 @@ func (r *Reader) Close() error {
 
 // ReadMagicTrailer reads the MagicTrailer and returns the index data
 func (r *Reader) ReadMagicTrailer() ([]byte, error) {
+	r.ensureResourceDataLoaded()
+
+	if r.usingResourceData() {
+		if len(r.resourceData) < MagicTrailerSize {
+			return nil, fmt.Errorf("resource PSPF data too small for MagicTrailer")
+		}
+		trailer := r.resourceData[len(r.resourceData)-MagicTrailerSize:]
+
+		if !bytes.Equal(trailer[:4], PackageEmojiBytes) {
+			return nil, fmt.Errorf("invalid MagicTrailer: missing 📦 at start")
+		}
+		if !bytes.Equal(trailer[MagicTrailerSize-4:], MagicWandEmojiBytes) {
+			return nil, fmt.Errorf("invalid MagicTrailer: missing 🪄 at end")
+		}
+
+		r.logger.Debug("Found index in PE resource MagicTrailer",
+			"trailer_size", MagicTrailerSize,
+			"resource_size", len(r.resourceData))
+		return trailer[4 : 4+IndexSize], nil
+	}
+
 	if err := r.Open(); err != nil {
 		return nil, err
 	}
@@ -155,14 +267,8 @@ func (r *Reader) ReadMetadata() (*Metadata, error) {
 		return nil, err
 	}
 
-	// Seek to metadata
-	if _, err := r.file.Seek(int64(index.MetadataOffset), io.SeekStart); err != nil {
-		return nil, err
-	}
-
-	// Read metadata archive
-	archiveData := make([]byte, index.MetadataSize)
-	if _, err := r.file.Read(archiveData); err != nil {
+	archiveData, err := r.readBytesAt(index.MetadataOffset, index.MetadataSize)
+	if err != nil {
 		return nil, err
 	}
 
@@ -195,13 +301,8 @@ func (r *Reader) ReadMetadataArchive() ([]byte, error) {
 		return nil, err
 	}
 
-	// Read metadata archive
-	if _, err := r.file.Seek(int64(index.MetadataOffset), io.SeekStart); err != nil {
-		return nil, err
-	}
-
-	metadataData := make([]byte, index.MetadataSize)
-	if _, err := r.file.Read(metadataData); err != nil {
+	metadataData, err := r.readBytesAt(index.MetadataOffset, index.MetadataSize)
+	if err != nil {
 		return nil, err
 	}
 

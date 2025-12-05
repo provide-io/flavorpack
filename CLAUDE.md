@@ -19,7 +19,7 @@ All Linux binaries are built as static executables:
 ### Environment Setup
 ```bash
 # Build Go and Rust helpers (required for packaging)
-we helpers build
+make build-helpers
 # or directly
 ./build.sh
 ```
@@ -27,20 +27,20 @@ we helpers build
 ### Testing
 ```bash
 # Run all Python tests
-we test
+make test
 
 # Run specific test modules
 uv run pytest tests/format_2025/test_pspf_2025_core.py
 uv run pytest tests/cli/test_cli.py -v
 
 # Run with coverage
-we test coverage
+uv run pytest --cov=flavor --cov-report=term-missing
 
 # Run PSPF validation tests
-we validate pspf
+make validate-pspf
 
 # Test all builder/launcher combinations
-we validate combo
+make validate-pspf-combo
 ```
 
 ### Linting and Formatting
@@ -75,17 +75,17 @@ flavor keygen --output keys/
 
 ### Release Management
 ```bash
-# Build platform-specific wheel (auto-detects platform)
-we wheel
+# Build platform-specific wheel
+make wheel PLATFORM=darwin_arm64
 
 # Build wheels for all platforms
-we release all
+make release-all
 
 # Validate wheels
-we release validate-full
+make release-validate-full
 
 # Clean release artifacts
-we release clean
+make release-clean
 ```
 
 ## Architecture
