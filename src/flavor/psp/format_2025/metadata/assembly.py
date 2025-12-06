@@ -85,7 +85,7 @@ def load_launcher_binary(launcher_type: str) -> bytes:
     raise FileNotFoundError(
         f"❌ Could not find {launcher_base} binary!\n"
         "\n"
-        "   • cd helpers && ./build.sh     (build both Go and Rust launchers)\n"
+        "   • ./build.sh                   (build both Go and Rust launchers)\n"
         "   • make build-helpers           (if using make)\n"
         "   • flavor helpers build         (if flavor CLI is available)\n"
         "\n"

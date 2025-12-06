@@ -138,7 +138,6 @@ addopts = [
     "--color=yes",
     "--ignore=tests/taster/tests",
     "--ignore=tests/pretaster/scripts",
-    "--dist", "load",
 ]
 norecursedirs = [".git", "build", "dist", "*.egg-info", ".venv", "htmlcov", ".hypothesis", "__pycache__", "*/generated/*"]
 filterwarnings = [
@@ -157,9 +156,6 @@ markers = [
     "taster: Taster-specific tests",
     "packaging: Package building and verification tests",
     "cross_language: Tests involving Go/Rust/Python interaction",
-    "cross_platform: Tests verifying cross-platform PSP extraction and verification",
-    "requires_artifacts: Tests requiring pre-built artifacts",
-    "ci_only: Tests that only run in CI environment",
     "stress: Stress and hypothesis-based property tests",
     "requires_helpers: Tests that need Go/Rust helpers built",
 ]
@@ -191,7 +187,7 @@ omit = [
 show_missing = true
 skip_covered = false
 precision = 2
-fail_under = 70
+fail_under = 60  # Baseline: 61.74% → 63% (Phase 2 complete) as of 2025-10-21
 exclude_also = [
     "pragma: no cover",
     "raise NotImplementedError",

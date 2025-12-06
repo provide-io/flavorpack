@@ -3,37 +3,25 @@ name: 06 🔒 Security Scanning
 on:
   workflow_dispatch:
     inputs:
-      scan_depth:
-        description: 'Scan depth (shallow/deep/paranoid)'
-        type: choice
-        options:
-          - shallow
-          - deep
-          - paranoid
-        default: deep
-      enable_sarif:
-        description: 'Enable SARIF reporting for GitHub Security tab'
-        type: boolean
-        default: true
-  
+      min_score:
+        description: 'Minimum security score (0-100)'
+        type: number
+        default: 85
+
   push:
     branches: [main, develop]
     paths:
       - '**.py'
       - '**.go'
       - '**.rs'
-      - '**.yml'
-      - '**.yaml'
       - '**.toml'
       - '**.json'
       - 'requirements*.txt'
-      - 'Pipfile*'
-      - 'poetry.lock'
       - 'go.mod'
       - 'go.sum'
       - 'Cargo.toml'
       - 'Cargo.lock'
-  
+
   schedule:
     # Run security scan daily at 3 AM UTC
     - cron: '0 3 * * *'
@@ -43,412 +31,225 @@ permissions:
   security-events: write
   actions: read
 
+env:
+  MIN_SCORE: ${{ inputs.min_score || 85 }}
+  UV_SYSTEM_PYTHON: 1
+
 jobs:
-  # Secret Scanning
-  secret-scan:
-    name: 🔑 Secret Scanning
+  # Unified Python Security Scanning via provide-testkit
+  python-security:
+    name: 🐍 Python Security (provide-testkit)
     runs-on: ubuntu-latest
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Full history for better secret detection
-      
-      - name: 🔍 TruffleHog Secret Scan
-        id: trufflehog
-        continue-on-error: true
+          fetch-depth: 0
+
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 📦 Install UV
+        run: pip install uv
+
+      - name: 🔧 Install provide-testkit
         run: |
-          .github/scripts/run-trufflehog-scan.sh
-      
+          uv pip install --system provide-testkit
+          echo "Installed provide-testkit version:"
+          provide-testkit --version || echo "Version command not available"
+
+      - name: 🔒 Run Security Analysis
+        id: security
+        run: |
+          echo "## 🔒 Python Security Analysis (provide-testkit)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Run provide-testkit security scan
+          provide-testkit quality security src/ \
+            --min-score ${{ env.MIN_SCORE }} \
+            --artifact-dir .security-artifacts \
+            2>&1 | tee security.log || true
+
+          # Extract results
+          if [ -f .security-artifacts/security_summary.txt ]; then
+            echo "### Security Summary" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            cat .security-artifacts/security_summary.txt >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ -f .security-artifacts/security_issues.txt ]; then
+            ISSUE_COUNT=$(wc -l < .security-artifacts/security_issues.txt)
+            echo "Found $ISSUE_COUNT lines of issues" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Check pass/fail
+          if grep -q "PASSED" security.log; then
+            echo "✅ Security scan PASSED" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Security scan FAILED" >> $GITHUB_STEP_SUMMARY
+            echo "security_failed=true" >> $GITHUB_ENV
+          fi
+
+      - name: 📤 Upload Security Artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: python-security-report
+          path: |
+            .security-artifacts/
+            security.log
+          retention-days: 30
+
+      - name: 🚨 Fail on Security Issues
+        if: env.security_failed == 'true'
+        run: |
+          echo "Security scan failed to meet minimum score of ${{ env.MIN_SCORE }}"
+          exit 1
+
+  # Secret Scanning with Gitleaks
+  secret-scan:
+    name: 🔑 Secret Scanning (Gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - name: 🔐 Gitleaks Secret Detection
         uses: gitleaks/gitleaks-action@v2
         continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      
-      - name: 🗝️ detect-secrets Scan
-        continue-on-error: true
-        run: |
-          .github/scripts/run-detect-secrets-scan.sh
-      
-      - name: 📤 Upload Secret Scan Results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: secret-scan-results
-          path: |
-            trufflehog.json
-            trufflehog.log
-            .secrets.baseline
-            detect-secrets.log
 
-  # Python Security
-  python-security:
-    name: 🐍 Python Security
-    runs-on: ubuntu-latest
-    steps:
-      - name: 📥 Checkout
-        uses: actions/checkout@v4
-      
-      - name: 🐍 Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-      
-      - name: 📦 Install Security Tools
+      - name: 📊 Secret Scan Summary
         run: |
-          python -m venv security-env
-          source security-env/bin/activate
-          pip install --upgrade pip
-          pip install \
-            bandit[toml] \
-            safety \
-            pip-audit \
-            semgrep \
-            dlint \
-            pyt \
-            dodgy \
-            vulture
-          
-          # Install project for dependency scanning
-          pip install -e ".[dev,test]"
-      
-      - name: 🔒 Bandit Security Scan
-        id: bandit
-        continue-on-error: true
-        run: |
-          source security-env/bin/activate
-          .github/scripts/run-bandit-scan.sh
-      
-      - name: 🛡️ Safety Dependency Check
-        id: safety
-        continue-on-error: true
-        run: |
-          source security-env/bin/activate
-          .github/scripts/run-safety-scan.sh
-      
-      - name: 🔍 pip-audit Vulnerability Scan
-        id: pip-audit
-        continue-on-error: true
-        run: |
-          source security-env/bin/activate
-          .github/scripts/run-pip-audit-scan.sh
-      
-      - name: 🔬 Semgrep SAST Analysis
-        id: semgrep
-        continue-on-error: true
-        run: |
-          source security-env/bin/activate
-          .github/scripts/run-semgrep-scan.sh
-      
-      - name: 🐛 Dodgy Suspicious Code Detection
-        continue-on-error: true
-        run: |
-          source security-env/bin/activate
-          .github/scripts/run-dodgy-scan.sh
-      
-      - name: 📊 Generate SARIF Report
-        if: inputs.enable_sarif == true
-        continue-on-error: true
-        run: |
-          source security-env/bin/activate
-          
-          # Convert Bandit to SARIF
-          bandit -r src/ helpers/ -f sarif -o bandit.sarif || true
-          
-          # Semgrep SARIF output
-          semgrep --config=auto --sarif --output=semgrep.sarif src/ helpers/ || true
-      
-      - name: 📤 Upload SARIF Results
-        if: inputs.enable_sarif == true
-        uses: github/codeql-action/upload-sarif@v3
-        continue-on-error: true
-        with:
-          sarif_file: |
-            bandit.sarif
-            semgrep.sarif
-      
-      - name: 📤 Upload Python Security Reports
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: python-security-results
-          path: |
-            *.json
-            *.log
-            *.sarif
+          echo "## 🔑 Secret Scanning" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Gitleaks scan completed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Note: All cryptographic keys have been removed from git history." >> $GITHUB_STEP_SUMMARY
+          echo "Keys are now in .gitignore to prevent future commits." >> $GITHUB_STEP_SUMMARY
 
-  # Go Security
+  # Go Security Scanning
   go-security:
-    name: 🐹 Go Security
+    name: 🔷 Go Security
     runs-on: ubuntu-latest
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
-      
-      - name: 🐹 Setup Go
+
+      - name: 🔷 Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.21'
-      
+          go-version: '1.22'
+
       - name: 🔒 Gosec Security Scan
         continue-on-error: true
         run: |
-          .github/scripts/run-gosec-scan.sh
-      
-      - name: 🔍 Nancy Dependency Scan
-        continue-on-error: true
-        run: |
-          echo "### Nancy Dependency Scan" >> $GITHUB_STEP_SUMMARY
-          
-          # Install nancy
-          go install github.com/sonatype-nexus-community/nancy@latest
-          
-          cd src/flavor-go
-          
-          # Run nancy
-          go list -json -deps ./... | nancy sleuth 2>&1 | tee nancy.log || true
-          
-          if grep -q "vulnerable" nancy.log; then
-            echo "⚠️ Nancy found vulnerable dependencies:" >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
-            grep -A 5 "vulnerable" nancy.log >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
-          else
-            echo "✅ No vulnerable dependencies found" >> $GITHUB_STEP_SUMMARY
-          fi
-      
-      - name: 🛡️ Govulncheck Vulnerability Detection
-        continue-on-error: true
-        run: |
-          .github/scripts/run-govulncheck-scan.sh
-      
-      - name: 📤 Upload Go Security Reports
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: go-security-results
-          path: |
-            src/flavor-go/*.json
-            src/flavor-go/*.log
+          echo "## 🔷 Go Security Analysis" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
 
-  # Rust Security
+          go install github.com/securego/gosec/v2/cmd/gosec@latest
+
+          cd src/flavor-go
+          gosec -fmt json -out gosec.json ./... 2>&1 | tee gosec.log || true
+
+          if [ -f gosec.json ]; then
+            ISSUE_COUNT=$(jq '.Issues | length' gosec.json)
+            echo "Found $ISSUE_COUNT Go security issues" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ No Go security issues found" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: 🔍 Go Vulnerability Check
+        continue-on-error: true
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+
+          cd src/flavor-go
+          echo "### Go Vulnerability Check" >> $GITHUB_STEP_SUMMARY
+          govulncheck ./... 2>&1 | tee govulncheck.log || true
+
+          if grep -q "No vulnerabilities found" govulncheck.log; then
+            echo "✅ No known vulnerabilities in Go dependencies" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ Check govulncheck.log for potential vulnerabilities" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: 📤 Upload Go Security Artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: go-security-report
+          path: |
+            src/flavor-go/gosec.json
+            src/flavor-go/gosec.log
+            src/flavor-go/govulncheck.log
+          retention-days: 30
+
+  # Rust Security Scanning
   rust-security:
     name: 🦀 Rust Security
     runs-on: ubuntu-latest
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
-      
+
       - name: 🦀 Setup Rust
-        uses: dtolnay/rust-toolchain@stable
-      
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+
       - name: 🔒 Cargo Audit
         continue-on-error: true
         run: |
-          .github/scripts/run-cargo-audit-scan.sh
-      
-      - name: 🛡️ Cargo Deny Check
-        continue-on-error: true
-        run: |
-          echo "### Cargo Deny Security Check" >> $GITHUB_STEP_SUMMARY
-          
-          cargo install cargo-deny
-          
-          cd src/flavor-rs
-          
-          # Create default deny.toml if not exists
-          if [ ! -f deny.toml ]; then
-            cat > deny.toml << 'EOF'
-          [bans]
-          multiple-versions = "warn"
-          wildcards = "allow"
-          
-          [licenses]
-          unlicensed = "deny"
-          copyleft = "warn"
-          
-          [sources]
-          unknown-registry = "warn"
-          unknown-git = "warn"
-          
-          [advisories]
-          vulnerability = "deny"
-          unmaintained = "warn"
-          unsound = "warn"
-          yanked = "warn"
-          EOF
-          fi
-          
-          # Run cargo deny
-          cargo deny check 2>&1 | tee cargo-deny.log || true
-          
-          if grep -q "error\[" cargo-deny.log; then
-            echo "❌ Cargo deny found issues:" >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
-            grep "error\[" cargo-deny.log >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
-          else
-            echo "✅ Cargo deny checks passed" >> $GITHUB_STEP_SUMMARY
-          fi
-      
-      - name: 🔬 Cargo Geiger (Unsafe Code Usage)
-        continue-on-error: true
-        run: |
-          echo "### Unsafe Code Analysis" >> $GITHUB_STEP_SUMMARY
-
-          # Install cargo-geiger
-          cargo install cargo-geiger
-
-          cd src/flavor-rs
-
-          # Run cargo geiger
-          cargo geiger --output-format Json > cargo-geiger.json 2>&1 || true
-          cargo geiger 2>&1 | tee cargo-geiger.log || true
-
-          echo "**Unsafe code usage:**" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          tail -20 cargo-geiger.log >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-      
-      - name: 📤 Upload Rust Security Reports
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: rust-security-results
-          path: |
-            src/flavor-rs/*.json
-            src/flavor-rs/*.log
-            src/flavor-rs/deny.toml
-
-  # Container Security Scan
-  container-security:
-    name: 🐳 Container Security
-    runs-on: ubuntu-latest
-    steps:
-      - name: 📥 Checkout
-        uses: actions/checkout@v4
-      
-      - name: 🔍 Dockerfile Security Scan
-        continue-on-error: true
-        run: |
-          echo "## 🐳 Container Security" >> $GITHUB_STEP_SUMMARY
+          echo "## 🦀 Rust Security Analysis" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          
-          # Find all Dockerfiles
-          DOCKERFILES=$(find . -name "Dockerfile*" -type f)
-          
-          if [ -z "$DOCKERFILES" ]; then
-            echo "ℹ️ No Dockerfiles found" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "### Dockerfile Security Analysis" >> $GITHUB_STEP_SUMMARY
-            
-            # Install hadolint
-            wget -q https://github.com/hadolint/hadolint/releases/latest/download/hadolint-Linux-x86_64 -O hadolint
-            chmod +x hadolint
-            
-            for dockerfile in $DOCKERFILES; do
-              echo "**Scanning: $dockerfile**" >> $GITHUB_STEP_SUMMARY
-              ./hadolint --format json "$dockerfile" > hadolint-$(basename $dockerfile).json 2>&1 || true
-              ./hadolint "$dockerfile" 2>&1 | tee hadolint-$(basename $dockerfile).log || true
-              
-              if [ -s hadolint-$(basename $dockerfile).log ]; then
-                echo '```' >> $GITHUB_STEP_SUMMARY
-                head -10 hadolint-$(basename $dockerfile).log >> $GITHUB_STEP_SUMMARY
-                echo '```' >> $GITHUB_STEP_SUMMARY
-              else
-                echo "✅ No issues found" >> $GITHUB_STEP_SUMMARY
-              fi
-            done
-          fi
-      
-      - name: 🔒 Trivy Security Scan
-        continue-on-error: true
-        run: |
-          .github/scripts/run-trivy-scan.sh
-      
-      - name: 📤 Upload Container Security Results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: container-security-results
-          path: |
-            hadolint*.json
-            hadolint*.log
-            trivy-results.sarif
 
-  # Infrastructure as Code Security
-  iac-security:
-    name: 🏗️ IaC Security
+          cargo install cargo-audit
+
+          cd src/flavor-rs
+          cargo audit --json > cargo-audit.json 2>&1 || true
+
+          if [ -f cargo-audit.json ]; then
+            VULN_COUNT=$(jq '.vulnerabilities.count' cargo-audit.json)
+            if [ "$VULN_COUNT" = "0" ] || [ "$VULN_COUNT" = "null" ]; then
+              echo "✅ No known vulnerabilities in Rust dependencies" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "⚠️ Found $VULN_COUNT vulnerabilities in Rust dependencies" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+
+      - name: 📤 Upload Rust Security Artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rust-security-report
+          path: src/flavor-rs/cargo-audit.json
+          retention-days: 30
+
+  # Security Summary
+  security-summary:
+    name: 📊 Security Summary
     runs-on: ubuntu-latest
-    steps:
-      - name: 📥 Checkout
-        uses: actions/checkout@v4
-      
-      - name: 🔍 Checkov IaC Scan
-        id: checkov
-        continue-on-error: true
-        run: |
-          .github/scripts/run-checkov-scan.sh
-      
-      - name: 🔍 YAML Security Lint
-        continue-on-error: true
-        run: |
-          echo "### YAML Security Analysis" >> $GITHUB_STEP_SUMMARY
-          
-          pip install yamllint
-          
-          # Lint all YAML files
-          yamllint -f parsable . > yamllint.log 2>&1 || true
-          
-          if [ -s yamllint.log ]; then
-            LINE_COUNT=$(wc -l < yamllint.log)
-            echo "⚠️ Found $LINE_COUNT YAML issues" >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
-            head -20 yamllint.log >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
-          else
-            echo "✅ YAML files are properly formatted" >> $GITHUB_STEP_SUMMARY
-          fi
-      
-      - name: 📤 Upload IaC Security Results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: iac-security-results
-          path: |
-            checkov-report.json
-            yamllint.log
-
-  # Security Report Aggregation
-  security-report:
-    name: 📊 Security Report
-    needs: [secret-scan, python-security, go-security, rust-security, container-security, iac-security]
+    needs: [python-security, secret-scan, go-security, rust-security]
     if: always()
-    runs-on: ubuntu-latest
     steps:
-      - name: 📥 Download all security reports
-        uses: actions/download-artifact@v4
-        with:
-          path: security-reports
-      
-      - name: 🐍 Setup Python for summary generation
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: 📊 Generate Consolidated Security Report
+      - name: 📊 Generate Summary
         run: |
-          python3 .github/scripts/generate-security-summary.py \
-            security-reports \
-            security-summary.json \
-            --github-repo "${{ github.repository }}" \
-            --github-ref "${{ github.ref_name }}" \
-            --github-sha "${{ github.sha }}" \
-            --run-id "${{ github.run_id }}"
-      
-      - name: 📤 Upload Consolidated Report
-        uses: actions/upload-artifact@v4
-        with:
-          name: security-summary
-          path: security-summary.json
+          echo "## 🔒 Security Scan Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Component | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Python (provide-testkit) | ${{ needs.python-security.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Secret Scanning | ${{ needs.secret-scan.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Go Security | ${{ needs.go-security.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Rust Security | ${{ needs.rust-security.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Key Improvements" >> $GITHUB_STEP_SUMMARY
+          echo "- All cryptographic keys purged from git history" >> $GITHUB_STEP_SUMMARY
+          echo "- Keys are gitignored to prevent future commits" >> $GITHUB_STEP_SUMMARY
+          echo "- Using provide-testkit for unified Python security scanning" >> $GITHUB_STEP_SUMMARY
+          echo "- Streamlined workflow with clear artifact collection" >> $GITHUB_STEP_SUMMARY

@@ -81,7 +81,8 @@ test_combination() {
         echo "$emoji   🔍 Immediate .exe validation..." | tee -a "$log_file"
 
         # Test if Windows can load and execute the binary
-        if "$output" --help > /dev/null 2>&1; then
+        # Force launcher CLI mode so --help is handled by the launcher, not the payload
+        if FLAVOR_LAUNCHER_CLI=1 "$output" --help > /dev/null 2>&1; then
             echo "$emoji   ✅ Windows loaded .exe successfully" | tee -a "$log_file"
         else
             local load_exit=$?

@@ -1,3 +1,0 @@
-# Runtime Configuration
-Settings that affect the execution of the package (env vars, memory, arguments).
-...

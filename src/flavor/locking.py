@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
+"""TODO: Add module docstring."""
 
 from collections.abc import Generator
 from contextlib import contextmanager
@@ -15,6 +16,7 @@ from provide.foundation.file.lock import FileLock
 class LockError(Exception):
     """Error during lock operations."""
 
+    pass
 
 
 class LockManager:

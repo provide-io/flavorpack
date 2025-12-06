@@ -184,7 +184,7 @@ class PythonSlotBuilder:
 
         return artifacts
 
-    def resolve_transitive_dependencies(
+    def resolve_transitive_dependencies(  # noqa: C901
         self, dep_path: Path, seen: set[Path] | None = None, depth: int = 0
     ) -> list[Path]:
         """
