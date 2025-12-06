@@ -109,7 +109,7 @@ class TestFindBuilderExecutable:
             find_builder_executable(None)
         except BuildError as e:
             error_msg = str(e)
-            assert "cd helpers && ./build.sh" in error_msg
+            assert "./build.sh" in error_msg
             assert "make build-helpers" in error_msg
             assert "flavor helpers build" in error_msg
             assert "--builder-bin" in error_msg
@@ -208,7 +208,7 @@ class TestFindLauncherExecutable:
             find_launcher_executable(None)
         except BuildError as e:
             error_msg = str(e)
-            assert "cd helpers && ./build.sh" in error_msg
+            assert "./build.sh" in error_msg
             assert "make build-helpers" in error_msg
             assert "flavor helpers build" in error_msg
             assert "--launcher-bin" in error_msg

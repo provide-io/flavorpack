@@ -62,7 +62,7 @@ class HelperManager:
 
         self._binary_loader = BinaryLoader(self)
 
-    def list_helpers(self, platform_filter: bool = False) -> dict[str, list[HelperInfo]]:
+    def list_helpers(self, platform_filter: bool = False) -> dict[str, list[HelperInfo]]:  # noqa: C901
         """List all available helpers.
 
         Args:

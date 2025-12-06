@@ -508,17 +508,17 @@ FLAVOR_VALIDATION=none ./myapp.psp
 ```bash
 # Build for Linux (from any platform)
 flavor pack \
-  --launcher-bin helpers/flavor-rs-launcher-linux_amd64 \
+  --launcher-bin dist/bin/flavor-rs-launcher-linux_amd64 \
   --output myapp-linux.psp
 
 # Build for macOS ARM
 flavor pack \
-  --launcher-bin helpers/flavor-rs-launcher-darwin_arm64 \
+  --launcher-bin dist/bin/flavor-rs-launcher-darwin_arm64 \
   --output myapp-macos-arm64.psp
 
 # Build for Windows
 flavor pack \
-  --launcher-bin helpers/flavor-rs-launcher-windows_amd64.exe \
+  --launcher-bin dist/bin/flavor-rs-launcher-windows_amd64.exe \
   --output myapp-windows.psp
 ```
 

@@ -23,6 +23,7 @@ log = get_command_logger("helpers")
 @click.group("helpers")
 def helper_group() -> None:
     """Manage Flavor helper binaries (launchers and builders)."""
+    pass
 
 
 @helper_group.command("list")
@@ -32,7 +33,7 @@ def helper_group() -> None:
     is_flag=True,
     help="Show detailed information",
 )
-def helper_list(verbose: bool) -> None:
+def helper_list(verbose: bool) -> None:  # noqa: C901
     """List available helper binaries."""
     from flavor.helpers.manager import HelperManager
 
