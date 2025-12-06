@@ -263,7 +263,7 @@ def find_builder_executable(builder_bin: str | None) -> Path:
             raise BuildError(
                 "❌ No builder binaries found!\n"
                 "\n"
-                "   • ./build.sh                   (build both Go and Rust builders)\n"
+                "   • cd helpers && ./build.sh     (build both Go and Rust builders)\n"
                 "   • make build-helpers           (if using make)\n"
                 "   • flavor helpers build         (if flavor CLI is available)\n"
                 "\n"
@@ -303,7 +303,7 @@ def find_launcher_executable(launcher_bin: str | None) -> Path:
             raise BuildError(
                 "❌ No launcher binaries found!\n"
                 "\n"
-                "   • ./build.sh                   (build both Go and Rust launchers)\n"
+                "   • cd helpers && ./build.sh     (build both Go and Rust launchers)\n"
                 "   • make build-helpers           (if using make)\n"
                 "   • flavor helpers build         (if flavor CLI is available)\n"
                 "\n"

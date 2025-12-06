@@ -26,20 +26,32 @@ func (r *Reader) ReadSlot(slotIndex int) ([]byte, error) {
 		return nil, ErrInvalidSlotIndex
 	}
 
-	slotTableEntryOffset := index.SlotTableOffset + (uint64(slotIndex) * uint64(SlotDescriptorSize))
-	entryData, err := r.readBytesAt(slotTableEntryOffset, SlotDescriptorSize)
-	if err != nil {
+	// Read slot table entry (64 bytes per entry)
+	slotTableEntryOffset := int64(index.SlotTableOffset) + int64(slotIndex*64)
+	if _, err := r.file.Seek(slotTableEntryOffset, io.SeekStart); err != nil {
+		return nil, err
+	}
+
+	// Read slot descriptor (64 bytes total)
+	var entryData [64]byte
+	if _, err := r.file.Read(entryData[:]); err != nil {
 		return nil, err
 	}
 
 	// Unpack the 64-byte descriptor using the new format
-	entry, err := UnpackSlotDescriptor(entryData)
+	entry, err := UnpackSlotDescriptor(entryData[:])
 	if err != nil {
 		return nil, fmt.Errorf("failed to unpack slot descriptor: %w", err)
 	}
 
-	slotData, err := r.readBytesAt(entry.Offset, entry.Size)
-	if err != nil {
+	// Read slot data
+	if _, err := r.file.Seek(int64(entry.Offset), io.SeekStart); err != nil {
+		return nil, err
+	}
+
+	// Read compressed data
+	slotData := make([]byte, entry.Size)
+	if _, err := r.file.Read(slotData); err != nil {
 		return nil, err
 	}
 
@@ -159,9 +171,13 @@ func (r *Reader) ExtractSlot(slotIndex int, destDir string) (string, error) {
 	}
 
 	// Read slot table entry (64 bytes per entry) to get permissions
-	slotTableEntryOffset := index.SlotTableOffset + (uint64(slotIndex) * uint64(SlotDescriptorSize))
-	entryData, err := r.readBytesAt(slotTableEntryOffset, SlotDescriptorSize)
-	if err != nil {
+	slotTableEntryOffset := int64(index.SlotTableOffset) + int64(slotIndex*64)
+	if _, err := r.file.Seek(slotTableEntryOffset, io.SeekStart); err != nil {
+		return "", err
+	}
+
+	var entryData [64]byte
+	if _, err := r.file.Read(entryData[:]); err != nil {
 		return "", err
 	}
 
