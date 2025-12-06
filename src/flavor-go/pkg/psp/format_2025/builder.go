@@ -163,10 +163,8 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 		os.Exit(1)
 	}
 	defer func() {
-		if out != nil {
-			if err := out.Close(); err != nil {
-				logger.Error("Failed to close output file", "error", err)
-			}
+		if err := out.Close(); err != nil {
+			logger.Error("Failed to close output file", "error", err)
 		}
 	}()
 
@@ -465,13 +463,6 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 		os.Exit(1)
 	}
 	logger.Debug("🔧 Set executable permissions on output file")
-
-	// Close output so subsequent Windows-specific mutations can rename safely
-	if err := out.Close(); err != nil {
-		logger.Error("Failed to close output file before resource embedding", "error", err)
-		os.Exit(1)
-	}
-	out = nil
 
 	// 🪟 Windows + Go Launcher: Convert append to resource embedding
 	// For Windows Go launchers, we need to embed PSPF as a PE resource instead of appending
