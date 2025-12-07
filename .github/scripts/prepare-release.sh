@@ -1,8 +1,12 @@
 #!/bin/bash
-set -euo pipefail
-
+#
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
 # Prepare release artifacts
 # Usage: prepare-release.sh <version>
+
+set -euo pipefail
 
 VERSION="${1}"
 
@@ -21,47 +25,10 @@ if [ -n "$(git status --porcelain)" ]; then
     git status --short
 fi
 
-# Update VERSION file
-echo "📝 Updating VERSION file to ${VERSION}"
-echo "${VERSION}" > VERSION
-
-# Update version in pyproject.toml
-echo "📝 Updating pyproject.toml"
-if [[ "$OSTYPE" == "darwin"* ]]; then
-    # macOS
-    sed -i '' "s/^version = \".*\"/version = \"${VERSION}\"/" pyproject.toml
-else
-    # Linux
-    sed -i "s/^version = \".*\"/version = \"${VERSION}\"/" pyproject.toml
-fi
-
-# Update version in helper configurations if they exist
-for config in helpers/*/Cargo.toml; do
-    if [ -f "$config" ]; then
-        echo "📝 Updating $(basename $(dirname "$config"))/Cargo.toml"
-        if [[ "$OSTYPE" == "darwin"* ]]; then
-            sed -i '' "s/^version = \".*\"/version = \"${VERSION}\"/" "$config"
-        else
-            sed -i "s/^version = \".*\"/version = \"${VERSION}\"/" "$config"
-        fi
-    fi
-done
-
-for config in helpers/*/go.mod; do
-    if [ -f "$config" ]; then
-        # Go modules don't have version in go.mod, but we can update any version constants
-        dir=$(dirname "$config")
-        version_file="$dir/internal/version/version.go"
-        if [ -f "$version_file" ]; then
-            echo "📝 Updating $(basename "$dir")/internal/version/version.go"
-            if [[ "$OSTYPE" == "darwin"* ]]; then
-                sed -i '' "s/Version = \".*\"/Version = \"${VERSION}\"/" "$version_file"
-            else
-                sed -i "s/Version = \".*\"/Version = \"${VERSION}\"/" "$version_file"
-            fi
-        fi
-    fi
-done
+# Update all version strings using the dedicated version update script
+echo ""
+echo "📝 Updating version strings across all components..."
+"$(dirname "$0")/../../tools/update-version.sh" "${VERSION}"
 
 # Generate changelog entry template
 CHANGELOG_ENTRY="docs/CHANGELOG.md"

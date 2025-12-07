@@ -1,0 +1,59 @@
+name: Reusable Publish
+
+on:
+  workflow_call:
+    inputs:
+      repository-url:
+        description: 'The URL of the PyPI repository'
+        required: true
+        type: string
+      environment-name:
+        description: 'The name of the environment'
+        required: true
+        type: string
+      environment-url:
+        description: 'The URL of the environment'
+        required: true
+        type: string
+    secrets:
+      api-token:
+        description: 'The API token for the repository'
+        required: true
+
+jobs:
+  publish:
+    name: Publish to ${{ inputs.environment-name }}
+    runs-on: ubuntu-24.04
+    environment:
+      name: ${{ inputs.environment-name }}
+      url: ${{ inputs.environment-url }}
+    permissions:
+      id-token: write
+    steps:
+      - name: 📥 Download wheels
+        uses: actions/download-artifact@v4
+        with:
+          name: release-wheels
+          path: ./dist
+      
+      - name: 🔍 Verify wheels
+        run: |
+          echo "📦 Wheels to publish to ${{ inputs.environment-name }}:"
+          ls -la dist/*.whl
+          
+          # Verify wheel names match PyPI expectations
+          for wheel in dist/*.whl; do
+            basename=$(basename "$wheel")
+            if [[ ! "$basename" =~ ^flavorpack-.*\.whl$ ]]; then
+              echo "::error::Invalid wheel name for PyPI: $basename"
+              exit 1
+            fi
+          done
+      
+      - name: 🚀 Publish to ${{ inputs.environment-name }}
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: ${{ inputs.repository-url }}
+          password: ${{ secrets.api-token }}
+          skip-existing: true
+          verbose: true
