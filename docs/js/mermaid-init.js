@@ -1,0 +1,1 @@
+../../.provide/foundry/theme/js/mermaid-init.js
