@@ -159,6 +159,7 @@ markers = [
     "cross_platform: Tests exercising cross-platform extraction helpers",
     "stress: Stress and hypothesis-based property tests",
     "requires_helpers: Tests that need Go/Rust helpers built",
+    "ci_only: Only run these tests when you're testing continuously",
 ]
 
 [tool.mutmut]
