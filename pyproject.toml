@@ -156,6 +156,7 @@ markers = [
     "taster: Taster-specific tests",
     "packaging: Package building and verification tests",
     "cross_language: Tests involving Go/Rust/Python interaction",
+    "cross_platform: Tests exercising cross-platform extraction helpers",
     "stress: Stress and hypothesis-based property tests",
     "requires_helpers: Tests that need Go/Rust helpers built",
 ]
