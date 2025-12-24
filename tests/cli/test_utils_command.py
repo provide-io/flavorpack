@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, Mock, patch
 
+import pytest
 from click.testing import CliRunner
 
 from flavor.cli import main as cli_main
@@ -80,7 +81,12 @@ class TestCleanCommand:
 
     @patch("flavor.cache.CacheManager")
     @patch("click.confirm")
-    def test_clean_user_aborts(self, mock_confirm: Mock, mock_cache_class: Mock) -> None:
+    def test_clean_user_aborts(
+        self,
+        mock_confirm: Mock,
+        mock_cache_class: Mock,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
         """Test clean when user aborts confirmation."""
         mock_cache = Mock()
         mock_cache.list_cached.return_value = [{"id": "pkg1", "name": "package-1", "size": 1_000_000}]
@@ -90,7 +96,8 @@ class TestCleanCommand:
         mock_confirm.return_value = False
 
         runner = CliRunner()
-        result = runner.invoke(cli_main, ["clean"])
+        with capsys.disabled():
+            result = runner.invoke(cli_main, ["clean"])
 
         assert result.exit_code == 0
         assert "Aborted." in result.output

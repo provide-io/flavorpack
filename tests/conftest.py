@@ -21,6 +21,32 @@ import pytest
 
 from flavor.psp.format_2025.pspf_builder import PSPFBuilder
 
+
+# Prevent click.testing's internal buffers from being closed too early during CLI
+# tests. If they close before the runner collects output we get a ValueError ("I/O
+# operation on closed file"), so make close() a no-op for BytesIOCopy while
+# keeping the data flushed.
+try:
+    from click.testing import BytesIOCopy
+
+    if not getattr(BytesIOCopy, "_flavorpack_keep_alive", False):
+        BytesIOCopy._flavorpack_keep_alive = True
+
+        def _keepalive_close(self) -> None:  # pragma: no cover - test-only safety patch
+            try:
+                self.flush()
+            except Exception:
+                pass
+            if copy_to := getattr(self, "copy_to", None):
+                try:
+                    copy_to.flush()
+                except Exception:
+                    pass
+
+        BytesIOCopy.close = _keepalive_close  # type: ignore[assignment]
+except ImportError:  # pragma: no cover - click should always be available during tests
+    pass
+
 if TYPE_CHECKING:
     from flavor.psp.format_2025 import SlotMetadata
 

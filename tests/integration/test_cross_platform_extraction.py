@@ -377,7 +377,7 @@ class TestCrossPlatformWithArtifacts:
 
     @pytest.mark.integration
     @pytest.mark.cross_platform
-    @pytest.mark.requires_artifacts
+    @pytest.mark.requires_helpers
     @pytest.mark.ci_only
     def test_verify_linux_amd64_package(self, artifacts_dir: Path | None) -> None:
         """Test verifying a package built on Linux AMD64."""
@@ -402,7 +402,7 @@ class TestCrossPlatformWithArtifacts:
 
     @pytest.mark.integration
     @pytest.mark.cross_platform
-    @pytest.mark.requires_artifacts
+    @pytest.mark.requires_helpers
     @pytest.mark.ci_only
     def test_verify_darwin_arm64_package(self, artifacts_dir: Path | None) -> None:
         """Test verifying a package built on macOS ARM64."""
@@ -427,7 +427,7 @@ class TestCrossPlatformWithArtifacts:
 
     @pytest.mark.integration
     @pytest.mark.cross_platform
-    @pytest.mark.requires_artifacts
+    @pytest.mark.requires_helpers
     @pytest.mark.ci_only
     def test_extract_all_platforms(self, artifacts_dir: Path | None, tmp_path: Path) -> None:
         """Test extracting packages from all available platforms.
