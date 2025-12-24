@@ -266,11 +266,19 @@ class TestUVDownload:
                     "provide.foundation.platform.get_arch_name",
                     return_value="arm64",
                 ),
-                patch.object(packager.env_builder, "find_uv_command", return_value=fake_uv_path),
-                patch.object(packager, "_copy_executable"),
+                patch.object(
+                    packager.slot_builder.env_builder,
+                    "find_uv_command",
+                    return_value=fake_uv_path,
+                ),
+                patch.object(
+                    packager.slot_builder.env_builder,
+                    "create_python_placeholder",
+                    return_value=None,
+                ),
+                patch.object(packager.slot_builder, "_copy_executable"),
                 patch.object(packager.slot_builder, "_build_wheels"),
                 patch.object(packager.slot_builder, "_create_metadata"),
-                patch.object(packager.env_builder, "create_python_placeholder"),
                 patch("tarfile.open"),
             ):
                 # Don't pre-create directories - let the method create them
