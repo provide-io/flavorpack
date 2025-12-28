@@ -123,3 +123,6 @@ clean = "rm -rf dist/ build/ *.egg-info src/flavor.egg-info\nrm -rf dist/bin\nfi
 upload = "if [ -z \"$(ls -A dist/*.whl 2>/dev/null)\" ]; then\n  echo \"❌ No wheels found in dist/\"\n  echo \"Run 'we release all' first\"\n  exit 1\nfi\necho \"📤 Uploading to PyPI...\"\ntwine upload dist/*.whl\n"
 upload-test = "if [ -z \"$(ls -A dist/*.whl 2>/dev/null)\" ]; then\n  echo \"❌ No wheels found in dist/\"\n  echo \"Run 'we release all' first\"\n  exit 1\nfi\necho \"📤 Uploading to TestPyPI...\"\ntwine upload --repository testpypi dist/*.whl\n"
 test = "echo \"🧪 Testing release process...\"\n./build.sh\nPLATFORM=$(python3 -c \"import platform; arch = platform.machine().lower(); arch = 'amd64' if arch == 'x86_64' else 'arm64' if arch in ['arm64', 'aarch64'] else arch; os = 'darwin' if platform.system() == 'Darwin' else 'linux' if platform.system() == 'Linux' else 'windows'; print(f'{os}_{arch}')\")\necho \"Testing with platform: $PLATFORM\"\npython3 tools/build_wheel.py --platform $PLATFORM\npython3 tools/validate_wheel.py --all --full\n"
+
+[tasks.security]
+_default = "bandit -r src/ -c pyproject.toml"

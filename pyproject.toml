@@ -219,3 +219,6 @@ dependencies = []
 [tool.flavor.signing]
 private_key_path = "keys/flavor-private.key"
 public_key_path = "keys/flavor-public.key"
+
+[tool.bandit]
+exclude_dirs = [".venv", "tests", "workenv"]
