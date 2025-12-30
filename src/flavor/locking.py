@@ -17,7 +17,6 @@ class LockError(Exception):
     """Error during lock operations."""
 
 
-
 class LockManager:
     """Manages file-based locks for concurrent operations."""
 

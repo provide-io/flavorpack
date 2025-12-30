@@ -155,9 +155,7 @@ class PSPFIntegrityVerifier:
                                 raise
                             elif validation_level == ValidationLevel.STANDARD:
                                 logger.warning(f"⚠️ Signature verification error: {e}")
-                                logger.warning(
-                                    "🚨 SECURITY WARNING: Package integrity verification failed"
-                                )
+                                logger.warning("🚨 SECURITY WARNING: Package integrity verification failed")
                                 logger.warning("🚨 Package may be corrupted or tampered with")
                                 logger.warning(
                                     "🚨 Continuing with standard validation (use FLAVOR_VALIDATION=strict to enforce)"
