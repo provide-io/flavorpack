@@ -36,7 +36,10 @@ dependencies = [
 keywords = ["packaging", "pspf", "flavor", "executable", "bundle"]
 
 [project.urls]
-Homepage = "https://github.com/provide-io/flavor"
+Homepage = "https://foundry.provide.io/flavorpack/"
+Documentation = "https://foundry.provide.io/flavorpack/"
+Repository = "https://github.com/provide-io/flavorpack"
+Issues = "https://github.com/provide-io/flavorpack/issues"
 
 [dependency-groups]
 dev = [
