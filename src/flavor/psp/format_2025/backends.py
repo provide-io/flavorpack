@@ -36,22 +36,18 @@ class Backend(ABC):
     @abstractmethod
     def open(self, path: Path) -> None:
         """Open the bundle file."""
-        pass
 
     @abstractmethod
     def close(self) -> None:
         """Close the bundle file."""
-        pass
 
     @abstractmethod
     def read_at(self, offset: int, size: int) -> bytes | memoryview:
         """Read data at specific offset."""
-        pass
 
     @abstractmethod
     def read_slot(self, descriptor: SlotDescriptor) -> bytes | memoryview:
         """Read slot data based on descriptor."""
-        pass
 
     def stream_slot(
         self, descriptor: SlotDescriptor, chunk_size: int = DEFAULT_CHUNK_SIZE

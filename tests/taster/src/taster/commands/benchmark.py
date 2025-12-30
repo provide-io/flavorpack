@@ -145,7 +145,6 @@ def _display_worker_summary(worker_results: Sequence[WorkerResult], duration: in
 @click.group("benchmark")
 def benchmark_command() -> None:
     """⚡ Performance testing and profiling"""
-    pass
 
 
 @benchmark_command.command("memory")

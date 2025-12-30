@@ -84,9 +84,7 @@ class TestExtractCommand:
         output_file.write_text("existing content")
 
         with capsys.disabled():
-            result = runner.invoke(
-                cli, ["extract", "--force", str(mock_test_package), "2", str(output_file)]
-            )
+            result = runner.invoke(cli, ["extract", "--force", str(mock_test_package), "2", str(output_file)])
 
         assert result.exit_code == 0
         assert output_file.stat().st_size > len("existing content")
@@ -102,9 +100,7 @@ class TestExtractCommand:
         output_dir = tmp_path / "extracted"
 
         with capsys.disabled():
-            result = runner.invoke(
-                cli, ["extract-all", str(mock_test_package), str(output_dir)]
-            )
+            result = runner.invoke(cli, ["extract-all", str(mock_test_package), str(output_dir)])
 
         assert result.exit_code == 0
         assert output_dir.exists()
@@ -137,9 +133,7 @@ class TestExtractCommand:
         existing.write_text("existing")
 
         with capsys.disabled():
-            result = runner.invoke(
-                cli, ["extract-all", str(mock_test_package), str(output_dir)]
-            )
+            result = runner.invoke(cli, ["extract-all", str(mock_test_package), str(output_dir)])
 
         assert result.exit_code == 0
         assert "⏭️  Skipping 00_main (exists)" in result.output
@@ -162,9 +156,7 @@ class TestExtractCommand:
         existing.write_text("existing")
 
         with capsys.disabled():
-            result = runner.invoke(
-                cli, ["extract-all", "--force", str(mock_test_package), str(output_dir)]
-            )
+            result = runner.invoke(cli, ["extract-all", "--force", str(mock_test_package), str(output_dir)])
 
         assert result.exit_code == 0
         assert "00_main" in result.output

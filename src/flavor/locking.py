@@ -16,7 +16,6 @@ from provide.foundation.file.lock import FileLock
 class LockError(Exception):
     """Error during lock operations."""
 
-    pass
 
 
 class LockManager:

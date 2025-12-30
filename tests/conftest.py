@@ -21,7 +21,6 @@ import pytest
 
 from flavor.psp.format_2025.pspf_builder import PSPFBuilder
 
-
 # Prevent click.testing's internal buffers from being closed too early during CLI
 # tests. If they close before the runner collects output we get a ValueError ("I/O
 # operation on closed file"), so make close() a no-op for BytesIOCopy while
