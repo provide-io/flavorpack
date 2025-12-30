@@ -54,7 +54,7 @@ docs = [
 flavor = "flavor.cli:main"
 
 [build-system]
-requires = ["setuptools>=68.0.0", "wheel"]
+requires = ["setuptools>=75.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
