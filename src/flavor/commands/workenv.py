@@ -23,7 +23,6 @@ log = get_command_logger("workenv")
 @click.group("workenv")
 def workenv_group() -> None:
     """Manage the Flavor work environment cache."""
-    pass
 
 
 @workenv_group.command("list")

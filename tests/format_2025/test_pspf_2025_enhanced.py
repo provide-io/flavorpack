@@ -143,7 +143,6 @@ class TestCleanup:
         """Clean up any test artifacts."""
         yield
         # Cleanup happens automatically with tmp_path
-        pass
 
 
 class TestEnhancedSlots:
