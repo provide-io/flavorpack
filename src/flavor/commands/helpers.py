@@ -23,7 +23,6 @@ log = get_command_logger("helpers")
 @click.group("helpers")
 def helper_group() -> None:
     """Manage Flavor helper binaries (launchers and builders)."""
-    pass
 
 
 @helper_group.command("list")

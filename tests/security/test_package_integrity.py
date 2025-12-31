@@ -125,7 +125,6 @@ class TestPackageIntegrity:
         # Test that compromised cache is detected and rejected
 
         # Placeholder for now
-        pass
 
     @pytest.mark.security
     @pytest.mark.slow
@@ -135,7 +134,6 @@ class TestPackageIntegrity:
         # that the tampering is detected during validation
 
         # Placeholder for comprehensive tampering test
-        pass
 
 
 # 🌶️📦🔚
