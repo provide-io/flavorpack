@@ -106,7 +106,6 @@ class TestPackageSecurity:
             PSPFBuilder()
             # For now, we skip validation testing as the builder doesn't validate paths
             # This would need to be implemented in the builder
-            pass
 
     def test_command_injection_prevention(self) -> None:
         """Ensure command injection is prevented."""
@@ -123,7 +122,6 @@ class TestPackageSecurity:
             # Ensure malicious commands in metadata are sanitized
             PSPFBuilder()
             # Method removed - skip this test
-            pass
             # with pytest.raises(Exception, match="invalid.*character|command"):
             #     builder.set_metadata({
             #         "execution": {
@@ -140,7 +138,6 @@ class TestPackageSecurity:
 
         # The builder doesn't have add_compressed_slot, use add_slot with encoding
         # For now, we skip zip bomb testing as it would need to be implemented
-        pass
         #     builder.add_compressed_slot(
         #         name="bomb",
         #         compressed_data=small_data,
@@ -154,7 +151,6 @@ class TestPackageSecurity:
 
         # The add_slot method exists but doesn't have claimed_size parameter
         # Memory limit testing would need to be implemented differently
-        pass
 
     def test_symlink_escape_prevention(self) -> None:
         """Ensure symlinks cannot escape package sandbox."""
@@ -164,7 +160,6 @@ class TestPackageSecurity:
 
         # The builder can use add_slot with a Path, but symlink validation
         # would need to be implemented in the builder
-        pass
 
     def test_race_condition_prevention(self) -> None:
         """Ensure race conditions during extraction are handled."""
@@ -232,7 +227,6 @@ class TestPackageSecurity:
 
         # The add_slot method exists, but file count limits would need
         # to be implemented in the builder
-        pass
 
     def test_permission_preservation(self) -> None:
         """Ensure file permissions are not escalated."""
