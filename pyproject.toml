@@ -1,6 +1,12 @@
 #
-# flavor/pyproject.toml
+# flavorpack/pyproject.toml
 #
+# Flavor Pack packaging system implementing Progressive Secure Package Format (PSPF/2025)
+#
+
+[build-system]
+requires = ["setuptools>=75.0", "wheel"]
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "flavorpack"
@@ -15,6 +21,7 @@ authors = [
 maintainers = [
     { name = "provide.io", email = "code@provide.io" },
 ]
+keywords = ["packaging", "pspf", "flavor", "executable", "bundle"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
@@ -26,6 +33,7 @@ classifiers = [
     "Topic :: Software Development :: Build Tools",
     "Topic :: Security :: Cryptography",
     "Topic :: System :: Archiving :: Packaging",
+    "Typing :: Typed",
 ]
 dependencies = [
     "provide-foundation[all]",
@@ -33,7 +41,6 @@ dependencies = [
     "uv>=0.9.6",
     "setuptools>=68.0.0",  # Required for building wheels at runtime
 ]
-keywords = ["packaging", "pspf", "flavor", "executable", "bundle"]
 
 [project.urls]
 Homepage = "https://foundry.provide.io/flavorpack/"
@@ -52,10 +59,6 @@ docs = [
 
 [project.scripts]
 flavor = "flavor.cli:main"
-
-[build-system]
-requires = ["setuptools>=75.0", "wheel"]
-build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
 include-package-data = true
