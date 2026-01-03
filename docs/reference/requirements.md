@@ -190,7 +190,7 @@ macOS binaries are built separately for Intel and Apple Silicon:
 
 ### Windows (Experimental)
 
-Windows support is experimental and not yet production-ready.
+Windows support is experimental and not yet production-focused.
 
 ---
 

@@ -2,13 +2,12 @@
 
 Complete reference for `pyproject.toml` configuration options in FlavorPack packages.
 
-!!! warning "Alpha Release - Limited Configuration Support"
-    **Many configuration options shown in this guide are planned but not yet implemented.**
+!!! warning "Feature Coverage"
+    This guide documents both current configuration and roadmap items.
 
-    FlavorPack is in alpha and currently supports a **minimal subset** of the documented configuration.
-    See the ["Currently Supported Configuration"](#currently-supported-configuration) section below for what actually works today.
+    See the ["Currently Supported Configuration"](#currently-supported-configuration) section below for what works today.
 
-    Features marked with 📋 are planned for future releases. See the [Roadmap](../roadmap/) for implementation timelines.
+    Features marked with 📋 are tracked in the roadmap as exploratory work. See the [Roadmap](../roadmap/) for status details.
 
 ## Overview
 
@@ -18,7 +17,7 @@ FlavorPack uses `pyproject.toml` as its manifest format, following Python packag
 
 ### Minimal Working Example
 
-This is what **actually works today** in FlavorPack alpha:
+This is what **actually works today** in FlavorPack initial release:
 
 ```toml
 [project]
@@ -206,11 +205,11 @@ description = "Custom package description"
 
 ### Execution Configuration
 
-!!! warning "📋 Planned Feature - Not Yet Implemented"
-    These execution configuration options are **not yet supported**. See [Roadmap](../roadmap/#manifest-configuration-features) for planned implementation.
+!!! warning "📋 Exploratory Feature - Not Yet Implemented"
+    These execution configuration options are **tracked in the roadmap** as exploratory work. See [Roadmap](../roadmap/#manifest-configuration-features) for status details.
 
 ```toml
-# 📋 PLANNED - Not yet implemented
+# 📋 EXPLORATORY - Not yet implemented
 [tool.flavor.execution]
 # Working directory (relative to extraction root)
 working_directory = "app"
@@ -258,11 +257,11 @@ dependencies = [                  # ✅ Supported
 ]
 ```
 
-!!! warning "📋 Planned Features - Not Yet Implemented"
-    The following build configuration options are **not yet supported**. See [Roadmap](../roadmap/#manifest-configuration-features) for planned implementation.
+!!! warning "📋 Exploratory Features - Not Yet Implemented"
+    The following build configuration options are **tracked in the roadmap** as exploratory work. See [Roadmap](../roadmap/#manifest-configuration-features) for status details.
 
 ```toml
-# 📋 PLANNED - Not yet implemented
+# 📋 EXPLORATORY - Not yet implemented
 [tool.flavor.build]
 # Exclude patterns (glob)
 exclude = [
@@ -291,7 +290,7 @@ deterministic = true
 seed = "my-build-seed"
 ```
 
-**Note**: The `--strip` CLI flag does work for stripping launcher binaries. Manifest-based strip configuration is planned.
+**Note**: The `--strip` CLI flag does work for stripping launcher binaries. Manifest-based strip configuration is tracked in the roadmap as exploratory work.
 
 ### Metadata Override
 
@@ -301,11 +300,11 @@ seed = "my-build-seed"
 package_name = "myapp-custom"     # ✅ Supported
 ```
 
-!!! warning "📋 Planned Features - Not Yet Implemented"
-    Additional metadata customization options are **not yet supported**. See [Roadmap](../roadmap/#manifest-configuration-features) for planned implementation.
+!!! warning "📋 Exploratory Features - Not Yet Implemented"
+    Additional metadata customization options are **tracked in the roadmap** as exploratory work. See [Roadmap](../roadmap/#manifest-configuration-features) for status details.
 
 ```toml
-# 📋 PLANNED - Not yet implemented
+# 📋 EXPLORATORY - Not yet implemented
 [tool.flavor.metadata]
 # Build information
 builder = "CI/CD Pipeline"
@@ -320,18 +319,18 @@ git_commit = "${GIT_COMMIT}"
 
 ## Slot Configuration
 
-!!! warning "📋 Planned Feature - Not Yet Implemented"
-    **Slot configuration via `pyproject.toml` is not yet supported.**
+!!! warning "📋 Exploratory Feature - Not Yet Implemented"
+    **Slot configuration via `pyproject.toml` is tracked in the roadmap as exploratory work.**
 
     Slots are currently created automatically by FlavorPack based on your Python application structure.
-    Manual slot configuration is planned for a future release. See [Roadmap](../roadmap/#slot-configuration) for details.
+    Manual slot configuration is tracked in the roadmap as exploratory work. See [Roadmap](../roadmap/#slot-configuration) for details.
 
-    This entire section documents the **planned slot configuration format** that will be available in future releases.
+    This entire section documents the **tracked in the roadmap slot configuration format** that may be available in later releases; timing may change or be removed.
 
 ### Basic Slot Definition
 
 ```toml
-# 📋 PLANNED - Not yet implemented
+# 📋 EXPLORATORY - Not yet implemented
 [[tool.flavor.slots]]
 id = "config"                    # Unique slot identifier
 source = "config/"                # Source directory/file
@@ -366,12 +365,12 @@ extract_to = "app"
 #
 # IMPORTANT: The operations field IS implemented in the PSPF/2025 binary format
 # (64-bit packed uint64 supporting up to 8 operations). However, manifest-based
-# configuration of operations is not yet available.
+# configuration of operations is not part of the current pre-release and may change or be removed.
 #
 # Current behavior: FlavorPack automatically applies tar.gz to all slots.
 # Future: You'll be able to specify operations via manifest configuration.
 #
-# 📋 PLANNED: Manifest-based operation specification
+# 📋 EXPLORATORY: Manifest-based operation specification
 # When implemented, you'll specify operations as string format:
 #   - "tar.gz" or "tgz": TAR archive with GZIP compression (default for directories)
 #   - "tar.bz2": TAR archive with BZIP2 compression (better compression)
@@ -470,8 +469,8 @@ optional = true
 
 ## Security Configuration
 
-!!! warning "📋 Planned Feature - Not Yet Implemented"
-    **Security configuration via `pyproject.toml` is not yet supported.**
+!!! warning "📋 Exploratory Feature - Not Yet Implemented"
+    **Security configuration via `pyproject.toml` is tracked in the roadmap as exploratory work.**
 
     Package signing is currently available via CLI flags only:
 
@@ -479,12 +478,12 @@ optional = true
     - `--public-key PATH` - Include public key in package
     - `--key-seed TEXT` - Deterministic key generation
 
-    Manifest-based security configuration is planned for a future release. See [Roadmap](../roadmap/) for details.
+    Manifest-based security configuration is tracked in the roadmap as exploratory work. See [Roadmap](../roadmap/) for details.
 
 ### Package Signing
 
 ```toml
-# 📋 PLANNED - Not yet implemented
+# 📋 EXPLORATORY - Not yet implemented
 [tool.flavor.security]
 # Signature algorithm
 algorithm = "ed25519"
@@ -519,15 +518,15 @@ strict_slot_validation = true
 
 ## Advanced Features
 
-!!! warning "📋 Planned Features - Not Yet Implemented"
-    **Advanced features are not yet supported.**
+!!! warning "📋 Exploratory Features - Not Yet Implemented"
+    **Advanced features are tracked in the roadmap as exploratory work.**
 
-    These features are planned for future releases to enable platform-specific builds, custom build steps, and experimental optimizations. See [Roadmap](../roadmap/#advanced-features) for details.
+    These features are tracked in the roadmap as exploratory work to enable platform-specific builds, custom build steps, and experimental optimizations. See [Roadmap](../roadmap/#advanced-features) for details.
 
 ### Conditional Configuration
 
 ```toml
-# 📋 PLANNED - Not yet implemented
+# 📋 EXPLORATORY - Not yet implemented
 [tool.flavor.conditions]
 # Platform-specific settings
 [tool.flavor.conditions.linux]
@@ -543,7 +542,7 @@ entry_point = "myapp.windows:main"
 ### Build Hooks
 
 ```toml
-# 📋 PLANNED - Not yet implemented
+# 📋 EXPLORATORY - Not yet implemented
 [tool.flavor.hooks]
 # Pre-build commands
 pre_build = [
@@ -571,7 +570,7 @@ post_extract = [
 ### Feature Flags
 
 ```toml
-# 📋 PLANNED - Not yet implemented
+# 📋 EXPLORATORY - Not yet implemented
 [tool.flavor.features]
 # Enable experimental features
 experimental_compression = true
@@ -700,7 +699,7 @@ RATE_LIMIT = 1000
 
 ## Examples
 
-These examples show what actually works today in FlavorPack alpha.
+These examples show what actually works today in FlavorPack initial release.
 
 ### Minimal Manifest (✅ Works Today)
 
@@ -758,16 +757,16 @@ pass = ["DATABASE_URL"]  # Pass through from host
 set = { FLASK_ENV = "production", PORT = "8000" }
 ```
 
-Note: Slot configuration shown in other examples is **not yet implemented**.
+Note: Slot configuration shown in other examples is **tracked in the roadmap** as exploratory work.
 
-### Future Examples (📋 Planned)
+### Exploratory Examples (📋 Exploratory)
 
-The following examples use features that are planned but not yet implemented:
+The following examples use features that are tracked in the roadmap as exploratory work:
 
-#### Web App with Custom Slots (📋 Planned)
+#### Web App with Custom Slots (📋 Exploratory)
 
 ```toml
-# 📋 PLANNED - Slot configuration not yet supported
+# 📋 EXPLORATORY - Slot configuration tracked in the roadmap
 [project]
 name = "webapp"
 version = "2.0.0"
@@ -789,10 +788,10 @@ purpose = "static-resources"
 lifecycle = "cached"
 ```
 
-#### CLI Tool with Lazy-Loaded Plugins (📋 Planned)
+#### CLI Tool with Lazy-Loaded Plugins (📋 Exploratory)
 
 ```toml
-# 📋 PLANNED - Slot configuration not yet supported
+# 📋 EXPLORATORY - Slot configuration tracked in the roadmap
 [project]
 name = "cli-tool"
 version = "3.0.0"

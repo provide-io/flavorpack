@@ -187,7 +187,7 @@ PRETASTER systematically tests these combinations:
 | Builder | Launcher | Status | Notes |
 |---------|----------|--------|-------|
 | Python | Go | ✅ Supported | Most common combination |
-| Python | Rust | ✅ Supported | Production-ready |
+| Python | Rust | ✅ Supported | Production-focused |
 | Go | Go | ✅ Supported | Native Go toolchain |
 | Rust | Rust | ✅ Supported | Native Rust toolchain |
 

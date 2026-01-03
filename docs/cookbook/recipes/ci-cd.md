@@ -332,7 +332,7 @@ strategy:
 
 ## Complete Real-World Example
 
-Here's a production-ready GitHub Actions workflow that builds, tests, and releases packages for multiple platforms with proper caching and error handling:
+Here's a production-focused GitHub Actions workflow that builds, tests, and releases packages for multiple platforms with proper caching and error handling:
 
 {% raw %}
 ```yaml

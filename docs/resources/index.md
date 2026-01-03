@@ -93,7 +93,7 @@ Connect with the FlavorPack community.
 - [Discussions](https://github.com/provide-io/flavorpack/discussions)
 
 !!! note "PyPI Package"
-    FlavorPack is not yet available on PyPI. Install from source following the [installation guide](../getting-started/installation/).
+    FlavorPack is available via PyPI. See the [installation guide](../getting-started/installation/).
 
 ### Documentation Formats
 - [API Reference](../api/index/) - Technical API documentation
