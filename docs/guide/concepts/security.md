@@ -257,7 +257,7 @@ verification: authenticity
 use_case: enterprise_deployment
 ```
 
-### 📋 Certificate-Based (Planned Feature)
+### 📋 Certificate-Based (Exploratory Feature)
 
 PKI integration is tracked in the roadmap as exploratory work to support public distribution:
 
@@ -288,7 +288,7 @@ FOUNDATION_LOG_LEVEL=debug      # Python component logging
 
 ### Configuration File
 
-!!! info "📋 Planned Feature - Not Yet Implemented"
+!!! info "📋 Exploratory Feature - Not Yet Implemented"
     Configuration file support is tracked in the roadmap as exploratory work. Currently, all configuration is done via environment variables and CLI flags.
 
 #### Current Configuration Methods
@@ -307,7 +307,7 @@ export FOUNDATION_LOG_LEVEL=debug
 export FLAVOR_CACHE=/custom/cache
 ```
 
-#### Planned Configuration File Format
+#### Exploratory Configuration File Format
 
 Exploratory: configuration file support may be added; timing may change or be removed:
 
