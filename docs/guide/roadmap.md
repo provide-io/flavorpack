@@ -1,20 +1,20 @@
 # FlavorPack Roadmap
 
-This roadmap shows the current implementation status and planned features for FlavorPack. Use this to understand what works today versus what's coming in future releases.
+This roadmap shows the current implementation status and exploratory items for FlavorPack. Use this to understand what works today versus what's under consideration. Roadmap items are non-binding and may change or be removed.
 
 !!! info "Version Status"
-    FlavorPack is currently in **alpha** stage. APIs, file formats, and commands may change without notice.
+    FlavorPack is currently in **initial release** stage. APIs, file formats, and commands may change without notice.
 
 ## Legend
 
 - ✅ **Implemented** - Works today, documented and tested
 - 🚧 **In Progress** - Partially implemented or under active development
-- 📋 **Planned** - Designed but not yet implemented
-- 💡 **Proposed** - Under consideration for future releases
+- 📋 **Exploratory** - Designed but tracked in the roadmap
+- 💡 **Proposed** - Under consideration; may change or be removed
 
 ---
 
-## What Works Today (Alpha)
+## What Works Today (Initial release)
 
 ### Core Functionality ✅
 
@@ -101,9 +101,9 @@ map = { OLD = "NEW" }            # ✅ Rename variables
 
 ---
 
-## Planned Features
+## Exploratory Features
 
-The following features are documented in guides but are **not yet implemented**. They represent the planned evolution of FlavorPack.
+The following features are documented in guides but are **tracked in the roadmap**. They represent the tracked in the roadmap evolution of FlavorPack.
 
 ### Manifest Configuration Features 📋
 
@@ -119,7 +119,7 @@ extract_to = "{workenv}/config"
 permissions = "0644"
 ```
 
-**Status**: 📋 Planned
+**Status**: 📋 Exploratory
 **Use Case**: Enable custom slot purposes, lifecycles, platform-specific slots, and lazy-loaded content
 
 #### Python Version Selection
@@ -131,7 +131,7 @@ min_version = "3.11"  # Minimum acceptable
 max_version = "3.13"  # Maximum acceptable
 ```
 
-**Status**: 🔶 Planned
+**Status**: 🔶 Exploratory
 **Priority**: Medium
 **Complexity**: Medium
 
@@ -164,7 +164,7 @@ pre_build_commands = [
 ]
 ```
 
-**Status**: 🔶 Planned
+**Status**: 🔶 Exploratory
 **Priority**: High
 **Complexity**: Medium
 
@@ -189,7 +189,7 @@ trusted_hosts = [
 ]
 ```
 
-**Status**: 🔶 Planned
+**Status**: 🔶 Exploratory
 **Priority**: Medium
 **Complexity**: Low-Medium
 
@@ -211,7 +211,7 @@ compile_bytecode = true
 strip_docstrings = true
 ```
 
-**Status**: 🔶 Planned
+**Status**: 🔶 Exploratory
 **Priority**: Low
 **Complexity**: Low
 
@@ -233,7 +233,7 @@ no_dev_deps = true
 requirements_file = "requirements.lock"
 ```
 
-**Status**: 🔶 Planned
+**Status**: 🔶 Exploratory
 **Priority**: Medium
 **Complexity**: Medium
 
@@ -260,7 +260,7 @@ source = "config/"
 lifecycle = "persistent"  # Keep across runs
 ```
 
-**Status**: 🔶 Planned
+**Status**: 🔶 Exploratory
 **Priority**: Medium
 **Complexity**: High
 
@@ -280,7 +280,7 @@ target = "lib/"
 platform = "darwin"
 ```
 
-**Status**: 🔶 Planned
+**Status**: 🔶 Exploratory
 **Priority**: Medium
 **Complexity**: Medium
 
@@ -304,7 +304,7 @@ env = {
 }
 ```
 
-**Status**: 🔶 Planned
+**Status**: 🔶 Exploratory
 **Priority**: Low
 **Complexity**: Medium
 
@@ -323,7 +323,7 @@ persistent = true
 port = 8000
 ```
 
-**Status**: 🔶 Planned
+**Status**: 🔶 Exploratory
 **Priority**: Medium
 **Complexity**: High
 
@@ -351,7 +351,7 @@ OLD_VAR = "NEW_VAR"
 **Status**: 🟢 Partially Implemented
 **Priority**: High
 **Complexity**: Medium
-**Note**: Basic environment control exists, advanced features planned
+**Note**: Basic environment control exists, advanced features tracked in the roadmap
 
 ---
 
@@ -673,9 +673,9 @@ Features required before declaring v1.0 stable:
 - ✅ Basic Python packaging
 - 🔶 Complete API documentation
 - 🔶 Comprehensive test coverage
-- 🔶 Production-ready error handling
+- 🔶 Production-focused error handling
 - 🔶 Performance optimization
-- 🔶 Windows support (currently beta)
+- 🔶 Windows support (limited)
 
 ### Nice to Have for v1.0
 
@@ -692,7 +692,7 @@ Features required before declaring v1.0 stable:
 - ✅ **Implemented** - Feature is complete and tested
 - 🟢 **Partially Implemented** - Basic functionality exists
 - 🟡 **In Progress** - Actively being developed
-- 🔶 **Planned** - Design complete, awaiting implementation
+- 🔶 **Exploratory** - Design complete, awaiting implementation
 - 🔴 **Not Started** - Concept only, no implementation
 
 ---

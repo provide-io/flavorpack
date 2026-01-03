@@ -11,10 +11,8 @@ Complete guide to packaging Python applications with FlavorPack, including depen
 
     See [System Requirements](../../reference/requirements/) for detailed version information.
 
-!!! warning "Alpha Release - Many Features Not Yet Implemented"
-    **This guide shows both working features and planned future features.**
-
-    FlavorPack's Python packaging is in alpha. Basic packaging works today, but many advanced features documented here are **planned for future releases**.
+!!! warning "Feature Coverage"
+    This guide covers current functionality and items tracked in the roadmap as exploratory work.
 
     **✅ What Works Today**:
 
@@ -23,7 +21,7 @@ Complete guide to packaging Python applications with FlavorPack, including depen
     - Automatic dependency resolution via UV
     - Simple package structure
 
-    **📋 Planned for Future Releases** (see [Roadmap](../roadmap/)):
+    **📋 Roadmap Items** (see [Roadmap](../roadmap/)):
 
     - Python version selection
     - Build environment customization
@@ -31,11 +29,11 @@ Complete guide to packaging Python applications with FlavorPack, including depen
     - Platform-specific builds
     - Advanced dependency configuration
 
-    Features marked with 📋 are **not yet implemented**.
+    Features marked with 📋 are **tracked in the roadmap as exploratory work**.
 
 ## Overview
 
-FlavorPack provides first-class support for Python applications. This guide covers what works today and what's planned for future releases.
+FlavorPack provides first-class support for Python applications. This guide covers what works today and what's tracked in the roadmap as exploratory work.
 
 ## What Works Today
 
@@ -82,11 +80,11 @@ Packaged applications currently use whatever Python version is available in your
 | Python 3.10 or older | ❌ FlavorPack won't run |
 
 !!! info "Current Limitation"
-    **Python version selection is not yet implemented.** You cannot specify a different Python version than what's in your build environment.
+    **Python version selection is tracked in the roadmap as exploratory work.** You cannot specify a different Python version than what's in your build environment.
 
     For example, if you build on Python 3.12, your package will use Python 3.12 - you cannot target Python 3.11.
 
-    **Planned**: Future releases will support specifying target Python versions via manifest configuration (see [Roadmap](../roadmap/)).
+    **Exploratory**: Support for specifying target Python versions via manifest configuration is under evaluation (see [Roadmap](../roadmap/)).
 
 ### Dependency Management ✅
 
@@ -128,14 +126,14 @@ The `[tool.flavor].entry_point` is required and specifies which function runs wh
 
 ---
 
-## Planned Python Features
+## Exploratory Python Features
 
-The following features are planned but **not yet implemented**. See the [FlavorPack Roadmap](../../roadmap/) for detailed status, target versions, and implementation timelines.
+The following features are tracked in the roadmap as exploratory work. See the [FlavorPack Roadmap](../../roadmap/) for current status and context.
 
 ### Python Version Selection 📋
 
-!!! note "Planned Feature"
-    Automatic Python version selection is planned for **v0.3.0 (Q1 2026)**.
+!!! note "Exploratory Feature"
+    Automatic Python version selection is tracked in the roadmap as exploratory work. Timing may change or be removed.
     See [Roadmap - Python Version Management](../../roadmap/#python-version-selection) for full details.
 
 **Current Workaround:** Packages use the Python version from your build environment. If you build on Python 3.12, your package will use Python 3.12.
@@ -208,8 +206,8 @@ dependencies = [
 
 ### Build Environment
 
-!!! note "Planned Feature"
-    FlavorPack creates a basic isolated virtual environment during build. Advanced configuration options (custom venv path, build-time environment variables, pre-install commands) are **planned for v0.3.0 (Q1 2026)**.
+!!! note "Exploratory Feature"
+    FlavorPack creates a basic isolated virtual environment during build. Advanced configuration options (custom venv path, build-time environment variables, pre-install commands) are tracked in the roadmap as exploratory work. Timing may change or be removed.
 
     See [Roadmap - Build Environment Configuration](../../roadmap/#build-environment-configuration) for full details.
 
@@ -402,8 +400,8 @@ dependencies = [
 
 ## Optimization Techniques
 
-!!! note "Planned Feature"
-    Runtime optimization configuration (code optimization levels, bytecode compilation, dependency optimization, lazy loading) is **planned for v0.4.0 (Q2 2026)**.
+!!! note "Exploratory Feature"
+    Runtime optimization configuration (code optimization levels, bytecode compilation, dependency optimization, lazy loading) is tracked in the roadmap as exploratory work. Timing may change or be removed.
 
     See [Roadmap - Runtime Optimization](../../roadmap/#runtime-optimization) and [Roadmap - Advanced Slot Configuration](../../roadmap/#advanced-slot-configuration) for full details.
 

@@ -1,7 +1,7 @@
 # Installation
 
-!!! warning "Alpha Release - Source Installation Only"
-    FlavorPack is in early alpha. PyPI packages and pre-built binaries are not yet available. Check current version with `flavor --version`. **Install from source only.**
+!!! warning "Feature Coverage"
+    This guide focuses on the current installation paths. Check your version with `flavor --version`.
 
 Get started with FlavorPack, a cross-language packaging system implementing the Progressive Secure Package Format (PSPF/2025) that creates self-contained, portable executables from Python applications.
 
@@ -66,7 +66,7 @@ See [Rust's official installation guide](https://www.rust-lang.org/tools/install
 | Windows | x86_64 | ⚠️ Disabled | Dynamic | Currently disabled due to UTF-8 issues |
 
 !!! warning "Windows Support Status"
-    Windows support is currently **disabled** in FlavorPack due to UTF-8 encoding issues in the native helpers. Windows support is planned for a future release once these issues are resolved.
+    Windows support is currently **disabled** in FlavorPack due to UTF-8 encoding issues in the native helpers.
 
 !!! info "Binary Compatibility"
     All Linux binaries are built as static executables:
@@ -104,7 +104,7 @@ Best for developers who want the latest features and ability to build custom hel
 === "Windows"
 
     !!! warning "Windows Not Currently Supported"
-        Windows support is currently **disabled** due to UTF-8 encoding issues in the native helpers. Windows support is planned for a future release.
+        Windows support is currently **disabled** due to UTF-8 encoding issues in the native helpers.
 
         For now, Windows users can use WSL2 (Windows Subsystem for Linux) and follow the Linux installation instructions.
 
@@ -121,11 +121,11 @@ Best for developers who want the latest features and ability to build custom hel
 ### Method 2: Using pip
 
 !!! info "Planned for Future Release"
-    PyPI installation is planned for a future release. Currently unavailable.
+    PyPI installation is available.
 
     **When available**, installation will be:
     ```bash
-    pip install flavorpack
+    uv tool install flavorpack
     make build-helpers
     ```
 
@@ -317,7 +317,7 @@ uv run mypy src/flavor
     - **Trace logging is essential** - Preserve all debug/trace logging for diagnostics
     - Use structured logging with emoji prefixes (DAS pattern)
     - Rust code must compile with `--warnings-as-errors` (strict mode)
-    - All implementations must be production-ready and reliable
+    - All implementations must be production-focused and reliable
 
 ### Pre-commit Hooks
 
@@ -451,7 +451,7 @@ The project has a polyglot architecture with three main layers:
 ### Linux
 
 - **Static Binaries**: We provide musl-based static binaries for maximum compatibility
-- **AppImage**: Future support planned for AppImage format
+- **AppImage**: Potential support is tracked in the roadmap as exploratory work
 - **Permissions**: Packages need execute permission (`chmod +x`)
 
 ### Windows

@@ -2,10 +2,8 @@
 
 Comprehensive guide to diagnosing and resolving common FlavorPack issues.
 
-!!! warning "Alpha Software - Some Features Not Yet Implemented"
-    FlavorPack is in **alpha** status. This troubleshooting guide includes solutions for both implemented and planned features. Features marked with 📋 **PLANNED** are not yet available.
-
-    If you encounter issues with features that don't work, check the [Roadmap](../guide/roadmap/) to see implementation status.
+!!! warning "Feature Coverage"
+    This troubleshooting guide focuses on implemented functionality. For exploratory capabilities, see the [Roadmap](../guide/roadmap/).
 
 ## Overview
 
@@ -158,7 +156,7 @@ FOUNDATION_LOG_LEVEL=debug flavor pack --manifest pyproject.toml
 # Clear build cache if stuck
 rm -rf ~/.cache/flavor/build
 
-# Note: Timeout option is planned for a future release
+# Note: Timeout option is tracked in the roadmap as exploratory work
 ```
 
 #### Missing Launcher
@@ -490,12 +488,12 @@ export XDG_CACHE_HOME=/path/to/cache    # Alternative cache location
 export FLAVOR_VALIDATION=none           # Skip verification (DANGER! Never use in production)
 ```
 
-#### 📋 Planned Features
+#### 📋 Exploratory Features
 
-These environment variables are planned for future releases:
+These environment variables are tracked in the roadmap as exploratory work:
 
 ```bash
-# Not yet implemented - coming in future versions
+# Not yet implemented - exploratory and may change or be removed
 export FLAVOR_KEEP_TEMP=1               # Keep temporary files for debugging
 export FLAVOR_NO_CLEANUP=1              # Disable automatic cleanup
 export FLAVOR_PARALLEL_EXTRACTION=1     # Enable parallel slot extraction
@@ -527,23 +525,23 @@ flavor workenv clean --older-than 7
 export FLAVOR_CACHE=/fast/disk/cache
 ```
 
-### 📋 Planned Performance Features
+### 📋 Exploratory Performance Features
 
-The following performance optimizations are planned for future releases:
+The following performance optimizations are tracked in the roadmap as exploratory work:
 
-#### Build Optimizations (Planned)
+#### Build Optimizations (Exploratory)
 
 ```bash
-# Not yet implemented - coming in future versions
+# Not yet implemented - exploratory and may change or be removed
 flavor pack --manifest pyproject.toml --parallel        # Parallel packaging
 flavor pack --manifest pyproject.toml --no-tests        # Skip test files
 flavor pack --manifest pyproject.toml --no-docs         # Skip documentation
 ```
 
-#### Extraction Optimizations (Planned)
+#### Extraction Optimizations (Exploratory)
 
 ```toml
-# Not yet implemented - will be available in future release
+# Not yet implemented - exploratory and may change or be removed
 
 [[tool.flavor.slots]]
 operations = "tar"      # Manual operation control
@@ -554,10 +552,10 @@ parallel_extraction = true     # Concurrent slot extraction
 streaming_extraction = true    # Stream instead of full extraction
 ```
 
-#### Memory Management (Planned)
+#### Memory Management (Exploratory)
 
 ```toml
-# Not yet implemented - will be available in future release
+# Not yet implemented - exploratory and may change or be removed
 
 [tool.flavor.execution]
 max_memory = "512MB"    # Set memory limits

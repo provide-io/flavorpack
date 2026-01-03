@@ -3,7 +3,7 @@
 Welcome to FlavorPack! This guide will help you get up and running with creating your first Progressive Secure Package.
 
 !!! note "Package Name vs Tool Name"
-    **FlavorPack** (or `flavorpack`) is the Python package name used for installation. The actual command-line tool and API is called **`flavor`**. Install with `pip install flavorpack`, use with `flavor pack`.
+    **FlavorPack** (or `flavorpack`) is the Python package name used for installation. The actual command-line tool and API is called **`flavor`**. Install with `uv tool install flavorpack`, use with `flavor pack`.
 
 ## Quick Start Path
 
@@ -11,7 +11,7 @@ Follow these steps to get FlavorPack up and running:
 
 ### 1. **[Install FlavorPack](installation/)** ⚙️
 
-Install FlavorPack and its native helper binaries. Supports installation from source (currently the only option), with PyPI and other methods coming soon.
+Install FlavorPack and its native helper binaries. Use the standard install path or build from source if you need local changes.
 
 **Time**: ~10 minutes
 **Prerequisites**: Python 3.11+, UV, Go 1.23+, Rust 1.85+
@@ -83,14 +83,12 @@ Need to integrate FlavorPack into CI/CD?
 ??? question "What are the system requirements?"
     **Minimum**: Python 3.11, UV 0.8.13, Go 1.23, Rust 1.85
     **Recommended**: Python 3.12+, latest UV, Go, and Rust
-    **Platforms**: Linux (full), macOS (full), Windows (beta)
+    **Platforms**: Linux (full), macOS (full), Windows (limited)
 
     See [Installation → System Requirements](installation/#system-requirements) for details.
 
-??? question "Is FlavorPack production-ready?"
-    FlavorPack is currently in **alpha** status. The core PSPF format and basic packaging features work well, but APIs and file formats may change without notice.
-
-    Not recommended for production use yet. See the [Roadmap](../guide/roadmap/) for planned v1.0 features.
+??? question "Is FlavorPack production-focused?"
+    FlavorPack is an initial release. The core PSPF format and packaging features are available today, and exploratory improvements are tracked in the [Roadmap](../guide/roadmap/).
 
 ??? question "How do I package a Python app with dependencies?"
     The most common workflow:

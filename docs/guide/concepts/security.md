@@ -171,12 +171,12 @@ The verify command performs comprehensive validation:
 - Validates Ed25519 signature
 - Reports any integrity issues
 
-#### 📋 Planned Verification Modes
+#### 📋 Exploratory Verification Modes
 
-Additional verification levels are planned for future releases:
+Additional verification levels are tracked in the roadmap as exploratory work:
 
 ```bash
-# Coming in future versions
+# Exploratory examples (may change or be removed)
 flavor verify package.psp --quick     # Quick (index only)
 flavor verify package.psp --deep      # Deep (all slots)
 flavor verify package.psp --paranoid  # Paranoid (extract and verify)
@@ -259,10 +259,10 @@ use_case: enterprise_deployment
 
 ### 📋 Certificate-Based (Planned Feature)
 
-PKI integration is planned for future releases to support public distribution:
+PKI integration is tracked in the roadmap as exploratory work to support public distribution:
 
 ```yaml
-# X.509 certificate chains (not yet implemented)
+# X.509 certificate chains (tracked in the roadmap as exploratory work)
 trust_model: pki
 verification: chain_of_trust
 use_case: public_distribution
@@ -289,7 +289,7 @@ FOUNDATION_LOG_LEVEL=debug      # Python component logging
 ### Configuration File
 
 !!! info "📋 Planned Feature - Not Yet Implemented"
-    Configuration file support is planned for a future release. Currently, all configuration is done via environment variables and CLI flags.
+    Configuration file support is tracked in the roadmap as exploratory work. Currently, all configuration is done via environment variables and CLI flags.
 
 #### Current Configuration Methods
 
@@ -312,7 +312,7 @@ export FLAVOR_CACHE=/custom/cache
 Future releases will support a configuration file:
 
 ```toml
-# ~/.flavor/config.toml (not yet supported - planned feature)
+# ~/.flavor/config.toml (tracked in the roadmap as exploratory work)
 [security]
 verify_signatures = true
 require_https = true
