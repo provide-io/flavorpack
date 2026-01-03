@@ -29,12 +29,16 @@
 - UV package manager (`curl -LsSf https://astral.sh/uv/install.sh | sh`)
 - Go 1.23+ and Rust 1.85+ (for building helpers - see `src/flavor-go/go.mod` and `src/flavor-rs/Cargo.toml`)
 
-### Installation (Source Only)
-
-> **Note**: FlavorPack is not yet available on PyPI. Source installation is currently the only option.
+### Installation
 
 ```bash
-# Clone the repository
+# Install from PyPI
+uv tool install flavorpack
+```
+
+### From Source
+
+```bash
 git clone https://github.com/provide-io/flavorpack.git
 cd flavorpack
 
