@@ -309,7 +309,7 @@ export FLAVOR_CACHE=/custom/cache
 
 #### Planned Configuration File Format
 
-Future releases will support a configuration file:
+Exploratory: configuration file support may be added; timing may change or be removed:
 
 ```toml
 # ~/.flavor/config.toml (tracked in the roadmap as exploratory work)

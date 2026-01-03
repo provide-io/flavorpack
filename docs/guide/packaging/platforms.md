@@ -2,7 +2,7 @@
 
 Build packages for different operating systems and architectures.
 
-## Coming Soon
+## Exploratory
 
 This page is under development. In the meantime, see:
 

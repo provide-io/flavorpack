@@ -368,7 +368,7 @@ extract_to = "app"
 # configuration of operations is not part of the current pre-release and may change or be removed.
 #
 # Current behavior: FlavorPack automatically applies tar.gz to all slots.
-# Future: You'll be able to specify operations via manifest configuration.
+# Exploratory: You may be able to specify operations via manifest configuration; timing may change or be removed.
 #
 # 📋 EXPLORATORY: Manifest-based operation specification
 # When implemented, you'll specify operations as string format:

@@ -38,9 +38,9 @@ Automate packaging in continuous integration.
 
 ---
 
-## Coming Soon
+## Exploratory
 
-More recipes are in development:
+Additional recipes are being explored; scope may change or be removed:
 
 - **Multi-Platform Builds** - Cross-compile for all platforms
 - **Cloud Deployment** - Deploy to AWS, GCP, Azure

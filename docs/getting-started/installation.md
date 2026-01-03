@@ -118,18 +118,14 @@ Best for developers who want the latest features and ability to build custom hel
     # Then follow Linux installation steps in WSL
     ```
 
-### Method 2: Using pip
+### Method 2: Using uv
 
-!!! info "Planned for Future Release"
-    PyPI installation is available.
+Install from PyPI:
 
-    **When available**, installation will be:
-    ```bash
-    uv tool install flavorpack
-    make build-helpers
-    ```
-
-    For now, please use source installation (Method 1 above).
+```bash
+uv tool install flavorpack
+make build-helpers
+```
 
 ### Method 3: Development Container
 

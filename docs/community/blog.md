@@ -2,7 +2,7 @@
 
 Articles, updates, and deep dives about FlavorPack.
 
-## Coming Soon
+## Exploratory
 
 The FlavorPack blog is under development.
 
@@ -14,7 +14,7 @@ In the meantime, follow these channels:
 - **[GitHub Discussions](https://github.com/provide-io/flavorpack/discussions)** - Announcements
 - **[Changelog](../community/changelog/)** - Version history
 
-## Topics We'll Cover
+## Topics We May Cover
 
 - Release announcements and highlights
 - Technical deep dives into PSPF format
