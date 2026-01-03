@@ -151,7 +151,7 @@ build:helpers:
     # Note: FlavorPack is not yet on PyPI - install from source
     - git clone https://github.com/provide-io/flavorpack.git
     - cd flavorpack
-    - pip install uv
+    - curl -LsSf https://astral.sh/uv/install.sh | sh
     - uv sync
     - make build-helpers
   artifacts:
@@ -199,7 +199,7 @@ jobs:
             # Note: FlavorPack is not yet on PyPI - install from source
             git clone https://github.com/provide-io/flavorpack.git
             cd flavorpack
-            pip install uv
+            curl -LsSf https://astral.sh/uv/install.sh | sh
             uv sync
 
       - run:

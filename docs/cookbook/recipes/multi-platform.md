@@ -100,7 +100,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install FlavorPack
-        run: pip install flavor
+        run: uv tool install flavorpack
 
       - name: Build helpers
         run: make build-helpers

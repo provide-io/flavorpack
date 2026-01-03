@@ -84,7 +84,7 @@ chmod +x $(which flavor)
 **Solution**:
 ```bash
 # Install build dependencies
-uv pip install --upgrade pip setuptools wheel
+uv pip install --upgrade setuptools wheel
 
 # Sync all dependencies
 uv sync
