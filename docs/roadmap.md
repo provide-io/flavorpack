@@ -793,7 +793,7 @@ Have an idea for FlavorPack? Here's how to suggest features:
 
 - [Current Documentation](guide/index/) - What's available now
 - [PSPF Specification](reference/spec/fep-0001-core-format-and-operation-chains/) - Format details
-- [Future Enhancement Proposals](reference/spec/pspf-2025/) - Detailed FEPs
+- [Exploratory Enhancement Proposals](reference/spec/pspf-2025/) - Detailed FEPs
 - [Changelog](community/changelog/) - What's been implemented
 
 ---

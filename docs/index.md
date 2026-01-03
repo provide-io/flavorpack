@@ -1,5 +1,9 @@
 # Welcome to FlavorPack
 
+!!! warning "Pre-release"
+    This documentation covers a pre-release. APIs and features may change, and some documented or roadmap items are exploratory and may change or be removed.
+
+
 !!! warning "Initial release Software - Development Version"
     FlavorPack is currently in early initial release. APIs, file formats, and commands may change without notice. Not recommended for production use. Check current version with `flavor --version`. **Source installation only** at this time.
 

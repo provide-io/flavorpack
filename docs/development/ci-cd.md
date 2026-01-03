@@ -351,7 +351,7 @@ Currently disabled due to UTF-8 encoding issues with emoji characters in test sc
    .github/scripts/build-platform-helpers.sh darwin_arm64
    ```
 
-## Future Improvements
+## Exploratory Improvements
 
 1. **Re-enable Windows Support**: Fix UTF-8 encoding issues
 2. **Parallel Test Execution**: Run platform tests concurrently

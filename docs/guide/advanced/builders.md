@@ -2,7 +2,7 @@
 
 Extend FlavorPack's build system with custom builders.
 
-## Coming Soon
+## Exploratory
 
 This page is under development. In the meantime, see:
 

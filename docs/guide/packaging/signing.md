@@ -316,11 +316,11 @@ flavor verify package.psp
 
 **Exploratory Verification**:
 ```bash
-# Future: Verify against trusted keys
+# Exploratory: Verify against trusted keys
 # flavor verify package.psp --trusted-keys /etc/flavor/trusted-keys/
 ```
 
-### 3. Web of Trust (Future)
+### 3. Web of Trust (Exploratory)
 
 !!! info "Exploratory Feature"
     Multiple signatures from trusted parties is tracked in the roadmap as exploratory work.
@@ -336,7 +336,7 @@ flavor verify package.psp
     flavor verify package.psp --min-signatures 2
     ```
 
-### 4. Certificate Authority (Future)
+### 4. Certificate Authority (Exploratory)
 
 X.509 certificate chains:
 
@@ -538,13 +538,13 @@ flavor inspect package.psp
 # - Format version and metadata
 ```
 
-## Advanced Topics (Future Features)
+## Advanced Topics (Exploratory Features)
 
 The following features are tracked in the roadmap as exploratory work:
 
 ### Multi-Signature Packages (Exploratory)
 
-!!! info "Future Feature"
+!!! info "Exploratory Feature"
     Support for multiple signatures per package is under development.
 
     **Exploratory API:**
@@ -561,7 +561,7 @@ The following features are tracked in the roadmap as exploratory work:
 
 ### Threshold Signatures (Exploratory)
 
-!!! info "Future Feature"
+!!! info "Exploratory Feature"
     Threshold signature schemes (N-of-M signatures required) are tracked in the roadmap as exploratory work.
 
     **Exploratory manifest format:**
@@ -573,7 +573,7 @@ The following features are tracked in the roadmap as exploratory work:
 
 ### Hardware Token Integration (Exploratory)
 
-!!! info "Future Feature"
+!!! info "Exploratory Feature"
     PKCS#11 hardware token support (YubiKey, HSM, etc.) is tracked in the roadmap as exploratory work.
 
     **Exploratory workflow:**
