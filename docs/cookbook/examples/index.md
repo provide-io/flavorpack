@@ -342,7 +342,7 @@ jobs:
           python-version: '3.11'
       
       - name: Install FlavorPack
-        run: pip install flavor
+        run: uv tool install flavorpack
       
 {% raw %}
       - name: Build package
@@ -372,7 +372,7 @@ FROM python:3.11-slim as builder
 WORKDIR /app
 COPY . .
 
-RUN pip install flavor
+RUN uv tool install flavorpack
 RUN flavor pack --strip --output app.psp
 
 FROM scratch

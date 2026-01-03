@@ -112,7 +112,7 @@ py -0
 py -3.11 -m flavor pack --manifest pyproject.toml
 
 # Set default version
-py -3.11 -m pip install --upgrade pip
+uv self update
 ```
 
 ### Antivirus Interference

@@ -162,8 +162,8 @@ env = {
 
 # Pre-install commands
 pre_install_commands = [
-    "pip install --upgrade pip setuptools wheel",
-    "pip install numpy==1.24.0"
+    "uv pip install --upgrade setuptools wheel",
+    "uv pip install numpy==1.24.0"
 ]
 
 # Pre-build validation
