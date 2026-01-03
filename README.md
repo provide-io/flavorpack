@@ -59,21 +59,31 @@ flavor pack --manifest pyproject.toml --output myapp.psp
 flavor verify myapp.psp
 ```
 
+## 📚 Documentation
+
+- **[Quick Start](https://github.com/provide-io/flavorpack/blob/main/docs/getting-started/quickstart.md)** - Get started in 5 minutes
+- **[User Guide](https://github.com/provide-io/flavorpack/tree/main/docs/guide)** - Comprehensive guide to using FlavorPack
+- **[PSPF Format Specification](https://github.com/provide-io/flavorpack/blob/main/docs/reference/spec/fep-0001-core-format-and-operation-chains.md)** - Binary format details
+- **[API Reference](https://github.com/provide-io/flavorpack/tree/main/docs/api)** - Python API documentation
+- **[Development Guide](https://github.com/provide-io/flavorpack/tree/main/docs/development)** - Contributing and development setup
+- **[Troubleshooting](https://github.com/provide-io/flavorpack/tree/main/docs/troubleshooting)** - Common issues and solutions
+- **[Full Documentation](https://github.com/provide-io/flavorpack/blob/main/docs/index.md)** - Complete documentation portal
+
+## Development
+- See [CLAUDE.md](https://github.com/provide-io/flavorpack/blob/main/CLAUDE.md) for local development notes.
+- Run `make test` from `flavorpack/` for the full test suite.
+
+## Contributing
+See [CLAUDE.md](https://github.com/provide-io/flavorpack/blob/main/CLAUDE.md) for contribution guidance.
+
+## License
+See [LICENSE](https://github.com/provide-io/flavorpack/blob/main/LICENSE) for license details.
+
 ## 📦 PSPF Format
 
 The Progressive Secure Package Format is a polyglot file format that works as both an OS executable and a structured package. Each `.psp` file contains a native launcher, package metadata, and compressed data slots.
 
-See the [PSPF Format Specification](docs/reference/spec/fep-0001-core-format-and-operation-chains.md#32-package-structure-overview) for the complete binary layout diagram and technical details.
-
-## 📚 Documentation
-
-- **[Quick Start](docs/getting-started/quickstart.md)** - Get started in 5 minutes
-- **[User Guide](docs/guide/)** - Comprehensive guide to using FlavorPack
-- **[PSPF Format Specification](docs/reference/spec/fep-0001-core-format-and-operation-chains.md)** - Binary format details
-- **[API Reference](docs/api/)** - Python API documentation
-- **[Development Guide](docs/development/)** - Contributing and development setup
-- **[Troubleshooting](docs/troubleshooting/)** - Common issues and solutions
-- **[Full Documentation](docs/index.md)** - Complete documentation portal
+See the [PSPF Format Specification](https://github.com/provide-io/flavorpack/blob/main/docs/reference/spec/fep-0001-core-format-and-operation-chains.md#32-package-structure-overview) for the complete binary layout diagram and technical details.
 
 ## 🏗️ Architecture
 
@@ -128,3 +138,5 @@ FlavorPack is built on the shoulders of giants:
 ---
 
 **Built with ❤️ by the provide.io team**
+
+Copyright (c) Provide.io LLC.
