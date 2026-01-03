@@ -368,7 +368,7 @@ Subsequent runs: <100ms (cached)
 
 ### Can I improve build performance?
 
-!!! info "📋 Planned Features"
+!!! info "📋 Exploratory Features"
     Build optimization features like `--parallel` and build caching are tracked in the roadmap as exploratory work.
 
     Currently, build performance is primarily determined by dependency resolution and UV's package installation speed.
