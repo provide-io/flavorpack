@@ -76,8 +76,21 @@ flavor verify myapp.psp
 - **[Full Documentation](https://github.com/provide-io/flavorpack/blob/main/docs/index.md)** - Complete documentation portal
 
 ## Development
-- See [CLAUDE.md](https://github.com/provide-io/flavorpack/blob/main/CLAUDE.md) for local development notes.
-- Run `make test` from `flavorpack/` for the full test suite.
+
+### Quick Start
+
+```bash
+# Set up environment
+uv sync
+
+# Run common tasks
+we test           # Run tests
+we lint           # Check code
+we format         # Format code
+we tasks          # See all available commands
+```
+
+See [CLAUDE.md](https://github.com/provide-io/flavorpack/blob/main/CLAUDE.md) for detailed development instructions and architecture information.
 
 ## Contributing
 See [CLAUDE.md](https://github.com/provide-io/flavorpack/blob/main/CLAUDE.md) for contribution guidance.
