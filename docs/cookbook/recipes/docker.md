@@ -5,7 +5,7 @@ Use FlavorPack packages in Docker containers for minimal, secure deployments.
 ## Why Use .psp Files with Docker?
 
 - **Smaller images**: No Python runtime needed in container
-- **Faster builds**: No pip install step
+- **Faster builds**: No uv add step
 - **Reproducible**: Exact same binary everywhere
 - **Secure**: Pre-signed, verified packages
 
@@ -34,7 +34,7 @@ WORKDIR /build
 COPY . .
 
 # Install FlavorPack
-RUN pip install flavorpack
+RUN uv tool install flavorpack
 
 # Build helpers
 RUN make build-helpers

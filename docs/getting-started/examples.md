@@ -517,7 +517,7 @@ Process CSV files with pandas:
     # Install FlavorPack from source
     RUN git clone https://github.com/provide-io/flavorpack.git /flavorpack
     WORKDIR /flavorpack
-    RUN pip install uv && uv sync && make build-helpers
+    RUN curl -LsSf https://astral.sh/uv/install.sh | sh && uv sync && make build-helpers
     ENV PATH="/flavorpack/.venv/bin:$PATH"
 
     # Copy application

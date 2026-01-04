@@ -43,7 +43,7 @@ This specification defines:
 - Extension mechanisms for vendor-specific fields
 
 This specification does NOT define:
-- Binary wire format (reserved for future versions)
+- Binary wire format (reserved for possible future versions; may change or be removed)
 - Network transmission protocols
 - Metadata compression algorithms (handled at package level)
 - Runtime behavior of metadata fields
@@ -256,7 +256,7 @@ Vendor-specific extensions. All keys MUST begin with "x-".
 **Max Length**: 255  
 **Example**: "my-application"  
 
-Package identifier. MUST be lowercase alphanumeric with hyphens and underscores.
+Package identifier. MUST be lowercase initial releasenumeric with hyphens and underscores.
 
 #### 4.2.2 version (REQUIRED)
 

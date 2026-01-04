@@ -11,7 +11,7 @@ FlavorPack transforms Python applications into portable executables that run any
 ### 1. Install FlavorPack
 
 ```bash
-pip install flavor
+uv tool install flavorpack
 ```
 
 ### 2. Create a Manifest

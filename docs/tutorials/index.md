@@ -39,9 +39,9 @@ Build a custom HTTP client tool that wraps HTTPie with environment management. L
 
 ---
 
-## Coming Soon
+## Exploratory
 
-More tutorials are being added! Future topics include:
+More tutorials are being explored; potential topics include:
 
 - **Web Application Packaging** - Package a Flask/FastAPI web app
 - **Data Science Tool** - Package a data analysis CLI with NumPy/Pandas

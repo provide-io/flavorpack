@@ -2,7 +2,7 @@
 
 Write unit tests for FlavorPack components.
 
-## Coming Soon
+## Exploratory
 
 Complete unit testing guide under development.
 

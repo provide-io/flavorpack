@@ -434,11 +434,14 @@ jobs:
     if: always()
     runs-on: ubuntu-latest
     steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
       - name: 📥 Download all security reports
         uses: actions/download-artifact@v4
         with:
           path: security-reports
-      
+
       - name: 🐍 Setup Python for summary generation
         uses: actions/setup-python@v5
         with:

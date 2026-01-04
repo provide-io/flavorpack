@@ -130,8 +130,8 @@ flavor verify myapp.psp
 ✅ Checksum: Valid
 ```
 
-!!! info "📋 Planned Features"
-    Additional verification options are planned for future releases:
+!!! info "📋 Exploratory Features"
+    Additional verification options are tracked in the roadmap as exploratory work:
 
     - `--quick`: Fast verification (index and signature only)
     - `--deep`: Deep verification (all slot checksums)

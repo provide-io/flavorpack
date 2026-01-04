@@ -2,7 +2,7 @@
 
 Test component interactions and end-to-end workflows.
 
-## Coming Soon
+## Exploratory
 
 Complete integration testing guide under development.
 

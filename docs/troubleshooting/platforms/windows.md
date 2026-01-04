@@ -3,7 +3,7 @@
 Platform-specific issues and solutions for Windows users.
 
 !!! warning "Beta Support"
-    Windows support is currently in beta. Some features may be limited or require additional configuration.
+    Windows support is limited in this pre-release. Some features may be limited or require additional configuration. Some documented or roadmap items are exploratory and may change or be removed.
 
 ## Common Issues
 
@@ -112,7 +112,7 @@ py -0
 py -3.11 -m flavor pack --manifest pyproject.toml
 
 # Set default version
-py -3.11 -m pip install --upgrade pip
+uv self update
 ```
 
 ### Antivirus Interference

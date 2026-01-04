@@ -104,7 +104,7 @@ Control dependency installation:
 # Install from pyproject.toml dependencies
 install_deps = true
 
-# Additional pip install options
+# Additional uv add options
 pip_args = ["--no-cache-dir", "--compile"]
 
 # Use specific index URL
