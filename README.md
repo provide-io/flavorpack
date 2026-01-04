@@ -21,7 +21,9 @@ FlavorPack creates self-contained, portable executables using the Progressive Se
 - 💾 **Smart Caching** - Persistent work environment with intelligent validation
 - 🚀 **Zero Dependencies** - End users need nothing pre-installed
 
-## 🚀 Quick Start
+## Quick Start
+
+> **Note**: flavorpack is in pre-release (v0.x.x). APIs and features may change before 1.0 release.
 
 ### Prerequisites
 
@@ -63,7 +65,7 @@ flavor pack --manifest pyproject.toml --output myapp.psp
 flavor verify myapp.psp
 ```
 
-## 📚 Documentation
+## Documentation
 
 - **[Quick Start](https://github.com/provide-io/flavorpack/blob/main/docs/getting-started/quickstart.md)** - Get started in 5 minutes
 - **[User Guide](https://github.com/provide-io/flavorpack/tree/main/docs/guide)** - Comprehensive guide to using FlavorPack
