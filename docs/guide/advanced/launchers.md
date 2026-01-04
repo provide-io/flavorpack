@@ -2,7 +2,7 @@
 
 Build custom launchers for specific use cases.
 
-## Coming Soon
+## Exploratory
 
 This page is under development. In the meantime, see:
 

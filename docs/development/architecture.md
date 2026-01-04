@@ -567,7 +567,7 @@ The cache validation process uses checksums to ensure integrity:
 5. **Deterministic Builds**: Reproducible with seed keys
 6. **Helper Independence**: Helpers are generic, data-driven executors
 
-## Future Enhancements
+## Exploratory Enhancements
 
 1. **Windows Support**: Currently disabled due to UTF-8 issues
 2. **Package Compression**: Additional compression algorithms

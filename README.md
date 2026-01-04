@@ -1,4 +1,4 @@
-# FlavorPack: Progressive Secure Polyglot Packaging Toolchain
+# 🌶️📦 FlavorPack
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
@@ -6,20 +6,20 @@
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![CI](https://github.com/provide-io/flavorpack/actions/workflows/ci.yml/badge.svg)](https://github.com/provide-io/flavorpack/actions)
 
-> **⚠️ Alpha Software**: FlavorPack is in early development. APIs, file formats, and commands may change without notice. Not recommended for production use. Check current version with `flavor --version`. Install from source only.
+**Cross-language packaging system for self-contained, portable executables**
 
-**FlavorPack** is a cross-language packaging system that creates self-contained, portable executables using the **Progressive Secure Package Format (PSPF) 2025 Edition**. It enables you to ship Python applications as single binaries that "just work" - no installation, no dependencies, no configuration required.
+FlavorPack creates self-contained, portable executables using the Progressive Secure Package Format (PSPF) 2025 Edition. Ship Python applications as single binaries that "just work" - no installation, no dependencies, no configuration required.
 
 > **Note**: The package name is `flavorpack`, but the command-line tool is `flavor`.
 
-## 🎯 Key Features
+## ✨ Key Features
 
-- **Single-File Distribution**: Package entire applications into one executable file
-- **Cross-Language Support**: Python orchestrator with Go and Rust launchers
-- **Secure by Default**: Ed25519 signature verification ensures package integrity
-- **Progressive Extraction**: Extract only what's needed, when it's needed
-- **Smart Caching**: Persistent work environment with intelligent validation
-- **Zero Dependencies**: End users need nothing pre-installed
+- 📦 **Single-File Distribution** - Package entire applications into one executable file
+- 🌐 **Cross-Language Support** - Python orchestrator with Go and Rust launchers
+- 🔒 **Secure by Default** - Ed25519 signature verification ensures package integrity
+- ⚡ **Progressive Extraction** - Extract only what's needed, when it's needed
+- 💾 **Smart Caching** - Persistent work environment with intelligent validation
+- 🚀 **Zero Dependencies** - End users need nothing pre-installed
 
 ## 🚀 Quick Start
 
@@ -29,12 +29,16 @@
 - UV package manager (`curl -LsSf https://astral.sh/uv/install.sh | sh`)
 - Go 1.23+ and Rust 1.85+ (for building helpers - see `src/flavor-go/go.mod` and `src/flavor-rs/Cargo.toml`)
 
-### Installation (Source Only)
-
-> **Note**: FlavorPack is not yet available on PyPI. Source installation is currently the only option.
+### Installation
 
 ```bash
-# Clone the repository
+# Install from PyPI
+uv tool install flavorpack
+```
+
+### From Source
+
+```bash
 git clone https://github.com/provide-io/flavorpack.git
 cd flavorpack
 
@@ -59,21 +63,31 @@ flavor pack --manifest pyproject.toml --output myapp.psp
 flavor verify myapp.psp
 ```
 
+## 📚 Documentation
+
+- **[Quick Start](https://github.com/provide-io/flavorpack/blob/main/docs/getting-started/quickstart.md)** - Get started in 5 minutes
+- **[User Guide](https://github.com/provide-io/flavorpack/tree/main/docs/guide)** - Comprehensive guide to using FlavorPack
+- **[PSPF Format Specification](https://github.com/provide-io/flavorpack/blob/main/docs/reference/spec/fep-0001-core-format-and-operation-chains.md)** - Binary format details
+- **[API Reference](https://github.com/provide-io/flavorpack/tree/main/docs/api)** - Python API documentation
+- **[Development Guide](https://github.com/provide-io/flavorpack/tree/main/docs/development)** - Contributing and development setup
+- **[Troubleshooting](https://github.com/provide-io/flavorpack/tree/main/docs/troubleshooting)** - Common issues and solutions
+- **[Full Documentation](https://github.com/provide-io/flavorpack/blob/main/docs/index.md)** - Complete documentation portal
+
+## Development
+- See [CLAUDE.md](https://github.com/provide-io/flavorpack/blob/main/CLAUDE.md) for local development notes.
+- Run `make test` from `flavorpack/` for the full test suite.
+
+## Contributing
+See [CLAUDE.md](https://github.com/provide-io/flavorpack/blob/main/CLAUDE.md) for contribution guidance.
+
+## License
+See [LICENSE](https://github.com/provide-io/flavorpack/blob/main/LICENSE) for license details.
+
 ## 📦 PSPF Format
 
 The Progressive Secure Package Format is a polyglot file format that works as both an OS executable and a structured package. Each `.psp` file contains a native launcher, package metadata, and compressed data slots.
 
-See the [PSPF Format Specification](docs/reference/spec/fep-0001-core-format-and-operation-chains.md#32-package-structure-overview) for the complete binary layout diagram and technical details.
-
-## 📚 Documentation
-
-- **[Quick Start](docs/getting-started/quickstart.md)** - Get started in 5 minutes
-- **[User Guide](docs/guide/)** - Comprehensive guide to using FlavorPack
-- **[PSPF Format Specification](docs/reference/spec/fep-0001-core-format-and-operation-chains.md)** - Binary format details
-- **[API Reference](docs/api/)** - Python API documentation
-- **[Development Guide](docs/development/)** - Contributing and development setup
-- **[Troubleshooting](docs/troubleshooting/)** - Common issues and solutions
-- **[Full Documentation](docs/index.md)** - Complete documentation portal
+See the [PSPF Format Specification](https://github.com/provide-io/flavorpack/blob/main/docs/reference/spec/fep-0001-core-format-and-operation-chains.md#32-package-structure-overview) for the complete binary layout diagram and technical details.
 
 ## 🏗️ Architecture
 
@@ -128,3 +142,5 @@ FlavorPack is built on the shoulders of giants:
 ---
 
 **Built with ❤️ by the provide.io team**
+
+Copyright (c) provide.io LLC.

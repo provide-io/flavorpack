@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import os
 from pathlib import Path
 import sys
 from typing import Any
@@ -400,8 +401,6 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    import os
-
     sys.exit(main())
 
 # 🌶️📦🔚

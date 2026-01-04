@@ -14,7 +14,7 @@ FlavorPack follows [Semantic Versioning 2.0.0](https://semver.org/):
 - **MINOR**: New features, backward compatible
 - **PATCH**: Bug fixes, backward compatible
 
-Current alpha version format: `0.0.XXXX-alpha` where XXXX is the build number.
+Current initial release version format: `0.0.XXXX-initial release` where XXXX is the build number.
 
 ## Release Checklist
 
@@ -97,7 +97,7 @@ make release-validate-full
 
 ```bash
 # Install from local wheel
-pip install dist/flavorpack-*.whl
+uv pip install dist/flavorpack-*.whl
 
 # Test basic operations
 flavor --version
@@ -157,7 +157,7 @@ git push --tags
 make release-upload-test
 
 # Test installation
-pip install --index-url https://test.pypi.org/simple/ flavorpack
+uv pip install --index-url https://test.pypi.org/simple/ flavorpack
 ```
 
 ### Production PyPI
@@ -208,7 +208,7 @@ Brief description of major changes.
 ## Installation
 
 \`\`\`bash
-pip install flavorpack==0.1.0
+uv tool install flavorpack==0.1.0
 \`\`\`
 
 ## Assets
@@ -280,7 +280,7 @@ make release-all
 ### Verification
 
 - [ ] Check PyPI page: https://pypi.org/project/flavorpack/
-- [ ] Test fresh installation: `pip install flavorpack`
+- [ ] Test fresh installation: `uv tool install flavorpack`
 - [ ] Verify helper binaries included
 - [ ] Test basic commands work
 - [ ] Check documentation site is updated
@@ -304,7 +304,7 @@ If a critical issue is found after release:
 
 ```bash
 # Yank a release (requires PyPI permissions)
-pip install twine
+uv tool install twine
 twine upload --repository pypi --yank dist/flavorpack-X.Y.Z-*.whl
 ```
 

@@ -581,7 +581,7 @@ flavor pack \
   --no-index
 
 # 3. Vendor dependencies
-pip install --target vendor/ -r requirements.txt
+uv pip install --target vendor/ -r requirements.txt
 
 # 4. Build in offline mode
 PIP_NO_INDEX=1 PIP_FIND_LINKS=vendor/ flavor pack

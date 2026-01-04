@@ -2,7 +2,7 @@
 
 Test compatibility across Python, Go, and Rust implementations.
 
-## Coming Soon
+## Exploratory
 
 Complete cross-language testing guide under development.
 

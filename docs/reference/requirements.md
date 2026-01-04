@@ -105,7 +105,7 @@ These tools enhance the development experience but are not required:
 |------|---------|--------------|
 | **Make** | Build automation | `brew install make` (macOS) or pre-installed (Linux) |
 | **Docker** | Container testing | [docker.com](https://docker.com) |
-| **MkDocs** | Documentation preview | `uv pip install mkdocs-material` |
+| **MkDocs** | Documentation preview | `uv uv add mkdocs-material` |
 
 ---
 
@@ -190,7 +190,7 @@ macOS binaries are built separately for Intel and Apple Silicon:
 
 ### Windows (Experimental)
 
-Windows support is experimental and not yet production-ready.
+Windows support is experimental and not yet production-focused.
 
 ---
 
