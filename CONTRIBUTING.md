@@ -56,7 +56,7 @@ make validate-pspf
 make validate-pspf-combo
 
 # Or using wrknv
-we test
+we run test
 ```
 
 ### Code Quality
@@ -74,9 +74,9 @@ uv run ruff check src/ tests/
 uv run mypy src/flavor
 
 # Or using wrknv
-we format
-we lint
-we typecheck
+we run format
+we run lint
+we run typecheck
 ```
 
 ### Building Packages
