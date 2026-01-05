@@ -3,7 +3,7 @@
 Comprehensive guide to diagnosing and resolving common FlavorPack issues.
 
 !!! warning "Feature Coverage"
-    This troubleshooting guide focuses on implemented functionality. For exploratory capabilities, see the [Roadmap](../guide/roadmap/).
+    This troubleshooting guide focuses on implemented functionality. For exploratory capabilities, see the [Roadmap](../roadmap/).
 
 ## Overview
 

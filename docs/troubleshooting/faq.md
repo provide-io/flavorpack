@@ -116,12 +116,12 @@ entry_point = "myapp:main"
 ### How do I exclude files from the package?
 
 !!! info "📋 Exploratory Feature"
-    Manifest-based exclude patterns are tracked in the roadmap as exploratory work. See the [Roadmap](../guide/roadmap/) for details.
+    Manifest-based exclude patterns are tracked in the roadmap as exploratory work. See the [Roadmap](../roadmap/) for details.
 
 ### Can I build packages for other platforms?
 
 !!! info "📋 Exploratory Feature"
-    Platform-specific builds via CLI are tracked in the roadmap as exploratory work. Currently, packages are built for the host platform. See the [Roadmap](../guide/roadmap/) for details.
+    Platform-specific builds via CLI are tracked in the roadmap as exploratory work. Currently, packages are built for the host platform. See the [Roadmap](../roadmap/) for details.
 
 ### How do I reduce package size?
 
