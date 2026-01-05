@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""TODO: Add module docstring."""
+"""FlavorPack CLI entry point."""
 
 from flavor.cli import cli
 
