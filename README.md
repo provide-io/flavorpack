@@ -84,9 +84,9 @@ flavor verify myapp.psp
 uv sync
 
 # Run common tasks
-we test           # Run tests
-we lint           # Check code
-we format         # Format code
+we run test       # Run tests
+we run lint       # Check code
+we run format     # Format code
 we tasks          # See all available commands
 ```
 

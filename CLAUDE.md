@@ -195,7 +195,7 @@ uv run pytest -m security
 - Rather than "no hardcoded defaults" i mean "no inline defaults." defaults may be stored in a common file for the project. either defaults.py or constants.py, and THOSE will ALWAYS be used instead of inline defaults.
 - "import annotations" is okay so I can use the unquoted types.
 - After writing each Python file, run the code quality tools:
-  - If `we` commands available: `we format`, `we lint`, `we typecheck`
+  - If `we` commands available: `we run format`, `we run lint`, `we run typecheck`
   - Otherwise: `ruff format`, `ruff check --fix`, `mypy`%
 - no print ever for debug. use the debug logger.
 - When you want the CI pipeline to work, you must manually start the Helper Prep action.
