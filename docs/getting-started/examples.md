@@ -260,8 +260,8 @@ A FastAPI web application packaged with FlavorPack:
     def main():
         """Run the API server."""
         print("🚀 Starting Task API server...")
-        print("📖 Documentation: http://localhost:8000/docs")
-        uvicorn.run(app, host="0.0.0.0", port=8000)
+        print("📖 Documentation: http://localhost:8080/docs")
+        uvicorn.run(app, host="0.0.0.0", port=8080)
     
     if __name__ == "__main__":
         main()
@@ -291,8 +291,8 @@ A FastAPI web application packaged with FlavorPack:
     ./api.psp
     
     # In another terminal, test the API
-    curl http://localhost:8000/
-    curl -X POST http://localhost:8000/tasks \
+    curl http://localhost:8080/
+    curl -X POST http://localhost:8080/tasks \
       -H "Content-Type: application/json" \
       -d '{"title": "Test task"}'
     ```
@@ -574,4 +574,3 @@ Explore our cookbook for more detailed examples:
 
 - 📚 [CLI Tools](../cookbook/examples/cli-tool/) - Command-line applications
 - 🌐 [Web Apps](../cookbook/examples/web-app/) - Flask, FastAPI, Django
-

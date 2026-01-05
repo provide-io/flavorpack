@@ -154,7 +154,7 @@ if __name__ == "__main__":
 flavor pack --key-seed "api-key-123"
 ./dist/webapi.psp
 
-# API is now available at http://localhost:8000
+# API is now available at http://localhost:8080
 ```
 
 ### Data Science Package
