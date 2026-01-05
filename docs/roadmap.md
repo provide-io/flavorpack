@@ -104,6 +104,14 @@ The following features are documented in guides but are **under evaluation**. Th
 
 ### Manifest Configuration Features 📋
 
+#### Build Host Redaction
+
+Allow opting out of emitting `build.platform.host` in metadata for privacy or reproducible builds.
+
+**Status**: 📋 Exploratory
+**Priority**: High
+**Complexity**: Low
+
 #### Slot Configuration
 
 ```toml
