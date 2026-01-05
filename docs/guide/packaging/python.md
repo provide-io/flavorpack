@@ -133,7 +133,7 @@ The following features are tracked in the roadmap as exploratory work. See the [
 ### Python Version Selection 📋
 
 !!! note "Exploratory Feature"
-    Automatic Python version selection is tracked in the roadmap as exploratory work. Timing may change or be removed.
+    Automatic Python version selection is tracked in the roadmap as exploratory work. Availability may change or be removed.
     See [Roadmap - Python Version Management](../../roadmap/#python-version-selection) for full details.
 
 **Current Workaround:** Packages use the Python version from your build environment. If you build on Python 3.12, your package will use Python 3.12.
@@ -207,7 +207,7 @@ dependencies = [
 ### Build Environment
 
 !!! note "Exploratory Feature"
-    FlavorPack creates a basic isolated virtual environment during build. Advanced configuration options (custom venv path, build-time environment variables, pre-install commands) are tracked in the roadmap as exploratory work. Timing may change or be removed.
+    FlavorPack creates a basic isolated virtual environment during build. Advanced configuration options (custom venv path, build-time environment variables, pre-install commands) are tracked in the roadmap as exploratory work. Availability may change or be removed.
 
     See [Roadmap - Build Environment Configuration](../../roadmap/#build-environment-configuration) for full details.
 
@@ -401,7 +401,7 @@ dependencies = [
 ## Optimization Techniques
 
 !!! note "Exploratory Feature"
-    Runtime optimization configuration (code optimization levels, bytecode compilation, dependency optimization, lazy loading) is tracked in the roadmap as exploratory work. Timing may change or be removed.
+    Runtime optimization configuration (code optimization levels, bytecode compilation, dependency optimization, lazy loading) is tracked in the roadmap as exploratory work. Availability may change or be removed.
 
     See [Roadmap - Runtime Optimization](../../roadmap/#runtime-optimization) and [Roadmap - Advanced Slot Configuration](../../roadmap/#advanced-slot-configuration) for full details.
 

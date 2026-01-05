@@ -325,7 +325,7 @@ git_commit = "${GIT_COMMIT}"
     Slots are currently created automatically by FlavorPack based on your Python application structure.
     Manual slot configuration is tracked in the roadmap as exploratory work. See [Roadmap](../roadmap/#slot-configuration) for details.
 
-    This entire section documents the **tracked in the roadmap slot configuration format** that may be available in later releases; timing may change or be removed.
+    This entire section documents the **tracked in the roadmap slot configuration format** that may be available in later releases; availability may change or be removed.
 
 ### Basic Slot Definition
 
@@ -368,7 +368,7 @@ extract_to = "app"
 # configuration of operations is not part of the current pre-release and may change or be removed.
 #
 # Current behavior: FlavorPack automatically applies tar.gz to all slots.
-# Exploratory: You may be able to specify operations via manifest configuration; timing may change or be removed.
+# Exploratory: You may be able to specify operations via manifest configuration; availability may change or be removed.
 #
 # 📋 EXPLORATORY: Manifest-based operation specification
 # When implemented, you'll specify operations as string format:
