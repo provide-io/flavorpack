@@ -21,7 +21,9 @@ FlavorPack creates self-contained, portable executables using the Progressive Se
 - 💾 **Smart Caching** - Persistent work environment with intelligent validation
 - 🚀 **Zero Dependencies** - End users need nothing pre-installed
 
-## 🚀 Quick Start
+## Quick Start
+
+> **Note**: flavorpack is in pre-release (v0.x.x). APIs and features may change before 1.0 release.
 
 ### Prerequisites
 
@@ -63,7 +65,7 @@ flavor pack --manifest pyproject.toml --output myapp.psp
 flavor verify myapp.psp
 ```
 
-## 📚 Documentation
+## Documentation
 
 - **[Quick Start](https://github.com/provide-io/flavorpack/blob/main/docs/getting-started/quickstart.md)** - Get started in 5 minutes
 - **[User Guide](https://github.com/provide-io/flavorpack/tree/main/docs/guide)** - Comprehensive guide to using FlavorPack
@@ -74,8 +76,21 @@ flavor verify myapp.psp
 - **[Full Documentation](https://github.com/provide-io/flavorpack/blob/main/docs/index.md)** - Complete documentation portal
 
 ## Development
-- See [CLAUDE.md](https://github.com/provide-io/flavorpack/blob/main/CLAUDE.md) for local development notes.
-- Run `make test` from `flavorpack/` for the full test suite.
+
+### Quick Start
+
+```bash
+# Set up environment
+uv sync
+
+# Run common tasks
+we test           # Run tests
+we lint           # Check code
+we format         # Format code
+we tasks          # See all available commands
+```
+
+See [CLAUDE.md](https://github.com/provide-io/flavorpack/blob/main/CLAUDE.md) for detailed development instructions and architecture information.
 
 ## Contributing
 See [CLAUDE.md](https://github.com/provide-io/flavorpack/blob/main/CLAUDE.md) for contribution guidance.
