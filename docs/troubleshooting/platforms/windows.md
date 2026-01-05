@@ -3,7 +3,7 @@
 Platform-specific issues and solutions for Windows users.
 
 !!! warning "Beta Support"
-    Windows support is limited in this pre-release. Some features may be limited or require additional configuration. Some documented or roadmap items are exploratory and may change or be removed.
+    Windows support is limited in this pre-release. Some features may be limited or require additional configuration. Some documented items are exploratory and may change or be removed.
 
 ## Common Issues
 

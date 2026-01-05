@@ -40,7 +40,7 @@ FlavorPack requires Python 3.11 or later.
 
 !!! warning "Initial release Status - Source Installation Only"
     FlavorPack is in its pre-release series. Installation is available via PyPI.
-    Some documented or roadmap items are exploratory and may change or be removed.
+    Some documented items are exploratory and may change or be removed.
 
 ```bash
 # Clone the repository
@@ -111,17 +111,17 @@ entry_point = "myapp:main"
 ### Can I include non-Python files?
 
 !!! info "📋 Exploratory Feature"
-    Manual slot configuration is tracked in the roadmap as exploratory work. Currently, FlavorPack automatically packages your Python application and its dependencies.
+    Manual slot configuration is under evaluation. Currently, FlavorPack automatically packages your Python application and its dependencies.
 
 ### How do I exclude files from the package?
 
 !!! info "📋 Exploratory Feature"
-    Manifest-based exclude patterns are tracked in the roadmap as exploratory work. See the [Roadmap](../roadmap/) for details.
+    Manifest-based exclude patterns are under evaluation.
 
 ### Can I build packages for other platforms?
 
 !!! info "📋 Exploratory Feature"
-    Platform-specific builds via CLI are tracked in the roadmap as exploratory work. Currently, packages are built for the host platform. See the [Roadmap](../roadmap/) for details.
+    Platform-specific builds via CLI are under evaluation. Currently, packages are built for the host platform.
 
 ### How do I reduce package size?
 
@@ -369,7 +369,7 @@ Subsequent runs: <100ms (cached)
 ### Can I improve build performance?
 
 !!! info "📋 Exploratory Features"
-    Build optimization features like `--parallel` and build caching are tracked in the roadmap as exploratory work.
+    Build optimization features like `--parallel` and build caching are under evaluation.
 
     Currently, build performance is primarily determined by dependency resolution and UV's package installation speed.
 

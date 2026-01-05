@@ -3,7 +3,7 @@
 Comprehensive guide to diagnosing and resolving common FlavorPack issues.
 
 !!! warning "Feature Coverage"
-    This troubleshooting guide focuses on implemented functionality. For exploratory capabilities, see the [Roadmap](../roadmap/).
+    This troubleshooting guide focuses on implemented functionality.
 
 ## Overview
 
@@ -156,7 +156,7 @@ FOUNDATION_LOG_LEVEL=debug flavor pack --manifest pyproject.toml
 # Clear build cache if stuck
 rm -rf ~/.cache/flavor/build
 
-# Note: Timeout option is tracked in the roadmap as exploratory work
+# Note: Timeout option is under evaluation
 ```
 
 #### Missing Launcher
@@ -490,7 +490,7 @@ export FLAVOR_VALIDATION=none           # Skip verification (DANGER! Never use i
 
 #### 📋 Exploratory Features
 
-These environment variables are tracked in the roadmap as exploratory work:
+These environment variables are under evaluation:
 
 ```bash
 # Not yet implemented - exploratory and may change or be removed
@@ -527,7 +527,7 @@ export FLAVOR_CACHE=/fast/disk/cache
 
 ### 📋 Exploratory Performance Features
 
-The following performance optimizations are tracked in the roadmap as exploratory work:
+The following performance optimizations are under evaluation:
 
 #### Build Optimizations (Exploratory)
 

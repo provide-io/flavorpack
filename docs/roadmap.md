@@ -6,7 +6,7 @@ This roadmap shows the current implementation status and exploratory items for F
 
 - ✅ **Implemented** - Works today, documented and tested
 - 🚧 **In Progress** - Partially implemented or under active development
-- 📋 **Exploratory** - Designed but tracked in the roadmap
+- 📋 **Exploratory** - Designed but under evaluation
 - 💡 **Proposed** - Under consideration; may change or be removed
 
 ---
@@ -100,7 +100,7 @@ map = { OLD = "NEW" }            # ✅ Rename variables
 
 ## Exploratory Features
 
-The following features are documented in guides but are **tracked in the roadmap**. They represent potential evolution of FlavorPack.
+The following features are documented in guides but are **under evaluation**. They represent potential evolution of FlavorPack.
 
 ### Manifest Configuration Features 📋
 
@@ -348,7 +348,7 @@ OLD_VAR = "NEW_VAR"
 **Status**: 🟢 Partially Implemented
 **Priority**: High
 **Complexity**: Medium
-**Note**: Basic environment control exists, advanced features tracked in the roadmap
+**Note**: Basic environment control exists, advanced features under evaluation
 
 ---
 

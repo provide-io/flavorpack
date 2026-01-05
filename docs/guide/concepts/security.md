@@ -173,7 +173,7 @@ The verify command performs comprehensive validation:
 
 #### 📋 Exploratory Verification Modes
 
-Additional verification levels are tracked in the roadmap as exploratory work:
+Additional verification levels are under evaluation:
 
 ```bash
 # Exploratory examples (may change or be removed)
@@ -259,10 +259,10 @@ use_case: enterprise_deployment
 
 ### 📋 Certificate-Based (Exploratory Feature)
 
-PKI integration is tracked in the roadmap as exploratory work to support public distribution:
+PKI integration is under evaluation to support public distribution:
 
 ```yaml
-# X.509 certificate chains (tracked in the roadmap as exploratory work)
+# X.509 certificate chains (under evaluation)
 trust_model: pki
 verification: chain_of_trust
 use_case: public_distribution
@@ -289,7 +289,7 @@ FOUNDATION_LOG_LEVEL=debug      # Python component logging
 ### Configuration File
 
 !!! info "📋 Exploratory Feature - Not Yet Implemented"
-    Configuration file support is tracked in the roadmap as exploratory work. Currently, all configuration is done via environment variables and CLI flags.
+    Configuration file support is under evaluation. Currently, all configuration is done via environment variables and CLI flags.
 
 #### Current Configuration Methods
 
@@ -312,7 +312,7 @@ export FLAVOR_CACHE=/custom/cache
 Exploratory: configuration file support may be added; availability may change or be removed:
 
 ```toml
-# ~/.flavor/config.toml (tracked in the roadmap as exploratory work)
+# ~/.flavor/config.toml (under evaluation)
 [security]
 verify_signatures = true
 require_https = true

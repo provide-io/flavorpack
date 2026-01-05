@@ -100,7 +100,7 @@ dependencies = [
     "flask>=2.0",
 ]
 
-# 📋 EXPLORATORY: --no-deps option tracked in the roadmap
+# 📋 EXPLORATORY: --no-deps option under evaluation
 # flavor pack --manifest pyproject.toml --no-deps
 
 # Current workaround: Fix dependency conflicts in pyproject.toml
@@ -227,7 +227,7 @@ chmod -R r+X data/
 
 **Solution**:
 ```bash
-# 📋 EXPLORATORY: Manual slot configuration tracked in the roadmap
+# 📋 EXPLORATORY: Manual slot configuration under evaluation
 # Slots are currently created automatically
 
 # [[tool.flavor.slots]]
@@ -259,7 +259,7 @@ exclude = [
     ".git/"
 ]
 
-# 📋 EXPLORATORY: Compression and strip options tracked in the roadmap
+# 📋 EXPLORATORY: Compression and strip options under evaluation
 # flavor pack --manifest pyproject.toml --compress
 # flavor pack --manifest pyproject.toml --strip
 
@@ -443,7 +443,7 @@ FLAVOR_CACHE=/tmp/cache ./package.psp
 
 **Solution**:
 ```bash
-# 📋 EXPLORATORY: Python version selection tracked in the roadmap
+# 📋 EXPLORATORY: Python version selection under evaluation
 # flavor pack --manifest pyproject.toml --python-version 3.11
 
 # Current: Package uses build environment's Python version
@@ -452,7 +452,7 @@ FLAVOR_CACHE=/tmp/cache ./package.psp
 # Verify package contents
 flavor inspect package.psp
 
-# 📋 EXPLORATORY: Slot extraction tracked in the roadmap
+# 📋 EXPLORATORY: Slot extraction under evaluation
 # flavor extract package.psp --slot python-runtime
 ```
 

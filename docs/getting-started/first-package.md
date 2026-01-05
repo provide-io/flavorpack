@@ -309,7 +309,7 @@ Your `weather-cli.psp` file is now a **completely self-contained executable** th
 
 === "Package Managers"
 
-    Potential support is tracked in the roadmap as exploratory work for:
+    Potential support is under evaluation for:
     - Homebrew (macOS/Linux)
     - Scoop (Windows)
     - Snap (Linux)
