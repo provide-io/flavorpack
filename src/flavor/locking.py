@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""TODO: Add module docstring."""
+"""File locking helpers for build and cache operations."""
 
 from collections.abc import Generator
 from contextlib import contextmanager
