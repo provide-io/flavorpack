@@ -58,15 +58,13 @@ xattr -c myapp.psp
 
 **Symptom**: "Bad CPU type in executable"
 
-**Solution**: Build for the correct architecture:
+**Solution**: Build on the correct architecture:
 ```bash
 # Check your architecture
 uname -m  # Returns "arm64" or "x86_64"
 
-# Build for specific architecture
-flavor pack --manifest pyproject.toml --platform darwin_arm64
-# or
-flavor pack --manifest pyproject.toml --platform darwin_x86_64
+# Build on the target machine
+flavor pack --manifest pyproject.toml
 ```
 
 #### Rosetta 2 Compatibility

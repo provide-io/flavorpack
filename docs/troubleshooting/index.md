@@ -119,29 +119,13 @@ entry_point = "myapp:main"  # module:function
 **Symptom**: Package over 100MB
 
 **Causes**:
-- Uncompressed slots
 - Unnecessary files included
 - Large dependencies
 
 **Solutions**:
-```toml
-# Enable compression
-[[tool.flavor.slots]]
-operations = "tar.gz"  # Compress with gzip
-
-# Exclude unnecessary files
-[tool.flavor.build]
-exclude = [
-    "**/__pycache__",
-    "**/test_*",
-    "docs/",
-    ".git/"
-]
-
-# Strip binaries
-[tool.flavor.build]
-strip = true
-```
+- Remove unnecessary files before packaging
+- Keep dependencies minimal
+- Use `flavor pack --strip` to reduce launcher size
 
 #### Build Timeout
 
@@ -228,7 +212,7 @@ file myapp.psp
 df -h
 
 # Clear cache
-flavor workenv clean
+flavor clean --yes
 
 # Use different cache location
 export FLAVOR_CACHE=/tmp/flavor-cache
@@ -253,9 +237,7 @@ dependencies = [
     # Add all required packages
 ]
 
-# Pin Python version
-[tool.flavor]
-python_version = "3.11"
+# Pin dependency versions as needed
 ```
 
 #### Memory Issues
@@ -263,13 +245,6 @@ python_version = "3.11"
 **Symptom**: `MemoryError` or application crashes
 
 **Solutions**:
-```toml
-# Set memory limits
-[tool.flavor.execution]
-min_memory = "256MB"
-max_memory = "2GB"
-```
-
 ```bash
 # Monitor memory usage
 FLAVOR_LOG_LEVEL=debug ./myapp.psp
@@ -523,43 +498,6 @@ flavor workenv clean --older-than 7
 
 # Use custom cache location if default is slow
 export FLAVOR_CACHE=/fast/disk/cache
-```
-
-### 📋 Exploratory Performance Features
-
-The following performance optimizations are under evaluation:
-
-#### Build Optimizations (Exploratory)
-
-```bash
-# Not yet implemented - exploratory and may change or be removed
-flavor pack --manifest pyproject.toml --parallel        # Parallel packaging
-flavor pack --manifest pyproject.toml --no-tests        # Skip test files
-flavor pack --manifest pyproject.toml --no-docs         # Skip documentation
-```
-
-#### Extraction Optimizations (Exploratory)
-
-```toml
-# Not yet implemented - exploratory and may change or be removed
-
-[[tool.flavor.slots]]
-operations = "tar"      # Manual operation control
-lifecycle = "lazy"      # Lazy loading for optional content
-
-[tool.flavor.features]
-parallel_extraction = true     # Concurrent slot extraction
-streaming_extraction = true    # Stream instead of full extraction
-```
-
-#### Memory Management (Exploratory)
-
-```toml
-# Not yet implemented - exploratory and may change or be removed
-
-[tool.flavor.execution]
-max_memory = "512MB"    # Set memory limits
-min_memory = "128MB"    # Minimum required memory
 ```
 
 ## Error Messages Reference
