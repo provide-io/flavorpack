@@ -464,7 +464,6 @@ flavor inspect myapp.psp --dependency-tree
 
 ```bash
 flavor inspect myapp.psp --slot-details
-flavor inspect myapp.psp --compression-stats
 ```
 
 **Status**: 🔴 Not Started

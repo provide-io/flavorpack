@@ -29,7 +29,6 @@ dependencies = [
 
 [tool.flavor]
 entry_point = "myapp:main"
-python_version = "3.11"
 ```
 
 ### 3. Build the Package
@@ -127,23 +126,6 @@ dependencies = [
 [tool.flavor]
 # Required: Entry point module:function
 entry_point = "myapp:main"
-
-# Python version (default: current)
-python_version = "3.11"
-
-# Optional: Additional slots
-[[tool.flavor.slots]]
-id = "config"
-source = "config/"
-purpose = "configuration"
-lifecycle = "persistent"
-
-[[tool.flavor.slots]]
-id = "static"
-source = "static/"
-purpose = "static-resources"
-lifecycle = "cached"
-# Automatic tar.gz compression
 ```
 
 ### Step 4: Build Package
@@ -178,7 +160,7 @@ Always verify your package after building:
 # Basic verification
 flavor verify myapp-1.0.0.psp
 
-# Deep verification (all slots)
+# Deep verification (full validation)
 flavor verify myapp-1.0.0.psp --deep
 
 # Inspect package contents
@@ -193,8 +175,7 @@ FlavorPack automatically creates a virtual environment with your dependencies:
 
 - Installs all dependencies from `pyproject.toml`
 - Includes pip for runtime package management
-- Optimizes for size (removes __pycache__, tests, docs)
-- Compresses with tar.gz for efficiency
+- Packages the environment into the PSPF payload
 
 ### Application Code
 
@@ -202,12 +183,11 @@ Your source code is packaged separately:
 
 - Preserves directory structure
 - Includes all Python modules
-- Excludes test files by default
-- Can include data files and resources
+- Includes your project files and resources
 
 ### Slots
 
-Organize content into logical slots:
+Packages are assembled into internal slots:
 
 | Slot Type | Purpose | Example Content |
 |-----------|---------|-----------------|
@@ -219,92 +199,58 @@ Organize content into logical slots:
 
 ## Build Options
 
-### Launcher Selection
+### Builder and Launcher Binaries
 
-Choose between Go and Rust launchers:
+Provide custom helper binaries when needed:
 
 ```bash
-# Use Rust launcher (default)
-flavor pack --manifest pyproject.toml --launcher rust
-
-# Use Go launcher
-flavor pack --manifest pyproject.toml --launcher go
-
 # Use specific launcher binary
 flavor pack --manifest pyproject.toml --launcher-bin /path/to/launcher
+
+# Use specific builder binary
+flavor pack --manifest pyproject.toml --builder-bin /path/to/builder
 ```
 
-### Compression
-
-Control slot compression:
-
-```toml
-[[tool.flavor.slots]]
-id = "large-data"
-source = "data/"
-# Automatic tar.gz compression  # Options: raw, tar, gzip, tgz
-```
-
-### Platform-Specific Builds
-
-Build for specific platforms:
+### Output and Verification
 
 ```bash
-# Build for current platform (default)
-flavor pack --manifest pyproject.toml
+# Specify output location
+flavor pack --manifest pyproject.toml --output dist/myapp.psp
 
-# Build for specific platform
-flavor pack --manifest pyproject.toml --platform linux_amd64
-flavor pack --manifest pyproject.toml --platform darwin_arm64
-flavor pack --manifest pyproject.toml --platform windows_amd64
+# Skip verification (not recommended)
+flavor pack --manifest pyproject.toml --no-verify
+
+# Strip debug symbols for smaller size
+flavor pack --manifest pyproject.toml --strip
 ```
 
 ## Advanced Features
 
-### Multiple Entry Points
+### Runtime Environment Variables
 
-Support multiple commands:
-
-```toml
-[project.scripts]
-myapp = "myapp:main"
-myapp-admin = "myapp.admin:main"
-myapp-worker = "myapp.worker:main"
-```
-
-### Custom Slots
-
-Add custom content slots:
+Control which environment variables are available at runtime:
 
 ```toml
-[[tool.flavor.slots]]
-id = "models"
-source = "models/"
-purpose = "data-files"
-lifecycle = "lazy"  # Load on demand
-platform = "linux_amd64"  # Platform-specific
+[tool.flavor.execution.runtime.env]
+unset = ["*"]
+pass = ["PATH", "HOME", "TERM", "LANG", "LC_*"]
 ```
 
-### Build Hooks
+### Build Dependencies
 
-Run commands during build:
+Declare local build-time dependencies:
 
 ```toml
 [tool.flavor.build]
-pre_build = ["pytest", "myapp/scripts/prepare.py"]
-post_build = ["myapp/scripts/verify.py"]
+dependencies = ["../shared-lib"]
 ```
 
-### Deterministic Builds
+### Deterministic Signing Keys
 
-Ensure reproducible builds:
+Generate deterministic signing keys:
 
 ```bash
-# Set seed for deterministic builds
-export FLAVOR_SEED="my-secret-seed"
-flavor pack --manifest pyproject.toml
-
-# Or use command line
+# Use command line
 flavor pack --manifest pyproject.toml --key-seed "my-secret-seed"
 ```
 
@@ -324,9 +270,8 @@ flavor pack --manifest pyproject.toml --key-seed "my-secret-seed"
 
 ### 3. Size Optimization
 
-- Exclude unnecessary files (tests, docs)
-- Use appropriate compression
-- Strip debug symbols for production
+- Keep dependencies lean
+- Strip debug symbols for production (`--strip`)
 
 ### 4. Security
 
@@ -346,10 +291,10 @@ flavor pack --manifest pyproject.toml --key-seed "my-secret-seed"
 
 | Issue | Solution |
 |-------|----------|
-| Large package size | Use compression, exclude unnecessary files |
+| Large package size | Reduce dependencies, use `--strip` |
 | Missing dependencies | Check pyproject.toml dependencies |
 | Entry point not found | Verify module:function syntax |
-| Platform incompatibility | Build for specific platform |
+| Platform incompatibility | Build on the target platform |
 
 ### Debug Mode
 
@@ -380,11 +325,6 @@ dependencies = ["flask>=2.0", "gunicorn>=20.0"]
 
 [tool.flavor]
 entry_point = "webapp:create_app"
-
-[[tool.flavor.slots]]
-id = "templates"
-source = "templates/"
-purpose = "static-resources"
 ```
 
 ### CLI Tool
@@ -412,12 +352,6 @@ dependencies = ["numpy", "pandas", "scikit-learn"]
 
 [tool.flavor]
 entry_point = "model:predict"
-
-[[tool.flavor.slots]]
-id = "models"
-source = "trained_models/"
-purpose = "data-files"
-lifecycle = "lazy"
 ```
 
 ## Related Documentation

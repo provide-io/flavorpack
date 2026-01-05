@@ -67,11 +67,7 @@ dependencies = [
 gh = "githelper.cli:cli"
 
 [tool.flavor]
-type = "python-app"
 entry_point = "githelper.cli:cli"
-
-[tool.flavor.execution]
-command = "{workenv}/bin/gh"
 
 [tool.flavor.execution.runtime.env]
 # Clean environment with essential variables
@@ -152,12 +148,11 @@ if __name__ == '__main__':
     cli()
 ```
 
-Package with enhanced configuration:
+Package with configuration:
 
 ```toml
-[tool.flavor.execution]
-command = "{workenv}/bin/devtools"
-args = []
+[tool.flavor]
+entry_point = "devtools:cli"
 
 [tool.flavor.execution.runtime.env]
 unset = ["*"]
@@ -166,17 +161,6 @@ pass = [
     "DOCKER_*", "KUBECONFIG",
     "AWS_*", "GOOGLE_*"  # Cloud credentials
 ]
-
-[tool.flavor.slots]
-# Slot 0: Python runtime (auto-generated)
-# Slot 1: Application code (auto-generated)
-
-[[tool.flavor.slots]]
-id = 2
-path = "./config"
-extract_to = "config"
-lifecycle = "cached"
-operations = "tar.gz"  # or "tar|gzip" for pipe-separated format
 ```
 
 ## Tips & Best Practices
@@ -257,26 +241,16 @@ flavor pack
 # Check what's included
 flavor inspect githelper.psp
 
-# Exclude unnecessary files in pyproject.toml
-```
-
-```toml
-[tool.flavor.build]
-exclude = [
-    "**/__pycache__",
-    "**/*.pyc",
-    "tests/",
-    "docs/",
-    ".git/",
-]
+# Reduce dependencies and rebuild
+flavor pack --manifest pyproject.toml --strip
 ```
 
 ### Command Not Found
 
 ```toml
 # Ensure entry point is correct
-[tool.flavor.execution]
-command = "{workenv}/bin/gh"  # Must match [project.scripts]
+[tool.flavor]
+entry_point = "githelper.cli:cli"  # Must match [project.scripts]
 ```
 
 ### Missing Dependencies

@@ -110,37 +110,24 @@ entry_point = "myapp:main"
 
 ### Can I include non-Python files?
 
-!!! info "📋 Exploratory Feature"
-    Manual slot configuration is under evaluation. Currently, FlavorPack automatically packages your Python application and its dependencies.
+FlavorPack packages your Python application and its dependencies. Include non-Python files by bundling them in your package directory so they are part of your distribution.
 
 ### How do I exclude files from the package?
 
-!!! info "📋 Exploratory Feature"
-    Manifest-based exclude patterns are under evaluation.
+There is no manifest-based exclude list yet. Remove unnecessary files from the source tree before packaging.
 
 ### Can I build packages for other platforms?
 
-!!! info "📋 Exploratory Feature"
-    Platform-specific builds via CLI are under evaluation. Currently, packages are built for the host platform.
+Packages are built for the host platform. Cross-platform builds are not available yet.
 
 ### How do I reduce package size?
 
-1. Enable compression:
-   ```toml
-   [[tool.flavor.slots]]
-   # Compression is automatic - tar.gz for directories
-   ```
-
-2. Exclude unnecessary files:
-   ```toml
-   [tool.flavor.build]
-   exclude = ["tests/", "docs/"]
-   ```
-
-3. Strip binaries:
+1. Strip binaries:
    ```bash
    flavor pack --manifest pyproject.toml --strip
    ```
+
+2. Keep dependencies minimal and remove unnecessary files before packaging.
 
 ## Running Packages
 

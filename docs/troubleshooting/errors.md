@@ -156,51 +156,6 @@ version = "1.0.0"     # Required
 entry_point = "app:main"  # Required
 ```
 
-#### "Invalid slot configuration"
-
-**Cause**: Slot definition has errors.
-
-**Solution**:
-```toml
-[[tool.flavor.slots]]
-id = "data"           # Required: unique ID
-source = "data/"      # Required: source path
-purpose = "data-files"  # Optional but recommended
-lifecycle = "persistent"  # Valid lifecycle
-```
-
-#### "Invalid platform: {platform}"
-
-**Cause**: Unknown platform identifier.
-
-**Solution**:
-```bash
-# Use valid platform
-flavor pack --manifest pyproject.toml --platform linux_amd64
-# Valid: linux_amd64, linux_arm64, darwin_amd64, darwin_arm64, windows_amd64
-```
-
-#### "Invalid codec: {codec}"
-
-**Cause**: Unknown compression codec.
-
-**Solution**:
-```toml
-[[tool.flavor.slots]]
-# Operations are handled automatically based on source type
-```
-
-#### "Invalid lifecycle: {lifecycle}"
-
-**Cause**: Unknown slot lifecycle.
-
-**Solution**:
-```toml
-[[tool.flavor.slots]]
-lifecycle = "persistent"
-# Valid: persistent, volatile, temporary, cached, init-only, lazy, eager
-```
-
 ## Packaging Errors
 
 ### PackagingError
@@ -227,21 +182,8 @@ chmod -R r+X data/
 
 **Solution**:
 ```bash
-# 📋 EXPLORATORY: Manual slot configuration under evaluation
-# Slots are currently created automatically
-
-# [[tool.flavor.slots]]
-# id = "data-part1"
-# source = "data/part1/"
-
-# [[tool.flavor.slots]]
-# id = "data-part2"
-# source = "data/part2/"
-
-# [[tool.flavor.slots]]
-# lifecycle = "lazy"  # Not yet implemented
-
 # Current: No size limits enforced
+# If you hit size issues, remove or downsample large assets before packaging.
 ```
 
 #### "Package size exceeds limit: {size}"
@@ -250,20 +192,9 @@ chmod -R r+X data/
 
 **Solution**:
 ```bash
-# Exclude unnecessary files
-[tool.flavor.build]
-exclude = [
-    "**/__pycache__",
-    "tests/",
-    "docs/",
-    ".git/"
-]
-
-# 📋 EXPLORATORY: Compression and strip options under evaluation
-# flavor pack --manifest pyproject.toml --compress
+# Current: remove unneeded files before packaging and keep dependencies minimal
+# You can also strip launcher symbols:
 # flavor pack --manifest pyproject.toml --strip
-
-# Current: Optimize by excluding files in pyproject.toml
 ```
 
 #### "Failed to sign package"

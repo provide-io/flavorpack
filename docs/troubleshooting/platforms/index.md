@@ -87,17 +87,15 @@ Ensure package matches your system architecture:
 uname -m                    # Linux/macOS
 echo %PROCESSOR_ARCHITECTURE%  # Windows
 
-# Build for correct platform
-flavor pack --platform linux_amd64    # Linux x86_64
-flavor pack --platform darwin_arm64   # macOS ARM
-flavor pack --platform windows_amd64  # Windows x64
+# Build on the target platform to ensure helpers match
+flavor pack --manifest pyproject.toml
 ```
 
 ## Platform Comparison
 
 | Feature | Linux | macOS | Windows |
 |---------|-------|-------|---------|
-| **Support Level** | ✅ Full | ✅ Full | 🚧 Beta |
+| **Support Level** | ✅ Full | ✅ Full | 🚫 Disabled (UTF-8 issues) |
 | **Static Binaries** | ✅ Yes (musl) | ❌ Dynamic | ❌ Dynamic |
 | **Code Signing** | ⚪ Optional | ⚠️ Required for distribution | ⚪ Optional |
 | **Containers** | ✅ Excellent | ✅ Good | 🚧 Limited |

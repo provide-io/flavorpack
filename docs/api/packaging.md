@@ -272,14 +272,19 @@ orchestrator = PackagingOrchestrator(
     public_key_path="keys/flavor-public.key",
     output_flavor_path="dist/myapp.psp",
     build_config={
-        "include": ["src/**/*.py"],
-        "exclude": ["tests/"],
+        "execution": {
+            "runtime": {
+                "env": {
+                    "unset": ["*"],
+                    "pass": ["PATH", "HOME", "LANG", "LC_*"],
+                }
+            }
+        }
     },
     manifest_dir=Path.cwd(),
     package_name="myapp",
     version="1.0.0",
     entry_point="myapp.cli:main",
-    python_version="3.11",
 )
 
 # Build package

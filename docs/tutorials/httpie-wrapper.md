@@ -336,15 +336,7 @@ api_tool = ["py.typed"]
 
 # FlavorPack configuration
 [tool.flavor]
-type = "python-app"
 entry_point = "api_tool.cli:cli"
-
-[tool.flavor.execution]
-command = "{workenv}/bin/api-tool"
-
-[tool.flavor.execution.runtime]
-# Python runtime configuration
-python_version = "3.11"
 
 [tool.flavor.execution.runtime.env]
 # Clean environment, only pass essential variables
@@ -360,11 +352,6 @@ pass = [
     "COLUMNS",
     "LINES",
 ]
-
-[tool.flavor.metadata]
-author = "Your Name"
-license = "MIT"
-keywords = ["http", "api", "cli", "httpie"]
 ```
 
 ---
