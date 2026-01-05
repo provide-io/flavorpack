@@ -3,11 +3,11 @@
 Complete reference for `pyproject.toml` configuration options in FlavorPack packages.
 
 !!! warning "Feature Coverage"
-    This guide documents both current configuration and roadmap items.
+    This guide documents both current configuration and exploratory items.
 
     See the ["Currently Supported Configuration"](#currently-supported-configuration) section below for what works today.
 
-    Features marked with 📋 are tracked in the roadmap as exploratory work. See the [Roadmap](../roadmap/) for status details.
+    Features marked with 📋 are under evaluation.
 
 ## Overview
 
@@ -206,7 +206,7 @@ description = "Custom package description"
 ### Execution Configuration
 
 !!! warning "📋 Exploratory Feature - Not Yet Implemented"
-    These execution configuration options are **tracked in the roadmap** as exploratory work. See [Roadmap](../roadmap/#manifest-configuration-features) for status details.
+    These execution configuration options are under evaluation.
 
 ```toml
 # 📋 EXPLORATORY - Not yet implemented
@@ -258,7 +258,7 @@ dependencies = [                  # ✅ Supported
 ```
 
 !!! warning "📋 Exploratory Features - Not Yet Implemented"
-    The following build configuration options are **tracked in the roadmap** as exploratory work. See [Roadmap](../roadmap/#manifest-configuration-features) for status details.
+    The following build configuration options are under evaluation.
 
 ```toml
 # 📋 EXPLORATORY - Not yet implemented
@@ -290,7 +290,7 @@ deterministic = true
 seed = "my-build-seed"
 ```
 
-**Note**: The `--strip` CLI flag does work for stripping launcher binaries. Manifest-based strip configuration is tracked in the roadmap as exploratory work.
+**Note**: The `--strip` CLI flag does work for stripping launcher binaries. Manifest-based strip configuration is under evaluation.
 
 ### Metadata Override
 
@@ -301,7 +301,7 @@ package_name = "myapp-custom"     # ✅ Supported
 ```
 
 !!! warning "📋 Exploratory Features - Not Yet Implemented"
-    Additional metadata customization options are **tracked in the roadmap** as exploratory work. See [Roadmap](../roadmap/#manifest-configuration-features) for status details.
+    Additional metadata customization options are under evaluation.
 
 ```toml
 # 📋 EXPLORATORY - Not yet implemented
@@ -320,12 +320,12 @@ git_commit = "${GIT_COMMIT}"
 ## Slot Configuration
 
 !!! warning "📋 Exploratory Feature - Not Yet Implemented"
-    **Slot configuration via `pyproject.toml` is tracked in the roadmap as exploratory work.**
+    **Slot configuration via `pyproject.toml` is under evaluation.**
 
     Slots are currently created automatically by FlavorPack based on your Python application structure.
-    Manual slot configuration is tracked in the roadmap as exploratory work. See [Roadmap](../roadmap/#slot-configuration) for details.
+    Manual slot configuration is under evaluation.
 
-    This entire section documents the **tracked in the roadmap slot configuration format** that may be available in later releases; availability may change or be removed.
+    This entire section documents the **under evaluation slot configuration format** that may be available in later releases; availability may change or be removed.
 
 ### Basic Slot Definition
 
@@ -470,7 +470,7 @@ optional = true
 ## Security Configuration
 
 !!! warning "📋 Exploratory Feature - Not Yet Implemented"
-    **Security configuration via `pyproject.toml` is tracked in the roadmap as exploratory work.**
+    **Security configuration via `pyproject.toml` is under evaluation.**
 
     Package signing is currently available via CLI flags only:
 
@@ -478,7 +478,7 @@ optional = true
     - `--public-key PATH` - Include public key in package
     - `--key-seed TEXT` - Deterministic key generation
 
-    Manifest-based security configuration is tracked in the roadmap as exploratory work. See [Roadmap](../roadmap/) for details.
+    Manifest-based security configuration is under evaluation.
 
 ### Package Signing
 
@@ -519,9 +519,9 @@ strict_slot_validation = true
 ## Advanced Features
 
 !!! warning "📋 Exploratory Features - Not Yet Implemented"
-    **Advanced features are tracked in the roadmap as exploratory work.**
+    **Advanced features are under evaluation.**
 
-    These features are tracked in the roadmap as exploratory work to enable platform-specific builds, custom build steps, and experimental optimizations. See [Roadmap](../roadmap/#advanced-features) for details.
+    These features are under evaluation to enable platform-specific builds, custom build steps, and experimental optimizations.
 
 ### Conditional Configuration
 
@@ -757,16 +757,16 @@ pass = ["DATABASE_URL"]  # Pass through from host
 set = { FLASK_ENV = "production", PORT = "8000" }
 ```
 
-Note: Slot configuration shown in other examples is **tracked in the roadmap** as exploratory work.
+Note: Slot configuration shown in other examples is **under evaluation** as exploratory work.
 
 ### Exploratory Examples (📋 Exploratory)
 
-The following examples use features that are tracked in the roadmap as exploratory work:
+The following examples use features that are under evaluation:
 
 #### Web App with Custom Slots (📋 Exploratory)
 
 ```toml
-# 📋 EXPLORATORY - Slot configuration tracked in the roadmap
+# 📋 EXPLORATORY - Slot configuration under evaluation
 [project]
 name = "webapp"
 version = "2.0.0"
@@ -791,7 +791,7 @@ lifecycle = "cached"
 #### CLI Tool with Lazy-Loaded Plugins (📋 Exploratory)
 
 ```toml
-# 📋 EXPLORATORY - Slot configuration tracked in the roadmap
+# 📋 EXPLORATORY - Slot configuration under evaluation
 [project]
 name = "cli-tool"
 version = "3.0.0"
