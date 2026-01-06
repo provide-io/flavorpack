@@ -85,7 +85,7 @@ src/flavor-go/
 
 ### Prerequisites
 
-- Go 1.21 or higher
+- Go 1.24 or higher
 - Make (optional but recommended)
 
 ### Building for Development

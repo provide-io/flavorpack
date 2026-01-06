@@ -65,7 +65,7 @@ See the [Installation Guide](../getting-started/installation/) for complete inst
 ### Do I need to install anything else?
 
 Yes, during initial release you need to build the launcher binaries locally. This requires:
-- Go 1.23+
+- Go 1.24+
 - Rust 1.85+
 - Make
 
