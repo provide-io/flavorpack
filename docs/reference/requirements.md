@@ -188,9 +188,9 @@ macOS binaries are built separately for Intel and Apple Silicon:
 - `*-darwin_amd64` - Intel Macs
 - `*-darwin_arm64` - Apple Silicon Macs
 
-### Windows (Experimental)
+### Windows
 
-Windows support is experimental and not yet production-focused.
+Windows support is currently disabled due to UTF-8 encoding issues in the native helpers.
 
 ---
 

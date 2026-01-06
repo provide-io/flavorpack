@@ -447,7 +447,7 @@ The project has a polyglot architecture with three main layers:
 ### Linux
 
 - **Static Binaries**: We provide musl-based static binaries for maximum compatibility
-- **AppImage**: Potential support is tracked in the roadmap as exploratory work
+- **AppImage**: Potential support is under evaluation
 - **Permissions**: Packages need execute permission (`chmod +x`)
 
 ### Windows

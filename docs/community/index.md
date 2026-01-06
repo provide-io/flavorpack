@@ -32,7 +32,6 @@ Join conversations about FlavorPack.
 - Feature requests
 - Use cases
 - Best practices
-- Roadmap discussions
 
 ### :material-post: **Blog**
 

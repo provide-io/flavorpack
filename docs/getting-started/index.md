@@ -88,7 +88,7 @@ Need to integrate FlavorPack into CI/CD?
     See [Installation → System Requirements](installation/#system-requirements) for details.
 
 ??? question "Is FlavorPack production-focused?"
-    FlavorPack is an initial release. The core PSPF format and packaging features are available today, and exploratory improvements are tracked in the [Roadmap](../guide/roadmap/).
+    FlavorPack is an initial release. The core PSPF format and packaging features are available today, and exploratory improvements are still under evaluation.
 
 ??? question "How do I package a Python app with dependencies?"
     The most common workflow:

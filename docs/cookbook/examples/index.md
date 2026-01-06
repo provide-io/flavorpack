@@ -2,22 +2,6 @@
 
 Practical examples demonstrating how to use FlavorPack for various packaging scenarios.
 
-!!! warning "Examples Need Verification"
-    These cookbook examples demonstrate FlavorPack's intended usage patterns. However, some advanced configuration options shown here (such as `[tool.flavor.slots]` arrays, `[tool.flavor.targets]`, and `[tool.flavor.environment]` tables) may not yet be fully implemented.
-
-    **Verified to work**:
-    - Basic `pyproject.toml` with `[tool.flavor]` and `entry_point`
-    - `[project.scripts]` definitions
-    - Simple packaging with `flavor pack`
-
-    **Needs verification** (may not be implemented):
-    - `[tool.flavor.slots.*]` configuration
-    - `[tool.flavor.environment]` table
-    - `[tool.flavor.targets]` multi-platform builds
-    - `--compress`, `--jobs` CLI flags
-
-    Before relying on any example, test it with your FlavorPack installation. If a configuration option doesn't work, check the current [manifest documentation](../../guide/packaging/manifest/) for supported options.
-
 ## Quick Examples
 
 ### Minimal Package
@@ -69,7 +53,6 @@ dependencies = [
 
 [tool.flavor]
 entry_point = "myapp.cli:main"
-strip_binaries = true
 ```
 
 ```python
@@ -116,11 +99,9 @@ dependencies = [
 
 [tool.flavor]
 entry_point = "webapi.app:run"
-strip_binaries = true
 
-[tool.flavor.environment]
-PORT = "8000"
-HOST = "0.0.0.0"
+[tool.flavor.execution.runtime.env]
+set = { PORT = "8000", HOST = "0.0.0.0" }
 ```
 
 ```python
@@ -154,7 +135,7 @@ if __name__ == "__main__":
 flavor pack --key-seed "api-key-123"
 ./dist/webapi.psp
 
-# API is now available at http://localhost:8000
+# API is now available at http://localhost:8080
 ```
 
 ### Data Science Package
@@ -177,73 +158,28 @@ dependencies = [
 
 [tool.flavor]
 entry_point = "datasci.analyze:main"
-strip_binaries = true
-
-[tool.flavor.slots.data]
-path = "data/"
-lifecycle = "persistent"
-purpose = "input-data"
 ```
 
 ```python
 # datasci/analyze.py
-import sys
 import pandas as pd
 import numpy as np
-from pathlib import Path
 
 def main():
     """Analyze data from package."""
-    # Data is extracted alongside the package
-    data_path = Path(sys.argv[0]).parent / "data" / "dataset.csv"
-    
-    if data_path.exists():
-        df = pd.read_csv(data_path)
-        print(f"Dataset shape: {df.shape}")
-        print(f"Columns: {list(df.columns)}")
-        print(f"\nSummary statistics:")
-        print(df.describe())
-    else:
-        print("Creating sample data...")
-        df = pd.DataFrame({
-            'x': np.random.randn(100),
-            'y': np.random.randn(100)
-        })
-        print(f"Generated {len(df)} samples")
-        print(df.head())
+    print("Creating sample data...")
+    df = pd.DataFrame({
+        "x": np.random.randn(100),
+        "y": np.random.randn(100),
+    })
+    print(f"Generated {len(df)} samples")
+    print(df.head())
 
 if __name__ == "__main__":
     main()
 ```
 
 ## Advanced Examples
-
-### Multi-Platform Package
-
-Build packages for multiple platforms.
-
-```toml
-# pyproject.toml
-[project]
-name = "crossplatform"
-version = "1.0.0"
-requires-python = ">=3.11"
-
-[tool.flavor]
-entry_point = "app:main"
-
-[tool.flavor.targets]
-linux-x64 = { platform = "linux", arch = "amd64" }
-macos-arm64 = { platform = "darwin", arch = "arm64" }
-windows-x64 = { platform = "windows", arch = "amd64" }
-```
-
-```bash
-# Build for all targets
-flavor pack --output dist/app-linux.psp --target linux-x64
-flavor pack --output dist/app-macos.psp --target macos-arm64
-flavor pack --output dist/app-windows.psp --target windows-x64
-```
 
 ### Signed Package with Verification
 
@@ -265,36 +201,6 @@ cp keys/public.pem public-key.pem
 # 4. Users verify before running
 flavor verify signed-app.psp --public-key public-key.pem
 ./signed-app.psp
-```
-
-### Package with Custom Slots
-
-Include additional resources as slots.
-
-```toml
-# pyproject.toml
-[project]
-name = "slotted"
-version = "1.0.0"
-
-[tool.flavor]
-entry_point = "app:main"
-
-[tool.flavor.slots.config]
-path = "config/settings.json"
-lifecycle = "volatile"
-purpose = "configuration"
-
-[tool.flavor.slots.assets]
-path = "assets/"
-lifecycle = "persistent"
-purpose = "static-resources"
-operations = "gzip"
-
-[tool.flavor.slots.templates]
-path = "templates/"
-lifecycle = "lazy"
-purpose = "templates"
 ```
 
 ### Development vs Production Builds
@@ -453,11 +359,8 @@ FLAVOR_CACHE_DIR=/tmp/flavor-cache flavor pack
 ### Optimized Builds
 
 ```bash
-# Strip binaries and compress
-flavor pack --strip --compress 9
-
-# Parallel building (when available)
-flavor pack --jobs 4
+# Strip binaries
+flavor pack --strip
 
 # Skip verification for speed
 flavor pack --no-verify
