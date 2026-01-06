@@ -153,7 +153,7 @@ system_site_packages = false
 # Environment variables for build
 env = {
     "NUMPY_SETUP_DEBUG": "1",
-    "PIP_NO_CACHE_DIR": "1"
+    "UV_NO_CACHE": "1"
 }
 
 # Pre-install commands
@@ -177,9 +177,6 @@ pre_build_commands = [
 
 ```toml
 [tool.flavor.build]
-# Use pip instead of uv
-use_pip = true
-
 # Custom index URL
 index_url = "https://pypi.company.com/simple"
 

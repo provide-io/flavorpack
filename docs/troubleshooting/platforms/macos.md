@@ -154,8 +154,8 @@ export HTTPS_PROXY=http://proxy.example.com:8080
 # Clear FlavorPack cache
 rm -rf ~/.cache/flavor/workenv/
 
-# Clear pip cache if packaging issues
-pip cache purge
+# Clear uv cache if packaging issues
+uv cache clean
 
 # Rebuild package
 flavor pack --manifest pyproject.toml --force

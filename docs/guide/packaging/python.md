@@ -213,7 +213,7 @@ dependencies = [
 
 **Current Behavior:** FlavorPack automatically creates a virtual environment and installs dependencies using UV.
 
-**Current Workaround:** Use standard Python packaging tools (pip, setuptools) in your project's development environment before packaging.
+**Current Workaround:** Use standard Python packaging tooling (uv, setuptools) in your project's development environment before packaging.
 
 ## Entry Points
 
@@ -598,7 +598,7 @@ print("Work environment:", os.environ.get('FLAVOR_WORKENV'))
 flavor inspect package.psp --show-deps
 
 # Verify compatibility
-pip check
+uv pip check
 
 # Force reinstall
 flavor pack --manifest pyproject.toml --force-reinstall

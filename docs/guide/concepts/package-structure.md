@@ -189,7 +189,7 @@ slots/
 
 | Purpose | Description | Typical Content |
 |---------|-------------|-----------------|
-| `python-environment` | Python venv | site-packages, pip |
+| `python-environment` | Python venv | site-packages, metadata |
 | `application-code` | Main code | Python modules |
 | `configuration` | Settings | JSON, YAML, TOML |
 | `static-resources` | Assets | Images, fonts |

@@ -404,9 +404,9 @@ wireshark build-network.pcap
 # Test with network disabled (Linux)
 unshare -n flavor pack --manifest pyproject.toml
 
-# Or use pip cache
-pip download -d .cache/pip -r requirements.txt
-PIP_FIND_LINKS=.cache/pip PIP_NO_INDEX=1 flavor pack
+# Or use a local wheel cache
+uv pip download -d .cache/uv -r requirements.txt
+UV_PIP_FIND_LINKS=.cache/uv UV_PIP_NO_INDEX=1 flavor pack
 ```
 
 ---
@@ -457,8 +457,9 @@ docker run -it --rm \
 
 # Inside container
 apt-get update
-apt-get install -y python3.11 python3-pip make
-pip3 install flavor
+apt-get install -y python3.11 make
+curl -LsSf https://astral.sh/uv/install.sh | sh
+uv tool install flavor
 
 # Run same commands as CI
 make build-helpers
