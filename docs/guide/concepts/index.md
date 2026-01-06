@@ -10,7 +10,7 @@ Instead of complex installation procedures:
 ```bash
 tar -xzf myapp.tar.gz
 cd myapp/
-uv pip install -r requirements.txt
+uv sync
 ./run.sh
 ```
 

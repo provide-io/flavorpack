@@ -97,7 +97,7 @@ make release-validate-full
 
 ```bash
 # Install from local wheel
-uv pip install dist/flavorpack-*.whl
+uv tool install dist/flavorpack-*.whl
 
 # Test basic operations
 flavor --version
@@ -157,7 +157,7 @@ git push --tags
 make release-upload-test
 
 # Test installation
-uv pip install --index-url https://test.pypi.org/simple/ flavorpack
+uv tool install --index-url https://test.pypi.org/simple/ flavorpack
 ```
 
 ### Production PyPI

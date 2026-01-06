@@ -598,7 +598,7 @@ print("Work environment:", os.environ.get('FLAVOR_WORKENV'))
 flavor inspect package.psp --show-deps
 
 # Verify compatibility
-uv pip check
+uv sync --frozen
 
 # Force reinstall
 flavor pack --manifest pyproject.toml --force-reinstall

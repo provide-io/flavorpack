@@ -55,7 +55,7 @@ FLAVOR_LOG_LEVEL=debug ./myapp.psp
 ```bash
 # Ensure FlavorPack is installed from source
 cd flavorpack
-uv pip install -e .
+uv sync
 
 # Check PATH
 which flavor
@@ -84,7 +84,7 @@ chmod +x $(which flavor)
 **Solution**:
 ```bash
 # Install build dependencies
-uv pip install --upgrade setuptools wheel
+uv sync --upgrade
 
 # Sync all dependencies
 uv sync

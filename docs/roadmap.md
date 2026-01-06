@@ -158,8 +158,8 @@ env = {
 
 # Pre-install commands
 pre_install_commands = [
-    "uv pip install --upgrade setuptools wheel",
-    "uv pip install numpy==1.24.0"
+    "uv sync --upgrade",
+    "uv add numpy==1.24.0"
 ]
 
 # Pre-build validation

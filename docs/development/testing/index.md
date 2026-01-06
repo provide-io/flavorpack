@@ -393,7 +393,7 @@ jobs:
       
       - name: Install dependencies
         run: |
-          uv pip install -e .[dev]
+          uv sync --group dev
       
       - name: Run tests
         run: |
