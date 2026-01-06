@@ -250,7 +250,7 @@ python_packager.install_dependencies(requirements)
 ### Step 3: Slot Creation
 Each component is packaged into a tar.gz slot:
 1. **Python Runtime Slot** - Python interpreter and standard library
-2. **Dependencies Slot** - All pip packages as wheels
+2. **Dependencies Slot** - All Python packages as wheels
 3. **Application Slot** - Application code
 4. **Volatile Slots** - Temporary data removed after setup
 

@@ -15,7 +15,7 @@ A custom HTTP client tool called `api-tool` that:
 - Wraps HTTPie with custom defaults and shortcuts
 - Includes colored output and JSON formatting
 - Can be distributed as a single executable
-- Works without requiring Python or pip on target systems
+- Works without requiring Python or a package manager on target systems
 - Includes environment-specific API configurations
 
 ---
@@ -503,7 +503,7 @@ api-tool get /users
 
 - ✅ **Single file** - No installation required
 - ✅ **No Python required** - Includes Python runtime
-- ✅ **No pip required** - All dependencies bundled
+- ✅ **No package manager required** - All dependencies bundled
 - ✅ **Cross-platform** - Build once per platform
 - ✅ **Reproducible** - Same build everywhere
 - ✅ **Secure** - Cryptographically signed

@@ -119,7 +119,6 @@ FlavorPack's Python dependencies are declared in `pyproject.toml`:
 [project]
 dependencies = [
     "provide-foundation[all]>=0.0.0.dev0",
-    "pip>=25.2",
     "uv>=0.8.13",
 ]
 ```
@@ -128,7 +127,6 @@ These are automatically installed when you run `uv sync`.
 
 **Key Dependencies**:
 - **provide-foundation**: Core utilities, logging, and crypto functions
-- **pip**: Python package installer (embedded in packages)
 - **uv**: Fast package manager for dependency resolution
 
 ### Development Dependencies

@@ -174,7 +174,7 @@ flavor inspect myapp-1.0.0.psp
 FlavorPack automatically creates a virtual environment with your dependencies:
 
 - Installs all dependencies from `pyproject.toml`
-- Includes pip for runtime package management
+- Includes a uv-managed environment for runtime dependency management
 - Packages the environment into the PSPF payload
 
 ### Application Code

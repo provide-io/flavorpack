@@ -570,19 +570,17 @@ flavor pack \
 
 ```bash
 # 1. Pre-download dependencies
-mkdir -p .cache/pip
-pip download -d .cache/pip -r requirements.txt
+mkdir -p .cache/uv
+uv pip download -d .cache/uv -r requirements.txt
 
 # 2. Use local package index
-flavor pack \
-  --pip-index-url file://$(pwd)/.cache/pip \
-  --no-index
+UV_PIP_INDEX_URL=file://$(pwd)/.cache/uv UV_PIP_NO_INDEX=1 flavor pack
 
 # 3. Vendor dependencies
 uv pip install --target vendor/ -r requirements.txt
 
 # 4. Build in offline mode
-PIP_NO_INDEX=1 PIP_FIND_LINKS=vendor/ flavor pack
+UV_PIP_NO_INDEX=1 UV_PIP_FIND_LINKS=vendor/ flavor pack
 ```
 
 ### Debugging Helper Issues
