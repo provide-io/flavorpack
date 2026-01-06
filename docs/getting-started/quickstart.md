@@ -45,7 +45,7 @@ make build-helpers
 ```
 
 !!! tip "Pre-built binaries"
-    Pre-built binaries for common platforms are exploratory and may change or be removed.
+    Pre-built binaries are not distributed yet. Build helpers from source for your platform.
 
 ## Your First Package
 

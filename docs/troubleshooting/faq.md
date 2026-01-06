@@ -40,7 +40,7 @@ FlavorPack requires Python 3.11 or later.
 
 !!! warning "Initial release Status - Source Installation Only"
     FlavorPack is in its pre-release series. Installation is available via PyPI.
-    Some documented items are exploratory and may change or be removed.
+    Some APIs may change during the pre-release series.
 
 ```bash
 # Clone the repository

@@ -463,19 +463,6 @@ export XDG_CACHE_HOME=/path/to/cache    # Alternative cache location
 export FLAVOR_VALIDATION=none           # Skip verification (DANGER! Never use in production)
 ```
 
-#### 📋 Exploratory Features
-
-These environment variables are under evaluation:
-
-```bash
-# Not yet implemented - exploratory and may change or be removed
-export FLAVOR_KEEP_TEMP=1               # Keep temporary files for debugging
-export FLAVOR_NO_CLEANUP=1              # Disable automatic cleanup
-export FLAVOR_PARALLEL_EXTRACTION=1     # Enable parallel slot extraction
-export FLAVOR_CACHE_SIZE=10GB           # Set cache size limit
-export FLAVOR_VERIFY_SIGNATURES=1       # Enforce signature verification
-```
-
 See the [Environment Variables Guide](../guide/usage/environment/) for a complete reference.
 
 ## Performance Optimization
