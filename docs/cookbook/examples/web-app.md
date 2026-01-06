@@ -143,6 +143,6 @@ CMD ["/app/myapi.psp"]
 
 ## See Also
 
-- **[Docker Integration](../recipes/docker/)**
-- **[CI/CD](../recipes/ci-cd/)**
-- **[Multi-Platform Builds](../recipes/multi-platform/)**
+- **[Docker Integration](../recipes/docker.md)**
+- **[CI/CD](../recipes/ci-cd.md)**
+- **[Multi-Platform Builds](../recipes/multi-platform.md)**

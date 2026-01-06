@@ -503,7 +503,7 @@ perf report
 
 ## Related Documentation
 
-- [Architecture](architecture/) - System design
-- [CI/CD Pipeline](ci-cd/) - Automated builds
-- [Testing Guide](testing/index/) - Test strategies
-- [Package Format](../reference/spec/pspf-2025/) - PSPF specification
+- [Architecture](architecture.md) - System design
+- [CI/CD Pipeline](ci-cd.md) - Automated builds
+- [Testing Guide](testing/index.md) - Test strategies
+- [Package Format](../reference/spec/pspf-2025.md) - PSPF specification

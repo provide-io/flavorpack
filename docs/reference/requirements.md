@@ -259,11 +259,11 @@ rustup update
 
 ## See Also
 
-- [Contributing Guide](../development/contributing/) - Development setup walkthrough
-- [Installation Guide](../getting-started/installation/) - User installation
-- [Platform Support](../includes/platform-support/) - Platform compatibility details
-- [Troubleshooting](../troubleshooting/common/) - Common issues and solutions
+- [Contributing Guide](../development/contributing.md) - Development setup walkthrough
+- [Installation Guide](../getting-started/installation.md) - User installation
+- [Platform Support](../includes/platform-support.md) - Platform compatibility details
+- [Troubleshooting](../troubleshooting/common.md) - Common issues and solutions
 
 ---
 
-**Questions?** Check the [FAQ](../troubleshooting/faq/) or join our [community discussions](../community/discussions/).
+**Questions?** Check the [FAQ](../troubleshooting/faq.md) or join our [community discussions](../community/discussions.md).

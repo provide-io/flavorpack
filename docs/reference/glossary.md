@@ -165,7 +165,7 @@ A sequence of up to 8 operations applied to a slot, encoded as a 64-bit integer.
 - `TAR|GZIP` → Create tar archive, then gzip compress (tar.gz)
 - `TAR|ZSTD` → Create tar archive, then zstd compress (tar.zst)
 
-**See**: [FEP-0001 Operation Chain System](spec/fep-0001-core-format-and-operation-chains/#5-operation-chain-system)
+**See**: [FEP-0001 Operation Chain System](spec/fep-0001-core-format-and-operation-chains.md#5-operation-chain-system)
 
 ### Orchestrator
 The Python-based component that coordinates the packaging process, managing dependency resolution, slot preparation, and helper invocation.
@@ -216,7 +216,7 @@ A 64-byte binary structure describing a slot's metadata:
 - Lifecycle settings
 - Name and purpose
 
-**See**: [Slot Descriptor Specification](spec/SLOT_DESCRIPTOR_SPECIFICATION/)
+**See**: [Slot Descriptor Specification](spec/SLOT_DESCRIPTOR_SPECIFICATION.md)
 
 ### Slot Table
 An array of slot descriptors, one per slot, located after the metadata block in a PSPF package.
@@ -309,10 +309,10 @@ flavor workenv clean
 
 ## See Also
 
-- **[PSPF Format Specification](spec/pspf-2025/)** - Complete format documentation
-- **[CLI Reference](../guide/usage/cli/)** - Command-line interface
-- **[Core Concepts](../guide/concepts/index/)** - Foundational concepts
-- **[Architecture](../development/architecture/)** - System design
+- **[PSPF Format Specification](spec/pspf-2025.md)** - Complete format documentation
+- **[CLI Reference](../guide/usage/cli.md)** - Command-line interface
+- **[Core Concepts](../guide/concepts/index.md)** - Foundational concepts
+- **[Architecture](../development/architecture.md)** - System design
 
 ---
 

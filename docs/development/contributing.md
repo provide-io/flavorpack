@@ -379,8 +379,8 @@ Follow conventional commits:
 
 ## Resources
 
-- [Architecture Documentation](architecture/)
-- [CI/CD Pipeline](ci-cd/)
-- [User Guide](../guide/index/)
-- [API Reference](../api/index/)
-- [Troubleshooting Guide](../troubleshooting/common/)
+- [Architecture Documentation](architecture.md)
+- [CI/CD Pipeline](ci-cd.md)
+- [User Guide](../guide/index.md)
+- [API Reference](../api/index.md)
+- [Troubleshooting Guide](../troubleshooting/common.md)

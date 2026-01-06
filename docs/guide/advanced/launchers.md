@@ -6,8 +6,8 @@ Build custom launchers for specific use cases.
 
 This page is under development. In the meantime, see:
 
-- **[Building Helpers](../../development/helpers/)** - Build launchers
-- **[Architecture](../../development/architecture/)** - Launcher design
+- **[Building Helpers](../../development/helpers.md)** - Build launchers
+- **[Architecture](../../development/architecture.md)** - Launcher design
 
 ## Topics to be Covered
 
@@ -30,4 +30,4 @@ Custom launchers are useful for:
 
 ---
 
-**See also:** [Custom Builders](builders/) | [Architecture](../../development/architecture/)
+**See also:** [Custom Builders](builders.md) | [Architecture](../../development/architecture.md)

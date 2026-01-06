@@ -537,11 +537,11 @@ packages = build_package_from_manifest(Path("pyproject.toml"))
 
 ## See Also
 
-- [Builder API](builder/) - Low-level PSPF building
-- [Reader API](reader/) - Package reading and extraction
-- [Crypto API](crypto/) - Cryptographic operations
-- [CLI Reference](../guide/usage/cli/) - Command-line tools
-- [Packaging Guide](../guide/packaging/index/) - User guide
+- [Builder API](builder.md) - Low-level PSPF building
+- [Reader API](reader.md) - Package reading and extraction
+- [Crypto API](crypto.md) - Cryptographic operations
+- [CLI Reference](../guide/usage/cli.md) - Command-line tools
+- [Packaging Guide](../guide/packaging/index.md) - User guide
 
 ---
 

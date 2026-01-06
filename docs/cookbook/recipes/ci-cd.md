@@ -528,5 +528,5 @@ jobs:
 
 ## See Also
 
-- **[Docker Integration](docker/)**
-- **[Multi-Platform Builds](multi-platform/)**
+- **[Docker Integration](docker.md)**
+- **[Multi-Platform Builds](multi-platform.md)**

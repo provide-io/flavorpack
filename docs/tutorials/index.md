@@ -13,13 +13,13 @@ Tutorials are **learning-oriented** guides that take you step-by-step through bu
 - ✅ Shows expected output at each step
 - ✅ Builds your confidence with FlavorPack
 
-**New to FlavorPack?** Start with [Build Your First Package](../getting-started/first-package/) to learn the basics.
+**New to FlavorPack?** Start with [Build Your First Package](../getting-started/first-package.md) to learn the basics.
 
 ---
 
 ## Available Tutorials
 
-### [HTTPie Wrapper Tutorial](httpie-wrapper/)
+### [HTTPie Wrapper Tutorial](httpie-wrapper.md)
 
 **Level:** Intermediate
 **Time:** 20-25 minutes
@@ -35,7 +35,7 @@ Build a custom HTTP client tool that wraps HTTPie with environment management. L
 
 **What You'll Build:** A command-line API testing tool with environment presets and shortcuts.
 
-[Start Tutorial →](httpie-wrapper/)
+[Start Tutorial →](httpie-wrapper.md)
 
 ---
 
@@ -56,11 +56,11 @@ Not sure which guide to use? Here's how they differ:
 
 | Type | Purpose | Best For |
 |------|---------|----------|
-| **[Getting Started](../getting-started/index/)** | Quick introduction | First-time users, basics |
+| **[Getting Started](../getting-started/index.md)** | Quick introduction | First-time users, basics |
 | **Tutorials** (you are here) | Step-by-step learning | Building complete examples |
-| **[User Guide](../guide/index/)** | Topic-focused explanations | Understanding concepts |
-| **[Cookbook](../cookbook/index/)** | Task-oriented recipes | Solving specific problems |
-| **[API Reference](../api/index/)** | Technical specifications | Looking up details |
+| **[User Guide](../guide/index.md)** | Topic-focused explanations | Understanding concepts |
+| **[Cookbook](../cookbook/index.md)** | Task-oriented recipes | Solving specific problems |
+| **[API Reference](../api/index.md)** | Technical specifications | Looking up details |
 
 ---
 
@@ -89,7 +89,7 @@ Use the tutorials as templates for your own projects. Adapt the patterns to your
 Before starting tutorials, ensure you have:
 
 - **Python 3.11 or later** installed
-- **FlavorPack installed** ([Installation Guide](../getting-started/installation/))
+- **FlavorPack installed** ([Installation Guide](../getting-started/installation.md))
 - **FlavorPack helpers built** (run `make build-helpers`)
 - **Basic Python knowledge** (functions, imports, packages)
 - **Basic command line skills** (bash, terminal)
@@ -100,8 +100,8 @@ Before starting tutorials, ensure you have:
 
 Having trouble with a tutorial?
 
-1. **Check [Troubleshooting](../troubleshooting/common/)** - Common issues and solutions
-2. **Review [FAQ](../troubleshooting/faq/)** - Frequently asked questions
+1. **Check [Troubleshooting](../troubleshooting/common.md)** - Common issues and solutions
+2. **Review [FAQ](../troubleshooting/faq.md)** - Frequently asked questions
 3. **Ask the community** - [GitHub Discussions](https://github.com/provide-io/flavorpack/discussions)
 4. **Report issues** - [GitHub Issues](https://github.com/provide-io/flavorpack/issues)
 
@@ -111,7 +111,7 @@ Having trouble with a tutorial?
 
 Have an idea for a tutorial? We'd love to include it!
 
-1. Check [Contributing Guide](../development/contributing/)
+1. Check [Contributing Guide](../development/contributing.md)
 2. Follow existing tutorial structure as a template
 3. Submit a pull request
 
@@ -121,10 +121,10 @@ Have an idea for a tutorial? We'd love to include it!
 
 After completing tutorials:
 
-- **[User Guide](../guide/index/)** - Deep dive into FlavorPack concepts
-- **[Cookbook](../cookbook/index/)** - Solve specific packaging challenges
-- **[API Reference](../api/index/)** - Complete technical documentation
-- **[Advanced Topics](../guide/advanced/index/)** - Performance, debugging, custom builders
+- **[User Guide](../guide/index.md)** - Deep dive into FlavorPack concepts
+- **[Cookbook](../cookbook/index.md)** - Solve specific packaging challenges
+- **[API Reference](../api/index.md)** - Complete technical documentation
+- **[Advanced Topics](../guide/advanced/index.md)** - Performance, debugging, custom builders
 
 ---
 

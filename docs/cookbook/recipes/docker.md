@@ -168,5 +168,5 @@ CMD ["/app/myapp.psp"]
 
 ## See Also
 
-- **[CI/CD Integration](ci-cd/)**
-- **[Multi-Platform Builds](multi-platform/)**
+- **[CI/CD Integration](ci-cd.md)**
+- **[Multi-Platform Builds](multi-platform.md)**

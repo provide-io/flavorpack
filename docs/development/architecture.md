@@ -115,7 +115,7 @@ The 8KB index block contains:
 
 ### Slot Operation Chains
 
-PSPF/2025 uses **operation chains** to specify transformations applied to slot data. See [FEP-0001 Operation Chain System](../reference/spec/fep-0001-core-format-and-operation-chains/#5-operation-chain-system) for complete specification.
+PSPF/2025 uses **operation chains** to specify transformations applied to slot data. See [FEP-0001 Operation Chain System](../reference/spec/fep-0001-core-format-and-operation-chains.md#5-operation-chain-system) for complete specification.
 
 **Common Operation Chains:**
 - `[]` (empty) - Raw uncompressed data

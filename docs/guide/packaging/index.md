@@ -356,9 +356,9 @@ entry_point = "model:predict"
 
 ## Related Documentation
 
-- [Manifest Configuration](manifest/) - Detailed manifest options
-- [Python Packaging](python/) - Python-specific features
-- [Package Signing](signing/) - Security and signatures
-- [Platform Support](platforms/) - Cross-platform packaging
-- [API Reference](../../api/index/) - Python API
-- [Troubleshooting](../../troubleshooting/index/) - Common issues
+- [Manifest Configuration](manifest.md) - Detailed manifest options
+- [Python Packaging](python.md) - Python-specific features
+- [Package Signing](signing.md) - Security and signatures
+- [Platform Support](platforms.md) - Cross-platform packaging
+- [API Reference](../../api/index.md) - Python API
+- [Troubleshooting](../../troubleshooting/index.md) - Common issues
