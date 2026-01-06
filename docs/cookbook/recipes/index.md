@@ -8,7 +8,7 @@ Short, focused how-to guides for specific integration scenarios and workflows.
 
 Use FlavorPack packages in Docker containers.
 
-**[View Recipe →](docker/)**
+**[View Recipe →](docker.md)**
 
 **Learn how to:**
 - Create minimal Docker images
@@ -25,7 +25,7 @@ Use FlavorPack packages in Docker containers.
 
 Automate packaging in continuous integration.
 
-**[View Recipe →](ci-cd/)**
+**[View Recipe →](ci-cd.md)**
 
 **Learn how to:**
 - Set up GitHub Actions
@@ -72,4 +72,4 @@ Choose examples when you want to:
 
 ---
 
-**Get started:** Try the **[Docker Integration Recipe](docker/)**!
+**Get started:** Try the **[Docker Integration Recipe](docker.md)**!

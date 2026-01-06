@@ -60,7 +60,7 @@ make build-helpers
 flavor --version
 ```
 
-See the [Installation Guide](../getting-started/installation/) for complete instructions.
+See the [Installation Guide](../getting-started/installation.md) for complete instructions.
 
 ### Do I need to install anything else?
 
@@ -314,7 +314,7 @@ packages = build_package_from_manifest(
 )
 ```
 
-See the [API Reference](../api/index/) for complete documentation.
+See the [API Reference](../api/index.md) for complete documentation.
 
 ### Can I customize the launcher?
 
@@ -398,7 +398,7 @@ Contact support@provide.io for commercial support options.
 
 ## Related Documentation
 
-- [Getting Started](../getting-started/index/) - Quick start guide
-- [User Guide](../guide/index/) - Comprehensive documentation
-- [Troubleshooting](index/) - Problem solving guide
-- [API Reference](../api/index/) - Programming interface
+- [Getting Started](../getting-started/index.md) - Quick start guide
+- [User Guide](../guide/index.md) - Comprehensive documentation
+- [Troubleshooting](index.md) - Problem solving guide
+- [API Reference](../api/index.md) - Programming interface

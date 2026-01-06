@@ -442,4 +442,4 @@ FlavorPack is optimized for production use:
 
 ---
 
-For the complete binary format specification, see [FEP-0001: Core Format and Operation Chains](../reference/spec/fep-0001-core-format-and-operation-chains/).
+For the complete binary format specification, see [FEP-0001: Core Format and Operation Chains](../reference/spec/fep-0001-core-format-and-operation-chains.md).

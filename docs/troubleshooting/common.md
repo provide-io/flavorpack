@@ -332,9 +332,9 @@ dtruss ./myapp.psp 2>&1 | grep -E "open|stat"
 ## Getting Help
 
 ### Check Documentation
-1. Review [User Guide](../guide/index/)
-2. Check [API Reference](../api/index/)
-3. Read [Architecture](../development/architecture/)
+1. Review [User Guide](../guide/index.md)
+2. Check [API Reference](../api/index.md)
+3. Read [Architecture](../development/architecture.md)
 
 ### Debugging Checklist
 - [ ] Using latest version?
@@ -651,15 +651,15 @@ make install-helpers
 
 See detailed troubleshooting for your platform:
 
-- [Linux](platforms/linux/)
-- [macOS](platforms/macos/)
-- [Windows](platforms/windows/)
+- [Linux](platforms/linux.md)
+- [macOS](platforms/macos.md)
+- [Windows](platforms/windows.md)
 
 ---
 
 ## See Also
 
-- [CLI Reference](../guide/usage/cli/) - All commands
-- [Environment Variables](../guide/usage/environment/) - Configuration
-- [Cache Management](../guide/usage/cache/) - Cache troubleshooting
-- [Advanced Debugging](../guide/advanced/debugging/) - Deep debugging techniques
+- [CLI Reference](../guide/usage/cli.md) - All commands
+- [Environment Variables](../guide/usage/environment.md) - Configuration
+- [Cache Management](../guide/usage/cache.md) - Cache troubleshooting
+- [Advanced Debugging](../guide/advanced/debugging.md) - Deep debugging techniques

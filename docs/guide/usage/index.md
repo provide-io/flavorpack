@@ -22,7 +22,7 @@ No installation, no dependencies, no configuration required!
 
 Execute packaged applications.
 
-**[Running Packages →](running/)**
+**[Running Packages →](running.md)**
 
 - Basic execution
 - Command-line arguments
@@ -33,7 +33,7 @@ Execute packaged applications.
 
 Complete command-line interface documentation.
 
-**[CLI Reference →](cli/)**
+**[CLI Reference →](cli.md)**
 
 - `flavor pack` - Create packages
 - `flavor verify` - Verify integrity
@@ -44,7 +44,7 @@ Complete command-line interface documentation.
 
 View package contents and metadata.
 
-**[Inspecting Packages →](inspection/)**
+**[Inspecting Packages →](inspection.md)**
 
 - View metadata
 - List slots
@@ -55,7 +55,7 @@ View package contents and metadata.
 
 Manage work environment cache.
 
-**[Cache Management →](cache/)**
+**[Cache Management →](cache.md)**
 
 - Cache location
 - Cache cleanup
@@ -66,7 +66,7 @@ Manage work environment cache.
 
 Configure runtime behavior.
 
-**[Environment Variables →](environment/)**
+**[Environment Variables →](environment.md)**
 
 - `FLAVOR_LOG_LEVEL` - Logging verbosity
 - `FLAVOR_WORKENV` - Cache location
@@ -116,6 +116,6 @@ flavor cache verify
 
 ## Next Steps
 
-- **[Running Packages](running/)** - Execution guide
-- **[CLI Reference](cli/)** - Complete CLI docs
-- **[Troubleshooting](../../troubleshooting/index/)** - Fix issues
+- **[Running Packages](running.md)** - Execution guide
+- **[CLI Reference](cli.md)** - Complete CLI docs
+- **[Troubleshooting](../../troubleshooting/index.md)** - Fix issues

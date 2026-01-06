@@ -502,11 +502,11 @@ When debugging issues:
 
 ## See Also
 
-- [Troubleshooting Guide](../../troubleshooting/common/) - Common issues
-- [Performance Optimization](performance/) - Performance debugging
-- [Testing Guide](../../development/testing/index/) - Testing techniques
-- [Environment Variables](../usage/environment/) - Logging configuration
+- [Troubleshooting Guide](../../troubleshooting/common.md) - Common issues
+- [Performance Optimization](performance.md) - Performance debugging
+- [Testing Guide](../../development/testing/index.md) - Testing techniques
+- [Environment Variables](../usage/environment.md) - Logging configuration
 
 ---
 
-**Need more help?** Check the [troubleshooting guide](../../troubleshooting/common/) or report issues on GitHub.
+**Need more help?** Check the [troubleshooting guide](../../troubleshooting/common.md) or report issues on GitHub.

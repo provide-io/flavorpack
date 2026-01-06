@@ -380,10 +380,10 @@ Try these improvements:
 
 ### Learn More
 
-- 📖 [Package Configuration](../guide/packaging/configuration/) - Advanced options
-- 🔧 [Python Packaging](../guide/packaging/python/) - Python-specific features
-- 🚀 [Performance Tips](../guide/advanced/performance/) - Optimization techniques
-- 🎨 [CLI Tool Example](../cookbook/examples/cli-tool/) - Advanced CLI packaging
+- 📖 [Package Configuration](../guide/packaging/configuration.md) - Advanced options
+- 🔧 [Python Packaging](../guide/packaging/python.md) - Python-specific features
+- 🚀 [Performance Tips](../guide/advanced/performance.md) - Optimization techniques
+- 🎨 [CLI Tool Example](../cookbook/examples/cli-tool.md) - Advanced CLI packaging
 
 ## Troubleshooting
 

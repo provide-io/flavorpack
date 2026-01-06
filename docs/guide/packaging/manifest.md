@@ -272,7 +272,7 @@ export FLAVOR_KEY_SEED="secret-seed"  # For reproducible builds
                 --public-key keys/flavor-public.key
     ```
 
-    The `FLAVOR_KEY_SEED` environment variable is only for deterministic key generation during the build, not for loading existing keys. See the [Signing Guide](signing/) for details.
+    The `FLAVOR_KEY_SEED` environment variable is only for deterministic key generation during the build, not for loading existing keys. See the [Signing Guide](signing.md) for details.
 
 ## Validation
 
@@ -383,7 +383,7 @@ set = { FLASK_ENV = "production", PORT = "8000" }
 
 ## Related Documentation
 
-- [Creating Packages](index/) - Package creation overview
-- [Python Packaging](python/) - Python-specific features
-- [Package Signing](signing/) - Security configuration
-- [API Reference](../../api/index/) - Python API
+- [Creating Packages](index.md) - Package creation overview
+- [Python Packaging](python.md) - Python-specific features
+- [Package Signing](signing.md) - Security configuration
+- [API Reference](../../api/index.md) - Python API

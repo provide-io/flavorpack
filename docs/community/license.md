@@ -45,7 +45,7 @@ See `LICENSE-THIRD-PARTY` in the repository for complete attribution.
 
 By contributing to FlavorPack, you agree that your contributions will be licensed under the Apache License 2.0.
 
-See **[Contributing Guide](../development/contributing/)** for details.
+See **[Contributing Guide](../development/contributing.md)** for details.
 
 ## Questions?
 

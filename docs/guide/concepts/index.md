@@ -230,14 +230,14 @@ FlavorPack's security is built on:
 
 Now that you understand the core concepts:
 
-- [Create your first package](../../getting-started/first-package/)
-- [Learn about package structure](package-structure/)
-- [Understand work environments](workenv/)
-- [Explore security features](security/)
+- [Create your first package](../../getting-started/first-package.md)
+- [Learn about package structure](package-structure.md)
+- [Understand work environments](workenv.md)
+- [Explore security features](security.md)
 
 ## Related Documentation
 
-- [Getting Started](../../getting-started/index/)
-- [API Reference](../../api/index/)
-- [Package Format Specification](../../reference/spec/fep-0001-core-format-and-operation-chains/)
-- [Troubleshooting](../../troubleshooting/index/)
+- [Getting Started](../../getting-started/index.md)
+- [API Reference](../../api/index.md)
+- [Package Format Specification](../../reference/spec/fep-0001-core-format-and-operation-chains.md)
+- [Troubleshooting](../../troubleshooting/index.md)

@@ -9,40 +9,40 @@ Welcome to FlavorPack! This guide will help you get up and running with creating
 
 Follow these steps to get FlavorPack up and running:
 
-### 1. **[Install FlavorPack](installation/)** ⚙️
+### 1. **[Install FlavorPack](installation.md)** ⚙️
 
 Install FlavorPack and its native helper binaries. Use the standard install path or build from source if you need local changes.
 
 **Time**: ~10 minutes
 **Prerequisites**: Python 3.11+, UV, Go 1.24+, Rust 1.85+
 
-[→ Installation Guide](installation/){ .md-button .md-button--primary }
+[→ Installation Guide](installation.md){ .md-button .md-button--primary }
 
-### 2. **[Quick Start Tutorial](quickstart/)** 🚀
+### 2. **[Quick Start Tutorial](quickstart.md)** 🚀
 
 Create and run your first PSPF package in under 5 minutes with our step-by-step tutorial.
 
 **Time**: ~5 minutes
 **What you'll build**: A simple "Hello World" package
 
-[→ Quick Start](quickstart/){ .md-button }
+[→ Quick Start](quickstart.md){ .md-button }
 
-### 3. **[Create Your First Real Package](first-package/)** 📦
+### 3. **[Create Your First Real Package](first-package.md)** 📦
 
 Build a complete Python application package with dependencies, configuration, and proper structure.
 
 **Time**: ~15 minutes
 **What you'll learn**: Manifest configuration, dependencies, entry points
 
-[→ First Package Guide](first-package/){ .md-button }
+[→ First Package Guide](first-package.md){ .md-button }
 
-### 4. **[Explore Examples](examples/)** 💡
+### 4. **[Explore Examples](examples.md)** 💡
 
 See real-world examples of CLI tools, web apps, and more advanced packaging scenarios.
 
 **What's included**: Complete working examples you can build and run
 
-[→ View Examples](examples/){ .md-button }
+[→ View Examples](examples.md){ .md-button }
 
 ---
 
@@ -54,27 +54,27 @@ Choose the path that matches your goals:
 
 Just want to package a Python app quickly?
 
-1. [Installation](installation/) - Get FlavorPack installed
-2. [Quick Start](quickstart/) - Your first package in 5 minutes
-3. [Examples](examples/) - Copy a working example similar to your needs
+1. [Installation](installation.md) - Get FlavorPack installed
+2. [Quick Start](quickstart.md) - Your first package in 5 minutes
+3. [Examples](examples.md) - Copy a working example similar to your needs
 
 ### For Developers
 
 Want to understand how everything works?
 
-1. [Installation](installation/) - Set up your environment
-2. [Core Concepts](../guide/concepts/index/) - Understand PSPF format and architecture
-3. [First Package](first-package/) - Build a complete package with best practices
-4. [API Reference](../api/index/) - Programmatic package creation
+1. [Installation](installation.md) - Set up your environment
+2. [Core Concepts](../guide/concepts/index.md) - Understand PSPF format and architecture
+3. [First Package](first-package.md) - Build a complete package with best practices
+4. [API Reference](../api/index.md) - Programmatic package creation
 
 ### For DevOps Engineers
 
 Need to integrate FlavorPack into CI/CD?
 
-1. [Installation](installation/) - Automated setup instructions
-2. [CLI Reference](../guide/usage/cli/) - Command-line interface details
-3. [CI/CD Recipes](../cookbook/recipes/ci-cd/) - Integration examples
-4. [Environment Variables](../guide/usage/environment/) - Configuration options
+1. [Installation](installation.md) - Automated setup instructions
+2. [CLI Reference](../guide/usage/cli.md) - Command-line interface details
+3. [CI/CD Recipes](../cookbook/recipes/ci-cd.md) - Integration examples
+4. [Environment Variables](../guide/usage/environment.md) - Configuration options
 
 ---
 
@@ -85,7 +85,7 @@ Need to integrate FlavorPack into CI/CD?
     **Recommended**: Python 3.12+, latest UV, Go, and Rust
     **Platforms**: Linux (full), macOS (full), Windows (limited)
 
-    See [Installation → System Requirements](installation/#system-requirements) for details.
+    See [Installation → System Requirements](installation.md#system-requirements) for details.
 
 ??? question "Is FlavorPack production-focused?"
     FlavorPack is an initial release. The core PSPF format and packaging features are available today, and exploratory improvements are still under evaluation.
@@ -97,7 +97,7 @@ Need to integrate FlavorPack into CI/CD?
     2. Run `flavor pack --manifest pyproject.toml`
     3. Your package is created as `dist/<name>.psp`
 
-    See [First Package Guide](first-package/) for a complete walkthrough.
+    See [First Package Guide](first-package.md) for a complete walkthrough.
 
 ??? question "What's the difference between FlavorPack and PyInstaller?"
     FlavorPack creates **PSPF packages** with:
@@ -112,7 +112,7 @@ Need to integrate FlavorPack into CI/CD?
     - Large applications (caching helps)
     - Cross-platform distribution
 
-    See [PSPF Format](../guide/concepts/pspf-format/) for technical details.
+    See [PSPF Format](../guide/concepts/pspf-format.md) for technical details.
 
 ??? question "Can I package apps without Python installed?"
     **Creating packages** requires Python 3.11+ on the build machine.
@@ -126,7 +126,7 @@ Need to integrate FlavorPack into CI/CD?
     - **Helper build fails**: Verify Go/Rust versions
     - **Permission denied**: Run `chmod +x` on `.psp` files
 
-    See [Installation Troubleshooting](installation/#troubleshooting-installation) for complete guide.
+    See [Installation Troubleshooting](installation.md#troubleshooting-installation) for complete guide.
 
 ---
 
@@ -140,7 +140,7 @@ Need to integrate FlavorPack into CI/CD?
 
     Get your first package built and running in under 5 minutes.
 
-    [:octicons-arrow-right-24: Start Tutorial](quickstart/)
+    [:octicons-arrow-right-24: Start Tutorial](quickstart.md)
 
 -   :material-package-variant:{ .lg .middle } **First Package**
 
@@ -148,7 +148,7 @@ Need to integrate FlavorPack into CI/CD?
 
     Build a complete application package with dependencies and configuration.
 
-    [:octicons-arrow-right-24: Build Your Package](first-package/)
+    [:octicons-arrow-right-24: Build Your Package](first-package.md)
 
 -   :material-book-open-variant:{ .lg .middle } **Core Concepts**
 
@@ -156,7 +156,7 @@ Need to integrate FlavorPack into CI/CD?
 
     Understand the PSPF format, slots, operation chains, and security model.
 
-    [:octicons-arrow-right-24: Learn Concepts](../guide/concepts/index/)
+    [:octicons-arrow-right-24: Learn Concepts](../guide/concepts/index.md)
 
 -   :material-code-braces:{ .lg .middle } **Examples**
 
@@ -164,7 +164,7 @@ Need to integrate FlavorPack into CI/CD?
 
     Real-world examples of CLI tools, web apps, and advanced use cases.
 
-    [:octicons-arrow-right-24: View Examples](examples/)
+    [:octicons-arrow-right-24: View Examples](examples.md)
 
 </div>
 
@@ -174,11 +174,11 @@ Need to integrate FlavorPack into CI/CD?
 
 If you run into issues or have questions:
 
-1. **[Troubleshooting Guide](../troubleshooting/index/)** - Common issues and solutions
-2. **[FAQ](../troubleshooting/faq/)** - Frequently asked questions
+1. **[Troubleshooting Guide](../troubleshooting/index.md)** - Common issues and solutions
+2. **[FAQ](../troubleshooting/faq.md)** - Frequently asked questions
 3. **[GitHub Issues](https://github.com/provide-io/flavorpack/issues)** - Report bugs or request features
 4. **[GitHub Discussions](https://github.com/provide-io/flavorpack/discussions)** - Ask questions and share ideas
 
 ---
 
-**Ready to package your Python applications?** Start with our [Installation Guide →](installation/)
+**Ready to package your Python applications?** Start with our [Installation Guide →](installation.md)
